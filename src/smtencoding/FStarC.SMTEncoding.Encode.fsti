@@ -21,6 +21,19 @@ module S = FStarC.Syntax.Syntax
 module Env = FStarC.TypeChecker.Env
 type encoding_depth = int & int
 val get_current_env: Env.env -> ML FStarC.SMTEncoding.Env.env_t
+(* Registering a dependency module's SMT encoding with the solver, and reading it
+   out of that module's .checked file in the first place, is pure waste for a
+   client that never talks to the solver.  So [FStarC.Universal] hands those
+   encodings to [defer_encoding] instead of performing them, in dependency
+   order, and they are run by [flush_deferred_encodings].
+
+   A deferred encoding must be replayed at the solver context depth at which the
+   module was loaded, since a subsequent pop would otherwise discard it.  Hence
+   every entry point that may push a context, or that needs the encoding
+   environment or the solver to be up to date, flushes first. *)
+val defer_encoding: (unit -> ML unit) -> ML unit
+val flush_deferred_encodings: unit -> ML unit
+
 val init: Env.env -> ML unit
 val snapshot_encoding: string -> ML encoding_depth
 val rollback_encoding: string -> option encoding_depth -> ML unit

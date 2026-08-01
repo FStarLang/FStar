@@ -36,7 +36,7 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
  *)
-let cache_version_number = 84
+let cache_version_number = 85
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -53,6 +53,14 @@ type checked_file_entry_stage1 =
   parsing_data: Parser.Dep.parsing_data
 }
 
+//The persisted part of a tc_result. The SMT encoding is not included: it is
+//written as a third value in the checked file so that it can be read on demand.
+type tc_result_stored =
+{
+  stored_checked_module: Syntax.modul;
+  stored_mii: DsEnv.module_inclusion_info
+}
+
 type checked_file_entry_stage2 =
 {
   //list of (file_name * digest) of direct dependences
@@ -62,8 +70,8 @@ type checked_file_entry_stage2 =
   //digest is that of the source file
   deps_dig: list (string & string);
 
-  //typechecking result, including the smt encoding
-  tc_res: tc_result
+  //typechecking result, excluding the smt encoding
+  tc_res: tc_result_stored
 }
 
 (*
@@ -87,12 +95,12 @@ type checked_file_entry_stage2 =
  *  At that point, the cache is updated to either Valid or Invalid w.r.t. the tc data
  *)
 type tc_result_t =
-  | Unknown
+  | Unknown of string  //digest of the checked file; validity of the tc data not yet determined
   | Invalid of string  //reason why this is invalid
   | Valid   of string  //digest of the checked file
 
 instance _ : showable tc_result_t = {
-  show = (function Unknown   -> "Unknown"
+  show = (function Unknown s -> "Unknown " ^ show s
                  | Invalid s -> "Invalid " ^ show s
                  | Valid   s -> "Valid " ^ show s);
 }
@@ -138,12 +146,12 @@ let load_checked_file (fn:string) (checked_fn:string) : ML cache_t =
     if not (Filepath.file_exists checked_fn)
     then let msg = Format.fmt1 "checked file %s does not exist" checked_fn in
          add_and_return (Invalid msg, Inl msg)
-    else let entry :option checked_file_entry_stage1 = BU.load_value_from_file checked_fn in
+    else let entry :option (string & checked_file_entry_stage1) = BU.load_1value_from_file3 checked_fn in
          match entry with
          | None ->
            let msg = Format.fmt1 "checked file %s is corrupt" checked_fn in
            add_and_return (Invalid msg, Inl msg)
-         | Some (x) ->
+         | Some (checked_digest, x) ->
            if x.version <> cache_version_number
            then let msg = Format.fmt1 "checked file %s has incorrect version" checked_fn in
                 add_and_return (Invalid msg, Inl msg)
@@ -157,7 +165,7 @@ let load_checked_file (fn:string) (checked_fn:string) : ML cache_t =
                   let msg = Format.fmt2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
                   add_and_return (Invalid msg, Inl msg)
                 end
-                else add_and_return (Unknown, Inr x.parsing_data)
+                else add_and_return (Unknown checked_digest, Inr x.parsing_data)
 
 (*
  * Either the reason because of which dependences are stale/invalid
@@ -225,7 +233,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
         Inl msg
       | Some (Invalid msg, _) -> Inl msg
       | Some (Valid dig, _)   -> Inr dig
-      | Some (Unknown, _)     ->
+      | Some (Unknown _, _)   ->
         failwith (Format.fmt2
                     "Impossible: unknown entry in the cache for dependence %s of module %s"
                     fn module_name)
@@ -239,12 +247,37 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
   hash_deps [] binary_deps
 
 
+(* Reads the SMT encoding of [checked_fn] -- the third value in the file -- and
+   memoizes the result, so that it is read at most once even if the thunk is
+   forced repeatedly. *)
+let smt_decls_thunk (checked_fn:string) : ML (unit -> ML smt_decls_t) =
+  let memo : ref (option smt_decls_t) = mk_ref None in
+  fun () ->
+    match !memo with
+    | Some d -> d
+    | None ->
+      let d =
+        match BU.load_3rd_value_from_file3 #smt_decls_t checked_fn with
+        | Some d -> d
+        | None ->
+          failwith (Format.fmt1 "Could not read the SMT encoding from checked file %s" checked_fn)
+      in
+      memo := Some d;
+      d
+
+let tc_result_of_stored (checked_fn:string) (s:tc_result_stored) : ML tc_result =
+  { checked_module = s.stored_checked_module;
+    mii = s.stored_mii;
+    smt_decls = smt_decls_thunk checked_fn;
+    tc_time = 0;
+    extraction_time = 0 }
+
 let load_tc_result (checked_fn:string) : ML (option (list (string & string) & tc_result)) =
-  let entry : option (checked_file_entry_stage1 & checked_file_entry_stage2) =
-    BU.load_2values_from_file checked_fn
+  let entry : option (string & checked_file_entry_stage1 & checked_file_entry_stage2) =
+    BU.load_2values_from_file3 checked_fn
   in
   match entry with
-  | Some ((_,s2)) -> Some (s2.deps_dig, s2.tc_res)
+  | Some ((_,_,s2)) -> Some (s2.deps_dig, tc_result_of_stored checked_fn s2.tc_res)
   | _ -> None
 
 (*
@@ -270,7 +303,7 @@ let load_checked_file_with_tc_result
   match elt with
   | Invalid msg, _ -> Inl msg
   | Valid _, _ -> checked_fn |> load_tc_result' |> snd |> Inr
-  | Unknown, parsing_data ->
+  | Unknown checked_digest, parsing_data ->
     match hash_dependences deps fn (Dep.deps_of deps fn) with
     | Inl msg ->
       let elt = (Invalid msg, parsing_data) in
@@ -283,7 +316,7 @@ let load_checked_file_with_tc_result
       || Options.should_be_already_cached module_name
       then begin
         //mark the tc data of the file as valid
-        let elt = (Valid (BU.digest_of_file checked_fn), parsing_data) in
+        let elt = (Valid checked_digest, parsing_data) in
         let _ = add_and_return checked_fn elt in
         (*
          * if there exists an interface for it, mark that too as valid
@@ -314,8 +347,8 @@ let load_checked_file_with_tc_result
             try
               let iface_checked_fn = iface |> Dep.cache_file_name in
               match try_find_in_cache iface_checked_fn with
-              | Some (Unknown, parsing_data) ->
-                let _ = add_and_return iface_checked_fn (Valid (BU.digest_of_file iface_checked_fn), parsing_data) in
+              | Some (Unknown iface_digest, parsing_data) ->
+                let _ = add_and_return iface_checked_fn (Valid iface_digest, parsing_data) in
                 ()
               | _ -> ()
             with
@@ -492,9 +525,10 @@ let store_values_to_cache
     (cache_file:string)
     (stage1:checked_file_entry_stage1)
     (stage2:checked_file_entry_stage2)
-    :ML unit =
+    (smt_decls:smt_decls_t)
+    :ML string =
   Errors.with_ctx ("While writing checked file " ^ cache_file) (fun () ->
-    BU.save_2values_to_file cache_file stage1 stage2)
+    BU.save_3values_to_file cache_file stage1 stage2 smt_decls)
 
 instance _ : showable Dep.parsing_data = {
   show = Dep.str_of_parsing_data
@@ -535,11 +569,13 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
     let digest = hash_dependences (TcEnv.dep_graph env) fn deps_of_fn in
     match digest with
     | Inr hashes ->
-      let tc_result = { tc_result with tc_time=0; extraction_time=0 } in
-
       let stage1 = {version=cache_version_number; digest=(BU.digest_of_file fn); parsing_data=parsing_data} in
-      let stage2 = {deps_dig=hashes; tc_res=tc_result} in
-      store_values_to_cache cache_file stage1 stage2
+      let stored = {stored_checked_module=tc_result.checked_module; stored_mii=tc_result.mii} in
+      let stage2 = {deps_dig=hashes; tc_res=stored} in
+      let checked_digest = store_values_to_cache cache_file stage1 stage2 (tc_result.smt_decls ()) in
+      (* Record the digest we just wrote, so that dependents of this module can
+         use it without having to read the file back. *)
+      ignore <| add_and_return cache_file (Valid checked_digest, Inr parsing_data)
     | Inl msg ->
       let open FStarC.Errors in
       let open FStarC.Errors.Msg in
@@ -557,7 +593,10 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
   end
 
 let unsafe_raw_load_checked_file (checked_fn:string) : ML (option (FStarC.Parser.Dep.parsing_data & list string & tc_result))
-  = let entry = BU.load_2values_from_file checked_fn in
+  = let entry : option (string & checked_file_entry_stage1 & checked_file_entry_stage2) =
+      BU.load_2values_from_file3 checked_fn
+    in
     match entry with
-     | Some ((s1,s2)) -> Some (s1.parsing_data, List.map fst s2.deps_dig, s2.tc_res)
+     | Some ((_,s1,s2)) ->
+       Some (s1.parsing_data, List.map fst s2.deps_dig, tc_result_of_stored checked_fn s2.tc_res)
      | _ -> None

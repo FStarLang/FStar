@@ -519,7 +519,7 @@ and tc_one_file_no_frame
           {
             checked_module=tcmod;
             tc_time=tc_time;
-            smt_decls=smt_decls;
+            smt_decls=(fun () -> smt_decls);
 
             extraction_time = extract_time + iface_extraction_time;
             mii = mii
@@ -582,7 +582,6 @@ and tc_one_file_no_frame
 
       | Some tc_result ->
         let tcmod = tc_result.checked_module in
-        let smt_decls = tc_result.smt_decls in
         if Options.dump_module (string_of_lid tcmod.name)
         then Format.print1 "Module after type checking:\n%s\n" (show tcmod);
 
@@ -597,11 +596,16 @@ and tc_one_file_no_frame
             let env = FStarC.TypeChecker.Tc.load_checked_module tcenv tcmod in
             restore_opts ();
             //AR: encode smt module and do post processing
-            if not skip_solver then (
-              if fst smt_decls <> [] || snd smt_decls <> [] then
-                FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
-              record_encoded_modul tcmod smt_decls
-            );
+            if not skip_solver then
+              (* Deferred: reading this module's SMT encoding out of its checked
+                 file, and handing it to the solver, is pure waste if we never
+                 issue a query. See FStarC.SMTEncoding.Encode.defer_encoding. *)
+              FStarC.SMTEncoding.Encode.defer_encoding (fun () ->
+                let smt_decls = tc_result.smt_decls () in
+                if fst smt_decls <> [] || snd smt_decls <> [] then
+                  FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
+                record_encoded_modul tcmod smt_decls
+              );
             (), env
         in
 

@@ -2131,6 +2131,25 @@ let set_env env = match !last_env with
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
 let get_current_env tcenv = get_env (Env.current_module tcenv) tcenv
+
+(* Encodings of dependency modules loaded from their .checked files are
+   deferred; see the comment on [defer_encoding] in the interface. *)
+let deferred_encodings : ref (list (unit -> ML unit)) = mk_ref []
+let defer_encoding (f:unit -> ML unit) : ML unit =
+  deferred_encodings := f :: !deferred_encodings
+let flush_deferred_encodings () : ML unit =
+  match !deferred_encodings with
+  | [] -> ()
+  | fs ->
+    (* Clear first: the thunks call back into this module, and a nested flush
+       must not run them a second time. *)
+    deferred_encodings := [];
+    let rec run (l:list (unit -> ML unit)) : ML unit =
+      match l with
+      | [] -> ()
+      | f :: tl -> f (); run tl
+    in
+    run (List.rev fs)
 let push_env () = match !last_env with
     | [] -> failwith "Empty env stack"
     | hd::tl ->
@@ -2144,9 +2163,12 @@ let rollback_env depth = FStarC.Common.rollback "SMTEncoding.Encode.env" pop_env
 (* TOP-LEVEL API *)
 
 let init tcenv =
+    deferred_encodings := [];
     init_env tcenv;
     Z3.giveZ3 [DefPrelude]
 let snapshot_encoding msg = BU.atomically (fun () ->
+    (* Anything still pending belongs below the context we are about to push. *)
+    flush_deferred_encodings ();
     if Debug.medium () then Format.print1 "Encode.snapshot_encoding: %s\n" msg;
     let env_depth, () = snapshot_env () in
     let varops_depth, () = varops.snapshot () in
@@ -2217,6 +2239,7 @@ let encode_sig tcenv se =
     else decls in
    if Debug.medium ()
    then Format.print1 "+++++++++++Encoding sigelt %s\n" (show se);
+   flush_deferred_encodings ();
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
    set_env env;
@@ -2245,6 +2268,8 @@ instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap
    live axioms) must not be visible while checking the implementation. *)
 let encode_modul_aux (give_to_z3:bool) tcenv modul =
   begin
+    (* The dependences' declarations must reach the solver before this module's. *)
+    flush_deferred_encodings ();
     let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
