@@ -277,6 +277,8 @@ let const_cmp c1 c2 =
   match c1, c2 with
   | C_Unit, C_Unit -> Eq
   | C_Int i1, C_Int i2 -> eq_cmp i1 i2
+  | C_MachineInt i1 s1 w1, C_MachineInt i2 s2 w2 ->
+    if i1 = i2 && s1 = s2 && w1 = w2 then Eq else Neq
   | C_True, C_True -> Eq
   | C_False, C_False -> Eq
   | C_String s1, C_String s2 -> eq_cmp s1 s2

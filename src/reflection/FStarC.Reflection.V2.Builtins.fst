@@ -140,10 +140,28 @@ let pack_fv (ns:list string) : ML fv =
          fallback ()
 
 
+let inspect_int_signedness (s:C.signedness) : RD.int_signedness =
+    match s with
+    | C.Signed -> RD.Signed
+    | C.Unsigned -> RD.Unsigned
+
+let inspect_int_width (w:C.width) : RD.int_width =
+    match w with
+    | C.Int8 -> RD.Int8
+    | C.Int16 -> RD.Int16
+    | C.Int32 -> RD.Int32
+    | C.Int64 -> RD.Int64
+    | C.Sizet -> RD.Sizet
+
 let inspect_const (c:sconst) : ML vconst =
     match c with
     | FStarC.Const.Const_unit -> C_Unit
-    | FStarC.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
+    | FStarC.Const.Const_int (s, None) -> C_Int (BU.int_of_string s)
+    | FStarC.Const.Const_int (s, Some (signedness, width)) ->
+      C_MachineInt (
+        BU.int_of_string s,
+        inspect_int_signedness signedness,
+        inspect_int_width width)
     | FStarC.Const.Const_bool true  -> C_True
     | FStarC.Const.Const_bool false -> C_False
     | FStarC.Const.Const_string (s, _) -> C_String s
@@ -332,6 +350,21 @@ let pack_const (c:vconst) : ML sconst =
     match c with
     | C_Unit         -> C.Const_unit
     | C_Int i        -> C.Const_int (show i, None)
+    | C_MachineInt (i, signedness, width) ->
+      let signedness =
+        match signedness with
+        | RD.Signed -> C.Signed
+        | RD.Unsigned -> C.Unsigned
+      in
+      let width =
+        match width with
+        | RD.Int8 -> C.Int8
+        | RD.Int16 -> C.Int16
+        | RD.Int32 -> C.Int32
+        | RD.Int64 -> C.Int64
+        | RD.Sizet -> C.Sizet
+      in
+      C.Const_int (show i, Some (signedness, width))
     | C_True         -> C.Const_bool true
     | C_False        -> C.Const_bool false
     | C_String s     -> C.Const_string (s, Range.dummyRange)
@@ -916,4 +949,3 @@ let subst_comp (s : list subst_elt) (c : comp) : ML comp =
 
 let range_of_term (t:term) = t.pos
 let range_of_sigelt (s:sigelt) = s.sigrng
-

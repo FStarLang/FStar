@@ -89,6 +89,16 @@ let _ = assert True
                             | Tv_Const (C_Int 5) -> fail "Quoted term got reduced!"
                             | _ -> fail "What?")
 
+(* inspect_const is used both for term constants and for pattern
+constants: machine integer constants must not be mangled into a plain
+C_Int in either case. *)
+let _ = assert True
+            by (let t = pack (Tv_Const (C_MachineInt 1 Unsigned Int32)) in
+                match inspect t with
+                | Tv_Const (C_MachineInt 1 Unsigned Int32) -> ()
+                | Tv_Const c -> fail ("machine integer constant was mangled: " ^ const_to_ast_string c)
+                | _ -> fail "expected a constant")
+
 let _1 = assert True
             by (let t = quote (forall (x:int). x == 2 /\ False) in
                 match term_as_formula' t with
