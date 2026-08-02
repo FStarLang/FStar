@@ -290,7 +290,7 @@ let initial_env deps
     sigtab=new_sigtab();
     attrtab=new_sigtab();
     instantiate_imp=true;
-    effects={decls=[]; order=[]; joins=[]; polymonadic_binds=[]; polymonadic_subcomps=[]};
+    effects={decls=[]; order=[]; joins=[]; lifts=[]};
     generalize=true;
     letrecs=[];
     top_level=false;
@@ -697,18 +697,10 @@ let effect_signature (us_opt:option universes) (se:sigelt) rng : ML (option ((un
   in
   match se.sigel with
   | Sig_new_effect ne ->
-    let sig_ts = U.effect_sig_ts ne.signature in
     check_effect_is_not_a_template ne rng;
-    (match us_opt with
-     | None -> ()
-     | Some us ->
-       if List.length us <> List.length (fst sig_ts)
-       then failwith ("effect_signature: incorrect number of universes for the signature of " ^
-         (string_of_lid ne.mname) ^ ", expected " ^ (show (List.length (fst sig_ts))) ^
-         ", got " ^ (show (List.length us)))
-       else ());
-
-    Some (inst_ts us_opt sig_ts, se.sigrng)
+    (* An effect is now just a name; its signature is uniformly [a:Type -> Effect]. *)
+    let a = S.new_bv None (fst (U.type_u ())) in
+    Some (inst_ts us_opt (ne.univs, U.arrow [S.mk_binder a] (mk_Total teff)), se.sigrng)
 
   | Sig_effect_abbrev {lid; us; bs=binders} ->
     Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
@@ -881,6 +873,22 @@ let datacons_of_typ env lid : ML _ =
     | Some (Inr ({ sigel = Sig_inductive_typ {ds=dcs} }, _), _) -> true, dcs
     | _ -> false, []
 
+(* The logical content of a binder's type, to be restated wherever the binder
+   is eliminated by substitution.  On top of the refinement formula we also
+   restate the typing judgement of the base type when it is an inductive: the
+   SMT encoding needs [HasType v t] to fire [t]'s axioms (its subterm ordering,
+   say), and that fact is otherwise lost. *)
+let type_hypothesis env (t:typ) (v:term) : ML term =
+  let phi = U.refinement_hypothesis t v in
+  let base = match (Subst.compress t).n with
+             | Tm_refine {b} -> b.sort
+             | _ -> t in
+  let hd, _ = U.head_and_args_full base in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv when fst (datacons_of_typ env fv.fv_name) ->
+    U.mk_conj_simp (U.mk_has_type base v base) phi
+  | _ -> phi
+
 let typ_of_datacon env lid : ML _ =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon {ty_lid=l} }, _), _) -> l
@@ -956,9 +964,7 @@ let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : ML (delta_depth) =
     | Sig_new_effect _
     | Sig_sub_effect _
     | Sig_effect_abbrev _ (* None? *)
-    | Sig_pragma  _
-    | Sig_polymonadic_bind _
-    | Sig_polymonadic_subcomp _ ->
+    | Sig_pragma  _ ->
       delta_constant
 
 and delta_depth_of_qninfo env (fv:fv) (qn:qninfo) : ML delta_depth =
@@ -1352,24 +1358,17 @@ let get_default_effect env lid : ML _ =
 let get_top_level_effect env lid : ML _ =
   get_lid_valued_effect_attr env lid Const.top_level_effect_attr (Some lid)
 
-let is_layered_effect env l : ML bool =
-  l |> get_effect_decl env |> U.is_layered
-
-let identity_mlift : mlift =
-  { mlift_wp=(fun _ c -> c, trivial_guard);
-    mlift_term=Some (fun _ _ e -> e) }
-
-let join_opt env (l1:lident) (l2:lident) : ML (option (lident & mlift & mlift)) =
+let join_opt env (l1:lident) (l2:lident) : ML (option lident) =
   if lid_equals l1 l2
-  then Some (l1, identity_mlift, identity_mlift)
+  then Some l1
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Some (Const.effect_GTot_lid, identity_mlift, identity_mlift)
-  else match env.effects.joins |> Option.find (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
+  then Some Const.effect_GTot_lid
+  else match env.effects.joins |> Option.find (fun (m1, m2, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> None
-        | Some (_, _, m3, j1, j2) -> Some (m3, j1, j2)
+        | Some (_, _, m3) -> Some m3
 
-let join env l1 l2 : ML ((lident & mlift & mlift)) =
+let join env l1 l2 : ML lident =
   match join_opt env l1 l2 with
   | None ->
     raise_error env Errors.Fatal_EffectsCannotBeComposed
@@ -1379,26 +1378,8 @@ let join env l1 l2 : ML ((lident & mlift & mlift)) =
 let monad_leq env l1 l2 : ML (option edge) =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
-  then Some ({msource=l1; mtarget=l2; mlift=identity_mlift; mpath=[]})
+  then Some ({msource=l1; mtarget=l2; mpath=[]})
   else env.effects.order |> Option.find (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
-
-let wp_sig_aux decls m : ML _ =
-  match decls |> Option.find (fun (d, _) -> lid_equals d.mname m) with
-  | None -> failwith (Format.fmt1 "Impossible: declaration for monad %s not found" (string_of_lid m))
-  | Some (md, _q) ->
-    (*
-     * AR: this code used to be inst_tscheme md.univs md.signature
-     *     i.e. implicitly there was an assumption that ed.binders is empty
-     *     now when signature is itself a tscheme, this just translates to the following
-     *)
-    let _, s = md.signature |> U.effect_sig_ts |> inst_tscheme in
-    let s = Subst.compress s in
-    let bs, c = U.arrow_formals_comp_ln_strict s in
-    match md.binders, bs with
-      | [], [b; wp_b] when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
-      | _ -> failwith "Impossible"
-
-let wp_signature env m : ML _ = wp_sig_aux env.effects.decls m
 
 let bound_vars_of_bindings bs =
   bs |> List.collect (function
@@ -1447,7 +1428,8 @@ let comp_to_comp_typ (env:env) c : ML comp_typ =
     {comp_univs = [env.universe_of env result_typ];
      effect_name;
      result_typ;
-     effect_args = [];
+     comp_pre = S.trivial_pre;
+     comp_post = S.trivial_post result_typ;
      flags = U.comp_flags c}
 
 let comp_set_flags env c f : ML _ =
@@ -1463,28 +1445,25 @@ let rec unfold_effect_abbrev env comp : ML _ =
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
-      if List.length binders <> List.length c.effect_args + 1 then
+      (* An effect abbreviation is now parameterized by the result type only. *)
+      if List.length binders <> 1 then
         raise_error comp Errors.Fatal_ConstructorArgLengthMismatch
-          (Format.fmt3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
-                         (show (List.length binders)) (show (List.length c.effect_args + 1))
+          (Format.fmt2 "Effect abbreviation should take exactly one (result type) argument, got %s, i.e., %s"
+                         (show (List.length binders))
                          (show (S.mk_Comp c)));
-      let inst = List.map2 (fun b (t, _) -> NT(b.binder_bv, t)) binders (as_arg c.result_typ::c.effect_args) in
+      let inst = [NT((List.hd binders).binder_bv, c.result_typ)] in
       let c1 = Subst.subst_comp inst cdef in
-      let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
+      let ct1 = comp_to_comp_typ env c1 in
+      let c =
+        {ct1 with comp_pre = U.mk_conj_simp ct1.comp_pre c.comp_pre;
+                  comp_post = U.mk_conj_post ct1.result_typ ct1.comp_post c.comp_post;
+                  flags = c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
 
-let effect_repr_aux only_reifiable env c u_res : ML _ =
-  let check_partial_application eff_name (args:args) =
-    let r = get_range env in
-    let given, expected = List.length args, num_effect_indices env eff_name r in
-    if given = expected  then ()
-    else
-      let message = Format.fmt3 "Not enough arguments for effect %s \
-        (given:%s, expected:%s)."
-        (Ident.string_of_lid eff_name) (show given) (show expected) in
-      raise_error r Errors.Fatal_NotEnoughArgumentsForEffect message
-  in
-
+(* The monadic representation of a computation type, if the effect has one.
+   Effect representations play no role in typechecking: they only give the
+   effect an executable meaning, used by reification (extraction, tactics). *)
+let effect_repr_aux only_reifiable env c u_res : ML (option term) =
   let effect_name = norm_eff_name env (U.comp_effect_name c) in
   match effect_decl_opt env effect_name with
   | None -> None
@@ -1493,10 +1472,8 @@ let effect_repr_aux only_reifiable env c u_res : ML _ =
     | None -> None
     | Some ts ->
       let c = unfold_effect_abbrev env c in
-      let res_typ = c.result_typ in
       let repr = inst_effect_fun_with [u_res] env ed ts in
-      check_partial_application effect_name c.effect_args;
-      Some (S.mk_Tm_app repr ((res_typ |> S.as_arg)::c.effect_args) (get_range env))
+      Some (S.mk_Tm_app repr [c.result_typ |> S.as_arg] (get_range env))
 
 let effect_repr env c u_res : ML (option term) = effect_repr_aux false env c u_res
 
@@ -1522,10 +1499,13 @@ let is_total_effect (env:env) (effect_lid:lident) : ML (bool) =
     let quals = lookup_effect_quals env effect_lid in
     List.contains TotalEffect quals
 
+(* An effect is reifiable exactly when it was given a representation with an
+   [effect { M with { repr = ...; return = ...; bind = ... } }] block. *)
 let is_reifiable_effect (env:env) (effect_lid:lident) : ML (bool) =
     let effect_lid = norm_eff_name env effect_lid in
-    is_user_reifiable_effect env effect_lid
-    || Ident.lid_equals effect_lid Const.effect_TAC_lid
+    match effect_decl_opt env effect_lid with
+    | None -> false
+    | Some (ed, _) -> Some? ed.combinators
 
 let is_reifiable_rc (env:env) (c:S.residual_comp) : ML (bool) =
     is_reifiable_effect env c.residual_effect
@@ -1611,45 +1591,11 @@ let push_new_effect env (ed, quals) =
   let effects = {env.effects with decls=env.effects.decls@[(ed, quals)]} in
   {env with effects=effects}
 
-let exists_polymonadic_bind env m n : ML (option (lident & polymonadic_bind_t)) =
-  match env.effects.polymonadic_binds
-        |> Option.find (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
-  | Some (_, _, p, t) -> Some (p, t)
-  | _ -> None
-
-let exists_polymonadic_subcomp env m n : ML _ =
-  match env.effects.polymonadic_subcomps
-        |> Option.find (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
-  | Some (_, _, ts, k) -> Some (ts, k)
-  | _ -> None
-
 let print_effects_graph env : ML _ =
   let eff_name lid = lid |> ident_of_lid |> string_of_id in
   let path_str path = path |> List.map eff_name |> String.concat ";" in
 
-  //
-  //Right now the values in the map are just ""
-  //
-  //But it may be range or something else if we wanted to dump it in the dot graph
-  //
-  let pbinds : smap string = smap_create 10 in
-
-  //
-  //The keys in the map are sources
-  //
-  //Each source is mapped to a map, whose keys are targets, and values are the path strings
-  //
   let lifts : smap (smap string) = smap_create 20 in
-
-  //Similar to pbinds
-  let psubcomps : smap string = smap_create 10 in
-
-  //Populate the maps
-
-  //
-  //Note that since order, polymonadic_binds, and polymonadic_subcomps are lists,
-  //  they may have duplicates (and the typechecker picks the first one)
-  //
 
   env.effects.order |> List.iter (fun ({msource=src; mtarget=tgt; mpath=path}) ->
     let key = eff_name src in
@@ -1664,80 +1610,26 @@ let print_effects_graph env : ML _ =
     | Some _ -> ()
     | None -> smap_add m (eff_name tgt) (path_str path));
 
-  env.effects.polymonadic_binds |> List.iter (fun (m, n, p, _) ->
-    let key = Format.fmt3 "%s, %s |> %s" (eff_name m) (eff_name n) (eff_name p) in
-    smap_add pbinds key "");
-
-  env.effects.polymonadic_subcomps |> List.iter (fun (m, n, _, _) ->
-    let key = Format.fmt2 "%s <: %s" (eff_name m) (eff_name n) in
-    smap_add psubcomps key "");
-
-  //
-  //Dump the dot graph
-  //
-  //Interesting bit of trivia:
-  //  the cluster_ in the names of the subgraphs is important,
-  //  if the name does not begin like this, dot rendering does not draw boxes
-  //    around subgraphs (!)
-  //
-
-  Format.fmt3 "digraph {\n\
+  Format.fmt1 "digraph {\n\
     label=\"Effects ordering\"\n\
     subgraph cluster_lifts {\n\
       label = \"Lifts\"\n
       %s\n\
-    }\n\
-    subgraph cluster_polymonadic_binds {\n\
-      label = \"Polymonadic binds\"\n\
-      %s\n\
-    }\n\
-    subgraph cluster_polymonadic_subcomps {\n\
-      label = \"Polymonadic subcomps\"\n\
-      %s\n\
     }}\n"
-
     ((smap_fold lifts (fun src m s ->
         smap_fold m (fun tgt path s ->
           (Format.fmt3 "%s -> %s [label=\"%s\"]" src tgt path)::s) s) []) |> String.concat "\n")
-    (smap_fold pbinds (fun k _ s -> (Format.fmt1 "\"%s\" [shape=\"plaintext\"]" k)::s) [] |> String.concat "\n")
-    (smap_fold psubcomps (fun k _ s -> (Format.fmt1 "\"%s\" [shape=\"plaintext\"]" k)::s) [] |> String.concat "\n")
 
-let update_effect_lattice env src tgt st_mlift : ML _ =
+let update_effect_lattice env src tgt : ML _ =
   let compose_edges e1 e2 : edge =
-    let composed_lift =
-      let mlift_wp env c =
-        c |> e1.mlift.mlift_wp env
-	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env
-                           |> (fun (c, g2) -> c, TcComm.conj_guard g1 g2)) in
-      let mlift_term : option (universe -> typ -> term -> ML term) =
-        match e1.mlift.mlift_term with
-        | Some l1 ->
-          (match e2.mlift.mlift_term with
-           | Some l2 -> Some (fun u t e -> let r = l1 u t e in l2 u t r)
-           | _ -> None)
-        | _ -> None
-      in
-      { mlift_wp=mlift_wp ; mlift_term=mlift_term}
-    in
     { msource=e1.msource;
       mtarget=e2.mtarget;
-      mlift=composed_lift;
       mpath=e1.mpath@[e1.mtarget]@e2.mpath}
   in
 
-  let edge = {
-    msource=src;
-    mtarget=tgt;
-    mlift=st_mlift;
-    mpath=[];
-  } in
+  let edge = { msource=src; mtarget=tgt; mpath=[] } in
 
-  let id_edge l = {
-    msource=src;
-    mtarget=tgt;
-    mlift=identity_mlift;
-    mpath=[];
-  } in
+  let id_edge l = { msource=l; mtarget=l; mpath=[] } in
 
   let find_edge order (i, j) =
     if lid_equals i j
@@ -1745,13 +1637,6 @@ let update_effect_lattice env src tgt st_mlift : ML _ =
     else order |> Option.find (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
 
   let ms = env.effects.decls |> List.map (fun (e, _) -> e.mname) in
-
-  (*
-   * AR: we compute all the new edges induced by the input edge
-   *     and add them to the head of the edges list
-   *
-   *     in other words, previous paths are overwritten
-   *)
 
   //all nodes i such that i <> src and i ~> src is an edge
   let all_i_src = ms |> List.fold_left (fun edges i ->
@@ -1774,14 +1659,6 @@ let update_effect_lattice env src tgt st_mlift : ML _ =
              (show edge.msource) (show edge.mtarget) (show src))
   in
 
-  //
-  //There are three types of new edges now:
-  //
-  //  - From i to edge target
-  //  - From edge source to j
-  //  - From i to j
-  //
-
   let new_i_edge_target = List.fold_left (fun edges i_src ->
     check_cycle i_src.msource edge.mtarget;
     (compose_edges i_src edge)::edges) [] all_i_src in
@@ -1798,7 +1675,6 @@ let update_effect_lattice env src tgt st_mlift : ML _ =
   let new_edges = edge::(new_i_edge_target@new_edge_source_j@new_i_j) in
 
   //Add new edges to the front of the list, shadowing existing ones
-
   let order = new_edges@env.effects.order in
 
   order |> List.iter (fun edge ->
@@ -1809,48 +1685,28 @@ let update_effect_lattice env src tgt st_mlift : ML _ =
         (Format.fmt1 "Divergent computations cannot be included in an effect %s marked 'total'"
                         (show edge.mtarget)));
 
-  //
-  //Compute upper bounds
-  //
-  //Addition of an edge may change upper bounds,
-  // that's ok, as long as it is unique in the new graph
-  //
   let joins =
-    //
-    //A map where we populate all upper bounds for each pair of effects
-    //
-    let ubs : smap (list (lident & lident & lident & mlift & mlift)) =
-      SMap.create 10 in
-    let add_ub i j k ik jk =
+    let ubs : smap (list (lident & lident & lident)) = SMap.create 10 in
+    let add_ub i j k =
       let key = string_of_lid i ^ ":" ^ string_of_lid j in
       let v =
         match smap_try_find ubs key with
-        | Some ubs -> (i, j, k, ik, jk)::ubs
-        | None -> [i, j, k, ik, jk] in
-
+        | Some ubs -> (i, j, k)::ubs
+        | None -> [i, j, k] in
       smap_add ubs key v in
 
-    //Populate ubs
     ms |> List.iter (fun i ->
       ms |> List.iter (fun j ->
         if lid_equals i j then ()
         else ms |> List.iter (fun k ->
                match find_edge order (i, k), find_edge order (j, k) with
-               | Some ik, Some jk -> add_ub i j k ik.mlift jk.mlift
+               | Some _, Some _ -> add_ub i j k
                | _ -> ())));
 
-    //
-    //Fold over the map
-    //
-    //For each pair of effects (i.e. key in the ubs map),
-    //  make sure there is a unique lub
-    //
     smap_fold ubs (fun s l joins ->
-      //Filter entries that have an edge to every other entry
-      let lubs = List.filter (fun (i, j, k, ik, jk) ->
-        List.for_all (fun (_, _, k', _, _) ->
+      let lubs = List.filter (fun (i, j, k) ->
+        List.for_all (fun (_, _, k') ->
           find_edge order (k, k') |> Some?) l) l in
-      //Make sure there is only one such entry
       if List.length lubs <> 1
       then
         raise_error env Errors.Fatal_Effects_Ordering_Coherence
@@ -1860,21 +1716,13 @@ let update_effect_lattice env src tgt st_mlift : ML _ =
   let effects = {env.effects with order=order; joins=joins} in
   {env with effects=effects}
 
-(*
- * We allow overriding a previously defined poymonadic bind/subcomps
- *   between the same effects
- *
- * Also, polymonadic versions always take precedence over the effects graph
- *)
+let add_lift e src tgt ts : ML _ =
+  {e with effects={e.effects with lifts=(src, tgt, ts)::e.effects.lifts}}
 
-let add_polymonadic_bind env m n p ty =
-  { env with
-    effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
-
-let add_polymonadic_subcomp env m n (ts, k) =
-  { env with
-    effects = ({ env.effects with
-                 polymonadic_subcomps = (m, n, ts, k)::env.effects.polymonadic_subcomps }) }
+let lookup_lift env src tgt : ML (option tscheme) =
+  env.effects.lifts
+  |> Option.find (fun (s, t, _) -> lid_equals s src && lid_equals t tgt)
+  |> Option.map (fun (_, _, ts) -> ts)
 
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
@@ -2071,9 +1919,6 @@ let abstract_guard_n bs g : ML _ =
 
 let abstract_guard b g : ML _ =
     abstract_guard_n [b] g
-
-let too_early_in_prims env : ML _ =
-  not (lid_exists env Const.effect_GTot_lid)
 
 let apply_guard g e : ML guard_t = match g.guard_f with
   | Trivial -> g

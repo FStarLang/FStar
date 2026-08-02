@@ -885,16 +885,9 @@ let decl'_to_string (d:decl') : ML string = match d with
   | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(i, _) -> "val " ^ (string_of_id i)
   | Exception(i, _) -> "exception " ^ (string_of_id i)
-  | NewEffect(DefineEffect(i, _, _, _))
-  | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ (string_of_id i)
-  | LayeredEffect(DefineEffect(i, _, _, _))
-  | LayeredEffect(RedefineEffect(i, _, _)) -> "layered_effect " ^ (string_of_id i)
-  | Polymonadic_bind (l1, l2, l3, _) ->
-      Format.fmt3 "polymonadic_bind (%s, %s) |> %s"
-                    (string_of_lid l1) (string_of_lid l2) (string_of_lid l3)
-  | Polymonadic_subcomp (l1, l2, _) ->
-      Format.fmt2 "polymonadic_subcomp %s <: %s"
-                    (string_of_lid l1) (string_of_lid l2)
+  | NewEffect(DeclareEffect(i, _)) -> "effect " ^ (string_of_id i)
+  | NewEffect(DefineEffect(i, _, _)) -> "effect " ^ (string_of_id i)
+  | NewEffect(RedefineEffect(i, _, _)) -> "effect " ^ (string_of_id i)
   | Splice (is_typed, ids, t) ->
     "splice" ^ (if is_typed then "_t" else "")
              ^ "["
@@ -1279,12 +1272,6 @@ let pp_decl' (d:decl') : ML document =
       ctor "Exception" [pp i; pp_opt_term t_opt]
   | NewEffect eff_def ->
       ctor "NewEffect" []
-  | LayeredEffect eff_def ->
-      ctor "LayeredEffect" []
-  | Polymonadic_bind (l1, l2, l3, t) ->
-      ctor "Polymonadic_bind" [pp l1; pp l2; pp l3; pp_term t]
-  | Polymonadic_subcomp (l1, l2, t) ->
-      ctor "Polymonadic_subcomp" [pp l1; pp l2; pp_term t]
   | Splice (is_typed, ids, t) ->
       ctor "Splice" [doc_of_string (show is_typed); pp_list' pp ids; pp_term t]
   | SubEffect se ->

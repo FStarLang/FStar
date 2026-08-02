@@ -410,14 +410,23 @@ let name_of_decl (d:decl) : ML string =
   | DefineFun a _ _ _ _ -> a
   | _ -> failwith "Expected an assumption"
 
+(* Declarations must precede the definitions and assumptions that mention
+   them, otherwise Z3 rejects the input with "unknown constant". *)
+let decl_rank (d:decl) : int =
+  match d with
+  | DeclFun _ _ _ _ -> 0
+  | DefineFun _ _ _ _ _ -> 1
+  | _ -> 2
+
 let compare_decls (d0 d1:decl) : ML int =
-  match d0, d1 with
-  | DeclFun a0 _ _ _, DeclFun a1 _ _ _
-  | DefineFun a0 _ _ _ _, DefineFun a1 _ _ _ _
-  | Assume {assumption_name=a0}, Assume{assumption_name=a1} -> BU.compare a0 a1
-  | DeclFun _ _ _ _, _ -> -1
-  | DefineFun _ _ _ _ _, _ -> -1
-  | _ -> failwith "Unexpected decl in compare decls"
+  let r = decl_rank d0 - decl_rank d1 in
+  if r <> 0 then r
+  else
+    match d0, d1 with
+    | DeclFun a0 _ _ _, DeclFun a1 _ _ _
+    | DefineFun a0 _ _ _ _, DefineFun a1 _ _ _ _
+    | Assume {assumption_name=a0}, Assume{assumption_name=a1} -> BU.compare a0 a1
+    | _ -> 0
 
 (* Prune the context with respect to a set of roots *)
 let prune_level (roots:list decl) (hd:decls_at_level) (s:solver_state)

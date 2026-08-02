@@ -1024,19 +1024,22 @@ and translate_comp_typ cfg bs (c:S.comp_typ) : ML comp_typ =
   let { S.comp_univs  = comp_univs
       ; S.effect_name = effect_name
       ; S.result_typ  = result_typ
-      ; S.effect_args = effect_args
+      ; S.comp_pre    = comp_pre
+      ; S.comp_post   = comp_post
       ; S.flags       = flags } = c in
   { comp_univs = List.map (translate_univ cfg bs) comp_univs;
     effect_name = effect_name;
     result_typ = translate cfg bs result_typ;
-    effect_args = List.map (fun x -> translate cfg bs (fst x), snd x) effect_args;
+    comp_pre = translate cfg bs comp_pre;
+    comp_post = translate cfg bs comp_post;
     flags = List.map (translate_flag cfg bs) flags }
 
 and readback_comp_typ cfg (c:comp_typ) : ML S.comp_typ =
   { S.comp_univs = c.comp_univs;
     S.effect_name = c.effect_name;
     S.result_typ = readback cfg c.result_typ;
-    S.effect_args = List.map (fun x -> readback cfg (fst x), snd x) c.effect_args;
+    S.comp_pre = readback cfg c.comp_pre;
+    S.comp_post = readback cfg c.comp_post;
     S.flags = List.map (readback_flag cfg) c.flags }
 
 and translate_residual_comp cfg bs (c:S.residual_comp) : ML residual_comp =
@@ -1059,12 +1062,8 @@ and translate_flag cfg bs (f : S.cflag) : ML cflag =
     match f with
     | S.TOTAL -> TOTAL
     | S.MLEFFECT -> MLEFFECT
-    | S.RETURN -> RETURN
-    | S.PARTIAL_RETURN -> PARTIAL_RETURN
-    | S.SOMETRIVIAL -> SOMETRIVIAL
-    | S.TRIVIAL_POSTCONDITION -> TRIVIAL_POSTCONDITION
-    | S.SHOULD_NOT_INLINE -> SHOULD_NOT_INLINE
     | S.LEMMA -> LEMMA
+    | S.SMTPAT p -> SMTPAT (translate cfg bs p)
     | S.DECREASES (S.Decreases_lex l) -> DECREASES_lex (l |> List.map (translate cfg bs))
     | S.DECREASES (S.Decreases_wf (rel, e)) ->
       DECREASES_wf (translate cfg bs rel, translate cfg bs e)
@@ -1073,154 +1072,18 @@ and readback_flag cfg (f : cflag) : ML S.cflag =
     match f with
     | TOTAL -> S.TOTAL
     | MLEFFECT -> S.MLEFFECT
-    | RETURN -> S.RETURN
-    | PARTIAL_RETURN -> S.PARTIAL_RETURN
-    | SOMETRIVIAL -> S.SOMETRIVIAL
-    | TRIVIAL_POSTCONDITION -> S.TRIVIAL_POSTCONDITION
-    | SHOULD_NOT_INLINE -> S.SHOULD_NOT_INLINE
     | LEMMA -> S.LEMMA
+    | SMTPAT p -> S.SMTPAT (readback cfg p)
     | DECREASES_lex l -> S.DECREASES (S.Decreases_lex (l |> List.map (readback cfg)))
     | DECREASES_wf (rel, e) ->
       S.DECREASES (S.Decreases_wf (readback cfg rel, readback cfg e))
 
+(* Effects no longer have representations, so [reify] cannot reduce anything. *)
 and translate_monadic mty cfg bs e : ML t =
-   let (m, ty) = mty in
-   let e = U.unascribe e in
-   match e.n with
-   | Tm_let {lbs=(false, [lb]); body} -> //elaborate this to M.bind
-     begin
-     match Env.effect_decl_opt cfg.core_cfg.tcenv (Env.norm_eff_name cfg.core_cfg.tcenv m) with
-     | None ->
-       failwith (Format.fmt1 "Effect declaration not found: %s" (Ident.string_of_lid m))
-
-     | Some (ed, q) ->
-       let cfg' = reifying_false cfg in
-       let body_lam =
-           let body_rc = {
-                S.residual_effect=m;
-                S.residual_flags=[];
-                S.residual_typ=Some ty
-            } in
-           S.mk_Tm_abs [S.mk_binder (Inl?.v lb.lbname)] body (Some body_rc) body.pos
-       in
-       let maybe_range_arg = [] in
-       let t =
-       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (ed |> U.get_bind_repr |> Some?.v |> snd)))
-                      [mk_t <| Univ U_unknown, None;  //We are cheating here a bit
-                       mk_t <| Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
-                                              //and ty below; but this should be okay since these
-                                              //arguments should not actually appear in the resulting
-                                              //term
-           (
-           [(translate cfg' bs lb.lbtyp, None); //translating the type of the bound term
-            (translate cfg' bs ty, None)]       //and the body is sub-optimal; it is often unused
-           @maybe_range_arg    //some effects take two additional range arguments for debugging
-           @[(mk_t Unknown, None) ; //unknown WP of lb.lbdef; same as the universe argument ... should not appear in the result
-             (translate cfg bs lb.lbdef, None);
-             (mk_t Unknown, None) ;  //unknown WP of body; ditto
-             (translate cfg bs body_lam, None)]
-           )
-      in
-      debug cfg (fun () -> Format.print1 "translate_monadic: %s\n" (t_to_string t));
-      t
-
-      end
-
-   | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; arg=(e, _)} ->
-     translate (reifying_false cfg) bs e
-
-   | Tm_app _ ->
-     let head, args = U.head_and_args_full e in
-     debug cfg (fun () -> Format.print2 "translate_monadic app (%s) @ (%s)\n" (show head)
-                                                                          (show args));
-     let fallback1 () =
-         translate cfg bs e
-     in
-     let fallback2 () =
-         translate (reifying_false cfg) bs (S.mk (Tm_meta {tm=e; meta=Meta_monadic (m, ty)}) e.pos)
-     in
-     begin match (U.un_uinst head).n with
-     | Tm_fvar fv ->
-        let lid = S.lid_of_fv fv in
-        let qninfo = Env.lookup_qname cfg.core_cfg.tcenv lid in
-        if not (Env.is_action cfg.core_cfg.tcenv lid) then fallback1 () else
-
-        (* GM: I think the action *must* be fully applied at this stage
-         * since we were triggered into this function by a Meta_monadic
-         * annotation. So we don't check anything. *)
-
-        (* Fallback if it does not have a definition. This happens,
-         * but I'm not sure why. *)
-        if None? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fv.fv_name qninfo)
-        then fallback2 ()
-        else
-
-        (* Turn it info (reify head) args, then translate_fv will kick in on the head *)
-        let e = S.mk_Tm_app (U.mk_reify head None) args e.pos in
-        translate (reifying_false cfg) bs e
-     | _ ->
-        fallback1 ()
-     end
-
-   | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs=branches; rc_opt=lopt} ->
-     (* Commutation of reify with match. See the comment in the normalizer about it. *)
-     let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm (Some m)) in
-     let tm = S.mk (Tm_match {scrutinee=sc; ret_opt=asc_opt; brs=branches; rc_opt=lopt}) e.pos in
-     translate (reifying_false cfg) bs tm
-
-   | Tm_meta {tm=t; meta=Meta_monadic _} ->
-     translate_monadic (m, ty) cfg bs e
-
-   | Tm_meta {tm=t; meta=Meta_monadic_lift (msrc, mtgt, ty')} ->
-     translate_monadic_lift (msrc, mtgt, ty') cfg bs e
-
-   | _ -> failwith (Format.fmt1 "Unexpected case in translate_monadic: %s" (tag_of e))
+   translate (reifying_false cfg) bs (U.unascribe e)
 
 and translate_monadic_lift msmt cfg bs e : ML t =
-   let (msrc, mtgt, ty) = msmt in
-   let e = U.unascribe e in
-   if U.is_pure_effect msrc || U.is_div_effect msrc
-   then let ed = Env.get_effect_decl cfg.core_cfg.tcenv (Env.norm_eff_name cfg.core_cfg.tcenv mtgt) in
-        let ret = match (SS.compress (ed |> U.get_return_repr |> Some?.v |> snd)).n with
-                  | Tm_uinst (ret, [_]) -> S.mk (Tm_uinst (ret, [U_unknown])) e.pos
-                  | _ -> failwith "NYI: Reification of indexed effect (NBE)"
-        in
-        let cfg' = reifying_false cfg in
-        let t =
-        iapp cfg' (iapp cfg' (translate cfg' [] ret)
-                       [mk_t <| Univ U_unknown, None])
-                       [(translate cfg' bs ty, None); //translating the type of the returned term
-                        (translate cfg' bs e, None)]  //translating the returned term itself
-        in
-        debug cfg (fun () -> Format.print1 "translate_monadic_lift(1): %s\n" (t_to_string t));
-        t
-   else
-    match Env.monad_leq cfg.core_cfg.tcenv msrc mtgt with
-    | None ->
-      failwith (Format.fmt2 "Impossible : trying to reify a lift between unrelated effects (%s and %s)"
-                            (Ident.string_of_lid msrc)
-                            (Ident.string_of_lid mtgt))
-    | Some {mlift={mlift_term=None}} ->
-      failwith (Format.fmt2 "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
-                            (Ident.string_of_lid msrc)
-                            (Ident.string_of_lid mtgt))
-
-    | Some {mlift={mlift_term=Some lift}} ->
-      (* We don't have any reasonable wp to provide so we just pass unknown *)
-      (* The wp is only necessary to typecheck, so this should not create an issue. *)
-      let lift_lam =
-        let x = S.new_bv None S.tun in
-        U.abs [S.mk_binder x]
-              (lift U_unknown ty (S.bv_to_name x))
-              None
-      in
-      let cfg' = reifying_false cfg in
-      let t =
-      iapp cfg (translate cfg' [] lift_lam)
-               [(translate cfg bs e, None)]
-      in
-      debug cfg (fun () -> Format.print1 "translate_monadic_lift(2): %s\n" (t_to_string t));
-      t
+   translate (reifying_false cfg) bs (U.unascribe e)
 
 /// `readback` is the other half of the main normalization routine
 ///

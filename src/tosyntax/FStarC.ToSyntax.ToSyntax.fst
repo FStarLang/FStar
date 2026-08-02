@@ -439,24 +439,8 @@ let rec generalize_annotated_univs (s:sigelt) : ML sigelt =
                                fail_in_lax=lax;
                                ses=List.map generalize_annotated_univs ses} }
 
-  (* Works over the signature only *)
-  | Sig_new_effect ed ->
-    let generalize_annotated_univs_signature (s : effect_signature) : ML effect_signature =
-      match s with
-      | Layered_eff_sig (n, (_, t)) ->
-        let uvs = Free.univnames t |> elems in
-        let usubst = Subst.univ_var_closing uvs in
-        Layered_eff_sig (n, (uvs, Subst.subst usubst t))
-      | WP_eff_sig (_, t) ->
-        let uvs = Free.univnames t |> elems in
-        let usubst = Subst.univ_var_closing uvs in
-        WP_eff_sig (uvs, Subst.subst usubst t)
-    in
-    { s with sigel = Sig_new_effect { ed with signature = generalize_annotated_univs_signature ed.signature } }
-
+  | Sig_new_effect _
   | Sig_sub_effect _
-  | Sig_polymonadic_bind _
-  | Sig_polymonadic_subcomp _
   | Sig_splice _
   | Sig_pragma _ ->
     s
@@ -2286,6 +2270,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
       in
       rest |> List.partition is_decrease
     in
+    let rest0 = rest in
     let rest = desugar_args env rest in
     let decreases_clause = dec |>
       List.map (fun t -> match (unparen (fst t)).tm with
@@ -2308,27 +2293,41 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
         is_empty cattributes &&
         is_empty universes
     in
-    if no_additional_args
-    && lid_equals eff C.effect_Tot_lid
-    then mk_Total result_typ
-    else if no_additional_args
-         && lid_equals eff C.effect_GTot_lid
-    then mk_GTotal result_typ
+    if lid_equals eff C.effect_Tot_lid || lid_equals eff C.effect_GTot_lid
+    then (
+      (* Tot/GTot admit no pre- or postcondition, only a decreases clause. *)
+      if not (Nil? rest) then
+        fail Errors.Fatal_NotEnoughArgsToEffect
+          (Format.fmt1 "Effect %s does not take a requires or ensures clause" (show eff));
+      if no_additional_args
+      then (if lid_equals eff C.effect_Tot_lid then mk_Total result_typ else mk_GTotal result_typ)
+      else
+        mk_Comp ({comp_univs=universes;
+                  effect_name=eff;
+                  result_typ=result_typ;
+                  comp_pre=trivial_pre;
+                  comp_post=trivial_post result_typ;
+                  flags=(if lid_equals eff C.effect_Tot_lid then [TOTAL] else [])
+                        @ cattributes @ decreases_clause})
+    )
     else
       let flags =
         if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
         else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
         else if lid_equals eff (C.effect_ML_lid()) then [MLEFFECT]
-        else if lid_equals eff C.effect_GTot_lid  then [SOMETRIVIAL]
         else []
       in
       let flags = flags @ cattributes in
-      let rest =
+      (* Extract the precondition, the postcondition, and (for Lemma) the SMT patterns
+         from the remaining arguments of the computation type. *)
+      let pre, post, smtpat =
         if lid_equals eff C.effect_Lemma_lid
         then
+          (* pre_process_comp_typ has normalized Lemma's arguments to [pre; post; pat] *)
           match rest with
-          | [req;ens;(pat, aq)] ->
-            let pat = match pat.n with
+          | [(pre, _); (post, _); (pat, _)] ->
+            let pat =
+              match pat.n with
               (* we really want the empty pattern to be in universe 0 rather than generalizing it *)
               | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
                 let nil = S.mk_Tm_uinst pat [U_zero] in
@@ -2338,15 +2337,45 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
                 S.mk_Tm_app nil [(pattern, S.as_aqual_implicit true)] pat.pos
               | _ -> pat
             in
-            [req; ens; (S.mk (Tm_meta {tm=pat;meta=Meta_desugared Meta_smt_pat}) pat.pos, aq)]
-          | _ -> rest
-        else rest
+            pre, post, Some (S.mk (Tm_meta {tm=pat;meta=Meta_desugared Meta_smt_pat}) pat.pos)
+          | _ -> fail Errors.Fatal_InvalidLemmaArgument "Invalid arguments to 'Lemma'"
+        else
+          (* Otherwise the arguments are (requires pre) and (ensures post), either
+             explicitly tagged or given positionally, and both are optional. *)
+          let tagged_req, rest' = List.partition is_requires rest0 in
+          let tagged_ens, rest' = List.partition is_ensures rest' in
+          let rest' = desugar_args env rest' in
+          let get l = match l with
+            | [] -> None
+            | [x] -> Some (fst (List.hd (desugar_args env [x])))
+            | _ -> fail Errors.Fatal_NotEnoughArgsToEffect
+                     "Too many requires/ensures clauses in a computation type"
+          in
+          let pre, post =
+            match get tagged_req, get tagged_ens, rest' with
+            | Some p, Some q, [] -> p, q
+            | Some p, None, [] -> p, trivial_post result_typ
+            | None, Some q, [] -> trivial_pre, q
+            | None, None, [] -> trivial_pre, trivial_post result_typ
+            | None, None, [(p, _)] -> p, trivial_post result_typ
+            | None, None, [(p, _); (q, _)] -> p, q
+            | Some p, None, [(q, _)] -> p, q
+            | None, Some q, [(p, _)] -> p, q
+            | _ ->
+              fail Errors.Fatal_NotEnoughArgsToEffect
+                (Format.fmt1 "Unexpected arguments to effect %s" (show eff))
+          in
+          pre, post, None
       in
+      let flags = flags @ decreases_clause @ (match smtpat with
+                                              | None -> []
+                                              | Some p -> [SMTPAT p]) in
       mk_Comp ({comp_univs=universes;
                 effect_name=eff;
                 result_typ=result_typ;
-                effect_args=rest;
-                flags=flags@decreases_clause})
+                comp_pre=pre;
+                comp_post=post;
+                flags=flags})
 
 and desugar_formula env (f:term) : ML S.term =
   let mk t = S.mk t f.range in
@@ -2962,202 +2991,101 @@ let trans_pragma env (_x_:AST.pragma) : ML _ = match _x_ with
     check_no_aq aq;
     S.Eval t
 
-let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls : ML _ =
+(* An effect declaration is now just a name (and possibly some binders).
+   There are no combinators, no signature and no actions. *)
+let rec desugar_declare_effect env d (d_attrs:list S.term) (quals: qualifiers) eff_name eff_binders : ML _ =
     let env0 = env in
-    // qualified with effect name
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
-    let eff_t = desugar_term env eff_typ in
-
-    let num_indices = List.length (fst (U.arrow_formals eff_t)) in
-
-    (* An effect with only "a:Type -> Effect" shape was DM4F; now removed *)
-    if num_indices = 1 && not is_layered
-    then raise_error d Errors.Fatal_UnexpectedEffect
-            (Format.fmt1 "DM4Free feature has been removed, \
-              use layered effects to define %s" (Ident.string_of_id eff_name));
-
-    let mandatory_members =
-      let rr_members = ["repr" ; "return" ; "bind"] in
-      (*
-       * AR: subcomp, if_then_else, and close are optional
-       *     but adding here so as not to count them as actions
-       *)
-      if is_layered then rr_members @ [ "subcomp"; "if_then_else"; "close" ]
-        (* the first 3 are optional but must not be counted as actions *)
-      else rr_members @ [
-        "return_wp";
-        "bind_wp";
-        "if_then_else";
-        "ite_wp";
-        "stronger";
-        "close_wp";
-        "trivial"
-      ]
-    in
-
-    let name_of_eff_decl decl =
-      match decl.d with
-      | Tycon(_, _, [TyconAbbrev(name, _, _, _)]) -> Ident.string_of_id name
-      | _ -> failwith "Malformed effect member declaration."
-    in
-
-    let mandatory_members_decls, actions =
-      List.partition (fun decl -> List.mem (name_of_eff_decl decl) mandatory_members) eff_decls
-    in
-
-    let env, decls = mandatory_members_decls |> List.fold_left (fun (env, out) decl ->
-        let env, ses = desugar_decl env decl in
-        env, List.hd ses::out)
-      (env, [])
-    in
     let binders = Subst.close_binders binders in
-    let actions = actions |> List.map (fun d ->
-        match d.d with
-        | Tycon(_, _,[TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])})]) when not is_layered ->
-            // User provides a pair of the definition and its cps'd type.
-            let env, action_params = desugar_binders env action_params in
-            let action_params = Subst.close_binders action_params in
-            {
-              action_name=Env.qualify env name;
-              action_unqualified_name = name;
-              action_univs=[];
-              action_params = action_params;
-              action_defn=Subst.close (binders @ action_params) (desugar_term env def);
-              action_typ=Subst.close (binders @ action_params) (desugar_typ env cps_type)
-            }
-        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn)]) when is_layered ->
-            // For layered effects, user just provides the definition
-            let env, action_params = desugar_binders env action_params in
-            let action_params = Subst.close_binders action_params in
-            {
-              action_name=Env.qualify env name;
-              action_unqualified_name = name;
-              action_univs=[];
-              action_params = action_params;
-              action_defn=Subst.close (binders@action_params) (desugar_term env defn);
-              action_typ=S.tun
-            }
-        | _ ->
-            raise_error d Errors.Fatal_MalformedActionDeclaration
-              ("Malformed action declaration; please provide a pair of the definition \
-              and its cps-type with arrows inserted in the right place (see \
-              examples).")
-    ) in
-    let eff_t = Subst.close binders eff_t in
-    let lookup s =
-        let l = Env.qualify env (mk_ident(s, d.drange)) in
-        [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
-    let mname       =qualify env0 eff_name in
-    let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
-    let dummy_tscheme = [], S.tun in
-    let eff_sig, combinators =
-      if is_layered then
-        let has_subcomp = List.existsb (fun decl -> name_of_eff_decl decl = "subcomp") eff_decls in
-        let has_if_then_else = List.existsb (fun decl -> name_of_eff_decl decl = "if_then_else") eff_decls in
-        let has_close = List.existsb (fun decl -> name_of_eff_decl decl = "close") eff_decls in
-
-        //setting the second component to dummy_ts,
-        //  and kind to None, typechecker fills them in
-        let to_comb (us, t) = (us, t), dummy_tscheme, None in
-
- 
-        let eff_t, num_effect_params =
-          match (SS.compress eff_t).n with
-          | Tm_arrow _ ->
-            let bs, c = U.arrow_formals_comp_ln_strict eff_t in
-            // peel off the first a:Type binder
-            let a::bs = bs in
-            //
-            // allow_param checks that all effect parameters
-            //   are upfront
-            // it is true initially, and is set to false as soon as
-            //   we see a non-parameter binder
-            // and if some parameter appears after that, we raise an error
-            //
-            let n, _, bs = List.fold_left (fun (n, allow_param, bs) b ->
-              let b_attrs = b.binder_attrs in
-              let is_param = U.has_attribute b_attrs C.effect_parameter_attr in
-              if is_param && not allow_param
-              then raise_error d Errors.Fatal_UnexpectedEffect "Effect parameters must all be upfront";
-              let b_attrs = U.remove_attr C.effect_parameter_attr b_attrs in
-              (if is_param then n+1 else n),
-              allow_param && is_param,
-              bs@[{b with binder_attrs=b_attrs}]) (0, true, []) bs in
-            S.mk_Tm_arrow (a::bs) c eff_t.pos,
-            n
-          | _ -> failwith "desugaring indexed effect: effect type not an arrow" in
-
-        (*
-         * AR: if subcomp or if_then_else are not specified, then fill in dummy_tscheme
-         *     typechecker will fill in an appropriate default
-         *)
-
-        Layered_eff_sig (num_effect_params, ([], eff_t)),
-        Layered_eff ({
-          l_repr = lookup "repr", dummy_tscheme;
-          l_return = lookup "return", dummy_tscheme;
-          l_bind = lookup "bind" |> to_comb;
-          l_subcomp =
-            if has_subcomp then lookup "subcomp" |> to_comb
-            else dummy_tscheme, dummy_tscheme, None;
-          l_if_then_else =
-            if has_if_then_else then lookup "if_then_else" |> to_comb
-            else dummy_tscheme, dummy_tscheme, None;
-          l_close =
-            if has_close then Some (lookup "close", dummy_tscheme)
-            else None;  // If close is not specified, leave it to None
-                        // The typechecker will also not fill it in
-        })
-      else
-        let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
-        WP_eff_sig ([], eff_t),
-        Primitive_eff ({
-          ret_wp = lookup "return_wp";
-          bind_wp = lookup "bind_wp";
-          stronger = lookup "stronger";
-          if_then_else = lookup "if_then_else";
-          ite_wp = lookup "ite_wp";
-          close_wp = lookup "close_wp";
-          trivial = lookup "trivial";
-
-          repr = if rr then Some (lookup "repr") else None;
-          return_repr = if rr then Some (lookup "return") else None;
-          bind_repr = if rr then Some (lookup "bind") else None
-        }) in
-
-    let extraction_mode =
-      if is_layered
-      then S.Extract_none ""  // will be populated by the typechecker
-      else S.Extract_primitive in
-
+    let mname = qualify env0 eff_name in
+    let qualifiers = List.map (trans_qual d.drange (Some mname)) quals in
     let sigel = Sig_new_effect ({
       mname = mname;
       cattributes = [];
       univs = [];
       binders = binders;
-      signature = eff_sig;
-      combinators = combinators;
-      actions = actions;
+      combinators = None;
       eff_attrs = d_attrs;
-      extraction_mode
+      extraction_mode = S.Extract_primitive
     }) in
-
     let se = ({
       sigel = sigel;
       sigquals = qualifiers;
       sigrng = d.drange;
-      sigmeta = default_sigmeta  ;
+      sigmeta = default_sigmeta;
       sigattrs = d_attrs;
       sigopts = None;
       sigopens_and_abbrevs = opens_and_abbrevs env
     }) in
+    push_sigelt env0 se, [se]
 
-    let env = push_sigelt env0 se in
-    let env = actions |> List.fold_left (fun env a ->
-        //printfn "Pushing action %s\n" (string_of_lid a.action_name);
-        push_sigelt env (U.action_as_lb mname a a.action_defn.pos)) env
+(* [effect { M with { repr = ...; return = ...; bind = ... } }]
+
+   The combinators are only used for reification (extraction, and running
+   tactics); they play no role in typechecking, which is driven entirely by
+   the pre/postconditions written at each computation type. *)
+and desugar_define_effect env d (d_attrs:list S.term) (quals: qualifiers) eff_name eff_binders (eff_decls:list decl) : ML _ =
+    let env0 = env in
+    let monad_env = Env.enter_monad_scope env eff_name in
+    let env, binders = desugar_binders monad_env eff_binders in
+    let binders = Subst.close_binders binders in
+    let mname = qualify env0 eff_name in
+    let qualifiers = List.map (trans_qual d.drange (Some mname)) quals in
+    (* Each combinator is given as [name = term]. *)
+    let lookup_comb (s:string) : ML S.tscheme =
+      let decl_of_name =
+        eff_decls |> BU.try_find (fun d ->
+          match d.d with
+          | Tycon (_, _, [TyconAbbrev (name, _, _, _)]) -> string_of_id name = s
+          | _ -> false)
+      in
+      match decl_of_name with
+      | Some ({ d = Tycon (_, _, [TyconAbbrev (_, _, _, defn)]) }) ->
+        [], Subst.close binders (desugar_term env defn)
+      | _ ->
+        raise_error d Errors.Fatal_UnexpectedEffect
+          (Format.fmt2 "Effect %s is missing the '%s' combinator; \
+                        an effect definition must provide 'repr', 'return' and 'bind'"
+             (string_of_id eff_name) s)
     in
+    let () =
+      eff_decls |> List.iter (fun d ->
+        match d.d with
+        | Tycon (_, _, [TyconAbbrev (name, _, _, _)])
+            when List.mem (string_of_id name) ["repr"; "return"; "bind"] -> ()
+        | _ ->
+          raise_error d Errors.Fatal_UnexpectedEffect
+            "Unexpected effect combinator: only 'repr', 'return' and 'bind' are supported")
+    in
+    let combinators = {
+      repr        = lookup_comb "repr";
+      return_repr = lookup_comb "return";
+      bind_repr   = lookup_comb "bind";
+    } in
+    let sigel = Sig_new_effect ({
+      mname = mname;
+      cattributes = [];
+      univs = [];
+      binders = binders;
+      combinators = Some combinators;
+      eff_attrs = d_attrs;
+      extraction_mode =
+        if U.has_attribute d_attrs C.primitive_extraction_attr
+        then S.Extract_primitive
+        else S.Extract_reify
+    }) in
+    let se = ({
+      sigel = sigel;
+      sigquals = qualifiers;
+      sigrng = d.drange;
+      sigmeta = default_sigmeta;
+      sigattrs = d_attrs;
+      sigopts = None;
+      sigopens_and_abbrevs = opens_and_abbrevs env
+    }) in
+    let env = push_sigelt env0 se in
+    (* [reflectable] introduces [M?.reflect] *)
     let env = push_reflect_effect env qualifiers mname d.drange in
     env, [se]
 
@@ -3182,77 +3110,30 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
             | _ -> [], args
         in
         lid, ed, desugar_args env args, desugar_attributes env cattributes in
-//    printfn "ToSyntax got eff_decl: %s\n" (Print.eff_decl_to_string false ed);
     let binders = Subst.close_binders binders in
     if List.length args <> List.length ed.binders
     then raise_error defn Errors.Fatal_ArgumentLengthMismatch "Unexpected number of arguments to effect constructor";
-    let ed_binders, _, ed_binders_opening = Subst.open_term' ed.binders S.t_unit in
-    let sub' shift_n _usx_ =
-        let (us, x) = _usx_ in
-        let x = Subst.subst (Subst.shift_subst (shift_n + List.length us) ed_binders_opening) x in
-        let s = U.subst_of_list ed_binders args in
-        Subst.close_tscheme binders (us, (Subst.subst s x))
-    in
-    let sub = sub' 0 in
-    let mname=qualify env0 eff_name in
+    let mname = qualify env0 eff_name in
     let ed = {
             cattributes   = cattributes;
             mname         = mname;
             univs         = ed.univs;
             binders       = binders;
-            signature     = U.apply_eff_sig sub ed.signature;
-            combinators   = apply_eff_combinators sub ed.combinators;
-            actions       = List.map (fun action ->
-                let nparam = List.length action.action_params in
-                {
-                    // Since we called enter_monad_env before, this is going to generate
-                    // a name of the form FStarC.Effect.uu___proj__STATE__item__get
-                    action_name = Env.qualify env (action.action_unqualified_name);
-                    action_unqualified_name = action.action_unqualified_name;
-                    action_univs = action.action_univs ;
-                    action_params = action.action_params ;
-                    (* These need to be shifted further since they have the action's parameters also in scope *)
-                    action_defn =snd (sub' nparam ([], action.action_defn)) ;
-                    action_typ =snd (sub' nparam ([], action.action_typ))
-                        // GM: ^ Although isn't this one always Tm_unknown at this point?
-                })
-                ed.actions;
-            eff_attrs   = ed.eff_attrs;
+            combinators   = ed.combinators;
+            eff_attrs     = ed.eff_attrs;
             extraction_mode = ed.extraction_mode;
     } in
     let se =
       { sigel = Sig_new_effect ed;
         sigquals = List.map (trans_qual (Some mname)) quals;
         sigrng = d.drange;
-        sigmeta = default_sigmeta  ;
+        sigmeta = default_sigmeta;
         sigattrs = d_attrs;
         sigopts = None;
         sigopens_and_abbrevs = opens_and_abbrevs env
       }
     in
-    let monad_env = env in
-    let env = push_sigelt env0 se in
-    let env =
-      ed.actions |> List.fold_left
-        (fun env a -> push_sigelt env (U.action_as_lb mname a a.action_defn.pos))
-        env
-    in
-    let env =
-        if quals |> List.contains Reflectable
-        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
-             let quals = [S.Assumption; S.Reflectable mname] in
-             let refl_decl = { sigel = S.Sig_declare_typ {lid=reflect_lid; us=[]; t=S.tun};
-                               sigquals = quals;
-                               sigrng = d.drange;
-                               sigmeta = default_sigmeta  ;
-                               sigattrs = [];
-                               sigopts = None;
-                               sigopens_and_abbrevs = opens_and_abbrevs env
-                              } in
-             push_sigelt env refl_decl
-        else env in
-    env, [se]
-
+    push_sigelt env0 se, [se]
 
 and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : ML (env_t & sigelts) =
   let no_fail_attrs (ats : list S.term) : ML (list S.term) =
@@ -3747,96 +3628,29 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
     let quals = d.quals in
     desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders defn
 
-  | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
+  | NewEffect (DeclareEffect(eff_name, eff_binders)) ->
     let quals = d.quals in
-    desugar_effect env d d_attrs quals false eff_name eff_binders eff_typ eff_decls
+    desugar_declare_effect env d d_attrs quals eff_name eff_binders
 
-  | LayeredEffect (DefineEffect (eff_name, eff_binders, eff_typ, eff_decls)) ->
+  | NewEffect (DefineEffect(eff_name, eff_binders, eff_decls)) ->
     let quals = d.quals in
-    desugar_effect env d d_attrs quals true eff_name eff_binders eff_typ eff_decls
-
-  | LayeredEffect (RedefineEffect _) ->
-    failwith "Impossible: LayeredEffect (RedefineEffect _) (should not be parseable)"
+    desugar_define_effect env d d_attrs quals eff_name eff_binders eff_decls
 
   | SubEffect l ->
     let src_ed = lookup_effect_lid env l.msource d.drange in
     let dst_ed = lookup_effect_lid env l.mdest d.drange in
-    let top_attrs = d_attrs in
-    if not (U.is_layered src_ed || U.is_layered dst_ed)
-    then let lift_wp, lift = match l.lift_op with
-           | NonReifiableLift t -> Some ([],desugar_term env t), None
-           | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
-           | LiftForFree t -> None, Some ([],desugar_term env t)
-         in
-         let se = { sigel = Sig_sub_effect({source=src_ed.mname;
-                                            target=dst_ed.mname;
-                                            lift_wp=lift_wp;
-                                            lift=lift;
-                                            kind=None});
-                    sigquals = [];
-                    sigrng = d.drange;
-                    sigmeta = default_sigmeta  ;
-                    sigattrs = top_attrs;
-                    sigopts = None;
-                    sigopens_and_abbrevs = opens_and_abbrevs env } in
-         env, [se]
-    else
-      (match l.lift_op with
-       | NonReifiableLift t ->
-         let sub_eff = {
-           source = src_ed.mname;
-           target = dst_ed.mname;
-           lift_wp = None;
-           lift = Some ([], desugar_term env t);
-           kind = None
-         } in
-         env, [{
-           sigel = Sig_sub_effect sub_eff;
-           sigquals = [];
-           sigrng = d.drange;
-           sigmeta = default_sigmeta;
-           sigattrs = top_attrs;
-           sigopts = None;
-           sigopens_and_abbrevs = opens_and_abbrevs env}]
-       | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
-
-  | Polymonadic_bind (m_eff, n_eff, p_eff, bind) ->
-    let m = lookup_effect_lid env m_eff d.drange in
-    let n = lookup_effect_lid env n_eff d.drange in
-    let p = lookup_effect_lid env p_eff d.drange in
-    let top_attrs = d_attrs in
-    env, [{
-      sigel = Sig_polymonadic_bind {
-        m_lid=m.mname;
-        n_lid=n.mname;
-        p_lid=p.mname;
-        tm=([], desugar_term env bind);
-        typ=([], S.tun);
-        kind=None };
-      sigquals = [];
-      sigrng = d.drange;
-      sigmeta = default_sigmeta;
-      sigattrs = top_attrs;
-      sigopts = None;
-      sigopens_and_abbrevs = opens_and_abbrevs env }]
-
-  | Polymonadic_subcomp (m_eff, n_eff, subcomp) ->
-    let m = lookup_effect_lid env m_eff d.drange in
-    let n = lookup_effect_lid env n_eff d.drange in
-    let top_attrs = d_attrs in    
-    env, [{
-      sigel = Sig_polymonadic_subcomp {
-        m_lid=m.mname;
-        n_lid=n.mname;
-        tm=([], desugar_term env subcomp);
-        typ=([], S.tun);
-        kind=None };
-      sigquals = [];
-      sigrng = d.drange;
-      sigmeta = default_sigmeta;
-      sigattrs = top_attrs;
-      sigopts = None;
-      sigopens_and_abbrevs = opens_and_abbrevs env }]
+    let lift =
+      match l.lift_op with
+      | None -> None
+      | Some t -> Some ([], desugar_term env t) in
+    let se = { sigel = Sig_sub_effect({source=src_ed.mname; target=dst_ed.mname; lift=lift});
+               sigquals = List.map (trans_qual None) d.quals;
+               sigrng = d.drange;
+               sigmeta = default_sigmeta;
+               sigattrs = d_attrs;
+               sigopts = None;
+               sigopens_and_abbrevs = opens_and_abbrevs env } in
+    env, [se]
 
   | Splice (is_typed, ids, t) ->
     let t = desugar_term env t in
@@ -4006,37 +3820,9 @@ let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
           let erase_term t =
               Subst.close binders (erase_univs (Subst.subst binders_opening t))
           in
-          let erase_tscheme (us, t) =
-              let t = Subst.subst (Subst.shift_subst (List.length us) binders_opening) t in
-              [], Subst.close binders (erase_univs t)
-          in
-          let erase_action action =
-              let opening = Subst.shift_subst (List.length action.action_univs) binders_opening in
-              let erased_action_params =
-                  match action.action_params with
-                  | [] -> []
-                  | _ ->
-                    let bs = erase_binders <| Subst.subst_binders opening action.action_params in
-                    let t = S.mk_Tm_abs bs S.t_unit None Range.dummyRange in
-                    let bs, _, _ = U.abs_formals_ln (Subst.close binders t) in
-                    if Nil? bs then failwith "Impossible" else bs
-              in
-              let erase_term t =
-                  Subst.close binders (erase_univs (Subst.subst opening t))
-              in
-                { action with
-                    action_univs = [];
-                    action_params = erased_action_params;
-                    action_defn = erase_term action.action_defn;
-                    action_typ = erase_term action.action_typ
-                }
-          in
             { ed with
               univs         = [];
               binders       = Subst.close_binders binders;
-              signature     = U.apply_eff_sig erase_tscheme ed.signature;
-              combinators   = apply_eff_combinators erase_tscheme ed.combinators;
-              actions       = List.map erase_action ed.actions
           }
       in
       let push_sigelt env se =

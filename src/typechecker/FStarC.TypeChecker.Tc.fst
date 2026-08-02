@@ -913,73 +913,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
       (fun () -> tc_sig_let env r se lbs lids)
       (Some (Ident.string_of_lid (Env.current_module env)))
       "FStarC.TypeChecker.Tc.tc_sig_let"
-
-  | Sig_polymonadic_bind {m_lid=m; n_lid=n; p_lid=p; tm=t} ->  //desugaring does not set the last two fields, tc does
-    let t =
-      if do_two_phases env then run_phase1 (fun _ ->
-        let t, ty =
-          TcEff.tc_polymonadic_bind ({ env with phase1 = true; admit = true }) m n p t
-          |> (fun (t, ty, _) -> { se with sigel = Sig_polymonadic_bind {m_lid=m;
-                                                                        n_lid=n;
-                                                                        p_lid=p;
-                                                                        tm=t;
-                                                                        typ=ty;
-                                                                        kind=None} })
-          |> N.elim_uvars env
-          |> (fun se ->
-             match se.sigel with
-             | Sig_polymonadic_bind {tm=t; typ=ty} -> t, ty
-             | _ -> failwith "Impossible! tc for Sig_polymonadic_bind must be a Sig_polymonadic_bind") in
-        if Debug.medium () || !dbg_TwoPhases
-          then Format.print1 "Polymonadic bind after phase 1: %s\n"
-                 (show ({ se with sigel = Sig_polymonadic_bind {m_lid=m;
-                                                                                  n_lid=n;
-                                                                                  p_lid=p;
-                                                                                  tm=t;
-                                                                                  typ=ty;
-                                                                                  kind=None} }));
-        t)
-      else t in
-    let t, ty, k = TcEff.tc_polymonadic_bind env m n p t in
-    let se = ({ se with sigel = Sig_polymonadic_bind {m_lid=m;
-                                                      n_lid=n;
-                                                      p_lid=p;
-                                                      tm=t;
-                                                      typ=ty;
-                                                      kind=Some k} }) in
-    [se], [], env0
-
-  | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; tm=t} ->  //desugaring does not set the last two fields, tc does
-    let t =
-      if do_two_phases env then run_phase1 (fun _ ->
-        let t, ty =
-          TcEff.tc_polymonadic_subcomp ({ env with phase1 = true; admit = true }) m n t
-          |> (fun (t, ty, _) -> { se with sigel = Sig_polymonadic_subcomp {m_lid=m;
-                                                                           n_lid=n;
-                                                                           tm=t;
-                                                                           typ=ty;
-                                                                           kind=None} })
-          |> N.elim_uvars env
-          |> (fun se ->
-             match se.sigel with
-             | Sig_polymonadic_subcomp {tm=t; typ=ty} -> t, ty
-             | _ -> failwith "Impossible! tc for Sig_polymonadic_subcomp must be a Sig_polymonadic_subcomp") in
-        if Debug.medium () || !dbg_TwoPhases
-          then Format.print1 "Polymonadic subcomp after phase 1: %s\n"
-                 (show ({ se with sigel = Sig_polymonadic_subcomp {m_lid=m;
-                                                                                     n_lid=n;
-                                                                                     tm=t;
-                                                                                     typ=ty;
-                                                                                     kind=None} }));
-        t)
-      else t in
-    let t, ty, k = TcEff.tc_polymonadic_subcomp env m n t in
-    let se = ({ se with sigel = Sig_polymonadic_subcomp {m_lid=m;
-                                                         n_lid=n;
-                                                         tm=t;
-                                                         typ=ty;
-                                                         kind=Some k} }) in
-    [se], [], env0)
+  )
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns
@@ -1076,14 +1010,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : ML Env.env =
       env
 
     | Sig_new_effect ne ->
-      let env = Env.push_new_effect env (ne, se.sigquals) in
-      ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
+      Env.push_new_effect env (ne, se.sigquals)
 
     | Sig_sub_effect sub -> TcUtil.update_env_sub_eff env sub se.sigrng
-
-    | Sig_polymonadic_bind {m_lid=m;n_lid=n;p_lid=p;typ=ty;kind=k} -> TcUtil.update_env_polymonadic_bind env m n p ty (k |> Option.must)
-
-    | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; typ=ty; kind=k} -> Env.add_polymonadic_subcomp env m n (ty, k |> Option.must)
 
     | _ -> env
 

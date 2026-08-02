@@ -226,6 +226,7 @@ let subst_dec_order' s = function
 let subst_flags' s flags : ML _ =
     flags |> List.map (function
         | DECREASES dec_order -> DECREASES (subst_dec_order' s dec_order)
+        | SMTPAT p -> SMTPAT (subst' s p)
         | f -> f)
 
 let subst_bqual' s i =
@@ -247,7 +248,8 @@ let subst_comp_typ' s t : ML _ =
             comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
-            effect_args=List.map (fun (t, imp) -> subst' s t, subst_aqual' s imp) t.effect_args}
+            comp_pre=subst' s t.comp_pre;
+            comp_post=subst' s t.comp_post}
 
 let subst_comp' s t : ML _ =
   match s with
