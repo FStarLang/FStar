@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Hash
+open FStarC.Class.Hashable
 open FStarC
 open FStarC.Effect
 open FStarC.Util
@@ -109,11 +110,11 @@ and hash_term' (t:term)
                                                (hash_list hash_universe us))
     | Tm_constant sc -> mix (of_int 13) (hash_constant sc)
     | Tm_type u -> mix (of_int 17) (hash_universe u)
-    | Tm_abs {bs; body=t; rc_opt=rcopt} -> mix (of_int 19)
-                                        (mix (hash_list hash_binder bs)
+    | Tm_abs {b; body=t; rc_opt=rcopt} -> mix (of_int 19)
+                                        (mix (hash_binder b)
                                                     (mix (hash_term t)
                                                                 (hash_option hash_rc rcopt)))
-    | Tm_arrow {bs; comp=c} -> mix (of_int 23) (mix (hash_list hash_binder bs) (hash_comp c))
+    | Tm_arrow {b; comp=c} -> mix (of_int 23) (mix (hash_binder b) (hash_comp c))
     | Tm_refine {b; phi=t} -> mix (of_int 29) (mix (hash_bv b) (hash_term t))
     | Tm_app _ ->
       let hd, args = FStarC.Syntax.Util.head_and_args_full t in
@@ -424,12 +425,12 @@ let rec equal_term (t1 t2:term)
       equal_list equal_universe u1 u2
     | Tm_constant c1, Tm_constant c2 -> equal_constant c1 c2
     | Tm_type u1, Tm_type u2 -> equal_universe u1 u2
-    | Tm_abs {bs=bs1; body=t1; rc_opt=rc1}, Tm_abs {bs=bs2; body=t2; rc_opt=rc2} ->
-      equal_list equal_binder bs1 bs2 &&
+    | Tm_abs {b=b1; body=t1; rc_opt=rc1}, Tm_abs {b=b2; body=t2; rc_opt=rc2} ->
+      equal_binder b1 b2 &&
       equal_term t1 t2 &&
       equal_opt equal_rc rc1 rc2
-    | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
-      equal_list equal_binder bs1 bs2 &&
+    | Tm_arrow {b=b1; comp=c1}, Tm_arrow {b=b2; comp=c2} ->
+      equal_binder b1 b2 &&
       equal_comp c1 c2
     | Tm_refine {b=b1; phi=t1}, Tm_refine {b=b2; phi=t2} ->
       equal_bv b1 b2 &&

@@ -1,5 +1,6 @@
 module FStarC.TypeChecker.Primops
 
+include FStarC.TypeChecker.Primops.Base
 (* This module just contains the list of all builtin primitive steps
 with their implementations. *)
 

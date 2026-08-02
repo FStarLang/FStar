@@ -15,6 +15,11 @@
 *)
 
 module Pulse.Lib.ArrayPtr
+open FStar.Tactics.V2
+open Pulse.Lib.Pervasives
+module SZ = FStar.SizeT
+module A = Pulse.Lib.Array
+module R = Pulse.Lib.Reference
 #lang-pulse
 
 type base_t t = A.array t

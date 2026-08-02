@@ -19,6 +19,9 @@
 module FStarC.Range.Ops
 friend FStarC.Range.Type
 
+open FStarC.Range.Type
+open FStarC.Class.Show
+open FStarC.Class.PP
 open FStarC
 open FStarC.Json
 open FStarC.Effect 
@@ -29,8 +32,10 @@ open FStarC.Order
 (* The [deq]/[ord] instances for [pos] were moved here from FStarC.Range.Type
    so that the latter can stay below the typeclass/reflection layer (see the
    note there). *)
+(* Positions are packed so that integer order coincides with (line, col)
+   lexicographic order. *)
 let compare_pos (p1 p2 : pos) : ML order =
-  lex (cmp p1.line p2.line) (fun _ -> cmp p1.col p2.col)
+  cmp (p1 <: int) (p2 <: int)
 
 instance deq_pos : deq pos = { (=?) = (=); }
 
@@ -61,7 +66,7 @@ let rng_included r1 r2 =
     r2.end_pos >=? r1.end_pos
 
 let string_of_pos pos =
-    Format.fmt2 "%s,%s" (show pos.line) (show pos.col)
+    Format.fmt2 "%s,%s" (show (pos_line pos)) (show (pos_col pos))
 let file_of_range r = r.def_range.file_name
 let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = Filepath.basename f}}
 let string_of_rng r =
@@ -77,27 +82,22 @@ let file_of_use_range r   = r.use_range.file_name
 let start_of_use_range r  = r.use_range.start_pos
 let end_of_use_range r    = r.use_range.end_pos
 
-let line_of_pos p         = p.line
-let col_of_pos p          = p.col
+let line_of_pos p         = pos_line p
+let col_of_pos p          = pos_col p
 
 let end_range r           = mk_range r.def_range.file_name r.def_range.end_pos r.def_range.end_pos
 
 let compare_rng r1 r2     =
     let fcomp = FStar.String.compare r1.file_name r2.file_name in
     if fcomp = 0
-    then let start1 = r1.start_pos in
-         let start2 = r2.start_pos in
-         let lcomp = start1.line - start2.line in
-         if lcomp = 0
-         then start1.col - start2.col
-         else lcomp
+    then (r1.start_pos <: int) - (r2.start_pos <: int)
     else fcomp
 let compare r1 r2 = compare_rng r1.def_range r2.def_range
 let compare_use_range r1 r2 = compare_rng r1.use_range r2.use_range
 let range_before_pos m1 p =
     p >=? end_of_range m1
 
-let end_of_line p = {p with col = Util.max_int} // silly to depend on Util for this only...
+let end_of_line p = mk_pos (pos_line p) (col_limit - 1)
 let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (start_of_range r)
                                        (end_of_line (end_of_range r))

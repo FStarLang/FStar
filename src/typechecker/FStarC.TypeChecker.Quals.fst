@@ -15,6 +15,7 @@
 *)
 
 module FStarC.TypeChecker.Quals
+open FStarC.TypeChecker.Env
 open FStarC
 open FStarC.Effect
 open FStarC.Errors
@@ -247,9 +248,7 @@ let check_erasable env quals (r:Range.t) se =
     match se.sigel with
     | Sig_let {lbs=(false, [lb])} ->
       let Inr lbname = lb.lbname in
-      let has_iface_val = match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
-        | Some iface_decls -> iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name))
-        | None -> false in
+      let has_iface_val = Env.has_iface_val env lbname.fv_name in
       let val_decl = Env.try_lookup_val_decl env lbname.fv_name in
       if has_iface_val && Some? val_decl then
         let _, body, _ = U.abs_formals lb.lbdef in
@@ -311,16 +310,10 @@ let check_must_erase_attribute env se =
   if Options.ide() then () else
   match se.sigel with
   | Sig_let {lbs; lids=l} ->
-    begin match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
-     | None ->
-       ()
-
-     | Some iface_decls ->
+    begin
        snd lbs |> List.iter (fun lb ->
            let lbname = Inr?.v lb.lbname in
-           let has_iface_val =
-               iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name))
-           in
+           let has_iface_val = Env.has_iface_val env lbname.fv_name in
            if has_iface_val
            then
                let must_erase = TcUtil.must_erase_for_extraction env lb.lbdef in
@@ -359,7 +352,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
       ];
 
     let t = U.comp_result res in
-    let head, _ = U.head_and_args t in
+    let head, _ = U.head_and_args_full t in
     let err () =
       FStarC.Errors.log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
           text "Instances must define instances of `class` types.";

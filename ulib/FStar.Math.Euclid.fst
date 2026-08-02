@@ -32,11 +32,9 @@ let divides_reflexive a =
 
 let divides_transitive a b c =
   eliminate exists q1. b == q1 * a
-  returns a `divides` c
-  with _pf. 
+  with 
     eliminate exists q2. c == q2 * b
-    returns _
-    with _pf2.
+    with
          introduce exists q. c == q * a
 	 with (q1 * q2)
 	 and ()
@@ -182,7 +180,7 @@ let rec egcd a b u1 u2 u3 v1 v2 v3 =
     let u3, v3 = v3, u3 - q * v3 in
     (* proving the implication in the precondition *)
     introduce forall d. is_gcd v3' (u3' - q * v3') d ==> is_gcd u3' v3' d with
-      introduce _ ==> _ with _.
+      introduce _ ==> _ with
         is_gcd_for_euclid u3' v3' q d;
     let r = egcd a b u1 u2 u3 v1 v2 v3 in
     r
@@ -194,7 +192,7 @@ let euclid_gcd a b =
   else (
     introduce forall d. is_gcd a (-b) d ==> is_gcd a b d
     with introduce _ ==> _
-         with _pf. 
+         with 
            (is_gcd_minus a b d;
             is_gcd_symmetric b a d);
     let res = egcd a b 1 0 a 0 (-1) (-b) in

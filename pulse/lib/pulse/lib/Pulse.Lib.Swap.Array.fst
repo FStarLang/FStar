@@ -15,6 +15,9 @@
 *)
 
 module Pulse.Lib.Swap.Array
+open Pulse.Lib.Pervasives
+module SZ = FStar.SizeT
+module A = Pulse.Lib.Array
 #lang-pulse
 module Prf = Pulse.Lib.Swap.Spec
 open Pulse.Lib.Swap.Common

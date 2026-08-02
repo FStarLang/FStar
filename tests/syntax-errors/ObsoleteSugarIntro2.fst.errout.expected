@@ -1,0 +1,3 @@
+* Error 168 at ObsoleteSugarIntro2.fst(5,13-5,13):
+  - Syntax error. Note: 'introduce' and 'eliminate' no longer bind names for hypotheses; write 'with e' instead of 'with h. e'. The hypothesis is available in the proof context of e.
+

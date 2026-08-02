@@ -3,6 +3,7 @@ type 'a clist =
   | CNil 
   | CCons of 'a * 'a clist 
   | CCat of 'a clist * 'a clist 
+type 'a t = 'a clist
 let uu___is_CNil (projectee : 'a clist) : Prims.bool=
   match projectee with | CNil -> true | uu___ -> false
 let uu___is_CCons (projectee : 'a clist) : Prims.bool=
@@ -17,7 +18,6 @@ let __proj__CCat__item___0 (projectee : 'a clist) : 'a clist=
   match projectee with | CCat (_0, _1) -> _0
 let __proj__CCat__item___1 (projectee : 'a clist) : 'a clist=
   match projectee with | CCat (_0, _1) -> _1
-type 'a t = 'a clist
 let ccat (xs : 'a clist) (ys : 'a clist) : 'a clist=
   match (xs, ys) with
   | (CNil, uu___) -> ys

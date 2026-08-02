@@ -171,16 +171,14 @@ let memP_flatten_intro #a (x: a) (l: list a) (ls: list (list a)) :
          List.memP l ls ==>
          List.memP x (List.Tot.flatten ls)) =
     introduce List.memP x l ==> (List.memP l ls ==> List.memP x (List.Tot.flatten ls))
-    with memP_x_l_proof. introduce List.memP l ls ==> List.memP x (List.Tot.flatten ls)
-    with memP_l_ls_proof. begin
+    with introduce List.memP l ls ==> List.memP x (List.Tot.flatten ls)
+    with begin
       memP_append_aux x l;
       eliminate exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12
-      returns List.memP x (List.Tot.flatten ls)
-      with _. begin
+      with begin
         memP_append_aux l ls;
         eliminate exists (ls12: (list (list a) & list (list a))). ls == fst ls12 @ l :: snd ls12
-        returns List.memP x (List.Tot.flatten ls)
-        with _. begin
+        with begin
           let l1 = fst l12 in
           let l2 = snd l12 in
           let ls1 = fst ls12 in

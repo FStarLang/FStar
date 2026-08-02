@@ -75,7 +75,7 @@ fn pts_to_range_prop
   preserves pts_to_range a i j #p s
   ensures pure (
    (~ (is_null a)) /\
-   (i <= j /\ j <= length a /\ eq2 #nat (Seq.length s) (j - i))
+   (i <= j /\ j <= length a /\ Seq.length s == j - i)
   )
 
 ghost

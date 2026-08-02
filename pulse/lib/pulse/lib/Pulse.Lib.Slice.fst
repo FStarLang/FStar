@@ -15,6 +15,10 @@
 *)
 
 module Pulse.Lib.Slice
+open FStar.Tactics.V2
+open Pulse.Lib.Pervasives
+module SZ = FStar.SizeT
+module A = Pulse.Lib.Array
 #lang-pulse
 module AP = Pulse.Lib.ArrayPtr
 

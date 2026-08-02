@@ -468,7 +468,7 @@ let lemma_strict_subset_size #a #f s1 s2 =
             (ensures p=q) 
     = eq_lemma p q in Classical.move_requires_2 eql s1 s2;
   eliminate exists x. mem x s2 && not (mem x s1) 
-  returns size s2 > size s1 with _.
+  with
   begin
     Classical.forall_intro (mem_insert x s1);
     precise_size_insert s1 x;

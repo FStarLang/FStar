@@ -153,6 +153,20 @@ let op_Bar_Bar_Bar (x : 'uuuuu FStar_Pervasives_Native.option)
   (y : 'uuuuu FStar_Pervasives_Native.option) :
   'uuuuu FStar_Pervasives_Native.option=
   match x with | FStar_Pervasives_Native.None -> y | uu___ -> x
+let friends_of_implementation (fn : Prims.string) :
+  FStarC_Ident.lident Prims.list=
+  let uu___ = FStarC_Parser_Driver.parse_file fn in
+  match uu___ with
+  | (ast, uu___1) ->
+      FStarC_List.collect
+        (fun d ->
+           match d.FStarC_Parser_AST.d with
+           | FStarC_Parser_AST.Friend l ->
+               let uu___2 =
+                 FStarC_Ident.lid_of_str
+                   (FStarC_String.lowercase (FStarC_Ident.string_of_lid l)) in
+               [uu___2]
+           | uu___2 -> []) (FStarC_Parser_AST.decls_of_modul ast)
 let go_normal (uu___ : unit) : unit=
   let uu___1 = process_args () in
   match uu___1 with
@@ -576,13 +590,18 @@ let go_normal (uu___ : unit) : unit=
                                        FStarC_Parser_Dep.is_implementation fn in
                                      if uu___18
                                      then
-                                       let uu___19 =
-                                         FStarC_Parser_Dep.interface_of deps
-                                           m in
-                                       match uu___19 with
-                                       | FStar_Pervasives_Native.None -> [fn]
-                                       | FStar_Pervasives_Native.Some iface
-                                           -> [iface; fn]
+                                       ((let uu___20 =
+                                           friends_of_implementation fn in
+                                         FStarC_Parser_Dep.set_root_friends
+                                           uu___20);
+                                        (let uu___20 =
+                                           FStarC_Parser_Dep.interface_of
+                                             deps m in
+                                         match uu___20 with
+                                         | FStar_Pervasives_Native.None ->
+                                             [fn]
+                                         | FStar_Pervasives_Native.Some iface
+                                             -> [iface; fn]))
                                      else [fn] in
                                    (filenames1, deps, true) in
                                  let uu___17 = FStarC_Options.force () in

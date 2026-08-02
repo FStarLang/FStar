@@ -1,0 +1,3 @@
+* Error 168 at ObsoleteSugarElimExists.fst(5,4-6,15):
+  - Syntax error: 'eliminate exists' no longer takes a 'returns' clause nor a name for the hypothesis. Write 'eliminate exists x1...xn. P with e' instead; x1...xn are bound in e, and P is available in the proof context of e.
+

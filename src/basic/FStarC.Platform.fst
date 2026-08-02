@@ -1,5 +1,7 @@
 module FStarC.Platform
 
+include FStarC.Platform.Base
+open FStarC.Class.Show
 open FStarC.Effect
 open FStarC.Platform.Base
 

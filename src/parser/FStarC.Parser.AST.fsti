@@ -96,14 +96,14 @@ type term' =
   | CalcProof of term & term & list calc_step (* A calculational proof with relation, initial expression, and steps *)
   | IntroForall of list binder & term & term                     (* intro_forall x1..xn. P with e *)
   | IntroExists of list binder & term & list term & term        (* intro_exists x1...xn.P using v1..vn with e *)
-  | IntroImplies of term & term & binder & term                   (* intro_implies P Q with x. e *)
+  | IntroImplies of term & term & term                            (* intro_implies P Q with e *)
   | IntroOr of bool & term & term & term                          (* intro_or_{left ,right} P Q with e *)
   | IntroAnd of term & term & term & term                         (* intro_and P Q with e1 and e2 *)
   | ElimForall  of list binder & term & list term               (* elim_forall x1..xn. P using v1..vn *)
-  | ElimExists  of list binder & term & term & binder & term     (* elim_exists x1...xn.P to Q with e *)
+  | ElimExists  of list binder & term & term                     (* elim_exists x1...xn.P with e *)
   | ElimImplies of term & term & term                             (* elim_implies P Q with e *)
-  | ElimOr of term & term & term & binder & term & binder & term  (* elim_or P Q to R with x.e1 and y.e2 *)
-  | ElimAnd of term & term & term & binder & binder & term        (* elim_and P Q to R with x y. e *)
+  | ElimOr of term & term & term & term                           (* elim_or P Q with e1 and e2 *)
+  | ElimAnd of term & term & term                                 (* elim_and P Q with e *)
   | ListLiteral of list term
   | SeqLiteral of list term
   | LitDoc of Pprint.document (* Never parsed, used for resugaring extensions. *)
@@ -283,7 +283,6 @@ and decl = {
   drange:range;
   quals: qualifiers;
   attrs: attributes_;
-  interleaved: bool;
 }
 and effect_decl =
   (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)

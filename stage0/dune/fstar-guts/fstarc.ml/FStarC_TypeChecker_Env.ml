@@ -497,7 +497,11 @@ and env =
                FStar_Pervasives_Native.option,
               Prims.bool -> Prims.string) FStar_Pervasives.either
     ;
-  missing_decl: FStarC_Ident.lident FStarC_RBSet.t }
+  missing_decl: FStarC_Ident.lident FStarC_RBSet.t ;
+  iface_todo: FStarC_Syntax_Syntax.sigelt Prims.list ;
+  iface_lids:
+    FStarC_Ident.lident FStarC_RBSet.t FStar_Pervasives_Native.option ;
+  iface_val_lids: FStarC_Ident.lident FStarC_RBSet.t }
 and solver_t =
   {
   init: env -> unit ;
@@ -605,8 +609,8 @@ let __proj__Mkenv__item__solver (projectee : env) : solver_t=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> solver
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> solver
 let __proj__Mkenv__item__range (projectee : env) : FStarC_Range_Type.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -619,8 +623,8 @@ let __proj__Mkenv__item__range (projectee : env) : FStarC_Range_Type.t=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> range
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> range
 let __proj__Mkenv__item__curmodule (projectee : env) : FStarC_Ident.lident=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -633,8 +637,8 @@ let __proj__Mkenv__item__curmodule (projectee : env) : FStarC_Ident.lident=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> curmodule
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> curmodule
 let __proj__Mkenv__item__gamma (projectee : env) :
   FStarC_Syntax_Syntax.binding Prims.list=
   match projectee with
@@ -648,8 +652,8 @@ let __proj__Mkenv__item__gamma (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> gamma
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> gamma
 let __proj__Mkenv__item__gamma_sig (projectee : env) :
   sig_binding Prims.list=
   match projectee with
@@ -663,8 +667,8 @@ let __proj__Mkenv__item__gamma_sig (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> gamma_sig
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> gamma_sig
 let __proj__Mkenv__item__gamma_cache (projectee : env) :
   cached_elt FStarC_SMap.t=
   match projectee with
@@ -678,8 +682,8 @@ let __proj__Mkenv__item__gamma_cache (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> gamma_cache
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> gamma_cache
 let __proj__Mkenv__item__modules (projectee : env) :
   FStarC_Syntax_Syntax.modul Prims.list=
   match projectee with
@@ -693,8 +697,8 @@ let __proj__Mkenv__item__modules (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> modules
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> modules
 let __proj__Mkenv__item__expected_typ (projectee : env) :
   (FStarC_Syntax_Syntax.typ * Prims.bool) FStar_Pervasives_Native.option=
   match projectee with
@@ -708,8 +712,8 @@ let __proj__Mkenv__item__expected_typ (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> expected_typ
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> expected_typ
 let __proj__Mkenv__item__sigtab (projectee : env) :
   FStarC_Syntax_Syntax.sigelt FStarC_SMap.t=
   match projectee with
@@ -723,8 +727,8 @@ let __proj__Mkenv__item__sigtab (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> sigtab
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> sigtab
 let __proj__Mkenv__item__attrtab (projectee : env) :
   FStarC_Syntax_Syntax.sigelt Prims.list FStarC_SMap.t=
   match projectee with
@@ -738,8 +742,8 @@ let __proj__Mkenv__item__attrtab (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> attrtab
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> attrtab
 let __proj__Mkenv__item__instantiate_imp (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -752,8 +756,8 @@ let __proj__Mkenv__item__instantiate_imp (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> instantiate_imp
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> instantiate_imp
 let __proj__Mkenv__item__effects (projectee : env) : effects=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -766,8 +770,8 @@ let __proj__Mkenv__item__effects (projectee : env) : effects=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> effects1
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> effects1
 let __proj__Mkenv__item__generalize (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -780,8 +784,8 @@ let __proj__Mkenv__item__generalize (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> generalize
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> generalize
 let __proj__Mkenv__item__letrecs (projectee : env) :
   (FStarC_Syntax_Syntax.lbname * Prims.int * FStarC_Syntax_Syntax.typ *
     FStarC_Syntax_Syntax.univ_names) Prims.list=
@@ -796,8 +800,8 @@ let __proj__Mkenv__item__letrecs (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> letrecs
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> letrecs
 let __proj__Mkenv__item__top_level (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -810,8 +814,8 @@ let __proj__Mkenv__item__top_level (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> top_level
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> top_level
 let __proj__Mkenv__item__check_uvars (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -824,8 +828,8 @@ let __proj__Mkenv__item__check_uvars (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> check_uvars
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> check_uvars
 let __proj__Mkenv__item__use_eq_strict (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -838,8 +842,8 @@ let __proj__Mkenv__item__use_eq_strict (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> use_eq_strict
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> use_eq_strict
 let __proj__Mkenv__item__is_iface (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -852,8 +856,8 @@ let __proj__Mkenv__item__is_iface (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> is_iface
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> is_iface
 let __proj__Mkenv__item__admit (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -866,8 +870,8 @@ let __proj__Mkenv__item__admit (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> admit
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> admit
 let __proj__Mkenv__item__phase1 (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -880,8 +884,8 @@ let __proj__Mkenv__item__phase1 (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> phase1
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> phase1
 let __proj__Mkenv__item__failhard (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -894,8 +898,8 @@ let __proj__Mkenv__item__failhard (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> failhard
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> failhard
 let __proj__Mkenv__item__flychecking (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -908,8 +912,8 @@ let __proj__Mkenv__item__flychecking (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> flychecking
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> flychecking
 let __proj__Mkenv__item__uvar_subtyping (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -922,8 +926,8 @@ let __proj__Mkenv__item__uvar_subtyping (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> uvar_subtyping
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> uvar_subtyping
 let __proj__Mkenv__item__intactics (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -936,8 +940,8 @@ let __proj__Mkenv__item__intactics (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> intactics
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> intactics
 let __proj__Mkenv__item__nocoerce (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -950,8 +954,8 @@ let __proj__Mkenv__item__nocoerce (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> nocoerce
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> nocoerce
 let __proj__Mkenv__item__tc_term (projectee : env) :
   env ->
     FStarC_Syntax_Syntax.term ->
@@ -968,8 +972,8 @@ let __proj__Mkenv__item__tc_term (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> tc_term
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> tc_term
 let __proj__Mkenv__item__typeof_tot_or_gtot_term (projectee : env) :
   env ->
     FStarC_Syntax_Syntax.term ->
@@ -987,8 +991,8 @@ let __proj__Mkenv__item__typeof_tot_or_gtot_term (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> typeof_tot_or_gtot_term
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> typeof_tot_or_gtot_term
 let __proj__Mkenv__item__universe_of (projectee : env) :
   env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.universe=
   match projectee with
@@ -1002,8 +1006,8 @@ let __proj__Mkenv__item__universe_of (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> universe_of
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> universe_of
 let __proj__Mkenv__item__typeof_well_typed_tot_or_gtot_term (projectee : env)
   :
   env ->
@@ -1021,8 +1025,9 @@ let __proj__Mkenv__item__typeof_well_typed_tot_or_gtot_term (projectee : env)
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> typeof_well_typed_tot_or_gtot_term
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} ->
+      typeof_well_typed_tot_or_gtot_term
 let __proj__Mkenv__item__teq_nosmt_force (projectee : env) :
   env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term -> Prims.bool=
   match projectee with
@@ -1036,8 +1041,8 @@ let __proj__Mkenv__item__teq_nosmt_force (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> teq_nosmt_force
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> teq_nosmt_force
 let __proj__Mkenv__item__subtype_nosmt_force (projectee : env) :
   env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term -> Prims.bool=
   match projectee with
@@ -1051,8 +1056,8 @@ let __proj__Mkenv__item__subtype_nosmt_force (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> subtype_nosmt_force
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> subtype_nosmt_force
 let __proj__Mkenv__item__qtbl_name_and_index (projectee : env) :
   ((FStarC_Ident.lident * FStarC_Syntax_Syntax.typ * Prims.int)
     FStar_Pervasives_Native.option * Prims.int FStarC_SMap.t)=
@@ -1067,8 +1072,8 @@ let __proj__Mkenv__item__qtbl_name_and_index (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> qtbl_name_and_index
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> qtbl_name_and_index
 let __proj__Mkenv__item__normalized_eff_names (projectee : env) :
   FStarC_Ident.lident FStarC_SMap.t=
   match projectee with
@@ -1082,8 +1087,8 @@ let __proj__Mkenv__item__normalized_eff_names (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> normalized_eff_names
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> normalized_eff_names
 let __proj__Mkenv__item__fv_delta_depths (projectee : env) :
   FStarC_Syntax_Syntax.delta_depth FStarC_SMap.t=
   match projectee with
@@ -1097,8 +1102,8 @@ let __proj__Mkenv__item__fv_delta_depths (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> fv_delta_depths
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> fv_delta_depths
 let __proj__Mkenv__item__proof_ns (projectee : env) : proof_namespace=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1111,8 +1116,8 @@ let __proj__Mkenv__item__proof_ns (projectee : env) : proof_namespace=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> proof_ns
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> proof_ns
 let __proj__Mkenv__item__synth_hook (projectee : env) :
   env ->
     FStarC_Syntax_Syntax.typ ->
@@ -1129,8 +1134,8 @@ let __proj__Mkenv__item__synth_hook (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> synth_hook
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> synth_hook
 let __proj__Mkenv__item__try_solve_implicits_hook (projectee : env) :
   env ->
     FStarC_Syntax_Syntax.term -> FStarC_TypeChecker_Common.implicits -> unit=
@@ -1145,8 +1150,8 @@ let __proj__Mkenv__item__try_solve_implicits_hook (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> try_solve_implicits_hook
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> try_solve_implicits_hook
 let __proj__Mkenv__item__splice (projectee : env) :
   env ->
     FStarC_Syntax_Syntax.qualifier Prims.list ->
@@ -1166,8 +1171,8 @@ let __proj__Mkenv__item__splice (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> splice
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> splice
 let __proj__Mkenv__item__mpreprocess (projectee : env) :
   env ->
     FStarC_Syntax_Syntax.term ->
@@ -1183,8 +1188,8 @@ let __proj__Mkenv__item__mpreprocess (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> mpreprocess
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> mpreprocess
 let __proj__Mkenv__item__postprocess (projectee : env) :
   env ->
     FStarC_Syntax_Syntax.term ->
@@ -1201,8 +1206,8 @@ let __proj__Mkenv__item__postprocess (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> postprocess
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> postprocess
 let __proj__Mkenv__item__identifier_info (projectee : env) :
   FStarC_TypeChecker_Common.id_info_table FStarC_Effect.ref=
   match projectee with
@@ -1216,8 +1221,8 @@ let __proj__Mkenv__item__identifier_info (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> identifier_info
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> identifier_info
 let __proj__Mkenv__item__tc_hooks (projectee : env) : tcenv_hooks=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1230,8 +1235,8 @@ let __proj__Mkenv__item__tc_hooks (projectee : env) : tcenv_hooks=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> tc_hooks
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> tc_hooks
 let __proj__Mkenv__item__dsenv (projectee : env) : FStarC_Syntax_DsEnv.env=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1244,8 +1249,8 @@ let __proj__Mkenv__item__dsenv (projectee : env) : FStarC_Syntax_DsEnv.env=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> dsenv
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> dsenv
 let __proj__Mkenv__item__nbe (projectee : env) :
   step Prims.list ->
     env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term=
@@ -1260,8 +1265,8 @@ let __proj__Mkenv__item__nbe (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> nbe
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> nbe
 let __proj__Mkenv__item__strict_args_tab (projectee : env) :
   Prims.int Prims.list FStar_Pervasives_Native.option FStarC_SMap.t=
   match projectee with
@@ -1275,8 +1280,8 @@ let __proj__Mkenv__item__strict_args_tab (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> strict_args_tab
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> strict_args_tab
 let __proj__Mkenv__item__erasable_types_tab (projectee : env) :
   Prims.bool FStarC_SMap.t=
   match projectee with
@@ -1290,8 +1295,8 @@ let __proj__Mkenv__item__erasable_types_tab (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> erasable_types_tab
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> erasable_types_tab
 let __proj__Mkenv__item__enable_defer_to_tac (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1304,8 +1309,8 @@ let __proj__Mkenv__item__enable_defer_to_tac (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> enable_defer_to_tac
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> enable_defer_to_tac
 let __proj__Mkenv__item__unif_allow_ref_guards (projectee : env) :
   Prims.bool=
   match projectee with
@@ -1319,8 +1324,8 @@ let __proj__Mkenv__item__unif_allow_ref_guards (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> unif_allow_ref_guards
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> unif_allow_ref_guards
 let __proj__Mkenv__item__erase_erasable_args (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1333,8 +1338,8 @@ let __proj__Mkenv__item__erase_erasable_args (projectee : env) : Prims.bool=
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> erase_erasable_args
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> erase_erasable_args
 let __proj__Mkenv__item__core_check (projectee : env) :
   env ->
     FStarC_Syntax_Syntax.term ->
@@ -1354,8 +1359,8 @@ let __proj__Mkenv__item__core_check (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> core_check
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> core_check
 let __proj__Mkenv__item__missing_decl (projectee : env) :
   FStarC_Ident.lident FStarC_RBSet.t=
   match projectee with
@@ -1369,8 +1374,53 @@ let __proj__Mkenv__item__missing_decl (projectee : env) :
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
-      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;_}
-      -> missing_decl
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> missing_decl
+let __proj__Mkenv__item__iface_todo (projectee : env) :
+  FStarC_Syntax_Syntax.sigelt Prims.list=
+  match projectee with
+  | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
+      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
+      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
+      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
+      fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
+      splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
+      nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> iface_todo
+let __proj__Mkenv__item__iface_lids (projectee : env) :
+  FStarC_Ident.lident FStarC_RBSet.t FStar_Pervasives_Native.option=
+  match projectee with
+  | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
+      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
+      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
+      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
+      fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
+      splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
+      nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> iface_lids
+let __proj__Mkenv__item__iface_val_lids (projectee : env) :
+  FStarC_Ident.lident FStarC_RBSet.t=
+  match projectee with
+  | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
+      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
+      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
+      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
+      fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
+      splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
+      nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_lids; iface_val_lids;_} -> iface_val_lids
 let __proj__Mksolver_t__item__init (projectee : solver_t) : env -> unit=
   match projectee with
   | { init; snapshot; rollback; encode_sig; preprocess;
@@ -1559,7 +1609,10 @@ let rename_env (subst : FStarC_Syntax_Syntax.subst_t) (e : env) : env=
     unif_allow_ref_guards = (e.unif_allow_ref_guards);
     erase_erasable_args = (e.erase_erasable_args);
     core_check = (e.core_check);
-    missing_decl = (e.missing_decl)
+    missing_decl = (e.missing_decl);
+    iface_todo = (e.iface_todo);
+    iface_lids = (e.iface_lids);
+    iface_val_lids = (e.iface_val_lids)
   }
 let default_tc_hooks : tcenv_hooks=
   { tc_push_in_gamma_hook = (fun uu___ uu___1 -> ()) }
@@ -1617,7 +1670,10 @@ let set_tc_hooks (env1 : env) (hooks : tcenv_hooks) : env=
     unif_allow_ref_guards = (env1.unif_allow_ref_guards);
     erase_erasable_args = (env1.erase_erasable_args);
     core_check = (env1.core_check);
-    missing_decl = (env1.missing_decl)
+    missing_decl = (env1.missing_decl);
+    iface_todo = (env1.iface_todo);
+    iface_lids = (env1.iface_lids);
+    iface_val_lids = (env1.iface_val_lids)
   }
 let set_dep_graph (e : env) (g : FStarC_Parser_Dep.deps) : env=
   {
@@ -1672,12 +1728,18 @@ let set_dep_graph (e : env) (g : FStarC_Parser_Dep.deps) : env=
     unif_allow_ref_guards = (e.unif_allow_ref_guards);
     erase_erasable_args = (e.erase_erasable_args);
     core_check = (e.core_check);
-    missing_decl = (e.missing_decl)
+    missing_decl = (e.missing_decl);
+    iface_todo = (e.iface_todo);
+    iface_lids = (e.iface_lids);
+    iface_val_lids = (e.iface_val_lids)
   }
 let dep_graph (e : env) : FStarC_Parser_Dep.deps=
   FStarC_Syntax_DsEnv.dep_graph e.dsenv
 let with_restored_scope (e : env) (f : env -> ('a * env)) : ('a * env)=
   let env1 =
+    let uu___ =
+      FStarC_Class_Setlike.empty
+        (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) () in
     {
       solver = (e.solver);
       range = (e.range);
@@ -1730,7 +1792,10 @@ let with_restored_scope (e : env) (f : env -> ('a * env)) : ('a * env)=
       unif_allow_ref_guards = (e.unif_allow_ref_guards);
       erase_erasable_args = (e.erase_erasable_args);
       core_check = (e.core_check);
-      missing_decl = (e.missing_decl)
+      missing_decl = (e.missing_decl);
+      iface_todo = [];
+      iface_lids = FStar_Pervasives_Native.None;
+      iface_val_lids = uu___
     } in
   (env1.solver).refresh FStar_Pervasives_Native.None;
   (let uu___1 =
@@ -1797,7 +1862,10 @@ let with_restored_scope (e : env) (f : env -> ('a * env)) : ('a * env)=
                   unif_allow_ref_guards = (env2.unif_allow_ref_guards);
                   erase_erasable_args = (env2.erase_erasable_args);
                   core_check = (env2.core_check);
-                  missing_decl = (env2.missing_decl)
+                  missing_decl = (env2.missing_decl);
+                  iface_todo = (e.iface_todo);
+                  iface_lids = (e.iface_lids);
+                  iface_val_lids = (e.iface_val_lids)
                 })) in
    match uu___1 with
    | (res, env2) ->
@@ -1812,10 +1880,9 @@ let postprocess (env1 : env) (tau : FStarC_Syntax_Syntax.term)
 type env_t = env
 let record_val_for (e : env) (l : FStarC_Ident.lident) : env=
   let uu___ =
-    Obj.magic
-      (FStarC_Class_Setlike.add ()
-         (Obj.magic (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
-         l (Obj.magic e.missing_decl)) in
+    FStarC_Class_Setlike.add
+      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) l
+      e.missing_decl in
   {
     solver = (e.solver);
     range = (e.range);
@@ -1868,14 +1935,16 @@ let record_val_for (e : env) (l : FStarC_Ident.lident) : env=
     unif_allow_ref_guards = (e.unif_allow_ref_guards);
     erase_erasable_args = (e.erase_erasable_args);
     core_check = (e.core_check);
-    missing_decl = uu___
+    missing_decl = uu___;
+    iface_todo = (e.iface_todo);
+    iface_lids = (e.iface_lids);
+    iface_val_lids = (e.iface_val_lids)
   }
 let record_definition_for (e : env) (l : FStarC_Ident.lident) : env=
   let uu___ =
-    Obj.magic
-      (FStarC_Class_Setlike.remove ()
-         (Obj.magic (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
-         l (Obj.magic e.missing_decl)) in
+    FStarC_Class_Setlike.remove
+      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) l
+      e.missing_decl in
   {
     solver = (e.solver);
     range = (e.range);
@@ -1928,12 +1997,154 @@ let record_definition_for (e : env) (l : FStarC_Ident.lident) : env=
     unif_allow_ref_guards = (e.unif_allow_ref_guards);
     erase_erasable_args = (e.erase_erasable_args);
     core_check = (e.core_check);
-    missing_decl = uu___
+    missing_decl = uu___;
+    iface_todo = (e.iface_todo);
+    iface_lids = (e.iface_lids);
+    iface_val_lids = (e.iface_val_lids)
   }
 let missing_definition_list (e : env) : FStarC_Ident.lident Prims.list=
-  FStarC_Class_Setlike.elems ()
-    (Obj.magic (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
-    (Obj.magic e.missing_decl)
+  FStarC_Class_Setlike.elems
+    (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) e.missing_decl
+let set_iface_todo (e : env) (ses : FStarC_Syntax_Syntax.sigelt Prims.list) :
+  env=
+  {
+    solver = (e.solver);
+    range = (e.range);
+    curmodule = (e.curmodule);
+    gamma = (e.gamma);
+    gamma_sig = (e.gamma_sig);
+    gamma_cache = (e.gamma_cache);
+    modules = (e.modules);
+    expected_typ = (e.expected_typ);
+    sigtab = (e.sigtab);
+    attrtab = (e.attrtab);
+    instantiate_imp = (e.instantiate_imp);
+    effects = (e.effects);
+    generalize = (e.generalize);
+    letrecs = (e.letrecs);
+    top_level = (e.top_level);
+    check_uvars = (e.check_uvars);
+    use_eq_strict = (e.use_eq_strict);
+    is_iface = (e.is_iface);
+    admit = (e.admit);
+    phase1 = (e.phase1);
+    failhard = (e.failhard);
+    flychecking = (e.flychecking);
+    uvar_subtyping = (e.uvar_subtyping);
+    intactics = (e.intactics);
+    nocoerce = (e.nocoerce);
+    tc_term = (e.tc_term);
+    typeof_tot_or_gtot_term = (e.typeof_tot_or_gtot_term);
+    universe_of = (e.universe_of);
+    typeof_well_typed_tot_or_gtot_term =
+      (e.typeof_well_typed_tot_or_gtot_term);
+    teq_nosmt_force = (e.teq_nosmt_force);
+    subtype_nosmt_force = (e.subtype_nosmt_force);
+    qtbl_name_and_index = (e.qtbl_name_and_index);
+    normalized_eff_names = (e.normalized_eff_names);
+    fv_delta_depths = (e.fv_delta_depths);
+    proof_ns = (e.proof_ns);
+    synth_hook = (e.synth_hook);
+    try_solve_implicits_hook = (e.try_solve_implicits_hook);
+    splice = (e.splice);
+    mpreprocess = (e.mpreprocess);
+    postprocess = (e.postprocess);
+    identifier_info = (e.identifier_info);
+    tc_hooks = (e.tc_hooks);
+    dsenv = (e.dsenv);
+    nbe = (e.nbe);
+    strict_args_tab = (e.strict_args_tab);
+    erasable_types_tab = (e.erasable_types_tab);
+    enable_defer_to_tac = (e.enable_defer_to_tac);
+    unif_allow_ref_guards = (e.unif_allow_ref_guards);
+    erase_erasable_args = (e.erase_erasable_args);
+    core_check = (e.core_check);
+    missing_decl = (e.missing_decl);
+    iface_todo = ses;
+    iface_lids = (e.iface_lids);
+    iface_val_lids = (e.iface_val_lids)
+  }
+let iface_todo (e : env) : FStarC_Syntax_Syntax.sigelt Prims.list=
+  e.iface_todo
+let set_iface_lids (e : env) (ls : FStarC_Ident.lident Prims.list)
+  (vals : FStarC_Ident.lident Prims.list) : env=
+  let uu___ =
+    let uu___1 =
+      FStarC_Class_Setlike.from_list
+        (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) ls in
+    FStar_Pervasives_Native.Some uu___1 in
+  let uu___1 =
+    FStarC_Class_Setlike.from_list
+      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) vals in
+  {
+    solver = (e.solver);
+    range = (e.range);
+    curmodule = (e.curmodule);
+    gamma = (e.gamma);
+    gamma_sig = (e.gamma_sig);
+    gamma_cache = (e.gamma_cache);
+    modules = (e.modules);
+    expected_typ = (e.expected_typ);
+    sigtab = (e.sigtab);
+    attrtab = (e.attrtab);
+    instantiate_imp = (e.instantiate_imp);
+    effects = (e.effects);
+    generalize = (e.generalize);
+    letrecs = (e.letrecs);
+    top_level = (e.top_level);
+    check_uvars = (e.check_uvars);
+    use_eq_strict = (e.use_eq_strict);
+    is_iface = (e.is_iface);
+    admit = (e.admit);
+    phase1 = (e.phase1);
+    failhard = (e.failhard);
+    flychecking = (e.flychecking);
+    uvar_subtyping = (e.uvar_subtyping);
+    intactics = (e.intactics);
+    nocoerce = (e.nocoerce);
+    tc_term = (e.tc_term);
+    typeof_tot_or_gtot_term = (e.typeof_tot_or_gtot_term);
+    universe_of = (e.universe_of);
+    typeof_well_typed_tot_or_gtot_term =
+      (e.typeof_well_typed_tot_or_gtot_term);
+    teq_nosmt_force = (e.teq_nosmt_force);
+    subtype_nosmt_force = (e.subtype_nosmt_force);
+    qtbl_name_and_index = (e.qtbl_name_and_index);
+    normalized_eff_names = (e.normalized_eff_names);
+    fv_delta_depths = (e.fv_delta_depths);
+    proof_ns = (e.proof_ns);
+    synth_hook = (e.synth_hook);
+    try_solve_implicits_hook = (e.try_solve_implicits_hook);
+    splice = (e.splice);
+    mpreprocess = (e.mpreprocess);
+    postprocess = (e.postprocess);
+    identifier_info = (e.identifier_info);
+    tc_hooks = (e.tc_hooks);
+    dsenv = (e.dsenv);
+    nbe = (e.nbe);
+    strict_args_tab = (e.strict_args_tab);
+    erasable_types_tab = (e.erasable_types_tab);
+    enable_defer_to_tac = (e.enable_defer_to_tac);
+    unif_allow_ref_guards = (e.unif_allow_ref_guards);
+    erase_erasable_args = (e.erase_erasable_args);
+    core_check = (e.core_check);
+    missing_decl = (e.missing_decl);
+    iface_todo = (e.iface_todo);
+    iface_lids = uu___;
+    iface_val_lids = uu___1
+  }
+let has_iface (e : env) : Prims.bool=
+  FStar_Pervasives_Native.uu___is_Some e.iface_lids
+let declared_in_iface (e : env) (l : FStarC_Ident.lident) : Prims.bool=
+  match e.iface_lids with
+  | FStar_Pervasives_Native.None -> false
+  | FStar_Pervasives_Native.Some ls ->
+      FStarC_Class_Setlike.mem
+        (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) l ls
+let has_iface_val (e : env) (l : FStarC_Ident.lident) : Prims.bool=
+  FStarC_Class_Setlike.mem
+    (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) l
+    e.iface_val_lids
 type implicit = FStarC_TypeChecker_Common.implicit
 type implicits = FStarC_TypeChecker_Common.implicits
 type guard_t = FStarC_TypeChecker_Common.guard_t
@@ -2011,10 +2222,11 @@ let initial_env (deps : FStarC_Parser_Dep.deps)
   let uu___9 = FStarC_SMap.create (Prims.of_int 20) in
   let uu___10 = FStarC_SMap.create (Prims.of_int 20) in
   let uu___11 =
-    Obj.magic
-      (FStarC_Class_Setlike.empty ()
-         (Obj.magic (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
-         ()) in
+    FStarC_Class_Setlike.empty
+      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) () in
+  let uu___12 =
+    FStarC_Class_Setlike.empty
+      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) () in
   {
     solver;
     range = FStarC_Range_Type.dummyRange;
@@ -2053,13 +2265,13 @@ let initial_env (deps : FStarC_Parser_Dep.deps)
     universe_of;
     typeof_well_typed_tot_or_gtot_term =
       (fun env1 t must_tot1 ->
-         let uu___12 = typeof_tot_or_gtot_term_fastpath env1 t must_tot1 in
-         match uu___12 with
+         let uu___13 = typeof_tot_or_gtot_term_fastpath env1 t must_tot1 in
+         match uu___13 with
          | FStar_Pervasives_Native.Some k ->
              (k, FStarC_TypeChecker_Common.trivial_guard)
          | FStar_Pervasives_Native.None ->
-             let uu___13 = typeof_tot_or_gtot_term env1 t must_tot1 in
-             (match uu___13 with | (t', k, g) -> (k, g)));
+             let uu___14 = typeof_tot_or_gtot_term env1 t must_tot1 in
+             (match uu___14 with | (t', k, g) -> (k, g)));
     teq_nosmt_force;
     subtype_nosmt_force;
     qtbl_name_and_index = uu___3;
@@ -2088,7 +2300,10 @@ let initial_env (deps : FStarC_Parser_Dep.deps)
     unif_allow_ref_guards = false;
     erase_erasable_args = false;
     core_check;
-    missing_decl = uu___11
+    missing_decl = uu___11;
+    iface_todo = [];
+    iface_lids = FStar_Pervasives_Native.None;
+    iface_val_lids = uu___12
   }
 let dsenv (env1 : env) : FStarC_Syntax_DsEnv.env= env1.dsenv
 let sigtab (env1 : env) : FStarC_Syntax_Syntax.sigelt FStarC_SMap.t=
@@ -2205,7 +2420,10 @@ let push_stack (env1 : env) : env=
      unif_allow_ref_guards = (env1.unif_allow_ref_guards);
      erase_erasable_args = (env1.erase_erasable_args);
      core_check = (env1.core_check);
-     missing_decl = (env1.missing_decl)
+     missing_decl = (env1.missing_decl);
+     iface_todo = (env1.iface_todo);
+     iface_lids = (env1.iface_lids);
+     iface_val_lids = (env1.iface_val_lids)
    })
 let pop_stack (uu___ : unit) : env=
   let uu___1 = FStarC_Effect.op_Bang stack in
@@ -2293,7 +2511,10 @@ let snapshot (env1 : env) (msg : Prims.string) : (tcenv_depth_t * env)=
                               erase_erasable_args =
                                 (env2.erase_erasable_args);
                               core_check = (env2.core_check);
-                              missing_decl = (env2.missing_decl)
+                              missing_decl = (env2.missing_decl);
+                              iface_todo = (env2.iface_todo);
+                              iface_lids = (env2.iface_lids);
+                              iface_val_lids = (env2.iface_val_lids)
                             })))))
 let rollback (solver : solver_t) (msg : Prims.string)
   (depth : tcenv_depth_t FStar_Pervasives_Native.option) : env=
@@ -2395,7 +2616,10 @@ let incr_query_index (env1 : env) : env=
               unif_allow_ref_guards = (env1.unif_allow_ref_guards);
               erase_erasable_args = (env1.erase_erasable_args);
               core_check = (env1.core_check);
-              missing_decl = (env1.missing_decl)
+              missing_decl = (env1.missing_decl);
+              iface_todo = (env1.iface_todo);
+              iface_lids = (env1.iface_lids);
+              iface_val_lids = (env1.iface_val_lids)
             })
        | FStar_Pervasives_Native.Some (uu___1, m) ->
            let next = m + Prims.int_one in
@@ -2454,7 +2678,10 @@ let incr_query_index (env1 : env) : env=
               unif_allow_ref_guards = (env1.unif_allow_ref_guards);
               erase_erasable_args = (env1.erase_erasable_args);
               core_check = (env1.core_check);
-              missing_decl = (env1.missing_decl)
+              missing_decl = (env1.missing_decl);
+              iface_todo = (env1.iface_todo);
+              iface_lids = (env1.iface_lids);
+              iface_val_lids = (env1.iface_val_lids)
             }))
 let set_range (e : env) (r : FStarC_Range_Type.t) : env=
   if r = FStarC_Range_Type.dummyRange
@@ -2512,7 +2739,10 @@ let set_range (e : env) (r : FStarC_Range_Type.t) : env=
       unif_allow_ref_guards = (e.unif_allow_ref_guards);
       erase_erasable_args = (e.erase_erasable_args);
       core_check = (e.core_check);
-      missing_decl = (e.missing_decl)
+      missing_decl = (e.missing_decl);
+      iface_todo = (e.iface_todo);
+      iface_lids = (e.iface_lids);
+      iface_val_lids = (e.iface_val_lids)
     }
 let get_range (e : env) : FStarC_Range_Type.t= e.range
 let hasRange_env : env FStarC_Class_HasRange.hasRange=
@@ -2603,7 +2833,10 @@ let set_current_module (env1 : env) (lid : FStarC_Ident.lident) : env=
       unif_allow_ref_guards = (env1.unif_allow_ref_guards);
       erase_erasable_args = (env1.erase_erasable_args);
       core_check = (env1.core_check);
-      missing_decl = (env1.missing_decl)
+      missing_decl = (env1.missing_decl);
+      iface_todo = (env1.iface_todo);
+      iface_lids = (env1.iface_lids);
+      iface_val_lids = (env1.iface_val_lids)
     } in
   {
     solver = (env2.solver);
@@ -2657,7 +2890,10 @@ let set_current_module (env1 : env) (lid : FStarC_Ident.lident) : env=
     unif_allow_ref_guards = (env2.unif_allow_ref_guards);
     erase_erasable_args = (env2.erase_erasable_args);
     core_check = (env2.core_check);
-    missing_decl = (env2.missing_decl)
+    missing_decl = (env2.missing_decl);
+    iface_todo = (env2.iface_todo);
+    iface_lids = (env2.iface_lids);
+    iface_val_lids = (env2.iface_val_lids)
   }
 let has_interface (env1 : env) (l : FStarC_Ident.lident) : Prims.bool=
   FStarC_Util.for_some
@@ -2844,7 +3080,7 @@ let add_se_to_attrtab (env1 : env) (se : FStarC_Syntax_Syntax.sigelt) :
     FStarC_SMap.add (attrtab env2) attr uu___ in
   FStarC_List.iter
     (fun attr ->
-       let uu___ = FStarC_Syntax_Util.head_and_args attr in
+       let uu___ = FStarC_Syntax_Util.head_and_args_full attr in
        match uu___ with
        | (hd, uu___1) ->
            let uu___2 =
@@ -2914,6 +3150,23 @@ let rec add_sigelt (force : Prims.bool) (env1 : env)
   | uu___ ->
       let lids = FStarC_Syntax_Util.lids_of_sigelt se in
       (FStarC_List.iter (try_add_sigelt force env1 se) lids;
+       FStarC_List.iter
+         (fun l ->
+            let s = FStarC_Ident.string_of_lid l in
+            (let uu___4 = FStarC_SMap.try_find env1.fv_delta_depths s in
+             match uu___4 with
+             | FStar_Pervasives_Native.Some
+                 (FStarC_Syntax_Syntax.Delta_abstract uu___5) ->
+                 let ns = Prims.strcat (FStarC_Ident.nsstr l) "." in
+                 let uu___6 = FStarC_SMap.keys env1.fv_delta_depths in
+                 FStarC_List.iter
+                   (fun k ->
+                      if FStarC_Util.starts_with k ns
+                      then FStarC_SMap.remove env1.fv_delta_depths k
+                      else ()) uu___6
+             | uu___5 -> ());
+            FStarC_SMap.remove env1.fv_delta_depths s;
+            FStarC_SMap.remove env1.strict_args_tab s) lids;
        add_se_to_attrtab env1 se)
 and add_sigelts (force : Prims.bool) (env1 : env)
   (ses : FStarC_Syntax_Syntax.sigelt Prims.list) : unit=
@@ -3041,7 +3294,7 @@ let effect_signature
         FStar_Pervasives_Native.Some uu___2))
   | FStarC_Syntax_Syntax.Sig_effect_abbrev
       { FStarC_Syntax_Syntax.lid4 = lid; FStarC_Syntax_Syntax.us4 = us;
-        FStarC_Syntax_Syntax.bs2 = binders;
+        FStarC_Syntax_Syntax.bs = binders;
         FStarC_Syntax_Syntax.comp1 = uu___;
         FStarC_Syntax_Syntax.cflags = uu___1;_}
       ->
@@ -3154,7 +3407,7 @@ let try_lookup_lid_aux
                       let uu___14 =
                         let uu___15 =
                           let uu___16 = FStarC_Syntax_Syntax.mk_Total k in
-                          FStarC_Syntax_Util.flat_arrow tps uu___16 in
+                          FStarC_Syntax_Util.arrow tps uu___16 in
                         (uvs, uu___15) in
                       inst_tscheme1 uu___14 in
                     (uu___13, rng) in
@@ -3191,7 +3444,7 @@ let try_lookup_lid_aux
                       let uu___14 =
                         let uu___15 =
                           let uu___16 = FStarC_Syntax_Syntax.mk_Total k in
-                          FStarC_Syntax_Util.flat_arrow tps uu___16 in
+                          FStarC_Syntax_Util.arrow tps uu___16 in
                         (uvs, uu___15) in
                       inst_tscheme_with uu___14 us in
                     (uu___13, rng) in
@@ -3685,7 +3938,7 @@ and delta_depth_of_term (env1 : env) (t : FStarC_Syntax_Syntax.term) :
   | FStarC_Syntax_Syntax.Tm_uinst (t2, uu___) -> delta_depth_of_term env1 t2
   | FStarC_Syntax_Syntax.Tm_refine
       {
-        FStarC_Syntax_Syntax.b =
+        FStarC_Syntax_Syntax.b2 =
           { FStarC_Syntax_Syntax.ppname = uu___;
             FStarC_Syntax_Syntax.index = uu___1;
             FStarC_Syntax_Syntax.sort = t2;_};
@@ -3695,16 +3948,16 @@ and delta_depth_of_term (env1 : env) (t : FStarC_Syntax_Syntax.term) :
       { FStarC_Syntax_Syntax.tm = t2; FStarC_Syntax_Syntax.asc = uu___;
         FStarC_Syntax_Syntax.eff_opt = uu___1;_}
       -> delta_depth_of_term env1 t2
-  | FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = t2; FStarC_Syntax_Syntax.args = uu___;_} ->
-      delta_depth_of_term env1 t2
-  | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.bs = uu___; FStarC_Syntax_Syntax.body = t2;
-        FStarC_Syntax_Syntax.rc_opt = uu___1;_}
-      -> delta_depth_of_term env1 t2
   | FStarC_Syntax_Syntax.Tm_let
       { FStarC_Syntax_Syntax.lbs = uu___; FStarC_Syntax_Syntax.body1 = t2;_}
       -> delta_depth_of_term env1 t2
+  | FStarC_Syntax_Syntax.Tm_app uu___ ->
+      let uu___1 = FStarC_Syntax_Util.head_and_args_full t1 in
+      (match uu___1 with | (hd, uu___2) -> delta_depth_of_term env1 hd)
+  | FStarC_Syntax_Syntax.Tm_abs uu___ ->
+      let uu___1 = FStarC_Syntax_Util.abs_formals_ln t1 in
+      (match uu___1 with
+       | (uu___2, body, uu___3) -> delta_depth_of_term env1 body)
 let quals_of_qninfo (qninfo1 : qninfo) :
   FStarC_Syntax_Syntax.qualifier Prims.list FStar_Pervasives_Native.option=
   match qninfo1 with
@@ -3822,7 +4075,7 @@ let lookup_effect_abbrev (env1 : env)
           FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_effect_abbrev
             { FStarC_Syntax_Syntax.lid4 = lid;
               FStarC_Syntax_Syntax.us4 = univs;
-              FStarC_Syntax_Syntax.bs2 = binders;
+              FStarC_Syntax_Syntax.bs = binders;
               FStarC_Syntax_Syntax.comp1 = c;
               FStarC_Syntax_Syntax.cflags = uu___1;_};
           FStarC_Syntax_Syntax.sigrng = uu___2;
@@ -3890,14 +4143,12 @@ let lookup_effect_abbrev (env1 : env)
                     FStarC_Syntax_Subst.set_use_range
                       (FStarC_Ident.range_of_lid lid1) t in
                   let uu___12 =
-                    let uu___13 = FStarC_Syntax_Subst.compress t1 in
-                    uu___13.FStarC_Syntax_Syntax.n in
+                    FStarC_Syntax_Util.arrow_formals_comp_ln_strict t1 in
                   (match uu___12 with
-                   | FStarC_Syntax_Syntax.Tm_arrow
-                       { FStarC_Syntax_Syntax.bs1 = binders1;
-                         FStarC_Syntax_Syntax.comp = c1;_}
-                       -> FStar_Pervasives_Native.Some (binders1, c1)
-                   | uu___13 -> FStarC_Effect.failwith "Impossible")))
+                   | (binders1, c1) ->
+                       if Prims.uu___is_Nil binders1
+                       then FStarC_Effect.failwith "Impossible"
+                       else FStar_Pervasives_Native.Some (binders1, c1))))
   | uu___1 -> FStar_Pervasives_Native.None
 let norm_eff_name (env1 : env) (l : FStarC_Ident.lident) :
   FStarC_Ident.lident=
@@ -3950,25 +4201,33 @@ let rec non_informative (env1 : env) (t : FStarC_Syntax_Syntax.typ) :
           (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.erased_lid)
       then true
       else fv_has_erasable_attr env1 fv
-  | FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = uu___1;_}
-      -> non_informative env1 head
-  | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.bs = uu___1; FStarC_Syntax_Syntax.body = body;
-        FStarC_Syntax_Syntax.rc_opt = uu___2;_}
-      -> non_informative env1 body
-  | FStarC_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
-  | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = uu___1; FStarC_Syntax_Syntax.comp = c;_}
-      ->
+  | FStarC_Syntax_Syntax.Tm_app uu___1 ->
       let uu___2 =
-        let uu___3 = FStarC_Syntax_Util.is_pure_or_ghost_comp c in
-        if uu___3
-        then non_informative env1 (FStarC_Syntax_Util.comp_result c)
-        else false in
-      if uu___2
-      then true
-      else is_erasable_effect env1 (FStarC_Syntax_Util.comp_effect_name c)
+        let uu___3 = FStarC_Syntax_Util.unrefine t in
+        FStarC_Syntax_Util.head_and_args_full uu___3 in
+      (match uu___2 with | (head, uu___3) -> non_informative env1 head)
+  | FStarC_Syntax_Syntax.Tm_abs uu___1 ->
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Util.unrefine t in
+        FStarC_Syntax_Util.abs_formals_ln uu___3 in
+      (match uu___2 with
+       | (uu___3, body, uu___4) -> non_informative env1 body)
+  | FStarC_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
+  | FStarC_Syntax_Syntax.Tm_arrow uu___1 ->
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Util.unrefine t in
+        FStarC_Syntax_Util.arrow_formals_comp_ln uu___3 in
+      (match uu___2 with
+       | (uu___3, c) ->
+           let uu___4 =
+             let uu___5 = FStarC_Syntax_Util.is_pure_or_ghost_comp c in
+             if uu___5
+             then non_informative env1 (FStarC_Syntax_Util.comp_result c)
+             else false in
+           if uu___4
+           then true
+           else
+             is_erasable_effect env1 (FStarC_Syntax_Util.comp_effect_name c))
   | FStarC_Syntax_Syntax.Tm_meta
       { FStarC_Syntax_Syntax.tm2 = tm; FStarC_Syntax_Syntax.meta = uu___1;_}
       -> non_informative env1 tm
@@ -3978,21 +4237,23 @@ let num_effect_indices (env1 : env) (name : FStarC_Ident.lident)
   let sig_t =
     let uu___ = lookup_effect_lid env1 name in
     FStarC_Syntax_Subst.compress uu___ in
-  match sig_t.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = _a::bs;
-        FStarC_Syntax_Syntax.comp = uu___;_}
-      -> FStarC_List.length bs
-  | uu___ ->
-      let uu___1 =
-        let uu___2 = FStarC_Class_Show.show FStarC_Ident.showable_lident name in
-        let uu___3 =
-          FStarC_Class_Show.show FStarC_Syntax_Print.showable_term sig_t in
-        FStarC_Format.fmt2 "Signature for %s not an arrow (%s)" uu___2 uu___3 in
-      FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
-        FStarC_Errors_Codes.Fatal_UnexpectedSignatureForMonad ()
-        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-        (Obj.magic uu___1)
+  let uu___ = FStarC_Syntax_Util.arrow_formals_comp_ln_strict sig_t in
+  match uu___ with
+  | (bs, uu___1) ->
+      (match bs with
+       | _a::bs1 -> FStarC_List.length bs1
+       | uu___2 ->
+           let uu___3 =
+             let uu___4 =
+               FStarC_Class_Show.show FStarC_Ident.showable_lident name in
+             let uu___5 =
+               FStarC_Class_Show.show FStarC_Syntax_Print.showable_term sig_t in
+             FStarC_Format.fmt2 "Signature for %s not an arrow (%s)" uu___4
+               uu___5 in
+           FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
+             FStarC_Errors_Codes.Fatal_UnexpectedSignatureForMonad ()
+             (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+             (Obj.magic uu___3))
 let lookup_effect_quals (env1 : env) (l : FStarC_Ident.lident) :
   FStarC_Syntax_Syntax.qualifier Prims.list=
   let l1 = norm_eff_name env1 l in
@@ -4026,21 +4287,18 @@ let lookup_projector (env1 : env) (lid : FStarC_Ident.lident) (i : Prims.int)
   let uu___ = lookup_datacon env1 lid in
   match uu___ with
   | (uu___1, t) ->
-      let uu___2 =
-        let uu___3 = FStarC_Syntax_Subst.compress t in
-        uu___3.FStarC_Syntax_Syntax.n in
+      let uu___2 = FStarC_Syntax_Util.arrow_formals_comp_ln_strict t in
       (match uu___2 with
-       | FStarC_Syntax_Syntax.Tm_arrow
-           { FStarC_Syntax_Syntax.bs1 = binders;
-             FStarC_Syntax_Syntax.comp = uu___3;_}
-           ->
-           if (i < Prims.int_zero) || (i >= (FStarC_List.length binders))
+       | (binders, uu___3) ->
+           if Prims.uu___is_Nil binders
            then fail ()
            else
-             (let b = FStarC_List.nth binders i in
-              FStarC_Syntax_Util.mk_field_projector_name lid
-                b.FStarC_Syntax_Syntax.binder_bv i)
-       | uu___3 -> fail ())
+             if (i < Prims.int_zero) || (i >= (FStarC_List.length binders))
+             then fail ()
+             else
+               (let b = FStarC_List.nth binders i in
+                FStarC_Syntax_Util.mk_field_projector_name lid
+                  b.FStarC_Syntax_Syntax.binder_bv i))
 let is_projector (env1 : env) (l : FStarC_Ident.lident) : Prims.bool=
   let uu___ = lookup_qname env1 l in
   match uu___ with
@@ -4428,19 +4686,17 @@ let wp_sig_aux (decls : (FStarC_Syntax_Syntax.eff_decl * 'uuuuu) Prims.list)
       (match uu___1 with
        | (uu___2, s) ->
            let s1 = FStarC_Syntax_Subst.compress s in
-           (match ((md.FStarC_Syntax_Syntax.binders),
-                    (s1.FStarC_Syntax_Syntax.n))
-            with
-            | ([], FStarC_Syntax_Syntax.Tm_arrow
-               { FStarC_Syntax_Syntax.bs1 = b::wp_b::[];
-                 FStarC_Syntax_Syntax.comp = c;_})
-                when
-                FStarC_Syntax_Syntax.is_teff
-                  (FStarC_Syntax_Util.comp_result c)
-                ->
-                ((b.FStarC_Syntax_Syntax.binder_bv),
-                  ((wp_b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))
-            | uu___3 -> FStarC_Effect.failwith "Impossible"))
+           let uu___3 = FStarC_Syntax_Util.arrow_formals_comp_ln_strict s1 in
+           (match uu___3 with
+            | (bs, c) ->
+                (match ((md.FStarC_Syntax_Syntax.binders), bs) with
+                 | ([], b::wp_b::[]) when
+                     FStarC_Syntax_Syntax.is_teff
+                       (FStarC_Syntax_Util.comp_result c)
+                     ->
+                     ((b.FStarC_Syntax_Syntax.binder_bv),
+                       ((wp_b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))
+                 | uu___4 -> FStarC_Effect.failwith "Impossible")))
 let wp_signature (env1 : env) (m : FStarC_Ident.lident) :
   (FStarC_Syntax_Syntax.bv * FStarC_Syntax_Syntax.term)=
   wp_sig_aux (env1.effects).decls m
@@ -4465,14 +4721,11 @@ let bound_vars (env1 : env) : FStarC_Syntax_Syntax.bv Prims.list=
 let hasBinders_env : env FStarC_Class_Binders.hasBinders=
   {
     FStarC_Class_Binders.boundNames =
-      (fun uu___ ->
-         (fun e ->
-            let uu___ = bound_vars e in
-            Obj.magic
-              (FStarC_Class_Setlike.from_list ()
-                 (Obj.magic
-                    (FStarC_FlatSet.setlike_flat_set
-                       FStarC_Syntax_Syntax.ord_bv)) uu___)) uu___)
+      (fun e ->
+         let uu___ = bound_vars e in
+         FStarC_Class_Setlike.from_list
+           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv)
+           uu___)
   }
 let hasNames_lcomp :
   FStarC_TypeChecker_Common.lcomp FStarC_Class_Binders.hasNames=
@@ -4490,21 +4743,15 @@ let pretty_lcomp : FStarC_TypeChecker_Common.lcomp FStarC_Class_PP.pretty=
 let hasNames_guard : guard_t FStarC_Class_Binders.hasNames=
   {
     FStarC_Class_Binders.freeNames =
-      (fun uu___ ->
-         (fun g ->
-            match g.FStarC_TypeChecker_Common.guard_f with
-            | FStarC_TypeChecker_Common.Trivial ->
-                Obj.magic
-                  (Obj.repr
-                     (FStarC_Class_Setlike.empty ()
-                        (Obj.magic
-                           (FStarC_FlatSet.setlike_flat_set
-                              FStarC_Syntax_Syntax.ord_bv)) ()))
-            | FStarC_TypeChecker_Common.NonTrivial f ->
-                Obj.magic
-                  (Obj.repr
-                     (FStarC_Class_Binders.freeNames
-                        FStarC_Class_Binders.hasNames_term f))) uu___)
+      (fun g ->
+         match g.FStarC_TypeChecker_Common.guard_f with
+         | FStarC_TypeChecker_Common.Trivial ->
+             FStarC_Class_Setlike.empty
+               (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv)
+               ()
+         | FStarC_TypeChecker_Common.NonTrivial f ->
+             FStarC_Class_Binders.freeNames
+               FStarC_Class_Binders.hasNames_term f)
   }
 let pretty_guard : guard_t FStarC_Class_PP.pretty=
   {
@@ -4645,8 +4892,7 @@ let rec unfold_effect_abbrev (env1 : env) (comp : FStarC_Syntax_Syntax.comp)
               unfold_effect_abbrev env1 c2))))
 let effect_repr_aux (only_reifiable : 'uuuuu) (env1 : env)
   (c : FStarC_Syntax_Syntax.comp) (u_res : FStarC_Syntax_Syntax.universe) :
-  FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax
-    FStar_Pervasives_Native.option=
+  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
   let check_partial_application eff_name args =
     let r = get_range env1 in
     let uu___ =
@@ -4684,14 +4930,9 @@ let effect_repr_aux (only_reifiable : 'uuuuu) (env1 : env)
            (check_partial_application effect_name
               c1.FStarC_Syntax_Syntax.effect_args;
             (let uu___3 =
-               FStarC_Syntax_Syntax.mk
-                 (FStarC_Syntax_Syntax.Tm_app
-                    {
-                      FStarC_Syntax_Syntax.hd = repr;
-                      FStarC_Syntax_Syntax.args =
-                        ((FStarC_Syntax_Syntax.as_arg res_typ) ::
-                        (c1.FStarC_Syntax_Syntax.effect_args))
-                    }) (get_range env1) in
+               FStarC_Syntax_Syntax.mk_Tm_app repr
+                 ((FStarC_Syntax_Syntax.as_arg res_typ) ::
+                 (c1.FStarC_Syntax_Syntax.effect_args)) (get_range env1) in
              FStar_Pervasives_Native.Some uu___3)))
 let effect_repr (env1 : env) (c : FStarC_Syntax_Syntax.comp)
   (u_res : FStarC_Syntax_Syntax.universe) :
@@ -4737,9 +4978,9 @@ let is_reifiable_function (env1 : env) (t : FStarC_Syntax_Syntax.term) :
     let uu___1 = FStarC_Syntax_Subst.compress t in
     uu___1.FStarC_Syntax_Syntax.n in
   match uu___ with
-  | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = uu___1; FStarC_Syntax_Syntax.comp = c;_}
-      -> is_reifiable_comp env1 c
+  | FStarC_Syntax_Syntax.Tm_arrow uu___1 ->
+      let uu___2 = FStarC_Syntax_Util.arrow_formals_comp_ln t in
+      (match uu___2 with | (uu___3, c) -> is_reifiable_comp env1 c)
   | uu___1 -> false
 let reify_comp (env1 : env) (c : FStarC_Syntax_Syntax.comp)
   (u_c : FStarC_Syntax_Syntax.universe) : FStarC_Syntax_Syntax.term=
@@ -4869,7 +5110,10 @@ let push_sigelt' (force : Prims.bool) (env1 : env)
       unif_allow_ref_guards = (env1.unif_allow_ref_guards);
       erase_erasable_args = (env1.erase_erasable_args);
       core_check = (env1.core_check);
-      missing_decl = (env1.missing_decl)
+      missing_decl = (env1.missing_decl);
+      iface_todo = (env1.iface_todo);
+      iface_lids = (env1.iface_lids);
+      iface_val_lids = (env1.iface_val_lids)
     } in
   add_sigelt force env2 s;
   (env2.tc_hooks).tc_push_in_gamma_hook env2 (FStar_Pervasives.Inr sb);
@@ -4946,7 +5190,10 @@ let push_new_effect (env1 : env)
         unif_allow_ref_guards = (env1.unif_allow_ref_guards);
         erase_erasable_args = (env1.erase_erasable_args);
         core_check = (env1.core_check);
-        missing_decl = (env1.missing_decl)
+        missing_decl = (env1.missing_decl);
+        iface_todo = (env1.iface_todo);
+        iface_lids = (env1.iface_lids);
+        iface_val_lids = (env1.iface_val_lids)
       }
 let exists_polymonadic_bind (env1 : env) (m : FStarC_Ident.lident)
   (n : FStarC_Ident.lident) :
@@ -5294,7 +5541,10 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
      unif_allow_ref_guards = (env1.unif_allow_ref_guards);
      erase_erasable_args = (env1.erase_erasable_args);
      core_check = (env1.core_check);
-     missing_decl = (env1.missing_decl)
+     missing_decl = (env1.missing_decl);
+     iface_todo = (env1.iface_todo);
+     iface_lids = (env1.iface_lids);
+     iface_val_lids = (env1.iface_val_lids)
    })
 let add_polymonadic_bind (env1 : env) (m : FStarC_Ident.lident)
   (n : FStarC_Ident.lident) (p : FStarC_Ident.lident)
@@ -5360,7 +5610,10 @@ let add_polymonadic_bind (env1 : env) (m : FStarC_Ident.lident)
     unif_allow_ref_guards = (env1.unif_allow_ref_guards);
     erase_erasable_args = (env1.erase_erasable_args);
     core_check = (env1.core_check);
-    missing_decl = (env1.missing_decl)
+    missing_decl = (env1.missing_decl);
+    iface_todo = (env1.iface_todo);
+    iface_lids = (env1.iface_lids);
+    iface_val_lids = (env1.iface_val_lids)
   }
 let add_polymonadic_subcomp (env1 : env) (m : FStarC_Ident.lident)
   (n : FStarC_Ident.lident)
@@ -5431,7 +5684,10 @@ let add_polymonadic_subcomp (env1 : env) (m : FStarC_Ident.lident)
         unif_allow_ref_guards = (env1.unif_allow_ref_guards);
         erase_erasable_args = (env1.erase_erasable_args);
         core_check = (env1.core_check);
-        missing_decl = (env1.missing_decl)
+        missing_decl = (env1.missing_decl);
+        iface_todo = (env1.iface_todo);
+        iface_lids = (env1.iface_lids);
+        iface_val_lids = (env1.iface_val_lids)
       }
 let push_local_binding (env1 : env) (b : FStarC_Syntax_Syntax.binding) : 
   env=
@@ -5487,7 +5743,10 @@ let push_local_binding (env1 : env) (b : FStarC_Syntax_Syntax.binding) :
     unif_allow_ref_guards = (env1.unif_allow_ref_guards);
     erase_erasable_args = (env1.erase_erasable_args);
     core_check = (env1.core_check);
-    missing_decl = (env1.missing_decl)
+    missing_decl = (env1.missing_decl);
+    iface_todo = (env1.iface_todo);
+    iface_lids = (env1.iface_lids);
+    iface_val_lids = (env1.iface_val_lids)
   }
 let push_bv (env1 : env) (x : FStarC_Syntax_Syntax.bv) : env=
   push_local_binding env1 (FStarC_Syntax_Syntax.Binding_var x)
@@ -5551,7 +5810,10 @@ let pop_bv (env1 : env) :
             unif_allow_ref_guards = (env1.unif_allow_ref_guards);
             erase_erasable_args = (env1.erase_erasable_args);
             core_check = (env1.core_check);
-            missing_decl = (env1.missing_decl)
+            missing_decl = (env1.missing_decl);
+            iface_todo = (env1.iface_todo);
+            iface_lids = (env1.iface_lids);
+            iface_val_lids = (env1.iface_val_lids)
           })
   | uu___ -> FStar_Pervasives_Native.None
 let push_binders (env1 : env) (bs : FStarC_Syntax_Syntax.binders) : env=
@@ -5645,7 +5907,10 @@ let set_expected_typ (env1 : env) (t : FStarC_Syntax_Syntax.typ) : env=
     unif_allow_ref_guards = (env1.unif_allow_ref_guards);
     erase_erasable_args = (env1.erase_erasable_args);
     core_check = (env1.core_check);
-    missing_decl = (env1.missing_decl)
+    missing_decl = (env1.missing_decl);
+    iface_todo = (env1.iface_todo);
+    iface_lids = (env1.iface_lids);
+    iface_val_lids = (env1.iface_val_lids)
   }
 let set_expected_typ_maybe_eq (env1 : env) (t : FStarC_Syntax_Syntax.typ)
   (use_eq : Prims.bool) : env=
@@ -5701,7 +5966,10 @@ let set_expected_typ_maybe_eq (env1 : env) (t : FStarC_Syntax_Syntax.typ)
     unif_allow_ref_guards = (env1.unif_allow_ref_guards);
     erase_erasable_args = (env1.erase_erasable_args);
     core_check = (env1.core_check);
-    missing_decl = (env1.missing_decl)
+    missing_decl = (env1.missing_decl);
+    iface_todo = (env1.iface_todo);
+    iface_lids = (env1.iface_lids);
+    iface_val_lids = (env1.iface_val_lids)
   }
 let expected_typ (env1 : env) :
   (FStarC_Syntax_Syntax.typ * Prims.bool) FStar_Pervasives_Native.option=
@@ -5763,72 +6031,76 @@ let clear_expected_typ (env_ : env) :
      unif_allow_ref_guards = (env_.unif_allow_ref_guards);
      erase_erasable_args = (env_.erase_erasable_args);
      core_check = (env_.core_check);
-     missing_decl = (env_.missing_decl)
+     missing_decl = (env_.missing_decl);
+     iface_todo = (env_.iface_todo);
+     iface_lids = (env_.iface_lids);
+     iface_val_lids = (env_.iface_val_lids)
    }, (expected_typ env_))
 let finish_module : env -> FStarC_Syntax_Syntax.modul -> env=
   let empty_lid = FStarC_Ident.lid_of_ids [FStarC_Ident.id_of_text ""] in
-  fun env1 m ->
-    {
-      solver = (env1.solver);
-      range = (env1.range);
-      curmodule = empty_lid;
-      gamma = [];
-      gamma_sig = [];
-      gamma_cache = (env1.gamma_cache);
-      modules = (m :: (env1.modules));
-      expected_typ = (env1.expected_typ);
-      sigtab = (env1.sigtab);
-      attrtab = (env1.attrtab);
-      instantiate_imp = (env1.instantiate_imp);
-      effects = (env1.effects);
-      generalize = (env1.generalize);
-      letrecs = (env1.letrecs);
-      top_level = (env1.top_level);
-      check_uvars = (env1.check_uvars);
-      use_eq_strict = (env1.use_eq_strict);
-      is_iface = (env1.is_iface);
-      admit = (env1.admit);
-      phase1 = (env1.phase1);
-      failhard = (env1.failhard);
-      flychecking = (env1.flychecking);
-      uvar_subtyping = (env1.uvar_subtyping);
-      intactics = (env1.intactics);
-      nocoerce = (env1.nocoerce);
-      tc_term = (env1.tc_term);
-      typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
-      universe_of = (env1.universe_of);
-      typeof_well_typed_tot_or_gtot_term =
-        (env1.typeof_well_typed_tot_or_gtot_term);
-      teq_nosmt_force = (env1.teq_nosmt_force);
-      subtype_nosmt_force = (env1.subtype_nosmt_force);
-      qtbl_name_and_index = (env1.qtbl_name_and_index);
-      normalized_eff_names = (env1.normalized_eff_names);
-      fv_delta_depths = (env1.fv_delta_depths);
-      proof_ns = (env1.proof_ns);
-      synth_hook = (env1.synth_hook);
-      try_solve_implicits_hook = (env1.try_solve_implicits_hook);
-      splice = (env1.splice);
-      mpreprocess = (env1.mpreprocess);
-      postprocess = (env1.postprocess);
-      identifier_info = (env1.identifier_info);
-      tc_hooks = (env1.tc_hooks);
-      dsenv = (env1.dsenv);
-      nbe = (env1.nbe);
-      strict_args_tab = (env1.strict_args_tab);
-      erasable_types_tab = (env1.erasable_types_tab);
-      enable_defer_to_tac = (env1.enable_defer_to_tac);
-      unif_allow_ref_guards = (env1.unif_allow_ref_guards);
-      erase_erasable_args = (env1.erase_erasable_args);
-      core_check = (env1.core_check);
-      missing_decl = (env1.missing_decl)
-    }
+  fun env1 ->
+    fun m ->
+      {
+        solver = (env1.solver);
+        range = (env1.range);
+        curmodule = empty_lid;
+        gamma = [];
+        gamma_sig = [];
+        gamma_cache = (env1.gamma_cache);
+        modules = (m :: (env1.modules));
+        expected_typ = (env1.expected_typ);
+        sigtab = (env1.sigtab);
+        attrtab = (env1.attrtab);
+        instantiate_imp = (env1.instantiate_imp);
+        effects = (env1.effects);
+        generalize = (env1.generalize);
+        letrecs = (env1.letrecs);
+        top_level = (env1.top_level);
+        check_uvars = (env1.check_uvars);
+        use_eq_strict = (env1.use_eq_strict);
+        is_iface = (env1.is_iface);
+        admit = (env1.admit);
+        phase1 = (env1.phase1);
+        failhard = (env1.failhard);
+        flychecking = (env1.flychecking);
+        uvar_subtyping = (env1.uvar_subtyping);
+        intactics = (env1.intactics);
+        nocoerce = (env1.nocoerce);
+        tc_term = (env1.tc_term);
+        typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
+        universe_of = (env1.universe_of);
+        typeof_well_typed_tot_or_gtot_term =
+          (env1.typeof_well_typed_tot_or_gtot_term);
+        teq_nosmt_force = (env1.teq_nosmt_force);
+        subtype_nosmt_force = (env1.subtype_nosmt_force);
+        qtbl_name_and_index = (env1.qtbl_name_and_index);
+        normalized_eff_names = (env1.normalized_eff_names);
+        fv_delta_depths = (env1.fv_delta_depths);
+        proof_ns = (env1.proof_ns);
+        synth_hook = (env1.synth_hook);
+        try_solve_implicits_hook = (env1.try_solve_implicits_hook);
+        splice = (env1.splice);
+        mpreprocess = (env1.mpreprocess);
+        postprocess = (env1.postprocess);
+        identifier_info = (env1.identifier_info);
+        tc_hooks = (env1.tc_hooks);
+        dsenv = (env1.dsenv);
+        nbe = (env1.nbe);
+        strict_args_tab = (env1.strict_args_tab);
+        erasable_types_tab = (env1.erasable_types_tab);
+        enable_defer_to_tac = (env1.enable_defer_to_tac);
+        unif_allow_ref_guards = (env1.unif_allow_ref_guards);
+        erase_erasable_args = (env1.erase_erasable_args);
+        core_check = (env1.core_check);
+        missing_decl = (env1.missing_decl);
+        iface_todo = (env1.iface_todo);
+        iface_lids = (env1.iface_lids);
+        iface_val_lids = (env1.iface_val_lids)
+      }
 let uvars_in_env (env1 : env) : FStarC_Syntax_Syntax.uvars=
   let no_uvs =
-    Obj.magic
-      (FStarC_Class_Setlike.empty ()
-         (Obj.magic
-            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar))
-         ()) in
+    FStarC_Class_Setlike.empty
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar) () in
   let rec aux out g =
     match g with
     | [] -> out
@@ -5836,12 +6108,9 @@ let uvars_in_env (env1 : env) : FStarC_Syntax_Syntax.uvars=
     | (FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)))::tl ->
         let out1 =
           let uu___2 = FStarC_Syntax_Free.uvars t in
-          Obj.magic
-            (FStarC_Class_Setlike.union ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic out)
-               (Obj.magic uu___2)) in
+          FStarC_Class_Setlike.union
+            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
+            out uu___2 in
         aux out1 tl
     | (FStarC_Syntax_Syntax.Binding_var
         { FStarC_Syntax_Syntax.ppname = uu___;
@@ -5850,22 +6119,16 @@ let uvars_in_env (env1 : env) : FStarC_Syntax_Syntax.uvars=
         ->
         let out1 =
           let uu___2 = FStarC_Syntax_Free.uvars t in
-          Obj.magic
-            (FStarC_Class_Setlike.union ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic out)
-               (Obj.magic uu___2)) in
+          FStarC_Class_Setlike.union
+            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
+            out uu___2 in
         aux out1 tl in
   aux no_uvs env1.gamma
 let univ_vars (env1 : env) :
   FStarC_Syntax_Syntax.universe_uvar FStarC_FlatSet.t=
   let no_univs =
-    Obj.magic
-      (FStarC_Class_Setlike.empty ()
-         (Obj.magic
-            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar))
-         ()) in
+    FStarC_Class_Setlike.empty
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar) () in
   let rec aux out g =
     match g with
     | [] -> out
@@ -5873,12 +6136,9 @@ let univ_vars (env1 : env) :
     | (FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)))::tl ->
         let out1 =
           let uu___2 = FStarC_Syntax_Free.univs t in
-          Obj.magic
-            (FStarC_Class_Setlike.union ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Free.ord_univ_uvar)) (Obj.magic out)
-               (Obj.magic uu___2)) in
+          FStarC_Class_Setlike.union
+            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar)
+            out uu___2 in
         aux out1 tl
     | (FStarC_Syntax_Syntax.Binding_var
         { FStarC_Syntax_Syntax.ppname = uu___;
@@ -5887,41 +6147,30 @@ let univ_vars (env1 : env) :
         ->
         let out1 =
           let uu___2 = FStarC_Syntax_Free.univs t in
-          Obj.magic
-            (FStarC_Class_Setlike.union ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Free.ord_univ_uvar)) (Obj.magic out)
-               (Obj.magic uu___2)) in
+          FStarC_Class_Setlike.union
+            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar)
+            out uu___2 in
         aux out1 tl in
   aux no_univs env1.gamma
 let univnames (env1 : env) : FStarC_Syntax_Syntax.univ_name FStarC_FlatSet.t=
   let no_univ_names =
-    Obj.magic
-      (FStarC_Class_Setlike.empty ()
-         (Obj.magic
-            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident))
-         ()) in
+    FStarC_Class_Setlike.empty
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident) () in
   let rec aux out g =
     match g with
     | [] -> out
     | (FStarC_Syntax_Syntax.Binding_univ uname)::tl ->
         let out1 =
-          Obj.magic
-            (FStarC_Class_Setlike.add ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Syntax.ord_ident)) uname (Obj.magic out)) in
+          FStarC_Class_Setlike.add
+            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
+            uname out in
         aux out1 tl
     | (FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)))::tl ->
         let out1 =
           let uu___2 = FStarC_Syntax_Free.univnames t in
-          Obj.magic
-            (FStarC_Class_Setlike.union ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Syntax.ord_ident)) (Obj.magic out)
-               (Obj.magic uu___2)) in
+          FStarC_Class_Setlike.union
+            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
+            out uu___2 in
         aux out1 tl
     | (FStarC_Syntax_Syntax.Binding_var
         { FStarC_Syntax_Syntax.ppname = uu___;
@@ -5930,12 +6179,9 @@ let univnames (env1 : env) : FStarC_Syntax_Syntax.univ_name FStarC_FlatSet.t=
         ->
         let out1 =
           let uu___2 = FStarC_Syntax_Free.univnames t in
-          Obj.magic
-            (FStarC_Class_Setlike.union ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Syntax.ord_ident)) (Obj.magic out)
-               (Obj.magic uu___2)) in
+          FStarC_Class_Setlike.union
+            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
+            out uu___2 in
         aux out1 tl in
   aux no_univ_names env1.gamma
 let lidents (env1 : env) : FStarC_Ident.lident Prims.list=
@@ -6016,7 +6262,10 @@ let cons_proof_ns (b : Prims.bool) (e : env) (path : name_prefix) : env=
     unif_allow_ref_guards = (e.unif_allow_ref_guards);
     erase_erasable_args = (e.erase_erasable_args);
     core_check = (e.core_check);
-    missing_decl = (e.missing_decl)
+    missing_decl = (e.missing_decl);
+    iface_todo = (e.iface_todo);
+    iface_lids = (e.iface_lids);
+    iface_val_lids = (e.iface_val_lids)
   }
 let add_proof_ns (e : env) (path : name_prefix) : env=
   cons_proof_ns true e path
@@ -6076,31 +6325,28 @@ let set_proof_ns (ns : proof_namespace) (e : env) : env=
     unif_allow_ref_guards = (e.unif_allow_ref_guards);
     erase_erasable_args = (e.erase_erasable_args);
     core_check = (e.core_check);
-    missing_decl = (e.missing_decl)
+    missing_decl = (e.missing_decl);
+    iface_todo = (e.iface_todo);
+    iface_lids = (e.iface_lids);
+    iface_val_lids = (e.iface_val_lids)
   }
 let unbound_vars (e : env) (t : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.bv FStarC_FlatSet.t=
   let uu___ = FStarC_Syntax_Free.names t in
   let uu___1 = bound_vars e in
   FStarC_List.fold_left
-    (fun uu___3 uu___2 ->
-       (fun s bv ->
-          Obj.magic
-            (FStarC_Class_Setlike.remove ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Syntax.ord_bv)) bv (Obj.magic s))) uu___3
-         uu___2) uu___ uu___1
+    (fun s bv ->
+       FStarC_Class_Setlike.remove
+         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv) bv s)
+    uu___ uu___1
 let closed (e : env) (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ = unbound_vars e t in
-  FStarC_Class_Setlike.is_empty ()
-    (Obj.magic (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv))
-    (Obj.magic uu___)
+  FStarC_Class_Setlike.is_empty
+    (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv) uu___
 let closed' (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ = FStarC_Syntax_Free.names t in
-  FStarC_Class_Setlike.is_empty ()
-    (Obj.magic (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv))
-    (Obj.magic uu___)
+  FStarC_Class_Setlike.is_empty
+    (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv) uu___
 let string_of_proof_ns (env1 : env) : Prims.string=
   let aux uu___ =
     match uu___ with
@@ -6117,24 +6363,14 @@ let guard_of_guard_formula (g : FStarC_TypeChecker_Common.guard_formula) :
   {
     FStarC_TypeChecker_Common.guard_f = g;
     FStarC_TypeChecker_Common.deferred_to_tac =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))));
+      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
     FStarC_TypeChecker_Common.deferred =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))));
+      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
     FStarC_TypeChecker_Common.univ_ineqs =
-      ((Obj.magic
-          (FStarC_Class_Listlike.empty ()
-             (Obj.magic (FStarC_CList.listlike_clist ())))),
-        (Obj.magic
-           (FStarC_Class_Listlike.empty ()
-              (Obj.magic (FStarC_CList.listlike_clist ())))));
+      ((FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())),
+        (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())));
     FStarC_TypeChecker_Common.implicits =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))))
+      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()))
   }
 let guard_form (g : guard_t) : FStarC_TypeChecker_Common.guard_formula=
   g.FStarC_TypeChecker_Common.guard_f
@@ -6211,12 +6447,8 @@ let apply_guard (g : guard_t) (e : FStarC_Syntax_Syntax.term) : guard_t=
   | FStarC_TypeChecker_Common.NonTrivial f ->
       let uu___ =
         let uu___1 =
-          FStarC_Syntax_Syntax.mk
-            (FStarC_Syntax_Syntax.Tm_app
-               {
-                 FStarC_Syntax_Syntax.hd = f;
-                 FStarC_Syntax_Syntax.args = [FStarC_Syntax_Syntax.as_arg e]
-               }) f.FStarC_Syntax_Syntax.pos in
+          FStarC_Syntax_Syntax.mk_Tm_app f [FStarC_Syntax_Syntax.as_arg e]
+            f.FStarC_Syntax_Syntax.pos in
         FStarC_TypeChecker_Common.NonTrivial uu___1 in
       {
         FStarC_TypeChecker_Common.guard_f = uu___;
@@ -6433,11 +6665,8 @@ let new_tac_implicit_var (reason : Prims.string) (r : FStarC_Range_Type.t)
         FStarC_TypeChecker_Common.univ_ineqs =
           (trivial_guard.FStarC_TypeChecker_Common.univ_ineqs);
         FStarC_TypeChecker_Common.implicits =
-          (Obj.magic
-             (FStarC_Class_Listlike.cons ()
-                (Obj.magic (FStarC_CList.listlike_clist ())) imp
-                (FStarC_Class_Listlike.empty ()
-                   (Obj.magic (FStarC_CList.listlike_clist ())))))
+          (FStarC_Class_Listlike.cons (FStarC_CList.listlike_clist ()) imp
+             (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())))
       } in
     (t, (ctx_uvar, r), g)))
 let new_implicit_var_aux (reason : Prims.string) (r : FStarC_Range_Type.t)
@@ -6462,7 +6691,7 @@ let uvar_meta_for_binder (b : FStarC_Syntax_Syntax.binder) :
           (FStarC_Syntax_Syntax.Ctx_uvar_meta_tac tau)
     | uu___ ->
         let is_unification_tag t =
-          let uu___1 = FStarC_Syntax_Util.head_and_args t in
+          let uu___1 = FStarC_Syntax_Util.head_and_args_full t in
           match uu___1 with
           | (hd, args) ->
               let hd1 = FStarC_Syntax_Util.un_uinst hd in

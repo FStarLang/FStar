@@ -27,6 +27,7 @@ open FStarC.Ident
 open FStarC.SMTEncoding.Util
 
 module SS = FStarC.Syntax.Subst
+module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 
 open FStarC.Class.Show
@@ -48,8 +49,8 @@ let primitive_projector_by_pos env lid i =
     let fail () = failwith (Format.fmt2 "Projector %s on data constructor %s not found" (show i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
-        | Tm_arrow {bs; comp=c} ->
-          let binders, _ = SS.open_comp bs c in
+        | Tm_arrow _ ->
+          let binders, _ = U.arrow_node_formals_comp t in
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
@@ -90,7 +91,13 @@ let varops =
       if !dbg_Snapshot then Format.print_string "SMTEncoding.scopes.pop\n";
       scopes := List.tl !scopes in // already signal-atomic
     let snapshot () = FStarC.Common.snapshot "SMTEncoding.scopes" push scopes () in
-    let rollback depth = FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth in
+    let rollback depth =
+      (* [reset_scope] below may have dropped the scope stack below [depth];
+         in that case there is nothing left to pop. *)
+      match depth with
+      | Some n when List.length !scopes <= n -> ()
+      | _ -> FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth
+    in
     {push=push;
      pop=pop;
      snapshot=snapshot;
@@ -123,8 +130,8 @@ let kick_partial_app (fvb:fvar_binding) =
   match fvb.smt_token, fvb.needs_fuel_and_universe_instantiations with
   | None, _ -> None
   | _, Some _ -> None
-  | Some ({tm=FreeV (FV(tok, _, _))}), _
-  | Some ({tm=App(Var tok, _)}), _ ->
+  | Some ((FreeV (FV tok _ _))), _
+  | Some ((App (Var tok) _ _)), _ ->
     if fvb.univ_arity = 0
     then (
       let t = mkApp(tok, []) in
@@ -175,7 +182,7 @@ let check_valid_fvb fvb =
     else if fvb.fvb_thunked && fvb.smt_arity <> 0
     then failwith (Format.fmt1 "Unexpected arity of thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid));
     match fvb.smt_token with
-    | Some ({tm=FreeV _}) ->
+    | Some ((FreeV _)) ->
       failwith (Format.fmt1 "bad fvb\n%s" (fvb_to_string fvb))
     | _ -> ()
 
@@ -316,7 +323,7 @@ let push_zfuel_name env (x:lident) f ftok =
 let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
     then failwith (Format.fmt1 "Forcing a non-thunk %s in the SMT encoding" (string_of_lid fvb.fvar_lid));
-    mkFreeV <| FV (fvb.smt_id, Term_sort, true)
+    mkFreeV <| FV fvb.smt_id Term_sort true
 let try_lookup_free_var env l =
     match lookup_fvar_binding env l with
     | None -> None
@@ -336,8 +343,8 @@ let try_lookup_free_var env l =
         match fvb.smt_token with
         | Some t ->
           begin
-          match t.tm with
-          | App(_, [fuel]) ->
+          match t with
+          | App _ [fuel] _ ->
             if (BU.starts_with (Term.fv_of_term fuel |> fv_name) "fuel")
             then Some <| mk_ApplyTF(mkFreeV <| mk_fv (fvb.smt_id, Term_sort)) fuel
             else Some t
@@ -354,7 +361,7 @@ let lookup_free_var_name env (a : lident) = lookup_lid env a
 let lookup_free_var_sym env (a : lident) =
     let fvb = lookup_lid env a in
     match fvb.smt_fuel_partial_app with
-    | Some({tm=App(g, zf)}, _)
+    | Some((App g zf _), _)
         when env.use_zfuel_name ->
       Inl g, zf, fvb.smt_arity + 1
     | _ ->
@@ -366,8 +373,8 @@ let lookup_free_var_sym env (a : lident) =
             Inl (Var fvb.smt_id), [], fvb.smt_arity
         | Some sym ->
             begin
-            match sym.tm with
-            | App(g, [fuel]) ->
+            match sym with
+            | App g [fuel] _ ->
                 Inl g, [fuel], fvb.smt_arity + 1
             | _ ->
                 Inl (Var fvb.smt_id), [], fvb.smt_arity
@@ -386,7 +393,7 @@ let tok_of_name env nm =
     PIMap.fold pi (fun _ y res ->
       match res, y with
       | Some _, _ -> res
-      | None, (_, {tm=App(Var sym, [])}) when sym=nm ->
+      | None, (_, (App (Var sym) [] _)) when sym=nm ->
         Some (snd y)
       | _ -> None) None)
 

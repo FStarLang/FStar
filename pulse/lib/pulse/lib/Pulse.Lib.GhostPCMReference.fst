@@ -14,6 +14,10 @@
    limitations under the License.
 *)
 module Pulse.Lib.GhostPCMReference
+open Pulse.Lib.SmallType
+open Pulse.Lib.Core
+open Pulse.Lib.Send
+open Pulse.Main
 #lang-pulse
 open FStar.PCM
 module U = Pulse.Lib.Raise

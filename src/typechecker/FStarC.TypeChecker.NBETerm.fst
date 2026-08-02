@@ -16,6 +16,7 @@
 
 module FStarC.TypeChecker.NBETerm
 
+open FStarC.Ident
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax

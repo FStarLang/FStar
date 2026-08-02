@@ -16,6 +16,7 @@
 
 module PulseCore.Action
 friend PulseCore.InstantiatedSemantics
+open Pulse.Lib.Loc
 module Sem = PulseCore.Semantics
 module Sep = PulseCore.IndirectionTheorySep
 module ITA = PulseCore.IndirectionTheoryActions
@@ -680,7 +681,7 @@ let impersonate_pre_act #a #r #ictx #pre #post l (k: pre_act a r ictx pre post) 
   assert interp (post x `star` (loc l `star` on l0 frame) `star` mem_invariant ictx m2) m2;
   let m3 = set_loc m2 l0 in
   impersonate_lem2 l l0 m2 (post x) ictx frame;
-  introduce Ghost? r ==> is_ghost_action m0 m3 with _. (
+  introduce Ghost? r ==> is_ghost_action m0 m3 with (
     assert FStar.Preorder.transitive is_ghost_action
   );
   x, m3

@@ -16,6 +16,9 @@
 
 module Pulse.Typing.Env
 
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
+module Pprint = FStar.Pprint
 open Pulse.Syntax
 
 module G = FStar.Ghost

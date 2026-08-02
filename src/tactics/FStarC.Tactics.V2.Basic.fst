@@ -15,6 +15,7 @@
 *)
 module FStarC.Tactics.V2.Basic
 
+module Range  = FStarC.Range
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -1006,7 +1007,7 @@ let apply_implicits_as_goals
   : ML (tac (list (list goal))) =
 
   let one_implicit_as_goal (term, ctx_uvar) =
-    let hd, _ = U.head_and_args term in
+    let hd, _ = U.head_and_args_full term in
     match (SS.compress hd).n with
     | Tm_uvar (ctx_uvar, _) ->
       let gl =
@@ -1200,7 +1201,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv (goal_type g')) goals in
         let checkone t goals =
-            let hd, _ = U.head_and_args t in
+            let hd, _ = U.head_and_args_full t in
             begin match hd.n with
             | Tm_uvar (uv, _) -> appears uv.ctx_uvar_head goals
             | _ -> false
@@ -1774,7 +1775,7 @@ let unshelve (t : term) : ML (tac unit) = wrap_err "unshelve" <| (
                | g::_ -> g.opts
                | _ -> FStarC.Options.peek ()
     in
-    match U.head_and_args t with
+    match U.head_and_args_full t with
     | { n = Tm_uvar (ctx_uvar, _) }, _ ->
         let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
         let g = mk_goal env ctx_uvar opts false "" in

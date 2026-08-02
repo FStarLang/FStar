@@ -18,7 +18,7 @@ defaulting to returning the original term elsewhere. For instance, this
 (only slightly ficticious) call
 
   visit (fun t ->
-    match head_and_args t with
+    match head_and_args_full t with
     | (Tm_fvar plus, [a1;a2]) where fv_eq_lid plus PC.op_Addition ->
       let n1 = unembed a1 in
       let n2 = unembed a2 in

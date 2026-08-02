@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module PulseCore.IndirectionTheoryActions
+open PulseCore.IndirectionTheorySep
+open Pulse.Lib.Loc
 module PM = PulseCore.MemoryAlt
 module B = PulseCore.BaseHeapSig
 open FStar.Ghost
@@ -27,7 +29,7 @@ let pm_sep_laws () : squash (
 ) 
 = introduce forall p q. PM.equiv u#a p q ==> p == q
   with introduce _ ==> _
-  with _ . (
+  with (
     PM.slprop_extensionality p q
   );
   let open PM in
@@ -82,7 +84,7 @@ let pin_frame (p:pm_slprop) (frame:slprop)
   = introduce forall s0 s1.
       fr s0 /\ B.disjoint_mem s0 s1 ==> fr (B.join_mem s0 s1)
     with introduce _ ==> _
-    with _.
+    with
       update_timeless_mem_join m1 s0 s1
   in
   fr_affine();
@@ -100,15 +102,14 @@ let pin_frame (p:pm_slprop) (frame:slprop)
       PM.interp (q `PM.star` frame') m' ==>
       interp (lift q `star` frame) (update_timeless_mem w m')
   with introduce _ ==> _
-  with _ . (
+  with (
     B.star_equiv q frame' m';
     eliminate exists (m0' m1':IndirectionTheorySep.timeless_mem).
         B.disjoint_mem m0' m1' /\
         m' == B.join_mem m0' m1' /\
         B.interp q m0' /\
         B.interp frame' m1'
-    returns _
-    with _ . ( 
+    with ( 
       assert (fr m1');
       let mres = update_timeless_mem w m' in
       introduce exists (ml mr:mem).
@@ -524,8 +525,7 @@ let witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
     let m1, m2 = split_mem (op_exists_Star p) (frame `star` mem_invariant opened_invariants s0) s0 in 
     interp_exists p;
     eliminate exists x. interp (p x) m1
-    returns exists x. interp (p x `star` (frame `star` mem_invariant opened_invariants s0)) s0
-    with _. (
+    with (
         star_equiv (p x) (frame `star` mem_invariant opened_invariants s0) s0
     );
     let x =

@@ -1608,7 +1608,7 @@ let e_norm_step :
   let un t norm =
     lazy_unembed printer1 emb_t_norm_step t typ
       (fun t1 ->
-         let uu___ = FStarC_Syntax_Util.head_and_args t1 in
+         let uu___ = FStarC_Syntax_Util.head_and_args_full t1 in
          match uu___ with
          | (hd, args) ->
              let uu___1 =
@@ -1999,7 +1999,7 @@ let e_vconfig :
     FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng in
   let un uu___1 uu___ =
     (fun t norm ->
-       let uu___ = FStarC_Syntax_Util.head_and_args t in
+       let uu___ = FStarC_Syntax_Util.head_and_args_full t in
        match uu___ with
        | (hd, args) ->
            let uu___1 =
@@ -2707,7 +2707,7 @@ let e_order : FStarC_Order.order FStarC_Syntax_Embeddings_Base.embedding=
     } in
   let unembed_order t cb =
     let t1 = FStarC_Syntax_Util.unascribe t in
-    let uu___ = FStarC_Syntax_Util.head_and_args t1 in
+    let uu___ = FStarC_Syntax_Util.head_and_args_full t1 in
     match uu___ with
     | (hd, args) ->
         let uu___1 =
@@ -2741,21 +2741,14 @@ let e_arrow (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
     let uu___1 =
       let uu___2 =
         let uu___3 =
-          let uu___4 =
-            let uu___5 =
-              let uu___6 = FStarC_Syntax_Embeddings_Base.type_of ea in
-              FStarC_Syntax_Syntax.null_bv uu___6 in
-            FStarC_Syntax_Syntax.mk_binder uu___5 in
-          [uu___4] in
-        let uu___4 =
-          let uu___5 = FStarC_Syntax_Embeddings_Base.type_of eb in
-          FStarC_Syntax_Syntax.mk_Total uu___5 in
-        {
-          FStarC_Syntax_Syntax.bs1 = uu___3;
-          FStarC_Syntax_Syntax.comp = uu___4
-        } in
-      FStarC_Syntax_Syntax.Tm_arrow uu___2 in
-    FStarC_Syntax_Syntax.mk uu___1 FStarC_Range_Type.dummyRange in
+          let uu___4 = FStarC_Syntax_Embeddings_Base.type_of ea in
+          FStarC_Syntax_Syntax.null_bv uu___4 in
+        FStarC_Syntax_Syntax.mk_binder uu___3 in
+      [uu___2] in
+    let uu___2 =
+      let uu___3 = FStarC_Syntax_Embeddings_Base.type_of eb in
+      FStarC_Syntax_Syntax.mk_Total uu___3 in
+    FStarC_Syntax_Util.arrow_ln uu___1 uu___2 in
   let emb_t_arr_a_b uu___ =
     let uu___1 =
       let uu___2 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in

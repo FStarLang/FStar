@@ -18,6 +18,7 @@
  * queries; this file collects helpers for them                  *)
 
 module FStarC.Interactive.QueryHelper
+open FStarC.Interactive.Ide.Types
 open FStarC.Effect
 open FStarC.List
 open FStarC

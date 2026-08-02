@@ -1,5 +1,6 @@
 module Pulse.Lib.ForEvery
 
+open Pulse
 #lang-pulse
 open FStar.Fin
 open FStar.Bijection
@@ -477,7 +478,7 @@ fn forevery_remove'
       cond (t2b (pred y)) (p y) emp **
       forall+ (z:a { f z /\ z =!= y /\ pred z }). p z)
     fn pred add g {
-      forevery_fill p (fun z -> f z /\ z =!= y /\ add z)
+      forevery_fill #a p (fun z -> f z /\ z =!= y /\ add z)
         fn x { g x };
       forevery_refine_ext (fun (z: a) -> f z /\ ~(eq2 #a z y) /\ (pred z \/ add z <: prop)) p;
       let b = t2b (add y);
@@ -665,7 +666,7 @@ fn forevery_refine_join
     (fun pred ->
       forall+ (x:a{(f x /\ pred x) \/ g x}). p x)
     fn pred add h {
-      forevery_fill p (fun z -> f z /\ add z) fn x { h x };
+      forevery_fill #a p (fun z -> f z /\ add z) fn x { h x };
       forevery_refine_ext #a (fun x -> f x /\ (pred x \/ add x) \/ g x) p;
     }
     fn pred x {
@@ -692,7 +693,7 @@ fn forevery_refine_join'
 {
   forevery_ext #(x:a{f x}) (fun x -> p x) (fun x -> when__ (f x \/ g x) (fun _ -> p x));
   forevery_ext #(x:a{g x}) (fun x -> p x) (fun x -> when__ (f x \/ g x) (fun _ -> p x));
-  forevery_refine_join (fun x -> when__ (f x \/ g x) (fun _ -> p x)) f g;
+  forevery_refine_join #a (fun x -> when__ (f x \/ g x) (fun _ -> p x)) f g;
   forevery_ext #(x:a{f x \/ g x}) (fun x -> when__ (f x \/ g x) (fun _ -> p x)) (fun x -> p x);
 }
 
@@ -1176,7 +1177,7 @@ fn forevery_fin_pop
   ensures
     p (n-1)
 {
-  forevery_refine_split p (fun i -> i < n-1);
+  forevery_refine_split #(fin n) p (fun i -> i < n-1);
   forevery_singleton_elim' #(x: fin n {~(b2t (x < n - 1))}) p (n-1);
   forevery_fin_restrict #(n-1) n (fun i -> p (fin_coerce i));
 }
@@ -1194,7 +1195,7 @@ fn forevery_fin_push
 {
   forevery_fin_extend #(n-1) n (fun i -> p (fin_coerce i));
   forevery_singleton_intro' #(x: fin n {~(b2t (x < n - 1))}) p (n-1);
-  forevery_refine_join p (fun i -> i < n - 1) _;
+  forevery_refine_join #(fin n) p (fun i -> i < n - 1) _;
   forevery_unrefine p;
 }
 

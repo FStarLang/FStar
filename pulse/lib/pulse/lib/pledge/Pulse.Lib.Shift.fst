@@ -15,6 +15,10 @@
 *)
 
 module Pulse.Lib.Shift
+open Pulse.Class.Introducable
+open Pulse.Lib.Core
+open Pulse.Main
+module T = FStar.Tactics
 #lang-pulse
 open FStar.Ghost
 open Pulse.Class.Duplicable

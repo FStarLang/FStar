@@ -1,4 +1,5 @@
 module Pulse.Lib.WithPure
+open Pulse.Lib.Send
 #lang-pulse
 open Pulse.Lib.Core
 open Pulse.Main

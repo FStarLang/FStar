@@ -15,6 +15,9 @@
 *)
 
 module Pulse.Lib.CountingSemaphore
+open Pulse.Lib.Pervasives
+module U32 = FStar.UInt32
+module Tank = Pulse.Lib.Tank
 #lang-pulse
 open Pulse.Lib.Primitives
 module B = Pulse.Lib.Box

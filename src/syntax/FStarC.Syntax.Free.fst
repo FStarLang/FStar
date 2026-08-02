@@ -112,13 +112,11 @@ let rec free_univs u : ML _ = match Subst.compress_univ u with
   | U_unif u -> singleton_univ u
 
 //the interface of Syntax.Free now supports getting fvars in a term also
-//however, fvars are added unlike free names, free uvars, etc. which are part of a record free_vars, that is memoized at **every** AST node
-//if we added fvars also to the record, it would affect every AST node
-//instead of doing that, the functions below compute a tuple, free_vars * set lident, where the second component is the fvars lids
-//but this raises a compilication, what should happen when the functions below just return from the cache from the AST nodes
-//to handle that, use_cache flag is UNSET when asking for free_fvars, so that all the terms are traversed completely
-//on the other hand, for earlier interface use_cache is true
-//this flag is propagated, and is used in the function should_invalidate_cache below
+//fvars are not part of the free_vars record: the functions below compute a
+//tuple, free_vars * set lident, where the second component is the fvars lids
+//the use_cache flag no longer controls any memoization (there is none); it now
+//only distinguishes Full, which additionally descends into the types of
+//resolved unification variables, from Def/NoCache, which do not
 let rec free_names_and_uvs' tm (use_cache:use_cache_t) : ML free_vars_and_fvars =
     let aux_binders (bs : binders) (from_body : free_vars_and_fvars) : ML _ =
         let from_binders = free_names_and_uvars_binders bs use_cache in
@@ -152,20 +150,20 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : ML free_vars_and_fvars 
         let f = free_names_and_uvars t use_cache in
         List.fold_left (fun out u -> out ++ free_univs u) f us
 
-      | Tm_abs {bs; body=t; rc_opt=ropt} ->
-        aux_binders bs (free_names_and_uvars t use_cache) ++
+      | Tm_abs {b; body=t; rc_opt=ropt} ->
+        aux_binders [b] (free_names_and_uvars t use_cache) ++
         (match ropt with
          | Some { residual_typ = Some t } ->  free_names_and_uvars t use_cache
          | _ -> no_free_vars)
 
-      | Tm_arrow {bs; comp=c} ->
-        aux_binders bs (free_names_and_uvars_comp c use_cache)
+      | Tm_arrow {b; comp=c} ->
+        aux_binders [b] (free_names_and_uvars_comp c use_cache)
 
       | Tm_refine {b=bv; phi=t} ->
         aux_binders [mk_binder bv] (free_names_and_uvars t use_cache)
 
-      | Tm_app {hd=t; args} ->
-        free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
+      | Tm_app {hd=t; arg} ->
+        free_names_and_uvars_args [arg] (free_names_and_uvars t use_cache) use_cache
 
       | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats; rc_opt} ->
         (match rc_opt with
@@ -241,27 +239,13 @@ and free_names_and_uvars_ascription asc use_cache : ML _ =
 
 and free_names_and_uvars t use_cache : ML _ =
   let t = Subst.compress t in
-  let v = !t.vars in
-  match v with
-  | Some n when not (should_invalidate_cache n use_cache) -> n, empty ()
-  | _ ->
-      t.vars := None;
-      let n = free_names_and_uvs' t use_cache in
-      if use_cache <> Full then t.vars := Some (fst n);
-      n
+  free_names_and_uvs' t use_cache
 
 and free_names_and_uvars_args args (acc : free_vars_and_fvars) use_cache : ML _ =
    args |> List.fold_left (fun n (x, _) -> n ++ (free_names_and_uvars x use_cache)) acc
 
 and free_names_and_uvars_comp c use_cache : ML _ =
-    let v = !c.vars in
-    match v with
-        | Some n ->
-          if should_invalidate_cache n use_cache
-          then (c.vars := None; free_names_and_uvars_comp c use_cache)
-          else n, empty ()
-        | _ ->
-         let n = match c.n with
+         match c.n with
             | GTotal t
             | Total t ->
               free_names_and_uvars t use_cache
@@ -280,9 +264,6 @@ and free_names_and_uvars_comp c use_cache : ML _ =
               let us = free_names_and_uvars_args ct.effect_args us use_cache in
               //decreases clause + return type + effect args + comp_univs
               List.fold_left (fun us u -> us ++ free_univs u) us ct.comp_univs
-         in
-         c.vars := Some (fst n);
-         n
 
 and free_names_and_uvars_dec_order dec_order use_cache : ML _ =
   match dec_order with
@@ -291,20 +272,6 @@ and free_names_and_uvars_dec_order dec_order use_cache : ML _ =
   | Decreases_wf (rel, e) ->
     free_names_and_uvars rel use_cache ++
     free_names_and_uvars e use_cache
-
-and should_invalidate_cache n use_cache : ML _ =
-    (use_cache <> Def) ||
-    (n.free_uvars |> for_any (fun u ->
-         match UF.find u.ctx_uvar_head with
-         | Some _ -> true
-         | _ -> false)) ||
-    (n.free_univs |> for_any (fun u ->
-           match UF.univ_find u with
-           | Some _ -> true
-           | None -> false))
-
-//note use_cache is set false ONLY for fvars, which is not maintained at each AST node
-//see the comment above
 
 let names t : ML _ = (fst (free_names_and_uvars t Def)).free_names
 let names_comp c : ML _ = (fst (free_names_and_uvars_comp c Def)).free_names

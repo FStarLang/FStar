@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Checker.ImpureSpec
+open Pulse.Typing
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils

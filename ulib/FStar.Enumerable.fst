@@ -63,7 +63,7 @@ let distinct_seq_enumerates_all (#a:Type) {| d : enumerable a |} (s:Seq.seq a {S
   (requires forall (x y: fin (cardinal a #_)). x <> y ==> Seq.index s x =!= Seq.index s y)
   (ensures exists (i:fin (cardinal a #_)). Seq.index s i == n)
 = introduce (forall (i:fin (cardinal a #_)). Seq.index s i =!= n) ==> False
-  with _ . (
+  with (
     distinct_seq_greater_than_cardinal_impossible (Seq.snoc s n)
   )
 

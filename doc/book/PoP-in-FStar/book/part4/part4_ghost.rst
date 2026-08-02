@@ -351,13 +351,15 @@ A few comments on these examples:
 * ``incr'`` is interesting, since it calls ``incr_e``: its body
   is implicitly coerced to ``reveal (incr_e (hide x))``
 
-* Finally, ``poly`` shows the limitations of implicit coercion: F*
-  only inserts coercions when the expected type of the term in a
-  context and the type of the term differ by an ``erased``
-  constructor. In ``poly``, since ``==`` is polymorphic, the expected
-  type of the context is just an unresolved unification variable and,
-  so, no coercion is inserted. Instead, F* complains that ``y`` has
-  type ``erased nat`` when the type ``nat`` was expected.
+* Finally, ``poly`` illustrates coercion at a polymorphic type: since
+  ``==`` is polymorphic, the expected type of ``y`` is an unresolved
+  unification variable. However, the preceding argument ``x`` already
+  constrains that variable to be at least ``nat``, and F* uses that
+  constraint as the expected type when coercing---so the body is
+  implicitly coerced to ``x == reveal y``. Coercions are still only
+  inserted when the two types differ by an ``erased`` constructor, and
+  only when nothing at all is known about the expected type is the
+  coercion skipped.
   
 
 .. _Ghost_in_total_contexts:

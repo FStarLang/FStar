@@ -1121,48 +1121,31 @@ let rec embedding_for (tcenv : FStarC_TypeChecker_Env.env)
         FStar_Pervasives_Native.snd uu___ in
       mk (FStarC_Extraction_ML_Syntax.MLE_App (comb, [str_to_name s]))
   | FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = uu___;_} ->
+      { FStarC_Syntax_Syntax.b2 = x; FStarC_Syntax_Syntax.phi = uu___;_} ->
       embedding_for tcenv mutuals k env x.FStarC_Syntax_Syntax.sort
   | FStarC_Syntax_Syntax.Tm_ascribed
       { FStarC_Syntax_Syntax.tm = t4; FStarC_Syntax_Syntax.asc = uu___;
         FStarC_Syntax_Syntax.eff_opt = uu___1;_}
       -> embedding_for tcenv mutuals k env t4
-  | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = b::[]; FStarC_Syntax_Syntax.comp = c;_}
-      when FStarC_Syntax_Util.is_pure_comp c ->
-      let uu___ = FStarC_Syntax_Subst.open_comp [b] c in
-      (match uu___ with
-       | (b1::[], c1) ->
+  | FStarC_Syntax_Syntax.Tm_arrow uu___ when
+      let uu___1 = FStarC_Syntax_Util.arrow_one_ln t3 in
+      match uu___1 with
+      | FStar_Pervasives_Native.Some (uu___2, c) ->
+          FStarC_Syntax_Util.is_pure_comp c
+      | FStar_Pervasives_Native.None -> false ->
+      let uu___1 =
+        let uu___2 = FStarC_Syntax_Util.arrow_one t3 in
+        FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
+      (match uu___1 with
+       | (b, c) ->
            let t0 =
-             (b1.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-           let t11 = FStarC_Syntax_Util.comp_result c1 in
-           let uu___1 = embedding_for tcenv mutuals k env t0 in
-           let uu___2 = embedding_for tcenv mutuals k env t11 in
-           emb_arrow uu___1 uu___2)
-  | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = b::more::bs;
-        FStarC_Syntax_Syntax.comp = c;_}
-      ->
-      let tail =
-        FStarC_Syntax_Syntax.mk
-          (FStarC_Syntax_Syntax.Tm_arrow
-             {
-               FStarC_Syntax_Syntax.bs1 = (more :: bs);
-               FStarC_Syntax_Syntax.comp = c
-             }) t3.FStarC_Syntax_Syntax.pos in
-      let t4 =
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_Syntax_Syntax.mk_Total tail in
-            {
-              FStarC_Syntax_Syntax.bs1 = [b];
-              FStarC_Syntax_Syntax.comp = uu___2
-            } in
-          FStarC_Syntax_Syntax.Tm_arrow uu___1 in
-        FStarC_Syntax_Syntax.mk uu___ t3.FStarC_Syntax_Syntax.pos in
-      embedding_for tcenv mutuals k env t4
+             (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+           let t11 = FStarC_Syntax_Util.comp_result c in
+           let uu___2 = embedding_for tcenv mutuals k env t0 in
+           let uu___3 = embedding_for tcenv mutuals k env t11 in
+           emb_arrow uu___2 uu___3)
   | FStarC_Syntax_Syntax.Tm_app uu___ ->
-      let uu___1 = FStarC_Syntax_Util.head_and_args t3 in
+      let uu___1 = FStarC_Syntax_Util.head_and_args_full t3 in
       (match uu___1 with
        | (head, args) ->
            let e_head = embedding_for tcenv mutuals k env head in
@@ -2059,7 +2042,7 @@ let maybe_register_plugin (g : FStarC_Extraction_ML_UEnv.uenv)
   let plugin_with_arity attrs =
     FStarC_Util.find_map attrs
       (fun t ->
-         let uu___ = FStarC_Syntax_Util.head_and_args t in
+         let uu___ = FStarC_Syntax_Util.head_and_args_full t in
          match uu___ with
          | (head, args) ->
              let uu___1 =

@@ -1,11 +1,8 @@
 open Prims
 let query_cache_ref : FStarC_Hash.hash_code FStarC_RBSet.t FStarC_Effect.ref=
   let uu___ =
-    Obj.magic
-      (FStarC_Class_Setlike.empty ()
-         (Obj.magic
-            (FStarC_RBSet.setlike_rbset FStarC_Class_Hashable.ord_hash_code))
-         ()) in
+    FStarC_Class_Setlike.empty
+      (FStarC_RBSet.setlike_rbset FStarC_Class_Hashable.ord_hash_code) () in
   FStarC_Effect.mk_ref uu___
 let on (uu___ : unit) : Prims.bool=
   let uu___1 = FStarC_Options.query_cache () in
@@ -22,11 +19,9 @@ let query_cache_add (g : FStarC_TypeChecker_Env.env)
            FStarC_Syntax_Hash.hashable_term) (g, q) in
     let uu___1 =
       let uu___2 = FStarC_Effect.op_Bang query_cache_ref in
-      Obj.magic
-        (FStarC_Class_Setlike.add ()
-           (Obj.magic
-              (FStarC_RBSet.setlike_rbset FStarC_Class_Hashable.ord_hash_code))
-           h (Obj.magic uu___2)) in
+      FStarC_Class_Setlike.add
+        (FStarC_RBSet.setlike_rbset FStarC_Class_Hashable.ord_hash_code) h
+        uu___2 in
     FStarC_Effect.op_Colon_Equals query_cache_ref uu___1
   else ()
 let try_find_query_cache (g : FStarC_TypeChecker_Env.env)
@@ -41,9 +36,8 @@ let try_find_query_cache (g : FStarC_TypeChecker_Env.env)
            FStarC_Syntax_Hash.hashable_term) (g, q) in
     let r =
       let uu___1 = FStarC_Effect.op_Bang query_cache_ref in
-      FStarC_Class_Setlike.mem ()
-        (Obj.magic
-           (FStarC_RBSet.setlike_rbset FStarC_Class_Hashable.ord_hash_code))
-        h (Obj.magic uu___1) in
+      FStarC_Class_Setlike.mem
+        (FStarC_RBSet.setlike_rbset FStarC_Class_Hashable.ord_hash_code) h
+        uu___1 in
     r
   else false

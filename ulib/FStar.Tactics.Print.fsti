@@ -3,6 +3,7 @@ module FStar.Tactics.Print
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Tactics.Effect
+open FStar.Tactics.NamedView
 
 [@@plugin]
 val namedv_to_string (x:Stubs.Reflection.Types.namedv) : Tac string

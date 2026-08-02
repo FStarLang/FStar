@@ -176,10 +176,9 @@ and sub_elam (#r:bool) (s:sub r)
         else subst sub_inc (s (y - 1))
     in
     introduce not r ==> (exists x. ~ (EVar? (f x)))
-    with not_r. 
+    with 
       eliminate exists y. ~ (EVar? (s y))
-      returns (exists x. ~ (EVar? (f x)))
-      with (not_evar_sy:squash (~(EVar? (s y)))). 
+      with 
         introduce exists x. ~(EVar? (f x))
         with (y + 1)
         and ()
@@ -620,7 +619,7 @@ let naive_rel_implies_c ws wt : Lemma (rel_whole naive_rel ws wt) =
     ws `naive_rel` (dsnd wt)
   ==> 
     behS ws == behT wt
-  with _. begin
+  with begin
     let (| ew', htw' |) = eval (dsnd wt) in
     assert (TyLam? htw');
     let htapp : typing empty (EApp ew' EUnit) TNat = TyApp htw' TyUnit in

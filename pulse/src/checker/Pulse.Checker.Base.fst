@@ -16,6 +16,8 @@
 
 module Pulse.Checker.Base
 
+open Pulse.Typing
+open Pulse.Syntax
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing

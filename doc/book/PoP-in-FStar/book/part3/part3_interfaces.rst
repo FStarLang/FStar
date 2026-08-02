@@ -209,42 +209,50 @@ one implementation. For interfaces with multiple implementations, one
 must use typeclasses.
 
 
-Interleaving: A Quirk
----------------------
+Checking an implementation against its interface
+------------------------------------------------
 
-The current F* implementation views an interface and its
-implementation as two partially implemented halves of a module. When
-checking that an implementation is a correct implementation of an
-interface, F* attempts to combine the two halves into a complete
-module before typechecking it. It does this by trying to *interleave*
-the top-level elements of the interface and implementation, preserving
-their relative order.
+F* views an interface and its implementation as two partially
+implemented halves of a module. The interface is checked first, on its
+own, producing a checked module; the implementation is then checked
+against the *already checked* declarations of the interface.
 
-This implementation strategy is far from optimal in various ways and a
-relic from a time when F*'s implementation did not support separate
-compilation. This implementation strategy is likely to change in the
-future (see `this issue
-<https://github.com/FStarLang/FStar/issues/1770>`_ for
-details).
+As F* works through the implementation, it discharges the declarations
+of the interface one by one:
 
-Meanwhile, the main thing to keep in mind when implementing interfaces
-is the following:
+  * When the implementation defines a name declared by a ``val`` in the
+    interface, F* checks that the definition *subsumes* the
+    declaration: the two must have the same number of universe
+    parameters and the type of the definition must be a subtype of the
+    declared type. The declaration is never re-elaborated.
+
+  * Declarations of the interface that the implementation does not
+    define — for instance a ``let`` written directly in the interface,
+    or the projectors and discriminators generated for an inductive
+    type — are copied verbatim into the implementation. They are not
+    rechecked, so the terms recorded for them are exactly those of the
+    interface's checked module.
+
+  * If, at the end of the implementation, some declarations of the
+    interface are still undischarged, F* reports an error listing
+    them.
+
+Things to keep in mind when implementing an interface:
 
   * The order of definitions in an implementation must match the order
     of ``val`` declarations in the interface. E.g., if the interface
     contains ``val f : tf`` followed by ``val g : tg``, then the
     implementation of ``f`` must precede the implementation of ``g``.
 
+  * The scope of an interface is *not* inherited by its
+    implementation. In particular, ``open``, ``include`` and module
+    abbreviations written in ``A.fsti`` have no effect on ``A.fst``;
+    each file must declare the ones it uses. The same holds for
+    pragmas such as ``#set-options`` and ``#push-options``.
+
 Also, remember that if you are writing ``val`` declarations in an
 interface, it is a good idea to be explicit about universe levels. See
 :ref:`here for more discussion <Part2_tips_for_universes>`.
-
-Other issues with interleaving that may help in debugging compiler
-errors with interfaces:
-
-  * `Issue 2020 <https://github.com/FStarLang/FStar/issues/2020>`_
-  * `Issue 1770 <https://github.com/FStarLang/FStar/issues/1770>`_
-  * `Issue 959  <https://github.com/FStarLang/FStar/issues/959>`_
 
 Comparison with machine integers in the F* library
 --------------------------------------------------

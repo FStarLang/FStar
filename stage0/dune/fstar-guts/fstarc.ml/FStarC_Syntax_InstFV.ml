@@ -26,30 +26,30 @@ let rec inst
   | FStarC_Syntax_Syntax.Tm_lazy uu___ -> t1
   | FStarC_Syntax_Syntax.Tm_fvar fv -> s t1 fv
   | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.body = body;
+      { FStarC_Syntax_Syntax.b = b; FStarC_Syntax_Syntax.body = body;
         FStarC_Syntax_Syntax.rc_opt = lopt;_}
       ->
-      let bs1 = inst_binders s bs in
+      let b1 = let uu___ = inst_binders s [b] in FStarC_List.hd uu___ in
       let body1 = inst s body in
       let uu___ =
         let uu___1 =
           let uu___2 = inst_lcomp_opt s lopt in
           {
-            FStarC_Syntax_Syntax.bs = bs1;
+            FStarC_Syntax_Syntax.b = b1;
             FStarC_Syntax_Syntax.body = body1;
             FStarC_Syntax_Syntax.rc_opt = uu___2
           } in
         FStarC_Syntax_Syntax.Tm_abs uu___1 in
       mk1 uu___
   | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_} ->
-      let bs1 = inst_binders s bs in
+      { FStarC_Syntax_Syntax.b1 = b; FStarC_Syntax_Syntax.comp = c;_} ->
+      let b1 = let uu___ = inst_binders s [b] in FStarC_List.hd uu___ in
       let c1 = inst_comp s c in
       mk1
         (FStarC_Syntax_Syntax.Tm_arrow
-           { FStarC_Syntax_Syntax.bs1 = bs1; FStarC_Syntax_Syntax.comp = c1 })
+           { FStarC_Syntax_Syntax.b1 = b1; FStarC_Syntax_Syntax.comp = c1 })
   | FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = t2;_} ->
+      { FStarC_Syntax_Syntax.b2 = bv; FStarC_Syntax_Syntax.phi = t2;_} ->
       let bv1 =
         let uu___ = inst s bv.FStarC_Syntax_Syntax.sort in
         {
@@ -60,16 +60,17 @@ let rec inst
       let t3 = inst s t2 in
       mk1
         (FStarC_Syntax_Syntax.Tm_refine
-           { FStarC_Syntax_Syntax.b = bv1; FStarC_Syntax_Syntax.phi = t3 })
+           { FStarC_Syntax_Syntax.b2 = bv1; FStarC_Syntax_Syntax.phi = t3 })
   | FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = t2; FStarC_Syntax_Syntax.args = args;_} ->
+      { FStarC_Syntax_Syntax.hd = t2; FStarC_Syntax_Syntax.arg = arg;_} ->
       let uu___ =
         let uu___1 =
           let uu___2 = inst s t2 in
-          let uu___3 = inst_args s args in
+          let uu___3 =
+            let uu___4 = inst_args s [arg] in FStarC_List.hd uu___4 in
           {
             FStarC_Syntax_Syntax.hd = uu___2;
-            FStarC_Syntax_Syntax.args = uu___3
+            FStarC_Syntax_Syntax.arg = uu___3
           } in
         FStarC_Syntax_Syntax.Tm_app uu___1 in
       mk1 uu___

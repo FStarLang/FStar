@@ -200,36 +200,32 @@ let rec find_idx :
     match l with
     | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
     | x::xs ->
-        FStar_Tactics_Effect.tac_bind () () (f x)
-          (fun uu___ ->
-             if uu___
-             then
-               fun uu___1 -> FStar_Pervasives_Native.Some (Prims.int_zero, x)
-             else
-               FStar_Tactics_Effect.tac_bind () () (find_idx f xs)
-                 (fun uu___1 uu___2 ->
-                    match uu___1 with
-                    | FStar_Pervasives_Native.None ->
-                        FStar_Pervasives_Native.None
-                    | FStar_Pervasives_Native.Some (i, x1) ->
-                        FStar_Pervasives_Native.Some
-                          ((i + Prims.int_one), x1)))
+        (fun ps ->
+           let x1 = f x ps in
+           if x1
+           then FStar_Pervasives_Native.Some (Prims.int_zero, x)
+           else
+             (let x2 = find_idx f xs ps in
+              match x2 with
+              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+              | FStar_Pervasives_Native.Some (i, x3) ->
+                  FStar_Pervasives_Native.Some ((i + Prims.int_one), x3)))
 let atom (t : FStarC_Reflection_Types.term) : expr tm=
   fun uu___ ->
     match uu___ with
     | (n, atoms) ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (find_idx
-             (fun a uu___1 -> FStar_Reflection_TermEq_Simple.term_eq t a)
-             atoms)
-          (fun uu___1 uu___2 ->
-             match uu___1 with
-             | FStar_Pervasives_Native.None ->
-                 FStar_Pervasives.Inr
-                   ((Atom (n, t)), ((n + Prims.int_one), (t :: atoms)))
-             | FStar_Pervasives_Native.Some (i, t1) ->
-                 FStar_Pervasives.Inr
-                   ((Atom (((n - Prims.int_one) - i), t1)), (n, atoms)))
+        (fun ps ->
+           let x =
+             find_idx
+               (fun a uu___1 -> FStar_Reflection_TermEq_Simple.term_eq t a)
+               atoms ps in
+           match x with
+           | FStar_Pervasives_Native.None ->
+               FStar_Pervasives.Inr
+                 ((Atom (n, t)), ((n + Prims.int_one), (t :: atoms)))
+           | FStar_Pervasives_Native.Some (i, t1) ->
+               FStar_Pervasives.Inr
+                 ((Atom (((n - Prims.int_one) - i), t1)), (n, atoms)))
 let fail (s : Prims.string) : 'a tm= fun i uu___ -> FStar_Pervasives.Inl s
 let rec as_arith_expr (t : FStarC_Reflection_Types.term) : expr tm=
   let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in

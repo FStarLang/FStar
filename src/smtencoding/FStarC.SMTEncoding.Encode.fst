@@ -15,6 +15,7 @@
 *)
 module FStarC.SMTEncoding.Encode
 
+module ErrorReporting = FStarC.SMTEncoding.ErrorReporting
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -87,9 +88,9 @@ let prims =
     let xsym, x = fresh_fvar module_name "x" Term_sort in
     let ysym, y = fresh_fvar module_name "y" Term_sort in
     let quant_with_pre (rel:defn_rel_type) vars precondition body : Range.t -> string -> ML (term & int & list decl) = fun rng x ->
-        let xname_decl = Term.DeclFun(x, vars |> List.map fv_sort, Term_sort, None) in
+        let xname_decl = Term.DeclFun x (vars |> List.map fv_sort) Term_sort None in
         let xtok = x ^ "@tok" in
-        let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
+        let xtok_decl = Term.DeclFun xtok [] Term_sort None in
         let xapp = mkApp(x, List.map mkFreeV vars) in //arity ok, see decl (#1383)
         let xtok = mkApp(xtok, []) in //arity ok, see decl (#1383)
         let xtok_app = mk_Apply xtok vars in
@@ -168,7 +169,7 @@ let prims =
         (Const.real_op_Addition,    (quant Eq xy  (boxReal <| mkAdd(unboxReal x, unboxReal y))));
         (Const.real_op_Multiply,    (quant Eq xy  (boxReal <| mkMul(unboxReal x, unboxReal y))));
         (Const.real_op_Division,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxReal y, mkReal "0")))) (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
-        (Const.real_of_int,         (quant Eq qx  (boxReal <| mkRealOfInt (unboxInt x) Range.dummyRange)))
+        (Const.real_of_int,         (quant Eq qx  (boxReal <| mkRealOfInt (unboxInt x))))
         ]
     in
     let mk : lident -> string -> ML (term & int & list decl) =
@@ -434,14 +435,13 @@ let forall_univs rng univ_fvs body =
     let csorts = List.map fv_sort cvars in
     let body = abstr cvars body in
     match body with
-    | {tm=Quant (Forall, pats, wopt, sorts, body); rng} ->
-      mkForall'' rng (pats, wopt, csorts @ sorts, body)
+    | Quant Forall pats wopt sorts body r ->
+      mkForall'' r (pats, wopt, csorts @ sorts, body)
     | _ ->
-      mkForall'' rng ([], None, csorts, body)
+      mkForall'' (range_of_term body) ([], None, csorts, body)
 
 let encode_smt_lemma env fv t =
     let lid = fv.fv_name in
-    let t = U.canon_arrow t in // Make sure we flatten to catch SMTPats, see #2596
     let form, decls = encode_function_type_as_formula t env in
     let form = forall_univs (range_of_fv fv) (Free.univnames t |> FlatSet.elems) form in
     decls@([Util.mkAssume(form, Some ("Lemma: " ^ (string_of_lid lid)), ("lemma_"^(string_of_lid lid)))]
@@ -449,26 +449,86 @@ let encode_smt_lemma env fv t =
 
 let close_universes rng univ_fvs pat body = mkForall rng ([[pat]], univ_fvs, body)
 
+(* An explicit [@@smt_arity n] override on the declaration, if any. A symbol's
+   arity is a hard contract: its defining and typing axioms are stated at that
+   arity, with an SMT pattern on the full application, so a symbol that users
+   habitually apply to fewer arguments than its type has arrows must be
+   declared at the shorter arity, or those axioms never fire. *)
+let smt_arity_attribute env (lid:lident) : ML (option int) =
+  match Env.lookup_attrs_of_lid env.tcenv lid with
+  | None -> None
+  | Some attrs ->
+    match U.get_attribute Const.smt_arity_attr attrs with
+    | Some ((a, _) :: _) ->
+      (match (SS.compress a).n with
+       | Tm_constant (Const_int (s, None)) -> Some (BU.int_of_string s)
+       | _ -> failwith (Format.fmt2 "Expected an integer literal in [@@smt_arity] on %s, got %s"
+                          (show lid) (show a)))
+    | _ -> None
+
 let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_t) =
     let lid = fv.fv_name in
+    let arity_hint = smt_arity_attribute env lid in
     let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
     let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
     if not <| (U.is_pure_or_ghost_function t_norm || is_smt_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
     || uninterpreted
-    then let arg_sorts = match (SS.compress t_norm).n with
-            | Tm_arrow {bs=binders} -> binders |> List.map (fun _ -> Term_sort)
-            | _ -> [] in
+    then let arg_sorts =
+           match (SS.compress t_norm).n with
+           | Tm_arrow _ ->
+             let bs = U.arrow_node_formals_comp_ln t_norm |> fst in
+             let bs =
+               match arity_hint with
+               | Some n when n < List.length bs -> fst (BU.first_N n bs)
+               | _ -> bs
+             in
+             bs |> List.map (fun _ -> Term_sort)
+           | _ -> []
+         in
          let arity = List.length arg_sorts in
          let univ_arity = List.length us in
          let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity univ_arity in
          let univ_sorts = List.map (fun _ -> univ_sort) us in
-         let d = Term.DeclFun(vname, univ_sorts @ arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
-         let dd = Term.DeclFun(vtok, univ_sorts, Term_sort, Some "Uninterpreted name for impure function") in
+         let d = Term.DeclFun vname (univ_sorts @ arg_sorts) Term_sort (Some "Uninterpreted function symbol for impure function") in
+         let dd = Term.DeclFun vtok univ_sorts Term_sort (Some "Uninterpreted name for impure function") in
          [d;dd] |> mk_decls_trivial, env
     else let encode_non_total_function_typ = nsstr lid <> "Prims" in
+         (* Parameters *and* indices of the inductive [d] belongs to: exactly the
+            arguments a discriminator or projector takes before the scrutinee.
+            The inductive's kind ends in [Type], so this cannot over-flatten. *)
+         let n_indexed_formals (d:lident) : ML int =
+           let ty_lid = Env.typ_of_datacon env.tcenv d in
+           let (_, k), _ = Env.lookup_lid env.tcenv ty_lid in
+           List.length (fst (U.arrow_formals_comp_ln k))
+         in
+         (* The arity of a discriminator or projector is structural: the inductive's
+            parameters plus the scrutinee.  It must not be read off the symbol's
+            type, whose codomain may itself be an arrow (a function-typed field),
+            since the axiom relating this symbol to the primitive field projector
+            is stated at the structural arity, and users partially apply it. *)
+         let structural_arity : option int =
+           quals |> List.tryPick
+             (function
+              | Discriminator d
+              | Projector (d, _) -> Some (n_indexed_formals d + 1)
+              | _ -> None)
+         in
+         (* An explicit [@@smt_arity] overrides even the structural rule. *)
+         let structural_arity =
+           match arity_hint with
+           | Some _ -> arity_hint
+           | None -> structural_arity
+         in
          let formals, (pre_opt, res_t) =
            let args, comp = curried_arrow_formals_comp t_norm in
+           let args, comp =
+             match structural_arity with
+             | Some n when n < List.length args ->
+               let args, rest = BU.first_N n args in
+               args, S.mk_Total (U.arrow rest comp)
+             | _ -> args, comp
+           in
            let tcenv_comp = Env.push_binders env.tcenv args in
            let comp =
              if is_smt_reifiable_comp env.tcenv comp
@@ -480,28 +540,52 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
            else args, (None, U.comp_result comp)
          in
          let mk_disc_proj_axioms guard encoded_res_t vapp (vars:fvs) =
+           (* The scrutinee of a discriminator or projector is the argument right
+              after the inductive's parameters.  It is *not* necessarily the last
+              one: when the projected field is itself a function type, this symbol
+              takes further arguments, which have to be applied to the field. *)
+           let scrutinee_and_extra (d:lident) : ML (option (Term.fv & fvs)) =
+             let n_params = n_indexed_formals d in
+             if n_params < 0 || List.length vars <= n_params
+             then None
+             else let _, rest = BU.first_N n_params vars in
+                  match rest with
+                  | xxv::extra -> Some (xxv, extra)
+                  | [] -> None
+           in
+           let apply_extra (tm:Term.term) (extra:fvs) : ML Term.term =
+             extra |> List.fold_left
+               (fun tm v -> mk_ApplyTT tm (mkFreeV <| mk_fv (fv_name v, Term_sort))) tm
+           in
            quals |> List.collect
            (function
              | Discriminator d ->
-               let _, xxv = BU.prefix vars in
-               let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
-               [Util.mkAssume(mkForall (S.range_of_fv fv)
-                                       ([[vapp]],
-                                        univ_fvs@vars,
-                                        mkEq(vapp, Term.boxBool <| mk_tester (escape (string_of_lid d)) xx)),
-                              Some "Discriminator equation",
-                              "disc_equation_"^escape (string_of_lid d))]
+               begin match scrutinee_and_extra d with
+               | None -> []
+               | Some (xxv, extra) ->
+                 let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
+                 let disc = apply_extra (Term.boxBool <| mk_tester (escape (string_of_lid d)) xx) extra in
+                 [Util.mkAssume(mkForall (S.range_of_fv fv)
+                                         ([[vapp]],
+                                          univ_fvs@vars,
+                                          mkEq(vapp, disc)),
+                                Some "Discriminator equation",
+                                "disc_equation_"^escape (string_of_lid d))]
+               end
 
              | Projector(d, f) ->
-               let _, xxv = BU.prefix vars in
-               let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
-               let f = {ppname=f; index=0; sort=tun} in
-               let tp_name = mk_term_projector_name d f in //arity ok, primitive projector (#1383)
-               let prim_app = mkApp(tp_name, [xx]) in
-               [Util.mkAssume(mkForall (S.range_of_fv fv)
-                                       ([[vapp]], univ_fvs@vars, mkEq(vapp, prim_app)),
-                              Some "Projector equation",
-                              "proj_equation_"^tp_name)]
+               begin match scrutinee_and_extra d with
+               | None -> []
+               | Some (xxv, extra) ->
+                 let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
+                 let f = {ppname=f; index=0; sort=tun} in
+                 let tp_name = mk_term_projector_name d f in //arity ok, primitive projector (#1383)
+                 let prim_app = apply_extra (mkApp(tp_name, [xx])) extra in
+                 [Util.mkAssume(mkForall (S.range_of_fv fv)
+                                         ([[vapp]], univ_fvs@vars, mkEq(vapp, prim_app)),
+                                Some "Projector equation",
+                                "proj_equation_"^tp_name)]
+               end
              | _ -> [])
          in
          let vars, guards, env', decls1, _ = encode_binders None formals env in
@@ -523,7 +607,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
            | None -> mk_and_l guards, decls1
            | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
          let dummy_var = mk_fv ("@dummy", dummy_sort) in
-         let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
+         let dummy_tm = Term.mkFreeV dummy_var in
          let should_thunk () =
            //See note [Thunking Nullary Constants] in FStarC.SMTEncoding.Term.fs
            let is_type t =
@@ -532,7 +616,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                | _ -> false
            in
            let is_squash t =
-               let head, _ = U.head_and_args t in
+               let head, _ = U.head_and_args_full t in
                match (U.un_uinst head).n with
                | Tm_fvar fv ->
                  Syntax.fv_eq_lid fv FStarC.Parser.Const.squash_lid
@@ -571,7 +655,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
          let vtok_app = mk_Apply vtok_tm vars in
          let vapp = mkApp(vname, univs @ List.map mkFreeV vars) in //arity ok, see decl below, arity is |vars| (#1383)
          let decls2, env =
-           let vname_decl = Term.DeclFun(vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, None) in
+           let vname_decl = Term.DeclFun vname (univ_sorts @ (vars |> List.map fv_sort)) Term_sort None in
            let tok_typing, decls2 =
                let env = {env with encode_non_total_function_typ=encode_non_total_function_typ} in
                if not(head_normal env tt)
@@ -597,7 +681,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                 (* Generate a token and a function symbol;
                    equate the two, and use the function symbol for full applications *)
                  let vtok = get_vtok() in
-                 let vtok_decl = Term.DeclFun(vtok, univ_sorts, Term_sort, None) in
+                 let vtok_decl = Term.DeclFun vtok univ_sorts Term_sort None in
                  let name_tok_corr_formula pat =
                      match univ_fvs with
                      | [] ->
@@ -758,7 +842,7 @@ let encode_top_level_let :
       binders@extra_formals, body
     in
 
-    let destruct_bound_function t e
+    let destruct_bound_function target_arity t e
       : ML (S.binders    //arguments of the (possibly reified) lambda abstraction
        & S.term       //body of the (possibly reified) lambda abstraction
        & S.comp)      //result comp
@@ -774,12 +858,12 @@ let encode_top_level_let :
       in
 
       let rec arrow_formals_comp_norm norm t : ML (S.binders & S.comp) =
-        //NS: tried using U.arrow_formals_comp here
-        //    but that flattens Tot effects quite aggressively
         let t = U.unascribe <| SS.compress t in
         match t.n with
-        | Tm_arrow {bs=formals; comp} ->
-          SS.open_comp formals comp
+        //NS: tried using U.arrow_formals_comp here
+        //    but that flattens Tot effects quite aggressively
+        | Tm_arrow _ ->
+          U.arrow_node_formals_comp t
 
         | Tm_refine _ ->
           arrow_formals_comp_norm norm (U.unrefine t)
@@ -805,6 +889,15 @@ let encode_top_level_let :
                 //don't normalize t to avoid poorly encoding points-free code
                 //see, e.g., Benton2004.RHL.Example2
               | _ -> arrow_formals_comp_norm false t
+          in
+          (* Encode the definition at exactly the arity the symbol was declared
+             with; the type's arrow spine may well be longer. *)
+          let formals, comp =
+              match target_arity with
+              | Some n when n < List.length formals ->
+                let formals, rest = BU.first_N n formals in
+                formals, S.mk_Total (U.arrow rest comp)
+              | _ -> formals, comp
           in
           let nformals = List.length formals in
           let nbinders = List.length binders in
@@ -907,7 +1000,7 @@ let encode_top_level_let :
                   |> List.unzip
                 in
                 (* Open binders *)
-                let (binders, body, t_body_comp) = destruct_bound_function t_norm e in
+                let (binders, body, t_body_comp) = destruct_bound_function (Some fvb.smt_arity) t_norm e in
                 let t_body = U.comp_result t_body_comp in
                 if !dbg_SMTEncoding
                 then Format.print2 "Encoding let : binders=[%s], body=%s\n"
@@ -920,8 +1013,8 @@ let encode_top_level_let :
                     && vars = []
                     && univ_vars = []
                     then let dummy_var = mk_fv ("@dummy", dummy_sort) in
-                         let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
-                         let app = Term.mkApp (fvb.smt_id, [dummy_tm]) (S.range_of_lbname lbn) in
+                         let dummy_tm = Term.mkFreeV dummy_var in
+                         let app = Term.mkApp (fvb.smt_id, [dummy_tm]) in
                          [dummy_var], app
                     else univ_vars@vars,
                          maybe_curry_fvb (S.range_of_lbname lbn)
@@ -1021,7 +1114,7 @@ let encode_top_level_let :
                         (show e);
 
             (* Open binders *)
-            let (binders, body, tres_comp) = destruct_bound_function t_norm e in
+            let (binders, body, tres_comp) = destruct_bound_function (Some fvb.smt_arity) t_norm e in
             let curry = fvb.smt_arity <> List.length binders in
             let pre_opt, tres = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
             if !dbg_SMTEncoding
@@ -1048,15 +1141,12 @@ let encode_top_level_let :
             let binder_decls = binder_decls @ guard_decls in
             let univ_sorts = List.map fv_sort univ_vars in
             let decl_g =
-              Term.DeclFun(g,
-                           (Fuel_sort::
+              Term.DeclFun g (Fuel_sort::
                             univ_sorts @
-                            List.map fv_sort (fst (BU.first_N fvb.smt_arity vars))),
-                           Term_sort,
-                           Some "Fuel-instrumented function name")
+                            List.map fv_sort (fst (BU.first_N fvb.smt_arity vars))) Term_sort (Some "Fuel-instrumented function name")
             in
             let env0 = push_zfuel_name env0 fvb.fvar_lid g gtok in
-            let decl_g_tok = Term.DeclFun(gtok, univ_sorts, Term_sort, Some "Token for fuel-instrumented partial applications") in
+            let decl_g_tok = Term.DeclFun gtok univ_sorts Term_sort (Some "Token for fuel-instrumented partial applications") in
             let univ_vars_tm = List.map mkFreeV univ_vars in
             let vars_tm = List.map mkFreeV vars in
             let rng = S.range_of_lbname lbn in
@@ -1138,7 +1228,7 @@ let encode_top_level_let :
           in
           (* Function declarations must come first to be defined in all recursive definitions *)
           let prefix_decls, elts, rest =
-            let isDeclFun = function | DeclFun _ -> true | _ -> false in
+            let isDeclFun = function | DeclFun _ _ _ _ -> true | _ -> false in
             decls |> List.flatten |> (fun decls ->
               //decls is a list of decls_elt ... each of which contains a list decl in it
               //we need to go through each of those, accumulate DeclFuns and remove them from there
@@ -1188,7 +1278,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
   let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
   let constructor_or_logic_type_decl (c:constructor_t) =
     if is_logical
-    then [Term.DeclFun(c.constr_name, c.constr_fields |> List.map (fun f -> f.field_sort), Term_sort, None)]
+    then [Term.DeclFun c.constr_name (c.constr_fields |> List.map (fun f -> f.field_sort)) Term_sort None]
     else constructor_to_decl (Ident.range_of_lid t) c in
   let inversion_axioms env tapp vars =
     if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> None?) //Q: Why would this happen?
@@ -1247,7 +1337,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
     let k =
       match tps with
       | [] -> k
-      | _ -> S.mk (Tm_arrow {bs=tps; comp=S.mk_Total k}) k.pos
+      | _ -> S.mk_Tm_arrow tps (S.mk_Total k) k.pos
     in
     let k = norm_before_encoding env k in
     U.arrow_formals k
@@ -1277,7 +1367,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
       match vars with
       | [] -> [], push_free_var env t arity univ_arity tname (Some <| mkApp(tname, []))
       | _ ->
-        let ttok_decl = Term.DeclFun(ttok, List.map fv_sort univ_vars, Term_sort, Some "token") in
+        let ttok_decl = Term.DeclFun ttok (List.map fv_sort univ_vars) Term_sort (Some "token") in
         let ttok_fresh = Term.fresh_token (ttok_tm, univ_vars, Term_sort) (varops.next_id()) in
         let ttok_app = mk_Apply ttok_tm vars in
         let pats = [[ttok_app]; [tapp]] in
@@ -1392,7 +1482,7 @@ let encode_datacon (env:env_t) (se:sigelt)
       | _ -> [Term.fresh_token (ddtok_tm, univ_fvs, Term_sort) (varops.next_id())] in
 
   let encode_elim () =
-      let head, args = U.head_and_args t_res in
+      let head, args = U.head_and_args_full t_res in
       match (SS.compress head).n with
       | Tm_uinst({n=Tm_fvar fv}, _)
       | Tm_fvar fv ->
@@ -1511,9 +1601,9 @@ let encode_datacon (env:env_t) (se:sigelt)
                             )
                         end
                       | _ ->
-                        let head, _ = U.head_and_args t in
+                        let head, _ = U.head_and_args_full t in
                         let t' = norm t in
-                        let head', _ = U.head_and_args t' in
+                        let head', _ = U.head_and_args_full t' in
                         match TEQ.eq_tm env.tcenv head head' with
                         | TEQ.Equal -> None //no progress after whnf
                         | TEQ.NotEqual -> binder_and_codomain_type t'
@@ -1607,8 +1697,8 @@ let encode_datacon (env:env_t) (se:sigelt)
     //Also see #2456
     //
     let ty_pred', vars, guard =
-      match t_res_tm.tm with
-      | App (op, args) ->
+      match t_res_tm with
+      | App op args _ ->
         //iargs are index arguments in the return type of the data constructor
         let targs, iargs = List.splitAt (n_univs + n_tps) args in
         //fresh vars for iargs
@@ -1622,7 +1712,7 @@ let encode_datacon (env:env_t) (se:sigelt)
         mk_HasTypeWithFuel
           (Some fuel_tm)
           dapp
-          ({t_res_tm with tm = App (op, targs@fresh_iargs)}),
+          (App op (targs@fresh_iargs) (range_of_term t_res_tm)),
 
         vars@(fresh_ivars |> List.map (fun s -> mk_fv (s, Term_sort))),
 
@@ -1638,7 +1728,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   let g = binder_decls
           @decls2
           @decls3
-          @([Term.DeclFun(ddtok, univ_sorts, Term_sort, Some (Format.fmt1 "data constructor proxy: %s" (show d)))]
+          @([Term.DeclFun ddtok univ_sorts Term_sort (Some (Format.fmt1 "data constructor proxy: %s" (show d)))]
             @proxy_fresh |> mk_decls_trivial)
           @decls_pred
           @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
@@ -1714,9 +1804,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
               SS.subst ed_univs_subst
                 (match ed.binders with
                   | [] -> tm
-                  | _ -> S.mk (Tm_abs {bs=ed.binders;
-                                      body=tm;
-                                      rc_opt=Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])}) tm.pos)
+                  | _ -> U.abs_ln ed.binders tm
+                                      (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])))
             in
 
             let open_action_univs (a:S.action) =
@@ -1738,8 +1827,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
               let tm, decls = encode_term action_defn env in
               let univ_sorts = ed_univs@action_univs |> List.map (fun _ -> univ_sort) in
               let a_decls =
-                [Term.DeclFun(aname, univ_sorts @ (formals |> List.map (fun _ -> Term_sort)), Term_sort, Some "Action");
-                  Term.DeclFun(atok, univ_sorts, Term_sort, Some "Action token")]
+                [Term.DeclFun aname (univ_sorts @ (formals |> List.map (fun _ -> Term_sort))) Term_sort (Some "Action");
+                  Term.DeclFun atok univ_sorts Term_sort (Some "Action token")]
               in
               let _, us_sorts, us = 
                 let aux u (env, acc_sorts, acc) =
@@ -1839,7 +1928,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
        let valid_b2t_x = mkApp("Valid", [b2t_x]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
        let bool_ty = lookup_free_var env Const.bool_lid in
        let prop_ty = lookup_free_var env Const.prop_lid in
-       let decls = [Term.DeclFun(tname, [Term_sort], Term_sort, None);
+       let decls = [Term.DeclFun tname [Term_sort] Term_sort None;
                     Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
                                            mkEq(valid_b2t_x, mkApp(snd boxBoolFun, [x]))),
                                 Some "b2t def",
@@ -1941,14 +2030,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
         List.fold_left
           (fun (decls, elts, rest) elt ->
             if Some? elt.key //NS: Not sure what this case is for
-            && List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls
+            && List.existsb (function | Term.DeclFun _ _ _ _ -> true | _ -> false) elt.decls
             then decls, elts@[elt], rest 
             else ( //Pull the function symbol decls to the front
               let elt_decls, elt_rest =
                 elt.decls |>
                 List.partition
                   (function
-                    | Term.DeclFun _ -> true
+                    | Term.DeclFun _ _ _ _ -> true
                     | _ -> false)
               in
               decls @ elt_decls, elts, rest @ [ { elt with decls = elt_rest }]
@@ -1985,7 +2074,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
     let encode_binding b (i, decls, env) = match b with
         | S.Binding_univ u ->
           let u_fv, u_tm = EncodeTerm.encode_univ_name u in
-          let decls' = [Term.DeclFun(fv_name u_fv, [], univ_sort, Some "universe local constant")] |> mk_decls_trivial in
+          let decls' = [Term.DeclFun (fv_name u_fv) [] univ_sort (Some "universe local constant")] |> mk_decls_trivial in
           i+1, decls@decls', env
 
         | S.Binding_var x ->
@@ -2005,7 +2094,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
             let ax =
                 let a_name = ("binder_"^xxsym) in
                 Util.mkAssume(t, Some a_name, a_name) in
-            let g = ([Term.DeclFun(xxsym, [], Term_sort, caption)] |> mk_decls_trivial)
+            let g = ([Term.DeclFun xxsym [] Term_sort caption] |> mk_decls_trivial)
                     @decls'
                     @([ax] |> mk_decls_trivial) in
             i+1, decls@g, env'
@@ -2022,7 +2111,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
     decls, env
 
 let encode_labels (labs:list error_label) =
-    let prefix = labs |> List.map (fun (l, _, _) -> Term.DeclFun(fv_name l, [], Bool_sort, None)) in
+    let prefix = labs |> List.map (fun (l, _, _) -> Term.DeclFun (fv_name l) [] Bool_sort None) in
     let suffix = labs |> List.collect (fun (l, _, _) -> [Echo <| fv_name l; Eval (mkFreeV l)]) in
     prefix, suffix
 
@@ -2042,6 +2131,25 @@ let set_env env = match !last_env with
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
 let get_current_env tcenv = get_env (Env.current_module tcenv) tcenv
+
+(* Encodings of dependency modules loaded from their .checked files are
+   deferred; see the comment on [defer_encoding] in the interface. *)
+let deferred_encodings : ref (list (unit -> ML unit)) = mk_ref []
+let defer_encoding (f:unit -> ML unit) : ML unit =
+  deferred_encodings := f :: !deferred_encodings
+let flush_deferred_encodings () : ML unit =
+  match !deferred_encodings with
+  | [] -> ()
+  | fs ->
+    (* Clear first: the thunks call back into this module, and a nested flush
+       must not run them a second time. *)
+    deferred_encodings := [];
+    let rec run (l:list (unit -> ML unit)) : ML unit =
+      match l with
+      | [] -> ()
+      | f :: tl -> f (); run tl
+    in
+    run (List.rev fs)
 let push_env () = match !last_env with
     | [] -> failwith "Empty env stack"
     | hd::tl ->
@@ -2055,9 +2163,12 @@ let rollback_env depth = FStarC.Common.rollback "SMTEncoding.Encode.env" pop_env
 (* TOP-LEVEL API *)
 
 let init tcenv =
+    deferred_encodings := [];
     init_env tcenv;
     Z3.giveZ3 [DefPrelude]
 let snapshot_encoding msg = BU.atomically (fun () ->
+    (* Anything still pending belongs below the context we are about to push. *)
+    flush_deferred_encodings ();
     if Debug.medium () then Format.print1 "Encode.snapshot_encoding: %s\n" msg;
     let env_depth, () = snapshot_env () in
     let varops_depth, () = varops.snapshot () in
@@ -2112,10 +2223,10 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) : ML decls_t =
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else (
       match SMap.try_find env.global_cache (elt.key |> Some?.v) with
-      | Some (cache_elt, _) -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
-                                                                                             //AND drop elt
+      | Some (a_names, _) -> [Term.RetainAssumptions a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
+                                                                                  //AND drop elt
       | None ->  //no hit, update cache and retain elt
-        SMap.add env.global_cache (elt.key |> Some?.v) (elt, Env.current_module env.tcenv);
+        SMap.add env.global_cache (elt.key |> Some?.v) (elt.a_names, Env.current_module env.tcenv);
         [elt]
     )
   )
@@ -2128,28 +2239,115 @@ let encode_sig tcenv se =
     else decls in
    if Debug.medium ()
    then Format.print1 "+++++++++++Encoding sigelt %s\n" (show se);
+   flush_deferred_encodings ();
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
    set_env env;
    Z3.giveZ3 (caption (decls |> recover_caching_and_update_env env |> decls_list_of))
 
-let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) : ML unit =
-  let caption decls =
+(* Register a whole module's encoding with the solver.
+
+   Only [index] -- the module's pruning summary, see
+   FStarC.SMTEncoding.Pruning.elt_summary -- is inspected here; [decls] is a
+   thunk that reads the encoding itself, and is forced only if the solver ends
+   up needing some of the module's declarations. For a module loaded from a
+   .checked file, that means its SMT encoding usually stays on disk. *)
+let give_index_to_z3_and_set_env
+      (env:env_t) (name:string)
+      (index:list Pruning.elt_summary)
+      (decls:unit -> ML decls_t)
+: ML unit
+= set_env ({env with warn=true});
+  (* Hash-consing, exactly as recover_caching_and_update_env does it, but driven
+     by the index alone. [dropped] records the decision for each elt, so that it
+     can be replayed on the declarations if they are ever read. *)
+  let dropped, sums =
+    index |> List.fold_left
+      (fun (dropped, sums) elt ->
+        match elt.Pruning.elts_key with
+        | None -> None::dropped, List.rev_append elt.Pruning.elts_sums sums //not meant to be hashconsed, keep it
+        | Some key ->
+          match SMap.try_find env.global_cache key with
+          | Some (a_names, _) -> //hit: retain a_names from the hit entry AND drop elt
+            Some a_names::dropped, Pruning.Sum_retain a_names :: sums
+          | None -> //no hit, update cache and retain elt
+            SMap.add env.global_cache key (elt.Pruning.elts_a_names, Env.current_module env.tcenv);
+            None::dropped, List.rev_append elt.Pruning.elts_sums sums)
+      ([], [])
+  in
+  let dropped = List.rev dropped in
+  let sums = List.rev sums in
+  let memo : ref (option (list decl)) = mk_ref None in
+  (* Read the encoding, replaying the hash-consing decisions taken above *)
+  let force_flat () : ML (list decl) =
+    match !memo with
+    | Some ds -> ds
+    | None ->
+      let ds =
+        List.map2
+          (fun (elt:decls_elt) d ->
+            match d with
+            | Some a_names -> [Term.RetainAssumptions a_names]
+            | None -> elt.decls)
+          (decls ())
+          dropped
+        |> List.flatten
+      in
+      memo := Some ds;
+      ds
+  in
+  let force () : ML (list decl) =
+    let ds = force_flat () in
     if Options.log_queries()
     then let msg = "Externals for " ^ name in
-         [Module(name, Caption msg::decls@[Caption ("End " ^ msg)])]
-    else [Module(name, decls)] in
-  set_env ({env with warn=true});
-  //recover caching and flatten before giving to Z3
-  let z3_decls = caption (decls |> recover_caching_and_update_env env |> decls_list_of) in
-  Z3.giveZ3 z3_decls
+         [Module name (Caption msg::ds@[Caption ("End " ^ msg)])]
+    else [Module name ds]
+  in
+  let name_map : ref (option (PSMap.t decl)) = mk_ref None in
+  let resolve (n:string) : ML (option decl) =
+    let m =
+      match !name_map with
+      | Some m -> m
+      | None ->
+        let m =
+          List.fold_left
+            (fun m d ->
+              match d with
+              | Assume {assumption_name=x}
+              | DeclFun x _ _ _
+              | DefineFun x _ _ _ _ -> PSMap.add m x d
+              | _ -> m)
+            (PSMap.empty ())
+            (force_flat ())
+        in
+        name_map := Some m;
+        m
+    in
+    PSMap.try_find m n
+  in
+  (* Pruning only ever asks for assumptions and (declare-fun)/(define-fun)s by
+     name; if it is disabled we have to hand over everything right away. *)
+  if Options.Ext.enabled "context_pruning" && Options.Ext.enabled "prune_decls"
+  then Z3.giveZ3_lazy { ld_sums = sums; ld_resolve = resolve; ld_force = force }
+  else Z3.giveZ3 (force ())
+
+let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) : ML unit =
+  give_index_to_z3_and_set_env env name (Pruning.summarize_elts decls) (fun _ -> decls)
 
 instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap.t a)) = {
   show = (fun smap -> SMap.fold smap (fun k v acc -> Format.fmt3 "%s -> %s\n%s" (show k) (show v) acc) "")
 }
 
-let encode_modul tcenv modul =
+(* [give_to_z3=false] computes the module's encoding (so that it can be stored in
+   its .checked file) without handing it to the solver and without recording it
+   in the global SMT encoding environment. This is used for A.fsti when it is
+   loaded only in order to check A.fst: the interface's abstract view of the
+   module (in particular any assumed val, whose SMT patterns would otherwise be
+   live axioms) must not be visible while checking the implementation. *)
+let encode_modul_aux (give_to_z3:bool) tcenv modul =
   begin
+    (* The dependences' declarations must reach the solver before this module's. *)
+    flush_deferred_encodings ();
     let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
@@ -2171,7 +2369,7 @@ let encode_modul tcenv modul =
         (fun k ->
           match SMap.try_find env.global_cache k with
           | None -> ()
-          | Some (elts, m) -> 
+          | Some (_, m) -> 
             if Ident.lid_equals m modul.name then SMap.remove env.global_cache k else ())
         keys;
       let fvb =
@@ -2206,22 +2404,28 @@ let encode_modul tcenv modul =
       List.rev g', env
     in
     let decls, env = encode_signature ({env with warn=false}) modul.declarations in
-    give_decls_to_z3_and_set_env env name decls;
+    let index = Pruning.summarize_elts decls in
+    if give_to_z3 then give_index_to_z3_and_set_env env name index (fun _ -> decls);
     if Debug.medium () then Format.print1 "Done encoding externals for %s\n" name;
-    decls, env |> get_current_module_fvbs
+    { me_index = index;
+      me_fvbs = env |> get_current_module_fvbs;
+      me_decls = (fun _ -> decls) }
   ) end
 
-let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
+let encode_modul tcenv modul = encode_modul_aux true tcenv modul
+let encode_modul_no_solver tcenv modul = encode_modul_aux false tcenv modul
+
+let encode_modul_from_cache tcenv tcmod (me:module_encoding) =
   let tcenv = Env.set_current_module tcenv tcmod.name in
     let name = Format.fmt2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
     if Debug.medium ()
-    then Format.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> show);
+    then Format.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length me.me_index |> show);
     let env = get_env tcmod.name tcenv |> reset_current_module_fvbs in
     let env =
-      fvbs |> List.rev |> List.fold_left (fun env fvb ->
+      me.me_fvbs |> List.rev |> List.fold_left (fun env fvb ->
         add_fvar_binding_to_env fvb env
       ) env in
-    give_decls_to_z3_and_set_env env name decls;
+    give_index_to_z3_and_set_env env name me.me_index me.me_decls;
     if Debug.medium () then Format.print1 "Done encoding externals from cache for %s\n" name
 
 open FStarC.SMTEncoding.Z3

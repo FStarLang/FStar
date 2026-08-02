@@ -311,10 +311,9 @@ and eq_term' (t1 t2:term')
       eq_term t1 t3 &&
       eq_list eq_term ts1 ts2 &&
       eq_term t2 t4
-    | IntroImplies (t1, t2, b1, t3), IntroImplies (t4, t5, b2, t6) ->
+    | IntroImplies (t1, t2, t3), IntroImplies (t4, t5, t6) ->
       eq_term t1 t4 &&
       eq_term t2 t5 &&
-      eq_binder b1 b2 &&
       eq_term t3 t6
     | IntroOr (b1, t1, t2, t3), IntroOr (b2, t4, t5, t6) ->
       b1 = b2 &&
@@ -330,31 +329,23 @@ and eq_term' (t1 t2:term')
       eq_list eq_binder bs1 bs2 &&
       eq_term t1 t2 &&
       eq_list eq_term ts1 ts2
-    | ElimExists (bs1, t1, t2, b1, t3), ElimExists (bs2, t4, t5, b2, t6) ->
+    | ElimExists (bs1, t1, t2), ElimExists (bs2, t3, t4) ->
       eq_list eq_binder bs1 bs2 &&
-      eq_term t1 t4 &&
-      eq_term t2 t5 &&
-      eq_binder b1 b2 &&
-      eq_term t3 t6
+      eq_term t1 t3 &&
+      eq_term t2 t4
     | ElimImplies (t1, t2, t3), ElimImplies (t4, t5, t6) ->
       eq_term t1 t4 &&
       eq_term t2 t5 &&
       eq_term t3 t6
-    | ElimOr (t1, t2, t3, b1, t4, b2, t5), ElimOr (t6, t7, t8, b3, t9, b4, t10) ->
-      eq_term t1 t6 &&
-      eq_term t2 t7 &&
-      eq_term t3 t8 &&
-      eq_binder b1 b3 &&
-      eq_term t4 t9 &&
-      eq_binder b2 b4 &&
-      eq_term t5 t10
-    | ElimAnd (t1, t2, t3, b1, b2, t4), ElimAnd (t5, t6, t7, b3, b4, t8) ->
+    | ElimOr (t1, t2, t3, t4), ElimOr (t5, t6, t7, t8) ->
       eq_term t1 t5 &&
       eq_term t2 t6 &&
       eq_term t3 t7 &&
-      eq_binder b1 b3 &&
-      eq_binder b2 b4 &&
       eq_term t4 t8
+    | ElimAnd (t1, t2, t3), ElimAnd (t4, t5, t6) ->
+      eq_term t1 t4 &&
+      eq_term t2 t5 &&
+      eq_term t3 t6
     | ListLiteral ts1, ListLiteral ts2 ->
       eq_list eq_term ts1 ts2
     | SeqLiteral ts1, SeqLiteral ts2 ->

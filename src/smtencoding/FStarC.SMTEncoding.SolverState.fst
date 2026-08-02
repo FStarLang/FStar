@@ -31,13 +31,28 @@ let empty_decl_names = PSMap.empty #bool ()
 let decl_names_contains (x:string) (s:decl_name_set) = Some? (PSMap.try_find s x)
 let add_name (x:string) (s:decl_name_set) = PSMap.add s x true
 
+(* A batch of declarations that has been given to the solver.
+
+   Modules loaded from a .checked file are given lazily: only their (small)
+   pruning summary is read eagerly, and the SMT declarations themselves are
+   deserialized on demand, if and when context pruning decides to retain some
+   of them. Most dependences of a module contribute nothing to any of its
+   queries, so most of them are never deserialized at all. *)
+type given_decls =
+  | Given of list decl
+  | Given_lazy of lazy_decls
+
+let force_given (g:given_decls) : ML (list decl) =
+  match g with
+  | Given ds -> ds
+  | Given_lazy ld -> ld.ld_force ()
+
 type decls_at_level = {
   pruning_state: Pruning.pruning_state; (* the context pruning state representing all declarations visible at this level and prior levels *)
   given_decl_names: decl_name_set; (* all declarations that have been given to the solver at this level *)
-  all_decls_at_level_rev: list (list decl); (* all decls at this level; in reverse order of pushes *)
+  all_decls_at_level_rev: list given_decls; (* all decls at this level; in reverse order of pushes *)
   given_some_decls: bool; (* Have some declarations been flushed at this level? If not, we can pop this level without needing to flush pop to the solver *)
   to_flush_rev: list (list decl); (* declarations to be given to the solver at the next flush, in reverse order, though each nested list is in order *)
-  named_assumptions: PSMap.t assumption; (* A map from assumption names to assumptions, accumulating all assumptions up to this level *)
   pruning_roots:option (list decl); (* When starting a query context, we register the declarations to be used as roots for context pruning *)
 }
 
@@ -47,7 +62,6 @@ let init_given_decls_at_level = {
   pruning_state=Pruning.init;
   given_some_decls=false;
   to_flush_rev=[];
-  named_assumptions = PSMap.empty ();
   pruning_roots=None
 }
 
@@ -108,7 +122,6 @@ let push (s:solver_state)
                pruning_state = hd.pruning_state;
                given_some_decls=false;
                to_flush_rev=[[push]]; (* push a new context to the solver *)
-               named_assumptions = hd.named_assumptions;
                pruning_roots=None
               } in
   { s with levels=next::s.levels }
@@ -133,7 +146,6 @@ let pop (s:solver_state)
 *)
 let filter_using_facts_from
       (using_facts_from:option using_facts_from_setting)
-      (named_assumptions:PSMap.t assumption)
       (retain_assumptions:decl_name_set)
       (already_given_decl: string -> ML bool)
       (ds:list decl) //flattened decls
@@ -196,36 +208,23 @@ let already_given_decl (s:solver_state) (aname:string)
 
 let rec flatten (d:decl) : ML (list decl) = 
   match d with
-  | Module (_, ds) -> List.collect flatten ds
+  | Module _ ds -> List.collect flatten ds
   | _ -> [d]
 
-(* Record assumptions with their names *)
-let add_named_assumptions (named_assumptions:PSMap.t assumption) (ds:list decl)
-: ML (PSMap.t assumption)
-= List.fold_left
-    (fun named_assumptions d ->
-      match d with
-      | Assume a -> PSMap.add named_assumptions a.assumption_name a
-      | _ -> named_assumptions)
-    named_assumptions
-    ds
-
 (* Record all names that are named in a RetainAssumptions *)
-let add_retain_assumptions (ds:list decl) (s:solver_state)
+let add_retain_names (names:list (list string)) (s:solver_state)
 : ML solver_state
 = let ra =
     List.fold_left
-      (fun ra d ->
-        match d with
-        | RetainAssumptions names -> 
-          List.fold_left
-            (fun ra name -> add_name name ra)
-            ra names
-        | _ -> ra)
+      (List.fold_left (fun ra name -> add_name name ra))
       s.retain_assumptions
-      ds
+      names
   in
   { s with retain_assumptions = ra }
+
+let add_retain_assumptions (ds:list decl) (s:solver_state)
+: ML solver_state
+= add_retain_names (List.collect (function RetainAssumptions names -> [names] | _ -> []) ds) s
 
 (*
   The main `give` API has two modes:
@@ -250,9 +249,33 @@ let add_retain_assumptions (ds:list decl) (s:solver_state)
   The assumptions are retained and a selection of them may be flushed to the
   solver later, for a given set of roots of a query.
  *)
-let give_delay_assumptions (resetting:bool) (ds:list decl) (s:solver_state) 
+let give_delay_assumptions (resetting:bool) (g:given_decls) (s:solver_state) 
 : ML solver_state
-= let decls = List.collect flatten ds in
+= match g with
+  | Given_lazy ld when Options.Ext.enabled "prune_decls" ->
+    (* The fast path: nothing but the summary is needed. Everything except the
+       [Sum_other] declarations is either an assumption or a (declare-fun) /
+       (define-fun), all of which are given to the solver only when pruning
+       retains them. *)
+    let rest = ld.ld_sums |> List.collect (function Pruning.Sum_other d -> [d] | _ -> []) in
+    let hd, tl = peek s in
+    let hd = { hd with all_decls_at_level_rev = g::hd.all_decls_at_level_rev;
+                       to_flush_rev = rest :: hd.to_flush_rev } in
+    if resetting
+    then { s with levels = hd :: tl }
+    else (
+      let hd =
+        { hd with
+          pruning_state = Pruning.add_summaries ld.ld_sums ld.ld_resolve hd.pruning_state }
+      in
+      add_retain_names
+        (ld.ld_sums |> List.collect (function Pruning.Sum_retain names -> [names] | _ -> []))
+        { s with levels = hd :: tl }
+    )
+
+  | _ ->
+  let ds = force_given g in
+  let decls = List.collect flatten ds in
   let assumptions, rest = List.partition Assume? decls in
   let decls_and_defs, rest = 
     if Options.Ext.enabled "prune_decls"
@@ -263,15 +286,14 @@ let give_delay_assumptions (resetting:bool) (ds:list decl) (s:solver_state)
   in
 
   let hd, tl = peek s in
-  let hd = { hd with all_decls_at_level_rev = ds::hd.all_decls_at_level_rev;
+  let hd = { hd with all_decls_at_level_rev = g::hd.all_decls_at_level_rev;
                      to_flush_rev = rest :: hd.to_flush_rev } in
   if resetting
   then { s with levels = hd :: tl }
   else (
     let hd = 
       { hd with
-        pruning_state = Pruning.add_decls decls hd.pruning_state;
-        named_assumptions = add_named_assumptions hd.named_assumptions assumptions }
+        pruning_state = Pruning.add_decls decls hd.pruning_state }
     in
     add_retain_assumptions decls { s with levels = hd :: tl }
   )
@@ -282,20 +304,14 @@ let give_delay_assumptions (resetting:bool) (ds:list decl) (s:solver_state)
   declarations to the solver, after filtering them according to the
   using_facts_from setting
 *)
-let give_now (resetting:bool) (ds:list decl) (s:solver_state) 
+let give_now (resetting:bool) (g:given_decls) (s:solver_state) 
 : ML solver_state
-= let decls = List.collect flatten ds in
-  let assumptions, _ = List.partition Assume? decls in
+= let ds = force_given g in
+  let decls = List.collect flatten ds in
   let hd, tl = peek s in
-  let named_assumptions =
-    if resetting
-    then hd.named_assumptions
-    else add_named_assumptions hd.named_assumptions assumptions
-  in
   let ds_to_flush =
     filter_using_facts_from
       s.using_facts_from
-      named_assumptions
       s.retain_assumptions
       (already_given_decl s)
       decls
@@ -312,7 +328,7 @@ let give_now (resetting:bool) (ds:list decl) (s:solver_state)
   let hd =
     { hd with
       given_decl_names = given;
-      all_decls_at_level_rev = ds :: hd.all_decls_at_level_rev;
+      all_decls_at_level_rev = g :: hd.all_decls_at_level_rev;
       to_flush_rev = ds_to_flush :: hd.to_flush_rev; }
   in
   if resetting
@@ -320,20 +336,22 @@ let give_now (resetting:bool) (ds:list decl) (s:solver_state)
   else (
     let hd =
       { hd with
-        pruning_state = Pruning.add_decls decls hd.pruning_state;
-        named_assumptions }
+        pruning_state = Pruning.add_decls decls hd.pruning_state }
     in
     add_retain_assumptions decls { s with levels = hd :: tl }
   )
 
-let give_aux resetting (ds:list decl) (s:solver_state)
+let give_aux resetting (g:given_decls) (s:solver_state)
 : ML solver_state
 = if Options.Ext.enabled "context_pruning"
-  then give_delay_assumptions resetting ds s
-  else give_now resetting ds s
+  then give_delay_assumptions resetting g s
+  else give_now resetting g s
 
 (* give: The main API for giving declarations to the solver *)
-let give = give_aux false 
+let give (ds:list decl) (s:solver_state) : ML solver_state = give_aux false (Given ds) s
+
+(* give_lazy: give a whole module's encoding, without deserializing it *)
+let give_lazy (ld:lazy_decls) (s:solver_state) : ML solver_state = give_aux false (Given_lazy ld) s
 
 (* reset:
    
@@ -359,7 +377,7 @@ let reset (using_facts_from:option using_facts_from_setting) (s:solver_state)
     //Rebuild the level from s in the top-most level of the new solver state s_new
     let hd, tl = peek s_new in
     //1. replace the head of s_new recordingt the pruning state etc. from level
-    let hd = {hd with pruning_state=level.pruning_state; named_assumptions=level.named_assumptions} in
+    let hd = {hd with pruning_state=level.pruning_state} in
     let s_new = { s_new with levels = hd :: tl } in
     //2. Then give all declarations at this level
     //     The `now` flag is set for levels that "follow" a level
@@ -388,17 +406,17 @@ let reset (using_facts_from:option using_facts_from_setting) (s:solver_state)
 let name_of_decl (d:decl) : ML string =
   match d with
   | Assume a -> a.assumption_name
-  | DeclFun(a, _, _, _) -> a
-  | DefineFun(a, _, _, _, _) -> a
+  | DeclFun a _ _ _ -> a
+  | DefineFun a _ _ _ _ -> a
   | _ -> failwith "Expected an assumption"
 
 let compare_decls (d0 d1:decl) : ML int =
   match d0, d1 with
-  | DeclFun(a0, _, _, _), DeclFun(a1, _, _, _)
-  | DefineFun(a0, _, _, _, _), DefineFun(a1, _, _, _, _)
+  | DeclFun a0 _ _ _, DeclFun a1 _ _ _
+  | DefineFun a0 _ _ _ _, DefineFun a1 _ _ _ _
   | Assume {assumption_name=a0}, Assume{assumption_name=a1} -> BU.compare a0 a1
-  | DeclFun _, _ -> -1
-  | DefineFun _, _ -> -1
+  | DeclFun _ _ _ _, _ -> -1
+  | DefineFun _ _ _ _ _, _ -> -1
   | _ -> failwith "Unexpected decl in compare decls"
 
 (* Prune the context with respect to a set of roots *)
@@ -426,7 +444,6 @@ let prune_level (roots:list decl) (hd:decls_at_level) (s:solver_state)
   let can_give =
     filter_using_facts_from
       s.using_facts_from
-      hd.named_assumptions
       s.retain_assumptions
       (already_given_decl s)
       can_give
@@ -445,7 +462,6 @@ let prune_sim (roots:list decl) (s:solver_state)
   let can_give =
     filter_using_facts_from
       s.using_facts_from
-      hd.named_assumptions
       s.retain_assumptions
       (already_given_decl s)
       to_give
@@ -459,7 +475,7 @@ let start_query (msg:string) (roots_to_push:list decl) (qry:decl) (s:solver_stat
   let s = { s with levels = { hd with pruning_roots = Some (qry::roots_to_push) } :: tl } in
   let s = push s in
   let s = give [Caption msg] s in
-  give_now false roots_to_push s
+  give_now false (Given roots_to_push) s
 
 (* Finising a query context, popping and clearing the roots *)
 let finish_query (msg:string) (s:solver_state)
@@ -476,10 +492,10 @@ let filter_with_unsat_core queryid (core:U.unsat_core) (s:solver_state)
     match levels with
     | [last] -> last.all_decls_at_level_rev
     | level :: levels -> 
-      level.all_decls_at_level_rev@[Push <| List.length levels]::all_decls levels
+      level.all_decls_at_level_rev@Given [Push <| List.length levels]::all_decls levels
   in
   let all_decls = all_decls s.levels in
-  let all_decls = List.flatten <| List.rev all_decls in
+  let all_decls = List.flatten <| List.rev <| List.map force_given all_decls in
   U.filter core all_decls
 
 let would_have_pruned (s:solver_state) : ML (option (list string)) =

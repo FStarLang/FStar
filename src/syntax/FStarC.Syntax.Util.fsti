@@ -134,7 +134,6 @@ val is_pure_or_ghost_effect (l:lident) : bool
 val is_pure_or_ghost_function (t:typ) : ML bool
 
 val head_of (t : term) : ML term
-val head_and_args (t : term) : ML (term & args)  // Destructs a single Tm_app
 val head_and_args_full (t : term) : ML (term & args) // Collects all Tm_app nodes
 val head_and_args_full_unmeta (t : term) : ML (term & args)
 
@@ -255,13 +254,16 @@ val qualifier_equal (q1 q2 : qualifier) : ML bool
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
+(* Builds an n-ary lambda from already-closed binders; does not close them. *)
+val abs_ln (bs:binders) (t:term) (lopt:option residual_comp) : ML term
+
 val abs (bs:binders) (t:term) (lopt:option residual_comp) : ML term
 
+(* [arrow bs c] builds the arrow [bs -> c]; since the node is unary this is a
+   spine of one arrow per binder, linked by synthetic [Tot] comps.
+   [arrow_ln] is the variant for already-closed binders. *)
 val arrow_ln (bs:binders) (c:comp) : ML term
 val arrow (bs:binders) (c:comp) : ML term
-val flat_arrow (bs:binders) (c:comp) : ML term
-
-val canon_arrow (t:term) : ML term
 
 val refine (b:bv) (t:term) : ML term
 val branch (b:branch) : ML branch // awful name
@@ -275,6 +277,13 @@ val has_decreases (c:comp) : ML bool
  *)
 val arrow_formals_comp_ln (k:term) : ML (binders & comp)
 
+(* Unlike arrow_formals_comp_ln, these do not descend into a top-level
+   refinement (which would drop its predicate). They correspond exactly to
+   matching on Tm_arrow. *)
+val arrow_node_formals_comp_ln (k:term) : ML (binders & comp)
+val arrow_node_formals_comp (k:term) : ML (binders & comp)
+val arrow_formals_comp_ln_strict (k:term) : ML (binders & comp)
+val arrow_formals_comp_strict (k:term) : ML (binders & comp)
 val arrow_formals_comp (k:term) : ML (binders & comp)
 val arrow_formals_ln (k:term) : ML (binders & typ)
 val arrow_formals (k:term) : ML (binders & typ)
@@ -288,6 +297,14 @@ val arrow_formals (k:term) : ML (binders & typ)
     This is used by NBE for detecting potential non-terminating loops
 *)
 val let_rec_arity (lb:letbinding) : ML (int & option (list bool))
+
+(* Collects all nested Tm_abs nodes without opening the binders. *)
+val abs_formals_ln (t:term) : ML (binders & term & option residual_comp)
+
+(* Peels exactly the lambda spine that used to be a single n-ary Tm_abs node:
+   it does not look through metas or ascriptions, and stops at the binder
+   carrying the residual comp. Binders are not opened. *)
+val abs_one_group_ln (t:term) : ML (binders & term & option residual_comp)
 
 val abs_formals_maybe_unascribe_body : bool -> term -> ML (binders & term & option residual_comp)
 

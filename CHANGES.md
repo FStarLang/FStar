@@ -42,6 +42,30 @@ Guidelines for the changelog:
     (The PulseCore model currently defines `stt_div = stt`; a foundational model
     of divergence is future work.)
 
+## Syntax
+
+  * The `introduce`/`eliminate` sugar for logical connectives no longer binds
+    names for hypotheses, and `eliminate` no longer takes a `returns` clause.
+    The eliminated hypotheses are instead available in the proof context (i.e.
+    to the SMT solver) of the proof that follows `with`. Concretely:
+
+    | Old                                          | New                              |
+    |----------------------------------------------|----------------------------------|
+    | `introduce P ==> Q with h. e`                | `introduce P ==> Q with e`       |
+    | `eliminate exists x1..xn. P returns Q with h. e` | `eliminate exists x1..xn. P with e` |
+    | `eliminate P \/ Q returns R with x. e1 and y. e2` | `eliminate P \/ Q with e1 and e2` |
+    | `eliminate P /\ Q returns R with x y. e`     | `eliminate P /\ Q with e`        |
+
+    Uses of the old syntax are reported with an error explaining the change.
+    Proofs that used the name of a hypothesis (e.g. `with pf_p. f pf_p`) must
+    pass `()` instead (e.g. `with f ()`), which the SMT solver discharges using
+    the hypothesis now in context.
+
+    The desugaring changed accordingly: `eliminate exists` now elaborates to a
+    `let` binding using `FStar.Classical.Sugar.indefinite_descriptionN`,
+    `eliminate _ \/ _` to `if FStar.Classical.Sugar.or_decide p q then e1 else e2`,
+    and `eliminate _ /\ _` to `assert (p /\ q); e`.
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection
@@ -130,6 +154,41 @@ Guidelines for the changelog:
     `val` declarations and arrows which was not previously the case.
 
 ## Module system
+
+  * **Interfaces are no longer syntactically interleaved into their
+    implementations.** Previously, when checking `A.fst` in the presence of
+    `A.fsti`, F* spliced the *parsed* declarations of the interface into the
+    implementation's declaration list and rechecked everything from scratch.
+    Now `A.fsti` is a genuine dependency: it is checked (or loaded from
+    `A.fsti.checked`) first, and its *already-checked* declarations are kept in
+    the typechecking environment as an ordered to-do list. Each declaration of
+    `A.fst` discharges the matching entries; interface declarations that have no
+    counterpart in the implementation (e.g. a `let` in the interface, or
+    auto-generated projectors) are copied verbatim, without being rechecked.
+    If any entry is left over at the end of the module, F* reports an error
+    listing the declarations of the interface that the implementation does not
+    define.
+
+    Consequences for existing code:
+    - **`open`, `include` and module abbreviations in a `.fsti` no longer scope
+      over the corresponding `.fst`.** Each file must now declare the opens it
+      uses. To update existing code, copy the `open`/`include`/`module X = ...`
+      declarations of `A.fsti` to the top of `A.fst`.
+    - Pragmas such as `#set-options` / `#push-options` in a `.fsti` no longer
+      leak into the `.fst`.
+    - An implementation is now checked against the interface by *subsumption*:
+      the two must have the same number of universe parameters and the
+      implementation's type must be a subtype of the declared one. It is no
+      longer required to be syntactically identical up to normalization.
+    - Interface declarations are elaborated exactly once, so typeclass
+      resolution, tactics and splices in a `.fsti` can no longer produce
+      different terms in `A.fsti.checked` and in `A.fst.checked`.
+    - Errors are now reported in the source order of the `.fst` (interleaving
+      used to reorder declarations).
+    - `A.fsti.checked` is now required in order to check `A.fst`, so a build
+      produces (and must ship) checked files for interfaces.
+    - The checked-file format version was bumped; all `.checked` files must be
+      regenerated.
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 

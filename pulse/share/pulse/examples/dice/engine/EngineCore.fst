@@ -15,6 +15,7 @@
 *)
 
 module EngineCore
+module SZ = FStar.SizeT
 #lang-pulse
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array

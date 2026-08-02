@@ -715,10 +715,9 @@ let is_goal_safe_as_well_typed (g : FStarC_Tactics_Types.goal) : Prims.bool=
          match uu___1 with
          | FStar_Pervasives_Native.Some t ->
              let uu___2 = FStarC_Syntax_Free.uvars t in
-             FStarC_Class_Setlike.is_empty ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic uu___2)
+             FStarC_Class_Setlike.is_empty
+               (FStarC_FlatSet.setlike_flat_set
+                  FStarC_Syntax_Free.ord_ctx_uvar) uu___2
          | uu___2 -> false) uu___ in
   all_deps_resolved
 let register_goal (g : FStarC_Tactics_Types.goal) : unit=
@@ -848,7 +847,13 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
                FStarC_TypeChecker_Env.core_check =
                  (env.FStarC_TypeChecker_Env.core_check);
                FStarC_TypeChecker_Env.missing_decl =
-                 (env.FStarC_TypeChecker_Env.missing_decl)
+                 (env.FStarC_TypeChecker_Env.missing_decl);
+               FStarC_TypeChecker_Env.iface_todo =
+                 (env.FStarC_TypeChecker_Env.iface_todo);
+               FStarC_TypeChecker_Env.iface_lids =
+                 (env.FStarC_TypeChecker_Env.iface_lids);
+               FStarC_TypeChecker_Env.iface_val_lids =
+                 (env.FStarC_TypeChecker_Env.iface_val_lids)
              } in
            (let uu___4 = FStarC_Effect.op_Bang dbg_CoreEq in
             if uu___4

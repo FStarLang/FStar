@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module FStarC.Parser.Driver
+module Range      = FStarC.Range
+module ParseIt    = FStarC.Parser.ParseIt
 open FStarC.Effect
 
 open FStarC

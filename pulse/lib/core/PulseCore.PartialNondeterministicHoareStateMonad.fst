@@ -16,6 +16,8 @@
 
 module PulseCore.PartialNondeterministicHoareStateMonad
 
+open FStar.Ghost
+open PulseCore.HoareStateMonad
 module NST = PulseCore.NondeterministicHoareStateMonad
 type tape = nat -> bool
 type ctr = nat

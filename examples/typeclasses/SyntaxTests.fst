@@ -1,5 +1,6 @@
 module SyntaxTests
 
+open FStar.Tactics.Typeclasses
 open Add
 
 let foo  (#a:Type) {|additive a|} (x y : a) : Tot a = plus x y

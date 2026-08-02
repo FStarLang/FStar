@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module Pulse.Lib.Par
+open Pulse.Lib.Send
+open PulseCore.Observability
 open Pulse.Lib.Core
 open Pulse.Lib.ConditionVar
 

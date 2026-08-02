@@ -16,6 +16,8 @@
 [@@"no_prelude"]
 module FStar.Pervasives
 
+open FStar.Pervasives.Native
+open FStar.NormSteps
 (* This is a file from the core library, dependencies must be explicit *)
 open Prims
 

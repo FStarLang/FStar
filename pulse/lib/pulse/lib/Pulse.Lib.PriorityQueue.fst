@@ -367,8 +367,7 @@ let mem_swap #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s}) (x
     // Forward: if x in s, then x in s'
     let fwd () : Lemma (requires mem x s) (ensures mem x s') =
       eliminate exists (k:nat). k < Seq.length s /\ Seq.index s k == x
-      returns mem x s'
-      with _. (
+      with (
         if k = i then (
           assert (Seq.index s' j == x)
         ) else if k = j then (
@@ -381,8 +380,7 @@ let mem_swap #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s}) (x
     // Backward: if x in s', then x in s (by symmetry)
     let bwd () : Lemma (requires mem x s') (ensures mem x s) =
       eliminate exists (k:nat). k < Seq.length s' /\ Seq.index s' k == x
-      returns mem x s
-      with _. (
+      with (
         if k = i then (
           assert (Seq.index s j == x)
         ) else if k = j then (

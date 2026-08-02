@@ -267,7 +267,7 @@ let is_general_prefix_op op =
   (op_starting_char = '~' && Ident.string_of_id op <> "~")
 
 (* might already exist somewhere *)
-let head_and_args e =
+let head_and_args_full e =
   let rec aux e acc = match e.tm with
   | App (head, arg, imp) -> aux head ((arg,imp)::acc)
   | _ -> e, acc
@@ -1521,14 +1521,13 @@ and p_noSeqTerm' ps pb e : ML _ = match e.tm with
     str "with" ^^ space ^^ (separate_map space p_atomicTerm vs) ^^ hardline ^^
     str "and" ^^ space ^^ e
 
-  | IntroImplies(p, q, x, e) ->
+  | IntroImplies(p, q, e) ->
     let p = p_tmFormula p in
     let q = p_tmFormula q in
     let e = p_noSeqTermAndComment false false e in
-    let x = p_binders_sep [x] in
     str "introduce" ^^ space ^^
     p ^^ space ^^ str "==>" ^^ space ^^ q ^^ hardline ^^
-    str "with" ^^ space ^^ x ^^ str "." ^^ space ^^ e
+    str "with" ^^ space ^^ e
 
   | IntroOr(b, p, q, e) ->
     let p = p_tmFormula p in
@@ -1555,16 +1554,13 @@ and p_noSeqTerm' ps pb e : ML _ = match e.tm with
     str "eliminate" ^^ space ^^ str "forall" ^^ space ^^ xs ^^ str "." ^^ space ^^ p ^^ hardline ^^
     str "with" ^^ space ^^ vs
 
-  | ElimExists (bs, p, q, b, e) ->
+  | ElimExists (bs, p, e) ->
     let head = str "eliminate exists" ^^ space ^^ p_binders_sep bs ^^ str "." in
     let p = p_noSeqTermAndComment false false p in
-    let q = p_noSeqTermAndComment false false q in
     let e = p_noSeqTermAndComment false false e in
       head ^^ hardline ^^
       p ^^ hardline ^^
-      str "returns" ^^ space ^^ q ^^ hardline ^^
-      str "with" ^^ space ^^ (p_binders_sep [b]) ^^ str "." ^^ hardline ^^
-      e
+      str "with" ^^ space ^^ e
 
   | ElimImplies(p, q, e) ->
     let p = p_tmFormula p in
@@ -1573,28 +1569,21 @@ and p_noSeqTerm' ps pb e : ML _ = match e.tm with
     str "eliminate" ^^ space ^^ p ^^ space ^^ str "==>" ^^ space ^^ q ^^ hardline ^^
     str "with" ^^ space ^^ e
 
-  | ElimOr(p, q, r, x, e1, y, e2) ->
+  | ElimOr(p, q, e1, e2) ->
     let p = p_tmFormula p in
     let q = p_tmFormula q in
-    let r = p_noSeqTermAndComment false false r in
-    let x = p_binders_sep [x] in
     let e1 = p_noSeqTermAndComment false false e1 in
-    let y = p_binders_sep [y] in
     let e2 = p_noSeqTermAndComment false false e2 in
     str "eliminate" ^^ space ^^ p ^^ space ^^ str "\\/" ^^ space ^^ q ^^ hardline ^^
-    str "returns" ^^ space ^^ r ^^ hardline ^^
-    str "with" ^^ space ^^ x ^^ space ^^ str "." ^^ space ^^ e1 ^^ hardline ^^
-    str "and" ^^ space ^^ y ^^ space ^^ str "." ^^ space ^^ e2
+    str "with" ^^ space ^^ e1 ^^ hardline ^^
+    str "and" ^^ space ^^ e2
 
-  | ElimAnd(p, q, r, x, y, e) ->
+  | ElimAnd(p, q, e) ->
     let p = p_tmFormula p in
     let q = p_tmTuple q in
-    let r = p_noSeqTermAndComment false false r in
-    let xy = p_binders_sep [x; y] in
     let e = p_noSeqTermAndComment false false e in
     str "eliminate" ^^ space ^^ p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
-    str "returns" ^^ space ^^ r ^^ hardline ^^
-    str "with" ^^ space ^^ xy ^^ space ^^ str "." ^^ space ^^ e
+    str "with" ^^ space ^^ e
 
   | LitDoc d ->
     d
@@ -2025,7 +2014,7 @@ and p_simpleDef ps lid_e : ML _ =
 
 and p_appTerm e : ML _ = match e.tm with
   | App _ when is_general_application e ->
-      let head, args = head_and_args e in
+      let head, args = head_and_args_full e in
       (match args with
       | [e1; e2] when snd e1 = Infix ->
         p_argTerm e1 ^/^ group (str "`" ^^ (p_indexingTerm head) ^^ str "`") ^/^ p_argTerm e2
@@ -2260,7 +2249,7 @@ and p_universeFrom u : ML _ = match u.tm with
   | Op(id, [u1 ; u2]) when string_of_id id = "+" ->
     group (p_universeFrom u1 ^/^ plus ^/^ p_universeFrom u2)
   | App _ ->
-    let head, args = head_and_args u in
+    let head, args = head_and_args_full u in
     begin match head.tm with
       | Var maybe_max_lid when lid_equals maybe_max_lid C.max_lid ->
         group (p_qlident C.max_lid ^/+^

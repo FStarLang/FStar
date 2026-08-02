@@ -153,6 +153,18 @@ let ( ||| ) x y =
   | None -> y
   | _ -> x
 
+(* The modules that [fn] befriends. A friend dependence must be the first
+   dependence on a module, so the fly-deps scanner must know about them before
+   it loads anything else, in particular before the interface of [fn]'s own
+   module, which may itself depend on them. *)
+let friends_of_implementation (fn:string) : ML (list Ident.lident) =
+  let ast, _ = FStarC.Parser.Driver.parse_file fn in
+  FStarC.Parser.AST.decls_of_modul ast |> List.collect (fun d ->
+    match d.FStarC.Parser.AST.d with
+    | FStarC.Parser.AST.Friend l ->
+      [FStarC.String.lowercase (Ident.string_of_lid l) |> Ident.lid_of_str]
+    | _ -> [])
+
 (* Normal mode with some flags, files, etc *)
 let go_normal () : ML unit =
   let res, filenames0 = process_args () in
@@ -261,8 +273,8 @@ let go_normal () : ML unit =
         print1 "Deps: %s\n" (show deps);
         print1 "Inclusion info: %s\n" (show tcr.mii);
         print1 "Checked module: %s\n" (show tcr.checked_module);
-        print1 "SMT decls: %s\n" (show <| fst tcr.smt_decls);
-        print1 "SMT fvars: %s\n" (show <| snd tcr.smt_decls)
+        print1 "SMT decls: %s\n" (show <| tcr.smt_encoding.me_decls ());
+        print1 "SMT fvars: %s\n" (show <| tcr.smt_encoding.me_fvbs)
     )
 
     (* --read_krml_file: read and print a krml file *)
@@ -420,6 +432,11 @@ let go_normal () : ML unit =
                 let filenames =
                   if FStarC.Parser.Dep.is_implementation fn
                   then (
+                    (* The fly-deps scanner must know about the friends of [fn]
+                       from the start: a friend dependence has to be the first
+                       dependence on a module, and the interface of this very
+                       module (checked first) may depend on those modules too. *)
+                    FStarC.Parser.Dep.set_root_friends (friends_of_implementation fn);
                     match FStarC.Parser.Dep.interface_of deps m with
                     | None -> [fn]
                     | Some iface -> [iface; fn]

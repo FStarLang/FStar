@@ -123,11 +123,41 @@ let range_of_positions filename start fin =
   let end_pos = FStarC_Parser_Util.pos_of_lexpos fin in
   FStarC_Range.mk_range filename start_pos end_pos
 
+(* A short history of the most recently lexed tokens (most recent first).
+   It is used to produce targeted hints for syntax errors caused by syntax
+   that F* used to accept. *)
+let tok_history : FStarC_Parser_Parse.token list ref = ref []
+
+let record_token (t:FStarC_Parser_Parse.token) =
+  let rec take n l =
+    if n <= 0 then [] else match l with [] -> [] | x::xs -> x :: take (n-1) xs
+  in
+  tok_history := t :: take 5 !tok_history
+
+(* 'introduce P ==> Q with h. e' used to bind a name for the hypothesis; it now
+   does not. The grammar cannot tell a binder from a term after 'with', so we
+   detect the obsolete form from the token history instead. *)
+let legacy_syntax_hint () =
+  let open FStarC_Parser_Parse in
+  let is_binder_name = function IDENT _ | UNDERSCORE -> true | _ -> false in
+  let obsolete_hypothesis_name = function
+    | DOT :: n :: WITH :: _ -> is_binder_name n
+    | _ :: DOT :: n :: WITH :: _ -> is_binder_name n
+    | _ -> false
+  in
+  if obsolete_hypothesis_name !tok_history
+  then Some ("Syntax error. Note: 'introduce' and 'eliminate' no longer bind names \
+              for hypotheses; write 'with e' instead of 'with h. e'. \
+              The hypothesis is available in the proof context of e.")
+  else None
+
 let err_of_parse_error filename lexbuf tag =
     let pos = lexbuf.cur_p in
     let tag =
       match tag with
-      | None -> "Syntax error"
+      | None -> (match legacy_syntax_hint () with
+                 | Some msg -> msg
+                 | None -> "Syntax error")
       | Some tag -> tag
     in
     Fatal_SyntaxError,
@@ -490,6 +520,7 @@ let parse_fstar_incrementally
         let tok = FStarC_Parser_LexFStar.token lexbuf in
         if !dbg_Tokens then
           print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
+        record_token tok;
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
       try 
@@ -576,6 +607,7 @@ let parse_no_lang fn =
     let tok = FStarC_Parser_LexFStar.token lexbuf in
       if !dbg_Tokens then
         print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
+    record_token tok;
     (tok, lexbuf.start_p, lexbuf.cur_p)
   in
   try

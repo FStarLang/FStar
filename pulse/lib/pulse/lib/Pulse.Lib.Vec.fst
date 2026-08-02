@@ -15,6 +15,11 @@
 *)
 
 module Pulse.Lib.Vec
+open Pulse.Class.PtsTo
+open FStar.Ghost
+open PulseCore.FractionalPermission
+module SZ = FStar.SizeT
+module Seq = FStar.Seq
 #lang-pulse
 
 open Pulse.Lib.Core

@@ -15,6 +15,8 @@
 *)
 module FStarC.Parser.AST
 
+open FStarC.Class.PP
+open FStarC.Class.HasRange
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -688,12 +690,10 @@ let rec term_to_string (x:term) : ML string = match x.tm with
         (term_to_string t)
         (String.concat " " (List.map term_to_string vs))
 
-  | ElimExists(bs, p, q, b, e) ->
-    Format.fmt5 "_elim_ exists %s. %s _to_ %s\n\with %s. %s"
+  | ElimExists(bs, p, e) ->
+    Format.fmt3 "eliminate exists %s. %s\n\with %s"
         (binders_to_string " " bs)
         (term_to_string p)
-        (term_to_string q)
-        (binder_to_string b)
         (term_to_string e)
 
   | ElimImplies(p, q, e) ->
@@ -702,24 +702,18 @@ let rec term_to_string (x:term) : ML string = match x.tm with
       (term_to_string q)
       (term_to_string e)
 
-  | ElimOr(p, q, r, x, e, y, e') ->
-     Format.fmt "_elim_ %s \/ %s _to_ %s\n\with %s. %s\n\and %s.%s"
-       [term_to_string p;
-        term_to_string q;
-        term_to_string r;
-        binder_to_string x;
-        term_to_string e;
-        binder_to_string y;
-        term_to_string e']
+  | ElimOr(p, q, e, e') ->
+     Format.fmt4 "eliminate %s \/ %s\n\with %s\n\and %s"
+       (term_to_string p)
+       (term_to_string q)
+       (term_to_string e)
+       (term_to_string e')
 
-  | ElimAnd(p, q, r, x, y, e) ->
-     Format.fmt "_elim_ %s /\ %s _to_ %s\n\with %s %s. %s"
-       [term_to_string p;
-        term_to_string q;
-        term_to_string r;
-        binder_to_string x;
-        binder_to_string y;        
-        term_to_string e]
+  | ElimAnd(p, q, e) ->
+     Format.fmt3 "eliminate %s /\ %s\n\with %s"
+       (term_to_string p)
+       (term_to_string q)
+       (term_to_string e)
 
   | IntroForall(xs, p, e) -> 
     Format.fmt3 "_intro_ forall %s. %s with %s"
@@ -734,12 +728,11 @@ let rec term_to_string (x:term) : ML string = match x.tm with
       (String.concat " " (List.map term_to_string vs))
       (term_to_string e)
   
-  | IntroImplies(p, q, x, e) ->
-    Format.fmt4 ("_intro_ %s ==> %s with %s. %s")
+  | IntroImplies(p, q, e) ->
+    Format.fmt3 ("introduce %s ==> %s with %s")
       (term_to_string p)
       (term_to_string q)
-      (binder_to_string x)
-      (term_to_string p)
+      (term_to_string e)
       
   | IntroOr(b, p, q, r) ->
     Format.fmt4 ("_intro_ %s \/ %s using %s with %s")
@@ -1005,7 +998,7 @@ let add_decorations d decorations : ML decl =
   { d with quals=qualifiers; attrs=attributes_ }
 
 let mk_decl d r decorations : ML decl =
-  let d = { d=d; drange=r; quals=[]; attrs=[]; interleaved=false } in
+  let d = { d=d; drange=r; quals=[]; attrs=[] } in
   add_decorations d decorations
 
 instance pretty_quote_kind : pretty quote_kind = {
@@ -1154,22 +1147,22 @@ let rec pp_term (t:term) : ML document =
       ctor "IntroForall" [pp_list' pp_binder binders; pp_term t1; pp_term t2]
   | IntroExists (binders, t1, ts, t2) ->
       ctor "IntroExists" [pp_list' pp_binder binders; pp_term t1; pp_list' pp_term ts; pp_term t2]
-  | IntroImplies (t1, t2, b, t3) ->
-      ctor "IntroImplies" [pp_term t1; pp_term t2; pp_binder b; pp_term t3]
+  | IntroImplies (t1, t2, t3) ->
+      ctor "IntroImplies" [pp_term t1; pp_term t2; pp_term t3]
   | IntroOr (is_left, t1, t2, t3) ->
       ctor "IntroOr" [doc_of_string (show is_left); pp_term t1; pp_term t2; pp_term t3]
   | IntroAnd (t1, t2, t3, t4) ->
       ctor "IntroAnd" [pp_term t1; pp_term t2; pp_term t3; pp_term t4]
   | ElimForall (binders, t, ts) ->
       ctor "ElimForall" [pp_list' pp_binder binders; pp_term t; pp_list' pp_term ts]
-  | ElimExists (binders, t1, t2, b, t3) ->
-      ctor "ElimExists" [pp_list' pp_binder binders; pp_term t1; pp_term t2; pp_binder b; pp_term t3]
+  | ElimExists (binders, t1, t2) ->
+      ctor "ElimExists" [pp_list' pp_binder binders; pp_term t1; pp_term t2]
   | ElimImplies (t1, t2, t3) ->
       ctor "ElimImplies" [pp_term t1; pp_term t2; pp_term t3]
-  | ElimOr (t1, t2, t3, b1, t4, b2, t5) ->
-      ctor "ElimOr" [pp_term t1; pp_term t2; pp_term t3; pp_binder b1; pp_term t4; pp_binder b2; pp_term t5]
-  | ElimAnd (t1, t2, t3, b1, b2, t4) ->
-      ctor "ElimAnd" [pp_term t1; pp_term t2; pp_term t3; pp_binder b1; pp_binder b2; pp_term t4]
+  | ElimOr (t1, t2, t3, t4) ->
+      ctor "ElimOr" [pp_term t1; pp_term t2; pp_term t3; pp_term t4]
+  | ElimAnd (t1, t2, t3) ->
+      ctor "ElimAnd" [pp_term t1; pp_term t2; pp_term t3]
   | ListLiteral ts ->
       ctor "ListLiteral" [pp_list' pp_term ts]
   | SeqLiteral ts ->

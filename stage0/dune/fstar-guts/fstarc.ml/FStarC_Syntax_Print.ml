@@ -499,7 +499,7 @@ let showable_qualifier :
   { FStarC_Class_Show.show = qual_to_string }
 let showable_pat : FStarC_Syntax_Syntax.pat FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = pat_to_string }
-let showable_const : FStarC_Const.sconst FStarC_Class_Show.showable=
+let showable_const : FStarC_Syntax_Syntax.sconst FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = const_to_string }
 let showable_letbinding :
   FStarC_Syntax_Syntax.letbinding FStarC_Class_Show.showable=
@@ -704,7 +704,7 @@ let rec sigelt_to_string_short (x : FStarC_Syntax_Syntax.sigelt) :
       FStarC_Format.fmt2 "sub_effect %s ~> %s" uu___ uu___1
   | FStarC_Syntax_Syntax.Sig_effect_abbrev
       { FStarC_Syntax_Syntax.lid4 = l; FStarC_Syntax_Syntax.us4 = uu___;
-        FStarC_Syntax_Syntax.bs2 = tps; FStarC_Syntax_Syntax.comp1 = c;
+        FStarC_Syntax_Syntax.bs = tps; FStarC_Syntax_Syntax.comp1 = c;
         FStarC_Syntax_Syntax.cflags = uu___1;_}
       ->
       let uu___2 = FStarC_Class_Show.show FStarC_Ident.showable_lident l in

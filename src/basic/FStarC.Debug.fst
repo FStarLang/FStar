@@ -16,6 +16,7 @@
 
 module FStarC.Debug
 
+open FStarC
 open FStarC.Effect
 
 (* Mutable state *)

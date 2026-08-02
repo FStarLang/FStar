@@ -359,13 +359,11 @@ and eq_term' (t1 : FStarC_Parser_AST.term') (t2 : FStarC_Parser_AST.term') :
           if uu___2 then eq_term t11 t3 else false in
         if uu___1 then eq_list eq_term ts1 ts2 else false in
       if uu___ then eq_term t21 t4 else false
-  | (FStarC_Parser_AST.IntroImplies (t11, t21, b1, t3),
-     FStarC_Parser_AST.IntroImplies (t4, t5, b2, t6)) ->
+  | (FStarC_Parser_AST.IntroImplies (t11, t21, t3),
+     FStarC_Parser_AST.IntroImplies (t4, t5, t6)) ->
       let uu___ =
-        let uu___1 =
-          let uu___2 = eq_term t11 t4 in
-          if uu___2 then eq_term t21 t5 else false in
-        if uu___1 then eq_binder b1 b2 else false in
+        let uu___1 = eq_term t11 t4 in
+        if uu___1 then eq_term t21 t5 else false in
       if uu___ then eq_term t3 t6 else false
   | (FStarC_Parser_AST.IntroOr (b1, t11, t21, t3), FStarC_Parser_AST.IntroOr
      (b2, t4, t5, t6)) ->
@@ -387,48 +385,32 @@ and eq_term' (t1 : FStarC_Parser_AST.term') (t2 : FStarC_Parser_AST.term') :
         let uu___1 = eq_list eq_binder bs1 bs2 in
         if uu___1 then eq_term t11 t21 else false in
       if uu___ then eq_list eq_term ts1 ts2 else false
-  | (FStarC_Parser_AST.ElimExists (bs1, t11, t21, b1, t3),
-     FStarC_Parser_AST.ElimExists (bs2, t4, t5, b2, t6)) ->
+  | (FStarC_Parser_AST.ElimExists (bs1, t11, t21),
+     FStarC_Parser_AST.ElimExists (bs2, t3, t4)) ->
       let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = eq_list eq_binder bs1 bs2 in
-            if uu___3 then eq_term t11 t4 else false in
-          if uu___2 then eq_term t21 t5 else false in
-        if uu___1 then eq_binder b1 b2 else false in
-      if uu___ then eq_term t3 t6 else false
+        let uu___1 = eq_list eq_binder bs1 bs2 in
+        if uu___1 then eq_term t11 t3 else false in
+      if uu___ then eq_term t21 t4 else false
   | (FStarC_Parser_AST.ElimImplies (t11, t21, t3),
      FStarC_Parser_AST.ElimImplies (t4, t5, t6)) ->
       let uu___ =
         let uu___1 = eq_term t11 t4 in
         if uu___1 then eq_term t21 t5 else false in
       if uu___ then eq_term t3 t6 else false
-  | (FStarC_Parser_AST.ElimOr (t11, t21, t3, b1, t4, b2, t5),
-     FStarC_Parser_AST.ElimOr (t6, t7, t8, b3, t9, b4, t10)) ->
+  | (FStarC_Parser_AST.ElimOr (t11, t21, t3, t4), FStarC_Parser_AST.ElimOr
+     (t5, t6, t7, t8)) ->
       let uu___ =
         let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = eq_term t11 t6 in
-                if uu___5 then eq_term t21 t7 else false in
-              if uu___4 then eq_term t3 t8 else false in
-            if uu___3 then eq_binder b1 b3 else false in
-          if uu___2 then eq_term t4 t9 else false in
-        if uu___1 then eq_binder b2 b4 else false in
-      if uu___ then eq_term t5 t10 else false
-  | (FStarC_Parser_AST.ElimAnd (t11, t21, t3, b1, b2, t4),
-     FStarC_Parser_AST.ElimAnd (t5, t6, t7, b3, b4, t8)) ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = eq_term t11 t5 in
-              if uu___4 then eq_term t21 t6 else false in
-            if uu___3 then eq_term t3 t7 else false in
-          if uu___2 then eq_binder b1 b3 else false in
-        if uu___1 then eq_binder b2 b4 else false in
+          let uu___2 = eq_term t11 t5 in
+          if uu___2 then eq_term t21 t6 else false in
+        if uu___1 then eq_term t3 t7 else false in
       if uu___ then eq_term t4 t8 else false
+  | (FStarC_Parser_AST.ElimAnd (t11, t21, t3), FStarC_Parser_AST.ElimAnd
+     (t4, t5, t6)) ->
+      let uu___ =
+        let uu___1 = eq_term t11 t4 in
+        if uu___1 then eq_term t21 t5 else false in
+      if uu___ then eq_term t3 t6 else false
   | (FStarC_Parser_AST.ListLiteral ts1, FStarC_Parser_AST.ListLiteral ts2) ->
       eq_list eq_term ts1 ts2
   | (FStarC_Parser_AST.SeqLiteral ts1, FStarC_Parser_AST.SeqLiteral ts2) ->

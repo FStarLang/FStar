@@ -92,22 +92,15 @@
   - VC = forall (x: Prims.int). x >= 0
   - See also TestErrorLocations.fst(68,52-68,66)
 
-* Info at TestErrorLocations.fst(89,20-89,36):
+* Info at TestErrorLocations.fst(89,2-90,20):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (exists (x: Prims.nat). x = 0)
-    got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Env = (uu___ : Prims.unit)
-  - VC =
-      (exists (x: Prims.nat). x = 0) /\
-      (forall (any_result: Prims.unit)
-          (n: Prims.nat)
-          (pf_zero: Prims.squash (n = 0)).
-          (* - Could not prove post-condition *) n = 0)
-  - See also FStar.Classical.Sugar.fsti(66,21-66,40)
+  - VC = exists (x1: Prims.nat). x1 = 0
+  - See also FStar.Classical.Sugar.fsti(191,14-191,29)
 
-* Info at TestErrorLocations.fst(96,28-96,33):
+* Info at TestErrorLocations.fst(95,28-95,33):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (forall (x: Prims.nat). x = 0)
@@ -116,32 +109,29 @@
   - Env = (uu___ : Prims.unit)
   - VC = forall (x: Prims.nat). x = 0
 
-* Info at TestErrorLocations.fst(101,12-101,13):
+* Info at TestErrorLocations.fst(100,12-100,13):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (p /\ q) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Env = (p : Prims.prop) (q : Prims.prop)
   - VC = p /\ q
-  - See also TestErrorLocations.fst(100,19-100,20)
+  - See also TestErrorLocations.fst(99,19-99,20)
 
-* Info at TestErrorLocations.fst(107,17-107,18):
+* Info at TestErrorLocations.fst(105,17-105,18):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (p /\ q) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Env = (p : Prims.prop) (q : Prims.prop) (uu___ : Prims.squash p)
   - VC = p /\ q
-  - See also TestErrorLocations.fst(106,21-106,22)
+  - See also TestErrorLocations.fst(104,21-104,22)
 
-* Info at TestErrorLocations.fst(113,12-113,18):
+* Info at TestErrorLocations.fst(110,2-112,13):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (p \/ q) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Env = (p : Prims.prop) (q : Prims.prop)
   - VC = p \/ q
-  - See also FStar.Classical.Sugar.fsti(88,21-88,31)
+  - See also FStar.Classical.Sugar.fsti(173,14-173,20)
 
 * Warning 240 at TestErrorLocations.fst(60,4-60,9):
   - TestErrorLocations.test7 is declared but no definition was found
@@ -155,7 +145,7 @@
   - TestErrorLocations.test5 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at TestErrorLocations.fst(112,0-116,17):
+* Warning 240 at TestErrorLocations.fst(109,0-112,13):
   - Missing definitions in module TestErrorLocations:
       test5
       test6

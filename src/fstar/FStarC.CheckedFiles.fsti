@@ -32,8 +32,14 @@ val cache_version_number : int
 type tc_result = {
   checked_module: Syntax.modul; //persisted
   mii:DsEnv.module_inclusion_info; //persisted
-  smt_decls:(FStarC.SMTEncoding.Term.decls_t &  //list of smt decls and fvbs for the module
-             list FStarC.SMTEncoding.Env.fvar_binding); //persisted
+
+  //The SMT encoding of the module. Its index and fvar bindings are persisted
+  //alongside the module, but the declarations themselves are persisted as a
+  //separate value in the checked file and are only read (once) if the thunk is
+  //ever forced: they account for the majority of a checked file's size, and are
+  //typically not needed at all, since context pruning discards most of a
+  //dependency's declarations for any given query.
+  smt_encoding: FStarC.SMTEncoding.Env.module_encoding;
 
   tc_time:int;
   extraction_time:int

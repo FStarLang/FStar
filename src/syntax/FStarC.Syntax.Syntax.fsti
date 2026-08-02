@@ -127,22 +127,22 @@ type term' =
   | Tm_uinst      of term & universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        {  (* fun (xi:ti) -> t : (M t' wp | N) *)
-      bs:binders;
+  | Tm_abs        {  (* fun (x:t) -> t' : (M t'' wp | N) *)
+      b:binder;
       body:term;
       rc_opt:option residual_comp
     }
-  | Tm_arrow      {  (* (xi:ti) -> M t' wp *)
-      bs:binders;
+  | Tm_arrow      {  (* (x:t) -> M t' wp *)
+      b:binder;
       comp:comp
     }
   | Tm_refine     {  (* x:t{phi} *)
       b:bv;
       phi:term
     }
-  | Tm_app        {  (* h tau_1 ... tau_n, args in order from left to right *)
+  | Tm_app        {  (* h tau, a single argument *)
       hd:term;
-      args:args
+      arg:arg
     }
   | Tm_match      {  (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
       scrutinee:term;
@@ -356,7 +356,6 @@ and freenames = FlatSet.t bv
 and syntax 'a = {
     n:'a;
     pos:range;
-    vars:memo free_vars;
     hash_code:memo FStarC.Hash.hash_code
 }
 and bv = {
@@ -640,6 +639,10 @@ type sig_metadata = {
     sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
     sigmeta_spliced:bool;
     sigmeta_already_checked:bool;
+    sigmeta_extension_decl:bool;
+    // ^ This sigelt was produced by a language extension (e.g. a Pulse `fn`)
+    // rather than by a plain F* declaration. Such declarations in an interface
+    // are matched against the implementation out of order.
     // ^ This sigelt was created from a splice_t with a proof of well-typing,
     // and does not need to be checked again.
     sigmeta_extension_data: list (string & dyn) //each extension can register some data with a sig
@@ -786,6 +789,12 @@ val mk_lb :         (lbname & list univ_name & lident & typ & term & list attrib
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> range -> ML term
+
+(* n-ary lambda / arrow from ALREADY-CLOSED binders, at an explicit range.
+   These do not close anything; see FStarC.Syntax.Util.abs / arrow for the
+   variants that close their binders. *)
+val mk_Tm_abs:      binders -> term -> option residual_comp -> range -> ML term
+val mk_Tm_arrow:    binders -> comp -> range -> ML term
 
 (* This raises an exception if the term is not a Tm_fvar,
  * use with care. It has to be an Tm_fvar *immediately*,

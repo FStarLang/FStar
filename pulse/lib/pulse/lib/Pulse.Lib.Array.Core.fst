@@ -15,6 +15,9 @@
 *)
 
 module Pulse.Lib.Array.Core
+open Pulse.Class.PtsTo
+open Pulse.Lib.SmallType
+open Pulse.Lib.Send
 #lang-pulse
 open Pulse.Main
 open Pulse.Lib.Core

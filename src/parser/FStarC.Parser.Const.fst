@@ -342,6 +342,7 @@ let plugin_attr     = attr "plugin"
 let tcnorm_attr    =  attr "tcnorm"
 let must_erase_for_extraction_attr = attr "must_erase_for_extraction"
 let strict_on_arguments_attr =  attr "strict_on_arguments"
+let smt_arity_attr = attr "smt_arity"
 let resolve_implicits_attr_string = attr "resolve_implicits"
 let override_resolve_implicits_handler_lid = attr "override_resolve_implicits_handler"
 let handle_smt_goals_attr = attr "handle_smt_goals"
@@ -493,6 +494,10 @@ let exists_elim_lid = classical_sugar_lid "exists_elim"
 let implies_elim_lid = classical_sugar_lid "implies_elim"
 let or_elim_lid = classical_sugar_lid "or_elim"
 let and_elim_lid = classical_sugar_lid "and_elim"
+let or_decide_lid = classical_sugar_lid "or_decide"
+let max_indefinite_description_arity = 5
+let indefinite_description_lid (n:int) : ML lid =
+  classical_sugar_lid ("indefinite_description" ^ string_of_int n)
 
 
 let match_returns_def_name = reserved_prefix ^ "_ret_"

@@ -1,5 +1,11 @@
 module FStarC.TypeChecker.Cfg
 
+open FStarC.Syntax.Util
+open FStar.String
+open FStarC.Errors
+open FStarC.Syntax.Subst
+open FStarC.TypeChecker.Primops
+open FStarC.Class.Deq
 open FStar.Char
 open FStarC
 open FStarC.Effect

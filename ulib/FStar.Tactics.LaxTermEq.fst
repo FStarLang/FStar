@@ -1,5 +1,6 @@
 module FStar.Tactics.LaxTermEq
 
+open FStar.Tactics.Effect
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Stubs.Reflection.V2.Data

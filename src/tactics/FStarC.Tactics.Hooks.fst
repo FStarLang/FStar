@@ -111,7 +111,7 @@ let getprop (e:Env.env) (t:term) : ML (option term) =
     U.un_squash tn
 
 let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : ML tres =
-    let hd, args = U.head_and_args t in
+    let hd, args = U.head_and_args_full t in
     match (U.un_uinst hd).n, args with
 
     // with_tactic marker
@@ -222,19 +222,21 @@ let rec traverse (f: pol -> Env.env -> term -> ML tres) (pol:pol) (e:Env.env) (t
         | Tm_meta {tm=t; meta=m} -> let tr = traverse f pol e t in
                             comb1 (fun t' -> Tm_meta {tm=t'; meta=m}) tr
 
-        | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
+        | Tm_app _ ->
+            begin match U.head_and_args_full t with
+            | { n = Tm_fvar fv }, [(p,_); (q,_)] when S.fv_eq_lid fv PC.imp_lid ->
                // ==> is specialized to U_zero
                let x = S.new_bv None (U.mk_squash p) in
                let r1 = traverse f (flip pol)  e                p in
                let r2 = traverse f       pol  (Env.push_bv e x) q in
                comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
 
-        (* p <==> q is special, each side is bipolar *)
-        (* So we traverse its arguments with pol = Both, and negative and positive versions *)
-        (* of p and q *)
-        (* then we return (in general) (p- ==> q+) /\ (q- ==> p+) *)
-        (* But if neither side ran tactics, we just keep p <==> q *)
-        | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.iff_lid ->
+            (* p <==> q is special, each side is bipolar *)
+            (* So we traverse its arguments with pol = Both, and negative and positive versions *)
+            (* of p and q *)
+            (* then we return (in general) (p- ==> q+) /\ (q- ==> p+) *)
+            (* But if neither side ran tactics, we just keep p <==> q *)
+            | { n = Tm_fvar fv }, [(p,_); (q,_)] when S.fv_eq_lid fv PC.iff_lid ->
                // <==> is specialized to U_zero
                let xp = S.new_bv None (U.mk_squash p) in
                let xq = S.new_bv None (U.mk_squash q) in
@@ -251,17 +253,18 @@ let rec traverse (f: pol -> Env.env -> term -> ML tres) (pol:pol) (e:Env.env) (t
                   Simplified (t.n, gs1@gs2)
                end
 
-        | Tm_app {hd; args} ->
+            | hd, args ->
                 let r0 = traverse f pol e hd in
                 let r1 = List.fold_right (fun (a, q) r ->
                                               let r' = traverse f pol e a in
                                               comb2 (fun a args -> (a, q)::args) r' r)
                                                  args (tpure []) in
-                comb2 (fun hd args -> Tm_app {hd; args}) r0 r1
+                comb2 (fun hd args -> (S.mk_Tm_app hd args t.pos).n) r0 r1
+            end
 
-        | Tm_abs {bs; body=t; rc_opt=k} ->
+        | Tm_abs _ ->
                 // TODO: traverse k?
-                let bs, topen = SS.open_term bs t in
+                let bs, topen, k = U.abs_formals t in
                 let e' = Env.push_binders e bs in
                 let r0 = List.map (fun b ->
                                      let r = traverse f (flip pol) e b.binder_bv.sort in
@@ -370,7 +373,7 @@ let rec traverse_for_spinoff
     in
     let should_descend (t:term) =
         //descend only into the following connectives
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         let res =
           match (U.un_uinst hd).n with
           | Tm_fvar fv ->
@@ -418,11 +421,11 @@ let rec traverse_for_spinoff
         else Unchanged t
     in
     let rewrite_boolean_conjunction t : ML _ =
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(t, _)]
                     when S.fv_eq_lid fv PC.b2t_lid -> (
-            let hd, args = U.head_and_args t in
+            let hd, args = U.head_and_args_full t in
             match (U.un_uinst hd).n, args with
             | Tm_fvar fv, [(t0, _); (t1, _)]
               when S.fv_eq_lid fv PC.op_And ->
@@ -539,25 +542,29 @@ let rec traverse_for_spinoff
             // TODO: traverse the types?
             comb1 (fun t -> Tm_ascribed {tm=t; asc; eff_opt=ef}) (traverse pol e t)
 
-          | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
+          | Tm_app _ ->
+            begin
+            match U.head_and_args_full t with
+            | { n = Tm_fvar fv }, [(p,_); (q,_)] when S.fv_eq_lid fv PC.imp_lid ->
                  // ==> is specialized to U_zero
-            let x = S.new_bv None (U.mk_squash p) in
-            let r1 = traverse (flip pol)  e                p in
-            let r2 = traverse       pol  (Env.push_bv e x) q in
-            comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
+              let x = S.new_bv None (U.mk_squash p) in
+              let r1 = traverse (flip pol)  e                p in
+              let r2 = traverse       pol  (Env.push_bv e x) q in
+              comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
 
-          | Tm_app {hd; args} ->
+            | hd, args ->
+            let app_pos = t.pos in
             begin
             match (U.un_uinst hd).n, args with
-            | Tm_fvar fv, [(t, Some aq0); (body, aq)]
+            | Tm_fvar fv, [(ty, Some aq0); (body, aq)]
                when (S.fv_eq_lid fv PC.forall_lid ||
                      S.fv_eq_lid fv PC.exists_lid) &&
                     aq0.aqual_implicit ->
                 let r0 = traverse pol e hd in
-                let rt = traverse (flip pol) e t in
+                let rt = traverse (flip pol) e ty in
                 let rbody = traverse pol e body in
                 let rargs = comb2 (fun t body -> [(t, Some aq0); (body, aq)]) rt rbody in
-                comb2 (fun hd args -> Tm_app {hd; args}) r0 rargs
+                comb2 (fun hd args -> (S.mk_Tm_app hd args app_pos).n) r0 rargs
 
             | _ ->
                 let r0 = traverse pol e hd in
@@ -583,14 +590,14 @@ let rec traverse_for_spinoff
                          U.t_true.n
 
                        | _ ->
-                         let t' = Tm_app {hd; args} in
-                         t')
+                         (S.mk_Tm_app hd args app_pos).n)
                     r0 r1                  
             end
+            end
 
-          | Tm_abs {bs; body=t; rc_opt=k} ->
+          | Tm_abs _ ->
                 // TODO: traverse k?
-                let bs, topen = SS.open_term bs t in
+                let bs, topen, k = U.abs_formals t in
                 let e' = Env.push_binders e bs in
                 let r0 = List.map (fun b ->
                                      let r = traverse (flip pol) e b.binder_bv.sort in
@@ -694,7 +701,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) rng : ML term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when flychecking is set, cf. issue #73 in fstar-mode.el
     if env.flychecking
-    then mk_Tm_app (TcUtil.fvar_env env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
+    then S.mk_Tm_app (TcUtil.fvar_env env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
 
     let gs, w = run_tactic_on_typ tau.pos rng tau env typ in

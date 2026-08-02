@@ -15,6 +15,14 @@
 *)
 
 module Pulse.Lib.Reference
+open Pulse.Class.PtsTo
+open Pulse.Lib.Array.Core
+open Pulse.Main
+open PulseCore.FractionalPermission
+open FStar.Ghost
+open Pulse.Lib.SmallType
+open Pulse.Lib.Send
+module T = FStar.Tactics
 #lang-pulse
 open Pulse.Lib.Core
 module A = Pulse.Lib.Array.Core

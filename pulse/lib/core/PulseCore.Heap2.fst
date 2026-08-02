@@ -1,4 +1,6 @@
 module PulseCore.Heap2
+open FStar.Ghost
+module T = FStar.Tactics
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open FStar.PCM
@@ -129,29 +131,27 @@ let lift_star (l:tag) (p q:H.slprop)
     introduce 
       interp (llift l p `star` llift l q) m ==>
       interp (llift l (p `H.star` q)) m
-    with _ . ( 
+    with ( 
       eliminate exists h0 h1.
         disjoint h0 h1 /\
         m == join h0 h1 /\
         interp (llift l p) h0 /\
         interp (llift l q) h1
-      returns interp (llift l (p `H.star` q)) m
-      with _ . (
+      with (
         H.intro_star p q (get l h0) (get l h1)
       )
     );
     introduce 
       interp (llift l (p `H.star` q)) m ==>
       interp (llift l p `star` llift l q) m
-    with _ . ( 
+    with ( 
       H.elim_star p q (get l m);
       eliminate exists c0 c1.
         H.disjoint c0 c1 /\
         get l m == H.join c0 c1 /\
         H.interp p c0 /\
         H.interp q c1
-      returns interp (llift l p `star` llift l q) m
-      with _ . (
+      with (
         let h0 = put l c0 m in
         let h1 = put l c1 empty_heap in
         assert (join h0 h1 == m)
@@ -277,10 +277,7 @@ let lift_action
       h0 == join h0' h1' /\
       interp (lift fp) h0' /\
       interp frame h1'
-    returns 
-      interp (lift (fp' x) `star` frame) h1 /\
-      action_related_heaps #mut h0 h1
-    with _ . (
+    with (
       let hframe : H.heap -> prop = (fun h -> interp frame { concrete = h; ghost = h1'.ghost }) in
       introduce forall c0 c1.
         (hframe c0 /\ H.disjoint c0 c1)
@@ -288,7 +285,7 @@ let lift_action
         hframe (H.join c0 c1)
       with (
         introduce _ ==> _
-        with _ . (
+        with (
           let h0g = {concrete=c0; ghost=h1'.ghost} in
           assert (interp frame h0g);
           assert (H.disjoint c0 c1);
@@ -313,8 +310,7 @@ let lift_action
         h11 == H.join c0 c1 /\
         H.interp (fp' x) c0 /\
         H.interp hframe c1
-      returns interp (lift (fp' x) `star` frame) h1
-      with _ . ( 
+      with ( 
         let h10 = { concrete = c0; ghost = h0'.ghost } in
         let h11 = { concrete = c1; ghost = h1'.ghost } in
         assert (interp (lift (fp' x)) h10);
@@ -514,10 +510,7 @@ let lift_action_ghost
       h0 == join h0' h1' /\
       interp (llift GHOST fp) h0' /\
       interp frame h1'
-    returns 
-      interp (llift GHOST (fp' x) `star` frame) h1 /\
-      action_related_heaps #mut h0 h1
-    with _ . (
+    with (
       let hframe : H.heap -> prop = (fun h -> interp frame { concrete = h1'.concrete; ghost = h }) in
       introduce forall c0 c1.
         (hframe c0 /\ H.disjoint c0 c1)
@@ -525,7 +518,7 @@ let lift_action_ghost
         hframe (H.join c0 c1)
       with (
         introduce _ ==> _
-        with _ . (
+        with (
           let h0g = {concrete=h1'.concrete; ghost=c0 } in
           assert (interp frame h0g);
           assert (H.disjoint c0 c1);
@@ -550,8 +543,7 @@ let lift_action_ghost
         h11 == H.join c0 c1 /\
         H.interp (fp' x) c0 /\
         H.interp hframe c1
-      returns interp (llift GHOST (fp' x) `star` frame) h1
-      with _ . ( 
+      with ( 
         let h10 = { concrete = h0'.concrete; ghost=c0 } in
         let h11 = { concrete = h1'.concrete; ghost=c1 } in
         assert (interp (llift GHOST (fp' x)) h10);

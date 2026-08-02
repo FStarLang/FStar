@@ -199,12 +199,11 @@ let on_sub_term'
     let! ts = mapM d.f_term ts in
     let! t3 = d.f_term t3 in
     return <| IntroExists (bs, t1, ts, t3)
-  | IntroImplies (t1, t2, b, t3) ->
+  | IntroImplies (t1, t2, t3) ->
     let! t1 = d.f_term t1 in
     let! t2 = d.f_term t2 in
-    let! b = d.f_binder b in
     let! t3 = d.f_term t3 in
-    return <| IntroImplies (t1, t2, b, t3)
+    return <| IntroImplies (t1, t2, t3)
   | IntroOr (b, t1, t2, t3) ->
     let! t1 = d.f_term t1 in
     let! t2 = d.f_term t2 in
@@ -221,35 +220,27 @@ let on_sub_term'
     let! t = d.f_term t in
     let! ts = mapM d.f_term ts in
     return <| ElimForall (bs, t, ts)
-  | ElimExists (bs, t1, t2, b, t3) ->
+  | ElimExists (bs, t1, t2) ->
     let! bs = mapM d.f_binder bs in
     let! t1 = d.f_term t1 in
     let! t2 = d.f_term t2 in
-    let! b = d.f_binder b in
-    let! t3 = d.f_term t3 in
-    return <| ElimExists (bs, t1, t2, b, t3)
+    return <| ElimExists (bs, t1, t2)
   | ElimImplies (t1, t2, t3) ->
     let! t1 = d.f_term t1 in
     let! t2 = d.f_term t2 in
     let! t3 = d.f_term t3 in
     return <| ElimImplies (t1, t2, t3)
-  | ElimOr (t1, t2, t3, b1, p1, b2, p2) ->
+  | ElimOr (t1, t2, p1, p2) ->
     let! t1 = d.f_term t1 in
     let! t2 = d.f_term t2 in
-    let! t3 = d.f_term t3 in
-    let! b1 = d.f_binder b1 in
     let! p1 = d.f_term p1 in
-    let! b2 = d.f_binder b2 in
     let! p2 = d.f_term p2 in
-    return <| ElimOr (t1, t2, t3, b1, p1, b2, p2)
-  | ElimAnd (p, q, r, b1, b2, pf) ->
+    return <| ElimOr (t1, t2, p1, p2)
+  | ElimAnd (p, q, pf) ->
     let! p = d.f_term p in
     let! q = d.f_term q in
-    let! r = d.f_term r in
-    let! b1 = d.f_binder b1 in
-    let! b2 = d.f_binder b2 in
     let! pf = d.f_term pf in
-    return <| ElimAnd (p, q, r, b1, b2, pf)
+    return <| ElimAnd (p, q, pf)
   | ListLiteral ts ->
     let! ts = mapM d.f_term ts in
     return <| ListLiteral ts

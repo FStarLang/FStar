@@ -237,13 +237,13 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
 
          let arguments, result =
             let t = N.normalize (N.whnf_steps @ [Env.AllowUnboundUniverses]) env t in  //AR: allow unbounded universes, since we haven't typechecked t yet
-            let t = U.canon_arrow t in
             match (SS.compress t).n with
-                | Tm_arrow {bs; comp=res} ->
+                | Tm_arrow _ ->
+                  let bs, res = U.arrow_formals_comp_ln_strict t in
                   //the type of each datacon is already a function with the type params as arguments
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = BU.first_N ntps bs in
-                  let t = mk (Tm_arrow {bs=bs'; comp=res}) t.pos in
+                  let t = S.mk_Tm_arrow bs' res t.pos in
                   let subst = tps |> List.mapi (fun i ({binder_bv=x}) -> DB(ntps - (1 + i), x)) in
 (*open*)          let bs, c = U.arrow_formals_comp (SS.subst subst t) in
                   (* check that c is a Tot computation, reject it otherwise *)
@@ -366,11 +366,12 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt & universe)) (datas
             | Sig_inductive_typ {lid=tc; params=tps; num_uniform_params=num_uniform; mutuals; ds=datas} ->
               let ty = SS.close_univ_vars uvs x.sort in
               let tps, t = match (SS.compress ty).n with
-                | Tm_arrow {bs=binders; comp=c} ->
+                | Tm_arrow _ ->
+                  let binders, c = U.arrow_formals_comp_ln_strict ty in
                   let tps, rest = BU.first_N (List.length tps) binders in
                   let t = match rest with
                     | [] -> U.comp_result c
-                    | _ -> mk (Tm_arrow {bs=rest; comp=c}) x.sort.pos
+                    | _ -> S.mk_Tm_arrow rest c x.sort.pos
                   in
                   tps, t
                 | _ -> [], ty
@@ -452,7 +453,9 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:u
   //get the index binders, if any
   let ibs =
     match (SS.compress t).n with
-    | Tm_arrow {bs=ibs} -> ibs
+    | Tm_arrow _ ->
+      let ibs, _ = U.arrow_formals_ln t in
+      ibs
     | _                 -> []
   in
   //open the ibs binders
@@ -494,7 +497,8 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
   //apply the universes substitution to dt
   let dt = SS.subst usubst dt in
   match (SS.compress dt).n with
-  | Tm_arrow {bs=dbs} ->
+  | Tm_arrow _ ->
+    let dbs, _ = U.arrow_formals_ln dt in
     //filter out the inductive type parameters, dbs are the remaining binders
     let dbs = snd (List.splitAt (List.length bs) dbs) in
     //substitute bs into dbs
@@ -632,7 +636,9 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
     | Tm_fvar fv         -> List.existsb (fun lid -> lid_equals lid fv.fv_name) mutuals
     | Tm_uinst (t', _)   -> is_mutual t'
     | Tm_refine {b=bv} -> is_mutual bv.sort
-    | Tm_app {hd=t'; args}  -> if is_mutual t' then true else exists_mutual (List.map fst args)
+    | Tm_app _ ->
+      let t', args = U.head_and_args_full t in
+      if is_mutual t' then true else exists_mutual (List.map fst args)
     | Tm_meta {tm=t'}    -> is_mutual t'
     | _                  -> false
 
@@ -647,7 +653,8 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
   //apply the universes substitution to dt
   let dt = SS.subst usubst dt in
   match (SS.compress dt).n with
-  | Tm_arrow {bs=dbs} ->
+  | Tm_arrow _ ->
+    let dbs, _ = U.arrow_formals_ln dt in
     //filter out the inductive type parameters, dbs are the remaining binders
     let dbs = snd (List.splitAt (List.length bs) dbs) in
     //substitute bs into dbs
@@ -691,7 +698,9 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list sigelt) (mutuals:list lid
   //get the index binders, if any
   let ibs =
     match (SS.compress t).n with
-    | Tm_arrow {bs=ibs} -> ibs
+    | Tm_arrow _ ->
+      let ibs, _ = U.arrow_formals_ln t in
+      ibs
     | _                 -> []
   in
   //open the ibs binders
@@ -931,7 +940,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
           let body =
             match binders with
             | [] -> typ
-            | _ -> S.mk (Tm_arrow {bs=binders; comp=S.mk_Total typ}) se.sigrng
+            | _ -> S.mk_Tm_arrow binders (S.mk_Total typ) se.sigrng
           in
           (univs, body)
       in
