@@ -44,6 +44,14 @@ let assert_to_norm' (p:prop): Lemma
   (ensures (norm [delta_only wp_code_delta; zeta; iota; primops] p))
   = ()
 
+(* This proof relies on the exact shape of the term produced by
+   [assert_to_norm'], which lists the projectors it wants unfolded in
+   [wp_code_delta].  Projectors and discriminators are now reduced primitively
+   by an iota rule in the normalizer, so they reduce regardless of
+   [delta_only], and the resulting (smaller!) hypothesis no longer matches the
+   goal's encoding of the opaque [wp_code].  Vale is unmaintained, so we simply
+   restore the old behaviour for this one lemma. *)
+#push-options "--ext no_prim_proj"
 let lemma_weak_pre_ins (i:ins) (inss:list ins) 
 			       (s0:state) (sN:state) (post: unit -> prop) :
   Ghost (option state)
@@ -133,6 +141,7 @@ let lemma_weak_pre_ins (i:ins) (inss:list ins)
       else
   	  None
   | _ -> None
+#pop-options
 
 
  let rec lemma_weak_pre (inss:list ins) (s0:state) (sN:state) (post: unit -> prop) : Lemma

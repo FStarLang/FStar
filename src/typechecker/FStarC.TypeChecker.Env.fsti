@@ -455,6 +455,20 @@ val typ_of_datacon         : env -> lident -> ML (lident)
 
 val num_datacon_non_injective_ty_params  : env -> lident -> ML (option int)
 
+(* The number of type parameters of the inductive this data constructor
+   belongs to, i.e. how many of the constructor's arguments precede its
+   fields. *)
+val num_datacon_ty_params  : env -> lident -> ML (option int)
+val datacon_decl           : env -> lident -> ML (option (fv_qual & int & binders))
+
+(* If [l] is an auto-generated projector or discriminator, return the
+   corresponding qualifier (which records the data constructor it belongs
+   to).  Used to reduce these symbols structurally, without a definition. *)
+val disc_proj_qual         : env -> lident -> ML (option qualifier)
+(* (qualifier, number of args before the scrutinee, index of the projected
+   field among the constructor's arguments) *)
+val disc_proj_info         : env -> lident -> ML (option (qualifier & int & option int))
+
 val visible_with           : list delta_level -> list qualifier -> ML (bool)
 
 val lookup_definition_qninfo : list delta_level -> lident -> qninfo -> ML (option (univ_names & term))
