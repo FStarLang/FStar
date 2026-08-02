@@ -7,10 +7,9 @@ include $(FSTAR_ROOT)/mk/test.mk
 # 333: "unable to read hints"
 OTHERFLAGS+=--warn_error -241-247-333-274+240
 
-# Remove --query_stats and --hint_info from this subdir, since
+# Remove --query_stats from this subdir, since
 # they output timing info.
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
-OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 OTHERFLAGS += --ext fstar:no_absolute_paths
 
 # For these tests, we check that the resugared output

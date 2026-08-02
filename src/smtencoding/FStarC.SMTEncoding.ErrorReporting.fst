@@ -314,8 +314,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
       -- potential_errors are the labels in the initial counterexample model
  *)
-let detail_errors hint_replay
-                  env
+let detail_errors env
                  (all_labels:labels)
                  (askZ3:list decl -> ML Z3.z3result)
     : ML unit =
@@ -324,7 +323,7 @@ let detail_errors hint_replay
         let msg =
             Format.fmt4
                 "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
-                    (if hint_replay then "hint replay" else "error")
+                    "error"
                     (Range.string_of_range (TypeChecker.Env.get_range env))
                     (show 5)
                     (show (List.length all_labels)) in
@@ -337,9 +336,6 @@ let detail_errors hint_replay
       let open FStarC.Errors.Msg in
         if success
         then Format.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
-        else if hint_replay
-        then FStarC.Errors.log_issue r Errors.Warning_HintFailedToReplayProof
-               (text "Hint failed to replay this sub-proof" :: msg)
         else FStarC.Errors.log_issue r Errors.Error_ProofObligationFailed ([
                  text <| Format.fmt1 "XX: proof obligation at %s failed." (Class.Show.show r);
                ] @ msg)
@@ -349,7 +345,7 @@ let detail_errors hint_replay
         labs
         |> List.map (fun (l, _, _) ->
             let a = {
-                    assumption_name="@disable_label_"^fv_name l; //the "@" is important in the name; forces it to be retained when replaying a hint
+                    assumption_name="@disable_label_"^fv_name l;
                     assumption_caption=Some "Disabling label";
                     assumption_term=mkEq(mkFreeV l, mkTrue);
                     assumption_fact_ids=[]
@@ -372,7 +368,7 @@ let detail_errors hint_replay
           let decls = elim <| (eliminated @ errors @ tl) in
           let result = askZ3 decls in //hd is the only thing to prove
           match result.z3result_status with
-          | Z3.UNSAT _ -> //hd is provable
+          | Z3.UNSAT -> //hd is provable
             linear_check (hd::eliminated) errors tl
           | _ -> linear_check eliminated (hd::errors) tl
     in

@@ -214,7 +214,6 @@ val dep                         : unit    -> ML (option string)
 
 val detail_errors               : unit    -> ML bool
 
-val detail_hint_replay          : unit    -> ML bool
 
 val any_dump_module             : unit    -> ML bool
 
@@ -238,9 +237,7 @@ val help                        : unit    -> ML bool
 
 val hide_uvar_nums              : unit    -> ML bool
 
-val hint_info                   : unit    -> ML bool
 
-val hint_file_for_src           : string  -> ML string
 
 val ide                         : unit    -> ML bool
 
@@ -341,13 +338,11 @@ val locate_z3                   : unit    -> ML (option string)
 
 val read_krml_file              : unit    -> ML (option string)
 
-val record_hints                : unit    -> ML bool
 
 val record_options              : unit    -> ML bool
 
 val retry                       : unit    -> ML bool
 
-val reuse_hint_for              : unit    -> ML (option string)
 
 val report_assumes              : unit    -> ML (option string)
 
@@ -395,9 +390,7 @@ val unsafe_tactic_exec          : unit    -> ML bool
 
 val use_eq_at_higher_order      : unit    -> ML bool
 
-val use_hints                   : unit    -> ML bool
 
-val use_hint_hashes             : unit    -> ML bool
 
 val use_native_tactics          : unit    -> ML (option string)
 

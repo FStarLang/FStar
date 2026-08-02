@@ -80,6 +80,21 @@ Guidelines for the changelog:
     This is a breaking change for reflection clients that match exhaustively on
     `vconst`; such code should add a `C_MachineInt` case.
 
+## SMT
+
+  * Proof hints and unsat cores have been removed. The options
+    `--use_hints`, `--use_hint_hashes`, `--record_hints`, `--hint_dir`,
+    `--hint_file`, `--hint_info`, `--reuse_hint_for` and
+    `--detail_hint_replay` no longer exist, `.hints` files are no longer
+    read or written, and F* no longer asks Z3 to produce unsat cores
+    (`(set-option :produce-unsat-cores true)` is gone, which also removes a
+    significant Z3 performance penalty). Context pruning
+    (`--ext context_pruning`) subsumes what hints used to be good for.
+
+    The `vconfig` record in `FStar.VConfig` loses its `detail_hint_replay`
+    and `reuse_hint_for` fields; metaprograms that construct a `vconfig`
+    literal must drop them.
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection

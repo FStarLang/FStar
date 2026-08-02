@@ -265,6 +265,22 @@ let swap_length #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
   : Lemma (Seq.length (swap_seq s i j) == Seq.length s)
   = ()
 
+let swap_index #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
+                   (k:nat{k < Seq.length s})
+  : Lemma (Seq.index (swap_seq s i j) k ==
+           (if k = j then Seq.index s i
+            else if k = i then Seq.index s j
+            else Seq.index s k))
+          [SMTPat (Seq.index (swap_seq s i j) k)]
+  = let s' = Seq.upd s i (Seq.index s j) in
+    if k = j then
+      Seq.lemma_index_upd1 s' j (Seq.index s i)
+    else (
+      Seq.lemma_index_upd2 s' j (Seq.index s i) k;
+      if k = i then Seq.lemma_index_upd1 s i (Seq.index s j)
+      else Seq.lemma_index_upd2 s i (Seq.index s j) k
+    )
+
 let swap_index_i #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
   : Lemma (Seq.index (swap_seq s i j) i == Seq.index s j)
   = ()

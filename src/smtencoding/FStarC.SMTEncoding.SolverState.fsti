@@ -21,7 +21,6 @@ module FStarC.SMTEncoding.SolverState
   As such, it also encapsulates the various notions of filtering the facts that
   are sent to the solver, including:
 
-    - Filtering with unsat cores
     - Context pruning
     - Filtering using the using_facts_from setting
 
@@ -36,7 +35,6 @@ open FStarC.Effect
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-module U = FStarC.SMTEncoding.UnsatCore
 module Pruning = FStarC.SMTEncoding.Pruning
 type using_facts_from_setting = list (list string & bool)
 
@@ -97,20 +95,6 @@ val start_query (msg:string) (roots:list decl) (qry:decl) (s:solver_state) : ML 
 // Pops the context pushed at when starting a query
 // Clears any registered roots for context pruning
 val finish_query (msg:string) (s:solver_state) : ML solver_state
-
-// Filters all declarations visible with an unsat core and returns the result
-// Does not change the solver state
-//
-// Queries filtered with an unsat core are always sent to a fresh Z3 process, 
-// and if they fail, the query falls back to a background process whose state is `s`.
-// Filtering with an unsat core does not change the staet of s.
-val filter_with_unsat_core (queryid:string) (_:U.unsat_core) (s:solver_state) : ML (list decl)
-
-// If context_pruning_sim is set, this function returns the names of all declarations
-// that would have been given to the solver if the context were pruned.
-// This is useful for debugging whether context_pruning removed assumptions that are
-// otherwise necessary for a proof.
-val would_have_pruned (s:solver_state) : ML (option (list string))
 
 // Get all declarations to be given to the solver since the last flush
 // and update the solver state.

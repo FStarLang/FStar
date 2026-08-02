@@ -42,7 +42,7 @@ let between_bounds (s: Seq.seq int) (lb rb: int)
 let sorted (s: Seq.seq int)
   = forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
 
-#push-options "--retry 5"
+#push-options "--retry 10 --z3rlimit_factor 4"
 let lemma_sorted_append
   (s1 s2 : Seq.seq int)
   (l1 r1 l2 r2 : int)
@@ -52,7 +52,18 @@ let lemma_sorted_append
               r1 >= l1 /\ r2 >= l2 /\ // silly, but needed since the seqs may be empty
               r1 <= l2)
     (ensures sorted (Seq.append s1 s2) /\ between_bounds (Seq.append s1 s2) l1 r2)
-  = ()
+  = let s = Seq.append s1 s2 in
+    let n1 = Seq.length s1 in
+    introduce forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
+    with introduce _ ==> _
+    with _. (
+      if j < n1 then ()
+      else if i < n1 then ()
+      else ()
+    );
+    introduce forall (k: int). 0 <= k /\ k < Seq.length s ==> l1 <= Seq.index s k /\ Seq.index s k <= r2
+    with introduce _ ==> _
+    with _. (if k < n1 then () else ())
 
 let lemma_sorted_append_squash
   (s1 s2 : Seq.seq int)

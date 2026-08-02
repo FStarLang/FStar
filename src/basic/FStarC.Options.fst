@@ -203,7 +203,6 @@ let defaults = [
   ("defensive"                                 , String "no");
   ("dep"                                       , Unset);
   ("detail_errors"                             , Bool false);
-  ("detail_hint_replay"                        , Bool false);
   ("disallow_unification_guards"               , Bool false);
   ("dump_ast"                                  , Bool false);
   ("dump_module"                               , List []);
@@ -220,10 +219,6 @@ let defaults = [
   ("fuel"                                      , Unset);
   ("help"                                      , Bool false);
   ("hide_uvar_nums"                            , Bool false);
-  ("hint_dir"                                  , Unset);
-  ("hint_file"                                 , Unset);
-  ("hint_hook"                                 , Unset);
-  ("hint_info"                                 , Bool false);
   ("ide"                                       , Bool false);
   ("ide_id_info_off"                           , Bool false);
   ("ifuel"                                     , Unset);
@@ -285,11 +280,9 @@ let defaults = [
   ("query_stats"                               , Bool false);
   ("read_checked_file"                         , Unset);
   ("read_krml_file"                            , Unset);
-  ("record_hints"                              , Bool false);
   ("record_options"                            , Bool false);
   ("report_assumes"                            , Unset);
   ("retry"                                     , Bool false);
-  ("reuse_hint_for"                            , Unset);
   ("silent"                                    , Bool false);
   ("smtencoding.elim_box"                      , Bool false);
   ("smtencoding.l_arith_repr"                  , String "boxwrap");
@@ -311,8 +304,6 @@ let defaults = [
   ("unsafe_tactic_exec"                        , Bool false);
   ("unthrottle_inductives"                     , Bool false);
   ("use_eq_at_higher_order"                    , Bool false);
-  ("use_hint_hashes"                           , Bool false);
-  ("use_hints"                                 , Bool false);
   ("use_native_tactics"                        , Unset);
   ("use_nbe"                                   , Bool false);
   ("use_nbe_for_extraction"                    , Bool false);
@@ -427,7 +418,6 @@ let set_verification_options o =
     "initial_ifuel";
     "max_ifuel";
     "detail_errors";
-    "detail_hint_replay";
     "no_smt";
     "quake";
     "retry";
@@ -469,7 +459,6 @@ let get_codegen_lib             ()      = lookup_opt "codegen-lib"              
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
-let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_dump_ast                ()      = lookup_opt "dump_ast"                 as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
@@ -482,9 +471,6 @@ let get_extract_namespace       ()      = lookup_opt "extract_namespace"        
 let get_force                   ()      = lookup_opt "force"                    as_bool
 let get_help                    ()      = lookup_opt "help"                     as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
-let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
-let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
-let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          as_bool
 let get_print                   ()      = lookup_opt "print"                    as_bool
@@ -537,10 +523,8 @@ let get_locate_ocaml            ()      = lookup_opt "locate_ocaml"             
 let get_locate_file             ()      = lookup_opt "locate_file"              (as_option as_string)
 let get_expand_include          ()      = lookup_opt "expand_include"           (as_option as_string)
 let get_locate_z3               ()      = lookup_opt "locate_z3"                (as_option as_string)
-let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
-let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_report_assumes          ()      = lookup_opt "report_assumes"           (as_option as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
@@ -561,8 +545,6 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_unsafe_tactic_exec      ()      = lookup_opt "unsafe_tactic_exec"       as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
-let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
-let get_use_hint_hashes         ()      = lookup_opt "use_hint_hashes"          as_bool
 let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_no_tactics              ()      = lookup_opt "no_tactics"               as_bool
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
@@ -923,11 +905,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     text "Emit a detailed error report by asking the SMT solver many queries; will take longer");
 
   ( noshort,
-   "detail_hint_replay",
-    Const (Bool true),
-    text "Emit a detailed report for proof whose unsat core fails to replay");
-
-  ( noshort,
     "dump_ast",
     Const (Bool true),
     text "Dump the surface AST of the given file.");
@@ -1006,21 +983,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     "hide_uvar_nums",
     Const (Bool true),
     text "Don't print unification variable numbers");
-
-  ( noshort,
-    "hint_dir",
-    PostProcessed (pp_validate_dir, PathStr "dir"),
-    text "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)");
-
-  ( noshort,
-    "hint_file",
-    PathStr "path",
-    text "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
-
-  ( noshort,
-    "hint_info",
-    Const (Bool true),
-    text "Print information regarding hints (deprecated; use --query_stats instead)");
 
   ( noshort,
     "ide",
@@ -1318,11 +1280,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     text "Read a Karamel binary file and dump it to standard output.");
 
   ( noshort,
-    "record_hints",
-    Const (Bool true),
-    text "Record a database of hints for efficient proof replay");
-
-  ( noshort,
     "record_options",
     Const (Bool true),
     text "Record the state of options used to check each sigelt, useful \
@@ -1341,11 +1298,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
                    | _ -> failwith "impos"),
         IntStr "positive integer"),
     text "Retry each SMT query N times and succeed on the first try. Using --retry disables --quake.");
-
-  ( noshort,
-    "reuse_hint_for",
-    SimpleStr "toplevel_name",
-    text "Optimistically, attempt using the recorded hint for  toplevel_name (a top-level name in the current module) when trying to verify some other term 'g'");
 
   ( noshort,
     "report_assumes",
@@ -1482,16 +1434,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     text "Use equality constraints when comparing higher-order types (Temporary)");
 
   ( noshort,
-    "use_hints",
-    Const (Bool true),
-    text "Use a previously recorded hints database for proof replay");
-
-  ( noshort,
-    "use_hint_hashes",
-    Const (Bool true),
-    text "Admit queries if their hash matches the hash recorded in the hints database");
-
-  ( noshort,
      "use_native_tactics",
      PathStr "path",
     text "Use compiled tactics from  path");
@@ -1558,7 +1500,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
   ( noshort,
     "z3rlimit_factor",
     IntStr "positive_integer",
-    text "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
+    text "Set the Z3 per-query resource limit multiplier. (default 1)");
 
   ( noshort,
     "z3seed",
@@ -1728,13 +1670,9 @@ let settable = function
     | "debug_all_modules"
     | "defensive"
     | "detail_errors"
-    | "detail_hint_replay"
     | "eager_subtyping"
     | "error_contexts"
     | "hide_uvar_nums"
-    | "hint_dir"
-    | "hint_file"
-    | "hint_info"
     | "fuel"
     | "ext"
     | "ifuel"
@@ -1770,10 +1708,8 @@ let settable = function
     | "quake"
     | "query_cache"
     | "query_stats"
-    | "record_hints"
     | "record_options"
     | "retry"
-    | "reuse_hint_for"
     | "report_assumes"
     | "silent"
     | "smtencoding.elim_box"
@@ -2046,7 +1982,6 @@ let defensive_error              () = get_defensive () = "error"
 let defensive_abort              () = get_defensive () = "abort"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
-let detail_hint_replay           () = get_detail_hint_replay          ()
 let any_dump_module              () = Cons? (get_dump_module())
 let dump_ast                     () = get_dump_ast()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
@@ -2072,21 +2007,6 @@ let message_format               () =
 let force                        () = get_force ()
 let help                         () = get_help                        ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
-let hint_info                    () = get_hint_info                   ()
-                                    || get_query_stats                ()
-let hint_dir                     () = get_hint_dir                    ()
-let hint_file                    () = get_hint_file                   ()
-let hint_file_for_src src_filename =
-      match hint_file() with
-      | Some fn -> fn
-      | None ->
-        let file_name =
-          match hint_dir () with
-          | Some dir ->
-            Util.concat_dir_filename dir (Filepath.basename src_filename)
-          | _ -> src_filename
-        in
-        Format.fmt1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
 let ide_file_name_st =
@@ -2156,10 +2076,8 @@ let locate_ocaml                 () = get_locate_ocaml                ()
 let locate_file                  () = get_locate_file                 ()
 let locate_z3                    () = get_locate_z3                   ()
 let read_krml_file               () = get_read_krml_file              ()
-let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
 let retry                        () = get_retry                       ()
-let reuse_hint_for               () = get_reuse_hint_for              ()
 let report_assumes               () = get_report_assumes              ()
 let silent                       () = get_silent                      ()
 let smt                          () = get_smt                         ()
@@ -2191,8 +2109,6 @@ let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let unsafe_tactic_exec           () = get_unsafe_tactic_exec          ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
-let use_hints                    () = get_use_hints                   ()
-let use_hint_hashes              () = get_use_hint_hashes             ()
 let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = not (get_no_tactics             ())
 let using_facts_from             () =
@@ -2474,7 +2390,6 @@ let get_vconfig () =
     initial_ifuel                             = get_initial_ifuel ();
     max_ifuel                                 = get_max_ifuel ();
     detail_errors                             = get_detail_errors ();
-    detail_hint_replay                        = get_detail_hint_replay ();
     no_smt                                    = get_no_smt ();
     quake_lo                                  = get_quake_lo ();
     quake_hi                                  = get_quake_hi ();
@@ -2494,7 +2409,6 @@ let get_vconfig () =
     z3seed                                    = get_z3seed ();
     z3version                                 = get_z3version ();
     trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
-    reuse_hint_for                            = get_reuse_hint_for ();
   }
   in
   vcfg
@@ -2510,7 +2424,6 @@ let set_vconfig (vcfg:vconfig) : ML unit =
   set_option "initial_ifuel"                             (Int vcfg.initial_ifuel);
   set_option "max_ifuel"                                 (Int vcfg.max_ifuel);
   set_option "detail_errors"                             (Bool vcfg.detail_errors);
-  set_option "detail_hint_replay"                        (Bool vcfg.detail_hint_replay);
   set_option "no_smt"                                    (Bool vcfg.no_smt);
   set_option "quake_lo"                                  (Int vcfg.quake_lo);
   set_option "quake_hi"                                  (Int vcfg.quake_hi);
@@ -2530,7 +2443,6 @@ let set_vconfig (vcfg:vconfig) : ML unit =
   set_option "z3seed"                                    (Int vcfg.z3seed);
   set_option "z3version"                                 (String vcfg.z3version);
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
-  set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()
 
 instance showable_codegen_t : showable codegen_t = {

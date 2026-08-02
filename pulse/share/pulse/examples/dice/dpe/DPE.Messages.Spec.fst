@@ -15,6 +15,8 @@
 *)
 
 module DPE.Messages.Spec
+
+#set-options "--z3rlimit_factor 4"
 module Cddl = CDDL.Spec
 module Cbor = CBOR.Spec
 
