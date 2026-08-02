@@ -226,11 +226,10 @@ let append_injective #a (l0 l0':list a)
           append l0 l1 == append l0' l1')
           ==>
          (l0 == l0' /\ l1 == l1')
-     with _. eliminate (length l0 == length l0') \/
+     with eliminate (length l0 == length l0') \/
                        (length l1 == length l1')
-     returns _
-     with _. append_length_inv_head l0 l1 l0' l1'
-     and  _. append_length_inv_tail l0 l1 l0' l1'
+     with append_length_inv_head l0 l1 l0' l1'
+     and append_length_inv_tail l0 l1 l0' l1'
 
 (** The [last] element of a list remains the same, even after that list is
     [append]ed to another list. *)

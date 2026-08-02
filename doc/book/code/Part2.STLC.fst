@@ -172,10 +172,9 @@ and sub_elam1 (#r:bool) (s:sub r)
              | e -> subst1 sub_inc e
     in
     introduce not r ==> (exists x. ~ (EVar? (f x))) 
-    with not_r. 
+    with 
       eliminate exists y. ~ (EVar? (s y))
-      returns _
-      with not_evar_sy. 
+      with 
         introduce exists x. ~(EVar? (f x))
         with (y + 1)
         and ()

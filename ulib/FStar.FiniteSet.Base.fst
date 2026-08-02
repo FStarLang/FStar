@@ -172,11 +172,11 @@ let length_zero_lemma ()
   with (
     reveal_opaque (`%cardinality) (cardinality #a);
     introduce cardinality s = 0 ==> s == emptyset
-    with _. assert (feq s emptyset);
+    with assert (feq s emptyset);
     introduce s == emptyset ==> cardinality s = 0
-    with _. assert (set_as_list s == []);
+    with assert (set_as_list s == []);
     introduce cardinality s <> 0 ==> _
-    with _. introduce exists x. mem x s
+    with introduce exists x. mem x s
             with (Cons?.hd (set_as_list s))
             and  ())
 
@@ -236,7 +236,7 @@ let insert_member_cardinality_lemma ()
   introduce forall (a: eqtype) (s: set a) (x: a). mem x s ==> cardinality (insert x s) = cardinality s
   with
     introduce mem x s ==> cardinality (insert x s) = cardinality s
-    with _. (
+    with (
       reveal_opaque (`%cardinality) (cardinality #a);
       nonrepeating_lists_with_same_elements_have_same_length (set_as_list s) (set_as_list (insert x s))
     )
@@ -246,7 +246,7 @@ let insert_nonmember_cardinality_lemma ()
   introduce forall (a: eqtype) (s: set a) (x: a). not (mem x s) ==> cardinality (insert x s) = cardinality s + 1
   with
     introduce not (mem x s) ==> cardinality (insert x s) = cardinality s + 1
-    with _. (
+    with (
       reveal_opaque (`%cardinality) (cardinality #a);
       nonrepeating_lists_with_same_elements_have_same_length (x :: (set_as_list s)) (set_as_list (insert x s))
     )
@@ -268,7 +268,7 @@ let union_of_disjoint_lemma ()
   introduce forall (a: eqtype) (s1: set a) (s2: set a). disjoint s1 s2 ==> difference (union s1 s2) s1 == s2 /\ difference (union s1 s2) s2 == s1
   with
     introduce disjoint s1 s2 ==> difference (union s1 s2) s1 == s2 /\ difference (union s1 s2) s2 == s1
-    with _. (
+    with (
       assert (feq (difference (union s1 s2) s1) s2);
       assert (feq (difference (union s1 s2) s2) s1)
     )
@@ -380,7 +380,7 @@ let difference_cardinality_lemma ()
 let subset_helper  (a: eqtype) (s1: set a) (s2: set a)
 : Lemma (subset s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 ==> mem o s2)) =
   introduce (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 ==> mem o s2) ==> subset s1 s2
-  with _.
+  with
     introduce forall x. s1 x = true ==> s2 x = true
     with assert (mem x s1 = s1 x)
 
@@ -395,7 +395,7 @@ let equal_lemma ()
     equal s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 <==> mem o s2)
   with (
     introduce (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 <==> mem o s2) ==> equal s1 s2
-    with _.
+    with
       introduce forall x. s1 x = true <==> s2 x = true
       with assert (mem x s1 = s1 x /\ mem x s2 = s2 x)
   )
@@ -410,7 +410,7 @@ let disjoint_lemma ()
     disjoint s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} not (mem o s1) \/ not (mem o s2))
   with (
     introduce (forall o.{:pattern mem o s1 \/ mem o s2} not (mem o s1) \/ not (mem o s2)) ==> disjoint s1 s2
-    with _. (
+    with (
       introduce forall x. not (s1 x && s2 x)
       with assert (not (mem x s1) \/ not (mem x s2))
     )
@@ -430,7 +430,7 @@ let insert_remove_lemma ()
   introduce forall (a: eqtype) (x: a) (s: set a). mem x s = true ==> insert x (remove x s) == s
   with
     introduce mem x s = true ==> insert x (remove x s) == s
-    with _.  insert_remove_helper a x s
+    with  insert_remove_helper a x s
 
 let remove_insert_helper (a: eqtype) (x: a) (s: set a)
 : Lemma (requires mem x s = false)
@@ -441,7 +441,7 @@ let remove_insert_lemma ()
 : Lemma (remove_insert_fact) =
   introduce forall (a: eqtype) (x: a) (s: set a). mem x s = false ==> remove x (insert x s) == s
   with introduce mem x s = false ==> remove x (insert x s) == s
-  with _. remove_insert_helper a x s
+  with remove_insert_helper a x s
 
 let set_as_list_cardinality_lemma ()
 : Lemma (set_as_list_cardinality_fact) = 

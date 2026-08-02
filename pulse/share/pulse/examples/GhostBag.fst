@@ -161,8 +161,7 @@ let fp_upd_add #a
 
   eliminate exists (frame:gbag_pcm_carrier a). composable (gbag_pcm a) (F m) frame /\
                                                op (gbag_pcm a) frame (F m) == v
-  returns compatible (gbag_pcm a) (F (Map.upd m x 1.0R)) v_new
-  with _. (match frame with
+  with (match frame with
            | P m_frame
            | F m_frame ->
              assert (Map.equal (op_maps m_frame (Map.upd m x 1.0R))
@@ -200,8 +199,7 @@ let fp_upd_rem #a
 
   eliminate exists (frame:gbag_pcm_carrier a). composable (gbag_pcm a) (F m) frame /\
                                                op (gbag_pcm a) frame (F m) == v
-  returns compatible (gbag_pcm a) (F (Map.upd m x 0.0R)) v_new
-  with _. (match frame with
+  with (match frame with
            | P m_frame
            | F m_frame ->
              assert (Map.equal (op_maps m_frame (Map.upd m x 0.0R))
