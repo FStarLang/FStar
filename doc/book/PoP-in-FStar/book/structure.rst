@@ -13,15 +13,11 @@ exercises. These first four parts are arranged in increasing order of
 complexity---you can stop after any of them and have a working
 knowledge of useful fragments of F*.
 
-The remaining parts of the book are more loosely connected and either
-provide a reference guide to the compiler and libraries, or develop
-case studies that the reader can choose depending on their
-interest. Of course, some of those case studies come with
-prerequisites, e.g., you must have read about effects before tackling
-the case study on parsers and formatters.
+If you are interested in verified programming with side effects, we
+recommend using Pulse, a DSL embedded in F* and shipping with compiler, 
+with support for programming with mutable state and concurrency.
 
 * Part 1: Basic Functional Programming and Proofs
-
 
 The first part of this book provides a basic introduction to
 programming with pure total functions, refinement types, and SMT-based
@@ -106,6 +102,21 @@ started with using Meta-F* to target specific assertions in your
 program and to have their proofs be solved using a mixture of tactics
 and SMT solving.
 
+* Part 6: Pulse: Proof-Oriented Programming in Concurrent Separation Logic
+
+We present the Pulse DSL, an imperative DSL embedded in F* with support
+for mutable state & concurrency, with proofs in modern concurrent
+separation logic.
+
+* Part 7: Agentic Proof-Oriented Programming
+
+With the remarkable progress of AI agents, especially starting in late 2025, 
+we have entered a world in which AI agents are able to vastly automate large
+program proofs in F* and Pulse. This part of the book provides some initial 
+guidelines and principles for how to use AI agents to effectively automate
+programming and proving in F* and Pulse, while helping humans to understand
+agentically authored programs and proofs.
+
 * Under the hood: F* & SMT
 
 In this part of the book, we cover how F* uses the Z3 SMT solver. We
@@ -120,12 +131,10 @@ instantiation.
 
 .. _effects:
 
-* Planned content
+* Planned content: We anticipate adding more content, focusing
+  at least on the following topics.
 
-The rest of the book is still in the works, but the planned content is
-the following:
-
-  + Part 4: User-defined Effects
+  + User-defined Effects
 
     - State
 
@@ -136,31 +145,10 @@ the following:
     - Algebraic Effects
 
 
-  + Part 5: Tactics and Metaprogramming
-
-    - Reflecting on syntax
-
-    - Holes and proof states
-
-    - Builtin tactics
-
-    - Derived tactics
-
-    - Interactive proofs
-
-    - Custom decision procedures
-
-    - Proofs by reflection
-
-    - Synthesizing programs
-
-    - Tactics for program extraction
+  + F* Libraries
 
 
-  + Part 6: F* Libraries
-
-
-  + Part 7: A User's Guide to Structuring and Maintaining F* Developments
+  + A User's Guide to Structuring and Maintaining F* Developments
 
     - The Build System
           -- Dependence Analysis
@@ -190,12 +178,5 @@ the following:
     - Syntax guide
 
     - FAQ
-
-  + Part 8: Steel: A Concurrent Separation Logic Embedded in F*
-      
-  + Part 9: Application to High-assurance Cryptography
-
-  + Part 10: Application to Parsers and Formatters
-
 
 
