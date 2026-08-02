@@ -757,7 +757,7 @@ and desugar_pat (env:env_t) (p:A.pattern)
       let id = Ident.mk_ident ("_", r) in
       return (pat_var "_" r, [id])
     | A.PatConst c ->
-      let c = FStarC.Reflection.V2.Builtins.inspect_pattern_const c in
+      let c = FStarC.Reflection.V2.Builtins.inspect_const c in
       return (Pat_Constant c, [])
     | A.PatName lid ->
       let! fv = desugar_datacon env lid in

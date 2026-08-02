@@ -66,6 +66,20 @@ Guidelines for the changelog:
     `eliminate _ \/ _` to `if FStar.Classical.Sugar.or_decide p q then e1 else e2`,
     and `eliminate _ /\ _` to `assert (p /\ q); e`.
 
+## Tactics & Reflection
+
+  * PR https://github.com/FStarLang/FStar/pull/4374 adds a new case
+    `C_MachineInt of int -> int_signedness -> int_width -> vconst` to the
+    reflected constants (`FStar.Stubs.Reflection.V2.Data.vconst`). Machine
+    integer constants (e.g. `0uy`, `1l`, `2sz`) used to be inspected as a plain
+    `C_Int`, losing their signedness and width; they are now inspected
+    faithfully, both in patterns (`Pat_Constant`) and in terms (`Tv_Const`),
+    and `pack` rebuilds the machine integer constant from them. In particular,
+    this makes Pulse preserve machine integer patterns in `match` statements.
+
+    This is a breaking change for reflection clients that match exhaustively on
+    `vconst`; such code should add a `C_MachineInt` case.
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection

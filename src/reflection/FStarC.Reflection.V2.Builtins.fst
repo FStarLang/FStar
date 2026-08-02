@@ -140,20 +140,6 @@ let pack_fv (ns:list string) : ML fv =
          fallback ()
 
 
-let inspect_const (c:sconst) : ML vconst =
-    match c with
-    | FStarC.Const.Const_unit -> C_Unit
-    | FStarC.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
-    | FStarC.Const.Const_bool true  -> C_True
-    | FStarC.Const.Const_bool false -> C_False
-    | FStarC.Const.Const_string (s, _) -> C_String s
-    | FStarC.Const.Const_range r -> C_Range r
-    | FStarC.Const.Const_reify _ -> C_Reify
-    | FStarC.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
-    | FStarC.Const.Const_real s -> C_Real s
-    | FStarC.Const.Const_char c -> C_Char c
-    | _ -> failwith (Format.fmt1 "unknown constant: %s" (show c))
-
 let inspect_int_signedness (s:C.signedness) : RD.int_signedness =
     match s with
     | C.Signed -> RD.Signed
@@ -167,14 +153,24 @@ let inspect_int_width (w:C.width) : RD.int_width =
     | C.Int64 -> RD.Int64
     | C.Sizet -> RD.Sizet
 
-let inspect_pattern_const (c:sconst) : ML vconst =
+let inspect_const (c:sconst) : ML vconst =
     match c with
-    | C.Const_int (s, Some (signedness, width)) ->
+    | FStarC.Const.Const_unit -> C_Unit
+    | FStarC.Const.Const_int (s, None) -> C_Int (BU.int_of_string s)
+    | FStarC.Const.Const_int (s, Some (signedness, width)) ->
       C_MachineInt (
         BU.int_of_string s,
         inspect_int_signedness signedness,
         inspect_int_width width)
-    | _ -> inspect_const c
+    | FStarC.Const.Const_bool true  -> C_True
+    | FStarC.Const.Const_bool false -> C_False
+    | FStarC.Const.Const_string (s, _) -> C_String s
+    | FStarC.Const.Const_range r -> C_Range r
+    | FStarC.Const.Const_reify _ -> C_Reify
+    | FStarC.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
+    | FStarC.Const.Const_real s -> C_Real s
+    | FStarC.Const.Const_char c -> C_Char c
+    | _ -> failwith (Format.fmt1 "unknown constant: %s" (show c))
 
 let inspect_universe u =
   match u with
@@ -198,7 +194,7 @@ let pack_universe uv =
 
 let rec inspect_pat p : ML pattern =
   match p.v with
-  | Pat_constant c -> Pat_Constant (inspect_pattern_const c)
+  | Pat_constant c -> Pat_Constant (inspect_const c)
   | Pat_cons (fv, us_opt, ps) -> Pat_Cons fv us_opt (List.map (fun (p, b) -> inspect_pat p, b) ps)
   | Pat_var bv -> Pat_Var (Sealed.seal bv.sort) (Sealed.seal <| string_of_id bv.ppname)
   | Pat_dot_term eopt -> Pat_Dot_Term eopt

@@ -36,7 +36,6 @@ val inspect_fv    : fv -> ML (list string)
 val pack_fv       : list string -> ML fv
 
 val inspect_const : sconst -> ML vconst
-val inspect_pattern_const : sconst -> ML vconst
 val inspect_universe : universe -> universe_view
 val pack_universe    : universe_view -> universe
 
