@@ -71,11 +71,9 @@ let associativity (a b c:Type) (wp1:mwp a) (wp2:a -> mwp b) (wp3:b -> mwp c)
 //SNIPPET_END: mwp_laws$
 
 
-open FStar.Monotonic.Pure
-
 //SNIPPET_START: square$
 let square (n:int) 
-  : PURE nat (as_pure_wp #nat (fun q -> n*n >= 0 /\ q (n * n)))
+  : PURE nat (requires True) (ensures fun r -> r == n * n)
   = n * n
 //SNIPPET_END: square$
 
@@ -86,9 +84,8 @@ let stronger_wp (#a:Type) (wp1 wp2:wp a) : prop =
 
 //SNIPPET_START: maybe_incr$
 let maybe_incr (b:bool) (x:int)
-  : PURE int (as_pure_wp (if_then_else_wp b
-                                        (bind_wp (return_wp (x + 1)) (fun y -> return_wp y))
-                                        (return_wp x)))
+  : PURE int (requires True)
+             (ensures fun y -> if b then y == x + 1 else y == x)
   = if b
     then let y = x + 1 in y
     else x
@@ -97,7 +94,7 @@ let maybe_incr (b:bool) (x:int)
 
 //SNIPPET_START: maybe_incr2$
 let maybe_incr2 (b:bool) (x:int)
-  : PURE int (as_pure_wp (fun post -> forall (y:int). y >= x ==> post y))
+  : PURE int (requires True) (ensures fun y -> y >= x)
   = if b
     then let y = x + 1 in y
     else x

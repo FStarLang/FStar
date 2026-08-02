@@ -1,4 +1,4 @@
-* Info at Bug446.fst(34,59-34,62):
+* Info at Bug446.fst(30,59-30,62):
   - Expected failure:
   - Subtyping check failed
   - Expected type wP a got type wP b
@@ -11,6 +11,6 @@
         (wp2: Bug446.wP b)
         (f: Bug446.m a wp1).
         (* - Subtyping check failed\n  - Expected type wP a got type wP b *)
-        forall (_: b). Prims.has_type _ a
-  - See also Bug446.fst(33,55-33,58)
+        forall (_: a). Prims.has_type _ b
+  - See also Bug446.fst(29,55-29,58)
 

@@ -109,8 +109,7 @@ type eqtype_u = a:Type{hasEq a}
    the squash argument on the postcondition allows to assume the
    precondition for the *well-formedness* of the postcondition.
 *)
-effect Lemma (a: eqtype_u) (pre: prop) (post: (squash pre -> prop)) (pats: list pattern) =
-  Pure a pre (fun r -> post ())
+effect Lemma (a: eqtype_u) = PURE a
 
 (** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
@@ -131,7 +130,7 @@ let id (#a: Type) (x: a) : a = x
 
 (** Trivial postconditions for the [PURE] effect *)
 unfold
-let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
+let trivial_pure_post (a: Type) : a -> prop = fun _ -> True
 
 (** Sometimes it is convenient to explicit introduce nullary symbols
     into the ambient context, so that SMT can appeal to their definitions
@@ -183,188 +182,31 @@ val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
     solver as: [reveal_opaque (`%defn) defn]. *)
 let reveal_opaque (s: string) = norm_spec [delta_once [s]]
 
-(** Wrappers over pure wp combinators that return a pure_wp type
-    (with monotonicity refinement) *)
-
-unfold
-let pure_return (a:Type) (x:a) : pure_wp a =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_return0 a x
-
-unfold
-let pure_bind_wp (a b:Type) (wp1:pure_wp a) (wp2:(a -> Tot (pure_wp b))) : Tot (pure_wp b) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_bind_wp0 a b wp1 wp2
-
-unfold
-let pure_if_then_else (a:Type) (p: prop) (wp_then wp_else:pure_wp a) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_if_then_else0 a p wp_then wp_else
-
-unfold
-let pure_ite_wp (a:Type) (wp:pure_wp a) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_ite_wp0 a wp
-
-unfold
-let pure_close_wp (a b:Type) (wp:b -> Tot (pure_wp a)) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_close_wp0 a b wp
-
-unfold
-let pure_null_wp (a:Type) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_null_wp0 a
-
-[@@ "opaque_to_smt"]
-unfold
-let pure_assert_wp (p:prop) : Tot (pure_wp unit) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_assert_wp0 p
-
-[@@ "opaque_to_smt"]
-unfold
-let pure_assume_wp (p:prop) : Tot (pure_wp unit) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_assume_wp0 p
-
 /// The [DIV] effect for divergent computations
-///
-/// The wp-calculus for [DIV] is same as that of [PURE]
-
 
 (** The effect of divergence: from a specificational perspective it is
     identical to PURE, however the specs are given a partial
     correctness interpretation. Computations with the [DIV] effect may
     not terminate. *)
-new_effect {
-  DIV : a:Type -> wp:pure_wp a -> Effect
-  with
-    return_wp = pure_return
-  ; bind_wp = pure_bind_wp
-  ; if_then_else = pure_if_then_else
-  ; ite_wp = pure_ite_wp
-  ; stronger = pure_stronger
-  ; close_wp = pure_close_wp
-  ; trivial = pure_trivial
-}
+assume effect DIV
 
-(** [PURE] computations can be silently promoted for use in a [DIV] context *)
-sub_effect PURE ~> DIV { lift_wp = purewp_id }
+(** [PURE] and [GHOST] computations can be silently promoted for use in
+    a [DIV] context *)
+assume sub_effect PURE ~> DIV
+assume sub_effect GHOST ~> DIV
 
-private unfold let pure_wp_intro #a (wp: pure_wp' a { pure_wp_monotonic0 a wp }) : pure_wp a =
-  // GE: FIXME: this only works if pure_wp_monotonic is fully applied
-  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic a wp);
-  wp
-
-(** [Div] is the Hoare-style counterpart of the wp-indexed [DIV] *)
-unfold
-let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : Tot (pure_wp a) =
-  pure_wp_intro fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)
-
-effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
-  DIV a (div_hoare_to_wp post)
-
+(** [Div] is the Hoare-style counterpart of [DIV] *)
+effect Div (a: Type) = DIV a
 
 (** [Dv] is the instance of [DIV] with trivial pre- and postconditions *)
-effect Dv (a: Type) = DIV a (pure_null_wp a)
+effect Dv (a: Type) = DIV a
 
 
 (** We use the [EXT] effect to underspecify external system calls
     as being impure but having no observable effect on the state *)
 effect EXT (a: Type) = Dv a
 
-/// The [STATE_h] effect template for stateful computations, generic
-/// in the type of the state.
-///
-/// Note, [STATE_h] is itself not a computation type in F*, since it
-/// is parameterized by the type of heap. However, instantiations of
-/// [STATE_h] with specific types of the heap are computation
-/// types. See, e.g., [FStar.All] for such instantiations.
-///
-/// Weakest preconditions for stateful computations transform
-/// [st_post_h] postconditions to [st_pre_h] preconditions. Both are
-/// parametric in the type of the state, here denoted by the
-/// [heap:Type] variable.
-
-(** Preconditions are predicates on the [heap] *)
-let st_pre_h (heap: Type) = heap -> prop
-
-(** Postconditions relate [a]-typed results to the final [heap], here
-    refined by some pure proposition [pre], typically instantiated to
-    the precondition applied to the initial [heap] *)
-let st_post_h' (heap a: Type) (pre: prop) = a -> _: heap{pre} -> prop
-
-(** Postconditions without refinements *)
-let st_post_h (heap a: Type) = st_post_h' heap a True
-
-(** The type of the main WP-transformer for stateful computations *)
-let st_wp_h (heap a: Type) = st_post_h heap a -> Tot (st_pre_h heap)
-
-(** Returning a value does not transform the state *)
-unfold
-let st_return (heap a: Type) (x: a) (p: st_post_h heap a) = p x
-
-(** Sequential composition of stateful WPs *)
-unfold
-let st_bind_wp
-      (heap: Type)
-      (a b: Type)
-      (wp1: st_wp_h heap a)
-      (wp2: (a -> st_wp_h heap b))
-      (p: st_post_h heap b)
-      (h0: heap)
-     = wp1 (fun a h1 -> wp2 a p h1) h0
-
-(** Branching for stateful WPs *)
-unfold
-let st_if_then_else
-      (heap a: Type) (p: prop)
-      (wp_then wp_else: st_wp_h heap a)
-      (post: st_post_h heap a)
-      (h0: heap)
-     = wp_then post h0 /\ (~p ==> wp_else post h0)
-
-(** As with [PURE] the [wp] combinator names the postcondition as
-    [k] to avoid duplicating it. *)
-unfold
-let st_ite_wp (heap a: Type) (wp: st_wp_h heap a) (post: st_post_h heap a) (h0: heap) =
-  forall (k: st_post_h heap a).
-    (forall (x: a) (h: heap). {:pattern (guard_free (k x h))} post x h ==> k x h) ==> wp k h0
-
-(** Subsumption for stateful WPs *)
-unfold
-let st_stronger (heap a: Type) (wp1 wp2: st_wp_h heap a) =
-  (forall (p: st_post_h heap a) (h: heap). wp1 p h ==> wp2 p h)
-
-(** Closing the scope of a binder within a stateful WP *)
-unfold
-let st_close_wp (heap a b: Type) (wp: (b -> GTot (st_wp_h heap a))) (p: st_post_h heap a) (h: heap) =
-  (forall (b: b). wp b p h)
-
-(** Applying a stateful WP to a trivial postcondition *)
-unfold
-let st_trivial (heap a: Type) (wp: st_wp_h heap a) = (forall h0. wp (fun r h1 -> True) h0)
-
-(** Introducing a new effect template [STATE_h] *)
-new_effect {
-  STATE_h (heap: Type) : result: Type -> wp: st_wp_h heap result -> Effect
-  with
-    return_wp = st_return heap
-  ; bind_wp = st_bind_wp heap
-  ; if_then_else = st_if_then_else heap
-  ; ite_wp = st_ite_wp heap
-  ; stronger = st_stronger heap
-  ; close_wp = st_close_wp heap
-  ; trivial = st_trivial heap
-}
-
-/// The [EXN] effect for computations that may raise exceptions or
-/// fatal errors
-///
-/// Weakest preconditions for stateful computations transform
-/// [ex_post] postconditions (predicates on [result]s) to [ex_pre]
-/// precondition propositions.
+/// Exceptional results
 
 (** Normal results are represented using [V x].
     Handleable exceptions are represented [E e].
@@ -375,181 +217,22 @@ type result (a: Type) =
   | E : e: exn -> result a
   | Err : msg: string -> result a
 
-(** Exceptional preconditions are just propositions *)
-let ex_pre = prop
+/// The [EXN] effect for computations that may raise exceptions or
+/// fatal errors.
+///
+/// NOTE: BE WARNED, CODE IN THE [EXN] EFFECT IS ONLY CHECKED FOR
+/// PARTIAL CORRECTNESS
 
-(** Postconditions on results refined by a precondition *)
-let ex_post' (a: Type) (pre: prop) = _: result a {pre} -> prop
+assume effect EXN
 
-(** Postconditions on results *)
-let ex_post (a: Type) = ex_post' a True
+(** We include divergence in exceptions. *)
+assume sub_effect DIV ~> EXN
 
-(** Exceptions WP-predicate transformers *)
-let ex_wp (a: Type) = ex_post a -> ex_pre
-
-(** Returning a value [x] normally promotes it to the [V x] result *)
-unfold
-let ex_return (a: Type) (x: a) (p: ex_post a) : prop = p (V x)
-
-(** Sequential composition of exception-raising code requires case analysing
-    the result of the first computation before "running" the second one *)
-unfold
-let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> (ex_wp b))) (p: ex_post b)
-    : prop =
-  forall (k: ex_post b).
-    (forall (rb: result b). {:pattern (guard_free (k rb))} p rb ==> k rb) ==>
-    (wp1 (function
-          | V ra1 -> wp2 ra1 k
-          | E e -> k (E e)
-          | Err m -> k (Err m)))
-
-(** As for other effects, branching in [ex_wp] appears in two forms.
-    First, a simple case analysis on [p] *)
-unfold
-let ex_if_then_else (a: Type) (p: prop) (wp_then wp_else: ex_wp a) (post: ex_post a) =
-  wp_then post /\ (~p ==> wp_else post)
-
-(** Naming continuations for use with branching *)
-unfold
-let ex_ite_wp (a: Type) (wp: ex_wp a) (post: ex_post a) =
-  forall (k: ex_post a).
-    (forall (rb: result a). {:pattern (guard_free (k rb))} post rb ==> k rb) ==> wp k
-
-(** Subsumption for exceptional WPs *)
-unfold
-let ex_stronger (a: Type) (wp1 wp2: ex_wp a) = (forall (p: ex_post a). wp1 p ==> wp2 p)
-
-(** Closing the scope of a binder for exceptional WPs *)
-unfold
-let ex_close_wp (a b: Type) (wp: (b -> GTot (ex_wp a))) (p: ex_post a) = (forall (b: b). wp b p)
-
-(** Applying a computation with a trivial postcondition *)
-unfold
-let ex_trivial (a: Type) (wp: ex_wp a) = wp (fun r -> True)
-
-(** Introduce a new effect for [EXN] *)
-new_effect {
-  EXN : result: Type -> wp: ex_wp result -> Effect
-  with
-    return_wp = ex_return
-  ; bind_wp = ex_bind_wp
-  ; if_then_else = ex_if_then_else
-  ; ite_wp = ex_ite_wp
-  ; stronger = ex_stronger
-  ; close_wp = ex_close_wp
-  ; trivial = ex_trivial
-}
-
-(** A Hoare-style abbreviation for EXN *)
-effect Exn (a: Type) (pre: ex_pre) (post: ex_post' a pre) =
-  EXN a (fun (p: ex_post a) -> pre /\ (forall (r: result a). post r ==> p r))
-
-(** We include divergence in exceptions.
-
-    NOTE: BE WARNED, CODE IN THE [EXN] EFFECT IS ONLY CHECKED FOR
-    PARTIAL CORRECTNESS *)
-unfold
-let lift_div_exn (a: Type) (wp: pure_wp a) (p: ex_post a) = wp (fun a -> p (V a))
-sub_effect DIV ~> EXN { lift_wp = lift_div_exn }
+(** A Hoare-style abbreviation for [EXN] *)
+effect Exn (a: Type) = EXN a
 
 (** A variant of [Exn] with trivial pre- and postconditions *)
-effect Ex (a: Type) = Exn a True (fun v -> True)
-
-/// The [ALL_h] effect template for computations that may diverge,
-/// raise exceptions or fatal errors, and uses a generic state.
-///
-/// Note, this effect is poorly named, particularly as F* has since
-/// gained many more user-defined effect. We no longer have an effect
-/// that includes all others.
-///
-/// We might rename this in the future to something like [StExnDiv_h].
-///
-/// We layer state on top of exceptions, meaning that raising an
-/// exception does not discard the state.
-///
-/// As with [STATE_h], [ALL_h] is not a computation type, though its
-/// instantiation with a specific type of [heap] (in FStar.All) is.
-
-(** [all_pre_h] is a predicate on the initial state *)
-let all_pre_h (h: Type) = h -> prop
-
-(** Postconditions relate [result]s to final [heap]s refined by a precondition *)
-let all_post_h' (h a: Type) (pre: prop) = result a -> _: h{pre} -> prop
-
-(** A variant of [all_post_h'] without the precondition refinement *)
-let all_post_h (h a: Type) = all_post_h' h a True
-
-(** WP predicate transformers for the [All_h] effect template *)
-let all_wp_h (h a: Type) = all_post_h h a -> all_pre_h h
-
-(** Returning a value [x] normally promotes it to the [V x] result
-    without touching the [heap] *)
-unfold
-let all_return (heap a: Type) (x: a) (p: all_post_h heap a) = p (V x)
-
-(** Sequential composition for [ALL_h] is like [EXN]: case analysis of
-    the exceptional result before "running" the continuation *)
-unfold
-let all_bind_wp
-      (heap: Type)
-      (a b: Type)
-      (wp1: all_wp_h heap a)
-      (wp2: (a -> (all_wp_h heap b)))
-      (p: all_post_h heap b)
-      (h0: heap)
-    : prop =
-  wp1 (fun ra h1 ->
-        (match ra with
-          | V v -> wp2 v p h1
-          | E e -> p (E e) h1
-          | Err msg -> p (Err msg) h1))
-    h0
-
-(** Case analysis in [ALL_h] *)
-unfold
-let all_if_then_else
-      (heap a: Type) (p: prop)
-      (wp_then wp_else: all_wp_h heap a)
-      (post: all_post_h heap a)
-      (h0: heap)
-     = wp_then post h0 /\ (~p ==> wp_else post h0)
-
-(** Naming postcondition for better sharing in [ALL_h] *)
-unfold
-let all_ite_wp (heap a: Type) (wp: all_wp_h heap a) (post: all_post_h heap a) (h0: heap) =
-  forall (k: all_post_h heap a).
-    (forall (x: result a) (h: heap). {:pattern (guard_free (k x h))} post x h ==> k x h) ==> wp k h0
-
-(** Subsumption in [ALL_h] *)
-unfold
-let all_stronger (heap a: Type) (wp1 wp2: all_wp_h heap a) =
-  (forall (p: all_post_h heap a) (h: heap). wp1 p h ==> wp2 p h)
-
-(** Closing a binder in the scope of an [ALL_h] wp *)
-unfold
-let all_close_wp
-      (heap a b: Type)
-      (wp: (b -> GTot (all_wp_h heap a)))
-      (p: all_post_h heap a)
-      (h: heap)
-     = (forall (b: b). wp b p h)
-
-(** Applying an [ALL_h] wp to a trivial postcondition *)
-unfold
-let all_trivial (heap a: Type) (wp: all_wp_h heap a) = (forall (h0: heap). wp (fun r h1 -> True) h0)
-
-(** Introducing the [ALL_h] effect template *)
-new_effect {
-  ALL_h (heap: Type) : a: Type -> wp: all_wp_h heap a -> Effect
-  with
-    return_wp = all_return heap
-  ; bind_wp = all_bind_wp heap
-  ; if_then_else = all_if_then_else heap
-  ; ite_wp = all_ite_wp heap
-  ; stronger = all_stronger heap
-  ; close_wp = all_close_wp heap
-  ; trivial = all_trivial heap
-}
+effect Ex (a: Type) = EXN a
 
 (**
  Controlling inversions of inductive type

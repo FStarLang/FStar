@@ -1,8 +1,10 @@
 module GenericPartialDM4A
 
-open FStar.Tactics.V2
-open FStar.Calc
-open FStar.FunctionalExtensionality
+(* This file used to derive a partial Dijkstra-monad-for-all layered effect.
+   The effect declaration and WP index have been removed.  We keep the generic
+   underlying monad m, the ordered specification monad w, and a small explicit
+   partial monad that carries only a precondition. *)
+
 open FStar.Preorder
 
 // m is a monad.
@@ -10,7 +12,10 @@ assume val m (a : Type u#a) : Type u#a
 assume val m_return (#a : Type) : a -> m a
 assume val m_bind (#a #b : Type) : m a -> (a -> m b) -> m b
 
-// w is an ordered monad
+let total_return #a (x:a) : m a = m_return x
+let total_bind #a #b (c:m a) (f:a -> m b) : m b = m_bind c f
+
+// w is an ordered specification monad.  It is no longer an effect index.
 [@@erasable]
 assume val w (a : Type u#a) : Type u#(1 + a)
 assume val w_return (#a : Type) : a -> w a
@@ -26,9 +31,6 @@ assume val bind_is_monotonic
   : Lemma (requires (w1 `stronger` w2 /\ (forall x. f1 x `stronger` f2 x)))
           (ensures (w_bind w1 f1 `stronger` w_bind w2 f2))
 
-let (<<=) = stronger
-
-// a morphism between them, satisfying appropriate laws
 assume val interp (#a : Type) : m a -> w a
 
 assume val interp_ret (#a:Type) (x:a)
@@ -38,108 +40,27 @@ assume val interp_bind (#a #b:Type)
   (c : m a) (f : a -> m b)
   : Lemma (interp (m_bind c f) `equiv` w_bind (interp c) (fun x -> interp (f x)))
 
-(* Note the #57-like trick *)
-let repr (a : Type) (pre:prop) (w: squash pre -> w a) =
-  squash pre -> c:(m a){w () `stronger` interp c}
-
-let return (a:Type) (x:a) : repr a True (fun _ -> w_return x) =
-  fun _ ->
-    interp_ret x;
-    m_return x
-
-let and_elim_2 (s : squash ('p /\ 'q)) : squash 'q = ()
-let fa_elim #a #p (s : squash (forall x. p x)) (x:a) : squash (p x) =
-  ()
-
-let iw_bind (#a : Type) (#b : Type)
-  (pre_v : prop) (pre_f : a -> prop)
-  (wp_v : squash pre_v -> w a) (wp_f: (x:a -> squash (pre_f x) -> w b))
-  : squash (pre_v /\ (forall x. pre_f x)) -> w b
-  = fun pf -> w_bind (wp_v ()) (fun x -> let pf' = and_elim_2 pf in
-                                   let pf'' = fa_elim pf' x in
-                                   wp_f x ())
-
-let bind (a : Type) (b : Type)
-  (pre_v : prop) (wp_v : squash pre_v -> w a)
-  (pre_f : a -> prop)
-  (wp_f: (x:a -> (squash (pre_f x) -> w b)))
-  (v : repr a pre_v wp_v)
-  (f : (x:a -> repr b (pre_f x) (wp_f x)))
-  : repr b (pre_v /\ (forall x. pre_f x)) (iw_bind pre_v pre_f wp_v wp_f)
-  =
-  fun (pf : squash (pre_v /\ (forall x. pre_f x))) ->
-    let v = v () in
-    let _ = and_elim_2 pf in
-    assert (forall (x:a). pre_f x) by (exact (binding_to_term (nth_var (-1)))); // what the hell? #1948?
-    let f x = f x () in
-    let r = m_bind v f in
-    (* Proof that stronger holds *)
-    calc (<<=) {
-      w_bind (wp_v ()) (fun x -> wp_f x ());
-      <<= { bind_is_monotonic (wp_v ()) (interp v) (fun x -> wp_f x ()) (fun x -> interp (f x)) (* from the refinement *) }
-      w_bind (interp v) (fun x -> interp (f x));
-      <<= { interp_bind v f }
-      interp (m_bind v f);
-    };
-    r
-
-
-private
-let weaken (t1 t2 : prop) (s : squash t1)
-  : Pure (squash t2)
-         (requires (t1 ==> t2))
-         (ensures (fun _ -> True))
-  = ()
-
-let subcomp (a:Type)
-  (p1 : prop)
-  (w1 : squash p1 -> w a)
-  (p2 : prop)
-  (w2 : squash p2 -> w a)
-  (f : repr a p1 w1)
-  : Pure (repr a p2 w2)
-         (requires (p2 ==> p1) /\ (forall (pf : squash p2). w2 pf `stronger` w1 (weaken p2 p1 pf)))
-         (ensures fun _ -> True)
-  = fun _ -> f ()
-
-let if_then_else (a : Type)
-  (p1 : prop) // FIXME: should take a p2 as well
-  (w1 : squash p1 -> w a)
-  (w2 : squash p1 -> w a)
-  (f : repr a p1 w1)
-  (g : repr a p1 w2)
-  (b : bool)
-  : Type
-  = repr a p1 (if b then w1 else w2)
-
-#push-options "--warn_error -352"  // if then else is not substitutive, it doesn't bind p2
-total
-reifiable
-reflectable
-effect {
-  DM4A (a:Type) (pre:prop) (_:squash pre -> w a)
-  with {repr; return; bind; subcomp; if_then_else}
+noeq type partial (a:Type) = {
+  pre: prop;
+  comp: squash pre -> m a;
 }
-#pop-options
 
-(*
- * AR: 11/23:
- *     the type of the lift should not mention f in the current
- *     implementation, which is also the reason test () below
- *     didn't work
- *     there is now a check in the typechecker to forbid it,
- *     so the lift below fails
- *)
-let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:unit -> PURE a wp)
-  : Tot (repr a (wp (fun _ -> True)) (fun _ -> w_return (f ())))
-  = fun _ -> 
-      FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-      let x = f () in
-      interp_ret x;
-      m_return x
+let return #a (x:a) : partial a =
+  { pre = True; comp = (fun _ -> m_return x) }
 
-[@@expect_failure]
-sub_effect PURE ~> DM4A = lift_pure_dm4a
+let bind #a #b (c:partial a) (f:a -> partial b) : partial b =
+  { pre = c.pre /\ (forall x. (f x).pre);
+    comp = (fun _ ->
+      let v = c.comp () in
+      m_bind v (fun x -> (f x).comp ())) }
 
-[@@expect_failure [34]]
-let test () : DM4A int True (fun _ -> w_return 5) = 5
+let (let!) #a #b (c:partial a) (f:a -> partial b) : partial b = bind c f
+
+let run #a (c:partial a) (pf:squash c.pre) : m a = c.comp pf
+
+let example_partial #a #b (c:partial a) (f:a -> partial b) : partial b =
+  let! x = c in
+  f x
+
+let spec_return #a (x:a) : w a = w_return x
+let spec_bind #a #b (c:w a) (f:a -> w b) : w b = w_bind c f

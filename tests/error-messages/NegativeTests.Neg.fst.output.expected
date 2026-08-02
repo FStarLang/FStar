@@ -5,7 +5,7 @@
   - The SMT solver could not prove the query.
   - Env =
   - VC = Prims.l_False
-  - See also Prims.fst(642,18-642,24)
+  - See also Prims.fst(478,18-478,24)
 
 * Info at NegativeTests.Neg.fst(24,8-24,10):
   - Expected failure:
@@ -14,7 +14,7 @@
   - The SMT solver could not prove the query.
   - Env =
   - VC = Prims.l_False
-  - See also Prims.fst(642,18-642,24)
+  - See also Prims.fst(478,18-478,24)
 
 * Info at NegativeTests.Neg.fst(27,30-27,35):
   - Expected failure:
@@ -40,13 +40,10 @@
 
 * Info at NegativeTests.Neg.fst(42,33-42,34):
   - Expected failure:
-  - Could not prove post-condition
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Env = (x : Prims.int)
-  - VC =
-      forall (p: Prims.pure_post Prims.int).
-        (forall (pure_result: Prims.int). pure_result > 0 ==> p pure_result) ==>
-        (forall (return_val: Prims.int). return_val == x ==> p return_val)
+  - VC = x > 0
   - See also NegativeTests.Neg.fst(40,83-40,88)
 
 * Info at NegativeTests.Neg.fst(46,30-46,31):
@@ -68,8 +65,9 @@
   - Env =
   - VC =
       forall (ri: FStar.Pervasives.result Prims.int).
-        (* - Could not prove post-condition *) V? ri
-  - See also FStar.Pervasives.fsti(374,4-374,5)
+        (* - Could not prove post-condition *)
+        forall (a: Prims.eqtype). Prims.hasEq a ==> Prims.int == a ==> V? ri
+  - See also FStar.Pervasives.fsti(216,4-216,5)
 
 * Info at NegativeTests.Neg.fst(55,25-55,26):
   - Expected failure:
@@ -78,7 +76,7 @@
   - The SMT solver could not prove the query.
   - Env =
   - VC = forall (x: Prims.int). (* - Could not prove post-condition *) x >= 0
-  - See also Prims.fst(642,18-642,24)
+  - See also Prims.fst(478,18-478,24)
 
 * Info at NegativeTests.Neg.fst(59,26-59,34):
   - Expected failure:

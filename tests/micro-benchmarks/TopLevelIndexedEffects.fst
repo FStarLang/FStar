@@ -10,14 +10,9 @@ type repr (a:Type) = a
 let return (a:Type) (x:a) : repr a = x
 let bind (a b:Type) (f:repr a) (g:a -> repr b) : repr b = g f
 
-effect { M (a:Type) with {repr; return; bind}}
+effect { M with {repr; return; bind} }
 
-let lift_PURE_M (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
-  : Pure (repr a)
-         (requires wp (fun _ -> True))
-         (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-    f ()
+let lift_PURE_M (a:Type) (f:unit -> a) : repr a = f ()
 
 sub_effect PURE ~> M = lift_PURE_M
 
@@ -39,7 +34,7 @@ let n : int = f ()
 //
 
 [@@ top_level_effect]
-effect { N (a:Type) with {repr; return; bind}}
+effect { N with {repr; return; bind} }
 
 sub_effect PURE ~> N = lift_PURE_M
 

@@ -14,52 +14,22 @@
    limitations under the License.
 *)
 module Unit1.WPsAndTriples
-unfold let as_requires (#a:Type) (wp:pure_wp a) = wp (fun x -> True)
-unfold let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> ~(y==x)))
-assume val as_Pure: #a:Type -> #b:(a -> Type)
-          -> #wp:(x:a -> GTot (pure_wp (b x)))
-          -> $f:(x:a -> PURE (b x) (wp x))
-          -> x:a -> Pure (b x) (as_requires (wp x))
-                             (as_ensures (wp x))
 
-open FStar.Monotonic.Pure
+(* Weakest-precondition transformers are gone: a computation type is just
+   [M t (requires pre) (ensures post)].  What is left to test here is that
+   one can abstract over a Hoare triple. *)
 
-val f : x:int -> PURE int (as_pure_wp (fun p -> x > 0 /\ p (x + 1)))
+val f : x:int -> PURE int (requires x > 0) (ensures fun y -> y == x + 1)
 let f x = assert (x > 0); x + 1
 
 val h : #req:(int -> prop) -> #ens:(int -> int -> prop) -> $f:(x:int -> Pure int (req x) (ens x)) -> y:int -> Pure int (req y) (ens y)
 let h #req #ens f x = f x
 
 val g : x:int -> Pure int (b2t (x > 0)) (fun y -> y == x + 1)
-let g = h (as_Pure f)
+let g = h #(fun x -> b2t (x > 0)) #(fun x y -> y == x + 1) f
 
-
-(*
- * We enforce monotonicity of pure wps
- *)
-
-[@@ expect_failure]
-val bad_wp : unit -> PURE unit (as_pure_wp (fun p -> ~ (p ())))
-
-[@@ expect_failure]
-val bad_wp : unit -> PURE int (as_pure_wp (fun p -> ~ (p 3)))
-
-
-val good_wp : unit -> PURE int (as_pure_wp (fun p -> p 3))
 val good_hoare : unit -> Pure int True (fun r -> r == 3)
+let good_hoare () = 3
 
-(*
- * An example from Dominique Unruh
- *)
-let mono (a:Type u#a) (wp:pure_wp a) (p q:pure_post a) (_:squash(forall (x:a). p x ==> q x)) : 
-    Lemma (wp p ==> wp q) = 
-	FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ()
-
-[@@ expect_failure]
-let contradiction () : Lemma(False) = 
-    let a = unit in
-    let wp : pure_wp a = as_pure_wp (fun p -> ~ (p ())) in
-    let p x = False in let q x = True in
-    let u : squash(forall x. p x ==> q x) = () in
-    mono a wp p q u;
-    assert (wp p ==> wp q)
+[@@ expect_failure [19]]
+let bad_hoare () : Pure int True (fun r -> r == 3) = 4

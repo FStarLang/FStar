@@ -37,9 +37,9 @@ let serialize_cbor_inj'
   (s1: Seq.seq U8.t)
 : Lemma
   (forall c2 s2 . serialize_cbor c1 `Seq.append` s1 == serialize_cbor c2 `Seq.append` s2 ==> (c1 == c2 /\ s1 == s2))
-= Classical.forall_intro_2 (fun c2 s2 ->
-    Classical.move_requires (serialize_cbor_inj c1 c2 s1) s2
-  )
+= introduce forall c2 s2 . serialize_cbor c1 `Seq.append` s1 == serialize_cbor c2 `Seq.append` s2 ==> (c1 == c2 /\ s1 == s2)
+  with introduce _ ==> _
+  with _ . serialize_cbor_inj c1 c2 s1 s2
 
 let serialize_cbor_with_test_correct
   (c: raw_data_item)
@@ -53,9 +53,10 @@ let serialize_cbor_with_test_correct
     forall (c': raw_data_item) (suff': Seq.seq U8.t) .
     serialize_cbor c `Seq.append` suff == serialize_cbor c' `Seq.append` suff' ==> ~ (p c' suff'))
   )
-= Classical.forall_intro_2 (fun c' suff' ->
-    Classical.move_requires (serialize_cbor_inj c c' suff) suff'
-  )
+= introduce forall (c': raw_data_item) (suff': Seq.seq U8.t) .
+    serialize_cbor c `Seq.append` suff == serialize_cbor c' `Seq.append` suff' ==> ~ (p c' suff')
+  with introduce _ ==> _
+  with _ . serialize_cbor_inj c c' suff suff'
 
 val serialize_cbor_nonempty
   (c: raw_data_item)

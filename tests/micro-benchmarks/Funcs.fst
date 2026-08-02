@@ -82,7 +82,6 @@ let id x = x
 
 let rec f : unit -> Dv (unit -> Dv unit) =
   fun x ->
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   let r = fun y -> f () () in r
 and g : unit -> Dv unit =
   fun () -> f () ()

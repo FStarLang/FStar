@@ -205,8 +205,11 @@ let wp_code_delta = [
   `%(augment)
   ]
 
-let va_lemma_weakest_pre_norm_wp (inss:list ins) (s0:state) (sN:state) : pure_wp unit =
-  let wp = fun (post:(unit -> prop)) ->
+(* The postcondition [post] used to be inferred by F* from the continuation's
+   verification condition, since this was declared as [PURE unit wp] with an
+   explicitly quantified [wp].  With pre-/postconditions it is passed
+   explicitly. *)
+let va_lemma_weakest_pre_norm_pre (inss:list ins) (s0:state) (sN:state) (post:unit -> prop) : prop =
      forall ok0 regs0 flags0 mem0.
         ok0 == s0.ok /\
         regs0 == s0.regs /\
@@ -217,12 +220,11 @@ let va_lemma_weakest_pre_norm_wp (inss:list ins) (s0:state) (sN:state) : pure_wp
         norm [delta_only wp_code_delta; zeta; iota; primops]
                    (wp_code (normalize_term inss) (augment sN post)
                      ({ok=ok0; regs=regs0; flags=flags0; mem=mem0}))
-  in
-  assume (pure_wp_monotonic _ wp); // unsure why this fails
-  wp
 
 [@"uninterpreted_by_smt"]
-val va_lemma_weakest_pre_norm (inss:list ins) (s0:state) (sN:state) : PURE unit (va_lemma_weakest_pre_norm_wp inss s0 sN)
+val va_lemma_weakest_pre_norm (inss:list ins) (s0:state) (sN:state) (post:unit -> prop)
+  : Lemma (requires va_lemma_weakest_pre_norm_pre inss s0 sN post)
+          (ensures post ())
 
 (* #reset-options "--log_queries --debug X64.Vale.StrongPost_i --debug print_normalized_terms" *)
 // let test_lemma (s0:state) (sN:state) =

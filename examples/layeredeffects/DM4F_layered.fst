@@ -16,122 +16,41 @@
 
 module DM4F_layered
 
-(* Same as DM4F, but layered over a layered PURE *)
+(* This used to be the same DM4F state example layered over a layered PURE.
+   The layered encoding has been removed; the example is now the same plain
+   state monad as DM4F. *)
+
 open DM4F_Utils
-open ID2
-open FStar.Tactics.V2
 
-(* Simulating state effect in DM4F, hopefully doable by a tactic. *)
+type repr (a:Type u#ua) (st:Type0) : Type u#ua =
+  s0:st -> Pure (a & st)
 
-type post_t st a =
-  a -> st -> prop
-
-type wp0 (st:Type u#0) (a:Type u#ua) : Type u#ua =
-  st -> post_t st a -> prop
-
-let st_monotonic #st #a (w : wp0 st a) : prop =
-  //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
-  // ^ this version seems to be less SMT-friendly
-  forall s0 p1 p2. (forall x s1. p1 x s1 ==> p2 x s1) ==> w s0 p1 ==> w s0 p2
-
-type wp st a = w:(wp0 st a){st_monotonic w}
-
-open FStar.Monotonic.Pure
-
-type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
-  s0:st -> ID (a & st) (as_pure_wp (fun p -> wp s0 (curry p)))
-
-unfold
-let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a =
-  fun s0 p -> p x s0
-
-let return (a:Type) (x:a) (st:Type0) : repr a st (return_wp x) =
+let return (#a:Type) (#st:Type0) (x:a) : repr a st =
   fun s0 -> (x, s0)
 
-unfold
-let bind_wp (#a:Type) (#b:Type) (#st:Type0)
-  (w1 : wp st a) (w2 : a -> wp st b) : wp st b =
-  fun s0 p -> w1 s0 (fun y s1 -> w2 y s1 p)
-
-(* squash_lem and wp_squash_lem no longer needed since post_t returns prop *)
-
-let elim_mon #a #st (w : wp st a) (p1 p2 : post_t st a) (s0:st)
- : Lemma (requires (forall x s1. p1 x s1 ==> p2 x s1))
-         (ensures w s0 p1 ==> w s0 p2) = ()
-    
-let bind (a:Type) (b:Type) (st:Type0)
-  (wp_c : wp st a)
-  (wp_f : a -> wp st b)
-  (c : repr a st wp_c)
-  (f : (x:a -> repr b st (wp_f x)))
-: repr b st (bind_wp wp_c wp_f)
+let bind (#a #b:Type) (#st:Type0)
+  (c : repr a st)
+  (f : a -> repr b st)
+: repr b st
 = fun s0 ->
-      let (y, s1) = c s0 in
-      f y s1
+    let (y, s1) = c s0 in
+    f y s1
 
-let ite_wp #a #st (b:bool) (w1 w2 : wp st a) : wp st a =
-  fun s0 p -> (b ==> w1 s0 p) /\ ((~b) ==> w2 s0 p)
+let (let!) (#a #b:Type) (#st:Type0) (c : repr a st) (f : a -> repr b st) : repr b st =
+  bind c f
 
-let if_then_else
-  (a:Type)
-  (st:Type0)
-  (wpf wpg : wp st a)
-  (f : repr a st wpf)
-  (g : repr a st wpg)
-  (b : bool)
-  : Type
-  = repr a st (ite_wp b wpf wpg)
+let run (#a:Type) (#st:Type0) (c:repr a st) (s0:st) : Pure (a & st) =
+  c s0
 
-let stronger
-  (#a:Type) (#st:Type0)
-  (w1 w2 : wp st a)
-  : prop
-  = forall s0 p. w1 s0 p ==> w2 s0 p
+let get #st () : repr st st =
+  fun s0 -> (s0, s0)
 
-let subcomp
-  (a:Type)
-  (st:Type0)
-  (wpf wpg : wp st a)
-  (f : repr a st wpf)
-  : Pure (repr a st wpg)
-         (requires (stronger wpg wpf))
-         (ensures (fun _ -> True))
-  = f
+let put #st (s:st) : repr unit st =
+  fun _ -> ((), s)
 
-total
-reifiable
-reflectable
-effect {
-  ST (a:Type) ([@@@ effect_param] st:Type0) (_:wp st a)
-  with {repr; return; bind; subcomp; if_then_else}
-}
-
-let lift_pure_st_wp #a #st (w : pure_wp a) : wp st a =
-  FStar.Monotonic.Pure.elim_pure_wp_monotonicity w;
-  let r = fun s0 p -> w (fun x -> p x s0) in
-  r
-
-let lift_id_st_wp #a #st (w : pure_wp a) : wp st a =
-  elim_pure_wp_monotonicity w;
-  fun s0 p -> w (fun x -> p x s0)
-
-let lift_id_st a wp st (f : ID2.repr a wp)
-  : repr a st (lift_id_st_wp wp)
-  = elim_pure_wp_monotonicity wp;
-    fun s0 -> (f (), s0)
-
-sub_effect ID ~> ST = lift_id_st
-
-let null #st #a : wp st a =
-  fun s0 p -> forall x s1. p x s1
-
-let get #st () : ST st st (fun s0 p -> p s0 s0) =
-  ST?.reflect (fun s0 -> (s0, s0))
-
-let put #st (s:st) : ST unit st (fun _ p -> p () s) =
-  ST?.reflect (fun _ -> ((), s))
-
-let test () : ST int int null =
-  let x = get () in
-  put (x + x);
-  get () + get ()
+let test () : repr int int =
+  let! x = get () in
+  let! _ = put (x + x) in
+  let! y = get () in
+  let! z = get () in
+  return (y + z)

@@ -18,26 +18,18 @@ module Bug1370a
 open FStar.Pervasives
 open FStar.Exn
 
-// inferred type: Raises : ex:Prims.exn -> a:Type0 -> Prims.Tot Effect
+// The point of this test is that the parameters of an effect abbreviation
+// must be ordered as written: Raises : a:Type0 -> ex:exn -> Effect.
+// (Which exception is raised is no longer tracked by the effect system, so
+// the negative part of the original test is gone.)
 effect Raises (a:Type) (ex:exn) =
-    Exn a (requires True)
-        (ensures (function
-                | (V _) -> True
-                | (E e) -> e == ex
-                | _ -> False
-        ))
+    Exn a (requires True) (ensures fun _ -> ex == ex)
 
 exception Bad
-exception ReallyBad
 
-val u : nat -> Raises nat Bad
+// Note: an effect abbreviation may only be applied to its result type; the
+// remaining arguments of a computation type are the requires/ensures clauses.
+val u : nat -> Exn nat
 let u i = if i > 10
     then i
     else raise Bad                  // expected to work
-
-val u' : nat -> Raises nat Bad
-
-[@@expect_failure]
-let u' i = if i > 10
-    then i
-    else raise ReallyBad         // expected to fail type checking

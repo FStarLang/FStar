@@ -174,8 +174,8 @@ let lemma_weakest_pre_norm' (inss: list ins) (s0: state) (sN:state) (#post:unit 
   assert_from_norm' (wp_code inss (augment sN post) s0);
   lemma_weak_pre inss s0 sN post
 
-let va_lemma_weakest_pre_norm inss s0 sN =
-  admit () // connect with proof above
+let va_lemma_weakest_pre_norm inss s0 sN post =
+  lemma_weakest_pre_norm' inss s0 sN #post
 
 // See issue #3108
 let _dummy = ()

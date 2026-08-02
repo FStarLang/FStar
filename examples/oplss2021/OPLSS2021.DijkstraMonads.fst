@@ -14,191 +14,146 @@
    limitations under the License.
 *)
 module OPLSS2021.DijkstraMonads
-open FStar.Monotonic.Pure
 
 (* This module defines an abstraction for reasoning about stateful
    computations.
 
-   The main computation type it defines at the end is `STATE a wp`,
-   where `wp` is itself a predicate transformer monad.
+   The main computation type it defines is `repr a st pre post`, a state
+   monad whose type records a pre- and a postcondition.
 
-   So, the general idea is to
+   Historically, F* itself was built on *weakest precondition
+   transformers*: an effect carried a WP monad, and a computation type
+   `STATE a wp` was indexed by a WP.  F* now specifies a computation
+   directly by a precondition and a postcondition, so this module does
+   the same: we
 
-     1. Define our predicate transformer monad, wp
+     1. define the specification monad --- pre- and postconditions;
 
-     2. Relate it to a computational state monad, by indexing a basic
-        state monad with the predicate transformer
+     2. index a basic state monad by a specification;
 
-     3. Packaging the indexed monad up as F* effect, which instructs
-        F* to infer types and WPs for programs, and the WPs can be
-        used to prove Hoare-style specifications of stateful programs
+     3. show that the indexed monad has a `return`, a `bind`, and a
+        notion of subsumption, which is all it takes to program with it
+        in direct style, using `let!`.
 *)
 
-(*** Step 1: Define the WP monad ***)
+(*** Step 1: Specifications ***)
 
-/// The "raw" type of weakest precondition transformers
-/// Sometimes written
-///       ((s & st) -> Type) -> st -> Type
-///
-/// But, permuting its arguments here, makes some things a bit
-/// smoother
-let wp0 (st:Type0) (a:Type) = st -> (a & st -> prop) -> prop
+/// A precondition constrains the initial state.
+let pre_t (st:Type0) = st -> prop
 
-/// Monotonicity of wp's
-let st_monotonic #st #a (w : wp0 st a) : prop =
-  forall (s0:st)
-    (p1 p2: (a & st -> prop)).
-    //If p1 is stronger than p2
-    (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==>
-    //Then wp s0 p1 is stronger then wp s0 p2
-    w s0 p1 ==>
-    w s0 p2
+/// A postcondition relates the initial state, the result, and the
+/// final state.
+let post_t (st:Type0) (a:Type) = st -> a -> st -> prop
 
-/// A wp is a monotonic raw wp
-let wp st a = w:wp0 st a{st_monotonic w}
-
-/// This wp type comes with a monadic structure as shown by return and
-/// bind below (you can prove the laws, as an exercise : )
-
-/// Returning a value just requires proving the postcondion on that
-/// value and the initial state
+/// The specification of `return x`: the state is unchanged and the
+/// result is `x`.
 unfold
-let return_wp (#a:Type) (#st:Type0) (x:a)
-  : wp st a
-  = fun s0 p -> p (x, s0)
+let return_post (#a:Type) (#st:Type0) (x:a)
+  : post_t st a
+  = fun s0 y s1 -> y == x /\ s1 == s0
 
-/// Sequentially composing WPs
-///
-/// Read it "backwards"
+/// Sequential composition of two specifications.  Read the
+/// precondition as: `c` must be runnable, and whatever it may return,
+/// the continuation must be runnable on that result.
 unfold
-let bind_wp (#a #b:Type) (#st:Type0)
-            (wp_c:wp st a)
-            (wp_f:a -> wp st b)
-  : wp st b
-  = fun s0 p ->
-      wp_c s0
-      //push the postcondition of the continuation
-      //through the WP transformer of c
-      (fun (y, s1) ->
-        //push the postcondition p
-        //through the WP transformer of f applied to the
-        //result value and state of c
-        wp_f y s1 p)
+let bind_pre (#a:Type) (#st:Type0)
+             (pre_c:pre_t st) (post_c:post_t st a) (pre_f:a -> pre_t st)
+  : pre_t st
+  = fun s0 -> pre_c s0 /\ (forall x s1. post_c s0 x s1 ==> pre_f x s1)
 
+/// The postcondition of a sequential composition: there is an
+/// intermediate result and state that `c` may produce, and from which
+/// the continuation produces the final one.
+unfold
+let bind_post (#a #b:Type) (#st:Type0)
+              (post_c:post_t st a) (post_f:a -> post_t st b)
+  : post_t st b
+  = fun s0 y s2 -> exists x s1. post_c s0 x s1 /\ post_f x s1 y s2
 
 (*** Step 2: Define the computational monad
-             indexed by the WP
+             indexed by the specification
  ***)
 
-/// We'll use this representation for our
-/// WP-indexed state monad
-///
-///    `PURE a w` is the type of conditionally pure computations.
-///     We'll layer our refined state effect on top of it
-let repr (a:Type) (st:Type0) (wp : wp st a) : Type =
-  s0:st -> PURE (a & st) (as_pure_wp (wp s0))
+/// A stateful computation is a function from an initial state
+/// satisfying the precondition to a result and a final state
+/// satisfying the postcondition.  Note that this is just a refinement
+/// type: no effect is involved.
+let repr (a:Type) (st:Type0) (pre:pre_t st) (post:post_t st a) : Type =
+  s0:st{pre s0} -> r:(a & st){post s0 (fst r) (snd r)}
 
-/// repr is an indexed monad structure
+/// `repr` is an indexed monad.
 
 /// Returning a value `x`
 ///
-///   Notice, the action on the index is the
-///   return_wp, the return of the wp index
-///
-/// "The WP of return is the return of the wp"
+/// "The specification of return is the return of the specification"
 let return (a:Type) (x:a) (st:Type0)
-  : repr a st (return_wp x)
+  : repr a st (fun _ -> True) (return_post x)
   = fun s0 -> (x, s0)
 
 /// Sequentially composing computations
 ///
-/// "The WP of a bind is the bind of the WP"
+/// "The specification of a bind is the bind of the specification"
 let bind (a:Type) (b:Type) (st:Type0)
-         (wp_c : wp st a)
-         (wp_f : a -> wp st b)
-         (c : repr a st wp_c)
-         (f : (x:a -> repr b st (wp_f x)))
-  : repr b st (bind_wp wp_c wp_f)
+         (pre_c:pre_t st) (post_c:post_t st a)
+         (pre_f:a -> pre_t st) (post_f:a -> post_t st b)
+         (c : repr a st pre_c post_c)
+         (f : (x:a -> repr b st (pre_f x) (post_f x)))
+  : repr b st (bind_pre pre_c post_c pre_f) (bind_post post_c post_f)
   = fun s0 -> let (y, s1) = c s0 in
            f y s1
 
-/// You can also define a notion of subsumption of our new computation type
+/// You can also define a notion of subsumption of our computation type:
+/// a computation may always be given a weaker precondition and a
+/// stronger postcondition.
 let stronger
   (#a:Type) (#st:Type0)
-  (w1 w2 : wp st a)
+  (pre1:pre_t st) (post1:post_t st a)
+  (pre2:pre_t st) (post2:post_t st a)
   : prop
-  = forall s0 p. w1 s0 p ==> w2 s0 p
+  = (forall s0. pre2 s0 ==> pre1 s0) /\
+    (forall s0 x s1. pre2 s0 /\ post1 s0 x s1 ==> post2 s0 x s1)
 
 let subcomp
   (a:Type)
   (st:Type0)
-  (wpf wpg : wp st a)
-  (f : repr a st wpf)
-  : Pure (repr a st wpg)
-         (requires (stronger wpg wpf))
-         (ensures (fun _ -> True))
-  = f
+  (pre1:pre_t st) (post1:post_t st a)
+  (pre2:pre_t st) (post2:post_t st a)
+  (f : repr a st pre1 post1)
+  : Pure (repr a st pre2 post2)
+         (requires stronger pre1 post1 pre2 post2)
+         (ensures fun _ -> True)
+  = fun s0 -> f s0
 
-(*** Step 3:  Package it all up as a new effect ***)
-total
-reifiable
-reflectable
-layered_effect {
-  ST : a:Type -> st:Type0 -> wp st a -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind;
-  subcomp = subcomp
-}
+(*** Step 3: Programming with it ***)
 
+/// F* used to package such an indexed monad up as an *effect*, so that
+/// the type checker would infer the indices of every `bind`.  That is
+/// no longer needed for specifications --- every F* effect is already
+/// specified by a pre- and a postcondition --- so we simply program
+/// with `bind` directly.  The `let!` notation makes that pleasant.
 
-/// One technicality:
-///
-/// Pure terms in F* are given the type `pure a wp`
-/// where (wp : (a -> prop) -> prop)
-/// is a WP transformer for pure computations
-///
-/// `pure a wp` is the type of a conditionally pure term it is
-/// equivalent to `Tot a`, but only when `wp (fun _ -> True)` is
-/// provable
-let pure a wp = unit -> PURE a wp
+let ( let! ) (#a #b:Type) (#st:Type0)
+             (#pre_c:pre_t st) (#post_c:post_t st a)
+             (#pre_f:a -> pre_t st) (#post_f:a -> post_t st b)
+             (c : repr a st pre_c post_c)
+             (f : (x:a -> repr b st (pre_f x) (post_f x)))
+  : repr b st (bind_pre pre_c post_c pre_f) (bind_post post_c post_f)
+  = bind a b st pre_c post_c pre_f post_f c f
 
-unfold
-let lift_wp (#a:Type u#a) (#st:Type0) (w:pure_wp a) : wp st a =
-  elim_pure_wp_monotonicity_forall u#a ();
-  fun s0 p -> w (fun x -> p (x, s0))
-
-let lift_pure_st a st wp (f : pure a wp)
-  : repr a st (lift_wp wp)
-  = elim_pure_wp_monotonicity wp;
-    fun s0 -> (f (), s0)
-
-sub_effect PURE ~> ST = lift_pure_st
-
-/// A couple of actions with refined types
-let get #st ()
-  : ST st st (fun s0 p -> p (s0, s0))
-  = ST?.reflect (fun s0 -> (s0, s0))
+/// Reading the state
+let get (#st:Type0) ()
+  : repr st st (fun _ -> True) (fun s0 x s1 -> x == s0 /\ s1 == s0)
+  = fun s0 -> (s0, s0)
 
 /// Writing the state
-let put #st (s:st)
-  : ST unit st (fun _ p -> p ((), s))
-  = ST?.reflect (fun _ -> ((), s))
+let put (#st:Type0) (s:st)
+  : repr unit st (fun _ -> True) (fun _ _ s1 -> s1 == s)
+  = fun _ -> ((), s)
 
-/// WPs are fine for defining a VC generator
-/// But, we want to write specifications with pre/postconditions
-let as_wp (a:Type) (st:Type) (pre: st -> prop) (post: st -> a -> st -> prop)
-  : wp st a
-  = fun s0 k -> pre s0 /\ (forall x s1. post s0 x s1 ==> k (x, s1))
-
-effect HoareST (a:Type) (st:Type) (pre: st -> prop) (post: st -> a -> st -> prop) =
-  ST a st (as_wp a st pre post)
-
-/// And finally: here's a proof of `double`
+/// And finally: here is a proof of `double`.  The composed
+/// specification is inferred by `let!`; `subcomp` weakens it to the one
+/// we want to advertise.
 let double ()
-  : HoareST unit int
-    (requires fun _ -> True)
-    (ensures fun s0 _ s1 -> s1 == s0 + s0)
-  = let x = get () in
-    put (x + x)
+  : repr unit int (fun _ -> True) (fun s0 _ s1 -> s1 == s0 + s0)
+  = subcomp _ _ _ _ _ _ (let! x = get () in
+                         put (x + x))
