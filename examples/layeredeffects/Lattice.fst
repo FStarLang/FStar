@@ -3,7 +3,10 @@ module Lattice
 open FStar.Tactics.V2
 open FStar.List.Tot
 
-// GM: Force a type equality by SMT
+(* This example used to present a layered effect.  The effect declaration has
+   been removed; the examples below use the underlying labelled state/exception
+   monad directly. *)
+
 let coerce #a #b (x:a{a == b}) : b = x
 
 let unreachable #a () : Pure a (requires False) (ensures (fun _ -> False)) = coerce "whatever"
@@ -11,13 +14,7 @@ let unreachable #a () : Pure a (requires False) (ensures (fun _ -> False)) = coe
 type eff_label =
   | RD
   | WR
-  //| DIV
   | EXN
-
-// DONE: split ST into READ/WRITE with relational prop on abides
-//       ^ this was incredibly easy
-
-// DONE  add specs (see LatticeSpec.fst)
 
 type annot = eff_label -> bool
 
@@ -72,11 +69,12 @@ type repr (a:Type)
   : Type =
   r:(repr0 a){abides r (interp labs)}
 
-let ann_le (ann1 ann2 : annot) : prop =
-  forall x. ann1 x ==> ann2 x
-  
 let return (a:Type) (x:a)
   : repr a [] =
+  fun s0 -> (Some x, s0)
+
+let return_l (#labs:list eff_label) (a:Type) (x:a)
+  : repr a labs =
   fun s0 -> (Some x, s0)
 
 let bind (a b : Type)
@@ -91,7 +89,11 @@ let bind (a b : Type)
     in
     r
 
-let subcomp (a:Type)
+let (let!) #a #b #labs1 #labs2 (m : repr a labs1) (f : a -> repr b labs2)
+  : repr b (labs1@labs2)
+  = bind a b labs1 labs2 m f
+
+let weaken (a:Type)
   (labs1 labs2 : list eff_label)
   (f : repr a labs1)
   : Pure (repr a labs2)
@@ -99,65 +101,39 @@ let subcomp (a:Type)
          (ensures (fun _ -> True))
   = f
 
-let ite (p q r : prop) = (p ==> q) /\ (~p ==> r)
-
-let if_then_else
-  (a : Type)
-  (labs1 labs2 : list eff_label)
-  (f : repr a labs1)
-  (g : repr a labs2)
-  (p : bool)
-  : Type
-  = repr a (labs1@labs2)
-
-total // need this for catch!!
-reifiable
-reflectable
-effect {
-  EFF (a:Type) (_:list eff_label)
-  with {repr; return; bind; subcomp; if_then_else}
-}
-
-let lift_pure_eff
- (a:Type)
- (wp : pure_wp a)
- (f : unit -> PURE a wp)
- : Pure (repr a [])
-        (requires (wp (fun _ -> True)))
-        (ensures (fun _ -> True))
- = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-   fun s0 -> (Some (f ()), s0)
- 
-sub_effect PURE ~> EFF = lift_pure_eff
-
-let get () : EFF int [RD] =
-  EFF?.reflect (fun s0 -> (Some s0, s0))
+let get () : repr int [RD] =
+  fun s0 -> (Some s0, s0)
   
-let put (s:state) : EFF unit [WR] =
-  EFF?.reflect (fun _ -> (Some (), s))
+let put (s:state) : repr unit [WR] =
+  fun _ -> (Some (), s)
 
-let raise #a () : EFF a [EXN] =
-  EFF?.reflect (fun s0 -> (None, s0))
+let raise #a () : repr a [EXN] =
+  fun s0 -> (None, s0)
 
-let test0 (x y : int) : EFF int [RD; EXN] =
-  let z = get () in
+let test0 (x y : int) : repr int [RD; EXN] =
+  let! z = get () in
   if x + z > 0
   then raise ()
-  else y - z
+  else return_l #[EXN] int (y - z)
 
-let test1 (x y : int) : EFF int [EXN; RD; WR] =
-  let z = get () in
+let test1 (x y : int) : repr int [RD; EXN; WR] =
+  let! z = get () in
   if x + z > 0
-  then raise ()
-  else (put 42; y - z)
+  then weaken int [EXN] [EXN; WR] (raise ())
+  else let! _ = put 42 in
+       return_l #[] int (y - z)
 
 let sublist_at_self (l1 : list eff_label)
   : Lemma (sublist (l1@l1) l1)
           [SMTPat (l1@l1)]
   = Classical.forall_intro (List.Tot.Properties.append_mem l1 l1)
 
-let labpoly #labs (f g : unit -> EFF int labs) : EFF int labs =
-  f () + g ()
+let labpoly #labs (f g : unit -> repr int labs) : repr int labs =
+  sublist_at_self labs;
+  weaken int (labs@labs) labs
+    (let! x = f () in
+     let! y = g () in
+     return int (x + y))
 
 let catch0 #a #labs (f:repr a (EXN::labs)) (g:repr a labs)
   : repr a labs
@@ -172,19 +148,18 @@ let catch0 #a #labs (f:repr a (EXN::labs)) (g:repr a labs)
     r1
 
 let catch #a #labs
-  (f : unit -> EFF a (EXN::labs))
-  (g : unit -> EFF a labs)
-  : EFF a labs
-= EFF?.reflect (catch0 (reify (f ())) (reify (g ())))
+  (f : unit -> repr a (EXN::labs))
+  (g : unit -> repr a labs)
+  : repr a labs
+= catch0 (f ()) (g ())
 
 // TODO: haskell-like runST.
 // strong update with index on state type(s)?
 
-//AR: 07/03: this g was inlined earlier, but then the proofs were relying on smt_reifiable
-let g #labs () : EFF int labs = 42
+let g #labs () : repr int labs = return_l #labs int 42
 
-let test_catch #labs (f : unit -> EFF int [EXN;WR]) : EFF int [WR] =
+let test_catch #labs (f : unit -> repr int [EXN;WR]) : repr int [WR] =
   catch f g
 
-let test_catch2 (f : unit -> EFF int [EXN;EXN;WR]) : EFF int [EXN;WR] =
+let test_catch2 (f : unit -> repr int [EXN;EXN;WR]) : repr int [EXN;WR] =
   catch f g

@@ -170,6 +170,7 @@ let repr_related #kt #vt (r1 r2:repr_t kt vt) =
 
 let repr_t_sz kt vt sz = r:repr_t kt vt { r.sz == sz}
 
+#push-options "--z3rlimit_factor 2"
 let lemma_clean_upd_lookup_walk #kt #vt #sz
       (spec1 spec2 : spec_t kt vt) 
       (repr1 repr2 : repr_t_sz kt vt sz)
@@ -203,6 +204,7 @@ let lemma_clean_upd_lookup_walk #kt #vt #sz
     end
   in
   aux 0
+#pop-options
 
 let lemma_used_upd_lookup_walk #kt #vt #sz
       (spec1 spec2 : spec_t kt vt)

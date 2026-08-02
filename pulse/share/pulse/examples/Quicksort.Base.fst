@@ -62,7 +62,7 @@ let lemma_sorted_append_squash
               r1 >= l1 /\ r2 >= l2 /\ // silly, but needed since the seqs may be empty
               r1 <= l2))
     : squash (sorted (Seq.append s1 s2) /\ between_bounds (Seq.append s1 s2) l1 r2)
-  = ()
+  = lemma_sorted_append s1 s2 l1 r1 l2 r2
 #pop-options
 
 let to_nat (x: int{x >= 0}): nat = x

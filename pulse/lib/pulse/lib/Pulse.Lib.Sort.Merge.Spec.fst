@@ -205,7 +205,7 @@ let exists4_elim
 : Lemma
   (requires exists x1 x2 x3 x4 . p x1 x2 x3 x4)
   (ensures q)
-= Classical.forall_intro_4 (fun x1 x2 x3 x4 -> Classical.move_requires (prf x1 x2 x3) x4)
+= Classical.forall_intro_4 (Classical.move_requires_4 prf)
 
 #push-options "--split_queries always"
 

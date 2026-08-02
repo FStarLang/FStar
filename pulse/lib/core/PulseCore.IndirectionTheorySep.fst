@@ -469,6 +469,7 @@ let join_update_timeless_mem m1 m2 p1 p2 =
         (update_timeless_mem (join_mem m1 m2) (B.join_mem p1 p2))
     fun _ -> ()
 
+#push-options "--z3rlimit_factor 2"
 let star_equiv p q m =
   introduce
     forall m0 m1. 
@@ -496,6 +497,7 @@ let star_equiv p q m =
       interp q m1
     with m1 m2 and ()
   )
+#pop-options
 
 let erase_pair #t #s (p: erased (t & s)) : erased t & erased s =
   (hide (fst p), hide (snd p))
@@ -1104,6 +1106,7 @@ let inames_ok_hogs_dom e m = ()
 let inames_ok_update e m0 m1 =
   assert forall i. GS.mem i (hogs_dom m0) <==> GS.mem i (hogs_dom m1)
 
+#push-options "--z3rlimit_factor 4"
 let read_inv_age f' (is: mem { level_ is > 0 /\ iname_ok f' is }) (w: premem { 1 < level_ w /\ level_ w <= level_ is }) :
     Lemma (requires read_inv f' is w) (ensures read_inv f' (age1 is) (age1_ w)) =
   let Inv p = read is f' in
@@ -1116,6 +1119,7 @@ let read_inv_age f' (is: mem { level_ is > 0 /\ iname_ok f' is }) (w: premem { 1
   assert_norm (somewhere (later p') (age1_ w) == exists l. on l (later p') (age1_ w));
   assert somewhere (later p') (age1_ w);
   assert read_inv f' (age1 is) (age1_ w)
+#pop-options
 
 #push-options "--split_queries always"
 let rec hogs_invariant__age (e:inames) (is: mem { level_ is > 0 }) (f: address) :

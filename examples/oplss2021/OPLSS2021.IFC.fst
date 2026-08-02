@@ -420,7 +420,10 @@ let flows_included_append (f0 f1 g0 g1:flows)
             [SMTPat (has_flow_1 from to f)]
     = memP_append_or f f0 f1;
       assert (exists g. g `List.Tot.memP` g0 \/ g `List.Tot.memP` g1 /\ has_flow_1 from to g);
-      FStar.Classical.forall_intro (fun g -> memP_append_or g g0 g1)
+      introduce forall (g:flow).
+                  List.Tot.memP g (g0@g1) <==>
+                  (List.Tot.memP g g0 \/ List.Tot.memP g g1)
+      with memP_append_or g g0 g1
     in
     ()
 let flows_equiv_append (f0 f1 g0 g1:flows)
@@ -525,32 +528,30 @@ let subcomp (a:Type) (w0 r0 w1 r1:label) (fs0 fs1:flows) (f:ist a w0 r0 fs0)
     in
     f
 
-/// Package it up as an effect
-#push-options "--warn_error -352" //Warning_Adhoc_IndexedEffect_Combinator
-reflectable
-layered_effect {
-  IST : a:Type ->
-        w:label ->
-        w:label ->
-        fs:flows ->
-        Effect
-  with
-    repr = ist;
-    return = return;
-    bind = bind;
-    subcomp = subcomp
-}
-#pop-options
-let read (l:loc) : IST int bot (single l) [] = IST?.reflect (iread l)
-let write (l:loc) (x:int) : IST unit (single l) bot [] = IST?.reflect (iwrite l x)
+/// F* used to package such an indexed monad up as a *layered effect*, so
+/// that the type checker would infer the indices of every `bind` and
+/// insert the `subcomp`s.  Effects are now just names, specified by a
+/// pre- and a postcondition, so we program with `bind` and `subcomp`
+/// directly instead.  The `let!` notation makes the sequencing pleasant,
+/// and `sub` is `subcomp` with all its indices implicit, so it is
+/// determined by the expected type.
 
-let tot a = unit -> Tot a
-let lift_tot (a:Type) (x:tot a)
-  : ist a bot bot []
-  = return a (x())
-#push-options "--warn_error -352" //Warning_Adhoc_IndexedEffect_Combinator
-sub_effect PURE ~> IST = lift_tot
-#pop-options
+let ( let! ) (#a #b:Type)
+             (#w0 #r0 #w1 #r1:label) (#fs0 #fs1:flows)
+             (x:ist a w0 r0 fs0)
+             (y: a -> ist b w1 r1 fs1)
+  = bind a b w0 r0 w1 r1 fs0 fs1 x y
+
+let sub (#a:Type) (#w0 #r0 #w1 #r1:label) (#fs0 #fs1:flows) (f:ist a w0 r0 fs0)
+  : Pure (ist a w1 r1 fs1)
+    (requires label_inclusion w0 w1 /\
+              label_inclusion r0 r1 /\
+              fs0 `flows_included_in` fs1)
+    (ensures fun _ -> True)
+  = subcomp a w0 r0 w1 r1 fs0 fs1 f
+
+let read (l:loc) : ist int bot (single l) [] = iread l
+let write (l:loc) (x:int) : ist unit (single l) bot [] = iwrite l x
 
 ////////////////////////////////////////////////////////////////////////////////
 // Now for some examples
@@ -562,90 +563,90 @@ let lref = ref low
 let href = ref high
 
 let test (l:lref) (h:href)
-  : IST unit (union bot (single h))
+  : ist unit (union bot (single h))
              (union (single l) bot)
              (add_source (single l) [bot, single h])
-  = let x = read l in
+  = let! x = read l in
     write h x
 
 let test2 (l:lref) (h:href)
-  : IST unit (single h)
+  : ist unit (single h)
              (single l)
              [single l, single h]
-  = let x = read l in
-    write h x
+  = sub (let! x = read l in
+         write h x)
 
 let test3 (l:lref) (h:href)
-  : IST unit (single h)
+  : ist unit (single h)
              (single l)
              [single l, single h]
-  = write h (read l)
+  = sub (let! x = read l in write h x)
 
 let test3_lab (l:lref) (h:href)
-  : IST unit high low [low, high]
-  = write h (read l)
+  : ist unit high low [low, high]
+  = sub (let! x = read l in write h x)
 
 let test3_1 (l:lref) (h:href) (x:int)
-  : IST int (single h)
+  : ist int (single h)
           (single l)
           []
-  = write h 0;
-    read l
+  = sub (let! _ = write h 0 in
+         read l)
 
 let test4 (l:lref) (h:href) (x:int)
-  : IST int (single l)
+  : ist int (single l)
           (single h)
           [single h, bot]
-  = write l x;
-    read h
+  = sub (let! _ = write l x in
+         read h)
 
 let test5 (l:lref) (h:href) (x:int)
-  : IST int (single l)
+  : ist int (single l)
           (single h)
           []
-  = write l x;
-    read h
+  = sub (let! _ = write l x in
+         read h)
 
 let test6 (l:lref) (h:href)
-  : IST unit high low [low, high]
-  = let x = read l in
-    write h x
+  : ist unit high low [low, high]
+  = sub (let! x = read l in
+         write h x)
 
 //This leaks the contents of the href
 let test7 (l:lref) (h:href)
-  : IST unit (single l)
+  : ist unit (single l)
              (single h)
              [high, low]
-  = let x = read h in
-    write l x
+  = sub (let! x = read h in
+         write l x)
 
 //But, label-based IFC is inherently imprecise
 //This one still reports a leakage, even though it doesn't really leak h
 let test8 (l:lref) (h:href)
-  : IST unit (single l)
+  : ist unit (single l)
              (union (single h) (single l))
              [(single l `union` single h, single l)]
-  = let x0 = read h in
-    let x = read l in
-    write l x
+  = sub (let! x0 = read h in
+         let! x = read l in
+         write l x)
 
 //But, label-based IFC is inherently imprecise
 //This one still reports a leakage, even though it doesn't really leak h
 let test9 (l:lref) (h:href)
-  : IST unit (single l)
+  : ist unit (single l)
              (union (single h) (single l))
              [(single l `union` single h, single l)]
-  = let x= (let x0 = read h in
-            read l)
-    in
-    write l x
+  = sub (let! x = (let! x0 = read h in
+                   read l)
+         in
+         write l x)
 
 assume
 val cw0 : label
 assume
 val cr0 : label
 assume
-val c0 (_:unit) : IST unit cw0 cr0 []
+val c0 (_:unit) : ist unit cw0 cr0 []
 
 
 assume
@@ -653,53 +654,53 @@ val cw1 : label
 assume
 val cr1 : label
 assume
-val c1 (_:unit) : IST unit cw1 cr1 []
+val c1 (_:unit) : ist unit cw1 cr1 []
 
 assume
 val cw2 : label
 assume
 val cr2 : label
 assume
-val c2 (_:unit) : IST unit cw2 cr2 []
+val c2 (_:unit) : ist unit cw2 cr2 []
 
 let test10 ()
-  : IST unit (union cw0 (union cw1 cw2))
+  : ist unit (union cw0 (union cw1 cw2))
              (union cr0 (union cr1 cr2))
              (add_source cr0
                ((bot, union cw1 cw2)::
                 (add_source cr1 [bot, cw2])))
-  = c0 (); (c1();c2())
+  = let! _ = c0 () in (let! _ = c1 () in c2 ())
 
 
 let test12 ()
-  : IST unit (union cw0 (union cw1 cw2))
+  : ist unit (union cw0 (union cw1 cw2))
              (union cr0 (union cr1 cr2))
              [(cr0, union cw1 cw2);
               (union cr0 cr1, cw2)]
-  = c0 (); (c1();c2())
+  = sub (let! _ = c0 () in (let! _ = c1 () in c2 ()))
 
 let test12_1 ()
-  : IST unit (union cw0 (union cw1 cw2))
+  : ist unit (union cw0 (union cw1 cw2))
              (union cr0 (union cr1 cr2))
              [(cr0, cw1);
               (union cr0 cr1, cw2)]
-  = c0 (); (c1();c2())
+  = sub (let! _ = c0 () in (let! _ = c1 () in c2 ()))
 
 
 let test13 ()
-  : IST unit (union (union cw0 cw1) cw2)
+  : ist unit (union (union cw0 cw1) cw2)
              (union (union cr0 cr1) cr2)
              (add_source cr0 [bot, cw1] @
               add_source (union cr0 cr1) [bot, cw2])
-  = (c0 (); c1());c2()
+  = sub (let! _ = (let! _ = c0 () in c1 ()) in c2 ())
 
 let test14 ()
-  : IST unit (union (union cw0 cw1) cw2)
+  : ist unit (union (union cw0 cw1) cw2)
              (union (union cr0 cr1) cr2)
              ([cr0, cw1;
                union cr0 cr1, cw2])
-  = (c0 (); c1()); c2()
+  = sub (let! _ = (let! _ = c0 () in c1 ()) in c2 ())
 
 let test15 (l:lref)
-  : IST unit (single l) (single l) []
-  = write l (read l)
+  : ist unit (single l) (single l) []
+  = sub (let! x = read l in write l x)

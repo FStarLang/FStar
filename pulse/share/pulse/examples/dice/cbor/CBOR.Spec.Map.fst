@@ -462,8 +462,10 @@ let list_memP_map_forall
   (l: list t1)
 : Lemma
   (forall y . List.Tot.memP y (List.Tot.map f l) <==> (exists x . List.Tot.memP x l /\ y == f x))
-= Classical.forall_intro (fun y -> List.Tot.memP_map_elim f y l);
-  Classical.forall_intro (fun x -> List.Tot.memP_map_intro f x l)
+= introduce forall y . List.Tot.memP y (List.Tot.map f l) ==> (exists x . List.Tot.memP x l /\ f x == y)
+  with List.Tot.memP_map_elim f y l;
+  introduce forall x . List.Tot.memP x l ==> List.Tot.memP (f x) (List.Tot.map f l)
+  with List.Tot.memP_map_intro f x l
 
 #push-options "--z3rlimit_factor 6 --split_queries no"
 

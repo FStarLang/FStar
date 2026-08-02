@@ -1768,9 +1768,8 @@ not enough, since that doesn't mention ``g``.
 However, recall that there's a second pattern that's also applicable
 ``(HasType i Prims.nat)``--we can get Z3 to instantiate the quantifier
 if we can inject the predicate ``(HasType (n - 1) nat)`` into Z3's
-context. By using ``trigger_nat``, as shown below, does the trick,
-since F* inserts a proof obligation to show that the argument ``x`` in
-``trigger_nat x`` validates ``(HasType x Prims.nat)``.
+context. Asserting ``has_type (n - 1) nat`` directly, as shown below,
+does the trick.
 
 .. literalinclude:: ../code/AlexOpaque.fst
    :language: fstar

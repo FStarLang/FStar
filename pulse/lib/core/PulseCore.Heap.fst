@@ -1013,7 +1013,8 @@ let upd_gen_fp0 #a #p r x frame (h: full_hheap (pts_to #a #p r x `star` frame)) 
 
 let upd_gen_fp2 #a p r (x: a) (y: a { composable p x y /\ p.refine (op p x y) }) (v: a) (f: frame_preserving_upd p x v) :
     Lemma (compatible p x (op p x y) /\ f (op p x y) == op p v y /\ composable p v y) =
-  p.comm x y; assert compatible p x (op p x y)
+  p.comm x y; assert compatible p x (op p x y);
+  let _ = f (op p x y) in ()
 
 let upd_gen_fp3 #a p r
     (x: a) (y: a { composable p x y })

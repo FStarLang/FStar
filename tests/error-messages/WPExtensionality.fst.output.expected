@@ -3,8 +3,6 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Env = (uu___ : Prims.unit)
-  - VC =
-      forall (p: Prims.pure_post Prims.unit) (any_result: Prims.unit).
-        p any_result
-  - See also Prims.fst(419,90-419,102)
+  - VC = forall (_: Prims.unit). Prims.l_False
+  - See also WPExtensionality.fst(60,19-60,24)
 

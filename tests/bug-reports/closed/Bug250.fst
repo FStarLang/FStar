@@ -15,10 +15,10 @@
 *)
 module Bug250
 
-[@@expect_failure [173]]
+[@@expect_failure [146]]
 val foo : int -> Tot int (ensures (fun _ -> false))
 let foo x = x
 
-[@@expect_failure [173]]
+[@@expect_failure [146]]
 val bar : int -> Tot int (ensures (42 "is the the answer"))
 let bar x = x
