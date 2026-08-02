@@ -448,6 +448,26 @@ Guidelines for the changelog:
     already do.
 
 ## Core typechecker
+  * Auto-generated projectors (`__proj__C__item__f`) and discriminators
+    (`uu___is_C`) are now *declaration-only*: the typechecker no longer emits a
+    `let` with a `match` body for them.  They are instead reduced by a primitive
+    iota rule (in both the normalizer and NBE), axiomatized directly by the SMT
+    encoder as before, and given real code at extraction time.
+
+    Consequences:
+    - `.checked` files get substantially smaller, and projectors can no longer
+      accidentally unfold into a large `match` term during unification.
+    - Projectors/discriminators reduce exactly when a `match` would, i.e. under
+      `iota`.  In particular they are no longer sensitive to `delta_only` /
+      `delta_attr` / `delta_namespace`, and `Env.lookup_definition` returns
+      `None` for them.
+    - Passing a projector or discriminator unapplied where a first-class
+      function is expected still works, but code that relied on the projector
+      being an ordinary `let` (for instance to unfold it explicitly) may need
+      adjustment.
+    - `--ext no_prim_proj` restores the old behaviour for a single
+      `#push-options` scope, as an escape hatch for proofs that regress.
+
   * PR https://github.com/FStarLang/FStar/pull/2760 introduces core typechecking for
     implicits introduced for application of indexed effects combinators. This is a
     breaking change, since indexed effects clients are subject to stricter typechecking.

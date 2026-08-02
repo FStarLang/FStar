@@ -110,6 +110,89 @@ let always_fail lid t =
     } in
     lb
 
+(* Projectors and discriminators are declaration-only (see
+   TcInductive.mk_discriminator_and_indexed_projectors): the typechecker gives
+   them a primitive iota rule and the SMT encoder axiomatizes them directly.
+   Extraction, though, needs real code.  Rather than emitting ML syntax by hand,
+   rebuild here exactly the F* definition that TcInductive used to generate and
+   let the regular extraction path handle it, so that types, records, erasure
+   and every backend keep working. *)
+let disc_proj_lb (tcenv:Env.env) (lid:lident) (us:univ_names) (t:typ) (q:qualifier)
+  : ML (option letbinding) =
+    let d = match q with
+            | Projector (d, _) -> d
+            | Discriminator d -> d
+            | _ -> failwith "disc_proj_lb: impossible" in
+    match Env.datacon_decl tcenv d with
+    | None -> None
+    | Some (fvq, ntps, cbs) ->
+      let us, t' = SS.open_univ_vars us t in
+      let binders, _ = U.arrow_formals t' in
+      if List.length binders = 0 || List.length cbs < ntps then None else
+      let arg_exp = S.bv_to_name (List.last binders).binder_bv in
+      let tps, fields = BU.first_N ntps cbs in
+      let all_params = List.map (fun b -> {b with binder_qual=Some S.imp_tag}) tps @ fields in
+      (* Mirrors the patterns TcInductive builds: the inductive's parameters are
+         dot patterns, the fields are (untyped) pattern variables. *)
+      let arg_pats (proj_idx:option int) =
+        all_params |> List.mapi (fun j ({binder_bv=x; binder_qual=imp}) ->
+          let b = S.is_bqual_implicit_or_meta imp in
+          if proj_idx = Some j
+          then withinfo (Pat_var x) Range.dummyRange, b
+          else if b && j < ntps
+          then (* The inductive's j-th parameter is the projector's j-th binder.
+                  Extraction reads these dot patterns to instantiate the data
+                  constructor's ML type scheme, so they must be filled in. *)
+               let t = S.bv_to_name (List.nth binders j).binder_bv in
+               withinfo (Pat_dot_term (Some t)) Range.dummyRange, b
+          else withinfo (Pat_var (S.gen_bv (string_of_id x.ppname) None S.tun)) Range.dummyRange, b)
+      in
+      let mk_pat_cons pats = withinfo (Pat_cons (S.lid_as_fv d (Some fvq), None, pats)) Range.dummyRange in
+      let body_opt =
+        match q with
+        | Discriminator _ ->
+          let pat_true = mk_pat_cons (arg_pats None), None, U.exp_true_bool in
+          let pat_false = withinfo (Pat_var (S.new_bv None S.tun)) Range.dummyRange, None, U.exp_false_bool in
+          Some (S.mk (Tm_match {scrutinee=arg_exp;
+                                ret_opt=None;
+                                brs=[U.branch pat_true; U.branch pat_false];
+                                rc_opt=None}) Range.dummyRange)
+        | _ ->
+          (* Recover the field index the same way TcInductive named the
+             projector, so that unnamed fields work too. *)
+          let idx =
+            fields |> List.mapi (fun j b -> (j, b))
+                   |> List.tryPick (fun (j, ({binder_bv=x})) ->
+                        if Ident.lid_equals (U.mk_field_projector_name d x j) lid
+                        then Some j else None)
+          in
+          match idx with
+          | None -> None
+          | Some i ->
+            let pats = arg_pats (Some (ntps + i)) in
+            let projection =
+              match List.nth pats (ntps + i) with
+              | { v = Pat_var x }, _ -> x
+              | _ -> failwith "disc_proj_lb: impossible"
+            in
+            let br = mk_pat_cons pats, None, S.bv_to_name projection in
+            Some (S.mk (Tm_match {scrutinee=arg_exp;
+                                  ret_opt=None;
+                                  brs=[U.branch br];
+                                  rc_opt=None}) Range.dummyRange)
+      in
+      match body_opt with
+      | None -> None
+      | Some body ->
+        let imp = U.abs binders body None in
+        Some (U.mk_letbinding (Inr (S.lid_and_dd_as_fv lid None))
+                              us
+                              t
+                              PC.effect_Tot_lid
+                              (SS.close_univ_vars us imp)
+                              []
+                              Range.dummyRange)
+
 let as_pair = function
    | [a;b] -> (a,b)
    | _ -> failwith "Expected a list with 2 elements"
@@ -1025,26 +1108,25 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
 
     | Sig_let _ -> extract_sig_let g se
 
-    | Sig_declare_typ {lid; t} ->
+    | Sig_declare_typ {lid; us; t} ->
       let quals = se.sigquals in
       if quals |> List.contains Assumption
       && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
       then let always_fail =
              { se with sigel = Sig_let {lbs=(false, [always_fail lid t]); lids=[]} } in
-           let g, mlm = extract_sig g always_fail in //extend the scope with the new name
-           match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-           | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
-             g, [mk_mlmodule1 (MLM_Loc (Util.mlloc_of_range se.sigrng));
-                 Term.ind_discriminator_body g lid l]
-
-           | _ ->
-             begin match BU.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
-                   (* TODO : this could fail, it happens that projectors for variants are assumed *)
-                   | Some _ -> //it must be a record projector, since other projectors are not assumed
-                     g, [] //records are extracted as ML records; no projectors for them
-                   | _ ->
-                     g, mlm //in all other cases, generate mlm, a stub that always fails
-             end
+           let disc_proj =
+             match quals |> List.tryFind (fun q -> Discriminator? q || Projector? q) with
+             | None -> None
+             | Some q -> disc_proj_lb (tcenv_of_uenv g) lid us t q
+           in
+           match disc_proj with
+           | Some lb ->
+             (* Rebuild and extract the definition the typechecker no longer emits. *)
+             extract_sig g { se with sigel = Sig_let {lbs=(false, [lb]); lids=[]};
+                                     sigquals = se.sigquals |> List.filter (fun q -> not (Assumption? q)) }
+           | None ->
+             let g, mlm = extract_sig g always_fail in //extend the scope with the new name
+             g, mlm //in all other cases, generate mlm, a stub that always fails
       else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
                      //or, it must be erased
 

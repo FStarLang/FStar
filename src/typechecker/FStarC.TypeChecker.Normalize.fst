@@ -135,10 +135,63 @@ let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bo
     in
     check a
 
-(* Check for strict applications (both strict_on_arguments and projectors, when
-the flag for reducing projections is set). The boolean is whether we
-should "force" then unfolding regardless of what delta says. We set it to true
-for projectors. *)
+(* Reduce a projector or discriminator applied to a constructor, structurally.
+
+   Projectors and discriminators are declared (Sig_declare_typ carrying a
+   Projector/Discriminator qualifier) rather than defined; see
+   TcInductive.mk_discriminator_and_indexed_projectors.  The SMT encoder
+   already axiomatizes them directly against its theory of datatypes
+   (Encode.mk_disc_proj_axioms), and this is the corresponding rule for the
+   normalizer.
+
+   Doing it here rather than by unfolding a definition into a [match] avoids
+   materializing that match at all: it is large (one branch per field, plus a
+   catch-all), it is re-traversed by every subsequent normalization, and its
+   binders are a recurring source of higher-order unification problems.
+
+   This is an iota rule --- it reduces a destructor applied to a constructor
+   --- so it is gated on cfg.steps.iota, not on the delta level: there is no
+   definition whose visibility a delta level could control. *)
+let reduce_disc_proj (cfg : Cfg.cfg) (renorm : term -> ML term) (hua : fv & universes & args) : ML (option term) =
+  let (h, _us, args) = hua in
+  let tcenv = cfg.tcenv in
+  if Options.Ext.enabled "no_prim_proj" then None else
+  match Env.disc_proj_info tcenv h.fv_name with
+  | None -> None
+  | Some (q, n_indexed, idx) ->
+    let d = match q with
+            | Projector (d, _) -> d
+            | Discriminator d -> d
+            | _ -> failwith "reduce_disc_proj: impossible" in
+    if List.length args <= n_indexed then None else
+    let scrutinee = fst (List.nth args n_indexed) in
+    (* A projector can be over-applied (e.g. [QProc?.wp qc k s0]); the extra
+       arguments must be re-applied to the projected field. *)
+    let _, rest = BU.first_N (n_indexed + 1) args in
+    (* The scrutinee plays the role of a match scrutinee, which the normalizer
+       always reduces; but here it sits in an argument position, which cfg.hnf
+       leaves alone.  Reduce it explicitly in that case. *)
+    let scrutinee = if cfg.steps.hnf then renorm scrutinee else scrutinee in
+    match U.hua (U.unmeta scrutinee) with
+    | None -> None
+    | Some (c, _, cargs) ->
+      if not (Env.is_datacon tcenv c.fv_name) then None else
+      let same = Ident.lid_equals c.fv_name d in
+      match q with
+      | Discriminator _ ->
+        (* Well-typedness guarantees c and d belong to the same inductive, so a
+           mismatch really does mean the discriminator is false. *)
+        Some (U.mk_app (if same then U.exp_true_bool else U.exp_false_bool) rest)
+      | Projector _ ->
+        (* Projecting out of a different constructor is stuck, not false. *)
+        if not same then None else
+        match idx with
+        | None -> None
+        | Some i ->
+          if List.length cargs <= i then None
+          else Some (U.mk_app (fst (List.nth cargs i)) rest)
+
+
 let check_strict (cfg : Cfg.cfg) (hua : fv & universes & args) : ML (option bool) =
   let open FStarC.Class.Monad in
   if check_strict_app cfg hua then (
@@ -2284,6 +2337,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
       match U.hua t with
       | None -> do_rebuild cfg env stack t
       | Some hua ->
+        match (if cfg.steps.iota
+               then reduce_disc_proj cfg
+                      (fun t -> norm ({cfg with steps = {cfg.steps with hnf=false}}) [] [] t)
+                      hua
+               else None) with
+        | Some t' ->
+          log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
+                                           (show t) (show t'));
+          norm cfg env stack t'
+        | None ->
         match check_strict cfg hua with
         | Some force -> (
           let h, u, a = hua in

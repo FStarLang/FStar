@@ -1065,10 +1065,14 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
         else
             let discriminator_name = U.mk_discriminator lid in
             let no_decl = false in
-            let only_decl =
-              early_prims_inductive ||
-              U.has_attribute attrs C.no_auto_projectors_attr
-            in
+            (* Discriminators and projectors are always declaration-only:
+               Normalize.reduce_disc_proj gives them their iota rule, the SMT
+               encoder axiomatizes them against its theory of datatypes, and
+               Extraction.ML.Term.ind_discriminator_body generates their ML
+               code.  Emitting a Sig_let with a match body on top of that only
+               bloats checked files and gives the unifier a large term to
+               unfold into. *)
+            let only_decl = true in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
                 S.Discriminator lid ::
@@ -1171,10 +1175,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             then S.mk_GTotal t
             else S.mk_Total t in
           let t = SS.close_univ_vars uvs <| U.arrow binders result_comp in
-          let only_decl =
-            early_prims_inductive ||
-            U.has_attribute attrs C.no_auto_projectors_attr
-          in
+          let only_decl = true in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
           (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
           let no_decl = false (* Syntax.is_type x.sort *) in
