@@ -2134,88 +2134,58 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
           let req = Requires (mk_term (Name C.true_lid) t.range Formula) in
           mk_term req t.range Type_level, Nothing
         in
+        let ens_true =
+          let ens = Ensures (mk_term (Name C.true_lid) t.range Formula) in
+          mk_term ens t.range Type_level, Nothing
+        in
         (* The postcondition for Lemma is thunked, to allow to assume the precondition
          * (c.f. #57), so add the thunking here *)
         let thunk_ens (e, i) = (thunk e, i) in
-        let fail_lemma () =
+        let fail_lemma #a () : ML a =
              let open FStarC.Pprint in
              let expected_one_of = ["Lemma post";
+                                    "Lemma (requires pre)";
                                     "Lemma (ensures post)";
-                                    "Lemma (requires pre) (ensures post)";
-                                    "Lemma post [SMTPat ...]";
-                                    "Lemma (ensures post) [SMTPat ...]";
-                                    "Lemma (ensures post) (decreases d)";
-                                    "Lemma (ensures post) (decreases d) [SMTPat ...]";
-                                    "Lemma (requires pre) (ensures post) (decreases d)";
-                                    "Lemma (requires pre) (ensures post) [SMTPat ...]";
-                                    "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
+                                    "Lemma (requires pre) (ensures post)"] in
              raise_error t Errors.Fatal_InvalidLemmaArgument [
                 text "Invalid arguments to 'Lemma'; expected one of the following"
-                  ^^ sublist empty (List.map doc_of_string expected_one_of)
+                  ^^ sublist empty (List.map doc_of_string expected_one_of);
+                text "each of which may additionally be followed by a (decreases d) clause and/or an [SMTPat ...] list."
              ]
         in
-        let args = match args with
-          | [] -> fail_lemma ()
-
-          | [req] //a single requires clause (cf. Issue #1208)
-               when is_requires req ->
-            fail_lemma()
-
-          | [smtpat]
-                when is_smt_pat smtpat ->
-            fail_lemma()
-
-          | [dec]
-                when is_decreases dec ->
-            fail_lemma()
-
-          | [ens] -> //otherwise, a single argument is always treated as just an ensures clause
-            [unit_tm;req_true;thunk_ens ens;nil_pat]
-
-          | [req;ens]
-                when is_requires req
-                  && is_ensures ens ->
-            [unit_tm;req;thunk_ens ens;nil_pat]
-
-          | [ens;smtpat] //either Lemma p [SMTPat ...]; or Lemma (ensures p) [SMTPat ...]
-                when not (is_requires ens)
-                  && not (is_smt_pat ens)
-                  && not (is_decreases ens)
-                  && is_smt_pat smtpat ->
-            [unit_tm;req_true;thunk_ens ens;smtpat]
-
-          | [ens;dec]
-                when is_ensures ens
-                  && is_decreases dec ->
-            [unit_tm;req_true;thunk_ens ens;nil_pat;dec]
-
-          | [ens;dec;smtpat]
-                when is_ensures ens
-                  && is_decreases dec
-                  && is_smt_pat smtpat ->
-            [unit_tm;req_true;thunk_ens ens;smtpat;dec]
-
-          | [req;ens;dec]
-                when is_requires req
-                  && is_ensures ens
-                  && is_decreases dec ->
-            [unit_tm;req;thunk_ens ens;nil_pat;dec]
-
-          | [req;ens;smtpat]
-                when is_requires req
-                  && is_ensures ens
-                  && is_smt_pat smtpat ->
-            [unit_tm;req;thunk_ens ens;smtpat]
-
-          | [req;ens;dec;smtpat]
-                when is_requires req
-                  && is_ensures ens
-                  && is_smt_pat smtpat
-                  && is_decreases dec ->
-            [unit_tm;req;thunk_ens ens;dec;smtpat]
-
-          | _other ->
-            fail_lemma()
+        (* The precondition and the postcondition are both optional (a missing
+           one defaults to [True]), but at least one of them must be given.
+           The postcondition may be written positionally, i.e. [Lemma post].
+           A (decreases d) clause and an [SMTPat ...] list may be added to any
+           of these forms, in any order. *)
+        let args =
+          let tagged_req, args = List.partition is_requires args in
+          let tagged_ens, args = List.partition is_ensures args in
+          let dec,        args = List.partition is_decreases args in
+          let smtpat,     args = List.partition is_smt_pat args in
+          (* Whatever is left over is the untagged postcondition, if any. *)
+          let ens =
+            match tagged_ens, args with
+            | [ens], [] -> Some ens
+            | [], [ens] -> Some ens
+            | [], [] -> None
+            | _ -> fail_lemma ()
+          in
+          let req =
+            match tagged_req with
+            | [] -> None
+            | [req] -> Some req
+            | _ -> fail_lemma ()
+          in
+          if None? req && None? ens then fail_lemma ();
+          if List.length dec > 1 then fail_lemma ();
+          let smtpat =
+            match smtpat with
+            | [] -> nil_pat
+            | [p] -> p
+            | _ -> fail_lemma ()
+          in
+          [unit_tm; Option.dflt req_true req; thunk_ens (Option.dflt ens_true ens); smtpat] @ dec
         in
         let head_and_attributes = fail_or env
           (Env.try_lookup_effect_name_and_attributes env)
