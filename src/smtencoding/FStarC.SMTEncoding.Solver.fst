@@ -1526,6 +1526,7 @@ let solve use_env_msg tcenv q : ML unit =
          [text "A query could not be solved internally, and --no_smt was given.";
           text "Query = " ^/^ pp q])
   else (
+    Encode.flush_deferred_encodings ();
     Profiling.profile
       (fun () -> do_solve_maybe_split use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
@@ -1544,6 +1545,7 @@ It WILL raise fuel incrementally to attempt to solve the query
 let solve_sync use_env_msg tcenv (q:Syntax.term) : ML answer =
     if Options.no_smt () then ans_fail
     else
+    let _ = Encode.flush_deferred_encodings () in
     let go () =
       if !dbg_SMTQuery then (
         let open FStarC.Errors.Msg in

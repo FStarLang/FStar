@@ -35,7 +35,6 @@ let mkAssume x : ML decl =
         assumption_caption=cap;
         assumption_term=tm;
         assumption_fact_ids=[];
-        assumption_free_names=free_top_level_names tm;
     })
 let mkTrue = Term.mkTrue
 let mkFalse = Term.mkFalse

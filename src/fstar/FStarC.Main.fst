@@ -273,8 +273,8 @@ let go_normal () : ML unit =
         print1 "Deps: %s\n" (show deps);
         print1 "Inclusion info: %s\n" (show tcr.mii);
         print1 "Checked module: %s\n" (show tcr.checked_module);
-        print1 "SMT decls: %s\n" (show <| fst tcr.smt_decls);
-        print1 "SMT fvars: %s\n" (show <| snd tcr.smt_decls)
+        print1 "SMT decls: %s\n" (show <| tcr.smt_encoding.me_decls ());
+        print1 "SMT fvars: %s\n" (show <| tcr.smt_encoding.me_fvbs)
     )
 
     (* --read_krml_file: read and print a krml file *)

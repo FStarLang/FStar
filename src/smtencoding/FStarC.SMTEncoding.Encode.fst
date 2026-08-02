@@ -2131,6 +2131,25 @@ let set_env env = match !last_env with
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
 let get_current_env tcenv = get_env (Env.current_module tcenv) tcenv
+
+(* Encodings of dependency modules loaded from their .checked files are
+   deferred; see the comment on [defer_encoding] in the interface. *)
+let deferred_encodings : ref (list (unit -> ML unit)) = mk_ref []
+let defer_encoding (f:unit -> ML unit) : ML unit =
+  deferred_encodings := f :: !deferred_encodings
+let flush_deferred_encodings () : ML unit =
+  match !deferred_encodings with
+  | [] -> ()
+  | fs ->
+    (* Clear first: the thunks call back into this module, and a nested flush
+       must not run them a second time. *)
+    deferred_encodings := [];
+    let rec run (l:list (unit -> ML unit)) : ML unit =
+      match l with
+      | [] -> ()
+      | f :: tl -> f (); run tl
+    in
+    run (List.rev fs)
 let push_env () = match !last_env with
     | [] -> failwith "Empty env stack"
     | hd::tl ->
@@ -2144,9 +2163,12 @@ let rollback_env depth = FStarC.Common.rollback "SMTEncoding.Encode.env" pop_env
 (* TOP-LEVEL API *)
 
 let init tcenv =
+    deferred_encodings := [];
     init_env tcenv;
     Z3.giveZ3 [DefPrelude]
 let snapshot_encoding msg = BU.atomically (fun () ->
+    (* Anything still pending belongs below the context we are about to push. *)
+    flush_deferred_encodings ();
     if Debug.medium () then Format.print1 "Encode.snapshot_encoding: %s\n" msg;
     let env_depth, () = snapshot_env () in
     let varops_depth, () = varops.snapshot () in
@@ -2201,10 +2223,10 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) : ML decls_t =
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else (
       match SMap.try_find env.global_cache (elt.key |> Some?.v) with
-      | Some (cache_elt, _) -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
-                                                                                             //AND drop elt
+      | Some (a_names, _) -> [Term.RetainAssumptions a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
+                                                                                  //AND drop elt
       | None ->  //no hit, update cache and retain elt
-        SMap.add env.global_cache (elt.key |> Some?.v) (elt, Env.current_module env.tcenv);
+        SMap.add env.global_cache (elt.key |> Some?.v) (elt.a_names, Env.current_module env.tcenv);
         [elt]
     )
   )
@@ -2217,21 +2239,100 @@ let encode_sig tcenv se =
     else decls in
    if Debug.medium ()
    then Format.print1 "+++++++++++Encoding sigelt %s\n" (show se);
+   flush_deferred_encodings ();
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
    set_env env;
    Z3.giveZ3 (caption (decls |> recover_caching_and_update_env env |> decls_list_of))
 
-let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) : ML unit =
-  let caption decls =
+(* Register a whole module's encoding with the solver.
+
+   Only [index] -- the module's pruning summary, see
+   FStarC.SMTEncoding.Pruning.elt_summary -- is inspected here; [decls] is a
+   thunk that reads the encoding itself, and is forced only if the solver ends
+   up needing some of the module's declarations. For a module loaded from a
+   .checked file, that means its SMT encoding usually stays on disk. *)
+let give_index_to_z3_and_set_env
+      (env:env_t) (name:string)
+      (index:list Pruning.elt_summary)
+      (decls:unit -> ML decls_t)
+: ML unit
+= set_env ({env with warn=true});
+  (* Hash-consing, exactly as recover_caching_and_update_env does it, but driven
+     by the index alone. [dropped] records the decision for each elt, so that it
+     can be replayed on the declarations if they are ever read. *)
+  let dropped, sums =
+    index |> List.fold_left
+      (fun (dropped, sums) elt ->
+        match elt.Pruning.elts_key with
+        | None -> None::dropped, List.rev_append elt.Pruning.elts_sums sums //not meant to be hashconsed, keep it
+        | Some key ->
+          match SMap.try_find env.global_cache key with
+          | Some (a_names, _) -> //hit: retain a_names from the hit entry AND drop elt
+            Some a_names::dropped, Pruning.Sum_retain a_names :: sums
+          | None -> //no hit, update cache and retain elt
+            SMap.add env.global_cache key (elt.Pruning.elts_a_names, Env.current_module env.tcenv);
+            None::dropped, List.rev_append elt.Pruning.elts_sums sums)
+      ([], [])
+  in
+  let dropped = List.rev dropped in
+  let sums = List.rev sums in
+  let memo : ref (option (list decl)) = mk_ref None in
+  (* Read the encoding, replaying the hash-consing decisions taken above *)
+  let force_flat () : ML (list decl) =
+    match !memo with
+    | Some ds -> ds
+    | None ->
+      let ds =
+        List.map2
+          (fun (elt:decls_elt) d ->
+            match d with
+            | Some a_names -> [Term.RetainAssumptions a_names]
+            | None -> elt.decls)
+          (decls ())
+          dropped
+        |> List.flatten
+      in
+      memo := Some ds;
+      ds
+  in
+  let force () : ML (list decl) =
+    let ds = force_flat () in
     if Options.log_queries()
     then let msg = "Externals for " ^ name in
-         [Module name (Caption msg::decls@[Caption ("End " ^ msg)])]
-    else [Module name decls] in
-  set_env ({env with warn=true});
-  //recover caching and flatten before giving to Z3
-  let z3_decls = caption (decls |> recover_caching_and_update_env env |> decls_list_of) in
-  Z3.giveZ3 z3_decls
+         [Module name (Caption msg::ds@[Caption ("End " ^ msg)])]
+    else [Module name ds]
+  in
+  let name_map : ref (option (PSMap.t decl)) = mk_ref None in
+  let resolve (n:string) : ML (option decl) =
+    let m =
+      match !name_map with
+      | Some m -> m
+      | None ->
+        let m =
+          List.fold_left
+            (fun m d ->
+              match d with
+              | Assume {assumption_name=x}
+              | DeclFun x _ _ _
+              | DefineFun x _ _ _ _ -> PSMap.add m x d
+              | _ -> m)
+            (PSMap.empty ())
+            (force_flat ())
+        in
+        name_map := Some m;
+        m
+    in
+    PSMap.try_find m n
+  in
+  (* Pruning only ever asks for assumptions and (declare-fun)/(define-fun)s by
+     name; if it is disabled we have to hand over everything right away. *)
+  if Options.Ext.enabled "context_pruning" && Options.Ext.enabled "prune_decls"
+  then Z3.giveZ3_lazy { ld_sums = sums; ld_resolve = resolve; ld_force = force }
+  else Z3.giveZ3 (force ())
+
+let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) : ML unit =
+  give_index_to_z3_and_set_env env name (Pruning.summarize_elts decls) (fun _ -> decls)
 
 instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap.t a)) = {
   show = (fun smap -> SMap.fold smap (fun k v acc -> Format.fmt3 "%s -> %s\n%s" (show k) (show v) acc) "")
@@ -2245,6 +2346,8 @@ instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap
    live axioms) must not be visible while checking the implementation. *)
 let encode_modul_aux (give_to_z3:bool) tcenv modul =
   begin
+    (* The dependences' declarations must reach the solver before this module's. *)
+    flush_deferred_encodings ();
     let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
@@ -2266,7 +2369,7 @@ let encode_modul_aux (give_to_z3:bool) tcenv modul =
         (fun k ->
           match SMap.try_find env.global_cache k with
           | None -> ()
-          | Some (elts, m) -> 
+          | Some (_, m) -> 
             if Ident.lid_equals m modul.name then SMap.remove env.global_cache k else ())
         keys;
       let fvb =
@@ -2301,25 +2404,28 @@ let encode_modul_aux (give_to_z3:bool) tcenv modul =
       List.rev g', env
     in
     let decls, env = encode_signature ({env with warn=false}) modul.declarations in
-    if give_to_z3 then give_decls_to_z3_and_set_env env name decls;
+    let index = Pruning.summarize_elts decls in
+    if give_to_z3 then give_index_to_z3_and_set_env env name index (fun _ -> decls);
     if Debug.medium () then Format.print1 "Done encoding externals for %s\n" name;
-    decls, env |> get_current_module_fvbs
+    { me_index = index;
+      me_fvbs = env |> get_current_module_fvbs;
+      me_decls = (fun _ -> decls) }
   ) end
 
 let encode_modul tcenv modul = encode_modul_aux true tcenv modul
 let encode_modul_no_solver tcenv modul = encode_modul_aux false tcenv modul
 
-let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
+let encode_modul_from_cache tcenv tcmod (me:module_encoding) =
   let tcenv = Env.set_current_module tcenv tcmod.name in
     let name = Format.fmt2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
     if Debug.medium ()
-    then Format.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> show);
+    then Format.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length me.me_index |> show);
     let env = get_env tcmod.name tcenv |> reset_current_module_fvbs in
     let env =
-      fvbs |> List.rev |> List.fold_left (fun env fvb ->
+      me.me_fvbs |> List.rev |> List.fold_left (fun env fvb ->
         add_fvar_binding_to_env fvb env
       ) env in
-    give_decls_to_z3_and_set_env env name decls;
+    give_index_to_z3_and_set_env env name me.me_index me.me_decls;
     if Debug.medium () then Format.print1 "Done encoding externals from cache for %s\n" name
 
 open FStarC.SMTEncoding.Z3

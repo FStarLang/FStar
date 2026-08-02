@@ -651,8 +651,7 @@ let fresh_token (tok, univ_fvs, sort) id =
     let a = {assumption_name=escape a_name;
              assumption_caption=Some "fresh token";
              assumption_term=tm;
-             assumption_fact_ids=[];
-             assumption_free_names=free_top_level_names tm} in
+             assumption_fact_ids=[]} in
     Assume a
 
 let fresh_constructor rng (name, arg_sorts, sort, id) =
@@ -667,8 +666,7 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
     assumption_name=escape a_name;
     assumption_caption=Some "Constructor distinct";
     assumption_term=tm;
-    assumption_fact_ids=[];
-    assumption_free_names=free_top_level_names tm
+    assumption_fact_ids=[]
   } in
   Assume a
 
@@ -694,8 +692,7 @@ let injective_constructor
                     assumption_name = escape ("projection_inverse_"^name);
                     assumption_caption = Some "Projection inverse";
                     assumption_term = tm;
-                    assumption_fact_ids = [];
-                    assumption_free_names = free_top_level_names tm
+                    assumption_fact_ids = []
                  } in
               [proj_name; Assume a]
             else [])
@@ -763,8 +760,7 @@ let constructor_to_decl rng constr =
           assumption_name=escape ("constructor_base_" ^ constr.constr_name);
           assumption_caption=Some "Constructor base";
           assumption_term=q;
-          assumption_fact_ids=[];
-          assumption_free_names=free_top_level_names q
+          assumption_fact_ids=[]
         } in
         [decl; Assume a]
     )

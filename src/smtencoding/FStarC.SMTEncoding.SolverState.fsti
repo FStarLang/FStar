@@ -37,7 +37,18 @@ open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
 module U = FStarC.SMTEncoding.UnsatCore
+module Pruning = FStarC.SMTEncoding.Pruning
 type using_facts_from_setting = list (list string & bool)
+
+(* A batch of declarations that is given to the solver lazily: only [ld_sums],
+   the pruning summary, is needed up front. The declarations themselves are
+   produced by [ld_resolve] (one at a time, by name) or [ld_force] (all of
+   them), and only if context pruning decides they are relevant. *)
+type lazy_decls = {
+  ld_sums: list Pruning.decl_summary;
+  ld_resolve: string -> ML (option decl);
+  ld_force: unit -> ML (list decl);
+}
 
 // Abstract state of the solver
 val solver_state : Type0
@@ -59,6 +70,9 @@ val pop (s:solver_state) : ML solver_state
 
 // Give the solver some declarations
 val give (ds:list decl) (s:solver_state) : ML solver_state
+
+// Give the solver a whole module's encoding, without deserializing it
+val give_lazy (ld:lazy_decls) (s:solver_state) : ML solver_state
 
 // Reset the state, so that the next flush will yield all the declarations
 // that should be sent to a _fresh_ Z3 process to bring it to a state
