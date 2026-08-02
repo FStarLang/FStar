@@ -934,7 +934,6 @@ let e_vconfig =
                    S.as_arg (embed vcfg.initial_ifuel                             rng None norm);
                    S.as_arg (embed vcfg.max_ifuel                                 rng None norm);
                    S.as_arg (embed vcfg.detail_errors                             rng None norm);
-                   S.as_arg (embed vcfg.detail_hint_replay                        rng None norm);
                    S.as_arg (embed vcfg.no_smt                                    rng None norm);
                    S.as_arg (embed vcfg.quake_lo                                  rng None norm);
                    S.as_arg (embed vcfg.quake_hi                                  rng None norm);
@@ -954,7 +953,6 @@ let e_vconfig =
                    S.as_arg (embed vcfg.z3seed                                    rng None norm);
                    S.as_arg (embed vcfg.z3version                                 rng None norm);
                    S.as_arg (embed vcfg.trivial_pre_for_unannotated_effectful_fns rng None norm);
-                   S.as_arg (embed vcfg.reuse_hint_for                            rng None norm);
                   ]
                   rng
     in
@@ -968,7 +966,6 @@ let e_vconfig =
             (initial_ifuel, _);
             (max_ifuel, _);
             (detail_errors, _);
-            (detail_hint_replay, _);
             (no_smt, _);
             (quake_lo, _);
             (quake_hi, _);
@@ -987,8 +984,7 @@ let e_vconfig =
             (z3rlimit_factor, _);
             (z3seed, _);
             (z3version, _);
-            (trivial_pre_for_unannotated_effectful_fns, _);
-            (reuse_hint_for, _)
+            (trivial_pre_for_unannotated_effectful_fns, _)
             ] when S.fv_eq_lid fv PC.mkvconfig_lid ->
                   let open FStarC.Class.Monad in
                   let! initial_fuel = try_unembed initial_fuel norm in
@@ -996,7 +992,6 @@ let e_vconfig =
                   let! initial_ifuel = try_unembed initial_ifuel norm in
                   let! max_ifuel = try_unembed max_ifuel norm in
                   let! detail_errors = try_unembed detail_errors norm in
-                  let! detail_hint_replay = try_unembed detail_hint_replay norm in
                   let! no_smt = try_unembed no_smt norm in
                   let! quake_lo = try_unembed quake_lo norm in
                   let! quake_hi = try_unembed quake_hi norm in
@@ -1016,14 +1011,12 @@ let e_vconfig =
                   let! z3seed = try_unembed z3seed norm in
                   let! z3version = try_unembed z3version norm in
                   let! trivial_pre_for_unannotated_effectful_fns = try_unembed trivial_pre_for_unannotated_effectful_fns norm in
-                  let! reuse_hint_for = try_unembed reuse_hint_for norm in
                   Some ({
                     initial_fuel = initial_fuel;
                     max_fuel = max_fuel;
                     initial_ifuel = initial_ifuel;
                     max_ifuel = max_ifuel;
                     detail_errors = detail_errors;
-                    detail_hint_replay = detail_hint_replay;
                     no_smt = no_smt;
                     quake_lo = quake_lo;
                     quake_hi = quake_hi;
@@ -1043,7 +1036,6 @@ let e_vconfig =
                     z3seed = z3seed;
                     z3version = z3version;
                     trivial_pre_for_unannotated_effectful_fns = trivial_pre_for_unannotated_effectful_fns;
-                    reuse_hint_for = reuse_hint_for;
                   })
         | _ ->
           None

@@ -11,10 +11,9 @@ include $(FSTAR_ROOT)/mk/test.mk
 
 OTHERFLAGS += --ext fstar:no_absolute_paths
 
-# Remove --query_stats and --hint_info from this subdir, since
+# Remove --query_stats from this subdir, since
 # they output timing info.
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
-OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 
 FAILING := $(patsubst %.fst,%,$(wildcard Iface*.fst))
 

@@ -15,7 +15,6 @@
 *)
 module X64.Poly1305
 #reset-options "--z3rlimit 40 --retry 5"
-#set-options "--hint_info"
 #set-options "--admit_smt_queries true"
 open X64.Machine_s
 open X64.Vale.State_i

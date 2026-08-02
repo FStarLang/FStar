@@ -25,7 +25,6 @@ type vconfig = {
   initial_ifuel                             : int;
   max_ifuel                                 : int;
   detail_errors                             : bool;
-  detail_hint_replay                        : bool;
   no_smt                                    : bool;
   quake_lo                                  : int;
   quake_hi                                  : int;
@@ -45,7 +44,6 @@ type vconfig = {
   z3seed                                    : int;
   z3version                                 : string;
   trivial_pre_for_unannotated_effectful_fns : bool;
-  reuse_hint_for                            : option string;
 }
 
 (** Marker to check a sigelt with a particular vconfig *)

@@ -104,14 +104,14 @@
   - Env = (uu___ : Prims.unit)
   - VC = forall (x: Prims.nat). x = 0
 
-* Info at TestErrorLocations.fst(101,12-101,13):
+* Info at TestErrorLocations.fst(101,17-101,18):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (p /\ q) got type Prims.unit
   - The SMT solver could not prove the query.
   - Env = (p : Prims.prop) (q : Prims.prop)
   - VC = p /\ q
-  - See also TestErrorLocations.fst(100,19-100,20)
+  - See also TestErrorLocations.fst(100,21-100,22)
 
 * Info at TestErrorLocations.fst(107,17-107,18):
   - Expected failure:

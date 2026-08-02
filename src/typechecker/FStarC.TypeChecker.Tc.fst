@@ -81,13 +81,7 @@ let set_hint_correlator env se =
 
     let typ = match sigelt_typ se with | Some t -> t | _ -> S.tun in
 
-    match Options.reuse_hint_for () with
-    | Some l ->
-      let lid = Ident.lid_add_suffix (Env.current_module env) l in
-      {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
-
-    | None ->
-      let lids = U.lids_of_sigelt se in
+    let lids = U.lids_of_sigelt se in
       let lid = match lids with
             | [] -> Ident.lid_add_suffix (Env.current_module env)
                                          (GenSym.next_id () |> show) // GM: Should we really touch the gensym?
@@ -1356,10 +1350,6 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
       (Some (Ident.string_of_lid (Env.current_module env)))      
       "FStarC.TypeChecker.Tc.encode_sig";
 
-
-    (* Potentially write hints to disk after every query, when on interactive mode. *)
-    if Options.interactive () then
-      SMTEncoding.Solver.flush_hints ();
 
     (* Now that the implementation has been checked, verify that it really does
        subsume what the interface declared. *)

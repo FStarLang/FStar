@@ -18,11 +18,10 @@ open FStarC.Effect
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-module U = FStarC.SMTEncoding.UnsatCore
 module SolverState = FStarC.SMTEncoding.SolverState
 
 type z3status =
-    | UNSAT   of option U.unsat_core
+    | UNSAT
     | SAT     of error_labels & option string         //error labels & z3 reason
     | UNKNOWN of error_labels & option string         //error labels & z3 reason
     | TIMEOUT of error_labels & option string         //error labels & z3 reason
@@ -34,7 +33,6 @@ type z3result = {
       z3result_time        : int;
       z3result_initial_statistics : z3statistics;
       z3result_statistics  : z3statistics;
-      z3result_query_hash  : option string;
       z3result_log_file    : option string
 }
 
@@ -58,20 +56,16 @@ val giveZ3_lazy : SolverState.lazy_decls -> ML unit
 
 val ask_text
        : r:Range.t
-       -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
-       -> core:option U.unsat_core
        -> ML string
 
 val ask: r:Range.t
-       -> cache:option string // hash
        -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
        -> fresh:bool
-       -> core:option U.unsat_core
        -> ML z3result
 
 (* This will make sure the solver is in a fresh state, potentially

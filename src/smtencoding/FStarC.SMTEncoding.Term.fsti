@@ -144,7 +144,6 @@ type decl =
   | Push       : int -> decl
   | Pop        : int -> decl
   | CheckSat
-  | GetUnsatCore
   | SetOption  : string -> string -> decl
   | GetStatistics
   | GetReasonUnknown

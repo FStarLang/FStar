@@ -28,8 +28,7 @@ type labels = list label
 
 val label_goals : option (unit -> ML string) -> range -> q:term -> ML (labels & term)
 
-val detail_errors :  bool //detail_hint_replay?
-                  -> TypeChecker.Env.env
+val detail_errors :  TypeChecker.Env.env
                   -> labels
                   -> (list decl -> ML Z3.z3result)
                   -> ML unit

@@ -525,8 +525,7 @@ and tc_one_file_no_frame
           extracted_defs,
           env
       in
-      SMT.with_hints_db (Pars.find_file fn) 
-        check_mod
+      check_mod ()
   in
   if not (Options.cache_off()) then
       let r = 

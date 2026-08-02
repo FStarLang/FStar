@@ -23,7 +23,6 @@ open FStarC.Class.Show
 open FStarC.Class.Setlike
 module BU = FStarC.Util
 module Pruning = FStarC.SMTEncoding.Pruning
-module U = FStarC.SMTEncoding.UnsatCore
 module TcEnv = FStarC.TypeChecker.Env
 
 let decl_name_set = PSMap.t bool
@@ -493,19 +492,6 @@ let finish_query (msg:string) (s:solver_state)
   let s = pop s in
   let hd, tl = peek s in
   { s with levels = { hd with pruning_roots = None } :: tl }
-
-(* Filter all declarations visible with an unsat core *)
-let filter_with_unsat_core queryid (core:U.unsat_core) (s:solver_state) 
-: ML (list decl)
-= let rec all_decls levels = 
-    match levels with
-    | [last] -> last.all_decls_at_level_rev
-    | level :: levels -> 
-      level.all_decls_at_level_rev@Given [Push <| List.length levels]::all_decls levels
-  in
-  let all_decls = all_decls s.levels in
-  let all_decls = List.flatten <| List.rev <| List.map force_given all_decls in
-  U.filter core all_decls
 
 let would_have_pruned (s:solver_state) : ML (option (list string)) =
   if not (Options.Ext.enabled "context_pruning_sim")
