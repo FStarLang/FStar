@@ -46,7 +46,7 @@ let fresh_label : Errors.error_message -> Range.t -> term -> ML (label & term) =
         let lvar = mk_fv (l, Bool_sort) in
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
-        let lt = Term.mkOr(lterm, t) range in
+        let lt = Term.mkOr(lterm, t) in
         label, lt
 
 (*
@@ -66,24 +66,24 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                & term)       //the query, decorated with labels
                =
     let rec is_a_post_condition post_name_opt tm : ML bool =
-        match post_name_opt, tm.tm with
+        match post_name_opt, tm with
         | None, _ -> false
         | Some nm, FreeV fv ->
           nm=fv_name fv
-        | _, App (Var "Valid", [tm])
-        | _, App (Var "ApplyTT", tm::_) ->
+        | _, App (Var "Valid") [tm] _
+        | _, App (Var "ApplyTT") (tm::_) _ ->
           is_a_post_condition post_name_opt tm
         | _ ->
           false
     in
     let conjuncts t =
-        match t.tm with
-        | App(And, cs) -> cs
+        match t with
+        | App And cs _ -> cs
         | _ -> [t]
     in
     let is_guard_free tm =
-      match tm.tm with
-      | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, _, {tm=App(Imp, [l;r])}) ->
+      match tm with
+      | Quant Forall [[(App (Var "Prims.guard_free") [p] _)]] iopt _ (App Imp [l;r] _) _ ->
         true
       | _ -> false
     in
@@ -110,14 +110,14 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 (labels:list label) //the labels accumulated so far
                 (q:term) //the term being instrumented
      : ML (list label & term)
-     =  match q.tm with
+     =  match q with
         | BoundV _
         | Integer _
         | String _
         | Real _ ->
           labels, q
 
-        | Labeled(arg, [d], label_range) when Errors.Msg.renderdoc d = "Could not prove post-condition" ->
+        | Labeled arg [d] label_range when Errors.Msg.renderdoc d = "Could not prove post-condition" ->
           //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
           //        (Term.print_smt_term q);
           let fallback debug_msg =
@@ -126,19 +126,19 @@ let label_goals use_env_msg  //when present, provides an alternate error message
             aux default_msg (Some label_range) post_name_opt labels arg
           in
           begin try
-              begin match arg.tm with
-                | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->
+              begin match arg with
+                | Quant Forall pats iopt (post::sorts) (App Imp [lhs;rhs] rng) _ ->
                   let post_name = "^^post_condition_"^ (show <| GenSym.next_id ()) in
                   let names = mk_fv (post_name, post)
                               ::List.map (fun s -> mk_fv ("^^" ^ (show <| GenSym.next_id()), s)) sorts in
                   let instantiation = List.map mkFreeV names in
                   let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
-                  let labels, lhs = match lhs.tm with
-                    | App(And, clauses_lhs) ->
+                  let labels, lhs = match lhs with
+                    | App And clauses_lhs _ ->
                       let req, ens = BU.prefix clauses_lhs in
-                      begin match ens.tm with
-                        | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) ->
+                      begin match ens with
+                        | Quant Forall pats_ens iopt_ens sorts_ens (App Imp [ensures_conjuncts; post] rng_ens) ens_rng ->
                           if is_a_post_condition (Some post_name) post
                           then
                             let labels, ensures_conjuncts = aux (Errors.mkmsg "Could not prove post-condition") None (Some post_name) labels ensures_conjuncts in
@@ -147,9 +147,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                               | []
                               | [[]] -> [[post]]  //make the post-condition formula the pattern, if there isn't one already (usually there isn't)
                               | _ -> pats_ens in
-                            let ens = Term.mk (Quant(Forall, pats_ens, iopt_ens, sorts_ens,
-                                                             Term.mk (App(Imp, [ensures_conjuncts; post])) rng_ens)) ens.rng in
-                            let lhs = Term.mk (App(And, req@[ens])) lhs.rng in
+                            let ens = Quant Forall pats_ens iopt_ens sorts_ens (App Imp [ensures_conjuncts; post] rng_ens) ens_rng in
+                            let lhs = App And (req@[ens]) (range_of_term lhs) in
                             labels, Term.abstr names lhs
                            else raise (Not_a_wp_implication ("Ensures clause doesn't match post name:  "
                                                             ^ post_name
@@ -167,8 +166,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                     let labels, rhs = aux default_msg None (Some post_name) labels rhs in
                     labels, Term.abstr names rhs in
 
-                  let body = Term.mkImp(lhs, rhs) rng in
-                  labels, Term.mk (Quant(Forall, pats, iopt, post::sorts, body)) q.rng
+                  let body = set_range (Term.mkImp(lhs, rhs)) rng in
+                  labels, Quant Forall pats iopt (post::sorts) body (range_of_term q)
 
 
                 | _ -> //not in the form produced by an application of M_stronger
@@ -177,10 +176,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           with Not_a_wp_implication msg -> fallback msg
           end
 
-        | Labeled(arg, reason, r) ->
+        | Labeled arg reason r ->
           aux reason (Some r) post_name_opt labels arg
 
-        | Quant(Forall, [], None, sorts, {tm=App(Imp, [lhs;rhs]); rng=rng})
+        | Quant Forall [] None sorts (App Imp [lhs;rhs] rng) _
             when is_a_named_continuation lhs ->
           let sorts', post = BU.prefix sorts in
           let new_post_name = "^^post_condition_"^ (show <| GenSym.next_id ()) in
@@ -192,8 +191,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
           let labels, lhs_conjs =
                 BU.fold_map (fun labels tm ->
-                    match tm.tm with
-                    | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Imp, [l0;r])}) ->
+                    match tm with
+                    | Quant Forall [[(App (Var "Prims.guard_free") [p] _)]] iopt sorts (App Imp [l0;r] _) _ ->
                       if is_a_post_condition (Some new_post_name) r
                       then begin
                         //printfn "++++RHS is a post-condition for %s;\n\trhs=%s"
@@ -203,7 +202,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                         //printfn "++++LHS %s\nlabeled as%s"
                         //        (Term.print_smt_term l0)
                         //        (Term.print_smt_term l);
-                        labels, mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Imp, [l;r])))) q.rng
+                        labels, Quant Forall [[p]] (Some 0) sorts (App Imp [l;r] Range.dummyRange) (range_of_term q)
                       end
                       else begin
                         //printfn "----RHS not a post-condition for %s;\n\trhs=%s"
@@ -215,92 +214,92 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 labels (conjuncts lhs) in
 
           let labels, rhs = aux default_msg None (Some new_post_name) labels rhs in
-          let body = Term.mkImp(Term.mk_and_l lhs_conjs lhs.rng, rhs) rng |> Term.abstr names in
-          let q = Term.mk (Quant(Forall, [], None, sorts, body)) q.rng in
+          let body = set_range (Term.mkImp(set_range (Term.mk_and_l lhs_conjs) (range_of_term lhs), rhs)) rng |> Term.abstr names in
+          let q = Quant Forall [] None sorts body (range_of_term q) in
           labels, q
 
-        | App(Imp, [lhs;rhs]) ->
+        | App Imp [lhs;rhs] _ ->
           let labels, rhs = aux default_msg ropt post_name_opt labels rhs in
           labels, mkImp(lhs, rhs)
 
-        | App(And, conjuncts) ->
+        | App And conjuncts _ ->
           let labels, conjuncts = BU.fold_map (aux default_msg ropt post_name_opt) labels conjuncts in
-          labels, Term.mk_and_l conjuncts q.rng
+          labels, set_range (Term.mk_and_l conjuncts) (range_of_term q)
 
-        | App(ITE, [hd; q1; q2]) ->
+        | App ITE [hd; q1; q2] _ ->
           let labels, q1 = aux default_msg ropt post_name_opt labels q1 in
           let labels, q2 = aux default_msg ropt post_name_opt labels q2 in
-          labels, Term.mkITE (hd, q1, q2) q.rng
+          labels, set_range (Term.mkITE (hd, q1, q2)) (range_of_term q)
 
-        | Quant(Exists, _, _, _, _)
-        | App(Iff, _)
-        | App(Or, _) -> //non-atomic, but can't case split
-          let lab, q = fresh_label default_msg ropt q.rng q in
+        | Quant Exists _ _ _ _ _
+        | App Iff _ _
+        | App Or _ _ -> //non-atomic, but can't case split
+          let lab, q = fresh_label default_msg ropt (range_of_term q) q in
           lab::labels, q
 
-        | App (Var "Unreachable", _) ->
+        | App (Var "Unreachable") _ _ ->
           //ITEs are encoded with an additional else case just to make them well-formed
           //These are not real goals and should not be labeled
           labels, q
           
-        | App (Var _, _) when is_a_post_condition post_name_opt q ->
+        | App (Var _) _ _ when is_a_post_condition post_name_opt q ->
           //applications of the post-condition variable are never labeled
           //only specific conjuncts of an ensures clause are labeled
           labels, q
 
         | FreeV _
-        | App(TrueOp, _)
-        | App(FalseOp, _)
-        | App(Not, _)
-        | App(Eq, _)
-        | App(LT, _)
-        | App(LTE, _)
-        | App(GT, _)
-        | App(GTE, _)
-        | App(BvUlt, _)
-        | App(Var _, _) -> //atomic goals
-          let lab, q = fresh_label default_msg ropt q.rng q in
+        | App TrueOp _ _
+        | App FalseOp _ _
+        | App Not _ _
+        | App Eq _ _
+        | App LT _ _
+        | App LTE _ _
+        | App GT _ _
+        | App GTE _ _
+        | App BvUlt _ _
+        | App (Var _) _ _ -> //atomic goals
+          let lab, q = fresh_label default_msg ropt (range_of_term q) q in
           lab::labels, q
 
-        | App(RealDiv, _)
-        | App(Add, _)
-        | App(Sub, _)
-        | App(Div, _)
-        | App(Mul, _)
-        | App(Minus, _)
-        | App(Mod, _)
-        | App(BvAnd, _)
-        | App(BvXor, _)
-        | App(BvOr, _)
-        | App(BvAdd, _)
-        | App(BvSub, _)
-        | App(BvShl, _)
-        | App(BvShr, _)
-        | App(BvRol _, _)
-        | App(BvRor _, _)
-        | App(BvExtRol, _)
-        | App(BvExtRor, _)
-        | App(BvUdiv, _)
-        | App(BvMod, _)
-        | App(BvMul, _)
-        | App(BvUext _, _)
-        | App(BvNot, _)
-        | App(BvToNat, _)
-        | App(NatToBv _, _) ->
+        | App RealDiv _ _
+        | App Add _ _
+        | App Sub _ _
+        | App Div _ _
+        | App Mul _ _
+        | App Minus _ _
+        | App Mod _ _
+        | App BvAnd _ _
+        | App BvXor _ _
+        | App BvOr _ _
+        | App BvAdd _ _
+        | App BvSub _ _
+        | App BvShl _ _
+        | App BvShr _ _
+        | App (BvRol _) _ _
+        | App (BvRor _) _ _
+        | App BvExtRol _ _
+        | App BvExtRor _ _
+        | App BvUdiv _ _
+        | App BvMod _ _
+        | App BvMul _ _
+        | App (BvUext _) _ _
+        | App BvNot _ _
+        | App BvToNat _ _
+        | App (NatToBv _) _ _ ->
           failwith "Impossible: non-propositional term"
 
-        | App(ITE, _)
-        | App(Imp, _) ->
+        | App ITE _ _
+        | App Imp _ _ ->
           failwith "Impossible: arity mismatch"
 
-        | Quant(Forall, pats, iopt, sorts, body) ->
+        | Quant Forall pats iopt sorts body _ ->
           let labels, body = aux default_msg ropt post_name_opt labels body in
-          labels, Term.mk (Quant(Forall, pats, iopt, sorts, body)) q.rng
+          labels, Quant Forall pats iopt sorts body (range_of_term q)
 
         (* TODO (KM) : I am not sure whether we should label the let-bounded expressions here *)
-        | Let(es, body) ->
+        | Let es body ->
           let labels, body = aux default_msg ropt post_name_opt labels body in
-          labels, Term.mkLet (es, body) q.rng
+          labels, Term.mkLet (es, body)
     in
     __ctr := 0;
     aux (Errors.mkmsg "Assertion failed") None None [] q
@@ -349,13 +348,11 @@ let detail_errors hint_replay
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         labs
         |> List.map (fun (l, _, _) ->
-            let tm = mkEq(mkFreeV l, mkTrue) in
             let a = {
                     assumption_name="@disable_label_"^fv_name l; //the "@" is important in the name; forces it to be retained when replaying a hint
                     assumption_caption=Some "Disabling label";
                     assumption_term=mkEq(mkFreeV l, mkTrue);
-                    assumption_fact_ids=[];
-                    assumption_free_names=free_top_level_names tm
+                    assumption_fact_ids=[]
                 }
             in
             Term.Assume a) in

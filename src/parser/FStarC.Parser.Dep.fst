@@ -638,50 +638,97 @@ let warned_about : ref (list (option intf_and_impl)) = mk_ref Nil
 
     If the open is an implicit open (as indicated by the flag),
     and doing so shadows an existing entry, warn! *)
+(* [enter_namespace] shortens every module under [sprefix] into [working_map],
+   and used to do so by scanning the whole module map and recomputing, for each
+   hit, the suffix, the file it maps to and whether that suffix shadows an
+   existing module.  All of that depends only on [original_map], while
+   [enter_namespace] is called several times per file for a few hundred files,
+   so it is precomputed once here, indexed by dot-terminated prefix.
+
+   The index is memoized on the map itself: [build_map] only ever populates a
+   map that is still empty (see [interface_of]), so a non-empty map is never
+   mutated again.  Buckets are built by prepending during [SMap.iter] and then
+   reversed, so iterating a bucket visits entries in exactly the order
+   [SMap.iter] used to, keeping the order of the shadowing warnings unchanged. *)
+type ns_entry = {
+  ne_suffix   : string;            //the shortened name
+  ne_file     : intf_and_impl;     //what it resolves to
+  ne_shadowed : option intf_and_impl; //the module this shortening shadows, if any
+}
+
+let ns_index_memo : ref (option (files_for_module_name & SMap.t (list ns_entry))) =
+  mk_ref None
+
+let namespace_index (m:files_for_module_name) : ML (SMap.t (list ns_entry)) =
+  match !ns_index_memo with
+  | Some (m', idx) when BU.physical_equality m m' -> idx
+  | _ ->
+    let idx : SMap.t (list ns_entry) = SMap.create 100 in
+    let suffix_exists mopt =
+      match mopt with
+      | None -> false
+      | Some (intf, impl) -> Some? intf || Some? impl
+    in
+    SMap.iter m (fun k fn ->
+      (* register [k] under each of its proper dot-terminated prefixes:
+         "a.b.c" is registered under "a." as "b.c" and under "a.b." as "c" *)
+      let rec prefixes (acc:string) (segs:list string) : ML unit =
+        match segs with
+        | [] | [_] -> ()
+        | seg :: rest ->
+          let p = acc ^ seg ^ "." in
+          let suffix =
+            String.substring k (String.length p) (String.length k - String.length p)
+          in
+          let shadowed =
+            let so = SMap.try_find m suffix in
+            if suffix_exists so then so else None
+          in
+          let e = { ne_suffix = suffix; ne_file = fn; ne_shadowed = shadowed } in
+          let cur = match SMap.try_find idx p with None -> [] | Some l -> l in
+          SMap.add idx p (e :: cur);
+          prefixes p rest
+      in
+      prefixes "" (String.split ['.'] k)
+    );
+    SMap.keys idx |> List.iter (fun p ->
+      SMap.add idx p (List.rev (Option.must (SMap.try_find idx p)))
+    );
+    ns_index_memo := Some (m, idx);
+    idx
+
 let enter_namespace
   (original_map: files_for_module_name)
   (working_map: files_for_module_name)
   (sprefix: string)
   (implicit_open:bool) : ML bool =
-  let found = mk_ref false in
   let sprefix = sprefix ^ "." in
-  let suffix_exists mopt =
-    match mopt with
-    | None -> false
-    | Some (intf, impl) -> Some? intf || Some? impl in
-  SMap.iter original_map (fun k _fn ->
-    // if !dbg then Format.print2 "enter_namespace considering %s -> %s\n" k (show _fn);
-    if Util.starts_with k sprefix then
-      let suffix =
-        String.substring k (String.length sprefix) (String.length k - String.length sprefix)
-      in
-
-      begin
-        let suffix_filename = SMap.try_find original_map suffix in
-        if implicit_open &&
-           suffix_exists suffix_filename &&
-           not (List.mem suffix_filename !warned_about)
-        then let str = suffix_filename |> Option.must |> intf_and_impl_to_string in
-             warned_about := suffix_filename :: !warned_about;
-             let open FStarC.Pprint in
-             log_issue0 Errors.Warning_UnexpectedFile [
-                flow (break_ 1) [
-                  text "Implicitly opening namespace";
-                  fquotes (doc_of_string sprefix);
-                  text "shadows module";
-                  fquotes (doc_of_string suffix);
-                  text "in file";
-                  fquotes (doc_of_string str) ^^ dot;
-                ];
-                text "Rename" ^/^ fquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
-             ]
-      end;
-
-      let filename = Option.must (SMap.try_find original_map k) in
-      SMap.add working_map suffix filename;
-      found := true
+  let entries =
+    match SMap.try_find (namespace_index original_map) sprefix with
+    | None -> []
+    | Some l -> l
+  in
+  entries |> List.iter (fun e ->
+    (match e.ne_shadowed with
+     | Some _ when implicit_open && not (List.mem e.ne_shadowed !warned_about) ->
+       let str = e.ne_shadowed |> Option.must |> intf_and_impl_to_string in
+       warned_about := e.ne_shadowed :: !warned_about;
+       let open FStarC.Pprint in
+       log_issue0 Errors.Warning_UnexpectedFile [
+          flow (break_ 1) [
+            text "Implicitly opening namespace";
+            fquotes (doc_of_string sprefix);
+            text "shadows module";
+            fquotes (doc_of_string e.ne_suffix);
+            text "in file";
+            fquotes (doc_of_string str) ^^ dot;
+          ];
+          text "Rename" ^/^ fquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
+       ]
+     | _ -> ());
+    SMap.add working_map e.ne_suffix e.ne_file
   );
-  !found
+  Cons? entries
 
 let prelude_lid = Ident.lid_of_str "FStar.Prelude"
 let prelude : list (open_kind & lid) = [
@@ -1007,11 +1054,10 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
       List.iter collect_term vs;
       collect_term e
 
-    | IntroImplies(p, q, x, e) ->
+    | IntroImplies(p, q, e) ->
       add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
       collect_term p;
       collect_term q;
-      collect_binder x;
       collect_term e
 
     | IntroOr(b, p, q, r) ->
@@ -1033,12 +1079,10 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
         collect_term p;
         List.iter collect_term vs
 
-    | ElimExists(bs, p, q, b, e) ->
+    | ElimExists(bs, p, e) ->
         add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
         collect_binders bs;
         collect_term p;
-        collect_term q;
-        collect_binder b;
         collect_term e
 
     | ElimImplies(p, q, e) ->
@@ -1047,22 +1091,16 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
       collect_term q;
       collect_term e
 
-    | ElimAnd(p, q, r, x, y, e) ->
+    | ElimAnd(p, q, e) ->
       add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
       collect_term p;
       collect_term q;
-      collect_term r;
-      collect_binder x;
-      collect_binder y;
       collect_term e
 
-    | ElimOr(p, q, r, x, e, y, e') ->
+    | ElimOr(p, q, e, e') ->
       add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
       collect_term p;
       collect_term q;
-      collect_term r;
-      collect_binder x;
-      collect_binder y;
       collect_term e;
       collect_term e'
 

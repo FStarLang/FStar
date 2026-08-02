@@ -172,7 +172,7 @@ let eq_to_eq a x y p _ = ()
 
 val add_squash: p:prop -> q:prop -> squash (p ==> q) -> squash (p ==> q)
 let add_squash p q _ =
-  introduce p ==> q with _. ()
+  introduce p ==> q with ()
 
 val or_split: b1:bool -> b2:bool -> p:prop -> squash (b1 ==> p) -> squash (b2 ==> p) -> squash (b1 || b2 ==> p)
 let or_split b1 b2 p _ _ = ()

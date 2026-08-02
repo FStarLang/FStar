@@ -501,7 +501,13 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
            FStarC_TypeChecker_Env.core_check =
              (uu___.FStarC_TypeChecker_Env.core_check);
            FStarC_TypeChecker_Env.missing_decl =
-             (uu___.FStarC_TypeChecker_Env.missing_decl)
+             (uu___.FStarC_TypeChecker_Env.missing_decl);
+           FStarC_TypeChecker_Env.iface_todo =
+             (uu___.FStarC_TypeChecker_Env.iface_todo);
+           FStarC_TypeChecker_Env.iface_lids =
+             (uu___.FStarC_TypeChecker_Env.iface_lids);
+           FStarC_TypeChecker_Env.iface_val_lids =
+             (uu___.FStarC_TypeChecker_Env.iface_val_lids)
          });
       FStarC_Tactics_Types.all_implicits =
         (ps.FStarC_Tactics_Types.all_implicits);
@@ -631,7 +637,13 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
            FStarC_TypeChecker_Env.core_check =
              (uu___.FStarC_TypeChecker_Env.core_check);
            FStarC_TypeChecker_Env.missing_decl =
-             (uu___.FStarC_TypeChecker_Env.missing_decl)
+             (uu___.FStarC_TypeChecker_Env.missing_decl);
+           FStarC_TypeChecker_Env.iface_todo =
+             (uu___.FStarC_TypeChecker_Env.iface_todo);
+           FStarC_TypeChecker_Env.iface_lids =
+             (uu___.FStarC_TypeChecker_Env.iface_lids);
+           FStarC_TypeChecker_Env.iface_val_lids =
+             (uu___.FStarC_TypeChecker_Env.iface_val_lids)
          });
       FStarC_Tactics_Types.all_implicits =
         (ps1.FStarC_Tactics_Types.all_implicits);

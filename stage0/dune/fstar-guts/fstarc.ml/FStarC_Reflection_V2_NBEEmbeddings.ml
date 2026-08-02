@@ -232,7 +232,7 @@ let e_aqualv :
     (fun uu___ ->
        fv_as_emb_typ FStarC_Reflection_V2_Constants.fstar_refl_aqualv_fv)
 let e_binders :
-  FStarC_Syntax_Syntax.binders FStarC_TypeChecker_NBETerm.embedding=
+  FStarC_Reflection_V2_Data.binders FStarC_TypeChecker_NBETerm.embedding=
   FStarC_TypeChecker_NBETerm.e_list e_binder
 let e_fv : FStarC_Syntax_Syntax.fv FStarC_TypeChecker_NBETerm.embedding=
   let embed_fv cb fv =

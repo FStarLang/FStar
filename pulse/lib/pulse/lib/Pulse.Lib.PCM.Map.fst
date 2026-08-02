@@ -183,8 +183,7 @@ let compatible_pointwise #a #k
     with (
       eliminate exists frame.
         composable pcm' m0 frame /\ op pcm' frame m0 == m1
-      returns _
-      with _. (
+      with (
         introduce exists (frame:a).
                          composable p
                                     (Map.sel m0 k)
@@ -215,11 +214,9 @@ let compatible_pointwise_upd #a (#k:eqtype)
     let full_m1 = (Map.upd full_m0 key full_v1) in
     let p' = pointwise k p in
     eliminate exists (frame_m0:_). composable p' m0 frame_m0 /\ op p' frame_m0 m0 == full_m0
-    returns _
-    with _. (
+    with (
     eliminate exists (frame0:_). composable p v1 frame0 /\ op p frame0 v1 == full_v1
-    returns _
-    with _. (
+    with (
       introduce exists (frame:_).
       composable p' m1 frame /\ op p' frame m1 == full_m1
     with (Map.upd frame_m0 key frame0)
@@ -271,7 +268,7 @@ let lift_frame_preservation #a (#k:eqtype) (p:pcm a)
         introduce _ /\ _
         with ()
         and ( introduce _ ==> _
-              with _. (
+              with (
                   assert (compose_maps p m1 frame `Map.equal` full_m1)
               )
         )

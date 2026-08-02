@@ -837,194 +837,177 @@ let formula_to_string (f : formula) :
   | True_ -> (fun uu___ -> "True_")
   | False_ -> (fun uu___ -> "False_")
   | Comp (Eq mt, l, r) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (match mt with
-            | FStar_Pervasives_Native.None ->
-                FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> "")
-            | FStar_Pervasives_Native.Some t ->
-                FStar_Tactics_Effect.tac_bind () ()
-                  (FStar_Tactics_Effect.tac_bind () ()
-                     (FStarC_Tactics_V2_Builtins.term_to_string t)
-                     (fun uu___ uu___1 -> Prims.strcat uu___ ")"))
-                  (fun uu___ uu___1 -> Prims.strcat " (" uu___))
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string l ps in
-                  let x3 =
-                    let x4 =
-                      let x5 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
-                      Prims.strcat x5 ")" in
-                    Prims.strcat ") (" x4 in
-                  Prims.strcat x2 x3 in
-                Prims.strcat " (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "Eq" uu___)
+      (fun ps ->
+         let x =
+           let x1 =
+             match mt with
+             | FStar_Pervasives_Native.None -> ""
+             | FStar_Pervasives_Native.Some t ->
+                 let x2 =
+                   let x3 = FStarC_Tactics_V2_Builtins.term_to_string t ps in
+                   Prims.strcat x3 ")" in
+                 Prims.strcat " (" x2 in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string l ps in
+               let x5 =
+                 let x6 =
+                   let x7 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
+                   Prims.strcat x7 ")" in
+                 Prims.strcat ") (" x6 in
+               Prims.strcat x4 x5 in
+             Prims.strcat " (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Eq" x)
   | Comp (BoolEq mt, l, r) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (match mt with
-            | FStar_Pervasives_Native.None ->
-                FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> "")
-            | FStar_Pervasives_Native.Some t ->
-                FStar_Tactics_Effect.tac_bind () ()
-                  (FStar_Tactics_Effect.tac_bind () ()
-                     (FStarC_Tactics_V2_Builtins.term_to_string t)
-                     (fun uu___ uu___1 -> Prims.strcat uu___ ")"))
-                  (fun uu___ uu___1 -> Prims.strcat " (" uu___))
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string l ps in
-                  let x3 =
-                    let x4 =
-                      let x5 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
-                      Prims.strcat x5 ")" in
-                    Prims.strcat ") (" x4 in
-                  Prims.strcat x2 x3 in
-                Prims.strcat " (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "BoolEq" uu___)
+      (fun ps ->
+         let x =
+           let x1 =
+             match mt with
+             | FStar_Pervasives_Native.None -> ""
+             | FStar_Pervasives_Native.Some t ->
+                 let x2 =
+                   let x3 = FStarC_Tactics_V2_Builtins.term_to_string t ps in
+                   Prims.strcat x3 ")" in
+                 Prims.strcat " (" x2 in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string l ps in
+               let x5 =
+                 let x6 =
+                   let x7 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
+                   Prims.strcat x7 ")" in
+                 Prims.strcat ") (" x6 in
+               Prims.strcat x4 x5 in
+             Prims.strcat " (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "BoolEq" x)
   | Comp (Lt, l, r) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string l)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "Lt (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string l ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Lt (" x)
   | Comp (Le, l, r) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string l)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "Le (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string l ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Le (" x)
   | Comp (Gt, l, r) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string l)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "Gt (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string l ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Gt (" x)
   | Comp (Ge, l, r) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string l)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "Ge (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string l ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string r ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Ge (" x)
   | And (p, q) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string p)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "And (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string p ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "And (" x)
   | Or (p, q) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string p)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "Or (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string p ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Or (" x)
   | Implies (p, q) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string p)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "Implies (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string p ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Implies (" x)
   | Not p ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string p)
-           (fun uu___ uu___1 -> Prims.strcat uu___ ")"))
-        (fun uu___ uu___1 -> Prims.strcat "Not (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string p ps in
+           Prims.strcat x1 ")" in
+         Prims.strcat "Not (" x)
   | Iff (p, q) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string p)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "Iff (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string p ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Iff (" x)
   | Forall (bs, _sort, t) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string t)
-           (fun uu___ uu___1 -> Prims.strcat uu___ ")"))
-        (fun uu___ uu___1 -> Prims.strcat "Forall <bs> (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string t ps in
+           Prims.strcat x1 ")" in
+         Prims.strcat "Forall <bs> (" x)
   | Exists (bs, _sort, t) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string t)
-           (fun uu___ uu___1 -> Prims.strcat uu___ ")"))
-        (fun uu___ uu___1 -> Prims.strcat "Exists <bs> (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string t ps in
+           Prims.strcat x1 ")" in
+         Prims.strcat "Exists <bs> (" x)
   | App (p, q) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string p)
-           (fun uu___ ps ->
-              let x =
-                let x1 =
-                  let x2 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
-                  Prims.strcat x2 ")" in
-                Prims.strcat ") (" x1 in
-              Prims.strcat uu___ x))
-        (fun uu___ uu___1 -> Prims.strcat "App (" uu___)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string p ps in
+           let x2 =
+             let x3 =
+               let x4 = FStarC_Tactics_V2_Builtins.term_to_string q ps in
+               Prims.strcat x4 ")" in
+             Prims.strcat ") (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "App (" x)
   | Name bv ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () () (namedv_to_string bv)
-           (fun uu___ uu___1 -> Prims.strcat uu___ ")"))
-        (fun uu___ uu___1 -> Prims.strcat "Name (" uu___)
+      (fun ps ->
+         let x = let x1 = namedv_to_string bv ps in Prims.strcat x1 ")" in
+         Prims.strcat "Name (" x)
   | FV fv ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ ->
-           Prims.strcat "FV ("
-             (Prims.strcat
-                (FStar_Reflection_V2_Derived.flatten_name
-                   (FStarC_Reflection_V2_Builtins.inspect_fv fv)) ")"))
-  | IntLit i ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ -> Prims.strcat "Int " (Prims.string_of_int i))
+      (fun uu___ ->
+         Prims.strcat "FV ("
+           (Prims.strcat
+              (FStar_Reflection_V2_Derived.flatten_name
+                 (FStarC_Reflection_V2_Builtins.inspect_fv fv)) ")"))
+  | IntLit i -> (fun uu___ -> Prims.strcat "Int " (Prims.string_of_int i))
   | F_Unknown -> (fun uu___ -> "?")

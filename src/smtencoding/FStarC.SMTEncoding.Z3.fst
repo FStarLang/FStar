@@ -396,6 +396,7 @@ let reading_solver_state (f:SolverState.solver_state -> ML 'a) : ML 'a
 = let ss = !bg_z3_proc in
   f ss.ctxt
 let giveZ3 (decls:list decl) : ML unit = with_solver_state_unit (SolverState.give decls)
+let giveZ3_lazy (ld:SolverState.lazy_decls) : ML unit = with_solver_state_unit (SolverState.give_lazy ld)
 
 let do_refresh (using_facts_from:option SolverState.using_facts_from_setting) : ML unit =
     (!bg_z3_proc).refresh();
@@ -554,7 +555,7 @@ let context_profile (theory:list decl) : ML unit =
     let modules, total_decls =
         List.fold_left (fun (out, _total) d ->
             match d with
-            | Module(name, decls) ->
+            | Module name decls ->
               let decls =
                 List.filter
                     (function Assume _ -> true

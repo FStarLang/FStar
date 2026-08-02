@@ -1152,9 +1152,34 @@ noSeqTerm:
         else mk_term (IntroExists(bs, p, vs, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
-   | INTRO p=tmArrow(tmFormula) IMPLIES q=tmFormula WITH y=singleBinder DOT e=noSeqTerm
+   | INTRO p=tmArrow(tmFormula) IMPLIES q=tmFormula WITH e=noSeqTerm
      {
-        mk_term (IntroImplies(p, q, y, e)) (rr2 $loc($1) $loc(e)) Expr
+        (* 'introduce P ==> Q with h. e' no longer binds a name for the
+           hypothesis. The grammar cannot tell a binder from a term after
+           'with', so the obsolete form is either a syntax error (handled in
+           FStarC_Parser_ParseIt) or, when the body starts with an identifier,
+           silently parses as a projection 'h.e'. Catch the latter here. *)
+        let rec head t =
+          match t.tm with
+          | App (t, _, _) -> head t
+          | _ -> t
+        in
+        (* A genuine projection 'r.f' has no whitespace around the dot, whereas
+           the obsolete 'with h. e' does. *)
+        let separated_by_space (r1:range) (r2:range) =
+          let e1 = FStarC_Range_Ops.end_of_range r1 in
+          let s2 = FStarC_Range_Ops.start_of_range r2 in
+          FStarC_Range_Ops.line_of_pos s2 <> FStarC_Range_Ops.line_of_pos e1 ||
+          Z.gt (FStarC_Range_Ops.col_of_pos s2) (Z.succ (FStarC_Range_Ops.col_of_pos e1))
+        in
+        (match (head e).tm with
+         | Project ({tm=Var l; range=lhs_range; _}, f)
+              when ns_of_lid l = [] && separated_by_space lhs_range (range_of_lid f) ->
+           raise_error_text (rr $loc(e)) Fatal_SyntaxError
+             "Syntax error: 'introduce _ ==> _' no longer takes a name for the hypothesis. \
+              Write 'introduce P ==> Q with e' instead; P is available in the proof context of e."
+         | _ -> ());
+        mk_term (IntroImplies(p, q, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
    | INTRO p=tmFormula DISJUNCTION q=tmConjunction WITH lr=NAME e=noSeqTerm
@@ -1177,9 +1202,18 @@ noSeqTerm:
         mk_term (ElimForall(xs, p, vs)) (rr2 $loc($1) $loc(vs)) Expr
      }
 
+   | ELIM EXISTS bs=binders DOT p=noSeqTerm WITH e=noSeqTerm
+     {
+        mk_term (ElimExists(bs, p, e)) (rr2 $loc($1) $loc(e)) Expr
+     }
+
    | ELIM EXISTS bs=binders DOT p=noSeqTerm RETURNS q=noSeqTerm WITH y=singleBinder DOT e=noSeqTerm
      {
-        mk_term (ElimExists(bs, p, q, y, e)) (rr2 $loc($1) $loc(e)) Expr
+        let _ = bs, p, q, y, e in
+        raise_error_text (rr2 $loc($6) $loc(e)) Fatal_SyntaxError
+          "Syntax error: 'eliminate exists' no longer takes a 'returns' clause nor a name for the hypothesis. \
+           Write 'eliminate exists x1...xn. P with e' instead; x1...xn are bound in e, \
+           and P is available in the proof context of e."
      }
 
    | ELIM p=tmArrow(tmFormula) IMPLIES q=tmFormula WITH e=noSeqTerm
@@ -1187,15 +1221,31 @@ noSeqTerm:
         mk_term (ElimImplies(p, q, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
+   | ELIM p=tmFormula DISJUNCTION q=tmConjunction WITH e1=noSeqTerm AND e2=noSeqTerm
+     {
+        mk_term (ElimOr(p, q, e1, e2)) (rr2 $loc($1) $loc(e2)) Expr
+     }
+
    | ELIM p=tmFormula DISJUNCTION q=tmConjunction RETURNS r=noSeqTerm WITH x=singleBinder DOT e1=noSeqTerm AND y=singleBinder DOT e2=noSeqTerm
      {
-        mk_term (ElimOr(p, q, r, x, e1, y, e2)) (rr2 $loc($1) $loc(e2)) Expr
+        let _ = p, q, r, x, e1, y, e2 in
+        raise_error_text (rr2 $loc($5) $loc(e2)) Fatal_SyntaxError
+          "Syntax error: 'eliminate _ \\/ _' no longer takes a 'returns' clause nor names for the hypotheses. \
+           Write 'eliminate P \\/ Q with e1 and e2' instead; P is available in the proof context of e1, \
+           and Q in that of e2."
+     }
+
+   | ELIM p=tmConjunction CONJUNCTION q=tmTuple WITH e=noSeqTerm
+     {
+        mk_term (ElimAnd(p, q, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
    | ELIM p=tmConjunction CONJUNCTION q=tmTuple RETURNS r=noSeqTerm WITH xs=binders DOT e=noSeqTerm
      {
-        match xs with
-        | [x;y] -> mk_term (ElimAnd(p, q, r, x, y, e)) (rr2 $loc($1) $loc(e)) Expr
+        let _ = p, q, r, xs, e in
+        raise_error_text (rr2 $loc($5) $loc(e)) Fatal_SyntaxError
+          "Syntax error: 'eliminate _ /\\ _' no longer takes a 'returns' clause nor names for the hypotheses. \
+           Write 'eliminate P /\\ Q with e' instead; both P and Q are available in the proof context of e."
      }
 
 singleBinder:

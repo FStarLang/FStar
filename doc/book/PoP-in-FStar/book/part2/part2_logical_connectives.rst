@@ -337,7 +337,7 @@ desugaring, shown below.
      = FStar.Classical.Sugar.implies_intro
               p
               (fun (_: squash p) -> q)
-              (fun (pf_p: squash p) -> pq pf_p)
+              (fun (_: squash p) -> pq ())
 
 ``FStar.Classical`` provides the basic building
 blocks and the sugar packages it into a more convenient form for use.

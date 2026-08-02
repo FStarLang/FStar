@@ -261,7 +261,7 @@ let with_fuel_and_diagnostics settings label_assumptions =
         settings.query_decl        //the query itself
     ]
     @label_assumptions         //the sub-goals that are currently disabled
-    @[  Term.SetOption ("rlimit", show rlimit); //the rlimit setting for the check-sat
+    @[  Term.SetOption "rlimit" (show rlimit); //the rlimit setting for the check-sat
 
         // Print stats just before the query, so we know the initial rlimit.
         Term.Echo "<initial_stats>";
@@ -269,7 +269,7 @@ let with_fuel_and_diagnostics settings label_assumptions =
         Term.Echo "</initial_stats>";
 
         Term.CheckSat; //go Z3!
-        Term.SetOption ("rlimit", "0"); //back to using infinite rlimit
+        Term.SetOption "rlimit" "0"; //back to using infinite rlimit
         Term.GetReasonUnknown; //explain why it failed
     ]@
     (if settings.query_record_hints
@@ -1389,7 +1389,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : ML (li
       let tcenv = incr_query_index tcenv in
       match qry with
       (* trivial cases *)
-      | Assume({assumption_term={tm=App(FalseOp, _)}}) -> ([], ans_ok)
+      | Assume({assumption_term=(App FalseOp _ _)}) -> ([], ans_ok)
       | _ when tcenv.admit -> ([], ans_ok)
 
       | Assume _ ->
@@ -1526,6 +1526,7 @@ let solve use_env_msg tcenv q : ML unit =
          [text "A query could not be solved internally, and --no_smt was given.";
           text "Query = " ^/^ pp q])
   else (
+    Encode.flush_deferred_encodings ();
     Profiling.profile
       (fun () -> do_solve_maybe_split use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
@@ -1544,6 +1545,7 @@ It WILL raise fuel incrementally to attempt to solve the query
 let solve_sync use_env_msg tcenv (q:Syntax.term) : ML answer =
     if Options.no_smt () then ans_fail
     else
+    let _ = Encode.flush_deferred_encodings () in
     let go () =
       if !dbg_SMTQuery then (
         let open FStarC.Errors.Msg in
