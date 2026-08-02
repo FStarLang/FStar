@@ -1781,86 +1781,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
          failwith "impossible -- Sig_fail should have been removed by Tc.fs"
      | Sig_pragma _
      | Sig_effect_abbrev _
-     | Sig_sub_effect _
-     | Sig_polymonadic_bind _
-     | Sig_polymonadic_subcomp _ -> [], env
+     | Sig_sub_effect _ -> [], env
 
-     | Sig_new_effect(ed) ->
-       if not (is_smt_reifiable_effect env.tcenv ed.mname)
-       then [], env
-       else (* The basic idea:
-                    1. Encode M.bind_repr: a:Type -> b:Type -> wp_a -> wp_b -> f:st_repr a wp_a -> g:(a -> st_repr b) : st_repr b
-                                       = e
-                       by encoding a function (erasing type arguments)
-                       M.bind_repr (f Term) (g Term) : [[e]]]
-
-                    2. Likewise for M.return_repr
-
-                    3. For each action, a : x1:n -> ... -> xn:tn -> st_repr t wp = fun x1..xn -> e
-                        encode forall x1..xn. Reify (Apply a x1 ... xn) = [[e]]
-            *)
-            let ed_univs_subst, ed_univs = SS.univ_var_opening ed.univs in
-            let close_effect_params tm =
-              SS.subst ed_univs_subst
-                (match ed.binders with
-                  | [] -> tm
-                  | _ -> U.abs_ln ed.binders tm
-                                      (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])))
-            in
-
-            let open_action_univs (a:S.action) =
-              let action_univs_subst, action_univs = SS.univ_var_opening a.action_univs in
-              SS.subst ed_univs_subst (SS.subst action_univs_subst a.action_defn),
-              SS.subst ed_univs_subst (SS.subst action_univs_subst a.action_typ),
-              action_univs
-
-            in
-
-            let encode_action env (a:S.action) =
-              let action_univs_subst, action_univs = SS.univ_var_opening a.action_univs in
-              let action_defn, action_typ, action_univs = open_action_univs a in
-              let action_defn = norm_before_encoding env (close_effect_params action_defn) in
-              let formals, _ = U.arrow_formals_comp action_typ in
-              let arity = List.length formals in
-              let univ_arity = List.length action_univs + List.length ed_univs in
-              let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name arity univ_arity in
-              let tm, decls = encode_term action_defn env in
-              let univ_sorts = ed_univs@action_univs |> List.map (fun _ -> univ_sort) in
-              let a_decls =
-                [Term.DeclFun aname (univ_sorts @ (formals |> List.map (fun _ -> Term_sort))) Term_sort (Some "Action");
-                  Term.DeclFun atok univ_sorts Term_sort (Some "Action token")]
-              in
-              let _, us_sorts, us = 
-                let aux u (env, acc_sorts, acc) =
-                  let fv, tm = encode_univ_name u in
-                  env, fv::acc_sorts, tm::acc
-                in
-                List.fold_right aux (ed_univs@action_univs) (env, [], [])
-              in
-              let _, xs_sorts, xs =
-                let aux ({binder_bv=bv}) (env, acc_sorts, acc) =
-                  let xxsym, xx, env = gen_term_var env bv in
-                  env, mk_fv (xxsym, Term_sort)::acc_sorts, xx::acc
-                in
-                List.fold_right aux formals (env, [], [])
-              in
-              let app = mkApp(aname, us@xs) in
-              let a_eq =
-                Util.mkAssume(mkForall (Ident.range_of_lid a.action_name) ([[app]], us_sorts@xs_sorts, mkEq(app, mk_Apply tm xs_sorts)),
-                            Some "Action equality",
-                            (aname ^"_equality"))
-              in
-              let tok_correspondence =
-                let tok_term = mkApp(atok, us) in
-                let tok_app = mk_Apply tok_term xs_sorts in
-                Util.mkAssume(mkForall (Ident.range_of_lid a.action_name) ([[tok_app]], us_sorts@xs_sorts, mkEq(tok_app, app)),
-                            Some "Action token correspondence", (aname ^ "_token_correspondence"))
-              in
-              env, decls@(a_decls@[a_eq; tok_correspondence] |> mk_decls_trivial)
-            in
-
-            let env, decls2 = BU.fold_map encode_action env ed.actions in
-            List.flatten decls2, env
+     | Sig_new_effect _ -> [], env
 
      | Sig_declare_typ {lid} when (lid_equals lid Const.precedes_lid) ->
         //precedes is added in the prelude, see FStarC.SMTEncoding.Term.fs

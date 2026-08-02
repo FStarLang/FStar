@@ -1238,7 +1238,6 @@ let ask_solver
     let default_settings = List.hd configs in
     let skip : bool =
         env.tcenv.admit ||
-        Env.too_early_in_prims env.tcenv   ||
         (match Options.admit_except () with
          | Some id ->
            if BU.starts_with id "("

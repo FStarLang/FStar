@@ -90,6 +90,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
         || inferred q2
         || visibility q2
         || assumption q2
+        || q2=TotalEffect
         || (env.is_iface && q2=Inline_for_extraction)
         || q2=NoExtract
 
@@ -111,7 +112,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
         q2=Logic || q2=Inline_for_extraction || q2=NoExtract || has_eq q2 || inferred q2 || visibility q2 || reification q2
 
       | TotalEffect ->
-        inferred q2 || visibility q2 || reification q2
+        inferred q2 || visibility q2 || reification q2 || q2=Assumption
 
       | Logic ->
         q2=Assumption || inferred q2 || visibility q2 || reducibility q2
@@ -190,13 +191,43 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
       | Sig_assume _ ->
         if not (quals |> BU.for_all (fun x -> visibility x || x=Assumption || x=InternalAssumption))
         then err []
-      | Sig_new_effect _ ->
+      | Sig_new_effect ed ->
         if not (quals |> BU.for_all (fun x ->
               x=TotalEffect
+              || x=Assumption
               || inferred x
               || visibility x
               || reification x))
-        then err []
+        then err [];
+        (* An effect declaration without a representation says nothing about how
+           the effect is implemented: it is taken on faith, so it must be marked
+           `assume`.  Conversely, the combinators of an `effect { M with { ... } }`
+           block are checked (TcEffect.tc_eff_decl), so there is nothing to
+           assume. *)
+        let assumed = quals |> List.contains Assumption in
+        begin match ed.combinators with
+        | None ->
+          if not assumed then
+            err [text "An effect declaration with no representation is an assumption; write `assume effect`."]
+        | Some _ ->
+          if assumed then
+            err [text "The combinators of an effect definition are checked, so it cannot be marked `assume`."]
+        end
+      | Sig_sub_effect sub ->
+        if not (quals |> BU.for_all (fun x -> x=Assumption || inferred x || visibility x))
+        then err [];
+        (* A sub-effect edge with no lift term is an assumption: the lattice
+           admits the coercion, but nothing witnesses it.  With a lift term, the
+           term is checked (TcEffect.tc_lift). *)
+        let assumed = quals |> List.contains Assumption in
+        begin match sub.lift with
+        | None ->
+          if not assumed then
+            err [text "A sub-effect with no lift is an assumption; write `assume sub_effect`."]
+        | Some _ ->
+          if assumed then
+            err [text "The lift of a sub-effect is checked, so it cannot be marked `assume`."]
+        end
       | Sig_effect_abbrev _ ->
         if not (quals |> BU.for_all (fun x -> inferred x || visibility x))
         then err []

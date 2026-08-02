@@ -328,13 +328,13 @@ let lcomp_set_flags lc fs
              fs
              (fun () -> lc |> lcomp_comp |> (fun (c, g) -> comp_typ_set_flags c, g))
 
-let is_total_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_total_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL -> true | _ -> false)
 
 let is_tot_or_gtot_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid
                              || lid_equals c.eff_name PC.effect_GTot_lid
-                             || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
+                             || c.cflags |> BU.for_some (function TOTAL -> true | _ -> false)
 
-let is_lcomp_partial_return c : ML bool = c.cflags |> BU.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+let is_lcomp_partial_return c : ML bool = false
 
 let is_pure_lcomp lc : ML bool =
     is_total_lcomp lc
@@ -357,7 +357,7 @@ let lcomp_of_comp_guard c0 g : ML lcomp =
     let eff_name, flags =
         match c0.n with
         | Total _ -> PC.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
+        | GTotal _ -> PC.effect_GTot_lid, []
         | Comp c -> c.effect_name, c.flags in
     mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, g)
 
