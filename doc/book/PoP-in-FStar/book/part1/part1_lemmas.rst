@@ -95,6 +95,10 @@ or even
 
    Lemma post
 
+Likewise, when the postcondition ``post`` is trivial, it can be omitted
+and one writes just ``Lemma (requires pre)``. This is occasionally useful
+to state that a term is well-defined only under some assumption.
+
 
 A proof by induction, explained in detail
 .........................................

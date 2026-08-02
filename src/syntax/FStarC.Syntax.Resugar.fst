@@ -1217,23 +1217,29 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
       | Some pats when not (U.is_fvar C.nil_lid (U.head_of pats)) -> [pats]
       | _ -> []
     in
+    (* Both clauses are optional, so we only print the non-trivial ones. *)
+    let triv_pre = U.is_fvar C.true_lid c.comp_pre in
     if lid_equals c.effect_name C.effect_Lemma_lid then
-      let pre = (if U.is_fvar C.true_lid c.comp_pre then [] else [c.comp_pre]) in
       let post = U.unthunk_lemma_post c.comp_post in
-
-      let pre = List.map (fun t -> mk (Requires (resugar_term' env t))) pre in
-      let post = mk (Ensures (resugar_term' env post)) in
+      (* [Lemma] with no arguments at all is not valid syntax, so we keep the
+         postcondition when there is nothing else to print. *)
+      let triv_post = U.is_t_true post && not triv_pre in
+      let pre = if triv_pre then [] else [mk (Requires (resugar_term' env c.comp_pre))] in
+      let post = if triv_post then [] else [mk (Ensures (resugar_term' env post))] in
       let pats = List.map (resugar_term' env) smt_pats in
       let decrease = mk_decreases c.flags in
 
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post::decrease@pats)))
+      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post@decrease@pats)))
 
     else if (Options.print_effect_args()) then
-      let pre = mk (Requires (resugar_term' env c.comp_pre)) in
-      let post = mk (Ensures (resugar_term' env c.comp_post)) in
+      let pre = if triv_pre then [] else [mk (Requires (resugar_term' env c.comp_pre)), A.Nothing] in
+      let post =
+        if U.is_trivial_post c.comp_post then []
+        else [mk (Ensures (resugar_term' env c.comp_post)), A.Nothing]
+      in
       let decrease = List.map (fun t -> (t, A.Nothing)) (mk_decreases c.flags) in
       mk (A.Construct(maybe_shorten_lid env c.effect_name,
-                      result::decrease@[(pre, A.Nothing); (post, A.Nothing)]))
+                      result::decrease@pre@post))
     else
       mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))
 
