@@ -356,7 +356,6 @@ and freenames = FlatSet.t bv
 and syntax 'a = {
     n:'a;
     pos:range;
-    vars:memo free_vars;
     hash_code:memo FStarC.Hash.hash_code
 }
 and bv = {

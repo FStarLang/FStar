@@ -222,7 +222,6 @@ let withinfo v r = {v=v; p=r}
 let mk (t:'a) r : ML (syntax 'a) = {
     n=t;
     pos=r;
-    vars=mk_ref None;
     hash_code=mk_ref None;
 }
 
