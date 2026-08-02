@@ -42,6 +42,30 @@ Guidelines for the changelog:
     (The PulseCore model currently defines `stt_div = stt`; a foundational model
     of divergence is future work.)
 
+## Syntax
+
+  * The `introduce`/`eliminate` sugar for logical connectives no longer binds
+    names for hypotheses, and `eliminate` no longer takes a `returns` clause.
+    The eliminated hypotheses are instead available in the proof context (i.e.
+    to the SMT solver) of the proof that follows `with`. Concretely:
+
+    | Old                                          | New                              |
+    |----------------------------------------------|----------------------------------|
+    | `introduce P ==> Q with h. e`                | `introduce P ==> Q with e`       |
+    | `eliminate exists x1..xn. P returns Q with h. e` | `eliminate exists x1..xn. P with e` |
+    | `eliminate P \/ Q returns R with x. e1 and y. e2` | `eliminate P \/ Q with e1 and e2` |
+    | `eliminate P /\ Q returns R with x y. e`     | `eliminate P /\ Q with e`        |
+
+    Uses of the old syntax are reported with an error explaining the change.
+    Proofs that used the name of a hypothesis (e.g. `with pf_p. f pf_p`) must
+    pass `()` instead (e.g. `with f ()`), which the SMT solver discharges using
+    the hypothesis now in context.
+
+    The desugaring changed accordingly: `eliminate exists` now elaborates to a
+    `let` binding using `FStar.Classical.Sugar.indefinite_descriptionN`,
+    `eliminate _ \/ _` to `if FStar.Classical.Sugar.or_decide p q then e1 else e2`,
+    and `eliminate _ /\ _` to `assert (p /\ q); e`.
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection

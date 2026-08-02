@@ -279,6 +279,7 @@ let must_erase_for_extraction_attr : FStarC_Ident.lident=
   attr "must_erase_for_extraction"
 let strict_on_arguments_attr : FStarC_Ident.lident=
   attr "strict_on_arguments"
+let smt_arity_attr : FStarC_Ident.lident= attr "smt_arity"
 let resolve_implicits_attr_string : FStarC_Ident.lident=
   attr "resolve_implicits"
 let override_resolve_implicits_handler_lid : FStarC_Ident.lident=
@@ -472,6 +473,11 @@ let exists_elim_lid : FStarC_Ident.lid= classical_sugar_lid "exists_elim"
 let implies_elim_lid : FStarC_Ident.lid= classical_sugar_lid "implies_elim"
 let or_elim_lid : FStarC_Ident.lid= classical_sugar_lid "or_elim"
 let and_elim_lid : FStarC_Ident.lid= classical_sugar_lid "and_elim"
+let or_decide_lid : FStarC_Ident.lid= classical_sugar_lid "or_decide"
+let max_indefinite_description_arity : Prims.int= Prims.of_int 5
+let indefinite_description_lid (n : Prims.int) : FStarC_Ident.lid=
+  classical_sugar_lid
+    (Prims.strcat "indefinite_description" (Prims.string_of_int n))
 let match_returns_def_name : Prims.string=
   Prims.strcat FStarC_Ident.reserved_prefix "_ret_"
 let steel_memory_inv_lid : FStarC_Ident.lident=

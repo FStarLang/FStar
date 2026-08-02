@@ -1054,11 +1054,10 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
       List.iter collect_term vs;
       collect_term e
 
-    | IntroImplies(p, q, x, e) ->
+    | IntroImplies(p, q, e) ->
       add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
       collect_term p;
       collect_term q;
-      collect_binder x;
       collect_term e
 
     | IntroOr(b, p, q, r) ->
@@ -1080,12 +1079,10 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
         collect_term p;
         List.iter collect_term vs
 
-    | ElimExists(bs, p, q, b, e) ->
+    | ElimExists(bs, p, e) ->
         add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
         collect_binders bs;
         collect_term p;
-        collect_term q;
-        collect_binder b;
         collect_term e
 
     | ElimImplies(p, q, e) ->
@@ -1094,22 +1091,16 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
       collect_term q;
       collect_term e
 
-    | ElimAnd(p, q, r, x, y, e) ->
+    | ElimAnd(p, q, e) ->
       add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
       collect_term p;
       collect_term q;
-      collect_term r;
-      collect_binder x;
-      collect_binder y;
       collect_term e
 
-    | ElimOr(p, q, r, x, e, y, e') ->
+    | ElimOr(p, q, e, e') ->
       add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
       collect_term p;
       collect_term q;
-      collect_term r;
-      collect_binder x;
-      collect_binder y;
       collect_term e;
       collect_term e'
 

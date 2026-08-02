@@ -18,7 +18,7 @@ let my_t_injective : squash (is_inj my_t) =
   introduce forall f0 f1.
       my_t f0 == my_t f1 ==> f0 == f1
   with introduce _ ==> _
-  with _ . (
+  with (
     inj_my_t #f0 My;
     inj_my_t #f1 (coerce_eq () (My #f0)) 
   )
@@ -36,7 +36,7 @@ let t_injective : squash (is_inj t) =
   introduce forall f0 f1.
       t f0 == t f1 ==> f0 == f1
   with introduce _ ==> _
-  with _ . (
+  with (
     inj_t #f0 Mk;
     inj_t #f1 (coerce_eq () (Mk #f0)) 
   )
@@ -59,7 +59,7 @@ let itest2_injective' : squash (is_inj test2) =
   introduce forall f0 f1.
       test2 f0 == test2 f1 ==> f0 == f1
   with introduce _ ==> _
-  with _ . (
+  with (
     test2_injective f0 f1
   )
 let fals () : squash False =

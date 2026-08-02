@@ -20,8 +20,7 @@ let test_exists_intro_workaround (x:int) (y:t x) (_:squash (p x y)) =
 
 let test_exists_elim (_:squash(exists (x:int) (y:t x). p x y)) =
   eliminate exists (x:int) (y:t x). p x y
-  returns True
-  with _. ()
+  with ()
 
 let test_forall_intro (f:(x:int -> y:t x -> squash (p x y))) =
   introduce forall (x:int) (y: t x). p x y

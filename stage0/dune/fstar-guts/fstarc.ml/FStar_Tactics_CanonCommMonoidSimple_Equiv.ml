@@ -82,9 +82,7 @@ let rec where_aux (n : Prims.nat) (x : FStar_Tactics_NamedView.term)
   | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
   | x'::xs' ->
       if term_eq x x'
-      then
-        FStar_Tactics_Effect.lift_div_tac ()
-          (fun uu___ -> FStar_Pervasives_Native.Some n)
+      then (fun uu___ -> FStar_Pervasives_Native.Some n)
       else where_aux (n + Prims.int_one) x xs'
 let where :
   FStar_Tactics_NamedView.term ->

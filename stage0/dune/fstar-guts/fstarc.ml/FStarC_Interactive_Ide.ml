@@ -956,9 +956,6 @@ let json_of_repl_state (st : FStarC_Interactive_Ide_Types.repl_state) :
     match uu___ with
     | (uu___1, (task, uu___2)) ->
         (match task with
-         | FStarC_Interactive_Ide_Types.LDInterleaved (intf, impl) ->
-             [intf.FStarC_Interactive_Ide_Types.tf_fname;
-             impl.FStarC_Interactive_Ide_Types.tf_fname]
          | FStarC_Interactive_Ide_Types.LDSingle intf_or_impl ->
              [intf_or_impl.FStarC_Interactive_Ide_Types.tf_fname]
          | FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile intf ->
@@ -1110,12 +1107,6 @@ let write_error (contents : (Prims.string * FStarC_Json.json) Prims.list) :
 let write_repl_ld_task_progress
   (task : FStarC_Interactive_Ide_Types.repl_task) : unit=
   match task with
-  | FStarC_Interactive_Ide_Types.LDInterleaved (uu___, tf) ->
-      let modname =
-        FStarC_Parser_Dep.module_name_of_file
-          tf.FStarC_Interactive_Ide_Types.tf_fname in
-      write_progress (FStar_Pervasives_Native.Some "loading-dependency")
-        [("modname", (FStarC_Json.JsonStr modname))]
   | FStarC_Interactive_Ide_Types.LDSingle tf ->
       let modname =
         FStarC_Parser_Dep.module_name_of_file
@@ -1293,64 +1284,51 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env)
                   (tc_result.FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name))) in
       (match uu___1 with
        | (uu___2, env1) ->
+           let pred se =
+             let rec pred1 lids =
+               match lids with
+               | [] -> false
+               | lid::lids1 ->
+                   if (FStarC_Ident.string_of_lid lid) = until_lid
+                   then true
+                   else pred1 lids1 in
+             pred1 (FStarC_Syntax_Util.lids_of_sigelt se) in
            let uu___3 =
-             FStarC_Universal.with_dsenv_of_tcenv env1
-               (fun ds ->
-                  let uu___4 =
-                    FStarC_Syntax_DsEnv.set_iface_decls ds
-                      (tc_result.FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name
-                      [] in
-                  ((), uu___4)) in
+             trunc_modul tc_result.FStarC_CheckedFiles.checked_module pred in
            (match uu___3 with
-            | (uu___4, env2) ->
-                let pred se =
-                  let rec pred1 lids =
-                    match lids with
-                    | [] -> false
-                    | lid::lids1 ->
-                        if (FStarC_Ident.string_of_lid lid) = until_lid
-                        then true
-                        else pred1 lids1 in
-                  pred1 (FStarC_Syntax_Util.lids_of_sigelt se) in
-                let uu___5 =
-                  trunc_modul tc_result.FStarC_CheckedFiles.checked_module
-                    pred in
-                (match uu___5 with
-                 | (found_decl, m) ->
-                     if Prims.op_Negation found_decl
-                     then
-                       FStarC_Effect.failwith
-                         (Prims.strcat
-                            "did not find declaration with lident " until_lid)
-                     else
-                       (let uu___6 =
-                          let uu___7 =
-                            FStarC_ToSyntax_ToSyntax.add_partial_modul_to_env
-                              m tc_result.FStarC_CheckedFiles.mii
-                              (FStarC_TypeChecker_Normalize.erase_universes
-                                 env2) in
-                          FStarC_Universal.with_dsenv_of_tcenv env2 uu___7 in
-                        match uu___6 with
-                        | (uu___7, env3) ->
-                            let env4 =
-                              FStarC_TypeChecker_Tc.load_partial_checked_module
-                                env3 m in
-                            let uu___8 =
-                              FStarC_Universal.with_dsenv_of_tcenv env4
-                                (fun ds ->
-                                   ((),
-                                     (FStarC_Syntax_DsEnv.set_current_module
-                                        ds m.FStarC_Syntax_Syntax.name))) in
-                            (match uu___8 with
-                             | (uu___9, env5) ->
-                                 let env6 =
-                                   FStarC_TypeChecker_Env.set_current_module
-                                     env5 m.FStarC_Syntax_Syntax.name in
-                                 ((let uu___11 =
-                                     FStarC_SMTEncoding_Encode.encode_modul
-                                       env6 m in
-                                   ());
-                                  (env6, m)))))))
+            | (found_decl, m) ->
+                if Prims.op_Negation found_decl
+                then
+                  FStarC_Effect.failwith
+                    (Prims.strcat "did not find declaration with lident "
+                       until_lid)
+                else
+                  (let uu___4 =
+                     let uu___5 =
+                       FStarC_ToSyntax_ToSyntax.add_partial_modul_to_env m
+                         tc_result.FStarC_CheckedFiles.mii
+                         (FStarC_TypeChecker_Normalize.erase_universes env1) in
+                     FStarC_Universal.with_dsenv_of_tcenv env1 uu___5 in
+                   match uu___4 with
+                   | (uu___5, env2) ->
+                       let env3 =
+                         FStarC_TypeChecker_Tc.load_partial_checked_module
+                           env2 m in
+                       let uu___6 =
+                         FStarC_Universal.with_dsenv_of_tcenv env3
+                           (fun ds ->
+                              ((),
+                                (FStarC_Syntax_DsEnv.set_current_module ds
+                                   m.FStarC_Syntax_Syntax.name))) in
+                       (match uu___6 with
+                        | (uu___7, env4) ->
+                            let env5 =
+                              FStarC_TypeChecker_Env.set_current_module env4
+                                m.FStarC_Syntax_Syntax.name in
+                            ((let uu___9 =
+                                FStarC_SMTEncoding_Encode.encode_modul env5 m in
+                              ());
+                             (env5, m))))))
 let run_load_partial_file (st : FStarC_Interactive_Ide_Types.repl_state)
   (decl_name : Prims.string) :
   ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json) *
@@ -1553,7 +1531,13 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
            FStarC_TypeChecker_Env.core_check =
              (uu___.FStarC_TypeChecker_Env.core_check);
            FStarC_TypeChecker_Env.missing_decl =
-             (uu___.FStarC_TypeChecker_Env.missing_decl)
+             (uu___.FStarC_TypeChecker_Env.missing_decl);
+           FStarC_TypeChecker_Env.iface_todo =
+             (uu___.FStarC_TypeChecker_Env.iface_todo);
+           FStarC_TypeChecker_Env.iface_lids =
+             (uu___.FStarC_TypeChecker_Env.iface_lids);
+           FStarC_TypeChecker_Env.iface_val_lids =
+             (uu___.FStarC_TypeChecker_Env.iface_val_lids)
          });
       FStarC_Interactive_Ide_Types.repl_stdin =
         (st1.FStarC_Interactive_Ide_Types.repl_stdin);
@@ -2216,10 +2200,9 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
             str
       | TypeContainsLid lid ->
           let uu___ = sc_fvars tcenv candidate in
-          FStarC_Class_Setlike.mem ()
-            (Obj.magic
-               (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv)) lid
-            (Obj.magic uu___) in
+          FStarC_Class_Setlike.mem
+            (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) lid
+            uu___ in
     found <> term.st_negate in
   let parse search_str1 =
     let parse_one term =

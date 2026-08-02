@@ -522,24 +522,13 @@ let trivial_guard : guard_t=
   {
     guard_f = Trivial;
     deferred_to_tac =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))));
-    deferred =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))));
+      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
+    deferred = (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
     univ_ineqs =
-      ((Obj.magic
-          (FStarC_Class_Listlike.empty ()
-             (Obj.magic (FStarC_CList.listlike_clist ())))),
-        (Obj.magic
-           (FStarC_Class_Listlike.empty ()
-              (Obj.magic (FStarC_CList.listlike_clist ())))));
+      ((FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())),
+        (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())));
     implicits =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))))
+      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()))
   }
 let conj_guard_f (g1 : guard_formula) (g2 : guard_formula) : guard_formula=
   match (g1, g2) with
@@ -586,7 +575,7 @@ let monoid_guard_t : guard_t FStarC_Class_Monoid.monoid=
 let rec check_trivial (t : FStarC_Syntax_Syntax.term) : guard_formula=
   let uu___ =
     let uu___1 = FStarC_Syntax_Util.unmeta t in
-    FStarC_Syntax_Util.head_and_args uu___1 in
+    FStarC_Syntax_Util.head_and_args_full uu___1 in
   match uu___ with
   | (hd, args) ->
       let uu___1 =

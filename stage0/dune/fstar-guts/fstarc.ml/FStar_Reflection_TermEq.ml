@@ -195,24 +195,6 @@ let const_cmp : FStarC_Reflection_V2_Data.vconst comparator_for=
     | uu___ -> Obj.magic (Obj.repr Neq)
 let ctxu_cmp : FStarC_Reflection_Types.ctx_uvar_and_subst comparator_for=
   fun uu___ uu___1 -> Unknown
-let denote_pat_univs
-  (o :
-    FStarC_Reflection_Types.universe Prims.list
-      FStar_Pervasives_Native.option)
-  : unit Prims.list FStar_Pervasives_Native.option=
-  match o with
-  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some us ->
-      FStar_Pervasives_Native.Some
-        (FStar_Reflection_TermSpec.denote_universes us)
-let denote_either
-  (tc :
-    (FStarC_Reflection_Types.term, FStarC_Reflection_Types.comp)
-      FStar_Pervasives.either)
-  : (unit, unit) FStar_Pervasives.either=
-  match tc with
-  | FStar_Pervasives.Inl t -> FStar_Pervasives.Inl ()
-  | FStar_Pervasives.Inr c -> FStar_Pervasives.Inr ()
 let rec term_cmp : (FStarC_Reflection_Types.term, Obj.t) comparator_for'=
   fun t1 t2 ->
     let tv1 = FStarC_Reflection_V2_Builtins.inspect_ln t1 in

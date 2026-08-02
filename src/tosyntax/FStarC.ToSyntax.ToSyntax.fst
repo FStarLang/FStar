@@ -1895,11 +1895,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
        in
        aux bs vs [] e, noaqs
 
-    | IntroImplies (p, q, x, e) ->
+    | IntroImplies (p, q, e) ->
       let p = desugar_term env p in
       let q = desugar_term env q in
-      let env', [x] = desugar_binders env [x] in
-      let e = desugar_term env' e in
+      let e = desugar_term env e in
+      (* The hypothesis is no longer named; bind it to a fresh anonymous
+         variable so that it is still available to the SMT solver. *)
+      let x = S.mk_binder (S.new_bv (Some e.pos) S.tun) in
       let head = S.fv_to_tm (S.lid_and_dd_as_fv C.implies_intro_lid None) in
       let args = [(p, None);
                   (mk_thunk q, None);
@@ -1972,79 +1974,54 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       let range = List.fold_right (fun bs r -> Range.union_ranges (S.range_of_bv bs.binder_bv) r) bs p.pos in
       aux bs vs [] { U.exp_unit with pos = range }, noaqs
 
-    | ElimExists (binders, p, q, binder, e) -> (
-      let env', bs = desugar_binders env binders in
-      let p = desugar_term env' p in
-      let q = desugar_term env q in
-      let sq_q = U.mk_squash q in
-      let env'', [b_pf_p] = desugar_binders env' [binder] in
-      let e = desugar_term env'' e in
-      let rec mk_exists bs p : ML _ =
+    | ElimExists (bs, p, e) ->
+      (*
+         eliminate exists x1 ... xn. p
+         with e
+         desugars to
+         let (| x1, ..., xk |) = indefinite_descriptionk (fun x1 ... xk -> exists xk+1 ... xn. p) in
+         ... continuing with the remaining binders, at most
+         max_indefinite_description_arity at a time ...
+      *)
+      let pat_of_binder (b:binder) : ML pattern =
+        let v aq attrs x = mk_pattern (PatVar (x, aq, attrs)) b.brange in
+        match b.b with
+        | Variable x -> v b.aqual b.battributes x
+        | Annotated (x, t) ->
+          mk_pattern (PatAscribed (v b.aqual b.battributes x, (t, None))) b.brange
+        | NoName _ ->
+          raise_error b Fatal_UnexpectedTerm
+            "Unexpected unnamed binder in 'eliminate exists'"
+      in
+      let rec aux (bs:list binder) : ML term =
         match bs with
-        | [] -> failwith "Impossible"
-        | [b] ->
-          let x = b.binder_bv in
-          let head = S.fv_to_tm (S.lid_and_dd_as_fv C.exists_lid None) in
-          let args = [(x.sort, S.as_aqual_implicit true);
-                      (U.abs [List.hd bs] p None, None)] in
-          S.mk_Tm_app head args p.pos
-        | b::bs ->
-          let body = mk_exists bs p in
-          mk_exists [b] body
-      in
-      let mk_exists_elim t x_p s_ex_p f r =
-        let head = S.fv_to_tm (S.lid_and_dd_as_fv C.exists_elim_lid None) in
-        let args = [(t, S.as_aqual_implicit true);
-                    (x_p, S.as_aqual_implicit true);
-                    (q, S.as_aqual_implicit true);
-                    (s_ex_p, None);
-                    (f, None)] in
-        mk_Tm_app head args r
-      in
-      let rec aux binders squash_token : ML _ =
-        match binders with
-        | [] -> raise_error top Fatal_UnexpectedTerm "Empty binders in ELIM_EXISTS"
-        | [b] ->
-          let x = unqual_bv_of_binder b in
-          (*
-               exists_elim
-                  #(x.sort)
-                  #(fun b -> p)
-                  squash_token
-                  (fun b pf_p -> e)
-          *)
-          mk_exists_elim
-              x.sort
-              (U.abs [b] p None)
-              squash_token
-              (U.abs [b;b_pf_p] (U.ascribe e (Inl sq_q, None, false)) None)
-              squash_token.pos
-
-        | b::bs ->
-          let pf_i =
-            S.gen_bv "pf"
-              (Some (range_of_bv b.binder_bv))
-              S.tun
+        | [] -> e
+        | _ ->
+          let n = List.length bs in
+          let k = if n < C.max_indefinite_description_arity
+                  then n
+                  else C.max_indefinite_description_arity
           in
-          let k = aux bs (S.bv_to_name pf_i) in
-          let x = unqual_bv_of_binder b in
-          (*
-             exists_elim
-               #(x.sort)
-               #(fun b -> exists bs. p)
-               squash_token
-               (fun b pf_i -> k)
-          *)
-          mk_exists_elim
-            x.sort
-            (U.abs [b] (mk_exists bs p) None)
-            squash_token
-            (U.abs [b; S.mk_binder pf_i] k None)
-            squash_token.pos
+          let hd, tl = List.splitAt k bs in
+          let r = List.fold_right (fun (b:binder) r -> Range.union_ranges b.brange r) hd p.range in
+          let body =
+            if Nil? tl then p
+            else mk_term (QExists (tl, ([], []), p)) p.range Formula
+          in
+          let pred = mk_term (Abs (List.map pat_of_binder hd, body)) r Expr in
+          let head = mk_term (Var (C.indefinite_description_lid k)) r Expr in
+          let rhs = mkExplicitApp head [pred] r in
+          let pats = List.map pat_of_binder hd in
+          let pat =
+            match pats with
+            | [pat] -> pat
+            | _ -> mk_pattern (PatTuple (pats, true)) r
+          in
+          mk_term (Let (LocalNoLetQualifier, [(None, (pat, rhs))], aux tl)) top.range Expr
       in
-      let range = List.fold_right (fun bs r -> Range.union_ranges (S.range_of_bv bs.binder_bv) r) bs p.pos in
-      aux bs { U.exp_unit with pos = range }, noaqs
-      )
+      if Nil? bs
+      then raise_error top Fatal_UnexpectedTerm "Empty binders in 'eliminate exists'"
+      else desugar_term_maybe_top top_level env (aux bs)
 
     | ElimImplies (p, q, e) ->
       let p = desugar_term env p in
@@ -2057,37 +2034,21 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                   (mk_thunk e, None)] in
       mk_Tm_app head args top.range, noaqs
 
-    | ElimOr(p, q, r, x, e1, y, e2) ->
-      let p = desugar_term env p in
-      let q = desugar_term env q in
-      let r = desugar_term env r in
-      let env_x, [x] = desugar_binders env [x] in
-      let e1 = desugar_term env_x e1 in
-      let env_y, [y] = desugar_binders env [y] in
-      let e2 = desugar_term env_y e2 in
-      let head = S.fv_to_tm (S.lid_and_dd_as_fv C.or_elim_lid None) in
-      let extra_binder = S.mk_binder (S.new_bv None S.tun) in
-      let args = [(p, None);
-                  (mk_thunk q, None);
-                  (r, None);
-                  ({ U.exp_unit with pos = Range.union_ranges p.pos q.pos }, None);
-                  (U.abs [x] e1 None, None);
-                  (U.abs [extra_binder; y] e2 None, None)] in
-      mk_Tm_app head args top.range, noaqs
+    | ElimOr(p, q, e1, e2) ->
+      (* eliminate p \/ q with e1 and e2  ~~>  if or_decide p q then e1 else e2 *)
+      let r = Range.union_ranges p.range q.range in
+      let head = mk_term (Var C.or_decide_lid) r Expr in
+      let b = mkExplicitApp head [p; q] r in
+      desugar_term_maybe_top top_level env
+        (mk_term (If (b, None, None, e1, e2)) top.range Expr)
 
-    | ElimAnd(p, q, r, x, y, e) ->
-      let p = desugar_term env p in
-      let q = desugar_term env q in
-      let r = desugar_term env r in
-      let env', [x;y] = desugar_binders env [x;y] in
-      let e = desugar_term env' e in
-      let head = S.fv_to_tm (S.lid_and_dd_as_fv C.and_elim_lid None) in
-      let args = [(p, None);
-                  (mk_thunk q, None);
-                  (r, None);
-                  ({ U.exp_unit with pos = Range.union_ranges p.pos q.pos }, None);
-                  (U.abs [x;y] e None, None)] in
-      mk_Tm_app head args top.range, noaqs
+    | ElimAnd(p, q, e) ->
+      (* eliminate p /\ q with e  ~~>  assert (p /\ q); e *)
+      let r = Range.union_ranges p.range q.range in
+      let conj = mk_term (Op (mk_ident ("/\\", r), [p; q])) r Formula in
+      let a = mkExplicitApp (mk_term (Var C.assert_lid) r Expr) [conj] r in
+      desugar_term_maybe_top top_level env
+        (mk_term (Seq (a, e)) top.range Expr)
 
     | ListLiteral ts ->
       let nil r = mk_term (Construct (C.nil_lid, [])) r Expr in

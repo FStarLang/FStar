@@ -158,51 +158,19 @@ let rec inspect_ln (t : FStarC_Syntax_Syntax.term) :
         FStarC_Syntax_Syntax.eff_opt = uu___;_}
       -> FStarC_Reflection_V2_Data.Tv_AscribedC (t2, cty, tacopt, eq)
   | FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = uu___; FStarC_Syntax_Syntax.args = [];_} ->
-      FStarC_Effect.failwith "inspect_ln: empty arguments on Tm_app"
-  | FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = hd; FStarC_Syntax_Syntax.args = args;_} ->
-      let uu___ = FStarC_List.last args in
-      (match uu___ with
-       | (a, q) ->
-           let q' = inspect_aqual q in
-           let uu___1 =
-             let uu___2 =
-               FStarC_Syntax_Util.mk_app hd (FStarC_List.init args) in
-             (uu___2, (a, q')) in
-           FStarC_Reflection_V2_Data.Tv_App uu___1)
+      { FStarC_Syntax_Syntax.hd = hd; FStarC_Syntax_Syntax.arg = (a, q);_} ->
+      let q' = inspect_aqual q in
+      FStarC_Reflection_V2_Data.Tv_App (hd, (a, q'))
   | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.bs = []; FStarC_Syntax_Syntax.body = uu___;
-        FStarC_Syntax_Syntax.rc_opt = uu___1;_}
-      -> FStarC_Effect.failwith "inspect_ln: empty arguments on Tm_abs"
-  | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.bs = b::bs; FStarC_Syntax_Syntax.body = t2;
-        FStarC_Syntax_Syntax.rc_opt = k;_}
-      ->
-      let body =
-        match bs with
-        | [] -> t2
-        | bs1 ->
-            FStarC_Syntax_Syntax.mk
-              (FStarC_Syntax_Syntax.Tm_abs
-                 {
-                   FStarC_Syntax_Syntax.bs = bs1;
-                   FStarC_Syntax_Syntax.body = t2;
-                   FStarC_Syntax_Syntax.rc_opt = k
-                 }) t2.FStarC_Syntax_Syntax.pos in
-      FStarC_Reflection_V2_Data.Tv_Abs (b, body)
+      { FStarC_Syntax_Syntax.b = b; FStarC_Syntax_Syntax.body = body;
+        FStarC_Syntax_Syntax.rc_opt = uu___;_}
+      -> FStarC_Reflection_V2_Data.Tv_Abs (b, body)
   | FStarC_Syntax_Syntax.Tm_type u -> FStarC_Reflection_V2_Data.Tv_Type u
   | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = []; FStarC_Syntax_Syntax.comp = uu___;_}
-      -> FStarC_Effect.failwith "inspect_ln: empty binders on arrow"
-  | FStarC_Syntax_Syntax.Tm_arrow uu___ ->
-      let uu___1 = FStarC_Syntax_Util.arrow_one_ln t1 in
-      (match uu___1 with
-       | FStar_Pervasives_Native.Some (b, c) ->
-           FStarC_Reflection_V2_Data.Tv_Arrow (b, c)
-       | FStar_Pervasives_Native.None -> FStarC_Effect.failwith "impossible")
+      { FStarC_Syntax_Syntax.b1 = b; FStarC_Syntax_Syntax.comp = c;_} ->
+      FStarC_Reflection_V2_Data.Tv_Arrow (b, c)
   | FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = t2;_} ->
+      { FStarC_Syntax_Syntax.b2 = bv; FStarC_Syntax_Syntax.phi = t2;_} ->
       FStarC_Reflection_V2_Data.Tv_Refine
         ((FStarC_Syntax_Syntax.mk_binder bv), t2)
   | FStarC_Syntax_Syntax.Tm_constant c ->
@@ -440,14 +408,14 @@ let pack_ln (tv : FStarC_Reflection_V2_Data.term_view) :
       FStarC_Syntax_Syntax.mk
         (FStarC_Syntax_Syntax.Tm_abs
            {
-             FStarC_Syntax_Syntax.bs = [b];
+             FStarC_Syntax_Syntax.b = b;
              FStarC_Syntax_Syntax.body = t;
              FStarC_Syntax_Syntax.rc_opt = FStar_Pervasives_Native.None
            }) t.FStarC_Syntax_Syntax.pos
   | FStarC_Reflection_V2_Data.Tv_Arrow (b, c) ->
       FStarC_Syntax_Syntax.mk
         (FStarC_Syntax_Syntax.Tm_arrow
-           { FStarC_Syntax_Syntax.bs1 = [b]; FStarC_Syntax_Syntax.comp = c })
+           { FStarC_Syntax_Syntax.b1 = b; FStarC_Syntax_Syntax.comp = c })
         c.FStarC_Syntax_Syntax.pos
   | FStarC_Reflection_V2_Data.Tv_Type u ->
       FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_type u)
@@ -456,7 +424,7 @@ let pack_ln (tv : FStarC_Reflection_V2_Data.term_view) :
       let bv = b.FStarC_Syntax_Syntax.binder_bv in
       FStarC_Syntax_Syntax.mk
         (FStarC_Syntax_Syntax.Tm_refine
-           { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = t })
+           { FStarC_Syntax_Syntax.b2 = bv; FStarC_Syntax_Syntax.phi = t })
         t.FStarC_Syntax_Syntax.pos
   | FStarC_Reflection_V2_Data.Tv_Const c ->
       let uu___ =
