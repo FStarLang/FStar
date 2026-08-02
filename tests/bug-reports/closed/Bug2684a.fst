@@ -41,15 +41,13 @@ let the_lemma p1 p2 t n1 tl =
   // - replace `dtuple_pred (|p1, p2, t|)` with `True`
   // - remove one of the eliminates / introduce
   introduce (exists n0. n0 <= n1 /\ nat_pred n0) ==> dtuple_pred (|p1, p2, t|)
-  with _. (
+  with (
     eliminate exists n0. n0 <= n1 /\ nat_pred n0
-    returns dtuple_pred (|p1, p2, t|)
-    with _. (
+    with (
       // No bug if we use `nat_pred` or a predicate for a new type
       // Bug is still there if we use `dtuple_pred` instead of `t4_pred`
       eliminate exists x. t4_pred x
-      returns dtuple_pred (|p1, p2, t|)
-      with _. (
+      with (
         admit()
       )
     )

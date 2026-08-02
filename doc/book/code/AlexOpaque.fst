@@ -17,13 +17,13 @@ let g : (nat -> int) = fun x -> f (x+1)
 let find_above_for_g (m:nat) : Lemma(exists (i:nat). abs(g i) > m) = 
   instantiate_unbounded f m;
   eliminate exists (n:nat). abs(f n) > m
-  returns exists (i:nat). abs(g i) > m with _. begin
+  with begin
     let m1 = abs(f n) in
     if n>=1 then assert (abs(g (n-1)) > m)
     else begin
       instantiate_unbounded f m1;
       eliminate exists (n1:nat). abs (f n1) > m1
-      returns exists (i:nat). abs(g i) > m with _. 
+      with 
       begin
         assert (abs (g (n1-1)) > m)
       end 
@@ -48,13 +48,13 @@ let find_above_for_gg (m:nat) : Lemma(exists (i:nat). abs(gg i) > m) =
   assert (unbounded_alt ff);
   assert (trigger m);
   eliminate exists (n:nat). abs(ff n) > m
-  returns exists (i:nat). abs(gg i) > m with _. begin
+  with begin
     let m1 = abs(ff n) in
     if n>=1 then assert (abs(gg (n-1)) > m)
     else begin
       assert (trigger m1);
       eliminate exists (n1:nat). abs (ff n1) > m1
-      returns exists (i:nat). abs(gg i) > m with _. 
+      with 
       begin
         assert (abs (gg (n1-1)) > m)
       end 
@@ -66,13 +66,13 @@ let find_above_for_gg (m:nat) : Lemma(exists (i:nat). abs(gg i) > m) =
 let find_above_for_g1 (m:nat) : Lemma(exists (i:nat). abs(g i) > m) = 
   instantiate_unbounded f m;
   eliminate exists (n:nat). abs(f n) > m
-  returns exists (i:nat). abs(g i) > m with _. begin
+  with begin
     let m1 = abs(f n) in
     if n>=1 then assert (trigger (g (n-1)))
     else begin
       instantiate_unbounded f m1;
       eliminate exists (n1:nat). abs (f n1) > m1
-      returns exists (i:nat). abs(g i) > m with _. 
+      with 
       begin
         assert (trigger (g (n1-1)))
       end 
@@ -85,13 +85,13 @@ let trigger_nat (x:nat) = True
 let find_above_for_g2 (m:nat) : Lemma(exists (i:nat). abs(g i) > m) = 
   instantiate_unbounded f m;
   eliminate exists (n:nat). abs(f n) > m
-  returns exists (i:nat). abs(g i) > m with _. begin
+  with begin
     let m1 = abs(f n) in
     if n>=1 then assert (trigger_nat (n-1))
     else begin
       instantiate_unbounded f m1;
       eliminate exists (n1:nat). abs (f n1) > m1
-      returns exists (i:nat). abs(g i) > m with _. 
+      with 
       begin
         assert (trigger_nat (n1-1))
       end 
@@ -103,8 +103,7 @@ let find_above_for_g2 (m:nat) : Lemma(exists (i:nat). abs(g i) > m) =
 let find_above_for_g' (m:nat) : Lemma(exists (i:nat). abs(g i) > m) = 
   instantiate_unbounded f m;
   eliminate exists (n:nat). abs(f n) > m
-  returns _ // exists (i:nat). abs(g i) > m
-  with _. begin
+  with begin
     let m1 = abs(f n) in
     if n>=1 then (
       introduce exists (i:nat). abs(g i) > m 
@@ -114,8 +113,7 @@ let find_above_for_g' (m:nat) : Lemma(exists (i:nat). abs(g i) > m) =
     else begin
       instantiate_unbounded f m1;
       eliminate exists (n1:nat). abs (f n1) > m1
-      returns _ //exists (i:nat). _ abs(g i) > m
-      with _. 
+      with 
         begin 
           introduce exists (i:nat). abs (g i) > m
           with (n1 - 1)

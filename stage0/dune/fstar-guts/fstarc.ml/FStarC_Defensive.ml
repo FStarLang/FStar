@@ -20,9 +20,8 @@ let pp_set (uu___ : 'a FStarC_Class_Ord.ord)
                 (FStar_Pprint.break_ Prims.int_one)) FStar_Pprint.rbracket ds in
          let uu___2 =
            let uu___3 =
-             FStarC_Class_Setlike.elems ()
-               (Obj.magic (FStarC_FlatSet.setlike_flat_set uu___))
-               (Obj.magic s) in
+             FStarC_Class_Setlike.elems
+               (FStarC_FlatSet.setlike_flat_set uu___) s in
            FStarC_List.map (FStarC_Class_PP.pp uu___1) uu___3 in
          doclist uu___2)
   }
@@ -34,10 +33,9 @@ let __def_check_scoped (uu___ : 'envut FStarC_Class_Binders.hasBinders)
   let scope = FStarC_Class_Binders.boundNames uu___ env in
   let uu___3 =
     let uu___4 =
-      FStarC_Class_Setlike.subset ()
-        (Obj.magic
-           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv))
-        (Obj.magic free) (Obj.magic scope) in
+      FStarC_Class_Setlike.subset
+        (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv) free
+        scope in
     Prims.op_Negation uu___4 in
   if uu___3
   then
@@ -64,12 +62,9 @@ let __def_check_scoped (uu___ : 'envut FStarC_Class_Binders.hasBinders)
               let uu___12 =
                 let uu___13 =
                   let uu___14 =
-                    Obj.magic
-                      (FStarC_Class_Setlike.diff ()
-                         (Obj.magic
-                            (FStarC_FlatSet.setlike_flat_set
-                               FStarC_Syntax_Syntax.ord_bv)) (Obj.magic free)
-                         (Obj.magic scope)) in
+                    FStarC_Class_Setlike.diff
+                      (FStarC_FlatSet.setlike_flat_set
+                         FStarC_Syntax_Syntax.ord_bv) free scope in
                   FStarC_Class_PP.pp
                     (pp_set FStarC_Syntax_Syntax.ord_bv pp_bv) uu___14 in
                 FStar_Pprint.op_Hat_Slash_Hat

@@ -36,11 +36,10 @@ let rec print_list_aux :
     | [] -> (fun uu___ -> "")
     | x::[] -> f x
     | x::xs1 ->
-        FStar_Tactics_Effect.tac_bind () () (f x)
-          (fun uu___ ps ->
-             let x1 =
-               let x2 = print_list_aux f xs1 ps in Prims.strcat "; " x2 in
-             Prims.strcat uu___ x1)
+        (fun ps ->
+           let x1 = f x ps in
+           let x2 = let x3 = print_list_aux f xs1 ps in Prims.strcat "; " x3 in
+           Prims.strcat x1 x2)
 let print_list
   (f : 'a -> (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr)
   (l : 'a Prims.list) : (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -223,8 +222,8 @@ and match_returns_to_string
       match tacopt with
       | FStar_Pervasives_Native.None -> (fun uu___ -> "")
       | FStar_Pervasives_Native.Some tac ->
-          FStar_Tactics_Effect.tac_bind () () (term_to_ast_string tac)
-            (fun uu___ uu___1 -> Prims.strcat " by " uu___) in
+          (fun ps1 ->
+             let x1 = term_to_ast_string tac ps1 in Prims.strcat " by " x1) in
     match ret_opt with
     | FStar_Pervasives_Native.None -> ""
     | FStar_Pervasives_Native.Some (b, asc) ->
@@ -255,37 +254,35 @@ and comp_to_ast_string (c : FStar_Tactics_NamedView.comp) :
   (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr=
   match FStar_Tactics_NamedView.inspect_comp c with
   | FStarC_Reflection_V2_Data.C_Total t ->
-      FStar_Tactics_Effect.tac_bind () () (term_to_ast_string t)
-        (fun uu___ uu___1 -> Prims.strcat "Tot " uu___)
+      (fun ps -> let x = term_to_ast_string t ps in Prims.strcat "Tot " x)
   | FStarC_Reflection_V2_Data.C_GTotal t ->
-      FStar_Tactics_Effect.tac_bind () () (term_to_ast_string t)
-        (fun uu___ uu___1 -> Prims.strcat "GTot " uu___)
+      (fun ps -> let x = term_to_ast_string t ps in Prims.strcat "GTot " x)
   | FStarC_Reflection_V2_Data.C_Lemma (pre, post, uu___) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () () (term_to_ast_string pre)
-           (fun uu___1 ps ->
-              let x =
-                let x1 = term_to_ast_string post ps in Prims.strcat " " x1 in
-              Prims.strcat uu___1 x))
-        (fun uu___1 uu___2 -> Prims.strcat "Lemma " uu___1)
+      (fun ps ->
+         let x =
+           let x1 = term_to_ast_string pre ps in
+           let x2 =
+             let x3 = term_to_ast_string post ps in Prims.strcat " " x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Lemma " x)
   | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, uu___, uu___1) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStar_Tactics_Effect.tac_bind () () (universes_to_ast_string us)
-              (fun uu___2 ps ->
-                 let x =
-                   let x1 =
-                     let x2 =
-                       let x3 =
-                         let x4 = term_to_ast_string res ps in
-                         Prims.strcat ", " x4 in
-                       Prims.strcat
-                         (FStarC_Reflection_V2_Builtins.implode_qn eff) x3 in
-                     paren x2 in
-                   Prims.strcat "> " x1 in
-                 Prims.strcat uu___2 x))
-           (fun uu___2 uu___3 -> Prims.strcat "<" uu___2))
-        (fun uu___2 uu___3 -> Prims.strcat "Effect" uu___2)
+      (fun ps ->
+         let x =
+           let x1 =
+             let x2 = universes_to_ast_string us ps in
+             let x3 =
+               let x4 =
+                 let x5 =
+                   let x6 =
+                     let x7 = term_to_ast_string res ps in
+                     Prims.strcat ", " x7 in
+                   Prims.strcat
+                     (FStarC_Reflection_V2_Builtins.implode_qn eff) x6 in
+                 paren x5 in
+               Prims.strcat "> " x4 in
+             Prims.strcat x2 x3 in
+           Prims.strcat "<" x1 in
+         Prims.strcat "Effect" x)
 and const_to_ast_string (c : FStarC_Reflection_V2_Data.vconst) :
   (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun uu___ ->

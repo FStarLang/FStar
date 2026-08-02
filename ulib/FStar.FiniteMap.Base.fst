@@ -160,7 +160,7 @@ let cardinality_zero_iff_empty_lemma ()
   introduce forall (a: eqtype) (b:Type u#b) (m: map a b). cardinality m = 0 <==> m == emptymap
   with (
     introduce cardinality m = 0 ==> m == emptymap
-    with _. assert (feq (elements m) (elements emptymap))
+    with assert (feq (elements m) (elements emptymap))
   )
 
 
@@ -287,7 +287,7 @@ let map_extensionality_lemma ()
   introduce forall (a: eqtype) (b:Type u#b) (m1: map a b) (m2: map a b). equal m1 m2 ==> m1 == m2
   with (
     introduce equal m1 m2 ==> m1 == m2
-    with _. (
+    with (
       assert (FSet.equal (domain m1) (domain m2));
       assert (feq (elements m1) (elements m2))
     )

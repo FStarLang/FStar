@@ -147,15 +147,14 @@ val interp_pure (p:prop) (m:mem)
 let destruct_star_l (p q:slprop) (m:mem)
 : Lemma (interp (p `star` q) m ==> interp p m)
 = introduce interp (p `star` q) m ==> interp p m
-  with _ . (
+  with (
     star_equiv p q m;
     eliminate exists c0 c1.
         disjoint c0 c1 /\
         m == join c0 c1 /\
         interp p c0 /\
         interp q c1
-    returns interp p m
-    with _ . (
+    with (
         star_equiv p emp m;
         emp_equiv c1
     )

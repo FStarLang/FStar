@@ -54,7 +54,7 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
   let rec attr_list_elements e =
     let uu___ =
       let uu___1 = FStarC_Syntax_Util.unmeta e in
-      FStarC_Syntax_Util.head_and_args uu___1 in
+      FStarC_Syntax_Util.head_and_args_full uu___1 in
     match uu___ with
     | (head, args) ->
         let uu___1 =
@@ -124,7 +124,7 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
           (fun other ->
              FStarC_Util.for_some
                (fun attr ->
-                  let uu___ = FStarC_Syntax_Util.head_and_args attr in
+                  let uu___ = FStarC_Syntax_Util.head_and_args_full attr in
                   match uu___ with
                   | (head, args) ->
                       let uu___1 =
@@ -335,7 +335,13 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
            FStarC_TypeChecker_Env.core_check =
              (env.FStarC_TypeChecker_Env.core_check);
            FStarC_TypeChecker_Env.missing_decl =
-             (env.FStarC_TypeChecker_Env.missing_decl)
+             (env.FStarC_TypeChecker_Env.missing_decl);
+           FStarC_TypeChecker_Env.iface_todo =
+             (env.FStarC_TypeChecker_Env.iface_todo);
+           FStarC_TypeChecker_Env.iface_lids =
+             (env.FStarC_TypeChecker_Env.iface_lids);
+           FStarC_TypeChecker_Env.iface_val_lids =
+             (env.FStarC_TypeChecker_Env.iface_val_lids)
          } in
        env1.FStarC_TypeChecker_Env.try_solve_implicits_hook env1 resolve_tac
          deferred_goals)
@@ -466,7 +472,13 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                          FStarC_TypeChecker_Env.core_check =
                            (env1.FStarC_TypeChecker_Env.core_check);
                          FStarC_TypeChecker_Env.missing_decl =
-                           (env1.FStarC_TypeChecker_Env.missing_decl)
+                           (env1.FStarC_TypeChecker_Env.missing_decl);
+                         FStarC_TypeChecker_Env.iface_todo =
+                           (env1.FStarC_TypeChecker_Env.iface_todo);
+                         FStarC_TypeChecker_Env.iface_lids =
+                           (env1.FStarC_TypeChecker_Env.iface_lids);
+                         FStarC_TypeChecker_Env.iface_val_lids =
+                           (env1.FStarC_TypeChecker_Env.iface_val_lids)
                        } in
                      let env_lax =
                        {
@@ -570,7 +582,13 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                          FStarC_TypeChecker_Env.core_check =
                            (env2.FStarC_TypeChecker_Env.core_check);
                          FStarC_TypeChecker_Env.missing_decl =
-                           (env2.FStarC_TypeChecker_Env.missing_decl)
+                           (env2.FStarC_TypeChecker_Env.missing_decl);
+                         FStarC_TypeChecker_Env.iface_todo =
+                           (env2.FStarC_TypeChecker_Env.iface_todo);
+                         FStarC_TypeChecker_Env.iface_lids =
+                           (env2.FStarC_TypeChecker_Env.iface_lids);
+                         FStarC_TypeChecker_Env.iface_val_lids =
+                           (env2.FStarC_TypeChecker_Env.iface_val_lids)
                        } in
                      let uu___4 =
                        let t =
@@ -713,9 +731,7 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
              FStarC_TypeChecker_Common.guard_f =
                (g.FStarC_TypeChecker_Common.guard_f);
              FStarC_TypeChecker_Common.deferred_to_tac =
-               (Obj.magic
-                  (FStarC_Class_Listlike.empty ()
-                     (Obj.magic (FStarC_CList.listlike_clist ()))));
+               (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
              FStarC_TypeChecker_Common.deferred =
                (g.FStarC_TypeChecker_Common.deferred);
              FStarC_TypeChecker_Common.univ_ineqs =

@@ -576,8 +576,10 @@ let compare_decls (d0 : FStarC_SMTEncoding_Term.decl)
        FStarC_SMTEncoding_Term.assumption_fact_ids = uu___6;
        FStarC_SMTEncoding_Term.assumption_free_names = uu___7;_})
       -> FStarC_Util.compare a0 a1
-  | (FStarC_SMTEncoding_Term.DeclFun uu___, uu___1) -> Prims.of_int (-1)
-  | (FStarC_SMTEncoding_Term.DefineFun uu___, uu___1) -> Prims.of_int (-1)
+  | (FStarC_SMTEncoding_Term.DeclFun (uu___, uu___1, uu___2, uu___3), uu___4)
+      -> Prims.of_int (-1)
+  | (FStarC_SMTEncoding_Term.DefineFun
+     (uu___, uu___1, uu___2, uu___3, uu___4), uu___5) -> Prims.of_int (-1)
   | uu___ -> FStarC_Effect.failwith "Unexpected decl in compare decls"
 let prune_level (roots : FStarC_SMTEncoding_Term.decl Prims.list)
   (hd : decls_at_level) (s : solver_state) : decls_at_level=

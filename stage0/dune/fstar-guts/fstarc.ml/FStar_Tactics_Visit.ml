@@ -88,28 +88,27 @@ let rec visit_tm
               (fun uu___ ->
                  match uu___ with
                  | (b, asc) ->
-                     FStar_Tactics_Effect.tac_bind () ()
-                       (on_sort_binder (visit_tm ff) b)
-                       (fun b1 ps1 ->
-                          let x4 =
-                            match asc with
-                            | (FStar_Pervasives.Inl t1, tacopt, use_eq) ->
-                                let x5 =
-                                  let x6 = visit_tm ff t1 ps1 in
-                                  FStar_Pervasives.Inl x6 in
-                                let x6 =
-                                  FStar_Tactics_Util.map_opt (visit_tm ff)
-                                    tacopt ps1 in
-                                (x5, x6, use_eq)
-                            | (FStar_Pervasives.Inr c, tacopt, use_eq) ->
-                                let x5 =
-                                  let x6 = visit_comp ff c ps1 in
-                                  FStar_Pervasives.Inr x6 in
-                                let x6 =
-                                  FStar_Tactics_Util.map_opt (visit_tm ff)
-                                    tacopt ps1 in
-                                (x5, x6, use_eq) in
-                          (b1, x4))) ret_opt ps in
+                     (fun ps1 ->
+                        let x4 = on_sort_binder (visit_tm ff) b ps1 in
+                        let x5 =
+                          match asc with
+                          | (FStar_Pervasives.Inl t1, tacopt, use_eq) ->
+                              let x6 =
+                                let x7 = visit_tm ff t1 ps1 in
+                                FStar_Pervasives.Inl x7 in
+                              let x7 =
+                                FStar_Tactics_Util.map_opt (visit_tm ff)
+                                  tacopt ps1 in
+                              (x6, x7, use_eq)
+                          | (FStar_Pervasives.Inr c, tacopt, use_eq) ->
+                              let x6 =
+                                let x7 = visit_comp ff c ps1 in
+                                FStar_Pervasives.Inr x7 in
+                              let x7 =
+                                FStar_Tactics_Util.map_opt (visit_tm ff)
+                                  tacopt ps1 in
+                              (x6, x7, use_eq) in
+                        (x4, x5))) ret_opt ps in
           let x4 = FStar_Tactics_Util.map (visit_br ff) brs ps in
           FStarC_Reflection_V2_Data.Tv_Match (x2, x3, x4)
       | FStarC_Reflection_V2_Data.Tv_AscribedT (e, t1, topt, use_eq) ->
@@ -139,25 +138,23 @@ and visit_pat
   (p : FStarC_Reflection_V2_Data.pattern) :
   (FStarC_Reflection_V2_Data.pattern, Obj.t) FStar_Tactics_Effect.tac_repr=
   match p with
-  | FStarC_Reflection_V2_Data.Pat_Constant uu___ ->
-      FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> p)
+  | FStarC_Reflection_V2_Data.Pat_Constant uu___ -> (fun uu___1 -> p)
   | FStarC_Reflection_V2_Data.Pat_Var (v, s) ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ -> FStarC_Reflection_V2_Data.Pat_Var (v, s))
+      (fun uu___ -> FStarC_Reflection_V2_Data.Pat_Var (v, s))
   | FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Util.map
-           (fun uu___ ->
-              match uu___ with
-              | (p1, b) ->
-                  FStar_Tactics_Effect.tac_bind () () (visit_pat ff p1)
-                    (fun uu___1 uu___2 -> (uu___1, b))) subpats)
-        (fun subpats1 uu___ ->
-           FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats1))
+      (fun ps ->
+         let x =
+           FStar_Tactics_Util.map
+             (fun uu___ ->
+                match uu___ with
+                | (p1, b) ->
+                    (fun ps1 -> let x1 = visit_pat ff p1 ps1 in (x1, b)))
+             subpats ps in
+         FStarC_Reflection_V2_Data.Pat_Cons (head, univs, x))
   | FStarC_Reflection_V2_Data.Pat_Dot_Term t ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Util.map_opt (visit_tm ff) t)
-        (fun t1 uu___ -> FStarC_Reflection_V2_Data.Pat_Dot_Term t1)
+      (fun ps ->
+         let x = FStar_Tactics_Util.map_opt (visit_tm ff) t ps in
+         FStarC_Reflection_V2_Data.Pat_Dot_Term x)
 and visit_comp
   (ff :
     FStarC_Reflection_Types.term ->
@@ -185,8 +182,8 @@ and visit_comp
               (fun uu___ ->
                  match uu___ with
                  | (a, q) ->
-                     FStar_Tactics_Effect.tac_bind () () (visit_tm ff a)
-                       (fun uu___1 uu___2 -> (uu___1, q))) args ps in
+                     (fun ps1 -> let x4 = visit_tm ff a ps1 in (x4, q))) args
+              ps in
           let x4 = FStar_Tactics_Util.map (visit_tm ff) decrs ps in
           FStarC_Reflection_V2_Data.C_Eff (us, eff, x2, x3, x4) in
     FStarC_Reflection_V2_Builtins.pack_comp x1

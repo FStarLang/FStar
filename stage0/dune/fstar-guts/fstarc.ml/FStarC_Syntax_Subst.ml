@@ -613,14 +613,14 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
       let uu___ = mk (FStarC_Syntax_Syntax.Tm_uinst (t', us1)) in
       tag_with_range uu___ s
   | FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = t0; FStarC_Syntax_Syntax.args = args;_} ->
+      { FStarC_Syntax_Syntax.hd = t0; FStarC_Syntax_Syntax.arg = arg;_} ->
       let uu___ =
         let uu___1 =
           let uu___2 = subst' s t0 in
-          let uu___3 = subst_args' s args in
+          let uu___3 = subst_arg' s arg in
           {
             FStarC_Syntax_Syntax.hd = uu___2;
-            FStarC_Syntax_Syntax.args = uu___3
+            FStarC_Syntax_Syntax.arg = uu___3
           } in
         FStarC_Syntax_Syntax.Tm_app uu___1 in
       mk uu___
@@ -640,39 +640,38 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
         FStarC_Syntax_Syntax.Tm_ascribed uu___1 in
       mk uu___
   | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.body = body;
+      { FStarC_Syntax_Syntax.b = b; FStarC_Syntax_Syntax.body = body;
         FStarC_Syntax_Syntax.rc_opt = lopt;_}
       ->
-      let n = FStarC_List.length bs in
-      let s' = shift_subst' n s in
+      let s' = shift_subst' Prims.int_one s in
       let uu___ =
         let uu___1 =
-          let uu___2 = subst_binders' s bs in
+          let uu___2 = subst_binder' s b in
           let uu___3 = subst' s' body in
           let uu___4 = push_subst_lcomp s' lopt in
           {
-            FStarC_Syntax_Syntax.bs = uu___2;
+            FStarC_Syntax_Syntax.b = uu___2;
             FStarC_Syntax_Syntax.body = uu___3;
             FStarC_Syntax_Syntax.rc_opt = uu___4
           } in
         FStarC_Syntax_Syntax.Tm_abs uu___1 in
       mk uu___
   | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = comp;_} ->
-      let n = FStarC_List.length bs in
+      { FStarC_Syntax_Syntax.b1 = b; FStarC_Syntax_Syntax.comp = comp;_} ->
       let uu___ =
         let uu___1 =
-          let uu___2 = subst_binders' s bs in
+          let uu___2 = subst_binder' s b in
           let uu___3 =
-            let uu___4 = shift_subst' n s in subst_comp' uu___4 comp in
+            let uu___4 = shift_subst' Prims.int_one s in
+            subst_comp' uu___4 comp in
           {
-            FStarC_Syntax_Syntax.bs1 = uu___2;
+            FStarC_Syntax_Syntax.b1 = uu___2;
             FStarC_Syntax_Syntax.comp = uu___3
           } in
         FStarC_Syntax_Syntax.Tm_arrow uu___1 in
       mk uu___
   | FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = phi;_} ->
+      { FStarC_Syntax_Syntax.b2 = x; FStarC_Syntax_Syntax.phi = phi;_} ->
       let x1 =
         let uu___ = subst' s x.FStarC_Syntax_Syntax.sort in
         {
@@ -683,7 +682,7 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
       let phi1 = let uu___ = shift_subst' Prims.int_one s in subst' uu___ phi in
       mk
         (FStarC_Syntax_Syntax.Tm_refine
-           { FStarC_Syntax_Syntax.b = x1; FStarC_Syntax_Syntax.phi = phi1 })
+           { FStarC_Syntax_Syntax.b2 = x1; FStarC_Syntax_Syntax.phi = phi1 })
   | FStarC_Syntax_Syntax.Tm_match
       { FStarC_Syntax_Syntax.scrutinee = t0;
         FStarC_Syntax_Syntax.ret_opt = asc_opt;

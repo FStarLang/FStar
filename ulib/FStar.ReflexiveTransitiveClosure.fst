@@ -53,7 +53,7 @@ let closure_reflexive #a r =
 val closure_transitive: #a:Type u#a -> r:binrel u#a a -> Lemma (transitive (_closure0 r))
 let closure_transitive #a r =
   introduce forall x y z. _closure0 r x y /\ _closure0 r y z ==> _closure0 r x z with
-  introduce _ ==> _ with _.
+  introduce _ ==> _ with
   nonempty_intro (Closure x y z (nonempty_elim _) (nonempty_elim _))
 
 let closure #a r =
@@ -62,7 +62,7 @@ let closure #a r =
   _closure0 r
 
 let closure_step #a r x y =
-  introduce r x y ==> closure r x y with _.
+  introduce r x y ==> closure r x y with
   nonempty_intro (Step x y ())
 
 val closure_one_aux: #a:Type u#a -> r:binrel u#a a -> x:a -> y:a
@@ -125,7 +125,7 @@ let rec _stable_on_closure #a r p p_stable_on_r x y xy px =
 
 let stable_on_closure #a r p hr =
   introduce forall x y. p x /\ closure r x y ==> p y with
-  introduce p x /\ closure r x y ==> p y with _.
+  introduce p x /\ closure r x y ==> p y with
   nonempty_intro (_stable_on_closure r p () x y (nonempty_elim _) ())
 
 let induct
