@@ -2,19 +2,23 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: (Valid (OptionStack.p (BoxInt 1)))
 
 * Info at OptionStack.fst(24,16-24,21):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: (Valid (OptionStack.p (BoxInt 2)))
 
 * Info at OptionStack.fst(27,16-27,21):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
 
 * Info at OptionStack.fst(39,16-39,21):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
 

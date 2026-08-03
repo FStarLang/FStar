@@ -2,14 +2,29 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: (= (Prims.op_Addition @sk_2 (BoxInt 1)) @sk_2)
+  - In context:
+      @sk_1 : Term
+      @sk_2 : Term
+      (and (HasType @sk_1 Prims.int) (HasType @sk_2 Prims.int))
 
 * Info at Asserts.fst(11,9-11,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: (= (Prims.op_Addition @sk_2 (BoxInt 1)) @sk_2)
+  - In context:
+      @sk_1 : Term
+      @sk_2 : Term
+      (and (HasType @sk_1 Prims.int) (HasType @sk_2 Prims.int))
 
 * Info at Asserts.fst(16,9-16,14):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      @sk_2 : Term
+      (and (HasType @sk_1 Prims.int) (HasType @sk_2 Prims.int))
 

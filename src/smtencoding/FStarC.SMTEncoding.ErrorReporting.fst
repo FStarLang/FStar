@@ -47,8 +47,16 @@ let rec goals_of (t:goal_tree) : ML (list goal) =
   | GCtx _ t -> goals_of t
   | GBranch ts -> List.collect goals_of ts
 
-let fresh_name (prefix:string) : ML string =
-  prefix ^ show (GenSym.next_id ())
+let goal_context (t:goal_tree) (g:goal) : ML (list decl) =
+  let rec aux (t:goal_tree) : ML (option (list decl)) =
+    match t with
+    | GTrivial -> None
+    | GLeaf g' -> if g'.goal_id = g.goal_id then Some [] else None
+    | GCtx ds t -> aux t |> Option.map (fun ds' -> ds @ ds')
+    | GBranch ts ->
+      List.fold_left (fun acc t -> match acc with Some _ -> acc | None -> aux t) None ts
+  in
+  Option.dflt [] (aux t)
 
 let split_goals use_env_msg  //when present, provides an alternate error message,
                              //usually "could not check implicit argument",
@@ -59,6 +67,15 @@ let split_goals use_env_msg  //when present, provides an alternate error message
              : ML goal_tree
              =
     let ctr = mk_ref 0 in
+    (* Names for the constants and hypotheses we introduce.  The counter is
+       local to the query: all of these declarations live inside a push/pop
+       frame, so they only have to be unique within it, and keeping them
+       independent of the rest of the run makes error messages reproducible. *)
+    let name_ctr = mk_ref 0 in
+    let fresh_name (prefix:string) : ML string =
+      name_ctr := !name_ctr + 1;
+      prefix ^ show !name_ctr
+    in
     let flag, msg_prefix = match use_env_msg with
         | None -> false, Pprint.empty
         | Some f -> true, Pprint.doc_of_string (f()) in

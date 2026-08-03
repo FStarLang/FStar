@@ -6,61 +6,87 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
 
 * Info at Basic.fst(7,45-7,50):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
 
 * Info at Basic.fst(8,45-8,50):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
 
 * Info at Basic.fst(9,45-9,50):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
 
 * Info at Basic.fst(11,38-11,49):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
   - See also Basic.fst(11,50-11,55)
 
 * Info at Basic.fst(12,38-12,49):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
   - See also Basic.fst(12,50-12,55)
 
 * Info at Basic.fst(13,38-13,49):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
   - See also Basic.fst(13,50-13,55)
 
 * Info at Basic.fst(14,38-14,49):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
   - See also Basic.fst(14,50-14,55)
 
 * Info at Basic.fst(17,29-17,31):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
   - See also Basic.fst(17,21-17,26)
 
 * Info at Basic.fst(20,29-20,31):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
   - See also Basic.fst(20,21-20,26)
 
 * Info at Basic.fst(23,46-23,48):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
   - See also Basic.fst(23,37-23,42)
 

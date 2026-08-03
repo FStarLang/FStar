@@ -3,6 +3,22 @@
   - Subtyping check failed
   - Expected type Prims.squash Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      @sk_2 : Term
+      (and
+       (HasType @sk_1 Prims.unit)
+       (HasType @sk_2 Prims.unit)
+       (=
+        (PatAnnot.f Tm_unit)
+        (FStar.Pervasives.Native.Mktuple2
+         U_zero
+         U_zero
+         Prims.unit
+         Prims.unit
+         @sk_1
+         @sk_2)))
   - See also PatAnnot.fst(25,19-25,24)
 
 * Info at PatAnnot.fst(29,10-29,11):
@@ -10,6 +26,22 @@
   - Subtyping check failed
   - Expected type x: Prims.unit{Prims.l_False} got type Prims.unit
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      @sk_2 : Term
+      (and
+       (HasType @sk_1 Prims.unit)
+       (HasType @sk_2 Prims.unit)
+       (=
+        (PatAnnot.f Tm_unit)
+        (FStar.Pervasives.Native.Mktuple2
+         U_zero
+         U_zero
+         Prims.unit
+         Prims.unit
+         @sk_1
+         @sk_2)))
   - See also PatAnnot.fst(29,17-29,22)
 
 * Info at PatAnnot.fst(34,10-34,11):
@@ -18,6 +50,34 @@
   - Expected type l: Prims.list Prims.int {Prims.l_False}
     got type Prims.list Prims.int
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      @sk_2 : Term
+      (and
+       (HasType @sk_1 (Prims.list U_zero Prims.int))
+       (HasType @sk_2 (Prims.list U_zero Prims.int))
+       (=
+        (FStar.List.Tot.Base.splitAt
+         U_zero
+         Prims.int
+         (BoxInt 0)
+         (Prims.Cons
+          U_zero
+          Prims.int
+          (BoxInt 1)
+          (Prims.Cons
+           U_zero
+           Prims.int
+           (BoxInt 2)
+           (Prims.Cons U_zero Prims.int (BoxInt 3) (Prims.Nil U_zero Prims.int)))))
+        (FStar.Pervasives.Native.Mktuple2
+         U_zero
+         U_zero
+         (Prims.list U_zero Prims.int)
+         (Prims.list U_zero Prims.int)
+         @sk_1
+         @sk_2)))
   - See also PatAnnot.fst(34,21-34,26)
 
 * Info at PatAnnot.fst(39,10-39,12):
@@ -25,6 +85,7 @@
   - Subtyping check failed
   - Expected type Prims.squash Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query.
+  - Failed to prove: false
   - See also PatAnnot.fst(40,26-40,31)
 
 * Info at PatAnnot.fst(46,10-46,11):
@@ -32,11 +93,19 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
+  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.int)
   - See also Prims.fst(478,18-478,24)
 
 * Info at PatAnnot.fst(55,36-55,39):
   - Expected failure:
   - Type annotation on parameter incompatible with the expected type
   - The SMT solver could not prove the query.
+  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.int)
   - See also Prims.fst(478,18-478,24)
 

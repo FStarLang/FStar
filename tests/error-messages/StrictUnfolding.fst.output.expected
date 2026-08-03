@@ -2,5 +2,141 @@
   - Expected failure:
   - Could not prove goal #1
   - The SMT solver could not prove the query.
+  - Failed to prove:
+      (=
+       (FStar.Integers.v @sk_1 (FStar.Integers.op_Plus @sk_1 @sk_2 @sk_3))
+       (Prims.op_Addition
+        (FStar.Integers.v @sk_1 @sk_2)
+        (FStar.Integers.v @sk_1 @sk_3)))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 FStar.Integers.signed_width)
+      @sk_2 : Term
+      @sk_3 : Term
+      (and
+       (HasType
+        @sk_2
+        (let ((@lb0 @sk_1))
+         (ite
+          (and
+           (is-FStar.Integers.Unsigned @lb0)
+           (is-FStar.Integers.W8 (FStar.Integers.Unsigned_@_0 @lb0)))
+          (FStar.UInt8.t Dummy_value)
+          (ite
+           (and
+            (is-FStar.Integers.Unsigned @lb0)
+            (is-FStar.Integers.W16 (FStar.Integers.Unsigned_@_0 @lb0)))
+           (FStar.UInt16.t Dummy_value)
+           (ite
+            (and
+             (is-FStar.Integers.Unsigned @lb0)
+             (is-FStar.Integers.W32 (FStar.Integers.Unsigned_@_0 @lb0)))
+            (FStar.UInt32.t Dummy_value)
+            (ite
+             (and
+              (is-FStar.Integers.Unsigned @lb0)
+              (is-FStar.Integers.W64 (FStar.Integers.Unsigned_@_0 @lb0)))
+             (FStar.UInt64.t Dummy_value)
+             (ite
+              (and
+               (is-FStar.Integers.Unsigned @lb0)
+               (is-FStar.Integers.W128 (FStar.Integers.Unsigned_@_0 @lb0)))
+              (FStar.UInt128.t Dummy_value)
+              (ite
+               (and
+                (is-FStar.Integers.Signed @lb0)
+                (is-FStar.Integers.Winfinite (FStar.Integers.Signed_@_0 @lb0)))
+               Prims.int
+               (ite
+                (and
+                 (is-FStar.Integers.Signed @lb0)
+                 (is-FStar.Integers.W8 (FStar.Integers.Signed_@_0 @lb0)))
+                (FStar.Int8.t Dummy_value)
+                (ite
+                 (and
+                  (is-FStar.Integers.Signed @lb0)
+                  (is-FStar.Integers.W16 (FStar.Integers.Signed_@_0 @lb0)))
+                 (FStar.Int16.t Dummy_value)
+                 (ite
+                  (and
+                   (is-FStar.Integers.Signed @lb0)
+                   (is-FStar.Integers.W32 (FStar.Integers.Signed_@_0 @lb0)))
+                  (FStar.Int32.t Dummy_value)
+                  (ite
+                   (and
+                    (is-FStar.Integers.Signed @lb0)
+                    (is-FStar.Integers.W64 (FStar.Integers.Signed_@_0 @lb0)))
+                   (FStar.Int64.t Dummy_value)
+                   (ite
+                    (and
+                     (is-FStar.Integers.Signed @lb0)
+                     (is-FStar.Integers.W128 (FStar.Integers.Signed_@_0 @lb0)))
+                    (FStar.Int128.t Dummy_value)
+                    Tm_unit)))))))))))))
+       (HasType
+        @sk_3
+        (let ((@lb0 @sk_1))
+         (ite
+          (and
+           (is-FStar.Integers.Unsigned @lb0)
+           (is-FStar.Integers.W8 (FStar.Integers.Unsigned_@_0 @lb0)))
+          (FStar.UInt8.t Dummy_value)
+          (ite
+           (and
+            (is-FStar.Integers.Unsigned @lb0)
+            (is-FStar.Integers.W16 (FStar.Integers.Unsigned_@_0 @lb0)))
+           (FStar.UInt16.t Dummy_value)
+           (ite
+            (and
+             (is-FStar.Integers.Unsigned @lb0)
+             (is-FStar.Integers.W32 (FStar.Integers.Unsigned_@_0 @lb0)))
+            (FStar.UInt32.t Dummy_value)
+            (ite
+             (and
+              (is-FStar.Integers.Unsigned @lb0)
+              (is-FStar.Integers.W64 (FStar.Integers.Unsigned_@_0 @lb0)))
+             (FStar.UInt64.t Dummy_value)
+             (ite
+              (and
+               (is-FStar.Integers.Unsigned @lb0)
+               (is-FStar.Integers.W128 (FStar.Integers.Unsigned_@_0 @lb0)))
+              (FStar.UInt128.t Dummy_value)
+              (ite
+               (and
+                (is-FStar.Integers.Signed @lb0)
+                (is-FStar.Integers.Winfinite (FStar.Integers.Signed_@_0 @lb0)))
+               Prims.int
+               (ite
+                (and
+                 (is-FStar.Integers.Signed @lb0)
+                 (is-FStar.Integers.W8 (FStar.Integers.Signed_@_0 @lb0)))
+                (FStar.Int8.t Dummy_value)
+                (ite
+                 (and
+                  (is-FStar.Integers.Signed @lb0)
+                  (is-FStar.Integers.W16 (FStar.Integers.Signed_@_0 @lb0)))
+                 (FStar.Int16.t Dummy_value)
+                 (ite
+                  (and
+                   (is-FStar.Integers.Signed @lb0)
+                   (is-FStar.Integers.W32 (FStar.Integers.Signed_@_0 @lb0)))
+                  (FStar.Int32.t Dummy_value)
+                  (ite
+                   (and
+                    (is-FStar.Integers.Signed @lb0)
+                    (is-FStar.Integers.W64 (FStar.Integers.Signed_@_0 @lb0)))
+                   (FStar.Int64.t Dummy_value)
+                   (ite
+                    (and
+                     (is-FStar.Integers.Signed @lb0)
+                     (is-FStar.Integers.W128 (FStar.Integers.Signed_@_0 @lb0)))
+                    (FStar.Int128.t Dummy_value)
+                    Tm_unit)))))))))))))
+       (Valid
+        (FStar.Integers.within_bounds_
+         @sk_1
+         (Prims.op_Addition
+          (FStar.Integers.v @sk_1 @sk_2)
+          (FStar.Integers.v @sk_1 @sk_3)))))
   - See also StrictUnfolding.fst(50,48-50,72)
 

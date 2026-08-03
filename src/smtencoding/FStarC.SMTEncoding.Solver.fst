@@ -39,7 +39,6 @@ module BU       = FStarC.Util
 module Env      = FStarC.TypeChecker.Env
 module Err      = FStarC.Errors
 module Syntax   = FStarC.Syntax.Syntax
-exception SplitQueryAndRetry
 
 let dbg_SMTQuery = Debug.get_toggle "SMTQuery"
 let dbg_SMTFail  = Debug.get_toggle "SMTFail"
@@ -257,6 +256,23 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) (gst : 
     in
     let open FStarC.Errors.Msg in
     let open FStarC.Class.PP in
+    (* The failed goal itself, and the assumptions it was proved under: the
+       skolem constants and hypotheses introduced by the walk over the
+       verification condition.  This is exactly what was sent to the solver. *)
+    let goal_detail =
+      let ctx = goal_context settings.query_goals gst.gs_goal in
+      let ctx_doc (d:Term.decl) : ML (option Pprint.document) =
+        match d with
+        | Term.DeclFun nm [] sort _ -> Some (doc_of_string (nm ^ " : " ^ show sort))
+        | Term.Assume a -> Some (Term.termToSmt false "hypothesis" a.assumption_term)
+        | _ -> None
+      in
+      let ctx = List.filter_map ctx_doc ctx in
+      [prefix 2 1 (text "Failed to prove:")
+                  (Term.termToSmt false "goal" gst.gs_goal.goal_term)]
+      @ (if Nil? ctx then []
+         else [prefix 2 1 (text "In context:") (Pprint.separate Pprint.hardline ctx)])
+    in
     let vc_detail =
       if Options.query_stats () then [
         prefix 2 1 (text "Env =")
@@ -269,7 +285,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) (gst : 
     FStarC.TypeChecker.Err.errors_smt_detail
       settings.query_env.tcenv
       [(Error_Z3SolverError, gst.gs_goal.goal_msg, gst.gs_goal.goal_range, get_ctx())]
-      (smt_error @ vc_detail)
+      (smt_error @ goal_detail @ vc_detail)
 
 type unique_string_accumulator = {
   add: string -> ML unit;

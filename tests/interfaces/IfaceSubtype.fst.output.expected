@@ -2,5 +2,9 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
+  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.int)
   - See also Prims.fst(478,18-478,24)
 
