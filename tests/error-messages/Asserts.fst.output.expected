@@ -2,20 +2,14 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int) (y : Prims.int)
-  - VC = y + 1 == y
 
 * Info at Asserts.fst(11,9-11,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int) (y : Prims.int)
-  - VC = y + 1 == y
 
 * Info at Asserts.fst(16,9-16,14):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int) (y : Prims.int)
-  - VC = Prims.l_False
 

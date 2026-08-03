@@ -251,7 +251,7 @@ let disjoint_join (m0 m1 m2:heap)
     in
     ()
 
-#push-options "--z3rlimit 20 --split_queries always"
+#push-options "--z3rlimit 20"
 let join_associative' (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -279,7 +279,7 @@ let join_associative' (m0 m1 m2:heap)
 
 let join_associative (m0 m1 m2:heap) = disjoint_join m0 m1 m2; join_associative' m0 m1 m2
 
-#push-options "--z3rlimit 20 --split_queries always"
+#push-options "--z3rlimit 20"
 let join_associative2 (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -529,7 +529,7 @@ let pts_to_compatible_fwd (#a:Type u#a)
               pts_to_cell pcm v1 c1 /\
               c == join_cells c0 c1)
 
-#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1 --split_queries always"
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
 #restart-solver
 let pts_to_compatible_bk 
       (#a:Type u#a)
@@ -935,7 +935,7 @@ let select_join_both #a (p: pcm a) (r: addr) (h1: heap) (h2: heap { disjoint h1 
     : Lemma (select r (join h1 h2) == Some (Ref a p (op p x1 x2))) =
   ()
 
-#push-options "--split_queries always"
+#push-options ""
 
 let split_off_pcm_val #a (p: pcm a) x y (z:a { composable p y z /\ x == op p y z })
     r (h: heap { select r h == Some (Ref a p x) }) :

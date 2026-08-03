@@ -3,8 +3,6 @@
   - Subtyping check failed
   - Expected type Prims.squash Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC = Prims.l_False
   - See also NegativeTests.ZZImplicitFalse.fst(20,19-20,24)
 
 * Warning 240 at NegativeTests.ZZImplicitFalse.fst(18,4-18,8):

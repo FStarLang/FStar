@@ -321,7 +321,7 @@ let union_of_three_disjoint_sets_cardinality_lemma (#a: eqtype) (s1: set a) (s2:
   union_of_disjoint_sets_cardinality_lemma (union s1 s2) s3
 
 #restart-solver
-#push-options "--z3rlimit_factor 8 --split_queries no"
+#push-options "--z3rlimit_factor 8"
 let cardinality_matches_difference_plus_intersection_lemma (#a: eqtype) (s1: set a) (s2: set a)
 : Lemma (ensures cardinality s1 = cardinality (difference s1 s2) + cardinality (intersection s1 s2)) =
   union_of_disjoint_sets_cardinality_lemma (difference s1 s2) (intersection s1 s2);
@@ -333,7 +333,7 @@ let union_is_differences_and_intersection (#a: eqtype) (s1: set a) (s2: set a)
   assert (feq (union s1 s2) (union (union (difference s1 s2) (intersection s1 s2)) (difference s2 s1)))
 
 #restart-solver
-#push-options "--z3rlimit_factor 8 --split_queries no"
+#push-options "--z3rlimit_factor 8"
 let intersection_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
 : Lemma (cardinality (union s1 s2) + cardinality (intersection s1 s2) = cardinality s1 + cardinality s2) =
   cardinality_matches_difference_plus_intersection_lemma s1 s2;
@@ -359,7 +359,7 @@ let difference_doesnt_include_lemma ()
   ()
 
 #restart-solver
-#push-options "--z3rlimit_factor 8 --split_queries no"
+#push-options "--z3rlimit_factor 8"
 let difference_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
 : Lemma (  cardinality (difference s1 s2) + cardinality (difference s2 s1) + cardinality (intersection s1 s2) = cardinality (union s1 s2)
          /\ cardinality (difference s1 s2) = cardinality s1 - cardinality (intersection s1 s2)) =
@@ -417,7 +417,7 @@ let disjoint_lemma ()
   )
 
 #restart-solver
-#push-options "--z3rlimit_factor 8 --split_queries no"
+#push-options "--z3rlimit_factor 8"
 let insert_remove_helper (a: eqtype) (x: a) (s: set a)
 : Lemma (requires mem x s)
         (ensures  insert x (remove x s) == s) =

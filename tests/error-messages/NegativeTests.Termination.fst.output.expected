@@ -2,133 +2,71 @@
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env = (m : Prims.int) (l : Prims.int)
-  - VC = m << m \/ l << l
   - See also NegativeTests.Termination.fst(18,12-21,29)
 
 * Info at NegativeTests.Termination.fst(28,26-28,35):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env = (n : Prims.int) (count : Prims.int)
-  - VC = ~(count = 0) ==> n << n \/ count - 1 << count
   - See also NegativeTests.Termination.fst(25,23-28,35)
+
+* Info at NegativeTests.Termination.fst(36,29-36,54):
+  - Expected failure:
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query.
+  - See also NegativeTests.Termination.fst(31,19-36,54)
 
 * Info at NegativeTests.Termination.fst(36,46-36,53):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env = (m : Prims.int) (n : Prims.int)
-  - VC =
-      ~(m = 0 = true) ==>
-      (n = 0 = true ==> n = 0 == true ==> m - 1 << m \/ m - 1 === m /\ 1 << n) /\
-      (~(n = 0 = true) ==>
-        (m << m \/ n - 1 << n) /\
-        (forall (_: Prims.int).
-            m << m \/ n - 1 << n ==>
-            NegativeTests.Termination.ackermann_bad m (n - 1) == _ ==>
-            m - 1 << m \/
-            m - 1 === m /\
-            NegativeTests.Termination.ackermann_bad m (n - 1) << n))
+  - See also NegativeTests.Termination.fst(31,19-36,54)
+
+* Info at NegativeTests.Termination.fst(35,43-35,44):
+  - Expected failure:
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query.
   - See also NegativeTests.Termination.fst(31,19-36,54)
 
 * Info at NegativeTests.Termination.fst(42,28-42,29):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env = ('a : Type) (l : Prims.list 'a)
-  - VC =
-      (~(Nil? l) /\ ~(Cons? l) ==> Prims.l_False) /\
-      (~(Nil? l) ==>
-        (forall (_: 'a) (tl: Prims.list 'a).
-            l == _ :: tl ==>
-            l << l /\
-            (forall (_: Prims.int).
-                NegativeTests.Termination.length_bad l >= 0 /\
-                (l << l) /\ (Prims.has_type l (Prims.list 'a) /\ (l << l)) ==>
-                1 + NegativeTests.Termination.length_bad l == _ ==>
-                1 + NegativeTests.Termination.length_bad l >= 0)))
   - See also NegativeTests.Termination.fst(40,23-42,29)
 
 * Info at NegativeTests.Termination.fst(55,15-55,29):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env = (v : Prims.nat)
-  - VC =
-      ~(v = 0 = true) ==>
-      (forall (i: Prims.nat).
-          i >= 0 ==> v == i ==> (forall (x: Prims.nat). x <= v ==> x << v))
   - See also NegativeTests.Termination.fst(53,2-55,29)
 
 * Info at NegativeTests.Termination.fst(67,19-67,29):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env = (n : NegativeTests.Termination.snat)
-  - VC =
-      (~(O? n) /\ ~(S? n && O? n._0) /\ ~(S? n && S? n._0) ==> Prims.l_False) /\
-      (~(O? n) ==>
-        ~(S? n && O? n._0) ==>
-        (forall (n': NegativeTests.Termination.snat).
-            n == NegativeTests.Termination.S (NegativeTests.Termination.S n') ==>
-            NegativeTests.Termination.S (NegativeTests.Termination.S n') << n))
   - See also NegativeTests.Termination.fst(64,2-67,29)
 
 * Info at NegativeTests.Termination.fst(75,34-75,35):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env =
-      (n : NegativeTests.Termination.snat) (m : NegativeTests.Termination.snat)
-  - VC =
-      (~(O? n) /\ ~(S? n && O? n._0) /\ ~(S? n && S? n._0) ==> Prims.l_False) /\
-      (~(O? n) ==>
-        ~(S? n && O? n._0) ==>
-        (forall (n': NegativeTests.Termination.snat).
-            n == NegativeTests.Termination.S (NegativeTests.Termination.S n') ==>
-            NegativeTests.Termination.S (NegativeTests.Termination.S n') << n \/
-            NegativeTests.Termination.S (NegativeTests.Termination.S n') === n /\
-            m << m))
   - See also NegativeTests.Termination.fst(71,13-75,35)
 
 * Info at NegativeTests.Termination.fst(80,2-82,14):
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-      (n : NegativeTests.Termination.snat) (m : NegativeTests.Termination.snat)
-  - VC = ~(O? n) /\ ~(S? n && O? n._0) ==> Prims.l_False
 
 * Info at NegativeTests.Termination.fst(89,29-89,31):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env =
-      (n : NegativeTests.Termination.snat) (m : NegativeTests.Termination.snat)
-  - VC =
-      (~(O? (n, m)._1) /\ ~(S? (n, m)._1) ==> Prims.l_False) /\
-      (~(O? (n, m)._1) ==>
-        (forall (n': NegativeTests.Termination.snat)
-            (m': NegativeTests.Termination.snat).
-            (n, m) == (NegativeTests.Termination.S n', m') ==>
-            NegativeTests.Termination.S n' << n \/
-            NegativeTests.Termination.S n' === n /\ m' << m))
   - See also NegativeTests.Termination.fst(86,15-89,31)
 
 * Info at NegativeTests.Termination.fst(96,20-96,26):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Env = (n : NegativeTests.Termination.snat)
-  - VC =
-      (~(O? (n, 42)._1 && (n, 42)._2 = 42) /\
-        ~(S? (n, 42)._1 && (n, 42)._2 = 42) ==>
-        Prims.l_False) /\
-      (~(O? (n, 42)._1 && (n, 42)._2 = 42) ==>
-        (forall (n': NegativeTests.Termination.snat).
-            (n, 42) == (NegativeTests.Termination.S n', 42) ==>
-            NegativeTests.Termination.S n' << n))
   - See also NegativeTests.Termination.fst(94,2-96,26)
 
 * Warning 240 at NegativeTests.Termination.fst(91,4-91,7):

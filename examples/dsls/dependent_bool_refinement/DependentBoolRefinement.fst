@@ -778,7 +778,7 @@ let elab_open_b2t (e:src_exp) (x:var)
     denote_pack_var (R.pack_namedv (RT.make_namedv x));
     elab_open_commute' 0 e (EVar x)
 
-#push-options "--split_queries always --fuel 2 --ifuel 2 --z3rlimit_factor 4"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 4"
 let rec soundness (#f:fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 
                   (#se:src_exp)

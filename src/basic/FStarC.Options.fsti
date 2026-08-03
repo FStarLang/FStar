@@ -38,7 +38,6 @@ type codegen_t =
 
 //let __test_norm_all = mk_ref false
 
-type split_queries_t = | No | OnFailure | Always
 
 type message_format_t = | Json | Human | Github
 
@@ -212,7 +211,6 @@ val defensive_abort             : unit    -> ML bool // true if "abort"
 
 val dep                         : unit    -> ML (option string)
 
-val detail_errors               : unit    -> ML bool
 
 
 val any_dump_module             : unit    -> ML bool
@@ -362,7 +360,6 @@ val smtencoding_l_arith_native  : unit    -> ML bool
 
 val smtencoding_l_arith_default : unit    -> ML bool
 
-val split_queries               : unit    -> ML split_queries_t
 
 val stats                       : unit    -> ML bool
 

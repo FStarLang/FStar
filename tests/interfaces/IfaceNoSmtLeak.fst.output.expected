@@ -1,7 +1,5 @@
 * Error 19 at IfaceNoSmtLeak.fst(5,35-5,37):
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC = forall (_: Prims.unit). IfaceNoSmtLeak.q x
   - See also IfaceNoSmtLeak.fst(5,27-5,32)
 

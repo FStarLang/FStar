@@ -2,7 +2,5 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC = x >= 0
   - See also Prims.fst(478,18-478,24)
 

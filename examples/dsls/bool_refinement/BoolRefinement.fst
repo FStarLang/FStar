@@ -1213,7 +1213,7 @@ let rec src_typing_freevars #f (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing f
       src_typing_freevars _ _ _ dbody
 #pop-options
 
-#push-options "--z3rlimit_factor 8 --query_stats --split_queries no --fuel 2 --ifuel 2"
+#push-options "--z3rlimit_factor 8 --query_stats --fuel 2 --ifuel 2"
 #restart-solver
 let rec src_typing_renaming (#f:RT.fstar_top_env)
                             (sg sg':src_env)
@@ -1392,7 +1392,7 @@ let sub_typing_weakening #f (sg sg':src_env)
 
       | _ -> admit ())
 
-#push-options "--z3rlimit_factor 8 --query_stats --split_queries no --fuel 2 --ifuel 2"
+#push-options "--z3rlimit_factor 8 --query_stats --fuel 2 --ifuel 2"
 #restart-solver
 let rec src_typing_weakening #f (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -1600,7 +1600,7 @@ let freevars_refinement (e:R.term) (bv0:_)
     denote_pack_bvar bv0
 #pop-options
     
-#push-options "--z3rlimit_factor 8 --query_stats --split_queries no --fuel 2 --ifuel 2"
+#push-options "--z3rlimit_factor 8 --query_stats --fuel 2 --ifuel 2"
 #restart-solver
 let rec soundness (#f:RT.fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 

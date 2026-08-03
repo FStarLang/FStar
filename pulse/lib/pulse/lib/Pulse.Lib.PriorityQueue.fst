@@ -442,7 +442,7 @@ let sift_up_swap_heap_up_at_sibling #t {| total_order t |}
     le_le_trans v u (Seq.index s i)
 
 // Helper for sift_up_swap_heap_up_at: case parent_idx i = child (i is grandchild)
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1 --split_queries always"
+#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
 let sift_up_swap_heap_up_at_gchild #t {| total_order t |}
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   (i:nat{i < Seq.length s /\ i <> 0 /\ i <> child /\ parent_idx i = child})
@@ -1203,7 +1203,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
 #pop-options
 
 // After setting root to last element and popping, we get almost_heap_sift_down at 0
-#push-options "--z3rlimit 40 --fuel 1 --ifuel 1 --split_queries always"
+#push-options "--z3rlimit 40 --fuel 1 --ifuel 1"
 let extract_almost_heap #t {| total_order t |} (s:Seq.seq t) (v:t)
   : Lemma (requires is_heap s /\ Seq.length s > 1)
           (ensures almost_heap_sift_down (Seq.slice (Seq.upd s 0 v) 0 (Seq.length s - 1)) 0)

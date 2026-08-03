@@ -24,7 +24,6 @@ type vconfig = {
   max_fuel                                  : int;
   initial_ifuel                             : int;
   max_ifuel                                 : int;
-  detail_errors                             : bool;
   no_smt                                    : bool;
   quake_lo                                  : int;
   quake_hi                                  : int;

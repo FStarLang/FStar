@@ -183,9 +183,6 @@ type decls_elt = {
 type decls_t = list decls_elt
 val escape: string -> string
 
-type error_label = (fv & Errors.error_message & Range.t)
-type error_labels = list error_label
-
 (*
  * AR: sym_name -> md5 -> auxiliary decls -> decls
  *     the auxilkiary decls are those that are not directly related to

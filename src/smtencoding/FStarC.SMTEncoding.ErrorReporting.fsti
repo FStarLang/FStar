@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,12 +23,29 @@ open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding
 open FStarC.Range
 
-type label = error_label
-type labels = list label
+(* A single proof obligation: an atomic formula to be discharged, together
+   with the error message and source range to report if it fails. *)
+type goal = {
+  goal_id    : int;
+  goal_msg   : Errors.error_message;
+  goal_range : Range.t;
+  goal_term  : term;
+}
 
-val label_goals : option (unit -> ML string) -> range -> q:term -> ML (labels & term)
+(* The structure of a verification condition, as a tree of goals sharing
+   a context of declarations and hypotheses.  Emitting it to the solver
+   sends each shared declaration/hypothesis exactly once, and asks a
+   separate (check-sat) per leaf. *)
+type goal_tree =
+  | GTrivial : goal_tree
+  | GLeaf    : goal -> goal_tree
+  | GCtx     : list decl -> goal_tree -> goal_tree
+  | GBranch  : list goal_tree -> goal_tree
 
-val detail_errors :  TypeChecker.Env.env
-                  -> labels
-                  -> (list decl -> ML Z3.z3result)
-                  -> ML unit
+(* Traverse an encoded verification condition, skolemizing universal
+   quantifiers, turning the left-hand sides of implications into
+   hypotheses, and collecting the leaves as individual goals. *)
+(* The goals of a tree, in the order in which they are emitted. *)
+val goals_of : goal_tree -> ML (list goal)
+
+val split_goals : option (unit -> ML string) -> range -> q:term -> ML goal_tree

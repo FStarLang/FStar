@@ -148,7 +148,7 @@ type dpe_cmd = {
   dpe_cmd_args: cbor;
 }
 
-#push-options "--z3rlimit 128" // to let z3 cope with CDDL specs
+#push-options "--z3rlimit 128 --max_ifuel 4" // to let z3 cope with CDDL specs
 #restart-solver
 let destruct_spec_command_message
   (v: raw_data_item)

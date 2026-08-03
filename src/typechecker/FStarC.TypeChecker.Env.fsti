@@ -231,7 +231,6 @@ and solver_t = {
     rollback        :string -> option solver_depth_t -> ML unit;
     encode_sig      :env -> sigelt -> ML unit;
     preprocess      :env -> goal -> ML (bool & list (env & goal & FStarC.Options.optionstate));
-    spinoff_strictly_positive_goals: option (env -> goal -> ML (list (env & goal)));
     handle_smt_goal :env -> goal -> ML (list (env & goal));
     solve           :option (unit -> ML string) -> env -> goal -> ML unit; //call to the smt solver
     solve_sync      :option (unit -> ML string) -> env -> goal -> ML bool; //call to the smt solver
@@ -741,7 +740,6 @@ val get_letrec_arity : env -> lbname -> ML (option int)
 
 val fvar_of_nonqual_lid : env -> lident -> ML (term)
 
-val split_smt_query : env -> term -> ML (option (list (env & term)))
 
 (* Binding instances, mostly for defensive checks *)
 

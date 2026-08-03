@@ -207,7 +207,7 @@ let exists4_elim
   (ensures q)
 = Classical.forall_intro_4 (Classical.move_requires_4 prf)
 
-#push-options "--split_queries always"
+#push-options ""
 
 #restart-solver
 let rec spec_sort_correct

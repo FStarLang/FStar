@@ -5,7 +5,7 @@ open FStar.Classical
 let bar (x z : nat) = exists (y:nat) (w:nat). z*y = x*w
 
 private let aux (x z : nat) : Lemma (bar x z) =
-  introduce exists y w. z*y = x*w with x z and ()
+  introduce exists (y:nat) (w:nat). z*y = x*w with x z and ()
 
 let foo (x : nat) : prop = forall z. bar x z
 let always_foo x : Lemma (foo x) =

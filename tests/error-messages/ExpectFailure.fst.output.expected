@@ -14,15 +14,11 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.l_False
 
 * Info at ExpectFailure.fst(30,15-30,20):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.l_False
 
 * Info at ExpectFailure.fst(43,12-43,15):
   - Expected failure:

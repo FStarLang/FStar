@@ -75,7 +75,7 @@ let test_unit_valued_implicits1 () : PURE unit (requires True) = some_f _
 assume val some_other_predicate : prop
 assume val some_g (_:(_:unit{some_predicate}){some_other_predicate}) : unit
 
-[@@ expect_failure [19]]
+[@@ expect_failure [19; 19]]
 let test_unit_valued_implicits2 () : PURE unit (requires True) = some_g _
 
 [@@ expect_failure [19]]

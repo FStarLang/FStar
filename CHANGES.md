@@ -95,6 +95,37 @@ Guidelines for the changelog:
     and `reuse_hint_for` fields; metaprograms that construct a `vconfig`
     literal must drop them.
 
+  * Verification conditions are no longer sent to Z3 as a single labelled
+    formula. F* now walks the encoded VC and replays its structure into the
+    solver: a universally quantified variable becomes a `declare-fun`, the
+    hypothesis of an implication becomes an `assert`, and every leaf goal gets
+    its own `(push) (assert (not goal)) (check-sat) (pop)`. All the goals of a
+    definition are still sent in a single round trip, and only the goals that
+    actually fail are retried at higher fuel/ifuel.
+
+    Consequences:
+    - `--split_queries` is gone: splitting a query was a coarse approximation
+      of one-assertion-per-goal, which is now the default and unconditional.
+      Remove `--split_queries no|on_failure|always` from `#push-options` and
+      from command lines. Warning 349 (`Warning_SplitAndRetryQueries`) no
+      longer exists.
+    - `--detail_errors` is gone: error reporting is already per goal.
+    - `--quake` and `--retry` now apply per leaf goal rather than to the whole
+      query.
+    - Error messages and ranges are more precise, and a definition can now
+      report several independent failures at once.
+    - The `Env = ...` / `VC = ...` detail attached to a failed query is now
+      printed only under `--query_stats`. It describes the whole definition,
+      not the individual goal, and would otherwise be repeated once per
+      failing goal.
+
+    Because each goal is discharged in a context that no longer contains its
+    sibling goals, a proof that relied on ground terms appearing only in a
+    sibling conjunct may need help. The usual fix is to state an intermediate
+    `assert` in the vocabulary of the goal it is meant to feed, or to spell a
+    proof out with `introduce forall ... with ...` instead of relying on
+    `Classical.forall_intro`.
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection

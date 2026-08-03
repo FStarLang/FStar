@@ -330,7 +330,7 @@ let lem_is_unit #a #p (x:history a p)
       assert (forall (h:vhist p). extends #a #p h []);
       assert (h =!= []);
       assert (extends #a #p h [])
-#push-options "--split_queries always"
+#push-options ""
 let assoc_l #a #p (x y:history a p)
                   (z:history a p{history_composable y z /\
                                  history_composable x (history_compose y z)})

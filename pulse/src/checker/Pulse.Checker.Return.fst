@@ -138,7 +138,7 @@ let rec unrefine_result (t:term) : T.Tac term =
   | T.Tv_AscribedC e _ _ _ -> unrefine_result e
   | _ -> t
 
-#push-options "--z3rlimit_factor 16 --fuel 0 --ifuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 16 --fuel 0 --ifuel 1"
 #restart-solver
 let check_core
   (g:env)

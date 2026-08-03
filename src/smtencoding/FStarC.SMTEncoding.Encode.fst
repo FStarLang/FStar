@@ -2033,11 +2033,6 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
     let _, decls, env = List.fold_right encode_binding bindings (0, [], env) in
     decls, env
 
-let encode_labels (labs:list error_label) =
-    let prefix = labs |> List.map (fun (l, _, _) -> Term.DeclFun (fv_name l) [] Bool_sort None) in
-    let suffix = labs |> List.collect (fun (l, _, _) -> [Echo <| fv_name l; Eval (mkFreeV l)]) in
-    prefix, suffix
-
 (* caching encodings of the environment and the top-level API to the encoding *)
 let last_env : ref (list env_t) = mk_ref []
 let init_env tcenv = last_env := [{bvar_bindings=PSMap.empty ();
@@ -2354,9 +2349,8 @@ let encode_modul_from_cache tcenv tcmod (me:module_encoding) =
 open FStarC.SMTEncoding.Z3
 let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   : ML (list decl  //prelude, translation of  tcenv
-  & list ErrorReporting.label //labels in the query
-  & decl        //the query itself
-  & list decl)  //suffix, evaluating labels in the model, etc.
+  & ErrorReporting.goal_tree //the goals of the query
+  & decl)       //the negated query, as a single assumption
   =
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
@@ -2383,8 +2377,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     if Debug.medium () || !dbg_SMTEncoding
     then Format.print1 "Encoding query formula {: %s\n" (show q);
     let (phi, qdecls), ms = Timing.record_ms (fun () -> encode_formula q env) in
-    let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
-    let label_prefix, label_suffix = encode_labels labels in
+    let goals = ErrorReporting.split_goals use_env_msg (Env.get_range tcenv) phi in
     let caption =
       (* If these options are off, the Captions will be dropped anyway,
       but by checking here we can skip the printing. *)
@@ -2395,15 +2388,13 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     in
     let query_prelude =
         env_decls
-        @(label_prefix |> mk_decls_trivial)
         @qdecls
         @(caption |> mk_decls_trivial) |> recover_caching_and_update_env env |> decls_list_of in  //recover caching and flatten
 
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
-    let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     if Debug.medium () || !dbg_SMTEncoding
     then Format.print_string "} Done encoding\n";
     if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
     then Format.print1 "Encoding took %sms\n" (show ms);
-    query_prelude, labels, qry, suffix
+    query_prelude, goals, qry
   )

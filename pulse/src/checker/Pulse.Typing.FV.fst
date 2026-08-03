@@ -119,7 +119,7 @@ let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
     | SHOW_PROOF_STATE _ -> ()
 
 // Needs a bit more rlimit sometimes. Also splitting is too expensive
-#push-options "--z3rlimit 20 --split_queries always"
+#push-options "--z3rlimit 20"
 #restart-solver
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
   : Lemma

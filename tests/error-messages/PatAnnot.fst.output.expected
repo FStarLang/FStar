@@ -3,10 +3,6 @@
   - Subtyping check failed
   - Expected type Prims.squash Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
-      forall (_: Prims.unit) (x: Prims.unit).
-        PatAnnot.f () == (_, x) ==> Prims.l_False
   - See also PatAnnot.fst(25,19-25,24)
 
 * Info at PatAnnot.fst(29,10-29,11):
@@ -14,10 +10,6 @@
   - Subtyping check failed
   - Expected type x: Prims.unit{Prims.l_False} got type Prims.unit
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
-      forall (_: Prims.unit) (x: Prims.unit).
-        PatAnnot.f () == (_, x) ==> Prims.l_False
   - See also PatAnnot.fst(29,17-29,22)
 
 * Info at PatAnnot.fst(34,10-34,11):
@@ -26,10 +18,6 @@
   - Expected type l: Prims.list Prims.int {Prims.l_False}
     got type Prims.list Prims.int
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
-      forall (_: Prims.list Prims.int) (l: Prims.list Prims.int).
-        FStar.List.Tot.Base.splitAt 0 [1; 2; 3] == (_, l) ==> Prims.l_False
   - See also PatAnnot.fst(34,21-34,26)
 
 * Info at PatAnnot.fst(39,10-39,12):
@@ -37,8 +25,6 @@
   - Subtyping check failed
   - Expected type Prims.squash Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.l_False
   - See also PatAnnot.fst(40,26-40,31)
 
 * Info at PatAnnot.fst(46,10-46,11):
@@ -46,15 +32,11 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env = (i : Prims.int)
-  - VC = i >= 0
   - See also Prims.fst(478,18-478,24)
 
 * Info at PatAnnot.fst(55,36-55,39):
   - Expected failure:
   - Type annotation on parameter incompatible with the expected type
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = forall (_: Prims.int). _ >= 0
   - See also Prims.fst(478,18-478,24)
 

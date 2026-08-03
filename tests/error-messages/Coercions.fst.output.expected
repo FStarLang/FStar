@@ -17,8 +17,6 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC = Prims.l_False
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(74,49-74,57):
@@ -26,8 +24,6 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env = (x : FStar.Ghost.erased Prims.int)
-  - VC = x >= 0
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(76,55-76,56):
@@ -35,8 +31,6 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC = x >= 0
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(78,50-78,51):
@@ -44,8 +38,6 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env = (x : FStar.Ghost.erased Prims.int)
-  - VC = x >= 0
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(80,51-80,52):
@@ -53,7 +45,5 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC = x >= 0
   - See also Prims.fst(478,18-478,24)
 

@@ -545,7 +545,6 @@ let lemma_del #kt #vt #sz spec (repr : repr_t_sz kt vt sz) idx k v
 let not_full #kt #vt (r:repr_t kt vt) : prop =
   exists i. ~(Used? (r @@ i ))
 
-#set-options "--split_queries always"
 #restart-solver
 #push-options "--z3rlimit_factor 4"
 let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 

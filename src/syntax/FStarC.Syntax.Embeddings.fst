@@ -933,7 +933,6 @@ let e_vconfig =
                    S.as_arg (embed vcfg.max_fuel                                  rng None norm);
                    S.as_arg (embed vcfg.initial_ifuel                             rng None norm);
                    S.as_arg (embed vcfg.max_ifuel                                 rng None norm);
-                   S.as_arg (embed vcfg.detail_errors                             rng None norm);
                    S.as_arg (embed vcfg.no_smt                                    rng None norm);
                    S.as_arg (embed vcfg.quake_lo                                  rng None norm);
                    S.as_arg (embed vcfg.quake_hi                                  rng None norm);
@@ -965,7 +964,6 @@ let e_vconfig =
             (max_fuel, _);
             (initial_ifuel, _);
             (max_ifuel, _);
-            (detail_errors, _);
             (no_smt, _);
             (quake_lo, _);
             (quake_hi, _);
@@ -991,7 +989,6 @@ let e_vconfig =
                   let! max_fuel = try_unembed max_fuel norm in
                   let! initial_ifuel = try_unembed initial_ifuel norm in
                   let! max_ifuel = try_unembed max_ifuel norm in
-                  let! detail_errors = try_unembed detail_errors norm in
                   let! no_smt = try_unembed no_smt norm in
                   let! quake_lo = try_unembed quake_lo norm in
                   let! quake_hi = try_unembed quake_hi norm in
@@ -1016,7 +1013,6 @@ let e_vconfig =
                     max_fuel = max_fuel;
                     initial_ifuel = initial_ifuel;
                     max_ifuel = max_ifuel;
-                    detail_errors = detail_errors;
                     no_smt = no_smt;
                     quake_lo = quake_lo;
                     quake_hi = quake_hi;

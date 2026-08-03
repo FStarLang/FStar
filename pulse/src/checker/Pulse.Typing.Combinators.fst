@@ -129,7 +129,7 @@ let lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c })
   | Some d ->
     d
 
-#push-options "--z3rlimit_factor 2 --ifuel 0 --fuel 0 --split_queries no"
+#push-options "--z3rlimit_factor 2 --ifuel 0 --fuel 0"
 #restart-solver
 let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
   fun g pre e1 e2 c1 c2 px post_hint ->

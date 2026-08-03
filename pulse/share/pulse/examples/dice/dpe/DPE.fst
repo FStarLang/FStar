@@ -310,7 +310,7 @@ fn frame_session_perm_on_range
 
 let emp_to_start_valid () : Lemma (valid_transition emp_trace G_SessionStart) = ()
 
-#push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 6"
+#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 6"
 
 fn __open_session (s:st)
   requires dpe_inv trace_ref (Some s)
@@ -518,7 +518,7 @@ fn upd_singleton
 }
 
 
-#push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 2"
+#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 2"
 
 divergent
 fn replace_session
@@ -686,7 +686,7 @@ ghost fn unrelated_session_state #x #y ()
   unreachable ()
 }
 
-#push-options "--fuel 2 --ifuel 2 --split_queries no"
+#push-options "--fuel 2 --ifuel 2"
 
 divergent
 fn initialize_context (sid:sid_t) 
@@ -1129,7 +1129,7 @@ fn rewrite_session_state_related_available
 }
 
 
-#push-options "--fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 4"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 4"
 #restart-solver
 divergent
 fn derive_child (sid:sid_t)
@@ -1286,7 +1286,7 @@ fn close_session (sid:sid_t)
 }
 
 
-#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1"
 
 divergent
 fn certify_key (sid:sid_t)
@@ -1383,7 +1383,7 @@ ensures
 
 #pop-options
 
-#push-options "--split_queries no"
+#push-options ""
 
 divergent
 fn sign (sid:sid_t)

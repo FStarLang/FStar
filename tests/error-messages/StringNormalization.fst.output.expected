@@ -2,6 +2,4 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = "abc" ^ "def" == "abcdef"
 

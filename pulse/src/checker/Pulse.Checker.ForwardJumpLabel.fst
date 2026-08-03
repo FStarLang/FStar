@@ -58,7 +58,7 @@ let ambient_effect_annot (g:env) (c:comp_st) (post_hint0:post_hint_opt g)
       in
       aux (bindings g)
 
-#push-options "--z3rlimit 10 --split_queries always"
+#push-options "--z3rlimit 10"
 let check
     (g:env)
     (pre:term)

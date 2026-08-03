@@ -875,7 +875,6 @@ let init_env deps : ML TcEnv.env =
   let solver =
     {SMT.solver with
       preprocess=FStarC.Tactics.Hooks.preprocess;
-      spinoff_strictly_positive_goals=Some FStarC.Tactics.Hooks.spinoff_strictly_positive_goals;
       handle_smt_goal=FStarC.Tactics.Hooks.handle_smt_goal
     } in
   let env =

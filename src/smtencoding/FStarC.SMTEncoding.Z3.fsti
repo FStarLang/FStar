@@ -22,9 +22,9 @@ module SolverState = FStarC.SMTEncoding.SolverState
 
 type z3status =
     | UNSAT
-    | SAT     of error_labels & option string         //error labels & z3 reason
-    | UNKNOWN of error_labels & option string         //error labels & z3 reason
-    | TIMEOUT of error_labels & option string         //error labels & z3 reason
+    | SAT     of option string         //z3 reason
+    | UNKNOWN of option string         //z3 reason
+    | TIMEOUT of option string         //z3 reason
     | KILLED
 type z3statistics = SMap.t string
 
@@ -44,7 +44,7 @@ type query_log = {
     close_log:       unit -> ML unit;
 }
 
-val status_string_and_errors : z3status -> ML (string & error_labels)
+val status_string : z3status -> ML string
 
 val query_logging : query_log
 
@@ -56,17 +56,19 @@ val giveZ3_lazy : SolverState.lazy_decls -> ML unit
 
 val ask_text
        : r:Range.t
-       -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
        -> ML string
 
+(* Asks the solver a batch of queries.  [qry] may contain any number of
+   check-sat blocks, each delimited by [Echo "<goal>"] / [Echo "</goal>"];
+   one result is returned per block that the solver answered.  Fewer results
+   than blocks means the solver died part-way through. *)
 val ask: r:Range.t
-       -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
        -> fresh:bool
-       -> ML z3result
+       -> ML (list z3result)
 
 (* This will make sure the solver is in a fresh state, potentially
 killing the current process. A new process will *not* be started
