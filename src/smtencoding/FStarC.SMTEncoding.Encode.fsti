@@ -51,5 +51,4 @@ val encode_query: option (unit -> ML string)
                 -> Env.env
                 -> S.term
                 -> ML (list decl  //prelude, translation of tcenv
-                  & ErrorReporting.goal_tree //the goals of the query
-                  & decl)       //the negated query, as a single assumption
+                  & ErrorReporting.goal_tree) //the goals of the query

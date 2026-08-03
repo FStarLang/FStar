@@ -477,10 +477,10 @@ let prune_sim (roots:list decl) (s:solver_state)
   List.map name_of_decl (List.filter Assume? roots@can_give)
 
 (* Start a query context, registering and pushing the roots *)
-let start_query (msg:string) (roots_to_push:list decl) (qry:decl) (s:solver_state)
+let start_query (msg:string) (roots_to_push:list decl) (qry:list decl) (s:solver_state)
 : ML solver_state
 = let hd, tl = peek s in
-  let s = { s with levels = { hd with pruning_roots = Some (qry::roots_to_push) } :: tl } in
+  let s = { s with levels = { hd with pruning_roots = Some (qry@roots_to_push) } :: tl } in
   let s = push s in
   let s = give [Caption msg] s in
   give_now false (Given roots_to_push) s

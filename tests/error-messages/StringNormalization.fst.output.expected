@@ -2,8 +2,5 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (=
-       (Prims.strcat (BoxString (FString_const 2)) (BoxString (FString_const 3)))
-       (BoxString (FString_const 4)))
+  - Failed to prove: "abc" ^ "def" == "abcdef"
 

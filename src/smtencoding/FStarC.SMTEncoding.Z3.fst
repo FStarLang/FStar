@@ -651,7 +651,7 @@ let rollback (msg:string) (depth:option int) : ML unit =
   //   (show depth)
   //   (show init)
   //   (show final)
-let start_query (msg:string) (prefix_to_push:list decl) (query:decl) : ML unit = 
+let start_query (msg:string) (prefix_to_push:list decl) (query:list decl) : ML unit = 
   with_solver_state_unit (SolverState.start_query msg prefix_to_push query)
 let finish_query (msg:string) : ML unit =
   with_solver_state_unit (SolverState.finish_query msg)

@@ -2,49 +2,15 @@
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (or
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_0
-         x_ae567c2fb75be05905677af440075565_0))
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_1
-         x_ae567c2fb75be05905677af440075565_1)))
+  - Failed to prove: m << m \/ l << l
   - See also NegativeTests.Termination.fst(18,12-21,29)
 
 * Info at NegativeTests.Termination.fst(28,26-28,35):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (or
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_0
-         x_ae567c2fb75be05905677af440075565_0))
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_1 (BoxInt 1))
-         x_ae567c2fb75be05905677af440075565_1)))
-  - In context: (not (= x_ae567c2fb75be05905677af440075565_1 (BoxInt 0)))
+  - Failed to prove: n << n \/ count - 1 << count
+  - In context: ~(count = 0)
   - See also NegativeTests.Termination.fst(25,23-28,35)
 
 * Info at NegativeTests.Termination.fst(36,29-36,54):
@@ -52,339 +18,65 @@
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (or
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_0 (BoxInt 1))
-         x_ae567c2fb75be05905677af440075565_0))
-       (and
-        (Valid
-         (Prims.op_Equals_Equals_Equals
-          U_zero
-          Prims.int
-          Prims.int
-          (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_0 (BoxInt 1))
-          x_ae567c2fb75be05905677af440075565_0))
-        (Valid
-         (Prims.precedes
-          U_zero
-          U_zero
-          Prims.int
-          Prims.int
-          (NegativeTests.Termination.ackermann_bad
-           x_ae567c2fb75be05905677af440075565_0
-           (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_1 (BoxInt 1)))
-          x_ae567c2fb75be05905677af440075565_1))))
+      m - 1 << m \/
+      m - 1 === m /\ NegativeTests.Termination.ackermann_bad m (n - 1) << n
   - In context:
-      (not
-       (=
-        (Prims.op_Equality
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_0
-         (BoxInt 0))
-        (BoxBool true)))
-      (implies
-       (and
-        (=
-         (Prims.op_Equality
-          Prims.int
-          x_ae567c2fb75be05905677af440075565_1
-          (BoxInt 0))
-         (BoxBool true))
-        (=
-         (Prims.op_Equality
-          Prims.int
-          x_ae567c2fb75be05905677af440075565_1
-          (BoxInt 0))
-         (BoxBool true)))
-       (or
-        (Valid
-         (Prims.precedes
-          U_zero
-          U_zero
-          Prims.int
-          Prims.int
-          (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_0 (BoxInt 1))
-          x_ae567c2fb75be05905677af440075565_0))
-        (and
-         (Valid
-          (Prims.op_Equals_Equals_Equals
-           U_zero
-           Prims.int
-           Prims.int
-           (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_0 (BoxInt 1))
-           x_ae567c2fb75be05905677af440075565_0))
-         (Valid
-          (Prims.precedes
-           U_zero
-           U_zero
-           Prims.int
-           Prims.int
-           (BoxInt 1)
-           x_ae567c2fb75be05905677af440075565_1)))))
-      (not
-       (=
-        (Prims.op_Equality
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_1
-         (BoxInt 0))
-        (BoxBool true)))
-      (or
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_0
-         x_ae567c2fb75be05905677af440075565_0))
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_1 (BoxInt 1))
-         x_ae567c2fb75be05905677af440075565_1)))
-      @sk_2 : Term
-      (and
-       (HasType @sk_2 Prims.int)
-       (or
-        (Valid
-         (Prims.precedes
-          U_zero
-          U_zero
-          Prims.int
-          Prims.int
-          x_ae567c2fb75be05905677af440075565_0
-          x_ae567c2fb75be05905677af440075565_0))
-        (Valid
-         (Prims.precedes
-          U_zero
-          U_zero
-          Prims.int
-          Prims.int
-          (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_1 (BoxInt 1))
-          x_ae567c2fb75be05905677af440075565_1)))
-       (=
-        (NegativeTests.Termination.ackermann_bad
-         x_ae567c2fb75be05905677af440075565_0
-         (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_1 (BoxInt 1)))
-        @sk_2))
+      ~(m = 0 = true)
+      n = 0 = true ==> n = 0 == true ==> m - 1 << m \/ m - 1 === m /\ 1 << n
+      ~(n = 0 = true)
+      m << m \/ n - 1 << n
+      uu___: Prims.int
+      m << m \/ n - 1 << n
+      NegativeTests.Termination.ackermann_bad m (n - 1) == _
   - See also NegativeTests.Termination.fst(31,19-36,54)
 
 * Info at NegativeTests.Termination.fst(36,46-36,53):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (or
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_0
-         x_ae567c2fb75be05905677af440075565_0))
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_1 (BoxInt 1))
-         x_ae567c2fb75be05905677af440075565_1)))
+  - Failed to prove: m << m \/ n - 1 << n
   - In context:
-      (not
-       (=
-        (Prims.op_Equality
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_0
-         (BoxInt 0))
-        (BoxBool true)))
-      (implies
-       (and
-        (=
-         (Prims.op_Equality
-          Prims.int
-          x_ae567c2fb75be05905677af440075565_1
-          (BoxInt 0))
-         (BoxBool true))
-        (=
-         (Prims.op_Equality
-          Prims.int
-          x_ae567c2fb75be05905677af440075565_1
-          (BoxInt 0))
-         (BoxBool true)))
-       (or
-        (Valid
-         (Prims.precedes
-          U_zero
-          U_zero
-          Prims.int
-          Prims.int
-          (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_0 (BoxInt 1))
-          x_ae567c2fb75be05905677af440075565_0))
-        (and
-         (Valid
-          (Prims.op_Equals_Equals_Equals
-           U_zero
-           Prims.int
-           Prims.int
-           (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_0 (BoxInt 1))
-           x_ae567c2fb75be05905677af440075565_0))
-         (Valid
-          (Prims.precedes
-           U_zero
-           U_zero
-           Prims.int
-           Prims.int
-           (BoxInt 1)
-           x_ae567c2fb75be05905677af440075565_1)))))
-      (not
-       (=
-        (Prims.op_Equality
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_1
-         (BoxInt 0))
-        (BoxBool true)))
+      ~(m = 0 = true)
+      n = 0 = true ==> n = 0 == true ==> m - 1 << m \/ m - 1 === m /\ 1 << n
+      ~(n = 0 = true)
   - See also NegativeTests.Termination.fst(31,19-36,54)
 
 * Info at NegativeTests.Termination.fst(35,43-35,44):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (or
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         Prims.int
-         Prims.int
-         (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_0 (BoxInt 1))
-         x_ae567c2fb75be05905677af440075565_0))
-       (and
-        (Valid
-         (Prims.op_Equals_Equals_Equals
-          U_zero
-          Prims.int
-          Prims.int
-          (Prims.op_Subtraction x_ae567c2fb75be05905677af440075565_0 (BoxInt 1))
-          x_ae567c2fb75be05905677af440075565_0))
-        (Valid
-         (Prims.precedes
-          U_zero
-          U_zero
-          Prims.int
-          Prims.int
-          (BoxInt 1)
-          x_ae567c2fb75be05905677af440075565_1))))
+  - Failed to prove: m - 1 << m \/ m - 1 === m /\ 1 << n
   - In context:
-      (not
-       (=
-        (Prims.op_Equality
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_0
-         (BoxInt 0))
-        (BoxBool true)))
-      (and
-       (=
-        (Prims.op_Equality
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_1
-         (BoxInt 0))
-        (BoxBool true))
-       (=
-        (Prims.op_Equality
-         Prims.int
-         x_ae567c2fb75be05905677af440075565_1
-         (BoxInt 0))
-        (BoxBool true)))
+      ~(m = 0 = true)
+      n = 0 = true
+      n = 0 == true
   - See also NegativeTests.Termination.fst(31,19-36,54)
 
 * Info at NegativeTests.Termination.fst(42,28-42,29):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (Valid
-       (Prims.precedes
-        uu___136
-        uu___136
-        (Prims.list uu___136 x_10ac8b46b5c3a9dcb7196f938db19076_1)
-        (Prims.list uu___136 x_10ac8b46b5c3a9dcb7196f938db19076_1)
-        x_2da3ce0e08b2dd44c055efbb88bc247e_2
-        x_2da3ce0e08b2dd44c055efbb88bc247e_2))
+  - Failed to prove: l << l
   - In context:
-      (implies
-       (and
-        (not
-         (BoxBool_proj_0
-          (Prims.uu___is_Nil
-           uu___136
-           x_10ac8b46b5c3a9dcb7196f938db19076_1
-           x_2da3ce0e08b2dd44c055efbb88bc247e_2)))
-        (not
-         (BoxBool_proj_0
-          (Prims.uu___is_Cons
-           uu___136
-           x_10ac8b46b5c3a9dcb7196f938db19076_1
-           x_2da3ce0e08b2dd44c055efbb88bc247e_2))))
-       false)
-      (not
-       (BoxBool_proj_0
-        (Prims.uu___is_Nil
-         uu___136
-         x_10ac8b46b5c3a9dcb7196f938db19076_1
-         x_2da3ce0e08b2dd44c055efbb88bc247e_2)))
-      @sk_2 : Term
-      @sk_3 : Term
-      (and
-       (HasType @sk_2 x_10ac8b46b5c3a9dcb7196f938db19076_1)
-       (HasType @sk_3 (Prims.list uu___136 x_10ac8b46b5c3a9dcb7196f938db19076_1))
-       (=
-        x_2da3ce0e08b2dd44c055efbb88bc247e_2
-        (Prims.Cons uu___136 x_10ac8b46b5c3a9dcb7196f938db19076_1 @sk_2 @sk_3)))
+      ~(Nil? l) /\ ~(Cons? l) ==> Prims.l_False
+      ~(Nil? l)
+      uu___: 'a
+      tl: Prims.list 'a
+      l == _ :: tl
   - See also NegativeTests.Termination.fst(40,23-42,29)
 
 * Info at NegativeTests.Termination.fst(55,15-55,29):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (Valid
-       (Prims.precedes
-        U_zero
-        U_zero
-        Prims.nat
-        Prims.nat
-        @sk_2
-        x_bb4e1c9af0265270f8e7a5f250f730e2_0))
+  - Failed to prove: x << v
   - In context:
-      (not
-       (=
-        (Prims.op_Equality
-         Prims.int
-         x_bb4e1c9af0265270f8e7a5f250f730e2_0
-         (BoxInt 0))
-        (BoxBool true)))
-      @sk_1 : Term
-      (and
-       (HasType @sk_1 Prims.nat)
-       (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-       (= x_bb4e1c9af0265270f8e7a5f250f730e2_0 @sk_1))
-      @sk_2 : Term
-      (and
-       (HasType @sk_2 Prims.nat)
-       (<=
-        (BoxInt_proj_0 @sk_2)
-        (BoxInt_proj_0 x_bb4e1c9af0265270f8e7a5f250f730e2_0)))
+      ~(v = 0 = true)
+      i: Prims.nat
+      i >= 0
+      v == i
+      x: Prims.nat
+      x <= v
   - See also NegativeTests.Termination.fst(53,2-55,29)
 
 * Info at NegativeTests.Termination.fst(67,19-67,29):
@@ -392,60 +84,13 @@
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (Valid
-       (Prims.precedes
-        U_zero
-        U_zero
-        NegativeTests.Termination.snat
-        NegativeTests.Termination.snat
-        (NegativeTests.Termination.S (NegativeTests.Termination.S @sk_2))
-        x_7f60d59d9214e8364ec143bcec86dd12_0))
+      NegativeTests.Termination.S (NegativeTests.Termination.S n') << n
   - In context:
-      (implies
-       (and
-        (not
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_O
-           x_7f60d59d9214e8364ec143bcec86dd12_0)))
-        (not
-         (and
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_S
-            x_7f60d59d9214e8364ec143bcec86dd12_0))
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_O
-            (NegativeTests.Termination.__proj__S__item___0
-             x_7f60d59d9214e8364ec143bcec86dd12_0)))))
-        (not
-         (and
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_S
-            x_7f60d59d9214e8364ec143bcec86dd12_0))
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_S
-            (NegativeTests.Termination.__proj__S__item___0
-             x_7f60d59d9214e8364ec143bcec86dd12_0))))))
-       false)
-      (and
-       (not
-        (BoxBool_proj_0
-         (NegativeTests.Termination.uu___is_O
-          x_7f60d59d9214e8364ec143bcec86dd12_0)))
-       (not
-        (and
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_S
-           x_7f60d59d9214e8364ec143bcec86dd12_0))
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_O
-           (NegativeTests.Termination.__proj__S__item___0
-            x_7f60d59d9214e8364ec143bcec86dd12_0))))))
-      @sk_2 : Term
-      (and
-       (HasType @sk_2 NegativeTests.Termination.snat)
-       (=
-        x_7f60d59d9214e8364ec143bcec86dd12_0
-        (NegativeTests.Termination.S (NegativeTests.Termination.S @sk_2))))
+      ~(O? n) /\ ~(S? n && O? n._0) /\ ~(S? n && S? n._0) ==> Prims.l_False
+      ~(O? n)
+      ~(S? n && O? n._0)
+      n': NegativeTests.Termination.snat
+      n == NegativeTests.Termination.S (NegativeTests.Termination.S n')
   - See also NegativeTests.Termination.fst(64,2-67,29)
 
 * Info at NegativeTests.Termination.fst(75,34-75,35):
@@ -453,331 +98,53 @@
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (or
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         NegativeTests.Termination.snat
-         NegativeTests.Termination.snat
-         (NegativeTests.Termination.S (NegativeTests.Termination.S @sk_2))
-         x_7f60d59d9214e8364ec143bcec86dd12_0))
-       (and
-        (Valid
-         (Prims.op_Equals_Equals_Equals
-          U_zero
-          NegativeTests.Termination.snat
-          NegativeTests.Termination.snat
-          (NegativeTests.Termination.S (NegativeTests.Termination.S @sk_2))
-          x_7f60d59d9214e8364ec143bcec86dd12_0))
-        (Valid
-         (Prims.precedes
-          U_zero
-          U_zero
-          NegativeTests.Termination.snat
-          NegativeTests.Termination.snat
-          x_7f60d59d9214e8364ec143bcec86dd12_1
-          x_7f60d59d9214e8364ec143bcec86dd12_1))))
+      NegativeTests.Termination.S (NegativeTests.Termination.S n') << n \/
+      NegativeTests.Termination.S (NegativeTests.Termination.S n') === n /\
+      m << m
   - In context:
-      (implies
-       (and
-        (not
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_O
-           x_7f60d59d9214e8364ec143bcec86dd12_0)))
-        (not
-         (and
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_S
-            x_7f60d59d9214e8364ec143bcec86dd12_0))
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_O
-            (NegativeTests.Termination.__proj__S__item___0
-             x_7f60d59d9214e8364ec143bcec86dd12_0)))))
-        (not
-         (and
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_S
-            x_7f60d59d9214e8364ec143bcec86dd12_0))
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_S
-            (NegativeTests.Termination.__proj__S__item___0
-             x_7f60d59d9214e8364ec143bcec86dd12_0))))))
-       false)
-      (and
-       (not
-        (BoxBool_proj_0
-         (NegativeTests.Termination.uu___is_O
-          x_7f60d59d9214e8364ec143bcec86dd12_0)))
-       (not
-        (and
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_S
-           x_7f60d59d9214e8364ec143bcec86dd12_0))
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_O
-           (NegativeTests.Termination.__proj__S__item___0
-            x_7f60d59d9214e8364ec143bcec86dd12_0))))))
-      @sk_2 : Term
-      (and
-       (HasType @sk_2 NegativeTests.Termination.snat)
-       (=
-        x_7f60d59d9214e8364ec143bcec86dd12_0
-        (NegativeTests.Termination.S (NegativeTests.Termination.S @sk_2))))
+      ~(O? n) /\ ~(S? n && O? n._0) /\ ~(S? n && S? n._0) ==> Prims.l_False
+      ~(O? n)
+      ~(S? n && O? n._0)
+      n': NegativeTests.Termination.snat
+      n == NegativeTests.Termination.S (NegativeTests.Termination.S n')
   - See also NegativeTests.Termination.fst(71,13-75,35)
 
 * Info at NegativeTests.Termination.fst(80,2-82,14):
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and
-       (HasType @sk_1 NegativeTests.Termination.snat)
-       (HasType @sk_2 NegativeTests.Termination.snat))
-      (and
-       (not (BoxBool_proj_0 (NegativeTests.Termination.uu___is_O @sk_1)))
-       (not
-        (and
-         (BoxBool_proj_0 (NegativeTests.Termination.uu___is_S @sk_1))
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_O
-           (NegativeTests.Termination.__proj__S__item___0 @sk_1))))))
+      n: NegativeTests.Termination.snat
+      m: NegativeTests.Termination.snat
+      ~(O? n) /\ ~(S? n && O? n._0)
 
 * Info at NegativeTests.Termination.fst(89,29-89,31):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (or
-       (Valid
-        (Prims.precedes
-         U_zero
-         U_zero
-         NegativeTests.Termination.snat
-         NegativeTests.Termination.snat
-         (NegativeTests.Termination.S @sk_2)
-         x_7f60d59d9214e8364ec143bcec86dd12_0))
-       (and
-        (Valid
-         (Prims.op_Equals_Equals_Equals
-          U_zero
-          NegativeTests.Termination.snat
-          NegativeTests.Termination.snat
-          (NegativeTests.Termination.S @sk_2)
-          x_7f60d59d9214e8364ec143bcec86dd12_0))
-        (Valid
-         (Prims.precedes
-          U_zero
-          U_zero
-          NegativeTests.Termination.snat
-          NegativeTests.Termination.snat
-          @sk_3
-          x_7f60d59d9214e8364ec143bcec86dd12_1))))
+      NegativeTests.Termination.S n' << n \/
+      NegativeTests.Termination.S n' === n /\ m' << m
   - In context:
-      (implies
-       (and
-        (not
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_O
-           (FStar.Pervasives.Native.__proj__Mktuple2__item___1
-            U_zero
-            U_zero
-            NegativeTests.Termination.snat
-            NegativeTests.Termination.snat
-            (FStar.Pervasives.Native.Mktuple2
-             U_zero
-             U_zero
-             NegativeTests.Termination.snat
-             NegativeTests.Termination.snat
-             x_7f60d59d9214e8364ec143bcec86dd12_0
-             x_7f60d59d9214e8364ec143bcec86dd12_1)))))
-        (not
-         (BoxBool_proj_0
-          (NegativeTests.Termination.uu___is_S
-           (FStar.Pervasives.Native.__proj__Mktuple2__item___1
-            U_zero
-            U_zero
-            NegativeTests.Termination.snat
-            NegativeTests.Termination.snat
-            (FStar.Pervasives.Native.Mktuple2
-             U_zero
-             U_zero
-             NegativeTests.Termination.snat
-             NegativeTests.Termination.snat
-             x_7f60d59d9214e8364ec143bcec86dd12_0
-             x_7f60d59d9214e8364ec143bcec86dd12_1))))))
-       false)
-      (not
-       (BoxBool_proj_0
-        (NegativeTests.Termination.uu___is_O
-         (FStar.Pervasives.Native.__proj__Mktuple2__item___1
-          U_zero
-          U_zero
-          NegativeTests.Termination.snat
-          NegativeTests.Termination.snat
-          (FStar.Pervasives.Native.Mktuple2
-           U_zero
-           U_zero
-           NegativeTests.Termination.snat
-           NegativeTests.Termination.snat
-           x_7f60d59d9214e8364ec143bcec86dd12_0
-           x_7f60d59d9214e8364ec143bcec86dd12_1)))))
-      @sk_2 : Term
-      @sk_3 : Term
-      (and
-       (HasType @sk_2 NegativeTests.Termination.snat)
-       (HasType @sk_3 NegativeTests.Termination.snat)
-       (=
-        (FStar.Pervasives.Native.Mktuple2
-         U_zero
-         U_zero
-         NegativeTests.Termination.snat
-         NegativeTests.Termination.snat
-         x_7f60d59d9214e8364ec143bcec86dd12_0
-         x_7f60d59d9214e8364ec143bcec86dd12_1)
-        (FStar.Pervasives.Native.Mktuple2
-         U_zero
-         U_zero
-         NegativeTests.Termination.snat
-         NegativeTests.Termination.snat
-         (NegativeTests.Termination.S @sk_2)
-         @sk_3)))
+      ~(O? (n, m)._1) /\ ~(S? (n, m)._1) ==> Prims.l_False
+      ~(O? (n, m)._1)
+      n': NegativeTests.Termination.snat
+      m': NegativeTests.Termination.snat
+      (n, m) == (NegativeTests.Termination.S n', m')
   - See also NegativeTests.Termination.fst(86,15-89,31)
 
 * Info at NegativeTests.Termination.fst(96,20-96,26):
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (Valid
-       (Prims.precedes
-        U_zero
-        U_zero
-        NegativeTests.Termination.snat
-        NegativeTests.Termination.snat
-        (NegativeTests.Termination.S @sk_2)
-        x_7f60d59d9214e8364ec143bcec86dd12_0))
+  - Failed to prove: NegativeTests.Termination.S n' << n
   - In context:
-      (implies
-       (and
-        (not
-         (and
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_O
-            (FStar.Pervasives.Native.__proj__Mktuple2__item___1
-             U_zero
-             U_zero
-             NegativeTests.Termination.snat
-             Prims.int
-             (FStar.Pervasives.Native.Mktuple2
-              U_zero
-              U_zero
-              NegativeTests.Termination.snat
-              Prims.int
-              x_7f60d59d9214e8364ec143bcec86dd12_0
-              (BoxInt 42)))))
-          (BoxBool_proj_0
-           (Prims.op_Equality
-            Prims.int
-            (FStar.Pervasives.Native.__proj__Mktuple2__item___2
-             U_zero
-             U_zero
-             NegativeTests.Termination.snat
-             Prims.int
-             (FStar.Pervasives.Native.Mktuple2
-              U_zero
-              U_zero
-              NegativeTests.Termination.snat
-              Prims.int
-              x_7f60d59d9214e8364ec143bcec86dd12_0
-              (BoxInt 42)))
-            (BoxInt 42)))))
-        (not
-         (and
-          (BoxBool_proj_0
-           (NegativeTests.Termination.uu___is_S
-            (FStar.Pervasives.Native.__proj__Mktuple2__item___1
-             U_zero
-             U_zero
-             NegativeTests.Termination.snat
-             Prims.int
-             (FStar.Pervasives.Native.Mktuple2
-              U_zero
-              U_zero
-              NegativeTests.Termination.snat
-              Prims.int
-              x_7f60d59d9214e8364ec143bcec86dd12_0
-              (BoxInt 42)))))
-          (BoxBool_proj_0
-           (Prims.op_Equality
-            Prims.int
-            (FStar.Pervasives.Native.__proj__Mktuple2__item___2
-             U_zero
-             U_zero
-             NegativeTests.Termination.snat
-             Prims.int
-             (FStar.Pervasives.Native.Mktuple2
-              U_zero
-              U_zero
-              NegativeTests.Termination.snat
-              Prims.int
-              x_7f60d59d9214e8364ec143bcec86dd12_0
-              (BoxInt 42)))
-            (BoxInt 42))))))
-       false)
-      (not
-       (and
-        (BoxBool_proj_0
-         (NegativeTests.Termination.uu___is_O
-          (FStar.Pervasives.Native.__proj__Mktuple2__item___1
-           U_zero
-           U_zero
-           NegativeTests.Termination.snat
-           Prims.int
-           (FStar.Pervasives.Native.Mktuple2
-            U_zero
-            U_zero
-            NegativeTests.Termination.snat
-            Prims.int
-            x_7f60d59d9214e8364ec143bcec86dd12_0
-            (BoxInt 42)))))
-        (BoxBool_proj_0
-         (Prims.op_Equality
-          Prims.int
-          (FStar.Pervasives.Native.__proj__Mktuple2__item___2
-           U_zero
-           U_zero
-           NegativeTests.Termination.snat
-           Prims.int
-           (FStar.Pervasives.Native.Mktuple2
-            U_zero
-            U_zero
-            NegativeTests.Termination.snat
-            Prims.int
-            x_7f60d59d9214e8364ec143bcec86dd12_0
-            (BoxInt 42)))
-          (BoxInt 42)))))
-      @sk_2 : Term
-      (and
-       (HasType @sk_2 NegativeTests.Termination.snat)
-       (=
-        (FStar.Pervasives.Native.Mktuple2
-         U_zero
-         U_zero
-         NegativeTests.Termination.snat
-         Prims.int
-         x_7f60d59d9214e8364ec143bcec86dd12_0
-         (BoxInt 42))
-        (FStar.Pervasives.Native.Mktuple2
-         U_zero
-         U_zero
-         NegativeTests.Termination.snat
-         Prims.int
-         (NegativeTests.Termination.S @sk_2)
-         (BoxInt 42))))
+      ~(O? (n, 42)._1 && (n, 42)._2 = 42) /\ ~(S? (n, 42)._1 && (n, 42)._2 = 42) ==>
+      Prims.l_False
+      ~(O? (n, 42)._1 && (n, 42)._2 = 42)
+      n': NegativeTests.Termination.snat
+      (n, 42) == (NegativeTests.Termination.S n', 42)
   - See also NegativeTests.Termination.fst(94,2-96,26)
 
 * Warning 240 at NegativeTests.Termination.fst(91,4-91,7):

@@ -1,25 +1,17 @@
 * Info at QuickTest.fst(124,2-127,34):
   - Expected failure:
   - The SMT solver could not prove the query.
-  - Failed to prove: (= (QuickTest.f (BoxInt 4)) (BoxInt 0))
+  - Failed to prove: QuickTest.f 4 == 0
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 QuickTest.vale_state)
-      @sk_2 : Term
-      (and
-       (HasType @sk_2 (QuickTest.quickCode Prims.unit))
-       (HasType @sk_2 (QuickTest.quickCode Prims.unit))
-       (= (QuickTest.va_qcode_Test2 Dummy_value) @sk_2))
-      @sk_3 : Term
-      (and
-       (HasType @sk_3 QuickTest.vale_state)
-       (HasType @sk_3 QuickTest.vale_state)
-       (= @sk_1 @sk_3))
-      @sk_4 : Term
-      (HasType @sk_4 Prims.bool)
-      (=
-       (Prims.op_Subtraction (QuickTest.f (BoxInt 4)) (QuickTest.f (BoxInt 4)))
-       (BoxInt 0))
+      va_s0: QuickTest.vale_state
+      qc: QuickTest.quickCode Prims.unit
+      Prims.has_type qc (QuickTest.quickCode Prims.unit)
+      QuickTest.va_qcode_Test2 == qc
+      s0: QuickTest.vale_state
+      Prims.has_type s0 QuickTest.vale_state
+      va_s0 == s0
+      ok: Prims.bool
+      QuickTest.f 4 - QuickTest.f 4 == 0
   - Also see: QuickTest(1,2-3,4)
   - Other related locations: QuickTest.fst(117,32-117,40)
 

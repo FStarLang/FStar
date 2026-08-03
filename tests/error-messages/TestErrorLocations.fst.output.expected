@@ -2,33 +2,30 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
 
 * Info at TestErrorLocations.fst(24,21-24,23):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
 
 * Info at TestErrorLocations.fst(31,10-31,19):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
   - See also TestErrorLocations.fst(27,50-27,58)
 
 * Info at TestErrorLocations.fst(37,10-37,11):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and (HasType @sk_1 (Tm_type uu___52)) (HasType @sk_2 @sk_1))
+      uu___: Type
+      x: _
   - See also TestErrorLocations.fst(27,50-27,58)
 
 * Info at TestErrorLocations.fst(43,20-43,21):
@@ -36,48 +33,38 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
   - See also Prims.fst(478,18-478,24)
 
 * Info at TestErrorLocations.fst(48,14-48,19):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (>=
-       (BoxInt_proj_0 (Prims.op_Addition @sk_1 (BoxInt 1)))
-       (BoxInt_proj_0 (BoxInt 0)))
+  - Failed to prove: x + 1 >= 0
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
-      (not (= @sk_1 (BoxInt 0)))
+      x: Prims.int
+      x <> 0
   - See also TestErrorLocations.fst(46,84-46,90)
 
 * Info at TestErrorLocations.fst(58,15-58,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
-      @sk_2 : Term
-      (HasType @sk_2 Prims.unit)
+      uu___: Prims.unit
+      uu___: Prims.unit
   - See also TestErrorLocations.fst(56,27-56,29)
 
 * Info at TestErrorLocations.fst(62,15-62,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
-      @sk_2 : Term
-      (HasType @sk_2 Prims.unit)
+      uu___: Prims.unit
+      uu___: Prims.unit
   - See also TestErrorLocations.fst(60,25-60,30)
 
 * Info at TestErrorLocations.fst(66,27-66,28):
@@ -85,15 +72,12 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
+  - Failed to prove: x >= 0
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and
-       (HasType @sk_1 Prims.int)
-       (HasType @sk_2 Prims.eqtype)
-       (Valid (Prims.hasEq U_zero @sk_2))
-       (= Prims.int @sk_2))
+      x: Prims.int
+      a: Prims.eqtype
+      Prims.hasEq a
+      Prims.int == a
   - See also Prims.fst(478,18-478,24)
 
 * Info at TestErrorLocations.fst(70,25-70,34):
@@ -101,28 +85,26 @@
   - Subtyping check failed
   - Expected type Type0 got type Type0
   - The SMT solver could not prove the query.
-  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
   - See also TestErrorLocations.fst(68,52-68,66)
 
 * Info at TestErrorLocations.fst(81,9-81,11):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: (BoxBool_proj_0 (TestErrorLocations.p3 Dummy_value))
+  - Failed to prove: TestErrorLocations.p3
   - In context:
-      (BoxBool_proj_0 (TestErrorLocations.p1 Dummy_value))
-      (BoxBool_proj_0 (TestErrorLocations.p1 Dummy_value))
-      (BoxBool_proj_0 (TestErrorLocations.p2 Dummy_value))
-      (BoxBool_proj_0 (TestErrorLocations.p2 Dummy_value))
+      TestErrorLocations.p1
+      TestErrorLocations.p1
+      TestErrorLocations.p2
+      TestErrorLocations.p2
 
 * Info at TestErrorLocations.fst(79,9-79,11):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: (BoxBool_proj_0 (TestErrorLocations.p1 Dummy_value))
+  - Failed to prove: TestErrorLocations.p1
 
 * Info at TestErrorLocations.fst(86,20-86,36):
   - Expected failure:
@@ -130,12 +112,8 @@
   - Expected type Prims.squash (exists (x: Prims.nat). x = 0)
     got type Prims.unit
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (exists ((@x0 Term))
-       (! (and (HasType @x0 Prims.nat) (= @x0 (BoxInt 0))) :qid goal))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
+  - Failed to prove: exists (x: Prims.nat). x = 0
+  - In context: uu___: Prims.unit
   - See also FStar.Classical.Sugar.fsti(66,21-66,40)
 
 * Info at TestErrorLocations.fst(93,28-93,33):
@@ -144,24 +122,21 @@
   - Expected type Prims.squash (forall (x: Prims.nat). x = 0)
     got type Prims.unit
   - The SMT solver could not prove the query.
-  - Failed to prove: (= @sk_2 (BoxInt 0))
+  - Failed to prove: x = 0
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
-      @sk_2 : Term
-      (HasType @sk_2 Prims.nat)
+      uu___: Prims.unit
+      x: Prims.nat
 
 * Info at TestErrorLocations.fst(98,17-98,18):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (p /\ q) got type Prims.unit
   - The SMT solver could not prove the query.
-  - Failed to prove: (Valid @sk_2)
+  - Failed to prove: q
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and (HasType @sk_1 Prims.prop) (HasType @sk_2 Prims.prop))
-      (Valid @sk_1)
+      p: Prims.prop
+      q: Prims.prop
+      p
   - See also TestErrorLocations.fst(97,21-97,22)
 
 * Info at TestErrorLocations.fst(98,12-98,13):
@@ -169,11 +144,10 @@
   - Subtyping check failed
   - Expected type Prims.squash (p /\ q) got type Prims.unit
   - The SMT solver could not prove the query.
-  - Failed to prove: (Valid @sk_1)
+  - Failed to prove: p
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and (HasType @sk_1 Prims.prop) (HasType @sk_2 Prims.prop))
+      p: Prims.prop
+      q: Prims.prop
   - See also TestErrorLocations.fst(97,19-97,20)
 
 * Info at TestErrorLocations.fst(104,17-104,18):
@@ -181,16 +155,12 @@
   - Subtyping check failed
   - Expected type Prims.squash (p /\ q) got type Prims.unit
   - The SMT solver could not prove the query.
-  - Failed to prove: (Valid @sk_2)
+  - Failed to prove: q
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      @sk_3 : Term
-      (and
-       (HasType @sk_1 Prims.prop)
-       (HasType @sk_2 Prims.prop)
-       (HasType @sk_3 (Prims.squash @sk_1)))
-      (Valid @sk_1)
+      p: Prims.prop
+      q: Prims.prop
+      uu___: Prims.squash p
+      p
   - See also TestErrorLocations.fst(103,21-103,22)
 
 * Info at TestErrorLocations.fst(110,12-110,18):
@@ -198,11 +168,10 @@
   - Subtyping check failed
   - Expected type Prims.squash (p \/ q) got type Prims.unit
   - The SMT solver could not prove the query.
-  - Failed to prove: (or (Valid @sk_1) (Valid @sk_2))
+  - Failed to prove: p \/ q
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and (HasType @sk_1 Prims.prop) (HasType @sk_2 Prims.prop))
+      p: Prims.prop
+      q: Prims.prop
   - See also FStar.Classical.Sugar.fsti(88,21-88,31)
 
 * Warning 240 at TestErrorLocations.fst(60,4-60,9):

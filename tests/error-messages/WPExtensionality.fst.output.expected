@@ -2,11 +2,9 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
-      @sk_2 : Term
-      (HasType @sk_2 Prims.unit)
+      uu___: Prims.unit
+      uu___: Prims.unit
   - See also WPExtensionality.fst(60,19-60,24)
 

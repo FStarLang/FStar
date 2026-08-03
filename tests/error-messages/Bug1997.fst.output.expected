@@ -164,10 +164,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (=
-       Tm_abs_4cc5eb7a1909db3dd5b9ea520cfaa94f
-       Tm_abs_53d97cc34bf4ec8ab714f2ee6ee21c24)
+  - Failed to prove: (fun a b c -> a + b + c) == (fun a b c -> a + (b + c))
   - See also Bug1997.fst(13,39-13,55)
 
 * Info at Bug1997.fst(21,27-21,38):
@@ -175,9 +172,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_56f20913ae467d7b046c0270fd7f2b47
-       Tm_abs_15220419667ca7a78289974fab4a5bf2)
+      (fun p q r -> p ==> q ==> r) == (fun p q r -> (p ==> q) ==> r)
   - See also Bug1997.fst(21,39-21,67)
 
 * Info at Bug1997.fst(29,27-29,38):
@@ -185,9 +180,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_a48725cd94a24706eba696b7af1ced62
-       Tm_abs_24ae1807bdb50b27edeab933d894da6c)
+      (fun p q r -> ((p ==> q) ==> r) /\ (r ==> p ==> q) <: Prims.prop) ==
+      (fun p q r -> p ==> (q ==> r) /\ (r ==> q))
   - See also Bug1997.fst(29,39-29,63)
 
 * Info at Bug1997.fst(38,27-38,38):
@@ -195,9 +189,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_122f9cef71a4f0bc18e70a27393c2894
-       Tm_abs_c632b8a06ad74c419d096a487b3f01d2)
+      (fun p q r s -> p ==> q /\ r ==> s) ==
+      (fun p q r s -> p ==> q /\ (r ==> s))
   - See also Bug1997.fst(38,39-38,65)
 
 * Info at Bug1997.fst(39,27-39,38):
@@ -205,9 +198,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_122f9cef71a4f0bc18e70a27393c2894
-       Tm_abs_eb5e1dba8bbc84b5ed4aad644a3f0a57)
+      (fun p q r s -> p ==> q /\ r ==> s) ==
+      (fun p q r s -> (p ==> q) /\ (r ==> s))
   - See also Bug1997.fst(39,39-39,65)
 
 * Info at Bug1997.fst(40,27-40,38):
@@ -215,9 +207,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_eb5e1dba8bbc84b5ed4aad644a3f0a57
-       Tm_abs_c632b8a06ad74c419d096a487b3f01d2)
+      (fun p q r s -> (p ==> q) /\ (r ==> s)) ==
+      (fun p q r s -> p ==> q /\ (r ==> s))
   - See also Bug1997.fst(40,39-40,65)
 
 * Info at Bug1997.fst(41,27-41,38):
@@ -225,9 +216,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_eb5e1dba8bbc84b5ed4aad644a3f0a57
-       Tm_abs_122f9cef71a4f0bc18e70a27393c2894)
+      (fun p q r s -> (p ==> q) /\ (r ==> s)) ==
+      (fun p q r s -> p ==> q /\ r ==> s)
   - See also Bug1997.fst(41,39-41,65)
 
 * Info at Bug1997.fst(42,27-42,38):
@@ -235,9 +225,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_c632b8a06ad74c419d096a487b3f01d2
-       Tm_abs_122f9cef71a4f0bc18e70a27393c2894)
+      (fun p q r s -> p ==> q /\ (r ==> s)) ==
+      (fun p q r s -> p ==> q /\ r ==> s)
   - See also Bug1997.fst(42,39-42,65)
 
 * Info at Bug1997.fst(51,27-51,38):
@@ -245,9 +234,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_8e66ad7727b0e70a64d91f2bf38f0513
-       Tm_abs_a993c71b7b293cc2adfd9546470a18e1)
+      (fun p q r -> p ==> q /\ (p ==> Prims.l_False) ==> r) ==
+      (fun p q r -> p ==> q /\ ((p ==> Prims.l_False) ==> r))
   - See also Bug1997.fst(51,39-51,59)
 
 * Info at Bug1997.fst(52,27-52,38):
@@ -255,9 +243,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_8e66ad7727b0e70a64d91f2bf38f0513
-       Tm_abs_0e1ae35089412f6d0391124decbc8bab)
+      (fun p q r -> p ==> q /\ (p ==> Prims.l_False) ==> r) ==
+      (fun p q r -> (p ==> q) /\ ((p ==> Prims.l_False) ==> r))
   - See also Bug1997.fst(52,39-52,59)
 
 * Info at Bug1997.fst(53,27-53,38):
@@ -265,9 +252,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_0e1ae35089412f6d0391124decbc8bab
-       Tm_abs_a993c71b7b293cc2adfd9546470a18e1)
+      (fun p q r -> (p ==> q) /\ ((p ==> Prims.l_False) ==> r)) ==
+      (fun p q r -> p ==> q /\ ((p ==> Prims.l_False) ==> r))
   - See also Bug1997.fst(53,39-53,59)
 
 * Info at Bug1997.fst(54,27-54,38):
@@ -275,9 +261,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_0e1ae35089412f6d0391124decbc8bab
-       Tm_abs_8e66ad7727b0e70a64d91f2bf38f0513)
+      (fun p q r -> (p ==> q) /\ ((p ==> Prims.l_False) ==> r)) ==
+      (fun p q r -> p ==> q /\ (p ==> Prims.l_False) ==> r)
   - See also Bug1997.fst(54,39-54,59)
 
 * Info at Bug1997.fst(55,27-55,38):
@@ -285,29 +270,22 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_a993c71b7b293cc2adfd9546470a18e1
-       Tm_abs_8e66ad7727b0e70a64d91f2bf38f0513)
+      (fun p q r -> p ==> q /\ ((p ==> Prims.l_False) ==> r)) ==
+      (fun p q r -> p ==> q /\ (p ==> Prims.l_False) ==> r)
   - See also Bug1997.fst(55,39-55,59)
 
 * Info at Bug1997.fst(63,27-63,38):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (=
-       Tm_abs_3cfd86c38faed62a394354d546819382
-       Tm_abs_82e31bab83a3cfb6d69e46f4b5e5b1f2)
+  - Failed to prove: (fun p q r -> p /\ q \/ r) == (fun p q r -> p /\ (q \/ r))
   - See also Bug1997.fst(63,39-63,51)
 
 * Info at Bug1997.fst(64,27-64,38):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (=
-       Tm_abs_3cfd86c38faed62a394354d546819382
-       Tm_abs_82e31bab83a3cfb6d69e46f4b5e5b1f2)
+  - Failed to prove: (fun p q r -> p /\ q \/ r) == (fun p q r -> p /\ (q \/ r))
   - See also Bug1997.fst(64,39-64,51)
 
 * Info at Bug1997.fst(75,27-75,38):
@@ -315,9 +293,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_b723cf7db16ba412a669ac93bc9b5981
-       Tm_abs_c27e0b357aefdeb53ba8ae0dd2bcae45)
+      (fun p q r s -> p /\ (q \/ r) /\ s) == (fun p q r s -> p /\ q \/ r /\ s)
   - See also Bug1997.fst(75,39-75,49)
 
 * Info at Bug1997.fst(76,27-76,38):
@@ -325,9 +301,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_b723cf7db16ba412a669ac93bc9b5981
-       Tm_abs_c27e0b357aefdeb53ba8ae0dd2bcae45)
+      (fun p q r s -> p /\ (q \/ r) /\ s) == (fun p q r s -> p /\ q \/ r /\ s)
   - See also Bug1997.fst(76,39-76,49)
 
 * Info at Bug1997.fst(77,27-77,38):
@@ -335,9 +309,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_b723cf7db16ba412a669ac93bc9b5981
-       Tm_abs_c27e0b357aefdeb53ba8ae0dd2bcae45)
+      (fun p q r s -> p /\ (q \/ r) /\ s) == (fun p q r s -> p /\ q \/ r /\ s)
   - See also Bug1997.fst(77,39-77,49)
 
 * Info at Bug1997.fst(78,27-78,38):
@@ -345,9 +317,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_b723cf7db16ba412a669ac93bc9b5981
-       Tm_abs_c27e0b357aefdeb53ba8ae0dd2bcae45)
+      (fun p q r s -> p /\ (q \/ r) /\ s) == (fun p q r s -> p /\ q \/ r /\ s)
   - See also Bug1997.fst(78,39-78,49)
 
 * Info at Bug1997.fst(87,27-87,38):
@@ -355,9 +325,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_5f780aad75a647c504bca723596b576c
-       Tm_abs_02468d7a6221e68c82e37abb93f3d9ce)
+      (fun p q r s -> p \/ q /\ r \/ s) == (fun p q r s -> (p \/ q) /\ r \/ s)
   - See also Bug1997.fst(87,39-87,49)
 
 * Info at Bug1997.fst(88,27-88,38):
@@ -365,9 +333,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_5f780aad75a647c504bca723596b576c
-       Tm_abs_082862a13c49327b1b399c21f7bed40e)
+      (fun p q r s -> p \/ q /\ r \/ s) == (fun p q r s -> (p \/ q) /\ (r \/ s))
   - See also Bug1997.fst(88,39-88,49)
 
 * Info at Bug1997.fst(89,27-89,38):
@@ -375,9 +341,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_5f780aad75a647c504bca723596b576c
-       Tm_abs_d7ceba99000b3461fa5713663a5ad5dd)
+      (fun p q r s -> p \/ q /\ r \/ s) == (fun p q r s -> p \/ q /\ (r \/ s))
   - See also Bug1997.fst(89,39-89,49)
 
 * Info at Bug1997.fst(90,27-90,38):
@@ -385,9 +349,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_02468d7a6221e68c82e37abb93f3d9ce
-       Tm_abs_082862a13c49327b1b399c21f7bed40e)
+      (fun p q r s -> (p \/ q) /\ r \/ s) ==
+      (fun p q r s -> (p \/ q) /\ (r \/ s))
   - See also Bug1997.fst(90,39-90,49)
 
 * Info at Bug1997.fst(91,27-91,38):
@@ -395,9 +358,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_02468d7a6221e68c82e37abb93f3d9ce
-       Tm_abs_d7ceba99000b3461fa5713663a5ad5dd)
+      (fun p q r s -> (p \/ q) /\ r \/ s) == (fun p q r s -> p \/ q /\ (r \/ s))
   - See also Bug1997.fst(91,39-91,49)
 
 * Info at Bug1997.fst(92,27-92,38):
@@ -405,9 +366,8 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_abs_082862a13c49327b1b399c21f7bed40e
-       Tm_abs_d7ceba99000b3461fa5713663a5ad5dd)
+      (fun p q r s -> (p \/ q) /\ (r \/ s)) ==
+      (fun p q r s -> p \/ q /\ (r \/ s))
   - See also Bug1997.fst(92,39-92,49)
 
 Module after type checking:

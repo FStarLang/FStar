@@ -90,7 +90,7 @@ val reset (_:option using_facts_from_setting) (s:solver_state) : ML solver_state
 // * qry: The query itself: This is NOT given to the solver. Instead, (qry::roots) are 
 //    registered in the solver state as the roots from which to scan for context pruning. 
 //
-val start_query (msg:string) (roots:list decl) (qry:decl) (s:solver_state) : ML solver_state
+val start_query (msg:string) (roots:list decl) (qry:list decl) (s:solver_state) : ML solver_state
 
 // Pops the context pushed at when starting a query
 // Clears any registered roots for context pruning

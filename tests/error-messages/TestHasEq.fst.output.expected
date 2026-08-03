@@ -5,11 +5,10 @@
     supports decidable equality because of this argument.
   - Add either the ‘noeq’ or ‘unopteq’ qualifier
   - The SMT solver could not prove the query.
-  - Failed to prove: (Valid (Prims.hasEq U_zero @sk_1))
+  - Failed to prove: Prims.hasEq a
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and (HasType @sk_1 (Tm_type U_zero)) (HasType @sk_2 @sk_1))
+      a: Type0
+      x: a
   - See also TestHasEq.fst(57,0-58,19)
 
 * Info at TestHasEq.fst(84,10-84,70):
@@ -17,13 +16,10 @@
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query.
-  - Failed to prove: (Valid (Prims.hasEq U_zero TestHasEq.erasable_t))
+  - Failed to prove: Prims.hasEq TestHasEq.erasable_t
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and
-       (HasType @sk_1 Tm_refine_6d4423ad97eda18ffe686b845deb8abd)
-       (HasType @sk_2 Tm_refine_b25cc4270b563a69cdd51b89eff8a6c4))
+      x: x: TestHasEq.erasable_t{C_erasable_t? x}
+      y: y: TestHasEq.erasable_t{D_erasable_t? y}
   - See also TestHasEq.fst(84,12-84,22)
 
 * Info at TestHasEq.fst(88,8-89,30):

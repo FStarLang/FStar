@@ -3,11 +3,9 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       Tm_arrow_ca5b7f60fd43315f38a12bb8b10d93e6
-       Tm_arrow_f0ff90e9b7bb943fb00c38686bd40c20)
+      (a: Type0 -> x: Prims.nat -> Unit2.vector a x) ==
+      (b: Type0 -> y: Unit2.zat -> Unit2.vector b y)
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and (HasType @sk_1 (Tm_type uu___51)) (HasType @sk_2 @sk_1))
+      uu___: Type
+      uu___: _
 

@@ -3,20 +3,12 @@
   - Subtyping check failed
   - Expected type wP a got type wP b
   - The SMT solver could not prove the query.
-  - Failed to prove: (HasType @sk_6 @sk_2)
+  - Failed to prove: Prims.has_type _ b
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      @sk_3 : Term
-      @sk_4 : Term
-      @sk_5 : Term
-      (and
-       (HasType @sk_1 (Tm_type uu___54))
-       (HasType @sk_2 (Tm_type uu___55))
-       (HasType @sk_3 (Bug446.wP uu___54 @sk_1))
-       (HasType @sk_4 (Bug446.wP uu___55 @sk_2))
-       (HasType @sk_5 (Bug446.m uu___54 @sk_1 @sk_3)))
-      @sk_6 : Term
-      (HasType @sk_6 @sk_1)
-  - See also Bug446.fst(29,55-29,58)
+      a: Type
+      b: Type
+      wp1: Bug446.wP a
+      wp2: Bug446.wP b
+      f: Bug446.m a wp1
+      uu___: a
 

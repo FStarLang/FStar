@@ -1,27 +1,17 @@
 * Info at QuickTestNBE.fst(124,2-127,34):
   - Expected failure:
   - The SMT solver could not prove the query.
-  - Failed to prove: (= (QuickTestNBE.f (BoxInt 4)) (BoxInt 0))
+  - Failed to prove: QuickTestNBE.f 4 == 0
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 QuickTestNBE.vale_state)
-      @sk_2 : Term
-      (and
-       (HasType @sk_2 (QuickTestNBE.quickCode Prims.unit))
-       (HasType @sk_2 (QuickTestNBE.quickCode Prims.unit))
-       (= (QuickTestNBE.va_qcode_Test2 Dummy_value) @sk_2))
-      @sk_3 : Term
-      (and
-       (HasType @sk_3 QuickTestNBE.vale_state)
-       (HasType @sk_3 QuickTestNBE.vale_state)
-       (= @sk_1 @sk_3))
-      @sk_4 : Term
-      (HasType @sk_4 Prims.bool)
-      (=
-       (Prims.op_Subtraction
-        (QuickTestNBE.f (BoxInt 4))
-        (QuickTestNBE.f (BoxInt 4)))
-       (BoxInt 0))
+      va_s0: QuickTestNBE.vale_state
+      qc: QuickTestNBE.quickCode Prims.unit
+      Prims.has_type qc (QuickTestNBE.quickCode Prims.unit)
+      QuickTestNBE.va_qcode_Test2 == qc
+      s0: QuickTestNBE.vale_state
+      Prims.has_type s0 QuickTestNBE.vale_state
+      va_s0 == s0
+      ok: Prims.bool
+      QuickTestNBE.f 4 - QuickTestNBE.f 4 == 0
   - Also see: QuickTestNBE(1,2-3,4)
   - Other related locations: QuickTestNBE.fst(117,36-117,38)
 

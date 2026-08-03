@@ -3,10 +3,8 @@
   - Subtyping check failed
   - Expected type Prims.squash Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query.
-  - Failed to prove: false
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
+  - Failed to prove: Prims.l_False
+  - In context: uu___: Prims.unit
   - See also NegativeTests.ZZImplicitFalse.fst(20,19-20,24)
 
 * Warning 240 at NegativeTests.ZZImplicitFalse.fst(18,4-18,8):

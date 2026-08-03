@@ -96,12 +96,13 @@ Guidelines for the changelog:
     literal must drop them.
 
   * Verification conditions are no longer sent to Z3 as a single labelled
-    formula. F* now walks the encoded VC and replays its structure into the
-    solver: a universally quantified variable becomes a `declare-fun`, the
-    hypothesis of an implication becomes an `assert`, and every leaf goal gets
-    its own `(push) (assert (not goal)) (check-sat) (pop)`. All the goals of a
-    definition are still sent in a single round trip, and only the goals that
-    actually fail are retried at higher fuel/ifuel.
+    formula. F* now walks the VC *before* encoding it and replays its
+    structure into the solver: a universally quantified variable becomes a
+    `declare-fun`, the hypothesis of an implication becomes an `assert`, and
+    every leaf goal gets its own `(push) (assert (not goal)) (check-sat)
+    (pop)`. All the goals of a definition are still sent in a single round
+    trip, and only the goals that actually fail are retried at higher
+    fuel/ifuel.
 
     Consequences:
     - `--split_queries` is gone: splitting a query was a coarse approximation
@@ -116,13 +117,13 @@ Guidelines for the changelog:
       report several independent failures at once.
     - A failed query now reports the individual proof obligation that could
       not be discharged, as `Failed to prove: ...`, together with the
-      declarations and hypotheses it was proved under, as `In context: ...`.
-      These are printed in SMT-LIB syntax: they are exactly what was sent to
-      the solver.
-    - The `Env = ...` / `VC = ...` detail, which describes the whole
-      definition rather than the individual goal, is now printed only under
-      `--query_stats`. `Env = ...` remains useful for reading the goal: its
-      binders correspond, in order, to the `@sk_i` constants of the context.
+      variables, local definitions and hypotheses it was proved under, as
+      `In context: ...`. Both are printed in F* syntax, with the original
+      binder names.
+    - The `VC = ...` detail, which describes the whole definition rather than
+      the individual goal, is now printed only under `--query_stats`. The
+      `Env = ...` detail is gone: the context of each goal is now reported
+      directly.
 
     Because each goal is discharged in a context that no longer contains its
     sibling goals, a proof that relied on ground terms appearing only in a
