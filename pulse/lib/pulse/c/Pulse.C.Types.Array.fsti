@@ -52,7 +52,7 @@ let mk_base_array_inj  (#t: Type) (tn: Type0) (n: array_size_t) (v1 v2: Seq.seq 
   [SMTPat (mk_base_array tn n v1); SMTPat (mk_base_array tn n v2)]
 = introduce forall (i: nat) . i < SZ.v n ==> Seq.index v1 i == Seq.index v2 i
   with introduce _ ==> _
-  with _. (
+  with (
     mk_base_array_index tn n v1 (SZ.uint_to_t i);
     mk_base_array_index tn n v2 (SZ.uint_to_t i)
   );

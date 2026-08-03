@@ -124,8 +124,8 @@ let is_gcd_plus a b q d =
   divides_plus b (q * a) d;
   introduce forall x. (x `divides` a /\ x `divides` (b + q * a)) ==> x `divides` d
   with introduce _ ==> _
-  with _. (divides_mult_right q a x;
-           divides_sub (b + q * a) (q * a) x)
+  with (divides_mult_right q a x;
+        divides_sub (b + q * a) (q * a) x)
 
 ///
 /// Extended Euclidean algorithm

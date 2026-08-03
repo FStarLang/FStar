@@ -4,12 +4,11 @@
   - Expected type FStar.Seq.Base.seq Prims.int
     got type FStar.Seq.Base.seq Prims.nat
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
-      forall (a1: Pulse.Lib.Array.Core.array Prims.int)
-        (s1: FStar.Seq.Base.seq Prims.nat).
-        (* - Subtyping check failed\n  - Expected type FStar.Seq.Base.seq Prims.int\n    got type FStar.Seq.Base.seq Prims.nat *)
-        forall (i: Prims.int). i >= 0
+  - Failed to prove: i >= 0
+  - In context:
+      a1: Pulse.Lib.Array.Core.array Prims.int
+      s1: FStar.Seq.Base.seq Prims.nat
+      i: Prims.int
   - See also Prims.fst(478,18-478,24)
 
 * Info at Bug100.fst(19,57-19,58):
@@ -18,8 +17,11 @@
   - Expected type FStar.Seq.Base.seq Prims.int
     got type FStar.Seq.Base.seq Prims.nat
   - The SMT solver could not prove the query.
-  - Env = (a : Bug100.array Prims.int) (s : FStar.Seq.Base.seq Prims.nat)
-  - VC = forall (i: Prims.int). i >= 0
+  - Failed to prove: i >= 0
+  - In context:
+      a: Bug100.array Prims.int
+      s: FStar.Seq.Base.seq Prims.nat
+      i: Prims.int
   - See also Prims.fst(478,18-478,24)
 
 * Info at Bug100.fst(23,11-23,27):
@@ -27,7 +29,10 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (a1 : Bug100.array Prims.int) (s1 : FStar.Seq.Base.seq Prims.nat)
-  - VC = forall (i: Prims.int). Prims.l_True == (i >= 0 == true)
+  - Failed to prove: Prims.l_True == (i >= 0 == true)
+  - In context:
+      a1: Bug100.array Prims.int
+      s1: FStar.Seq.Base.seq Prims.nat
+      i: Prims.int
   - Also see: Prims.fst(188,27-188,38)
 

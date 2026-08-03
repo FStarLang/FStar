@@ -56,14 +56,14 @@ let lemma_sorted_append
     let n1 = Seq.length s1 in
     introduce forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
     with introduce _ ==> _
-    with _. (
+    with (
       if j < n1 then ()
       else if i < n1 then ()
       else ()
     );
     introduce forall (k: int). 0 <= k /\ k < Seq.length s ==> l1 <= Seq.index s k /\ Seq.index s k <= r2
     with introduce _ ==> _
-    with _. (if k < n1 then () else ())
+    with (if k < n1 then () else ())
 
 let lemma_sorted_append_squash
   (s1 s2 : Seq.seq int)

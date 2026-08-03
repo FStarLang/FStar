@@ -3,6 +3,10 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (a : Type0) (b : Type0) (x : a) (y : b)
-  - VC = b == a
+  - Failed to prove: b == a
+  - In context:
+      a: Type0
+      b: Type0
+      x: a
+      y: b
 

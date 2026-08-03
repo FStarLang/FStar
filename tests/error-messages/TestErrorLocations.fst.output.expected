@@ -106,17 +106,15 @@
   - The SMT solver could not prove the query.
   - Failed to prove: TestErrorLocations.p1
 
-* Info at TestErrorLocations.fst(86,20-86,36):
+* Info at TestErrorLocations.fst(86,2-87,20):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (exists (x: Prims.nat). x = 0)
-    got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: exists (x: Prims.nat). x = 0
+  - Failed to prove: exists (x1: Prims.nat). x1 = 0
   - In context: uu___: Prims.unit
-  - See also FStar.Classical.Sugar.fsti(66,21-66,40)
+  - See also FStar.Classical.Sugar.fsti(191,14-191,29)
 
-* Info at TestErrorLocations.fst(93,28-93,33):
+* Info at TestErrorLocations.fst(92,28-92,33):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (forall (x: Prims.nat). x = 0)
@@ -127,33 +125,30 @@
       uu___: Prims.unit
       x: Prims.nat
 
-* Info at TestErrorLocations.fst(98,17-98,18):
+* Info at TestErrorLocations.fst(97,17-97,18):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (p /\ q) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: q
   - In context:
       p: Prims.prop
       q: Prims.prop
       p
-  - See also TestErrorLocations.fst(97,21-97,22)
+  - See also TestErrorLocations.fst(96,21-96,22)
 
-* Info at TestErrorLocations.fst(98,12-98,13):
+* Info at TestErrorLocations.fst(97,12-97,13):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (p /\ q) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: p
   - In context:
       p: Prims.prop
       q: Prims.prop
-  - See also TestErrorLocations.fst(97,19-97,20)
+  - See also TestErrorLocations.fst(96,19-96,20)
 
-* Info at TestErrorLocations.fst(104,17-104,18):
+* Info at TestErrorLocations.fst(102,17-102,18):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (p /\ q) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: q
   - In context:
@@ -161,18 +156,17 @@
       q: Prims.prop
       uu___: Prims.squash p
       p
-  - See also TestErrorLocations.fst(103,21-103,22)
+  - See also TestErrorLocations.fst(101,21-101,22)
 
-* Info at TestErrorLocations.fst(110,12-110,18):
+* Info at TestErrorLocations.fst(107,2-109,13):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (p \/ q) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: p \/ q
   - In context:
       p: Prims.prop
       q: Prims.prop
-  - See also FStar.Classical.Sugar.fsti(88,21-88,31)
+  - See also FStar.Classical.Sugar.fsti(173,14-173,20)
 
 * Warning 240 at TestErrorLocations.fst(60,4-60,9):
   - TestErrorLocations.test7 is declared but no definition was found
@@ -186,7 +180,7 @@
   - TestErrorLocations.test5 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at TestErrorLocations.fst(109,0-113,17):
+* Warning 240 at TestErrorLocations.fst(106,0-109,13):
   - Missing definitions in module TestErrorLocations:
       test5
       test6
