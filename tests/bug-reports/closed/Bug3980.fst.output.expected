@@ -11,13 +11,13 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: (= (Bug3980.a U_zero) (Bug3980.c U_zero))
+  - Failed to prove: Bug3980.a == Bug3980.c
 
 * Info at Bug3980.fst(25,15-25,23):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: (= (Bug3980.b U_zero) (Bug3980.c U_zero))
+  - Failed to prove: Bug3980.b == Bug3980.c
 
 * Info at Bug3980.fst(33,0-33,29):
   - Term "a" |-> 1 ** "b" |-> 2 has type Bug3980.slprop

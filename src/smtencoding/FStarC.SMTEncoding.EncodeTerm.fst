@@ -1547,24 +1547,30 @@ and encode_let
         let ee2, decls2 = encode_body e2 env' in
         ee2, decls1@decls2
 
+and encode_branch_pattern (env:env_t) (scr:term) (b:S.branch)
+    : ML (term & S.pat & S.term & env_t & decls_t)
+    =
+    let p, w, br = SS.open_branch b in
+    let _, pattern = encode_pat env p in
+    let guard = pattern.guard scr in
+    let projections = pattern.projections scr in
+    let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
+    let guard, decls =
+        match w with
+        | None -> guard, []
+        | Some w ->
+          let w, decls = encode_term w env in
+          mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls
+    in
+    guard, p, br, env, decls
+
 and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> ML (term & decls_t)) : ML (term & decls_t) =
     let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown Range.dummyRange)) in
     let scr, decls = encode_term e env in
     let match_tm, decls =
       let encode_branch b (else_case, decls) =
-        let p, w, br = SS.open_branch b in
-        let env0, pattern = encode_pat env p in
-        let guard = pattern.guard scr' in
-        let projections = pattern.projections scr' in
-        let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
-        let guard, decls2 =
-            match w with
-            | None -> guard, []
-            | Some w ->
-              let w, decls2 = encode_term w env in
-              mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls2
-       in
+       let guard, _, br, env, decls2 = encode_branch_pattern env scr' b in
        let br, decls3 = encode_br br env in
        mkITE(guard, br, else_case), decls@decls2@decls3
       in

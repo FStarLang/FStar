@@ -3,7 +3,7 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
   - See also Prims.fst(478,18-478,24)
 
 * Info at NegativeTests.Neg.fst(24,8-24,10):
@@ -11,49 +11,40 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
   - See also Prims.fst(478,18-478,24)
 
 * Info at NegativeTests.Neg.fst(27,30-27,35):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: false
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
+  - Failed to prove: Prims.l_False
+  - In context: uu___: Prims.unit
 
 * Info at NegativeTests.Neg.fst(30,28-31,15):
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Failed to prove: false
+  - Failed to prove: Prims.l_False
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and
-       (HasType @sk_1 (Tm_type uu___28))
-       (HasType @sk_2 (Prims.list uu___28 @sk_1)))
-      (not (BoxBool_proj_0 (Prims.uu___is_Cons uu___28 @sk_1 @sk_2)))
+      uu___: Type
+      l: Prims.list _
+      ~(Cons? l)
 
 * Info at NegativeTests.Neg.fst(38,32-38,42):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: (> (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+  - Failed to prove: x > 0
+  - In context: x: Prims.int
   - See also NegativeTests.Neg.fst(33,44-33,57)
 
 * Info at NegativeTests.Neg.fst(42,33-42,34):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: (> (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+  - Failed to prove: x > 0
+  - In context: x: Prims.int
   - See also NegativeTests.Neg.fst(40,83-40,88)
 
 * Info at NegativeTests.Neg.fst(46,30-46,31):
@@ -62,14 +53,10 @@
   - Expected type _: FStar.Pervasives.Native.option 'a {Some? _}
     got type FStar.Pervasives.Native.option 'a
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (BoxBool_proj_0 (FStar.Pervasives.Native.uu___is_Some uu___10 @sk_1 @sk_2))
+  - Failed to prove: Some? x
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and
-       (HasType @sk_1 (Tm_type uu___10))
-       (HasType @sk_2 (FStar.Pervasives.Native.option uu___10 @sk_1)))
+      'a: Type
+      x: FStar.Pervasives.Native.option 'a
   - See also FStar.Pervasives.Native.fst(33,4-33,8)
 
 * Info at NegativeTests.Neg.fst(50,45-50,47):
@@ -78,16 +65,12 @@
   - Expected type _: FStar.Pervasives.result Prims.int {V? _}
     got type FStar.Pervasives.result Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (BoxBool_proj_0 (FStar.Pervasives.uu___is_V U_zero Prims.int @sk_1))
+  - Failed to prove: V? ri
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 (FStar.Pervasives.result U_zero Prims.int))
-      @sk_2 : Term
-      (and
-       (HasType @sk_2 Prims.eqtype)
-       (Valid (Prims.hasEq U_zero @sk_2))
-       (= Prims.int @sk_2))
+      ri: FStar.Pervasives.result Prims.int
+      a: Prims.eqtype
+      Prims.hasEq a
+      Prims.int == a
   - See also FStar.Pervasives.fsti(216,4-216,5)
 
 * Info at NegativeTests.Neg.fst(55,25-55,26):
@@ -95,10 +78,8 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
   - See also Prims.fst(478,18-478,24)
 
 * Info at NegativeTests.Neg.fst(59,26-59,34):

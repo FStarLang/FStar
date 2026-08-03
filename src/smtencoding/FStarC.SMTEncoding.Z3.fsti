@@ -82,5 +82,5 @@ val push : msg:string -> ML unit
 val pop : msg:string -> ML unit
 val snapshot : string -> ML int
 val rollback : string -> option int -> ML unit
-val start_query (msg:string) (prefix_to_push:list decl) (query:decl) : ML unit
+val start_query (msg:string) (prefix_to_push:list decl) (query:list decl) : ML unit
 val finish_query (msg:string) : ML unit

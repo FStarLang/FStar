@@ -1,11 +1,9 @@
 * Error 19 at IfaceNoSmtLeak.fst(5,35-5,37):
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: (Valid (IfaceNoSmtLeak.q @sk_1))
+  - Failed to prove: IfaceNoSmtLeak.q x
   - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
-      @sk_2 : Term
-      (HasType @sk_2 Prims.unit)
+      x: Prims.int
+      uu___: Prims.unit
   - See also IfaceNoSmtLeak.fst(5,27-5,32)
 

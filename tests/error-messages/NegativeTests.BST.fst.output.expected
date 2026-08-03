@@ -8,16 +8,8 @@
           None? FStar.Pervasives.Native.None == (1 = 0) }
     got type FStar.Pervasives.Native.option (tree 2)
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (=
-       (FStar.Pervasives.Native.uu___is_None
-        U_zero
-        (NegativeTests.BST.tree (BoxInt 2))
-        (FStar.Pervasives.Native.None U_zero (NegativeTests.BST.tree (BoxInt 2))))
-       (BoxBool false))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
+  - Failed to prove: None? FStar.Pervasives.Native.None == false
+  - In context: uu___: Prims.unit
   - See also NegativeTests.BST.fst(27,36-27,58)
 
 * Info at NegativeTests.BST.fst(40,61-40,65):
@@ -30,25 +22,12 @@
           None? (FStar.Pervasives.Native.Some t) == (l = l) }
     got type FStar.Pervasives.Native.option (tree (l + 1))
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (=
-       (FStar.Pervasives.Native.uu___is_None
-        U_zero
-        (NegativeTests.BST.tree (Prims.op_Addition @sk_1 (BoxInt 1)))
-        (FStar.Pervasives.Native.None
-         U_zero
-         (NegativeTests.BST.tree (Prims.op_Addition @sk_1 (BoxInt 1)))))
-       (Prims.op_Equality Prims.int @sk_1 (Prims.op_Addition @sk_1 (BoxInt 1))))
+  - Failed to prove: None? FStar.Pervasives.Native.None == (l = l + 1)
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      (and
-       (HasType @sk_1 Prims.int)
-       (HasType @sk_2 (NegativeTests.BST.tree @sk_1)))
-      (<= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 @sk_1))
-      (<=
-       (BoxInt_proj_0 @sk_1)
-       (BoxInt_proj_0 (Prims.op_Addition @sk_1 (BoxInt 1))))
+      l: Prims.int
+      t: NegativeTests.BST.tree l
+      l <= l
+      l <= l + 1
   - See also NegativeTests.BST.fst(27,36-27,58)
 
 * Info at NegativeTests.BST.fst(43,78-43,87):
@@ -61,31 +40,12 @@
           None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }
     got type FStar.Pervasives.Native.option (tree (l + 1))
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (=
-       (FStar.Pervasives.Native.uu___is_None
-        U_zero
-        (NegativeTests.BST.tree (Prims.op_Addition @sk_1 (BoxInt 1)))
-        (FStar.Pervasives.Native.Some
-         U_zero
-         (NegativeTests.BST.tree (Prims.op_Addition @sk_1 (BoxInt 1)))
-         @sk_3))
-       (BoxBool true))
+  - Failed to prove: None? (FStar.Pervasives.Native.Some t2) == true
   - In context:
-      @sk_1 : Term
-      @sk_2 : Term
-      @sk_3 : Term
-      (and
-       (HasType @sk_1 Prims.int)
-       (HasType @sk_2 (NegativeTests.BST.tree @sk_1))
-       (HasType
-        @sk_3
-        (NegativeTests.BST.tree (Prims.op_Addition @sk_1 (BoxInt 1)))))
-      (<=
-       (BoxInt_proj_0 @sk_1)
-       (BoxInt_proj_0 (Prims.op_Addition @sk_1 (BoxInt 1))))
-      (<=
-       (BoxInt_proj_0 (Prims.op_Addition @sk_1 (BoxInt 1)))
-       (BoxInt_proj_0 (Prims.op_Addition @sk_1 (BoxInt 1))))
+      l: Prims.int
+      t1: NegativeTests.BST.tree l
+      t2: NegativeTests.BST.tree (l + 1)
+      l <= l + 1
+      l + 1 <= l + 1
   - See also NegativeTests.BST.fst(27,36-27,58)
 

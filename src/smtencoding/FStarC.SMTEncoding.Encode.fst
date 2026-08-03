@@ -2349,8 +2349,7 @@ let encode_modul_from_cache tcenv tcmod (me:module_encoding) =
 open FStarC.SMTEncoding.Z3
 let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   : ML (list decl  //prelude, translation of  tcenv
-  & ErrorReporting.goal_tree //the goals of the query
-  & decl)       //the negated query, as a single assumption
+  & ErrorReporting.goal_tree) //the goals of the query
   =
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
@@ -2376,8 +2375,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding
     then Format.print1 "Encoding query formula {: %s\n" (show q);
-    let (phi, qdecls), ms = Timing.record_ms (fun () -> encode_formula q env) in
-    let goals = ErrorReporting.split_goals use_env_msg (Env.get_range tcenv) phi in
+    let (goals, qdecls), ms = Timing.record_ms (fun () -> ErrorReporting.split_goals use_env_msg env q) in
     let caption =
       (* If these options are off, the Captions will be dropped anyway,
       but by checking here we can skip the printing. *)
@@ -2391,10 +2389,9 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
         @qdecls
         @(caption |> mk_decls_trivial) |> recover_caching_and_update_env env |> decls_list_of in  //recover caching and flatten
 
-    let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     if Debug.medium () || !dbg_SMTEncoding
     then Format.print_string "} Done encoding\n";
     if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
     then Format.print1 "Encoding took %sms\n" (show ms);
-    query_prelude, goals, qry
+    query_prelude, goals
   )

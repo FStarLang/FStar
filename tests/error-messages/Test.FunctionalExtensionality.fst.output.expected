@@ -3,30 +3,11 @@
   - Subtyping check failed
   - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (Valid
-       (FStar.FunctionalExtensionality.is_restricted
-        U_zero
-        U_zero
-        Prims.nat
-        Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-        @sk_1))
+  - Failed to prove: FStar.FunctionalExtensionality.is_restricted Prims.nat f
   - In context:
-      @sk_1 : Term
-      (HasType
-       @sk_1
-       (FStar.FunctionalExtensionality.restricted_t
-        U_zero
-        U_zero
-        Prims.int
-        Tm_abs_8226ea7ad351132a561066402b911ac6))
-      (Valid
-       (FStar.FunctionalExtensionality.is_restricted
-        U_zero
-        U_zero
-        Prims.int
-        Tm_abs_8226ea7ad351132a561066402b911ac6
-        @sk_1))
+      f:
+      FStar.FunctionalExtensionality.restricted_t Prims.int (fun _ -> Prims.int)
+      FStar.FunctionalExtensionality.is_restricted Prims.int f
   - See also FStar.FunctionalExtensionality.fsti(106,60-106,77)
 
 * Info at Test.FunctionalExtensionality.fst(80,9-80,43):
@@ -34,121 +15,52 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       (FStar.FunctionalExtensionality.on_domain
-        U_zero
-        U_zero
-        Prims.int
-        Tm_abs_8226ea7ad351132a561066402b911ac6
-        Test.FunctionalExtensionality.f1@tok)
-       (Test.FunctionalExtensionality.g1 Dummy_value))
+      FStar.FunctionalExtensionality.on_domain Prims.int
+        Test.FunctionalExtensionality.f1 ==
+      Test.FunctionalExtensionality.g1
   - In context:
-      (=
-       (FStar.FunctionalExtensionality.on_domain
-        U_zero
-        U_zero
-        Prims.nat
-        Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-        Test.FunctionalExtensionality.f1@tok)
-       (FStar.FunctionalExtensionality.on_domain
-        U_zero
-        U_zero
-        Prims.nat
-        Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-        (Test.FunctionalExtensionality.g1 Dummy_value)))
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.f1 ==
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.g1
 
 * Info at Test.FunctionalExtensionality.fst(92,9-92,52):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove:
-      (=
-       (FStar.FunctionalExtensionality.on_domain
-        U_zero
-        U_zero
-        Prims.int
-        Tm_abs_8226ea7ad351132a561066402b911ac6
-        (FStar.FunctionalExtensionality.on_domain
-         U_zero
-         U_zero
-         Prims.nat
-         Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-         Test.FunctionalExtensionality.f1@tok))
-       (Test.FunctionalExtensionality.g1 Dummy_value))
+      FStar.FunctionalExtensionality.on_domain Prims.int
+        (FStar.FunctionalExtensionality.on_domain Prims.nat
+            Test.FunctionalExtensionality.f1) ==
+      Test.FunctionalExtensionality.g1
   - In context:
-      (=
-       (FStar.FunctionalExtensionality.on_domain
-        U_zero
-        U_zero
-        Prims.nat
-        Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-        Test.FunctionalExtensionality.f1@tok)
-       (FStar.FunctionalExtensionality.on_domain
-        U_zero
-        U_zero
-        Prims.nat
-        Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-        (Test.FunctionalExtensionality.g1 Dummy_value)))
-      @sk_3 : Term
-      (and
-       (HasType @sk_3 Prims.prop)
-       (Valid
-        (FStar.FunctionalExtensionality.is_restricted
-         U_zero
-         U_zero
-         Prims.int
-         Tm_abs_8226ea7ad351132a561066402b911ac6
-         (FStar.FunctionalExtensionality.on_domain
-          U_zero
-          U_zero
-          Prims.int
-          Tm_abs_8226ea7ad351132a561066402b911ac6
-          (FStar.FunctionalExtensionality.on_domain
-           U_zero
-           U_zero
-           Prims.nat
-           Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-           Test.FunctionalExtensionality.f1@tok))))
-       (=
-        (Prims.eq2
-         U_zero
-         Tm_arrow_fc34ca66de2f262c06145b17fb7ed6cb
-         (FStar.FunctionalExtensionality.on_domain
-          U_zero
-          U_zero
-          Prims.int
-          Tm_abs_8226ea7ad351132a561066402b911ac6
-          (FStar.FunctionalExtensionality.on_domain
-           U_zero
-           U_zero
-           Prims.nat
-           Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-           Test.FunctionalExtensionality.f1@tok))
-         (Test.FunctionalExtensionality.g1 Dummy_value))
-        @sk_3))
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.f1 ==
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.g1
+      p: Prims.prop
+      FStar.FunctionalExtensionality.is_restricted Prims.int
+        (FStar.FunctionalExtensionality.on_domain Prims.int
+            (FStar.FunctionalExtensionality.on_domain Prims.nat
+                Test.FunctionalExtensionality.f1))
+      FStar.FunctionalExtensionality.on_domain Prims.int
+        (FStar.FunctionalExtensionality.on_domain Prims.nat
+            Test.FunctionalExtensionality.f1) ==
+      Test.FunctionalExtensionality.g1 ==
+      p
 
 * Info at Test.FunctionalExtensionality.fst(92,36-92,47):
   - Expected failure:
   - Subtyping check failed
   - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
+  - Failed to prove: _ >= 0
   - In context:
-      (=
-       (FStar.FunctionalExtensionality.on_domain
-        U_zero
-        U_zero
-        Prims.nat
-        Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-        Test.FunctionalExtensionality.f1@tok)
-       (FStar.FunctionalExtensionality.on_domain
-        U_zero
-        U_zero
-        Prims.nat
-        Tm_abs_df89efc1ad0abed1b1ec27a13a05ab8a
-        (Test.FunctionalExtensionality.g1 Dummy_value)))
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.f1 ==
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.g1
+      uu___: Prims.int
   - See also Prims.fst(478,18-478,24)
 
 * Info at Test.FunctionalExtensionality.fst(142,57-142,58):
@@ -156,29 +68,10 @@
   - Subtyping check failed
   - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (Valid
-       (FStar.FunctionalExtensionality.is_restricted
-        U_zero
-        U_zero
-        Prims.int
-        Tm_abs_8226ea7ad351132a561066402b911ac6
-        @sk_1))
+  - Failed to prove: FStar.FunctionalExtensionality.is_restricted Prims.int f
   - In context:
-      @sk_1 : Term
-      (HasType
-       @sk_1
-       (FStar.FunctionalExtensionality.restricted_t
-        U_zero
-        U_zero
-        Prims.int
-        Tm_abs_2f549f5ae46fc8db2e3491324a865a9f))
-      (Valid
-       (FStar.FunctionalExtensionality.is_restricted
-        U_zero
-        U_zero
-        Prims.int
-        Tm_abs_2f549f5ae46fc8db2e3491324a865a9f
-        @sk_1))
+      f:
+      FStar.FunctionalExtensionality.restricted_t Prims.int (fun _ -> Prims.nat)
+      FStar.FunctionalExtensionality.is_restricted Prims.int f
   - See also FStar.FunctionalExtensionality.fsti(106,60-106,77)
 

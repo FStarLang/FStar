@@ -17,10 +17,8 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: false
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.unit)
+  - Failed to prove: Prims.l_False
+  - In context: uu___: Prims.unit
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(74,49-74,57):
@@ -28,13 +26,8 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (>=
-       (BoxInt_proj_0 (FStar.Ghost.reveal U_zero Prims.int @sk_1))
-       (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 (FStar.Ghost.erased U_zero Prims.int))
+  - Failed to prove: x >= 0
+  - In context: x: FStar.Ghost.erased Prims.int
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(76,55-76,56):
@@ -42,10 +35,8 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(78,50-78,51):
@@ -53,13 +44,8 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove:
-      (>=
-       (BoxInt_proj_0 (FStar.Ghost.reveal U_zero Prims.int @sk_1))
-       (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 (FStar.Ghost.erased U_zero Prims.int))
+  - Failed to prove: x >= 0
+  - In context: x: FStar.Ghost.erased Prims.int
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(80,51-80,52):
@@ -67,9 +53,7 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: (>= (BoxInt_proj_0 @sk_1) (BoxInt_proj_0 (BoxInt 0)))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 Prims.int)
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
   - See also Prims.fst(478,18-478,24)
 

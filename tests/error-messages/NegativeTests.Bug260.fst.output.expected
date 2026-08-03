@@ -3,10 +3,8 @@
   - Subtyping check failed
   - Expected type validity (S (S t)) got type validity (S t)
   - The SMT solver could not prove the query.
-  - Failed to prove: (= @sk_1 (NegativeTests.Bug260.S @sk_1))
-  - In context:
-      @sk_1 : Term
-      (HasType @sk_1 NegativeTests.Bug260.pnat)
+  - Failed to prove: t == NegativeTests.Bug260.S t
+  - In context: t: NegativeTests.Bug260.pnat
   - See also NegativeTests.Bug260.fst(23,37-26,9)
 
 * Warning 240 at NegativeTests.Bug260.fst(23,4-23,7):

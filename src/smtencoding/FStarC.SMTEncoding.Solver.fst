@@ -68,7 +68,6 @@ let error_to_short_string err =
 
 type query_settings = {
     query_env:env_t;
-    query_decl:decl;
     query_name:string;
     query_index:int;
     query_range:Range.t;
@@ -144,7 +143,7 @@ let rec emit_goals (pending : int -> ML bool) (settings:query_settings) (t:goal_
     | GTrivial -> [], []
     | GLeaf g ->
       if pending g.goal_id then goal_block settings g, [g] else [], []
-    | GCtx ds t ->
+    | GCtx ds _ t ->
       let ds', gs = emit_goals pending settings t in
       (match gs with
        | [] -> [], []
@@ -256,29 +255,22 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) (gst : 
     in
     let open FStarC.Errors.Msg in
     let open FStarC.Class.PP in
-    (* The failed goal itself, and the assumptions it was proved under: the
-       skolem constants and hypotheses introduced by the walk over the
-       verification condition.  This is exactly what was sent to the solver. *)
+    (* The failed goal, and the hypotheses it was proved under. *)
     let goal_detail =
-      let ctx = goal_context settings.query_goals gst.gs_goal in
-      let ctx_doc (d:Term.decl) : ML (option Pprint.document) =
-        match d with
-        | Term.DeclFun nm [] sort _ -> Some (doc_of_string (nm ^ " : " ^ show sort))
-        | Term.Assume a -> Some (Term.termToSmt false "hypothesis" a.assumption_term)
-        | _ -> None
+      let ctx_doc (c:ctx_elt) : ML Pprint.document =
+        match c with
+        | CVar x -> group <| pp x.ppname ^^ text " :" ^/^ nest 2 (pp x.sort)
+        | CDef x e -> group <| pp x.ppname ^^ text " =" ^/^ nest 2 (pp e)
+        | CHyp p -> pp p
+        | CMatch e p -> group <| pp e ^/^ text "matches" ^/^ nest 2 (doc_of_string (show p))
       in
-      let ctx = List.filter_map ctx_doc ctx in
-      [prefix 2 1 (text "Failed to prove:")
-                  (Term.termToSmt false "goal" gst.gs_goal.goal_term)]
+      let ctx = goal_context settings.query_goals gst.gs_goal |> List.map ctx_doc in
+      [prefix 2 1 (text "Failed to prove:") (pp gst.gs_goal.goal_source)]
       @ (if Nil? ctx then []
          else [prefix 2 1 (text "In context:") (Pprint.separate Pprint.hardline ctx)])
     in
     let vc_detail =
       if Options.query_stats () then [
-        prefix 2 1 (text "Env =")
-          (all_binders settings.query_env.tcenv |> Pprint.flow_map (break_ 1) fun (b:Syntax.binder) ->
-            group <| parens <| nest 2 <|
-              pp b.binder_bv.ppname ^/^ colon ^/^ pp b.binder_bv.sort);
         prefix 2 1 (text "VC =") (pp settings.query_term);
       ] else []
     in
@@ -423,7 +415,6 @@ instance _ : showable answer = {
 let make_solver_configs
     (env : env_t)
     (goals : goal_tree)
-    (query : decl)
     (query_term : Syntax.term)
  : ML (list query_settings)
  =
@@ -439,7 +430,6 @@ let make_solver_configs
         in
         {
             query_env=env;
-            query_decl=query;
             query_name=qname;
             query_index=index;
             query_range=Env.get_range env.tcenv;
@@ -797,8 +787,8 @@ let encode_and_ask use_env_msg tcenv q : ML (list query_settings & answer) =
     maybe_refresh_solver tcenv;
     let msg =  (Format.fmt1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     Encode.push_encoding_state msg;
-    let prefix, goals, qry = Encode.encode_query use_env_msg tcenv q in
-    Z3.start_query msg prefix qry;
+    let prefix, goals = Encode.encode_query use_env_msg tcenv q in
+    Z3.start_query msg prefix (all_decls goals);
     let finish_query () = 
       let msg = (Format.fmt1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
       Encode.pop_encoding_state msg;
@@ -816,12 +806,11 @@ let encode_and_ask use_env_msg tcenv q : ML (list query_settings & answer) =
         then
           FStarC.Errors.diag
               (Env.get_range tcenv)
-              (Format.fmt3 "Encoded query %s\nto %s\nwith %s goals"
+              (Format.fmt2 "Encoded query %s\nwith %s goals"
                         (show q)
-                        (Term.declToSmt "" qry)
                         (show (List.length (goals_of goals))));
         let env = FStarC.SMTEncoding.Encode.get_current_env tcenv in
-        let configs = make_solver_configs env goals qry q in
+        let configs = make_solver_configs env goals q in
         ask_solver env configs
     )
   in
