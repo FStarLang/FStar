@@ -177,7 +177,9 @@ let reduce_disc_proj (cfg : Cfg.cfg)
                      (d : Ident.lident) (is_disc : bool) (idx : option int)
                      (scrutinee : term)
   : ML (option term) =
-  match U.hua (U.unmeta scrutinee) with
+  (* The scrutinee may be a lazily embedded value (tactics pass those around);
+     force it, exactly as matches_pat does. *)
+  match U.hua (U.unlazy (U.unmeta scrutinee)) with
   | None -> None
   | Some (c, _, cargs) ->
     if not (Env.is_datacon cfg.tcenv c.fv_name) then None else
@@ -2369,6 +2371,27 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
       match U.hua t with
       | None -> do_rebuild cfg env stack t
       | Some hua ->
+        let h, _, args = hua in
+        (* The application may have been assembled here rather than descended
+           into by [norm] --- e.g. the head only became a projector after being
+           delta-unfolded --- so the rule of [disc_proj_head] is repeated here.
+           This term is already normalized, hence [do_rebuild] below; only an
+           over-applied projector needs to keep normalizing. *)
+        match (match disc_proj_head cfg (S.fv_to_tm h) with
+               | Some (d, is_disc, n_indexed, idx) when List.length args > n_indexed ->
+                 (match reduce_disc_proj cfg d is_disc idx (fst (List.nth args n_indexed)) with
+                  | None -> None
+                  | Some field ->
+                    let _, rest = BU.first_N (n_indexed + 1) args in
+                    Some (field, rest))
+               | _ -> None) with
+        | Some (field, rest) ->
+          log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
+                                           (show t) (show field));
+          if Nil? rest
+          then do_rebuild cfg env stack field
+          else norm cfg env stack (U.mk_app field rest)
+        | None ->
         match check_strict cfg hua with
         | Some force -> (
           let h, u, a = hua in
