@@ -3,6 +3,12 @@
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query.
+  - Failed to prove:
+      (Valid
+       (Prims.hasEq U_zero (Tm_arrow_84543425b818e2d10a976186b8e8c250 @sk_1)))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 (Tm_type U_zero))
   - See also Prims.fst(91,23-91,30)
 
 * Info at ArrowRanges.fst(10,29-10,38):

@@ -294,6 +294,7 @@ val fresh_token: (term & fvs & sort) -> int -> ML decl
 val fresh_constructor : Range.t -> (string & list sort & sort & int) -> ML decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: Range.t -> constructor_t -> ML (list decl)
+val termToSmt: print_ranges:bool -> enclosing_name:string -> t:term -> ML Pprint.document
 val declToSmt: string -> decl -> ML string
 val declToSmt_no_caps: string -> decl -> ML string
 val mkBvConstructor: int -> ML (list decl & string & string)

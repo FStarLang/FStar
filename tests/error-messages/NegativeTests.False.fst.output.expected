@@ -4,6 +4,10 @@
   - Expected type f: (_: Prims.unit -> Prims.bool){f () = true}
     got type x: Prims.unit -> Prims.bool
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
   - See also NegativeTests.False.fst(18,31-18,42)
 
 * Info at NegativeTests.False.fst(30,42-30,66):

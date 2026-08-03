@@ -2,24 +2,108 @@
   - Expected failure:
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query.
+  - Failed to prove:
+      (Valid
+       (Calc.eta
+        U_zero
+        U_zero
+        Prims.int
+        Prims.int
+        Prims.op_GreaterThanOrEqual@tok
+        @sk_10
+        @sk_11))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_10 : Term
+      @sk_11 : Term
+      (and
+       (HasType @sk_10 Prims.int)
+       (HasType @sk_11 Prims.int)
+       (exists ((@x0 Term))
+        (! (and
+          (HasType @x0 Prims.int)
+          (exists ((@x1 Term))
+           (! (and
+             (HasType @x1 Prims.int)
+             (= @sk_10 @x1)
+             (Valid
+              (Calc.eta
+               U_zero
+               U_zero
+               Prims.int
+               Prims.int
+               Prims.op_GreaterThanOrEqual@tok
+               @x1
+               @x0)))
+            :qid hypothesis.1))
+          (Valid
+           (Calc.eta
+            U_zero
+            U_zero
+            Prims.int
+            Prims.int
+            Prims.op_LessThanOrEqual@tok
+            @x0
+            @sk_11)))
+         :qid hypothesis)))
   - See also FStar.Calc.fsti(43,50-43,55)
 
 * Info at Calc.fst(21,2-27,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query.
+  - Failed to prove: (>= (BoxInt_proj_0 @sk_2) (BoxInt_proj_0 @sk_3))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      @sk_3 : Term
+      (and
+       (HasType @sk_2 Prims.int)
+       (HasType @sk_3 Prims.int)
+       (exists ((@x0 Term))
+        (! (and
+          (HasType @x0 Prims.int)
+          (exists ((@x1 Term))
+           (! (and
+             (HasType @x1 Prims.int)
+             (= @sk_2 @x1)
+             (>= (BoxInt_proj_0 @x1) (BoxInt_proj_0 @x0)))
+            :qid hypothesis.1))
+          (<= (BoxInt_proj_0 @x0) (BoxInt_proj_0 @sk_3)))
+         :qid hypothesis)))
   - See also Calc.fst(21,7-21,11)
 
 * Info at Calc.fst(32,2-34,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query.
+  - Failed to prove: (< (BoxInt_proj_0 @sk_2) (BoxInt_proj_0 @sk_3))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      @sk_3 : Term
+      (and (HasType @sk_2 Prims.int) (HasType @sk_3 Prims.int) (= @sk_2 @sk_3))
   - See also Calc.fst(32,7-32,10)
 
 * Info at Calc.fst(39,2-43,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query.
+  - Failed to prove: (> (BoxInt_proj_0 @sk_2) (BoxInt_proj_0 @sk_3))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.int)
+      @sk_2 : Term
+      @sk_3 : Term
+      (and
+       (HasType @sk_2 Prims.int)
+       (HasType @sk_3 Prims.int)
+       (exists ((@x0 Term))
+        (! (and (HasType @x0 Prims.int) (= @sk_2 @x0) (= @x0 @sk_3))
+         :qid hypothesis)))
   - See also Calc.fst(39,7-39,10)
 
 * Info at Calc.fst(50,6-50,8):
@@ -27,6 +111,18 @@
   - Subtyping check failed
   - Expected type Prims.squash (1 == 2) got type Prims.unit
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
+      @sk_3 : Term
+      (HasType @sk_3 Prims.unit)
+      @sk_4 : Term
+      (HasType @sk_4 Prims.unit)
+      @sk_5 : Term
+      (HasType @sk_5 Prims.unit)
   - See also Calc.fst(50,3-50,5)
 
 * Info at Calc.fst(64,6-64,8):
@@ -34,6 +130,16 @@
   - Subtyping check failed
   - Expected type Prims.squash (2 == 3) got type Prims.unit
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
+      @sk_3 : Term
+      (HasType @sk_3 Prims.unit)
+      @sk_4 : Term
+      (HasType @sk_4 Prims.unit)
   - See also Calc.fst(64,3-64,5)
 
 * Info at Calc.fst(78,6-78,8):
@@ -41,6 +147,14 @@
   - Subtyping check failed
   - Expected type Prims.squash (3 == 4) got type Prims.unit
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
+      @sk_3 : Term
+      (HasType @sk_3 Prims.unit)
   - See also Calc.fst(78,3-78,5)
 
 * Info at Calc.fst(92,42-92,44):
@@ -48,6 +162,16 @@
   - Subtyping check failed
   - Expected type Prims.squash q got type Prims.unit
   - The SMT solver could not prove the query.
+  - Failed to prove: (Valid (Calc.q Dummy_value))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
+      @sk_3 : Term
+      (HasType @sk_3 Prims.unit)
+      @sk_4 : Term
+      (HasType @sk_4 (Prims.squash (Calc.p Dummy_value)))
   - See also Calc.fst(90,20-90,21)
 
 * Info at Calc.fst(99,10-99,12):
@@ -55,17 +179,47 @@
   - Subtyping check failed
   - Expected type Prims.squash q got type Prims.unit
   - The SMT solver could not prove the query.
+  - Failed to prove: (Valid (Calc.q Dummy_value))
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.unit)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
+      @sk_3 : Term
+      (HasType @sk_3 Prims.unit)
+      @sk_4 : Term
+      (HasType @sk_4 (Prims.squash (Calc.p Dummy_value)))
   - See also Calc.fst(100,4-100,5)
 
 * Info at Calc.fst(113,17-113,25):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.int)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
+      @sk_3 : Term
+      (HasType @sk_3 Prims.unit)
+      @sk_4 : Term
+      (HasType @sk_4 Prims.unit)
   - See also Calc.fst(104,12-104,17)
 
 * Info at Calc.fst(120,9-120,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove: false
+  - In context:
+      @sk_1 : Term
+      (HasType @sk_1 Prims.int)
+      @sk_2 : Term
+      (HasType @sk_2 Prims.unit)
+      @sk_3 : Term
+      (HasType @sk_3 Prims.unit)
+      @sk_4 : Term
+      (HasType @sk_4 Prims.unit)
   - See also Calc.fst(104,12-104,17)
 

@@ -48,4 +48,10 @@ type goal_tree =
 (* The goals of a tree, in the order in which they are emitted. *)
 val goals_of : goal_tree -> ML (list goal)
 
+(* The declarations and hypotheses in scope at a given goal, outermost first.
+   This is the part of the verification condition the goal was proved under:
+   the skolem constants of the enclosing universals, the left-hand sides of
+   the enclosing implications, and the definitions of the enclosing lets. *)
+val goal_context : goal_tree -> goal -> ML (list decl)
+
 val split_goals : option (unit -> ML string) -> range -> q:term -> ML goal_tree

@@ -2,5 +2,15 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
+  - Failed to prove:
+      (= (Prims.op_Addition @sk_1 @sk_1) (Prims.op_Addition @sk_2 @sk_2))
+  - In context:
+      @sk_1 : Term
+      @sk_2 : Term
+      @sk_3 : Term
+      (and
+       (HasType @sk_1 Prims.int)
+       (HasType @sk_2 Prims.int)
+       (HasType @sk_3 Prims.int))
   - See also AssertNorm.fst(7,14-7,30)
 

@@ -114,10 +114,15 @@ Guidelines for the changelog:
       query.
     - Error messages and ranges are more precise, and a definition can now
       report several independent failures at once.
-    - The `Env = ...` / `VC = ...` detail attached to a failed query is now
-      printed only under `--query_stats`. It describes the whole definition,
-      not the individual goal, and would otherwise be repeated once per
-      failing goal.
+    - A failed query now reports the individual proof obligation that could
+      not be discharged, as `Failed to prove: ...`, together with the
+      declarations and hypotheses it was proved under, as `In context: ...`.
+      These are printed in SMT-LIB syntax: they are exactly what was sent to
+      the solver.
+    - The `Env = ...` / `VC = ...` detail, which describes the whole
+      definition rather than the individual goal, is now printed only under
+      `--query_stats`. `Env = ...` remains useful for reading the goal: its
+      binders correspond, in order, to the `@sk_i` constants of the context.
 
     Because each goal is discharged in a context that no longer contains its
     sibling goals, a proof that relied on ground terms appearing only in a
