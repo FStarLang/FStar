@@ -1060,7 +1060,6 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let discriminator_ses =
         if fvq <> Data_ctor // We do not generate discriminators for record types
-          || U.has_attribute attrs C.no_auto_projectors_decls_attr
         then []
         else
             let discriminator_name = U.mk_discriminator lid in
@@ -1068,10 +1067,10 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             (* Discriminators and projectors are always declaration-only:
                Normalize.reduce_disc_proj gives them their iota rule, the SMT
                encoder axiomatizes them against its theory of datatypes, and
-               Extraction.ML.Term.ind_discriminator_body generates their ML
-               code.  Emitting a Sig_let with a match body on top of that only
-               bloats checked files and gives the unifier a large term to
-               unfold into. *)
+               Extraction.ML.Modul.disc_proj_lb rebuilds their ML code.
+               Emitting a Sig_let with a match body on top of that only bloats
+               checked files and gives the unifier a large term to unfold
+               into. *)
             let only_decl = true in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -1162,10 +1161,6 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
 
     let projectors_ses =
-      if U.has_attribute attrs C.no_auto_projectors_decls_attr
-        || U.has_attribute attrs C.meta_projectors_attr
-      then []
-      else
       fields |> List.mapi (fun i ({binder_bv=x}) ->
           let p = S.range_of_bv x in
           let field_name = U.mk_field_projector_name lid x i in

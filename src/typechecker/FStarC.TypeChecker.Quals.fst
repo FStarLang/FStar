@@ -79,6 +79,15 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
       | _ -> false in
     let has_eq = function Noeq | Unopteq -> true | _ -> false in
 
+    (* Projectors and discriminators are declaration-only, but unlike a real
+       assumed val they do get code: the normalizer reduces them primitively and
+       extraction rebuilds their definition.  So `assume` on them does not
+       conflict with `inline_for_extraction` inherited from the inductive. *)
+    let is_disc_proj_decl =
+      Sig_declare_typ? se.sigel &&
+      se.sigquals |> BU.for_some (function Discriminator _ | Projector _ -> true | _ -> false)
+    in
+
     (* Are qualifiers q1 and q2 compatible? The function check_all below will call this
     function for every pair of qualifiers in sigelt, in both orders, ignoring the diagonal. Hence
     this function need not be symmetric. This could probably use a cleanup by just
@@ -91,7 +100,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
         || visibility q2
         || assumption q2
         || q2=TotalEffect
-        || (env.is_iface && q2=Inline_for_extraction)
+        || ((env.is_iface || is_disc_proj_decl) && q2=Inline_for_extraction)
         || q2=NoExtract
 
       | New -> //no definition provided
@@ -101,7 +110,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
       | Inline_for_extraction ->
          q2=Logic || visibility q2 || reducibility q2 ||
          reification q2 || inferred q2 || has_eq q2 ||
-         (env.is_iface && q2=Assumption) || q2=NoExtract ||
+         ((env.is_iface || is_disc_proj_decl) && q2=Assumption) || q2=NoExtract ||
          q2=New
 
       | Unfold_for_unification_and_vcgen

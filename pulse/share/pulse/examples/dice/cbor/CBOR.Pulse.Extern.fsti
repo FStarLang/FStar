@@ -97,7 +97,6 @@ let raw_data_item_map_match
 
 (* Parsing *)
 
-[@@no_auto_projectors]
 noeq
 type cbor_read_t = {
   cbor_read_is_success: bool;
@@ -465,7 +464,6 @@ let maybe_cbor_tagged_payload
   | Cbor.Tagged _ l -> l
   | _ -> dummy_raw_data_item
 
-[@@no_auto_projectors]
 noeq
 type cbor_tagged = {
   cbor_tagged_tag: U64.t;

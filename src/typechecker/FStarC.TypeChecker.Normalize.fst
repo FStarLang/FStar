@@ -149,47 +149,52 @@ let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bo
    catch-all), it is re-traversed by every subsequent normalization, and its
    binders are a recurring source of higher-order unification problems.
 
-   This is an iota rule --- it reduces a destructor applied to a constructor
-   --- so it is gated on cfg.steps.iota, not on the delta level: there is no
-   definition whose visibility a delta level could control. *)
-let reduce_disc_proj (cfg : Cfg.cfg) (renorm : term -> ML term) (hua : fv & universes & args) : ML (option term) =
-  let (h, _us, args) = hua in
-  let tcenv = cfg.tcenv in
-  if Options.Ext.enabled "no_prim_proj" then None else
-  match Env.disc_proj_info tcenv h.fv_name with
-  | None -> None
-  | Some (q, n_indexed, idx) ->
-    let d = match q with
-            | Projector (d, _) -> d
-            | Discriminator d -> d
-            | _ -> failwith "reduce_disc_proj: impossible" in
-    if List.length args <= n_indexed then None else
-    let scrutinee = fst (List.nth args n_indexed) in
-    (* A projector can be over-applied (e.g. [QProc?.wp qc k s0]); the extra
-       arguments must be re-applied to the projected field. *)
-    let _, rest = BU.first_N (n_indexed + 1) args in
-    (* The scrutinee plays the role of a match scrutinee, which the normalizer
-       always reduces; but here it sits in an argument position, which cfg.hnf
-       leaves alone.  Reduce it explicitly in that case. *)
-    let scrutinee = if cfg.steps.hnf then renorm scrutinee else scrutinee in
-    match U.hua (U.unmeta scrutinee) with
+   This is an iota rule --- it reduces a destructor applied to a constructor ---
+   so it is gated on cfg.steps.iota only, just like the reduction of a match on
+   a constructor.  In particular the delta level does not apply: there is no
+   longer a definition whose visibility it could control. *)
+
+(* Is [head] a projector or discriminator whose reduction is currently enabled?
+   If so, return the data constructor it belongs to, whether it is a
+   discriminator, the number of arguments preceding the scrutinee, and (for a
+   projector) the position of the field among the constructor's arguments. *)
+let disc_proj_head (cfg : Cfg.cfg) (head : term) : ML (option (Ident.lident & bool & int & option int)) =
+  if not cfg.steps.iota || Options.Ext.enabled "no_prim_proj" then None else
+  match (U.un_uinst head).n with
+  | Tm_fvar h -> (
+    match Env.disc_proj_info cfg.tcenv h.fv_name with
     | None -> None
-    | Some (c, _, cargs) ->
-      if not (Env.is_datacon tcenv c.fv_name) then None else
-      let same = Ident.lid_equals c.fv_name d in
+    | Some (q, n_indexed, idx) ->
       match q with
-      | Discriminator _ ->
-        (* Well-typedness guarantees c and d belong to the same inductive, so a
-           mismatch really does mean the discriminator is false. *)
-        Some (U.mk_app (if same then U.exp_true_bool else U.exp_false_bool) rest)
-      | Projector _ ->
-        (* Projecting out of a different constructor is stuck, not false. *)
-        if not same then None else
-        match idx with
-        | None -> None
-        | Some i ->
-          if List.length cargs <= i then None
-          else Some (U.mk_app (fst (List.nth cargs i)) rest)
+      | Projector (d, _) -> Some (d, false, n_indexed, idx)
+      | Discriminator d -> Some (d, true, n_indexed, idx)
+      | _ -> failwith "disc_proj_head: impossible")
+  | _ -> None
+
+(* Given the scrutinee's weak head normal form, select the projected field (or
+   compute the discriminator's value).  [None] means the projection is stuck. *)
+let reduce_disc_proj (cfg : Cfg.cfg)
+                     (d : Ident.lident) (is_disc : bool) (idx : option int)
+                     (scrutinee : term)
+  : ML (option term) =
+  match U.hua (U.unmeta scrutinee) with
+  | None -> None
+  | Some (c, _, cargs) ->
+    if not (Env.is_datacon cfg.tcenv c.fv_name) then None else
+    let same = Ident.lid_equals c.fv_name d in
+    if is_disc
+    then
+      (* Well-typedness guarantees c and d belong to the same inductive, so a
+         mismatch really does mean the discriminator is false. *)
+      Some (if same then U.exp_true_bool else U.exp_false_bool)
+    else
+      (* Projecting out of a different constructor is stuck, not false. *)
+      if not same then None else
+      match idx with
+      | None -> None
+      | Some i ->
+        if List.length cargs <= i then None
+        else Some (fst (List.nth cargs i))
 
 
 let check_strict (cfg : Cfg.cfg) (hua : fv & universes & args) : ML (option bool) =
@@ -1281,7 +1286,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             (* Recover the whole application spine (head and all arguments); the
                node is now unary, holding a single argument. *)
             let head, args = U.head_and_args_full t in
-            let stack =
+            let push_args env args stack =
               List.fold_right
                 (fun (a, aq) stack ->
                   let a =
@@ -1307,8 +1312,35 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 args
                 stack
             in
-            log cfg (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
-            norm cfg env stack head
+            let fallback () =
+              let stack = push_args env args stack in
+              log cfg (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
+              norm cfg env stack head
+            in
+            (* Projections and discriminators are reduced here, on the way down,
+               rather than in [rebuild].  All that is needed of the scrutinee is
+               its head constructor, so reducing it to weak head normal form is
+               enough and the selected field is then normalized exactly once.
+               Reducing in [rebuild] instead would normalize the whole scrutinee
+               first and then normalize the selected field again, which is
+               exponential in the nesting depth of the projections. *)
+            (match disc_proj_head cfg head with
+             | Some (d, is_disc, n_indexed, idx) when List.length args > n_indexed ->
+               let scrutinee = fst (List.nth args n_indexed) in
+               let scrutinee = norm ({cfg with steps={cfg.steps with hnf=true}}) env [] scrutinee in
+               (match reduce_disc_proj cfg d is_disc idx scrutinee with
+                | None -> fallback ()
+                | Some field ->
+                  log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
+                                                   (show t) (show field));
+                  (* A projector may be over-applied (e.g. [QProc?.wp qc k s0]);
+                     the extra arguments are re-applied to the selected field.
+                     [field] is closed: hnf normalization pushes the environment
+                     into the arguments it does not reduce. *)
+                  let _, rest = BU.first_N (n_indexed + 1) args in
+                  let stack = push_args env rest stack in
+                  norm cfg empty_env stack field)
+             | _ -> fallback ())
 
           | Tm_refine {b=x}
               when cfg.steps.for_extraction
@@ -2337,16 +2369,6 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
       match U.hua t with
       | None -> do_rebuild cfg env stack t
       | Some hua ->
-        match (if cfg.steps.iota
-               then reduce_disc_proj cfg
-                      (fun t -> norm ({cfg with steps = {cfg.steps with hnf=false}}) [] [] t)
-                      hua
-               else None) with
-        | Some t' ->
-          log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
-                                           (show t) (show t'));
-          norm cfg env stack t'
-        | None ->
         match check_strict cfg hua with
         | Some force -> (
           let h, u, a = hua in

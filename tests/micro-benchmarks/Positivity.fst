@@ -421,7 +421,6 @@ and asn1_sequence_k_wf (#[@@@strictly_positive] t:set asn1_id_t -> asn1_decorato
     | PLAIN -> asn1_sequence_k_wf tl
     | OPTION | DEFAULT -> asn1_sequence_k_wf' tl s'
 
-[@@ no_auto_projectors]
 noeq
 type asn1_decorated : set asn1_id_t -> asn1_decorator -> Type0 =
   | MkDecorated : f:list (x:set asn1_id_t & y:asn1_decorator & asn1_decorated x y) -> squash (asn1_sequence_k_wf f) -> asn1_decorated asn1_id_set PLAIN

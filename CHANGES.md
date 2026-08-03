@@ -468,6 +468,15 @@ Guidelines for the changelog:
     - `--ext no_prim_proj` restores the old behaviour for a single
       `#push-options` scope, as an escape hatch for proofs that regress.
 
+  * As a consequence of the above, the machinery that existed to work around
+    the cost of generating projectors is gone:
+    - `FStar.Tactics.MkProjectors` (the `mk_projs` tactic and the
+      `mk_projectors` attribute) is removed.  Types that used it no longer need
+      anything: the built-in projectors are now free.
+    - The `no_auto_projectors` and `no_auto_projectors_decls` attributes are
+      deprecated and ignored.  Remove them; projectors and discriminators are
+      always declared.
+
   * PR https://github.com/FStarLang/FStar/pull/2760 introduces core typechecking for
     implicits introduced for application of indexed effects combinators. This is a
     breaking change, since indexed effects clients are subject to stricter typechecking.

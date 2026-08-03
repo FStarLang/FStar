@@ -428,7 +428,7 @@ val num_datacon_non_injective_ty_params  : env -> lident -> ML (option int)
    belongs to, i.e. how many of the constructor's arguments precede its
    fields. *)
 val num_datacon_ty_params  : env -> lident -> ML (option int)
-val datacon_decl           : env -> lident -> ML (option (fv_qual & int & binders))
+val datacon_decl           : env -> lident -> ML (option (fv_qual & int & tscheme))
 
 (* If [l] is an auto-generated projector or discriminator, return the
    corresponding qualifier (which records the data constructor it belongs

@@ -918,9 +918,9 @@ let num_datacon_ty_params env lid : ML _ =
 (* The data constructor's fv_qual (as DsEnv.fv_qual_of_se computes it), its
    number of type parameters, and its (unopened) binders.  Used by extraction to
    rebuild the bodies of declaration-only projectors/discriminators. *)
-let datacon_decl env (lid:lident) : ML (option (fv_qual & int & binders)) =
+let datacon_decl env (lid:lident) : ML (option (fv_qual & int & tscheme)) =
   match lookup_qname env lid with
-  | Some (Inr ({ sigel = Sig_datacon {ty_lid; t; num_ty_params}; sigquals }, _), _) ->
+  | Some (Inr ({ sigel = Sig_datacon {ty_lid; us; t; num_ty_params}; sigquals }, _), _) ->
     let fvq =
       match BU.find_map sigquals (function
               | RecordConstructor (_, fs) -> Some (Record_ctor (ty_lid, fs))
@@ -929,11 +929,20 @@ let datacon_decl env (lid:lident) : ML (option (fv_qual & int & binders)) =
       | Some q -> q
       | None -> Data_ctor
     in
-    let bs, _ = U.arrow_formals_comp_ln_strict t in
-    Some (fvq, num_ty_params, bs)
+    Some (fvq, num_ty_params, (us, t))
   | _ -> None
 
 let disc_proj_qual env (l:lident) : ML (option qualifier) =
+  (* Auto-generated projectors and discriminators are named
+     [__proj__C__item__f] and [uu___is_C]; neither prefix can appear in a
+     source name, so this cheap test avoids a qname lookup for every other
+     name.  This matters: Normalize.reduce_disc_proj consults this on every
+     application it rebuilds. *)
+  let n = string_of_id (ident_of_lid l) in
+  if not (BU.starts_with n U.field_projector_prefix
+          || BU.starts_with n (Ident.reserved_prefix ^ "is_"))
+  then None
+  else
   match lookup_qname env l with
   | Some (Inr ({ sigquals=quals }, _), _) ->
     quals |> List.tryPick (function
