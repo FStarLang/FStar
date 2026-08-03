@@ -125,60 +125,87 @@ let disc_proj_lb (tcenv:Env.env) (lid:lident) (us:univ_names) (t:typ) (q:qualifi
             | _ -> failwith "disc_proj_lb: impossible" in
     match Env.datacon_decl tcenv d with
     | None -> None
-    | Some (fvq, ntps, cbs) ->
+    | Some (fvq, ntps, (dus, dt)) ->
       let us, t' = SS.open_univ_vars us t in
       let binders, _ = U.arrow_formals t' in
-      if List.length binders = 0 || List.length cbs < ntps then None else
-      let arg_exp = S.bv_to_name (List.last binders).binder_bv in
-      let tps, fields = BU.first_N ntps cbs in
-      let all_params = List.map (fun b -> {b with binder_qual=Some S.imp_tag}) tps @ fields in
-      (* Mirrors the patterns TcInductive builds: the inductive's parameters are
-         dot patterns, the fields are (untyped) pattern variables. *)
-      let arg_pats (proj_idx:option int) =
-        all_params |> List.mapi (fun j ({binder_bv=x; binder_qual=imp}) ->
-          let b = S.is_bqual_implicit_or_meta imp in
-          if proj_idx = Some j
-          then withinfo (Pat_var x) Range.dummyRange, b
-          else if b && j < ntps
-          then (* The inductive's j-th parameter is the projector's j-th binder.
-                  Extraction reads these dot patterns to instantiate the data
-                  constructor's ML type scheme, so they must be filled in. *)
-               let t = S.bv_to_name (List.nth binders j).binder_bv in
-               withinfo (Pat_dot_term (Some t)) Range.dummyRange, b
-          else withinfo (Pat_var (S.gen_bv (string_of_id x.ppname) None S.tun)) Range.dummyRange, b)
+      (* The data constructor is universe-polymorphic in the same universes as
+         the inductive, hence as the projector; instantiate it at those so the
+         field types below are well scoped. *)
+      let dt =
+        if List.length dus = List.length us
+        then snd (Env.inst_tscheme_with (dus, dt) (us |> List.map U_name))
+        else snd (SS.open_univ_vars dus dt)
       in
-      let mk_pat_cons pats = withinfo (Pat_cons (S.lid_as_fv d (Some fvq), None, pats)) Range.dummyRange in
+      let cbs, dres = U.arrow_formals dt in
+      (* The projector's type is [params -> indices -> projectee:_ -> field_ty].
+         U.arrow_formals flattens through field_ty when the field is itself a
+         function, so recover the arity from the data constructor's result type
+         [tc params indices] and truncate. *)
+      let n_imp = List.length (snd (U.head_and_args_full dres)) in
+      if List.length binders <= n_imp || List.length cbs < ntps || n_imp < ntps then None else
+      let binders, _ = BU.first_N (n_imp + 1) binders in
+      let arg_exp = S.bv_to_name (List.last binders).binder_bv in
+      let cparams, cfields = BU.first_N ntps cbs in
+      let ty_params, _ = BU.first_N ntps binders in
+      (* The inductive's j-th parameter is the projector's j-th binder. *)
+      let subst =
+        List.map2 (fun (cb:binder) (b:binder) -> NT (cb.binder_bv, S.bv_to_name b.binder_bv))
+                  cparams ty_params
+      in
+      let _, field_bvs =
+        List.fold_left
+          (fun (subst, out) (cb:binder) ->
+            let x = S.gen_bv (string_of_id cb.binder_bv.ppname) None
+                             (SS.subst subst cb.binder_bv.sort) in
+            NT (cb.binder_bv, S.bv_to_name x) :: subst, x :: out)
+          (subst, [])
+          cfields
+      in
+      let field_bvs = List.rev field_bvs in
+      (* Mirrors the patterns TcInductive built (and the typechecker then
+         elaborated): the inductive's parameters become dot patterns carrying
+         the projector's own binders — extraction reads them to instantiate the
+         data constructor's ML type scheme — and the fields become pattern
+         variables at their real types. *)
+      let arg_pats =
+        (ty_params |> List.map (fun (b:binder) ->
+           withinfo (Pat_dot_term (Some (S.bv_to_name b.binder_bv))) Range.dummyRange, true)) @
+        (List.map2 (fun (cb:binder) x ->
+           withinfo (Pat_var x) Range.dummyRange, S.is_bqual_implicit_or_meta cb.binder_qual)
+           cfields field_bvs)
+      in
+      let pat_cons = withinfo (Pat_cons (S.lid_as_fv d (Some fvq), None, arg_pats)) Range.dummyRange in
       let body_opt =
         match q with
         | Discriminator _ ->
-          let pat_true = mk_pat_cons (arg_pats None), None, U.exp_true_bool in
-          let pat_false = withinfo (Pat_var (S.new_bv None S.tun)) Range.dummyRange, None, U.exp_false_bool in
+          (* With at most one constructor there is nothing to discriminate;
+             TcInductive used to emit [true] here too. *)
+          if List.length (snd (Env.datacons_of_typ tcenv (Env.typ_of_datacon tcenv d))) <= 1
+          then Some U.exp_true_bool
+          else
+          let wild = S.new_bv None (List.last binders).binder_bv.sort in
           Some (S.mk (Tm_match {scrutinee=arg_exp;
                                 ret_opt=None;
-                                brs=[U.branch pat_true; U.branch pat_false];
+                                brs=[U.branch (pat_cons, None, U.exp_true_bool);
+                                     U.branch (withinfo (Pat_var wild) Range.dummyRange,
+                                               None, U.exp_false_bool)];
                                 rc_opt=None}) Range.dummyRange)
         | _ ->
           (* Recover the field index the same way TcInductive named the
              projector, so that unnamed fields work too. *)
           let idx =
-            fields |> List.mapi (fun j b -> (j, b))
-                   |> List.tryPick (fun (j, ({binder_bv=x})) ->
-                        if Ident.lid_equals (U.mk_field_projector_name d x j) lid
-                        then Some j else None)
+            cfields |> List.mapi (fun j b -> (j, b))
+                    |> List.tryPick (fun (j, ({binder_bv=x})) ->
+                         if Ident.lid_equals (U.mk_field_projector_name d x j) lid
+                         then Some j else None)
           in
           match idx with
           | None -> None
           | Some i ->
-            let pats = arg_pats (Some (ntps + i)) in
-            let projection =
-              match List.nth pats (ntps + i) with
-              | { v = Pat_var x }, _ -> x
-              | _ -> failwith "disc_proj_lb: impossible"
-            in
-            let br = mk_pat_cons pats, None, S.bv_to_name projection in
             Some (S.mk (Tm_match {scrutinee=arg_exp;
                                   ret_opt=None;
-                                  brs=[U.branch br];
+                                  brs=[U.branch (pat_cons, None,
+                                                 S.bv_to_name (List.nth field_bvs i))];
                                   rc_opt=None}) Range.dummyRange)
       in
       match body_opt with
@@ -861,6 +888,11 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : ML (uenv & iface) =
       extract_bundle_iface g se
 
     | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
+      //Don't extract projectors returning types---not useful for typing generated code and
+      //And can actually break F# extraction, in case there are unused type parameters
+      if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+      then g, empty_iface
+      else
       let env, iface, _ =
           extract_type_declaration g true lid se.sigquals se.sigattrs univs t
       in
@@ -1133,6 +1165,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
 
     | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
       //extracting `assume type t : k`
+      //Don't extract projectors returning types---not useful for typing generated code and
+      //And can actually break F# extraction, in case there are unused type parameters
+      if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+      then g, []
+      else
       let env, _, impl = extract_type_declaration g false lid se.sigquals se.sigattrs univs t in
       env, impl
 

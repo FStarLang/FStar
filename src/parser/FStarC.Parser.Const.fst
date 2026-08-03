@@ -369,8 +369,6 @@ let bind_has_range_args_attr = attr "bind_has_range_args"
 let primitive_extraction_attr = attr "primitive_extraction"
 let binder_strictly_positive_attr = pconst "strictly_positive"
 let binder_unused_attr = attr "unused"
-let no_auto_projectors_decls_attr = attr "no_auto_projectors_decls"
-let no_auto_projectors_attr = attr "no_auto_projectors"
 let no_subtping_attr_lid = attr "no_subtyping"
 let admit_termination_lid = attr "admit_termination"
 let admitted_lid = attr "admitted"
@@ -435,8 +433,6 @@ let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let tac_opaque_attr = pconst "tac_opaque"
 
-let meta_projectors_attr = fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
-let mk_projs_lid   = fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
