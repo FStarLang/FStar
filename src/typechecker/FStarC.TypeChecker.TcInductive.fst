@@ -1067,7 +1067,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             (* Discriminators and projectors are always declaration-only:
                Normalize.reduce_disc_proj gives them their iota rule, the SMT
                encoder axiomatizes them against its theory of datatypes, and
-               Extraction.ML.Modul.disc_proj_lb rebuilds their ML code.
+               Normalize.disc_proj_lb rebuilds their definition for extraction.
                Emitting a Sig_let with a match body on top of that only bloats
                checked files and gives the unifier a large term to unfold
                into. *)

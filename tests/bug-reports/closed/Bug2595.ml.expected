@@ -72,4 +72,4 @@ type ('a, 'len) ntuple = Obj.t
 let rest_ (len : flen) (s : Obj.t) : Obj.t=
   FStar_Pervasives_Native.snd (Obj.magic s)
 let rest (len : flen) (s : Obj.t) : Obj.t=
-  FStar_Pervasives_Native.__proj__Mktuple2__item___2 (Obj.magic s)
+  match Obj.magic s with | (_1, _2) -> _2
