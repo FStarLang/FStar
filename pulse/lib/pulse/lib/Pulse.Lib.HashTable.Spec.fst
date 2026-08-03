@@ -226,7 +226,7 @@ let lemma_used_upd_lookup_walk #kt #vt #sz
                /\ walk repr2 idx' k' off == lookup_repr repr2 k')
         (ensures walk repr1 idx' k' off == walk repr2 idx' k' off)
         (decreases sz - off) 
-  = if off = repr1.sz then ()
+  = if off = sz then ()
     else if (idx' + off) % sz = idx then
       match repr1 @@ idx with
       | Used k'' _ ->
@@ -326,6 +326,17 @@ let strong_all_used_not_by #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.
 let aunb_extend #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off : nat) (k : kt)
   : Lemma (requires all_used_not_by repr idx off k /\ used_not_by repr k ((idx+off) % repr.sz))
           (ensures  all_used_not_by repr idx (off+1) k)
+  = ()
+
+let saunb_extend #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off : nat) (k : kt)
+  : Lemma (requires strong_all_used_not_by repr idx off k
+                 /\ strong_used_not_by repr k ((idx+off) % repr.sz))
+          (ensures  strong_all_used_not_by repr idx (off+1) k)
+  = ()
+
+let saunb_weaken #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off : nat) (k : kt)
+  : Lemma (requires strong_all_used_not_by repr idx off k)
+          (ensures  all_used_not_by repr idx off k)
   = ()
 
 let aunb_shrink #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off : nat) (k : kt)
@@ -589,7 +600,8 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
         (**)lemma_used_upd spec repr off k v v';
         upd_ repr idx k v
       end else begin
-        assert (all_used_not_by repr cidx (off+1) k);
+        saunb_extend repr cidx off k;
+        saunb_weaken repr cidx (off+1) k;
         insert_repr_walk #kt #vt #sz #spec repr k v (off+1) cidx () ()
       end
     
