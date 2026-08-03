@@ -220,7 +220,7 @@ let defaults = [
   ("fuel"                                      , Unset);
   ("help"                                      , Bool false);
   ("hide_uvar_nums"                            , Bool false);
-  ("hierarchical_namespaces"                   , Bool false);
+  ("hierarchical_includes"                      , Bool false);
   ("hint_dir"                                  , Unset);
   ("hint_file"                                 , Unset);
   ("hint_hook"                                 , Unset);
@@ -483,7 +483,7 @@ let get_extract_namespace       ()      = lookup_opt "extract_namespace"        
 let get_force                   ()      = lookup_opt "force"                    as_bool
 let get_help                    ()      = lookup_opt "help"                     as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
-let get_hierarchical_namespaces ()      = lookup_opt "hierarchical_namespaces"  as_bool
+let get_hierarchical_includes ()        = lookup_opt "hierarchical_includes"    as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -1010,7 +1010,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     text "Don't print unification variable numbers");
 
   ( noshort,
-    "hierarchical_namespaces",
+    "hierarchical_includes",
     Const (Bool true),
     text "When resolving a module 'X.Y.Z', in addition to looking for a file \
           'X.Y.Z.fst' (or '.fsti') in the include path, also look for it at the \
@@ -2082,7 +2082,7 @@ let message_format               () =
 let force                        () = get_force ()
 let help                         () = get_help                        ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
-let hierarchical_namespaces      () = get_hierarchical_namespaces     ()
+let hierarchical_includes        () = get_hierarchical_includes       ()
 let hint_info                    () = get_hint_info                   ()
                                     || get_query_stats                ()
 let hint_dir                     () = get_hint_dir                    ()

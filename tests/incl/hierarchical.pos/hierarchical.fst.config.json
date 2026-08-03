@@ -1,7 +1,7 @@
 {
   "fstar_exe": "../../../out/bin/fstar.exe",
   "options": [
-    "--hierarchical_namespaces"
+    "--hierarchical_includes"
   ],
   "include_dirs": [
   ]

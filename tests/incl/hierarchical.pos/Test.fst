@@ -15,6 +15,6 @@
 *)
 module Test
 (* Module A.B.C is defined in the file A/B/C.fst, which is resolved thanks to
-   --hierarchical_namespaces (see this test's Makefile). *)
+   --hierarchical_includes (see this test's Makefile). *)
 open A.B.C
 let y : int = x

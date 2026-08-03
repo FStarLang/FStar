@@ -216,7 +216,7 @@ let module_name_from_include_path (f:string) : ML (option string) =
 
 (* In public interface *)
 let maybe_module_name_of_file f =
-  if Options.hierarchical_namespaces () then
+  if Options.hierarchical_includes () then
     match module_name_from_include_path f with
     | Some longname -> Some longname
     | None -> check_and_strip_suffix (Filepath.basename f)
@@ -399,7 +399,7 @@ let cache_file_name =
          in different namespaces do not collide in the cache directory. We keep
          [fn]'s own extension (e.g. .fst / .fsti) rather than assuming one. *)
       let cache_fn =
-        if Options.hierarchical_namespaces ()
+        if Options.hierarchical_includes ()
         then let bn = Filepath.basename fn in
              let ext = match check_and_strip_suffix bn with
                        | Some stem -> Util.substring_from bn (String.length stem)
@@ -622,7 +622,7 @@ let hierarchical_modules_for_dir (cwd:string) (root:string)
 (* Build a map from module long name (and interface/implementation role) to the
    file providing it within a single include directory, and check that this map
    is unique: fail hard if any module long name is provided by more than one
-   file of the same role. Under [--hierarchical_namespaces] this catches, e.g., a
+  file of the same role. Under [--hierarchical_includes] this catches, e.g., a
    flat [X.Y.Z.fst] and a nested [X/Y/Z.fst] both defining module [X.Y.Z], rather
    than silently picking one. Only relevant in hierarchical mode, where a single
    directory can otherwise provide two files with the same long name. Duplicates
@@ -638,7 +638,7 @@ let check_unique_module_names_for_dir (dir:string)
     | Some prev ->
       raise_error0 Errors.Fatal_DuplicateModuleOrInterface [
         text (Format.fmt4 "Module %s is provided by more than one file in include directory %s: %s and %s." longname dir prev path);
-        text "With --hierarchical_namespaces a module must have a unique source file. For example, do not provide both a flat 'X.Y.Z.fst' and a nested 'X/Y/Z.fst' for the same module."
+        text "With --hierarchical_includes a module must have a unique source file. For example, do not provide both a flat 'X.Y.Z.fst' and a nested 'X/Y/Z.fst' for the same module."
       ]
     | None -> SMap.add seen key path)
 
@@ -647,7 +647,7 @@ let check_unique_module_names_for_dir (dir:string)
 
     In non-hierarchical mode only files that sit directly in an include
     directory are considered (e.g. [X.Y.Z.fst], mapped to [X.Y.Z]). Under
-    [--hierarchical_namespaces] we also descend into subdirectories, mapping a
+    [--hierarchical_includes] we also descend into subdirectories, mapping a
     file at [X/Y/Z.fst] to the long name [X.Y.Z] (matching is case-insensitive;
     long names are lowercased in [build_map]).
 
@@ -656,7 +656,7 @@ let check_unique_module_names_for_dir (dir:string)
     directory (e.g. both a flat [X.Y.Z.fst] and a nested [X/Y/Z.fst]). *)
 (* In public interface *)
 let build_inclusion_candidates_list (): ML (list (string & string)) =
-  let hierarchical = Options.hierarchical_namespaces () in
+  let hierarchical = Options.hierarchical_includes () in
   let include_directories = Find.full_include_path () in
   let include_directories = List.map Filepath.normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can

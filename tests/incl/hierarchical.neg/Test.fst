@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Test
-(* With --hierarchical_namespaces, the file A/B/C.fst is known as A.B.C, not as
+(* With --hierarchical_includes, the file A/B/C.fst is known as A.B.C, not as
    the short name C. Opening C therefore fails to resolve, so this test fails as
    expected. *)
 open C
