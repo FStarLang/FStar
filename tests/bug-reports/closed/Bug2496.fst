@@ -34,7 +34,10 @@ let singleton_includes_argument_lemma ()
 : Lemma (forall (ty: eqtype) (r: ty). includes (singleton r) r) =
   ()
 
-#push-options "--z3cliopt 'smt.qi.eager_threshold=100' --fuel 1 --ifuel 1"
+(* This used to need --z3cliopt 'smt.qi.eager_threshold=100'.  With one
+   assertion per goal it verifies without any Z3 tuning; and with eager
+   instantiation forced, Z3 now overflows its instantiation table. *)
+#push-options "--fuel 1 --ifuel 1"
 #restart-solver
 let singleton_includes_argument_lemma_bad ()
 : Lemma (forall (ty: eqtype) (r: ty). includes (singleton r) r) 

@@ -2,7 +2,5 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC = forall (_: Prims.unit). Prims.l_False
   - See also WPExtensionality.fst(60,19-60,24)
 

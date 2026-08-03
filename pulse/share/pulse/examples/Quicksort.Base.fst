@@ -319,7 +319,7 @@ let transfer_larger_slice
   assert (forall (k: int). l - shift <= k /\ k < r - shift ==> (lb <= Seq.index s k));
   ()
 
-#push-options "--z3rlimit_factor 4 --split_queries no"
+#push-options "--z3rlimit_factor 4"
 let transfer_smaller_slice
   (s : Seq.seq int)
   (shift : nat)

@@ -120,7 +120,7 @@ let intro_h_exists x p h = ()
 let elim_h_exists #a p h = ()
 let interp_depends_only_on hp = ()
 #restart-solver
-#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 4 --split_queries always"
+#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 4"
 let lift_star (l:tag) (p q:H.slprop)
 : Lemma (llift l (p `H.star` q) == (llift l p `star` llift l q))
         [SMTPat (llift l (p `H.star` q))]

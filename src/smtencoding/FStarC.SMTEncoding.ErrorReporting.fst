@@ -22,244 +22,168 @@ open FStarC.List
 open FStarC.BaseTypes
 open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Util
-open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding
 open FStarC.Range
-open FStarC.Class.Setlike
 open FStarC.Class.Show
 module BU = FStarC.Util
 
-exception Not_a_wp_implication of string
-let sort_labels (l:(list (error_label & bool))) : ML (list (error_label & bool)) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
-let remove_dups (l:labels) : ML labels = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
-type msg = string & Range.t
-type ranges = list (option string & Range.t)
+(* Smart constructors: a context or a branch with no goals under it is
+   itself trivial, and must not be emitted. *)
+let gctx (ds:list decl) (t:goal_tree) : goal_tree =
+  match t with
+  | GTrivial -> GTrivial
+  | _ -> GCtx ds t
 
-//decorate a term with an error label
-let __ctr = mk_ref 0
+let gbranch (ts:list goal_tree) : ML goal_tree =
+  match ts |> List.filter (function GTrivial -> false | _ -> true) with
+  | [] -> GTrivial
+  | [t] -> t
+  | ts -> GBranch ts
 
-let incr r : ML unit = r := !r + 1
+let rec goals_of (t:goal_tree) : ML (list goal) =
+  match t with
+  | GTrivial -> []
+  | GLeaf g -> [g]
+  | GCtx _ t -> goals_of t
+  | GBranch ts -> List.collect goals_of ts
 
-let fresh_label : Errors.error_message -> Range.t -> term -> ML (label & term) =
-    fun message range t ->
-        let l = incr __ctr; Format.fmt1 "label_%s" (show !__ctr) in
-        let lvar = mk_fv (l, Bool_sort) in
-        let label = (lvar, message, range) in
-        let lterm = mkFreeV lvar in
-        let lt = Term.mkOr(lterm, t) in
-        label, lt
+let fresh_name (prefix:string) : ML string =
+  prefix ^ show (GenSym.next_id ())
 
-(*
-   label_goals query : term * labels
-      traverses the query, finding sub-formulas that are goals to be proven,
-      and labels each such sub-goal with a distinct label variable
-
-      Returns the labeled query and the label terms that were added
-*)
-let label_goals use_env_msg  //when present, provides an alternate error message,
-                                  //usually "could not check implicit argument",
-                                  //        "could not prove post-condition"
-                                  //or something like that
-                (r:Range.t)            //the source range in which this query was asked
-                q            //the query
-               : ML (labels   //the labels themselves
-               & term)       //the query, decorated with labels
-               =
-    let rec is_a_post_condition post_name_opt tm : ML bool =
-        match post_name_opt, tm with
-        | None, _ -> false
-        | Some nm, FreeV fv ->
-          nm=fv_name fv
-        | _, App (Var "Valid") [tm] _
-        | _, App (Var "ApplyTT") (tm::_) _ ->
-          is_a_post_condition post_name_opt tm
-        | _ ->
-          false
-    in
-    let conjuncts t =
-        match t with
-        | App And cs _ -> cs
-        | _ -> [t]
-    in
-    let is_guard_free tm =
-      match tm with
-      | Quant Forall [[(App (Var "Prims.guard_free") [p] _)]] iopt _ (App Imp [l;r] _) _ ->
-        true
-      | _ -> false
-    in
-    let is_a_named_continuation lhs = conjuncts lhs |> BU.for_some is_guard_free in
+let split_goals use_env_msg  //when present, provides an alternate error message,
+                             //usually "could not check implicit argument",
+                             //        "could not prove post-condition"
+                             //or something like that
+               (r:Range.t)   //the source range in which this query was asked
+               (q:term)      //the query
+             : ML goal_tree
+             =
+    let ctr = mk_ref 0 in
     let flag, msg_prefix = match use_env_msg with
         | None -> false, Pprint.empty
         | Some f -> true, Pprint.doc_of_string (f()) in
-    let fresh_label msg ropt rng t =
+    let mk_leaf (msg:Errors.error_message) (ropt:option Range.t) (t:term) : ML goal_tree =
         let open FStarC.Pprint in
         let msg = if flag
                   then (Errors.Msg.text "Failed to verify implicit argument: " ^^ msg_prefix) :: msg
                   else msg in
+        let rng = range_of_term t in
         let rng = match ropt with
                   | None -> rng
                   | Some r -> if Range.rng_included (Range.use_range rng) (Range.use_range r)
                               then rng
                               else Range.set_def_range r (Range.def_range rng)
         in
-        fresh_label msg rng t
+        ctr := !ctr + 1;
+        GLeaf { goal_id = !ctr; goal_msg = msg; goal_range = rng; goal_term = t }
     in
-    let rec aux (default_msg : Errors.error_message) //the error message text to generate at a label
-                (ropt:option Range.t) //an optional position, if there was an enclosing Labeled node
-                (post_name_opt:option string) //the name of the current post-condition variable --- it is left uninstrumented
-                (labels:list label) //the labels accumulated so far
-                (q:term) //the term being instrumented
-     : ML (list label & term)
+    (* An assumption emitted by the walker.  It is given a fresh name, and no
+       fact ids, so that --using_facts_from never filters it out. *)
+    let hyp (t:term) : ML decl =
+        mkAssume (t, None, fresh_name "@hypothesis_")
+    in
+    (* Is [t] a small quantifier-free formula?  Such a formula is cheap to
+       assume: it adds no new quantifier instantiations, it only brings ground
+       terms into the solver's congruence closure. *)
+    let quantifier_free (t:term) : ML bool =
+        let budget = mk_ref 200 in
+        let rec aux (t:term) : ML bool =
+            if !budget <= 0 then false
+            else begin
+              budget := !budget - 1;
+              match t with
+              | Quant _ _ _ _ _ _ -> false
+              | App _ tms _ -> List.for_all aux tms
+              | Let tms t -> List.for_all aux tms && aux t
+              | Labeled t _ _ -> aux t
+              | _ -> true
+            end
+        in
+        aux t
+    in
+    (* [aux] returns the goal tree together with a flag saying whether the tree
+       really establishes the term it was given.  The flag is false when the
+       term contains an [Unreachable] marker, which we deliberately do not
+       prove; such a term may not be assumed elsewhere (it is defined to be
+       [false] in the prelude). *)
+    let rec aux (default_msg : Errors.error_message) //the error message to report for a leaf
+                (ropt:option Range.t)                //position of the enclosing Labeled node, if any
+                (q:term)                             //the term being split
+     : ML (goal_tree & bool)
      =  match q with
-        | BoundV _
-        | Integer _
-        | String _
-        | Real _ ->
-          labels, q
-
-        | Labeled arg [d] label_range when Errors.Msg.renderdoc d = "Could not prove post-condition" ->
-          //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
-          //        (Term.print_smt_term q);
-          let fallback debug_msg =
-            //printfn "FALLING BACK: %s with range %s" msg
-            //        (match ropt with None -> "None" | Some r -> Range.string_of_range r);
-            aux default_msg (Some label_range) post_name_opt labels arg
-          in
-          begin try
-              begin match arg with
-                | Quant Forall pats iopt (post::sorts) (App Imp [lhs;rhs] rng) _ ->
-                  let post_name = "^^post_condition_"^ (show <| GenSym.next_id ()) in
-                  let names = mk_fv (post_name, post)
-                              ::List.map (fun s -> mk_fv ("^^" ^ (show <| GenSym.next_id()), s)) sorts in
-                  let instantiation = List.map mkFreeV names in
-                  let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
-
-                  let labels, lhs = match lhs with
-                    | App And clauses_lhs _ ->
-                      let req, ens = BU.prefix clauses_lhs in
-                      begin match ens with
-                        | Quant Forall pats_ens iopt_ens sorts_ens (App Imp [ensures_conjuncts; post] rng_ens) ens_rng ->
-                          if is_a_post_condition (Some post_name) post
-                          then
-                            let labels, ensures_conjuncts = aux (Errors.mkmsg "Could not prove post-condition") None (Some post_name) labels ensures_conjuncts in
-                            let pats_ens =
-                              match pats_ens with
-                              | []
-                              | [[]] -> [[post]]  //make the post-condition formula the pattern, if there isn't one already (usually there isn't)
-                              | _ -> pats_ens in
-                            let ens = Quant Forall pats_ens iopt_ens sorts_ens (App Imp [ensures_conjuncts; post] rng_ens) ens_rng in
-                            let lhs = App And (req@[ens]) (range_of_term lhs) in
-                            labels, Term.abstr names lhs
-                           else raise (Not_a_wp_implication ("Ensures clause doesn't match post name:  "
-                                                            ^ post_name
-                                                            ^ "  ... "
-                                                            ^ Term.print_smt_term post))
-
-                        | _ -> raise (Not_a_wp_implication ("Ensures clause doesn't have the expected shape for post-condition "
-                                                            ^ post_name
-                                                            ^ "  ... "
-                                                            ^ Term.print_smt_term ens))
-                      end
-                    | _ -> raise (Not_a_wp_implication ("LHS not a conjunct: " ^ (Term.print_smt_term lhs))) in
-
-                  let labels, rhs =
-                    let labels, rhs = aux default_msg None (Some post_name) labels rhs in
-                    labels, Term.abstr names rhs in
-
-                  let body = set_range (Term.mkImp(lhs, rhs)) rng in
-                  labels, Quant Forall pats iopt (post::sorts) body (range_of_term q)
-
-
-                | _ -> //not in the form produced by an application of M_stronger
-                  fallback ("arg not a quant: ")// ^ (Term.print_smt_term arg))
-              end
-          with Not_a_wp_implication msg -> fallback msg
-          end
+        | Labeled arg [d] r when Errors.Msg.renderdoc d = "Could not prove post-condition" ->
+          (* [check_expected_effect] labels a definition's *whole* guard with
+             this message, so it says nothing about the individual goal.  Keep
+             it only as a position, and report whatever more specific message
+             is in scope. *)
+          aux default_msg (Some r) arg
 
         | Labeled arg reason r ->
-          aux reason (Some r) post_name_opt labels arg
+          aux reason (Some r) arg
 
-        | Quant Forall [] None sorts (App Imp [lhs;rhs] rng) _
-            when is_a_named_continuation lhs ->
-          let sorts', post = BU.prefix sorts in
-          let new_post_name = "^^post_condition_"^ (show <| GenSym.next_id ()) in
-          //printfn "Got a named continuation with post-condition %s" new_post_name;
-          let names = List.map (fun s -> mk_fv ("^^" ^ (show <| GenSym.next_id()), s)) sorts'
-                             @ [mk_fv (new_post_name, post)] in
-          let instantiation = List.map mkFreeV names in
-          let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
-
-          let labels, lhs_conjs =
-                BU.fold_map (fun labels tm ->
-                    match tm with
-                    | Quant Forall [[(App (Var "Prims.guard_free") [p] _)]] iopt sorts (App Imp [l0;r] _) _ ->
-                      if is_a_post_condition (Some new_post_name) r
-                      then begin
-                        //printfn "++++RHS is a post-condition for %s;\n\trhs=%s"
-                        //        new_post_name
-                        //        (Term.print_smt_term r);
-                        let labels, l = aux default_msg None post_name_opt labels l0 in
-                        //printfn "++++LHS %s\nlabeled as%s"
-                        //        (Term.print_smt_term l0)
-                        //        (Term.print_smt_term l);
-                        labels, Quant Forall [[p]] (Some 0) sorts (App Imp [l;r] Range.dummyRange) (range_of_term q)
-                      end
-                      else begin
-                        //printfn "----RHS not a post-condition for %s;\n\trhs=%s"
-                        //        new_post_name
-                        //        (Term.print_smt_term r);
-                        labels, tm
-                      end
-                    | _ -> labels, tm)
-                labels (conjuncts lhs) in
-
-          let labels, rhs = aux default_msg None (Some new_post_name) labels rhs in
-          let body = set_range (Term.mkImp(set_range (Term.mk_and_l lhs_conjs) (range_of_term lhs), rhs)) rng |> Term.abstr names in
-          let q = Quant Forall [] None sorts body (range_of_term q) in
-          labels, q
-
-        | App Imp [lhs;rhs] _ ->
-          let labels, rhs = aux default_msg ropt post_name_opt labels rhs in
-          labels, mkImp(lhs, rhs)
-
-        | App And conjuncts _ ->
-          let labels, conjuncts = BU.fold_map (aux default_msg ropt post_name_opt) labels conjuncts in
-          labels, set_range (Term.mk_and_l conjuncts) (range_of_term q)
-
-        | App ITE [hd; q1; q2] _ ->
-          let labels, q1 = aux default_msg ropt post_name_opt labels q1 in
-          let labels, q2 = aux default_msg ropt post_name_opt labels q2 in
-          labels, set_range (Term.mkITE (hd, q1, q2)) (range_of_term q)
-
-        | Quant Exists _ _ _ _ _
-        | App Iff _ _
-        | App Or _ _ -> //non-atomic, but can't case split
-          let lab, q = fresh_label default_msg ropt (range_of_term q) q in
-          lab::labels, q
+        | App TrueOp [] _ ->
+          GTrivial, true
 
         | App (Var "Unreachable") _ _ ->
           //ITEs are encoded with an additional else case just to make them well-formed
-          //These are not real goals and should not be labeled
-          labels, q
-          
-        | App (Var _) _ _ when is_a_post_condition post_name_opt q ->
-          //applications of the post-condition variable are never labeled
-          //only specific conjuncts of an ensures clause are labeled
-          labels, q
+          //These are not real goals
+          GTrivial, false
 
-        | FreeV _
-        | App TrueOp _ _
-        | App FalseOp _ _
-        | App Not _ _
-        | App Eq _ _
-        | App LT _ _
-        | App LTE _ _
-        | App GT _ _
-        | App GTE _ _
-        | App BvUlt _ _
-        | App (Var _) _ _ -> //atomic goals
-          let lab, q = fresh_label default_msg ropt (range_of_term q) q in
-          lab::labels, q
+        | App And conjuncts _ ->
+          (* To prove [c1 /\ ... /\ cn] we prove each [ci] under the assumption
+             of the preceding conjuncts.  This is sound, and it is what keeps
+             the terms occurring in the earlier conjuncts available to the
+             solver -- in a single monolithic query they were all in scope. *)
+          let rec seq (cs:list term) : ML (goal_tree & bool) =
+            match cs with
+            | [] -> GTrivial, true
+            | [c] -> aux default_msg ropt c
+            | c::cs ->
+              let t, ok = aux default_msg ropt c in
+              let rest, ok' = seq cs in
+              let rest = if ok && quantifier_free c then gctx [hyp c] rest else rest in
+              gbranch [t; rest], ok && ok'
+          in
+          seq conjuncts
+
+        | App Imp [lhs; rhs] _ ->
+          let t, ok = aux default_msg ropt rhs in
+          gctx [hyp lhs] t, ok
+
+        | App ITE [hd; q1; q2] _ ->
+          let t1, ok1 = aux default_msg ropt q1 in
+          let t2, ok2 = aux default_msg ropt q2 in
+          gbranch [ gctx [hyp hd]         t1;
+                    gctx [hyp (mkNot hd)] t2 ],
+          ok1 && ok2
+
+        | Quant Forall _pats _iopt sorts body _ ->
+          (* Skolemize: each bound variable becomes a fresh constant.  Note we
+             keep them as FreeV, which prints exactly like a constant but keeps
+             the hash-consed encodings of refinements parameterized over them. *)
+          let fvs = sorts |> List.map (fun s -> mk_fv (fresh_name "@sk_", s)) in
+          let decls = fvs |> List.map (fun fv -> DeclFun (fv_name fv) [] (fv_sort fv) None) in
+          let t, ok = aux default_msg ropt (Term.inst (List.map mkFreeV fvs) body) in
+          gctx decls t, ok
+
+        | Let es body ->
+          (* Turn each let binding into a fresh constant with a defining
+             equation, rather than inlining it (which would destroy sharing).
+             The only producer of [Let] is the encoding of a match scrutinee,
+             which is always of [Term_sort]. *)
+          let rec go (fvs:list fv) (decls:list decl) (es:list term) : ML (list fv & list decl) =
+            match es with
+            | [] -> fvs, decls
+            | e::es ->
+              let e = Term.inst (List.map mkFreeV fvs) e in
+              let fv = mk_fv (fresh_name "@let_", Term_sort) in
+              go (fvs @ [fv])
+                 (decls @ [DeclFun (fv_name fv) [] Term_sort None; hyp (mkEq (mkFreeV fv, e))])
+                 es
+          in
+          let fvs, decls = go [] [] es in
+          let t, ok = aux default_msg ropt (Term.inst (List.map mkFreeV fvs) body) in
+          gctx decls t, ok
 
         | App RealDiv _ _
         | App Add _ _
@@ -292,91 +216,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App Imp _ _ ->
           failwith "Impossible: arity mismatch"
 
-        | Quant Forall pats iopt sorts body _ ->
-          let labels, body = aux default_msg ropt post_name_opt labels body in
-          labels, Quant Forall pats iopt sorts body (range_of_term q)
-
-        (* TODO (KM) : I am not sure whether we should label the let-bounded expressions here *)
-        | Let es body ->
-          let labels, body = aux default_msg ropt post_name_opt labels body in
-          labels, Term.mkLet (es, body)
+        (* Everything else is an atomic goal: existentials, disjunctions,
+           equalities, applications of uninterpreted predicates, ... *)
+        | _ ->
+          mk_leaf default_msg ropt q, true
     in
-    __ctr := 0;
-    aux (Errors.mkmsg "Assertion failed") None None [] q
-
-
-(*
-   detail_errors all_labels potential_errors askZ3
-
-      -- Searching through the list of errors labels to exhaustively list
-         only those that are definitely not provable given the current
-         solver parameters.
-
-      -- potential_errors are the labels in the initial counterexample model
- *)
-let detail_errors env
-                 (all_labels:labels)
-                 (askZ3:list decl -> ML Z3.z3result)
-    : ML unit =
-
-    let print_banner () : ML unit =
-        let msg =
-            Format.fmt4
-                "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
-                    "error"
-                    (Range.string_of_range (TypeChecker.Env.get_range env))
-                    (show 5)
-                    (show (List.length all_labels)) in
-        Format.print_error msg
-    in
-
-    let print_result (x : label & bool) : ML unit =
-      let ((_, msg, r), success) = x in
-      let open FStarC.Pprint in
-      let open FStarC.Errors.Msg in
-        if success
-        then Format.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
-        else FStarC.Errors.log_issue r Errors.Error_ProofObligationFailed ([
-                 text <| Format.fmt1 "XX: proof obligation at %s failed." (Class.Show.show r);
-               ] @ msg)
-    in
-
-    let elim labs = //assumes that all the labs are true, effectively removing them from the query
-        labs
-        |> List.map (fun (l, _, _) ->
-            let a = {
-                    assumption_name="@disable_label_"^fv_name l;
-                    assumption_caption=Some "Disabling label";
-                    assumption_term=mkEq(mkFreeV l, mkTrue);
-                    assumption_fact_ids=[]
-                }
-            in
-            Term.Assume a) in
-
-    //check all active labels linearly and classify as eliminated/error
-    let rec linear_check eliminated errors active : ML (list (label & bool)) =
-        FStarC.SMTEncoding.Z3.refresh (Some env.proof_ns);
-        match active with
-        | [] ->
-            let results =
-                List.map (fun x -> x, true) eliminated
-                @ List.map (fun x -> x, false) errors in
-            sort_labels results
-
-        | hd::tl ->
-          Format.print1 "%s, " (show (List.length active));
-          let decls = elim <| (eliminated @ errors @ tl) in
-          let result = askZ3 decls in //hd is the only thing to prove
-          match result.z3result_status with
-          | Z3.UNSAT -> //hd is provable
-            linear_check (hd::eliminated) errors tl
-          | _ -> linear_check eliminated (hd::errors) tl
-    in
-
-    print_banner ();
-    Options.set_option "z3rlimit" (Options.Int 5);
-    let res = linear_check [] [] all_labels in
-    Format.print_string "\n";
-    res |> List.iter print_result;
-    if BU.for_all snd res
-    then Format.print_string "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"
+    fst (aux (Errors.mkmsg "Assertion failed") None q)

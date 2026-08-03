@@ -19,9 +19,9 @@ conditions (VCs) and calling an SMT solver (Z3) to prove them. Most
 simple proof obligations are handled completely automatically by Z3,
 and for more complex statements we can help the solver find a proof
 via lemma calls and intermediate assertions. Even when using lemma
-calls and assertions, the VC for a definition is sent to Z3 in one
-single piece (though :ref:`SMT queries can be split via an option
-<Splitting_queries>`.). This "monolithic" style of proof can become
+calls and assertions, the VC for a definition is computed as a whole and
+then :ref:`split into one Z3 query per proof obligation
+<Splitting_queries>`. This style of proof can become
 unwieldy rapidly, particularly when the solver is being pushed to its
 limits.
 

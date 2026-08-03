@@ -224,7 +224,7 @@ let join_premem_commutative (is0:premem) (is1:premem { disjoint_mem is0 is1 }) :
   H2.join_commutative (timeless_heap_of is0) (timeless_heap_of is1);
   mem_ext (join_premem is0 is1) (join_premem is1 is0) fun a -> ()
 
-#push-options "--split_queries always"
+#push-options ""
 let join_premem_associative
     (is0:premem)
     (is1:premem)
@@ -365,7 +365,7 @@ let star_elim (p1 p2: slprop) (w: premem { star p1 p2 w }) :
   star__elim p1 p2 w
 
 #restart-solver
-#push-options "--split_queries always --z3rlimit 20"
+#push-options "--z3rlimit 20"
 irreducible
 let star_elim' (p1 p2: slprop) (w: mem { star p1 p2 w }) :
     GTot (w':(mem & mem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
@@ -1103,8 +1103,13 @@ let mem_invariant_set_loc ictx m l = hogs_invariant_congr2 ictx (set_loc m l) m
 
 let inames_ok_hogs_dom e m = ()
 
+let mem_hogs_dom (i: iref) (m: mem)
+  : Lemma (GS.mem i (hogs_dom m) == hogs_iname_ok i m)
+  = ()
+
 let inames_ok_update e m0 m1 =
-  assert forall i. GS.mem i (hogs_dom m0) <==> GS.mem i (hogs_dom m1)
+  introduce forall i. hogs_iname_ok i m0 == hogs_iname_ok i m1
+  with (mem_hogs_dom i m0; mem_hogs_dom i m1)
 
 #push-options "--z3rlimit_factor 4"
 let read_inv_age f' (is: mem { level_ is > 0 /\ iname_ok f' is }) (w: premem { 1 < level_ w /\ level_ w <= level_ is }) :
@@ -1121,7 +1126,7 @@ let read_inv_age f' (is: mem { level_ is > 0 /\ iname_ok f' is }) (w: premem { 1
   assert read_inv f' (age1 is) (age1_ w)
 #pop-options
 
-#push-options "--split_queries always"
+#push-options ""
 let rec hogs_invariant__age (e:inames) (is: mem { level_ is > 0 }) (f: address) :
     Lemma (forall w. 1 < level_ w /\ level_ w <= level_ is /\ hogs_invariant_ e is f w ==>
         hogs_invariant_ e (age1 is) f (age1_ w)) =
@@ -1163,7 +1168,7 @@ let gs_disjoint_elim #t (a: GS.set t) (b: GS.set t { GS.disjoint a b }) (x: t { 
     Lemma (~(GS.mem x b)) =
   ()
 
-#push-options "--split_queries always"
+#push-options ""
 let rec hogs_invariant__disjoint (e1 e2:inames) (m1 m2:mem) (f: iref) :
     Lemma (requires
       disjoint m1 m2 /\
@@ -1206,7 +1211,7 @@ let hogs_invariant_disjoint (e1 e2:inames) (m1 m2:mem) :
   hogs_invariant__congr e2 m2 (some_fresh_addr m2) (some_fresh_addr m);
   hogs_invariant__disjoint e1 e2 m1 m2 (some_fresh_addr m)
 
-#push-options "--split_queries always"
+#push-options ""
 let rec hogs_invariant__mono (ex1: inames) (ex2: inames)
     (m: mem { forall i. GS.mem i (hogs_dom m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
     (f: address) (w: premem) :
@@ -1240,7 +1245,7 @@ let hogs_invariant_mono (ex1: inames) (ex2: inames)
 let gs_diff #t (a b: GS.set t) : GS.set t =
   GS.comprehend fun i -> GS.mem i a && not (GS.mem i b)
 
-#push-options "--split_queries always"
+#push-options ""
 let hogs_invariant_disjoint' (e f:inames) (p0 p1:slprop) (m0 m1:mem) :
     Lemma (requires
       disjoint_mem m0 m1 /\

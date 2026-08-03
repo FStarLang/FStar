@@ -2,27 +2,19 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = OptionStack.p 1
 
 * Info at OptionStack.fst(24,16-24,21):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = OptionStack.p 2
 
 * Info at OptionStack.fst(27,16-27,21):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.l_False
 
 * Info at OptionStack.fst(39,16-39,21):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.l_False
 

@@ -13,7 +13,7 @@ let also_bad_assumed ()
   
 let eq_fun (f1 f2 : 'a -> 'b) (x : 'a) (_ : squash (f1 == f2)) : Lemma (f1 x == f2 x) = ()
   
-[@@expect_failure [19]]
+[@@expect_failure [19; 19]]
 let bad2 () =
   let f0 : int -> prop = fun x -> True in
   let f1 : int -> prop = fun x -> x >= 0 in

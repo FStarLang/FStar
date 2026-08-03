@@ -202,7 +202,7 @@ let k_elab_equiv
     k_elab_equiv_prefix ctxt1' k in
   k
 
-#push-options "--fuel 3 --ifuel 1 --split_queries no --z3rlimit_factor 20"
+#push-options "--fuel 3 --ifuel 1 --z3rlimit_factor 20"
 open Pulse.PP
 let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   (c1:comp{stateful_comp c1})
@@ -363,7 +363,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   | _ -> 
     (| t, c |)
 
-#push-options "--z3rlimit_factor 4 --ifuel 1 --split_queries always"
+#push-options "--z3rlimit_factor 4 --ifuel 1"
 #restart-solver
 let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
   (post_hint:post_hint_opt g)

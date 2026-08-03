@@ -106,7 +106,7 @@ let gbag_pcm_commutative a : lem_commutative (gbag_pcm' a) =
   fun m1 m2 ->
     assert (gbag_equal (gbag_pcm_op m1 m2) (gbag_pcm_op m2 m1))
 
-#push-options "--split_queries always --z3rlimit 20"
+#push-options "--z3rlimit 20"
 let gbag_pcm_assoc_l a : lem_assoc_l (gbag_pcm' a) =
   fun x y z ->
     match x, y, z with
@@ -253,7 +253,7 @@ fn gbag_create (a:eqtype)
 
 
 
-#set-options "--split_queries always --debug SMTFail"
+#set-options "--debug SMTFail"
 
 
 ghost

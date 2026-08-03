@@ -202,7 +202,6 @@ let defaults = [
   ("debug"                                     , List []);
   ("defensive"                                 , String "no");
   ("dep"                                       , Unset);
-  ("detail_errors"                             , Bool false);
   ("disallow_unification_guards"               , Bool false);
   ("dump_ast"                                  , Bool false);
   ("dump_module"                               , List []);
@@ -288,7 +287,6 @@ let defaults = [
   ("smtencoding.l_arith_repr"                  , String "boxwrap");
   ("smtencoding.nl_arith_repr"                 , String "boxwrap");
   ("smt"                                       , Unset);
-  ("split_queries"                             , String "on_failure");
   ("stats"                                     , Bool false);
   ("tactic_raw_binders"                        , Bool false);
   ("tactics_failhard"                          , Bool false);
@@ -417,7 +415,6 @@ let set_verification_options o =
     "max_fuel";
     "initial_ifuel";
     "max_ifuel";
-    "detail_errors";
     "no_smt";
     "quake";
     "retry";
@@ -458,7 +455,6 @@ let get_codegen                 ()      = lookup_opt "codegen"                  
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
-let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_dump_ast                ()      = lookup_opt "dump_ast"                 as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
@@ -531,7 +527,6 @@ let get_smt                     ()      = lookup_opt "smt"                      
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
-let get_split_queries           ()      = lookup_opt "split_queries"            as_string
 let get_stats                   ()      = lookup_opt "stats"                    as_bool
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
@@ -900,11 +895,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
        ]);
 
   ( noshort,
-    "detail_errors",
-    Const (Bool true),
-    text "Emit a detailed error report by asking the SMT solver many queries; will take longer");
-
-  ( noshort,
     "dump_ast",
     Const (Bool true),
     text "Dump the surface AST of the given file.");
@@ -1251,8 +1241,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
       text "--quake N is an alias for --quake N/N";
       text "--quake N/k is an alias for --quake N/N/k";
     ] ^^
-    text "Using --quake disables --retry. When quake testing, queries are not splitted for error reporting unless \
-          '--split_queries always' is given. Queries from the smt_sync tactic are not quake-tested.");
+    text "Using --quake disables --retry. Queries from the smt_sync tactic are not quake-tested.");
 
   ( noshort,
     "query_cache",
@@ -1339,17 +1328,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
       text "if 'native', use '+, -, -'";
     ] ^^
     text "(default 'boxwrap')");
-
-  ( noshort,
-    "split_queries",
-    EnumStr ["no"; "on_failure"; "always"],
-    text "Split SMT verification conditions into several separate queries, one per goal. \
-          Helps with localizing errors." ^^
-    bulleted [
-      text "Use 'no' to disable (this may reduce the quality of error messages).";
-      text "Use 'on_failure' to split queries and retry when discharging fails (the default)";
-      text "Use 'yes' to always split.";
-    ]);
 
   ( noshort,
     "stats",
@@ -1669,7 +1647,6 @@ let settable = function
     | "debug_all"
     | "debug_all_modules"
     | "defensive"
-    | "detail_errors"
     | "eager_subtyping"
     | "error_contexts"
     | "hide_uvar_nums"
@@ -1715,7 +1692,6 @@ let settable = function
     | "smtencoding.elim_box"
     | "smtencoding.l_arith_repr"
     | "smtencoding.nl_arith_repr"
-    | "split_queries"
     | "stats"
     | "tactic_raw_binders"
     | "tactics_failhard"
@@ -1992,7 +1968,6 @@ let defensive                    () = get_defensive () <> "no"
 let defensive_error              () = get_defensive () = "error"
 let defensive_abort              () = get_defensive () = "abort"
 let dep                          () = get_dep                         ()
-let detail_errors                () = get_detail_errors               ()
 let any_dump_module              () = Cons? (get_dump_module())
 let dump_ast                     () = get_dump_ast()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
@@ -2099,14 +2074,6 @@ let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwra
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 
-let parse_split_queries (s:string) : option split_queries_t =
-  match s with
-  | "no" -> Some No
-  | "on_failure" -> Some OnFailure
-  | "always" -> Some Always
-  | _ -> None
-
-let split_queries                () = get_split_queries () |> parse_split_queries |> Some?.v 
 let stats                        () = get_stats ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
@@ -2400,7 +2367,6 @@ let get_vconfig () =
     max_fuel                                  = get_max_fuel ();
     initial_ifuel                             = get_initial_ifuel ();
     max_ifuel                                 = get_max_ifuel ();
-    detail_errors                             = get_detail_errors ();
     no_smt                                    = get_no_smt ();
     quake_lo                                  = get_quake_lo ();
     quake_hi                                  = get_quake_hi ();
@@ -2434,7 +2400,6 @@ let set_vconfig (vcfg:vconfig) : ML unit =
   set_option "max_fuel"                                  (Int vcfg.max_fuel);
   set_option "initial_ifuel"                             (Int vcfg.initial_ifuel);
   set_option "max_ifuel"                                 (Int vcfg.max_ifuel);
-  set_option "detail_errors"                             (Bool vcfg.detail_errors);
   set_option "no_smt"                                    (Bool vcfg.no_smt);
   set_option "quake_lo"                                  (Int vcfg.quake_lo);
   set_option "quake_hi"                                  (Int vcfg.quake_hi);

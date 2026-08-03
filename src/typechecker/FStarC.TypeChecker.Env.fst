@@ -2116,12 +2116,6 @@ let fvar_of_nonqual_lid env lid : ML _ =
     let qn = lookup_qname env lid in
     fvar lid None
 
-let split_smt_query (e:env) (q:term) 
-  : ML (option (list (env & term)))
-  = match e.solver.spinoff_strictly_positive_goals with
-    | None -> None
-    | Some p -> Some (p e q)
-
 (* We hash as much as needed for the query cache. *)
 instance hashable_env : hashable env = {
   hash = (fun e ->

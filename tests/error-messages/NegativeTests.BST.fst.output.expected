@@ -8,10 +8,6 @@
           None? FStar.Pervasives.Native.None == (1 = 0) }
     got type FStar.Pervasives.Native.option (tree 2)
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC =
-      None? FStar.Pervasives.Native.None == false /\
-      None? FStar.Pervasives.Native.None == false
   - See also NegativeTests.BST.fst(27,36-27,58)
 
 * Info at NegativeTests.BST.fst(40,61-40,65):
@@ -24,10 +20,6 @@
           None? (FStar.Pervasives.Native.Some t) == (l = l) }
     got type FStar.Pervasives.Native.option (tree (l + 1))
   - The SMT solver could not prove the query.
-  - Env = (l : Prims.int) (t : NegativeTests.BST.tree l)
-  - VC =
-      l <= l /\ l <= l + 1 /\ None? FStar.Pervasives.Native.None == (l = l + 1) /\
-      None? (FStar.Pervasives.Native.Some t) == true
   - See also NegativeTests.BST.fst(27,36-27,58)
 
 * Info at NegativeTests.BST.fst(43,78-43,87):
@@ -40,12 +32,5 @@
           None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }
     got type FStar.Pervasives.Native.option (tree (l + 1))
   - The SMT solver could not prove the query.
-  - Env =
-      (l : Prims.int) (t1 : NegativeTests.BST.tree l)
-      (t2 : NegativeTests.BST.tree (l + 1))
-  - VC =
-      l <= l + 1 /\ l + 1 <= l + 1 /\
-      None? (FStar.Pervasives.Native.Some t2) == true /\
-      None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l)
   - See also NegativeTests.BST.fst(27,36-27,58)
 

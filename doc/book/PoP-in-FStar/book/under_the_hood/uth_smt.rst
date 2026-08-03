@@ -1574,8 +1574,8 @@ using it at the moment with Z3 logs generated from F*.
 
 .. _Splitting_queries:
 
-Splitting Queries
-.................
+One Query per Proof Obligation
+..............................
 
 In the next two sections, we look at a small example that Alex Rozanov
 reported, shown below. It exhibits similar proof problems to our
@@ -1591,45 +1591,24 @@ The hypothesis is that ``unbounded f`` has exactly the same problem as
 the our unbounded hypothesis on factorial---the ``forall/exists``
 quantifier contains a matching loop. 
 
-This proof of ``find_above_for_g`` succeeds, but it takes a while and
-F* reports:
+This proof of ``find_above_for_g`` succeeds, but it takes a while.
 
-.. code-block:: none
+F* collects all the proof obligations in a top-level F* definition and
+presents them to Z3 as a *separate* query per obligation: the shared
+hypotheses are asserted once, and each leaf goal gets its own
+``(check-sat)``. This means that the proof search for one obligation
+cannot interfere with the proof search for another, and that the
+current rlimit setting applies to each obligation separately.
 
-    (Warning 349) The verification condition succeeded after splitting
-    it to localize potential errors, although the original non-split
-    verification condition failed. If you want to rely on splitting
-    queries for verifying your program please use the '--split_queries
-    always' option rather than relying on it implicitly.
+It also means that an obligation is proven only from the hypotheses
+that are in scope for it---the ground terms appearing in a *sibling*
+obligation are no longer part of Z3's congruence closure. So an
+intermediate ``assert`` only helps if it is stated in the vocabulary of
+the goal it is meant to feed.
 
-By default, F* collects all the proof obligations in a top-level F*
-definition and presents it to Z3 in a single query with several
-conjuncts. Usually, this allows Z3 to efficiently solve all the
-conjuncts together, e.g., the proof search for one conjunct may yield
-clauses useful to complete the search for other clauses. However,
-sometimes, the converse can be true: the proof search for separate
-conjuncts can interfere with each other negatively, leading to the
-entire proof to fail even when every conjunct may be provable if tried
-separately. Additionally, when F* calls Z3, it applies the current
-rlimit setting for every query. If a query contains N conjuncts,
-splitting the conjuncts into N separate conjuncts is effectively a
-rlimit multiplier, since each query can separately consume resources
-as much as the current rlimit.
-
-If the single query with several conjunct fails without Z3 reporting
-any further information that F* can reconstruct into a localized error
-message, F* splits the query into its conjuncts and tries each of
-them in isolation, so as to isolate the failing conjunct if
-any. However, sometimes, when tried in this mode, the proof of all
-conjuncts can succeed.
-
-One way to respond to Warning 349 is to follow what it says and enable
-``--split_queries always`` explicitly, at least for the program fragment in
-question. This can sometimes stabilize a previously unstable
-proof. However, it may also end up deferring an underlying
-proof-performance problem. Besides, even putting stability aside,
-splitting queries into their conjuncts results in somewhat slower
-proofs.
+Even so, the proof above is slow, because it relies on Z3 instantiating
+a quantifier that contains a matching loop. Splitting the query does
+not fix that; the next section shows how to.
 
 .. _UTH_opaque_to_smt:
 

@@ -35,7 +35,7 @@ module T = FStar.Stubs.Tactics.V2.Builtins
 module TD = FStar.Tactics.V2.Derived
 module TM = FStar.Tactics.MApply
 
-#set-options "--fuel 0 --ifuel 0 --split_queries no"
+#set-options "--fuel 0 --ifuel 0"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection'"
 
 (* TODO: explain why exactly this is needed? It leads to failures in
@@ -240,7 +240,7 @@ let mod_add_small n1 n2 k =
 
 // This proof is pretty stable with the calc proof, but it can fail
 // ~1% of the times, so add a retry.
-#push-options "--split_queries no --z3rlimit 20 --retry 5"
+#push-options "--z3rlimit 20 --retry 5"
 let add_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a + v b) % pow2 128 = v r)) =

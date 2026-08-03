@@ -87,7 +87,7 @@ let rec lower_bounded_and_count (#a: eqtype) {| _ : ordered a |} (l: list a) (m 
   | t::q -> if (t = x) then () else lower_bounded_and_count q m x
 
 // Two sorted lists with the same elements (with the same multiplicities) are the same
-#push-options "--split_queries always"
+#push-options ""
 #push-options "--z3rlimit 30"
 let rec injectivity_count_sorted (#t: eqtype) {| _ : ordered t |} (a b: list t):
   Lemma (requires (forall y. count a y = count b y) /\ sorted a /\ sorted b)
@@ -108,7 +108,9 @@ let rec injectivity_count_sorted (#t: eqtype) {| _ : ordered t |} (a b: list t):
     antisymmetry ta tb;
     injectivity_count_sorted #t qa qb
     )
-  | _ -> ()
+  | [], tb::_ -> eliminate forall y. count a y = count b y with tb
+  | ta::_, [] -> eliminate forall y. count a y = count b y with ta
+  | [], [] -> ()
 #pop-options
 #pop-options
 

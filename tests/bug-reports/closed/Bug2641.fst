@@ -124,7 +124,7 @@ instance compile_option (t:Type) {| d1:compilable t |} : compilable (option t) =
     | None -> None)
 }
 
-[@@ expect_failure [19]]
+[@@ expect_failure [19; 19]]
 let test_assert_false
   (t1:Type)
   (t2:Type)
@@ -147,7 +147,7 @@ let compile_option2 : (option int -> option int) =
         | None -> None
         | Some r -> Some r
 
-[@@ expect_failure [19]]
+[@@ expect_failure [19; 19]]
 let test_assert_false2
   (f:(unit -> free (option int))) :
   Lemma False =

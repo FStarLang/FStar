@@ -1,19 +1,6 @@
 * Info at QuickTestNBE.fst(124,2-127,34):
   - Expected failure:
   - The SMT solver could not prove the query.
-  - Env = (va_s0 : QuickTestNBE.vale_state)
-  - VC =
-      forall (qc: QuickTestNBE.quickCode Prims.unit).
-        Prims.has_type qc (QuickTestNBE.quickCode Prims.unit) ==>
-        QuickTestNBE.va_qcode_Test2 == qc ==>
-        (forall (s0: QuickTestNBE.vale_state).
-            Prims.has_type s0 QuickTestNBE.vale_state ==>
-            va_s0 == s0 ==>
-            (forall (ok: Prims.bool).
-                FStar.Range.labeled QuickTestNBE(1,2-3,4)
-                  ""
-                  (QuickTestNBE.f 4 - QuickTestNBE.f 4 == 0 /\
-                    QuickTestNBE.f 4 == 0)))
   - Also see: QuickTestNBE(1,2-3,4)
   - Other related locations: QuickTestNBE.fst(117,36-117,38)
 

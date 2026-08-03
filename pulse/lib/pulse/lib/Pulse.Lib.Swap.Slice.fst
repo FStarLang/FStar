@@ -99,7 +99,7 @@ fn slice_swap_aux (#t: Type0) (a: S.slice t)
   };
 }
 
-#push-options "--fuel 0 --ifuel 0 --split_queries no"
+#push-options "--fuel 0 --ifuel 0"
 inline_for_extraction noextract [@@noextract_to "krml"]
 fn slice_swap0
   (#t: Type0)
