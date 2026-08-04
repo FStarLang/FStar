@@ -178,7 +178,7 @@ let dep_graph e = DsEnv.dep_graph e.dsenv
 //Used in fly_deps mode for loading a module on the fly and then
 //restoring the local environment to what it was
 let with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env) =
-  let env = { e with gamma=[]; gamma_sig=[]; proof_ns=[]; iface_todo=[]; iface_lids=None; iface_val_lids=empty() } in
+  let env = { e with gamma=[]; gamma_sig=[]; proof_ns=[]; iface_todo=[]; iface_hidden=empty (); iface_lids=None; iface_val_lids=empty() } in
   env.solver.refresh None;
   let res, env =
     FStarC.Options.with_restored_cmd_line_options (fun _ -> 
@@ -196,6 +196,7 @@ let with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env) =
                 gamma_sig=e.gamma_sig;
                 proof_ns=e.proof_ns;
                 iface_todo=e.iface_todo;
+                iface_hidden=e.iface_hidden;
                 iface_lids=e.iface_lids;
                 iface_val_lids=e.iface_val_lids}
     )
@@ -215,11 +216,22 @@ let record_definition_for (e:env) (l:lident) : ML env =
 let missing_definition_list (e:env) : ML (list lident) =
   elems e.missing_decl
 
-let set_iface_todo (e:env) (ses:list sigelt) : env =
-  { e with iface_todo = ses }
+let set_iface_todo (e:env) (ses:list sigelt) : ML env =
+  { e with iface_todo = ses;
+           iface_hidden = ses |> List.collect lids_of_sigelt |> from_list }
 
 let iface_todo (e:env) : list sigelt =
   e.iface_todo
+
+let consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : ML env =
+  let hidden =
+    consumed |> List.collect lids_of_sigelt
+             |> List.fold_left (fun s l -> remove l s) e.iface_hidden
+  in
+  { e with iface_todo = remaining; iface_hidden = hidden }
+
+let is_iface_hidden (e:env) (l:lident) : ML bool =
+  Cons? e.iface_todo && mem l e.iface_hidden
 
 let set_iface_lids (e:env) (ls:list lident) (vals:list lident) : ML env =
   { e with iface_lids = Some (from_list ls); iface_val_lids = from_list vals }
@@ -323,6 +335,7 @@ let initial_env deps
 
     missing_decl = empty();
     iface_todo = [];
+    iface_hidden = empty();
     iface_lids = None;
     iface_val_lids = empty();
   }
@@ -538,6 +551,12 @@ let lookup_qname env (lid:lident) : ML (qninfo) =
   in
   if Some? found
   then found
+  else if is_iface_hidden env lid
+  then
+    (* [lid] is declared further down the interface of the module we are
+       implementing; it only comes into scope once the implementation has
+       discharged the declarations that precede it. *)
+    None
   else match find_in_sigtab env lid with
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
@@ -550,7 +569,14 @@ let lookup_sigelt (env:env) (lid:lid) : ML (option sigelt) =
 
 let lookup_attr (env:env) (attr:string) : ML (list sigelt) =
     match SMap.try_find (attrtab env) attr with
-    | Some ses -> ses
+    | Some ses ->
+      if Nil? env.iface_todo
+      then ses
+      else
+        (* Do not offer the interface declarations we have not reached yet, e.g.
+           as typeclass instances. *)
+        ses |> List.filter (fun se ->
+                 not (U.lids_of_sigelt se |> BU.for_some (fun l -> mem l env.iface_hidden)))
     | None -> []
 
 let add_se_to_attrtab env se : ML _ =
@@ -785,14 +811,28 @@ let try_lookup_and_inst_lid env us l : ML _ =
       let r = Range.set_use_range r (Range.use_range use_range) in
       Some (Subst.set_use_range use_range t, r)
 
-let name_not_found (#a:Type) (l:lid) : ML (a) =
-  raise_error l Errors.Fatal_NameNotFound
-    (Format.fmt1 "Name \"%s\" not found" (string_of_lid l))
+let name_not_found (#a:Type) (env:env) (l:lid) : ML (a) =
+  let open FStarC.Pprint in
+  let open FStarC.Errors.Msg in
+  if is_iface_hidden env l
+  then
+    (* [l] is declared by the interface of the module being implemented, but the
+       implementation has not reached its declaration yet. *)
+    raise_error l Errors.Fatal_NameNotFound [
+      prefix 2 1 (text "Name") (pp l) ^/^ text "is not in scope here.";
+      prefix 2 1 (text "It is declared further down the interface of")
+                 (pp (current_module env))
+        ^/^ text "and only comes into scope once the declarations that precede it \
+                  have been implemented."
+    ]
+  else
+    raise_error l Errors.Fatal_NameNotFound
+      (Format.fmt1 "Name \"%s\" not found" (string_of_lid l))
 
 let lookup_lid env l : ML _ =
     match try_lookup_lid env l with
     | Some v -> v
-    | None -> name_not_found l
+    | None -> name_not_found env l
 
 let lookup_univ env x : ML _ =
     List.find (function
@@ -811,19 +851,19 @@ let lookup_val_decl env lid : ML _ =
   match lookup_qname env lid with
   | Some (Inr ({ sigel = Sig_declare_typ {us=uvs; t} }, None), _) ->
     inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-  | _ -> name_not_found lid
+  | _ -> name_not_found env lid
 
 let lookup_datacon env lid : ML _ =
   match lookup_qname env lid with
   | Some (Inr ({ sigel = Sig_datacon {us=uvs; t} }, None), _) ->
     inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-  | _ -> name_not_found lid
+  | _ -> name_not_found env lid
 
 let lookup_and_inst_datacon env us lid : ML _ =
   match lookup_qname env lid with
   | Some (Inr ({ sigel = Sig_datacon {us=uvs; t} }, None), _) ->
     inst_tscheme_with (uvs, t) us |> snd
-  | _ -> name_not_found lid
+  | _ -> name_not_found env lid
 
 let datacons_of_typ env lid : ML _ =
   match lookup_qname env lid with
@@ -1057,7 +1097,7 @@ let try_lookup_effect_lid env (ftv:lident) : ML (option typ) =
 
 let lookup_effect_lid env (ftv:lident) : ML (typ) =
   match try_lookup_effect_lid env ftv with
-    | None -> name_not_found ftv
+    | None -> name_not_found env ftv
     | Some k -> k
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 : ML _ =
@@ -1267,7 +1307,7 @@ let effect_decl_opt env l : ML _ =
 
 let get_effect_decl env l : ML _ =
   match effect_decl_opt env l with
-    | None -> name_not_found l
+    | None -> name_not_found env l
     | Some md -> fst md
 
 let get_lid_valued_effect_attr env
