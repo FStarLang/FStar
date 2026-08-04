@@ -80,18 +80,6 @@ ghost fn weaken_opened #a (p q: timeless_slprop) #qs
   requires trade q p
   ensures lifetime_opened a (Cons #slprop q qs)
 
-ghost fn sub_borrow' (#a: lifetime) (p q: slprop)
-  requires trade (later p) (later q ** trade (later q) (later p))
-  preserves a
-  requires a >:> p
-  ensures a >:> q
-
-ghost fn sub_borrow (#a: lifetime) (p q: timeless_slprop)
-  requires trade p (q ** trade q p)
-  preserves a
-  requires a >:> p
-  ensures a >:> q
-
 ghost fn open_lifetime (a: lifetime)
   requires a
   ensures lifetime_opened a []
@@ -111,6 +99,18 @@ ghost fn end_use_borrow' (a: lifetime) (p: slprop) (#qs: list slprop)
   requires later p
   ensures lifetime_opened a qs
   ensures a >:> p
+
+ghost fn sub_borrow' (#a: lifetime) (p q: slprop)
+  requires trade (later p) (later q ** trade (later q) (later p))
+  preserves a
+  requires a >:> p
+  ensures a >:> q
+
+ghost fn sub_borrow (#a: lifetime) (p q: timeless_slprop)
+  requires trade p (q ** trade q p)
+  preserves a
+  requires a >:> p
+  ensures a >:> q
 
 ghost fn use_borrow (a: lifetime) (p: timeless_slprop) (#q: list slprop)
   requires lifetime_opened a q

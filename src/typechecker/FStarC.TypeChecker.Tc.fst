@@ -1208,6 +1208,12 @@ interleaving implemented:
     error for [defs] to be declared *later* in the interface, since the
     definitions must appear in the order of their declarations.
 
+This is what rules out circular proofs: an interface definition is justified by
+the `val`s that precede it, so it must not come into scope until they have all
+been implemented, or it could be used to discharge one of them. Declarations
+introduced by a language extension (a Pulse `fn`, say) are no different from
+plain `val`s in this respect.
+
 Returns (copied, matched, remaining). *)
 let split_iface_todo (se:sigelt) (defs:list lident) (todo:list sigelt)
   : ML (list sigelt & list sigelt & list sigelt) =
@@ -1219,21 +1225,16 @@ let split_iface_todo (se:sigelt) (defs:list lident) (todo:list sigelt)
     | hd :: tl when is_iface_val hd && defines hd -> take_mutuals (hd::acc) tl
     | _ -> List.rev acc, todo
   in
-  (* [skipped] holds the declarations we walked past without matching; they stay
-     in the to-do list, ahead of what remains. Only declarations produced by a
-     language extension (e.g. a Pulse `fn`) may be skipped: plain `val`s must be
-     implemented in the order they are declared. *)
-  let rec go copied skipped todo : ML (list sigelt & list sigelt & list sigelt) =
+  let rec go copied todo
+    : ML (list sigelt & list sigelt & list sigelt) =
     match todo with
-    | [] -> List.rev copied, [], List.rev skipped
+    | [] -> List.rev copied, [], []
     | hd :: tl ->
       if not (is_iface_val hd)
-      then go (hd::copied) skipped tl
+      then go (hd::copied) tl
       else if defines hd
       then let mutuals, rest = take_mutuals [] tl in
-           List.rev copied, hd::mutuals, List.rev skipped @ rest
-      else if hd.sigmeta.sigmeta_extension_decl
-      then go copied (hd::skipped) tl
+           List.rev copied, hd::mutuals, rest
       else (
         (* [hd] is not implemented here. Make sure we are not implementing
            something the interface only declares later on. *)
@@ -1246,10 +1247,10 @@ let split_iface_todo (se:sigelt) (defs:list lident) (todo:list sigelt)
                (pp (List.hd (U.lids_of_sigelt hd)) ^/^ text "to precede" ^/^ pp l)
            ]
          | None -> ());
-        List.rev copied, [], List.rev skipped @ todo
+        List.rev copied, [], todo
       )
   in
-  go [] [] todo
+  go [] todo
 
 (* Discharge the head of the interface to-do list against the implementation
 sigelt [se], which is about to be checked.

@@ -71,14 +71,14 @@ fn ( ! ) u#a (#a:Type u#a) (r:ref a) (#n:erased a) (#p:perm)
   returns  x : erased a
   ensures  rewrites_to x n
 
-ghost
-fn write u#a (#a:Type u#a) (r:ref a) (x:erased a) (#n:erased a)
-  requires r |-> n
-  ensures  r |-> x
-
 (* alias for write *)
 ghost
 fn ( := ) u#a (#a:Type u#a) (r:ref a) (x:erased a) (#n:erased a)
+  requires r |-> n
+  ensures  r |-> x
+
+ghost
+fn write u#a (#a:Type u#a) (r:ref a) (x:erased a) (#n:erased a)
   requires r |-> n
   ensures  r |-> x
 

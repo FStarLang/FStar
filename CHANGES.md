@@ -189,6 +189,8 @@ Guidelines for the changelog:
     that `A.fst` has not implemented yet. This ordering discipline is what rules
     out circular proofs, where `A.fst` would discharge a `val` of `A.fsti` using
     a later definition of `A.fsti` that is itself justified by that very `val`.
+    Declarations introduced by a language extension (a Pulse `fn`, say) are no
+    different from plain `val`s in this respect.
 
     Consequences for existing code:
     - **`open`, `include` and module abbreviations in a `.fsti` no longer scope
