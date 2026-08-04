@@ -224,10 +224,15 @@ let iface_todo (e:env) : list sigelt =
   e.iface_todo
 
 let consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : ML env =
-  let hidden =
-    consumed |> List.collect lids_of_sigelt
-             |> List.fold_left (fun s l -> remove l s) e.iface_hidden
-  in
+  let lids = consumed |> List.collect lids_of_sigelt in
+  (* Revealing a declaration does not go through [add_sigelt] (it is already in
+     the sigtab), so flush by hand the memo tables that [add_sigelt] flushes:
+     they may hold information computed while the name was still hidden. *)
+  lids |> List.iter (fun l ->
+    let s = string_of_lid l in
+    SMap.remove e.fv_delta_depths s;
+    SMap.remove e.strict_args_tab s);
+  let hidden = lids |> List.fold_left (fun s l -> remove l s) e.iface_hidden in
   { e with iface_todo = remaining; iface_hidden = hidden }
 
 let is_iface_hidden (e:env) (l:lident) : ML bool =
@@ -567,20 +572,26 @@ let lookup_sigelt (env:env) (lid:lid) : ML (option sigelt) =
     | Some (Inl _, rng) -> None
     | Some (Inr (se, us), rng) -> Some se
 
-let lookup_attr (env:env) (attr:string) : ML (list sigelt) =
+(* The raw contents of the attribute table. Used when *updating* the table:
+   filtering there would permanently drop the interface entries that happen to
+   be hidden at that moment, and they would not come back once revealed. *)
+let lookup_attr_all (env:env) (attr:string) : ML (list sigelt) =
     match SMap.try_find (attrtab env) attr with
-    | Some ses ->
-      if Nil? env.iface_todo
-      then ses
-      else
-        (* Do not offer the interface declarations we have not reached yet, e.g.
-           as typeclass instances. *)
-        ses |> List.filter (fun se ->
-                 not (U.lids_of_sigelt se |> BU.for_some (fun l -> mem l env.iface_hidden)))
+    | Some ses -> ses
     | None -> []
 
+let lookup_attr (env:env) (attr:string) : ML (list sigelt) =
+    let ses = lookup_attr_all env attr in
+    if Nil? env.iface_todo
+    then ses
+    else
+      (* Do not offer the interface declarations we have not reached yet, e.g.
+         as typeclass instances. *)
+      ses |> List.filter (fun se ->
+               not (U.lids_of_sigelt se |> BU.for_some (fun l -> mem l env.iface_hidden)))
+
 let add_se_to_attrtab env se : ML _ =
-    let add_one env se attr = SMap.add (attrtab env) attr (se :: lookup_attr env attr) in
+    let add_one env se attr = SMap.add (attrtab env) attr (se :: lookup_attr_all env attr) in
     List.iter (fun attr ->
                 let hd, _ = U.head_and_args_full attr in
                 match (Subst.compress hd).n with
