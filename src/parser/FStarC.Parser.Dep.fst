@@ -591,13 +591,15 @@ let flat_modules_for_dir (cwd:string) (root:string)
     else module_candidate_of_file [] (if root = cwd then entry else entry_path) entry)
 
 (* Enumerate the (long name, file path) candidates found under a single include
-   directory [root], descending into subdirectories and turning each directory
-   name into a namespace component: a file at [X/Y/Z.fst] (relative to [root]) is
-   mapped to the long name [X.Y.Z]. Directories whose name starts with a '.'
-   (e.g. [.git]) are skipped, since they can never be a valid namespace
-   component. [cwd] is the normalized current directory: files under it are
-   reported by their bare path relative to [cwd]. *)
-let hierarchical_modules_for_dir (cwd:string) (root:string)
+  directory [root], descending into subdirectories and turning each directory
+  name into a namespace component: a file at [X/Y/Z.fst] (relative to [root]) is
+  mapped to the long name [X.Y.Z]. Directories whose name starts with a '.'
+  (e.g. [.git]) are skipped, since they can never be a valid namespace
+  component. We also never descend into a subdirectory that is itself an
+  include root, so that each include root owns its own traversal. [cwd] is the
+  normalized current directory: files under it are reported by their bare path
+  relative to [cwd]. *)
+let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:string)
   : ML (list (string & string)) =
   (* [ns_prefix] is the list of namespace components corresponding to the
      subdirectories walked so far (in order); [rel] is the path, relative to
@@ -613,6 +615,10 @@ let hierarchical_modules_for_dir (cwd:string) (root:string)
         (* Never descend into hidden directories (they cannot be namespace
            components). *)
         if String.length entry > 0 && String.get entry 0 = '.'
+        then []
+        (* If this directory is itself an include root, let that root's own
+           traversal cover it. *)
+        else if List.contains entry_path include_roots
         then []
         else walk (ns_prefix @ [entry]) rel'
       else module_candidate_of_file ns_prefix (if root = cwd then rel' else entry_path) entry)
@@ -665,7 +671,7 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
   let cwd = Filepath.normalize_file_path (getcwd ()) in
   include_directories |> List.concatMap (fun d ->
     if hierarchical then
-      let candidates = hierarchical_modules_for_dir cwd d in
+      let candidates = hierarchical_modules_for_dir cwd include_directories d in
       check_unique_module_names_for_dir d candidates;
       candidates
     else
