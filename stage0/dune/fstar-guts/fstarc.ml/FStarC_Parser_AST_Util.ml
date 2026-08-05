@@ -303,16 +303,8 @@ let lidents_of_tycon (tc : FStarC_Parser_AST.tycon) :
         FStarC_List.op_At uu___3 uu___4 in
       FStarC_List.op_At uu___1 uu___2
 let lidents_of_lift (l : FStarC_Parser_AST.lift) :
-  FStarC_Ident.lident Prims.list=
-  let uu___ =
-    match l.FStarC_Parser_AST.lift_op with
-    | FStarC_Parser_AST.NonReifiableLift t -> lidents_of_term t
-    | FStarC_Parser_AST.ReifiableLift (t1, t2) ->
-        let uu___1 = lidents_of_term t1 in
-        let uu___2 = lidents_of_term t2 in FStarC_List.op_At uu___1 uu___2
-    | FStarC_Parser_AST.LiftForFree t -> lidents_of_term t in
-  FStarC_List.op_At [l.FStarC_Parser_AST.msource; l.FStarC_Parser_AST.mdest]
-    uu___
+  FStarC_Ident.lid Prims.list=
+  [l.FStarC_Parser_AST.msource; l.FStarC_Parser_AST.mdest]
 let rec lidents_of_decl (d : FStarC_Parser_AST.decl) :
   FStarC_Ident.lident Prims.list=
   match d.FStarC_Parser_AST.d with
@@ -336,16 +328,7 @@ let rec lidents_of_decl (d : FStarC_Parser_AST.decl) :
   | FStarC_Parser_AST.Exception (uu___, FStar_Pervasives_Native.Some t) ->
       lidents_of_term t
   | FStarC_Parser_AST.NewEffect ed -> lidents_of_effect_decl ed
-  | FStarC_Parser_AST.LayeredEffect ed -> lidents_of_effect_decl ed
   | FStarC_Parser_AST.SubEffect lift -> lidents_of_lift lift
-  | FStarC_Parser_AST.Polymonadic_bind (l0, l1, l2, t) ->
-      let uu___ =
-        let uu___1 = let uu___2 = lidents_of_term t in l2 :: uu___2 in l1 ::
-          uu___1 in
-      l0 :: uu___
-  | FStarC_Parser_AST.Polymonadic_subcomp (l0, l1, t) ->
-      let uu___ = let uu___1 = lidents_of_term t in l1 :: uu___1 in l0 ::
-        uu___
   | FStarC_Parser_AST.Pragma uu___ -> []
   | FStarC_Parser_AST.Assume (uu___, t) -> lidents_of_term t
   | FStarC_Parser_AST.Splice (uu___, uu___1, t) -> lidents_of_term t
@@ -354,12 +337,11 @@ let rec lidents_of_decl (d : FStarC_Parser_AST.decl) :
 and lidents_of_effect_decl (ed : FStarC_Parser_AST.effect_decl) :
   FStarC_Ident.lident Prims.list=
   match ed with
-  | FStarC_Parser_AST.DefineEffect (uu___, bs, t, ds) ->
+  | FStarC_Parser_AST.DeclareEffect (uu___, bs) ->
+      concat_map () lidents_of_binder bs
+  | FStarC_Parser_AST.DefineEffect (uu___, bs, ds) ->
       let uu___1 = concat_map () lidents_of_binder bs in
-      let uu___2 =
-        let uu___3 = lidents_of_term t in
-        let uu___4 = concat_map () lidents_of_decl ds in
-        FStarC_List.op_At uu___3 uu___4 in
+      let uu___2 = concat_map () lidents_of_decl ds in
       FStarC_List.op_At uu___1 uu___2
   | FStarC_Parser_AST.RedefineEffect (uu___, bs, t) ->
       let uu___1 = concat_map () lidents_of_binder bs in

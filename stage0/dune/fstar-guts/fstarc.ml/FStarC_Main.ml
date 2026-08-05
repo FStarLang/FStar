@@ -342,18 +342,19 @@ let go_normal (uu___ : unit) : unit=
                             tcr.FStarC_CheckedFiles.checked_module in
                         FStarC_Format.print1 "Checked module: %s\n" uu___11);
                        (let uu___12 =
+                          let uu___13 =
+                            (tcr.FStarC_CheckedFiles.smt_encoding).FStarC_SMTEncoding_Env.me_decls
+                              () in
                           FStarC_Class_Show.show
                             (FStarC_Class_Show.show_list
                                FStarC_SMTEncoding_Term.showable_decls_elt)
-                            (FStar_Pervasives_Native.fst
-                               tcr.FStarC_CheckedFiles.smt_decls) in
+                            uu___13 in
                         FStarC_Format.print1 "SMT decls: %s\n" uu___12);
                        (let uu___12 =
                           FStarC_Class_Show.show
                             (FStarC_Class_Show.show_list
                                FStarC_SMTEncoding_Env.showable_fvar_binding)
-                            (FStar_Pervasives_Native.snd
-                               tcr.FStarC_CheckedFiles.smt_decls) in
+                            (tcr.FStarC_CheckedFiles.smt_encoding).FStarC_SMTEncoding_Env.me_fvbs in
                         FStarC_Format.print1 "SMT fvars: %s\n" uu___12)))
              | FStarC_Getopt.Success when
                  let uu___8 = FStarC_Options.read_krml_file () in

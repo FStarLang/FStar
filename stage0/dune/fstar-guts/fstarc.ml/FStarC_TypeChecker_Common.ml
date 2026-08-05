@@ -711,14 +711,15 @@ let lcomp_set_flags (lc : lcomp) (fs : FStarC_Syntax_Syntax.cflag Prims.list)
               (ct.FStarC_Syntax_Syntax.effect_name);
             FStarC_Syntax_Syntax.result_typ =
               (ct.FStarC_Syntax_Syntax.result_typ);
-            FStarC_Syntax_Syntax.effect_args =
-              (ct.FStarC_Syntax_Syntax.effect_args);
+            FStarC_Syntax_Syntax.comp_pre =
+              (ct.FStarC_Syntax_Syntax.comp_pre);
+            FStarC_Syntax_Syntax.comp_post =
+              (ct.FStarC_Syntax_Syntax.comp_post);
             FStarC_Syntax_Syntax.flags = fs
           } in
         {
           FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Comp ct1);
           FStarC_Syntax_Syntax.pos = (c.FStarC_Syntax_Syntax.pos);
-          FStarC_Syntax_Syntax.vars = (c.FStarC_Syntax_Syntax.vars);
           FStarC_Syntax_Syntax.hash_code = (c.FStarC_Syntax_Syntax.hash_code)
         } in
   mk_lcomp lc.eff_name lc.res_typ fs
@@ -733,7 +734,6 @@ let is_total_lcomp (c : lcomp) : Prims.bool=
       (fun uu___ ->
          match uu___ with
          | FStarC_Syntax_Syntax.TOTAL -> true
-         | FStarC_Syntax_Syntax.RETURN -> true
          | uu___1 -> false) c.cflags
 let is_tot_or_gtot_lcomp (c : lcomp) : Prims.bool=
   if
@@ -746,15 +746,8 @@ let is_tot_or_gtot_lcomp (c : lcomp) : Prims.bool=
       (fun uu___ ->
          match uu___ with
          | FStarC_Syntax_Syntax.TOTAL -> true
-         | FStarC_Syntax_Syntax.RETURN -> true
          | uu___1 -> false) c.cflags
-let is_lcomp_partial_return (c : lcomp) : Prims.bool=
-  FStarC_Util.for_some
-    (fun uu___ ->
-       match uu___ with
-       | FStarC_Syntax_Syntax.RETURN -> true
-       | FStarC_Syntax_Syntax.PARTIAL_RETURN -> true
-       | uu___1 -> false) c.cflags
+let is_lcomp_partial_return (c : lcomp) : Prims.bool= false
 let is_pure_lcomp (lc : lcomp) : Prims.bool=
   let uu___ =
     let uu___1 = is_total_lcomp lc in
@@ -791,8 +784,7 @@ let lcomp_of_comp_guard (c0 : FStarC_Syntax_Syntax.comp) (g : guard_t) :
     | FStarC_Syntax_Syntax.Total uu___1 ->
         (FStarC_Parser_Const.effect_Tot_lid, [FStarC_Syntax_Syntax.TOTAL])
     | FStarC_Syntax_Syntax.GTotal uu___1 ->
-        (FStarC_Parser_Const.effect_GTot_lid,
-          [FStarC_Syntax_Syntax.SOMETRIVIAL])
+        (FStarC_Parser_Const.effect_GTot_lid, [])
     | FStarC_Syntax_Syntax.Comp c ->
         ((c.FStarC_Syntax_Syntax.effect_name),
           (c.FStarC_Syntax_Syntax.flags)) in

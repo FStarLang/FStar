@@ -262,53 +262,51 @@ let rec traverse
         (match uu___2 with
          | ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
               FStarC_Syntax_Syntax.pos = uu___3;
-              FStarC_Syntax_Syntax.vars = uu___4;
-              FStarC_Syntax_Syntax.hash_code = uu___5;_},
-            (p, uu___6)::(q, uu___7)::[]) when
+              FStarC_Syntax_Syntax.hash_code = uu___4;_},
+            (p, uu___5)::(q, uu___6)::[]) when
              FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.imp_lid ->
              let x =
-               let uu___8 = FStarC_Syntax_Util.mk_squash p in
+               let uu___7 = FStarC_Syntax_Util.mk_squash p in
                FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-                 uu___8 in
+                 uu___7 in
              let r1 = traverse f (flip pol1) e p in
              let r2 = traverse f pol1 (FStarC_TypeChecker_Env.push_bv e x) q in
              comb2
                (fun l r3 ->
-                  let uu___8 = FStarC_Syntax_Util.mk_imp l r3 in
-                  uu___8.FStarC_Syntax_Syntax.n) r1 r2
+                  let uu___7 = FStarC_Syntax_Util.mk_imp l r3 in
+                  uu___7.FStarC_Syntax_Syntax.n) r1 r2
          | ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
               FStarC_Syntax_Syntax.pos = uu___3;
-              FStarC_Syntax_Syntax.vars = uu___4;
-              FStarC_Syntax_Syntax.hash_code = uu___5;_},
-            (p, uu___6)::(q, uu___7)::[]) when
+              FStarC_Syntax_Syntax.hash_code = uu___4;_},
+            (p, uu___5)::(q, uu___6)::[]) when
              FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.iff_lid ->
              let xp =
-               let uu___8 = FStarC_Syntax_Util.mk_squash p in
+               let uu___7 = FStarC_Syntax_Util.mk_squash p in
                FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-                 uu___8 in
+                 uu___7 in
              let xq =
-               let uu___8 = FStarC_Syntax_Util.mk_squash q in
+               let uu___7 = FStarC_Syntax_Util.mk_squash q in
                FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-                 uu___8 in
+                 uu___7 in
              let r1 = traverse f Both (FStarC_TypeChecker_Env.push_bv e xq) p in
              let r2 = traverse f Both (FStarC_TypeChecker_Env.push_bv e xp) q in
              (match (r1, r2) with
-              | (Unchanged uu___8, Unchanged uu___9) ->
+              | (Unchanged uu___7, Unchanged uu___8) ->
                   comb2
                     (fun l r3 ->
-                       let uu___10 = FStarC_Syntax_Util.mk_iff l r3 in
-                       uu___10.FStarC_Syntax_Syntax.n) r1 r2
-              | uu___8 ->
-                  let uu___9 = explode r1 in
-                  (match uu___9 with
+                       let uu___9 = FStarC_Syntax_Util.mk_iff l r3 in
+                       uu___9.FStarC_Syntax_Syntax.n) r1 r2
+              | uu___7 ->
+                  let uu___8 = explode r1 in
+                  (match uu___8 with
                    | (pn, pp, gs1) ->
-                       let uu___10 = explode r2 in
-                       (match uu___10 with
+                       let uu___9 = explode r2 in
+                       (match uu___9 with
                         | (qn, qp, gs2) ->
                             let t1 =
-                              let uu___11 = FStarC_Syntax_Util.mk_imp pn qp in
-                              let uu___12 = FStarC_Syntax_Util.mk_imp qn pp in
-                              FStarC_Syntax_Util.mk_conj uu___11 uu___12 in
+                              let uu___10 = FStarC_Syntax_Util.mk_imp pn qp in
+                              let uu___11 = FStarC_Syntax_Util.mk_imp qn pp in
+                              FStarC_Syntax_Util.mk_conj uu___10 uu___11 in
                             Simplified
                               ((t1.FStarC_Syntax_Syntax.n),
                                 (FStarC_List.op_At gs1 gs2)))))
@@ -415,7 +413,6 @@ let rec traverse
         {
           FStarC_Syntax_Syntax.n = tn';
           FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-          FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
           FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
         }
   | Simplified (tn', gs) ->
@@ -424,7 +421,6 @@ let rec traverse
           {
             FStarC_Syntax_Syntax.n = tn';
             FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-            FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
             FStarC_Syntax_Syntax.hash_code =
               (t.FStarC_Syntax_Syntax.hash_code)
           } in
@@ -435,7 +431,6 @@ let rec traverse
           {
             FStarC_Syntax_Syntax.n = tp;
             FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-            FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
             FStarC_Syntax_Syntax.hash_code =
               (t.FStarC_Syntax_Syntax.hash_code)
           } in
@@ -446,7 +441,6 @@ let rec traverse
              ({
                 FStarC_Syntax_Syntax.n = tn;
                 FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-                FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
                 FStarC_Syntax_Syntax.hash_code =
                   (t.FStarC_Syntax_Syntax.hash_code)
               }, p', (FStarC_List.op_At gs gs')))
@@ -811,6 +805,8 @@ let rec traverse_for_spinoff (pol1 : pol)
                        (env2.FStarC_TypeChecker_Env.missing_decl);
                      FStarC_TypeChecker_Env.iface_todo =
                        (env2.FStarC_TypeChecker_Env.iface_todo);
+                     FStarC_TypeChecker_Env.iface_hidden =
+                       (env2.FStarC_TypeChecker_Env.iface_hidden);
                      FStarC_TypeChecker_Env.iface_lids =
                        (env2.FStarC_TypeChecker_Env.iface_lids);
                      FStarC_TypeChecker_Env.iface_val_lids =
@@ -1008,23 +1004,22 @@ let rec traverse_for_spinoff (pol1 : pol)
                 | ({
                      FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
                      FStarC_Syntax_Syntax.pos = uu___5;
-                     FStarC_Syntax_Syntax.vars = uu___6;
-                     FStarC_Syntax_Syntax.hash_code = uu___7;_},
-                   (p, uu___8)::(q, uu___9)::[]) when
+                     FStarC_Syntax_Syntax.hash_code = uu___6;_},
+                   (p, uu___7)::(q, uu___8)::[]) when
                     FStarC_Syntax_Syntax.fv_eq_lid fv
                       FStarC_Parser_Const.imp_lid
                     ->
                     let x =
-                      let uu___10 = FStarC_Syntax_Util.mk_squash p in
+                      let uu___9 = FStarC_Syntax_Util.mk_squash p in
                       FStarC_Syntax_Syntax.new_bv
-                        FStar_Pervasives_Native.None uu___10 in
+                        FStar_Pervasives_Native.None uu___9 in
                     let r1 = traverse1 (flip pol1) e p in
                     let r2 =
                       traverse1 pol1 (FStarC_TypeChecker_Env.push_bv e x) q in
                     comb2
                       (fun l r3 ->
-                         let uu___10 = FStarC_Syntax_Util.mk_imp l r3 in
-                         uu___10.FStarC_Syntax_Syntax.n) r1 r2
+                         let uu___9 = FStarC_Syntax_Util.mk_imp l r3 in
+                         uu___9.FStarC_Syntax_Syntax.n) r1 r2
                 | (hd, args) ->
                     let app_pos = t1.FStarC_Syntax_Syntax.pos in
                     let uu___5 =
@@ -1148,7 +1143,6 @@ let rec traverse_for_spinoff (pol1 : pol)
              {
                FStarC_Syntax_Syntax.n = tn';
                FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-               FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
                FStarC_Syntax_Syntax.hash_code =
                  (t.FStarC_Syntax_Syntax.hash_code)
              }
@@ -1158,7 +1152,6 @@ let rec traverse_for_spinoff (pol1 : pol)
                {
                  FStarC_Syntax_Syntax.n = tn';
                  FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-                 FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
                  FStarC_Syntax_Syntax.hash_code =
                    (t.FStarC_Syntax_Syntax.hash_code)
                } in
@@ -1169,7 +1162,6 @@ let rec traverse_for_spinoff (pol1 : pol)
                {
                  FStarC_Syntax_Syntax.n = tp;
                  FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-                 FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
                  FStarC_Syntax_Syntax.hash_code =
                    (t.FStarC_Syntax_Syntax.hash_code)
                } in
@@ -1180,8 +1172,6 @@ let rec traverse_for_spinoff (pol1 : pol)
                   ({
                      FStarC_Syntax_Syntax.n = tn;
                      FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-                     FStarC_Syntax_Syntax.vars =
-                       (t.FStarC_Syntax_Syntax.vars);
                      FStarC_Syntax_Syntax.hash_code =
                        (t.FStarC_Syntax_Syntax.hash_code)
                    }, p', (FStarC_List.op_At gs gs'))))
@@ -1729,6 +1719,8 @@ let splice : FStarC_TypeChecker_Env.splice_t=
                                        (env.FStarC_TypeChecker_Env.missing_decl);
                                      FStarC_TypeChecker_Env.iface_todo =
                                        (env.FStarC_TypeChecker_Env.iface_todo);
+                                     FStarC_TypeChecker_Env.iface_hidden =
+                                       (env.FStarC_TypeChecker_Env.iface_hidden);
                                      FStarC_TypeChecker_Env.iface_lids =
                                        (env.FStarC_TypeChecker_Env.iface_lids);
                                      FStarC_TypeChecker_Env.iface_val_lids =

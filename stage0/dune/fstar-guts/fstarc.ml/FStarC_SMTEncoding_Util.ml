@@ -7,17 +7,14 @@ let mkAssume
   let uu___ = x in
   match uu___ with
   | (tm, cap, nm) ->
-      let uu___1 =
-        let uu___2 = FStarC_SMTEncoding_Term.free_top_level_names tm in
+      FStarC_SMTEncoding_Term.Assume
         {
           FStarC_SMTEncoding_Term.assumption_term = tm;
           FStarC_SMTEncoding_Term.assumption_caption = cap;
           FStarC_SMTEncoding_Term.assumption_name =
             (FStarC_SMTEncoding_Term.escape nm);
-          FStarC_SMTEncoding_Term.assumption_fact_ids = [];
-          FStarC_SMTEncoding_Term.assumption_free_names = uu___2
-        } in
-      FStarC_SMTEncoding_Term.Assume uu___1
+          FStarC_SMTEncoding_Term.assumption_fact_ids = []
+        }
 let mkTrue : FStarC_SMTEncoding_Term.term= FStarC_SMTEncoding_Term.mkTrue
 let mkFalse : FStarC_SMTEncoding_Term.term= FStarC_SMTEncoding_Term.mkFalse
 let mkInteger : Prims.string -> FStarC_SMTEncoding_Term.term=
@@ -248,14 +245,7 @@ let mk_LexTop : FStarC_SMTEncoding_Term.term=
 let is_smt_reifiable_effect (en : FStarC_TypeChecker_Env.env)
   (l : FStarC_Ident.lident) : Prims.bool=
   let l1 = FStarC_TypeChecker_Env.norm_eff_name en l in
-  let uu___ = FStarC_TypeChecker_Env.is_reifiable_effect en l1 in
-  if uu___
-  then
-    let uu___1 =
-      let uu___2 = FStarC_TypeChecker_Env.get_effect_decl en l1 in
-      FStarC_Syntax_Util.is_layered uu___2 in
-    Prims.op_Negation uu___1
-  else false
+  FStarC_TypeChecker_Env.is_reifiable_effect en l1
 let is_smt_reifiable_comp (en : FStarC_TypeChecker_Env.env)
   (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   match c.FStarC_Syntax_Syntax.n with
