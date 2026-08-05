@@ -130,7 +130,6 @@ let find_max_eq t = find_max_lemma t
 val delete : x:int -> t:tree{is_bst t} ->
   Tot (r:tree{is_bst r /\ not (in_tree x r)  /\
               (forall y. x <> y ==> (in_tree y t = in_tree y r))}) (decreases t)
-#set-options "--z3rlimit 15"
 let rec delete x t = match t with
   | Leaf -> Leaf
   | Node n t1 t2 -> if n = x then
@@ -156,7 +155,6 @@ let rec delete' x t = match t with
                     else if x < n then Node n (delete' x t1) t2
                          else Node n t1 (delete' x t2)
 
-#set-options "--z3rlimit 20"
 val delete_lemma : x:int -> t:tree{is_bst t} ->
       Lemma (ensures (is_bst (delete' x t) /\ not (in_tree x (delete' x t)) /\
         (forall y. x <> y ==> (in_tree y (delete' x t) = in_tree y t))))

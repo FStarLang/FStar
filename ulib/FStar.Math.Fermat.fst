@@ -3,7 +3,7 @@ module FStar.Math.Fermat
 open FStar.Math.Lemmas
 open FStar.Math.Euclid
 
-#set-options "--fuel 1 --ifuel 0 --z3rlimit 20"
+#set-options "--fuel 1 --ifuel 0"
 
 ///
 /// Pow

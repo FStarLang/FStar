@@ -106,7 +106,6 @@ let gbag_pcm_commutative a : lem_commutative (gbag_pcm' a) =
   fun m1 m2 ->
     assert (gbag_equal (gbag_pcm_op m1 m2) (gbag_pcm_op m2 m1))
 
-#push-options "--z3rlimit 20"
 let gbag_pcm_assoc_l a : lem_assoc_l (gbag_pcm' a) =
   fun x y z ->
     match x, y, z with
@@ -132,7 +131,6 @@ let gbag_pcm_assoc_r a : lem_assoc_r (gbag_pcm' a) =
       assert (gbag_pcm_op x (gbag_pcm_op y z) `gbag_equal` gbag_pcm_op (gbag_pcm_op x y) z);
       ()
     | _ -> assert False
-#pop-options
 
 let gbag_pcm_is_unit a : lem_is_unit (gbag_pcm' a) =
   let p = gbag_pcm' a in

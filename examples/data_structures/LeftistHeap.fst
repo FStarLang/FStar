@@ -88,7 +88,6 @@ let rec lower_bounded_and_count (#a: eqtype) {| _ : ordered a |} (l: list a) (m 
 
 // Two sorted lists with the same elements (with the same multiplicities) are the same
 #push-options ""
-#push-options "--z3rlimit 30"
 let rec injectivity_count_sorted (#t: eqtype) {| _ : ordered t |} (a b: list t):
   Lemma (requires (forall y. count a y = count b y) /\ sorted a /\ sorted b)
   (ensures a = b)
@@ -111,7 +110,6 @@ let rec injectivity_count_sorted (#t: eqtype) {| _ : ordered t |} (a b: list t):
   | [], tb::_ -> eliminate forall y. count a y = count b y with tb
   | ta::_, [] -> eliminate forall y. count a y = count b y with ta
   | [], [] -> ()
-#pop-options
 #pop-options
 
 let rec merge_count (#t: eqtype) {| _: ordered t |} (a b: list t) y:

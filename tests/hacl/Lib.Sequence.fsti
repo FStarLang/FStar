@@ -2,7 +2,7 @@ module Lib.Sequence
 
 open Lib.IntTypes
 
-#set-options "--z3rlimit 30 --fuel 0 --ifuel 0 --using_facts_from '-* +Prims +FStar.Math.Lemmas +FStar.Seq +Lib.IntTypes +Lib.Sequence'"
+#set-options "--fuel 0 --ifuel 0 --using_facts_from '-* +Prims +FStar.Math.Lemmas +FStar.Seq +Lib.IntTypes +Lib.Sequence'"
 #set-options "--z3refresh"
 /// Variable length Sequences, derived from FStar.Seq
 
@@ -478,7 +478,6 @@ let get_block
 
 
 (* Computes the last block of (map_blocks blocksize input f g) *)
-#push-options "--z3rlimit_factor 2"
 let get_last
   (#a:Type)
   (#len:nat)
@@ -492,7 +491,6 @@ let get_last
   let rem = len % blocksize in
   let b: lseq a rem = Seq.slice inp (len - rem) len in
   g (len / blocksize) rem b
-#pop-options
 
 val index_map_blocks:
     #a:Type

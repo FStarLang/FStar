@@ -666,7 +666,7 @@ val pat_arg_cmp      : comparator_for' pareq
 val br_cmp           : comparator_for' breq
 val match_returns_ascription_cmp : comparator_for' maeq
 
-#push-options "--z3rlimit 40 --fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2"
 
 let rec term_cmp t1 t2 =
   let tv1 = inspect_ln t1 in
@@ -905,7 +905,7 @@ and univ_faithful_lemma_list #b (u1 u2 : b) (us1 : list universe{us1 << u1}) (us
 (* Just a placeholder for now *)
 val faithful_lemma (t1:term) (t2:term) : Lemma (requires faithful t1 /\ faithful t2) (ensures defined (term_cmp t1 t2))
 
-#push-options "--z3rlimit 40 --fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2"
 
 let faithful_Tv_UInst (t : term) (f : fv) (us : list universe)
   : Lemma (requires inspect_ln t == Tv_UInst f us

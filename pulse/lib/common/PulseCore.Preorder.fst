@@ -389,7 +389,7 @@ let pcm_history_preorder #a #p : preorder (history a p) =
     | Current vh0 _, Current vh1 _ ->
       vh1 `extends` vh0
 
-#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 0 --warn_error -271"
+#push-options "--ifuel 1 --fuel 0 --warn_error -271"
 let pcm_history_induces_preorder #a #p
   : Lemma (induces_preorder (pcm_history #a #p)
                               (pcm_history_preorder #a #p))

@@ -403,7 +403,6 @@ let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
 /// This is the hardest of the three cases and we ramp up the SMT solvers
 /// timeout to prove it.
 
-#set-options "--z3rlimit 15"
 
 /// No, unfortunately this is not a panacea and should only be used when
 /// verification is unstable. In other situations, it is a proven recipe for

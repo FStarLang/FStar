@@ -18,7 +18,7 @@ open X64.Machine_s
 open X64.Vale.State_i
 open X64.Vale.Decls
 
-#reset-options "--z3rlimit 20"
+#reset-options
 
 val empty : unit //annoying
 

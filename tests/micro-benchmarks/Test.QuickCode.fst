@@ -96,7 +96,7 @@ let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> prop)) : prop =
   (k sM)
 
 //#reset-options "--z3rlimit 10 --debug NBE --debug SMTQuery"
-#push-options "--z3rlimit 10 --admit_smt_queries true"
+#push-options "--admit_smt_queries true"
 
 let lemma_gcm_core (s0:state) (x:int) : Lemma True =
   let k s =

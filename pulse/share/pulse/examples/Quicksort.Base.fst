@@ -42,7 +42,7 @@ let between_bounds (s: Seq.seq int) (lb rb: int)
 let sorted (s: Seq.seq int)
   = forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
 
-#push-options "--retry 10 --z3rlimit_factor 4"
+#push-options "--retry 10"
 let lemma_sorted_append
   (s1 s2 : Seq.seq int)
   (l1 r1 l2 r2 : int)
@@ -222,7 +222,6 @@ let partition_pred (s:Seq.seq int) (lo hi:nat) (r: (nat & nat & int))
     (r._1 <= kk /\ kk < r._2  ==> Seq.index s k == r._3) /\
     (r._2 <= kk /\ kk < hi    ==> Seq.index s k >  r._3))
 
-#push-options "--z3rlimit_factor 4"
 fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   (lb rb: erased int)
   (#s0: Ghost.erased (Seq.seq int))
@@ -298,7 +297,6 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   swap a vj (hi - 1);
   (vi, vj', pivot)
 }
-#pop-options
 
 
 #restart-solver
@@ -319,7 +317,6 @@ let transfer_larger_slice
   assert (forall (k: int). l - shift <= k /\ k < r - shift ==> (lb <= Seq.index s k));
   ()
 
-#push-options "--z3rlimit_factor 4"
 let transfer_smaller_slice
   (s : Seq.seq int)
   (shift : nat)
@@ -335,7 +332,6 @@ let transfer_smaller_slice
   assert (forall (k: int). l <= (k+shift) /\ (k+shift) < r ==> (Seq.index s ((k+shift) - shift) <= rb));
   assert (forall (k: int). l - shift <= k /\ k < r - shift ==> (Seq.index s k <= rb));
   ()
-#pop-options
 #pop-options
 
 let transfer_equal_slice
@@ -354,7 +350,7 @@ let transfer_equal_slice
   transfer_larger_slice s shift l r rb;
   ()
 
-#push-options "--z3rlimit_factor 8 --retry 5"
+#push-options "--retry 5"
 
 fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   (lb rb: erased int)

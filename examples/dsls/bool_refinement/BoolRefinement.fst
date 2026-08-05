@@ -190,7 +190,6 @@ let rec close_exp_ln (e:src_exp) (v:var) (n:nat)
     | ELam _ e -> close_exp_ln e v (n + 1)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
 
-#push-options "--z3rlimit 15"
 let rec open_exp_freevars (e:src_exp) (v:var) (n:nat)
   : Lemma ((freevars e `Set.subset` freevars (open_exp' e v n))  /\
            (freevars (open_exp' e v n) `Set.subset` (freevars e `Set.union` Set.singleton v)))
@@ -208,7 +207,6 @@ let rec open_exp_freevars (e:src_exp) (v:var) (n:nat)
       open_exp_freevars e2 v n
     | ELam t e ->
       open_exp_freevars e v (n + 1)
-#pop-options
 
 let minus (s:Set.set 'a) (x:'a) = Set.intersect s (Set.complement (Set.singleton x))
 
@@ -521,7 +519,7 @@ let weaken (f:RT.fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } 
 
 let exp (sg:src_env) = e:src_exp { ln e /\ (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)) }
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6"
+#push-options "--fuel 2 --ifuel 2"
 let rec check (f:RT.fstar_top_env)
               (sg:src_env)
               (e:exp sg)
@@ -624,7 +622,7 @@ let rec shift_subst_spec_n_succ_list (n:nat) (ss:subst_spec)
     | [] -> ()
     | _::xs -> shift_subst_spec_n_succ_list n xs
 
-#push-options "--z3rlimit_factor 4 --fuel 8 --ifuel 2"
+#push-options "--fuel 8 --ifuel 2"
 #restart-solver
 let rec src_refinements_are_closed_core
                        (n:nat)
@@ -690,7 +688,7 @@ let src_refinements_are_closed (e:src_exp {ln e && closed e})
     src_refinements_are_closed_core 0 e elt
  
 
-#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 3"
+#push-options "--fuel 8 --ifuel 2"
 let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var) 
   : Lemma (ensures
               subst_term_spec (denote_term (elab_exp e)) (open_with_var_spec x n) ==
@@ -1191,7 +1189,7 @@ let sub_typing_renaming (#f:RT.fstar_top_env)
     | S_ELab g _ _ d ->
       S_ELab _ _ _ (core_subtyping_renaming sg sg' x y b t0 t1 d)
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 2"
 let freevars_included_in (e:src_exp) (sg:src_env) =
   forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)
   
@@ -1392,7 +1390,7 @@ let sub_typing_weakening #f (sg sg':src_env)
 
       | _ -> admit ())
 
-#push-options "--z3rlimit_factor 8 --query_stats --fuel 2 --ifuel 2"
+#push-options "--query_stats --fuel 2 --ifuel 2"
 #restart-solver
 let rec src_typing_weakening #f (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })

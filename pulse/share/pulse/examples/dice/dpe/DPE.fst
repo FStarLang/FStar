@@ -200,7 +200,6 @@ let half (t0:trace) = Some #perm 0.5R, t0
 
 
 #restart-solver
-#push-options "--z3rlimit_factor 2"
 ghost
 fn upd_sid_pts_to
   (r:gref) (sid:sid_t)
@@ -245,7 +244,6 @@ fn upd_sid_pts_to
   fold (sid_pts_to r sid (next_trace t0 s));
   fold (sid_pts_to r sid (next_trace t0 s));
 }
-#pop-options
 
 let safe_incr (i:U16.t)
   : r:option U16.t { Some? r ==> (U16.v (Some?.v r) == U16.v i + 1) } =
@@ -310,7 +308,7 @@ fn frame_session_perm_on_range
 
 let emp_to_start_valid () : Lemma (valid_transition emp_trace G_SessionStart) = ()
 
-#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 6"
+#push-options "--fuel 0 --ifuel 2"
 
 fn __open_session (s:st)
   requires dpe_inv trace_ref (Some s)
@@ -518,7 +516,7 @@ fn upd_singleton
 }
 
 
-#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 0 --ifuel 2"
 
 divergent
 fn replace_session
@@ -1129,7 +1127,7 @@ fn rewrite_session_state_related_available
 }
 
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 4"
+#push-options "--fuel 2 --ifuel 2"
 #restart-solver
 divergent
 fn derive_child (sid:sid_t)
@@ -1286,7 +1284,7 @@ fn close_session (sid:sid_t)
 }
 
 
-#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1"
+#push-options "--fuel 2 --ifuel 1"
 
 divergent
 fn certify_key (sid:sid_t)

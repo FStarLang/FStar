@@ -123,7 +123,7 @@ let lemma_mod_add_3 (a b c:int) (p:pos)
 = lemma_mod_add_distr_l (a + b) c p;
   lemma_mod_add_distr_l (a + c) b p
 
-#push-options "--z3rlimit_factor 10 --ifuel 0 --fuel 2"
+#push-options "--ifuel 0 --fuel 2"
 #restart-solver
 let aux (x: str nat) (base: nat) (prime:nat { prime > 0 }) (i: nat) (j: nat { i+1 < j /\ j <= Seq.length x })
   (h_lsd: nat { h_lsd == base * hash x base prime (i+1) (j-1) })
@@ -318,7 +318,7 @@ let maybe_found #t (xs pat:str t) (o:option nat) =
   | None -> forall j. ~(pat `occurs_at j` xs)
   | Some i -> pat`occurs_at i` xs
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+#push-options "--fuel 0 --ifuel 0"
 #restart-solver
 let rabin_karp_matcher_nat
     (xs pat:str nat)
@@ -389,7 +389,7 @@ let rec slice_map
     Seq.slice (map_seq as_digit t_xs) i j `Seq.equal` map_seq as_digit (Seq.slice t_xs i j)
   ) 
    
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+#push-options "--fuel 0 --ifuel 0"
 // The main matcher, same as the one on nats, but not with a strings of t
 let rabin_karp_matcher
     (#t:eqtype)
