@@ -1240,7 +1240,8 @@ needs to know this, so tag them with the internal `KrmlPrivate` attribute; see
 syntactic interleaving used to do. *)
 let mark_karamel_private (env:Env.env) (se:sigelt) : ML sigelt =
   let lids = U.lids_of_sigelt se in
-  if not (Env.has_iface env)
+  if Options.Ext.get "no_krml_private" <> ""
+  || not (Env.has_iface env)
   || Nil? lids
   || lids |> BU.for_some (Env.declared_in_iface env)
   then se
