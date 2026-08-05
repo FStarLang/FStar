@@ -7,18 +7,13 @@ open FStar.Mul
 
 (* total function composition *)
 let o #a #b #c (g : b -> Tot c) (f : a -> Tot b) : a -> Tot c = fun x -> g (f x)
-(* ghost function composition *)
-let oo #a #b #c (g : b -> GTot c) (f : a -> GTot b) : a -> GTot c = fun x -> g (f x)
 
-(* Note: bijections are erasable. For an executable version,
-see cbij below. *)
 noeq
-[@@erasable]
 type bijection (a b : Type) = {
   (* Functions between the types, the name indicates
   the direction we're "moving" in *)
-  right : a -> GTot b;
-  left  : b -> GTot a;
+  right : a -> b;
+  left  : b -> a;
 
   (* Proofs that the functions are inverses of each other. As
   usual the name here is a tough choice. We call the first one
@@ -49,8 +44,8 @@ let mk_bijection
   Mkbijection right left left_right right_left
 
 (* Move values across bijections. *)
-let ( >> ) (#a #b : Type) (x : a) (bij : a =~ b) : GTot b = bij.right x
-let ( << ) (#a #b : Type) (x : b) (bij : a =~ b) : GTot a = bij.left x
+let ( >> ) (#a #b : Type) (x : a) (bij : a =~ b) : b = bij.right x
+let ( << ) (#a #b : Type) (x : b) (bij : a =~ b) : a = bij.left x
 
 val inv_lemma_pat (#a #b : _) (d : a =~ b) (x:a) (y:b)
   : Lemma ((x >> d) == y <==> x == (y << d))
@@ -74,8 +69,8 @@ let bij_sym (#a #b : Type) (d : a =~ b) : (b =~ a) =
 
 let bij_comp (#a #b #c : Type) (ab : a =~ b) (bc : b =~ c) : (a =~ c) =
 {
-  right = bc.right `oo` ab.right;
-  left = ab.left `oo` bc.left;
+  right = bc.right `o` ab.right;
+  left = ab.left `o` bc.left;
   right_left = (fun x -> ab.right_left (bc.left x); bc.right_left x);
   left_right = (fun x -> bc.left_right (ab.right x); ab.left_right x);
 }
@@ -180,57 +175,6 @@ let bij_nat_sum (n1 n2 : nat)
   left_right = (fun _ -> ());
 }
 
-(***** Computationally relevant bijections *****)
-
-noeq type cbij (a b: Type) = {
-  bij: (a =~ b);
-  cright: cright: (a -> b) { forall x. cright x == bij.right x };
-  cleft: cleft: (b -> a) { forall x. cleft x == bij.left x };
-}
-
-let mk_cbij
-  (#a #b : _)
-  (right : a -> b) (left : b -> a)
-  (right_left : (x:b -> squash (right (left x) == x)))
-  (left_right : (x:a -> squash (left (right x) == x)))
-  : cbij a b =
-{
-  bij = {
-    right = (fun x -> right x);
-    left  = (fun x -> left x);
-    right_left = right_left;
-    left_right = left_right;
-  };
-  cright = right;
-  cleft = left;
-}
-
-inline_for_extraction
-let (==~) = cbij
-
-inline_for_extraction noextract
-let cbij_self (a:Type) : (a ==~ a) = {
-  bij = bij_self _;
-  cright = id;
-  cleft = id;
-}
-
-inline_for_extraction noextract
-let cbij_prod (#a #b #c #d : Type) (ab : a ==~ b) (cd : c ==~ d) : (a & c ==~ b & d) =
-{
-  bij = bij_prod ab.bij cd.bij;
-  cright = (fun (x, y) -> (ab.cright x, cd.cright y));
-  cleft = (fun (x, y) -> (ab.cleft x, cd.cleft y));
-}
-
-inline_for_extraction noextract
-let cbij_comp (#a #b #c : Type) (ab : a ==~ b) (bc : b ==~ c) : (a ==~ c) =
-{
-  bij = bij_comp ab.bij bc.bij;
-  cright = (fun x -> bc.cright (ab.cright x));
-  cleft = (fun x -> ab.cleft (bc.cleft x));
-}
-
 
 (***** Injections from bijections *****)
 
@@ -245,24 +189,3 @@ let inj_bij' (#a #b : Type) (bij : a =~ b) : (b @~> a) =
     f = bij.left;
     is_inj = (fun _ _ _ -> ());
   }
-
-let bij_inj (#a #b : Type) (inj : a @~> b)
-  : (a =~ image_of inj)
-= let right : a -> GTot (image_of inj) = (fun x -> inj.f x) in
-  {
-    right = right;
-    left = FStar.Functions.inverse_of_bij right;
-    right_left = (fun _ -> ());
-    left_right = (fun _ -> ());
-  }
-
-let bij_inj' (#a #b : Type) (inj : a @~> b)
-  : Ghost (a =~ b)
-          (requires Functions.is_surj inj.f)
-          (ensures fun _ -> True)
-= {
-  right = inj.f;
-  left = FStar.Functions.inverse_of_bij inj.f;
-  right_left = (fun _ -> ());
-  left_right = (fun _ -> ());
-}
