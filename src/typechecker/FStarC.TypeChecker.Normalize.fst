@@ -324,6 +324,10 @@ let unfold_disc_proj_for_extraction (cfg : Cfg.cfg) (head : term) : ML (option t
   match (SS.compress head).n with
   | Tm_fvar fv
   | Tm_uinst ({n=Tm_fvar fv}, _) -> (
+    (* A field projection written with dot notation carries a Record_projector
+       qualifier, and extraction turns it into an ML record projection, which is
+       better than the match we would produce here. *)
+    if Record_projector? (Option.dflt Data_ctor fv.fv_qual) then None else
     let lid = fv.fv_name in
     match Env.disc_proj_qual cfg.tcenv lid with
     | None -> None
