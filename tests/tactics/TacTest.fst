@@ -1,6 +1,7 @@
 module TacTest
 
 open FStar.Tactics.Effect
+open FStar.Stubs.Tactics.Types
 
 /// Tactic "primitives" (in the real library these are compiler builtins
 /// registered as primitive steps).
@@ -37,7 +38,7 @@ let checked (x:int) : Tac int (requires (x >= 0)) (ensures (fun r -> r >= x)) =
 
 /// Effect definitions only matter for extraction, but they do let us build a
 /// tactic from its representation with `TAC?.reflect`.
-assume val get_ps : ref_proofstate -> FStar.All.ML int
+assume val get_ps : ref_proofstate -> Dv int
 
 let goal_count () : Tac int =
   TAC?.reflect (fun ps -> get_ps ps)

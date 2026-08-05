@@ -26,7 +26,6 @@ _build
 *.sav
 dump*
 cache/
-.simple-cache/
 
 /lib
 
