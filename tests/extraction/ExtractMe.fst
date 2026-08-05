@@ -38,3 +38,5 @@ let rec length (#a:Type) (l : list a) : Tot int =
 
 let main () : ML unit =
   let _ = mixed 3 in ()
+
+let _ : unit = main ()

@@ -1,8 +1,8 @@
-module NegPrecondition
+module PreconditionFailure
 
-/// Expected to FAIL.  The precondition of `div` is not satisfied at the call
-/// site, and the error must be reported *at the call site* (like a failing
-/// refinement subtyping check), not as one opaque VC for the whole definition.
+/// The precondition of `div` is not satisfied at the call site, and the error
+/// must be reported *at the call site* (like a failing refinement subtyping
+/// check), not as one opaque VC for the whole definition.
 
 assume
 val div : x:int -> y:int -> Pure int (requires (y =!= 0)) (ensures (fun r -> r * y == x))

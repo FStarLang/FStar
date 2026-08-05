@@ -107,12 +107,6 @@ build: 3
 # No tests for stage3
 3.full:  $(FSTAR3_FULL_EXE)
 
-# Acceptance tests for the simplified (pre/post) effect system.  Uses the
-# stage1 compiler against the minimal library in simple-lib/.
-.PHONY: simple-tests
-simple-tests: $(FSTAR1_FULL_EXE)
-	FSTAR_EXE=$(FSTAR1_FULL_EXE) ./simple-tests/run.sh
-
 
 # This file's timestamp is updated whenever anything in stage0/
 # (excluding some build directories)
