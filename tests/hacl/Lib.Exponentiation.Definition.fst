@@ -2,7 +2,7 @@ module Lib.Exponentiation.Definition
 
 
 
-#set-options "--z3rlimit 50 --fuel 0 --ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 let lemma_inverse_one #t k =
   lemma_inverse k.cm.one;

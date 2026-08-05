@@ -112,7 +112,6 @@ let partial_merge
 : Seq.lseq int (S.length s1 + S.length s2) =
   S.append (merge (stake i s1) (stake j s2)) (sdrop (i+j) s3)
 
-#set-options "--z3rlimit 20"
 
 let lemma_eq_intro_explicit (#a : Type) (s1 : S.seq a) (s2 : S.seq a{S.length s2 == S.length s1})
   (pf : ((i:nat{i < S.length s1}) -> Lemma (S.index s1 i == S.index s2 i)))

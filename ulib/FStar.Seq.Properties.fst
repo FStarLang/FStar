@@ -160,7 +160,6 @@ let lemma_swap_permutes_aux_frag_eq #a s i j i' j' =
   cut (equal (slice s i (i + 1))  (slice (swap s i j) j (j + 1)));
   cut (equal (slice s j (j + 1))  (slice (swap s i j) i (i + 1)))
 
-#push-options "--z3rlimit 20"
 let lemma_swap_permutes_aux #_ s i j x =
   if j=i
   then cut (equal (swap s i j) s)
@@ -187,7 +186,6 @@ let lemma_swap_permutes_aux #_ s i j x =
       lemma_append_count_aux x frag_mid (append frag_i frag_hi);
       lemma_append_count_aux x frag_i frag_hi
   end
-#pop-options  
 
 let append_permutations #a s1 s2 s1' s2' =
   (
@@ -206,7 +204,7 @@ let lemma_swap_permutes #a s i j
      of each other also have the same length
 *)
 //a proof optimization: Z3 only needs to unfold the recursive definition of `count` once
-#push-options "--fuel 1 --ifuel 1 --z3rlimit 20"
+#push-options "--fuel 1 --ifuel 1"
 let rec perm_len' (#a:eqtype) (s1 s2: seq a)
   : Lemma (requires (permutation a s1 s2))
           (ensures  (length s1 == length s2))
@@ -565,7 +563,6 @@ let intro_of_list' = intro_of_list''
 
 let intro_of_list #_ s l = intro_of_list' 0 s l
 
-#push-options "--z3rlimit 20"
 let rec elim_of_list'': #a:Type ->
   i:nat ->
   s:seq a ->
@@ -585,7 +582,6 @@ let rec elim_of_list'': #a:Type ->
   | hd :: tl ->
       lemma_seq_of_list_induction l;
       elim_of_list'' (i + 1) s tl
-#pop-options
 
 let elim_of_list' = elim_of_list''
 

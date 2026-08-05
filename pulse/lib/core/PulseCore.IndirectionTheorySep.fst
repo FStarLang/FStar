@@ -245,7 +245,6 @@ let join_premem_associative
   mem_ext (join_premem is0 (join_premem is1 is2)) (join_premem (join_premem is0 is1) is2) (fun a -> ())
 #pop-options
 
-#push-options "--z3rlimit 10"
 let mem_le_iff (w1 w2: premem) :
     Lemma (mem_le w1 w2 <==> exists w3. join_premem w1 w3 == w2) =
   reveal_mem_le ();
@@ -262,7 +261,6 @@ let mem_le_iff (w1 w2: premem) :
     } in
     mem_ext (join_premem w1 w3) w2 fun a -> ()
   )
-#pop-options
 
 let age_to_disjoint_mem (w1 w2: premem) n :
     Lemma (requires disjoint_mem w1 w2)
@@ -469,7 +467,6 @@ let join_update_timeless_mem m1 m2 p1 p2 =
         (update_timeless_mem (join_mem m1 m2) (B.join_mem p1 p2))
     fun _ -> ()
 
-#push-options "--z3rlimit_factor 2"
 let star_equiv p q m =
   introduce
     forall m0 m1. 
@@ -497,7 +494,6 @@ let star_equiv p q m =
       interp q m1
     with m1 m2 and ()
   )
-#pop-options
 
 let erase_pair #t #s (p: erased (t & s)) : erased t & erased s =
   (hide (fst p), hide (snd p))
@@ -619,7 +615,7 @@ let rejuvenate1 (m: premem) (m': premem { mem_le m' (age1_ m) }) :
   mem_ext (age1_ m'') m' (fun _ -> ());
   m''
 
-#push-options "--z3rlimit 100 --query_stats"
+#push-options "--query_stats"
 #restart-solver
 irreducible
 let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_ m == join_premem m1' m2' }) :
@@ -745,7 +741,6 @@ let timeless_ext (a b: (p:slprop {timeless p})) (h: (w: premem { level_ w == 0 }
     timeless_interp b w;
     h (age_to_ w 0)
 
-#push-options "--z3rlimit 20"
 let equiv_timeless (a b: slprop) :
     Lemma (requires timeless a /\ timeless b)
       (ensures timeless (equiv a b) /\ equiv a b == pure (a == b)) =
@@ -760,7 +755,6 @@ let equiv_timeless (a b: slprop) :
     introduce equiv a b w ==> a == b with
       timeless_ext a b fun w' ->
         eq_at_elim 1 a b w'
-#pop-options
 
 let equiv_star_congr (p q r: slprop) =
   let aux (q r: slprop) (n: nat { eq_at n q r }) (w: premem) =
@@ -1111,7 +1105,6 @@ let inames_ok_update e m0 m1 =
   introduce forall i. hogs_iname_ok i m0 == hogs_iname_ok i m1
   with (mem_hogs_dom i m0; mem_hogs_dom i m1)
 
-#push-options "--z3rlimit_factor 4"
 let read_inv_age f' (is: mem { level_ is > 0 /\ iname_ok f' is }) (w: premem { 1 < level_ w /\ level_ w <= level_ is }) :
     Lemma (requires read_inv f' is w) (ensures read_inv f' (age1 is) (age1_ w)) =
   let Inv p = read is f' in
@@ -1124,7 +1117,6 @@ let read_inv_age f' (is: mem { level_ is > 0 /\ iname_ok f' is }) (w: premem { 1
   assert_norm (somewhere (later p') (age1_ w) == exists l. on l (later p') (age1_ w));
   assert somewhere (later p') (age1_ w);
   assert read_inv f' (age1 is) (age1_ w)
-#pop-options
 
 #push-options ""
 let rec hogs_invariant__age (e:inames) (is: mem { level_ is > 0 }) (f: address) :

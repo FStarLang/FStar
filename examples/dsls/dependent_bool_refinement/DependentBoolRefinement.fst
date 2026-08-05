@@ -106,7 +106,7 @@ let open_ty t v = open_ty' t (EVar v) 0
 let close_ty t v = close_ty' t v 0
 let open_ty_with t e = open_ty' t e 0
 
-#push-options "--fuel 4 --ifuel 2 --z3rlimit_factor 8"
+#push-options "--fuel 4 --ifuel 2"
 let rec open_exp_freevars (e:src_exp) (v:src_exp) (n:nat)
   : Lemma 
     (ensures (freevars e `Set.subset` freevars (open_exp' e v n))  /\
@@ -484,7 +484,7 @@ and check_ok (e:src_exp) (sg:src_env)
     | EApp e1 e2 -> check_ok e1 sg && check_ok e2 sg
   
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6"
+#push-options "--fuel 2 --ifuel 2"
 
 let rec check (f:fstar_top_env)
               (sg:src_env)
@@ -590,7 +590,7 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
     | [] -> ()
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
-#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 3"
+#push-options "--fuel 8 --ifuel 2"
 let rec elab_open_commute' (n:nat) (e:src_exp) (x:src_exp) 
   : Lemma (ensures
               subst_term_spec (denote_term (elab_exp e)) [ DTs n (denote_term (elab_exp x)) ] ==
@@ -683,7 +683,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
     | [] -> ()
     | hd::tl -> extend_env_l_lookup_fvar g tl fv
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 2"
 
 let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0 t1)
   : GTot (RT.sub_typing (extend_env_l f sg) (denote_term (elab_ty t0)) (denote_term (elab_ty t1)))
@@ -693,7 +693,7 @@ let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0
 
 #pop-options
 
-#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 4"
+#push-options "--fuel 8 --ifuel 2"
 let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)
   : Lemma (ensures
               subst_term_spec (denote_term (elab_exp e)) [ NDs x n ] ==
@@ -777,7 +777,7 @@ let elab_open_b2t (e:src_exp) (x:var)
     denote_pack_var (R.pack_namedv (RT.make_namedv x));
     elab_open_commute' 0 e (EVar x)
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 4"
+#push-options "--fuel 2 --ifuel 2"
 let rec soundness (#f:fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 
                   (#se:src_exp)
