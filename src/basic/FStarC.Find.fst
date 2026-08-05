@@ -138,7 +138,7 @@ let rec path_is_at_or_below (root:string) (path:string) : ML bool =
     let parent = Filepath.dirname path in
     parent <> path && path_is_at_or_below root parent
 
-(* Use command-line file parents as implicit roots unless an explicit root covers them. *)
+(* Add command-line file parents as specific roots while preserving the implicit cwd root. *)
 let command_line_include_paths () : ML (list string) =
   match !_file_list with
   | [] -> expand_include_d "."
@@ -155,7 +155,7 @@ let command_line_include_paths () : ML (list string) =
         not (List.existsb (fun explicit_root ->
           path_is_at_or_below explicit_root root) explicit_roots)) file_roots
     in
-    expand_include_ds uncovered_roots
+    expand_include_ds uncovered_roots @ expand_include_d "."
 
 let full_include_path () : ML _ =
   // Stats.record "Find.full_include_path" fun () ->
