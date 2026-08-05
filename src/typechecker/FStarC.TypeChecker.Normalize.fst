@@ -315,18 +315,15 @@ let disc_proj_lb (tcenv:Env.env) (lid:Ident.lident) (us:univ_names) (t:typ) (q:q
    stands for, exactly as when it was an ordinary definition.  The backends
    compile that match to a field access or a tag test, whereas a residual
    application would be compiled to a call of the projector function, which is
-   both slower and much less readable --- especially in C. *)
-let unfold_disc_proj_for_extraction (cfg : Cfg.cfg) (head : term) : ML (option term) =
+   both slower and much less readable --- especially in C.
+
+   Returns the definition as a universe-closed type scheme; the caller
+   instantiates it, exactly as do_unfold_fv does for ordinary definitions. *)
+let unfold_disc_proj_for_extraction (cfg : Cfg.cfg) (head : term) : ML (option tscheme) =
   if not cfg.steps.for_extraction then None else
-  let fv_us =
-    match (SS.compress head).n with
-    | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)
-    | Tm_fvar fv -> Some (fv, [])
-    | _ -> None
-  in
-  match fv_us with
-  | None -> None
-  | Some (fv, us) ->
+  match (SS.compress head).n with
+  | Tm_fvar fv
+  | Tm_uinst ({n=Tm_fvar fv}, _) -> (
     let lid = fv.fv_name in
     match Env.disc_proj_qual cfg.tcenv lid with
     | None -> None
@@ -335,12 +332,9 @@ let unfold_disc_proj_for_extraction (cfg : Cfg.cfg) (head : term) : ML (option t
       | Some (Inr ({ sigel = Sig_declare_typ {us=dus; t} }, _), _) -> (
         match disc_proj_lb cfg.tcenv lid dus t q with
         | None -> None
-        | Some lb ->
-          (* Universes are usually erased by the time we get here. *)
-          if List.length us = List.length lb.lbunivs
-          then Some (snd (Env.inst_tscheme_with (lb.lbunivs, lb.lbdef) us))
-          else Some (snd (SS.open_univ_vars lb.lbunivs lb.lbdef)))
-      | _ -> None
+        | Some lb -> Some (lb.lbunivs, lb.lbdef))
+      | _ -> None)
+  | _ -> None
 
 let check_strict (cfg : Cfg.cfg) (hua : fv & universes & args) : ML (option bool) =
   let open FStarC.Class.Monad in
@@ -1338,9 +1332,28 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               (* Only when extracting; see unfold_disc_proj_for_extraction. *)
               match unfold_disc_proj_for_extraction cfg head with
               | None -> fallback ()
-              | Some def ->
-                let stack = push_args env args stack in
-                norm cfg empty_env stack def
+              | Some (us_names, def) ->
+                (* The universes of the head may be bound in [env] (that is how
+                   do_unfold_fv passes them along), so normalize them before
+                   substituting; the definition itself is closed, hence the
+                   empty environment below. *)
+                let us =
+                  match (SS.compress head).n with
+                  | Tm_uinst (_, us) -> us |> List.map (norm_universe cfg env)
+                  | _ -> []
+                in
+                let us =
+                  if List.length us = List.length us_names then Some us
+                  else if cfg.steps.erase_universes || cfg.steps.allow_unbound_universes
+                  then Some (us_names |> List.map (fun _ -> U_unknown))
+                  else None
+                in
+                match us with
+                | None -> fallback ()
+                | Some us ->
+                  let def = snd (Env.inst_tscheme_with (us_names, def) us) in
+                  let stack = push_args env args stack in
+                  norm cfg empty_env stack def
             in
             (match disc_proj_head cfg head with
              | Some (d, is_disc, n_indexed, idx) when List.length args > n_indexed ->
