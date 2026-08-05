@@ -39,7 +39,7 @@ let inverse_of_inj #a #b f def =
   (* extend the inverse to the full domain b *)
   let g : b -> GTot a =
     fun (y:b) ->
-      if in_image f y
+      if FStar.IndefiniteDescription.strong_excluded_middle (in_image f y)
       then g_partial y
       else def
   in
