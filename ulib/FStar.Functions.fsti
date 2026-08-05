@@ -1,5 +1,7 @@
 module FStar.Functions
 
+open FStar.Fin { fin }
+
 (* This module contains basic definitions and lemmas
 about functions and sets. *)
 
@@ -51,3 +53,7 @@ val inverse_of_inj (#a #b : _) (f : a -> GTot b{is_inj f}) (def : a)
   : Ghost (b -> GTot a)
           (requires is_inj f)
           (ensures fun g -> is_surj g /\ g `is_inverse_of` f)
+
+(* Pigeonhole principle on nats. *)
+val pigeon (n1:nat) (n2:nat{n2 < n1}) (f : fin n1 -> GTot (fin n2))
+  : Lemma (~ (is_inj f))
