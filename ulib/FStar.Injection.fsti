@@ -3,7 +3,6 @@ module FStar.Injection
 open FStar.Fin
 open FStar.Functions
 open FStar.SizeT { (/^), (%^), (+^), (-^), ( *^ )  }
-open FStar.Tactics.Easy
 
 (* A theory of injections. As for bijections, injections are erasable
    but there is a computational variant cinj below. *)
@@ -47,7 +46,7 @@ val inverse_lem (#a #b : Type) (i : a @~> b) (y : image_of i)
 let inverse (#a #b : Type) (i : a @~> b) : (image_of i @~> a) = {
   f = inverse_f i;
 
-  is_inj = easy;
+  is_inj = (fun _ _ _ -> ());
 }
 
 let lem_pat (#a #b : _) (d : a @~> b) (x : a)
@@ -61,19 +60,19 @@ let ( <~| ) (#a #b : Type) (y : b) (i : a `injection` b{in_image i.f y}) : GTot 
 let inj_prod (i1 : 'a @~> 'c) (i2 : 'b @~> 'd) : ('a & 'b @~> 'c & 'd) =
 {
   f = (fun (a,b) -> (i1.f a, i2.f b));
-  is_inj = easy;
+  is_inj = (fun _ _ _ -> ());
 }
 
 let inj_either (i1 : 'a @~> 'c) (i2 : 'b @~> 'd) : (either 'a 'b @~> either 'c 'd) =
 {
   f = (function | Inl a -> Inl (i1.f a) | Inr b -> Inr (i2.f b));
-  is_inj = easy;
+  is_inj = (fun _ _ _ -> ());
 }
 
 let inj_comp (i1 : 'a @~> 'b) (i2 : 'b @~> 'c) : ('a @~> 'c) =
 {
   f = i2.f `oo` i1.f;
-  is_inj = easy;
+  is_inj = (fun _ _ _ -> ());
 }
 
 (* Computationally relevant injections *)
@@ -100,14 +99,14 @@ let cinj_either (i1 : 'a @~>> 'c) (i2 : 'b @~>> 'd) : (either 'a 'b @~>> either 
 }
 
 unfold inline_for_extraction noextract
-let mk_cinj #a #b (f: a -> b) (#[Tactics.V2.easy_fill ()] is_inj: _) : (a @~>> b) =
+let mk_cinj #a #b (f: a -> b) (#is_inj: _) : (a @~>> b) =
 {
   inj = { f; is_inj };
   cf = f;
 }
 
 inline_for_extraction noextract
-let cinj_id #a : (a @~>> a) = mk_cinj id
+let cinj_id #a : (a @~>> a) = mk_cinj id #(fun _ _ _ -> ())
 
 let inj_id #a : (a @~> a) = cinj_id.inj
 
@@ -119,7 +118,7 @@ let inj_nat_sum_f (n1 n2 : nat) : either (fin n1) (fin n2) -> fin (n1 + n2) =
 
 inline_for_extraction noextract
 let cinj_nat_sum (n1 n2 : nat) : (either (fin n1) (fin n2) @~>> fin (n1 + n2)) =
-  mk_cinj (inj_nat_sum_f n1 n2)
+  mk_cinj (inj_nat_sum_f n1 n2) #(fun _ _ _ -> ())
 
 let inj_nat_sum (n1 n2 : nat) : (either (fin n1) (fin n2) @~> fin (n1 + n2)) =
   (cinj_nat_sum n1 n2).inj
