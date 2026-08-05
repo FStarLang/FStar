@@ -18,7 +18,7 @@ noeq
 type injection (a b : Type) = {
   f : a -> GTot b;
 
-  is_inj : x:a -> y:a -> f x == f y -> x == y;
+  is_inj : x:a -> y:a -> squash (f x == f y) -> squash (x == y);
 }
 
 // Not a great symbol, but F* is limited in operator support.
@@ -28,7 +28,7 @@ let ( @~> ) a b = injection a b
 let mk_injection
   (#a #b : _)
   (f : a -> GTot b)
-  (is_inj : (x:a -> y:a -> f x == f y -> x == y))
+  (is_inj : (x:a -> y:a -> squash (f x == f y) -> squash (x == y)))
   : (a @~> b) =
   Mkinjection f is_inj
 
