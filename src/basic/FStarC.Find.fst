@@ -138,7 +138,10 @@ let rec path_is_at_or_below (root:string) (path:string) : ML bool =
     let parent = Filepath.dirname path in
     parent <> path && path_is_at_or_below root parent
 
-(* Add command-line file parents as specific roots while preserving the implicit cwd root. *)
+(* Add existing command-line file parents as specific roots while preserving the cwd root.
+  This is only necessary when no include path is specified. For example, when running:
+  > fstar.exe test/Test01.fst
+  we add `test` as an include path under the assumption that the file defines the Test01 module. *)
 let command_line_include_paths () : ML (list string) =
   match !_file_list with
   | [] -> expand_include_d "."
@@ -146,8 +149,10 @@ let command_line_include_paths () : ML (list string) =
     let explicit_roots = List.map Filepath.normalize_file_path !_include in
     let file_roots =
       List.fold_left (fun roots file ->
-        let root = Filepath.normalize_file_path (Filepath.dirname file) in
-        if List.contains root roots then roots else roots @ [root])
+        if Filepath.file_exists file then
+          let root = Filepath.normalize_file_path (Filepath.dirname file) in
+          if List.contains root roots then roots else roots @ [root]
+        else roots)
         [] files
     in
     let uncovered_roots =
