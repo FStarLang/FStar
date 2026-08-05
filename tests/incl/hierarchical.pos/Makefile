@@ -1,6 +1,5 @@
-# The module A.B.C lives in the file A/B/C.fst. Enabling hierarchical
-# namespaces makes F* resolve it in the include path (here, the cwd).
-OTHERFLAGS += --hierarchical_includes
+# The module A.B.C lives in the file A/B/C.fst. F* resolves it hierarchically
+# in the include path (here, the cwd).
 
 # Unlike the other incl tests, run real dependency analysis (do not set
 # NODEPEND) so that we exercise 'fstar --dep' / the generated .depend and the

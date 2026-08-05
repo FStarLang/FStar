@@ -238,8 +238,6 @@ val help                        : unit    -> ML bool
 
 val hide_uvar_nums              : unit    -> ML bool
 
-val hierarchical_includes       : unit    -> ML bool
-
 val hint_info                   : unit    -> ML bool
 
 val hint_file_for_src           : string  -> ML string

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Test
-(* Module A.B.C is defined in the file A/B/C.fst, which is resolved thanks to
-   --hierarchical_includes (see this test's Makefile). *)
+(* Module A.B.C is defined in the file A/B/C.fst and resolved hierarchically. *)
 open A.B.C
 let y : int = x

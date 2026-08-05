@@ -216,12 +216,9 @@ let module_name_from_include_path (f:string) : ML (option string) =
 
 (* In public interface *)
 let maybe_module_name_of_file f =
-  if Options.hierarchical_includes () then
-    match module_name_from_include_path f with
-    | Some longname -> Some longname
-    | None -> check_and_strip_suffix (Filepath.basename f)
-  else
-    check_and_strip_suffix (Filepath.basename f)
+  match module_name_from_include_path f with
+  | Some longname -> Some longname
+  | None -> check_and_strip_suffix (Filepath.basename f)
 let module_name_of_file f =
     match maybe_module_name_of_file f with
     | Some longname ->
@@ -399,17 +396,15 @@ let cache_file_name =
          in different namespaces do not collide in the cache directory. We keep
          [fn]'s own extension (e.g. .fst / .fsti) rather than assuming one. *)
       let cache_fn =
-        if Options.hierarchical_includes ()
-        then let bn = Filepath.basename fn in
-             let ext = match check_and_strip_suffix bn with
-                       | Some stem -> Util.substring_from bn (String.length stem)
-                       | None ->
-                         // Unreachable: [module_name_of_file fn] above would
-                         // already have raised Fatal_NotValidFStarFile if [bn]
-                         // had no valid F* extension.
-                         failwith (Format.fmt1 "Impossible: cache_file_name: file without a valid F* extension: %s" fn) in
-             mname ^ ext ^ ".checked"
-        else fn ^ ".checked"
+        let bn = Filepath.basename fn in
+        let ext = match check_and_strip_suffix bn with
+                  | Some stem -> Util.substring_from bn (String.length stem)
+                  | None ->
+                    // Unreachable: [module_name_of_file fn] above would
+                    // already have raised Fatal_NotValidFStarFile if [bn]
+                    // had no valid F* extension.
+                    failwith (Format.fmt1 "Impossible: cache_file_name: file without a valid F* extension: %s" fn) in
+        mname ^ ext ^ ".checked"
       in
       match Find.find_file (cache_fn |> Filepath.basename) with
       | Some path ->
@@ -578,18 +573,6 @@ let module_candidate_of_file (ns_prefix:list string) (path:string) (filename:str
   | None -> []
   | Some modname -> [(String.concat "." (ns_prefix @ [modname]), path)]
 
-(* Enumerate the (long name, file path) candidates sitting directly in a single
-   include directory [root] (e.g. [X.Y.Z.fst], mapped to the long name [X.Y.Z]);
-   subdirectories are ignored. [cwd] is the normalized current directory: files
-   under it are reported by their bare path relative to [cwd]. *)
-let flat_modules_for_dir (cwd:string) (root:string)
-  : ML (list (string & string)) =
-  safe_readdir_for_include root |> List.concatMap (fun entry ->
-    let entry = Filepath.basename entry in
-    let entry_path = Filepath.join_paths root entry in
-    if Filepath.is_directory entry_path then []
-    else module_candidate_of_file [] (if root = cwd then entry else entry_path) entry)
-
 (* Enumerate the (long name, file path) candidates found under a single include
   directory [root], descending into subdirectories and turning each directory
   name into a namespace component: a file at [X/Y/Z.fst] (relative to [root]) is
@@ -626,14 +609,12 @@ let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:
   walk [] ""
 
 (* Build a map from module long name (and interface/implementation role) to the
-   file providing it within a single include directory, and check that this map
-   is unique: fail hard if any module long name is provided by more than one
-  file of the same role. Under [--hierarchical_includes] this catches, e.g., a
-   flat [X.Y.Z.fst] and a nested [X/Y/Z.fst] both defining module [X.Y.Z], rather
-   than silently picking one. Only relevant in hierarchical mode, where a single
-   directory can otherwise provide two files with the same long name. Duplicates
-   *across* different include directories remain allowed; later directories
-   override earlier ones (see [build_map]). *)
+  file providing it within a single include directory, and check that this map
+  is unique: fail hard if any module long name is provided by more than one
+  file of the same role. This catches, e.g., a flat [X.Y.Z.fst] and a nested
+  [X/Y/Z.fst] both defining module [X.Y.Z], rather than silently picking one.
+  Duplicates *across* different include directories remain allowed; later
+  directories override earlier ones (see [build_map]). *)
 let check_unique_module_names_for_dir (dir:string)
                                       (candidates : list (string & string))
   : ML unit =
@@ -644,25 +625,22 @@ let check_unique_module_names_for_dir (dir:string)
     | Some prev ->
       raise_error0 Errors.Fatal_DuplicateModuleOrInterface [
         text (Format.fmt4 "Module %s is provided by more than one file in include directory %s: %s and %s." longname dir prev path);
-        text "With --hierarchical_includes a module must have a unique source file. For example, do not provide both a flat 'X.Y.Z.fst' and a nested 'X/Y/Z.fst' for the same module."
+        text "A module must have a unique source file. For example, do not provide both a flat 'X.Y.Z.fst' and a nested 'X/Y/Z.fst' for the same module."
       ]
     | None -> SMap.add seen key path)
 
 (** Enumerate all F* files in all include directories, returning a list of pairs
     of long names and full paths.
 
-    In non-hierarchical mode only files that sit directly in an include
-    directory are considered (e.g. [X.Y.Z.fst], mapped to [X.Y.Z]). Under
-    [--hierarchical_includes] we also descend into subdirectories, mapping a
-    file at [X/Y/Z.fst] to the long name [X.Y.Z] (matching is case-insensitive;
-    long names are lowercased in [build_map]).
+    We descend into subdirectories, mapping a file at [X/Y/Z.fst] to the long
+    name [X.Y.Z] (matching is case-insensitive; long names are lowercased in
+    [build_map]).
 
-    In hierarchical mode we additionally fail hard if any module long name is
-    provided by more than one file of the same role within a single include
-    directory (e.g. both a flat [X.Y.Z.fst] and a nested [X/Y/Z.fst]). *)
+    We fail hard if any module long name is provided by more than one file of
+    the same role within a single include directory (e.g. both a flat
+    [X.Y.Z.fst] and a nested [X/Y/Z.fst]). *)
 (* In public interface *)
 let build_inclusion_candidates_list (): ML (list (string & string)) =
-  let hierarchical = Options.hierarchical_includes () in
   let include_directories = Find.full_include_path () in
   let include_directories = List.map Filepath.normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
@@ -670,12 +648,9 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
   let include_directories = List.unique include_directories in
   let cwd = Filepath.normalize_file_path (getcwd ()) in
   include_directories |> List.concatMap (fun d ->
-    if hierarchical then
-      let candidates = hierarchical_modules_for_dir cwd include_directories d in
-      check_unique_module_names_for_dir d candidates;
-      candidates
-    else
-      flat_modules_for_dir cwd d)
+    let candidates = hierarchical_modules_for_dir cwd include_directories d in
+    check_unique_module_names_for_dir d candidates;
+    candidates)
 
 (** List the contents of all include directories, then build a map from long
     names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are

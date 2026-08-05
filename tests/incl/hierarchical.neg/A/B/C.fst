@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-(* This file lives at A/B/C.fst, so with --hierarchical_includes its
-   path-derived long name is A.B.C. Declaring it as plain [module C] is an
-   invalid hierarchical layout: the module is not known under the short name C,
-   so Test.fst's [open C] must fail. *)
+(* This file lives at A/B/C.fst, so its path-derived long name is A.B.C.
+   Declaring it as plain [module C] is an invalid hierarchical layout: the
+   module is not known under the short name C, so Test.fst's [open C] must
+   fail. *)
 module C
 let x = 18

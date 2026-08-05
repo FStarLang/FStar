@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-(* This module lives at A/B/C.fst; with --hierarchical_includes it is
-   found in the include path under the long name A.B.C. *)
+(* This module lives at A/B/C.fst and is found in the include path under the
+   long name A.B.C. *)
 module A.B.C
 let x = 18
