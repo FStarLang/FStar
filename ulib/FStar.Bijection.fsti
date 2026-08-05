@@ -3,6 +3,7 @@ module FStar.Bijection
 open FStar.Ghost
 open FStar.Fin { fin }
 open FStar.Injection
+open FStar.Mul
 
 (* total function composition *)
 let o #a #b #c (g : b -> Tot c) (f : a -> Tot b) : a -> Tot c = fun x -> g (f x)
