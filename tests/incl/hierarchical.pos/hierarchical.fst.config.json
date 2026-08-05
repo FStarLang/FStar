@@ -1,6 +1,5 @@
 {
   "fstar_exe": "../../../out/bin/fstar.exe",
   "options": [],
-  "include_dirs": [
-  ]
+  "include_dirs": ["."]
 }

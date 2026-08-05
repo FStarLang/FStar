@@ -5,6 +5,7 @@
 # NODEPEND) so that we exercise 'fstar --dep' / the generated .depend and the
 # checked-file naming logic.
 NODEPEND :=
+OTHERFLAGS += --include .
 
 include ../Makefile.sub
 
