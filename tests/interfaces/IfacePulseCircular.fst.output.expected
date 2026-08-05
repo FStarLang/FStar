@@ -1,0 +1,6 @@
+* Error 133 at IfacePulseCircular.fst(23,2-23,9):
+  - Name IfacePulseCircular.derived is not in scope here.
+  - It is declared further down the interface of IfacePulseCircular
+    and only comes into scope once the declarations that precede it have been
+    implemented.
+

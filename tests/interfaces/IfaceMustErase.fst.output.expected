@@ -1,0 +1,11 @@
+* Warning 318 at IfaceMustErase.fst(5,4-5,6):
+  - Values of type ‘t1’ will be erased during extraction, but its interface
+    hides this fact.
+  - Add the ‘erasable’ attribute to the ‘val t1’ declaration for this
+    symbol in the interface
+
+* Error 162 at IfaceMustErase.fst(9,9-9,13):
+  - Illegal attribute: the ‘erasable’ attribute is only permitted on
+    inductive type definitions and abbreviations for non-informative types.
+  - The term Prims.bool is considered informative.
+

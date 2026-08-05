@@ -15,10 +15,14 @@
 *)
 module MustEraseForExtraction
 
+(* An informative type, declared without the `erasable` attribute. *)
 val t1 : Type0
 
+(* A non-informative type, declared as erasable. The negative cases --- a
+   definition that is erasable behind a declaration that is not, and vice
+   versa --- are in tests/interfaces/IfaceMustErase, since they are diagnosed
+   against the interface's `val` and so cannot be wrapped in an
+   [@@expect_failure] here: such a block defines nothing, and the declaration
+   would be left unimplemented. *)
 [@@erasable]
 val t2 : Type0
-
-[@@erasable]
-val t3 : Type0

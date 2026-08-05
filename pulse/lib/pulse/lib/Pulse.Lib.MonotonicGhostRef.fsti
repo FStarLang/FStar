@@ -57,6 +57,8 @@ fn gather (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#f #g:perm)
   requires pts_to r #g v
   ensures pts_to r #(f +. g) v
 
+instance val duplicable_snapshot #t #p r u : duplicable (snapshot #t #p r u)
+
 ghost
 fn take_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
   preserves pts_to r #f v
@@ -73,8 +75,6 @@ fn snapshots_related (#t:Type0) (#p:preorder t) (r:mref p) (#u #v:t)
   preserves snapshot r u
   preserves snapshot r v
   ensures pure (p u v \/ p v u)
-
-instance val duplicable_snapshot #t #p r u : duplicable (snapshot #t #p r u)
 
 ghost
 fn update (#t:Type) (#p:preorder t) (r:mref p) (#u:t) (v:t)

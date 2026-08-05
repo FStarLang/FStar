@@ -183,6 +183,15 @@ Guidelines for the changelog:
     listing the declarations of the interface that the implementation does not
     define.
 
+    The to-do list also governs *scope*: a declaration of `A.fsti` only becomes
+    visible to `A.fst` once the implementation has reached it. As before, this
+    means that `A.fst` cannot use a name that `A.fsti` declares after a `val`
+    that `A.fst` has not implemented yet. This ordering discipline is what rules
+    out circular proofs, where `A.fst` would discharge a `val` of `A.fsti` using
+    a later definition of `A.fsti` that is itself justified by that very `val`.
+    Declarations introduced by a language extension (a Pulse `fn`, say) are no
+    different from plain `val`s in this respect.
+
     Consequences for existing code:
     - **`open`, `include` and module abbreviations in a `.fsti` no longer scope
       over the corresponding `.fst`.** Each file must now declare the opens it
@@ -199,6 +208,10 @@ Guidelines for the changelog:
       different terms in `A.fsti.checked` and in `A.fst.checked`.
     - Errors are now reported in the source order of the `.fst` (interleaving
       used to reorder declarations).
+    - An `[@@expect_failure]` block in `A.fst` defines nothing, so it does not
+      discharge anything of `A.fsti`. Writing `[@@expect_failure] let f = ...`
+      in `A.fst` no longer admits a `val f` of `A.fsti`; the declaration is
+      still reported as unimplemented.
     - `A.fsti.checked` is now required in order to check `A.fst`, so a build
       produces (and must ship) checked files for interfaces.
     - The checked-file format version was bumped; all `.checked` files must be

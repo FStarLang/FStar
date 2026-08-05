@@ -1,0 +1,1 @@
+{"msg":["Expected the definition of IfacePulseOrder.f to precede IfacePulseOrder.g"],"level":"Error","range":{"def":{"file_name":"IfacePulseOrder.fst","start_pos":{"line":6,"col":0},"end_pos":{"line":9,"col":7}},"use":{"file_name":"IfacePulseOrder.fst","start_pos":{"line":6,"col":0},"end_pos":{"line":9,"col":7}}},"number":233,"ctx":[]}

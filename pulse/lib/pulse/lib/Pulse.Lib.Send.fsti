@@ -35,6 +35,19 @@ irreducible let anywhere (l: loc_id) = ()
 type placeless (p: slprop) =
   is_send_across anywhere p
 
+ghost fn placeless_move (p: slprop) {| placeless p |} l1 l2
+  requires on l1 p
+  ensures on l2 p
+
+ghost fn placeless_on_intro (p: slprop) {| placeless p |} l
+  requires p
+  ensures on l p
+
+ghost fn placeless_on_elim (p: slprop) {| placeless p |} l
+  requires on l p
+  ensures p
+instance val placeless_on (l: loc_id) (p: slprop) : placeless (on l p)
+
 [@@deprecated "impersonate is unsound; only use for model implementations"]
 noextract inline_for_extraction
 fn impersonate
@@ -80,17 +93,9 @@ ghost fn ghost_impersonate
   requires pre
   ensures post
 
-ghost fn placeless_move (p: slprop) {| placeless p |} l1 l2
-  requires on l1 p
-  ensures on l2 p
-
-ghost fn placeless_on_intro (p: slprop) {| placeless p |} l
-  requires p
-  ensures on l p
-
-ghost fn placeless_on_elim (p: slprop) {| placeless p |} l
-  requires on l p
-  ensures p
+instance val placeless_emp : placeless emp
+instance val placeless_star (a b: slprop) {| placeless a, placeless b |} : placeless (a ** b)
+instance val placeless_pure (p: prop) : placeless (pure p)
 
 [@@pulse_eager_intro]
 ghost fn on_emp_intro l
@@ -142,10 +147,6 @@ ghost fn on_star_elim #l (p q: slprop)
   ensures on l p
   ensures on l q
 
-instance val placeless_on (l: loc_id) (p: slprop) : placeless (on l p)
-instance val placeless_emp : placeless emp
-instance val placeless_star (a b: slprop) {| placeless a, placeless b |} : placeless (a ** b)
-instance val placeless_pure (p: prop) : placeless (pure p)
 instance val placeless_later_credit amt : placeless (later_credit amt)
 instance val placeless_equiv a b : placeless (equiv a b)
 instance val placeless_slprop_ref_pts_to x y : placeless (slprop_ref_pts_to x y)

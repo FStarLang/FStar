@@ -235,6 +235,15 @@ and env = {
   of the module a non-empty list is an error. *)
   iface_todo : list sigelt;
 
+  (* The names defined by the entries of [iface_todo], i.e. the part of A.fsti
+  that the implementation has not reached yet. They are *not* in scope: an
+  interface declaration only becomes visible to the implementation once the
+  to-do list has advanced past it, exactly as it would have been under the old
+  syntactic interleaving. Keeping them in scope is unsound: the implementation
+  could discharge a `val` using a later definition of the interface that is
+  itself justified by that very `val`, closing a circular proof. *)
+  iface_hidden : RBSet.t lident;
+
   (* The set of names declared by A.fsti, when checking A.fst. Unlike
   [iface_todo] this is not consumed: it is used to decide which definitions of
   the implementation are module-private (and hence marked [KrmlPrivate] for
@@ -307,9 +316,18 @@ val missing_definition_list (e:env) : ML (list lident)
 (* The interface "to-do list" of the module currently being checked. See the
 [iface_todo] field of [env]. *)
 
-val set_iface_todo (e:env) (ses:list sigelt) : env
+val set_iface_todo (e:env) (ses:list sigelt) : ML env
 
 val iface_todo (e:env) : list sigelt
+
+(* Advance the to-do list: [consumed] entries have been discharged (or copied
+into the implementation) and thereby come into scope, [remaining] is what is
+left of the list. *)
+val consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : ML env
+
+(* Is [l] a name of the interface that the implementation has not reached yet,
+and which is therefore not in scope? *)
+val is_iface_hidden (e:env) (l:lident) : ML bool
 
 (* Record the names declared by the interface of the module being checked;
 [vals] are the ones declared with a `val`. *)

@@ -1113,6 +1113,14 @@ let compress_and_norm env t =
 (* discharged by checking that the implementation subsumes it, and any *)
 (* other interface sigelt (a `let`, an inductive, ...) is copied over  *)
 (* verbatim.                                                           *)
+(*                                                                     *)
+(* The to-do list doubles as a scope: as long as an entry sits on it,  *)
+(* the names it defines are *not* visible to the implementation (see   *)
+(* [Env.is_iface_hidden]). This reproduces the ordering discipline of  *)
+(* the old syntactic interleaving and is what makes the whole scheme   *)
+(* sound: were the interface visible in full from the start, A.fst     *)
+(* could discharge `val one` using a definition of A.fsti that is      *)
+(* itself justified by `one` --- a circular proof of anything.         *)
 (***********************************************************************)
 
 (* The `val`s of an interface carry the Assumption qualifier, since on their own
@@ -1200,6 +1208,12 @@ interleaving implemented:
     error for [defs] to be declared *later* in the interface, since the
     definitions must appear in the order of their declarations.
 
+This is what rules out circular proofs: an interface definition is justified by
+the `val`s that precede it, so it must not come into scope until they have all
+been implemented, or it could be used to discharge one of them. Declarations
+introduced by a language extension (a Pulse `fn`, say) are no different from
+plain `val`s in this respect.
+
 Returns (copied, matched, remaining). *)
 let split_iface_todo (se:sigelt) (defs:list lident) (todo:list sigelt)
   : ML (list sigelt & list sigelt & list sigelt) =
@@ -1211,21 +1225,16 @@ let split_iface_todo (se:sigelt) (defs:list lident) (todo:list sigelt)
     | hd :: tl when is_iface_val hd && defines hd -> take_mutuals (hd::acc) tl
     | _ -> List.rev acc, todo
   in
-  (* [skipped] holds the declarations we walked past without matching; they stay
-     in the to-do list, ahead of what remains. Only declarations produced by a
-     language extension (e.g. a Pulse `fn`) may be skipped: plain `val`s must be
-     implemented in the order they are declared. *)
-  let rec go copied skipped todo : ML (list sigelt & list sigelt & list sigelt) =
+  let rec go copied todo
+    : ML (list sigelt & list sigelt & list sigelt) =
     match todo with
-    | [] -> List.rev copied, [], List.rev skipped
+    | [] -> List.rev copied, [], []
     | hd :: tl ->
       if not (is_iface_val hd)
-      then go (hd::copied) skipped tl
+      then go (hd::copied) tl
       else if defines hd
       then let mutuals, rest = take_mutuals [] tl in
-           List.rev copied, hd::mutuals, List.rev skipped @ rest
-      else if hd.sigmeta.sigmeta_extension_decl
-      then go copied (hd::skipped) tl
+           List.rev copied, hd::mutuals, rest
       else (
         (* [hd] is not implemented here. Make sure we are not implementing
            something the interface only declares later on. *)
@@ -1238,38 +1247,48 @@ let split_iface_todo (se:sigelt) (defs:list lident) (todo:list sigelt)
                (pp (List.hd (U.lids_of_sigelt hd)) ^/^ text "to precede" ^/^ pp l)
            ]
          | None -> ());
-        List.rev copied, [], List.rev skipped @ todo
+        List.rev copied, [], todo
       )
   in
-  go [] [] todo
+  go [] todo
 
 (* Discharge the head of the interface to-do list against the implementation
 sigelt [se], which is about to be checked.
 
-Returns the interface sigelts to be emitted verbatim ahead of [se] (already
-added to [env]) and the interface `val`s that [se] is expected to subsume. *)
+Returns the interface sigelts to be emitted verbatim ahead of [se] (which the
+tick-off just brought into scope) and the interface `val`s that [se] is
+expected to subsume. *)
 let tick_off_iface_todo (env:Env.env) (se:sigelt)
   : ML (list sigelt & list sigelt & Env.env)
   = match Env.iface_todo env with
     | [] -> [], [], env
     | todo ->
-      (* An `[@@expect_failure]` declaration defines nothing, but it does
-         discharge the interface's declarations of the names it mentions: they
-         are then simply admitted, as they were before this rework. *)
+      (* An `[@@expect_failure]` block defines nothing --- its declarations are
+         checked with errors trapped and then thrown away --- so it must not
+         discharge anything of the interface. Were it to do so, writing
+             [@@expect_failure] let f = ...
+         in A.fst would silently *admit* `val f` of A.fsti: the declaration
+         would be ticked off the to-do list, and hence neither reported as
+         unimplemented nor ever checked, while remaining an assumption for the
+         rest of the module and for A.fst.checked. Interface definitions that
+         precede the next unimplemented `val` are still copied over, so that the
+         block is checked in the scope it would have had. *)
       let defs =
         match se.sigel with
-        | Sig_fail {ses} -> ses |> List.collect U.lids_of_sigelt
+        | Sig_fail _ -> []
         | _ -> U.lids_of_sigelt se
       in
       let copied, matched, remaining = split_iface_todo se defs todo in
-      if Sig_fail? se.sigel
-      then copied @ matched, [], Env.set_iface_todo env remaining
-      else
-        (* An interface `val` that is being implemented is no longer an assumption. *)
-        let matched_vals = List.map unassume_iface_val matched in
-        (* Nothing needs to be added to the environment: the interface has
-           already been checked and loaded in full. *)
-        copied @ matched_vals, matched_vals, Env.set_iface_todo env remaining
+      (* The entries we just walked past come into scope now; whatever is left
+         of the to-do list stays hidden, so that [se] cannot be justified by an
+         interface definition that the implementation has not reached yet. *)
+      let env = Env.consume_iface_todo env (copied @ matched) remaining in
+      (* An interface `val` that is being implemented is no longer an assumption. *)
+      let matched_vals = List.map unassume_iface_val matched in
+      (* Nothing needs to be added to the environment: the interface has
+         already been checked and loaded in full; ticking the entries off the
+         to-do list is what brings them into scope. *)
+      copied @ matched_vals, matched_vals, env
 
 (* Flush the remaining to-do list at the end of the module: any leftover `val`
 is an unimplemented declaration, everything else is copied verbatim. *)
