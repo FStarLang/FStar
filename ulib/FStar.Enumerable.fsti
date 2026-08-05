@@ -3,6 +3,7 @@ module FStar.Enumerable
 open FStar.Fin
 open FStar.Bijection
 open FStar.Injection
+open FStar.Mul
 
 (* This class is for enumerable types, i.e. those in a bijection
    with a prefix of the natural numbers. *)
