@@ -16,7 +16,13 @@
 
 module DPE.Messages.Spec
 
-#set-options "--z3rlimit_factor 4"
+// The map_group_equiv proofs below unfold list-recursive predicates whose fuel
+// requirement grows with the number of map entries, so most of them only
+// succeed at fuel 8.  Starting the retry ladder at the default fuel 2 makes
+// every one of them fail three times first, which costs more than half the
+// verification time of this file.
+#set-options "--initial_fuel 8 --z3rlimit_factor 2"
+
 module Cddl = CDDL.Spec
 module Cbor = CBOR.Spec
 
