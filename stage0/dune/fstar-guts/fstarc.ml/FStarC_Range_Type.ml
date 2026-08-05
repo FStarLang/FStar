@@ -1,12 +1,9 @@
 open Prims
 type file_name = Prims.string[@@deriving yojson,show]
-type pos = {
-  line: Prims.int ;
-  col: Prims.int }[@@deriving yojson,show]
-let __proj__Mkpos__item__line (projectee : pos) : Prims.int=
-  match projectee with | { line; col;_} -> line
-let __proj__Mkpos__item__col (projectee : pos) : Prims.int=
-  match projectee with | { line; col;_} -> col
+let col_limit : Prims.int= Prims.of_int 65536
+type pos = Prims.int[@@deriving yojson,show]
+let pos_line (p : pos) : Prims.int= p / col_limit
+let pos_col (p : pos) : Prims.int= (mod) p col_limit
 let max (i : Prims.int) (j : Prims.int) : Prims.int= if i < j then j else i
 type rng = {
   file_name: file_name ;
@@ -29,7 +26,7 @@ let __proj__Mkrange__item__def_range (projectee : range) : rng=
   match projectee with | { def_range; use_range;_} -> def_range
 let __proj__Mkrange__item__use_range (projectee : range) : rng=
   match projectee with | { def_range; use_range;_} -> use_range
-let dummy_pos : pos= { line = Prims.int_zero; col = Prims.int_zero }
+let dummy_pos : pos= Prims.int_zero
 let dummy_rng : rng=
   { file_name = "dummy"; start_pos = dummy_pos; end_pos = dummy_pos }
 let dummyRange : range= { def_range = dummy_rng; use_range = dummy_rng }
@@ -51,7 +48,10 @@ let set_def_range (r2 : range) (def_rng : rng) : range=
   then { def_range = def_rng; use_range = (r2.use_range) }
   else r2
 let mk_pos (l : Prims.int) (c : Prims.int) : pos=
-  { line = (max Prims.int_zero l); col = (max Prims.int_zero c) }
+  let l1 = max Prims.int_zero l in
+  let c1 = max Prims.int_zero c in
+  (l1 * col_limit) +
+    (if c1 >= col_limit then col_limit - Prims.int_one else c1)
 let mk_rng (file_name1 : Prims.string) (start_pos : pos) (end_pos : pos) :
   rng=
   { file_name = (FStarC_Filepath.basename file_name1); start_pos; end_pos }
@@ -59,8 +59,8 @@ let mk_range (f : Prims.string) (b : pos) (e : pos) : range=
   let r = mk_rng f b e in range_of_rng r r
 let json_of_pos (r : pos) : FStarC_Json.json=
   FStarC_Json.JsonAssoc
-    [("line", (FStarC_Json.JsonInt (r.line)));
-    ("col", (FStarC_Json.JsonInt (r.col)))]
+    [("line", (FStarC_Json.JsonInt (pos_line r)));
+    ("col", (FStarC_Json.JsonInt (pos_col r)))]
 let json_of_rng (r : rng) : FStarC_Json.json=
   FStarC_Json.JsonAssoc
     [("file_name", (FStarC_Json.JsonStr (r.file_name)));

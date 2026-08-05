@@ -705,18 +705,12 @@ let detail_errors (hint_replay : Prims.bool)
       (fun uu___ ->
          match uu___ with
          | (l, uu___1, uu___2) ->
-             let tm =
-               let uu___3 =
-                 let uu___4 = FStarC_SMTEncoding_Util.mkFreeV l in
-                 (uu___4, FStarC_SMTEncoding_Util.mkTrue) in
-               FStarC_SMTEncoding_Util.mkEq uu___3 in
              let a =
                let uu___3 =
                  let uu___4 =
                    let uu___5 = FStarC_SMTEncoding_Util.mkFreeV l in
                    (uu___5, FStarC_SMTEncoding_Util.mkTrue) in
                  FStarC_SMTEncoding_Util.mkEq uu___4 in
-               let uu___4 = FStarC_SMTEncoding_Term.free_top_level_names tm in
                {
                  FStarC_SMTEncoding_Term.assumption_term = uu___3;
                  FStarC_SMTEncoding_Term.assumption_caption =
@@ -724,8 +718,7 @@ let detail_errors (hint_replay : Prims.bool)
                  FStarC_SMTEncoding_Term.assumption_name =
                    (Prims.strcat "@disable_label_"
                       (FStarC_SMTEncoding_Term.fv_name l));
-                 FStarC_SMTEncoding_Term.assumption_fact_ids = [];
-                 FStarC_SMTEncoding_Term.assumption_free_names = uu___4
+                 FStarC_SMTEncoding_Term.assumption_fact_ids = []
                } in
              FStarC_SMTEncoding_Term.Assume a) labs in
   let rec linear_check eliminated errors active =

@@ -3,39 +3,36 @@ let dbg : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "CheckedFiles"
 let debug (f : unit -> unit) : unit=
   let uu___ = FStarC_Effect.op_Bang dbg in if uu___ then f () else ()
-let cache_version_number : Prims.int= Prims.of_int 84
+let cache_version_number : Prims.int= Prims.of_int 89
 type tc_result =
   {
   checked_module: FStarC_Syntax_Syntax.modul ;
   mii: FStarC_Syntax_DsEnv.module_inclusion_info ;
-  smt_decls:
-    (FStarC_SMTEncoding_Term.decls_t * FStarC_SMTEncoding_Env.fvar_binding
-      Prims.list)
-    ;
+  smt_encoding: FStarC_SMTEncoding_Env.module_encoding ;
   tc_time: Prims.int ;
   extraction_time: Prims.int }
 let __proj__Mktc_result__item__checked_module (projectee : tc_result) :
   FStarC_Syntax_Syntax.modul=
   match projectee with
-  | { checked_module; mii; smt_decls; tc_time; extraction_time;_} ->
+  | { checked_module; mii; smt_encoding; tc_time; extraction_time;_} ->
       checked_module
 let __proj__Mktc_result__item__mii (projectee : tc_result) :
   FStarC_Syntax_DsEnv.module_inclusion_info=
   match projectee with
-  | { checked_module; mii; smt_decls; tc_time; extraction_time;_} -> mii
-let __proj__Mktc_result__item__smt_decls (projectee : tc_result) :
-  (FStarC_SMTEncoding_Term.decls_t * FStarC_SMTEncoding_Env.fvar_binding
-    Prims.list)=
+  | { checked_module; mii; smt_encoding; tc_time; extraction_time;_} -> mii
+let __proj__Mktc_result__item__smt_encoding (projectee : tc_result) :
+  FStarC_SMTEncoding_Env.module_encoding=
   match projectee with
-  | { checked_module; mii; smt_decls; tc_time; extraction_time;_} ->
-      smt_decls
+  | { checked_module; mii; smt_encoding; tc_time; extraction_time;_} ->
+      smt_encoding
 let __proj__Mktc_result__item__tc_time (projectee : tc_result) : Prims.int=
   match projectee with
-  | { checked_module; mii; smt_decls; tc_time; extraction_time;_} -> tc_time
+  | { checked_module; mii; smt_encoding; tc_time; extraction_time;_} ->
+      tc_time
 let __proj__Mktc_result__item__extraction_time (projectee : tc_result) :
   Prims.int=
   match projectee with
-  | { checked_module; mii; smt_decls; tc_time; extraction_time;_} ->
+  | { checked_module; mii; smt_encoding; tc_time; extraction_time;_} ->
       extraction_time
 type checked_file_entry_stage1 =
   {
@@ -51,23 +48,53 @@ let __proj__Mkchecked_file_entry_stage1__item__digest
 let __proj__Mkchecked_file_entry_stage1__item__parsing_data
   (projectee : checked_file_entry_stage1) : FStarC_Parser_Dep.parsing_data=
   match projectee with | { version; digest; parsing_data;_} -> parsing_data
+type tc_result_stored =
+  {
+  stored_checked_module: FStarC_Syntax_Syntax.modul ;
+  stored_mii: FStarC_Syntax_DsEnv.module_inclusion_info ;
+  stored_smt_index: FStarC_SMTEncoding_Pruning.elt_summary Prims.list ;
+  stored_smt_fvbs: FStarC_SMTEncoding_Env.fvar_binding Prims.list }
+let __proj__Mktc_result_stored__item__stored_checked_module
+  (projectee : tc_result_stored) : FStarC_Syntax_Syntax.modul=
+  match projectee with
+  | { stored_checked_module; stored_mii; stored_smt_index; stored_smt_fvbs;_}
+      -> stored_checked_module
+let __proj__Mktc_result_stored__item__stored_mii
+  (projectee : tc_result_stored) : FStarC_Syntax_DsEnv.module_inclusion_info=
+  match projectee with
+  | { stored_checked_module; stored_mii; stored_smt_index; stored_smt_fvbs;_}
+      -> stored_mii
+let __proj__Mktc_result_stored__item__stored_smt_index
+  (projectee : tc_result_stored) :
+  FStarC_SMTEncoding_Pruning.elt_summary Prims.list=
+  match projectee with
+  | { stored_checked_module; stored_mii; stored_smt_index; stored_smt_fvbs;_}
+      -> stored_smt_index
+let __proj__Mktc_result_stored__item__stored_smt_fvbs
+  (projectee : tc_result_stored) :
+  FStarC_SMTEncoding_Env.fvar_binding Prims.list=
+  match projectee with
+  | { stored_checked_module; stored_mii; stored_smt_index; stored_smt_fvbs;_}
+      -> stored_smt_fvbs
 type checked_file_entry_stage2 =
   {
   deps_dig: (Prims.string * Prims.string) Prims.list ;
-  tc_res: tc_result }
+  tc_res: tc_result_stored }
 let __proj__Mkchecked_file_entry_stage2__item__deps_dig
   (projectee : checked_file_entry_stage2) :
   (Prims.string * Prims.string) Prims.list=
   match projectee with | { deps_dig; tc_res;_} -> deps_dig
 let __proj__Mkchecked_file_entry_stage2__item__tc_res
-  (projectee : checked_file_entry_stage2) : tc_result=
+  (projectee : checked_file_entry_stage2) : tc_result_stored=
   match projectee with | { deps_dig; tc_res;_} -> tc_res
 type tc_result_t =
-  | Unknown 
+  | Unknown of Prims.string 
   | Invalid of Prims.string 
   | Valid of Prims.string 
 let uu___is_Unknown (projectee : tc_result_t) : Prims.bool=
-  match projectee with | Unknown -> true | uu___ -> false
+  match projectee with | Unknown _0 -> true | uu___ -> false
+let __proj__Unknown__item___0 (projectee : tc_result_t) : Prims.string=
+  match projectee with | Unknown _0 -> _0
 let uu___is_Invalid (projectee : tc_result_t) : Prims.bool=
   match projectee with | Invalid _0 -> true | uu___ -> false
 let __proj__Invalid__item___0 (projectee : tc_result_t) : Prims.string=
@@ -81,7 +108,10 @@ let uu___0 : tc_result_t FStarC_Class_Show.showable=
     FStarC_Class_Show.show =
       (fun uu___ ->
          match uu___ with
-         | Unknown -> "Unknown"
+         | Unknown s ->
+             let uu___1 =
+               FStarC_Class_Show.show FStarC_Class_Show.showable_string s in
+             Prims.strcat "Unknown " uu___1
          | Invalid s ->
              let uu___1 =
                FStarC_Class_Show.show FStarC_Class_Show.showable_string s in
@@ -128,13 +158,13 @@ let load_checked_file (fn : Prims.string) (checked_fn : Prims.string) :
           FStarC_Format.fmt1 "checked file %s does not exist" checked_fn in
         add_and_return1 ((Invalid msg), (FStar_Pervasives.Inl msg))
       else
-        (let entry = FStarC_Util.load_value_from_file checked_fn in
+        (let entry = FStarC_Util.load_1value_from_file3 checked_fn in
          match entry with
          | FStar_Pervasives_Native.None ->
              let msg =
                FStarC_Format.fmt1 "checked file %s is corrupt" checked_fn in
              add_and_return1 ((Invalid msg), (FStar_Pervasives.Inl msg))
-         | FStar_Pervasives_Native.Some x ->
+         | FStar_Pervasives_Native.Some (checked_digest, x) ->
              if x.version <> cache_version_number
              then
                let msg =
@@ -158,7 +188,8 @@ let load_checked_file (fn : Prims.string) (checked_fn : Prims.string) :
                       ((Invalid msg), (FStar_Pervasives.Inl msg))))
                 else
                   add_and_return1
-                    (Unknown, (FStar_Pervasives.Inr (x.parsing_data)))))))
+                    ((Unknown checked_digest),
+                      (FStar_Pervasives.Inr (x.parsing_data)))))))
 let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : Prims.string)
   (deps_of_fn : Prims.string Prims.list) :
   (Prims.string, (Prims.string * Prims.string) Prims.list)
@@ -236,7 +267,7 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : Prims.string)
                    FStar_Pervasives.Inl msg
                | FStar_Pervasives_Native.Some (Valid dig, uu___2) ->
                    FStar_Pervasives.Inr dig
-               | FStar_Pervasives_Native.Some (Unknown, uu___2) ->
+               | FStar_Pervasives_Native.Some (Unknown uu___2, uu___3) ->
                    FStarC_Effect.failwith
                      (FStarC_Format.fmt2
                         "Impossible: unknown entry in the cache for dependence %s of module %s"
@@ -247,13 +278,51 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : Prims.string)
                   let mn = FStarC_Parser_Dep.lowercase_module_name fn2 in
                   hash_deps ((mn, dig) :: out) deps1) in
        hash_deps [] binary_deps1)
+let smt_decls_thunk (checked_fn : Prims.string) :
+  unit -> FStarC_SMTEncoding_Term.decls_t=
+  let memo = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
+  fun uu___ ->
+    let uu___1 = FStarC_Effect.op_Bang memo in
+    match uu___1 with
+    | FStar_Pervasives_Native.Some d -> d
+    | FStar_Pervasives_Native.None ->
+        let d =
+          let uu___2 = FStarC_Util.load_3rd_value_from_file3 checked_fn in
+          match uu___2 with
+          | FStar_Pervasives_Native.Some d1 -> d1
+          | FStar_Pervasives_Native.None ->
+              FStarC_Effect.failwith
+                (FStarC_Format.fmt1
+                   "Could not read the SMT encoding from checked file %s"
+                   checked_fn) in
+        (FStarC_Effect.op_Colon_Equals memo (FStar_Pervasives_Native.Some d);
+         d)
+let tc_result_of_stored (checked_fn : Prims.string) (s : tc_result_stored) :
+  tc_result=
+  let uu___ =
+    let uu___1 = smt_decls_thunk checked_fn in
+    {
+      FStarC_SMTEncoding_Env.me_index = (s.stored_smt_index);
+      FStarC_SMTEncoding_Env.me_fvbs = (s.stored_smt_fvbs);
+      FStarC_SMTEncoding_Env.me_decls = uu___1
+    } in
+  {
+    checked_module = (s.stored_checked_module);
+    mii = (s.stored_mii);
+    smt_encoding = uu___;
+    tc_time = Prims.int_zero;
+    extraction_time = Prims.int_zero
+  }
 let load_tc_result (checked_fn : Prims.string) :
   ((Prims.string * Prims.string) Prims.list * tc_result)
     FStar_Pervasives_Native.option=
-  let entry = FStarC_Util.load_2values_from_file checked_fn in
+  let entry = FStarC_Util.load_2values_from_file3 checked_fn in
   match entry with
-  | FStar_Pervasives_Native.Some (uu___, s2) ->
-      FStar_Pervasives_Native.Some ((s2.deps_dig), (s2.tc_res))
+  | FStar_Pervasives_Native.Some (uu___, uu___1, s2) ->
+      let uu___2 =
+        let uu___3 = tc_result_of_stored checked_fn s2.tc_res in
+        ((s2.deps_dig), uu___3) in
+      FStar_Pervasives_Native.Some uu___2
   | uu___ -> FStar_Pervasives_Native.None
 let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
   (fn : Prims.string) (checked_fn : Prims.string) :
@@ -277,7 +346,7 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
          let uu___4 = load_tc_result' checked_fn in
          FStar_Pervasives_Native.snd uu___4 in
        FStar_Pervasives.Inr uu___3
-   | (Unknown, parsing_data) ->
+   | (Unknown checked_digest, parsing_data) ->
        let uu___1 =
          let uu___2 = FStarC_Parser_Dep.deps_of deps fn in
          hash_dependences deps fn uu___2 in
@@ -297,11 +366,7 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
                    else FStarC_Options.should_be_already_cached module_name in
                  if uu___3
                  then
-                   let elt1 =
-                     let uu___4 =
-                       let uu___5 = FStarC_Util.digest_of_file checked_fn in
-                       Valid uu___5 in
-                     (uu___4, parsing_data) in
+                   let elt1 = ((Valid checked_digest), parsing_data) in
                    let uu___4 = add_and_return checked_fn elt1 in
                    let validate_iface_cache uu___5 =
                      let iface =
@@ -321,17 +386,12 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
                                      try_find_in_cache iface_checked_fn in
                                    (match uu___7 with
                                     | FStar_Pervasives_Native.Some
-                                        (Unknown, parsing_data1) ->
+                                        (Unknown iface_digest, parsing_data1)
+                                        ->
                                         let uu___8 =
-                                          let uu___9 =
-                                            let uu___10 =
-                                              let uu___11 =
-                                                FStarC_Util.digest_of_file
-                                                  iface_checked_fn in
-                                              Valid uu___11 in
-                                            (uu___10, parsing_data1) in
                                           add_and_return iface_checked_fn
-                                            uu___9 in
+                                            ((Valid iface_digest),
+                                              parsing_data1) in
                                         ()
                                     | uu___8 -> ())) ()
                           with | uu___6 -> ()) in
@@ -514,11 +574,12 @@ let load_module_from_cache (env : FStarC_TypeChecker_Env.env)
   load_module_from_cache_internal false
     (FStarC_TypeChecker_Env.dep_graph env) fn
 let store_values_to_cache (cache_file : Prims.string)
-  (stage1 : checked_file_entry_stage1) (stage2 : checked_file_entry_stage2) :
-  unit=
+  (stage1 : checked_file_entry_stage1) (stage2 : checked_file_entry_stage2)
+  (smt_decls : FStarC_SMTEncoding_Term.decls_t) : Prims.string=
   FStarC_Errors.with_ctx
     (Prims.strcat "While writing checked file " cache_file)
-    (fun uu___ -> FStarC_Util.save_2values_to_file cache_file stage1 stage2)
+    (fun uu___ ->
+       FStarC_Util.save_3values_to_file cache_file stage1 stage2 smt_decls)
 let uu___1 : FStarC_Parser_Dep.parsing_data FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = FStarC_Parser_Dep.str_of_parsing_data }
 let store_module_to_cache (env : FStarC_TypeChecker_Env.env)
@@ -577,14 +638,6 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env)
               deps_of_fn in
           (match digest with
            | FStar_Pervasives.Inr hashes ->
-               let tc_result2 =
-                 {
-                   checked_module = (tc_result1.checked_module);
-                   mii = (tc_result1.mii);
-                   smt_decls = (tc_result1.smt_decls);
-                   tc_time = Prims.int_zero;
-                   extraction_time = Prims.int_zero
-                 } in
                let stage1 =
                  let uu___5 = FStarC_Util.digest_of_file fn in
                  {
@@ -592,8 +645,26 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env)
                    digest = uu___5;
                    parsing_data
                  } in
-               let stage2 = { deps_dig = hashes; tc_res = tc_result2 } in
-               store_values_to_cache cache_file stage1 stage2
+               let stored =
+                 {
+                   stored_checked_module = (tc_result1.checked_module);
+                   stored_mii = (tc_result1.mii);
+                   stored_smt_index =
+                     ((tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_index);
+                   stored_smt_fvbs =
+                     ((tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_fvbs)
+                 } in
+               let stage2 = { deps_dig = hashes; tc_res = stored } in
+               let checked_digest =
+                 let uu___5 =
+                   (tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_decls
+                     () in
+                 store_values_to_cache cache_file stage1 stage2 uu___5 in
+               let uu___5 =
+                 add_and_return cache_file
+                   ((Valid checked_digest),
+                     (FStar_Pervasives.Inr parsing_data)) in
+               ()
            | FStar_Pervasives.Inl msg ->
                (debug
                   (fun uu___6 ->
@@ -621,11 +692,12 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env)
 let unsafe_raw_load_checked_file (checked_fn : Prims.string) :
   (FStarC_Parser_Dep.parsing_data * Prims.string Prims.list * tc_result)
     FStar_Pervasives_Native.option=
-  let entry = FStarC_Util.load_2values_from_file checked_fn in
+  let entry = FStarC_Util.load_2values_from_file3 checked_fn in
   match entry with
-  | FStar_Pervasives_Native.Some (s1, s2) ->
-      let uu___ =
-        let uu___2 = FStarC_List.map FStar_Pervasives_Native.fst s2.deps_dig in
-        ((s1.parsing_data), uu___2, (s2.tc_res)) in
-      FStar_Pervasives_Native.Some uu___
+  | FStar_Pervasives_Native.Some (uu___, s1, s2) ->
+      let uu___2 =
+        let uu___3 = FStarC_List.map FStar_Pervasives_Native.fst s2.deps_dig in
+        let uu___4 = tc_result_of_stored checked_fn s2.tc_res in
+        ((s1.parsing_data), uu___3, uu___4) in
+      FStar_Pervasives_Native.Some uu___2
   | uu___ -> FStar_Pervasives_Native.None

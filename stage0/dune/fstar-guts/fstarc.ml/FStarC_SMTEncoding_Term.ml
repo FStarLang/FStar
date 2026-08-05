@@ -329,33 +329,27 @@ type assumption =
   assumption_term: term ;
   assumption_caption: caption ;
   assumption_name: Prims.string ;
-  assumption_fact_ids: fact_db_id Prims.list ;
-  assumption_free_names: Prims.string FStarC_RBSet.t }
+  assumption_fact_ids: fact_db_id Prims.list }
 let __proj__Mkassumption__item__assumption_term (projectee : assumption) :
   term=
   match projectee with
   | { assumption_term; assumption_caption; assumption_name;
-      assumption_fact_ids; assumption_free_names;_} -> assumption_term
+      assumption_fact_ids;_} -> assumption_term
 let __proj__Mkassumption__item__assumption_caption (projectee : assumption) :
   caption=
   match projectee with
   | { assumption_term; assumption_caption; assumption_name;
-      assumption_fact_ids; assumption_free_names;_} -> assumption_caption
+      assumption_fact_ids;_} -> assumption_caption
 let __proj__Mkassumption__item__assumption_name (projectee : assumption) :
   Prims.string=
   match projectee with
   | { assumption_term; assumption_caption; assumption_name;
-      assumption_fact_ids; assumption_free_names;_} -> assumption_name
+      assumption_fact_ids;_} -> assumption_name
 let __proj__Mkassumption__item__assumption_fact_ids (projectee : assumption)
   : fact_db_id Prims.list=
   match projectee with
   | { assumption_term; assumption_caption; assumption_name;
-      assumption_fact_ids; assumption_free_names;_} -> assumption_fact_ids
-let __proj__Mkassumption__item__assumption_free_names
-  (projectee : assumption) : Prims.string FStarC_RBSet.t=
-  match projectee with
-  | { assumption_term; assumption_caption; assumption_name;
-      assumption_fact_ids; assumption_free_names;_} -> assumption_free_names
+      assumption_fact_ids;_} -> assumption_fact_ids
 type decl =
   | DefPrelude 
   | DeclFun of Prims.string * sort Prims.list * sort * caption 
@@ -1427,13 +1421,11 @@ let fresh_token (uu___ : (term * fvs * sort)) (id : Prims.int) : decl=
         mkEq uu___1 in
       let tm1 = mkForall norng ([[tok]], univ_fvs, tm) in
       let a =
-        let uu___1 = free_top_level_names tm1 in
         {
           assumption_term = tm1;
           assumption_caption = (FStar_Pervasives_Native.Some "fresh token");
           assumption_name = (escape a_name);
-          assumption_fact_ids = [];
-          assumption_free_names = uu___1
+          assumption_fact_ids = []
         } in
       Assume a
 let fresh_constructor (rng : FStarC_Range_Type.t)
@@ -1467,14 +1459,12 @@ let fresh_constructor (rng : FStarC_Range_Type.t)
           ([[capp]], bvar_names, uu___2) in
         mkForall rng uu___1 in
       let a =
-        let uu___1 = free_top_level_names tm in
         {
           assumption_term = tm;
           assumption_caption =
             (FStar_Pervasives_Native.Some "Constructor distinct");
           assumption_name = (escape a_name);
-          assumption_fact_ids = [];
-          assumption_free_names = uu___1
+          assumption_fact_ids = []
         } in
       Assume a
 let injective_constructor (rng : FStarC_Range_Type.t)
@@ -1518,15 +1508,13 @@ let injective_constructor (rng : FStarC_Range_Type.t)
                        ([[capp]], bvar_names, uu___4) in
                      mkForall rng uu___3 in
                    let a =
-                     let uu___3 = free_top_level_names tm in
                      {
                        assumption_term = tm;
                        assumption_caption =
                          (FStar_Pervasives_Native.Some "Projection inverse");
                        assumption_name =
                          (escape (Prims.strcat "projection_inverse_" name1));
-                       assumption_fact_ids = [];
-                       assumption_free_names = uu___3
+                       assumption_fact_ids = []
                      } in
                    [proj_name; Assume a]
                  else []) fields in
@@ -1663,15 +1651,13 @@ let constructor_to_decl (rng : FStarC_Range_Type.t) (constr : constructor_t)
            ([[constructed_term]], formals, uu___1) in
          mkForall rng uu___ in
        let a =
-         let uu___ = free_top_level_names q in
          {
            assumption_term = q;
            assumption_caption =
              (FStar_Pervasives_Native.Some "Constructor base");
            assumption_name =
              (escape (Prims.strcat "constructor_base_" constr.constr_name));
-           assumption_fact_ids = [];
-           assumption_free_names = uu___
+           assumption_fact_ids = []
          } in
        [decl1; Assume a]) in
   FStarC_List.op_At

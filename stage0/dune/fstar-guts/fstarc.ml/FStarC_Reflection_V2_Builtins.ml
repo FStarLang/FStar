@@ -66,13 +66,33 @@ let pack_fv (ns : Prims.string Prims.list) : FStarC_Syntax_Syntax.fv=
            let uu___1 = FStarC_Parser_Const.p2l ns in
            FStarC_Syntax_Syntax.lid_as_fv uu___1 quals
        | uu___1 -> fallback ())
+let inspect_int_signedness (s : FStarC_Const.signedness) :
+  FStarC_Reflection_V2_Data.int_signedness=
+  match s with
+  | FStarC_Const.Signed -> FStarC_Reflection_V2_Data.Signed
+  | FStarC_Const.Unsigned -> FStarC_Reflection_V2_Data.Unsigned
+let inspect_int_width (w : FStarC_Const.width) :
+  FStarC_Reflection_V2_Data.int_width=
+  match w with
+  | FStarC_Const.Int8 -> FStarC_Reflection_V2_Data.Int8
+  | FStarC_Const.Int16 -> FStarC_Reflection_V2_Data.Int16
+  | FStarC_Const.Int32 -> FStarC_Reflection_V2_Data.Int32
+  | FStarC_Const.Int64 -> FStarC_Reflection_V2_Data.Int64
+  | FStarC_Const.Sizet -> FStarC_Reflection_V2_Data.Sizet
 let inspect_const (c : FStarC_Syntax_Syntax.sconst) :
   FStarC_Reflection_V2_Data.vconst=
   match c with
   | FStarC_Const.Const_unit -> FStarC_Reflection_V2_Data.C_Unit
-  | FStarC_Const.Const_int (s, uu___) ->
-      let uu___1 = FStarC_Util.int_of_string s in
-      FStarC_Reflection_V2_Data.C_Int uu___1
+  | FStarC_Const.Const_int (s, FStar_Pervasives_Native.None) ->
+      let uu___ = FStarC_Util.int_of_string s in
+      FStarC_Reflection_V2_Data.C_Int uu___
+  | FStarC_Const.Const_int
+      (s, FStar_Pervasives_Native.Some (signedness, width)) ->
+      let uu___ =
+        let uu___1 = FStarC_Util.int_of_string s in
+        (uu___1, (inspect_int_signedness signedness),
+          (inspect_int_width width)) in
+      FStarC_Reflection_V2_Data.C_MachineInt uu___
   | FStarC_Const.Const_bool true -> FStarC_Reflection_V2_Data.C_True
   | FStarC_Const.Const_bool false -> FStarC_Reflection_V2_Data.C_False
   | FStarC_Const.Const_string (s, uu___) ->
@@ -266,23 +286,33 @@ let inspect_comp (c : FStarC_Syntax_Syntax.comp) :
         FStarC_Ident.lid_equals ct.FStarC_Syntax_Syntax.effect_name
           FStarC_Parser_Const.effect_Lemma_lid
       then
-        (match ct.FStarC_Syntax_Syntax.effect_args with
-         | (pre, uu___)::(post, uu___1)::(pats, uu___2)::uu___3 ->
-             FStarC_Reflection_V2_Data.C_Lemma (pre, post, pats)
-         | uu___ ->
-             FStarC_Effect.failwith
-               "inspect_comp: Lemma does not have enough arguments?")
+        let pats =
+          let uu___ =
+            let uu___1 = FStarC_Syntax_Syntax.mk_Comp ct in
+            FStarC_Syntax_Util.comp_smt_pats uu___1 in
+          match uu___ with
+          | FStar_Pervasives_Native.Some p -> p
+          | FStar_Pervasives_Native.None ->
+              let uu___1 =
+                FStarC_Syntax_Syntax.fvar_with_dd
+                  FStarC_Parser_Const.pattern_lid
+                  FStar_Pervasives_Native.None in
+              FStarC_Syntax_Util.mk_list uu___1 FStarC_Range_Type.dummyRange
+                [] in
+        FStarC_Reflection_V2_Data.C_Lemma
+          ((ct.FStarC_Syntax_Syntax.comp_pre),
+            (ct.FStarC_Syntax_Syntax.comp_post), pats)
       else
-        (let inspect_arg uu___ =
-           match uu___ with | (a, q) -> (a, (inspect_aqual q)) in
-         let uu___ =
+        (let uu___ =
            let uu___1 =
              FStarC_Ident.path_of_lid ct.FStarC_Syntax_Syntax.effect_name in
-           let uu___2 =
-             FStarC_List.map inspect_arg ct.FStarC_Syntax_Syntax.effect_args in
-           let uu___3 = get_dec ct.FStarC_Syntax_Syntax.flags in
+           let uu___2 = get_dec ct.FStarC_Syntax_Syntax.flags in
            ((ct.FStarC_Syntax_Syntax.comp_univs), uu___1,
-             (ct.FStarC_Syntax_Syntax.result_typ), uu___2, uu___3) in
+             (ct.FStarC_Syntax_Syntax.result_typ),
+             [((ct.FStarC_Syntax_Syntax.comp_pre),
+                FStarC_Reflection_V2_Data.Q_Explicit);
+             ((ct.FStarC_Syntax_Syntax.comp_post),
+               FStarC_Reflection_V2_Data.Q_Explicit)], uu___2) in
          FStarC_Reflection_V2_Data.C_Eff uu___)
 let pack_comp (cv : FStarC_Reflection_V2_Data.comp_view) :
   FStarC_Syntax_Syntax.comp=
@@ -302,33 +332,42 @@ let pack_comp (cv : FStarC_Reflection_V2_Data.comp_view) :
           FStarC_Syntax_Syntax.effect_name =
             FStarC_Parser_Const.effect_Lemma_lid;
           FStarC_Syntax_Syntax.result_typ = FStarC_Syntax_Syntax.t_unit;
-          FStarC_Syntax_Syntax.effect_args =
-            [FStarC_Syntax_Syntax.as_arg pre;
-            FStarC_Syntax_Syntax.as_arg post;
-            FStarC_Syntax_Syntax.as_arg pats];
-          FStarC_Syntax_Syntax.flags = []
+          FStarC_Syntax_Syntax.comp_pre = pre;
+          FStarC_Syntax_Syntax.comp_post = post;
+          FStarC_Syntax_Syntax.flags =
+            [FStarC_Syntax_Syntax.LEMMA; FStarC_Syntax_Syntax.SMTPAT pats]
         } in
       FStarC_Syntax_Syntax.mk_Comp ct
   | FStarC_Reflection_V2_Data.C_Eff (us, ef, res, args, decrs) ->
-      let pack_arg uu___ =
-        match uu___ with | (a, q) -> let uu___1 = pack_aqual q in (a, uu___1) in
       let flags =
         if Prims.uu___is_Nil decrs
         then []
         else
           [FStarC_Syntax_Syntax.DECREASES
              (FStarC_Syntax_Syntax.Decreases_lex decrs)] in
-      let ct =
-        let uu___ = FStarC_Ident.lid_of_path ef FStarC_Range_Type.dummyRange in
-        let uu___1 = FStarC_List.map pack_arg args in
-        {
-          FStarC_Syntax_Syntax.comp_univs = us;
-          FStarC_Syntax_Syntax.effect_name = uu___;
-          FStarC_Syntax_Syntax.result_typ = res;
-          FStarC_Syntax_Syntax.effect_args = uu___1;
-          FStarC_Syntax_Syntax.flags = flags
-        } in
-      FStarC_Syntax_Syntax.mk_Comp ct
+      let uu___ =
+        match args with
+        | (pre, uu___1)::(post, uu___2)::uu___3 -> (pre, post)
+        | (pre, uu___1)::[] ->
+            let uu___2 = FStarC_Syntax_Syntax.trivial_post res in
+            (pre, uu___2)
+        | [] ->
+            let uu___1 = FStarC_Syntax_Syntax.trivial_post res in
+            (FStarC_Syntax_Syntax.trivial_pre, uu___1) in
+      (match uu___ with
+       | (pre, post) ->
+           let ct =
+             let uu___1 =
+               FStarC_Ident.lid_of_path ef FStarC_Range_Type.dummyRange in
+             {
+               FStarC_Syntax_Syntax.comp_univs = us;
+               FStarC_Syntax_Syntax.effect_name = uu___1;
+               FStarC_Syntax_Syntax.result_typ = res;
+               FStarC_Syntax_Syntax.comp_pre = pre;
+               FStarC_Syntax_Syntax.comp_post = post;
+               FStarC_Syntax_Syntax.flags = flags
+             } in
+           FStarC_Syntax_Syntax.mk_Comp ct)
 let pack_const (c : FStarC_Reflection_V2_Data.vconst) :
   FStarC_Syntax_Syntax.sconst=
   match c with
@@ -337,6 +376,22 @@ let pack_const (c : FStarC_Reflection_V2_Data.vconst) :
       let uu___ =
         let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
         (uu___1, FStar_Pervasives_Native.None) in
+      FStarC_Const.Const_int uu___
+  | FStarC_Reflection_V2_Data.C_MachineInt (i, signedness, width) ->
+      let signedness1 =
+        match signedness with
+        | FStarC_Reflection_V2_Data.Signed -> FStarC_Const.Signed
+        | FStarC_Reflection_V2_Data.Unsigned -> FStarC_Const.Unsigned in
+      let width1 =
+        match width with
+        | FStarC_Reflection_V2_Data.Int8 -> FStarC_Const.Int8
+        | FStarC_Reflection_V2_Data.Int16 -> FStarC_Const.Int16
+        | FStarC_Reflection_V2_Data.Int32 -> FStarC_Const.Int32
+        | FStarC_Reflection_V2_Data.Int64 -> FStarC_Const.Int64
+        | FStarC_Reflection_V2_Data.Sizet -> FStarC_Const.Sizet in
+      let uu___ =
+        let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+        (uu___1, (FStar_Pervasives_Native.Some (signedness1, width1))) in
       FStarC_Const.Const_int uu___
   | FStarC_Reflection_V2_Data.C_True -> FStarC_Const.Const_bool true
   | FStarC_Reflection_V2_Data.C_False -> FStarC_Const.Const_bool false

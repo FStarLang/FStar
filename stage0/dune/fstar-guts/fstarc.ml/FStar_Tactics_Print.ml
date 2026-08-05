@@ -290,6 +290,21 @@ and const_to_ast_string (c : FStarC_Reflection_V2_Data.vconst) :
     | FStarC_Reflection_V2_Data.C_Unit -> "C_Unit"
     | FStarC_Reflection_V2_Data.C_Int i ->
         Prims.strcat "C_Int " (Prims.string_of_int i)
+    | FStarC_Reflection_V2_Data.C_MachineInt (i, signedness, width) ->
+        Prims.strcat "C_MachineInt "
+          (Prims.strcat (Prims.string_of_int i)
+             (Prims.strcat " "
+                (Prims.strcat
+                   (match signedness with
+                    | FStarC_Reflection_V2_Data.Signed -> "Signed"
+                    | FStarC_Reflection_V2_Data.Unsigned -> "Unsigned")
+                   (Prims.strcat " "
+                      (match width with
+                       | FStarC_Reflection_V2_Data.Int8 -> "Int8"
+                       | FStarC_Reflection_V2_Data.Int16 -> "Int16"
+                       | FStarC_Reflection_V2_Data.Int32 -> "Int32"
+                       | FStarC_Reflection_V2_Data.Int64 -> "Int64"
+                       | FStarC_Reflection_V2_Data.Sizet -> "Sizet")))))
     | FStarC_Reflection_V2_Data.C_True -> "C_True"
     | FStarC_Reflection_V2_Data.C_False -> "C_False"
     | FStarC_Reflection_V2_Data.C_String s -> Prims.strcat "C_String " s

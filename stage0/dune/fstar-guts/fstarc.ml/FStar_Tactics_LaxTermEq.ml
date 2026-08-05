@@ -66,6 +66,9 @@ let const_eq : FStarC_Reflection_V2_Data.vconst comparator_for=
         true
     | (FStarC_Reflection_V2_Data.C_Int i1, FStarC_Reflection_V2_Data.C_Int
        i2) -> i1 = i2
+    | (FStarC_Reflection_V2_Data.C_MachineInt (i1, s1, w1),
+       FStarC_Reflection_V2_Data.C_MachineInt (i2, s2, w2)) ->
+        ((i1 = i2) && (s1 = s2)) && (w1 = w2)
     | (FStarC_Reflection_V2_Data.C_True, FStarC_Reflection_V2_Data.C_True) ->
         true
     | (FStarC_Reflection_V2_Data.C_False, FStarC_Reflection_V2_Data.C_False)

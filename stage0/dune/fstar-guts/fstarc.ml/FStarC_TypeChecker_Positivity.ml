@@ -837,13 +837,10 @@ let mutuals_unused_in_type (mutuals : FStarC_Ident.lident Prims.list)
     | FStarC_Syntax_Syntax.Total t1 -> ok t1
     | FStarC_Syntax_Syntax.GTotal t1 -> ok t1
     | FStarC_Syntax_Syntax.Comp c1 ->
-        let uu___ = ok c1.FStarC_Syntax_Syntax.result_typ in
-        if uu___
-        then
-          FStarC_List.for_all
-            (fun uu___1 -> match uu___1 with | (a, uu___2) -> ok a)
-            c1.FStarC_Syntax_Syntax.effect_args
-        else false in
+        let uu___ =
+          let uu___1 = ok c1.FStarC_Syntax_Syntax.result_typ in
+          if uu___1 then ok c1.FStarC_Syntax_Syntax.comp_pre else false in
+        if uu___ then ok c1.FStarC_Syntax_Syntax.comp_post else false in
   ok t
 type unfolded_memo_elt =
   (FStarC_Ident.lident * FStarC_Syntax_Syntax.args * Prims.int) Prims.list
@@ -1033,7 +1030,23 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                  match uu___7 with
                  | (sbs, c1) ->
                      let return_type = FStarC_Syntax_Util.comp_result c1 in
-                     let effect_args = FStarC_Syntax_Util.comp_effect_args c1 in
+                     let post_body =
+                       let uu___8 =
+                         let uu___9 =
+                           let uu___10 = FStarC_Syntax_Util.comp_post c1 in
+                           FStarC_Syntax_Subst.compress uu___10 in
+                         uu___9.FStarC_Syntax_Syntax.n in
+                       match uu___8 with
+                       | FStarC_Syntax_Syntax.Tm_abs
+                           { FStarC_Syntax_Syntax.b = uu___9;
+                             FStarC_Syntax_Syntax.body = body;
+                             FStarC_Syntax_Syntax.rc_opt = uu___10;_}
+                           -> body
+                       | uu___9 -> FStarC_Syntax_Util.comp_post c1 in
+                     let effect_args =
+                       [FStarC_Syntax_Syntax.as_arg
+                          (FStarC_Syntax_Util.comp_pre c1);
+                       FStarC_Syntax_Syntax.as_arg post_body] in
                      let ty_lid_not_to_left_of_arrow =
                        FStarC_List.for_all
                          (fun uu___8 ->

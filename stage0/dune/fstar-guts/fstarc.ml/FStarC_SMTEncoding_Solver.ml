@@ -1861,20 +1861,14 @@ let ask_solver (env : FStarC_SMTEncoding_Env.env_t)
   (query_settings Prims.list * answer)=
   let default_settings = FStarC_List.hd configs in
   let skip =
-    let uu___ =
-      if (env.FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.admit
-      then true
-      else
-        FStarC_TypeChecker_Env.too_early_in_prims
-          env.FStarC_SMTEncoding_Env.tcenv in
-    if uu___
+    if (env.FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.admit
     then true
     else
-      (let uu___1 = FStarC_Options.admit_except () in
-       match uu___1 with
+      (let uu___ = FStarC_Options.admit_except () in
+       match uu___ with
        | FStar_Pervasives_Native.Some id ->
            if FStarC_Util.starts_with id "("
-           then let uu___2 = full_query_id default_settings in uu___2 <> id
+           then let uu___1 = full_query_id default_settings in uu___1 <> id
            else default_settings.query_name <> id
        | FStar_Pervasives_Native.None -> false) in
   let ans =
@@ -2129,9 +2123,7 @@ let encode_and_ask (can_split : Prims.bool) (is_retry : Prims.bool)
                          (FStarC_SMTEncoding_Term.FalseOp, uu___6, uu___7);
                        FStarC_SMTEncoding_Term.assumption_caption = uu___8;
                        FStarC_SMTEncoding_Term.assumption_name = uu___9;
-                       FStarC_SMTEncoding_Term.assumption_fact_ids = uu___10;
-                       FStarC_SMTEncoding_Term.assumption_free_names =
-                         uu___11;_}
+                       FStarC_SMTEncoding_Term.assumption_fact_ids = uu___10;_}
                      -> ([], ans_ok)
                  | uu___6 when tcenv1.FStarC_TypeChecker_Env.admit ->
                      ([], ans_ok)
@@ -2368,12 +2360,13 @@ let solve
     FStarC_TypeChecker_Err.log_issue tcenv tcenv.FStarC_TypeChecker_Env.range
       uu___1
   else
-    FStarC_Profiling.profile
-      (fun uu___1 -> do_solve_maybe_split use_env_msg tcenv q)
-      (FStar_Pervasives_Native.Some
-         (FStarC_Ident.string_of_lid
-            (FStarC_TypeChecker_Env.current_module tcenv)))
-      "FStarC.SMTEncoding.solve_top_level"
+    (FStarC_SMTEncoding_Encode.flush_deferred_encodings ();
+     FStarC_Profiling.profile
+       (fun uu___2 -> do_solve_maybe_split use_env_msg tcenv q)
+       (FStar_Pervasives_Native.Some
+          (FStarC_Ident.string_of_lid
+             (FStarC_TypeChecker_Env.current_module tcenv)))
+       "FStarC.SMTEncoding.solve_top_level")
 let solve_sync
   (use_env_msg : (unit -> Prims.string) FStar_Pervasives_Native.option)
   (tcenv : FStarC_TypeChecker_Env.env) (q : FStarC_Syntax_Syntax.term) :
@@ -2382,32 +2375,33 @@ let solve_sync
   if uu___
   then ans_fail
   else
-    (let go uu___1 =
-       (let uu___3 = FStarC_Effect.op_Bang dbg_SMTQuery in
-        if uu___3
-        then
-          let uu___4 =
-            let uu___5 =
-              let uu___6 =
-                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term q in
-              FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-                (FStarC_Errors_Msg.text "Running synchronous SMT query. Q =")
-                uu___6 in
-            [uu___5] in
-          FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
-            q.FStarC_Syntax_Syntax.pos ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-            (Obj.magic uu___4)
-        else ());
-       (let uu___3 =
-          disable_quake_for
-            (fun uu___4 -> encode_and_ask false false use_env_msg tcenv q) in
-        match uu___3 with | (_cfgs, ans) -> ans) in
-     FStarC_Profiling.profile go
-       (FStar_Pervasives_Native.Some
-          (FStarC_Ident.string_of_lid
-             (FStarC_TypeChecker_Env.current_module tcenv)))
-       "FStarC.SMTEncoding.solve_sync_top_level")
+    (FStarC_SMTEncoding_Encode.flush_deferred_encodings ();
+     (let go uu___2 =
+        (let uu___4 = FStarC_Effect.op_Bang dbg_SMTQuery in
+         if uu___4
+         then
+           let uu___5 =
+             let uu___6 =
+               let uu___7 =
+                 FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term q in
+               FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
+                 (FStarC_Errors_Msg.text "Running synchronous SMT query. Q =")
+                 uu___7 in
+             [uu___6] in
+           FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
+             q.FStarC_Syntax_Syntax.pos ()
+             (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+             (Obj.magic uu___5)
+         else ());
+        (let uu___4 =
+           disable_quake_for
+             (fun uu___5 -> encode_and_ask false false use_env_msg tcenv q) in
+         match uu___4 with | (_cfgs, ans) -> ans) in
+      FStarC_Profiling.profile go
+        (FStar_Pervasives_Native.Some
+           (FStarC_Ident.string_of_lid
+              (FStarC_TypeChecker_Env.current_module tcenv)))
+        "FStarC.SMTEncoding.solve_sync_top_level"))
 let solve_sync_bool
   (use_env_msg : (unit -> Prims.string) FStar_Pervasives_Native.option)
   (tcenv : FStarC_TypeChecker_Env.env) (q : FStarC_Syntax_Syntax.term) :
