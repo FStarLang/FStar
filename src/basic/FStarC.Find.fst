@@ -149,7 +149,7 @@ let command_line_include_paths () : ML (list string) =
     let explicit_roots = List.map Filepath.normalize_file_path !_include in
     let file_roots =
       List.fold_left (fun roots file ->
-        if Filepath.file_exists file then
+        if Filepath.file_exists file && not (Filepath.is_directory file) then
           let root = Filepath.normalize_file_path (Filepath.dirname file) in
           if List.contains root roots then roots else roots @ [root]
         else roots)

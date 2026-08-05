@@ -584,6 +584,7 @@ let module_candidate_of_file (ns_prefix:list string) (path:string) (filename:str
   relative to [cwd]. *)
 let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:string)
   : ML (list (string & string)) =
+  let has_include_manifest = Filepath.file_exists (Filepath.join_paths root "fstar.include") in
   (* [ns_prefix] is the list of namespace components corresponding to the
      subdirectories walked so far (in order); [rel] is the path, relative to
      [root], of the directory currently being scanned ("" for [root] itself). *)
@@ -595,9 +596,13 @@ let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:
       let rel' = if rel = "" then entry else Filepath.join_paths rel entry in
       let entry_path = Filepath.join_paths root rel' in
       if Filepath.is_directory entry_path then
+        (* A manifest explicitly selects the child roots to scan; those roots
+          are expanded separately by [Find.full_include_path]. *)
+        if has_include_manifest
+        then []
         (* Never descend into hidden directories (they cannot be namespace
            components). *)
-        if String.length entry > 0 && String.get entry 0 = '.'
+        else if String.length entry > 0 && String.get entry 0 = '.'
         then []
         (* If this directory is itself an include root, let that root's own
            traversal cover it. *)
