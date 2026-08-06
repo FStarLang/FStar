@@ -505,13 +505,14 @@ Processing one item `(lid, margs) ↦ nm`:
      Env.Reify;                            // reify effectful definitions
      Env.Unascribe; Env.Unmeta;
      Env.ForExtraction;
-     Env.UnfoldAttr [Const.tcnorm_attr];   // force TC dictionary resolution
+     Env.UnfoldAttr [Const.tcnorm_attr;     // force TC dictionary resolution
+                     Const.tcmethod_lid];  // inline class method accessors
      Env.ReduceProjections;                // <-- collapses Mkfoo?.frobnicate d
    ]
    ```
 
-   `ReduceProjections` plus `UnfoldAttr [tcnorm_attr]` is what "inlines trivial
-   TC projectors automatically": once the dictionary argument is a concrete
+   `ReduceProjections` plus `UnfoldAttr [tcnorm_attr; tcmethod_lid]` is what
+   "inlines trivial TC projectors automatically": once the dictionary argument is a concrete
    `Mkfoo x y z` value, `Mkfoo?.frobnicate (Mkfoo f)` iota-reduces to `f`, so
    no method-projector functions survive into the IR at all.  The `solve`
    helper in `ulib/FStar.Tactics.Typeclasses.fsti:61` is already
@@ -546,8 +547,14 @@ For the type-class example above, the loop runs:
 | 2 | `baz, [0↦MTy string; 2↦MTerm foo_string]` | `bar "frob"` after substitution | `baz__0` |
 | 3 | `bar, [0↦MTy string; 1↦MTerm foo_string]` | `Mkfoo?.frobnicate (Mkfoo (fun x -> x)) x` → `x` | `bar__0` |
 
-Note `Mkfoo?.frobnicate` is *never* requested: it is reduced away in step 3 by
-`ReduceProjections`.  The draft says this example generates three functions;
+Note `Mkfoo?.frobnicate` is *never* requested when it is applied to exactly the
+dictionary: it is reduced away in step 3 by `ReduceProjections`.  When the
+method is applied to further arguments (`Mkfoo?.frobnicate d x`, which is the
+usual shape, because a method's result type is a function) the normalizer's
+strict-projector check declines to fire, and the projector is instead requested
+and specialized on `d` -- which reduces its body to the method implementation,
+so the emitted code is correct but goes through one extra wrapper per method
+call.  Collapsing those wrappers is the job of the inlining pass of section 6.  The draft says this example generates three functions;
 that is what falls out.  The `foo` class type itself is also never emitted,
 because no residual value of type `foo string` remains — dead-type elimination
 in phase 4 removes it.

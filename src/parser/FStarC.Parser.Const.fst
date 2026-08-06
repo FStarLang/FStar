@@ -340,6 +340,7 @@ let no_inline_let_attr = attr "no_inline_let"
 let rename_let_attr = attr "rename_let"
 let plugin_attr     = attr "plugin"
 let tcnorm_attr    =  attr "tcnorm"
+let monomorphize_attr = attr "monomorphize"
 let must_erase_for_extraction_attr = attr "must_erase_for_extraction"
 let strict_on_arguments_attr =  attr "strict_on_arguments"
 let smt_arity_attr = attr "smt_arity"
@@ -441,6 +442,7 @@ let mk_projs_lid   = fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
 let tcclass_lid = fstar_tactics_lid' ["Typeclasses"; "tcclass"]
+let tcmethod_lid = fstar_tactics_lid' ["Typeclasses"; "tcmethod"]
 let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 let no_method_lid = fstar_tactics_lid' ["Typeclasses"; "no_method"]
 

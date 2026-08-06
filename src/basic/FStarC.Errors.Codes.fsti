@@ -389,6 +389,8 @@ type error_code =
   | Error_CannotResolveRecord
   | Error_MissingPopOptions
   | Error_CustardEntryNotFound
+  | Error_CustardCannotMonomorphize
+  | Error_CustardFuelExhausted
 
 type error_setting = error_code & error_flag & int
 

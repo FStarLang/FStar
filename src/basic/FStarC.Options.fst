@@ -197,6 +197,10 @@ let defaults = [
   ("codegen"                                   , Unset);
   ("custard_entry"                             , List []);
   ("custard_dump_ir"                           , Bool false);
+  ("custard_dump_specializations"              , Bool false);
+  ("custard_fuel"                              , Int 10000);
+  ("custard_max_specializations"               , Int 1000);
+  ("custard_monomorphize_types"                , Bool false);
   ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
   ("debug_all"                                 , Bool false);
@@ -470,6 +474,10 @@ let get_codegen                 ()      = lookup_opt "codegen"                  
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
+let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
+let get_custard_fuel            ()      = lookup_opt "custard_fuel"             as_int
+let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
+let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
@@ -873,6 +881,31 @@ compiles the definitions reachable from these roots.");
     "custard_dump_ir",
     Const (Bool true),
     text "Print the Custard IR of the extracted program to standard output");
+
+  ( noshort,
+    "custard_dump_specializations",
+    Const (Bool true),
+    text "Print, for every definition Custard specialized, how many \
+specializations of it were emitted. Useful to diagnose code bloat and \
+specialization fuel exhaustion.");
+
+  ( noshort,
+    "custard_fuel",
+    IntStr "positive_integer",
+    text "Total number of specializations Custard may create before giving up \
+(default 10000)");
+
+  ( noshort,
+    "custard_max_specializations",
+    IntStr "positive_integer",
+    text "Number of specializations Custard may create for any single \
+definition before giving up (default 1000)");
+
+  ( noshort,
+    "custard_monomorphize_types",
+    BoolStr,
+    text "Monomorphize type binders too, not just type-class dictionaries and \
+binders explicitly marked [@@monomorphize] (default false)");
 
   ( 'd',
     "",
@@ -2059,6 +2092,10 @@ let codegen                      () =
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let custard_entries              () = get_custard_entry ()
 let custard_dump_ir              () = get_custard_dump_ir ()
+let custard_dump_specializations () = get_custard_dump_specializations ()
+let custard_fuel                 () = get_custard_fuel ()
+let custard_max_specializations  () = get_custard_max_specializations ()
+let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 
 let profile_group_by_decl        () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"

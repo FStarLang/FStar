@@ -20,9 +20,10 @@
     starting from the entry points, we look each definition up, normalize it,
     translate it to the Custard IR, and request whatever it refers to.
 
-    Scope of this milestone (M1): pure, first-order, monomorphic code.  No
-    specialization happens yet, so a request is just a lid; monomorphization
-    (M2) will replace [request] with an interning of specialization keys. *)
+    A request is a [spec_key]: a definition together with the concrete
+    arguments of its [Mono] binders (section 3.1).  Requests are interned, so
+    two call sites that agree on the [Mono] arguments share one
+    specialization. *)
 module FStarC.Custard.Extract
 
 open FStarC
@@ -33,6 +34,13 @@ module Dep   = FStarC.Parser.Dep
 module Ident = FStarC.Ident
 module TcEnv = FStarC.TypeChecker.Env
 
+(** A specialization request: a definition, plus the value of each of its
+    [Mono] binders, given by the binder's index in the definition's type. *)
+type spec_key = {
+  sk_lid:  Ident.lident;
+  sk_args: list (int & FStarC.Syntax.Syntax.term);
+}
+
 val state : Type0
 
 val init : Dep.deps -> TcEnv.env -> ML state
@@ -41,9 +49,9 @@ val init : Dep.deps -> TcEnv.env -> ML state
     Section 3.3 of the design doc explains each one. *)
 val custard_norm_steps : list TcEnv.step
 
-(** Request the extraction of a top-level definition, returning the IR name it
-    will be emitted under.  Idempotent. *)
-val request : state -> Ident.lident -> ML name
+(** Request the extraction of a specialization, returning the IR name it will
+    be emitted under.  Idempotent. *)
+val request : state -> spec_key -> ML name
 
 (** Drain the worklist and return the program in dependency order (definitions
     before their uses), which is the order the backends want. *)

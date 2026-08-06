@@ -377,4 +377,6 @@ let default_settings : list error_setting =
     Error_CannotResolveRecord                         , CAlwaysError, 360;
     Error_MissingPopOptions                           , CWarning, 361;
     Error_CustardEntryNotFound                        , CAlwaysError, 362;
+    Error_CustardCannotMonomorphize                   , CAlwaysError, 363;
+    Error_CustardFuelExhausted                        , CAlwaysError, 364;
     ]

@@ -20,13 +20,17 @@ open FStarC.Effect
 open FStarC.List
 open FStarC.Errors.Msg
 open FStarC.Class.Show
+open FStarC.Class.Setlike
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print
 open FStarC.Const
+open FStarC.Custard.Mono
 open FStarC.Custard.Syntax
 
-module BU     = FStarC.Util
+module BU     = FStarC.Format
 module Dep    = FStarC.Parser.Dep
 module E      = FStarC.Errors
+module Free   = FStarC.Syntax.Free
 module Ident  = FStarC.Ident
 module Loader = FStarC.Custard.Loader
 module N      = FStarC.TypeChecker.Normalize
@@ -38,19 +42,58 @@ module TcEnv  = FStarC.TypeChecker.Env
 module U      = FStarC.Syntax.Util
 
 (* -------------------------------------------------------------------- *)
+(* Specialization keys                                                  *)
+(* -------------------------------------------------------------------- *)
+
+(* Section 3.7: two call sites share a specialization when their [Mono]
+   arguments have the same canonical form.  This step list is deliberately much
+   smaller than the one used on a definition's body: the key only has to make
+   equal things syntactically equal.
+
+   [Primops] is what makes [loop_unrolling (n-1)] fold to a literal, without
+   which every recursive call would produce a fresh key.  Delta-unfolding is
+   what turns a named type-class instance into a concrete dictionary value, so
+   that [ReduceProjections] can collapse method projections in the body. *)
+let key_norm_steps : list TcEnv.step = [
+  TcEnv.AllowUnboundUniverses;
+  TcEnv.EraseUniverses;
+  TcEnv.Beta;
+  TcEnv.Iota;
+  TcEnv.Primops;
+  TcEnv.Unascribe;
+  TcEnv.Unmeta;
+  TcEnv.UnfoldUntil delta_constant;
+]
+
+let string_of_key (k:spec_key) : ML string =
+  Ident.string_of_lid k.sk_lid ^
+  (k.sk_args |> List.map (fun (i, t) -> "#" ^ show i ^ "=" ^ show t)
+             |> String.concat "")
+
+(* -------------------------------------------------------------------- *)
 (* State                                                                *)
 (* -------------------------------------------------------------------- *)
 
 type state = {
   deps:    Dep.deps;
   env:     ref TcEnv.env;
-  (* lid -> the IR name it was assigned.  Filled in *before* the definition is
-     translated, so that a recursive occurrence finds it and stops. *)
+  (* Specialization key -> the IR name it was assigned.  Filled in *before*
+     the definition is translated, so that a recursive occurrence finds it and
+     stops. *)
   names:   SMap.t name;
   emitted: SMap.t decl;
   (* Emission order, reversed: a definition is appended once its body has been
      translated, so uses come after definitions. *)
   order:   ref (list string);
+  (* lid -> its binder classification (section 3.1), computed once. *)
+  classes: SMap.t (list bclass);
+  (* lid -> how many specializations of it we have created so far. *)
+  counts:  SMap.t int;
+  fuel:    ref int;
+  (* The chain of requests that led to what we are currently working on,
+     innermost first.  Only used to make diagnostics debuggable (section
+     3.6). *)
+  chain:   ref (list string);
 }
 
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
@@ -59,6 +102,10 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   names   = SMap.create 100;
   emitted = SMap.create 100;
   order   = mk_ref [];
+  classes = SMap.create 100;
+  counts  = SMap.create 100;
+  fuel    = mk_ref (Options.custard_fuel ());
+  chain   = mk_ref [];
 }
 
 let custard_norm_steps : list TcEnv.step = [
@@ -74,9 +121,52 @@ let custard_norm_steps : list TcEnv.step = [
   TcEnv.Unascribe;
   TcEnv.Unmeta;
   TcEnv.ForExtraction;
-  TcEnv.UnfoldAttr [PC.tcnorm_attr];
+  (* [tcmethod] inlines a class's method accessor down to the record
+     projection, which [ReduceProjections] then collapses against the concrete
+     dictionary: no method projector survives into the IR (section 3.4). *)
+  TcEnv.UnfoldAttr [PC.tcnorm_attr; PC.tcmethod_lid];
   TcEnv.ReduceProjections;
 ]
+
+let tcenv (st:state) : ML TcEnv.env = !st.env
+
+(* -------------------------------------------------------------------- *)
+(* Diagnostics                                                          *)
+(* -------------------------------------------------------------------- *)
+
+(* Every Custard error is reported with the chain of specialization requests
+   that reached it: without it a failure deep inside a specialized library
+   function is impossible to act on. *)
+let chain_display_limit : int = 10
+
+let request_chain (st:state) : ML (list Pprint.document) =
+  match !st.chain with
+  | [] -> []
+  | c ->
+    let n = List.length c in
+    let shown, elided =
+      if n <= chain_display_limit
+      then c, []
+      else List.splitAt chain_display_limit c |> fst,
+           [text ("... and " ^ show (n - chain_display_limit) ^ " more.")]
+    in
+    [text "Reached through:"] @
+    (shown |> List.map (fun s -> Pprint.doc_of_string ("  " ^ s))) @
+    elided
+
+let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.document) : ML a =
+  E.raise_error0 code (msg @ request_chain st)
+
+(* -------------------------------------------------------------------- *)
+(* Loading                                                              *)
+(* -------------------------------------------------------------------- *)
+
+(* A definition may live in a module the driver never loaded; pull it in.  This
+   is the on-demand part of section 4.1. *)
+let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
+  let m = Ident.nsstr l in
+  if m <> "" && not (Loader.module_is_loaded (tcenv st) m) then
+    st.env := Loader.ensure_loaded st.deps (tcenv st) m
 
 (* -------------------------------------------------------------------- *)
 (* Names                                                                *)
@@ -92,18 +182,18 @@ let name_of_lid (l:Ident.lident) : ML name = {
 let name_of_bv (b:bv) : ML string =
   Ident.string_of_id b.ppname ^ "_" ^ show b.index
 
-(* -------------------------------------------------------------------- *)
-(* Loading                                                              *)
-(* -------------------------------------------------------------------- *)
-
-let tcenv (st:state) : ML TcEnv.env = !st.env
-
-(* A definition may live in a module the driver never loaded; pull it in.  This
-   is the on-demand part of section 4.1. *)
-let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
-  let m = Ident.nsstr l in
-  if m <> "" && not (Loader.module_is_loaded (tcenv st) m) then
-    st.env := Loader.ensure_loaded st.deps (tcenv st) m
+(* A readable suffix for a specialization: the head symbol of its first [Mono]
+   argument is almost always the interesting one (the type, or the instance). *)
+let hint_of_args (args:list (int & term)) : ML (option string) =
+  match args with
+  | [] -> None
+  | (_, t) :: _ ->
+    let hd, _ = U.head_and_args_full t in
+    (match (U.un_uinst (SS.compress hd)).n with
+     | Tm_fvar fv -> Some (Ident.string_of_id (Ident.ident_of_lid (S.lid_of_fv fv)))
+     | Tm_constant (Const_int (s, _)) -> Some s
+     | Tm_constant (Const_bool b) -> Some (if b then "true" else "false")
+     | _ -> None)
 
 (* -------------------------------------------------------------------- *)
 (* Effects                                                              *)
@@ -124,14 +214,20 @@ let eff_of_lid (st:state) (l:Ident.lident) : ML eff =
 (* Requests                                                             *)
 (* -------------------------------------------------------------------- *)
 
-(* Section 3.3, step 3: this is where the demand-driven loop lives.  M1 has no
-   specialization, so the key is just the lid; M2 replaces it by a spec_key. *)
-let rec request (st:state) (l:Ident.lident) : ML name =
-  let key = Ident.string_of_lid l in
+(* Section 3.3, step 3: this is where the demand-driven loop lives. *)
+let rec request (st:state) (k:spec_key) : ML name =
+  let key = string_of_key k in
   match SMap.try_find st.names key with
   | Some nm -> nm
   | None ->
-    let nm = name_of_lid l in
+    check_budget st k;
+    let l = k.sk_lid in
+    let lstr = Ident.string_of_lid l in
+    let n = (match SMap.try_find st.counts lstr with None -> 0 | Some n -> n) in
+    SMap.add st.counts lstr (n + 1);
+    let nm = { name_of_lid l with
+               uniq = (if Nil? k.sk_args then 0 else n);
+               hint = hint_of_args k.sk_args } in
     (* Register before translating: a self-reference must find this name
        rather than loop. *)
     SMap.add st.names key nm;
@@ -140,18 +236,72 @@ let rec request (st:state) (l:Ident.lident) : ML name =
     | Some ty_lid ->
       (* A data constructor is part of its inductive's declaration, not a
          declaration of its own: request the type and emit nothing. *)
-      let _ = request st ty_lid in
+      let _ = request st { sk_lid = ty_lid; sk_args = [] } in
       nm
     | None ->
-      let d = extract_lid st l nm in
+      let saved = !st.chain in
+      st.chain := key :: saved;
+      let d = extract_lid st l nm k.sk_args in
+      st.chain := saved;
       SMap.add st.emitted key d;
       st.order := key :: !st.order;
       nm
+
+(* Section 3.6: the budget is checked *before* the definition is looked up and
+   before its body is normalized, so that a diverging specialization is cut off
+   after a negligible amount of work. *)
+and check_budget (st:state) (k:spec_key) : ML unit =
+  let lstr = Ident.string_of_lid k.sk_lid in
+  let n = match SMap.try_find st.counts lstr with None -> 0 | Some n -> n in
+  if n >= Options.custard_max_specializations () then
+    custard_error st E.Error_CustardFuelExhausted [
+      text ("Custard created " ^ show n ^ " specializations of " ^ lstr ^
+            ", which is the limit set by --custard_max_specializations.");
+      text "This usually means a definition recurses through a monomorphized \
+            binder. Use --custard_dump_specializations to see which \
+            definitions are being specialized."
+    ];
+  st.fuel := !st.fuel - 1;
+  if !st.fuel <= 0 then
+    custard_error st E.Error_CustardFuelExhausted [
+      text ("Custard ran out of specialization fuel while requesting " ^ lstr ^
+            "; see --custard_fuel.")
+    ]
 
 and datacon_owner (st:state) (l:Ident.lident) : ML (option Ident.lident) =
   match TcEnv.lookup_sigelt (tcenv st) l with
   | Some ({ sigel = Sig_datacon {ty_lid} }) -> Some ty_lid
   | _ -> None
+
+(* -------------------------------------------------------------------- *)
+(* Binder classification                                                *)
+(* -------------------------------------------------------------------- *)
+
+(* Section 3.1.  Computed once per definition and cached: it is a property of
+   the definition, not of a call site. *)
+and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
+  let key = Ident.string_of_lid l in
+  match SMap.try_find st.classes key with
+  | Some cs -> cs
+  | None ->
+    ensure_lid_available st l;
+    let cs =
+      match TcEnv.lookup_sigelt (tcenv st) l with
+      | Some se ->
+        (match se.sigel with
+         | Sig_let {lbs=(_, lbs)} ->
+           (match lbs |> List.tryFind (fun lb ->
+                    match lb.lbname with
+                    | Inr fv -> Ident.lid_equals (S.lid_of_fv fv) l
+                    | Inl _ -> false) with
+            | Some lb -> classify (tcenv st) (se.sigattrs @ lb.lbattrs) lb.lbtyp
+            | None -> [])
+         | Sig_declare_typ {t} -> classify (tcenv st) se.sigattrs t
+         | _ -> [])
+      | None -> []
+    in
+    SMap.add st.classes key cs;
+    cs
 
 (* -------------------------------------------------------------------- *)
 (* Types                                                                *)
@@ -197,10 +347,13 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
   | Tm_type _
   | _ -> TAny
 
+(* Type constructors are compiled uniformly in their parameters (section 5.0),
+   so an inductive is never specialized: it is always requested with an empty
+   key. *)
 and ty_of_fv (st:state) (fv:fv) (args:list term) : ML cty =
   let l = S.lid_of_fv fv in
   if Ident.lid_equals l PC.unit_lid then TUnit
-  else TApp (request st l, List.map (ty_of_typ st) args)
+  else TApp (request st { sk_lid = l; sk_args = [] }, List.map (ty_of_typ st) args)
 
 (* -------------------------------------------------------------------- *)
 (* Terms                                                                *)
@@ -216,13 +369,14 @@ and constant_of_sconst (c:sconst) : ML (option constant) =
   | _ -> None
 
 and ty_of_constant (st:state) (c:constant) : ML cty =
+  let prim (l:Ident.lident) : ML cty = TApp (request st { sk_lid = l; sk_args = [] }, []) in
   match c with
   | CUnit -> TUnit
-  | CBool _ -> TApp (request st PC.bool_lid, [])
-  | CInt (_, None) -> TApp (request st PC.int_lid, [])
+  | CBool _ -> prim PC.bool_lid
+  | CInt (_, None) -> prim PC.int_lid
   | CInt (_, Some _) -> TAny
-  | CChar _ -> TApp (request st PC.char_lid, [])
-  | CString _ -> TApp (request st PC.string_lid, [])
+  | CChar _ -> prim PC.char_lid
+  | CString _ -> prim PC.string_lid
 
 and is_data_ctor (fv:fv) : ML bool =
   match fv.fv_qual with
@@ -243,7 +397,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
 
   | Tm_uinst (t, _) -> expr_of_term st t
 
-  | Tm_fvar fv -> expr_of_fv st fv []
+  | Tm_fvar fv -> app_of_fv st fv []
 
   | Tm_abs _ ->
     let bs, body, _ = U.abs_formals t in
@@ -257,14 +411,11 @@ and expr_of_term (st:state) (t:term) : ML expr =
 
   | Tm_app _ ->
     let hd, args = U.head_and_args_full t in
-    let args = args |> List.filter (fun (a, q) ->
-                 not (S.is_aqual_implicit q) && not (is_type_arg a))
-                    |> List.map fst in
-    let args = args |> List.map (expr_of_term st) in
     (match (U.un_uinst hd).n with
-     | Tm_fvar fv -> apply st (expr_of_fv st fv args) fv args
+     | Tm_fvar fv -> app_of_fv st fv args
      | _ ->
        let hd = expr_of_term st hd in
+       let args = args |> keep_args |> List.map (expr_of_term st) in
        (match args with
         | [] -> hd
         | _ -> mk (EApp (hd, args)) TAny (List.fold_left (fun e a -> join_eff e a.eff) hd.eff args)))
@@ -296,29 +447,95 @@ and expr_of_term (st:state) (t:term) : ML expr =
   | Tm_type _ -> unit_expr
   | _ -> unit_expr
 
+(* Implicit and type arguments carry no runtime content. *)
+and keep_args (args:args) : ML (list term) =
+  args |> List.filter (fun (a, q) -> not (S.is_aqual_implicit q) && not (is_type_arg a))
+       |> List.map fst
+
 and is_type_arg (a:term) : ML bool =
   match (SS.compress a).n with
   | Tm_type _ -> true
   | _ -> false
 
-and expr_of_fv (st:state) (fv:fv) (args:list expr) : ML expr =
+(* -------------------------------------------------------------------- *)
+(* Call sites                                                           *)
+(* -------------------------------------------------------------------- *)
+
+(* The core of monomorphization: split a call's arguments into the [Mono] ones,
+   which become part of the specialization key, and the rest, which are passed
+   at runtime. *)
+and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
   let l = S.lid_of_fv fv in
+  ensure_lid_available st l;
   if is_data_ctor fv
-  then mk (ECtor (request st l, args)) TAny E_Pure
-  else mk (EQual (request st l, [])) TAny E_Pure
+  then
+    let nm = request st { sk_lid = l; sk_args = [] } in
+    mk (ECtor (nm, args |> keep_args |> List.map (expr_of_term st))) TAny E_Pure
+  else
+    let cs = binder_classes st l in
+    let margs, rest = split_mono_args st l cs args in
+    let key = { sk_lid = l; sk_args = margs } in
+    let nm = request st key in
+    let hd = mk (EQual (nm, [])) TAny E_Pure in
+    let rest = rest |> keep_args |> List.map (expr_of_term st) in
+    match rest with
+    | [] -> hd
+    | _ ->
+      let e = List.fold_left (fun e a -> join_eff e a.eff)
+                             (callee_eff st (string_of_key key)) rest in
+      mk (EApp (hd, rest)) TAny e
 
-and apply (st:state) (hd:expr) (fv:fv) (args:list expr) : ML expr =
-  match hd.e, args with
-  | ECtor _, _ -> hd            (* expr_of_fv already applied the arguments *)
-  | _, [] -> hd
-  | _, _ ->
-    let e = List.fold_left (fun e a -> join_eff e a.eff) (callee_eff st fv) args in
-    mk (EApp (hd, args)) TAny e
+(* Section 3.2: the two ways a call site can fail to be specializable. *)
+and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
+  : ML (list (int & term) & args) =
+  if not (has_mono cs) then ([], spine)
+  else
+    let n_args = List.length spine in
+    let rec go (i:int) (cs:list bclass) (sp:args) (margs:list (int & term)) (rest:args)
+      : ML (list (int & term) & args) =
+      match cs, sp with
+      | [], _ -> (List.rev margs, List.rev rest @ sp)
+      | Poly :: cs, a :: sp -> go (i + 1) cs sp margs (a :: rest)
+      | Mono :: cs, a :: sp ->
+        let t = N.normalize key_norm_steps (tcenv st) (fst a) in
+        check_mono_arg st l i t;
+        go (i + 1) cs sp ((i, t) :: margs) rest
+      | Mono :: _, [] ->
+        (* Section 3.2(a): partial application of a specializing definition. *)
+        custard_error st E.Error_CustardCannotMonomorphize [
+          text ("This use of " ^ Ident.string_of_lid l ^ " supplies only " ^
+                show n_args ^ " argument(s), but its binder number " ^ show i ^
+                " is monomorphized and so must be given at every call site.");
+          text "Eta-expand the use, or drop the [@@monomorphize] attribute."
+        ]
+      | Poly :: _, [] -> (List.rev margs, List.rev rest)
+    in
+    go 0 cs spine [] []
 
-(* The effect of calling [fv]: we know it exactly, because the callee has
-   already been extracted by the time we get here (requests are depth-first). *)
-and callee_eff (st:state) (fv:fv) : ML eff =
-  match SMap.try_find st.emitted (Ident.string_of_lid (S.lid_of_fv fv)) with
+(* Section 3.2(b): the argument has to be known at specialization time, i.e. it
+   must not mention any of the enclosing definition's runtime parameters.  Note
+   the check happens *after* canonicalization, so an argument computed out of
+   another [Mono] value (a projection out of a dictionary, say) has already
+   been reduced to a closed term and is accepted. *)
+and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
+  let free = elems (Free.names t) in
+  match free with
+  | [] -> ()
+  | v :: _ ->
+    custard_error st E.Error_CustardCannotMonomorphize [
+      text ("The argument passed to the monomorphized binder number " ^ show i ^
+            " of " ^ Ident.string_of_lid l ^ " is not known at specialization \
+            time: it mentions the runtime parameter " ^
+            Ident.string_of_id v.ppname ^ ".");
+      text ("Mark " ^ Ident.string_of_id v.ppname ^ " with [@@monomorphize] in \
+            the enclosing definition so that it, too, is known at \
+            specialization time.")
+    ]
+
+(* The effect of a call: we know it exactly, because the callee has already
+   been extracted by the time we get here (requests are depth-first). *)
+and callee_eff (st:state) (key:string) : ML eff =
+  match SMap.try_find st.emitted key with
   | Some (DLet l) -> l.dl_eff
   | Some (DExternal _) -> E_Impure
   | _ -> E_Pure
@@ -340,21 +557,22 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
   | Pat_cons (fv, _, pats) ->
     let pats = pats |> List.filter (fun (_, imp) -> not imp)
                     |> List.map (fun (p, _) -> pat_of_pat st p) in
-    PCtor (request st (S.lid_of_fv fv), pats)
+    PCtor (request st { sk_lid = S.lid_of_fv fv; sk_args = [] }, pats)
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
 
-and extract_lid (st:state) (l:Ident.lident) (nm:name) : ML decl =
+and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) : ML decl =
   match TcEnv.lookup_sigelt (tcenv st) l with
   | None ->
-    E.raise_error0 E.Error_CustardEntryNotFound [
+    custard_error st E.Error_CustardEntryNotFound [
       text ("Custard cannot find a definition for " ^ Ident.string_of_lid l ^ ".")
     ]
-  | Some se -> extract_sigelt st l nm se
+  | Some se -> extract_sigelt st l nm margs se
 
-and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (se:sigelt) : ML decl =
+and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) (se:sigelt)
+  : ML decl =
   match se.sigel with
   | Sig_let {lbs=(is_rec, lbs)} ->
     (match lbs |> List.tryFind (fun lb ->
@@ -365,7 +583,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (se:sigelt) : ML decl =
        (* A type abbreviation is a [Sig_let] too; it must not become a value. *)
        if is_type_sig st lb.lbtyp
        then extract_type_abbrev st nm lb
-       else extract_letbinding st nm lb is_rec
+       else extract_letbinding st l nm lb is_rec margs
      | None -> DExternal { dx_name = nm; dx_ty = TAny; dx_flags = [] })
 
   | Sig_declare_typ {t} ->
@@ -376,7 +594,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (se:sigelt) : ML decl =
     then DType { dt_name = nm; dt_params = []; dt_body = TAbstract; dt_flags = [] }
     else DExternal { dx_name = nm; dx_ty = ty_of_typ st t; dx_flags = [] }
 
-  | Sig_inductive_typ {us; params} ->
+  | Sig_inductive_typ {params} ->
     extract_inductive st l nm params
 
   | Sig_datacon _ ->
@@ -390,7 +608,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (se:sigelt) : ML decl =
              match se.sigel with
              | Sig_inductive_typ {lid} -> Ident.lid_equals lid l
              | _ -> false) with
-     | Some se -> extract_sigelt st l nm se
+     | Some se -> extract_sigelt st l nm margs se
      | None -> DType { dt_name = nm; dt_params = []; dt_body = TAbstract; dt_flags = [] })
 
   | _ ->
@@ -422,15 +640,51 @@ and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
     dt_flags  = [];
   }
 
-and extract_letbinding (st:state) (nm:name) (lb:letbinding) (is_rec:bool) : ML decl =
-  let def = N.normalize custard_norm_steps (tcenv st) lb.lbdef in
+(* Substitute the [Mono] arguments into the definition and re-abstract over the
+   [Poly] ones.  Instead of taking the definition apart we apply it to a
+   spine made of the concrete [Mono] arguments and fresh names for the [Poly]
+   ones, and let the normalizer do the substitution: that copes uniformly with
+   definitions that are eta-short, that have more binders than their type
+   shows, or that are not syntactically lambdas at all. *)
+and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int & term))
+  : ML (term & comp) =
+  let bs, c = U.arrow_formals_comp ty in
+  let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
+             (spine:args) (poly:binders)
+    : ML (args & binders & comp) =
+    match bs with
+    | [] -> (List.rev spine, List.rev poly, SS.subst_comp subst c)
+    | b :: bs' ->
+      let cls, cs' = match cs with
+                     | [] -> Poly, []
+                     | c :: cs' -> c, cs' in
+      let sort = SS.subst subst b.binder_bv.sort in
+      let marg = margs |> List.tryFind (fun (j, _) -> j = i) in
+      match cls, marg with
+      | Mono, Some (_, a) ->
+        go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst)
+           ((a, U.aqual_of_binder b) :: spine) poly
+      | _ ->
+        let bv = { b.binder_bv with sort = sort } in
+        let b' = { b with binder_bv = bv } in
+        go (i + 1) bs' cs' subst
+           ((S.bv_to_name bv, U.aqual_of_binder b) :: spine) (b' :: poly)
+  in
+  let spine, poly, c = go 0 bs cs [] [] [] in
+  let applied = match spine with [] -> def | _ -> U.mk_app def spine in
+  let body = N.normalize custard_norm_steps (tcenv st) applied in
+  (U.abs poly body None, c)
+
+and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
+                       (is_rec:bool) (margs:list (int & term)) : ML decl =
+  let cs = binder_classes st l in
+  let def, c = specialize st lb.lbtyp lb.lbdef cs margs in
   let bs, body, _ = U.abs_formals def in
   let bs = bs |> List.filter (fun b -> not (S.is_bqual_implicit b.binder_qual)) in
   let binders = bs |> List.map (fun b ->
     { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
   (* The effect is the one of the *codomain*: [lbeff] is the effect of
      evaluating the lambda, which is always Tot. *)
-  let _, c = U.arrow_formals_comp lb.lbtyp in
   let eff = eff_of_lid st (U.comp_effect_name c) in
   let ret = ty_of_typ st (U.comp_result c) in
   DLet {
@@ -471,15 +725,22 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
 (* Driving                                                              *)
 (* -------------------------------------------------------------------- *)
 
+let dump_specializations (st:state) : ML unit =
+  BU.print_string "Custard specializations:\n";
+  SMap.iter st.counts (fun l n ->
+    if n > 1 then BU.print2 "  %s -> %s\n" l (show n));
+  BU.print1 "  (total: %s)\n" (show (SMap.fold st.counts (fun _ n acc -> acc + n) 0))
+
 let run (st:state) (roots:list Ident.lident) : ML program =
   roots |> List.iter (fun l ->
-    let nm = request st l in
+    let key = string_of_key { sk_lid = l; sk_args = [] } in
+    let _ = request st { sk_lid = l; sk_args = [] } in
     (* Mark the root so backends know which symbols must survive. *)
-    match SMap.try_find st.emitted (Ident.string_of_lid l) with
+    match SMap.try_find st.emitted key with
     | Some (DLet d) ->
-      SMap.add st.emitted (Ident.string_of_lid l)
-               (DLet { d with dl_flags = Entrypoint :: d.dl_flags })
+      SMap.add st.emitted key (DLet { d with dl_flags = Entrypoint :: d.dl_flags })
     | _ -> ());
+  if Options.custard_dump_specializations () then dump_specializations st;
   List.rev !st.order |> List.collect (fun key ->
     match SMap.try_find st.emitted key with
     | Some d -> [d]

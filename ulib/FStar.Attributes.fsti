@@ -425,3 +425,10 @@ val desugar_of_variant_record (type_name: string): unit
 
 (** Tag for implicits that are to be solved by a tactic. *)
 val defer_to (#a:Type) (tag : a) : unit
+
+(** Marks a binder for whole-program monomorphization by the Custard
+    extraction pipeline (see doc/ref/custard.md): every call site must supply a
+    specialization-time-known argument, and one copy of the definition is
+    emitted per distinct argument.  Attached to a whole definition, it marks
+    all of its non-erased binders. *)
+val monomorphize : unit
