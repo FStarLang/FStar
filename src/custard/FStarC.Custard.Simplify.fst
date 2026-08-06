@@ -209,6 +209,117 @@ let inline_call (bs : list binder) (body:expr) (args:list expr) (at:expr) : ML e
   List.fold_right (fun (v, ty, a) acc ->
     { acc with e = ELet (v, ty, a, acc) }) lets r
 
+(* Beta: [(fun bs -> body) args].  With more arguments than binders the
+   surplus is re-applied to the result; with fewer, nothing happens, because a
+   partial application is a closure and turning it into one would be a
+   different program. *)
+let beta (bs : list binder) (body:expr) (args:list expr) (at:expr) : ML expr =
+  let n = List.length bs in
+  if List.length args < n then at
+  else
+    let given, extra = List.splitAt n args in
+    let r = inline_call bs body given at in
+    match extra with
+    | [] -> r
+    | _ -> { at with e = EApp (r, extra) }
+
+(* Iota: match a constructor application against a pattern, yielding the
+   bindings it makes.  [None] means "cannot tell", which is the answer for
+   anything the analysis does not model, and leaves the match alone. *)
+let rec match_pat (p:pat) (e:expr) : ML (option (list (string & expr))) =
+  match p, e.e with
+  | PWild, _ -> Some []
+  | PVar v, _ -> Some [(v, e)]
+  | PCtor (n, ps), ECtor (m, es) ->
+    if string_of_name n = string_of_name m then match_pats ps es else None
+  | PTuple ps, ETuple es -> match_pats ps es
+  | PConst c1, EConst c2 -> if c1 = c2 then Some [] else None
+  | _, _ -> None
+
+and match_pats (ps:list pat) (es:list expr) : ML (option (list (string & expr))) =
+  match ps, es with
+  | [], [] -> Some []
+  | p :: ps, e :: es ->
+    (match match_pat p e, match_pats ps es with
+     | Some l1, Some l2 -> Some (l1 @ l2)
+     | _ -> None)
+  | _ -> None
+
+(* Selecting a branch discards the scrutinee's other fields, so it is only
+   sound when building them was unobservable. *)
+let rec ctor_args_pure (e:expr) : ML bool =
+  match e.e with
+  | ECtor (_, es) -> es |> List.for_all (fun a -> is_pure a.eff)
+  | ETuple es -> es |> List.for_all (fun a -> is_pure a.eff)
+  | _ -> false
+
+let rec iota (brs:list branch) (scrut:expr) (at:expr) : ML expr =
+  match brs with
+  | [] -> at
+  | (p, None, body) :: brs ->
+    (match match_pat p scrut with
+     | None -> at
+     (* The bindings go through [inline_call] rather than becoming [let]s: a
+        field used once has to be *substituted*, or the head of the enclosing
+        application is a [let] and the beta rule below never sees the function
+        it is wrapping. *)
+     | Some bnds ->
+       inline_call (bnds |> List.map (fun (v, (a:expr)) -> { b_name = v; b_ty = a.ty }))
+                   body (bnds |> List.map snd) at)
+  (* A guard has to be evaluated before the branch is known. *)
+  | _ -> at
+
+(* Beta and iota to a fixed point.  This is what collapses a record of
+   functions: inlining a projector leaves [(match C f g with C (p, s) -> s) x],
+   which iota turns into [f x] and beta into [f]'s body.  Neither rule fires on
+   its own, and each one exposes work for the other, so a rewritten node is
+   re-examined rather than merely rebuilt. *)
+let rec reduce (x:expr) : ML expr =
+  match x.e with
+  | EApp (h, args) ->
+    let h = reduce h in
+    let args = args |> List.map reduce in
+    (match h.e with
+     | EFun (bs, body) when List.length bs <= List.length args ->
+       reduce (beta bs body args { x with e = EApp (h, args) })
+     | _ -> { x with e = EApp (h, args) })
+
+  | EMatch (scrut, brs) ->
+    let scrut = reduce scrut in
+    if ctor_args_pure scrut
+    then
+      let r = iota brs scrut { x with e = EMatch (scrut, brs |> List.map reduce_branch) } in
+      (match r.e with
+       | EMatch _ -> r
+       | _ -> reduce r)
+    else { x with e = EMatch (scrut, brs |> List.map reduce_branch) }
+
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, reduce e1, reduce e2) }
+  | EFun (bs, b) -> { x with e = EFun (bs, reduce b) }
+  | EIf (c, a, b) -> { x with e = EIf (reduce c, reduce a, reduce b) }
+  | ESeq (a, b) -> { x with e = ESeq (reduce a, reduce b) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map reduce) }
+  | ETuple es -> { x with e = ETuple (es |> List.map reduce) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map reduce) }
+  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map reduce) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, reduce e))) }
+  | EProj (e1, n, f) -> { x with e = EProj (reduce e1, n, f) }
+  | EDiscrim (e1, n) -> { x with e = EDiscrim (reduce e1, n) }
+  | ECast (e1, c) -> { x with e = ECast (reduce e1, c) }
+  | EWhile (a, b) -> { x with e = EWhile (reduce a, reduce b) }
+  | ETry (a, brs) -> { x with e = ETry (reduce a, brs |> List.map reduce_branch) }
+
+and reduce_branch (br:branch) : ML branch =
+  let p, g, b = br in
+  (p, (match g with None -> None | Some g -> Some (reduce g)), reduce b)
+
+let reduce_decls (prog:program) : ML program =
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = reduce dl.dl_body }
+    | d -> d)
+
 (* [Inline] declarations are substituted at their fully applied uses.  A use
    that is *not* fully applied keeps the declaration alive, so it is emitted
    after all; that is rare enough not to be worth eta-expanding. *)
@@ -222,8 +333,15 @@ let rec inline_expr (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (x:
   | EApp ({e = EQual (n, tys)}, args) ->
     let args = args |> List.map g in
     (match SMap.try_find tbl (string_of_name n) with
-     | Some (bs, body) when List.length bs = List.length args ->
-       inline_call bs body args x
+     (* Over-application is common and must be handled: F* stores the
+        projector of an arrow-typed field as a one-binder function returning a
+        function, so every use of it is applied to one argument too many. *)
+     | Some (bs, body) when List.length bs <= List.length args ->
+       let given, extra = List.splitAt (List.length bs) args in
+       let r = inline_call bs body given x in
+       (match extra with
+        | [] -> r
+        | _ -> { x with e = EApp (r, extra) })
      | _ -> SMap.add used (string_of_name n) true;
             { x with e = EApp ({ x with e = EQual (n, tys) }, args) })
   | EQual (n, _) ->
@@ -421,6 +539,7 @@ let dce (prog:program) : ML program =
 let run (prog:program) : ML program =
   let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
+  let prog = reduce_decls prog in
   let prog = prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }

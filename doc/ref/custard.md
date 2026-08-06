@@ -669,6 +669,36 @@ A useful diagnostic while tuning: `--custard_dump_specializations` listing
 `lid ↦ number of specializations`, which makes both failure modes (bloat, and
 fuel exhaustion) immediately visible.
 
+#### The key is not what gets substituted
+
+The canonical form computed here is the specialization's *identity*.  It is
+**not** the term that gets substituted into the body, and conflating the two
+is a trap worth spelling out.
+
+The key steps include `Primops` and `UnfoldUntil delta_constant`, i.e. they
+unfold everything and fold arithmetic.  That is exactly right for deciding
+"are these two dictionaries the same dictionary?", and exactly wrong as the
+argument to substitute, because it *runs the program at extraction time*.
+The EverParse-style combinator of §3.9 makes this vivid: substituting the
+fully normalized parser bundle folds the offset arithmetic `4 + 8`, which
+forces every sub-parser to reduce to a concrete `Some (n, _)`, which lets
+`Iota` collapse every `match` — and the whole grammar arrives inlined into
+its root as straight-line code.  Its serializer, which contains neither
+arithmetic nor a `match`, escaped untouched, which is what made the asymmetry
+noticeable.
+
+So the substituted form uses a *second*, weaker step list:
+
+```
+subst_norm_steps = Weak :: HNF :: key_norm_steps
+```
+
+`Weak` and `HNF` stop reduction at the head constructor with the field bodies
+as written, so a sub-combinator stays a *call* rather than being evaluated.
+If weak reduction leaves free names behind — it can, when the argument is not
+a closed value — we fall back to the fully normalized term, which is always
+sound, just less structured.
+
 ### 3.8 Function-valued `Mono` arguments (deferred to v2)
 
 Marking a *function* parameter `[@@monomorphize]` is genuinely harder than
@@ -723,6 +753,64 @@ karamel's existing closure handling or an explicit environment struct.  This is
 also why we cannot simply defunctionalize everything.
 
 ---
+
+### 3.9 Worked example: bundled combinators
+
+EverParse 3D generates *bundles*: a record holding several methods that are
+built up compositionally.
+
+```fstar
+noeq type parser_combinator (ty:Type0) = {
+  parse:     bytes -> option (nat & ty);
+  serialize: ty -> bytes;
+}
+
+let u32 : parser_combinator U32.t = { parse = …; serialize = … }
+let seq (#a #b:Type0) (p: parser_combinator a) (q: parser_combinator b)
+  : parser_combinator (a & b) = { parse = …; serialize = … }
+
+let three_numbers = seq u32 (seq u32 u32)
+```
+
+The desired output is one top-level function per (combinator, method) pair,
+each *calling* its sub-combinators' functions, and no `parser_combinator`
+value ever materialized.  Today this is hand-rolled with an
+`inline_for_extraction` "prelim" definition that is projected field by field.
+
+Custard gets there without the prelim, but the annotation goes on
+*wrapper* functions rather than on `seq`:
+
+```fstar
+let parse (#a:Type0) ([@@@monomorphize] p: parser_combinator a) (b:bytes)
+  : option (nat & a) = p.parse b
+let serialize (#a:Type0) ([@@@monomorphize] p: parser_combinator a) (x:a)
+  : bytes = p.serialize x
+```
+
+and `seq`'s body calls `parse p` / `serialize q` instead of `p.parse` /
+`q.serialize`.  `seq`'s own binders need no annotation: rule 5 of §3.1
+propagates `Mono` to them, because they flow into a `Mono` position.
+
+Each specialization `parse@<key>` then *is* that combinator's parser.  Sharing
+falls out of interning: two structurally identical grammar nodes normalize to
+the same key and collapse to one function.  For the example above the emitted
+program is
+
+```
+parse@t  parse@tuple2  parse@tuple2_2
+serialize@t  serialize@tuple2_2  serialize@tuple2
+```
+
+— six functions, each a direct call into the next, with the record type,
+its constructor and its projectors all removed by dead-code elimination.
+
+Two pieces of machinery were needed to reach that shape, both in §6's
+reduction pass, and both about *not* leaving a residue where the projector
+used to be: over-applied inlining (the projector is stored eta-expanded, so
+inlining it leaves `EApp (EMatch …, args)`) and an iota rule whose pattern
+bindings are *substituted* rather than turned into `let`s.  See §6 pass 5.
+
+This is `tests/custard/Combinators.fst`.
 
 ## 4. Driver and on-demand loading
 
@@ -1014,7 +1102,7 @@ On the Pulse hash table this is the difference between 44 emitted declarations
 and 27: `Ghost.hide`, `mk_init_pht`, `lift_hash_fun`, `Seq.Base.create`,
 `Seq.Base._cons`, `FStar.SizeT.v`, `Prims.op_Subtraction`, `repr_t`, `lseq`,
 `Prims.pos` and `Prims.nat` are now never requested at all, rather than
-requested, monomorphized, emitted, and swept up afterwards by pass 5.
+requested, monomorphized, emitted, and swept up afterwards by pass 6.
 
 - a record/variant all of whose fields are erased is erased
   (`type foo = { a: prop; b: prop }` ⟹ `L_erased`);
@@ -1193,7 +1281,40 @@ Phase 4 passes, in order:
    back into the result type, and the effect of the arrow it removes becomes
    part of the returned closure's type rather than the declaration's.
 
-5. **Dead-code elimination**: reachability from the declarations flagged
+5. **Reduction** (beta and iota).  Inlining a declaration can expose a redex
+   that neither pass alone will contract, and the leftovers are exactly the
+   ones a reader notices.  Two rules, applied to fixpoint together with the
+   recursive descent:
+
+   - **beta**: `EApp (EFun (bs, body), args)` with `|bs| ≤ |args|` contracts,
+     reusing the inliner's substitute-or-`let` heuristic so an impure or
+     multiply-used argument is not duplicated.  Surplus arguments are
+     re-applied to the result.
+   - **iota**: `EMatch (ECtor (c, es), branches)` selects the first branch
+     whose pattern matches, provided every `es` is pure — otherwise selecting
+     a branch would drop the effects of the fields the pattern ignores.
+     Guarded branches are never selected, since the guard has to run first.
+
+   Two subtleties, both found while getting §3.9 to come out right:
+
+   *Inlining must handle over-application.*  A projector for a field of arrow
+   type is stored eta-expanded (see pass 4), so after eta reduction it is a
+   one-binder function returning a `match`, and every use applies it to the
+   record *and* the method's own arguments.  If the inliner declines
+   over-applied uses, the projector survives; if it splits the argument list
+   and re-applies the surplus, the result is `EApp (EMatch …, args)`, which
+   iota then collapses.
+
+   *Iota must substitute, not bind.*  Turning the matched pattern's variables
+   into `ELet`s looks equivalent and is not: it puts an `ELet` where the head
+   of the enclosing application was, so the beta rule above never sees the
+   `EFun` it is wrapping and every emitted body keeps a residual
+   `(fun b -> …) b`.  Routing the bindings through the same
+   substitute-or-`let` helper the inliner uses makes a field that is used once
+   — the overwhelmingly common case, since the whole point is to select one
+   method out of a bundle — substitute directly.
+
+6. **Dead-code elimination**: reachability from the declarations flagged
    `Root`/`Entrypoint`, following the names in bodies, binder types, result
    types and field types (a constructor name resolves to its `DType`).  The
    pass runs *after* inlining, when the call graph is final, and its job is to
@@ -1211,13 +1332,13 @@ Phase 4 passes, in order:
    specification of every data structure it touched, and any error raised while
    doing so (a `Mono` binder in ghost code, say) was a spurious failure about
    code that was never going to be emitted.
-6. **Unused-parameter elimination** for the residual polymorphic decls.  The
+7. **Unused-parameter elimination** for the residual polymorphic decls.  The
    existing algorithm in
    `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst` is a good
    template; Custard's version is simpler because it does not need to keep an
    ABI-compatible record of eliminated positions.
-7. **SCC computation and topological sort** of the final decl list.
-8. **Renaming** (`FStarC.Custard.Rename`): give every bound name its source
+8. **SCC computation and topological sort** of the final decl list.
+9. **Renaming** (`FStarC.Custard.Rename`): give every bound name its source
    spelling back.
 
    Extraction names a local after the F\* `bv` it came from, because two
@@ -1807,7 +1928,7 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
     `Alloc`/`Free` stay separate impure operations; a scoped `EWithLocal` is at
     most an optional recovery, never a requirement.
 15. **Mutual recursion across specializations** — emitting decls incrementally
-    and computing SCCs once the worklist is drained (§6, pass 6) is the plan.
+    and computing SCCs once the worklist is drained (§6, pass 8) is the plan.
 
 ### 11.2 Still open
 
@@ -1850,5 +1971,6 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6a | Output polish: per-specialization suffixes, projector/discriminator inlining, externals printed at their uses, OCaml type annotations, `--custard_entry` vs `--custard_main` | Done. `tests/custard/Library.fst` covers the root-only (no `main`) mode |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
 | M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny`/`EAbort` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` and `PulseHashTable.fst` both go to compiled OCaml and to compiled C; requires stage3, so neither is part of `tests/custard` |
+| M6c | Bundled combinators (§3.9): weak-HNF substitution (§3.7), over-applied inlining and iota (§6 pass 5) | Done. `tests/custard/Combinators.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

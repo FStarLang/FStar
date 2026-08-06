@@ -28,6 +28,13 @@ ROOTS_Library  = scale
 GREP_Library   = library_scale library_double
 NOGREP_Library = library_unused "let _ ="
 
+ROOT_TESTS += Combinators
+ROOTS_Combinators  = parse_three serialize_three
+GREP_Combinators   = combinators_parse__t combinators_parse__tuple2 \
+                     combinators_serialize__t combinators_serialize__tuple2
+# No record is built at runtime, so neither the type nor its projectors survive.
+NOGREP_Combinators = parser_combinator __proj__
+
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.
 REJECT_TESTS += MonoPoly

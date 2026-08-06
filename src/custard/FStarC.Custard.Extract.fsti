@@ -39,6 +39,12 @@ module TcEnv = FStarC.TypeChecker.Env
 type spec_key = {
   sk_lid:  Ident.lident;
   sk_args: list (int & FStarC.Syntax.Syntax.term);
+  (* The terms actually substituted into the body, which are the same
+     arguments in *weak head* normal form.  Kept apart from [sk_args] because
+     the two answer different questions: [sk_args] is the specialization's
+     identity, so it must be fully reduced, while what goes into the body
+     should be reduced no further than it takes to see the value's head. *)
+  sk_subst: list (int & FStarC.Syntax.Syntax.term);
 }
 
 val state : Type0

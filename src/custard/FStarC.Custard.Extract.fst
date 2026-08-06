@@ -73,6 +73,24 @@ let key_norm_steps : list TcEnv.step = [
   TcEnv.UnfoldUntil delta_constant;
 ]
 
+(* The same reduction, stopped as soon as the value's head constructor is
+   visible.  This -- not [key_norm_steps] -- is what gets substituted into the
+   body; see section 3.3.
+
+   The two have to differ.  [key_norm_steps] is a specialization's *identity*,
+   so it must reduce everything: two arguments that mean the same thing have
+   to produce the same key, or the same code is emitted twice.  But that same
+   reduction, applied to the term the body will contain, evaluates the whole
+   program at extraction time.  On a bundled parser combinator it inlines the
+   entire grammar into its root -- [Primops] folds the offset arithmetic
+   [4 + 8], which forces the sub-parsers to reduce to concrete [Some (n, _)]
+   values, which lets [Iota] collapse every [match] -- and all the sharing is
+   gone.  Weak head normal form stops at the record constructor, leaving the
+   fields' bodies as written, so a sub-combinator stays a *call* and gets a
+   specialization (and a name) of its own. *)
+let subst_norm_steps : list TcEnv.step =
+  TcEnv.Weak :: TcEnv.HNF :: key_norm_steps
+
 let string_of_key (k:spec_key) : ML string =
   Ident.string_of_lid k.sk_lid ^
   (k.sk_args |> List.map (fun (i, t) -> "#" ^ show i ^ "=" ^ show t)
@@ -275,12 +293,12 @@ let rec request (st:state) (k:spec_key) : ML name =
     | Some ty_lid ->
       (* A data constructor is part of its inductive's declaration, not a
          declaration of its own: request the type and emit nothing. *)
-      let _ = request st { sk_lid = ty_lid; sk_args = [] } in
+      let _ = request st { sk_lid = ty_lid; sk_args = []; sk_subst = [] } in
       nm
     | None ->
       let saved = !st.chain in
       st.chain := key :: saved;
-      let d = extract_lid st l nm k.sk_args in
+      let d = extract_lid st l nm k.sk_subst in
       st.chain := saved;
       SMap.add st.emitted key d;
       st.order := key :: !st.order;
@@ -420,7 +438,7 @@ and ty_of_fv (st:state) (fv:fv) (args:list term) : ML cty =
        F*, so it is never requested and its F* definition is never seen. *)
     match Builtins.lookup_rule l with
     | Some (Builtins.Rule_type f) -> f args
-    | _ -> TApp (request st { sk_lid = l; sk_args = [] }, args)
+    | _ -> TApp (request st { sk_lid = l; sk_args = []; sk_subst = [] }, args)
 
 (* -------------------------------------------------------------------- *)
 (* Terms                                                                *)
@@ -436,7 +454,7 @@ and constant_of_sconst (c:sconst) : ML (option constant) =
   | _ -> None
 
 and ty_of_constant (st:state) (c:constant) : ML cty =
-  let prim (l:Ident.lident) : ML cty = TApp (request st { sk_lid = l; sk_args = [] }, []) in
+  let prim (l:Ident.lident) : ML cty = TApp (request st { sk_lid = l; sk_args = []; sk_subst = [] }, []) in
   match c with
   | CUnit -> TUnit
   | CBool _ -> prim PC.bool_lid
@@ -663,7 +681,7 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
   ensure_lid_available st l;
   if is_data_ctor fv
   then
-    let nm = request st { sk_lid = l; sk_args = [] } in
+    let nm = request st { sk_lid = l; sk_args = []; sk_subst = [] } in
     let flags, ufs = match TcEnv.try_lookup_lid (tcenv st) l with
                      | Some ((_, ty), _) -> (Mono.erased_binders (tcenv st) ty,
                                              Mono.unit_binders (tcenv st) ty)
@@ -672,8 +690,8 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
        (ctor_result_ty st l args) E_Pure
   else
     let cs = binder_classes st l in
-    let margs, rest = split_mono_args st l cs args in
-    let key = { sk_lid = l; sk_args = margs } in
+    let margs, msubst, rest = split_mono_args st l cs args in
+    let key = { sk_lid = l; sk_args = margs; sk_subst = msubst } in
     let nm = request st key in
     (* Uniform compilation (section 5.0) deletes the type arguments from the
        value spine, but the karamel backend still needs them: it is karamel's
@@ -769,23 +787,30 @@ and callee_sig (st:state) (key:string) (tyargs:list cty) : ML cty =
     subst_cty (zip d.dl_typars tyargs) (build d.dl_binders)
   | _ -> TAny
 
-(* Section 3.2: the two ways a call site can fail to be specializable. *)
+(* Section 3.2: the two ways a call site can fail to be specializable.
+   Returns the key arguments, the terms to substitute into the body, and the
+   remaining spine. *)
 and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
-  : ML (list (int & term) & args) =
-  if not (has_mono cs) && not (has_dropped cs) then ([], spine)
+  : ML (list (int & term) & list (int & term) & args) =
+  if not (has_mono cs) && not (has_dropped cs) then ([], [], spine)
   else
     let n_args = List.length spine in
-    let rec go (i:int) (cs:list bclass) (sp:args) (margs:list (int & term)) (rest:args)
-      : ML (list (int & term) & args) =
+    let rec go (i:int) (cs:list bclass) (sp:args) (margs:list (int & term))
+               (msubst:list (int & term)) (rest:args)
+      : ML (list (int & term) & list (int & term) & args) =
       match cs, sp with
-      | [], _ -> (List.rev margs, List.rev rest @ sp)
-      | Poly :: cs, a :: sp -> go (i + 1) cs sp margs (a :: rest)
+      | [], _ -> (List.rev margs, List.rev msubst, List.rev rest @ sp)
+      | Poly :: cs, a :: sp -> go (i + 1) cs sp margs msubst (a :: rest)
       (* Section 5.1: an erased argument is deleted, not passed as unit. *)
-      | Dropped :: cs, _ :: sp -> go (i + 1) cs sp margs rest
+      | Dropped :: cs, _ :: sp -> go (i + 1) cs sp margs msubst rest
       | Mono :: cs, a :: sp ->
         let t = N.normalize key_norm_steps (tcenv st) (fst a) in
         check_mono_arg st l i t;
-        go (i + 1) cs sp ((i, t) :: margs) rest
+        let w = N.normalize subst_norm_steps (tcenv st) (fst a) in
+        (* Full reduction can eliminate a free variable that weak reduction
+           leaves behind ([fst (x, 1)]), and the body must stay closed. *)
+        let w = if is_empty (Free.names w) then w else t in
+        go (i + 1) cs sp ((i, t) :: margs) ((i, w) :: msubst) rest
       | Mono :: _, [] ->
         (* Section 3.2(a): partial application of a specializing definition. *)
         custard_error st E.Error_CustardCannotMonomorphize [
@@ -795,9 +820,9 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
           text "Eta-expand the use, or drop the [@@monomorphize] attribute."
         ]
       | Poly :: _, []
-      | Dropped :: _, [] -> (List.rev margs, List.rev rest)
+      | Dropped :: _, [] -> (List.rev margs, List.rev msubst, List.rev rest)
     in
-    go 0 cs spine [] []
+    go 0 cs spine [] [] []
 
 (* Section 3.2(b): the argument has to be known at specialization time, i.e. it
    must not mention any of the enclosing definition's runtime parameters.  Note
@@ -856,7 +881,7 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
                 | Some ((_, ty), _) -> Mono.erased_binders (tcenv st) ty
                 | None -> [] in
     let pats = drop_flagged flags pats |> List.map (fun (p, _) -> pat_of_pat st p) in
-    PCtor (request st { sk_lid = l; sk_args = [] }, pats)
+    PCtor (request st { sk_lid = l; sk_args = []; sk_subst = [] }, pats)
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
@@ -1188,8 +1213,8 @@ let dump_specializations (st:state) : ML unit =
 
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML program =
   let mark (f:flag) (l:Ident.lident) : ML unit =
-    let key = string_of_key { sk_lid = l; sk_args = [] } in
-    let _ = request st { sk_lid = l; sk_args = [] } in
+    let key = string_of_key { sk_lid = l; sk_args = []; sk_subst = [] } in
+    let _ = request st { sk_lid = l; sk_args = []; sk_subst = [] } in
     (* Mark the root so backends know which symbols must survive. *)
     match SMap.try_find st.emitted key with
     | Some (DLet d) ->
