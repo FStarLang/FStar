@@ -46,6 +46,8 @@ module SMap   = FStarC.SMap
 module SS     = FStarC.Syntax.Subst
 module TcEnv  = FStarC.TypeChecker.Env
 module U      = FStarC.Syntax.Util
+module TcUtil = FStarC.TypeChecker.Util
+module Range = FStarC.Range
 
 (* -------------------------------------------------------------------- *)
 (* Specialization keys                                                  *)
@@ -352,6 +354,14 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
 
   | Tm_uinst (t, _) -> ty_of_typ st t
 
+  (* As with {!erasable_app}, a non-informative type is collapsed *before* its
+     head is requested.  Requesting it would emit its whole definition -- and
+     recursively that of every type it mentions -- for a value that cannot
+     exist at runtime; [Pulse.Lib.HashTable.Spec.repr_t] and its [Seq]/[nat]
+     entourage are the motivating example. *)
+  | Tm_fvar _
+  | Tm_app _ when TcUtil.must_erase_for_extraction (tcenv st) t -> TUnit
+
   | Tm_fvar fv -> ty_of_fv st fv []
 
   | Tm_arrow _ ->
@@ -486,6 +496,10 @@ and expr_of_term (st:state) (t:term) : ML expr =
      | Tm_fvar fv -> app_of_fv st fv args
      | _ ->
        let hd_term = hd in
+       let erasable = match (SS.compress hd_term).n with
+                      | Tm_name bv -> erasable_result st bv.sort (List.length args)
+                      | _ -> false in
+       if erasable then unit_expr else
        let hd = expr_of_term st hd in
        (* No declaration to consult, so the filter has to come from the head's
           own type; a head we cannot type is left alone. *)
@@ -505,7 +519,10 @@ and expr_of_term (st:state) (t:term) : ML expr =
     (match lb.lbname with
      | Inl bv ->
        let bv, body = SS.open_term_bv bv body in
-       let e1 = expr_of_term st lb.lbdef in
+       let e1 = if TcUtil.must_erase_for_extraction (tcenv st) lb.lbtyp &&
+                   U.is_pure_or_ghost_effect lb.lbeff
+                then unit_expr
+                else expr_of_term st lb.lbdef in
        let e2 = expr_of_term st body in
        mk (ELet (name_of_bv bv, ty_of_typ st lb.lbtyp, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
      | Inr _ ->
@@ -563,9 +580,39 @@ and drop_flagged (#a:Type) (flags:list bool) (xs:list a) : ML (list a) =
    at runtime. *)
 and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
   let l = S.lid_of_fv fv in
-  match Builtins.lookup_rule l with
-  | Some (Builtins.Rule_prim (n, f)) -> prim_app st l n f args
-  | _ -> app_of_fv' st fv args
+  if erasable_app st (TcEnv.try_lookup_lid (tcenv st) l) (List.length args)
+  then unit_expr
+  else
+    match Builtins.lookup_rule l with
+    | Some (Builtins.Rule_prim (n, f)) -> prim_app st l n f args
+    | _ -> app_of_fv' st fv args
+
+(* Section 5.1: a term whose *result* is non-informative is replaced by [()]
+   without ever being looked at.  This has to happen before the spine is
+   traversed, not after: extracting an erased subterm issues specialization
+   requests for everything it mentions, and although the simplifier then
+   deletes the reference, the requested declarations have already been emitted.
+   That is how the ghost model of a Pulse data structure -- [mk_init_pht],
+   [Seq.create], [lift_hash_fun] -- used to follow [Ghost.hide] into the
+   output, where it is at best dead weight and at worst rejected by karamel for
+   using mathematical integers.
+
+   The effect has to be pure or ghost for this to be sound: an erased *result*
+   says nothing about whether the call has side effects to run, so
+   [unit -> ML (erased int)] is extracted normally. *)
+and erasable_app (st:state) (lookup:option ((universes & typ) & Range.range)) (n_args:int)
+  : ML bool =
+  match lookup with
+  | None -> false
+  | Some ((_, ty), _) -> erasable_result st ty n_args
+
+and erasable_result (st:state) (ty:typ) (n_args:int) : ML bool =
+  let bs, c = U.arrow_formals_comp ty in
+  (* Over-application leaves an unknown residue, and under-application leaves
+     a closure; only an exactly saturated call has a result we can judge. *)
+  List.length bs = n_args &&
+  U.is_pure_or_ghost_comp c &&
+  TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c)
 
 (* A primitive is a function in F* but an operator in the IR, so an
    under-applied use has to be eta-expanded rather than passed along. *)

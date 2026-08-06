@@ -988,6 +988,34 @@ it themselves: karamel's `Simplify.remove_unused_parameters` deletes `TUnit`
 parameters ("type-based elimination") along with the matching arguments at
 every call site, and in OCaml a `unit` argument costs nothing.
 
+#### Erase on sight
+
+Erasure decides what is *not* extracted, so it has to be applied *before* the
+term is walked, never after.  A request is a side effect: `Extract.request`
+specializes the definition, emits it, and records it, so descending into a
+subterm that will later be thrown away still leaves its entire transitive
+closure in the program.  The subsequent simplifier deletes only the
+*reference*.
+
+Custard therefore short-circuits at three places, each returning the erased
+answer without looking at its operands:
+
+- `Extract.erasable_app` — a saturated call whose comp is pure or ghost and
+  whose result type is non-informative becomes `()`.  The purity side
+  condition is essential: an erased *result* says nothing about side effects,
+  so `unit -> ML (erased int)` is extracted normally.
+- the `Tm_let` case of `Extract.expr_of_term` — same test on `lbtyp`/`lbeff`,
+  so `let x : erased t = <ghost> in e` never visits `<ghost>`.
+- `Extract.ty_of_typ` — a non-informative `Tm_fvar`/`Tm_app` collapses to
+  `TUnit` instead of requesting its head, which would emit the type's whole
+  definition and recursively that of every type it mentions.
+
+On the Pulse hash table this is the difference between 44 emitted declarations
+and 27: `Ghost.hide`, `mk_init_pht`, `lift_hash_fun`, `Seq.Base.create`,
+`Seq.Base._cons`, `FStar.SizeT.v`, `Prims.op_Subtraction`, `repr_t`, `lseq`,
+`Prims.pos` and `Prims.nat` are now never requested at all, rather than
+requested, monomorphized, emitted, and swept up afterwards by pass 5.
+
 - a record/variant all of whose fields are erased is erased
   (`type foo = { a: prop; b: prop }` ⟹ `L_erased`);
 - a variant with exactly one constructor with no non-erased argument is
@@ -1167,14 +1195,22 @@ Phase 4 passes, in order:
 
 5. **Dead-code elimination**: reachability from the declarations flagged
    `Root`/`Entrypoint`, following the names in bodies, binder types, result
-   types and field types (a constructor name resolves to its `DType`).  This is
-   not an optimization but a *correctness* requirement for the C backend:
-   extraction requests a definition the moment it meets one, including from a
-   position the layout analysis later erases, so a Pulse data structure drags
-   in its whole ghost model — `Seq.create`, `Prims.op_Subtraction`, `Prims.pos`.
-   In OCaml that is merely wasteful; karamel rejects it, because a
-   specification uses mathematical integers.  The pass runs *after* inlining,
-   when the call graph is final.
+   types and field types (a constructor name resolves to its `DType`).  The
+   pass runs *after* inlining, when the call graph is final, and its job is to
+   collect what inlining orphaned: a projector or an `external` alias that was
+   substituted into every use site is still a declaration until something
+   deletes it.
+
+   It is deliberately *not* the mechanism that keeps ghost code out — see
+   §5.1's "erase on sight" rule.  It once was, and that was a mistake: a
+   request is a side effect, so by the time the simplifier deleted a reference
+   to `Ghost.hide`, the transitive closure of its argument — `mk_init_pht`,
+   `Seq.create`, `FStar.SizeT.v`, `Prims.op_Subtraction` — had already been
+   specialized and emitted.  Deleting it afterwards happened to work, but it
+   meant Custard was paying to extract, monomorphize and simplify the entire
+   specification of every data structure it touched, and any error raised while
+   doing so (a `Mono` binder in ghost code, say) was a spurious failure about
+   code that was never going to be emitted.
 6. **Unused-parameter elimination** for the residual polymorphic decls.  The
    existing algorithm in
    `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst` is a good
