@@ -30,6 +30,7 @@ module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
 module Layout  = FStarC.Custard.Layout
 module OCaml   = FStarC.Custard.PrintOCaml
+module Rename  = FStarC.Custard.Rename
 module Simplify = FStarC.Custard.Simplify
 module Ident   = FStarC.Ident
 module TcEnv   = FStarC.TypeChecker.Env
@@ -76,6 +77,9 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let prog = Layout.run prog in
   (* Effect-guarded simplification (sections 6 and 7.3). *)
   let prog = Simplify.run prog in
+  (* Last: the passes above invent names, and the whole point is that what a
+     reader sees is stable under everything that happened before. *)
+  let prog = Rename.run prog in
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   (* Custard emits one file for the whole program, so -o is unambiguous here,

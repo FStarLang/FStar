@@ -65,6 +65,19 @@ type name = {
 val mangled_name : name -> ML string
 val string_of_name : name -> ML string
 
+(** {1 Local names} *)
+
+(** A local name is the source [ppname] plus a uniquifying suffix, because two
+    distinct F* [bv]s routinely share a [ppname].  The separator is a character
+    no F* identifier and no target-language identifier can contain, so the two
+    halves can always be told apart again -- which is what lets
+    {!FStarC.Custard.Rename} hand the source spelling back at the very end of
+    the pipeline, and what makes a name that escaped it obvious on sight. *)
+val uniq : string -> int -> ML string
+
+(** The part of a local name before the uniquifying suffix. *)
+val base_name : string -> ML string
+
 (** {1 Effects} *)
 
 (** The effect lattice, ordered [E_Ghost < E_Pure < E_Impure].  We deliberately

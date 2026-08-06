@@ -305,7 +305,7 @@ let keep_by_slots (#a:Type) (slots:list slot) (xs:list a) : ML (list a & list a)
 
 let fresh_var (t:tbl) : ML string =
   t.fresh := !t.fresh + 1;
-  "_dropped" ^ show !t.fresh
+  uniq "_dropped" !t.fresh
 
 (* Dropping an argument is only sound when it cannot have an effect; an impure
    one is sequenced before the result instead (section 5.2, last guard). *)

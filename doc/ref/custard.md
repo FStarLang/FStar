@@ -1217,6 +1217,37 @@ Phase 4 passes, in order:
    template; Custard's version is simpler because it does not need to keep an
    ABI-compatible record of eliminated positions.
 7. **SCC computation and topological sort** of the final decl list.
+8. **Renaming** (`FStarC.Custard.Rename`): give every bound name its source
+   spelling back.
+
+   Extraction names a local after the F\* `bv` it came from, because two
+   distinct `bv`s routinely share a `ppname` and the IR has no binding
+   structure of its own to disambiguate them.  The obvious encoding —
+   `ppname ^ "_" ^ index` — is a disaster for reviewability: `bv` indices come
+   from a global counter, so touching *anything* upstream renumbers every local
+   in the program and the diff is unreadable.  Since the generated code is
+   meant to be read and checked in, that matters.
+
+   So the uniquifying suffix is written with `Syntax.uniq`, which separates it
+   with a `#`.  No F\* identifier and no target-language identifier can contain
+   one, so `Syntax.base_name` recovers the original spelling exactly, and a
+   name that escaped this pass is obvious on sight (the printers sanitize it to
+   `_` rather than emit it).  Everything that invents a name goes through
+   `uniq`: `Extract.name_of_bv`, the eta-expansion binders of a builtin rule,
+   `Simplify.rename` for the inliner's capture avoidance, and `Layout`'s
+   placeholders for dropped fields.
+
+   The pass then walks the program with a scope, renaming each binder to its
+   bare `base_name` and appending `1`, `2`, … only when that would actually
+   shadow something already in scope.  Three namespaces are handled
+   separately, because they do not interfere: locals (per enclosing term), type
+   variables (per declaration), and record/variant fields (per constructor,
+   with the result published so that `EProj`/`ERecord` elsewhere agree).
+   `uu____NNN`, which F\* invents for a binder written `_`, is collapsed to
+   `tmp` — its digits are exactly as volatile as the suffix being removed.
+
+   It runs last, after every pass that might invent a name, so what a reader
+   sees is stable under everything that happened before it.
 
 Emission:
 

@@ -191,7 +191,7 @@ let name_of_lid (l:Ident.lident) : ML name = {
 }
 
 let name_of_bv (b:bv) : ML string =
-  Ident.string_of_id b.ppname ^ "_" ^ show b.index
+  uniq (Ident.string_of_id b.ppname) b.index
 
 (* A readable suffix for a specialization: the head symbol of its first [Mono]
    argument is almost always the interesting one (the type, or the instance). *)
@@ -639,7 +639,7 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let missing = n - List.length given in
   if missing > 0
   then
-    let bs = List.map (fun _ -> { b_name = "custard_eta_" ^ show (GenSym.next_id ());
+    let bs = List.map (fun _ -> { b_name = uniq "eta" (GenSym.next_id ());
                                   b_ty = TAny })
                       (repeat_unit missing) in
     let vs = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in

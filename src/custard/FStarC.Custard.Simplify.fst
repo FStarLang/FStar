@@ -102,7 +102,7 @@ and simpl_branch (br:branch) : ML branch =
    definition; only *copying* a definition can break that. *)
 let subst = SMap.t expr
 
-let rename (x:string) : ML string = x ^ "_i" ^ show (GenSym.next_id ())
+let rename (x:string) : ML string = uniq (base_name x) (GenSym.next_id ())
 
 let rec sub (sm:subst) (x:expr) : ML expr =
   let g = sub sm in

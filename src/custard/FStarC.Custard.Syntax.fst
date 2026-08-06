@@ -47,6 +47,15 @@ let string_of_name (n:name) : ML string =
   | None -> base
   | Some s -> base ^ "@" ^ s
 
+(* '#' is not legal in an F* identifier, so [base_name] is exact; the printers
+   sanitize it away in the rare event that a name escapes the renaming pass. *)
+let uniq (base:string) (i:int) : ML string = base ^ "#" ^ show i
+
+let base_name (s:string) : ML string =
+  match String.split ['#'] s with
+  | b :: _ :: _ -> b
+  | _ -> s
+
 (* -------------------------------------------------------------------- *)
 (* Effects                                                              *)
 (* -------------------------------------------------------------------- *)
