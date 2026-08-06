@@ -25,6 +25,7 @@ module BU    = FStarC.Util
 module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
 module UF      = FStarC.Syntax.Unionfind
+module Krml    = FStarC.Custard.PrintKrml
 module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
 module Layout  = FStarC.Custard.Layout
@@ -70,9 +71,12 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     Format.print_string (program_to_string prog ^ "\n");
   (* Custard emits one file for the whole program, so -o is unambiguous here,
      unlike in the per-module backends. *)
+  let krml = Options.custard_backend () = "Krml" in
   let ofile =
     match Options.output_to () with
     | Some fn -> fn
-    | None -> Find.prepend_output_dir "Custard.ml"
+    | None -> Find.prepend_output_dir (if krml then "Custard.krml" else "Custard.ml")
   in
-  BU.write_file ofile (OCaml.print_program prog)
+  if krml
+  then Krml.write_program ofile prog
+  else BU.write_file ofile (OCaml.print_program prog)

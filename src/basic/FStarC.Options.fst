@@ -202,6 +202,7 @@ let defaults = [
   ("custard_fuel"                              , Int 10000);
   ("custard_max_specializations"               , Int 1000);
   ("custard_monomorphize_types"                , Bool false);
+  ("custard_backend"                           , String "OCaml");
   ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
   ("debug_all"                                 , Bool false);
@@ -480,6 +481,7 @@ let get_custard_dump_layouts ()          = lookup_opt "custard_dump_layouts"    
 let get_custard_fuel            ()      = lookup_opt "custard_fuel"             as_int
 let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
 let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
+let get_custard_backend         ()      = lookup_opt "custard_backend"          as_string
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
@@ -915,6 +917,12 @@ definition before giving up (default 1000)");
     BoolStr,
     text "Monomorphize type binders too, not just type-class dictionaries and \
 binders explicitly marked [@@monomorphize] (default false)");
+
+  ( noshort,
+    "custard_backend",
+    EnumStr ["OCaml"; "Krml"],
+    text "Language Custard emits: OCaml source, or karamel's AST for \
+compilation to C (default OCaml)");
 
   ( 'd',
     "",
@@ -2106,6 +2114,7 @@ let custard_dump_layouts ()         = get_custard_dump_layouts ()
 let custard_fuel                 () = get_custard_fuel ()
 let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
+let custard_backend              () = get_custard_backend ()
 
 let profile_group_by_decl        () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"

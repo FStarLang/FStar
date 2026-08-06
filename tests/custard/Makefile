@@ -14,6 +14,11 @@ CUSTARD_TESTS += Curried
 CUSTARD_TESTS += Implicits
 CUSTARD_TESTS += MachineInts
 
+# Each of these is extracted with --custard_backend Krml, run through karamel
+# to produce C, compiled and run; the program must exit 0.  Skipped when
+# karamel is not installed.
+KRML_TESTS += KrmlBasic
+
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.
 REJECT_TESTS += MonoPoly
@@ -40,5 +45,29 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	  || { echo "ERROR: expected error $(CODE_$*) from $*"; cat $(OUTPUT_DIR)/$*.err; false; }
 	$(Q)touch $@
 
+$(OUTPUT_DIR)/%.krml:
+	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
+	$(FSTAR) --codegen Custard --custard_backend Krml --custard_entry $*.main $< -o $@
+
+# karamel emits its own compile_flags.txt, which is the only portable way to
+# learn where krmllib's headers live.
+$(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
+	$(call msg, "KRML", $(basename $(notdir $@)))
+	$(Q)krml -silent -skip-linking -no-prefix $* -tmpdir $(OUTPUT_DIR)/$*_c $<
+	$(call msg, "CC", $(basename $(notdir $@)))
+	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
+	  $(OUTPUT_DIR)/$*_c/Custard.c -o $@
+
+$(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
+	$(call msg, "RUN-C", $(basename $(notdir $@)))
+	$(Q)$<
+	$(Q)touch $@
+
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
+
+# Only when karamel is on the PATH: the OCaml backend is always testable, the
+# C one needs a toolchain.
+ifneq ($(shell command -v krml 2>/dev/null),)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cran, $(KRML_TESTS)))
+endif

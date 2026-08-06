@@ -209,6 +209,7 @@ val custard_dump_layouts: unit           -> ML bool
 val custard_fuel                : unit    -> ML int
 val custard_max_specializations : unit    -> ML int
 val custard_monomorphize_types  : unit    -> ML bool
+val custard_backend             : unit    -> ML string
 
 val profile_group_by_decl       : unit    -> ML bool
 

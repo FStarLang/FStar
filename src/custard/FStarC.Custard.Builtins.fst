@@ -122,6 +122,26 @@ let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
     | _ -> None
 
 (* -------------------------------------------------------------------- *)
+(* Prims                                                                *)
+(* -------------------------------------------------------------------- *)
+
+(* The boolean connectives.  Without these they would be emitted as calls to
+   [Prims_op_AmpAmp], which has no realization in C.  The comparison and
+   arithmetic operators of [Prims] are deliberately *not* here: they act on
+   unbounded integers, which no C backend can represent, so leaving them as
+   ordinary calls keeps the failure at link time and legible. *)
+let prims_rule (id:string) : ML (option rule) =
+  let bool_op (o:op) (arity:int) : ML (option rule) =
+    let po = { po_op = o; po_int = None } in
+    Some (Rule_prim (arity, fun _ args ->
+            mk (EOp (po, args)) (TApp (bool_name, [])) E_Pure)) in
+  match id with
+  | "op_AmpAmp"   -> bool_op And 2
+  | "op_BarBar"   -> bool_op Or 2
+  | "op_Negation" -> bool_op Not 1
+  | _ -> None
+
+(* -------------------------------------------------------------------- *)
 (* Lookup                                                               *)
 (* -------------------------------------------------------------------- *)
 
@@ -134,5 +154,6 @@ let lookup_rule (l:Ident.lident) : ML (option rule) =
     | id :: rev_ns ->
       (match machine_int_of_module (List.rev rev_ns) with
        | Some sw -> machine_int_rule sw id
-       | None -> None)
+       | None ->
+         if List.rev rev_ns = ["Prims"] then prims_rule id else None)
     | [] -> None

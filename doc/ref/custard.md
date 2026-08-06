@@ -1067,12 +1067,40 @@ Phase 4 passes, in order:
 
 Emission:
 
-- **Krml**: `FStarC.Custard.ToKrml` targets the same karamel AST as
-  `src/extraction/FStarC.Extraction.Krml.fst`, writing the same
+- **Krml** (implemented, M5b): `FStarC.Custard.PrintKrml` targets the same
+  karamel AST as `src/extraction/FStarC.Extraction.Krml.fst`, writing the same
   `(version, files)` binary via `save_value_to_file` (cf.
   `Universal.fst:408`).  This is the first backend to build, because it gets us
   end-to-end C output with no new code generator.  Karamel's own
-  monomorphization then has nothing left to do.
+  monomorphization then has nothing left to do.  Select it with
+  `--custard_backend Krml` (the default is `OCaml`); the output file defaults
+  to `Custard.krml`.
+
+  To make the AST shareable, it was moved verbatim out of
+  `FStarC.Extraction.Krml.fst` into a new `FStarC.Extraction.KrmlAst.fst`,
+  which `Krml.fsti` re-exports with `include` so that every existing client
+  keeps compiling unchanged.
+
+  Three points of the translation are worth recording.  *First*, Custard's
+  mangled name goes in the identifier but the **namespace stays the F* one**
+  (`lident_of_name`), because karamel recognizes its own builtins — `Prims.*`,
+  `FStar.UInt32.*`, the Pulse primitives — by fully qualified name; karamel
+  joins the two with `_` for the C name anyway, so nothing is lost.  For the
+  same reason, the types karamel knows natively (`Prims.unit/bool/int/string`)
+  are mapped to `TUnit`/`TBool`/`TInt CInt`/… and their `DType` declarations
+  are **skipped**, rather than redeclared.  *Second*, `EDiscrim` has no karamel
+  counterpart and is compiled to a two-branch match (karamel has no wildcard
+  pattern, so the default branch binds a fresh `PVar`); this needs constructor
+  arities, hence the small `ctor_arity` table built up front.  *Third*, the
+  constructs C cannot express — `POr`, pattern guards, character constants,
+  `ERaise`/`ETry`, `DExn` — become `EAbortS` or a warning, not a crash.
+
+  This backend is also what forced the `Prims` boolean connectives into the
+  rule table of §8.2: emitted as ordinary calls they become a `DExternal`
+  `Prims_op_AmpAmp`, which nothing defines.  The `Prims` *comparison and
+  arithmetic* operators are deliberately left alone, because they act on
+  unbounded integers that no C backend can represent, and a link error naming
+  `Prims_op_LessThan` is a better diagnostic than silently truncating.
 - **ML/OCaml**: `FStarC.Custard.ToML` produces the existing `mlmodule` and
   reuses `FStarC.Extraction.ML.Code`'s printer.  Note the impedance mismatch:
   Custard's collapsed representations are *not* well-typed OCaml in general
@@ -1350,7 +1378,9 @@ discrepancy there would be a miscompilation rather than an error.  The IR gains
 a `TInt of signedness & width` type and a structured `prim_op` for this.
 
 `FStar.Ghost` and `FStar.Pervasives.Native` are not in the table: `Ghost` is
-handled by erasure (§5.1) and the native tuples by `TTuple`/`ETuple`.
+handled by erasure (§5.1) and the native tuples by `TTuple`/`ETuple`.  The
+`Prims` boolean connectives (`op_AmpAmp`, `op_BarBar`, `op_Negation`) *are*,
+because C has no `Prims_op_AmpAmp` to link against; see §6.
 
 Phase 2: the table becomes registrable from F* plugins, using the same
 mutable-ref/registration style already used by
@@ -1505,7 +1535,7 @@ collapse (§5.2), since their representation is fixed externally.
 | M2 | Type-class monomorphization (§3.1 rules 1,2,5) + `[@@monomorphize]` (rule 3); rejection diagnostics of §3.2; fuel (§3.6); key canonicalization (§3.7) | The two §3 examples pass as golden tests; `--custard_dump_specializations` for tuning |
 | M3 | Layout analysis: erasure + uniform newtype collapse (§5.0) + cast elimination (§5) | Differential tests vs ML extraction |
 | M4 | Effect classification + `extract_as_impure_effect` + purity discipline (§7) | Required before any Pulse code can be extracted.  `FStarC.Custard.Effects` and `FStarC.Custard.Simplify`; ANF (§6 pass 1) is not implemented yet, so the purity discipline is applied directly to the tree |
-| M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | End-to-end C via karamel; the sorting-typeclass benchmark |
+| M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | Done. M5a is `FStarC.Custard.Builtins` (§8.2); M5b is `FStarC.Custard.PrintKrml` behind `--custard_backend Krml` (§6), with the karamel AST split out into `FStarC.Extraction.KrmlAst`.  `tests/custard/KrmlBasic.fst` goes all the way to a compiled and executed C binary |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |
