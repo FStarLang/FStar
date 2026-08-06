@@ -4310,10 +4310,10 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                    then U.t_true
                    else
                      let x = S.new_bv None c1_comp.result_typ in
-                     U.mk_forall_no_univ x
-                       (U.mk_imp (U.mk_conj_simp (Env.type_hypothesis env c1_comp.result_typ (S.bv_to_name x))
-                                                 (U.apply_post c1_comp.comp_post (S.bv_to_name x)))
-                                 (U.apply_post c2_comp.comp_post (S.bv_to_name x))) in
+                     post_obligation x
+                       (U.mk_conj_simp (Env.type_hypothesis env c1_comp.result_typ (S.bv_to_name x))
+                                       (U.apply_post c1_comp.comp_post (S.bv_to_name x)))
+                       (U.apply_post c2_comp.comp_post (S.bv_to_name x)) in
                  empty,
                  U.mk_conj_simp (U.mk_imp c2_comp.comp_pre c1_comp.comp_pre)
                                 (U.mk_imp c2_comp.comp_pre g_post),
@@ -4360,10 +4360,10 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                this is what makes [Tot (squash phi)] a subtype of
                [Lemma (ensures phi)]. *)
             let x = S.new_bv None c1.result_typ in
-            U.mk_forall_no_univ x
-              (U.mk_imp (U.mk_conj_simp (Env.type_hypothesis env c1.result_typ (S.bv_to_name x))
-                                        (U.apply_post post1 (S.bv_to_name x)))
-                        (U.apply_post post2 (S.bv_to_name x))) in
+            post_obligation x
+              (U.mk_conj_simp (Env.type_hypothesis env c1.result_typ (S.bv_to_name x))
+                              (U.apply_post post1 (S.bv_to_name x)))
+              (U.apply_post post2 (S.bv_to_name x)) in
         let g = U.mk_conj_simp g_pre (U.mk_imp pre2 g_post) in
         if !dbg_Rel then
           Format.print1 "Computation subtyping guard is (%s)\n" (show g);

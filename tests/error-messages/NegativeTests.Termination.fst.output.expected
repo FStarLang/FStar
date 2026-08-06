@@ -10,7 +10,10 @@
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
   - Failed to prove: n << n \/ count - 1 << count
-  - In context: ~(count = 0)
+  - In context:
+      ~(count = 0)
+      uu___: Prims.int
+      count == _
   - See also NegativeTests.Termination.fst(25,23-28,35)
 
 * Info at NegativeTests.Termination.fst(36,29-36,54):
@@ -22,8 +25,12 @@
       m - 1 === m /\ NegativeTests.Termination.ackermann_bad m (n - 1) << n
   - In context:
       ~(m = 0 = true)
+      uu___: Prims.bool
+      m = 0 == _
       n = 0 = true ==> n = 0 == true ==> m - 1 << m \/ m - 1 === m /\ 1 << n
       ~(n = 0 = true)
+      uu___: Prims.bool
+      n = 0 == _
       m << m \/ n - 1 << n
       uu___: Prims.int
       m << m \/ n - 1 << n
@@ -37,8 +44,12 @@
   - Failed to prove: m << m \/ n - 1 << n
   - In context:
       ~(m = 0 = true)
+      uu___: Prims.bool
+      m = 0 == _
       n = 0 = true ==> n = 0 == true ==> m - 1 << m \/ m - 1 === m /\ 1 << n
       ~(n = 0 = true)
+      uu___: Prims.bool
+      n = 0 == _
   - See also NegativeTests.Termination.fst(31,19-36,54)
 
 * Info at NegativeTests.Termination.fst(35,43-35,44):
@@ -48,6 +59,8 @@
   - Failed to prove: m - 1 << m \/ m - 1 === m /\ 1 << n
   - In context:
       ~(m = 0 = true)
+      uu___: Prims.bool
+      m = 0 == _
       n = 0 = true
       n = 0 == true
   - See also NegativeTests.Termination.fst(31,19-36,54)
@@ -72,6 +85,8 @@
   - Failed to prove: x << v
   - In context:
       ~(v = 0 = true)
+      uu___: Prims.bool
+      v = 0 == _
       i: Prims.nat
       i >= 0
       v == i

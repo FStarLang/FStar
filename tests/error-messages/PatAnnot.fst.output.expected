@@ -17,9 +17,11 @@
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
+      uu___: Prims.unit & Prims.unit
+      PatAnnot.f () == _
       uu___: Prims.unit
       x: Prims.unit
-      PatAnnot.f () == (_, x)
+      _ == (_, x)
   - See also PatAnnot.fst(29,17-29,22)
 
 * Info at PatAnnot.fst(34,10-34,11):
@@ -30,9 +32,11 @@
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
+      uu___: Prims.list Prims.int & Prims.list Prims.int
+      FStar.List.Tot.Base.splitAt 0 [1; 2; 3] == _
       uu___: Prims.list Prims.int
       l: Prims.list Prims.int
-      FStar.List.Tot.Base.splitAt 0 [1; 2; 3] == (_, l)
+      _ == (_, l)
   - See also PatAnnot.fst(34,21-34,26)
 
 * Info at PatAnnot.fst(39,10-39,12):

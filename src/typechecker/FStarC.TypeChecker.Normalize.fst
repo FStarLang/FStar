@@ -877,12 +877,18 @@ let is_forall_const cfg (phi : term) : ML (option term) =
     | _ -> None
 
 (* The one-point rule:
-     forall x. (... /\ x == v /\ ...) ==> q   ~>   ((... /\ ...) ==> q)[v/x]
      exists x. (... /\ x == v /\ ...)          ~>   (... /\ ...)[v/x]
    where [x] does not occur in [v].  Sequencing computations introduces one
    quantifier per intermediate value, each pinned down by such an equation;
-   without this rule verification conditions become unreadable and, more
-   importantly, very hard for the SMT solver. *)
+   without this rule postconditions become unreadable and, more importantly,
+   very hard for the SMT solver.
+
+   The dual rule for [forall x. (... /\ x == v /\ ...) ==> q] is deliberately
+   *not* applied: substituting a definition into a verification condition is
+   what makes VCs blow up exponentially (see issue #3800), and the SMT encoding
+   emits a universally quantified hypothesis as a [declare-fun]/[assert] pair,
+   which is exactly the shape we want.  Write [let unfold] to ask for
+   substitution. *)
 let is_one_point cfg (phi : term) : ML (option term) =
   let rec conjuncts (t:term) : ML (list term) =
     let hd, args = U.head_and_args_full t in
@@ -944,15 +950,7 @@ let is_one_point cfg (phi : term) : ML (option term) =
        (match (SS.compress body).n with
         | Tm_meta {meta=Meta_pattern _} -> None
         | _ ->
-          if is_forall then
-            let hd, args = U.head_and_args_full body in
-            match (U.un_uinst hd).n, args with
-            | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv PC.imp_lid ->
-              (match split x p with
-               | Some (v, rest) ->
-                 keep_if_small (SS.subst [NT (x, v)] (U.mk_imp (U.mk_conj_simp (typing x v) rest) q))
-               | None -> None)
-            | _ -> None
+          if is_forall then None
           else
             match split x body with
             | Some (v, rest) ->

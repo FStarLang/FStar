@@ -768,38 +768,7 @@ let mk_bind env
      postcondition that [return_value] produces, we apply the one-point rule
      and substitute instead of quantifying.  Without this every intermediate
      computation would contribute an [exists] to the verification condition. *)
-  let one_point : option (term & term) =
-    let is_x (t:term) =
-      match (SS.compress t).n with
-      | Tm_name y -> S.bv_eq x y
-      | _ -> false in
-    (* [Some v] if [t] is [x == v] or [v == x] with [x] not free in [v]. *)
-    let as_defn (t:term) : ML (option term) =
-      let hd, args = U.head_and_args_full t in
-      match (U.un_uinst hd).n, args with
-      | Tm_fvar fv, [_; (lhs, _); (rhs, _)] when S.fv_eq_lid fv C.eq2_lid ->
-        if is_x lhs && not (mem x (Free.names rhs)) then Some rhs
-        else if is_x rhs && not (mem x (Free.names lhs)) then Some lhs
-        else None
-      | _ -> None in
-    (* Look for a defining equation among the conjuncts of [post1 x]; the
-       remaining conjuncts stay as a hypothesis (resp. a conjunct). *)
-    let rec find (t:term) : ML (option (term & term)) =
-      let hd, args = U.head_and_args_full t in
-      match (U.un_uinst hd).n, args with
-      | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv C.and_lid ->
-        (match find a with
-         | Some (v, rest) -> Some (v, U.mk_conj_simp rest b)
-         | None ->
-           match find b with
-           | Some (v, rest) -> Some (v, U.mk_conj_simp a rest)
-           | None -> None)
-      | _ ->
-        match as_defn t with
-        | Some v -> Some (v, U.t_true)
-        | None -> None in
-    find post1_x
-  in
+  let one_point : option (term & term) = TcComm.one_point_defn x post1_x in
 
   (* [forall x. post1 x ==> phi], dropping the quantifier when it is vacuous.
      This is the weakest-precondition direction, used for [pre]. *)
@@ -957,24 +926,19 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp)
       let c, g = weaken_comp env c phi in
       c, g, true
     else c, Env.trivial_guard, false
+  | Tm_fvar fv when S.fv_eq_lid fv C.unit_lid ->
+    (* Likewise for an unrefined [unit] binder: [()] is its only value, so the
+       binder carries no information and need not be quantified over. *)
+    SS.subst_comp [NT (x, S.unit_const)] c, Env.trivial_guard, true
   | _ -> c, Env.trivial_guard, false
 
 let optimize_bind_vc () : ML _ = Options.Ext.enabled "optimize_let_vc"
 
 (* [optimize_let_vc] keeps a let-bound variable opaque in the verification
-   condition, turning [phi[e/x]] into [forall x. x == e ==> phi].  That is a
-   good idea for the SMT solver, but it defeats [assert_norm] and friends: by
-   the time the one-point rule puts [e] back (see [Normalize.is_one_point]) the
-   normalization request has already been discharged against the opaque [x].
-   So when the continuation asks for normalization, substitute eagerly. *)
-let requests_normalization (c:comp) : ML bool =
-  match c.n with
-  | Total _ | GTotal _ -> false
-  | Comp ct ->
-    let fvs = Free.fvars ct.comp_pre in
-    [C.normalize; C.normalize_term; C.norm]
-    |> BU.for_some (fun l -> mem l fvs)
-
+   condition, turning [phi[e/x]] into [forall x. x == e ==> phi], which the SMT
+   encoding emits as a [declare-fun]/[assert] pair.  Substituting instead would
+   make VCs blow up exponentially (see issue #3800), so it only happens for
+   non-let bindings (intermediate values) and for [let unfold]. *)
 let bind
       (r1:Range.t)
       (is_let_binding:bool) 
@@ -1090,7 +1054,6 @@ let bind
                 | Some e, Some x when (
                     not (optimize_bind_vc()) || // optimization is disabled
                     not is_let_binding || //non-let bindings, e.g., in applications, are inlined
-                    requests_normalization c2 || // the continuation needs to see the definition
                     is_layered // layered effects do not always support closing with universal quantification
                   ) ->
                   let c2, g_close, _ =
@@ -1216,7 +1179,6 @@ let bind
                         Format.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
                       let c2 = 
                         if not (optimize_bind_vc()) || not is_let_binding
-                           || requests_normalization c2
                         then SS.subst_comp [NT(x,e1)] c2
                         else c2
                       in

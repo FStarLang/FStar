@@ -264,7 +264,7 @@ let binomial_theorem_aux a b n i =
     binomial n i * pow a (n - i) * pow b i;
   }
 
-#push-options "--fuel 2"
+#push-options "--fuel 2 --z3rlimit_factor 2"
 
 val binomial_theorem (a b:int) (n:nat) : Lemma
   (pow (a + b) n == sum 0 n (fun i -> binomial n i * pow a (n - i) * pow b i))
@@ -408,7 +408,7 @@ let freshman_aux p a b i =
 val freshman (p:int{is_prime p}) (a b:int) : Lemma
   (pow (a + b) p % p = (pow a p + pow b p) % p)
 let freshman p a b =
-  let f (i:nat{0 <= i /\ i <= p}) = binomial p i * pow a (p - i) * pow b i % p in
+  let unfold f (i:nat{0 <= i /\ i <= p}) = binomial p i * pow a (p - i) * pow b i % p in
   Classical.forall_intro (freshman_aux p a b);
   calc (==) {
     pow (a + b) p % p;

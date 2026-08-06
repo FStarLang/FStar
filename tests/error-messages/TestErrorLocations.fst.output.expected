@@ -26,6 +26,8 @@
   - In context:
       uu___: Type
       x: _
+      f: x: Prims.int -> Prims.Pure Prims.int
+      TestErrorLocations.test2_aux == f
   - See also TestErrorLocations.fst(27,50-27,58)
 
 * Info at TestErrorLocations.fst(43,20-43,21):
