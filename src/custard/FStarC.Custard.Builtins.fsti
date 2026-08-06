@@ -69,7 +69,29 @@ val register_rule : Ident.lident -> rule -> ML unit
     is [(Unsigned, Int32)]. *)
 val machine_int_of_module : list string -> option (signedness & width)
 
-(** [lookup_rule l] is the rule for [l], consulting first the registered table
-    and then the hardcoded families (machine integers), which are matched by
-    the shape of the name rather than enumerated. *)
+(** The rule declared by a definition's attributes, if any:
+    [@@custard_extern "target"] (plus an optional [@@custard_c_header "h.h"])
+    and [@@custard_opaque].  Unlike {!lookup_rule} this needs the definition in
+    hand, so the extractor consults it separately. *)
+val rule_of_attributes : list FStarC.Syntax.Syntax.term -> ML (option rule)
+
+(** Raised by a rule lookup that does not apply to the given name, so that the
+    next extension in the chain is tried. *)
+exception No_custard_rule
+
+(** A rule lookup, as registered by a plugin.  It signals "not mine" by raising
+    {!No_custard_rule}. *)
+let rule_lookup_t = Ident.lident -> ML rule
+
+(** Try [f] before everything already registered. *)
+val register_pre_rule : rule_lookup_t -> ML unit
+
+(** Try [f] only after everything already registered has declined. *)
+val register_post_rule : rule_lookup_t -> ML unit
+
+
+(** [lookup_rule l] is the rule for [l]: the extensions registered by plugins,
+    then the table populated by {!register_rule}, then the hardcoded families
+    (machine integers, the [Prims] connectives), which are matched by the shape
+    of the name rather than enumerated. *)
 val lookup_rule : Ident.lident -> ML (option rule)

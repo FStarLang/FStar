@@ -681,22 +681,44 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
 (* -------------------------------------------------------------------- *)
 
 and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) : ML decl =
-  match Builtins.lookup_rule l with
-  | Some (Builtins.Rule_extern _) ->
+  let se = TcEnv.lookup_sigelt (tcenv st) l in
+  (* A rule declared by the definition's own attributes wins over the built-in
+     table, so that a program can override a rule it does not like. *)
+  let rule = match se with
+             | Some se ->
+               (match Builtins.rule_of_attributes se.sigattrs with
+                | Some r -> Some r
+                | None -> Builtins.lookup_rule l)
+             | None -> Builtins.lookup_rule l in
+  match rule with
+  | Some (Builtins.Rule_extern x) ->
     (* Section 8.1, kind 4: the F* "definition" is a specification (often
        literally [admit ()]); the real one lives in a hand-written .ml or .c
        file, and all we owe the backend is the type. *)
     let ty = match TcEnv.try_lookup_lid (tcenv st) l with
              | Some ((_, ty), _) -> ty_of_typ st ty
              | None -> TAny in
-    DExternal { dx_name = nm; dx_ty = ty; dx_flags = [] }
+    DExternal { dx_name = nm; dx_ty = ty;
+                dx_target = x.Builtins.x_name; dx_header = x.Builtins.x_header;
+                dx_flags = [] }
   | _ ->
-  match TcEnv.lookup_sigelt (tcenv st) l with
+  let is_opaque = (match rule with Some Builtins.Rule_opaque -> true | _ -> false) in
+  match se with
   | None ->
     custard_error st E.Error_CustardEntryNotFound [
       text ("Custard cannot find a definition for " ^ Ident.string_of_lid l ^ ".")
     ]
-  | Some se -> extract_sigelt st l nm margs se
+  | Some se ->
+    let d = extract_sigelt st l nm margs se in
+    if is_opaque then with_no_newtype d else d
+
+(* [@@custard_opaque]: the representation is fixed outside F*, so neither
+   erasure nor the newtype collapse of section 5.2 may touch it. *)
+and with_no_newtype (d:decl) : ML decl =
+  match d with
+  | DType t ->
+    DType { t with dt_flags = NoNewtype :: List.filter (fun f -> not (Erased? f)) t.dt_flags }
+  | d -> d
 
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) (se:sigelt)
   : ML decl =
@@ -713,7 +735,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
              if is_erasable st se || is_prop_sig st lb.lbtyp
              then with_erased_flag d else d)
        else extract_letbinding st l nm lb is_rec margs
-     | None -> DExternal { dx_name = nm; dx_ty = TAny; dx_flags = [] })
+     | None -> DExternal { dx_name = nm; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] })
 
   | Sig_declare_typ {t} ->
     (* An [assume val], or a type whose definition is not available: an
@@ -723,7 +745,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
     then DType { dt_name = nm; dt_params = []; dt_body = TAbstract;
                  dt_flags = (if is_erasable st se || is_prop_sig st t
                              then [Erased] else []) }
-    else DExternal { dx_name = nm; dx_ty = ty_of_typ st t; dx_flags = [] }
+    else DExternal { dx_name = nm; dx_ty = ty_of_typ st t; dx_target = None; dx_header = None; dx_flags = [] }
 
   | Sig_inductive_typ {params} ->
     let d = extract_inductive st l nm params in
@@ -733,7 +755,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
     (* Reached through a constructor application or pattern: what we actually
        want is the type it belongs to, which the layout analysis (M3) will
        need.  For now record it as external so the name exists. *)
-    DExternal { dx_name = nm; dx_ty = TAny; dx_flags = [] }
+    DExternal { dx_name = nm; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] }
 
   | Sig_bundle {ses} ->
     (match ses |> List.tryFind (fun se ->
@@ -744,7 +766,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
      | None -> DType { dt_name = nm; dt_params = []; dt_body = TAbstract; dt_flags = [] })
 
   | _ ->
-    DExternal { dx_name = nm; dx_ty = TAny; dx_flags = [] }
+    DExternal { dx_name = nm; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] }
 
 (* Section 5.1: a type declared [erasable] has no runtime representation at any
    instantiation, which is what makes it safe to erase uniformly (section

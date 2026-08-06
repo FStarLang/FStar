@@ -19,10 +19,15 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Const
+open FStarC.Syntax.Syntax
 open FStarC.Custard.Syntax
 
 module Ident = FStarC.Ident
 module SMap  = FStarC.SMap
+module S     = FStarC.Syntax.Syntax
+module SS    = FStarC.Syntax.Subst
+module U     = FStarC.Syntax.Util
+module PC    = FStarC.Parser.Const
 
 (* -------------------------------------------------------------------- *)
 (* The registry                                                         *)
@@ -142,18 +147,72 @@ let prims_rule (id:string) : ML (option rule) =
   | _ -> None
 
 (* -------------------------------------------------------------------- *)
+(* Attribute-declared rules                                             *)
+(* -------------------------------------------------------------------- *)
+
+(* [@@custard_extern "target"], [@@custard_c_header "h.h"] and
+   [@@custard_opaque] let a rule be declared in F* source, which covers the
+   common cases (an [assume val] realized by hand) without an OCaml plugin. *)
+let string_arg (t:S.term) : ML (option string) =
+  match (SS.compress t).n with
+  | Tm_constant (Const_string (s, _)) -> Some s
+  | _ -> None
+
+let attribute_string (attrs : list S.term) (a : Ident.lident) : ML (option string) =
+  match U.get_attribute a attrs with
+  | Some ((arg, _) :: _) -> string_arg arg
+  | _ -> None
+
+let rule_of_attributes (attrs : list S.term) : ML (option rule) =
+  if U.has_attribute attrs PC.custard_opaque_attr
+  then Some Rule_opaque
+  (* [has_attribute] only matches a bare fvar, and these carry an argument. *)
+  else if Some? (U.get_attribute PC.custard_extern_attr attrs)
+  then
+    let name = match attribute_string attrs PC.custard_extern_attr with
+               | Some "" -> None
+               | r -> r in
+    Some (Rule_extern { x_name   = name;
+                        x_header = attribute_string attrs PC.custard_c_header_attr })
+  else None
+
+(* -------------------------------------------------------------------- *)
 (* Lookup                                                               *)
 (* -------------------------------------------------------------------- *)
 
+(* The hardcoded rules: the registry populated by {!register_rule}, then the
+   families matched by the shape of the name. *)
+let builtin_rule (l:Ident.lident) : ML rule =
+  let r =
+    match SMap.try_find table (Ident.string_of_lid l) with
+    | Some r -> Some r
+    | None ->
+      let path = Ident.path_of_lid l in
+      match List.rev path with
+      | id :: rev_ns ->
+        (match machine_int_of_module (List.rev rev_ns) with
+         | Some sw -> machine_int_rule sw id
+         | None ->
+           if List.rev rev_ns = ["Prims"] then prims_rule id else None)
+      | [] -> None
+  in
+  match r with
+  | Some r -> r
+  | None -> raise No_custard_rule
+
+(* Extensions are chained in the same style as the karamel extension points of
+   [FStarC.Extraction.Krml] (see [register_pre_translate_type] there): each
+   registered function may decline by raising [No_custard_rule], in which case
+   the rest of the chain is tried. *)
+let ref_lookup_rule : ref rule_lookup_t = mk_ref builtin_rule
+
+let register_pre_rule (f : rule_lookup_t) : ML unit =
+  let before : rule_lookup_t = !ref_lookup_rule in
+  ref_lookup_rule := (fun l -> try f l with No_custard_rule -> before l)
+
+let register_post_rule (f : rule_lookup_t) : ML unit =
+  let before : rule_lookup_t = !ref_lookup_rule in
+  ref_lookup_rule := (fun l -> try before l with No_custard_rule -> f l)
+
 let lookup_rule (l:Ident.lident) : ML (option rule) =
-  match SMap.try_find table (Ident.string_of_lid l) with
-  | Some r -> Some r
-  | None ->
-    let path = Ident.path_of_lid l in
-    match List.rev path with
-    | id :: rev_ns ->
-      (match machine_int_of_module (List.rev rev_ns) with
-       | Some sw -> machine_int_rule sw id
-       | None ->
-         if List.rev rev_ns = ["Prims"] then prims_rule id else None)
-    | [] -> None
+  try Some (!ref_lookup_rule l) with No_custard_rule -> None

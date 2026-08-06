@@ -218,6 +218,12 @@ type dlet = {
 type dexternal = {
   dx_name:  name;
   dx_ty:    cty;
+  dx_target: option string;
+  (** The symbol's name in the target language, when it is not the one derived
+      from [dx_name]; set by [@@custard_extern "..."]. *)
+  dx_header: option string;
+  (** The C header that declares it, for the direct-to-C backend; set by
+      [@@custard_c_header "..."]. *)
   dx_flags: list flag;
 }
 

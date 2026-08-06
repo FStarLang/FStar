@@ -305,7 +305,10 @@ let decl (d:decl) : ML (option string) =
 
   | DExternal e ->
     (* No F* definition: bind to the hand-written OCaml realization. *)
-    Some ("let " ^ ocaml_value_name e.dx_name ^ " = " ^ realization_of e.dx_name)
+    let target = match e.dx_target with
+                 | Some t -> t
+                 | None -> realization_of e.dx_name in
+    Some ("let " ^ ocaml_value_name e.dx_name ^ " = " ^ target)
 
   | DExn e ->
     Some ("exception " ^ uppercase_first (sanitize (mangled_name e.de_name)) ^

@@ -375,7 +375,10 @@ let decl_to_doc (d:decl) : ML document =
   | DExternal e ->
     flags_to_doc e.dx_flags ^^
     group (nest 2 (
-      text "external" ^^ space ^^ name_to_doc e.dx_name ^/^ colon ^/^ cty_to_doc e.dx_ty))
+      text "external" ^^ space ^^ name_to_doc e.dx_name ^/^ colon ^/^ cty_to_doc e.dx_ty ^^
+      (match e.dx_target with
+       | None -> empty
+       | Some t -> space ^^ equals ^/^ dquotes (text t))))
 
   | DExn e ->
     group (nest 2 (

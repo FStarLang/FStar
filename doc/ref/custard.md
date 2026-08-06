@@ -1382,15 +1382,36 @@ handled by erasure (§5.1) and the native tuples by `TTuple`/`ETuple`.  The
 `Prims` boolean connectives (`op_AmpAmp`, `op_BarBar`, `op_Negation`) *are*,
 because C has no `Prims_op_AmpAmp` to link against; see §6.
 
-Phase 2: the table becomes registrable from F* plugins, using the same
-mutable-ref/registration style already used by
-`FStarC.Extraction.Krml.fst:617–712` (`ref_translate_type`,
-`ref_translate_expr`, …) and `FStarC.Tactics.Native`.  Pulse then ships its own
+Phase 2 (implemented, M6): the table is registrable from F* plugins, in the
+same mutable-ref/registration style already used by
+`FStarC.Extraction.Krml.fst` (`ref_translate_type`, `ref_translate_expr`, …)
+and `FStarC.Tactics.Native`.  A plugin registers a whole *lookup function*
+rather than one name at a time — `register_pre_rule` to run before everything
+already registered, `register_post_rule` to run only after they have all
+declined — because the interesting rules come in families (every
+`FStar.UInt*` operator, every Pulse primitive) that are cheaper to match by
+shape than to enumerate.  A lookup declines by raising `No_custard_rule`.
+`register_rule` remains as the one-name shorthand.  Pulse can then ship its
 rules instead of patching the compiler.
 
-Phase 3 (optional, later): the rule can be *declared in F* source* via an
-attribute, e.g. `[@@custard_prim "add32"]`, so that no OCaml plugin is needed
-for the simple cases.
+Phase 3 (implemented, M6): the simple rules can be *declared in F* source*, so
+that no OCaml plugin is needed for them.
+
+- `[@@custard_extern "target"]` gives `Rule_extern`: the definition is not
+  compiled, and uses of it become references to `target` in the output.  An
+  empty string means "use the name Custard generated", which is what a
+  hand-written `.ml` realization following the usual naming convention wants.
+- `[@@custard_c_header "h.h"]` names the C header that declares such a symbol.
+  The karamel backend ignores it (karamel takes includes on its command line);
+  it is there for the direct-to-C backend of M8.
+- `[@@custard_opaque]` gives `Rule_opaque`.
+
+These are declared in `FStar.Attributes` and, unlike the table, are found by
+*looking at the definition* rather than at its name, so `Extract` consults
+`rule_of_attributes` separately — and lets it win over the built-in table, so
+that a program can override a rule it does not like.  Note that
+`FStarC.Syntax.Util.has_attribute` only matches a bare `fvar`; an attribute
+that takes an argument has to be found with `get_attribute`.
 
 Types with custom rules are automatically exempt from erasure and newtype
 collapse (§5.2), since their representation is fixed externally.
@@ -1536,6 +1557,6 @@ collapse (§5.2), since their representation is fixed externally.
 | M3 | Layout analysis: erasure + uniform newtype collapse (§5.0) + cast elimination (§5) | Differential tests vs ML extraction |
 | M4 | Effect classification + `extract_as_impure_effect` + purity discipline (§7) | Required before any Pulse code can be extracted.  `FStarC.Custard.Effects` and `FStarC.Custard.Simplify`; ANF (§6 pass 1) is not implemented yet, so the purity discipline is applied directly to the tree |
 | M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | Done. M5a is `FStarC.Custard.Builtins` (§8.2); M5b is `FStarC.Custard.PrintKrml` behind `--custard_backend Krml` (§6), with the karamel AST split out into `FStarC.Extraction.KrmlAst`.  `tests/custard/KrmlBasic.fst` goes all the way to a compiled and executed C binary |
-| M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | |
+| M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

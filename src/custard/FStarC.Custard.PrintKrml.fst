@@ -311,8 +311,12 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
      | TAbstract -> Some (K.DTypeAbstractStruct lid))
 
   | DExternal x ->
-    Some (K.DExternal (None, krml_flags x.dx_flags, lident_of_name x.dx_name,
-                       krml_typ env x.dx_ty, []))
+    (* A [@@custard_extern "f"] symbol is declared under exactly that C name;
+       karamel does not prefix a lident whose namespace is empty. *)
+    let lid = match x.dx_target with
+              | Some t -> ([], t)
+              | None -> lident_of_name x.dx_name in
+    Some (K.DExternal (None, krml_flags x.dx_flags, lid, krml_typ env x.dx_ty, []))
 
   | DExn e ->
     E.log_issue0 E.Warning_DefinitionNotTranslated [

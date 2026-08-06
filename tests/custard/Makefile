@@ -13,6 +13,7 @@ CUSTARD_TESTS += Effects
 CUSTARD_TESTS += Curried
 CUSTARD_TESTS += Implicits
 CUSTARD_TESTS += MachineInts
+CUSTARD_TESTS += Externs
 
 # Each of these is extracted with --custard_backend Krml, run through karamel
 # to produce C, compiled and run; the program must exit 0.  Skipped when

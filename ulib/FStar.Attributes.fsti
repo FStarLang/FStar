@@ -432,3 +432,17 @@ val defer_to (#a:Type) (tag : a) : unit
     emitted per distinct argument.  Attached to a whole definition, it marks
     all of its non-erased binders. *)
 val monomorphize : unit
+
+(** Custard: do not compile this definition from its F* body; emit a reference
+    to an external symbol instead (see doc/ref/custard.md, section 8).  The
+    argument is the name of that symbol in the target language; the empty
+    string means "use the name Custard would have generated". *)
+val custard_extern (target: string) : unit
+
+(** Custard: the C header that declares a [custard_extern] symbol. *)
+val custard_c_header (header: string) : unit
+
+(** Custard: compile this type from its F* definition, but treat its
+    representation as fixed elsewhere, so that the layout analysis neither
+    erases it nor collapses it as a newtype (see doc/ref/custard.md, 5.2). *)
+val custard_opaque : unit
