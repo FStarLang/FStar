@@ -49,7 +49,7 @@ instance val showable_bclass : Class.Show.showable bclass
     distinction is a source-level convenience with no bearing on what has to
     exist at runtime, and Custard has no interoperability obligation that would
     make the source arity worth preserving. *)
-val is_type_binder (b:binder) : ML bool
+val is_type_binder (env:TcEnv.env) (b:binder) : ML bool
 
 val is_erased_binder (env:TcEnv.env) (b:binder) : ML bool
 

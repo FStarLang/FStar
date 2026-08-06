@@ -30,6 +30,7 @@ module SS    = FStarC.Syntax.Subst
 module TcEnv = FStarC.TypeChecker.Env
 module TcUtil = FStarC.TypeChecker.Util
 module U     = FStarC.Syntax.Util
+module N     = FStarC.TypeChecker.Normalize
 
 let bclass_to_string (c:bclass) : string =
   match c with
@@ -58,8 +59,16 @@ let is_tcclass_binder (env:TcEnv.env) (b:binder) : ML bool =
   | Tm_fvar fv -> TcEnv.fv_has_attr env fv PC.tcclass_lid
   | _ -> false
 
-let is_type_binder (b:binder) : ML bool =
-  match (SS.compress (U.unrefine b.binder_bv.sort)).n with
+let is_type_binder (env:TcEnv.env) (b:binder) : ML bool =
+  (* [eqtype] and [Type0] are abbreviations, not [Tm_type]s, so the sort has to
+     be unfolded before it can be recognised.  Getting this wrong is not
+     harmless: the parameters of an inductive are exactly its type binders, and
+     a missed one becomes an unbound type variable in the emitted type. *)
+  let sort = N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                          TcEnv.Beta; TcEnv.Iota;
+                          TcEnv.UnfoldUntil delta_constant]
+                         env b.binder_bv.sort in
+  match (SS.compress (U.unrefine sort)).n with
   | Tm_type _ -> true
   | _ -> false
 
@@ -71,11 +80,11 @@ let is_type_binder (b:binder) : ML bool =
 let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   let sort = b.binder_bv.sort in
   not (U.is_unit sort) &&
-  not (is_type_binder b) &&
+  not (is_type_binder env b) &&
   TcUtil.must_erase_for_extraction env sort
 
 let is_erased_binder (env:TcEnv.env) (b:binder) : ML bool =
-  is_type_binder b || is_dropped_binder env b
+  is_type_binder env b || is_dropped_binder env b
 
 (* Deleting *every* binder of an impure definition would turn it into a value,
    and its effects would then run at module initialization instead of when it
@@ -95,7 +104,7 @@ let erased_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
 
 let type_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in
-  bs |> List.map is_type_binder
+  bs |> List.map (is_type_binder env)
 
 let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
   let bs, comp = U.arrow_formals_comp t in
@@ -108,7 +117,7 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
     || U.has_attribute b.binder_attrs PC.monomorphize_attr        (* rule 3 *)
     || is_tcresolve_binder b                                      (* rule 2 *)
     || is_tcclass_binder env b                                    (* rule 2 *)
-    || (mono_types && is_type_binder b)                           (* rule 4 *)
+    || (mono_types && is_type_binder env b)                           (* rule 4 *)
     then Mono
     else Poly
   in
@@ -148,7 +157,7 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
      not promote it to [Mono] when a [Mono] binder's type mentions it. *)
   let cs = bcs |> List.map (fun (b, c) ->
     match c with
-    | Poly -> if is_type_binder b then Dropped else Poly
+    | Poly -> if is_type_binder env b then Dropped else Poly
     | c -> c) in
   (* Same guard as [erased_binders]: keep one binder rather than turn an impure
      definition into a value.  (A definition all of whose binders are [Mono] has

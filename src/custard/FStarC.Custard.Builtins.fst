@@ -58,6 +58,10 @@ let machine_int_of_module (ns : list string) : option (signedness & width) =
      | "Int16"  -> Some (Signed, Int16)
      | "Int32"  -> Some (Signed, Int32)
      | "Int64"  -> Some (Signed, Int64)
+     (* [FStar.SizeT.t] is *defined* as [UInt64.t], so without this rule
+        Custard would see through it and emit a 64-bit integer even where the
+        C backend must emit [size_t]. *)
+     | "SizeT"  -> Some (Unsigned, Sizet)
      | _ -> None)
   | _ -> None
 
@@ -124,6 +128,24 @@ let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
     | "v" | "to_string" | "to_string_hex" | "to_string_hex_pad" | "of_string" ->
       Some (Rule_extern { x_name = None; x_header = None })
 
+    (* [FStar.SizeT]'s conversions.  They are ordinary width changes, and
+       saying so keeps them out of the emitted program: the alternative is a
+       call into a support library that C does not have. *)
+    | "uint16_to_sizet" | "uint32_to_sizet" | "uint64_to_sizet"
+    | "of_u32" | "of_u64" when snd sw = Sizet ->
+      Some (Rule_prim (1, fun _ args ->
+        match args with
+        | [a] -> mk (ECast (a, TInt sw)) (TInt sw) a.eff
+        | _ -> failwith "Custard: SizeT conversion applied to the wrong arity"))
+
+    | "sizet_to_uint32" | "sizet_to_uint64" when snd sw = Sizet ->
+      let target = if id = "sizet_to_uint32" then (Unsigned, Int32)
+                                             else (Unsigned, Int64) in
+      Some (Rule_prim (1, fun _ args ->
+        match args with
+        | [a] -> mk (ECast (a, TInt target)) (TInt target) a.eff
+        | _ -> failwith "Custard: SizeT conversion applied to the wrong arity"))
+
     | _ -> None
 
 (* -------------------------------------------------------------------- *)
@@ -144,6 +166,188 @@ let prims_rule (id:string) : ML (option rule) =
   | "op_AmpAmp"   -> bool_op And 2
   | "op_BarBar"   -> bool_op Or 2
   | "op_Negation" -> bool_op Not 1
+  | _ -> None
+
+(* -------------------------------------------------------------------- *)
+(* Pulse                                                                *)
+(* -------------------------------------------------------------------- *)
+
+(* Section 8.4.  Pulse's references, boxes, vectors, arrays and array pointers
+   are all one thing at runtime -- a pointer into a mutable run of values --
+   and its [while] is a statement.  Compiling their F* definitions is not an
+   option: they are specified against Pulse's separation-logic model, which
+   has no runtime meaning at all.
+
+   These rules deliberately mirror [ExtractPulse.pulse_translate_expr], the
+   corresponding table of the ML-to-karamel pipeline, so that a Pulse program
+   means the same thing through either.  The argument counts differ, though:
+   the ML pipeline sees the source arity, whereas by the time a rule runs here
+   the erased arguments (the permissions, the ghost sequences, the [small_type]
+   dictionaries) are already gone.  *)
+
+let size_lit (n:string) : expr =
+  mk (EConst (CInt (n, Some (Unsigned, Sizet)))) (TInt (Unsigned, Sizet)) E_Pure
+
+let elt_of (tys : list cty) : cty =
+  match tys with
+  | t :: _ -> t
+  | [] -> TAny
+
+(* [buf_prim n mk_ty o mk_args e]: a rule taking [n] value arguments, of result
+   type [mk_ty], building [EOp (o, mk_args ...)] with effect [e]. *)
+let buf_prim (n:int) (o:op) (ef:eff)
+             (ret : list cty -> list expr -> ML cty)
+             (mk_args : list expr -> ML (list expr)) : rule =
+  Rule_prim (n, fun tys args ->
+    mk (EOp ({ po_op = o; po_int = None }, mk_args args)) (ret tys args) ef)
+
+let unit_rule (n:int) : rule =
+  Rule_prim (n, fun _ _ -> unit_expr)
+
+(* [Reference.free] is a no-op: the allocation it matches was a [BufCreate
+   LStack], which the C backend scopes to the enclosing block. *)
+let identity_rule (n:int) : rule =
+  Rule_prim (n, fun _ args ->
+    match args with
+    | a :: _ -> a
+    | [] -> unit_expr)
+
+let pulse_rule (ns : list string) (id : string) : ML (option rule) =
+  let buf tys (_ : list expr) : ML cty = TBuf (elt_of tys) in
+  let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
+  let bool_ty (_ : list cty) (_ : list expr) : ML cty = TApp (bool_name, []) in
+  (* The element type of a buffer we are given rather than creating: the
+     first argument's own type already says it. *)
+  let elt_of_arg (_ : list cty) (args : list expr) : ML cty =
+    match args with
+    | { ty = TBuf t } :: _ -> t
+    | _ -> TAny in
+  let self (_ : list cty) (args : list expr) : ML cty =
+    match args with
+    | a :: _ -> a.ty
+    | _ -> TAny in
+  match ns, id with
+  (* Types.  Every one of them is a pointer. *)
+  | ["Pulse"; "Lib"; "Reference"], "ref"
+  | ["Pulse"; "Lib"; "Box"], "box"
+  | ["Pulse"; "Lib"; "Vec"], "vec"
+  | ["Pulse"; "Lib"; "Array"; "Core"], "array"
+  | ["Pulse"; "Lib"; "ArrayPtr"], "ptr" ->
+    Some (Rule_type (fun tys -> TBuf (elt_of tys)))
+
+  (* A reference is a one-element stack allocation. *)
+  | ["Pulse"; "Lib"; "Reference"], "alloc" ->
+    Some (buf_prim 1 (BufCreate LStack) E_Impure buf
+            (fun args -> args @ [size_lit "1"]))
+  | ["Pulse"; "Lib"; "Reference"], "alloc_uninit" ->
+    Some (Rule_prim (1, fun tys _ ->
+      let t = elt_of tys in
+      mk (EOp ({ po_op = BufCreate LStack; po_int = None },
+               [mk EAny t E_Pure; size_lit "1"]))
+         (TBuf t) E_Impure))
+  | ["Pulse"; "Lib"; "Reference"], "free" -> Some (unit_rule 1)
+  | ["Pulse"; "Lib"; "Reference"], "read"
+  | ["Pulse"; "Lib"; "Reference"], "op_Bang" ->
+    Some (buf_prim 1 BufRead E_Impure elt_of_arg
+            (fun args -> args @ [size_lit "0"]))
+  | ["Pulse"; "Lib"; "Reference"], "write"
+  | ["Pulse"; "Lib"; "Reference"], "op_Colon_Equals" ->
+    Some (buf_prim 2 BufWrite E_Impure unit_ty
+            (fun args -> match args with
+                         | [r; v] -> [r; size_lit "0"; v]
+                         | args -> args))
+  | ["Pulse"; "Lib"; "Reference"], "to_array_mask" -> Some (identity_rule 1)
+  | ["Pulse"; "Lib"; "Reference"], "array_at"
+  | ["Pulse"; "Lib"; "Reference"], "array_at_uninit" ->
+    Some (buf_prim 2 BufSub E_Pure self (fun args -> args))
+
+  (* A box is a one-element heap allocation. *)
+  | ["Pulse"; "Lib"; "Box"], "alloc" ->
+    Some (buf_prim 1 (BufCreate LHeap) E_Impure buf
+            (fun args -> args @ [size_lit "1"]))
+  | ["Pulse"; "Lib"; "Box"], "free" ->
+    Some (buf_prim 1 BufFree E_Impure unit_ty (fun args -> args))
+  | ["Pulse"; "Lib"; "Box"], "op_Bang" ->
+    Some (buf_prim 1 BufRead E_Impure elt_of_arg
+            (fun args -> args @ [size_lit "0"]))
+  | ["Pulse"; "Lib"; "Box"], "op_Colon_Equals" ->
+    Some (buf_prim 2 BufWrite E_Impure unit_ty
+            (fun args -> match args with
+                         | [r; v] -> [r; size_lit "0"; v]
+                         | args -> args))
+  | ["Pulse"; "Lib"; "Box"], "box_to_ref" -> Some (identity_rule 1)
+
+  (* A vector is a heap-allocated run. *)
+  | ["Pulse"; "Lib"; "Vec"], "alloc" ->
+    Some (buf_prim 2 (BufCreate LHeap) E_Impure buf (fun args -> args))
+  | ["Pulse"; "Lib"; "Vec"], "free" ->
+    Some (buf_prim 1 BufFree E_Impure unit_ty (fun args -> args))
+  | ["Pulse"; "Lib"; "Vec"], "op_Array_Access" ->
+    Some (buf_prim 2 BufRead E_Impure elt_of_arg (fun args -> args))
+  | ["Pulse"; "Lib"; "Vec"], "op_Array_Assignment" ->
+    Some (buf_prim 3 BufWrite E_Impure unit_ty (fun args -> args))
+  | ["Pulse"; "Lib"; "Vec"], "vec_to_array" -> Some (identity_rule 1)
+
+  (* An array is a stack-allocated run. *)
+  | ["Pulse"; "Lib"; "Array"; "PtsTo"], "alloc" ->
+    Some (buf_prim 2 (BufCreate LStack) E_Impure buf (fun args -> args))
+  | ["Pulse"; "Lib"; "Array"; "Core"], "mask_alloc"
+  | ["Pulse"; "Lib"; "Array"; "Core"], "mask_alloc_with_vis" ->
+    Some (Rule_prim (1, fun tys args ->
+      let t = elt_of tys in
+      let n = match args with a :: _ -> a | [] -> size_lit "0" in
+      mk (EOp ({ po_op = BufCreate LStack; po_int = None }, [mk EAny t E_Pure; n]))
+         (TBuf t) E_Impure))
+  | ["Pulse"; "Lib"; "Array"; "Core"], "mask_free" -> Some (unit_rule 1)
+  | ["Pulse"; "Lib"; "Array"; "Core"], "mask_read" ->
+    Some (buf_prim 2 BufRead E_Impure elt_of_arg (fun args -> args))
+  | ["Pulse"; "Lib"; "Array"; "Core"], "mask_write" ->
+    Some (buf_prim 3 BufWrite E_Impure unit_ty (fun args -> args))
+  | ["Pulse"; "Lib"; "Array"; "Core"], "sub" ->
+    Some (buf_prim 2 BufSub E_Pure self (fun args -> args))
+
+  (* An array pointer is a raw pointer. *)
+  | ["Pulse"; "Lib"; "ArrayPtr"], "op_Array_Access" ->
+    Some (buf_prim 2 BufRead E_Impure elt_of_arg (fun args -> args))
+  | ["Pulse"; "Lib"; "ArrayPtr"], "op_Array_Assignment" ->
+    Some (buf_prim 3 BufWrite E_Impure unit_ty (fun args -> args))
+  | ["Pulse"; "Lib"; "ArrayPtr"], "split" ->
+    Some (buf_prim 2 BufSub E_Pure self (fun args -> args))
+  | ["Pulse"; "Lib"; "ArrayPtr"], "as_ref"
+  | ["Pulse"; "Lib"; "ArrayPtr"], "from_ref"
+  | ["Pulse"; "Lib"; "ArrayPtr"], "from_array" ->
+    Some (identity_rule 1)
+  | ["Pulse"; "Lib"; "ArrayPtr"], "memcpy" ->
+    Some (buf_prim 5 BufBlit E_Impure unit_ty (fun args -> args))
+
+  (* Null pointers, shared by all of them. *)
+  | ["Pulse"; "Lib"; "Reference"], "null"
+  | ["Pulse"; "Lib"; "Box"], "null"
+  | ["Pulse"; "Lib"; "Array"; "Core"], "null"
+  | ["Pulse"; "Lib"; "ArrayPtr"], "null" ->
+    Some (Rule_prim (0, fun tys _ ->
+      mk (EOp ({ po_op = BufNull; po_int = None }, [])) (TBuf (elt_of tys)) E_Pure))
+  | ["Pulse"; "Lib"; "Reference"], "is_null"
+  | ["Pulse"; "Lib"; "Box"], "is_null"
+  | ["Pulse"; "Lib"; "Array"; "Core"], "is_null"
+  | ["Pulse"; "Lib"; "ArrayPtr"], "is_null" ->
+    Some (buf_prim 1 BufIsNull E_Pure bool_ty (fun args -> args))
+
+  (* [while_] is emitted by Pulse's own elaboration with both halves already
+     thunked; a [while] statement is exactly the two thunk bodies. *)
+  | ["Pulse"; "Lib"; "Dv"], "while_" ->
+    Some (Rule_prim (2, fun _ args ->
+      match args with
+      | [{ e = EFun (_, cond) }; { e = EFun (_, body) }] ->
+        mk (EWhile (cond, body)) TUnit E_Impure
+      | _ ->
+        (* Pulse's elaboration always thunks both halves, so this cannot
+           happen; failing loudly beats emitting a loop that does not loop. *)
+        failwith "Custard: Pulse.Lib.Dv.while_ applied to something other than two thunks"))
+
+  (* [mk_gvar]/[read_gvar] are the two halves of a global initializer. *)
+  | ["Pulse"; "Lib"; "GlobalVar"], "read_gvar" -> Some (identity_rule 1)
+
   | _ -> None
 
 (* -------------------------------------------------------------------- *)
@@ -190,10 +394,11 @@ let builtin_rule (l:Ident.lident) : ML rule =
       let path = Ident.path_of_lid l in
       match List.rev path with
       | id :: rev_ns ->
-        (match machine_int_of_module (List.rev rev_ns) with
+        let ns = List.rev rev_ns in
+        (match machine_int_of_module ns with
          | Some sw -> machine_int_rule sw id
          | None ->
-           if List.rev rev_ns = ["Prims"] then prims_rule id else None)
+           if ns = ["Prims"] then prims_rule id else pulse_rule ns id)
       | [] -> None
   in
   match r with

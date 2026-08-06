@@ -787,6 +787,26 @@ depends on `A.fsti.checked` — so loading the implementation may pull the
 interface in anyway; what matters is that the *definitions* visible to
 `Env.lookup_definition` come from the implementation.
 
+Three details of the implementation are worth recording, because each of them
+silently produced `DExternal`s for a whole library before it was fixed:
+
+- `Parser.Dep`'s file system map is keyed by **lowercase** module names, so
+  `Dep.implementation_of deps "Pulse.Lib.HashTable"` answers `None` while
+  `... "pulse.lib.hashtable"` answers with the `.fst`.
+- "is this module already loaded?" must mean *the implementation is loaded*.
+  By the time Custard runs, the driver has loaded the interface of everything
+  the entry point depends on, so a test that accepts an interface never loads
+  anything.  `Loader.module_is_loaded` therefore looks for a `modul` record
+  with `is_interface = false` — unless the module has no implementation at all.
+- `Tc.load_checked_module` deliberately *skips* every sigelt of an
+  implementation whose name already came from that module's interface
+  (`already_loaded_iface_decls`), which is precisely the set of `val`s Custard
+  wants to replace by their definitions.  So the loader pushes the
+  implementation's declarations a second time with
+  `Env.push_sigelt_force`.  For the same reason it does not re-register the
+  module in the desugaring environment when the interface is already there:
+  that is an Error 47 (duplicate top-level names).
+
 Consequence for users: `noextract`/abstraction in an interface does not hide a
 definition from Custard.  This is the same trust posture as the existing
 pipeline under `--cmi`, so it is not a new exposure, but it is worth stating.
@@ -1474,6 +1494,49 @@ that takes an argument has to be found with `get_attribute`.
 Types with custom rules are automatically exempt from erasure and newtype
 collapse (§5.2), since their representation is fixed externally.
 
+### 8.3 Pulse
+
+Pulse does not reach Custard as Pulse.  `Pulse.Main.set_impl` attaches an
+ordinary F\* `Dv` term to every `fn` as `[@@FStar.ExtractAs.extract_as impl]`,
+and the ML pipeline swaps the body in
+`FStarC.Extraction.ML.Modul.fixup_sigelt_extract_as`.  Custard does the same,
+in `Extract.fixup_extract_as`, at the one point where a `sigelt` is fetched
+from the environment; without it a Pulse module extracts to the proof term,
+which is nonsense.  The letbinding is re-marked recursive only if the
+replacement body actually mentions the name, since Pulse loops are `while_`
+applications rather than self-calls.
+
+What is left after that is a handful of primitives, which
+`Builtins.pulse_rule` maps to IR nodes, mirroring
+`pulse/src/extraction/ExtractPulse.fst`:
+
+| Pulse | IR |
+| --- | --- |
+| `Reference.alloc`, `Box.alloc` | `BufCreate LStack` / `BufCreate LHeap` of length 1 |
+| `Reference.(read, op_Bang, write, op_Colon_Equals)`, `Box.…` | `BufRead` / `BufWrite` at index 0 |
+| `Vec.alloc`, `free`, `op_Array_Access`, `op_Array_Assignment` | `BufCreate LHeap`, `BufFree`, `BufRead`, `BufWrite` |
+| `Array.Core.*`, `ArrayPtr.*` | the same, plus `BufSub` for interior pointers |
+| `Dv.while_` | `EWhile` |
+
+The arities in that table are *not* the ML pipeline's: by the time a rule runs,
+`Mono.erased_binders` has already deleted permissions, ghost sequences and the
+`small_type` dictionaries (`small_type` is `U.raisable`, whose instance is
+`non_informative`, so `must_erase_for_extraction` drops it).  `Reference.write`
+takes two arguments here, not four.
+
+This is also why `Rule_prim` receives the *type* arguments separately: they are
+erased out of the value spine, but a buffer rule needs the element type to
+build `TBuf t` (and `BufNull`).  `Extract.prim_app` collects them with
+`Mono.type_binders`.
+
+Two IR additions come with this: `TBuf` (§2.2), and `EAny` for karamel's
+`EAny`.  In the karamel backend a `TBuf` is a real C pointer, so a Pulse `let
+mut` scalarizes into a plain local and a `Vec.alloc` becomes
+`KRML_HOST_MALLOC`.  In the OCaml backend a `TBuf t` is a `t array`; `BufSub`
+has no OCaml representation and emits a `failwith`.  `FStar.SizeT` is a machine
+integer width (`Sizet`) like the `FStar.UInt*` ones, with the usual conversion
+rules.
+
 ---
 
 ## 9. Testing and validation
@@ -1617,5 +1680,6 @@ collapse (§5.2), since their representation is fixed externally.
 | M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | Done. M5a is `FStarC.Custard.Builtins` (§8.2); M5b is `FStarC.Custard.PrintKrml` behind `--custard_backend Krml` (§6), with the karamel AST split out into `FStarC.Extraction.KrmlAst`.  `tests/custard/KrmlBasic.fst` goes all the way to a compiled and executed C binary |
 | M6a | Output polish: per-specialization suffixes, projector/discriminator inlining, externals printed at their uses, OCaml type annotations, `--custard_entry` vs `--custard_main` | Done. `tests/custard/Library.fst` covers the root-only (no `main`) mode |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
+| M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` goes to OCaml and to compiled C; requires stage3, so it is not part of `tests/custard` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

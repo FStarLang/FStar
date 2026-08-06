@@ -130,7 +130,11 @@ let op_to_string (o:prim_op) : string =
    | BOr -> "|" | BAnd -> "&" | BXor -> "^" | BShiftL -> "<<"
    | BShiftR -> ">>" | BNot -> "~"
    | Eq -> "=" | Neq -> "<>" | Lt -> "<" | Lte -> "<=" | Gt -> ">" | Gte -> ">="
-   | And -> "&&" | Or -> "||" | Not -> "not") ^
+   | And -> "&&" | Or -> "||" | Not -> "not"
+   | BufCreate LStack -> "alloca" | BufCreate LHeap -> "malloc"
+   | BufRead -> "read" | BufWrite -> "write" | BufSub -> "sub"
+   | BufFree -> "free" | BufNull -> "null" | BufIsNull -> "is_null"
+   | BufBlit -> "blit") ^
   (match o.po_int with None -> "" | Some sw -> width_to_string sw)
 
 (* [prec] is the precedence of the enclosing context: 0 at the top, 1 under an
@@ -155,6 +159,8 @@ let rec cty_to_doc' (prec:int) (t:cty) : ML document =
     parens_if (prec >= 2) <|
       group (name_to_doc n ^^ langle ^^
              sep_by (comma ^^ space) (List.map (cty_to_doc' 0) args) ^^ rangle)
+  | TBuf t ->
+    parens_if (prec >= 2) <| group (text "buf" ^/^ cty_to_doc' 2 t)
   | TTuple ts ->
     parens (sep_by (space ^^ text "*" ^^ space) (List.map (cty_to_doc' 1) ts))
 

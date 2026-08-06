@@ -129,10 +129,13 @@ let int_module_stem (s:signedness) : string =
    name. *)
 let int_module (sw : signedness & width) : string =
   let s, w = sw in
-  "FStar_" ^ int_module_stem s ^
-  (match w with
-   | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
-   | Sizet -> "SizeT")
+  match w with
+  | Sizet -> "FStar_SizeT"
+  | _ ->
+    "FStar_" ^ int_module_stem s ^
+    (match w with
+     | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
+     | Sizet -> "SizeT")
 
 let rec ty (t:cty) : ML string =
   match t with
@@ -142,6 +145,10 @@ let rec ty (t:cty) : ML string =
   | TInt sw -> int_module sw ^ ".t"
   | TArrow (t1, _, t2) -> "(" ^ ty t1 ^ " -> " ^ ty t2 ^ ")"
   | TTuple ts -> "(" ^ String.concat " * " (List.map ty ts) ^ ")"
+  (* Section 8.4: a buffer is an OCaml array.  This is faithful for everything
+     but [BufSub], which needs an interior pointer that OCaml has no way to
+     express; that one is refused at run time rather than mistranslated. *)
+  | TBuf t -> "(" ^ ty t ^ " array)"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -268,8 +275,25 @@ let rec term (ind:string) (e:expr) : ML string =
   | EDiscrim (e1, n) ->
     "(match " ^ term ind e1 ^ " with " ^ ctor_ref n ^ " _ -> true | _ -> false)"
   | ECast (e1, _) -> "(Obj.magic (" ^ term ind e1 ^ "))"
+  (* An OCaml array is indexed by [int], the IR by a machine integer. *)
+  | EOp ({ po_op = BufCreate _ }, [init; len]) ->
+    "(Array.make " ^ index ind len ^ " " ^ term ind init ^ ")"
+  | EOp ({ po_op = BufRead }, [b; i]) ->
+    "(" ^ term ind b ^ ").(" ^ index ind i ^ ")"
+  | EOp ({ po_op = BufWrite }, [b; i; v]) ->
+    "((" ^ term ind b ^ ").(" ^ index ind i ^ ") <- " ^ term ind v ^ ")"
+  | EOp ({ po_op = BufFree }, [_]) -> "()"
+  | EOp ({ po_op = BufNull }, []) -> "[||]"
+  | EOp ({ po_op = BufIsNull }, [b]) ->
+    "(Array.length (" ^ term ind b ^ ") = 0)"
+  | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
+    "(Array.blit " ^ term ind src ^ " " ^ index ind si ^ " " ^
+    term ind dst ^ " " ^ index ind di ^ " " ^ index ind len ^ ")"
+  | EOp ({ po_op = BufSub }, _) ->
+    "(failwith \"Custard: pointer arithmetic has no OCaml representation\")"
   | EOp (op, args) ->
     "(" ^ op_name op ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"
+  | EAny -> "(Obj.magic 0)"
   | EWhile (c, body) ->
     "(while " ^ term ind c ^ " do " ^ term ind body ^ " done)"
   | ERaise (n, []) -> "(raise " ^ ctor_ref n ^ ")"
@@ -279,6 +303,19 @@ let rec term (ind:string) (e:expr) : ML string =
     let ind' = ind ^ "  " in
     "(try " ^ term ind e1 ^ " with\n" ^
     String.concat "" (List.map (case ind') brs) ^ ind ^ ")"
+
+(* An array index: the IR value is a machine integer, whose OCaml realization
+   is a [Stdint] value with a [v] projection into a [Z.t]. *)
+and index (ind:string) (e:expr) : ML string =
+  match e.e with
+  (* A literal index is the common case, and going through [Z.t] to say [0]
+     would drown the output. *)
+  | EConst (CInt (s, _)) -> s
+  | ECast (e1, _) -> index ind e1
+  | _ ->
+    (match e.ty with
+     | TInt sw -> "(Z.to_int (" ^ int_module sw ^ ".v " ^ term ind e ^ "))"
+     | _ -> "(Obj.magic (" ^ term ind e ^ "))")
 
 and case (ind:string) (br:branch) : ML string =
   let p, g, b = br in

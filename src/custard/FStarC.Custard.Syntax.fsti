@@ -93,6 +93,11 @@ type cty =
       not look inside. *)
   | TArrow of cty & eff & cty
   | TApp   of name & list cty
+  | TBuf   of cty
+  (** A pointer to a mutable, contiguous run of values.  This is what Pulse's
+      [ref], [array], [vec], [box] and [ptr] all compile to (section 8.4);
+      keeping one node for all of them is what lets the C backend emit a real
+      pointer instead of a call into a runtime. *)
   | TTuple of list cty
   | TUnit
   (** The sole inhabited erased value.  Erased *types* have no
@@ -127,6 +132,11 @@ type binder = {
   b_ty:   cty;
 }
 
+(** Where a buffer allocated by [BufCreate] lives, and hence who frees it. *)
+type lifetime =
+  | LStack
+  | LHeap
+
 (** The primitive operators a builtin rule (section 8) may introduce.  The
     names and the grouping deliberately follow karamel's, since that is the
     backend that has to give them a C meaning. *)
@@ -136,6 +146,16 @@ type op =
   | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
   | Eq | Neq | Lt | Lte | Gt | Gte
   | And | Or | Not
+  (** The buffer operations (section 8.4).  All of them are impure except
+      [BufSub] and [BufNull], which only compute an address. *)
+  | BufCreate of lifetime  (** [init; len] *)
+  | BufRead                (** [buf; idx] *)
+  | BufWrite               (** [buf; idx; v] *)
+  | BufSub                 (** [buf; idx] *)
+  | BufFree                (** [buf] *)
+  | BufNull                (** no arguments; the element type is the node's *)
+  | BufIsNull              (** [buf] *)
+  | BufBlit                (** [src; srcidx; dst; dstidx; len] *)
 
 (** A primitive operation, together with the machine type it operates at.
     [po_int = None] means the operands are booleans or mathematical integers,
@@ -173,6 +193,9 @@ and expr' =
   | EProj    of expr & name & string
   | EDiscrim of expr & name
   | ECast    of expr & cty
+  | EAny
+  (** An arbitrary value of the node's type: what an uninitialized stack
+      allocation is filled with.  Only a rule may introduce it. *)
   | EOp      of prim_op & list expr
   | EWhile   of expr & expr
   | ERaise   of name & list expr

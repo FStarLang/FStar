@@ -116,6 +116,7 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   | TVar x -> K.TBound (find_t env x)
   | TArrow (a, _, b) -> K.TArrow (krml_typ env a, krml_typ env b)
   | TTuple ts -> K.TTuple (ts |> List.map (krml_typ env))
+  | TBuf t -> K.TBuf (krml_typ env t)
   | TApp (n, []) ->
     (match prim_type n with
      | Some t -> t
@@ -205,8 +206,16 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EIf (c, t, f) -> K.EIfThenElse (krml_expr env c, krml_expr env t, krml_expr env f)
 
   (* [ESequence] is variadic in karamel, but nesting is equivalent and keeps
-     this a local rewrite. *)
-  | ESeq (e1, e2) -> K.ESequence [krml_expr env e1; krml_expr env e2]
+     this a local rewrite.  karamel requires every element but the last to
+     have type unit, though, so a discarded value has to be bound instead. *)
+  | ESeq (e1, e2) when e1.ty = TUnit ->
+    K.ESequence [krml_expr env e1; krml_expr env e2]
+  | ESeq (e1, e2) ->
+    (* [TAny] rather than [krml_typ env e1.ty]: a discarded value's type is of
+       no interest to anyone, and Custard is happy to leave a call's result
+       type as [TAny], which would then clash with what karamel infers. *)
+    let b = { K.name = "_"; K.typ = K.TAny; K.mut = false; K.meta = [] } in
+    K.ELet (b, krml_expr env e1, krml_expr (extend env "_") e2)
 
   | ECtor (n, args) ->
     K.ECons (krml_typ env e.ty, mangled_name n, args |> List.map (krml_expr env))
@@ -232,6 +241,28 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
 
   | ECast (e1, t) -> K.ECast (krml_expr env e1, krml_typ env t)
 
+  (* The buffer operations are karamel nodes rather than operators: the C
+     backend needs to see the address computation, not a call. *)
+  | EOp ({ po_op = BufCreate l }, [init; len]) ->
+    K.EBufCreate ((match l with LStack -> K.Stack | LHeap -> K.ManuallyManaged),
+                  krml_expr env init, krml_expr env len)
+  | EOp ({ po_op = BufRead }, [b; i]) ->
+    K.EBufRead (krml_expr env b, krml_expr env i)
+  | EOp ({ po_op = BufWrite }, [b; i; v]) ->
+    K.EBufWrite (krml_expr env b, krml_expr env i, krml_expr env v)
+  | EOp ({ po_op = BufSub }, [b; i]) ->
+    K.EBufSub (krml_expr env b, krml_expr env i)
+  | EOp ({ po_op = BufFree }, [b]) -> K.EBufFree (krml_expr env b)
+  | EOp ({ po_op = BufNull }, []) ->
+    K.EBufNull (match e.ty with TBuf t -> krml_typ env t | _ -> K.TAny)
+  | EOp ({ po_op = BufIsNull }, [b]) ->
+    (* karamel has no [is_null], so compare against a null of the same type. *)
+    let t = match b.ty with TBuf t -> krml_typ env t | _ -> K.TAny in
+    K.EApp (K.EOp (K.Eq, K.Bool), [krml_expr env b; K.EBufNull t])
+  | EOp ({ po_op = BufBlit }, [src; srci; dst; dsti; len]) ->
+    K.EBufBlit (krml_expr env src, krml_expr env srci,
+                krml_expr env dst, krml_expr env dsti, krml_expr env len)
+
   (* An operator is a value in karamel, so it is always applied. *)
   | EOp (o, args) ->
     let w = match o.po_int with
@@ -242,6 +273,8 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.EApp (K.EOp (krml_op o.po_op, w), args |> List.map (krml_expr env))
 
   | EWhile (c, body) -> K.EWhile (krml_expr env c, krml_expr env body)
+
+  | EAny -> K.EAny
 
   | ERaise _ | ETry _ ->
     K.EAbortS "Custard: exceptions are not supported by the C backend"

@@ -79,6 +79,9 @@ let rec cty_erased (t:tbl) (c:cty) : ML bool =
        calling it is observable. *)
     is_pure e && cty_erased t r
   | TTuple cs -> cs |> List.for_all (fun c -> cty_erased t c)
+  (* A pointer is a machine word whether or not its contents are erased, and
+     the allocation that produced it is an observable effect. *)
+  | TBuf _ -> false
   | TApp (n, _) ->
     (match SMap.try_find t.erased (key n) with
      | Some b -> b
@@ -149,6 +152,7 @@ let rec names_of_cty (c:cty) : ML (list string) =
   match c with
   | TArrow (a, _, b) -> names_of_cty a @ names_of_cty b
   | TTuple cs -> cs |> List.collect names_of_cty
+  | TBuf c -> names_of_cty c
   | TApp (n, args) -> key n :: (args |> List.collect names_of_cty)
   | _ -> []
 
@@ -246,6 +250,7 @@ let rec subst_cty (s:list (string & cty)) (c:cty) : ML cty =
                | None -> c)
   | TArrow (a, e, b) -> TArrow (subst_cty s a, e, subst_cty s b)
   | TTuple cs -> TTuple (cs |> List.map (subst_cty s))
+  | TBuf c -> TBuf (subst_cty s c)
   | TApp (n, args) -> TApp (n, args |> List.map (subst_cty s))
   | c -> c
 
@@ -259,6 +264,7 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
     match c with
     | TArrow (a, e, b) -> TArrow (resolve t fuel a, e, resolve t fuel b)
     | TTuple cs -> TTuple (cs |> List.map (resolve t fuel))
+    | TBuf c -> TBuf (resolve t fuel c)
     | TApp (n, args) ->
       let args = args |> List.map (resolve t fuel) in
       (match SMap.try_find t.layouts (key n) with

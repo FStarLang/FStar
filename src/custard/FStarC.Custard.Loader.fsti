@@ -31,13 +31,16 @@ open FStarC.Effect
 module Dep   = FStarC.Parser.Dep
 module TcEnv = FStarC.TypeChecker.Env
 
-(** [module_is_loaded env m] is true when [m]'s sigelts are already in [env],
-    i.e. when the driver loaded it as part of the dependency closure. *)
-val module_is_loaded : TcEnv.env -> string -> ML bool
-
 (** The file whose checked file we should load for a module: its
     implementation if it has one, otherwise its interface. *)
 val implementation_or_interface_of : Dep.deps -> string -> ML (option string)
+
+(** [module_is_loaded deps env m] is true when the sigelts Custard needs from
+    [m] are already in [env]: its *implementation*, or its interface when it
+    has no implementation.  The driver has already loaded the interface of
+    every module the entry point depends on, so a test that accepted an
+    interface would never load anything. *)
+val module_is_loaded : Dep.deps -> TcEnv.env -> string -> ML bool
 
 (** [ensure_loaded deps env m] returns an environment in which [m]'s
     definitions are visible, loading [m]'s checked file if needed.  Fails if

@@ -40,6 +40,7 @@ module Builtins = FStarC.Custard.Builtins
 module GenSym = FStarC.GenSym
 module N      = FStarC.TypeChecker.Normalize
 module PC     = FStarC.Parser.Const
+module ExtractAs = FStarC.Parser.Const.ExtractAs
 module S      = FStarC.Syntax.Syntax
 module SMap   = FStarC.SMap
 module SS     = FStarC.Syntax.Subst
@@ -174,7 +175,7 @@ let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.docu
    is the on-demand part of section 4.1. *)
 let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
   let m = Ident.nsstr l in
-  if m <> "" && not (Loader.module_is_loaded (tcenv st) m) then
+  if m <> "" && not (Loader.module_is_loaded st.deps (tcenv st) m) then
     st.env := Loader.ensure_loaded st.deps (tcenv st) m
 
 (* -------------------------------------------------------------------- *)
@@ -535,6 +536,16 @@ and expr_of_term (st:state) (t:term) : ML expr =
    argument was written by the user or inferred says nothing about whether it
    has to exist at runtime, and unlike the ML extraction we have no
    interoperability reason to preserve the source arity. *)
+(* The complement of {!drop_flagged}: keep exactly the entries flagged [true].
+   A flag list shorter than the list keeps nothing of the surplus. *)
+and keep_flagged (#a:Type) (flags:list bool) (xs:list a) : ML (list a) =
+  match flags, xs with
+  | _, [] -> []
+  | [], _ -> []
+  | f :: flags, x :: xs ->
+    let rest = keep_flagged flags xs in
+    if f then x :: rest else rest
+
 and drop_flagged (#a:Type) (flags:list bool) (xs:list a) : ML (list a) =
   match flags, xs with
   | _, [] -> []
@@ -560,9 +571,20 @@ and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
    under-applied use has to be eta-expanded rather than passed along. *)
 and prim_app (st:state) (l:Ident.lident) (n:int)
              (f : list cty -> list expr -> ML expr) (args:args) : ML expr =
-  let flags = match TcEnv.try_lookup_lid (tcenv st) l with
-              | Some ((_, ty), _) -> Mono.erased_binders (tcenv st) ty
+  let decl_ty = match TcEnv.try_lookup_lid (tcenv st) l with
+                | Some ((_, ty), _) -> Some ty
+                | None -> None in
+  let flags = match decl_ty with
+              | Some ty -> Mono.erased_binders (tcenv st) ty
               | None -> [] in
+  (* A rule that builds a buffer, a null pointer or a cast needs to know at
+     which type; the type arguments are erased from the value spine, so they
+     are collected separately rather than reconstructed from it. *)
+  let tyargs = match decl_ty with
+               | Some ty ->
+                 keep_flagged (Mono.type_binders (tcenv st) ty) args
+                 |> List.map fst |> List.map (ty_of_typ st)
+               | None -> [] in
   let args = drop_flagged flags args |> List.map fst |> List.map (expr_of_term st) in
   let given, extra =
     if List.length args <= n then args, []
@@ -574,12 +596,12 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
                                   b_ty = TAny })
                       (repeat_unit missing) in
     let vs = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in
-    let body = f [] (given @ vs) in
+    let body = f tyargs (given @ vs) in
     mk (EFun (bs, body))
        (List.fold_right (fun (b:binder) t -> TArrow (b.b_ty, E_Pure, t)) bs body.ty)
        E_Pure
   else
-    let e = f [] given in
+    let e = f tyargs given in
     match extra with
     | [] -> e
     | _ -> mk (EApp (e, extra)) (apply_result e.ty (List.length extra))
@@ -692,16 +714,25 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
   | Pat_var bv -> PVar (name_of_bv bv)
   | Pat_dot_term _ -> PWild
   | Pat_cons (fv, _, pats) ->
-    let pats = pats |> List.filter (fun (_, imp) -> not imp)
-                    |> List.map (fun (p, _) -> pat_of_pat st p) in
-    PCtor (request st { sk_lid = S.lid_of_fv fv; sk_args = [] }, pats)
+    (* Which subpatterns survive has to be decided exactly as for a
+       constructor *application* (see [app_of_fv']), from the constructor's own
+       type -- not from the implicit/explicit marks on the subpatterns.  A
+       pattern built by a metaprogram (Pulse's elaboration, for one) marks
+       nothing implicit, and the two paths disagreeing produces a constructor
+       pattern of the wrong arity. *)
+    let l = S.lid_of_fv fv in
+    let flags = match TcEnv.try_lookup_lid (tcenv st) l with
+                | Some ((_, ty), _) -> Mono.erased_binders (tcenv st) ty
+                | None -> [] in
+    let pats = drop_flagged flags pats |> List.map (fun (p, _) -> pat_of_pat st p) in
+    PCtor (request st { sk_lid = l; sk_args = [] }, pats)
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
 
 and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) : ML decl =
-  let se = TcEnv.lookup_sigelt (tcenv st) l in
+  let se = TcEnv.lookup_sigelt (tcenv st) l |> Option.map fixup_extract_as in
   (* A rule declared by the definition's own attributes wins over the built-in
      table, so that a program can override a rule it does not like. *)
   let rule = match se with
@@ -732,6 +763,24 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) 
     let d = extract_sigelt st l nm margs se in
     let d = if is_opaque then with_no_newtype d else d in
     if is_inlinable se then with_inline d else d
+
+(* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
+   for extraction.  This is how Pulse hands us its programs: the F* definition
+   of a [fn] is a proof term in Pulse's own syntax, and the attribute carries
+   the ordinary [Dv] F* term that it elaborates to.  The ML pipeline does the
+   same thing in [FStarC.Extraction.ML.Modul.fixup_sigelt_extract_as]; unlike
+   it we do not force the result to be recursive, since Custard's [Rec] flag
+   drives the emission order and a spurious cycle would be noise.  Pulse's own
+   knot-tying makes the recursive uses visible as ordinary occurrences of [l],
+   so testing for them is enough. *)
+and fixup_extract_as (se:sigelt) : ML sigelt =
+  match se.sigel, List.tryPick ExtractAs.is_extract_as_attr se.sigattrs with
+  | Sig_let {lids; lbs=(is_rec, [lb])}, Some impl ->
+    let self = match lb.lbname with
+               | Inr fv -> mem (S.lid_of_fv fv) (Free.fvars impl)
+               | Inl _ -> false in
+    { se with sigel = Sig_let {lids; lbs=(is_rec || self, [{lb with lbdef = impl}])} }
+  | _ -> se
 
 (* The projectors and discriminators F* derives for an inductive are one field
    read or one tag test each; leaving them as calls would make the output
@@ -855,7 +904,7 @@ and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
   DType {
     dt_name   = nm;
     dt_params = bs |> List.collect (fun b ->
-                  if is_type_binder b then [name_of_bv b.binder_bv] else []);
+                  if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []);
     dt_body   = TAbbrev (ty_of_typ st body);
     dt_flags  = [];
   }
@@ -942,7 +991,7 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
   (* Only the *type* parameters become parameters of the target type; a value
      index has no counterpart in the target's type language. *)
   let ty_params = params |> List.collect (fun b ->
-                    if is_type_binder b then [name_of_bv b.binder_bv] else []) in
+                    if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []) in
   let ctor (c:Ident.lident) : ML (name & list (string & cty)) =
     let _, ty = TcEnv.lookup_datacon (tcenv st) c in
     let bs, _ = U.arrow_formals_comp ty in
