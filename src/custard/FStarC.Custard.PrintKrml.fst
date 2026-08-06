@@ -65,10 +65,9 @@ let find_t (env:kenv) (x:string) : ML int =
    operators, the Pulse primitives) by their fully qualified name.  Only the
    specialization suffix is new. *)
 let lident_of_name (n:name) : ML K.lident =
-  let id = if n.uniq = 0 then n.id
-           else match n.hint with
-                | Some h -> n.id ^ "__" ^ h
-                | None -> n.id ^ "__" ^ show n.uniq in
+  let id = match n.spec with
+           | None -> n.id
+           | Some s -> n.id ^ "__" ^ s in
   (n.ns, id)
 
 let krml_width (sw : signedness & width) : K.width =

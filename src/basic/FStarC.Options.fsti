@@ -203,6 +203,7 @@ val codegen                     : unit    -> ML (option codegen_t)
 
 val codegen_libs                : unit    -> ML (list (list string))
 val custard_entries             : unit    -> ML (list string)
+val custard_main                : unit    -> ML (option string)
 val custard_dump_ir             : unit    -> ML bool
 val custard_dump_specializations: unit    -> ML bool
 val custard_dump_layouts: unit           -> ML bool

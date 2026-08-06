@@ -94,6 +94,9 @@ type state = {
   classes: SMap.t (list bclass);
   (* lid -> how many specializations of it we have created so far. *)
   counts:  SMap.t int;
+  (* The mangled names handed out already, so that two specializations whose
+     hints coincide still get distinct names. *)
+  suffixes: SMap.t bool;
   fuel:    ref int;
   (* The chain of requests that led to what we are currently working on,
      innermost first.  Only used to make diagnostics debuggable (section
@@ -109,6 +112,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   order   = mk_ref [];
   classes = SMap.create 100;
   counts  = SMap.create 100;
+  suffixes = SMap.create 100;
   fuel    = mk_ref (Options.custard_fuel ());
   chain   = mk_ref [];
 }
@@ -180,8 +184,7 @@ let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
 let name_of_lid (l:Ident.lident) : ML name = {
   ns   = List.map Ident.string_of_id (Ident.ns_of_lid l);
   id   = Ident.string_of_id (Ident.ident_of_lid l);
-  uniq = 0;
-  hint = None;
+  spec = None;
 }
 
 let name_of_bv (b:bv) : ML string =
@@ -199,6 +202,25 @@ let hint_of_args (args:list (int & term)) : ML (option string) =
      | Tm_constant (Const_int (s, _)) -> Some s
      | Tm_constant (Const_bool b) -> Some (if b then "true" else "false")
      | _ -> None)
+
+(* The suffix that distinguishes one specialization of [lstr] from its
+   siblings.  A definition that was not specialized at all keeps its bare
+   name; every specialization gets a suffix, even when it turns out to be the
+   only one, so that a name means the same thing regardless of how many
+   siblings happen to exist.  The readable hint is preferred, and falls back
+   to the sequence number when it is missing or already taken. *)
+let spec_suffix (st:state) (lstr:string) (args:list (int & term)) (n:int)
+  : ML (option string) =
+  if Nil? args then None
+  else
+    let claim (s:string) : ML bool =
+      let key = lstr ^ "__" ^ s in
+      if Some? (SMap.try_find st.suffixes key) then false
+      else (SMap.add st.suffixes key true; true) in
+    match hint_of_args args with
+    | Some h when claim h -> Some h
+    | Some h -> Some (h ^ "_" ^ show n)
+    | None -> Some (show n)
 
 (* -------------------------------------------------------------------- *)
 (* Effects                                                              *)
@@ -241,9 +263,7 @@ let rec request (st:state) (k:spec_key) : ML name =
     let lstr = Ident.string_of_lid l in
     let n = (match SMap.try_find st.counts lstr with None -> 0 | Some n -> n) in
     SMap.add st.counts lstr (n + 1);
-    let nm = { name_of_lid l with
-               uniq = (if Nil? k.sk_args then 0 else n);
-               hint = hint_of_args k.sk_args } in
+    let nm = { name_of_lid l with spec = spec_suffix st lstr k.sk_args n } in
     (* Register before translating: a self-reference must find this name
        rather than loop. *)
     SMap.add st.names key nm;
@@ -710,7 +730,23 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) 
     ]
   | Some se ->
     let d = extract_sigelt st l nm margs se in
-    if is_opaque then with_no_newtype d else d
+    let d = if is_opaque then with_no_newtype d else d in
+    if is_inlinable se then with_inline d else d
+
+(* The projectors and discriminators F* derives for an inductive are one field
+   read or one tag test each; leaving them as calls would make the output
+   unreadable and, in C, slow. *)
+and is_inlinable (se:sigelt) : ML bool =
+  se.sigquals |> List.existsb (fun q ->
+    match q with
+    | S.Projector _ | S.Discriminator _ -> true
+    | _ -> false)
+
+and with_inline (d:decl) : ML decl =
+  match d with
+  | DLet l when not (l.dl_flags |> List.existsb Rec?) ->
+    DLet { l with dl_flags = Inline :: l.dl_flags }
+  | d -> d
 
 (* [@@custard_opaque]: the representation is fixed outside F*, so neither
    erasure nor the newtype collapse of section 5.2 may touch it. *)
@@ -945,15 +981,17 @@ let dump_specializations (st:state) : ML unit =
     if n > 1 then BU.print2 "  %s -> %s\n" l (show n));
   BU.print1 "  (total: %s)\n" (show (SMap.fold st.counts (fun _ n acc -> acc + n) 0))
 
-let run (st:state) (roots:list Ident.lident) : ML program =
-  roots |> List.iter (fun l ->
+let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML program =
+  let mark (f:flag) (l:Ident.lident) : ML unit =
     let key = string_of_key { sk_lid = l; sk_args = [] } in
     let _ = request st { sk_lid = l; sk_args = [] } in
     (* Mark the root so backends know which symbols must survive. *)
     match SMap.try_find st.emitted key with
     | Some (DLet d) ->
-      SMap.add st.emitted key (DLet { d with dl_flags = Entrypoint :: d.dl_flags })
-    | _ -> ());
+      SMap.add st.emitted key (DLet { d with dl_flags = f :: d.dl_flags })
+    | _ -> () in
+  roots |> List.iter (mark Root);
+  (match main with Some l -> mark Entrypoint l | None -> ());
   if Options.custard_dump_specializations () then dump_specializations st;
   List.rev !st.order |> List.collect (fun key ->
     match SMap.try_find st.emitted key with

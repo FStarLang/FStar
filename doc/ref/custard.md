@@ -172,8 +172,9 @@ layout table of §5, which is why it is deferred.
 type name = {
   ns:   list string;      // module path of the *original* definition
   id:   string;           // original identifier
-  uniq: int;              // disambiguator: 0 for the unspecialized decl,
-                          // >0 for the n-th specialization
+  spec: option string;    // None for a definition that was never
+                          // specialized; otherwise the suffix that
+                          // distinguishes this specialization
 }
 
 type cty =
@@ -301,14 +302,21 @@ type spec_key = lid & list (int & mono_arg)   // binder index -> argument
 
 `spec_key`s are compared up to α-equivalence of the normalized arguments and
 hash-consed in the specialization table.  The generated name is
-`<Module>_<id>__<k>` where `k` is the specialization index, with a
-human-readable suffix appended when it is short and unambiguous
-(`bar__string`, `loop_unrolling__10`).  This mirrors what karamel already does
-in `karamel/lib/Monomorphization.ml`, including the fall back to a hash when
-names get long.  Readability of these names is the *only* debugging aid we
-provide (locations are an explicit non-goal, and no `spec_key ↦ name` side
-table is needed), so the mangler should prefer the readable suffix and fall
-back to a hash only when it genuinely has to.
+`<Module>_<id>__<suffix>`, where the suffix is a readable reminder of what the
+specialization was for — the head symbol of the first monomorphized argument
+(`bar__string`) or a literal (`loop_unrolling__10`) — falling back to the
+sequence number when there is nothing readable to say, and to
+`<readable>_<n>` when two specializations would otherwise collide.  This
+mirrors what karamel already does in `karamel/lib/Monomorphization.ml`.
+Readability of these names is the *only* debugging aid we provide (locations
+are an explicit non-goal, and no `spec_key ↦ name` side table is needed).
+
+*Every* specialization carries a suffix, including one that turns out to be
+the only one, and only a definition that was never specialized at all keeps
+its bare name.  The alternative — numbering from zero and letting `__0` be
+implicit — makes a name mean different things depending on how many siblings
+happen to exist, so that adding a call site elsewhere in the program silently
+renames a function.
 
 ---
 
@@ -721,8 +729,8 @@ also why we cannot simply defunctionalize everything.
 Custard is invoked as
 
 ```
-fstar.exe --codegen Custard --custard_entry Main.main [--custard_entry Foo.bar] \
-          --custard_backend krml|ml|c -o out.krml Main.fst
+fstar.exe --codegen Custard --custard_main Main.main [--custard_entry Foo.bar] \
+          --custard_backend OCaml|Krml -o out.krml Main.fst
 ```
 
 `--codegen Custard` is added to the `EnumStr` at
@@ -794,6 +802,24 @@ deliberate difference from the ML extraction, which quietly drops them
 the normalizer, so such definitions are simply never requested.
 
 ### 4.4 Entrypoints, and why there is no library mode
+
+Two separate things are being named here, and they used to be conflated.
+
+- `--custard_entry` names a **root of the extraction**: Custard compiles
+  exactly the definitions reachable from the roots, and a root survives dead
+  code elimination even though nothing in the program calls it.  It may be
+  repeated.
+- `--custard_main` names the definition the generated program **invokes on
+  startup**.  There is at most one, and it is a root too, so the common case
+  still needs only one option.
+
+Omitting `--custard_main` is the normal thing to do when the generated code is
+to be embedded in a hand-written wrapper — which is the usual arrangement,
+since a generated `main` can only be reached by linking the whole program the
+way Custard laid it out.  The generated code then exposes an unstable API on
+purpose: the names are mangled and the signatures are whatever the layout
+analysis decided, and the wrapper is expected to be regenerated or adjusted
+along with it.
 
 Custard targets **standalone programs**.  `--custard_entry` takes a list only
 so that a program can have several roots (a `main` plus signal handlers, say),
@@ -1054,16 +1080,35 @@ Phase 4 passes, in order:
    operands only.  It also happens to be what the C and Krml backends want.
 2. **Erasure/newtype rewriting** (§5.1, §5.2).
 3. **Coercion elimination** (§5.4).
-4. **Dead-code elimination**: after monomorphization, reachability from the
+4. **Inlining of `Inline`-flagged declarations.**  A declaration carrying the
+   `Inline` flag is substituted at each of its *fully applied* uses and then
+   dropped.  The extractor sets the flag on the projectors and discriminators
+   F* derives for an inductive: each is a single field read or tag test, and
+   left as a call it makes both the OCaml and the C output unreadable and
+   slower, with no way for a backend to undo it.  A use that is not fully
+   applied, or that precedes the definition, keeps the declaration alive
+   instead of being eta-expanded.
+
+   Two details matter for correctness.  The copied body's own bound variables
+   (lets, lambdas, pattern variables) are **renamed**, because inlining the
+   same declaration twice into one caller would otherwise put two bindings of
+   the same name in scope — harmless in OCaml, but the karamel backend turns
+   names into de Bruijn indices.  And an argument is substituted directly only
+   when it is atomic, or pure and used at most once; otherwise it gets a
+   `let`, which the next pass removes again if the parameter turns out to be
+   unused.  Duplicating an impure argument would duplicate its effect, and
+   duplicating an expensive one would duplicate its cost.
+
+5. **Dead-code elimination**: after monomorphization, reachability from the
    entrypoints is exact; drop unreachable decls (including class types whose
    dictionaries were all reduced away) and unused let-bindings whose effect is
    `E_Pure`/`E_Ghost`.
-5. **Unused-parameter elimination** for the residual polymorphic decls.  The
+6. **Unused-parameter elimination** for the residual polymorphic decls.  The
    existing algorithm in
    `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst` is a good
    template; Custard's version is simpler because it does not need to keep an
    ABI-compatible record of eliminated positions.
-6. **SCC computation and topological sort** of the final decl list.
+7. **SCC computation and topological sort** of the final decl list.
 
 Emission:
 
@@ -1101,7 +1146,20 @@ Emission:
   arithmetic* operators are deliberately left alone, because they act on
   unbounded integers that no C backend can represent, and a link error naming
   `Prims_op_LessThan` is a better diagnostic than silently truncating.
-- **ML/OCaml**: `FStarC.Custard.ToML` produces the existing `mlmodule` and
+- **ML/OCaml**: `FStarC.Custard.PrintOCaml` prints OCaml source directly.
+  Every top-level declaration carries its type — each binder and the result —
+  because Custard knows all of them exactly, and writing them down turns a
+  mistake in the extraction into an OCaml type error at the declaration rather
+  than a puzzle at some use site much later.
+
+  A `DExternal` produces no declaration at all: it is a reference to a
+  hand-written realization (`FStar_IO.print_string`), so it is printed at each
+  of its uses.  Binding it to a local alias first would only add a layer of
+  names to see through.
+
+  The design sketch below predates the printer and is kept for the
+  alternative it describes: `FStarC.Custard.ToML` would produce the existing
+  `mlmodule` and
   reuses `FStarC.Extraction.ML.Code`'s printer.  Note the impedance mismatch:
   Custard's collapsed representations are *not* well-typed OCaml in general
   (that is why `MLE_Coerce`/`Obj.magic` exists), so `ToML` re-inserts
@@ -1557,6 +1615,7 @@ collapse (§5.2), since their representation is fixed externally.
 | M3 | Layout analysis: erasure + uniform newtype collapse (§5.0) + cast elimination (§5) | Differential tests vs ML extraction |
 | M4 | Effect classification + `extract_as_impure_effect` + purity discipline (§7) | Required before any Pulse code can be extracted.  `FStarC.Custard.Effects` and `FStarC.Custard.Simplify`; ANF (§6 pass 1) is not implemented yet, so the purity discipline is applied directly to the tree |
 | M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | Done. M5a is `FStarC.Custard.Builtins` (§8.2); M5b is `FStarC.Custard.PrintKrml` behind `--custard_backend Krml` (§6), with the karamel AST split out into `FStarC.Extraction.KrmlAst`.  `tests/custard/KrmlBasic.fst` goes all the way to a compiled and executed C binary |
+| M6a | Output polish: per-specialization suffixes, projector/discriminator inlining, externals printed at their uses, OCaml type annotations, `--custard_entry` vs `--custard_main` | Done. `tests/custard/Library.fst` covers the root-only (no `main`) mode |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

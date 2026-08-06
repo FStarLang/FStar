@@ -49,16 +49,17 @@ open FStarC.Class.PP
 (** {1 Names} *)
 
 (** A name in the IR refers to one *specialization* of one source definition.
-    [uniq] is 0 for a definition that was not specialized, and n > 0 for its
-    n-th specialization.  [hint] is a human-readable reminder of what the
-    specialization was for (e.g. "string"); it is only used when building the
-    mangled name, which is the only debugging aid Custard provides, so it
-    should be kept readable. *)
+    [spec] is [None] for a definition that was not specialized at all, and
+    otherwise the suffix distinguishing this specialization from its siblings
+    -- a human-readable reminder of what it was for ("string", "3"), made
+    unique by the extractor.  *Every* specialization has one, including the
+    only one: a bare name would then mean two different things depending on
+    how many siblings happened to exist, which is exactly the sort of thing
+    that makes generated code hard to read. *)
 type name = {
   ns:   list string;
   id:   string;
-  uniq: int;
-  hint: option string;
+  spec: option string;
 }
 
 val mangled_name : name -> ML string
@@ -184,8 +185,19 @@ and branch = pat & option expr & expr
 type flag =
   | Rec of list name       (** the SCC this declaration belongs to *)
   | Private
+  | Root
+  (** A root of the extraction, named by [--custard_entry]: it must survive
+      dead-code elimination even though nothing in the program calls it. *)
   | Entrypoint
+  (** The definition named by [--custard_main], which the generated program
+      invokes on startup.  There is at most one. *)
   | NoNewtype
+  | Inline
+  (** Substitute this definition at its fully applied uses and do not emit it.
+      Set for the record projectors and discriminators F* generates, whose
+      bodies are a single field access or tag test: emitting them as functions
+      turns every field read into a call, which the backends have no way to
+      undo. *)
   | Erased
   (** The type has no runtime representation at all (section 5.1).  Set by the
       extractor for types F* considers non-informative; the layout analysis

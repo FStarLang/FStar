@@ -196,6 +196,7 @@ let defaults = [
   ("codegen-lib"                               , List []);
   ("codegen"                                   , Unset);
   ("custard_entry"                             , List []);
+  ("custard_main"                              , Unset);
   ("custard_dump_ir"                           , Bool false);
   ("custard_dump_specializations"              , Bool false);
   ("custard_dump_layouts"                     , Bool false);
@@ -475,6 +476,7 @@ let get_no_cmi                  ()      = lookup_opt "no_cmi"                   
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
+let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
 let get_custard_dump_layouts ()          = lookup_opt "custard_dump_layouts"          as_bool
@@ -879,7 +881,15 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     Accumulated (SimpleStr "long_name"),
     text "Entry point for whole-program extraction with --codegen Custard. \
 May be repeated; every occurrence is a root of the extraction. Custard only \
-compiles the definitions reachable from these roots.");
+compiles the definitions reachable from these roots. It does *not* make them \
+run: use --custard_main for that.");
+
+  ( noshort,
+    "custard_main",
+    SimpleStr "long_name",
+    text "The definition to invoke when the extracted program starts. It is \
+also a root of the extraction, so --custard_entry need not repeat it. Omit it \
+to extract a program that is meant to be driven by a hand-written wrapper.");
 
   ( noshort,
     "custard_dump_ir",
@@ -2108,6 +2118,7 @@ let codegen                      () =
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let custard_entries              () = get_custard_entry ()
+let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()
 let custard_dump_layouts ()         = get_custard_dump_layouts ()

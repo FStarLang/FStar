@@ -55,4 +55,4 @@ val request : state -> spec_key -> ML name
 
 (** Drain the worklist and return the program in dependency order (definitions
     before their uses), which is the order the backends want. *)
-val run : state -> list Ident.lident -> ML program
+val run : state -> list Ident.lident -> option Ident.lident -> ML program

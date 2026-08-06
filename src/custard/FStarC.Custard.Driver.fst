@@ -37,6 +37,11 @@ module TcEnv   = FStarC.TypeChecker.Env
 let entrypoints () =
   Options.custard_entries () |> List.map Ident.lid_of_str
 
+let main_entry () : ML (option Ident.lident) =
+  match Options.custard_main () with
+  | Some s -> Some (Ident.lid_of_str s)
+  | None -> None
+
 (* Check that every requested entry point actually resolves to a definition we
    can see.  Getting this wrong is by far the most likely user error, and the
    resulting "empty program" would otherwise be silent. *)
@@ -51,10 +56,14 @@ let check_entrypoints (env:TcEnv.env) (roots:list Ident.lident) : ML unit =
       ])
 
 let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
-  let roots = entrypoints () in
+  let main = main_entry () in
+  (* [--custard_main] is a root too, so that the common case needs only one
+     option. *)
+  let roots = entrypoints () @ (match main with Some l -> [l] | None -> []) in
   if Nil? roots then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text "--codegen Custard requires at least one --custard_entry.";
+      text "--codegen Custard requires at least one --custard_entry or \
+            --custard_main.";
       text "Custard is a whole-program compiler: it extracts exactly the \
                    definitions reachable from the entry points."
     ];
@@ -62,7 +71,7 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   (* Looking definitions up in the environment instantiates their universes,
      which needs the union-find; by the time a backend runs it has been put in
      read-only mode.  The ML extraction does the same thing. *)
-  let prog = UF.with_uf_enabled (fun () -> Extract.run (Extract.init deps env) roots) in
+  let prog = UF.with_uf_enabled (fun () -> Extract.run (Extract.init deps env) roots main) in
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog = Layout.run prog in
   (* Effect-guarded simplification (sections 6 and 7.3). *)

@@ -37,15 +37,15 @@ module BU = FStarC.Util
    back to the numeric index otherwise. *)
 let mangled_name (n:name) : ML string =
   let base = String.concat "_" (n.ns @ [n.id]) in
-  if n.uniq = 0 then base
-  else
-    match n.hint with
-    | Some h -> base ^ "__" ^ h
-    | None -> base ^ "__" ^ show n.uniq
+  match n.spec with
+  | None -> base
+  | Some s -> base ^ "__" ^ s
 
 let string_of_name (n:name) : ML string =
   let base = String.concat "." (n.ns @ [n.id]) in
-  if n.uniq = 0 then base else base ^ "@" ^ show n.uniq
+  match n.spec with
+  | None -> base
+  | Some s -> base ^ "@" ^ s
 
 (* -------------------------------------------------------------------- *)
 (* Effects                                                              *)
@@ -312,8 +312,10 @@ let flag_to_doc (f:flag) : ML document =
   match f with
   | Rec ns -> text ("rec[" ^ String.concat "," (List.map string_of_name ns) ^ "]")
   | Private -> text "private"
+  | Root -> text "root"
   | Entrypoint -> text "entrypoint"
   | NoNewtype -> text "no_newtype"
+  | Inline -> text "inline"
   | Erased -> text "erased"
   | Comment s -> text ("(* " ^ s ^ " *)")
 

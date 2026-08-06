@@ -90,7 +90,7 @@ let int_op (id:string) : option (op & int) =
 
 (* Uniq 0 is the unspecialized declaration, which is what a primitive type
    always is; the backends recognize [Prims.bool] by name. *)
-let bool_name : name = { ns = ["Prims"]; id = "bool"; uniq = 0; hint = None }
+let bool_name : name = { ns = ["Prims"]; id = "bool"; spec = None }
 
 let int_lit (sw : signedness & width) (s:string) : expr =
   mk (EConst (CInt (s, Some sw))) (TInt sw) E_Pure
