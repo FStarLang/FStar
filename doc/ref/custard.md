@@ -939,6 +939,15 @@ runtime signature.
 because `p` is erased at every instantiation.  `type foo a = { x: a; y: bool }`
 stays a two-field struct at every instantiation, even `foo prop`.
 
+A polymorphic Custard declaration is not, however, the end of the story for
+the C backend: C has no polymorphism.  karamel monomorphizes it, exactly as it
+does for the ML pipeline, and to do that it needs the type arguments of every
+call.  So although a type argument is deleted from the *value* spine, it is
+carried on the `EQual` node as a type application (§2.2), and a declaration
+records the type variables it abstracts over in `dl_typars`.  The OCaml backend
+ignores both; the karamel backend turns them into `ETypApp` and
+`DFunction`'s `n_type_args`.
+
 The rule composes with §2.1 for free: the layout table is keyed by the
 *specialized* type name (§2.3), and under `--custard_monomorphize_types` there
 are no type variables left, so the uniformity rule vacuously permits maximal
@@ -955,6 +964,11 @@ A type is erased when it is non-informative.  The existing predicate is
 `prop`, `squash`, `Ghost.erased`, and anything with the
 `must_erase_for_extraction` attribute.  Custard reuses it verbatim, and adds
 the *structural* closure:
+
+One trap: `U.is_unit` answers *yes* for `squash p`, so a test for "the binder
+is a literal `unit` thunk, which must not be deleted" has to compare against
+`Prims.unit` itself.  Using `U.is_unit` there keeps every proof argument alive,
+and the `Prims.magic ()` that fills one in reaches the generated program.
 
 - a record/variant all of whose fields are erased is erased
   (`type foo = { a: prop; b: prop }` ⟹ `L_erased`);
@@ -1119,10 +1133,30 @@ Phase 4 passes, in order:
    unused.  Duplicating an impure argument would duplicate its effect, and
    duplicating an expensive one would duplicate its cost.
 
-5. **Dead-code elimination**: after monomorphization, reachability from the
-   entrypoints is exact; drop unreachable decls (including class types whose
-   dictionaries were all reduced away) and unused let-bindings whose effect is
-   `E_Pure`/`E_Ghost`.
+   Inlining is preceded by an **eta reduction** of the declarations, because
+   F* stores the projector of a field whose type is an arrow eta-expanded:
+
+   ```fstar
+   let __proj__Mkht_t__item__hashf projectee x = (match projectee with ... ) x
+   ```
+
+   That extra binder makes every use of the projector under-applied, so the
+   `Inline` pass declines it and the C backend sees a call with too few
+   arguments.  Dropping a trailing binder that is applied to a pure head, and
+   occurs nowhere else, is always sound; the arrow it used to consume moves
+   back into the result type, and the effect of the arrow it removes becomes
+   part of the returned closure's type rather than the declaration's.
+
+5. **Dead-code elimination**: reachability from the declarations flagged
+   `Root`/`Entrypoint`, following the names in bodies, binder types, result
+   types and field types (a constructor name resolves to its `DType`).  This is
+   not an optimization but a *correctness* requirement for the C backend:
+   extraction requests a definition the moment it meets one, including from a
+   position the layout analysis later erases, so a Pulse data structure drags
+   in its whole ghost model — `Seq.create`, `Prims.op_Subtraction`, `Prims.pos`.
+   In OCaml that is merely wasteful; karamel rejects it, because a
+   specification uses mathematical integers.  The pass runs *after* inlining,
+   when the call graph is final.
 6. **Unused-parameter elimination** for the residual polymorphic decls.  The
    existing algorithm in
    `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst` is a good
@@ -1153,7 +1187,29 @@ Emission:
   joins the two with `_` for the C name anyway, so nothing is lost.  For the
   same reason, the types karamel knows natively (`Prims.unit/bool/int/string`)
   are mapped to `TUnit`/`TBool`/`TInt CInt`/… and their `DType` declarations
-  are **skipped**, rather than redeclared.  *Second*, `EDiscrim` has no karamel
+  are **skipped**, rather than redeclared.  Also by name: `Prims.op_Equality`
+  and `op_disEquality` are operators, not calls — left as externals they get a
+  `void *` C signature that no `eqtype` fits.  karamel types decidable equality
+  only through an explicit type application naming the operand type
+  (`Checker.infer`, the `ETApp (EOp (Eq|Neq), _)` case), so Custard emits
+  `EApp (ETypApp (EOp (Eq, Bool), [t]), args)`, `t` being the type of the first
+  operand.
+
+  Getting a real program through karamel also depends on Custard's types being
+  real.  `ECons` carries the type of the value being built and `EFlat`/`EField`
+  the type of the record, and karamel's datatype passes call `assert_tlid` on
+  them: an `any` there is a hard error, not a fallback.  So a constructor
+  application takes its type from the constructor's result type with the
+  inductive's parameters instantiated from the spine, and a call takes its type
+  from the callee's already-emitted signature, instantiated at the call's type
+  arguments (requests are depth-first, so it is available; a recursive call
+  falls back to `TAny`).  Two consequences worth stating: a `DExternal` has no
+  type-parameter list in karamel's AST, so a free type variable in its
+  signature is printed as `TAny` rather than reported as unbound; and
+  `U.abs_formals` opens a definition's binders under fresh names while the
+  computation type still speaks of the ones `specialize` abstracted over, so
+  the two have to be related by an explicit substitution or the result type
+  mentions type variables that no binder introduces.  *Second*, `EDiscrim` has no karamel
   counterpart and is compiled to a two-branch match (karamel has no wildcard
   pattern, so the default branch binds a fresh `PVar`); this needs constructor
   arities, hence the small `ctor_arity` table built up front.  *Third*, the
@@ -1559,11 +1615,11 @@ A real Pulse program turned up four things that a small test does not:
 
 `tests/custard/pulse/PulseHashTable.fst` is the standing regression for all of
 this: it drives `Pulse.Lib.HashTable` (polymorphic, array-backed, linear
-probing) from a `main`, and the generated OCaml is compiled, not just grepped.
-It does *not* go through the karamel backend.  `ht_t` stores its hash function
-in a field, which is the §3.2 `Poly` case deferred to v2; karamel cannot give a
-partially applied function a C type, and drops the enclosing declaration.
-Custard does not yet diagnose this at extraction time.
+probing) from a `main`, and goes to *compiled and executed* OCaml as well as to
+compiled C.  Note that `ht_t` stores its hash function in a field.  That is the
+§3.2 `Poly` case as far as Custard's own monomorphization is concerned, and it
+works: the field is a function pointer, the table is compiled once, and it is
+karamel that specializes `ht_t` to `size_t`/`data` for C.
 
 ---
 
@@ -1708,6 +1764,6 @@ Custard does not yet diagnose this at extraction time.
 | M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | Done. M5a is `FStarC.Custard.Builtins` (§8.2); M5b is `FStarC.Custard.PrintKrml` behind `--custard_backend Krml` (§6), with the karamel AST split out into `FStarC.Extraction.KrmlAst`.  `tests/custard/KrmlBasic.fst` goes all the way to a compiled and executed C binary |
 | M6a | Output polish: per-specialization suffixes, projector/discriminator inlining, externals printed at their uses, OCaml type annotations, `--custard_entry` vs `--custard_main` | Done. `tests/custard/Library.fst` covers the root-only (no `main`) mode |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
-| M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny`/`EAbort` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` goes to OCaml and to compiled C, `PulseHashTable.fst` to compiled OCaml; requires stage3, so neither is part of `tests/custard` |
+| M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny`/`EAbort` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` and `PulseHashTable.fst` both go to compiled OCaml and to compiled C; requires stage3, so neither is part of `tests/custard` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

@@ -621,13 +621,19 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
                 | Some ((_, ty), _) -> Mono.erased_binders (tcenv st) ty
                 | None -> [] in
     mk (ECtor (nm, drop_flagged flags args |> List.map fst |> List.map (expr_of_term st)))
-       TAny E_Pure
+       (ctor_result_ty st l args) E_Pure
   else
     let cs = binder_classes st l in
     let margs, rest = split_mono_args st l cs args in
     let key = { sk_lid = l; sk_args = margs } in
     let nm = request st key in
-    let hd = mk (EQual (nm, [])) TAny E_Pure in
+    (* Uniform compilation (section 5.0) deletes the type arguments from the
+       value spine, but the karamel backend still needs them: it is karamel's
+       own monomorphization that turns a polymorphic Custard declaration into C.
+       So they are carried on the [EQual] node instead, as a type application. *)
+    let tyargs = call_type_args st l cs args in
+    let hd_ty = callee_sig st (string_of_key key) tyargs in
+    let hd = mk (EQual (nm, tyargs)) hd_ty E_Pure in
     (* [split_mono_args] has already removed the [Mono] and [Dropped]
        arguments, so everything left is passed at runtime. *)
     let rest = rest |> List.map fst |> List.map (expr_of_term st) in
@@ -636,7 +642,56 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     | _ ->
       let e = List.fold_left (fun e a -> join_eff e a.eff)
                              (callee_eff st (string_of_key key) (List.length rest)) rest in
-      mk (EApp (hd, rest)) TAny e
+      mk (EApp (hd, rest)) (apply_result hd_ty (List.length rest)) e
+
+(* A constructor application's type is the constructor's result type with the
+   inductive's parameters instantiated -- which the spine supplies, since the
+   parameters come first.  karamel needs it: [ECons] carries the type of the
+   value being built, and an [any] there makes its datatype passes fail. *)
+and ctor_result_ty (st:state) (l:Ident.lident) (spine:args) : ML cty =
+  match TcEnv.try_lookup_lid (tcenv st) l with
+  | None -> TAny
+  | Some ((_, ty), _) ->
+    let bs, c = U.arrow_formals_comp ty in
+    let rec go (bs:binders) (sp:args) (acc:list subst_elt) : ML (list subst_elt) =
+      match bs, sp with
+      | b :: bs, (a, _) :: sp -> go bs sp (NT (b.binder_bv, a) :: acc)
+      | _ -> acc in
+    ty_of_typ st (SS.subst (go bs spine []) (U.comp_result c))
+
+(* The type arguments of a call, in the order [extract_letbinding] records them
+   in [dl_typars]: source order, restricted to the type binders that survived
+   as parameters rather than being specialized away. *)
+and call_type_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : ML (list cty) =
+  let tflags = match TcEnv.try_lookup_lid (tcenv st) l with
+               | Some ((_, ty), _) -> Mono.type_binders (tcenv st) ty
+               | None -> [] in
+  let rec go (cs:list bclass) (tf:list bool) (sp:args) : ML (list cty) =
+    match cs, tf, sp with
+    | c :: cs, t :: tf, (a, _) :: sp ->
+      if t && not (Mono? c)
+      then ty_of_typ st a :: go cs tf sp
+      else go cs tf sp
+    | _ -> [] in
+  go cs tflags spine
+
+(* The callee's signature, instantiated at this call site.  It is available
+   because requests are depth-first; a recursive call is the exception, and
+   falls back to [TAny]. *)
+and callee_sig (st:state) (key:string) (tyargs:list cty) : ML cty =
+  match SMap.try_find st.emitted key with
+  | Some (DLet d) ->
+    let rec zip (ps:list string) (ts:list cty) : list (string & cty) =
+      match ps, ts with
+      | p :: ps, t :: ts -> (p, t) :: zip ps ts
+      | _ -> [] in
+    let rec build (bs:list binder) : ML cty =
+      match bs with
+      | [] -> d.dl_ret
+      | [b] -> TArrow (b.b_ty, d.dl_eff, d.dl_ret)
+      | b :: bs -> TArrow (b.b_ty, E_Pure, build bs) in
+    subst_cty (zip d.dl_typars tyargs) (build d.dl_binders)
+  | _ -> TAny
 
 (* Section 3.2: the two ways a call site can fail to be specializable. *)
 and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)

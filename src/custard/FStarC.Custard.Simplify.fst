@@ -219,13 +219,13 @@ let rec inline_expr (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (x:
      definition (which a mutually recursive group can do). *)
   let g = inline_expr tbl used in
   match x.e with
-  | EApp ({e = EQual (n, _)}, args) ->
+  | EApp ({e = EQual (n, tys)}, args) ->
     let args = args |> List.map g in
     (match SMap.try_find tbl (string_of_name n) with
      | Some (bs, body) when List.length bs = List.length args ->
        inline_call bs body args x
      | _ -> SMap.add used (string_of_name n) true;
-            { x with e = EApp ({ x with e = EQual (n, []) }, args) })
+            { x with e = EApp ({ x with e = EQual (n, tys) }, args) })
   | EQual (n, _) ->
     (match SMap.try_find tbl (string_of_name n) with
      | Some ([], body) -> inline_call [] body [] x
@@ -254,6 +254,51 @@ and inline_branch (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (br:b
   (p, (match guard with None -> None | Some e -> Some (inline_expr tbl used e)),
    inline_expr tbl used b)
 
+(* -------------------------------------------------------------------- *)
+(* Eta reduction                                                        *)
+(* -------------------------------------------------------------------- *)
+
+(* F* stores the projector of a field whose type is an arrow eta-expanded:
+   [let __proj__Mkht_t__item__hashf projectee x = (match projectee with ... ) x].
+   Extraction faithfully reproduces that, and the extra binder then defeats
+   both projector inlining (which needs an exactly saturated use) and the C
+   backend (which sees a call with too few arguments).  Dropping a trailing
+   binder that is applied to a pure head, and to nothing else, is always sound;
+   the arrow it used to consume moves into the result type. *)
+
+let rec split_last (es:list 'a) : ML (option (list 'a & 'a)) =
+  match es with
+  | [] -> None
+  | [e] -> Some ([], e)
+  | e :: es -> (match split_last es with
+                | Some (pre, last) -> Some (e :: pre, last)
+                | None -> None)
+
+let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
+  : ML (list binder & expr & cty & eff) =
+  match split_last bs, body.e with
+  | Some (bs', b), EApp (f, args) when Cons? bs' ->
+    (match split_last args with
+     | Some (args', { e = EVar v }) when v = b.b_name
+                                      && is_pure f.eff
+                                      && not (occurs v f)
+                                      && not (args' |> List.existsb (occurs v)) ->
+       let ret' = TArrow (b.b_ty, ef, ret) in
+       let body' = match args' with
+                   | [] -> { f with ty = ret' }
+                   | _ -> { body with e = EApp (f, args'); ty = ret'; eff = E_Pure } in
+       eta_reduce bs' body' ret' E_Pure
+     | _ -> (bs, body, ret, ef))
+  | _ -> (bs, body, ret, ef)
+
+let eta_reduce_decls (prog:program) : ML program =
+  prog |> List.map (fun d ->
+    match d with
+    | DLet l ->
+      let bs, body, ret, ef = eta_reduce l.dl_binders l.dl_body l.dl_ret l.dl_eff in
+      DLet { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
+    | d -> d)
+
 (* One left-to-right pass: the program is topologically sorted, so by the time
    an [Inline] body is stored it has already had its own callees inlined. *)
 let inline_decls (prog:program) : ML program =
@@ -273,9 +318,111 @@ let inline_decls (prog:program) : ML program =
               || Some? (SMap.try_find used (string_of_name dl.dl_name))
     | _ -> true)
 
+(* -------------------------------------------------------------------- *)
+(* Dead-declaration elimination                                         *)
+(* -------------------------------------------------------------------- *)
+
+(* Extraction requests a definition as soon as it meets one, including from
+   positions that the layout analysis later erases -- the ghost model of a data
+   structure, say.  What is left behind is a specification-only declaration
+   that nothing reachable calls: harmless in OCaml, but karamel rejects it
+   ("not Low*", because specifications use mathematical integers), so it has to
+   go.  Reachability is computed after inlining, when the call graph is final. *)
+
+let rec cty_deps (c:cty) : ML (list string) =
+  match c with
+  | TApp (n, args) -> string_of_name n :: List.collect cty_deps args
+  | TArrow (a, _, b) -> cty_deps a @ cty_deps b
+  | TTuple cs -> List.collect cty_deps cs
+  | TBuf c -> cty_deps c
+  | _ -> []
+
+let rec pat_deps (p:pat) : ML (list string) =
+  match p with
+  | PCtor (n, ps) -> string_of_name n :: List.collect pat_deps ps
+  | PTuple ps
+  | POr ps -> List.collect pat_deps ps
+  | _ -> []
+
+let rec expr_deps (x:expr) : ML (list string) =
+  let ds = cty_deps x.ty in
+  let sub (es:list expr) : ML (list string) = List.collect expr_deps es in
+  ds @ (match x.e with
+        | EQual (n, tys) -> string_of_name n :: List.collect cty_deps tys
+        | ECtor (n, es) | ERaise (n, es) -> string_of_name n :: sub es
+        | ERecord (n, fs) -> string_of_name n :: sub (List.map snd fs)
+        | EDiscrim (e, n) -> string_of_name n :: expr_deps e
+        | EProj (e, n, _) -> string_of_name n :: expr_deps e
+        | EConst _ | EVar _ | EAny | EAbort _ -> []
+        | ELet (_, t, e1, e2) -> cty_deps t @ sub [e1; e2]
+        | EApp (h, es) -> sub (h :: es)
+        | EFun (bs, b) -> List.collect (fun (b:binder) -> cty_deps b.b_ty) bs @ expr_deps b
+        | EMatch (sc, brs) ->
+          expr_deps sc @ (brs |> List.collect (fun (p, g, b) ->
+            pat_deps p @ (match g with Some g -> expr_deps g | None -> []) @ expr_deps b))
+        | EIf (c, a, b) -> sub [c; a; b]
+        | ESeq (a, b) -> sub [a; b]
+        | ETuple es | EOp (_, es) -> sub es
+        | ECast (e, t) -> cty_deps t @ expr_deps e
+        | EWhile (c, b) -> sub [c; b]
+        | ETry (e, brs) ->
+          expr_deps e @ (brs |> List.collect (fun (p, g, b) ->
+            pat_deps p @ (match g with Some g -> expr_deps g | None -> []) @ expr_deps b)))
+
+let decl_deps (d:decl) : ML (list string) =
+  match d with
+  | DLet l ->
+    List.collect (fun (b:binder) -> cty_deps b.b_ty) l.dl_binders
+    @ cty_deps l.dl_ret @ expr_deps l.dl_body
+  | DType t ->
+    (match t.dt_body with
+     | TAbbrev c -> cty_deps c
+     | TRecord fs -> List.collect (fun (_, c) -> cty_deps c) fs
+     | TVariant cs -> cs |> List.collect (fun (_, fs) ->
+                        List.collect (fun (_, c) -> cty_deps c) fs)
+     | TAbstract -> [])
+  | DExternal x -> cty_deps x.dx_ty
+  | DExn e -> List.collect cty_deps e.de_args
+
+(* A constructor or field name refers to its declaration, not to itself. *)
+let owners (prog:program) : ML (SMap.t string) =
+  let m : SMap.t string = SMap.create 50 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DType t ->
+      let owner = string_of_name t.dt_name in
+      (match t.dt_body with
+       | TVariant cs -> cs |> List.iter (fun (cn, _) -> SMap.add m (string_of_name cn) owner)
+       | _ -> ())
+    | _ -> ());
+  m
+
+let dce (prog:program) : ML program =
+  let own = owners prog in
+  let resolve (n:string) : ML string =
+    match SMap.try_find own n with Some o -> o | None -> n in
+  let defs : SMap.t decl = SMap.create 50 in
+  prog |> List.iter (fun d -> SMap.add defs (string_of_name (name_of_decl d)) d);
+  let live : SMap.t bool = SMap.create 50 in
+  let rec visit (n:string) : ML unit =
+    let n = resolve n in
+    if None? (SMap.try_find live n) then begin
+      SMap.add live n true;
+      match SMap.try_find defs n with
+      | Some d -> decl_deps d |> List.iter visit
+      | None -> ()
+    end in
+  prog |> List.iter (fun d ->
+    if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)
+    then visit (string_of_name (name_of_decl d)));
+  prog |> List.filter (fun d ->
+    Some? (SMap.try_find live (string_of_name (name_of_decl d))))
+
 let run (prog:program) : ML program =
+  let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
-  prog |> List.map (fun d ->
+  let prog = prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
-    | d -> d)
+    | d -> d) in
+  dce prog

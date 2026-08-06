@@ -69,6 +69,17 @@ let is_pure (e:eff) : bool =
 (* Helpers                                                              *)
 (* -------------------------------------------------------------------- *)
 
+let rec subst_cty (s:list (string & cty)) (c:cty) : ML cty =
+  match c with
+  | TVar v -> (match s |> List.tryFind (fun (p, _) -> p = v) with
+               | Some (_, c') -> c'
+               | None -> c)
+  | TArrow (a, e, b) -> TArrow (subst_cty s a, e, subst_cty s b)
+  | TTuple cs -> TTuple (cs |> List.map (subst_cty s))
+  | TBuf c -> TBuf (subst_cty s c)
+  | TApp (n, args) -> TApp (n, args |> List.map (subst_cty s))
+  | c -> c
+
 let mk (e:expr') (ty:cty) (eff:eff) : expr = { e; ty; eff }
 
 let unit_expr : expr = mk (EConst CUnit) TUnit E_Pure

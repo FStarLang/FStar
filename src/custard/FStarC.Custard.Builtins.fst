@@ -166,6 +166,12 @@ let prims_rule (id:string) : ML (option rule) =
   | "op_AmpAmp"   -> bool_op And 2
   | "op_BarBar"   -> bool_op Or 2
   | "op_Negation" -> bool_op Not 1
+  (* Decidable equality is an operator, not a call: leaving it as an external
+     gives C a [void *] signature that no eqtype fits.  The type argument is
+     deliberately ignored, exactly as [FStarC.Extraction.Krml.mk_bool_op] does
+     -- the operands' own types say what is being compared. *)
+  | "op_Equality"    -> bool_op Eq 2
+  | "op_disEquality" -> bool_op Neq 2
   | _ -> None
 
 (* -------------------------------------------------------------------- *)

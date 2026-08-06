@@ -24,9 +24,8 @@ NOGREP_PulseBasic += "PulseCore"
 NOGREP_PulseBasic += "Obj.magic"
 
 # The hash table is polymorphic, stores a closure in a runtime record, and is
-# loaded from another module's implementation through its interface.  It does
-# not go through the karamel backend: a closure in a data structure is the
-# section 3.2 [Poly] case deferred to v2, and karamel rejects it.
+# loaded from another module's implementation through its interface.  It stays
+# polymorphic all the way into karamel, which monomorphizes it itself.
 GREP_TESTS += PulseHashTable
 GREP_PulseHashTable += "pulse_Lib_HashTable_alloc"
 GREP_PulseHashTable += "pulse_Lib_HashTable_insert"
@@ -45,6 +44,7 @@ OCAML_TESTS += PulseHashTable
 # Same modules, through the karamel backend: krml must accept the output and
 # the C compiler must build it.
 KRML_TESTS += PulseBasic
+KRML_TESTS += PulseHashTable
 
 $(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))

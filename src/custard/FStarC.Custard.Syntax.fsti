@@ -283,6 +283,10 @@ type program = list decl
 
 (** {1 Helpers} *)
 
+(* Instantiate type variables, e.g. to specialize a polymorphic declaration's
+   signature to a particular call site. *)
+val subst_cty : list (string & cty) -> cty -> ML cty
+
 val mk : expr' -> cty -> eff -> expr
 val unit_expr : expr
 val name_of_decl : decl -> name

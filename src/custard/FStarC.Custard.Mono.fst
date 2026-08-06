@@ -77,9 +77,18 @@ let is_type_binder (env:TcEnv.env) (b:binder) : ML bool =
    would turn an impure function into a value, which changes when its effects
    run.  Removing unit thunks safely needs the purity discipline of section 7
    and is left to a later milestone. *)
+(* Deliberately *not* [U.is_unit], which also answers yes for [squash p]: a
+   proof binder carries no more information than an [erased], and the ML
+   pipeline deletes it.  Only a binder whose type is literally [Prims.unit] is
+   exempted below. *)
+let is_literal_unit (t:typ) : ML bool =
+  match (U.unrefine t).n with
+  | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
+  | _ -> false
+
 let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   let sort = b.binder_bv.sort in
-  not (U.is_unit sort) &&
+  not (is_literal_unit sort) &&
   not (is_type_binder env b) &&
   TcUtil.must_erase_for_extraction env sort
 

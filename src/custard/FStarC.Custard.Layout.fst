@@ -243,17 +243,6 @@ let ctor_owner (t:tbl) (n:name) : ML (option (layout & ctor_layout)) =
 (* Resolving types                                                      *)
 (* -------------------------------------------------------------------- *)
 
-let rec subst_cty (s:list (string & cty)) (c:cty) : ML cty =
-  match c with
-  | TVar v -> (match s |> List.tryFind (fun (p, _) -> p = v) with
-               | Some (_, c') -> c'
-               | None -> c)
-  | TArrow (a, e, b) -> TArrow (subst_cty s a, e, subst_cty s b)
-  | TTuple cs -> TTuple (cs |> List.map (subst_cty s))
-  | TBuf c -> TBuf (subst_cty s c)
-  | TApp (n, args) -> TApp (n, args |> List.map (subst_cty s))
-  | c -> c
-
 (* Erased types become [TUnit] (the residual position of section 5.1) and
    collapsed types become their payload.  [fuel] bounds the unfolding; the
    cycle check above makes exhaustion unreachable, but a bound is cheaper than

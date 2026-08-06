@@ -267,12 +267,23 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.EBufBlit (krml_expr env src, krml_expr env srci,
                 krml_expr env dst, krml_expr env dsti, krml_expr env len)
 
+  (* Decidable equality at no particular width is *polymorphic*: karamel types
+     it only through an explicit type application naming the operand type
+     ([Checker.infer], the [ETApp (EOp (Eq|Neq), _)] case). *)
+  | EOp ({ po_op = o; po_int = None }, args)
+      when (Eq? o || Neq? o) && Cons? args ->
+    let t = match args with a :: _ -> krml_typ env a.ty | [] -> K.TAny in
+    K.EApp (K.ETypApp (K.EOp (krml_op o, K.Bool), [t]),
+            args |> List.map (krml_expr env))
+
   (* An operator is a value in karamel, so it is always applied. *)
   | EOp (o, args) ->
     let w = match o.po_int with
             | Some sw -> krml_width sw
             | None -> (match o.po_op with
-                       | And | Or | Not -> K.Bool
+                       (* [Eq]/[Neq] at no particular width is F*'s decidable
+                          equality; karamel's convention for it is [Bool]. *)
+                       | And | Or | Not | Eq | Neq -> K.Bool
                        | _ -> K.CInt) in
     K.EApp (K.EOp (krml_op o.po_op, w), args |> List.map (krml_expr env))
 
