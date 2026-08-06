@@ -916,7 +916,7 @@ and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
    definitions that are eta-short, that have more binders than their type
    shows, or that are not syntactically lambdas at all. *)
 and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int & term))
-  : ML (term & comp & list bclass) =
+  : ML (term & comp & list bclass & binders) =
   let bs, c = U.arrow_formals_comp ty in
   let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
              (spine:args) (poly:binders) (polycs:list bclass)
@@ -944,13 +944,22 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
   let spine, poly, polycs, c = go 0 bs cs [] [] [] [] in
   let applied = match spine with [] -> def | _ -> U.mk_app def spine in
   let body = N.normalize custard_norm_steps (tcenv st) applied in
-  (U.abs poly body None, c, polycs)
+  (U.abs poly body None, c, polycs, poly)
 
 and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                        (is_rec:bool) (margs:list (int & term)) : ML decl =
   let cs = binder_classes st l in
-  let def, c, polycs = specialize st lb.lbtyp lb.lbdef cs margs in
+  let def, c, polycs, poly = specialize st lb.lbtyp lb.lbdef cs margs in
   let bs, body, _ = U.abs_formals def in
+  (* [abs_formals] opens the binders under fresh names, but [c] still speaks of
+     the ones [specialize] abstracted over.  Left unrelated, the two sets of
+     names produce a signature whose result type mentions type variables no
+     binder introduces -- fatal in the karamel backend. *)
+  let rec realign (ps:binders) (bs:binders) : ML (list subst_elt) =
+    match ps, bs with
+    | p :: ps, b :: bs -> NT (p.binder_bv, S.bv_to_name b.binder_bv) :: realign ps bs
+    | _ -> [] in
+  let c = SS.subst_comp (realign poly bs) c in
   (* [U.abs] put the specialized binders first, so [polycs] lines up with the
      head of [bs]; any further binders come from the body's own lambdas and are
      not classified. *)
@@ -963,19 +972,35 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     go polycs i in
   (* Binders past [polycs] come from the body's own lambdas and are filtered by
      the same predicate the call sites use. *)
-  let bs = bs |> List.mapi (fun i b ->
-             nth_class i || (i >= List.length polycs
-                             && Mono.is_erased_binder (tcenv st) b)) |> (fun flags ->
-           drop_flagged flags bs) in
+  let n_poly = List.length polycs in
+  let flags = bs |> List.mapi (fun i b ->
+                nth_class i || (i >= n_poly && Mono.is_erased_binder (tcenv st) b)) in
+  (* [abs_formals] sees through nested lambdas, so a definition written
+     [let f x = fun y -> e] has more binders than its type has arrows.  Each
+     such extra binder consumes one arrow of the result type -- and its
+     effect, which is the one that matters at a call site. *)
+  let n_extra =
+    flags |> List.mapi (fun i f -> if not f && i >= n_poly then 1 else 0)
+          |> List.fold_left (fun a b -> a + b) 0 in
+  (* Erased type binders carry no value but do parameterize the signature; the
+     karamel backend resolves [TVar]s against this list, so they have to be
+     recorded even though they take no runtime argument. *)
+  let typars = bs |> List.collect (fun b ->
+                 if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+  let bs = drop_flagged flags bs in
   let binders = bs |> List.map (fun b ->
     { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
   (* The effect is the one of the *codomain*: [lbeff] is the effect of
      evaluating the lambda, which is always Tot. *)
-  let eff = eff_of_comp st c in
-  let ret = ty_of_typ st (U.comp_result c) in
+  let rec peel (n:int) (e:eff) (t:cty) : ML (eff & cty) =
+    if n <= 0 then (e, t)
+    else match t with
+         | TArrow (_, e', r) -> peel (n - 1) e' r
+         | _ -> (e, t) in
+  let eff, ret = peel n_extra (eff_of_comp st c) (ty_of_typ st (U.comp_result c)) in
   DLet {
     dl_name    = nm;
-    dl_typars  = [];
+    dl_typars  = typars;
     dl_binders = binders;
     dl_ret     = ret;
     dl_eff     = eff;

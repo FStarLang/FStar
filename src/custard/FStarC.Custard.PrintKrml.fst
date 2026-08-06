@@ -42,6 +42,10 @@ type kenv = {
   names:      list string;
   names_t:    list string;
   ctor_arity: SMap.t int;
+  (* An external symbol has no type-parameter list in karamel's AST -- and C has
+     no polymorphism to give it one -- so a type variable in its signature is
+     approximated by [any] instead of being reported as unbound. *)
+  tvars_any:  bool;
 }
 
 let extend (env:kenv) (x:string) : kenv = { env with names = x :: env.names }
@@ -113,7 +117,7 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   | TUnit -> K.TUnit
   | TAny -> K.TAny
   | TInt sw -> K.TInt (krml_width sw)
-  | TVar x -> K.TBound (find_t env x)
+  | TVar x -> if env.tvars_any then K.TAny else K.TBound (find_t env x)
   | TArrow (a, _, b) -> K.TArrow (krml_typ env a, krml_typ env b)
   | TTuple ts -> K.TTuple (ts |> List.map (krml_typ env))
   | TBuf t -> K.TBuf (krml_typ env t)
@@ -275,6 +279,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EWhile (c, body) -> K.EWhile (krml_expr env c, krml_expr env body)
 
   | EAny -> K.EAny
+  | EAbort s -> K.EAbortS s
 
   | ERaise _ | ETry _ ->
     K.EAbortS "Custard: exceptions are not supported by the C backend"
@@ -348,7 +353,8 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
     let lid = match x.dx_target with
               | Some t -> ([], t)
               | None -> lident_of_name x.dx_name in
-    Some (K.DExternal (None, krml_flags x.dx_flags, lid, krml_typ env x.dx_ty, []))
+    Some (K.DExternal (None, krml_flags x.dx_flags, lid,
+                       krml_typ ({ env with tvars_any = true }) x.dx_ty, []))
 
   | DExn e ->
     E.log_issue0 E.Warning_DefinitionNotTranslated [
@@ -371,7 +377,7 @@ let ctor_table (p:program) : ML (SMap.t int) =
   t
 
 let print_program (p:program) : ML (list Krml.file) =
-  let env = { names = []; names_t = []; ctor_arity = ctor_table p } in
+  let env = { names = []; names_t = []; ctor_arity = ctor_table p; tvars_any = false } in
   let ds = p |> List.collect (fun d ->
              match krml_decl env d with
              | Some d -> [d]

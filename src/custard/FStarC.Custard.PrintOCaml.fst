@@ -230,13 +230,27 @@ let rec pattern (p:pat) : ML string =
   | PVar x -> ocaml_var x
   | PConst c -> constant c
   | PCtor (n, []) -> ctor_ref n
+  (* [::] is infix in OCaml, and it is the only builtin constructor that takes
+     arguments, so this one case covers them all. *)
+  | PCtor (n, [p1; p2]) when builtin_ctor n = Some "::" ->
+    "(" ^ pattern p1 ^ " :: " ^ pattern p2 ^ ")"
   | PCtor (n, ps) -> "(" ^ ctor_ref n ^ " (" ^ String.concat ", " (List.map pattern ps) ^ "))"
   | PTuple ps -> "(" ^ String.concat ", " (List.map pattern ps) ^ ")"
   | POr ps -> "(" ^ String.concat " | " (List.map pattern ps) ^ ")"
 
 (* A constructor name in the IR is the *constructor's* lid, so the OCaml name
-   is derived from it directly. *)
-and ctor_ref (n:name) : ML string = uppercase_first (sanitize (mangled_name n))
+   is derived from it directly -- except for the constructors of the types
+   [builtin_type] maps to an OCaml type, which have to be OCaml's own. *)
+and ctor_ref (n:name) : ML string =
+  match builtin_ctor n with
+  | Some c -> c
+  | None -> uppercase_first (sanitize (mangled_name n))
+
+and builtin_ctor (n:name) : ML (option string) =
+  match String.concat "." (n.ns @ [n.id]) with
+  | "Prims.Nil" -> Some "[]"
+  | "Prims.Cons" -> Some "::"
+  | _ -> None
 
 let rec term (ind:string) (e:expr) : ML string =
   match e.e with
@@ -247,6 +261,8 @@ let rec term (ind:string) (e:expr) : ML string =
      | Some t -> t
      | None -> ocaml_value_name n)
   | ECtor (n, []) -> ctor_ref n
+  | ECtor (n, [a; b]) when builtin_ctor n = Some "::" ->
+    "(" ^ term ind a ^ " :: " ^ term ind b ^ ")"
   | ECtor (n, args) ->
     "(" ^ ctor_ref n ^ " (" ^ String.concat ", " (List.map (term ind) args) ^ "))"
   | ETuple es -> "(" ^ String.concat ", " (List.map (term ind) es) ^ ")"
@@ -294,6 +310,7 @@ let rec term (ind:string) (e:expr) : ML string =
   | EOp (op, args) ->
     "(" ^ op_name op ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"
   | EAny -> "(Obj.magic 0)"
+  | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
   | EWhile (c, body) ->
     "(while " ^ term ind c ^ " do " ^ term ind body ^ " done)"
   | ERaise (n, []) -> "(raise " ^ ctor_ref n ^ ")"

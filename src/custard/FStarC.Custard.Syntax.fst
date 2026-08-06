@@ -290,6 +290,9 @@ let rec expr_to_doc' (prec:int) (e:expr) : ML document =
         group (nest 2 (text "{" ^^ hardline ^^ expr_to_doc' 0 body)) ^^
         hardline ^^ text "}")
 
+  | EAny -> text "any"
+  | EAbort s -> group (text "abort" ^/^ dquotes (text s))
+
   | ERaise (n, []) -> group (text "raise" ^/^ name_to_doc n)
   | ERaise (n, args) ->
     group (text "raise" ^/^ name_to_doc n ^^

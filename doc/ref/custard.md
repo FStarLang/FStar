@@ -1529,13 +1529,41 @@ erased out of the value spine, but a buffer rule needs the element type to
 build `TBuf t` (and `BufNull`).  `Extract.prim_app` collects them with
 `Mono.type_binders`.
 
-Two IR additions come with this: `TBuf` (§2.2), and `EAny` for karamel's
-`EAny`.  In the karamel backend a `TBuf` is a real C pointer, so a Pulse `let
+Three IR additions come with this: `TBuf` (§2.2), `EAny` for karamel's
+`EAny`, and `EAbort of string` for `Pulse.Lib.Dv.unreachable` -- a `Dv`
+function that Pulse emits where the proof says control never arrives.  It
+prints as `failwith` in OCaml and as karamel's `EAbortS`.  In the karamel backend a `TBuf` is a real C pointer, so a Pulse `let
 mut` scalarizes into a plain local and a `Vec.alloc` becomes
 `KRML_HOST_MALLOC`.  In the OCaml backend a `TBuf t` is a `t array`; `BufSub`
 has no OCaml representation and emits a `failwith`.  `FStar.SizeT` is a machine
 integer width (`Sizet`) like the `FStar.UInt*` ones, with the usual conversion
 rules.
+
+A real Pulse program turned up four things that a small test does not:
+
+- `Prims.Nil` and `Prims.Cons` have to be printed as OCaml's `[]` and `::`,
+  in patterns as well as terms, because `FStar.Seq` is compiled to a list.
+- `Layout.resolve` has to unfold type abbreviations (`TAbbrev`) before it can
+  decide a layout; otherwise an `array` hidden behind an alias is not
+  recognised and its elements are coerced through `Obj.magic`.
+- `U.abs_formals` sees through nested lambdas, so a definition written
+  `let f x = fun y -> e` has more binders than its type has arrows.  Each such
+  extra binder consumes one arrow of the result type -- *and its effect*, which
+  is the one that matters at the call site (§7).
+- `U.abs_formals` also *opens* the binders under fresh names, while the
+  computation type `specialize` returns still speaks of the ones it abstracted
+  over.  The two have to be related by an explicit substitution: otherwise the
+  result type mentions type variables that no binder introduces.  OCaml
+  generalizes those away silently, but the karamel backend resolves a `TVar`
+  positionally against `dl_typars` and fails outright.
+
+`tests/custard/pulse/PulseHashTable.fst` is the standing regression for all of
+this: it drives `Pulse.Lib.HashTable` (polymorphic, array-backed, linear
+probing) from a `main`, and the generated OCaml is compiled, not just grepped.
+It does *not* go through the karamel backend.  `ht_t` stores its hash function
+in a field, which is the §3.2 `Poly` case deferred to v2; karamel cannot give a
+partially applied function a C type, and drops the enclosing declaration.
+Custard does not yet diagnose this at extraction time.
 
 ---
 
@@ -1680,6 +1708,6 @@ rules.
 | M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | Done. M5a is `FStarC.Custard.Builtins` (§8.2); M5b is `FStarC.Custard.PrintKrml` behind `--custard_backend Krml` (§6), with the karamel AST split out into `FStarC.Extraction.KrmlAst`.  `tests/custard/KrmlBasic.fst` goes all the way to a compiled and executed C binary |
 | M6a | Output polish: per-specialization suffixes, projector/discriminator inlining, externals printed at their uses, OCaml type annotations, `--custard_entry` vs `--custard_main` | Done. `tests/custard/Library.fst` covers the root-only (no `main`) mode |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
-| M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` goes to OCaml and to compiled C; requires stage3, so it is not part of `tests/custard` |
+| M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny`/`EAbort` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` goes to OCaml and to compiled C, `PulseHashTable.fst` to compiled OCaml; requires stage3, so neither is part of `tests/custard` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

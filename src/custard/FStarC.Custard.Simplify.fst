@@ -38,6 +38,7 @@ let rec occurs (v:string) (x:expr) : ML bool =
   | EFun (_, b) -> occurs v b
   | EMatch (s, brs) -> occurs v s || occurs_branches v brs
   | EIf (c, a, b) -> occurs v c || occurs v a || occurs v b
+  | EAny | EAbort _ -> false
   | ESeq (a, b) -> occurs v a || occurs v b
   | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> occurs_list v es
   | ERecord (_, fs) -> occurs_list v (fs |> List.map snd)
@@ -71,7 +72,7 @@ let rec simpl (x:expr) : ML expr =
     let e2 = simpl e2 in
     if is_pure e1.eff then e2 else { x with e = ESeq (e1, e2) }
 
-  | EConst _ | EVar _ | EQual _ -> x
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
   | EApp (h, es) -> { x with e = EApp (simpl h, es |> List.map simpl) }
   | EFun (bs, b) -> { x with e = EFun (bs, simpl b) }
   | EMatch (s, brs) -> { x with e = EMatch (simpl s, brs |> List.map simpl_branch) }
@@ -110,7 +111,7 @@ let rec sub (sm:subst) (x:expr) : ML expr =
     (match SMap.try_find sm v with
      | Some e -> e
      | None -> x)
-  | EConst _ | EQual _ -> x
+  | EConst _ | EQual _ | EAny | EAbort _ -> x
   | ELet (v, ty, e1, e2) ->
     let v' = rename v in
     let e1 = g e1 in
@@ -172,6 +173,7 @@ let rec count (v:string) (x:expr) : ML int =
       imin 2 (count v s + (brs |> List.fold_left (fun acc (_, g, b) ->
                imax acc (count v b + (match g with None -> 0 | Some g -> count v g))) 0))
     | EIf (c, a, b) -> imin 2 (count v c + imax (count v a) (count v b))
+    | EAny | EAbort _ -> 0
     | ESeq (a, b) -> imin 2 (count v a + count v b)
     | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> count_list v es
     | ERecord (_, fs) -> count_list v (fs |> List.map snd)
@@ -228,7 +230,7 @@ let rec inline_expr (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (x:
     (match SMap.try_find tbl (string_of_name n) with
      | Some ([], body) -> inline_call [] body [] x
      | _ -> SMap.add used (string_of_name n) true; x)
-  | EConst _ | EVar _ -> x
+  | EConst _ | EVar _ | EAny | EAbort _ -> x
   | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
   | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
   | EFun (bs, b) -> { x with e = EFun (bs, g b) }

@@ -23,6 +23,25 @@ NOGREP_PulseBasic += "Pulse_Lib"
 NOGREP_PulseBasic += "PulseCore"
 NOGREP_PulseBasic += "Obj.magic"
 
+# The hash table is polymorphic, stores a closure in a runtime record, and is
+# loaded from another module's implementation through its interface.  It does
+# not go through the karamel backend: a closure in a data structure is the
+# section 3.2 [Poly] case deferred to v2, and karamel rejects it.
+GREP_TESTS += PulseHashTable
+GREP_PulseHashTable += "pulse_Lib_HashTable_alloc"
+GREP_PulseHashTable += "pulse_Lib_HashTable_insert"
+GREP_PulseHashTable += "pulse_Lib_HashTable_lookup"
+GREP_PulseHashTable += "while"
+GREP_PulseHashTable += "Array.make"
+NOGREP_PulseHashTable += "Obj.magic"
+NOGREP_PulseHashTable += "PulseCore"
+NOGREP_PulseHashTable += "prims_unit"
+
+# The generated OCaml must also type-check: these programs are large enough
+# that a grep test alone would miss most of what can go wrong in a signature.
+OCAML_TESTS += PulseBasic
+OCAML_TESTS += PulseHashTable
+
 # Same modules, through the karamel backend: krml must accept the output and
 # the C compiler must build it.
 KRML_TESTS += PulseBasic
@@ -42,6 +61,13 @@ $(OUTPUT_DIR)/%.grepped: $(OUTPUT_DIR)/%.custard.ml
 	    && { echo "ERROR: $* output should not contain $$p"; exit 1; }; done; true
 	$(Q)touch $@
 
+$(OUTPUT_DIR)/%.mlchecked: $(OUTPUT_DIR)/%.custard.ml
+	$(call msg, "OCAMLOPT", $(basename $(notdir $@)))
+	$(Q)mkdir -p $(OUTPUT_DIR)/$*_ml
+	$(Q)cp $< $(OUTPUT_DIR)/$*_ml/$*.ml
+	$(Q)cd $(OUTPUT_DIR)/$*_ml && $(abspath $(FSTAR_EXE)) --ocamlopt $*.ml -o $*.exe
+	$(Q)touch $@
+
 $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
@@ -56,6 +82,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 	  -c $(OUTPUT_DIR)/$*_c/Custard.c -o $@
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .grepped, $(GREP_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .mlchecked, $(OCAML_TESTS)))
 
 ifneq ($(shell command -v krml 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))

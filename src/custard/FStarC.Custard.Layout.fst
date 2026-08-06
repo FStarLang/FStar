@@ -275,7 +275,17 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
                       | None -> [] in
          let s = (try List.zip params args with _ -> []) in
          resolve t (fuel - 1) (subst_cty s nt.nt_ty)
-       | _ -> TApp (n, args))
+       (* A type abbreviation carries no representation of its own, and the
+          backends need to see the machine integer behind, say, [pos_us]. *)
+       | _ ->
+         (match SMap.try_find t.types (key n) with
+          | Some d ->
+            (match d.dt_body with
+             | TAbbrev c ->
+               let s = (try List.zip d.dt_params args with _ -> []) in
+               resolve t (fuel - 1) (subst_cty s c)
+             | _ -> TApp (n, args))
+          | _ -> TApp (n, args)))
     | c -> c
 
 (* -------------------------------------------------------------------- *)
@@ -335,7 +345,7 @@ let rec rw_expr (t:tbl) (x:expr) : ML expr =
   let ty = resolve t 100 x.ty in
   let x = { x with ty = ty } in
   match x.e with
-  | EConst _ | EVar _ -> x
+  | EConst _ | EVar _ | EAny | EAbort _ -> x
   | EQual (n, cs) -> { x with e = EQual (n, cs |> List.map (resolve t 100)) }
   | ELet (v, c, e1, e2) ->
     { x with e = ELet (v, resolve t 100 c, rw_expr t e1, rw_expr t e2) }

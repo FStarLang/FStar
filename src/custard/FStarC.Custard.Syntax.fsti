@@ -196,6 +196,9 @@ and expr' =
   | EAny
   (** An arbitrary value of the node's type: what an uninitialized stack
       allocation is filled with.  Only a rule may introduce it. *)
+  | EAbort   of string
+  (** Control never reaches here; the string says why.  Only a rule may
+      introduce it (Pulse's [unreachable], section 8.3). *)
   | EOp      of prim_op & list expr
   | EWhile   of expr & expr
   | ERaise   of name & list expr

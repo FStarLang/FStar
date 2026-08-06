@@ -345,6 +345,11 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
            happen; failing loudly beats emitting a loop that does not loop. *)
         failwith "Custard: Pulse.Lib.Dv.while_ applied to something other than two thunks"))
 
+  (* Pulse proved this branch dead; its argument is the proof. *)
+  | ["Pulse"; "Lib"; "Dv"], "unreachable" ->
+    Some (Rule_prim (1, fun _ _ ->
+      mk (EAbort "Pulse.Lib.Dv.unreachable") TAny E_Impure))
+
   (* [mk_gvar]/[read_gvar] are the two halves of a global initializer. *)
   | ["Pulse"; "Lib"; "GlobalVar"], "read_gvar" -> Some (identity_rule 1)
 
