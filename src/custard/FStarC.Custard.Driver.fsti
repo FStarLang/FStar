@@ -25,6 +25,7 @@ open FStarC
 open FStarC.Effect
 open FStarC.Custard.Syntax
 
+module Dep   = FStarC.Parser.Dep
 module TcEnv = FStarC.TypeChecker.Env
 
 (** The entry points requested on the command line, resolved to lids. *)
@@ -33,4 +34,4 @@ val entrypoints : unit -> ML (list FStarC.Ident.lident)
 (** Run the whole pipeline: resolve the entry points, extract, simplify and
     emit.  Called from FStarC.Universal once all input files have been
     typechecked. *)
-val run : TcEnv.env -> ML unit
+val run : Dep.deps -> TcEnv.env -> ML unit

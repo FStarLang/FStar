@@ -23,8 +23,12 @@ open FStarC.Errors.Msg
 
 module BU    = FStarC.Util
 module E     = FStarC.Errors
-module Ident = FStarC.Ident
-module TcEnv = FStarC.TypeChecker.Env
+module Dep     = FStarC.Parser.Dep
+module Extract = FStarC.Custard.Extract
+module Find    = FStarC.Find
+module OCaml   = FStarC.Custard.PrintOCaml
+module Ident   = FStarC.Ident
+module TcEnv   = FStarC.TypeChecker.Env
 
 let entrypoints () =
   Options.custard_entries () |> List.map Ident.lid_of_str
@@ -42,7 +46,7 @@ let check_entrypoints (env:TcEnv.env) (roots:list Ident.lident) : ML unit =
         text "Make sure the module defining it is among the input files."
       ])
 
-let run (env:TcEnv.env) : ML unit =
+let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let roots = entrypoints () in
   if Nil? roots then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
@@ -51,8 +55,14 @@ let run (env:TcEnv.env) : ML unit =
                    definitions reachable from the entry points."
     ];
   check_entrypoints env roots;
-  (* M0: the extraction loop is not implemented yet; we only produce the empty
-     program so the plumbing can be exercised end to end. *)
-  let prog : program = [] in
+  let prog = Extract.run (Extract.init deps env) roots in
   if Options.custard_dump_ir () then
-    Format.print_string (program_to_string prog)
+    Format.print_string (program_to_string prog ^ "\n");
+  (* Custard emits one file for the whole program, so -o is unambiguous here,
+     unlike in the per-module backends. *)
+  let ofile =
+    match Options.output_to () with
+    | Some fn -> fn
+    | None -> Find.prepend_output_dir "Custard.ml"
+  in
+  BU.write_file ofile (OCaml.print_program prog)

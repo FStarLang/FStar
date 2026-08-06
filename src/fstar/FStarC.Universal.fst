@@ -929,7 +929,7 @@ let batch_mode_tc fly_deps filenames dep_graph
   if FStarC.Errors.get_err_count() = 0 then begin
     match Options.codegen () with
     | Some Options.Custard ->
-      FStarC.Custard.Driver.run (FStarC.Extraction.ML.UEnv.tcenv_of_uenv env)
+      FStarC.Custard.Driver.run dep_graph (FStarC.Extraction.ML.UEnv.tcenv_of_uenv env)
     | _ -> emit dep_graph mllibs
   end;
   let solver_refresh env =

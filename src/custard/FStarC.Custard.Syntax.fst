@@ -143,6 +143,20 @@ let rec cty_to_doc' (prec:int) (t:cty) : ML document =
 let cty_to_doc (t:cty) : ML document = cty_to_doc' 0 t
 let cty_to_string (t:cty) : ML string = render (cty_to_doc t)
 
+(* The dump is meant to be re-readable by eye, so escape rather than emit raw
+   control characters. *)
+let escape_char (c:char) : string =
+  match c with
+  | '\n' -> "\\n"
+  | '\t' -> "\\t"
+  | '\r' -> "\\r"
+  | '"'  -> "\\\""
+  | '\\' -> "\\\\"
+  | c -> BU.string_of_char c
+
+let escape_string (s:string) : ML string =
+  String.concat "" (List.map escape_char (String.list_of_string s))
+
 let constant_to_doc (c:constant) : ML document =
   match c with
   | CUnit -> text "()"
@@ -153,8 +167,8 @@ let constant_to_doc (c:constant) : ML document =
           (match w with
            | Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
            | Int64 -> "64" | Sizet -> "size") ^ ">")
-  | CChar c -> text ("'" ^ BU.string_of_char c ^ "'")
-  | CString s -> dquotes (text s)
+  | CChar c -> text ("'" ^ escape_char c ^ "'")
+  | CString s -> dquotes (text (escape_string s))
 
 let constant_to_string (c:constant) : ML string = render (constant_to_doc c)
 
@@ -296,22 +310,24 @@ let params_to_doc (ps : list string) : ML document =
   | _ -> space ^^ langle ^^
          separate (comma ^^ space) (List.map (fun p -> text ("'" ^ p)) ps) ^^ rangle
 
+(* Starts with its own leading break, so the caller writes [... ^^ equals ^^
+   tydef_to_doc], which keeps variants from getting a blank line. *)
 let tydef_to_doc (d:tydef) : ML document =
   match d with
-  | TAbstract -> text "<abstract>"
-  | TAbbrev t -> cty_to_doc t
-  | TRecord fs ->
+  | TAbstract -> space ^^ text "<abstract>"
+  | TAbbrev t -> break_ 1 ^^ cty_to_doc t
+  | TRecord fs -> break_ 1 ^^
     group (nest 2 (lbrace ^^ break_ 1 ^^
       sep_by (semi ^^ break_ 1)
         (List.map (fun (f, t) -> group (text f ^^ colon ^/^ cty_to_doc t)) fs))
       ^^ break_ 1 ^^ rbrace)
   | TVariant cs ->
-    let ctor_to_doc (cf : string & list (string & cty)) : ML document =
+    let ctor_to_doc (cf : name & list (string & cty)) : ML document =
       let c, fs = cf in
       match fs with
-      | [] -> text c
+      | [] -> name_to_doc c
       | _ ->
-        group (text c ^/^ text "of" ^/^
+        group (name_to_doc c ^/^ text "of" ^/^
           sep_by (space ^^ text "&" ^^ space)
             (List.map (fun (f, t) -> group (text f ^^ colon ^/^ cty_to_doc t)) fs))
     in
@@ -322,8 +338,8 @@ let decl_to_doc (d:decl) : ML document =
   | DType t ->
     flags_to_doc t.dt_flags ^^
     group (nest 2 (
-      text "type" ^^ space ^^ name_to_doc t.dt_name ^^ params_to_doc t.dt_params ^/^
-      equals ^/^ tydef_to_doc t.dt_body))
+      text "type" ^^ space ^^ name_to_doc t.dt_name ^^ params_to_doc t.dt_params ^^
+      space ^^ equals ^^ tydef_to_doc t.dt_body))
 
   | DLet l ->
     flags_to_doc l.dl_flags ^^

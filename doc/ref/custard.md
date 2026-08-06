@@ -260,7 +260,7 @@ Notes:
 type tydef =
   | TAbbrev of cty
   | TRecord of list (string & cty)
-  | TVariant of list (string & list (string & cty))
+  | TVariant of list (name & list (string & cty))
   | TAbstract                         // assumed / externally realized
 
 // F* has no inline record payloads, so each shape gets its own record type,
