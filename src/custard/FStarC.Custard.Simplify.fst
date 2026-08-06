@@ -53,6 +53,39 @@ and occurs_branches (v:string) (brs:list branch) : ML bool =
   brs |> List.existsb (fun (_, g, b) ->
     (match g with None -> false | Some g -> occurs v g) || occurs v b)
 
+(* [if c then a else b] reaches the IR as a match on a boolean, because that
+   is how F* desugars it: [match c with | true -> a | _ -> b].  Left alone it
+   stays a match, and karamel then has to emit a switch with an unreachable
+   default -- noisy in the C, and a missed opportunity, since the IR has an
+   [EIf] that every pass and both backends already handle.  Nothing else
+   builds one. *)
+let bool_alt (p:pat) (body:expr) : ML (option (option bool)) =
+  match p with
+  | PConst (CBool b) -> Some (Some b)
+  | PWild -> Some None
+  (* A catch-all that *names* the scrutinee would need the name bound to it;
+     when the name is unused, which is the only shape F* produces here, there
+     is nothing to bind. *)
+  | PVar v -> if occurs v body then None else Some None
+  | _ -> None
+
+(* [Some (then_branch, else_branch)] when the branches are a boolean test. *)
+let as_if (brs:list branch) : ML (option (expr & expr)) =
+  match brs with
+  | [(p1, None, b1); (p2, None, b2)] ->
+    (match bool_alt p1 b1, bool_alt p2 b2 with
+     (* The first branch has to be a literal: a catch-all there makes the
+        second one dead, and two catch-alls are no evidence that the scrutinee
+        is a boolean at all. *)
+     | Some (Some c1), Some alt2 ->
+       let complementary = match alt2 with
+                           | None -> true
+                           | Some c2 -> c1 <> c2 in
+       if not complementary then None
+       else if c1 then Some (b1, b2) else Some (b2, b1)
+     | _ -> None)
+  | _ -> None
+
 let rec simpl (x:expr) : ML expr =
   match x.e with
   | ELet (v, ty, e1, e2) ->
@@ -75,7 +108,12 @@ let rec simpl (x:expr) : ML expr =
   | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
   | EApp (h, es) -> { x with e = EApp (simpl h, es |> List.map simpl) }
   | EFun (bs, b) -> { x with e = EFun (bs, simpl b) }
-  | EMatch (s, brs) -> { x with e = EMatch (simpl s, brs |> List.map simpl_branch) }
+  | EMatch (s, brs) ->
+    let s = simpl s in
+    let brs = brs |> List.map simpl_branch in
+    (match as_if brs with
+     | Some (t, f) -> { x with e = EIf (s, t, f) }
+     | None -> { x with e = EMatch (s, brs) })
   | EIf (c, a, b) -> { x with e = EIf (simpl c, simpl a, simpl b) }
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map simpl) }
   | ETuple es -> { x with e = ETuple (es |> List.map simpl) }

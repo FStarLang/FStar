@@ -1316,6 +1316,25 @@ Phase 4 passes, in order:
    — the overwhelmingly common case, since the whole point is to select one
    method out of a bundle — substitute directly.
 
+   A third rewrite belongs to the same family, though it is a recovery rather
+   than a reduction: **a boolean match becomes an `EIf`**.  The IR has had an
+   `EIf` node, and both backends have printed it, since M0 -- but nothing ever
+   *built* one, because F\* desugars `if c then a else b` to
+   `match c with | true -> a | _ -> b` and Custard faithfully translated the
+   match.  In OCaml that is merely ugly; in C it is worse, because karamel
+   compiles a match to a chain of tag tests and has to close it with an
+   `KRML_HOST_EPRINTF("unreachable (pattern matches are exhaustive in F*)")`
+   default.  Recognizing the two-branch boolean shape removed half of those
+   from the Pulse hash table and 10% of its C.
+
+   The catch-all side may be `PWild`, `PVar` (F\* names the scrutinee even
+   when the name is unused -- if it *is* used the match stays, since there
+   would be nothing to bind it to) or the complementary literal.  The first
+   branch has to be a literal: two catch-alls are no evidence that the
+   scrutinee is a boolean at all.  What remains after this are matches on real
+   datatypes, and there karamel emits the same unreachable default for the ML
+   pipeline as it does for Custard.
+
 6. **Dead-code elimination**: reachability from the declarations flagged
    `Root`/`Entrypoint`, following the names in bodies, binder types, result
    types and field types (a constructor name resolves to its `DType`).  The
