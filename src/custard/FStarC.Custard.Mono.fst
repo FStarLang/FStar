@@ -73,22 +73,19 @@ let is_type_binder (env:TcEnv.env) (b:binder) : ML bool =
   | _ -> false
 
 (* Rule 1: a non-informative binder carries no runtime value, so it is deleted
-   rather than passed.  [unit] is deliberately excluded: dropping a unit binder
-   would turn an impure function into a value, which changes when its effects
-   run.  Removing unit thunks safely needs the purity discipline of section 7
-   and is left to a later milestone. *)
-(* Deliberately *not* [U.is_unit], which also answers yes for [squash p]: a
-   proof binder carries no more information than an [erased], and the ML
-   pipeline deletes it.  Only a binder whose type is literally [Prims.unit] is
-   exempted below. *)
-let is_literal_unit (t:typ) : ML bool =
-  match (U.unrefine t).n with
-  | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
-  | _ -> false
-
+   rather than passed.  The *unit-shaped* ones are deliberately excluded, and
+   [U.is_unit] is the right test because it treats [unit], [squash p] and
+   [_:unit{p}] as the one thing they are.  Deleting them is not safe: a unit
+   binder is how F* writes a thunk, and dropping it turns an impure function
+   into a value whose effect then runs at module initialization.  Nothing is
+   lost by keeping them -- their *arguments* are replaced by [()]
+   ([Mono.unit_binders], used by [Extract.app_of_fv]), so no ghost term
+   survives, and both backends drop a unit parameter of their own accord
+   (karamel in [Simplify.remove_unused_parameters], "type-based
+   elimination"). *)
 let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   let sort = b.binder_bv.sort in
-  not (is_literal_unit sort) &&
+  not (U.is_unit sort) &&
   not (is_type_binder env b) &&
   TcUtil.must_erase_for_extraction env sort
 
@@ -110,6 +107,14 @@ let keep_one_if_impure (env:TcEnv.env) (c:comp) (flags:list bool) : ML (list boo
 let erased_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, c = U.arrow_formals_comp t in
   keep_one_if_impure env c (bs |> List.map (is_erased_binder env))
+
+(* The binders of [t] whose value is irrelevant because their type is
+   unit-shaped.  These are exactly the ones rule 1 declines to delete, so a
+   call site may -- and should -- pass [()] rather than whatever proof term the
+   source supplies, which can be a [Prims.magic ()] that aborts at runtime. *)
+let unit_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
+  let bs, _ = U.arrow_formals_comp t in
+  bs |> List.map (fun b -> U.is_unit b.binder_bv.sort)
 
 let type_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in

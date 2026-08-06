@@ -59,6 +59,11 @@ val is_erased_binder (env:TcEnv.env) (b:binder) : ML bool
     variable, and type applications. *)
 val erased_binders (env:TcEnv.env) (t:typ) : ML (list bool)
 
+(** [unit_binders env t] marks the binders of [t] whose type is unit-shaped
+    ([unit], [squash p], [_:unit{p}]).  They are kept -- a unit binder is how
+    F* writes a thunk -- but carry no value, so a call site passes [()]. *)
+val unit_binders (env:TcEnv.env) (t:typ) : ML (list bool)
+
 (** [type_binders env t] marks the binders of [t] that are types.  This is the
     dual filter, used at the *type* level: the arguments of a type constructor
     that survive into a [cty] are exactly its type parameters. *)

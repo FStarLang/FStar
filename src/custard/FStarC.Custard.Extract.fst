@@ -617,10 +617,11 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
   if is_data_ctor fv
   then
     let nm = request st { sk_lid = l; sk_args = [] } in
-    let flags = match TcEnv.try_lookup_lid (tcenv st) l with
-                | Some ((_, ty), _) -> Mono.erased_binders (tcenv st) ty
-                | None -> [] in
-    mk (ECtor (nm, drop_flagged flags args |> List.map fst |> List.map (expr_of_term st)))
+    let flags, ufs = match TcEnv.try_lookup_lid (tcenv st) l with
+                     | Some ((_, ty), _) -> (Mono.erased_binders (tcenv st) ty,
+                                             Mono.unit_binders (tcenv st) ty)
+                     | None -> ([], []) in
+    mk (ECtor (nm, value_args st (drop_flagged flags ufs) (drop_flagged flags args)))
        (ctor_result_ty st l args) E_Pure
   else
     let cs = binder_classes st l in
@@ -636,7 +637,7 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     let hd = mk (EQual (nm, tyargs)) hd_ty E_Pure in
     (* [split_mono_args] has already removed the [Mono] and [Dropped]
        arguments, so everything left is passed at runtime. *)
-    let rest = rest |> List.map fst |> List.map (expr_of_term st) in
+    let rest = value_args st (call_unit_flags st l cs args) rest in
     match rest with
     | [] -> hd
     | _ ->
@@ -658,6 +659,34 @@ and ctor_result_ty (st:state) (l:Ident.lident) (spine:args) : ML cty =
       | b :: bs, (a, _) :: sp -> go bs sp (NT (b.binder_bv, a) :: acc)
       | _ -> acc in
     ty_of_typ st (SS.subst (go bs spine []) (U.comp_result c))
+
+(* A binder whose type is unit-shaped is kept (it may be a thunk) but carries
+   no value, so the argument is [()] rather than whatever the source wrote --
+   which for a proof obligation can be a [Prims.magic ()] that aborts at
+   runtime, or an arbitrarily expensive piece of ghost code. *)
+and value_args (st:state) (ufs:list bool) (spine:args) : ML (list expr) =
+  match ufs, spine with
+  | true :: ufs, _ :: sp -> unit_expr :: value_args st ufs sp
+  | _ :: ufs, (a, _) :: sp -> expr_of_term st a :: value_args st ufs sp
+  | [], (a, _) :: sp -> expr_of_term st a :: value_args st [] sp
+  | _, [] -> []
+
+(* [Mono.unit_binders] restricted to the arguments a call actually passes, in
+   the order [split_mono_args] leaves them. *)
+and call_unit_flags (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : ML (list bool) =
+  let ub = match TcEnv.try_lookup_lid (tcenv st) l with
+           | Some ((_, ty), _) -> Mono.unit_binders (tcenv st) ty
+           | None -> [] in
+  let rec go (cs:list bclass) (uf:list bool) (sp:args) : ML (list bool) =
+    match cs, sp with
+    | [], _ -> []
+    | c :: cs, _ :: sp ->
+      let u, uf = match uf with
+                  | u :: uf -> (u, uf)
+                  | [] -> (false, []) in
+      if Poly? c then u :: go cs uf sp else go cs uf sp
+    | _, [] -> [] in
+  go cs ub spine
 
 (* The type arguments of a call, in the order [extract_letbinding] records them
    in [dl_typars]: source order, restricted to the type binders that survived

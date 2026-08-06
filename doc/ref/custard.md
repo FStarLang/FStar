@@ -965,10 +965,28 @@ A type is erased when it is non-informative.  The existing predicate is
 `must_erase_for_extraction` attribute.  Custard reuses it verbatim, and adds
 the *structural* closure:
 
-One trap: `U.is_unit` answers *yes* for `squash p`, so a test for "the binder
-is a literal `unit` thunk, which must not be deleted" has to compare against
-`Prims.unit` itself.  Using `U.is_unit` there keeps every proof argument alive,
-and the `Prims.magic ()` that fills one in reaches the generated program.
+Erasure of a *binder* is where this gets subtle, and the rule is uniform: a
+binder whose sort is unit-shaped — `unit`, `squash p`, or `_:unit{p}`, which is
+exactly what `U.is_unit` recognizes — is **kept**, and its argument is replaced
+by `()`.  Both halves matter.
+
+Keeping it is a correctness requirement: a unit binder is how F\* writes a
+thunk, so deleting the last one turns an impure function into a *value*, and
+its effects then run at module initialization instead of at the call.  This is
+not hypothetical — `let k (n:nat) (_:squash (n>0)) : ML nat` loses every binder
+if `squash` binders are deleted, and rule 1's `keep_one_if_impure` does not
+rescue it, because that only fires when *all* binders were dropped.
+
+Replacing the argument is what keeps ghost code out of the output: the position
+is non-informative by definition, so its value is irrelevant, while the term
+the source wrote there can be a `Prims.magic ()` that aborts at runtime, or an
+arbitrarily expensive proof.  `Mono.unit_binders` computes the mask and
+`Extract.value_args` applies it, at both calls and constructor applications.
+
+Nothing is lost by carrying the extra parameter, because both backends remove
+it themselves: karamel's `Simplify.remove_unused_parameters` deletes `TUnit`
+parameters ("type-based elimination") along with the matching arguments at
+every call site, and in OCaml a `unit` argument costs nothing.
 
 - a record/variant all of whose fields are erased is erased
   (`type foo = { a: prop; b: prop }` ⟹ `L_erased`);
