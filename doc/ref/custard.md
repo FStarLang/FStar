@@ -387,10 +387,43 @@ The classification is a function of the *definition*, computed once and cached.
    `b_j`, then `b_i` becomes `Mono`.  Iterate to a fixpoint (it terminates: the
    set only grows and is bounded by `n`).  This is the rule that makes `#a` in
    `bar #a {| foo a |}` monomorphized without annotation.
-6. Otherwise `Poly`.
+6. A **type binder** still `Poly` after the fixpoint of rule 5 ⟹ deleted.
+   Under the uniform compilation of types (§5.0) a type argument cannot change
+   any layout, so it has no runtime content.  This has to be applied *after*
+   the fixpoint, so that rule 5 still gets the chance to promote it to `Mono`.
+7. Otherwise `Poly`.
 
 `Mono` binders are removed from the specialized definition's signature and
 replaced by their concrete arguments in the body.  `Poly` binders remain.
+
+**Custard never inspects the implicit/explicit qualifier of a binder.**
+Whether an argument was written by the user or inferred by the elaborator says
+nothing about whether it exists at runtime, and unlike the ML extraction
+Custard has no interoperability obligation to reproduce the source arity.  (ML
+extraction looks at the qualifier so that `val foo : 'a -> list 'a` becomes a
+*unary* OCaml function while `val bar : Type -> Type -> nat` becomes a binary
+one.  Custard emits its own top-level signatures and mangled names, so there is
+nothing to match.)  Two dual rules replace the qualifier test:
+
+- **At the value level**, a binder — and the corresponding argument at every
+  call site — is deleted iff it holds no runtime value, i.e. iff it is a type
+  binder or a `Dropped` (non-informative) binder.
+- **At the type level**, an argument of a type constructor survives into the
+  emitted `cty` iff its binder is a *type* binder.  A value index such as the
+  `n` of `vec n` has no counterpart in the target's type language.
+
+Signature and call sites derive their filtering from the same F* type, so they
+agree without having to communicate.  Concretely, an implicit *value* binder
+like the `#n` of `let addn (#n:int) (x:int) = n + x` is an ordinary parameter
+that must be passed everywhere.
+
+**The last-binder guard.**  Deleting *every* binder of a definition would turn
+it from a function into a value, so its effects would run at module
+initialization time instead of at the call.  If all of a definition's binders
+would be deleted and its computation type is not pure or ghost, the last binder
+is kept.  The same guard applies to lambdas.  A known gap: a definition all of
+whose binders are `Mono` has the same problem, and would need a thunk inserted
+at the definition and forced at each call site; v1 does not do this.
 
 The classification is *not* affected by whether the argument at a call site
 happens to be a literal: `f 3` where `n` is `Poly` does not specialize.  We

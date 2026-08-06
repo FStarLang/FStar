@@ -163,7 +163,7 @@ let rec pattern (p:pat) : ML string =
   | PVar x -> ocaml_var x
   | PConst c -> constant c
   | PCtor (n, []) -> ctor_ref n
-  | PCtor (n, ps) -> ctor_ref n ^ " (" ^ String.concat ", " (List.map pattern ps) ^ ")"
+  | PCtor (n, ps) -> "(" ^ ctor_ref n ^ " (" ^ String.concat ", " (List.map pattern ps) ^ "))"
   | PTuple ps -> "(" ^ String.concat ", " (List.map pattern ps) ^ ")"
   | POr ps -> "(" ^ String.concat " | " (List.map pattern ps) ^ ")"
 
@@ -178,7 +178,7 @@ let rec term (ind:string) (e:expr) : ML string =
   | EQual (n, _) -> ocaml_value_name n
   | ECtor (n, []) -> ctor_ref n
   | ECtor (n, args) ->
-    ctor_ref n ^ " (" ^ String.concat ", " (List.map (term ind) args) ^ ")"
+    "(" ^ ctor_ref n ^ " (" ^ String.concat ", " (List.map (term ind) args) ^ "))"
   | ETuple es -> "(" ^ String.concat ", " (List.map (term ind) es) ^ ")"
   | EApp (hd, args) ->
     "(" ^ term ind hd ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"

@@ -24,6 +24,7 @@ open FStarC.Errors.Msg
 module BU    = FStarC.Util
 module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
+module UF      = FStarC.Syntax.Unionfind
 module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
 module Layout  = FStarC.Custard.Layout
@@ -57,7 +58,10 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                    definitions reachable from the entry points."
     ];
   check_entrypoints env roots;
-  let prog = Extract.run (Extract.init deps env) roots in
+  (* Looking definitions up in the environment instantiates their universes,
+     which needs the union-find; by the time a backend runs it has been put in
+     read-only mode.  The ML extraction does the same thing. *)
+  let prog = UF.with_uf_enabled (fun () -> Extract.run (Extract.init deps env) roots) in
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog = Layout.run prog in
   (* Effect-guarded simplification (sections 6 and 7.3). *)

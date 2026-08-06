@@ -74,8 +74,31 @@ let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   not (is_type_binder b) &&
   TcUtil.must_erase_for_extraction env sort
 
-let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
+let is_erased_binder (env:TcEnv.env) (b:binder) : ML bool =
+  is_type_binder b || is_dropped_binder env b
+
+(* Deleting *every* binder of an impure definition would turn it into a value,
+   and its effects would then run at module initialization instead of when it
+   is called.  So the last binder stays, carrying no information but keeping
+   the definition a function.  Both the signature and the call sites derive
+   their filtering from the same F* type, so they agree without communicating. *)
+let keep_one_if_impure (env:TcEnv.env) (c:comp) (flags:list bool) : ML (list bool) =
+  if Cons? flags && List.for_all (fun b -> b) flags && not (U.is_pure_or_ghost_comp c)
+  then (match List.rev flags with
+        | _ :: rest -> List.rev (false :: rest)
+        | [] -> flags)
+  else flags
+
+let erased_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
+  let bs, c = U.arrow_formals_comp t in
+  keep_one_if_impure env c (bs |> List.map (is_erased_binder env))
+
+let type_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in
+  bs |> List.map is_type_binder
+
+let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
+  let bs, comp = U.arrow_formals_comp t in
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
   let init (b:binder) : ML bclass =
@@ -123,9 +146,17 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
      from the signature and from every call site -- exactly like an erased
      value binder.  This has to happen *after* the fixpoint, or rule 5 could
      not promote it to [Mono] when a [Mono] binder's type mentions it. *)
-  bcs |> List.map (fun (b, c) ->
+  let cs = bcs |> List.map (fun (b, c) ->
     match c with
     | Poly -> if is_type_binder b then Dropped else Poly
+    | c -> c) in
+  (* Same guard as [erased_binders]: keep one binder rather than turn an impure
+     definition into a value.  (A definition all of whose binders are [Mono] has
+     the same problem and would need thunking to fix; that is a known gap.) *)
+  let flags = keep_one_if_impure env comp (cs |> List.map Dropped?) in
+  List.zip cs flags |> List.map (fun (c, dropped) ->
+    match c with
+    | Dropped -> if dropped then Dropped else Poly
     | c -> c)
 
 let has_mono (cs:list bclass) : ML bool =

@@ -11,6 +11,7 @@ CUSTARD_TESTS += Unroll
 CUSTARD_TESTS += Layouts
 CUSTARD_TESTS += Effects
 CUSTARD_TESTS += Curried
+CUSTARD_TESTS += Implicits
 
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.

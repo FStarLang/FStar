@@ -40,6 +40,30 @@ val bclass_to_string : bclass -> string
 
 instance val showable_bclass : Class.Show.showable bclass
 
+(** True when a binder carries no runtime value, either because it is a type
+    (types are compiled uniformly, section 5.0, so a type argument cannot
+    change any layout) or because its sort is non-informative (section 5.1).
+
+    Custard decides deletion with this predicate alone, and never by looking at
+    whether a binder is implicit or explicit.  The implicit/explicit
+    distinction is a source-level convenience with no bearing on what has to
+    exist at runtime, and Custard has no interoperability obligation that would
+    make the source arity worth preserving. *)
+val is_type_binder (b:binder) : ML bool
+
+val is_erased_binder (env:TcEnv.env) (b:binder) : ML bool
+
+(** [erased_binders env t] applies [is_erased_binder] to each binder of [t]'s
+    outermost arrow, in order.  Used wherever a spine has to be filtered but no
+    full [classify] is available: constructor applications, applications of a
+    variable, and type applications. *)
+val erased_binders (env:TcEnv.env) (t:typ) : ML (list bool)
+
+(** [type_binders env t] marks the binders of [t] that are types.  This is the
+    dual filter, used at the *type* level: the arguments of a type constructor
+    that survive into a [cty] are exactly its type parameters. *)
+val type_binders (env:TcEnv.env) (t:typ) : ML (list bool)
+
 (** [classify env attrs t] classifies the binders of a definition of type [t]
     carrying the top-level attributes [attrs].  The returned list has one
     entry per binder of [t]'s outermost arrow, in order. *)

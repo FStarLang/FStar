@@ -25,6 +25,7 @@ open FStarC.Syntax.Syntax
 open FStarC.Syntax.Print
 open FStarC.Const
 open FStarC.Custard.Mono
+
 open FStarC.Custard.Syntax
 
 module BU     = FStarC.Format
@@ -34,6 +35,7 @@ module Effects = FStarC.Custard.Effects
 module Free   = FStarC.Syntax.Free
 module Ident  = FStarC.Ident
 module Loader = FStarC.Custard.Loader
+module Mono   = FStarC.Custard.Mono
 module N      = FStarC.TypeChecker.Normalize
 module PC     = FStarC.Parser.Const
 module S      = FStarC.Syntax.Syntax
@@ -335,6 +337,7 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
        result type and promotes the arrow to [E_Impure]. *)
     let res = ty_of_typ st (Effects.result_typ (tcenv st) c) in
     let e = eff_of_comp st c in
+    let bs = drop_flagged (Mono.erased_binders (tcenv st) t) bs in
     (* The effect belongs to the last arrow only; the intermediate ones are the
        pure arrows a curried function is made of. *)
     let rec build (bs:binders) : ML cty =
@@ -352,8 +355,15 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
      | None ->
        let hd, args = U.head_and_args_full t in
        (match (U.un_uinst hd).n with
-        | Tm_fvar fv -> ty_of_fv st fv (args |> List.filter (fun (_, q) -> not (S.is_aqual_implicit q))
-                                             |> List.map fst)
+        | Tm_fvar fv ->
+          (* A type constructor's arguments survive into the [cty] exactly when
+             they are types: an index like the [n] of [vec n] has no
+             counterpart in the target's type language. *)
+          let keep = match TcEnv.try_lookup_lid (tcenv st) (S.lid_of_fv fv) with
+                     | Some ((_, k), _) -> Mono.type_binders (tcenv st) k
+                                           |> List.map (fun b -> not b)
+                     | None -> [] in
+          ty_of_fv st fv (drop_flagged keep args |> List.map fst)
         | _ -> TAny))
 
   | Tm_refine {b} -> ty_of_typ st b.sort
@@ -419,8 +429,17 @@ and expr_of_term (st:state) (t:term) : ML expr =
 
   | Tm_abs _ ->
     let bs, body, _ = U.abs_formals t in
-    let bs = bs |> List.filter (fun b -> not (S.is_bqual_implicit b.binder_qual)) in
     let body = expr_of_term st body in
+    let bs =
+      let flags = bs |> List.map (Mono.is_erased_binder (tcenv st)) in
+      (* Same guard as [Mono.erased_binders]: a lambda whose binders all vanish
+         would become a value, running its effects where it is built. *)
+      let flags = if List.for_all (fun b -> b) flags && not (is_pure body.eff)
+                  then (match List.rev flags with
+                        | _ :: r -> List.rev (false :: r)
+                        | [] -> flags)
+                  else flags in
+      drop_flagged flags bs in
     let bs = bs |> List.map (fun b ->
       { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
     (match bs with
@@ -437,8 +456,14 @@ and expr_of_term (st:state) (t:term) : ML expr =
     (match (U.un_uinst hd).n with
      | Tm_fvar fv -> app_of_fv st fv args
      | _ ->
+       let hd_term = hd in
        let hd = expr_of_term st hd in
-       let args = args |> keep_args |> List.map (expr_of_term st) in
+       (* No declaration to consult, so the filter has to come from the head's
+          own type; a head we cannot type is left alone. *)
+       let flags = match (SS.compress hd_term).n with
+                   | Tm_name bv -> Mono.erased_binders (tcenv st) bv.sort
+                   | _ -> [] in
+       let args = drop_flagged flags args |> List.map fst |> List.map (expr_of_term st) in
        (match args with
         | [] -> hd
         | _ ->
@@ -474,15 +499,21 @@ and expr_of_term (st:state) (t:term) : ML expr =
   | Tm_type _ -> unit_expr
   | _ -> unit_expr
 
-(* Implicit and type arguments carry no runtime content. *)
-and keep_args (args:args) : ML (list term) =
-  args |> List.filter (fun (a, q) -> not (S.is_aqual_implicit q) && not (is_type_arg a))
-       |> List.map fst
+(* Delete the entries flagged [true].  A flag list shorter than the list being
+   filtered leaves the surplus entries alone, which is what we want when a
+   spine is longer than its head's declared arity.
 
-and is_type_arg (a:term) : ML bool =
-  match (SS.compress a).n with
-  | Tm_type _ -> true
-  | _ -> false
+   Note there is no test on implicit/explicit anywhere in Custard: whether an
+   argument was written by the user or inferred says nothing about whether it
+   has to exist at runtime, and unlike the ML extraction we have no
+   interoperability reason to preserve the source arity. *)
+and drop_flagged (#a:Type) (flags:list bool) (xs:list a) : ML (list a) =
+  match flags, xs with
+  | _, [] -> []
+  | [], xs -> xs
+  | f :: flags, x :: xs ->
+    let rest = drop_flagged flags xs in
+    if f then rest else x :: rest
 
 (* -------------------------------------------------------------------- *)
 (* Call sites                                                           *)
@@ -497,14 +528,20 @@ and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
   if is_data_ctor fv
   then
     let nm = request st { sk_lid = l; sk_args = [] } in
-    mk (ECtor (nm, args |> keep_args |> List.map (expr_of_term st))) TAny E_Pure
+    let flags = match TcEnv.try_lookup_lid (tcenv st) l with
+                | Some ((_, ty), _) -> Mono.erased_binders (tcenv st) ty
+                | None -> [] in
+    mk (ECtor (nm, drop_flagged flags args |> List.map fst |> List.map (expr_of_term st)))
+       TAny E_Pure
   else
     let cs = binder_classes st l in
     let margs, rest = split_mono_args st l cs args in
     let key = { sk_lid = l; sk_args = margs } in
     let nm = request st key in
     let hd = mk (EQual (nm, [])) TAny E_Pure in
-    let rest = rest |> keep_args |> List.map (expr_of_term st) in
+    (* [split_mono_args] has already removed the [Mono] and [Dropped]
+       arguments, so everything left is passed at runtime. *)
+    let rest = rest |> List.map fst |> List.map (expr_of_term st) in
     match rest with
     | [] -> hd
     | _ ->
@@ -702,7 +739,8 @@ and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
   let bs, body, _ = U.abs_formals lb.lbdef in
   DType {
     dt_name   = nm;
-    dt_params = bs |> List.map (fun b -> name_of_bv b.binder_bv);
+    dt_params = bs |> List.collect (fun b ->
+                  if is_type_binder b then [name_of_bv b.binder_bv] else []);
     dt_body   = TAbbrev (ty_of_typ st body);
     dt_flags  = [];
   }
@@ -759,9 +797,12 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
       | c :: cs -> if i <= 0 then Dropped? c else go cs (i - 1)
     in
     go polycs i in
-  let bs = bs |> List.mapi (fun i b -> (b, nth_class i)) in
-  let bs = bs |> List.collect (fun (b, dropped) ->
-             if dropped || S.is_bqual_implicit b.binder_qual then [] else [b]) in
+  (* Binders past [polycs] come from the body's own lambdas and are filtered by
+     the same predicate the call sites use. *)
+  let bs = bs |> List.mapi (fun i b ->
+             nth_class i || (i >= List.length polycs
+                             && Mono.is_erased_binder (tcenv st) b)) |> (fun flags ->
+           drop_flagged flags bs) in
   let binders = bs |> List.map (fun b ->
     { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
   (* The effect is the one of the *codomain*: [lbeff] is the effect of
@@ -782,22 +823,35 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
 
 and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : ML decl =
   let _, ctors = TcEnv.datacons_of_typ (tcenv st) l in
-  let params = params |> List.map (fun b -> name_of_bv b.binder_bv) in
+  let n_params = List.length params in
+  (* Only the *type* parameters become parameters of the target type; a value
+     index has no counterpart in the target's type language. *)
+  let ty_params = params |> List.collect (fun b ->
+                    if is_type_binder b then [name_of_bv b.binder_bv] else []) in
   let ctor (c:Ident.lident) : ML (name & list (string & cty)) =
     let _, ty = TcEnv.lookup_datacon (tcenv st) c in
     let bs, _ = U.arrow_formals_comp ty in
     (* Drop the inductive's own parameters, which are re-bound by every
-       constructor's type. *)
-    let bs = if List.length bs >= List.length params
-             then List.splitAt (List.length params) bs |> snd
+       constructor's type under fresh names; the fields' types mention those
+       fresh names, so rename them back to the ones the type declaration
+       binds. *)
+    let bs = if List.length bs >= n_params
+             then let pre, bs = List.splitAt n_params bs in
+                  let subst = List.map2 (fun (pb:S.binder) (b:S.binder) ->
+                                NT (pb.binder_bv, S.bv_to_name b.binder_bv)) pre params in
+                  SS.subst_binders subst bs
              else bs in
+    (* The remaining binders are the constructor's fields; those without
+       runtime content are deleted here, matching what [app_of_fv] does to a
+       constructor application. *)
+    let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
     (name_of_lid c,
      bs |> List.map (fun b ->
        (name_of_bv b.binder_bv, ty_of_typ st b.binder_bv.sort)))
   in
   DType {
     dt_name   = nm;
-    dt_params = params;
+    dt_params = ty_params;
     dt_body   = TVariant (ctors |> List.map ctor);
     dt_flags  = [];
   }
