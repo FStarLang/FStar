@@ -847,6 +847,15 @@ monomorphization are the same question, and v1 answers it conservatively:
 > contains, in relevant position) a type *variable* is treated as relevant: it
 > is never erased and never collapsed away.
 
+The same rule read from the other side says that a type *argument* carries no
+runtime information, since it cannot change any layout.  So a type binder that
+is still `Poly` after the rule-5 fixpoint is classified `Dropped` (§3.1) and
+deleted from the signature and from every call site — whether it was written
+implicitly or, as in `let idt (a:Type) (x:a) : a = x`, explicitly.  Under
+`--custard_monomorphize_types` the same binders are `Mono` instead and are
+consumed by specialization; either way nothing type-shaped survives into a
+runtime signature.
+
 `type foo a = { x: a; p: prop }` is still a newtype of `a` — that is uniform,
 because `p` is erased at every instantiation.  `type foo a = { x: a; y: bool }`
 stays a two-field struct at every instantiation, even `foo prop`.
@@ -1180,7 +1189,21 @@ same reason a lambda is given a proper arrow type rather than `TAny`.
 
 Dually, a *partially* applied callee is a closure, and building a closure is
 pure however impure calling it will be; `Extract.callee_eff` therefore compares
-the number of supplied arguments against the callee's arity.
+the number of supplied arguments against the callee's arity.  "Arity" here
+means the number of *lambdas* the definition actually has, not the number of
+arrows in its type, and the difference matters for a definition such as
+
+```fstar
+let step (n:int) : ML (int -> Tot int) = print_string "step "; (fun y -> y + n)
+```
+
+whose effect fires after *one* argument.  Because `dl_binders` comes from the
+definition's lambdas, `step 1` counts as saturated and is correctly impure.
+The converse case, where the definition has more lambdas than the type has
+arrows before its effect — `let mk (n:int) : ML (int -> Tot int) = fun y -> y + n`
+— is sound for a subtler reason: for the surplus binders to exist, the effectful
+computation has to be syntactically a lambda, i.e. a value, and so has no
+effects to lose.
 
 ANF is what makes this tractable, which is why it is phase 4's *first* pass
 (§6): after ANF every impure computation is a named `ELet` in a fixed order, so

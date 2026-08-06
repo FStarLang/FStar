@@ -117,7 +117,16 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
     else let changed, bcs = pass bcs in
          if changed then fixpoint (n - 1) bcs else bcs
   in
-  fixpoint (List.length bs) bcs |> List.map snd
+  let bcs = fixpoint (List.length bs) bcs in
+  (* A type binder that came out of the fixpoint still [Poly] is compiled
+     uniformly (section 5.0), so it carries nothing at runtime and is deleted
+     from the signature and from every call site -- exactly like an erased
+     value binder.  This has to happen *after* the fixpoint, or rule 5 could
+     not promote it to [Mono] when a [Mono] binder's type mentions it. *)
+  bcs |> List.map (fun (b, c) ->
+    match c with
+    | Poly -> if is_type_binder b then Dropped else Poly
+    | c -> c)
 
 let has_mono (cs:list bclass) : ML bool =
   cs |> List.existsb Mono?
