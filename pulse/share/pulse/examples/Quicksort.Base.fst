@@ -52,8 +52,8 @@ let lemma_sorted_append
               r1 >= l1 /\ r2 >= l2 /\ // silly, but needed since the seqs may be empty
               r1 <= l2)
     (ensures sorted (Seq.append s1 s2) /\ between_bounds (Seq.append s1 s2) l1 r2)
-  = let s = Seq.append s1 s2 in
-    let n1 = Seq.length s1 in
+  = let unfold s = Seq.append s1 s2 in
+    let unfold n1 = Seq.length s1 in
     introduce forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
     with introduce _ ==> _
     with (

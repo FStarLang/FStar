@@ -18,7 +18,10 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context: uu___: Prims.unit
+  - In context:
+      uu___: Prims.unit
+      f: n: FStar.Ghost.erased Prims.nat -> FStar.Ghost.erased Prims.nat
+      (fun n -> n) == f
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(74,49-74,57):
@@ -27,7 +30,10 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
-  - In context: x: FStar.Ghost.erased Prims.int
+  - In context:
+      x: FStar.Ghost.erased Prims.int
+      uu___: Prims.int
+      x == _
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(76,55-76,56):
@@ -45,7 +51,10 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
-  - In context: x: FStar.Ghost.erased Prims.int
+  - In context:
+      x: FStar.Ghost.erased Prims.int
+      uu___: Prims.int
+      x == _
   - See also Prims.fst(478,18-478,24)
 
 * Info at Coercions.fst(80,51-80,52):

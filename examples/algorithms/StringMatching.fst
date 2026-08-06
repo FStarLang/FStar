@@ -404,8 +404,8 @@ let rabin_karp_matcher
   else if m = 0 then Some 0
   else (
     let pow_base_m = pow base (m - 1) in
-    let pat = Seq.map_seq as_digit t_pat in
-    let xs = Seq.map_seq as_digit t_xs in
+    let unfold pat = Seq.map_seq as_digit t_pat in
+    let unfold xs = Seq.map_seq as_digit t_xs in
     let hpat = hash pat base prime 0 m in
     let xpat = hash xs base prime 0 m in
     let rec loop 

@@ -2,19 +2,23 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: y + 1 == y
+  - Failed to prove: x == y
   - In context:
       x: Prims.int
       y: Prims.int
+      x: Prims.int
+      y + 1 == x
 
 * Info at Asserts.fst(11,9-11,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: y + 1 == y
+  - Failed to prove: x == y
   - In context:
       x: Prims.int
       y: Prims.int
+      x: Prims.int
+      y + 1 == x
 
 * Info at Asserts.fst(16,9-16,14):
   - Expected failure:
