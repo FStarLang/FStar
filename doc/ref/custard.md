@@ -810,7 +810,9 @@ used to be: over-applied inlining (the projector is stored eta-expanded, so
 inlining it leaves `EApp (EMatch …, args)`) and an iota rule whose pattern
 bindings are *substituted* rather than turned into `let`s.  See §6 pass 5.
 
-This is `tests/custard/Combinators.fst`.
+This is `tests/custard/Combinators.fst`, which additionally round-trips a
+value through the generated serializer and parser, so the test checks the
+code's behaviour and not only its shape.
 
 ## 4. Driver and on-demand loading
 
@@ -1338,6 +1340,15 @@ Phase 4 passes, in order:
    template; Custard's version is simpler because it does not need to keep an
    ABI-compatible record of eliminated positions.
 8. **SCC computation and topological sort** of the final decl list.
+   The OCaml backend has one rewrite of its own here, because OCaml is missing
+   a pattern form the IR has: there is no integer *pattern*.  `Prims.int` is a
+   `Z.t`, whose literals are calls to `Prims.parse_int`, and a machine integer
+   literal is a call to `uint_to_t`; neither is a pattern.  So `PConst (CInt
+   _)` is printed as a fresh variable plus an equality in the branch's `when`
+   clause -- which is what the ML extraction does too.  The C backend has real
+   integer patterns and keeps the `PConst`; it is also the backend that
+   rejects guards, which is why this cannot be a shared pass.
+
 9. **Renaming** (`FStarC.Custard.Rename`): give every bound name its source
    spelling back.
 
@@ -1971,6 +1982,6 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6a | Output polish: per-specialization suffixes, projector/discriminator inlining, externals printed at their uses, OCaml type annotations, `--custard_entry` vs `--custard_main` | Done. `tests/custard/Library.fst` covers the root-only (no `main`) mode |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
 | M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny`/`EAbort` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` and `PulseHashTable.fst` both go to compiled OCaml and to compiled C; requires stage3, so neither is part of `tests/custard` |
-| M6c | Bundled combinators (§3.9): weak-HNF substitution (§3.7), over-applied inlining and iota (§6 pass 5) | Done. `tests/custard/Combinators.fst` |
+| M6c | Bundled combinators (§3.9): weak-HNF substitution (§3.7), over-applied inlining and iota (§6 pass 5) | Done. `tests/custard/Combinators.fst`, extracted, compiled and run |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

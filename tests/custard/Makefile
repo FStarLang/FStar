@@ -14,6 +14,15 @@ CUSTARD_TESTS += Curried
 CUSTARD_TESTS += Implicits
 CUSTARD_TESTS += MachineInts
 CUSTARD_TESTS += Externs
+CUSTARD_TESTS += Combinators
+
+# GREP_<name>/NOGREP_<name> additionally assert on the generated .ml.  For
+# Combinators (section 3.9) the *shape* of the output is the point: one
+# function per (combinator, method) pair, and no record built at runtime, so
+# neither the bundle type nor its projectors survive.
+GREP_Combinators   = combinators_parse__t combinators_parse__tuple2 \
+                     combinators_serialize__t combinators_serialize__tuple2
+NOGREP_Combinators = parser_combinator __proj__
 
 # Each of these is extracted with --custard_backend Krml, run through karamel
 # to produce C, compiled and run; the program must exit 0.  Skipped when
@@ -27,13 +36,6 @@ ROOT_TESTS += Library
 ROOTS_Library  = scale
 GREP_Library   = library_scale library_double
 NOGREP_Library = library_unused "let _ ="
-
-ROOT_TESTS += Combinators
-ROOTS_Combinators  = parse_three serialize_three
-GREP_Combinators   = combinators_parse__t combinators_parse__tuple2 \
-                     combinators_serialize__t combinators_serialize__tuple2
-# No record is built at runtime, so neither the type nor its projectors survive.
-NOGREP_Combinators = parser_combinator __proj__
 
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.
@@ -51,6 +53,12 @@ include $(FSTAR_ROOT)/mk/test.mk
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
 	$(FSTAR) --codegen Custard --custard_main $*.main $< -o $@
+	$(Q)for p in $(GREP_$*); do \
+	  grep -q -- "$$p" $@ \
+	    || { echo "ERROR: $* output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(NOGREP_$*); do \
+	  grep -q -- "$$p" $@ \
+	    && { echo "ERROR: $* output should not contain $$p"; exit 1; }; done; true
 
 $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "REJECT", $(basename $(notdir $@)))

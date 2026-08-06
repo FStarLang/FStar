@@ -224,6 +224,33 @@ let op_name (o:prim_op) : ML string =
      | BOr -> "(lor)" | BAnd -> "(land)" | BXor -> "(lxor)" | BNot -> "lnot"
      | BShiftL -> "(lsl)" | BShiftR -> "(lsr)")
 
+(* OCaml has no integer pattern that means what the IR's [PConst (CInt _)]
+   means: [Prims.int] is a [Z.t], whose literals are calls to
+   [Prims.parse_int], and a machine integer literal is a call to
+   [uint_to_t].  Neither is a pattern.  So an integer constant pattern is
+   replaced by a fresh variable and an equality in the [when] clause, which
+   is what the ML extraction does too (`Term.fst`, [Pat_constant] of a
+   machine integer).  The C backend has real integer patterns and keeps the
+   [PConst]. *)
+let rec defer_ints (n:int) (p:pat) : (int & pat & list (string & FStarC.Custard.Syntax.constant)) =
+  match p with
+  | PConst c when (match c with CInt _ -> true | _ -> false) ->
+    let x = "_iconst" ^ string_of_int n in
+    (n + 1, PVar x, [(x, c)])
+  | PCtor (nm, ps) -> let n, ps, eqs = defer_ints_list n ps in (n, PCtor (nm, ps), eqs)
+  | PTuple ps -> let n, ps, eqs = defer_ints_list n ps in (n, PTuple ps, eqs)
+  (* A disjunction has to bind the same variables in every alternative, so
+     there is nothing sensible to lift out of one. *)
+  | _ -> (n, p, [])
+
+and defer_ints_list (n:int) (ps:list pat) : (int & list pat & list (string & FStarC.Custard.Syntax.constant)) =
+  match ps with
+  | [] -> (n, [], [])
+  | p :: ps ->
+    let n, p, eqs = defer_ints n p in
+    let n, ps, eqs' = defer_ints_list n ps in
+    (n, p :: ps, eqs @ eqs')
+
 let rec pattern (p:pat) : ML string =
   match p with
   | PWild -> "_"
@@ -336,7 +363,10 @@ and index (ind:string) (e:expr) : ML string =
 
 and case (ind:string) (br:branch) : ML string =
   let p, g, b = br in
-  let guard = match g with None -> "" | Some g -> " when " ^ term ind g in
+  let _, p, eqs = defer_ints 0 p in
+  let conds = eqs |> List.map (fun (x, c) -> ocaml_var x ^ " = " ^ constant c) in
+  let conds = match g with None -> conds | Some g -> conds @ [term ind g] in
+  let guard = if conds = [] then "" else " when " ^ String.concat " && " conds in
   ind ^ "| " ^ pattern p ^ guard ^ " -> " ^ term (ind ^ "  ") b ^ "\n"
 
 (* -------------------------------------------------------------------- *)
