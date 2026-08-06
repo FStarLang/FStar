@@ -20,6 +20,7 @@ open FStarC.Effect
 open FStarC.List
 open FStarC.Class.Show
 open FStarC.BaseTypes
+open FStarC.Const
 open FStarC.Custard.Syntax
 
 module BU = FStarC.Util
@@ -108,11 +109,26 @@ let is_builtin_type (n:name) : ML bool = Some? (builtin_type n)
 (* Types                                                                *)
 (* -------------------------------------------------------------------- *)
 
+let int_module_stem (s:signedness) : string =
+  match s with Unsigned -> "UInt" | Signed -> "Int"
+
+(* The OCaml realizations of machine integers live in the [FStar.UIntN]
+   support modules, and every operator we emit has a same-named function
+   there, so a machine type and a machine operation are both just a qualified
+   name. *)
+let int_module (sw : signedness & width) : string =
+  let s, w = sw in
+  "FStar_" ^ int_module_stem s ^
+  (match w with
+   | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
+   | Sizet -> "SizeT")
+
 let rec ty (t:cty) : ML string =
   match t with
   | TUnit -> "unit"
   | TAny -> "Obj.t"
   | TVar x -> "'" ^ ocaml_var x
+  | TInt sw -> int_module sw ^ ".t"
   | TArrow (t1, _, t2) -> "(" ^ ty t1 ^ " -> " ^ ty t2 ^ ")"
   | TTuple ts -> "(" ^ String.concat " * " (List.map ty ts) ^ ")"
   | TApp (n, []) ->
@@ -149,13 +165,46 @@ let constant (c:constant) : ML string =
   (* Prims.int is arbitrary precision in the OCaml runtime, exactly as in the
      ML extraction. *)
   | CInt (s, None) -> "(Prims.parse_int \"" ^ s ^ "\")"
-  | CInt (s, Some _) -> s
+  (* The realization's injection is [uint_to_t] for unsigned widths and
+     [int_to_t] for signed ones. *)
+  | CInt (s, Some sw) ->
+    let sgn, _ = sw in
+    let inj = match sgn with Unsigned -> "uint_to_t" | Signed -> "int_to_t" in
+    "(" ^ int_module sw ^ "." ^ inj ^ " (Prims.parse_int \"" ^ s ^ "\"))"
   | CChar c -> "(FStar_Char.char_of_int (" ^ show (BU.int_of_char c) ^ "))"
   | CString s -> "\"" ^ escape s ^ "\""
 
 (* -------------------------------------------------------------------- *)
 (* Patterns and expressions                                             *)
 (* -------------------------------------------------------------------- *)
+
+(* Machine operators are the functions of the [FStar.UIntN] support module;
+   the non-width-directed ones are OCaml's own. *)
+let op_name (o:prim_op) : ML string =
+  match o.po_int with
+  | Some sw ->
+    int_module sw ^ "." ^
+    (match o.po_op with
+     | Add -> "add" | AddW -> "add_mod" | Sub -> "sub" | SubW -> "sub_mod"
+     | Mult -> "mul" | MultW -> "mul_mod" | Div -> "div" | DivW -> "div"
+     | Mod -> "rem"
+     | BOr -> "logor" | BAnd -> "logand" | BXor -> "logxor" | BNot -> "lognot"
+     | BShiftL -> "shift_left" | BShiftR -> "shift_right"
+     | Eq -> "eq" | Neq -> "ne" | Lt -> "lt" | Lte -> "lte"
+     | Gt -> "gt" | Gte -> "gte"
+     | And -> "logand" | Or -> "logor" | Not -> "lognot")
+  | None ->
+    (match o.po_op with
+     | Add -> "Prims.op_Addition" | AddW -> "Prims.op_Addition"
+     | Sub -> "Prims.op_Subtraction" | SubW -> "Prims.op_Subtraction"
+     | Mult -> "Prims.op_Multiply" | MultW -> "Prims.op_Multiply"
+     | Div -> "Prims.op_Division" | DivW -> "Prims.op_Division"
+     | Mod -> "Prims.op_Modulus"
+     | Eq -> "(=)" | Neq -> "(<>)" | Lt -> "(<)" | Lte -> "(<=)"
+     | Gt -> "(>)" | Gte -> "(>=)"
+     | And -> "(&&)" | Or -> "(||)" | Not -> "not"
+     | BOr -> "(lor)" | BAnd -> "(land)" | BXor -> "(lxor)" | BNot -> "lnot"
+     | BShiftL -> "(lsl)" | BShiftR -> "(lsr)")
 
 let rec pattern (p:pat) : ML string =
   match p with
@@ -206,7 +255,7 @@ let rec term (ind:string) (e:expr) : ML string =
     "(match " ^ term ind e1 ^ " with " ^ ctor_ref n ^ " _ -> true | _ -> false)"
   | ECast (e1, _) -> "(Obj.magic (" ^ term ind e1 ^ "))"
   | EOp (op, args) ->
-    "(" ^ op ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"
+    "(" ^ op_name op ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"
   | EWhile (c, body) ->
     "(while " ^ term ind c ^ " do " ^ term ind body ^ " done)"
   | ERaise (n, []) -> "(raise " ^ ctor_ref n ^ ")"

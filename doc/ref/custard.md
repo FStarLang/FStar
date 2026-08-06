@@ -1317,23 +1317,40 @@ call.
 
 ### 8.2 Design
 
-A single table, consulted in step 1 of the extraction loop:
+A single table, consulted in step 1 of the extraction loop, *before* the
+definition is looked up, so that a definition with a rule is never requested
+and never appears in the output.  This is `FStarC.Custard.Builtins`:
 
 ```fstar
 type rule =
-  | Rule_prim   of (list cty -> list expr -> ST expr)   // build EOp/ECtor/...
-  | Rule_type   of (list cty -> ST cty)
-  | Rule_extern of { target_name: string; header: option string }
-  | Rule_inline                                          // force unfolding
+  | Rule_prim   of int & (list cty -> list expr -> ML expr)  // build EOp/ECtor/...
+  | Rule_type   of (list cty -> ML cty)
+  | Rule_extern of { x_name: option string; x_header: option string }
+  | Rule_opaque                                              // fix the representation
 
-val register_rule : lid -> rule -> unit
-val lookup_rule   : lid -> option rule
+val register_rule : lid -> rule -> ML unit
+val lookup_rule   : lid -> ML (option rule)
 ```
 
-Phase 1: the table is populated by a hardcoded module
-`FStarC.Custard.Builtins` covering machine integers, `FStar.Ghost`,
-`FStar.Pervasives.Native`, and the Pulse primitives — as the draft says,
-hardcoding is fine to start.
+The `int` in `Rule_prim` is the arity: a primitive is an *operator* in the IR
+but a *function* in F*, so a use that supplies fewer arguments than the rule
+needs is eta-expanded rather than rejected.  This is what lets a primitive
+still be passed as an argument (`twice UInt32.add_mod x`).
+
+`Rule_extern` is how a definition whose F* "body" is a specification — often
+literally `admit ()`, as for `UInt32.to_string` — becomes a `DExternal`, whose
+OCaml realization is the existing `FStar_UInt32.to_string`.
+
+Phase 1, which is what is implemented, hardcodes the rules.  Machine integers
+are matched by the *shape* of the name rather than enumerated: the module name
+gives the width (`FStar.UInt32` ⟹ `(Unsigned, Int32)`) and the identifier gives
+the operator, following `FStarC.Extraction.Krml`'s `mk_width` and `mk_op`
+exactly — karamel is the backend that has to give these a C meaning, and a
+discrepancy there would be a miscompilation rather than an error.  The IR gains
+a `TInt of signedness & width` type and a structured `prim_op` for this.
+
+`FStar.Ghost` and `FStar.Pervasives.Native` are not in the table: `Ghost` is
+handled by erasure (§5.1) and the native tuples by `TTuple`/`ETuple`.
 
 Phase 2: the table becomes registrable from F* plugins, using the same
 mutable-ref/registration style already used by

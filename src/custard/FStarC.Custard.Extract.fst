@@ -36,6 +36,8 @@ module Free   = FStarC.Syntax.Free
 module Ident  = FStarC.Ident
 module Loader = FStarC.Custard.Loader
 module Mono   = FStarC.Custard.Mono
+module Builtins = FStarC.Custard.Builtins
+module GenSym = FStarC.GenSym
 module N      = FStarC.TypeChecker.Normalize
 module PC     = FStarC.Parser.Const
 module S      = FStarC.Syntax.Syntax
@@ -381,7 +383,13 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
 and ty_of_fv (st:state) (fv:fv) (args:list term) : ML cty =
   let l = S.lid_of_fv fv in
   if Ident.lid_equals l PC.unit_lid then TUnit
-  else TApp (request st { sk_lid = l; sk_args = [] }, List.map (ty_of_typ st) args)
+  else
+    let args = List.map (ty_of_typ st) args in
+    (* Section 8: a type with a custom rule has a representation fixed outside
+       F*, so it is never requested and its F* definition is never seen. *)
+    match Builtins.lookup_rule l with
+    | Some (Builtins.Rule_type f) -> f args
+    | _ -> TApp (request st { sk_lid = l; sk_args = [] }, args)
 
 (* -------------------------------------------------------------------- *)
 (* Terms                                                                *)
@@ -402,7 +410,7 @@ and ty_of_constant (st:state) (c:constant) : ML cty =
   | CUnit -> TUnit
   | CBool _ -> prim PC.bool_lid
   | CInt (_, None) -> prim PC.int_lid
-  | CInt (_, Some _) -> TAny
+  | CInt (_, Some sw) -> TInt sw
   | CChar _ -> prim PC.char_lid
   | CString _ -> prim PC.string_lid
 
@@ -524,6 +532,45 @@ and drop_flagged (#a:Type) (flags:list bool) (xs:list a) : ML (list a) =
    at runtime. *)
 and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
   let l = S.lid_of_fv fv in
+  match Builtins.lookup_rule l with
+  | Some (Builtins.Rule_prim (n, f)) -> prim_app st l n f args
+  | _ -> app_of_fv' st fv args
+
+(* A primitive is a function in F* but an operator in the IR, so an
+   under-applied use has to be eta-expanded rather than passed along. *)
+and prim_app (st:state) (l:Ident.lident) (n:int)
+             (f : list cty -> list expr -> ML expr) (args:args) : ML expr =
+  let flags = match TcEnv.try_lookup_lid (tcenv st) l with
+              | Some ((_, ty), _) -> Mono.erased_binders (tcenv st) ty
+              | None -> [] in
+  let args = drop_flagged flags args |> List.map fst |> List.map (expr_of_term st) in
+  let given, extra =
+    if List.length args <= n then args, []
+    else List.splitAt n args in
+  let missing = n - List.length given in
+  if missing > 0
+  then
+    let bs = List.map (fun _ -> { b_name = "custard_eta_" ^ show (GenSym.next_id ());
+                                  b_ty = TAny })
+                      (repeat_unit missing) in
+    let vs = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in
+    let body = f [] (given @ vs) in
+    mk (EFun (bs, body))
+       (List.fold_right (fun (b:binder) t -> TArrow (b.b_ty, E_Pure, t)) bs body.ty)
+       E_Pure
+  else
+    let e = f [] given in
+    match extra with
+    | [] -> e
+    | _ -> mk (EApp (e, extra)) (apply_result e.ty (List.length extra))
+              (List.fold_left (fun x a -> join_eff x a.eff)
+                              (apply_eff e.ty (List.length extra)) extra)
+
+and repeat_unit (n:int) : ML (list unit) =
+  if n <= 0 then [] else () :: repeat_unit (n - 1)
+
+and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
+  let l = S.lid_of_fv fv in
   ensure_lid_available st l;
   if is_data_ctor fv
   then
@@ -634,6 +681,16 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
 (* -------------------------------------------------------------------- *)
 
 and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) : ML decl =
+  match Builtins.lookup_rule l with
+  | Some (Builtins.Rule_extern _) ->
+    (* Section 8.1, kind 4: the F* "definition" is a specification (often
+       literally [admit ()]); the real one lives in a hand-written .ml or .c
+       file, and all we owe the backend is the type. *)
+    let ty = match TcEnv.try_lookup_lid (tcenv st) l with
+             | Some ((_, ty), _) -> ty_of_typ st ty
+             | None -> TAny in
+    DExternal { dx_name = nm; dx_ty = ty; dx_flags = [] }
+  | _ ->
   match TcEnv.lookup_sigelt (tcenv st) l with
   | None ->
     custard_error st E.Error_CustardEntryNotFound [

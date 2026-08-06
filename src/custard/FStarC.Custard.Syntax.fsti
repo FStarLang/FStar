@@ -86,6 +86,10 @@ val is_pure : eff -> bool
 
 type cty =
   | TVar   of string
+  | TInt   of signedness & width
+  (** A machine integer.  Installed by a builtin rule (section 8): the source
+      [FStar.UInt32.t] is a record wrapping a refined [nat], which Custard must
+      not look inside. *)
   | TArrow of cty & eff & cty
   | TApp   of name & list cty
   | TTuple of list cty
@@ -122,10 +126,23 @@ type binder = {
   b_ty:   cty;
 }
 
-(** Primitive operations introduced by the custom extraction rules: machine
-    arithmetic, references, arrays, and so on.  Kept abstract as a string here;
-    backends match on it. *)
-type prim_op = string
+(** The primitive operators a builtin rule (section 8) may introduce.  The
+    names and the grouping deliberately follow karamel's, since that is the
+    backend that has to give them a C meaning. *)
+type op =
+  | Add | AddW | Sub | SubW | Mult | MultW | Div | DivW | Mod
+  (** The [W] variants wrap around instead of being undefined on overflow. *)
+  | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
+  | Eq | Neq | Lt | Lte | Gt | Gte
+  | And | Or | Not
+
+(** A primitive operation, together with the machine type it operates at.
+    [po_int = None] means the operands are booleans or mathematical integers,
+    i.e. the operation is not width-directed. *)
+type prim_op = {
+  po_op:  op;
+  po_int: option (signedness & width);
+}
 
 (** Every expression node carries its type and effect: monomorphization means
     both are always known, and the simplification passes need the effect at

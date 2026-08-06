@@ -71,6 +71,9 @@ let rec cty_erased (t:tbl) (c:cty) : ML bool =
   | TUnit -> true
   | TVar _ -> false
   | TAny -> false
+  (* A machine integer's representation is fixed by its builtin rule
+     (section 8), so nothing about it is ours to erase. *)
+  | TInt _ -> false
   | TArrow (_, e, r) ->
     (* An arrow into an impure effect is not erasable even if its result is:
        calling it is observable. *)

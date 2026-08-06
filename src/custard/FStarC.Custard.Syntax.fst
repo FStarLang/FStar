@@ -116,11 +116,29 @@ let eff_to_string (e:eff) : string =
 
 let eff_to_doc (e:eff) : ML document = text (eff_to_string e)
 
+let width_to_string (sw:signedness & width) : string =
+  let s, w = sw in
+  (match s with Unsigned -> "u" | Signed -> "i") ^
+  (match w with
+   | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
+   | Sizet -> "size")
+
+let op_to_string (o:prim_op) : string =
+  (match o.po_op with
+   | Add -> "+" | AddW -> "+." | Sub -> "-" | SubW -> "-."
+   | Mult -> "*" | MultW -> "*." | Div -> "/" | DivW -> "/." | Mod -> "%"
+   | BOr -> "|" | BAnd -> "&" | BXor -> "^" | BShiftL -> "<<"
+   | BShiftR -> ">>" | BNot -> "~"
+   | Eq -> "=" | Neq -> "<>" | Lt -> "<" | Lte -> "<=" | Gt -> ">" | Gte -> ">="
+   | And -> "&&" | Or -> "||" | Not -> "not") ^
+  (match o.po_int with None -> "" | Some sw -> width_to_string sw)
+
 (* [prec] is the precedence of the enclosing context: 0 at the top, 1 under an
    arrow's domain, 2 as the argument of a type application. *)
 let rec cty_to_doc' (prec:int) (t:cty) : ML document =
   match t with
   | TVar x -> text ("'" ^ x)
+  | TInt sw -> text (width_to_string sw)
   | TUnit -> text "unit"
   | TAny -> text "any"
   | TArrow (t1, e, t2) ->
@@ -256,7 +274,7 @@ let rec expr_to_doc' (prec:int) (e:expr) : ML document =
     group (parens (nest 2 (expr_to_doc' 0 e1 ^/^ text "<:" ^/^ cty_to_doc t)))
 
   | EOp (op, args) ->
-    group (text ("`" ^ op ^ "`") ^^
+    group (text ("`" ^ op_to_string op ^ "`") ^^
            parens (sep_by (comma ^^ space) (List.map (expr_to_doc' 0) args)))
 
   | EWhile (c, body) ->
