@@ -1086,9 +1086,15 @@ Every source computation type is mapped into this lattice by
 | `Tot`, `Pure`, `Lemma`-free pure code | `E_Pure` |
 | `GTot`, `Ghost`, anything `non_informative` | `E_Ghost` |
 | `Div`, `Dv`, `ML`, `ST`, `Ex`, … | `E_Impure` |
-| a user effect with `Extract_reify` | classify the reified computation |
+| a user effect with `Extract_reify` | `E_Impure` (see below) |
 | a user effect with `Extract_primitive` | `E_Impure` (see §7.2) |
-| a user effect with `Extract_none` | hard error, if reachable |
+| a user effect with `Extract_none` | hard error, if reachable (code 365) |
+
+`Extract_reify` and `Extract_primitive` are not distinguished here.  Reification
+changes the *term* Custard extracts, not the drop/duplicate/reorder question,
+which is all `eff` is used for; Custard does not reify yet, and extracts a
+reifiable effect through its representation type, which is what the ML pipeline
+arrives at after reifying anyway.
 
 The three-way distinction comes from `TcUtil.effect_extraction_mode`
 (`src/typechecker/FStarC.TypeChecker.Util.fst:3288`, returning
@@ -1131,6 +1137,10 @@ why §8's expression-level rules cannot express them:
 The check is a single attribute lookup on the head fv
 (`TcEnv.fv_has_attr env fv Const.extract_as_impure_effect_lid`), so this is
 cheap and can be done during type translation, exactly as the ML pipeline does.
+All three live in `FStarC.Custard.Effects`: `of_lid` is the §7.1 table,
+`impure_effect_result` is the result-type projection, and `of_comp` is the
+effect *including* the promotion, so that the extractor cannot accidentally
+consult one without the other.
 Note it must be applied to the head of the *codomain* after normalization, not
 just to syntactic occurrences, since `stt` is often behind an abbreviation.
 
@@ -1158,6 +1168,19 @@ consult `eff`:
 `ELet (x, e.ty, e, ...)` so its effect still happens, in the right order, even
 though its value is unused.  This is what makes erasing an argument of an
 `E_Impure` call sound.
+
+There is a third source of effect information besides declarations and
+computation types, and it is easy to miss: a call through a *variable* --- a
+function parameter, or a local closure --- has no declaration to consult.  Its
+effect has to come from the arrow type of the head, by joining the effects of
+the arrows the application consumes (`Extract.apply_eff`).  When the head's
+type is not arrow-shaped (typically `TAny`) the answer must be `E_Impure`, or
+the table above would happily delete a call we know nothing about.  For the
+same reason a lambda is given a proper arrow type rather than `TAny`.
+
+Dually, a *partially* applied callee is a closure, and building a closure is
+pure however impure calling it will be; `Extract.callee_eff` therefore compares
+the number of supplied arguments against the callee's arity.
 
 ANF is what makes this tractable, which is why it is phase 4's *first* pass
 (§6): after ANF every impure computation is a named `ELet` in a fixed order, so
@@ -1408,7 +1431,7 @@ collapse (§5.2), since their representation is fixed externally.
 | M1 | Extraction loop for pure, first-order, monomorphic code; on-demand loading incl. `.fst.checked` preference (§4.2); ML backend | Enough to extract `let main () = print_string "hi"` |
 | M2 | Type-class monomorphization (§3.1 rules 1,2,5) + `[@@monomorphize]` (rule 3); rejection diagnostics of §3.2; fuel (§3.6); key canonicalization (§3.7) | The two §3 examples pass as golden tests; `--custard_dump_specializations` for tuning |
 | M3 | Layout analysis: erasure + uniform newtype collapse (§5.0) + cast elimination (§5) | Differential tests vs ML extraction |
-| M4 | Effect classification + `extract_as_impure_effect` + purity discipline (§7) | Required before any Pulse code can be extracted |
+| M4 | Effect classification + `extract_as_impure_effect` + purity discipline (§7) | Required before any Pulse code can be extracted.  `FStarC.Custard.Effects` and `FStarC.Custard.Simplify`; ANF (§6 pass 1) is not implemented yet, so the purity discipline is applied directly to the tree |
 | M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | End-to-end C via karamel; the sorting-typeclass benchmark |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |

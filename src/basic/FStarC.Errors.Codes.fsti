@@ -391,6 +391,7 @@ type error_code =
   | Error_CustardEntryNotFound
   | Error_CustardCannotMonomorphize
   | Error_CustardFuelExhausted
+  | Error_CustardUnextractableEffect
 
 type error_setting = error_code & error_flag & int
 

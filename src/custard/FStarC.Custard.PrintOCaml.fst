@@ -189,7 +189,9 @@ let rec term (ind:string) (e:expr) : ML string =
     let ind' = ind ^ "  " in
     "(let " ^ ocaml_var x ^ " = " ^ term ind' e1 ^ " in\n" ^ ind' ^ term ind' e2 ^ ")"
   | ESeq (e1, e2) ->
-    "(" ^ term ind e1 ^ ";\n" ^ ind ^ term ind e2 ^ ")"
+    (* [let _ = ...] rather than [;]: the discarded expression need not have
+       type unit, and OCaml warns about that. *)
+    "(let _ = " ^ term ind e1 ^ " in\n" ^ ind ^ term ind e2 ^ ")"
   | EIf (c, t, f) ->
     "(if " ^ term ind c ^ " then " ^ term ind t ^ " else " ^ term ind f ^ ")"
   | EMatch (scrut, brs) ->

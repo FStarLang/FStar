@@ -30,6 +30,7 @@ open FStarC.Custard.Syntax
 module BU     = FStarC.Format
 module Dep    = FStarC.Parser.Dep
 module E      = FStarC.Errors
+module Effects = FStarC.Custard.Effects
 module Free   = FStarC.Syntax.Free
 module Ident  = FStarC.Ident
 module Loader = FStarC.Custard.Loader
@@ -199,16 +200,27 @@ let hint_of_args (args:list (int & term)) : ML (option string) =
 (* Effects                                                              *)
 (* -------------------------------------------------------------------- *)
 
-let eff_of_lid (st:state) (l:Ident.lident) : ML eff =
-  let l = TcEnv.norm_eff_name (tcenv st) l in
-  if Ident.lid_equals l PC.effect_GHOST_lid
-  || Ident.lid_equals l PC.effect_Ghost_lid
-  then E_Ghost
-  else if Ident.lid_equals l PC.effect_PURE_lid
-       || Ident.lid_equals l PC.effect_Pure_lid
-       || Ident.lid_equals l PC.effect_Tot_lid
-  then E_Pure
-  else E_Impure
+let eff_of_comp (st:state) (c:comp) : ML eff = Effects.of_comp (tcenv st) c
+
+(* Applying [n] arguments to something of type [ty] runs the effects of the
+   first [n] arrows.  This is how a call through a *variable* -- a function
+   parameter, or a local closure -- gets its effect: there is no declaration to
+   consult, only the type.  When the type is not arrow-shaped (typically
+   [TAny]) we have to assume the worst, or section 7.3 would let us drop a call
+   we know nothing about. *)
+let rec apply_eff (ty:cty) (n:int) : ML eff =
+  if n <= 0 then E_Pure
+  else
+    match ty with
+    | TArrow (_, e, r) -> join_eff e (apply_eff r (n - 1))
+    | _ -> E_Impure
+
+let rec apply_result (ty:cty) (n:int) : ML cty =
+  if n <= 0 then ty
+  else
+    match ty with
+    | TArrow (_, _, r) -> apply_result r (n - 1)
+    | _ -> TAny
 
 (* -------------------------------------------------------------------- *)
 (* Requests                                                             *)
@@ -319,8 +331,10 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
 
   | Tm_arrow _ ->
     let bs, c = U.arrow_formals_comp t in
-    let res = ty_of_typ st (U.comp_result c) in
-    let e = eff_of_lid st (U.comp_effect_name c) in
+    (* Section 7.2: a codomain of the form [stt b p q] contributes [b] as the
+       result type and promotes the arrow to [E_Impure]. *)
+    let res = ty_of_typ st (Effects.result_typ (tcenv st) c) in
+    let e = eff_of_comp st c in
     (* The effect belongs to the last arrow only; the intermediate ones are the
        pure arrows a curried function is made of. *)
     let rec build (bs:binders) : ML cty =
@@ -332,11 +346,15 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
     build bs
 
   | Tm_app _ ->
-    let hd, args = U.head_and_args_full t in
-    (match (U.un_uinst hd).n with
-     | Tm_fvar fv -> ty_of_fv st fv (args |> List.filter (fun (_, q) -> not (S.is_aqual_implicit q))
-                                          |> List.map fst)
-     | _ -> TAny)
+    (match Effects.impure_effect_result (tcenv st) t with
+     (* Section 7.2, rule 1: [stt b p q] is represented by [b]. *)
+     | Some a -> ty_of_typ st a
+     | None ->
+       let hd, args = U.head_and_args_full t in
+       (match (U.un_uinst hd).n with
+        | Tm_fvar fv -> ty_of_fv st fv (args |> List.filter (fun (_, q) -> not (S.is_aqual_implicit q))
+                                             |> List.map fst)
+        | _ -> TAny))
 
   | Tm_refine {b} -> ty_of_typ st b.sort
   | Tm_ascribed {tm} -> ty_of_typ st tm
@@ -407,7 +425,12 @@ and expr_of_term (st:state) (t:term) : ML expr =
       { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
     (match bs with
      | [] -> body
-     | _ -> mk (EFun (bs, body)) TAny E_Pure)
+     | _ ->
+       (* Give the lambda an arrow type: it is what tells a caller reached
+          through a variable which effects applying it will run (section 7.3). *)
+       let ty = List.fold_right (fun b (ty, e) -> (TArrow (b.b_ty, e, ty), E_Pure))
+                                bs (body.ty, body.eff) |> fst in
+       mk (EFun (bs, body)) ty E_Pure)
 
   | Tm_app _ ->
     let hd, args = U.head_and_args_full t in
@@ -418,7 +441,11 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let args = args |> keep_args |> List.map (expr_of_term st) in
        (match args with
         | [] -> hd
-        | _ -> mk (EApp (hd, args)) TAny (List.fold_left (fun e a -> join_eff e a.eff) hd.eff args)))
+        | _ ->
+          let n = List.length args in
+          let e = List.fold_left (fun e a -> join_eff e a.eff)
+                                 (join_eff hd.eff (apply_eff hd.ty n)) args in
+          mk (EApp (hd, args)) (apply_result hd.ty n) e))
 
   | Tm_let {lbs=(false, [lb]); body} ->
     (match lb.lbname with
@@ -482,7 +509,7 @@ and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
     | [] -> hd
     | _ ->
       let e = List.fold_left (fun e a -> join_eff e a.eff)
-                             (callee_eff st (string_of_key key)) rest in
+                             (callee_eff st (string_of_key key) (List.length rest)) rest in
       mk (EApp (hd, rest)) TAny e
 
 (* Section 3.2: the two ways a call site can fail to be specializable. *)
@@ -537,9 +564,12 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
 
 (* The effect of a call: we know it exactly, because the callee has already
    been extracted by the time we get here (requests are depth-first). *)
-and callee_eff (st:state) (key:string) : ML eff =
+(* A *partially* applied callee is a closure, and building a closure is pure
+   however impure calling it will be. *)
+and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
   match SMap.try_find st.emitted key with
-  | Some (DLet l) -> l.dl_eff
+  | Some (DLet l) ->
+    if n_args >= List.length l.dl_binders then l.dl_eff else E_Pure
   | Some (DExternal _) -> E_Impure
   | _ -> E_Pure
 
@@ -736,7 +766,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
   (* The effect is the one of the *codomain*: [lbeff] is the effect of
      evaluating the lambda, which is always Tot. *)
-  let eff = eff_of_lid st (U.comp_effect_name c) in
+  let eff = eff_of_comp st c in
   let ret = ty_of_typ st (U.comp_result c) in
   DLet {
     dl_name    = nm;
