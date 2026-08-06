@@ -31,6 +31,10 @@ type bclass =
   | Mono
   (* Kept as a parameter of the specialized definition. *)
   | Poly
+  (* Non-informative (section 5.1): the binder is deleted from the specialized
+     definition's signature, and the corresponding argument is deleted from
+     every call site.  This is rule 1 of section 3.1. *)
+  | Dropped
 
 val bclass_to_string : bclass -> string
 
@@ -44,3 +48,7 @@ val classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass)
 (** True if any binder is [Mono], i.e. uses of this definition have to be
     specialized. *)
 val has_mono (cs:list bclass) : ML bool
+
+(** True if any binder is [Dropped], i.e. uses of this definition have to have
+    arguments deleted. *)
+val has_dropped (cs:list bclass) : ML bool

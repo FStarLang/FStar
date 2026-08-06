@@ -296,6 +296,7 @@ let flag_to_doc (f:flag) : ML document =
   | Private -> text "private"
   | Entrypoint -> text "entrypoint"
   | NoNewtype -> text "no_newtype"
+  | Erased -> text "erased"
   | Comment s -> text ("(* " ^ s ^ " *)")
 
 let flags_to_doc (fs : list flag) : ML document =

@@ -488,7 +488,7 @@ and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
 (* Section 3.2: the two ways a call site can fail to be specializable. *)
 and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
   : ML (list (int & term) & args) =
-  if not (has_mono cs) then ([], spine)
+  if not (has_mono cs) && not (has_dropped cs) then ([], spine)
   else
     let n_args = List.length spine in
     let rec go (i:int) (cs:list bclass) (sp:args) (margs:list (int & term)) (rest:args)
@@ -496,6 +496,8 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       match cs, sp with
       | [], _ -> (List.rev margs, List.rev rest @ sp)
       | Poly :: cs, a :: sp -> go (i + 1) cs sp margs (a :: rest)
+      (* Section 5.1: an erased argument is deleted, not passed as unit. *)
+      | Dropped :: cs, _ :: sp -> go (i + 1) cs sp margs rest
       | Mono :: cs, a :: sp ->
         let t = N.normalize key_norm_steps (tcenv st) (fst a) in
         check_mono_arg st l i t;
@@ -508,7 +510,8 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
                 " is monomorphized and so must be given at every call site.");
           text "Eta-expand the use, or drop the [@@monomorphize] attribute."
         ]
-      | Poly :: _, [] -> (List.rev margs, List.rev rest)
+      | Poly :: _, []
+      | Dropped :: _, [] -> (List.rev margs, List.rev rest)
     in
     go 0 cs spine [] []
 
@@ -582,7 +585,9 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
      | Some lb ->
        (* A type abbreviation is a [Sig_let] too; it must not become a value. *)
        if is_type_sig st lb.lbtyp
-       then extract_type_abbrev st nm lb
+       then (let d = extract_type_abbrev st nm lb in
+             if is_erasable st se || is_prop_sig st lb.lbtyp
+             then with_erased_flag d else d)
        else extract_letbinding st l nm lb is_rec margs
      | None -> DExternal { dx_name = nm; dx_ty = TAny; dx_flags = [] })
 
@@ -591,11 +596,14 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
        external symbol, to be realized by the backend or by a custom rule
        (section 8). *)
     if is_type_sig st t
-    then DType { dt_name = nm; dt_params = []; dt_body = TAbstract; dt_flags = [] }
+    then DType { dt_name = nm; dt_params = []; dt_body = TAbstract;
+                 dt_flags = (if is_erasable st se || is_prop_sig st t
+                             then [Erased] else []) }
     else DExternal { dx_name = nm; dx_ty = ty_of_typ st t; dx_flags = [] }
 
   | Sig_inductive_typ {params} ->
-    extract_inductive st l nm params
+    let d = extract_inductive st l nm params in
+    if is_erasable st se then with_erased_flag d else d
 
   | Sig_datacon _ ->
     (* Reached through a constructor application or pattern: what we actually
@@ -614,6 +622,18 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
   | _ ->
     DExternal { dx_name = nm; dx_ty = TAny; dx_flags = [] }
 
+(* Section 5.1: a type declared [erasable] has no runtime representation at any
+   instantiation, which is what makes it safe to erase uniformly (section
+   5.0).  The structural closure -- a type all of whose fields are erased is
+   itself erased -- is computed later, by the layout analysis. *)
+and is_erasable (st:state) (se:sigelt) : ML bool =
+  U.has_attribute se.sigattrs PC.erasable_attr
+
+and with_erased_flag (d:decl) : ML decl =
+  match d with
+  | DType t -> DType { t with dt_flags = Erased :: t.dt_flags }
+  | d -> d
+
 (* [eqtype], [Type0] and friends are all abbreviations, so we have to unfold
    before we can tell a type declaration from a value declaration. *)
 and is_type_sig (st:state) (t:typ) : ML bool =
@@ -622,14 +642,31 @@ and is_type_sig (st:state) (t:typ) : ML bool =
                          TcEnv.Beta; TcEnv.Iota;
                          TcEnv.UnfoldUntil delta_constant]
                         (tcenv st) (U.comp_result c) in
-  (* [eqtype] is a refinement of [Type0], so peel refinements too. *)
+  (* [eqtype] is a refinement of [Type0], so peel refinements too.  [prop] is
+     [assume val prop : Type0], i.e. opaque, so the normalizer cannot reduce it
+     to a [Tm_type]; but a [prop]-valued definition such as [eq2] or [l_and] is
+     a type constructor all the same. *)
   let rec is_type (t:typ) : ML bool =
     match (SS.compress t).n with
     | Tm_type _ -> true
     | Tm_refine {b} -> is_type b.sort
+    | Tm_fvar fv -> S.fv_eq_lid fv PC.prop_lid
     | _ -> false
   in
   is_type res
+
+(* A [prop]-valued type constructor is by definition non-informative, so we can
+   tell the layout analysis so directly instead of waiting for the structural
+   closure to (fail to) discover it: these are all opaque. *)
+and is_prop_sig (st:state) (t:typ) : ML bool =
+  let _, c = U.arrow_formals_comp t in
+  let res = N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                         TcEnv.Beta; TcEnv.Iota;
+                         TcEnv.UnfoldUntil delta_constant]
+                        (tcenv st) (U.comp_result c) in
+  match (SS.compress (U.unrefine res)).n with
+  | Tm_fvar fv -> S.fv_eq_lid fv PC.prop_lid
+  | _ -> false
 
 and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
   let bs, body, _ = U.abs_formals lb.lbdef in
@@ -647,13 +684,13 @@ and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
    definitions that are eta-short, that have more binders than their type
    shows, or that are not syntactically lambdas at all. *)
 and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int & term))
-  : ML (term & comp) =
+  : ML (term & comp & list bclass) =
   let bs, c = U.arrow_formals_comp ty in
   let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
-             (spine:args) (poly:binders)
-    : ML (args & binders & comp) =
+             (spine:args) (poly:binders) (polycs:list bclass)
+    : ML (args & binders & list bclass & comp) =
     match bs with
-    | [] -> (List.rev spine, List.rev poly, SS.subst_comp subst c)
+    | [] -> (List.rev spine, List.rev poly, List.rev polycs, SS.subst_comp subst c)
     | b :: bs' ->
       let cls, cs' = match cs with
                      | [] -> Poly, []
@@ -663,24 +700,38 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
       match cls, marg with
       | Mono, Some (_, a) ->
         go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst)
-           ((a, U.aqual_of_binder b) :: spine) poly
+           ((a, U.aqual_of_binder b) :: spine) poly polycs
       | _ ->
+        (* A [Dropped] binder still has to bind, or the body would have a free
+           variable; it is deleted from the emitted signature instead. *)
         let bv = { b.binder_bv with sort = sort } in
         let b' = { b with binder_bv = bv } in
         go (i + 1) bs' cs' subst
-           ((S.bv_to_name bv, U.aqual_of_binder b) :: spine) (b' :: poly)
+           ((S.bv_to_name bv, U.aqual_of_binder b) :: spine) (b' :: poly) (cls :: polycs)
   in
-  let spine, poly, c = go 0 bs cs [] [] [] in
+  let spine, poly, polycs, c = go 0 bs cs [] [] [] [] in
   let applied = match spine with [] -> def | _ -> U.mk_app def spine in
   let body = N.normalize custard_norm_steps (tcenv st) applied in
-  (U.abs poly body None, c)
+  (U.abs poly body None, c, polycs)
 
 and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                        (is_rec:bool) (margs:list (int & term)) : ML decl =
   let cs = binder_classes st l in
-  let def, c = specialize st lb.lbtyp lb.lbdef cs margs in
+  let def, c, polycs = specialize st lb.lbtyp lb.lbdef cs margs in
   let bs, body, _ = U.abs_formals def in
-  let bs = bs |> List.filter (fun b -> not (S.is_bqual_implicit b.binder_qual)) in
+  (* [U.abs] put the specialized binders first, so [polycs] lines up with the
+     head of [bs]; any further binders come from the body's own lambdas and are
+     not classified. *)
+  let nth_class (i:int) : ML bool =
+    let rec go (cs:list bclass) (i:int) : ML bool =
+      match cs with
+      | [] -> false
+      | c :: cs -> if i <= 0 then Dropped? c else go cs (i - 1)
+    in
+    go polycs i in
+  let bs = bs |> List.mapi (fun i b -> (b, nth_class i)) in
+  let bs = bs |> List.collect (fun (b, dropped) ->
+             if dropped || S.is_bqual_implicit b.binder_qual then [] else [b]) in
   let binders = bs |> List.map (fun b ->
     { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
   (* The effect is the one of the *codomain*: [lbeff] is the effect of

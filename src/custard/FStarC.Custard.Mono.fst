@@ -28,12 +28,14 @@ module PC    = FStarC.Parser.Const
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module TcEnv = FStarC.TypeChecker.Env
+module TcUtil = FStarC.TypeChecker.Util
 module U     = FStarC.Syntax.Util
 
 let bclass_to_string (c:bclass) : string =
   match c with
   | Mono -> "Mono"
   | Poly -> "Poly"
+  | Dropped -> "Dropped"
 
 instance showable_bclass : showable bclass = { show = bclass_to_string }
 
@@ -61,12 +63,25 @@ let is_type_binder (b:binder) : ML bool =
   | Tm_type _ -> true
   | _ -> false
 
+(* Rule 1: a non-informative binder carries no runtime value, so it is deleted
+   rather than passed.  [unit] is deliberately excluded: dropping a unit binder
+   would turn an impure function into a value, which changes when its effects
+   run.  Removing unit thunks safely needs the purity discipline of section 7
+   and is left to a later milestone. *)
+let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
+  let sort = b.binder_bv.sort in
+  not (U.is_unit sort) &&
+  not (is_type_binder b) &&
+  TcUtil.must_erase_for_extraction env sort
+
 let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
   let bs, _ = U.arrow_formals_comp t in
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
   let init (b:binder) : ML bclass =
-    if all_mono                                                   (* rule 3 *)
+    if is_dropped_binder env b                                    (* rule 1 *)
+    then Dropped
+    else if all_mono                                                   (* rule 3 *)
     || U.has_attribute b.binder_attrs PC.monomorphize_attr        (* rule 3 *)
     || is_tcresolve_binder b                                      (* rule 2 *)
     || is_tcclass_binder env b                                    (* rule 2 *)
@@ -84,12 +99,12 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
       bcs |> List.collect (fun (b, c) ->
         match c with
         | Mono -> elems (Free.names b.binder_bv.sort)
-        | Poly -> [])
+        | _ -> [])
     in
     let changed = mk_ref false in
     let bcs = bcs |> List.map (fun (b, c) ->
       match c with
-      | Mono -> (b, c)
+      | Mono | Dropped -> (b, c)
       | Poly ->
         if needed |> List.existsb (fun v -> bv_eq v b.binder_bv)
         then (changed := true; (b, Mono))
@@ -106,3 +121,6 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
 
 let has_mono (cs:list bclass) : ML bool =
   cs |> List.existsb Mono?
+
+let has_dropped (cs:list bclass) : ML bool =
+  cs |> List.existsb Dropped?

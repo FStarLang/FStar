@@ -169,6 +169,10 @@ type flag =
   | Private
   | Entrypoint
   | NoNewtype
+  | Erased
+  (** The type has no runtime representation at all (section 5.1).  Set by the
+      extractor for types F* considers non-informative; the layout analysis
+      propagates it structurally. *)
   | Comment of string
 
 type tydef =

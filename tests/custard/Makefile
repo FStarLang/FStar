@@ -8,6 +8,7 @@ CUSTARD_TESTS += Recursion
 CUSTARD_TESTS += Datatypes
 CUSTARD_TESTS += Typeclass
 CUSTARD_TESTS += Unroll
+CUSTARD_TESTS += Layouts
 
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.

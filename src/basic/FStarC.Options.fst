@@ -198,6 +198,7 @@ let defaults = [
   ("custard_entry"                             , List []);
   ("custard_dump_ir"                           , Bool false);
   ("custard_dump_specializations"              , Bool false);
+  ("custard_dump_layouts"                     , Bool false);
   ("custard_fuel"                              , Int 10000);
   ("custard_max_specializations"               , Int 1000);
   ("custard_monomorphize_types"                , Bool false);
@@ -475,6 +476,7 @@ let get_codegen_lib             ()      = lookup_opt "codegen-lib"              
 let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
+let get_custard_dump_layouts ()          = lookup_opt "custard_dump_layouts"          as_bool
 let get_custard_fuel            ()      = lookup_opt "custard_fuel"             as_int
 let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
 let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
@@ -888,6 +890,13 @@ compiles the definitions reachable from these roots.");
     text "Print, for every definition Custard specialized, how many \
 specializations of it were emitted. Useful to diagnose code bloat and \
 specialization fuel exhaustion.");
+
+  ( noshort,
+    "custard_dump_layouts",
+    Const (Bool true),
+    text "Print the layout Custard computed for every type: erased, collapsed \
+to a single field, or a struct. Useful to understand why a field or argument \
+disappeared from the generated code.");
 
   ( noshort,
     "custard_fuel",
@@ -2093,6 +2102,7 @@ let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> U
 let custard_entries              () = get_custard_entry ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()
+let custard_dump_layouts ()         = get_custard_dump_layouts ()
 let custard_fuel                 () = get_custard_fuel ()
 let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()

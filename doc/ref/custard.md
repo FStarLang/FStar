@@ -810,7 +810,12 @@ type layout =
       index: int;                //   ...and its index in the *source* field list
       ty:    cty }               // the payload type = representation of the whole type
   | L_struct  of list ctor_layout
+  | L_abbrev  of cty             // a transparent abbreviation, kept as-is
+  | L_opaque                     // abstract, or realized by a custom rule
 ```
+
+(`FStarC.Custard.Layout` is the implementation; `--custard_dump_layouts` prints
+the table.)
 
 `cl_slots` is the essential piece: it is the source-field → target-slot map,
 and it is needed even in the `L_struct` case, because erasing field `a` from
@@ -870,6 +875,12 @@ the *structural* closure:
 - an abbreviation of an erased type is erased;
 - an arrow whose result is erased and whose effect is `E_Pure`/`E_Ghost` is
   erased (an arrow into `E_Impure` is not, because it may have effects).
+
+One wrinkle: `prop` is `assume val prop : Type0`, so a `prop`-valued definition
+such as `Prims.eq2` or `Prims.l_and` cannot be recognized as a type
+constructor by normalizing its result to a `Tm_type`.  Custard special-cases
+`prop` in `is_type_sig`, and marks every `prop`-valued type constructor erased
+outright — being opaque, the structural closure would never discover it.
 
 Note that a *multi*-constructor variant whose fields are all erased is **not**
 erased — `type c = | A | B` still has to carry a tag.  It becomes an
@@ -937,12 +948,26 @@ representation, except through the custom rules of §8, which opt out.
 
 Erasure and newtype collapse interact with the extraction loop: whether a
 binder is dropped depends on whether its type is erased, which depends on the
-type having been extracted.  The implementation keeps a layout table with three
-states (`Unknown`, `InProgress`, `Known l`), computes optimistically
-(`InProgress` ⟹ assume `L_struct` for the purpose of cycle-breaking), and
-iterates the SCC to a fixpoint before phase 4 runs.  Term-level rewriting only
-happens in phase 4, after all layouts are `Known`, so no rewrite is ever done on
-a stale assumption.
+type having been extracted.  The implementation splits this in two.
+
+*Binder* erasure is decided during extraction (phase 2), where the F* type is
+still available: `Mono.classify` gives a binder the class `Dropped` when
+`TcUtil.must_erase_for_extraction` holds of its sort, and the argument is then
+deleted at every call site by the same `split_mono_args` that handles `Mono`
+arguments, so the two sides cannot drift apart.  One exception: a `unit` binder
+is *not* dropped, even though `unit` is non-informative, because dropping the
+`unit` parameter of an impure function would turn it into a value evaluated at
+module initialization time.  Removing such thunks safely needs the effect
+discipline of §7 and is left to a later milestone.
+
+*Type* erasure and collapse are decided after extraction, over the whole IR, by
+a **least fixpoint** starting from "nothing is erased" and iterated until
+stable (bounded by the number of type declarations).  Least, not greatest, is
+what makes a recursive type answer "not erased", which is the safe direction.
+Newtype candidates are computed from the resulting `cl_slots`, and a candidate
+whose representation can reach itself through other candidates' representations
+is rejected, which is the `type t = | C of t` guard.  Term-level rewriting only
+happens afterwards, so no rewrite is ever done on a stale assumption.
 
 ### 5.4 Coercion elimination
 
@@ -953,6 +978,9 @@ introduces (mostly around `TAny`).  Phase 4 runs:
 1. `ECast (e, t)` → `e` when `layout t = layout e.ty` (after collapse);
 2. `ECast (ECast (e, _), t)` → `ECast (e, t)`;
 3. push casts towards the leaves so that (1) fires more often.
+
+Rules 1 and 2 are implemented; rule 3 is not yet, and is only a matter of how
+often rule 1 fires.
 
 The goal is that `repr`-based programming (Pulse's `ref`s over erased indices,
 `FStar.Ghost`, index-erasure idioms) costs literally nothing, and that any

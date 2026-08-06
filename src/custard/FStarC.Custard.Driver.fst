@@ -26,6 +26,7 @@ module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
 module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
+module Layout  = FStarC.Custard.Layout
 module OCaml   = FStarC.Custard.PrintOCaml
 module Ident   = FStarC.Ident
 module TcEnv   = FStarC.TypeChecker.Env
@@ -56,6 +57,8 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     ];
   check_entrypoints env roots;
   let prog = Extract.run (Extract.init deps env) roots in
+  (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
+  let prog = Layout.run prog in
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   (* Custard emits one file for the whole program, so -o is unambiguous here,
