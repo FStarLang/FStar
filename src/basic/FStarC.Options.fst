@@ -195,6 +195,8 @@ let defaults = [
   ("no_cmi"                                     , Bool false);
   ("codegen-lib"                               , List []);
   ("codegen"                                   , Unset);
+  ("custard_entry"                             , List []);
+  ("custard_dump_ir"                           , Bool false);
   ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
   ("debug_all"                                 , Bool false);
@@ -466,6 +468,8 @@ let get_print_cache_version     ()      = lookup_opt "print_cache_version"      
 let get_no_cmi                  ()      = lookup_opt "no_cmi"                   as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
+let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
+let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
@@ -850,13 +854,25 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "codegen",
-    EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"],
+    EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"; "Custard"],
     text "Generate code for further compilation to executable code, or build a compiler plugin");
 
   ( noshort,
     "codegen-lib",
     Accumulated (SimpleStr "namespace"),
     text "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
+
+  ( noshort,
+    "custard_entry",
+    Accumulated (SimpleStr "long_name"),
+    text "Entry point for whole-program extraction with --codegen Custard. \
+May be repeated; every occurrence is a root of the extraction. Custard only \
+compiles the definitions reachable from these roots.");
+
+  ( noshort,
+    "custard_dump_ir",
+    Const (Bool true),
+    text "Print the Custard IR of the extracted program to standard output");
 
   ( 'd',
     "",
@@ -970,7 +986,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     "extract",
     Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
     text "Extract only those modules whose names or namespaces match the provided options. \
-     'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}. \
+     'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension, Custard}. \
      A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. \
      For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means \
      for OCaml, extract everything in the A namespace only except A.B; \
@@ -2024,6 +2040,7 @@ let parse_codegen =
   | "krml" -> Some Krml
   | "Plugin" -> Some Plugin
   | "Extension" -> Some Extension
+  | "Custard" -> Some Custard
   | _ -> None
 
 let print_codegen =
@@ -2033,12 +2050,15 @@ let print_codegen =
   | Krml -> "krml"
   | Plugin -> "Plugin"
   | Extension -> "Extension"
+  | Custard -> "Custard"
 
 let codegen                      () =
     Option.map (fun s -> parse_codegen s |> Some?.v)
                (get_codegen())
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
+let custard_entries              () = get_custard_entry ()
+let custard_dump_ir              () = get_custard_dump_ir ()
 
 let profile_group_by_decl        () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
@@ -2303,7 +2323,7 @@ let extract_settings
         | Some x -> [tgt,x]
       in
       {
-        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;Extension];
+        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;Extension;Custard];
         default_settings = merge_setting p0.default_settings p1.default_settings
       }
     in

@@ -263,21 +263,26 @@ type tydef =
   | TVariant of list (string & list (string & cty))
   | TAbstract                         // assumed / externally realized
 
+// F* has no inline record payloads, so each shape gets its own record type,
+// with a per-constructor field prefix to keep field resolution unambiguous.
+type dtype     = { dt_name: name; dt_params: list ident; dt_body: tydef;
+                   dt_flags: list flag }
+type dlet      = { dl_name: name; dl_typars: list ident; dl_binders: list binder;
+                   dl_ret: cty; dl_eff: eff; dl_body: expr;
+                   dl_flags: list flag }
+type dexternal = { dx_name: name; dx_ty: cty; dx_flags: list flag }  // assume val
+type dexn      = { de_name: name; de_args: list cty }
+
 type decl =
-  | DType of {
-      name: name; params: list ident; body: tydef;
-      meta: list flag }
-  | DLet  of {
-      name: name; typars: list ident; binders: list binder;
-      ret: cty; eff: eff; body: expr;
-      meta: list flag }
-  | DExternal of { name: name; ty: cty; meta: list flag }   // assume val
-  | DExn of { name: name; args: list cty }
+  | DType     of dtype
+  | DLet      of dlet
+  | DExternal of dexternal
+  | DExn      of dexn
 
 type program = list decl    // topologically sorted; SCCs marked in `meta`
 ```
 
-Recursion at the top level is expressed by a `Rec of list name` flag in `meta`
+Recursion at the top level is expressed by a `Rec of list name` flag in the flags
 (the SCC), rather than by a `let rec ... and ...` grouping, so that the
 extraction loop can emit decls one at a time as it discovers them and fix up
 SCCs at the end.

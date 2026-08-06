@@ -313,6 +313,8 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
       | Some Options.Plugin -> ".ml"
       | Some Options.Krml -> ".krml"
       | Some Options.Extension -> ".ast"
+      (* Unused: Custard emits from its own driver, see batch_mode_tc. *)
+      | Some Options.Custard -> ".custard"
       | _ -> fail ()
     in
 
@@ -347,6 +349,8 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
         in
         let ml = printer mlmodule in
         write_file filename ml)
+
+    | Some Options.Custard -> () (* handled in batch_mode_tc *)
 
     | Some Options.Extension ->
       //
@@ -447,6 +451,9 @@ and tc_one_file_no_frame
   let maybe_extract_mldefs tcmod env : ML _ =
     match Options.codegen() with
     | None -> None, 0
+    (* Custard does its own whole-program extraction at the end of the run,
+       driven by --custard_entry rather than by the module list. *)
+    | Some Options.Custard -> None, 0
     | Some tgt ->
       if not (Options.should_extract (string_of_lid tcmod.name) tgt)
       then None, 0
@@ -458,6 +465,7 @@ and tc_one_file_no_frame
   in
   let maybe_extract_ml_iface tcmod env : ML _ =
       if Options.codegen() = None
+      || Options.codegen() = Some Options.Custard
       then env, 0
       else
         Timing.record_ms (fun () ->
@@ -918,8 +926,12 @@ let batch_mode_tc fly_deps filenames dep_graph
   end;
   let env = FStarC.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
   let all_mods, mllibs, env = tc_fold_interleave fly_deps None ([], [], env) filenames in
-  if FStarC.Errors.get_err_count() = 0 then
-    emit dep_graph mllibs;
+  if FStarC.Errors.get_err_count() = 0 then begin
+    match Options.codegen () with
+    | Some Options.Custard ->
+      FStarC.Custard.Driver.run (FStarC.Extraction.ML.UEnv.tcenv_of_uenv env)
+    | _ -> emit dep_graph mllibs
+  end;
   let solver_refresh env =
       snd <|
       with_tcenv_of_env env (fun tcenv ->
