@@ -6,6 +6,10 @@ module U8  = FStar.UInt8
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module I32 = FStar.Int32
+module I8  = FStar.Int8
+module U16 = FStar.UInt16
+module SZ  = FStar.SizeT
+module Cast = FStar.Int.Cast
 
 (* Machine arithmetic must become machine instructions, not the modular
    arithmetic over Prims.int that FStar.UInt actually specifies (section 8.1,
@@ -28,6 +32,18 @@ let twice (f : U32.t -> U32.t -> U32.t) (x : U32.t) : U32.t = f (f x x) x
 
 let show32 (x : U32.t) : ML unit = print_string (U32.to_string x); print_string " "
 
+(* Width conversions.  Every machine width is a *distinct* OCaml type -- and a
+   distinct C type -- so a coercion between two of them has to be a real
+   conversion, and a narrowing one has to mask (section 8.1). *)
+let widen (x : U8.t) : U64.t = Cast.uint8_to_uint64 x
+let narrow32 (x : U32.t) : U8.t = Cast.uint32_to_uint8 x
+let resign (x : I32.t) : I8.t = Cast.int32_to_int8 x
+
+(* [FStar.SizeT]'s conversions are compiled as coercions rather than as calls,
+   because C has no support library for them. *)
+let to_sz (x : U16.t) : SZ.t = SZ.uint16_to_sizet x
+let of_sz (x : SZ.t) : U64.t = SZ.sizet_to_uint64 x
+
 let main () : ML unit =
   show32 (wrap 4294967295ul 3ul);
   show32 (bits 12ul 10ul);
@@ -37,4 +53,11 @@ let main () : ML unit =
   print_string (I32.to_string (signed 3l));
   print_string " ";
   show32 (twice U32.add_mod 5ul);
+  print_string (U64.to_string (widen 200uy));
+  print_string " ";
+  print_string (U8.to_string (narrow32 0x1234ff00ul));
+  print_string " ";
+  print_string (I8.to_string (resign (-129l)));
+  print_string " ";
+  print_string (U64.to_string (of_sz (to_sz 60000us)));
   print_string "\n"

@@ -65,6 +65,20 @@ let machine_int_of_module (ns : list string) : option (signedness & width) =
      | _ -> None)
   | _ -> None
 
+(* The same mapping, keyed on the lowercase spelling that [FStar.Int.Cast]'s
+   conversion names use ([uint32_to_uint8]). *)
+let machine_int_of_name (s:string) : option (signedness & width) =
+  match s with
+  | "uint8"  -> Some (Unsigned, Int8)
+  | "uint16" -> Some (Unsigned, Int16)
+  | "uint32" -> Some (Unsigned, Int32)
+  | "uint64" -> Some (Unsigned, Int64)
+  | "int8"   -> Some (Signed, Int8)
+  | "int16"  -> Some (Signed, Int16)
+  | "int32"  -> Some (Signed, Int32)
+  | "int64"  -> Some (Signed, Int64)
+  | _ -> None
+
 (* [Some (op, arity)].  Note [add] and [add_mod] differ: the former is only
    defined when the result fits, so a backend may compile it to an operation
    that is undefined on overflow, whereas the latter must wrap. *)
@@ -147,6 +161,34 @@ let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
         | _ -> failwith "Custard: SizeT conversion applied to the wrong arity"))
 
     | _ -> None
+
+(* -------------------------------------------------------------------- *)
+(* FStar.Int.Cast                                                       *)
+(* -------------------------------------------------------------------- *)
+
+(* A width conversion is a coercion: [uint32_to_uint8] is specified as
+   [v x % pow2 8] and [int32_to_int8] as [v x @% pow2 8], which is exactly
+   what a C cast does.  Compiling the F* definitions instead would be correct
+   but drags in [Prims.pow2] -- a recursive function over unbounded integers --
+   and karamel has no rule for [FStar.Int.Cast] either: krmllib ships a header
+   full of [extern] declarations and no implementation, precisely because the
+   real pipeline reduces these to casts before they reach C.
+
+   The masking that a narrowing conversion needs is therefore the backend's
+   job.  C gets it for free; the OCaml backend, where every width is a
+   different type, prints the coercion as the corresponding [FStar_Int_Cast]
+   function (see [PrintOCaml]). *)
+let int_cast_rule (id:string) : ML (option rule) =
+  match String.split ['_'] id with
+  | [src; "to"; dst] ->
+    (match machine_int_of_name src, machine_int_of_name dst with
+     | Some _, Some sw ->
+       Some (Rule_prim (1, fun _ args ->
+         match args with
+         | [a] -> mk (ECast (a, TInt sw)) (TInt sw) a.eff
+         | _ -> failwith "Custard: integer conversion applied to the wrong arity"))
+     | _ -> None)
+  | _ -> None
 
 (* -------------------------------------------------------------------- *)
 (* Prims                                                                *)
@@ -409,7 +451,9 @@ let builtin_rule (l:Ident.lident) : ML rule =
         (match machine_int_of_module ns with
          | Some sw -> machine_int_rule sw id
          | None ->
-           if ns = ["Prims"] then prims_rule id else pulse_rule ns id)
+           if ns = ["Prims"] then prims_rule id
+           else if ns = ["FStar"; "Int"; "Cast"] then int_cast_rule id
+           else pulse_rule ns id)
       | [] -> None
   in
   match r with

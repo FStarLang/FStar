@@ -1688,6 +1688,34 @@ Concretely, the rules fall into four kinds:
    rule table alone is not enough — see §7.4.
 4. **Hand-realized definitions**: `assume val`s implemented in an `.ml`/`.c`
    file.  These become `DExternal` plus a link-time obligation.
+5. **Width conversions**: `FStar.Int.Cast` and `FStar.SizeT`'s
+   `uintN_to_sizet` family map to the IR's single coercion node, `ECast`.
+
+Kind 5 is the one where the two backends visibly disagree, and it is worth
+recording why.  `uint32_to_uint8` is *specified* as `v x % pow2 8`, and the
+signed conversions as `v x @% pow2 n`; that is exactly what a C cast does, so
+the Krml backend emits `(uint8_t)x` and is done.  Compiling F\*'s own
+definitions instead would be correct but drags `Prims.pow2` — a recursive
+function over unbounded integers — into the program, and krmllib does not
+help: it ships an `FStar_Int_Cast.h` full of `extern` declarations and *no*
+implementation, precisely because the reference pipeline reduces these to
+casts long before they reach C.
+
+OCaml cannot do the same, because every machine width there is a *distinct*
+type: `Stdint.UintN.t` at most widths, plain `int` for `FStar.UInt8`, and a
+boxed `Sz of UInt64.t` for `FStar.SizeT`.  An `Obj.magic` between two of them
+is a miscompilation, not a no-op, and a narrowing conversion additionally has
+to do the masking that the C cast does implicitly.  So the OCaml backend
+prints an `ECast` between two machine widths as the corresponding
+`FStar_Int_Cast` function, which `ulib/ml` realizes and which is by
+construction the same specification.  `FStar.SizeT` is not in that module, but
+its conversions are exact by their own preconditions, so they go through
+`Prims.int` — `FStar_SizeT.uint_to_t (FStar_UInt16.v x)` — the way the
+realization itself does.
+
+`tests/custard/MachineInts.fst` covers widening, unsigned narrowing, signed
+narrowing and the `FStar.SizeT` round trip on the OCaml side, and
+`tests/custard/KrmlBasic.fst` covers them on the C side.
 
 Effect-level behaviour (`extract_as_impure_effect`, effect classification, the
 drop/dup/reorder discipline) is deliberately *not* part of this table; it lives

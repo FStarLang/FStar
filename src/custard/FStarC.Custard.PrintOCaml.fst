@@ -137,6 +137,20 @@ let int_module (sw : signedness & width) : string =
      | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
      | Sizet -> "SizeT")
 
+(* A width as [FStar.Int.Cast] spells it: [uint32], [int8]. *)
+let int_cast_stem (sw : signedness & width) : ML string =
+  let s, w = sw in
+  (match s with Unsigned -> "uint" | Signed -> "int") ^
+  (match w with
+   | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
+   | Sizet -> failwith "Custard: FStar.SizeT has no FStar.Int.Cast conversion")
+
+(* The realization's injection from [Prims.int]: [uint_to_t] at an unsigned
+   width, [int_to_t] at a signed one. *)
+let int_inj (sw : signedness & width) : string =
+  let sgn, _ = sw in
+  int_module sw ^ (match sgn with Unsigned -> ".uint_to_t" | Signed -> ".int_to_t")
+
 let rec ty (t:cty) : ML string =
   match t with
   | TUnit -> "unit"
@@ -186,9 +200,7 @@ let constant (c:constant) : ML string =
   (* The realization's injection is [uint_to_t] for unsigned widths and
      [int_to_t] for signed ones. *)
   | CInt (s, Some sw) ->
-    let sgn, _ = sw in
-    let inj = match sgn with Unsigned -> "uint_to_t" | Signed -> "int_to_t" in
-    "(" ^ int_module sw ^ "." ^ inj ^ " (Prims.parse_int \"" ^ s ^ "\"))"
+    "(" ^ int_inj sw ^ " (Prims.parse_int \"" ^ s ^ "\"))"
   | CChar c -> "(FStar_Char.char_of_int (" ^ show (BU.int_of_char c) ^ "))"
   | CString s -> "\"" ^ escape s ^ "\""
 
@@ -317,7 +329,26 @@ let rec term (ind:string) (e:expr) : ML string =
   | EProj (e1, _, f) -> "(" ^ term ind e1 ^ ")." ^ ocaml_var f
   | EDiscrim (e1, n) ->
     "(match " ^ term ind e1 ^ " with " ^ ctor_ref n ^ " _ -> true | _ -> false)"
-  | ECast (e1, _) -> "(Obj.magic (" ^ term ind e1 ^ "))"
+  (* Every machine width is a *distinct* OCaml type -- [Stdint.UintN.t], plain
+     [int] for [FStar.UInt8], a boxed [Sz of UInt64.t] for [FStar.SizeT] -- so
+     an [Obj.magic] between two of them is a miscompilation, not a no-op.  C
+     gets a coercion between integer types for free; OCaml needs a conversion,
+     and a narrowing one needs the masking that the C cast does implicitly.
+     Both are exactly what [FStar.Int.Cast] specifies, so between two machine
+     widths that is what we call.  [FStar.SizeT] is not in that module, but its
+     conversions are exact by their own preconditions, so they can go through
+     [Prims.int] the way the realization itself does. *)
+  | ECast (e1, t) ->
+    (match e1.ty, t with
+     | TInt sw1, TInt sw2 when sw1 = sw2 -> term ind e1
+     | TInt sw1, TInt sw2 when snd sw1 <> Sizet && snd sw2 <> Sizet ->
+       "(FStar_Int_Cast." ^ int_cast_stem sw1 ^ "_to_" ^ int_cast_stem sw2 ^
+       " " ^ term ind e1 ^ ")"
+     | TInt sw1, TInt sw2 ->
+       "(" ^ int_inj sw2 ^ " (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
+     | TInt sw1, _ -> "(Obj.magic (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
+     | _, TInt sw2 -> "(" ^ int_inj sw2 ^ " (Obj.magic (" ^ term ind e1 ^ ")))"
+     | _ -> "(Obj.magic (" ^ term ind e1 ^ "))")
   (* An OCaml array is indexed by [int], the IR by a machine integer. *)
   | EOp ({ po_op = BufCreate _ }, [init; len]) ->
     "(Array.make " ^ index ind len ^ " " ^ term ind init ^ ")"
