@@ -212,17 +212,35 @@ let head_of t = let hd, _ = U.head_and_args_full t in hd
    The pattern-bound variables of the branch are bound to subterms of the
    normalized scrutinee, so the memos we set for them must be tagged with this
    cfg, and not with cfg itself: their normal forms are only as reduced as the
-   scrutinee is. *)
-let weak_scrutinee_cfg (cfg:Cfg.cfg) : option Cfg.cfg =
+   scrutinee is.
+
+   Building this cfg allocates a fresh cfg and fsteps record, and we do it once
+   per match we reduce, so we cache the last one. Besides saving the allocation,
+   this makes the cfg *physically* equal across calls, which is what makes the
+   memo lookups below succeed on the cheap physical equality test instead of a
+   structural comparison of the whole fsteps record. *)
+let weak_scrutinee_cache : ref (option (Cfg.cfg & Cfg.cfg)) = mk_ref None
+
+let weak_scrutinee_cfg (cfg:Cfg.cfg) : ML (option Cfg.cfg) =
   if cfg.steps.iota
      && cfg.steps.weakly_reduce_scrutinee
      && not cfg.steps.weak
-  then Some ({ cfg with steps = { cfg.steps with weak = true } })
+  then
+    match !weak_scrutinee_cache with
+    | Some (cfg0, cfg0') when BU.physical_equality cfg cfg0 -> Some cfg0'
+    | _ ->
+      let cfg' = { cfg with steps = { cfg.steps with weak = true } } in
+      weak_scrutinee_cache := Some (cfg, cfg');
+      Some cfg'
   else None
 
 (* Decides whether a memo taken in config c1 is valid when reducing in config
-   c2, i.e. whether the two configs reduce exactly the same way. *)
+   c2, i.e. whether the two configs reduce exactly the same way.
+   The common case by far is a weak cfg meeting a strong one (see
+   weak_scrutinee_cfg), so check that field first: it makes the negative case a
+   single comparison instead of a walk over the whole fsteps record. *)
 let cfg_equivalent (c1 c2 : Cfg.cfg) : ML bool =
+  c1.steps.weak = c2.steps.weak &&
   c1.steps =? c2.steps &&
   c1.delta_level =? c2.delta_level &&
   c1.normalize_pure_lets =? c2.normalize_pure_lets
@@ -249,13 +267,15 @@ let lookup_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
   | Some l -> lookup_memo_aux cfg l
 
 let read_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
-  match lookup_memo cfg r with
-  | Some a -> Some a
-  (* In compatibility mode we take any memoized value, even one computed in a
-     different cfg. *)
-  | None ->
-    if cfg.compat_memo_ignore_cfg
-    then (match memo_entries r with
+  match !r with
+  | None -> None
+  | Some l ->
+    let res = lookup_memo_aux cfg l in
+    if Some? res then res
+    (* In compatibility mode we take any memoized value, even one computed in a
+       different cfg. *)
+    else if cfg.compat_memo_ignore_cfg
+    then (match l with
           | (_, a) :: _ -> Some a
           | [] -> None)
     else None
@@ -2812,24 +2832,25 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                 //otherwise, we will keep reducing them over and over
                 //again. See, e.g., Issue #2757
 
-                //We record the value under two cfgs. First under the cfg that
-                //was actually used to reduce the scrutinee (weak_scrutinee_cfg):
-                //that entry is honest, so a later weak reduction can use it as
-                //is, without the linear-time maybe_weakly_reduced scan that
-                //would make traversing a large data structure quadratic (see
-                //Issue #4394). And second under cfg itself, so that a strong
-                //reduction still finds it and falls back to inspecting it with
-                //maybe_weakly_reduced, as it always has.
+                //We record the value under two cfgs. First under cfg itself,
+                //so that a strong reduction finds it right away and falls back
+                //to inspecting it with maybe_weakly_reduced, as it always has.
+                //And second under the cfg that was actually used to reduce the
+                //scrutinee (weak_scrutinee_cfg): that entry is honest, so a
+                //later weak reduction can use it as is, without the
+                //linear-time maybe_weakly_reduced scan that would make
+                //traversing a large data structure quadratic (see Issue #4394).
 
                 //Except, if the normalizer is running in HEAD normal form mode, 
                 //then the sub-terms of the scrutinee might not be reduced yet.
                 //In that case, do not set the memo reference
+                let scrut_cfg = weak_scrutinee_cfg cfg in
                 let mk_memo t =
                   if cfg.steps.hnf then mk_ref None
                   else
                     let v = ([], t) in
-                    match weak_scrutinee_cfg cfg with
-                    | Some scrut_cfg -> mk_ref (Some [(scrut_cfg, v); (cfg, v)])
+                    match scrut_cfg with
+                    | Some scrut_cfg -> mk_ref (Some [(cfg, v); (scrut_cfg, v)])
                     | None -> mk_ref (Some [(cfg, v)])
                 in
                 let env = List.fold_left
