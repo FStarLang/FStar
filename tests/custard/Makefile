@@ -19,6 +19,20 @@ CUSTARD_TESTS += Mutual
 CUSTARD_TESTS += Anf
 CUSTARD_TESTS += Phantom
 CUSTARD_TESTS += ShortCircuit
+CUSTARD_TESTS += MonoTypes
+
+# FLAGS_<name> are extra options for that test's extraction.
+FLAGS_MonoTypes = --custard_monomorphize_types true
+
+# Section 5.0: with type monomorphization on, nothing polymorphic may survive
+# -- no type variable anywhere in the file -- and each instantiation must be
+# its own declaration, including the nested one and the two that are only
+# spelled differently ('pair_of_ints' is 'both int', and 'nat' is 'int').
+GREP_MonoTypes   = "type monoTypes_both__int" "type monoTypes_both__bool" \
+                   "monoTypes_tree__int" "monoTypes_tree__string" \
+                   "type prims_list__int" "type prims_list__list_int" \
+                   "monoTypes_via_abbrev (p : monoTypes_both__int)"
+NOGREP_MonoTypes = "'"
 
 # GREP_<name>/NOGREP_<name> additionally assert on the generated .ml.  For
 # Combinators (section 3.9) the *shape* of the output is the point: one
@@ -96,7 +110,7 @@ WARN_ANY = --custard_warn_any --warn_error @366
 # pipeline instead, which is whole-program and hence keyed on an entry point.
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_main $*.main $< -o $@
+	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_main $*.main $< -o $@
 	$(Q)for p in $(GREP_$*); do \
 	  grep -q -- "$$p" $@ \
 	    || { echo "ERROR: $* output is missing $$p"; exit 1; }; done
@@ -107,7 +121,7 @@ $(OUTPUT_DIR)/%.ml:
 $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "REJECT", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
 	  --custard_main $*.main $< >$(OUTPUT_DIR)/$*.err 2>&1 || true
 	$(Q)grep -q "Error $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
 	  || { echo "ERROR: expected error $(CODE_$*) from $*"; cat $(OUTPUT_DIR)/$*.err; false; }
@@ -116,7 +130,7 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "ROOTS", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) \
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
 	  $(foreach r,$(ROOTS_$*),--custard_entry $*.$(r)) \
 	  $(patsubst %,%.fst,$*) -o $(OUTPUT_DIR)/$*.ml
 	$(Q)for p in $(GREP_$*); do \
@@ -129,7 +143,7 @@ $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked
 
 $(OUTPUT_DIR)/%.krml:
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend Krml \
+	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend Krml \
 	  --custard_main $*.main $< -o $@
 
 # karamel emits its own compile_flags.txt, which is the only portable way to

@@ -30,6 +30,7 @@ module Krml    = FStarC.Custard.PrintKrml
 module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
 module Layout  = FStarC.Custard.Layout
+module Monomorphize = FStarC.Custard.Monomorphize
 module OCaml   = FStarC.Custard.PrintOCaml
 module Rename  = FStarC.Custard.Rename
 module Simplify = FStarC.Custard.Simplify
@@ -171,6 +172,11 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   (* Phase 4 pass 1: let-normalization, before anything that moves a subterm
      (section 6). *)
   let prog = Simplify.anf prog in
+  (* Section 5.0: one type declaration per instantiation.  Before the layout
+     analysis, so that with no type variables left it may be precise per
+     instantiation rather than uniform. *)
+  let prog = if Options.custard_monomorphize_types ()
+             then Monomorphize.run prog else prog in
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog = Layout.run prog in
   (* Effect-guarded simplification (sections 6 and 7.3). *)

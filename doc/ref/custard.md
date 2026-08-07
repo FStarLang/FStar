@@ -1070,6 +1070,70 @@ precision.  One rule, two regimes: uniform compilation of types when they stay
 polymorphic, per-instantiation layouts when everything is monomorphized.  There
 is no middle setting in v1.
 
+#### 5.0.1 The type monomorphization pass
+
+`--custard_monomorphize_types` is two separate things.  Rule 4 of §3.1 makes
+every *function*'s type binders `Mono`, which specialization then consumes, so
+no function is left polymorphic.  That leaves the polymorphic type
+*declarations* the functions mention: `list` is still one declaration with one
+parameter, and the program says `TApp (list, [int])` here and
+`TApp (list, [bool])` there.  A separate IR-to-IR pass,
+`FStarC.Custard.Monomorphize`, gives each distinct instantiation a declaration
+of its own.
+
+It is a pass over the IR rather than part of the extractor.  The extractor's
+job — deciding what to compile and at what instantiation — is already
+delicate, and this needs none of it: by the time the IR exists every type is
+ground, so the set of instantiations is simply what is written in the program.
+Nested instantiations (`list (list int)`) then fall out of a worklist instead
+of having to be threaded through the demand-driven loop.  And it runs *before*
+the layout analysis, which is what earns the second regime above: with no type
+variables left the uniformity rule is vacuous, and layouts really are computed
+per instantiation.
+
+Four things make it work.
+
+1. **Constructor names follow their owner.**  A clone's constructors get the
+   *owner type's* suffix — `Prims.Nil` of `list@uint32` is `Prims.Nil@uint32` —
+   rather than a suffix of their own.  A use site can then rename a
+   constructor knowing only the type it is building or matching, which every
+   use site does know.
+
+2. **Patterns are rewritten top down**, against the type the scrutinee had
+   *before* rewriting, and the subpatterns against the field types read off the
+   original polymorphic declaration with a positional substitution.  That needs
+   only the original declarations, so it does not matter whether the clone's
+   body has been built yet.  The scrutinee's type comes from an environment of
+   binder types, not from the `ty` field of the scrutinee node: binder types
+   are exactly what this pass rewrites and so are known precisely, whereas
+   `ty` is best-effort metadata (§2.2) that is often `TAny`.
+
+3. **Abbreviations are looked through.**  A type abbreviation is not a
+   representation and so is not an instantiation either: `bytes = list uint32`
+   has to be unfolded to find the instantiation a use site means, and `nat` has
+   to be unfolded so that it does not ask for a different clone than `int`.
+   The layout pass unfolds abbreviations anyway, immediately afterwards, so
+   nothing is lost by doing it here.
+
+4. **Externally realized types are frozen.**  An external is realized by
+   hand-written code in the target language, which this pass cannot rewrite.
+   If `FStar.String.concat` is realized in OCaml at `'a list`, then `list` has
+   to stay one polymorphic declaration and every use of it has to agree.  So
+   every type mentioned in an external's signature is frozen, transitively,
+   along with everything reachable from it, and is left alone.  In C, where
+   nothing is realized polymorphically, this set is empty — which is why the
+   flag delivers a completely monomorphic program there and only a mostly
+   monomorphic one under the OCaml backend.
+
+Ordering costs nothing: the clones are appended at the end of the program,
+because `Simplify.scc` topologically sorts the whole program — type
+declarations included — at the end of phase 4, which is after this pass runs.
+
+`tests/custard/MonoTypes.fst` is the test.  It asserts that two instantiations
+of one type become two declarations, that a nested `list (list int)` works,
+that an abbreviation and its expansion share a declaration, and that no type
+variable survives anywhere in the generated file.
+
 ### 5.1 Erasure
 
 A type is erased when it is non-informative.  The existing predicate is
@@ -2235,4 +2299,5 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6h | `--custard_warn_any` (§5.6); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
 | M6i | Short-circuiting `&&`/`\|\|` (§6 pass 1): infix emission, bitwise guard | Done. `tests/custard/ShortCircuit.fst`, and the C side in `KrmlBasic.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
-| M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |
+| M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | `MonoTypes`; whole corpus re-run under the flag |
+| M8 | Direct-to-C backend | Only after M5 proves the IR is adequate |

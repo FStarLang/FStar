@@ -102,9 +102,11 @@ let realization_of (n:name) : ML string =
   | ns -> String.concat "_" ns ^ "." ^ lowercase_first (sanitize n.id)
 
 (* Types with a built-in OCaml realization; emitting a declaration for these
-   would shadow the real one. *)
+   would shadow the real one.  A monomorphized clone carries a [spec] suffix
+   and is a genuinely new type, so it is declared and referred to like any
+   other. *)
 let builtin_type (n:name) : ML (option string) =
-  match String.concat "." (n.ns @ [n.id]) with
+  match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
   | "Prims.unit" -> Some "unit"
   | "Prims.bool" -> Some "bool"
   | "Prims.string" -> Some "string"
@@ -286,7 +288,7 @@ and ctor_ref (n:name) : ML string =
   | None -> uppercase_first (sanitize (mangled_name n))
 
 and builtin_ctor (n:name) : ML (option string) =
-  match String.concat "." (n.ns @ [n.id]) with
+  match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
   | "Prims.Nil" -> Some "[]"
   | "Prims.Cons" -> Some "::"
   | _ -> None
