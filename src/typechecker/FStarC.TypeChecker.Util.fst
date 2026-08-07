@@ -706,14 +706,7 @@ let should_return env eopt lc : ML _ =
  * The postcondition of [c1] is thus *assumed* while checking the continuation,
  * which is exactly the intended reading of the specification.
  *)
-(* No specification composed here will ever be looked at: phase 1 of two-phase
-   type-checking only elaborates the term and throws its types away, and under
-   [--admit_smt_queries] no verification condition is ever discharged.
-
-   Deliberately *not* conditioned on [--lax]: the type we infer for a
-   definition must not depend on whether we are verifying it. *)
-let discard_specs env : ML bool =
-  env.phase1 || Options.admit_smt_queries ()
+let discard_specs = Env.discard_specs
 
 let mk_bind env
   (c1:comp)

@@ -417,6 +417,7 @@ val lookup_and_inst_datacon: env -> universes -> lident -> ML (typ)
 (* the boolean tells if the lident was actually a inductive *)
 
 val datacons_of_typ        : env -> lident -> ML ((bool & list lident))
+val discard_specs          : env -> ML bool
 val type_hypothesis        : env -> typ -> term -> ML term
 
 val typ_of_datacon         : env -> lident -> ML (lident)
