@@ -162,13 +162,35 @@ let reifying_true (cfg:config) =
   if not (cfg.core_cfg.reifying)
   then new_config ({cfg.core_cfg with reifying=true}) //blow away cache
   else cfg
-let zeta_false (cfg:config) =
+(* The configuration used to read back the branches of a stuck match.
+
+   This mirrors [cfg_exclude_zeta] in FStarC.TypeChecker.Normalize: under a
+   stuck scrutinee we stop unfolding altogether, keeping only the unfoldings
+   that are unconditional (inlining and eager unfolding). Besides matching the
+   reference normalizer, this is what makes it sound to unfold a recursive
+   definition applied to symbolic arguments: the recursive occurrences left in
+   the branches are not unfolded again, so the process terminates. *)
+let stuck_match_cfg (cfg:config) =
     let cfg_core = cfg.core_cfg in
-    if cfg_core.steps.zeta
-    then
-      let cfg_core' = {cfg_core with steps={cfg_core.steps with zeta=false}} in // disable zeta flag
-      new_config cfg_core' //blow away cache
-    else cfg
+    if cfg_core.steps.zeta_full
+    then cfg
+    else
+      let delta_level =
+        cfg_core.delta_level |> List.filter (function
+          | Env.InliningDelta
+          | Env.Eager_unfolding_only -> true
+          | _ -> false)
+      in
+      let steps = { cfg_core.steps with
+                    zeta = false;
+                    unfold_until = None;
+                    unfold_only = None;
+                    unfold_attr = None;
+                    unfold_qual = None;
+                    unfold_namespace = None;
+                    dont_unfold_attr = None }
+      in
+      new_config ({cfg_core with delta_level; steps}) //blow away cache
 let cache_add (cfg:config) (fv:fv) (v:t) =
   let lid = fv.fv_name in
   SMap.add cfg.fv_cache (string_of_lid lid) v
@@ -565,7 +587,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
 
       (* Thunked computation that reconstructs the patterns *)
       let make_branches () : ML (list branch) =
-        let cfg = zeta_false cfg in
+        let cfg = stuck_match_cfg cfg in
         let rec process_pattern bs (p:pat) : ML (list t & pat) = (* returns new environment and pattern *)
           let (bs, p_new) =
             match p.v with

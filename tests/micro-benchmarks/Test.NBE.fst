@@ -146,3 +146,20 @@ let test_refinement_binder_name =
     let b = norm_term (nbe::steps) t in
     if term_to_string a = term_to_string b then () else
     fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))
+
+(* When a match is stuck, the normalizer reads back its branches with all the
+   unfolding directives removed (cfg_exclude_zeta in FStarC.TypeChecker.Normalize),
+   so `g` below is left alone under the stuck `match`. NBE only used to turn
+   zeta off, and so kept unfolding inside the branches. *)
+let g_stuck (x:int) : int = x + 1
+let h_stuck (l:list int) : int = match l with | [] -> 0 | y::_ -> g_stuck y
+
+let test_stuck_match_branches (l:list int) =
+  assert True by (
+    let open FStar.Tactics.V2 in
+    let steps = [delta_only [`%h_stuck; `%g_stuck]; iota; zeta; unascribe] in
+    let t = (`(h_stuck (`#(quote l)))) in
+    let a = norm_term steps t in
+    let b = norm_term (nbe::steps) t in
+    if term_to_string a = term_to_string b then () else
+    fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))
