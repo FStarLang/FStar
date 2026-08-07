@@ -83,6 +83,14 @@ KRML_TESTS += KrmlBasic
 # monomorphization (section 5.0.1).
 C_TESTS += KrmlBasic
 
+# CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
+# output-quality invariants of section 6: a unit parameter is a thunk, which C
+# does not need; a pattern binding is an alias, not a copy; and the last arm
+# of an exhaustive match is not guarded.
+CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
+                    "_cs1.val.KrmlBasic_Square._0 * _cs1.val.KrmlBasic_Square._0"
+CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
+
 # Each of these is extracted with --custard_entry and *no* --custard_main, as a
 # library would be: the generated .ml must contain every GREP_<name> pattern
 # and none of the NOGREP_<name> ones.
@@ -177,6 +185,12 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
 	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+	$(Q)for p in $(CGREP_$*); do \
+	  grep -qF -- "$$p" $@ \
+	    || { echo "ERROR: $* C output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(CNOGREP_$*); do \
+	  grep -qF -- "$$p" $@ \
+	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
 
 $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
 	$(call msg, "CC", $(basename $(notdir $@)))

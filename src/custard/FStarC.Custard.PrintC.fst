@@ -123,6 +123,19 @@ let ctors : ref (SMap.t (dtype & list (string & cty))) = mk_ref (SMap.create 0)
 (* external name -> the symbol to call it by *)
 let externs : ref (SMap.t string) = mk_ref (SMap.create 0)
 
+(* Which parameters of a definition survive into C.  A [unit] parameter the
+   body never mentions carries no information -- it is F*'s way of writing a
+   thunk, and C has no laziness to preserve -- so it is dropped from the
+   signature and from every call site.  The flags are computed once, in
+   [print_program], because the call site has to make the same decision as the
+   definition. *)
+let keeps : ref (SMap.t (list bool)) = mk_ref (SMap.create 0)
+
+let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
+  match flags, xs with
+  | b :: flags, x :: xs -> (if b then [x] else []) @ filter_by flags xs
+  | _ -> xs
+
 let find_type (n:name) : ML (option dtype) = SMap.try_find !types (string_of_name n)
 let find_ctor (n:name) : ML (option (dtype & list (string & cty))) =
   SMap.try_find !ctors (string_of_name n)
@@ -230,6 +243,10 @@ let ty (t:cty) : ML string = decl_of t ""
 (* Constants                                                            *)
 (* -------------------------------------------------------------------- *)
 
+(* The unit value.  There is only one, and nothing may be done with it, so it
+   is worth recognizing on sight. *)
+let unit_value : string = "((custard_unit)0)"
+
 let escape (s:string) : ML string =
   let esc (c:char) : ML string =
     match c with
@@ -250,7 +267,7 @@ let escape (s:string) : ML string =
 
 let constant (c:constant) : ML string =
   match c with
-  | CUnit -> "((custard_unit)0)"
+  | CUnit -> unit_value
   | CBool b -> if b then "true" else "false"
   | CInt (s, Some sw) ->
     (* The cast pins the type: an unsuffixed literal is [int], which would make
@@ -332,6 +349,13 @@ let bind_var (x:string) : ML string =
   scope := (x, nm) :: !scope;
   nm
 
+(* A pattern binding does not need a variable of its own: the value it names is
+   already reachable, as a projection out of the scrutinee, and both are
+   immutable.  Binding the *path* instead of declaring a copy is what turns
+   [{ size_t sz_1 = s.sz; t = sz_1; }] into [t = s.sz;]. *)
+let bind_alias (x:string) (path:string) : ML unit =
+  scope := (x, path) :: !scope
+
 let lookup_var (x:string) : ML string =
   match !scope |> List.tryFind (fun (y, _) -> y = x) with
   | Some (_, nm) -> nm
@@ -406,6 +430,15 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      | Some t -> t
      | None -> c_name n)
   | EApp (hd, args) ->
+    (* Drop the arguments that correspond to dropped parameters.  ANF has made
+       every operand pure, so nothing is lost by not evaluating them. *)
+    let args =
+      match hd.e with
+      | EQual (n, _) ->
+        (match SMap.try_find !keeps (string_of_name n) with
+         | Some flags -> filter_by flags args
+         | None -> args)
+      | _ -> args in
     c_expr out ind hd ^ "(" ^
     String.concat ", " (args |> List.map (c_expr out ind)) ^ ")"
   | ECast (e1, t) ->
@@ -514,8 +547,9 @@ and finish (ind:string) (d:dest) (s:string) : ML string =
   | D_Return -> ind ^ "return " ^ s ^ ";\n"
   | D_Assign x -> ind ^ x ^ " = " ^ s ^ ";\n"
   (* The value is computed for its effect; the cast silences the warning that
-     it is unused. *)
-  | D_Ignore -> ind ^ "(void)(" ^ s ^ ");\n"
+     it is unused.  A unit constant computes nothing, so it needs neither. *)
+  | D_Ignore ->
+    if s = unit_value then "" else ind ^ "(void)(" ^ s ^ ");\n"
 
 and emit (ind:string) (d:dest) (e:expr) : ML string =
   let ind' = ind ^ "  " in
@@ -561,7 +595,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     ind' ^ "if (!(" ^ cs ^ ")) { break; }\n" ^
     emit ind' D_Ignore body ^
     ind ^ "}\n" ^
-    (match d with D_Ignore -> "" | _ -> finish ind d "((custard_unit)0)")
+    (match d with D_Ignore -> "" | _ -> finish ind d unit_value)
 
   (* Control does not reach here.  [abort] is [_Noreturn], so no [return]
      has to follow it even in a value position. *)
@@ -601,7 +635,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     !out ^ finish ind d s
 
 and unit_result (ind:string) (d:dest) : ML string =
-  match d with D_Ignore -> "" | _ -> finish ind d "((custard_unit)0)"
+  match d with D_Ignore -> "" | _ -> finish ind d unit_value
 
 (* [BufCreate] is [init; len]: a run of [len] copies of [init].  A stack
    allocation is a local array -- a variable-length one when the length is not
@@ -639,14 +673,11 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
    that reaches the sub-value the pattern is matching.  Compiling to an
    if/else chain rather than a [switch] is what lets a nested pattern, a
    constant pattern and a variable pattern all be handled by one mechanism. *)
-and pat_tests (used:list string) (path:string) (t:cty) (p:pat)
-    : ML (list string & list string) =
+and pat_tests (path:string) (t:cty) (p:pat)
+    : ML (list string & list (string & string)) =
   match p with
   | PWild -> ([], [])
-  | PVar x ->
-    if List.existsb (fun y -> y = x) used
-    then ([], [decl_of t (bind_var x) ^ " = " ^ path ^ ";"])
-    else ([], [])
+  | PVar x -> ([], [(x, path)])
   | PConst c -> ([path ^ " == " ^ constant c], [])
   | PTuple _ ->
     reject "an anonymous tuple pattern"
@@ -665,15 +696,19 @@ and pat_tests (used:list string) (path:string) (t:cty) (p:pat)
          if single_ctor d then path ^ "." ^ c_var f
          else path ^ ".val." ^ c_var (mangled_name cn) ^ "." ^ c_var f in
        let rec go (fs : list (string & cty)) (ps : list pat)
-                : ML (list string & list string) =
+                : ML (list string & list (string & string)) =
          match fs, ps with
          | (f, ft) :: fs, p :: ps ->
-           let t1, b1 = pat_tests used (sub f) ft p in
+           let t1, b1 = pat_tests (sub f) ft p in
            let t2, b2 = go fs ps in
            (t1 @ t2, b1 @ b2)
          | _ -> ([], []) in
        let t2, b2 = go fields ps in
        (tests @ t2, b2))
+
+and guard_rejected (#a:Type) () : ML a =
+  reject "a pattern guard"
+    ["Rewrite the guard as an 'if' in the branch body."]
 
 and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string =
   let out = mk_ref "" in
@@ -684,43 +719,51 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      what a [let] over an irrefutable pattern turns into. *)
   let x = fresh "s" in
   let looked_at =
-    let saved = !scope in
-    let r = brs |> List.existsb (fun (p, g, b) ->
-              let ts, bs = pat_tests (vars_of_branch (p, g, b)) x scrut.ty p in
-              Cons? ts || Cons? bs) in
-    scope := saved; r in
+    brs |> List.existsb (fun (p, _, _) ->
+      let ts, bs = pat_tests x scrut.ty p in
+      Cons? ts || Cons? bs) in
   let ind' = ind ^ "  " in
   if not looked_at then
     (match brs with
-     | (_, None, b) :: _ -> !out ^ ind ^ "(void)(" ^ sv ^ ");\n" ^ emit ind d b
-     | _ -> !out ^ ind ^ "(void)(" ^ sv ^ ");\n" ^ ind ^ "abort();\n")
+     | (_, None, b) :: _ -> !out ^ finish ind D_Ignore sv ^ emit ind d b
+     | _ -> !out ^ finish ind D_Ignore sv ^ ind ^ "abort();\n")
   else
   let head = !out ^ ind ^ decl_of scrut.ty x ^ " = " ^ sv ^ ";\n" in
+  (* The bindings of a branch are aliases, not declarations (see
+     [bind_alias]), so a branch body is emitted with them in scope and the
+     scope is restored afterwards. *)
+  let branch_body (p:pat) (b:expr) : ML string =
+    let saved = !scope in
+    let _, binds = pat_tests x scrut.ty p in
+    binds |> List.iter (fun (v, path) -> bind_alias v path);
+    let body = emit ind' d b in
+    scope := saved;
+    body in
   let rec go (first:bool) (brs:list branch) : ML string =
+    let block (p:pat) (b:expr) : ML string =
+      (if first then ind ^ "{\n" else ind ^ "else {\n") ^
+      branch_body p b ^ ind ^ "}\n" in
     match brs with
-    | [] ->
-      (* A match the type says is exhaustive but the tests do not prove so.
-         Falling off the end of a value-producing chain would be undefined,
-         so it aborts instead. *)
-      ind ^ "else {\n" ^ ind' ^ "abort();\n" ^ ind ^ "}\n"
+    (* F* has already checked that the match is exhaustive, so the last branch
+       is the one that runs when no earlier one did: its tests would always
+       succeed, and testing them anyway would only add a branch C cannot see
+       is dead.  This is the same reasoning that lets a projector be emitted
+       without a tag check. *)
+    | [] -> ""
+    | [(p, g, b)] ->
+      if Some? g then guard_rejected ();
+      block p b
     | (p, g, b) :: rest ->
-      if Some? g then
-        reject "a pattern guard"
-          ["Rewrite the guard as an 'if' in the branch body."];
-      let saved = !scope in
-      let tests, binds = pat_tests (vars_of_branch (p, g, b)) x scrut.ty p in
-      let body =
-        String.concat "" (binds |> List.map (fun s -> ind' ^ s ^ "\n")) ^
-        emit ind' d b in
-      scope := saved;
+      if Some? g then guard_rejected ();
+      let tests, _ = pat_tests x scrut.ty p in
       if Nil? tests then
         (* Irrefutable, so it is the last branch that can run; anything after
            it is dead and C would warn about it. *)
-        (if first then ind ^ "{\n" ^ body ^ ind ^ "}\n"
-         else ind ^ "else {\n" ^ body ^ ind ^ "}\n")
+        block p b
       else
         (if first then ind else ind ^ "else ") ^
-        "if (" ^ String.concat " && " tests ^ ") {\n" ^ body ^ ind ^ "}\n" ^
+        "if (" ^ String.concat " && " tests ^ ") {\n" ^
+        branch_body p b ^ ind ^ "}\n" ^
         go false rest in
   head ^ go true brs
 
@@ -804,10 +847,15 @@ let type_decl (d:dtype) : ML (option string) =
                "  } val;\n") ^
             "} " ^ n ^ ";\n")
 
+let kept_binders (l:dlet) : ML (list binder) =
+  match SMap.try_find !keeps (string_of_name l.dl_name) with
+  | Some flags -> filter_by flags l.dl_binders
+  | None -> l.dl_binders
+
 (* The C signature of a definition, without the trailing [;] or body. *)
 let signature (l:dlet) : ML string =
   let args =
-    match l.dl_binders with
+    match kept_binders l with
     | [] -> "void"
     | bs -> String.concat ", " (bs |> List.map (fun b -> decl_of b.b_ty (lookup_var b.b_name))) in
   decl_of l.dl_ret (c_name l.dl_name ^ "(" ^ args ^ ")")
@@ -822,7 +870,7 @@ let let_decl (l:dlet) : ML string =
   current := string_of_name l.dl_name;
   ctr := 0;
   reset_scope ();
-  l.dl_binders |> List.iter (fun b -> let _ = bind_var b.b_name in ());
+  kept_binders l |> List.iter (fun b -> let _ = bind_var b.b_name in ());
   if Nil? l.dl_binders then
     reject ("the top-level value " ^ string_of_name l.dl_name)
       ["C has no way to initialize a global from a computation.";
@@ -831,7 +879,7 @@ let let_decl (l:dlet) : ML string =
   (* C also warns about an unused *parameter*, and a definition's parameters
      have to be named, so the ones the body never mentions are voided
      explicitly. *)
-  let voids = String.concat "" (l.dl_binders |> List.collect (fun b ->
+  let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
     if List.existsb (fun y -> y = b.b_name) used then []
     else ["  (void)" ^ lookup_var b.b_name ^ ";\n"])) in
   signature l ^ " {\n" ^ voids ^ emit "  " D_Return l.dl_body ^ "}\n"
@@ -870,6 +918,7 @@ let print_program (p:program) : ML string =
   let tt = SMap.create 50 in
   let ct = SMap.create 50 in
   let xt = SMap.create 20 in
+  let kt = SMap.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DType t ->
@@ -883,8 +932,17 @@ let print_program (p:program) : ML string =
         (match x.dx_target with
          | Some "" | None -> c_name x.dx_name
          | Some t -> escape_kw (sanitize t))
+    | DLet l ->
+      let used = vars_of l.dl_body in
+      let flags = l.dl_binders |> List.map (fun b ->
+        not (TUnit? b.b_ty) || List.existsb (fun y -> y = b.b_name) used) in
+      (* Only worth recording when it changes something, and never for a
+         definition whose every parameter would go: [f()] is fine, but the
+         rejection of a parameterless definition below is about the IR, so the
+         two must not be confused. *)
+      if List.existsb (fun b -> not b) flags then SMap.add kt (string_of_name l.dl_name) flags
     | _ -> ());
-  types := tt; ctors := ct; externs := xt;
+  types := tt; ctors := ct; externs := xt; keeps := kt;
 
   (* Only the standard library, and only the parts that are used unavoidably:
      fixed-width integers, malloc/free/abort, memmove, and bool. *)
@@ -932,7 +990,7 @@ let print_program (p:program) : ML string =
     | DLet l when Cons? l.dl_binders ->
       current := string_of_name l.dl_name;
       reset_scope ();
-      l.dl_binders |> List.iter (fun b -> let _ = bind_var b.b_name in ());
+      kept_binders l |> List.iter (fun b -> let _ = bind_var b.b_name in ());
       [(if l.dl_flags |> List.existsb Private? then "static " else "") ^
        signature l ^ ";\n"]
     | _ -> []) in
@@ -951,7 +1009,7 @@ let print_program (p:program) : ML string =
     | DLet l when l.dl_flags |> List.existsb Entrypoint? ->
       current := string_of_name l.dl_name;
       let args = String.concat ", "
-                   (l.dl_binders |> List.map (fun _ -> "((custard_unit)0)")) in
+                   (kept_binders l |> List.map (fun _ -> unit_value)) in
       let call = c_name l.dl_name ^ "(" ^ args ^ ")" in
       (match l.dl_ret with
        | TInt _ -> ["int main(void) {\n  return (int)" ^ call ^ ";\n}\n"]

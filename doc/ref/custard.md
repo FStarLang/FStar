@@ -1774,7 +1774,27 @@ Emission:
   **Matching is an if/else-if chain**, not a `switch`: nested patterns,
   constant patterns and variable patterns then all go through one mechanism,
   which walks a pattern against an access *path* and returns a list of tests
-  and a list of bindings.  The chain ends in `abort()`.
+  and a list of bindings.
+
+  Two things the chain deliberately does *not* do:
+
+  - It does not test the **last** branch.  F\* has already checked that the
+    match is exhaustive, so the last arm is the one that runs when no earlier
+    one did; testing it anyway would only add an `else { abort(); }` that C
+    cannot see is dead.  This is the same reasoning that lets `EProj` be
+    emitted without a tag check.  An `abort()` in the output therefore always
+    stands for something in the source — a `Pulse.Lib.Dv.unreachable`, a failed
+    allocation — and never for the backend hedging.
+  - It does not **copy** what a pattern binds.  A binding names a value that is
+    already reachable as a projection out of the scrutinee, and both are
+    immutable, so the variable is bound to the *path* rather than declared:
+    `{ size_t sz_1 = s.sz; t = sz_1; }` becomes `t = s.sz;`.
+
+  **A `unit` parameter the body never mentions is dropped**, from the
+  signature and from every call site — it is how F\* writes a thunk, and C has
+  no laziness to preserve.  So `main` is `int32_t main(void)`, not
+  `int32_t main(custard_unit tmp)`.  ANF is what makes dropping the *argument*
+  safe: every operand is already pure, so not evaluating it loses nothing.
 
   **C scoping is coarser than the IR's.**  A chain of `ELet`s, and a loop's
   condition and body, all land in the same C block, while the IR scopes them
