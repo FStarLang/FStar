@@ -195,9 +195,23 @@ type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
 
-(* Decides whether a memo taken in config c1 is valid when reducing in config c2. *)
+(* Decides whether a memo taken in config c1 is valid when reducing in config c2.
+
+   The `weak` and `hnf` flags only ever make the normalizer reduce *less*, so a
+   memo taken without them is still a valid answer for a config that has them
+   set (a strong normal form is also a weak/head normal form). The converse is
+   not true, so we require c1.weak ==> c2.weak (and likewise for hnf).
+
+   This matters a lot for performance: matches are normalized by first weakly
+   reducing the scrutinee with a `weak = true` config (see the
+   `weakly_reduce_scrutinee` step). Without this, every such weak normalization
+   would reject the memos taken by the enclosing strong normalization and
+   recompute them from scratch, making e.g. `assert_norm (List.length l = n)`
+   quadratic in the length of the list. See issue #4394. *)
 let cfg_equivalent (c1 c2 : Cfg.cfg) : ML bool =
-  c1.steps =? c2.steps &&
+  (not c1.steps.weak || c2.steps.weak) &&
+  (not c1.steps.hnf || c2.steps.hnf) &&
+  ({ c1.steps with weak = c2.steps.weak; hnf = c2.steps.hnf }) =? c2.steps &&
   c1.delta_level =? c2.delta_level &&
   c1.normalize_pure_lets =? c2.normalize_pure_lets
 
