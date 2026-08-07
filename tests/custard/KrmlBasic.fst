@@ -34,6 +34,14 @@ let truncate (x:U32.t) : U8.t = Cast.uint32_to_uint8 x
 let roundtrip (x:U32.t) : U32.t = Cast.uint8_to_uint32 (truncate x)
 let via_sizet (x:U16.t) : U64.t = SZ.sizet_to_uint64 (SZ.uint16_to_sizet x)
 
+(* Section 6, pass 8: a cycle has no order in which every member precedes its
+   uses, so the SCC pass has to find it.  karamel recovers the recursion
+   itself, but it still needs the definitions to reach it. *)
+let rec even (n:U32.t) : Tot bool (decreases U32.v n) =
+  if U32.eq n 0ul then true else odd (U32.sub n 1ul)
+and odd (n:U32.t) : Tot bool (decreases U32.v n) =
+  if U32.eq n 0ul then false else even (U32.sub n 1ul)
+
 let main () : I32.t =
   let a = area (Square 3ul) in
   let b = area (Rect 2ul 5ul) in
@@ -43,4 +51,5 @@ let main () : I32.t =
   let s = via_sizet 4097us in
   if U32.eq tot_area 75ul && is_square (Square 1ul)
      && U32.eq t 7ul && U64.eq s 4097uL
+     && even 10ul && odd 7ul
   then 0l else 1l

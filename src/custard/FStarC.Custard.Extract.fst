@@ -1161,8 +1161,10 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     dl_ret     = ret;
     dl_eff     = eff;
     dl_body    = expr_of_term st body;
-    (* M1 has no SCC analysis yet, so a recursive definition is its own group;
-       mutual recursion is handled in a later milestone. *)
+    (* Provisional: [Simplify.scc] recomputes this from the final call graph,
+       which is the only place the answer is knowable -- specialization and
+       inlining change it in both directions.  Setting it here at all is just
+       so that a self-recursive body is well-formed before then. *)
     dl_flags   = (if is_rec then [Rec [nm]] else []);
   }
 

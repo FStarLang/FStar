@@ -574,6 +574,106 @@ let dce (prog:program) : ML program =
   prog |> List.filter (fun d ->
     Some? (SMap.try_find live (string_of_name (name_of_decl d))))
 
+(* Section 6, pass 8: strongly connected components.
+
+   The extraction loop appends a declaration once it has finished translating
+   it, so everything a definition mentions is already in the list by the time
+   the definition itself is -- a topological order, but only while the
+   dependency graph is acyclic.  Recursion is exactly the case where no such
+   order exists, and both of the target languages want the members of a cycle
+   written as a single [let rec ... and ...] or [type ... and ...] group.  So
+   we recover the cycles here, with Tarjan's algorithm, and reorder the program
+   so that the members of a group are adjacent.
+
+   This also makes the [Rec] flag mean what its comment in {!Syntax} says --
+   "the SCC this declaration belongs to" -- rather than what the source said.
+   [extract_lid] can only set it from F*'s [is_rec], which specialization and
+   the passes above invalidate in both directions: unrolling a recursive
+   definition against a [Mono] argument leaves a non-recursive body, and
+   inlining can introduce a call that closes a cycle. *)
+let scc (prog:program) : ML program =
+  let own = owners prog in
+  let key (d:decl) : ML string = string_of_name (name_of_decl d) in
+  let defs : SMap.t decl = SMap.create 50 in
+  prog |> List.iter (fun d -> SMap.add defs (key d) d);
+  (* Original position, so that a component's members and the components
+     themselves come out in an order a reader can predict. *)
+  let pos : SMap.t int = SMap.create 50 in
+  let _ = prog |> List.fold_left (fun i d -> SMap.add pos (key d) i; i + 1) 0 in
+  let at (n:string) : ML int =
+    match SMap.try_find pos n with Some i -> i | None -> 0 in
+  let succs (n:string) : ML (list string) =
+    match SMap.try_find defs n with
+    | None -> []
+    | Some d ->
+      decl_deps d
+      |> List.map (fun m -> match SMap.try_find own m with Some o -> o | None -> m)
+      |> List.filter (fun m -> Some? (SMap.try_find defs m)) in
+
+  let index : SMap.t int = SMap.create 50 in
+  let low : SMap.t int = SMap.create 50 in
+  let onstack : SMap.t bool = SMap.create 50 in
+  let stack : ref (list string) = mk_ref [] in
+  let counter : ref int = mk_ref 0 in
+  (* Accumulated in reverse: Tarjan closes a component only once every
+     component it depends on is closed, so prepending and reversing at the end
+     puts dependencies first. *)
+  let comps : ref (list (list string)) = mk_ref [] in
+  let get (m:SMap.t int) (n:string) : ML int =
+    match SMap.try_find m n with Some i -> i | None -> 0 in
+  let rec strong (v:string) : ML unit =
+    let i = !counter in
+    counter := i + 1;
+    SMap.add index v i;
+    SMap.add low v i;
+    stack := v :: !stack;
+    SMap.add onstack v true;
+    succs v |> List.iter (fun w ->
+      match SMap.try_find index w with
+      | None ->
+        strong w;
+        SMap.add low v (imin (get low v) (get low w))
+      | Some iw ->
+        if SMap.try_find onstack w = Some true
+        then SMap.add low v (imin (get low v) iw));
+    if get low v = get index v then begin
+      let rec pop (acc:list string) (st:list string) : ML (list string & list string) =
+        match st with
+        | [] -> (acc, [])
+        | w :: rest ->
+          SMap.add onstack w false;
+          if w = v then (w :: acc, rest) else pop (w :: acc) rest in
+      let comp, rest = pop [] !stack in
+      stack := rest;
+      comps := List.sortWith (fun a b -> at a - at b) comp :: !comps
+    end in
+  prog |> List.iter (fun d ->
+    let n = key d in
+    if None? (SMap.try_find index n) then strong n);
+
+  (* A component is recursive if it has more than one member, or if its single
+     member refers to itself. *)
+  let flags (comp:list string) : ML (list flag) =
+    match comp with
+    | [n] when not (succs n |> List.existsb (fun m -> m = n)) -> []
+    | _ -> [Rec (comp |> List.collect (fun n ->
+                   match SMap.try_find defs n with
+                   | Some d -> [name_of_decl d]
+                   | None -> []))] in
+  let retag (fs:list flag) (d:decl) : ML decl =
+    let keep gs = fs @ List.filter (fun f -> not (Rec? f)) gs in
+    match d with
+    | DLet l      -> DLet { l with dl_flags = keep l.dl_flags }
+    | DType t     -> DType { t with dt_flags = keep t.dt_flags }
+    | DExternal x -> DExternal { x with dx_flags = keep x.dx_flags }
+    | DExn _      -> d in
+  List.rev !comps |> List.collect (fun comp ->
+    let fs = flags comp in
+    comp |> List.collect (fun n ->
+      match SMap.try_find defs n with
+      | Some d -> [retag fs d]
+      | None -> []))
+
 let run (prog:program) : ML program =
   let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
@@ -582,4 +682,4 @@ let run (prog:program) : ML program =
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
     | d -> d) in
-  dce prog
+  scc (dce prog)

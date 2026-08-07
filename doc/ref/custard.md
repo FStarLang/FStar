@@ -1358,7 +1358,30 @@ Phase 4 passes, in order:
    `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst` is a good
    template; Custard's version is simpler because it does not need to keep an
    ABI-compatible record of eliminated positions.
-8. **SCC computation and topological sort** of the final decl list.
+8. **SCC computation and topological sort** of the final decl list
+   (`Simplify.scc`, Tarjan).  The extraction loop appends a declaration once it
+   has finished translating it, so everything a definition mentions precedes
+   it — a topological order, but only while the dependency graph is acyclic.
+   Recursion is exactly the case where no such order exists, and both targets
+   want a cycle written as one group.  The pass finds the cycles, orders the
+   components dependencies-first, makes the members of a component adjacent
+   (ordered among themselves by their previous position, so the output is
+   stable), and tags each member with `Rec` naming the whole component.
+
+   The pass is also what makes `Rec` mean what §`Syntax` says it means — "the
+   SCC this declaration belongs to" — rather than what the source said.
+   `extract_lid` can only set it from F\*'s `is_rec`, which the passes above
+   invalidate in *both* directions: unrolling a recursive definition against a
+   `Mono` argument leaves a body with no self-call (`Unroll` is exactly this),
+   and inlining can introduce a call that closes a cycle.  So `scc` clears any
+   inherited `Rec` and recomputes.  A single-member component is recursive only
+   if it really does refer to itself.
+
+   A component never mixes `DType`s and `DLet`s, because a type cannot mention
+   a value.  The OCaml backend joins the members of a component with `and`
+   (writing `let rec`/`type` only on the first); the C backend needs no
+   grouping, since karamel recovers recursion itself.
+
    The OCaml backend has one rewrite of its own here, because OCaml is missing
    a pattern form the IR has: there is no integer *pattern*.  `Prims.int` is a
    `Z.t`, whose literals are calls to `Prims.parse_int`, and a machine integer
@@ -1986,7 +2009,9 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
     `Alloc`/`Free` stay separate impure operations; a scoped `EWithLocal` is at
     most an optional recovery, never a requirement.
 15. **Mutual recursion across specializations** — emitting decls incrementally
-    and computing SCCs once the worklist is drained (§6, pass 8) is the plan.
+    and computing SCCs once the worklist is drained (§6, pass 8) is the plan,
+    and is what `Simplify.scc` does.  `tests/custard/Mutual.fst` covers a type
+    cycle, a two-member function cycle and a three-member one.
 
 ### 11.2 Still open
 
@@ -2030,5 +2055,6 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
 | M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny`/`EAbort` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` and `PulseHashTable.fst` both go to compiled OCaml and to compiled C; requires stage3, so neither is part of `tests/custard` |
 | M6c | Bundled combinators (§3.9): weak-HNF substitution (§3.7), over-applied inlining and iota (§6 pass 5) | Done. `tests/custard/Combinators.fst`, extracted, compiled and run |
+| M6d | Mutual recursion (§6 pass 8): `Simplify.scc` and `and`-grouping in the OCaml backend | Done. `tests/custard/Mutual.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |
