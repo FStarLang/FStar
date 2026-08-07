@@ -76,6 +76,7 @@ let rec hint_of_cty (c:cty) : ML string =
   | TApp (n, args) -> n.id ^ "_" ^ String.concat "_" (args |> List.map hint_of_cty)
   | TBuf c -> hint_of_cty c ^ "_ptr"
   | TRef c -> hint_of_cty c ^ "_ref"
+  | TInline c -> hint_of_cty c
   | TTuple cs -> "tup" ^ String.concat "_" (cs |> List.map hint_of_cty)
   | TUnit -> "unit"
   | TArrow _ -> "fn"
@@ -176,6 +177,7 @@ let rec mono_cty (st:state) (c:cty) : ML cty =
   | TArrow (a, e, b) -> TArrow (mono_cty st a, e, mono_cty st b)
   | TBuf c -> TBuf (mono_cty st c)
   | TRef c -> TRef (mono_cty st c)
+  | TInline c -> TInline (mono_cty st c)
   | TTuple cs -> TTuple (cs |> List.map (mono_cty st))
   | TVar _ | TInt _ | TUnit | TAny -> c
 
@@ -201,7 +203,10 @@ let ctor_fields (st:state) (owner:name) (args:list cty) (cn:name) : ML (list cty
   | Some ({ dt_body = TVariant cs; dt_params = ps }) ->
     let sub = zip_params ps args in
     (match cs |> List.tryFind (fun (c, _) -> string_of_name c = string_of_name cn) with
-     | Some (_, fs) -> fs |> List.map (fun (_, c) -> subst_cty sub c)
+     (* [TInline] is a note to [Simplify] about how the field is stored, not
+        part of its type; a subpattern is matched against the type. *)
+     | Some (_, fs) -> fs |> List.map (fun (_, c) ->
+                         subst_cty sub (match c with TInline c -> c | c -> c))
      | None -> [])
   | _ -> []
 
@@ -388,7 +393,7 @@ let run (prog:program) : ML program =
         | None -> ()
       end
     | TArrow (a, _, b) -> freeze (fuel - 1) a; freeze (fuel - 1) b
-    | TBuf c | TRef c -> freeze (fuel - 1) c
+    | TBuf c | TRef c | TInline c -> freeze (fuel - 1) c
     | TTuple cs -> cs |> List.iter (freeze (fuel - 1))
     | TVar _ | TInt _ | TUnit | TAny -> () in
   prog |> List.iter (fun d ->

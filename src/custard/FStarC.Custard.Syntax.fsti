@@ -110,6 +110,12 @@ type cty =
   (** A pointer to a mutable, contiguous run of values: Pulse's [array], [vec]
       and [ptr] (section 8.4).  One node for all of them is what lets the C
       backend emit a real pointer instead of a call into a runtime. *)
+  | TInline of cty
+  (** Only meaningful on a constructor field: the field's contents are stored
+      in the constructor itself rather than behind a pointer to them, so its
+      record type's fields take the place of it (section 5.7).  [Extract] puts
+      it there, [Simplify.inline_fields] takes every one of them away again;
+      no later pass and no backend ever sees one. *)
   | TRef   of cty
   (** A pointer to a single mutable value: Pulse's [ref] and [box].  C makes no
       distinction -- both are [t*], and the buffer operations apply to either

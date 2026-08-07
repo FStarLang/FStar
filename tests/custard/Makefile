@@ -20,6 +20,7 @@ CUSTARD_TESTS += Anf
 CUSTARD_TESTS += Phantom
 CUSTARD_TESTS += ShortCircuit
 CUSTARD_TESTS += MonoTypes
+CUSTARD_TESTS += InlineFields
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -38,6 +39,14 @@ GREP_MonoTypes   = "type monoTypes_both__int" "type monoTypes_both__bool" \
                    "type monoTypes_both__int = { fst : Prims.int; snd : Prims.int }" \
                    "{ fst = (p).snd; snd = (p).fst }"
 NOGREP_MonoTypes = "'" "Mkboth" "match p with"
+
+# Issue #4382: a tuple field lives in the constructor, not behind a pointer to
+# a pair; [@@@custard_inline_field] asks for the same on a named record.
+GREP_InlineFields   = "InlineFields_Bar of bool \* string" \
+                      "InlineFields_W of bool \* string" \
+                      "InlineFields_W (pa, pb)) -> (if pa then pb else " \
+                      "keep = { p : inlineFields_pair; n : Prims.int }"
+NOGREP_InlineFields = "tuple2" "Mktuple2" "let p = {"
 
 # GREP_<name>/NOGREP_<name> additionally assert on the generated .ml.  For
 # Combinators (section 3.9) the *shape* of the output is the point: one

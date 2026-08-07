@@ -82,6 +82,7 @@ let rec cty_erased (t:tbl) (c:cty) : ML bool =
   (* A pointer is a machine word whether or not its contents are erased, and
      the allocation that produced it is an observable effect. *)
   | TBuf _ | TRef _ -> false
+  | TInline c -> cty_erased t c
   | TApp (n, _) ->
     (match SMap.try_find t.erased (key n) with
      | Some b -> b
@@ -152,7 +153,7 @@ let rec names_of_cty (c:cty) : ML (list string) =
   match c with
   | TArrow (a, _, b) -> names_of_cty a @ names_of_cty b
   | TTuple cs -> cs |> List.collect names_of_cty
-  | TBuf c | TRef c -> names_of_cty c
+  | TBuf c | TRef c | TInline c -> names_of_cty c
   | TApp (n, args) -> key n :: (args |> List.collect names_of_cty)
   | _ -> []
 
@@ -255,6 +256,7 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
     | TTuple cs -> TTuple (cs |> List.map (resolve t fuel))
     | TBuf c -> TBuf (resolve t fuel c)
     | TRef c -> TRef (resolve t fuel c)
+    | TInline c -> TInline (resolve t fuel c)
     | TApp (n, args) ->
       let args = args |> List.map (resolve t fuel) in
       (match SMap.try_find t.layouts (key n) with

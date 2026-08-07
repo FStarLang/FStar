@@ -241,7 +241,7 @@ and base_ty (t:cty) : ML string =
   | TAny ->
     reject "a value whose representation is unknown (TAny)"
       ["Run with --custard_warn_any to see where the representation was lost \
-        (section 5.8)."]
+        (section 5.9)."]
   | TBuf _ | TRef _ | TArrow _ -> decl_of t ""
 
 (* The abstract declarator: a type as a cast or a compound literal spells it. *)

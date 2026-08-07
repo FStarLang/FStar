@@ -446,3 +446,13 @@ val custard_c_header (header: string) : unit
     representation as fixed elsewhere, so that the layout analysis neither
     erases it nor collapses it as a newtype (see doc/ref/custard.md, 5.2). *)
 val custard_opaque : unit
+
+(** Custard: store this constructor field's contents directly in the
+    constructor rather than behind a pointer to it.  The field's type must be a
+    record (or a one-constructor inductive); its fields take the place of this
+    one.  Tuple fields are inlined without asking, since the indirection there
+    is never what the source meant (see doc/ref/custard.md, 5.6).
+
+    Written on the field's binder:
+    [noeq type wrap = | W : [@@@custard_inline_field] p:pair -> wrap] *)
+val custard_inline_field : unit

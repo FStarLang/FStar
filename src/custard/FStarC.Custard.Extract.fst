@@ -1183,6 +1183,25 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     dl_flags   = (if is_rec then [Rec [nm]] else []);
   }
 
+(* A field whose contents belong in the constructor rather than behind a
+   pointer to them (section 5.6).  A tuple is inlined without asking: [| Bar of
+   a & b] is how F* source spells a two-argument constructor, and the pair it
+   builds is never what the author meant to pay for (issue #4382).  Anything
+   else has to say so with [@@@custard_inline_field] on the binder.
+
+   The marker rides on the field's *type* so that it survives the passes that
+   rewrite field lists without any of them having to know about it;
+   [Simplify.inline_fields] strips every one. *)
+and is_tuple_name (n:name) : bool =
+  n.ns = ["FStar"; "Pervasives"; "Native"] && FStarC.Util.starts_with n.id "tuple"
+
+and field_ty (st:state) (b:S.binder) : ML cty =
+  let t = ty_of_typ st b.binder_bv.sort in
+  let asked = U.has_attribute b.binder_attrs PC.custard_inline_field_attr in
+  match t with
+  | TApp (n, _) when asked || is_tuple_name n -> TInline t
+  | _ -> t
+
 and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : ML decl =
   let _, ctors = TcEnv.datacons_of_typ (tcenv st) l in
   let n_params = List.length params in
@@ -1209,7 +1228,7 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
     (name_of_lid c,
      bs |> List.map (fun b ->
-       (name_of_bv b.binder_bv, ty_of_typ st b.binder_bv.sort)))
+       (name_of_bv b.binder_bv, field_ty st b)))
   in
   DType {
     dt_name   = nm;

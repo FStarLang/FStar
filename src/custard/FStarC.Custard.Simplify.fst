@@ -641,7 +641,7 @@ let rec cty_deps (c:cty) : ML (list string) =
   | TApp (n, args) -> string_of_name n :: List.collect cty_deps args
   | TArrow (a, _, b) -> cty_deps a @ cty_deps b
   | TTuple cs -> List.collect cty_deps cs
-  | TBuf c | TRef c -> cty_deps c
+  | TBuf c | TRef c | TInline c -> cty_deps c
   | _ -> []
 
 let rec pat_deps (p:pat) : ML (list string) =
@@ -791,7 +791,7 @@ let unused_params (prog:program) : ML program =
     | TApp (n, args) -> u_args n args
     | TArrow (a, _, b) -> u_cty a; u_cty b
     | TTuple cs -> cs |> List.iter u_cty
-    | TBuf c | TRef c -> u_cty c
+    | TBuf c | TRef c | TInline c -> u_cty c
     | TInt _ | TUnit | TAny -> ()
   and u_args (n:name) (args:list cty) : ML unit =
     match retained n args with
@@ -863,6 +863,7 @@ let unused_params (prog:program) : ML program =
     | TTuple cs -> TTuple (cs |> List.map r_cty)
     | TBuf c -> TBuf (r_cty c)
     | TRef c -> TRef (r_cty c)
+    | TInline c -> TInline (r_cty c)
     | TVar _ | TInt _ | TUnit | TAny -> c in
   let r_binder (b:binder) : ML binder = { b with b_ty = r_cty b.b_ty } in
   let rec r_expr (x:expr) : ML expr =
@@ -1120,6 +1121,9 @@ let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
     | DType ({ dt_name = tn; dt_body = TVariant cs }) ->
       let n = List.length cs in
       cs |> List.iter (fun (cn, fs) ->
+        (* [TInline] is [inline_fields]'s business; the types this table hands
+           out end up on [EProj] nodes, where the marker has no meaning. *)
+        let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
         SMap.add m (string_of_name cn) { ci_owner = tn; ci_count = n; ci_fields = fs })
     | _ -> ());
   m
@@ -1360,6 +1364,416 @@ let records (prog:program) : ML program =
     | d -> d)
   end
 
+(* -------------------------------------------------------------------- *)
+(* Inline fields                                                        *)
+(* -------------------------------------------------------------------- *)
+
+(* [| Bar of a & b] is how F* source spells a two-argument constructor, but
+   what it denotes is a constructor with *one* argument pointing at a pair, so
+   every [Bar] costs an allocation and an indirection nobody asked for
+   (FStarLang/FStar#4382).  An inline field says instead: keep the record's
+   fields in the constructor itself.
+
+   [Extract] marks such a field by wrapping its type in [TInline] -- tuples
+   without being asked, anything else on [@@@custard_inline_field].  This pass
+   is the only consumer, and it removes every marker it finds, whether or not
+   it could act on it: no later pass and no backend knows the node exists. *)
+
+noeq
+type expansion = {
+  ex_ty:    cty;                  (* the field's declared type, [TApp (R, _)] *)
+  ex_type:  name;                 (* R *)
+  ex_ctor:  option name;          (* R's constructor, when R is a variant *)
+  ex_src:   list (string & cty);  (* R's fields, instantiated *)
+  ex_dst:   list (string & cty);  (* what they become in the outer constructor *)
+}
+
+(* [ECtor]/[ERecord] and [EProj] are keyed on the constructor name for a
+   variant and on the type name for a record; [Rename] relies on that, so the
+   nodes this pass builds have to agree. *)
+let ex_key (ex:expansion) : name =
+  match ex.ex_ctor with Some c -> c | None -> ex.ex_type
+
+(* A plan for one constructor, in field order: each field's name before and
+   after, and what it expands to.  A field can be renamed without expanding,
+   because expanding its neighbour shifts the positional names along. *)
+type fplan = list (string & string & option expansion)
+
+let pure_ (e:expr') (t:cty) : expr = mk e t E_Pure
+
+(* Put one of R's values together out of its fields. *)
+let ex_build (ex:expansion) (vs:list expr) : ML expr =
+  match ex.ex_ctor with
+  | Some c -> pure_ (ECtor (c, vs)) ex.ex_ty
+  | None -> pure_ (ERecord (ex.ex_type, List.zip (ex.ex_src |> List.map fst) vs)) ex.ex_ty
+
+(* The fields [e] holds, when it is a value of R that is right there. *)
+let ex_take (ex:expansion) (e:expr) : ML (option (list expr)) =
+  match e.e with
+  | ECtor (c, vs) ->
+    if (match ex.ex_ctor with
+        | Some rc -> string_of_name c = string_of_name rc
+        | None -> false)
+       && List.length vs = List.length ex.ex_src
+    then Some vs else None
+  | ERecord (tn, fs) ->
+    if string_of_name tn = string_of_name ex.ex_type
+    then Some (ex.ex_src |> List.map (fun (g, gt) ->
+                 match fs |> List.tryFind (fun (h, _) -> h = g) with
+                 | Some (_, v) -> v
+                 | None -> mk EAny gt E_Pure))
+    else None
+  | _ -> None
+
+(* [_0], [_1], ... are the names a constructor's unnamed arguments get.  A
+   constructor made only of those keeps them, renumbered, rather than growing
+   [_0__1]-shaped ones. *)
+let positional (f:string) : ML bool =
+  String.strlen f > 1 && String.substring f 0 1 = "_"
+
+let strip_inline (c:cty) : cty =
+  match c with TInline c -> c | c -> c
+
+(* R's declaration, when R is a type this pass can take the fields out of:
+   exactly one constructor (or a record), and at least one field. *)
+let record_body (prog:program) (n:name)
+  : ML (option (list string & option name & list (string & cty))) =
+  match prog |> List.tryFind (fun d -> string_of_name (name_of_decl d) = string_of_name n) with
+  | Some (DType t) ->
+    (match t.dt_body with
+     | TRecord fs -> if Cons? fs then Some (t.dt_params, None, fs) else None
+     | TVariant [(cn, fs)] -> if Cons? fs then Some (t.dt_params, Some cn, fs) else None
+     | _ -> None)
+  | _ -> None
+
+(* The plan for every constructor with at least one marked field.  A field
+   whose type turns out not to be a record keeps its place; only the marker
+   goes. *)
+let plan_of (prog:program) : ML (SMap.t fplan) =
+  let m : SMap.t fplan = SMap.create 20 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DType ({ dt_body = TVariant cs }) ->
+      cs |> List.iter (fun (cn, fs) ->
+        if fs |> List.existsb (fun (_, c) -> TInline? c) then begin
+          let allpos = fs |> List.for_all (fun (f, _) -> positional f) in
+          let next : SMap.t int = SMap.create 1 in
+          let fresh (f:string) (g:string) : ML string =
+            if allpos
+            then begin
+              let i = (match SMap.try_find next "n" with Some i -> i | None -> 0) in
+              SMap.add next "n" (i + 1);
+              "_" ^ string_of_int i
+            end
+            else if g = "" then f else f ^ "_" ^ g in
+          let plan = fs |> List.map (fun (f, c) ->
+            match c with
+            | TInline (TApp (rn, args)) ->
+              (match record_body prog rn with
+               | Some (ps, rc, rfs) ->
+                 if List.length ps <> List.length args then (f, fresh f "", None)
+                 else begin
+                   let sm = List.zip ps args in
+                   let src = rfs |> List.map (fun (g, gt) -> (g, subst_cty sm gt)) in
+                   let dst = src |> List.map (fun (g, gt) -> (fresh f g, gt)) in
+                   (f, f, Some { ex_ty = TApp (rn, args); ex_type = rn; ex_ctor = rc;
+                                 ex_src = src; ex_dst = dst })
+                 end
+               | None -> (f, fresh f "", None))
+            | _ -> (f, fresh f "", None)) in
+          SMap.add m (string_of_name cn) plan
+        end)
+    | _ -> ());
+  m
+
+(* Only [PVar], [PWild] and R's own constructor can be flattened into the outer
+   pattern; anything else at that position takes the field out of the plan,
+   everywhere, before a single node is rewritten. *)
+let blocked_fields (m:SMap.t fplan) (prog:program) : ML (SMap.t bool) =
+  let bad : SMap.t bool = SMap.create 20 in
+  let key (cn:name) (f:string) : ML string = string_of_name cn ^ "#" ^ f in
+  let rec scan_pat (p:pat) : ML unit =
+    (match p with
+     | PCtor (cn, ps) ->
+       (match SMap.try_find m (string_of_name cn) with
+        | Some fs ->
+          if List.length ps <> List.length fs
+          then fs |> List.iter (fun (f, _, _) -> SMap.add bad (key cn f) true)
+          else List.iter2 (fun (p:pat) (f, _, ex) ->
+                 match ex with
+                 | None -> ()
+                 | Some ex ->
+                   let ok = (match p with
+                             | PVar _ -> true
+                             | PWild -> true
+                             | PCtor (c, qs) ->
+                               (match ex.ex_ctor with
+                                | Some rc -> string_of_name c = string_of_name rc
+                                           && List.length qs = List.length ex.ex_src
+                                | None -> false)
+                             | _ -> false) in
+                   if not ok then SMap.add bad (key cn f) true) ps fs
+        | None -> ())
+     | _ -> ());
+    (match p with
+     | PCtor (_, ps) -> List.iter scan_pat ps
+     | PTuple ps -> List.iter scan_pat ps
+     | POr ps -> List.iter scan_pat ps
+     | _ -> ()) in
+  let rec go (x:expr) : ML unit =
+    let brs (bs:list branch) : ML unit =
+      bs |> List.iter (fun (p, gd, b) ->
+        scan_pat p; (match gd with None -> () | Some g -> go g); go b) in
+    match x.e with
+    | EMatch (s, bs) -> go s; brs bs
+    | ETry (s, bs) -> go s; brs bs
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> ()
+    | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> go a; go b
+    | EApp (h, es) -> go h; List.iter go es
+    | EFun (_, b) -> go b
+    | EIf (c, a, b) -> go c; go a; go b
+    | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> List.iter go es
+    | ERecord (_, fs) -> fs |> List.iter (fun (_, e) -> go e)
+    | EProj (e, _, _) | EDiscrim (e, _) | ECast (e, _) -> go e in
+  prog |> List.iter (fun d -> match d with DLet dl -> go dl.dl_body | _ -> ());
+  bad
+
+(* An [EProj] out of a value that is right there.  The rewrites below leave one
+   behind wherever a field had to be put back together, and this is what makes
+   the reconstruction cost nothing in the case that matters -- a projection out
+   of a field that was itself projected out. *)
+let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
+  let g = unbuild infos in
+  let pick (fs:list (string & expr)) (f:string) : ML (option expr) =
+    if fs |> List.for_all (fun (h, (e:expr)) -> h = f || is_pure e.eff)
+    then (match fs |> List.tryFind (fun (h, _) -> h = f) with
+          | Some (_, e) -> Some e
+          | None -> None)
+    else None in
+  match x.e with
+  | EProj (e1, n, f) ->
+    let e1 = g e1 in
+    let alt = { x with e = EProj (e1, n, f) } in
+    (match e1.e with
+     | ERecord (_, fs) -> (match pick fs f with Some e -> e | None -> alt)
+     | ECtor (cn, es) ->
+       (match SMap.try_find infos (string_of_name cn) with
+        | Some ci ->
+          if List.length es <> List.length ci.ci_fields then alt
+          else (match pick (List.zip (ci.ci_fields |> List.map fst) es) f with
+                | Some e -> e
+                | None -> alt)
+        | None -> alt)
+     | _ -> alt)
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
+  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
+  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
+  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
+  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
+  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
+  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (unbuild_branch infos)) }
+  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map (unbuild_branch infos)) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
+  | ETuple es -> { x with e = ETuple (es |> List.map g) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
+  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+
+and unbuild_branch (infos:SMap.t ctor_info) (br:branch) : ML branch =
+  let p, gd, b = br in
+  (p, (match gd with None -> None | Some e -> Some (unbuild infos e)), unbuild infos b)
+
+(* Is every occurrence of [v] the target of a projection?  Then a record built
+   out of pieces can be substituted for it however many times it is used:
+   [unbuild] takes every copy apart again and none of them is ever built. *)
+let rec only_projected (v:string) (x:expr) : ML bool =
+  let g = only_projected v in
+  match x.e with
+  | EVar w -> w <> v
+  | EProj (e1, _, _) -> (match e1.e with EVar w -> w = v || g e1 | _ -> g e1)
+  | EConst _ | EQual _ | EAny | EAbort _ -> true
+  | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> g a && g b
+  | EApp (h, es) -> g h && es |> List.for_all g
+  | EFun (_, b) -> g b
+  | EIf (c, a, b) -> g c && g a && g b
+  | EMatch (s, brs) | ETry (s, brs) ->
+    g s && brs |> List.for_all (fun (_, gd, b) ->
+      (match gd with None -> true | Some e -> g e) && g b)
+  | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> es |> List.for_all g
+  | ERecord (_, fs) -> fs |> List.for_all (fun (_, e) -> g e)
+  | EDiscrim (e1, _) | ECast (e1, _) -> g e1
+
+let inline_fields (prog:program) : ML program =
+  let m0 = plan_of prog in
+  if SMap.keys m0 = [] then prog else begin
+  (* Drop the expansions the patterns will not take.  Renaming stays: it was
+     decided per constructor and the declaration follows it either way. *)
+  let bad = blocked_fields m0 prog in
+  let m : SMap.t fplan = SMap.create 20 in
+  SMap.keys m0 |> List.iter (fun k ->
+    match SMap.try_find m0 k with
+    | None -> ()
+    | Some fs ->
+      SMap.add m k (fs |> List.map (fun (f, f', ex) ->
+        match ex with
+        | Some _ ->
+          if None? (SMap.try_find bad (k ^ "#" ^ f)) then (f, f', ex) else (f, f', None)
+        | None -> (f, f', None))));
+  let plan (cn:name) : ML (option fplan) = SMap.try_find m (string_of_name cn) in
+
+  let rec go (x:expr) : ML expr =
+    match x.e with
+    | ECtor (cn, es) ->
+      let es = es |> List.map go in
+      let alt = { x with e = ECtor (cn, es) } in
+      (match plan cn with
+       | Some fs ->
+         if List.length es <> List.length fs then alt
+         else begin
+           (* Splicing the pieces straight in is the whole point; anything
+              else has to read them back out, which is correct but buys
+              nothing. *)
+           let binds, args =
+             List.fold_left2 (fun (binds, acc) (e:expr) (_, _, ex) ->
+               match ex with
+               | None -> (binds, acc @ [e])
+               | Some ex ->
+                 (match ex_take ex e with
+                  | Some vs -> (binds, acc @ vs)
+                  | None ->
+                    let binds, v =
+                      if dup_ok e then binds, e
+                      else let n = rename "fld" in
+                           binds @ [(n, e.ty, e)], mk (EVar n) e.ty E_Pure in
+                    (binds, acc @ (ex.ex_src |> List.map (fun (g, gt) ->
+                       pure_ (EProj (v, ex_key ex, g)) gt)))))
+               ([], []) es fs in
+           let body = { x with e = ECtor (cn, args) } in
+           List.fold_right (fun (n, t, e) acc -> { acc with e = ELet (n, t, e, acc) })
+                           binds body
+         end
+       | None -> alt)
+
+    (* Reading a field that is no longer there has to put it back together;
+       [unbuild] takes it apart again wherever only a field of it was
+       wanted, which is every chained projection. *)
+    | EProj (e1, cn, f) ->
+      let e1 = go e1 in
+      let alt = { x with e = EProj (e1, cn, f) } in
+      (match plan cn with
+       | Some fs ->
+         (match fs |> List.tryFind (fun (g, _, _) -> g = f) with
+          | Some (_, f', None) -> { x with e = EProj (e1, cn, f') }
+          | Some (_, _, Some ex) ->
+            let bind, v =
+              if dup_ok e1 then None, e1
+              else let n = rename "whole" in Some n, mk (EVar n) e1.ty E_Pure in
+            let vs = ex.ex_dst |> List.map (fun (g, gt) -> pure_ (EProj (v, cn, g)) gt) in
+            let b = ex_build ex vs in
+            (match bind with
+             | None -> b
+             | Some n -> { b with e = ELet (n, e1.ty, e1, b) })
+          | None -> alt)
+       | None -> alt)
+
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, go a, go b) }
+    | ESeq (a, b) -> { x with e = ESeq (go a, go b) }
+    | EWhile (a, b) -> { x with e = EWhile (go a, go b) }
+    | EApp (h, es) -> { x with e = EApp (go h, es |> List.map go) }
+    | EFun (bs, b) -> { x with e = EFun (bs, go b) }
+    | EIf (c, a, b) -> { x with e = EIf (go c, go a, go b) }
+    | EMatch (s, brs) -> { x with e = EMatch (go s, brs |> List.map go_branch) }
+    | ETry (s, brs) -> { x with e = ETry (go s, brs |> List.map go_branch) }
+    | ETuple es -> { x with e = ETuple (es |> List.map go) }
+    | EOp (o, es) -> { x with e = EOp (o, es |> List.map go) }
+    | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map go) }
+    | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
+    | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
+    | ECast (e1, c) -> { x with e = ECast (go e1, c) }
+
+  (* A branch is rewritten pattern first.  A nested constructor pattern is the
+     case that pays: it flattens.  A [PVar] standing for the whole field
+     becomes one variable per piece, and the body gets the field back as a
+     value -- substituted when it is read at most once, so that [unbuild] can
+     take it apart again, and behind a [let] otherwise, so that no allocation
+     is duplicated. *)
+  and go_branch (br:branch) : ML branch =
+    let plain () : ML branch =
+      let p, gd, b = br in
+      (p, (match gd with None -> None | Some g -> Some (go g)), go b) in
+    let p, gd, b = br in
+    match p with
+    | PCtor (cn, ps) ->
+      (match plan cn with
+       | Some fs ->
+         if List.length ps <> List.length fs then plain ()
+         else begin
+           let sm : subst = SMap.create 10 in
+           let lets, ps =
+             List.fold_left2 (fun (lets, acc) (p:pat) (_, _, ex) ->
+               match ex with
+               | None -> (lets, acc @ [p])
+               | Some ex ->
+                 (match p with
+                  | PCtor (_, qs) -> (lets, acc @ qs)
+                  | PWild -> (lets, acc @ (ex.ex_dst |> List.map (fun _ -> PWild)))
+                  | PVar v ->
+                    let ns = ex.ex_src |> List.map (fun (g, gt) -> (rename g, gt)) in
+                    let e = ex_build ex (ns |> List.map (fun (n, t) -> mk (EVar n) t E_Pure)) in
+                    let uses = count v b + (match gd with None -> 0 | Some g -> count v g) in
+                    let free = uses <= 1
+                            || (only_projected v b
+                                && (match gd with None -> true | Some g -> only_projected v g)) in
+                    let lets = if free
+                               then (SMap.add sm v e; lets)
+                               else lets @ [(v, ex.ex_ty, e)] in
+                    (lets, acc @ (ns |> List.map (fun (n, _) -> PVar n)))
+                  | _ -> (lets, acc @ [p])))
+               ([], []) ps fs in
+           (* A guard cannot be wrapped in a [let], so it always substitutes. *)
+           let gsm : subst = SMap.create 10 in
+           SMap.keys sm |> List.iter (fun k ->
+             match SMap.try_find sm k with Some e -> SMap.add gsm k e | None -> ());
+           lets |> List.iter (fun (v, t, e) -> SMap.add gsm v e);
+           let gd = (match gd with None -> None | Some g -> Some (go (psub gsm g))) in
+           let b = go (psub sm b) in
+           let b = List.fold_right (fun (v, t, e) acc -> { acc with e = ELet (v, t, e, acc) })
+                                   lets b in
+           (PCtor (cn, ps), gd, b)
+         end
+       | None -> plain ())
+    | _ -> plain () in
+
+  let prog = prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = go dl.dl_body }
+    | DType t ->
+      (match t.dt_body with
+       | TVariant cs ->
+         DType { t with dt_body = TVariant (cs |> List.map (fun (cn, fs) ->
+           match SMap.try_find m (string_of_name cn) with
+           | Some pl ->
+             if List.length pl <> List.length fs
+             then (cn, fs |> List.map (fun (f, c) -> (f, strip_inline c)))
+             else (cn, List.zip fs pl |> List.collect (fun ((_, c), (_, f', ex)) ->
+                         match ex with
+                         | Some ex -> ex.ex_dst
+                         | None -> [(f', strip_inline c)]))
+           | None -> (cn, fs |> List.map (fun (f, c) -> (f, strip_inline c))))) }
+       | TRecord fs -> DType { t with dt_body = TRecord (fs |> List.map (fun (f, c) -> (f, strip_inline c))) }
+       | _ -> d)
+    | d -> d) in
+  let infos = ctor_infos prog in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = unbuild infos dl.dl_body }
+    | d -> d)
+  end
+
 let run (prog:program) : ML program =
   let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
@@ -1368,6 +1782,10 @@ let run (prog:program) : ML program =
      irrefutable one, which is exactly what [depat] removes entirely. *)
   let prog = prune_decls prog in
   let prog = depat_decls prog in
+  (* After [depat]: a field of the record being inlined is read with an
+     [EProj] only once [depat] has run, and that is what tells the pass a
+     reconstructed value will never actually be built. *)
+  let prog = inline_fields prog in
   let prog = prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }

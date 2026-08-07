@@ -1322,7 +1322,7 @@ The only remaining producer of `ECast` is the machine-integer rules in
 the source asked for, a real call into `FStar.Int.Cast`.  Rule 1 must not
 delete them, and rule 3 could only duplicate them across branches.
 
-`--custard_warn_any` (§5.8) is what turns "we measured zero" into something
+`--custard_warn_any` (§5.9) is what turns "we measured zero" into something
 that stays true.
 
 ### 5.5 Record recovery
@@ -1416,7 +1416,79 @@ the generated OCaml disables warning 8 in its header, and `--ocamlopt` passes
 branch can leave a match with a single irrefutable one, which §5.5 then removes
 entirely.
 
-### 5.7 Other representation choices (to be pinned down)
+### 5.7 Inline fields
+
+`| Bar of a & b` is how F\* source spells a two-argument constructor, but it is
+not what it means.  What it means is a constructor with *one* argument, whose
+type is `a & b`, so every `Bar` is two allocations and every read of a field
+two loads (FStarLang/FStar#4382).  The same is true of `| K of pair` for a
+record `pair`, except that there the author may well have meant it.
+
+An **inline field** stores the field's record in the constructor itself:
+
+```
+type foo = | Bar of bool & string      (*  Bar of bool * string  *)
+noeq type wrap =
+  | W : [@@@custard_inline_field] p:pair -> wrap
+                                       (*  W of bool * string    *)
+```
+
+The policy is in `Extract` and the mechanism in `Simplify.inline_fields`.
+`Extract` inlines a field whose type is one of `FStar.Pervasives.Native.tupleN`
+without being asked, on the grounds that the pair in `| Bar of a & b` is never
+what the author was after, and any other field on `[@@@custard_inline_field]`.
+It says so by wrapping the field's type in `TInline`, which rides along through
+every pass that rewrites field lists without any of them having to know about
+it.  `Simplify.inline_fields` is the only consumer and removes every marker it
+finds, whether or not it could act on it; no later pass and no backend ever
+sees one.  (The two places that read a *declared* field type for some other
+purpose — `Monomorphize.ctor_fields`, which types the subpatterns of a `PCtor`,
+and `Simplify.ctor_infos`, whose types end up on `EProj` nodes — strip it, since
+there the marker has no meaning.)
+
+For a field `f` of constructor `C` whose type is a record `R` with fields
+`g1..gn`, the pass does four things.
+
+- The **declaration**: `f` is replaced by `n` fields.  Their types are `R`'s,
+  instantiated at the arguments `f` was applied to, since Custard also runs
+  without `--custard_monomorphize_types`.  Their names are `f_gj`, except that
+  a constructor all of whose fields are the positional `_0`, `_1`, ... — which
+  is to say, every `| Bar of ...` — keeps positional names, renumbered.
+- **Construction.**  `ECtor (C, [.. e ..])` splices `e`'s fields in when `e` is
+  a value of `R` that is right there, which is the common case: `Bar (Mktuple2
+  (b, s))` becomes `Bar (b, s)`, and nothing is allocated that was not going to
+  be.  Otherwise it splices in `n` projections out of `e`, `let`-binding it
+  first if re-evaluating it is not free.
+- **Patterns.**  `PCtor (C, [.. PCtor (Mk_R, qs) ..])` splices `qs` in, which is
+  the case that pays.  A `PWild` becomes `n` wildcards.  A `PVar v` standing for
+  the whole field becomes one variable per piece, and the body gets `v` back as
+  a reconstructed `R` — substituted when every use of it is a projection, so
+  that the reconstruction is taken apart again and never built, and behind a
+  `let` otherwise, so that no allocation is duplicated.
+- **Projection.**  `EProj (e, C, f)` has to rebuild an `R` out of the `n`
+  fields.  Chained through a further projection this costs nothing, because the
+  pass finishes by reducing every `EProj` out of a value that is right there.
+
+A field is taken out of the plan, everywhere, if *any* pattern in the program
+matches it against something that cannot be flattened — a constant, an `or`
+pattern.  That scan runs before a single node is rewritten, exactly as in §5.5:
+a field that is inlined in the declaration and matched constructor-wise
+somewhere is not a worse program, it is an ill-typed one.
+
+Each of the residual cases is correct but no faster than before, which is what
+makes the pass safe to apply without measuring.
+
+It runs after §5.5, and that ordering is the point: a field of `R` is read with
+an `EProj` only once `depat` has turned the irrefutable match into projections,
+and that is what lets the pass see that a reconstructed value will never
+actually be built.
+
+Two things that look like they need this and do not.  `| Baz : x:a -> y:b -> t`
+is already a two-field constructor — the `of` syntax is the only one that
+introduces the pair.  And `| Bar of { x:a; y:b }` is not F\* syntax at all, so
+there is nothing to inline there.
+
+### 5.8 Other representation choices (to be pinned down)
 
 - Machine integers: `UInt32.t` etc. must map to native target types, not to
   their `nat`-refinement definitions.  Handled as custom rules (§8), the same
@@ -1426,7 +1498,7 @@ entirely.
 - Refinement types are erased to their base type (they are already erased by
   the normalizer's `Unrefine`/`ForExtraction`).
 
-### 5.8 `--custard_warn_any`
+### 5.9 `--custard_warn_any`
 
 `--custard_warn_any` walks the final IR, after renaming so the names it reports
 are the ones in the emitted file, and warns (code 366) about the two ways
@@ -1966,7 +2038,7 @@ Emission:
   | `EFun` in a value position | no closures; mark the parameter `[@@@monomorphize]` (§3.1) |
   | abstract types, `Prims.int` in particular | no size, and no width to guess |
   | unbounded integer literals | same |
-  | `TAny` | the representation was already lost; `--custard_warn_any` (§5.8) says where |
+  | `TAny` | the representation was already lost; `--custard_warn_any` (§5.9) says where |
   | `TTuple`, `ETuple`, `PTuple` | tuples must have reached the backend as `tupleN` inductives |
   | `POr`, pattern guards | no `EAbortS`-style approximation is available here |
   | `ERaise`, `ETry`, `DExn` | no exceptions |
@@ -2313,6 +2385,10 @@ that no OCaml plugin is needed for them.
   The karamel backend ignores it (karamel takes includes on its command line);
   it is there for the direct-to-C backend of M8.
 - `[@@custard_opaque]` gives `Rule_opaque`.
+- `[@@@custard_inline_field]`, on a constructor's *binder* rather than on a
+  definition, asks for that field to be stored in the constructor itself
+  (§5.7).  It is read straight off `binder_attrs` by `Extract`, not through
+  `rule_of_attributes`.
 
 These are declared in `FStar.Attributes` and, unlike the table, are found by
 *looking at the definition* rather than at its name, so `Extract` consults
@@ -2541,7 +2617,7 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
    for types that are never passed to a polymorphic function) is conceivable but
    needs a whole-program "is this type ever used polymorphically?" analysis; not
    obviously worth it.
-5. **Which `option`/tuple representations to special-case** (§5.7), e.g. null
+5. **Which `option`/tuple representations to special-case** (§5.8), e.g. null
    pointers for `option t` in the C backend.
 6. **CI coverage under demand-driven extraction** (§4.1) — accepted as expected
    behaviour, but the entrypoint set still has to be curated in practice.
@@ -2566,8 +2642,9 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6e | ANF (§6 pass 1): `Simplify.anf`, plus effect precision for externals (§7.3) | Done. `tests/custard/Anf.fst` |
 | M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done. `tests/custard/Phantom.fst` |
 | M6g | Deleting unit-shaped proof binders (§3.1, §5.1): `Mono.keep_thunk` | Done. `tests/custard/Implicits.fst` covers both halves of the guard |
-| M6h | `--custard_warn_any` (§5.8); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
+| M6h | `--custard_warn_any` (§5.9); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
 | M6i | Short-circuiting `&&`/`\|\|` (§6 pass 1): infix emission, bitwise guard | Done. `tests/custard/ShortCircuit.fst`, and the C side in `KrmlBasic.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | `MonoTypes`; whole corpus re-run under the flag |
 | M8b | Direct-to-C backend (§6): self-contained C11, no krmllib, function pointers but no closures | `KrmlBasic` and both Pulse modules compiled `-Wall -Wextra -Werror` and run; `CNoInt`/`CNoClosure` reject |
+| M8c | Inline constructor fields (§5.7): `Simplify.inline_fields`, `TInline`, `[@@@custard_inline_field]` | Done. `tests/custard/InlineFields.fst`; closes the `\| Bar of a & b` indirection of FStarLang/FStar#4382 |
