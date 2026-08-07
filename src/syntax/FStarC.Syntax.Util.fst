@@ -784,15 +784,14 @@ let arrow_formals k =
     let bs, c = arrow_formals_comp k in
     bs, comp_result c
 
-(* let_rec_arity e f:
-    if `f` is a let-rec bound name in e
-    then this function returns
-        1. f's type
-        2. the natural arity of f, i.e., the number of arguments including universes on which the let rec is defined
-        3. a list of booleans, one for each argument above, where the boolean is true iff the variable appears in the f's decreases clause
+(* let_rec_arity lb:
+    returns
+        1. the natural arity of lb, i.e., the number of arguments including universes on which the let rec is defined
+        2. a list of booleans, one for each argument above, where the boolean is true iff the argument may
+           appear in lb's decreases clause
     This is used by NBE for detecting potential non-terminating loops
 *)
-let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
+let let_rec_arity (lb:letbinding) : ML (int & list bool) =
     let rec arrow_until_decreases (k:term) : ML _ =
         let k = Subst.compress k in
         match k.n with
@@ -817,16 +816,29 @@ let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
     let bs, dopt = arrow_until_decreases lb.lbtyp in
     let n_univs = List.length lb.lbunivs in
     n_univs + List.length bs,
-    dopt |> Option.map (fun d ->
-       let d_bvs =
-         match d with
-         | Decreases_lex l ->
-           l |> List.fold_left (fun s t ->
-             union s (FStarC.Syntax.Free.names t)) (empty #bv ())
-         | Decreases_wf (rel, e) ->
-           union (Free.names rel) (Free.names e) in
-       Common.tabulate n_univs (fun _ -> false)
-       @ (bs |> List.map (fun b -> mem b.binder_bv d_bvs)))
+    (* Universes can never be a decreases measure. *)
+    Common.tabulate n_univs (fun _ -> false)
+    @ (match dopt with
+       | Some d ->
+         let d_bvs =
+           match d with
+           | Decreases_lex l ->
+             l |> List.fold_left (fun s t ->
+               union s (FStarC.Syntax.Free.names t)) (empty #bv ())
+           | Decreases_wf (rel, e) ->
+             union (Free.names rel) (Free.names e) in
+         bs |> List.map (fun b -> mem b.binder_bv d_bvs)
+
+       | None ->
+         (* No decreases clause in the type: F* does not record the inferred
+            one, so conservatively assume every argument may appear in it,
+            *except* arguments of type `Type`, which can never be a
+            well-founded measure. This matters because NBE refuses to unfold
+            a recursive definition when one of the recursion-relevant
+            arguments is symbolic; a symbolic type argument (e.g. an
+            unresolved implicit) would otherwise block all unfolding. *)
+         bs |> List.map (fun b -> not (Tm_type? (Subst.compress b.binder_bv.sort).n)))
+
 
 let rec __abs_formals_ln t abs_body_lcomp : ML _ =
     match (unmeta_safe t).n with

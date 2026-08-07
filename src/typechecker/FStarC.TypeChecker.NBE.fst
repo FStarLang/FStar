@@ -132,15 +132,7 @@ let implies b1 b2 =
   | true, b2 -> b2
 
 let let_rec_arity (b:letbinding) : ML (int & list bool) =
-  let (ar, maybe_lst) = U.let_rec_arity b in
-  match maybe_lst with
-  | None ->
-    ar,
-    FStarC.Common.tabulate ar (fun _ -> true) (* treat all arguments as recursive *)
-  | Some lst ->
-    ar, lst
-    // let l = trim lst in
-    // List.length l, l
+  U.let_rec_arity b
 
 // NBE debuging
 

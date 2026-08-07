@@ -77,3 +77,23 @@ let test_reveal_opaque () =
 let test_delta_fully =
   assert (norm [nbe; primops; delta_fully [`%g_nbe]] (g_nbe 1) == 3)
 #pop-options
+
+(* NBE refuses to unfold a recursive definition when one of the arguments
+   that may appear in its decreases clause is symbolic. When the type of the
+   definition records no decreases clause (F* does not record inferred ones),
+   *every* argument used to be considered recursion-relevant, so a symbolic
+   type argument -- e.g. the not-yet-resolved implicit of a quoted term --
+   would block all unfolding. Type arguments can never be a well-founded
+   measure, so they are now excluded. *)
+let rec myapp (#a:Type) (l1 l2: list a) : Tot (list a) =
+  match l1 with | [] -> l2 | h::t -> h :: myapp t l2
+
+let test_rec_symbolic_type_arg =
+  assert True by (
+    let open FStar.Tactics.V2 in
+    let steps = [delta; zeta; iota; primops; unascribe] in
+    let t = (`(myapp [1;2] [3])) in
+    let a = norm_term steps t in
+    let b = norm_term (nbe::steps) t in
+    if term_to_string a = term_to_string b then () else
+    fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))

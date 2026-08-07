@@ -288,15 +288,15 @@ val arrow_formals_comp (k:term) : ML (binders & comp)
 val arrow_formals_ln (k:term) : ML (binders & typ)
 val arrow_formals (k:term) : ML (binders & typ)
 
-(* let_rec_arity e f:
-    if `f` is a let-rec bound name in e
-    then this function returns
-        1. f's type
-        2. the natural arity of f, i.e., the number of arguments including universes on which the let rec is defined
-        3. a list of booleans, one for each argument above, where the boolean is true iff the variable appears in the f's decreases clause
+(* let_rec_arity lb:
+    returns
+        1. the natural arity of lb, i.e., the number of arguments including universes on which the let rec is defined
+        2. a list of booleans, one for each argument above, where the boolean is true iff that argument may
+           appear in lb's decreases clause. If the type of lb records no decreases clause, every argument is
+           conservatively assumed to appear in it, except universes and arguments of type `Type`.
     This is used by NBE for detecting potential non-terminating loops
 *)
-val let_rec_arity (lb:letbinding) : ML (int & option (list bool))
+val let_rec_arity (lb:letbinding) : ML (int & list bool)
 
 (* Collects all nested Tm_abs nodes without opening the binders. *)
 val abs_formals_ln (t:term) : ML (binders & term & option residual_comp)
