@@ -724,6 +724,42 @@ If weak reduction leaves free names behind — it can, when the argument is not
 a closed value — we fall back to the fully normalized term, which is always
 sound, just less structured.
 
+#### Printing the key
+
+Keys are interned as strings, so the function that turns a canonicalized
+`Mono` argument into text is load-bearing: it decides which call sites share
+code.  It must therefore be injective up to the equivalence we intend, and
+must depend on nothing but the term.
+
+`show` is neither, and it is worth recording what went wrong, because the
+symptom is a silent miscompilation rather than an error.  `Print.term_to_string`
+resugars unless `--ugly`, and the ugly printer prints an `fv` by its **last
+identifier alone** (`Syntax.fst:629`, `sli`).  So under `--ugly`, `A.tweak` and
+`B.tweak` are one key.  `tests/custard/KeyNames.fst` is exactly that program —
+two `assume val tweak`s in different modules, both passed to one
+`[@@@monomorphize]` binder — and it used to emit a single specialization and
+print `abab` instead of `abAB`.  Delta-unfolding in `key_norm_steps` masks this
+whenever the argument reduces to a structure whose *contents* differ, which is
+why type classes never showed it; what defeats the mask is an argument that
+keeps an `fv` which does not unfold, such as an `assume val`, a
+`[@@custard_extern]`, or an abstract type constructor.
+
+`Extract.key_of_term` is a printer written for this one job: every `fv` and
+effect name fully qualified, universes erased (matching `EraseUniverses`),
+bound variables printed as their de Bruijn index and binders as their sort
+alone — so the key is α-canonical for free, since terms are locally nameless
+and are never opened — integer constants printed with their width and
+signedness, and ranges, attributes, qualifiers and `ppname`s dropped as
+non-semantic.  It is independent of every printing option; `KeyNames` runs
+with `--ugly` on for precisely that reason.
+
+The same string is what §12.2 stores in a unit interface, so it has to mean
+the same thing in the next process as in this one.  The one construct that
+cannot: a `Tm_name`, which is a variable bound *outside* the argument and so
+has nothing canonical about it but a gensym index.  Such a key is fine within
+a run and not portable across one; if separately compiled units ever need to
+export such a specialization, that is the thing to fix.
+
 ### 3.8 Function-valued `Mono` arguments (deferred to v2)
 
 Marking a *function* parameter `[@@monomorphize]` is genuinely harder than
@@ -2709,7 +2745,7 @@ Names do not need to be deterministic, and it would be a mistake to make the
 design depend on their being so: two type-class instances for the same type
 will always need a disambiguating subscript from somewhere.  The interface
 records the **full emitted name**, and downstream reads it.  So
-`spec_suffix`'s discovery-order counter (`Extract.fst:233`, `Extract.fst:285`)
+`spec_suffix`'s discovery-order counter (`Extract.spec_suffix`, `Extract.request`)
 is fine as it stands, and making specialization names more readable — folding
 the structural scheme `Monomorphize.request` already uses for types
 (`Monomorphize.fst:134`, which is what produces `tuple3@tree_int_int_tree_int`)
@@ -2717,34 +2753,30 @@ over *all* the `Mono` arguments of a value specialization, instead of taking the
 head symbol of the first — is output polish, decoupled from everything here.
 
 What *does* have to be stable is the **key**, because that is the lookup.
-Today it is not, and the reason is worth recording because it is a live bug
-independent of separate compilation:
+Until M9a it was not, and the reason is worth recording because it was a live
+bug independent of separate compilation:
 
 ```
-Extract.fst:94   string_of_key k = string_of_lid k.sk_lid ^ ... ^ show t
+string_of_key k = string_of_lid k.sk_lid ^ ... ^ show t
 ```
 
 `show` on a `term` is `Print.term_to_string` (`Print.fst:166`), which
-**resugars** unless `--ugly`, and which prints an `fv` by its **last
-identifier only** unless `--print_real_names` or `--print_full_names`
-(`Syntax.fst:629`).  The interning key is therefore sensitive to printing
-options and is not injective on names: `A.inst` and `B.inst` both print as
-`inst`.
+**resugars** unless `--ugly`, and the ugly printer prints an `fv` by its
+**last identifier alone** (`Syntax.fst:629`).  The interning key was therefore
+sensitive to a printing option, and under `--ugly` was not injective on names:
+`A.inst` and `B.inst` both print as `inst`.
 
-Measured, this does not bite today.  A probe with two modules each declaring a
-type `t` and an instance `inst` of a shared class, both passed to one generic
-function, correctly produced two specializations — because `key_norm_steps`
-delta-unfolds each instance to its record literal and the two literals differ.
-But that is an accident of the step list rather than a property of the key, and
-it stops holding the moment a `Mono` argument retains an `fv` that does not
-unfold: an `assume val`, a `[@@custard_extern]`, an abstract type constructor.
-The failure is silent — two call sites share one specialization, compiled for
-the other one's type.
+Measured, this bit.  `tests/custard/KeyNames.fst` — two `assume val tweak`s in
+different modules, both passed to one `[@@@monomorphize]` binder — emitted a
+single specialization under `--ugly` and printed `abab` where it should print
+`abAB`.  What kept it rare is that `key_norm_steps` delta-unfolds a dictionary
+to a record literal whose contents differ, so type classes never showed it;
+what defeats that is an argument keeping an `fv` which does not unfold: an
+`assume val`, a `[@@custard_extern]`, an abstract type constructor.
 
-So keys get their own printer: fully qualified lids, α-canonical (bound
-variables by de Bruijn level, not by `ppname`), universes erased, no
-resugaring, independent of every printing option.  That is also exactly the
-string the interface should store.
+So keys have their own printer, `Extract.key_of_term` (§3.7): fully qualified
+lids, α-canonical, universes erased, no resugaring, independent of every
+printing option.  That is also exactly the string the interface stores.
 
 ### 12.4 What changes in the pipeline
 
@@ -2890,7 +2922,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | `MonoTypes`; whole corpus re-run under the flag |
 | M8b | Direct-to-C backend (§6): self-contained C11, no krmllib, function pointers but no closures | `KrmlBasic` and both Pulse modules compiled `-Wall -Wextra -Werror` and run; `CNoInt`/`CNoClosure` reject |
 | M8c | Inline constructor fields (§5.7): `Simplify.inline_fields`, `TInline`, `[@@@custard_inline_field]` | Done. `tests/custard/InlineFields.fst`; closes the `\| Bar of a & b` indirection of FStarLang/FStar#4382 |
-| M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | A live interning bug in its own right, and the lookup key §12 rests on |
+| M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
 | M9b | Exceptions: an `Extract` producer for `DExn`/`ERaise`/`ETry`, and the `Prims.exn` constructor path (§12.8 item 1) | The IR and the OCaml backend already carry them |
 | M9c | `FStar.ST`/`FStar.Ref`/`FStarC.Util.mk_ref` rules (§12.8 item 2) | The compiler's imperative style; same table as §8.3 |
 | M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Decides whether M7 moves ahead of M10 |

@@ -21,9 +21,14 @@ CUSTARD_TESTS += Phantom
 CUSTARD_TESTS += ShortCircuit
 CUSTARD_TESTS += MonoTypes
 CUSTARD_TESTS += InlineFields
+CUSTARD_TESTS += KeyNames
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
+# Section 12.3: --ugly is what made the old key printer collapse the two
+# 'tweak's into one key, so the test runs with it on.  A specialization key
+# must not depend on a printing option at all.
+FLAGS_KeyNames = --ugly
 
 # Section 5.0: with type monomorphization on, nothing polymorphic may survive
 # -- no type variable anywhere in the file -- and each instantiation must be
@@ -39,6 +44,12 @@ GREP_MonoTypes   = "type monoTypes_both__int" "type monoTypes_both__bool" \
                    "type monoTypes_both__int = { fst : Prims.int; snd : Prims.int }" \
                    "{ fst = (p).snd; snd = (p).fst }"
 NOGREP_MonoTypes = "'" "Mkboth" "match p with"
+
+# Section 12.3: the two 'tweak's must get separate specializations, which they
+# only do if the key printer distinguishes them.  The run itself is the real
+# assertion (the output is "abAB", not "abab"); this checks the shape.
+GREP_KeyNames = "keyNames_apply__tweak" "keyNames_apply__tweak_1" \
+                "FStar_String.lowercase" "FStar_String.uppercase"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.

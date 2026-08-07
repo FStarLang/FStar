@@ -46,6 +46,7 @@ module SMap   = FStarC.SMap
 module SS     = FStarC.Syntax.Subst
 module TcEnv  = FStarC.TypeChecker.Env
 module U      = FStarC.Syntax.Util
+module UF     = FStarC.Syntax.Unionfind
 module TcUtil = FStarC.TypeChecker.Util
 module Range = FStarC.Range
 
@@ -91,9 +92,145 @@ let key_norm_steps : list TcEnv.step = [
 let subst_norm_steps : list TcEnv.step =
   TcEnv.Weak :: TcEnv.HNF :: key_norm_steps
 
+(* -------------------------------------------------------------------- *)
+(* The key printer (section 12.3)                                       *)
+(* -------------------------------------------------------------------- *)
+
+(* A specialization key is an *identity*: two call sites share a
+   specialization exactly when their keys are equal as strings.  So the
+   function that turns a term into a key has one job, and it is not
+   readability -- it is to be injective up to the equivalence we intend, and
+   to depend on nothing but the term.
+
+   [show] is neither.  It resugars unless [--ugly] (Print.fst:166), and it
+   prints an [fv] by its last identifier alone unless [--print_real_names]
+   (Syntax.fst:629), so [A.inst] and [B.inst] are one key and the whole
+   interning table changes shape with a printing option.  Delta-unfolding in
+   [key_norm_steps] hides this most of the time -- two dictionaries usually
+   reduce to record literals that differ -- but it stops hiding it the moment
+   a [Mono] argument keeps an [fv] that does not unfold: an [assume val], a
+   [[@@custard_extern]], an abstract type constructor.  The failure is a
+   silent miscompilation, two call sites sharing code built for one of them.
+
+   Hence this printer.  It is deliberately dumb and total:
+
+     - every [fv] and effect name is fully qualified;
+     - universes are erased, matching [EraseUniverses] in [key_norm_steps];
+     - bound variables print as their de Bruijn index and binders print only
+       their sort, so the key is alpha-canonical for free -- terms are
+       locally nameless and we never open one, which is also why [ppname] and
+       [bv.index], both of which are run-local gensym noise, never appear;
+     - ranges and attributes, which are not semantic, are dropped.
+
+   It is also what section 12.2 stores in a unit interface, so it has to mean
+   the same thing in the next process as in this one. *)
+
+let key_of_const (c:sconst) : ML string =
+  match c with
+  | Const_effect        -> "Effect"
+  | Const_unit          -> "()"
+  | Const_bool b        -> if b then "true" else "false"
+  | Const_real r        -> r ^ "R"
+  | Const_char c        -> "'" ^ show (FStarC.Util.int_of_char c) ^ "'"
+  | Const_string (s, _) -> "\"" ^ s ^ "\""
+  (* The width and signedness are part of the constant: [0uy] and [0ul] are
+     different values of different types, and [const_to_string] prints both as
+     "0". *)
+  | Const_int (s, sw)   ->
+    s ^ (match sw with
+         | None -> ""
+         | Some (s, w) ->
+           (match s with Unsigned -> "u" | Signed -> "s") ^
+           (match w with Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
+                       | Int64 -> "64" | Sizet -> "sz"))
+  (* A range is a position, so it cannot appear in a key: two identical calls
+     on different lines would specialize twice, and the key would change
+     whenever anything above it moved. *)
+  | Const_range _       -> "<range>"
+  | Const_range_of      -> "range_of"
+  | Const_set_range_of  -> "set_range_of"
+  | Const_reify lopt    ->
+    "reify" ^ (match lopt with None -> "" | Some l -> "<" ^ Ident.string_of_lid l ^ ">")
+  | Const_reflect l     -> "reflect<" ^ Ident.string_of_lid l ^ ">"
+
+let rec key_of_term (t:S.term) : ML string =
+  match (SS.compress t).n with
+  | Tm_bvar bv          -> "@" ^ show bv.index
+  (* A [Tm_name] is bound outside the term, so its identity is the gensym
+     index and there is nothing canonical to print.  A key containing one is
+     not portable across runs; see section 12.3. *)
+  | Tm_name bv          -> "%" ^ Ident.string_of_id bv.ppname ^ "#" ^ show bv.index
+  | Tm_fvar fv          -> Ident.string_of_lid (S.lid_of_fv fv)
+  | Tm_uinst (t, _)     -> key_of_term t
+  | Tm_constant c       -> key_of_const c
+  | Tm_type _           -> "Type"
+  | Tm_abs {b; body}    -> "(fun " ^ key_of_binder b ^ " -> " ^ key_of_term body ^ ")"
+  | Tm_arrow {b; comp}  -> "(" ^ key_of_binder b ^ " -> " ^ key_of_comp comp ^ ")"
+  | Tm_refine {b; phi}  -> "({" ^ key_of_term b.sort ^ "|" ^ key_of_term phi ^ "})"
+  | Tm_app {hd; arg}    -> "(" ^ key_of_term hd ^ " " ^ key_of_arg arg ^ ")"
+  | Tm_match {scrutinee; brs} ->
+    "(match " ^ key_of_term scrutinee ^ " with" ^
+    (brs |> List.map key_of_branch |> String.concat "") ^ ")"
+  (* [Unascribe] and [Unmeta] are in [key_norm_steps], so these are only
+     reached on a term the normalizer declined to touch; either way neither
+     node changes what the term means. *)
+  | Tm_ascribed {tm}    -> key_of_term tm
+  | Tm_meta {tm}        -> key_of_term tm
+  | Tm_let {lbs = (r, lbs); body} ->
+    "(let" ^ (if r then " rec" else "") ^
+    (lbs |> List.map key_of_lb |> String.concat " and ") ^
+    " in " ^ key_of_term body ^ ")"
+  | Tm_uvar (u, _)      -> "?" ^ show (UF.uvar_id u.ctx_uvar_head)
+  | Tm_quoted (t, _)    -> "(quote " ^ key_of_term t ^ ")"
+  | Tm_lazy _ ->
+    (* One step only: [unlazy] on something that does not unfold gives back
+       what it was handed, and we must not loop. *)
+    (match (SS.compress (U.unlazy t)).n with
+     | Tm_lazy _ -> "<lazy>"
+     | _ -> key_of_term (U.unlazy t))
+  | Tm_unknown          -> "_"
+  | Tm_delayed _        -> "<delayed>"  (* unreachable: compressed above *)
+
+(* The qualifier is dropped: whether an argument was written [#a] or [a] does
+   not change the value, and the two must not key differently.  Attributes are
+   dropped for the same reason. *)
+and key_of_binder (b:S.binder) : ML string = key_of_term b.binder_bv.sort
+
+and key_of_arg (a:S.arg) : ML string = key_of_term (fst a)
+
+and key_of_comp (c:S.comp) : ML string =
+  match c.n with
+  | Total t  -> key_of_term t
+  | GTotal t -> "GTot " ^ key_of_term t
+  | Comp ct  ->
+    Ident.string_of_lid ct.effect_name ^ " " ^ key_of_term ct.result_typ ^
+    (ct.effect_args |> List.map (fun a -> " " ^ key_of_arg a) |> String.concat "")
+
+and key_of_branch (br:S.branch) : ML string =
+  let (p, w, e) = br in
+  " | " ^ key_of_pat p ^
+  (match w with None -> "" | Some w -> " when " ^ key_of_term w) ^
+  " -> " ^ key_of_term e
+
+and key_of_pat (p:S.pat) : ML string =
+  match p.v with
+  | Pat_constant c   -> key_of_const c
+  (* Pattern variables are positional, so their names carry no information. *)
+  | Pat_var _        -> "_"
+  | Pat_dot_term _   -> "."
+  | Pat_cons (fv, _, ps) ->
+    "(" ^ Ident.string_of_lid (S.lid_of_fv fv) ^
+    (ps |> List.map (fun (p, _) -> " " ^ key_of_pat p) |> String.concat "") ^ ")"
+
+and key_of_lb (lb:S.letbinding) : ML string =
+  (match lb.lbname with
+   | Inl _ -> "@"                        (* recursive group binders are positional *)
+   | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)) ^
+  " : " ^ key_of_term lb.lbtyp ^ " = " ^ key_of_term lb.lbdef
+
 let string_of_key (k:spec_key) : ML string =
   Ident.string_of_lid k.sk_lid ^
-  (k.sk_args |> List.map (fun (i, t) -> "#" ^ show i ^ "=" ^ show t)
+  (k.sk_args |> List.map (fun (i, t) -> "#" ^ show i ^ "=" ^ key_of_term t)
              |> String.concat "")
 
 (* -------------------------------------------------------------------- *)
