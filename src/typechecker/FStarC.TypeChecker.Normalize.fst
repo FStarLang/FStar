@@ -158,8 +158,18 @@ let check_strict (cfg : Cfg.cfg) (hua : fv & universes & args) : ML (option bool
  * essentially make it invalid. See issue #2155 in Github.
  *
  * We compare the cfg with physical equality, so it has to be the
- * exact same object in memory. See read_memo and set_memo below. *)
-type cfg_memo 'a = memo (Cfg.cfg & 'a)
+ * exact same object in memory. See read_memo and set_memo below.
+ *
+ * A single term can legitimately be normalized in more than one cfg: in
+ * particular the scrutinee of a match is reduced weakly, with an otherwise
+ * identical cfg (see weak_scrutinee_cfg). So we keep one slot per cfg instead
+ * of a single one, otherwise the two normalizations keep invalidating each
+ * other's memo and, e.g., `assert_norm (List.length l = n)` becomes quadratic
+ * in the length of the list. See issue #4394.
+ *
+ * In practice this list has one or two elements; it is bounded by the number
+ * of distinct cfgs the term is normalized in. *)
+type cfg_memo 'a = memo (list (Cfg.cfg & 'a))
 
 let fresh_memo (#a:Type) () : ML (memo a) = mk_ref None
 
@@ -210,46 +220,42 @@ let weak_scrutinee_cfg (cfg:Cfg.cfg) : option Cfg.cfg =
   then Some ({ cfg with steps = { cfg.steps with weak = true } })
   else None
 
-(* [cfg_stronger c1 c2] decides whether c1 reduces at least as much as c2, and
-   hence whether a memo taken in config c1 is still valid when reducing in
-   config c2. Note this relation is asymmetric.
-
-   The `weak` and `hnf` flags only ever make the normalizer reduce *less*, so a
-   memo taken without them is still a valid answer for a config that has them
-   set (a strong normal form is also a weak/head normal form). The converse is
-   not true, so we require c1.weak ==> c2.weak (and likewise for hnf). All other
-   steps must match exactly.
-
-   This matters a lot for performance: matches are normalized by first weakly
-   reducing the scrutinee with a `weak = true` config (see the
-   `weakly_reduce_scrutinee` step). Without this, every such weak normalization
-   would reject the memos taken by the enclosing strong normalization and
-   recompute them from scratch, making e.g. `assert_norm (List.length l = n)`
-   quadratic in the length of the list. See issue #4394. *)
-let cfg_stronger (c1 c2 : Cfg.cfg) : ML bool =
-  (not c1.steps.weak || c2.steps.weak) &&
-  (not c1.steps.hnf || c2.steps.hnf) &&
-  ({ c1.steps with weak = c2.steps.weak; hnf = c2.steps.hnf }) =? c2.steps &&
+(* Decides whether a memo taken in config c1 is valid when reducing in config
+   c2, i.e. whether the two configs reduce exactly the same way. *)
+let cfg_equivalent (c1 c2 : Cfg.cfg) : ML bool =
+  c1.steps =? c2.steps &&
   c1.delta_level =? c2.delta_level &&
   c1.normalize_pure_lets =? c2.normalize_pure_lets
 
-let read_memo cfg (r:memo (Cfg.cfg & 'a)) : ML (option 'a) =
+let memo_entries (r:cfg_memo 'a) : ML (list (Cfg.cfg & 'a)) =
   match !r with
-  (* We only take this memoized value if it was taken in a cfg that reduces at
-  least as much as the current one, or if we are running in compatibility mode
-  for it. *)
-  | Some (cfg', a) when cfg.compat_memo_ignore_cfg || BU.physical_equality cfg cfg' || cfg_stronger cfg' cfg ->
-    Some a
-  | _ -> None
+  | None -> []
+  | Some l -> l
 
-(* True when the memo in r holds a value that was taken in a cfg reducing
-   *less* than cfg, and hence may not be fully reduced for cfg. This can only
-   happen when running with compat_memo_ignore_cfg, since read_memo otherwise
-   rejects such memos. *)
-let memo_may_be_under_reduced cfg (r:memo (Cfg.cfg & 'a)) : ML bool =
-  match !r with
-  | Some (cfg', _) -> not (BU.physical_equality cfg cfg' || cfg_stronger cfg' cfg)
-  | None -> false
+(* The memoized value for exactly this cfg, if any. *)
+let lookup_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
+  match memo_entries r |> List.tryFind (fun (cfg', _) ->
+          BU.physical_equality cfg cfg' || cfg_equivalent cfg' cfg) with
+  | Some (_, a) -> Some a
+  | None -> None
+
+let read_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
+  match lookup_memo cfg r with
+  | Some a -> Some a
+  (* In compatibility mode we take any memoized value, even one computed in a
+     different cfg. *)
+  | None ->
+    if cfg.compat_memo_ignore_cfg
+    then (match memo_entries r with
+          | (_, a) :: _ -> Some a
+          | [] -> None)
+    else None
+
+(* True when read_memo only accepted the memo because of
+   compat_memo_ignore_cfg, in which case its value was computed in some other
+   cfg and may not be reduced enough for cfg. *)
+let memo_may_be_under_reduced cfg (r:cfg_memo 'a) : ML bool =
+  None? (lookup_memo cfg r)
 
 (* A memo always holds a *weak* normal form (see the comment on set_memo in the
    MemoLazy cases of norm/rebuild) paired with a residual environment for the
@@ -275,19 +281,19 @@ let rec stack_accepts_weak_normal_form (stack:stack) : Tot bool =
   | Match _ :: _ -> true
   | _ -> false
 
-let memo_is_ready cfg (env:env) (stack:stack) (r:memo (Cfg.cfg & 'a)) : ML bool =
+let memo_is_ready cfg (env:env) (stack:stack) (r:cfg_memo 'a) : ML bool =
   Nil? env
   && cfg.steps.weak
   && stack_accepts_weak_normal_form stack
   && not (memo_may_be_under_reduced cfg r)
 
-let set_memo cfg (r:memo (Cfg.cfg & 'a)) (t:'a) : ML unit =
+let set_memo cfg (r:cfg_memo 'a) (t:'a) : ML unit =
   if cfg.memoize_lazy then begin
     (* We do this only as a sanity check. The only situation where we
      * should set a memo again is when the cfg has changed. *)
     if Some? (read_memo cfg r) then
       failwith "Unexpected set_memo: thunk already evaluated";
-    r := Some (cfg, t)
+    r := Some ((cfg, t) :: memo_entries r)
   end
 
 let closure_to_string = function
@@ -1377,7 +1383,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                     let env_elts = (None, Clos(env, fix_f_i, memo, true), fresh_memo ())::env_elts in
                     env_elts, memo::memos, i + 1) (snd lbs) ([], [], 0) in
             let rec_env = List.rev env_elts @ env in
-            let _ = List.map2 (fun lb memo -> memo := Some (cfg, (rec_env, lb.lbdef))) (snd lbs) memos in //tying the knot
+            let _ = List.map2 (fun lb memo -> memo := Some [(cfg, (rec_env, lb.lbdef))]) (snd lbs) memos in //tying the knot
             // NB: fold_left, since the binding structure of lbs is that righmost is closer, while in the env leftmost
             // is closer. In other words, the last element of lbs is index 0 for body, hence needs to be pushed last.
             let body_env = List.fold_left (fun env lb -> (None, Clos(rec_env, lb.lbdef, fresh_memo(), false), fresh_memo())::env)
@@ -2810,7 +2816,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                 let scrut_cfg = Option.dflt cfg (weak_scrutinee_cfg cfg) in
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                           Clos([], t, mk_ref (if cfg.steps.hnf then None else Some (scrut_cfg, ([], t))), false),
+                                           Clos([], t, mk_ref (if cfg.steps.hnf then None else Some [(scrut_cfg, ([], t))]), false),
                                            fresh_memo ()) :: env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
