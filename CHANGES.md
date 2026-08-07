@@ -231,6 +231,15 @@ Guidelines for the changelog:
     rechecking `M.fsti`, whenever that checked file (and those of its
     dependences) are valid.
 
+  * `--cache_checked_modules` now writes checked files only for the *files*
+    given on the command line, rather than for every file of a command-line
+    *module*. In particular `fstar.exe M.fst` no longer writes
+    `M.fsti.checked` as a side effect; only `fstar.exe M.fsti` does. This
+    guarantees that the contents of an interface's checked file never depend on
+    its implementation. Builds that need `M.fsti.checked` (any consumer of `M`
+    does) must ask for it explicitly, as the `--dep full` generated makefiles
+    already do.
+
 ## Core typechecker
   * PR https://github.com/FStarLang/FStar/pull/2760 introduces core typechecking for
     implicits introduced for application of indexed effects combinators. This is a

@@ -170,6 +170,11 @@ val should_check_file           : string  -> ML bool (* Should check this file, 
 
 val should_verify_file          : string  -> ML bool (* Should check this file with verification enabled. *)
 
+(* Should a checked file be written for this file? True only for the files
+   given on the command line; note this is per *file*, not per module, so
+   `fstar.exe A.fst` does not write A.fsti.checked. *)
+val should_write_checked_file   : string  -> ML bool
+
 val should_print_message        : string  -> ML bool
 
 val custom_prims                : unit    -> ML (option string)
