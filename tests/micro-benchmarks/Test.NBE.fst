@@ -69,3 +69,11 @@ let test_delta_once =
 let test_reveal_opaque () =
   reveal_opaque (`%opaque_nbe) opaque_nbe;
   assert (opaque_nbe 4 == 7)
+
+(* delta_fully used to make NBE fail with "Not yet handled", and then, once
+   handled, to only unfold the head (the modified cfg was dropped by the
+   TopLevelLet node). *)
+#push-options "--no_smt"
+let test_delta_fully =
+  assert (norm [nbe; primops; delta_fully [`%g_nbe]] (g_nbe 1) == 3)
+#pop-options

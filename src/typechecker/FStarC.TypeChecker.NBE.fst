@@ -907,7 +907,24 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): ML t =
    else
      match NU.should_unfold false cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo with
      | NU.Should_unfold_fully  ->
-       failwith "Not yet handled"
+       (* Unfold this fv, and everything within its body, with a cfg where
+          the selective unfolding steps are cleared and delta is set to
+          delta_constant. Mirrors decide_unfolding in Normalize.fst.
+          NB: the result depends on the (modified) cfg, so it must not be
+          added to the fv cache of [cfg]. *)
+       let cfg' =
+         let steps = { cfg.core_cfg.steps with
+                         unfold_only  = None
+                       ; unfold_once  = None
+                       ; unfold_fully = None
+                       ; unfold_attr  = None
+                       ; unfold_qual  = None
+                       ; unfold_namespace = None
+                       ; unfold_until = Some delta_constant } in
+         new_config ({ cfg.core_cfg with steps;
+                                         delta_level = [Env.Unfold delta_constant] }) //blow away cache
+       in
+       unfold_fv true cfg' bs fvar qninfo
 
      | NU.Should_unfold_no ->
        debug (fun () -> Format.print1 "(1) Decided to not unfold %s\n" (show fvar));
