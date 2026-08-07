@@ -718,6 +718,198 @@ let dce (prog:program) : ML program =
   prog |> List.filter (fun d ->
     Some? (SMap.try_find live (string_of_name (name_of_decl d))))
 
+(* Section 6, pass 7: unused type parameters.
+
+   Monomorphization removes the type parameters a declaration is specialized
+   on, but section 5.0's uniform compilation deliberately leaves the [Poly]
+   ones behind, and some of those turn out not to describe any part of the
+   runtime representation:
+
+     type tagged (a:Type) (b:Type) = | L : a -> tagged a b | R : a -> tagged a b
+
+   [b] is a phantom: no field mentions it, so every instantiation of [tagged]
+   has the same layout and the parameter is pure noise.  Carrying it costs
+   nothing in OCaml, where the parameter is only a name, but the direct-to-C
+   backend has to instantiate what it is given, so a phantom parameter there is
+   a fork in the monomorphization for no reason.
+
+   "Used" is a least fixed point, because a parameter can be used solely by
+   being passed on:
+
+     type chain (p:Type) (q:Type) = tagged p q
+
+   [q] occurs in [chain]'s body, but only in a position of [tagged] that is
+   itself about to be dropped, so [q] is unused too.  Starting from "every
+   parameter is unused" and only ever adding uses gets this right, and gets the
+   recursive case ([type t (a:Type) = ... t a ...] where [a] reaches nothing
+   but the recursive occurrence) right for the same reason.
+
+   This is the analogue of the ML extraction's
+   {!FStarC.Extraction.ML.RemoveUnusedParameters}, which needs the same
+   transformation to satisfy F#.  Custard's version is both simpler and more
+   aggressive: because the program is whole, every use site is in hand and
+   there is no need to record the eliminated positions for a separately
+   compiled client to agree with, and the same analysis extends from type
+   abbreviations to inductives and to the type parameters of functions. *)
+let unused_params (prog:program) : ML program =
+  let params_of (d:decl) : list string =
+    match d with
+    | DType t -> t.dt_params
+    | DLet l -> l.dl_typars
+    | _ -> [] in
+  let keep : SMap.t (list bool) = SMap.create 50 in
+  prog |> List.iter (fun d ->
+    match params_of d with
+    | [] -> ()
+    | ps -> SMap.add keep (string_of_name (name_of_decl d))
+                          (ps |> List.map (fun _ -> false)));
+
+  let rec select (ks:list bool) (xs:list cty) : list cty =
+    match ks, xs with
+    | k :: ks, x :: xs -> if k then x :: select ks xs else select ks xs
+    | _ -> xs in
+  (* Only rewrite an application whose shape we can vouch for: a reference to a
+     declaration we have, saturated with exactly its parameters. *)
+  let retained (n:name) (args:list cty) : ML (option (list bool)) =
+    match SMap.try_find keep (string_of_name n) with
+    | Some ks when List.length ks = List.length args -> Some ks
+    | _ -> None in
+
+  (* Phase 1: which parameters are used, as a fixed point. *)
+  let changed : ref bool = mk_ref false in
+  let acc : ref (list string) = mk_ref [] in
+  let rec u_cty (c:cty) : ML unit =
+    match c with
+    | TVar v -> acc := v :: !acc
+    | TApp (n, args) -> u_args n args
+    | TArrow (a, _, b) -> u_cty a; u_cty b
+    | TTuple cs -> cs |> List.iter u_cty
+    | TBuf c -> u_cty c
+    | TInt _ | TUnit | TAny -> ()
+  and u_args (n:name) (args:list cty) : ML unit =
+    match retained n args with
+    | Some ks -> List.zip ks args |> List.iter (fun (k, a) -> if k then u_cty a)
+    | None -> args |> List.iter u_cty in
+  let rec u_expr (x:expr) : ML unit =
+    u_cty x.ty;
+    let sub (es:list expr) : ML unit = es |> List.iter u_expr in
+    match x.e with
+    | EConst _ | EVar _ | EAny | EAbort _ -> ()
+    | EQual (n, tys) -> u_args n tys
+    | ELet (_, t, e1, e2) -> u_cty t; sub [e1; e2]
+    | EApp (h, es) -> sub (h :: es)
+    | EFun (bs, b) -> bs |> List.iter (fun (b:binder) -> u_cty b.b_ty); u_expr b
+    | EMatch (sc, brs) -> u_expr sc; brs |> List.iter u_branch
+    | ETry (e, brs) -> u_expr e; brs |> List.iter u_branch
+    | EIf (c, a, b) -> sub [c; a; b]
+    | ESeq (a, b) -> sub [a; b]
+    | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> sub es
+    | ERecord (_, fs) -> sub (fs |> List.map snd)
+    | EProj (e, _, _) | EDiscrim (e, _) -> u_expr e
+    | ECast (e, t) -> u_cty t; u_expr e
+    | EWhile (c, b) -> sub [c; b]
+  and u_branch (br:branch) : ML unit =
+    let _, g, b = br in
+    (match g with Some g -> u_expr g | None -> ());
+    u_expr b in
+  let u_tydef (b:tydef) : ML unit =
+    let fields (fs:list (string & cty)) : ML unit =
+      fs |> List.iter (fun (_, c) -> u_cty c) in
+    match b with
+    | TAbbrev c -> u_cty c
+    | TRecord fs -> fields fs
+    | TVariant cs -> cs |> List.iter (fun (_, fs) -> fields fs)
+    | TAbstract -> () in
+  let visit (d:decl) : ML unit =
+    match params_of d with
+    | [] -> ()
+    | ps ->
+      acc := [];
+      (match d with
+       | DType t -> u_tydef t.dt_body
+       | DLet l ->
+         l.dl_binders |> List.iter (fun (b:binder) -> u_cty b.b_ty);
+         u_cty l.dl_ret;
+         u_expr l.dl_body
+       | _ -> ());
+      let seen = !acc in
+      let n = string_of_name (name_of_decl d) in
+      let old = match SMap.try_find keep n with Some ks -> ks | None -> [] in
+      let ks = List.zip old ps |> List.map (fun (k, p) ->
+                 k || List.existsb (fun v -> v = p) seen) in
+      if ks <> old then (changed := true; SMap.add keep n ks) in
+  let rec fixpoint (fuel:int) : ML unit =
+    changed := false;
+    prog |> List.iter visit;
+    if !changed && fuel > 0 then fixpoint (fuel - 1) in
+  (* The fixed point is monotone in a lattice whose height is the total number
+     of parameters, so that many rounds always suffice. *)
+  fixpoint (1 + List.fold_left (fun n d -> n + List.length (params_of d)) 0 prog);
+
+  (* Phase 2: drop the parameters, and the arguments at their positions. *)
+  let rec r_cty (c:cty) : ML cty =
+    match c with
+    | TApp (n, args) ->
+      let args = args |> List.map r_cty in
+      TApp (n, (match retained n args with Some ks -> select ks args | None -> args))
+    | TArrow (a, e, b) -> TArrow (r_cty a, e, r_cty b)
+    | TTuple cs -> TTuple (cs |> List.map r_cty)
+    | TBuf c -> TBuf (r_cty c)
+    | TVar _ | TInt _ | TUnit | TAny -> c in
+  let r_binder (b:binder) : ML binder = { b with b_ty = r_cty b.b_ty } in
+  let rec r_expr (x:expr) : ML expr =
+    let go = r_expr in
+    let e =
+      match x.e with
+      | EConst _ | EVar _ | EAny | EAbort _ -> x.e
+      | EQual (n, tys) ->
+        let tys = tys |> List.map r_cty in
+        EQual (n, (match retained n tys with Some ks -> select ks tys | None -> tys))
+      | ELet (v, t, e1, e2) -> ELet (v, r_cty t, go e1, go e2)
+      | EApp (h, es) -> EApp (go h, es |> List.map go)
+      | EFun (bs, b) -> EFun (bs |> List.map r_binder, go b)
+      | EMatch (sc, brs) -> EMatch (go sc, brs |> List.map r_branch)
+      | ETry (e, brs) -> ETry (go e, brs |> List.map r_branch)
+      | EIf (c, a, b) -> EIf (go c, go a, go b)
+      | ESeq (a, b) -> ESeq (go a, go b)
+      | ECtor (n, es) -> ECtor (n, es |> List.map go)
+      | ERaise (n, es) -> ERaise (n, es |> List.map go)
+      | ETuple es -> ETuple (es |> List.map go)
+      | EOp (o, es) -> EOp (o, es |> List.map go)
+      | ERecord (n, fs) -> ERecord (n, fs |> List.map (fun (f, e) -> (f, go e)))
+      | EProj (e, n, f) -> EProj (go e, n, f)
+      | EDiscrim (e, n) -> EDiscrim (go e, n)
+      | ECast (e, t) -> ECast (go e, r_cty t)
+      | EWhile (c, b) -> EWhile (go c, go b)
+    in
+    { x with e = e; ty = r_cty x.ty }
+  and r_branch (br:branch) : ML branch =
+    let p, g, b = br in
+    (p, (match g with Some g -> Some (r_expr g) | None -> None), r_expr b) in
+  let r_tydef (b:tydef) : ML tydef =
+    let fields (fs:list (string & cty)) : ML (list (string & cty)) =
+      fs |> List.map (fun (f, c) -> (f, r_cty c)) in
+    match b with
+    | TAbbrev c -> TAbbrev (r_cty c)
+    | TRecord fs -> TRecord (fields fs)
+    | TVariant cs -> TVariant (cs |> List.map (fun (cn, fs) -> (cn, fields fs)))
+    | TAbstract -> TAbstract in
+  let survivors (d:decl) (ps:list string) : ML (list string) =
+    match SMap.try_find keep (string_of_name (name_of_decl d)) with
+    | Some ks when List.length ks = List.length ps ->
+      List.zip ks ps |> List.collect (fun (k, p) -> if k then [p] else [])
+    | _ -> ps in
+  prog |> List.map (fun d ->
+    match d with
+    | DType t -> DType { t with dt_params = survivors d t.dt_params;
+                                dt_body = r_tydef t.dt_body }
+    | DLet l -> DLet { l with dl_typars = survivors d l.dl_typars;
+                              dl_binders = l.dl_binders |> List.map r_binder;
+                              dl_ret = r_cty l.dl_ret;
+                              dl_body = r_expr l.dl_body }
+    | DExternal x -> DExternal { x with dx_ty = r_cty x.dx_ty }
+    | DExn e -> DExn { e with de_args = e.de_args |> List.map r_cty })
+
 (* Section 6, pass 8: strongly connected components.
 
    The extraction loop appends a declaration once it has finished translating
@@ -826,4 +1018,4 @@ let run (prog:program) : ML program =
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
     | d -> d) in
-  scc (dce prog)
+  scc (dce (unused_params (dce prog)))

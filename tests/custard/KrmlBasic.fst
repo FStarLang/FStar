@@ -42,6 +42,14 @@ let rec even (n:U32.t) : Tot bool (decreases U32.v n) =
 and odd (n:U32.t) : Tot bool (decreases U32.v n) =
   if U32.eq n 0ul then false else even (U32.sub n 1ul)
 
+(* Section 6, pass 7: [ph] describes no part of the representation, so it must
+   be gone by the time karamel is asked to instantiate the declaration. *)
+noeq type tagged (a:Type0) (ph:Type0) =
+  | L : a -> tagged a ph
+  | R : a -> tagged a ph
+let untag (#a:Type0) (#ph:Type0) (x: tagged a ph) : a =
+  match x with L v -> v | R v -> v
+
 let main () : I32.t =
   let a = area (Square 3ul) in
   let b = area (Rect 2ul 5ul) in
@@ -49,7 +57,8 @@ let main () : I32.t =
   let tot_area = U32.add_mod a (U32.add_mod b c) in
   let t = roundtrip 0x1234ff07ul in
   let s = via_sizet 4097us in
+  let phantom = U32.add_mod (untag #U32.t #bool (L 3ul)) (untag #U32.t #I32.t (R 4ul)) in
   if U32.eq tot_area 75ul && is_square (Square 1ul)
      && U32.eq t 7ul && U64.eq s 4097uL
-     && even 10ul && odd 7ul
+     && even 10ul && odd 7ul && U32.eq phantom 7ul
   then 0l else 1l

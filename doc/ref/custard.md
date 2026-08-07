@@ -1382,11 +1382,48 @@ Phase 4 passes, in order:
    specification of every data structure it touched, and any error raised while
    doing so (a `Mono` binder in ghost code, say) was a spurious failure about
    code that was never going to be emitted.
-7. **Unused-parameter elimination** for the residual polymorphic decls.  The
-   existing algorithm in
-   `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst` is a good
-   template; Custard's version is simpler because it does not need to keep an
-   ABI-compatible record of eliminated positions.
+7. **Unused-parameter elimination** (`Simplify.unused_params`).
+   Monomorphization removes the type parameters a declaration is specialized
+   on, but §5.0's uniform compilation deliberately leaves the `Poly` ones
+   behind, and some of those describe nothing about the runtime
+   representation:
+
+   ```fstar
+   noeq type tagged (a:Type) (ph:Type) = | L : a -> tagged a ph | R : a -> tagged a ph
+   ```
+
+   `ph` is a phantom: no field mentions it, so every instantiation of `tagged`
+   has the same layout.  Carrying it costs nothing in OCaml, where the
+   parameter is only a name, but the direct-to-C backend (M8) has to
+   instantiate what it is given, so a phantom parameter there is a fork in the
+   monomorphization for no reason.  It is also just noise in code that is meant
+   to be read and checked in.
+
+   "Used" is a *least* fixed point over the whole program, because a parameter
+   can be used solely by being passed on: in `type chain (a:Type) (ph:Type) =
+   tagged a ph`, `ph` occurs in the body, but only in a position of `tagged`
+   that is itself about to be dropped.  Starting from "every parameter is
+   unused" and only ever adding uses gets that right, and gets the recursive
+   case right for the same reason — in `type t (a:Type) = ... t a ...`, a
+   parameter that reaches nothing but the recursive occurrence really is
+   unused.  A single pass in program order would settle the acyclic cases,
+   since the program is topologically sorted by then, but a cycle has no such
+   order, so the pass iterates.  The rewrite then drops the parameters and,
+   at every use site, the `TApp` and `EQual` arguments at their positions.
+
+   This is the analogue of
+   `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst`, which the
+   ML pipeline needs to satisfy F#.  Custard's version is both simpler and more
+   aggressive: because the program is whole, every use site is in hand, so
+   there is no need to keep an ABI-compatible record of the eliminated
+   positions for a separately compiled client to agree with, and the same
+   analysis extends from type abbreviations to inductives and to the type
+   parameters of functions.
+
+   The pass runs between two rounds of dead-code elimination.  The first is
+   what makes it precise — a use in a declaration that is about to be deleted
+   is not a use — and the second collects the declarations that the rewrite
+   itself orphaned, a type that was only ever mentioned in a phantom position.
 8. **SCC computation and topological sort** of the final decl list
    (`Simplify.scc`, Tarjan).  The extraction loop appends a declaration once it
    has finished translating it, so everything a definition mentions precedes
@@ -2098,5 +2135,6 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6c | Bundled combinators (§3.9): weak-HNF substitution (§3.7), over-applied inlining and iota (§6 pass 5) | Done. `tests/custard/Combinators.fst`, extracted, compiled and run |
 | M6d | Mutual recursion (§6 pass 8): `Simplify.scc` and `and`-grouping in the OCaml backend | Done. `tests/custard/Mutual.fst` |
 | M6e | ANF (§6 pass 1): `Simplify.anf`, plus effect precision for externals (§7.3) | Done. `tests/custard/Anf.fst` |
+| M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done. `tests/custard/Phantom.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |
