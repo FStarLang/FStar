@@ -46,10 +46,15 @@ OCAML_TESTS += PulseHashTable
 KRML_TESTS += PulseBasic
 KRML_TESTS += PulseHashTable
 
+# Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
+# which is the repr-over-erased-index style section 5.4 is about -- may lose
+# the representation of a value.
+WARN_ANY = --custard_warn_any --warn_error @366
+
 $(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard --custard_main $*.main $*.fst -o $@
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_main $*.main $*.fst -o $@
 
 $(OUTPUT_DIR)/%.grepped: $(OUTPUT_DIR)/%.custard.ml
 	$(call msg, "GREP", $(basename $(notdir $@)))
@@ -71,7 +76,7 @@ $(OUTPUT_DIR)/%.mlchecked: $(OUTPUT_DIR)/%.custard.ml
 $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard --custard_backend Krml --custard_main $*.main \
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend Krml --custard_main $*.main \
 	  $*.fst -o $@
 
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml

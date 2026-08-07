@@ -380,4 +380,5 @@ let default_settings : list error_setting =
     Error_CustardCannotMonomorphize                   , CAlwaysError, 363;
     Error_CustardFuelExhausted                        , CAlwaysError, 364;
     Error_CustardUnextractableEffect                  , CAlwaysError, 365;
+    Warning_CustardLostRepresentation                 , CWarning, 366;
     ]

@@ -20,6 +20,7 @@ open FStarC.Effect
 open FStarC.List
 open FStarC.Custard.Syntax
 open FStarC.Errors.Msg
+open FStarC.Class.Show
 
 module BU    = FStarC.Util
 module E     = FStarC.Errors
@@ -42,6 +43,100 @@ let main_entry () : ML (option Ident.lident) =
   match Options.custard_main () with
   | Some s -> Some (Ident.lid_of_str s)
   | None -> None
+
+(* -------------------------------------------------------------------- *)
+(* --custard_warn_any (sections 3 and 5.4)                              *)
+(* -------------------------------------------------------------------- *)
+
+(* The two ways Custard can lose track of what a value looks like at runtime.
+
+   [TAny] is the analogue of the ML extraction's [MLTY_Top]: a type Custard
+   could not work out.  Because the program is whole and monomorphic there is
+   almost always an answer, so each occurrence is a place where something went
+   wrong upstream -- and, unlike the ML extraction's [Obj.magic] sprinkles,
+   one that can be pointed at.
+
+   A surviving [ECast] is the other half.  Section 5.4 eliminates a coercion
+   when the two sides have the same layout, and fuses nested ones; what is left
+   is a coercion between representations Custard believes are genuinely
+   different, which in OCaml is an [Obj.magic] and in C a reinterpretation.
+   The exception is a cast between two machine integers, which is not lost
+   information at all but the conversion the source asked for -- a real call
+   into [FStar.Int.Cast] -- so it is not reported. *)
+let lost_cast (e:expr) (t:cty) : bool =
+  match e.ty, t with
+  | TInt _, TInt _ -> false
+  | _ -> true
+
+let warn_any (prog:program) : ML unit =
+  let sites : ref (list string) = mk_ref [] in
+  let note (s:string) : ML unit = sites := s :: !sites in
+  let rec any_cty (c:cty) : ML bool =
+    match c with
+    | TAny -> true
+    | TArrow (a, _, b) -> any_cty a || any_cty b
+    | TApp (_, args) -> args |> List.existsb any_cty
+    | TTuple cs -> cs |> List.existsb any_cty
+    | TBuf c -> any_cty c
+    | TVar _ | TInt _ | TUnit -> false in
+  let at (where:string) (c:cty) : ML unit =
+    if any_cty c then note ("the " ^ where ^ " has type " ^ show c) in
+  let rec go (x:expr) : ML unit =
+    (match x.e with
+     | ECast (e1, t) when lost_cast e1 t ->
+       note ("a coercion from " ^ show e1.ty ^ " to " ^ show t)
+     | _ -> ());
+    let sub (es:list expr) : ML unit = es |> List.iter go in
+    match x.e with
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> ()
+    | ELet (v, t, e1, e2) -> at ("binding of '" ^ v ^ "'") t; sub [e1; e2]
+    | EApp (h, es) -> sub (h :: es)
+    | EFun (bs, b) ->
+      bs |> List.iter (fun (b:binder) -> at ("binder '" ^ b.b_name ^ "'") b.b_ty);
+      go b
+    | EMatch (sc, brs) -> go sc; brs |> List.iter go_branch
+    | ETry (e, brs) -> go e; brs |> List.iter go_branch
+    | EIf (c, a, b) -> sub [c; a; b]
+    | ESeq (a, b) -> sub [a; b]
+    | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> sub es
+    | ERecord (_, fs) -> sub (fs |> List.map snd)
+    | EProj (e, _, _) | EDiscrim (e, _) -> go e
+    | ECast (e, _) -> go e
+    | EWhile (c, b) -> sub [c; b]
+  and go_branch (br:branch) : ML unit =
+    let _, g, b = br in
+    (match g with Some g -> go g | None -> ());
+    go b in
+  prog |> List.iter (fun d ->
+    sites := [];
+    (match d with
+     | DLet l ->
+       l.dl_binders |> List.iter (fun (b:binder) ->
+         at ("binder '" ^ b.b_name ^ "'") b.b_ty);
+       at "result" l.dl_ret;
+       go l.dl_body
+     | DType t ->
+       let fields (owner:string) (fs:list (string & cty)) : ML unit =
+         fs |> List.iter (fun (f, c) -> at ("field '" ^ owner ^ "." ^ f ^ "'") c) in
+       (match t.dt_body with
+        | TAbbrev c -> at "definition" c
+        | TRecord fs -> fields (string_of_name t.dt_name) fs
+        | TVariant cs ->
+          cs |> List.iter (fun (cn, fs) -> fields (string_of_name cn) fs)
+        | TAbstract -> ())
+     | DExternal x -> at "declaration" x.dx_ty
+     | DExn e -> e.de_args |> List.iter (at "exception argument"));
+    match List.rev !sites with
+    | [] -> ()
+    | ss ->
+      E.log_issue0 E.Warning_CustardLostRepresentation
+        (text ("Custard lost the representation of " ^
+               show (List.length ss) ^ " value(s) in '" ^
+               string_of_name (name_of_decl d) ^ "':")
+         :: (ss |> List.map (fun s -> text ("- " ^ s)))
+         @ [text "A whole, monomorphic program should not need these. The \
+                  generated code for them is unchecked: an Obj.magic in OCaml, \
+                  a reinterpretation in C."]))
 
 (* Check that every requested entry point actually resolves to a definition we
    can see.  Getting this wrong is by far the most likely user error, and the
@@ -85,6 +180,7 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let prog = Rename.run prog in
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
+  if Options.custard_warn_any () then warn_any prog;
   (* Custard emits one file for the whole program, so -o is unambiguous here,
      unlike in the per-module backends. *)
   let krml = Options.custard_backend () = "Krml" in

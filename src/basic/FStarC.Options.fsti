@@ -207,6 +207,7 @@ val custard_main                : unit    -> ML (option string)
 val custard_dump_ir             : unit    -> ML bool
 val custard_dump_specializations: unit    -> ML bool
 val custard_dump_layouts: unit           -> ML bool
+val custard_warn_any            : unit    -> ML bool
 val custard_fuel                : unit    -> ML int
 val custard_max_specializations : unit    -> ML int
 val custard_monomorphize_types  : unit    -> ML bool

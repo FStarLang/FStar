@@ -134,6 +134,14 @@ let erased_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in
   bs |> List.map (is_erased_binder env)
 
+(* The sorts of the binders [erased_binders] retains, in order: exactly what a
+   caller still has to supply.  Used to type the binders introduced when a
+   primitive has to be eta-expanded, which would otherwise be [TAny]. *)
+let retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ) =
+  let bs, _ = U.arrow_formals_comp t in
+  bs |> List.filter (fun b -> not (is_erased_binder env b))
+     |> List.map (fun b -> b.binder_bv.sort)
+
 (* The binders of [t] whose value is irrelevant because their type is
    unit-shaped.  These are exactly the ones rule 1 declines to delete, so a
    call site may -- and should -- pass [()] rather than whatever proof term the

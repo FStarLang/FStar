@@ -657,9 +657,17 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let missing = n - List.length given in
   if missing > 0
   then
-    let bs = List.map (fun _ -> { b_name = uniq "eta" (GenSym.next_id ());
-                                  b_ty = TAny })
-                      (repeat_unit missing) in
+    (* The eta binders stand for the arguments the source did not supply, so
+       their types are the primitive's own remaining binder sorts. *)
+    let sorts = match decl_ty with
+                | Some ty -> Mono.retained_sorts (tcenv st) ty
+                | None -> [] in
+    let nth_sort (i:int) : ML cty =
+      let j = List.length given + i in
+      if j < List.length sorts then ty_of_typ st (List.nth sorts j) else TAny in
+    let bs = List.mapi (fun i _ -> { b_name = uniq "eta" (GenSym.next_id ());
+                                     b_ty = nth_sort i })
+                       (repeat_unit missing) in
     let vs = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in
     let body = f tyargs (given @ vs) in
     mk (EFun (bs, body))

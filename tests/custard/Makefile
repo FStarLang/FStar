@@ -69,17 +69,27 @@ NOGREP_Library = library_unused "let _ ="
 REJECT_TESTS += MonoPoly
 REJECT_TESTS += MonoPartial
 REJECT_TESTS += MonoFuel
+# WarnAny is higher-kinded (#f:Type0 -> Type0), which has no counterpart in the
+# target type language: it lands on TAny, which --custard_warn_any reports and
+# WARN_ANY escalates.  This is the positive test for section 5.6.
+REJECT_TESTS += WarnAny
 CODE_MonoPoly    = 363
 CODE_MonoPartial = 363
 CODE_MonoFuel    = 364
+CODE_WarnAny     = 366
 
 include $(FSTAR_ROOT)/mk/test.mk
+
+# --custard_warn_any escalated to an error (section 5.6): no declaration in the
+# corpus may lose the representation of a value.  This is what keeps the "no
+# surviving ECast, no surviving TAny" measurement of section 5.4 true.
+WARN_ANY = --custard_warn_any --warn_error @366
 
 # Override the default OCaml extraction rule from test.mk: we drive the Custard
 # pipeline instead, which is whole-program and hence keyed on an entry point.
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard --custard_main $*.main $< -o $@
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_main $*.main $< -o $@
 	$(Q)for p in $(GREP_$*); do \
 	  grep -q -- "$$p" $@ \
 	    || { echo "ERROR: $* output is missing $$p"; exit 1; }; done
@@ -90,8 +100,8 @@ $(OUTPUT_DIR)/%.ml:
 $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "REJECT", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --message_format human --codegen Custard --custard_main $*.main \
-	  $< >$(OUTPUT_DIR)/$*.err 2>&1 || true
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	  --custard_main $*.main $< >$(OUTPUT_DIR)/$*.err 2>&1 || true
 	$(Q)grep -q "Error $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
 	  || { echo "ERROR: expected error $(CODE_$*) from $*"; cat $(OUTPUT_DIR)/$*.err; false; }
 	$(Q)touch $@
@@ -99,7 +109,7 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "ROOTS", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard \
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) \
 	  $(foreach r,$(ROOTS_$*),--custard_entry $*.$(r)) \
 	  $(patsubst %,%.fst,$*) -o $(OUTPUT_DIR)/$*.ml
 	$(Q)for p in $(GREP_$*); do \
@@ -112,7 +122,8 @@ $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked
 
 $(OUTPUT_DIR)/%.krml:
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard --custard_backend Krml --custard_main $*.main $< -o $@
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend Krml \
+	  --custard_main $*.main $< -o $@
 
 # karamel emits its own compile_flags.txt, which is the only portable way to
 # learn where krmllib's headers live.

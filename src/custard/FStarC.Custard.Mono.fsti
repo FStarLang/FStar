@@ -59,6 +59,11 @@ val is_erased_binder (env:TcEnv.env) (b:binder) : ML bool
     variable, and type applications. *)
 val erased_binders (env:TcEnv.env) (t:typ) : ML (list bool)
 
+(** [retained_sorts env t] is the sorts of the binders [erased_binders] keeps,
+    in order: exactly what a caller still has to supply.  Used to type the
+    binders introduced when a primitive has to be eta-expanded. *)
+val retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ)
+
 (** [unit_binders env t] marks the binders of [t] whose type is unit-shaped
     ([unit], [squash p], [_:unit{p}]).  They are kept -- a unit binder is how
     F* writes a thunk -- but carry no value, so a call site passes [()]. *)

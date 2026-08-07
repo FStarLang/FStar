@@ -1237,13 +1237,29 @@ introduces (mostly around `TAny`).  Phase 4 runs:
 2. `ECast (ECast (e, _), t)` → `ECast (e, t)`;
 3. push casts towards the leaves so that (1) fires more often.
 
-Rules 1 and 2 are implemented; rule 3 is not yet, and is only a matter of how
-often rule 1 fires.
+Rules 1 and 2 are implemented, in `Layout.rw_expr`.  Rule 3 is **not
+implemented, and as of M6h has nothing to bite on**: no `ECast` at all survives
+to the backend, anywhere in the test corpus (all sixteen `tests/custard`
+modules and both Pulse tests, including `PulseHashTable`, which is exactly the
+`repr`-over-erased-index style this section is about).  The generated OCaml
+corpus contains no `Obj.magic`.  That is the goal met, not a gap, so rule 3 is
+deferred until an input demonstrates it is needed.
 
-The goal is that `repr`-based programming (Pulse's `ref`s over erased indices,
-`FStar.Ghost`, index-erasure idioms) costs literally nothing, and that any
-surviving `ECast` is reported under `--custard_warn_any` as something a human
-should look at.
+The reason is that two of the three sources above never reach phase 4:
+
+- `Ghost.reveal` is `GTot`, so §5.1's erase-on-sight removes the call before it
+  can become a cast.  (F\* will not even let you write a `Tot` wrapper around
+  it.)
+- `coerce_eq` extracts as an ordinary polymorphic identity function, which
+  monomorphization then specializes and inlining then deletes.
+
+The only remaining producer of `ECast` is the machine-integer rules in
+`Builtins`, and those are not lost information at all: they are the conversion
+the source asked for, a real call into `FStar.Int.Cast`.  Rule 1 must not
+delete them, and rule 3 could only duplicate them across branches.
+
+`--custard_warn_any` (§5.6) is what turns "we measured zero" into something
+that stays true.
 
 ### 5.5 Other representation choices (to be pinned down)
 
@@ -1254,6 +1270,40 @@ should look at.
   candidate for null-pointer representation in the C backend.  Deferred.
 - Refinement types are erased to their base type (they are already erased by
   the normalizer's `Unrefine`/`ForExtraction`).
+
+### 5.6 `--custard_warn_any`
+
+`--custard_warn_any` walks the final IR, after renaming so the names it reports
+are the ones in the emitted file, and warns (code 366) about the two ways
+Custard can lose track of what a value looks like at runtime:
+
+- a **`TAny`** anywhere in a declaration's binder types, result type, `ELet`
+  binding type, lambda binder types, record or variant field types, or external
+  declaration type.  `TAny` is the analogue of the ML extraction's `MLTY_Top`;
+  in a whole, monomorphic program there is almost always an answer, so an
+  occurrence is a place something went wrong upstream.
+- a surviving **`ECast`** whose two sides are not both machine integers.
+
+One warning is emitted per declaration, listing its sites, rather than one per
+occurrence: the IR has no source positions, so a flat list of anonymous
+occurrences would be unusable.  The code is a `CWarning`, so `--warn_error @366`
+escalates it; the test suite runs the whole corpus that way, which is what
+makes the measurement above a checked invariant rather than a note.
+
+Deliberately **not** checked is the `ty` field of arbitrary expression nodes.
+That field is best-effort metadata — `callee_sig` falls back to `TAny` for a
+callee whose signature is not to hand, and the fallback propagates through
+`apply_result` — and neither backend consults it except in a handful of places
+where it is already guarded.  Checking it flagged even `Hello`, which is the
+definition of a useless diagnostic.  What is checked is exactly the set of
+positions that shape the generated code.
+
+Two things the flag found on first use: primitives that had to be
+eta-expanded were giving their introduced binders `TAny` rather than the
+primitive's own remaining binder sorts (fixed, `Mono.retained_sorts`), and
+higher-kinded polymorphism (`#f:Type0 -> Type0`, `x: f int`) has no
+counterpart in the target type language and lands on `TAny` throughout — which
+is the honest answer, and now a visible one.
 
 ---
 
@@ -2157,5 +2207,6 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6e | ANF (§6 pass 1): `Simplify.anf`, plus effect precision for externals (§7.3) | Done. `tests/custard/Anf.fst` |
 | M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done. `tests/custard/Phantom.fst` |
 | M6g | Deleting unit-shaped proof binders (§3.1, §5.1): `Mono.keep_thunk` | Done. `tests/custard/Implicits.fst` covers both halves of the guard |
+| M6h | `--custard_warn_any` (§5.6); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |
