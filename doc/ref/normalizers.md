@@ -153,3 +153,26 @@ mirrors the normalizer (`NBE.stuck_match_cfg`). The two halves must stay in sync
 worth 3-13x on closed first-order computation, neutral where primops dominate,
 and roughly an order of magnitude *slower* on open terms — the regime tactics
 operate in.
+
+## Testing a change to either engine
+
+A change to `NBE.fst` or `Normalize.fst` should be validated with a full clean
+bootstrap and the Pulse suites, since Pulse is by far the heaviest user of both
+engines:
+
+```
+make clean
+make -j$(nproc) stage3          # stage3 = stage2 + Pulse
+make -j$(nproc) test-3          # all F* tests + pulse/test + pulse examples
+OTHERFLAGS="--use_nbe true" make -j$(nproc) _test_pulse
+```
+
+**Pass `OTHERFLAGS` through the environment, not as a `make` argument.** The
+Pulse makefiles build their flags up with `OTHERFLAGS += ...` — for instance
+`pulse/test/pool/pulse_task/Makefile` adds
+`--include $(PULSE_ROOT)/share/pulse/examples`, and `pulse/mk/test.mk` adds
+`--ext optimize_let_vc` and `--ext fly_deps`. A variable set on the make command
+line cannot be appended to by the makefile, so `make OTHERFLAGS=...` silently
+drops all of those and the run fails with an unrelated-looking
+`Error 134: Namespace 'Quicksort.Base' cannot be found`. Setting the variable in
+the environment lets the `+=` work as intended.
