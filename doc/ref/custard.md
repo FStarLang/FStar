@@ -1241,13 +1241,42 @@ should look at.
 
 Phase 4 passes, in order:
 
-1. **ANF / let-normalization** (allowed by the non-goals).  This runs **first**,
-   not last: every non-trivial subterm gets named and effect order becomes
-   explicit, which is what makes the purity discipline of §7.3 tractable.  After
-   ANF, every impure computation is a named `ELet` in a fixed order, so
-   "may I reorder these?" is a question about statement order rather than about
-   arbitrary subterm positions, and all the later rewrites operate on pure
-   operands only.  It also happens to be what the C and Krml backends want.
+1. **ANF / let-normalization** (allowed by the non-goals), in `Simplify.anf`.
+   This runs **first**, not last.  The invariant it establishes is: *every
+   operand is pure*.  An impure computation may appear only as the right-hand
+   side of an `ELet`, the left of an `ESeq`, or in tail position — never as an
+   argument, a constructor field, a scrutinee or a cast operand.  So effect
+   order becomes explicit, "may I reorder these?" becomes a question about
+   statement order rather than about arbitrary subterm positions, and all the
+   later rewrites operate on pure operands only.  It also happens to be what
+   the C and Krml backends want.
+
+   Hoisting is only sound into a position that is evaluated unconditionally,
+   exactly once, where the operand was, so the traversal stops at every delayed
+   position: a lambda body, the arms of an `EIf`, the branches and guards of an
+   `EMatch` or `ETry`, both parts of an `EWhile` (the condition is re-evaluated
+   per iteration), and — because both backends short-circuit them — every
+   operand but the first of `And` and `Or`.
+
+   **Most of this work is already done for us, and the exception is the point.**
+   An application whose arguments have an *F\** effect arrives in monadic normal
+   form, because that is how the typechecker elaborates it; the same is true of
+   Pulse, which sequences every `stt` computation through `bind`.  What does
+   *not* arrive normalized is everything Custard alone considers impure — an
+   arrow promoted by `extract_as_impure_effect` (§7.2), which F\* sees as `Tot`
+   and therefore leaves nested.  `tests/custard/Anf.fst` is exactly that shape,
+   and without this pass it prints `ba` where the program says `ab`, because
+   OCaml evaluates arguments right to left.
+
+   The invariant is also what lets three existing rewrites stop hedging:
+   `Layout.hoist` sequences a dropped erased argument before the *whole* node it
+   was dropped from, stepping over the arguments to its left; `ctor_args_pure`
+   refuses to fire iota at all when any field of the scrutinee is impure,
+   because it cannot tell which fields the pattern discards; and `inline_call`
+   can only substitute a pure argument, so an impure one blocks the
+   beta-reduction that would have consumed it.  After ANF the operands are
+   variables in all three cases, so nothing is ever moved past an effect, and
+   the last two get strictly stronger.
 2. **Erasure/newtype rewriting** (§5.1, §5.2).
 3. **Coercion elimination** (§5.4).
 4. **Inlining of `Inline`-flagged declarations.**  A declaration carrying the
@@ -1665,6 +1694,18 @@ ANF is what makes this tractable, which is why it is phase 4's *first* pass
 subterm positions, and every rewrite in the table above then operates on pure
 operands only.
 
+One more thing this table depends on, and it is easy to get wrong in the
+conservative direction: an **external**'s effect is `apply_eff` of its declared
+arrow type, not `E_Impure`.  A hand-realized symbol's F\* type is the whole
+contract we have with its realization — it is the same contract the ML pipeline
+and karamel work from — and almost all of them are `Tot`.  Answering
+`E_Impure` for every external instead puts a barrier around `Prims.op_Addition`
+and every other arithmetic primitive, `Prims.strcat`, `string_of_int` and the
+`to_string` of every machine integer, which then blocks inlining, blocks iota
+through `ctor_args_pure`, and makes ANF name a temporary for each of them.
+`apply_eff` still answers `E_Impure` when the type is not an arrow, so a symbol
+we genuinely know nothing about (`dx_ty = TAny`) stays opaque.
+
 ### 7.4 Statement-shaped effectful primitives
 
 Pulse's `while` and its reference/array operations are impure *and*
@@ -2049,12 +2090,13 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M1 | Extraction loop for pure, first-order, monomorphic code; on-demand loading incl. `.fst.checked` preference (§4.2); ML backend | Enough to extract `let main () = print_string "hi"` |
 | M2 | Type-class monomorphization (§3.1 rules 1,2,5) + `[@@monomorphize]` (rule 3); rejection diagnostics of §3.2; fuel (§3.6); key canonicalization (§3.7) | The two §3 examples pass as golden tests; `--custard_dump_specializations` for tuning |
 | M3 | Layout analysis: erasure + uniform newtype collapse (§5.0) + cast elimination (§5) | Differential tests vs ML extraction |
-| M4 | Effect classification + `extract_as_impure_effect` + purity discipline (§7) | Required before any Pulse code can be extracted.  `FStarC.Custard.Effects` and `FStarC.Custard.Simplify`; ANF (§6 pass 1) is not implemented yet, so the purity discipline is applied directly to the tree |
+| M4 | Effect classification + `extract_as_impure_effect` + purity discipline (§7) | Required before any Pulse code can be extracted.  `FStarC.Custard.Effects` and `FStarC.Custard.Simplify` |
 | M5 | Krml backend + hardcoded builtin rules (machine ints, Pulse ops) | Done. M5a is `FStarC.Custard.Builtins` (§8.2); M5b is `FStarC.Custard.PrintKrml` behind `--custard_backend Krml` (§6), with the karamel AST split out into `FStarC.Extraction.KrmlAst`.  `tests/custard/KrmlBasic.fst` goes all the way to a compiled and executed C binary |
 | M6a | Output polish: per-specialization suffixes, projector/discriminator inlining, externals printed at their uses, OCaml type annotations, `--custard_entry` vs `--custard_main` | Done. `tests/custard/Library.fst` covers the root-only (no `main`) mode |
 | M6 | Registrable custom rules from plugins; Pulse moves off hardcoding | Done. `register_pre_rule`/`register_post_rule` in `FStarC.Custard.Builtins` (§8, phase 2) and the `[@@custard_extern]`/`[@@custard_c_header]`/`[@@custard_opaque]` source attributes (phase 3), tested by `tests/custard/Externs.fst` |
 | M6b | Pulse: `[@@extract_as]`, `TBuf`/`EAny`/`EAbort` and the buffer operations, the Pulse rule table, `FStar.SizeT` (§8.3) | Done. `tests/custard/pulse/PulseBasic.fst` and `PulseHashTable.fst` both go to compiled OCaml and to compiled C; requires stage3, so neither is part of `tests/custard` |
 | M6c | Bundled combinators (§3.9): weak-HNF substitution (§3.7), over-applied inlining and iota (§6 pass 5) | Done. `tests/custard/Combinators.fst`, extracted, compiled and run |
 | M6d | Mutual recursion (§6 pass 8): `Simplify.scc` and `and`-grouping in the OCaml backend | Done. `tests/custard/Mutual.fst` |
+| M6e | ANF (§6 pass 1): `Simplify.anf`, plus effect precision for externals (§7.3) | Done. `tests/custard/Anf.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

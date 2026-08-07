@@ -16,6 +16,7 @@ CUSTARD_TESTS += MachineInts
 CUSTARD_TESTS += Externs
 CUSTARD_TESTS += Combinators
 CUSTARD_TESTS += Mutual
+CUSTARD_TESTS += Anf
 
 # GREP_<name>/NOGREP_<name> additionally assert on the generated .ml.  For
 # Combinators (section 3.9) the *shape* of the output is the point: one
@@ -28,6 +29,11 @@ NOGREP_Combinators = parser_combinator __proj__
 # The SCC pass must group each cycle and must *not* mark anything else 'rec'.
 GREP_Mutual   = "and mutual_tree" "and mutual_size_t" "and mutual_a"
 NOGREP_Mutual = "let rec mutual_main"
+
+# Pass 1 must fix the order of the two impure siblings in 'sum', which F*
+# leaves nested because it classifies them as Tot (section 7.2).  Left nested,
+# OCaml would evaluate them right to left and print "ba".
+GREP_Anf = "let tmp1 = (anf_tick \"a\"" "let tmp2 = (anf_tick \"b\""
 
 # Each of these is extracted with --custard_backend Krml, run through karamel
 # to produce C, compiled and run; the program must exit 0.  Skipped when

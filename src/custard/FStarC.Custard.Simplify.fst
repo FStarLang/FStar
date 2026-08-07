@@ -53,6 +53,150 @@ and occurs_branches (v:string) (brs:list branch) : ML bool =
   brs |> List.existsb (fun (_, g, b) ->
     (match g with None -> false | Some g -> occurs v g) || occurs v b)
 
+(* -------------------------------------------------------------------- *)
+(* ANF                                                                  *)
+(* -------------------------------------------------------------------- *)
+
+(* Section 6, pass 1.  The invariant this establishes is: *every operand is
+   pure*.  An impure computation may only appear as the right-hand side of an
+   [ELet], the left of an [ESeq], or in tail position -- never as an argument,
+   a constructor field, a scrutinee or a cast operand.
+
+   That is what the purity discipline of section 7.3 is written against.
+   Without it, "may I reorder these?" is a question about arbitrary subterm
+   positions, and the answer has to be rediscovered by every rewrite that
+   moves anything.  Three places in the existing passes show what that costs:
+
+   - [Layout.hoist] sequences a dropped erased argument before the *whole*
+     node it was dropped from, which steps over the arguments to its left;
+   - [ctor_args_pure] refuses to fire iota at all when any field of the
+     scrutinee is impure, because it cannot tell which fields the pattern
+     discards;
+   - [inline_call] can only substitute a pure argument, so an impure one
+     blocks the beta-reduction that would have consumed it.
+
+   After ANF all three become unconditional: the operands are variables, so
+   they are pure, so nothing is ever moved past an effect.  The last two get
+   strictly stronger as a result.
+
+   Note that F* has already done most of this work.  An application whose
+   arguments have an F* effect arrives in monadic normal form, because that is
+   how the typechecker elaborates it; what does *not* arrive normalized is
+   everything Custard alone considers impure -- the arrows promoted by
+   [extract_as_impure_effect] (section 7.2), which F* sees as [Tot] -- plus
+   whatever the extractor and the rules build. *)
+
+(* Hoisting is only sound into a position that is evaluated unconditionally,
+   exactly once, at the point the operand was.  So the traversal stops at
+   every delayed position: the body of a lambda, the arms of an [EIf], the
+   branches of an [EMatch] or [ETry], both parts of an [EWhile] (the condition
+   is re-evaluated per iteration), and -- because the backends short-circuit
+   them -- every operand but the first of [And] and [Or]. *)
+let delayed_operands (o:op) : bool =
+  match o with
+  | And | Or -> true
+  | _ -> false
+
+let anf_expr (x0:expr) : ML expr =
+  (* Pending bindings for the operand group currently being normalized, most
+     recent first. *)
+  let rec norm (x:expr) : ML expr =
+    match x.e with
+    (* Statement and tail positions: nothing is hoisted *out* of these, since
+       they are already where an effect is allowed to be. *)
+    | ELet (v, t, e1, e2) ->
+      let e1 = norm e1 in
+      let e2 = norm e2 in
+      { x with e = ELet (v, t, e1, e2) }
+    | ESeq (a, b) ->
+      let a = norm a in
+      let b = norm b in
+      { x with e = ESeq (a, b) }
+    | EFun (bs, b) -> { x with e = EFun (bs, norm b) }
+    | EWhile (c, b) ->
+      let c = norm c in
+      let b = norm b in
+      { x with e = EWhile (c, b) }
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+
+    (* Everything else has operand positions, so it needs an accumulator. *)
+    | _ ->
+      let acc : ref (list (string & cty & expr)) = mk_ref [] in
+      let operand (e:expr) : ML expr =
+        let e = norm e in
+        if is_pure e.eff then e
+        else begin
+          let v = uniq "tmp" (GenSym.next_id ()) in
+          acc := (v, e.ty, e) :: !acc;
+          { e with e = EVar v; eff = E_Pure }
+        end in
+      (* [List.map] is not usable here: the order in which the accumulator is
+         filled *is* the evaluation order being fixed, and it must be left to
+         right whatever the host language does with the argument of a cons. *)
+      let rec ops (es:list expr) : ML (list expr) =
+        match es with
+        | [] -> []
+        | e :: es ->
+          let e = operand e in
+          let rest = ops es in
+          e :: rest in
+      let rec fields (fs:list (string & expr)) : ML (list (string & expr)) =
+        match fs with
+        | [] -> []
+        | (f, e) :: fs ->
+          let e = operand e in
+          let rest = fields fs in
+          (f, e) :: rest in
+      let body =
+        match x.e with
+        | EApp (h, es) ->
+          let h = operand h in
+          let es = ops es in
+          { x with e = EApp (h, es) }
+        | ECtor (n, es)  -> { x with e = ECtor (n, ops es) }
+        | ETuple es      -> { x with e = ETuple (ops es) }
+        | ERaise (n, es) -> { x with e = ERaise (n, ops es) }
+        | ERecord (n, fs) -> { x with e = ERecord (n, fields fs) }
+        | EOp (o, es) ->
+          if delayed_operands o.po_op
+          then
+            (match es with
+             | e :: rest ->
+               let e = operand e in
+               let rest = rest |> List.map norm in
+               { x with e = EOp (o, e :: rest) }
+             | [] -> x)
+          else { x with e = EOp (o, ops es) }
+        | EProj (e, n, f)  -> { x with e = EProj (operand e, n, f) }
+        | EDiscrim (e, n)  -> { x with e = EDiscrim (operand e, n) }
+        | ECast (e, c)     -> { x with e = ECast (operand e, c) }
+        | EIf (c, a, b) ->
+          let c = operand c in
+          let a = norm a in
+          let b = norm b in
+          { x with e = EIf (c, a, b) }
+        | EMatch (s, brs) ->
+          let s = operand s in
+          { x with e = EMatch (s, brs |> List.map norm_branch) }
+        | ETry (e, brs) ->
+          { x with e = ETry (norm e, brs |> List.map norm_branch) }
+        | _ -> x in
+      List.fold_left (fun acc (v, t, e) ->
+        { x with e = ELet (v, t, e, acc) }) body !acc
+
+  and norm_branch (br:branch) : ML branch =
+    let p, g, b = br in
+    (* A guard is evaluated before the branch is chosen, so it is delayed too;
+       [reduce] already refuses to fire iota through one. *)
+    (p, (match g with None -> None | Some g -> Some (norm g)), norm b) in
+  norm x0
+
+let anf (prog:program) : ML program =
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = anf_expr dl.dl_body }
+    | d -> d)
+
 (* [if c then a else b] reaches the IR as a match on a boolean, because that
    is how F* desugars it: [match c with | true -> a | _ -> b].  Left alone it
    stays a match, and karamel then has to emit a switch with an unreachable

@@ -26,6 +26,13 @@ open FStarC
 open FStarC.Effect
 open FStarC.Custard.Syntax
 
+(** Section 6, pass 1: let-normalization.  Establishes the invariant every
+    later rewrite is written against -- *every operand is pure*, so an impure
+    computation appears only as the right-hand side of an [ELet], the left of
+    an [ESeq], or in tail position.  Runs before the layout analysis, since
+    that pass drops arguments and so has to move effects. *)
+val anf : program -> ML program
+
 (** Drop unused pure let-bindings, turn unused impure ones into sequencing,
     and contract [let x = e in x] to [e]. *)
 val run : program -> ML program

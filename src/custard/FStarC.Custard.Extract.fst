@@ -852,7 +852,14 @@ and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
   match SMap.try_find st.emitted key with
   | Some (DLet l) ->
     if n_args >= List.length l.dl_binders then l.dl_eff else E_Pure
-  | Some (DExternal _) -> E_Impure
+  (* An external's declared arrow type is the whole contract we have with its
+     realization, exactly as for a call through a variable -- and it is the
+     same contract the ML pipeline and karamel work from.  Treating every
+     external as impure instead would put a barrier around [Prims.op_Addition]
+     and every other arithmetic primitive, which are all [Tot].  [apply_eff]
+     still answers [E_Impure] when the type is not an arrow, so a symbol we
+     genuinely know nothing about ([dx_ty = TAny]) stays opaque. *)
+  | Some (DExternal x) -> apply_eff x.dx_ty n_args
   | _ -> E_Pure
 
 and branch_of_branch (st:state) (br:S.branch) : ML branch =

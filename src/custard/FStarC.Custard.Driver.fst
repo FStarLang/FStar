@@ -73,6 +73,9 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      which needs the union-find; by the time a backend runs it has been put in
      read-only mode.  The ML extraction does the same thing. *)
   let prog = UF.with_uf_enabled (fun () -> Extract.run (Extract.init deps env) roots main) in
+  (* Phase 4 pass 1: let-normalization, before anything that moves a subterm
+     (section 6). *)
+  let prog = Simplify.anf prog in
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog = Layout.run prog in
   (* Effect-guarded simplification (sections 6 and 7.3). *)
