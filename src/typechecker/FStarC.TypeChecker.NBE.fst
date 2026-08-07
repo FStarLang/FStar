@@ -439,7 +439,8 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
       if cfg.core_cfg.steps.for_extraction
       ||  cfg.core_cfg.steps.unrefine
       then translate cfg bs bv.sort //if we're only extracting, then drop the refinement
-      else mk_t <| Refinement ((fun (y:t) -> translate cfg (y::bs) tm),
+      else mk_t <| Refinement (bv,
+                              (fun (y:t) -> translate cfg (y::bs) tm),
                               (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
 
     | Tm_ascribed {tm=t} ->
@@ -1359,11 +1360,12 @@ and readback (cfg:config) (x:t) : ML term =
         with_range body
       end
 
-    | Refinement (f, targ) ->
+    | Refinement (bv, f, targ) ->
       if cfg.core_cfg.steps.for_extraction
       then readback cfg (fst (targ ()))
       else
-        let x =  S.new_bv None (readback cfg (fst (targ ()))) in
+        // preserve the source name of the refinement binder, as the normalizer does
+        let x = { S.freshen_bv bv with sort = readback cfg (fst (targ ())) } in
         let body = readback cfg (f (mkAccuVar x)) in
         let refinement = U.refine x body in
         with_range (

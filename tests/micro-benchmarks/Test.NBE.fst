@@ -132,3 +132,17 @@ let test_rec_symbolic_abstract_arg (a:Type) (r:a -> a -> prop) (x y:a) =
       then fail ("NBE did not unfold chain_nbe")
       else ()
     | _ -> ())
+
+(* NBE used to drop the source name of a refinement binder on readback,
+   producing `_: int{_ > 3}` where the normalizer produces `x: int{x > 3}`. *)
+let refine_nbe (n:int) : Type0 = x:int{x > n}
+
+let test_refinement_binder_name =
+  assert True by (
+    let open FStar.Tactics.V2 in
+    let steps = [delta; zeta; iota; primops; unascribe] in
+    let t = (`(refine_nbe 3)) in
+    let a = norm_term steps t in
+    let b = norm_term (nbe::steps) t in
+    if term_to_string a = term_to_string b then () else
+    fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))
