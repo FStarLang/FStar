@@ -17,10 +17,10 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 FSTAR=${1:-$HERE/../../out/bin/fstar.exe}
 REPS=${2:-5}
 
-# Bench.Sym*, which measure the tactic-level norm_term path, are handled
+# Bench.SymTac*, which measure the tactic-level norm_term path, are handled
 # separately below: they pick their engine with the [nbe] norm step rather
 # than with --use_nbe, so they cannot be run as a flag flip.
-MODS="Bench.Empty Bench.Arith Bench.List Bench.Sort Bench.Tree Bench.MachInt Bench.HO Bench.Share Bench.Dead"
+MODS="Bench.Empty Bench.Arith Bench.List Bench.Sort Bench.Tree Bench.MachInt Bench.HO Bench.Share Bench.Dead Bench.Sym"
 
 run1() { # $1 = file, $2.. = extra flags; echoes elapsed ms, or nothing on failure
   local f=$1; shift
@@ -70,12 +70,12 @@ done
 # norm step inside the module, so these are three distinct modules rather
 # than one module under two flags.
 echo
-sb=$(best Bench.SymBase.fst) || sb=0
-sn=$(best Bench.Sym.fst)     || sn=0
-se=$(best Bench.SymNbe.fst)  || se=0
+sb=$(best Bench.SymTacBase.fst) || sb=0
+sn=$(best Bench.SymTac.fst)     || sn=0
+se=$(best Bench.SymTacNbe.fst)  || se=0
 nn=$(( sn - sb )); [ $nn -lt 1 ] && nn=1
 nb=$(( se - sb )); [ $nb -lt 1 ] && nb=1
-echo "# tactic-level norm_term on an open term (baseline = Bench.SymBase)"
+echo "# tactic-level norm_term on an open term (baseline = Bench.SymTacBase)"
 printf "%-16s %9s %9s %9s %9s %8s\n" module norm_ms nbe_ms net_norm net_nbe speedup
-printf "%-16s %9s %9s %9s %9s %8s\n" Bench.Sym "$sn" "$se" "$nn" "$nb" \
+printf "%-16s %9s %9s %9s %9s %8s\n" Bench.SymTac "$sn" "$se" "$nn" "$nb" \
   "$(awk -v a=$nn -v b=$nb 'BEGIN{printf "%.1fx", a/b}')"

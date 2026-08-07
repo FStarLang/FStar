@@ -6,7 +6,7 @@ F* ships two normalizers:
   **reference** behaviour. Any observable disagreement between the two engines is
   by definition an NBE bug.
 * **`FStarC.TypeChecker.NBE`** — normalization by evaluation, call-by-value.
-  Usually faster on closed computation, slower on open terms.
+  Usually faster, most markedly on closed first-order computation.
 
 This document records where each engine is used, how to switch between them, and
 which differences are known and deliberately tolerated.
@@ -149,10 +149,19 @@ mirrors the normalizer (`NBE.stuck_match_cfg`). The two halves must stay in sync
 
 ## Benchmarks
 
-`tests/nbe-bench/` measures the tradeoff; see its `README.md`. In short, NBE is
-worth 3-13x on closed first-order computation, neutral where primops dominate,
-and roughly an order of magnitude *slower* on open terms — the regime tactics
-operate in.
+`tests/nbe-bench/` measures the tradeoff; see its `README.md`. In short, since
+the normalizer memoization fix in
+[PR #4397](https://github.com/FStarLang/FStar/pull/4397), NBE is worth about
+2-3x on closed first-order computation, about 2x on producing large residual
+terms from open ones, and nothing measurable on list, higher-order, sharing and
+primop-bound code. It is not a loss anywhere in that suite. The argument against
+making it the default is therefore correctness surface, not speed: see *Accepted
+differences* above.
+
+Beware when benchmarking open/symbolic terms: `open FStar.Tactics.V2` alone
+costs about 18 s of module loading, so a small kernel measures nothing but
+noise. An earlier version of `Bench.Sym` did exactly that and reported a
+spurious 19x NBE slowdown.
 
 ## Testing a change to either engine
 
