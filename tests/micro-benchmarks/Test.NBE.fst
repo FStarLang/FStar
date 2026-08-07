@@ -180,3 +180,41 @@ let test_rec_unfold_symbolic (l:list int) =
     let b = norm_term (nbe::steps) t in
     if term_to_string a = term_to_string b then () else
     fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))
+
+(* A TopLevelLet/TopLevelRec node remembers the definition it stands for but
+   not the configuration it was created in, so it could escape that
+   configuration as a first-class value and be unfolded where no unfolding
+   should happen -- in particular under the branches of a stuck match.
+   `allP` below passes `faithful_nbe` around as a value, exactly as
+   FStar.Reflection.TermEq does. *)
+let rec allP_nbe (#a:Type) (f:a -> prop) (l:list a) : prop =
+  match l with | [] -> True | x::xs -> f x /\ allP_nbe f xs
+let rec faithful_nbe (n:nat) : prop = if n = 0 then True else faithful_nbe (n-1)
+
+let test_value_escapes_cfg (l:list nat) =
+  assert True by (
+    let open FStar.Tactics.V2 in
+    let steps = [delta_only [`%allP_nbe; `%faithful_nbe]; iota; zeta; unascribe] in
+    let t = (`(allP_nbe faithful_nbe (`#(quote l)))) in
+    let a = norm_term steps t in
+    let b = norm_term (nbe::steps) t in
+    if term_to_string a = term_to_string b then () else
+    fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))
+
+(* Same, for a definition whose arity is hidden behind a type abbreviation:
+   `U.arrow_formals` cannot see through `parser_nbe`, so `no_ext_nbe` used to
+   be translated (and thus unfolded) eagerly instead of being delayed. *)
+type parser_nbe = list int -> option int
+let no_ext_nbe : parser_nbe = fun l -> None
+let use_ext_nbe (l:list int) (p:parser_nbe) : option int =
+  match l with | [] -> None | _::tl -> p tl
+
+let test_arity_behind_abbreviation (l:list int) =
+  assert True by (
+    let open FStar.Tactics.V2 in
+    let steps = [delta_only [`%use_ext_nbe; `%no_ext_nbe]; iota; zeta; unascribe] in
+    let t = (`(use_ext_nbe (`#(quote l)) no_ext_nbe)) in
+    let a = norm_term steps t in
+    let b = norm_term (nbe::steps) t in
+    if term_to_string a = term_to_string b then () else
+    fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))

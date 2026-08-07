@@ -756,6 +756,24 @@ and translate_comp cfg bs (c:S.comp) : ML comp =
   | S.Comp   ctyp -> Comp (translate_comp_typ cfg bs ctyp)
 
 (* uncurried application *)
+(* A TopLevelLet/TopLevelRec node records the definition it stands for, but not
+   the configuration in which the decision to unfold it was taken. Before
+   actually unfolding it we must therefore re-check that it is still meant to be
+   unfolded in [cfg]: such a node can escape the configuration it was created in
+   by being passed around as a first-class value, and end up being applied under
+   e.g. [stuck_match_cfg], where no unfolding at all should happen.
+
+   Without this, `allP u faithful_univ us` (FStar.Reflection.TermEq) unfolded
+   `faithful_univ` inside the branches of a stuck match, where the reference
+   normalizer leaves it alone. *)
+and still_unfoldable (cfg:config) (lbname:lbname) : ML bool =
+  match lbname with
+  | Inl _ -> true // local let-binding: no delta level applies
+  | Inr fvar ->
+    let qninfo = Env.lookup_qname cfg.core_cfg.tcenv (S.lid_of_fv fvar) in
+    Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name qninfo)
+    && not (NU.Should_unfold_no? (NU.should_unfold false cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo))
+
 and iapp (cfg : config) (f:t) (args:args) : ML t =
   // meta and lazy nodes shouldn't block reduction
   let mk t = mk_rt f.nbe_r t in
@@ -822,7 +840,13 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
                 (show lb.lbname)
                 (show arity)
                 (show n_args_rev));
-    if n_args_rev >= arity
+    if n_args_rev >= arity && not (still_unfoldable cfg lb.lbname)
+    then (
+      let fv = Inr?.v lb.lbname in
+      debug cfg (fun () -> Format.print1 "Decided to not unfold %s (not unfoldable in this cfg)\n" (show fv));
+      iapp cfg (mk_rt (S.range_of_fv fv) (FV (fv, [], []))) (List.rev args_rev)
+    )
+    else if n_args_rev >= arity
     then let bs, body =
            (* Recover the full binder spine of the (now unary) abstraction so its
               length can be compared against the precomputed let-rec arity. *)
@@ -853,6 +877,7 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
     then let should_reduce, _, _ =
            should_reduce_recursive_definition args decreases_list
          in
+         let should_reduce = should_reduce && still_unfoldable cfg lb.lbname in
          if not should_reduce
          then begin
            let fv = Inr?.v lb.lbname in
@@ -1058,7 +1083,17 @@ and translate_letbinding (cfg:config) (bs:list t) (lb:letbinding) : ML t =
   let debug = debug cfg in
   let us = lb.lbunivs in
   let formals, _ = U.arrow_formals lb.lbtyp in
-  let arity = List.length us + List.length formals in
+  (* The type may be an abbreviation that arrow_formals cannot see through
+     (e.g. `let no_extensions : extension_parser = fun s -> None`), so also
+     look at the binders of the definition itself. Getting this wrong means
+     the definition is unfolded eagerly instead of being delayed in a
+     TopLevelLet node, which loses the ability to keep it folded. *)
+  let n_def_binders =
+    match (U.unascribe lb.lbdef).n with
+    | Tm_abs _ -> List.length (let bs, _, _ = U.abs_formals_ln (U.unascribe lb.lbdef) in bs)
+    | _ -> 0
+  in
+  let arity = List.length us + max (List.length formals) n_def_binders in
   if arity = 0
   then translate cfg bs lb.lbdef
   else if Inr? lb.lbname
@@ -1530,16 +1565,25 @@ and readback (cfg:config) (x:t) : ML term =
       with_range (U.mk_app hd args)
 
     | TopLevelLet(lb, arity, args_rev) ->
+      if not (still_unfoldable cfg lb.lbname)
+      then
+        (* Not meant to be unfolded here: read it back as the fv itself, rather
+           than forcing its definition. Going through iapp on an FV takes care
+           of separating the universe arguments from the term arguments. *)
+        let fv = Inr?.v lb.lbname in
+        readback cfg (iapp cfg (mk_rt (S.range_of_fv fv) (FV (fv, [], []))) (List.rev args_rev))
+      else
       let n_univs = List.length lb.lbunivs in
       let n_args = List.length args_rev in
       let args_rev, univs = BU.first_N (n_args - n_univs) args_rev in
       readback cfg (iapp cfg (translate cfg (List.map fst univs) lb.lbdef) (List.rev args_rev))
 
     | TopLevelRec(lb, _, _, args) ->
+      (* Going through iapp on an FV separates the universe arguments from the
+         term arguments; mapping readback over [args] directly would fail on a
+         universe argument. *)
       let fv = Inr?.v lb.lbname in
-      let head = S.mk (Tm_fvar fv) Range.dummyRange in
-      let args = List.map (fun (t, q) -> readback cfg t, q) args in
-      with_range (U.mk_app head args)
+      readback cfg (iapp cfg (mk_rt (S.range_of_fv fv) (FV (fv, [], []))) args)
 
     | LocalLetRec(i, _, lbs, bs, args, _ar, _ar_lst) ->
       (* if this point is reached then the local let rec is unreduced
