@@ -232,12 +232,21 @@ let memo_entries (r:cfg_memo 'a) : ML (list (Cfg.cfg & 'a)) =
   | None -> []
   | Some l -> l
 
-(* The memoized value for exactly this cfg, if any. *)
+(* The memoized value for exactly this cfg, if any. This is on the hot path of
+   the normalizer, so we spell out the search rather than using List.tryFind,
+   which would allocate a closure on every call. *)
+let rec lookup_memo_aux cfg (l : list (Cfg.cfg & 'a)) : ML (option 'a) =
+  match l with
+  | [] -> None
+  | (cfg', a) :: l ->
+    if BU.physical_equality cfg cfg' || cfg_equivalent cfg' cfg
+    then Some a
+    else lookup_memo_aux cfg l
+
 let lookup_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
-  match memo_entries r |> List.tryFind (fun (cfg', _) ->
-          BU.physical_equality cfg cfg' || cfg_equivalent cfg' cfg) with
-  | Some (_, a) -> Some a
+  match !r with
   | None -> None
+  | Some l -> lookup_memo_aux cfg l
 
 let read_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
   match lookup_memo cfg r with
@@ -255,7 +264,7 @@ let read_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
    compat_memo_ignore_cfg, in which case its value was computed in some other
    cfg and may not be reduced enough for cfg. *)
 let memo_may_be_under_reduced cfg (r:cfg_memo 'a) : ML bool =
-  None? (lookup_memo cfg r)
+  cfg.compat_memo_ignore_cfg && None? (lookup_memo cfg r)
 
 (* A memo always holds a *weak* normal form (see the comment on set_memo in the
    MemoLazy cases of norm/rebuild) paired with a residual environment for the
@@ -2803,20 +2812,29 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                 //otherwise, we will keep reducing them over and over
                 //again. See, e.g., Issue #2757
 
-                //We tag those memos with the cfg that was actually used to
-                //reduce the scrutinee (see weak_scrutinee_cfg), rather than
-                //with cfg itself. That way read_memo knows exactly how reduced
-                //these sub-terms are, and does not need to inspect them with
-                //maybe_weakly_reduced, which is linear in their size and would
-                //make traversing a large data structure quadratic. See #4394.
+                //We record the value under two cfgs. First under the cfg that
+                //was actually used to reduce the scrutinee (weak_scrutinee_cfg):
+                //that entry is honest, so a later weak reduction can use it as
+                //is, without the linear-time maybe_weakly_reduced scan that
+                //would make traversing a large data structure quadratic (see
+                //Issue #4394). And second under cfg itself, so that a strong
+                //reduction still finds it and falls back to inspecting it with
+                //maybe_weakly_reduced, as it always has.
 
                 //Except, if the normalizer is running in HEAD normal form mode, 
                 //then the sub-terms of the scrutinee might not be reduced yet.
                 //In that case, do not set the memo reference
-                let scrut_cfg = Option.dflt cfg (weak_scrutinee_cfg cfg) in
+                let mk_memo t =
+                  if cfg.steps.hnf then mk_ref None
+                  else
+                    let v = ([], t) in
+                    match weak_scrutinee_cfg cfg with
+                    | Some scrut_cfg -> mk_ref (Some [(scrut_cfg, v); (cfg, v)])
+                    | None -> mk_ref (Some [(cfg, v)])
+                in
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                           Clos([], t, mk_ref (if cfg.steps.hnf then None else Some [(scrut_cfg, ([], t))]), false),
+                                           Clos([], t, mk_memo t, false),
                                            fresh_memo ()) :: env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
