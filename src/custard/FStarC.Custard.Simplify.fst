@@ -1017,12 +1017,284 @@ let scc (prog:program) : ML program =
       | Some d -> [retag fs d]
       | None -> []))
 
+(* -------------------------------------------------------------------- *)
+(* Record recovery                                                      *)
+(* -------------------------------------------------------------------- *)
+
+(* Extraction turns every inductive into a [TVariant], even the ones F* calls
+   records, because the ML syntax it reads has already forgotten which is
+   which.  A single-constructor variant is then matched to get at its fields,
+   and every backend has to undo that for itself: the C one because a match on
+   an irrefutable pattern is not a control-flow construct at all, the OCaml one
+   because [Mkfoo (a, b, c)] is unreadable where [foo.b] was written.  Doing it
+   once on the IR is both less code and better output everywhere.
+
+   The pass has two halves.  The first rewrites a match on a single-constructor
+   pattern into projections, which is what makes the second possible: once no
+   [PCtor] of a type survives, the type can become a [TRecord], which every
+   backend already prints natively. *)
+
+noeq
+type ctor_info = {
+  ci_owner:  name;               (* the type this constructor belongs to *)
+  ci_count:  int;                (* how many constructors that type has *)
+  ci_fields: list (string & cty);
+}
+
+let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
+  let m : SMap.t ctor_info = SMap.create 50 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DType ({ dt_name = tn; dt_body = TVariant cs }) ->
+      let n = List.length cs in
+      cs |> List.iter (fun (cn, fs) ->
+        SMap.add m (string_of_name cn) { ci_owner = tn; ci_count = n; ci_fields = fs })
+    | _ -> ());
+  m
+
+let single_ctor (tbl:SMap.t ctor_info) (cn:name) : ML (option ctor_info) =
+  match SMap.try_find tbl (string_of_name cn) with
+  | Some ci when ci.ci_count = 1 -> Some ci
+  | _ -> None
+
+(* Reading a projection out of [e] once per field is only worth it when [e] is
+   free to re-evaluate; anything else keeps its [let]. *)
+let rec dup_ok (e:expr) : ML bool =
+  match e.e with
+  | EVar _ | EConst _ | EQual _ -> true
+  | EProj (a, _, _) -> dup_ok a
+  | _ -> false
+
+(* Substitution for variables that does *not* rename the binders it passes
+   under.  [sub] has to rename because it copies a definition into a scope that
+   may already use the same names; here the body stays where it is, and the
+   expressions substituted in are projections out of variables bound outside
+   it, so the names cannot collide.  Not renaming keeps the output readable. *)
+let rec psub (sm:subst) (x:expr) : ML expr =
+  let g = psub sm in
+  match x.e with
+  | EVar v -> (match SMap.try_find sm v with Some e -> e | None -> x)
+  | EConst _ | EQual _ | EAny | EAbort _ -> x
+  | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
+  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
+  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
+  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (psub_branch sm)) }
+  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
+  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
+  | ETuple es -> { x with e = ETuple (es |> List.map g) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
+  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
+  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
+  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (psub_branch sm)) }
+
+and psub_branch (sm:subst) (br:branch) : ML branch =
+  let p, guard, b = br in
+  (p, (match guard with None -> None | Some e -> Some (psub sm e)), psub sm b)
+
+(* A binding whose pattern cannot fail: one constructor, and no nested test. *)
+let irrefutable (tbl:SMap.t ctor_info) (p:pat) : ML (option (name & list pat & ctor_info)) =
+  match p with
+  | PCtor (cn, ps) ->
+    (match single_ctor tbl cn with
+     | Some ci when List.length ps = List.length ci.ci_fields
+                 && ps |> List.for_all (fun p -> PVar? p || PWild? p) -> Some (cn, ps, ci)
+     | _ -> None)
+  | _ -> None
+
+let rec pat_ctors (p:pat) : ML (list string) =
+  match p with
+  | PCtor (n, ps) -> string_of_name n :: List.collect pat_ctors ps
+  | PTuple ps | POr ps -> List.collect pat_ctors ps
+  | _ -> []
+
+(* The constructors the program matches on, ignoring the patterns [depat] is
+   about to consume when [tbl] is given.  Run before [depat] it says which
+   types will be free of [PCtor] afterwards, and hence which ones may become
+   records; run after, with no [tbl], it confirms it. *)
+let matched_ctors (tbl:option (SMap.t ctor_info)) (prog:program) : ML (SMap.t bool) =
+  let m : SMap.t bool = SMap.create 50 in
+  let mark (p:pat) : ML unit = pat_ctors p |> List.iter (fun n -> SMap.add m n true) in
+  let consumed (p:pat) : ML bool =
+    match tbl with
+    | Some tbl -> Some? (irrefutable tbl p)
+    | None -> false in
+  let rec go (x:expr) : ML unit =
+    let brs (bs:list branch) : ML unit =
+      bs |> List.iter (fun (p, gd, b) ->
+        mark p;
+        (match gd with None -> () | Some g -> go g);
+        go b) in
+    match x.e with
+    | EMatch (s, [(p, None, body)]) ->
+      go s;
+      if not (consumed p) then mark p;
+      go body
+    | EMatch (s, bs) -> go s; brs bs
+    | ETry (s, bs) -> go s; brs bs
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> ()
+    | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> go a; go b
+    | EApp (h, es) -> go h; List.iter go es
+    | EFun (_, b) -> go b
+    | EIf (c, a, b) -> go c; go a; go b
+    | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> List.iter go es
+    | ERecord (_, fs) -> fs |> List.iter (fun (_, e) -> go e)
+    | EProj (e, _, _) | EDiscrim (e, _) | ECast (e, _) -> go e in
+  prog |> List.iter (fun d ->
+    match d with DLet dl -> go dl.dl_body | _ -> ());
+  m
+
+let rec depat (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (x:expr) : ML expr =
+  let g = depat tbl blocked in
+  match x.e with
+  | EMatch (s, [(p, None, body)]) ->
+    let s = g s in
+    let body = g body in
+    (* Projecting is only sound if the type really does become a record: an
+       [EProj] out of something still printed as a variant is not valid ML. *)
+    let irr = (match irrefutable tbl p with
+               | Some (cn, ps, ci) ->
+                 if Some? (SMap.try_find blocked (string_of_name cn))
+                 then None else Some (cn, ps, ci)
+               | None -> None) in
+    (match irr with
+     | Some (cn, ps, ci) ->
+       (* Re-reading the scrutinee for every field is what makes the match
+          disappear entirely; when that is not free, one [let] stands in. *)
+       let bound, s' =
+         if dup_ok s then None, s
+         else let v = rename "scrut" in
+              Some v, { s with e = EVar v; eff = E_Pure } in
+       let sm : subst = SMap.create 10 in
+       List.iter2 (fun p (f, ft) ->
+         match p with
+         | PVar v -> SMap.add sm v (mk (EProj (s', cn, f)) ft E_Pure)
+         | _ -> ()) ps ci.ci_fields;
+       let body = psub sm body in
+       (match bound with
+        | None -> body
+        | Some v -> { x with e = ELet (v, s.ty, s, body) })
+     | None -> { x with e = EMatch (s, [(p, None, body)]) })
+
+  (* The tag of a one-constructor value is known.  Nothing else in the pass
+     depends on this, but leaving it in would force the type to stay a variant
+     in the OCaml backend, which prints a discriminator as a match. *)
+  | EDiscrim (e1, cn) ->
+    let e1 = g e1 in
+    (match single_ctor tbl cn with
+     | Some _ when is_pure e1.eff -> { x with e = EConst (CBool true) }
+     | _ -> { x with e = EDiscrim (e1, cn) })
+
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
+  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
+  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
+  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (depat_branch tbl blocked)) }
+  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
+  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
+  | ETuple es -> { x with e = ETuple (es |> List.map g) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
+  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
+  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (depat_branch tbl blocked)) }
+
+and depat_branch (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (br:branch) : ML branch =
+  let p, guard, b = br in
+  (p, (match guard with None -> None | Some e -> Some (depat tbl blocked e)),
+   depat tbl blocked b)
+
+let depat_decls (prog:program) : ML program =
+  let tbl = ctor_infos prog in
+  let blocked = matched_ctors (Some tbl) prog in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = depat tbl blocked dl.dl_body }
+    | d -> d)
+
+(* Turn the qualifying single-constructor variants into records.  A [PCtor]
+   left over anywhere disqualifies its type: there is no record pattern in the
+   IR to rewrite it to. *)
+let records (prog:program) : ML program =
+  let matched = matched_ctors None prog in
+  (* constructor name -> the record type it becomes *)
+  let recs : SMap.t name = SMap.create 50 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DType ({ dt_name = tn; dt_body = TVariant [(cn, fs)] }) ->
+      (* A constructor whose arguments F* did not name gets the positional
+         names [_0], [_1], ...; those are perfectly good field names, and
+         making the conversion unconditional means no [EProj] anywhere is
+         left pointing at a variant. *)
+      if Cons? fs
+      && None? (SMap.try_find matched (string_of_name cn))
+      then SMap.add recs (string_of_name cn) tn
+    | _ -> ());
+  if SMap.keys recs = [] then prog else begin
+  let infos = ctor_infos prog in
+  let as_record (cn:name) : ML (option name) = SMap.try_find recs (string_of_name cn) in
+  let rec go (x:expr) : ML expr =
+    match x.e with
+    | ECtor (cn, es) ->
+      let es = es |> List.map go in
+      (match as_record cn with
+       | Some tn ->
+         (* the field names come from the declaration, which is unchanged here *)
+         let fs = (match SMap.try_find infos (string_of_name cn) with
+                   | Some ci -> ci.ci_fields |> List.map fst
+                   | None -> []) in
+         { x with e = ERecord (tn, List.zip fs es) }
+       | None -> { x with e = ECtor (cn, es) })
+    (* [Rename] keys a record's fields on the type name and a variant's on the
+       constructor name, so the node has to be re-tagged along with the type. *)
+    | EProj (e1, n, f) ->
+      let e1 = go e1 in
+      { x with e = EProj (e1, (match as_record n with Some tn -> tn | None -> n), f) }
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, go a, go b) }
+    | ESeq (a, b) -> { x with e = ESeq (go a, go b) }
+    | EWhile (a, b) -> { x with e = EWhile (go a, go b) }
+    | EApp (h, es) -> { x with e = EApp (go h, es |> List.map go) }
+    | EFun (bs, b) -> { x with e = EFun (bs, go b) }
+    | EIf (c, a, b) -> { x with e = EIf (go c, go a, go b) }
+    | EMatch (s, brs) -> { x with e = EMatch (go s, brs |> List.map go_branch) }
+    | ETry (s, brs) -> { x with e = ETry (go s, brs |> List.map go_branch) }
+    | ETuple es -> { x with e = ETuple (es |> List.map go) }
+    | EOp (o, es) -> { x with e = EOp (o, es |> List.map go) }
+    | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map go) }
+    | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
+    | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
+    | ECast (e1, c) -> { x with e = ECast (go e1, c) }
+  and go_branch (br:branch) : ML branch =
+    let p, gd, b = br in
+    (p, (match gd with None -> None | Some g -> Some (go g)), go b) in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = go dl.dl_body }
+    | DType t ->
+      (match t.dt_body with
+       | TVariant [(cn, fs)] ->
+         (match as_record cn with
+          | Some _ -> DType { t with dt_body = TRecord fs }
+          | None -> d)
+       | _ -> d)
+    | d -> d)
+  end
+
 let run (prog:program) : ML program =
   let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
   let prog = reduce_decls prog in
+  let prog = depat_decls prog in
   let prog = prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
     | d -> d) in
-  scc (dce (unused_params (dce prog)))
+  records (scc (dce (unused_params (dce prog))))

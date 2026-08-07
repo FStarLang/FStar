@@ -28,11 +28,16 @@ FLAGS_MonoTypes = --custard_monomorphize_types true
 # -- no type variable anywhere in the file -- and each instantiation must be
 # its own declaration, including the nested one and the two that are only
 # spelled differently ('pair_of_ints' is 'both int', and 'nat' is 'int').
+# The record recovery of section 5.5 also shows up here: 'both' arrives from
+# extraction as a one-constructor variant and has to come out as a record, with
+# its field reads as projections rather than as a match.
 GREP_MonoTypes   = "type monoTypes_both__int" "type monoTypes_both__bool" \
                    "monoTypes_tree__int" "monoTypes_tree__string" \
                    "type prims_list__int" "type prims_list__list_int" \
-                   "monoTypes_via_abbrev (p : monoTypes_both__int)"
-NOGREP_MonoTypes = "'"
+                   "monoTypes_via_abbrev (p : monoTypes_both__int)" \
+                   "type monoTypes_both__int = { fst : Prims.int; snd : Prims.int }" \
+                   "{ fst = (p).snd; snd = (p).fst }"
+NOGREP_MonoTypes = "'" "Mkboth" "match p with"
 
 # GREP_<name>/NOGREP_<name> additionally assert on the generated .ml.  For
 # Combinators (section 3.9) the *shape* of the output is the point: one

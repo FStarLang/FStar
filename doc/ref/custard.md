@@ -1322,10 +1322,79 @@ The only remaining producer of `ECast` is the machine-integer rules in
 the source asked for, a real call into `FStar.Int.Cast`.  Rule 1 must not
 delete them, and rule 3 could only duplicate them across branches.
 
-`--custard_warn_any` (§5.6) is what turns "we measured zero" into something
+`--custard_warn_any` (§5.7) is what turns "we measured zero" into something
 that stays true.
 
-### 5.5 Other representation choices (to be pinned down)
+### 5.5 Record recovery
+
+Extraction reads ML syntax, which has already forgotten which of F\*'s
+inductives were written as records: everything arrives as a `TVariant`, and
+every field read arrives as a one-branch `match`.  Nothing produced a `TRecord`
+at all, even though the IR has the node and every backend prints it.
+
+Undoing that in each backend is both duplicated work and not enough.  The C
+backend can compile a one-branch match into nothing (§6), so it looked fine;
+the OCaml backend cannot, and `PulseHashTable.lookup` came out with seven
+copies of
+
+```ocaml
+(match ht with Mkht_t (sz, hashf, contents) -> sz)
+```
+
+where `ht.sz` was written.  So the recovery is a pass on the IR, `records` in
+`Simplify`, run last.  It has two halves.
+
+**Match-to-projection (`depat`).**  A `match` with a single branch, no guard,
+and a pattern `C x1 … xn` where `C` is the *only* constructor of its type and
+every subpattern is a variable or a wildcard, is not a control-flow construct:
+it is a set of field reads.  It becomes the branch body with each `xi`
+replaced by `EProj (scrut, C, fi)`.
+
+Re-reading the scrutinee once per field is only free when the scrutinee is a
+variable, a constant, a top-level reference, or a projection out of one;
+otherwise it gets a `let` first, which is exactly what was already there.
+
+The substitution deliberately does *not* rename the binders it passes under,
+unlike the one used for inlining.  Inlining copies a definition into a scope
+that may already use its names; here the body stays where it is, and what is
+substituted into it are projections out of variables bound outside it, so
+nothing can capture.  Not renaming is what keeps `sz` from becoming `sz_41`.
+
+The same pass replaces `EDiscrim (e, C)` on a one-constructor type by `true`
+when `e` is pure.  That is worth doing on its own — the OCaml backend prints a
+discriminator as a whole `match` — but it also matters for the second half,
+which cannot fire while a discriminator still names the constructor.
+
+**The conversion.**  A one-constructor type with at least one field, and with
+no `PCtor` mentioning it left anywhere, becomes a `TRecord`; its `ECtor`
+becomes an `ERecord`.  The IR has no record *pattern*, which is why the
+surviving-`PCtor` condition is needed: a type that is still matched somewhere
+has to stay a variant.
+
+That condition is also why `depat` cannot simply project everything it can.  A
+type may be matched irrefutably in one place and refutably (a guard, or an
+extra `_` branch) in another; projecting the first while the second keeps the
+type a variant would leave an `EProj` out of a variant, which the OCaml backend
+prints as `e.f` and OCaml rejects.  So the set of blocked constructors is
+computed *before* `depat` runs, counting only the patterns `depat` will not
+consume, and `depat` skips the rest.
+
+The conversion is unconditional in the field names.  F\* names the arguments of
+a non-record constructor `_0`, `_1`, …; those are legal field names in all
+three backends, and converting them too is what guarantees no `EProj` anywhere
+points at a variant.  One consequence worth knowing: `Rename` keys a record's
+fields on the *type* name and a variant's on the *constructor* name, so the
+pass re-tags every `EProj` it converts.
+
+The C backend already treated a one-constructor variant as a plain struct, so
+its output is byte-for-byte unchanged; the win is entirely in OCaml and
+karamel.  What stays in the C backend is what is genuinely target-specific:
+dropping unit parameters (OCaml needs `()` to delay an effect), `void` returns,
+not testing the last match arm (OCaml checks matches syntactically), the brace
+and hoisting peepholes, and turning a one-cell stack allocation into a
+variable (which needs `&x`, and so has no ML analogue).
+
+### 5.6 Other representation choices (to be pinned down)
 
 - Machine integers: `UInt32.t` etc. must map to native target types, not to
   their `nat`-refinement definitions.  Handled as custom rules (§8), the same
@@ -1335,7 +1404,7 @@ that stays true.
 - Refinement types are erased to their base type (they are already erased by
   the normalizer's `Unrefine`/`ForExtraction`).
 
-### 5.6 `--custard_warn_any`
+### 5.7 `--custard_warn_any`
 
 `--custard_warn_any` walks the final IR, after renaming so the names it reports
 are the ones in the emitted file, and warns (code 366) about the two ways
@@ -1877,7 +1946,7 @@ Emission:
   | `EFun` in a value position | no closures; mark the parameter `[@@@monomorphize]` (§3.1) |
   | abstract types, `Prims.int` in particular | no size, and no width to guess |
   | unbounded integer literals | same |
-  | `TAny` | the representation was already lost; `--custard_warn_any` (§5.6) says where |
+  | `TAny` | the representation was already lost; `--custard_warn_any` (§5.7) says where |
   | `TTuple`, `ETuple`, `PTuple` | tuples must have reached the backend as `tupleN` inductives |
   | `POr`, pattern guards | no `EAbortS`-style approximation is available here |
   | `ERaise`, `ETry`, `DExn` | no exceptions |
@@ -2432,7 +2501,7 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
    for types that are never passed to a polymorphic function) is conceivable but
    needs a whole-program "is this type ever used polymorphically?" analysis; not
    obviously worth it.
-5. **Which `option`/tuple representations to special-case** (§5.5), e.g. null
+5. **Which `option`/tuple representations to special-case** (§5.6), e.g. null
    pointers for `option t` in the C backend.
 6. **CI coverage under demand-driven extraction** (§4.1) — accepted as expected
    behaviour, but the entrypoint set still has to be curated in practice.
@@ -2457,7 +2526,7 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6e | ANF (§6 pass 1): `Simplify.anf`, plus effect precision for externals (§7.3) | Done. `tests/custard/Anf.fst` |
 | M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done. `tests/custard/Phantom.fst` |
 | M6g | Deleting unit-shaped proof binders (§3.1, §5.1): `Mono.keep_thunk` | Done. `tests/custard/Implicits.fst` covers both halves of the guard |
-| M6h | `--custard_warn_any` (§5.6); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
+| M6h | `--custard_warn_any` (§5.7); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
 | M6i | Short-circuiting `&&`/`\|\|` (§6 pass 1): infix emission, bitwise guard | Done. `tests/custard/ShortCircuit.fst`, and the C side in `KrmlBasic.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | `MonoTypes`; whole corpus re-run under the flag |
