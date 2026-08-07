@@ -1322,7 +1322,7 @@ The only remaining producer of `ECast` is the machine-integer rules in
 the source asked for, a real call into `FStar.Int.Cast`.  Rule 1 must not
 delete them, and rule 3 could only duplicate them across branches.
 
-`--custard_warn_any` (§5.7) is what turns "we measured zero" into something
+`--custard_warn_any` (§5.8) is what turns "we measured zero" into something
 that stays true.
 
 ### 5.5 Record recovery
@@ -1394,7 +1394,29 @@ not testing the last match arm (OCaml checks matches syntactically), the brace
 and hoisting peepholes, and turning a one-cell stack allocation into a
 variable (which needs `&x`, and so has no ML analogue).
 
-### 5.6 Other representation choices (to be pinned down)
+### 5.6 Unreachable branches
+
+`EAbort` says control does not reach here, and it means it: the only rule that
+introduces one is Pulse's `unreachable` (§8.3), whose precondition F\* has
+already proved false.  A branch whose body is nothing but an abort therefore
+contributes nothing to the value of the match, and testing for it is wasted
+work at run time and noise in the output.  `prune` drops such branches, and
+rewrites `if c then e else abort` (and its mirror) to `e`, keeping `c` as a
+statement if evaluating it is observable.
+
+A match *all* of whose branches abort is left alone: it cannot be entered, and
+there is no value to give it.
+
+This started as a C-backend peephole, where dropping a branch also lets the one
+before it become the unconditional one.  But the reasoning has nothing to do
+with C — the branch is dead in every target.  What made it safe to lift is that
+Custard already relies on F\*'s exhaustiveness check rather than on the target's:
+the generated OCaml disables warning 8 in its header, and `--ocamlopt` passes
+`-w -8` for the same reason.  Running it before §5.5 also matters: dropping a
+branch can leave a match with a single irrefutable one, which §5.5 then removes
+entirely.
+
+### 5.7 Other representation choices (to be pinned down)
 
 - Machine integers: `UInt32.t` etc. must map to native target types, not to
   their `nat`-refinement definitions.  Handled as custom rules (§8), the same
@@ -1404,7 +1426,7 @@ variable (which needs `&x`, and so has no ML analogue).
 - Refinement types are erased to their base type (they are already erased by
   the normalizer's `Unrefine`/`ForExtraction`).
 
-### 5.7 `--custard_warn_any`
+### 5.8 `--custard_warn_any`
 
 `--custard_warn_any` walks the final IR, after renaming so the names it reports
 are the ones in the emitted file, and warns (code 366) about the two ways
@@ -1854,11 +1876,9 @@ Emission:
     emitted without a tag check.  An `abort()` in the output therefore always
     stands for something in the source — a `Pulse.Lib.Dv.unreachable`, a failed
     allocation — and never for the backend hedging.
-  - It does not emit a branch that only **aborts**.  `EAbort` reaches this
-    backend only from `Pulse.Lib.Dv.unreachable`, so such a branch is one F\*
-    has proved cannot be taken: it contributes nothing to the value, testing
-    for it is wasted, and dropping it lets the branch before it become the
-    unconditional one.
+  - It never sees a branch that only **aborts**: §5.6 has already dropped
+    those.  That is what lets the branch before such a one become the
+    unconditional one here.
   - It does not **copy** what a pattern binds.  A binding names a value that is
     already reachable as a projection out of the scrutinee, and both are
     immutable, so the variable is bound to the *path* rather than declared:
@@ -1946,7 +1966,7 @@ Emission:
   | `EFun` in a value position | no closures; mark the parameter `[@@@monomorphize]` (§3.1) |
   | abstract types, `Prims.int` in particular | no size, and no width to guess |
   | unbounded integer literals | same |
-  | `TAny` | the representation was already lost; `--custard_warn_any` (§5.7) says where |
+  | `TAny` | the representation was already lost; `--custard_warn_any` (§5.8) says where |
   | `TTuple`, `ETuple`, `PTuple` | tuples must have reached the backend as `tupleN` inductives |
   | `POr`, pattern guards | no `EAbortS`-style approximation is available here |
   | `ERaise`, `ETry`, `DExn` | no exceptions |
@@ -2501,7 +2521,7 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
    for types that are never passed to a polymorphic function) is conceivable but
    needs a whole-program "is this type ever used polymorphically?" analysis; not
    obviously worth it.
-5. **Which `option`/tuple representations to special-case** (§5.6), e.g. null
+5. **Which `option`/tuple representations to special-case** (§5.7), e.g. null
    pointers for `option t` in the C backend.
 6. **CI coverage under demand-driven extraction** (§4.1) — accepted as expected
    behaviour, but the entrypoint set still has to be curated in practice.
@@ -2526,7 +2546,7 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6e | ANF (§6 pass 1): `Simplify.anf`, plus effect precision for externals (§7.3) | Done. `tests/custard/Anf.fst` |
 | M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done. `tests/custard/Phantom.fst` |
 | M6g | Deleting unit-shaped proof binders (§3.1, §5.1): `Mono.keep_thunk` | Done. `tests/custard/Implicits.fst` covers both halves of the guard |
-| M6h | `--custard_warn_any` (§5.7); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
+| M6h | `--custard_warn_any` (§5.8); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
 | M6i | Short-circuiting `&&`/`\|\|` (§6 pass 1): infix emission, bitwise guard | Done. `tests/custard/ShortCircuit.fst`, and the C side in `KrmlBasic.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | `MonoTypes`; whole corpus re-run under the flag |

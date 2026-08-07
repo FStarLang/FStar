@@ -35,6 +35,12 @@ GREP_PulseHashTable += "Array.make"
 NOGREP_PulseHashTable += "Obj.magic"
 NOGREP_PulseHashTable += "PulseCore"
 NOGREP_PulseHashTable += "prims_unit"
+# Section 5.5: 'ht_t' comes back as a record rather than a one-constructor
+# variant, and the two 'unreachable' branches are gone.
+GREP_PulseHashTable += "pulse_Lib_HashTable_Type_ht_t = { sz : FStar_SizeT.t;"
+GREP_PulseHashTable += "(ht).sz"
+NOGREP_PulseHashTable += "Mkht_t"
+NOGREP_PulseHashTable += "failwith"
 
 # The generated OCaml must also type-check: these programs are large enough
 # that a grep test alone would miss most of what can go wrong in a signature.

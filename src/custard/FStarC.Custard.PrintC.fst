@@ -241,7 +241,7 @@ and base_ty (t:cty) : ML string =
   | TAny ->
     reject "a value whose representation is unknown (TAny)"
       ["Run with --custard_warn_any to see where the representation was lost \
-        (section 5.6)."]
+        (section 5.8)."]
   | TBuf _ | TArrow _ -> decl_of t ""
 
 (* The abstract declarator: a type as a cast or a compound literal spells it. *)
@@ -912,12 +912,8 @@ and guard_rejected (#a:Type) () : ML a =
 and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string =
   let out = mk_ref "" in
   let sv = c_expr out ind scrut in
-  (* A branch that only aborts is a branch F* has proved cannot be taken --
-     [EAbort] reaches this backend only from [Pulse.Lib.Dv.unreachable].  It
-     contributes nothing to the value, so testing for it is wasted work and
-     emitting it is noise.  Dropping it also lets the branch before it become
-     the unconditional one. *)
-  let brs = brs |> List.filter (fun (_, _, b) -> not (EAbort? b.e)) in
+  (* Branches whose body only aborts are gone by now (section 5.6); what is
+     left is an empty match, which cannot be entered. *)
   if Nil? brs then !out ^ finish ind D_Ignore sv ^ ind ^ "abort();\n" else
   (* The scrutinee is tested once per branch, so it has to be a name -- unless
      no branch looks at it, in which case naming it would leave an unused

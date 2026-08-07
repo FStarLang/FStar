@@ -1018,6 +1018,74 @@ let scc (prog:program) : ML program =
       | None -> []))
 
 (* -------------------------------------------------------------------- *)
+(* Unreachable branches                                                 *)
+(* -------------------------------------------------------------------- *)
+
+(* [EAbort] says control does not reach here, and it means it: the only rule
+   that introduces one is Pulse's [unreachable] (section 8.3), whose
+   precondition F* has already proved false.  A branch whose body is nothing
+   but an abort therefore contributes nothing to the value of the match, and
+   testing for it is wasted work at run time and noise in the output.
+
+   This was a C-backend peephole first, where dropping the branch also lets the
+   one before it become unconditional.  But the reasoning has nothing to do
+   with C: the branch is dead in every target, and OCaml's non-exhaustive-match
+   warning is off in the generated file's header (and in the flags [--ocamlopt]
+   passes) precisely because Custard relies on F*'s exhaustiveness check
+   rather than on OCaml's. *)
+
+let take (x:expr) (c:expr) (r:expr) : ML expr =
+  (* [x] supplies the type and effect: both are over-approximations of [r]'s,
+   which is the safe direction -- an effect that is too high only stops a
+   later pass from moving something. *)
+  if is_pure c.eff then { x with e = r.e } else { x with e = ESeq (c, r) }
+
+let rec prune (x:expr) : ML expr =
+  let g = prune in
+  match x.e with
+  | EMatch (s, brs) ->
+    let s = g s in
+    let brs = brs |> List.map prune_branch in
+    let live = brs |> List.filter (fun (_, _, b) -> not (EAbort? b.e)) in
+    (* A match all of whose branches abort cannot be entered at all; leave it
+       alone rather than invent a value for it. *)
+    { x with e = EMatch (s, (if Nil? live then brs else live)) }
+
+  | EIf (c, a, b) ->
+    let c = g c in
+    let a = g a in
+    let b = g b in
+    if EAbort? b.e && not (EAbort? a.e) then take x c a
+    else if EAbort? a.e && not (EAbort? b.e) then take x c b
+    else { x with e = EIf (c, a, b) }
+
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
+  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
+  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
+  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
+  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
+  | ETuple es -> { x with e = ETuple (es |> List.map g) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
+  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
+  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map prune_branch) }
+
+and prune_branch (br:branch) : ML branch =
+  let p, guard, b = br in
+  (p, (match guard with None -> None | Some e -> Some (prune e)), prune b)
+
+let prune_decls (prog:program) : ML program =
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = prune dl.dl_body }
+    | d -> d)
+
+(* -------------------------------------------------------------------- *)
 (* Record recovery                                                      *)
 (* -------------------------------------------------------------------- *)
 
@@ -1292,6 +1360,9 @@ let run (prog:program) : ML program =
   let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
   let prog = reduce_decls prog in
+  (* Before [depat]: dropping a branch can leave a match with a single
+     irrefutable one, which is exactly what [depat] removes entirely. *)
+  let prog = prune_decls prog in
   let prog = depat_decls prog in
   let prog = prog |> List.map (fun d ->
     match d with
