@@ -341,39 +341,47 @@ type dest =
    enclosing *function* has already used it, in which case it takes a
    subscript.  So the generated C reads like the source, and a subscript in it
    means something real. *)
-let scope : ref (list (string & string)) = mk_ref []
+(* Each entry is the C name a variable resolves to, and whether that name is a
+   one-cell stack allocation the backend has collapsed into a variable (see
+   [ELet] below): a use that wants the cell reads or assigns it, a use that
+   wants the pointer takes its address. *)
+let scope : ref (list (string & (string & bool))) = mk_ref []
 let declared : ref (SMap.t bool) = mk_ref (SMap.create 0)
 
-(* The locals that a one-cell stack allocation has been collapsed into.  Keyed
-   by the *C* name, which is what both the declaration and every use resolve
-   to.  A use that wants the cell reads or assigns the variable; a use that
-   wants the pointer takes its address. *)
-let scalars : ref (SMap.t bool) = mk_ref (SMap.create 0)
-
 let reset_scope () : ML unit =
-  scope := []; declared := SMap.create 20; scalars := SMap.create 20
+  scope := []; declared := SMap.create 20
 
-let bind_var (x:string) : ML string =
+let bind_gen (x:string) (cell:bool) : ML string =
   let base = c_var x in
   let rec pick (i:int) : ML string =
     let cand = if i = 0 then base else base ^ "_" ^ show i in
     if Some? (SMap.try_find !declared cand) then pick (i + 1) else cand in
   let nm = pick 0 in
   SMap.add !declared nm true;
-  scope := (x, nm) :: !scope;
+  scope := (x, (nm, cell)) :: !scope;
   nm
 
 (* A pattern binding does not need a variable of its own: the value it names is
    already reachable, as a projection out of the scrutinee, and both are
    immutable.  Binding the *path* instead of declaring a copy is what turns
    [{ size_t sz_1 = s.sz; t = sz_1; }] into [t = s.sz;]. *)
+let bind_var (x:string) : ML string = bind_gen x false
+
+(* A one-cell stack allocation, collapsed into an ordinary variable. *)
+let bind_cell (x:string) : ML string = bind_gen x true
+
 let bind_alias (x:string) (path:string) : ML unit =
-  scope := (x, path) :: !scope
+  scope := (x, (path, false)) :: !scope
 
 let lookup_var (x:string) : ML string =
   match !scope |> List.tryFind (fun (y, _) -> y = x) with
-  | Some (_, nm) -> nm
+  | Some (_, (nm, _)) -> nm
   | None -> c_var x
+
+let is_cell (x:string) : ML bool =
+  match !scope |> List.tryFind (fun (y, _) -> y = x) with
+  | Some (_, (_, c)) -> c
+  | None -> false
 
 (* Fresh names for the temporaries the hoisting introduces.  They are the only
    names in the output that no source name stands behind, so they are spelled
@@ -422,11 +430,63 @@ and vars_of_branch (br:branch) : ML (list string) =
   let _, g, b = br in
   (match g with Some g -> vars_of g | None -> []) @ vars_of b
 
+(* Does [e] write to the collapsed cell [x], or take its address (which would
+   let something else write to it)?  If not, a value read out of the cell stays
+   valid for the whole of [e], and the read needs no copy. *)
+let rec mutates (x:string) (e:expr) : ML bool =
+  let any (es:list expr) : ML bool = List.existsb (mutates x) es in
+  match e.e with
+  | EVar y -> y = x
+  | EOp ({ po_op = BufRead }, [{ e = EVar y }; i]) when y = x -> mutates x i
+  | EConst _ | EQual _ | EAny | EAbort _ -> false
+  | ELet (_, _, a, b) -> mutates x a || mutates x b
+  | EApp (h, es) -> mutates x h || any es
+  | EFun (_, b) -> mutates x b
+  | EMatch (sc, brs) -> mutates x sc || List.existsb (mutates_branch x) brs
+  | ETry (a, brs) -> mutates x a || List.existsb (mutates_branch x) brs
+  | EIf (a, b, c) -> mutates x a || mutates x b || mutates x c
+  | ESeq (a, b) | EWhile (a, b) -> mutates x a || mutates x b
+  | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> any es
+  | ERecord (_, fs) -> List.existsb (fun (_, e) -> mutates x e) fs
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> mutates x a
+
+and mutates_branch (x:string) (br:branch) : ML bool =
+  let _, g, b = br in
+  (match g with Some g -> mutates x g | None -> false) || mutates x b
+
+(* An expression whose value cannot change and whose evaluation does nothing:
+   a variable that is not a collapsed cell, and projections out of one.  The
+   backend never assigns to such a variable, so a copy of it is dead weight. *)
+let rec is_stable (e:expr) : ML bool =
+  match e.e with
+  | EVar x -> not (is_cell x)
+  | EProj (a, _, _) -> is_stable a
+  | _ -> false
+
+(* No calls, no writes, no loops: an expression that can be moved anywhere
+   without changing what the program does. *)
+let rec is_pure (e:expr) : ML bool =
+  let all (es:list expr) : ML bool = List.for_all is_pure es in
+  match e.e with
+  | EConst _ | EVar _ | EQual _ | EAny -> true
+  | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
+  | EOp ({ po_op = BufRead }, es) -> all es
+  | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
+  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
+  | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
+  | ELet (_, _, a, b) | ESeq (a, b) -> is_pure a && is_pure b
+  | EIf (a, b, c) -> is_pure a && is_pure b && is_pure c
+  | EMatch (sc, brs) -> is_pure sc && List.for_all is_pure_branch brs
+  | ERecord (_, fs) -> List.for_all (fun (_, e) -> is_pure e) fs
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> is_pure a
+
+and is_pure_branch (br:branch) : ML bool =
+  let _, g, b = br in
+  (match g with Some g -> is_pure g | None -> true) && is_pure b
+
 (* A [BufCreate] of exactly one cell: what Pulse emits for [let mut]. *)
 let is_one (e:expr) : bool =
   match e.e with EConst (CInt ("1", _)) -> true | _ -> false
-
-let is_scalar (nm:string) : ML bool = Some? (SMap.try_find !scalars nm)
 
 (* A constructor's field names, paired with the printed arguments.  A length
    mismatch would be an extractor bug; keeping the prefix produces a C error
@@ -442,7 +502,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EConst c -> constant c
   (* Every other use of a collapsed cell wants the pointer -- passing it to a
      function expecting a [ref], say -- and C can produce one on demand. *)
-  | EVar x -> let nm = lookup_var x in if is_scalar nm then "&" ^ nm else nm
+  | EVar x -> if is_cell x then "&" ^ lookup_var x else lookup_var x
   | EAny ->
     (* What an uninitialized stack slot holds.  A zero of the right type is a
        legal value of it and is what C would give a static. *)
@@ -487,7 +547,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
       "." ^ c_var f ^ " = " ^ c_expr out ind v)) ^ " }"
   | EOp ({ po_op = BufRead }, [b; i]) ->
     (match b.e with
-     | EVar y when is_scalar (lookup_var y) -> lookup_var y
+     | EVar y when is_cell y -> lookup_var y
      | _ -> c_expr out ind b ^ "[" ^ c_expr out ind i ^ "]")
   | EOp ({ po_op = BufSub }, [b; i]) ->
     "(" ^ c_expr out ind b ^ " + " ^ c_expr out ind i ^ ")"
@@ -517,8 +577,17 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
 and hoist (out:ref string) (ind:string) (e:expr) : ML string =
   if TUnit? e.ty then (out := !out ^ emit ind D_Ignore e; unit_value) else
   let x = fresh "t" in
-  out := !out ^ ind ^ decl_of e.ty x ^ ";\n" ^ emit ind (D_Assign x) e;
-  x
+  let body = emit ind (D_Assign x) e in
+  (* If the whole thing came out as a single assignment to the temporary, and
+     evaluating it does nothing, then the temporary was only ever going to hold
+     the right-hand side: use that instead.  This is what turns a record
+     projection -- which reaches the backend as a one-branch match -- back into
+     the projection it was. *)
+  match String.split ['\n'] body with
+  | [l; ""] when is_pure e && starts_with l (ind ^ x ^ " = ") ->
+    String.substring l (String.length ind + String.length x + 3)
+                     (String.length l - String.length ind - String.length x - 4)
+  | _ -> out := !out ^ ind ^ decl_of e.ty x ^ ";\n" ^ body; x
 
 (* The C spelling of field [f] of a value of type [t].  A single-constructor
    variant is a plain struct, so its fields are reached directly; a record's
@@ -611,13 +680,25 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      address, which is what a C programmer would have written.  The Pulse
      checker has already established that the cell does not outlive its scope,
      so the address is never stale. *)
+  (* [let x = !r] where nothing in the rest of the term writes [r] or takes its
+     address.  The read cannot go stale, so [x] is just another name for [r]
+     and the copy is dead weight.  Where a write *does* follow -- the loop
+     counter Pulse increments at the end of each iteration -- the copy stays,
+     because it is what makes the body see the value it started with. *)
+  | ELet (x, _, { e = EOp ({ po_op = BufRead }, [{ e = EVar y }; _]) }, e2)
+      when is_cell y && not (mutates y e2) ->
+    let saved = !scope in
+    bind_alias x (lookup_var y);
+    let s2 = emit ind d e2 in
+    scope := saved;
+    s2
+
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
       when is_one len ->
     let out = mk_ref "" in
     let iv = c_expr out ind init in
     let saved = !scope in
-    let nm = bind_var x in
-    SMap.add !scalars nm true;
+    let nm = bind_cell x in
     let s2 = emit ind d e2 in
     scope := saved;
     !out ^ ind ^ decl_of t nm ^ " = " ^ iv ^ ";\n" ^ s2
@@ -627,11 +708,21 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let s1 =
       if is_stmt e1
       then (let x = bind_var x in
-            ind ^ decl_of t x ^ ";\n" ^
-            (let saved' = !scope in
-             scope := saved;
-             let s = emit ind (D_Assign x) e1 in
-             scope := saved'; s))
+            let body =
+              let saved' = !scope in
+              scope := saved;
+              let s = emit ind (D_Assign x) e1 in
+              scope := saved'; s in
+            (* A declaration and its only assignment, next to each other, are
+               one definition.  Nothing moves, so this needs no purity side
+               condition. *)
+            match String.split ['\n'] body with
+            | [l; ""] when starts_with l (ind ^ x ^ " = ") ->
+              ind ^ decl_of t x ^
+              String.substring l (String.length ind + String.length x)
+                               (String.length l - String.length ind - String.length x) ^
+              "\n"
+            | _ -> ind ^ decl_of t x ^ ";\n" ^ body)
       else (let out = mk_ref "" in
             let v = c_expr out ind e1 in
             let x = bind_var x in
@@ -680,14 +771,14 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let out = mk_ref "" in
     let lhs =
       match b.e with
-      | EVar y when is_scalar (lookup_var y) -> lookup_var y
+      | EVar y when is_cell y -> lookup_var y
       | _ -> c_expr out ind b ^ "[" ^ c_expr out ind i ^ "]" in
     let v = c_expr out ind v in
     !out ^ ind ^ lhs ^ " = " ^ v ^ ";\n" ^ unit_result ind d
 
   (* Pulse emits a matching "free" for a stack allocation too.  A collapsed
      cell is freed by leaving the scope, so there is nothing to say. *)
-  | EOp ({ po_op = BufFree }, [{ e = EVar y }]) when is_scalar (lookup_var y) ->
+  | EOp ({ po_op = BufFree }, [{ e = EVar y }]) when is_cell y ->
     unit_result ind d
 
   | EOp ({ po_op = BufFree }, [b]) ->
@@ -810,6 +901,10 @@ and brace (ind:string) (body:string) : ML string =
   | [l; ""] -> " " ^ drop_indent l ^ "\n"
   | _ -> " {\n" ^ body ^ ind ^ "}\n"
 
+and starts_with (s:string) (pre:string) : ML bool =
+  String.length s >= String.length pre &&
+  String.substring s 0 (String.length pre) = pre
+
 and guard_rejected (#a:Type) () : ML a =
   reject "a pattern guard"
     ["Rewrite the guard as an 'if' in the branch body."]
@@ -828,7 +923,12 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      no branch looks at it, in which case naming it would leave an unused
      variable behind.  That happens for a single catch-all branch, which is
      what a [let] over an irrefutable pattern turns into. *)
-  let x = fresh "s" in
+  (* The scrutinee is read once per test and once per binding, so it normally
+     has to be named.  When it is already a name -- or a projection out of one,
+     which the backend never assigns to -- naming it again would only add an
+     indirection. *)
+  let direct = is_stable scrut in
+  let x = if direct then sv else fresh "s" in
   let looked_at =
     brs |> List.existsb (fun (p, _, _) ->
       let ts, bs = pat_tests x scrut.ty p in
@@ -839,7 +939,8 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      | (_, None, b) :: _ -> !out ^ finish ind D_Ignore sv ^ emit ind d b
      | _ -> !out ^ finish ind D_Ignore sv ^ ind ^ "abort();\n")
   else
-  let head = !out ^ ind ^ decl_of scrut.ty x ^ " = " ^ sv ^ ";\n" in
+  let head = if direct then !out
+             else !out ^ ind ^ decl_of scrut.ty x ^ " = " ^ sv ^ ";\n" in
   (* The bindings of a branch are aliases, not declarations (see
      [bind_alias]), so a branch body is emitted with them in scope and the
      scope is restored afterwards. *)

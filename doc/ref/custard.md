@@ -1820,6 +1820,27 @@ Emission:
   allocation is scope exit, so it emits nothing.  This removes a declaration,
   an array and an initializing loop per mutable variable.
 
+  **No variable that only renames another.**  Four places used to introduce
+  one, and each is removed by a condition the backend can check locally:
+
+  - The **scrutinee** of a match is normally named, because it is read once per
+    test and once per binding — but when it is already a name, or a projection
+    out of one, it is used directly.  The backend never assigns to such a
+    variable, which is what makes that safe.
+  - A **read of a `let mut` cell** binds a copy, which is what makes the rest
+    of the term see the value it started with.  When nothing in that rest
+    writes the cell or takes its address, there is nothing to be protected
+    from, and the binding becomes another name for the cell.  Where a write
+    *does* follow — the loop counter Pulse increments at the end of an
+    iteration — the copy stays.
+  - A **hoisted temporary** whose statements came out as a single assignment to
+    it was only ever going to hold that right-hand side, so the right-hand side
+    is used instead.  This needs the hoisted expression to be *pure*, since it
+    moves; it is what turns a record projection — which reaches the backend as
+    a one-branch match — back into the projection it was.
+  - A **declaration and its only assignment**, next to each other, are one
+    definition.  Nothing moves here, so this one needs no side condition.
+
   **A `unit` parameter the body never mentions is dropped**, from the
   signature and from every call site — it is how F\* writes a thunk, and C has
   no laziness to preserve.  So `main` is `int32_t main(void)`, not

@@ -88,7 +88,7 @@ C_TESTS += KrmlBasic
 # does not need; a pattern binding is an alias, not a copy; and the last arm
 # of an exhaustive match is not guarded.
 CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
-                    "_cs1.val.KrmlBasic_Square._0 * _cs1.val.KrmlBasic_Square._0" \
+                    "if (s.tag == KRMLBASIC_SQUARE) return (s.val.KrmlBasic_Square._0" \
                     "if ((n == ((uint32_t)0))) return acc;"
 CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
 
