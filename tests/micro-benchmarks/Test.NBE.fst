@@ -163,3 +163,20 @@ let test_stuck_match_branches (l:list int) =
     let b = norm_term (nbe::steps) t in
     if term_to_string a = term_to_string b then () else
     fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))
+
+(* A recursive definition applied to symbolic arguments must still be unfolded
+   once, as the reference normalizer does, leaving a stuck match behind. NBE
+   used to refuse to unfold at all, which left FStar.Calc.calc_chain_related
+   completely unreduced and made FStar.Calc fail to verify under --use_nbe. *)
+let rec len_nbe (#a:Type) (l:list a) : nat =
+  match l with | [] -> 0 | _::tl -> 1 + len_nbe tl
+
+let test_rec_unfold_symbolic (l:list int) =
+  assert True by (
+    let open FStar.Tactics.V2 in
+    let steps = [delta_only [`%len_nbe]; iota; zeta; unascribe] in
+    let t = (`(len_nbe (`#(quote l)))) in
+    let a = norm_term steps t in
+    let b = norm_term (nbe::steps) t in
+    if term_to_string a = term_to_string b then () else
+    fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))

@@ -297,10 +297,21 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : ML (option (t
   in pickBranch_aux scrut branches branches
 
 // Tests if a recursive function should be reduced based on
-// the arguments provided and the arity/decreases clause of the function.
+// the arguments provided and the arity of the function.
+//
+// Note: this used to also refuse to unfold when one of the arguments that may
+// appear in the decreases clause was symbolic, to avoid looping. That is not
+// what the reference normalizer does -- it unfolds once and then gets stuck on
+// the match in the body -- and the difference was observable: e.g. under NBE,
+// `norm [delta_only [`%calc_chain_related]; iota; zeta] (calc_chain_related rs x y)`
+// was left completely unreduced, so FStar.Calc failed to verify.
+//
+// Termination is instead ensured by [stuck_match_cfg]: the branches of a stuck
+// match are read back with all unfolding directives removed, so the recursive
+// occurrences they contain are not unfolded again. This is exactly how the
+// reference normalizer stays terminating.
 // Returns:
-//  should_unfold: bool, true, if the application is full and if none of the recursive
-//                 arguments is symbolic.
+//  should_unfold: bool, true, if the application is full
 //  arguments : list arg, the arguments to the recursive function in reverse order
 //  residual args: list arg, any additional arguments, beyond the arity of the function
 let should_reduce_recursive_definition
@@ -314,11 +325,8 @@ let should_reduce_recursive_definition
       true, acc, ts
     | [], _ :: _ ->
       false, acc, []  (* It's partial! *)
-    | t :: ts, in_decreases_clause :: bs ->
-      if in_decreases_clause
-      && isAccu (fst t)  //one of the recursive arguments is symbolic, so we shouldn't reduce
-      then false, List.rev_append ts acc, []
-      else aux ts bs (t::acc)
+    | t :: ts, _ :: bs ->
+      aux ts bs (t::acc)
   in
   aux arguments formals_in_decreases []
 
