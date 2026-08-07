@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.Send
+open PulseCore.Observability
+module T = FStar.Tactics.V2
 open Pulse.Lib.Core
 open Pulse.Class.Duplicable
 open Pulse.Main

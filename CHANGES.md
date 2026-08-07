@@ -42,6 +42,44 @@ Guidelines for the changelog:
     (The PulseCore model currently defines `stt_div = stt`; a foundational model
     of divergence is future work.)
 
+## Syntax
+
+  * The `introduce`/`eliminate` sugar for logical connectives no longer binds
+    names for hypotheses, and `eliminate` no longer takes a `returns` clause.
+    The eliminated hypotheses are instead available in the proof context (i.e.
+    to the SMT solver) of the proof that follows `with`. Concretely:
+
+    | Old                                          | New                              |
+    |----------------------------------------------|----------------------------------|
+    | `introduce P ==> Q with h. e`                | `introduce P ==> Q with e`       |
+    | `eliminate exists x1..xn. P returns Q with h. e` | `eliminate exists x1..xn. P with e` |
+    | `eliminate P \/ Q returns R with x. e1 and y. e2` | `eliminate P \/ Q with e1 and e2` |
+    | `eliminate P /\ Q returns R with x y. e`     | `eliminate P /\ Q with e`        |
+
+    Uses of the old syntax are reported with an error explaining the change.
+    Proofs that used the name of a hypothesis (e.g. `with pf_p. f pf_p`) must
+    pass `()` instead (e.g. `with f ()`), which the SMT solver discharges using
+    the hypothesis now in context.
+
+    The desugaring changed accordingly: `eliminate exists` now elaborates to a
+    `let` binding using `FStar.Classical.Sugar.indefinite_descriptionN`,
+    `eliminate _ \/ _` to `if FStar.Classical.Sugar.or_decide p q then e1 else e2`,
+    and `eliminate _ /\ _` to `assert (p /\ q); e`.
+
+## Tactics & Reflection
+
+  * PR https://github.com/FStarLang/FStar/pull/4374 adds a new case
+    `C_MachineInt of int -> int_signedness -> int_width -> vconst` to the
+    reflected constants (`FStar.Stubs.Reflection.V2.Data.vconst`). Machine
+    integer constants (e.g. `0uy`, `1l`, `2sz`) used to be inspected as a plain
+    `C_Int`, losing their signedness and width; they are now inspected
+    faithfully, both in patterns (`Pat_Constant`) and in terms (`Tv_Const`),
+    and `pack` rebuilds the machine integer constant from them. In particular,
+    this makes Pulse preserve machine integer patterns in `match` statements.
+
+    This is a breaking change for reflection clients that match exhaustively on
+    `vconst`; such code should add a `C_MachineInt` case.
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection
@@ -130,6 +168,54 @@ Guidelines for the changelog:
     `val` declarations and arrows which was not previously the case.
 
 ## Module system
+
+  * **Interfaces are no longer syntactically interleaved into their
+    implementations.** Previously, when checking `A.fst` in the presence of
+    `A.fsti`, F* spliced the *parsed* declarations of the interface into the
+    implementation's declaration list and rechecked everything from scratch.
+    Now `A.fsti` is a genuine dependency: it is checked (or loaded from
+    `A.fsti.checked`) first, and its *already-checked* declarations are kept in
+    the typechecking environment as an ordered to-do list. Each declaration of
+    `A.fst` discharges the matching entries; interface declarations that have no
+    counterpart in the implementation (e.g. a `let` in the interface, or
+    auto-generated projectors) are copied verbatim, without being rechecked.
+    If any entry is left over at the end of the module, F* reports an error
+    listing the declarations of the interface that the implementation does not
+    define.
+
+    The to-do list also governs *scope*: a declaration of `A.fsti` only becomes
+    visible to `A.fst` once the implementation has reached it. As before, this
+    means that `A.fst` cannot use a name that `A.fsti` declares after a `val`
+    that `A.fst` has not implemented yet. This ordering discipline is what rules
+    out circular proofs, where `A.fst` would discharge a `val` of `A.fsti` using
+    a later definition of `A.fsti` that is itself justified by that very `val`.
+    Declarations introduced by a language extension (a Pulse `fn`, say) are no
+    different from plain `val`s in this respect.
+
+    Consequences for existing code:
+    - **`open`, `include` and module abbreviations in a `.fsti` no longer scope
+      over the corresponding `.fst`.** Each file must now declare the opens it
+      uses. To update existing code, copy the `open`/`include`/`module X = ...`
+      declarations of `A.fsti` to the top of `A.fst`.
+    - Pragmas such as `#set-options` / `#push-options` in a `.fsti` no longer
+      leak into the `.fst`.
+    - An implementation is now checked against the interface by *subsumption*:
+      the two must have the same number of universe parameters and the
+      implementation's type must be a subtype of the declared one. It is no
+      longer required to be syntactically identical up to normalization.
+    - Interface declarations are elaborated exactly once, so typeclass
+      resolution, tactics and splices in a `.fsti` can no longer produce
+      different terms in `A.fsti.checked` and in `A.fst.checked`.
+    - Errors are now reported in the source order of the `.fst` (interleaving
+      used to reorder declarations).
+    - An `[@@expect_failure]` block in `A.fst` defines nothing, so it does not
+      discharge anything of `A.fsti`. Writing `[@@expect_failure] let f = ...`
+      in `A.fst` no longer admits a `val f` of `A.fsti`; the declaration is
+      still reported as unimplemented.
+    - `A.fsti.checked` is now required in order to check `A.fst`, so a build
+      produces (and must ship) checked files for interfaces.
+    - The checked-file format version was bumped; all `.checked` files must be
+      regenerated.
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 

@@ -16,6 +16,9 @@
 
 module Pulse.Checker.Prover.Util
 
+open Pulse.Syntax
+open Pulse.Typing
+module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
 
 let debug_prover g s =

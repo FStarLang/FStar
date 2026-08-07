@@ -16,6 +16,7 @@
 
 module Pulse.Show
 
+open FStar.Tactics.NamedView
 open FStar.Tactics.V2
 open FStar.Tactics.Typeclasses
 open Pulse.Typing

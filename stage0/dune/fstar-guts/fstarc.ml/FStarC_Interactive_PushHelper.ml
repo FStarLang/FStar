@@ -123,7 +123,13 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
     FStarC_TypeChecker_Env.core_check =
       (env.FStarC_TypeChecker_Env.core_check);
     FStarC_TypeChecker_Env.missing_decl =
-      (env.FStarC_TypeChecker_Env.missing_decl)
+      (env.FStarC_TypeChecker_Env.missing_decl);
+    FStarC_TypeChecker_Env.iface_todo =
+      (env.FStarC_TypeChecker_Env.iface_todo);
+    FStarC_TypeChecker_Env.iface_lids =
+      (env.FStarC_TypeChecker_Env.iface_lids);
+    FStarC_TypeChecker_Env.iface_val_lids =
+      (env.FStarC_TypeChecker_Env.iface_val_lids)
   }
 let repl_ld_tasks_of_deps (deps : Prims.string Prims.list)
   (final_tasks : FStarC_Interactive_Ide_Types.repl_task Prims.list) :
@@ -136,13 +142,6 @@ let repl_ld_tasks_of_deps (deps : Prims.string Prims.list)
     } in
   let rec aux deps1 final_tasks1 =
     match deps1 with
-    | intf::impl::deps' when FStarC_Universal.needs_interleaving intf impl ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = wrap intf in
-            let uu___3 = wrap impl in (uu___2, uu___3) in
-          FStarC_Interactive_Ide_Types.LDInterleaved uu___1 in
-        let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
     | intf_or_impl::deps' ->
         let uu___ =
           let uu___1 = wrap intf_or_impl in
@@ -381,21 +380,14 @@ let run_repl_task (repl_fname : Prims.string)
   (FStarC_Interactive_Ide_Types.optmod_t * FStarC_TypeChecker_Env.env_t *
     FStarC_Universal.lang_decls_t)=
   match task with
-  | FStarC_Interactive_Ide_Types.LDInterleaved (intf, impl) ->
-      let uu___ =
-        FStarC_Universal.load_file env
-          (FStar_Pervasives_Native.Some
-             (intf.FStarC_Interactive_Ide_Types.tf_fname))
-          impl.FStarC_Interactive_Ide_Types.tf_fname in
-      (curmod, uu___, [])
   | FStarC_Interactive_Ide_Types.LDSingle intf_or_impl ->
       let uu___ =
-        FStarC_Universal.load_file env FStar_Pervasives_Native.None
+        FStarC_Universal.load_file env
           intf_or_impl.FStarC_Interactive_Ide_Types.tf_fname in
       (curmod, uu___, [])
   | FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile intf ->
       let uu___ =
-        FStarC_Universal.load_interface_decls env
+        FStarC_Universal.load_interface_of_current_file env
           intf.FStarC_Interactive_Ide_Types.tf_fname in
       (curmod, uu___, [])
   | FStarC_Interactive_Ide_Types.PushFragment
@@ -575,12 +567,6 @@ let tf_of_fname (fname : Prims.string) :
 let update_task_timestamps (task : FStarC_Interactive_Ide_Types.repl_task) :
   FStarC_Interactive_Ide_Types.repl_task=
   match task with
-  | FStarC_Interactive_Ide_Types.LDInterleaved (intf, impl) ->
-      let uu___ =
-        let uu___1 = tf_of_fname intf.FStarC_Interactive_Ide_Types.tf_fname in
-        let uu___2 = tf_of_fname impl.FStarC_Interactive_Ide_Types.tf_fname in
-        (uu___1, uu___2) in
-      FStarC_Interactive_Ide_Types.LDInterleaved uu___
   | FStarC_Interactive_Ide_Types.LDSingle intf_or_impl ->
       let uu___ =
         tf_of_fname intf_or_impl.FStarC_Interactive_Ide_Types.tf_fname in

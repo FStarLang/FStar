@@ -43,9 +43,21 @@ type ident_view = string & Range.t
 (* No distinction internally between bvars and named vars *)
 type namedv = bv
 
+type int_signedness =
+  | Signed
+  | Unsigned
+
+type int_width =
+  | Int8
+  | Int16
+  | Int32
+  | Int64
+  | Sizet
+
 type vconst =
     | C_Unit
     | C_Int of int
+    | C_MachineInt of int & int_signedness & int_width
     | C_True
     | C_False
     | C_String of string

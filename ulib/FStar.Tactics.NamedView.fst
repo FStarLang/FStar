@@ -15,6 +15,11 @@
 *)
 module FStar.Tactics.NamedView
 
+open FStar.Sealed { seal }
+open FStar.Stubs.Syntax.Syntax { subst_elt, subst_t }
+module R = FStar.Stubs.Reflection.Types
+module RD = FStar.Stubs.Reflection.V2.Data
+module RB = FStar.Stubs.Reflection.V2.Builtins
 (* inner let bindings not encoded, OK *)
 #set-options "--warn_error -242"
 
@@ -120,7 +125,7 @@ let subst_comp (s : subst_t) (c : comp) : comp =
 private
 let open_comp (b : R.binder) (t : comp) : Tac (binder & comp) =
   let n = fresh () in
-  let bv : binder_view = R.inspect_binder b in
+  let bv : RD.binder_view = R.inspect_binder b in
   let nv : R.namedv = R.pack_namedv {
     uniq   = n;
     sort   = seal bv.sort;
@@ -154,7 +159,7 @@ be done extrinsically. Can we add a refinement to the binder? *)
 private
 let open_term_simple (b : R.simple_binder) (t : term) : Tac (simple_binder & term) =
   let n = fresh () in
-  let bv : binder_view = R.inspect_binder b in
+  let bv : RD.binder_view = R.inspect_binder b in
   let nv : R.namedv = R.pack_namedv {
     uniq   = n;
     sort   = seal bv.sort;
@@ -175,7 +180,7 @@ let open_term_simple (b : R.simple_binder) (t : term) : Tac (simple_binder & ter
 private
 let open_comp_simple (b : R.simple_binder) (t : comp) : Tac (simple_binder & comp) =
   let n = fresh () in
-  let bv : binder_view = R.inspect_binder b in
+  let bv : RD.binder_view = R.inspect_binder b in
   let nv : R.namedv = R.pack_namedv {
     uniq   = n;
     sort   = seal bv.sort;
@@ -210,7 +215,7 @@ private
 let close_term_simple (b:simple_binder) (t:term) : R.simple_binder & term =
   let nv = r_binder_to_namedv b in
   let t' = R.subst_term [NM nv 0] t in
-  let bv : binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
+  let bv : RD.binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   let b = R.pack_binder bv in
   R.inspect_pack_binder bv;
   (b, t')
@@ -218,7 +223,7 @@ private
 let close_comp_simple (b:simple_binder) (t:comp) : R.simple_binder & comp =
   let nv = r_binder_to_namedv b in
   let t' = subst_comp [NM nv 0] t in
-  let bv : binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
+  let bv : RD.binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   let b = R.pack_binder bv in
   R.inspect_pack_binder bv;
   (b, t')
@@ -409,7 +414,7 @@ let close_match_returns_ascription (mra : match_returns_ascription) : R.match_re
   (b, (ct, topt, use_eq))
 
 private
-let open_view (tv:term_view) : Tac (tv':named_term_view{ctor_matches tv' tv}) =
+let open_view (tv:RD.term_view) : Tac (tv':named_term_view{ctor_matches tv' tv}) =
   match tv with
   (* Nothing interesting *)
   | RD.Tv_Var v -> Tv_Var (R.inspect_namedv v)
@@ -455,7 +460,7 @@ let open_view (tv:term_view) : Tac (tv':named_term_view{ctor_matches tv' tv}) =
     Tv_Match scrutinee ret brs
 
 private
-let close_view (tv : named_term_view) : Tot (tv':term_view{ctor_matches tv tv'}) =
+let close_view (tv : named_term_view) : Tot (tv':RD.term_view{ctor_matches tv tv'}) =
   match tv with
   (* Nothing interesting *)
   | Tv_Var v -> RD.Tv_Var (R.pack_namedv v)
@@ -562,13 +567,13 @@ let rec open_n_binders_from_arrow (bs : binders) (t : term) : Tac term =
   | [] -> t
   | b::bs ->
     match inspect t with
-    | Tv_Arrow b' (C_Total t') ->
+    | Tv_Arrow b' (RD.C_Total t') ->
       let t' = R.subst_term [NT (r_binder_to_namedv b') (pack (Tv_Var (R.inspect_namedv (r_binder_to_namedv b))))] t' in
       open_n_binders_from_arrow bs t'
     | _ -> raise NotEnoughBinders
 
 private
-let open_sigelt_view (sv : sigelt_view) : Tac named_sigelt_view =
+let open_sigelt_view (sv : RD.sigelt_view) : Tac named_sigelt_view =
   match sv with
   | RD.Sg_Let isrec lbs ->
     let lbs = map open_lb lbs in
@@ -613,11 +618,11 @@ let rec mk_arr (args : list binder) (t : term) : Tac term =
   match args with
   | [] -> t
   | a :: args' ->
-    let t' = C_Total (mk_arr args' t) in
+    let t' = RD.C_Total (mk_arr args' t) in
     pack (Tv_Arrow a t')
 
 private
-let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view{~(RD.Unk? sv)}) =
+let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:RD.sigelt_view{~(RD.Unk? sv)}) =
   match sv with
   | Sg_Let { isrec; lbs } ->
     let lbs = List.Tot.map close_lb lbs in
@@ -651,17 +656,17 @@ let close_sigelt_view (sv : named_sigelt_view{~(Unk? sv)}) : Tac (sv:sigelt_view
     RD.Sg_Val nm univs typ
 
 [@@plugin]
-let inspect_sigelt (s : sigelt) : Tac named_sigelt_view =
+let inspect_sigelt (s : R.sigelt) : Tac named_sigelt_view =
   let sv = R.inspect_sigelt s in
   (* dump ("sv orig = " ^ term_to_string (quote sv)); *)
   open_sigelt_view sv
 
 [@@plugin]
-let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tac sigelt =
+let pack_sigelt (sv:named_sigelt_view{~(Unk? sv)}) : Tac R.sigelt =
   let sv = close_sigelt_view sv in
   R.pack_sigelt sv
 
-let tcc (e:env) (t:term) : Tac comp =
+let tcc (e:R.env) (t:term) : Tac comp =
   let c : R.comp = Stubs.Tactics.V2.Builtins.tcc e t in
   R.inspect_comp c
 

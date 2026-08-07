@@ -1,5 +1,6 @@
 module FStar.Tactics.LaxTermEq
 
+open FStar.Tactics.Effect
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Stubs.Reflection.V2.Data
@@ -54,6 +55,8 @@ let const_eq c1 c2 =
   match c1, c2 with
   | C_Unit, C_Unit -> true
   | C_Int i1, C_Int i2 -> i1 = i2
+  | C_MachineInt i1 s1 w1, C_MachineInt i2 s2 w2 ->
+    i1 = i2 && s1 = s2 && w1 = w2
   | C_True, C_True -> true
   | C_False, C_False -> true
   | C_String s1, C_String s2 -> s1 = s2

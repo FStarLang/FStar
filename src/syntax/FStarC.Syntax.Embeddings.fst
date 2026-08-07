@@ -16,6 +16,9 @@
 
 module FStarC.Syntax.Embeddings
 
+open FStar.Char
+include FStarC.Syntax.Embeddings.Base
+module Range = FStarC.Range.Type
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
@@ -865,7 +868,7 @@ let e_norm_step : embedding NormSteps.norm_step =
             t
             typ
             (fun t ->
-                let hd, args = U.head_and_args t in
+                let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
                     Some Simpl
@@ -956,7 +959,7 @@ let e_vconfig =
                   rng
     in
     let un (t:term) norm : ML (option vconfig) =
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         match (U.un_uinst hd).n, args with
         (* Sigh *)
         | Tm_fvar fv, [
@@ -1073,7 +1076,7 @@ let e_order =
   in
   let unembed_order (t:term) cb : ML (option order) =
       let t = U.unascribe t in
-      let hd, args = U.head_and_args t in
+      let hd, args = U.head_and_args_full t in
       match (U.un_uinst hd).n, args with
       | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
       | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
@@ -1090,9 +1093,8 @@ let or_else (f: option 'a) (g:unit -> 'a) =
 
 let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
     let typ () =
-        S.mk (Tm_arrow {bs=[S.mk_binder (S.null_bv (type_of ea))];
-                        comp=S.mk_Total (type_of eb)})
-              Range.dummyRange
+        U.arrow_ln [S.mk_binder (S.null_bv (type_of ea))]
+                   (S.mk_Total (type_of eb))
     in
     let emb_t_arr_a_b () = ET_fun(emb_typ_of 'a (), emb_typ_of 'b ()) in
     let printer (f:'a -> 'b) = "<fun>" in

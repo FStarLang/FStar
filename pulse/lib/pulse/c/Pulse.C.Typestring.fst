@@ -1,4 +1,5 @@
 module Pulse.C.Typestring
+open FStar.String
 #lang-pulse
 
 let ca: Type0 = unit

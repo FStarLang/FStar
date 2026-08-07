@@ -119,9 +119,9 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
         | _ -> (t, None))
     in
     let t = U.unmeta_safe t in
-    match (SS.compress t).n with
-    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd
-                                  || U.is_fvar (__int_to_t_lid_for k) hd ->
+    match U.head_and_args_full t with
+    | hd, [(a,_)] when U.is_fvar (int_to_t_lid_for k) hd
+                    || U.is_fvar (__int_to_t_lid_for k) hd ->
       let a = U.unlazy_emb a in
       let! a : int = EMB.try_unembed a cb in
       Some (Mk a m)

@@ -613,7 +613,14 @@ let mk_class (nm:string) : Tac decls =
       let lb = { lb_fv=sfv; lb_us=proj_lb.lb_us; lb_typ=ty; lb_def=def } in
       let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
       let se = set_sigelt_quals to_propagate se in
-      let se = set_sigelt_attrs ((`tcmethod) :: proj_attrs @ b.attrs) se in
+      (* A method's result type is typically a function, so its SMT arity has to
+         be pinned down explicitly rather than read off the (flattened) arrow
+         spine of its type; see FStar.Attributes.smt_arity. The class parameters
+         are the right choice: methods are habitually used partially applied,
+         and this is the arity the encoding used before arrows became unary. *)
+      let arity = pack (Tv_Const (C_Int (L.length params))) in
+      let se = set_sigelt_attrs ((`(FStar.Attributes.smt_arity (`#arity)))
+                                :: (`tcmethod) :: proj_attrs @ b.attrs) se in
       // debug' (fun () -> "trying to return : " ^ term_to_string (quote se));
       se
     )

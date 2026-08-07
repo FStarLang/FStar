@@ -16,6 +16,7 @@
 
 module PulseCore.IndirectionTheory
 
+open FStar.FunctionalExtensionality
 let pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
   restricted_t (m:nat {m<n}) fun m -> knot_t m ^-> prop
 
@@ -24,6 +25,9 @@ let f_ext #t #s (f g: restricted_t t s) (h: (x:t -> squash (f x == g x))) : squa
 
 irreducible let irred_true : b:bool{b} = true // gadget to control unfolding
 
+(* [k' ff] is used partially applied, as the [knot_t] argument of [pred'], and
+   [k'_eq] below relies on the defining equation firing there. *)
+[@@FStar.Attributes.smt_arity 2]
 let rec k' #f (ff: functor u#a f) : nat -> Type u#(a+1) =
   fun n -> if irred_true then f (pred' ff n (k' ff)) else (assert False; Type u#a)
 

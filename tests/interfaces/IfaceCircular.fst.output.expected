@@ -1,0 +1,6 @@
+* Error 133 at IfaceCircular.fst(19,18-19,21):
+  - Name IfaceCircular.two is not in scope here.
+  - It is declared further down the interface of IfaceCircular
+    and only comes into scope once the declarations that precede it have been
+    implemented.
+

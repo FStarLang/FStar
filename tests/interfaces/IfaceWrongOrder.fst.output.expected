@@ -1,0 +1,3 @@
+* Error 233 at IfaceWrongOrder.fst(3,0-3,23):
+  - Expected the definition of IfaceWrongOrder.f to precede IfaceWrongOrder.g
+

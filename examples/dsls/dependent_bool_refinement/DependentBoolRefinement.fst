@@ -194,8 +194,7 @@ let rec lookup_mem (e:list (var & 'a)) (x:var)
       | _ -> 
         lookup_mem tl x;
         eliminate exists elt. L.memP elt tl /\ fst elt == x
-        returns _
-        with _ . ( 
+        with ( 
           introduce exists elt. L.memP elt e /\ fst elt == x
           with elt
           and ()

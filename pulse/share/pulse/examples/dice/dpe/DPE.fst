@@ -15,6 +15,8 @@
 *)
 
 module DPE
+module U16 = FStar.UInt16
+module GR = Pulse.Lib.GhostPCMReference
 #lang-pulse
 open Pulse.Lib.Pervasives
 open DPETypes

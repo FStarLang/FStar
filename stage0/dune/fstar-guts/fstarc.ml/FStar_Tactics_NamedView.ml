@@ -1732,15 +1732,13 @@ let rec __open_term_n_aux (bs : FStarC_Reflection_Types.binder Prims.list)
   match bs with
   | [] -> (fun uu___ -> (nbs, s))
   | b::bs1 ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.lift_div_tac ()
-           (fun uu___ -> r_subst_binder_sort s b))
-        (fun b1 ps ->
-           let x = open_binder b1 ps in
-           let x1 = r_binder_to_namedv x in
-           __open_term_n_aux bs1 (x :: nbs)
-             ((FStarC_Syntax_Syntax.DB (Prims.int_zero, x1)) ::
-             (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s)) ps)
+      (fun ps ->
+         let x = r_subst_binder_sort s b in
+         let x1 = open_binder x ps in
+         let x2 = r_binder_to_namedv x1 in
+         __open_term_n_aux bs1 (x1 :: nbs)
+           ((FStarC_Syntax_Syntax.DB (Prims.int_zero, x2)) ::
+           (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s)) ps)
 let open_term_n (bs : FStarC_Reflection_Types.binder Prims.list) (t : term) :
   ((binder Prims.list * term), Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
@@ -1755,12 +1753,12 @@ let rec open_term_n_with (bs : FStarC_Reflection_Types.binder Prims.list)
   match (bs, nbs) with
   | ([], []) -> (fun uu___ -> t)
   | (b::bs1, nb::nbs1) ->
-      FStar_Tactics_Effect.tac_bind () () (open_term_n_with bs1 nbs1 t)
-        (fun t' ps -> let x = open_term_with b nb t' ps in x)
+      (fun ps ->
+         let x = open_term_n_with bs1 nbs1 t ps in
+         let x1 = open_term_with b nb x ps in x1)
   | uu___ ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStarC_Tactics_V2_Builtins.raise_core LengthMismatch)
-        (fun uu___1 uu___2 -> Obj.magic ())
+      (fun ps ->
+         Obj.magic (FStarC_Tactics_V2_Builtins.raise_core LengthMismatch ps))
 let close_term_n (bs : binder Prims.list) (t : term) :
   (FStarC_Reflection_Types.binder Prims.list * term)=
   let rec aux bs1 cbs s =
@@ -1783,13 +1781,12 @@ let rec open_term_n_simple
   match bs with
   | [] -> (fun uu___ -> ([], t))
   | b::bs1 ->
-      FStar_Tactics_Effect.tac_bind () () (open_term_n_simple bs1 t)
-        (fun uu___ ->
-           match uu___ with
-           | (bs', t') ->
-               FStar_Tactics_Effect.tac_bind () () (open_term_simple b t')
-                 (fun uu___1 uu___2 ->
-                    match uu___1 with | (b', t'') -> ((b' :: bs'), t'')))
+      (fun ps ->
+         let x = open_term_n_simple bs1 t ps in
+         match x with
+         | (bs', t') ->
+             let x1 = open_term_simple b t' ps in
+             (match x1 with | (b', t'') -> ((b' :: bs'), t'')))
 let rec close_term_n_simple (bs : simple_binder Prims.list) (t : term) :
   (FStarC_Reflection_V2_Data.simple_binder Prims.list * term)=
   match bs with
@@ -1806,57 +1803,51 @@ let rec open_pat (p : FStarC_Reflection_V2_Data.pattern)
     FStar_Tactics_Effect.tac_repr=
   match p with
   | FStarC_Reflection_V2_Data.Pat_Constant c ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ -> ((Pat_Constant { c }), s))
+      (fun uu___ -> ((Pat_Constant { c }), s))
   | FStarC_Reflection_V2_Data.Pat_Var (ssort, n) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStarC_Tactics_Unseal.unseal ssort)
-        (fun sort ps ->
-           let x = FStarC_Reflection_V2_Builtins.subst_term s sort in
-           let x1 =
-             let x2 = FStarC_Tactics_V2_Builtins.fresh () ps in
-             {
-               FStarC_Reflection_V2_Data.uniq = x2;
-               FStarC_Reflection_V2_Data.sort = (FStar_Sealed.seal x);
-               FStarC_Reflection_V2_Data.ppname = n
-             } in
-           ((Pat_Var { v = x1; sort1 = (FStar_Sealed.seal x) }),
-             ((FStarC_Syntax_Syntax.DB
-                 (Prims.int_zero,
-                   (FStarC_Reflection_V2_Builtins.pack_namedv x1))) ::
-             (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s))))
+      (fun ps ->
+         let x = FStarC_Tactics_Unseal.unseal ssort ps in
+         let x1 = FStarC_Reflection_V2_Builtins.subst_term s x in
+         let x2 =
+           let x3 = FStarC_Tactics_V2_Builtins.fresh () ps in
+           {
+             FStarC_Reflection_V2_Data.uniq = x3;
+             FStarC_Reflection_V2_Data.sort = (FStar_Sealed.seal x1);
+             FStarC_Reflection_V2_Data.ppname = n
+           } in
+         ((Pat_Var { v = x2; sort1 = (FStar_Sealed.seal x1) }),
+           ((FStarC_Syntax_Syntax.DB
+               (Prims.int_zero,
+                 (FStarC_Reflection_V2_Builtins.pack_namedv x2))) ::
+           (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s))))
   | FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Util.fold_left
-           (fun uu___ uu___1 ->
-              match (uu___, uu___1) with
-              | ((pats, s1), (pat, b)) ->
-                  FStar_Tactics_Effect.tac_bind () () (open_pat pat s1)
-                    (fun uu___2 uu___3 ->
-                       match uu___2 with
+      (fun ps ->
+         let x =
+           FStar_Tactics_Util.fold_left
+             (fun uu___ uu___1 ->
+                match (uu___, uu___1) with
+                | ((pats, s1), (pat, b)) ->
+                    (fun ps1 ->
+                       let x1 = open_pat pat s1 ps1 in
+                       match x1 with
                        | (pat1, s') -> (((pat1, b) :: pats), s'))) ([], s)
-           subpats)
-        (fun uu___ uu___1 ->
-           match uu___ with
-           | (subpats1, s1) ->
-               ((Pat_Cons
-                   {
-                     head;
-                     univs;
-                     subpats = (FStar_List_Tot_Base.rev subpats1)
-                   }), s1))
+             subpats ps in
+         match x with
+         | (subpats1, s1) ->
+             ((Pat_Cons
+                 { head; univs; subpats = (FStar_List_Tot_Base.rev subpats1)
+                 }), s1))
   | FStarC_Reflection_V2_Data.Pat_Dot_Term (FStar_Pervasives_Native.None) ->
       (fun uu___ -> ((Pat_Dot_Term { t = FStar_Pervasives_Native.None }), s))
   | FStarC_Reflection_V2_Data.Pat_Dot_Term (FStar_Pervasives_Native.Some t)
       ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ ->
-           ((Pat_Dot_Term
-               {
-                 t =
-                   (FStar_Pervasives_Native.Some
-                      (FStarC_Reflection_V2_Builtins.subst_term s t))
-               }), s))
+      (fun uu___ ->
+         ((Pat_Dot_Term
+             {
+               t =
+                 (FStar_Pervasives_Native.Some
+                    (FStarC_Reflection_V2_Builtins.subst_term s t))
+             }), s))
 let open_branch (b : FStarC_Reflection_V2_Data.branch) :
   (branch, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
@@ -1956,66 +1947,57 @@ let open_view (tv : FStarC_Reflection_V2_Data.term_view) :
   (named_term_view, Obj.t) FStar_Tactics_Effect.tac_repr=
   match tv with
   | FStarC_Reflection_V2_Data.Tv_Var v ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ -> Tv_Var (FStarC_Reflection_V2_Builtins.inspect_namedv v))
+      (fun uu___ -> Tv_Var (FStarC_Reflection_V2_Builtins.inspect_namedv v))
   | FStarC_Reflection_V2_Data.Tv_BVar v ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ -> Tv_BVar (FStarC_Reflection_V2_Builtins.inspect_bv v))
-  | FStarC_Reflection_V2_Data.Tv_FVar v ->
-      FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> Tv_FVar v)
+      (fun uu___ -> Tv_BVar (FStarC_Reflection_V2_Builtins.inspect_bv v))
+  | FStarC_Reflection_V2_Data.Tv_FVar v -> (fun uu___ -> Tv_FVar v)
   | FStarC_Reflection_V2_Data.Tv_UInst (v, us) ->
-      FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> Tv_UInst (v, us))
-  | FStarC_Reflection_V2_Data.Tv_App (hd, a) ->
-      FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> Tv_App (hd, a))
-  | FStarC_Reflection_V2_Data.Tv_Type u ->
-      FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> Tv_Type u)
-  | FStarC_Reflection_V2_Data.Tv_Const c ->
-      FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> Tv_Const c)
+      (fun uu___ -> Tv_UInst (v, us))
+  | FStarC_Reflection_V2_Data.Tv_App (hd, a) -> (fun uu___ -> Tv_App (hd, a))
+  | FStarC_Reflection_V2_Data.Tv_Type u -> (fun uu___ -> Tv_Type u)
+  | FStarC_Reflection_V2_Data.Tv_Const c -> (fun uu___ -> Tv_Const c)
   | FStarC_Reflection_V2_Data.Tv_Uvar (n, ctx_uvar_and_subst) ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ -> Tv_Uvar (n, ctx_uvar_and_subst))
+      (fun uu___ -> Tv_Uvar (n, ctx_uvar_and_subst))
   | FStarC_Reflection_V2_Data.Tv_AscribedT (e, t, tac, use_eq) ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ -> Tv_AscribedT (e, t, tac, use_eq))
+      (fun uu___ -> Tv_AscribedT (e, t, tac, use_eq))
   | FStarC_Reflection_V2_Data.Tv_AscribedC (e, c, tac, use_eq) ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ ->
-           Tv_AscribedC
-             (e, (FStarC_Reflection_V2_Builtins.inspect_comp c), tac, use_eq))
+      (fun uu___ ->
+         Tv_AscribedC
+           (e, (FStarC_Reflection_V2_Builtins.inspect_comp c), tac, use_eq))
   | FStarC_Reflection_V2_Data.Tv_Unknown -> (fun uu___ -> Tv_Unknown)
   | FStarC_Reflection_V2_Data.Tv_Unsupp -> (fun uu___ -> Tv_Unsupp)
   | FStarC_Reflection_V2_Data.Tv_Abs (b, body) ->
-      FStar_Tactics_Effect.tac_bind () () (open_term b body)
-        (fun uu___ uu___1 ->
-           match uu___ with | (nb, body1) -> Tv_Abs (nb, body1))
+      (fun ps ->
+         let x = open_term b body ps in
+         match x with | (nb, body1) -> Tv_Abs (nb, body1))
   | FStarC_Reflection_V2_Data.Tv_Arrow (b, c) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (open_comp b (FStarC_Reflection_V2_Builtins.inspect_comp c))
-        (fun uu___ uu___1 -> match uu___ with | (nb, c1) -> Tv_Arrow (nb, c1))
+      (fun ps ->
+         let x =
+           open_comp b (FStarC_Reflection_V2_Builtins.inspect_comp c) ps in
+         match x with | (nb, c1) -> Tv_Arrow (nb, c1))
   | FStarC_Reflection_V2_Data.Tv_Refine (b, ref) ->
-      FStar_Tactics_Effect.tac_bind () () (open_term_simple b ref)
-        (fun uu___ uu___1 ->
-           match uu___ with | (nb, ref1) -> Tv_Refine (nb, ref1))
+      (fun ps ->
+         let x = open_term_simple b ref ps in
+         match x with | (nb, ref1) -> Tv_Refine (nb, ref1))
   | FStarC_Reflection_V2_Data.Tv_Let (recf, attrs, b, def, body) ->
-      FStar_Tactics_Effect.tac_bind () () (open_term_simple b body)
-        (fun uu___ uu___1 ->
-           match uu___ with
-           | (nb, body1) ->
-               Tv_Let
-                 (recf, attrs, nb,
-                   (if recf
-                    then
-                      FStarC_Reflection_V2_Builtins.subst_term
-                        [FStarC_Syntax_Syntax.DB
-                           (Prims.int_zero, (r_binder_to_namedv nb))] def
-                    else def), body1))
+      (fun ps ->
+         let x = open_term_simple b body ps in
+         match x with
+         | (nb, body1) ->
+             Tv_Let
+               (recf, attrs, nb,
+                 (if recf
+                  then
+                    FStarC_Reflection_V2_Builtins.subst_term
+                      [FStarC_Syntax_Syntax.DB
+                         (Prims.int_zero, (r_binder_to_namedv nb))] def
+                  else def), body1))
   | FStarC_Reflection_V2_Data.Tv_Match (scrutinee, ret, brs) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Util.map open_branch brs)
-        (fun brs1 ps ->
-           let x =
-             FStar_Tactics_Util.map_opt open_match_returns_ascription ret ps in
-           Tv_Match (scrutinee, x, brs1))
+      (fun ps ->
+         let x = FStar_Tactics_Util.map open_branch brs ps in
+         let x1 =
+           FStar_Tactics_Util.map_opt open_match_returns_ascription ret ps in
+         Tv_Match (scrutinee, x1, x))
 let close_view (tv : named_term_view) : FStarC_Reflection_V2_Data.term_view=
   match tv with
   | Tv_Var v ->
@@ -2189,137 +2171,129 @@ let rec open_n_binders_from_arrow (bs : binders) (t : term) :
   match bs with
   | [] -> (fun uu___ -> t)
   | b::bs1 ->
-      FStar_Tactics_Effect.tac_bind () () (inspect t)
-        (fun uu___ ->
-           match uu___ with
-           | Tv_Arrow (b', FStarC_Reflection_V2_Data.C_Total t') ->
-               FStar_Tactics_Effect.tac_bind () ()
-                 (FStar_Tactics_Effect.lift_div_tac ()
-                    (fun uu___1 ->
-                       FStarC_Reflection_V2_Builtins.subst_term
-                         [FStarC_Syntax_Syntax.NT
-                            ((r_binder_to_namedv b'),
-                              (pack
-                                 (Tv_Var
-                                    (FStarC_Reflection_V2_Builtins.inspect_namedv
-                                       (r_binder_to_namedv b)))))] t'))
-                 (fun t'1 -> open_n_binders_from_arrow bs1 t'1)
-           | uu___1 ->
-               FStar_Tactics_Effect.tac_bind () ()
-                 (FStarC_Tactics_V2_Builtins.raise_core NotEnoughBinders)
-                 (fun uu___2 uu___3 -> Obj.magic ()))
+      (fun ps ->
+         let x = inspect t ps in
+         match x with
+         | Tv_Arrow (b', FStarC_Reflection_V2_Data.C_Total t') ->
+             Obj.magic
+               (Obj.repr
+                  (let x1 =
+                     FStarC_Reflection_V2_Builtins.subst_term
+                       [FStarC_Syntax_Syntax.NT
+                          ((r_binder_to_namedv b'),
+                            (pack
+                               (Tv_Var
+                                  (FStarC_Reflection_V2_Builtins.inspect_namedv
+                                     (r_binder_to_namedv b)))))] t' in
+                   open_n_binders_from_arrow bs1 x1 ps))
+         | uu___ ->
+             Obj.magic
+               (Obj.repr
+                  (FStarC_Tactics_V2_Builtins.raise_core NotEnoughBinders ps)))
 let open_sigelt_view (sv : FStarC_Reflection_V2_Data.sigelt_view) :
   (named_sigelt_view, Obj.t) FStar_Tactics_Effect.tac_repr=
   match sv with
   | FStarC_Reflection_V2_Data.Sg_Let (isrec, lbs) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Util.map open_lb lbs)
-        (fun lbs1 uu___ -> Sg_Let { isrec; lbs = lbs1 })
+      (fun ps ->
+         let x = FStar_Tactics_Util.map open_lb lbs ps in
+         Sg_Let { isrec; lbs = x })
   | FStarC_Reflection_V2_Data.Sg_Inductive (nm, univs, params, typ, ctors) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.lift_div_tac ()
-           (fun uu___ -> FStar_List_Tot_Base.length params))
-        (fun nparams ps ->
-           let x = open_univ_s univs ps in
-           match x with
-           | (univs1, s) ->
-               let x1 = subst_r_binders s params in
-               let x2 =
-                 FStarC_Reflection_V2_Builtins.subst_term
-                   (FStar_Reflection_V2_Derived.shift_subst nparams s) typ in
-               let x3 =
-                 FStar_Tactics_Util.map
-                   (fun uu___ uu___1 ->
-                      match uu___ with
-                      | (nm1, ty) ->
-                          (nm1,
-                            (FStarC_Reflection_V2_Builtins.subst_term s ty)))
-                   ctors ps in
-               let x4 = open_term_n x1 x2 ps in
-               (match x4 with
-                | (params1, typ1) ->
-                    let x5 =
-                      FStar_Tactics_Util.map
-                        (fun uu___ ->
-                           match uu___ with
-                           | (nm1, ty) ->
-                               FStar_Tactics_Effect.tac_bind () ()
-                                 (open_n_binders_from_arrow params1 ty)
-                                 (fun ty' uu___1 -> (nm1, ty'))) x3 ps in
-                    Sg_Inductive
-                      { nm; univs1; params = params1; typ = typ1; ctors = x5
-                      }))
+      (fun ps ->
+         let x = FStar_List_Tot_Base.length params in
+         let x1 = open_univ_s univs ps in
+         match x1 with
+         | (univs1, s) ->
+             let x2 = subst_r_binders s params in
+             let x3 =
+               FStarC_Reflection_V2_Builtins.subst_term
+                 (FStar_Reflection_V2_Derived.shift_subst x s) typ in
+             let x4 =
+               FStar_Tactics_Util.map
+                 (fun uu___ uu___1 ->
+                    match uu___ with
+                    | (nm1, ty) ->
+                        (nm1,
+                          (FStarC_Reflection_V2_Builtins.subst_term s ty)))
+                 ctors ps in
+             let x5 = open_term_n x2 x3 ps in
+             (match x5 with
+              | (params1, typ1) ->
+                  let x6 =
+                    FStar_Tactics_Util.map
+                      (fun uu___ ->
+                         match uu___ with
+                         | (nm1, ty) ->
+                             (fun ps1 ->
+                                let x7 =
+                                  open_n_binders_from_arrow params1 ty ps1 in
+                                (nm1, x7))) x4 ps in
+                  Sg_Inductive
+                    { nm; univs1; params = params1; typ = typ1; ctors = x6 }))
   | FStarC_Reflection_V2_Data.Sg_Val (nm, univs, typ) ->
-      FStar_Tactics_Effect.tac_bind () () (open_univ_s univs)
-        (fun uu___ uu___1 ->
-           match uu___ with
-           | (univs1, s) ->
-               Sg_Val
-                 {
-                   nm1 = nm;
-                   univs2 = univs1;
-                   typ1 = (FStarC_Reflection_V2_Builtins.subst_term s typ)
-                 })
+      (fun ps ->
+         let x = open_univ_s univs ps in
+         match x with
+         | (univs1, s) ->
+             Sg_Val
+               {
+                 nm1 = nm;
+                 univs2 = univs1;
+                 typ1 = (FStarC_Reflection_V2_Builtins.subst_term s typ)
+               })
   | FStarC_Reflection_V2_Data.Unk -> (fun uu___ -> Unk)
 let rec mk_arr (args : binder Prims.list) (t : term) :
   (term, Obj.t) FStar_Tactics_Effect.tac_repr=
   match args with
   | [] -> (fun uu___ -> t)
   | a::args' ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () () (mk_arr args' t)
-           (fun uu___ uu___1 -> FStarC_Reflection_V2_Data.C_Total uu___))
-        (fun t' uu___ -> pack (Tv_Arrow (a, t')))
+      (fun ps ->
+         let x =
+           let x1 = mk_arr args' t ps in FStarC_Reflection_V2_Data.C_Total x1 in
+         pack (Tv_Arrow (a, x)))
 let close_sigelt_view (sv : named_sigelt_view) :
   (FStarC_Reflection_V2_Data.sigelt_view, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   match sv with
   | Sg_Let { isrec; lbs;_} ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ ->
-           FStarC_Reflection_V2_Data.Sg_Let
-             (isrec, (FStar_List_Tot_Base.map close_lb lbs)))
+      (fun uu___ ->
+         FStarC_Reflection_V2_Data.Sg_Let
+           (isrec, (FStar_List_Tot_Base.map close_lb lbs)))
   | Sg_Inductive { nm; univs1 = univs; params; typ; ctors;_} ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.lift_div_tac ()
-           (fun uu___ -> FStar_List_Tot_Base.length params))
-        (fun nparams ps ->
-           let x =
-             FStar_Tactics_Util.map
-               (fun uu___ ->
-                  match uu___ with
-                  | (nm1, ty) ->
-                      FStar_Tactics_Effect.tac_bind () () (mk_arr params ty)
-                        (fun ty' uu___1 -> (nm1, ty'))) ctors ps in
-           let x1 = close_term_n params typ in
-           match x1 with
-           | (params1, typ1) ->
-               let x2 = close_univ_s univs in
-               (match x2 with
-                | (univs1, s) ->
-                    let x3 = subst_r_binders s params1 in
-                    let x4 =
-                      FStarC_Reflection_V2_Builtins.subst_term
-                        (FStar_Reflection_V2_Derived.shift_subst nparams s)
-                        typ1 in
-                    let x5 =
-                      FStar_Tactics_Util.map
-                        (fun uu___ uu___1 ->
-                           match uu___ with
-                           | (nm1, ty) ->
-                               (nm1,
-                                 (FStarC_Reflection_V2_Builtins.subst_term s
-                                    ty))) x ps in
-                    FStarC_Reflection_V2_Data.Sg_Inductive
-                      (nm, univs1, x3, x4, x5)))
+      (fun ps ->
+         let x = FStar_List_Tot_Base.length params in
+         let x1 =
+           FStar_Tactics_Util.map
+             (fun uu___ ->
+                match uu___ with
+                | (nm1, ty) ->
+                    (fun ps1 -> let x2 = mk_arr params ty ps1 in (nm1, x2)))
+             ctors ps in
+         let x2 = close_term_n params typ in
+         match x2 with
+         | (params1, typ1) ->
+             let x3 = close_univ_s univs in
+             (match x3 with
+              | (univs1, s) ->
+                  let x4 = subst_r_binders s params1 in
+                  let x5 =
+                    FStarC_Reflection_V2_Builtins.subst_term
+                      (FStar_Reflection_V2_Derived.shift_subst x s) typ1 in
+                  let x6 =
+                    FStar_Tactics_Util.map
+                      (fun uu___ uu___1 ->
+                         match uu___ with
+                         | (nm1, ty) ->
+                             (nm1,
+                               (FStarC_Reflection_V2_Builtins.subst_term s ty)))
+                      x1 ps in
+                  FStarC_Reflection_V2_Data.Sg_Inductive
+                    (nm, univs1, x4, x5, x6)))
   | Sg_Val { nm1 = nm; univs2 = univs; typ1 = typ;_} ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ ->
-           match close_univ_s univs with
-           | (univs1, s) ->
-               FStarC_Reflection_V2_Data.Sg_Val
-                 (nm, univs1,
-                   (FStarC_Reflection_V2_Builtins.subst_term s typ)))
+      (fun uu___ ->
+         match close_univ_s univs with
+         | (univs1, s) ->
+             FStarC_Reflection_V2_Data.Sg_Val
+               (nm, univs1, (FStarC_Reflection_V2_Builtins.subst_term s typ)))
 let inspect_sigelt (s : FStarC_Reflection_Types.sigelt) :
   (named_sigelt_view, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->

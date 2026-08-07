@@ -14,11 +14,8 @@
    limitations under the License.
 *)
 module MustEraseForExtraction
-[@@(expect_failure [318])]
-let t1 = unit
+
+let t1 = bool
 
 [@@erasable]
 let t2 = unit
-
-[@@(expect_failure [162])]
-let t3 = bool

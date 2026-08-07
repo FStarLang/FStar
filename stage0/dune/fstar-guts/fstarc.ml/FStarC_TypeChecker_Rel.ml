@@ -83,7 +83,7 @@ type tagged_implicits =
 let is_base_type (env : FStarC_TypeChecker_Env.env)
   (typ : FStarC_Syntax_Syntax.typ) : Prims.bool=
   let t = FStarC_TypeChecker_Normalize.unfold_whnf env typ in
-  let uu___ = FStarC_Syntax_Util.head_and_args t in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t in
   match uu___ with
   | (head, args) ->
       let uu___1 =
@@ -106,16 +106,11 @@ let term_is_uvar (uv : FStarC_Syntax_Syntax.ctx_uvar)
       FStarC_Syntax_Unionfind.equiv uv.FStarC_Syntax_Syntax.ctx_uvar_head
         uv'.FStarC_Syntax_Syntax.ctx_uvar_head
   | uu___1 -> false
-let binders_as_bv_set (uu___ : FStarC_Syntax_Syntax.binders) :
+let binders_as_bv_set (bs : FStarC_Syntax_Syntax.binders) :
   FStarC_Syntax_Syntax.bv FStarC_FlatSet.t=
-  (fun bs ->
-     let uu___ =
-       FStarC_List.map (fun b -> b.FStarC_Syntax_Syntax.binder_bv) bs in
-     Obj.magic
-       (FStarC_Class_Setlike.from_list ()
-          (Obj.magic
-             (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv))
-          uu___)) uu___
+  let uu___ = FStarC_List.map (fun b -> b.FStarC_Syntax_Syntax.binder_bv) bs in
+  FStarC_Class_Setlike.from_list
+    (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv) uu___
 type lstring = Prims.string FStarC_Thunk.t
 let mklstr (f : unit -> Prims.string) : Prims.string FStarC_Thunk.thunk=
   let uf = FStarC_Syntax_Unionfind.get () in
@@ -318,10 +313,8 @@ let new_uvar (reason : Prims.string) (wl : worklist)
        umax_heuristic_ok = (wl.umax_heuristic_ok);
        tcenv = (wl.tcenv);
        wl_implicits =
-         (Obj.magic
-            (FStarC_Class_Listlike.cons ()
-               (Obj.magic (FStarC_CList.listlike_clist ())) imp
-               (Obj.magic wl.wl_implicits)));
+         (FStarC_Class_Listlike.cons (FStarC_CList.listlike_clist ()) imp
+            wl.wl_implicits);
        repr_subcomp_allowed = (wl.repr_subcomp_allowed);
        typeclass_variables = (wl.typeclass_variables)
      }))
@@ -420,7 +413,13 @@ let copy_uvar (u : FStarC_Syntax_Syntax.ctx_uvar)
       FStarC_TypeChecker_Env.core_check =
         (uu___.FStarC_TypeChecker_Env.core_check);
       FStarC_TypeChecker_Env.missing_decl =
-        (uu___.FStarC_TypeChecker_Env.missing_decl)
+        (uu___.FStarC_TypeChecker_Env.missing_decl);
+      FStarC_TypeChecker_Env.iface_todo =
+        (uu___.FStarC_TypeChecker_Env.iface_todo);
+      FStarC_TypeChecker_Env.iface_lids =
+        (uu___.FStarC_TypeChecker_Env.iface_lids);
+      FStarC_TypeChecker_Env.iface_val_lids =
+        (uu___.FStarC_TypeChecker_Env.iface_val_lids)
     } in
   let env1 = FStarC_TypeChecker_Env.push_binders env bs in
   let uu___ = FStarC_TypeChecker_Env.all_binders env1 in
@@ -706,7 +705,13 @@ let p_env (wl : worklist) (prob : FStarC_TypeChecker_Common.prob) :
     FStarC_TypeChecker_Env.core_check =
       (uu___.FStarC_TypeChecker_Env.core_check);
     FStarC_TypeChecker_Env.missing_decl =
-      (uu___.FStarC_TypeChecker_Env.missing_decl)
+      (uu___.FStarC_TypeChecker_Env.missing_decl);
+    FStarC_TypeChecker_Env.iface_todo =
+      (uu___.FStarC_TypeChecker_Env.iface_todo);
+    FStarC_TypeChecker_Env.iface_lids =
+      (uu___.FStarC_TypeChecker_Env.iface_lids);
+    FStarC_TypeChecker_Env.iface_val_lids =
+      (uu___.FStarC_TypeChecker_Env.iface_val_lids)
   }
 let def_scope_wf (msg : Prims.string) (rng : FStarC_Range_Type.range)
   (r : FStarC_Syntax_Syntax.binder Prims.list) : unit=
@@ -733,17 +738,13 @@ let hasBinders_prob :
   FStarC_TypeChecker_Common.prob FStarC_Class_Binders.hasBinders=
   {
     FStarC_Class_Binders.boundNames =
-      (fun uu___ ->
-         (fun prob ->
-            let uu___ =
-              let uu___1 = p_scope prob in
-              FStarC_List.map (fun b -> b.FStarC_Syntax_Syntax.binder_bv)
-                uu___1 in
-            Obj.magic
-              (FStarC_Class_Setlike.from_list ()
-                 (Obj.magic
-                    (FStarC_FlatSet.setlike_flat_set
-                       FStarC_Syntax_Syntax.ord_bv)) uu___)) uu___)
+      (fun prob ->
+         let uu___ =
+           let uu___1 = p_scope prob in
+           FStarC_List.map (fun b -> b.FStarC_Syntax_Syntax.binder_bv) uu___1 in
+         FStarC_Class_Setlike.from_list
+           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv)
+           uu___)
   }
 let def_check_term_scoped_in_prob (msg : Prims.string)
   (prob : FStarC_TypeChecker_Common.prob) (phi : FStarC_Syntax_Syntax.term) :
@@ -798,7 +799,7 @@ let rel_to_string (uu___ : FStarC_TypeChecker_Common.rel) : Prims.string=
   | FStarC_TypeChecker_Common.SUB -> "<:"
   | FStarC_TypeChecker_Common.SUBINV -> ":>"
 let term_to_string (t : FStarC_Syntax_Syntax.term) : Prims.string=
-  let uu___ = FStarC_Syntax_Util.head_and_args t in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t in
   match uu___ with
   | (head, args) ->
       (match head.FStarC_Syntax_Syntax.n with
@@ -892,29 +893,21 @@ let uvis_to_string (env : FStarC_TypeChecker_Env.env) (uvis : uvi Prims.list)
   : Prims.string= FStarC_Common.string_of_list (uvi_to_string env) uvis
 let empty_worklist (env : FStarC_TypeChecker_Env.env) : worklist=
   let uu___ =
-    Obj.magic
-      (FStarC_Class_Setlike.empty ()
-         (Obj.magic
-            (FStarC_RBSet.setlike_rbset FStarC_Syntax_Free.ord_ctx_uvar)) ()) in
+    FStarC_Class_Setlike.empty
+      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Free.ord_ctx_uvar) () in
   {
     attempting = [];
     wl_deferred =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))));
+      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
     wl_deferred_to_tac =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))));
+      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
     ctr = Prims.int_zero;
     defer_ok = DeferAny;
     smt_ok = true;
     umax_heuristic_ok = true;
     tcenv = env;
     wl_implicits =
-      (Obj.magic
-         (FStarC_Class_Listlike.empty ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))));
+      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
     repr_subcomp_allowed = false;
     typeclass_variables = uu___
   }
@@ -972,10 +965,8 @@ let defer (reason : FStarC_TypeChecker_Common.deferred_reason)
   {
     attempting = (wl.attempting);
     wl_deferred =
-      (Obj.magic
-         (FStarC_Class_Listlike.cons ()
-            (Obj.magic (FStarC_CList.listlike_clist ()))
-            ((wl.ctr), reason, msg, prob) (Obj.magic wl.wl_deferred)));
+      (FStarC_Class_Listlike.cons (FStarC_CList.listlike_clist ())
+         ((wl.ctr), reason, msg, prob) wl.wl_deferred);
     wl_deferred_to_tac = (wl.wl_deferred_to_tac);
     ctr = (wl.ctr);
     defer_ok = (wl.defer_ok);
@@ -1295,10 +1286,8 @@ let occurs (uk : FStarC_Syntax_Syntax.ctx_uvar)
   (FStarC_Syntax_Syntax.ctx_uvar Prims.list * Prims.bool)=
   let uvars =
     let uu___ = FStarC_Syntax_Free.uvars t in
-    FStarC_Class_Setlike.elems ()
-      (Obj.magic
-         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar))
-      (Obj.magic uu___) in
+    FStarC_Class_Setlike.elems
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar) uu___ in
   let occurs1 =
     FStarC_Util.for_some
       (fun uv ->
@@ -1402,7 +1391,7 @@ let norm_with_steps (profiling_tag : Prims.string)
 let should_strongly_reduce (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ =
     let uu___1 = FStarC_Syntax_Util.unascribe t in
-    FStarC_Syntax_Util.head_and_args uu___1 in
+    FStarC_Syntax_Util.head_and_args_full uu___1 in
   match uu___ with
   | (h, uu___1) ->
       let uu___2 =
@@ -1506,7 +1495,7 @@ let base_and_refinement_maybe_delta (should_delta : Prims.bool)
     let t12 = FStarC_Syntax_Util.unmeta t11 in
     match t12.FStarC_Syntax_Syntax.n with
     | FStarC_Syntax_Syntax.Tm_refine
-        { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = phi;_} ->
+        { FStarC_Syntax_Syntax.b2 = x; FStarC_Syntax_Syntax.phi = phi;_} ->
         if norm
         then
           ((x.FStarC_Syntax_Syntax.sort),
@@ -1516,7 +1505,7 @@ let base_and_refinement_maybe_delta (should_delta : Prims.bool)
            match uu___ with
            | {
                FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_refine
-                 { FStarC_Syntax_Syntax.b = x1;
+                 { FStarC_Syntax_Syntax.b2 = x1;
                    FStarC_Syntax_Syntax.phi = phi1;_};
                FStarC_Syntax_Syntax.pos = uu___1;
                FStarC_Syntax_Syntax.vars = uu___2;
@@ -1664,7 +1653,7 @@ let force_refinement
        | (y, phi) ->
            FStarC_Syntax_Syntax.mk
              (FStarC_Syntax_Syntax.Tm_refine
-                { FStarC_Syntax_Syntax.b = y; FStarC_Syntax_Syntax.phi = phi
+                { FStarC_Syntax_Syntax.b2 = y; FStarC_Syntax_Syntax.phi = phi
                 }) t_base.FStarC_Syntax_Syntax.pos)
 let wl_to_string (wl : worklist) : Prims.string=
   let probs_to_string ps =
@@ -1716,7 +1705,7 @@ let flex_t_to_string (flex : flex_t) : Prims.string=
                 FStarC_Syntax_Print.showable_aqual)) args in
       FStarC_Format.fmt2 "%s [%s]" uu___2 uu___3
 let is_flex (t : FStarC_Syntax_Syntax.term) : Prims.bool=
-  let uu___ = FStarC_Syntax_Util.head_and_args t in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t in
   match uu___ with
   | (head, _args) ->
       let uu___1 =
@@ -1727,7 +1716,7 @@ let is_flex (t : FStarC_Syntax_Syntax.term) : Prims.bool=
        | uu___2 -> false)
 let flex_uvar_head (t : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.ctx_uvar=
-  let uu___ = FStarC_Syntax_Util.head_and_args t in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t in
   match uu___ with
   | (head, _args) ->
       let uu___1 =
@@ -1751,7 +1740,7 @@ let ensure_no_uvar_subst (env : 'uuuuu) (t0 : FStarC_Syntax_Syntax.term)
     match b with
     | FStarC_Syntax_Syntax.Binding_var x -> bv_not_affected_by s x
     | uu___ -> true in
-  let uu___ = FStarC_Syntax_Util.head_and_args t0 in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t0 in
   match uu___ with
   | (head, args) ->
       let uu___1 =
@@ -1845,17 +1834,15 @@ let ensure_no_uvar_subst (env : 'uuuuu) (t0 : FStarC_Syntax_Syntax.term)
 let no_free_uvars (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ =
     let uu___1 = FStarC_Syntax_Free.uvars t in
-    FStarC_Class_Setlike.is_empty ()
-      (Obj.magic
-         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar))
-      (Obj.magic uu___1) in
+    FStarC_Class_Setlike.is_empty
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
+      uu___1 in
   if uu___
   then
     let uu___1 = FStarC_Syntax_Free.univs t in
-    FStarC_Class_Setlike.is_empty ()
-      (Obj.magic
-         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar))
-      (Obj.magic uu___1)
+    FStarC_Class_Setlike.is_empty
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar)
+      uu___1
   else false
 let rec may_relate_with_logical_guard (env : FStarC_TypeChecker_Env.env)
   (is_eq : Prims.bool) (head : FStarC_Syntax_Syntax.typ) : Prims.bool=
@@ -1888,7 +1875,7 @@ let may_relate (env : FStarC_TypeChecker_Env.env)
     (FStarC_TypeChecker_Common.uu___is_EQ prel) head
 let destruct_flex_t' (t : FStarC_Syntax_Syntax.term) :
   (flex_t * (FStarC_Syntax_Syntax.subst_ts * FStarC_Syntax_Syntax.term))=
-  let uu___ = FStarC_Syntax_Util.head_and_args t in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t in
   match uu___ with
   | (head, args) ->
       let uu___1 =
@@ -1914,18 +1901,20 @@ let u_abs (k : FStarC_Syntax_Syntax.typ) (ys : FStarC_Syntax_Syntax.binders)
       let uu___2 = FStarC_Syntax_Subst.compress k in
       uu___2.FStarC_Syntax_Syntax.n in
     match uu___1 with
-    | FStarC_Syntax_Syntax.Tm_arrow
-        { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_} ->
-        if (FStarC_List.length bs) = (FStarC_List.length ys)
-        then
-          let uu___2 = FStarC_Syntax_Subst.open_comp bs c in
-          ((ys, t), uu___2)
-        else
-          (let uu___2 = FStarC_Syntax_Util.abs_formals t in
-           match uu___2 with
-           | (ys', t1, uu___3) ->
-               let uu___4 = FStarC_Syntax_Util.arrow_formals_comp k in
-               (((FStarC_List.op_At ys ys'), t1), uu___4))
+    | FStarC_Syntax_Syntax.Tm_arrow uu___2 ->
+        let uu___3 = FStarC_Syntax_Util.arrow_formals_comp_ln_strict k in
+        (match uu___3 with
+         | (bs, c) ->
+             if (FStarC_List.length bs) = (FStarC_List.length ys)
+             then
+               let uu___4 = FStarC_Syntax_Subst.open_comp bs c in
+               ((ys, t), uu___4)
+             else
+               (let uu___4 = FStarC_Syntax_Util.abs_formals t in
+                match uu___4 with
+                | (ys', t1, uu___5) ->
+                    let uu___6 = FStarC_Syntax_Util.arrow_formals_comp k in
+                    (((FStarC_List.op_At ys ys'), t1), uu___6)))
     | uu___2 ->
         let uu___3 =
           let uu___4 = FStarC_Syntax_Syntax.mk_Total k in ([], uu___4) in
@@ -2211,11 +2200,9 @@ let restrict_all_uvars (env : 'uuuuu) (tgt : FStarC_Syntax_Syntax.ctx_uvar)
            let ctx_src =
              binders_as_bv_set src.FStarC_Syntax_Syntax.ctx_uvar_binders in
            let uu___ =
-             FStarC_Class_Setlike.subset ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Syntax.ord_bv)) (Obj.magic ctx_src)
-               (Obj.magic ctx_tgt) in
+             FStarC_Class_Setlike.subset
+               (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv)
+               ctx_src ctx_tgt in
            if uu___ then wl1 else restrict_ctx env tgt [] src wl1) sources wl
   | uu___ -> FStarC_List.fold_right (restrict_ctx env tgt bs) sources wl
 let intersect_binders (g : FStarC_Syntax_Syntax.gamma)
@@ -2223,39 +2210,26 @@ let intersect_binders (g : FStarC_Syntax_Syntax.gamma)
   FStarC_Syntax_Syntax.binders=
   let as_set v =
     let uu___ =
-      Obj.magic
-        (FStarC_Class_Setlike.empty ()
-           (Obj.magic
-              (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_bv)) ()) in
+      FStarC_Class_Setlike.empty
+        (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_bv) () in
     FStarC_List.fold_left
-      (fun uu___2 uu___1 ->
-         (fun out x ->
-            Obj.magic
-              (FStarC_Class_Setlike.add ()
-                 (Obj.magic
-                    (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_bv))
-                 x.FStarC_Syntax_Syntax.binder_bv (Obj.magic out))) uu___2
-           uu___1) uu___ v in
+      (fun out x ->
+         FStarC_Class_Setlike.add
+           (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_bv)
+           x.FStarC_Syntax_Syntax.binder_bv out) uu___ v in
   let v1_set = as_set v1 in
   let ctx_binders =
     let uu___ =
-      Obj.magic
-        (FStarC_Class_Setlike.empty ()
-           (Obj.magic
-              (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv))
-           ()) in
+      FStarC_Class_Setlike.empty
+        (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv) () in
     FStarC_List.fold_left
-      (fun uu___2 uu___1 ->
-         (fun out b ->
-            match b with
-            | FStarC_Syntax_Syntax.Binding_var x ->
-                Obj.magic
-                  (Obj.repr
-                     (FStarC_Class_Setlike.add ()
-                        (Obj.magic
-                           (FStarC_FlatSet.setlike_flat_set
-                              FStarC_Syntax_Syntax.ord_bv)) x (Obj.magic out)))
-            | uu___1 -> Obj.magic (Obj.repr out)) uu___2 uu___1) uu___ g in
+      (fun out b ->
+         match b with
+         | FStarC_Syntax_Syntax.Binding_var x ->
+             FStarC_Class_Setlike.add
+               (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv)
+               x out
+         | uu___1 -> out) uu___ g in
   let uu___ =
     FStarC_List.fold_left
       (fun uu___1 b ->
@@ -2268,11 +2242,9 @@ let intersect_binders (g : FStarC_Syntax_Syntax.gamma)
               | (x, imp) ->
                   let uu___3 =
                     let uu___4 =
-                      FStarC_Class_Setlike.mem ()
-                        (Obj.magic
-                           (FStarC_RBSet.setlike_rbset
-                              FStarC_Syntax_Syntax.ord_bv)) x
-                        (Obj.magic v1_set) in
+                      FStarC_Class_Setlike.mem
+                        (FStarC_RBSet.setlike_rbset
+                           FStarC_Syntax_Syntax.ord_bv) x v1_set in
                     Prims.op_Negation uu___4 in
                   if uu___3
                   then (isect, isect_set)
@@ -2280,20 +2252,15 @@ let intersect_binders (g : FStarC_Syntax_Syntax.gamma)
                     (let fvs =
                        FStarC_Syntax_Free.names x.FStarC_Syntax_Syntax.sort in
                      let uu___4 =
-                       FStarC_Class_Setlike.subset ()
-                         (Obj.magic
-                            (FStarC_FlatSet.setlike_flat_set
-                               FStarC_Syntax_Syntax.ord_bv)) (Obj.magic fvs)
-                         (Obj.magic isect_set) in
+                       FStarC_Class_Setlike.subset
+                         (FStarC_FlatSet.setlike_flat_set
+                            FStarC_Syntax_Syntax.ord_bv) fvs isect_set in
                      if uu___4
                      then
                        let uu___5 =
-                         Obj.magic
-                           (FStarC_Class_Setlike.add ()
-                              (Obj.magic
-                                 (FStarC_FlatSet.setlike_flat_set
-                                    FStarC_Syntax_Syntax.ord_bv)) x
-                              (Obj.magic isect_set)) in
+                         FStarC_Class_Setlike.add
+                           (FStarC_FlatSet.setlike_flat_set
+                              FStarC_Syntax_Syntax.ord_bv) x isect_set in
                        ((b :: isect), uu___5)
                      else (isect, isect_set)))) ([], ctx_binders) v2 in
   match uu___ with | (isect, uu___1) -> FStarC_List.rev isect
@@ -2475,38 +2442,51 @@ let rec head_matches (env : FStarC_TypeChecker_Env.env)
          MisMatch
            (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
    | (FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = uu___1;_},
+      { FStarC_Syntax_Syntax.b2 = x; FStarC_Syntax_Syntax.phi = uu___1;_},
       FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = y; FStarC_Syntax_Syntax.phi = uu___2;_}) ->
+      { FStarC_Syntax_Syntax.b2 = y; FStarC_Syntax_Syntax.phi = uu___2;_}) ->
        let uu___3 =
          head_matches env x.FStarC_Syntax_Syntax.sort
            y.FStarC_Syntax_Syntax.sort in
        head_match uu___3
    | (FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = uu___1;_},
+      { FStarC_Syntax_Syntax.b2 = x; FStarC_Syntax_Syntax.phi = uu___1;_},
       uu___2) ->
        let uu___3 = head_matches env x.FStarC_Syntax_Syntax.sort t21 in
        head_match uu___3
    | (uu___1, FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = uu___2;_}) ->
+      { FStarC_Syntax_Syntax.b2 = x; FStarC_Syntax_Syntax.phi = uu___2;_}) ->
        let uu___3 = head_matches env t11 x.FStarC_Syntax_Syntax.sort in
        head_match uu___3
    | (FStarC_Syntax_Syntax.Tm_type uu___1, FStarC_Syntax_Syntax.Tm_type
       uu___2) -> HeadMatch false
    | (FStarC_Syntax_Syntax.Tm_arrow uu___1, FStarC_Syntax_Syntax.Tm_arrow
       uu___2) -> HeadMatch false
-   | (FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = uu___1;_},
-      FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = head';
-        FStarC_Syntax_Syntax.args = uu___2;_})
-       -> let uu___3 = head_matches env head head' in head_match uu___3
-   | (FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = uu___1;_},
-      uu___2) -> let uu___3 = head_matches env head t21 in head_match uu___3
-   | (uu___1, FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = uu___2;_})
-       -> let uu___3 = head_matches env t11 head in head_match uu___3
+   | (FStarC_Syntax_Syntax.Tm_app uu___1, FStarC_Syntax_Syntax.Tm_app uu___2)
+       ->
+       let uu___3 =
+         let uu___4 =
+           let uu___5 = FStarC_Syntax_Util.head_and_args_full t11 in
+           FStar_Pervasives_Native.fst uu___5 in
+         let uu___5 =
+           let uu___6 = FStarC_Syntax_Util.head_and_args_full t21 in
+           FStar_Pervasives_Native.fst uu___6 in
+         head_matches env uu___4 uu___5 in
+       head_match uu___3
+   | (FStarC_Syntax_Syntax.Tm_app uu___1, uu___2) ->
+       let uu___3 =
+         let uu___4 =
+           let uu___5 = FStarC_Syntax_Util.head_and_args_full t11 in
+           FStar_Pervasives_Native.fst uu___5 in
+         head_matches env uu___4 t21 in
+       head_match uu___3
+   | (uu___1, FStarC_Syntax_Syntax.Tm_app uu___2) ->
+       let uu___3 =
+         let uu___4 =
+           let uu___5 = FStarC_Syntax_Util.head_and_args_full t21 in
+           FStar_Pervasives_Native.fst uu___5 in
+         head_matches env t11 uu___4 in
+       head_match uu___3
    | (FStarC_Syntax_Syntax.Tm_let uu___1, FStarC_Syntax_Syntax.Tm_let uu___2)
        -> HeadMatch true
    | (FStarC_Syntax_Syntax.Tm_match uu___1, FStarC_Syntax_Syntax.Tm_match
@@ -2643,10 +2623,10 @@ let head_matches_delta (env : FStarC_TypeChecker_Env.env)
        else FStar_Pervasives_Native.None)) in
   let made_progress t t' =
     let head =
-      let uu___ = FStarC_Syntax_Util.head_and_args t in
+      let uu___ = FStarC_Syntax_Util.head_and_args_full t in
       FStar_Pervasives_Native.fst uu___ in
     let head' =
-      let uu___ = FStarC_Syntax_Util.head_and_args t' in
+      let uu___ = FStarC_Syntax_Util.head_and_args_full t' in
       FStar_Pervasives_Native.fst uu___ in
     let uu___ = FStarC_Syntax_Util.term_eq head head' in
     Prims.op_Negation uu___ in
@@ -2853,11 +2833,12 @@ let rank (wl : worklist) (pr : FStarC_TypeChecker_Common.prob) :
   match prob with
   | FStarC_TypeChecker_Common.TProb tp ->
       let uu___ =
-        FStarC_Syntax_Util.head_and_args tp.FStarC_TypeChecker_Common.lhs in
+        FStarC_Syntax_Util.head_and_args_full
+          tp.FStarC_TypeChecker_Common.lhs in
       (match uu___ with
        | (lh, lhs_args) ->
            let uu___1 =
-             FStarC_Syntax_Util.head_and_args
+             FStarC_Syntax_Util.head_and_args_full
                tp.FStarC_TypeChecker_Common.rhs in
            (match uu___1 with
             | (rh, rhs_args) ->
@@ -3080,7 +3061,7 @@ let flex_prob_closing (tcenv : FStarC_TypeChecker_Env.env)
   (bs : FStarC_Syntax_Syntax.binders) (p : FStarC_TypeChecker_Common.prob) :
   Prims.bool=
   let flex_will_be_closed t =
-    let uu___ = FStarC_Syntax_Util.head_and_args t in
+    let uu___ = FStarC_Syntax_Util.head_and_args_full t in
     match uu___ with
     | (hd, uu___1) ->
         let uu___2 =
@@ -3642,7 +3623,13 @@ let run_meta_arg_tac (env : FStarC_TypeChecker_Env.env_t)
           FStarC_TypeChecker_Env.core_check =
             (env.FStarC_TypeChecker_Env.core_check);
           FStarC_TypeChecker_Env.missing_decl =
-            (env.FStarC_TypeChecker_Env.missing_decl)
+            (env.FStarC_TypeChecker_Env.missing_decl);
+          FStarC_TypeChecker_Env.iface_todo =
+            (env.FStarC_TypeChecker_Env.iface_todo);
+          FStarC_TypeChecker_Env.iface_lids =
+            (env.FStarC_TypeChecker_Env.iface_lids);
+          FStarC_TypeChecker_Env.iface_val_lids =
+            (env.FStarC_TypeChecker_Env.iface_val_lids)
         } in
       ((let uu___1 = FStarC_Effect.op_Bang dbg_Tac in
         if uu___1
@@ -4116,12 +4103,11 @@ let apply_ad_hoc_indexed_subcomp (env : FStarC_TypeChecker_Env.env)
                        wl3))))
 let has_typeclass_constraint (u : FStarC_Syntax_Syntax.ctx_uvar)
   (wl : worklist) : Prims.bool=
-  FStarC_Class_Setlike.for_any ()
-    (Obj.magic (FStarC_RBSet.setlike_rbset FStarC_Syntax_Free.ord_ctx_uvar))
+  FStarC_Class_Setlike.for_any
+    (FStarC_RBSet.setlike_rbset FStarC_Syntax_Free.ord_ctx_uvar)
     (fun v ->
        FStarC_Syntax_Unionfind.equiv v.FStarC_Syntax_Syntax.ctx_uvar_head
-         u.FStarC_Syntax_Syntax.ctx_uvar_head)
-    (Obj.magic wl.typeclass_variables)
+         u.FStarC_Syntax_Syntax.ctx_uvar_head) wl.typeclass_variables
 let lazy_complete_repr (k : FStarC_Syntax_Syntax.lazy_kind) : Prims.bool=
   match k with
   | FStarC_Syntax_Syntax.Lazy_bv -> true
@@ -4136,10 +4122,9 @@ let lazy_complete_repr (k : FStarC_Syntax_Syntax.lazy_kind) : Prims.bool=
 let has_free_uvars (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ =
     let uu___1 = FStarC_Syntax_Free.uvars_uncached t in
-    FStarC_Class_Setlike.is_empty ()
-      (Obj.magic
-         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar))
-      (Obj.magic uu___1) in
+    FStarC_Class_Setlike.is_empty
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
+      uu___1 in
   Prims.op_Negation uu___
 let gamma_has_free_uvars (g : FStarC_Syntax_Syntax.binding Prims.list) :
   Prims.bool=
@@ -4184,7 +4169,7 @@ let payload_of_hide_reveal
   | uu___ -> FStar_Pervasives_Native.None
 let is_reveal_or_hide (t : FStarC_Syntax_Syntax.term) :
   reveal_hide_t FStar_Pervasives_Native.option=
-  let uu___ = FStarC_Syntax_Util.head_and_args t in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t in
   match uu___ with
   | (h, args) ->
       let uu___1 = FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.reveal h in
@@ -4250,10 +4235,8 @@ let defer_to_user_tac (orig : FStarC_TypeChecker_Common.prob)
          let uu___3 = FStarC_Thunk.mkv reason in
          ((wl1.ctr), FStarC_TypeChecker_Common.Deferred_to_user_tac, uu___3,
            orig) in
-       Obj.magic
-         (FStarC_Class_Listlike.cons ()
-            (Obj.magic (FStarC_CList.listlike_clist ())) uu___2
-            (Obj.magic wl1.wl_deferred_to_tac)) in
+       FStarC_Class_Listlike.cons (FStarC_CList.listlike_clist ()) uu___2
+         wl1.wl_deferred_to_tac in
      {
        attempting = (wl1.attempting);
        wl_deferred = (wl1.wl_deferred);
@@ -4274,7 +4257,7 @@ let maybe_defer_to_user_tac
   match prob.FStarC_TypeChecker_Common.relation with
   | FStarC_TypeChecker_Common.EQ ->
       let should_defer_tac t =
-        let uu___ = FStarC_Syntax_Util.head_and_args t in
+        let uu___ = FStarC_Syntax_Util.head_and_args_full t in
         match uu___ with
         | (head, uu___1) ->
             let uu___2 =
@@ -4347,9 +4330,7 @@ let try_solve_probs_without_smt (wl : worklist)
         {
           attempting = probs1;
           wl_deferred =
-            (Obj.magic
-               (FStarC_Class_Listlike.empty ()
-                  (Obj.magic (FStarC_CList.listlike_clist ()))));
+            (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
           wl_deferred_to_tac = (wl.wl_deferred_to_tac);
           ctr = (wl.ctr);
           defer_ok = NoDefer;
@@ -4357,9 +4338,7 @@ let try_solve_probs_without_smt (wl : worklist)
           umax_heuristic_ok = false;
           tcenv = (wl.tcenv);
           wl_implicits =
-            (Obj.magic
-               (FStarC_Class_Listlike.empty ()
-                  (Obj.magic (FStarC_CList.listlike_clist ()))));
+            (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
           repr_subcomp_allowed = (wl.repr_subcomp_allowed);
           typeclass_variables = (wl.typeclass_variables)
         } in
@@ -4368,9 +4347,7 @@ let try_solve_probs_without_smt (wl : worklist)
        | Success (uu___2, defer_to_tac, imps) ->
            let wl1 =
              extend_wl wl
-               (Obj.magic
-                  (FStarC_Class_Listlike.empty ()
-                     (Obj.magic (FStarC_CList.listlike_clist ()))))
+               (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()))
                defer_to_tac imps in
            FStar_Pervasives.Inl wl1
        | Failed (uu___2, ls) -> FStar_Pervasives.Inr ls)
@@ -4383,9 +4360,7 @@ let try_solve_without_smt_or_else (wl : worklist)
     {
       attempting = [];
       wl_deferred =
-        (Obj.magic
-           (FStarC_Class_Listlike.empty ()
-              (Obj.magic (FStarC_CList.listlike_clist ()))));
+        (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
       wl_deferred_to_tac = (wl.wl_deferred_to_tac);
       ctr = (wl.ctr);
       defer_ok = NoDefer;
@@ -4393,9 +4368,7 @@ let try_solve_without_smt_or_else (wl : worklist)
       umax_heuristic_ok = false;
       tcenv = (wl.tcenv);
       wl_implicits =
-        (Obj.magic
-           (FStarC_Class_Listlike.empty ()
-              (Obj.magic (FStarC_CList.listlike_clist ()))));
+        (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
       repr_subcomp_allowed = (wl.repr_subcomp_allowed);
       typeclass_variables = (wl.typeclass_variables)
     } in
@@ -4405,10 +4378,8 @@ let try_solve_without_smt_or_else (wl : worklist)
   | Success (uu___1, defer_to_tac, imps) ->
       let wl1 =
         extend_wl wl
-          (Obj.magic
-             (FStarC_Class_Listlike.empty ()
-                (Obj.magic (FStarC_CList.listlike_clist ())))) defer_to_tac
-          imps in
+          (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()))
+          defer_to_tac imps in
       solve wl1
   | Failed (p, s) ->
       (FStarC_Syntax_Unionfind.rollback tx; else_solve wl (p, s))
@@ -4419,9 +4390,7 @@ let try_solve_then_or_else (wl : worklist) (try_solve : worklist -> solution)
     {
       attempting = [];
       wl_deferred =
-        (Obj.magic
-           (FStarC_Class_Listlike.empty ()
-              (Obj.magic (FStarC_CList.listlike_clist ()))));
+        (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
       wl_deferred_to_tac = (wl.wl_deferred_to_tac);
       ctr = (wl.ctr);
       defer_ok = NoDefer;
@@ -4429,9 +4398,7 @@ let try_solve_then_or_else (wl : worklist) (try_solve : worklist -> solution)
       umax_heuristic_ok = (wl.umax_heuristic_ok);
       tcenv = (wl.tcenv);
       wl_implicits =
-        (Obj.magic
-           (FStarC_Class_Listlike.empty ()
-              (Obj.magic (FStarC_CList.listlike_clist ()))));
+        (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
       repr_subcomp_allowed = (wl.repr_subcomp_allowed);
       typeclass_variables = (wl.typeclass_variables)
     } in
@@ -4441,10 +4408,8 @@ let try_solve_then_or_else (wl : worklist) (try_solve : worklist -> solution)
   | Success (uu___1, defer_to_tac, imps) ->
       let wl1 =
         extend_wl wl
-          (Obj.magic
-             (FStarC_Class_Listlike.empty ()
-                (Obj.magic (FStarC_CList.listlike_clist ())))) defer_to_tac
-          imps in
+          (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()))
+          defer_to_tac imps in
       then_solve wl1
   | Failed (p, s) -> (FStarC_Syntax_Unionfind.rollback tx; else_solve wl)
 let solve_one_universe_eq (orig : FStarC_TypeChecker_Common.prob)
@@ -4712,10 +4677,12 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                  (match uu___3 with
                   | (t11, t21) ->
                       let try_eq t12 t22 wl3 =
-                        let uu___4 = FStarC_Syntax_Util.head_and_args t12 in
+                        let uu___4 =
+                          FStarC_Syntax_Util.head_and_args_full t12 in
                         match uu___4 with
                         | (t1_hd, t1_args) ->
-                            let uu___5 = FStarC_Syntax_Util.head_and_args t22 in
+                            let uu___5 =
+                              FStarC_Syntax_Util.head_and_args_full t22 in
                             (match uu___5 with
                              | (t2_hd, t2_args) ->
                                  if
@@ -4746,12 +4713,9 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                                           {
                                             attempting = probs;
                                             wl_deferred =
-                                              (Obj.magic
-                                                 (FStarC_Class_Listlike.empty
-                                                    ()
-                                                    (Obj.magic
-                                                       (FStarC_CList.listlike_clist
-                                                          ()))));
+                                              (FStarC_Class_Listlike.empty
+                                                 (FStarC_CList.listlike_clist
+                                                    ()));
                                             wl_deferred_to_tac =
                                               (wl4.wl_deferred_to_tac);
                                             ctr = (wl4.ctr);
@@ -4761,12 +4725,9 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                                               (wl4.umax_heuristic_ok);
                                             tcenv = (wl4.tcenv);
                                             wl_implicits =
-                                              (Obj.magic
-                                                 (FStarC_Class_Listlike.empty
-                                                    ()
-                                                    (Obj.magic
-                                                       (FStarC_CList.listlike_clist
-                                                          ()))));
+                                              (FStarC_Class_Listlike.empty
+                                                 (FStarC_CList.listlike_clist
+                                                    ()));
                                             repr_subcomp_allowed =
                                               (wl4.repr_subcomp_allowed);
                                             typeclass_variables =
@@ -4781,13 +4742,9 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                                              (uu___8, defer_to_tac, imps) ->
                                              let uu___9 =
                                                extend_wl wl4
-                                                 (Obj.magic
-                                                    (FStarC_Class_Listlike.empty
-                                                       ()
-                                                       (Obj.magic
-                                                          (FStarC_CList.listlike_clist
-                                                             ()))))
-                                                 defer_to_tac imps in
+                                                 (FStarC_Class_Listlike.empty
+                                                    (FStarC_CList.listlike_clist
+                                                       ())) defer_to_tac imps in
                                              FStar_Pervasives_Native.Some
                                                uu___9
                                          | Failed uu___8 ->
@@ -4944,66 +4901,69 @@ let solve_rigid_flex_or_flex_rigid_subtyping
          let uu___3 = FStarC_Syntax_Subst.compress this_rigid in
          uu___3.FStarC_Syntax_Syntax.n in
        (match uu___2 with
-        | FStarC_Syntax_Syntax.Tm_arrow
-            { FStarC_Syntax_Syntax.bs1 = _bs;
-              FStarC_Syntax_Syntax.comp = comp;_}
-            ->
-            let uu___3 = FStarC_Syntax_Util.is_tot_or_gtot_comp comp in
-            if uu___3
-            then
-              let uu___4 = destruct_flex_t this_flex wl in
-              (match uu___4 with
-               | (flex, wl1) ->
-                   let uu___5 = quasi_pattern wl1.tcenv flex in
-                   (match uu___5 with
-                    | FStar_Pervasives_Native.None ->
-                        giveup_lit wl1
-                          "flex-arrow subtyping, not a quasi pattern"
-                          (FStarC_TypeChecker_Common.TProb tp)
-                    | FStar_Pervasives_Native.Some (flex_bs, flex_t1) ->
-                        ((let uu___7 = FStarC_Effect.op_Bang dbg_Rel in
-                          if uu___7
-                          then
-                            let uu___8 =
-                              FStarC_Class_Show.show
-                                FStarC_Class_Show.showable_int
-                                tp.FStarC_TypeChecker_Common.pid in
-                            FStarC_Format.print1
-                              "Trying to solve by imitating arrow:%s\n"
-                              uu___8
-                          else ());
-                         imitate_arrow (FStarC_TypeChecker_Common.TProb tp)
-                           wl1 flex flex_bs flex_t1
-                           tp.FStarC_TypeChecker_Common.relation this_rigid)))
-            else
-              (let uu___4 =
-                 attempt
-                   [FStarC_TypeChecker_Common.TProb
-                      {
-                        FStarC_TypeChecker_Common.pid =
-                          (tp.FStarC_TypeChecker_Common.pid);
-                        FStarC_TypeChecker_Common.lhs =
-                          (tp.FStarC_TypeChecker_Common.lhs);
-                        FStarC_TypeChecker_Common.relation =
-                          FStarC_TypeChecker_Common.EQ;
-                        FStarC_TypeChecker_Common.rhs =
-                          (tp.FStarC_TypeChecker_Common.rhs);
-                        FStarC_TypeChecker_Common.element =
-                          (tp.FStarC_TypeChecker_Common.element);
-                        FStarC_TypeChecker_Common.logical_guard =
-                          (tp.FStarC_TypeChecker_Common.logical_guard);
-                        FStarC_TypeChecker_Common.logical_guard_uvar =
-                          (tp.FStarC_TypeChecker_Common.logical_guard_uvar);
-                        FStarC_TypeChecker_Common.reason =
-                          (tp.FStarC_TypeChecker_Common.reason);
-                        FStarC_TypeChecker_Common.loc =
-                          (tp.FStarC_TypeChecker_Common.loc);
-                        FStarC_TypeChecker_Common.rank =
-                          (tp.FStarC_TypeChecker_Common.rank);
-                        FStarC_TypeChecker_Common.logical =
-                          (tp.FStarC_TypeChecker_Common.logical)
-                      }] wl in
-               solve uu___4)
+        | FStarC_Syntax_Syntax.Tm_arrow uu___3 ->
+            let uu___4 =
+              FStarC_Syntax_Util.arrow_formals_comp_ln_strict this_rigid in
+            (match uu___4 with
+             | (_bs, comp) ->
+                 let uu___5 = FStarC_Syntax_Util.is_tot_or_gtot_comp comp in
+                 if uu___5
+                 then
+                   let uu___6 = destruct_flex_t this_flex wl in
+                   (match uu___6 with
+                    | (flex, wl1) ->
+                        let uu___7 = quasi_pattern wl1.tcenv flex in
+                        (match uu___7 with
+                         | FStar_Pervasives_Native.None ->
+                             giveup_lit wl1
+                               "flex-arrow subtyping, not a quasi pattern"
+                               (FStarC_TypeChecker_Common.TProb tp)
+                         | FStar_Pervasives_Native.Some (flex_bs, flex_t1) ->
+                             ((let uu___9 = FStarC_Effect.op_Bang dbg_Rel in
+                               if uu___9
+                               then
+                                 let uu___10 =
+                                   FStarC_Class_Show.show
+                                     FStarC_Class_Show.showable_int
+                                     tp.FStarC_TypeChecker_Common.pid in
+                                 FStarC_Format.print1
+                                   "Trying to solve by imitating arrow:%s\n"
+                                   uu___10
+                               else ());
+                              imitate_arrow
+                                (FStarC_TypeChecker_Common.TProb tp) wl1 flex
+                                flex_bs flex_t1
+                                tp.FStarC_TypeChecker_Common.relation
+                                this_rigid)))
+                 else
+                   (let uu___6 =
+                      attempt
+                        [FStarC_TypeChecker_Common.TProb
+                           {
+                             FStarC_TypeChecker_Common.pid =
+                               (tp.FStarC_TypeChecker_Common.pid);
+                             FStarC_TypeChecker_Common.lhs =
+                               (tp.FStarC_TypeChecker_Common.lhs);
+                             FStarC_TypeChecker_Common.relation =
+                               FStarC_TypeChecker_Common.EQ;
+                             FStarC_TypeChecker_Common.rhs =
+                               (tp.FStarC_TypeChecker_Common.rhs);
+                             FStarC_TypeChecker_Common.element =
+                               (tp.FStarC_TypeChecker_Common.element);
+                             FStarC_TypeChecker_Common.logical_guard =
+                               (tp.FStarC_TypeChecker_Common.logical_guard);
+                             FStarC_TypeChecker_Common.logical_guard_uvar =
+                               (tp.FStarC_TypeChecker_Common.logical_guard_uvar);
+                             FStarC_TypeChecker_Common.reason =
+                               (tp.FStarC_TypeChecker_Common.reason);
+                             FStarC_TypeChecker_Common.loc =
+                               (tp.FStarC_TypeChecker_Common.loc);
+                             FStarC_TypeChecker_Common.rank =
+                               (tp.FStarC_TypeChecker_Common.rank);
+                             FStarC_TypeChecker_Common.logical =
+                               (tp.FStarC_TypeChecker_Common.logical)
+                           }] wl in
+                    solve uu___6))
         | uu___3 ->
             ((let uu___5 = FStarC_Effect.op_Bang dbg_Rel in
               if uu___5
@@ -5014,7 +4974,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                 FStarC_Format.print1
                   "Trying to solve by meeting refinements:%s\n" uu___6
               else ());
-             (let uu___5 = FStarC_Syntax_Util.head_and_args this_flex in
+             (let uu___5 = FStarC_Syntax_Util.head_and_args_full this_flex in
               match uu___5 with
               | (u, _args) ->
                   let env = p_env wl (FStarC_TypeChecker_Common.TProb tp) in
@@ -5024,7 +4984,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                   (match uu___6 with
                    | FStarC_Syntax_Syntax.Tm_uvar (ctx_uvar, _subst) ->
                        let equiv t =
-                         let uu___7 = FStarC_Syntax_Util.head_and_args t in
+                         let uu___7 = FStarC_Syntax_Util.head_and_args_full t in
                          match uu___7 with
                          | (u', uu___8) ->
                              let uu___9 =
@@ -5058,346 +5018,388 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                               | uu___9 -> false) wl.attempting in
                        (match uu___7 with
                         | (bounds_probs, rest) ->
-                            let bounds_typs =
-                              let uu___8 = whnf env this_rigid in
-                              let uu___9 =
-                                FStarC_List.collect
-                                  (fun uu___10 ->
-                                     match uu___10 with
-                                     | FStarC_TypeChecker_Common.TProb p ->
-                                         let uu___11 =
-                                           if flip
-                                           then
-                                             whnf env
-                                               (maybe_invert p).FStarC_TypeChecker_Common.rhs
-                                           else
-                                             whnf env
-                                               (maybe_invert p).FStarC_TypeChecker_Common.lhs in
-                                         [uu___11]
-                                     | uu___11 -> []) bounds_probs in
-                              uu___8 :: uu___9 in
-                            let uu___8 =
+                            let prefer_lower_bounds uu___8 =
                               let uu___9 =
                                 let uu___10 =
-                                  has_typeclass_constraint ctx_uvar wl in
+                                  if flip
+                                  then has_typeclass_constraint ctx_uvar wl
+                                  else false in
                                 if uu___10
-                                then Prims.op_Negation flip
+                                then
+                                  let uu___11 =
+                                    let uu___12 =
+                                      let uu___13 = whnf env this_rigid in
+                                      FStarC_Syntax_Subst.compress uu___13 in
+                                    uu___12.FStarC_Syntax_Syntax.n in
+                                  FStarC_Syntax_Syntax.uu___is_Tm_refine
+                                    uu___11
                                 else false in
                               if uu___9
-                              then (true, FStar_Pervasives_Native.None)
-                              else
-                                (false,
-                                  (FStar_Pervasives_Native.Some
-                                     (if flip
-                                      then FStarC_Syntax_Util.mk_conj_simp
-                                      else FStarC_Syntax_Util.mk_disj_simp))) in
-                            (match uu___8 with
-                             | (widen, meet_or_join_op) ->
-                                 let meet_or_join_op1 = meet_or_join_op in
-                                 let uu___9 =
-                                   match bounds_typs with
-                                   | t::[] ->
-                                       if widen
-                                       then
-                                         let uu___10 =
-                                           let uu___11 =
-                                             base_and_refinement_maybe_delta
-                                               false env t in
-                                           FStar_Pervasives_Native.fst
-                                             uu___11 in
-                                         (uu___10, [], wl)
-                                       else (t, [], wl)
-                                   | uu___10 ->
-                                       meet_or_join meet_or_join_op1
-                                         bounds_typs wl in
-                                 (match uu___9 with
-                                  | (bound, sub_probs, wl1) ->
-                                      let uu___10 =
-                                        let flex_u = flex_uvar_head this_flex in
-                                        let bound1 =
-                                          let uu___11 =
+                              then
+                                FStarC_Util.for_some
+                                  (fun uu___10 ->
+                                     match uu___10 with
+                                     | FStarC_TypeChecker_Common.TProb tp1 ->
+                                         let tp2 = maybe_invert tp1 in
+                                         (match tp2.FStarC_TypeChecker_Common.rank
+                                          with
+                                          | FStar_Pervasives_Native.Some
+                                              (FStarC_TypeChecker_Common.Rigid_flex)
+                                              ->
+                                              equiv
+                                                tp2.FStarC_TypeChecker_Common.rhs
+                                          | uu___11 -> false)
+                                     | uu___11 -> false) wl.attempting
+                              else false in
+                            let uu___8 = prefer_lower_bounds () in
+                            if uu___8
+                            then
+                              let uu___9 =
+                                defer_lit
+                                  FStarC_TypeChecker_Common.Deferred_flex
+                                  "solving a typeclass variable from its lower bounds first"
+                                  (FStarC_TypeChecker_Common.TProb tp) wl in
+                              solve uu___9
+                            else
+                              (let bounds_typs =
+                                 let uu___9 = whnf env this_rigid in
+                                 let uu___10 =
+                                   FStarC_List.collect
+                                     (fun uu___11 ->
+                                        match uu___11 with
+                                        | FStarC_TypeChecker_Common.TProb p
+                                            ->
                                             let uu___12 =
-                                              FStarC_Syntax_Subst.compress
-                                                bound in
-                                            uu___12.FStarC_Syntax_Syntax.n in
-                                          match uu___11 with
-                                          | FStarC_Syntax_Syntax.Tm_refine
-                                              { FStarC_Syntax_Syntax.b = x;
-                                                FStarC_Syntax_Syntax.phi =
-                                                  phi;_}
-                                              when
-                                              if
-                                                tp.FStarC_TypeChecker_Common.relation
-                                                  =
-                                                  FStarC_TypeChecker_Common.SUB
+                                              if flip
                                               then
-                                                let uu___12 =
-                                                  occurs flex_u
-                                                    x.FStarC_Syntax_Syntax.sort in
-                                                FStar_Pervasives_Native.snd
-                                                  uu___12
-                                              else false ->
-                                              x.FStarC_Syntax_Syntax.sort
-                                          | uu___12 -> bound in
+                                                whnf env
+                                                  (maybe_invert p).FStarC_TypeChecker_Common.rhs
+                                              else
+                                                whnf env
+                                                  (maybe_invert p).FStarC_TypeChecker_Common.lhs in
+                                            [uu___12]
+                                        | uu___12 -> []) bounds_probs in
+                                 uu___9 :: uu___10 in
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 =
+                                     has_typeclass_constraint ctx_uvar wl in
+                                   if uu___11
+                                   then Prims.op_Negation flip
+                                   else false in
+                                 if uu___10
+                                 then (true, FStar_Pervasives_Native.None)
+                                 else
+                                   (false,
+                                     (FStar_Pervasives_Native.Some
+                                        (if flip
+                                         then FStarC_Syntax_Util.mk_conj_simp
+                                         else FStarC_Syntax_Util.mk_disj_simp))) in
+                               match uu___9 with
+                               | (widen, meet_or_join_op) ->
+                                   let meet_or_join_op1 = meet_or_join_op in
+                                   let uu___10 =
+                                     match bounds_typs with
+                                     | t::[] ->
+                                         if widen
+                                         then
+                                           let uu___11 =
+                                             let uu___12 =
+                                               base_and_refinement_maybe_delta
+                                                 false env t in
+                                             FStar_Pervasives_Native.fst
+                                               uu___12 in
+                                           (uu___11, [], wl)
+                                         else (t, [], wl)
+                                     | uu___11 ->
+                                         meet_or_join meet_or_join_op1
+                                           bounds_typs wl in
+                                   (match uu___10 with
+                                    | (bound, sub_probs, wl1) ->
                                         let uu___11 =
+                                          let flex_u =
+                                            flex_uvar_head this_flex in
+                                          let bound1 =
+                                            let uu___12 =
+                                              let uu___13 =
+                                                FStarC_Syntax_Subst.compress
+                                                  bound in
+                                              uu___13.FStarC_Syntax_Syntax.n in
+                                            match uu___12 with
+                                            | FStarC_Syntax_Syntax.Tm_refine
+                                                {
+                                                  FStarC_Syntax_Syntax.b2 = x;
+                                                  FStarC_Syntax_Syntax.phi =
+                                                    phi;_}
+                                                when
+                                                if
+                                                  tp.FStarC_TypeChecker_Common.relation
+                                                    =
+                                                    FStarC_TypeChecker_Common.SUB
+                                                then
+                                                  let uu___13 =
+                                                    occurs flex_u
+                                                      x.FStarC_Syntax_Syntax.sort in
+                                                  FStar_Pervasives_Native.snd
+                                                    uu___13
+                                                else false ->
+                                                x.FStarC_Syntax_Syntax.sort
+                                            | uu___13 -> bound in
                                           let uu___12 =
-                                            p_env wl1
-                                              (FStarC_TypeChecker_Common.TProb
-                                                 tp) in
-                                          new_problem wl1 uu___12 bound1
-                                            FStarC_TypeChecker_Common.EQ
-                                            this_flex
-                                            FStar_Pervasives_Native.None
-                                            tp.FStarC_TypeChecker_Common.loc
-                                            (if flip
-                                             then "joining refinements"
-                                             else "meeting refinements") in
-                                        (bound1, uu___11) in
-                                      (match uu___10 with
-                                       | (bound_typ, (eq_prob, wl')) ->
-                                           (def_check_prob "meet_or_join2"
-                                              (FStarC_TypeChecker_Common.TProb
-                                                 eq_prob);
-                                            (let uu___13 =
-                                               FStarC_Effect.op_Bang dbg_Rel in
-                                             if uu___13
-                                             then
-                                               let wl'1 =
-                                                 {
-                                                   attempting =
-                                                     ((FStarC_TypeChecker_Common.TProb
-                                                         eq_prob) ::
-                                                     sub_probs);
-                                                   wl_deferred =
-                                                     (wl1.wl_deferred);
-                                                   wl_deferred_to_tac =
-                                                     (wl1.wl_deferred_to_tac);
-                                                   ctr = (wl1.ctr);
-                                                   defer_ok = (wl1.defer_ok);
-                                                   smt_ok = (wl1.smt_ok);
-                                                   umax_heuristic_ok =
-                                                     (wl1.umax_heuristic_ok);
-                                                   tcenv = (wl1.tcenv);
-                                                   wl_implicits =
-                                                     (wl1.wl_implicits);
-                                                   repr_subcomp_allowed =
-                                                     (wl1.repr_subcomp_allowed);
-                                                   typeclass_variables =
-                                                     (wl1.typeclass_variables)
-                                                 } in
-                                               let uu___14 =
-                                                 wl_to_string wl'1 in
-                                               FStarC_Format.print1
-                                                 "After meet/join refinements: %s\n"
-                                                 uu___14
-                                             else ());
-                                            (let tx =
-                                               FStarC_Syntax_Unionfind.new_transaction
-                                                 () in
-                                             FStarC_List.iter
-                                               (def_check_prob
-                                                  "meet_or_join3_sub")
-                                               sub_probs;
-                                             (let uu___14 =
-                                                solve_t eq_prob
-                                                  {
-                                                    attempting = sub_probs;
-                                                    wl_deferred =
-                                                      (Obj.magic
-                                                         (FStarC_Class_Listlike.empty
-                                                            ()
-                                                            (Obj.magic
-                                                               (FStarC_CList.listlike_clist
-                                                                  ()))));
-                                                    wl_deferred_to_tac =
-                                                      (wl'.wl_deferred_to_tac);
-                                                    ctr = (wl'.ctr);
-                                                    defer_ok = NoDefer;
-                                                    smt_ok = (wl'.smt_ok);
-                                                    umax_heuristic_ok =
-                                                      (wl'.umax_heuristic_ok);
-                                                    tcenv = (wl'.tcenv);
-                                                    wl_implicits =
-                                                      (Obj.magic
-                                                         (FStarC_Class_Listlike.empty
-                                                            ()
-                                                            (Obj.magic
-                                                               (FStarC_CList.listlike_clist
-                                                                  ()))));
-                                                    repr_subcomp_allowed =
-                                                      (wl'.repr_subcomp_allowed);
-                                                    typeclass_variables =
-                                                      (wl'.typeclass_variables)
-                                                  } in
-                                              match uu___14 with
-                                              | Success
-                                                  (uu___15, defer_to_tac,
-                                                   imps)
-                                                  ->
-                                                  let wl2 =
+                                            let uu___13 =
+                                              p_env wl1
+                                                (FStarC_TypeChecker_Common.TProb
+                                                   tp) in
+                                            new_problem wl1 uu___13 bound1
+                                              FStarC_TypeChecker_Common.EQ
+                                              this_flex
+                                              FStar_Pervasives_Native.None
+                                              tp.FStarC_TypeChecker_Common.loc
+                                              (if flip
+                                               then "joining refinements"
+                                               else "meeting refinements") in
+                                          (bound1, uu___12) in
+                                        (match uu___11 with
+                                         | (bound_typ, (eq_prob, wl')) ->
+                                             (def_check_prob "meet_or_join2"
+                                                (FStarC_TypeChecker_Common.TProb
+                                                   eq_prob);
+                                              (let uu___14 =
+                                                 FStarC_Effect.op_Bang
+                                                   dbg_Rel in
+                                               if uu___14
+                                               then
+                                                 let wl'1 =
+                                                   {
+                                                     attempting =
+                                                       ((FStarC_TypeChecker_Common.TProb
+                                                           eq_prob) ::
+                                                       sub_probs);
+                                                     wl_deferred =
+                                                       (wl1.wl_deferred);
+                                                     wl_deferred_to_tac =
+                                                       (wl1.wl_deferred_to_tac);
+                                                     ctr = (wl1.ctr);
+                                                     defer_ok =
+                                                       (wl1.defer_ok);
+                                                     smt_ok = (wl1.smt_ok);
+                                                     umax_heuristic_ok =
+                                                       (wl1.umax_heuristic_ok);
+                                                     tcenv = (wl1.tcenv);
+                                                     wl_implicits =
+                                                       (wl1.wl_implicits);
+                                                     repr_subcomp_allowed =
+                                                       (wl1.repr_subcomp_allowed);
+                                                     typeclass_variables =
+                                                       (wl1.typeclass_variables)
+                                                   } in
+                                                 let uu___15 =
+                                                   wl_to_string wl'1 in
+                                                 FStarC_Format.print1
+                                                   "After meet/join refinements: %s\n"
+                                                   uu___15
+                                               else ());
+                                              (let tx =
+                                                 FStarC_Syntax_Unionfind.new_transaction
+                                                   () in
+                                               FStarC_List.iter
+                                                 (def_check_prob
+                                                    "meet_or_join3_sub")
+                                                 sub_probs;
+                                               (let uu___15 =
+                                                  solve_t eq_prob
                                                     {
-                                                      attempting = rest;
+                                                      attempting = sub_probs;
                                                       wl_deferred =
-                                                        (wl'.wl_deferred);
+                                                        (FStarC_Class_Listlike.empty
+                                                           (FStarC_CList.listlike_clist
+                                                              ()));
                                                       wl_deferred_to_tac =
                                                         (wl'.wl_deferred_to_tac);
                                                       ctr = (wl'.ctr);
-                                                      defer_ok =
-                                                        (wl'.defer_ok);
+                                                      defer_ok = NoDefer;
                                                       smt_ok = (wl'.smt_ok);
                                                       umax_heuristic_ok =
                                                         (wl'.umax_heuristic_ok);
                                                       tcenv = (wl'.tcenv);
                                                       wl_implicits =
-                                                        (wl'.wl_implicits);
+                                                        (FStarC_Class_Listlike.empty
+                                                           (FStarC_CList.listlike_clist
+                                                              ()));
                                                       repr_subcomp_allowed =
                                                         (wl'.repr_subcomp_allowed);
                                                       typeclass_variables =
                                                         (wl'.typeclass_variables)
                                                     } in
-                                                  let wl3 =
-                                                    extend_wl wl2
-                                                      (Obj.magic
-                                                         (FStarC_Class_Listlike.empty
-                                                            ()
-                                                            (Obj.magic
-                                                               (FStarC_CList.listlike_clist
-                                                                  ()))))
-                                                      defer_to_tac imps in
-                                                  let g =
-                                                    FStarC_List.fold_left
-                                                      (fun g1 p ->
-                                                         FStarC_Syntax_Util.mk_conj
-                                                           g1 (p_guard p))
-                                                      eq_prob.FStarC_TypeChecker_Common.logical_guard
-                                                      sub_probs in
-                                                  let wl4 =
-                                                    solve_prob' false
-                                                      (FStarC_TypeChecker_Common.TProb
-                                                         tp)
-                                                      (FStar_Pervasives_Native.Some
-                                                         g) [] wl3 in
-                                                  let uu___16 =
-                                                    FStarC_List.fold_left
-                                                      (fun wl5 p ->
-                                                         solve_prob' true p
-                                                           FStar_Pervasives_Native.None
-                                                           [] wl5) wl4
-                                                      bounds_probs in
-                                                  solve wl4
-                                              | Failed (p, msg) ->
-                                                  ((let uu___16 =
-                                                      FStarC_Effect.op_Bang
-                                                        dbg_Rel in
-                                                    if uu___16
-                                                    then
-                                                      let uu___17 =
+                                                match uu___15 with
+                                                | Success
+                                                    (uu___16, defer_to_tac,
+                                                     imps)
+                                                    ->
+                                                    let wl2 =
+                                                      {
+                                                        attempting = rest;
+                                                        wl_deferred =
+                                                          (wl'.wl_deferred);
+                                                        wl_deferred_to_tac =
+                                                          (wl'.wl_deferred_to_tac);
+                                                        ctr = (wl'.ctr);
+                                                        defer_ok =
+                                                          (wl'.defer_ok);
+                                                        smt_ok = (wl'.smt_ok);
+                                                        umax_heuristic_ok =
+                                                          (wl'.umax_heuristic_ok);
+                                                        tcenv = (wl'.tcenv);
+                                                        wl_implicits =
+                                                          (wl'.wl_implicits);
+                                                        repr_subcomp_allowed
+                                                          =
+                                                          (wl'.repr_subcomp_allowed);
+                                                        typeclass_variables =
+                                                          (wl'.typeclass_variables)
+                                                      } in
+                                                    let wl3 =
+                                                      extend_wl wl2
+                                                        (FStarC_Class_Listlike.empty
+                                                           (FStarC_CList.listlike_clist
+                                                              ()))
+                                                        defer_to_tac imps in
+                                                    let g =
+                                                      FStarC_List.fold_left
+                                                        (fun g1 p ->
+                                                           FStarC_Syntax_Util.mk_conj
+                                                             g1 (p_guard p))
+                                                        eq_prob.FStarC_TypeChecker_Common.logical_guard
+                                                        sub_probs in
+                                                    let wl4 =
+                                                      solve_prob' false
+                                                        (FStarC_TypeChecker_Common.TProb
+                                                           tp)
+                                                        (FStar_Pervasives_Native.Some
+                                                           g) [] wl3 in
+                                                    let uu___17 =
+                                                      FStarC_List.fold_left
+                                                        (fun wl5 p ->
+                                                           solve_prob' true p
+                                                             FStar_Pervasives_Native.None
+                                                             [] wl5) wl4
+                                                        bounds_probs in
+                                                    solve wl4
+                                                | Failed (p, msg) ->
+                                                    ((let uu___17 =
+                                                        FStarC_Effect.op_Bang
+                                                          dbg_Rel in
+                                                      if uu___17
+                                                      then
                                                         let uu___18 =
-                                                          FStarC_List.map
-                                                            (prob_to_string
-                                                               env)
-                                                            ((FStarC_TypeChecker_Common.TProb
-                                                                eq_prob) ::
-                                                            sub_probs) in
-                                                        FStarC_String.concat
-                                                          "\n" uu___18 in
-                                                      FStarC_Format.print1
-                                                        "meet/join attempted and failed to solve problems:\n%s\n"
-                                                        uu___17
-                                                    else ());
-                                                   (let uu___16 =
-                                                      let uu___17 =
-                                                        base_and_refinement
-                                                          env bound_typ in
-                                                      (rank1, uu___17) in
-                                                    match uu___16 with
-                                                    | (FStarC_TypeChecker_Common.Rigid_flex,
-                                                       (t_base,
-                                                        FStar_Pervasives_Native.Some
-                                                        uu___17)) ->
-                                                        (FStarC_Syntax_Unionfind.rollback
-                                                           tx;
-                                                         (let uu___19 =
-                                                            let uu___20 =
-                                                              p_env wl1
-                                                                (FStarC_TypeChecker_Common.TProb
-                                                                   tp) in
-                                                            new_problem wl1
-                                                              uu___20 t_base
-                                                              FStarC_TypeChecker_Common.EQ
-                                                              this_flex
-                                                              FStar_Pervasives_Native.None
-                                                              tp.FStarC_TypeChecker_Common.loc
-                                                              "widened subtyping" in
-                                                          match uu___19 with
-                                                          | (eq_prob1, wl2)
-                                                              ->
-                                                              (def_check_prob
-                                                                 "meet_or_join3"
-                                                                 (FStarC_TypeChecker_Common.TProb
+                                                          let uu___19 =
+                                                            FStarC_List.map
+                                                              (prob_to_string
+                                                                 env)
+                                                              ((FStarC_TypeChecker_Common.TProb
+                                                                  eq_prob) ::
+                                                              sub_probs) in
+                                                          FStarC_String.concat
+                                                            "\n" uu___19 in
+                                                        FStarC_Format.print1
+                                                          "meet/join attempted and failed to solve problems:\n%s\n"
+                                                          uu___18
+                                                      else ());
+                                                     (let uu___17 =
+                                                        let uu___18 =
+                                                          base_and_refinement
+                                                            env bound_typ in
+                                                        (rank1, uu___18) in
+                                                      match uu___17 with
+                                                      | (FStarC_TypeChecker_Common.Rigid_flex,
+                                                         (t_base,
+                                                          FStar_Pervasives_Native.Some
+                                                          uu___18)) ->
+                                                          (FStarC_Syntax_Unionfind.rollback
+                                                             tx;
+                                                           (let uu___20 =
+                                                              let uu___21 =
+                                                                p_env wl1
+                                                                  (FStarC_TypeChecker_Common.TProb
+                                                                    tp) in
+                                                              new_problem wl1
+                                                                uu___21
+                                                                t_base
+                                                                FStarC_TypeChecker_Common.EQ
+                                                                this_flex
+                                                                FStar_Pervasives_Native.None
+                                                                tp.FStarC_TypeChecker_Common.loc
+                                                                "widened subtyping" in
+                                                            match uu___20
+                                                            with
+                                                            | (eq_prob1, wl2)
+                                                                ->
+                                                                (def_check_prob
+                                                                   "meet_or_join3"
+                                                                   (FStarC_TypeChecker_Common.TProb
                                                                     eq_prob1);
-                                                               (let wl3 =
-                                                                  solve_prob'
+                                                                 (let wl3 =
+                                                                    solve_prob'
                                                                     false
-                                                                    (
-                                                                    FStarC_TypeChecker_Common.TProb
+                                                                    (FStarC_TypeChecker_Common.TProb
                                                                     tp)
-                                                                    (
-                                                                    FStar_Pervasives_Native.Some
+                                                                    (FStar_Pervasives_Native.Some
                                                                     (p_guard
                                                                     (FStarC_TypeChecker_Common.TProb
                                                                     eq_prob1)))
                                                                     [] wl2 in
-                                                                let uu___21 =
-                                                                  attempt
+                                                                  let uu___22
+                                                                    =
+                                                                    attempt
                                                                     [
                                                                     FStarC_TypeChecker_Common.TProb
                                                                     eq_prob1]
                                                                     wl3 in
-                                                                solve uu___21))))
-                                                    | (FStarC_TypeChecker_Common.Flex_rigid,
-                                                       (t_base,
-                                                        FStar_Pervasives_Native.Some
-                                                        (x, phi))) ->
-                                                        (FStarC_Syntax_Unionfind.rollback
-                                                           tx;
-                                                         (let x1 =
-                                                            FStarC_Syntax_Syntax.freshen_bv
-                                                              x in
-                                                          let uu___18 =
-                                                            FStarC_Syntax_Subst.open_term
-                                                              [FStarC_Syntax_Syntax.mk_binder
-                                                                 x1] phi in
-                                                          match uu___18 with
-                                                          | (uu___19, phi1)
-                                                              ->
-                                                              let uu___20 =
-                                                                new_problem
-                                                                  wl1 env
-                                                                  t_base
-                                                                  FStarC_TypeChecker_Common.EQ
-                                                                  this_flex
-                                                                  FStar_Pervasives_Native.None
-                                                                  tp.FStarC_TypeChecker_Common.loc
-                                                                  "widened subtyping" in
-                                                              (match uu___20
-                                                               with
-                                                               | (eq_prob1,
-                                                                  wl2) ->
-                                                                   (def_check_prob
+                                                                  solve
+                                                                    uu___22))))
+                                                      | (FStarC_TypeChecker_Common.Flex_rigid,
+                                                         (t_base,
+                                                          FStar_Pervasives_Native.Some
+                                                          (x, phi))) ->
+                                                          (FStarC_Syntax_Unionfind.rollback
+                                                             tx;
+                                                           (let x1 =
+                                                              FStarC_Syntax_Syntax.freshen_bv
+                                                                x in
+                                                            let uu___19 =
+                                                              FStarC_Syntax_Subst.open_term
+                                                                [FStarC_Syntax_Syntax.mk_binder
+                                                                   x1] phi in
+                                                            match uu___19
+                                                            with
+                                                            | (uu___20, phi1)
+                                                                ->
+                                                                let uu___21 =
+                                                                  new_problem
+                                                                    wl1 env
+                                                                    t_base
+                                                                    FStarC_TypeChecker_Common.EQ
+                                                                    this_flex
+                                                                    FStar_Pervasives_Native.None
+                                                                    tp.FStarC_TypeChecker_Common.loc
+                                                                    "widened subtyping" in
+                                                                (match uu___21
+                                                                 with
+                                                                 | (eq_prob1,
+                                                                    wl2) ->
+                                                                    (def_check_prob
                                                                     "meet_or_join4"
                                                                     (FStarC_TypeChecker_Common.TProb
                                                                     eq_prob1);
-                                                                    (
-                                                                    let phi2
+                                                                    (let phi2
                                                                     =
                                                                     guard_on_element
                                                                     wl2 tp x1
                                                                     phi1 in
                                                                     let wl3 =
-                                                                    let uu___22
-                                                                    =
                                                                     let uu___23
+                                                                    =
+                                                                    let uu___24
                                                                     =
                                                                     FStarC_Syntax_Util.mk_conj
                                                                     phi2
@@ -5405,14 +5407,14 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                                                                     (FStarC_TypeChecker_Common.TProb
                                                                     eq_prob1)) in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___23 in
+                                                                    uu___24 in
                                                                     solve_prob'
                                                                     false
                                                                     (FStarC_TypeChecker_Common.TProb
                                                                     tp)
-                                                                    uu___22
+                                                                    uu___23
                                                                     [] wl2 in
-                                                                    let uu___22
+                                                                    let uu___23
                                                                     =
                                                                     attempt
                                                                     [
@@ -5420,15 +5422,16 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                                                                     eq_prob1]
                                                                     wl3 in
                                                                     solve
-                                                                    uu___22)))))
-                                                    | uu___17 ->
-                                                        let uu___18 =
-                                                          FStarC_Thunk.map
-                                                            (fun s ->
-                                                               Prims.strcat
-                                                                 "failed to solve the sub-problems: "
-                                                                 s) msg in
-                                                        giveup wl1 uu___18 p)))))))))
+                                                                    uu___23)))))
+                                                      | uu___18 ->
+                                                          let uu___19 =
+                                                            FStarC_Thunk.map
+                                                              (fun s ->
+                                                                 Prims.strcat
+                                                                   "failed to solve the sub-problems: "
+                                                                   s) msg in
+                                                          giveup wl1 uu___19
+                                                            p)))))))))
                    | uu___7 when flip ->
                        let uu___8 =
                          let uu___9 =
@@ -5486,10 +5489,9 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                   let uu___6 =
                     FStarC_Syntax_Free.names
                       (FStar_Pervasives_Native.fst arg) in
-                  FStarC_Class_Setlike.mem ()
-                    (Obj.magic
-                       (FStarC_FlatSet.setlike_flat_set
-                          FStarC_Syntax_Syntax.ord_bv)) x (Obj.magic uu___6) in
+                  FStarC_Class_Setlike.mem
+                    (FStarC_FlatSet.setlike_flat_set
+                       FStarC_Syntax_Syntax.ord_bv) x uu___6 in
                 Prims.op_Negation uu___5 in
               let bv_not_free_in_args x args1 =
                 FStarC_Util.for_all (bv_not_free_in_arg x) args1 in
@@ -5535,7 +5537,7 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                              b.FStarC_Syntax_Syntax.binder_bv rhs_tl
                          else false -> remove_matching_prefix lhs_tl rhs_tl
                      | uu___6 -> (lhs_binders, rhs_args)) in
-              let uu___5 = FStarC_Syntax_Util.head_and_args rhs1 in
+              let uu___5 = FStarC_Syntax_Util.head_and_args_full rhs1 in
               match uu___5 with
               | (rhs_hd, rhs_args) ->
                   let uu___6 =
@@ -5596,11 +5598,10 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                           let fvs_rhs = FStarC_Syntax_Free.names rhs1 in
                           let uu___7 =
                             let uu___8 =
-                              FStarC_Class_Setlike.subset ()
-                                (Obj.magic
-                                   (FStarC_FlatSet.setlike_flat_set
-                                      FStarC_Syntax_Syntax.ord_bv))
-                                (Obj.magic fvs_rhs) (Obj.magic fvs_lhs) in
+                              FStarC_Class_Setlike.subset
+                                (FStarC_FlatSet.setlike_flat_set
+                                   FStarC_Syntax_Syntax.ord_bv) fvs_rhs
+                                fvs_lhs in
                             Prims.op_Negation uu___8 in
                           if uu___7
                           then
@@ -5615,7 +5616,7 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                                restrict_all_uvars env ctx_u [] uvars wl1 in
                              (uu___8, uu___9)))))) in
       let imitate_app orig1 env wl1 lhs1 bs_lhs t_res_lhs rhs1 =
-        let uu___2 = FStarC_Syntax_Util.head_and_args rhs1 in
+        let uu___2 = FStarC_Syntax_Util.head_and_args_full rhs1 in
         match uu___2 with
         | (rhs_hd, args) ->
             let uu___3 = FStarC_Util.prefix args in
@@ -5735,7 +5736,13 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                               FStarC_TypeChecker_Env.core_check =
                                 (env1.FStarC_TypeChecker_Env.core_check);
                               FStarC_TypeChecker_Env.missing_decl =
-                                (env1.FStarC_TypeChecker_Env.missing_decl)
+                                (env1.FStarC_TypeChecker_Env.missing_decl);
+                              FStarC_TypeChecker_Env.iface_todo =
+                                (env1.FStarC_TypeChecker_Env.iface_todo);
+                              FStarC_TypeChecker_Env.iface_lids =
+                                (env1.FStarC_TypeChecker_Env.iface_lids);
+                              FStarC_TypeChecker_Env.iface_val_lids =
+                                (env1.FStarC_TypeChecker_Env.iface_val_lids)
                             } (FStar_Pervasives_Native.fst last_arg_rhs)
                             false in
                         match uu___6 with
@@ -5804,7 +5811,7 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
         (let uu___3 = FStarC_Effect.op_Bang dbg_Rel in
          if uu___3 then FStarC_Format.print_string "imitate\n" else ());
         (let is_app rhs2 =
-           let uu___3 = FStarC_Syntax_Util.head_and_args rhs2 in
+           let uu___3 = FStarC_Syntax_Util.head_and_args_full rhs2 in
            match uu___3 with
            | (uu___4, args) ->
                (match args with | [] -> false | uu___5 -> true) in
@@ -5875,7 +5882,7 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
          match uu___3 with
          | Flex (_t1, ctx_uv, args_lhs) ->
              let n_args_lhs = FStarC_List.length args_lhs in
-             let uu___4 = FStarC_Syntax_Util.head_and_args rhs1 in
+             let uu___4 = FStarC_Syntax_Util.head_and_args_full rhs1 in
              (match uu___4 with
               | (head, args_rhs) ->
                   let n_args_rhs = FStarC_List.length args_rhs in
@@ -5906,12 +5913,10 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                                      let uu___11 =
                                        binders_as_bv_set
                                          ctx_uv.FStarC_Syntax_Syntax.ctx_uvar_binders in
-                                     FStarC_Class_Setlike.subset ()
-                                       (Obj.magic
-                                          (FStarC_FlatSet.setlike_flat_set
-                                             FStarC_Syntax_Syntax.ord_bv))
-                                       (Obj.magic uu___10)
-                                       (Obj.magic uu___11) in
+                                     FStarC_Class_Setlike.subset
+                                       (FStarC_FlatSet.setlike_flat_set
+                                          FStarC_Syntax_Syntax.ord_bv)
+                                       uu___10 uu___11 in
                                    Prims.op_Negation uu___9 in
                                  if uu___8
                                  then
@@ -6045,7 +6050,14 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                                             (env.FStarC_TypeChecker_Env.core_check);
                                           FStarC_TypeChecker_Env.missing_decl
                                             =
-                                            (env.FStarC_TypeChecker_Env.missing_decl)
+                                            (env.FStarC_TypeChecker_Env.missing_decl);
+                                          FStarC_TypeChecker_Env.iface_todo =
+                                            (env.FStarC_TypeChecker_Env.iface_todo);
+                                          FStarC_TypeChecker_Env.iface_lids =
+                                            (env.FStarC_TypeChecker_Env.iface_lids);
+                                          FStarC_TypeChecker_Env.iface_val_lids
+                                            =
+                                            (env.FStarC_TypeChecker_Env.iface_val_lids)
                                         } head1 false in
                                     match uu___9 with
                                     | (t_head, uu___10) ->
@@ -6088,12 +6100,9 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                                                 {
                                                   attempting = sub_probs;
                                                   wl_deferred =
-                                                    (Obj.magic
-                                                       (FStarC_Class_Listlike.empty
-                                                          ()
-                                                          (Obj.magic
-                                                             (FStarC_CList.listlike_clist
-                                                                ()))));
+                                                    (FStarC_Class_Listlike.empty
+                                                       (FStarC_CList.listlike_clist
+                                                          ()));
                                                   wl_deferred_to_tac =
                                                     (wl5.wl_deferred_to_tac);
                                                   ctr = (wl5.ctr);
@@ -6103,12 +6112,9 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                                                     (wl5.umax_heuristic_ok);
                                                   tcenv = (wl5.tcenv);
                                                   wl_implicits =
-                                                    (Obj.magic
-                                                       (FStarC_Class_Listlike.empty
-                                                          ()
-                                                          (Obj.magic
-                                                             (FStarC_CList.listlike_clist
-                                                                ()))));
+                                                    (FStarC_Class_Listlike.empty
+                                                       (FStarC_CList.listlike_clist
+                                                          ()));
                                                   repr_subcomp_allowed =
                                                     (wl5.repr_subcomp_allowed);
                                                   typeclass_variables =
@@ -6122,12 +6128,9 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                                                    ->
                                                    let wl6 =
                                                      extend_wl wl5
-                                                       (Obj.magic
-                                                          (FStarC_Class_Listlike.empty
-                                                             ()
-                                                             (Obj.magic
-                                                                (FStarC_CList.listlike_clist
-                                                                   ()))))
+                                                       (FStarC_Class_Listlike.empty
+                                                          (FStarC_CList.listlike_clist
+                                                             ()))
                                                        defer_to_tac imps in
                                                    FStar_Pervasives.Inr wl6
                                                | Failed (uu___13, lstring1)
@@ -6194,11 +6197,9 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                                                     FStarC_Syntax_Free.uvars
                                                       head1 in
                                                   FStarC_Class_Setlike.elems
-                                                    ()
-                                                    (Obj.magic
-                                                       (FStarC_FlatSet.setlike_flat_set
-                                                          FStarC_Syntax_Free.ord_ctx_uvar))
-                                                    (Obj.magic uu___15) in
+                                                    (FStarC_FlatSet.setlike_flat_set
+                                                       FStarC_Syntax_Free.ord_ctx_uvar)
+                                                    uu___15 in
                                                 solve_sub_probs_if_head_types_equal
                                                   uu___14 wl2
                                             | FStar_Pervasives.Inr msg ->
@@ -6237,11 +6238,9 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                        let uu___8 =
                          binders_as_bv_set
                            ctx_uv.FStarC_Syntax_Syntax.ctx_uvar_binders in
-                       FStarC_Class_Setlike.subset ()
-                         (Obj.magic
-                            (FStarC_FlatSet.setlike_flat_set
-                               FStarC_Syntax_Syntax.ord_bv))
-                         (Obj.magic uu___7) (Obj.magic uu___8) in
+                       FStarC_Class_Setlike.subset
+                         (FStarC_FlatSet.setlike_flat_set
+                            FStarC_Syntax_Syntax.ord_bv) uu___7 uu___8 in
                      if uu___6
                      then
                        let uu___7 = FStarC_Syntax_Subst.subst' subst rhs1 in
@@ -6329,12 +6328,9 @@ let rec solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                                            else
                                              (let uu___12 =
                                                 FStarC_Class_Setlike.subset
-                                                  ()
-                                                  (Obj.magic
-                                                     (FStarC_FlatSet.setlike_flat_set
-                                                        FStarC_Syntax_Syntax.ord_bv))
-                                                  (Obj.magic fvs2)
-                                                  (Obj.magic fvs1) in
+                                                  (FStarC_FlatSet.setlike_flat_set
+                                                     FStarC_Syntax_Syntax.ord_bv)
+                                                  fvs2 fvs1 in
                                               if uu___12
                                               then
                                                 let sol =
@@ -6969,10 +6965,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
           (if need_unif then "need unification" else "match") uu___3 uu___4
           uu___5 uu___6
       else ());
-     (let uu___2 = FStarC_Syntax_Util.head_and_args t1 in
+     (let uu___2 = FStarC_Syntax_Util.head_and_args_full t1 in
       match uu___2 with
       | (head1, args1) ->
-          let uu___3 = FStarC_Syntax_Util.head_and_args t2 in
+          let uu___3 = FStarC_Syntax_Util.head_and_args_full t2 in
           (match uu___3 with
            | (head2, args2) ->
                let need_unif1 =
@@ -7209,12 +7205,12 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                      | (FStar_Pervasives_Native.Some t1',
                                         FStar_Pervasives_Native.Some t2') ->
                                          let uu___8 =
-                                           FStarC_Syntax_Util.head_and_args
+                                           FStarC_Syntax_Util.head_and_args_full
                                              t1' in
                                          (match uu___8 with
                                           | (head1', uu___9) ->
                                               let uu___10 =
-                                                FStarC_Syntax_Util.head_and_args
+                                                FStarC_Syntax_Util.head_and_args_full
                                                   t2' in
                                               (match uu___10 with
                                                | (head2', uu___11) ->
@@ -7630,11 +7626,8 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                          [FStarC_TypeChecker_Common.TProb
                                             prob];
                                        wl_deferred =
-                                         (Obj.magic
-                                            (FStarC_Class_Listlike.empty ()
-                                               (Obj.magic
-                                                  (FStarC_CList.listlike_clist
-                                                     ()))));
+                                         (FStarC_Class_Listlike.empty
+                                            (FStarC_CList.listlike_clist ()));
                                        wl_deferred_to_tac =
                                          (wl4.wl_deferred_to_tac);
                                        ctr = (wl4.ctr);
@@ -7644,11 +7637,8 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                          (wl4.umax_heuristic_ok);
                                        tcenv = (wl4.tcenv);
                                        wl_implicits =
-                                         (Obj.magic
-                                            (FStarC_Class_Listlike.empty ()
-                                               (Obj.magic
-                                                  (FStarC_CList.listlike_clist
-                                                     ()))));
+                                         (FStarC_Class_Listlike.empty
+                                            (FStarC_CList.listlike_clist ()));
                                        repr_subcomp_allowed =
                                          (wl4.repr_subcomp_allowed);
                                        typeclass_variables =
@@ -7656,10 +7646,8 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                      }
                                      g_pat_term.FStarC_TypeChecker_Common.deferred
                                      g_pat_term.FStarC_TypeChecker_Common.deferred_to_tac
-                                     (Obj.magic
-                                        (FStarC_Class_Listlike.empty ()
-                                           (Obj.magic
-                                              (FStarC_CList.listlike_clist ())))) in
+                                     (FStarC_Class_Listlike.empty
+                                        (FStarC_CList.listlike_clist ())) in
                                  let uu___8 = solve wl' in
                                  (match uu___8 with
                                   | Success (uu___9, defer_to_tac, imps) ->
@@ -7706,13 +7694,9 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                                     ()) uu___15
                                                  g_pat_term.FStarC_TypeChecker_Common.implicits in
                                              extend_wl wl4
-                                               (Obj.magic
-                                                  (FStarC_Class_Listlike.empty
-                                                     ()
-                                                     (Obj.magic
-                                                        (FStarC_CList.listlike_clist
-                                                           ())))) uu___13
-                                               uu___14 in
+                                               (FStarC_Class_Listlike.empty
+                                                  (FStarC_CList.listlike_clist
+                                                     ())) uu___13 uu___14 in
                                            FStar_Pervasives_Native.Some
                                              uu___12
                                        | Failed uu___11 ->
@@ -8430,73 +8414,76 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              "Only locally nameless! We should never see a de Bruijn variable"
        | (FStarC_Syntax_Syntax.Tm_type u1, FStarC_Syntax_Syntax.Tm_type u2)
            -> solve_one_universe_eq orig u1 u2 wl
-       | (FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = bs1; FStarC_Syntax_Syntax.comp = c1;_},
-          FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = bs2; FStarC_Syntax_Syntax.comp = c2;_})
-           ->
-           let mk_c c uu___5 =
-             match uu___5 with
-             | [] -> c
-             | bs ->
-                 let uu___6 =
-                   FStarC_Syntax_Syntax.mk
-                     (FStarC_Syntax_Syntax.Tm_arrow
-                        {
-                          FStarC_Syntax_Syntax.bs1 = bs;
-                          FStarC_Syntax_Syntax.comp = c
-                        }) c.FStarC_Syntax_Syntax.pos in
-                 FStarC_Syntax_Syntax.mk_Total uu___6 in
-           let uu___5 = match_num_binders (bs1, (mk_c c1)) (bs2, (mk_c c2)) in
-           (match uu___5 with
-            | ((bs11, c11), (bs21, c21)) ->
-                solve_binders bs11 bs21 orig wl
-                  (fun wl1 scope subst ->
-                     let c12 = FStarC_Syntax_Subst.subst_comp subst c11 in
-                     let c22 = FStarC_Syntax_Subst.subst_comp subst c21 in
-                     let rel =
-                       let uu___6 = FStarC_Options.use_eq_at_higher_order () in
-                       if uu___6
-                       then FStarC_TypeChecker_Common.EQ
-                       else problem.FStarC_TypeChecker_Common.relation in
-                     mk_c_problem wl1 scope orig c12 rel c22
-                       FStar_Pervasives_Native.None "function co-domain"))
-       | (FStarC_Syntax_Syntax.Tm_abs
-          { FStarC_Syntax_Syntax.bs = bs1;
-            FStarC_Syntax_Syntax.body = tbody1;
-            FStarC_Syntax_Syntax.rc_opt = lopt1;_},
-          FStarC_Syntax_Syntax.Tm_abs
-          { FStarC_Syntax_Syntax.bs = bs2;
-            FStarC_Syntax_Syntax.body = tbody2;
-            FStarC_Syntax_Syntax.rc_opt = lopt2;_})
-           ->
-           let mk_t t l uu___5 =
-             match uu___5 with
-             | [] -> t
-             | bs ->
-                 FStarC_Syntax_Syntax.mk
-                   (FStarC_Syntax_Syntax.Tm_abs
-                      {
-                        FStarC_Syntax_Syntax.bs = bs;
-                        FStarC_Syntax_Syntax.body = t;
-                        FStarC_Syntax_Syntax.rc_opt = l
-                      }) t.FStarC_Syntax_Syntax.pos in
-           let uu___5 =
-             match_num_binders (bs1, (mk_t tbody1 lopt1))
-               (bs2, (mk_t tbody2 lopt2)) in
-           (match uu___5 with
-            | ((bs11, tbody11), (bs21, tbody21)) ->
-                solve_binders bs11 bs21 orig wl
-                  (fun wl1 scope subst ->
-                     let uu___6 = FStarC_Syntax_Subst.subst subst tbody11 in
-                     let uu___7 = FStarC_Syntax_Subst.subst subst tbody21 in
-                     mk_t_problem wl1 scope orig uu___6
-                       problem.FStarC_TypeChecker_Common.relation uu___7
-                       FStar_Pervasives_Native.None "lambda co-domain"))
+       | (FStarC_Syntax_Syntax.Tm_arrow uu___5, FStarC_Syntax_Syntax.Tm_arrow
+          uu___6) ->
+           let uu___7 = FStarC_Syntax_Util.arrow_formals_comp_ln_strict t1 in
+           (match uu___7 with
+            | (bs1, c1) ->
+                let uu___8 =
+                  FStarC_Syntax_Util.arrow_formals_comp_ln_strict t2 in
+                (match uu___8 with
+                 | (bs2, c2) ->
+                     let mk_c c uu___9 =
+                       match uu___9 with
+                       | [] -> c
+                       | bs ->
+                           let uu___10 =
+                             FStarC_Syntax_Syntax.mk_Tm_arrow bs c
+                               c.FStarC_Syntax_Syntax.pos in
+                           FStarC_Syntax_Syntax.mk_Total uu___10 in
+                     let uu___9 =
+                       match_num_binders (bs1, (mk_c c1)) (bs2, (mk_c c2)) in
+                     (match uu___9 with
+                      | ((bs11, c11), (bs21, c21)) ->
+                          solve_binders bs11 bs21 orig wl
+                            (fun wl1 scope subst ->
+                               let c12 =
+                                 FStarC_Syntax_Subst.subst_comp subst c11 in
+                               let c22 =
+                                 FStarC_Syntax_Subst.subst_comp subst c21 in
+                               let rel =
+                                 let uu___10 =
+                                   FStarC_Options.use_eq_at_higher_order () in
+                                 if uu___10
+                                 then FStarC_TypeChecker_Common.EQ
+                                 else
+                                   problem.FStarC_TypeChecker_Common.relation in
+                               mk_c_problem wl1 scope orig c12 rel c22
+                                 FStar_Pervasives_Native.None
+                                 "function co-domain"))))
+       | (FStarC_Syntax_Syntax.Tm_abs uu___5, FStarC_Syntax_Syntax.Tm_abs
+          uu___6) ->
+           let uu___7 = FStarC_Syntax_Util.abs_formals_ln t1 in
+           (match uu___7 with
+            | (bs1, tbody1, lopt1) ->
+                let uu___8 = FStarC_Syntax_Util.abs_formals_ln t2 in
+                (match uu___8 with
+                 | (bs2, tbody2, lopt2) ->
+                     let mk_t t l uu___9 =
+                       match uu___9 with
+                       | [] -> t
+                       | bs ->
+                           FStarC_Syntax_Syntax.mk_Tm_abs bs t l
+                             t.FStarC_Syntax_Syntax.pos in
+                     let uu___9 =
+                       match_num_binders (bs1, (mk_t tbody1 lopt1))
+                         (bs2, (mk_t tbody2 lopt2)) in
+                     (match uu___9 with
+                      | ((bs11, tbody11), (bs21, tbody21)) ->
+                          solve_binders bs11 bs21 orig wl
+                            (fun wl1 scope subst ->
+                               let uu___10 =
+                                 FStarC_Syntax_Subst.subst subst tbody11 in
+                               let uu___11 =
+                                 FStarC_Syntax_Subst.subst subst tbody21 in
+                               mk_t_problem wl1 scope orig uu___10
+                                 problem.FStarC_TypeChecker_Common.relation
+                                 uu___11 FStar_Pervasives_Native.None
+                                 "lambda co-domain"))))
        | (FStarC_Syntax_Syntax.Tm_refine
-          { FStarC_Syntax_Syntax.b = x1; FStarC_Syntax_Syntax.phi = phi1;_},
+          { FStarC_Syntax_Syntax.b2 = x1; FStarC_Syntax_Syntax.phi = phi1;_},
           FStarC_Syntax_Syntax.Tm_refine
-          { FStarC_Syntax_Syntax.b = x2; FStarC_Syntax_Syntax.phi = phi2;_})
+          { FStarC_Syntax_Syntax.b2 = x2; FStarC_Syntax_Syntax.phi = phi2;_})
            ->
            let env = p_env wl (FStarC_TypeChecker_Common.TProb problem) in
            let uu___5 =
@@ -8541,14 +8528,14 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                   FStarC_Syntax_Syntax.mk
                     (FStarC_Syntax_Syntax.Tm_refine
                        {
-                         FStarC_Syntax_Syntax.b = x11;
+                         FStarC_Syntax_Syntax.b2 = x11;
                          FStarC_Syntax_Syntax.phi = phi1
                        }) t1.FStarC_Syntax_Syntax.pos in
                 let t21 =
                   FStarC_Syntax_Syntax.mk
                     (FStarC_Syntax_Syntax.Tm_refine
                        {
-                         FStarC_Syntax_Syntax.b = x21;
+                         FStarC_Syntax_Syntax.b2 = x21;
                          FStarC_Syntax_Syntax.phi = phi2
                        }) t2.FStarC_Syntax_Syntax.pos in
                 let uu___6 = as_refinement false env t11 in
@@ -8653,11 +8640,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                     let uu___11 =
                                       let uu___12 =
                                         FStarC_Syntax_Free.uvars phi12 in
-                                      FStarC_Class_Setlike.is_empty ()
-                                        (Obj.magic
-                                           (FStarC_FlatSet.setlike_flat_set
-                                              FStarC_Syntax_Free.ord_ctx_uvar))
-                                        (Obj.magic uu___12) in
+                                      FStarC_Class_Setlike.is_empty
+                                        (FStarC_FlatSet.setlike_flat_set
+                                           FStarC_Syntax_Free.ord_ctx_uvar)
+                                        uu___12 in
                                     Prims.op_Negation uu___11 in
                                   if uu___10
                                   then true
@@ -8665,11 +8651,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                     (let uu___11 =
                                        let uu___12 =
                                          FStarC_Syntax_Free.uvars phi22 in
-                                       FStarC_Class_Setlike.is_empty ()
-                                         (Obj.magic
-                                            (FStarC_FlatSet.setlike_flat_set
-                                               FStarC_Syntax_Free.ord_ctx_uvar))
-                                         (Obj.magic uu___12) in
+                                       FStarC_Class_Setlike.is_empty
+                                         (FStarC_FlatSet.setlike_flat_set
+                                            FStarC_Syntax_Free.ord_ctx_uvar)
+                                         uu___12 in
                                      Prims.op_Negation uu___11) in
                                 if
                                   (problem.FStarC_TypeChecker_Common.relation
@@ -8697,12 +8682,9 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                            {
                                              attempting = [ref_prob1];
                                              wl_deferred =
-                                               (Obj.magic
-                                                  (FStarC_Class_Listlike.empty
-                                                     ()
-                                                     (Obj.magic
-                                                        (FStarC_CList.listlike_clist
-                                                           ()))));
+                                               (FStarC_Class_Listlike.empty
+                                                  (FStarC_CList.listlike_clist
+                                                     ()));
                                              wl_deferred_to_tac =
                                                (wl2.wl_deferred_to_tac);
                                              ctr = (wl2.ctr);
@@ -8712,12 +8694,9 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                                (wl2.umax_heuristic_ok);
                                              tcenv = (wl2.tcenv);
                                              wl_implicits =
-                                               (Obj.magic
-                                                  (FStarC_Class_Listlike.empty
-                                                     ()
-                                                     (Obj.magic
-                                                        (FStarC_CList.listlike_clist
-                                                           ()))));
+                                               (FStarC_Class_Listlike.empty
+                                                  (FStarC_CList.listlike_clist
+                                                     ()));
                                              repr_subcomp_allowed =
                                                (wl2.repr_subcomp_allowed);
                                              typeclass_variables =
@@ -8774,19 +8753,15 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                                               } in
                                             let wl5 =
                                               extend_wl wl4
-                                                (Obj.magic
-                                                   (FStarC_Class_Listlike.empty
-                                                      ()
-                                                      (Obj.magic
-                                                         (FStarC_CList.listlike_clist
-                                                            ()))))
-                                                defer_to_tac imps in
+                                                (FStarC_Class_Listlike.empty
+                                                   (FStarC_CList.listlike_clist
+                                                      ())) defer_to_tac imps in
                                             let uu___13 =
                                               attempt [base_prob] wl5 in
                                             solve uu___13))
                                 else fallback ())))))
-       | (FStarC_Syntax_Syntax.Tm_uvar uu___5, FStarC_Syntax_Syntax.Tm_uvar
-          uu___6) ->
+       | (uu___5, uu___6) when
+           let uu___7 = is_flex t1 in if uu___7 then is_flex t2 else false ->
            let env = p_env wl (FStarC_TypeChecker_Common.TProb problem) in
            let uu___7 = ensure_no_uvar_subst env t1 wl in
            (match uu___7 with
@@ -8802,125 +8777,23 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                           (match uu___11 with
                            | (f2, uu___12) ->
                                solve_t_flex_flex env orig wl2 f1 f2))))
-       | (FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___5;
-                FStarC_Syntax_Syntax.pos = uu___6;
-                FStarC_Syntax_Syntax.vars = uu___7;
-                FStarC_Syntax_Syntax.hash_code = uu___8;_};
-            FStarC_Syntax_Syntax.args = uu___9;_},
-          FStarC_Syntax_Syntax.Tm_uvar uu___10) ->
-           let env = p_env wl (FStarC_TypeChecker_Common.TProb problem) in
-           let uu___11 = ensure_no_uvar_subst env t1 wl in
-           (match uu___11 with
-            | (t11, wl1) ->
-                let t21 = FStarC_Syntax_Util.canon_app t2 in
-                let uu___12 = ensure_no_uvar_subst env t21 wl1 in
-                (match uu___12 with
-                 | (t22, wl2) ->
-                     let uu___13 = destruct_flex_t' t11 in
-                     (match uu___13 with
-                      | (f1, uu___14) ->
-                          let uu___15 = destruct_flex_t' t22 in
-                          (match uu___15 with
-                           | (f2, uu___16) ->
-                               solve_t_flex_flex env orig wl2 f1 f2))))
-       | (FStarC_Syntax_Syntax.Tm_uvar uu___5, FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___6;
-                FStarC_Syntax_Syntax.pos = uu___7;
-                FStarC_Syntax_Syntax.vars = uu___8;
-                FStarC_Syntax_Syntax.hash_code = uu___9;_};
-            FStarC_Syntax_Syntax.args = uu___10;_})
-           ->
-           let env = p_env wl (FStarC_TypeChecker_Common.TProb problem) in
-           let uu___11 = ensure_no_uvar_subst env t1 wl in
-           (match uu___11 with
-            | (t11, wl1) ->
-                let t21 = FStarC_Syntax_Util.canon_app t2 in
-                let uu___12 = ensure_no_uvar_subst env t21 wl1 in
-                (match uu___12 with
-                 | (t22, wl2) ->
-                     let uu___13 = destruct_flex_t' t11 in
-                     (match uu___13 with
-                      | (f1, uu___14) ->
-                          let uu___15 = destruct_flex_t' t22 in
-                          (match uu___15 with
-                           | (f2, uu___16) ->
-                               solve_t_flex_flex env orig wl2 f1 f2))))
-       | (FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___5;
-                FStarC_Syntax_Syntax.pos = uu___6;
-                FStarC_Syntax_Syntax.vars = uu___7;
-                FStarC_Syntax_Syntax.hash_code = uu___8;_};
-            FStarC_Syntax_Syntax.args = uu___9;_},
-          FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              {
-                FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___10;
-                FStarC_Syntax_Syntax.pos = uu___11;
-                FStarC_Syntax_Syntax.vars = uu___12;
-                FStarC_Syntax_Syntax.hash_code = uu___13;_};
-            FStarC_Syntax_Syntax.args = uu___14;_})
-           ->
-           let env = p_env wl (FStarC_TypeChecker_Common.TProb problem) in
-           let uu___15 = ensure_no_uvar_subst env t1 wl in
-           (match uu___15 with
-            | (t11, wl1) ->
-                let t21 = FStarC_Syntax_Util.canon_app t2 in
-                let uu___16 = ensure_no_uvar_subst env t21 wl1 in
-                (match uu___16 with
-                 | (t22, wl2) ->
-                     let uu___17 = destruct_flex_t' t11 in
-                     (match uu___17 with
-                      | (f1, uu___18) ->
-                          let uu___19 = destruct_flex_t' t22 in
-                          (match uu___19 with
-                           | (f2, uu___20) ->
-                               solve_t_flex_flex env orig wl2 f1 f2))))
-       | (FStarC_Syntax_Syntax.Tm_uvar uu___5, uu___6) when
-           problem.FStarC_TypeChecker_Common.relation =
-             FStarC_TypeChecker_Common.EQ
-           ->
+       | (uu___5, uu___6) when
+           let uu___7 = is_flex t1 in
+           if uu___7
+           then
+             problem.FStarC_TypeChecker_Common.relation =
+               FStarC_TypeChecker_Common.EQ
+           else false ->
            let f1 = destruct_flex_t' t1 in
            solve_t_flex_rigid_eq orig wl f1 t2
-       | (FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___5;
-                FStarC_Syntax_Syntax.pos = uu___6;
-                FStarC_Syntax_Syntax.vars = uu___7;
-                FStarC_Syntax_Syntax.hash_code = uu___8;_};
-            FStarC_Syntax_Syntax.args = uu___9;_},
-          uu___10) when
-           problem.FStarC_TypeChecker_Common.relation =
-             FStarC_TypeChecker_Common.EQ
-           ->
-           let f1 = destruct_flex_t' t1 in
-           solve_t_flex_rigid_eq orig wl f1 t2
-       | (uu___5, FStarC_Syntax_Syntax.Tm_uvar uu___6) when
-           problem.FStarC_TypeChecker_Common.relation =
-             FStarC_TypeChecker_Common.EQ
-           -> solve_t' (invert problem) wl
-       | (uu___5, FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___6;
-                FStarC_Syntax_Syntax.pos = uu___7;
-                FStarC_Syntax_Syntax.vars = uu___8;
-                FStarC_Syntax_Syntax.hash_code = uu___9;_};
-            FStarC_Syntax_Syntax.args = uu___10;_})
-           when
-           problem.FStarC_TypeChecker_Common.relation =
-             FStarC_TypeChecker_Common.EQ
-           -> solve_t' (invert problem) wl
-       | (FStarC_Syntax_Syntax.Tm_uvar uu___5, FStarC_Syntax_Syntax.Tm_arrow
-          uu___6) ->
+       | (uu___5, uu___6) when
+           let uu___7 = is_flex t2 in
+           if uu___7
+           then
+             problem.FStarC_TypeChecker_Common.relation =
+               FStarC_TypeChecker_Common.EQ
+           else false -> solve_t' (invert problem) wl
+       | (uu___5, FStarC_Syntax_Syntax.Tm_arrow uu___6) when is_flex t1 ->
            solve_t'
              {
                FStarC_TypeChecker_Common.pid =
@@ -8946,68 +8819,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                FStarC_TypeChecker_Common.logical =
                  (problem.FStarC_TypeChecker_Common.logical)
              } wl
-       | (FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___5;
-                FStarC_Syntax_Syntax.pos = uu___6;
-                FStarC_Syntax_Syntax.vars = uu___7;
-                FStarC_Syntax_Syntax.hash_code = uu___8;_};
-            FStarC_Syntax_Syntax.args = uu___9;_},
-          FStarC_Syntax_Syntax.Tm_arrow uu___10) ->
-           solve_t'
-             {
-               FStarC_TypeChecker_Common.pid =
-                 (problem.FStarC_TypeChecker_Common.pid);
-               FStarC_TypeChecker_Common.lhs =
-                 (problem.FStarC_TypeChecker_Common.lhs);
-               FStarC_TypeChecker_Common.relation =
-                 FStarC_TypeChecker_Common.EQ;
-               FStarC_TypeChecker_Common.rhs =
-                 (problem.FStarC_TypeChecker_Common.rhs);
-               FStarC_TypeChecker_Common.element =
-                 (problem.FStarC_TypeChecker_Common.element);
-               FStarC_TypeChecker_Common.logical_guard =
-                 (problem.FStarC_TypeChecker_Common.logical_guard);
-               FStarC_TypeChecker_Common.logical_guard_uvar =
-                 (problem.FStarC_TypeChecker_Common.logical_guard_uvar);
-               FStarC_TypeChecker_Common.reason =
-                 (problem.FStarC_TypeChecker_Common.reason);
-               FStarC_TypeChecker_Common.loc =
-                 (problem.FStarC_TypeChecker_Common.loc);
-               FStarC_TypeChecker_Common.rank =
-                 (problem.FStarC_TypeChecker_Common.rank);
-               FStarC_TypeChecker_Common.logical =
-                 (problem.FStarC_TypeChecker_Common.logical)
-             } wl
-       | (uu___5, FStarC_Syntax_Syntax.Tm_uvar uu___6) ->
+       | (uu___5, uu___6) when
+           let uu___7 = is_flex t1 in if uu___7 then true else is_flex t2 ->
            let uu___7 = attempt [FStarC_TypeChecker_Common.TProb problem] wl in
            solve uu___7
-       | (uu___5, FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___6;
-                FStarC_Syntax_Syntax.pos = uu___7;
-                FStarC_Syntax_Syntax.vars = uu___8;
-                FStarC_Syntax_Syntax.hash_code = uu___9;_};
-            FStarC_Syntax_Syntax.args = uu___10;_})
-           ->
-           let uu___11 = attempt [FStarC_TypeChecker_Common.TProb problem] wl in
-           solve uu___11
-       | (FStarC_Syntax_Syntax.Tm_uvar uu___5, uu___6) ->
-           let uu___7 = attempt [FStarC_TypeChecker_Common.TProb problem] wl in
-           solve uu___7
-       | (FStarC_Syntax_Syntax.Tm_app
-          {
-            FStarC_Syntax_Syntax.hd =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar uu___5;
-                FStarC_Syntax_Syntax.pos = uu___6;
-                FStarC_Syntax_Syntax.vars = uu___7;
-                FStarC_Syntax_Syntax.hash_code = uu___8;_};
-            FStarC_Syntax_Syntax.args = uu___9;_},
-          uu___10) ->
-           let uu___11 = attempt [FStarC_TypeChecker_Common.TProb problem] wl in
-           solve uu___11
        | (FStarC_Syntax_Syntax.Tm_abs uu___5, uu___6) ->
            let is_abs t =
              match t.FStarC_Syntax_Syntax.n with
@@ -9055,7 +8870,8 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                              (problem.FStarC_TypeChecker_Common.logical)
                          } wl
                    | uu___9 ->
-                       let uu___10 = FStarC_Syntax_Util.head_and_args not_abs in
+                       let uu___10 =
+                         FStarC_Syntax_Util.head_and_args_full not_abs in
                        (match uu___10 with
                         | (head, uu___11) ->
                             let uu___12 =
@@ -9117,7 +8933,8 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                              (problem.FStarC_TypeChecker_Common.logical)
                          } wl
                    | uu___9 ->
-                       let uu___10 = FStarC_Syntax_Util.head_and_args not_abs in
+                       let uu___10 =
+                         FStarC_Syntax_Util.head_and_args_full not_abs in
                        (match uu___10 with
                         | (head, uu___11) ->
                             let uu___12 =
@@ -9189,7 +9006,8 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                              (problem.FStarC_TypeChecker_Common.logical)
                          } wl
                    | uu___9 ->
-                       let uu___10 = FStarC_Syntax_Util.head_and_args not_abs in
+                       let uu___10 =
+                         FStarC_Syntax_Util.head_and_args_full not_abs in
                        (match uu___10 with
                         | (head, uu___11) ->
                             let uu___12 =
@@ -9251,7 +9069,8 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                              (problem.FStarC_TypeChecker_Common.logical)
                          } wl
                    | uu___9 ->
-                       let uu___10 = FStarC_Syntax_Util.head_and_args not_abs in
+                       let uu___10 =
+                         FStarC_Syntax_Util.head_and_args_full not_abs in
                        (match uu___10 with
                         | (head, uu___11) ->
                             let uu___12 =
@@ -9526,10 +9345,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
                               giveup wl3 uu___14 orig)))))
        | (FStarC_Syntax_Syntax.Tm_match uu___5, uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -9665,10 +9484,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (FStarC_Syntax_Syntax.Tm_uinst uu___5, uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -9804,10 +9623,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (FStarC_Syntax_Syntax.Tm_name uu___5, uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -9943,10 +9762,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (FStarC_Syntax_Syntax.Tm_constant uu___5, uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -10082,10 +9901,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (FStarC_Syntax_Syntax.Tm_fvar uu___5, uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -10221,10 +10040,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (FStarC_Syntax_Syntax.Tm_app uu___5, uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -10360,10 +10179,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (uu___5, FStarC_Syntax_Syntax.Tm_match uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -10499,10 +10318,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (uu___5, FStarC_Syntax_Syntax.Tm_uinst uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -10638,10 +10457,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (uu___5, FStarC_Syntax_Syntax.Tm_name uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -10777,10 +10596,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (uu___5, FStarC_Syntax_Syntax.Tm_constant uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -10916,10 +10735,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (uu___5, FStarC_Syntax_Syntax.Tm_fvar uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -11055,10 +10874,10 @@ let solve_t'_aux (problem : tprob) (wl : worklist) : solution=
              else rigid_rigid_delta problem wl head1 head2 t1 t2))
        | (uu___5, FStarC_Syntax_Syntax.Tm_app uu___6) ->
            let head1 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t1 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
              FStar_Pervasives_Native.fst uu___7 in
            let head2 =
-             let uu___7 = FStarC_Syntax_Util.head_and_args t2 in
+             let uu___7 = FStarC_Syntax_Util.head_and_args_full t2 in
              FStar_Pervasives_Native.fst uu___7 in
            ((let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
              if uu___8
@@ -11403,18 +11222,13 @@ let solve_c_aux
                          let uu___4 =
                            FStarC_Class_Monoid.op_Plus_Plus
                              (FStarC_CList.monoid_clist ()) univ_sub_probs
-                             (Obj.magic
-                                (FStarC_Class_Listlike.cons ()
-                                   (Obj.magic
-                                      (FStarC_CList.listlike_clist ())) p
-                                   (FStarC_Class_Listlike.empty ()
-                                      (Obj.magic
-                                         (FStarC_CList.listlike_clist ()))))) in
+                             (FStarC_Class_Listlike.cons
+                                (FStarC_CList.listlike_clist ()) p
+                                (FStarC_Class_Listlike.empty
+                                   (FStarC_CList.listlike_clist ()))) in
                          (uu___4, wl2)))
-             ((Obj.magic
-                 (FStarC_Class_Listlike.empty ()
-                    (Obj.magic (FStarC_CList.listlike_clist ())))), wl)
-             c1_comp.FStarC_Syntax_Syntax.comp_univs
+             ((FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())),
+               wl) c1_comp.FStarC_Syntax_Syntax.comp_univs
              c2_comp.FStarC_Syntax_Syntax.comp_univs in
          match uu___1 with
          | (univ_sub_probs, wl1) ->
@@ -11435,17 +11249,13 @@ let solve_c_aux
                                  a2 "effect arg" in
                              (match uu___9 with
                               | (p, wl4) ->
-                                  ((Obj.magic
-                                      (FStarC_Class_Listlike.cons ()
-                                         (Obj.magic
-                                            (FStarC_CList.listlike_clist ()))
-                                         p (Obj.magic arg_sub_probs))), wl4)))
+                                  ((FStarC_Class_Listlike.cons
+                                      (FStarC_CList.listlike_clist ()) p
+                                      arg_sub_probs), wl4)))
                       c1_comp.FStarC_Syntax_Syntax.effect_args
                       c2_comp.FStarC_Syntax_Syntax.effect_args
-                      ((Obj.magic
-                          (FStarC_Class_Listlike.empty ()
-                             (Obj.magic (FStarC_CList.listlike_clist ())))),
-                        wl2) in
+                      ((FStarC_Class_Listlike.empty
+                          (FStarC_CList.listlike_clist ())), wl2) in
                   (match uu___3 with
                    | (arg_sub_probs, wl3) ->
                        let sub_probs =
@@ -11460,10 +11270,9 @@ let solve_c_aux
                              FStarC_Class_Monoid.op_Plus_Plus
                                (FStarC_CList.monoid_clist ()) arg_sub_probs
                                uu___6 in
-                           Obj.magic
-                             (FStarC_Class_Listlike.cons ()
-                                (Obj.magic (FStarC_CList.listlike_clist ()))
-                                ret_sub_prob (Obj.magic uu___5)) in
+                           FStarC_Class_Listlike.cons
+                             (FStarC_CList.listlike_clist ()) ret_sub_prob
+                             uu___5 in
                          FStarC_Class_Monoid.op_Plus_Plus
                            (FStarC_CList.monoid_clist ()) univ_sub_probs
                            uu___4 in
@@ -11710,7 +11519,7 @@ let solve_c_aux
                              is_uvar t1
                          | FStarC_Syntax_Syntax.Tm_app
                              { FStarC_Syntax_Syntax.hd = t1;
-                               FStarC_Syntax_Syntax.args = uu___6;_}
+                               FStarC_Syntax_Syntax.arg = uu___6;_}
                              -> is_uvar t1
                          | uu___6 -> false in
                        FStarC_List.fold_right2
@@ -12012,19 +11821,12 @@ let solve_c_aux
                                        "Rel doesn't yet handle undefined trivial combinator in an effect"
                                  | FStar_Pervasives_Native.Some t -> t in
                                let uu___6 =
-                                 let uu___7 =
-                                   let uu___8 =
-                                     FStarC_TypeChecker_Env.inst_effect_fun_with
-                                       [c1_univ] env c2_decl trivial in
-                                   {
-                                     FStarC_Syntax_Syntax.hd = uu___8;
-                                     FStarC_Syntax_Syntax.args =
-                                       [FStarC_Syntax_Syntax.as_arg
-                                          c11.FStarC_Syntax_Syntax.result_typ;
-                                       wpc1_2]
-                                   } in
-                                 FStarC_Syntax_Syntax.Tm_app uu___7 in
-                               FStarC_Syntax_Syntax.mk uu___6 r))
+                                 FStarC_TypeChecker_Env.inst_effect_fun_with
+                                   [c1_univ] env c2_decl trivial in
+                               FStarC_Syntax_Syntax.mk_Tm_app uu___6
+                                 [FStarC_Syntax_Syntax.as_arg
+                                    c11.FStarC_Syntax_Syntax.result_typ;
+                                 wpc1_2] r))
                            else
                              (let c2_univ =
                                 env.FStarC_TypeChecker_Env.universe_of env
@@ -12034,20 +11836,13 @@ let solve_c_aux
                                   (FStarC_Syntax_Util.get_stronger_vc_combinator
                                      c2_decl) in
                               let uu___5 =
-                                let uu___6 =
-                                  let uu___7 =
-                                    FStarC_TypeChecker_Env.inst_effect_fun_with
-                                      [c2_univ] env c2_decl stronger in
-                                  {
-                                    FStarC_Syntax_Syntax.hd = uu___7;
-                                    FStarC_Syntax_Syntax.args =
-                                      [FStarC_Syntax_Syntax.as_arg
-                                         c21.FStarC_Syntax_Syntax.result_typ;
-                                      FStarC_Syntax_Syntax.as_arg wpc2;
-                                      wpc1_2]
-                                  } in
-                                FStarC_Syntax_Syntax.Tm_app uu___6 in
-                              FStarC_Syntax_Syntax.mk uu___5 r)) in
+                                FStarC_TypeChecker_Env.inst_effect_fun_with
+                                  [c2_univ] env c2_decl stronger in
+                              FStarC_Syntax_Syntax.mk_Tm_app uu___5
+                                [FStarC_Syntax_Syntax.as_arg
+                                   c21.FStarC_Syntax_Syntax.result_typ;
+                                FStarC_Syntax_Syntax.as_arg wpc2;
+                                wpc1_2] r)) in
                       (let uu___5 = FStarC_Effect.op_Bang dbg_Rel in
                        if uu___5
                        then
@@ -12560,18 +12355,14 @@ let solve_aux (probs : worklist) : solution=
                       solve_rigid_flex_or_flex_rigid_subtyping rank1 tp1
                         probs1)))
    | FStar_Pervasives_Native.None ->
-       (match Obj.magic
-                (FStarC_Class_Listlike.view ()
-                   (Obj.magic (FStarC_CList.listlike_clist ()))
-                   (Obj.magic probs.wl_deferred))
+       (match FStarC_Class_Listlike.view (FStarC_CList.listlike_clist ())
+                probs.wl_deferred
         with
         | FStarC_Class_Listlike.VNil ->
             let uu___3 =
               let uu___4 = as_deferred probs.wl_deferred_to_tac in
-              ((Obj.magic
-                  (FStarC_Class_Listlike.empty ()
-                     (Obj.magic (FStarC_CList.listlike_clist ())))), uu___4,
-                (probs.wl_implicits)) in
+              ((FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())),
+                uu___4, (probs.wl_implicits)) in
             Success uu___3
         | FStarC_Class_Listlike.VCons (uu___3, uu___4) ->
             let uu___5 =
@@ -12582,10 +12373,8 @@ let solve_aux (probs : worklist) : solution=
                 probs.wl_deferred in
             (match uu___5 with
              | (attempt1, rest) ->
-                 (match Obj.magic
-                          (FStarC_Class_Listlike.view ()
-                             (Obj.magic (FStarC_CList.listlike_clist ()))
-                             (Obj.magic attempt1))
+                 (match FStarC_Class_Listlike.view
+                          (FStarC_CList.listlike_clist ()) attempt1
                   with
                   | FStarC_Class_Listlike.VNil ->
                       let uu___6 =
@@ -12661,10 +12450,8 @@ let ineqs_to_string
 let guard_to_string (env : FStarC_TypeChecker_Env.env)
   (g : FStarC_TypeChecker_Common.guard_t) : Prims.string=
   match ((g.FStarC_TypeChecker_Common.guard_f),
-          (Obj.magic
-             (FStarC_Class_Listlike.view ()
-                (Obj.magic (FStarC_CList.listlike_clist ()))
-                (Obj.magic g.FStarC_TypeChecker_Common.deferred))))
+          (FStarC_Class_Listlike.view (FStarC_CList.listlike_clist ())
+             g.FStarC_TypeChecker_Common.deferred))
   with
   | (FStarC_TypeChecker_Common.Trivial, FStarC_Class_Listlike.VNil) when
       let uu___ =
@@ -12823,12 +12610,10 @@ let with_guard (env : FStarC_TypeChecker_Env.env)
               FStarC_TypeChecker_Common.deferred_to_tac = defer_to_tac;
               FStarC_TypeChecker_Common.deferred = deferred;
               FStarC_TypeChecker_Common.univ_ineqs =
-                ((Obj.magic
-                    (FStarC_Class_Listlike.empty ()
-                       (Obj.magic (FStarC_CList.listlike_clist ())))),
-                  (Obj.magic
-                     (FStarC_Class_Listlike.empty ()
-                        (Obj.magic (FStarC_CList.listlike_clist ())))));
+                ((FStarC_Class_Listlike.empty
+                    (FStarC_CList.listlike_clist ())),
+                  (FStarC_Class_Listlike.empty
+                     (FStarC_CList.listlike_clist ())));
               FStarC_TypeChecker_Common.implicits = implicits
             } in
         FStar_Pervasives_Native.Some uu___2))
@@ -13058,67 +12843,44 @@ let solve_universe_inequalities' (tx : FStarC_Syntax_Unionfind.tx)
         | uu___3 -> false in
       let sols =
         FStarC_CList.collect
-          (fun uu___2 ->
-             (fun v ->
-                let uu___2 = FStarC_Syntax_Subst.compress_univ v in
-                match uu___2 with
-                | FStarC_Syntax_Syntax.U_unif uu___3 ->
-                    Obj.magic
-                      (Obj.repr
-                         (let lower_bounds_of_v =
-                            FStarC_CList.collect
-                              (fun uu___4 ->
-                                 (fun uu___4 ->
-                                    match uu___4 with
-                                    | (u, v') ->
-                                        let uu___5 = equiv v v' in
-                                        if uu___5
-                                        then
-                                          let uu___6 =
-                                            FStarC_CList.existsb (equiv u)
-                                              variables in
-                                          (if uu___6
-                                           then
-                                             Obj.magic
-                                               (FStarC_Class_Listlike.empty
-                                                  ()
-                                                  (Obj.magic
-                                                     (FStarC_CList.listlike_clist
-                                                        ())))
-                                           else
-                                             Obj.magic
-                                               (FStarC_Class_Listlike.cons ()
-                                                  (Obj.magic
-                                                     (FStarC_CList.listlike_clist
-                                                        ())) u
-                                                  (FStarC_Class_Listlike.empty
-                                                     ()
-                                                     (Obj.magic
-                                                        (FStarC_CList.listlike_clist
-                                                           ())))))
-                                        else
-                                          Obj.magic
-                                            (FStarC_Class_Listlike.empty ()
-                                               (Obj.magic
-                                                  (FStarC_CList.listlike_clist
-                                                     ())))) uu___4) ineqs in
-                          let lb =
-                            let uu___4 =
-                              let uu___5 =
-                                FStarC_Class_Listlike.to_list
-                                  (FStarC_CList.listlike_clist ())
-                                  lower_bounds_of_v in
-                              FStarC_Syntax_Syntax.U_max uu___5 in
-                            FStarC_TypeChecker_Normalize.normalize_universe
-                              env uu___4 in
-                          FStarC_Class_Listlike.singleton
-                            (FStarC_CList.listlike_clist ()) (lb, v)))
-                | uu___3 ->
-                    Obj.magic
-                      (Obj.repr
-                         (FStarC_Class_Listlike.empty ()
-                            (Obj.magic (FStarC_CList.listlike_clist ())))))
-               uu___2) variables in
+          (fun v ->
+             let uu___2 = FStarC_Syntax_Subst.compress_univ v in
+             match uu___2 with
+             | FStarC_Syntax_Syntax.U_unif uu___3 ->
+                 let lower_bounds_of_v =
+                   FStarC_CList.collect
+                     (fun uu___4 ->
+                        match uu___4 with
+                        | (u, v') ->
+                            let uu___5 = equiv v v' in
+                            if uu___5
+                            then
+                              let uu___6 =
+                                FStarC_CList.existsb (equiv u) variables in
+                              (if uu___6
+                               then
+                                 FStarC_Class_Listlike.empty
+                                   (FStarC_CList.listlike_clist ())
+                               else
+                                 FStarC_Class_Listlike.cons
+                                   (FStarC_CList.listlike_clist ()) u
+                                   (FStarC_Class_Listlike.empty
+                                      (FStarC_CList.listlike_clist ())))
+                            else
+                              FStarC_Class_Listlike.empty
+                                (FStarC_CList.listlike_clist ())) ineqs in
+                 let lb =
+                   let uu___4 =
+                     let uu___5 =
+                       FStarC_Class_Listlike.to_list
+                         (FStarC_CList.listlike_clist ()) lower_bounds_of_v in
+                     FStarC_Syntax_Syntax.U_max uu___5 in
+                   FStarC_TypeChecker_Normalize.normalize_universe env uu___4 in
+                 FStarC_Class_Listlike.singleton
+                   (FStarC_CList.listlike_clist ()) (lb, v)
+             | uu___3 ->
+                 FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()))
+          variables in
       let uu___2 =
         let wl =
           let uu___3 = empty_worklist env in
@@ -13244,18 +13006,14 @@ let try_solve_deferred_constraints (defer_ok : defer_ok_t)
                                   FStarC_Syntax_Util.ctx_uvar_typ
                                     i.FStarC_TypeChecker_Common.imp_uvar in
                                 let uvs = FStarC_Syntax_Free.uvars goal_type in
-                                FStarC_Class_Setlike.elems ()
-                                  (Obj.magic
-                                     (FStarC_FlatSet.setlike_flat_set
-                                        FStarC_Syntax_Free.ord_ctx_uvar))
-                                  (Obj.magic uvs)
+                                FStarC_Class_Setlike.elems
+                                  (FStarC_FlatSet.setlike_flat_set
+                                     FStarC_Syntax_Free.ord_ctx_uvar) uvs
                               else [])
                      | uu___4 -> []) imps_l in
-              Obj.magic
-                (FStarC_Class_Setlike.from_list ()
-                   (Obj.magic
-                      (FStarC_RBSet.setlike_rbset
-                         FStarC_Syntax_Free.ord_ctx_uvar)) uu___3) in
+              FStarC_Class_Setlike.from_list
+                (FStarC_RBSet.setlike_rbset FStarC_Syntax_Free.ord_ctx_uvar)
+                uu___3 in
             let wl =
               let uu___3 =
                 let uu___4 =
@@ -13305,10 +13063,8 @@ let try_solve_deferred_constraints (defer_ok : defer_ok_t)
                match uu___4 with
                | FStar_Pervasives_Native.Some (deferred, uu___5, uu___6) when
                    (FStarC_Class_Listlike.uu___is_VCons
-                      (Obj.magic
-                         (FStarC_Class_Listlike.view ()
-                            (Obj.magic (FStarC_CList.listlike_clist ()))
-                            (Obj.magic deferred))))
+                      (FStarC_Class_Listlike.view
+                         (FStarC_CList.listlike_clist ()) deferred))
                      && (defer_ok = NoDefer)
                    ->
                    FStarC_Effect.failwith
@@ -13375,12 +13131,10 @@ let try_solve_deferred_constraints (defer_ok : defer_ok_t)
                 FStarC_TypeChecker_Common.deferred =
                   (g2.FStarC_TypeChecker_Common.deferred);
                 FStarC_TypeChecker_Common.univ_ineqs =
-                  ((Obj.magic
-                      (FStarC_Class_Listlike.empty ()
-                         (Obj.magic (FStarC_CList.listlike_clist ())))),
-                    (Obj.magic
-                       (FStarC_Class_Listlike.empty ()
-                          (Obj.magic (FStarC_CList.listlike_clist ())))));
+                  ((FStarC_Class_Listlike.empty
+                      (FStarC_CList.listlike_clist ())),
+                    (FStarC_Class_Listlike.empty
+                       (FStarC_CList.listlike_clist ())));
                 FStarC_TypeChecker_Common.implicits =
                   (g2.FStarC_TypeChecker_Common.implicits)
               })))
@@ -13791,7 +13545,7 @@ let try_solve_single_valued_implicits (env : FStarC_TypeChecker_Env.env)
                 let uu___3 = FStarC_Syntax_Syntax.unit_const_with_range r in
                 FStar_Pervasives_Native.Some uu___3
             | FStarC_Syntax_Syntax.Tm_refine
-                { FStarC_Syntax_Syntax.b = b;
+                { FStarC_Syntax_Syntax.b2 = b;
                   FStarC_Syntax_Syntax.phi = uu___3;_}
                 when FStarC_Syntax_Util.is_unit b.FStarC_Syntax_Syntax.sort
                 ->
@@ -13959,7 +13713,13 @@ let check_implicit_solution_and_discharge_guard
                  FStarC_TypeChecker_Env.core_check =
                    (env.FStarC_TypeChecker_Env.core_check);
                  FStarC_TypeChecker_Env.missing_decl =
-                   (env.FStarC_TypeChecker_Env.missing_decl)
+                   (env.FStarC_TypeChecker_Env.missing_decl);
+                 FStarC_TypeChecker_Env.iface_todo =
+                   (env.FStarC_TypeChecker_Env.iface_todo);
+                 FStarC_TypeChecker_Env.iface_lids =
+                   (env.FStarC_TypeChecker_Env.iface_lids);
+                 FStarC_TypeChecker_Env.iface_val_lids =
+                   (env.FStarC_TypeChecker_Env.iface_val_lids)
                }) in
         let empty_cb uu___3 = () in
         let uu___3 =
@@ -13991,38 +13751,26 @@ let check_implicit_solution_and_discharge_guard
                          let uu___6 = FStarC_Syntax_Subst.compress imp_tm in
                          uu___6.FStarC_Syntax_Syntax.n in
                        match uu___5 with
-                       | FStarC_Syntax_Syntax.Tm_abs
-                           { FStarC_Syntax_Syntax.bs = bs;
-                             FStarC_Syntax_Syntax.body = body;
-                             FStarC_Syntax_Syntax.rc_opt =
-                               FStar_Pervasives_Native.Some rc;_}
-                           ->
-                           {
-                             FStarC_Syntax_Syntax.n =
-                               (FStarC_Syntax_Syntax.Tm_abs
-                                  {
-                                    FStarC_Syntax_Syntax.bs = bs;
-                                    FStarC_Syntax_Syntax.body = body;
-                                    FStarC_Syntax_Syntax.rc_opt =
-                                      (FStar_Pervasives_Native.Some
-                                         {
-                                           FStarC_Syntax_Syntax.residual_effect
-                                             =
-                                             (rc.FStarC_Syntax_Syntax.residual_effect);
-                                           FStarC_Syntax_Syntax.residual_typ
-                                             = FStar_Pervasives_Native.None;
-                                           FStarC_Syntax_Syntax.residual_flags
-                                             =
-                                             (rc.FStarC_Syntax_Syntax.residual_flags)
-                                         })
-                                  });
-                             FStarC_Syntax_Syntax.pos =
-                               (imp_tm.FStarC_Syntax_Syntax.pos);
-                             FStarC_Syntax_Syntax.vars =
-                               (imp_tm.FStarC_Syntax_Syntax.vars);
-                             FStarC_Syntax_Syntax.hash_code =
-                               (imp_tm.FStarC_Syntax_Syntax.hash_code)
-                           }
+                       | FStarC_Syntax_Syntax.Tm_abs uu___6 ->
+                           let uu___7 =
+                             FStarC_Syntax_Util.abs_formals_ln imp_tm in
+                           (match uu___7 with
+                            | (bs, body, rc_opt) ->
+                                (match rc_opt with
+                                 | FStar_Pervasives_Native.Some rc ->
+                                     FStarC_Syntax_Syntax.mk_Tm_abs bs body
+                                       (FStar_Pervasives_Native.Some
+                                          {
+                                            FStarC_Syntax_Syntax.residual_effect
+                                              =
+                                              (rc.FStarC_Syntax_Syntax.residual_effect);
+                                            FStarC_Syntax_Syntax.residual_typ
+                                              = FStar_Pervasives_Native.None;
+                                            FStarC_Syntax_Syntax.residual_flags
+                                              =
+                                              (rc.FStarC_Syntax_Syntax.residual_flags)
+                                          }) imp_tm.FStarC_Syntax_Syntax.pos
+                                 | FStar_Pervasives_Native.None -> imp_tm))
                        | uu___6 -> imp_tm in
                      let uu___5 =
                        env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
@@ -14178,13 +13926,11 @@ let pick_a_univ_deffered_implicit (out : tagged_implicits) :
 let is_tac_implicit_resolved (env : FStarC_TypeChecker_Env.env)
   (i : FStarC_TypeChecker_Common.implicit) : Prims.bool=
   let uu___ = FStarC_Syntax_Free.uvars i.FStarC_TypeChecker_Common.imp_tm in
-  FStarC_Class_Setlike.for_all ()
-    (Obj.magic
-       (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar))
+  FStarC_Class_Setlike.for_all
+    (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
     (fun uv ->
        let uu___2 = FStarC_Syntax_Util.ctx_uvar_should_check uv in
-       FStarC_Syntax_Syntax.uu___is_Allow_unresolved uu___2)
-    (Obj.magic uu___)
+       FStarC_Syntax_Syntax.uu___is_Allow_unresolved uu___2) uu___
 let resolve_implicits' (env : FStarC_TypeChecker_Env.env)
   (is_tac : Prims.bool) (is_gen : Prims.bool)
   (implicits : FStarC_TypeChecker_Env.implicits) :
@@ -14200,11 +13946,11 @@ let resolve_implicits' (env : FStarC_TypeChecker_Env.env)
          uu___3.FStarC_Syntax_Syntax.n in
        match uu___2 with
        | FStarC_Syntax_Syntax.Tm_abs
-           { FStarC_Syntax_Syntax.bs = uu___3::[];
+           { FStarC_Syntax_Syntax.b = uu___3;
              FStarC_Syntax_Syntax.body = body;
              FStarC_Syntax_Syntax.rc_opt = uu___4;_}
            ->
-           let uu___5 = FStarC_Syntax_Util.head_and_args body in
+           let uu___5 = FStarC_Syntax_Util.head_and_args_full body in
            (match uu___5 with
             | (hd, args) ->
                 let uu___6 =
@@ -14459,7 +14205,13 @@ let resolve_implicits' (env : FStarC_TypeChecker_Env.env)
                                      FStarC_TypeChecker_Env.core_check =
                                        (env.FStarC_TypeChecker_Env.core_check);
                                      FStarC_TypeChecker_Env.missing_decl =
-                                       (env.FStarC_TypeChecker_Env.missing_decl)
+                                       (env.FStarC_TypeChecker_Env.missing_decl);
+                                     FStarC_TypeChecker_Env.iface_todo =
+                                       (env.FStarC_TypeChecker_Env.iface_todo);
+                                     FStarC_TypeChecker_Env.iface_lids =
+                                       (env.FStarC_TypeChecker_Env.iface_lids);
+                                     FStarC_TypeChecker_Env.iface_val_lids =
+                                       (env.FStarC_TypeChecker_Env.iface_val_lids)
                                    } in
                                  let typ =
                                    FStarC_Syntax_Util.ctx_uvar_typ ctx_u in
@@ -14678,7 +14430,13 @@ let resolve_implicits' (env : FStarC_TypeChecker_Env.env)
                                      FStarC_TypeChecker_Env.core_check =
                                        (env.FStarC_TypeChecker_Env.core_check);
                                      FStarC_TypeChecker_Env.missing_decl =
-                                       (env.FStarC_TypeChecker_Env.missing_decl)
+                                       (env.FStarC_TypeChecker_Env.missing_decl);
+                                     FStarC_TypeChecker_Env.iface_todo =
+                                       (env.FStarC_TypeChecker_Env.iface_todo);
+                                     FStarC_TypeChecker_Env.iface_lids =
+                                       (env.FStarC_TypeChecker_Env.iface_lids);
+                                     FStarC_TypeChecker_Env.iface_val_lids =
+                                       (env.FStarC_TypeChecker_Env.iface_val_lids)
                                    } in
                                  let tm1 =
                                    norm_with_steps
@@ -14826,10 +14584,8 @@ let force_trivial_guard (env : FStarC_TypeChecker_Env.env)
    else ());
   (let g1 = solve_deferred_constraints env g in
    let g2 = resolve_implicits env g1 in
-   match Obj.magic
-           (FStarC_Class_Listlike.view ()
-              (Obj.magic (FStarC_CList.listlike_clist ()))
-              (Obj.magic g2.FStarC_TypeChecker_Common.implicits))
+   match FStarC_Class_Listlike.view (FStarC_CList.listlike_clist ())
+           g2.FStarC_TypeChecker_Common.implicits
    with
    | FStarC_Class_Listlike.VNil -> let uu___2 = discharge_guard env g2 in ()
    | FStarC_Class_Listlike.VCons (imp, uu___2) ->
@@ -14909,14 +14665,10 @@ let universe_inequality (u1 : FStarC_Syntax_Syntax.universe)
     FStarC_TypeChecker_Common.deferred =
       (FStarC_TypeChecker_Common.trivial_guard.FStarC_TypeChecker_Common.deferred);
     FStarC_TypeChecker_Common.univ_ineqs =
-      ((Obj.magic
-          (FStarC_Class_Listlike.empty ()
-             (Obj.magic (FStarC_CList.listlike_clist ())))),
-        (Obj.magic
-           (FStarC_Class_Listlike.cons ()
-              (Obj.magic (FStarC_CList.listlike_clist ())) (u1, u2)
-              (FStarC_Class_Listlike.empty ()
-                 (Obj.magic (FStarC_CList.listlike_clist ()))))));
+      ((FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())),
+        (FStarC_Class_Listlike.cons (FStarC_CList.listlike_clist ()) 
+           (u1, u2)
+           (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()))));
     FStarC_TypeChecker_Common.implicits =
       (FStarC_TypeChecker_Common.trivial_guard.FStarC_TypeChecker_Common.implicits)
   }

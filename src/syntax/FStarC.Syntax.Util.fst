@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Util
+open FStarC.Range.Type
 open FStarC.Effect
 open FStarC.List
 
@@ -101,9 +102,25 @@ let name_binders binders =
                  { b with binder_bv = bv }
             else b)
 
-let name_function_binders t = match t.n with
-    | Tm_arrow {bs=binders; comp} -> mk (Tm_arrow {bs=name_binders binders; comp}) t.pos
+(* Names the binders of the whole arrow spine, numbering them from [i]. Under
+   the unary representation the spine is what used to be a single n-ary node,
+   so the index must be threaded through the recursion. *)
+let rec name_function_binders_from (i:int) (t:term) : ML term = match t.n with
+    | Tm_arrow {b; comp} ->
+      let b =
+        if is_null_binder b
+        then { b with binder_bv = {ppname=id_of_text ("_" ^ show i); index=0; sort=b.binder_bv.sort} }
+        else b
+      in
+      let comp =
+        match comp.n with
+        | Total res -> { comp with n = Total (name_function_binders_from (i+1) res) }
+        | _ -> comp
+      in
+      mk (Tm_arrow {b; comp}) t.pos
     | _ -> t
+
+let name_function_binders t = name_function_binders_from 0 t
 
 let mk_subst s = [s]
 
@@ -261,8 +278,15 @@ let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.t) (err:stri
   let err () = Errors.raise_error r Errors.Fatal_UnexpectedEffect err in
   let repr = compress repr in
   if is_layered
-  then match repr.n with
-       | Tm_app {args=_::is} -> is |> List.map fst
+  then (* [head_and_args_full] is not in scope yet, so collect the spine here. *)
+       let rec spine acc t : ML _ =
+         let t = compress t in
+         match t.n with
+         | Tm_app {hd; arg} -> spine (arg::acc) hd
+         | _ -> acc
+       in
+       match spine [] repr with
+       | _::is -> is |> List.map fst
        | _ -> err ()
   else match repr.n with
        | Tm_arrow {comp=c} -> c |> comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
@@ -320,8 +344,15 @@ let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_nam
 
 let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
 
-let is_pure_or_ghost_function t = match (compress t).n with
-    | Tm_arrow {comp=c} -> is_pure_or_ghost_comp c
+(* Walks to the end of the arrow spine: [x:t -> y:s -> Div r] is not a pure or
+   ghost function. Since the node is unary, that arrow *is* [x:t -> Tot (y:s ->
+   Div r)], so the intermediate [Tot]s have to be looked through. *)
+let rec is_pure_or_ghost_function t = match (compress t).n with
+    | Tm_arrow {comp=c} ->
+      (* [comp_result] is not in scope yet. *)
+      (match c.n with
+       | Total res when Tm_arrow? (compress res).n -> is_pure_or_ghost_function res
+       | _ -> is_pure_or_ghost_comp c)
     | _ -> true
 
 let rec head_of (t : term) : ML term =
@@ -333,17 +364,11 @@ let rec head_of (t : term) : ML term =
     | Tm_meta {tm=t} -> head_of t
     | _ -> t
 
-let head_and_args t =
-    let t = compress t in
-    match t.n with
-    | Tm_app {hd=head; args} -> head, args
-    | _ -> t, []
-
 let rec __head_and_args_full acc unmeta t : ML _ =
     let t = compress t in
     match t.n with
-    | Tm_app {hd=head; args} ->
-      __head_and_args_full (args@acc) unmeta head
+    | Tm_app {hd=head; arg} ->
+      __head_and_args_full (arg::acc) unmeta head
     | Tm_meta {tm} when unmeta ->
       __head_and_args_full acc unmeta tm
     | _ -> t, acc
@@ -368,7 +393,7 @@ let leftmost_head_and_args t =
     let rec aux t args : ML _ =
       let t = compress t in
       match t.n with
-      | Tm_app {hd=t0; args=args'} -> aux t0 (args'@args)
+      | Tm_app {hd=t0; arg} -> aux t0 (arg::args)
       | Tm_meta {tm=t0; meta=Meta_pattern _}
       | Tm_meta {tm=t0; meta=Meta_named _}
       | Tm_meta {tm=t0; meta=Meta_labeled _}
@@ -498,7 +523,7 @@ let rec is_uvar t =
   match (compress t).n with
   | Tm_uvar _ -> true
   | Tm_uinst (t, _) -> is_uvar t
-  | Tm_app _ -> t |> head_and_args |> fst |> is_uvar
+  | Tm_app _ -> t |> head_and_args_full |> fst |> is_uvar
   | Tm_ascribed {tm=t} -> is_uvar t
   | _ -> false
 
@@ -533,14 +558,9 @@ let rec pre_typ t =
 
 let destruct typ lid =
   let typ = compress typ in
-  match (un_uinst typ).n with
-    | Tm_app {hd=head; args} ->
-      let head = un_uinst head in
-      begin match head.n with
-              | Tm_fvar tc when fv_eq_lid tc lid -> Some args
-              | _ -> None
-      end
-    | Tm_fvar tc when fv_eq_lid tc lid -> Some []
+  let head, args = head_and_args_full (un_uinst typ) in
+  match (un_uinst head).n with
+    | Tm_fvar tc when fv_eq_lid tc lid -> Some args
     | _ -> None
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
@@ -577,7 +597,7 @@ let mk_app f args =
   | [] -> f
   | _ ->
       let r = range_of_args args f.pos in
-      mk (Tm_app {hd=f; args}) r
+      mk_Tm_app f args r
 
 let mk_app_binders f bs =
     mk_app f (List.map (fun b -> (bv_to_name b.binder_bv, aqual_of_binder b)) bs)
@@ -661,6 +681,8 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
+let abs_ln bs t lopt = mk_Tm_abs bs t lopt t.pos
+
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
       | None -> None
@@ -670,46 +692,23 @@ let abs bs t lopt =
   | [] -> t
   | _ ->
     let body = compress (Subst.close bs t) in
-    match body.n with
-        | Tm_abs {bs=bs'; body=t; rc_opt=lopt'} ->  //AR: if the body is an Tm_abs, we can combine the binders and use lopt', ignoring lopt, since lopt will be Tot (non-informative anyway)
-          mk (Tm_abs {bs=close_binders bs@bs'; body=t; rc_opt=close_lopt lopt'}) t.pos
-        | _ ->
-          mk (Tm_abs {bs=close_binders bs; body; rc_opt=close_lopt lopt}) t.pos
+    (* Merging with a nested abstraction is automatic now that the node is
+       unary: the spines simply concatenate. When [body] is itself a lambda,
+       the residual comp of the merged node is the *inner* one (which the
+       inner spine already carries), and [lopt] is dropped -- this is exactly
+       what the n-ary [abs] did. *)
+    let lopt = if Tm_abs? body.n then None else close_lopt lopt in
+    mk_Tm_abs (close_binders bs) body lopt t.pos
 
 let arrow_ln bs c = match bs with
   | [] -> comp_result c
-  | _ -> mk (Tm_arrow {bs; comp=c})
+  | _ -> mk_Tm_arrow bs c
             (List.fold_left (fun a b -> Range.union_ranges a b.binder_bv.sort.pos) c.pos bs)
 
 let arrow bs c =
   let c = Subst.close_comp bs c in
   let bs = close_binders bs in
   arrow_ln bs c
-
-let flat_arrow bs c =
-  let t = arrow bs c in
-  match (Subst.compress t).n with
-  | Tm_arrow {bs; comp=c} ->
-    begin match c.n with
-        | Total tres ->
-          begin match (Subst.compress tres).n with
-               | Tm_arrow {bs=bs'; comp=c'} -> mk (Tm_arrow {bs=bs@bs'; comp=c'}) t.pos
-               | _ -> t
-          end
-        | _ -> t
-    end
-  | _ -> t
-
-let rec canon_arrow t =
-  match (compress t).n with
-  | Tm_arrow {bs; comp=c} ->
-      let cn = match c.n with
-               | Total t -> Total (canon_arrow t)
-               | _ -> c.n
-      in
-      let c = { c with n = cn } in
-      flat_arrow bs c
-  | _ -> t
 
 let refine b t = mk (Tm_refine {b; phi=Subst.close [mk_binder b] t}) (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
@@ -731,11 +730,11 @@ let has_decreases (c:comp) : ML bool =
 let rec arrow_formals_comp_ln (k:term) =
     let k = Subst.compress k in
     match k.n with
-        | Tm_arrow {bs; comp=c} ->
+        | Tm_arrow {b; comp=c} ->
             if is_total_comp c && not (has_decreases c)
             then let bs', k = arrow_formals_comp_ln (comp_result c) in
-                 bs@bs', k
-            else bs, c
+                 b::bs', k
+            else [b], c
         | Tm_refine {b={ sort = s }} ->
           (*
            * AR: start descending into s, but if s does not turn out to be an arrow later, we want to return k itself
@@ -748,6 +747,30 @@ let rec arrow_formals_comp_ln (k:term) =
           in
           aux s k
         | _ -> [], Syntax.mk_Total k
+
+(* Destructs the arrow spine: every binder reachable through total comps
+   without a decreases clause. Unlike [arrow_formals_comp_ln] it never descends
+   into a refinement (which would drop its predicate), so it is the faithful
+   reading of what used to be a single [Tm_arrow] match. *)
+let rec arrow_node_formals_comp_ln (k:term) : ML (binders & comp) =
+    match (Subst.compress k).n with
+    | Tm_arrow {b; comp} ->
+      if is_total_comp comp && not (has_decreases comp) && Tm_arrow? (Subst.compress (comp_result comp)).n
+      then let bs, c = arrow_node_formals_comp_ln (comp_result comp) in
+           b::bs, c
+      else [b], comp
+    | _ -> [], Syntax.mk_Total k
+
+let arrow_node_formals_comp k =
+    let bs, c = arrow_node_formals_comp_ln k in
+    Subst.open_comp bs c
+
+(* [_strict] is the same thing under its historical name: unlike
+   arrow_formals_comp_ln it does not flatten and does not descend into a
+   top-level refinement (which would drop its predicate). *)
+let arrow_formals_comp_ln_strict k = arrow_node_formals_comp_ln k
+
+let arrow_formals_comp_strict k = arrow_node_formals_comp k
 
 let arrow_formals_comp k =
     let bs, c = arrow_formals_comp_ln k in
@@ -773,8 +796,8 @@ let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
     let rec arrow_until_decreases (k:term) : ML _ =
         let k = Subst.compress k in
         match k.n with
-        | Tm_arrow {bs; comp=c} ->
-            let bs, c = Subst.open_comp bs c in
+        | Tm_arrow {b; comp=c} ->
+            let bs, c = Subst.open_comp [b] c in
            (match
                 c |> comp_flags |> Option.find (function DECREASES _ -> true | _ -> false)
             with
@@ -805,19 +828,53 @@ let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun b -> mem b.binder_bv d_bvs)))
 
+let rec __abs_formals_ln t abs_body_lcomp : ML _ =
+    match (unmeta_safe t).n with
+    | Tm_abs {b; body=t; rc_opt=what} ->
+      let bs', t, what = __abs_formals_ln t what in
+      b::bs', t, what
+    | _ -> [], t, abs_body_lcomp
+
+(* Collects all nested Tm_abs nodes without opening the binders. *)
+let abs_formals_ln (t:term) : ML (binders & term & option residual_comp) =
+    __abs_formals_ln t None
+
+(* Peels exactly the lambda spine that used to be a single n-ary Tm_abs node:
+   it does not look through metas or ascriptions, and it stops at the binder
+   carrying the residual comp (which is where [mk_Tm_abs] puts it). Binders are
+   not opened. *)
+let rec abs_one_group_ln (t:term) : ML (binders & term & option residual_comp) =
+    match (Subst.compress t).n with
+    | Tm_abs {b; body; rc_opt=Some rc} -> [b], body, Some rc
+    | Tm_abs {b; body} ->
+      let bs, body, rc = abs_one_group_ln body in
+      b::bs, body, rc
+    | _ -> [], t, None
+
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->
           Some ({rc with residual_typ = Option.map (Subst.subst s) rc.residual_typ})
         | _ -> l
     in
+    (* A single n-ary Tm_abs node is a maximal contiguous spine of unary nodes,
+       so [maybe_unascribe=false] still walks the spine; it just does not look
+       through Tm_meta between the levels. *)
+    let rec spine t abs_body_lcomp : ML _ =
+        match (Subst.compress t).n with
+        | Tm_abs {b; body=t; rc_opt=what} ->
+          let bs', t, what = spine t what in
+          b::bs', t, what
+        | _ -> [], t, abs_body_lcomp
+    in
     let rec aux t abs_body_lcomp : ML _ =
         match (unmeta_safe t).n with
-        | Tm_abs {bs; body=t; rc_opt=what} ->
+        | Tm_abs {b; body=t; rc_opt=what} ->
           if maybe_unascribe
           then let bs',t, what = aux t what in
-               bs@bs', t, what
-          else bs, t, what
+               b::bs', t, what
+          else let bs', t, what = spine t what in
+               b::bs', t, what
         | _ -> [], t, abs_body_lcomp
     in
     let bs, t, abs_body_lcomp = aux t None in
@@ -839,7 +896,7 @@ let remove_inacc (t:term) : ML term =
     let bs, c = arrow_formals_comp_ln t in
     match bs with
     | [] -> t
-    | _ -> mk (Tm_arrow {bs=List.map no_acc bs; comp=c}) t.pos
+    | _ -> mk_Tm_arrow (List.map no_acc bs) c t.pos
 
 let mk_letbinding (lbname : either bv fv) univ_vars typ eff def lbattrs pos =
     {lbname=lbname;
@@ -873,9 +930,11 @@ let open_univ_vars_binders_and_comp uvs binders c =
         | _ ->
           let t' = arrow binders c in
           let uvs, t' = Subst.open_univ_vars uvs t' in
-          match (Subst.compress t').n with
-            | Tm_arrow {bs=binders; comp=c} -> uvs, binders, c
-            | _ -> failwith "Impossible"
+          (* Recovers exactly the binders/comp packed by [arrow] above. *)
+          let binders, c = arrow_formals_comp_ln_strict t' in
+          if Nil? binders
+          then failwith "Impossible"
+          else uvs, binders, c
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
@@ -983,9 +1042,9 @@ let t_dsl_tac_typ = fvar PC.dsl_tac_typ_lid None
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
-  | Some phi1 -> Some (mk (Tm_app {hd=tand; args=[as_arg phi1; as_arg phi2]}) (Range.union_ranges phi1.pos phi2.pos))
-let mk_binop op_t phi1 phi2 = mk (Tm_app {hd=op_t; args=[as_arg phi1; as_arg phi2]}) (Range.union_ranges phi1.pos phi2.pos)
-let mk_neg phi = mk (Tm_app {hd=t_not; args=[as_arg phi]}) phi.pos
+  | Some phi1 -> Some (mk_Tm_app tand [as_arg phi1; as_arg phi2] (Range.union_ranges phi1.pos phi2.pos))
+let mk_binop op_t phi1 phi2 = mk_Tm_app op_t [as_arg phi1; as_arg phi2] (Range.union_ranges phi1.pos phi2.pos)
+let mk_neg phi = mk_Tm_app t_not [as_arg phi] phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
     | [] -> fvar_with_dd PC.true_lid None
@@ -996,9 +1055,9 @@ let mk_disj_l phi = match phi with
     | hd::tl -> List.fold_right mk_disj tl hd
 let mk_imp phi1 phi2 : ML term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : ML term = mk_binop tiff phi1 phi2
-let b2t e = mk (Tm_app {hd=b2t_v; args=[as_arg e]}) e.pos//implicitly coerce a boolean to a type
+let b2t e = mk_Tm_app b2t_v [as_arg e] e.pos//implicitly coerce a boolean to a type
 let unb2t (e:term) : ML (option term) =
-    let hd, args = head_and_args e in
+    let hd, args = head_and_args_full e in
     match (compress hd).n, args with
     | Tm_fvar fv, [(e, _)] when fv_eq_lid fv PC.b2t_lid -> Some e
     | _ -> None
@@ -1017,21 +1076,21 @@ let mk_disj_simp t1 t2 =
     else mk_disj t1 t2
 
 let teq = fvar_const PC.eq2_lid
-let mk_untyped_eq2 e1 e2 = mk (Tm_app {hd=teq; args=[as_arg e1; as_arg e2]}) (Range.union_ranges e1.pos e2.pos)
+let mk_untyped_eq2 e1 e2 = mk_Tm_app teq [as_arg e1; as_arg e2] (Range.union_ranges e1.pos e2.pos)
 let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : ML term =
     let eq_inst = mk_Tm_uinst teq [u] in
-    mk (Tm_app {hd=eq_inst; args=[iarg t; as_arg e1; as_arg e2]}) (Range.union_ranges e1.pos e2.pos)
+    mk_Tm_app eq_inst [iarg t; as_arg e1; as_arg e2] (Range.union_ranges e1.pos e2.pos)
 
 let mk_eq3_no_univ =
   let teq3 = fvar_const PC.eq3_lid in
   fun t1 t2 e1 e2 ->
-    mk (Tm_app {hd=teq3; args=[iarg t1; iarg t2; as_arg e1; as_arg e2]})
+    mk_Tm_app teq3 [iarg t1; iarg t2; as_arg e1; as_arg e2]
        (Range.union_ranges e1.pos e2.pos)
 
 let mk_has_type t x t' =
     let t_has_type = fvar_const PC.has_type_lid in //TODO: Fix the U_zeroes below!
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
-    mk (Tm_app {hd=t_has_type; args=[iarg t; as_arg x; as_arg t']}) dummyRange
+    mk_Tm_app t_has_type [iarg t; as_arg x; as_arg t'] dummyRange
 
 let tforall  = fvar_with_dd PC.forall_lid None
 let texists  = fvar_with_dd PC.exists_lid None
@@ -1039,20 +1098,20 @@ let t_haseq   = fvar_with_dd PC.haseq_lid None
 
 let decidable_eq = fvar_const PC.op_Eq
 let mk_decidable_eq t e1 e2 =
-  mk (Tm_app {hd=decidable_eq; args=[iarg t; as_arg e1; as_arg e2]}) (Range.union_ranges e1.pos e2.pos)
+  mk_Tm_app decidable_eq [iarg t; as_arg e1; as_arg e2] (Range.union_ranges e1.pos e2.pos)
 
 let b_or = fvar_const PC.op_Or
 let mk_or e1 e2 =
-  mk (Tm_app {hd=b_or; args=[as_arg e1; as_arg e2]}) (Range.union_ranges e1.pos e2.pos)
+  mk_Tm_app b_or [as_arg e1; as_arg e2] (Range.union_ranges e1.pos e2.pos)
 
 let b_and = fvar_const PC.op_And
 let mk_and e1 e2 =
-  mk (Tm_app {hd=b_and; args=[as_arg e1; as_arg e2]}) (Range.union_ranges e1.pos e2.pos)
+  mk_Tm_app b_and [as_arg e1; as_arg e2] (Range.union_ranges e1.pos e2.pos)
 let mk_and_l l = match l with
     | [] -> exp_true_bool
     | hd::tl -> List.fold_left mk_and hd tl
 let mk_boolean_negation b = 
-  mk (Tm_app {hd=fvar_const PC.op_Negation; args=[as_arg b]}) b.pos
+  mk_Tm_app (fvar_const PC.op_Negation) [as_arg b] b.pos
 let mk_residual_comp l t f = {
     residual_effect=l;
     residual_typ=t;
@@ -1075,9 +1134,9 @@ let residual_comp_of_comp (c:comp) = {
   }
 
 let mk_forall_aux fa x body =
-  mk (Tm_app {hd=fa;
-              args=[ iarg (x.sort);
-                     as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))]}) dummyRange
+  mk_Tm_app fa
+              [ iarg (x.sort);
+                     as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))] dummyRange
 
 let mk_forall_no_univ (x:bv) (body:typ) : ML typ =
   mk_forall_aux tforall x body
@@ -1090,9 +1149,9 @@ let close_forall_no_univs bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall_no_univ b.binder_bv f) bs f
 
 let mk_exists_aux fa x body =
-  mk (Tm_app {hd=fa;
-              args=[ iarg (x.sort);
-                     as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))]}) dummyRange
+  mk_Tm_app fa
+              [ iarg (x.sort);
+                     as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))] dummyRange
 
 let mk_exists_no_univ (x:bv) (body:typ) : ML typ =
   mk_exists_aux texists x body
@@ -1143,7 +1202,7 @@ let un_squash t =
       None
 
 let is_squash t =
-    let head, args = head_and_args t in
+    let head, args = head_and_args_full t in
     match (Subst.compress head).n, args with
     | Tm_fvar fv, [(t, _)]
         when Syntax.fv_eq_lid fv PC.squash_lid ->
@@ -1156,17 +1215,8 @@ let mk_t2b t = mk_app (fvar_with_dd PC.t2b_lid None) [as_arg t]
 
 let arrow_one_ln (t:typ) : ML (option (binder & comp)) =
     match (compress t).n with
-    | Tm_arrow {bs=[]} ->
-        failwith "fatal: empty binders on arrow?"
-    | Tm_arrow {bs=[b]; comp=c} ->
-        Some (b, c)
-    | Tm_arrow {bs=b::bs; comp=c} ->
-        (* NB: bs are closed, so we just repackage the node *)
-        let rng' = List.fold_left (fun a b -> Range.union_ranges a b.binder_bv.sort.pos) c.pos bs in
-        let c' = mk_Total (mk (Tm_arrow {bs; comp=c}) rng') in
-        Some (b, c')
-    | _ ->
-        None
+    | Tm_arrow {b; comp=c} -> Some (b, c)
+    | _ -> None
 
 let arrow_one (t:typ) : ML (option (binder & comp)) =
     Option.bind (arrow_one_ln t) (fun (b, c) ->
@@ -1179,12 +1229,8 @@ let arrow_one (t:typ) : ML (option (binder & comp)) =
 
 let abs_one_ln (t:typ) : ML (option (binder & term)) =
     match (compress t).n with
-    | Tm_abs {bs=[]} ->
-        failwith "fatal: empty binders on abs?"
-    | Tm_abs {bs=[b]; body} ->
+    | Tm_abs {b; body} ->
         Some (b, body)
-    | Tm_abs {bs=b::bs; body; rc_opt} ->
-        Some (b, abs bs body rc_opt)
     | _ ->
         None
 
@@ -1214,11 +1260,11 @@ let action_as_lb eff_lid a pos =
 (* Some reification utilities *)
 let mk_reify t (lopt:option Ident.lident) =
     let reify_ = mk (Tm_constant (FStarC.Const.Const_reify lopt)) t.pos in
-    mk (Tm_app {hd=reify_; args=[as_arg t]}) t.pos
+    mk_Tm_app reify_ [as_arg t] t.pos
 
 let mk_reflect t =
     let reflect_ = mk (Tm_constant(FStarC.Const.Const_reflect (Ident.lid_of_str "Bogus.Effect"))) t.pos in
-    mk (Tm_app {hd=reflect_; args=[as_arg t]}) t.pos
+    mk_Tm_app reflect_ [as_arg t] t.pos
 
 (* Some utilities for clients who wish to build top-level bindings and keep
  * their delta-qualifiers correct. *)
@@ -1304,22 +1350,22 @@ let rec term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool =
   | Tm_constant c1 , Tm_constant c2 -> check "const" (eq_const c1 c2)
   | Tm_type _, Tm_type _ -> true // x = y
 
-  | Tm_abs {bs=b1;body=t1;rc_opt=k1}, Tm_abs {bs=b2;body=t2;rc_opt=k2} ->
-    (check "abs binders"  (eqlist (binder_eq_dbg dbg) b1 b2)) &&
+  | Tm_abs {b=b1;body=t1;rc_opt=k1}, Tm_abs {b=b2;body=t2;rc_opt=k2} ->
+    (check "abs binders"  (binder_eq_dbg dbg b1 b2)) &&
     (check "abs bodies"   (term_eq_dbg dbg t1 t2))
     //&& eqopt (eqsum lcomp_eq_dbg dbg residual_eq) k1 k2
 
-  | Tm_arrow {bs=b1;comp=c1}, Tm_arrow {bs=b2;comp=c2} ->
-    (check "arrow binders" (eqlist (binder_eq_dbg dbg) b1 b2)) &&
+  | Tm_arrow {b=b1;comp=c1}, Tm_arrow {b=b2;comp=c2} ->
+    (check "arrow binders" (binder_eq_dbg dbg b1 b2)) &&
     (check "arrow comp"    (comp_eq_dbg dbg c1 c2))
 
   | Tm_refine {b=b1;phi=t1}, Tm_refine {b=b2;phi=t2} ->
     (check "refine bv sort" (term_eq_dbg dbg b1.sort b2.sort)) &&
     (check "refine formula" (term_eq_dbg dbg t1 t2))
 
-  | Tm_app {hd=f1; args=a1}, Tm_app {hd=f2; args=a2} ->
+  | Tm_app {hd=f1; arg=a1}, Tm_app {hd=f2; arg=a2} ->
     (check "app head"  (term_eq_dbg dbg f1 f2)) &&
-    (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
+    (check "app args"  (arg_eq_dbg dbg a1 a2))
 
   | Tm_match {scrutinee=t1;brs=bs1},
     Tm_match {scrutinee=t2;brs=bs2} ->
@@ -1487,8 +1533,8 @@ let rec sizeof (t:term) : ML int =
     | Tm_bvar bv
     | Tm_name bv -> 1 + sizeof bv.sort
     | Tm_uinst (t,us) -> List.length us + sizeof t
-    | Tm_abs {bs; body=t} -> sizeof t  + List.fold_left (fun acc b -> acc + sizeof b.binder_bv.sort) 0 bs
-    | Tm_app {hd; args} -> sizeof hd + List.fold_left (fun acc (arg, _) -> acc + sizeof arg) 0 args
+    | Tm_abs {b; body=t} -> sizeof t  + sizeof b.binder_bv.sort
+    | Tm_app {hd; arg=(a, _)} -> sizeof hd + sizeof a
     // TODO: obviously want much more
     | _ -> 1
 
@@ -1508,7 +1554,7 @@ let has_attribute (attrs:list Syntax.attribute) (attr:lident) =
  * takes precedence. *)
 let get_attribute (attr : lident) (attrs:list Syntax.attribute) : ML (option args) =
     List.tryPick (fun t ->
-        let head, args = head_and_args t in
+        let head, args = head_and_args_full t in
         match (Subst.compress head).n with
         | Tm_fvar fv when fv_eq_lid fv attr -> Some args
         | _ -> None) attrs
@@ -1595,13 +1641,13 @@ let rec unbound_variables tm : ML (list bv) =
       | Tm_uinst(t, us) ->
         unbound_variables t
 
-      | Tm_abs {bs; body=t} ->
-        let bs, t = Subst.open_term bs t in
+      | Tm_abs {b; body=t} ->
+        let bs, t = Subst.open_term [b] t in
         List.collect (fun b -> unbound_variables b.binder_bv.sort) bs
         @ unbound_variables t
 
-      | Tm_arrow {bs; comp=c} ->
-        let bs, c = Subst.open_comp bs c in
+      | Tm_arrow {b; comp=c} ->
+        let bs, c = Subst.open_comp [b] c in
         List.collect (fun b -> unbound_variables b.binder_bv.sort) bs
         @ unbound_variables_comp c
 
@@ -1610,8 +1656,8 @@ let rec unbound_variables tm : ML (list bv) =
         List.collect (fun b -> unbound_variables b.binder_bv.sort) bs
         @ unbound_variables t
 
-      | Tm_app {hd=t; args} ->
-        List.collect (fun (x, _) -> unbound_variables x) args
+      | Tm_app {hd=t; arg=(x, _)} ->
+        unbound_variables x
         @ unbound_variables t
 
       | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats} ->
@@ -1687,7 +1733,7 @@ let extract_attr' (attr_lid:lid) (attrs:list term) : ML (option (list term & arg
         match attrs with
         | [] -> None
         | h::t ->
-            let head, args = head_and_args h in
+            let head, args = head_and_args_full h in
             begin match (compress head).n with
             | Tm_fvar fv when fv_eq_lid fv attr_lid ->
                 let attrs' = List.rev_acc acc t in
@@ -1730,7 +1776,7 @@ let is_smt_lemma t =
   | _ -> false
 
 let rec list_elements (e:term) : ML (option (list term)) =
-  let head, args = head_and_args (unmeta e) in
+  let head, args = head_and_args_full (unmeta e) in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid ->
       Some []
@@ -1744,7 +1790,7 @@ let destruct_lemma_with_smt_patterns (t:term)
 //binders, pre, post, patterns
 = let lemma_pats p =
     let smt_pat_or t =
-      let head, args = unmeta t |> head_and_args in
+      let head, args = unmeta t |> head_and_args_full in
       match (un_uinst head).n, args with
       | Tm_fvar fv, [(e, _)]
           when fv_eq_lid fv PC.smtpatOr_lid ->
@@ -1752,7 +1798,7 @@ let destruct_lemma_with_smt_patterns (t:term)
       | _ -> None
     in
     let one_pat p =
-      let head, args = unmeta p |> head_and_args in
+      let head, args = unmeta p |> head_and_args_full in
       match (un_uinst head).n, args with
       | Tm_fvar fv, [(_, _); arg] when fv_eq_lid fv PC.smtpat_lid ->
         arg
@@ -1809,7 +1855,7 @@ let triggers_of_smt_lemma (t:term)
 has some other shape just apply it to `()`. *)
 let unthunk (t:term) : ML term =
     match (compress t).n with
-    | Tm_abs {bs=[b]; body=e} ->
+    | Tm_abs {b; body=e} ->
         let bs, e = open_term [b] e in
         let b = List.hd bs in
         if is_free_in b.binder_bv e
@@ -1975,7 +2021,7 @@ let aqual_is_erasable (aq:aqual) =
   | Some aq -> U.for_some (is_fvar PC.erasable_attr) aq.aqual_attributes
 
 let is_erased_head (t:term) : ML (option (universe & term)) = 
-  let head, args = head_and_args t in
+  let head, args = head_and_args_full t in
   match head.n, args with
   | Tm_uinst({n=Tm_fvar fv}, [u]), [(ty, _)]
     when fv_eq_lid fv PC.erased_lid ->

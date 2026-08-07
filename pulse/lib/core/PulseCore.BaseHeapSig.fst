@@ -1,4 +1,6 @@
 module PulseCore.BaseHeapSig
+open FStar.Ghost
+open FStar.PCM
 module H2 = PulseCore.Heap2
 open PulseCore.Tags
 
@@ -7,7 +9,7 @@ let interp (p:slprop) : affine_mem_prop =
   H2.interp p
 let as_slprop (p:affine_mem_prop) : q:slprop{forall h. interp q h <==> p h} =
   introduce forall (h0 h1: H2.heap u#a). p h0 /\ H2.disjoint h0 h1 ==> p (H2.join h0 h1) with
-    introduce _ ==> _ with _. assert disjoint_mem h0 h1;
+    introduce _ ==> _ with assert disjoint_mem h0 h1;
   H2.as_slprop p
 
 let pure (p:prop) : slprop = as_slprop fun _ -> p
@@ -15,18 +17,18 @@ let pure (p:prop) : slprop = as_slprop fun _ -> p
 let star_equiv (p q:slprop) (m:mem u#a)
 = assert (forall (m0 m1: mem u#a). disjoint_mem m0 m1 == H2.disjoint m0 m1);
   introduce interp (p `star` q) m ==>
-      exists m0 m1. disjoint_mem m0 m1 /\ m == join_mem m0 m1 /\ interp p m0 /\ interp q m1 with _.
+      exists m0 m1. disjoint_mem m0 m1 /\ m == join_mem m0 m1 /\ interp p m0 /\ interp q m1 with
     H2.elim_star p q m;
   introduce forall m0 m1.
       disjoint_mem m0 m1 /\ m == join_mem m0 m1 /\ interp p m0 /\ interp q m1 ==>
         interp (p `star` q) m with
-    introduce _ ==> _ with _.
+    introduce _ ==> _ with
     H2.intro_star p q m0 m1
 
 let slprop_extensionality (p q:slprop)
 : Lemma ((forall c. interp p c <==> interp q c) ==> p == q)
         [SMTPat (p == q)]
-= introduce (forall c. H2.interp p c <==> interp q c) ==> p == q with _.
+= introduce (forall c. H2.interp p c <==> interp q c) ==> p == q with
   H2.slprop_extensionality p q
 
 let star_commutative (p q: slprop u#a) : Lemma (star p q == star q p) =
@@ -35,7 +37,7 @@ let star_commutative (p q: slprop u#a) : Lemma (star p q == star q p) =
     star_equiv q p c;
     introduce forall (a b: mem u#a). disjoint_mem a b <==> disjoint_mem b a with H2.disjoint_sym a b;
     introduce forall (h0 h1: mem u#a). disjoint_mem h0 h1 ==> disjoint_mem h1 h0 /\ join_mem h0 h1 == join_mem h1 h0 with
-      introduce _ ==> _ with _. H2.join_commutative h0 h1
+      introduce _ ==> _ with H2.join_commutative h0 h1
   );
   slprop_extensionality (star p q) (star q p)
 
@@ -59,10 +61,10 @@ let star_associative' (p q r: slprop) (m: mem { interp (star p (star q r)) m }) 
 
 let star_associative p q r : Lemma (star (star p q) r == star p (star q r)) =
   introduce forall m. interp (star p (star q r)) m <==> interp (star (star p q) r) m with (
-    introduce interp (star p (star q r)) m ==> interp (star (star p q) r) m with _. (
+    introduce interp (star p (star q r)) m ==> interp (star (star p q) r) m with (
       star_associative' p q r m
     );
-    introduce interp (star (star p q) r) m ==> interp (star p (star q r)) m with _. (
+    introduce interp (star (star p q) r) m ==> interp (star p (star q r)) m with (
       star_commutative (star p q) r;
       star_commutative p q;
       star_commutative p (star q r);
@@ -115,7 +117,7 @@ let lower' (frame: slprop) (m: mem) (h: H2.heap) : prop =
   interp frame h
 let lower (frame: slprop) (m: mem) : p:H2.slprop { forall h. H2.interp p h <==> lower' frame m h } =
   introduce forall (h0 h1: H2.heap). lower' frame m h0 /\ H2.disjoint h0 h1 ==> lower' frame m (H2.join h0 h1) with
-    introduce _ ==> _ with _ . (
+    introduce _ ==> _ with (
       assert disjoint_mem h0 h1
     );
   H2.as_slprop (lower' frame m)

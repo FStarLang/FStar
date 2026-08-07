@@ -145,21 +145,21 @@ let on_sub_term #m {|d : lvm m |} (tm : term) : ML (m term) =
     let! u = u |> f_univ in
     return <| mk (Tm_type u)
 
-  | Tm_app {hd; args} ->
+  | Tm_app {hd; arg} ->
     let! hd    = f_term hd in
-    let! args  = mapM (f_arg #m #d) args in
-    return <| mk (Tm_app {hd; args})
+    let! arg   = f_arg #m #d arg in
+    return <| mk (Tm_app {hd; arg})
 
-  | Tm_abs {bs; body=t; rc_opt} ->
-    let! bs     = mapM f_binder bs in
+  | Tm_abs {b; body=t; rc_opt} ->
+    let! b      = f_binder b in
     let! t      = f_term t in
     let! rc_opt = map_optM f_residual_comp rc_opt in
-    return <| mk (Tm_abs {bs; body=t; rc_opt})
+    return <| mk (Tm_abs {b; body=t; rc_opt})
 
-  | Tm_arrow {bs; comp=c} ->
-    let! bs    = mapM f_binder bs in
+  | Tm_arrow {b; comp=c} ->
+    let! b     = f_binder b in
     let! c     = f_comp c in
-    return <| mk (Tm_arrow {bs; comp=c})
+    return <| mk (Tm_arrow {b; comp=c})
 
   | Tm_refine {b=bv; phi} ->
     let! bv    = f_binding_bv bv in

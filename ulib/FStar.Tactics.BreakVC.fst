@@ -1,5 +1,6 @@
 module FStar.Tactics.BreakVC
 
+open FStar.Tactics
 open FStar.Tactics.V2
 
 let mono_lem () : Lemma (tac_wp_monotonic #unit break_wp') =

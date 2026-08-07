@@ -138,7 +138,7 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
         let uu___2 = concat_map () lidents_of_term ts in
         let uu___3 = lidents_of_term t2 in FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
-  | FStarC_Parser_AST.IntroImplies (t1, t2, b, t3) ->
+  | FStarC_Parser_AST.IntroImplies (t1, t2, t3) ->
       let uu___ = lidents_of_term t1 in
       let uu___1 =
         let uu___2 = lidents_of_term t2 in
@@ -166,14 +166,11 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
         let uu___3 = concat_map () lidents_of_term ts in
         FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
-  | FStarC_Parser_AST.ElimExists (bs, t1, t2, b, t3) ->
+  | FStarC_Parser_AST.ElimExists (bs, t1, t2) ->
       let uu___ = concat_map () lidents_of_binder bs in
       let uu___1 =
         let uu___2 = lidents_of_term t1 in
-        let uu___3 =
-          let uu___4 = lidents_of_term t2 in
-          let uu___5 = lidents_of_term t3 in FStarC_List.op_At uu___4 uu___5 in
-        FStarC_List.op_At uu___2 uu___3 in
+        let uu___3 = lidents_of_term t2 in FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.ElimImplies (t1, t2, t3) ->
       let uu___ = lidents_of_term t1 in
@@ -181,20 +178,7 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
         let uu___2 = lidents_of_term t2 in
         let uu___3 = lidents_of_term t3 in FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
-  | FStarC_Parser_AST.ElimOr (t1, t2, t3, b1, t4, b2, t5) ->
-      let uu___ = lidents_of_term t1 in
-      let uu___1 =
-        let uu___2 = lidents_of_term t2 in
-        let uu___3 =
-          let uu___4 = lidents_of_term t3 in
-          let uu___5 =
-            let uu___6 = lidents_of_term t4 in
-            let uu___7 = lidents_of_term t5 in
-            FStarC_List.op_At uu___6 uu___7 in
-          FStarC_List.op_At uu___4 uu___5 in
-        FStarC_List.op_At uu___2 uu___3 in
-      FStarC_List.op_At uu___ uu___1
-  | FStarC_Parser_AST.ElimAnd (t1, t2, t3, b1, b2, t4) ->
+  | FStarC_Parser_AST.ElimOr (t1, t2, t3, t4) ->
       let uu___ = lidents_of_term t1 in
       let uu___1 =
         let uu___2 = lidents_of_term t2 in
@@ -202,6 +186,12 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
           let uu___4 = lidents_of_term t3 in
           let uu___5 = lidents_of_term t4 in FStarC_List.op_At uu___4 uu___5 in
         FStarC_List.op_At uu___2 uu___3 in
+      FStarC_List.op_At uu___ uu___1
+  | FStarC_Parser_AST.ElimAnd (t1, t2, t3) ->
+      let uu___ = lidents_of_term t1 in
+      let uu___1 =
+        let uu___2 = lidents_of_term t2 in
+        let uu___3 = lidents_of_term t3 in FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.ListLiteral ts -> concat_map () lidents_of_term ts
   | FStarC_Parser_AST.SeqLiteral ts -> concat_map () lidents_of_term ts

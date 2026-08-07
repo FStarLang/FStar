@@ -74,6 +74,13 @@ val prelude : list (open_kind & lid)
 // scope_parsing_data is a representing of the current desugaring environment's
 // gloabal scope, i.e., the modules and namespaces current open, module abbrevs etc., 
 // as parsing data, so that ds can be scanned in the appropriate scope.
+// The modules befriended by the root implementation file being checked.
+// A `friend` declaration must be the *first* dependence on a module, but in
+// fly_deps mode the root module's own interface is scanned (and loaded) before
+// its implementation, so we have to know about the implementation's friends
+// upfront and take them into account in every scan.
+val set_root_friends : list lident -> ML unit
+
 val collect_deps_of_decl 
     (deps:deps) (filename:string) (ds:list FStarC.Parser.AST.decl)
     (scope_parsing_data:list parsing_data_elt)

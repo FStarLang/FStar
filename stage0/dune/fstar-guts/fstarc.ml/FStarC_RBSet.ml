@@ -9,13 +9,13 @@ let uu___is_B (projectee : color) : Prims.bool=
 type 'a rbset =
   | L 
   | N of (color * 'a rbset * 'a * 'a rbset) 
+type 'a t = 'a rbset
 let uu___is_L (projectee : 'a rbset) : Prims.bool=
   match projectee with | L -> true | uu___ -> false
 let uu___is_N (projectee : 'a rbset) : Prims.bool=
   match projectee with | N _0 -> true | uu___ -> false
 let __proj__N__item___0 (projectee : 'a rbset) :
   (color * 'a rbset * 'a * 'a rbset)= match projectee with | N _0 -> _0
-type 'a t = 'a rbset
 let empty (uu___ : unit) : 'uuuuu rbset= L
 let singleton (x : 'a) : 'a rbset= N (R, L, x, L)
 let is_empty (uu___ : unit) : 'uuuuu rbset -> Prims.bool= uu___is_L

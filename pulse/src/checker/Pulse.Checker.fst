@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Checker
+open Pulse.Elaborate.Pure
 module RT = FStar.Reflection.Typing
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2

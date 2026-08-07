@@ -14,7 +14,7 @@ let rec ackermann_flip (n m:nat)
   : Tot nat (decreases %[m;n])
   = if m=0 then n + 1
     else if n = 0 then ackermann_flip 1 (m - 1)
-    else ackermann_flip (ackermann (n - 1) m) (m - 1)
+    else ackermann_flip (ackermann_flip (n - 1) m) (m - 1)
 //SNIPPET_END: ackermann_flip
 
 

@@ -1,0 +1,3 @@
+* Error 233 at IfacePulseOrder.fst(6,0-9,7):
+  - Expected the definition of IfacePulseOrder.f to precede IfacePulseOrder.g
+

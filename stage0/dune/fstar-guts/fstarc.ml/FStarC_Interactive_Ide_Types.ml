@@ -113,17 +113,12 @@ let __proj__Mktimed_fname__item__tf_modtime (projectee : timed_fname) :
   FStarC_Time.time_of_day=
   match projectee with | { tf_fname; tf_modtime;_} -> tf_modtime
 type repl_task =
-  | LDInterleaved of (timed_fname * timed_fname) 
   | LDSingle of timed_fname 
   | LDInterfaceOfCurrentFile of timed_fname 
   | PushFragment of ((FStarC_Parser_ParseIt.input_frag,
   FStarC_Parser_AST.decl) FStar_Pervasives.either * push_kind *
   FStarC_Json.json Prims.list * Prims.string Prims.list) 
   | Noop 
-let uu___is_LDInterleaved (projectee : repl_task) : Prims.bool=
-  match projectee with | LDInterleaved _0 -> true | uu___ -> false
-let __proj__LDInterleaved__item___0 (projectee : repl_task) :
-  (timed_fname * timed_fname)= match projectee with | LDInterleaved _0 -> _0
 let uu___is_LDSingle (projectee : repl_task) : Prims.bool=
   match projectee with | LDSingle _0 -> true | uu___ -> false
 let __proj__LDSingle__item___0 (projectee : repl_task) : timed_fname=
@@ -144,12 +139,6 @@ let uu___is_Noop (projectee : repl_task) : Prims.bool=
 let t0 : FStarC_Time.time_of_day= FStarC_Time.get_time_of_day ()
 let dummy_tf_of_fname (fname : Prims.string) : timed_fname=
   { tf_fname = fname; tf_modtime = t0 }
-let mk_ld_interleaved (iface : Prims.string) (impl : Prims.string) :
-  repl_task=
-  let tod = FStarC_Time.get_time_of_day () in
-  LDInterleaved
-    ({ tf_fname = iface; tf_modtime = tod },
-      { tf_fname = impl; tf_modtime = tod })
 let mk_ld_single (filename : Prims.string) : repl_task=
   let tod = FStarC_Time.get_time_of_day () in
   LDSingle { tf_fname = filename; tf_modtime = tod }
@@ -392,10 +381,6 @@ let string_of_timed_fname (x : timed_fname) : Prims.string=
          FStarC_Format.fmt2 "{ %s; %s }" fname uu___1)
 let string_of_repl_task (t : repl_task) : Prims.string=
   match t with
-  | LDInterleaved (intf, impl) ->
-      let uu___ = string_of_timed_fname intf in
-      let uu___1 = string_of_timed_fname impl in
-      FStarC_Format.fmt2 "LDInterleaved (%s, %s)" uu___ uu___1
   | LDSingle intf_or_impl ->
       let uu___ = string_of_timed_fname intf_or_impl in
       FStarC_Format.fmt1 "LDSingle %s" uu___

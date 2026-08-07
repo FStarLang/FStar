@@ -35,8 +35,7 @@ let rec fold_right2 :
   fun f l1 l2 c1 ->
     match (l1, l2) with
     | (h1::t1, h2::t2) ->
-        FStar_Tactics_Effect.tac_bind () () (fold_right2 f t1 t2 c1)
-          (fun uu___ -> f h1 h2 uu___)
+        (fun ps -> let x = fold_right2 f t1 t2 c1 ps in f h1 h2 x ps)
     | ([], []) -> (fun uu___ -> c1)
     | uu___ -> FStar_Tactics_V2_Derived.fail "fold_right2"
 let rec zip3 :
@@ -50,7 +49,7 @@ let rec zip3 :
     | uu___ -> []
 let last (xs : 'a Prims.list) : ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
   match FStar_List_Tot_Base.rev xs with
-  | h::uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> h)
+  | h::uu___ -> (fun uu___1 -> h)
   | [] -> FStar_Tactics_V2_Derived.fail "last: empty list"
 let app_binders (t : FStar_Tactics_NamedView.term)
   (bs : FStar_Tactics_NamedView.binder Prims.list) :
@@ -85,7 +84,7 @@ let lookup_rec_fv (s : param_state) (f : FStarC_Reflection_Types.fv) :
            Obj.magic (FStarC_Tactics_V2_Builtins.raise_core NotARecFV ps))
     | (f1, k)::fs ->
         if (FStar_Reflection_V2_Compare.compare_fv f f1) = FStar_Order.Eq
-        then FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> k)
+        then (fun uu___ -> k)
         else aux fs in
   aux s.recs
 let push_fv (f1 : FStarC_Reflection_Types.fv)
@@ -106,7 +105,7 @@ let lookup (s : param_state) (v : FStar_Tactics_NamedView.namedv) :
           (FStar_Tactics_NamedView.inspect_namedv v).FStarC_Reflection_V2_Data.uniq
             =
             (FStar_Tactics_NamedView.inspect_namedv v').FStarC_Reflection_V2_Data.uniq
-        then FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> r)
+        then (fun uu___ -> r)
         else aux tl in
   aux s.bvmap
 let replace_var (s : param_state) (b : Prims.bool)
@@ -130,12 +129,11 @@ let replace_var (s : param_state) (b : Prims.bool)
                                 (if b then y else x2)))))
           (fun uu___ ->
              match uu___ with
-             | NotFoundBV uu___1 ->
-                 FStar_Tactics_Effect.lift_div_tac () (fun uu___2 -> t)
+             | NotFoundBV uu___1 -> (fun uu___2 -> t)
              | e ->
-                 FStar_Tactics_Effect.tac_bind () ()
-                   (FStarC_Tactics_V2_Builtins.raise_core e)
-                   (fun uu___1 uu___2 -> Obj.magic ())) ps
+                 (fun ps1 ->
+                    Obj.magic (FStarC_Tactics_V2_Builtins.raise_core e ps1)))
+          ps
     | uu___ -> t
 let replace_by (s : param_state) (b : Prims.bool)
   (t : FStar_Tactics_NamedView.term) :
@@ -388,21 +386,18 @@ and param_pat (s : param_state) (p : FStar_Tactics_NamedView.pattern) :
             (fun uu___ uu___1 ->
                match (uu___, uu___1) with
                | ((s1, (pats0, pats1, patsr)), (p1, i)) ->
-                   FStar_Tactics_Effect.tac_bind () () (x p1)
-                     (fun uu___2 ->
-                        if uu___2
-                        then fun uu___3 -> (s1, (pats0, pats1, patsr))
-                        else
-                          FStar_Tactics_Effect.tac_bind () ()
-                            (param_pat s1 p1)
-                            (fun uu___3 uu___4 ->
-                               match uu___3 with
-                               | (s', (p0, p11, pr)) ->
-                                   (s',
-                                     (((p0, i) :: pats0), ((p11, i) ::
-                                       pats1), ((pr, false) :: (p11, i) ::
-                                       (p0, i) :: patsr))))))
-            (s, ([], [], [])) pats ps in
+                   (fun ps1 ->
+                      let x3 = x p1 ps1 in
+                      if x3
+                      then (s1, (pats0, pats1, patsr))
+                      else
+                        (let x4 = param_pat s1 p1 ps1 in
+                         match x4 with
+                         | (s', (p0, p11, pr)) ->
+                             (s',
+                               (((p0, i) :: pats0), ((p11, i) :: pats1),
+                                 ((pr, false) :: (p11, i) :: (p0, i) ::
+                                 patsr)))))) (s, ([], [], [])) pats ps in
         (match x2 with
          | (s', (pats0, pats1, patsr)) ->
              (s',
@@ -572,7 +567,7 @@ and push_binder (b : FStar_Tactics_NamedView.binder) (s : param_state) :
 let init_param_state : param_state=
   { bvmap = []; fresh = Prims.int_zero; recs = [] }
 let param (t : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.term, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps -> let x = param' init_param_state t ps in x
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.Parametricity.param"
@@ -614,13 +609,12 @@ let param_ctor (nm_ty : FStarC_Reflection_Types.name) (s : param_state)
                  (fun uu___ b ->
                     match uu___ with
                     | (s1, bvs) ->
-                        FStar_Tactics_Effect.tac_bind () ()
-                          (push_binder b s1)
-                          (fun uu___1 uu___2 ->
-                             match uu___1 with
-                             | (s2, (bx0, bx1, bxr)) ->
-                                 (s2, (bxr :: bx1 :: bx0 :: bvs)))) (s, [])
-                 bs ps in
+                        (fun ps1 ->
+                           let x5 = push_binder b s1 ps1 in
+                           match x5 with
+                           | (s2, (bx0, bx1, bxr)) ->
+                               (s2, (bxr :: bx1 :: bx0 :: bvs)))) (s, []) bs
+                 ps in
              (match x4 with
               | (s1, bs1) ->
                   let x5 = FStar_List_Tot_Base.rev bs1 in
@@ -661,12 +655,12 @@ let param_inductive (se : FStarC_Reflection_Types.sigelt)
             (fun uu___ b ->
                match uu___ with
                | (s, bvs) ->
-                   FStar_Tactics_Effect.tac_bind () () (push_binder b s)
-                     (fun uu___1 uu___2 ->
-                        match uu___1 with
-                        | (s1, (bx0, bx1, bxr)) ->
-                            (s1, (bxr :: bx1 :: bx0 :: bvs)))) (x1, [])
-            params ps in
+                   (fun ps1 ->
+                      let x4 = push_binder b s ps1 in
+                      match x4 with
+                      | (s1, (bx0, bx1, bxr)) ->
+                          (s1, (bxr :: bx1 :: bx0 :: bvs)))) (x1, []) params
+            ps in
         (match x3 with
          | (s, param_bs) ->
              let x4 = FStar_List_Tot_Base.rev param_bs in
@@ -798,7 +792,7 @@ let _ =
                (FStarC_Syntax_Embeddings.e_list
                   FStarC_Reflection_V2_Embeddings.e_sigelt) psc ncb us args)
 type ('a, 'x, 'y) param_of_eqtype = unit
-type ('uuuuu, 'uuuuu1) int_param = unit
-type ('uuuuu, 'uuuuu1) bool_param = unit
-type ('uuuuu, 'uuuuu1) unit_param = unit
-type ('uuuuu, 'uuuuu1) string_param = unit
+type ('x, 'y) int_param = unit
+type ('x, 'y) bool_param = unit
+type ('x, 'y) unit_param = unit
+type ('x, 'y) string_param = unit

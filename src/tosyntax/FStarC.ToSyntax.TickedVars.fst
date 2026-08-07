@@ -141,33 +141,26 @@ let rec go_term (env : DsEnv.env) (t: term) : ML (m unit) =
     go_term env' t;!
     iterM (go_term env') ts
 
-  | ElimExists (binders, p, q, y, e) ->
-    go_term env q;!
+  | ElimExists (binders, p, e) ->
     let! env' = go_binders env binders in
     go_term env' p;!
-    let! env'' = go_binder env' y in
-    go_term env'' e
+    go_term env' e
 
   | ElimImplies (p, q, e) ->
     go_term env p;!
     go_term env q;!
     go_term env e
 
-  | ElimOr(p, q, r, x, e, x', e') ->
+  | ElimOr(p, q, e, e') ->
     go_term env p;!
     go_term env q;!
-    go_term env r;!
-    let! env_x = go_binder env x in
-    go_term env_x e;!
-    let! env_x' = go_binder env x' in
-    go_term env_x' e'
+    go_term env e;!
+    go_term env e'
 
-  | ElimAnd(p, q, r, x, y, e) ->
+  | ElimAnd(p, q, e) ->
     go_term env p;!
     go_term env q;!
-    go_term env r;!
-    let! env' = go_binders env [x; y] in
-    go_term env' e
+    go_term env e
 
   | ListLiteral ts -> iterM (go_term env) ts
   | SeqLiteral ts  -> iterM (go_term env) ts

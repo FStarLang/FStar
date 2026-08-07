@@ -67,6 +67,21 @@ type fvar_binding = {
     needs_fuel_and_universe_instantiations: option univ_names;
 }
 
+(* A module's SMT encoding, as it is registered with the solver.
+
+   Everything but [me_decls] is small, and is loaded eagerly from the module's
+   .checked file; [me_decls] holds the bulk of the encoding and is read on
+   demand, if and when context pruning decides that some of the module's
+   declarations are relevant to a query. *)
+type module_encoding = {
+  (* One entry per [decls_elt] of [me_decls] *)
+  me_index: list FStarC.SMTEncoding.Pruning.elt_summary;
+  me_fvbs: list fvar_binding;
+  me_decls: unit -> ML decls_t;
+}
+
+let is_empty_encoding (me:module_encoding) = Nil? me.me_index && Nil? me.me_fvbs
+
 val list_of : int -> (int -> ML 'a) -> ML (list 'a)
 val kick_partial_app : fvar_binding -> ML (option term)
 val fvb_to_string : fvar_binding -> ML string
@@ -87,7 +102,11 @@ type env_t = {
     encode_non_total_function_typ:bool;
     current_module_name:string;
     encoding_quantifier:bool;
-    global_cache:SMap.t (decls_elt & lident);
+    (* Maps the hash-consing key of a [decls_elt] to the [a_names] of the
+       first elt registered under that key, and to the module that registered
+       it. Only the names are needed, which lets a module's encoding be
+       registered here without deserializing it. *)
+    global_cache:SMap.t (list string & lident);
 }
 
 val print_env : env_t -> ML string

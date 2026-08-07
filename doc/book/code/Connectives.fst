@@ -57,14 +57,12 @@ let conj_elim_2 #p #q (pf_pq:squash (p /\ q))
 let conj_elim_sugar_1 #p #q (pf_pq:squash (p /\ q))
   : squash p
   = eliminate p /\ q
-    returns p
-    with pf_p pf_q. pf_p
+    with ()
 
 let conj_elim_sugar_2 #p #q (pf_pq:squash (p /\ q))
   : squash p
   = eliminate p /\ q
-    returns q
-    with pf_p pf_q. pf_q
+    with ()
 //SNIPPET_END: conj_elim_sugar$
 
 //SNIPPET_START: or_intro$
@@ -114,26 +112,25 @@ let or_elim_sugar #p #q #r
                   (pf_qr:unit -> Lemma (requires q) (ensures r))
   : squash r
   = eliminate p \/ q
-    returns r
-    with pf_p. pf_pr () //pf_p : squash p
-    and  pf_q. pf_qr () //pf_q : squash q
+    with pf_pr () //p is in scope here
+    and pf_qr () //q is in scope here
 //SNIPPET_END: or_elim_sugar$
 
 //SNIPPET_START: implies_intro$
 let implies_intro_1 #p #q (pq: squash p -> squash q)
   : squash (p ==> q)
   = introduce p ==> q
-    with pf_p. pq pf_p
+    with pq ()
 
 let implies_intro_2 #p #q (pq: unit -> Lemma (requires p) (ensures q))
   : squash (p ==> q)
   = introduce p ==> q
-    with pf_p. pq pf_p
+    with pq ()
 
 let implies_intro_3 #p #q (pq: unit -> Lemma (requires p) (ensures q))
   : Lemma (p ==> q)
   = introduce p ==> q
-    with pf_p. pq pf_p
+    with pq ()
 //SNIPPET_END: implies_intro$
 
 //SNIPPET_START: implies_elim$
@@ -151,7 +148,7 @@ let implies_elim_sugar #p #q (pq:squash (p ==> q)) (pf_p: squash p)
 let neg_intro #p (f:squash p -> squash False)
   : squash (~p)
   = introduce p ==> False
-    with pf_p. f pf_p
+    with f ()
 //SNIPPET_END: neg_intro$
 
 //SNIPPET_START: neg_elim$
@@ -279,8 +276,7 @@ let exists_elim (#t:Type) (#p:t -> prop) (#q:prop)
                  (k : (x:t -> squash (p x) -> squash q))
   : squash q
   = eliminate exists (x:t). p x
-    returns q
-    with pf_p. k x pf_p
+    with k x ()
 
 let exists_elim_alt (#t:Type) (#p:t -> prop) (#q:prop)
                     (pf: squash (exists (x:t). p x))
@@ -288,6 +284,5 @@ let exists_elim_alt (#t:Type) (#p:t -> prop) (#q:prop)
                                       (ensures q)))
   : Lemma q
   = eliminate exists (x:t). p x
-    returns q
-    with pf_p. k x
+    with k x
 //SNIPPET_END: exists_elim$

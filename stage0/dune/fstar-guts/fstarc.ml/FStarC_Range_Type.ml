@@ -24,11 +24,11 @@ let __proj__Mkrng__item__end_pos (projectee : rng) : pos=
 type range = {
   def_range: rng ;
   use_range: rng }[@@deriving yojson,show]
+type t = range
 let __proj__Mkrange__item__def_range (projectee : range) : rng=
   match projectee with | { def_range; use_range;_} -> def_range
 let __proj__Mkrange__item__use_range (projectee : range) : rng=
   match projectee with | { def_range; use_range;_} -> use_range
-type t = range
 let dummy_pos : pos= { line = Prims.int_zero; col = Prims.int_zero }
 let dummy_rng : rng=
   { file_name = "dummy"; start_pos = dummy_pos; end_pos = dummy_pos }

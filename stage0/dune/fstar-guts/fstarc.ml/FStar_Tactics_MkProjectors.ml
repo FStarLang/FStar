@@ -139,7 +139,7 @@ let rec list_last :
   fun xs ->
     match xs with
     | [] -> FStar_Tactics_V2_Derived.fail "list_last: empty"
-    | x::[] -> FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> x)
+    | x::[] -> (fun uu___ -> x)
     | uu___::xs1 -> list_last xs1
 let embed_int (i : Prims.int) : FStar_Tactics_NamedView.term=
   FStarC_Reflection_V2_Builtins.pack_ln
@@ -454,24 +454,25 @@ let mk_projs (is_class : Prims.bool) (tyname : Prims.string) :
                                       match uu___1 with
                                       | (decls, smap, unfold_names_tm, idx)
                                           ->
-                                          FStar_Tactics_Effect.tac_bind () ()
-                                            (mk_proj_decl is_class x1
-                                               ctorname univs params idx
-                                               field unfold_names_tm smap)
-                                            (fun uu___2 uu___3 ->
-                                               match uu___2 with
-                                               | (ds, fv) ->
-                                                   ((FStar_List_Tot_Base.op_At
-                                                       decls ds),
-                                                     (((FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv
-                                                          field), fv) ::
-                                                     smap),
-                                                     (FStarC_Reflection_V2_Builtins.pack_ln
-                                                        (FStarC_Reflection_V2_Data.Tv_App
-                                                           ((FStarC_Reflection_V2_Builtins.pack_ln
-                                                               (FStarC_Reflection_V2_Data.Tv_App
-                                                                  ((FStarC_Reflection_V2_Builtins.pack_ln
-                                                                    (FStarC_Reflection_V2_Data.Tv_App
+                                          (fun ps1 ->
+                                             let x11 =
+                                               mk_proj_decl is_class x1
+                                                 ctorname univs params idx
+                                                 field unfold_names_tm smap
+                                                 ps1 in
+                                             match x11 with
+                                             | (ds, fv) ->
+                                                 ((FStar_List_Tot_Base.op_At
+                                                     decls ds),
+                                                   (((FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv
+                                                        field), fv) :: smap),
+                                                   (FStarC_Reflection_V2_Builtins.pack_ln
+                                                      (FStarC_Reflection_V2_Data.Tv_App
+                                                         ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                             (FStarC_Reflection_V2_Data.Tv_App
+                                                                ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                                    (
+                                                                    FStarC_Reflection_V2_Data.Tv_App
                                                                     ((FStarC_Reflection_V2_Builtins.pack_ln
                                                                     (FStarC_Reflection_V2_Data.Tv_UInst
                                                                     ((FStarC_Reflection_V2_Builtins.pack_fv
@@ -486,14 +487,14 @@ let mk_projs (is_class : Prims.bool) (tyname : Prims.string) :
                                                                     ["Prims";
                                                                     "string"]))),
                                                                     FStarC_Reflection_V2_Data.Q_Implicit)))),
-                                                                    ((embed_string
+                                                                  ((embed_string
                                                                     (FStarC_Reflection_V2_Builtins.implode_qn
                                                                     (FStarC_Reflection_V2_Builtins.inspect_fv
                                                                     fv))),
                                                                     FStarC_Reflection_V2_Data.Q_Explicit)))),
-                                                             (unfold_names_tm,
-                                                               FStarC_Reflection_V2_Data.Q_Explicit)))),
-                                                     (idx + Prims.int_one))))
+                                                           (unfold_names_tm,
+                                                             FStarC_Reflection_V2_Data.Q_Explicit)))),
+                                                   (idx + Prims.int_one))))
                                    ([], [], x9, Prims.int_zero) fields ps in
                                (match x10 with
                                 | (decls, uu___1, uu___2, uu___3) -> decls)))))

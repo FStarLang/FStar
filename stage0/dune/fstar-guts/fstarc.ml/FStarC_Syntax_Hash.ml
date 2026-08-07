@@ -91,24 +91,24 @@ and hash_term' (t : FStarC_Syntax_Syntax.term) : FStarC_Hash.hash_code mm=
   | FStarC_Syntax_Syntax.Tm_type u ->
       let uu___1 = hash_universe u in mix (of_int (Prims.of_int 17)) uu___1
   | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.body = t1;
+      { FStarC_Syntax_Syntax.b = b; FStarC_Syntax_Syntax.body = t1;
         FStarC_Syntax_Syntax.rc_opt = rcopt;_}
       ->
       let uu___1 =
-        let uu___2 = hash_list hash_binder bs in
+        let uu___2 = hash_binder b in
         let uu___3 =
           let uu___4 = hash_term t1 in
           let uu___5 = hash_option hash_rc rcopt in mix uu___4 uu___5 in
         mix uu___2 uu___3 in
       mix (of_int (Prims.of_int 19)) uu___1
   | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_} ->
+      { FStarC_Syntax_Syntax.b1 = b; FStarC_Syntax_Syntax.comp = c;_} ->
       let uu___1 =
-        let uu___2 = hash_list hash_binder bs in
+        let uu___2 = hash_binder b in
         let uu___3 = hash_comp c in mix uu___2 uu___3 in
       mix (of_int (Prims.of_int 23)) uu___1
   | FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = b; FStarC_Syntax_Syntax.phi = t1;_} ->
+      { FStarC_Syntax_Syntax.b2 = b; FStarC_Syntax_Syntax.phi = t1;_} ->
       let uu___1 =
         let uu___2 = hash_bv b in
         let uu___3 = hash_term t1 in mix uu___2 uu___3 in
@@ -614,31 +614,31 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
           | (FStarC_Syntax_Syntax.Tm_type u1, FStarC_Syntax_Syntax.Tm_type
              u2) -> equal_universe u1 u2
           | (FStarC_Syntax_Syntax.Tm_abs
-             { FStarC_Syntax_Syntax.bs = bs1;
-               FStarC_Syntax_Syntax.body = t11;
+             { FStarC_Syntax_Syntax.b = b1; FStarC_Syntax_Syntax.body = t11;
                FStarC_Syntax_Syntax.rc_opt = rc1;_},
              FStarC_Syntax_Syntax.Tm_abs
-             { FStarC_Syntax_Syntax.bs = bs2;
-               FStarC_Syntax_Syntax.body = t21;
+             { FStarC_Syntax_Syntax.b = b2; FStarC_Syntax_Syntax.body = t21;
                FStarC_Syntax_Syntax.rc_opt = rc2;_})
               ->
               let uu___2 =
-                let uu___3 = equal_list equal_binder bs1 bs2 in
+                let uu___3 = equal_binder b1 b2 in
                 if uu___3 then equal_term t11 t21 else false in
               if uu___2 then equal_opt equal_rc rc1 rc2 else false
           | (FStarC_Syntax_Syntax.Tm_arrow
-             { FStarC_Syntax_Syntax.bs1 = bs1;
+             { FStarC_Syntax_Syntax.b1 = b1;
                FStarC_Syntax_Syntax.comp = c1;_},
              FStarC_Syntax_Syntax.Tm_arrow
-             { FStarC_Syntax_Syntax.bs1 = bs2;
+             { FStarC_Syntax_Syntax.b1 = b2;
                FStarC_Syntax_Syntax.comp = c2;_})
               ->
-              let uu___2 = equal_list equal_binder bs1 bs2 in
+              let uu___2 = equal_binder b1 b2 in
               if uu___2 then equal_comp c1 c2 else false
           | (FStarC_Syntax_Syntax.Tm_refine
-             { FStarC_Syntax_Syntax.b = b1; FStarC_Syntax_Syntax.phi = t11;_},
+             { FStarC_Syntax_Syntax.b2 = b1;
+               FStarC_Syntax_Syntax.phi = t11;_},
              FStarC_Syntax_Syntax.Tm_refine
-             { FStarC_Syntax_Syntax.b = b2; FStarC_Syntax_Syntax.phi = t21;_})
+             { FStarC_Syntax_Syntax.b2 = b2;
+               FStarC_Syntax_Syntax.phi = t21;_})
               ->
               let uu___2 = equal_bv b1 b2 in
               if uu___2 then equal_term t11 t21 else false

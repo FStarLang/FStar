@@ -1,5 +1,6 @@
 module FStar.Tactics.MApply0
 
+open FStar.Stubs.Reflection.Types
 open FStar.Reflection.V2
 open FStar.Reflection.V2.Formula
 

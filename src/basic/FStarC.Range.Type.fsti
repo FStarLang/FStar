@@ -22,8 +22,10 @@ open FStarC.Effect
    FStar.Range (which the reflection stubs depend on) can be realized by
    [range] without creating a dependency cycle. *)
 
+(* [pos] is a packed (line, col) integer; see FStarC.Range.Type.fst. It is
+   therefore not a [new] type, unlike [rng] and [range]. *)
 [@@ PpxDerivingYoJson; PpxDerivingShow]
-new val pos : Type0
+val pos : Type0
 
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val rng : Type0

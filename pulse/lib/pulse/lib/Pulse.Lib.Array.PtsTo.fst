@@ -15,6 +15,10 @@
 *)
 
 module Pulse.Lib.Array.PtsTo
+open Pulse.Class.PtsTo
+open Pulse.Lib.Array.Core
+open Pulse.Lib.SmallType
+open Pulse.Lib.Send
 #lang-pulse
 open Pulse.Main
 open FStar.Tactics.V2

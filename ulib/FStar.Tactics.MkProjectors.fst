@@ -1,5 +1,6 @@
 module FStar.Tactics.MkProjectors
 
+open FStar.Stubs.Reflection.Types
 (* NB: We cannot use typeclasses here, or any module that depends on
 them, since they use the tactics defined here. So we must be careful
 with our includes. *)

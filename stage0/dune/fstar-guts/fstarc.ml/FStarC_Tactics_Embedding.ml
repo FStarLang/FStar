@@ -106,7 +106,7 @@ let unembed' (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
 let hd'_and_args (tm : FStarC_Syntax_Syntax.term) :
   (FStarC_Syntax_Syntax.term' * FStarC_Syntax_Syntax.args)=
   let tm1 = FStarC_Syntax_Util.unascribe tm in
-  let uu___ = FStarC_Syntax_Util.head_and_args tm1 in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full tm1 in
   match uu___ with
   | (hd, args) ->
       let uu___1 =

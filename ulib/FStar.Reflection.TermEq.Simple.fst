@@ -1,5 +1,6 @@
 module FStar.Reflection.TermEq.Simple
 
+open FStar.Reflection.TermSpec
 open FStar.Stubs.Reflection.Types
 open FStar.Reflection.TermEq
 

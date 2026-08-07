@@ -317,7 +317,7 @@ let is_general_prefix_op (op : FStarC_Ident.ident) : Prims.bool=
     FStarC_Util.char_at (FStarC_Ident.string_of_id op) Prims.int_zero in
   ((op_starting_char = 33) || (op_starting_char = 63)) ||
     ((op_starting_char = 126) && ((FStarC_Ident.string_of_id op) <> "~"))
-let head_and_args (e : FStarC_Parser_AST.term) :
+let head_and_args_full (e : FStarC_Parser_AST.term) :
   (FStarC_Parser_AST.term * (FStarC_Parser_AST.term * FStarC_Parser_AST.imp)
     Prims.list)=
   let rec aux e1 acc =
@@ -1813,12 +1813,13 @@ and p_binder' (no_pars : Prims.bool) (is_atomic : Prims.bool)
                  ((is_meta_qualifier b.FStarC_Parser_AST.aqual) &&
                     (Prims.op_Negation no_pars))
              then
-               fun x y ->
-                 FStar_Pprint.group
-                   (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen
-                      (FStar_Pprint.op_Hat_Hat (cat_with_colon x y)
-                         FStar_Pprint.rparen))
-             else (fun x y -> FStar_Pprint.group (cat_with_colon x y)) in
+               fun x ->
+                 fun y ->
+                   FStar_Pprint.group
+                     (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen
+                        (FStar_Pprint.op_Hat_Hat (cat_with_colon x y)
+                           FStar_Pprint.rparen))
+             else (fun x -> fun y -> FStar_Pprint.group (cat_with_colon x y)) in
            (b', (FStar_Pervasives_Native.Some (t', catf1))))
   | FStarC_Parser_AST.NoName t ->
       (match t.FStarC_Parser_AST.tm with
@@ -2513,11 +2514,10 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
           FStar_Pprint.op_Hat_Hat (str "exists") uu___2 in
         FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___1 in
       FStar_Pprint.op_Hat_Hat (str "introduce") uu___
-  | FStarC_Parser_AST.IntroImplies (p, q, x, e1) ->
+  | FStarC_Parser_AST.IntroImplies (p, q, e1) ->
       let p1 = p_tmFormula p in
       let q1 = p_tmFormula q in
       let e2 = p_noSeqTermAndComment false false e1 in
-      let x1 = p_binders_sep [x] in
       FStar_Pprint.op_Hat_Hat (str "introduce")
         (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
            (FStar_Pprint.op_Hat_Hat p1
@@ -2528,10 +2528,7 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
                           (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
                              (FStar_Pprint.op_Hat_Hat (str "with")
                                 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
-                                   (FStar_Pprint.op_Hat_Hat x1
-                                      (FStar_Pprint.op_Hat_Hat (str ".")
-                                         (FStar_Pprint.op_Hat_Hat
-                                            FStar_Pprint.space e2))))))))))))
+                                   e2)))))))))
   | FStarC_Parser_AST.IntroOr (b, p, q, e1) ->
       let p1 = p_tmFormula p in
       let q1 = p_tmFormula q in
@@ -2587,7 +2584,7 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
                                 (FStar_Pprint.op_Hat_Hat (str "with")
                                    (FStar_Pprint.op_Hat_Hat
                                       FStar_Pprint.space vs1))))))))))
-  | FStarC_Parser_AST.ElimExists (bs, p, q, b, e1) ->
+  | FStarC_Parser_AST.ElimExists (bs, p, e1) ->
       let head =
         let uu___ =
           let uu___1 =
@@ -2596,33 +2593,13 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
           FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___1 in
         FStar_Pprint.op_Hat_Hat (str "eliminate exists") uu___ in
       let p1 = p_noSeqTermAndComment false false p in
-      let q1 = p_noSeqTermAndComment false false q in
       let e2 = p_noSeqTermAndComment false false e1 in
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 =
-                    let uu___7 =
-                      let uu___8 =
-                        let uu___9 =
-                          let uu___10 = p_binders_sep [b] in
-                          FStar_Pprint.op_Hat_Hat uu___10
-                            (FStar_Pprint.op_Hat_Hat (str ".")
-                               (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
-                                  e2)) in
-                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___9 in
-                      FStar_Pprint.op_Hat_Hat (str "with") uu___8 in
-                    FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___7 in
-                  FStar_Pprint.op_Hat_Hat q1 uu___6 in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___5 in
-              FStar_Pprint.op_Hat_Hat (str "returns") uu___4 in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___3 in
-          FStar_Pprint.op_Hat_Hat p1 uu___2 in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___1 in
-      FStar_Pprint.op_Hat_Hat head uu___
+      FStar_Pprint.op_Hat_Hat head
+        (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+           (FStar_Pprint.op_Hat_Hat p1
+              (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                 (FStar_Pprint.op_Hat_Hat (str "with")
+                    (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2)))))
   | FStarC_Parser_AST.ElimImplies (p, q, e1) ->
       let p1 = p_tmFormula p in
       let q1 = p_tmFormula q in
@@ -2638,13 +2615,10 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
                              (FStar_Pprint.op_Hat_Hat (str "with")
                                 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                                    e2)))))))))
-  | FStarC_Parser_AST.ElimOr (p, q, r, x, e1, y, e2) ->
+  | FStarC_Parser_AST.ElimOr (p, q, e1, e2) ->
       let p1 = p_tmFormula p in
       let q1 = p_tmFormula q in
-      let r1 = p_noSeqTermAndComment false false r in
-      let x1 = p_binders_sep [x] in
       let e11 = p_noSeqTermAndComment false false e1 in
-      let y1 = p_binders_sep [y] in
       let e21 = p_noSeqTermAndComment false false e2 in
       FStar_Pprint.op_Hat_Hat (str "eliminate")
         (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
@@ -2654,46 +2628,17 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
                     (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                        (FStar_Pprint.op_Hat_Hat q1
                           (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
-                             (FStar_Pprint.op_Hat_Hat (str "returns")
+                             (FStar_Pprint.op_Hat_Hat (str "with")
                                 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
-                                   (FStar_Pprint.op_Hat_Hat r1
+                                   (FStar_Pprint.op_Hat_Hat e11
                                       (FStar_Pprint.op_Hat_Hat
                                          FStar_Pprint.hardline
-                                         (FStar_Pprint.op_Hat_Hat
-                                            (str "with")
+                                         (FStar_Pprint.op_Hat_Hat (str "and")
                                             (FStar_Pprint.op_Hat_Hat
-                                               FStar_Pprint.space
-                                               (FStar_Pprint.op_Hat_Hat x1
-                                                  (FStar_Pprint.op_Hat_Hat
-                                                     FStar_Pprint.space
-                                                     (FStar_Pprint.op_Hat_Hat
-                                                        (str ".")
-                                                        (FStar_Pprint.op_Hat_Hat
-                                                           FStar_Pprint.space
-                                                           (FStar_Pprint.op_Hat_Hat
-                                                              e11
-                                                              (FStar_Pprint.op_Hat_Hat
-                                                                 FStar_Pprint.hardline
-                                                                 (FStar_Pprint.op_Hat_Hat
-                                                                    (
-                                                                    str "and")
-                                                                    (
-                                                                    FStar_Pprint.op_Hat_Hat
-                                                                    FStar_Pprint.space
-                                                                    (FStar_Pprint.op_Hat_Hat
-                                                                    y1
-                                                                    (FStar_Pprint.op_Hat_Hat
-                                                                    FStar_Pprint.space
-                                                                    (FStar_Pprint.op_Hat_Hat
-                                                                    (str ".")
-                                                                    (FStar_Pprint.op_Hat_Hat
-                                                                    FStar_Pprint.space
-                                                                    e21)))))))))))))))))))))))))
-  | FStarC_Parser_AST.ElimAnd (p, q, r, x, y, e1) ->
+                                               FStar_Pprint.space e21)))))))))))))
+  | FStarC_Parser_AST.ElimAnd (p, q, e1) ->
       let p1 = p_tmFormula p in
       let q1 = p_tmTuple q in
-      let r1 = p_noSeqTermAndComment false false r in
-      let xy = p_binders_sep [x; y] in
       let e2 = p_noSeqTermAndComment false false e1 in
       FStar_Pprint.op_Hat_Hat (str "eliminate")
         (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
@@ -2703,23 +2648,9 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
                     (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                        (FStar_Pprint.op_Hat_Hat q1
                           (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
-                             (FStar_Pprint.op_Hat_Hat (str "returns")
+                             (FStar_Pprint.op_Hat_Hat (str "with")
                                 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
-                                   (FStar_Pprint.op_Hat_Hat r1
-                                      (FStar_Pprint.op_Hat_Hat
-                                         FStar_Pprint.hardline
-                                         (FStar_Pprint.op_Hat_Hat
-                                            (str "with")
-                                            (FStar_Pprint.op_Hat_Hat
-                                               FStar_Pprint.space
-                                               (FStar_Pprint.op_Hat_Hat xy
-                                                  (FStar_Pprint.op_Hat_Hat
-                                                     FStar_Pprint.space
-                                                     (FStar_Pprint.op_Hat_Hat
-                                                        (str ".")
-                                                        (FStar_Pprint.op_Hat_Hat
-                                                           FStar_Pprint.space
-                                                           e2)))))))))))))))))
+                                   e2)))))))))
   | FStarC_Parser_AST.LitDoc d -> d
   | uu___ -> p_typ ps pb e
 and p_dec_wf (ps : Prims.bool) (pb : Prims.bool)
@@ -3532,7 +3463,7 @@ and p_simpleDef (ps : Prims.bool)
 and p_appTerm (e : FStarC_Parser_AST.term) : FStar_Pprint.document=
   match e.FStarC_Parser_AST.tm with
   | FStarC_Parser_AST.App uu___ when is_general_application e ->
-      let uu___1 = head_and_args e in
+      let uu___1 = head_and_args_full e in
       (match uu___1 with
        | (head, args) ->
            (match args with
@@ -3938,7 +3869,7 @@ and p_universeFrom (u : FStarC_Parser_AST.term) : FStar_Pprint.document=
         FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
       FStar_Pprint.group uu___
   | FStarC_Parser_AST.App uu___ ->
-      let uu___1 = head_and_args u in
+      let uu___1 = head_and_args_full u in
       (match uu___1 with
        | (head, args) ->
            (match head.FStarC_Parser_AST.tm with

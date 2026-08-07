@@ -16,6 +16,7 @@
 
 module FStarC.Syntax.Embeddings.Base
 
+module Range = FStarC.Range.Type
 open FStarC
 open FStarC.Effect
 open FStarC.Range
@@ -278,7 +279,7 @@ let (let?) o f = Option.bind o f
 
 let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> ML term) : ML (embedding 'a) =
   let uu (t:term) _norm : ML (option 'a) =
-    let hd, args = U.head_and_args t in
+    let hd, args = U.head_and_args_full t in
     let? hd_lid =
       match (SS.compress (U.un_uinst hd)).n with
       | Tm_fvar fv -> Some fv.fv_name

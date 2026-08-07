@@ -79,14 +79,14 @@ and lidents_of_term' (t:term')
   | CalcProof (t1, t2, ts) -> lidents_of_term t1 @ lidents_of_term t2 @ concat_map lidents_of_calc_step ts
   | IntroForall (bs, t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
   | IntroExists (bs, t1, ts, t2) -> lidents_of_term t1 @ concat_map lidents_of_term ts @ lidents_of_term t2
-  | IntroImplies (t1, t2, b, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | IntroImplies (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | IntroOr (b, t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | IntroAnd (t1, t2, t3, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
   | ElimForall (bs, t1, ts) -> concat_map lidents_of_binder bs @ lidents_of_term t1 @ concat_map lidents_of_term ts
-  | ElimExists (bs, t1, t2, b, t3) -> concat_map lidents_of_binder bs @ lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
+  | ElimExists (bs, t1, t2) -> concat_map lidents_of_binder bs @ lidents_of_term t1 @ lidents_of_term t2
   | ElimImplies (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
-  | ElimOr (t1, t2, t3, b1, t4, b2, t5) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4 @ lidents_of_term t5
-  | ElimAnd (t1, t2, t3, b1, b2, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
+  | ElimOr (t1, t2, t3, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
+  | ElimAnd (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | ListLiteral ts -> concat_map lidents_of_term ts
   | SeqLiteral ts -> concat_map lidents_of_term ts
 and lidents_of_branch b : ML _ = let (p, _, t) = b in lidents_of_pattern p @ lidents_of_term t

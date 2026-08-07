@@ -39,33 +39,21 @@ let lookup_tyname (env : env_t) (name : FStarC_Extraction_ML_Syntax.mlpath) :
     (FStarC_Extraction_ML_Syntax.string_of_mlpath name)
 type var_set = FStarC_Extraction_ML_Syntax.mlident FStarC_RBSet.t
 let empty_var_set : Prims.string FStarC_RBSet.t=
-  Obj.magic
-    (FStarC_Class_Setlike.empty ()
-       (Obj.magic (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
-       ())
-let rec freevars_of_mlty' (uu___1 : var_set)
-  (uu___ : FStarC_Extraction_ML_Syntax.mlty) : var_set=
-  (fun vars t ->
-     match t with
-     | FStarC_Extraction_ML_Syntax.MLTY_Var i ->
-         Obj.magic
-           (Obj.repr
-              (FStarC_Class_Setlike.add ()
-                 (Obj.magic
-                    (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
-                 i (Obj.magic vars)))
-     | FStarC_Extraction_ML_Syntax.MLTY_Fun (t0, uu___, t1) ->
-         Obj.magic
-           (Obj.repr
-              (let uu___1 = freevars_of_mlty' vars t0 in
-               freevars_of_mlty' uu___1 t1))
-     | FStarC_Extraction_ML_Syntax.MLTY_Named (tys, uu___) ->
-         Obj.magic
-           (Obj.repr (FStarC_List.fold_left freevars_of_mlty' vars tys))
-     | FStarC_Extraction_ML_Syntax.MLTY_Tuple tys ->
-         Obj.magic
-           (Obj.repr (FStarC_List.fold_left freevars_of_mlty' vars tys))
-     | uu___ -> Obj.magic (Obj.repr vars)) uu___1 uu___
+  FStarC_Class_Setlike.empty
+    (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string) ()
+let rec freevars_of_mlty' (vars : var_set)
+  (t : FStarC_Extraction_ML_Syntax.mlty) : var_set=
+  match t with
+  | FStarC_Extraction_ML_Syntax.MLTY_Var i ->
+      FStarC_Class_Setlike.add
+        (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string) i vars
+  | FStarC_Extraction_ML_Syntax.MLTY_Fun (t0, uu___, t1) ->
+      let uu___1 = freevars_of_mlty' vars t0 in freevars_of_mlty' uu___1 t1
+  | FStarC_Extraction_ML_Syntax.MLTY_Named (tys, uu___) ->
+      FStarC_List.fold_left freevars_of_mlty' vars tys
+  | FStarC_Extraction_ML_Syntax.MLTY_Tuple tys ->
+      FStarC_List.fold_left freevars_of_mlty' vars tys
+  | uu___ -> vars
 let freevars_of_mlty : FStarC_Extraction_ML_Syntax.mlty -> var_set=
   freevars_of_mlty' empty_var_set
 let rec elim_mlty (env : env_t) (t : FStarC_Extraction_ML_Syntax.mlty) :
@@ -284,10 +272,9 @@ let elim_tydef (env : env_t) (name : Prims.string)
          | (i, params, entry1) ->
              let p = param.FStarC_Extraction_ML_Syntax.ty_param_name in
              let uu___2 =
-               FStarC_Class_Setlike.mem ()
-                 (Obj.magic
-                    (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
-                 p (Obj.magic freevars) in
+               FStarC_Class_Setlike.mem
+                 (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string) p
+                 freevars in
              if uu___2
              then
                (if must_eliminate i

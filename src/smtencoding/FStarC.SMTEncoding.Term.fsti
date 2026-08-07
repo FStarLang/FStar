@@ -80,19 +80,28 @@ type qop =
   | Forall
   | Exists
 
-type term' =
-  | Integer    of string
-  | String     of string
-  | Real       of string
-  | BoundV     of int
-  | FreeV      of fv
-  | App        of op  & list term
-  | Quant      of qop & list (list pat) & option int & list sort & term
-  | Let        of list term & term
-  | Labeled    of term & Errors.error_message & Range.t
+(* NOTE: the constructors below are deliberately declared in curried form
+   (`C : a -> b -> t`) rather than with a single tuple argument
+   (`C of a & b`). F* extracts the latter to an OCaml constructor holding a
+   *boxed tuple*, costing an extra header and indirection per node. SMT terms
+   are by far the largest thing stored in .checked files, so this matters. *)
+type term =
+  | Integer    : string -> term
+  | String     : string -> term
+  | Real       : string -> term
+  | BoundV     : int -> term
+  | FreeV      : fv -> term
+  (* App and Quant carry a range: it is the only source of position
+     information for SMT goals, used by ErrorReporting to attach source
+     locations to labels. It is Range.dummyRange for all but the
+     formula-level nodes built by EncodeTerm.encode_formula. *)
+  | App        : op -> list term -> Range.t -> term
+  | Quant      : qop -> list (list pat) -> option int -> list sort -> term -> Range.t -> term
+  | Let        : list term -> term -> term
+  | Labeled    : term -> Errors.error_message -> Range.t -> term
 and pat  = term
-and term = {tm:term'; freevars:S.memo fvs; rng:Range.t}
-and fv = | FV of string & sort & bool (* bool iff variable must be forced/unthunked *)
+(* bool iff variable must be forced/unthunked *)
+and fv = | FV : string -> sort -> bool -> fv
 and fvs = list fv
 
 type caption = option string
@@ -121,23 +130,22 @@ type assumption = {
     assumption_caption: caption;
     assumption_name: string;
     assumption_fact_ids:list fact_db_id;
-    assumption_free_names: RBSet.t string;
 }
 type decl =
   | DefPrelude
-  | DeclFun    of string & list sort & sort & caption
-  | DefineFun  of string & list sort & sort & term & caption
-  | Assume     of assumption
-  | Caption    of string
-  | Module     of string & list decl
-  | Eval       of term
-  | Echo       of string
-  | RetainAssumptions of list string
-  | Push       of int
-  | Pop        of int
+  | DeclFun    : string -> list sort -> sort -> caption -> decl
+  | DefineFun  : string -> list sort -> sort -> term -> caption -> decl
+  | Assume     : assumption -> decl
+  | Caption    : string -> decl
+  | Module     : string -> list decl -> decl
+  | Eval       : term -> decl
+  | Echo       : string -> decl
+  | RetainAssumptions : list string -> decl
+  | Push       : int -> decl
+  | Pop        : int -> decl
   | CheckSat
   | GetUnsatCore
-  | SetOption  of string & string
+  | SetOption  : string -> string -> decl
   | GetStatistics
   | GetReasonUnknown
   | EmptyLine
@@ -153,7 +161,8 @@ type decl =
  *       duplicate such blocks
  *
  *     Deduplication happens when giving the decls to Z3
- *       at which point, if the key below -- which is the MD5 string --
+ *       at which point, if the key below -- the MD5 digest of the
+ *       s-expression rendering of the term (see hash_of_term) --
  *       matches, the whole block is dropped (see Encode.fs.recover_caching_and_update_env)
  *
  *     Alternative way would have been to do some smt name matching
@@ -211,66 +220,71 @@ val boxIntFun : string & string
 val boxBoolFun : string & string
 val boxStringFun : string & string
 val boxRealFun: string & string
-val mk: term' -> Range.t -> ML term
-val mkTrue :  (Range.t -> ML term)
-val mkFalse : (Range.t -> ML term)
+val mkTrue :  term
+val mkFalse : term
 val mkUnreachable : term
-val mkInteger : string -> Range.t -> ML term
-val mkInteger': int -> Range.t -> ML term
-val mkReal: string -> Range.t -> ML term
-val mkBoundV : int -> Range.t -> ML term
-val mkFreeV  : fv -> Range.t -> ML term
-val mkApp' : (op & list term) -> Range.t -> ML term
-val mkApp  : (string & list term) -> Range.t -> ML term
-val mkNot  : term -> Range.t -> ML term
-val mkAnd  : ((term & term) -> Range.t -> ML term)
-val mkOr  :  ((term & term) -> Range.t -> ML term)
-val mkImp :  ((term & term) -> Range.t -> ML term)
-val mkMinus: term -> Range.t -> ML term
-val mkNatToBv : (int -> term -> Range.t -> ML term)
-val mkBvUext  : (int -> term -> Range.t -> ML term)
-val mkBvNot   : (term -> Range.t -> ML term)
-val mkBvToNat : (term -> Range.t -> ML term)
-val mkBvAnd   : ((term & term) -> Range.t -> ML term)
-val mkBvXor   : ((term & term) -> Range.t -> ML term)
-val mkBvOr    : ((term & term) -> Range.t -> ML term)
-val mkBvAdd   : ((term & term) -> Range.t -> ML term)
-val mkBvSub   : ((term & term) -> Range.t -> ML term)
-val mkBvShl   : (int -> (term & term) -> Range.t -> ML term)
-val mkBvShr   : (int -> (term & term) -> Range.t -> ML term)
-val mkBvRol   : (int -> (term & term) -> Range.t -> ML term)
-val mkBvRor   : (int -> (term & term) -> Range.t -> ML term)
-val mkBvUdiv  : (int -> (term & term) -> Range.t -> ML term)
-val mkBvMod   : (int -> (term & term) -> Range.t -> ML term)
-val mkBvMul   : (int -> (term & term) -> Range.t -> ML term)
-val mkBvShl'  : (int -> (term & term) -> Range.t -> ML term)
-val mkBvShr'  : (int -> (term & term) -> Range.t -> ML term)
-val mkBvRol'  : (int -> (term & term) -> Range.t -> ML term)
-val mkBvRor'  : (int -> (term & term) -> Range.t -> ML term)
-val mkBvMul'  : (int -> (term & term) -> Range.t -> ML term)
-val mkBvUdivUnsafe : (int -> (term & term) -> Range.t -> ML term)
-val mkBvModUnsafe  : (int -> (term & term) -> Range.t -> ML term)
-val mkBvUlt   : ((term & term) -> Range.t -> ML term)
-val mkIff :  ((term & term) -> Range.t -> ML term)
-val mkEq :   ((term & term) -> Range.t -> ML term)
-val mkLT :   ((term & term) -> Range.t -> ML term)
-val mkLTE :  ((term & term) -> Range.t -> ML term)
-val mkGT:    ((term & term) -> Range.t -> ML term)
-val mkGTE:   ((term & term) -> Range.t -> ML term)
-val mkAdd:   ((term & term) -> Range.t -> ML term)
-val mkSub:   ((term & term) -> Range.t -> ML term)
-val mkDiv:   ((term & term) -> Range.t -> ML term)
-val mkRealDiv:   ((term & term) -> Range.t -> ML term)
-val mkMul:   ((term & term) -> Range.t -> ML term)
-val mkMod:   ((term & term) -> Range.t -> ML term)
-val mkRealOfInt: term -> Range.t -> ML term
-val mkITE: (term & term & term) -> Range.t -> ML term
-val mkCases : list term -> Range.t -> ML term
+val mkInteger : string -> ML term
+val mkInteger': int -> ML term
+val mkReal: string -> ML term
+val mkBoundV : int -> ML term
+val mkFreeV  : fv -> ML term
+val mkApp' : (op & list term) -> ML term
+val mkApp  : (string & list term) -> ML term
+
+(* The range of a term, if it carries one (App/Quant/Labeled), else
+   Range.dummyRange. Only formula-level nodes carry meaningful ranges. *)
+val range_of_term : term -> Range.t
+(* Set the range of an App or Quant node; a no-op on other nodes. *)
+val set_range : term -> Range.t -> term
+val mkNot  : term -> ML term
+val mkAnd  : ((term & term) -> ML term)
+val mkOr  :  ((term & term) -> ML term)
+val mkImp :  ((term & term) -> ML term)
+val mkMinus: term -> ML term
+val mkNatToBv : (int -> term -> ML term)
+val mkBvUext  : (int -> term -> ML term)
+val mkBvNot   : (term -> ML term)
+val mkBvToNat : (term -> ML term)
+val mkBvAnd   : ((term & term) -> ML term)
+val mkBvXor   : ((term & term) -> ML term)
+val mkBvOr    : ((term & term) -> ML term)
+val mkBvAdd   : ((term & term) -> ML term)
+val mkBvSub   : ((term & term) -> ML term)
+val mkBvShl   : (int -> (term & term) -> ML term)
+val mkBvShr   : (int -> (term & term) -> ML term)
+val mkBvRol   : (int -> (term & term) -> ML term)
+val mkBvRor   : (int -> (term & term) -> ML term)
+val mkBvUdiv  : (int -> (term & term) -> ML term)
+val mkBvMod   : (int -> (term & term) -> ML term)
+val mkBvMul   : (int -> (term & term) -> ML term)
+val mkBvShl'  : (int -> (term & term) -> ML term)
+val mkBvShr'  : (int -> (term & term) -> ML term)
+val mkBvRol'  : (int -> (term & term) -> ML term)
+val mkBvRor'  : (int -> (term & term) -> ML term)
+val mkBvMul'  : (int -> (term & term) -> ML term)
+val mkBvUdivUnsafe : (int -> (term & term) -> ML term)
+val mkBvModUnsafe  : (int -> (term & term) -> ML term)
+val mkBvUlt   : ((term & term) -> ML term)
+val mkIff :  ((term & term) -> ML term)
+val mkEq :   ((term & term) -> ML term)
+val mkLT :   ((term & term) -> ML term)
+val mkLTE :  ((term & term) -> ML term)
+val mkGT:    ((term & term) -> ML term)
+val mkGTE:   ((term & term) -> ML term)
+val mkAdd:   ((term & term) -> ML term)
+val mkSub:   ((term & term) -> ML term)
+val mkDiv:   ((term & term) -> ML term)
+val mkRealDiv:   ((term & term) -> ML term)
+val mkMul:   ((term & term) -> ML term)
+val mkMod:   ((term & term) -> ML term)
+val mkRealOfInt: term -> ML term
+val mkITE: (term & term & term) -> ML term
+val mkCases : list term -> ML term
 val check_pattern_ok: term -> option term
 val print_smt_term: term -> ML string
 val print_smt_term_list: list term -> ML string
 val print_smt_term_list_list: list (list term) -> ML string
-val mkLet: (list term & term) -> Range.t -> ML term
+val mkLet: (list term & term) -> ML term
 val abstr: list fv -> term -> ML term
 val inst: list term -> term -> ML term
 val subst: term -> fv -> term -> ML term
@@ -279,7 +293,7 @@ val mkForall'': Range.t -> (list (list pat) & option int & list sort & term) -> 
 val mkForall': Range.t -> (list (list pat) & option int & fvs & term)  -> ML term
 val mkExists: Range.t -> (list (list pat) & fvs & term) -> ML term
 val mkForallFlat:  (fvs & term) -> ML term
-val mkLet': (list (fv & term) & term) -> Range.t -> ML term
+val mkLet': (list (fv & term) & term) -> ML term
 val fresh_token: (term & fvs & sort) -> int -> ML decl
 val fresh_constructor : Range.t -> (string & list sort & sort & int) -> ML decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
@@ -298,8 +312,8 @@ val mk_U_name:       string -> ML term
 val mk_U_unif:       term -> ML term
 val mk_U_unknown:    term
 val mk_Term_type:    term -> ML term
-val mk_Term_app : term -> term -> Range.t -> ML term
-val mk_Term_uvar: int -> Range.t -> ML term
+val mk_Term_app : term -> term -> ML term
+val mk_Term_uvar: int -> ML term
 val mk_Term_unit:    term
 
 val boxInt:      term -> ML term
@@ -315,6 +329,7 @@ val unboxBitVec: int -> term -> ML term
 
 val mk_PreType:      term -> ML term
 val mk_Valid:        term -> ML term
+val mk_valid_at:     Range.t -> term -> ML term
 val mk_HasType:      term -> term -> ML term
 val mk_HasTypeZ:     term -> term -> ML term
 val mk_IsTotFun:     term -> ML term
@@ -323,16 +338,16 @@ val mk_HasTypeWithFuel: option term -> term -> term -> ML term
 val mk_NoHoist:      term -> term -> ML term
 val mk_tester:       string -> term -> ML term
 val mk_ApplyTF:      term -> term -> ML term
-val mk_ApplyTT:      term -> term -> Range.t -> ML term
-val mk_String_const: string -> Range.t -> ML term
-val mk_Precedes_term:term -> term -> term -> term -> term -> term -> Range.t -> ML term
-val mk_Precedes:     term -> term -> term -> term -> term -> term -> Range.t -> ML term
-val mk_lex_t:        Range.t -> ML term
-val mk_LexCons:      term -> term -> term -> Range.t -> ML term
-val mk_LexTop:       Range.t -> ML term
+val mk_ApplyTT:      term -> term -> ML term
+val mk_String_const: string -> ML term
+val mk_Precedes_term:term -> term -> term -> term -> term -> term -> ML term
+val mk_Precedes:     term -> term -> term -> term -> term -> term -> ML term
+val mk_lex_t:        term
+val mk_LexCons:      term -> term -> term -> ML term
+val mk_LexTop:       term
 val n_fuel: int -> ML term
-val mk_and_l: list term -> Range.t -> ML term
-val mk_or_l: list term -> Range.t -> ML term
+val mk_and_l: list term -> ML term
+val mk_or_l: list term -> ML term
 val mk_haseq: univ:term -> term -> ML term
 val dummy_sort : sort
 

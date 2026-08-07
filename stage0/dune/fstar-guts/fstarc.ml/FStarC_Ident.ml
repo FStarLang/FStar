@@ -2,19 +2,20 @@ open Prims
 type ident = {
   idText: Prims.string ;
   idRange: FStarC_Range_Type.range }[@@deriving yojson,show]
+type path = Prims.string Prims.list[@@deriving yojson,show]
+type ipath = ident Prims.list[@@deriving yojson,show]
 let __proj__Mkident__item__idText (projectee : ident) : Prims.string=
   match projectee with | { idText; idRange;_} -> idText
 let __proj__Mkident__item__idRange (projectee : ident) :
   FStarC_Range_Type.range=
   match projectee with | { idText; idRange;_} -> idRange
-type path = Prims.string Prims.list[@@deriving yojson,show]
-type ipath = ident Prims.list[@@deriving yojson,show]
 type lident =
   {
   ns: ipath ;
   ident: ident ;
   nsstr: Prims.string ;
   str: Prims.string }[@@deriving yojson,show]
+type lid = lident[@@deriving yojson,show]
 let __proj__Mklident__item__ns (projectee : lident) : ipath=
   match projectee with | { ns; ident = ident1; nsstr; str;_} -> ns
 let __proj__Mklident__item__ident (projectee : lident) : ident=
@@ -23,7 +24,6 @@ let __proj__Mklident__item__nsstr (projectee : lident) : Prims.string=
   match projectee with | { ns; ident = ident1; nsstr; str;_} -> nsstr
 let __proj__Mklident__item__str (projectee : lident) : Prims.string=
   match projectee with | { ns; ident = ident1; nsstr; str;_} -> str
-type lid = lident[@@deriving yojson,show]
 let mk_ident (uu___ : (Prims.string * FStarC_Range_Type.range)) : ident=
   match uu___ with | (text, range) -> { idText = text; idRange = range }
 let set_id_range (r : FStarC_Range_Type.range) (i : ident) : ident=

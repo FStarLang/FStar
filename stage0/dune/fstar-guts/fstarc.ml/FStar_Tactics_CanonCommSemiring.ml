@@ -282,27 +282,24 @@ let rec quote_list :
                    (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "Nil"])))
              [(ta, FStarC_Reflection_V2_Data.Q_Implicit)])
     | x::xs' ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (FStar_Tactics_Effect.tac_bind () ()
-             (FStar_Tactics_Effect.tac_bind () ()
-                (FStar_Tactics_Effect.tac_bind () () (quotea x)
-                   (fun uu___ uu___1 ->
-                      (uu___, FStarC_Reflection_V2_Data.Q_Explicit)))
-                (fun uu___ ps ->
-                   let x1 =
-                     let x2 =
-                       let x3 = quote_list ta quotea xs' ps in
-                       (x3, FStarC_Reflection_V2_Data.Q_Explicit) in
-                     [x2] in
-                   uu___ :: x1))
-             (fun uu___ uu___1 -> (ta, FStarC_Reflection_V2_Data.Q_Implicit)
-                :: uu___))
-          (fun uu___ uu___1 ->
-             FStar_Reflection_V2_Derived.mk_app
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "Cons"])))
-               uu___)
+        (fun ps ->
+           let x1 =
+             let x2 =
+               let x3 =
+                 let x4 = quotea x ps in
+                 (x4, FStarC_Reflection_V2_Data.Q_Explicit) in
+               let x4 =
+                 let x5 =
+                   let x6 = quote_list ta quotea xs' ps in
+                   (x6, FStarC_Reflection_V2_Data.Q_Explicit) in
+                 [x5] in
+               x3 :: x4 in
+             (ta, FStarC_Reflection_V2_Data.Q_Implicit) :: x2 in
+           FStar_Reflection_V2_Derived.mk_app
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "Cons"])))
+             x1)
 let quote_vm (ta : FStar_Tactics_NamedView.term)
   (quotea :
     'a -> (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr)
@@ -507,9 +504,7 @@ let rec find_aux (n : Prims.nat) (x : FStar_Tactics_NamedView.term)
   | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
   | x'::xs' ->
       if term_eq x x'
-      then
-        FStar_Tactics_Effect.lift_div_tac ()
-          (fun uu___ -> FStar_Pervasives_Native.Some n)
+      then (fun uu___ -> FStar_Pervasives_Native.Some n)
       else find_aux (n + Prims.int_one) x xs'
 let find :
   FStar_Tactics_NamedView.term ->
@@ -637,11 +632,9 @@ let reification
         (fun uu___ t ->
            match uu___ with
            | (es, vs, vm) ->
-               FStar_Tactics_Effect.tac_bind () ()
-                 (reification_aux unquotea vs vm x x1 x2 x3 t)
-                 (fun uu___1 uu___2 ->
-                    match uu___1 with
-                    | (e, vs1, vm1) -> ((e :: es), vs1, vm1)))
+               (fun ps1 ->
+                  let x6 = reification_aux unquotea vs vm x x1 x2 x3 t ps1 in
+                  match x6 with | (e, vs1, vm1) -> ((e :: es), vs1, vm1)))
         ([], [], ([], munit)) x4 ps in
     match x5 with | (es, uu___, vm) -> ((FStar_List_Tot_Base.rev es), vm)
 let rec quote_polynomial :
@@ -656,72 +649,60 @@ let rec quote_polynomial :
   fun ta quotea e ->
     match e with
     | Pconst c ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (FStar_Tactics_Effect.tac_bind () ()
-             (FStar_Tactics_Effect.tac_bind () ()
-                (FStar_Tactics_Effect.tac_bind () () (quotea c)
-                   (fun uu___ uu___1 ->
-                      (uu___, FStarC_Reflection_V2_Data.Q_Explicit)))
-                (fun uu___ uu___1 -> [uu___]))
-             (fun uu___ uu___1 -> (ta, FStarC_Reflection_V2_Data.Q_Implicit)
-                :: uu___))
-          (fun uu___ uu___1 ->
-             FStar_Reflection_V2_Derived.mk_app
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar"; "Tactics"; "CanonCommSemiring"; "Pconst"])))
-               uu___)
+        (fun ps ->
+           let x =
+             let x1 =
+               let x2 =
+                 let x3 = quotea c ps in
+                 (x3, FStarC_Reflection_V2_Data.Q_Explicit) in
+               [x2] in
+             (ta, FStarC_Reflection_V2_Data.Q_Implicit) :: x1 in
+           FStar_Reflection_V2_Derived.mk_app
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "CanonCommSemiring"; "Pconst"])))
+             x)
     | Pvar x ->
-        FStar_Tactics_Effect.lift_div_tac ()
-          (fun uu___ ->
-             FStar_Reflection_V2_Derived.mk_e_app
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar"; "Tactics"; "CanonCommSemiring"; "Pvar"])))
-               [FStar_Tactics_NamedView.pack
-                  (FStar_Tactics_NamedView.Tv_Const
-                     (FStarC_Reflection_V2_Data.C_Int x))])
+        (fun uu___ ->
+           FStar_Reflection_V2_Derived.mk_e_app
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "CanonCommSemiring"; "Pvar"])))
+             [FStar_Tactics_NamedView.pack
+                (FStar_Tactics_NamedView.Tv_Const
+                   (FStarC_Reflection_V2_Data.C_Int x))])
     | Pplus (e1, e2) ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (FStar_Tactics_Effect.tac_bind () ()
-             (quote_polynomial ta quotea e1)
-             (fun uu___ ps ->
-                let x = let x1 = quote_polynomial ta quotea e2 ps in [x1] in
-                uu___ :: x))
-          (fun uu___ uu___1 ->
-             FStar_Reflection_V2_Derived.mk_e_app
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar"; "Tactics"; "CanonCommSemiring"; "Pplus"])))
-               uu___)
+        (fun ps ->
+           let x =
+             let x1 = quote_polynomial ta quotea e1 ps in
+             let x2 = let x3 = quote_polynomial ta quotea e2 ps in [x3] in x1
+               :: x2 in
+           FStar_Reflection_V2_Derived.mk_e_app
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "CanonCommSemiring"; "Pplus"]))) x)
     | Pmult (e1, e2) ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (FStar_Tactics_Effect.tac_bind () ()
-             (quote_polynomial ta quotea e1)
-             (fun uu___ ps ->
-                let x = let x1 = quote_polynomial ta quotea e2 ps in [x1] in
-                uu___ :: x))
-          (fun uu___ uu___1 ->
-             FStar_Reflection_V2_Derived.mk_e_app
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar"; "Tactics"; "CanonCommSemiring"; "Pmult"])))
-               uu___)
+        (fun ps ->
+           let x =
+             let x1 = quote_polynomial ta quotea e1 ps in
+             let x2 = let x3 = quote_polynomial ta quotea e2 ps in [x3] in x1
+               :: x2 in
+           FStar_Reflection_V2_Derived.mk_e_app
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "CanonCommSemiring"; "Pmult"]))) x)
     | Popp e1 ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (FStar_Tactics_Effect.tac_bind () ()
-             (quote_polynomial ta quotea e1) (fun uu___ uu___1 -> [uu___]))
-          (fun uu___ uu___1 ->
-             FStar_Reflection_V2_Derived.mk_e_app
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar"; "Tactics"; "CanonCommSemiring"; "Popp"])))
-               uu___)
+        (fun ps ->
+           let x = let x1 = quote_polynomial ta quotea e1 ps in [x1] in
+           FStar_Reflection_V2_Derived.mk_e_app
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "CanonCommSemiring"; "Popp"]))) x)
 let canon_semiring_aux (ta : FStar_Tactics_NamedView.term)
   (unquotea :
     FStar_Tactics_NamedView.term -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr)

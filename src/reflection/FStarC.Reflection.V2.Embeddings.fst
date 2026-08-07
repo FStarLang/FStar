@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V2.Embeddings
+open FStarC.TypeChecker.Env
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
@@ -55,7 +56,7 @@ let curry5 f x y z w v = f (x,y,z,w,v)
 
 let head_fv_and_args (t : term) : ML (option (fv & args)) =
   let t = U.unascribe t in
-  let hd, args = U.head_and_args t in
+  let hd, args = U.head_and_args_full t in
   match (U.un_uinst hd).n with
   | Tm_fvar fv -> Some (fv, args)
   | _ -> None
@@ -198,6 +199,44 @@ let e_universe_view =
 
   mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view_fv
 
+let e_int_signedness =
+  let embed_int_signedness (rng:Range.t) (s:int_signedness) : ML term =
+    let t = match s with
+      | Signed -> ref_Signed.t
+      | Unsigned -> ref_Unsigned.t
+    in
+    { t with pos = rng }
+  in
+  let unembed_int_signedness (t:term) : ML (option int_signedness) =
+    let? fv, args = head_fv_and_args t in
+    if S.fv_eq_lid fv ref_Signed.lid then run args (pure Signed)
+    else if S.fv_eq_lid fv ref_Unsigned.lid then run args (pure Unsigned)
+    else None
+  in
+  mk_emb embed_int_signedness unembed_int_signedness fstar_refl_int_signedness_fv
+
+let e_int_width =
+  let embed_int_width (rng:Range.t) (w:int_width) : ML term =
+    let t = match w with
+      | Int8 -> ref_Int8.t
+      | Int16 -> ref_Int16.t
+      | Int32 -> ref_Int32.t
+      | Int64 -> ref_Int64.t
+      | Sizet -> ref_Sizet.t
+    in
+    { t with pos = rng }
+  in
+  let unembed_int_width (t:term) : ML (option int_width) =
+    let? fv, args = head_fv_and_args t in
+    if S.fv_eq_lid fv ref_Int8.lid then run args (pure Int8)
+    else if S.fv_eq_lid fv ref_Int16.lid then run args (pure Int16)
+    else if S.fv_eq_lid fv ref_Int32.lid then run args (pure Int32)
+    else if S.fv_eq_lid fv ref_Int64.lid then run args (pure Int64)
+    else if S.fv_eq_lid fv ref_Sizet.lid then run args (pure Sizet)
+    else None
+  in
+  mk_emb embed_int_width unembed_int_width fstar_refl_int_width_fv
+
 let e_vconst =
     let embed_const (rng:Range.t) (c:vconst) : ML term =
         let r =
@@ -209,6 +248,12 @@ let e_vconst =
         | C_Int i ->
             S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (show i))]
                         Range.dummyRange
+        | C_MachineInt (i, signedness, width) ->
+            S.mk_Tm_app ref_C_MachineInt.t
+              [S.as_arg (U.exp_int (show i));
+               S.as_arg (embed #_ #e_int_signedness rng signedness);
+               S.as_arg (embed #_ #e_int_width rng width)]
+              Range.dummyRange
         | C_String s ->
             S.mk_Tm_app ref_C_String.t [S.as_arg (embed rng s)]
                         Range.dummyRange
@@ -240,6 +285,8 @@ let e_vconst =
       | _ when S.fv_eq_lid fv ref_C_True.lid -> run args (pure C_True)
       | _ when S.fv_eq_lid fv ref_C_False.lid -> run args (pure C_False)
       | _ when S.fv_eq_lid fv ref_C_Int.lid -> run args (C_Int <$$> e_int)
+      | _ when S.fv_eq_lid fv ref_C_MachineInt.lid ->
+        run args (curry3 C_MachineInt <$$> e_int <**> e_int_signedness <**> e_int_width)
       | _ when S.fv_eq_lid fv ref_C_String.lid -> run args (C_String <$$> e_string)
       | _ when S.fv_eq_lid fv ref_C_Range.lid -> run args (C_Range <$$> e_range)
       | _ when S.fv_eq_lid fv ref_C_Reify.lid -> run args (pure C_Reify)

@@ -15,6 +15,8 @@
 *)
 
 module FStarC.Syntax.Print.Pretty
+open FStarC.Effect
+open FStarC.Syntax
 open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.Util

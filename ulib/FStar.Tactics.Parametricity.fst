@@ -1,5 +1,7 @@
 module FStar.Tactics.Parametricity
 
+open FStar.Tactics.Effect
+open FStar.Stubs.Reflection.Types
 open FStar.List
 open FStar.Tactics.V2.Bare
 

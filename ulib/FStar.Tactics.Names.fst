@@ -1,5 +1,6 @@
 module FStar.Tactics.Names
 
+open FStar.Stubs.Reflection.Types
 open FStar.Tactics.NamedView
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.V2.Builtins

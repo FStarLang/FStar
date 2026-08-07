@@ -9,35 +9,29 @@ let opt_eq (cmp : 'a comparator_for) :
         (fun uu___ -> true)
     | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
         cmp x y
-    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
+    | uu___ -> (fun uu___1 -> false)
 let either_eq (cmpa : 'a comparator_for) (cmpb : 'b comparator_for) :
   ('a, 'b) FStar_Pervasives.either comparator_for=
   fun e1 e2 ->
     match (e1, e2) with
     | (FStar_Pervasives.Inl x, FStar_Pervasives.Inl y) -> cmpa x y
     | (FStar_Pervasives.Inr x, FStar_Pervasives.Inr y) -> cmpb x y
-    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
+    | uu___ -> (fun uu___1 -> false)
 let pair_eq (cmpa : 'a comparator_for) (cmpb : 'b comparator_for) :
   ('a * 'b) comparator_for=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
     | ((a1, b1), (a2, b2)) ->
-        FStar_Tactics_Effect.tac_bind () () (cmpa a1 a2)
-          (fun uu___2 ->
-             if uu___2
-             then cmpb b1 b2
-             else FStar_Tactics_Effect.lift_div_tac () (fun uu___3 -> false))
+        (fun ps ->
+           let x = cmpa a1 a2 ps in if x then cmpb b1 b2 ps else false)
 let rec list_eq : 'a . 'a comparator_for -> 'a Prims.list comparator_for =
   fun cmp l1 l2 ->
     match (l1, l2) with
     | ([], []) -> (fun uu___ -> true)
     | (x::xs, y::ys) ->
-        FStar_Tactics_Effect.tac_bind () () (cmp x y)
-          (fun uu___ ->
-             if uu___
-             then list_eq cmp xs ys
-             else FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false))
-    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
+        (fun ps ->
+           let x1 = cmp x y ps in if x1 then list_eq cmp xs ys ps else false)
+    | uu___ -> (fun uu___1 -> false)
 let rec univ_eq : FStarC_Reflection_Types.universe comparator_for=
   fun u1 u2 ps ->
     let x = FStarC_Tactics_V2_Builtins.compress_univ u1 ps in
@@ -179,11 +173,8 @@ and arg_eq : FStarC_Reflection_V2_Data.argv comparator_for=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
     | ((a1, q1), (a2, q2)) ->
-        FStar_Tactics_Effect.tac_bind () () (term_eq a1 a2)
-          (fun uu___2 ->
-             if uu___2
-             then aqual_eq q1 q2
-             else FStar_Tactics_Effect.lift_div_tac () (fun uu___3 -> false))
+        (fun ps ->
+           let x = term_eq a1 a2 ps in if x then aqual_eq q1 q2 ps else false)
 and aqual_eq : FStarC_Reflection_V2_Data.aqualv comparator_for=
   fun a1 a2 ->
     match (a1, a2) with
@@ -195,7 +186,7 @@ and aqual_eq : FStarC_Reflection_V2_Data.aqualv comparator_for=
        FStarC_Reflection_V2_Data.Q_Equality) -> (fun uu___ -> true)
     | (FStarC_Reflection_V2_Data.Q_Meta m1, FStarC_Reflection_V2_Data.Q_Meta
        m2) -> term_eq m1 m2
-    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
+    | uu___ -> (fun uu___1 -> false)
 and match_returns_ascription_eq :
   FStarC_Syntax_Syntax.match_returns_ascription comparator_for=
   fun asc1 asc2 ps ->
@@ -282,8 +273,7 @@ and pat_eq : FStarC_Reflection_V2_Data.pattern comparator_for=
   fun p1 p2 ->
     match (p1, p2) with
     | (FStarC_Reflection_V2_Data.Pat_Var (v1, sort1),
-       FStarC_Reflection_V2_Data.Pat_Var (v2, sort2)) ->
-        FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> true)
+       FStarC_Reflection_V2_Data.Pat_Var (v2, sort2)) -> (fun uu___ -> true)
     | (FStarC_Reflection_V2_Data.Pat_Constant x1,
        FStarC_Reflection_V2_Data.Pat_Constant x2) -> const_eq x1 x2
     | (FStarC_Reflection_V2_Data.Pat_Dot_Term x1,
@@ -294,18 +284,17 @@ and pat_eq : FStarC_Reflection_V2_Data.pattern comparator_for=
           Prims.op_Negation
             ((FStarC_Reflection_V2_Builtins.inspect_fv head1) =
                (FStarC_Reflection_V2_Builtins.inspect_fv head2))
-        then FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> false)
+        then (fun uu___ -> false)
         else list_eq pat_arg_eq subpats1 subpats2
-    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
+    | uu___ -> (fun uu___1 -> false)
 and pat_arg_eq :
   (FStarC_Reflection_V2_Data.pattern * Prims.bool) comparator_for=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
     | ((p1, b1), (p2, b2)) ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (FStar_Tactics_Effect.tac_bind () () (pat_eq p1 p2)
-             (fun uu___2 uu___3 -> Prims.op_Negation uu___2))
-          (fun uu___2 uu___3 -> if uu___2 then false else b1 = b2)
+        (fun ps ->
+           let x = let x1 = pat_eq p1 p2 ps in Prims.op_Negation x1 in
+           if x then false else b1 = b2)
 let lax_term_eq (t1 : FStarC_Reflection_Types.term)
   (t2 : FStarC_Reflection_Types.term) :
   (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr=

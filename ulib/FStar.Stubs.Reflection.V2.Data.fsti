@@ -23,10 +23,22 @@ open FStar.Stubs.Reflection.Types
 let ppname_t = FStar.Sealed.Inhabited.sealed ""
 let as_ppname (x:string) : ppname_t = FStar.Sealed.Inhabited.seal x
 
+type int_signedness =
+  | Signed
+  | Unsigned
+
+type int_width =
+  | Int8
+  | Int16
+  | Int32
+  | Int64
+  | Sizet
+
 noeq
 type vconst =
   | C_Unit      : vconst
   | C_Int       : int -> vconst // Not exposing the full details of our integer repr.
+  | C_MachineInt : int -> int_signedness -> int_width -> vconst
   | C_True      : vconst
   | C_False     : vconst
   | C_String    : string -> vconst

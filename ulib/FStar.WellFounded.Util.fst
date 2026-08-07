@@ -1,4 +1,5 @@
 module FStar.WellFounded.Util
+open FStar.Nonempty
 open FStar.WellFounded
 
 let intro_lift_binrel (#a:Type) (r:binrel a) (y:a) (x:a)

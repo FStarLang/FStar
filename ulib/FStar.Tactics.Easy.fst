@@ -15,6 +15,7 @@
 *)
 module FStar.Tactics.Easy
 
+open FStar.Tactics.Effect
 open FStar.Tactics.V2.Bare
 open FStar.Tactics.Logic.Lemmas { lemma_from_squash }
 

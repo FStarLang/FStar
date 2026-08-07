@@ -1,4 +1,5 @@
 module Pulse.Lib.SeqMatch.Util
+open Pulse
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade

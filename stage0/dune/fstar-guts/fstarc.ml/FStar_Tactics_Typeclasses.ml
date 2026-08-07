@@ -83,82 +83,77 @@ let extract_fundeps (se : FStarC_Reflection_Types.sigelt) :
     match x with
     | [] -> FStar_Pervasives_Native.None
     | attr::attrs' ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (FStar_Tactics_V2_SyntaxHelpers.collect_app attr)
-          (fun uu___ ->
-             match uu___ with
-             | (hd, (a0, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
-                 if
-                   FStar_Reflection_TermEq_Simple.term_eq hd
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar"; "Tactics"; "Typeclasses"; "fundeps"])))
-                 then unembed_list unembed_int a0
-                 else
-                   (let rec aux attrs =
-                      match attrs with
-                      | [] -> (fun uu___1 -> FStar_Pervasives_Native.None)
-                      | attr1::attrs'1 ->
-                          FStar_Tactics_Effect.tac_bind () ()
-                            (FStar_Tactics_V2_SyntaxHelpers.collect_app attr1)
-                            (fun uu___1 ->
-                               match uu___1 with
-                               | (hd1,
-                                  (a01, FStarC_Reflection_V2_Data.Q_Explicit)::[])
-                                   ->
-                                   if
-                                     FStar_Reflection_TermEq_Simple.term_eq
-                                       hd1
-                                       (FStarC_Reflection_V2_Builtins.pack_ln
-                                          (FStarC_Reflection_V2_Data.Tv_FVar
-                                             (FStarC_Reflection_V2_Builtins.pack_fv
-                                                ["FStar";
-                                                "Tactics";
-                                                "Typeclasses";
-                                                "fundeps"])))
-                                   then unembed_list unembed_int a01
-                                   else aux attrs'1
-                               | uu___2 -> aux attrs'1) in
-                    aux attrs')
-             | uu___1 ->
-                 let rec aux attrs =
-                   match attrs with
-                   | [] -> (fun uu___2 -> FStar_Pervasives_Native.None)
-                   | attr1::attrs'1 ->
-                       FStar_Tactics_Effect.tac_bind () ()
-                         (FStar_Tactics_V2_SyntaxHelpers.collect_app attr1)
-                         (fun uu___2 ->
-                            match uu___2 with
-                            | (hd,
-                               (a0, FStarC_Reflection_V2_Data.Q_Explicit)::[])
-                                ->
-                                if
-                                  FStar_Reflection_TermEq_Simple.term_eq hd
-                                    (FStarC_Reflection_V2_Builtins.pack_ln
-                                       (FStarC_Reflection_V2_Data.Tv_FVar
-                                          (FStarC_Reflection_V2_Builtins.pack_fv
-                                             ["FStar";
-                                             "Tactics";
-                                             "Typeclasses";
-                                             "fundeps"])))
-                                then unembed_list unembed_int a0
-                                else aux attrs'1
-                            | uu___3 -> aux attrs'1) in
-                 aux attrs') ps
+        let x1 = FStar_Tactics_V2_SyntaxHelpers.collect_app attr ps in
+        (match x1 with
+         | (hd, (a0, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
+             if
+               FStar_Reflection_TermEq_Simple.term_eq hd
+                 (FStarC_Reflection_V2_Builtins.pack_ln
+                    (FStarC_Reflection_V2_Data.Tv_FVar
+                       (FStarC_Reflection_V2_Builtins.pack_fv
+                          ["FStar"; "Tactics"; "Typeclasses"; "fundeps"])))
+             then unembed_list unembed_int a0 ps
+             else
+               (let rec aux attrs =
+                  match attrs with
+                  | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
+                  | attr1::attrs'1 ->
+                      (fun ps1 ->
+                         let x2 =
+                           FStar_Tactics_V2_SyntaxHelpers.collect_app attr1
+                             ps1 in
+                         match x2 with
+                         | (hd1,
+                            (a01, FStarC_Reflection_V2_Data.Q_Explicit)::[])
+                             ->
+                             if
+                               FStar_Reflection_TermEq_Simple.term_eq hd1
+                                 (FStarC_Reflection_V2_Builtins.pack_ln
+                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                       (FStarC_Reflection_V2_Builtins.pack_fv
+                                          ["FStar";
+                                          "Tactics";
+                                          "Typeclasses";
+                                          "fundeps"])))
+                             then unembed_list unembed_int a01 ps1
+                             else aux attrs'1 ps1
+                         | uu___ -> aux attrs'1 ps1) in
+                aux attrs' ps)
+         | uu___ ->
+             let rec aux attrs =
+               match attrs with
+               | [] -> (fun uu___1 -> FStar_Pervasives_Native.None)
+               | attr1::attrs'1 ->
+                   (fun ps1 ->
+                      let x2 =
+                        FStar_Tactics_V2_SyntaxHelpers.collect_app attr1 ps1 in
+                      match x2 with
+                      | (hd, (a0, FStarC_Reflection_V2_Data.Q_Explicit)::[])
+                          ->
+                          if
+                            FStar_Reflection_TermEq_Simple.term_eq hd
+                              (FStarC_Reflection_V2_Builtins.pack_ln
+                                 (FStarC_Reflection_V2_Data.Tv_FVar
+                                    (FStarC_Reflection_V2_Builtins.pack_fv
+                                       ["FStar";
+                                       "Tactics";
+                                       "Typeclasses";
+                                       "fundeps"])))
+                          then unembed_list unembed_int a0 ps1
+                          else aux attrs'1 ps1
+                      | uu___1 -> aux attrs'1 ps1) in
+             aux attrs' ps)
 let sigelt_name (se : FStarC_Reflection_Types.sigelt) :
   (FStarC_Reflection_Types.fv, Obj.t) FStar_Tactics_Effect.tac_repr=
   match FStarC_Reflection_V2_Builtins.inspect_sigelt se with
   | FStarC_Reflection_V2_Data.Sg_Let (uu___, lbs) ->
       (match lbs with
        | lb::[] ->
-           FStar_Tactics_Effect.lift_div_tac ()
-             (fun uu___1 ->
-                (FStarC_Reflection_V2_Builtins.inspect_lb lb).FStarC_Reflection_V2_Data.lb_fv)
+           (fun uu___1 ->
+              (FStarC_Reflection_V2_Builtins.inspect_lb lb).FStarC_Reflection_V2_Data.lb_fv)
        | uu___1 -> FStar_Tactics_V2_Derived.fail "GGG1")
   | FStarC_Reflection_V2_Data.Sg_Val (nm, uu___, uu___1) ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___2 -> FStarC_Reflection_V2_Builtins.pack_fv nm)
+      (fun uu___2 -> FStarC_Reflection_V2_Builtins.pack_fv nm)
   | uu___ -> FStar_Tactics_V2_Derived.fail "GGG2"
 let rec head_of (t : FStar_Tactics_NamedView.term) :
   (FStarC_Reflection_Types.fv FStar_Pervasives_Native.option, Obj.t)
@@ -190,23 +185,20 @@ let rec compact (xs : glb_entry Prims.list) :
   match xs with
   | [] -> (fun uu___ -> [])
   | x::xs1 ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.lift_div_tac ()
-           (fun uu___ ->
-              FStar_List_Tot_Base.partition
-                (fun y -> fv_eq x.class_name y.class_name) xs1))
-        (fun uu___ ->
-           match uu___ with
-           | (same, rest) ->
-               FStar_Tactics_Effect.tac_bind () () (compact rest)
-                 (fun uu___1 uu___2 ->
-                    {
-                      class_name = (x.class_name);
-                      instances =
-                        (op_At () x.instances
-                           (FStar_List_Tot_Base.concatMap
-                              (fun y -> y.instances) same))
-                    } :: uu___1))
+      (fun ps ->
+         let x1 =
+           FStar_List_Tot_Base.partition
+             (fun y -> fv_eq x.class_name y.class_name) xs1 in
+         match x1 with
+         | (same, rest) ->
+             let x2 = compact rest ps in
+             {
+               class_name = (x.class_name);
+               instances =
+                 (op_At () x.instances
+                    (FStar_List_Tot_Base.concatMap (fun y -> y.instances)
+                       same))
+             } :: x2)
 let is_class_name (f : FStarC_Reflection_Types.fv) :
   (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
@@ -325,7 +317,7 @@ let debug (st : st_t)
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   if st.dbg
   then fun ps -> let x = f () ps in FStarC_Tactics_V2_Builtins.print x ps
-  else FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> ())
+  else (fun uu___ -> ())
 type tc_goal =
   {
   g: FStar_Tactics_NamedView.term ;
@@ -377,9 +369,7 @@ let op_Greater_Greater_Greater
        match uu___1 with
        | Next -> t2 ()
        | e ->
-           FStar_Tactics_Effect.tac_bind () ()
-             (FStarC_Tactics_V2_Builtins.raise_core e)
-             (fun uu___2 uu___3 -> Obj.magic ()))
+           (fun ps -> Obj.magic (FStarC_Tactics_V2_Builtins.raise_core e ps)))
 let run (t : unit -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr= t ()
 let rec first :
@@ -430,26 +420,26 @@ let trywith (st : st_t) (g : tc_goal) (t : FStar_Tactics_NamedView.term)
          else
            if Prims.uu___is_Cons x
            then
-             FStar_Tactics_Effect.tac_bind () ()
-               (if FStar_Pervasives_Native.uu___is_None g.fundeps
+             (fun ps1 ->
+                if FStar_Pervasives_Native.uu___is_None g.fundeps
                 then
                   skip st
                     "Will not continue as there are unresolved args (and no fundeps)"
-                else FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> ()))
-               (fun uu___1 ps1 ->
-                  let x2 = g.fundeps in
-                  match x2 with
-                  | FStar_Pervasives_Native.Some fundeps ->
-                      (debug st (fun uu___2 uu___3 -> "checking fundeps") ps1;
-                       if
-                         FStar_List_Tot_Base.existsb
-                           (fun i ->
-                              Prims.op_Negation
-                                (FStar_List_Tot_Base.mem i fundeps)) x
-                       then skip st "fundeps: a non-fundep is unresolved" ps1
-                       else ();
-                       orskip st "apply"
-                         (fun uu___2 -> FStar_Tactics_V2_Derived.apply t) ps1))
+                    ps1
+                else ();
+                (let x3 = g.fundeps in
+                 match x3 with
+                 | FStar_Pervasives_Native.Some fundeps ->
+                     (debug st (fun uu___1 uu___2 -> "checking fundeps") ps1;
+                      if
+                        FStar_List_Tot_Base.existsb
+                          (fun i ->
+                             Prims.op_Negation
+                               (FStar_List_Tot_Base.mem i fundeps)) x
+                      then skip st "fundeps: a non-fundep is unresolved" ps1
+                      else ();
+                      orskip st "apply"
+                        (fun uu___1 -> FStar_Tactics_V2_Derived.apply t) ps1)))
            else
              orskip st "apply_noinst"
                (fun uu___1 -> FStar_Tactics_V2_Derived.apply_noinst t))
@@ -506,57 +496,56 @@ let global (st : st_t) (g : tc_goal)
     (match st.glb with
      | [] -> skip st "no more global instances" ps
      | { class_name; instances;_}::rest ->
-         FStar_Tactics_Effect.tac_bind () ()
-           (type_matches_class g.head_fv
-              (FStar_Tactics_NamedView.pack
-                 (FStar_Tactics_NamedView.Tv_FVar class_name)))
-           (fun uu___1 ->
-              if uu___1
-              then
-                first
-                  (fun i ->
-                     trywith st g
-                       (FStar_Tactics_NamedView.pack
-                          (FStar_Tactics_NamedView.Tv_FVar (i.inst_name)))
-                       i.noinst k) instances
-              else
-                (let rec go l =
-                   match l with
-                   | [] -> skip st "no more global instances"
-                   | { class_name = class_name1; instances = instances1;_}::rest1
-                       ->
-                       FStar_Tactics_Effect.tac_bind () ()
-                         (type_matches_class g.head_fv
-                            (FStar_Tactics_NamedView.pack
-                               (FStar_Tactics_NamedView.Tv_FVar class_name1)))
-                         (fun uu___2 ->
-                            if uu___2
-                            then
-                              first
-                                (fun i ->
-                                   trywith st g
-                                     (FStar_Tactics_NamedView.pack
-                                        (FStar_Tactics_NamedView.Tv_FVar
-                                           (i.inst_name))) i.noinst k)
-                                instances1
-                            else go rest1) in
-                 go rest)) ps)
+         let x1 =
+           type_matches_class g.head_fv
+             (FStar_Tactics_NamedView.pack
+                (FStar_Tactics_NamedView.Tv_FVar class_name)) ps in
+         if x1
+         then
+           first
+             (fun i ->
+                trywith st g
+                  (FStar_Tactics_NamedView.pack
+                     (FStar_Tactics_NamedView.Tv_FVar (i.inst_name)))
+                  i.noinst k) instances ps
+         else
+           (let rec go l =
+              match l with
+              | [] -> skip st "no more global instances"
+              | { class_name = class_name1; instances = instances1;_}::rest1
+                  ->
+                  (fun ps1 ->
+                     let x2 =
+                       type_matches_class g.head_fv
+                         (FStar_Tactics_NamedView.pack
+                            (FStar_Tactics_NamedView.Tv_FVar class_name1))
+                         ps1 in
+                     if x2
+                     then
+                       first
+                         (fun i ->
+                            trywith st g
+                              (FStar_Tactics_NamedView.pack
+                                 (FStar_Tactics_NamedView.Tv_FVar
+                                    (i.inst_name))) i.noinst k) instances1
+                         ps1
+                     else go rest1 ps1) in
+            go rest ps))
 let rec unrefine (t : FStar_Tactics_NamedView.named_term_view) :
   (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
   match t with
   | FStar_Tactics_NamedView.Tv_Refine (b, t1) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_NamedView.inspect b.FStar_Tactics_NamedView.sort)
-        (fun uu___ -> unrefine uu___)
+      (fun ps ->
+         let x =
+           FStar_Tactics_NamedView.inspect b.FStar_Tactics_NamedView.sort ps in
+         unrefine x ps)
   | FStar_Tactics_NamedView.Tv_AscribedT (e, uu___, uu___1, uu___2) ->
-      FStar_Tactics_Effect.tac_bind () () (FStar_Tactics_NamedView.inspect e)
-        (fun uu___3 -> unrefine uu___3)
+      (fun ps ->
+         let x = FStar_Tactics_NamedView.inspect e ps in unrefine x ps)
   | FStar_Tactics_NamedView.Tv_AscribedC (e, uu___, uu___1, uu___2) ->
-      FStar_Tactics_Effect.tac_bind () () (FStar_Tactics_NamedView.inspect e)
-        (fun uu___3 -> unrefine uu___3)
-  | uu___ ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___1 -> FStar_Tactics_NamedView.pack t)
+      (fun ps ->
+         let x = FStar_Tactics_NamedView.inspect e ps in unrefine x ps)
+  | uu___ -> (fun uu___1 -> FStar_Tactics_NamedView.pack t)
 let try_trivial (g : FStar_Tactics_NamedView.term)
   (k : st_t -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr) (uu___ : unit) :
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -633,11 +622,11 @@ let try_instances (st : st_t)
             (fun uu___1 ->
                match uu___1 with
                | (a, q) ->
-                   FStar_Tactics_Effect.tac_bind () ()
-                     (FStar_Tactics_Effect.tac_bind () ()
-                        (FStarC_Tactics_V2_Builtins.free_uvars a)
-                        (fun uu___2 uu___3 -> Prims.uu___is_Cons uu___2))
-                     (fun uu___2 uu___3 -> ((a, q), uu___2))) args ps in
+                   (fun ps1 ->
+                      let x5 =
+                        let x6 = FStarC_Tactics_V2_Builtins.free_uvars a ps1 in
+                        Prims.uu___is_Cons x6 in
+                      ((a, q), x5))) args ps in
         let x5 =
           {
             seen = (x :: (st.seen));
@@ -752,10 +741,8 @@ let __tcresolve (dbg : Prims.bool) :
                  (op_At ()
                     [FStar_Pprint.arbitrary_string
                        "Typeclass resolution failed."] msg) r
-           | e ->
-               FStar_Tactics_Effect.tac_bind () ()
-                 (FStarC_Tactics_V2_Builtins.raise_core e)
-                 (fun uu___1 uu___2 -> ())) ps))
+           | e -> (fun ps1 -> FStarC_Tactics_V2_Builtins.raise_core e ps1))
+        ps))
 let _ =
   FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Typeclasses.__tcresolve" (Prims.of_int 2)
@@ -803,16 +790,17 @@ let rec mk_abs (bs : FStar_Tactics_NamedView.binder Prims.list)
   match bs with
   | [] -> (fun uu___ -> body)
   | b::bs1 ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () () (mk_abs bs1 body)
-           (fun uu___ uu___1 -> FStar_Tactics_NamedView.Tv_Abs (b, uu___)))
-        (fun uu___ uu___1 -> FStar_Tactics_NamedView.pack uu___)
+      (fun ps ->
+         let x =
+           let x1 = mk_abs bs1 body ps in
+           FStar_Tactics_NamedView.Tv_Abs (b, x1) in
+         FStar_Tactics_NamedView.pack x)
 let rec last :
   'a . 'a Prims.list -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr =
   fun l ->
     match l with
     | [] -> FStar_Tactics_V2_Derived.fail "last: empty list"
-    | x::[] -> FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> x)
+    | x::[] -> (fun uu___ -> x)
     | uu___::xs -> last xs
 let filter_no_method_binders (bs : FStar_Tactics_NamedView.binders) :
   (FStar_Tactics_NamedView.binders, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -1158,12 +1146,28 @@ let mk_class (nm : Prims.string) :
                                             FStarC_Reflection_V2_Builtins.set_sigelt_attrs
                                               (op_At ()
                                                  ((FStarC_Reflection_V2_Builtins.pack_ln
-                                                     (FStarC_Reflection_V2_Data.Tv_FVar
-                                                        (FStarC_Reflection_V2_Builtins.pack_fv
-                                                           ["FStar";
-                                                           "Tactics";
-                                                           "Typeclasses";
-                                                           "tcmethod"]))) ::
+                                                     (FStarC_Reflection_V2_Data.Tv_App
+                                                        ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                            (FStarC_Reflection_V2_Data.Tv_FVar
+                                                               (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                  ["FStar";
+                                                                  "Attributes";
+                                                                  "smt_arity"]))),
+                                                          ((FStar_Tactics_NamedView.pack
+                                                              (FStar_Tactics_NamedView.Tv_Const
+                                                                 (FStarC_Reflection_V2_Data.C_Int
+                                                                    (
+                                                                    FStar_List_Tot_Base.length
+                                                                    params)))),
+                                                            FStarC_Reflection_V2_Data.Q_Explicit))))
+                                                 ::
+                                                 (FStarC_Reflection_V2_Builtins.pack_ln
+                                                    (FStarC_Reflection_V2_Data.Tv_FVar
+                                                       (FStarC_Reflection_V2_Builtins.pack_fv
+                                                          ["FStar";
+                                                          "Tactics";
+                                                          "Typeclasses";
+                                                          "tcmethod"]))) ::
                                                  x35)
                                                  b.FStar_Tactics_NamedView.attrs)
                                               (FStarC_Reflection_V2_Builtins.set_sigelt_quals

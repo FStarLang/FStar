@@ -1,4 +1,5 @@
 module Pulse.Lib.Trade.Util
+include Pulse.Lib.Trade
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade

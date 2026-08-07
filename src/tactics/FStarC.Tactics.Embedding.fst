@@ -16,6 +16,7 @@
 
 module FStarC.Tactics.Embedding
 
+open FStarC.Ident
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
@@ -128,7 +129,7 @@ let unembed' {|embedding 'a|} x : ML (option 'a) = FStarC.Syntax.Embeddings.unem
 
 let hd'_and_args tm =
   let tm = U.unascribe tm in
-  let hd, args = U.head_and_args tm in
+  let hd, args = U.head_and_args_full tm in
   (U.un_uinst hd).n, args
 
 instance e_ref_proofstate : embedding ref_proofstate = e_lazy Lazy_ref_proofstate fstar_tactics_ref_proofstate.t

@@ -255,7 +255,7 @@ private let update_then_index_lemma () : Lemma (update_then_index_fact u#a) =
         /\ (i <> n ==> index (update s i v) n == index s n)
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       update_then_index_helper s i v n
     )
 
@@ -265,15 +265,14 @@ private let contains_iff_exists_index_lemma () : Lemma (contains_iff_exists_inde
       contains s x <==> (exists (i: nat).{:pattern index s i} i < length s /\ index s i == x)
   with (
     introduce contains s x ==> (exists (i: nat).{:pattern index s i} i < length s /\ index s i == x)
-    with given_antecedent. (
+    with (
       introduce exists (i: nat). i < length s /\ index s i == x
       with (FLT.index_of s x) and ()
     );
     introduce (exists (i: nat).{:pattern index s i} i < length s /\ index s i == x) ==> contains s x
-    with given_antecedent. (
+    with (
       eliminate exists (i: nat). i < length s /\ index s i == x
-      returns _
-      with _. FLT.lemma_index_memP s i
+      with FLT.lemma_index_memP s i
     )
   )
 
@@ -286,9 +285,8 @@ private let rec build_contains_equiv_helper (ty: Type) (s: list ty) (v: ty) (x: 
   | [] -> ()
   | hd :: tl ->
      eliminate x == hd \/ ~(x == hd)
-     returns FLT.memP x (append s [v]) <==> (v == x \/ FLT.memP x s)
-     with _. ()
-     and _. build_contains_equiv_helper ty tl v x
+     with ()
+     and build_contains_equiv_helper ty tl v x
 
 private let build_contains_equiv_lemma () : Lemma (build_contains_equiv_fact u#a) =
   introduce 
@@ -304,14 +302,12 @@ private let rec take_contains_equiv_exists_helper1 (ty: Type) (s: list ty) (n: n
   match s with
   | hd :: tl ->
      eliminate x == hd \/ ~(x == hd)
-     returns exists (i: nat).{:pattern index s i} i < n /\ i < length s /\ index s i == x
-     with case_x_eq_hd.
+     with
        assert(index s 0 == x)
-     and case_x_ne_hd. (
+     and (
       take_contains_equiv_exists_helper1 ty tl (n - 1) x;
       eliminate exists (i_tl: nat). i_tl < n - 1 /\ i_tl < length tl /\ index tl i_tl == x
-      returns exists (i: nat).{:pattern index s i} i < n /\ i < length s /\ index s i == x
-      with _.
+      with
         introduce exists (i: nat). i < n /\ i < length s /\ index s i == x
         with (i_tl + 1)
         and ())
@@ -322,22 +318,20 @@ private let rec take_contains_equiv_exists_helper2 (ty: Type) (s: list ty) (n: n
   match s with
   | hd :: tl ->
      eliminate x == hd \/ ~(x == hd)
-     returns FLT.memP x (take s n)
-     with case_x_eq_hd. ()
-     and case_x_ne_hd. take_contains_equiv_exists_helper2 ty tl (n - 1) x (i - 1)
+     with ()
+     and take_contains_equiv_exists_helper2 ty tl (n - 1) x (i - 1)
 
 private let take_contains_equiv_exists_helper3 (ty: Type) (s: list ty) (n: nat{n <= length s}) (x: ty)
   : Lemma (FLT.memP x (take s n) <==>
            (exists (i: nat).{:pattern index s i} i < n /\ i < length s /\ index s i == x)) =
   introduce FLT.memP x (take s n) ==>
               (exists (i: nat).{:pattern index s i} i < n /\ i < length s /\ index s i == x)
-  with given_antecedent. (take_contains_equiv_exists_helper1 ty s n x);
+  with (take_contains_equiv_exists_helper1 ty s n x);
   introduce (exists (i: nat).{:pattern index s i} i < n /\ i < length s /\ index s i == x) ==>
               FLT.memP x (take s n)
-  with given_antecedent. (
+  with (
     eliminate exists (i: nat). i < n /\ i < length s /\ index s i == x
-    returns _
-    with _. take_contains_equiv_exists_helper2 ty s n x i
+    with take_contains_equiv_exists_helper2 ty s n x i
   )
 
 private let take_contains_equiv_exists_lemma () : Lemma (take_contains_equiv_exists_fact u#a) =
@@ -355,22 +349,18 @@ private let rec drop_contains_equiv_exists_helper1 (ty: Type) (s: list ty) (n: n
   match s with
   | hd :: tl ->
      eliminate n == 0 \/ n <> 0
-     returns  exists (i: nat).{:pattern index s i} n <= i /\ i < length s /\ index s i == x
-     with case_n_eq_0. (
+     with (
        eliminate x == hd \/ ~(x == hd)
-       returns _
-       with _. assert(index s 0 == x)
-       and _. (
+       with assert(index s 0 == x)
+       and (
          drop_contains_equiv_exists_helper1 ty tl n x;
          eliminate exists (i_tl: nat). (n <= i_tl /\ i_tl < length tl /\ index tl i_tl == x)
-         returns _
-         with _. introduce exists i. n <= i /\ i < length s /\ index s i == x with (i_tl + 1) and ()
+         with introduce exists i. n <= i /\ i < length s /\ index s i == x with (i_tl + 1) and ()
        ))
-     and case_n_ne_0. (
+     and (
        drop_contains_equiv_exists_helper1 ty tl (n - 1) x;
        eliminate exists (i_tl: nat). n - 1 <= i_tl /\ i_tl < length tl /\ index tl i_tl == x
-       returns _
-       with _. introduce exists i. n <= i /\ i < length s /\ index s i == x with (i_tl + 1) and ())
+       with introduce exists i. n <= i /\ i < length s /\ index s i == x with (i_tl + 1) and ())
 #pop-options
 
 private let rec drop_contains_equiv_exists_helper2 (ty: Type) (s: list ty) (n: nat{n <= length s}) (x: ty) (i: nat)
@@ -379,13 +369,11 @@ private let rec drop_contains_equiv_exists_helper2 (ty: Type) (s: list ty) (n: n
   match s with
   | hd :: tl ->
      eliminate n == 0 \/ n <> 0
-     returns FLT.memP x (drop s n)
-     with _. FLT.lemma_index_memP s i
-     and _. (
+     with FLT.lemma_index_memP s i
+     and (
        drop_contains_equiv_exists_helper2 ty tl (n - 1) x (i - 1);
        eliminate exists (i_tl: nat). n - 1 <= i_tl /\ i_tl < length tl /\ index tl i_tl == x
-       returns _
-       with _.
+       with
          introduce exists i. n <= i /\ i < length s /\ index s i == x with (i_tl + 1) and ())
 
 private let drop_contains_equiv_exists_helper3 (ty: Type) (s: list ty) (n: nat{n <= length s}) (x: ty)
@@ -393,14 +381,13 @@ private let drop_contains_equiv_exists_helper3 (ty: Type) (s: list ty) (n: nat{n
            (exists (i: nat).{:pattern index s i} n <= i /\ i < length s /\ index s i == x)) =
   introduce FLT.memP x (drop s n) ==>
               (exists (i: nat).{:pattern index s i} n <= i /\ i < length s /\ index s i == x)
-  with given_antecedent. (
+  with (
     drop_contains_equiv_exists_helper1 ty s n x);
     introduce (exists (i: nat).{:pattern index s i} n <= i /\ i < length s /\ index s i == x) ==>
                 FLT.memP x (drop s n)
-    with given_antecedent. (
+    with (
       eliminate exists (i: nat). n <= i /\ i < length s /\ index s i == x
-      returns _
-      with _. drop_contains_equiv_exists_helper2 ty s n x i
+      with drop_contains_equiv_exists_helper2 ty s n x i
     )
 
 private let drop_contains_equiv_exists_lemma () : Lemma (drop_contains_equiv_exists_fact u#a) =
@@ -421,11 +408,11 @@ private let extensionality_lemma () : Lemma (extensionality_fact u#a) =
   introduce forall (ty: Type u#a) (a: seq ty) (b: seq ty). equal a b ==> a == b
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       introduce forall (i: nat) . i < length a ==> index a i == index b i
       with
         introduce _ ==> _
-        with given_antecedent. (
+        with (
           assert (index a i == index b i) // needed to trigger
         );
       FStar.List.Tot.Properties.index_extensionality a b
@@ -439,7 +426,7 @@ private let take_length_lemma () : Lemma (take_length_fact u#a) =
     n <= length s ==> length (take s n) = n
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       lemma_splitAt_fst_length n s
     )
 
@@ -456,7 +443,7 @@ private let index_into_take_lemma ()
       j < n && n <= length s ==> index (take s n) j == index s j
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (take s n) == n); // triggers take_length_fact
       index_into_take_helper s n j
     )
@@ -466,7 +453,7 @@ private let drop_length_lemma () : Lemma (drop_length_fact u#a) =
               n <= length s ==> length (drop s n) = length s - n
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       FLT.lemma_splitAt_snd_length n s
     )
 
@@ -483,7 +470,7 @@ private let index_into_drop_lemma ()
       j < length s - n ==> index (drop s n) j == index s (j + n)
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (drop s n) = length s - n); // triggers drop_length_fact
       index_into_drop_helper s n j
     )
@@ -495,7 +482,7 @@ private let drop_index_offset_lemma ()
       n <= k && k < length s ==> index (drop s n) (k - n) == index s k
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (drop s n) = length s - n); // triggers drop_length_fact
       index_into_drop_helper s n (k - n)
     )
@@ -514,7 +501,7 @@ private let append_then_take_or_drop_lemma ()
       n = length s ==> take (append s t) n == s /\ drop (append s t) n == t
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       append_then_take_or_drop_helper s t n
     )
 
@@ -538,7 +525,7 @@ private let take_commutes_with_in_range_update_lemma ()
       take (update s i v) n == update (take s n) i v
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (update s i v) = length s); // triggers update_maintains_length_fact
       assert (length (take s n) = n);            // triggers take_length_fact
       take_commutes_with_in_range_update_helper s i v n
@@ -561,7 +548,7 @@ private let take_ignores_out_of_range_update_lemma ()
       take (update s i v) n == take s n
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (update s i v) = length s); // triggers update_maintains_length_fact
       take_ignores_out_of_range_update_helper s i v n
     )
@@ -594,7 +581,7 @@ private let drop_commutes_with_in_range_update_lemma ()
       drop (update s i v) n == update (drop s n) (i - n) v
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (update s i v) = length s); // triggers update_maintains_length_fact
       assert (length (drop s n) = length s - n); // triggers drop_length_fact
       drop_commutes_with_in_range_update_helper s i v n
@@ -617,7 +604,7 @@ private let drop_ignores_out_of_range_update_lemma ()
       drop (update s i v) n == drop s n
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (update s i v) = length s); // triggers update_maintains_length_fact
       drop_ignores_out_of_range_update_helper s i v n
     )
@@ -640,7 +627,7 @@ private let drop_commutes_with_build_lemma ()
       n <= length s ==> drop (build s v) n == build (drop s n) v
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (build s v) = 1 + length s); // triggers build_increments_length_fact
       drop_commutes_with_build_helper s v n
     )
@@ -652,7 +639,7 @@ private let element_ranks_less_lemma () : Lemma (element_ranks_less_fact u#a) =
   introduce forall (ty: Type u#a) (s: seq ty) (i: nat). i < length s ==> rank (index s i) << rank s
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       contains_iff_exists_index_lemma ();
       assert (contains s (index s i));
       FLT.memP_precedes (index s i) s
@@ -670,7 +657,7 @@ private let drop_ranks_less_lemma () : Lemma (drop_ranks_less_fact u#a) =
               0 < i && i <= length s ==> rank (drop s i) << rank s
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       drop_ranks_less_helper ty s i
     )
 
@@ -706,7 +693,7 @@ private let drop_then_drop_lemma () : Lemma (requires drop_length_fact u#a) (ens
               m + n <= length s ==> drop (drop s m) n == drop s (m + n)
   with
     introduce _ ==> _
-    with given_antecedent. (
+    with (
       assert (length (drop s m) = length s - m); // triggers drop_length_fact
       drop_then_drop_helper s m n
     )

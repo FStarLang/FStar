@@ -18,6 +18,7 @@
 
 module BinomialQueue
 
+module S = FStar.Set
 module L = FStar.List.Tot
 
 /// Some auxiliary lemmas

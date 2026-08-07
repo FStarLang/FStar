@@ -50,6 +50,8 @@ module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module Print = FStarC.Syntax.Print
+module CList = FStarC.CList
+module Free = FStarC.Syntax.Free
 
 let dbg_Exports        = Debug.get_toggle "Exports"
 let dbg_LayeredEffects = Debug.get_toggle "LayeredEffects"
@@ -75,6 +77,43 @@ let norm_c env c : ML _ = N.normalize_comp (steps env) env c
 
 (* Checks that the variables in `fvs` do not appear in the free vars of `t`.
 The environment `env` must not contain fvs in its gamma for this to work properly. *)
+(* If this type is headed by an unsolved unification variable, return it. *)
+let flex_head_uvar (t:term) : ML (option ctx_uvar) =
+  match (SS.compress (U.leftmost_head (U.unmeta t))).n with
+  | Tm_uvar (u, _) -> Some u
+  | _ -> None
+
+(* Does this deferred constraint have [u] at the head of one of its sides?  If so,
+   forcing it may well determine [u]. *)
+(* If [t] is flex and some deferred subtyping constraint bounds its head uvar by a
+   fully-determined (uvar-free) type, return that type.  Using it as the expected type
+   for an argument is what enables coercion insertion and typeclass resolution, without
+   committing to a solution for the uvar.  Before applications became unary, nested
+   application nodes achieved this by forcing the deferred constraints at each node
+   boundary (see monadic_application's partial-application case); doing it here makes
+   elaboration insensitive to how an application is bracketed. *)
+let bound_of_flex (require_ground:bool) (ds : TcComm.deferred) (t : term) : ML (option term) =
+  match flex_head_uvar t with
+  | None -> None
+  | Some u ->
+    let headed_by (t:term) : ML bool =
+      match flex_head_uvar t with
+      | Some u' -> UF.equiv u.ctx_uvar_head u'.ctx_uvar_head
+      | None -> false
+    in
+    let ground (t:term) : ML bool = not require_ground || is_empty (Free.uvars t) in
+    let bound (d : deferred_reason & string & prob) : ML (option term) =
+      let (_, _, p) = d in
+      match p with
+      | TProb p ->
+        if p.relation = EQ then None
+        else if headed_by p.rhs && ground p.lhs then Some p.lhs
+        else if headed_by p.lhs && ground p.rhs then Some p.rhs
+        else None
+      | CProb _ -> None
+    in
+    List.tryPick bound (FStarC.Class.Listlike.to_list ds)
+
 let check_no_escape (head_opt : option term)
     (env : Env.env)
     (fvs:list bv)
@@ -197,7 +236,7 @@ let maybe_warn_on_use env fv : ML unit =
       attrs |>
       List.iter
         (fun a ->
-          let head, args = U.head_and_args a in
+          let head, args = U.head_and_args_full a in
           let msg_arg m =
               match args with
               | [{n=Tm_constant (Const_string (s, _))}, _] ->
@@ -394,7 +433,7 @@ let print_expected_ty env : ML _ = Format.print1 "%s\n" (print_expected_ty_str e
  * intersection of the sub-variables instead of the union. *)
 let rec get_pat_vars' all (andlist : bool) (pats:term) : ML (FlatSet.t bv) =
   let pats = unmeta pats in
-  let head, args = head_and_args pats in
+  let head, args = head_and_args_full pats in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->
       if andlist
@@ -439,7 +478,7 @@ let check_pat_fvs (rng:Range.t) env pats bs : ML unit =
 let check_no_smt_theory_symbols (en:env) (t:term) : ML unit =
   let rec pat_terms (t:term) : ML (list term) =
     let t = unmeta t in
-    let head, args = head_and_args t in
+    let head, args = head_and_args_full t in
     match (un_uinst head).n, args with
     | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid -> []
     | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv Const.cons_lid ->
@@ -464,8 +503,9 @@ let check_no_smt_theory_symbols (en:env) (t:term) : ML unit =
       if Env.fv_has_attr en fv Const.smt_theory_symbol_attr_lid then [t]
       else []
 
-    | Tm_app {hd=t; args} ->
-      let ts = aux t :: List.map (fun (t, _) -> aux t) args in
+    | Tm_app _ ->
+      let hd, args = U.head_and_args_full t in
+      let ts = aux hd :: List.map (fun (t, _) -> aux t) args in
       List.flatten ts
 
     | Tm_ascribed {tm=t}
@@ -569,7 +609,9 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
              else match (SS.compress t1).n, (SS.compress t2).n with
                   | Tm_uinst (t1, _), Tm_uinst (t2, _) -> warn t1 t2
                   | Tm_name _, Tm_name _ -> false  //do not warn for names, e.g. in polymorphic functions, the names may be instantiated at the call sites
-                  | Tm_app {hd=h1; args=args1}, Tm_app {hd=h2; args=args2} ->
+                  | Tm_app _, Tm_app _ ->
+                    let h1, args1 = U.head_and_args_full t1 in
+                    let h2, args2 = U.head_and_args_full t2 in
                     warn h1 h2 || List.length args1 <> List.length args2 ||
                     (List.zip args1 args2 |> List.existsML (fun ((a1, _), (a2, _)) -> warn a1 a2))
                   | Tm_refine {b=t1; phi=phi1}, Tm_refine {b=t2; phi=phi2} ->
@@ -710,9 +752,13 @@ let is_comp_ascribed_reflect (e:term) : ML (option (lident & term & aqual)) =
   match (SS.compress e).n with
   | Tm_ascribed {tm=e;asc=(Inr _, _, _)} ->
     (match (SS.compress e).n with
-     | Tm_app {hd=head; args} when List.length args = 1 ->
-       (match (SS.compress head).n with
-        | Tm_constant (Const_reflect l) -> args |> List.hd |> (fun (e, aqual) -> (l, e, aqual)) |> Some
+     | Tm_app _ ->
+       let head, args = U.head_and_args_full e in
+       (match args with
+        | [(e, aqual)] ->
+          (match (SS.compress head).n with
+           | Tm_constant (Const_reflect l) -> Some (l, e, aqual)
+           | _ -> None)
         | _ -> None)
      | _ -> None)
    | _ -> None
@@ -962,7 +1008,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let top =
       let r = top.pos in
       let tm = mk (Tm_constant (Const_reflect effect_lid)) r in
-      let tm = mk (Tm_app {hd=tm;args=[e, aqual]}) r in
+      let tm = S.mk_Tm_app tm [e, aqual] r in
       mk (Tm_ascribed {tm; asc=(Inr expected_c, None, use_eq); eff_opt=expected_c |> U.comp_effect_name |> Some}) r in
 
     //check the expected type in the env, if present
@@ -1001,359 +1047,356 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
                                                                  eff_opt=Some c.eff_name}) top.pos) c in
     e, c, f ++ (g ++ f2)
 
-  (* Unary operators. Explicitly curry extra arguments *)
-  | Tm_app {hd={n=Tm_constant Const_range_of}; args=a::hd::rest}
-  | Tm_app {hd={n=Tm_constant (Const_reify _)}; args=a::hd::rest}
-  | Tm_app {hd={n=Tm_constant (Const_reflect _)}; args=a::hd::rest} ->
-    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
-    let unary_op, _ = U.head_and_args top in
-    let head = mk (Tm_app {hd=unary_op; args=[a]}) (Range.union_ranges unary_op.pos (fst a).pos) in
-    let t = mk (Tm_app {hd=head; args=rest}) top.pos in
-    tc_term env t
+  | Tm_app _ ->
+    let lhead, largs = U.head_and_args_full top in
+    let dispatch : either (term & lcomp & guard_t) (term & args) =
+      match (SS.compress lhead).n, largs with
+      (* Unary operators. Explicitly curry extra arguments *)
+      | Tm_constant Const_range_of, a::rest
+      | Tm_constant (Const_reify _), a::rest
+      | Tm_constant (Const_reflect _), a::rest
+          when Cons? rest ->
+        let head = S.mk_Tm_app lhead [a] (Range.union_ranges lhead.pos (fst a).pos) in
+        Inr (head, rest)
 
-  (* Binary operators *)
-  | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=a1::a2::hd::rest} ->
-    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
-    let unary_op, _ = U.head_and_args top in
-    let head = mk (Tm_app {hd=unary_op; args=[a1; a2]}) (Range.union_ranges unary_op.pos (fst a1).pos) in
-    let t = mk (Tm_app {hd=head; args=rest}) top.pos in
-    tc_term env t
+      (* Binary operators *)
+      | Tm_constant Const_set_range_of, a1::a2::rest
+          when Cons? rest ->
+        let head = S.mk_Tm_app lhead [a1; a2] (Range.union_ranges lhead.pos (fst a1).pos) in
+        Inr (head, rest)
 
-  | Tm_app {hd={n=Tm_constant Const_range_of}; args=[(e, None)]} ->
-    let e, c, g = tc_term (fst <| Env.clear_expected_typ env) e in
-    let head, _ = U.head_and_args top in
-    mk (Tm_app {hd=head; args=[(e, None)]}) top.pos, (TcComm.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
+      | Tm_constant Const_range_of, [(e, None)] ->
+        let e, c, g = tc_term (fst <| Env.clear_expected_typ env) e in
+        Inl (S.mk_Tm_app lhead [(e, None)] top.pos, (TcComm.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g)
 
-  | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=(t, None)::(r, None)::[]} ->
-    let head, _ = U.head_and_args top in
-    let env' = Env.set_expected_typ env (tabbrev Const.range_lid) in
-    let er, _, gr = tc_term env' r in
-    let t, tt, gt = tc_term env t in
-    let g = gr ++ gt in
-    mk_Tm_app head [S.as_arg t; S.as_arg r] top.pos, tt, g
+      | Tm_constant Const_set_range_of, (t, None)::(r, None)::[] ->
+        let env' = Env.set_expected_typ env (tabbrev Const.range_lid) in
+        let er, _, gr = tc_term env' r in
+        let t, tt, gt = tc_term env t in
+        let g = gr ++ gt in
+        Inl (mk_Tm_app lhead [S.as_arg t; S.as_arg r] top.pos, tt, g)
 
-  | Tm_app {hd={n=Tm_constant Const_range_of}}
-  | Tm_app {hd={n=Tm_constant Const_set_range_of}} ->
-    raise_error e Errors.Fatal_IllAppliedConstant (Format.fmt1 "Ill-applied constant %s" (show top))
+      | Tm_constant Const_range_of, _
+      | Tm_constant Const_set_range_of, _ ->
+        raise_error e Errors.Fatal_IllAppliedConstant (Format.fmt1 "Ill-applied constant %s" (show top))
 
-  | Tm_app {hd={n=Tm_constant (Const_reify _)}; args=[(e, aqual)]} ->
-    if Some? aqual
-    then Errors.log_issue e
-           Errors.Warning_IrrelevantQualifierOnArgumentToReify
-            "Qualifier on argument to reify is irrelevant and will be ignored";
+      | Tm_constant (Const_reify _), [(e, aqual)] ->
+        if Some? aqual
+        then Errors.log_issue e
+               Errors.Warning_IrrelevantQualifierOnArgumentToReify
+                "Qualifier on argument to reify is irrelevant and will be ignored";
 
-    //
-    // Typecheck e
-    //
-    let env0, _ = Env.clear_expected_typ env in
-    let e, c, g = tc_term env0 e in
-    let c, g_c =
-      let c, g_c = TcComm.lcomp_comp c in
-      Env.unfold_effect_abbrev env c, g_c in
+        //
+        // Typecheck e
+        //
+        let env0, _ = Env.clear_expected_typ env in
+        let e, c, g = tc_term env0 e in
+        let c, g_c =
+          let c, g_c = TcComm.lcomp_comp c in
+          Env.unfold_effect_abbrev env c, g_c in
 
-    if not (is_user_reifiable_effect env c.effect_name) then
-      raise_error e Errors.Fatal_EffectCannotBeReified
-                   (Format.fmt1 "Effect %s cannot be reified" (string_of_lid c.effect_name));
-    let u_c = List.hd c.comp_univs in
+        if not (is_user_reifiable_effect env c.effect_name) then
+          raise_error e Errors.Fatal_EffectCannotBeReified
+                       (Format.fmt1 "Effect %s cannot be reified" (string_of_lid c.effect_name));
+        let u_c = List.hd c.comp_univs in
 
-    let e = U.mk_reify e (Some c.effect_name) in
-    let repr = Env.reify_comp env (S.mk_Comp c) u_c in
-    let c =
-        if effect_has_primitive_extraction env c.effect_name then
-          (* Primitively extracted, make sure to reify into GTot to
-             not mix the two representations. *)
-          S.mk_GTotal repr |> TcComm.lcomp_of_comp
-        else if is_total_effect env c.effect_name then
-          (* Total. *)
-          S.mk_Total repr |> TcComm.lcomp_of_comp
-        else
-          (* Add a DIV effect for non-total effects. *)
-          let ct = { comp_univs = [u_c]
-                   ; effect_name = Const.effect_Dv_lid
-                   ; result_typ = repr
-                   ; effect_args = []
-                   ; flags = []
-                   }
-          in
-          S.mk_Comp ct |> TcComm.lcomp_of_comp
-    in
-    let e, c, g' = comp_check_expected_typ env e c in
-    e, c, g ++ (g_c ++ g')
-
-  | Tm_app {hd={n=Tm_constant (Const_reflect l)}; args=[(e, aqual)]}->
-    if Some? aqual then
-      Errors.log_issue e
-        Errors.Warning_IrrelevantQualifierOnArgumentToReflect
-         "Qualifier on argument to reflect is irrelevant and will be ignored";
-
-    if not (is_user_reflectable_effect env l) then
-      raise_error e Errors.Fatal_EffectCannotBeReified
-        (Format.fmt1 "Effect %s cannot be reflected" (string_of_lid l));
-
-    let reflect_op, _ = U.head_and_args top in
-
-    begin match Env.effect_decl_opt env l with
-    | None ->
-      raise_error e Errors.Fatal_EffectNotFound
-        (Format.fmt1 "Effect %s not found (for reflect)" (Ident.string_of_lid l))
-
-    | Some (ed, qualifiers) ->
-      let env_no_ex, _ = Env.clear_expected_typ env in
-
-      let e, c_e, g_e =
-        let e, c, g = tc_tot_or_gtot_term env_no_ex e in
-        if not <| TcComm.is_total_lcomp c then
-          Errors.log_issue e Errors.Error_UnexpectedGTotComputation "Expected Tot, got a GTot computation";
-        e, c, g
-      in
-
-      let (expected_repr_typ, g_repr), u_a, a, g_a =
-        let a, u_a = U.type_u () in
-        let a_uvar, _, g_a = TcUtil.new_implicit_var "tc_term reflect" e.pos env_no_ex a false in
-        TcUtil.fresh_effect_repr_en env_no_ex e.pos l u_a a_uvar, u_a, a_uvar, g_a in
-
-      let g_eq = Rel.teq env_no_ex c_e.res_typ expected_repr_typ in
-
-      let eff_args =
-        match (SS.compress expected_repr_typ).n with
-        | Tm_app {args=_::args} -> args
-        | _ ->
-          raise_error top Errors.Fatal_UnexpectedEffect
-            (Format.fmt3 "Expected repr type for %s is not an application node (%s:%s)"
-              (show l) (tag_of expected_repr_typ)
-              (show expected_repr_typ)) in
-
-      let c = S.mk_Comp ({
-        comp_univs=[u_a];
-        effect_name = ed.mname;
-        result_typ=a;
-        effect_args=eff_args;
-        flags=[]
-      }) |> TcComm.lcomp_of_comp in
-
-      let e = mk (Tm_app {hd=reflect_op; args=[(e, aqual)]}) top.pos in
-
-      let e, c, g' = comp_check_expected_typ env e c in
-
-      let e = S.mk (Tm_meta {tm=e; meta=Meta_monadic(c.eff_name, c.res_typ)}) e.pos in
-
-      e, c, msum [g_e; g_repr; g_a; g_eq; g']
-    end
-
-  | Tm_app {hd={n=Tm_fvar {fv_qual=Some (Unresolved_constructor uc)}}; args} ->
-    (* ToSyntax left an unresolved constructor, we have to use type info to disambiguate *)
-    let base_term, uc_fields =
-      let base_term, fields =
-        if uc.uc_base_term
-        then match args with
-             | (b, _)::rest -> Some b, rest
-             | _ -> failwith "Impossible"
-        else None, args
-      in
-      if List.length uc.uc_fields <> List.length fields
-      then raise_error top Errors.Fatal_IdentifierNotFound
-             (Format.fmt2 "Could not resolve constructor; expected %s fields but only found %s"
-                              (show <| List.length uc.uc_fields)
-                              (show <| List.length fields))
-      else (
-        base_term, List.zip uc.uc_fields (List.map fst fields)
-      )
-    in
-    let (rdc, constrname, constructor), topt =
-      let fallback env =
-        match base_term with
-        | Some e ->
-          //Otherwise, if we have an {e with ...}, compute the type of e and use it
-          //(there's no expected type anyway from the context, so no need to clear it check e)
-          let _, lc, _ = tc_term env e in
-          TcUtil.find_record_or_dc_from_head_fv env (TcUtil.head_fv_of_typ env lc.res_typ) uc top.pos, Some (Inr lc.res_typ)
-
-        | None ->
-          //Otherwise, no type info here, use what ToSyntax decided
-          TcUtil.find_record_or_dc_from_head_fv env None uc top.pos, None
-      in
-      match Env.expected_typ env with
-      | Some (t, _) -> (
-        match TcUtil.head_fv_of_typ env t with
-        | None ->
-          fallback (Env.clear_expected_typ env |> fst) //no head fv, fallback
-        | hfv ->
-          //first, prefer the expected type from the context, if any
-          TcUtil.find_record_or_dc_from_head_fv env hfv uc top.pos, Some (Inl t)
-      )
-
-      | None -> fallback env
-    in
-    let rdc : DsEnv.record_or_dc = rdc in //for type-based disambiguation of rdc projectors below
-    let open FStarC.Pprint in
-    (if Some? (Env.expected_typ env) && not rdc.is_record then
-      let rdc_field_names = List.map (fun (i, _, _) -> Ident.string_of_id i) rdc.fields in
-      let bad_field = List.tryFind (fun i -> not (List.existsb (fun f -> f = Ident.string_of_id (Ident.ident_of_lid i)) rdc_field_names)) uc.uc_fields in
-      match bad_field with
-      | Some f ->
-        raise_error top Errors.Error_CannotResolveRecord [
-          text "Expected an expression of type" ^/^ pp (fst (Some?.v (Env.expected_typ env)));
-          text "Type" ^/^ pp rdc.typename ^/^ text "is not declared as a record type;" ^/^
-          text "field" ^/^ pp f ^/^ text "is not valid for this type.";
-        ]
-      | None -> ());
-    let constructor = S.fv_to_tm constructor in
-    let mk_field_projector i x =
-        let projname = mk_field_projector_name_from_ident constrname i in
-        let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
-        let candidate = S.fvar (Ident.set_lid_range projname x.pos) qual in
-        S.mk_Tm_app candidate [(x, None)] x.pos
-    in
-    let args =
-        TcUtil.make_record_fields_in_order env uc topt
-          rdc
-          uc_fields
-          (fun field_name is_imp ->
-            match base_term with
-            | Some x -> Some (mk_field_projector field_name x)
-            | None when is_imp ->
-              (* We're missing an implicit field, use a wildcard. *)
-              Some S.tun
-            | None -> None)
-          top.pos
-    in
-    (* First, apply the constructor to as many wildcards as it has parameters. Otherwise,
-       if its first field is implicit, we would construct a bad application. *)
-    let term = S.mk_Tm_app constructor (List.map (fun _ -> S.iarg S.tun) rdc.parms) top.pos in
-    let term = S.mk_Tm_app term (List.map (fun (a, is_imp) -> a, as_aqual_implicit is_imp) args) top.pos in
-    tc_term env term
-
-  | Tm_app {hd={n=Tm_fvar {fv_name=field_name; fv_qual=Some (Unresolved_projector candidate)}};
-            args=(e, None)::rest} ->
-    (* ToSyntax left an unresolved projector, we have to use type info to disambiguate *)
-    let proceed_with choice =
-      match choice with
-      | None ->
-        raise_error field_name Errors.Fatal_IdentifierNotFound [
-           text <| Format.fmt1 "Field name %s could not be resolved." (string_of_lid field_name);
-        ]
-      | Some choice ->
-        let f = S.fv_to_tm choice in
-        let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
-        tc_term env term
-    in
-    //We have e.f, use the type of e to disambiguate
-    let _, lc, _ =
-      let env, _ = Env.clear_expected_typ env in
-      tc_term env e
-    in
-    begin
-    let t0 = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env lc.res_typ in
-    let thead, _ = U.head_and_args t0 in
-    if !dbg_RFD
-    then (
-      Format.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
-        (show lc.res_typ)
-        (show t0)
-        (show thead)
-    );
-    match (SS.compress (U.un_uinst thead)).n with
-    | Tm_fvar type_name -> (
-      match TcUtil.try_lookup_record_type env type_name.fv_name with
-      | None -> proceed_with candidate
-      | Some rdc ->
-        let i =
-          List.tryFind
-            (fun (i, _, _) -> TcUtil.field_name_matches field_name rdc i)
-            rdc.fields
+        let e = U.mk_reify e (Some c.effect_name) in
+        let repr = Env.reify_comp env (S.mk_Comp c) u_c in
+        let c =
+            if effect_has_primitive_extraction env c.effect_name then
+              (* Primitively extracted, make sure to reify into GTot to
+                 not mix the two representations. *)
+              S.mk_GTotal repr |> TcComm.lcomp_of_comp
+            else if is_total_effect env c.effect_name then
+              (* Total. *)
+              S.mk_Total repr |> TcComm.lcomp_of_comp
+            else
+              (* Add a DIV effect for non-total effects. *)
+              let ct = { comp_univs = [u_c]
+                       ; effect_name = Const.effect_Dv_lid
+                       ; result_typ = repr
+                       ; effect_args = []
+                       ; flags = []
+                       }
+              in
+              S.mk_Comp ct |> TcComm.lcomp_of_comp
         in
-        match i with
-        | None -> proceed_with candidate
-        | Some (i, _, _) ->
-          let constrname = FStarC.Ident.lid_of_ids (Ident.ns_of_lid rdc.typename @ [rdc.constrname]) in
-          let projname = mk_field_projector_name_from_ident constrname i in
-          let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
-          let choice =
-            S.lid_as_fv
-              (Ident.set_lid_range projname (Ident.range_of_lid field_name))
-              qual
+        let e, c, g' = comp_check_expected_typ env e c in
+        Inl (e, c, g ++ (g_c ++ g'))
+
+      | Tm_constant (Const_reflect l), [(e, aqual)] ->
+        if Some? aqual then
+          Errors.log_issue e
+            Errors.Warning_IrrelevantQualifierOnArgumentToReflect
+             "Qualifier on argument to reflect is irrelevant and will be ignored";
+
+        if not (is_user_reflectable_effect env l) then
+          raise_error e Errors.Fatal_EffectCannotBeReified
+            (Format.fmt1 "Effect %s cannot be reflected" (string_of_lid l));
+
+        let reflect_op, _ = U.head_and_args_full top in
+
+        begin match Env.effect_decl_opt env l with
+        | None ->
+          raise_error e Errors.Fatal_EffectNotFound
+            (Format.fmt1 "Effect %s not found (for reflect)" (Ident.string_of_lid l))
+
+        | Some (ed, qualifiers) ->
+          let env_no_ex, _ = Env.clear_expected_typ env in
+
+          let e, c_e, g_e =
+            let e, c, g = tc_tot_or_gtot_term env_no_ex e in
+            if not <| TcComm.is_total_lcomp c then
+              Errors.log_issue e Errors.Error_UnexpectedGTotComputation "Expected Tot, got a GTot computation";
+            e, c, g
           in
-          proceed_with (Some choice)
-      )
-    | _ -> proceed_with candidate
-    end
 
-  // If we're on the first phase, we don't synth, and just wait for the next phase
-  | Tm_app {hd=head; args=[(tau, None)]}
-  | Tm_app {hd=head; args=[(_, Some ({ aqual_implicit = true })); (tau, None)]}
-        when U.is_synth_by_tactic head && not env.phase1 ->
-    (* Got an application of synth_by_tactic, process it *)
+          let (expected_repr_typ, g_repr), u_a, a, g_a =
+            let a, u_a = U.type_u () in
+            let a_uvar, _, g_a = TcUtil.new_implicit_var "tc_term reflect" e.pos env_no_ex a false in
+            TcUtil.fresh_effect_repr_en env_no_ex e.pos l u_a a_uvar, u_a, a_uvar, g_a in
 
-    // no "as" clause
-    let head, args = U.head_and_args top in
-    tc_synth head env args top.pos
+          let g_eq = Rel.teq env_no_ex c_e.res_typ expected_repr_typ in
 
-  | Tm_app {hd=head; args}
-        when U.is_synth_by_tactic head && not env.phase1 ->
-    (* We have some extra args, move them out of the way *)
-    let args1, args2 =
-        match args with
-        | (tau, None)::rest ->
-            [(tau, None)], rest
-        | (a, Some aq) :: (tau, None) :: rest
-          when aq.aqual_implicit ->
-          [(a, Some aq); (tau, None)], rest
-        | _ ->
-            raise_error top Errors.Fatal_SynthByTacticError "synth_by_tactic: bad application"
+          let eff_args =
+            match U.head_and_args_full expected_repr_typ with
+            | _, _::args -> args
+            | _ ->
+              raise_error top Errors.Fatal_UnexpectedEffect
+                (Format.fmt3 "Expected repr type for %s is not an application node (%s:%s)"
+                  (show l) (tag_of expected_repr_typ)
+                  (show expected_repr_typ)) in
+
+          let c = S.mk_Comp ({
+            comp_univs=[u_a];
+            effect_name = ed.mname;
+            result_typ=a;
+            effect_args=eff_args;
+            flags=[]
+          }) |> TcComm.lcomp_of_comp in
+
+          let e = S.mk_Tm_app reflect_op [(e, aqual)] top.pos in
+
+          let e, c, g' = comp_check_expected_typ env e c in
+
+          let e = S.mk (Tm_meta {tm=e; meta=Meta_monadic(c.eff_name, c.res_typ)}) e.pos in
+
+          Inl (e, c, msum [g_e; g_repr; g_a; g_eq; g'])
+        end
+
+      | Tm_fvar {fv_qual=Some (Unresolved_constructor uc)}, args ->
+        (* ToSyntax left an unresolved constructor, we have to use type info to disambiguate *)
+        let base_term, uc_fields =
+          let base_term, fields =
+            if uc.uc_base_term
+            then match args with
+                 | (b, _)::rest -> Some b, rest
+                 | _ -> failwith "Impossible"
+            else None, args
+          in
+          if List.length uc.uc_fields <> List.length fields
+          then raise_error top Errors.Fatal_IdentifierNotFound
+                 (Format.fmt2 "Could not resolve constructor; expected %s fields but only found %s"
+                                  (show <| List.length uc.uc_fields)
+                                  (show <| List.length fields))
+          else (
+            base_term, List.zip uc.uc_fields (List.map fst fields)
+          )
+        in
+        let (rdc, constrname, constructor), topt =
+          let fallback env =
+            match base_term with
+            | Some e ->
+              //Otherwise, if we have an {e with ...}, compute the type of e and use it
+              //(there's no expected type anyway from the context, so no need to clear it check e)
+              let _, lc, _ = tc_term env e in
+              TcUtil.find_record_or_dc_from_head_fv env (TcUtil.head_fv_of_typ env lc.res_typ) uc top.pos, Some (Inr lc.res_typ)
+
+            | None ->
+              //Otherwise, no type info here, use what ToSyntax decided
+              TcUtil.find_record_or_dc_from_head_fv env None uc top.pos, None
+          in
+          match Env.expected_typ env with
+          | Some (t, _) -> (
+            match TcUtil.head_fv_of_typ env t with
+            | None ->
+              fallback (Env.clear_expected_typ env |> fst) //no head fv, fallback
+            | hfv ->
+              //first, prefer the expected type from the context, if any
+              TcUtil.find_record_or_dc_from_head_fv env hfv uc top.pos, Some (Inl t)
+          )
+
+          | None -> fallback env
+        in
+        let rdc : DsEnv.record_or_dc = rdc in //for type-based disambiguation of rdc projectors below
+        let open FStarC.Pprint in
+        (if Some? (Env.expected_typ env) && not rdc.is_record then
+          let rdc_field_names = List.map (fun (i, _, _) -> Ident.string_of_id i) rdc.fields in
+          let bad_field = List.tryFind (fun i -> not (List.existsb (fun f -> f = Ident.string_of_id (Ident.ident_of_lid i)) rdc_field_names)) uc.uc_fields in
+          match bad_field with
+          | Some f ->
+            raise_error top Errors.Error_CannotResolveRecord [
+              text "Expected an expression of type" ^/^ pp (fst (Some?.v (Env.expected_typ env)));
+              text "Type" ^/^ pp rdc.typename ^/^ text "is not declared as a record type;" ^/^
+              text "field" ^/^ pp f ^/^ text "is not valid for this type.";
+            ]
+          | None -> ());
+        let constructor = S.fv_to_tm constructor in
+        let mk_field_projector i x =
+            let projname = mk_field_projector_name_from_ident constrname i in
+            let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
+            let candidate = S.fvar (Ident.set_lid_range projname x.pos) qual in
+            S.mk_Tm_app candidate [(x, None)] x.pos
+        in
+        let args =
+            TcUtil.make_record_fields_in_order env uc topt
+              rdc
+              uc_fields
+              (fun field_name is_imp ->
+                match base_term with
+                | Some x -> Some (mk_field_projector field_name x)
+                | None when is_imp ->
+                  (* We're missing an implicit field, use a wildcard. *)
+                  Some S.tun
+                | None -> None)
+              top.pos
+        in
+        (* First, apply the constructor to as many wildcards as it has parameters. Otherwise,
+           if its first field is implicit, we would construct a bad application. *)
+        let term = S.mk_Tm_app constructor (List.map (fun _ -> S.iarg S.tun) rdc.parms) top.pos in
+        let term = S.mk_Tm_app term (List.map (fun (a, is_imp) -> a, as_aqual_implicit is_imp) args) top.pos in
+        Inl (tc_term env term)
+
+      | Tm_fvar {fv_name=field_name; fv_qual=Some (Unresolved_projector candidate)}, (e, None)::rest ->
+        (* ToSyntax left an unresolved projector, we have to use type info to disambiguate *)
+        let proceed_with choice =
+          match choice with
+          | None ->
+            raise_error field_name Errors.Fatal_IdentifierNotFound [
+               text <| Format.fmt1 "Field name %s could not be resolved." (string_of_lid field_name);
+            ]
+          | Some choice ->
+            let f = S.fv_to_tm choice in
+            let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
+            tc_term env term
+        in
+        //We have e.f, use the type of e to disambiguate
+        let _, lc, _ =
+          let env, _ = Env.clear_expected_typ env in
+          tc_term env e
+        in
+        Inl (begin
+        let t0 = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env lc.res_typ in
+        let thead, _ = U.head_and_args_full t0 in
+        if !dbg_RFD
+        then (
+          Format.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
+            (show lc.res_typ)
+            (show t0)
+            (show thead)
+        );
+        match (SS.compress (U.un_uinst thead)).n with
+        | Tm_fvar type_name -> (
+          match TcUtil.try_lookup_record_type env type_name.fv_name with
+          | None -> proceed_with candidate
+          | Some rdc ->
+            let i =
+              List.tryFind
+                (fun (i, _, _) -> TcUtil.field_name_matches field_name rdc i)
+                rdc.fields
+            in
+            match i with
+            | None -> proceed_with candidate
+            | Some (i, _, _) ->
+              let constrname = FStarC.Ident.lid_of_ids (Ident.ns_of_lid rdc.typename @ [rdc.constrname]) in
+              let projname = mk_field_projector_name_from_ident constrname i in
+              let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
+              let choice =
+                S.lid_as_fv
+                  (Ident.set_lid_range projname (Ident.range_of_lid field_name))
+                  qual
+              in
+              proceed_with (Some choice)
+          )
+        | _ -> proceed_with candidate
+        end)
+
+      | _ ->
+        if U.is_synth_by_tactic lhead && not env.phase1
+        then (
+          (* An application of synth_by_tactic *)
+          match largs with
+          | [(tau, None)]
+          | [(_, Some ({ aqual_implicit = true })); (tau, None)] ->
+            Inl (tc_synth lhead env largs top.pos)
+          | _ ->
+            (* We have some extra args, move them out of the way *)
+            let args1, args2 =
+                match largs with
+                | (tau, None)::rest ->
+                    [(tau, None)], rest
+                | (a, Some aq) :: (tau, None) :: rest
+                  when aq.aqual_implicit ->
+                  [(a, Some aq); (tau, None)], rest
+                | _ ->
+                    raise_error top Errors.Fatal_SynthByTacticError "synth_by_tactic: bad application"
+            in
+            Inr (mk_app lhead args1, args2)
+        )
+        else Inr (lhead, largs)
     in
-    let t1 = mk_app head args1 in
-    let t2 = mk_app t1 args2 in
-    tc_term env t2
+    begin match dispatch with
+    | Inl res -> res
+    | Inr (head, args) ->
+      (* An ordinary application *)
+      let env0 = env in
+      let env = Env.clear_expected_typ env |> fst |> instantiate_both in
+      if Debug.high ()
+      then Format.print3 "(%s) Checking app %s, %s\n"
+                      (Range.string_of_range top.pos)
+                      (show top)
+                      (print_expected_ty_str env0);
 
-  (* An ordinary application *)
-  | Tm_app {hd=head; args} ->
-    let env0 = env in
-    let env = Env.clear_expected_typ env |> fst |> instantiate_both in
-    if Debug.high ()
-    then Format.print3 "(%s) Checking app %s, %s\n"
-                    (Range.string_of_range top.pos)
-                    (show top)
-                    (print_expected_ty_str env0);
-
-    //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
-    let head, chead, g_head = tc_term (no_inst env) head in
-    let chead, g_head = TcComm.lcomp_comp chead |> (fun (c, g) -> c, g_head ++ g) in
-    let e, c, g =
-      if TcUtil.short_circuit_head head
-      then
-        if env.phase1
+      //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
+      let head, chead, g_head = tc_term (no_inst env) head in
+      let chead, g_head = TcComm.lcomp_comp chead |> (fun (c, g) -> c, g_head ++ g) in
+      let e, c, g =
+        if TcUtil.short_circuit_head head
         then
-          (* In phase1, elaborate && and || to if-then-else
-             to enforce proper short-circuit evaluation order
-             for impure arguments. Other SC ops (/\, \/, ==>) go
-             through check_application_args. *)
-          match maybe_elaborate_short_circuit_args env0 head args with
-          | Some rewritten -> rewritten
-          | None -> check_application_args env head chead g_head args (Env.expected_typ env0)
-        else
-          (* Full verification: enforce purity of arguments to all
-             short-circuit operators. *)
-          check_short_circuit_args env head chead g_head args (Env.expected_typ env0)
-      else check_application_args env head chead g_head args (Env.expected_typ env0)
-    in
-    let e, c, implicits =
-        if TcComm.is_tot_or_gtot_lcomp c
-        // Also instantiate in phase1, dropping any precondition,
-        // since it will be recomputed correctly in phase2.
-        || (env.phase1 && TcComm.is_pure_or_ghost_lcomp c)
-        then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
-             e, TcComm.set_result_typ_lc c res_typ, implicits
-        else e, c, mzero
-    in
-    if Debug.extreme ()
-    then Format.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
-    let e, c, g' = comp_check_expected_typ env0 e c in
-    let gres = g ++ g' ++ implicits in
-    if Debug.extreme ()
-    then Format.print2 "Guard from application node %s is %s\n"
-                (show e)
-                (Rel.guard_to_string env gres);
-    e, c, gres
+          if env.phase1
+          then
+            (* In phase1, elaborate && and || to if-then-else
+               to enforce proper short-circuit evaluation order
+               for impure arguments. Other SC ops (/\, \/, ==>) go
+               through check_application_args. *)
+            match maybe_elaborate_short_circuit_args env0 head args with
+            | Some rewritten -> rewritten
+            | None -> check_application_args env head chead g_head args (Env.expected_typ env0)
+          else
+            (* Full verification: enforce purity of arguments to all
+               short-circuit operators. *)
+            check_short_circuit_args env head chead g_head args (Env.expected_typ env0)
+        else check_application_args env head chead g_head args (Env.expected_typ env0)
+      in
+      let e, c, implicits =
+          if TcComm.is_tot_or_gtot_lcomp c
+          // Also instantiate in phase1, dropping any precondition,
+          // since it will be recomputed correctly in phase2.
+          || (env.phase1 && TcComm.is_pure_or_ghost_lcomp c)
+          then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
+               e, TcComm.set_result_typ_lc c res_typ, implicits
+          else e, c, mzero
+      in
+      if Debug.extreme ()
+      then Format.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
+      let e, c, g' = comp_check_expected_typ env0 e c in
+      let gres = g ++ g' ++ implicits in
+      if Debug.extreme ()
+      then Format.print2 "Guard from application node %s is %s\n"
+                  (show e)
+                  (Rel.guard_to_string env gres);
+      e, c, gres
+    end
 
   | Tm_match _ ->
     tc_match env top
@@ -1852,7 +1895,11 @@ and tc_value env (e:term) : ML (term
     let e = mk (Tm_constant c) e.pos in
     value_check_expected_typ env e (Inl t) mzero
 
-  | Tm_arrow {bs; comp=c} ->
+  | Tm_arrow _ ->
+    (* Check the whole arrow *node* at once: checking one unary binder at a time
+       would nest the guard (and its labels) one level per binder, changing the
+       shape of the VC and of error messages. *)
+    let bs, c = U.arrow_node_formals_comp_ln top in
     let bs, c = SS.open_comp bs c in
     let env0 = env in
     let env, _ = Env.clear_expected_typ env in
@@ -1894,11 +1941,12 @@ and tc_value env (e:term) : ML (term
     let g = TcUtil.close_guard_implicits env false [x] g in
     value_check_expected_typ env0 e (Inl t) g
 
-  | Tm_abs {bs; body} ->
+  | Tm_abs _ ->
     (* in case we use type variables which are implicitly quantified, we add quantifiers here *)
+    let bs, body, _ = U.abs_one_group_ln top in
     let bs = TcUtil.maybe_add_implicit_binders env bs in
     if Debug.medium ()
-    then Format.print1 "Abstraction is: %s\n" (show ({top with n=Tm_abs {bs; body; rc_opt=None}}));
+    then Format.print1 "Abstraction is: %s\n" (show (S.mk_Tm_abs bs body None top.pos));
     let bs, body = SS.open_term bs body in
     tc_abs env top bs body
 
@@ -1977,11 +2025,11 @@ and tc_comp env c : ML (comp                                      (* checked ver
          *              the unifier or the normalizer
          *)
         tc_check_tot_or_gtot_term ({ env with failhard = true }) tc S.teff None in
-      let head, args = U.head_and_args tc in
+      let head, args = U.head_and_args_full tc in
       let comp_univs = match (SS.compress head).n with
         | Tm_uinst(_, us) -> us
         | _ -> [] in
-      let _, args = U.head_and_args tc in
+      let _, args = U.head_and_args_full tc in
       let res, args = List.hd args, List.tl args in
       let flags, guards = c.flags |> List.map (function
         | DECREASES (Decreases_lex l) ->
@@ -2078,7 +2126,8 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
       match (SS.compress t).n with
       (* we are type checking abs so all cases except arrow are required for definitional equality *)
       | Tm_uvar _
-      | Tm_app {hd={n=Tm_uvar _}} ->
+      | Tm_app _
+          when Tm_uvar? (SS.compress (U.leftmost_head t)).n ->
         (* expected a uvar; build a function type from the term and unify with it *)
         let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible: uvar abs with non-empty environment" in
         let bs, envbody, g_env, _ = tc_binders env bs in
@@ -2092,8 +2141,8 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
         //we pass type `t` out to check afterwards the full refinement type is respected
         Some t, bs, bs', copt, env_body, body, g_env
 
-      | Tm_arrow {bs=bs_expected; comp=c_expected} ->
-        let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
+      | Tm_arrow _ ->
+        let bs_expected, c_expected = U.arrow_formals_comp_strict t in
         (* Two main interesting bits here;
            1. The expected type may have
               a. more immediate binders, whereas the function may itself return a function
@@ -2122,8 +2171,8 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
                 if U.is_named_tot c then
                   let t = N.unfold_whnf env_bs (U.comp_result c) in
                   match t.n with
-                  | Tm_arrow {bs=bs_expected; comp=c_expected} ->
-                    let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
+                  | Tm_arrow _ ->
+                    let bs_expected, c_expected = U.arrow_formals_comp_strict t in
                     let (env_bs_bs', bs', more, guard'_env_bs, subst) = tc_abs_check_binders env_bs more_bs bs_expected use_eq in
                     let guard'_env = Env.close_guard env_bs bs guard'_env_bs in
                     handle_more (env_bs_bs', bs@bs', more, guard_env ++ guard'_env, subst) c_expected body
@@ -2354,9 +2403,12 @@ and tc_abs env (top:term) (bs:binders) (body:term) : ML (term & lcomp & guard_t)
           | _ -> None in
         if c_opt |> Some? &&
            (match (SS.compress body).n with  //body is an M.reflect
-            | Tm_app {hd=head; args} when List.length args = 1 ->
-              (match (SS.compress head).n with
-               | Tm_constant (Const_reflect _) -> true
+            | Tm_app _ ->
+              (match U.head_and_args_full body with
+               | head, [_] ->
+                 (match (SS.compress head).n with
+                  | Tm_constant (Const_reflect _) -> true
+                  | _ -> false)
                | _ -> false)
             | _ -> false)
         then
@@ -2824,6 +2876,15 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             then Format.print5 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
                              (show x) (show x.sort) (show e) (show subst) (show targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
+            (* If the formal's type is still flex, we may have a fully-determined bound
+               for it from a constraint deferred while checking an earlier argument (see
+               bound_of_flex).  Coercion insertion needs a concrete expected type,
+               so in that case check the argument bare, coerce it towards the bound, and
+               only then relate its type to the flex formal.  Note we do *not* check the
+               argument against the bound itself: the bound is only a lower bound, and the
+               formal may well end up being solved to a supertype of it. *)
+            let bound = bound_of_flex true g.deferred targ in
+            let e0 = e in
             let env = Env.set_expected_typ_maybe_eq env targ (is_eq bqual) in
             if Debug.high ()
             then Format.print4 "Checking arg (%s) %s at type %s with use_eq:%s\n"
@@ -2832,6 +2893,26 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                    (show targ)
                    (bqual |> is_eq |> show);
             let e, c, g_e = tc_term env e in
+            (* Coercion insertion needs a concrete expected type, which a flex formal does
+               not provide.  If we have a bound for it and a coercion would in fact apply,
+               redo the check against the bound.  Note we do not do this unconditionally:
+               the bound is only a lower bound, and checking against it would lose the
+               joins that the deferred constraints on the formal give us. *)
+            let e, c, g_e =
+              match bound with
+              | None -> e, c, g_e
+              | Some b ->
+                (* c.res_typ has been weakened to the (flex) expected type, but the
+                   constraint we just deferred for it records the argument's own type. *)
+                match bound_of_flex false g_e.deferred targ with
+                | None -> e, c, g_e
+                | Some t_e ->
+                  let _, c', _ =
+                    TcUtil.maybe_coerce_lc env e (TcComm.lcomp_of_comp (S.mk_Total t_e)) b in
+                  if TEQ.Equal? (TEQ.eq_tm env c'.res_typ t_e)
+                  then e, c, g_e
+                  else tc_term (Env.set_expected_typ_maybe_eq env b (is_eq bqual)) e0
+            in
             let g = g_ex ++ g ++ g_e in
 //                if debug env Options.High then Format.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
@@ -2851,8 +2932,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             let rec aux norm solve ghead tres : ML _ =
                 let tres = SS.compress tres |> U.unrefine |> U.unmeta_safe in
                 match tres.n with
-                | Tm_arrow {bs; comp=cres'} ->
-                        let bs, cres' = SS.open_comp bs cres' in
+                | Tm_arrow _ ->
+                        let bs, cres' = U.arrow_formals_comp_strict tres in
                         let head_info = (head, chead, ghead, cres') in
                         if Debug.low ()
                         then FStarC.Errors.log_issue tres
@@ -2887,7 +2968,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
        let tf = N.unfold_whnf env tf in
        match (U.unmeta tf).n with
         | Tm_uvar _
-        | Tm_app {hd={n=Tm_uvar _}} ->
+        | Tm_app _
+            when Tm_uvar? (SS.compress (U.leftmost_head (U.unmeta tf))).n ->
             let bs, guard =
                 List.fold_right
                     (fun _ (bs, guard) ->
@@ -2910,8 +2992,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             let g = Rel.solve_deferred_constraints env (Rel.teq env tf bs_cres) in
             check_function_app bs_cres (g ++ guard)
 
-        | Tm_arrow {bs; comp=c} ->
-            let bs, c = SS.open_comp bs c in
+        | Tm_arrow _ ->
+            let bs, c = U.arrow_formals_comp_strict (U.unmeta tf) in
             let head_info = head, chead, ghead, c in
             if Debug.extreme ()
             then Format.print4 "######tc_args of head %s @ %s with formals=%s and result type=%s\n"
@@ -2944,7 +3026,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
 and maybe_elaborate_short_circuit_args env0 head args
   : ML (option (term & lcomp & guard_t))
   = (* Make sure to collect args in the head. *)
-    let head, args' = U.head_and_args head in
+    let head, args' = U.head_and_args_full head in
     let args = args'@args in
     match (U.un_uinst head).n with
     | Tm_fvar fv when S.fv_eq_lid fv Const.op_And || S.fv_eq_lid fv Const.op_Or ->
@@ -2993,8 +3075,11 @@ and maybe_elaborate_short_circuit_args env0 head args
 and check_short_circuit_args env head chead g_head args expected_topt : ML (term & lcomp & guard_t) =
     let r = Env.get_range env in
     let tf = SS.compress (U.comp_result chead) in
-    match tf.n with
-        | Tm_arrow {bs; comp=c} when (U.is_total_comp c && List.length bs=List.length args) ->
+    let formals_opt = match tf.n with
+      | Tm_arrow _ -> Some (U.arrow_formals_comp_strict tf)
+      | _ -> None in
+    match formals_opt with
+        | Some (bs, c) when (U.is_total_comp c && List.length bs=List.length args) ->
           let res_t = U.comp_result c in
           let args, guard, ghost =
             List.fold_left2
@@ -3046,7 +3131,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
     let expected_pat_typ env pos scrutinee_t : ML typ  =
         let rec aux norm t : ML _ =
             let t = U.unrefine t in
-            let head, args = U.head_and_args t in
+            let head, args = U.head_and_args_full t in
             match (SS.compress head).n with
             | Tm_uinst ({n=Tm_fvar f}, us) -> unfold_once t f us args
             | Tm_fvar f -> unfold_once t f [] args
@@ -3086,11 +3171,11 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
          in
         raise_error p0.p Errors.Fatal_MismatchedPatternType msg
        in
-       let head_s, args_s = U.head_and_args scrutinee_t in
+       let head_s, args_s = U.head_and_args_full scrutinee_t in
        let pat_t = N.normalize [Env.Beta] env pat_t in
        match U.un_uinst head_s with
        | {n=Tm_fvar _} ->
-           let head_p, args_p = U.head_and_args pat_t in
+           let head_p, args_p = U.head_and_args_full pat_t in
            if Rel.teq_nosmt_force env head_p head_s
            then match (U.un_uinst head_p).n with
                 | Tm_fvar f ->
@@ -3137,7 +3222,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
            g
     in
     let type_of_simple_pat env (e:term) : ML (term & typ & list bv & guard_t & bool) =
-        let head, args = U.head_and_args e in
+        let head, args = U.head_and_args_full e in
         match head.n with
         | Tm_uinst ({n=Tm_fvar _}, _)
         | Tm_fvar _ ->
@@ -3278,7 +3363,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
           //                if we can't then (lax) typechecking later will infer them
           //
           let ty_args =
-            let hd, args = U.head_and_args t in
+            let hd, args = U.head_and_args_full t in
             match (hd |> SS.compress |> U.un_uinst).n with
             | Tm_fvar fv ->
               fv |> lid_of_fv |> Env.num_inductive_ty_params env
@@ -3497,7 +3582,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
                   | _ -> failwith "Impossible: expected a simple pattern"
               in
               let us = 
-                let hd, _ = U.head_and_args simple_pat_e in
+                let hd, _ = U.head_and_args_full simple_pat_e in
                 match (SS.compress hd).n with
                 | Tm_fvar _ -> []
                 | Tm_uinst(_, us) -> us
@@ -3709,8 +3794,9 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
                 then failwith "Impossible: nullary patterns must be data constructors"
                 else discriminate (force_scrutinee ()) (head_constructor pat_exp)
 
-            | Pat_cons (_, _, pat_args), Tm_app {hd=head; args} ->
+            | Pat_cons (_, _, pat_args), Tm_app _ ->
                 //application pattern
+                let head, args = U.head_and_args_full pat_exp in
                 let f = head_constructor head in
                 if not (Env.is_datacon env f)
                 || List.length pat_args <> List.length args
@@ -4413,8 +4499,16 @@ and check_let_recs env lbts : ML _ =
             else let inner = U.abs bs1 t lcomp in
                  let inner = SS.close bs0 inner in
                  let bs0 = SS.close_binders bs0 in
-                 S.mk (Tm_abs {bs=bs0;body=inner;rc_opt=None}) inner.pos
-                 // ^ using abs again would flatten the abstraction
+                 (* Under the unary representation, an abstraction "node" ends at
+                    the binder carrying a residual comp. [inner] is a lambda, hence
+                    Tot, so this marker is truthful; without it the spine would be
+                    indistinguishable from a single [arity + |bs1|]-binder node and
+                    tc_abs would compute the wrong decreases clause. *)
+                 let node_rc = { residual_effect = Const.effect_Tot_lid;
+                                 residual_typ = None;
+                                 residual_flags = [] } in
+                 S.mk_Tm_abs bs0 inner (Some node_rc) inner.pos
+                 // ^ mk_Tm_abs does not close/flatten; using U.abs would flatten the abstraction
         in
         (* / HACK *)
 
@@ -4681,14 +4775,17 @@ let level_of_type env e t : ML _ =
 let rec apply_well_typed env (t_hd:typ) (args:args) : ML (option typ) =
   if Nil? args
   then Some t_hd
-  else match (N.unfold_whnf env t_hd).n with
-       | Tm_arrow {bs; comp=c} ->
+  else
+    let thd = N.unfold_whnf env t_hd in
+    match thd.n with
+       | Tm_arrow _ ->
+         let bs, c = U.arrow_formals_comp_ln_strict thd in
          let n_args = List.length args in
          let n_bs = List.length bs in
          let bs, args, t, remaining_args =  (* bs (opened), args (length args = length bs), comp result type, remaining args *)
            if n_args < n_bs
            then let bs, rest = BU.first_N n_args bs in
-                let t = S.mk (Tm_arrow {bs=rest; comp=c}) t_hd.pos in
+                let t = S.mk_Tm_arrow rest c t_hd.pos in
                 let bs, c = SS.open_comp bs (S.mk_Total t) in
                 bs, args, U.comp_result c, []
            else let bs, c = SS.open_comp bs c in
@@ -4732,7 +4829,7 @@ let rec universe_of_aux env e : ML term =
      let e = N.normalize [] env e in
      universe_of_aux env e
    //we expect to compute (Type u); so an abstraction always fails
-   | Tm_abs {bs; body=t} ->
+   | Tm_abs _ ->
      level_of_type_fail env e "arrow type"
    //these next few cases are easy; we just use the type stored at the node
    | Tm_uvar (u, s) -> SS.subst' s (U.ctx_uvar_typ u)
@@ -4774,8 +4871,8 @@ let rec universe_of_aux env e : ML term =
    //the refinement formula plays no role in the universe computation; so skip it
    | Tm_refine {b=x} -> universe_of_aux env x.sort
    //U_max(univ_of bs, univ_of c)
-   | Tm_arrow {bs; comp=c} ->
-     let bs, c = SS.open_comp bs c in
+   | Tm_arrow _ ->
+     let bs, c = U.arrow_formals_comp_strict e in
      let env = Env.push_binders env bs in
      let us = List.map (fun ({binder_bv=b}) -> level_of_type env b.sort (universe_of_aux env b.sort)) bs in
      let u_res =
@@ -4785,7 +4882,8 @@ let rec universe_of_aux env e : ML term =
      let u = N.normalize_universe env (S.U_max (u_c::us)) in
      S.mk (Tm_type u) e.pos
    //See the comment at the top of this function; we just compute the universe of hd's result type
-   | Tm_app {hd; args} ->
+   | Tm_app _ ->
+     let hd, args = U.head_and_args_full e in
      let rec type_of_head retry env hd args : ML _ =
         let hd = SS.compress hd in
         match hd.n with
@@ -4807,7 +4905,7 @@ let rec universe_of_aux env e : ML term =
         | Tm_match {brs=b::_} ->  //AR: TODO: use return annotation? Or the residual_comp?
           let (pat, _, tm) = SS.open_branch b in
           let bvs = Syntax.pat_bvs pat in
-          let hd, args' = U.head_and_args tm in
+          let hd, args' = U.head_and_args_full tm in
           type_of_head retry (Env.push_bvs env bvs) hd (args'@args)
         | _ when retry ->
           //head is either an abs, so we have a beta-redex
@@ -4816,7 +4914,7 @@ let rec universe_of_aux env e : ML term =
           //     this is calling itself with the `e` from
           //     universe_of_aux and splitting it again.
           let e = N.normalize [Env.Beta; Env.DoNotUnfoldPureLets] env e in
-          let hd, args = U.head_and_args e in
+          let hd, args = U.head_and_args_full e in
           type_of_head false env hd args
         | _ ->
           let env, _ = Env.clear_expected_typ env in
@@ -4888,7 +4986,9 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_lazy i ->
     __typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
 
-  | Tm_abs {bs; body; rc_opt=Some ({residual_effect=eff; residual_typ=tbody})} ->  //AR: maybe keep residual univ too?
+  | Tm_abs _ ->
+    (match U.abs_formals_ln t with
+     | bs, body, Some ({residual_effect=eff; residual_typ=tbody}) ->  //AR: maybe keep residual univ too?
     let is_tot = Ident.lid_equals eff Const.effect_Tot_lid in
     let is_gtot = Ident.lid_equals eff Const.effect_GTot_lid in
     if not (is_tot || is_gtot) then None
@@ -4905,40 +5005,38 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
         let u = universe_of (Env.push_binders env bs) tbody in
         Some (U.arrow bs (if is_tot then S.mk_Total tbody else S.mk_GTotal tbody)))
 
-  | Tm_abs _ -> None
+     | _ -> None)
 
   | Tm_refine {b=x} -> __typeof_tot_or_gtot_term_fastpath env x.sort must_tot
 
-  (* Unary operators. Explicitly curry extra arguments *)
-  | Tm_app {hd={n=Tm_constant Const_range_of}; args=a::hd::rest} ->
-    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
-    let unary_op, _ = U.head_and_args t in
-    let head = mk (Tm_app {hd=unary_op; args=[a]}) (Range.union_ranges unary_op.pos (fst a).pos) in
-    let t = mk (Tm_app {hd=head; args=rest}) t.pos in
-    __typeof_tot_or_gtot_term_fastpath env t must_tot
+  | Tm_app _ ->
+    let hd, args = U.head_and_args_full t in
+    let apply_head hd args =
+      let t_hd = __typeof_tot_or_gtot_term_fastpath env hd must_tot in
+      Option.bind t_hd (fun t_hd ->
+        Option.bind (apply_well_typed env t_hd args) (fun t ->
+          if (effect_ok t) ||
+             (List.for_all (fun (a, _) -> __typeof_tot_or_gtot_term_fastpath env a must_tot |> Some?) args)
+          then Some t
+          else None))
+    in
+    (match (SS.compress hd).n, args with
+     (* Unary operators. Explicitly curry extra arguments *)
+     | Tm_constant Const_range_of, a::rest when Cons? rest ->
+       apply_head (S.mk_Tm_app hd [a] (Range.union_ranges hd.pos (fst a).pos)) rest
 
-  (* Binary operators *)
-  | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=a1::a2::hd::rest} ->
-    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
-    let unary_op, _ = U.head_and_args t in
-    let head = mk (Tm_app {hd=unary_op; args=[a1; a2]}) (Range.union_ranges unary_op.pos (fst a1).pos) in
-    let t = mk (Tm_app {hd=head; args=rest}) t.pos in
-    __typeof_tot_or_gtot_term_fastpath env t must_tot
+     (* Binary operators *)
+     | Tm_constant Const_set_range_of, a1::a2::rest when Cons? rest ->
+       apply_head (S.mk_Tm_app hd [a1; a2] (Range.union_ranges hd.pos (fst a1).pos)) rest
 
-  | Tm_app {hd={n=Tm_constant Const_range_of}; args=[_]} ->
-    Some (t_range)
+     | Tm_constant Const_range_of, [_] ->
+       Some (t_range)
 
-  | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=[(t, _); _]} ->
-    __typeof_tot_or_gtot_term_fastpath env t must_tot
+     | Tm_constant Const_set_range_of, [(t, _); _] ->
+       __typeof_tot_or_gtot_term_fastpath env t must_tot
 
-  | Tm_app {hd; args} ->
-    let t_hd = __typeof_tot_or_gtot_term_fastpath env hd must_tot in
-    Option.bind t_hd (fun t_hd ->
-      Option.bind (apply_well_typed env t_hd args) (fun t ->
-        if (effect_ok t) ||
-           (List.for_all (fun (a, _) -> __typeof_tot_or_gtot_term_fastpath env a must_tot |> Some?) args)
-        then Some t
-        else None))
+     | _ ->
+       apply_head hd args)
 
   | Tm_ascribed {tm=t; asc=(Inl k, _, _)} ->
     if effect_ok k
@@ -5017,7 +5115,8 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : ML (option liden
   | Tm_arrow _ -> Const.effect_PURE_lid |> Some
   | Tm_refine _ -> Const.effect_PURE_lid |> Some
 
-  | Tm_app {hd; args} ->
+  | Tm_app _ ->
+    let hd, args = U.head_and_args_full t in
     let join_effects eff1 eff2 =
       let eff1, eff2 = Env.norm_eff_name env eff1, Env.norm_eff_name env eff2 in
       let pure, ghost = Const.effect_PURE_lid, Const.effect_GHOST_lid in
@@ -5041,8 +5140,10 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : ML (option liden
             | Tm_refine {b=x} -> maybe_arrow x.sort
             | Tm_ascribed {tm=t} -> maybe_arrow t
             | _ -> t in
-          match (maybe_arrow t_hd).n with
-          | Tm_arrow {bs; comp=c} ->
+          let ta = maybe_arrow t_hd in
+          match ta.n with
+          | Tm_arrow _ ->
+            let bs, c = U.arrow_formals_comp_ln_strict ta in
             let eff_app =
               if List.length args < List.length bs
               then Const.effect_PURE_lid

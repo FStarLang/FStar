@@ -15,6 +15,7 @@
 *)
 module FStarC.Reflection.V2.NBEEmbeddings
 
+module RD = FStarC.Reflection.V2.Data
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
@@ -209,6 +210,42 @@ let e_env =
     in
     mk_emb' embed_env unembed_env fstar_refl_env_fv
 
+let e_int_signedness =
+    let embed_int_signedness _ (s:int_signedness) : ML t =
+        match s with
+        | Signed -> mkConstruct ref_Signed.fv [] []
+        | Unsigned -> mkConstruct ref_Unsigned.fv [] []
+    in
+    let unembed_int_signedness _ (t:t) : ML (option int_signedness) =
+        match t.nbe_t with
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Signed.lid ->
+            Some Signed
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Unsigned.lid ->
+            Some Unsigned
+        | _ -> None
+    in
+    mk_emb' embed_int_signedness unembed_int_signedness fstar_refl_int_signedness_fv
+
+let e_int_width =
+    let embed_int_width _ (w:int_width) : ML t =
+        match w with
+        | Int8 -> mkConstruct ref_Int8.fv [] []
+        | Int16 -> mkConstruct ref_Int16.fv [] []
+        | Int32 -> mkConstruct ref_Int32.fv [] []
+        | Int64 -> mkConstruct ref_Int64.fv [] []
+        | Sizet -> mkConstruct ref_Sizet.fv [] []
+    in
+    let unembed_int_width _ (t:t) : ML (option int_width) =
+        match t.nbe_t with
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Int8.lid -> Some Int8
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Int16.lid -> Some Int16
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Int32.lid -> Some Int32
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Int64.lid -> Some Int64
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Sizet.lid -> Some Sizet
+        | _ -> None
+    in
+    mk_emb' embed_int_width unembed_int_width fstar_refl_int_width_fv
+
 let e_vconst =
     let embed_const cb (c:vconst) : ML t =
         match c with
@@ -216,6 +253,11 @@ let e_vconst =
         | C_True         -> mkConstruct ref_C_True.fv    [] []
         | C_False        -> mkConstruct ref_C_False.fv   [] []
         | C_Int i        -> mkConstruct ref_C_Int.fv     [] [as_arg (mk_t <| Constant (Int i))]
+        | C_MachineInt (i, signedness, width) ->
+            mkConstruct ref_C_MachineInt.fv []
+              [as_arg (mk_t <| Constant (Int i));
+               as_arg (embed e_int_signedness cb signedness);
+               as_arg (embed e_int_width cb width)]
         | C_String s     -> mkConstruct ref_C_String.fv  [] [as_arg (embed e_string cb s)]
         | C_Range r      -> mkConstruct ref_C_Range.fv   [] [as_arg (embed e_range cb r)]
         | C_Reify        -> mkConstruct ref_C_Reify.fv   [] []
@@ -235,6 +277,13 @@ let e_vconst =
         | Construct (fv, [], [(i, _)]) when S.fv_eq_lid fv ref_C_Int.lid ->
             Option.bind (unembed e_int cb i) (fun i ->
             Some <| C_Int i)
+
+        | Construct (fv, [], [(width, _); (signedness, _); (i, _)])
+            when S.fv_eq_lid fv ref_C_MachineInt.lid ->
+            Option.bind (unembed e_int cb i) (fun i ->
+            Option.bind (unembed e_int_signedness cb signedness) (fun signedness ->
+            Option.bind (unembed e_int_width cb width) (fun width ->
+            Some <| C_MachineInt (i, signedness, width))))
 
         | Construct (fv, [], [(s, _)]) when S.fv_eq_lid fv ref_C_String.lid ->
             Option.bind (unembed e_string cb s) (fun s ->

@@ -197,12 +197,12 @@ let __proj__Mkprefix_match__item__completion (projectee : prefix_match) :
 type path_elem = {
   imports: Prims.string Prims.list ;
   segment: prefix_match }
+type path = path_elem Prims.list
 let __proj__Mkpath_elem__item__imports (projectee : path_elem) :
   Prims.string Prims.list=
   match projectee with | { imports; segment;_} -> imports
 let __proj__Mkpath_elem__item__segment (projectee : path_elem) :
   prefix_match= match projectee with | { imports; segment;_} -> segment
-type path = path_elem Prims.list
 let matched_prefix_of_path_elem (elem : path_elem) :
   Prims.string FStar_Pervasives_Native.option= (elem.segment).prefix
 type query = Prims.string Prims.list

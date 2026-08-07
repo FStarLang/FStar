@@ -80,7 +80,6 @@ type timed_fname =
 dependencies, as they carry enough information to determine whether a dependency
 is stale. **)
 type repl_task =
-  | LDInterleaved of timed_fname & timed_fname (* (interface * implementation) *)
   | LDSingle of timed_fname (* interface or implementation *)
   | LDInterfaceOfCurrentFile of timed_fname (* interface *)
   | PushFragment of either PI.input_frag FStarC.Parser.AST.decl (* code fragment *)
@@ -89,7 +88,6 @@ type repl_task =
                   & list string (* dependences loaded on the fly *)
   | Noop (* Used by compute, PushPartialCheckedFile *)
 
-val mk_ld_interleaved (iface impl:string) : ML repl_task
 val mk_ld_single (filename:string) : ML repl_task
 
 type full_buffer_request_kind =

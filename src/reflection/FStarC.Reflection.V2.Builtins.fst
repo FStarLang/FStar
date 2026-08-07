@@ -15,6 +15,10 @@
 *)
 module FStarC.Reflection.V2.Builtins
 
+open FStarC.Order
+open FStarC.Syntax.Embeddings
+open FStarC.Ident
+module S   = FStarC.Syntax.Syntax
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
@@ -136,10 +140,28 @@ let pack_fv (ns:list string) : ML fv =
          fallback ()
 
 
+let inspect_int_signedness (s:C.signedness) : RD.int_signedness =
+    match s with
+    | C.Signed -> RD.Signed
+    | C.Unsigned -> RD.Unsigned
+
+let inspect_int_width (w:C.width) : RD.int_width =
+    match w with
+    | C.Int8 -> RD.Int8
+    | C.Int16 -> RD.Int16
+    | C.Int32 -> RD.Int32
+    | C.Int64 -> RD.Int64
+    | C.Sizet -> RD.Sizet
+
 let inspect_const (c:sconst) : ML vconst =
     match c with
     | FStarC.Const.Const_unit -> C_Unit
-    | FStarC.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
+    | FStarC.Const.Const_int (s, None) -> C_Int (BU.int_of_string s)
+    | FStarC.Const.Const_int (s, Some (signedness, width)) ->
+      C_MachineInt (
+        BU.int_of_string s,
+        inspect_int_signedness signedness,
+        inspect_int_width width)
     | FStarC.Const.Const_bool true  -> C_True
     | FStarC.Const.Const_bool false -> C_False
     | FStarC.Const.Const_string (s, _) -> C_String s
@@ -207,38 +229,18 @@ let rec inspect_ln (t:term) : ML term_view =
     | Tm_ascribed {tm=t; asc=(Inr cty, tacopt, eq)} ->
         Tv_AscribedC (t, cty, tacopt, eq)
 
-    | Tm_app {args=[]} ->
-        failwith "inspect_ln: empty arguments on Tm_app"
-
-    | Tm_app {hd; args} ->
-        // We split at the last argument, since the term_view does not
-        // expose n-ary lambdas buy unary ones.
-        let (a, q) = last args in
+    | Tm_app {hd; arg=(a, q)} ->
         let q' = inspect_aqual q in
-        Tv_App (U.mk_app hd (init args), (a, q'))
+        Tv_App (hd, (a, q'))
 
-    | Tm_abs {bs=[]} ->
-        failwith "inspect_ln: empty arguments on Tm_abs"
-
-    | Tm_abs {bs=b::bs; body=t; rc_opt=k} ->
-        let body =
-            match bs with
-            | [] -> t
-            | bs -> S.mk (Tm_abs {bs; body=t; rc_opt=k}) t.pos
-        in
+    | Tm_abs {b; body} ->
         Tv_Abs (b, body)
 
     | Tm_type u ->
         Tv_Type u
 
-    | Tm_arrow {bs=[]} ->
-        failwith "inspect_ln: empty binders on arrow"
-
-    | Tm_arrow _ ->
-        begin match U.arrow_one_ln t with
-        | Some (b, c) -> Tv_Arrow (b, c)
-        | None -> failwith "impossible"
-        end
+    | Tm_arrow {b; comp=c} ->
+        Tv_Arrow (b, c)
 
     | Tm_refine {b=bv; phi=t} ->
         Tv_Refine (S.mk_binder bv, t)
@@ -348,6 +350,21 @@ let pack_const (c:vconst) : ML sconst =
     match c with
     | C_Unit         -> C.Const_unit
     | C_Int i        -> C.Const_int (show i, None)
+    | C_MachineInt (i, signedness, width) ->
+      let signedness =
+        match signedness with
+        | RD.Signed -> C.Signed
+        | RD.Unsigned -> C.Unsigned
+      in
+      let width =
+        match width with
+        | RD.Int8 -> C.Int8
+        | RD.Int16 -> C.Int16
+        | RD.Int32 -> C.Int32
+        | RD.Int64 -> C.Int64
+        | RD.Sizet -> C.Sizet
+      in
+      C.Const_int (show i, Some (signedness, width))
     | C_True         -> C.Const_bool true
     | C_False        -> C.Const_bool false
     | C_String s     -> C.Const_string (s, Range.dummyRange)
@@ -387,10 +404,10 @@ let pack_ln (tv:term_view) : ML term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        mk (Tm_abs {bs=[b]; body=t; rc_opt=None}) t.pos // TODO: effect?
+        mk (Tm_abs {b; body=t; rc_opt=None}) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        mk (Tm_arrow {bs=[b]; comp=c}) c.pos
+        mk (Tm_arrow {b; comp=c}) c.pos
 
     | Tv_Type u ->
         mk (Tm_type u) Range.dummyRange
@@ -932,4 +949,3 @@ let subst_comp (s : list subst_elt) (c : comp) : ML comp =
 
 let range_of_term (t:term) = t.pos
 let range_of_sigelt (s:sigelt) = s.sigrng
-

@@ -1,0 +1,6 @@
+* Error 233 at IfacePulseSkipCircular.fst(16,0-20,7):
+  - Expected the definition of
+      IfacePulseSkipCircular.bad
+      to precede
+      IfacePulseSkipCircular.other
+

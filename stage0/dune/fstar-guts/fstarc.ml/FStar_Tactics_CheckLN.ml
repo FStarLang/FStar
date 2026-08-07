@@ -8,11 +8,7 @@ let rec for_all :
     match l with
     | [] -> (fun uu___ -> true)
     | x::xs ->
-        FStar_Tactics_Effect.tac_bind () () (p x)
-          (fun uu___ ->
-             if uu___
-             then for_all p xs
-             else FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false))
+        (fun ps -> let x1 = p x ps in if x1 then for_all p xs ps else false)
 let rec check (t : FStar_Tactics_NamedView.term) :
   (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
@@ -69,50 +65,35 @@ and check_comp (c : FStar_Tactics_NamedView.comp) :
   | FStarC_Reflection_V2_Data.C_Total typ -> check typ
   | FStarC_Reflection_V2_Data.C_GTotal typ -> check typ
   | FStarC_Reflection_V2_Data.C_Lemma (pre, post, pats) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () () (check pre)
-           (fun uu___ uu___1 -> Prims.op_Negation uu___))
-        (fun uu___ ->
-           if uu___
-           then fun uu___1 -> false
-           else
-             FStar_Tactics_Effect.tac_bind () ()
-               (FStar_Tactics_Effect.tac_bind () () (check post)
-                  (fun uu___1 uu___2 -> Prims.op_Negation uu___1))
-               (fun uu___1 ->
-                  if uu___1 then fun uu___2 -> false else check pats))
+      (fun ps ->
+         let x = let x1 = check pre ps in Prims.op_Negation x1 in
+         if x
+         then false
+         else
+           (let x1 = let x2 = check post ps in Prims.op_Negation x2 in
+            if x1 then false else check pats ps))
   | FStarC_Reflection_V2_Data.C_Eff (us, nm, res, args, decrs) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () () (for_all check_u us)
-           (fun uu___ uu___1 -> Prims.op_Negation uu___))
-        (fun uu___ ->
-           if uu___
-           then fun uu___1 -> false
-           else
-             FStar_Tactics_Effect.tac_bind () ()
-               (FStar_Tactics_Effect.tac_bind () () (check res)
-                  (fun uu___1 uu___2 -> Prims.op_Negation uu___1))
-               (fun uu___1 ->
-                  if uu___1
-                  then fun uu___2 -> false
-                  else
-                    FStar_Tactics_Effect.tac_bind () ()
-                      (FStar_Tactics_Effect.tac_bind () ()
-                         (for_all
-                            (fun uu___2 ->
-                               match uu___2 with | (a, q) -> check a) args)
-                         (fun uu___2 uu___3 -> Prims.op_Negation uu___2))
-                      (fun uu___2 ->
-                         if uu___2
-                         then fun uu___3 -> false
-                         else
-                           FStar_Tactics_Effect.tac_bind () ()
-                             (FStar_Tactics_Effect.tac_bind () ()
-                                (for_all check decrs)
-                                (fun uu___3 uu___4 ->
-                                   Prims.op_Negation uu___3))
-                             (fun uu___3 uu___4 ->
-                                if uu___3 then false else true))))
+      (fun ps ->
+         let x = let x1 = for_all check_u us ps in Prims.op_Negation x1 in
+         if x
+         then false
+         else
+           (let x1 = let x2 = check res ps in Prims.op_Negation x2 in
+            if x1
+            then false
+            else
+              (let x2 =
+                 let x3 =
+                   for_all
+                     (fun uu___ -> match uu___ with | (a, q) -> check a) args
+                     ps in
+                 Prims.op_Negation x3 in
+               if x2
+               then false
+               else
+                 (let x3 =
+                    let x4 = for_all check decrs ps in Prims.op_Negation x4 in
+                  if x3 then false else true))))
 and check_br (b : FStar_Tactics_NamedView.branch) :
   (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps -> let x = b in match x with | (p, t) -> check t ps

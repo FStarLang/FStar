@@ -16,6 +16,7 @@
 
 module Pulse.Extract.Main
 
+open Pulse.Typing.Env { env }
 open Pulse.Syntax.Base
 open Pulse.Syntax.Pure
 open Pulse.Syntax.Printer

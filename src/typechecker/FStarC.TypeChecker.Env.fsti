@@ -226,6 +226,33 @@ and env = {
   only when a definition for it is checked. At the of checking a module,
   if anything remains here, we fail. *)
   missing_decl : RBSet.t lident;
+
+  (* When checking an implementation A.fst of an interface A.fsti, this holds
+  the *already checked* sigelts of A.fsti, in interface order, that the
+  implementation has not discharged yet. Sigelts are popped off the front as
+  the implementation defines the corresponding names; interface sigelts that
+  are not `val`s are simply copied over verbatim (never rechecked). At the end
+  of the module a non-empty list is an error. *)
+  iface_todo : list sigelt;
+
+  (* The names defined by the entries of [iface_todo], i.e. the part of A.fsti
+  that the implementation has not reached yet. They are *not* in scope: an
+  interface declaration only becomes visible to the implementation once the
+  to-do list has advanced past it, exactly as it would have been under the old
+  syntactic interleaving. Keeping them in scope is unsound: the implementation
+  could discharge a `val` using a later definition of the interface that is
+  itself justified by that very `val`, closing a circular proof. *)
+  iface_hidden : RBSet.t lident;
+
+  (* The set of names declared by A.fsti, when checking A.fst. Unlike
+  [iface_todo] this is not consumed: it is used to decide which definitions of
+  the implementation are module-private (and hence marked [KrmlPrivate] for
+  extraction). *)
+  iface_lids : option (RBSet.t lident);
+
+  (* The subset of [iface_lids] that the interface declares with a `val`, i.e.
+  the names the implementation is expected to define. *)
+  iface_val_lids : RBSet.t lident;
 }
 and solver_depth_t = int & int & int
 and solver_t = {
@@ -285,6 +312,35 @@ val record_val_for (e:env) (l:lident) : ML env
 val record_definition_for (e:env) (l:lident) : ML env
 
 val missing_definition_list (e:env) : ML (list lident)
+
+(* The interface "to-do list" of the module currently being checked. See the
+[iface_todo] field of [env]. *)
+
+val set_iface_todo (e:env) (ses:list sigelt) : ML env
+
+val iface_todo (e:env) : list sigelt
+
+(* Advance the to-do list: [consumed] entries have been discharged (or copied
+into the implementation) and thereby come into scope, [remaining] is what is
+left of the list. *)
+val consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : ML env
+
+(* Is [l] a name of the interface that the implementation has not reached yet,
+and which is therefore not in scope? *)
+val is_iface_hidden (e:env) (l:lident) : ML bool
+
+(* Record the names declared by the interface of the module being checked;
+[vals] are the ones declared with a `val`. *)
+val set_iface_lids (e:env) (ls:list lident) (vals:list lident) : ML env
+
+(* Does the module being checked have an interface? *)
+val has_iface (e:env) : bool
+
+(* Is [l] declared by the interface of the module being checked? *)
+val declared_in_iface (e:env) (l:lident) : ML bool
+
+(* Does the interface of the module being checked contain a `val` for [l]? *)
+val has_iface_val (e:env) (l:lident) : ML bool
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits

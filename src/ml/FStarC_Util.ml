@@ -824,6 +824,60 @@ let load_2values_from_file (fname:string) =
       channel
   with | _ -> None
 
+(* See FStarC.Util.fsti for the layout of this container format. *)
+let save_3values_to_file (fname:string) value1 value2 value3 =
+  try
+    maybe_create_parent fname;
+    let b12 = Marshal.to_string value1 [] ^ Marshal.to_string value2 [] in
+    let b3 = Marshal.to_string value3 [] in
+    (* A Merkle-style digest of the two halves, so that we never have to
+       materialize the concatenation of the whole payload. *)
+    let dig = BatDigest.to_hex (BatDigest.string (BatDigest.string b12 ^ BatDigest.string b3)) in
+    let channel = open_out_bin fname in
+    BatPervasives.finally
+      (fun () -> close_out channel)
+      (fun channel ->
+        output_value channel dig;
+        output_binary_int channel (String.length b12);
+        output_string channel b12;
+        output_string channel b3)
+      channel;
+    dig
+  with
+  | e -> delete_file fname;
+         raise e
+
+let with_in_channel_opt (fname:string) (f: in_channel -> 'a) : 'a option =
+  try
+    let channel = open_in_bin fname in
+    BatPervasives.finally
+      (fun () -> close_in channel)
+      (fun channel -> Some (f channel))
+      channel
+  with | _ -> None
+
+let load_1value_from_file3 (fname:string) =
+  with_in_channel_opt fname (fun channel ->
+    let dig : string = input_value channel in
+    let _len = input_binary_int channel in
+    let v1 = input_value channel in
+    (dig, v1))
+
+let load_2values_from_file3 (fname:string) =
+  with_in_channel_opt fname (fun channel ->
+    let dig : string = input_value channel in
+    let _len = input_binary_int channel in
+    let v1 = input_value channel in
+    let v2 = input_value channel in
+    (dig, v1, v2))
+
+let load_3rd_value_from_file3 (fname:string) =
+  with_in_channel_opt fname (fun channel ->
+    let _dig : string = input_value channel in
+    let len = input_binary_int channel in
+    seek_in channel (pos_in channel + len);
+    input_value channel)
+
 let print_exn e =
   Printexc.to_string e
 

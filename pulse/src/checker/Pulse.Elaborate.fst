@@ -15,6 +15,9 @@
 *)
 
 module Pulse.Elaborate
+include Pulse.Elaborate.Core
+open Pulse.Syntax.Naming
+open Pulse.Elaborate.Pure
 module RT = FStar.Reflection.Typing
 open FStar.List.Tot
 open Pulse.Syntax

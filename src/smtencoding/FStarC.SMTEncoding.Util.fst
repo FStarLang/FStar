@@ -22,6 +22,7 @@ open FStarC.Syntax.Syntax
 open FStarC.SMTEncoding.Term
 open FStarC.Ident
 
+module Term = FStarC.SMTEncoding.Term
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
@@ -34,76 +35,68 @@ let mkAssume x : ML decl =
         assumption_caption=cap;
         assumption_term=tm;
         assumption_fact_ids=[];
-        assumption_free_names=free_top_level_names tm;
     })
-let norng f = fun x -> f x Range.dummyRange
-let norng2 f = fun x y -> f x y Range.dummyRange
-let norng3 f = fun x y z -> f x y z Range.dummyRange
-let norng4 f = fun x y z w -> f x y z w Range.dummyRange
-let _fv_empty : S.memo fvs = alloc None
-let mkTrue : term  = {tm=App(TrueOp, []); freevars=_fv_empty; rng=Range.dummyRange}
-let mkFalse : term = {tm=App(FalseOp, []); freevars=alloc None; rng=Range.dummyRange}
-let mkInteger  = norng mkInteger
-let mkInteger' = norng mkInteger'
-let mkReal     = norng mkReal
-let mkBoundV   = norng mkBoundV
-let mkFreeV    = norng mkFreeV
-let mkApp'     = norng mkApp'
-let mkApp      = norng mkApp
-let mkNot = norng mkNot
-let mkMinus = norng mkMinus
-let mkAnd = norng mkAnd
-let mkOr = norng mkOr
-let mkImp = norng mkImp
-let mkIff = norng mkIff
-let mkEq = norng mkEq
-let mkLT = norng mkLT
-let mkLTE = norng mkLTE
-let mkGT = norng mkGT
-let mkGTE = norng mkGTE
-let mkAdd = norng mkAdd
-let mkSub = norng mkSub
-let mkDiv = norng mkDiv
-let mkRealDiv = norng mkRealDiv
-let mkMul = norng mkMul
-let mkMod = norng mkMod
-
-let mkNatToBv sz = norng (mkNatToBv sz)
-let mkBvAnd = norng mkBvAnd
-let mkBvXor = norng mkBvXor
-let mkBvOr = norng mkBvOr
-let mkBvAdd = norng mkBvAdd
-let mkBvSub = norng mkBvSub
-let mkBvShl sz = norng (mkBvShl sz)
-let mkBvShr sz = norng (mkBvShr sz)
-let mkBvRol sz = norng (mkBvRol sz)
-let mkBvRor sz = norng (mkBvRor sz)
-let mkBvUdiv sz = norng (mkBvUdiv sz)
-let mkBvMod sz = norng (mkBvMod sz)
-let mkBvMul sz = norng (mkBvMul sz)
-let mkBvShl' sz = norng (mkBvShl' sz)
-let mkBvShr' sz = norng (mkBvShr' sz)
-let mkBvRol' sz = norng (mkBvRol' sz)
-let mkBvRor' sz = norng (mkBvRor' sz)
-let mkBvUdivUnsafe sz = norng (mkBvUdivUnsafe sz)
-let mkBvModUnsafe  sz = norng (mkBvModUnsafe sz)
-let mkBvMul' sz = norng (mkBvMul' sz)
-let mkBvUlt = norng mkBvUlt
-let mkBvUext sz = norng (mkBvUext sz)
-let mkBvNot = norng mkBvNot
-let mkBvToNat = norng mkBvToNat
-let mkITE = norng mkITE
-let mkCases = norng mkCases
-
-let mk_Term_app  = norng2 mk_Term_app
-let mk_and_l = norng mk_and_l
-let mk_or_l = norng mk_or_l
-let mk_ApplyTT = norng2 mk_ApplyTT
-let mk_String_const = norng mk_String_const
-let mk_Precedes u0 u1 = norng4 (mk_Precedes u0 u1)
-let mk_LexCons = norng3 mk_LexCons
-let mk_lex_t : term = {tm=App(Var "Prims.lex_t", []); freevars=alloc None; rng=Range.dummyRange}
-let mk_LexTop : term = {tm=App(Var "LexTop", []); freevars=alloc None; rng=Range.dummyRange}
+let mkTrue = Term.mkTrue
+let mkFalse = Term.mkFalse
+let mkInteger = Term.mkInteger
+let mkInteger' = Term.mkInteger'
+let mkReal = Term.mkReal
+let mkBoundV = Term.mkBoundV
+let mkFreeV = Term.mkFreeV
+let mkApp' = Term.mkApp'
+let mkApp = Term.mkApp
+let mkNot = Term.mkNot
+let mkMinus = Term.mkMinus
+let mkAnd = Term.mkAnd
+let mkOr = Term.mkOr
+let mkImp = Term.mkImp
+let mkIff = Term.mkIff
+let mkEq = Term.mkEq
+let mkLT = Term.mkLT
+let mkLTE = Term.mkLTE
+let mkGT = Term.mkGT
+let mkGTE = Term.mkGTE
+let mkAdd = Term.mkAdd
+let mkSub = Term.mkSub
+let mkDiv = Term.mkDiv
+let mkRealDiv = Term.mkRealDiv
+let mkMul = Term.mkMul
+let mkMod = Term.mkMod
+let mkNatToBv = Term.mkNatToBv
+let mkBvAnd = Term.mkBvAnd
+let mkBvXor = Term.mkBvXor
+let mkBvOr = Term.mkBvOr
+let mkBvAdd = Term.mkBvAdd
+let mkBvSub = Term.mkBvSub
+let mkBvShl = Term.mkBvShl
+let mkBvShr = Term.mkBvShr
+let mkBvRol = Term.mkBvRol
+let mkBvRor = Term.mkBvRor
+let mkBvUdiv = Term.mkBvUdiv
+let mkBvMod = Term.mkBvMod
+let mkBvMul = Term.mkBvMul
+let mkBvShl' = Term.mkBvShl'
+let mkBvShr' = Term.mkBvShr'
+let mkBvRol' = Term.mkBvRol'
+let mkBvRor' = Term.mkBvRor'
+let mkBvUdivUnsafe = Term.mkBvUdivUnsafe
+let mkBvModUnsafe = Term.mkBvModUnsafe
+let mkBvMul' = Term.mkBvMul'
+let mkBvUlt = Term.mkBvUlt
+let mkBvUext = Term.mkBvUext
+let mkBvNot = Term.mkBvNot
+let mkBvToNat = Term.mkBvToNat
+let mkITE = Term.mkITE
+let mkCases = Term.mkCases
+let mk_Term_app = Term.mk_Term_app
+let mk_and_l = Term.mk_and_l
+let mk_or_l = Term.mk_or_l
+let mk_ApplyTT = Term.mk_ApplyTT
+let mk_String_const = Term.mk_String_const
+let mk_Precedes = Term.mk_Precedes
+let mk_LexCons = Term.mk_LexCons
+let mk_lex_t = Term.mk_lex_t
+let mk_LexTop = Term.mk_LexTop
 
 
 (*
@@ -138,6 +131,6 @@ let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : ML bool =
 
 let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : ML bool =
   match (SS.compress t).n with
-  | Tm_arrow {comp=c} ->
-    c |> U.comp_effect_name |> is_smt_reifiable_effect en
+  | Tm_arrow _ ->
+    snd (U.arrow_node_formals_comp_ln t) |> U.comp_effect_name |> is_smt_reifiable_effect en
   | _ -> false

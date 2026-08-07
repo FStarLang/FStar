@@ -19,6 +19,9 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Common
+open FStarC.Tactics.Common
+open FStarC.Class.Show
+open FStarC.Class.PP
 
 module Env     = FStarC.TypeChecker.Env
 module O       = FStarC.Options

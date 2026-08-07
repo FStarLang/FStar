@@ -34,9 +34,9 @@ let filter (core:unsat_core) (decls:list decl)
               else if BU.starts_with a.assumption_name "@"
               then d::keep, n_retained, n_pruned
               else keep, n_retained, n_pruned+1
-          | Module (name, decls) ->
+          | Module name decls ->
               let keep', n, m = aux decls in
-              Module(name, keep')::keep, n_retained + n, n_pruned + m
+              Module name keep'::keep, n_retained + n, n_pruned + m
           | _ -> d::keep, n_retained, n_pruned)
         ([Caption ("UNSAT CORE USED: " ^ (core |> String.concat ", "))],//start with the unsat core caption at the end
         0,

@@ -174,8 +174,7 @@ let repeat (e:expr) (p:program) (inv:state -> prop)
     (requires triple inv p inv)
     (ensures triple inv (Repeat e p) inv)
   = introduce forall s0. inv s0 ==> inv (snd (run (Repeat e p) s0)) with
-    introduce _ ==> _  with
-      inv_s0 . (
+    introduce _ ==> _  with (
         let n = eval_expr e s0 in
         if n <= 0 then ()
         else repeat_n p inv n
@@ -198,6 +197,9 @@ let consequence (p:program) (pre pre' post post':state -> prop)
 // WPs
 ////////////////////////////////////////////////////////////////////////////////
 
+(* The SMT encoding would otherwise pick the arity of the flattened arrow
+   spine (3); the soundness proof below relies on partial applications. *)
+[@@FStar.Attributes.smt_arity 2]
 //SNIPPET_START: wp$
 let rec wp (c:program) (post: state -> prop) 
   : state -> prop 
@@ -235,14 +237,12 @@ let rec wp_soundness (p:program) (post:state -> prop)
     | Repeat e p ->
       introduce forall s0. wp (Repeat e p) post s0 ==> 
                       post (snd (run (Repeat e p) s0)) with
-      introduce _ ==> _ with
-        _ . ( 
+      introduce _ ==> _ with ( 
           eliminate exists (inv:state -> prop).
                             inv s0 /\                      
                             (forall s. inv s ==> post s) /\
                             (forall s. inv s ==> wp p inv s)
-          returns _
-          with inv_props. (
+          with (
             wp_soundness p inv;
             repeat e p inv
           )

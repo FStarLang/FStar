@@ -399,10 +399,8 @@ let with_fuel_and_diagnostics (settings : query_settings)
       let uu___3 =
         let uu___4 =
           let uu___5 =
-            let uu___6 =
-              FStarC_Class_Show.show FStarC_Class_Show.showable_int rlimit in
-            ("rlimit", uu___6) in
-          FStarC_SMTEncoding_Term.SetOption uu___5 in
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int rlimit in
+          FStarC_SMTEncoding_Term.SetOption ("rlimit", uu___5) in
         [uu___4;
         FStarC_SMTEncoding_Term.Echo "<initial_stats>";
         FStarC_SMTEncoding_Term.GetStatistics;
@@ -2127,17 +2125,13 @@ let encode_and_ask (can_split : Prims.bool) (is_retry : Prims.bool)
                  | FStarC_SMTEncoding_Term.Assume
                      {
                        FStarC_SMTEncoding_Term.assumption_term =
-                         {
-                           FStarC_SMTEncoding_Term.tm =
-                             FStarC_SMTEncoding_Term.App
-                             (FStarC_SMTEncoding_Term.FalseOp, uu___6);
-                           FStarC_SMTEncoding_Term.freevars = uu___7;
-                           FStarC_SMTEncoding_Term.rng = uu___8;_};
-                       FStarC_SMTEncoding_Term.assumption_caption = uu___9;
-                       FStarC_SMTEncoding_Term.assumption_name = uu___10;
-                       FStarC_SMTEncoding_Term.assumption_fact_ids = uu___11;
+                         FStarC_SMTEncoding_Term.App
+                         (FStarC_SMTEncoding_Term.FalseOp, uu___6, uu___7);
+                       FStarC_SMTEncoding_Term.assumption_caption = uu___8;
+                       FStarC_SMTEncoding_Term.assumption_name = uu___9;
+                       FStarC_SMTEncoding_Term.assumption_fact_ids = uu___10;
                        FStarC_SMTEncoding_Term.assumption_free_names =
-                         uu___12;_}
+                         uu___11;_}
                      -> ([], ans_ok)
                  | uu___6 when tcenv1.FStarC_TypeChecker_Env.admit ->
                      ([], ans_ok)

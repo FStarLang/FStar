@@ -46,9 +46,7 @@ let rec l_revert_all (bs : FStar_Tactics_NamedView.binding Prims.list) :
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   match bs with
   | [] -> (fun uu___ -> ())
-  | uu___::tl ->
-      FStar_Tactics_Effect.tac_bind () () (l_revert ())
-        (fun uu___1 -> l_revert_all tl)
+  | uu___::tl -> (fun ps -> l_revert () ps; l_revert_all tl ps)
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_revert_all"
     (Prims.of_int 2)
@@ -425,7 +423,7 @@ let rec visit
     (fun uu___ ->
        FStar_Tactics_V2_Derived.or_else callback
          (fun uu___1 ps ->
-            let x = FStar_Tactics_V2_Derived.cur_goal () ps in
+            let x = cur_goal () ps in
             let x1 = FStar_Reflection_V2_Formula.term_as_formula x ps in
             match x1 with
             | FStar_Reflection_V2_Formula.Forall (_b, _sort, _phi) ->
@@ -444,7 +442,7 @@ let rec simplify_eq_implication (uu___ : unit) :
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_V2_Derived.cur_env () ps in
-    let x1 = FStar_Tactics_V2_Derived.cur_goal () ps in
+    let x1 = cur_goal () ps in
     let x2 = FStar_Tactics_V2_Derived.destruct_equality_implication x1 ps in
     match x2 with
     | FStar_Pervasives_Native.None ->
@@ -483,7 +481,7 @@ let _ =
 let rec unfold_definition_and_simplify_eq (tm : FStar_Tactics_NamedView.term)
   : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
-    let x = FStar_Tactics_V2_Derived.cur_goal () ps in
+    let x = cur_goal () ps in
     let x1 = FStar_Reflection_V2_Formula.term_as_formula x ps in
     match x1 with
     | FStar_Reflection_V2_Formula.App (hd, arg) ->

@@ -16,6 +16,8 @@
 
 module Pulse.Checker.Prover.Substs
 
+open Pulse.PP
+open Pulse.Show
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 open FStar.List.Tot

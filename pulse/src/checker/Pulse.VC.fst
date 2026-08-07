@@ -1,5 +1,8 @@
 module Pulse.VC
 
+open FStar.Stubs.Reflection.Types
+open FStar.Issue
+module RT = FStar.Reflection.Typing
 open FStar.Ghost { erased }
 open Pulse.Syntax.Base
 open Pulse.Typing

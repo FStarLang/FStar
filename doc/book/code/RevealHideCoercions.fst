@@ -12,7 +12,6 @@ let incr_e (x:erased nat) : erased nat = incr x
 
 let incr' (x:nat) : GTot nat = incr_e x
 
-[@@expect_failure]
 let poly (x:nat) (y:erased nat) = x == y
 
 

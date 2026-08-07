@@ -14,3 +14,4 @@
    limitations under the License.
 *)
 module C
+open B

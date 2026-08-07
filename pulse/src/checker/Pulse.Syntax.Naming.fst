@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Syntax.Naming
+open Pulse.Common
+module L = FStar.List.Tot
 module RT = FStar.Reflection.Typing
 open FStar.List.Tot
 open Pulse.Syntax.Base

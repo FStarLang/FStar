@@ -277,6 +277,8 @@ let const_cmp c1 c2 =
   match c1, c2 with
   | C_Unit, C_Unit -> Eq
   | C_Int i1, C_Int i2 -> eq_cmp i1 i2
+  | C_MachineInt i1 s1 w1, C_MachineInt i2 s2 w2 ->
+    if i1 = i2 && s1 = s2 && w1 = w2 then Eq else Neq
   | C_True, C_True -> Eq
   | C_False, C_False -> Eq
   | C_String s1, C_String s2 -> eq_cmp s1 s2
@@ -371,7 +373,7 @@ and denote_universes_inj (top1 top2 : universe)
 let denote_universe_inj_iff (u1 u2 : universe)
   : Lemma (denote_universe u1 == denote_universe u2 <==> u1 == u2)
   = introduce (denote_universe u1 == denote_universe u2) ==> (u1 == u2)
-    with _. denote_universe_inj u1 u2
+    with denote_universe_inj u1 u2
 
 (* -------------------------------------------------------------------- *)
 (* Bridging lemmas: connect the pointwise relations produced by the
@@ -432,7 +434,7 @@ let bridge_ret (o1 o2 : option match_returns_ascription)
     | _ -> ()
 
 (* The [option (list universe)] that appears in [Pat_Cons]. *)
-let denote_pat_univs (o : option (list universe)) : option (list universe_spec) =
+let denote_pat_univs (o : option (list universe)) : GTot (option (list universe_spec)) =
   match o with
   | None -> None
   | Some us -> Some (denote_universes us)
@@ -444,7 +446,7 @@ let bridge_pat_univs (o1 o2 : option (list universe))
     | _ -> ()
 
 (* The [either term comp] under a match ascription. *)
-let denote_either (tc : either term comp) : either term_spec comp_spec =
+let denote_either (tc : either term comp) : GTot (either term_spec comp_spec) =
   match tc with
   | Inl t -> Inl (denote_term t)
   | Inr c -> Inr (denote_comp c)
@@ -892,7 +894,7 @@ and univ_faithful_lemma_list #b (u1 u2 : b) (us1 : list universe{us1 << u1}) (us
   =
     introduce forall x y. L.memP x us1 /\ L.memP y us2 ==> defined (univ_cmp x y) with
      (introduce forall y. L.memP x us1 /\ L.memP y us2 ==> defined (univ_cmp x y) with
-      (introduce (L.memP x us1 /\ L.memP y us2) ==> (defined (univ_cmp x y)) with h. (
+      (introduce (L.memP x us1 /\ L.memP y us2) ==> (defined (univ_cmp x y)) with (
        univ_faithful_lemma x y
        )
       )
@@ -1080,7 +1082,7 @@ and faithful_lemma_pattern_args #b
   =
   introduce forall x y. L.memP x pats1 /\ L.memP y pats2 ==> defined (pat_arg_cmp x y) with
    (introduce forall y. L.memP x pats1 /\ L.memP y pats2 ==> defined (pat_arg_cmp x y) with
-    (introduce (L.memP x pats1 /\ L.memP y pats2) ==> (defined (pat_arg_cmp x y)) with h. (
+    (introduce (L.memP x pats1 /\ L.memP y pats2) ==> (defined (pat_arg_cmp x y)) with (
      faithful_lemma_pattern_arg x y
      )
     )
@@ -1101,7 +1103,7 @@ and faithful_lemma_branches #b (top1 top2 : b)
   =
   introduce forall x y. L.memP x brs1 /\ L.memP y brs2 ==> defined (br_cmp x y) with
    (introduce forall y. L.memP x brs1 /\ L.memP y brs2 ==> defined (br_cmp x y) with
-    (introduce (L.memP x brs1 /\ L.memP y brs2) ==> (defined (br_cmp x y)) with h. (
+    (introduce (L.memP x brs1 /\ L.memP y brs2) ==> (defined (br_cmp x y)) with (
      faithful_lemma_branch x y
      )
     )
@@ -1135,7 +1137,7 @@ and faithful_lemma_attrs_dec #b (top1 top2 : b)
   // TODO: factor out
   introduce forall x y. L.memP x at1 /\ L.memP y at2 ==> defined (term_cmp x y) with
    (introduce forall y. L.memP x at1 /\ L.memP y at2 ==> defined (term_cmp x y) with
-    (introduce (L.memP x at1 /\ L.memP y at2) ==> (defined (term_cmp x y)) with h. (
+    (introduce (L.memP x at1 /\ L.memP y at2) ==> (defined (term_cmp x y)) with (
      faithful_lemma x y
      )
     )
@@ -1156,7 +1158,7 @@ and faithful_lemma_comp (c1 c2 : comp) : Lemma (requires faithful_comp c1 /\ fai
     faithful_lemma r1 r2;
     introduce forall x y. L.memP x args1 /\ L.memP y args2 ==> defined (arg_cmp x y) with
      (introduce forall y. L.memP x args1 /\ L.memP y args2 ==> defined (arg_cmp x y) with
-      (introduce (L.memP x args1 /\ L.memP y args2) ==> (defined (arg_cmp x y)) with h. (
+      (introduce (L.memP x args1 /\ L.memP y args2) ==> (defined (arg_cmp x y)) with (
        faithful_lemma_arg x y
        )
       )
@@ -1165,7 +1167,7 @@ and faithful_lemma_comp (c1 c2 : comp) : Lemma (requires faithful_comp c1 /\ fai
     defined_list_dec c1 c2 arg_cmp args1 args2;
     introduce forall x y. L.memP x dec1 /\ L.memP y dec2 ==> defined (term_cmp x y) with
      (introduce forall y. L.memP x dec1 /\ L.memP y dec2 ==> defined (term_cmp x y) with
-      (introduce (L.memP x dec1 /\ L.memP y dec2) ==> (defined (term_cmp x y)) with h. (
+      (introduce (L.memP x dec1 /\ L.memP y dec2) ==> (defined (term_cmp x y)) with (
        faithful_lemma x y
        )
       )
@@ -1183,7 +1185,7 @@ and univ_faithful_lemma_list_dec #b (u1 u2 : b) (us1 : list universe{us1 << u1})
   =
     introduce forall x y. L.memP x us1 /\ L.memP y us2 ==> defined (univ_cmp x y) with
      (introduce forall y. L.memP x us1 /\ L.memP y us2 ==> defined (univ_cmp x y) with
-      (introduce (L.memP x us1 /\ L.memP y us2) ==> (defined (univ_cmp x y)) with h. (
+      (introduce (L.memP x us1 /\ L.memP y us2) ==> (defined (univ_cmp x y)) with (
        univ_faithful_lemma x y
        )
       )

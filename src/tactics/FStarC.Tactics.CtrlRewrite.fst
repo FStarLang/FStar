@@ -319,16 +319,16 @@ and on_subterms
       let tm = SS.compress tm in
       match tm.n with
       (* Run on hd and args in parallel *)
-      | Tm_app {hd; args} ->
+      | Tm_app _ ->
+        let hd, args = U.head_and_args_full tm in
         let! ((hd, args), flag) = par_ctac rr (ctac_args rr) (hd, args) in
-        return (Tm_app {hd; args}, flag)
+        return ((S.mk_Tm_app hd args tm.pos).n, flag)
 
       (* Open, descend, rebuild *)
-      | Tm_abs {bs; body=t; rc_opt=k} ->
-        let bs_orig, t, subst = SS.open_term' bs t in
-        let k = k |> Option.map (SS.subst_residual_comp subst) in
+      | Tm_abs _ ->
+        let bs_orig, t, k = U.abs_formals tm in
         descend_binders tm [] [] Continue env bs_orig t k
-                        (fun bs t k -> Tm_abs {bs; body=t; rc_opt=k})
+                        (fun bs t k -> (U.abs_ln bs t k).n)
 
       | Tm_refine {b=x; phi} -> 
         let bs, phi = SS.open_term [S.mk_binder x] phi in
@@ -341,16 +341,17 @@ and on_subterms
                           in
                           Tm_refine {b=x; phi})
 
-      | Tm_arrow { bs = bs; comp = comp } ->
+      | Tm_arrow { b; comp } ->
+        let bs = [b] in
         (match comp.n with
         | Total t ->
           let bs_orig, t = SS.open_term bs t in
           descend_binders tm [] [] Continue env bs_orig t None
-                          (fun bs t _ -> Tm_arrow {bs; comp = {comp with n = Total t}})
+                          (fun bs t _ -> (U.arrow_ln bs {comp with n = Total t}).n)
         | GTotal t ->
           let bs_orig, t = SS.open_term bs t in
           descend_binders tm [] [] Continue env bs_orig t None
-                          (fun bs t _ -> Tm_arrow {bs; comp = {comp with n = GTotal t}})
+                          (fun bs t _ -> (U.arrow_ln bs {comp with n = GTotal t}).n)
         | _ ->
           (* Do nothing (FIXME).
             What should we do for effectful computations? *)

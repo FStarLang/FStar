@@ -283,8 +283,7 @@ let rec lookup_mem (e:list (var & 'a)) (x:var)
       | _ -> 
         lookup_mem tl x;
         eliminate exists elt. L.memP elt tl /\ fst elt == x
-        returns _
-        with _ . ( 
+        with ( 
           introduce exists elt. L.memP elt e /\ fst elt == x
           with elt
           and ()
@@ -613,14 +612,14 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
 //key lemma about src types: the denotations of their elaborations are closed
 let rec shift_subst_spec_n_zero_list (ss:subst_spec)
   : Lemma (ensures shift_subst_spec_n 0 ss == ss)
-          (decreases ss)
+          (decreases Ghost.reveal ss)
   = match ss with
     | [] -> ()
     | _::xs -> shift_subst_spec_n_zero_list xs
 
 let rec shift_subst_spec_n_succ_list (n:nat) (ss:subst_spec)
   : Lemma (ensures shift_subst_spec (shift_subst_spec_n n ss) == shift_subst_spec_n (n + 1) ss)
-          (decreases ss)
+          (decreases Ghost.reveal ss)
   = match ss with
     | [] -> ()
     | _::xs -> shift_subst_spec_n_succ_list n xs

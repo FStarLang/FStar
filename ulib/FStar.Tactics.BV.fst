@@ -15,6 +15,7 @@
 *)
 module FStar.Tactics.BV
 
+open FStar.Tactics.Effect
 open FStar.Tactics.V2.Bare
 open FStar.Tactics.MApply0
 open FStar.Reflection.V2.Formula

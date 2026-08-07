@@ -1,0 +1,1 @@
+{"msg":["Module IfaceUnimplemented fails to implement some declarations of its interface:\n  IfaceUnimplemented.g"],"level":"Error","range":{"def":{"file_name":"IfaceUnimplemented.fsti","start_pos":{"line":4,"col":0},"end_pos":{"line":4,"col":19}},"use":{"file_name":"IfaceUnimplemented.fsti","start_pos":{"line":4,"col":0},"end_pos":{"line":4,"col":19}}},"number":98,"ctx":[]}

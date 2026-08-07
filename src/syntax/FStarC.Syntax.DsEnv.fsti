@@ -70,9 +70,6 @@ val module_abbrevs: env -> ML (list (ident & lident))
 val set_current_module: env -> lident -> env
 val clear_scope_mods: env -> env
 val current_module: env -> ML lident
-val iface_decls : env -> lident -> ML (option (list Parser.AST.decl))
-val set_iface_decls: env -> lident -> list Parser.AST.decl -> ML env
-val iface_interleaving_init: env -> bool
 val qualify: env -> ident -> ML lident
 val syntax_only: env -> bool
 val set_syntax_only: env -> bool -> env
@@ -119,6 +116,9 @@ val push_sigelt: env -> sigelt -> ML env
 (* Won't fail on duplicates, use with caution *)
 val push_sigelt_force : env -> sigelt -> ML env
 val push_namespace: env -> lident -> restriction -> ML env
+(* Re-push the scope modifiers of the interface of the module being implemented,
+   so that the names it declares keep shadowing the modules opened at top level. *)
+val reshadow_iface_defs: env -> ML env
 val push_include: env -> lident -> restriction -> ML env
 val push_module_abbrev : env -> ident -> lident -> ML env
 (* private *) val check_admits: env -> modul -> ML modul

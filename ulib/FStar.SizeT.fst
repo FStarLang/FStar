@@ -1,4 +1,7 @@
 module FStar.SizeT
+module U16 = FStar.UInt16
+module U32 = FStar.UInt32
+module U64 = FStar.UInt64
 open FStar.Ghost
 
 (* This is only intended as a model, but will be extracted natively by Krml

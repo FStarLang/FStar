@@ -16,6 +16,7 @@
 
 module FStarC.Tactics.V2.Primops
 
+open FStarC.TypeChecker.Primops.Base
 (* Most of the tactic running logic is here. V1.Interpreter calls
 into this module for all of that. *)
 

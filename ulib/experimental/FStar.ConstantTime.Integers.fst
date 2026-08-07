@@ -26,6 +26,7 @@ module FStar.ConstantTime.Integers
     
 open FStar.IFC
 open FStar.Integers
+module MI = FStar.Integers
 
 /// A `secret_int l s` is a machine-integer at secrecy level `l` and
 /// signedness/width `s`.
@@ -65,11 +66,11 @@ noextract
 inline_for_extraction
 let addition #sl (#l:lattice_element sl) #s
              (x : secret_int l s)
-             (y : secret_int l s {ok ( + ) (m x) (m y)})
-    : Tot (z:secret_int l s{m z == m x + m y})
+             (y : secret_int l s {MI.(ok ( + ) (m x) (m y))})
+    : Tot (z:secret_int l s{m z == MI.(m x + m y)})
     = let>> a = x in
       let>> b = y in
-      return l (a + b)
+      return l MI.(a + b)
 
 noextract
 inline_for_extraction
@@ -78,7 +79,7 @@ let addition_mod (#sl:sl)
                  (#sw: _ {Unsigned? sw /\ width_of_sw sw <> W128})
                  (x : secret_int l sw)
                  (y : secret_int l sw)
-    : Tot (z:secret_int l sw { m z == m x +% m y } )
+    : Tot (z:secret_int l sw { m z == MI.(m x +% m y) } )
     = let>> a = x in
       let>> b = y in
-      return l (a +% b)
+      return l MI.(a +% b)

@@ -1,4 +1,8 @@
 module HACL
+open Pulse.Lib.Pervasives
+module A = Pulse.Lib.Array
+module US = FStar.SizeT
+module U8 = FStar.UInt8
 #lang-pulse
 
 // let alg_t = (a: EverCrypt.HMAC.supported_alg { US.fits_u32 })

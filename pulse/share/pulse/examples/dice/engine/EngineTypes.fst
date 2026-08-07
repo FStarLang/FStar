@@ -16,4 +16,6 @@
 
 module EngineTypes
 
+open Pulse.Lib.Pervasives
+open HACL
 let uds_len : hashable_len  = 32sz

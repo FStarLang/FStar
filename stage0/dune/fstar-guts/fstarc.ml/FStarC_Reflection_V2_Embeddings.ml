@@ -28,7 +28,7 @@ let head_fv_and_args (t : FStarC_Syntax_Syntax.term) :
   (FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.args)
     FStar_Pervasives_Native.option=
   let t1 = FStarC_Syntax_Util.unascribe t in
-  let uu___ = FStarC_Syntax_Util.head_and_args t1 in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t1 in
   match uu___ with
   | (hd, args) ->
       let uu___1 =
@@ -42,8 +42,7 @@ let noaqs : FStarC_Syntax_Syntax.antiquotations= (Prims.int_zero, [])
 let e_bv : FStarC_Syntax_Syntax.bv FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_bv
     FStarC_Reflection_V2_Constants.fstar_refl_bv
-let e_namedv :
-  FStarC_Reflection_V2_Data.namedv FStarC_Syntax_Embeddings_Base.embedding=
+let e_namedv : namedv FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_namedv
     FStarC_Reflection_V2_Constants.fstar_refl_namedv
 let e_binder :
@@ -224,7 +223,7 @@ let e_aqualv :
   mk_emb embed_aqualv unembed_aqualv
     FStarC_Reflection_V2_Constants.fstar_refl_aqualv_fv
 let e_binders :
-  FStarC_Syntax_Syntax.binders FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V2_Data.binders FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings.e_list e_binder
 let e_universe_view :
   FStarC_Reflection_V2_Data.universe_view

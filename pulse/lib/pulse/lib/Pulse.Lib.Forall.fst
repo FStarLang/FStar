@@ -1,4 +1,5 @@
 module Pulse.Lib.Forall
+open Pulse.Class.Introducable
 #lang-pulse
 open Pulse.Main
 open Pulse.Lib.Core

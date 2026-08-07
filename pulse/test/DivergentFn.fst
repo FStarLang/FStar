@@ -126,3 +126,24 @@ fn if_ensures_diverges_bad () {
     if (true) ensures emp { diverge () };
     ()
 }
+
+(* An explicit forward-label postcondition fixes only the postcondition, not
+   the effect of the labeled body. *)
+divergent fn label_ensures_diverges () {
+    {
+        diverge ();
+    }
+    ensures pure True
+    label done:;
+    ()
+}
+
+[@expect_failure [228]]
+fn label_ensures_diverges_bad () {
+    {
+        diverge ();
+    }
+    ensures pure True
+    label done:;
+    ()
+}

@@ -1,0 +1,5 @@
+* Error 98 at IfaceExpectFailure.fsti(9,0-9,15):
+  - Module IfaceExpectFailure fails to implement some declarations of its
+    interface:
+      IfaceExpectFailure.one
+

@@ -22,7 +22,6 @@ open FStarC.Class.Setlike
 open FStarC.Class.Show
 open FStarC.Class.Monad
 module BU = FStarC.Util
-type triggers = list (list string)
 type triggers_set = list (RBSet.t string)
 
 instance showable_psmap (_:showable 'a) : Tot (showable (PSMap.t 'a)) = {
@@ -53,29 +52,45 @@ let mk_remaining_triggers ts = {
 // This option prunes away all top-level assumptions that have no patterns on them
 let no_ambients () = Options.Ext.enabled "context_pruning_no_ambients"
 
-let should_retain_assumption (a:assumption) =
-  if a.assumption_caption = Some "pretyping" //pretyping assumptions are deprecated
+(* An assumption, as recorded in the pruning state. Everything the pruning
+   algorithm needs is stored directly; the declaration itself is only recovered
+   (via [pa_resolve]) for the assumptions that survive pruning. This is what
+   allows a module's SMT encoding to stay on disk until it is actually needed. *)
+type passumption = {
+  pa_name : string;
+  pa_free_names : RBSet.t string; //with exclude_names already removed
+  pa_pretyping : bool;
+  pa_resolve : unit -> ML (option decl);
+}
+
+(* A (declare-fun) or (define-fun), likewise resolved on demand *)
+type pdef = {
+  pd_is_declfun : bool;
+  pd_resolve : unit -> ML (option decl);
+}
+
+let should_retain_assumption (a:passumption) =
+  if a.pa_pretyping //pretyping assumptions are deprecated
   then Options.Ext.enabled "pretyping_axioms" //unless '--ext pretyping_axioms' is on
   else true
 
 type pruning_state = {
-  defs_and_decls: list decl;
-  defs_and_decls_map: PSMap.t decl;
+  defs_and_decls_map: PSMap.t pdef;
   //A macro is a (define-fun f ... (body)); Maps macro name 'f' to the free names of its body
   macro_freenames: PSMap.t (list string); 
   // Maps trigger symbols to assumptions that have triggers that mention that symbol
   // E.g., given `A : forall x. {:pattern (p x; q x) \/ (p' x; q' x)} R`
   // trigger_to_assumption maps p -> A, q -> A, p' -> A, q' -> A
-  trigger_to_assumption: PSMap.t (list assumption);
+  trigger_to_assumption: PSMap.t (list passumption);
   // Maps assumption name to triggers that  "waiting" on it
   // E.g., in the example above, assumption_to_trigger contains A -> [[p;q]; [p';q']]
   assumption_to_triggers: PSMap.t assumption_remaining_triggers;
   // Maps assumption names to the assumptions themselves
-  assumption_name_map: PSMap.t decl;
+  assumption_name_map: PSMap.t passumption;
   //assumptions with no triggers that will always included
   ambients: list string;
   //extra roots that will be added to the initial set of roots
-  extra_roots: list assumption;
+  extra_roots: list passumption;
   //ambients that are pruned away, useful for debuging the no_ambients option
   pruned_ambients: list string
 }
@@ -129,8 +144,7 @@ let init_macro_freenames =
 (* Initial state: everything is empty *)
 let init
 : pruning_state 
-= { defs_and_decls = [];
-    defs_and_decls_map = PSMap.empty();
+= { defs_and_decls_map = PSMap.empty();
     macro_freenames = init_macro_freenames;
     trigger_to_assumption = PSMap.empty ();
     assumption_to_triggers = PSMap.empty ();
@@ -140,7 +154,7 @@ let init
     pruned_ambients=[] }
 
 (* Add: trig -> a*)
-let add_trigger_to_assumption (a:assumption) (p:pruning_state) (trig:string)
+let add_trigger_to_assumption (a:passumption) (p:pruning_state) (trig:string)
 : pruning_state
 = match PSMap.try_find p.trigger_to_assumption trig with
   | None -> 
@@ -163,17 +177,17 @@ let exclude_names : RBSet.t string =
   ]
 
 let free_top_level_names t = diff (Term.free_top_level_names t) exclude_names
-let assumption_free_names a = diff a.assumption_free_names exclude_names
+let assumption_free_names a = free_top_level_names a.assumption_term
 
 (* Triggers of a universally quantified term *)
 let triggers_of_term (t:term)
 : ML triggers_set
 = let rec aux (t:term) : ML triggers_set =
-    match t.tm with
-    | Quant(Forall, triggers, _, _, _) ->
+    match t with
+    | Quant Forall triggers _ _ _ _ ->
       triggers |> List.map (fun disjunct ->
       disjunct |> List.fold_left (fun out t -> union out (free_top_level_names t)) (empty()))
-    | Labeled (t, _, _) -> aux t
+    | Labeled t _ _ -> aux t
     | _ -> []
   in aux t
 
@@ -184,18 +198,12 @@ let triggers_of_term (t:term)
    itself:
 
     - Applications of nullary functions are sometimes encoded as
-      App(Var "name", []) and sometiems as FreeV(FV("name", _, _))  
+      App (Var "name") [] and sometiems as FreeV(FV "name" _ _)  
 *)
-let maybe_add_ambient (a:assumption) (p:pruning_state)
-: ML pruning_state
-= let add_assumption_with_triggers (triggers:triggers_set) =
-    (* associate the triggers with the assumption in both directions *)
-    let p = 
-      { p with
-        assumption_to_triggers=
-        PSMap.add p.assumption_to_triggers a.assumption_name (mk_remaining_triggers triggers) }
-    in
-    List.fold_left (List.fold_left (add_trigger_to_assumption a)) p (List.map elems triggers)
+let maybe_add_ambient (a:assumption)
+: ML asum_kind
+= let add_assumption_with_triggers (triggers:triggers_set) : ML asum_kind =
+    Sum_triggers (List.map elems triggers)
   in
   let is_empty triggers =
     match triggers with
@@ -204,23 +212,23 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     | _ -> false
   in
   let is_ambient_refinement ty =
-    match ty.tm with
-    | App(Var "Prims.squash", _) -> true
-    | App(Var name, _) 
-    | FreeV(FV(name, _, _)) -> BU.starts_with name "Tm_refine_"
+    match ty with
+    | App (Var "Prims.squash") _ _ -> true
+    | App (Var name) _ _ 
+    | FreeV(FV name _ _) -> BU.starts_with name "Tm_refine_"
     | _ -> false
   in
   let ambient_refinement_payload ty =
-    match ty.tm with
-    | App(Var "Prims.squash", [_;t]) -> t
+    match ty with
+    | App (Var "Prims.squash") [_;t] _ -> t
     | _ -> ty
   in
   begin
-    match a.assumption_term.tm with
+    match a.assumption_term with
     // - l_quant_interp assumptions give interpretations to deeply embedded quantifiers
     //   and have a specific shape of an Iff, where the LHS has a pattern, if the
     //   user annotated one.
-    | App(Iff, [t0; t1]) when BU.starts_with a.assumption_name "l_quant_interp" -> (
+    | App Iff [t0; t1] _ when BU.starts_with a.assumption_name "l_quant_interp" -> (
       let triggers_lhs = free_top_level_names t0 in
       add_assumption_with_triggers [triggers_lhs]
     )
@@ -241,30 +249,23 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     // - Top-level assumptions of the form `HasType term (squash ty)`
     //   or `HasType term (Tm_refine_... )` are deemed ambient and are
     //   always included in the pruned set and added as extra roots.
-    | App (Var "HasType", [term; ty])
+    | App (Var "HasType") [term; ty] _
       when is_ambient_refinement ty -> (
       //HasType term (squash ty) is an ambient that should trigger on either the term or the type
       let triggers = triggers_of_term (ambient_refinement_payload ty) in
       if is_empty triggers
-      then (
-        let p = { p with extra_roots = a :: p.extra_roots } in
-        if no_ambients()
-        then { p with pruned_ambients = a.assumption_name::p.pruned_ambients }
-        else { p with ambients = a.assumption_name::p.ambients }
-      )
+      then Sum_ambient true
       else add_assumption_with_triggers triggers
     )
  
     // - Partial applications are triggered with a __uu__PartialApp token; this is
     //   triggered on either the symbol itself or its nullary token
-    | App (Var "Valid", 
-          [{tm=App (Var "ApplyTT", [{tm=FreeV (FV("__uu__PartialApp", _, _))}; term])}])
-    | App (Var "Valid", 
-          [{tm=App (Var "ApplyTT", [{tm=App(Var "__uu__PartialApp", _)}; term])}]) ->
+    | App (Var "Valid") [(App (Var "ApplyTT") [(FreeV (FV "__uu__PartialApp" _ _)); term] _)] _
+    | App (Var "Valid") [(App (Var "ApplyTT") [(App (Var "__uu__PartialApp") _ _); term] _)] _ ->
       let triggers =
-        match term.tm with
-        | FreeV(FV(token, _, _))
-        | App(Var token, []) ->
+        match term with
+        | FreeV(FV token _ _)
+        | App (Var token) [] _ ->
           if BU.ends_with token "@tok"
           then [singleton token; singleton (BU.substring token 0 (String.length token - 4))]
           else [singleton token]
@@ -275,32 +276,32 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
 
     // HasType, Valid, IsTotFun, and is-Tm_arrow are so common that we exclude them as triggers
     // and instead only consider the free names of the underlying terms
-    | App (Var "Valid", [term])
-    | App (Var "HasType", [term; _])
-    | App (Var "IsTotFun", [term])
-    | App (Var "is-Tm_arrow", [term]) ->
+    | App (Var "Valid") [term] _
+    | App (Var "HasType") [term; _] _
+    | App (Var "IsTotFun") [term] _
+    | App (Var "is-Tm_arrow") [term] _ ->
       add_assumption_with_triggers [free_top_level_names term]
 
     // Term_constr_id assumptions trigger on the free names of the underlying term
-    | App (Eq, [ _; {tm=App (Var "Term_constr_id", [term])}]) ->
+    | App Eq [ _; (App (Var "Term_constr_id") [term] _)] _ ->
       add_assumption_with_triggers [free_top_level_names term]
 
     // Descend into conjunctions and collect their triggers
     // Fire if any of the conjuncts have triggers that fire
-    | App (And, tms) ->
+    | App And tms _ ->
       let t1 = List.collect triggers_of_term tms in
       add_assumption_with_triggers t1
 
     // Assumptions named "equation_" are encodings of F* definitions and are
     // equations oriented from left to right
-    | App (Eq, [t0; t1]) when BU.starts_with a.assumption_name "equation_" ->
+    | App Eq [t0; t1] _ when BU.starts_with a.assumption_name "equation_" ->
       let t0 = free_top_level_names t0 in
       add_assumption_with_triggers [t0]
 
-    | App (Iff, [t0; t1]) -> (
-      match t0.tm, t1.tm with
-      | App(Var "Valid", [{tm=App(Var "Prims.hasEq", [_u; lhs])}]),
-        App(Var "Valid", [{tm=App(Var "Prims.hasEq", [_v; rhs])}]) ->
+    | App Iff [t0; t1] _ -> (
+      match t0, t1 with
+      | App (Var "Valid") [(App (Var "Prims.hasEq") [_u; lhs] _)] _,
+        App (Var "Valid") [(App (Var "Prims.hasEq") [_v; rhs] _)] _ ->
         //hasEq t0 <==> hasEq t1
         //We have many of these for every refinement type; triggers from left-to-right
         //perhaps these are better written hasEq t1 ==> hasEq t0, and trigger in a goal-directed way
@@ -315,30 +316,82 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     )
 
     // Other equations are bidirectional
-    | App (Eq, [t0; t1]) ->
+    | App Eq [t0; t1] _ ->
       let t0 = free_top_level_names t0 in
       let t1 = free_top_level_names t1 in
       add_assumption_with_triggers [t0; t1]
 
     // we get many vacuous True facts; just drop them
-    | App (TrueOp, _) -> p
+    | App TrueOp _ _ -> Sum_drop
 
     // Oterwise, add to ambients without scanning them further
-    | _ ->
-      if no_ambients()
-      then { p with pruned_ambients = a.assumption_name::p.pruned_ambients }
-      else { p with ambients = a.assumption_name::p.ambients }
+    | _ -> Sum_ambient false
   end
+
+(* Summarize a single assumption: how it is triggered, and the names it
+   contributes to the reachable set. *)
+let summarize_assumption (a:assumption)
+: ML assumption_summary
+= let kind =
+    match triggers_of_term a.assumption_term with
+    | [] -> maybe_add_ambient a
+    | ts -> Sum_triggers (List.map elems ts)
+  in
+  { asum_name = a.assumption_name;
+    asum_free_names = elems (assumption_free_names a);
+    asum_pretyping = (a.assumption_caption = Some "pretyping");
+    asum_kind = kind }
+
+let rec summarize_decl (d:decl)
+: ML (list decl_summary)
+= match d with
+  | Assume a -> [Sum_assume (summarize_assumption a)]
+  | Module _ ds -> List.collect summarize_decl ds
+  | DefineFun macro _ _ body _ -> [Sum_definefun (macro, elems (free_top_level_names body))]
+  | DeclFun name _ _ _ -> [Sum_declfun name]
+  | RetainAssumptions names -> [Sum_retain names]
+  | Caption _
+  | EmptyLine -> [Sum_ignored]
+  | _ -> [Sum_other d]
+
+let summarize_decls (ds:list decl)
+: ML (list decl_summary)
+= List.collect summarize_decl ds
+
+let summarize_elts (ds:decls_t)
+: ML (list elt_summary)
+= ds |> List.map (fun elt ->
+    { elts_key = elt.key;
+      elts_a_names = elt.a_names;
+      elts_sums = summarize_decls elt.decls })
 
 // Add an assumption to the pruning state
 // If the assumption has triggers, add it to the trigger map
 // Otherwise, use the custom logic for ambients
-let add_assumption_to_triggers (a:assumption) (p:pruning_state) (trigs:triggers_set)
+let add_assumption_summary (asum:assumption_summary) (resolve:string -> ML (option decl)) (p:pruning_state)
 : ML pruning_state
-= let p = { p with assumption_name_map = PSMap.add p.assumption_name_map a.assumption_name (Assume a) } in
-  match trigs with
-  | [] -> maybe_add_ambient a p
-  | _ -> { p with assumption_to_triggers = PSMap.add p.assumption_to_triggers a.assumption_name (mk_remaining_triggers trigs) }
+= let a = {
+    pa_name = asum.asum_name;
+    pa_free_names = from_list asum.asum_free_names;
+    pa_pretyping = asum.asum_pretyping;
+    pa_resolve = (fun _ -> resolve asum.asum_name);
+  } in
+  let p = { p with assumption_name_map = PSMap.add p.assumption_name_map a.pa_name a } in
+  match asum.asum_kind with
+  | Sum_drop -> p
+  | Sum_ambient is_root ->
+    let p = if is_root then { p with extra_roots = a :: p.extra_roots } else p in
+    if no_ambients()
+    then { p with pruned_ambients = a.pa_name::p.pruned_ambients }
+    else { p with ambients = a.pa_name::p.ambients }
+  | Sum_triggers trigs ->
+    let p =
+      { p with
+        assumption_to_triggers =
+          PSMap.add p.assumption_to_triggers a.pa_name
+                    (mk_remaining_triggers (triggers_as_triggers_set trigs)) }
+    in
+    List.fold_left (List.fold_left (add_trigger_to_assumption a)) p trigs
 
 // Mark a trigger as reached; removing it from the trigger map
 let trigger_reached (p:pruning_state) (trig:string)
@@ -370,37 +423,65 @@ let rec assumptions_of_decl (d:decl)
 : ML (list assumption)
 = match d with
   | Assume a -> [a]
-  | Module (_, ds) -> List.collect assumptions_of_decl ds
+  | Module _ ds -> List.collect assumptions_of_decl ds
   | d -> []
 
-// Add a declaration to the pruning state, updating the trigger and assumption tables
-// and macro tables
-let rec add_decl (d:decl) (p:pruning_state)
+(* An assumption that is already in memory: resolving it is free *)
+let passumption_of_assumption (a:assumption)
+: ML passumption
+= { pa_name = a.assumption_name;
+    pa_free_names = assumption_free_names a;
+    pa_pretyping = (a.assumption_caption = Some "pretyping");
+    pa_resolve = (fun _ -> Some (Assume a)) }
+
+// Add summarized declarations to the pruning state, updating the trigger and
+// assumption tables and macro tables
+let add_summaries (sums:list decl_summary) (resolve:string -> ML (option decl)) (p:pruning_state)
 : ML pruning_state
-= match d with
-  | Assume a ->
-    let triggers = triggers_of_term a.assumption_term in
-    let p = List.fold_left (List.fold_left (add_trigger_to_assumption a)) p (List.map elems triggers) in
-    add_assumption_to_triggers a p triggers
-  | Module (_, ds) -> List.fold_left (fun p d -> add_decl d p) p ds
-  | DefineFun(macro, _, _, body, _) ->
-    let free_names = elems (free_top_level_names body) in
-    { p with defs_and_decls=d::p.defs_and_decls; 
-             defs_and_decls_map = PSMap.add p.defs_and_decls_map macro d;
-             macro_freenames = PSMap.add p.macro_freenames macro free_names } 
-  | DeclFun(name, _, _, _) ->
-    { p with defs_and_decls = d::p.defs_and_decls;
-             defs_and_decls_map = PSMap.add p.defs_and_decls_map name d }
-  | _ -> p
-    
+= List.fold_left
+    (fun p sum ->
+      match sum with
+      | Sum_assume asum -> add_assumption_summary asum resolve p
+      | Sum_definefun (macro, free_names) ->
+        { p with defs_and_decls_map =
+                   PSMap.add p.defs_and_decls_map macro
+                             { pd_is_declfun = false; pd_resolve = (fun _ -> resolve macro) };
+                 macro_freenames = PSMap.add p.macro_freenames macro free_names }
+      | Sum_declfun name ->
+        { p with defs_and_decls_map =
+                   PSMap.add p.defs_and_decls_map name
+                             { pd_is_declfun = true; pd_resolve = (fun _ -> resolve name) } }
+      | Sum_retain _
+      | Sum_ignored
+      | Sum_other _ -> p)
+    p
+    sums
+
+(* The name under which a declaration is registered in the pruning state *)
+let name_of_decl (d:decl) : ML string =
+  match d with
+  | Assume a -> a.assumption_name
+  | DeclFun a _ _ _ -> a
+  | DefineFun a _ _ _ _ -> a
+  | _ -> "<none>"
+
 let add_decls (ds:list decl) (p:pruning_state)
 : ML pruning_state
-= List.fold_left (fun p d -> add_decl d p) p ds
+= let rec add (m:PSMap.t decl) (d:decl) : ML (PSMap.t decl) =
+    match d with
+    | Module _ ds -> List.fold_left add m ds
+    | Assume _
+    | DeclFun _ _ _ _
+    | DefineFun _ _ _ _ _ -> PSMap.add m (name_of_decl d) d
+    | _ -> m
+  in
+  let map = List.fold_left add (PSMap.empty ()) ds in
+  add_summaries (summarize_decls ds) (PSMap.try_find map) p
 
 // An assumption that is to be retained;
 // together with the reason why it was triggered
 type triggered_assumption = {
-  assumption : assumption;
+  assumption : passumption;
   triggered_by : list sym
 }
 
@@ -429,7 +510,7 @@ let mark_trigger_reached (x:sym)
 
 // All assumptions that are waiting on a trigger
 let find_assumptions_waiting_on_trigger (x:sym)
-: ML (st (list assumption))
+: ML (st (list passumption))
 = let! ctxt = get in
   match PSMap.try_find ctxt.p.trigger_to_assumption x.sym_name with
   | None -> return []
@@ -444,10 +525,10 @@ let reached_assumption (aname:string)
   put {ctxt with reached=add aname ctxt.reached }
 
 // Remove trigger x from assumption a, and return true if a is now eligible
-let remove_trigger_for (trig:sym) (a:assumption)
+let remove_trigger_for (trig:sym) (a:passumption)
 : ML (st (bool & list sym))
 = let! ctxt = get in
-  let p, eligible, already_triggered = remove_trigger_for_assumption ctxt.p trig a.assumption_name in
+  let p, eligible, already_triggered = remove_trigger_for_assumption ctxt.p trig a.pa_name in
   put {ctxt with p} ;!
   return (eligible, already_triggered)
 
@@ -479,7 +560,7 @@ let trigger_pending_assumptions (lids:list sym)
   lids
 
 // The main scanning loop
-let rec scan (ds:list assumption)
+let rec scan (ds:list passumption)
 : ML (st unit)
 = let! ctxt = get in
   let mk_sym assumption_name l = { sym_name = l; sym_provenance = assumption_name } in
@@ -489,7 +570,7 @@ let rec scan (ds:list assumption)
     | Some l -> s::List.map (mk_sym s.sym_provenance) l
   in
   // Collect the free names of all assumptions and macro expand them
-  let new_syms = List.collect (fun a -> List.collect macro_expand (List.map (mk_sym a.assumption_name) <| elems (assumption_free_names a))) ds in
+  let new_syms = List.collect (fun a -> List.collect macro_expand (List.map (mk_sym a.pa_name) <| elems a.pa_free_names)) ds in
 
   // Trigger all assumptions that are waiting on the new symbols
   match! trigger_pending_assumptions new_syms with
@@ -502,12 +583,12 @@ let rec scan (ds:list assumption)
       foldM_left
         (fun acc triggered_assumption ->
           let assumption = triggered_assumption.assumption in
-          if! already_reached assumption.assumption_name
+          if! already_reached assumption.pa_name
           then return acc
           else if not (should_retain_assumption assumption)
           then return acc
           else (
-            reached_assumption assumption.assumption_name ;!
+            reached_assumption assumption.pa_name ;!
             return <| assumption::acc
           ))
         []
@@ -523,25 +604,17 @@ let print_reached_names_and_reasons (ctxt:ctxt) names : ML string =
   in
   String.concat "\n\t" (List.map print_one names)
 
-let name_of_decl (d:decl) : ML string =
-  match d with
-  | Assume a -> a.assumption_name
-  | DeclFun(a, _, _, _) -> a
-  | DefineFun(a, _, _, _, _) -> a
-  | _ -> "<none>"
-
 let prune (p:pruning_state) (roots0:list decl)
 : ML (list decl)
 = // Collect all assumptions from the roots
-  let roots = List.collect assumptions_of_decl roots0 in
+  let root_assumptions = List.map passumption_of_assumption (List.collect assumptions_of_decl roots0) in
   let init = { p; reached = empty () } in
   // Scan to find all reachable assumptions
   let roots = 
     if no_ambients()
-    then roots
-    else roots@p.extra_roots
+    then root_assumptions
+    else root_assumptions@p.extra_roots
   in
-  let mk_triggered_assumption assumption = {assumption; triggered_by=[]} in
   let _, ctxt = scan roots init in
   // Collect their names
   let reached_names = elems ctxt.reached in
@@ -575,40 +648,40 @@ let prune (p:pruning_state) (roots0:list decl)
     then []
     else (
       let _, defs_and_decls = 
-        List.fold_left #(RBSet.t string & list decl)
-          (fun (included_decl_names, defs_and_decls) a ->
-            match a with
-            | Assume a -> 
-              let free_names = assumption_free_names a in
-              List.fold_left
-                (fun (included_decl_names, defs_and_decls) name ->
-                  if RBSet.mem name included_decl_names
-                  then included_decl_names, defs_and_decls
-                  else (
-                    match PSMap.try_find p.defs_and_decls_map name with
-                    | None -> 
-                      included_decl_names, defs_and_decls
-                    | Some d -> 
-                      RBSet.add name included_decl_names, d::defs_and_decls
-                  ))
-                (included_decl_names, defs_and_decls)
-                (elems free_names)
-
-            | _ -> included_decl_names, defs_and_decls)
+        List.fold_left #(RBSet.t string & list pdef)
+          (fun (included_decl_names, defs_and_decls) (a:passumption) ->
+            List.fold_left
+              (fun (included_decl_names, defs_and_decls) name ->
+                if RBSet.mem name included_decl_names
+                then included_decl_names, defs_and_decls
+                else (
+                  match PSMap.try_find p.defs_and_decls_map name with
+                  | None -> 
+                    included_decl_names, defs_and_decls
+                  | Some d -> 
+                    RBSet.add name included_decl_names, d::defs_and_decls
+                ))
+              (included_decl_names, defs_and_decls)
+              (elems a.pa_free_names))
         (RBSet.empty(), [])
-        (reached_assumptions@roots0)
+        (reached_assumptions@root_assumptions)
       in
-      let decls, defs = List.partition DeclFun? defs_and_decls in
-      defs@decls
+      let decls, defs = List.partition (fun (d:pdef) -> d.pd_is_declfun) defs_and_decls in
+      // Resolve, on demand, only the declarations that survived pruning
+      List.collect (fun (d:pdef) -> match d.pd_resolve () with None -> [] | Some d -> [d]) (defs@decls)
     )
   in
-  let print_assumption (a:assumption) =
+  let reached_decls =
+    List.collect (fun (a:passumption) -> match a.pa_resolve () with None -> [] | Some d -> [d])
+                 reached_assumptions
+  in
+  let print_assumption (a:passumption) =
     Format.fmt2 "{name=%s; freevars={%s}}"
-      (show a.assumption_name)
-      (show (assumption_free_names a))
+      (show a.pa_name)
+      (show a.pa_free_names)
   in
   debug (fun _ ->
     Format.print2 "Debug context pruning: roots %s, retained decls and defs %s\n"
       (show (List.map print_assumption roots))
       (show (List.map name_of_decl decls_and_defs)));
-  reached_assumptions@decls_and_defs
+  reached_decls@decls_and_defs

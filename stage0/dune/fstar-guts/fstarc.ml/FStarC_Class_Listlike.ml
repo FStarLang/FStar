@@ -22,31 +22,23 @@ let __proj__Mklistlike__item__cons (projectee : ('e, 's) listlike) :
 let __proj__Mklistlike__item__view (projectee : ('e, 's) listlike) :
   's -> ('e, 's) view_t=
   match projectee with | { empty; cons; view;_} -> view
-let empty (s : unit) (projectee : ('e, Obj.t) listlike) : Obj.t=
+let empty (projectee : ('e, 's) listlike) : 's=
   __proj__Mklistlike__item__empty projectee
-let cons (s : unit) (projectee : ('e, Obj.t) listlike) :
-  'e -> Obj.t -> Obj.t= __proj__Mklistlike__item__cons projectee
-let view (s : unit) (projectee : ('e, Obj.t) listlike) :
-  Obj.t -> ('e, Obj.t) view_t= __proj__Mklistlike__item__view projectee
+let cons (projectee : ('e, 's) listlike) : 'e -> 's -> 's=
+  __proj__Mklistlike__item__cons projectee
+let view (projectee : ('e, 's) listlike) : 's -> ('e, 's) view_t=
+  __proj__Mklistlike__item__view projectee
 let is_empty (uu___ : ('e, 's) listlike) (l : 's) : Prims.bool=
-  match Obj.magic (view () (Obj.magic uu___) (Obj.magic l)) with
-  | VNil -> true
-  | VCons (uu___1, uu___2) -> false
-let singleton (uu___1 : ('e, 's) listlike) (uu___ : 'e) : 's=
-  (fun uu___ x ->
-     Obj.magic (cons () (Obj.magic uu___) x (empty () (Obj.magic uu___))))
-    uu___1 uu___
+  match view uu___ l with | VNil -> true | VCons (uu___1, uu___2) -> false
+let singleton (uu___ : ('e, 's) listlike) (x : 'e) : 's=
+  cons uu___ x (empty uu___)
 let rec to_list : 'e 's . ('e, 's) listlike -> 's -> 'e Prims.list =
   fun uu___ l ->
-    match Obj.magic (view () (Obj.magic uu___) (Obj.magic l)) with
+    match view uu___ l with
     | VNil -> []
     | VCons (x, xs) -> let uu___1 = to_list uu___ xs in x :: uu___1
 let rec from_list : 'e 's . ('e, 's) listlike -> 'e Prims.list -> 's =
-  fun uu___1 uu___ ->
-    (fun uu___ l ->
-       match l with
-       | [] -> Obj.magic (empty () (Obj.magic uu___))
-       | x::xs ->
-           let uu___1 = from_list uu___ xs in
-           Obj.magic (cons () (Obj.magic uu___) x (Obj.magic uu___1))) uu___1
-      uu___
+  fun uu___ l ->
+    match l with
+    | [] -> empty uu___
+    | x::xs -> let uu___1 = from_list uu___ xs in cons uu___ x uu___1

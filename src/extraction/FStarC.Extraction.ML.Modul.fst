@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Modul
+open FStarC.Extraction.ML.Syntax
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -80,12 +81,12 @@ type env_t = UEnv.uenv
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app {hd=S.fvar (PC.failwith_lid()) None;
-                args=[ S.iarg t
-                     ; S.as_arg <|
-                       mk (Tm_constant
-                             (Const_string ("Not yet implemented: " ^ show lid, Range.dummyRange)))
-                          Range.dummyRange]})
+    S.mk_Tm_app (S.fvar (PC.failwith_lid()) None)
+        [ S.iarg t
+        ; S.as_arg <|
+          mk (Tm_constant
+                (Const_string ("Not yet implemented: " ^ show lid, Range.dummyRange)))
+             Range.dummyRange]
         Range.dummyRange
 
 let always_fail lid t =
@@ -142,7 +143,15 @@ let rec extract_meta x : ML (option meta) =
       | "Prims.deprecated" -> Some (Deprecated "")
       | _ -> None
       end
-  | { n = Tm_app {hd={ n = Tm_fvar fv }; args=[{ n = Tm_constant (Const_string (s, _)) }, _]} } ->
+  | { n = Tm_constant (Const_string ("KrmlPrivate", _)) } -> Some Private // This one generated internally
+  // These are only for backwards compatibility, they should be removed at some point.
+  | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
+  | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
+  | { n = Tm_meta {tm=x} } -> extract_meta x
+  | _ ->
+    let head, args = U.head_and_args_full x in
+    match (SS.compress head).n, args with
+    | Tm_fvar fv, [{ n = Tm_constant (Const_string (s, _)) }, _] ->
       begin match string_of_lid (lid_of_fv fv) with
       | "FStar.Attributes.PpxDerivingShowConstant" -> Some (PpxDerivingShowConstant s)
       | "FStar.Attributes.Comment" -> Some (Comment s)
@@ -153,14 +162,6 @@ let rec extract_meta x : ML (option meta) =
       | "Prims.deprecated" -> Some (Deprecated s)
       | _ -> None
       end
-  | { n = Tm_constant (Const_string ("KrmlPrivate", _)) } -> Some Private // This one generated internally
-  // These are only for backwards compatibility, they should be removed at some point.
-  | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
-  | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
-  | { n = Tm_meta {tm=x} } -> extract_meta x
-  | _ ->
-    let head, args = U.head_and_args x in
-    match (SS.compress head).n, args with
     | Tm_fvar fv, [_]
        when S.fv_eq_lid fv FStarC.Parser.Const.remove_unused_type_parameters_lid ->
        begin
@@ -364,14 +365,10 @@ let extract_typ_abbrev env quals attrs lb
     let lid = fv.fv_name in
     let def = SS.compress lbdef |> U.unmeta |> U.un_uinst in
     let def =
-        match def.n with
-        | Tm_abs _ -> Term.normalize_abs def
-        | _ -> def in
-    let bs, body =
-        match def.n with
-        | Tm_abs {bs; body} ->
-          SS.open_term bs body
-        | _ -> [], def in
+        match U.abs_formals_ln def with
+        | [], _, _ -> def
+        | _ -> Term.normalize_abs def in
+    let bs, body, _ = U.abs_formals def in
     let assumed = BU.for_some (function Assumption -> true | _ -> false) quals in
     let env1, ml_bs = binders_as_mlty_binders env bs in
     let body =
@@ -703,7 +700,7 @@ let extract_let_rec_types se (env:uenv) (lbs:list letbinding) : ML (uenv & iface
 
 let get_noextract_to (se:sigelt) (backend:option Options.codegen_t) : ML bool =
   BU.for_some (function attr ->
-    let hd, args = U.head_and_args attr in
+    let hd, args = U.head_and_args_full attr in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
         begin match EMB.try_unembed a EMB.id_norm_cb with
@@ -926,11 +923,9 @@ let extract_bundle env se : ML (env_t & list mlmodule1) =
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
-        let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
-          | Tm_arrow {bs} ->
-              List.map (fun ({binder_bv={ ppname = ppname }}) -> (string_of_id ppname)) bs
-          | _ ->
-              []
+        let names =
+          let bs, _ = U.arrow_node_formals_comp_ln (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp) in
+          List.map (fun ({binder_bv={ ppname = ppname }}) -> (string_of_id ppname)) bs
         in
         let tys = (ml_tyvars, mlt) in
         let fvv = lid_as_fv ctor.dname None in
@@ -1257,8 +1252,8 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
                       // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (show lbname) (show t) (must (mllb.mllb_tysc)));
                       let lb_lid = (Inr?.v lbname).fv_name in
                       let flags'' =
-                          match (SS.compress t).n with
-                          | Tm_arrow {comp={ n = Comp { effect_name = e }}}
+                          match U.arrow_node_formals_comp_ln t with
+                          | _, { n = Comp { effect_name = e }}
                               when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
                               [ StackInline ]
                           | _ ->

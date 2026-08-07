@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.SendableTrade
+open Pulse.Class.Introducable
+module T = FStar.Tactics
 #lang-pulse
 
 open Pulse.Lib.Pervasives

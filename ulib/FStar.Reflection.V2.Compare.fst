@@ -31,10 +31,35 @@ let compare_name (n1 n2 : name) : order =
 let compare_fv (f1 f2 : fv) : order =
     compare_name (inspect_fv f1) (inspect_fv f2)
 
+let compare_int_signedness (s1 s2:int_signedness) : order =
+  match s1, s2 with
+  | Signed, Signed
+  | Unsigned, Unsigned -> Eq
+  | Signed, Unsigned -> Lt
+  | Unsigned, Signed -> Gt
+
+let compare_int_width (w1 w2:int_width) : order =
+  match w1, w2 with
+  | Int8, Int8
+  | Int16, Int16
+  | Int32, Int32
+  | Int64, Int64
+  | Sizet, Sizet -> Eq
+  | Int8, _ -> Lt | _, Int8 -> Gt
+  | Int16, _ -> Lt | _, Int16 -> Gt
+  | Int32, _ -> Lt | _, Int32 -> Gt
+  | Int64, _ -> Lt | _, Int64 -> Gt
+
 let compare_const (c1 c2 : vconst) : order =
     match c1, c2 with
     | C_Unit, C_Unit -> Eq
     | C_Int i, C_Int j -> order_from_int (i - j)
+    | C_MachineInt i1 s1 w1, C_MachineInt i2 s2 w2 ->
+      let c = order_from_int (i1 - i2) in
+      if c <> Eq then c
+      else
+        let c = compare_int_signedness s1 s2 in
+        if c <> Eq then c else compare_int_width w1 w2
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
     | C_String s1, C_String s2 -> order_from_int (compare_string s1 s2)
@@ -46,6 +71,7 @@ let compare_const (c1 c2 : vconst) : order =
     (* Different constructors *)
     | C_Unit,  _ -> Lt       | _, C_Unit  -> Gt
     | C_Int _, _ -> Lt       | _, C_Int _ -> Gt
+    | C_MachineInt _ _ _, _ -> Lt | _, C_MachineInt _ _ _ -> Gt
     | C_True,  _ -> Lt       | _, C_True  -> Gt
     | C_False, _ -> Lt       | _, C_False -> Gt
     | C_String _, _ -> Lt    | _, C_String _ -> Gt

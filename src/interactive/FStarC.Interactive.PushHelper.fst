@@ -49,8 +49,6 @@ let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) : ML
   let rec aux (deps:list string) (final_tasks:list repl_task)
     : ML (list repl_task) =
     match deps with
-    | intf :: impl :: deps' when needs_interleaving intf impl ->
-      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
     | intf_or_impl :: deps' ->
       LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
     | [] -> final_tasks in
@@ -196,12 +194,13 @@ let pop_repl msg st : ML repl_state =
 (** Load the file or files described by `task` **)
 let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: repl_task) lds : ML (optmod_t & env_t & lang_decls_t) =
   match task with
-  | LDInterleaved (intf, impl) ->
-    curmod, load_file env (Some intf.tf_fname) impl.tf_fname, []
   | LDSingle intf_or_impl ->
-    curmod, load_file env None intf_or_impl.tf_fname, []
+    curmod, load_file env intf_or_impl.tf_fname, []
   | LDInterfaceOfCurrentFile intf ->
-    curmod, Universal.load_interface_decls env intf.tf_fname, []
+    (* The interface of the file being edited is loaded like any other
+       dependency; [Tc.tc_partial_modul] then uses its checked sigelts as the
+       implementation's to-do list. *)
+    curmod, load_interface_of_current_file env intf.tf_fname, []
   | PushFragment (frag, _, _, filenames_to_load) ->
     let frag  =
       match frag with
@@ -304,8 +303,6 @@ let tf_of_fname fname : ML timed_fname =
 // Little helper: update timestamps in argument task to last modification times.
 let update_task_timestamps (task:repl_task) : ML repl_task =
   match task with
-  | LDInterleaved (intf, impl) ->
-    LDInterleaved (tf_of_fname intf.tf_fname, tf_of_fname impl.tf_fname)
   | LDSingle intf_or_impl ->
     LDSingle (tf_of_fname intf_or_impl.tf_fname)
   | LDInterfaceOfCurrentFile intf ->

@@ -28,8 +28,7 @@ let raise_compatible
 = eliminate exists frame.
       composable p x frame /\
       op p frame x == y
-  returns compatible (raise u#a u#b p) (U.raise_val x) (U.raise_val y)
-  with _ . (
+  with (
     assert (composable (raise u#a u#b p) (U.raise_val x) (U.raise_val frame))
   )
  

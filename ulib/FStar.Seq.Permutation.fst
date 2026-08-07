@@ -16,6 +16,7 @@
    Authors: N. Swamy, A. Rastogi, A. Rozanov
 *)
 module FStar.Seq.Permutation
+open FStar.IntegerIntervals
 open FStar.Seq
 open FStar.Calc
 
@@ -198,7 +199,7 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
       let neq =
       introduce forall x y. x <> y ==> f x <> f y
         with (introduce _ ==> _
-            with _. (
+            with (
               if f x = n || f y = n
               then ()
               else if f' (x - 1) < n

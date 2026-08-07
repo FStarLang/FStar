@@ -1,5 +1,9 @@
 module Lib.Vec.Lemmas
 
+open Lib.IntTypes
+open Lib.Sequence
+open Lib.Sequence.Lemmas
+module Loops = Lib.LoopCombinators
 #set-options "--z3rlimit 30 --fuel 0 --ifuel 0 \
   --using_facts_from '-* +Prims +FStar.Pervasives +FStar.Math.Lemmas +FStar.Seq -FStar.Seq.Properties.slice_slice \
     +Lib.IntTypes +Lib.Sequence +Lib.Sequence.Lemmas +Lib.LoopCombinators +Lib.Vec.Lemmas'"

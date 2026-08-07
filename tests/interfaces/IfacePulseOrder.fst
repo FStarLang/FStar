@@ -1,15 +1,17 @@
-module PulseRespectIx4
+module IfacePulseOrder
 
 #lang-pulse
 open Pulse
 
 ghost
-fn foo ()
-  ensures pure False
-
-#lang-pulse
-open Pulse
-
-ghost
-fn bar ()
+fn g ()
   ensures emp
+{ (); }
+
+#lang-pulse
+open Pulse
+
+ghost
+fn f ()
+  ensures emp
+{ (); }

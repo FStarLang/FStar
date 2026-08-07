@@ -9,7 +9,7 @@ To set up an environment to build the book, you will need python3, sphinx, and t
 Once you have python3, on Ubuntu-24, install using:
 
 * sudo apt install python3-sphinx
-* sudo apt install python3-sphinx_rtd_theme
+* sudo apt install python3-sphinx-rtd-theme
 
 Then, see book/Makefile:
 

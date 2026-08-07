@@ -764,8 +764,7 @@ let full_not_full #kt #vt (r:repr_t kt vt) (k:kt)
       strong_all_used_not_by r (canonical_index k r) r.sz k)
     (ensures False)
   = eliminate exists (i:nat { i < r.sz }). ~(Used? (r @@ i))
-    returns False
-    with _ . (
+    with (
       assert (~(Used? (r@@i)));
       eliminate_strong_all_used_not_by r k i
     )

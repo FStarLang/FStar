@@ -12,26 +12,20 @@ let gen_univs (env : FStarC_TypeChecker_Env.env)
   (x : FStarC_Syntax_Syntax.universe_uvar FStarC_FlatSet.t) :
   FStarC_Syntax_Syntax.univ_name Prims.list=
   let uu___ =
-    FStarC_Class_Setlike.is_empty ()
-      (Obj.magic
-         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar))
-      (Obj.magic x) in
+    FStarC_Class_Setlike.is_empty
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar) x in
   if uu___
   then []
   else
     (let s =
        let uu___1 =
          let uu___2 = FStarC_TypeChecker_Env.univ_vars env in
-         Obj.magic
-           (FStarC_Class_Setlike.diff ()
-              (Obj.magic
-                 (FStarC_FlatSet.setlike_flat_set
-                    FStarC_Syntax_Free.ord_univ_uvar)) (Obj.magic x)
-              (Obj.magic uu___2)) in
-       FStarC_Class_Setlike.elems ()
-         (Obj.magic
-            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar))
-         (Obj.magic uu___1) in
+         FStarC_Class_Setlike.diff
+           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar)
+           x uu___2 in
+       FStarC_Class_Setlike.elems
+         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar)
+         uu___1 in
      (let uu___2 = FStarC_Effect.op_Bang dbg_Gen in
       if uu___2
       then
@@ -74,11 +68,9 @@ let gather_free_univnames (env : FStarC_TypeChecker_Env.env)
   let ctx_univnames = FStarC_TypeChecker_Env.univnames env in
   let tm_univnames = FStarC_Syntax_Free.univnames t in
   let univnames =
-    Obj.magic
-      (FStarC_Class_Setlike.diff ()
-         (Obj.magic
-            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident))
-         (Obj.magic tm_univnames) (Obj.magic ctx_univnames)) in
+    FStarC_Class_Setlike.diff
+      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
+      tm_univnames ctx_univnames in
   univnames
 let check_universe_generalization
   (explicit_univ_names : FStarC_Syntax_Syntax.univ_name Prims.list)
@@ -110,10 +102,9 @@ let generalize_universes (env : FStarC_TypeChecker_Env.env)
            FStarC_TypeChecker_Env.DoNotUnfoldPureLets] env t0 in
        let univnames =
          let uu___1 = gather_free_univnames env t in
-         FStarC_Class_Setlike.elems ()
-           (Obj.magic
-              (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident))
-           (Obj.magic uu___1) in
+         FStarC_Class_Setlike.elems
+           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
+           uu___1 in
        (let uu___2 = FStarC_Effect.op_Bang dbg_Gen in
         if uu___2
         then
@@ -199,16 +190,12 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
      let env_uvars = FStarC_TypeChecker_Env.uvars_in_env env in
      let gen_uvars uvs =
        let uu___1 =
-         Obj.magic
-           (FStarC_Class_Setlike.diff ()
-              (Obj.magic
-                 (FStarC_FlatSet.setlike_flat_set
-                    FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic uvs)
-              (Obj.magic env_uvars)) in
-       FStarC_Class_Setlike.elems ()
-         (Obj.magic
-            (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar))
-         (Obj.magic uu___1) in
+         FStarC_Class_Setlike.diff
+           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
+           uvs env_uvars in
+       FStarC_Class_Setlike.elems
+         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
+         uu___1 in
      let univs_and_uvars_of_lec uu___1 =
        match uu___1 with
        | (lbname, e, c) ->
@@ -234,23 +221,18 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
              else ());
             (let univs1 =
                let uu___3 =
-                 FStarC_Class_Setlike.elems ()
-                   (Obj.magic
-                      (FStarC_FlatSet.setlike_flat_set
-                         FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic uvt) in
+                 FStarC_Class_Setlike.elems
+                   (FStarC_FlatSet.setlike_flat_set
+                      FStarC_Syntax_Free.ord_ctx_uvar) uvt in
                FStarC_List.fold_left
-                 (fun uu___5 uu___4 ->
-                    (fun univs2 uv ->
-                       let uu___4 =
-                         let uu___5 = FStarC_Syntax_Util.ctx_uvar_typ uv in
-                         FStarC_Syntax_Free.univs uu___5 in
-                       Obj.magic
-                         (FStarC_Class_Setlike.union ()
-                            (Obj.magic
-                               (FStarC_FlatSet.setlike_flat_set
-                                  FStarC_Syntax_Free.ord_univ_uvar))
-                            (Obj.magic univs2) (Obj.magic uu___4))) uu___5
-                      uu___4) univs uu___3 in
+                 (fun univs2 uv ->
+                    let uu___4 =
+                      let uu___5 = FStarC_Syntax_Util.ctx_uvar_typ uv in
+                      FStarC_Syntax_Free.univs uu___5 in
+                    FStarC_Class_Setlike.union
+                      (FStarC_FlatSet.setlike_flat_set
+                         FStarC_Syntax_Free.ord_univ_uvar) univs2 uu___4)
+                 univs uu___3 in
              let uvs = gen_uvars uvt in
              (let uu___4 = FStarC_Effect.op_Bang dbg_Gen in
               if uu___4
@@ -273,11 +255,9 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
      | (univs, uvs, lec_hd) ->
          let force_univs_eq lec2 u1 u2 =
            let uu___2 =
-             FStarC_Class_Setlike.equal ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Free.ord_univ_uvar)) (Obj.magic u1)
-               (Obj.magic u2) in
+             FStarC_Class_Setlike.equal
+               (FStarC_FlatSet.setlike_flat_set
+                  FStarC_Syntax_Free.ord_univ_uvar) u1 u2 in
            if uu___2
            then ()
            else
@@ -407,11 +387,9 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                                  let free = FStarC_Syntax_Free.names kres in
                                  let uu___7 =
                                    let uu___8 =
-                                     FStarC_Class_Setlike.is_empty ()
-                                       (Obj.magic
-                                          (FStarC_FlatSet.setlike_flat_set
-                                             FStarC_Syntax_Syntax.ord_bv))
-                                       (Obj.magic free) in
+                                     FStarC_Class_Setlike.is_empty
+                                       (FStarC_FlatSet.setlike_flat_set
+                                          FStarC_Syntax_Syntax.ord_bv) free in
                                    Prims.op_Negation uu___8 in
                                  if uu___7
                                  then []
@@ -498,24 +476,20 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                                             x q FStar_Pervasives_Native.None
                                             []) gen_tvars in
                                let t =
-                                 let uu___6 =
-                                   let uu___7 =
-                                     FStarC_Syntax_Subst.compress
-                                       (FStarC_Syntax_Util.comp_result c1) in
-                                   uu___7.FStarC_Syntax_Syntax.n in
-                                 match uu___6 with
-                                 | FStarC_Syntax_Syntax.Tm_arrow
-                                     { FStarC_Syntax_Syntax.bs1 = bs;
-                                       FStarC_Syntax_Syntax.comp = cod;_}
-                                     ->
+                                 let cod_t =
+                                   FStarC_Syntax_Subst.compress
+                                     (FStarC_Syntax_Util.comp_result c1) in
+                                 match cod_t.FStarC_Syntax_Syntax.n with
+                                 | FStarC_Syntax_Syntax.Tm_arrow uu___6 ->
                                      let uu___7 =
-                                       FStarC_Syntax_Subst.open_comp bs cod in
+                                       FStarC_Syntax_Util.arrow_formals_comp_strict
+                                         cod_t in
                                      (match uu___7 with
-                                      | (bs1, cod1) ->
+                                      | (bs, cod) ->
                                           FStarC_Syntax_Util.arrow
-                                            (FStarC_List.op_At tvars_bs bs1)
-                                            cod1)
-                                 | uu___7 ->
+                                            (FStarC_List.op_At tvars_bs bs)
+                                            cod)
+                                 | uu___6 ->
                                      FStarC_Syntax_Util.arrow tvars_bs c1 in
                                let e' =
                                  let uu___6 =
@@ -558,28 +532,20 @@ let generalize' (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
    else ());
   (let univnames_lecs =
      let empty =
-       Obj.magic
-         (FStarC_Class_Setlike.from_list ()
-            (Obj.magic
-               (FStarC_FlatSet.setlike_flat_set
-                  FStarC_Syntax_Syntax.ord_ident)) []) in
+       FStarC_Class_Setlike.from_list
+         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident) [] in
      FStarC_List.fold_left
-       (fun uu___2 uu___1 ->
-          (fun out uu___1 ->
-             match uu___1 with
-             | (l, t, c) ->
-                 let uu___2 = gather_free_univnames env t in
-                 Obj.magic
-                   (FStarC_Class_Setlike.union ()
-                      (Obj.magic
-                         (FStarC_FlatSet.setlike_flat_set
-                            FStarC_Syntax_Syntax.ord_ident)) (Obj.magic out)
-                      (Obj.magic uu___2))) uu___2 uu___1) empty lecs in
+       (fun out uu___1 ->
+          match uu___1 with
+          | (l, t, c) ->
+              let uu___2 = gather_free_univnames env t in
+              FStarC_Class_Setlike.union
+                (FStarC_FlatSet.setlike_flat_set
+                   FStarC_Syntax_Syntax.ord_ident) out uu___2) empty lecs in
    let univnames_lecs1 =
-     FStarC_Class_Setlike.elems ()
-       (Obj.magic
-          (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident))
-       (Obj.magic univnames_lecs) in
+     FStarC_Class_Setlike.elems
+       (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
+       univnames_lecs in
    let generalized_lecs =
      let uu___1 = gen env is_rec lecs in
      match uu___1 with

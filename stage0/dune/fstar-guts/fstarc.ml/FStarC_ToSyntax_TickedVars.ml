@@ -10,28 +10,20 @@ let lident_is_ticked (id : FStarC_Ident.lident) : Prims.bool=
   if Prims.uu___is_Nil ns then ident_is_ticked id1 else false
 let uu___0 : FStarC_Ident.ident FStarC_RBSet.t FStarC_Class_Monoid.monoid=
   let uu___ =
-    Obj.magic
-      (FStarC_Class_Setlike.empty ()
-         (Obj.magic
-            (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident)) ()) in
+    FStarC_Class_Setlike.empty
+      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident) () in
   {
     FStarC_Class_Monoid.mzero = uu___;
     FStarC_Class_Monoid.mplus =
-      (fun uu___2 uu___1 ->
-         Obj.magic
-           (FStarC_Class_Setlike.union ()
-              (Obj.magic
-                 (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident)))
-           uu___2 uu___1)
+      (FStarC_Class_Setlike.union
+         (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident))
   }
 type 'a m =
   (FStarC_Ident.ident FStarC_RBSet.t, Obj.t, 'a) FStarC_Writer.writer
 let emit1 (x : FStarC_Ident.ident) : unit m=
   let uu___ =
-    Obj.magic
-      (FStarC_Class_Setlike.singleton ()
-         (Obj.magic
-            (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident)) x) in
+    FStarC_Class_Setlike.singleton
+      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident) x in
   FStarC_Writer.emit uu___0 uu___
 let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
   : unit m=
@@ -259,40 +251,21 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
                               (FStarC_Writer.monad_writer uu___0) ()
                               (fun uu___3 -> Obj.magic (go_term env') uu___3)
                               (Obj.magic ts))) uu___2))) uu___1)
-  | FStarC_Parser_AST.ElimExists (binders, p, q, y, e) ->
-      let uu___ = go_term env q in
+  | FStarC_Parser_AST.ElimExists (binders, p, e) ->
+      let uu___ = go_binders env binders in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () uu___
+        () (Obj.magic uu___)
         (fun uu___1 ->
-           (fun uu___1 ->
-              let uu___1 = Obj.magic uu___1 in
-              let uu___2 = go_binders env binders in
+           (fun env' ->
+              let env' = Obj.magic env' in
+              let uu___1 = go_term env' p in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang
-                   (FStarC_Writer.monad_writer uu___0) () ()
-                   (Obj.magic uu___2)
-                   (fun uu___3 ->
-                      (fun env' ->
-                         let env' = Obj.magic env' in
-                         let uu___3 = go_term env' p in
-                         Obj.magic
-                           (FStarC_Class_Monad.op_let_Bang
-                              (FStarC_Writer.monad_writer uu___0) () ()
-                              uu___3
-                              (fun uu___4 ->
-                                 (fun uu___4 ->
-                                    let uu___4 = Obj.magic uu___4 in
-                                    let uu___5 = go_binder env' y in
-                                    Obj.magic
-                                      (FStarC_Class_Monad.op_let_Bang
-                                         (FStarC_Writer.monad_writer uu___0)
-                                         () () (Obj.magic uu___5)
-                                         (fun uu___6 ->
-                                            (fun env'' ->
-                                               let env'' = Obj.magic env'' in
-                                               Obj.magic (go_term env'' e))
-                                              uu___6))) uu___4))) uu___3)))
-             uu___1)
+                   (FStarC_Writer.monad_writer uu___0) () () uu___1
+                   (fun uu___2 ->
+                      (fun uu___2 ->
+                         let uu___2 = Obj.magic uu___2 in
+                         Obj.magic (go_term env' e)) uu___2))) uu___1)
   | FStarC_Parser_AST.ElimImplies (p, q, e) ->
       let uu___ = go_term env p in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
@@ -308,7 +281,7 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
                       (fun uu___3 ->
                          let uu___3 = Obj.magic uu___3 in
                          Obj.magic (go_term env e)) uu___3))) uu___1)
-  | FStarC_Parser_AST.ElimOr (p, q, r, x, e, x', e') ->
+  | FStarC_Parser_AST.ElimOr (p, q, e, e') ->
       let uu___ = go_term env p in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
         () uu___
@@ -322,7 +295,7 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
                    (fun uu___3 ->
                       (fun uu___3 ->
                          let uu___3 = Obj.magic uu___3 in
-                         let uu___4 = go_term env r in
+                         let uu___4 = go_term env e in
                          Obj.magic
                            (FStarC_Class_Monad.op_let_Bang
                               (FStarC_Writer.monad_writer uu___0) () ()
@@ -330,47 +303,9 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
                               (fun uu___5 ->
                                  (fun uu___5 ->
                                     let uu___5 = Obj.magic uu___5 in
-                                    let uu___6 = go_binder env x in
-                                    Obj.magic
-                                      (FStarC_Class_Monad.op_let_Bang
-                                         (FStarC_Writer.monad_writer uu___0)
-                                         () () (Obj.magic uu___6)
-                                         (fun uu___7 ->
-                                            (fun env_x ->
-                                               let env_x = Obj.magic env_x in
-                                               let uu___7 = go_term env_x e in
-                                               Obj.magic
-                                                 (FStarC_Class_Monad.op_let_Bang
-                                                    (FStarC_Writer.monad_writer
-                                                       uu___0) () () uu___7
-                                                    (fun uu___8 ->
-                                                       (fun uu___8 ->
-                                                          let uu___8 =
-                                                            Obj.magic uu___8 in
-                                                          let uu___9 =
-                                                            go_binder env x' in
-                                                          Obj.magic
-                                                            (FStarC_Class_Monad.op_let_Bang
-                                                               (FStarC_Writer.monad_writer
-                                                                  uu___0) ()
-                                                               ()
-                                                               (Obj.magic
-                                                                  uu___9)
-                                                               (fun uu___10
-                                                                  ->
-                                                                  (fun env_x'
-                                                                    ->
-                                                                    let env_x'
-                                                                    =
-                                                                    Obj.magic
-                                                                    env_x' in
-                                                                    Obj.magic
-                                                                    (go_term
-                                                                    env_x' e'))
-                                                                    uu___10)))
-                                                         uu___8))) uu___7)))
-                                   uu___5))) uu___3))) uu___1)
-  | FStarC_Parser_AST.ElimAnd (p, q, r, x, y, e) ->
+                                    Obj.magic (go_term env e')) uu___5)))
+                        uu___3))) uu___1)
+  | FStarC_Parser_AST.ElimAnd (p, q, e) ->
       let uu___ = go_term env p in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
         () uu___
@@ -384,25 +319,7 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
                    (fun uu___3 ->
                       (fun uu___3 ->
                          let uu___3 = Obj.magic uu___3 in
-                         let uu___4 = go_term env r in
-                         Obj.magic
-                           (FStarC_Class_Monad.op_let_Bang
-                              (FStarC_Writer.monad_writer uu___0) () ()
-                              uu___4
-                              (fun uu___5 ->
-                                 (fun uu___5 ->
-                                    let uu___5 = Obj.magic uu___5 in
-                                    let uu___6 = go_binders env [x; y] in
-                                    Obj.magic
-                                      (FStarC_Class_Monad.op_let_Bang
-                                         (FStarC_Writer.monad_writer uu___0)
-                                         () () (Obj.magic uu___6)
-                                         (fun uu___7 ->
-                                            (fun env' ->
-                                               let env' = Obj.magic env' in
-                                               Obj.magic (go_term env' e))
-                                              uu___7))) uu___5))) uu___3)))
-             uu___1)
+                         Obj.magic (go_term env e)) uu___3))) uu___1)
   | FStarC_Parser_AST.ListLiteral ts ->
       FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
         (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic ts)
@@ -548,10 +465,8 @@ let free_ticked_vars (env : FStarC_Syntax_DsEnv.env)
   let uu___ = Obj.magic (FStarC_Writer.run_writer uu___0 () (Obj.magic w)) in
   match uu___ with
   | (fvs, ()) ->
-      FStarC_Class_Setlike.elems ()
-        (Obj.magic
-           (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident))
-        (Obj.magic fvs)
+      FStarC_Class_Setlike.elems
+        (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident) fvs
 let rec unparen (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term=
   match t.FStarC_Parser_AST.tm with
   | FStarC_Parser_AST.Paren t1 -> unparen t1

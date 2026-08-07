@@ -8,8 +8,7 @@ let rec map :
     match x with
     | [] -> (fun uu___ -> [])
     | a1::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f a1)
-          (fun uu___ ps -> let x1 = map f tl ps in uu___ :: x1)
+        (fun ps -> let x1 = f a1 ps in let x2 = map f tl ps in x1 :: x2)
 let rec concatMap :
   'a 'b .
     ('a -> ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr) ->
@@ -19,9 +18,9 @@ let rec concatMap :
     match l with
     | [] -> (fun uu___ -> [])
     | x::xs ->
-        FStar_Tactics_Effect.tac_bind () () (f x)
-          (fun uu___ ps ->
-             let x1 = concatMap f xs ps in FStar_List_Tot_Base.op_At uu___ x1)
+        (fun ps ->
+           let x1 = f x ps in
+           let x2 = concatMap f xs ps in FStar_List_Tot_Base.op_At x1 x2)
 let rec __mapi :
   'a 'b .
     Prims.nat ->
@@ -32,9 +31,9 @@ let rec __mapi :
     match x with
     | [] -> (fun uu___ -> [])
     | a1::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f i a1)
-          (fun uu___ ps ->
-             let x1 = __mapi (i + Prims.int_one) f tl ps in uu___ :: x1)
+        (fun ps ->
+           let x1 = f i a1 ps in
+           let x2 = __mapi (i + Prims.int_one) f tl ps in x1 :: x2)
 let mapi (f : Prims.nat -> 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr)
   (l : 'a Prims.list) : ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr=
   __mapi Prims.int_zero f l
@@ -46,8 +45,7 @@ let rec iter :
   fun f x ->
     match x with
     | [] -> (fun uu___ -> ())
-    | a1::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f a1) (fun uu___ -> iter f tl)
+    | a1::tl -> (fun ps -> f a1 ps; iter f tl ps)
 let rec iteri_aux :
   'a .
     Prims.int ->
@@ -57,9 +55,7 @@ let rec iteri_aux :
   fun i f x ->
     match x with
     | [] -> (fun uu___ -> ())
-    | a1::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f i a1)
-          (fun uu___ -> iteri_aux (i + Prims.int_one) f tl)
+    | a1::tl -> (fun ps -> f i a1 ps; iteri_aux (i + Prims.int_one) f tl ps)
 let iteri
   (f : Prims.int -> 'a -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr)
   (x : 'a Prims.list) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -72,9 +68,7 @@ let rec fold_left :
   fun f x l ->
     match l with
     | [] -> (fun uu___ -> x)
-    | hd::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f x hd)
-          (fun uu___ -> fold_left f uu___ tl)
+    | hd::tl -> (fun ps -> let x1 = f x hd ps in fold_left f x1 tl ps)
 let rec fold_right :
   'a 'b .
     ('a -> 'b -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr) ->
@@ -83,9 +77,7 @@ let rec fold_right :
   fun f l x ->
     match l with
     | [] -> (fun uu___ -> x)
-    | hd::tl ->
-        FStar_Tactics_Effect.tac_bind () () (fold_right f tl x)
-          (fun uu___ -> f hd uu___)
+    | hd::tl -> (fun ps -> let x1 = fold_right f tl x ps in f hd x1 ps)
 let rec zip :
   'a 'b .
     'a Prims.list ->
@@ -94,10 +86,8 @@ let rec zip :
   =
   fun l1 l2 ->
     match (l1, l2) with
-    | (x::xs, y::ys) ->
-        FStar_Tactics_Effect.tac_bind () () (zip xs ys)
-          (fun uu___ uu___1 -> (x, y) :: uu___)
-    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> [])
+    | (x::xs, y::ys) -> (fun ps -> let x1 = zip xs ys ps in (x, y) :: x1)
+    | uu___ -> (fun uu___1 -> [])
 let rec filter :
   'a .
     ('a -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr) ->
@@ -107,11 +97,9 @@ let rec filter :
     match uu___ with
     | [] -> (fun uu___1 -> [])
     | hd::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f hd)
-          (fun uu___1 ->
-             if uu___1
-             then fun ps -> let x = filter f tl ps in hd :: x
-             else filter f tl)
+        (fun ps ->
+           let x = f hd ps in
+           if x then let x1 = filter f tl ps in hd :: x1 else filter f tl ps)
 let rec filter_map_acc :
   'a 'b .
     ('a ->
@@ -125,12 +113,12 @@ let rec filter_map_acc :
     match l with
     | [] -> (fun uu___ -> FStar_List_Tot_Base.rev acc)
     | hd::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f hd)
-          (fun uu___ ->
-             match uu___ with
-             | FStar_Pervasives_Native.Some hd1 ->
-                 filter_map_acc f (hd1 :: acc) tl
-             | FStar_Pervasives_Native.None -> filter_map_acc f acc tl)
+        (fun ps ->
+           let x = f hd ps in
+           match x with
+           | FStar_Pervasives_Native.Some hd1 ->
+               filter_map_acc f (hd1 :: acc) tl ps
+           | FStar_Pervasives_Native.None -> filter_map_acc f acc tl ps)
 let filter_map
   (f :
     'a ->
@@ -152,13 +140,12 @@ let rec tryPick :
     match l with
     | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
     | hd::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f hd)
-          (fun uu___ ->
-             match uu___ with
-             | FStar_Pervasives_Native.Some x ->
-                 FStar_Tactics_Effect.lift_div_tac ()
-                   (fun uu___1 -> FStar_Pervasives_Native.Some x)
-             | FStar_Pervasives_Native.None -> tryPick f tl)
+        (fun ps ->
+           let x = f hd ps in
+           match x with
+           | FStar_Pervasives_Native.Some x1 ->
+               FStar_Pervasives_Native.Some x1
+           | FStar_Pervasives_Native.None -> tryPick f tl ps)
 let map_opt (f : 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr)
   (x : 'a FStar_Pervasives_Native.option) :
   ('b FStar_Pervasives_Native.option, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -166,8 +153,7 @@ let map_opt (f : 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr)
   | FStar_Pervasives_Native.None ->
       (fun uu___ -> FStar_Pervasives_Native.None)
   | FStar_Pervasives_Native.Some x1 ->
-      FStar_Tactics_Effect.tac_bind () () (f x1)
-        (fun uu___ uu___1 -> FStar_Pervasives_Native.Some uu___)
+      (fun ps -> let x2 = f x1 ps in FStar_Pervasives_Native.Some x2)
 let rec repeatn :
   'a .
     Prims.int ->
@@ -178,9 +164,9 @@ let rec repeatn :
     if n <= Prims.int_zero
     then fun uu___ -> []
     else
-      FStar_Tactics_Effect.tac_bind () () (t ())
-        (fun uu___ ps ->
-           let x = repeatn (n - Prims.int_one) t ps in uu___ :: x)
+      (fun ps ->
+         let x = t () ps in
+         let x1 = repeatn (n - Prims.int_one) t ps in x :: x1)
 let rec tryFind :
   'a .
     ('a -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr) ->
@@ -190,8 +176,7 @@ let rec tryFind :
     match l with
     | [] -> (fun uu___ -> false)
     | hd::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f hd)
-          (fun uu___ -> if uu___ then fun uu___1 -> true else tryFind f tl)
+        (fun ps -> let x = f hd ps in if x then true else tryFind f tl ps)
 let rec fold_left2 :
   'a 'b 'c .
     ('a -> 'b -> 'c -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr) ->
@@ -203,8 +188,7 @@ let rec fold_left2 :
     match (l1, l2) with
     | ([], []) -> (fun uu___ -> x)
     | (hd1::tl1, hd2::tl2) ->
-        FStar_Tactics_Effect.tac_bind () () (f x hd1 hd2)
-          (fun uu___ -> fold_left2 f uu___ tl1 tl2)
+        (fun ps -> let x1 = f x hd1 hd2 ps in fold_left2 f x1 tl1 tl2 ps)
 let rec string_of_list :
   'a .
     ('a -> (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr) ->
@@ -214,18 +198,17 @@ let rec string_of_list :
     match l with
     | [] -> (fun uu___ -> "")
     | x::xs ->
-        FStar_Tactics_Effect.tac_bind () () (f x)
-          (fun uu___ ps ->
-             let x1 = let x2 = string_of_list f xs ps in Prims.strcat ";" x2 in
-             Prims.strcat uu___ x1)
+        (fun ps ->
+           let x1 = f x ps in
+           let x2 = let x3 = string_of_list f xs ps in Prims.strcat ";" x3 in
+           Prims.strcat x1 x2)
 let string_of_option
   (f : 'a -> (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr)
   (o : 'a FStar_Pervasives_Native.option) :
   (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr=
   match o with
   | FStar_Pervasives_Native.Some x ->
-      FStar_Tactics_Effect.tac_bind () () (f x)
-        (fun uu___ uu___1 -> Prims.strcat "Some " uu___)
+      (fun ps -> let x1 = f x ps in Prims.strcat "Some " x1)
   | FStar_Pervasives_Native.None -> (fun uu___ -> "None")
 let rec existsb :
   'a .
@@ -236,5 +219,4 @@ let rec existsb :
     match l with
     | [] -> (fun uu___ -> false)
     | hd::tl ->
-        FStar_Tactics_Effect.tac_bind () () (f hd)
-          (fun uu___ -> if uu___ then fun uu___1 -> true else existsb f tl)
+        (fun ps -> let x = f hd ps in if x then true else existsb f tl ps)

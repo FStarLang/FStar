@@ -143,7 +143,13 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                               FStarC_TypeChecker_Env.core_check =
                                 (env.FStarC_TypeChecker_Env.core_check);
                               FStarC_TypeChecker_Env.missing_decl =
-                                (env.FStarC_TypeChecker_Env.missing_decl)
+                                (env.FStarC_TypeChecker_Env.missing_decl);
+                              FStarC_TypeChecker_Env.iface_todo =
+                                (env.FStarC_TypeChecker_Env.iface_todo);
+                              FStarC_TypeChecker_Env.iface_lids =
+                                (env.FStarC_TypeChecker_Env.iface_lids);
+                              FStarC_TypeChecker_Env.iface_val_lids =
+                                (env.FStarC_TypeChecker_Env.iface_val_lids)
                             } tm in
                         FStar_Pervasives_Native.Some uu___2)) ()
           with
@@ -703,53 +709,47 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
        (fun uu___ ->
           let tm1 = FStarC_Syntax_Subst.compress tm in
           match tm1.FStarC_Syntax_Syntax.n with
-          | FStarC_Syntax_Syntax.Tm_app
-              { FStarC_Syntax_Syntax.hd = hd;
-                FStarC_Syntax_Syntax.args = args;_}
-              ->
+          | FStarC_Syntax_Syntax.Tm_app uu___1 ->
               Obj.magic
                 (Obj.repr
-                   (let uu___1 = par_ctac rr (ctac_args rr) (hd, args) in
-                    FStarC_Class_Monad.op_let_Bang
-                      FStarC_Tactics_Monad.monad_tac () () (Obj.magic uu___1)
-                      (fun uu___2 ->
-                         (fun uu___2 ->
-                            let uu___2 = Obj.magic uu___2 in
-                            match uu___2 with
-                            | ((hd1, args1), flag) ->
-                                Obj.magic
-                                  (FStarC_Class_Monad.return
-                                     FStarC_Tactics_Monad.monad_tac ()
-                                     (Obj.magic
-                                        ((FStarC_Syntax_Syntax.Tm_app
-                                            {
-                                              FStarC_Syntax_Syntax.hd = hd1;
-                                              FStarC_Syntax_Syntax.args =
-                                                args1
-                                            }), flag)))) uu___2)))
-          | FStarC_Syntax_Syntax.Tm_abs
-              { FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.body = t;
-                FStarC_Syntax_Syntax.rc_opt = k;_}
-              ->
+                   (let uu___2 = FStarC_Syntax_Util.head_and_args_full tm1 in
+                    match uu___2 with
+                    | (hd, args) ->
+                        let uu___3 = par_ctac rr (ctac_args rr) (hd, args) in
+                        FStarC_Class_Monad.op_let_Bang
+                          FStarC_Tactics_Monad.monad_tac () ()
+                          (Obj.magic uu___3)
+                          (fun uu___4 ->
+                             (fun uu___4 ->
+                                let uu___4 = Obj.magic uu___4 in
+                                match uu___4 with
+                                | ((hd1, args1), flag) ->
+                                    let uu___5 =
+                                      let uu___6 =
+                                        let uu___7 =
+                                          FStarC_Syntax_Syntax.mk_Tm_app hd1
+                                            args1
+                                            tm1.FStarC_Syntax_Syntax.pos in
+                                        uu___7.FStarC_Syntax_Syntax.n in
+                                      (uu___6, flag) in
+                                    Obj.magic
+                                      (FStarC_Class_Monad.return
+                                         FStarC_Tactics_Monad.monad_tac ()
+                                         (Obj.magic uu___5))) uu___4)))
+          | FStarC_Syntax_Syntax.Tm_abs uu___1 ->
               Obj.magic
                 (Obj.repr
-                   (let uu___1 = FStarC_Syntax_Subst.open_term' bs t in
-                    match uu___1 with
-                    | (bs_orig, t1, subst) ->
-                        let k1 =
-                          FStarC_Option.map
-                            (FStarC_Syntax_Subst.subst_residual_comp subst) k in
+                   (let uu___2 = FStarC_Syntax_Util.abs_formals tm1 in
+                    match uu___2 with
+                    | (bs_orig, t, k) ->
                         descend_binders tm1 [] []
-                          FStarC_Tactics_Types.Continue env bs_orig t1 k1
-                          (fun bs1 t2 k2 ->
-                             FStarC_Syntax_Syntax.Tm_abs
-                               {
-                                 FStarC_Syntax_Syntax.bs = bs1;
-                                 FStarC_Syntax_Syntax.body = t2;
-                                 FStarC_Syntax_Syntax.rc_opt = k2
-                               })))
+                          FStarC_Tactics_Types.Continue env bs_orig t k
+                          (fun bs t1 k1 ->
+                             let uu___3 = FStarC_Syntax_Util.abs_ln bs t1 k1 in
+                             uu___3.FStarC_Syntax_Syntax.n)))
           | FStarC_Syntax_Syntax.Tm_refine
-              { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = phi;_}
+              { FStarC_Syntax_Syntax.b2 = x;
+                FStarC_Syntax_Syntax.phi = phi;_}
               ->
               Obj.magic
                 (Obj.repr
@@ -769,16 +769,17 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                                    FStarC_Effect.failwith "Impossible" in
                              FStarC_Syntax_Syntax.Tm_refine
                                {
-                                 FStarC_Syntax_Syntax.b = x1;
+                                 FStarC_Syntax_Syntax.b2 = x1;
                                  FStarC_Syntax_Syntax.phi = phi2
                                })))
           | FStarC_Syntax_Syntax.Tm_arrow
-              { FStarC_Syntax_Syntax.bs1 = bs;
+              { FStarC_Syntax_Syntax.b1 = b;
                 FStarC_Syntax_Syntax.comp = comp;_}
               ->
               Obj.magic
                 (Obj.repr
-                   (match comp.FStarC_Syntax_Syntax.n with
+                   (let bs = [b] in
+                    match comp.FStarC_Syntax_Syntax.n with
                     | FStarC_Syntax_Syntax.Total t ->
                         Obj.repr
                           (let uu___1 = FStarC_Syntax_Subst.open_term bs t in
@@ -788,21 +789,19 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                                  FStarC_Tactics_Types.Continue env bs_orig t1
                                  FStar_Pervasives_Native.None
                                  (fun bs1 t2 uu___2 ->
-                                    FStarC_Syntax_Syntax.Tm_arrow
-                                      {
-                                        FStarC_Syntax_Syntax.bs1 = bs1;
-                                        FStarC_Syntax_Syntax.comp =
-                                          {
-                                            FStarC_Syntax_Syntax.n =
-                                              (FStarC_Syntax_Syntax.Total t2);
-                                            FStarC_Syntax_Syntax.pos =
-                                              (comp.FStarC_Syntax_Syntax.pos);
-                                            FStarC_Syntax_Syntax.vars =
-                                              (comp.FStarC_Syntax_Syntax.vars);
-                                            FStarC_Syntax_Syntax.hash_code =
-                                              (comp.FStarC_Syntax_Syntax.hash_code)
-                                          }
-                                      }))
+                                    let uu___3 =
+                                      FStarC_Syntax_Util.arrow_ln bs1
+                                        {
+                                          FStarC_Syntax_Syntax.n =
+                                            (FStarC_Syntax_Syntax.Total t2);
+                                          FStarC_Syntax_Syntax.pos =
+                                            (comp.FStarC_Syntax_Syntax.pos);
+                                          FStarC_Syntax_Syntax.vars =
+                                            (comp.FStarC_Syntax_Syntax.vars);
+                                          FStarC_Syntax_Syntax.hash_code =
+                                            (comp.FStarC_Syntax_Syntax.hash_code)
+                                        } in
+                                    uu___3.FStarC_Syntax_Syntax.n))
                     | FStarC_Syntax_Syntax.GTotal t ->
                         Obj.repr
                           (let uu___1 = FStarC_Syntax_Subst.open_term bs t in
@@ -812,21 +811,19 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                                  FStarC_Tactics_Types.Continue env bs_orig t1
                                  FStar_Pervasives_Native.None
                                  (fun bs1 t2 uu___2 ->
-                                    FStarC_Syntax_Syntax.Tm_arrow
-                                      {
-                                        FStarC_Syntax_Syntax.bs1 = bs1;
-                                        FStarC_Syntax_Syntax.comp =
-                                          {
-                                            FStarC_Syntax_Syntax.n =
-                                              (FStarC_Syntax_Syntax.GTotal t2);
-                                            FStarC_Syntax_Syntax.pos =
-                                              (comp.FStarC_Syntax_Syntax.pos);
-                                            FStarC_Syntax_Syntax.vars =
-                                              (comp.FStarC_Syntax_Syntax.vars);
-                                            FStarC_Syntax_Syntax.hash_code =
-                                              (comp.FStarC_Syntax_Syntax.hash_code)
-                                          }
-                                      }))
+                                    let uu___3 =
+                                      FStarC_Syntax_Util.arrow_ln bs1
+                                        {
+                                          FStarC_Syntax_Syntax.n =
+                                            (FStarC_Syntax_Syntax.GTotal t2);
+                                          FStarC_Syntax_Syntax.pos =
+                                            (comp.FStarC_Syntax_Syntax.pos);
+                                          FStarC_Syntax_Syntax.vars =
+                                            (comp.FStarC_Syntax_Syntax.vars);
+                                          FStarC_Syntax_Syntax.hash_code =
+                                            (comp.FStarC_Syntax_Syntax.hash_code)
+                                        } in
+                                    uu___3.FStarC_Syntax_Syntax.n))
                     | uu___1 ->
                         Obj.repr
                           (FStarC_Class_Monad.return

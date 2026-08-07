@@ -1,5 +1,6 @@
 module FStar.Tactics.PrettifyType
 
+open FStar.Bijection {}
 (* The single thing you should call here is entry function,
 as the body of a splice. We could make this a plugin eventually,
 not doing it now to now complicate the build (and this is pretty

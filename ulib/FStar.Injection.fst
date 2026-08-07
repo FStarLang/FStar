@@ -1,5 +1,9 @@
 module FStar.Injection
 
+open FStar.SizeT { (/^), (%^), (+^), (-^), ( *^ )  }
+open FStar.Fin
+module Functions = FStar.Functions
+open FStar.Tactics.Easy
 let inverse_f (#a #b : Type) (i : a @~> b) (y : image_of i) : GTot a =
   FStar.IndefiniteDescription.indefinite_description_ghost a
     (fun (x:a) -> i.f x == y)

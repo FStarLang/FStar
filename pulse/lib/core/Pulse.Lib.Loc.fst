@@ -16,6 +16,7 @@
 
 module Pulse.Lib.Loc
 
+open FStar.Ghost
 [@@erasable]
 noeq type loc_id = {
   process: nat;

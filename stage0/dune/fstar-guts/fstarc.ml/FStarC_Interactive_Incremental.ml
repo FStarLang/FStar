@@ -466,8 +466,7 @@ let format_code (st : FStarC_Interactive_Ide_Types.repl_state)
     | [] -> FStar_Pervasives_Native.None
     | { FStarC_Parser_AST.d = FStarC_Parser_AST.UseLangDecls l;
         FStarC_Parser_AST.drange = uu___; FStarC_Parser_AST.quals = uu___1;
-        FStarC_Parser_AST.attrs = uu___2;
-        FStarC_Parser_AST.interleaved = uu___3;_}::uu___4 ->
+        FStarC_Parser_AST.attrs = uu___2;_}::uu___3 ->
         FStar_Pervasives_Native.Some l in
   let parse_result = parse_code st maybe_lang code in
   match parse_result with

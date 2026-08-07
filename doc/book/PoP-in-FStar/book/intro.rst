@@ -58,34 +58,21 @@ collection of domain-specific languages (DSLs). A common use of F* is
 to embed within it programming languages at different levels of
 abstraction or for specific programming tasks, and for the embedded
 language to be engineered with domain-specific reasoning, proof
-automation, and compilation backends. Some examples include:
+automation, and compilation backends. 
 
-* Low*, a shallowly embedded DSL for sequential programming against a
-  C-like memory model including explicit memory management on the
-  stack and heap; a Hoare logic for partial correctness based on
-  implicit dynamic frames; and a custom backend (Karamel) to compile
-  Low* programs to C for further compilation by off-the-shelf C
-  compilers.
+There are two main examples of DSLs supported by F* today:
 
-* EverParse, a shallow embedding of a DSL (layered on top of the Low*
-  DSL) of parser and serializer combinators, for low-level binary
-  formats.
+* Pulse: An embedded domain-specific language that ships with F* itself,
+  and is based on concurrent separation logic, for developing concurrent programs
+  shared state, with extraction to C, Rust, and OCaml.
 
-* Vale, a deeply embedded DSL for structured programming in a
-  user-defined assembly language, with a Hoare logic for total
-  correctness, and a printer to emit verified programs in a assembly
-  syntax compatible with various standard assemblers.
+* EverParse, a shallow embedding of a DSL (layered on top of Pulse) 
+  of parser and serializer combinators, for low-level binary
+  formats. EverParse does not ship with F*, but is available as a separate
+  download from https://github.com/project-everest/everparse.
 
-* Steel, a shallow embedding of concurrency as an effect in F*, with
-  an extensible concurrent separation logic for partial correctness as
-  a core program logic, and proof automation built using a combination
-  of Meta-F* tactics, higher-order unification, and SMT.
-
-* Pulse, a successor of Steel, a DSL with custom syntax and
-  typechecking algorithm, providing proofs in a small but highly
-  expressive core logic for mutable state and concurrency called
-  PulseCore, formalized entirely in terms of pure and ghost functions
-  in F*.
+A variety of other DSLs have been developed with F*, including Low*, Vale, Steel, Wys*,
+and others, though these are no longer actively maintained.
 
 .. _Intro_Vec:
 
@@ -162,15 +149,14 @@ complete, since nontermination can break soundness. However, F*
 supports general recursive functions and non-termination in a safe
 manner, without compromising soundness.
 
-Beyond nontermination, F* supports a system of user-defined
+Beyond nontermination, F* also supports a variety of
 computational effects which can be used to model a variety of
 programming idioms, including things like mutable state, exceptions,
 concurrency, IO, etc.
 
-Here below is some code in an F* dialect called Low*
-which provides a sequential, imperative C-like programming model with
-mutable memory. The function ``malloc_copy_free`` allocates an array
-``dest``, copies the contents of an array of bytes ``src`` into a
+Here below is some code in Pulse. The function 
+``malloc_copy_free`` allocates an array ``dest``, 
+copies the contents of an array of bytes ``src`` into a
 ``dest``, deallocates ``src`` and returns ``dest``.
 
 .. literalinclude:: code/MemCpy.fst
@@ -194,24 +180,8 @@ full detail, but here are two main points to take away:
 While other program verifiers offer features similar to what we've
 used here, a notable thing about F* is that the semantics of programs
 with side effects (like reading and writing memory) is entirely
-encoded within F*'s logic using a system of user-defined effects.
-
-Whereas ``malloc_copy_free`` is programmed in Low* and specified using
-a particular kind of `Floyd-Hoare logic
-<https://en.wikipedia.org/wiki/Hoare_logic>`_, there's nothing really
-special about it in F*.
-
-Here, for example, is a concurrent program in another user-defined F*
-dialect called Steel. It increments two heap-allocated
-references in parallel and is specified for safety and correctness in
-`concurrent separation logic
-<https://en.wikipedia.org/wiki/Separation_logic>`_, a different kind
-of Floyd-Hoare logic than the one we used for ``malloc_copy_free``.
-
-.. literalinclude:: IncrPair.fst
-   :language: fstar
-   :start-after: SNIPPET_START: par_incr
-   :end-before: SNIPPET_END: par_incr
+encoded within F*'s using its core dependently typed logic of pure functions
+together with its user-defined effect system.
 
 As an F* user, you can choose a programming model and a suite of
 program proof abstractions to match your needs. You'll learn more

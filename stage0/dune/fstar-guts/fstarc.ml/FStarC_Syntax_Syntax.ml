@@ -143,20 +143,19 @@ let uu___is_BinderUnused (projectee : positivity_qualifier) : Prims.bool=
   match projectee with | BinderUnused -> true | uu___ -> false
 type term'__Tm_abs__payload =
   {
-  bs: binder Prims.list ;
+  b: binder ;
   body: term' syntax ;
   rc_opt: residual_comp FStar_Pervasives_Native.option }
 and term'__Tm_arrow__payload = {
-  bs1: binder Prims.list ;
+  b1: binder ;
   comp: comp' syntax }
 and term'__Tm_refine__payload = {
-  b: bv ;
+  b2: bv ;
   phi: term' syntax }
 and term'__Tm_app__payload =
   {
   hd: term' syntax ;
-  args:
-    (term' syntax * arg_qualifier FStar_Pervasives_Native.option) Prims.list }
+  arg: (term' syntax * arg_qualifier FStar_Pervasives_Native.option) }
 and term'__Tm_match__payload =
   {
   scrutinee: term' syntax ;
@@ -378,35 +377,35 @@ and arg_qualifier =
   {
   aqual_implicit: Prims.bool ;
   aqual_attributes: term' syntax Prims.list }
-let __proj__Mkterm'__Tm_abs__payload__item__bs
-  (projectee : term'__Tm_abs__payload) : binder Prims.list=
-  match projectee with | { bs; body; rc_opt;_} -> bs
+let __proj__Mkterm'__Tm_abs__payload__item__b
+  (projectee : term'__Tm_abs__payload) : binder=
+  match projectee with | { b; body; rc_opt;_} -> b
 let __proj__Mkterm'__Tm_abs__payload__item__body
   (projectee : term'__Tm_abs__payload) : term' syntax=
-  match projectee with | { bs; body; rc_opt;_} -> body
+  match projectee with | { b; body; rc_opt;_} -> body
 let __proj__Mkterm'__Tm_abs__payload__item__rc_opt
   (projectee : term'__Tm_abs__payload) :
   residual_comp FStar_Pervasives_Native.option=
-  match projectee with | { bs; body; rc_opt;_} -> rc_opt
-let __proj__Mkterm'__Tm_arrow__payload__item__bs
-  (projectee : term'__Tm_arrow__payload) : binder Prims.list=
-  match projectee with | { bs1 = bs; comp;_} -> bs
+  match projectee with | { b; body; rc_opt;_} -> rc_opt
+let __proj__Mkterm'__Tm_arrow__payload__item__b
+  (projectee : term'__Tm_arrow__payload) : binder=
+  match projectee with | { b1 = b; comp;_} -> b
 let __proj__Mkterm'__Tm_arrow__payload__item__comp
   (projectee : term'__Tm_arrow__payload) : comp' syntax=
-  match projectee with | { bs1 = bs; comp;_} -> comp
+  match projectee with | { b1 = b; comp;_} -> comp
 let __proj__Mkterm'__Tm_refine__payload__item__b
   (projectee : term'__Tm_refine__payload) : bv=
-  match projectee with | { b; phi;_} -> b
+  match projectee with | { b2 = b; phi;_} -> b
 let __proj__Mkterm'__Tm_refine__payload__item__phi
   (projectee : term'__Tm_refine__payload) : term' syntax=
-  match projectee with | { b; phi;_} -> phi
+  match projectee with | { b2 = b; phi;_} -> phi
 let __proj__Mkterm'__Tm_app__payload__item__hd
   (projectee : term'__Tm_app__payload) : term' syntax=
-  match projectee with | { hd; args;_} -> hd
-let __proj__Mkterm'__Tm_app__payload__item__args
+  match projectee with | { hd; arg;_} -> hd
+let __proj__Mkterm'__Tm_app__payload__item__arg
   (projectee : term'__Tm_app__payload) :
-  (term' syntax * arg_qualifier FStar_Pervasives_Native.option) Prims.list=
-  match projectee with | { hd; args;_} -> args
+  (term' syntax * arg_qualifier FStar_Pervasives_Native.option)=
+  match projectee with | { hd; arg;_} -> arg
 let __proj__Mkterm'__Tm_match__payload__item__scrutinee
   (projectee : term'__Tm_match__payload) : term' syntax=
   match projectee with
@@ -1667,40 +1666,50 @@ type sig_metadata =
   sigmeta_admit: Prims.bool ;
   sigmeta_spliced: Prims.bool ;
   sigmeta_already_checked: Prims.bool ;
+  sigmeta_extension_decl: Prims.bool ;
   sigmeta_extension_data: (Prims.string * FStar_Dyn.dyn) Prims.list }
 let __proj__Mksig_metadata__item__sigmeta_active (projectee : sig_metadata) :
   Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
-      sigmeta_already_checked; sigmeta_extension_data;_} -> sigmeta_active
+      sigmeta_already_checked; sigmeta_extension_decl;
+      sigmeta_extension_data;_} -> sigmeta_active
 let __proj__Mksig_metadata__item__sigmeta_fact_db_ids
   (projectee : sig_metadata) : Prims.string Prims.list=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
-      sigmeta_already_checked; sigmeta_extension_data;_} ->
-      sigmeta_fact_db_ids
+      sigmeta_already_checked; sigmeta_extension_decl;
+      sigmeta_extension_data;_} -> sigmeta_fact_db_ids
 let __proj__Mksig_metadata__item__sigmeta_admit (projectee : sig_metadata) :
   Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
-      sigmeta_already_checked; sigmeta_extension_data;_} -> sigmeta_admit
+      sigmeta_already_checked; sigmeta_extension_decl;
+      sigmeta_extension_data;_} -> sigmeta_admit
 let __proj__Mksig_metadata__item__sigmeta_spliced (projectee : sig_metadata)
   : Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
-      sigmeta_already_checked; sigmeta_extension_data;_} -> sigmeta_spliced
+      sigmeta_already_checked; sigmeta_extension_decl;
+      sigmeta_extension_data;_} -> sigmeta_spliced
 let __proj__Mksig_metadata__item__sigmeta_already_checked
   (projectee : sig_metadata) : Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
-      sigmeta_already_checked; sigmeta_extension_data;_} ->
-      sigmeta_already_checked
+      sigmeta_already_checked; sigmeta_extension_decl;
+      sigmeta_extension_data;_} -> sigmeta_already_checked
+let __proj__Mksig_metadata__item__sigmeta_extension_decl
+  (projectee : sig_metadata) : Prims.bool=
+  match projectee with
+  | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
+      sigmeta_already_checked; sigmeta_extension_decl;
+      sigmeta_extension_data;_} -> sigmeta_extension_decl
 let __proj__Mksig_metadata__item__sigmeta_extension_data
   (projectee : sig_metadata) : (Prims.string * FStar_Dyn.dyn) Prims.list=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
-      sigmeta_already_checked; sigmeta_extension_data;_} ->
-      sigmeta_extension_data
+      sigmeta_already_checked; sigmeta_extension_decl;
+      sigmeta_extension_data;_} -> sigmeta_extension_data
 type open_kind =
   | Open_module 
   | Open_namespace 
@@ -1764,7 +1773,7 @@ and sigelt'__Sig_effect_abbrev__payload =
   {
   lid4: FStarC_Ident.lident ;
   us4: univ_names ;
-  bs2: binders ;
+  bs: binders ;
   comp1: comp ;
   cflags: cflag Prims.list }
 and sigelt'__Sig_splice__payload =
@@ -1946,24 +1955,21 @@ let __proj__Mksigelt'__Sig_assume__payload__item__phi
   match projectee with | { lid3 = lid; us3 = us; phi1 = phi;_} -> phi
 let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__lid
   (projectee : sigelt'__Sig_effect_abbrev__payload) : FStarC_Ident.lident=
-  match projectee with
-  | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> lid
+  match projectee with | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> lid
 let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__us
   (projectee : sigelt'__Sig_effect_abbrev__payload) : univ_names=
-  match projectee with
-  | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> us
+  match projectee with | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> us
 let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__bs
   (projectee : sigelt'__Sig_effect_abbrev__payload) : binders=
-  match projectee with
-  | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> bs
+  match projectee with | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> bs
 let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__comp
   (projectee : sigelt'__Sig_effect_abbrev__payload) : comp=
   match projectee with
-  | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> comp1
+  | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> comp1
 let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__cflags
   (projectee : sigelt'__Sig_effect_abbrev__payload) : cflag Prims.list=
   match projectee with
-  | { lid4 = lid; us4 = us; bs2 = bs; comp1; cflags;_} -> cflags
+  | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> cflags
 let __proj__Mksigelt'__Sig_splice__payload__item__is_typed
   (projectee : sigelt'__Sig_splice__payload) : Prims.bool=
   match projectee with | { is_typed; lids2 = lids; tac;_} -> is_typed
@@ -2202,6 +2208,7 @@ let default_sigmeta : sig_metadata=
     sigmeta_admit = false;
     sigmeta_spliced = false;
     sigmeta_already_checked = false;
+    sigmeta_extension_decl = false;
     sigmeta_extension_data = []
   }
 let mk_sigelt (e : sigelt') : sigelt=
@@ -2214,22 +2221,50 @@ let mk_sigelt (e : sigelt') : sigelt=
     sigopens_and_abbrevs = [];
     sigopts = FStar_Pervasives_Native.None
   }
-let mk_Tm_app (t1 : typ) (args1 : arg Prims.list)
+let rec mk_Tm_app (t1 : typ) (args1 : arg Prims.list)
   (p : FStarC_Range_Type.range) : term=
   match args1 with
   | [] -> t1
-  | uu___ -> mk (Tm_app { hd = t1; args = args1 }) p
+  | arg1::args2 ->
+      let uu___ = mk (Tm_app { hd = t1; arg = arg1 }) p in
+      mk_Tm_app uu___ args2 p
+let rec mk_Tm_abs (bs : binders) (body : term)
+  (rc : residual_comp FStar_Pervasives_Native.option)
+  (p : FStarC_Range_Type.range) : term=
+  match bs with
+  | [] -> body
+  | b::[] -> mk (Tm_abs { b; body; rc_opt = rc }) p
+  | b::bs1 ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 = mk_Tm_abs bs1 body rc p in
+          { b; body = uu___2; rc_opt = FStar_Pervasives_Native.None } in
+        Tm_abs uu___1 in
+      mk uu___ p
+let rec mk_Tm_arrow (bs : binders) (c : comp) (p : FStarC_Range_Type.range) :
+  term=
+  match bs with
+  | [] ->
+      (match c.n with
+       | Total t -> t
+       | uu___ ->
+           FStarC_Effect.failwith
+             "mk_Tm_arrow: no binders, and the computation is not Tot")
+  | b::[] -> mk (Tm_arrow { b1 = b; comp = c }) p
+  | b::bs1 ->
+      let tail = mk_Tm_arrow bs1 c p in
+      let uu___ =
+        let uu___1 =
+          let uu___2 = mk (Total tail) tail.pos in { b1 = b; comp = uu___2 } in
+        Tm_arrow uu___1 in
+      mk uu___ p
 let mk_Tm_uinst (t : term) (us : universes) : term=
   match t.n with
   | Tm_fvar uu___ ->
       (match us with | [] -> t | us1 -> mk (Tm_uinst (t, us1)) t.pos)
   | uu___ -> FStarC_Effect.failwith "Unexpected universe instantiation"
 let extend_app_n (t : term) (args' : args) (r : FStarC_Range_Type.range) :
-  term=
-  match t.n with
-  | Tm_app { hd; args = args1;_} ->
-      mk_Tm_app hd (FStarC_List.op_At args1 args') r
-  | uu___ -> mk_Tm_app t args' r
+  term= mk_Tm_app t args' r
 let extend_app (t : term) (arg1 : arg) (r : FStarC_Range_Type.range) : 
   term= extend_app_n t [arg1] r
 let mk_Tm_delayed (lr : (term * subst_ts)) (pos : FStarC_Range_Type.range) :
@@ -2328,16 +2363,11 @@ let ord_fv : FStarC_Ident.lident FStarC_Class_Ord.ord=
     (fun x y -> FStarC_Order.order_from_int (order_fv x y))
 let freenames_of_binders (bs : binders) : freenames=
   let uu___ =
-    Obj.magic
-      (FStarC_Class_Setlike.empty ()
-         (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_bv)) ()) in
+    FStarC_Class_Setlike.empty (FStarC_FlatSet.setlike_flat_set ord_bv) () in
   FStarC_List.fold_right
-    (fun uu___2 uu___1 ->
-       (fun b out ->
-          Obj.magic
-            (FStarC_Class_Setlike.add ()
-               (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_bv))
-               b.binder_bv (Obj.magic out))) uu___2 uu___1) bs uu___
+    (fun b out ->
+       FStarC_Class_Setlike.add (FStarC_FlatSet.setlike_flat_set ord_bv)
+         b.binder_bv out) bs uu___
 let null_id : FStarC_Ident.ident=
   FStarC_Ident.mk_ident ("_", FStarC_Range_Type.dummyRange)
 let null_bv (k : term) : bv=
@@ -2359,8 +2389,7 @@ let binders_of_list (fvs : bv Prims.list) : binders=
   FStarC_List.map (fun t -> mk_binder t) fvs
 let binders_of_freenames (fvs : freenames) : binders=
   let uu___ =
-    FStarC_Class_Setlike.elems ()
-      (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_bv)) (Obj.magic fvs) in
+    FStarC_Class_Setlike.elems (FStarC_FlatSet.setlike_flat_set ord_bv) fvs in
   binders_of_list uu___
 let null_binder (t : term) : binder= let uu___ = null_bv t in mk_binder uu___
 let as_arg (t : term) : arg= (t, FStar_Pervasives_Native.None)
@@ -2659,33 +2688,35 @@ let is_ident_allowed_by_restriction :
   FStarC_Ident.ident ->
     restriction -> FStarC_Ident.ident FStar_Pervasives_Native.option=
   let debug = FStarC_Debug.get_toggle "open_include_restrictions" in
-  fun id restriction1 ->
-    let result = is_ident_allowed_by_restriction' id restriction1 in
-    (let uu___1 = FStarC_Effect.op_Bang debug in
-     if uu___1
-     then
-       let uu___2 =
-         let uu___3 =
-           let uu___4 = FStarC_Class_Show.show FStarC_Ident.showable_ident id in
-           let uu___5 =
-             let uu___6 =
-               let uu___7 =
-                 FStarC_Class_Show.show show_restriction restriction1 in
-               let uu___8 =
-                 let uu___9 =
-                   let uu___10 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.show_option
-                          FStarC_Ident.showable_ident) result in
-                   Prims.strcat uu___10 "\n" in
-                 Prims.strcat ") = " uu___9 in
-               Prims.strcat uu___7 uu___8 in
-             Prims.strcat ", " uu___6 in
-           Prims.strcat uu___4 uu___5 in
-         Prims.strcat "is_ident_allowed_by_restriction(" uu___3 in
-       FStarC_Format.print_string uu___2
-     else ());
-    result
+  fun id ->
+    fun restriction1 ->
+      let result = is_ident_allowed_by_restriction' id restriction1 in
+      (let uu___1 = FStarC_Effect.op_Bang debug in
+       if uu___1
+       then
+         let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               FStarC_Class_Show.show FStarC_Ident.showable_ident id in
+             let uu___5 =
+               let uu___6 =
+                 let uu___7 =
+                   FStarC_Class_Show.show show_restriction restriction1 in
+                 let uu___8 =
+                   let uu___9 =
+                     let uu___10 =
+                       FStarC_Class_Show.show
+                         (FStarC_Class_Show.show_option
+                            FStarC_Ident.showable_ident) result in
+                     Prims.strcat uu___10 "\n" in
+                   Prims.strcat ") = " uu___9 in
+                 Prims.strcat uu___7 uu___8 in
+               Prims.strcat ", " uu___6 in
+             Prims.strcat uu___4 uu___5 in
+           Prims.strcat "is_ident_allowed_by_restriction(" uu___3 in
+         FStarC_Format.print_string uu___2
+       else ());
+      result
 let has_range_syntax (uu___ : unit) :
   'a syntax FStarC_Class_HasRange.hasRange=
   {

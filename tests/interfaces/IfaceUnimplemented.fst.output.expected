@@ -1,0 +1,5 @@
+* Error 98 at IfaceUnimplemented.fsti(4,0-4,19):
+  - Module IfaceUnimplemented fails to implement some declarations of its
+    interface:
+      IfaceUnimplemented.g
+

@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Checker.Pure
+open Pulse.Elaborate.Pure
+open Pulse.Readback
 module RTB = FStar.Tactics.Builtins
 module RT = FStar.Reflection.Typing
 module RTS = FStar.Reflection.TermSpec
@@ -376,7 +378,7 @@ let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
     let topt, issues =
       catch_all (fun _ -> 
         rtb_core_check_term 
-          (push_context g "check_term_with_expected_type_and_effect" (range_of_term e))
+          (push_context "check_term_with_expected_type_and_effect" (range_of_term e) g)
           fg e eff t) in
     match topt with
     | None ->
@@ -394,7 +396,7 @@ let check_term_at_type (g:env) (e:term) (t:term)
     let effopt, issues =
       catch_all (fun _ -> 
       rtb_core_check_term_at_type 
-        (push_context g "check_term_with_expected_type" (range_of_term e))
+        (push_context "check_term_with_expected_type" (range_of_term e) g)
         fg e t) in
     match effopt with
     | None ->
@@ -407,7 +409,7 @@ let check_term_at_type (g:env) (e:term) (t:term)
 let tc_with_core g (f:R.env) (e:R.term)
 = let aux ()
   : T.Tac (option (eff:T.tot_or_ghost & t:R.term & rt_typing f e (eff, t)) & issues)
-  = let ropt, issues = catch_all (fun _ -> rtb_core_compute_term_type (push_context g "tc_with_core" (range_of_term e)) f e) in
+  = let ropt, issues = catch_all (fun _ -> rtb_core_compute_term_type (push_context "tc_with_core" (range_of_term e) g) f e) in
     match ropt with
     | None -> None, issues
     | Some (eff, t) ->
@@ -458,7 +460,7 @@ let core_compute_term_type (g:env) (t:term)
   : T.Tac (eff:T.tot_or_ghost &
             ty:term)
   = let _, fg = elab_env_with_term_range g t in
-    let res, issues = tc_with_core (push_context g "core_check_term" (range_of_term t)) fg t in
+    let res, issues = tc_with_core (push_context "core_check_term" (range_of_term t) g) fg t in
       match res with
       | None -> 
         fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
@@ -472,7 +474,7 @@ let core_check_term' g e eff t extra_msg
     let topt, issues =
       catch_all (fun _ ->
       rtb_core_check_term
-        (push_context g "core_check_term" (range_of_term e))
+        (push_context "core_check_term" (range_of_term e) g)
         fg e eff t) in
     match topt with   
     | None ->
@@ -491,7 +493,7 @@ let core_check_term_at_type g e t
     let effopt, issues =
       catch_all (fun _ -> 
       rtb_core_check_term_at_type 
-        (push_context g "core_check_term_at_type" (range_of_term e))
+        (push_context "core_check_term_at_type" (range_of_term e) g)
         fg e t) in
     match effopt with
     | None ->

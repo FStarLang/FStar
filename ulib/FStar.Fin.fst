@@ -89,8 +89,7 @@ let tail_contains_eq #a (eq: equivalence_relation a) (s:S.seq a)
   = let t = S.tail s in  
     reveal_opaque (`%contains_eq) (contains_eq eq);  
     eliminate exists (i: under (S.length s)). eq x (S.index s i)
-    returns exists (k: under (S.length t)). eq x (S.index t k) 
-    with _. assert (S.index s i == S.index t (i-1))
+    with assert (S.index s i == S.index t (i-1))
 
 (** retrieves the index of an element given prior knowledge of its presense 
     unlike find function above, that returns option, this one guarantees

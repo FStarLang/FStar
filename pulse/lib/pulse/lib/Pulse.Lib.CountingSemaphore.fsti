@@ -28,16 +28,6 @@ let rec replicate (p: slprop) (i: nat) : slprop =
 
 instance val is_send_replicate (p: slprop) (i: nat) {| is_send p |} : is_send (replicate p i)
 
-(** Split replicate into two parts *)
-ghost fn replicate_split (p: slprop) (i j: nat)
-  requires replicate p (i + j)
-  ensures replicate p i ** replicate p j
-
-(** Join two replicates into one *)
-ghost fn replicate_join (p: slprop) (i j: nat)
-  requires replicate p i ** replicate p j
-  ensures replicate p (i + j)
-
 (** The semaphore capacity must fit in a U32 *)
 let sem_max: U32.t = 0xfffffffful
 
@@ -55,6 +45,16 @@ let permit #p ([@@@mkey] s: sem p) (i: nat) : slprop =
 val sem_alive #p ([@@@mkey] s: sem p) (#[full_default()] f:perm) : slprop
 
 instance val is_send_sem_alive #p s f {| is_send p |} : is_send (sem_alive #p s #f)
+
+(** Split replicate into two parts *)
+ghost fn replicate_split (p: slprop) (i j: nat)
+  requires replicate p (i + j)
+  ensures replicate p i ** replicate p j
+
+(** Join two replicates into one *)
+ghost fn replicate_join (p: slprop) (i j: nat)
+  requires replicate p i ** replicate p j
+  ensures replicate p (i + j)
 
 (** Create a new semaphore with n initial resources *)
 fn new_sem (p: slprop) (n: U32.t)

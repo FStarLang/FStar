@@ -506,7 +506,6 @@ let trim_option_name opt_name =
 let json_of_repl_state st =
   let filenames (_, (task, _)) =
     match task with
-    | LDInterleaved (intf, impl) -> [intf.tf_fname; impl.tf_fname]
     | LDSingle intf_or_impl -> [intf_or_impl.tf_fname]
     | LDInterfaceOfCurrentFile intf -> [intf.tf_fname]
     | _ -> [] in
@@ -584,7 +583,7 @@ let write_error contents =
 
 let write_repl_ld_task_progress task =
   match task with
-  | LDInterleaved (_, tf) | LDSingle tf | LDInterfaceOfCurrentFile tf ->
+  | LDSingle tf | LDInterfaceOfCurrentFile tf ->
     let modname = Parser.Dep.module_name_of_file tf.tf_fname in
     write_progress (Some "loading-dependency") [("modname", JsonStr modname)]
   | _ -> ()
@@ -658,7 +657,6 @@ let load_partial_checked_file (env: TcEnv.env) (filename: string) (until_lid: st
   | None -> failwith ("cannot find checked file for " ^ filename)
   | Some tc_result ->
   let _, env = with_dsenv_of_tcenv env (fun ds -> (), DsEnv.set_current_module ds tc_result.checked_module.name) in
-  let _, env = with_dsenv_of_tcenv env (fun ds -> (), DsEnv.set_iface_decls ds tc_result.checked_module.name []) in
   let pred se =
     let rec pred lids = match lids with
       | [] -> false

@@ -60,7 +60,7 @@ let pretty_guard_policy : guard_policy FStarC_Class_PP.pretty=
 type proofstate =
   {
   main_context: FStarC_TypeChecker_Env.env ;
-  all_implicits: FStarC_TypeChecker_Common.implicits ;
+  all_implicits: FStarC_TypeChecker_Env.implicits ;
   goals: goal Prims.list ;
   smt_goals: goal Prims.list ;
   splice_quals: FStarC_Syntax_Syntax.qualifier Prims.list ;
@@ -83,7 +83,7 @@ let __proj__Mkproofstate__item__main_context (projectee : proofstate) :
       guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
       urgency; dump_on_failure;_} -> main_context
 let __proj__Mkproofstate__item__all_implicits (projectee : proofstate) :
-  FStarC_TypeChecker_Common.implicits=
+  FStarC_TypeChecker_Env.implicits=
   match projectee with
   | { main_context; all_implicits; goals; smt_goals; splice_quals;
       splice_attrs; depth; __dump; psc; entry_range;
@@ -340,8 +340,7 @@ let mk_goal (env : FStarC_TypeChecker_Env.env)
   { goal_main_env = env; goal_ctx_uvar = u; opts = o; is_guard = b; label = l
   }
 let goal_of_goal_ty (env : FStarC_TypeChecker_Env.env)
-  (typ : FStarC_Syntax_Syntax.typ) :
-  (goal * FStarC_TypeChecker_Common.guard_t)=
+  (typ : FStarC_Syntax_Syntax.typ) : (goal * FStarC_TypeChecker_Env.guard_t)=
   let uu___ =
     FStarC_TypeChecker_Env.new_implicit_var_aux "proofstate_of_goal_ty"
       typ.FStarC_Syntax_Syntax.pos env typ FStarC_Syntax_Syntax.Strict
@@ -440,7 +439,13 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env)
       FStarC_TypeChecker_Env.core_check =
         (env.FStarC_TypeChecker_Env.core_check);
       FStarC_TypeChecker_Env.missing_decl =
-        (env.FStarC_TypeChecker_Env.missing_decl)
+        (env.FStarC_TypeChecker_Env.missing_decl);
+      FStarC_TypeChecker_Env.iface_todo =
+        (env.FStarC_TypeChecker_Env.iface_todo);
+      FStarC_TypeChecker_Env.iface_lids =
+        (env.FStarC_TypeChecker_Env.iface_lids);
+      FStarC_TypeChecker_Env.iface_val_lids =
+        (env.FStarC_TypeChecker_Env.iface_val_lids)
     } i.FStarC_TypeChecker_Common.imp_uvar uu___ false
     i.FStarC_TypeChecker_Common.imp_reason
 let goal_of_ctx_uvar (g : goal) (ctx_u : FStarC_Syntax_Syntax.ctx_uvar) :

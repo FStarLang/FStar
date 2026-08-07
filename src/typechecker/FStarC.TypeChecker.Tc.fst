@@ -366,10 +366,13 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
       let rename_in_typ def typ =
         let typ = Subst.compress typ in
         let def_bs = match (Subst.compress def).n with
-                     | Tm_abs {bs=binders} -> binders
+                     | Tm_abs _ ->
+                       let binders, _, _ = U.abs_formals_ln def in
+                       binders
                      | _ -> [] in
         match typ with
-        | { n = Tm_arrow {bs=val_bs; comp=c}; pos = r } -> begin
+        | { n = Tm_arrow _; pos = r } -> begin
+          let val_bs, c = U.arrow_formals_comp_ln_strict typ in
           let has_auto_name bv =
             BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
           let rec rename_binders def_bs val_bs =
@@ -387,7 +390,7 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
                  //     (Format.fmt2 "Parameter name %s doesn't match name %s used in val declaration"
                  //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
                  val_b) :: rename_binders bt vt in
-          Syntax.mk (Tm_arrow {bs=rename_binders def_bs val_bs; comp=c}) r end
+          S.mk_Tm_arrow (rename_binders def_bs val_bs) c r end
         | _ -> typ in
       { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
 
@@ -885,7 +888,12 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
       then { se with sigquals = Assumption :: (List.filter (fun q -> q <> Irreducible) se.sigquals) }
       else se)
     in
-    let ses = ses |> List.map (fun se -> { se with sigmeta = { se.sigmeta with sigmeta_spliced = true } }) in
+    let ses = ses |> List.map (fun sp -> { sp with sigmeta = { sp.sigmeta with
+                                            sigmeta_spliced = true;
+                                            (* the splice stands for a declaration of a language
+                                               extension (e.g. a Pulse `fn`); keep that marker on
+                                               the declarations it produces *)
+                                            sigmeta_extension_decl = se.sigmeta.sigmeta_extension_decl } }) in
 
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
@@ -1038,6 +1046,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : ML Env.env =
   | Sig_let _ when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
 
   | _ ->
+    (* When loading an already checked module, its declarations may include
+       copies of the declarations of its interface, which was loaded before
+       it; do not complain about those. *)
     let env = Env.push_sigelt env se in
     //match again to perform postprocessing
     match se.sigel with
@@ -1093,6 +1104,228 @@ let compress_and_norm env t =
               t
       )
 
+(***********************************************************************)
+(* Checking an implementation against its interface                    *)
+(*                                                                     *)
+(* When A.fst is checked and A.fsti exists, the *already checked*      *)
+(* sigelts of A.fsti are held in [env.iface_todo] as an ordered to-do  *)
+(* list. Nothing from the interface is ever rechecked: a `val` is      *)
+(* discharged by checking that the implementation subsumes it, and any *)
+(* other interface sigelt (a `let`, an inductive, ...) is copied over  *)
+(* verbatim.                                                           *)
+(*                                                                     *)
+(* The to-do list doubles as a scope: as long as an entry sits on it,  *)
+(* the names it defines are *not* visible to the implementation (see   *)
+(* [Env.is_iface_hidden]). This reproduces the ordering discipline of  *)
+(* the old syntactic interleaving and is what makes the whole scheme   *)
+(* sound: were the interface visible in full from the start, A.fst     *)
+(* could discharge `val one` using a definition of A.fsti that is      *)
+(* itself justified by `one` --- a circular proof of anything.         *)
+(***********************************************************************)
+
+(* The `val`s of an interface carry the Assumption qualifier, since on their own
+they are indeed assumptions. Once implemented they are not, so drop it when
+copying the declaration into the implementation. *)
+let unassume_iface_val (se:sigelt) : ML sigelt =
+  match se.sigel with
+  | Sig_declare_typ _ ->
+    { se with sigquals = se.sigquals |> List.filter (fun q -> q <> Assumption) }
+  | _ -> se
+
+(* Is [se] a `val` of the interface, i.e. a declaration that the
+implementation is expected to define? Auto-generated projectors and
+discriminators are declarations too, but they come with their type and are
+simply copied over. *)
+let is_iface_val (se:sigelt) : ML bool =
+  match se.sigel with
+  | Sig_declare_typ _ ->
+    not (se.sigquals |> BU.for_some (function
+         | Projector _ | Discriminator _ -> true
+         | _ -> false))
+  | _ -> false
+
+(* Check that the implementation of [l], whose checked sigelt is [impl],
+subsumes the interface's `val l : us. t_iface`. We require the same number of
+universe parameters and that the implementation's type is a subtype of the
+declared one. *)
+let check_subsumes_iface_val (env:Env.env) (iface_se:sigelt) (impl:sigelt) : ML unit =
+  let open FStarC.Pprint in
+  match iface_se.sigel with
+  | Sig_declare_typ {lid=l; us=iface_us; t=iface_t} -> (
+    let impl_scheme =
+      match impl.sigel with
+      | Sig_let {lbs=(_, lbs)} ->
+        BU.find_map lbs (fun lb ->
+                 if lid_equals (Inr?.v lb.lbname).fv_name l
+                 then Some (lb.lbunivs, lb.lbtyp)
+                 else None)
+      | Sig_inductive_typ {us; t}
+      | Sig_datacon {us; t}
+      | Sig_declare_typ {us; t} -> Some (us, t)
+      | _ -> None
+    in
+    match impl_scheme with
+    | None ->
+      (* Nothing to compare against: e.g. a splice or an effect definition.
+         Those are accepted as-is, as they were before. *)
+      ()
+    | Some (impl_us, impl_t) ->
+      if List.length impl_us <> List.length iface_us
+      then raise_error impl Errors.Fatal_IncoherentInlineUniverse [
+             prefix 2 1 (text "The implementation of") (pp l)
+               ^/^ text "has a different number of universe parameters than its interface.";
+             text (Format.fmt2 "The interface declares %s, the implementation has %s."
+                     (show (List.length iface_us)) (show (List.length impl_us)))
+           ];
+      (* Relate the two types under a common set of universe binders. *)
+      let us, iface_t = SS.open_univ_vars iface_us iface_t in
+      let _, impl_t = Env.inst_tscheme_with (impl_us, impl_t) (us |> List.map U_name) in
+      let env = Env.push_univ_vars env us in
+      let env = Env.set_range env (range_of_sigelt impl) in
+      match Rel.get_subtyping_predicate env impl_t iface_t with
+      | None ->
+        raise_error impl Errors.Fatal_InterfaceNotImplementedByModule [
+          prefix 2 1 (text "The implementation of") (pp l)
+            ^/^ text "does not match its declaration in the interface.";
+          prefix 2 1 (text "Interface type:") (pp iface_t);
+          prefix 2 1 (text "Implementation type:") (pp impl_t)
+        ]
+      | Some g ->
+        Rel.force_trivial_guard env (Env.apply_guard g (S.fvar l None))
+  )
+  | _ -> ()
+
+(* Split the interface to-do list against an implementation sigelt defining
+[defs]. This follows the ordering discipline that the old syntactic
+interleaving implemented:
+
+  - leading interface sigelts that are not `val`s (definitions, inductives,
+    projectors, ...) are copied verbatim into the implementation;
+  - a `val` that [defs] discharges is consumed, together with the `val`s of the
+    other members of its mutually recursive group;
+  - a `val` that [defs] does not discharge stops the walk: the implementation
+    declaration is simply a private definition of its own. It is however an
+    error for [defs] to be declared *later* in the interface, since the
+    definitions must appear in the order of their declarations.
+
+This is what rules out circular proofs: an interface definition is justified by
+the `val`s that precede it, so it must not come into scope until they have all
+been implemented, or it could be used to discharge one of them. Declarations
+introduced by a language extension (a Pulse `fn`, say) are no different from
+plain `val`s in this respect.
+
+Returns (copied, matched, remaining). *)
+let split_iface_todo (se:sigelt) (defs:list lident) (todo:list sigelt)
+  : ML (list sigelt & list sigelt & list sigelt) =
+  let defines se' =
+    U.lids_of_sigelt se' |> BU.for_some (fun l -> defs |> BU.for_some (lid_equals l))
+  in
+  let rec take_mutuals acc todo : ML (list sigelt & list sigelt) =
+    match todo with
+    | hd :: tl when is_iface_val hd && defines hd -> take_mutuals (hd::acc) tl
+    | _ -> List.rev acc, todo
+  in
+  let rec go copied todo
+    : ML (list sigelt & list sigelt & list sigelt) =
+    match todo with
+    | [] -> List.rev copied, [], []
+    | hd :: tl ->
+      if not (is_iface_val hd)
+      then go (hd::copied) tl
+      else if defines hd
+      then let mutuals, rest = take_mutuals [] tl in
+           List.rev copied, hd::mutuals, rest
+      else (
+        (* [hd] is not implemented here. Make sure we are not implementing
+           something the interface only declares later on. *)
+        (match tl |> List.tryFind (fun i -> is_iface_val i && defines i) with
+         | Some out_of_order ->
+           let open FStarC.Pprint in
+           let l = List.hd (U.lids_of_sigelt out_of_order) in
+           raise_error se Errors.Fatal_WrongDefinitionOrder [
+             prefix 2 1 (text "Expected the definition of")
+               (pp (List.hd (U.lids_of_sigelt hd)) ^/^ text "to precede" ^/^ pp l)
+           ]
+         | None -> ());
+        List.rev copied, [], todo
+      )
+  in
+  go [] todo
+
+(* Discharge the head of the interface to-do list against the implementation
+sigelt [se], which is about to be checked.
+
+Returns the interface sigelts to be emitted verbatim ahead of [se] (which the
+tick-off just brought into scope) and the interface `val`s that [se] is
+expected to subsume. *)
+let tick_off_iface_todo (env:Env.env) (se:sigelt)
+  : ML (list sigelt & list sigelt & Env.env)
+  = match Env.iface_todo env with
+    | [] -> [], [], env
+    | todo ->
+      (* An `[@@expect_failure]` block defines nothing --- its declarations are
+         checked with errors trapped and then thrown away --- so it must not
+         discharge anything of the interface. Were it to do so, writing
+             [@@expect_failure] let f = ...
+         in A.fst would silently *admit* `val f` of A.fsti: the declaration
+         would be ticked off the to-do list, and hence neither reported as
+         unimplemented nor ever checked, while remaining an assumption for the
+         rest of the module and for A.fst.checked. Interface definitions that
+         precede the next unimplemented `val` are still copied over, so that the
+         block is checked in the scope it would have had. *)
+      let defs =
+        match se.sigel with
+        | Sig_fail _ -> []
+        | _ -> U.lids_of_sigelt se
+      in
+      let copied, matched, remaining = split_iface_todo se defs todo in
+      (* The entries we just walked past come into scope now; whatever is left
+         of the to-do list stays hidden, so that [se] cannot be justified by an
+         interface definition that the implementation has not reached yet. *)
+      let env = Env.consume_iface_todo env (copied @ matched) remaining in
+      (* An interface `val` that is being implemented is no longer an assumption. *)
+      let matched_vals = List.map unassume_iface_val matched in
+      (* Nothing needs to be added to the environment: the interface has
+         already been checked and loaded in full; ticking the entries off the
+         to-do list is what brings them into scope. *)
+      copied @ matched_vals, matched_vals, env
+
+(* Flush the remaining to-do list at the end of the module: any leftover `val`
+is an unimplemented declaration, everything else is copied verbatim. *)
+let finish_iface_todo (env:Env.env)
+  : ML (list sigelt & Env.env)
+  = let open FStarC.Pprint in
+    let todo = Env.iface_todo env in
+    let missing = todo |> List.filter is_iface_val in
+    if Cons? missing
+    then (
+      let names = missing |> List.collect U.lids_of_sigelt in
+      log_issue (range_of_sigelt (List.hd missing)) Errors.Fatal_InterfaceNotImplementedByModule [
+        prefix 2 1
+          (text (Format.fmt1 "Module %s fails to implement some declarations of its interface:"
+                   (show (Env.current_module env))))
+          (names |> List.map pp |> separate hardline)
+      ]
+    );
+    let copied = todo |> List.filter (fun se -> not (is_iface_val se)) in
+    copied, Env.set_iface_todo env []
+
+(* When a module has an interface, its definitions that the interface does not
+declare are private to the module. Extraction (in particular to C, via Karamel)
+needs to know this, so tag them with the internal `KrmlPrivate` attribute; see
+[FStarC.Extraction.ML.Modul.extract_meta]. This reproduces what the old
+syntactic interleaving used to do. *)
+let mark_karamel_private (env:Env.env) (se:sigelt) : ML sigelt =
+  let lids = U.lids_of_sigelt se in
+  if not (Env.has_iface env)
+  || Nil? lids
+  || lids |> BU.for_some (Env.declared_in_iface env)
+  then se
+  else
+    let rng = range_of_sigelt se in
+    let attr = S.mk (Tm_constant (Const_string ("KrmlPrivate", rng))) rng in
+    { se with sigattrs = attr :: se.sigattrs }
+
 let tc_decls env ses : ML (list sigelt & Env.env) =
   let rec process_one_decl ses_env se : ML _ =
     let (ses, env) = ses_env in
@@ -1111,6 +1344,23 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
 
     if Options.ide_id_info_off() then Env.toggle_id_info env false;
     if !dbg_IdInfoOn then Env.toggle_id_info env true;
+
+    (* Tick off the entries of the interface's to-do list that this declaration
+       discharges. Copied interface sigelts and the declarations being
+       implemented are added to the environment and emitted before [se]. *)
+    let iface_prefix, iface_matched, env =
+      (* Sigelts produced by a splice are fed back through this loop; the splice
+         itself has already discharged the interface declarations they define. *)
+      if se.sigmeta.sigmeta_spliced
+      then [], [], env
+      else tick_off_iface_todo env se
+    in
+
+    (* The interface is not encoded to the solver while checking the
+       implementation (its abstract view of the module would clash with the
+       implementation's own encoding), so the sigelts we copy verbatim from the
+       interface must be encoded here, before checking [se]. *)
+    List.iter (fun se -> env.solver.encode_sig env se) iface_prefix;
 
     let ses', ses_elaborated, env =
             Errors.with_ctx (Format.fmt2 "While typechecking the %stop-level declaration ‘%s’"
@@ -1158,6 +1408,8 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
     // in
     // let ses' = ses' |> List.map fixup_delta_depth in
 
+    let ses' = ses' |> List.map (mark_karamel_private env) in
+
     // Add to the environment
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
     UF.reset();
@@ -1165,6 +1417,11 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
     if Options.log_types () || Debug.medium () || !dbg_LogTypes
     then Format.print1 "Checked: %s\n" (show ses');
 
+    (* The interface is not encoded to the solver while checking the
+       implementation (its abstract view of the module would clash with the
+       implementation's own encoding), so the sigelts we copy verbatim from the
+       interface must be encoded here, right before the declaration that
+       triggered them. *)
     Profiling.profile 
       (fun () -> List.iter (fun se -> env.solver.encode_sig env se) ses')
       (Some (Ident.string_of_lid (Env.current_module env)))      
@@ -1175,7 +1432,15 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
     if Options.interactive () then
       SMTEncoding.Solver.flush_hints ();
 
-    (List.rev_append ses' ses, env), ses_elaborated
+    (* Now that the implementation has been checked, verify that it really does
+       subsume what the interface declared. *)
+    iface_matched |> List.iter (fun iface_se ->
+      let lids = U.lids_of_sigelt iface_se in
+      ses' |> List.iter (fun impl ->
+        if U.lids_of_sigelt impl |> BU.for_some (fun l -> lids |> BU.for_some (lid_equals l))
+        then check_subsumes_iface_val env iface_se impl));
+
+    (List.rev_append ses' (List.rev_append iface_prefix ses), env), ses_elaborated
     end
   in
   // A wrapper to (maybe) print the time taken for each sigelt
@@ -1224,6 +1489,36 @@ let tc_partial_modul env modul =
   let name = Format.fmt2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   let env = Env.set_current_module env modul.name in
+  (* If this is the implementation of an interface we have already checked,
+     seed the interface's checked sigelts as a to-do list. Nothing of the
+     interface is rechecked: entries are ticked off as the implementation
+     discharges them. See [tick_off_iface_todo]. *)
+  let env =
+    if modul.is_interface then env
+    else
+      match env.modules |> List.tryFind (fun m -> m.is_interface && lid_equals m.name modul.name) with
+      | None -> env
+      | Some iface ->
+        let env = Env.set_iface_todo env iface.declarations in
+        let env =
+          Env.set_iface_lids env
+            (iface.declarations |> List.collect U.lids_of_sigelt)
+            (iface.declarations |> List.filter is_iface_val |> List.collect U.lids_of_sigelt)
+        in
+        let missing_decl0 = env.missing_decl in
+        (* The interface's `val`s carry the Assumption qualifier (they are
+           assumptions on their own). Within the implementation they are
+           ordinary declarations, so shadow them with unassumed copies. *)
+        let env =
+          iface.declarations |> List.fold_left (fun env se ->
+            if is_iface_val se
+            then Env.push_sigelt_force env (unassume_iface_val se)
+            else env) env
+        in
+        (* The interface's to-do list already tracks these; do not report them
+           twice via [missing_definition_list]. *)
+        { env with missing_decl = missing_decl0 }
+  in
   (* Only set a context for dependencies *)
   Errors.with_ctx_if (not (Options.should_check (string_of_lid modul.name)))
                      (Format.fmt2 "While loading dependency %s%s"
@@ -1239,13 +1534,21 @@ let tc_more_partial_modul env modul decls =
   let modul = {modul with declarations=modul.declarations@ses} in
   modul, ses, env
 
-let finish_partial_modul should_pop (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : ML (modul & env) =
+let finish_partial_modul should_pop (loading_from_cache:bool) (en:env) (m:modul) : ML (modul & env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   if Debug.low () then
     Format.print3 "Finishing %s %s -- loading_from_cache=%s\n"
       (if m.is_interface then "interface" else "module")
       (show m.name)
       (show loading_from_cache);
+  (* Flush whatever is left of the interface's to-do list, and complain about
+     declarations of the interface that the implementation never defined. *)
+  let m, en =
+    if loading_from_cache then m, en
+    else
+      let trailing, en = finish_iface_todo en in
+      {m with declarations=m.declarations@trailing}, en
+  in
   let env = Env.finish_module en m in
 
   if not loading_from_cache then (
@@ -1277,22 +1580,49 @@ let finish_partial_modul should_pop (loading_from_cache:bool) (iface_exists:bool
 let deep_compress_modul (m:modul) : ML modul =
   { m with declarations = List.map (Compress.deep_compress_se false false) m.declarations }
 
-let tc_modul (env0:env) (m:modul) (iface_exists:bool) : ML (modul & env) =
+let tc_modul (env0:env) (m:modul) : ML (modul & env) =
   let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, env = tc_partial_modul env0 m in
   // Note: all sigelts returned by tc_partial_modul must already be compressed
   // by Syntax.compress.deep_compress, so they are safe to output.
-  finish_partial_modul true false iface_exists env modul
+  finish_partial_modul true false env modul
 
-let load_checked_module_sigelts (en:env) (m:modul) : ML env =
+(* A checked implementation contains copies of the declarations of its
+   interface. If the interface has already been loaded into [en] --- which is
+   the normal case, since it is a dependency of the implementation --- those
+   copies must not be pushed again. They are recognized by their name and
+   range, as they are copied verbatim. *)
+let sigelt_key (se:sigelt) : ML (list string & string) =
+  U.lids_of_sigelt se |> List.map string_of_lid,
+  Range.string_of_range (range_of_sigelt se)
+
+let already_loaded_iface_decls (en:env) (m:modul) : ML (list (list string & string)) =
+  if m.is_interface then []
+  else
+    match en.modules |> Option.find (fun mm -> lid_equals mm.name m.name && mm.is_interface) with
+    | Some i -> i.declarations |> List.map sigelt_key
+    | None -> []
+
+(* [push] controls whether the module's sigelts are added under a fresh
+   context snapshot.  Callers that go on to [finish_partial_modul true] need it;
+   [load_checked_module] does not, since the env it keeps afterwards is the
+   pushed one and the popped one is discarded -- so the snapshot only costs 9
+   [SMap.copy]s per dependency. *)
+let load_checked_module_sigelts (push:bool) (en:env) (m:modul) : ML env =
   //This function tries to very carefully mimic the effect of the environment
   //of having checked the module from scratch, i.e., using tc_module below
+  let loaded = already_loaded_iface_decls en m in
   let env = Env.set_current_module en m.name in
   //push context, finish_partial_modul will do the pop
-  let env = push_context env ("Internals for " ^ Ident.string_of_lid m.name) in
+  let env =
+    if push
+    then push_context env ("Internals for " ^ Ident.string_of_lid m.name)
+    else env
+  in
   let env = List.fold_left (fun env se ->
+             if Cons? loaded && List.mem (sigelt_key se) loaded then env else
              //add every sigelt in the environment
              let env = add_sigelt_to_env env se true in
              //and then query it back immediately to populate the environment's internal cache
@@ -1313,25 +1643,24 @@ let load_checked_module (en:env) (m:modul) : ML env =
   if not (Options.should_check (string_of_lid m.name)) && not (Options.debug_all_modules ())
   then Debug.disable_all ();
 
-  let env = load_checked_module_sigelts en m in
+  let env = load_checked_module_sigelts false en m in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
-  //the second true flag is for iface_exists, used to determine whether should extract interface or not
-  let _, env = finish_partial_modul true true true env m in
+  let _, env = finish_partial_modul false true env m in
   Debug.restore dsnap;
   env
 
 let load_partial_checked_module (en:env) (m:modul) : ML env =
-  load_checked_module_sigelts en m
+  load_checked_module_sigelts true en m
 
-let check_module env0 m b : ML _ =
+let check_module env0 m : ML _ =
   if Debug.any()
   then Format.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (show m.name);
   if Options.dump_module (string_of_lid m.name)
   then Format.print1 "Module before type checking:\n%s\n" (show m);
 
   let env = {env0 with admit = not (Options.should_verify (string_of_lid m.name))} in
-  let m, env = tc_modul env m b in
+  let m, env = tc_modul env m in
   (* restore admit *)
   let env = { env with admit = env0.admit } in
 

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.GhostSet
+include FStar.GhostSet
 open FStar.List.Tot { (@) }
 
 let rec mem_as_set' x = function
@@ -45,14 +46,14 @@ let rec list_filterP #t (p: t->prop) (xs: list t) :
       list_filterP p xs
 
 let is_finite_union_r #t (x y: set t) =
-  introduce is_finite (union x y) ==> is_finite x with _.
+  introduce is_finite (union x y) ==> is_finite x with
   let xy' = is_finite_elim (union x y) in
   assert (forall a. mem a (union x y) <==> List.memP a xy');
   let x' = list_filterP (fun a -> mem a x) xy' in
   lemma_equal_intro x (as_set x')
 
 let is_finite_union_l #t (x y: set t) =
-  introduce is_finite x /\ is_finite y ==> is_finite (union x y) with _.
+  introduce is_finite x /\ is_finite y ==> is_finite (union x y) with
   let x' = is_finite_elim x in
   let y' = is_finite_elim y in
   List.append_memP_forall x' y';
@@ -65,7 +66,7 @@ let is_finite_union x y =
   is_finite_union_r y x
 
 let is_finite_intersect_r #t (x y: set t) =
-  introduce is_finite x ==> is_finite (intersect x y) with _.
+  introduce is_finite x ==> is_finite (intersect x y) with
   let x' = is_finite_elim x in
   let xy' = list_filterP (fun a -> mem a y) x' in
   lemma_equal_intro (intersect x y) (as_set xy')

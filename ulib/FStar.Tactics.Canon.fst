@@ -15,6 +15,7 @@
 *)
 module FStar.Tactics.Canon
 
+open FStar.Tactics.Effect
 open FStar.Reflection.V2
 open FStar.Tactics.V2.Bare
 open FStar.Reflection.V2.Arith

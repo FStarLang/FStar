@@ -1,0 +1,3 @@
+* Error 12 at IfaceUnivMismatch.fst(3,0-3,34):
+  - Expected type Type got type Type0
+

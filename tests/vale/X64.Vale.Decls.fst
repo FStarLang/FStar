@@ -115,9 +115,7 @@ let regs_eval_code_one (c:va_code{ Ins? c }) (dst:dst_op) (va_s0:va_state) (va_s
      UInt64.v (S.eval_operand dst (snd (S.eval_ins cc (state_to_S va_s0))))))
 = eliminate exists fuel.
     Some <| state_to_S va_sM == S.eval_code c fuel (state_to_S va_s0)
-  returns
-    Regs_i.equal va_sM.regs (va_update_dst_operand dst va_sM va_s0).regs
-  with _. (
+  with (
     ()
   )
 
@@ -423,9 +421,7 @@ let regs_eval_code_mul64 (c:va_code{ Ins? c }) (va_s0:va_state) (va_sM:va_state)
      Regs_i.equal va_sM.regs (va_update_reg Rdx va_sM (va_update_reg Rax va_sM va_s0)).regs))
 = eliminate exists fuel.
     Some <| state_to_S va_sM == S.eval_code c fuel (state_to_S va_s0)
-  returns
-    Regs_i.equal va_sM.regs (va_update_reg Rdx va_sM (va_update_reg Rax va_sM va_s0)).regs
-  with _. (
+  with (
     ()
   )
 

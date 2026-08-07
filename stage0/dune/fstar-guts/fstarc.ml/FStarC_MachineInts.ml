@@ -171,14 +171,9 @@ let e_machint (k : machint_kind) :
        match uu___ with
        | (t1, m) ->
            let t2 = FStarC_Syntax_Util.unmeta_safe t1 in
-           let uu___1 =
-             let uu___2 = FStarC_Syntax_Subst.compress t2 in
-             uu___2.FStarC_Syntax_Syntax.n in
+           let uu___1 = FStarC_Syntax_Util.head_and_args_full t2 in
            (match uu___1 with
-            | FStarC_Syntax_Syntax.Tm_app
-                { FStarC_Syntax_Syntax.hd = hd;
-                  FStarC_Syntax_Syntax.args = (a, uu___2)::[];_}
-                when
+            | (hd, (a, uu___2)::[]) when
                 let uu___3 =
                   let uu___4 = int_to_t_lid_for k in
                   FStarC_Syntax_Util.is_fvar uu___4 hd in

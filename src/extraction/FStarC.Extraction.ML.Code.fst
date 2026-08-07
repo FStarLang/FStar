@@ -16,6 +16,7 @@
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Code
 
+open FStarC.Class.Show
 open FStarC
 open FStarC.Effect
 open FStarC.List

@@ -52,6 +52,10 @@ val query_logging : query_log
 
 val giveZ3 : list decl -> ML unit
 
+(* Give the solver a whole module's SMT encoding, without deserializing it;
+   see FStarC.SMTEncoding.SolverState.lazy_decls *)
+val giveZ3_lazy : SolverState.lazy_decls -> ML unit
+
 val ask_text
        : r:Range.t
        -> cache:(option string) // hash

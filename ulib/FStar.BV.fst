@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.BV
+open FStar.UInt
 
 module U = FStar.UInt
 module B = FStar.BitVector

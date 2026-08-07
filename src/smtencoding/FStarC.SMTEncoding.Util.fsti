@@ -27,10 +27,6 @@ module TcEnv = FStarC.TypeChecker.Env
 
 val mkAssume : term & caption & string -> ML decl
 
-val norng  (f : 'a -> Range.t -> ML term) : 'a -> ML term
-val norng2 (f : 'a -> 'b -> Range.t -> ML term) : 'a -> 'b -> ML term
-val norng3 (f : 'a -> 'b -> 'c -> Range.t -> ML term) : 'a -> 'b -> 'c -> ML term
-val norng4 (f : 'a -> 'b -> 'c -> 'd -> Range.t -> ML term) : 'a -> 'b -> 'c -> 'd -> ML term
 
 val mkTrue : term
 val mkFalse : term

@@ -34,7 +34,7 @@ instance e_erased (a:Type) (d : EMB.embedding a) : Tot (EMB.embedding (emb_erase
       U.mk_app r [S.iarg ty; S.as_arg (EMB.embed x rng shadow cbs)]
   in
   let un (t:term) cbs : ML (option (emb_erased term a)) =
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     match (U.un_uinst head).n, args with
     | Tm_fvar fv, [(ty, Some _); (a, None)] when fv_eq_lid fv PC.hide ->
       let! v = EMB.unembed a cbs in

@@ -918,7 +918,7 @@ let e_bool : Prims.bool embedding=
   mk_emb' em1 un1
     (fun uu___ -> lid_as_typ FStarC_Parser_Const.bool_lid [] [])
     (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_bool)
-let e_char : FStar_String.char embedding=
+let e_char : FStar_Char.char embedding=
   let em1 _cb c = Constant (Char c) in
   let un1 _cb c =
     match c with

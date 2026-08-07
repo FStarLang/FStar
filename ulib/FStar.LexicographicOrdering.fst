@@ -17,6 +17,7 @@
 *)
 
 module FStar.LexicographicOrdering
+open FStar.Nonempty
 #set-options "--warn_error -242" //no inner let recs in SMT
 open FStar.ReflexiveTransitiveClosure
 open FStar.WellFounded

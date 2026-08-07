@@ -87,8 +87,7 @@ let test10 =
 [@@expect_failure [19]]
 let test_elim_exists () : unit
 = eliminate exists (n: nat). (n = 0)
-  returns True
-  with pf_zero . assert(n = 0)
+  with assert(n = 0)
 
 
 [@@expect_failure [19]]
@@ -99,18 +98,15 @@ let test_elim_forall () : unit
 [@@expect_failure [19]]
 let test_elim_and (p q:prop) : unit
 = eliminate p /\ q
-  returns q
-  with pp qq. qq
+  with ()
 
 [@@expect_failure [19]]
 let test_elim_and (p q:prop) (_:squash p) : unit
 = eliminate p /\ q
-  returns q
-  with pp qq. qq
+  with ()
 
 [@@expect_failure [19]]
 let test_elim_or (p q:prop) : unit
 = eliminate p \/ q
-  returns False
-  with pp. admit()
-  and qq. admit()
+  with admit()
+  and admit()

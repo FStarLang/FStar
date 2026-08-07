@@ -1,5 +1,6 @@
 module Lib.Sequence.Lemmas
 
+module Loops = Lib.LoopCombinators
 open Lib.IntTypes
 open Lib.Sequence
 

@@ -1,5 +1,11 @@
 module FStarC.Ident
 
+open FStarC.Range.Type
+open FStarC.Class.Show
+open FStarC.Class.HasRange
+open FStarC.Class.Deq
+open FStarC.Class.Ord
+open FStarC.Class.PP
 open FStarC.Effect
 open FStarC.Range
 open FStarC.List

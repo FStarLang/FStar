@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.SpinLock
+open Pulse.Lib.Trade
 #lang-pulse
 
 open Pulse.Lib.Pervasives

@@ -16,6 +16,10 @@
 
 module Pulse.Lib.Box
 
+open Pulse.Class.PtsTo
+open FStar.Ghost
+open PulseCore.FractionalPermission
+open Pulse.Lib.Send
 open Pulse.Lib.Core
 
 module R = Pulse.Lib.Reference

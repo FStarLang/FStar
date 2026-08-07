@@ -49,7 +49,7 @@ let e_erased (d : 'a FStarC_Syntax_Embeddings_Base.embedding) :
         FStarC_Syntax_Util.mk_app r uu___ in
   let un uu___1 uu___ =
     (fun t cbs ->
-       let uu___ = FStarC_Syntax_Util.head_and_args t in
+       let uu___ = FStarC_Syntax_Util.head_and_args_full t in
        match uu___ with
        | (head, args) ->
            let uu___1 =

@@ -1,0 +1,11 @@
+* Warning 361 at IfaceNoPragmaLeak.fsti(5,0-5,19):
+  - Some #push-options have not been popped. Current depth is 1.
+
+* Error 19 at IfaceNoPragmaLeak.fst(5,22-5,23):
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC = x >= 0
+  - See also Prims.fst(642,18-642,24)
+

@@ -155,3 +155,97 @@ val and_intro
         (left:unit -> Tot (squash p))
         (right:squash p -> Tot (squash (q())))
   : Tot (squash (p /\ q()))
+
+////////////////////////////////////////////////////////////////////////////////
+// Combinators used by the desugaring of `eliminate`
+////////////////////////////////////////////////////////////////////////////////
+
+(** Decide which side of a disjunction holds.
+    Used to desugar `eliminate p \/ q with e1 and e2` into
+    `if or_decide p q then e1 else e2`.
+
+    These combinators are marked `irreducible` so that a `let` binding
+    of one of them does not add a defining equation to the VC; see
+    `should_return` in FStarC.TypeChecker.Util. *)
+irreducible
+let or_decide (p q:prop)
+  : Ghost bool
+    (requires p \/ q)
+    (ensures fun b -> if b then p else q)
+  = let b = t2b p in
+    assert (b <==> p);
+    b
+
+(** Pick a witness for an existential.
+    `indefinite_descriptionN` picks witnesses for `N` nested existentials at
+    once, packaged in a dependent tuple, so that
+    `eliminate exists x1 ... xN. p with e` can be desugared into
+    `let (| x1, ..., xN |) = indefinite_descriptionN (fun x1 ... xN -> p) in e`.
+    For more than `max_indefinite_description_arity` binders, the desugaring
+    nests several of these. *)
+irreducible
+let indefinite_description1
+      (#a:Type)
+      (p: a -> prop)
+  : Ghost a
+    (requires exists x1. p x1)
+    (ensures fun x1 -> p x1)
+  = indefinite_description p
+
+irreducible
+let indefinite_description2
+      (#a:Type)
+      (#b:a -> GTot Type)
+      (p: (x1:a -> b x1 -> prop))
+  : Ghost (dtuple2 a b)
+    (requires exists x1 x2. p x1 x2)
+    (ensures fun r -> let (| x1, x2 |) = r in p x1 x2)
+  = let x1 = indefinite_description (fun (x1:a) -> exists x2. p x1 x2) in
+    let x2 = indefinite_description1 #(b x1) (fun x2 -> p x1 x2) in
+    (| x1, x2 |)
+
+irreducible
+let indefinite_description3
+      (#a:Type)
+      (#b:a -> GTot Type)
+      (#c:(x1:a -> b x1 -> GTot Type))
+      (p: (x1:a -> x2:b x1 -> c x1 x2 -> prop))
+  : Ghost (dtuple3 a b c)
+    (requires exists x1 x2 x3. p x1 x2 x3)
+    (ensures fun r -> let (| x1, x2, x3 |) = r in p x1 x2 x3)
+  = let x1 = indefinite_description (fun (x1:a) -> exists x2 x3. p x1 x2 x3) in
+    let (| x2, x3 |) = indefinite_description2 #(b x1) #(c x1) (fun x2 x3 -> p x1 x2 x3) in
+    (| x1, x2, x3 |)
+
+irreducible
+let indefinite_description4
+      (#a:Type)
+      (#b:a -> GTot Type)
+      (#c:(x1:a -> b x1 -> GTot Type))
+      (#d:(x1:a -> x2:b x1 -> c x1 x2 -> GTot Type))
+      (p: (x1:a -> x2:b x1 -> x3:c x1 x2 -> d x1 x2 x3 -> prop))
+  : Ghost (dtuple4 a b c d)
+    (requires exists x1 x2 x3 x4. p x1 x2 x3 x4)
+    (ensures fun r -> let (| x1, x2, x3, x4 |) = r in p x1 x2 x3 x4)
+  = let x1 = indefinite_description (fun (x1:a) -> exists x2 x3 x4. p x1 x2 x3 x4) in
+    let (| x2, x3, x4 |) =
+      indefinite_description3 #(b x1) #(c x1) #(d x1) (fun x2 x3 x4 -> p x1 x2 x3 x4)
+    in
+    (| x1, x2, x3, x4 |)
+
+irreducible
+let indefinite_description5
+      (#a:Type)
+      (#b:a -> GTot Type)
+      (#c:(x1:a -> b x1 -> GTot Type))
+      (#d:(x1:a -> x2:b x1 -> c x1 x2 -> GTot Type))
+      (#e:(x1:a -> x2:b x1 -> x3:c x1 x2 -> d x1 x2 x3 -> GTot Type))
+      (p: (x1:a -> x2:b x1 -> x3:c x1 x2 -> x4:d x1 x2 x3 -> e x1 x2 x3 x4 -> prop))
+  : Ghost (dtuple5 a b c d e)
+    (requires exists x1 x2 x3 x4 x5. p x1 x2 x3 x4 x5)
+    (ensures fun r -> let (| x1, x2, x3, x4, x5 |) = r in p x1 x2 x3 x4 x5)
+  = let x1 = indefinite_description (fun (x1:a) -> exists x2 x3 x4 x5. p x1 x2 x3 x4 x5) in
+    let (| x2, x3, x4, x5 |) =
+      indefinite_description4 #(b x1) #(c x1) #(d x1) #(e x1) (fun x2 x3 x4 x5 -> p x1 x2 x3 x4 x5)
+    in
+    (| x1, x2, x3, x4, x5 |)

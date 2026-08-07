@@ -15,6 +15,7 @@
 *)
 module FStarC.Reflection.V2.Data
 
+open FStarC.Sealed
 (* NOTE: This file is exactly the same as its .fs/.fsi counterpart.
 It is only here so the equally-named interface file in ulib/ is not
 taken by the dependency analysis to be the interface of the .fs. We also

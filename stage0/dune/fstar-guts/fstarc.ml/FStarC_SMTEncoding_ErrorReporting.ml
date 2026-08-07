@@ -40,42 +40,35 @@ let fresh_label (message : FStarC_Errors_Msg.error_message)
     FStarC_SMTEncoding_Term.mk_fv (l, FStarC_SMTEncoding_Term.Bool_sort) in
   let label1 = (lvar, message, range) in
   let lterm = FStarC_SMTEncoding_Util.mkFreeV lvar in
-  let lt = FStarC_SMTEncoding_Term.mkOr (lterm, t) range in (label1, lt)
+  let lt = FStarC_SMTEncoding_Term.mkOr (lterm, t) in (label1, lt)
 let label_goals
   (use_env_msg : (unit -> Prims.string) FStar_Pervasives_Native.option)
   (r : FStarC_Range_Type.t) (q : FStarC_SMTEncoding_Term.term) :
   (labels * FStarC_SMTEncoding_Term.term)=
   let rec is_a_post_condition post_name_opt tm =
-    match (post_name_opt, (tm.FStarC_SMTEncoding_Term.tm)) with
+    match (post_name_opt, tm) with
     | (FStar_Pervasives_Native.None, uu___) -> false
     | (FStar_Pervasives_Native.Some nm, FStarC_SMTEncoding_Term.FreeV fv) ->
         nm = (FStarC_SMTEncoding_Term.fv_name fv)
     | (uu___, FStarC_SMTEncoding_Term.App
-       (FStarC_SMTEncoding_Term.Var "Valid", tm1::[])) ->
+       (FStarC_SMTEncoding_Term.Var "Valid", tm1::[], uu___1)) ->
         is_a_post_condition post_name_opt tm1
     | (uu___, FStarC_SMTEncoding_Term.App
-       (FStarC_SMTEncoding_Term.Var "ApplyTT", tm1::uu___1)) ->
+       (FStarC_SMTEncoding_Term.Var "ApplyTT", tm1::uu___1, uu___2)) ->
         is_a_post_condition post_name_opt tm1
     | uu___ -> false in
   let conjuncts t =
-    match t.FStarC_SMTEncoding_Term.tm with
-    | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.And, cs) -> cs
+    match t with
+    | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.And, cs, uu___) ->
+        cs
     | uu___ -> [t] in
   let is_guard_free tm =
-    match tm.FStarC_SMTEncoding_Term.tm with
+    match tm with
     | FStarC_SMTEncoding_Term.Quant
-        (FStarC_SMTEncoding_Term.Forall,
-         ({
-            FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-              (FStarC_SMTEncoding_Term.Var "Prims.guard_free", p::[]);
-            FStarC_SMTEncoding_Term.freevars = uu___;
-            FStarC_SMTEncoding_Term.rng = uu___1;_}::[])::[],
-         iopt, uu___2,
-         {
-           FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-             (FStarC_SMTEncoding_Term.Imp, l::r1::[]);
-           FStarC_SMTEncoding_Term.freevars = uu___3;
-           FStarC_SMTEncoding_Term.rng = uu___4;_})
+        (FStarC_SMTEncoding_Term.Forall, ((FStarC_SMTEncoding_Term.App
+         (FStarC_SMTEncoding_Term.Var "Prims.guard_free", p::[], uu___))::[])::[],
+         iopt, uu___1, FStarC_SMTEncoding_Term.App
+         (FStarC_SMTEncoding_Term.Imp, l::r1::[], uu___2), uu___3)
         -> true
     | uu___ -> false in
   let is_a_named_continuation lhs =
@@ -112,7 +105,7 @@ let label_goals
                   (FStarC_Range_Type.def_range rng) in
         fresh_label msg2 rng1 t in
       let rec aux default_msg ropt post_name_opt labels1 q1 =
-        match q1.FStarC_SMTEncoding_Term.tm with
+        match q1 with
         | FStarC_SMTEncoding_Term.BoundV uu___1 -> (labels1, q1)
         | FStarC_SMTEncoding_Term.Integer uu___1 -> (labels1, q1)
         | FStarC_SMTEncoding_Term.String uu___1 -> (labels1, q1)
@@ -127,16 +120,12 @@ let label_goals
                (fun uu___1 ->
                   match () with
                   | () ->
-                      (match arg.FStarC_SMTEncoding_Term.tm with
+                      (match arg with
                        | FStarC_SMTEncoding_Term.Quant
                            (FStarC_SMTEncoding_Term.Forall, pats, iopt,
-                            post::sorts,
-                            {
-                              FStarC_SMTEncoding_Term.tm =
-                                FStarC_SMTEncoding_Term.App
-                                (FStarC_SMTEncoding_Term.Imp, lhs::rhs::[]);
-                              FStarC_SMTEncoding_Term.freevars = uu___2;
-                              FStarC_SMTEncoding_Term.rng = rng;_})
+                            post::sorts, FStarC_SMTEncoding_Term.App
+                            (FStarC_SMTEncoding_Term.Imp, lhs::rhs::[], rng),
+                            uu___2)
                            ->
                            let post_name =
                              let uu___3 =
@@ -174,31 +163,25 @@ let label_goals
                            (match uu___3 with
                             | (lhs1, rhs1) ->
                                 let uu___4 =
-                                  match lhs1.FStarC_SMTEncoding_Term.tm with
+                                  match lhs1 with
                                   | FStarC_SMTEncoding_Term.App
                                       (FStarC_SMTEncoding_Term.And,
-                                       clauses_lhs)
+                                       clauses_lhs, uu___5)
                                       ->
-                                      let uu___5 =
+                                      let uu___6 =
                                         FStarC_Util.prefix clauses_lhs in
-                                      (match uu___5 with
+                                      (match uu___6 with
                                        | (req, ens) ->
-                                           (match ens.FStarC_SMTEncoding_Term.tm
-                                            with
+                                           (match ens with
                                             | FStarC_SMTEncoding_Term.Quant
                                                 (FStarC_SMTEncoding_Term.Forall,
                                                  pats_ens, iopt_ens,
                                                  sorts_ens,
-                                                 {
-                                                   FStarC_SMTEncoding_Term.tm
-                                                     =
-                                                     FStarC_SMTEncoding_Term.App
-                                                     (FStarC_SMTEncoding_Term.Imp,
-                                                      ensures_conjuncts::post1::[]);
-                                                   FStarC_SMTEncoding_Term.freevars
-                                                     = uu___6;
-                                                   FStarC_SMTEncoding_Term.rng
-                                                     = rng_ens;_})
+                                                 FStarC_SMTEncoding_Term.App
+                                                 (FStarC_SMTEncoding_Term.Imp,
+                                                  ensures_conjuncts::post1::[],
+                                                  rng_ens),
+                                                 ens_rng)
                                                 ->
                                                 let uu___7 =
                                                   is_a_post_condition
@@ -224,33 +207,24 @@ let label_goals
                                                              [[post1]]
                                                          | uu___9 -> pats_ens in
                                                        let ens1 =
-                                                         let uu___9 =
-                                                           let uu___10 =
-                                                             let uu___11 =
-                                                               FStarC_SMTEncoding_Term.mk
-                                                                 (FStarC_SMTEncoding_Term.App
-                                                                    (FStarC_SMTEncoding_Term.Imp,
-                                                                    [ensures_conjuncts1;
-                                                                    post1]))
-                                                                 rng_ens in
-                                                             (FStarC_SMTEncoding_Term.Forall,
-                                                               pats_ens1,
-                                                               iopt_ens,
-                                                               sorts_ens,
-                                                               uu___11) in
-                                                           FStarC_SMTEncoding_Term.Quant
-                                                             uu___10 in
-                                                         FStarC_SMTEncoding_Term.mk
-                                                           uu___9
-                                                           ens.FStarC_SMTEncoding_Term.rng in
+                                                         FStarC_SMTEncoding_Term.Quant
+                                                           (FStarC_SMTEncoding_Term.Forall,
+                                                             pats_ens1,
+                                                             iopt_ens,
+                                                             sorts_ens,
+                                                             (FStarC_SMTEncoding_Term.App
+                                                                (FStarC_SMTEncoding_Term.Imp,
+                                                                  [ensures_conjuncts1;
+                                                                  post1],
+                                                                  rng_ens)),
+                                                             ens_rng) in
                                                        let lhs2 =
-                                                         FStarC_SMTEncoding_Term.mk
-                                                           (FStarC_SMTEncoding_Term.App
-                                                              (FStarC_SMTEncoding_Term.And,
-                                                                (FStarC_List.op_At
-                                                                   req 
-                                                                   [ens1])))
-                                                           lhs1.FStarC_SMTEncoding_Term.rng in
+                                                         FStarC_SMTEncoding_Term.App
+                                                           (FStarC_SMTEncoding_Term.And,
+                                                             (FStarC_List.op_At
+                                                                req [ens1]),
+                                                             (FStarC_SMTEncoding_Term.range_of_term
+                                                                lhs1)) in
                                                        let uu___9 =
                                                          FStarC_SMTEncoding_Term.abstr
                                                            names lhs2 in
@@ -273,23 +247,23 @@ let label_goals
                                                      Not_a_wp_implication
                                                        uu___9 in
                                                    FStarC_Effect.raise uu___8)
-                                            | uu___6 ->
-                                                let uu___7 =
-                                                  let uu___8 =
-                                                    let uu___9 =
-                                                      let uu___10 =
-                                                        let uu___11 =
+                                            | uu___7 ->
+                                                let uu___8 =
+                                                  let uu___9 =
+                                                    let uu___10 =
+                                                      let uu___11 =
+                                                        let uu___12 =
                                                           FStarC_SMTEncoding_Term.print_smt_term
                                                             ens in
                                                         Prims.strcat "  ... "
-                                                          uu___11 in
+                                                          uu___12 in
                                                       Prims.strcat post_name
-                                                        uu___10 in
+                                                        uu___11 in
                                                     Prims.strcat
                                                       "Ensures clause doesn't have the expected shape for post-condition "
-                                                      uu___9 in
-                                                  Not_a_wp_implication uu___8 in
-                                                FStarC_Effect.raise uu___7))
+                                                      uu___10 in
+                                                  Not_a_wp_implication uu___9 in
+                                                FStarC_Effect.raise uu___8))
                                   | uu___5 ->
                                       let uu___6 =
                                         let uu___7 =
@@ -317,16 +291,18 @@ let label_goals
                                      (match uu___5 with
                                       | (labels3, rhs2) ->
                                           let body =
-                                            FStarC_SMTEncoding_Term.mkImp
-                                              (lhs2, rhs2) rng in
-                                          let uu___6 =
-                                            FStarC_SMTEncoding_Term.mk
-                                              (FStarC_SMTEncoding_Term.Quant
-                                                 (FStarC_SMTEncoding_Term.Forall,
-                                                   pats, iopt, (post ::
-                                                   sorts), body))
-                                              q1.FStarC_SMTEncoding_Term.rng in
-                                          (labels3, uu___6))))
+                                            let uu___6 =
+                                              FStarC_SMTEncoding_Term.mkImp
+                                                (lhs2, rhs2) in
+                                            FStarC_SMTEncoding_Term.set_range
+                                              uu___6 rng in
+                                          (labels3,
+                                            (FStarC_SMTEncoding_Term.Quant
+                                               (FStarC_SMTEncoding_Term.Forall,
+                                                 pats, iopt, (post :: sorts),
+                                                 body,
+                                                 (FStarC_SMTEncoding_Term.range_of_term
+                                                    q1)))))))
                        | uu___2 -> fallback "arg not a quant: ")) ()
              with | Not_a_wp_implication msg1 -> fallback msg1)
         | FStarC_SMTEncoding_Term.Labeled (arg, reason, r1) ->
@@ -334,12 +310,8 @@ let label_goals
               labels1 arg
         | FStarC_SMTEncoding_Term.Quant
             (FStarC_SMTEncoding_Term.Forall, [],
-             FStar_Pervasives_Native.None, sorts,
-             {
-               FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-                 (FStarC_SMTEncoding_Term.Imp, lhs::rhs::[]);
-               FStarC_SMTEncoding_Term.freevars = uu___1;
-               FStarC_SMTEncoding_Term.rng = rng;_})
+             FStar_Pervasives_Native.None, sorts, FStarC_SMTEncoding_Term.App
+             (FStarC_SMTEncoding_Term.Imp, lhs::rhs::[], rng), uu___1)
             when is_a_named_continuation lhs ->
             let uu___2 = FStarC_Util.prefix sorts in
             (match uu___2 with
@@ -378,57 +350,41 @@ let label_goals
                       let uu___4 =
                         FStarC_Util.fold_map
                           (fun labels2 tm ->
-                             match tm.FStarC_SMTEncoding_Term.tm with
+                             match tm with
                              | FStarC_SMTEncoding_Term.Quant
                                  (FStarC_SMTEncoding_Term.Forall,
-                                  ({
-                                     FStarC_SMTEncoding_Term.tm =
-                                       FStarC_SMTEncoding_Term.App
-                                       (FStarC_SMTEncoding_Term.Var
-                                        "Prims.guard_free", p::[]);
-                                     FStarC_SMTEncoding_Term.freevars =
-                                       uu___5;
-                                     FStarC_SMTEncoding_Term.rng = uu___6;_}::[])::[],
-                                  iopt, sorts1,
-                                  {
-                                    FStarC_SMTEncoding_Term.tm =
-                                      FStarC_SMTEncoding_Term.App
-                                      (FStarC_SMTEncoding_Term.Imp,
-                                       l0::r1::[]);
-                                    FStarC_SMTEncoding_Term.freevars = uu___7;
-                                    FStarC_SMTEncoding_Term.rng = uu___8;_})
+                                  ((FStarC_SMTEncoding_Term.App
+                                  (FStarC_SMTEncoding_Term.Var
+                                   "Prims.guard_free", p::[], uu___5))::[])::[],
+                                  iopt, sorts1, FStarC_SMTEncoding_Term.App
+                                  (FStarC_SMTEncoding_Term.Imp, l0::r1::[],
+                                   uu___6),
+                                  uu___7)
                                  ->
-                                 let uu___9 =
+                                 let uu___8 =
                                    is_a_post_condition
                                      (FStar_Pervasives_Native.Some
                                         new_post_name) r1 in
-                                 if uu___9
+                                 if uu___8
                                  then
-                                   let uu___10 =
+                                   let uu___9 =
                                      aux default_msg
                                        FStar_Pervasives_Native.None
                                        post_name_opt labels2 l0 in
-                                   (match uu___10 with
+                                   (match uu___9 with
                                     | (labels3, l) ->
-                                        let uu___11 =
-                                          let uu___12 =
-                                            let uu___13 =
-                                              let uu___14 =
-                                                FStarC_SMTEncoding_Util.norng
-                                                  FStarC_SMTEncoding_Term.mk
-                                                  (FStarC_SMTEncoding_Term.App
-                                                     (FStarC_SMTEncoding_Term.Imp,
-                                                       [l; r1])) in
-                                              (FStarC_SMTEncoding_Term.Forall,
-                                                [[p]],
-                                                (FStar_Pervasives_Native.Some
-                                                   Prims.int_zero), sorts1,
-                                                uu___14) in
-                                            FStarC_SMTEncoding_Term.Quant
-                                              uu___13 in
-                                          FStarC_SMTEncoding_Term.mk uu___12
-                                            q1.FStarC_SMTEncoding_Term.rng in
-                                        (labels3, uu___11))
+                                        (labels3,
+                                          (FStarC_SMTEncoding_Term.Quant
+                                             (FStarC_SMTEncoding_Term.Forall,
+                                               [[p]],
+                                               (FStar_Pervasives_Native.Some
+                                                  Prims.int_zero), sorts1,
+                                               (FStarC_SMTEncoding_Term.App
+                                                  (FStarC_SMTEncoding_Term.Imp,
+                                                    [l; r1],
+                                                    FStarC_Range_Type.dummyRange)),
+                                               (FStarC_SMTEncoding_Term.range_of_term
+                                                  q1)))))
                                  else (labels2, tm)
                              | uu___5 -> (labels2, tm)) labels1
                           (conjuncts lhs1) in
@@ -444,203 +400,247 @@ let label_goals
                                   let uu___6 =
                                     let uu___7 =
                                       let uu___8 =
-                                        FStarC_SMTEncoding_Term.mk_and_l
-                                          lhs_conjs
-                                          lhs1.FStarC_SMTEncoding_Term.rng in
-                                      (uu___8, rhs2) in
-                                    FStarC_SMTEncoding_Term.mkImp uu___7 rng in
+                                        let uu___9 =
+                                          let uu___10 =
+                                            FStarC_SMTEncoding_Term.mk_and_l
+                                              lhs_conjs in
+                                          FStarC_SMTEncoding_Term.set_range
+                                            uu___10
+                                            (FStarC_SMTEncoding_Term.range_of_term
+                                               lhs1) in
+                                        (uu___9, rhs2) in
+                                      FStarC_SMTEncoding_Term.mkImp uu___8 in
+                                    FStarC_SMTEncoding_Term.set_range uu___7
+                                      rng in
                                   FStarC_SMTEncoding_Term.abstr names uu___6 in
                                 let q2 =
-                                  FStarC_SMTEncoding_Term.mk
-                                    (FStarC_SMTEncoding_Term.Quant
-                                       (FStarC_SMTEncoding_Term.Forall, [],
-                                         FStar_Pervasives_Native.None, sorts,
-                                         body))
-                                    q1.FStarC_SMTEncoding_Term.rng in
+                                  FStarC_SMTEncoding_Term.Quant
+                                    (FStarC_SMTEncoding_Term.Forall, [],
+                                      FStar_Pervasives_Native.None, sorts,
+                                      body,
+                                      (FStarC_SMTEncoding_Term.range_of_term
+                                         q1)) in
                                 (labels3, q2)))))
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.Imp, lhs::rhs::[]) ->
-            let uu___1 = aux default_msg ropt post_name_opt labels1 rhs in
-            (match uu___1 with
+            (FStarC_SMTEncoding_Term.Imp, lhs::rhs::[], uu___1) ->
+            let uu___2 = aux default_msg ropt post_name_opt labels1 rhs in
+            (match uu___2 with
              | (labels2, rhs1) ->
-                 let uu___2 = FStarC_SMTEncoding_Util.mkImp (lhs, rhs1) in
-                 (labels2, uu___2))
+                 let uu___3 = FStarC_SMTEncoding_Util.mkImp (lhs, rhs1) in
+                 (labels2, uu___3))
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.And, conjuncts1) ->
-            let uu___1 =
+            (FStarC_SMTEncoding_Term.And, conjuncts1, uu___1) ->
+            let uu___2 =
               FStarC_Util.fold_map (aux default_msg ropt post_name_opt)
                 labels1 conjuncts1 in
-            (match uu___1 with
+            (match uu___2 with
              | (labels2, conjuncts2) ->
-                 let uu___2 =
-                   FStarC_SMTEncoding_Term.mk_and_l conjuncts2
-                     q1.FStarC_SMTEncoding_Term.rng in
-                 (labels2, uu___2))
+                 let uu___3 =
+                   let uu___4 = FStarC_SMTEncoding_Term.mk_and_l conjuncts2 in
+                   FStarC_SMTEncoding_Term.set_range uu___4
+                     (FStarC_SMTEncoding_Term.range_of_term q1) in
+                 (labels2, uu___3))
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.ITE, hd::q11::q2::[]) ->
-            let uu___1 = aux default_msg ropt post_name_opt labels1 q11 in
-            (match uu___1 with
+            (FStarC_SMTEncoding_Term.ITE, hd::q11::q2::[], uu___1) ->
+            let uu___2 = aux default_msg ropt post_name_opt labels1 q11 in
+            (match uu___2 with
              | (labels2, q12) ->
-                 let uu___2 = aux default_msg ropt post_name_opt labels2 q2 in
-                 (match uu___2 with
+                 let uu___3 = aux default_msg ropt post_name_opt labels2 q2 in
+                 (match uu___3 with
                   | (labels3, q21) ->
-                      let uu___3 =
-                        FStarC_SMTEncoding_Term.mkITE (hd, q12, q21)
-                          q1.FStarC_SMTEncoding_Term.rng in
-                      (labels3, uu___3)))
+                      let uu___4 =
+                        let uu___5 =
+                          FStarC_SMTEncoding_Term.mkITE (hd, q12, q21) in
+                        FStarC_SMTEncoding_Term.set_range uu___5
+                          (FStarC_SMTEncoding_Term.range_of_term q1) in
+                      (labels3, uu___4)))
         | FStarC_SMTEncoding_Term.Quant
-            (FStarC_SMTEncoding_Term.Exists, uu___1, uu___2, uu___3, uu___4)
+            (FStarC_SMTEncoding_Term.Exists, uu___1, uu___2, uu___3, uu___4,
+             uu___5)
             ->
-            let uu___5 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___5 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Iff, uu___1)
-            ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Or, uu___1) ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
+            let uu___6 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___6 with | (lab, q2) -> ((lab :: labels1), q2))
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.Var "Unreachable", uu___1) ->
+            (FStarC_SMTEncoding_Term.Iff, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.Or, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.Var "Unreachable", uu___1, uu___2) ->
             (labels1, q1)
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.Var uu___1, uu___2) when
+            (FStarC_SMTEncoding_Term.Var uu___1, uu___2, uu___3) when
             is_a_post_condition post_name_opt q1 -> (labels1, q1)
         | FStarC_SMTEncoding_Term.FreeV uu___1 ->
             let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
             (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.TrueOp, uu___1) ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.FalseOp, uu___1) ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Not, uu___1)
-            ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Eq, uu___1) ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.LT, uu___1) ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.LTE, uu___1)
-            ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.GT, uu___1) ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.GTE, uu___1)
-            ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvUlt, uu___1)
-            ->
-            let uu___2 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
-            (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
-        | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.Var uu___1, uu___2) ->
+            (FStarC_SMTEncoding_Term.TrueOp, uu___1, uu___2) ->
             let uu___3 =
-              fresh_label1 default_msg ropt q1.FStarC_SMTEncoding_Term.rng q1 in
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
             (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.RealDiv, uu___1) ->
-            FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Add, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Sub, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Div, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Mul, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Minus, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Mod, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvAnd, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvXor, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvOr, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvAdd, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvSub, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvShl, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvShr, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
+            (FStarC_SMTEncoding_Term.FalseOp, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.BvRol uu___1, uu___2) ->
+            (FStarC_SMTEncoding_Term.Not, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.Eq, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.LT, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.LTE, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.GT, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.GTE, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvUlt, uu___1, uu___2) ->
+            let uu___3 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.Var uu___1, uu___2, uu___3) ->
+            let uu___4 =
+              fresh_label1 default_msg ropt
+                (FStarC_SMTEncoding_Term.range_of_term q1) q1 in
+            (match uu___4 with | (lab, q2) -> ((lab :: labels1), q2))
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.RealDiv, uu___1, uu___2) ->
             FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.BvRor uu___1, uu___2) ->
+            (FStarC_SMTEncoding_Term.Add, uu___1, uu___2) ->
             FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.BvExtRol, uu___1) ->
+            (FStarC_SMTEncoding_Term.Sub, uu___1, uu___2) ->
             FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.BvExtRor, uu___1) ->
+            (FStarC_SMTEncoding_Term.Div, uu___1, uu___2) ->
             FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.BvUdiv, uu___1) ->
-            FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvMod, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvMul, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.BvUext uu___1, uu___2) ->
-            FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvNot, uu___1)
-            -> FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.BvToNat, uu___1) ->
+            (FStarC_SMTEncoding_Term.Mul, uu___1, uu___2) ->
             FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
-            (FStarC_SMTEncoding_Term.NatToBv uu___1, uu___2) ->
+            (FStarC_SMTEncoding_Term.Minus, uu___1, uu___2) ->
             FStarC_Effect.failwith "Impossible: non-propositional term"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.ITE, uu___1)
-            -> FStarC_Effect.failwith "Impossible: arity mismatch"
-        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Imp, uu___1)
-            -> FStarC_Effect.failwith "Impossible: arity mismatch"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.Mod, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvAnd, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvXor, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvOr, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvAdd, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvSub, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvShl, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvShr, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvRol uu___1, uu___2, uu___3) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvRor uu___1, uu___2, uu___3) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvExtRol, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvExtRor, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvUdiv, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvMod, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvMul, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvUext uu___1, uu___2, uu___3) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvNot, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvToNat, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.NatToBv uu___1, uu___2, uu___3) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.ITE, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: arity mismatch"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.Imp, uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: arity mismatch"
         | FStarC_SMTEncoding_Term.Quant
-            (FStarC_SMTEncoding_Term.Forall, pats, iopt, sorts, body) ->
-            let uu___1 = aux default_msg ropt post_name_opt labels1 body in
-            (match uu___1 with
+            (FStarC_SMTEncoding_Term.Forall, pats, iopt, sorts, body, uu___1)
+            ->
+            let uu___2 = aux default_msg ropt post_name_opt labels1 body in
+            (match uu___2 with
              | (labels2, body1) ->
-                 let uu___2 =
-                   FStarC_SMTEncoding_Term.mk
-                     (FStarC_SMTEncoding_Term.Quant
-                        (FStarC_SMTEncoding_Term.Forall, pats, iopt, sorts,
-                          body1)) q1.FStarC_SMTEncoding_Term.rng in
-                 (labels2, uu___2))
+                 (labels2,
+                   (FStarC_SMTEncoding_Term.Quant
+                      (FStarC_SMTEncoding_Term.Forall, pats, iopt, sorts,
+                        body1, (FStarC_SMTEncoding_Term.range_of_term q1)))))
         | FStarC_SMTEncoding_Term.Let (es, body) ->
             let uu___1 = aux default_msg ropt post_name_opt labels1 body in
             (match uu___1 with
              | (labels2, body1) ->
-                 let uu___2 =
-                   FStarC_SMTEncoding_Term.mkLet (es, body1)
-                     q1.FStarC_SMTEncoding_Term.rng in
+                 let uu___2 = FStarC_SMTEncoding_Term.mkLet (es, body1) in
                  (labels2, uu___2)) in
       (FStarC_Effect.op_Colon_Equals __ctr Prims.int_zero;
        aux (FStarC_Errors_Msg.mkmsg "Assertion failed")

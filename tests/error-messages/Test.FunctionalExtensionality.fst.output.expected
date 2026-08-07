@@ -7,7 +7,7 @@
   - VC =
       FStar.FunctionalExtensionality.is_restricted Prims.int f ==>
       FStar.FunctionalExtensionality.is_restricted Prims.nat f
-  - See also FStar.FunctionalExtensionality.fsti(102,60-102,77)
+  - See also FStar.FunctionalExtensionality.fsti(106,60-106,77)
 
 * Info at Test.FunctionalExtensionality.fst(80,2-80,8):
   - Expected failure:
@@ -81,5 +81,5 @@
   - VC =
       FStar.FunctionalExtensionality.is_restricted Prims.int f ==>
       FStar.FunctionalExtensionality.is_restricted Prims.int f
-  - See also FStar.FunctionalExtensionality.fsti(102,60-102,77)
+  - See also FStar.FunctionalExtensionality.fsti(106,60-106,77)
 

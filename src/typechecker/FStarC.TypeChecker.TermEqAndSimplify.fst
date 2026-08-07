@@ -119,8 +119,8 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
       | _ -> false
     in
     let heads_and_args_in_case_both_data : option (S.fv & args & S.fv & args & int) =
-      let head1, args1 = t1 |> unmeta |> head_and_args in
-      let head2, args2 = t2 |> unmeta |> head_and_args in
+      let head1, args1 = t1 |> unmeta |> head_and_args_full in
+      let head2, args2 = t2 |> unmeta |> head_and_args_full in
       match (un_uinst head1).n, (un_uinst head2).n with
       | Tm_fvar f, Tm_fvar g 
         when qual_is_inj f.fv_qual &&
@@ -188,13 +188,13 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
     | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
       equal_if (Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
 
-    | Tm_app {hd=h1; args=args1}, Tm_app {hd=h2; args=args2} ->
+    | Tm_app {hd=h1; arg=arg1}, Tm_app {hd=h2; arg=arg2} ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
       | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
-        equal_data f1 args1 f2 args2 0
+        equal_data f1 [arg1] f2 [arg2] 0
 
       | _ -> // can only assert they're equal if they syntactically match, nothing else
-        eq_and (eq_tm env h1 h2) (fun () -> eq_args env args1 args2)
+        eq_and (eq_tm env h1 h2) (fun () -> eq_args env [arg1] [arg2])
       end
 
     | Tm_match {scrutinee=t1; brs=bs1}, Tm_match {scrutinee=t2; brs=bs2} ->  //AR: note: no return annotations
@@ -223,17 +223,13 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
        * AR: ignoring residual comp here, that's an ascription added by the typechecker
        *     do we care if that's different?
        *)
-    | Tm_abs {bs=bs1; body=body1}, Tm_abs {bs=bs2; body=body2}
-      when List.length bs1 = List.length bs2 ->
+    | Tm_abs {b=b1; body=body1}, Tm_abs {b=b2; body=body2} ->
 
-      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm env b1.binder_bv.sort b2.binder_bv.sort))
-                Equal bs1 bs2)
+      eq_and (eq_tm env b1.binder_bv.sort b2.binder_bv.sort)
              (fun () -> eq_tm env body1 body2)
 
-    | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2}
-          when List.length bs1 = List.length bs2 ->
-      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm env b1.binder_bv.sort b2.binder_bv.sort))
-                Equal bs1 bs2)
+    | Tm_arrow {b=b1; comp=c1}, Tm_arrow {b=b2; comp=c2} ->
+      eq_and (eq_tm env b1.binder_bv.sort b2.binder_bv.sort)
              (fun () -> eq_comp env c1 c2)
 
     | _ -> Unknown
@@ -374,7 +370,7 @@ let simplify (debug:bool) (env:env_t) (tm:term) : ML term =
         //     | _ ->
         //       t,q
         // in
-        // let head, args = U.head_and_args t in
+        // let head, args = U.head_and_args_full t in
         // let args = List.map maybe_un_auto_squash_arg args in
         // S.mk_Tm_app head args t.pos
         t
@@ -393,155 +389,159 @@ let simplify (debug:bool) (env:env_t) (tm:term) : ML term =
     in
     let simplify arg = (simp_t (fst arg), arg) in
     match (SS.compress tm).n with
-    | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv}, _)}; args}
-    | Tm_app {hd={n=Tm_fvar fv}; args} ->
-      if S.fv_eq_lid fv PC.squash_lid
-      then squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.and_lid
-      then match args |> List.map simplify with
-           | [(Some true, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg
-           | [(Some false, _); _]
-           | [_; (Some false, _)] -> w U.t_false
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.or_lid
-      then match args |> List.map simplify with
-           | [(Some true, _); _]
-           | [_; (Some true, _)] -> w U.t_true
-           | [(Some false, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.imp_lid
-      then match args |> List.map simplify with
-           | [_; (Some true, _)]
-           | [(Some false, _); _] -> w U.t_true
-           | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg
-           | [(_, (p, _)); (_, (q, _))] ->
-             if U.term_eq p q
-             then w U.t_true
-             else squashed_head_un_auto_squash_args tm
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.iff_lid
-      then match args |> List.map simplify with
-           | [(Some true, _)  ; (Some true, _)]
-           | [(Some false, _) ; (Some false, _)] -> w U.t_true
-           | [(Some true, _)  ; (Some false, _)]
-           | [(Some false, _) ; (Some true, _)]  -> w U.t_false
-           | [(_, (arg, _))   ; (Some true, _)]
-           | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
-           | [(_, (arg, _))   ; (Some false, _)]
-           | [(Some false, _) ; (_, (arg, _))]   -> maybe_auto_squash (U.mk_neg arg)
-           | [(_, (p, _)); (_, (q, _))] ->
-             if U.term_eq p q
-             then w U.t_true
-             else squashed_head_un_auto_squash_args tm
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.not_lid
-      then match args |> List.map simplify with
-           | [(Some true, _)] ->  w U.t_false
-           | [(Some false, _)] -> w U.t_true
-           | _ -> squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.forall_lid
-      then match args with
-           (* Simplify ∀x. True to True *)
-           | [(t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs {bs=[_]; body} ->
-                     (match simp_t body with
-                     | Some true -> w U.t_true
-                     | _ -> tm)
-                   | _ -> tm
-             end
-           (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
-           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs {bs=[_]; body} ->
-                     (match simp_t body with
-                     | Some true -> w U.t_true
-                     | Some false when clearly_inhabited ty -> w U.t_false
-                     | _ -> tm)
-                   | _ -> tm
-             end
-           | _ -> tm
-      else if S.fv_eq_lid fv PC.exists_lid
-      then match args with
-           (* Simplify ∃x. False to False *)
-           | [(t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs {bs=[_]; body} ->
-                     (match simp_t body with
-                     | Some false -> w U.t_false
-                     | _ -> tm)
-                   | _ -> tm
-             end
-           (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
-           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs {bs=[_]; body} ->
-                     (match simp_t body with
-                     | Some false -> w U.t_false
-                     | Some true when clearly_inhabited ty -> w U.t_true
-                     | _ -> tm)
-                   | _ -> tm
-             end
-           | _ -> tm
-      else if S.fv_eq_lid fv PC.b2t_lid
-      then match args with
-           | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
-           | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
-           | _ -> tm //its arg is a bool, can't unsquash
-      else if S.fv_eq_lid fv PC.haseq_lid
-      then begin
-        (*
-         * AR: We try to mimic the hasEq related axioms in Prims
-         *       and the axiom related to refinements
-         *     For other types, such as lists, whose hasEq is derived by the typechecker,
-         *       we leave them as is
-         *)
-        let t_has_eq_for_sure (t:S.term) : ML bool =
-          //Axioms from prims
-          let haseq_lids = [PC.int_lid; PC.bool_lid; PC.unit_lid; PC.string_lid] in
-          match (SS.compress t).n with
-          | Tm_fvar fv when haseq_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) -> true
-          | _ -> false
-        in
-        if List.length args = 1 then
-          let t = args |> List.hd |> fst in
-          if t |> t_has_eq_for_sure then w U.t_true
-          else
+    | Tm_app _ ->
+      let head, args = U.head_and_args_full tm in
+      begin match (un_uinst head).n with
+      | Tm_fvar fv ->
+        if S.fv_eq_lid fv PC.squash_lid
+        then squashed_head_un_auto_squash_args tm
+        else if S.fv_eq_lid fv PC.and_lid
+        then match args |> List.map simplify with
+             | [(Some true, _); (_, (arg, _))]
+             | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg
+             | [(Some false, _); _]
+             | [_; (Some false, _)] -> w U.t_false
+             | _ -> squashed_head_un_auto_squash_args tm
+        else if S.fv_eq_lid fv PC.or_lid
+        then match args |> List.map simplify with
+             | [(Some true, _); _]
+             | [_; (Some true, _)] -> w U.t_true
+             | [(Some false, _); (_, (arg, _))]
+             | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg
+             | _ -> squashed_head_un_auto_squash_args tm
+        else if S.fv_eq_lid fv PC.imp_lid
+        then match args |> List.map simplify with
+             | [_; (Some true, _)]
+             | [(Some false, _); _] -> w U.t_true
+             | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg
+             | [(_, (p, _)); (_, (q, _))] ->
+               if U.term_eq p q
+               then w U.t_true
+               else squashed_head_un_auto_squash_args tm
+             | _ -> squashed_head_un_auto_squash_args tm
+        else if S.fv_eq_lid fv PC.iff_lid
+        then match args |> List.map simplify with
+             | [(Some true, _)  ; (Some true, _)]
+             | [(Some false, _) ; (Some false, _)] -> w U.t_true
+             | [(Some true, _)  ; (Some false, _)]
+             | [(Some false, _) ; (Some true, _)]  -> w U.t_false
+             | [(_, (arg, _))   ; (Some true, _)]
+             | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
+             | [(_, (arg, _))   ; (Some false, _)]
+             | [(Some false, _) ; (_, (arg, _))]   -> maybe_auto_squash (U.mk_neg arg)
+             | [(_, (p, _)); (_, (q, _))] ->
+               if U.term_eq p q
+               then w U.t_true
+               else squashed_head_un_auto_squash_args tm
+             | _ -> squashed_head_un_auto_squash_args tm
+        else if S.fv_eq_lid fv PC.not_lid
+        then match args |> List.map simplify with
+             | [(Some true, _)] ->  w U.t_false
+             | [(Some false, _)] -> w U.t_true
+             | _ -> squashed_head_un_auto_squash_args tm
+        else if S.fv_eq_lid fv PC.forall_lid
+        then match args with
+             (* Simplify ∀x. True to True *)
+             | [(t, _)] ->
+               begin match (SS.compress t).n with
+                     | Tm_abs {b=_; body} ->
+                       (match simp_t body with
+                       | Some true -> w U.t_true
+                       | _ -> tm)
+                     | _ -> tm
+               end
+             (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
+             | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
+               begin match (SS.compress t).n with
+                     | Tm_abs {b=_; body} ->
+                       (match simp_t body with
+                       | Some true -> w U.t_true
+                       | Some false when clearly_inhabited ty -> w U.t_false
+                       | _ -> tm)
+                     | _ -> tm
+               end
+             | _ -> tm
+        else if S.fv_eq_lid fv PC.exists_lid
+        then match args with
+             (* Simplify ∃x. False to False *)
+             | [(t, _)] ->
+               begin match (SS.compress t).n with
+                     | Tm_abs {b=_; body} ->
+                       (match simp_t body with
+                       | Some false -> w U.t_false
+                       | _ -> tm)
+                     | _ -> tm
+               end
+             (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
+             | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
+               begin match (SS.compress t).n with
+                     | Tm_abs {b=_; body} ->
+                       (match simp_t body with
+                       | Some false -> w U.t_false
+                       | Some true when clearly_inhabited ty -> w U.t_true
+                       | _ -> tm)
+                     | _ -> tm
+               end
+             | _ -> tm
+        else if S.fv_eq_lid fv PC.b2t_lid
+        then match args with
+             | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
+             | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
+             | _ -> tm //its arg is a bool, can't unsquash
+        else if S.fv_eq_lid fv PC.haseq_lid
+        then begin
+          (*
+           * AR: We try to mimic the hasEq related axioms in Prims
+           *       and the axiom related to refinements
+           *     For other types, such as lists, whose hasEq is derived by the typechecker,
+           *       we leave them as is
+           *)
+          let t_has_eq_for_sure (t:S.term) : ML bool =
+            //Axioms from prims
+            let haseq_lids = [PC.int_lid; PC.bool_lid; PC.unit_lid; PC.string_lid] in
             match (SS.compress t).n with
-            | Tm_refine _ ->
-              let t = U.unrefine t in
-              if t |> t_has_eq_for_sure then w U.t_true
-              else
-                //get the hasEq term itself
-                let haseq_tm =
-                  match (SS.compress tm).n with
-                  | Tm_app {hd} -> hd
-                  | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
-                in
-                //and apply it to the unrefined type
-                mk_app (haseq_tm) [t |> as_arg]
-            | _ -> tm
-        else tm
-      end
-      else if S.fv_eq_lid fv PC.eq2_lid
-      then match args with
-           | [(_typ, _); (a1, _); (a2, _)]  ->         //eq2
-             (match eq_tm env a1 a2 with
-              | Equal -> w U.t_true
-              | NotEqual -> w U.t_false
-              | _ -> tm)
-           | _ -> tm
-      else
-      begin
-        // match U.is_auto_squash tm with
-        // | Some (U_zero, t)
-        //      when U.is_sub_singleton t ->
-        //      //remove redundant auto_squashes
-        //      t
-        // | _ ->
-             tm
+            | Tm_fvar fv when haseq_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) -> true
+            | _ -> false
+          in
+          if List.length args = 1 then
+            let t = args |> List.hd |> fst in
+            if t |> t_has_eq_for_sure then w U.t_true
+            else
+              match (SS.compress t).n with
+              | Tm_refine _ ->
+                let t = U.unrefine t in
+                if t |> t_has_eq_for_sure then w U.t_true
+                else
+                  //get the hasEq term itself
+                  let haseq_tm =
+                    match (SS.compress tm).n with
+                    | Tm_app {hd} -> hd
+                    | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
+                  in
+                  //and apply it to the unrefined type
+                  mk_app (haseq_tm) [t |> as_arg]
+              | _ -> tm
+          else tm
+        end
+        else if S.fv_eq_lid fv PC.eq2_lid
+        then match args with
+             | [(_typ, _); (a1, _); (a2, _)]  ->         //eq2
+               (match eq_tm env a1 a2 with
+                | Equal -> w U.t_true
+                | NotEqual -> w U.t_false
+                | _ -> tm)
+             | _ -> tm
+        else
+        begin
+          // match U.is_auto_squash tm with
+          // | Some (U_zero, t)
+          //      when U.is_sub_singleton t ->
+          //      //remove redundant auto_squashes
+          //      t
+          // | _ ->
+               tm
+        end
+      | _ -> tm
       end
     | Tm_refine {b=bv; phi=t} ->
         begin match simp_t t with

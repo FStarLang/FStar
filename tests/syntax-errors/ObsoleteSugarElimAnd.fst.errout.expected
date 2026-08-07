@@ -1,0 +1,3 @@
+* Error 168 at ObsoleteSugarElimAnd.fst(5,4-6,16):
+  - Syntax error: 'eliminate _ /\ _' no longer takes a 'returns' clause nor names for the hypotheses. Write 'eliminate P /\ Q with e' instead; both P and Q are available in the proof context of e.
+

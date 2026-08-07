@@ -34,8 +34,8 @@ let range_0 = T.dummyRange
 let mk_range file from_line from_col to_line to_col =
   T.mk_range file (T.mk_pos from_line from_col) (T.mk_pos to_line to_col)
 
-let pos_leq (p1 p2 : T.pos) : bool =
-  p1.line < p2.line || (p1.line = p2.line && p1.col <= p2.col)
+(* Positions are packed integers ordered lexicographically by (line, col). *)
+let pos_leq (p1 p2 : T.pos) : bool = (p1 <: int) <= (p2 <: int)
 
 let min_pos (p1 p2 : T.pos) : T.pos = if pos_leq p1 p2 then p1 else p2
 let max_pos (p1 p2 : T.pos) : T.pos = if pos_leq p1 p2 then p2 else p1
@@ -52,7 +52,7 @@ let join_range r1 r2 =
 
 let explode r =
   (r.def_range.file_name,
-   r.def_range.start_pos.line,
-   r.def_range.start_pos.col,
-   r.def_range.end_pos.line,
-   r.def_range.end_pos.col)
+   T.pos_line r.def_range.start_pos,
+   T.pos_col r.def_range.start_pos,
+   T.pos_line r.def_range.end_pos,
+   T.pos_col r.def_range.end_pos)

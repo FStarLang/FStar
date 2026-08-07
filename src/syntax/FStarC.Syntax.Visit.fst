@@ -1,5 +1,6 @@
 module FStarC.Syntax.Visit
 
+open FStarC.Syntax.Syntax
 open FStarC.Effect
 open FStarC.List
 

@@ -66,7 +66,7 @@ let run_all () : ML unit =
   let snat_l = S.lid_as_fv (lid "S") (Some Data_ctor) in
   let tm_fv fv = mk (Tm_fvar fv) dummyRange in
   let znat : term = tm_fv znat_l in
-  let snat s      = mk (Tm_app {hd=tm_fv snat_l; args=[as_arg s]}) dummyRange in
+  let snat s      = S.mk_Tm_app (tm_fv snat_l) [as_arg s] dummyRange in
   let pat p = withinfo p dummyRange in
   let snat_type = tm_fv (S.lid_as_fv (lid "snat") None) in
   let mk_match h branches =

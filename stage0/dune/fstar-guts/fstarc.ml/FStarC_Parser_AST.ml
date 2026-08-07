@@ -100,14 +100,14 @@ type term' =
   | CalcProof of (term * term * calc_step Prims.list) 
   | IntroForall of (binder Prims.list * term * term) 
   | IntroExists of (binder Prims.list * term * term Prims.list * term) 
-  | IntroImplies of (term * term * binder * term) 
+  | IntroImplies of (term * term * term) 
   | IntroOr of (Prims.bool * term * term * term) 
   | IntroAnd of (term * term * term * term) 
   | ElimForall of (binder Prims.list * term * term Prims.list) 
-  | ElimExists of (binder Prims.list * term * term * binder * term) 
+  | ElimExists of (binder Prims.list * term * term) 
   | ElimImplies of (term * term * term) 
-  | ElimOr of (term * term * term * binder * term * binder * term) 
-  | ElimAnd of (term * term * term * binder * binder * term) 
+  | ElimOr of (term * term * term * term) 
+  | ElimAnd of (term * term * term) 
   | ListLiteral of term Prims.list 
   | SeqLiteral of term Prims.list 
   | LitDoc of FStar_Pprint.document 
@@ -367,7 +367,7 @@ let __proj__IntroExists__item___0 (projectee : term') :
 let uu___is_IntroImplies (projectee : term') : Prims.bool=
   match projectee with | IntroImplies _0 -> true | uu___ -> false
 let __proj__IntroImplies__item___0 (projectee : term') :
-  (term * term * binder * term)= match projectee with | IntroImplies _0 -> _0
+  (term * term * term)= match projectee with | IntroImplies _0 -> _0
 let uu___is_IntroOr (projectee : term') : Prims.bool=
   match projectee with | IntroOr _0 -> true | uu___ -> false
 let __proj__IntroOr__item___0 (projectee : term') :
@@ -384,7 +384,7 @@ let __proj__ElimForall__item___0 (projectee : term') :
 let uu___is_ElimExists (projectee : term') : Prims.bool=
   match projectee with | ElimExists _0 -> true | uu___ -> false
 let __proj__ElimExists__item___0 (projectee : term') :
-  (binder Prims.list * term * term * binder * term)=
+  (binder Prims.list * term * term)=
   match projectee with | ElimExists _0 -> _0
 let uu___is_ElimImplies (projectee : term') : Prims.bool=
   match projectee with | ElimImplies _0 -> true | uu___ -> false
@@ -393,12 +393,10 @@ let __proj__ElimImplies__item___0 (projectee : term') : (term * term * term)=
 let uu___is_ElimOr (projectee : term') : Prims.bool=
   match projectee with | ElimOr _0 -> true | uu___ -> false
 let __proj__ElimOr__item___0 (projectee : term') :
-  (term * term * term * binder * term * binder * term)=
-  match projectee with | ElimOr _0 -> _0
+  (term * term * term * term)= match projectee with | ElimOr _0 -> _0
 let uu___is_ElimAnd (projectee : term') : Prims.bool=
   match projectee with | ElimAnd _0 -> true | uu___ -> false
-let __proj__ElimAnd__item___0 (projectee : term') :
-  (term * term * term * binder * binder * term)=
+let __proj__ElimAnd__item___0 (projectee : term') : (term * term * term)=
   match projectee with | ElimAnd _0 -> _0
 let uu___is_ListLiteral (projectee : term') : Prims.bool=
   match projectee with | ListLiteral _0 -> true | uu___ -> false
@@ -912,8 +910,7 @@ and decl =
   d: decl' ;
   drange: FStarC_Range_Type.range ;
   quals: qualifiers ;
-  attrs: attributes_ ;
-  interleaved: Prims.bool }
+  attrs: attributes_ }
 and effect_decl =
   | DefineEffect of (FStarC_Ident.ident * binder Prims.list * term * decl
   Prims.list) 
@@ -1012,17 +1009,14 @@ let __proj__DeclToBeDesugared__item___0 (projectee : decl') :
 let uu___is_Unparseable (projectee : decl') : Prims.bool=
   match projectee with | Unparseable -> true | uu___ -> false
 let __proj__Mkdecl__item__d (projectee : decl) : decl'=
-  match projectee with | { d; drange; quals; attrs; interleaved;_} -> d
+  match projectee with | { d; drange; quals; attrs;_} -> d
 let __proj__Mkdecl__item__drange (projectee : decl) :
   FStarC_Range_Type.range=
-  match projectee with | { d; drange; quals; attrs; interleaved;_} -> drange
+  match projectee with | { d; drange; quals; attrs;_} -> drange
 let __proj__Mkdecl__item__quals (projectee : decl) : qualifiers=
-  match projectee with | { d; drange; quals; attrs; interleaved;_} -> quals
+  match projectee with | { d; drange; quals; attrs;_} -> quals
 let __proj__Mkdecl__item__attrs (projectee : decl) : attributes_=
-  match projectee with | { d; drange; quals; attrs; interleaved;_} -> attrs
-let __proj__Mkdecl__item__interleaved (projectee : decl) : Prims.bool=
-  match projectee with
-  | { d; drange; quals; attrs; interleaved;_} -> interleaved
+  match projectee with | { d; drange; quals; attrs;_} -> attrs
 let uu___is_DefineEffect (projectee : effect_decl) : Prims.bool=
   match projectee with | DefineEffect _0 -> true | uu___ -> false
 let __proj__DefineEffect__item___0 (projectee : effect_decl) :
@@ -1038,13 +1032,7 @@ let hasRange_decl : decl FStarC_Class_HasRange.hasRange=
     FStarC_Class_HasRange.pos = (fun d -> d.drange);
     FStarC_Class_HasRange.setPos =
       (fun r d ->
-         {
-           d = (d.d);
-           drange = r;
-           quals = (d.quals);
-           attrs = (d.attrs);
-           interleaved = (d.interleaved)
-         })
+         { d = (d.d); drange = r; quals = (d.quals); attrs = (d.attrs) })
   }
 type modul__Module__payload =
   {
@@ -1468,7 +1456,7 @@ let as_frag (ds : decl Prims.list) : inputFragment=
               (fun uu___3 ->
                  match uu___3 with
                  | { d = TopLevelModule uu___4; drange = r; quals = uu___5;
-                     attrs = uu___6; interleaved = uu___7;_} ->
+                     attrs = uu___6;_} ->
                      FStarC_Errors.raise_error
                        FStarC_Class_HasRange.hasRange_range r
                        FStarC_Errors_Codes.Fatal_UnexpectedModuleDeclaration
@@ -1986,59 +1974,29 @@ let rec term_to_string (x : term) : Prims.string=
         let uu___3 = FStarC_List.map term_to_string vs in
         FStarC_String.concat " " uu___3 in
       FStarC_Format.fmt3 "_elim_ forall %s. %s using %s" uu___ uu___1 uu___2
-  | ElimExists (bs, p, q, b, e) ->
+  | ElimExists (bs, p, e) ->
       let uu___ = binders_to_string " " bs in
       let uu___1 = term_to_string p in
-      let uu___2 = term_to_string q in
-      let uu___3 = binder_to_string b in
-      let uu___4 = term_to_string e in
-      FStarC_Format.fmt5 "_elim_ exists %s. %s _to_ %s\n\\with %s. %s" uu___
-        uu___1 uu___2 uu___3 uu___4
+      let uu___2 = term_to_string e in
+      FStarC_Format.fmt3 "eliminate exists %s. %s\n\\with %s" uu___ uu___1
+        uu___2
   | ElimImplies (p, q, e) ->
       let uu___ = term_to_string p in
       let uu___1 = term_to_string q in
       let uu___2 = term_to_string e in
       FStarC_Format.fmt3 "_elim_ %s ==> %s with %s" uu___ uu___1 uu___2
-  | ElimOr (p, q, r, x1, e, y, e') ->
-      let uu___ =
-        let uu___1 = term_to_string p in
-        let uu___2 =
-          let uu___3 = term_to_string q in
-          let uu___4 =
-            let uu___5 = term_to_string r in
-            let uu___6 =
-              let uu___7 = binder_to_string x1 in
-              let uu___8 =
-                let uu___9 = term_to_string e in
-                let uu___10 =
-                  let uu___11 = binder_to_string y in
-                  let uu___12 = let uu___13 = term_to_string e' in [uu___13] in
-                  uu___11 :: uu___12 in
-                uu___9 :: uu___10 in
-              uu___7 :: uu___8 in
-            uu___5 :: uu___6 in
-          uu___3 :: uu___4 in
-        uu___1 :: uu___2 in
-      FStarC_Format.fmt
-        "_elim_ %s \\/ %s _to_ %s\n\\with %s. %s\n\\and %s.%s" uu___
-  | ElimAnd (p, q, r, x1, y, e) ->
-      let uu___ =
-        let uu___1 = term_to_string p in
-        let uu___2 =
-          let uu___3 = term_to_string q in
-          let uu___4 =
-            let uu___5 = term_to_string r in
-            let uu___6 =
-              let uu___7 = binder_to_string x1 in
-              let uu___8 =
-                let uu___9 = binder_to_string y in
-                let uu___10 = let uu___11 = term_to_string e in [uu___11] in
-                uu___9 :: uu___10 in
-              uu___7 :: uu___8 in
-            uu___5 :: uu___6 in
-          uu___3 :: uu___4 in
-        uu___1 :: uu___2 in
-      FStarC_Format.fmt "_elim_ %s /\\ %s _to_ %s\n\\with %s %s. %s" uu___
+  | ElimOr (p, q, e, e') ->
+      let uu___ = term_to_string p in
+      let uu___1 = term_to_string q in
+      let uu___2 = term_to_string e in
+      let uu___3 = term_to_string e' in
+      FStarC_Format.fmt4 "eliminate %s \\/ %s\n\\with %s\n\\and %s" uu___
+        uu___1 uu___2 uu___3
+  | ElimAnd (p, q, e) ->
+      let uu___ = term_to_string p in
+      let uu___1 = term_to_string q in
+      let uu___2 = term_to_string e in
+      FStarC_Format.fmt3 "eliminate %s /\\ %s\n\\with %s" uu___ uu___1 uu___2
   | IntroForall (xs, p, e) ->
       let uu___ = binders_to_string " " xs in
       let uu___1 = term_to_string p in
@@ -2053,13 +2011,11 @@ let rec term_to_string (x : term) : Prims.string=
       let uu___3 = term_to_string e in
       FStarC_Format.fmt4 "_intro_ exists %s. %s using %s with %s" uu___
         uu___1 uu___2 uu___3
-  | IntroImplies (p, q, x1, e) ->
+  | IntroImplies (p, q, e) ->
       let uu___ = term_to_string p in
       let uu___1 = term_to_string q in
-      let uu___2 = binder_to_string x1 in
-      let uu___3 = term_to_string p in
-      FStarC_Format.fmt4 "_intro_ %s ==> %s with %s. %s" uu___ uu___1 uu___2
-        uu___3
+      let uu___2 = term_to_string e in
+      FStarC_Format.fmt3 "introduce %s ==> %s with %s" uu___ uu___1 uu___2
   | IntroOr (b, p, q, r) ->
       let uu___ = term_to_string p in
       let uu___1 = term_to_string q in
@@ -2508,16 +2464,11 @@ let add_decorations (d : decl) (decorations : decoration Prims.list) :
          match uu___ with
          | Qualifier q -> FStar_Pervasives_Native.Some q
          | uu___1 -> FStar_Pervasives_Native.None) decorations1 in
-  {
-    d = (d.d);
-    drange = (d.drange);
-    quals = qualifiers1;
-    attrs = attributes_2;
-    interleaved = (d.interleaved)
+  { d = (d.d); drange = (d.drange); quals = qualifiers1; attrs = attributes_2
   }
 let mk_decl (d : decl') (r : FStarC_Range_Type.range)
   (decorations : decoration Prims.list) : decl=
-  let d1 = { d; drange = r; quals = []; attrs = []; interleaved = false } in
+  let d1 = { d; drange = r; quals = []; attrs = [] } in
   add_decorations d1 decorations
 let pretty_quote_kind : quote_kind FStarC_Class_PP.pretty=
   {
@@ -3052,16 +3003,13 @@ let rec pp_term (t : term) : FStar_Pprint.document=
           uu___3 :: uu___4 in
         uu___1 :: uu___2 in
       ctor "IntroExists" uu___
-  | IntroImplies (t1, t2, b, t3) ->
+  | IntroImplies (t1, t2, t3) ->
       let uu___ =
         let uu___1 = pp_term t1 in
         let uu___2 =
           let uu___3 = pp_term t2 in
-          let uu___4 =
-            let uu___5 = pp_binder b in
-            let uu___6 = let uu___7 = pp_term t3 in [uu___7] in uu___5 ::
-              uu___6 in
-          uu___3 :: uu___4 in
+          let uu___4 = let uu___5 = pp_term t3 in [uu___5] in uu___3 ::
+            uu___4 in
         uu___1 :: uu___2 in
       ctor "IntroImplies" uu___
   | IntroOr (is_left, t1, t2, t3) ->
@@ -3100,19 +3048,13 @@ let rec pp_term (t : term) : FStar_Pprint.document=
             :: uu___4 in
         uu___1 :: uu___2 in
       ctor "ElimForall" uu___
-  | ElimExists (binders, t1, t2, b, t3) ->
+  | ElimExists (binders, t1, t2) ->
       let uu___ =
         let uu___1 = pp_list' pp_binder binders in
         let uu___2 =
           let uu___3 = pp_term t1 in
-          let uu___4 =
-            let uu___5 = pp_term t2 in
-            let uu___6 =
-              let uu___7 = pp_binder b in
-              let uu___8 = let uu___9 = pp_term t3 in [uu___9] in uu___7 ::
-                uu___8 in
-            uu___5 :: uu___6 in
-          uu___3 :: uu___4 in
+          let uu___4 = let uu___5 = pp_term t2 in [uu___5] in uu___3 ::
+            uu___4 in
         uu___1 :: uu___2 in
       ctor "ElimExists" uu___
   | ElimImplies (t1, t2, t3) ->
@@ -3124,43 +3066,25 @@ let rec pp_term (t : term) : FStar_Pprint.document=
             uu___4 in
         uu___1 :: uu___2 in
       ctor "ElimImplies" uu___
-  | ElimOr (t1, t2, t3, b1, t4, b2, t5) ->
+  | ElimOr (t1, t2, t3, t4) ->
       let uu___ =
         let uu___1 = pp_term t1 in
         let uu___2 =
           let uu___3 = pp_term t2 in
           let uu___4 =
             let uu___5 = pp_term t3 in
-            let uu___6 =
-              let uu___7 = pp_binder b1 in
-              let uu___8 =
-                let uu___9 = pp_term t4 in
-                let uu___10 =
-                  let uu___11 = pp_binder b2 in
-                  let uu___12 = let uu___13 = pp_term t5 in [uu___13] in
-                  uu___11 :: uu___12 in
-                uu___9 :: uu___10 in
-              uu___7 :: uu___8 in
-            uu___5 :: uu___6 in
+            let uu___6 = let uu___7 = pp_term t4 in [uu___7] in uu___5 ::
+              uu___6 in
           uu___3 :: uu___4 in
         uu___1 :: uu___2 in
       ctor "ElimOr" uu___
-  | ElimAnd (t1, t2, t3, b1, b2, t4) ->
+  | ElimAnd (t1, t2, t3) ->
       let uu___ =
         let uu___1 = pp_term t1 in
         let uu___2 =
           let uu___3 = pp_term t2 in
-          let uu___4 =
-            let uu___5 = pp_term t3 in
-            let uu___6 =
-              let uu___7 = pp_binder b1 in
-              let uu___8 =
-                let uu___9 = pp_binder b2 in
-                let uu___10 = let uu___11 = pp_term t4 in [uu___11] in uu___9
-                  :: uu___10 in
-              uu___7 :: uu___8 in
-            uu___5 :: uu___6 in
-          uu___3 :: uu___4 in
+          let uu___4 = let uu___5 = pp_term t3 in [uu___5] in uu___3 ::
+            uu___4 in
         uu___1 :: uu___2 in
       ctor "ElimAnd" uu___
   | ListLiteral ts ->

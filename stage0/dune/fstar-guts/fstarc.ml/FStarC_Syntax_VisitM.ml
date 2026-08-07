@@ -374,41 +374,37 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                 (FStarC_Class_Monad.return (_lvm_monad d) ()
                    (Obj.magic uu___1))) uu___1)
   | FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = hd; FStarC_Syntax_Syntax.args = args;_} ->
+      { FStarC_Syntax_Syntax.hd = hd; FStarC_Syntax_Syntax.arg = arg;_} ->
       let uu___ = f_term d hd in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
         (fun uu___1 ->
            (fun hd1 ->
               let hd1 = Obj.magic hd1 in
-              let uu___1 =
-                FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                  (fun uu___2 -> Obj.magic (f_arg d) uu___2) (Obj.magic args) in
+              let uu___1 = f_arg d arg in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
                    (fun uu___2 ->
-                      (fun args1 ->
-                         let args1 = Obj.magic args1 in
+                      (fun arg1 ->
+                         let arg1 = Obj.magic arg1 in
                          let uu___2 =
                            mk
                              (FStarC_Syntax_Syntax.Tm_app
                                 {
                                   FStarC_Syntax_Syntax.hd = hd1;
-                                  FStarC_Syntax_Syntax.args = args1
+                                  FStarC_Syntax_Syntax.arg = arg1
                                 }) in
                          Obj.magic
                            (FStarC_Class_Monad.return (_lvm_monad d) ()
                               (Obj.magic uu___2))) uu___2))) uu___1)
   | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.body = t;
+      { FStarC_Syntax_Syntax.b = b; FStarC_Syntax_Syntax.body = t;
         FStarC_Syntax_Syntax.rc_opt = rc_opt;_}
       ->
-      let uu___ =
-        FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-          (fun uu___1 -> Obj.magic (f_binder d) uu___1) (Obj.magic bs) in
+      let uu___ = f_binder d b in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
         (fun uu___1 ->
-           (fun bs1 ->
-              let bs1 = Obj.magic bs1 in
+           (fun b1 ->
+              let b1 = Obj.magic b1 in
               let uu___1 = f_term d t in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
@@ -430,7 +426,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                                       mk
                                         (FStarC_Syntax_Syntax.Tm_abs
                                            {
-                                             FStarC_Syntax_Syntax.bs = bs1;
+                                             FStarC_Syntax_Syntax.b = b1;
                                              FStarC_Syntax_Syntax.body = t1;
                                              FStarC_Syntax_Syntax.rc_opt =
                                                rc_opt1
@@ -440,14 +436,12 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                                          (_lvm_monad d) () (Obj.magic uu___3)))
                                    uu___3))) uu___2))) uu___1)
   | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_} ->
-      let uu___ =
-        FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-          (fun uu___1 -> Obj.magic (f_binder d) uu___1) (Obj.magic bs) in
+      { FStarC_Syntax_Syntax.b1 = b; FStarC_Syntax_Syntax.comp = c;_} ->
+      let uu___ = f_binder d b in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
         (fun uu___1 ->
-           (fun bs1 ->
-              let bs1 = Obj.magic bs1 in
+           (fun b1 ->
+              let b1 = Obj.magic b1 in
               let uu___1 = f_comp d c in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
@@ -458,14 +452,14 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                            mk
                              (FStarC_Syntax_Syntax.Tm_arrow
                                 {
-                                  FStarC_Syntax_Syntax.bs1 = bs1;
+                                  FStarC_Syntax_Syntax.b1 = b1;
                                   FStarC_Syntax_Syntax.comp = c1
                                 }) in
                          Obj.magic
                            (FStarC_Class_Monad.return (_lvm_monad d) ()
                               (Obj.magic uu___2))) uu___2))) uu___1)
   | FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = phi;_} ->
+      { FStarC_Syntax_Syntax.b2 = bv; FStarC_Syntax_Syntax.phi = phi;_} ->
       let uu___ = f_binding_bv d bv in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
         (fun uu___1 ->
@@ -481,7 +475,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                            mk
                              (FStarC_Syntax_Syntax.Tm_refine
                                 {
-                                  FStarC_Syntax_Syntax.b = bv1;
+                                  FStarC_Syntax_Syntax.b2 = bv1;
                                   FStarC_Syntax_Syntax.phi = phi1
                                 }) in
                          Obj.magic
@@ -1732,7 +1726,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                                       })))) uu___2))) uu___1)
     | FStarC_Syntax_Syntax.Sig_effect_abbrev
         { FStarC_Syntax_Syntax.lid4 = lid; FStarC_Syntax_Syntax.us4 = us;
-          FStarC_Syntax_Syntax.bs2 = bs; FStarC_Syntax_Syntax.comp1 = comp;
+          FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.comp1 = comp;
           FStarC_Syntax_Syntax.cflags = cflags;_}
         ->
         let uu___ =
@@ -1769,7 +1763,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                                                      = lid;
                                                    FStarC_Syntax_Syntax.us4 =
                                                      us;
-                                                   FStarC_Syntax_Syntax.bs2 =
+                                                   FStarC_Syntax_Syntax.bs =
                                                      bs;
                                                    FStarC_Syntax_Syntax.comp1
                                                      = comp1;

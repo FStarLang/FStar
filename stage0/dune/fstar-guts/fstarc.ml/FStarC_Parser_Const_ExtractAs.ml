@@ -5,7 +5,7 @@ let extract_as_lid : FStarC_Ident.lid=
   p2l ["FStar"; "ExtractAs"; "extract_as"]
 let is_extract_as_attr (attr : FStarC_Syntax_Syntax.attribute) :
   FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
-  let uu___ = FStarC_Syntax_Util.head_and_args attr in
+  let uu___ = FStarC_Syntax_Util.head_and_args_full attr in
   match uu___ with
   | (head, args) ->
       let uu___1 =

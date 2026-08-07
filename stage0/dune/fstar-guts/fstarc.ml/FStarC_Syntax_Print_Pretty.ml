@@ -109,11 +109,8 @@ let pat_to_string (p : FStarC_Syntax_Syntax.pat) : Prims.string=
     (fun uu___ ->
        let e =
          let uu___1 =
-           Obj.magic
-             (FStarC_Class_Setlike.empty ()
-                (Obj.magic
-                   (FStarC_FlatSet.setlike_flat_set
-                      FStarC_Syntax_Syntax.ord_bv)) ()) in
+           FStarC_Class_Setlike.empty
+             (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv) () in
          FStarC_Syntax_Resugar.resugar_pat p uu___1 in
        let d = FStarC_Parser_ToDocument.pat_to_document e in pp d)
 let binder_to_string' (is_arrow : Prims.bool)

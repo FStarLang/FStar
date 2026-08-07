@@ -1,4 +1,4 @@
-* Info at RewriteFail.fst(11,11-11,33):
+* Info at RewriteFail.fst(11,10-11,38):
   - Expected failure:
   - rewrite: could not prove equality of
   - ‘pts_to r 0’

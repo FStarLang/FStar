@@ -16,6 +16,8 @@
 
 module FStarC.Tactics.Monad
 
+open FStarC.Tactics.Result
+open FStarC.Class.Monad
 open FStarC
 open FStarC.Effect
 open FStarC.List

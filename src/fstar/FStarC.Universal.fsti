@@ -47,23 +47,16 @@ val tc_one_fragment :
     either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
     ML (option Syntax.modul & TcEnv.env & lang_decls_t)
 
-(* Load an interface file into the dsenv. sed in interactive mode when fly_deps is off *)
-val load_interface_decls :
-    TcEnv.env ->
-    string ->
-    ML TcEnv.env_t
-
-(* [needs_interleaving s1 s2] is when s1 and s2 are (resp.) the filenames
-for the interface and implementation of a (single) module. *)
-val needs_interleaving :
-    string ->
-    string ->
-    ML bool
-
 (* Loads one file as a dependence. Used in interactive mode when fly_deps is off *)
 val load_file :
     TcEnv.env_t ->
-    iface_fn:option string ->
+    filename:string ->
+    ML TcEnv.env_t
+
+(* Loads the interface of the file being edited, in interactive mode when
+fly_deps is off. Its checked sigelts become the implementation's to-do list. *)
+val load_interface_of_current_file :
+    TcEnv.env_t ->
     filename:string ->
     ML TcEnv.env_t
 

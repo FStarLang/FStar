@@ -1,4 +1,6 @@
 module FStar.Tactics.Print
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Reflection.V2.Data
 
 open FStar.Reflection.V2
 open FStar.Tactics.Effect
@@ -106,6 +108,15 @@ and const_to_ast_string (c:vconst) : Tac string =
   match c with
   | C_Unit -> "C_Unit"
   | C_Int i -> "C_Int " ^ string_of_int i
+  | C_MachineInt i signedness width ->
+    "C_MachineInt " ^ string_of_int i ^ " " ^
+    (match signedness with | Signed -> "Signed" | Unsigned -> "Unsigned") ^ " " ^
+    (match width with
+     | Int8 -> "Int8"
+     | Int16 -> "Int16"
+     | Int32 -> "Int32"
+     | Int64 -> "Int64"
+     | Sizet -> "Sizet")
   | C_True -> "C_True"
   | C_False -> "C_False"
   | C_String s -> "C_String " ^ s

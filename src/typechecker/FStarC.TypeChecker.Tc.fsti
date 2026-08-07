@@ -37,11 +37,10 @@ val tc_more_partial_modul: env -> modul -> list sigelt -> ML (modul & list sigel
 val finish_partial_modul
  (should_pop:bool)
  (loading_from_cache:bool)
- (iface_exists:bool)
  (en:env) 
  (m:modul)
 : ML (modul & env)
 
 val load_checked_module: env -> modul -> ML env
 val load_partial_checked_module: env -> modul -> ML env
-val check_module: env -> modul -> bool -> ML (modul & env)
+val check_module: env -> modul -> ML (modul & env)

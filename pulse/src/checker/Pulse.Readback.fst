@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Readback
+open Pulse.Elaborate.Pure
 module R = FStar.Reflection.V2
 open Pulse.Syntax.Base
 open Pulse.Reflection.Util

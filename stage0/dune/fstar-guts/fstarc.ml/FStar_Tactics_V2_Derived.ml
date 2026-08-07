@@ -59,8 +59,7 @@ let map_optRO (f : 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr)
   | FStar_Pervasives_Native.None ->
       (fun uu___ -> FStar_Pervasives_Native.None)
   | FStar_Pervasives_Native.Some x1 ->
-      FStar_Tactics_Effect.tac_bind () () (f x1)
-        (fun uu___ uu___1 -> FStar_Pervasives_Native.Some uu___)
+      (fun ps -> let x2 = f x1 ps in FStar_Pervasives_Native.Some x2)
 let fail_doc_at (m : FStar_Errors_Msg.error_message)
   (r : FStar_Range.range FStar_Pervasives_Native.option) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -318,9 +317,8 @@ let rec iseq
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   match ts with
   | t::ts1 ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (divide Prims.int_one t (fun uu___ -> iseq ts1))
-        (fun uu___ uu___1 -> ())
+      (fun ps ->
+         let x = divide Prims.int_one t (fun uu___ -> iseq ts1) ps in ())
   | [] -> (fun uu___ -> ())
 let focus (t : unit -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -397,8 +395,7 @@ let exact_args (qs : FStarC_Reflection_V2_Data.aqualv Prims.list)
          (fun uv ->
             if FStar_Reflection_V2_Derived.is_uvar uv
             then FStarC_Tactics_V2_Builtins.unshelve uv
-            else FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> ()))
-         (FStar_List_Tot_Base.rev x1) ps)
+            else (fun uu___1 -> ())) (FStar_List_Tot_Base.rev x1) ps)
 let exact_n (n : Prims.int) (t : FStar_Tactics_NamedView.term) :
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
@@ -476,9 +473,7 @@ let fresh_implicit_binder (t : FStarC_Reflection_Types.typ) :
       FStar_Tactics_NamedView.attrs = []
     }
 let guard (b : Prims.bool) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
-  if Prims.op_Negation b
-  then fail "guard failed"
-  else FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> ())
+  if Prims.op_Negation b then fail "guard failed" else (fun uu___ -> ())
 let try_with (f : unit -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr)
   (h : Prims.exn -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -644,8 +639,7 @@ let rec revert_all (bs : FStar_Tactics_NamedView.binding Prims.list) :
   match bs with
   | [] -> (fun uu___ -> ())
   | uu___::tl ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStarC_Tactics_V2_Builtins.revert ()) (fun uu___1 -> revert_all tl)
+      (fun ps -> FStarC_Tactics_V2_Builtins.revert () ps; revert_all tl ps)
 let binder_sort (b : FStar_Tactics_NamedView.binder) :
   FStarC_Reflection_Types.typ= b.FStar_Tactics_NamedView.sort
 let rec __assumption_aux (xs : FStar_Tactics_NamedView.binding Prims.list) :
@@ -694,28 +688,29 @@ let rec try_rewrite_equality (x : FStar_Tactics_NamedView.term)
   match bs with
   | [] -> (fun uu___ -> ())
   | x_t::bs1 ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Reflection_V2_Formula.term_as_formula (type_of_binding x_t))
-        (fun uu___ ->
-           match uu___ with
-           | FStar_Reflection_V2_Formula.Comp
-               (FStar_Reflection_V2_Formula.Eq uu___1, y, uu___2) ->
-               if term_eq x y
-               then FStarC_Tactics_V2_Builtins.rewrite x_t
-               else try_rewrite_equality x bs1
-           | uu___1 -> try_rewrite_equality x bs1)
+      (fun ps ->
+         let x1 =
+           FStar_Reflection_V2_Formula.term_as_formula (type_of_binding x_t)
+             ps in
+         match x1 with
+         | FStar_Reflection_V2_Formula.Comp
+             (FStar_Reflection_V2_Formula.Eq uu___, y, uu___1) ->
+             if term_eq x y
+             then FStarC_Tactics_V2_Builtins.rewrite x_t ps
+             else try_rewrite_equality x bs1 ps
+         | uu___ -> try_rewrite_equality x bs1 ps)
 let rec rewrite_all_context_equalities
   (bs : FStar_Tactics_NamedView.binding Prims.list) :
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   match bs with
   | [] -> (fun uu___ -> ())
   | x_t::bs1 ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (try_with
+      (fun ps ->
+         try_with
            (fun uu___ ->
               match () with | () -> FStarC_Tactics_V2_Builtins.rewrite x_t)
-           (fun uu___ uu___1 -> ()))
-        (fun uu___ -> rewrite_all_context_equalities bs1)
+           (fun uu___ uu___1 -> ()) ps;
+         rewrite_all_context_equalities bs1 ps)
 let rewrite_eqs_from_context (uu___ : unit) :
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps -> let x = cur_vars () ps in rewrite_all_context_equalities x ps
@@ -1020,7 +1015,7 @@ let rec last :
   fun x ->
     match x with
     | [] -> fail "last: empty list"
-    | x1::[] -> FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> x1)
+    | x1::[] -> (fun uu___ -> x1)
     | uu___::xs -> last xs
 let branch_on_match (uu___ : unit) :
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -1050,10 +1045,9 @@ let rec mk_abs (args : FStar_Tactics_NamedView.binder Prims.list)
   match args with
   | [] -> (fun uu___ -> t)
   | a::args' ->
-      FStar_Tactics_Effect.tac_bind () () (mk_abs args' t)
-        (fun t' uu___ ->
-           FStar_Tactics_NamedView.pack
-             (FStar_Tactics_NamedView.Tv_Abs (a, t')))
+      (fun ps ->
+         let x = mk_abs args' t ps in
+         FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_Abs (a, x)))
 let namedv_to_simple_binder (n : FStar_Tactics_NamedView.namedv) :
   (FStar_Tactics_NamedView.simple_binder, Obj.t)
     FStar_Tactics_Effect.tac_repr=
@@ -1086,10 +1080,9 @@ let string_to_term_with_lb
         (fun uu___ uu___1 ->
            match (uu___, uu___1) with
            | ((e1, lb_bvs), (i, v)) ->
-               FStar_Tactics_Effect.tac_bind () ()
-                 (FStarC_Tactics_V2_Builtins.push_bv_dsenv e1 i)
-                 (fun uu___2 uu___3 ->
-                    match uu___2 with | (e2, b) -> (e2, ((v, b) :: lb_bvs))))
+               (fun ps1 ->
+                  let x1 = FStarC_Tactics_V2_Builtins.push_bv_dsenv e1 i ps1 in
+                  match x1 with | (e2, b) -> (e2, ((v, b) :: lb_bvs))))
         (e, []) letbindings ps in
     match x with
     | (e1, lb_bindings) ->

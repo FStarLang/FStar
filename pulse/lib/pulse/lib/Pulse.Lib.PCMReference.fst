@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module Pulse.Lib.PCMReference
+open Pulse.Lib.SmallType
+open Pulse.Lib.Send
 open Pulse.Lib.Core
 module C = Pulse.Lib.Core.Refs
 module U = Pulse.Lib.Raise

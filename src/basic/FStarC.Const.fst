@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Const
+open FStarC.Range.Type
 open FStarC.Effect
 
 open FStar.Char

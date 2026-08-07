@@ -1,5 +1,6 @@
 module FStarC.HashMap
 
+open FStarC.Class.Deq
 (* This is implemented with a red black tree. We should use an actual hash table *)
 
 open FStarC

@@ -16,6 +16,7 @@
 
 module FStar.BitVector
 
+open FStar.Seq.Base
 /// This module defines a bit vector as a sequence of booleans of a
 /// given length, and provides various utilities.
 ///

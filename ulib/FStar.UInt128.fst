@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.UInt128
+open FStar.UInt
 
 
 module UInt = FStar.UInt
@@ -86,9 +87,9 @@ let lem_ult_2 (a b:uint_t 64)
 let int2bv_ult (#n: pos) (a b: uint_t n)
   : Lemma (ensures a < b <==> bvult #n (int2bv #n a) (int2bv #n b))
   = introduce (a < b) ==> (bvult #n (int2bv #n a) (int2bv #n b))
-    with _ . FStar.BV.int2bv_lemma_ult_1 a b;
+    with FStar.BV.int2bv_lemma_ult_1 a b;
     introduce (bvult #n (int2bv #n a) (int2bv #n b)) ==> (a < b)
-    with _ . FStar.BV.int2bv_lemma_ult_2 a b
+    with FStar.BV.int2bv_lemma_ult_2 a b
 
 let lem_ult (a b:uint_t 64)
   : Lemma (if a < b

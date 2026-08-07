@@ -170,6 +170,22 @@ val unifier_hint_injective : unit
       reduces to [f v0 v1 v2]. *)
 val strict_on_arguments (x: list int) : Tot unit
 
+(** [smt_arity n]: overrides the arity at which a top-level symbol is
+    declared to, and applied by, the SMT encoding.
+
+    By default the arity is the length of the arrow spine of the symbol's
+    type. That is not always the right choice: the defining and typing axioms
+    of a symbol are stated at its declared arity, with an SMT pattern on the
+    full application, so a symbol that users habitually apply to fewer
+    arguments than its type has arrows must be declared at the shorter arity,
+    or those axioms will never fire.
+
+    This typically happens when the result of a function is itself a function,
+    as in
+      {[ [@@smt_arity 3] val on_domain (a: Type) (#b: (a -> Type)) (f: arrow a b) : Tot (arrow a b) ]}
+    where [n] counts only the term arguments, not the universes. *)
+val smt_arity (n: int) : Tot unit
+
 (**
  * An attribute to tag a tactic designated to solve any
  * unsolved implicit arguments remaining at the end of type inference.
