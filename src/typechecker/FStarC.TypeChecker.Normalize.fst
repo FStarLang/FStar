@@ -550,10 +550,20 @@ let should_consider_norm_requests cfg =
 let is_nbe_request s = BU.for_some ((=?) NBE) s
 
 let nbe_eval (cfg:cfg) (s:steps) (tm:term) : ML term =
-    let delta_level =
-      if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
-      then [Unfold delta_constant]
-      else [NoDelta] in
+    (* NBE builds a fresh cfg out of [s] alone, so anything the ambient cfg
+       carries that is not reflected in [s] would be lost. In particular,
+       handle_norm_request below keeps for_extraction and, absent any explicit
+       unfolding step, sets the delta level to [Eager_unfolding_only;
+       InliningDelta] so that inline_for_extraction definitions get unfolded.
+       Add the steps that make Cfg.config' derive the very same thing. *)
+    let s =
+      if cfg.steps.for_extraction
+      then ForExtraction ::
+           (if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
+            then s
+            else Eager_unfolding :: Inlining :: s)
+      else s
+    in
     log_nbe cfg (fun () -> Format.print1 "Invoking NBE with  %s\n" (show tm));
     let tm_norm = (cfg_env cfg).nbe s cfg.tcenv tm in
     log_nbe cfg (fun () -> Format.print1 "Result of NBE is  %s\n" (show tm_norm));

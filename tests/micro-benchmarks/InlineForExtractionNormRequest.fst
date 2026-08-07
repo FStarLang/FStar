@@ -30,3 +30,11 @@ let f5 b =
   [@inline_let] let b1 = f1 b in
   [@inline_let] let b2 = f1 (not b) in
   Pervasives.norm [delta_only []] (f1 (b1 || b2))
+
+/// Same, but explicitly asking for NBE. The `for_extraction` flag and the
+/// delta level it implies used to be dropped when dispatching to NBE, so
+/// `id` and `f1` were left unfolded and extraction failed with error 342.
+let test_nbe (x:int) = norm [nbe; primops] (id 0 + 1)
+
+val f3_nbe : bool -> bool
+let f3_nbe b = Pervasives.norm [nbe; delta_only []] (f1 b)
