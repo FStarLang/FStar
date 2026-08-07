@@ -22,6 +22,7 @@ CUSTARD_TESTS += ShortCircuit
 CUSTARD_TESTS += MonoTypes
 CUSTARD_TESTS += InlineFields
 CUSTARD_TESTS += KeyNames
+CUSTARD_TESTS += Refs
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -50,6 +51,11 @@ NOGREP_MonoTypes = "'" "Mkboth" "match p with"
 # assertion (the output is "abAB", not "abab"); this checks the shape.
 GREP_KeyNames = "keyNames_apply__tweak" "keyNames_apply__tweak_1" \
                 "FStar_String.lowercase" "FStar_String.uppercase"
+
+# Section 8.4: a garbage-collected reference is an OCaml 'ref', not a
+# one-element array, and it is never freed.
+GREP_Refs   = "(Prims.int ref)" "(ref (Prims.parse_int \"0\"))" "(!(r))" "(r) := "
+NOGREP_Refs = "Array.make" "free"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.

@@ -2527,6 +2527,33 @@ compiled C.  Note that `ht_t` stores its hash function in a field.  That is the
 works: the field is a function pointer, the table is compiled once, and it is
 karamel that specializes `ht_t` to `size_t`/`data` for C.
 
+### 8.4 Garbage-collected references
+
+Pulse's references are the ones with an explicit lifetime.  The other
+reference API -- `FStar.All` in ulib, `FStarC.Effect` in the compiler, the
+same three operations under two names -- has no `free` at all, because it is
+realized by OCaml's own `ref`.  `Builtins.ref_rule` maps both:
+
+| `FStar.All` / `FStarC.Effect` | IR |
+| --- | --- |
+| `ref` | `TRef t` |
+| `alloc`, `mk_ref` | `BufCreate LHeap` of length 1, at `TRef t` |
+| `op_Bang` (`!`), `read` | `BufRead` at index 0 |
+| `op_Colon_Equals` (`:=`), `write` | `BufWrite` at index 0 |
+
+`LHeap` rather than `LStack` because the cell outlives its scope -- nothing
+here is a `let mut`, and there is no checker proving it does not escape.  For
+the OCaml backend the distinction does not arise: a `TRef` prints as `t ref`
+and a `BufCreate` into one as `ref x`, whatever the location says.  For the C
+backend it does, and the honest statement is that these references are **not
+supported there**: the allocation would be a `malloc` that nothing ever frees.
+A C target must use Pulse's references, which have the lifetime the C backend
+needs.  `tests/custard/Refs.fst` is the regression, on the OCaml side only.
+
+This is what makes the compiler's own imperative style reachable: roughly
+sixty `FStarC.*` modules allocate a `mk_ref` at the top level and mutate it
+(§12.8).
+
 ---
 
 ## 9. Testing and validation
@@ -2869,10 +2896,9 @@ against `src/**/*.fst` turns up, in rough order of size:
    single extensible `Prims.exn`, so `extract_inductive`'s
    `datacons_of_typ` enumeration is the wrong shape for them and they need
    their own path.
-2. **No rules for `FStar.ST`/`FStar.Ref`/`FStarC.Util.mk_ref`.**  `TRef` and
-   the buffer operations exist, but `Builtins` only wires up Pulse's
-   `Reference`/`Box`/`Vec` (§8.3).  The compiler is `ref`-heavy imperative code
-   throughout.  Small, well-understood, and entirely absent.
+2. ~~**No rules for the garbage-collected references.**~~  Done: §8.4.  The
+   remaining hole is that they are OCaml-only, which is the right trade for
+   the compiler and wrong for anything targeting C.
 3. **The hand-written realizations.**  `src/ml/` and `ulib/ml/` together hold
    on the order of seventy `.ml` files realizing `assume val`s.  The mechanism
    to consume them exists — `[@@custard_extern]`, §8.2 — but none have been
@@ -2924,7 +2950,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M8c | Inline constructor fields (§5.7): `Simplify.inline_fields`, `TInline`, `[@@@custard_inline_field]` | Done. `tests/custard/InlineFields.fst`; closes the `\| Bar of a & b` indirection of FStarLang/FStar#4382 |
 | M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
 | M9b | Exceptions: an `Extract` producer for `DExn`/`ERaise`/`ETry`, and the `Prims.exn` constructor path (§12.8 item 1) | The IR and the OCaml backend already carry them |
-| M9c | `FStar.ST`/`FStar.Ref`/`FStarC.Util.mk_ref` rules (§12.8 item 2) | The compiler's imperative style; same table as §8.3 |
+| M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
 | M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Decides whether M7 moves ahead of M10 |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |

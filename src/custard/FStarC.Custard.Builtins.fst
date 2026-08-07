@@ -422,6 +422,44 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   | _ -> None
 
 (* -------------------------------------------------------------------- *)
+(* Garbage-collected references                                         *)
+(* -------------------------------------------------------------------- *)
+
+(* [FStar.All] is the ulib reference API and [FStarC.Effect] the compiler's
+   own; they are the same API under two names, and neither has a [free],
+   because both are realized by OCaml's [ref].  So a reference here is a
+   [TRef] holding a *heap* cell: the OCaml backend prints [TRef] as [t ref]
+   and [BufCreate] into one as [ref x] (PrintOCaml.fst:359), which is exactly
+   right, while the C backend would emit a [malloc] that nothing frees --
+   correct, but a leak, and section 8.4 says so.
+
+   [read]/[write] index at 0 for the same reason [Pulse.Lib.Reference] does:
+   the IR has one memory-access node, and a reference is the one-element case
+   of it. *)
+let ref_rule (id:string) : ML (option rule) =
+  let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
+  let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
+  let elt_of_arg (_ : list cty) (args : list expr) : ML cty =
+    match args with
+    | { ty = TRef t } :: _ -> t
+    | { ty = TBuf t } :: _ -> t
+    | _ -> TAny in
+  match id with
+  | "ref" -> Some (Rule_type (fun tys -> TRef (elt_of tys)))
+  | "alloc" | "mk_ref" ->
+    Some (buf_prim 1 (BufCreate LHeap) E_Impure rf
+            (fun args -> args @ [size_lit "1"]))
+  | "read" | "op_Bang" ->
+    Some (buf_prim 1 BufRead E_Impure elt_of_arg
+            (fun args -> args @ [size_lit "0"]))
+  | "write" | "op_Colon_Equals" ->
+    Some (buf_prim 2 BufWrite E_Impure unit_ty
+            (fun args -> match args with
+                         | [r; v] -> [r; size_lit "0"; v]
+                         | args -> args))
+  | _ -> None
+
+(* -------------------------------------------------------------------- *)
 (* Attribute-declared rules                                             *)
 (* -------------------------------------------------------------------- *)
 
@@ -471,6 +509,10 @@ let builtin_rule (l:Ident.lident) : ML rule =
          | None ->
            if ns = ["Prims"] then prims_rule id
            else if ns = ["FStar"; "Int"; "Cast"] then int_cast_rule id
+           else if ns = ["FStar"; "All"] || ns = ["FStarC"; "Effect"]
+           then (match ref_rule id with
+                 | Some r -> Some r
+                 | None -> pulse_rule ns id)
            else pulse_rule ns id)
       | [] -> None
   in
