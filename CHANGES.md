@@ -163,6 +163,15 @@ Guidelines for the changelog:
 
 ## SMT
 
+  * The kinding axiom for a non-total arrow type (`Typing for non-total
+    arrows`) used to be a pattern-less quantifier over the universe
+    variables occurring in the types of the arrow's free variables. Z3
+    therefore instantiated it over the cross product of every
+    `Universe`-sorted term in the context, which could account for the vast
+    majority of all quantifier instantiations in a query. The axiom is now a
+    single quantifier with a multi-pattern that determines every bound
+    variable.
+
   * Proof hints and unsat cores have been removed. The options
     `--use_hints`, `--use_hint_hashes`, `--record_hints`, `--hint_dir`,
     `--hint_file`, `--hint_info`, `--reuse_hint_for` and

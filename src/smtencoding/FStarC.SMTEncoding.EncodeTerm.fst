@@ -1009,20 +1009,28 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
              let tapp = mkApp(tsym, fv_tms) in
              let t_kinding =
                 let a_name = "non_total_function_typing_" ^tsym in
-                let axiom =
-                  (* We generate:
-                     forall v1 .. vn, (v1 hasType t1 /\ ... vn hasType tn) ==> tapp hasType Type *)
-                  (* NB: we use the conlusion (HasType tapp Type) as the pattern. Though Z3
-                  will probably pick the same one if left empty. *)
-                  mkForall t0.pos ([[mk_HasType tapp (mk_Term_type mk_U_unknown)]], fv_vars, //NS: REVIEW! Can we give it a more precise universe
-                    mkImp (mk_and_l fv_guards, mk_HasType tapp (mk_Term_type mk_U_unknown)))
-                in
+                (* We generate:
+                   forall v1 .. vn, (v1 hasType t1 /\ ... vn hasType tn) ==> tapp hasType Type *)
+                (* NB: we use the conlusion (HasType tapp Type) as the pattern. Though Z3
+                will probably pick the same one if left empty. *)
+                let concl = mk_HasType tapp (mk_Term_type mk_U_unknown) in //NS: REVIEW! Can we give it a more precise universe
+                let body = mkImp (mk_and_l fv_guards, concl) in
                 (* We furthermore must close over any variable that is
                 still free in the axiom. This can happen since the types
                 of the fvs we are closing over above may not be closed
-                in the current env. *)
-                let svars = Term.free_variables axiom in
-                let axiom = mkForall t0.pos ([], svars, axiom) in
+                in the current env.  In particular, the guard of a
+                type-valued variable is [HasType v (Tm_type u)], whose
+                universe [u] occurs *only* in the guard.
+
+                Such a variable must occur in the trigger as well, or Z3
+                instantiates the axiom over the cross product of every term of
+                that sort in the E-graph -- for a three-argument non-total
+                arrow this was observed to account for 99% of all quantifier
+                instantiations of a query.  So the guards join the conclusion
+                in a multi-pattern, which determines every bound variable. *)
+                let svars = Term.free_variables (mkForall t0.pos ([], fv_vars, body)) in
+                let pat = if Cons? svars then concl::fv_guards else [concl] in
+                let axiom = mkForall t0.pos ([pat], fv_vars@svars, body) in
                 Util.mkAssume (axiom, Some "Typing for non-total arrows", a_name)
              in
 
