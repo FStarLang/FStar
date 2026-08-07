@@ -344,8 +344,12 @@ type dest =
 let scope : ref (list (string & string)) = mk_ref []
 let declared : ref (SMap.t bool) = mk_ref (SMap.create 0)
 
+(* The locals that a [let mut] of one cell has been collapsed into.  Keyed by
+   the *C* name, which is what both the declaration and every use resolve to. *)
+let scalars : ref (SMap.t bool) = mk_ref (SMap.create 0)
+
 let reset_scope () : ML unit =
-  scope := []; declared := SMap.create 20
+  scope := []; declared := SMap.create 20; scalars := SMap.create 20
 
 let bind_var (x:string) : ML string =
   let base = c_var x in
@@ -416,6 +420,43 @@ and vars_of_branch (br:branch) : ML (list string) =
   let _, g, b = br in
   (match g with Some g -> vars_of g | None -> []) @ vars_of b
 
+(* Does [x] -- a pointer to a single cell -- occur anywhere other than as the
+   base of a read or a write of that cell?  If not, the cell needs no address,
+   and the [let mut] that introduced it is just a local variable.  Anything
+   else (passing it to a function, taking a sub-buffer, freeing it) needs the
+   pointer, so the array stays.
+
+   Shadowing is ignored, in the conservative direction: an inner binder of the
+   same name can only add occurrences, never remove one. *)
+let rec escapes (x:string) (e:expr) : ML bool =
+  let any (es:list expr) : ML bool = List.existsb (escapes x) es in
+  match e.e with
+  | EVar y -> y = x
+  | EOp ({ po_op = BufRead }, [{ e = EVar y }; i]) when y = x -> escapes x i
+  | EOp ({ po_op = BufWrite }, [{ e = EVar y }; i; v]) when y = x ->
+    escapes x i || escapes x v
+  | EConst _ | EQual _ | EAny | EAbort _ -> false
+  | ELet (_, _, a, b) -> escapes x a || escapes x b
+  | EApp (h, es) -> escapes x h || any es
+  | EFun (_, b) -> escapes x b
+  | EMatch (sc, brs) -> escapes x sc || List.existsb (escapes_branch x) brs
+  | ETry (a, brs) -> escapes x a || List.existsb (escapes_branch x) brs
+  | EIf (a, b, c) -> escapes x a || escapes x b || escapes x c
+  | ESeq (a, b) | EWhile (a, b) -> escapes x a || escapes x b
+  | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> any es
+  | ERecord (_, fs) -> List.existsb (fun (_, e) -> escapes x e) fs
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> escapes x a
+
+and escapes_branch (x:string) (br:branch) : ML bool =
+  let _, g, b = br in
+  (match g with Some g -> escapes x g | None -> false) || escapes x b
+
+(* A [BufCreate] of exactly one cell: what Pulse emits for [let mut]. *)
+let is_one (e:expr) : bool =
+  match e.e with EConst (CInt ("1", _)) -> true | _ -> false
+
+let is_scalar (nm:string) : ML bool = Some? (SMap.try_find !scalars nm)
+
 (* A constructor's field names, paired with the printed arguments.  A length
    mismatch would be an extractor bug; keeping the prefix produces a C error
    at the literal rather than a crash here. *)
@@ -472,7 +513,9 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     String.concat ", " (fs |> List.map (fun (f, v) ->
       "." ^ c_var f ^ " = " ^ c_expr out ind v)) ^ " }"
   | EOp ({ po_op = BufRead }, [b; i]) ->
-    c_expr out ind b ^ "[" ^ c_expr out ind i ^ "]"
+    (match b.e with
+     | EVar y when is_scalar (lookup_var y) -> lookup_var y
+     | _ -> c_expr out ind b ^ "[" ^ c_expr out ind i ^ "]")
   | EOp ({ po_op = BufSub }, [b; i]) ->
     "(" ^ c_expr out ind b ^ " + " ^ c_expr out ind i ^ ")"
   | EOp ({ po_op = BufNull }, []) -> "(" ^ ty e.ty ^ ")NULL"
@@ -589,6 +632,21 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     scope := saved;
     s1 ^ s2
 
+  (* Pulse's [let mut] is a stack allocation of one cell (section 7.4).  When
+     the cell's address is never needed -- every use is a read or a write of
+     that one cell -- it is an ordinary local, and saying so removes a
+     declaration, an array, and an initializing loop per mutable variable. *)
+  | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
+      when is_one len && not (escapes x e2) ->
+    let out = mk_ref "" in
+    let iv = c_expr out ind init in
+    let saved = !scope in
+    let nm = bind_var x in
+    SMap.add !scalars nm true;
+    let s2 = emit ind d e2 in
+    scope := saved;
+    !out ^ ind ^ decl_of t nm ^ " = " ^ iv ^ ";\n" ^ s2
+
   | ELet (x, t, e1, e2) ->
     let saved = !scope in
     let s1 =
@@ -612,10 +670,16 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | EIf (c, t, f) ->
     let out = mk_ref "" in
     let cs = c_expr out ind c in
+    let tt = emit ind' d t in
     let ft = emit ind' d f in
+    (* An empty arm is not worth a pair of braces.  When it is the [then] arm,
+       negating the condition is what removes it -- which happens whenever a
+       branch's only job is to fall through, as an [if] with no [else] in the
+       source does. *)
     !out ^
-    ind ^ "if (" ^ cs ^ ")" ^ brace ind (emit ind' d t) ^
-    (if ft = "" then "" else ind ^ "else" ^ brace ind ft)
+    (if tt = "" && ft <> "" then ind ^ "if (!(" ^ cs ^ "))" ^ brace ind ft
+     else ind ^ "if (" ^ cs ^ ")" ^ brace ind tt ^
+          (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
 
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
 
@@ -639,10 +703,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
 
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
     let out = mk_ref "" in
-    let b = c_expr out ind b in
-    let i = c_expr out ind i in
+    let lhs =
+      match b.e with
+      | EVar y when is_scalar (lookup_var y) -> lookup_var y
+      | _ -> c_expr out ind b ^ "[" ^ c_expr out ind i ^ "]" in
     let v = c_expr out ind v in
-    !out ^ ind ^ b ^ "[" ^ i ^ "] = " ^ v ^ ";\n" ^ unit_result ind d
+    !out ^ ind ^ lhs ^ " = " ^ v ^ ";\n" ^ unit_result ind d
 
   | EOp ({ po_op = BufFree }, [b]) ->
     let out = mk_ref "" in
@@ -684,9 +750,14 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
             | _ -> reject "an allocation whose result is not a pointer" [] in
   let arr = fresh "buf" in
   let i = fresh "i" in
+  let elt_of = match t with TBuf e -> e | _ -> t in
+  if LStack? lt && is_one len then
+    !out ^ ind ^ decl_of elt_of (arr ^ "[1]") ^ " = { " ^ iv ^ " };\n" ^
+    finish ind d arr
+  else
   let alloc =
     match lt with
-    | LStack -> ind ^ elt ^ " " ^ arr ^ "[" ^ lv ^ "];\n"
+    | LStack -> ind ^ decl_of elt_of (arr ^ "[" ^ lv ^ "]") ^ ";\n"
     | LHeap ->
       ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc((" ^ lv ^
       ") * sizeof(" ^ elt ^ "));\n" ^
