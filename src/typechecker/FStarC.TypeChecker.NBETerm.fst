@@ -126,7 +126,7 @@ let rec term_eq (t1 t2 : t) : ML bool =
   | Constant c1, Constant c2 -> c1 = c2
   | Type_t u1, Type_t u2
   | Univ u1, Univ u2 -> u1 = u2
-  | Refinement(r1, t1), Refinement(r2, t2) ->
+  | Refinement(_, r1, t1), Refinement(_, r2, t2) ->
     let x =  S.new_bv None S.t_unit in (* bogus type *)
     term_eq (fst (t1 ())) (fst (t2 ())) && term_eq (r1 (mkAccuVar x)) (r2 (mkAccuVar x))
   | Unknown, Unknown -> true
@@ -175,7 +175,7 @@ let rec eq_t env (t1 : t) (t2 : t) : ML TEQ.eq_result =
   | Constant c1, Constant c2 -> eq_constant c1 c2
   | Type_t u1, Type_t u2
   | Univ u1, Univ u2 -> equal_iff (U.eq_univs u1 u2)
-  | Refinement(r1, t1), Refinement(r2, t2) ->
+  | Refinement(_, r1, t1), Refinement(_, r2, t2) ->
     let x =  S.new_bv None S.t_unit in (* bogus type *)
     eq_and (eq_t env (fst (t1 ())) (fst (t2 ()))) (fun () -> eq_t env (r1 (mkAccuVar x)) (r2 (mkAccuVar x)))
   | Unknown, Unknown -> TEQ.Equal
@@ -225,8 +225,7 @@ let rec t_to_string (x:t) : ML string =
   | Univ u -> "Universe " ^ (show u)
   | Type_t u -> "Type_t " ^ (show u)
   | Arrow _ -> "Arrow" // TODO : revisit
-  | Refinement (f, t) ->
-    let x =  S.new_bv None S.t_unit in (* bogus type *)
+  | Refinement (x, f, t) ->
     let t = fst (t ()) in
     "Refinement " ^ (show x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
   | Unknown -> "Unknown"

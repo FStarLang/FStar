@@ -8,3 +8,5 @@ let f4 (b : Prims.bool) : Prims.bool=
 let f5 (b : Prims.bool) : Prims.bool=
   Prims.op_Negation
     ((Prims.op_Negation b) || (Prims.op_Negation (Prims.op_Negation b)))
+let test_nbe (x : Prims.int) : Prims.int= Prims.int_one
+let f3_nbe (b : Prims.bool) : Prims.bool= Prims.op_Negation b

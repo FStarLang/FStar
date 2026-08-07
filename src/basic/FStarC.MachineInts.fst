@@ -143,7 +143,11 @@ instance nbe_machint (k : machint_kind) : Tot (NBE.embedding (machint k)) =
   let em cbs (x : machint k) =
     let Mk i m = x in
     let it = embed e_int cbs i in
-    let int_to_t args = mk_t <| FV (S.lid_as_fv (__int_to_t_lid_for k) None, [], args) in
+    (* NB: must agree with the syntactic embedding above and use int_to_t,
+       not __int_to_t: the latter is an `unfold` alias, so any delta step
+       would rewrite a source literal into the former, and the two
+       representations would no longer be syntactically equal. *)
+    let int_to_t args = mk_t <| FV (S.lid_as_fv (int_to_t_lid_for k) None, [], args) in
     let t = int_to_t [as_arg it] in
     with_meta_ds t m
   in
