@@ -77,6 +77,12 @@ NOGREP_Phantom = "'ph"
 # karamel is not installed.
 KRML_TESTS += KrmlBasic
 
+# Each of these is extracted with --custard_backend C, then compiled by a C11
+# compiler with the warnings on and run; the program must exit 0.  The direct
+# backend has no polymorphism to fall back on, so it always runs with type
+# monomorphization (section 5.0.1).
+C_TESTS += KrmlBasic
+
 # Each of these is extracted with --custard_entry and *no* --custard_main, as a
 # library would be: the generated .ml must contain every GREP_<name> pattern
 # and none of the NOGREP_<name> ones.
@@ -94,6 +100,14 @@ REJECT_TESTS += MonoFuel
 # target type language: it lands on TAny, which --custard_warn_any reports and
 # WARN_ANY escalates.  This is the positive test for section 5.6.
 REJECT_TESTS += WarnAny
+# Section 6: the direct-to-C backend has no representation for an unbounded
+# Prims.int, and none for a closure.  Both must be diagnosed, not mistranslated.
+REJECT_TESTS += CNoInt
+REJECT_TESTS += CNoClosure
+FLAGS_CNoInt     = --custard_backend C --custard_monomorphize_types true
+FLAGS_CNoClosure = --custard_backend C --custard_monomorphize_types true
+CODE_CNoInt      = 367
+CODE_CNoClosure  = 367
 CODE_MonoPoly    = 363
 CODE_MonoPartial = 363
 CODE_MonoFuel    = 364
@@ -155,6 +169,24 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
 	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
 	  $(OUTPUT_DIR)/$*_c/Custard.c -o $@
 
+# The direct-to-C backend (section 6): no krmllib, no krml, just a C11
+# compiler.  -Werror is part of the test -- an unused variable or a missing
+# cast is a bug in the backend, not a style question.
+$(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+
+$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
+	$(call msg, "CC", $(basename $(notdir $@)))
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -x c $< -o $@
+
+$(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
+	$(call msg, "RUN-C", $(basename $(notdir $@)))
+	$(Q)$<
+	$(Q)touch $@
+
 $(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
 	$(call msg, "RUN-C", $(basename $(notdir $@)))
 	$(Q)$<
@@ -163,6 +195,7 @@ $(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 
 # Only when karamel is on the PATH: the OCaml backend is always testable, the
 # C one needs a toolchain.

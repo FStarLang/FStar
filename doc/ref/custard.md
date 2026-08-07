@@ -1732,10 +1732,100 @@ Emission:
   the residual polymorphic decls after monomorphization are few.  It is not a
   priority: if it does not typecheck, falling back to `TAny` (`Obj.t`) at the
   offending parameter is an acceptable answer.
-- **C directly**: `FStarC.Custard.ToC`, last.  Because the program is
-  monomorphic, ANF'd, and has explicit discriminators, this is a
-  syntax-directed printer plus a struct/union layout decision for the residual
-  `L_struct` variants.  "Pretty C" is an explicit non-goal.
+- **C directly**: `FStarC.Custard.PrintC` (`--custard_backend C`) prints C11
+  source with no runtime of its own — the only headers are `<stdint.h>`,
+  `<stdlib.h>`, `<stdbool.h>` and `<string.h>`, and the only definition the
+  backend contributes is `typedef uint8_t custard_unit;`.  No krmllib, no
+  macros: a generated file is meant to be readable, and to be compilable by
+  any C11 compiler with nothing installed.  "Pretty C" is still a non-goal;
+  *warning-free* C is not, and the corpus compiles with `-Wall -Wextra
+  -Werror`.
+
+  This is the backend that has the least to work with, so it is the one that
+  most depends on the earlier phases.  It **requires
+  `--custard_monomorphize_types true`** (§5.0.1) — C has no type variables,
+  and there is no `Obj.t` to hide behind — and it leans on ANF for evaluation
+  order and on the `Layout` fixpoint for the shape of every value.
+
+  **Expressions become statements.**  C's expression language is much smaller
+  than the IR's, so the printer is two mutually recursive functions rather
+  than one:
+
+  - `emit ind dest e` compiles `e` into a *statement sequence* that delivers
+    its value to `dest`, which is either "return it", "assign it to `x`", or
+    "discard it".  `ELet`, `EMatch`, `EIf`, `ESeq`, `EWhile`, `EAbort` and the
+    buffer primitives of §7.4 are compiled here.
+  - `c_expr out ind e` prints `e` as a C *expression*, appending to `out` any
+    statements that had to be hoisted first.  A subterm that only `emit` can
+    handle is hoisted into a fresh temporary.
+
+  ANF has already made most operands atomic, so hoisting fires rarely; keeping
+  it is what makes the printer total rather than a source of "this shape cannot
+  appear here" failures.
+
+  **Layout choices.**  A record becomes a `struct`; a variant whose
+  constructors are all nullary becomes an `enum`; a **single**-constructor
+  variant becomes a plain `struct` with no tag and no union, which is what
+  keeps tuples and Pulse's one-constructor records free.  Anything else is a
+  tagged union.  Constructor applications are C99 compound literals with
+  designated initializers, so a value is built in one expression and the
+  printer never has to name a partially initialized object.
+
+  **Matching is an if/else-if chain**, not a `switch`: nested patterns,
+  constant patterns and variable patterns then all go through one mechanism,
+  which walks a pattern against an access *path* and returns a list of tests
+  and a list of bindings.  The chain ends in `abort()`.
+
+  **C scoping is coarser than the IR's.**  A chain of `ELet`s, and a loop's
+  condition and body, all land in the same C block, while the IR scopes them
+  separately — so two disjoint IR scopes can collide on a name.  The printer
+  therefore tracks, per function, which names it has already emitted, and
+  appends `_1`, `_2`, … only on a real collision.  The common case keeps the
+  name the F\* programmer wrote.
+
+  **Function pointers, but not closures.**  A `TArrow` in a value position is
+  a C function pointer: `size_t (*hashf)(size_t)`.  That is enough for the
+  Pulse hash table, whose `ht_t` record stores its hash function, because
+  Custard has no closures left by this point — the value is always a top-level
+  definition, whose name *is* the pointer.  A surviving `EFun` (a lambda that
+  captures) is rejected.
+
+  Building the type and the name together, from the inside out, is what a C
+  declarator requires, and doing it once (`decl_of t x`, with `x = ""` giving
+  the abstract declarator a cast wants) is what keeps returned pointers
+  (`uint32_t *f(void)`) and stored functions correct without a special case at
+  each use.
+
+  **What it rejects, and why each is a rejection rather than a fallback.**
+  Every one of these is a case where C *could* be emitted, but only by
+  guessing; error 367 names the enclosing declaration and says what to do.
+
+  | Rejected | Why |
+  |---|---|
+  | `TVar`, polymorphic `TApp` | no type variables in C; run with `--custard_monomorphize_types true` |
+  | `EFun` in a value position | no closures; mark the parameter `[@@@monomorphize]` (§3.1) |
+  | abstract types, `Prims.int` in particular | no size, and no width to guess |
+  | unbounded integer literals | same |
+  | `TAny` | the representation was already lost; `--custard_warn_any` (§5.6) says where |
+  | `TTuple`, `ETuple`, `PTuple` | tuples must have reached the backend as `tupleN` inductives |
+  | `POr`, pattern guards | no `EAbortS`-style approximation is available here |
+  | `ERaise`, `ETry`, `DExn` | no exceptions |
+  | recursive datatypes | a C struct cannot contain itself by value |
+  | a top-level `DLet` with no binders | C cannot initialize a global from a computation |
+
+  Compare the Krml backend, which *approximates* several of these (`EAbortS`,
+  a warning) because krml has a runtime and a monomorphizer of its own to fall
+  back on.  This backend has neither, so an approximation would only move the
+  failure to the C compiler, with a worse message.
+
+  **Entry points.**  An entry point returning a machine integer becomes
+  `int main(void) { return (int)f(...); }` — the process exit status; anything
+  else is run for its effect and `main` returns 0.
+
+  Tested by `tests/custard/KrmlBasic.fst` (records, variants, machine
+  integers, casts, mutual recursion, short-circuiting) and by both Pulse
+  modules, each compiled with `-Werror` and run;
+  `tests/custard/CNoInt.fst` and `CNoClosure.fst` are the negative tests.
 
 ---
 
@@ -2300,4 +2390,4 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6i | Short-circuiting `&&`/`\|\|` (§6 pass 1): infix emission, bitwise guard | Done. `tests/custard/ShortCircuit.fst`, and the C side in `KrmlBasic.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | `MonoTypes`; whole corpus re-run under the flag |
-| M8 | Direct-to-C backend | Only after M5 proves the IR is adequate |
+| M8b | Direct-to-C backend (§6): self-contained C11, no krmllib, function pointers but no closures | `KrmlBasic` and both Pulse modules compiled `-Wall -Wextra -Werror` and run; `CNoInt`/`CNoClosure` reject |

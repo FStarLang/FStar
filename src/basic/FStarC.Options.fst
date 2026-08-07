@@ -941,9 +941,9 @@ binders explicitly marked [@@monomorphize] (default false)");
 
   ( noshort,
     "custard_backend",
-    EnumStr ["OCaml"; "Krml"],
-    text "Language Custard emits: OCaml source, or karamel's AST for \
-compilation to C (default OCaml)");
+    EnumStr ["OCaml"; "Krml"; "C"],
+    text "Language Custard emits: OCaml source, karamel's AST for \
+compilation to C, or self-contained C11 source (default OCaml)");
 
   ( 'd',
     "",

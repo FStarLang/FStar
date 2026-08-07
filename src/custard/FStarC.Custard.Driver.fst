@@ -26,6 +26,7 @@ module BU    = FStarC.Util
 module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
 module UF      = FStarC.Syntax.Unionfind
+module C       = FStarC.Custard.PrintC
 module Krml    = FStarC.Custard.PrintKrml
 module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
@@ -189,12 +190,23 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   if Options.custard_warn_any () then warn_any prog;
   (* Custard emits one file for the whole program, so -o is unambiguous here,
      unlike in the per-module backends. *)
-  let krml = Options.custard_backend () = "Krml" in
+  let backend = Options.custard_backend () in
   let ofile =
     match Options.output_to () with
     | Some fn -> fn
-    | None -> Find.prepend_output_dir (if krml then "Custard.krml" else "Custard.ml")
+    | None ->
+      Find.prepend_output_dir
+        (match backend with
+         | "Krml" -> "Custard.krml"
+         | "C" -> "Custard.c"
+         | _ -> "Custard.ml")
   in
-  if krml
-  then Krml.write_program ofile prog
-  else BU.write_file ofile (OCaml.print_program prog)
+  match backend with
+  | "Krml" -> Krml.write_program ofile prog
+  | "C" -> BU.write_file ofile (C.print_program prog)
+  | "OCaml" -> BU.write_file ofile (OCaml.print_program prog)
+  | b ->
+    E.raise_error0 E.Fatal_OptionsNotCompatible [
+      text ("Unknown --custard_backend " ^ b ^ ".");
+      text "The backends are OCaml (the default), Krml and C."
+    ]

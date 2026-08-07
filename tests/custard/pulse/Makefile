@@ -46,6 +46,13 @@ OCAML_TESTS += PulseHashTable
 KRML_TESTS += PulseBasic
 KRML_TESTS += PulseHashTable
 
+# Same modules again, through the direct-to-C backend: no krml, no krmllib,
+# just a C11 compiler with the warnings turned on.  PulseHashTable is the
+# demanding one -- arrays, a struct-valued cell, and a hash function stored in
+# a record, which becomes a C function pointer.
+C_TESTS += PulseBasic
+C_TESTS += PulseHashTable
+
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose
 # the representation of a value.
@@ -79,6 +86,16 @@ $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend Krml --custard_main $*.main \
 	  $*.fst -o $@
 
+$(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
+	$(Q)mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+
+$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
+	$(call msg, "CC", $(basename $(notdir $@)))
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -x c $< -o $@
+
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
 	$(Q)krml -silent -skip-linking -tmpdir $(OUTPUT_DIR)/$*_c $<
@@ -88,6 +105,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .grepped, $(GREP_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .mlchecked, $(OCAML_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcexe, $(C_TESTS)))
 
 ifneq ($(shell command -v krml 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))

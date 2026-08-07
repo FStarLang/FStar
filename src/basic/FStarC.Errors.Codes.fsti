@@ -393,6 +393,7 @@ type error_code =
   | Error_CustardFuelExhausted
   | Error_CustardUnextractableEffect
   | Warning_CustardLostRepresentation
+  | Error_CustardNoCRepresentation
 
 type error_setting = error_code & error_flag & int
 
