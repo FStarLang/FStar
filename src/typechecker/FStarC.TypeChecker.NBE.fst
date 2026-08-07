@@ -941,39 +941,77 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): ML t =
        end
 
 
+     | NU.Should_unfold_once ->
+       (* Unfold this fv, but with a cfg where it has been removed from the
+          unfold_once list, so it is not unfolded again in its own body.
+          NB: the result depends on the (modified) cfg, so it must not be
+          added to the fv cache of [cfg]. *)
+       let cfg' =
+         let once = Some?.v cfg.core_cfg.steps.unfold_once in
+         let steps = { cfg.core_cfg.steps with
+                       unfold_once = Some <| List.filter (fun lid -> not (S.fv_eq_lid fvar lid)) once } in
+         new_config ({ cfg.core_cfg with steps }) //blow away cache
+       in
+       unfold_fv true cfg' bs fvar qninfo
+
      | NU.Should_unfold_reify
      | NU.Should_unfold_yes ->
-       let t =
-         let is_qninfo_visible =
-           Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name qninfo)
-         in
-         if is_qninfo_visible
-         then begin
-           match qninfo with
-           | Some (Inr ({ sigel = Sig_let {lbs=(is_rec, lbs); lids=names} }, _us_opt), _rng) ->
-             debug (fun () -> Format.print1 "(1) Decided to unfold %s\n" (show fvar));
-             let lbm = find_let lbs fvar in
-             begin match lbm with
-             | Some lb ->
-               if is_rec && cfg.core_cfg.steps.zeta
-               then
-                 let ar, lst = let_rec_arity lb in
-                 mk_rt (S.range_of_fv fvar) <| TopLevelRec(lb, ar, lst, [])
-               else
-                 translate_letbinding cfg bs lb
-             | None -> failwith "Could not find let binding"
-             end
-           | _ ->
-             debug (fun () -> Format.print1 "(1) qninfo is None for (%s)\n" (show fvar));
-             mkFV fvar [] []
-           end
-         else begin
-           debug (fun () -> Format.print1 "(1) qninfo is not visible at this level (%s)\n" (show fvar));
-           mkFV fvar [] []
-         end
-       in
+       let t = unfold_fv false cfg bs fvar qninfo in
        cache_add cfg fvar t;
        t
+
+(* Unfold the definition of [fvar], whose qninfo is [qninfo], in the
+   configuration [cfg]. Returns an opaque FV if the definition is not
+   visible at the current delta level.
+
+   If [now] is set, the definition is translated eagerly in [cfg], rather
+   than being delayed as a TopLevelLet node. This is needed when [cfg] is a
+   *modified* configuration (e.g. for delta_once/delta_fully), since a
+   TopLevelLet node does not record the configuration it was created in,
+   and would later be reduced in the ambient configuration instead. *)
+and unfold_fv (now:bool) (cfg:config) (bs:list t) (fvar:fv) (qninfo:qninfo) : ML t =
+  let debug = debug cfg in
+  let is_qninfo_visible =
+    Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name qninfo)
+  in
+  if is_qninfo_visible
+  then begin
+    match qninfo with
+    | Some (Inr ({ sigel = Sig_let {lbs=(is_rec, lbs); lids=names} }, _us_opt), _rng) ->
+      debug (fun () -> Format.print1 "(1) Decided to unfold %s\n" (show fvar));
+      let lbm = find_let lbs fvar in
+      begin match lbm with
+      | Some lb ->
+        if is_rec && cfg.core_cfg.steps.zeta
+        then
+          let ar, lst = let_rec_arity lb in
+          mk_rt (S.range_of_fv fvar) <| TopLevelRec(lb, ar, lst, [])
+        else if now
+        then translate_letbinding_now cfg bs lb
+        else translate_letbinding cfg bs lb
+      | None -> failwith "Could not find let binding"
+      end
+    | _ ->
+      debug (fun () -> Format.print1 "(1) qninfo is None for (%s)\n" (show fvar));
+      mkFV fvar [] []
+    end
+  else begin
+    debug (fun () -> Format.print1 "(1) qninfo is not visible at this level (%s)\n" (show fvar));
+    mkFV fvar [] []
+  end
+
+(* Translate a top-level let-binding eagerly in [cfg], without going through a
+   TopLevelLet node. Universe binders, if any, are consumed by a Lam of the
+   corresponding arity, matching how iapp handles TopLevelLet. *)
+and translate_letbinding_now (cfg:config) (bs:list t) (lb:letbinding) : ML t =
+  match lb.lbunivs with
+  | [] -> translate cfg bs lb.lbdef
+  | us ->
+    mk_rt (S.range_of_lbname lb.lbname) <| Lam {
+      interp = (fun args_rev -> translate cfg (List.map fst args_rev) lb.lbdef);
+      shape = Lam_args [];
+      arity = List.length us;
+    }
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (cfg:config) (bs:list t) (lb:letbinding) : ML t =

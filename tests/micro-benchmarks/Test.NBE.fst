@@ -48,3 +48,24 @@ let test3 =
           = [1;2;3;4;5;6;7;8;9])
 
 // #set-options "--debug NBE --fuel 0"
+
+(***** Differential tests: NBE must agree with the normalizer *****)
+(* --no_smt so that these really test the normalization, and not the solver. *)
+
+let f_nbe (x:int) = x + 1
+let g_nbe (x:int) = f_nbe x + 1
+
+[@@"opaque_to_smt"]
+let opaque_nbe (x:int) = 7
+
+(* delta_once (used by reveal_opaque) used to make NBE crash with
+   "Pattern matching failed" (Should_unfold_once was unhandled). *)
+#push-options "--no_smt"
+let test_delta_once =
+  assert (norm [nbe; primops; delta_once [`%opaque_nbe]] (opaque_nbe 1) == 7)
+
+#pop-options
+
+let test_reveal_opaque () =
+  reveal_opaque (`%opaque_nbe) opaque_nbe;
+  assert (opaque_nbe 4 == 7)
