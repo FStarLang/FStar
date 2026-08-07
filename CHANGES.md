@@ -227,6 +227,10 @@ Guidelines for the changelog:
     Pass `--force` to regenerate a checked file unconditionally.
     Fixes https://github.com/FStarLang/FStar/issues/4399.
 
+  * Relatedly, when checking `M.fst` F* now loads `M.fsti.checked` instead of
+    rechecking `M.fsti`, whenever that checked file (and those of its
+    dependences) are valid.
+
 ## Core typechecker
   * PR https://github.com/FStarLang/FStar/pull/2760 introduces core typechecking for
     implicits introduced for application of indexed effects combinators. This is a

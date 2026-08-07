@@ -29,8 +29,11 @@ verify:
 	cp $(CACHE_DIR)/B.fsti.checked $(CACHE_DIR)/B.fsti.checked.bak
 #	C is legally checked against the B.fsti.checked just produced.
 	$(FSTAR) C.fst
-#	Building B.fst must leave B.fsti.checked alone.
-	$(FSTAR) B.fst
+#	Building B.fst must load B.fsti.checked rather than recheck B.fsti,
+#	and must leave B.fsti.checked alone.
+	$(FSTAR) --debug CheckedFiles B.fst > $(CACHE_DIR)/B.log 2>&1
+	grep -q 'Successfully loaded module from checked file.*B\.fsti\.checked' $(CACHE_DIR)/B.log
+	! grep -q 'Storing checked file for B\.fsti' $(CACHE_DIR)/B.log
 	cmp $(CACHE_DIR)/B.fsti.checked.bak $(CACHE_DIR)/B.fsti.checked
 #	And so C.fst.checked must still be loadable.
 	$(FSTAR) D.fst
