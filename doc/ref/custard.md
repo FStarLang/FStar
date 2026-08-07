@@ -43,9 +43,9 @@ Diagram:
 
 This document is a design sketch, not a specification of shipped code.
 Sections 1–3 describe the parts that are settled enough to implement;
-sections 4–9 describe the surrounding machinery; section 10 lists the open
-questions that need answers before/while implementing; section 11 is the
-proposed milestone breakdown.
+sections 4–9 describe the surrounding machinery; section 11 lists the
+decisions taken and the questions still open; section 12 is the design for
+separate compilation, and section 13 the milestone breakdown.
 
 Throughout, references to existing F* compiler code are given as
 `src/<dir>/<Module>.fst:<line>` so the design can be checked against reality.
@@ -2624,7 +2624,249 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 
 ---
 
-## 12. Milestones
+## 12. Separate compilation
+
+Everything above assumes one Custard run sees the whole program.  Two things
+need that assumption relaxed.
+
+- **Plugins.** An F\* plugin is loaded into a running compiler and calls into
+  it.  Compiling a plugin has to mean "refer to the functions and types the
+  compiler already contains", not "compile a second copy of the compiler".
+- **Layered libraries.** EverParse wants a core `PulseParse`, then a CBOR
+  library over it, then CDDL over that, and then one library per concrete CDDL
+  format.  Each layer is built once and the next links against it.
+
+The framing that makes this tractable is that **a Custard unit is a whole
+program with holes**, and that Custard already has exactly one place where a
+hole could be filled: `Extract.request` (`Extract.fst:277`) is the single
+choke point that turns "I need this definition" into "here is its name".
+Separate compilation is teaching it a third answer, alongside "already
+requested in this run" and "not yet requested": *someone else already built
+that*.
+
+### 12.1 What a unit is
+
+Two options: `--custard_unit <name>` names the unit being built, and
+`--custard_link <file.cui>` (repeatable) names units already built.
+
+Roots are unchanged.  §4.4 still holds in full: Custard compiles what is
+reachable from `--custard_entry`/`--custard_main`, a library still cannot
+export a symbol with an unapplied `Mono` binder because there would be nothing
+to name it after, and specialized entrypoints are still the idiom.  The single
+addition is that a request may now be satisfied from an interface instead of
+from source.
+
+A declaration belongs to **whichever unit first emitted it**, and its
+provenance is otherwise irrelevant.  In particular a unit that specializes a
+combinator whose source lives upstream — the concrete-CDDL-format case, where
+`cddl_parse@my_grammar` cannot possibly have existed when the CDDL library was
+built — emits that specialization as an ordinary declaration of its own, lists
+it in its own interface, and anything downstream reuses it.  There is no notion
+of a private copy.
+
+This is the same arrangement as C++ templates and Rust generics: generic code
+crosses the boundary as *source*, instantiated code is emitted locally, and a
+unit boundary is a **linking** boundary rather than an extraction boundary.
+
+### 12.2 The unit interface
+
+Alongside its `.ml` or `.c`, a unit emits a **unit interface**, `<unit>.cui`.
+It lists *everything the unit emitted*, not only its roots: the object file has
+symbols for all of it, so downstream should get to reuse all of it, and "which
+of these was a root" is a fact about dead-code elimination that stops mattering
+once the code exists.
+
+Per declaration:
+
+| field | why it has to be there |
+| --- | --- |
+| the canonical specialization key (§12.3) | this is what a downstream `request` looks up |
+| the emitted symbol name | see §12.3: downstream must read this, not re-derive it |
+| the post-`Layout`, post-`Rename` signature (binder `cty`s, result, `eff`) | so that a hit needs nothing else |
+| for a type, its whole post-`Layout` `dtype` | erasure verdict, newtype collapse, dropped parameters, record versus variant, field names and order, inline fields |
+| `Private`/`Rec` flags | `Rec` so that a downstream `scc` knows not to regroup |
+
+Layout verdicts are recorded for **every type the unit reached**, including the
+ones that were erased or collapsed to nothing.  A verdict is exactly the kind
+of thing a downstream unit must not re-derive, and "this type has no runtime
+representation at all" is as much a verdict as any other.
+
+A header records the unit's name, the backend, every option that can change a
+layout (`--custard_monomorphize_types` and friends), and the digests of the
+checked files the run **loaded** — not merely of those that contributed an
+emitted declaration.  The difference matters because of
+`inline_for_extraction`: see §12.6.  Linking an interface built under different
+options is an error rather than a silent mismatch.
+
+The honest description of the format is that **a `.cui` is a serialized slice
+of the post-`Layout`, post-`Rename` IR with the bodies stripped**.  It is not a
+source-level interface, because none of the decisions it has to pin down are
+source-level decisions.
+
+### 12.3 The specialization key
+
+Names do not need to be deterministic, and it would be a mistake to make the
+design depend on their being so: two type-class instances for the same type
+will always need a disambiguating subscript from somewhere.  The interface
+records the **full emitted name**, and downstream reads it.  So
+`spec_suffix`'s discovery-order counter (`Extract.fst:233`, `Extract.fst:285`)
+is fine as it stands, and making specialization names more readable — folding
+the structural scheme `Monomorphize.request` already uses for types
+(`Monomorphize.fst:134`, which is what produces `tuple3@tree_int_int_tree_int`)
+over *all* the `Mono` arguments of a value specialization, instead of taking the
+head symbol of the first — is output polish, decoupled from everything here.
+
+What *does* have to be stable is the **key**, because that is the lookup.
+Today it is not, and the reason is worth recording because it is a live bug
+independent of separate compilation:
+
+```
+Extract.fst:94   string_of_key k = string_of_lid k.sk_lid ^ ... ^ show t
+```
+
+`show` on a `term` is `Print.term_to_string` (`Print.fst:166`), which
+**resugars** unless `--ugly`, and which prints an `fv` by its **last
+identifier only** unless `--print_real_names` or `--print_full_names`
+(`Syntax.fst:629`).  The interning key is therefore sensitive to printing
+options and is not injective on names: `A.inst` and `B.inst` both print as
+`inst`.
+
+Measured, this does not bite today.  A probe with two modules each declaring a
+type `t` and an instance `inst` of a shared class, both passed to one generic
+function, correctly produced two specializations — because `key_norm_steps`
+delta-unfolds each instance to its record literal and the two literals differ.
+But that is an accident of the step list rather than a property of the key, and
+it stops holding the moment a `Mono` argument retains an `fv` that does not
+unfold: an `assume val`, a `[@@custard_extern]`, an abstract type constructor.
+The failure is silent — two call sites share one specialization, compiled for
+the other one's type.
+
+So keys get their own printer: fully qualified lids, α-canonical (bound
+variables by de Bruijn level, not by `ppname`), universes erased, no
+resugaring, independent of every printing option.  That is also exactly the
+string the interface should store.
+
+### 12.4 What changes in the pipeline
+
+1. **`Extract.request`** consults the linked interfaces before allocating a
+   name.  A hit records a `DExternal` carrying the interface's signature and
+   returns the interface's name, without normalizing or translating a body.
+   This is where the saving is.
+2. **A new `Imported of string` flag** on a declaration, naming the unit it
+   came from, alongside `Private`/`Root`/`Erased`.  Every pass that rewrites a
+   signature or changes a representation has to leave flagged declarations
+   alone: `Layout` (erasure, newtype collapse, coercion elimination),
+   `Simplify.unused_params`, `inline_fields`, `records`, `depat`, `dce`.  This
+   is the same exemption §8.2 already grants types with custom rules, whose
+   representation is likewise fixed elsewhere.
+3. **`Simplify.scc`** (`Simplify.fst:939`) treats an imported declaration as a
+   leaf.  Units are acyclic by construction — a unit is whatever was reachable
+   and not already in a linked interface — so a recursive group cannot span a
+   boundary; the pass simply needs to know that it must not try.
+4. **`Simplify.unused_params`** pessimizes rather than specializes: a phantom
+   parameter that an imported signature mentions stays.  Phantom parameters are
+   rare enough that uniform treatment costs nothing worth measuring.
+5. **`Rename`** uses the recorded name verbatim for an imported declaration,
+   and treats every imported name as taken so that a local definition cannot
+   shadow one.
+6. **`Driver`** writes the `.cui` after `Rename` (`Driver.fst:187`), which is
+   the only point at which both the layout verdicts and the final names exist.
+
+### 12.5 Why freezing the layouts is sound
+
+> A type is either **imported**, and its layout is pinned by an interface, or
+> **local**, and its layout is freely derived.  A value of one can never meet a
+> value of the other.
+
+Because a value crosses a unit boundary only through an imported signature, and
+an imported signature mentions only types that are in the same interface.  A
+downstream unit that reaches the same source type again and derives a different
+layout for it is therefore harmless, provided interfaces are always consulted
+first — which §12.4 rule 1 guarantees.
+
+This is the load-bearing claim of the whole design, and it is the one to
+re-examine first if something goes wrong.
+
+### 12.6 What separate compilation does not do
+
+**It does not avoid loading the upstream sources.**  `inline_for_extraction`
+and `unfold` are handled by `Eager_unfolding`/`Inlining` while the
+*downstream* body is normalized (§4.3), which needs the upstream
+implementation in the `TcEnv`.  So `Loader.ensure_loaded`
+(`Loader.fst:60`) keeps working exactly as it does today, and the win is
+skipping re-normalization, re-specialization and re-emission rather than
+skipping I/O.
+
+This is also why the interface's digest header covers every checked file the
+run loaded.  A unit that inlines an upstream `inline_for_extraction` definition
+depends on a body that appears in no interface at all; without that, editing
+such a body would leave stale downstream units.
+
+**It does not eliminate duplication.**  A specialization that did not exist
+upstream is emitted by each unit that needs it.  Exporting them (§12.1) means
+the duplication is between sibling units rather than between a unit and its
+dependencies, and the answer when it matters is to put several formats in one
+unit.  It is in any case an improvement on the status quo, which inlines
+everything.
+
+**It does not make rebuilds finer-grained.**  Custard emits one file per unit,
+where the ML pipeline emits one `.ml` per `.fst` and rebuilds per module.  A
+unit is a much coarser rebuild granularity; for a handful of units this is a
+better trade than it sounds, but it is a real difference from how the compiler
+is built today.
+
+### 12.7 Names and clashes
+
+Two units may independently emit a specialization of the same upstream
+definition, and the mangled names will coincide.  OCaml resolves this for free
+if each unit is a module; the direct-to-C backend needs a per-unit prefix on
+every emitted symbol.  Neither requires the names themselves to be
+deterministic (§12.3).
+
+### 12.8 Compiling F\* itself: what else is missing
+
+Separate compilation is a prerequisite for plugins but not the only gap between
+Custard today and compiling the compiler.  What a survey of `src/custard/`
+against `src/**/*.fst` turns up, in rough order of size:
+
+1. **Exceptions have no producer.**  `DExn`, `ERaise` and `ETry`
+   (`Syntax.fsti:227`, `:300`) exist in the IR and are carried correctly by
+   every pass and by the OCaml backend, but nothing in `Extract` ever builds
+   one.  This is precisely the state `TRecord` was in before §5.5.  Note also
+   that an F\* `exception` declaration desugars to a data constructor of the
+   single extensible `Prims.exn`, so `extract_inductive`'s
+   `datacons_of_typ` enumeration is the wrong shape for them and they need
+   their own path.
+2. **No rules for `FStar.ST`/`FStar.Ref`/`FStarC.Util.mk_ref`.**  `TRef` and
+   the buffer operations exist, but `Builtins` only wires up Pulse's
+   `Reference`/`Box`/`Vec` (§8.3).  The compiler is `ref`-heavy imperative code
+   throughout.  Small, well-understood, and entirely absent.
+3. **The hand-written realizations.**  `src/ml/` and `ulib/ml/` together hold
+   on the order of seventy `.ml` files realizing `assume val`s.  The mechanism
+   to consume them exists — `[@@custard_extern]`, §8.2 — but none have been
+   ported, and doing it one attribute at a time is the wrong shape; this
+   probably wants a per-module convention.
+4. **Plugins, native tactics and embeddings** have no counterpart at all.  This
+   is not an independent item so much as the acceptance test for §12: a plugin
+   *is* a separately compiled unit linking against the compiler.
+5. **§3.2b — a `Poly` argument in a `Mono` position — is a hard rejection**,
+   and the compiler leans on `FStarC.Class.Show`/`Ord`/`Monad` everywhere.  If
+   generic helpers over those classes trip it at scale then M7's
+   infer-and-promote stops being a v2 nicety and becomes a prerequisite.  This
+   is cheap to measure — point Custard at one compiler module and count — and
+   worth measuring before committing to a schedule.
+6. **Build integration.**  One file per unit against the current per-module
+   `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
+   leaves syntax, elaboration and the checked files unchanged.
+7. Smaller: `Prims.int` maps to a fixed-width integer on the Krml path
+   (`PrintKrml.fst:111`), which is fine for an OCaml target and a latent
+   miscompilation for a C one; and `FStar.Printf`'s type-level arity
+   computation has no story, though the compiler itself sidesteps it by using
+   `FStarC.Format`'s hand-unrolled `fmt1`..`fmt6`.
+
+---
+
+## 13. Milestones
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -2648,3 +2890,12 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | `MonoTypes`; whole corpus re-run under the flag |
 | M8b | Direct-to-C backend (§6): self-contained C11, no krmllib, function pointers but no closures | `KrmlBasic` and both Pulse modules compiled `-Wall -Wextra -Werror` and run; `CNoInt`/`CNoClosure` reject |
 | M8c | Inline constructor fields (§5.7): `Simplify.inline_fields`, `TInline`, `[@@@custard_inline_field]` | Done. `tests/custard/InlineFields.fst`; closes the `\| Bar of a & b` indirection of FStarLang/FStar#4382 |
+| M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | A live interning bug in its own right, and the lookup key §12 rests on |
+| M9b | Exceptions: an `Extract` producer for `DExn`/`ERaise`/`ETry`, and the `Prims.exn` constructor path (§12.8 item 1) | The IR and the OCaml backend already carry them |
+| M9c | `FStar.ST`/`FStar.Ref`/`FStarC.Util.mk_ref` rules (§12.8 item 2) | The compiler's imperative style; same table as §8.3 |
+| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Decides whether M7 moves ahead of M10 |
+| M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
+| M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |
+| M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | |
+| M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
+| M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |
