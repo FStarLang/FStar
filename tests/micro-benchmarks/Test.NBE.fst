@@ -107,3 +107,28 @@ let test_rec_symbolic_type_arg =
 let test_machine_int_repr =
   assert (norm [nbe; primops] (FStar.UInt8.add_underspec 3uy 2uy) == 5uy)
 #pop-options
+
+(* Same conservatism, second instance: an argument whose type is a *variable*
+   can never be the one consumed by the recursion, since NBE cannot scrutinize
+   a value of an abstract type. Treating it as recursion-relevant meant that
+   FStar.Calc.calc_chain_related was never unfolded once its two element
+   arguments went symbolic, which silently broke *every* calc proof under
+   --use_nbe. *)
+let rec chain_nbe (#a:Type) (rs:list (a -> a -> prop)) (x y:a) : prop =
+  match rs with
+  | [] -> x == y
+  | r::rs -> exists (w:a). chain_nbe rs x w /\ r w y
+
+let test_rec_symbolic_abstract_arg (a:Type) (r:a -> a -> prop) (x y:a) =
+  assert True by (
+    let open FStar.Tactics.V2 in
+    let steps = [nbe; delta_only [`%chain_nbe]; zeta; iota] in
+    let t = (`(chain_nbe [(`#(quote r))] (`#(quote x)) (`#(quote y)))) in
+    let hd, _ = collect_app (norm_term steps t) in
+    match inspect hd with
+    | Tv_FVar fv
+    | Tv_UInst fv _ ->
+      if implode_qn (inspect_fv fv) = `%chain_nbe
+      then fail ("NBE did not unfold chain_nbe")
+      else ()
+    | _ -> ())

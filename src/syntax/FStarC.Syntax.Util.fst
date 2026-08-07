@@ -832,12 +832,30 @@ let let_rec_arity (lb:letbinding) : ML (int & list bool) =
        | None ->
          (* No decreases clause in the type: F* does not record the inferred
             one, so conservatively assume every argument may appear in it,
-            *except* arguments of type `Type`, which can never be a
-            well-founded measure. This matters because NBE refuses to unfold
-            a recursive definition when one of the recursion-relevant
-            arguments is symbolic; a symbolic type argument (e.g. an
-            unresolved implicit) would otherwise block all unfolding. *)
-         bs |> List.map (fun b -> not (Tm_type? (Subst.compress b.binder_bv.sort).n)))
+            except those that cannot drive the recursion.
+
+            This matters because NBE refuses to unfold a recursive definition
+            when one of the recursion-relevant arguments is symbolic, so being
+            too conservative here blocks unfolding altogether.
+
+            Types and functions are excluded because the decreases clause F*
+            infers for a `let rec` without one drops exactly those (see
+            [filter_types_and_functions] in FStarC.TypeChecker.TcTerm).
+
+            Arguments whose type is a variable are excluded too: NBE cannot
+            scrutinize a value of an abstract type, so such an argument can
+            never be the one being consumed by the recursion. Without this,
+            e.g. `FStar.Calc.calc_chain_related (rs:list _) (x y:a)` is never
+            unfolded once `x` and `y` are symbolic, which breaks every `calc`
+            proof under NBE. *)
+         bs |> List.map (fun b ->
+           match (Subst.compress (unrefine b.binder_bv.sort)).n with
+           | Tm_type _
+           | Tm_arrow _
+           | Tm_bvar _
+           | Tm_name _
+           | Tm_uvar _ -> false
+           | _ -> true))
 
 
 let rec __abs_formals_ln t abs_body_lcomp : ML _ =
