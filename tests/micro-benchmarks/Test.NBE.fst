@@ -97,3 +97,13 @@ let test_rec_symbolic_type_arg =
     let b = norm_term (nbe::steps) t in
     if term_to_string a = term_to_string b then () else
     fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))
+
+(* The NBE embedding of machine integers used to build a __uint_to_t node,
+   whereas the reference normalizer builds a uint_to_t one. Since __uint_to_t
+   is an `unfold` alias of uint_to_t, any delta step rewrites a source literal
+   into the latter, so the two engines produced results that were not
+   syntactically equal (only equal up to delta). *)
+#push-options "--no_smt"
+let test_machine_int_repr =
+  assert (norm [nbe; primops] (FStar.UInt8.add_underspec 3uy 2uy) == 5uy)
+#pop-options
