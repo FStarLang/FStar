@@ -344,8 +344,10 @@ type dest =
 let scope : ref (list (string & string)) = mk_ref []
 let declared : ref (SMap.t bool) = mk_ref (SMap.create 0)
 
-(* The locals that a [let mut] of one cell has been collapsed into.  Keyed by
-   the *C* name, which is what both the declaration and every use resolve to. *)
+(* The locals that a one-cell stack allocation has been collapsed into.  Keyed
+   by the *C* name, which is what both the declaration and every use resolve
+   to.  A use that wants the cell reads or assigns the variable; a use that
+   wants the pointer takes its address. *)
 let scalars : ref (SMap.t bool) = mk_ref (SMap.create 0)
 
 let reset_scope () : ML unit =
@@ -420,37 +422,6 @@ and vars_of_branch (br:branch) : ML (list string) =
   let _, g, b = br in
   (match g with Some g -> vars_of g | None -> []) @ vars_of b
 
-(* Does [x] -- a pointer to a single cell -- occur anywhere other than as the
-   base of a read or a write of that cell?  If not, the cell needs no address,
-   and the [let mut] that introduced it is just a local variable.  Anything
-   else (passing it to a function, taking a sub-buffer, freeing it) needs the
-   pointer, so the array stays.
-
-   Shadowing is ignored, in the conservative direction: an inner binder of the
-   same name can only add occurrences, never remove one. *)
-let rec escapes (x:string) (e:expr) : ML bool =
-  let any (es:list expr) : ML bool = List.existsb (escapes x) es in
-  match e.e with
-  | EVar y -> y = x
-  | EOp ({ po_op = BufRead }, [{ e = EVar y }; i]) when y = x -> escapes x i
-  | EOp ({ po_op = BufWrite }, [{ e = EVar y }; i; v]) when y = x ->
-    escapes x i || escapes x v
-  | EConst _ | EQual _ | EAny | EAbort _ -> false
-  | ELet (_, _, a, b) -> escapes x a || escapes x b
-  | EApp (h, es) -> escapes x h || any es
-  | EFun (_, b) -> escapes x b
-  | EMatch (sc, brs) -> escapes x sc || List.existsb (escapes_branch x) brs
-  | ETry (a, brs) -> escapes x a || List.existsb (escapes_branch x) brs
-  | EIf (a, b, c) -> escapes x a || escapes x b || escapes x c
-  | ESeq (a, b) | EWhile (a, b) -> escapes x a || escapes x b
-  | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> any es
-  | ERecord (_, fs) -> List.existsb (fun (_, e) -> escapes x e) fs
-  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> escapes x a
-
-and escapes_branch (x:string) (br:branch) : ML bool =
-  let _, g, b = br in
-  (match g with Some g -> escapes x g | None -> false) || escapes x b
-
 (* A [BufCreate] of exactly one cell: what Pulse emits for [let mut]. *)
 let is_one (e:expr) : bool =
   match e.e with EConst (CInt ("1", _)) -> true | _ -> false
@@ -469,7 +440,9 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   if is_stmt e then hoist out ind e
   else match e.e with
   | EConst c -> constant c
-  | EVar x -> lookup_var x
+  (* Every other use of a collapsed cell wants the pointer -- passing it to a
+     function expecting a [ref], say -- and C can produce one on demand. *)
+  | EVar x -> let nm = lookup_var x in if is_scalar nm then "&" ^ nm else nm
   | EAny ->
     (* What an uninitialized stack slot holds.  A zero of the right type is a
        legal value of it and is what C would give a static. *)
@@ -632,12 +605,14 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     scope := saved;
     s1 ^ s2
 
-  (* Pulse's [let mut] is a stack allocation of one cell (section 7.4).  When
-     the cell's address is never needed -- every use is a read or a write of
-     that one cell -- it is an ordinary local, and saying so removes a
-     declaration, an array, and an initializing loop per mutable variable. *)
+  (* Pulse's [let mut] is a stack allocation of one cell (section 7.4), and a
+     one-cell array is just a variable: reads and writes of the cell become
+     uses and assignments of it, and the uses that want a pointer take its
+     address, which is what a C programmer would have written.  The Pulse
+     checker has already established that the cell does not outlive its scope,
+     so the address is never stale. *)
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
-      when is_one len && not (escapes x e2) ->
+      when is_one len ->
     let out = mk_ref "" in
     let iv = c_expr out ind init in
     let saved = !scope in
@@ -710,6 +685,11 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let v = c_expr out ind v in
     !out ^ ind ^ lhs ^ " = " ^ v ^ ";\n" ^ unit_result ind d
 
+  (* Pulse emits a matching "free" for a stack allocation too.  A collapsed
+     cell is freed by leaving the scope, so there is nothing to say. *)
+  | EOp ({ po_op = BufFree }, [{ e = EVar y }]) when is_scalar (lookup_var y) ->
+    unit_result ind d
+
   | EOp ({ po_op = BufFree }, [b]) ->
     let out = mk_ref "" in
     let b = c_expr out ind b in
@@ -751,9 +731,12 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
   let arr = fresh "buf" in
   let i = fresh "i" in
   let elt_of = match t with TBuf e -> e | _ -> t in
+  (* Same collapse as the [ELet] case above, for a one-cell stack allocation
+     that is not bound to a name: the pointer the caller wanted is the address
+     of the variable. *)
   if LStack? lt && is_one len then
-    !out ^ ind ^ decl_of elt_of (arr ^ "[1]") ^ " = { " ^ iv ^ " };\n" ^
-    finish ind d arr
+    !out ^ ind ^ decl_of elt_of arr ^ " = " ^ iv ^ ";\n" ^
+    finish ind d ("&" ^ arr)
   else
   let alloc =
     match lt with

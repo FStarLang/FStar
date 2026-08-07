@@ -1810,17 +1810,15 @@ Emission:
   did is emitted flat when there is no `if` before it, rather than wrapping
   the rest of the function in a block that says nothing.
 
-  **`let mut` becomes a local variable when it can.**  Pulse compiles a `let
-  mut` to a stack allocation of one cell (§7.4) — the Pulse checker guarantees
-  it does not escape its scope, which is what makes the stack the right place
-  for it.  But not escaping is weaker than not needing an *address*: within
-  its scope the cell can still be passed to a function taking a `ref`.  So the
-  backend asks the stronger question — does every occurrence of the variable
-  sit under a read or a write of that one cell? — and when the answer is yes,
-  emits an ordinary local instead, with reads and writes becoming plain uses
-  and assignments.  That removes a declaration, an array and an initializing
-  loop per mutable variable; when the answer is no, the array stays, but it is
-  still initialized with `= { v }` rather than a loop.
+  **`let mut` becomes a local variable.**  Pulse compiles a `let mut` to a
+  stack allocation of one cell (§7.4), and a one-cell array *is* a variable:
+  reads and writes of the cell become uses and assignments of it, and the uses
+  that want a pointer — passing it to a function expecting a `ref` — take its
+  address, which is what a C programmer would have written.  The Pulse checker
+  has already established that the cell does not outlive its scope, so the
+  address is never stale, and the matching "free" Pulse emits for a stack
+  allocation is scope exit, so it emits nothing.  This removes a declaration,
+  an array and an initializing loop per mutable variable.
 
   **A `unit` parameter the body never mentions is dropped**, from the
   signature and from every call site — it is how F\* writes a thunk, and C has
