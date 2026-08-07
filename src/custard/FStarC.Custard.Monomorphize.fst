@@ -75,6 +75,7 @@ let rec hint_of_cty (c:cty) : ML string =
   | TApp (n, []) -> (match n.spec with Some s -> n.id ^ "_" ^ s | None -> n.id)
   | TApp (n, args) -> n.id ^ "_" ^ String.concat "_" (args |> List.map hint_of_cty)
   | TBuf c -> hint_of_cty c ^ "_ptr"
+  | TRef c -> hint_of_cty c ^ "_ref"
   | TTuple cs -> "tup" ^ String.concat "_" (cs |> List.map hint_of_cty)
   | TUnit -> "unit"
   | TArrow _ -> "fn"
@@ -174,6 +175,7 @@ let rec mono_cty (st:state) (c:cty) : ML cty =
     if is_poly st n then TApp (request st n args, []) else TApp (n, args)
   | TArrow (a, e, b) -> TArrow (mono_cty st a, e, mono_cty st b)
   | TBuf c -> TBuf (mono_cty st c)
+  | TRef c -> TRef (mono_cty st c)
   | TTuple cs -> TTuple (cs |> List.map (mono_cty st))
   | TVar _ | TInt _ | TUnit | TAny -> c
 
@@ -386,7 +388,7 @@ let run (prog:program) : ML program =
         | None -> ()
       end
     | TArrow (a, _, b) -> freeze (fuel - 1) a; freeze (fuel - 1) b
-    | TBuf c -> freeze (fuel - 1) c
+    | TBuf c | TRef c -> freeze (fuel - 1) c
     | TTuple cs -> cs |> List.iter (freeze (fuel - 1))
     | TVar _ | TInt _ | TUnit | TAny -> () in
   prog |> List.iter (fun d ->

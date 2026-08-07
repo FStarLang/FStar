@@ -165,6 +165,10 @@ let rec ty (t:cty) : ML string =
      but [BufSub], which needs an interior pointer that OCaml has no way to
      express; that one is refused at run time rather than mistranslated. *)
   | TBuf t -> "(" ^ ty t ^ " array)"
+  (* A reference points at one value, so it is an OCaml [ref] rather than a
+     one-element array.  The buffer operations are shared with [TBuf], so the
+     spelling of each one is chosen from the type of its pointer argument. *)
+  | TRef t -> "(" ^ ty t ^ " ref)"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -353,15 +357,24 @@ let rec term (ind:string) (e:expr) : ML string =
      | _ -> "(Obj.magic (" ^ term ind e1 ^ "))")
   (* An OCaml array is indexed by [int], the IR by a machine integer. *)
   | EOp ({ po_op = BufCreate _ }, [init; len]) ->
-    "(Array.make " ^ index ind len ^ " " ^ term ind init ^ ")"
+    if TRef? e.ty then "(ref " ^ term ind init ^ ")"
+    else "(Array.make " ^ index ind len ^ " " ^ term ind init ^ ")"
   | EOp ({ po_op = BufRead }, [b; i]) ->
-    "(" ^ term ind b ^ ").(" ^ index ind i ^ ")"
+    if TRef? b.ty then "(!(" ^ term ind b ^ "))"
+    else "(" ^ term ind b ^ ").(" ^ index ind i ^ ")"
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
-    "((" ^ term ind b ^ ").(" ^ index ind i ^ ") <- " ^ term ind v ^ ")"
+    if TRef? b.ty then "((" ^ term ind b ^ ") := " ^ term ind v ^ ")"
+    else "((" ^ term ind b ^ ").(" ^ index ind i ^ ") <- " ^ term ind v ^ ")"
   | EOp ({ po_op = BufFree }, [_]) -> "()"
-  | EOp ({ po_op = BufNull }, []) -> "[||]"
+  (* A [ref] has no null, and no room to invent one: the empty array that
+     stands in for a null buffer has no [ref] counterpart.  Refused at run
+     time, like [BufSub]. *)
+  | EOp ({ po_op = BufNull }, []) ->
+    if TRef? e.ty then "(failwith \"Custard: a null reference has no OCaml representation\")"
+    else "[||]"
   | EOp ({ po_op = BufIsNull }, [b]) ->
-    "(Array.length (" ^ term ind b ^ ") = 0)"
+    if TRef? b.ty then "(failwith \"Custard: a null reference has no OCaml representation\")"
+    else "(Array.length (" ^ term ind b ^ ") = 0)"
   | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
     "(Array.blit " ^ term ind src ^ " " ^ index ind si ^ " " ^
     term ind dst ^ " " ^ index ind di ^ " " ^ index ind len ^ ")"

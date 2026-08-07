@@ -2342,7 +2342,8 @@ What is left after that is a handful of primitives, which
 
 | Pulse | IR |
 | --- | --- |
-| `Reference.alloc`, `Box.alloc` | `BufCreate LStack` / `BufCreate LHeap` of length 1 |
+| `Reference.ref`, `Box.box` | `TRef t` |
+| `Reference.alloc`, `Box.alloc` | `BufCreate LStack` / `BufCreate LHeap` of length 1, at type `TRef t` |
 | `Reference.(read, op_Bang, write, op_Colon_Equals)`, `Box.…` | `BufRead` / `BufWrite` at index 0 |
 | `Vec.alloc`, `free`, `op_Array_Access`, `op_Array_Assignment` | `BufCreate LHeap`, `BufFree`, `BufRead`, `BufWrite` |
 | `Array.Core.*`, `ArrayPtr.*` | the same, plus `BufSub` for interior pointers |
@@ -2359,15 +2360,34 @@ erased out of the value spine, but a buffer rule needs the element type to
 build `TBuf t` (and `BufNull`).  `Extract.prim_app` collects them with
 `Mono.type_binders`.
 
-Three IR additions come with this: `TBuf` (§2.2), `EAny` for karamel's
+Four IR additions come with this: `TBuf` and `TRef` (§2.2), `EAny` for karamel's
 `EAny`, and `EAbort of string` for `Pulse.Lib.Dv.unreachable` -- a `Dv`
 function that Pulse emits where the proof says control never arrives.  It
-prints as `failwith` in OCaml and as karamel's `EAbortS`.  In the karamel backend a `TBuf` is a real C pointer, so a Pulse `let
-mut` scalarizes into a plain local and a `Vec.alloc` becomes
-`KRML_HOST_MALLOC`.  In the OCaml backend a `TBuf t` is a `t array`; `BufSub`
-has no OCaml representation and emits a `failwith`.  `FStar.SizeT` is a machine
-integer width (`Sizet`) like the `FStar.UInt*` ones, with the usual conversion
-rules.
+prints as `failwith` in OCaml and as karamel's `EAbortS`.  In the karamel
+backend a `TBuf` is a real C pointer, so a Pulse `let mut` scalarizes into a
+plain local and a `Vec.alloc` becomes `KRML_HOST_MALLOC`.  `FStar.SizeT` is a
+machine integer width (`Sizet`) like the `FStar.UInt*` ones, with the usual
+conversion rules.
+
+**`TRef` versus `TBuf`.**  A `ref` and a `box` point at one value; an `array`,
+a `vec` and a `ptr` point at a run.  C and karamel make no distinction — both
+are `t*`, and the same `BufRead`/`BufWrite`/`BufCreate` nodes serve for either,
+which is why they share the operations rather than getting their own.  OCaml
+does make the distinction, and it is worth making: a `TBuf t` is a `t array`,
+but a `TRef t` is a `t ref`, so a `let mut` reads `!r` and `r := v` instead of
+`(r).(0)` and `(r).(0) <- v` on a one-element array.
+
+Each operation therefore chooses its OCaml spelling from the *type of its
+pointer argument*, not from the node.  Two corners have no `ref` counterpart
+and emit a `failwith`, the way `BufSub` on an array already does: a null
+reference (`[||]` stands in for a null array, and there is nothing to stand in
+for a null `ref`) and the `is_null` that tests one.  `Reference.to_array_mask`
+and `Reference.array_at`, which view a reference as a one-element run, are
+`BufSub` nodes for the same reason: in C they are the same pointer, in OCaml
+they are not the same value.  `ArrayPtr.as_ref` and `from_ref` are still
+identities, so a program that mixes those two libraries is C-only; the OCaml
+backend will not silently mistranslate it, it will emit a file that does not
+type-check.
 
 A real Pulse program turned up four things that a small test does not:
 

@@ -107,10 +107,14 @@ type cty =
   | TArrow of cty & eff & cty
   | TApp   of name & list cty
   | TBuf   of cty
-  (** A pointer to a mutable, contiguous run of values.  This is what Pulse's
-      [ref], [array], [vec], [box] and [ptr] all compile to (section 8.4);
-      keeping one node for all of them is what lets the C backend emit a real
-      pointer instead of a call into a runtime. *)
+  (** A pointer to a mutable, contiguous run of values: Pulse's [array], [vec]
+      and [ptr] (section 8.4).  One node for all of them is what lets the C
+      backend emit a real pointer instead of a call into a runtime. *)
+  | TRef   of cty
+  (** A pointer to a single mutable value: Pulse's [ref] and [box].  C makes no
+      distinction -- both are [t*], and the buffer operations apply to either
+      -- but OCaml does, and a [t ref] is both the honest translation and a
+      far better one than a one-element array (section 8.4). *)
   | TTuple of list cty
   | TUnit
   (** The sole inhabited erased value.  Erased *types* have no

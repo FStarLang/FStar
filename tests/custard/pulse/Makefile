@@ -22,6 +22,10 @@ GREP_PulseBasic += "Array.make 4"
 NOGREP_PulseBasic += "Pulse_Lib"
 NOGREP_PulseBasic += "PulseCore"
 NOGREP_PulseBasic += "Obj.magic"
+# Section 8.4: 'let mut' is an OCaml ref, not a one-element array.
+GREP_PulseBasic += "(ref (FStar_SizeT.uint_to_t"
+GREP_PulseBasic += "(!(i))"
+NOGREP_PulseBasic += "Array.make 1"
 
 # The hash table is polymorphic, stores a closure in a runtime record, and is
 # loaded from another module's implementation through its interface.  It stays
@@ -41,6 +45,9 @@ GREP_PulseHashTable += "pulse_Lib_HashTable_Type_ht_t = { sz : FStar_SizeT.t;"
 GREP_PulseHashTable += "(ht).sz"
 NOGREP_PulseHashTable += "Mkht_t"
 NOGREP_PulseHashTable += "failwith"
+GREP_PulseHashTable += "(ref false)"
+GREP_PulseHashTable += "(u__break) := true"
+NOGREP_PulseHashTable += "Array.make 1"
 
 # The generated OCaml must also type-check: these programs are large enough
 # that a grep test alone would miss most of what can go wrong in a signature.

@@ -262,6 +262,7 @@ let identity_rule (n:int) : rule =
 
 let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   let buf tys (_ : list expr) : ML cty = TBuf (elt_of tys) in
+  let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
   let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
   let bool_ty (_ : list cty) (_ : list expr) : ML cty = TApp (bool_name, []) in
   (* The element type of a buffer we are given rather than creating: the
@@ -269,6 +270,15 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   let elt_of_arg (_ : list cty) (args : list expr) : ML cty =
     match args with
     | { ty = TBuf t } :: _ -> t
+    | { ty = TRef t } :: _ -> t
+    | _ -> TAny in
+  (* [to_array_mask] and [array_at] view a reference as a one-element run.
+     The two are the same pointer in C, but not the same OCaml value, so the
+     node has to say which one it is. *)
+  let as_buf (_ : list cty) (args : list expr) : ML cty =
+    match args with
+    | { ty = TRef t } :: _ -> TBuf t
+    | a :: _ -> a.ty
     | _ -> TAny in
   let self (_ : list cty) (args : list expr) : ML cty =
     match args with
@@ -276,23 +286,28 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     | _ -> TAny in
   match ns, id with
   (* Types.  Every one of them is a pointer. *)
-  | ["Pulse"; "Lib"; "Reference"], "ref"
-  | ["Pulse"; "Lib"; "Box"], "box"
   | ["Pulse"; "Lib"; "Vec"], "vec"
   | ["Pulse"; "Lib"; "Array"; "Core"], "array"
   | ["Pulse"; "Lib"; "ArrayPtr"], "ptr" ->
     Some (Rule_type (fun tys -> TBuf (elt_of tys)))
 
+  (* A reference points at one value, not at a run.  C makes no distinction,
+     but OCaml does: this is what gets [t ref] rather than a one-element
+     array (section 8.4). *)
+  | ["Pulse"; "Lib"; "Reference"], "ref"
+  | ["Pulse"; "Lib"; "Box"], "box" ->
+    Some (Rule_type (fun tys -> TRef (elt_of tys)))
+
   (* A reference is a one-element stack allocation. *)
   | ["Pulse"; "Lib"; "Reference"], "alloc" ->
-    Some (buf_prim 1 (BufCreate LStack) E_Impure buf
+    Some (buf_prim 1 (BufCreate LStack) E_Impure rf
             (fun args -> args @ [size_lit "1"]))
   | ["Pulse"; "Lib"; "Reference"], "alloc_uninit" ->
     Some (Rule_prim (1, fun tys _ ->
       let t = elt_of tys in
       mk (EOp ({ po_op = BufCreate LStack; po_int = None },
                [mk EAny t E_Pure; size_lit "1"]))
-         (TBuf t) E_Impure))
+         (TRef t) E_Impure))
   | ["Pulse"; "Lib"; "Reference"], "free" -> Some (unit_rule 1)
   | ["Pulse"; "Lib"; "Reference"], "read"
   | ["Pulse"; "Lib"; "Reference"], "op_Bang" ->
@@ -304,14 +319,15 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
             (fun args -> match args with
                          | [r; v] -> [r; size_lit "0"; v]
                          | args -> args))
-  | ["Pulse"; "Lib"; "Reference"], "to_array_mask" -> Some (identity_rule 1)
+  | ["Pulse"; "Lib"; "Reference"], "to_array_mask" ->
+    Some (buf_prim 1 BufSub E_Pure as_buf (fun args -> args @ [size_lit "0"]))
   | ["Pulse"; "Lib"; "Reference"], "array_at"
   | ["Pulse"; "Lib"; "Reference"], "array_at_uninit" ->
-    Some (buf_prim 2 BufSub E_Pure self (fun args -> args))
+    Some (buf_prim 2 BufSub E_Pure as_buf (fun args -> args))
 
   (* A box is a one-element heap allocation. *)
   | ["Pulse"; "Lib"; "Box"], "alloc" ->
-    Some (buf_prim 1 (BufCreate LHeap) E_Impure buf
+    Some (buf_prim 1 (BufCreate LHeap) E_Impure rf
             (fun args -> args @ [size_lit "1"]))
   | ["Pulse"; "Lib"; "Box"], "free" ->
     Some (buf_prim 1 BufFree E_Impure unit_ty (fun args -> args))
@@ -370,7 +386,9 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
 
   (* Null pointers, shared by all of them. *)
   | ["Pulse"; "Lib"; "Reference"], "null"
-  | ["Pulse"; "Lib"; "Box"], "null"
+  | ["Pulse"; "Lib"; "Box"], "null" ->
+    Some (Rule_prim (0, fun tys _ ->
+      mk (EOp ({ po_op = BufNull; po_int = None }, [])) (TRef (elt_of tys)) E_Pure))
   | ["Pulse"; "Lib"; "Array"; "Core"], "null"
   | ["Pulse"; "Lib"; "ArrayPtr"], "null" ->
     Some (Rule_prim (0, fun tys _ ->

@@ -82,6 +82,7 @@ let rec rn_cty (ts:scope) (c:cty) : ML cty =
   | TArrow (a, e, b) -> TArrow (rn_cty ts a, e, rn_cty ts b)
   | TApp (n, args) -> TApp (n, args |> List.map (rn_cty ts))
   | TBuf t -> TBuf (rn_cty ts t)
+  | TRef t -> TRef (rn_cty ts t)
   | TTuple cs -> TTuple (cs |> List.map (rn_cty ts))
   | c -> c
 

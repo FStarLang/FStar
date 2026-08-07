@@ -86,6 +86,7 @@ let rec subst_cty (s:list (string & cty)) (c:cty) : ML cty =
   | TArrow (a, e, b) -> TArrow (subst_cty s a, e, subst_cty s b)
   | TTuple cs -> TTuple (cs |> List.map (subst_cty s))
   | TBuf c -> TBuf (subst_cty s c)
+  | TRef c -> TRef (subst_cty s c)
   | TApp (n, args) -> TApp (n, args |> List.map (subst_cty s))
   | c -> c
 
@@ -181,6 +182,8 @@ let rec cty_to_doc' (prec:int) (t:cty) : ML document =
              sep_by (comma ^^ space) (List.map (cty_to_doc' 0) args) ^^ rangle)
   | TBuf t ->
     parens_if (prec >= 2) <| group (text "buf" ^/^ cty_to_doc' 2 t)
+  | TRef t ->
+    parens_if (prec >= 2) <| group (text "ref" ^/^ cty_to_doc' 2 t)
   | TTuple ts ->
     parens (sep_by (space ^^ text "*" ^^ space) (List.map (cty_to_doc' 1) ts))
 

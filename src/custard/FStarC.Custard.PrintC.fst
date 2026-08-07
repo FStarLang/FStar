@@ -196,7 +196,7 @@ let builtin_type (n:name) : ML (option string) =
    out right without special cases at each use. *)
 let rec decl_of (t:cty) (x:string) : ML string =
   match t with
-  | TBuf e -> decl_of e ("*" ^ x)
+  | TBuf e | TRef e -> decl_of e ("*" ^ x)
   (* A function cannot be stored, only a pointer to one, so a [TArrow] in a
      data position becomes a function pointer.  Custard has no closures --
      [EFun] in a value position is rejected below -- so the value is always a
@@ -242,7 +242,7 @@ and base_ty (t:cty) : ML string =
     reject "a value whose representation is unknown (TAny)"
       ["Run with --custard_warn_any to see where the representation was lost \
         (section 5.8)."]
-  | TBuf _ | TArrow _ -> decl_of t ""
+  | TBuf _ | TRef _ | TArrow _ -> decl_of t ""
 
 (* The abstract declarator: a type as a cast or a compound literal spells it. *)
 let ty (t:cty) : ML string = decl_of t ""
@@ -693,6 +693,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     scope := saved;
     s2
 
+  | ELet (x, TRef t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
       when is_one len ->
     let out = mk_ref "" in
@@ -789,7 +790,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
     let out = mk_ref "" in
     let elt = match dst.ty with
-              | TBuf e -> ty e
+              | TBuf e | TRef e -> ty e
               | _ -> reject "a blit whose destination is not a pointer" [] in
     let srcv = c_expr out ind src in
     let siv = c_expr out ind si in
@@ -817,11 +818,11 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
   let iv = c_expr out ind init in
   let lv = c_expr out ind len in
   let elt = match t with
-            | TBuf e -> ty e
+            | TBuf e | TRef e -> ty e
             | _ -> reject "an allocation whose result is not a pointer" [] in
   let arr = fresh "buf" in
   let i = fresh "i" in
-  let elt_of = match t with TBuf e -> e | _ -> t in
+  let elt_of = match t with TBuf e | TRef e -> e | _ -> t in
   (* Same collapse as the [ELet] case above, for a one-cell stack allocation
      that is not bound to a name: the pointer the caller wanted is the address
      of the variable. *)

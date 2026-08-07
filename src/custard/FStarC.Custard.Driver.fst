@@ -79,7 +79,7 @@ let warn_any (prog:program) : ML unit =
     | TArrow (a, _, b) -> any_cty a || any_cty b
     | TApp (_, args) -> args |> List.existsb any_cty
     | TTuple cs -> cs |> List.existsb any_cty
-    | TBuf c -> any_cty c
+    | TBuf c | TRef c -> any_cty c
     | TVar _ | TInt _ | TUnit -> false in
   let at (where:string) (c:cty) : ML unit =
     if any_cty c then note ("the " ^ where ^ " has type " ^ show c) in

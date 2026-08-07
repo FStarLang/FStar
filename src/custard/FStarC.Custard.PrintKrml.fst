@@ -120,7 +120,9 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   | TVar x -> if env.tvars_any then K.TAny else K.TBound (find_t env x)
   | TArrow (a, _, b) -> K.TArrow (krml_typ env a, krml_typ env b)
   | TTuple ts -> K.TTuple (ts |> List.map (krml_typ env))
-  | TBuf t -> K.TBuf (krml_typ env t)
+  (* karamel has no separate reference type: a [ref] is a one-element buffer,
+     which is exactly what the operations on it already say. *)
+  | TBuf t | TRef t -> K.TBuf (krml_typ env t)
   | TApp (n, []) ->
     (match prim_type n with
      | Some t -> t
@@ -258,10 +260,10 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.EBufSub (krml_expr env b, krml_expr env i)
   | EOp ({ po_op = BufFree }, [b]) -> K.EBufFree (krml_expr env b)
   | EOp ({ po_op = BufNull }, []) ->
-    K.EBufNull (match e.ty with TBuf t -> krml_typ env t | _ -> K.TAny)
+    K.EBufNull (match e.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny)
   | EOp ({ po_op = BufIsNull }, [b]) ->
     (* karamel has no [is_null], so compare against a null of the same type. *)
-    let t = match b.ty with TBuf t -> krml_typ env t | _ -> K.TAny in
+    let t = match b.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny in
     K.EApp (K.EOp (K.Eq, K.Bool), [krml_expr env b; K.EBufNull t])
   | EOp ({ po_op = BufBlit }, [src; srci; dst; dsti; len]) ->
     K.EBufBlit (krml_expr env src, krml_expr env srci,

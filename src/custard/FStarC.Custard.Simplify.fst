@@ -641,7 +641,7 @@ let rec cty_deps (c:cty) : ML (list string) =
   | TApp (n, args) -> string_of_name n :: List.collect cty_deps args
   | TArrow (a, _, b) -> cty_deps a @ cty_deps b
   | TTuple cs -> List.collect cty_deps cs
-  | TBuf c -> cty_deps c
+  | TBuf c | TRef c -> cty_deps c
   | _ -> []
 
 let rec pat_deps (p:pat) : ML (list string) =
@@ -791,7 +791,7 @@ let unused_params (prog:program) : ML program =
     | TApp (n, args) -> u_args n args
     | TArrow (a, _, b) -> u_cty a; u_cty b
     | TTuple cs -> cs |> List.iter u_cty
-    | TBuf c -> u_cty c
+    | TBuf c | TRef c -> u_cty c
     | TInt _ | TUnit | TAny -> ()
   and u_args (n:name) (args:list cty) : ML unit =
     match retained n args with
@@ -862,6 +862,7 @@ let unused_params (prog:program) : ML program =
     | TArrow (a, e, b) -> TArrow (r_cty a, e, r_cty b)
     | TTuple cs -> TTuple (cs |> List.map r_cty)
     | TBuf c -> TBuf (r_cty c)
+    | TRef c -> TRef (r_cty c)
     | TVar _ | TInt _ | TUnit | TAny -> c in
   let r_binder (b:binder) : ML binder = { b with b_ty = r_cty b.b_ty } in
   let rec r_expr (x:expr) : ML expr =
@@ -1047,9 +1048,12 @@ let rec prune (x:expr) : ML expr =
     let s = g s in
     let brs = brs |> List.map prune_branch in
     let live = brs |> List.filter (fun (_, _, b) -> not (EAbort? b.e)) in
-    (* A match all of whose branches abort cannot be entered at all; leave it
-       alone rather than invent a value for it. *)
-    { x with e = EMatch (s, (if Nil? live then brs else live)) }
+    (* A match all of whose branches abort cannot be entered at all, so there
+       is nothing to choose between them: it is just the abort, with the
+       scrutinee kept only if evaluating it is observable. *)
+    (match live, brs with
+     | [], (_, _, b) :: _ -> take x s b
+     | _ -> { x with e = EMatch (s, (if Nil? live then brs else live)) })
 
   | EIf (c, a, b) ->
     let c = g c in
