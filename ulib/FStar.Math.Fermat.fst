@@ -264,7 +264,7 @@ let binomial_theorem_aux a b n i =
     binomial n i * pow a (n - i) * pow b i;
   }
 
-#push-options "--fuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --z3rlimit_factor 4"
 
 val binomial_theorem (a b:int) (n:nat) : Lemma
   (pow (a + b) n == sum 0 n (fun i -> binomial n i * pow a (n - i) * pow b i))
