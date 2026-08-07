@@ -1776,7 +1776,7 @@ Emission:
   which walks a pattern against an access *path* and returns a list of tests
   and a list of bindings.
 
-  Two things the chain deliberately does *not* do:
+  Three things the chain deliberately does *not* do:
 
   - It does not test the **last** branch.  F\* has already checked that the
     match is exhaustive, so the last arm is the one that runs when no earlier
@@ -1785,10 +1785,30 @@ Emission:
     emitted without a tag check.  An `abort()` in the output therefore always
     stands for something in the source — a `Pulse.Lib.Dv.unreachable`, a failed
     allocation — and never for the backend hedging.
+  - It does not emit a branch that only **aborts**.  `EAbort` reaches this
+    backend only from `Pulse.Lib.Dv.unreachable`, so such a branch is one F\*
+    has proved cannot be taken: it contributes nothing to the value, testing
+    for it is wasted, and dropping it lets the branch before it become the
+    unconditional one.
   - It does not **copy** what a pattern binds.  A binding names a value that is
     already reachable as a projection out of the scrutinee, and both are
     immutable, so the variable is bound to the *path* rather than declared:
     `{ size_t sz_1 = s.sz; t = sz_1; }` becomes `t = s.sz;`.
+
+  **A definition returning `unit` returns `void`**, and a `unit` binding is an
+  alias for the constant rather than a variable.  Nothing follows a value's
+  destination — every construct hands it to its tail positions and emits no
+  statement after them — so in a `void` function the value is dropped and
+  control falls off the end, which is where it was going anyway.  At a call
+  site a `void` call is a statement, so it is emitted as one and stands for
+  the unit value.
+
+  **Braces are only written where they hold something.**  A single-statement
+  `if` or `else` body is written inline, which the printer can decide safely
+  because it emits one statement per line and anything that could dangle
+  spans more than one; and the arm of a match that runs when no earlier one
+  did is emitted flat when there is no `if` before it, rather than wrapping
+  the rest of the function in a block that says nothing.
 
   **A `unit` parameter the body never mentions is dropped**, from the
   signature and from every call site — it is how F\* writes a thunk, and C has

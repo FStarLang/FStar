@@ -131,6 +131,14 @@ let externs : ref (SMap.t string) = mk_ref (SMap.create 0)
    definition. *)
 let keeps : ref (SMap.t (list bool)) = mk_ref (SMap.create 0)
 
+(* Which definitions return [unit], and are therefore emitted as C [void].
+   Consulted at the call site, where a [void] call is a statement and cannot be
+   an operand. *)
+let void_fns : ref (SMap.t bool) = mk_ref (SMap.create 0)
+
+(* Whether the definition currently being printed returns [void]. *)
+let void_ret : ref bool = mk_ref false
+
 let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
   match flags, xs with
   | b :: flags, x :: xs -> (if b then [x] else []) @ filter_by flags xs
@@ -439,8 +447,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
          | Some flags -> filter_by flags args
          | None -> args)
       | _ -> args in
-    c_expr out ind hd ^ "(" ^
-    String.concat ", " (args |> List.map (c_expr out ind)) ^ ")"
+    let call = c_expr out ind hd ^ "(" ^
+               String.concat ", " (args |> List.map (c_expr out ind)) ^ ")" in
+    (* A [void] call is a statement, not an operand.  It runs here and stands
+       for the unit value, which is what the caller was going to do with it. *)
+    (match hd.e with
+     | EQual (n, _) when Some? (SMap.try_find !void_fns (string_of_name n)) ->
+       out := !out ^ ind ^ call ^ ";\n"; unit_value
+     | _ -> call)
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt a, TInt b when a = b -> c_expr out ind e1
@@ -485,6 +499,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
    [let x = if ... ] and an allocation work in an operand position; ANF has
    already removed most of the reasons for it to trigger. *)
 and hoist (out:ref string) (ind:string) (e:expr) : ML string =
+  if TUnit? e.ty then (out := !out ^ emit ind D_Ignore e; unit_value) else
   let x = fresh "t" in
   out := !out ^ ind ^ decl_of e.ty x ^ ";\n" ^ emit ind (D_Assign x) e;
   x
@@ -544,6 +559,12 @@ and ctor_lit (out:ref string) (ind:string) (t:cty) (cn:name) (args:list expr) : 
 
 and finish (ind:string) (d:dest) (s:string) : ML string =
   match d with
+  (* Nothing follows a [finish]: every construct hands its destination to its
+     tail positions and emits no statement after them.  So in a [void]
+     function the value can simply be dropped and control fall off the end --
+     which is where it was going anyway. *)
+  | D_Return when !void_ret ->
+    if s = unit_value then "" else ind ^ "(void)(" ^ s ^ ");\n"
   | D_Return -> ind ^ "return " ^ s ^ ";\n"
   | D_Assign x -> ind ^ x ^ " = " ^ s ^ ";\n"
   (* The value is computed for its effect; the cast silences the warning that
@@ -556,6 +577,18 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   match e.e with
   (* [e1] is elaborated before [x] is bound: the IR scopes [x] over [e2] only,
      and a name reused between the two must not capture. *)
+  (* A [unit] binding names the only value of its type, so there is nothing to
+     store: the right-hand side runs for its effect and the variable becomes an
+     alias for the constant.  Without this a [void] call would be assigned to a
+     variable that C would then warn about. *)
+  | ELet (x, TUnit, e1, e2) ->
+    let saved = !scope in
+    let s1 = emit ind D_Ignore e1 in
+    bind_alias x unit_value;
+    let s2 = emit ind d e2 in
+    scope := saved;
+    s1 ^ s2
+
   | ELet (x, t, e1, e2) ->
     let saved = !scope in
     let s1 =
@@ -579,10 +612,10 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | EIf (c, t, f) ->
     let out = mk_ref "" in
     let cs = c_expr out ind c in
+    let ft = emit ind' d f in
     !out ^
-    ind ^ "if (" ^ cs ^ ") {\n" ^ emit ind' d t ^
-    ind ^ "} else {\n" ^ emit ind' d f ^
-    ind ^ "}\n"
+    ind ^ "if (" ^ cs ^ ")" ^ brace ind (emit ind' d t) ^
+    (if ft = "" then "" else ind ^ "else" ^ brace ind ft)
 
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
 
@@ -706,6 +739,23 @@ and pat_tests (path:string) (t:cty) (p:pat)
        let t2, b2 = go fields ps in
        (tests @ t2, b2))
 
+and drop_indent (l:string) : ML string =
+  if String.length l > 0 && String.substring l 0 1 = " "
+  then drop_indent (String.substring l 1 (String.length l - 1))
+  else l
+
+(* The body of an [if] or an [else], which the caller has emitted at [ind ^
+   "  "].  A single statement does not need a block, and one statement per
+   line is an invariant of this printer, so a body with one newline in it is
+   one statement.  Nothing that could dangle is ever unbraced: a nested [if]
+   spans more than a line. *)
+and brace (ind:string) (body:string) : ML string =
+  let lines = String.split ['\n'] body in
+  match lines with
+  | [""] -> " { }\n"
+  | [l; ""] -> " " ^ drop_indent l ^ "\n"
+  | _ -> " {\n" ^ body ^ ind ^ "}\n"
+
 and guard_rejected (#a:Type) () : ML a =
   reject "a pattern guard"
     ["Rewrite the guard as an 'if' in the branch body."]
@@ -713,6 +763,13 @@ and guard_rejected (#a:Type) () : ML a =
 and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string =
   let out = mk_ref "" in
   let sv = c_expr out ind scrut in
+  (* A branch that only aborts is a branch F* has proved cannot be taken --
+     [EAbort] reaches this backend only from [Pulse.Lib.Dv.unreachable].  It
+     contributes nothing to the value, so testing for it is wasted work and
+     emitting it is noise.  Dropping it also lets the branch before it become
+     the unconditional one. *)
+  let brs = brs |> List.filter (fun (_, _, b) -> not (EAbort? b.e)) in
+  if Nil? brs then !out ^ finish ind D_Ignore sv ^ ind ^ "abort();\n" else
   (* The scrutinee is tested once per branch, so it has to be a name -- unless
      no branch looks at it, in which case naming it would leave an unused
      variable behind.  That happens for a single catch-all branch, which is
@@ -732,38 +789,41 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
   (* The bindings of a branch are aliases, not declarations (see
      [bind_alias]), so a branch body is emitted with them in scope and the
      scope is restored afterwards. *)
-  let branch_body (p:pat) (b:expr) : ML string =
+  let branch_body (bi:string) (p:pat) (b:expr) : ML string =
     let saved = !scope in
     let _, binds = pat_tests x scrut.ty p in
     binds |> List.iter (fun (v, path) -> bind_alias v path);
-    let body = emit ind' d b in
+    let body = emit bi d b in
     scope := saved;
     body in
   let rec go (first:bool) (brs:list branch) : ML string =
-    let block (p:pat) (b:expr) : ML string =
-      (if first then ind ^ "{\n" else ind ^ "else {\n") ^
-      branch_body p b ^ ind ^ "}\n" in
+    (* The arm that runs when no earlier one did.  With no [if] before it there
+       is nothing to attach a block to, so it is emitted flat -- otherwise the
+       rest of the function would sit inside a pair of braces that says
+       nothing. *)
+    let last (p:pat) (b:expr) : ML string =
+      if first then branch_body ind p b
+      else ind ^ "else" ^ brace ind (branch_body ind' p b) in
     match brs with
+    | [] -> ""
     (* F* has already checked that the match is exhaustive, so the last branch
        is the one that runs when no earlier one did: its tests would always
        succeed, and testing them anyway would only add a branch C cannot see
        is dead.  This is the same reasoning that lets a projector be emitted
        without a tag check. *)
-    | [] -> ""
     | [(p, g, b)] ->
       if Some? g then guard_rejected ();
-      block p b
+      last p b
     | (p, g, b) :: rest ->
       if Some? g then guard_rejected ();
       let tests, _ = pat_tests x scrut.ty p in
-      if Nil? tests then
-        (* Irrefutable, so it is the last branch that can run; anything after
-           it is dead and C would warn about it. *)
-        block p b
+      (* Irrefutable, so it is the last branch that can run; anything after it
+         is dead and C would warn about it. *)
+      if Nil? tests then last p b
       else
         (if first then ind else ind ^ "else ") ^
-        "if (" ^ String.concat " && " tests ^ ") {\n" ^
-        branch_body p b ^ ind ^ "}\n" ^
+        "if (" ^ String.concat " && " tests ^ ")" ^
+        brace ind (branch_body ind' p b) ^
         go false rest in
   head ^ go true brs
 
@@ -858,7 +918,8 @@ let signature (l:dlet) : ML string =
     match kept_binders l with
     | [] -> "void"
     | bs -> String.concat ", " (bs |> List.map (fun b -> decl_of b.b_ty (lookup_var b.b_name))) in
-  decl_of l.dl_ret (c_name l.dl_name ^ "(" ^ args ^ ")")
+  let hd = c_name l.dl_name ^ "(" ^ args ^ ")" in
+  if TUnit? l.dl_ret then "void " ^ hd else decl_of l.dl_ret hd
 
 (* A definition with no parameters is a C *variable*, not a function of no
    arguments, and its initializer has to be a constant expression -- which the
@@ -869,6 +930,7 @@ let signature (l:dlet) : ML string =
 let let_decl (l:dlet) : ML string =
   current := string_of_name l.dl_name;
   ctr := 0;
+  void_ret := TUnit? l.dl_ret;
   reset_scope ();
   kept_binders l |> List.iter (fun b -> let _ = bind_var b.b_name in ());
   if Nil? l.dl_binders then
@@ -919,6 +981,7 @@ let print_program (p:program) : ML string =
   let ct = SMap.create 50 in
   let xt = SMap.create 20 in
   let kt = SMap.create 50 in
+  let vt = SMap.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DType t ->
@@ -940,9 +1003,10 @@ let print_program (p:program) : ML string =
          definition whose every parameter would go: [f()] is fine, but the
          rejection of a parameterless definition below is about the IR, so the
          two must not be confused. *)
-      if List.existsb (fun b -> not b) flags then SMap.add kt (string_of_name l.dl_name) flags
+      if List.existsb (fun b -> not b) flags then SMap.add kt (string_of_name l.dl_name) flags;
+      if TUnit? l.dl_ret && Cons? l.dl_binders then SMap.add vt (string_of_name l.dl_name) true
     | _ -> ());
-  types := tt; ctors := ct; externs := xt; keeps := kt;
+  types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
 
   (* Only the standard library, and only the parts that are used unavoidably:
      fixed-width integers, malloc/free/abort, memmove, and bool. *)
@@ -1013,6 +1077,7 @@ let print_program (p:program) : ML string =
       let call = c_name l.dl_name ^ "(" ^ args ^ ")" in
       (match l.dl_ret with
        | TInt _ -> ["int main(void) {\n  return (int)" ^ call ^ ";\n}\n"]
+       | TUnit -> ["int main(void) {\n  " ^ call ^ ";\n  return 0;\n}\n"]
        | _ -> ["int main(void) {\n  (void)" ^ call ^ ";\n  return 0;\n}\n"])
     | _ -> []) in
 
