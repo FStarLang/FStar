@@ -80,6 +80,29 @@ Guidelines for the changelog:
     This is a breaking change for reflection clients that match exhaustively on
     `vconst`; such code should add a `C_MachineInt` case.
 
+## Effects
+
+  * A pre- or postcondition can no longer determine an implicit argument. A
+    specification is a proof obligation, not part of the identity of a
+    computation type, so the verification condition of a term is not allowed to
+    influence type inference. Concretely, given
+
+    ```fstar
+    val app (#p:(int -> prop)) ($f: (x:int -> Lemma (p x))) : Lemma (forall x. p x)
+    ```
+
+    `app (fun x -> lem x)` is now rejected with *"Failed to resolve implicit
+    argument"*, because `p` would have to be read off the lambda's proof
+    obligation. `p` must instead come from unification against a declared type,
+    or be written down:
+
+    | Rejected                     | Accepted                                    |
+    |------------------------------|---------------------------------------------|
+    | `app (fun x -> lem x)`       | `app lem`                                   |
+    |                              | `app #(fun x -> q x) (fun x -> lem x)`      |
+    |                              | `let g (x:int) : Lemma (q x) = lem x in app g` |
+    |                              | `introduce forall x. q x with lem x`        |
+
 ## SMT
 
   * Proof hints and unsat cores have been removed. The options

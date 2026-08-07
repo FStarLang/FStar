@@ -71,6 +71,11 @@ let dbg_Rel  = Debug.get_toggle "Rel"
 let dbg_RelBench  = Debug.get_toggle "RelBench"
 let dbg_RelDelta  = Debug.get_toggle "RelDelta"
 let dbg_RelTop  = Debug.get_toggle "RelTop"
+(* Unification variables we refused to solve from a placeholder specification
+   (see [post_is_placeholder] below).  Recorded only to be able to explain the
+   resulting "failed to resolve implicit argument" error. *)
+let unsolvable_spec_uvars : ref (list int) = mk_ref []
+
 let dbg_ResolveImplicitsHook  = Debug.get_toggle "ResolveImplicitsHook"
 let dbg_Simplification  = Debug.get_toggle "Simplification"
 let dbg_SMTQuery  = Debug.get_toggle "SMTQuery"
@@ -4297,8 +4302,33 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                 contains a unification variable: there we must unify, or the
                 uvar would be left unresolved. *)
              let has_uvars (t:term) : ML bool = not (no_free_uvars t) in
+             (* ... but only when the specification we would unify it against
+                carries information.  Where specifications are discarded (phase
+                1, [--admit_smt_queries]) a computed postcondition is the
+                placeholder [fun _ -> True], and unifying it would silently
+                solve the uvar to [True] -- i.e. the verification condition of
+                the term would determine an implicit argument.  Refuse; the
+                uvar is then reported as unresolved. *)
+             let post_is_placeholder =
+               Env.discard_specs env
+               && U.is_trivial_post c1_comp.comp_post
+               && has_uvars c2_comp.comp_post
+             in
+             if post_is_placeholder then
+               Free.uvars c2_comp.comp_post |> elems
+               |> List.iter (fun u ->
+                    unsolvable_spec_uvars := UF.uvar_id u.ctx_uvar_head :: !unsolvable_spec_uvars);
              let spec_probs, spec_guard, wl =
-               if has_uvars c1_comp.comp_pre  || has_uvars c2_comp.comp_pre
+               if post_is_placeholder
+               then
+                 let probs, wl =
+                   if has_uvars c1_comp.comp_pre || has_uvars c2_comp.comp_pre
+                   then let p1, wl = sub_prob wl c1_comp.comp_pre EQ c2_comp.comp_pre "effect precondition" in
+                        cons p1 empty, wl
+                   else empty, wl
+                 in
+                 probs, U.mk_imp c2_comp.comp_pre c1_comp.comp_pre, wl
+               else if has_uvars c1_comp.comp_pre  || has_uvars c2_comp.comp_pre
                || has_uvars c1_comp.comp_post || has_uvars c2_comp.comp_post
                then
                  let p1, wl = sub_prob wl c1_comp.comp_pre EQ c2_comp.comp_pre "effect precondition" in
@@ -5468,14 +5498,22 @@ let force_trivial_guard env g : ML _
     | VNil -> ignore <| discharge_guard env g
     | VCons imp _ ->
       let open FStarC.Pprint in
-      raise_error imp.imp_range Errors.Fatal_FailToResolveImplicitArgument [
+      let hint =
+        if List.mem (UF.uvar_id imp.imp_uvar.ctx_uvar_head) !unsolvable_spec_uvars
+        then [text "This implicit argument only occurs in a pre- or postcondition, \
+                    so it cannot be inferred: a specification is a proof obligation, \
+                    not part of the identity of a computation.  Write it out explicitly, \
+                    or pass an argument whose declared type determines it."]
+        else []
+      in
+      raise_error imp.imp_range Errors.Fatal_FailToResolveImplicitArgument ([
         prefix 4 1 (text "Failed to resolve implicit argument")
                 (arbitrary_string (show imp.imp_uvar.ctx_uvar_head)) ^/^
         prefix 4 1 (text "of type")
                 (N.term_to_doc env (U.ctx_uvar_typ imp.imp_uvar)) ^/^
         prefix 4 1 (text "introduced for")
                 (text imp.imp_reason)
-      ]
+      ] @ hint)
 
 let subtype_nosmt_force env t1 t2 : ML _
   =
