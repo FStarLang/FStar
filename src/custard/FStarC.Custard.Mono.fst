@@ -73,40 +73,66 @@ let is_type_binder (env:TcEnv.env) (b:binder) : ML bool =
   | _ -> false
 
 (* Rule 1: a non-informative binder carries no runtime value, so it is deleted
-   rather than passed.  The *unit-shaped* ones are deliberately excluded, and
+   rather than passed.  The *unit-shaped* ones are excluded here, and
    [U.is_unit] is the right test because it treats [unit], [squash p] and
-   [_:unit{p}] as the one thing they are.  Deleting them is not safe: a unit
-   binder is how F* writes a thunk, and dropping it turns an impure function
-   into a value whose effect then runs at module initialization.  Nothing is
-   lost by keeping them -- their *arguments* are replaced by [()]
-   ([Mono.unit_binders], used by [Extract.app_of_fv]), so no ghost term
-   survives, and both backends drop a unit parameter of their own accord
-   (karamel in [Simplify.remove_unused_parameters], "type-based
-   elimination"). *)
+   [_:unit{p}] as the one thing they are.  They are deleted too, but only from
+   a *signature*, by [classify] below, where the codomain is in hand: a unit
+   binder is also how F* writes a thunk, and dropping the wrong one turns an
+   impure function into a value whose effect then runs at module
+   initialization.  This predicate is the one applied to the binders that come
+   from a definition's own lambdas rather than from its type, where there is no
+   codomain to consult and so no way to tell a thunk apart. *)
 let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   let sort = b.binder_bv.sort in
   not (U.is_unit sort) &&
   not (is_type_binder env b) &&
   TcUtil.must_erase_for_extraction env sort
 
+let is_unit_binder (b:binder) : ML bool = U.is_unit b.binder_bv.sort
+
 let is_erased_binder (env:TcEnv.env) (b:binder) : ML bool =
   is_type_binder env b || is_dropped_binder env b
 
-(* Deleting *every* binder of an impure definition would turn it into a value,
-   and its effects would then run at module initialization instead of when it
-   is called.  So the last binder stays, carrying no information but keeping
-   the definition a function.  Both the signature and the call sites derive
-   their filtering from the same F* type, so they agree without communicating. *)
-let keep_one_if_impure (env:TcEnv.env) (c:comp) (flags:list bool) : ML (list bool) =
-  if Cons? flags && List.for_all (fun b -> b) flags && not (U.is_pure_or_ghost_comp c)
+(* The guard that makes deleting a binder from a *definition* safe.  Two things
+   can go wrong.  Deleting every binder turns the definition into a value, so
+   its body runs at module initialization instead of when it is called, and any
+   partial application of it at a call site silently becomes a saturated one.
+   And a unit-shaped binder in front of an impure codomain is
+   indistinguishable, from the type alone, from the thunk F* writes the same
+   way -- [unit -> ML a] and [squash p -> ML a] are the same arrow.
+
+   So the last binder is retained when it is dropped and either the definition
+   would otherwise become a value, or it is unit-shaped and the codomain is
+   impure.  It carries no information -- its argument is [()] either way, see
+   [unit_binders] -- it just keeps the definition a function.  Both the
+   signature and the call sites derive their filtering from the same F* type,
+   so they agree without communicating.
+
+   The first clause does not test purity, even though a pure body may be run at
+   initialization without changing what the program computes, because F*'s
+   notion of purity is not Custard's: a Pulse [fn f () : stt unit] is a [Tot]
+   function returning an [stt] value, and section 7.2 is what makes it an
+   impure arrow.  Keeping the arity is the answer that does not depend on
+   which of the two notions is meant. *)
+let keep_thunk (env:TcEnv.env) (bs:binders) (c:comp) (flags:list bool) : ML (list bool) =
+  let last (l:list 'a) : ML (option 'a) =
+    match List.rev l with x :: _ -> Some x | [] -> None in
+  let becomes_value = Cons? flags && List.for_all (fun b -> b) flags in
+  let is_thunk =
+    not (U.is_pure_or_ghost_comp c) &&
+    (match last bs with Some b -> is_unit_binder b | None -> false) in
+  if last flags = Some true && (becomes_value || is_thunk)
   then (match List.rev flags with
         | _ :: rest -> List.rev (false :: rest)
         | [] -> flags)
   else flags
 
+(* A constructor is a value, so neither hazard applies to it: deleting all of
+   its arguments is exactly what a nullary constructor is.  The one case that
+   would still be wrong is an impure one, which does not exist. *)
 let erased_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
-  let bs, c = U.arrow_formals_comp t in
-  keep_one_if_impure env c (bs |> List.map (is_erased_binder env))
+  let bs, _ = U.arrow_formals_comp t in
+  bs |> List.map (is_erased_binder env)
 
 (* The binders of [t] whose value is irrelevant because their type is
    unit-shaped.  These are exactly the ones rule 1 declines to delete, so a
@@ -125,7 +151,7 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
   let init (b:binder) : ML bclass =
-    if is_dropped_binder env b                                    (* rule 1 *)
+    if is_dropped_binder env b || is_unit_binder b                (* rule 1 *)
     then Dropped
     else if all_mono                                                   (* rule 3 *)
     || U.has_attribute b.binder_attrs PC.monomorphize_attr        (* rule 3 *)
@@ -173,10 +199,11 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
     match c with
     | Poly -> if is_type_binder env b then Dropped else Poly
     | c -> c) in
-  (* Same guard as [erased_binders]: keep one binder rather than turn an impure
-     definition into a value.  (A definition all of whose binders are [Mono] has
-     the same problem and would need thunking to fix; that is a known gap.) *)
-  let flags = keep_one_if_impure env comp (cs |> List.map Dropped?) in
+  (* Same guard as [erased_binders]: keep the last binder rather than turn the
+     definition into a value or delete what may be a thunk.  (A definition all
+     of whose binders are [Mono] has the same problem and would need thunking
+     to fix; that is a known gap.) *)
+  let flags = keep_thunk env bs comp (cs |> List.map Dropped?) in
   List.zip cs flags |> List.map (fun (c, dropped) ->
     match c with
     | Dropped -> if dropped then Dropped else Poly

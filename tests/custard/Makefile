@@ -36,6 +36,14 @@ NOGREP_Mutual = "let rec mutual_main"
 # OCaml would evaluate them right to left and print "ba".
 GREP_Anf = "let tmp1 = (anf_tick \"a\"" "let tmp2 = (anf_tick \"b\""
 
+# Rule 1 deletes a unit-shaped proof binder from the signature and from every
+# call site -- except where the type cannot distinguish it from a thunk.
+GREP_Implicits   = "implicits_clamp (x : Prims.int) : Prims.int" \
+                   "implicits_clampi (x : Prims.int) : Prims.int" \
+                   "implicits_only_proof (tmp : unit)" \
+                   "implicits_thunk (x : Prims.int) (tmp : unit)"
+NOGREP_Implicits = "implicits_clamp (Prims.parse_int \"3\") ()"
+
 # Pass 7 must drop every phantom parameter, including the ones that are only
 # reachable through another declaration's phantom position.  Each surviving
 # declaration therefore takes exactly one parameter.

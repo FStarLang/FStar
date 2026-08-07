@@ -425,13 +425,38 @@ agree without having to communicate.  Concretely, an implicit *value* binder
 like the `#n` of `let addn (#n:int) (x:int) = n + x` is an ordinary parameter
 that must be passed everywhere.
 
-**The last-binder guard.**  Deleting *every* binder of a definition would turn
-it from a function into a value, so its effects would run at module
-initialization time instead of at the call.  If all of a definition's binders
-would be deleted and its computation type is not pure or ghost, the last binder
-is kept.  The same guard applies to lambdas.  A known gap: a definition all of
-whose binders are `Mono` has the same problem, and would need a thunk inserted
-at the definition and forced at each call site; v1 does not do this.
+**The last-binder guard** (`Mono.keep_thunk`).  Two things can go wrong when a
+binder is deleted, and both are about the *last* one.
+
+Deleting *every* binder turns a definition from a function into a value, so its
+body runs at module initialization instead of at the call, and a partial
+application at some call site silently becomes a saturated one.  And a
+unit-shaped binder in front of an impure codomain cannot be told apart, from
+the type alone, from the thunk F\* writes exactly the same way: `unit -> ML a`
+and `squash p -> ML a` are the same arrow, and only the programmer knows which
+was meant.
+
+So the last binder is retained when it would be deleted and either the
+definition would otherwise become a value, or it is unit-shaped and the
+codomain is impure.  It carries no information — its argument is `()` either
+way — it just keeps the definition a function.  The first clause deliberately
+does not test purity, even though running a pure body at initialization does
+not change what the program computes, because F\*'s notion of purity is not
+Custard's: a Pulse `fn f () : stt unit` is a `Tot` function returning an `stt`
+*value*, and it is §7.2 that makes it an impure arrow.  Preserving the arity is
+the answer that does not depend on which of the two notions is meant.
+
+The guard is a property of a *signature*, so it does not apply to a
+constructor, which is a value already — deleting all of a constructor's
+arguments is precisely what a nullary constructor is.  Nor does it apply to the
+binders that come from a definition's own lambdas rather than from its type
+(`let boxed (n:int) : box int = fun () -> ...`), where there is no codomain to
+consult; those keep the older, purely non-informative test
+(`Mono.is_erased_binder`), which never touches a unit-shaped binder.
+
+A known gap: a definition all of whose binders are `Mono` has the same problem,
+and would need a thunk inserted at the definition and forced at each call site;
+v1 does not do this.
 
 The classification is *not* affected by whether the argument at a call site
 happens to be a literal: `f 3` where `n` is `Poly` does not specialize.  We
@@ -1055,17 +1080,12 @@ A type is erased when it is non-informative.  The existing predicate is
 `must_erase_for_extraction` attribute.  Custard reuses it verbatim, and adds
 the *structural* closure:
 
-Erasure of a *binder* is where this gets subtle, and the rule is uniform: a
-binder whose sort is unit-shaped — `unit`, `squash p`, or `_:unit{p}`, which is
-exactly what `U.is_unit` recognizes — is **kept**, and its argument is replaced
-by `()`.  Both halves matter.
-
-Keeping it is a correctness requirement: a unit binder is how F\* writes a
-thunk, so deleting the last one turns an impure function into a *value*, and
-its effects then run at module initialization instead of at the call.  This is
-not hypothetical — `let k (n:nat) (_:squash (n>0)) : ML nat` loses every binder
-if `squash` binders are deleted, and rule 1's `keep_one_if_impure` does not
-rescue it, because that only fires when *all* binders were dropped.
+Erasure of a *binder* is where this gets subtle.  A binder whose sort is
+unit-shaped — `unit`, `squash p`, or `_:unit{p}`, which is exactly what
+`U.is_unit` recognizes — is deleted from the signature and from every call
+site, like any other non-informative binder, **unless** the last-binder guard
+of §3.1 rescues it.  A deleted one costs nothing at all; a rescued one is kept
+but its argument is replaced by `()`.
 
 Replacing the argument is what keeps ghost code out of the output: the position
 is non-informative by definition, so its value is irrelevant, while the term
@@ -1073,10 +1093,12 @@ the source wrote there can be a `Prims.magic ()` that aborts at runtime, or an
 arbitrarily expensive proof.  `Mono.unit_binders` computes the mask and
 `Extract.value_args` applies it, at both calls and constructor applications.
 
-Nothing is lost by carrying the extra parameter, because both backends remove
-it themselves: karamel's `Simplify.remove_unused_parameters` deletes `TUnit`
-parameters ("type-based elimination") along with the matching arguments at
-every call site, and in OCaml a `unit` argument costs nothing.
+Deleting these binders is not just cosmetic.  karamel removes `TUnit`
+parameters itself (`Simplify.remove_unused_parameters`, "type-based
+elimination"), so the C backend never saw them; OCaml does not, so every proof
+obligation the source discharged showed up as a literal `()` at every call
+site, in code that is meant to be read and checked in.  And the direct-to-C
+backend of M8 will not have karamel to fall back on.
 
 #### Erase on sight
 
@@ -1192,11 +1214,9 @@ type having been extracted.  The implementation splits this in two.
 still available: `Mono.classify` gives a binder the class `Dropped` when
 `TcUtil.must_erase_for_extraction` holds of its sort, and the argument is then
 deleted at every call site by the same `split_mono_args` that handles `Mono`
-arguments, so the two sides cannot drift apart.  One exception: a `unit` binder
-is *not* dropped, even though `unit` is non-informative, because dropping the
-`unit` parameter of an impure function would turn it into a value evaluated at
-module initialization time.  Removing such thunks safely needs the effect
-discipline of §7 and is left to a later milestone.
+arguments, so the two sides cannot drift apart.  Unit-shaped binders go the
+same way, subject to §3.1's last-binder guard, which is what keeps a genuine
+thunk from being deleted.
 
 *Type* erasure and collapse are decided after extraction, over the whole IR, by
 a **least fixpoint** starting from "nothing is erased" and iterated until
@@ -2136,5 +2156,6 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6d | Mutual recursion (§6 pass 8): `Simplify.scc` and `and`-grouping in the OCaml backend | Done. `tests/custard/Mutual.fst` |
 | M6e | ANF (§6 pass 1): `Simplify.anf`, plus effect precision for externals (§7.3) | Done. `tests/custard/Anf.fst` |
 | M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done. `tests/custard/Phantom.fst` |
+| M6g | Deleting unit-shaped proof binders (§3.1, §5.1): `Mono.keep_thunk` | Done. `tests/custard/Implicits.fst` covers both halves of the guard |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

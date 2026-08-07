@@ -21,6 +21,15 @@ let pred (x:int) : prop = x >= 0
 let clamp (x:int) (_:squash (pred x)) : int = x
 let clampi (x:int) (#_:squash (pred x)) : int = x
 
+(* Two cases where the proof binder has to stay, because from the type alone it
+   is indistinguishable from something that matters.  [only_proof] would become
+   a value, so its body would run at module initialization rather than when it
+   is called.  [thunk]'s trailing binder is unit-shaped in front of an impure
+   codomain, which is exactly how F* writes a thunk -- [squash p -> ML int] and
+   [unit -> ML int] are the same arrow. *)
+let only_proof (#p:prop) (_:squash p) : int = 7
+let thunk (x:int) (_:squash (pred x)) : ML int = print_string "thunk\n"; x
+
 (* Constructors mix all three kinds of field. *)
 noeq
 type tagged (a:Type) =
@@ -39,6 +48,9 @@ let main () : ML unit =
   print_string "\n";
   print_string (string_of_int (clamp 3 ()));
   print_string (string_of_int (clampi 4 #()));
+  print_string (string_of_int (only_proof #(pred 0) ()));
+  let delayed = thunk 5 in
+  print_string (string_of_int (delayed ()));
   print_string "\n";
   print_string (label_of (Tagged #int #bool "tag" 1 ()));
   print_string "\n"
