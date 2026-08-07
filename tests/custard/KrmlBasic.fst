@@ -50,6 +50,12 @@ noeq type tagged (a:Type0) (ph:Type0) =
 let untag (#a:Type0) (#ph:Type0) (x: tagged a ph) : a =
   match x with L v -> v | R v -> v
 
+(* Section 6, pass 1, on the C side: F* discharges the division's precondition
+   by reasoning that [&&] does not reach its right operand, so a strict
+   translation would divide by zero -- which in C is undefined behaviour, not
+   an exception. *)
+let safe (x:U32.t) : bool = U32.gt x 0ul && U32.gt (U32.div 100ul x) 5ul
+
 let main () : I32.t =
   let a = area (Square 3ul) in
   let b = area (Rect 2ul 5ul) in
@@ -61,4 +67,5 @@ let main () : I32.t =
   if U32.eq tot_area 75ul && is_square (Square 1ul)
      && U32.eq t 7ul && U64.eq s 4097uL
      && even 10ul && odd 7ul && U32.eq phantom 7ul
+     && not (safe 0ul) && safe 10ul
   then 0l else 1l

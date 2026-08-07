@@ -18,6 +18,7 @@ CUSTARD_TESTS += Combinators
 CUSTARD_TESTS += Mutual
 CUSTARD_TESTS += Anf
 CUSTARD_TESTS += Phantom
+CUSTARD_TESTS += ShortCircuit
 
 # GREP_<name>/NOGREP_<name> additionally assert on the generated .ml.  For
 # Combinators (section 3.9) the *shape* of the output is the point: one
@@ -26,6 +27,12 @@ CUSTARD_TESTS += Phantom
 GREP_Combinators   = combinators_parse__t combinators_parse__tuple2 \
                      combinators_serialize__t combinators_serialize__tuple2
 NOGREP_Combinators = parser_combinator __proj__
+
+# The connectives must come out infix, so that the emitted file says what it
+# means; 'logand' is the bitwise one and must stay a call.  F* has already
+# turned the effectful ones into an 'if', so no EOp survives for those.
+GREP_ShortCircuit   = ") && (" ") || (" "FStar_UInt32.logand"
+NOGREP_ShortCircuit = "(&&)" "(||)"
 
 # The SCC pass must group each cycle and must *not* mark anything else 'rec'.
 GREP_Mutual   = "and mutual_tree" "and mutual_size_t" "and mutual_a"

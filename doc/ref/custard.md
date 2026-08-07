@@ -1326,7 +1326,32 @@ Phase 4 passes, in order:
    position: a lambda body, the arms of an `EIf`, the branches and guards of an
    `EMatch` or `ETry`, both parts of an `EWhile` (the condition is re-evaluated
    per iteration), and — because both backends short-circuit them — every
-   operand but the first of `And` and `Or`.
+   operand but the first of `And` and `Or`.  The last of those is guarded on
+   the operator's *width*: at a width, `And` and `Or` are the bitwise
+   operators, which are strict.
+
+   Short-circuiting is worth stating separately, because it is a place where
+   Custard has to preserve a semantics rather than choose one, and two
+   different mechanisms are responsible.
+
+   - When an operand is **effectful**, F\* has already rewritten `a && b` into
+     `if a then b else false` — the connectives are `Tot` functions, so an
+     effectful operand cannot be passed to one — and Custard never sees an
+     `EOp` at all.
+   - When both operands are **pure**, the connective survives as an `EOp`, and
+     short-circuiting is still observable, because pure does not mean total:
+     F\* discharges the precondition of `100 / x` in `x <> 0 && 100 / x > 5`
+     precisely by reasoning that the right operand is not reached.  Evaluating
+     it strictly would divide by zero — an exception in OCaml, undefined
+     behaviour in C.
+
+   Both backends get this right, and both are emitted infix: `a && b`, not
+   `((&&) a b)`.  OCaml would in fact short-circuit the prefix form too — `&&`
+   is the `%sequand` primitive, which the compiler lowers to a conditional when
+   it is fully applied — but nothing in the emitted file says so, and a reader
+   checking the generated code should not have to know it.
+   `tests/custard/ShortCircuit.fst` covers both mechanisms and the bitwise
+   guard; `KrmlBasic.fst` covers the C side.
 
    **Most of this work is already done for us, and the exception is the point.**
    An application whose arguments have an *F\** effect arrives in monadic normal
@@ -2208,5 +2233,6 @@ karamel that specializes `ht_t` to `size_t`/`data` for C.
 | M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done. `tests/custard/Phantom.fst` |
 | M6g | Deleting unit-shaped proof binders (§3.1, §5.1): `Mono.keep_thunk` | Done. `tests/custard/Implicits.fst` covers both halves of the guard |
 | M6h | `--custard_warn_any` (§5.6); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
+| M6i | Short-circuiting `&&`/`\|\|` (§6 pass 1): infix emission, bitwise guard | Done. `tests/custard/ShortCircuit.fst`, and the C side in `KrmlBasic.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
 | M8 | Direct-to-C backend; `--custard_monomorphize_types` (which also unlocks per-instantiation layouts, §5.0) | Only after M5 proves the IR is adequate |

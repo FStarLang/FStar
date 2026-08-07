@@ -365,6 +365,17 @@ let rec term (ind:string) (e:expr) : ML string =
     term ind dst ^ " " ^ index ind di ^ " " ^ index ind len ^ ")"
   | EOp ({ po_op = BufSub }, _) ->
     "(failwith \"Custard: pointer arithmetic has no OCaml representation\")"
+  (* Infix, not [((&&) a b)].  OCaml's [&&] and [||] are the [%sequand] and
+     [%sequor] primitives, which the compiler does short-circuit even when
+     they are written prefix and fully applied -- but nothing in the emitted
+     file says so, and §6 pass 1 has already arranged the operands on the
+     assumption that they are delayed.  Printing them infix makes the
+     generated code mean what it is meant to mean on inspection.  The guard on
+     [po_int] matters: at a width, [And]/[Or] are *bitwise*. *)
+  | EOp ({ po_op = And; po_int = None }, [a; b]) ->
+    "(" ^ term ind a ^ " && " ^ term ind b ^ ")"
+  | EOp ({ po_op = Or; po_int = None }, [a; b]) ->
+    "(" ^ term ind a ^ " || " ^ term ind b ^ ")"
   | EOp (op, args) ->
     "(" ^ op_name op ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"
   | EAny -> "(Obj.magic 0)"

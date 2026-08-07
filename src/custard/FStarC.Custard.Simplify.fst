@@ -91,10 +91,17 @@ and occurs_branches (v:string) (brs:list branch) : ML bool =
    every delayed position: the body of a lambda, the arms of an [EIf], the
    branches of an [EMatch] or [ETry], both parts of an [EWhile] (the condition
    is re-evaluated per iteration), and -- because the backends short-circuit
-   them -- every operand but the first of [And] and [Or]. *)
-let delayed_operands (o:op) : bool =
-  match o with
-  | And | Or -> true
+   them -- every operand but the first of [And] and [Or].
+
+   The [po_int] guard is the whole point of taking a [prim_op] rather than an
+   [op]: *at a width* [And] and [Or] are the bitwise operators, which are
+   strict.  Treating those as delayed would leave an impure second operand in
+   an operand position, and OCaml would then evaluate [logand a b] right to
+   left -- exactly the reordering this pass exists to prevent. *)
+let delayed_operands (o:prim_op) : bool =
+  match o.po_int, o.po_op with
+  | None, And
+  | None, Or -> true
   | _ -> false
 
 let anf_expr (x0:expr) : ML expr =
@@ -158,7 +165,7 @@ let anf_expr (x0:expr) : ML expr =
         | ERaise (n, es) -> { x with e = ERaise (n, ops es) }
         | ERecord (n, fs) -> { x with e = ERecord (n, fields fs) }
         | EOp (o, es) ->
-          if delayed_operands o.po_op
+          if delayed_operands o
           then
             (match es with
              | e :: rest ->
