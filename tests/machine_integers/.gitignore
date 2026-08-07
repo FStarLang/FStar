@@ -1,3 +1,4 @@
 out/
 *.out
 BigList.memcheck
+BigListNorm.timecheck
