@@ -679,7 +679,8 @@ is still `ML`, so the argument is still the result of a computation rather
 than a value, and there is no termination argument that would make it `Tot`.
 A recursive, effectfully-tied dictionary is not something specialization can
 reach by any restructuring of the source, and it should not be — it wants the
-identity skeleton, which is to say it wants dictionary passing.
+identity skeleton, which is to say it wants dictionary passing.  §3.2c1 is
+how it asks; `tie_bu` now carries seven `dyn`s and `VisitM` extracts.
 
 #### 3.2c1 `dyn`: asking for the identity skeleton
 
@@ -744,6 +745,11 @@ and the marker is buried where Custard cannot see it.  Binding the dereference
 first, as above, is enough.  A friendlier diagnostic here — recognising a
 `dyn` at the head of an effectful `let`-definition and accepting it — is
 possible but not yet implemented.
+
+`dyn` is also no help for a *type* argument: under uniform compilation (§5.0)
+there is no runtime value to pass, so the case (b) rejection above stands and
+only option 2's promotion reaches it.  The diagnostic checks the sort of the
+variable and only suggests `dyn` where it could actually work.
 
 ### 3.3 The extraction loop
 
@@ -3481,6 +3487,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
 | M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`.  Conclusion in §12.8 item 5: M7 is a prerequisite, and handles the common case but not all of it.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), local functions blocking specialization (§5.11), an inline marker escaping newtype collapse (§5.2), and keys not seeing through local `let`s (§3.2b).  Also found: §5.11 must be restricted to polymorphic locals or extraction blows up exponentially (§12.8 item 8), and `Primops.Sealed.ops` builds a dictionary from a runtime value, which motivated §3.2c |
 | M9f | Tell an effectful `Mono` argument apart from a runtime parameter (§3.2c) | Done. `Extract.effletdefs`; `tests/custard/MonoEffect.fst`.  Motivated by `Syntax.VisitM.tie_bu`, whose recursive `lvm` instance is tied through a `ref`, so no annotation and no restructuring of the source can make it static.  It is the identity-skeleton end of §3.2c -- dictionary passing -- and so wants the opt-in gate opened rather than a new mechanism |
+| M9h | Apply `dyn` to `Syntax.VisitM.tie_bu` | Done. Seven `dyn`s in `tie_bu`; the compiler still bootstraps and `--custard_entry FStarC.Syntax.VisitM.visitM_term_univs` no longer stops there.  `FStarC.Main.main` is back to the M7 blocker (`Class.Ord.sort`'s type parameter), which `dyn` cannot help with and no longer claims to |
 | M9g | Call-site opt-in to the identity skeleton (§3.2c1) | Done. `FStar.Custard.dyn` in ulib, `no_specialize` blocked from unfolding via `DontUnfoldAttr`, erased by a `Rule_prim` in `Custard.Builtins`; `tests/custard/MonoDyn.fst`.  No change to `split_mono_args` or `check_mono_arg` was needed, which is the concrete payoff of §3.2c's "hole abstraction and dictionary passing are one mechanism": the marker merely turns the whole argument into a hole.  Known wart: `dyn` must wrap a pure term, since F\*'s ANF phase buries it otherwise |
 | M9e | §3.2c hole abstraction: specialize on a `Mono` argument's skeleton, pass its runtime leaves as parameters | Done. `Extract.mono_holes`/`split_mono_args`/`specialize`, `sk_holes` in the key; `tests/custard/MonoHoles.fst` covers the dictionary and the closure case.  Unblocks `Primops.Sealed.ops`; subsumes closure arguments, which §3.2 had expected to need a separate defunctionalization pass.  Found and fixed on the way: `Sig_inductive_typ` parameters were used unopened, so a dependent parameter (`{| monoid m |}` after `m:Type`) crashed the normalizer, and constructor applications and patterns dropped only *erased* parameters while the type declaration dropped *all* of them, so a typeclass-parameterized inductive got the wrong constructor arity (`tests/custard/DepParams.fst`) |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |

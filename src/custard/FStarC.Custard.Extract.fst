@@ -1389,38 +1389,50 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
      let nm = Ident.string_of_id v.ppname in
      let where = "the monomorphized binder number " ^ show i ^ " of " ^
                  Ident.string_of_lid l in
+     (* [dyn] passes the value at runtime, so it is no help at all for a
+        *type* argument: under uniform compilation (5.0) there is no runtime
+        value to pass.  Only option 2's promotion reaches that case, so do not
+        suggest [dyn] for it. *)
+     let dynable = match (SS.compress v.sort).n with
+                   | Tm_type _ -> false
+                   | _ -> true in
+     let dyn_hint (lead:string) : list Pprint.document =
+       if dynable
+       then [text (lead ^ "write [FStar.Custard.dyn " ^ nm ^ "].")]
+       else [] in
      (* Whether the name stands for a parameter or for the result of an
         effectful [let] decides what can be done about it, so the two get
         different messages.  Suggesting [@@monomorphize] for a computation's
         result would be advice that cannot be followed. *)
-     if Some? (SMap.try_find st.effletdefs (show v.index))
-     then
-       custard_error st E.Error_CustardCannotMonomorphize [
-         text ("The argument passed to " ^ where ^ " is " ^ nm ^ ", the result \
-               of an effectful computation, so the whole argument is a hole \
-               (section 3.2c) and no skeleton is left to specialize on.");
-         text ("Unlike a runtime parameter, this cannot be fixed by an \
-               annotation: the computation runs when the program runs, so " ^
-               nm ^ " is never known earlier.  What is left is to pass the \
-               value at runtime -- for a typeclass dictionary, ordinary \
-               dictionary passing -- which is the identity-skeleton end of \
-               section 3.2c.");
-         text ("Write [FStar.Custard.dyn " ^ nm ^ "] to ask for that here.  \
-               It is opt-in, and per call site, because it reintroduces the \
-               indirect calls monomorphization exists to remove: other calls \
-               to this function are still specialized.")
-       ]
-     else
-       custard_error st E.Error_CustardCannotMonomorphize [
-         text ("The argument passed to " ^ where ^ " is the runtime parameter " ^
-               nm ^ ", so there is nothing to specialize on.");
-         text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
-               definition so that it, too, is known at specialization time, or \
-               drop the annotation on binder " ^ show i ^ " and pass it at \
-               runtime.  To pass it at runtime at this call site only, \
-               without changing either signature, write \
-               [FStar.Custard.dyn " ^ nm ^ "].")
-       ]
+     let msg : list Pprint.document =
+       if Some? (SMap.try_find st.effletdefs (show v.index))
+       then
+         [ text ("The argument passed to " ^ where ^ " is " ^ nm ^ ", the \
+                 result of an effectful computation, so the whole argument is \
+                 a hole (section 3.2c) and no skeleton is left to specialize \
+                 on.");
+           text ("Unlike a runtime parameter, this cannot be fixed by an \
+                 annotation: the computation runs when the program runs, so " ^
+                 nm ^ " is never known earlier.  What is left is to pass the \
+                 value at runtime -- for a typeclass dictionary, ordinary \
+                 dictionary passing -- which is the identity-skeleton end of \
+                 section 3.2c.") ]
+         @ dyn_hint "To ask for that here, "
+         @ [ text "It is opt-in, and per call site, because it reintroduces \
+                   the indirect calls monomorphization exists to remove: \
+                   other calls to this function are still specialized." ]
+       else
+         [ text ("The argument passed to " ^ where ^ " is the runtime \
+                 parameter " ^ nm ^ ", so there is nothing to specialize \
+                 on.");
+           text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
+                 definition so that it, too, is known at specialization time, \
+                 or drop the annotation on binder " ^ show i ^ " and pass it \
+                 at runtime.") ]
+         @ dyn_hint "To pass it at runtime at this call site only, without \
+                     changing either signature, "
+     in
+     custard_error st E.Error_CustardCannotMonomorphize msg
    | _ -> ());
   let is_type_name (v:S.bv) : ML bool =
     match (SS.compress v.sort).n with
