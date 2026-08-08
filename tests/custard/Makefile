@@ -28,6 +28,8 @@ CUSTARD_TESTS += LocalRec
 CUSTARD_TESTS += NewtypeInline
 CUSTARD_TESTS += SortBy
 CUSTARD_TESTS += LocalPoly
+CUSTARD_TESTS += MonoHoles
+CUSTARD_TESTS += DepParams
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -94,6 +96,20 @@ NOGREP_LocalPoly   = "localPoly_Mkemb" "localPoly_e_int" "localPoly_e_bool"
 # nothing (it has no type argument to make concrete) and cost 2^n on the
 # nested, twice-used helpers in [nested].
 GREP_LocalPoly    += "let a = (fun y" "let b = (fun y" "let c = (fun y"
+
+# A dependent inductive parameter list ({| printable a |} after a:Type) has to
+# be opened before its sorts are looked at.
+GREP_DepParams     = "type .a depParams_labelled = { tag : string; value : .a }"
+NOGREP_DepParams   = "p_int"
+
+# Section 3.2c: a Mono argument that mentions a runtime value is specialized
+# on its *shape*, with the runtime parts passed as extra parameters.  The
+# dictionary's code is static (p_int's printer is called directly, and the
+# record never appears at runtime) and its data is not (the tag arrives as an
+# argument).  The closure case is the same mechanism and leaves no closure at
+# all.
+GREP_MonoHoles     = "monoHoles_render__0" "monoHoles_twice__0"
+NOGREP_MonoHoles   = "set_tag" "fun y"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.

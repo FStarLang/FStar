@@ -549,6 +549,81 @@ dictionary-passing for those call sites, which is a genuine performance cliff
 and therefore must be **manual opt-in**, not inference.  Out of scope for v1;
 v1 rejects, per option 1.
 
+### 3.2c Arguments that are *partly* runtime: hole abstraction
+
+Case (b) above is stated as though an argument were either wholly known at
+specialization time or wholly unknown.  Real code produces a third shape far
+more often than either: an argument whose *structure* is static and some of
+whose *leaves* are runtime values.  The case that forced this was
+`FStarC.Syntax.Embeddings.Base`:
+
+```fstar
+let embed_simple (#a:Type) {| e : embedding a |} (x:a) = ...
+// at a use site, with [ta] an ordinary runtime value:
+let emb = set_type ta e_any in
+... e_sealed emb ...
+```
+
+`emb` looks unused, but F\* selects it as a *local instance*, so the dictionary
+`e_sealed (set_type ta e_any)` is what reaches a `Mono` binder.  Every method in
+it is statically known; only `ta` is not.  Rejecting the call throws away all
+of the former because of a little of the latter, and no annotation can fix it —
+`ta` is an honest runtime value, so promoting a binder to `Mono` (option 2)
+does not apply either.
+
+So Custard specializes on the argument's **skeleton** and passes its runtime
+leaves as ordinary extra parameters.  Concretely, for a call whose `Mono`
+arguments are `w1..wk`:
+
+1. Collect the free names of the normalized `w1..wk`.  These are the *holes*.
+   They are free names of an already-normalized term, so they are leaves:
+   nothing more can be learned about them.  Abstracting maximal
+   runtime-dependent *subterms* instead would just degenerate into ordinary
+   dictionary passing.
+2. Replace each `wj` by `fun v1..vn -> wj`, over the *same* list of holes for
+   every argument, so that a value occurring in two arguments stays one
+   parameter.
+3. Key on those abstractions.  Nothing else is needed to make the key
+   canonical: the key printer already prints binders by sort and bound
+   variables by de Bruijn index, so alpha-equivalent skeletons print
+   identically and share a specialization.
+4. Emit the specialization with the hole binders appended to its own, and pass
+   the holes at the call site in the same order.
+
+The specialization's signature is therefore `poly ++ holes`, and holes are
+ordered by their de Bruijn index so that the order cannot depend on the order
+the arguments happened to be visited in.
+
+The number of holes is part of the key (`sk_holes`), because the abstraction
+step is not injective on terms alone: an argument genuinely written as
+`fun (x:int) -> x` and an argument `x` with one `int` hole abstracted produce
+the *same term* and differ only in arity.
+
+This composes.  If a specialized callee passes one of its own hole parameters
+to a further `Mono` binder, that becomes a hole there too, and the requirement
+propagates outward until it reaches a call site where the value is concrete.
+
+It also subsumes a case §3.2 never claimed to handle.  A closure argument
+`twice (fun y -> y + k)` has static structure and one runtime leaf `k`, so it
+specializes: the closure is inlined into the specialization and `k` is passed
+as an `int`.  That is defunctionalization, falling out of the same mechanism —
+compare §3.2's "function arguments" discussion, which anticipated needing an
+explicit closure-conversion pass to get here.
+
+**Two things are still rejected**, and deliberately.
+
+- *A hole whose sort is a type.*  Types are erased under uniform compilation
+  (§5.0), so there would be nothing to pass at runtime.  This stays the case
+  (b) rejection it has always been, and option 2's promotion is the fix.
+- *An argument that is nothing but a hole* — a bare variable.  Here the
+  skeleton carries no information at all, and abstracting it would silently
+  turn monomorphization into ordinary runtime passing: exactly the invisible
+  performance cliff that option 3 was rejected for, and exactly what the
+  `Mono` annotation exists to make visible.  §3.2c widens what may be
+  specialized; it does not weaken the guarantee.  The error names the runtime
+  parameter, so the fix — mark it `[@@monomorphize]` in the caller, or drop
+  the annotation on the callee's binder — is a local one.
+
 ### 3.3 The extraction loop
 
 State:
@@ -3181,11 +3256,16 @@ against `src/**/*.fst` turns up, in rough order of size:
 
    `ta` is a runtime argument, so the dictionary reaching `embed_simple`'s
    `Mono` binder is a runtime value, and no amount of annotation makes it
-   known at specialization time.  This is the §3.2b line working as designed
-   rather than a gap: it is the "stored in a runtime data structure" case, and
-   compiling it needs the dictionary passing that §3.2b exists to avoid.  It
-   wants either an `[@@custard_extern]` realization for these primops or the
-   opt-in fallback that has always been out of scope for v1.
+   known at specialization time.
+
+   This was first read as the "stored in a runtime data structure" case,
+   wanting an `[@@custard_extern]` realization or the opt-in dictionary
+   passing that is out of scope for v1.  That reading was wrong, and looking
+   at the term rather than the category is what corrected it: the dictionary
+   is not a runtime value, it is a *static skeleton with one runtime leaf*.
+   Every method in `e_sealed (set_type ta e_any)` is known; only `ta` is not.
+   That is now §3.2c, which specializes on the skeleton and passes `ta` as an
+   ordinary parameter, and `Sealed.ops` goes through.
 
    So the conclusion, with better evidence than the first attempt: the
    rejections are neither rare nor deep.  They are all one thing — a generic
@@ -3200,11 +3280,12 @@ against `src/**/*.fst` turns up, in rough order of size:
 
    M7 is *not*, however, the whole remaining story, as an earlier draft of
    this section claimed on the strength of a single root.  Pushing past
-   `sort_by` immediately produced the `Sealed.ops` case below, which is a
-   dictionary built from a runtime value and which no inference can promote.
-   The honest summary is that generic helpers are the *common* case and M7
-   handles them; runtime-built dictionaries are a second, rarer case that
-   needs `extern` realizations or opt-in dictionary passing.
+   `sort_by` immediately produced the `Sealed.ops` case above, a second and
+   quite different root that no inference can promote; §3.2c handles it.  The
+   pattern across this whole exercise is worth stating plainly, because it has
+   now repeated three times: each blocker looked like a deep limitation when
+   named as a category, and turned out to be a specific and fixable shape when
+   read as a term.
 
 8. **Extraction ran away, and it was §5.11's fault, not the normalizer's.**
    With §5.11 in place `FStarC.TypeChecker.Normalize.normalize` consumed 73GB
@@ -3277,7 +3358,8 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
 | M9b | Exceptions (§8.5): `TExn`, the `DExn` producer, `raise`/`try_with` rules | Done. `tests/custard/Exceptions.fst`; OCaml only |
 | M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
-| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`.  Conclusion in §12.8 item 5: M7 is a prerequisite, and handles the common case but not all of it.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), local functions blocking specialization (§5.11), an inline marker escaping newtype collapse (§5.2), and keys not seeing through local `let`s (§3.2b).  Also found: §5.11 must be restricted to polymorphic locals or extraction blows up exponentially (§12.8 item 8), and `Primops.Sealed.ops` builds a dictionary from a runtime value, which no annotation can fix |
+| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`.  Conclusion in §12.8 item 5: M7 is a prerequisite, and handles the common case but not all of it.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), local functions blocking specialization (§5.11), an inline marker escaping newtype collapse (§5.2), and keys not seeing through local `let`s (§3.2b).  Also found: §5.11 must be restricted to polymorphic locals or extraction blows up exponentially (§12.8 item 8), and `Primops.Sealed.ops` builds a dictionary from a runtime value, which motivated §3.2c |
+| M9e | §3.2c hole abstraction: specialize on a `Mono` argument's skeleton, pass its runtime leaves as parameters | Done. `Extract.mono_holes`/`split_mono_args`/`specialize`, `sk_holes` in the key; `tests/custard/MonoHoles.fst` covers the dictionary and the closure case.  Unblocks `Primops.Sealed.ops`; subsumes closure arguments, which §3.2 had expected to need a separate defunctionalization pass.  Found and fixed on the way: `Sig_inductive_typ` parameters were used unopened, so a dependent parameter (`{| monoid m |}` after `m:Type`) crashed the normalizer, and constructor applications and patterns dropped only *erased* parameters while the type declaration dropped *all* of them, so a typeclass-parameterized inductive got the wrong constructor arity (`tests/custard/DepParams.fst`) |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |
 | M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | |

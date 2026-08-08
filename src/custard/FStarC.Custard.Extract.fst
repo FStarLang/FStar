@@ -230,6 +230,7 @@ and key_of_lb (lb:S.letbinding) : ML string =
 
 let string_of_key (k:spec_key) : ML string =
   Ident.string_of_lid k.sk_lid ^
+  (if k.sk_holes = 0 then "" else "/" ^ show k.sk_holes) ^
   (k.sk_args |> List.map (fun (i, t) -> "#" ^ show i ^ "=" ^ key_of_term t)
              |> String.concat "")
 
@@ -489,7 +490,7 @@ let rec request (st:state) (k:spec_key) : ML name =
     | Some ty_lid ->
       (* A data constructor is part of its inductive's declaration, not a
          declaration of its own: request the type and emit nothing. *)
-      let _ = request st { sk_lid = ty_lid; sk_args = []; sk_subst = [] } in
+      let _ = request st { sk_lid = ty_lid; sk_args = []; sk_subst = []; sk_holes = 0 } in
       nm
     | None ->
       let saved = !st.chain in
@@ -498,7 +499,7 @@ let rec request (st:state) (k:spec_key) : ML name =
          what an *internal* failure -- a [failwith] from the normalizer, say --
          reports, and without it such a failure names no definition at all. *)
       let d = E.with_ctx ("While extracting " ^ key) (fun () ->
-                extract_lid st l nm k.sk_subst) in
+                extract_lid st l nm k.sk_subst k.sk_holes) in
       st.chain := saved;
       SMap.add st.emitted key d;
       st.order := key :: !st.order;
@@ -651,7 +652,7 @@ and ty_of_fv (st:state) (fv:fv) (args:list term) : ML cty =
        F*, so it is never requested and its F* definition is never seen. *)
     match Builtins.lookup_rule l with
     | Some (Builtins.Rule_type f) -> f args
-    | _ -> TApp (request st { sk_lid = l; sk_args = []; sk_subst = [] }, args)
+    | _ -> TApp (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }, args)
 
 (* -------------------------------------------------------------------- *)
 (* Terms                                                                *)
@@ -667,7 +668,7 @@ and constant_of_sconst (c:sconst) : ML (option constant) =
   | _ -> None
 
 and ty_of_constant (st:state) (c:constant) : ML cty =
-  let prim (l:Ident.lident) : ML cty = TApp (request st { sk_lid = l; sk_args = []; sk_subst = [] }, []) in
+  let prim (l:Ident.lident) : ML cty = TApp (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }, []) in
   match c with
   | CUnit -> TUnit
   | CBool _ -> prim PC.bool_lid
@@ -1049,6 +1050,26 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
               (List.fold_left (fun x a -> join_eff x a.eff)
                               (apply_eff e.ty (List.length extra)) extra)
 
+(* Which of a constructor's arguments do not survive, positionally.
+
+   Two separate reasons.  The leading [num_ty_params] arguments are the
+   *inductive's* parameters, which every constructor re-binds but which the
+   emitted type does not store -- [extract_inductive] drops all of them, so a
+   constructor application and a constructor pattern have to drop exactly the
+   same ones or they disagree about the arity.  Erasure alone is not the same
+   test: a parameter can be a typeclass dictionary, which is not erased where
+   it stands but is still not a field.  The remaining arguments are the real
+   fields, and those go by erasure as usual. *)
+and ctor_dropped_flags (st:state) (l:Ident.lident) : ML (list bool) =
+  let n_params = match TcEnv.lookup_sigelt (tcenv st) l with
+                 | Some { sigel = Sig_datacon {num_ty_params} } -> num_ty_params
+                 | _ -> 0 in
+  match TcEnv.try_lookup_lid (tcenv st) l with
+  | Some ((_, ty), _) ->
+    Mono.erased_binders (tcenv st) ty
+    |> List.mapi (fun i erased -> erased || i < n_params)
+  | None -> []
+
 and repeat_unit (n:int) : ML (list unit) =
   if n <= 0 then [] else () :: repeat_unit (n - 1)
 
@@ -1057,17 +1078,18 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
   ensure_lid_available st l;
   if is_data_ctor fv
   then
-    let nm = request st { sk_lid = l; sk_args = []; sk_subst = [] } in
-    let flags, ufs = match TcEnv.try_lookup_lid (tcenv st) l with
-                     | Some ((_, ty), _) -> (Mono.erased_binders (tcenv st) ty,
-                                             Mono.unit_binders (tcenv st) ty)
-                     | None -> ([], []) in
+    let nm = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
+    let flags = ctor_dropped_flags st l in
+    let ufs = match TcEnv.try_lookup_lid (tcenv st) l with
+              | Some ((_, ty), _) -> Mono.unit_binders (tcenv st) ty
+              | None -> [] in
     mk (ECtor (nm, value_args st (drop_flagged flags ufs) (drop_flagged flags args)))
        (ctor_result_ty st l args) E_Pure
   else
     let cs = binder_classes st l in
-    let margs, msubst, rest = split_mono_args st l cs args in
-    let key = { sk_lid = l; sk_args = margs; sk_subst = msubst } in
+    let margs, msubst, rest, holes = split_mono_args st l cs args in
+    let key = { sk_lid = l; sk_args = margs; sk_subst = msubst;
+                sk_holes = List.length holes } in
     let nm = request st key in
     (* Uniform compilation (section 5.0) deletes the type arguments from the
        value spine, but the karamel backend still needs them: it is karamel's
@@ -1079,6 +1101,9 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     (* [split_mono_args] has already removed the [Mono] and [Dropped]
        arguments, so everything left is passed at runtime. *)
     let rest = value_args st (call_unit_flags st l cs args) rest in
+    (* Section 3.2c: the values abstracted out of the [Mono] arguments are
+       passed after the [Poly] ones, in the order [specialize] binds them. *)
+    let rest = rest @ List.map (fun (v:S.bv) -> expr_of_term st (S.bv_to_name v)) holes in
     match rest with
     | [] -> hd
     | _ ->
@@ -1167,8 +1192,8 @@ and callee_sig (st:state) (key:string) (tyargs:list cty) : ML cty =
    Returns the key arguments, the terms to substitute into the body, and the
    remaining spine. *)
 and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
-  : ML (list (int & term) & list (int & term) & args) =
-  if not (has_mono cs) && not (has_dropped cs) then ([], [], spine)
+  : ML (list (int & term) & list (int & term) & args & list S.bv) =
+  if not (has_mono cs) && not (has_dropped cs) then ([], [], spine, [])
   else
     let n_args = List.length spine in
     let rec go (i:int) (cs:list bclass) (sp:args) (margs:list (int & term))
@@ -1187,8 +1212,9 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
         check_mono_arg st l i t;
         let w = norm_bounded st what subst_norm_steps a0 in
         (* Full reduction can eliminate a free variable that weak reduction
-           leaves behind ([fst (x, 1)]), and the body must stay closed. *)
-        let w = if is_empty (Free.names w) then w else t in
+           leaves behind ([fst (x, 1)]); if that happens the two disagree
+           about what is a hole, so use the reduced one for both. *)
+        let w = if subset (Free.names w) (Free.names t) then w else t in
         go (i + 1) cs sp ((i, t) :: margs) ((i, w) :: msubst) rest
       | Mono :: _, [] ->
         (* Section 3.2(a): partial application of a specializing definition. *)
@@ -1201,7 +1227,42 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       | Poly :: _, []
       | Dropped :: _, [] -> (List.rev margs, List.rev msubst, List.rev rest)
     in
-    go 0 cs spine [] [] []
+    let margs, msubst, rest = go 0 cs spine [] [] [] in
+    (* Section 3.2c: whatever the [Mono] arguments still mention of the
+       runtime becomes a parameter of the specialization instead of a reason
+       to reject the call. *)
+    let holes = mono_holes st l margs msubst in
+    match holes with
+    | [] -> (margs, msubst, rest, [])
+    | _ ->
+      (* One shared list of holes across all the [Mono] arguments, so that a
+         value occurring in two of them is one parameter and not two. *)
+      let abs (t:term) : ML term = U.abs (List.map S.mk_binder holes) t None in
+      (List.map (fun (i, t) -> (i, abs t)) margs,
+       List.map (fun (i, t) -> (i, abs t)) msubst,
+       rest, holes)
+
+(* Section 3.2c: the runtime values a call's [Mono] arguments still mention,
+   in a deterministic order.
+
+   Everything here is a *free name* of an already normalized argument, so it
+   is a value the enclosing definition receives at runtime and nothing more
+   can be learned about it.  Two kinds have to be told apart.  A name whose
+   sort is a type cannot become a runtime parameter, because types are erased
+   and there would be nothing to pass; that stays the section 3.2b rejection
+   it has always been.  Any other name is an ordinary value, and passing it is
+   exactly what this does. *)
+and mono_holes (st:state) (l:Ident.lident)
+               (margs:list (int & term)) (msubst:list (int & term))
+  : ML (list S.bv) =
+  let names_of (acc:list S.bv) (it:int & term) : ML (list S.bv) =
+    List.fold_left (fun acc v ->
+                      if List.existsb (S.bv_eq v) acc then acc else acc @ [v])
+                   acc (elems (Free.names (snd it))) in
+  let vs = List.fold_left names_of [] (margs @ msubst) in
+  (* Sorted so that the order cannot depend on the order the arguments happen
+     to be visited in, which would make the key unstable. *)
+  List.sortWith (fun a b -> a.index - b.index) vs
 
 (* Section 5.11: is this local binding a function that should be substituted
    at its uses instead of compiled as a closure?
@@ -1283,19 +1344,49 @@ and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
    the check happens *after* canonicalization, so an argument computed out of
    another [Mono] value (a projection out of a dictionary, say) has already
    been reduced to a closed term and is accepted. *)
+(* Section 3.2b, narrowed by section 3.2c.  A [Mono] argument may mention
+   runtime *values*: those are abstracted out and passed at runtime.  What it
+   still may not mention is a runtime *type*, because types are erased and
+   there would be nothing to pass at runtime -- the specialization would have
+   to be chosen by a value that does not exist in the emitted program. *)
 and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
-  let free = elems (Free.names t) in
-  match free with
+  (* An argument that is *nothing but* a runtime value has no shape to
+     specialize on, and abstracting it would silently turn monomorphization
+     into ordinary runtime passing -- which is the performance cliff the
+     [Mono] annotation exists to make visible.  Section 3.2c widens what may
+     be specialized; it does not remove the guarantee.  So a bare variable is
+     still rejected, and it is the case the user can act on: either the value
+     should have been static, or the binder should not have been marked. *)
+  (match (SS.compress t).n with
+   | Tm_name v ->
+     custard_error st E.Error_CustardCannotMonomorphize [
+       text ("The argument passed to the monomorphized binder number " ^ show i ^
+             " of " ^ Ident.string_of_lid l ^ " is the runtime parameter " ^
+             Ident.string_of_id v.ppname ^ ", so there is nothing to \
+             specialize on.");
+       text ("Mark " ^ Ident.string_of_id v.ppname ^ " with [@@monomorphize] in \
+             the enclosing definition so that it, too, is known at \
+             specialization time, or drop the annotation on binder " ^ show i ^
+             " and pass it at runtime.")
+     ]
+   | _ -> ());
+  let is_type_name (v:S.bv) : ML bool =
+    match (SS.compress v.sort).n with
+    | Tm_type _ -> true
+    | _ -> false in
+  match elems (Free.names t) |> List.filter is_type_name with
   | [] -> ()
   | v :: _ ->
     custard_error st E.Error_CustardCannotMonomorphize [
       text ("The argument passed to the monomorphized binder number " ^ show i ^
             " of " ^ Ident.string_of_lid l ^ " is not known at specialization \
-            time: it mentions the runtime parameter " ^
+            time: it mentions the runtime type parameter " ^
             Ident.string_of_id v.ppname ^ ".");
       text ("Mark " ^ Ident.string_of_id v.ppname ^ " with [@@monomorphize] in \
             the enclosing definition so that it, too, is known at \
-            specialization time.")
+            specialization time.  (A runtime *value* would be passed at \
+            runtime instead -- see section 3.2c -- but a type is erased, so \
+            there would be nothing to pass.)")
     ]
 
 (* The effect of a call: we know it exactly, because the callee has already
@@ -1338,17 +1429,16 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
        nothing implicit, and the two paths disagreeing produces a constructor
        pattern of the wrong arity. *)
     let l = S.lid_of_fv fv in
-    let flags = match TcEnv.try_lookup_lid (tcenv st) l with
-                | Some ((_, ty), _) -> Mono.erased_binders (tcenv st) ty
-                | None -> [] in
+    let flags = ctor_dropped_flags st l in
     let pats = drop_flagged flags pats |> List.map (fun (p, _) -> pat_of_pat st p) in
-    PCtor (request st { sk_lid = l; sk_args = []; sk_subst = [] }, pats)
+    PCtor (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }, pats)
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
 
-and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) : ML decl =
+and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
+                (n_holes:int) : ML decl =
   let se = TcEnv.lookup_sigelt (tcenv st) l |> Option.map fixup_extract_as in
   (* A rule declared by the definition's own attributes wins over the built-in
      table, so that a program can override a rule it does not like. *)
@@ -1377,7 +1467,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) 
       text ("Custard cannot find a definition for " ^ Ident.string_of_lid l ^ ".")
     ]
   | Some se ->
-    let d = extract_sigelt st l nm margs se in
+    let d = extract_sigelt st l nm margs n_holes se in
     let d = if is_opaque then with_no_newtype d else d in
     if is_inlinable se then with_inline d else d
 
@@ -1422,7 +1512,8 @@ and with_no_newtype (d:decl) : ML decl =
     DType { t with dt_flags = NoNewtype :: List.filter (fun f -> not (Erased? f)) t.dt_flags }
   | d -> d
 
-and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term)) (se:sigelt)
+and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
+                   (n_holes:int) (se:sigelt)
   : ML decl =
   match se.sigel with
   | Sig_let {lbs=(is_rec, lbs)} ->
@@ -1436,7 +1527,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
        then (let d = extract_type_abbrev st nm lb in
              if is_erasable st se || is_prop_sig st lb.lbtyp
              then with_erased_flag d else d)
-       else extract_letbinding st l nm lb is_rec margs
+       else extract_letbinding st l nm lb is_rec margs n_holes
      | None -> DExternal { dx_name = nm; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] })
 
   | Sig_declare_typ {t} ->
@@ -1464,7 +1555,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
              match se.sigel with
              | Sig_inductive_typ {lid} -> Ident.lid_equals lid l
              | _ -> false) with
-     | Some se -> extract_sigelt st l nm margs se
+     | Some se -> extract_sigelt st l nm margs n_holes se
      | None -> DType { dt_name = nm; dt_params = []; dt_body = TAbstract; dt_flags = [] })
 
   | _ ->
@@ -1535,7 +1626,28 @@ and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
    definitions that are eta-short, that have more binders than their type
    shows, or that are not syntactically lambdas at all. *)
 and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int & term))
+               (n_holes:int)
   : ML (term & comp & list bclass & binders) =
+  (* Section 3.2c.  Each [Mono] argument arrives abstracted over the same
+     [n_holes] runtime values, so they are re-opened under *one* shared set of
+     fresh binders -- a value that occurred in two arguments has to stay one
+     parameter -- and those binders are appended to the specialization's own.
+     The call site passes them in the same order. *)
+  let hbs, margs =
+    match margs with
+    | (_, a0) :: _ when n_holes > 0 ->
+      let bs0, _, _ = U.abs_formals a0 in
+      let hbs = List.splitAt n_holes bs0 |> fst
+                |> List.map (fun (b:S.binder) ->
+                     S.mk_binder (S.new_bv None b.binder_bv.sort)) in
+      let hargs = hbs |> List.map (fun (b:S.binder) -> S.as_arg (S.bv_to_name b.binder_bv)) in
+      let inst (t:term) : ML term =
+        norm_bounded st "a monomorphized argument"
+                     [TcEnv.AllowUnboundUniverses; TcEnv.Beta]
+                     (U.mk_app t hargs) in
+      hbs, List.map (fun (i, t) -> (i, inst t)) margs
+    | _ -> [], margs
+  in
   let bs, c = U.arrow_formals_comp ty in
   let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
              (spine:args) (poly:binders) (polycs:list bclass)
@@ -1561,18 +1673,20 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
            ((S.bv_to_name bv, U.aqual_of_binder b) :: spine) (b' :: poly) (cls :: polycs)
   in
   let spine, poly, polycs, c = go 0 bs cs [] [] [] [] in
+  let poly = poly @ hbs in
+  let polycs = polycs @ List.map (fun _ -> Poly) hbs in
   let applied = match spine with [] -> def | _ -> U.mk_app def spine in
   (* The chain in the error names the definition, so "a body" is enough. *)
   let body = norm_bounded st "a definition body" custard_norm_steps applied in
   (U.abs poly body None, c, polycs, poly)
 
 and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
-                       (is_rec:bool) (margs:list (int & term)) : ML decl =
+                       (is_rec:bool) (margs:list (int & term)) (n_holes:int) : ML decl =
   let cs = binder_classes st l in
   (* Lifted local functions are named after whatever encloses them. *)
   let saved_cur = !st.cur in
   st.cur := nm;
-  let def, c, polycs, poly = specialize st lb.lbtyp lb.lbdef cs margs in
+  let def, c, polycs, poly = specialize st lb.lbtyp lb.lbdef cs margs n_holes in
   let bs, body, _ = U.abs_formals def in
   (* [abs_formals] opens the binders under fresh names, but [c] still speaks of
      the ones [specialize] abstracted over.  Left unrelated, the two sets of
@@ -1657,6 +1771,12 @@ and field_ty (st:state) (b:S.binder) : ML cty =
   | _ -> t
 
 and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : ML decl =
+  (* [Sig_inductive_typ] stores its parameters closed, so a parameter whose
+     sort mentions an earlier one -- a typeclass dictionary [{| monoid m |}]
+     standing after its [m:Type] is the usual case -- still holds a de Bruijn
+     index.  Anything that inspects a sort, [is_type_binder] first among them,
+     has to see a name there instead. *)
+  let params = SS.open_binders params in
   let _, ctors = TcEnv.datacons_of_typ (tcenv st) l in
   let n_params = List.length params in
   (* Only the *type* parameters become parameters of the target type; a value
@@ -1703,8 +1823,8 @@ let dump_specializations (st:state) : ML unit =
 
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML program =
   let mark (f:flag) (l:Ident.lident) : ML unit =
-    let key = string_of_key { sk_lid = l; sk_args = []; sk_subst = [] } in
-    let _ = request st { sk_lid = l; sk_args = []; sk_subst = [] } in
+    let key = string_of_key { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
+    let _ = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
     (* Mark the root so backends know which symbols must survive. *)
     match SMap.try_find st.emitted key with
     | Some (DLet d) ->

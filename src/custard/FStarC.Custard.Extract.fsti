@@ -45,6 +45,19 @@ type spec_key = {
      identity, so it must be fully reduced, while what goes into the body
      should be reduced no further than it takes to see the value's head. *)
   sk_subst: list (int & FStarC.Syntax.Syntax.term);
+  (* Section 3.2c.  A [Mono] argument may mention runtime values -- a
+     dictionary built out of one, a closure over one -- and when it does, the
+     parts that are runtime are abstracted out of it and passed at runtime
+     instead.  [sk_holes] is how many were abstracted; every term in
+     [sk_args] and [sk_subst] is then a lambda over exactly that many
+     binders, shared between them, and the specialization takes that many
+     extra parameters after its [Poly] ones.
+
+     It has to be part of the key.  Abstracting a runtime [int] out of an
+     argument produces the same term as an argument that was written as a
+     function of an [int]; the two are different specializations with
+     different arities, and only the count tells them apart. *)
+  sk_holes: int;
 }
 
 val state : Type0
