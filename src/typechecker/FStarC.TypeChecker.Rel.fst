@@ -4268,6 +4268,32 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
     let sub_prob : worklist -> term -> rel -> term -> string -> ML (prob & worklist) =
         fun wl t1 rel t2 reason -> mk_t_problem wl [] orig t1 rel t2 None reason in
 
+    (* The logical content of  M res1 (requires pre1) (ensures post1)  <:
+       M res2 (requires pre2) (ensures post2),  namely
+         pre2 ==> pre1   /\   pre2 ==> (forall x. post1 x ==> post2 x).
+       The witness comes from the left-hand computation, so it is quantified at
+       [res1] and the logical content of that type is available too -- this is
+       what makes [Tot (squash phi)] a subtype of [Lemma (ensures phi)]. *)
+    let spec_subsumption_guard (res1:typ) pre1 post1 pre2 post2 : ML term =
+        (* A uvar occurring in the *expected* postcondition is only ever
+           constrained by this obligation, which is a proof obligation and not
+           a constraint on the term.  Record it so that, if it is still
+           unsolved when implicits are resolved, the error can say why. *)
+        Free.uvars post2 |> elems
+        |> List.iter (fun u ->
+             unsolvable_spec_uvars := UF.uvar_id u.ctx_uvar_head :: !unsolvable_spec_uvars);
+        let g_post =
+          if U.is_trivial_post post2
+          then U.t_true
+          else
+            let x = S.new_bv None res1 in
+            post_obligation x
+              (U.mk_conj_simp (Env.type_hypothesis env res1 (S.bv_to_name x))
+                              (U.apply_post post1 (S.bv_to_name x)))
+              (U.apply_post post2 (S.bv_to_name x)) in
+        U.mk_conj_simp (U.mk_imp pre2 pre1) (U.mk_imp pre2 g_post)
+    in
+
     let solve_eq c1_comp c2_comp g_lift =
         let _ = if !dbg_EQ
                 then Format.print2 "solve_c is using an equality constraint (%s vs %s)\n"
@@ -4293,14 +4319,18 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                    "effect universes" in
                  (univ_sub_probs ++ cons p empty), wl) (empty, wl) c1_comp.comp_univs c2_comp.comp_univs in
              let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
-             (* Pre- and postconditions are proof obligations, not part of the
-                identity of a computation type: relating them by unification
-                would reject a computation that merely has a *more precise*
-                specification than the expected one.  So even under an equality
-                constraint we relate the specifications logically, exactly as
-                subsumption does.  The exception is a specification that still
-                contains a unification variable: there we must unify, or the
-                uvar would be left unresolved. *)
+             (* EQ is what F* uses for invariant positions -- the arguments of a
+                type application, for instance -- so the specifications have to
+                be related by *unification*, not by a logical guard.  Relating
+                them logically would make every type constructor covariant in
+                the specifications it mentions, and would let a computation type
+                occurring negatively be silently widened (proving False).  It
+                would also be less complete than it looks: a failed unification
+                problem lets [solve_t] fall back to unfolding the head and
+                relating the two types contravariantly, whereas an SMT guard
+                commits to the invariant reading.  Subsumption -- which is what
+                should accept a merely more precise specification -- is
+                [solve_sub] below. *)
              let has_uvars (t:term) : ML bool = not (no_free_uvars t) in
              (* ... but only when the specification we would unify it against
                 carries information.  Where specifications are discarded (phase
@@ -4328,26 +4358,20 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                    else empty, wl
                  in
                  probs, U.mk_imp c2_comp.comp_pre c1_comp.comp_pre, wl
-               else if has_uvars c1_comp.comp_pre  || has_uvars c2_comp.comp_pre
-               || has_uvars c1_comp.comp_post || has_uvars c2_comp.comp_post
-               then
-                 let p1, wl = sub_prob wl c1_comp.comp_pre EQ c2_comp.comp_pre "effect precondition" in
-                 let p2, wl = sub_prob wl c1_comp.comp_post EQ c2_comp.comp_post "effect postcondition" in
-                 cons p1 (cons p2 empty), U.t_true, wl
                else
-                 let g_post =
-                   if U.is_trivial_post c2_comp.comp_post
-                   then U.t_true
-                   else
-                     let x = S.new_bv None c1_comp.result_typ in
-                     post_obligation x
-                       (U.mk_conj_simp (Env.type_hypothesis env c1_comp.result_typ (S.bv_to_name x))
-                                       (U.apply_post c1_comp.comp_post (S.bv_to_name x)))
-                       (U.apply_post c2_comp.comp_post (S.bv_to_name x)) in
-                 empty,
-                 U.mk_conj_simp (U.mk_imp c2_comp.comp_pre c1_comp.comp_pre)
-                                (U.mk_imp c2_comp.comp_pre g_post),
-                 wl
+                 let p1, wl = sub_prob wl c1_comp.comp_pre EQ c2_comp.comp_pre "effect precondition" in
+                 (* Relate the postconditions applied to a fresh witness rather
+                    than as terms: the two abstractions may well disagree on the
+                    *type* of their binder ([tc_comp] refines it by the
+                    precondition, a computed postcondition does not), and that
+                    difference is irrelevant to the specification they denote. *)
+                 let x = S.new_bv None c1_comp.result_typ in
+                 let p2, wl =
+                   mk_t_problem wl [S.mk_binder x] orig
+                     (U.apply_post c1_comp.comp_post (S.bv_to_name x)) EQ
+                     (U.apply_post c2_comp.comp_post (S.bv_to_name x))
+                     None "effect postcondition" in
+                 cons p1 (cons p2 empty), U.t_true, wl
              in
              let sub_probs : clist _ =
                univ_sub_probs ++
@@ -4377,24 +4401,21 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
     let solve_sub c1 (edge:edge) c2 =
         if problem.relation <> SUB then
           failwith "impossible: solve_sub";
+        (* An erasable computation may only be used where a non-erasable one is
+           expected if its result type is non-informative; otherwise a ghost
+           value would flow into extracted code.  [TcUtil.lift_comp] enforces
+           this on the bind/return path, and the lattice may well contain such
+           an edge (a user may declare one), so it has to be enforced here too. *)
+        if Env.is_erasable_effect env c1.effect_name
+        && not (Env.is_erasable_effect env c2.effect_name)
+        && not (N.non_info_norm env c1.result_typ)
+        then giveup wl (mklstr (fun () ->
+               Format.fmt3 "cannot lift erasable computation %s ~> %s: its result type %s is informative"
+                 (show c1.effect_name) (show c2.effect_name) (show c1.result_typ))) orig
+        else
         let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
-        let pre1, post1 = c1.comp_pre, c1.comp_post in
-        let pre2, post2 = c2.comp_pre, c2.comp_post in
-        let g_pre = U.mk_imp pre2 pre1 in
-        let g_post =
-          if U.is_trivial_post post2
-          then U.t_true
-          else
-            (* The witness comes from [c1], so it is quantified at [c1]'s result
-               type and the logical content of that type is available too --
-               this is what makes [Tot (squash phi)] a subtype of
-               [Lemma (ensures phi)]. *)
-            let x = S.new_bv None c1.result_typ in
-            post_obligation x
-              (U.mk_conj_simp (Env.type_hypothesis env c1.result_typ (S.bv_to_name x))
-                              (U.apply_post post1 (S.bv_to_name x)))
-              (U.apply_post post2 (S.bv_to_name x)) in
-        let g = U.mk_conj_simp g_pre (U.mk_imp pre2 g_post) in
+        let g = spec_subsumption_guard c1.result_typ
+                  c1.comp_pre c1.comp_post c2.comp_pre c2.comp_post in
         if !dbg_Rel then
           Format.print1 "Computation subtyping guard is (%s)\n" (show g);
         let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in

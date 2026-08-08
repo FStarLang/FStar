@@ -20,7 +20,7 @@ let aux_inj_type_powerset (f1 f2 : powerset (Type u#a))
   assert (f1 == f2)
   
 let inj_type_powerset () : Lemma (is_inj (type_powerset u#a u#b)) =
-  Classical.forall_intro_2 (fun f1 -> Classical.move_requires (aux_inj_type_powerset u#a u#b f1))
+  Classical.forall_intro_2 (Classical.move_requires_2 (aux_inj_type_powerset u#a u#b))
  
 (* let u' > u be universes. (u' = max(a+1, b), u=a below)
    The general structure of this proof is:

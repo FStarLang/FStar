@@ -103,6 +103,24 @@ Guidelines for the changelog:
     |                              | `let g (x:int) : Lemma (q x) = lem x in app g` |
     |                              | `introduce forall x. q x with lem x`        |
 
+  * Computation types are now invariant in their specification under an
+    equality constraint. Relating two computation types that occur as the
+    argument of a type application (e.g. `f (unit -> Lemma p)` and
+    `f (unit -> Lemma q)`) used to succeed whenever `p ==> q`, which made every
+    type constructor covariant in the specifications it mentions and was
+    unsound in negative positions. Ordinary subsumption -- which is what
+    accepts a merely more precise specification -- is unchanged, and so is the
+    meaning of a `$`-marked binder: it demands that the argument's *type* match
+    exactly, but its specification is still related by subsumption.
+
+  * The `GHOST ~> DIV` lift has been removed from `FStar.Pervasives`. A ghost
+    computation may only be used in a divergent (hence extracted) context when
+    its result type is non-informative, in which case it is promoted to `PURE`
+    first and reaches `DIV` through `PURE ~> DIV`. Code that relied on the old
+    edge, e.g. `let leak (x:int) : Dv int = ghost x`, is now rejected. The same
+    check is now also applied to computation subtyping, so it can no longer be
+    bypassed by an ascription.
+
 ## SMT
 
   * The kinding axiom for a non-total arrow type (`Typing for non-total
