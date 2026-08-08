@@ -54,8 +54,33 @@ Selects NBE for extraction-time normalization in `FStarC.Extraction.ML.Term` and
 
 Selects NBE for tactic execution (`FStarC.Tactics.Interpreter`, `Options.tactics_nbe`).
 
-**This flag is currently broken.** `TAC` is a layered effect and NBE cannot reify
-it, so essentially any tactic fails with an assertion. It should not be used.
+**This flag is still unusable**, but for one reason rather than two.
+
+*Blocker 1 (fixed).* A tactic registered as a native plugin had
+`interpretation_nbe = dummy_interp`, an unconditional `failwith` ("No
+interpretation for `FStar.Tactics.Typeclasses.mk_class`"). It now gets a real
+NBE interpretation, built by reading the arguments back into syntax, running the
+syntactic interpretation, and translating the result — which is why `nbe_cbs`
+carries a `readback` callback next to `iapp` and `translate`. That was reachable
+from *any* NBE reduction meeting such a primitive, not just from this flag.
+
+*Blocker 2 (not fixed; now explicit).* `TAC` is a **layered** effect, and NBE's
+`translate_monadic` / `translate_monadic_lift` implement only the plain-effect
+protocol. They used to build a malformed application and report it as `NBE
+ill-typed application: Unknown`; they now fail up front naming the effect. A
+real port has to mirror, from `Normalize`:
+
+- the layered `bind_inst_args` argument convention — `bind a b <one unit per
+  index binder> <2 ranges if the decl has `bind_has_range_args`> f g`, rather
+  than `bind a b wp_f f wp_g g`;
+- real universes from `env.universe_of` (NBE currently passes `U_unknown`, and
+  readback of a universe variable is a `failwith`);
+- `reify_lift`'s layered case, which deliberately uses the *lift* rather than
+  the target's `return`, because that is what verification used;
+- `Div`-let reduction under `steps.tactics`.
+
+Until then, tactics run on the call-by-name normalizer; a tactic that wants NBE
+can ask for it per-request with the `nbe` step, see (4).
 
 ### 4. The `nbe` norm step in source
 
