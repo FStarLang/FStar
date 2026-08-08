@@ -188,6 +188,8 @@ NOGREP_Library = library_unused "let _ ="
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.
 REJECT_TESTS += MonoPoly
+REJECT_TESTS += MonoEffect
+CODE_MonoEffect = 363
 REJECT_TESTS += MonoPartial
 REJECT_TESTS += MonoFuel
 REJECT_TESTS += NormBudget

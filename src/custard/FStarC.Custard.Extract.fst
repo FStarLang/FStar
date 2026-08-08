@@ -276,6 +276,11 @@ type state = {
      stale entry can never be found by a different variable and nothing is
      ever removed. *)
   letdefs: SMap.t S.term;
+  (* Names bound to an *effectful* right-hand side, which [letdefs]
+     deliberately does not record.  Kept only so that section 3.2's rejection
+     can tell a runtime parameter apart from a computation's result: the two
+     need entirely different advice. *)
+  effletdefs: SMap.t unit;
 }
 
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
@@ -292,6 +297,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   lifted  = SMap.create 20;
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
   letdefs = SMap.create 100;
+  effletdefs = SMap.create 100;
 }
 
 (* Just enough to fire the redexes that substituting a local function creates,
@@ -777,7 +783,8 @@ and expr_of_term (st:state) (t:term) : ML expr =
           [lbeff], which in an [ML] function reports [ML] for a perfectly pure
           right-hand side. *)
        if e1.eff = E_Pure then
-         SMap.add st.letdefs (show bv.index) lb.lbdef;
+         SMap.add st.letdefs (show bv.index) lb.lbdef
+       else SMap.add st.effletdefs (show bv.index) ();
        let e2 = expr_of_term st body in
        mk (ELet (name_of_bv bv, ty_of_typ st lb.lbtyp, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
      | Inr _ ->
@@ -1359,16 +1366,31 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
      should have been static, or the binder should not have been marked. *)
   (match (SS.compress t).n with
    | Tm_name v ->
-     custard_error st E.Error_CustardCannotMonomorphize [
-       text ("The argument passed to the monomorphized binder number " ^ show i ^
-             " of " ^ Ident.string_of_lid l ^ " is the runtime parameter " ^
-             Ident.string_of_id v.ppname ^ ", so there is nothing to \
-             specialize on.");
-       text ("Mark " ^ Ident.string_of_id v.ppname ^ " with [@@monomorphize] in \
-             the enclosing definition so that it, too, is known at \
-             specialization time, or drop the annotation on binder " ^ show i ^
-             " and pass it at runtime.")
-     ]
+     let nm = Ident.string_of_id v.ppname in
+     let where = "the monomorphized binder number " ^ show i ^ " of " ^
+                 Ident.string_of_lid l in
+     (* Whether the name stands for a parameter or for the result of an
+        effectful [let] decides what can be done about it, so the two get
+        different messages.  Suggesting [@@monomorphize] for a computation's
+        result would be advice that cannot be followed. *)
+     if Some? (SMap.try_find st.effletdefs (show v.index))
+     then
+       custard_error st E.Error_CustardCannotMonomorphize [
+         text ("The argument passed to " ^ where ^ " is " ^ nm ^ ", the result \
+               of an effectful computation.  It has no value at specialization \
+               time: the computation runs when the program runs, and may give \
+               a different answer each time it does.");
+         text "Specializing on it is not merely unsupported but wrong -- there is no one value to specialize on, and baking the computation into each specialization would re-run it.  This shape needs the value passed at runtime, which for a typeclass dictionary means real dictionary passing; section 3.2 keeps that out of v1 deliberately, as it is the performance cliff monomorphization exists to avoid."
+       ]
+     else
+       custard_error st E.Error_CustardCannotMonomorphize [
+         text ("The argument passed to " ^ where ^ " is the runtime parameter " ^
+               nm ^ ", so there is nothing to specialize on.");
+         text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
+               definition so that it, too, is known at specialization time, or \
+               drop the annotation on binder " ^ show i ^ " and pass it at \
+               runtime.")
+       ]
    | _ -> ());
   let is_type_name (v:S.bv) : ML bool =
     match (SS.compress v.sort).n with
