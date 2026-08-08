@@ -327,7 +327,7 @@ let act_as_m1
     (#t:Type u#1)
     (a:action st t)
 : Dv (m u#s u#1 u#(max 1 b) t a.pre a.post)
-= let k (x:U.raise_t t)
+= let k (x:U.raise_t u#1 u#(max 1 b) t)
     : Dv (m t (a.post (U.downgrade_val x)) a.post) 
     = Ret (U.downgrade_val x)
   in
@@ -338,7 +338,7 @@ let act_as_m2
     (#t:Type u#2)
     (a:action st t)
 : Dv (m u#s u#2 u#(max 2 b) t a.pre a.post)
-= let k (x:U.raise_t t)
+= let k (x:U.raise_t u#2 u#(max 2 b) t)
     : Dv (m t (a.post (U.downgrade_val x)) a.post) 
     = Ret (U.downgrade_val x)
   in

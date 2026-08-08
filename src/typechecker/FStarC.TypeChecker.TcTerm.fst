@@ -3142,7 +3142,15 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
             if Env.is_type_constructor env f.fv_name
             then t
             else match Env.lookup_definition [Env.Unfold delta_constant] env f.fv_name with
-                 | None -> t
+                 | None ->
+                   (* Projectors and discriminators have no definition; they are
+                      reduced primitively by Normalize.reduce_disc_proj, which
+                      needs the scrutinee in weak head normal form. *)
+                   if None? (Env.disc_proj_qual env f.fv_name) then t
+                   else
+                     let t' = N.normalize [Env.Beta; Env.Iota; Env.Weak;
+                                           Env.UnfoldUntil delta_constant] env t in
+                     if U.term_eq t' t then t else aux false t'
                  | Some head_def_ts ->
                    let _, head_def = Env.inst_tscheme_with head_def_ts us in
                    let t' = S.mk_Tm_app head_def args t.pos in

@@ -330,12 +330,6 @@ val monoid__uu___haseq: Prims.l_True /\
 
 
 
-
-
-
-
-
-
 let intro_monoid m u581 mult = Monoid.Monoid u581 mult () () () <: Prims.Pure (Monoid.monoid m)
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
@@ -438,9 +432,6 @@ val monoid_morphism__uu___haseq: forall (a: Type)
 
 
 
-
-
-
 let intro_monoid_morphism f ma mb =
   Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
 let embed_nat_int n = n <: Prims.int
@@ -492,10 +483,6 @@ val left_action__uu___haseq: Prims.l_True /\
         Prims.hasEq (Prims.squash (Monoid.mult_act_lemma m a mm.mult act)) /\
         Prims.hasEq (Prims.squash (Monoid.unit_act_lemma m a mm.unit act))) ==>
     Prims.hasEq (Monoid.left_action mm a))
-
-
-
-
 
 
 

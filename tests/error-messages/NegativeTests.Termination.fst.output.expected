@@ -148,8 +148,8 @@
         (forall (x: NegativeTests.Termination.snat).
             {:pattern Prims.guard_free (k x)}
             k x) ==>
-        (~(O? (n, m)._1) /\ ~(S? (n, m)._1) ==> Prims.l_False) /\
-        (~(O? (n, m)._1) ==>
+        (~(O? n) /\ ~(S? n) ==> Prims.l_False) /\
+        (~(O? n) ==>
           (forall (b: NegativeTests.Termination.snat)
               (b: NegativeTests.Termination.snat).
               (n, m) == (NegativeTests.Termination.S b, b) ==>
@@ -167,10 +167,8 @@
         (forall (x: NegativeTests.Termination.snat).
             {:pattern Prims.guard_free (k x)}
             k x) ==>
-        (~(O? (n, 42)._1 && (n, 42)._2 = 42) /\
-          ~(S? (n, 42)._1 && (n, 42)._2 = 42) ==>
-          Prims.l_False) /\
-        (~(O? (n, 42)._1 && (n, 42)._2 = 42) ==>
+        (~(O? n && true) /\ ~(S? n && true) ==> Prims.l_False) /\
+        (~(O? n && true) ==>
           (forall (b: NegativeTests.Termination.snat).
               (n, 42) == (NegativeTests.Termination.S b, 42) ==>
               NegativeTests.Termination.S b << n))

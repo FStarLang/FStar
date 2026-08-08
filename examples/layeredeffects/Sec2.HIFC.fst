@@ -70,7 +70,10 @@ let reads #a #p #q (f:hst a p q) (reads:label) =
 (* The respects flows refinement *)
 let flow = label & label //from, to
 let flows = list flow
-let has_flow_1 (from to:loc) (f:flow) = from `Set.mem` fst f /\ to `Set.mem` snd f
+(* Note: destructuring [f] here (rather than using [fst]/[snd]) keeps the SMT
+   encoding of the flow relation in terms of the primitive field projectors,
+   which the proofs of [test2] and friends below rely on. *)
+let has_flow_1 (from to:loc) (f:flow) = let (r, w) = f in from `Set.mem` r /\ to `Set.mem` w
 let has_flow (from to:loc) (fs:flows) = (exists rs. rs `List.Tot.memP` fs /\ has_flow_1 from to rs)
 let no_leakage_k #a #p #q (f:hst a p q) (from to:loc) (k:int) =
   forall (s0:store{p s0}).{:pattern (upd s0 from k)}

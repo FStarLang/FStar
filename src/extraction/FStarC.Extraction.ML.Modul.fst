@@ -778,6 +778,11 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : ML (uenv & iface) =
       extract_bundle_iface g se
 
     | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
+      //Don't extract projectors returning types---not useful for typing generated code and
+      //And can actually break F# extraction, in case there are unused type parameters
+      if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+      then g, empty_iface
+      else
       let env, iface, _ =
           extract_type_declaration g true lid se.sigquals se.sigattrs univs t
       in
@@ -1050,6 +1055,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
 
     | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
       //extracting `assume type t : k`
+      //Don't extract projectors returning types---not useful for typing generated code and
+      //And can actually break F# extraction, in case there are unused type parameters
+      if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+      then g, []
+      else
       let env, _, impl = extract_type_declaration g false lid se.sigquals se.sigattrs univs t in
       env, impl
 
@@ -1118,26 +1128,25 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
 
     | Sig_let _ -> extract_sig_let g se
 
-    | Sig_declare_typ {lid; t} ->
+    | Sig_declare_typ {lid; us; t} ->
       let quals = se.sigquals in
       if quals |> List.contains Assumption
       && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
       then let always_fail =
              { se with sigel = Sig_let {lbs=(false, [always_fail lid t]); lids=[]} } in
-           let g, mlm = extract_sig g always_fail in //extend the scope with the new name
-           match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-           | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
-             g, [mk_mlmodule1 (MLM_Loc (Util.mlloc_of_range se.sigrng));
-                 Term.ind_discriminator_body g lid l]
-
-           | _ ->
-             begin match BU.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
-                   (* TODO : this could fail, it happens that projectors for variants are assumed *)
-                   | Some _ -> //it must be a record projector, since other projectors are not assumed
-                     g, [] //records are extracted as ML records; no projectors for them
-                   | _ ->
-                     g, mlm //in all other cases, generate mlm, a stub that always fails
-             end
+           let disc_proj =
+             match quals |> List.tryFind (fun q -> Discriminator? q || Projector? q) with
+             | None -> None
+             | Some q -> N.disc_proj_lb (tcenv_of_uenv g) lid us t q
+           in
+           match disc_proj with
+           | Some lb ->
+             (* Rebuild and extract the definition the typechecker no longer emits. *)
+             extract_sig g { se with sigel = Sig_let {lbs=(false, [lb]); lids=[]};
+                                     sigquals = se.sigquals |> List.filter (fun q -> not (Assumption? q)) }
+           | None ->
+             let g, mlm = extract_sig g always_fail in //extend the scope with the new name
+             g, mlm //in all other cases, generate mlm, a stub that always fails
       else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
                      //or, it must be erased
 

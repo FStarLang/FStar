@@ -892,6 +892,92 @@ let num_datacon_non_injective_ty_params env lid : ML _ =
       if injective_type_params then Some 0 else Some num_ty_params
     | _ -> None
 
+let num_datacon_ty_params env lid : ML _ =
+  match lookup_qname env lid with
+    | Some (Inr ({ sigel = Sig_datacon {num_ty_params} }, _), _) -> Some num_ty_params
+    | _ -> None
+
+(* The data constructor's fv_qual (as DsEnv.fv_qual_of_se computes it), its
+   number of type parameters, and its (unopened) binders.  Used by extraction to
+   rebuild the bodies of declaration-only projectors/discriminators. *)
+let datacon_decl env (lid:lident) : ML (option (fv_qual & int & tscheme)) =
+  match lookup_qname env lid with
+  | Some (Inr ({ sigel = Sig_datacon {ty_lid; us; t; num_ty_params}; sigquals }, _), _) ->
+    let fvq =
+      match BU.find_map sigquals (function
+              | RecordConstructor (_, fs) -> Some (Record_ctor (ty_lid, fs))
+              | _ -> None)
+      with
+      | Some q -> q
+      | None -> Data_ctor
+    in
+    Some (fvq, num_ty_params, (us, t))
+  | _ -> None
+
+let disc_proj_qual env (l:lident) : ML (option qualifier) =
+  (* Auto-generated projectors and discriminators are named
+     [__proj__C__item__f] and [uu___is_C]; neither prefix can appear in a
+     source name, so this cheap test avoids a qname lookup for every other
+     name.  This matters: Normalize.reduce_disc_proj consults this on every
+     application it rebuilds. *)
+  let n = string_of_id (ident_of_lid l) in
+  if not (BU.starts_with n U.field_projector_prefix
+          || BU.starts_with n (Ident.reserved_prefix ^ "is_"))
+  then None
+  else
+  match lookup_qname env l with
+  | Some (Inr ({ sigquals=quals }, _), _) ->
+    quals |> List.tryPick (function
+      | Projector (d, f) -> Some (Projector (d, f))
+      | Discriminator d -> Some (Discriminator d)
+      | _ -> None)
+  | _ -> None
+
+(* For a projector or discriminator [l], compute everything needed to reduce it
+   applied to a constructor:
+     - its qualifier;
+     - [n_indexed]: the number of arguments preceding the scrutinee, i.e. the
+       inductive's parameters *and* indices, which are exactly the binders of
+       its kind;
+     - for a projector, the position of the projected field among the
+       constructor's arguments (parameters included).
+   Returns None if [l] is not a projector/discriminator, or if the field cannot
+   be located. *)
+let disc_proj_info env (l:lident) : ML (option (qualifier & int & option int)) =
+  match disc_proj_qual env l with
+  | None -> None
+  | Some q ->
+    let d = match q with
+            | Projector (d, _) -> d
+            | Discriminator d -> d
+            | _ -> failwith "disc_proj_info: impossible" in
+    let n_indexed =
+      let ty_lid = typ_of_datacon env d in
+      let (_, k), _ = lookup_lid env ty_lid in
+      List.length (fst (U.arrow_formals_comp_ln k))
+    in
+    (match q with
+     | Discriminator _ -> Some (q, n_indexed, None)
+     | _ ->
+       match num_datacon_ty_params env d with
+       | None -> None
+       | Some n_ty_params ->
+         let _, ctor_t = lookup_datacon env d in
+         let bs, _ = U.arrow_formals_comp_ln_strict ctor_t in
+         if List.length bs < n_ty_params then None else
+         let _, fields = BU.first_N n_ty_params bs in
+         (* Recover the field index by rebuilding the projector's name the same
+            way TcInductive generated it; this handles unnamed fields too. *)
+         let idx =
+           fields |> List.mapi (fun j b -> (j, b))
+                  |> List.tryPick (fun (j, b) ->
+                       if Ident.lid_equals (U.mk_field_projector_name d b.binder_bv j) l
+                       then Some j else None)
+         in
+         match idx with
+         | None -> None
+         | Some j -> Some (q, n_indexed, Some (n_ty_params + j)))
+
 let visible_with delta_levels quals : ML _ =
   delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
 
@@ -936,7 +1022,16 @@ let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : ML (delta_depth) =
         then delta_equational
         else delta_constant
       in
-      if se.sigquals |> BU.for_some (Assumption?)
+      (* A projector or discriminator that is declared but not defined is still
+         definitionally transparent: Normalize.reduce_disc_proj reduces it
+         structurally, and the SMT encoder axiomatizes it against the theory of
+         datatypes.  It must therefore *not* be treated as abstract, or the
+         unifier would consider it rigid and fail hard on goals that used to be
+         deferred to the solver.  Delta_equational_at_level 1 is the depth its
+         Sig_let used to get: an abstraction over a match. *)
+      if se.sigquals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false)
+      then Delta_equational_at_level 1
+      else if se.sigquals |> BU.for_some (Assumption?)
         && not (se.sigquals |> BU.for_some (New?))
       then Delta_abstract d0
       else d0

@@ -208,7 +208,6 @@ type comp_ascription = {
 let empty_ascription = { annotated=None; elaborated=None }  
 
 (* terms with STT types *)
-[@@ no_auto_projectors]
 noeq
 type st_term' =
   | Tm_Return { 
