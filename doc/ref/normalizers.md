@@ -108,6 +108,20 @@ make it — e.g. a function passed as an argument can show up as a `fun` literal
 a position the normalizer would leave as an `fv`. Removing this means abandoning
 CBV, i.e. abandoning NBE.
 
+**Source ranges.** Readback attaches the ranges NBE recorded while building the
+semantic value, which are not always the ones the normalizer would have carried
+through. The difference is invisible in a normal form but shows up in the
+location an error is reported at, and occasionally in whether a "See also"
+secondary location is emitted at all.
+
+Because of the last two, `tests/error-messages` does **not** diff clean under
+`--use_nbe true`, and is not expected to: its golden files record ranges and
+printed ascriptions, not just normal forms. As of this writing `AssertNorm`,
+`Bug1997`, `Calc` and `QuickTest` differ, all three ways — dropped `<: prop`
+ascriptions, differently numbered unification variables, and shifted ranges. The
+VC bodies themselves are identical. Everything else in `tests/` diffs clean
+under the flag.
+
 ## Writing a differential test
 
 Regression tests for engine agreement live in
