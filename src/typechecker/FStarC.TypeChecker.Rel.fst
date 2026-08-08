@@ -4357,7 +4357,8 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                         cons p1 empty, wl
                    else empty, wl
                  in
-                 probs, U.mk_imp c2_comp.comp_pre c1_comp.comp_pre, wl
+                 probs |> CList.map (fun p -> [], p),
+                 U.mk_imp c2_comp.comp_pre c1_comp.comp_pre, wl
                else
                  let p1, wl = sub_prob wl c1_comp.comp_pre EQ c2_comp.comp_pre "effect precondition" in
                  (* Relate the postconditions applied to a fresh witness rather
@@ -4371,17 +4372,23 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                      (U.apply_post c1_comp.comp_post (S.bv_to_name x)) EQ
                      (U.apply_post c2_comp.comp_post (S.bv_to_name x))
                      None "effect postcondition" in
-                 cons p1 (cons p2 empty), U.t_true, wl
+                 cons ([], p1) (cons ([S.mk_binder x], p2) empty), U.t_true, wl
              in
-             let sub_probs : clist _ =
-               univ_sub_probs ++
-               (cons ret_sub_prob <|
+             let scoped_sub_probs : clist (binders & prob) =
+               (univ_sub_probs |> CList.map (fun p -> [], p)) ++
+               (cons ([], ret_sub_prob) <|
                 spec_probs ++
-                (g_lift.deferred |> CList.map (fun (_, _, p) -> p)))
+                (g_lift.deferred |> CList.map (fun (_, _, p) -> [], p)))
              in
-             let sub_probs : list _ = to_list sub_probs in
+             let scoped_sub_probs : list (binders & prob) = to_list scoped_sub_probs in
+             let sub_probs : list prob = List.map snd scoped_sub_probs in
              let guard =
-               let guard = U.mk_conj_l (spec_guard :: List.map p_guard sub_probs) in
+               (* The postcondition problem lives under the witness binder, so
+                  its guard has to be closed before it can be conjoined here. *)
+               let guard =
+                 U.mk_conj_l (spec_guard ::
+                   List.map (fun (scope, p) -> close_forall (p_env wl orig) scope (p_guard p))
+                            scoped_sub_probs) in
                match g_lift.guard_f with
                | Trivial -> guard
                | NonTrivial f -> U.mk_conj guard f in

@@ -123,7 +123,7 @@ let lemma_mod_add_3 (a b c:int) (p:pos)
 = lemma_mod_add_distr_l (a + b) c p;
   lemma_mod_add_distr_l (a + c) b p
 
-#push-options "--ifuel 0 --fuel 2"
+#push-options "--z3rlimit_factor 2 --ifuel 0 --fuel 2"
 #restart-solver
 let aux (x: str nat) (base: nat) (prime:nat { prime > 0 }) (i: nat) (j: nat { i+1 < j /\ j <= Seq.length x })
   (h_lsd: nat { h_lsd == base * hash x base prime (i+1) (j-1) })

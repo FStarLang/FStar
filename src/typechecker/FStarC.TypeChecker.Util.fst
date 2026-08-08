@@ -1470,23 +1470,45 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp &
             (if use_eq then "$:" else "<:")
             (show c');
   (* [use_eq] (a [$]-marked binder, or an equality-typed ascription) demands
-     that the *type* match exactly, so that no implicit argument is solved from
-     it.  A specification, however, is a proof obligation rather than part of
-     the identity of a computation, so it is always related by subsumption:
-     a term is free to guarantee more than it was asked to. *)
-  let g_eq =
+     that the annotation match exactly, so that unification, rather than
+     subtyping, is what relates the two and implicit arguments can be solved
+     from the computed computation type.  This is what makes the [$f] idiom of
+     [FStar.Classical.forall_intro] work: the implicit [p] occurs only in the
+     postcondition of [f]'s type, and is solved by unifying that postcondition
+     with the one computed for the argument.
+
+     Unification is however too strong to *demand* of a specification: a term
+     is free to guarantee more than it was asked to, e.g. a lambda passed to a
+     [$]-binder whose expected postcondition is trivial still computes a
+     postcondition of its own.  So the specification is unified only when
+     there is something to solve in it --- and related by subsumption
+     otherwise.  Note that the *result type* is related by equality either way;
+     that much is essential, as it is what keeps a [$]-binder from being
+     instantiated by subtyping. *)
+  let spec_has_uvars (c:comp) : ML bool =
+    not (Free.uvars (U.comp_pre c) |> is_empty)
+    || not (Free.uvars (U.comp_post c) |> is_empty) in
+  let eq_result_and_subsume () =
+    match Rel.try_teq true env (U.comp_result c) (U.comp_result c') with
+    | None -> None
+    | Some g_eq ->
+      match Rel.sub_comp env c c' with
+      | None -> None
+      | Some g -> Some (g_eq ++ g) in
+  let g =
     if use_eq
-    then Rel.try_teq true env (U.comp_result c) (U.comp_result c')
-    else Some Env.trivial_guard in
-  match g_eq with
-  | None -> Err.computed_computation_type_does_not_match_annotation_eq env (Env.get_range env) e c c'
-  | Some g_eq ->
-  match Rel.sub_comp env c c' with
+    then if spec_has_uvars c || spec_has_uvars c'
+         then match Rel.eq_comp env c c' with
+              | Some g -> Some g
+              | None -> eq_result_and_subsume ()
+         else eq_result_and_subsume ()
+    else Rel.sub_comp env c c' in
+  match g with
     | None ->
         if use_eq
         then Err.computed_computation_type_does_not_match_annotation_eq env (Env.get_range env) e c c'
         else Err.computed_computation_type_does_not_match_annotation env (Env.get_range env) e c c'
-    | Some g -> e, c', g_eq ++ g
+    | Some g -> e, c', g
 
 (*
  * The universe of a computation type [M t (requires pre) (ensures post)].
