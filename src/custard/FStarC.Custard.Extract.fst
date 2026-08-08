@@ -293,6 +293,14 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   letdefs = SMap.create 100;
 }
 
+(* Just enough to fire the redexes that substituting a local function creates,
+   and nothing else: this runs on the enclosing body, which is code, so any
+   further reduction here would be reduction of the emitted program. *)
+let local_inline_steps : list TcEnv.step = [
+  TcEnv.AllowUnboundUniverses;
+  TcEnv.Beta;
+]
+
 let custard_norm_steps : list TcEnv.step = [
   TcEnv.AllowUnboundUniverses;
   TcEnv.EraseUniverses;
@@ -722,6 +730,13 @@ and expr_of_term (st:state) (t:term) : ML expr =
     (match lb.lbname with
      | Inl bv ->
        let bv, body = SS.open_term_bv bv body in
+       if inlinable_local st lb then
+         (* Section 5.11: a local function is substituted at its uses rather
+            than compiled as a closure, so that each use instantiates its type
+            and its [Mono] arguments concretely. *)
+         expr_of_term st (N.normalize local_inline_steps (tcenv st)
+                                      (SS.subst [NT (bv, U.unmeta lb.lbdef)] body))
+       else
        let e1 = if TcUtil.must_erase_for_extraction (tcenv st) lb.lbtyp &&
                    U.is_pure_or_ghost_effect lb.lbeff
                 then unit_expr
@@ -1159,6 +1174,35 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       | Dropped :: _, [] -> (List.rev margs, List.rev msubst, List.rev rest)
     in
     go 0 cs spine [] [] []
+
+(* Section 5.11: is this local binding a function that should be substituted
+   at its uses instead of compiled as a closure?
+
+   Only functions, and only pure ones.  A local function is the one construct
+   that has no top-level identity, so it can be neither specialized nor
+   annotated: its type parameters and its [Mono] arguments are whatever its
+   single definition site says they are, which is to say runtime-opaque, and
+   every call it makes into a specializing definition is a section 3.2b
+   rejection.  Substituting it gives each use its own instantiation, which is
+   what the caller meant and what a monomorphizing compiler owes it.
+
+   Only the shape of the definition is consulted, not [lbeff]: binding a
+   lambda builds a closure and is pure whatever the function itself does, and
+   [lbeff] reports the *function's* effect -- [ML] for every local helper in
+   an [ML] definition, which is most of them.  For the same reason the shape
+   is read through [unmeta]: a local helper in an [ML] definition arrives as
+   [Meta_monadic_lift (PURE, ALL)] around its [Tm_abs], the lift of a pure
+   *value* into the ambient effect, which carries no computational content and
+   would otherwise hide every such helper from this test.  Custard computes
+   effects from the IR arrow it builds, not from these markers, so dropping
+   them changes nothing about the emitted code.
+
+   A local [let rec] cannot be substituted and is lambda-lifted instead
+   (section 5.10). *)
+and inlinable_local (st:state) (lb:S.letbinding) : ML bool =
+  match (SS.compress (U.unmeta lb.lbdef)).n with
+  | Tm_abs _ -> true
+  | _ -> false
 
 (* Replace the local [let]-bound variables of a [Mono] argument by what they
    are bound to, to a fixpoint.

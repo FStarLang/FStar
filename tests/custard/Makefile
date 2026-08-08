@@ -27,6 +27,7 @@ CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += LocalRec
 CUSTARD_TESTS += NewtypeInline
 CUSTARD_TESTS += SortBy
+CUSTARD_TESTS += LocalPoly
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -83,6 +84,12 @@ NOGREP_NewtypeInline = "newtypeInline_step" "inline"
 # ever built at run time.
 GREP_SortBy     = "sortBy_sort_by__int" "sortBy_sort_desc__int" "sortBy_cmp__int_1"
 NOGREP_SortBy   = "sortBy_Mkord" "type .*sortBy_ord"
+
+# The local polymorphic helper is substituted at its uses, so the specializing
+# function it calls gets one copy per type and no dictionary survives.
+GREP_LocalPoly     = "localPoly_try_unembed__int" "localPoly_try_unembed__bool" \
+                     "localPoly_un__int" "localPoly_un__bool"
+NOGREP_LocalPoly   = "localPoly_Mkemb" "localPoly_e_int" "localPoly_e_bool"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.

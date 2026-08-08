@@ -1635,6 +1635,55 @@ Occurrences of a lifted name in the body of the enclosing definition become
 `EQual (nm, tyargs)` applied to the captures.  The partial application is pure:
 the binders the user actually wrote are always still missing.
 
+### 5.11 Local functions are inlined
+
+A non-recursive local `let` whose definition is a lambda is substituted at its
+uses rather than compiled as a closure.
+
+A local function is the one construct with no top-level identity: it cannot be
+specialized, because specialization is keyed on a `lid`, and it cannot be
+annotated, because `[@@monomorphize]` is read off a top-level signature.  So
+its type parameters and its arguments are whatever its single definition site
+says they are — runtime-opaque — and *every* call it makes into a specializing
+definition is a §3.2b rejection.  Substituting it gives each use its own
+instantiation, which is what the author meant and what a monomorphizing
+compiler owes them.
+
+This is not a corner case.  `FStarC.TypeChecker.Primops.Sealed.ops` is
+written as
+
+```fstar
+let try_unembed (#a:Type) (e:embedding a) (x:term) : ML (option a) =
+  try_unembed x id_norm_cb
+in
+match try_unembed e_any ta, try_unembed (e_sealed e_any) s, ... with
+```
+
+— a local helper fixing one argument of a specializing function and used at
+several types.  Inlined, each use instantiates `a` concretely and the whole
+thing specializes; left alone, it is a hard rejection with no annotation
+available to fix it.
+
+Two details matter in the implementation:
+
+- The test reads the definition's shape through `unmeta`.  A local helper
+  inside an `ML` definition arrives as `Meta_monadic_lift (PURE, ALL)` wrapped
+  around its `Tm_abs` — the lift of a pure *value* into the ambient effect.
+  It carries no computational content, but it hides the lambda from a naive
+  `compress`-and-match, which is enough to make the whole pass silently do
+  nothing.
+- `lbeff` is *not* consulted.  Binding a lambda builds a closure and is pure
+  whatever the function goes on to do; `lbeff` reports the function's own
+  effect, which is `ML` for most local helpers.
+
+Duplication is the obvious worry and in practice there is none to speak of:
+across `tests/custard` the change moved exactly one file, by five lines, and
+`FStarC.Syntax.Print.term_to_string` grew by 1%.  `Simplify` was already
+collapsing most of these at the IR level; what is new is that the *extractor*
+now sees through them, which is what §3.2b needs.
+
+A local `let rec` cannot be substituted and is lambda-lifted instead (§5.10).
+
 ---
 
 ## 6. Simplification and emission
@@ -3057,25 +3106,44 @@ against `src/**/*.fst` turns up, in rough order of size:
    `int` copy is literally `op_Subtraction`, and no `ord` record is ever built
    at run time.  `tests/custard/SortBy.fst` is this example.
 
-   With `sort_by` annotated by hand, `FStarC.Main.main` advances to
-   `FStarC.TypeChecker.Primops.Sealed.ops`, and the blocker there is a *local*
-   helper of exactly the same shape:
-
-   ```fstar
-   let try_unembed (#a:Type) (e:embedding a) (x:term) : ML (option a) =
-     try_unembed x id_norm_cb
-   ```
+   With `sort_by` annotated by hand, `FStarC.Main.main` advanced to
+   `FStarC.TypeChecker.Primops.Sealed.ops`, whose blocker was a *local* helper
+   of the same shape — and that one needed no annotation at all, only §5.11's
+   inlining, because a local function has no signature to annotate.
 
    So the conclusion, with better evidence than the first attempt: the
    rejections are neither rare nor deep.  They are all one thing — a generic
    helper whose type parameter flows into a `Mono` position without being
-   `Mono` itself — the diagnostic already names the binder to annotate, and
-   the annotation always works.  What makes hand-annotation the wrong answer
-   is only that there are many of them, spread across the library, and that
-   some are local functions.  **M7's infer-and-promote is a prerequisite for
-   compiling F\* itself**, and it is also, on this evidence, the *whole*
-   remaining story for §3.2b.  It is not a prerequisite for §12: the two are
-   independent, and M10 can proceed on the code that already extracts.
+   `Mono` itself.  For a *local* helper §5.11 now resolves it outright.  For a
+   *top-level* one the diagnostic names the binder and the annotation always
+   works, so what makes hand-annotation the wrong answer is only that there
+   are many of them, spread across the library.  **M7's infer-and-promote is a
+   prerequisite for compiling F\* itself**, and it is also, on this evidence,
+   the whole remaining story for §3.2b.  It is not a prerequisite for §12: the
+   two are independent, and M10 can proceed on the code that already extracts.
+
+8. **Key normalization can diverge** (found immediately downstream of the
+   above, and *not* diagnosed yet).  With §5.11 in place,
+   `FStarC.TypeChecker.Normalize.normalize` gets past the primops and then
+   runs away: memory grows steadily at gigabytes per minute with the CPU
+   pegged, and it does not stop.  Bisecting on `--custard_fuel` puts the onset
+   immediately after request ~1784,
+   `FStarC.Syntax.Embeddings.Base.__proj__Mkembedding__item__em` — the `em`
+   field projector of the `embedding` record, being specialized on an
+   embedding value.
+
+   The important part is that it consumes *no fuel* while it runs away, so it
+   is not a runaway request loop: §3.6's budget bounds the number of
+   specializations, and nothing bounds the normalizer *within* the computation
+   of a single key.  `key_norm_steps` is deliberately the most aggressive
+   reduction in the pipeline (it has to be — a key is an identity), and
+   embeddings are exactly the kind of compositional, self-referential
+   dictionary value that gives such a reduction nothing to stop at.
+
+   This wants a bound on key normalization, and a diagnostic naming the
+   definition rather than a hang.  It is the first thing to look at after M7,
+   because M7 will make far more of the compiler reachable and this is what
+   is waiting there.
 
 6. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
@@ -3115,7 +3183,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
 | M9b | Exceptions (§8.5): `TExn`, the `DExn` producer, `raise`/`try_with` rules | Done. `tests/custard/Exceptions.fst`; OCaml only |
 | M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
-| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`, and with that annotated by hand at the next helper of identical shape.  Table and conclusion in §12.8 item 5: M7 is a prerequisite, and on this evidence the whole remaining story for §3.2b.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), an inline marker escaping newtype collapse (§5.2), and specialization keys not seeing through local `let`s (§3.2b, `tests/custard/SortBy.fst`) |
+| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`.  Table and conclusion in §12.8 item 5: M7 is a prerequisite and, on this evidence, the whole remaining story for §3.2b.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), local functions blocking specialization (§5.11), an inline marker escaping newtype collapse (§5.2), and keys not seeing through local `let`s (§3.2b).  Found and *not* fixed: key normalization can diverge (§12.8 item 8) |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |
 | M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | |
