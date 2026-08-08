@@ -127,10 +127,11 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
         let pats = visit_tm ff pats in
         C_Lemma pre post pats
 
-    | C_Eff us eff res args decrs ->
+    | C_Eff us eff res pre post decrs ->
         let res = visit_tm ff res in
-        let args = map (fun (a, q) -> (visit_tm ff a, q)) args in
+        let pre = visit_tm ff pre in
+        let post = visit_tm ff post in
         let decrs = map (visit_tm ff) decrs in
-        C_Eff us eff res args decrs
+        C_Eff us eff res pre post decrs
   in
   pack_comp cv'

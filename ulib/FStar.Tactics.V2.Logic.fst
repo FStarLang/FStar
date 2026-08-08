@@ -90,7 +90,7 @@ let pose_lemma (t : term) : Tac binding =
     | C_Lemma pre post _ -> pre, post
     (* [tcc] on an application returns the underlying [PURE] computation,
        with the [Lemma] abbreviation already unfolded. *)
-    | C_Eff _ _ res [(pre, _); (post, _)] _ ->
+    | C_Eff _ _ res pre post _ ->
       if not (term_eq res (`unit)) then fail "";
       pre, post
     | _ -> fail ""

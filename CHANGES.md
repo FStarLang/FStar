@@ -121,6 +121,17 @@ Guidelines for the changelog:
     check is now also applied to computation subtyping, so it can no longer be
     bypassed by an ascription.
 
+## Reflection
+
+  * `C_Eff` in the V2 computation view now carries the pre- and postcondition
+    directly, `C_Eff : universes -> name -> typ -> pre:term -> post:term ->
+    decreases:list term -> comp_view`, instead of an unconstrained
+    `eff_args : list argv`. The old shape made the assumed axiom
+    `inspect_pack_comp_inv` false, since `inspect_comp` always produced exactly
+    two explicit arguments while `pack_comp` silently discarded any others.
+    Tactics that matched on `C_Eff _ _ res [(pre,_); (post,_)] decrs` should
+    now match on `C_Eff _ _ res pre post decrs`.
+
 ## SMT
 
   * The kinding axiom for a non-total arrow type (`Typing for non-total

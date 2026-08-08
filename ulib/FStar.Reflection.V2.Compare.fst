@@ -253,8 +253,8 @@ and __compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
                 (fun () -> __compare_term s1 s2)
           )
 
-    | C_Eff us1 eff1 res1 args1 _decrs1,
-      C_Eff us2 eff2 res2 args2 _decrs2 ->
+    | C_Eff us1 eff1 res1 _pre1 _post1 _decrs1,
+      C_Eff us2 eff2 res2 _pre2 _post2 _decrs2 ->
         (* This could be more complex, not sure it is worth it *)
         lex (compare_universes us1 us2)
             (fun _ -> lex (compare_name eff1 eff2)
@@ -263,7 +263,7 @@ and __compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
     | C_Total _, _  -> Lt     | _, C_Total _ -> Gt
     | C_GTotal _, _  -> Lt    | _, C_GTotal _ -> Gt
     | C_Lemma _ _ _, _  -> Lt   | _, C_Lemma _ _ _ -> Gt
-    | C_Eff _ _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ _ -> Gt
+    | C_Eff _ _ _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ _ _ -> Gt
 
 and __compare_binder (b1 b2 : binder) : order =
     let bview1 = inspect_binder b1 in
