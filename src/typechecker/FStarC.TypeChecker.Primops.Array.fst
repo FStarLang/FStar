@@ -74,6 +74,7 @@ let mixed_ternary_op
 
 let bogus_cbs = {
     NBETerm.iapp = (fun h _args -> h);
+    NBETerm.readback = (fun _ -> failwith "cb readback");
     NBETerm.translate = (fun _ -> failwith "bogus_cbs translate");
 }
 

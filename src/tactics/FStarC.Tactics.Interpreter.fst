@@ -62,6 +62,26 @@ let embed {|embedding 'a|} r (x:'a) norm_cb = embed x r None norm_cb
 let unembed {|embedding 'a|} a norm_cb : ML (option 'a) = unembed a norm_cb
 
 let native_tactics_steps () : ML (list PO.primitive_step) =
+  (* Tactic plugins are compiled with a syntactic interpretation only:
+     FStarC.Extraction.ML.RegEmb registers them through `register_tactic`,
+     which has no NBE counterpart of `mk_tactic_interpretation_N`. Rather
+     than failing outright when NBE reaches one -- which is what
+     --__tactics_nbe used to do, e.g. "No interpretation for
+     FStar.Tactics.Typeclasses.mk_class" -- read the arguments back into
+     syntax, run the syntactic interpretation, and translate the result
+     back. This is the same round trip NBE already performs at the boundary
+     of any embedding, so it is no less faithful; it just gives up NBE's
+     speed inside the plugin. *)
+  let nbe_interp_from_syntactic (s : native_primitive_step)
+                                (cb : NBET.nbe_cbs)
+                                (us : universes)
+                                (args : NBET.args)
+    : ML (option NBET.t)
+    = let args = args |> List.map (fun (a, q) -> (NBET.readback_cb cb a, q)) in
+      match s.tactic PO.null_psc FStarC.Syntax.Embeddings.id_norm_cb us args with
+      | Some t -> Some (NBET.translate_cb cb t)
+      | None -> None
+  in
   let step_from_native_step (s: native_primitive_step) : ML PO.primitive_step =
     { name                         = s.name
     ; arity                        = s.arity
@@ -71,7 +91,7 @@ let native_tactics_steps () : ML (list PO.primitive_step) =
     ; requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
     ; renorm_after                 = false
     ; interpretation               = s.tactic
-    ; interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
+    ; interpretation_nbe           = nbe_interp_from_syntactic s
     }
   in
   List.map step_from_native_step (FStarC.Tactics.Native.list_all ())

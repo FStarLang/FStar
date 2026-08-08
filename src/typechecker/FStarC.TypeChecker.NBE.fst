@@ -930,6 +930,7 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
     let callbacks = {
       iapp = iapp cfg;
       translate = translate cfg [];
+      readback = readback cfg;
     } in
     begin
     match args with
@@ -944,6 +945,7 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
     let callbacks = {
       iapp = iapp cfg;
       translate = translate cfg [];
+      readback = readback cfg;
     } in
     match args with
     | [(t, _); (r, _)] -> (
@@ -996,6 +998,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): ML t =
                       let callbacks = {
                         iapp = iapp cfg;
                         translate = translate cfg bs;
+                        readback = readback cfg;
                       } in
                       debug (fun () -> Format.print1 "Caling primop with args = [%s]\n" (show args'));
                       let univs, rest = List.span (function ({nbe_t=Univ _ }, _) -> true | _ -> false) args' in

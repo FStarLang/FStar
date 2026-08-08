@@ -227,6 +227,9 @@ type annot = option t
 type nbe_cbs = {
    iapp : t -> args -> ML t;
    translate : term -> ML t;
+   (* The inverse of [translate]. Needed to run a primitive step that only has
+      a syntactic interpretation, such as a native tactic plugin. *)
+   readback : t -> ML term;
 }
 
 class embedding (a:Type0) = {
@@ -258,6 +261,7 @@ instance val showable_args : showable args
 
 val iapp_cb      : nbe_cbs -> t -> args -> ML t
 val translate_cb : nbe_cbs -> term -> ML t
+val readback_cb  : nbe_cbs -> t -> ML term
 
 val embed   : embedding 'a -> nbe_cbs -> 'a -> ML t
 val unembed : embedding 'a -> nbe_cbs -> t -> ML (option 'a)

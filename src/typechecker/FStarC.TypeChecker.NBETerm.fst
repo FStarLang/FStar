@@ -260,6 +260,7 @@ instance showable_args = {
 
 let iapp_cb cbs    h a : ML t = cbs.iapp h a
 let translate_cb cbs x : ML t = cbs.translate x
+let readback_cb  cbs x : ML term = cbs.readback x
 
 let embed   (#a:Type0) (e:embedding a) (cb:nbe_cbs) (x:a) : ML t = e.em cb x
 let unembed (#a:Type0) (e:embedding a) (cb:nbe_cbs) (trm:t) : ML (option a) = e.un cb trm
@@ -795,6 +796,7 @@ let e_norm_step =
 let bogus_cbs = {
     iapp = (fun h _args -> h);
     translate = (fun _ -> failwith "bogus_cbs translate");
+    readback = (fun _ -> failwith "bogus_cbs readback");
 }
 
 let arg_as_int    (a:arg) : ML (option int) = fst a |> unembed e_int bogus_cbs
