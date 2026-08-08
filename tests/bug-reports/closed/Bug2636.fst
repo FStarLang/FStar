@@ -2,7 +2,6 @@ module Bug2636
 open FStar.Tactics.V2
 
 
-open FStar.Nonempty
 
 type prop_with_pre (p : prop) (pf : squash p) : Type0
   = | PropWithPre

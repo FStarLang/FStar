@@ -42,6 +42,50 @@ Guidelines for the changelog:
     (The PulseCore model currently defines `stt_div = stt`; a foundational model
     of divergence is future work.)
 
+## Core typechecker
+
+  * Fixes https://github.com/FStarLang/FStar/issues/4401. A top-level definition
+    whose body has a non-total effect (`Div`, `ML`, etc.) is only accepted if its
+    type is provably inhabited. Previously such definitions silently eliminated
+    divergence, which was unsound: `let bad : False = loop ()` typechecked with
+    only a warning.
+
+    Concretely, `let foo : ty = e` where `e` has a divergent effect now incurs an
+    extra proof obligation `nonempty ty`. This mirrors what Lean does for
+    `partial def`. The obligation is discharged automatically for a few obviously
+    inhabited types (`unit`, `bool`, `int`, `string`, `exn`, `prop`, `Type`,
+    `list a`, `option a`, and arrows into those). For any other type, supply a
+    witness with a top-level proof before the definition:
+
+    ```
+    let _ : nonempty (int & bool) = nonempty_intro (1, true)
+    let foo : int & bool = compute_int_and_bool ()
+    ```
+
+    The obligation is a *ground* fact, so it must be stated at exactly the type
+    F* computes. Note that a top-level definition is generalized, so for a
+    polymorphic definition the obligation is about the whole quantified type;
+    naming that type makes it easy to state the witness:
+
+    ```
+    let impossible_ty = #a:Type0 -> u:unit{False} -> Tot a
+    let _ : nonempty impossible_ty =
+      nonempty_intro #impossible_ty (fun (#a:Type0) (u:unit{False}) -> false_elim #a ())
+    val impossible : impossible_ty
+    let impossible = failwith "this won't happen"
+    ```
+
+    (Lemmas with `SMTPat (nonempty t)` are not yet useful here, since the facts
+    needed are ground and F* cannot currently register a trigger-free lemma.
+    Once it can, library patterns will discharge these obligations
+    automatically.)
+
+  * `nonempty` is now a lang item and lives in `Prims`; the module
+    `FStar.Nonempty` has been removed. Replace `FStar.Nonempty.nonempty` (and
+    `nonempty_intro`/`nonempty_elim`) with the corresponding `Prims` names, and
+    drop any `open FStar.Nonempty`. Note that `Prims.nonempty` is transparent,
+    whereas `FStar.Nonempty.nonempty` was abstract.
+
 ## Syntax
 
   * The `introduce`/`eliminate` sugar for logical connectives no longer binds

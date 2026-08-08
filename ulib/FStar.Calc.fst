@@ -19,7 +19,6 @@
 module FStar.Calc
 
 open FStar.Preorder
-open FStar.Nonempty
 
 [@@erasable]
 noeq

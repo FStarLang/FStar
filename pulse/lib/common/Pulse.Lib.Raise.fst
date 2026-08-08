@@ -15,7 +15,6 @@
 *)
 module Pulse.Lib.Raise
 open Pulse.Lib.NonInformative
-open FStar.Nonempty
 open FStar.ExtractAs
 module U = FStar.Universe
 
