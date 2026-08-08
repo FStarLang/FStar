@@ -376,4 +376,10 @@ let default_settings : list error_setting =
     Warning_ProofRecovery                             , CWarning, 359;
     Error_CannotResolveRecord                         , CAlwaysError, 360;
     Error_MissingPopOptions                           , CWarning, 361;
+    Error_CustardEntryNotFound                        , CAlwaysError, 362;
+    Error_CustardCannotMonomorphize                   , CAlwaysError, 363;
+    Error_CustardFuelExhausted                        , CAlwaysError, 364;
+    Error_CustardUnextractableEffect                  , CAlwaysError, 365;
+    Warning_CustardLostRepresentation                 , CWarning, 366;
+    Error_CustardNoCRepresentation                    , CAlwaysError, 367;
     ]

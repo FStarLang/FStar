@@ -35,6 +35,7 @@ type codegen_t =
   | Krml
   | Plugin
   | Extension
+  | Custard
 
 //let __test_norm_all = mk_ref false
 
@@ -206,6 +207,16 @@ val parse_codegen               : string  -> option codegen_t
 val codegen                     : unit    -> ML (option codegen_t)
 
 val codegen_libs                : unit    -> ML (list (list string))
+val custard_entries             : unit    -> ML (list string)
+val custard_main                : unit    -> ML (option string)
+val custard_dump_ir             : unit    -> ML bool
+val custard_dump_specializations: unit    -> ML bool
+val custard_dump_layouts: unit           -> ML bool
+val custard_warn_any            : unit    -> ML bool
+val custard_fuel                : unit    -> ML int
+val custard_max_specializations : unit    -> ML int
+val custard_monomorphize_types  : unit    -> ML bool
+val custard_backend             : unit    -> ML string
 
 val profile_group_by_decl       : unit    -> ML bool
 
