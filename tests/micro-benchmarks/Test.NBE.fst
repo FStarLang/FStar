@@ -218,3 +218,34 @@ let test_arity_behind_abbreviation (l:list int) =
     let b = norm_term (nbe::steps) t in
     if term_to_string a = term_to_string b then () else
     fail ("NBE and the normalizer disagree: " ^ term_to_string a ^ " vs " ^ term_to_string b))
+
+(* A local `let rec` has no delta level, so zeta is the only thing that can stop
+   it from unfolding. NBE used to ignore zeta entirely for local let recs, so
+   under a stuck match -- where all unfolding is supposed to stop -- `aux_nbe`
+   below kept unrolling and the normalizer never returned. Bug1622. *)
+let sprop_nbe = bool -> prop
+let pred_nbe (args: list bool) : sprop_nbe =
+  let rec aux_nbe (args:list bool) (out:sprop_nbe) : sprop_nbe =
+    match args with
+    | [] -> out
+    | a::q -> let out : sprop_nbe = fun s0 -> out s0 in aux_nbe q out
+  in aux_nbe args (fun _ -> True)
+
+let test_local_let_rec_under_stuck_match (args:list bool) =
+  assert True by (
+    let open FStar.Tactics.V2 in
+    let steps = [nbe; delta_only [`%pred_nbe; `%sprop_nbe]; iota; zeta; primops; unascribe] in
+    let t = (`(pred_nbe (`#(quote args)) true)) in
+    (* Termination is the property under test: before the fix this call never
+       returned. The two engines are not compared by printing here, because the
+       residual term contains a local `let rec`, on which they differ only in
+       the two accepted ways -- NBE drops the ascription on the body, and the
+       printer renders the eta-expanded binder differently. *)
+    let _ = norm_term steps t in ())
+
+(* And the same definition through an explicit norm request, which is what
+   Bug1622 originally reported: with --use_nbe true this used to loop. *)
+let test_local_let_rec_norm_request (args:list bool) : Lemma (pred_nbe args true) =
+  match args with
+  | [] -> assert_norm (pred_nbe args true)
+  | _ -> admit ()

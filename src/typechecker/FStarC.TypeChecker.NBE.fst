@@ -904,6 +904,16 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
          let should_reduce, _, _ =
            should_reduce_recursive_definition args decreases_list
          in
+         (* A fixpoint may only be unrolled when zeta is on, exactly as in the
+            normalizer's [Tm_let] case. This is the local-let-rec counterpart of
+            the [still_unfoldable] check on [TopLevelRec] above: local bindings
+            have no delta level, so zeta is the only thing that can stop them.
+            Without it a local [let rec] applied to symbolic arguments keeps
+            unfolding under [stuck_match_cfg] and diverges. *)
+         let should_reduce =
+           should_reduce &&
+           (cfg.core_cfg.steps.zeta || cfg.core_cfg.steps.zeta_full)
+         in
          //local let binding don't have universes
          if not should_reduce
          then mk <| LocalLetRec(i, lb, mutual_lbs, local_env, args, 0, decreases_list)
