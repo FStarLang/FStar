@@ -1469,12 +1469,24 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp &
             (show c)
             (if use_eq then "$:" else "<:")
             (show c');
-  match (if use_eq then Rel.eq_comp env c c' else Rel.sub_comp env c c') with
+  (* [use_eq] (a [$]-marked binder, or an equality-typed ascription) demands
+     that the *type* match exactly, so that no implicit argument is solved from
+     it.  A specification, however, is a proof obligation rather than part of
+     the identity of a computation, so it is always related by subsumption:
+     a term is free to guarantee more than it was asked to. *)
+  let g_eq =
+    if use_eq
+    then Rel.try_teq true env (U.comp_result c) (U.comp_result c')
+    else Some Env.trivial_guard in
+  match g_eq with
+  | None -> Err.computed_computation_type_does_not_match_annotation_eq env (Env.get_range env) e c c'
+  | Some g_eq ->
+  match Rel.sub_comp env c c' with
     | None ->
         if use_eq
         then Err.computed_computation_type_does_not_match_annotation_eq env (Env.get_range env) e c c'
         else Err.computed_computation_type_does_not_match_annotation env (Env.get_range env) e c c'
-    | Some g -> e, c', g
+    | Some g -> e, c', g_eq ++ g
 
 (*
  * The universe of a computation type [M t (requires pre) (ensures post)].

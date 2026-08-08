@@ -21,13 +21,13 @@ let ghost_one () : GTot int = 1
 
 assume val g: (u:unit) -> St unit
 
-[@@expect_failure [12;12]]
+[@@expect_failure [12;53]]
 let test (u:unit) : St unit
   = ghost_one (); //rightfully complains about int </: unit
     g(); // (used to crash extraction)
     ()
 
-[@@expect_failure [12]]
+[@@expect_failure [53]]
 let test2 (u:unit) : St unit
   = let _ = ghost_one () in //rightfully complains about Ghost nat not being composable with ST
     g(); // (used to crash extraction)
