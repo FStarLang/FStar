@@ -573,6 +573,26 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
          we would clobber previously-written checked files. *)
       | None -> FStarC.Parser.Dep.cache_file_name fn
     in
+    (* Never overwrite a checked file that is already there and valid. A module
+       can have more than one valid encoding of its checked file: checking
+       [M.fst] reveals the implementations of the modules it befriends, so the
+       sigelts recorded for [M.fsti] then point at those implementations rather
+       than at their interfaces, even though the dependence hashes are the same.
+       Rewriting a valid [M.fsti.checked] as a side effect of the [M.fst] job
+       silently invalidates every module that was already checked against the
+       file we are about to clobber. See #4399. *)
+    let already_valid =
+      None? (Options.output_to ())
+      && not (Options.force ())
+      && (match try_find_in_cache cache_file with
+          | Some (Valid _, _) -> true
+          | _ -> false)
+    in
+    if already_valid then
+      debug (fun () ->
+        Format.print1 "Not rewriting checked file %s: it is already present and valid\n"
+          cache_file)
+    else
     let parsing_data, deps_of_fn = parsing_data_and_direct_deps in
     let digest = hash_dependences (TcEnv.dep_graph env) fn deps_of_fn in
     match digest with

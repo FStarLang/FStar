@@ -572,7 +572,7 @@ and tc_one_file_no_frame
         let parsing_data, tc_result, mllib, env = tc_source_file () in
 
         if FStarC.Errors.get_err_count() = 0
-        && Options.should_check (string_of_lid tc_result.checked_module.name)
+        && Options.should_write_checked_file fn
         then begin
           Ch.store_module_to_cache (tcenv_of_uenv env) fn parsing_data tc_result
         end;

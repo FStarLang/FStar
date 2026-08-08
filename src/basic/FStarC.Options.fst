@@ -1945,6 +1945,17 @@ let should_check_file fn =
 let should_verify_file fn =
     should_verify (module_name_of_file_name fn)
 
+(* Whether a checked file should be written for [fn].
+   Unlike [should_check_file], this is about the *file*, not the module: running
+   [fstar.exe A.fst] verifies A.fsti too, but it must not write A.fsti.checked.
+   Otherwise the contents of the interface's checked file would depend on which
+   of the two files happened to be checked --- checking A.fst reveals the
+   implementations of the modules A befriends. Only [fstar.exe A.fsti] writes
+   A.fsti.checked. See #4399. *)
+let should_write_checked_file fn =
+  let base f = String.lowercase (Filepath.basename f) in
+  file_list () |> List.existsb (fun f -> base f = base fn)
+
 let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
 
 let should_print_message m =

@@ -219,6 +219,27 @@ Guidelines for the changelog:
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
+  * F* no longer overwrites a `.checked` file that is already present and
+    valid. In particular, checking `M.fst` when `M` befriends some module used
+    by `M.fsti` used to rewrite an already valid `M.fsti.checked` with
+    different (though equally valid) contents, which silently invalidated every
+    module that had already been checked against it and broke parallel builds.
+    Pass `--force` to regenerate a checked file unconditionally.
+    Fixes https://github.com/FStarLang/FStar/issues/4399.
+
+  * Relatedly, when checking `M.fst` F* now loads `M.fsti.checked` instead of
+    rechecking `M.fsti`, whenever that checked file (and those of its
+    dependences) are valid.
+
+  * `--cache_checked_modules` now writes checked files only for the *files*
+    given on the command line, rather than for every file of a command-line
+    *module*. In particular `fstar.exe M.fst` no longer writes
+    `M.fsti.checked` as a side effect; only `fstar.exe M.fsti` does. This
+    guarantees that the contents of an interface's checked file never depend on
+    its implementation. Builds that need `M.fsti.checked` (any consumer of `M`
+    does) must ask for it explicitly, as the `--dep full` generated makefiles
+    already do.
+
 ## Core typechecker
   * PR https://github.com/FStarLang/FStar/pull/2760 introduces core typechecking for
     implicits introduced for application of indexed effects combinators. This is a
