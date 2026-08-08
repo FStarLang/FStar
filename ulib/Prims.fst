@@ -632,35 +632,6 @@ For some background on the axiom, see:
 assume val indefinite_description (#a: Type) (p: (a -> prop) { exists x. p x })
   : GTot (x: a { p x })
 
-(** An artificial tag used in the definition of [nonempty] below. It
-    exists only to make sure the body of the existential mentions the
-    bound variable, so that F*'s simplifier does not turn
-    [exists (x:a). True] into [True]. *)
-let nonempty_tag (#a: Type) (x: a) : prop = True
-
-(** [nonempty a] holds exactly when the type [a] is inhabited.
-
-    This is a lang item: the typechecker requires a proof of
-    [nonempty t] for every top-level definition [let x : t = e] where
-    [e] has a potentially divergent effect (i.e., any effect other than
-    [Tot] or [GTot]). Without this obligation, a divergent term could
-    be used to inhabit any type, including [False].
-
-    It is stated as [nonempty a] rather than [exists (x:a). True] so
-    that libraries can register SMT patterns for it. *)
-let nonempty (a: Type) : prop = exists (x: a). nonempty_tag x
-
-(** Any element of [a] witnesses that [a] is nonempty. *)
-let nonempty_intro (#a: Type) (x: a) : nonempty a = _assert (nonempty_tag x)
-
-(** The axiom of choice: from a proof that [a] is inhabited, we can
-    (ghostly) obtain an element of [a]. *)
-let nonempty_elim (a: Type { nonempty a }) : GTot a =
-  indefinite_description (fun (_: a) -> True)
-
-(** A version of [nonempty_elim] taking the proof explicitly. *)
-let nonempty_elim' (#a: Type) (h: nonempty a) : GTot a = nonempty_elim a
-
 (* prop-to-bool coercion *)
 irreducible let t2b (p: prop) : GTot (b:bool { b <==> p }) =
   let f (b: bool) = b <==> p in
@@ -716,3 +687,32 @@ val string_of_bool: bool -> Tot string
 (** A primitive printer for [int] *)
 assume
 val string_of_int: int -> Tot string
+
+(** An artificial tag used in the definition of [nonempty] below. It
+    exists only to make sure the body of the existential mentions the
+    bound variable, so that F*'s simplifier does not turn
+    [exists (x:a). True] into [True]. *)
+let nonempty_tag (#a: Type) (x: a) : prop = True
+
+(** [nonempty a] holds exactly when the type [a] is inhabited.
+
+    This is a lang item: the typechecker requires a proof of
+    [nonempty t] for every top-level definition [let x : t = e] where
+    [e] has a potentially divergent effect (i.e., any effect other than
+    [Tot] or [GTot]). Without this obligation, a divergent term could
+    be used to inhabit any type, including [False].
+
+    It is stated as [nonempty a] rather than [exists (x:a). True] so
+    that libraries can register SMT patterns for it. *)
+let nonempty (a: Type) : prop = exists (x: a). nonempty_tag x
+
+(** Any element of [a] witnesses that [a] is nonempty. *)
+let nonempty_intro (#a: Type) (x: a) : nonempty a = _assert (nonempty_tag x)
+
+(** The axiom of choice: from a proof that [a] is inhabited, we can
+    (ghostly) obtain an element of [a]. *)
+let nonempty_elim (a: Type { nonempty a }) : GTot a =
+  indefinite_description (fun (_: a) -> True)
+
+(** A version of [nonempty_elim] taking the proof explicitly. *)
+let nonempty_elim' (#a: Type) (h: nonempty a) : GTot a = nonempty_elim a
