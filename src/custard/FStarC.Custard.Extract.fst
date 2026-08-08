@@ -443,7 +443,11 @@ let rec request (st:state) (k:spec_key) : ML name =
     | None ->
       let saved = !st.chain in
       st.chain := key :: saved;
-      let d = extract_lid st l nm k.sk_subst in
+      (* The chain in [st] is what Custard's own errors report; [with_ctx] is
+         what an *internal* failure -- a [failwith] from the normalizer, say --
+         reports, and without it such a failure names no definition at all. *)
+      let d = E.with_ctx ("While extracting " ^ key) (fun () ->
+                extract_lid st l nm k.sk_subst) in
       st.chain := saved;
       SMap.add st.emitted key d;
       st.order := key :: !st.order;

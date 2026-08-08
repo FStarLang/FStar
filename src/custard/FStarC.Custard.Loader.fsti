@@ -31,9 +31,11 @@ open FStarC.Effect
 module Dep   = FStarC.Parser.Dep
 module TcEnv = FStarC.TypeChecker.Env
 
-(** The file whose checked file we should load for a module: its
-    implementation if it has one, otherwise its interface. *)
-val implementation_or_interface_of : Dep.deps -> string -> ML (option string)
+(** The files whose checked file we might load for a module, best first: its
+    implementation if it has one, then its interface.  The interface is a real
+    fallback -- a module realized by hand in OCaml has an implementation that
+    nothing checks, so only its interface is in the cache. *)
+val candidate_files : Dep.deps -> string -> ML (list string)
 
 (** [module_is_loaded deps env m] is true when the sigelts Custard needs from
     [m] are already in [env]: its *implementation*, or its interface when it
