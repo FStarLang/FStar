@@ -195,7 +195,7 @@ making it the default is therefore correctness surface, not speed: see *Accepted
 differences* above.
 
 Beware when benchmarking open/symbolic terms: `open FStar.Tactics.V2` alone
-costs about 18 s of module loading, so a small kernel measures nothing but
+costs about 14 s of module loading, so a small kernel measures nothing but
 noise. An earlier version of `Bench.Sym` did exactly that and reported a
 spurious 19x NBE slowdown.
 
