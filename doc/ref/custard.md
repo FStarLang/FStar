@@ -522,6 +522,24 @@ so v1 shipping the error is not a design commitment.
   Anything projected, matched, or computed out of a `Mono` value is itself
   known at specialization time.
 
+- **Naming a `Mono` argument with a local `let`.**  `let d = { cmp = f } in
+  sort #a #d` is the same call as `sort #a #({ cmp = f })`, and is judged the
+  same way: keys are computed with local `let`-bound variables replaced by
+  what they are bound to, to a fixpoint.  This is not something the normalizer
+  can do for us — by the time an argument is inspected it is a bare variable,
+  the `let` that binds it is somewhere else, and `custard_norm_steps` carries
+  `PureSubtermsWithinComputations` *precisely* so that pure `let`s are not
+  substituted into the body, which is what keeps sharing and evaluation order
+  intact in the emitted code.  So the unfolding is separate and one-directional:
+  it happens on the way to the key and to the value substituted into the body,
+  and never to the body itself.  Only pure definitions are unfolded; an
+  effectful one is already evaluated by the `let` that stays behind, and baking
+  it into a specialization as well would run it twice.
+
+  This is what makes a dictionary *assembled on the fly* specializable, which
+  is how `FStarC.Class.Ord.sort_by` is written and, by the measurement in
+  §12.8 item 5, not a rare shape.
+
 The *only* bad case is the one above: a value that exists only at runtime
 reaching a `Mono` parameter.  The interesting instance of it is storing a
 dictionary in a runtime data structure — a `ref (foo a)`, a dictionary read out
@@ -2996,8 +3014,14 @@ against `src/**/*.fst` turns up, in rough order of size:
    *is* a separately compiled unit linking against the compiler.
 5. **§3.2b — a `Poly` argument in a `Mono` position — is a hard rejection**,
    and the compiler leans on `FStarC.Class.Show`/`Ord`/`Monad` everywhere.
-   Measured (M9d), by pointing Custard at compiler entry points of increasing
-   size:
+   Measured (M9d).
+
+   The first thing the measurement had to get right is *what to measure*.  A
+   generic function is not a valid entry point — Custard compiles whole
+   programs, and there is nothing to compile a generic `log_issue` *to* —
+   so pointing `--custard_entry` at one and observing a §3.2b rejection says
+   nothing at all.  The only honest root is a real program entry point.  With
+   that settled:
 
    | Entry point | Result |
    | --- | --- |
@@ -3006,20 +3030,53 @@ against `src/**/*.fst` turns up, in rough order of size:
    | `FStarC.Options.set_option` | Extracts |
    | `FStarC.Parser.ParseIt.parse` | Extracts |
    | `FStarC.Syntax.Print.term_to_string` | Extracts (~6 kloc of OCaml) |
-   | `FStarC.Errors.log_issue` | §3.2b: `FStarC.Class.HasRange.pos`, runtime parameter `pos_t` |
-   | `FStarC.TypeChecker.Normalize.normalize` | §3.2b, via `Primops.Sealed.ops` |
-   | `FStarC.Main.main` | §3.2b: `FStarC.Class.Ord.sort` from `sort_by`, runtime parameter `a` |
+   | `FStarC.Main.main` | §3.2b, at `FStarC.Class.Ord.sort_by` |
 
-   Every rejection has the same shape: a *generic helper over a class* —
-   `sort_by : ord a -> (b -> a) -> list b -> list b`, `log_issue : hasRange r
-   -> r -> ...` — passes its own type parameter to a class method.  A helper
-   like that is `Mono` in everything but the annotation, and M7's
-   infer-and-promote is exactly the analysis that would say so.  Annotating
-   them by hand would work and is what the diagnostic suggests, but there are
-   enough of them, and they are spread over enough of the library, that
-   **M7 is a prerequisite for compiling the compiler, not a v2 nicety.**  It
-   is not a prerequisite for §12 itself: the two are independent, and M10 can
-   proceed on the code that already extracts.
+   `sort_by` is worth reading, because every rejection since has had its
+   shape:
+
+   ```fstar
+   val sort    (#a:Type) {| ord a |} (xs : list a) : ML (list a)
+   val sort_by (#a:Type) (f : a -> a -> ML order) (xs : list a) : ML (list a)
+
+   let sort_by #a f xs =
+     let d : ord a = { super = ...; cmp = f } in
+     sort #a #d xs
+   ```
+
+   `sort_by` carries no class constraint, so nothing marks its `#a` `Mono`; it
+   stays `Poly`, and the `sort #a` call is a §3.2b rejection.  It is `Mono` in
+   everything but the annotation, and inferring exactly that is M7.
+
+   Annotating `#a` by hand moves the rejection to `sort`'s *dictionary*
+   binder, and this turned out to be a real gap rather than an inherent one.
+   `d` is a local name; §3.2b saw a variable it did not recognize and stopped,
+   even though `f` was by then known at specialization time.  Keys are now
+   computed through local `let`s (see below), and with both `#a` and `f`
+   annotated the whole thing specializes away — the emitted `cmp` for the
+   `int` copy is literally `op_Subtraction`, and no `ord` record is ever built
+   at run time.  `tests/custard/SortBy.fst` is this example.
+
+   With `sort_by` annotated by hand, `FStarC.Main.main` advances to
+   `FStarC.TypeChecker.Primops.Sealed.ops`, and the blocker there is a *local*
+   helper of exactly the same shape:
+
+   ```fstar
+   let try_unembed (#a:Type) (e:embedding a) (x:term) : ML (option a) =
+     try_unembed x id_norm_cb
+   ```
+
+   So the conclusion, with better evidence than the first attempt: the
+   rejections are neither rare nor deep.  They are all one thing — a generic
+   helper whose type parameter flows into a `Mono` position without being
+   `Mono` itself — the diagnostic already names the binder to annotate, and
+   the annotation always works.  What makes hand-annotation the wrong answer
+   is only that there are many of them, spread across the library, and that
+   some are local functions.  **M7's infer-and-promote is a prerequisite for
+   compiling F\* itself**, and it is also, on this evidence, the *whole*
+   remaining story for §3.2b.  It is not a prerequisite for §12: the two are
+   independent, and M10 can proceed on the code that already extracts.
+
 6. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
    leaves syntax, elaboration and the checked files unchanged.
@@ -3058,7 +3115,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
 | M9b | Exceptions (§8.5): `TExn`, the `DExn` producer, `raise`/`try_with` rules | Done. `tests/custard/Exceptions.fst`; OCaml only |
 | M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
-| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `Errors.log_issue`, `Normalize.normalize` and `Main.main` each stop at one generic-helper-over-a-class.  Measurement table and conclusion in §12.8 item 5: M7 is a prerequisite.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), and an inline marker escaping newtype collapse (§5.2) |
+| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`, and with that annotated by hand at the next helper of identical shape.  Table and conclusion in §12.8 item 5: M7 is a prerequisite, and on this evidence the whole remaining story for §3.2b.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), an inline marker escaping newtype collapse (§5.2), and specialization keys not seeing through local `let`s (§3.2b, `tests/custard/SortBy.fst`) |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |
 | M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | |

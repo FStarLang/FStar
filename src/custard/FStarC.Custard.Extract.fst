@@ -268,6 +268,13 @@ type state = {
   (* The declaration currently being extracted, which is what a lifted local
      function is named after. *)
   cur:     ref name;
+  (* The definition of every pure local [let] the extractor is currently
+     inside, keyed by its bound variable's index.  Section 3.2b consults it so
+     that a [Mono] argument named by a local variable is judged by the value
+     the variable stands for.  Binder indices are unique after opening, so a
+     stale entry can never be found by a different variable and nothing is
+     ever removed. *)
+  letdefs: SMap.t S.term;
 }
 
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
@@ -283,6 +290,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   chain   = mk_ref [];
   lifted  = SMap.create 20;
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
+  letdefs = SMap.create 100;
 }
 
 let custard_norm_steps : list TcEnv.step = [
@@ -718,6 +726,16 @@ and expr_of_term (st:state) (t:term) : ML expr =
                    U.is_pure_or_ghost_effect lb.lbeff
                 then unit_expr
                 else expr_of_term st lb.lbdef in
+       (* Section 3.2b: remember what the variable stands for, so that a
+          [Mono] argument written as [d] is judged by [d]'s definition rather
+          than rejected as a runtime parameter.  Only pure definitions: an
+          effectful one is evaluated by the [let] that stays behind, and
+          baking it into a specialization as well would run it twice.  The
+          test is Custard's own classification (section 7) rather than
+          [lbeff], which in an [ML] function reports [ML] for a perfectly pure
+          right-hand side. *)
+       if e1.eff = E_Pure then
+         SMap.add st.letdefs (show bv.index) lb.lbdef;
        let e2 = expr_of_term st body in
        mk (ELet (name_of_bv bv, ty_of_typ st lb.lbtyp, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
      | Inr _ ->
@@ -1121,9 +1139,10 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       (* Section 5.1: an erased argument is deleted, not passed as unit. *)
       | Dropped :: cs, _ :: sp -> go (i + 1) cs sp margs msubst rest
       | Mono :: cs, a :: sp ->
-        let t = N.normalize key_norm_steps (tcenv st) (fst a) in
+        let a0 = unfold_lets st 100 (fst a) in
+        let t = N.normalize key_norm_steps (tcenv st) a0 in
         check_mono_arg st l i t;
-        let w = N.normalize subst_norm_steps (tcenv st) (fst a) in
+        let w = N.normalize subst_norm_steps (tcenv st) a0 in
         (* Full reduction can eliminate a free variable that weak reduction
            leaves behind ([fst (x, 1)]), and the body must stay closed. *)
         let w = if is_empty (Free.names w) then w else t in
@@ -1140,6 +1159,31 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       | Dropped :: _, [] -> (List.rev margs, List.rev msubst, List.rev rest)
     in
     go 0 cs spine [] [] []
+
+(* Replace the local [let]-bound variables of a [Mono] argument by what they
+   are bound to, to a fixpoint.
+
+   The normalizer cannot do this.  A [let] is only reducible as part of the
+   term that binds it, and by the time an argument is inspected it is the bare
+   variable; worse, [custard_norm_steps] carries
+   [PureSubtermsWithinComputations] precisely so that pure [let]s are *not*
+   substituted into the body, which is what keeps sharing and evaluation order
+   intact in the emitted code.  That is the right answer for code and the
+   wrong one for a key, so the two are separated here: unfolding happens on
+   the way to the key and to the substituted value, and never to the body.
+
+   This is what lets a dictionary assembled on the fly be specialized on --
+   [let d = { cmp = f } in sort #a #d], the shape [FStarC.Class.Ord.sort_by]
+   is written in.  [d] is not a runtime parameter, it is a name for a value
+   that section 3.2b can see through. *)
+and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
+  if fuel <= 0 then t
+  else
+    let sub = elems (Free.names t) |> List.collect (fun (bv:S.bv) ->
+                match SMap.try_find st.letdefs (show bv.index) with
+                | Some d -> [NT (bv, d)]
+                | None -> []) in
+    if Nil? sub then t else unfold_lets st (fuel - 1) (SS.subst sub t)
 
 (* Section 3.2(b): the argument has to be known at specialization time, i.e. it
    must not mention any of the enclosing definition's runtime parameters.  Note

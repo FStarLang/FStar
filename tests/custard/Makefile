@@ -26,6 +26,7 @@ CUSTARD_TESTS += Refs
 CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += LocalRec
 CUSTARD_TESTS += NewtypeInline
+CUSTARD_TESTS += SortBy
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -76,6 +77,12 @@ NOGREP_LocalRec   = "let rec aux" "let rec go"
 # The collapsed newtype is the pair itself, and no [inline] marker escapes.
 GREP_NewtypeInline   = "(bool, string) fStar_Pervasives_Native_tuple2"
 NOGREP_NewtypeInline = "newtypeInline_step" "inline"
+
+# The dictionary built behind a local [let] is specialized away entirely, so
+# each of the two orderings gets its own copy of [sort] and no [ord] record is
+# ever built at run time.
+GREP_SortBy     = "sortBy_sort_by__int" "sortBy_sort_desc__int" "sortBy_cmp__int_1"
+NOGREP_SortBy   = "sortBy_Mkord" "type .*sortBy_ord"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.
