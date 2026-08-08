@@ -536,6 +536,18 @@ let rule_of_attributes (attrs : list S.term) : ML (option rule) =
 
 (* The hardcoded rules: the registry populated by {!register_rule}, then the
    families matched by the shape of the name. *)
+(* Section 3.2c: [FStar.Custard.dyn] is a call-site marker, not a
+   computation.  It exists to survive the normalization that computes a
+   specialization key -- which is why it is [irreducible] -- and carries no
+   run-time meaning of its own, so it compiles to its argument. *)
+let custard_rule (id:string) : ML (option rule) =
+  match id with
+  | "dyn" -> Some (Rule_prim (1, fun _ args ->
+                     match args with
+                     | [e] -> e
+                     | _ -> failwith "FStar.Custard.dyn applied to the wrong number of arguments"))
+  | _ -> None
+
 let builtin_rule (l:Ident.lident) : ML rule =
   let r =
     match SMap.try_find table (Ident.string_of_lid l) with
@@ -557,6 +569,7 @@ let builtin_rule (l:Ident.lident) : ML rule =
                    (match exn_rule id with
                     | Some r -> Some r
                     | None -> pulse_rule ns id))
+           else if ns = ["FStar"; "Custard"] then custard_rule id
            else if ns = ["FStar"; "Exn"] then exn_rule id
            else pulse_rule ns id)
       | [] -> None

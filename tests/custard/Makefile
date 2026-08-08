@@ -30,6 +30,13 @@ CUSTARD_TESTS += SortBy
 CUSTARD_TESTS += LocalPoly
 CUSTARD_TESTS += MonoHoles
 CUSTARD_TESTS += DepParams
+CUSTARD_TESTS += MonoDyn
+# One shared specialization taking the dictionary at run time (the identity
+# skeleton), one fully specialized version for the static call site, and no
+# trace of the [dyn] marker itself.
+GREP_MonoDyn += "monoDyn_render__0 (x : Prims.int) : ((Prims.int -> string) -> string)"
+GREP_MonoDyn += "monoDyn_render__int (x : Prims.int) : string"
+NOGREP_MonoDyn += dyn
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true

@@ -63,7 +63,18 @@ module Range = FStarC.Range
    which every recursive call would produce a fresh key.  Delta-unfolding is
    what turns a named type-class instance into a concrete dictionary value, so
    that [ReduceProjections] can collapse method projections in the body. *)
+(* [FStar.Custard.dyn] is a call-site opt-out of specialization (section
+   3.2c): it marks an argument that is to be passed at run time rather than
+   specialized on.  For that to work the marker has to survive the reduction
+   that computes a specialization key -- an ordinary identity function would
+   simply be unfolded away, leaving the bare variable it was wrapping and the
+   rejection that variable triggers.  So [dyn] carries an attribute that
+   Custard refuses to unfold, in every reduction it performs.  The marker is
+   erased later, by the builtin rule for [dyn] in [Custard.Builtins]. *)
+let no_specialize_lid : Ident.lident = PC.p2l ["FStar"; "Custard"; "no_specialize"]
+
 let key_norm_steps : list TcEnv.step = [
+  TcEnv.DontUnfoldAttr [no_specialize_lid];
   TcEnv.AllowUnboundUniverses;
   TcEnv.EraseUniverses;
   TcEnv.Beta;
@@ -309,6 +320,7 @@ let local_inline_steps : list TcEnv.step = [
 ]
 
 let custard_norm_steps : list TcEnv.step = [
+  TcEnv.DontUnfoldAttr [no_specialize_lid];
   TcEnv.AllowUnboundUniverses;
   TcEnv.EraseUniverses;
   TcEnv.Beta;
@@ -1363,7 +1375,15 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
      [Mono] annotation exists to make visible.  Section 3.2c widens what may
      be specialized; it does not remove the guarantee.  So a bare variable is
      still rejected, and it is the case the user can act on: either the value
-     should have been static, or the binder should not have been marked. *)
+     should have been static, the binder should not have been marked, or the
+     call site asks for runtime passing explicitly with [FStar.Custard.dyn].
+
+     Note that the [dyn] case never reaches here.  [dyn v] is not a name, and
+     Custard refuses to unfold it (see [no_specialize_lid]), so [v] becomes an
+     ordinary hole and the argument abstracts to [fun h -> dyn h] -- the
+     identity skeleton.  Nothing else in the pipeline has to know about it:
+     the machinery that already passes a hole at runtime is exactly the
+     machinery dictionary passing needs. *)
   (match (SS.compress t).n with
    | Tm_name v ->
      let nm = Ident.string_of_id v.ppname in
@@ -1384,9 +1404,11 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
                nm ^ " is never known earlier.  What is left is to pass the \
                value at runtime -- for a typeclass dictionary, ordinary \
                dictionary passing -- which is the identity-skeleton end of \
-               section 3.2c and is gated behind manual opt-in, because it \
-               reintroduces the indirect calls monomorphization exists to \
-               remove.")
+               section 3.2c.");
+         text ("Write [FStar.Custard.dyn " ^ nm ^ "] to ask for that here.  \
+               It is opt-in, and per call site, because it reintroduces the \
+               indirect calls monomorphization exists to remove: other calls \
+               to this function are still specialized.")
        ]
      else
        custard_error st E.Error_CustardCannotMonomorphize [
@@ -1395,7 +1417,9 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
          text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
                definition so that it, too, is known at specialization time, or \
                drop the annotation on binder " ^ show i ^ " and pass it at \
-               runtime.")
+               runtime.  To pass it at runtime at this call site only, \
+               without changing either signature, write \
+               [FStar.Custard.dyn " ^ nm ^ "].")
        ]
    | _ -> ());
   let is_type_name (v:S.bv) : ML bool =
