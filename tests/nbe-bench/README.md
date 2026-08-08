@@ -106,6 +106,42 @@ The `net_nbe` column is unchanged across the merge (PR #4397 touches only
 `FStarC.TypeChecker.Normalize`), which is a useful control: it confirms the
 before/after difference is the patch and not the machine.
 
+#### The fix removes an asymptotic factor, not a constant
+
+`Bench.Sym` builds a residual term of `n` applications, so it can be scaled to
+show the shape of the bug directly. Best-of-3 wall clock, whole-file, in
+seconds:
+
+| n | before #4397 | after #4397 | speedup |
+|---|---|---|---|
+| 1000 | 5.91 | 0.30 | 20x |
+| 2000 | 22.88 | 0.44 | 52x |
+| 4000 | 91.21 | 0.68 | 134x |
+| 8000 | 368.38 | 1.17 | 315x |
+| 20000 | >26 min (abandoned) | 2.67 | >580x |
+
+Before the fix each doubling of `n` costs **4x** the time — textbook quadratic.
+After it, net of the ~0.15s process baseline (0.15 / 0.29 / 0.53 / 1.02), each
+doubling costs **2x** — linear. So the speedups above are not a fixed factor;
+they grow without bound with the size of the residual term, which is why the
+same patch looks like 1.0x on `Bench.MachInt` and 315x here.
+
+To reproduce, copy `Bench.Sym.fst`, change `upto 20000` to the size you want,
+and time the two compilers on the same file.
+
+#### The fix changes no observable output
+
+PR #4397 is a caching change, so the interesting question is whether it
+perturbs any result. Three checks, comparing a build at the merge base against
+one at the merge:
+
+- all **319** `ulib` `.checked` files are byte-identical;
+- all **97** extracted `ulib` `.ml` files are byte-identical (and 313 of the
+  320 compiler ones — the 7 that differ are exactly the files edited on this
+  branch);
+- the `--log_queries` SMT output for the 8 closed benchmarks above is
+  byte-identical apart from the F* commit hash written into a comment.
+
 ### Reading the numbers
 
 **NBE still wins on closed, computational reduction, but by much less than it
