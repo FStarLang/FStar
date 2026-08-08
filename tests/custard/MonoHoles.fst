@@ -25,8 +25,20 @@ let twice ([@@@monomorphize] f : int -> int) (x:int) : int = f (f x)
 
 let bump (k:int) (x:int) : int = twice (fun y -> y + k) x
 
+(* The hole may just as well come out of an *effectful* computation.  Nothing
+   special is needed: a hole is a free *name*, so the dereference runs once
+   where it was written and only its result -- an ordinary value -- is passed
+   to the specialization.  The skeleton stays pure, which is all specializing
+   on it requires. *)
+let from_ref (x:int) : ML string =
+  let r = alloc 5 in
+  let n = !r in
+  render (set_tag n p_int) x
+
 let main () : ML unit =
   FStar.IO.print_string (describe 7 42);
+  FStar.IO.print_string " ";
+  FStar.IO.print_string (from_ref 42);
   FStar.IO.print_string " ";
   FStar.IO.print_string (string_of_int (bump 3 10));
   FStar.IO.print_string "\n"

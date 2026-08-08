@@ -1377,10 +1377,16 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
      then
        custard_error st E.Error_CustardCannotMonomorphize [
          text ("The argument passed to " ^ where ^ " is " ^ nm ^ ", the result \
-               of an effectful computation.  It has no value at specialization \
-               time: the computation runs when the program runs, and may give \
-               a different answer each time it does.");
-         text "Specializing on it is not merely unsupported but wrong -- there is no one value to specialize on, and baking the computation into each specialization would re-run it.  This shape needs the value passed at runtime, which for a typeclass dictionary means real dictionary passing; section 3.2 keeps that out of v1 deliberately, as it is the performance cliff monomorphization exists to avoid."
+               of an effectful computation, so the whole argument is a hole \
+               (section 3.2c) and no skeleton is left to specialize on.");
+         text ("Unlike a runtime parameter, this cannot be fixed by an \
+               annotation: the computation runs when the program runs, so " ^
+               nm ^ " is never known earlier.  What is left is to pass the \
+               value at runtime -- for a typeclass dictionary, ordinary \
+               dictionary passing -- which is the identity-skeleton end of \
+               section 3.2c and is gated behind manual opt-in, because it \
+               reintroduces the indirect calls monomorphization exists to \
+               remove.")
        ]
      else
        custard_error st E.Error_CustardCannotMonomorphize [

@@ -616,49 +616,70 @@ explicit closure-conversion pass to get here.
   (§5.0), so there would be nothing to pass at runtime.  This stays the case
   (b) rejection it has always been, and option 2's promotion is the fix.
 - *An argument that is nothing but a hole* — a bare variable.  Here the
-  skeleton carries no information at all, and abstracting it would silently
-  turn monomorphization into ordinary runtime passing: exactly the invisible
-  performance cliff that option 3 was rejected for, and exactly what the
-  `Mono` annotation exists to make visible.  §3.2c widens what may be
-  specialized; it does not weaken the guarantee.
+  skeleton is the identity function, so nothing is specialized: the value is
+  simply passed at runtime.  That is not unsound, it is **dictionary
+  passing**, and it is gated for the reason §3.2 rejected option 3 —
+  it reintroduces the indirect calls monomorphization exists to remove, and
+  doing it silently would make the performance cliff invisible.  §3.2c widens
+  what may be specialized; the gate is a policy about the degenerate end of
+  the same mechanism, not a limit of it.
 
-  Two quite different situations produce a bare variable, and Custard
-  distinguishes them because the advice differs.  If the variable is a
-  *runtime parameter*, the fix is local: mark it `[@@monomorphize]` in the
-  caller, or drop the annotation on the callee's binder.  If it is the result
-  of an *effectful* `let` — which §3.2b's `let`-unfolding deliberately leaves
-  in place — then specializing is not merely unsupported but **wrong**: there
-  is no single value to specialize on, the computation may answer differently
-  each time it runs, and baking it into each specialization would re-run it.
-  Nothing can be annotated to fix that; the value has to be passed at
-  runtime.
+  This is worth stating plainly, because it took a while to see: hole
+  abstraction and dictionary passing are not two mechanisms but one, and the
+  skeleton is the dial between them.
 
-  The motivating case is `FStarC.Syntax.VisitM`, and it is worth recording
-  because it is the first blocker found in the compiler that is genuinely
-  out of reach rather than merely unimplemented.  `tie_bu` builds a
-  *recursive* `lvm m` instance — each method has to visit subterms with the
-  dictionary being defined — and since F\* has no recursive value bindings,
-  it ties the knot through a `ref`:
-
-  ```fstar
-  let r : ref (lvm m) = mk_ref (novfs #m #md) in
-  r := { lvm_monad = (!r).lvm_monad;
-         f_term = (fun x -> f_term #_ #d <<| on_sub_term #_ #!r x); … };
-  !r
+  ```
+  skeleton fully static ─────────────── skeleton = identity
+  (pure monomorphization)      (pure dictionary passing)
+        render p_int      render (set_tag n p_int)      render d
   ```
 
-  Every `#!r` passes a dereference into `on_sub_*`'s `{| lvm m |}` binder.
-  Restructuring the knot as mutually recursive functions removes the `ref`,
-  and was measured to cost nothing (+0.5% minor allocation, *less* major-heap
-  traffic, wall time within noise, because the per-node records die in the
-  minor heap where the `ref` and its record were promoted).  But it does not
-  help: the replacement `bu_dict` is still `ML`, so the argument is still an
-  effectful computation rather than a value, and there is no termination
-  argument that would make it `Tot`.  Specialization is the wrong tool for a
-  recursive, effectfully-tied dictionary.  This one needs real dictionary
-  passing — the manual opt-in that §3.2 puts out of scope for v1 — and the
-  diagnostic now says so instead of suggesting an annotation that cannot
-  work.
+  Turning the gate off for a chosen dictionary type is therefore a policy
+  change, not a new pass: the machinery that would pass `d` at runtime is the
+  machinery that already passes `n`.
+
+Two situations produce a bare variable, and Custard distinguishes them
+because the *advice* differs even though the mechanism does not.  If it is a
+**runtime parameter**, the fix is local and cheap: mark it
+`[@@monomorphize]` in the caller, or drop the annotation on the callee's
+binder.  If it is the result of an **effectful** `let` — which §3.2b's
+`let`-unfolding deliberately leaves in place — then no annotation can help,
+because the computation runs when the program runs and the value is never
+known earlier.  Opting in to dictionary passing is the only route.
+
+Note the effectfulness itself is *not* the obstacle, and an early draft of
+this section had that wrong.  A hole is a free **name**, so it is always an
+already-evaluated value; a computation can never become a hole, only its
+result can.  The `let` stays exactly where it was written, runs exactly once,
+and its result is passed like any other hole — so an effectfully-obtained
+leaf specializes as happily as a pure one, and reaches the *same*
+specialization as a pure caller does (`tests/custard/MonoHoles.fst`,
+`from_ref`).  The obstacle is only that in these particular cases the
+effectful result is the *whole* argument.
+
+The motivating case is `FStarC.Syntax.VisitM`.  `tie_bu` builds a *recursive*
+`lvm m` instance — each method has to visit subterms with the dictionary
+being defined — and since F\* has no recursive value bindings, it ties the
+knot through a `ref`:
+
+```fstar
+let r : ref (lvm m) = mk_ref (novfs #m #md) in
+r := { lvm_monad = (!r).lvm_monad;
+       f_term = (fun x -> f_term #_ #d <<| on_sub_term #_ #!r x); … };
+!r
+```
+
+Every `#!r` passes a dereference into `on_sub_*`'s `{| lvm m |}` binder, so
+every one of them is an identity skeleton.  Restructuring the knot as
+mutually recursive functions removes the `ref`, and was measured to cost
+nothing (+0.5% minor allocation, *less* major-heap traffic, wall time within
+noise, because the per-node records die in the minor heap where the `ref` and
+its record were promoted).  But it does not help: the replacement `bu_dict`
+is still `ML`, so the argument is still the result of a computation rather
+than a value, and there is no termination argument that would make it `Tot`.
+A recursive, effectfully-tied dictionary is not something specialization can
+reach by any restructuring of the source, and it should not be — it wants the
+identity skeleton, which is to say it wants dictionary passing.
 
 ### 3.3 The extraction loop
 
@@ -3395,7 +3416,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M9b | Exceptions (§8.5): `TExn`, the `DExn` producer, `raise`/`try_with` rules | Done. `tests/custard/Exceptions.fst`; OCaml only |
 | M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
 | M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`.  Conclusion in §12.8 item 5: M7 is a prerequisite, and handles the common case but not all of it.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), local functions blocking specialization (§5.11), an inline marker escaping newtype collapse (§5.2), and keys not seeing through local `let`s (§3.2b).  Also found: §5.11 must be restricted to polymorphic locals or extraction blows up exponentially (§12.8 item 8), and `Primops.Sealed.ops` builds a dictionary from a runtime value, which motivated §3.2c |
-| M9f | Tell an effectful `Mono` argument apart from a runtime parameter (§3.2c) | Done. `Extract.effletdefs`; `tests/custard/MonoEffect.fst`.  Motivated by `Syntax.VisitM.tie_bu`, whose recursive `lvm` instance is tied through a `ref` and so is not a compile-time value at all -- the first compiler blocker that is out of reach rather than unimplemented, and the concrete case for opt-in dictionary passing |
+| M9f | Tell an effectful `Mono` argument apart from a runtime parameter (§3.2c) | Done. `Extract.effletdefs`; `tests/custard/MonoEffect.fst`.  Motivated by `Syntax.VisitM.tie_bu`, whose recursive `lvm` instance is tied through a `ref`, so no annotation and no restructuring of the source can make it static.  It is the identity-skeleton end of §3.2c -- dictionary passing -- and so wants the opt-in gate opened rather than a new mechanism |
 | M9e | §3.2c hole abstraction: specialize on a `Mono` argument's skeleton, pass its runtime leaves as parameters | Done. `Extract.mono_holes`/`split_mono_args`/`specialize`, `sk_holes` in the key; `tests/custard/MonoHoles.fst` covers the dictionary and the closure case.  Unblocks `Primops.Sealed.ops`; subsumes closure arguments, which §3.2 had expected to need a separate defunctionalization pass.  Found and fixed on the way: `Sig_inductive_typ` parameters were used unopened, so a dependent parameter (`{| monoid m |}` after `m:Type`) crashed the normalizer, and constructor applications and patterns dropped only *erased* parameters while the type declaration dropped *all* of them, so a typeclass-parameterized inductive got the wrong constructor arity (`tests/custard/DepParams.fst`) |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |
