@@ -58,7 +58,8 @@ let _ = assert (x == 42)
         (pack_comp (C_Eff [pack_universe (Uv_Succ (pack_universe Uv_Zero))]
                           ["Prims"; "Tot"]
                           (`Type0)
-                          []
+                          (`True)
+                          (`(fun _ -> True))
                           [`(10 - (`#(binder_to_term n)))]))
     ; lb_def = `(fun n -> if n>=10 then int else int & (`#recursive) (n + 1));
     }]}

@@ -9,10 +9,9 @@ let test () : Type0 =
      | Tv_Arrow bv c ->
        let c' =
          begin match inspect_comp c with
-         | C_Eff us eff res args decrs ->
-                 let args' = [(`(True), Q_Explicit);
-                              (`(fun (r:int) -> r == 17), Q_Explicit)] in
-                 pack_comp (C_Eff us eff res args' decrs)
+         | C_Eff us eff res _pre _post decrs ->
+                 pack_comp (C_Eff us eff res (`(True))
+                                  (`(fun (r:int) -> r == 17)) decrs)
          | _ -> fail "no"
          end
        in

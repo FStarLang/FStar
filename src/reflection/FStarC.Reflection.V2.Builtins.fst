@@ -308,7 +308,8 @@ let inspect_comp (c : comp) : ML comp_view =
             C_Eff (ct.comp_univs,
                    Ident.path_of_lid ct.effect_name,
                    ct.result_typ,
-                   [(ct.comp_pre, Q_Explicit); (ct.comp_post, Q_Explicit)],
+                   ct.comp_pre,
+                   ct.comp_post,
                    get_dec ct.flags)
       end
 
@@ -333,16 +334,11 @@ let pack_comp (cv : comp_view) : ML comp =
                  ; flags       = [LEMMA; SMTPAT pats] } in
         S.mk_Comp ct
 
-    | C_Eff (us, ef, res, args, decrs) ->
+    | C_Eff (us, ef, res, pre, post, decrs) ->
         let flags =
           if Nil? decrs
           then []
           else [DECREASES (Decreases_lex decrs)] in
-        let pre, post =
-          match args with
-          | (pre, _)::(post, _)::_ -> pre, post
-          | [(pre, _)] -> pre, S.trivial_post res
-          | [] -> S.trivial_pre, S.trivial_post res in
         let ct = { comp_univs  = us
                  ; effect_name = Ident.lid_of_path ef Range.dummyRange
                  ; result_typ  = res
@@ -887,11 +883,12 @@ and comp_eq (c1 : comp) (c2 : comp) : ML bool =
   | C_Lemma (pre1, post1, pats1), C_Lemma (pre2, post2, pats2) ->
     term_eq pre1 pre2 && term_eq post1 post2 && term_eq pats1 pats2
 
-  | C_Eff (us1, name1, t1, args1, decrs1), C_Eff (us2, name2, t2, args2, decrs2) ->
+  | C_Eff (us1, name1, t1, pre1, post1, decrs1), C_Eff (us2, name2, t2, pre2, post2, decrs2) ->
     univs_eq us1 us2&&
     name1 = name2&&
     term_eq t1 t2&&
-    eqlist arg_eq args1 args2&&
+    term_eq pre1 pre2&&
+    term_eq post1 post2&&
     eqlist term_eq decrs1 decrs2
 
   | _ ->
