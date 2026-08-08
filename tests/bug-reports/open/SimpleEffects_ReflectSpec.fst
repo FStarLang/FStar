@@ -68,5 +68,14 @@ let liar1 () : M unit (requires True) (ensures fun _ -> False) = M?.reflect ()
 [@@ expect_failure]
 let liar2 () : M int (requires True) (ensures fun r -> r == 1) = M?.reflect 0
 
-/// An honest spec must keep working.
-let honest () : M int (requires True) (ensures fun r -> r == 0) = M?.reflect 0
+/// Reflection at the trivial specification must keep working.
+let honest () : M int (requires True) (ensures fun _ -> True) = M?.reflect 0
+
+/// Note: under the fix, `reflect` justifies ONLY the trivial specification, so
+/// even a *true* nontrivial claim is no longer derivable from `reflect` alone.
+/// This is inherent to the simplified effect system: the representation type
+/// cannot mention the specification, so there is nothing to discharge it
+/// against.  It must be established some other way.
+[@@ expect_failure]
+let honest_but_unjustified () : M int (requires True) (ensures fun r -> r == 0) =
+  M?.reflect 0
