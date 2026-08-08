@@ -1199,9 +1199,30 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
 
    A local [let rec] cannot be substituted and is lambda-lifted instead
    (section 5.10). *)
+(* Section 5.11.  Only *polymorphic* local functions are inlined, and the
+   restriction is not a heuristic -- it is the whole reason the pass exists.
+   Inlining is what gives a local function's type arguments a concrete value at
+   each use, which a local function cannot get any other way: specialization is
+   keyed on a lid and a local function has none.  A local function with no type
+   binder has nothing to gain from it.
+
+   Inlining every local lambda instead is not merely wasteful, it does not
+   terminate in practice.  A local function used twice is duplicated twice, so
+   a body with n nested local helpers each used twice costs 2^n -- and since
+   inlining runs on the result of inlining, the helpers nest.  Pointed at
+   [FStarC.TypeChecker.Normalize.normalize] this consumed 73GB without
+   finishing: the give-away in the trace was that no new specializations were
+   being requested at all, so it was not a runaway request loop but the same
+   already-named code being re-extracted exponentially often.  Restricted to
+   the polymorphic case the same run finishes in minutes. *)
 and inlinable_local (st:state) (lb:S.letbinding) : ML bool =
   match (SS.compress (U.unmeta lb.lbdef)).n with
-  | Tm_abs _ -> true
+  | Tm_abs _ ->
+    let bs, _, _ = U.abs_formals (U.unmeta lb.lbdef) in
+    bs |> List.existsb (fun b ->
+            match (SS.compress b.binder_bv.sort).n with
+            | Tm_type _ -> true
+            | _ -> false)
   | _ -> false
 
 (* Replace the local [let]-bound variables of a [Mono] argument by what they

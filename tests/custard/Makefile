@@ -90,6 +90,10 @@ NOGREP_SortBy   = "sortBy_Mkord" "type .*sortBy_ord"
 GREP_LocalPoly     = "localPoly_try_unembed__int" "localPoly_try_unembed__bool" \
                      "localPoly_un__int" "localPoly_un__bool"
 NOGREP_LocalPoly   = "localPoly_Mkemb" "localPoly_e_int" "localPoly_e_bool"
+# ... but a *monomorphic* local helper is left alone.  Inlining it would buy
+# nothing (it has no type argument to make concrete) and cost 2^n on the
+# nested, twice-used helpers in [nested].
+GREP_LocalPoly    += "let a = (fun y" "let b = (fun y" "let c = (fun y"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.

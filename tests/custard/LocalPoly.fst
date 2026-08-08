@@ -18,6 +18,19 @@ let ops (n:int) : ML string =
   | Some i, Some b -> string_of_int i ^ (if b then "t" else "f")
   | _ -> "none"
 
+(* Monomorphic local helpers are *not* inlined.  Inlining them would be pure
+   duplication -- they have no type argument to make concrete, which is the
+   only thing inlining buys -- and because each is used twice and they nest,
+   the cost is 2^n.  This shape is what made a real extraction run consume
+   73GB; four levels here is enough for the .ml to give it away. *)
+let nested (x:int) : ML int =
+  let a (y:int) : ML int = y + x in
+  let b (y:int) : ML int = a y + a (y + 1) in
+  let c (y:int) : ML int = b y + b (y + 1) in
+  let d (y:int) : ML int = c y + c (y + 1) in
+  d 0 + d 1
+
 let main () : ML unit =
   FStar.IO.print_string (ops 3);
+  FStar.IO.print_string (string_of_int (nested 1));
   FStar.IO.print_string "\n"

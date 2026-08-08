@@ -1635,10 +1635,10 @@ Occurrences of a lifted name in the body of the enclosing definition become
 `EQual (nm, tyargs)` applied to the captures.  The partial application is pure:
 the binders the user actually wrote are always still missing.
 
-### 5.11 Local functions are inlined
+### 5.11 Polymorphic local functions are inlined
 
-A non-recursive local `let` whose definition is a lambda is substituted at its
-uses rather than compiled as a closure.
+A non-recursive local `let` whose definition is a lambda **that binds at least
+one type** is substituted at its uses rather than compiled as a closure.
 
 A local function is the one construct with no top-level identity: it cannot be
 specialized, because specialization is keyed on a `lid`, and it cannot be
@@ -1676,11 +1676,39 @@ Two details matter in the implementation:
   whatever the function goes on to do; `lbeff` reports the function's own
   effect, which is `ML` for most local helpers.
 
-Duplication is the obvious worry and in practice there is none to speak of:
-across `tests/custard` the change moved exactly one file, by five lines, and
-`FStarC.Syntax.Print.term_to_string` grew by 1%.  `Simplify` was already
-collapsing most of these at the IR level; what is new is that the *extractor*
-now sees through them, which is what §3.2b needs.
+#### Why only the polymorphic ones
+
+The restriction is not a heuristic to limit code size; it is the scope of the
+argument above.  Inlining is worth doing because it gives a local function's
+*type* arguments a concrete value at each use, and that is the one thing a
+local function cannot obtain any other way.  A local function with no type
+binder has nothing to gain: it is already fully monomorphic, and substituting
+it only copies code.
+
+Inlining every local lambda is not merely wasteful, it does not terminate on
+real input.  A helper used twice is duplicated twice, inlining runs on the
+result of inlining, so helpers that nest cost 2^n:
+
+```fstar
+let a y = y + x in
+let b y = a y + a (y+1) in
+let c y = b y + b (y+1) in ...
+```
+
+Pointed at `FStarC.TypeChecker.Normalize.normalize`, the unrestricted version
+consumed 73GB without finishing.  What identifies the cause — and rules out
+the more obvious suspects — is that **no new specializations were being
+requested** while it ran away.  So it was not a runaway request loop (§3.6's
+budget bounds those, and none of it was being spent), and it was not a
+diverging normalization either: it was already-named code being re-extracted
+exponentially often.  Restricted to the polymorphic case, the same run
+finishes in ten seconds, and `term_to_string` returns to exactly the size it
+had before §5.11 existed — every line the unrestricted version added was
+duplication.
+
+`tests/custard/LocalPoly.fst` pins both halves: the polymorphic helper is gone
+from the output and specialized per type, and the four nested monomorphic
+helpers are still there, once each.
 
 A local `let rec` cannot be substituted and is lambda-lifted instead (§5.10).
 
@@ -3107,9 +3135,25 @@ against `src/**/*.fst` turns up, in rough order of size:
    at run time.  `tests/custard/SortBy.fst` is this example.
 
    With `sort_by` annotated by hand, `FStarC.Main.main` advanced to
-   `FStarC.TypeChecker.Primops.Sealed.ops`, whose blocker was a *local* helper
-   of the same shape — and that one needed no annotation at all, only §5.11's
-   inlining, because a local function has no signature to annotate.
+   `FStarC.TypeChecker.Primops.Sealed.ops`, whose first blocker was a *local*
+   helper of the same shape — and that one needed no annotation at all, only
+   §5.11's inlining, because a local function has no signature to annotate.
+
+   Past it lies a blocker of a genuinely different kind, and the first one
+   found so far that an annotation cannot fix.  `Sealed.ops` builds an
+   embedding out of a value it just unembedded at runtime:
+
+   ```fstar
+   | [(ta, _); (tb, _); (s, _); (f, _)] -> … let emb = set_type ta e_any in …
+   ```
+
+   `ta` is a runtime argument, so the dictionary reaching `embed_simple`'s
+   `Mono` binder is a runtime value, and no amount of annotation makes it
+   known at specialization time.  This is the §3.2b line working as designed
+   rather than a gap: it is the "stored in a runtime data structure" case, and
+   compiling it needs the dictionary passing that §3.2b exists to avoid.  It
+   wants either an `[@@custard_extern]` realization for these primops or the
+   opt-in fallback that has always been out of scope for v1.
 
    So the conclusion, with better evidence than the first attempt: the
    rejections are neither rare nor deep.  They are all one thing — a generic
@@ -3118,32 +3162,50 @@ against `src/**/*.fst` turns up, in rough order of size:
    *top-level* one the diagnostic names the binder and the annotation always
    works, so what makes hand-annotation the wrong answer is only that there
    are many of them, spread across the library.  **M7's infer-and-promote is a
-   prerequisite for compiling F\* itself**, and it is also, on this evidence,
-   the whole remaining story for §3.2b.  It is not a prerequisite for §12: the
-   two are independent, and M10 can proceed on the code that already extracts.
+   prerequisite for compiling F\* itself.**  It is not a prerequisite for §12:
+   the two are independent, and M10 can proceed on the code that already
+   extracts.
 
-8. **Key normalization can diverge** (found immediately downstream of the
-   above, and *not* diagnosed yet).  With §5.11 in place,
-   `FStarC.TypeChecker.Normalize.normalize` gets past the primops and then
-   runs away: memory grows steadily at gigabytes per minute with the CPU
-   pegged, and it does not stop.  Bisecting on `--custard_fuel` puts the onset
-   immediately after request ~1784,
-   `FStarC.Syntax.Embeddings.Base.__proj__Mkembedding__item__em` — the `em`
-   field projector of the `embedding` record, being specialized on an
-   embedding value.
+   M7 is *not*, however, the whole remaining story, as an earlier draft of
+   this section claimed on the strength of a single root.  Pushing past
+   `sort_by` immediately produced the `Sealed.ops` case below, which is a
+   dictionary built from a runtime value and which no inference can promote.
+   The honest summary is that generic helpers are the *common* case and M7
+   handles them; runtime-built dictionaries are a second, rarer case that
+   needs `extern` realizations or opt-in dictionary passing.
 
-   The important part is that it consumes *no fuel* while it runs away, so it
-   is not a runaway request loop: §3.6's budget bounds the number of
-   specializations, and nothing bounds the normalizer *within* the computation
-   of a single key.  `key_norm_steps` is deliberately the most aggressive
-   reduction in the pipeline (it has to be — a key is an identity), and
-   embeddings are exactly the kind of compositional, self-referential
-   dictionary value that gives such a reduction nothing to stop at.
+8. **Extraction ran away, and it was §5.11's fault, not the normalizer's.**
+   With §5.11 in place `FStarC.TypeChecker.Normalize.normalize` consumed 73GB
+   without finishing.  The plausible-looking explanation was that key
+   normalization had diverged: `key_norm_steps` is deliberately the most
+   aggressive reduction in the pipeline, it is *strong* (no `Weak`, no `HNF`,
+   because a key has to be a normal form), and `Cfg.default_steps` sets
+   `zeta = true`, so recursive definitions are unfolded unless `Exclude Zeta`
+   is passed — leaving `Zeta` out of a step list does not turn it off, since a
+   step list only ever adds.  Embeddings are exactly the kind of
+   compositional, self-referential dictionary such a reduction would not stop
+   on.
 
-   This wants a bound on key normalization, and a diagnostic naming the
-   definition rather than a hang.  It is the first thing to look at after M7,
-   because M7 will make far more of the compiler reachable and this is what
-   is waiting there.
+   That explanation was wrong, and adding `Exclude Zeta` changed nothing: the
+   run still reached 73GB.  Tracing each normalization site showed the actual
+   shape — the last *body* was normalized early and then nothing new was ever
+   requested again, while argument normalization continued forever.  No new
+   requests means no fuel spent, which is why §3.6's budget never fired; it
+   also means nothing was diverging, since every key was a cache hit.  It was
+   the same already-named code being re-extracted exponentially often, from
+   §5.11 duplicating nested monomorphic helpers.  Restricting §5.11 to
+   polymorphic local functions fixed it, and `Exclude Zeta` was reverted as
+   unmotivated.
+
+   Two things are worth keeping from this.  First, the diagnostic that
+   actually discriminated was *whether fuel was being spent*: a runaway with
+   no fuel spent cannot be a request loop, and cannot be a divergence either
+   if the keys repeat.  Second, `key_norm_steps` really is unbounded strong
+   normalization with `zeta` on, and that remains a latent hazard even though
+   it was not this one.  Nothing bounds the normalizer within a single key, so
+   a definition that does diverge there would hang with no diagnostic at all.
+   Bounding it wants doing before M7 makes much more of the compiler
+   reachable.
 
 6. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
@@ -3183,7 +3245,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
 | M9b | Exceptions (§8.5): `TExn`, the `DExn` producer, `raise`/`try_with` rules | Done. `tests/custard/Exceptions.fst`; OCaml only |
 | M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
-| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`.  Table and conclusion in §12.8 item 5: M7 is a prerequisite and, on this evidence, the whole remaining story for §3.2b.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), local functions blocking specialization (§5.11), an inline marker escaping newtype collapse (§5.2), and keys not seeing through local `let`s (§3.2b).  Found and *not* fixed: key normalization can diverge (§12.8 item 8) |
+| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `FStarC.Main.main` stops at `Class.Ord.sort_by`.  Conclusion in §12.8 item 5: M7 is a prerequisite, and handles the common case but not all of it.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), local functions blocking specialization (§5.11), an inline marker escaping newtype collapse (§5.2), and keys not seeing through local `let`s (§3.2b).  Also found: §5.11 must be restricted to polymorphic locals or extraction blows up exponentially (§12.8 item 8), and `Primops.Sealed.ops` builds a dictionary from a runtime value, which no annotation can fix |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |
 | M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | |
