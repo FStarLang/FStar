@@ -203,6 +203,7 @@ let defaults = [
   ("custard_warn_any"                          , Bool false);
   ("custard_fuel"                              , Int 10000);
   ("custard_max_specializations"               , Int 1000);
+  ("custard_norm_budget"                       , Int 10000000);
   ("custard_monomorphize_types"                , Bool false);
   ("custard_backend"                           , String "OCaml");
   ("compat_pre_core"                           , Unset);
@@ -484,6 +485,7 @@ let get_custard_dump_layouts ()          = lookup_opt "custard_dump_layouts"    
 let get_custard_warn_any ()             = lookup_opt "custard_warn_any"             as_bool
 let get_custard_fuel            ()      = lookup_opt "custard_fuel"             as_int
 let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
+let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
 let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
 let get_custard_backend         ()      = lookup_opt "custard_backend"          as_string
 let get_defensive               ()      = lookup_opt "defensive"                as_string
@@ -932,6 +934,15 @@ the rest.");
     IntStr "positive_integer",
     text "Number of specializations Custard may create for any single \
 definition before giving up (default 1000)");
+
+  ( noshort,
+    "custard_norm_budget",
+    IntStr "positive_integer",
+    text "Number of reduction steps Custard may spend normalizing any single \
+term -- a specialization key, a substituted argument, or a definition's body \
+-- before giving up (default 10000000).  Normalization need not terminate, so \
+without this a definition that diverges under reduction would hang the \
+compiler rather than report an error");
 
   ( noshort,
     "custard_monomorphize_types",
@@ -2136,6 +2147,7 @@ let custard_dump_layouts ()         = get_custard_dump_layouts ()
 let custard_warn_any ()             = get_custard_warn_any ()
 let custard_fuel                 () = get_custard_fuel ()
 let custard_max_specializations  () = get_custard_max_specializations ()
+let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 let custard_backend              () = get_custard_backend ()
 

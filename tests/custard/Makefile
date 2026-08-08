@@ -174,6 +174,7 @@ NOGREP_Library = library_unused "let _ ="
 REJECT_TESTS += MonoPoly
 REJECT_TESTS += MonoPartial
 REJECT_TESTS += MonoFuel
+REJECT_TESTS += NormBudget
 # WarnAny is higher-kinded (#f:Type0 -> Type0), which has no counterpart in the
 # target type language: it lands on TAny, which --custard_warn_any reports and
 # WARN_ANY escalates.  This is the positive test for section 5.6.
@@ -189,6 +190,7 @@ CODE_CNoClosure  = 367
 CODE_MonoPoly    = 363
 CODE_MonoPartial = 363
 CODE_MonoFuel    = 364
+CODE_NormBudget  = 364
 CODE_WarnAny     = 366
 
 include $(FSTAR_ROOT)/mk/test.mk

@@ -350,6 +350,31 @@ let request_chain (st:state) : ML (list Pprint.document) =
 let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.document) : ML a =
   E.raise_error0 code (msg @ request_chain st)
 
+(* Every normalization Custard performs runs under a step budget.
+
+   Custard reduces terms nobody wrote for it: a specialization key has to be a
+   normal form, so [key_norm_steps] is the most aggressive reduction in the
+   pipeline, and it is applied to whatever value happens to reach a [Mono]
+   binder.  Reduction does not have to terminate -- with [zeta] on, which is
+   the default, a recursive definition can be unfolded without bound -- and
+   there is no way to know in advance that a given argument is safe.
+
+   The failure mode this replaces is the worst kind: not a wrong answer or a
+   rejection, but a compiler that never finishes and never says why.  With the
+   budget the same program gets a fatal error naming the definition being
+   specialized and the chain that reached it, which is the information needed
+   to either fix the definition or raise the limit. *)
+let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML term =
+  try N.with_budget (Options.custard_norm_budget ())
+                    (fun () -> N.normalize steps (tcenv st) t)
+  with N.Budget_exceeded ->
+    custard_error st E.Error_CustardFuelExhausted [
+      text ("Custard exceeded --custard_norm_budget (" ^
+            show (Options.custard_norm_budget ()) ^
+            " reduction steps) while normalizing " ^ what ^ ".");
+      text "Reduction of an argument to a monomorphized binder need not terminate: a recursive definition reachable from it may unfold without bound. Either avoid specializing on this value, or raise --custard_norm_budget if the term is merely large."
+    ]
+
 (* -------------------------------------------------------------------- *)
 (* Loading                                                              *)
 (* -------------------------------------------------------------------- *)
@@ -734,7 +759,8 @@ and expr_of_term (st:state) (t:term) : ML expr =
          (* Section 5.11: a local function is substituted at its uses rather
             than compiled as a closure, so that each use instantiates its type
             and its [Mono] arguments concretely. *)
-         expr_of_term st (N.normalize local_inline_steps (tcenv st)
+         expr_of_term st (norm_bounded st "an inlined local function"
+                            local_inline_steps
                                       (SS.subst [NT (bv, U.unmeta lb.lbdef)] body))
        else
        let e1 = if TcUtil.must_erase_for_extraction (tcenv st) lb.lbtyp &&
@@ -1155,9 +1181,11 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       | Dropped :: cs, _ :: sp -> go (i + 1) cs sp margs msubst rest
       | Mono :: cs, a :: sp ->
         let a0 = unfold_lets st 100 (fst a) in
-        let t = N.normalize key_norm_steps (tcenv st) a0 in
+        let what = "the argument to binder " ^ show i ^ " of " ^
+                   Ident.string_of_lid l in
+        let t = norm_bounded st ("a specialization key -- " ^ what) key_norm_steps a0 in
         check_mono_arg st l i t;
-        let w = N.normalize subst_norm_steps (tcenv st) a0 in
+        let w = norm_bounded st what subst_norm_steps a0 in
         (* Full reduction can eliminate a free variable that weak reduction
            leaves behind ([fst (x, 1)]), and the body must stay closed. *)
         let w = if is_empty (Free.names w) then w else t in
@@ -1458,10 +1486,11 @@ and with_erased_flag (d:decl) : ML decl =
    before we can tell a type declaration from a value declaration. *)
 and is_type_sig (st:state) (t:typ) : ML bool =
   let _, c = U.arrow_formals_comp t in
-  let res = N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                         TcEnv.Beta; TcEnv.Iota;
-                         TcEnv.UnfoldUntil delta_constant]
-                        (tcenv st) (U.comp_result c) in
+  let res = norm_bounded st "a type signature"
+                         [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                          TcEnv.Beta; TcEnv.Iota;
+                          TcEnv.UnfoldUntil delta_constant]
+                         (U.comp_result c) in
   (* [eqtype] is a refinement of [Type0], so peel refinements too.  [prop] is
      [assume val prop : Type0], i.e. opaque, so the normalizer cannot reduce it
      to a [Tm_type]; but a [prop]-valued definition such as [eq2] or [l_and] is
@@ -1480,10 +1509,11 @@ and is_type_sig (st:state) (t:typ) : ML bool =
    closure to (fail to) discover it: these are all opaque. *)
 and is_prop_sig (st:state) (t:typ) : ML bool =
   let _, c = U.arrow_formals_comp t in
-  let res = N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                         TcEnv.Beta; TcEnv.Iota;
-                         TcEnv.UnfoldUntil delta_constant]
-                        (tcenv st) (U.comp_result c) in
+  let res = norm_bounded st "a type signature"
+                         [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                          TcEnv.Beta; TcEnv.Iota;
+                          TcEnv.UnfoldUntil delta_constant]
+                         (U.comp_result c) in
   match (SS.compress (U.unrefine res)).n with
   | Tm_fvar fv -> S.fv_eq_lid fv PC.prop_lid
   | _ -> false
@@ -1532,7 +1562,8 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
   in
   let spine, poly, polycs, c = go 0 bs cs [] [] [] [] in
   let applied = match spine with [] -> def | _ -> U.mk_app def spine in
-  let body = N.normalize custard_norm_steps (tcenv st) applied in
+  (* The chain in the error names the definition, so "a body" is enough. *)
+  let body = norm_bounded st "a definition body" custard_norm_steps applied in
   (U.abs poly body None, c, polycs, poly)
 
 and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)

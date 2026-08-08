@@ -893,8 +893,29 @@ let is_norm_request_head (fv : S.fv) : ML (option norm_request_kind) =
  * information when --debug NormTop is given, which makes it a
  * whole lot easier to find normalization calls that are taking a long
  * time. *)
+(* See the interface.  [budget] is the number of reduction steps still
+   allowed; negative means unbounded, which is the default. *)
+let budget : ref int = mk_ref (-1)
+
+
+let with_budget (n:int) (f: unit -> ML 'a) : ML 'a =
+  let saved = !budget in
+  budget := n;
+  let r = try f () with e -> (budget := saved; raise e) in
+  budget := saved;
+  r
+
+(* Charged once per call to [norm], which is the reduction machine's single
+   entry point, so the count is proportional to the work actually done. *)
+let charge_step () : ML unit =
+  let b = !budget in
+  if b >= 0 then
+    if b = 0 then raise Budget_exceeded
+    else budget := b - 1
+
 let rec norm : cfg -> env -> stack -> term -> ML term =
     fun cfg env stack t ->
+        charge_step ();
         let rec collapse_metas st =
           match st with
           (* Keep only the outermost Meta_monadic *)

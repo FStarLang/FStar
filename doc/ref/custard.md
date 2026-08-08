@@ -686,6 +686,38 @@ looked up and before its body is normalized — and the only work done per
 diverging step is normalizing the `Mono` arguments to their canonical form.
 With the default bounds a diverging program should fail in well under a second.
 
+#### Bounding normalization itself
+
+The counters above bound the number of specializations.  Nothing they do
+bounds the work inside *one* of them, and normalization is not guaranteed to
+terminate either: `Cfg.default_steps` sets `zeta = true` — so leaving `Zeta`
+out of a step list does not disable it, a step list only ever adds — and
+`Unfolding.should_unfold` will then unfold a recursive definition without
+bound.  Custard is unusually exposed to this because it reduces terms nobody
+wrote for it: a key has to be a normal form, so `key_norm_steps` is the most
+aggressive reduction in the pipeline and it is applied to whatever value
+happens to reach a `Mono` binder.
+
+So every normalization Custard performs runs under `--custard_norm_budget`
+(default 10,000,000 reduction steps), implemented as
+`Normalize.with_budget`, which charges one step per call to `norm` — the
+reduction machine's single entry point — and raises `Budget_exceeded` when the
+count runs out.  Custard turns that into a fatal error naming what it was
+normalizing and the request chain that reached it.
+
+Two choices worth recording.  It is a **step count, not a time limit**,
+because a compiler that fails should fail identically on every machine and
+every run.  And the budget is *per normalization*, not per run, because the
+question it answers is "is this one term diverging?", which is what the
+diagnostic needs to name.
+
+The default has room: extracting `FStarC.Syntax.Print.term_to_string` needs
+under 10,000 steps for its largest single normalization, three orders of
+magnitude below the default, so hitting the budget means something is wrong
+rather than merely large.  `tests/custard/NormBudget.fst` pins the behaviour
+with a definition that is `Tot` for the typechecker and divergent for the
+normalizer; without the budget it hangs, with it it fails in three seconds.
+
 ### 3.7 Canonicalizing `Mono` arguments for interning
 
 Two call sites should share a specialization when their `Mono` arguments are

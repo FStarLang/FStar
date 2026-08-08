@@ -210,6 +210,7 @@ val custard_dump_layouts: unit           -> ML bool
 val custard_warn_any            : unit    -> ML bool
 val custard_fuel                : unit    -> ML int
 val custard_max_specializations : unit    -> ML int
+val custard_norm_budget         : unit    -> ML int
 val custard_monomorphize_types  : unit    -> ML bool
 val custard_backend             : unit    -> ML string
 
