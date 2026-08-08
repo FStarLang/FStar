@@ -2062,6 +2062,22 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         match (U.unmeta ty).n with
         | Tm_uinst (t, _) -> clearly_inhabited t
         | Tm_arrow {comp=c} -> clearly_inhabited (U.comp_result c)
+        | Tm_fvar fv ->
+            let l = S.lid_of_fv fv in
+               (Ident.lid_equals l PC.int_lid)
+            || (Ident.lid_equals l PC.bool_lid)
+            || (Ident.lid_equals l PC.string_lid)
+            || (Ident.lid_equals l PC.exn_lid)
+        | _ -> false
+    in
+    (* A more generous version of [clearly_inhabited], used only to discharge
+       [nonempty t] goals. It is deliberately kept separate: [clearly_inhabited]
+       also drives the quantifier simplifications below, where being too eager
+       collapses verification conditions and degrades error messages. *)
+    let rec clearly_nonempty (ty : typ) : ML bool =
+        match (U.unmeta ty).n with
+        | Tm_uinst (t, _) -> clearly_nonempty t
+        | Tm_arrow {comp=c} -> clearly_nonempty (U.comp_result c)
         | Tm_type _ -> true
         | Tm_app _ ->
           let hd, _ = U.head_and_args_full ty in
@@ -2073,13 +2089,10 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
            | _ -> false)
         | Tm_fvar fv ->
             let l = S.lid_of_fv fv in
-               (Ident.lid_equals l PC.int_lid)
-            || (Ident.lid_equals l PC.bool_lid)
-            || (Ident.lid_equals l PC.string_lid)
-            || (Ident.lid_equals l PC.exn_lid)
-            || (Ident.lid_equals l PC.unit_lid)
+               (Ident.lid_equals l PC.unit_lid)
             || (Ident.lid_equals l PC.prop_lid)
-        | _ -> false
+            || clearly_inhabited ty
+        | _ -> clearly_inhabited ty
     in
     let simplify arg = (simp_t (fst arg), arg) in
     match is_forall_const cfg tm with
@@ -2189,7 +2202,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         then match args with
              (* [nonempty t] is trivially true when [t] is obviously inhabited *)
              | [(ty, _)] ->
-               if clearly_inhabited ty
+               if clearly_nonempty ty
                then w U.t_true, false
                else tm, false
              | _ -> tm, false
