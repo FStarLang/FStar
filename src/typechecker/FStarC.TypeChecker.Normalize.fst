@@ -1263,10 +1263,18 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 let ty = norm cfg env [] lb.lbtyp in
                 let lbname = Inl ({Inl?.v lb.lbname with sort=ty}) in
                 let xs, def_body, lopt = U.abs_formals lb.lbdef in
-                let xs = norm_binders cfg env xs in
+                (* A definiens lives under the recursively bound names, and the
+                   binders' *sorts* are part of the definiens: opening replaces
+                   the recursive occurrences but does not renumber anything
+                   around them, so the slots are still there and the sorts
+                   still count them.  Normalizing [xs] in the outer [env]
+                   therefore looks an outer variable up one slot too shallow --
+                   a "Failed to find" failure on any inner [let rec] whose
+                   arguments mention an outer type variable. *)
+                let rec_env = List.map (fun _ -> dummy ()) lbs @ env in
+                let xs = norm_binders cfg rec_env xs in
                 let env = List.map (fun _ -> dummy ()) xs //first the bound vars for the arguments
-                        @ List.map (fun _ -> dummy ()) lbs //then the recursively bound names
-                        @ env in
+                        @ rec_env in                      //then the recursively bound names
                 let def_body = norm cfg env [] def_body in
                 let lopt =
                   match lopt with
