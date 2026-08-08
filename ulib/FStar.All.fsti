@@ -21,6 +21,12 @@ include FStar.Exn
 new
 val ref ([@@@ strictly_positive] a:Type0) : Type0
 
+(** References always exist, so [ref a] is inhabited. This cannot be
+    proven, since [alloc] below is itself effectful; it is an axiom
+    about the (OCaml) realization of [ref]. It is needed to define
+    top-level references, e.g. [let r : ref int = alloc 0]. *)
+val nonempty_ref (a:Type0) : Lemma (nonempty (ref a)) [SMTPat (nonempty (ref a))]
+
 (** References support decidable equality *)
 
 (** STATE effect: same WP as DIV (underspecified state) *)

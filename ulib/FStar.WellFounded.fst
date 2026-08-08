@@ -59,7 +59,6 @@ let fix (#aa:Type) (#r:binrel aa) (rwf:well_founded r)
   : p x
   = fix_F f x (rwf x)
 
-open FStar.Nonempty
 
 let is_well_founded (#a:Type) (rel:binrel a) =
   forall (x:a). nonempty (acc rel x)

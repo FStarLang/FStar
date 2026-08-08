@@ -17,7 +17,6 @@ module Evens.Test
 open Evens
 open FStar.Tactics.V2
 
-open FStar.Nonempty
 
 let even_test () =
  assert (nonempty (even (nat2unary 1024)))
