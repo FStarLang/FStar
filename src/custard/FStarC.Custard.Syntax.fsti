@@ -121,6 +121,10 @@ type cty =
       distinction -- both are [t*], and the buffer operations apply to either
       -- but OCaml does, and a [t ref] is both the honest translation and a
       far better one than a one-element array (section 8.4). *)
+  | TExn
+  (** [Prims.exn], the one extensible variant.  It has no parameters and no
+      layout to derive: its constructors arrive one at a time, as [DExn]
+      declarations (section 8.5).  Only OCaml has a representation for it. *)
   | TTuple of list cty
   | TUnit
   (** The sole inhabited erased value.  Erased *types* have no
@@ -224,8 +228,14 @@ and expr' =
       introduce it (Pulse's [unreachable], section 8.3). *)
   | EOp      of prim_op & list expr
   | EWhile   of expr & expr
-  | ERaise   of name & list expr
+  | ERaise   of expr
+  (** Raise an exception value.  The value is an ordinary [ECtor] of a
+      constructor declared by a [DExn] (section 8.5), so nothing here is
+      special-cased; only the control flow is. *)
   | ETry     of expr & list branch
+  (** [try e with | p -> ...].  The branches match on a [TExn], so they are
+      the same [branch] as an [EMatch]'s, and the last one is a catch-all
+      rather than exhaustive -- an uncaught exception propagates. *)
 
 and branch = pat & option expr & expr
 

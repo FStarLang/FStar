@@ -183,6 +183,7 @@ type cty =
   | TApp     of name & list cty      // named type, incl. arity-0
   | TTuple   of list cty
   | TUnit                            // the sole inhabited erased value
+  | TExn                             // Prims.exn, the extensible variant (§8.5)
   | TAny                             // ML's MLTY_Top: representation unknown
 ```
 
@@ -233,7 +234,7 @@ and expr' =
   | ECast   of expr & cty                    // the *only* unsafe coercion node
   | EOp     of prim_op & list expr           // built-in ops (see §8)
   | EWhile  of expr & expr                   // statement-shaped, see §7.4
-  | ERaise  of name & list expr
+  | ERaise  of expr                          // §8.5; the value is an ECtor
   | ETry    of expr & list (pat & option expr & expr)
 ```
 
@@ -2077,7 +2078,7 @@ Emission:
   | `TAny` | the representation was already lost; `--custard_warn_any` (§5.9) says where |
   | `TTuple`, `ETuple`, `PTuple` | tuples must have reached the backend as `tupleN` inductives |
   | `POr`, pattern guards | no `EAbortS`-style approximation is available here |
-  | `ERaise`, `ETry`, `DExn` | no exceptions |
+  | `ERaise`, `ETry`, `DExn`, `TExn` | no exceptions (§8.5) |
   | recursive datatypes | a C struct cannot contain itself by value |
   | a top-level `DLet` with no binders | C cannot initialize a global from a computation |
 
@@ -2554,6 +2555,51 @@ This is what makes the compiler's own imperative style reachable: roughly
 sixty `FStarC.*` modules allocate a `mk_ref` at the top level and mutate it
 (§12.8).
 
+### 8.5 Exceptions
+
+`exception Bad of string & int` desugars to a data constructor of `Prims.exn`,
+which is the one inductive with no `Sig_inductive_typ` behind it: `exn` is
+extensible, any module may add a constructor, and there is no declaration to
+hang fields on.  So `Extract.request` intercepts a constructor whose owner is
+`PC.exn_lid` before the ordinary "request the type instead" path and emits a
+declaration of its own, `DExn` -- which is what `MLM_Exn` is in the ML pipeline
+(`Modul.fst:978`).  Erased binders are dropped exactly as they are for an
+ordinary constructor, so building one agrees with declaring it.  `Prims.exn`
+itself is a builtin rule mapping to `TExn`.
+
+Nothing else about an exception value is special.  `Bad ("negative", n)` is an
+ordinary `ECtor`, and `| Bad (s, k) ->` an ordinary `PCtor`, printed by the
+same `ctor_ref` that a variant's constructors are -- which is exactly why the
+declaration and the uses agree without a second mechanism.  Only the control
+flow gets nodes:
+
+| F\* | IR |
+| --- | --- |
+| `Prims.exn` | `TExn` |
+| `exception C of t1 & t2` | `DExn` |
+| `raise e` | `ERaise e` |
+| `try_with (fun () -> e) h` | `ETry (e, [_cexn -> h _cexn])` |
+| `failwith`, `exit` | externals; OCaml's own |
+
+`ERaise` takes an *expression*, not a constructor and its arguments: the value
+raised need not be built at the raise site, and making the node carry a
+constructor would have meant special-casing something that `ECtor` already
+does.  `ETry` gets a single catch-all branch because that is what the source
+says -- F\* has no `try` syntax, so a handler is a function, and it does its
+own matching on the value.  The thunk is unwrapped when it is syntactically a
+lambda, the way `Pulse.Lib.Dv.while_`'s two halves are (§8.3).
+
+Neither C backend has anything to say here: karamel drops a `DExn` with a
+warning and compiles every use to `EAbortS`, and the direct backend rejects
+both.  That is not a gap to be closed -- C has no exceptions -- it is the
+statement that a program using them is an OCaml program.
+
+One thing this does *not* do: a tuple field of an exception is not inlined the
+way §5.7 inlines one in a constructor, so `exception Bad of string & int`
+declares one field of tuple type rather than two.  `Simplify.inline_fields`
+works from the constructor table a `DType` provides, and a `DExn` has no
+`DType`.  `tests/custard/Exceptions.fst` is the regression.
+
 ---
 
 ## 9. Testing and validation
@@ -2888,14 +2934,7 @@ Separate compilation is a prerequisite for plugins but not the only gap between
 Custard today and compiling the compiler.  What a survey of `src/custard/`
 against `src/**/*.fst` turns up, in rough order of size:
 
-1. **Exceptions have no producer.**  `DExn`, `ERaise` and `ETry`
-   (`Syntax.fsti:227`, `:300`) exist in the IR and are carried correctly by
-   every pass and by the OCaml backend, but nothing in `Extract` ever builds
-   one.  This is precisely the state `TRecord` was in before §5.5.  Note also
-   that an F\* `exception` declaration desugars to a data constructor of the
-   single extensible `Prims.exn`, so `extract_inductive`'s
-   `datacons_of_typ` enumeration is the wrong shape for them and they need
-   their own path.
+1. ~~**Exceptions have no producer.**~~  Done: §8.5.
 2. ~~**No rules for the garbage-collected references.**~~  Done: §8.4.  The
    remaining hole is that they are OCaml-only, which is the right trade for
    the compiler and wrong for anything targeting C.
@@ -2949,7 +2988,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M8b | Direct-to-C backend (§6): self-contained C11, no krmllib, function pointers but no closures | `KrmlBasic` and both Pulse modules compiled `-Wall -Wextra -Werror` and run; `CNoInt`/`CNoClosure` reject |
 | M8c | Inline constructor fields (§5.7): `Simplify.inline_fields`, `TInline`, `[@@@custard_inline_field]` | Done. `tests/custard/InlineFields.fst`; closes the `\| Bar of a & b` indirection of FStarLang/FStar#4382 |
 | M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
-| M9b | Exceptions: an `Extract` producer for `DExn`/`ERaise`/`ETry`, and the `Prims.exn` constructor path (§12.8 item 1) | The IR and the OCaml backend already carry them |
+| M9b | Exceptions (§8.5): `TExn`, the `DExn` producer, `raise`/`try_with` rules | Done. `tests/custard/Exceptions.fst`; OCaml only |
 | M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
 | M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Decides whether M7 moves ahead of M10 |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |

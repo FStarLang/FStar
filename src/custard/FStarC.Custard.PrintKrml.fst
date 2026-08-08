@@ -116,6 +116,9 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   match t with
   | TUnit -> K.TUnit
   | TAny -> K.TAny
+  (* karamel has no exceptions; every *use* of one is already an [EAbortS],
+     so the type only has to be something it can carry. *)
+  | TExn -> K.TAny
   | TInt sw -> K.TInt (krml_width sw)
   | TVar x -> if env.tvars_any then K.TAny else K.TBound (find_t env x)
   | TArrow (a, _, b) -> K.TArrow (krml_typ env a, krml_typ env b)

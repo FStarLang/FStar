@@ -214,6 +214,10 @@ let prims_rule (id:string) : ML (option rule) =
      -- the operands' own types say what is being compared. *)
   | "op_Equality"    -> bool_op Eq 2
   | "op_disEquality" -> bool_op Neq 2
+  (* [Prims.exn] is the one extensible variant: it has no constructors of its
+     own, so there is no layout to derive and nothing to instantiate.  Only
+     OCaml has a representation for it (section 8.5). *)
+  | "exn" -> Some (Rule_type (fun _ -> TExn))
   | _ -> None
 
 (* -------------------------------------------------------------------- *)
@@ -436,6 +440,43 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
    [read]/[write] index at 0 for the same reason [Pulse.Lib.Reference] does:
    the IR has one memory-access node, and a reference is the one-element case
    of it. *)
+(* Section 8.5.  [raise] is a control-flow node rather than a call, because a
+   backend has to know that nothing after it runs.  [try_with] arrives as two
+   functions -- F* has no [try] syntax, so the source always spells it
+   [try_with (fun () -> e) (fun e -> h)] -- and becomes an [ETry] with a
+   single catch-all branch, which is what the two arguments say: an F*
+   handler takes the exception value and does its own matching. *)
+let exn_var : string = "_cexn"
+
+let exn_rule (id:string) : ML (option rule) =
+  (* Pulse's [while_] does the same: a thunk that is syntactically a lambda is
+     the body it wraps, and calling it would only make the backend undo that. *)
+  let force (f:expr) : ML expr =
+    match f.e with
+    | EFun ([_], body) -> body
+    | _ -> mk (EApp (f, [unit_expr])) TAny E_Impure in
+  match id with
+  | "raise" ->
+    Some (Rule_prim (1, fun _ args ->
+      match args with
+      | [e] -> mk (ERaise e) TAny E_Impure
+      | _ -> failwith "Custard: raise applied to the wrong number of arguments"))
+  | "try_with" ->
+    Some (Rule_prim (2, fun _ args ->
+      match args with
+      | [f; h] ->
+        let body = force f in
+        let x = mk (EVar exn_var) TExn E_Pure in
+        mk (ETry (body, [(PVar exn_var, None,
+                          mk (EApp (h, [x])) body.ty E_Impure)]))
+           body.ty E_Impure
+      | _ -> failwith "Custard: try_with applied to the wrong number of arguments"))
+  (* [failwith] and [exit] are OCaml's own, and there is nothing to be gained
+     by giving either an IR node. *)
+  | "failwith" -> Some (Rule_extern { x_name = Some "failwith"; x_header = None })
+  | "exit" -> Some (Rule_extern { x_name = Some "exit"; x_header = None })
+  | _ -> None
+
 let ref_rule (id:string) : ML (option rule) =
   let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
   let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
@@ -512,7 +553,11 @@ let builtin_rule (l:Ident.lident) : ML rule =
            else if ns = ["FStar"; "All"] || ns = ["FStarC"; "Effect"]
            then (match ref_rule id with
                  | Some r -> Some r
-                 | None -> pulse_rule ns id)
+                 | None ->
+                   (match exn_rule id with
+                    | Some r -> Some r
+                    | None -> pulse_rule ns id))
+           else if ns = ["FStar"; "Exn"] then exn_rule id
            else pulse_rule ns id)
       | [] -> None
   in

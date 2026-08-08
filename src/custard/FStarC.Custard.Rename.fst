@@ -164,7 +164,7 @@ let rec rn_expr (fields:SMap.t string) (ts:scope) (s:scope) (x:expr) : ML expr =
     | ECast (e1, t) -> ECast (go e1, rn_cty ts t)
     | EOp (o, es) -> EOp (o, es |> List.map go)
     | EWhile (c, b) -> EWhile (go c, go b)
-    | ERaise (n, es) -> ERaise (n, es |> List.map go)
+    | ERaise e1 -> ERaise (go e1)
     | ETry (e1, brs) -> ETry (go e1, brs |> List.map (rn_branch fields ts s))
   in
   { x with e = e; ty = ty }

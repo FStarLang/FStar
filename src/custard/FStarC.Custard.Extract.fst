@@ -427,6 +427,14 @@ let rec request (st:state) (k:spec_key) : ML name =
     SMap.add st.names key nm;
     ensure_lid_available st l;
     match datacon_owner st l with
+    (* An exception constructor is not part of a declaration of [Prims.exn]:
+       [exn] is extensible and has no declaration at all, so the constructor
+       *is* the declaration.  Section 8.5. *)
+    | Some ty_lid when Ident.lid_equals ty_lid PC.exn_lid ->
+      let d = extract_exn st l nm in
+      SMap.add st.emitted key d;
+      st.order := key :: !st.order;
+      nm
     | Some ty_lid ->
       (* A data constructor is part of its inductive's declaration, not a
          declaration of its own: request the type and emit nothing. *)
@@ -461,6 +469,19 @@ and check_budget (st:state) (k:spec_key) : ML unit =
       text ("Custard ran out of specialization fuel while requesting " ^ lstr ^
             "; see --custard_fuel.")
     ]
+
+(* [exception Foo of string] desugars to a data constructor of [Prims.exn],
+   which is the one inductive with no [Sig_inductive_typ] to hang fields on:
+   its constructors are declared one at a time and a program may add more at
+   any point.  So the constructor gets a declaration of its own -- exactly
+   what [DExn] is -- and the erased binders go the same way they do for an
+   ordinary constructor, so that building one agrees with declaring it. *)
+and extract_exn (st:state) (l:Ident.lident) (nm:name) : ML decl =
+  let _, ty = TcEnv.lookup_datacon (tcenv st) l in
+  let bs, _ = U.arrow_formals_comp ty in
+  let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
+  DExn { de_name = nm;
+         de_args = bs |> List.map (fun b -> ty_of_typ st b.binder_bv.sort) }
 
 and datacon_owner (st:state) (l:Ident.lident) : ML (option Ident.lident) =
   match TcEnv.lookup_sigelt (tcenv st) l with

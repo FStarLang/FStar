@@ -156,6 +156,7 @@ let int_inj (sw : signedness & width) : string =
 let rec ty (t:cty) : ML string =
   match t with
   | TUnit -> "unit"
+  | TExn -> "exn"
   | TAny -> "Obj.t"
   | TVar x -> "'" ^ ocaml_var x
   | TInt sw -> int_module sw ^ ".t"
@@ -397,9 +398,7 @@ let rec term (ind:string) (e:expr) : ML string =
   | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
   | EWhile (c, body) ->
     "(while " ^ term ind c ^ " do " ^ term ind body ^ " done)"
-  | ERaise (n, []) -> "(raise " ^ ctor_ref n ^ ")"
-  | ERaise (n, args) ->
-    "(raise (" ^ ctor_ref n ^ " (" ^ String.concat ", " (List.map (term ind) args) ^ ")))"
+  | ERaise e1 -> "(raise " ^ term ind e1 ^ ")"
   | ETry (e1, brs) ->
     let ind' = ind ^ "  " in
     "(try " ^ term ind e1 ^ " with\n" ^

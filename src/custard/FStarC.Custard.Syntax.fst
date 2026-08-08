@@ -166,6 +166,7 @@ let rec cty_to_doc' (prec:int) (t:cty) : ML document =
   | TVar x -> text ("'" ^ x)
   | TInt sw -> text (width_to_string sw)
   | TUnit -> text "unit"
+  | TExn -> text "exn"
   | TAny -> text "any"
   | TArrow (t1, e, t2) ->
     let arrow =
@@ -319,10 +320,7 @@ let rec expr_to_doc' (prec:int) (e:expr) : ML document =
   | EAny -> text "any"
   | EAbort s -> group (text "abort" ^/^ dquotes (text s))
 
-  | ERaise (n, []) -> group (text "raise" ^/^ name_to_doc n)
-  | ERaise (n, args) ->
-    group (text "raise" ^/^ name_to_doc n ^^
-           parens (sep_by (comma ^^ space) (List.map (expr_to_doc' 0) args)))
+  | ERaise e1 -> group (text "raise" ^/^ expr_to_doc' 1 e1)
 
   | ETry (e1, brs) ->
     parens_if (prec >= 1) <|

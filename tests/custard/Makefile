@@ -23,6 +23,7 @@ CUSTARD_TESTS += MonoTypes
 CUSTARD_TESTS += InlineFields
 CUSTARD_TESTS += KeyNames
 CUSTARD_TESTS += Refs
+CUSTARD_TESTS += Exceptions
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -56,6 +57,13 @@ GREP_KeyNames = "keyNames_apply__tweak" "keyNames_apply__tweak_1" \
 # one-element array, and it is never freed.
 GREP_Refs   = "(Prims.int ref)" "(ref (Prims.parse_int \"0\"))" "(!(r))" "(r) := "
 NOGREP_Refs = "Array.make" "free"
+
+# Section 8.5: each exception constructor is its own declaration, raising is
+# a control-flow node rather than a call, and try_with becomes a real
+# 'try ... with' whose single branch hands the value to the handler.
+GREP_Exceptions   = "exception Exceptions_Empty" "exception Exceptions_Bad of" \
+                    "raise Exceptions_Empty" "(try " "with" "Exceptions_Empty ->"
+NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.

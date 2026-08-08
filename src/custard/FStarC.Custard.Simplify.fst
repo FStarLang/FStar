@@ -40,7 +40,8 @@ let rec occurs (v:string) (x:expr) : ML bool =
   | EIf (c, a, b) -> occurs v c || occurs v a || occurs v b
   | EAny | EAbort _ -> false
   | ESeq (a, b) -> occurs v a || occurs v b
-  | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> occurs_list v es
+  | ECtor (_, es) | ETuple es | EOp (_, es) -> occurs_list v es
+  | ERaise e1 -> occurs v e1
   | ERecord (_, fs) -> occurs_list v (fs |> List.map snd)
   | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _) -> occurs v e1
   | EWhile (a, b) -> occurs v a || occurs v b
@@ -162,7 +163,7 @@ let anf_expr (x0:expr) : ML expr =
           { x with e = EApp (h, es) }
         | ECtor (n, es)  -> { x with e = ECtor (n, ops es) }
         | ETuple es      -> { x with e = ETuple (ops es) }
-        | ERaise (n, es) -> { x with e = ERaise (n, ops es) }
+        | ERaise e1 -> { x with e = ERaise (norm e1) }
         | ERecord (n, fs) -> { x with e = ERecord (n, fields fs) }
         | EOp (o, es) ->
           if delayed_operands o
@@ -269,7 +270,7 @@ let rec simpl (x:expr) : ML expr =
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map simpl) }
   | ETuple es -> { x with e = ETuple (es |> List.map simpl) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map simpl) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map simpl) }
+  | ERaise e1 -> { x with e = ERaise (simpl e1) }
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, simpl e))) }
   | EProj (e1, n, f) -> { x with e = EProj (simpl e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (simpl e1, n) }
@@ -320,7 +321,7 @@ let rec sub (sm:subst) (x:expr) : ML expr =
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
   | ETuple es -> { x with e = ETuple (es |> List.map g) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
@@ -364,7 +365,8 @@ let rec count (v:string) (x:expr) : ML int =
     | EIf (c, a, b) -> imin 2 (count v c + imax (count v a) (count v b))
     | EAny | EAbort _ -> 0
     | ESeq (a, b) -> imin 2 (count v a + count v b)
-    | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> count_list v es
+    | ECtor (_, es) | ETuple es | EOp (_, es) -> count_list v es
+    | ERaise e1 -> count v e1
     | ERecord (_, fs) -> count_list v (fs |> List.map snd)
     | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _) -> count v e1
     | EWhile (a, b) -> imin 2 (count v a + count v b)
@@ -491,7 +493,7 @@ let rec reduce (x:expr) : ML expr =
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map reduce) }
   | ETuple es -> { x with e = ETuple (es |> List.map reduce) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map reduce) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map reduce) }
+  | ERaise e1 -> { x with e = ERaise (reduce e1) }
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, reduce e))) }
   | EProj (e1, n, f) -> { x with e = EProj (reduce e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (reduce e1, n) }
@@ -547,7 +549,7 @@ let rec inline_expr (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (x:
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
   | ETuple es -> { x with e = ETuple (es |> List.map g) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
@@ -656,7 +658,8 @@ let rec expr_deps (x:expr) : ML (list string) =
   let sub (es:list expr) : ML (list string) = List.collect expr_deps es in
   ds @ (match x.e with
         | EQual (n, tys) -> string_of_name n :: List.collect cty_deps tys
-        | ECtor (n, es) | ERaise (n, es) -> string_of_name n :: sub es
+        | ECtor (n, es) -> string_of_name n :: sub es
+        | ERaise e1 -> expr_deps e1
         | ERecord (n, fs) -> string_of_name n :: sub (List.map snd fs)
         | EDiscrim (e, n) -> string_of_name n :: expr_deps e
         | EProj (e, n, _) -> string_of_name n :: expr_deps e
@@ -792,7 +795,7 @@ let unused_params (prog:program) : ML program =
     | TArrow (a, _, b) -> u_cty a; u_cty b
     | TTuple cs -> cs |> List.iter u_cty
     | TBuf c | TRef c | TInline c -> u_cty c
-    | TInt _ | TUnit | TAny -> ()
+    | TInt _ | TUnit | TExn | TAny -> ()
   and u_args (n:name) (args:list cty) : ML unit =
     match retained n args with
     | Some ks -> List.zip ks args |> List.iter (fun (k, a) -> if k then u_cty a)
@@ -810,7 +813,8 @@ let unused_params (prog:program) : ML program =
     | ETry (e, brs) -> u_expr e; brs |> List.iter u_branch
     | EIf (c, a, b) -> sub [c; a; b]
     | ESeq (a, b) -> sub [a; b]
-    | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> sub es
+    | ECtor (_, es) | ETuple es | EOp (_, es) -> sub es
+    | ERaise e1 -> u_expr e1
     | ERecord (_, fs) -> sub (fs |> List.map snd)
     | EProj (e, _, _) | EDiscrim (e, _) -> u_expr e
     | ECast (e, t) -> u_cty t; u_expr e
@@ -864,7 +868,7 @@ let unused_params (prog:program) : ML program =
     | TBuf c -> TBuf (r_cty c)
     | TRef c -> TRef (r_cty c)
     | TInline c -> TInline (r_cty c)
-    | TVar _ | TInt _ | TUnit | TAny -> c in
+    | TVar _ | TInt _ | TUnit | TExn | TAny -> c in
   let r_binder (b:binder) : ML binder = { b with b_ty = r_cty b.b_ty } in
   let rec r_expr (x:expr) : ML expr =
     let go = r_expr in
@@ -882,7 +886,7 @@ let unused_params (prog:program) : ML program =
       | EIf (c, a, b) -> EIf (go c, go a, go b)
       | ESeq (a, b) -> ESeq (go a, go b)
       | ECtor (n, es) -> ECtor (n, es |> List.map go)
-      | ERaise (n, es) -> ERaise (n, es |> List.map go)
+      | ERaise e1 -> ERaise (go e1)
       | ETuple es -> ETuple (es |> List.map go)
       | EOp (o, es) -> EOp (o, es |> List.map go)
       | ERecord (n, fs) -> ERecord (n, fs |> List.map (fun (f, e) -> (f, go e)))
@@ -1073,7 +1077,7 @@ let rec prune (x:expr) : ML expr =
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
   | ETuple es -> { x with e = ETuple (es |> List.map g) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
@@ -1160,7 +1164,7 @@ let rec psub (sm:subst) (x:expr) : ML expr =
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
   | ETuple es -> { x with e = ETuple (es |> List.map g) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
@@ -1217,7 +1221,8 @@ let matched_ctors (tbl:option (SMap.t ctor_info)) (prog:program) : ML (SMap.t bo
     | EApp (h, es) -> go h; List.iter go es
     | EFun (_, b) -> go b
     | EIf (c, a, b) -> go c; go a; go b
-    | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> List.iter go es
+    | ECtor (_, es) | ETuple es | EOp (_, es) -> List.iter go es
+    | ERaise e1 -> go e1
     | ERecord (_, fs) -> fs |> List.iter (fun (_, e) -> go e)
     | EProj (e, _, _) | EDiscrim (e, _) | ECast (e, _) -> go e in
   prog |> List.iter (fun d ->
@@ -1275,7 +1280,7 @@ let rec depat (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (x:expr) : ML expr =
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
   | ETuple es -> { x with e = ETuple (es |> List.map g) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
@@ -1344,7 +1349,7 @@ let records (prog:program) : ML program =
     | ETry (s, brs) -> { x with e = ETry (go s, brs |> List.map go_branch) }
     | ETuple es -> { x with e = ETuple (es |> List.map go) }
     | EOp (o, es) -> { x with e = EOp (o, es |> List.map go) }
-    | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map go) }
+    | ERaise e1 -> { x with e = ERaise (go e1) }
     | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
     | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
     | ECast (e1, c) -> { x with e = ECast (go e1, c) }
@@ -1532,7 +1537,8 @@ let blocked_fields (m:SMap.t fplan) (prog:program) : ML (SMap.t bool) =
     | EApp (h, es) -> go h; List.iter go es
     | EFun (_, b) -> go b
     | EIf (c, a, b) -> go c; go a; go b
-    | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> List.iter go es
+    | ECtor (_, es) | ETuple es | EOp (_, es) -> List.iter go es
+    | ERaise e1 -> go e1
     | ERecord (_, fs) -> fs |> List.iter (fun (_, e) -> go e)
     | EProj (e, _, _) | EDiscrim (e, _) | ECast (e, _) -> go e in
   prog |> List.iter (fun d -> match d with DLet dl -> go dl.dl_body | _ -> ());
@@ -1577,7 +1583,7 @@ let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
   | ETuple es -> { x with e = ETuple (es |> List.map g) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map g) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
@@ -1602,7 +1608,8 @@ let rec only_projected (v:string) (x:expr) : ML bool =
   | EMatch (s, brs) | ETry (s, brs) ->
     g s && brs |> List.for_all (fun (_, gd, b) ->
       (match gd with None -> true | Some e -> g e) && g b)
-  | ECtor (_, es) | ETuple es | EOp (_, es) | ERaise (_, es) -> es |> List.for_all g
+  | ECtor (_, es) | ETuple es | EOp (_, es) -> es |> List.for_all g
+  | ERaise e1 -> g e1
   | ERecord (_, fs) -> fs |> List.for_all (fun (_, e) -> g e)
   | EDiscrim (e1, _) | ECast (e1, _) -> g e1
 
@@ -1690,7 +1697,7 @@ let inline_fields (prog:program) : ML program =
     | ETry (s, brs) -> { x with e = ETry (go s, brs |> List.map go_branch) }
     | ETuple es -> { x with e = ETuple (es |> List.map go) }
     | EOp (o, es) -> { x with e = EOp (o, es |> List.map go) }
-    | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map go) }
+    | ERaise e1 -> { x with e = ERaise (go e1) }
     | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
     | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
     | ECast (e1, c) -> { x with e = ECast (go e1, c) }

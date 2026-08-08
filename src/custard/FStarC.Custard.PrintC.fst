@@ -242,6 +242,9 @@ and base_ty (t:cty) : ML string =
     reject "a value whose representation is unknown (TAny)"
       ["Run with --custard_warn_any to see where the representation was lost \
         (section 5.9)."]
+  | TExn ->
+    reject "an exception type"
+      ["C has no exceptions."]
   | TBuf _ | TRef _ | TArrow _ -> decl_of t ""
 
 (* The abstract declarator: a type as a cast or a compound literal spells it. *)
@@ -422,7 +425,8 @@ let rec vars_of (e:expr) : ML (list string) =
   | EIf (a, b, c) -> vars_of a @ vars_of b @ vars_of c
   | ESeq (a, b) -> vars_of a @ vars_of b
   | EWhile (a, b) -> vars_of a @ vars_of b
-  | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> List.collect vars_of es
+  | ECtor (_, es) | ETuple es | EOp (_, es) -> List.collect vars_of es
+  | ERaise e1 -> vars_of e1
   | ERecord (_, fs) -> List.collect (fun (_, e) -> vars_of e) fs
   | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> vars_of a
 
@@ -446,7 +450,8 @@ let rec mutates (x:string) (e:expr) : ML bool =
   | ETry (a, brs) -> mutates x a || List.existsb (mutates_branch x) brs
   | EIf (a, b, c) -> mutates x a || mutates x b || mutates x c
   | ESeq (a, b) | EWhile (a, b) -> mutates x a || mutates x b
-  | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> any es
+  | ECtor (_, es) | ETuple es | EOp (_, es) -> any es
+  | ERaise e1 -> mutates x e1
   | ERecord (_, fs) -> List.existsb (fun (_, e) -> mutates x e) fs
   | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> mutates x a
 

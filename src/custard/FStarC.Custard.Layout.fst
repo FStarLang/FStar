@@ -71,6 +71,9 @@ let rec cty_erased (t:tbl) (c:cty) : ML bool =
   | TUnit -> true
   | TVar _ -> false
   | TAny -> false
+  (* An exception value is a value; and raising one is observable whether or
+     not anything reads it. *)
+  | TExn -> false
   (* A machine integer's representation is fixed by its builtin rule
      (section 8), so nothing about it is ours to erase. *)
   | TInt _ -> false
@@ -352,7 +355,7 @@ let rec rw_expr (t:tbl) (x:expr) : ML expr =
   | ETuple es -> { x with e = ETuple (es |> List.map (rw_expr t)) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map (rw_expr t)) }
   | EWhile (a, b) -> { x with e = EWhile (rw_expr t a, rw_expr t b) }
-  | ERaise (n, es) -> { x with e = ERaise (n, es |> List.map (rw_expr t)) }
+  | ERaise e1 -> { x with e = ERaise (rw_expr t e1) }
   | ETry (a, brs) -> { x with e = ETry (rw_expr t a, brs |> List.map (rw_branch t)) }
 
   | ECtor (n, es) ->

@@ -79,6 +79,7 @@ let rec hint_of_cty (c:cty) : ML string =
   | TInline c -> hint_of_cty c
   | TTuple cs -> "tup" ^ String.concat "_" (cs |> List.map hint_of_cty)
   | TUnit -> "unit"
+  | TExn -> "exn"
   | TArrow _ -> "fn"
   | TAny -> "any"
 
@@ -179,7 +180,7 @@ let rec mono_cty (st:state) (c:cty) : ML cty =
   | TRef c -> TRef (mono_cty st c)
   | TInline c -> TInline (mono_cty st c)
   | TTuple cs -> TTuple (cs |> List.map (mono_cty st))
-  | TVar _ | TInt _ | TUnit | TAny -> c
+  | TVar _ | TInt _ | TUnit | TExn | TAny -> c
 
 (* The instantiation a use site is building or matching.  [None] means the
    type was not polymorphic, so its constructors keep their names. *)
@@ -307,7 +308,7 @@ let rec mono_expr (st:state) (env:env) (x:expr) : ML expr =
     | EIf (c, a, b) -> EIf (go c, go a, go b)
     | ESeq (a, b) -> ESeq (go a, go b)
     | ECtor (cn, es) -> ECtor (rename x.ty cn, es |> List.map go)
-    | ERaise (n, es) -> ERaise (n, es |> List.map go)
+    | ERaise e1 -> ERaise (go e1)
     | ETuple es -> ETuple (es |> List.map go)
     | ERecord (n, fs) ->
       let n' = match owner_of x.ty with Some o -> o | None -> n in
@@ -395,7 +396,7 @@ let run (prog:program) : ML program =
     | TArrow (a, _, b) -> freeze (fuel - 1) a; freeze (fuel - 1) b
     | TBuf c | TRef c | TInline c -> freeze (fuel - 1) c
     | TTuple cs -> cs |> List.iter (freeze (fuel - 1))
-    | TVar _ | TInt _ | TUnit | TAny -> () in
+    | TVar _ | TInt _ | TUnit | TExn | TAny -> () in
   prog |> List.iter (fun d ->
     match d with
     | DExternal x -> freeze 100 x.dx_ty

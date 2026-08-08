@@ -80,7 +80,7 @@ let warn_any (prog:program) : ML unit =
     | TApp (_, args) -> args |> List.existsb any_cty
     | TTuple cs -> cs |> List.existsb any_cty
     | TBuf c | TRef c | TInline c -> any_cty c
-    | TVar _ | TInt _ | TUnit -> false in
+    | TVar _ | TInt _ | TUnit | TExn -> false in
   let at (where:string) (c:cty) : ML unit =
     if any_cty c then note ("the " ^ where ^ " has type " ^ show c) in
   let rec go (x:expr) : ML unit =
@@ -100,7 +100,8 @@ let warn_any (prog:program) : ML unit =
     | ETry (e, brs) -> go e; brs |> List.iter go_branch
     | EIf (c, a, b) -> sub [c; a; b]
     | ESeq (a, b) -> sub [a; b]
-    | ECtor (_, es) | ERaise (_, es) | ETuple es | EOp (_, es) -> sub es
+    | ECtor (_, es) | ETuple es | EOp (_, es) -> sub es
+    | ERaise e1 -> go e1
     | ERecord (_, fs) -> sub (fs |> List.map snd)
     | EProj (e, _, _) | EDiscrim (e, _) -> go e
     | ECast (e, _) -> go e
