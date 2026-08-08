@@ -1305,6 +1305,17 @@ Because Custard has no ABI-compatibility obligation (an explicit non-goal),
 this is safe: nobody outside the generated program can observe the
 representation, except through the custom rules of §8, which opt out.
 
+Collapse takes precedence over the inline fields of §5.7, and takes the
+marker with it.  `type step = | Step of bool & string` is a single field of
+tuple type, so §5.7 marks it inline; but the constructor disappears
+altogether, and `step` simply *is* the pair — a strictly better answer than
+inlining into a wrapper.  The marker has to be stripped as the payload is
+recorded, because a collapsed type is substituted for its name *everywhere*,
+including into binder types and type arguments, and `Simplify.inline_fields`
+only ever looks at constructor fields.  Left on, the marker escapes to
+positions no pass will visit and reaches a backend that has no representation
+for it.
+
 ### 5.3 The layout fixpoint
 
 Erasure and newtype collapse interact with the extraction loop: whether a
@@ -2984,11 +2995,31 @@ against `src/**/*.fst` turns up, in rough order of size:
    is not an independent item so much as the acceptance test for §12: a plugin
    *is* a separately compiled unit linking against the compiler.
 5. **§3.2b — a `Poly` argument in a `Mono` position — is a hard rejection**,
-   and the compiler leans on `FStarC.Class.Show`/`Ord`/`Monad` everywhere.  If
-   generic helpers over those classes trip it at scale then M7's
-   infer-and-promote stops being a v2 nicety and becomes a prerequisite.  This
-   is cheap to measure — point Custard at one compiler module and count — and
-   worth measuring before committing to a schedule.
+   and the compiler leans on `FStarC.Class.Show`/`Ord`/`Monad` everywhere.
+   Measured (M9d), by pointing Custard at compiler entry points of increasing
+   size:
+
+   | Entry point | Result |
+   | --- | --- |
+   | `FStarC.Common.string_of_list` | Extracts |
+   | `FStarC.Ident.string_of_lid` | Extracts |
+   | `FStarC.Options.set_option` | Extracts |
+   | `FStarC.Parser.ParseIt.parse` | Extracts |
+   | `FStarC.Syntax.Print.term_to_string` | Extracts (~6 kloc of OCaml) |
+   | `FStarC.Errors.log_issue` | §3.2b: `FStarC.Class.HasRange.pos`, runtime parameter `pos_t` |
+   | `FStarC.TypeChecker.Normalize.normalize` | §3.2b, via `Primops.Sealed.ops` |
+   | `FStarC.Main.main` | §3.2b: `FStarC.Class.Ord.sort` from `sort_by`, runtime parameter `a` |
+
+   Every rejection has the same shape: a *generic helper over a class* —
+   `sort_by : ord a -> (b -> a) -> list b -> list b`, `log_issue : hasRange r
+   -> r -> ...` — passes its own type parameter to a class method.  A helper
+   like that is `Mono` in everything but the annotation, and M7's
+   infer-and-promote is exactly the analysis that would say so.  Annotating
+   them by hand would work and is what the diagnostic suggests, but there are
+   enough of them, and they are spread over enough of the library, that
+   **M7 is a prerequisite for compiling the compiler, not a v2 nicety.**  It
+   is not a prerequisite for §12 itself: the two are independent, and M10 can
+   proceed on the code that already extracts.
 6. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
    leaves syntax, elaboration and the checked files unchanged.
@@ -3027,7 +3058,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
 | M9b | Exceptions (§8.5): `TExn`, the `DExn` producer, `raise`/`try_with` rules | Done. `tests/custard/Exceptions.fst`; OCaml only |
 | M9c | `FStar.All`/`FStarC.Effect` reference rules (§8.4) | Done. `Builtins.ref_rule`; `tests/custard/Refs.fst`. OCaml only: a GC'd reference has no C representation |
-| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Decides whether M7 moves ahead of M10 |
+| M9d | Measure §3.2b rejections over one real compiler module (§12.8 item 5) | Done. `FStarC.Syntax.Print.term_to_string` extracts whole; `Errors.log_issue`, `Normalize.normalize` and `Main.main` each stop at one generic-helper-over-a-class.  Measurement table and conclusion in §12.8 item 5: M7 is a prerequisite.  Found and fixed on the way: three loader bugs, a `Normalize` scope bug, local `let rec` extracting as `()` (§5.10), and an inline marker escaping newtype collapse (§5.2) |
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |
 | M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | |

@@ -126,6 +126,15 @@ let erasure_fixpoint (t:tbl) : ML unit =
   in
   loop (SMap.fold t.types (fun _ _ n -> n + 1) 1)
 
+(* A collapsed newtype has no constructor left to inline a field into, so its
+   payload must shed the [TInline] marker of section 5.7 before it is
+   substituted for the type everywhere.  Left on, the marker escapes into
+   binder types and type arguments, where [Simplify.inline_fields] -- which
+   only ever looks at constructor fields -- can no longer take it away, and
+   the backends see a node they have no representation for. *)
+let uninline (c:cty) : cty =
+  match c with TInline c -> c | c -> c
+
 (* -------------------------------------------------------------------- *)
 (* 5.2 Constructor layouts and newtype collapse                         *)
 (* -------------------------------------------------------------------- *)
@@ -207,7 +216,7 @@ let compute_layouts (t:tbl) : ML unit =
           | [cl] ->
             if cl.cl_arity = 1 then
               (match cl.cl_fields with
-               | [(_, c)] -> SMap.add cands k c
+               | [(_, c)] -> SMap.add cands k (uninline c)
                | _ -> ())
           | _ -> ());
   (* Pass 2: reject the candidates whose representation is cyclic. *)
@@ -224,7 +233,7 @@ let compute_layouts (t:tbl) : ML unit =
        | Some i, [(f, c)] ->
          SMap.add t.layouts k
            (L_newtype { nt_ctor = cl.cl_name; nt_field = f;
-                        nt_index = i; nt_ty = c })
+                        nt_index = i; nt_ty = uninline c })
        | _ -> ())
     | _ -> ())
 

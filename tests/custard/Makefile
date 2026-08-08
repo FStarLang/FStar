@@ -25,6 +25,7 @@ CUSTARD_TESTS += KeyNames
 CUSTARD_TESTS += Refs
 CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += LocalRec
+CUSTARD_TESTS += NewtypeInline
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -71,6 +72,10 @@ GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go"
                     "let rec localRec_parity__even" "and localRec_parity__odd" \
                     "localRec_sum_upto__go n"
 NOGREP_LocalRec   = "let rec aux" "let rec go"
+
+# The collapsed newtype is the pair itself, and no [inline] marker escapes.
+GREP_NewtypeInline   = "(bool, string) fStar_Pervasives_Native_tuple2"
+NOGREP_NewtypeInline = "newtypeInline_step" "inline"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.
