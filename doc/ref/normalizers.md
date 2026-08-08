@@ -136,6 +136,15 @@ Three things to watch for:
 * When asserting "did this unfold?", match **both** `Tv_FVar fv` and
   `Tv_UInst fv _`. A universe-polymorphic head reads back as the latter, and a
   test that only matches `Tv_FVar` can pass for the wrong reason.
+* A divergence can show up as a **hang**, not an error. When flipping a suite to
+  `--use_nbe true`, run it under a timeout and check that it actually finished;
+  a `make -k` that is still running is not a pass. Remember that
+  `tests/bug-reports` has a `closed/` subdirectory, which is where the local
+  let rec divergence above was hiding.
+* Residual terms containing a local `let rec` cannot be compared with
+  `term_to_string`: the two engines differ there in the two accepted ways above
+  (NBE drops the body's ascription, and the printer renders the binder
+  differently). Test termination and the resulting proof obligation instead.
 
 ## Termination
 
@@ -146,6 +155,19 @@ unfolding directives when it descends into the branches of an irreducible match
 `isAccu` guard on recursion, but a branch cfg that only turned `zeta` off. It now
 mirrors the normalizer (`NBE.stuck_match_cfg`). The two halves must stay in sync
 — relaxing the recursion guard without the stronger branch cfg diverges.
+
+The stopping half has to cover **both** recursion paths in `NBE.iapp`:
+
+* `TopLevelRec` stops because `still_unfoldable` rejects the fv once
+  `stuck_match_cfg` has stripped the delta levels.
+* `LocalLetRec` has no fv and therefore no delta level, so the only thing that
+  can stop it is `zeta`, which it must test explicitly — exactly as the
+  normalizer's `Tm_let` case does with `not cfg.steps.zeta && not
+  cfg.steps.zeta_full`.
+
+Missing the second one is not caught by any closed-term test: it needs a local
+`let rec` scrutinising a *symbolic* argument, as in
+`tests/bug-reports/closed/Bug1622.fst`.
 
 ## Benchmarks
 
