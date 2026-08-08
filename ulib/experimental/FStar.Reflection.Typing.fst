@@ -19,7 +19,6 @@ module FStar.Reflection.Typing
 open FStar.Reflection.TermSpec
 open FStar.Reflection.TermSpec.Lemmas
 include FStar.Stubs.Tactics.Types.Reflection
-open FStar.Nonempty
 (** This module defines a typing judgment for (parts of) the total
     fragment of F*. We are using it in the meta DSL framework as an
     official specification for the F* type system.

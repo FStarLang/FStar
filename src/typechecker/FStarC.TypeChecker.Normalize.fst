@@ -2062,12 +2062,23 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         match (U.unmeta ty).n with
         | Tm_uinst (t, _) -> clearly_inhabited t
         | Tm_arrow {comp=c} -> clearly_inhabited (U.comp_result c)
+        | Tm_type _ -> true
+        | Tm_app _ ->
+          let hd, _ = U.head_and_args_full ty in
+          (match (U.un_uinst hd).n with
+           | Tm_fvar fv ->
+             let l = S.lid_of_fv fv in
+                (Ident.lid_equals l PC.list_lid)
+             || (Ident.lid_equals l PC.option_lid)
+           | _ -> false)
         | Tm_fvar fv ->
             let l = S.lid_of_fv fv in
                (Ident.lid_equals l PC.int_lid)
             || (Ident.lid_equals l PC.bool_lid)
             || (Ident.lid_equals l PC.string_lid)
             || (Ident.lid_equals l PC.exn_lid)
+            || (Ident.lid_equals l PC.unit_lid)
+            || (Ident.lid_equals l PC.prop_lid)
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
@@ -2173,6 +2184,14 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
                        | _ -> tm, false)
                      | _ -> tm, false
                end
+             | _ -> tm, false
+        else if S.fv_eq_lid fv PC.nonempty_lid
+        then match args with
+             (* [nonempty t] is trivially true when [t] is obviously inhabited *)
+             | [(ty, _)] ->
+               if clearly_inhabited ty
+               then w U.t_true, false
+               else tm, false
              | _ -> tm, false
         else if S.fv_eq_lid fv PC.b2t_lid
         then match args with

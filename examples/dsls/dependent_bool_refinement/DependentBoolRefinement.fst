@@ -1,5 +1,4 @@
 module DependentBoolRefinement
-open FStar.Nonempty
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 open FStar.List.Tot

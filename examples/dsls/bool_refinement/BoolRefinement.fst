@@ -1,5 +1,4 @@
 module BoolRefinement
-open FStar.Nonempty
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
@@ -1794,15 +1793,15 @@ let soundness_lemma (f:RT.fstar_top_env)
     (ensures  nonempty (RT.tot_typing (extend_env_l f sg)
                             (denote_term (elab_exp se))
                             (denote_term (elab_ty st))))
-  = let dd = FStar.Nonempty.nonempty_elim (src_typing f sg se st) in
-    FStar.Nonempty.nonempty_intro (soundness dd)
+  = let dd = Prims.nonempty_elim (src_typing f sg se st) in
+    Prims.nonempty_intro (soundness dd)
 
 let main (nm:string) (src:src_exp) : RT.dsl_tac_t =
   fun (f, expected_t) ->
   if ln src && closed src
   then if None? expected_t
        then let (| src_ty, d |) = check f [] src in
-            let _ : FStar.Nonempty.nonempty (RT.tot_typing (extend_env_l f []) (denote_term (elab_exp src)) (denote_term (elab_ty src_ty))) = FStar.Nonempty.nonempty_intro (soundness d) in
+            let _ : Prims.nonempty (RT.tot_typing (extend_env_l f []) (denote_term (elab_exp src)) (denote_term (elab_ty src_ty))) = Prims.nonempty_intro (soundness d) in
             [],
             RT.mk_checked_let f (T.cur_module ()) nm (elab_exp src) (elab_ty src_ty),
             []

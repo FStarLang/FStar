@@ -4019,6 +4019,27 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
   erasable
 
 (******************************************************************************)
+(* Check that a type is provably inhabited.                                   *)
+(*                                                                            *)
+(* When a top-level definition has a non-total effect, F* masks that effect    *)
+(* and treats the definition as a value of its result type. This is only      *)
+(* sound if the result type is actually inhabited: otherwise a divergent      *)
+(* term could be used to inhabit False. So we demand a proof of               *)
+(* [Prims.nonempty t]. (Lean imposes the same requirement on its              *)
+(* [partial def]s.)                                                           *)
+(******************************************************************************)
+and check_nonempty_result env (t:typ) : ML unit =
+  let u = env.universe_of env t in
+  let g =
+    Env.guard_of_guard_formula (NonTrivial (U.mk_nonempty u t))
+    |> TcUtil.label_guard (Env.get_range env)
+         (Errors.mkmsg
+            (Format.fmt1 "This definition has a non-total effect, so its type must be \
+                          provably inhabited; could not prove `nonempty (%s)`" (show t)))
+  in
+  Rel.force_trivial_guard env g
+
+(******************************************************************************)
 (* Checking a top-level, non-recursive let-binding:                           *)
 (* top-level let's may be generalized, if they are not annotated              *)
 (* the body of a top-level let is always ()---no point in checking it         *)
@@ -4049,8 +4070,14 @@ and check_top_level_let env e : ML _ =
            if ok
            then e2, c1
            else (
-             if not env.phase1 then
+             if not env.phase1 then (
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
+               (* The effect of e1 is about to be masked, i.e., we are turning a
+                  possibly-divergent computation of type t into a value of type t.
+                  That is only sound if t is actually inhabited, so we demand a
+                  proof of it. See issue #4401. *)
+               check_nonempty_result (Env.push_univ_vars env univ_vars) (U.comp_result c1)
+             );
              mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1 //and tag it as masking an effect
            )
          in

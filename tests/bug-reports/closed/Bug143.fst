@@ -34,11 +34,11 @@ val delta : lam
 let delta = Lam f
 
 
-val omega : empty
+(* This used to only raise a warning, allowing `empty` (which has no
+   inhabitants) to be inhabited by a divergent computation, and hence
+   `False` to be proven. F* now demands a proof of `nonempty empty`
+   for such a top-level definition, which of course fails. See #4401. *)
 #push-options "--warn_error -272" //Warning_TopLevelEffect
-let omega = f delta
+[@@expect_failure [19]]
+let omega : empty = f delta
 #pop-options
-
-
-val bug : unit -> Lemma (requires True) (ensures False)
-let bug () = empty_is_empty omega
