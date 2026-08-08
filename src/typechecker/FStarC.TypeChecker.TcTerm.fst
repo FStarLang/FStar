@@ -985,10 +985,33 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       let tm = S.mk_Tm_app tm [e, aqual] r in
       mk (Tm_ascribed {tm; asc=(Inr expected_c, None, use_eq); eff_opt=expected_c |> U.comp_effect_name |> Some}) r in
 
+    (* Reflection justifies only a *trivial* specification: the representation
+       type says nothing about the pre- and postcondition, so a reflected term
+       may not simply adopt the ascribed specification.  Check the ascription
+       by subsumption against the trivial computation instead, or a reflect
+       could claim any specification at all, including a false one. *)
+    let g_spec =
+      let c_reflect =
+        S.mk_Comp ({ comp_univs  = [u_c]
+                   ; effect_name = expected_ct.effect_name
+                   ; result_typ  = expected_ct.result_typ
+                   ; comp_pre    = S.trivial_pre
+                   ; comp_post   = S.trivial_post expected_ct.result_typ
+                   ; flags       = [] }) in
+      match Rel.sub_comp env0 c_reflect expected_c with
+      | Some g -> g
+      | None ->
+        raise_error top Errors.Fatal_UnexpectedEffect
+          (Format.fmt2
+            "A reflected term only has the trivial specification %s, \
+             which does not subsume the ascribed %s\n"
+            (show c_reflect) (show expected_c))
+    in
+
     //check the expected type in the env, if present
     let top, c, g_env = comp_check_expected_typ env top (expected_c |> TcComm.lcomp_of_comp) in
 
-    top, c, g_c ++ g_e ++ g_env
+    top, c, g_c ++ g_e ++ g_spec ++ g_env
 
   | Tm_ascribed {tm=e; asc=(Inr expected_c, None, use_eq)} ->
     let env0, _ = Env.clear_expected_typ env in
