@@ -71,11 +71,28 @@ let liar2 () : M int (requires True) (ensures fun r -> r == 1) = M?.reflect 0
 /// Reflection at the trivial specification must keep working.
 let honest () : M int (requires True) (ensures fun _ -> True) = M?.reflect 0
 
-/// Note: under the fix, `reflect` justifies ONLY the trivial specification, so
-/// even a *true* nontrivial claim is no longer derivable from `reflect` alone.
-/// This is inherent to the simplified effect system: the representation type
-/// cannot mention the specification, so there is nothing to discharge it
-/// against.  It must be established some other way.
+/// `reflect` justifies only the trivial specification, so a nontrivial claim
+/// has to be carried by the *result type* instead -- move the postcondition
+/// into a refinement, which `reflect` does check against the representation:
+let honest_refined () : M (n:nat{n == 0}) (requires True) (ensures fun _ -> True) =
+  M?.reflect (0 <: n:nat{n == 0})
+
+/// ... and a refinement that the reflected value does not satisfy is rejected.
 [@@ expect_failure]
-let honest_but_unjustified () : M int (requires True) (ensures fun r -> r == 0) =
-  M?.reflect 0
+let liar_refined () : M (n:nat{n == 1}) (requires True) (ensures fun _ -> True) =
+  M?.reflect (0 <: n:nat{n == 1})
+
+/// A false `ensures` is still rejected when the value is refined.
+[@@ expect_failure]
+let liar_ensures () : M int (requires True) (ensures fun r -> r == 1) =
+  M?.reflect (0 <: n:nat{n == 0})
+
+/// NOTE: writing the refinement in the result type and *also* asking for an
+/// equivalent `ensures` at the same time does not work, because the trivial
+/// computation is built at the ascribed result type (`int`), which has already
+/// dropped the refinement.  Use the refined result type, as `honest_refined`
+/// does.  Separately, and independently of `reflect`, result-type subtyping
+/// between two computations of the same user-defined effect is currently
+/// rejected (`h () : M (n:nat{n == 0}) ...` used at `M int (ensures r == 0)`);
+/// that is a pre-existing incompleteness on this branch, not unsoundness, and
+/// it reproduces with `assume val` and no `reflect` anywhere.
