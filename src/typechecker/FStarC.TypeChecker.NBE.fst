@@ -1219,6 +1219,21 @@ and translate_monadic mty cfg bs e : ML t =
      | None ->
        failwith (Format.fmt1 "Effect declaration not found: %s" (Ident.string_of_lid m))
 
+     | Some (ed, _) when U.is_layered ed ->
+       (* The code below builds the plain-effect bind application
+            bind a b wp_f f wp_g g
+          A layered bind instead expects
+            bind a b <units for the index binders> <2 ranges, if asked for> f g
+          and Normalize.bind_inst_args has a separate path for it. Reproducing
+          that path here is a real piece of work -- it also needs the layered
+          form of reify_lift, real universes rather than U_unknown, and Div-let
+          reduction under `tactics` -- so refuse explicitly rather than build a
+          malformed application and report it as an "ill-typed application".
+          This is what makes --__tactics_nbe unusable: TAC is layered. *)
+       failwith (Format.fmt1
+         "NBE: reification of indexed (layered) effects is not implemented (%s)"
+         (Ident.string_of_lid m))
+
      | Some (ed, q) ->
        let cfg' = reifying_false cfg in
        let body_lam =
@@ -1305,6 +1320,15 @@ and translate_monadic mty cfg bs e : ML t =
 and translate_monadic_lift msmt cfg bs e : ML t =
    let (msrc, mtgt, ty) = msmt in
    let e = U.unascribe e in
+   if mtgt |> Env.is_layered_effect cfg.core_cfg.tcenv
+   then
+     (* Normalize.reify_lift deliberately does NOT use the target's return for a
+        layered effect -- it uses the lift, because that is what verification
+        used. NBE has no such path; see translate_monadic. *)
+     failwith (Format.fmt1
+       "NBE: reification of a lift into an indexed (layered) effect is not implemented (%s)"
+       (Ident.string_of_lid mtgt))
+   else
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.core_cfg.tcenv (Env.norm_eff_name cfg.core_cfg.tcenv mtgt) in
         let ret = match (SS.compress (ed |> U.get_return_repr |> Some?.v |> snd)).n with
