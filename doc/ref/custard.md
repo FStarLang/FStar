@@ -1569,6 +1569,43 @@ higher-kinded polymorphism (`#f:Type0 -> Type0`, `x: f int`) has no
 counterpart in the target type language and lands on `TAny` throughout — which
 is the honest answer, and now a visible one.
 
+### 5.10 Local `let rec`
+
+A local `let rec` is lambda-lifted to a top-level `DLet` rather than given an
+IR node of its own.
+
+The IR's `ELet` is documented non-recursive, and adding an `ELetRec` would mean
+teaching every traversal about it.  There are ~57 `ELet` sites across a dozen
+files, half of them in `Simplify`, and many traversals end in a catch-all
+`| _ -> x`; since `src/custard` is built with `--lax`, which does not check
+match exhaustiveness, a pass that failed to learn about the new node would
+silently drop or mistraverse it rather than fail to compile.  A lifted function,
+by contrast, is an ordinary declaration: it gets specialization, `Simplify.scc`'s
+recursion analysis, and all three backends for free.  It also sidesteps the fact
+that a local `let rec` is a closure and C has no closures.
+
+The lifting is the textbook one, with two Custard-specific wrinkles.
+
+*Captured values* become extra **leading** parameters, shared by every member of
+a mutually recursive nest, so that the nest stays mutually recursive after
+lifting and its members agree on their prefix.  *Captured type variables* become
+`dl_typars`, and the use site passes them as `TVar`s of the same names; since
+compilation is uniform in type parameters (§5.0) they cost nothing at runtime.
+
+Nothing is renamed.  `Subst.open_let_rec` has already made the local names
+unique, and a capture keeps its own name as a parameter, so an occurrence reads
+the same inside the lifted body as it did in place.  The lifted declaration is
+named after the enclosing declaration, `<enclosing>__<ppname>`, uniquified
+through the same counter as every other emitted name; `LocalRec.rev1`'s inner
+`aux` becomes `localRec_rev1__aux`.  Lifted declarations are pushed straight
+into the emission list — nothing will ever `request` them — and carry a
+provisional `Rec` flag naming the whole nest, which `Simplify.scc` recomputes
+from the final call graph exactly as it does for top-level recursion.
+
+Occurrences of a lifted name in the body of the enclosing definition become
+`EQual (nm, tyargs)` applied to the captures.  The partial application is pure:
+the binders the user actually wrote are always still missing.
+
 ---
 
 ## 6. Simplification and emission

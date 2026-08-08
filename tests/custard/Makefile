@@ -24,6 +24,7 @@ CUSTARD_TESTS += InlineFields
 CUSTARD_TESTS += KeyNames
 CUSTARD_TESTS += Refs
 CUSTARD_TESTS += Exceptions
+CUSTARD_TESTS += LocalRec
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -64,6 +65,12 @@ NOGREP_Refs = "Array.make" "free"
 GREP_Exceptions   = "exception Exceptions_Empty" "exception Exceptions_Bad of" \
                     "raise Exceptions_Empty" "(try " "with" "Exceptions_Empty ->"
 NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
+
+# Local [let rec]s are lambda-lifted to top-level declarations (section 5.10).
+GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go" \
+                    "let rec localRec_parity__even" "and localRec_parity__odd" \
+                    "localRec_sum_upto__go n"
+NOGREP_LocalRec   = "let rec aux" "let rec go"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.

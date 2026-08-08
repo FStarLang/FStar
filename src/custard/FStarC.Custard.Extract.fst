@@ -260,6 +260,14 @@ type state = {
      innermost first.  Only used to make diagnostics debuggable (section
      3.6). *)
   chain:   ref (list string);
+  (* Local [let rec]s are lambda-lifted to declarations of their own; this maps
+     a recursive binder (by its IR variable name) to the lifted declaration's
+     name, its type arguments, the captured variables its call sites have to
+     supply, and its full arrow type.  See [lift_letrec]. *)
+  lifted:  SMap.t (name & list cty & list binder & cty);
+  (* The declaration currently being extracted, which is what a lifted local
+     function is named after. *)
+  cur:     ref name;
 }
 
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
@@ -273,6 +281,8 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   suffixes = SMap.create 100;
   fuel    = mk_ref (Options.custard_fuel ());
   chain   = mk_ref [];
+  lifted  = SMap.create 20;
+  cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
 }
 
 let custard_norm_steps : list TcEnv.step = [
@@ -640,7 +650,10 @@ and expr_of_term (st:state) (t:term) : ML expr =
      | None -> unit_expr)
 
   | Tm_bvar b
-  | Tm_name b -> mk (EVar (name_of_bv b)) (ty_of_typ st b.sort) E_Pure
+  | Tm_name b ->
+    (match lifted_ref st b with
+     | Some e -> e
+     | None -> mk (EVar (name_of_bv b)) (ty_of_typ st b.sort) E_Pure)
 
   | Tm_uinst (t, _) -> expr_of_term st t
 
@@ -695,6 +708,8 @@ and expr_of_term (st:state) (t:term) : ML expr =
                                  (join_eff hd.eff (apply_eff hd.ty n)) args in
           mk (EApp (hd, args)) (apply_result hd.ty n) e))
 
+  | Tm_let {lbs=(true, lbs); body} -> lift_letrec st lbs body
+
   | Tm_let {lbs=(false, [lb]); body} ->
     (match lb.lbname with
      | Inl bv ->
@@ -724,6 +739,138 @@ and expr_of_term (st:state) (t:term) : ML expr =
   (* Types and proofs in term position are erased. *)
   | Tm_type _ -> unit_expr
   | _ -> unit_expr
+
+(* -------------------------------------------------------------------- *)
+(* Local [let rec] (section 5.10)                                       *)
+(* -------------------------------------------------------------------- *)
+
+(* A local [let rec] is lambda-lifted to a declaration of its own rather than
+   given an IR node.  Two reasons.  The IR's [ELet] is documented
+   non-recursive, and a recursive one would have to be threaded through every
+   pass in [Simplify], several of which traverse with a catch-all -- a node
+   they did not know about would be silently left untraversed, which is the
+   failure mode this whole pipeline exists to avoid.  And a lifted function is
+   an ordinary declaration, so it gets specialization, the [scc] pass's
+   recursion analysis, and *all three* backends for free; a local [let rec] is
+   a closure, and C has no closures.
+
+   The transformation is the textbook one: the variables the definition
+   captures from its enclosing scope become extra leading parameters, and every
+   reference to the recursive name -- inside the definitions as much as in the
+   body -- becomes the lifted name applied to those captures.  The captured
+   *type* variables become the declaration's type parameters instead, since
+   uniform compilation (section 5.0) passes no types at runtime.
+
+   Nothing is renamed: [open_let_rec] has already made every name unique, and
+   a capture keeps its name when it becomes a parameter, so a reference reads
+   the same inside the lifted body as outside it. *)
+and lifted_ref (st:state) (b:S.bv) : ML (option expr) =
+  match SMap.try_find st.lifted (name_of_bv b) with
+  | None -> None
+  | Some (nm, tyargs, caps, ty) ->
+    let hd = mk (EQual (nm, tyargs)) ty E_Pure in
+    (match caps with
+     | [] -> Some hd
+     | _ ->
+       let args = caps |> List.map (fun (b:binder) ->
+                    mk (EVar b.b_name) b.b_ty E_Pure) in
+       let n = List.length args in
+       (* A partial application builds a closure, so it runs nothing: the
+          lifted function always has at least the binders it was written
+          with left over. *)
+       Some (mk (EApp (hd, args)) (apply_result ty n) E_Pure))
+
+and is_type_bv (st:state) (b:S.bv) : ML bool =
+  Mono.is_type_binder (tcenv st) (S.mk_binder b)
+
+and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
+  let lbs, body = SS.open_let_rec lbs body in
+  let recbvs = lbs |> List.collect (fun lb ->
+                 match lb.lbname with Inl bv -> [bv] | Inr _ -> []) in
+  if List.length recbvs <> List.length lbs then
+    (* [Inr] is a top-level name, which cannot occur in term position. *)
+    expr_of_term st body
+  else begin
+    (* The capture set is shared by the whole nest: a mutually recursive group
+       is lifted as a group, so every member takes every member's captures and
+       a call from one to another needs no adjustment. *)
+    let free = lbs |> List.collect (fun lb -> elems (Free.names lb.lbdef)) in
+    let free = free |> List.filter (fun (v:S.bv) ->
+                 not (List.existsb (fun (r:S.bv) -> S.bv_eq r v) recbvs)) in
+    let rec dedup (l:list S.bv) : ML (list S.bv) =
+      match l with
+      | [] -> []
+      | x :: xs -> x :: dedup (List.filter (fun (y:S.bv) -> not (S.bv_eq x y)) xs) in
+    (* Sorted, so that the parameter order depends on the term and not on the
+       order [Free.names] happened to walk it. *)
+    let free = dedup free |> List.sortWith (fun (x:S.bv) (y:S.bv) -> x.index - y.index) in
+    let tyvars, valvars = List.partition (is_type_bv st) free in
+    let typars = tyvars |> List.map name_of_bv in
+    let tyargs = typars |> List.map (fun v -> TVar v) in
+    let caps = valvars |> List.map (fun (v:S.bv) ->
+                 { b_name = name_of_bv v; b_ty = ty_of_typ st v.sort }) in
+    (* One entry per member, all registered before any body is translated: a
+       call from one member to another must find the lifted name, and so must
+       a self-call. *)
+    let entries = lbs |> List.map (fun lb ->
+      let bv = Inl?.v lb.lbname in
+      let base = (!st.cur).id ^ "__" ^ Ident.string_of_id bv.ppname in
+      let ns = (!st.cur).ns in
+      let n = (match SMap.try_find st.counts base with None -> 0 | Some n -> n) in
+      SMap.add st.counts base (n + 1);
+      let nm = { ns = ns; id = base; spec = (if n = 0 then None else Some (show n)) } in
+      let xs, _, _ = U.abs_formals lb.lbdef in
+      let ret, eff = local_result st lb.lbtyp xs in
+      let arg_binders = xs |> List.map (fun (b:S.binder) ->
+                          { b_name = name_of_bv b.binder_bv;
+                            b_ty   = ty_of_typ st b.binder_bv.sort }) in
+      let binders = caps @ arg_binders in
+      let ty = List.fold_right (fun (b:binder) (t, e) -> (TArrow (b.b_ty, e, t), E_Pure))
+                               binders (ret, eff) |> fst in
+      SMap.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty);
+      (lb, nm, binders, ret, eff)) in
+    entries |> List.iter (fun (lb, nm, binders, ret, eff) ->
+      let _, def_body, _ = U.abs_formals lb.lbdef in
+      let d = DLet {
+        dl_name    = nm;
+        dl_typars  = typars;
+        dl_binders = binders;
+        dl_ret     = ret;
+        dl_eff     = eff;
+        dl_body    = expr_of_term st def_body;
+        (* Provisional, exactly as for a top-level definition: [Simplify.scc]
+           recomputes it from the final call graph. *)
+        dl_flags   = [Rec (entries |> List.map (fun (_, nm, _, _, _) -> nm))];
+      } in
+      (* Not a specialization of anything -- no source lid names it -- so it
+         gets a key of its own, which nothing will ever request. *)
+      let key = "<local>" ^ mangled_name nm in
+      SMap.add st.emitted key d;
+      st.order := key :: !st.order);
+    expr_of_term st body
+  end
+
+(* The result type and effect of a local definition whose definiens has [xs]
+   binders.  As at top level (see [extract_letbinding]), the definiens may have
+   more binders than its type has arrows, and each extra one consumes an arrow
+   -- and with it the effect that a call site actually runs. *)
+and local_result (st:state) (ty:typ) (xs:binders) : ML (cty & eff) =
+  let bs, c = U.arrow_formals_comp ty in
+  (* The type's binders and the definiens' are different names for the same
+     things, and the result type may mention them. *)
+  let rec realign (bs:binders) (xs:binders) : ML (list subst_elt) =
+    match bs, xs with
+    | b :: bs, x :: xs -> NT (b.binder_bv, S.bv_to_name x.binder_bv) :: realign bs xs
+    | _ -> [] in
+  let c = SS.subst_comp (realign bs xs) c in
+  let rec peel (n:int) (e:eff) (t:cty) : ML (eff & cty) =
+    if n <= 0 then (e, t)
+    else match t with
+         | TArrow (_, e', r) -> peel (n - 1) e' r
+         | _ -> (e, t) in
+  let eff, ret = peel (List.length xs - List.length bs)
+                      (eff_of_comp st c) (ty_of_typ st (U.comp_result c)) in
+  (ret, eff)
 
 (* Delete the entries flagged [true].  A flag list shorter than the list being
    filtered leaves the surplus entries alone, which is what we want when a
@@ -1282,6 +1429,9 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
 and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                        (is_rec:bool) (margs:list (int & term)) : ML decl =
   let cs = binder_classes st l in
+  (* Lifted local functions are named after whatever encloses them. *)
+  let saved_cur = !st.cur in
+  st.cur := nm;
   let def, c, polycs, poly = specialize st lb.lbtyp lb.lbdef cs margs in
   let bs, body, _ = U.abs_formals def in
   (* [abs_formals] opens the binders under fresh names, but [c] still speaks of
@@ -1331,13 +1481,15 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
          | TArrow (_, e', r) -> peel (n - 1) e' r
          | _ -> (e, t) in
   let eff, ret = peel n_extra (eff_of_comp st c) (ty_of_typ st (U.comp_result c)) in
+  let dl_body = expr_of_term st body in
+  st.cur := saved_cur;
   DLet {
     dl_name    = nm;
     dl_typars  = typars;
     dl_binders = binders;
     dl_ret     = ret;
     dl_eff     = eff;
-    dl_body    = expr_of_term st body;
+    dl_body    = dl_body;
     (* Provisional: [Simplify.scc] recomputes this from the final call graph,
        which is the only place the answer is knowable -- specialization and
        inlining change it in both directions.  Setting it here at all is just
