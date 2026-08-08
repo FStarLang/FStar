@@ -12,6 +12,7 @@ RUN += Div.fst
 endif
 
 RUN += Division.fst
+RUN += ExtractMe.fst
 RUN += ExtractAs.fst
 RUN += ParseTest.fst
 

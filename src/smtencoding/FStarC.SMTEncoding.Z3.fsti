@@ -18,14 +18,13 @@ open FStarC.Effect
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-module U = FStarC.SMTEncoding.UnsatCore
 module SolverState = FStarC.SMTEncoding.SolverState
 
 type z3status =
-    | UNSAT   of option U.unsat_core
-    | SAT     of error_labels & option string         //error labels & z3 reason
-    | UNKNOWN of error_labels & option string         //error labels & z3 reason
-    | TIMEOUT of error_labels & option string         //error labels & z3 reason
+    | UNSAT
+    | SAT     of option string         //z3 reason
+    | UNKNOWN of option string         //z3 reason
+    | TIMEOUT of option string         //z3 reason
     | KILLED
 type z3statistics = SMap.t string
 
@@ -34,7 +33,6 @@ type z3result = {
       z3result_time        : int;
       z3result_initial_statistics : z3statistics;
       z3result_statistics  : z3statistics;
-      z3result_query_hash  : option string;
       z3result_log_file    : option string
 }
 
@@ -46,7 +44,7 @@ type query_log = {
     close_log:       unit -> ML unit;
 }
 
-val status_string_and_errors : z3status -> ML (string & error_labels)
+val status_string : z3status -> ML string
 
 val query_logging : query_log
 
@@ -58,21 +56,19 @@ val giveZ3_lazy : SolverState.lazy_decls -> ML unit
 
 val ask_text
        : r:Range.t
-       -> cache:(option string) // hash
-       -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
-       -> core:option U.unsat_core
        -> ML string
 
+(* Asks the solver a batch of queries.  [qry] may contain any number of
+   check-sat blocks, each delimited by [Echo "<goal>"] / [Echo "</goal>"];
+   one result is returned per block that the solver answered.  Fewer results
+   than blocks means the solver died part-way through. *)
 val ask: r:Range.t
-       -> cache:option string // hash
-       -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
        -> fresh:bool
-       -> core:option U.unsat_core
-       -> ML z3result
+       -> ML (list z3result)
 
 (* This will make sure the solver is in a fresh state, potentially
 killing the current process. A new process will *not* be started
@@ -86,5 +82,5 @@ val push : msg:string -> ML unit
 val pop : msg:string -> ML unit
 val snapshot : string -> ML int
 val rollback : string -> option int -> ML unit
-val start_query (msg:string) (prefix_to_push:list decl) (query:decl) : ML unit
+val start_query (msg:string) (prefix_to_push:list decl) (query:list decl) : ML unit
 val finish_query (msg:string) : ML unit

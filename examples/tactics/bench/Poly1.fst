@@ -20,7 +20,7 @@ open FStar.Tactics.CanonCommSemiring
 assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)
 assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 
-#set-options "--z3rlimit 150 --fuel 0 --ifuel 0 --using_facts_from '* -FStar.Tactics'"
+#set-options "--fuel 0 --ifuel 0 --using_facts_from '* -FStar.Tactics'"
 
 // To print timing
 #set-options "--query_stats"

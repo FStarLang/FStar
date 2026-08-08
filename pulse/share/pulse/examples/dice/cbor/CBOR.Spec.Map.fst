@@ -335,7 +335,7 @@ let rec list_sorted_append_chunk_elim
     end
   | _ :: l1' -> list_sorted_append_chunk_elim order l1' l2 l3
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --split_queries no"
+#push-options "--fuel 2 --ifuel 1"
 #restart-solver
 let rec map_sort_merge_correct
   (#t1 #t2: Type)
@@ -462,10 +462,11 @@ let list_memP_map_forall
   (l: list t1)
 : Lemma
   (forall y . List.Tot.memP y (List.Tot.map f l) <==> (exists x . List.Tot.memP x l /\ y == f x))
-= Classical.forall_intro (fun y -> List.Tot.memP_map_elim f y l);
-  Classical.forall_intro (fun x -> List.Tot.memP_map_intro f x l)
+= introduce forall y . List.Tot.memP y (List.Tot.map f l) ==> (exists x . List.Tot.memP x l /\ f x == y)
+  with List.Tot.memP_map_elim f y l;
+  introduce forall x . List.Tot.memP x l ==> List.Tot.memP (f x) (List.Tot.map f l)
+  with List.Tot.memP_map_intro f x l
 
-#push-options "--z3rlimit_factor 6 --split_queries no"
 
 #restart-solver
 let rec map_sort_correct
@@ -540,4 +541,3 @@ let rec map_sort_correct
     end
   end
 
-  #pop-options

@@ -299,17 +299,17 @@ let inspect_comp (c : comp) : ML comp_view =
           then U_unknown
           else ct.comp_univs |> List.hd in
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
-            match ct.effect_args with
-            | (pre,_)::(post,_)::(pats,_)::_ ->
-                C_Lemma (pre, post, pats)
-            | _ ->
-                failwith "inspect_comp: Lemma does not have enough arguments?"
+            let pats =
+              match U.comp_smt_pats (S.mk_Comp ct) with
+              | Some p -> p
+              | None -> U.mk_list (S.fvar_with_dd PC.pattern_lid None) Range.dummyRange [] in
+            C_Lemma (ct.comp_pre, ct.comp_post, pats)
         else
-            let inspect_arg (a, q) = (a, inspect_aqual q) in
             C_Eff (ct.comp_univs,
                    Ident.path_of_lid ct.effect_name,
                    ct.result_typ,
-                   List.map inspect_arg ct.effect_args,
+                   ct.comp_pre,
+                   ct.comp_post,
                    get_dec ct.flags)
       end
 
@@ -329,12 +329,12 @@ let pack_comp (cv : comp_view) : ML comp =
         let ct = { comp_univs  = []
                  ; effect_name = PC.effect_Lemma_lid
                  ; result_typ  = S.t_unit
-                 ; effect_args = [S.as_arg pre; S.as_arg post; S.as_arg pats]
-                 ; flags       = [] } in
+                 ; comp_pre    = pre
+                 ; comp_post   = post
+                 ; flags       = [LEMMA; SMTPAT pats] } in
         S.mk_Comp ct
 
-    | C_Eff (us, ef, res, args, decrs) ->
-        let pack_arg (a, q) = (a, pack_aqual q) in
+    | C_Eff (us, ef, res, pre, post, decrs) ->
         let flags =
           if Nil? decrs
           then []
@@ -342,7 +342,8 @@ let pack_comp (cv : comp_view) : ML comp =
         let ct = { comp_univs  = us
                  ; effect_name = Ident.lid_of_path ef Range.dummyRange
                  ; result_typ  = res
-                 ; effect_args = List.map pack_arg args
+                 ; comp_pre    = pre
+                 ; comp_post   = post
                  ; flags       = flags } in
         S.mk_Comp ct
 
@@ -882,11 +883,12 @@ and comp_eq (c1 : comp) (c2 : comp) : ML bool =
   | C_Lemma (pre1, post1, pats1), C_Lemma (pre2, post2, pats2) ->
     term_eq pre1 pre2 && term_eq post1 post2 && term_eq pats1 pats2
 
-  | C_Eff (us1, name1, t1, args1, decrs1), C_Eff (us2, name2, t2, args2, decrs2) ->
+  | C_Eff (us1, name1, t1, pre1, post1, decrs1), C_Eff (us2, name2, t2, pre2, post2, decrs2) ->
     univs_eq us1 us2&&
     name1 = name2&&
     term_eq t1 t2&&
-    eqlist arg_eq args1 args2&&
+    term_eq pre1 pre2&&
+    term_eq post1 post2&&
     eqlist term_eq decrs1 decrs2
 
   | _ ->

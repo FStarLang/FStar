@@ -8,11 +8,11 @@ let no_surj_powerset (a : Type) (f : a -> powerset a) : Lemma (~(is_surj f)) =
     we define a set s that cannot be in the image of f. Namely,
     the set of x:a such that x is not in f(x).  *)
     let s : powerset a = fun x -> not (f x x) in
-    let aux (x : a) : Lemma (requires f x == s) (ensures False) =
-      // We have f x == s, which means that f x x == not (f x x), contradiction
-      assert (f x x) // this triggers the SMT appropriately
-    in
-    Classical.forall_intro (Classical.move_requires aux)
+    lem_surj f s;
+    // We obtain an x with f x == s, which means that f x x == not (f x x),
+    // a contradiction.
+    Classical.exists_elim False #a #(fun x -> f x == s) ()
+      (fun x -> assert (f x x)) // this triggers the SMT appropriately
   in
   Classical.move_requires aux ()
 

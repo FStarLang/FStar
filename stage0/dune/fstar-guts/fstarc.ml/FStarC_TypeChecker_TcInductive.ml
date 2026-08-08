@@ -734,10 +734,8 @@ let tc_data (env : FStarC_TypeChecker_Env.env_t)
                                                      fv;
                                                    FStarC_Syntax_Syntax.pos =
                                                      uu___10;
-                                                   FStarC_Syntax_Syntax.vars
-                                                     = uu___11;
                                                    FStarC_Syntax_Syntax.hash_code
-                                                     = uu___12;_},
+                                                     = uu___11;_},
                                                  tuvs)
                                                 when
                                                 FStarC_Syntax_Syntax.fv_eq_lid
@@ -750,23 +748,23 @@ let tc_data (env : FStarC_TypeChecker_Env.env_t)
                                                 then
                                                   FStarC_List.fold_left2
                                                     (fun g u1 u2 ->
-                                                       let uu___13 =
-                                                         let uu___14 =
+                                                       let uu___12 =
+                                                         let uu___13 =
                                                            FStarC_Syntax_Syntax.mk
                                                              (FStarC_Syntax_Syntax.Tm_type
                                                                 u1)
                                                              FStarC_Range_Type.dummyRange in
-                                                         let uu___15 =
+                                                         let uu___14 =
                                                            FStarC_Syntax_Syntax.mk
                                                              (FStarC_Syntax_Syntax.Tm_type
                                                                 (FStarC_Syntax_Syntax.U_name
                                                                    u2))
                                                              FStarC_Range_Type.dummyRange in
                                                          FStarC_TypeChecker_Rel.teq
-                                                           env'1 uu___14
-                                                           uu___15 in
+                                                           env'1 uu___13
+                                                           uu___14 in
                                                        FStarC_TypeChecker_Env.conj_guard
-                                                         g uu___13)
+                                                         g uu___12)
                                                     FStarC_TypeChecker_Env.trivial_guard
                                                     tuvs _uvs1
                                                 else
@@ -1410,7 +1408,6 @@ let get_optimized_haseq_axiom (en : FStarC_TypeChecker_Env.env)
              {
                FStarC_Syntax_Syntax.n = uu___2;
                FStarC_Syntax_Syntax.pos = (fml.FStarC_Syntax_Syntax.pos);
-               FStarC_Syntax_Syntax.vars = (fml.FStarC_Syntax_Syntax.vars);
                FStarC_Syntax_Syntax.hash_code =
                  (fml.FStarC_Syntax_Syntax.hash_code)
              } in
@@ -1855,7 +1852,6 @@ let unoptimized_haseq_ty
              {
                FStarC_Syntax_Syntax.n = uu___2;
                FStarC_Syntax_Syntax.pos = (fml.FStarC_Syntax_Syntax.pos);
-               FStarC_Syntax_Syntax.vars = (fml.FStarC_Syntax_Syntax.vars);
                FStarC_Syntax_Syntax.hash_code =
                  (fml.FStarC_Syntax_Syntax.hash_code)
              } in

@@ -4,7 +4,6 @@ open FStar.List.Tot
 open FStar.List.Tot.Properties
 open FStar.Tactics
 open FStar.Classical
-open FStar.Monotonic.Pure
 
 (** Precondition decoding **)
 
@@ -144,33 +143,6 @@ let w_if_then_else #a (w1 w2 : wp a) (b : bool) : wp a =
 let if_then_else #ac #ad (a : Type) (w1 w2 : wp a) (f : dm #ac #ad a w1) (g : dm #ac #ad a w2) (b : bool) : Type =
   dm #ac #ad a (w_if_then_else w1 w2 b)
 
-let elim_pure (#a:Type u#a) #w (f : unit -> PURE a w) :
-  Pure
-    a
-    (requires w (fun _ -> True))
-    (ensures fun r -> forall post. w post ==> post r)
-= elim_pure_wp_monotonicity_forall u#a () ;
-  f ()
-
-unfold
-let wlift #a (w : pure_wp a) : wp a =
-  fun post hist -> w (post [])
-
-let as_requires_wlift (#a:Type u#a) (w : pure_wp a) :
-  Lemma (forall post hist. wlift w post hist ==> as_requires w)
-= assert (forall post (x : a). post x ==> True) ;
-  elim_pure_wp_monotonicity w ;
-  assert (forall post. w post ==> w (fun _ -> True)) ;
-  assert (forall post. (True ==> w post) ==> w (fun _ -> True))
-let lift_pure (a : Type u#0) (w : pure_wp a) (f:(eqtype_as_type unit -> PURE a w)) : dm a (wlift w) =
-  elim_pure_wp_monotonicity w ;
-  as_requires_wlift w ;
-  d_bind #_ #_ #_ #_ #_ #_ #_ #(fun _ -> w_return (elim_pure #a #w f)) (d_req (as_requires w)) (fun _ ->
-    let r = elim_pure #a #w f in
-    let r' : dm a (w_return r) = d_ret r in
-    r'
-  )
-
 (** Recast return and bind so that they have effect-friendly types **)
 
 let ret a (x : a) : dm a (_w_return x) =
@@ -186,24 +158,7 @@ let subcomp #ac #ad a w1 w2 (c : dm #ac #ad a w1) :
 let _dm a ac ad w =
   dm #ac #ad a w
 
-(** Effect **)
+(** Using the Dijkstra monad directly, rather than through an indexed effect **)
 
-(** Currently this fails because it wants only one universe, but I can't set
-    the two universes to be the same.
-**)
-
-(* Fails since `bind` is not universe-polymorphic enough, but should not crash *)
-[@@expect_failure [115]]
-total
-reifiable
-reflectable
-effect {
-  IOw (a : Type u#a) (ac : Type u#a) (ad : decode_pre ac) (w : wp a)
-  with {
-    repr         = _dm ;
-    return       = ret ;
-    bind         = bind ;
-    subcomp      = subcomp ;
-    if_then_else = if_then_else
-  }
-}
+let test_req_then_return (p : prop) : dm (squash p) (_w_bind (w_req p) (fun x -> _w_return x)) =
+  bind _ _ _ _ (d_req p) (fun x -> ret _ x)

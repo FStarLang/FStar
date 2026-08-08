@@ -321,8 +321,13 @@ and eq_comp (env : FStarC_TypeChecker_Env.env_t)
                     ct2.FStarC_Syntax_Syntax.result_typ in
                 eq_and uu___3
                   (fun uu___4 ->
-                     eq_args env ct1.FStarC_Syntax_Syntax.effect_args
-                       ct2.FStarC_Syntax_Syntax.effect_args)))
+                     let uu___5 =
+                       eq_tm env ct1.FStarC_Syntax_Syntax.comp_pre
+                         ct2.FStarC_Syntax_Syntax.comp_pre in
+                     eq_and uu___5
+                       (fun uu___6 ->
+                          eq_tm env ct1.FStarC_Syntax_Syntax.comp_post
+                            ct2.FStarC_Syntax_Syntax.comp_post))))
   | uu___ -> NotEqual
 let eq_tm_bool (e : FStarC_TypeChecker_Env.env_t)
   (t1 : FStarC_Syntax_Syntax.term) (t2 : FStarC_Syntax_Syntax.term) :
@@ -333,7 +338,6 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
     {
       FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = (tm.FStarC_Syntax_Syntax.pos);
-      FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
     } in
   let simp_t t =
@@ -708,20 +712,18 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                                           FStarC_Syntax_Syntax.Tm_constant
                                           (FStarC_Const.Const_bool true);
                                         FStarC_Syntax_Syntax.pos = uu___4;
-                                        FStarC_Syntax_Syntax.vars = uu___5;
                                         FStarC_Syntax_Syntax.hash_code =
-                                          uu___6;_},
-                                      uu___7)::[] ->
+                                          uu___5;_},
+                                      uu___6)::[] ->
                                        w FStarC_Syntax_Util.t_true
                                    | ({
                                         FStarC_Syntax_Syntax.n =
                                           FStarC_Syntax_Syntax.Tm_constant
                                           (FStarC_Const.Const_bool false);
                                         FStarC_Syntax_Syntax.pos = uu___4;
-                                        FStarC_Syntax_Syntax.vars = uu___5;
                                         FStarC_Syntax_Syntax.hash_code =
-                                          uu___6;_},
-                                      uu___7)::[] ->
+                                          uu___5;_},
+                                      uu___6)::[] ->
                                        w FStarC_Syntax_Util.t_false
                                    | uu___4 -> tm)
                                 else

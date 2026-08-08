@@ -226,7 +226,7 @@ let almost_up_implies_heap_down #t {| total_order t |}
 
 // When heap_up_at bad holds, it means parent(bad) <= bad, which fills in the missing
 // ordering relation in almost_heap_sift_up  
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 let almost_to_full_heap #t {| total_order t |} (s:Seq.seq t) (bad:nat{bad < Seq.length s})
   : Lemma (requires almost_heap_sift_up s bad /\ heap_up_at s bad)
           (ensures is_heap s)
@@ -264,6 +264,22 @@ let swap_seq #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s}) : 
 let swap_length #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
   : Lemma (Seq.length (swap_seq s i j) == Seq.length s)
   = ()
+
+let swap_index #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
+                   (k:nat{k < Seq.length s})
+  : Lemma (Seq.index (swap_seq s i j) k ==
+           (if k = j then Seq.index s i
+            else if k = i then Seq.index s j
+            else Seq.index s k))
+          [SMTPat (Seq.index (swap_seq s i j) k)]
+  = let s' = Seq.upd s i (Seq.index s j) in
+    if k = j then
+      Seq.lemma_index_upd1 s' j (Seq.index s i)
+    else (
+      Seq.lemma_index_upd2 s' j (Seq.index s i) k;
+      if k = i then Seq.lemma_index_upd1 s i (Seq.index s j)
+      else Seq.lemma_index_upd2 s i (Seq.index s j) k
+    )
 
 let swap_index_i #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
   : Lemma (Seq.index (swap_seq s i j) i == Seq.index s j)
@@ -426,7 +442,7 @@ let sift_up_swap_heap_up_at_sibling #t {| total_order t |}
     le_le_trans v u (Seq.index s i)
 
 // Helper for sift_up_swap_heap_up_at: case parent_idx i = child (i is grandchild)
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1 --split_queries always"
+#push-options "--fuel 1 --ifuel 1"
 let sift_up_swap_heap_up_at_gchild #t {| total_order t |}
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   (i:nat{i < Seq.length s /\ i <> 0 /\ i <> child /\ parent_idx i = child})
@@ -459,7 +475,7 @@ let heap_up_at_from_almost_heap_sift_up #t {| total_order t |}
 
 // Helper for sift_up_swap_heap_up_at: case i is elsewhere
 // Precondition: i is not 0, child, p = parent child, and parent_idx i is not p or child
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 let sift_up_swap_heap_up_at_other #t {| total_order t |}
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   (i:nat{i < Seq.length s /\ i <> 0 /\ i <> child /\ i <> parent_idx child /\ parent_idx i <> parent_idx child /\ parent_idx i <> child})
@@ -475,7 +491,7 @@ let sift_up_swap_heap_up_at_other #t {| total_order t |}
 #pop-options
 
 // Helper for sift_up_swap_lemma: heap_up_at after swap
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 let sift_up_swap_heap_up_at #t {| total_order t |}
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   (i:nat{i < Seq.length s})
@@ -501,7 +517,7 @@ let sift_up_swap_heap_up_at #t {| total_order t |}
 #pop-options
 
 // Helper for sift_up_swap_lemma: part 2 (parent->child ordering except at bad)
-#push-options "--z3rlimit 40 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit 80 --fuel 0 --ifuel 1"
 let sift_up_swap_part2 #t {| total_order t |}
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   (i:nat{i < Seq.length s})
@@ -619,7 +635,7 @@ let sift_up_swap_lemma #t {| total_order t |}
 // Helper for sift_up: After swapping idx with parent, establish the grandparent->children property
 // for the recursive call. The recursive call has new idx = parent, new sequence = swap_seq.
 // The invariant requires: swap_seq[gp] <=? swap_seq[children of parent].
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 let grandparent_up_after_swap #t {| total_order t |} 
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   : Lemma (requires almost_heap_sift_up s child /\
@@ -875,7 +891,7 @@ let sift_down_swap_heap_up_at_parent #t {| total_order t |}
 
 // Helper for sift_down_swap_heap_up_at: case parent_idx i = parent
 // In this case, i is a sibling of child (the other child of parent)
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 let sift_down_swap_heap_up_at_gchild #t {| total_order t |}
   (s:Seq.seq t) (parent:nat{parent < Seq.length s}) (child:nat{child < Seq.length s /\ parent <> child})
   (i:nat{i < Seq.length s /\ i <> 0 /\ i <> child /\ i <> parent /\ parent_idx i = parent})
@@ -926,7 +942,7 @@ let sift_down_swap_heap_up_at_other #t {| total_order t |}
     swap_index_other s parent child pi
 
 // Helper for sift_down_swap_lemma: heap_up_at after swap
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 let sift_down_swap_heap_up_at #t {| total_order t |}
   (s:Seq.seq t) (parent:nat{parent < Seq.length s}) (child:nat{child < Seq.length s /\ parent <> child})
   (i:nat{i < Seq.length s})
@@ -950,7 +966,7 @@ let sift_down_swap_heap_up_at #t {| total_order t |}
 #pop-options
 
 // Helper for sift_down_swap_lemma: heap_down_at after swap
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 let sift_down_swap_heap_down_at #t {| total_order t |}
   (s:Seq.seq t) (parent:nat{parent < Seq.length s}) (child:nat{child < Seq.length s /\ parent <> child})
   (i:nat{i < Seq.length s})
@@ -1074,7 +1090,7 @@ let grandparent_after_swap #t {| total_order t |}
     // heap_down_at s child means: s[child] <=? s[left_idx child] and s[child] <=? s[right_idx child]
     ()
 
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.t)
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s /\ SZ.v len == Seq.length s /\ 
                           SZ.fits (2 * Seq.length s + 2)})
@@ -1187,7 +1203,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
 #pop-options
 
 // After setting root to last element and popping, we get almost_heap_sift_down at 0
-#push-options "--z3rlimit 40 --fuel 1 --ifuel 1 --split_queries always"
+#push-options "--z3rlimit 40 --fuel 1 --ifuel 1"
 let extract_almost_heap #t {| total_order t |} (s:Seq.seq t) (v:t)
   : Lemma (requires is_heap s /\ Seq.length s > 1)
           (ensures almost_heap_sift_down (Seq.slice (Seq.upd s 0 v) 0 (Seq.length s - 1)) 0)

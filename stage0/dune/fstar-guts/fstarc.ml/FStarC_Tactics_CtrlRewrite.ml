@@ -146,6 +146,8 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                                 (env.FStarC_TypeChecker_Env.missing_decl);
                               FStarC_TypeChecker_Env.iface_todo =
                                 (env.FStarC_TypeChecker_Env.iface_todo);
+                              FStarC_TypeChecker_Env.iface_hidden =
+                                (env.FStarC_TypeChecker_Env.iface_hidden);
                               FStarC_TypeChecker_Env.iface_lids =
                                 (env.FStarC_TypeChecker_Env.iface_lids);
                               FStarC_TypeChecker_Env.iface_val_lids =
@@ -796,8 +798,6 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                                             (FStarC_Syntax_Syntax.Total t2);
                                           FStarC_Syntax_Syntax.pos =
                                             (comp.FStarC_Syntax_Syntax.pos);
-                                          FStarC_Syntax_Syntax.vars =
-                                            (comp.FStarC_Syntax_Syntax.vars);
                                           FStarC_Syntax_Syntax.hash_code =
                                             (comp.FStarC_Syntax_Syntax.hash_code)
                                         } in
@@ -818,8 +818,6 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                                             (FStarC_Syntax_Syntax.GTotal t2);
                                           FStarC_Syntax_Syntax.pos =
                                             (comp.FStarC_Syntax_Syntax.pos);
-                                          FStarC_Syntax_Syntax.vars =
-                                            (comp.FStarC_Syntax_Syntax.vars);
                                           FStarC_Syntax_Syntax.hash_code =
                                             (comp.FStarC_Syntax_Syntax.hash_code)
                                         } in
@@ -1106,8 +1104,6 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                                FStarC_Syntax_Syntax.n = tmn';
                                FStarC_Syntax_Syntax.pos =
                                  (tm.FStarC_Syntax_Syntax.pos);
-                               FStarC_Syntax_Syntax.vars =
-                                 (tm.FStarC_Syntax_Syntax.vars);
                                FStarC_Syntax_Syntax.hash_code =
                                  (tm.FStarC_Syntax_Syntax.hash_code)
                              }, flag)))) uu___1))) uu___5 uu___4 uu___3

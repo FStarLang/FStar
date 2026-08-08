@@ -80,6 +80,119 @@ Guidelines for the changelog:
     This is a breaking change for reflection clients that match exhaustively on
     `vconst`; such code should add a `C_MachineInt` case.
 
+## Effects
+
+  * A pre- or postcondition can no longer determine an implicit argument. A
+    specification is a proof obligation, not part of the identity of a
+    computation type, so the verification condition of a term is not allowed to
+    influence type inference. Concretely, given
+
+    ```fstar
+    val app (#p:(int -> prop)) ($f: (x:int -> Lemma (p x))) : Lemma (forall x. p x)
+    ```
+
+    `app (fun x -> lem x)` is now rejected with *"Failed to resolve implicit
+    argument"*, because `p` would have to be read off the lambda's proof
+    obligation. `p` must instead come from unification against a declared type,
+    or be written down:
+
+    | Rejected                     | Accepted                                    |
+    |------------------------------|---------------------------------------------|
+    | `app (fun x -> lem x)`       | `app lem`                                   |
+    |                              | `app #(fun x -> q x) (fun x -> lem x)`      |
+    |                              | `let g (x:int) : Lemma (q x) = lem x in app g` |
+    |                              | `introduce forall x. q x with lem x`        |
+
+  * Computation types are now invariant in their specification under an
+    equality constraint. Relating two computation types that occur as the
+    argument of a type application (e.g. `f (unit -> Lemma p)` and
+    `f (unit -> Lemma q)`) used to succeed whenever `p ==> q`, which made every
+    type constructor covariant in the specifications it mentions and was
+    unsound in negative positions. Ordinary subsumption -- which is what
+    accepts a merely more precise specification -- is unchanged, and so is the
+    meaning of a `$`-marked binder: it demands that the argument's *type* match
+    exactly, but its specification is still related by subsumption.
+
+  * The `GHOST ~> DIV` lift has been removed from `FStar.Pervasives`. A ghost
+    computation may only be used in a divergent (hence extracted) context when
+    its result type is non-informative, in which case it is promoted to `PURE`
+    first and reaches `DIV` through `PURE ~> DIV`. Code that relied on the old
+    edge, e.g. `let leak (x:int) : Dv int = ghost x`, is now rejected. The same
+    check is now also applied to computation subtyping, so it can no longer be
+    bypassed by an ascription.
+
+## Reflection
+
+  * `C_Eff` in the V2 computation view now carries the pre- and postcondition
+    directly, `C_Eff : universes -> name -> typ -> pre:term -> post:term ->
+    decreases:list term -> comp_view`, instead of an unconstrained
+    `eff_args : list argv`. The old shape made the assumed axiom
+    `inspect_pack_comp_inv` false, since `inspect_comp` always produced exactly
+    two explicit arguments while `pack_comp` silently discarded any others.
+    Tactics that matched on `C_Eff _ _ res [(pre,_); (post,_)] decrs` should
+    now match on `C_Eff _ _ res pre post decrs`.
+
+## SMT
+
+  * The kinding axiom for a non-total arrow type (`Typing for non-total
+    arrows`) used to be a pattern-less quantifier over the universe
+    variables occurring in the types of the arrow's free variables. Z3
+    therefore instantiated it over the cross product of every
+    `Universe`-sorted term in the context, which could account for the vast
+    majority of all quantifier instantiations in a query. The axiom is now a
+    single quantifier with a multi-pattern that determines every bound
+    variable.
+
+  * Proof hints and unsat cores have been removed. The options
+    `--use_hints`, `--use_hint_hashes`, `--record_hints`, `--hint_dir`,
+    `--hint_file`, `--hint_info`, `--reuse_hint_for` and
+    `--detail_hint_replay` no longer exist, `.hints` files are no longer
+    read or written, and F* no longer asks Z3 to produce unsat cores
+    (`(set-option :produce-unsat-cores true)` is gone, which also removes a
+    significant Z3 performance penalty). Context pruning
+    (`--ext context_pruning`) subsumes what hints used to be good for.
+
+    The `vconfig` record in `FStar.VConfig` loses its `detail_hint_replay`
+    and `reuse_hint_for` fields; metaprograms that construct a `vconfig`
+    literal must drop them.
+
+  * Verification conditions are no longer sent to Z3 as a single labelled
+    formula. F* now walks the VC *before* encoding it and replays its
+    structure into the solver: a universally quantified variable becomes a
+    `declare-fun`, the hypothesis of an implication becomes an `assert`, and
+    every leaf goal gets its own `(push) (assert (not goal)) (check-sat)
+    (pop)`. All the goals of a definition are still sent in a single round
+    trip, and only the goals that actually fail are retried at higher
+    fuel/ifuel.
+
+    Consequences:
+    - `--split_queries` is gone: splitting a query was a coarse approximation
+      of one-assertion-per-goal, which is now the default and unconditional.
+      Remove `--split_queries no|on_failure|always` from `#push-options` and
+      from command lines. Warning 349 (`Warning_SplitAndRetryQueries`) no
+      longer exists.
+    - `--detail_errors` is gone: error reporting is already per goal.
+    - `--quake` and `--retry` now apply per leaf goal rather than to the whole
+      query.
+    - Error messages and ranges are more precise, and a definition can now
+      report several independent failures at once.
+    - A failed query now reports the individual proof obligation that could
+      not be discharged, as `Failed to prove: ...`, together with the
+      variables, local definitions and hypotheses it was proved under, as
+      `In context: ...`. Both are printed in F* syntax, with the original
+      binder names.
+    - The `VC = ...` detail, which describes the whole definition rather than
+      the individual goal, is now printed only under `--query_stats`. The
+      `Env = ...` detail is gone: the context of each goal is now reported
+      directly.
+
+    Because each goal is discharged in a context that no longer contains its
+    sibling goals, a proof that relied on ground terms appearing only in a
+    sibling conjunct may need help. The usual fix is to state an intermediate
+    `assert` in the vocabulary of the goal it is meant to feed, or to spell a
+    proof out with `introduce forall ... with ...` instead of relying on
+    `Classical.forall_intro`.
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection

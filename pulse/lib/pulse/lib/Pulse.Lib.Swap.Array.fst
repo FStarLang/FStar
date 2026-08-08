@@ -129,7 +129,7 @@ let intro_array_swap_post2 (lb rb mb:SZ.t) (mb':SZ.t)
   : Lemma (requires SZ.v lb <= SZ.v mb /\ SZ.v mb <= SZ.v rb /\ mb == rb /\ mb' == lb)
           (ensures array_swap_post lb rb mb mb') = ()
 
-#push-options "--fuel 0 --ifuel 0 --split_queries no"
+#push-options "--fuel 0 --ifuel 0"
 inline_for_extraction noextract [@@noextract_to "krml"]
 
 fn array_swap

@@ -231,7 +231,6 @@ private let update_maintains_length_lemma () : Lemma (update_maintains_length_fa
   )
 
 #restart-solver
-#push-options "--z3rlimit_factor 4"
 private let rec update_then_index_helper
   (#ty: Type)
   (s: list ty)
@@ -244,7 +243,6 @@ private let rec update_then_index_helper
   | hd :: tl ->
       if i = 0 || n = 0 then ()
       else update_then_index_helper tl (i - 1) v (n - 1)
-#pop-options
 
 private let update_then_index_lemma () : Lemma (update_then_index_fact u#a) =
   update_maintains_length_lemma ();
@@ -342,7 +340,7 @@ private let take_contains_equiv_exists_lemma () : Lemma (take_contains_equiv_exi
     take_contains_equiv_exists_helper3 ty s n x
   )
 
-#push-options "--z3rlimit_factor 10 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 private let rec drop_contains_equiv_exists_helper1 (ty: Type) (s: list ty) (n: nat{n <= length s}) (x: ty)
   : Lemma (requires FLT.memP x (drop s n))
           (ensures (exists (i: nat).{:pattern index s i} n <= i /\ i < length s /\ index s i == x)) =
@@ -505,7 +503,6 @@ private let append_then_take_or_drop_lemma ()
       append_then_take_or_drop_helper s t n
     )
 
-#push-options "--z3rlimit 20"
 private let rec take_commutes_with_in_range_update_helper (#ty: Type) (s: list ty) (i: nat) (v: ty) (n: nat)
   : Lemma (requires   i < n
                     /\ n <= length s
@@ -514,7 +511,6 @@ private let rec take_commutes_with_in_range_update_helper (#ty: Type) (s: list t
           (ensures  take (update s i v) n == update (take s n) i v) =
   match s with
   | hd :: tl -> if i = 0 then () else (update_maintains_length_lemma() ; take_commutes_with_in_range_update_helper tl (i - 1) v (n - 1))
-#pop-options
 
 private let take_commutes_with_in_range_update_lemma ()
   : Lemma (requires update_maintains_length_fact u#a /\ take_length_fact u#a)
@@ -553,7 +549,7 @@ private let take_ignores_out_of_range_update_lemma ()
       take_ignores_out_of_range_update_helper s i v n
     )
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4"
+#push-options "--fuel 2 --ifuel 1"
 private let rec drop_commutes_with_in_range_update_helper (#ty: Type) (s: list ty) (i: nat) (v: ty) (n: nat)
   : Lemma (requires   n <= i
                     /\ i < length s

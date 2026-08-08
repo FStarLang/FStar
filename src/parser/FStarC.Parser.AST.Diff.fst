@@ -436,14 +436,7 @@ let eq_lid = Ident.lid_equals
 
 let eq_lift (t1 t2: lift) : ML bool =
   eq_lid t1.msource t2.msource &&
-  eq_lid t1.mdest t2.mdest &&
-  (match t1.lift_op, t2.lift_op with
-  | NonReifiableLift t1, NonReifiableLift t2 -> eq_term t1 t2
-  | ReifiableLift (t1, t2), ReifiableLift (t3, t4) ->
-    eq_term t1 t3 &&
-    eq_term t2 t4
-  | LiftForFree t1, LiftForFree t2 -> eq_term t1 t2
-  | _ -> false)
+  eq_lid t1.mdest t2.mdest
 
 
 let eq_pragma (t1 t2: pragma) : ML bool =
@@ -526,19 +519,8 @@ let rec eq_decl' (d1 d2:decl') : ML bool =
     eq_option eq_term t1 t2
   | NewEffect ed1, NewEffect ed2 ->
     eq_effect_decl ed1 ed2
-  | LayeredEffect ed1, LayeredEffect ed2 ->
-    eq_effect_decl ed1 ed2
   | SubEffect l1, SubEffect l2 ->
     eq_lift l1 l2
-  | Polymonadic_bind (lid1, lid2, lid3, t1), Polymonadic_bind (lid4, lid5, lid6, t2) ->
-    eq_lid lid1 lid4 &&
-    eq_lid lid2 lid5 &&
-    eq_lid lid3 lid6 &&
-    eq_term t1 t2
-  | Polymonadic_subcomp (lid1, lid2, t1), Polymonadic_subcomp (lid3, lid4, t2) ->
-    eq_lid lid1 lid3 &&
-    eq_lid lid2 lid4 &&
-    eq_term t1 t2
   | Pragma p1, Pragma p2 ->
     eq_pragma p1 p2
   | Assume (i1, t1), Assume (i2, t2) ->
@@ -559,10 +541,12 @@ let rec eq_decl' (d1 d2:decl') : ML bool =
 
 and eq_effect_decl (t1 t2: effect_decl) : ML bool =
   match t1, t2 with
-  | DefineEffect (i1, bs1, t1, ds1), DefineEffect (i2, bs2, t2, ds2) ->
+  | DeclareEffect (i1, bs1), DeclareEffect (i2, bs2) ->
+    eq_ident i1 i2 &&
+    eq_list eq_binder bs1 bs2
+  | DefineEffect (i1, bs1, ds1), DefineEffect (i2, bs2, ds2) ->
     eq_ident i1 i2 &&
     eq_list eq_binder bs1 bs2 &&
-    eq_term t1 t2 &&
     eq_list eq_decl ds1 ds2
   | RedefineEffect (i1, bs1, t1), RedefineEffect (i2, bs2, t2) ->
     eq_ident i1 i2 &&

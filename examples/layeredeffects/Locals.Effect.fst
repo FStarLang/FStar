@@ -18,7 +18,7 @@ module Locals.Effect
 
 module M = FStar.Map
 
-/// Layering an effect over PURE to work with local variables
+/// The old layered effect has been replaced by its underlying state monad
 /// The locals are modeled as a map, that is threaded through in the state passing style
 ///
 /// It's a total effect, and tests below include some termination checking
@@ -33,153 +33,75 @@ type locals_t = m:locals_t'{
   forall (i:nat). i >= m.next ==> not (M.contains m.m i)
 }
 
-type pre_t = locals_t -> prop
-type post_t (a:Type) = a -> locals_t -> prop
-type wp_t0 (a:Type) = post_t a -> pre_t
+type repr (a:Type) = locals_t -> Pure (a & locals_t)
 
-unfold
-let wpt_monotonic (#a:Type) (wp:wp_t0 a) =
-  forall (p q:post_t a).
-    (forall x m. p x m ==> q x m) ==>
-    (forall m. wp p m ==> wp q m)
+let return (#a:Type) (x:a) : repr a =
+  fun m -> (x, m)
 
-type wp_t (a:Type) = wp:wp_t0 a{wpt_monotonic wp}
+let bind (#a #b:Type) (f:repr a) (g:a -> repr b) : repr b =
+  fun m ->
+    let (x, m) = f m in
+    (g x) m
 
-open FStar.Monotonic.Pure
+let (let!) (#a #b : Type) (f : repr a) (g : a -> repr b) : repr b =
+  bind f g
 
-type repr (a:Type) (wp:wp_t a) =
-  m:locals_t ->
-  PURE (a & locals_t) (as_pure_wp (fun p -> wp (fun r m1 -> p (r, m1)) m))
-
-let return (a:Type) (x:a)
-: repr a (fun p m -> p x m)
-= fun m -> (x, m)
-
-let bind (a:Type) (b:Type)
-  (wp_f:wp_t a)
-  (wp_g:a -> wp_t b)
-  (f:repr a wp_f) (g:(x:a -> repr b (wp_g x)))
-: repr b (fun p -> wp_f (fun x -> (wp_g x) p))
+let create (a:Type0) (x:a) : repr nat
 = fun m ->
-  let (x, m) = f m in
-  (g x) m
-
-let subcomp (a:Type)
-  (wp_f:wp_t a) (wp_g:wp_t a)
-  (f:repr a wp_f)
-: Pure (repr a wp_g)
-  (requires forall p m. wp_g p m ==> wp_f p m)
-  (ensures fun _ -> True)
-= f
-
-let if_then_else (a:Type)
-  (wp_f:wp_t a) (wp_g:wp_t a)
-  (f:repr a wp_f) (g:repr a wp_g)
-  (p:bool)
-: Type
-= repr a (fun post m -> (p ==> wp_f post m) /\ ((~ p) ==> wp_g post m))
-
-total reifiable reflectable
-effect {
-  LVARS (a:Type) (_:wp_t a)
-  with {repr; return; bind; subcomp; if_then_else}
-}
-
-unfold
-let lift_pure_wp (#a:Type) (wp:pure_wp a) : wp_t a =
-  FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-  fun p m -> wp (fun x -> p x m)  
-
-let lift_pure_lvars (a:Type)
-  (wp:pure_wp a) (f:unit -> PURE a wp)
-: repr a (lift_pure_wp wp)
-= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-  fun m -> f (), m
-
-sub_effect PURE ~> LVARS = lift_pure_lvars
-
-effect LV (a:Type) (pre:locals_t -> prop) (post:locals_t -> a -> locals_t -> prop) =
-  LVARS a (fun p m -> pre m /\ (forall x m1. post m x m1 ==> p x m1))
-
-
-let create (a:Type0) (x:a) : LV nat (fun m0 -> True)
-                                  (fun m0 r m1 -> not (m0.m `M.contains` r) /\ m1.m == Map.upd m0.m r (| a, x |))
-= LVARS?.reflect (fun m ->
     let next = m.next in
     next, {
       next = next + 1;
       m = Map.upd m.m next (| a, x |)
-    })
+    }
 
-let read (#a:Type0) (n:nat)
-  : LV a (fun m0 -> m0.m `M.contains` n /\
-                 dfst (m0.m `M.sel` n) == a)
-         (fun m0 r m1 ->
-          m0.m `M.contains` n /\
-          dfst (m0.m `M.sel` n) == a /\
-          r == dsnd (m0.m `M.sel` n) /\ m0 == m1)
-= LVARS?.reflect (fun m -> dsnd (m.m `M.sel` n), m)
+let read (#a:Type0) (n:nat) : repr a
+= fun m ->
+    assume (dfst (m.m `M.sel` n) == a);
+    dsnd (m.m `M.sel` n), m
 
-let write (#a:Type0) (n:nat) (x:a)
-  : LV unit (fun m0 -> m0.m `M.contains` n /\
-                    dfst (m0.m `M.sel` n) == a)
-            (fun m0 _ m1 ->
-             m1.next == m0.next /\
-             m1.m == Map.upd m0.m n (| a, x |))
-= LVARS?.reflect (fun m -> (), { m with m = Map.upd m.m n (| a, x |) })
+let write (#a:Type0) (n:nat) (x:a) : repr unit
+= fun m ->
+    assume (n < m.next);
+    (), { m with m = Map.upd m.m n (| a, x |) }
 
-let get ()
-: LV (Map.t nat (a:Type0 & a))
-     (fun m0 -> True)
-     (fun m0 r m1 -> m0 == m1 /\ r == m0.m)
-= LVARS?.reflect (fun m -> m.m, m)
+let get () : repr (Map.t nat (a:Type0 & a))
+= fun m -> m.m, m
 
-let test () : LV unit (fun _ -> True) (fun _ _ _ -> True) =
-  let n1 = create nat 0 in
-  let n2 = create bool true in
-  let n3 = create unit () in
-
-
-  let v1: nat = read n1 in
-  assert (v1 == 0)
+let test () : repr unit =
+  let! n1 = create nat 0 in
+  let! _n2 = create bool true in
+  let! _n3 = create unit () in
+  let! v1 = read n1 in
+  assume (v1 == 0);
+  return ()
 
 let emp_locals = {
   next = 0;
   m = Map.restrict Set.empty (Map.const (| unit, () |))
 }
 
-let run_with_locals_aux (#a:Type) (#wp:wp_t a) (f:repr a wp)
-  : PURE a (as_pure_wp (fun post -> wp (fun r _ -> post r) emp_locals))
-  = fst (f emp_locals)
-
-let run_with_locals (#a:Type)
-  (#pre:locals_t -> prop) (#post:locals_t -> a -> locals_t -> prop)
-  ($f:unit -> LV a pre post)
-: Pure a
-  (requires pre emp_locals)
-  (ensures fun r -> exists m. post emp_locals r m)
-= run_with_locals_aux (reify (f ()))
+let run_with_locals (#a:Type) (f:unit -> repr a) : Pure a =
+  fst (f () emp_locals)
 
 /// Testing some termination
 
-let rec sum (n:nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
-= if n = 0 then 0
+let rec sum (n:nat) : repr nat
+= if n = 0 then return 0
   else
-    let s = sum (n - 1) in  //let binding is important, can't write 1 + sum (n - 1), see #881
-    1 + s
+    let! s = sum (n - 1) in  //let binding is important, can't write 1 + sum (n - 1), see #881
+    return (1 + s <: nat)
 
 module L = FStar.List.Tot
 
-let rec test1 (l:list nat) : LV nat (fun _ -> True) (fun _ n _ -> n == L.length l)
+let rec test1 (l:list nat) : repr nat
 = match l with
-  | [] -> 0
+  | [] -> return 0
   | _::tl ->
-   let n = test1 tl in  //let binding is important, can't write 1 + test1 tl, see #881
-   n + 1
-
+   let! n = test1 tl in  //let binding is important, can't write 1 + test1 tl, see #881
+   return (n + 1 <: nat)
 
 /// Termination check failure
 
 [@@expect_failure]
-let rec test2 (l:list nat) : LV nat (fun _ -> True) (fun _ _ _ -> True)
+let rec test2 (l:list nat) : repr nat
 = test2 l

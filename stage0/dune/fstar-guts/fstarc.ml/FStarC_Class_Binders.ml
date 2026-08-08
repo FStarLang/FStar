@@ -35,11 +35,14 @@ let hasNames_comp : FStarC_Syntax_Syntax.comp hasNames=
                let uu___2 =
                  FStarC_Syntax_Free.names ct.FStarC_Syntax_Syntax.result_typ in
                let uu___3 =
-                 FStarC_List.map
-                   (fun uu___4 ->
-                      match uu___4 with
-                      | (a, uu___5) -> FStarC_Syntax_Free.names a)
-                   ct.FStarC_Syntax_Syntax.effect_args in
+                 let uu___4 =
+                   FStarC_Syntax_Free.names ct.FStarC_Syntax_Syntax.comp_pre in
+                 let uu___5 =
+                   let uu___6 =
+                     FStarC_Syntax_Free.names
+                       ct.FStarC_Syntax_Syntax.comp_post in
+                   [uu___6] in
+                 uu___4 :: uu___5 in
                uu___2 :: uu___3 in
              FStarC_List.fold_left
                (FStarC_Class_Setlike.union

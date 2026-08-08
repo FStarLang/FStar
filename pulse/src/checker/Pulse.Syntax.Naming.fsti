@@ -95,9 +95,10 @@ and r_freevars_comp (c:R.comp)
       r_freevars pre `Set.union`
       r_freevars post `Set.union`
       r_freevars pats
-    | R.C_Eff us eff_name res args decrs ->
+    | R.C_Eff us eff_name res pre post decrs ->
       r_freevars res `Set.union`
-      r_freevars_args args `Set.union`
+      r_freevars pre `Set.union`
+      r_freevars post `Set.union`
       r_freevars_terms decrs
 
 and r_freevars_args (ts:list R.argv)
@@ -219,9 +220,10 @@ and r_ln'_comp (c:R.comp) (i:int)
       r_ln' pre i &&
       r_ln' post i &&
       r_ln' pats i
-    | R.C_Eff us eff_name res args decrs ->
+    | R.C_Eff us eff_name res pre post decrs ->
       r_ln' res i &&
-      r_ln'_args args i &&
+      r_ln' pre i &&
+      r_ln' post i &&
       r_ln'_terms decrs i
 
 and r_ln'_args (ts:list R.argv) (i:int)

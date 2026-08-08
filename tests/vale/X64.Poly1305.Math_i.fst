@@ -288,7 +288,7 @@ let lemma_poly_demod (p:pos) (h:int) (x:int) (r:int) =
   admit()
 #pop-options
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit 50"
+#push-options "--fuel 2 --ifuel 1"
 let lemma_reduce128  (h:int) (h2:nat64) (h1:nat64) (h0:nat64) (g:int) (g2:nat64) (g1:nat64) (g0:nat64) =
       admit()
       (*

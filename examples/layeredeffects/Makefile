@@ -5,11 +5,6 @@ include $(FSTAR_ROOT)/mk/test.mk
 
 all: extraction
 
-HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
-
-ifneq (,$(HAS_OCAML))
+.PHONY: extraction
 extraction:
-	$(MAKE) -C extraction
-else
-extraction:
-endif
+	$(MAKE) -C extraction FSTAR_EXE=$(FSTAR_EXE)

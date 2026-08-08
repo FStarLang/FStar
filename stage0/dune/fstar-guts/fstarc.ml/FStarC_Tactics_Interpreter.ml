@@ -504,6 +504,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.missing_decl);
            FStarC_TypeChecker_Env.iface_todo =
              (uu___.FStarC_TypeChecker_Env.iface_todo);
+           FStarC_TypeChecker_Env.iface_hidden =
+             (uu___.FStarC_TypeChecker_Env.iface_hidden);
            FStarC_TypeChecker_Env.iface_lids =
              (uu___.FStarC_TypeChecker_Env.iface_lids);
            FStarC_TypeChecker_Env.iface_val_lids =
@@ -640,6 +642,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.missing_decl);
            FStarC_TypeChecker_Env.iface_todo =
              (uu___.FStarC_TypeChecker_Env.iface_todo);
+           FStarC_TypeChecker_Env.iface_hidden =
+             (uu___.FStarC_TypeChecker_Env.iface_hidden);
            FStarC_TypeChecker_Env.iface_lids =
              (uu___.FStarC_TypeChecker_Env.iface_lids);
            FStarC_TypeChecker_Env.iface_val_lids =

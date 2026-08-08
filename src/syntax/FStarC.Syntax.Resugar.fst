@@ -1177,6 +1177,19 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
     let t = resugar_term' env typ in
     mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
 
+  (* [PURE t (requires True) (ensures True)] is just [Tot t]; print it as such. *)
+  | Comp c when U.has_trivial_spec (S.mk (S.Comp c) Range.dummyRange)
+             && not (Options.print_implicits ())
+             && not (c.flags |> BU.for_some (function
+                     | DECREASES _ | SMTPAT _ -> true
+                     | _ -> false))
+             && (lid_equals c.effect_name C.effect_PURE_lid ||
+                 lid_equals c.effect_name C.effect_GHOST_lid) ->
+    resugar_comp' env
+      (if lid_equals c.effect_name C.effect_PURE_lid
+       then S.mk_Total c.result_typ
+       else S.mk_GTotal c.result_typ)
+
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in
     let mk_decreases (fl : list cflag) : ML (list A.term) =
@@ -1199,30 +1212,34 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
       in
       aux [] fl
     in
-    if lid_equals c.effect_name C.effect_Lemma_lid && List.length c.effect_args = 3 then
-      let args = List.map(fun (e,_) -> (resugar_term' env e, A.Nothing)) c.effect_args in
-      let pre, post, pats =
-        match c.effect_args with
-        | (pre, _)::(post, _)::(pats, _)::[] ->
-          pre, post, pats
-        | _ -> failwith "impossible"
-      in
-      let pre = (if U.is_fvar C.true_lid pre then [] else [pre]) in
-      let post = U.unthunk_lemma_post post in
-      let pats = if U.is_fvar C.nil_lid (U.head_of pats) then [] else [pats] in
-
-      let pre = List.map (fun t -> mk (Requires (resugar_term' env t))) pre in
-      let post = mk (Ensures (resugar_term' env post)) in
-      let pats = List.map (resugar_term' env) pats in
+    let smt_pats =
+      match U.comp_smt_pats (S.mk (S.Comp c) Range.dummyRange) with
+      | Some pats when not (U.is_fvar C.nil_lid (U.head_of pats)) -> [pats]
+      | _ -> []
+    in
+    (* Both clauses are optional, so we only print the non-trivial ones. *)
+    let triv_pre = U.is_fvar C.true_lid c.comp_pre in
+    if lid_equals c.effect_name C.effect_Lemma_lid then
+      let post = U.unthunk_lemma_post c.comp_post in
+      (* [Lemma] with no arguments at all is not valid syntax, so we keep the
+         postcondition when there is nothing else to print. *)
+      let triv_post = U.is_t_true post && not triv_pre in
+      let pre = if triv_pre then [] else [mk (Requires (resugar_term' env c.comp_pre))] in
+      let post = if triv_post then [] else [mk (Ensures (resugar_term' env post))] in
+      let pats = List.map (resugar_term' env) smt_pats in
       let decrease = mk_decreases c.flags in
 
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post::decrease@pats)))
+      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post@decrease@pats)))
 
     else if (Options.print_effect_args()) then
-      (* let universe = List.map (fun u -> resugar_universe u) c.comp_univs in *)
-      let args = List.map(fun (e,_) -> (resugar_term' env e, A.Nothing)) c.effect_args in
+      let pre = if triv_pre then [] else [mk (Requires (resugar_term' env c.comp_pre)), A.Nothing] in
+      let post =
+        if U.is_trivial_post c.comp_post then []
+        else [mk (Ensures (resugar_term' env c.comp_post)), A.Nothing]
+      in
       let decrease = List.map (fun t -> (t, A.Nothing)) (mk_decreases c.flags) in
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, result::decrease@args))
+      mk (A.Construct(maybe_shorten_lid env c.effect_name,
+                      result::decrease@pre@post))
     else
       mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))
 
@@ -1478,66 +1495,25 @@ let resugar_tscheme'' env name (ts:S.tscheme) =
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tscheme" ts
 
-let resugar_wp_eff_combinators env combs =
-  let resugar_opt name tsopt =
-    match tsopt with
-    | Some ts -> [resugar_tscheme'' env name ts]
-    | None -> [] in
-
-  let repr = resugar_opt "repr" combs.repr in
-  let return_repr = resugar_opt "return_repr" combs.return_repr in
-  let bind_repr = resugar_opt "bind_repr" combs.bind_repr in
-
-  (resugar_tscheme'' env "ret_wp" combs.ret_wp)::
-  (resugar_tscheme'' env "bind_wp" combs.bind_wp)::
-  (resugar_tscheme'' env "stronger" combs.stronger)::
-  (resugar_tscheme'' env "if_then_else" combs.if_then_else)::
-  (resugar_tscheme'' env "ite_wp" combs.ite_wp)::
-  (resugar_tscheme'' env "close_wp" combs.close_wp)::
-  (resugar_tscheme'' env "trivial" combs.trivial)::
-  (repr@return_repr@bind_repr)
-
-let resugar_layered_eff_combinators env combs =
-  let resugar name (ts, _, _) = resugar_tscheme'' env name ts in
-  let resugar2 name (ts, _) = resugar_tscheme'' env name ts in
-
-  (resugar2 "repr"         combs.l_repr)::
-  (resugar2 "return"       combs.l_return)::
-  (resugar  "bind"         combs.l_bind)::
-  (resugar  "subcomp"      combs.l_subcomp)::
-  (resugar  "if_then_else" combs.l_if_then_else)::[]
-
-let resugar_combinators env combs =
-  match combs with
-  | Primitive_eff combs -> resugar_wp_eff_combinators env combs
-  | Layered_eff combs -> resugar_layered_eff_combinators env combs
-
 let resugar_eff_decl' env ed =
   let r = Range.dummyRange in
   let q = [] in
-  let resugar_action d =
-    let action_params = SS.open_binders d.action_params in
-    let bs, action_defn = SS.open_term action_params d.action_defn in
-    let bs, action_typ = SS.open_term action_params d.action_typ in
-    let action_params = filter_imp_bs action_params in
-    let action_params = action_params |> map (fun b -> resugar_binder' env b r) |> List.rev in
-    let action_defn = resugar_term' env action_defn in
-    let action_typ = resugar_term' env action_typ in
-    mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, action_defn))]))
-  in
   let eff_name = ident_of_lid ed.mname in
-  let eff_binders, eff_typ =
-    let sig_ts = U.effect_sig_ts ed.signature in
-    SS.open_term ed.binders (sig_ts |> snd) in
-  let eff_binders = filter_imp_bs eff_binders in
+  let eff_binders = filter_imp_bs ed.binders in
   let eff_binders = eff_binders |> map (fun b -> resugar_binder' env b r) |> List.rev in
-  let eff_typ = resugar_term' env eff_typ in
-
-  let mandatory_members_decls = resugar_combinators env ed.combinators in
-
-  let actions = ed.actions |> List.map (fun a -> resugar_action a) in
-  let decls = mandatory_members_decls@actions in
-  mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
+  match ed.combinators with
+  | None ->
+    (* An effect without a representation is always an assumption. *)
+    mk_decl r (S.Assumption :: q) (A.NewEffect (DeclareEffect (eff_name, eff_binders)))
+  | Some combs ->
+    let field name (ts:S.tscheme) =
+      mk_decl r [] (A.Tycon (false, false,
+        [A.TyconAbbrev (Ident.mk_ident (name, r), [], None,
+                        resugar_term' env (snd ts))])) in
+    mk_decl r q (A.NewEffect (DefineEffect (eff_name, eff_binders,
+      [field "repr" combs.repr;
+       field "return" combs.return_repr;
+       field "bind" combs.bind_repr])))
 
 let resugar_sigelt' env se : ML (option A.decl) =
   let d = (match se.sigel with
@@ -1611,25 +1587,8 @@ let resugar_sigelt' env se : ML (option A.decl) =
     Some { a_decl with quals = q }
 
   | Sig_sub_effect e ->
-    let src = e.source in
-    let dst = e.target in
-    let lift_wp = match e.lift_wp with
-      | Some (_, t) ->
-          Some (resugar_term' env t)
-      | _ -> None
-    in
-    let lift = match e.lift with
-      | Some (_, t) ->
-          Some (resugar_term' env t)
-      | _ -> None
-    in
-    let op = match (lift_wp, lift) with
-      | Some t, None -> A.NonReifiableLift t
-      | Some wp, Some t -> A.ReifiableLift (wp, t)
-      | None, Some t -> A.LiftForFree t
-      | _ -> failwith "Should not happen hopefully"
-    in
-    Some (decl'_to_decl se (A.SubEffect({msource=src; mdest=dst; lift_op=op; braced=false})))
+    Some (decl'_to_decl se (A.SubEffect({msource=e.source; mdest=e.target;
+                                         lift_op=e.lift |> Option.map (fun ts -> resugar_term' env (snd ts))})))
 
   | Sig_effect_abbrev {lid; us=vs; bs; comp=c; cflags=flags} ->
     let bs, c = SS.open_comp bs c in
@@ -1659,12 +1618,7 @@ let resugar_sigelt' env se : ML (option A.decl) =
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _
   | Sig_datacon _ -> None
-
-  | Sig_polymonadic_bind {m_lid=m; n_lid=n; p_lid=p; tm=(_, t)} ->
-    Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
-
-  | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; tm=(_, t)} ->
-    Some (decl'_to_decl se (A.Polymonadic_subcomp (m, n, resugar_term' env t)))) in
+  ) in
 
   match d with
   | Some d -> Some { d with attrs = List.map (resugar_term' env) se.sigattrs }

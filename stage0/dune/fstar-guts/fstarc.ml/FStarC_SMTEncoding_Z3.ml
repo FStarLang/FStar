@@ -693,6 +693,8 @@ let reading_solver_state
   let ss = FStarC_Effect.op_Bang bg_z3_proc in f ss.ctxt
 let giveZ3 (decls : FStarC_SMTEncoding_Term.decl Prims.list) : unit=
   with_solver_state_unit (FStarC_SMTEncoding_SolverState.give decls)
+let giveZ3_lazy (ld : FStarC_SMTEncoding_SolverState.lazy_decls) : unit=
+  with_solver_state_unit (FStarC_SMTEncoding_SolverState.give_lazy ld)
 let do_refresh
   (using_facts_from :
     FStarC_SMTEncoding_SolverState.using_facts_from_setting

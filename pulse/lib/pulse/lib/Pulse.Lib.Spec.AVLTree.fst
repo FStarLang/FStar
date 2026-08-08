@@ -4,7 +4,7 @@ module Pulse.Lib.Spec.AVLTree
 
 module M = FStar.Math.Lib
 
-#set-options "--fuel 1 --ifuel 1 --z3rlimit 20"
+#set-options "--fuel 1 --ifuel 1"
 
 (*** Type definitions *)
 

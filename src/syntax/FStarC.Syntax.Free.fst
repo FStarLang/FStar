@@ -258,11 +258,17 @@ and free_names_and_uvars_comp c use_cache : ML _ =
                 | Some (DECREASES dec_order) ->
                   free_names_and_uvars_dec_order dec_order use_cache
               in
+              let pat_vars =
+                match List.tryFind (function SMTPAT _ -> true | _ -> false) ct.flags with
+                | Some (SMTPAT p) -> free_names_and_uvars p use_cache
+                | _ -> no_free_vars
+              in
               //decreases clause + return type
-              let us = free_names_and_uvars ct.result_typ use_cache ++ decreases_vars in
-              //decreases clause + return type + effect args
-              let us = free_names_and_uvars_args ct.effect_args us use_cache in
-              //decreases clause + return type + effect args + comp_univs
+              let us = free_names_and_uvars ct.result_typ use_cache ++ decreases_vars ++ pat_vars in
+              //decreases clause + return type + pre/post
+              let us = free_names_and_uvars ct.comp_pre use_cache ++ us in
+              let us = free_names_and_uvars ct.comp_post use_cache ++ us in
+              //decreases clause + return type + pre/post + comp_univs
               List.fold_left (fun us u -> us ++ free_univs u) us ct.comp_univs
 
 and free_names_and_uvars_dec_order dec_order use_cache : ML _ =

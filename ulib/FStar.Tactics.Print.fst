@@ -101,7 +101,7 @@ and comp_to_ast_string (c:comp) : Tac string =
   | C_Total t -> "Tot " ^ term_to_ast_string t
   | C_GTotal t -> "GTot " ^ term_to_ast_string t
   | C_Lemma pre post _ -> "Lemma " ^ term_to_ast_string pre ^ " " ^ term_to_ast_string post
-  | C_Eff us eff res _ _ ->
+  | C_Eff us eff res _ _ _ ->
     "Effect" ^ "<" ^ universes_to_ast_string us ^ "> " ^ paren (implode_qn eff ^ ", " ^ term_to_ast_string res)
 
 and const_to_ast_string (c:vconst) : Tac string =

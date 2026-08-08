@@ -8,7 +8,7 @@ ignore these facts here to retain the example. What we would really want
 though is a way to scope SMT patterns. *)
 #set-options "--using_facts_from -FStar.UInt"
 
-[@@expect_failure [19]]
+[@@expect_failure [19; 19; 19]]
 //SNIPPET_START: pow2_0
 let pow2_bound_19 (x:nat{x <= 19}) : Lemma (pow2 x < 1000000) =
   assert (forall (x y : nat). x <= y ==> pow2 x <= pow2 y);

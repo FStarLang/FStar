@@ -340,7 +340,6 @@ let smash_repr (d:pos) (t1 t2:tree) (l1 l2:ms)
          t2 `repr_t` l2)
       (ensures smash d t1 t2 `repr_t` (ms_append l1 l2)) = ()
 
-#push-options "--z3rlimit 25"
 let rec carry_repr (d:pos) (q:forest) (t:tree) (lq lt:ms)
   : Lemma
       (requires
@@ -359,9 +358,8 @@ let rec carry_repr (d:pos) (q:forest) (t:tree) (lq lt:ms)
     carry_repr (d + 1) tl (smash d hd t)
       (keys tl)
       (ms_append (keys_of_tree hd) (keys_of_tree t))
-#pop-options
 
-#push-options "--z3rlimit 75 --fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1"
 let rec join_repr (d:pos) (p q:forest) (c:tree)
   (lp lq lc:ms)
   : Lemma
@@ -436,10 +434,8 @@ let rec compact_preserves_keys (q:forest)
 let insert_repr x q s =
   carry_repr 1 q (Internal Leaf x Leaf) s (ms_singleton x)
 
-#push-options "--z3rlimit_factor 10"
 let merge_repr p q sp sq =
   join_repr 1 p q Leaf sp sq ms_empty
-#pop-options
 
 /// Towards proof of delete correctness
 
@@ -507,7 +503,6 @@ let rec keys_append (l1 l2:forest) (ms1 ms2:ms)
   | [] -> ()
   | _::tl -> keys_append tl l2 (keys tl) ms2
 
-#push-options "--z3rlimit_factor 10"
 let rec unzip_repr (d:nat) (upper_bound:key_t) (t:tree) (lt:ms)
   : Lemma
       (requires
@@ -524,7 +519,6 @@ let rec unzip_repr (d:nat) (upper_bound:key_t) (t:tree) (lt:ms)
       (keys_of_tree right) (ms_append (keys_of_tree left)
                                       (ms_append (ms_singleton k)
                                                  ms_empty))
-#pop-options
 
 let heap_delete_max_repr (d:pos) (t:tree) (lt:ms)
   : Lemma
@@ -561,7 +555,6 @@ let tree_root_is_max (d:pos) (t:tree)
   let Internal left k Leaf = t in
   tree_root_is_max_aux (d - 1) k left
 
-#push-options "--z3rlimit 40"
 let rec delete_max_aux_repr (m:key_t) (d:pos) (q:forest)
   (x:key_t) (r:forest) (p:priq)
   (lq lr lp:ms)
@@ -591,7 +584,6 @@ let rec delete_max_aux_repr (m:key_t) (d:pos) (q:forest)
       delete_max_aux_repr m (d + 1) q y (L.tl r) p (keys q) (keys (L.tl r)) lp
     end
     else heap_delete_max_repr d (Internal left x Leaf) (keys_of_tree (Internal left x Leaf))
-#pop-options
 
 let rec find_max_mem_keys (kopt:option key_t) (q:forest)
   : Lemma
@@ -635,7 +627,6 @@ let rec find_max_is_max (d:pos) (kopt:option key_t) (q:forest)
       find_max_is_max (d + 1) (Some k) tl;
       find_max_some_is_some k tl
 
-#push-options "--z3rlimit_factor 4"
 let delete_max_some_repr p pl k q ql =
   match find_max None p with
   | None -> ()
@@ -650,4 +641,3 @@ let delete_max_some_repr p pl k q ql =
     compact_preserves_keys r;
     assert (permutation pl (ms_append (ms_singleton k) ql));
     find_max_is_max 1 None p
-#pop-options

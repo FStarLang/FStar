@@ -120,9 +120,12 @@ let is_gcd_opp a b d =
 
 let is_gcd_plus a b q d =
   add_sub_r b (q * a);
-  Classical.forall_intro_3 (Classical.move_requires_3 divides_plus);
-  Classical.forall_intro_3 (Classical.move_requires_3 divides_mult_right);
-  Classical.forall_intro_3 (Classical.move_requires_3 divides_sub)
+  divides_mult_right q a d;
+  divides_plus b (q * a) d;
+  introduce forall x. (x `divides` a /\ x `divides` (b + q * a)) ==> x `divides` d
+  with introduce _ ==> _
+  with (divides_mult_right q a x;
+        divides_sub (b + q * a) (q * a) x)
 
 ///
 /// Extended Euclidean algorithm
@@ -190,6 +193,7 @@ let euclid_gcd a b =
   if b >= 0 then
     egcd a b 1 0 a 0 1 b
   else (
+    assert (1 * a + 0 * b == a /\ 0 * a + (-1) * b == -b);
     introduce forall d. is_gcd a (-b) d ==> is_gcd a b d
     with introduce _ ==> _
          with 

@@ -525,8 +525,7 @@ and tc_one_file_no_frame
           extracted_defs,
           env
       in
-      SMT.with_hints_db (Pars.find_file fn) 
-        check_mod
+      check_mod ()
   in
   if not (Options.cache_off()) then
       let r = 
@@ -876,7 +875,6 @@ let init_env deps : ML TcEnv.env =
   let solver =
     {SMT.solver with
       preprocess=FStarC.Tactics.Hooks.preprocess;
-      spinoff_strictly_positive_goals=Some FStarC.Tactics.Hooks.spinoff_strictly_positive_goals;
       handle_smt_goal=FStarC.Tactics.Hooks.handle_smt_goal
     } in
   let env =

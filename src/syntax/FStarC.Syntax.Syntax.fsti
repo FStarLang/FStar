@@ -277,11 +277,20 @@ and quoteinfo = {
 
 *************************************************************************)
 }
+(* A computation type is nothing more than an effect name together with a
+   precondition and a postcondition. There are no weakest-precondition
+   transformers, and no effect indices.
+
+   [comp_pre] is a [prop].
+   [comp_post] is abstracted over the result: it has type [result_typ -> prop],
+   i.e. it is a [Tm_abs] with a single binder. Use [U.comp_post_as_formula] to
+   apply it to a concrete result. *)
 and comp_typ = {
   comp_univs:universes;
   effect_name:lident;
   result_typ:typ;
-  effect_args:args;
+  comp_pre:typ;
+  comp_post:typ;
   flags:list cflag
 }
 and comp' =
@@ -308,11 +317,8 @@ and cflag =                                                      (* flags applic
   | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
   | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
   | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
-  | RETURN                                                         (* the WP is return_wp of something *)
-  | PARTIAL_RETURN                                                 (* the WP is return_wp of something, possibly strengthened with some precondition *)
-  | SOMETRIVIAL                                                    (* the WP is the null wp *)
-  | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
-  | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
+  | SMTPAT of term                                                 (* the SMT patterns of a Lemma, as a list literal. Used
+                                                                      to be the third effect argument of the Lemma comp. *)
   | DECREASES of decreases_order
 and metadata =
   | Meta_pattern       of list term & list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
@@ -495,109 +501,16 @@ type monad_abbrev = {
   def:typ
   }
 
-//
-// Kind of a binder in an indexed effect combinator
-//
-type indexed_effect_binder_kind =
-  | Type_binder
-  | Substitutive_binder
-  | BindCont_no_abstraction_binder  // a g computation (the continuation) binder in bind that's not abstracted over x:a
-  | Range_binder
-  | Repr_binder
-  | Ad_hoc_binder
-instance val showable_indexed_effect_binder_kind : showable indexed_effect_binder_kind
-instance val tagged_indexed_effect_binder_kind : tagged indexed_effect_binder_kind
-
-//
-// Kind of an indexed effect combinator
-//
-// Substitutive invariant applies only to subcomp and ite combinators,
-//   where the effect indices of the two computations could be the same,
-//   and hence bound only once in the combinator definitions
-//
-type indexed_effect_combinator_kind =
-  | Substitutive_combinator of list indexed_effect_binder_kind
-  | Substitutive_invariant_combinator
-  | Ad_hoc_combinator
-instance val showable_indexed_effect_combinator_kind : showable indexed_effect_combinator_kind
-instance val tagged_indexed_effect_combinator_kind : tagged indexed_effect_combinator_kind
-
 type sub_eff = {
   source:lident;
   target:lident;
-  lift_wp:option tscheme;
+  (* An optional term-level lift, used only for reification/extraction:
+     [lift : a:Type -> repr_source a -> repr_target a]. *)
   lift:option tscheme;
-  kind:option indexed_effect_combinator_kind
  }
-
-type action = {
-    action_name:lident;
-    action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
-    action_univs:univ_names;
-    action_params : binders;
-    action_defn:term;
-    action_typ: typ
-}
-
-(*
- * Effect combinators for wp-based effects
- *
- * This includes primitive effects (such as PURE, DIV)
- *
- * repr, return_repr, and bind_repr are optional, and are set only for reifiable effects
- *)
-
-type wp_eff_combinators = {
-  ret_wp       : tscheme;
-  bind_wp      : tscheme;
-  stronger     : tscheme;
-  if_then_else : tscheme;
-  ite_wp       : tscheme;
-  close_wp     : tscheme;
-  trivial      : tscheme;
-
-  repr         : option tscheme;
-  return_repr  : option tscheme;
-  bind_repr    : option tscheme
-}
-
-
-(*
- * Layered effects combinators
- *
- * All of these have pairs of type schemes,
- *   where the first component is the term ts and the second component is the type ts
- *
- * Before typechecking the effect declaration, the second component is a dummy ts
- *   In other words, desugaring sets the first component only, and typechecker then fills up the second one
- *
- * Additionally, bind, subcomp, and if_then_else have a combinator kind,
- *   this is also set to None in desugaring and set during typechecking the effect
- *
- * The close combinator is optional
- *   If it is not provided as part of the effect declaration,
- *   the typechecker also does not synthesize it (unlike if-then-else and subcomp)
- *)
-type layered_eff_combinators = {
-  l_repr         : (tscheme & tscheme);
-  l_return       : (tscheme & tscheme);
-  l_bind         : (tscheme & tscheme & option indexed_effect_combinator_kind);
-  l_subcomp      : (tscheme & tscheme & option indexed_effect_combinator_kind);
-  l_if_then_else : (tscheme & tscheme & option indexed_effect_combinator_kind);
-  l_close        : option (tscheme & tscheme)
-}
-
-type eff_combinators =
-  | Primitive_eff of wp_eff_combinators
-  | Layered_eff of layered_eff_combinators
-
-type effect_signature =
-  | Layered_eff_sig of int & tscheme  // (n, ts) where n is the number of effect parameters (all upfront) in the effect signature
-  | WP_eff_sig of tscheme
 
 //
 // For primitive effects, this is set in ToSyntax
-// For indexed effects, typechecker sets it (in TcEffect)
 //
 type eff_extraction_mode =
   | Extract_none of string  // Effect cannot be extracted
@@ -608,24 +521,43 @@ instance val showable_eff_extraction_mode : showable eff_extraction_mode
 instance val tagged_eff_extraction_mode : tagged eff_extraction_mode
 
 (*
-  new_effect {
-    STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
-    with return ....
-  }
+ * The monadic representation of an effect.
+ *
+ * These combinators play *no role in typechecking*: the meaning of a
+ * computation type is fixed by the generic pre/postcondition rules.  They
+ * only give the effect an executable meaning, which is what reification
+ * (and hence extraction and the tactic engine) needs.
+ *
+ *   repr   : a:Type u#a -> Type u#b
+ *   return : a:Type u#a -> x:a -> repr a
+ *   bind   : a:Type u#a -> b:Type u#b -> repr a -> (a -> repr b) -> repr b
+ *)
+type eff_combinators = {
+  repr        : tscheme;
+  return_repr : tscheme;
+  bind_repr   : tscheme;
+}
+
+(*
+  An effect declaration is a name (plus universes/binders and attributes) and,
+  optionally, a monadic representation used for extraction only.
+
+    assume effect Pure                                       // spec only
+    sub_effect Pure ~> Div
+
+    reflectable effect {
+      TAC with { repr = tac_repr; return = tac_return; bind = tac_bind }
+    }
 *)
 type eff_decl = {
-  mname           : lident;      // STATE_h
+  mname           : lident;
 
   cattributes     : list cflag;
 
-  univs           : univ_names;  // u#heap
-  binders         : binders;     // (heap:Type u#heap), univs and binders are in the scope of the rest of the combinators
+  univs           : univ_names;
+  binders         : binders;
 
-  signature       : effect_signature;
-
-  combinators     : eff_combinators;
-
-  actions         : list action;
+  combinators     : option eff_combinators;
 
   eff_attrs       : list attribute;
 
@@ -726,21 +658,6 @@ type sigelt' =
       tac:term;
     }
 
-  | Sig_polymonadic_bind     {  //(m, n) |> p, the polymonadic term, and its type
-      m_lid:lident;
-      n_lid:lident;
-      p_lid:lident;
-      tm:tscheme;
-      typ:tscheme;
-      kind:option indexed_effect_combinator_kind;
-    }
-  | Sig_polymonadic_subcomp  {  //m <: n, the polymonadic subcomp term, and its type
-      m_lid:lident;
-      n_lid:lident;
-      tm:tscheme;
-      typ:tscheme;
-      kind:option indexed_effect_combinator_kind;
-    }
   | Sig_fail                 {
       errs:list int;      // Expected errors (empty for 'any')
       rng: range;   // range of the `expect_failure`, for error reporting
@@ -809,7 +726,6 @@ val mk_Tm_delayed:  (term & subst_ts) -> range -> ML term
 val mk_Total:       typ -> ML comp
 val mk_GTotal:      typ -> ML comp
 val mk_Comp:        comp_typ -> ML comp
-val mk_Tac :        typ -> ML comp
 
 val order_bv:        bv -> bv -> int
 val bv_eq:           bv -> bv -> bool
@@ -872,6 +788,16 @@ val lid_as_fv        : lident -> option fv_qual -> fv
 val fv_to_tm         : fv -> ML term
 val fvar_with_dd     : lident -> option fv_qual -> ML term
 val fvar             : lident -> option fv_qual -> ML term
+
+(* [True], the trivial precondition *)
+val trivial_pre :   term
+(* The residual comp of a postcondition abstraction: [Tot Type0] *)
+val post_rc :       residual_comp
+(* [fun (_:t) -> True], the trivial postcondition at result type [t] *)
+val trivial_post :  typ -> ML term
+(* A computation with a trivial specification: [mk_triv_comp us eff t flags] *)
+val mk_triv_comp :  universes -> lident -> typ -> list cflag -> ML comp
+val mk_Tac :        typ -> ML comp
 val fv_eq            : fv -> fv -> bool
 val fv_eq_lid        : fv -> lident -> bool
 val lid_of_fv        : fv -> lid

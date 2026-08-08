@@ -151,7 +151,8 @@ and hash_comp' (c:comp)
          hash_list hash_universe ct.comp_univs;
          hash_lid ct.effect_name;
          hash_term ct.result_typ;
-         hash_list hash_arg ct.effect_args;
+         hash_term ct.comp_pre;
+         hash_term ct.comp_post;
          hash_list hash_flag ct.flags]
 
 and hash_lb lb
@@ -318,11 +319,7 @@ and hash_flag f
   | TOTAL -> of_int 947
   | MLEFFECT -> of_int 953
   | LEMMA -> of_int 967
-  | RETURN -> of_int 971
-  | PARTIAL_RETURN -> of_int 977
-  | SOMETRIVIAL -> of_int 983
-  | TRIVIAL_POSTCONDITION -> of_int 991
-  | SHOULD_NOT_INLINE -> of_int 997
+  | SMTPAT p -> mix (of_int 971) (hash_term p)
   | DECREASES (Decreases_lex ts) -> mix (of_int 1013) (hash_list hash_term ts)
   | DECREASES (Decreases_wf (t0, t1)) -> mix (of_int 2341) (hash_list hash_term [t0;t1])
 
@@ -481,7 +478,8 @@ and equal_comp c1 c2
     Ident.lid_equals ct1.effect_name ct2.effect_name &&
     equal_list equal_universe ct1.comp_univs ct2.comp_univs &&
     equal_term ct1.result_typ ct2.result_typ &&
-    equal_list equal_arg ct1.effect_args ct2.effect_args &&
+    equal_term ct1.comp_pre ct2.comp_pre &&
+    equal_term ct1.comp_post ct2.comp_post &&
     equal_list equal_flag ct1.flags ct2.flags
   | _ -> false
 
@@ -678,6 +676,9 @@ and equal_flag f1 f2
   match f1, f2 with
   | DECREASES t1, DECREASES t2 ->
     equal_decreases_order t1 t2
+
+  | SMTPAT p1, SMTPAT p2 ->
+    equal_term p1 p2
 
   | _ -> f1 = f2
 

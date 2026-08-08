@@ -34,13 +34,13 @@ let label (r:range) (msg:string) (p:prop) : Ghost prop (requires True) (ensures 
 
 noeq type quickCodes (a:Type0) : Type =
 | QEmpty: a -> quickCodes a
-| QPURE: r:range -> msg:string -> pre:pure_wp unit ->
-    (unit -> PURE unit pre) -> quickCodes a -> quickCodes a
+| QPURE: r:range -> msg:string -> pre:prop ->
+    (unit -> PURE unit (requires pre)) -> quickCodes a -> quickCodes a
 
 [@va_qattr]
 let qPURE
-    (#pre:pure_wp unit) (#a:Type0) (r:range) (msg:string)
-    ($l:unit -> PURE unit pre) (qcs:quickCodes a)
+    (#pre:prop) (#a:Type0) (r:range) (msg:string)
+    ($l:unit -> PURE unit (requires pre)) (qcs:quickCodes a)
   : quickCodes a =
   QPURE r msg pre l qcs
 
@@ -54,10 +54,7 @@ let rec wp (#a:Type0) (qcs:quickCodes a) (k:vale_state -> a -> prop) (s0:vale_st
   match qcs with
   | QEmpty g -> k s0 g
   | QPURE r msg pre l qcs ->
-      (forall (p:unit -> GTot prop).//{:pattern (pre p)}
-        (forall (u:unit).{:pattern (guard_free (p u))} wp qcs k s0 ==> p ())
-        ==>
-        label r msg (pre p))
+      label r msg pre /\ wp qcs k s0
 
 [@va_qattr]
 let wp_block (#a:Type) (qcs:vale_state -> GTot (quickCodes a)) (s0:vale_state) (k:vale_state -> a -> prop) : prop =
@@ -91,16 +88,13 @@ assume val lem (x:int) : Lemma
   (requires f x - f x == 0)
   (ensures (forall (i:int).{:pattern f i} f i > 0))
 
-open FStar.Monotonic.Pure
-
 [@"opaque_to_smt" va_qattr]
 let va_qcode_Test : (quickCode unit) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   (qblock
     (fun (va_s:vale_state) ->
-      qPURE range1 "" (fun (_:unit) -> lem 4) (
-      qPURE range1 "" (fun (_:unit) -> lem 5) (
-      qPURE range1 "" (fun (_:unit) -> lem 6) (
+      qPURE #(f 4 - f 4 == 0) range1 "" (fun (_:unit) -> lem 4) (
+      qPURE #(f 5 - f 5 == 0) range1 "" (fun (_:unit) -> lem 5) (
+      qPURE #(f 6 - f 6 == 0) range1 "" (fun (_:unit) -> lem 6) (
       QEmpty ()
     ))))
   )
@@ -118,10 +112,9 @@ assume val lem2 (x:int) : Lemma
 
 [@"opaque_to_smt" va_qattr]
 let va_qcode_Test2 : (quickCode unit) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   (qblock
     (fun (va_s:vale_state) ->
-      qPURE range1 "" (fun (_:unit) -> lem2 4) (
+      qPURE #(f 4 - f 4 == 0 /\ f 4 == 0) range1 "" (fun (_:unit) -> lem2 4) (
       QEmpty ()
     ))
   )

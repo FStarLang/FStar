@@ -56,7 +56,7 @@ let split3_index (#a:eqtype) (s0:seq a) (x:a) (s1:seq a) (j:nat)
     if j < n then ()
     else ()
 
-#push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 0"
 let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
   : Tot (frags:(seq a & seq a) {
       let s' = Seq.append (fst frags) (snd frags) in
@@ -427,7 +427,7 @@ let eq2_eq #a (eq:CE.equiv a) (x y:a)
   = eq.reflexivity x
 
 (* The sequence indexing lemmas make this quite fiddly *)
-#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 0" 
+#push-options "--fuel 1 --ifuel 0"
 let rec foldm_snoc_perm #a #eq m s0 s1 p
   : Lemma
     (ensures eq.eq (foldm_snoc m s0) (foldm_snoc m s1))
@@ -546,7 +546,7 @@ let aux_shuffle_lemma #c #eq (cm: CE.cm c eq)
     cm.congruence (s2+(s1+l1)) l2 ((s1+l1)+s2) l2
 
 
-#push-options "--ifuel 0 --fuel 1 --z3rlimit 40"
+#push-options "--ifuel 0 --fuel 1"
 (* This proof is quite delicate, for several reasons:
      - It's working with higher order functions that are non-trivially dependently typed,
        notably on the ranges the ranges of indexes they manipulate

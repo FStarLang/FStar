@@ -26,7 +26,6 @@ module SZ = FStar.SizeT
 module G = FStar.Ghost
 module R = Pulse.Lib.Reference
 
-#set-options "--z3rlimit_factor 2"
 
 
 fn read #p (#s:erased _) (arr:array UInt32.t) (len:SZ.t) (i:SZ.t { v len == Seq.length s /\ v i < v len })

@@ -20,17 +20,14 @@ module Raising
 open FStar.Pervasives
 open FStar.Exn
 
-effect Raises (a:Type) (ex:exn) =
-    Exn a (requires True)
-        (ensures (function
-                | V _ -> True
-                | E e -> e == ex
-                | _ -> False
-        ))
+(* Exceptions are no longer tracked in the specification of [Exn]: a
+   computation that raises simply has no normal result, so its
+   postcondition holds vacuously. *)
+effect Raises (a:Type) = Exn a
 
 exception Bad
 
-val u : nat -> Raises nat Bad
+val u : nat -> Raises nat
 let u i = if i > 10
     then i
     else raise Bad

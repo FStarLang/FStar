@@ -3,10 +3,10 @@
   - Ill-typed term
   - Could not prove termination
   - The SMT solver could not prove the query.
-  - Env =
-      (x : Prims.unit)
-      (test_ghost_loop
-        :
+  - Failed to prove: () << ()
+  - In context:
+      x: Prims.unit
+      test_ghost_loop:
 
             x':
               Prims.unit
@@ -15,21 +15,18 @@
                     (() << ()) }
           -> ghost fn
                requires Pulse.Lib.Core.emp
-               ensures Pulse.Lib.Core.emp)
-  - VC =
-      FStar.Range.labeled FStar.Range.range_0
-        "Could not prove termination"
-        (() << ())
+               ensures Pulse.Lib.Core.emp
 
 * Info at Test.Recursion.fst(130,4-130,22):
   - Expected failure:
   - Ill-typed term
   - Could not prove termination
   - The SMT solver could not prove the query.
-  - Env =
-      (z : Prims.int) (y : Prims.nat)
-      (test5'
-        :
+  - Failed to prove: z - 1 << z
+  - In context:
+      z: Prims.int
+      y: Prims.nat
+      test5':
 
             z': Prims.int ->
             y':
@@ -39,11 +36,7 @@
                     (z' << z) }
           -> ghost fn
                requires Pulse.Lib.Core.emp
-               ensures Pulse.Lib.Core.emp)
-      (_if_hyp : Prims.squash ((z <> 0 && y <> 0) == true))
-  - VC =
-      y - 1 >= 0 /\
-      FStar.Range.labeled FStar.Range.range_0
-        "Could not prove termination"
-        (z - 1 << z)
+               ensures Pulse.Lib.Core.emp
+      _if_hyp: Prims.squash ((z <> 0 && y <> 0) == true)
+      y - 1 >= 0
 

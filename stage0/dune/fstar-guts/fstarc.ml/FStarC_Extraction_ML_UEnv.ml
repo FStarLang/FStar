@@ -945,26 +945,6 @@ let extend_with_monad_op_name (g : uenv) (ed : FStarC_Syntax_Syntax.eff_decl)
   | (g1, mlid, exp_b) ->
       let mlp = let uu___1 = mlns_of_lid lid in (uu___1, mlid) in
       (mlp, lid, exp_b, g1)
-let extend_with_action_name (g : uenv) (ed : FStarC_Syntax_Syntax.eff_decl)
-  (a : FStarC_Syntax_Syntax.action)
-  (ts : FStarC_Extraction_ML_Syntax.mltyscheme) :
-  (FStarC_Extraction_ML_Syntax.mlpath * FStarC_Ident.lident * exp_binding *
-    uenv)=
-  let nm =
-    FStarC_Ident.string_of_id
-      (FStarC_Ident.ident_of_lid a.FStarC_Syntax_Syntax.action_name) in
-  let module_name = FStarC_Ident.ns_of_lid ed.FStarC_Syntax_Syntax.mname in
-  let lid =
-    FStarC_Ident.lid_of_ids
-      (FStarC_List.op_At module_name [FStarC_Ident.id_of_text nm]) in
-  let uu___ =
-    extend_fv g
-      (FStarC_Syntax_Syntax.lid_as_fv lid FStar_Pervasives_Native.None) ts
-      false in
-  match uu___ with
-  | (g1, mlid, exp_b) ->
-      let mlp = let uu___1 = mlns_of_lid lid in (uu___1, mlid) in
-      (mlp, lid, exp_b, g1)
 let extend_record_field_name (g : uenv)
   (uu___ : (FStarC_Ident.lident * FStarC_Ident.ident)) :
   (FStarC_Extraction_ML_Syntax.mlident * uenv)=

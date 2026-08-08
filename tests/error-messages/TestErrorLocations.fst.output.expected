@@ -2,32 +2,32 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.l_False
+  - Failed to prove: Prims.l_False
 
 * Info at TestErrorLocations.fst(24,21-24,23):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.l_False
+  - Failed to prove: Prims.l_False
 
 * Info at TestErrorLocations.fst(31,10-31,19):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC = x >= 0
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
   - See also TestErrorLocations.fst(27,50-27,58)
 
 * Info at TestErrorLocations.fst(37,10-37,11):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Type) (x : _)
-  - VC =
-      forall (b: (x: Prims.int -> Prims.Pure Prims.int)).
-        TestErrorLocations.test2_aux == b ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context:
+      uu___: Type
+      x: _
+      f: x: Prims.int -> Prims.Pure Prims.int
+      TestErrorLocations.test2_aux == f
   - See also TestErrorLocations.fst(27,50-27,58)
 
 * Info at TestErrorLocations.fst(43,20-43,21):
@@ -35,102 +35,139 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC = x >= 0
-  - See also Prims.fst(642,18-642,24)
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
+  - See also Prims.fst(478,18-478,24)
 
 * Info at TestErrorLocations.fst(48,14-48,19):
   - Expected failure:
-  - Could not prove post-condition
+  - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC =
-      forall (p: Prims.pure_post Prims.int).
-        x <> 0 /\
-        (forall (pure_result: Prims.int). pure_result >= 0 ==> p pure_result) ==>
-        (forall (return_val: Prims.int). return_val == x + 1 ==> p return_val)
+  - Failed to prove: x + 1 >= 0
+  - In context:
+      x: Prims.int
+      x <> 0
   - See also TestErrorLocations.fst(46,84-46,90)
 
 * Info at TestErrorLocations.fst(58,15-58,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC =
-      forall (p: Prims.pure_post Prims.unit) (any_result: Prims.unit).
-        p any_result
-  - See also Prims.fst(419,90-419,102)
+  - Failed to prove: Prims.l_False
+  - In context:
+      uu___: Prims.unit
+      uu___: Prims.unit
+  - See also TestErrorLocations.fst(56,27-56,29)
 
 * Info at TestErrorLocations.fst(62,15-62,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC =
-      forall (p: Prims.pure_post Prims.unit) (any_result: Prims.unit).
-        p any_result
-  - See also Prims.fst(419,90-419,102)
+  - Failed to prove: Prims.l_False
+  - In context:
+      uu___: Prims.unit
+      uu___: Prims.unit
+  - See also TestErrorLocations.fst(60,25-60,30)
 
 * Info at TestErrorLocations.fst(66,27-66,28):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
-      forall (x: Prims.int).
-        (* - Subtyping check failed\n  - Expected type Prims.nat got type Prims.int *)
-        x >= 0
-  - See also Prims.fst(642,18-642,24)
+  - Failed to prove: x >= 0
+  - In context:
+      x: Prims.int
+      a: Prims.eqtype
+      Prims.hasEq a
+      Prims.int == a
+  - See also Prims.fst(478,18-478,24)
 
 * Info at TestErrorLocations.fst(70,25-70,34):
   - Expected failure:
   - Subtyping check failed
   - Expected type Type0 got type Type0
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = forall (x: Prims.int). x >= 0
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
   - See also TestErrorLocations.fst(68,52-68,66)
 
-* Info at TestErrorLocations.fst(89,2-90,20):
+* Info at TestErrorLocations.fst(81,9-81,11):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC = exists (x1: Prims.nat). x1 = 0
+  - Failed to prove: TestErrorLocations.p3
+  - In context:
+      TestErrorLocations.p1
+      TestErrorLocations.p1
+      TestErrorLocations.p2
+      TestErrorLocations.p2
+
+* Info at TestErrorLocations.fst(79,9-79,11):
+  - Expected failure:
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Failed to prove: TestErrorLocations.p1
+
+* Info at TestErrorLocations.fst(86,2-87,20):
+  - Expected failure:
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Failed to prove: exists (x1: Prims.nat). x1 = 0
+  - In context: uu___: Prims.unit
   - See also FStar.Classical.Sugar.fsti(191,14-191,29)
 
-* Info at TestErrorLocations.fst(95,28-95,33):
+* Info at TestErrorLocations.fst(92,28-92,33):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (forall (x: Prims.nat). x = 0)
     got type Prims.unit
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC = forall (x: Prims.nat). x = 0
+  - Failed to prove: x = 0
+  - In context:
+      uu___: Prims.unit
+      x: Prims.nat
 
-* Info at TestErrorLocations.fst(100,12-100,13):
+* Info at TestErrorLocations.fst(97,17-97,18):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (p : Prims.prop) (q : Prims.prop)
-  - VC = p /\ q
-  - See also TestErrorLocations.fst(99,19-99,20)
+  - Failed to prove: q
+  - In context:
+      p: Prims.prop
+      q: Prims.prop
+      p
+  - See also TestErrorLocations.fst(96,21-96,22)
 
-* Info at TestErrorLocations.fst(105,17-105,18):
+* Info at TestErrorLocations.fst(97,12-97,13):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (p : Prims.prop) (q : Prims.prop) (uu___ : Prims.squash p)
-  - VC = p /\ q
-  - See also TestErrorLocations.fst(104,21-104,22)
+  - Failed to prove: p
+  - In context:
+      p: Prims.prop
+      q: Prims.prop
+  - See also TestErrorLocations.fst(96,19-96,20)
 
-* Info at TestErrorLocations.fst(110,2-112,13):
+* Info at TestErrorLocations.fst(102,17-102,18):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (p : Prims.prop) (q : Prims.prop)
-  - VC = p \/ q
+  - Failed to prove: q
+  - In context:
+      p: Prims.prop
+      q: Prims.prop
+      uu___: Prims.squash p
+      p
+  - See also TestErrorLocations.fst(101,21-101,22)
+
+* Info at TestErrorLocations.fst(107,2-109,13):
+  - Expected failure:
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Failed to prove: p \/ q
+  - In context:
+      p: Prims.prop
+      q: Prims.prop
   - See also FStar.Classical.Sugar.fsti(173,14-173,20)
 
 * Warning 240 at TestErrorLocations.fst(60,4-60,9):
@@ -145,7 +182,7 @@
   - TestErrorLocations.test5 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at TestErrorLocations.fst(109,0-112,13):
+* Warning 240 at TestErrorLocations.fst(106,0-109,13):
   - Missing definitions in module TestErrorLocations:
       test5
       test6

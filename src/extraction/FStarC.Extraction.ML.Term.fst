@@ -132,13 +132,11 @@ let effect_as_etag =
          let ed_opt = TcEnv.effect_decl_opt (tcenv_of_uenv g) l in
          match ed_opt with
          | Some (ed, qualifiers) ->
-           if TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname
-           then
-             (* Some reifiable effects are extracted natively. In that case,
-                the tag must be IMPURE. *)
-             if get_extraction_mode (tcenv_of_uenv g) ed.mname = S.Extract_reify
-             then E_PURE
-             else E_IMPURE
+           (* A reified computation is a value of the representation type, so
+              its extraction is pure; effects that are extracted primitively
+              stay impure. *)
+           if get_extraction_mode (tcenv_of_uenv g) ed.mname = S.Extract_reify
+           then E_PURE
            else E_IMPURE
          | None ->
            E_IMPURE

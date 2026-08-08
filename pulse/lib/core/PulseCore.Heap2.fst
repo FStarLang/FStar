@@ -120,7 +120,7 @@ let intro_h_exists x p h = ()
 let elim_h_exists #a p h = ()
 let interp_depends_only_on hp = ()
 #restart-solver
-#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 4 --split_queries always"
+#push-options "--fuel 0 --ifuel 2"
 let lift_star (l:tag) (p q:H.slprop)
 : Lemma (llift l (p `H.star` q) == (llift l p `star` llift l q))
         [SMTPat (llift l (p `H.star` q))]
@@ -255,7 +255,7 @@ let lift_heap_pre_action
 
 #restart-solver
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+#push-options "--fuel 0 --ifuel 0"
 let lift_immut (m:bool) = if m then IMMUTABLE else MUTABLE
 let lift_action
       (#immut:_)
@@ -487,7 +487,7 @@ let lift_heap_pre_action_ghost
 
 #restart-solver
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+#push-options "--fuel 0 --ifuel 0"
 let lift_immut_ghost (m:bool) = if m then IMMUTABLE else ONLY_GHOST
 let lift_action_ghost
       (#immut:_)
@@ -627,7 +627,7 @@ let ghost_share
 
 let ni_squash #a : non_informative (squash a) = fun x -> reveal x
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8 --retry 3" // flaky
+#push-options "--fuel 0 --ifuel 0 --retry 3" // flaky
 let ghost_gather
     (#a:Type)
     (#pcm:pcm a)
