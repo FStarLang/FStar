@@ -2070,30 +2070,6 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
             || (Ident.lid_equals l PC.exn_lid)
         | _ -> false
     in
-    (* A more generous version of [clearly_inhabited], used only to discharge
-       [nonempty t] goals. It is deliberately kept separate: [clearly_inhabited]
-       also drives the quantifier simplifications below, where being too eager
-       collapses verification conditions and degrades error messages. *)
-    let rec clearly_nonempty (ty : typ) : ML bool =
-        match (U.unmeta ty).n with
-        | Tm_uinst (t, _) -> clearly_nonempty t
-        | Tm_arrow {comp=c} -> clearly_nonempty (U.comp_result c)
-        | Tm_type _ -> true
-        | Tm_app _ ->
-          let hd, _ = U.head_and_args_full ty in
-          (match (U.un_uinst hd).n with
-           | Tm_fvar fv ->
-             let l = S.lid_of_fv fv in
-                (Ident.lid_equals l PC.list_lid)
-             || (Ident.lid_equals l PC.option_lid)
-           | _ -> false)
-        | Tm_fvar fv ->
-            let l = S.lid_of_fv fv in
-               (Ident.lid_equals l PC.unit_lid)
-            || (Ident.lid_equals l PC.prop_lid)
-            || clearly_inhabited ty
-        | _ -> clearly_inhabited ty
-    in
     let simplify arg = (simp_t (fst arg), arg) in
     match is_forall_const cfg tm with
     (* We need to recurse, and maybe reduce further! *)
@@ -2200,11 +2176,11 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
              | _ -> tm, false
         else if S.fv_eq_lid fv PC.nonempty_lid
         then match args with
-             (* [nonempty t] is trivially true when [t] is obviously inhabited *)
-             | [(ty, _)] ->
-               if clearly_nonempty ty
-               then w U.t_true, false
-               else tm, false
+             (* [nonempty t] holds when [t] is clearly inhabited. This reuses,
+                unchanged, the same criterion as the quantifier simplifications
+                above; anything it does not cover needs an explicit
+                [nonempty_intro] witness. *)
+             | [(ty, _)] when clearly_inhabited ty -> w U.t_true, false
              | _ -> tm, false
         else if S.fv_eq_lid fv PC.b2t_lid
         then match args with

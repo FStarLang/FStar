@@ -52,9 +52,9 @@ Guidelines for the changelog:
 
     Concretely, `let foo : ty = e` where `e` has a divergent effect now incurs an
     extra proof obligation `nonempty ty`. This mirrors what Lean does for
-    `partial def`. The obligation is discharged automatically for a few obviously
-    inhabited types (`unit`, `bool`, `int`, `string`, `exn`, `prop`, `Type`,
-    `list a`, `option a`, and arrows into those). For any other type, supply a
+    `partial def`. The obligation is discharged automatically for the few
+    obviously inhabited types the normalizer already recognizes (`bool`, `int`,
+    `string`, `exn`, and arrows into those). For any other type, supply a
     witness with a top-level proof before the definition:
 
     ```
