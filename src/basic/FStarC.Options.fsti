@@ -213,6 +213,7 @@ val custard_max_specializations : unit    -> ML int
 val custard_norm_budget         : unit    -> ML int
 val custard_monomorphize_types  : unit    -> ML bool
 val custard_backend             : unit    -> ML string
+val custard_split               : unit    -> ML bool
 val custard_unit                : unit    -> ML (option string)
 val custard_links               : unit    -> ML (list string)
 val custard_dump_cui            : unit    -> ML bool

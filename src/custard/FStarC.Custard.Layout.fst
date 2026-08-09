@@ -596,8 +596,44 @@ let ctor_plans (look:name -> ML (option dtype)) (dt:dtype) : ML (list (name & fp
       end)
   | _ -> []
 
+(* A field whose type mentions a type variable the declaration does not bind
+   is a *polymorphic* field: [FStarC.Class.Monad.monad] is a class over
+   [m : Type -> Type], so its [return] has type [#a:Type -> a -> m a] and the
+   [a] is bound by the field, not by [monad].  Neither the IR's type language
+   nor an OCaml record field without an explicit universal can say that, and
+   [m a] is already [TAny] for the same reason, so the honest reading is that
+   the field has no representation on either side.
+
+   This has to happen before anything reads a field's type: the layout
+   analysis, the verdicts, and section 5.4's coercion insertion all take a
+   declared field type at its word. *)
+let close_fields (d:decl) : ML decl =
+  match d with
+  | DType dt ->
+    let bound (v:string) : ML bool = dt.dt_params |> List.existsb (fun p -> p = v) in
+    let rec close (c:cty) : ML cty =
+      match c with
+      | TVar v -> if bound v then c else TAny
+      | TApp (n, args) -> TApp (n, List.map close args)
+      | TArrow (a, e, b) -> TArrow (close a, e, close b)
+      | TTuple cs -> TTuple (List.map close cs)
+      | TBuf c -> TBuf (close c)
+      | TRef c -> TRef (close c)
+      | TInline c -> TInline (close c)
+      | c -> c in
+    let fields (fs : list (string & cty)) : ML (list (string & cty)) =
+      fs |> List.map (fun (f, c) -> (f, close c)) in
+    DType { dt with dt_body =
+      match dt.dt_body with
+      | TAbbrev c -> TAbbrev (close c)
+      | TRecord fs -> TRecord (fields fs)
+      | TVariant cs -> TVariant (cs |> List.map (fun (cn, fs) -> (cn, fields fs)))
+      | TAbstract -> TAbstract }
+  | d -> d
+
 let run (imports:list (dtype & type_info)) (prog:program)
   : ML (program & list (name & type_info) & verdicts) =
+  let prog = List.map close_fields prog in
   let t = { types   = SMap.create 100;
             erased  = SMap.create 100;
             layouts = SMap.create 100;

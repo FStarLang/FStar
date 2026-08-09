@@ -3258,6 +3258,12 @@ need that assumption relaxed.
   library over it, then CDDL over that, and then one library per concrete CDDL
   format.  Each layer is built once and the next links against it.
 
+A third thing wants *several output files* but not several runs, and is
+covered separately in §12.9: hand-written OCaml realizations that reference
+modules Custard compiles make the single output blob circular.  That is a
+partition of one whole-program run, not a relaxation of it, and none of the
+machinery below applies to it.
+
 The framing that makes this tractable is that **a Custard unit is a whole
 program with holes**, and that Custard already has exactly one place where a
 hole could be filled: `Extract.request` (`Extract.fst:277`) is the single
@@ -3714,9 +3720,10 @@ against `src/**/*.fst` turns up, in rough order of size:
    `FStarC.Parser.ParseIt`'s `ASTFragment` carries a `FStarC.Parser.AST.file`,
    and `FStarC_Parser_AST.modul` (from the ML-extracted `fstar.compiler`) is
    not `fStarC_Parser_AST_modul` (from Custard).  This is item 3's transitive
-   closure argument reaching a module with no hand-written `.ml` at all, and
-   the real fix is §12: compile `FStarC.Parser.AST` as a Custard *unit* and
-   link against it, rather than realizing ever more of the compiler.
+   closure argument reaching a module with no hand-written `.ml` at all.  It
+   is *not* §12: nothing here wants a second extraction run.  It is §12.9,
+   output splitting — **done**, and §12.10 records where the build reached
+   with it.
 7. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
    leaves syntax, elaboration and the checked files unchanged.
@@ -3728,7 +3735,140 @@ against `src/**/*.fst` turns up, in rough order of size:
 
 ---
 
-## 13. Milestones
+### 12.9 Output splitting
+
+Separate compilation is not the only reason the output cannot be one file, and
+the other reason is not about relaxing the whole-program assumption at all.
+
+**The problem.** F\* has fifty-odd hand-written OCaml realizations (§8.2), and
+fourteen of them reference modules Custard compiles:
+
+| realization | references |
+| --- | --- |
+| `FStarC_BaseTypes` | `FStar_Int8/16/32/64`, `FStar_UInt16` |
+| `FStarC_Extraction_ML_PrintML` | `FStarC_Const`, `FStarC_Options`, `FStarC_Parser_Const_Tuples` |
+| `FStarC_Filepath` | `FStarC_Platform` |
+| `FStarC_Parser_LexFStar` | `FStarC_Errors`, `FStarC_Ident` |
+| `FStarC_Parser_ParseIt` | `FStarC_Parser_AST`, `FStarC_Errors`, `FStarC_Options`, … |
+| `FStarC_Reflection_Types` | `FStarC_Syntax_Syntax`, `FStarC_TypeChecker_Env`, … |
+| `FStarC_Syntax_TermHashTable` | `FStarC_Syntax_Hash` |
+| `FStarC_Tactics_Native` | `FStarC_Tactics_Monad`, `FStarC_TypeChecker_Cfg`, … |
+| `FStarC_Tactics_V2_Builtins` | `FStarC_Syntax_Syntax` |
+| `FStarC_Unionfind`, `FStar_IO`, `FStar_Issue`, `FStarC_Util`, `FStar_Reflection_Typing_Builtins` | shallower |
+
+So the reference graph alternates: Custard output → realization → Custard
+output → …, and one blob gives OCaml a cycle.  OCaml compilation units must
+form a DAG.  `module rec` is single-file only, requires an explicit signature
+on every member, and is limited by the initialization-safety check, so it is
+not an escape.
+
+**There is no real cycle.**  F\*'s module graph is a DAG and every realization
+sits at a node of it — which is exactly why `fstar.compiler` builds today with
+the same realizations.  The cycle is created by emitting one file, and it is
+removed by emitting several.  This needs no second extraction run, no unit
+interface, no re-specialization and no version negotiation; it is one
+whole-program run whose already-topologically-sorted declaration list is cut
+into pieces.  That is a *different mechanism* from §12.1–12.8, and conflating
+the two is what made item 6 above look like a §12 problem.
+
+**Where to cut.**  One file per F\* source module, which is what ML extraction
+already does and what the existing build expects.  `ocamldep` over the
+generated `.ml` files together with the hand-written ones then computes the
+link order, correctly and with no table to maintain — including the parts of
+each realization's dependencies that its `.fsti` does not mention
+(`FStarC_Parser_ParseIt.ml` calls `FStarC_Parser_Parse`, which is nowhere in
+F\*'s dependency graph).
+
+**The one wrinkle: monomorphization detaches a declaration from its module.**
+`fStar_List_map__term` is born in `FStar.List` but mentions
+`FStarC.Syntax.Syntax`, and `FStarC_Syntax_Syntax.ml` references `FStar_List`
+— a cycle, from a specialization rather than from a realization.
+
+A valid slot always exists.  A specialization is created *because* some module
+`U` instantiated it, so `U` depends, in F\*'s graph, on every module the
+specialization mentions; any linear extension of the DAG therefore has room
+after all of them and before `U`.  The rule that finds it:
+
+> `home(d)` is the latest, in F\*'s module order, of `d`'s own module and the
+> homes of everything `d` references.
+
+One forward pass over the sorted program computes this, because every
+reference is already earlier in the list.  A declaration whose home is its own
+module is *at home*; everything else has been **relocated**.
+
+**Names.**  A realization refers to `FStarC_Parser_AST.decl`, not to
+`FStarC_Parser_AST.fStarC_Parser_AST_decl`, so the split output has to present
+the ML-extraction API — which it can, because mangling only ever existed to
+keep one flat file collision-free (§12.7).  A declaration that is at home and
+is the only declaration from its source lid is emitted under its plain
+identifier, with its constructors under their plain identifiers; a relocated
+declaration, and every specialization, keeps its mangled name.  Cross-file
+references are qualified by module.
+
+This reuses the `Imported` flag wholesale: when file *i* is printed, every
+declaration from an earlier file is marked `Imported`, which already means
+"not printed here, referred to as `Module.name`" (§12.2), and every
+declaration from a later file is dropped.  So the splitter is a partition plus
+a loop, and no printing path learns about it.
+
+**A realization's callees have to be roots.**  Dead-code elimination cannot
+see a call from hand-written OCaml, so a definition that only the realization
+uses is dropped.  `--custard_entry` names it, which is the same idiom §4.4
+already asks of a library.  `tests/custard/SplitLo.add_one` is the regression.
+
+**A realized module can still contribute a file.**  Realizing a module's
+*types* does not realize its values (§8.2): `Prims.pow2`,
+`FStar.List.Tot.Base.map` and `FStar.Pervasives.Native.fst` have F\* bodies
+that no rule claims, so Custard compiles its own copies — which is what lets
+them be monomorphized instead of reached through the realization's polymorphic
+ones.  Those copies cannot go in the file the realization occupies, so they go
+in `Custard_<Module>.ml`, under mangled names since nothing in them is at home.
+
+The exception is a body that *inspects* a realized type, because the
+realization is free to represent it however it likes.  `FStar.Dyn.dyn` is
+`unit -> Dv value_type_bundle` in F\* and `Obj.t` in `FStar_Dyn.ml`, so
+`undyn`'s body forces a thunk that is not one.  `Builtins`' second list,
+`value_realized_modules`, says the values of such a module come from the
+realization too.
+**What splitting does not do.**  It does not make Custard's data layout agree
+with ML extraction's.  A realization that only *names* a Custard type — which
+is what nearly all fourteen do — is fine, but one that constructs or matches a
+Custard value depends on Custard's §5.5 and §6 verdicts for that type matching
+what the hand-written code assumes.  `FStarC_Errors.Error` is the one case in
+the compiler that does this today.  Where they disagree the answer is the same
+as for any other realization mismatch: state the layout in `Builtins`, or
+realize the type too.
+
+### 12.10 Where the extracted compiler stands
+
+With splitting, `--custard_entry FStarC.Main.main --custard_split` produces
+**178 files**, and those together with the hand-written realizations of
+`src/ml` compile, in `ocamldep -sort` order, with no ordering error and no
+name clash.  Two bugs had to be fixed to get there, both found by advancing
+the build one error at a time and neither of them about splitting:
+
+- **A record field mentioning a type variable the type does not bind.**
+  `FStarC.Class.Monad.monad` is a class over `m : Type -> Type`, so `return`
+  has type `#a:Type -> a -> m a` and the `a` is bound by the *field*.  Neither
+  the IR nor an OCaml record field without an explicit universal can say that,
+  and `m a` is already `TAny` for the same reason, so the honest reading is
+  that the field has no representation on either side.
+  `Layout.close_fields` replaces such a variable with `TAny`, and it runs
+  before anything reads a field's type — the layout analysis, the verdicts and
+  §5.4's coercion insertion all take a declared field type at its word.
+- **`FStar.Dyn`'s values**, described above.
+
+What the build stops on now is an ordinary code-generation bug rather than a
+structural one: `FStarC.Interactive.CompletionTable` emits `trie_empty u_'a`,
+a type argument that erasure left in a value position.  Everything before it
+in the link order — a hundred-odd modules, the whole front end and most of the
+type checker — compiles.
+
+Still missing for a *runnable* compiler: build integration (item 7 of §12.8),
+which has to drive `menhir` and `sedlex` for the generated parser and lexer
+and link the result, and the `Prims.int` question of item 8.
+
+
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -3770,5 +3910,6 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M10f | Make every type-representation decision a function of the type, so that every declaration is exportable | Done.  The `records` and `inline_fields` *decisions* moved into `Layout` (§5.5, §5.7) and reach `Simplify` as a `verdicts` table; the two passes became appliers that decide nothing.  What made this possible: a new `PRecord` in the IR (every backend has one), which removes `records`' surviving-pattern condition; the observation that `inline_fields`' blocked-field scan was unreachable, since `Extract` only ever emits `PWild`/`PVar`/`PConst`/`PCtor`; and deleting `unused_params`.  What made it necessary: dropping a reshaped type from the interface is not an escape hatch, because global variables and exceptions have nominal identity across units (§12.5).  `Driver.stable_types`, `imported_shapes` and `ti_pre` are gone, and so is `Error_CustardBadUnitInterface`'s reason to fire: `Syntax.verdicts`, `Layout.record_verdict`, `Layout.ctor_plans`, `Simplify.records`, `Simplify.inline_fields`; `tests/custard/SepLib.fst` |
 | M10g | Realized modules (§8.2) | Done.  `Rule_realized` and the list in `Builtins`: a type of a hand-written-OCaml module keeps its declaration for its shape but is not emitted, and every reference to it, to its constructors and to its fields prints as the realization's own name.  `FStar.Pervasives.Native`'s `option` and tuples are part of it, which is what makes the whole-program output callable from the realizations at all; tuples print in OCaml's tuple syntax, since they have no constructor to name.  Four bugs the OCaml build of the extracted compiler exposed on the way: abstract types lost their arity, eta-contracted abbreviations (`type psmap = t`) dropped their arguments, `try_with`'s thunk binder was dropped rather than bound to `()`, and `FStar.All.exit` was compiled to OCaml's `exit` rather than the realization that narrows the `Z.t`.  §12.8 item 3 |
 | M10h | Coercions at the `TAny` boundary (§5.4) | Done.  `Simplify.coerce_prog`, the last pass in the pipeline: a bidirectional walk that inserts an `ECast` exactly where a value crosses a *printed* boundary -- a declaration's binders and result, an external's type, a constructor's or record's field types -- whose declared type disagrees with what the value is.  Nowhere else: a node's own `ty` is believed only when it mentions no `TAny`, since `Extract` falls back to `TAny` as often for "not worked out" as for "no representation", and driving the pass off those was the first implementation, which magicked every application.  Two asymmetries make it work: a coercion *to* `TAny` is well-typed whatever the source, so it needs only that the term obviously has *some* representation; and a node that hands its expectation to its own result (`if`, `match`, `let`, `try`) is not asked again, which is what keeps a coercion off the `if` as well as inside each branch.  Unblocks §12.8 item 6 -- `FStarC.Class.Monad`, a class over `Type -> Type`, which neither the IR nor OCaml can name.  Also: `Layout.resolve` no longer expands a realized abbreviation (`FStar.Dyn.dyn`), unless it is `inline_for_extraction` (`FStarC.PSMap.psmap`).  `tests/custard/Magic.fst` |
+| M10i | Output splitting (§12.9) | Done.  `--custard_split` writes one OCaml file per F\* source module instead of one file for the whole program, so that F\*'s hand-written realizations — fourteen of which reference modules Custard compiles — can sit between the pieces; OCaml compilation units must form a DAG, and a single file made them circular.  Still one whole-program run: no unit interface, no re-specialization, just a partition of the already-sorted declaration list.  `Split.run` gives each declaration the latest home, in F\*'s own module order, among its own module and those of everything it references, which is what relocates a specialization that outgrew its source module; `PrintOCaml` prints a declaration under its plain identifier when it is at home, which is the name the realizations spell, and reuses the `Imported` flag of M10c for every cross-file reference.  Two codegen bugs fixed behind it: a record field mentioning a type variable the type does not bind (`Layout.close_fields`), and `FStar.Dyn`'s values, whose bodies inspect a type the realization makes opaque (`Builtins.value_realized_modules`).  The compiler splits into 178 files that compile with the realizations in `ocamldep -sort` order; §12.10.  `tests/custard/SplitLo.fst`, `SplitMid.ml`, `SplitHi.fst` |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

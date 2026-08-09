@@ -368,6 +368,51 @@ $(OUTPUT_DIR)/SepApp.exe: $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml
 
 all: $(OUTPUT_DIR)/SepApp.out.diff
 
+# Section 12.9: output splitting.  SplitLo is Custard-compiled, SplitMid.ml is
+# hand written and calls SplitLo, SplitHi is Custard-compiled and calls
+# SplitMid -- the alternation F*'s own realizations create, and the one a
+# single output file cannot express because OCaml compilation units must form
+# a DAG.  What is tested is that the split puts each declaration in the file
+# its own module names, under the plain identifier the hand-written code
+# spells, in an order ocamlopt accepts.
+#
+# SplitLo.add_one is a root, because only the hand-written OCaml calls it and
+# dead-code elimination cannot see that.  That is the general rule for a
+# realization's callees, and the same --custard_entry idiom section 4.4 asks
+# of a library.
+$(OUTPUT_DIR)/SplitHi.ml: $(CACHE_DIR)/SplitHi.fst.checked
+	$(call msg, "CUSTARD-SPLIT", SplitHi)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_split \
+	  --custard_main SplitHi.main --custard_entry SplitLo.add_one \
+	  --odir $(OUTPUT_DIR) SplitHi.fst
+	$(Q)test -f $(OUTPUT_DIR)/SplitLo.ml
+	$(Q)for p in $(GREP_SplitLo); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/SplitLo.ml \
+	    || { echo "ERROR: SplitLo output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(GREP_SplitHi); do \
+	  grep -q -- "$$p" $@ \
+	    || { echo "ERROR: SplitHi output is missing $$p"; exit 1; }; done; true
+
+# A declaration in the file its own module names is emitted under its plain
+# identifier, constructors included; that is what SplitMid.ml refers to.
+GREP_SplitLo += "^type color ="
+GREP_SplitLo += "| Red"
+GREP_SplitLo += "let flip (c : color) : color"
+GREP_SplitLo += "let add_one"
+# A cross-file reference is qualified by the module, and never by an [open].
+GREP_SplitHi += "SplitMid.name"
+GREP_SplitHi += "SplitLo.flip"
+GREP_SplitHi += "SplitLo.Red"
+GREP_SplitHi += "let _ = main ()"
+
+$(OUTPUT_DIR)/SplitHi.exe: $(OUTPUT_DIR)/SplitHi.ml SplitMid.ml
+	$(call msg, "OCAMLOPT", SplitHi)
+	$(FSTAR_EXE) --ocamlopt -I $(OUTPUT_DIR) \
+	  $(OUTPUT_DIR)/SplitLo.ml SplitMid.ml $(OUTPUT_DIR)/SplitHi.ml -o $@
+
+all: $(OUTPUT_DIR)/SplitHi.out.diff
+
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))

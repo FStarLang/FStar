@@ -33,6 +33,17 @@ open FStarC.Custard.Syntax
     that pass drops arguments and so has to move effects. *)
 val anf : program -> ML program
 
+(** Every name a declaration mentions, in its signature and in its body, as
+    [string_of_name] keys.  This is what dead-code elimination walks, and what
+    section 12.9's splitter walks to decide which file a declaration can go
+    in.  A constructor appears under its own name, not its type's;
+    {!ctor_owners} maps one to the other. *)
+val decl_deps : decl -> ML (list string)
+
+(** Each constructor's type, as [string_of_name] keys.  A reference to a
+    constructor is a reference to its declaration. *)
+val ctor_owners : program -> ML (FStarC.SMap.t string)
+
 (** Drop unused pure let-bindings, turn unused impure ones into sequencing,
     and contract [let x = e in x] to [e]. *)
 (** [run imports vd prog].

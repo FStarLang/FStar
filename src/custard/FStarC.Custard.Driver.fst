@@ -36,6 +36,7 @@ module Monomorphize = FStarC.Custard.Monomorphize
 module OCaml   = FStarC.Custard.PrintOCaml
 module Rename  = FStarC.Custard.Rename
 module Simplify = FStarC.Custard.Simplify
+module Split    = FStarC.Custard.Split
 module Ident   = FStarC.Ident
 module TcEnv   = FStarC.TypeChecker.Env
 module Unit    = FStarC.Custard.Unit
@@ -313,6 +314,13 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
          | _ -> base ^ ".ml")
   in
   match backend with
+  | "OCaml" when Options.custard_split () ->
+    (* Section 12.9.  One whole-program run, one file per F* source module:
+       the hand-written realizations reference modules Custard compiles, and
+       OCaml compilation units have to form a DAG. *)
+    let files = Split.run deps (List.map fst imports @ prog) in
+    OCaml.print_split files |> List.iter (fun (m, src) ->
+      BU.write_file (Find.prepend_output_dir (m ^ ".ml")) src)
   | "Krml" -> Krml.write_program ofile prog
   | "C" -> BU.write_file ofile (C.print_program (List.map fst imports @ prog))
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))

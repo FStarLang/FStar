@@ -709,7 +709,7 @@ let decl_deps (d:decl) : ML (list string) =
   | DExn e -> List.collect cty_deps e.de_args
 
 (* A constructor or field name refers to its declaration, not to itself. *)
-let owners (prog:program) : ML (SMap.t string) =
+let ctor_owners (prog:program) : ML (SMap.t string) =
   let m : SMap.t string = SMap.create 50 in
   prog |> List.iter (fun d ->
     match d with
@@ -722,7 +722,7 @@ let owners (prog:program) : ML (SMap.t string) =
   m
 
 let dce (prog:program) : ML program =
-  let own = owners prog in
+  let own = ctor_owners prog in
   let resolve (n:string) : ML string =
     match SMap.try_find own n with Some o -> o | None -> n in
   let defs : SMap.t decl = SMap.create 50 in
@@ -760,7 +760,7 @@ let dce (prog:program) : ML program =
    definition against a [Mono] argument leaves a non-recursive body, and
    inlining can introduce a call that closes a cycle. *)
 let scc (prog:program) : ML program =
-  let own = owners prog in
+  let own = ctor_owners prog in
   let key (d:decl) : ML string = string_of_name (name_of_decl d) in
   let defs : SMap.t decl = SMap.create 50 in
   prog |> List.iter (fun d -> SMap.add defs (key d) d);

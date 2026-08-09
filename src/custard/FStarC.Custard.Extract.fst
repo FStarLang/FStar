@@ -1628,6 +1628,16 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     custard_error st E.Error_CustardEntryNotFound [
       text ("Custard cannot find a definition for " ^ Ident.string_of_lid l ^ ".")
     ]
+  | Some se when is_realized && Sig_let? se.sigel
+              && Builtins.is_value_realized_module (Ident.ns_of_lid l |> List.map Ident.string_of_id) ->
+    (* Section 8.2: the realization defines this value as well as the types it
+       is written against, so compiling the F* body would describe a
+       representation the target does not have. *)
+    let ty = match TcEnv.try_lookup_lid (tcenv st) l with
+             | Some ((_, ty), _) -> ty_of_typ st ty
+             | None -> TAny in
+    DExternal { dx_name = nm; dx_ty = ty; dx_target = None;
+                dx_header = None; dx_flags = [] }
   | Some se ->
     let d = extract_sigelt st l nm margs n_holes se in
     let d = if is_opaque || is_realized then with_no_newtype d else d in

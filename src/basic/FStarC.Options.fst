@@ -206,6 +206,7 @@ let defaults = [
   ("custard_norm_budget"                       , Int 10000000);
   ("custard_monomorphize_types"                , Bool false);
   ("custard_backend"                           , String "OCaml");
+  ("custard_split"                             , Bool false);
   ("custard_unit"                              , Unset);
   ("custard_link"                              , List []);
   ("custard_dump_cui"                          , Bool false);
@@ -491,6 +492,7 @@ let get_custard_max_specializations () = lookup_opt "custard_max_specializations
 let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
 let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
 let get_custard_backend         ()      = lookup_opt "custard_backend"          as_string
+let get_custard_split           ()      = lookup_opt "custard_split"           as_bool
 let get_custard_unit            ()      = lookup_opt "custard_unit"            (as_option as_string)
 let get_custard_link            ()      = lookup_opt "custard_link"            (as_list as_string)
 let get_custard_dump_cui        ()      = lookup_opt "custard_dump_cui"        as_bool
@@ -963,6 +965,15 @@ binders explicitly marked [@@monomorphize] (default false)");
     EnumStr ["OCaml"; "Krml"; "C"],
     text "Language Custard emits: OCaml source, karamel's AST for \
 compilation to C, or self-contained C11 source (default OCaml)");
+
+  ( noshort,
+    "custard_split",
+    Const (Bool true),
+    text "Write one OCaml file per F* source module instead of one file for \
+the whole program. This is still a single whole-program run; it exists \
+because F*'s hand-written OCaml realizations reference modules Custard \
+compiles, and a single output file would make those references circular. \
+--odir names the directory the files are written to.");
 
   ( noshort,
     "custard_unit",
@@ -2179,6 +2190,7 @@ let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 let custard_backend              () = get_custard_backend ()
+let custard_split                () = get_custard_split ()
 let custard_unit                 () = get_custard_unit ()
 let custard_links                () = get_custard_link ()
 let custard_dump_cui             () = get_custard_dump_cui ()

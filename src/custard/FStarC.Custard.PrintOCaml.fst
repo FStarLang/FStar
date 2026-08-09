@@ -55,6 +55,23 @@ let realized : ref (SMap.t unit) = mk_ref (SMap.create 0)
 let is_realized (n:name) : ML bool =
   None? n.spec && Some? (SMap.try_find !realized (string_of_name n))
 
+(* Section 12.9: the file currently being printed, when the output is split.
+   A reference to a name of *this* file must not be qualified, and everything
+   in {!qualifiers} is qualified by construction, so the two are reconciled
+   here rather than by keeping a second table per file. *)
+let current_module : ref (option string) = mk_ref None
+
+(* Section 12.9: the names emitted under their plain F* identifier rather than
+   their mangled one.  Mangling exists only to keep one flat file
+   collision-free (section 12.7); once a declaration is in the file its own
+   module names, and is the only declaration from its source lid, the module
+   already separates it and the plain name is both shorter and -- this is the
+   point -- the name the hand-written realizations refer to it by. *)
+let at_home : ref (SMap.t unit) = mk_ref (SMap.create 0)
+
+let is_at_home (n:name) : ML bool =
+  None? n.spec && Some? (SMap.try_find !at_home (string_of_name n))
+
 (* [FStar.Pervasives.Native.tupleN] is realized as OCaml's own N-tuple, which
    has no constructor to name and no field to project.  The *type* needs no
    help -- [('a, 'b) FStar_Pervasives_Native.tuple2] is an alias for ['a * 'b],
@@ -94,7 +111,9 @@ let by_position (k:int) (dflt:string) (fs : list (string & string)) : ML (list s
   go 1
 
 let qualifier (n:name) : ML (option string) =
-  SMap.try_find !qualifiers (string_of_name n)
+  match SMap.try_find !qualifiers (string_of_name n) with
+  | Some m -> if Some m = !current_module then None else Some m
+  | None -> None
 
 let qualify (n:name) (s:string) : ML string =
   match qualifier n with
@@ -146,16 +165,23 @@ let uppercase_first (s:string) : ML string =
     let tl = String.substring s 1 (String.length s - 1) in
     if is_alpha i then hd ^ tl else "U" ^ s
 
-let ocaml_value_name (n:name) : ML string =
-  let s = sanitize (mangled_name n) in
-  let s = lowercase_first s in
+let escape_keyword (s:string) : ML string =
   if List.existsb (fun k -> k = s) ocaml_keywords then s ^ "_" else s
+
+let ocaml_value_name (n:name) : ML string =
+  if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
+  escape_keyword (lowercase_first (sanitize (mangled_name n)))
 
 let ocaml_type_name (n:name) : ML string =
   if is_realized n then sanitize n.id else
-  let s = sanitize (mangled_name n) in
-  let s = lowercase_first s in
-  if List.existsb (fun k -> k = s) ocaml_keywords then s ^ "_" else s
+  if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
+  escape_keyword (lowercase_first (sanitize (mangled_name n)))
+
+(* The OCaml constructor a variant label or an exception is declared and
+   referred to under.  Both spellings have to agree, so both go through here. *)
+let ocaml_ctor_ident (n:name) : ML string =
+  if is_realized n || is_at_home n then uppercase_first (sanitize n.id)
+  else uppercase_first (sanitize (mangled_name n))
 
 let ocaml_ctor_name (n:name) (c:string) : ML string =
   uppercase_first (sanitize (mangled_name n ^ "_" ^ c))
@@ -399,8 +425,7 @@ and ctor_ref (n:name) : ML string =
   match builtin_ctor n with
   | Some c -> c
   | None ->
-    if is_realized n then qualify n (uppercase_first (sanitize n.id))
-    else qualify n (uppercase_first (sanitize (mangled_name n)))
+    qualify n (ocaml_ctor_ident n)
 
 and builtin_ctor (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
@@ -415,7 +440,7 @@ let rec term (ind:string) (e:expr) : ML string =
   | EQual (n, _) ->
     (match external_target n with
      | Some t -> t
-     | None -> ocaml_value_name n)
+     | None -> qualify n (ocaml_value_name n))
   | ECtor (n, []) -> ctor_ref n
   | ECtor (n, [a; b]) when builtin_ctor n = Some "::" ->
     "(" ^ term ind a ^ " :: " ^ term ind b ^ ")"
@@ -598,7 +623,7 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
   | DExternal _ -> None
 
   | DExn e ->
-    Some ("exception " ^ uppercase_first (sanitize (mangled_name e.de_name)) ^
+    Some ("exception " ^ ocaml_ctor_ident e.de_name ^
           (match e.de_args with
            | [] -> ""
            | args -> " of " ^ String.concat " * " (List.map ty args)))
@@ -617,11 +642,21 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
 (* Constructor names have to be declared with the same OCaml name we refer to
    them by, so the variant's constructor labels are the constructors' own
    mangled names. *)
-let print_program (p:program) : ML string =
+(* Constructor names have to be declared with the same OCaml name we refer to
+   them by, so the variant's constructor labels are the constructors' own
+   mangled names.
+
+   [homes] is empty for the ordinary whole-program-in-one-file output.  When
+   the output is split (section 12.9) it maps each declaration to the OCaml
+   module its file compiles to, which is what every cross-file reference is
+   qualified by and what decides whether a declaration is *at home* and so
+   emitted under its plain identifier. *)
+let build_tables (homes : SMap.t string) (p:program) : ML unit =
   let tbl = SMap.create 50 in
   let quals = SMap.create 50 in
   let real = SMap.create 20 in
   let tups = SMap.create 20 in
+  let home = SMap.create 50 in
   p |> List.iter (fun d ->
     (* An imported value is exactly an external whose target happens to be
        another generated module: nothing else about it is special, and reusing
@@ -653,8 +688,35 @@ let print_program (p:program) : ML string =
          | Some t -> t
          | None -> realization_of e.dx_name)
     | _ -> ());
+  (* Section 12.9.  Every compiled declaration is qualified by its own file --
+     {!qualifier} drops the qualification again while that file is the one
+     being printed -- so a reference needs to know nothing about where it is.
+
+     A declaration is at home when it sits in the file its own F* module names
+     and carries no specialization suffix.  No suffix means it is the only
+     declaration from its source lid, so the plain identifier is unambiguous
+     within the file, and it is the identifier the hand-written realizations
+     spell. *)
+  p |> List.iter (fun d ->
+    let n = name_of_decl d in
+    match SMap.try_find homes (string_of_name n) with
+    | None -> ()
+    | Some m ->
+      let mark (x:name) : ML unit =
+        SMap.add quals (string_of_name x) m;
+        if None? x.spec && module_name_of_unit (String.concat "." x.ns) = m
+        then SMap.add home (string_of_name x) () in
+      (* A value is reached through {!externals} when it belongs to a linked
+         unit, and through {!qualifiers} otherwise; only the latter is us. *)
+      mark n;
+      (match d with
+       | DType t ->
+         (match t.dt_body with
+          | TVariant cs -> cs |> List.iter (fun (cn, _) -> mark cn)
+          | _ -> ())
+       | _ -> ()));
   (* A realized type resolves to its support module, which is the module its
-     own namespace names.  This runs after the pass above so that a realized
+     own namespace names.  This runs after the passes above so that a realized
      type reaching us through an imported unit still resolves to the
      realization: the upstream unit did not compile it either. *)
   p |> List.iter (fun d ->
@@ -684,34 +746,82 @@ let print_program (p:program) : ML string =
   qualifiers := quals;
   realized := real;
   tuples := tups;
-  let header =
-    "(* Generated by F* Custard extraction. Do not edit. *)\n\
-     [@@@ocaml.warning \"-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70\"]\n" in
-  (* [scc] has already made the members of a recursive group adjacent and
-     tagged each of them with the group's members; all that is left is to join
-     them with [and].  The flag is what identifies the group, not adjacency
-     alone: two unrelated self-recursive definitions are also adjacent. *)
-  let group_of (d:decl) : ML (option (list string)) =
-    match decl_flags d |> List.tryFind Rec? with
-    | Some (Rec ns) -> Some (List.map string_of_name ns)
-    | _ -> None in
+  at_home := home
+
+let header : string =
+  "(* Generated by F* Custard extraction. Do not edit. *)\n\
+   [@@@ocaml.warning \"-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70\"]\n"
+
+(* [scc] has already made the members of a recursive group adjacent and
+   tagged each of them with the group's members; all that is left is to join
+   them with [and].  The flag is what identifies the group, not adjacency
+   alone: two unrelated self-recursive definitions are also adjacent. *)
+let group_of (d:decl) : ML (option (list string)) =
+  match decl_flags d |> List.tryFind Rec? with
+  | Some (Rec ns) -> Some (List.map string_of_name ns)
+  | _ -> None
+
+(* The declarations of one file, already rendered; the tables have to have
+   been built.  Not every declaration prints -- a realized type and an
+   external are references, not definitions -- so this can be empty, and an
+   empty file is one that should not exist. *)
+let print_decls (p:program) : ML (list string) =
   let prev : ref (option (list string)) = mk_ref None in
-  let ds = p |> List.collect (fun d ->
-             (* An imported declaration is in the program only so that the two
-                tables above could be built from it. *)
-             if Some? (imported_unit d) then [] else
-             let g = group_of d in
-             let first = None? g || g <> !prev in
-             match print_decl first d with
-             | Some s -> prev := g; [s]
-             | None -> []) in
-  (* Custard compiles standalone programs (section 4.4), so the entry points
-     are called from the generated module itself. *)
-  let calls = p |> List.collect (fun d ->
+  p |> List.collect (fun d ->
+    (* An imported declaration is in the program only so that the tables could
+       be built from it. *)
+    if Some? (imported_unit d) then [] else
+    let g = group_of d in
+    let first = None? g || g <> !prev in
+    match print_decl first d with
+    | Some s -> prev := g; [s]
+    | None -> [])
+
+(* Custard compiles standalone programs (section 4.4), so the entry points are
+   called from the generated code itself. *)
+let entry_calls (p:program) : ML (list string) =
+  p |> List.collect (fun d ->
     match d with
     | DLet l when l.dl_flags |> List.existsb Entrypoint?
                && l.dl_binders |> List.for_all (fun b -> TUnit? b.b_ty) ->
       let args = String.concat " " (List.map (fun _ -> "()") l.dl_binders) in
-      ["let _ = " ^ ocaml_value_name l.dl_name ^ " " ^ args]
-    | _ -> []) in
-  header ^ "\n" ^ String.concat "\n\n" (ds @ calls) ^ "\n"
+      ["let _ = " ^ qualify l.dl_name (ocaml_value_name l.dl_name) ^ " " ^ args]
+    | _ -> [])
+
+let assemble (ds : list string) : ML string =
+  header ^ "\n" ^ String.concat "\n\n" ds ^ "\n"
+
+let print_program (p:program) : ML string =
+  build_tables (SMap.create 0) p;
+  current_module := None;
+  assemble (print_decls p @ entry_calls p)
+
+let print_split (files : list (string & program)) : ML (list (string & string)) =
+  let homes = SMap.create 100 in
+  files |> List.iter (fun (m, ds) ->
+    let m = module_name_of_unit m in
+    ds |> List.iter (fun d ->
+      SMap.add homes (string_of_name (name_of_decl d)) m));
+  build_tables homes (List.collect snd files);
+  let rendered = files |> List.map (fun (m, ds) ->
+    let m = module_name_of_unit m in
+    current_module := Some m;
+    let r = (m, print_decls ds) in
+    current_module := None;
+    r) in
+  (* A module all of whose declarations are references -- a realized one, or
+     one that contributed only externals -- gets no file.  Which is also what
+     keeps a generated file from colliding with a hand-written realization of
+     the same name. *)
+  let rendered = rendered |> List.filter (fun (_, ds) -> Cons? ds) in
+  (* The entry points are called from the last file that exists, which by
+     construction comes after everything they reach.  They are collected from
+     the whole program, not from that file, and qualified from where the call
+     is written. *)
+  let n = List.length rendered in
+  let last = if n = 0 then None else Some (fst (List.last rendered)) in
+  current_module := last;
+  let calls = entry_calls (List.collect snd files) in
+  current_module := None;
+  rendered |> List.mapi (fun i (m, ds) ->
+    (m, assemble (if i = n - 1 then ds @ calls else ds)))

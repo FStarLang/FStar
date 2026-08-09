@@ -83,6 +83,18 @@ val machine_int_of_module : list string -> option (signedness & width)
     hand, so the extractor consults it separately. *)
 val rule_of_attributes : list FStarC.Syntax.Syntax.term -> ML (option rule)
 
+(** Whether a module is realized by hand in OCaml (section 8.2), and so has a
+    [.ml] of its own in [src/ml] or [ulib/ml] that Custard must neither
+    compile over nor write a file on top of. *)
+val is_realized_module : list string -> ML bool
+
+(** Whether a module's *values* come from the realization too.  Realizing a
+    module's types leaves its values compiled, so that they can still be
+    monomorphized; that is wrong when a body inspects a realized type, since
+    the realization is free to represent it however it likes.  See the list in
+    the implementation. *)
+val is_value_realized_module : list string -> ML bool
+
 (** Raised by a rule lookup that does not apply to the given name, so that the
     next extension in the chain is tried. *)
 exception No_custard_rule

@@ -608,6 +608,23 @@ let realized_modules : list (list string) = [
 let is_realized_module (ns : list string) : ML bool =
   realized_modules |> List.existsb (fun m -> m = ns)
 
+(* Realizing a module's *types* does not realize its values: an F* body that
+   only computes stays compiled, which is what lets [FStar.List.Tot.Base.map]
+   be monomorphized rather than reached through the realization's polymorphic
+   one.  A body that *inspects* a realized type is a different matter, because
+   the realization is free to represent it however it likes and the F* source
+   describes a representation that no longer exists.
+
+   [FStar.Dyn] is that: [dyn] is [unit -> Dv value_type_bundle] in F* and
+   [Obj.t] in [FStar_Dyn.ml], so [undyn]'s body forces a thunk that is not
+   one.  So the values of these modules come from the realization too. *)
+let value_realized_modules : list (list string) = [
+  ["FStar"; "Dyn"];
+]
+
+let is_value_realized_module (ns : list string) : ML bool =
+  value_realized_modules |> List.existsb (fun m -> m = ns)
+
 (* The hardcoded rules: the registry populated by {!register_rule}, then the
    families matched by the shape of the name. *)
 (* Section 3.2c: [FStar.Custard.dyn] is a call-site marker, not a

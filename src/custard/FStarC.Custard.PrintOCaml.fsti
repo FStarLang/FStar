@@ -37,3 +37,10 @@ val ocaml_type_name  : name -> ML string
 val module_name_of_unit : string -> ML string
 
 val print_program : program -> ML string
+
+(** Section 12.9: the whole program cut into one file per F\* source module,
+    as [(module name, source)] pairs in link order.  The input is the
+    partition {!FStarC.Custard.Split.run} computed; the module name is the F\*
+    module's, and the OCaml module -- which is also the file's base name -- is
+    {!module_name_of_unit} of it. *)
+val print_split : list (string & program) -> ML (list (string & string))
