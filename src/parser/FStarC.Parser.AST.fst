@@ -1010,7 +1010,13 @@ instance pretty_quote_kind : pretty quote_kind = {
 let ctor (n: string) (args: list document) : ML document =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
 
-let pp_list' (#a:Type) (f: a -> ML document) (xs: list a) : ML document =
+(* [f] is [@@@monomorphize] for Custard (doc/ref/custard.md 3.2), for the same
+   reason as [FStarC.Class.Ord.sort_by]: this builds a [pretty a] dictionary
+   out of [f] and hands it to [pp_list], whose instance binder is
+   monomorphized, so [f] has to be known at specialization time -- and marking
+   [f] promotes [a] with it (rule 5), which is what [pp_list]'s own type
+   parameter needs. *)
+let pp_list' (#a:Type) ([@@@monomorphize] f: a -> ML document) (xs: list a) : ML document =
   (pp_list a { pp = f }).pp xs // hack
 
 instance showable_arg_qualifier : showable arg_qualifier = {

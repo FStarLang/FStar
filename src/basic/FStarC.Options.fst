@@ -201,7 +201,7 @@ let defaults = [
   ("custard_dump_specializations"              , Bool false);
   ("custard_dump_layouts"                     , Bool false);
   ("custard_warn_any"                          , Bool false);
-  ("custard_fuel"                              , Int 10000);
+  ("custard_fuel"                              , Int 100000);
   ("custard_max_specializations"               , Int 1000);
   ("custard_norm_budget"                       , Int 10000000);
   ("custard_monomorphize_types"                , Bool false);
@@ -927,7 +927,9 @@ the rest.");
     "custard_fuel",
     IntStr "positive_integer",
     text "Total number of specializations Custard may create before giving up \
-(default 10000)");
+(default 100000).  This is a whole-program backstop; \
+--custard_max_specializations is the per-definition limit, and is the one \
+that catches a definition recursing through a monomorphized binder");
 
   ( noshort,
     "custard_max_specializations",
