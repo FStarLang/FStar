@@ -151,6 +151,12 @@ type pat =
   | PVar   of string
   | PConst of constant
   | PCtor  of name & list pat
+  (* A record's fields, named.  The layout analysis gives a
+     single-constructor type a record representation, and a match on it has to
+     be spelled the way the target language spells one; [PCtor] cannot say it
+     because the constructor no longer exists.  The list need not mention every
+     field. *)
+  | PRecord of name & list (string & pat)
   | PTuple of list pat
   | POr    of list pat
 

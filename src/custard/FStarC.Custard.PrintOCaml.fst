@@ -277,10 +277,20 @@ let rec defer_ints (n:int) (p:pat) : (int & pat & list (string & FStarC.Custard.
     let x = "_iconst" ^ string_of_int n in
     (n + 1, PVar x, [(x, c)])
   | PCtor (nm, ps) -> let n, ps, eqs = defer_ints_list n ps in (n, PCtor (nm, ps), eqs)
+  | PRecord (nm, fs) -> let n, fs, eqs = defer_ints_fields n fs in (n, PRecord (nm, fs), eqs)
   | PTuple ps -> let n, ps, eqs = defer_ints_list n ps in (n, PTuple ps, eqs)
   (* A disjunction has to bind the same variables in every alternative, so
      there is nothing sensible to lift out of one. *)
   | _ -> (n, p, [])
+
+and defer_ints_fields (n:int) (fs:list (string & pat))
+  : (int & list (string & pat) & list (string & FStarC.Custard.Syntax.constant)) =
+  match fs with
+  | [] -> (n, [], [])
+  | (f, p) :: fs ->
+    let n, p, eqs = defer_ints n p in
+    let n, fs, eqs' = defer_ints_fields n fs in
+    (n, (f, p) :: fs, eqs @ eqs')
 
 and defer_ints_list (n:int) (ps:list pat) : (int & list pat & list (string & FStarC.Custard.Syntax.constant)) =
   match ps with
@@ -301,6 +311,13 @@ let rec pattern (p:pat) : ML string =
   | PCtor (n, [p1; p2]) when builtin_ctor n = Some "::" ->
     "(" ^ pattern p1 ^ " :: " ^ pattern p2 ^ ")"
   | PCtor (n, ps) -> "(" ^ ctor_ref n ^ " (" ^ String.concat ", " (List.map pattern ps) ^ "))"
+  (* As with [ERecord], qualifying the first field is enough to resolve the
+     type.  A record pattern need not be exhaustive, and OCaml would warn about
+     the fields it leaves out, so it always ends in a [_]. *)
+  | PRecord (n, fs) ->
+    "{ " ^ String.concat "; " (List.mapi (fun i (f, p) ->
+             (if i = 0 then qualify n (ocaml_var f) else ocaml_var f)
+             ^ " = " ^ pattern p) fs) ^ (if Cons? fs then "; _ }" else "_ }")
   | PTuple ps -> "(" ^ String.concat ", " (List.map pattern ps) ^ ")"
   | POr ps -> "(" ^ String.concat " | " (List.map pattern ps) ^ ")"
 

@@ -1,9 +1,20 @@
-(* Section 6, pass 7: unused type parameters.
+(* Phantom type parameters.
 
    Uniform compilation (section 5.0) leaves the [Poly] type parameters in
    place, and some of them describe nothing about the runtime representation.
-   Every parameter named [ph] below is such a phantom and must not appear in
-   the generated code. *)
+   Every parameter named [ph] below is such a phantom.
+
+   Custard used to eliminate them.  It does not any more: a type's layout is a
+   function of the type and of what it depends on, and "no declaration in the
+   program mentions this parameter" is a fact about the whole program, so two
+   units would answer it differently (section 12.5).  A phantom parameter is
+   free in OCaml, and monomorphization has removed it by the time either of the
+   C backends sees anything, so carrying it costs nothing that was worth a
+   whole-program decision.
+
+   What this test now checks is that they survive *uniformly*: every
+   declaration keeps both parameters, so no use site can disagree with a
+   declaration about the arity. *)
 module Phantom
 open FStar.All
 open FStar.IO

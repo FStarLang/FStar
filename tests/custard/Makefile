@@ -158,12 +158,14 @@ GREP_Implicits   = "implicits_clamp (x : Prims.int) : Prims.int" \
                    "implicits_thunk (x : Prims.int) (tmp : unit)"
 NOGREP_Implicits = "implicits_clamp (Prims.parse_int \"3\") ()"
 
-# Pass 7 must drop every phantom parameter, including the ones that are only
-# reachable through another declaration's phantom position.  Each surviving
-# declaration therefore takes exactly one parameter.
-GREP_Phantom   = "type 'a phantom_tagged" "and 'a phantom_even_t" \
-                 "type 'a phantom_odd_t"
-NOGREP_Phantom = "'ph"
+# A phantom type parameter is carried rather than eliminated: a type's layout
+# is a function of the type, and dropping a parameter is a function of the
+# whole program.  The parameter is free in OCaml and gone by the time the C
+# backend sees anything, since monomorphization has run.  What this checks is
+# that it survives *uniformly* -- every declaration keeps both parameters, so
+# no use site disagrees with a declaration about the arity.
+GREP_Phantom   = "type ('a, 'ph) phantom_tagged" "and ('a, 'ph) phantom_even_t" \
+                 "type ('a, 'ph) phantom_odd_t"
 
 # Each of these is extracted with --custard_backend Krml, run through karamel
 # to produce C, compiled and run; the program must exit 0.  Skipped when

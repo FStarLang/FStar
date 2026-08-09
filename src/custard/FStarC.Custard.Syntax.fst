@@ -257,6 +257,9 @@ let rec pat_to_doc (p:pat) : ML document =
   | PCtor (n, []) -> name_to_doc n
   | PCtor (n, ps) ->
     group (name_to_doc n ^^ parens (sep_by (comma ^^ space) (List.map pat_to_doc ps)))
+  | PRecord (_, fs) ->
+    braces (sep_by (semi ^^ space) (fs |> List.map (fun (f, q) ->
+      group (text f ^/^ equals ^/^ pat_to_doc q))))
   | PTuple ps -> parens (sep_by (comma ^^ space) (List.map pat_to_doc ps))
   | POr ps -> group (sep_by (space ^^ bar ^^ space) (List.map pat_to_doc ps))
 

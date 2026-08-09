@@ -349,6 +349,21 @@ let rec rw_pat (t:tbl) (p:pat) : ML pat =
         | None -> PWild)
      | Some (_, cl) -> PCtor (n, keep_by_slots cl.cl_slots ps |> fst)
      | None -> PCtor (n, ps))
+  (* The mirror of [ERecord] in [rw_expr]: a record has one shape, so there is
+     no tag to collapse, and a field the layout dropped is simply not matched
+     on. *)
+  | PRecord (n, fs) ->
+    let fs = fs |> List.map (fun (f, q) -> (f, rw_pat t q)) in
+    (match SMap.try_find t.layouts (key n) with
+     | Some L_erased -> PWild
+     | Some (L_newtype nt) ->
+       (match fs |> List.tryFind (fun (f, _) -> f = nt.nt_field) with
+        | Some (_, q) -> q
+        | None -> PWild)
+     | Some (L_struct [cl]) ->
+       PRecord (n, fs |> List.filter (fun (f, _) ->
+         cl.cl_fields |> List.existsb (fun (g, _) -> g = f)))
+     | _ -> PRecord (n, fs))
   | PTuple ps -> PTuple (ps |> List.map (rw_pat t))
   | POr ps -> POr (ps |> List.map (rw_pat t))
   | p -> p

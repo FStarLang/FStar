@@ -172,6 +172,9 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
   | PCtor (n, ps) ->
     let env, ps = krml_pats env ps in
     (env, K.PCons (mangled_name n, ps))
+  | PRecord (_, fs) ->
+    let env, ps = krml_pats env (fs |> List.map snd) in
+    (env, K.PRecord (List.zip (fs |> List.map fst) ps))
   | PTuple ps ->
     let env, ps = krml_pats env ps in
     (env, K.PTuple ps)

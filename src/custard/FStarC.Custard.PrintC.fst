@@ -869,6 +869,19 @@ and pat_tests (path:string) (t:cty) (p:pat)
   | POr _ ->
     reject "a pattern disjunction"
       ["Split the branch into one per alternative."]
+  (* A record's fields are reached by name off the same path a
+     single-constructor [PCtor]'s are, and there is no tag to test. *)
+  | PRecord (tn, fs) ->
+    (match find_type tn with
+     | Some ({ dt_body = TRecord fields }) ->
+       fs |> List.fold_left (fun (ts, bs) (f, q) ->
+         let ft = (match fields |> List.tryFind (fun (g, _) -> g = f) with
+                   | Some (_, ft) -> ft
+                   | None -> TAny) in
+         let t1, b1 = pat_tests (path ^ "." ^ c_var f) ft q in
+         (ts @ t1, bs @ b1)) ([], [])
+     | _ -> reject ("the record type " ^ string_of_name tn)
+              ["It belongs to no record declaration in the program."])
   | PCtor (cn, ps) ->
     (match find_ctor cn with
      | None -> reject ("the constructor " ^ string_of_name cn)

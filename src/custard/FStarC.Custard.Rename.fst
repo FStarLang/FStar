@@ -111,6 +111,13 @@ let rec rn_pat (fields:SMap.t string) (s:scope) (p:pat) : ML (pat & scope) =
   | PCtor (n, ps) ->
     let ps, s = rn_pats fields s ps in
     (PCtor (n, ps), s)
+  | PRecord (n, fs) ->
+    (* The field names are renamed the same way [ERecord]'s are: keyed on the
+       type, because that is where the declaration puts them. *)
+    let fs, s = List.fold_left (fun (acc, s) (f, q) ->
+      let q, s = rn_pat fields s q in
+      (acc @ [(rn_field fields n f, q)], s)) ([], s) fs in
+    (PRecord (n, fs), s)
   | PTuple ps ->
     let ps, s = rn_pats fields s ps in
     (PTuple ps, s)

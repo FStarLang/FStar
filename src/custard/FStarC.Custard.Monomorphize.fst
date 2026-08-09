@@ -211,6 +211,15 @@ let ctor_fields (st:state) (owner:name) (args:list cty) (cn:name) : ML (list cty
      | None -> [])
   | _ -> []
 
+(* The same, for a record: the types its fields are matched at, by name. *)
+let record_fields (st:state) (owner:name) (args:list cty) : ML (list (string & cty)) =
+  match SMap.try_find st.types (string_of_name owner) with
+  | Some ({ dt_body = TRecord fs; dt_params = ps }) ->
+    let sub = zip_params ps args in
+    fs |> List.map (fun (f, c) ->
+      (f, subst_cty sub (match c with TInline c -> c | c -> c)))
+  | _ -> []
+
 (* -------------------------------------------------------------------- *)
 (* Rewriting the program                                                *)
 (* -------------------------------------------------------------------- *)
@@ -253,6 +262,18 @@ let rec mono_pat (st:state) (t:cty) (p:pat) : ML (pat & env) =
         (cn, (match t with TApp (n, _) -> ctor_fields st n [] cn | _ -> [])) in
     let ps', env = mono_pats st fields ps in
     (PCtor (cn', ps'), env)
+  | PRecord (tn, fs) ->
+    let tn', fields =
+      match resolve_owner st t with
+      | Some (owner, args) -> (request_inst st owner args, record_fields st owner args)
+      | None -> (tn, (match t with TApp (n, _) -> record_fields st n [] | _ -> [])) in
+    let fs', env = List.fold_left (fun (acc, env) (f, q) ->
+      let ft = (match fields |> List.tryFind (fun (g, _) -> g = f) with
+                | Some (_, ft) -> ft
+                | None -> TAny) in
+      let q', env' = mono_pat st ft q in
+      (acc @ [(f, q')], env @ env')) ([], []) fs in
+    (PRecord (tn', fs'), env)
   | PTuple ps ->
     let ps', env = mono_pats st (match t with TTuple cs -> cs | _ -> []) ps in
     (PTuple ps', env)
