@@ -63,6 +63,14 @@ type rule =
   (** Compile the definition normally, but treat the resulting type as having a
       representation fixed elsewhere: no erasure and no newtype collapse. *)
 
+  | Rule_realized
+  (** The definition's module is realized by hand-written OCaml.  For a type
+      this means {!FStarC.Custard.Syntax.Realized}: keep the declaration for
+      its shape, do not emit it, and refer to the realization's own names.
+      For anything else it means nothing -- a realized module's values are
+      either compiled from their F* definitions like any others or, when the
+      module only declares them, emitted as externals. *)
+
 val register_rule : Ident.lident -> rule -> ML unit
 
 (** The machine-integer type a module name denotes, if any: ["FStar.UInt32"]

@@ -2749,6 +2749,7 @@ type rule =
   | Rule_type   of (list cty -> ML cty)
   | Rule_extern of { x_name: option string; x_header: option string }
   | Rule_opaque                                              // fix the representation
+  | Rule_realized                                            // the module is hand-written OCaml
 
 val register_rule : lid -> rule -> ML unit
 val lookup_rule   : lid -> ML (option rule)
@@ -2771,8 +2772,9 @@ exactly — karamel is the backend that has to give these a C meaning, and a
 discrepancy there would be a miscompilation rather than an error.  The IR gains
 a `TInt of signedness & width` type and a structured `prim_op` for this.
 
-`FStar.Ghost` and `FStar.Pervasives.Native` are not in the table: `Ghost` is
-handled by erasure (§5.1) and the native tuples by `TTuple`/`ETuple`.  The
+`FStar.Ghost` is not in the table: it is handled by erasure (§5.1).
+`FStar.Pervasives.Native` is, but as a *realized module* rather than as a
+family of rules; see below.  The
 `Prims` boolean connectives (`op_AmpAmp`, `op_BarBar`, `op_Negation`) *are*,
 because C has no `Prims_op_AmpAmp` to link against; see §6.
 
@@ -2813,6 +2815,53 @@ that takes an argument has to be found with `get_attribute`.
 
 Types with custom rules are automatically exempt from erasure and newtype
 collapse (§5.2), since their representation is fixed externally.
+
+#### Realized modules
+
+`Rule_extern` names one symbol at a time, which is the right grain for a
+definition that F\* declares and OCaml implements.  It is the wrong grain for
+the fifty-odd modules of the F\* library and compiler that have a hand-written
+`.ml` under `src/ml` or `ulib/ml`.  Those files are not a collection of
+individual realizations: each one *is* the module, and the build simply
+excludes it from extraction.
+
+The whole-program output has to link against them, and there the difference
+between Custard and the ML pipeline bites.  ML extraction emits one OCaml
+module per F\* module and never mangles a name, so an extracted
+`FStar_Pervasives_Native.option` and a hand-written one are the same type
+because they have the same path.  Custard emits *one file*, and its
+`fStar_Pervasives_Native_option` is a new type that no realization has ever
+heard of.  A realization whose signature mentions an `option`, a tuple, an
+`either` or a `range` — which is most of them — then cannot be called at all.
+
+`Rule_realized` says so at the grain that matches: the module.  A type in a
+realized module keeps its declaration, so that every pass can still see its
+constructors, its fields and their arities, but it is not emitted, and every
+reference to it, to its constructors and to its fields prints as the
+realization's own unmangled name qualified by the support module —
+`FStarC_Platform_Base.sys`, `FStarC_Platform_Base.Win32`.  Its representation
+is fixed outside F\*, so `Realized` also implies no erasure, no newtype
+collapse and no inline-field expansion; the record recovery of §5.5 still
+applies, because F\* and OCaml agree on which declarations are records.
+
+The list of realized modules lives in `Builtins` rather than as an attribute on
+each interface.  Fifty attributes would be a fact about the *build* recorded in
+the *library*, and would still have to be kept in step with the build; one list
+next to the other rules is the same information in one place.  It is the set of
+module names for which `src/ml` or `ulib/ml` holds a file of the same name,
+plus `FStar.Pervasives`, which is extracted rather than hand-written but whose
+`either` and `dtuple` types the realizations use in their own signatures.
+Listing a module that declares no type is harmless: the rule has no effect on
+values, which are compiled from their F\* definitions as before, or emitted as
+externals when the module only declares them.
+
+`FStar.Pervasives.Native.tupleN` is the one realized type whose OCaml form is
+*syntax* rather than a name.  The type needs no help — the realization defines
+`('a, 'b) tuple2` as an alias for `'a * 'b`, so the qualified spelling is
+already right — but it has no constructor to name and no field to project, so
+building one, matching one and reading a component out of one are printed in
+OCaml's tuple syntax.  A component is read by a match rather than a projection,
+since OCaml has none beyond `fst` and `snd`.
 
 ### 8.3 Pulse
 
@@ -3379,11 +3428,44 @@ against `src/**/*.fst` turns up, in rough order of size:
 2. ~~**No rules for the garbage-collected references.**~~  Done: §8.4.  The
    remaining hole is that they are OCaml-only, which is the right trade for
    the compiler and wrong for anything targeting C.
-3. **The hand-written realizations.**  `src/ml/` and `ulib/ml/` together hold
-   on the order of seventy `.ml` files realizing `assume val`s.  The mechanism
-   to consume them exists — `[@@custard_extern]`, §8.2 — but none have been
-   ported, and doing it one attribute at a time is the wrong shape; this
-   probably wants a per-module convention.
+3. ~~**The hand-written realizations.**~~  Done, as the per-module convention
+   §8.2 asked for: `Rule_realized` and the list of realized modules in
+   `Builtins`.  A type declared in one of the fifty-odd modules that `src/ml`
+   or `ulib/ml` realizes is no longer compiled; it is referred to, under the
+   realization's own name.  `FStar.Pervasives.Native`'s tuples and `option`
+   are part of that, which is what makes the output callable from the
+   realizations at all.
+
+   Getting there was a bug hunt rather than a feature; each of these was found
+   by advancing the OCaml build of the extracted compiler by one error.
+
+   - An **abstract type lost its arity**.  `Sig_declare_typ` recorded
+     `dt_params = []` whatever the kind said, so `FStarC.SMap.t 'value`
+     declared a type constructor of no arguments.  Invisible while Custard
+     compiled the declaration too — it was wrong on both sides — and an error
+     the moment the declaration became the realization's.
+   - An **eta-contracted type abbreviation dropped its arguments**.
+     `type psmap = t` binds nothing and stands for a type *constructor*, so
+     `psmap string` arrives at `Layout.resolve` with one more argument than
+     the abbreviation has parameters; `List.zip` failed, the substitution was
+     dropped, and so was the argument.  The surplus belongs to whatever the
+     body resolves to.
+   - `try_with`'s **thunk binder was dropped rather than bound**.  `fun () ->
+     e` elaborates to a lambda whose body matches its binder against `()`, so
+     the body does mention it; forcing the thunk by taking its body left that
+     mention unbound.  It is now bound to `()`, which is what a call would
+     have done, and the simplifier deletes the binding when it is unused.
+   - `FStar.All.exit` was compiled to **OCaml's `exit`**, which takes an
+     `int` where F\*'s takes a `Z.t`.  The realization is what narrows it, so
+     the rule now names no target and lets each of `FStar.All`,
+     `FStarC.Effect` and `FStar.Exn` resolve to its own support file.
+
+   What the build stops on now is not this item: it is the 221 `Obj.t`s that
+   `TAny` prints as, every one of them from `FStarC.Class.Monad` and
+   `FStarC.Syntax.VisitM`.  `monad` is a class over `m : Type -> Type`, which
+   is outside the IR's type language, so the dictionary's fields are `TAny`
+   and OCaml has no coercions to make them typecheck.  That is item 6 below,
+   not a realization problem.
 4. **Plugins, native tactics and embeddings** have no counterpart at all.  This
    is not an independent item so much as the acceptance test for §12: a plugin
    *is* a separately compiled unit linking against the compiler.
@@ -3511,10 +3593,22 @@ against `src/**/*.fst` turns up, in rough order of size:
    Bounding it wants doing before M7 makes much more of the compiler
    reachable.
 
-6. **Build integration.**  One file per unit against the current per-module
+6. **Higher-kinded classes have no representation.**  `FStarC.Class.Monad` is
+   a class over `m : Type -> Type`, and the IR's type language has no such
+   binder, so `monad`'s `return` and `bind` fields are `TAny` and the OCaml
+   backend prints them as `Obj.t`.  221 of them survive into the extracted
+   compiler, all from `Class.Monad` and `Syntax.VisitM`, and OCaml will not
+   coerce silently the way `Obj.t` needs.  Two ways out: insert `Obj.magic` at
+   every `TAny` boundary, which is what ML extraction does and which the
+   no-generated-`Obj.magic` rule of §5.0 exists to avoid; or specialize the
+   dictionary away, which is what the hole abstraction of §3.7 already does
+   for first-order classes and would have to be extended to reach a
+   type-constructor argument.  This is what the extracted compiler's OCaml
+   build stops on today.
+7. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
    leaves syntax, elaboration and the checked files unchanged.
-7. Smaller: `Prims.int` maps to a fixed-width integer on the Krml path
+8. Smaller: `Prims.int` maps to a fixed-width integer on the Krml path
    (`PrintKrml.fst:111`), which is fine for an OCaml target and a latent
    miscompilation for a C one; and `FStar.Printf`'s type-level arity
    computation has no story, though the compiler itself sidesteps it by using
@@ -3562,5 +3656,6 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | Done. `Extract.import`, a dozen lines at the one choke point: a request whose key a linked unit exports is answered by a reference, its body is never looked at, and the requests that body would have made are never made either.  The layout freeze is `Layout.run`'s `imports` argument, which *seeds* the erasure, layout and constructor tables and marks the seeds pinned, rather than skipping imported declarations -- uses of an imported type still have to be rewritten, by the upstream unit's decisions.  The `Simplify`-stage decisions are frozen separately: see M10f |
 | M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | Done for OCaml.  A unit compiles to a module named after it and every reference to an import is qualified explicitly rather than brought into scope with `open`: §12.6 expects two sibling units to re-specialize the same upstream definition, and an `open` would make that clash silent and the choice positional.  An imported *value* needed no new machinery at all -- it is exactly an external whose target happens to be another generated module, so `PrintOCaml`'s existing `externals` table carries it.  Types, constructors and record fields needed a parallel table.  `--custard_backend C` and `Krml` reject `--custard_unit`/`--custard_link`: they need a header and a linker story they do not have yet |
 | M10f | Make every type-representation decision a function of the type, so that every declaration is exportable | Done.  The `records` and `inline_fields` *decisions* moved into `Layout` (§5.5, §5.7) and reach `Simplify` as a `verdicts` table; the two passes became appliers that decide nothing.  What made this possible: a new `PRecord` in the IR (every backend has one), which removes `records`' surviving-pattern condition; the observation that `inline_fields`' blocked-field scan was unreachable, since `Extract` only ever emits `PWild`/`PVar`/`PConst`/`PCtor`; and deleting `unused_params`.  What made it necessary: dropping a reshaped type from the interface is not an escape hatch, because global variables and exceptions have nominal identity across units (§12.5).  `Driver.stable_types`, `imported_shapes` and `ti_pre` are gone, and so is `Error_CustardBadUnitInterface`'s reason to fire: `Syntax.verdicts`, `Layout.record_verdict`, `Layout.ctor_plans`, `Simplify.records`, `Simplify.inline_fields`; `tests/custard/SepLib.fst` |
+| M10g | Realized modules (§8.2) | Done.  `Rule_realized` and the list in `Builtins`: a type of a hand-written-OCaml module keeps its declaration for its shape but is not emitted, and every reference to it, to its constructors and to its fields prints as the realization's own name.  `FStar.Pervasives.Native`'s `option` and tuples are part of it, which is what makes the whole-program output callable from the realizations at all; tuples print in OCaml's tuple syntax, since they have no constructor to name.  Four bugs the OCaml build of the extracted compiler exposed on the way: abstract types lost their arity, eta-contracted abbreviations (`type psmap = t`) dropped their arguments, `try_with`'s thunk binder was dropped rather than bound to `()`, and `FStar.All.exit` was compiled to OCaml's `exit` rather than the realization that narrows the `Z.t`.  §12.8 item 3 |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

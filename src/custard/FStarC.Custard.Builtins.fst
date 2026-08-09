@@ -450,10 +450,14 @@ let exn_var : string = "_cexn"
 
 let exn_rule (id:string) : ML (option rule) =
   (* Pulse's [while_] does the same: a thunk that is syntactically a lambda is
-     the body it wraps, and calling it would only make the backend undo that. *)
+     the body it wraps, and calling it would only make the backend undo that.
+     The binder cannot simply be dropped: [fun () -> e] elaborates to a lambda
+     whose body matches its binder against [()], so the body may well mention
+     it.  Binding it to [()] is what a call would have done, and the
+     simplifier deletes the binding when it turns out to be unused. *)
   let force (f:expr) : ML expr =
     match f.e with
-    | EFun ([_], body) -> body
+    | EFun ([b], body) -> mk (ELet (b.b_name, TUnit, unit_expr, body)) body.ty body.eff
     | _ -> mk (EApp (f, [unit_expr])) TAny E_Impure in
   match id with
   | "raise" ->
@@ -471,10 +475,12 @@ let exn_rule (id:string) : ML (option rule) =
                           mk (EApp (h, [x])) body.ty E_Impure)]))
            body.ty E_Impure
       | _ -> failwith "Custard: try_with applied to the wrong number of arguments"))
-  (* [failwith] and [exit] are OCaml's own, and there is nothing to be gained
-     by giving either an IR node. *)
-  | "failwith" -> Some (Rule_extern { x_name = Some "failwith"; x_header = None })
-  | "exit" -> Some (Rule_extern { x_name = Some "exit"; x_header = None })
+  (* [failwith] and [exit] are the support module's own: [exit] in particular
+     takes an F* [int], which is a [Z.t], and it is the realization that
+     narrows it.  Naming no target lets each of [FStar.All], [FStarC.Effect]
+     and [FStar.Exn] resolve to its own file. *)
+  | "failwith" -> Some (Rule_extern { x_name = None; x_header = None })
+  | "exit" -> Some (Rule_extern { x_name = None; x_header = None })
   | _ -> None
 
 let ref_rule (id:string) : ML (option rule) =
@@ -534,6 +540,74 @@ let rule_of_attributes (attrs : list S.term) : ML (option rule) =
 (* Lookup                                                               *)
 (* -------------------------------------------------------------------- *)
 
+(* The modules whose OCaml realization is written by hand rather than
+   extracted: every one of these has a file of the same name under [src/ml] or
+   [ulib/ml], and the build excludes it from extraction.  Custard links against
+   the same realizations, so a type declared in one of them belongs to that
+   file and must not be compiled again -- see {!Rule_realized}.
+
+   The list is the convention, not an attribute on each module: marking fifty
+   interfaces one at a time would be a rule about the build expressed in the
+   library, and it would still have to be kept in step with the build.  It is
+   the set of module names for which [src/ml] or [ulib/ml] holds a file of the
+   same name, plus [FStar.Pervasives], which is extracted rather than
+   hand-written but whose [either] and [dtuple] types the realizations use in
+   their own signatures.  Listing a module that declares no type is harmless:
+   the rule has no effect on values. *)
+let realized_modules : list (list string) = [
+  ["FStar"; "All"];
+  ["FStar"; "Bytes"];
+  ["FStar"; "Char"];
+  ["FStar"; "Dyn"];
+  ["FStar"; "Exception"];
+  ["FStar"; "Exn"];
+  ["FStar"; "IO"];
+  ["FStar"; "ImmutableArray"];
+  ["FStar"; "ImmutableArray"; "Base"];
+  ["FStar"; "List"];
+  ["FStar"; "List"; "Tot"; "Base"];
+  ["FStar"; "Option"];
+  ["FStar"; "Parse"];
+  ["FStar"; "Pervasives"];
+  ["FStar"; "Pervasives"; "Native"];
+  ["FStar"; "Pprint"];
+  ["FStar"; "String"];
+  ["FStar"; "UInt8"];
+  ["FStarC"; "Array"];
+  ["FStarC"; "BaseTypes"];
+  ["FStarC"; "Effect"];
+  ["FStarC"; "Extraction"; "ML"; "PrintML"];
+  ["FStarC"; "Filepath"];
+  ["FStarC"; "Format"];
+  ["FStarC"; "Getopt"];
+  ["FStarC"; "Hash"];
+  ["FStarC"; "Hints"];
+  ["FStarC"; "IMap"];
+  ["FStarC"; "Int"; "Extra"];
+  ["FStarC"; "Json"];
+  ["FStarC"; "List"];
+  ["FStarC"; "PIMap"];
+  ["FStarC"; "PSMap"];
+  ["FStarC"; "Parser"; "ParseIt"];
+  ["FStarC"; "Platform"; "Base"];
+  ["FStarC"; "Plugins"; "Base"];
+  ["FStarC"; "Pprint"];
+  ["FStarC"; "Range"];
+  ["FStarC"; "SMap"];
+  ["FStarC"; "String"];
+  ["FStarC"; "StringBuffer"];
+  ["FStarC"; "Syntax"; "TermHashTable"];
+  ["FStarC"; "Tactics"; "Native"];
+  ["FStarC"; "Time"];
+  ["FStarC"; "Timing"];
+  ["FStarC"; "Unionfind"];
+  ["FStarC"; "Util"];
+  ["Prims"];
+]
+
+let is_realized_module (ns : list string) : ML bool =
+  realized_modules |> List.existsb (fun m -> m = ns)
+
 (* The hardcoded rules: the registry populated by {!register_rule}, then the
    families matched by the shape of the name. *)
 (* Section 3.2c: [FStar.Custard.dyn] is a call-site marker, not a
@@ -571,6 +645,7 @@ let builtin_rule (l:Ident.lident) : ML rule =
                     | None -> pulse_rule ns id))
            else if ns = ["FStar"; "Custard"] then custard_rule id
            else if ns = ["FStar"; "Exn"] then exn_rule id
+           else if is_realized_module ns then Some Rule_realized
            else pulse_rule ns id)
       | [] -> None
   in

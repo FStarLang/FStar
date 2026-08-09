@@ -1622,6 +1622,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                 dx_flags = [] }
   | _ ->
   let is_opaque = (match rule with Some Builtins.Rule_opaque -> true | _ -> false) in
+  let is_realized = (match rule with Some Builtins.Rule_realized -> true | _ -> false) in
   match se with
   | None ->
     custard_error st E.Error_CustardEntryNotFound [
@@ -1629,7 +1630,8 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     ]
   | Some se ->
     let d = extract_sigelt st l nm margs n_holes se in
-    let d = if is_opaque then with_no_newtype d else d in
+    let d = if is_opaque || is_realized then with_no_newtype d else d in
+    let d = if is_realized then with_realized d else d in
     if is_inlinable se then with_inline d else d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
@@ -1673,6 +1675,16 @@ and with_no_newtype (d:decl) : ML decl =
     DType { t with dt_flags = NoNewtype :: List.filter (fun f -> not (Erased? f)) t.dt_flags }
   | d -> d
 
+(* A type of a realized module (section 8.2): the declaration stays, so that
+   the passes can see its constructors and fields, but it belongs to the
+   hand-written OCaml file and only the backend's reference to it is emitted.
+   The flag rides on the declaration; {!with_no_newtype} above has already
+   pinned the representation. *)
+and with_realized (d:decl) : ML decl =
+  match d with
+  | DType t -> DType { t with dt_flags = Realized :: t.dt_flags }
+  | d -> d
+
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                    (n_holes:int) (se:sigelt)
   : ML decl =
@@ -1696,9 +1708,17 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
        external symbol, to be realized by the backend or by a custom rule
        (section 8). *)
     if is_type_sig st t
-    then DType { dt_name = nm; dt_params = []; dt_body = TAbstract;
-                 dt_flags = (if is_erasable st se || is_prop_sig st t
-                             then [Erased] else []) }
+    then
+      (* The declaration's arity is its kind's type binders.  It has to be
+         written down even though the type has no body: a use of it carries
+         those arguments, and a declaration that binds none of them would not
+         be the same type constructor. *)
+      let bs, _ = U.arrow_formals t in
+      let ps = bs |> List.collect (fun b ->
+                 if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+      DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
+              dt_flags = (if is_erasable st se || is_prop_sig st t
+                          then [Erased] else []) }
     else DExternal { dx_name = nm; dx_ty = ty_of_typ st t; dx_target = None; dx_header = None; dx_flags = [] }
 
   | Sig_inductive_typ {params} ->

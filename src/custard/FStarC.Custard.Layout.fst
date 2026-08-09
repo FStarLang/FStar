@@ -94,6 +94,9 @@ let rec cty_erased (t:tbl) (c:cty) : ML bool =
 
 let dtype_erased (t:tbl) (d:dtype) : ML bool =
   if has_flag d.dt_flags Erased then true
+  (* A realized type's representation is the hand-written OCaml one, whatever
+     F* thinks its fields are worth. *)
+  else if has_flag d.dt_flags Realized then false
   else
     match d.dt_body with
     | TAbbrev c -> cty_erased t c
@@ -294,8 +297,19 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
           | Some d ->
             (match d.dt_body with
              | TAbbrev c ->
-               let s = (try List.zip d.dt_params args with _ -> []) in
-               resolve t (fuel - 1) (subst_cty s c)
+               (* An eta-contracted abbreviation -- [type psmap = t], which
+                  binds nothing and stands for a type constructor -- is applied
+                  to more arguments than it has parameters.  The surplus
+                  belongs to whatever the body resolves to. *)
+               let np = List.length d.dt_params in
+               let used, extra =
+                 if List.length args > np then List.splitAt np args else (args, []) in
+               let s = (try List.zip d.dt_params used with _ -> []) in
+               let r = resolve t (fuel - 1) (subst_cty s c) in
+               (match extra, r with
+                | [], _ -> r
+                | _, TApp (m, a) -> TApp (m, a @ extra)
+                | _ -> r)
              | _ -> TApp (n, args))
           | _ -> TApp (n, args)))
     | c -> c
@@ -542,6 +556,7 @@ let record_body (look:name -> ML (option dtype)) (n:name)
    [ex_ctor] names R's constructor, because the rewriting runs before the
    record conversion above is applied and so still sees R as a variant. *)
 let ctor_plans (look:name -> ML (option dtype)) (dt:dtype) : ML (list (name & fplan)) =
+  if has_flag dt.dt_flags Realized then [] else
   match dt.dt_body with
   | TVariant cs ->
     cs |> List.collect (fun (cn, fs) ->

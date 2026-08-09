@@ -44,6 +44,55 @@ let external_target (n:name) : ML (option string) =
    Explicit qualification cannot be ambiguous. *)
 let qualifiers : ref (SMap.t string) = mk_ref (SMap.create 0)
 
+(* The types of a realized module, and their constructors (section 8.2).  A
+   reference to one of these prints as the *realization's* own name -- [sys],
+   not [fStarC_Platform_Base_sys] -- qualified by the support module, which
+   {!qualifiers} already carries.  Nothing else about them is special: a field
+   of a realized record is qualified by exactly the same mechanism as a field
+   of an imported one. *)
+let realized : ref (SMap.t unit) = mk_ref (SMap.create 0)
+
+let is_realized (n:name) : ML bool =
+  None? n.spec && Some? (SMap.try_find !realized (string_of_name n))
+
+(* [FStar.Pervasives.Native.tupleN] is realized as OCaml's own N-tuple, which
+   has no constructor to name and no field to project.  The *type* needs no
+   help -- [('a, 'b) FStar_Pervasives_Native.tuple2] is an alias for ['a * 'b],
+   so the realized spelling above is already right -- but building one,
+   matching one and reading a component out of one each have to be written in
+   OCaml's tuple syntax.  This table gives the arity, under both the type's
+   name and its constructor's. *)
+let tuples : ref (SMap.t int) = mk_ref (SMap.create 0)
+
+let is_tuple_type (n:name) : ML bool =
+  None? n.spec &&
+  n.ns = ["FStar"; "Pervasives"; "Native"] &&
+  FStarC.Util.starts_with n.id "tuple"
+
+let tuple_arity (n:name) : ML (option int) =
+  if Some? n.spec then None
+  else SMap.try_find !tuples (string_of_name n)
+
+(* A tuple component's field name is [_1], [_2], ...; its position is the
+   number.  The name is the declaration's, before [ocaml_var] mangles it. *)
+let tuple_index (f:string) : ML int =
+  let s = if String.strlen f > 0 && String.substring f 0 1 = "_"
+          then String.substring f 1 (String.strlen f - 1) else f in
+  match FStarC.Util.safe_int_of_string s with Some i -> i | None -> 0
+
+(* Place [fs] at the positions their field names give, filling the gaps with
+   [dflt].  A pattern need not mention every component; a construction does,
+   but writing it positionally rather than trusting the order costs nothing. *)
+let by_position (k:int) (dflt:string) (fs : list (string & string)) : ML (list string) =
+  let at (i:int) : ML string =
+    match fs |> List.tryPick (fun (f, s) ->
+                  if tuple_index f = i then Some s else None) with
+    | Some s -> s
+    | None -> dflt in
+  let rec go (i:int) : ML (list string) =
+    if i > k then [] else at i :: go (i + 1) in
+  go 1
+
 let qualifier (n:name) : ML (option string) =
   SMap.try_find !qualifiers (string_of_name n)
 
@@ -103,6 +152,7 @@ let ocaml_value_name (n:name) : ML string =
   if List.existsb (fun k -> k = s) ocaml_keywords then s ^ "_" else s
 
 let ocaml_type_name (n:name) : ML string =
+  if is_realized n then sanitize n.id else
   let s = sanitize (mangled_name n) in
   let s = lowercase_first s in
   if List.existsb (fun k -> k = s) ocaml_keywords then s ^ "_" else s
@@ -325,7 +375,13 @@ let rec pattern (p:pat) : ML string =
      arguments, so this one case covers them all. *)
   | PCtor (n, [p1; p2]) when builtin_ctor n = Some "::" ->
     "(" ^ pattern p1 ^ " :: " ^ pattern p2 ^ ")"
+  | PCtor (n, ps) when Some? (tuple_arity n) ->
+    "(" ^ String.concat ", " (List.map pattern ps) ^ ")"
   | PCtor (n, ps) -> "(" ^ ctor_ref n ^ " (" ^ String.concat ", " (List.map pattern ps) ^ "))"
+  | PRecord (n, fs) when Some? (tuple_arity n) ->
+    let k = Some?.v (tuple_arity n) in
+    "(" ^ String.concat ", "
+            (by_position k "_" (fs |> List.map (fun (f, p) -> (f, pattern p)))) ^ ")"
   (* As with [ERecord], qualifying the first field is enough to resolve the
      type.  A record pattern need not be exhaustive, and OCaml would warn about
      the fields it leaves out, so it always ends in a [_]. *)
@@ -342,7 +398,9 @@ let rec pattern (p:pat) : ML string =
 and ctor_ref (n:name) : ML string =
   match builtin_ctor n with
   | Some c -> c
-  | None -> qualify n (uppercase_first (sanitize (mangled_name n)))
+  | None ->
+    if is_realized n then qualify n (uppercase_first (sanitize n.id))
+    else qualify n (uppercase_first (sanitize (mangled_name n)))
 
 and builtin_ctor (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
@@ -361,6 +419,8 @@ let rec term (ind:string) (e:expr) : ML string =
   | ECtor (n, []) -> ctor_ref n
   | ECtor (n, [a; b]) when builtin_ctor n = Some "::" ->
     "(" ^ term ind a ^ " :: " ^ term ind b ^ ")"
+  | ECtor (n, args) when Some? (tuple_arity n) ->
+    "(" ^ String.concat ", " (List.map (term ind) args) ^ ")"
   | ECtor (n, args) ->
     "(" ^ ctor_ref n ^ " (" ^ String.concat ", " (List.map (term ind) args) ^ "))"
   | ETuple es -> "(" ^ String.concat ", " (List.map (term ind) es) ^ ")"
@@ -382,13 +442,26 @@ let rec term (ind:string) (e:expr) : ML string =
     let ind' = ind ^ "  " in
     "(match " ^ term ind scrut ^ " with\n" ^
     String.concat "" (List.map (case ind') brs) ^ ind ^ ")"
+  | ERecord (n, fs) when Some? (tuple_arity n) ->
+    let k = Some?.v (tuple_arity n) in
+    "(" ^ String.concat ", "
+            (by_position k "(Obj.magic ())"
+               (fs |> List.map (fun (f, e) -> (f, term ind e)))) ^ ")"
   | ERecord (n, fs) ->
     (* Qualifying the first field is enough for OCaml to resolve the record
        type; qualifying every one would be noise. *)
     "{ " ^ String.concat "; " (List.mapi (fun i (f, e) ->
               (if i = 0 then qualify n (ocaml_var f) else ocaml_var f)
               ^ " = " ^ term ind e) fs) ^ " }"
+  (* A tuple has no projection in OCaml beyond [fst] and [snd], so every
+     component is read by a match that names it and ignores the rest. *)
+  | EProj (e1, n, f) when Some? (tuple_arity n) ->
+    let k = Some?.v (tuple_arity n) in
+    "(match " ^ term ind e1 ^ " with (" ^
+    String.concat ", " (by_position k "_" [(f, "custard_tup")]) ^ ") -> custard_tup)"
   | EProj (e1, n, f) -> "(" ^ term ind e1 ^ ")." ^ qualify n (ocaml_var f)
+  (* A tuple type has one constructor, so the test is vacuous. *)
+  | EDiscrim (_, n) when Some? (tuple_arity n) -> "true"
   | EDiscrim (e1, n) ->
     "(match " ^ term ind e1 ^ " with " ^ ctor_ref n ^ " _ -> true | _ -> false)"
   (* Every machine width is a *distinct* OCaml type -- [Stdint.UintN.t], plain
@@ -493,7 +566,7 @@ let params (ps : list string) : ML string =
 let print_decl (first:bool) (d:decl) : ML (option string) =
   match d with
   | DType t ->
-    if is_builtin_type t.dt_name then None
+    if is_builtin_type t.dt_name || has_flag t.dt_flags Realized then None
     else
       let hd = (if first then "type " else "and ") ^
                params t.dt_params ^ ocaml_type_name t.dt_name in
@@ -539,6 +612,8 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
 let print_program (p:program) : ML string =
   let tbl = SMap.create 50 in
   let quals = SMap.create 50 in
+  let real = SMap.create 20 in
+  let tups = SMap.create 20 in
   p |> List.iter (fun d ->
     (* An imported value is exactly an external whose target happens to be
        another generated module: nothing else about it is special, and reusing
@@ -570,8 +645,37 @@ let print_program (p:program) : ML string =
          | Some t -> t
          | None -> realization_of e.dx_name)
     | _ -> ());
+  (* A realized type resolves to its support module, which is the module its
+     own namespace names.  This runs after the pass above so that a realized
+     type reaching us through an imported unit still resolves to the
+     realization: the upstream unit did not compile it either. *)
+  p |> List.iter (fun d ->
+    match d with
+    | DType t when has_flag t.dt_flags Realized ->
+      let m = String.concat "_" t.dt_name.ns in
+      let mark (n:name) : ML unit =
+        SMap.add real (string_of_name n) ();
+        SMap.add quals (string_of_name n) m in
+      mark t.dt_name;
+      (match t.dt_body with
+       | TVariant cs -> cs |> List.iter (fun (cn, _) -> mark cn)
+       | _ -> ());
+      (* [tupleN] is the one realized type whose OCaml form is syntax rather
+         than a name; record its arity under every name it is reached by. *)
+      if is_tuple_type t.dt_name then begin
+        let arity (fs : list (string & cty)) : ML unit =
+          SMap.add tups (string_of_name t.dt_name) (List.length fs) in
+        match t.dt_body with
+        | TRecord fs -> arity fs
+        | TVariant [(cn, fs)] ->
+          arity fs; SMap.add tups (string_of_name cn) (List.length fs)
+        | _ -> ()
+      end
+    | _ -> ());
   externals := tbl;
   qualifiers := quals;
+  realized := real;
+  tuples := tups;
   let header =
     "(* Generated by F* Custard extraction. Do not edit. *)\n\
      [@@@ocaml.warning \"-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70\"]\n" in

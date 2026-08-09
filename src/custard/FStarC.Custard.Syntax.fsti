@@ -268,6 +268,15 @@ type flag =
       extractor for types F* considers non-informative; the layout analysis
       propagates it structurally. *)
   | Comment of string
+  | Realized
+  (** The declaration is realized by hand-written OCaml, in the support module
+      named by its own namespace (section 8.2): [FStarC.Platform.Base.sys] is
+      [FStarC_Platform_Base.sys].  Custard keeps the declaration so that its
+      shape -- constructors, fields, arities -- is visible to the passes, but
+      does not emit it, and prints every reference to it, to its constructors
+      and to its fields with the realization's own unmangled names.  Its
+      representation is therefore fixed outside F*: no erasure, no newtype
+      collapse and no inline-field expansion may touch it. *)
   | Imported of string
   (** This declaration was compiled by an already-built unit (section 12), the
       one named here.  It is present so that this unit's passes can see its

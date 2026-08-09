@@ -86,7 +86,7 @@ GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go"
 NOGREP_LocalRec   = "let rec aux" "let rec go"
 
 # The collapsed newtype is the pair itself, and no [inline] marker escapes.
-GREP_NewtypeInline   = "(bool, string) fStar_Pervasives_Native_tuple2"
+GREP_NewtypeInline   = "(bool, string) FStar_Pervasives_Native.tuple2"
 NOGREP_NewtypeInline = "newtypeInline_step" "inline"
 
 # The dictionary built behind a local [let] is specialized away entirely, so
