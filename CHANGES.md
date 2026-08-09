@@ -13,6 +13,20 @@ Guidelines for the changelog:
 
 ## Pulse
 
+  * Each branch of a Pulse `match` is now checked under the additional
+    hypotheses that the scrutinee does *not* match any of the *preceding*
+    patterns, one hypothesis per preceding pattern, of the form
+    `squash ((match sc with | p -> true | _ -> false) == false)`. Previously
+    a branch only got the equation relating the scrutinee to its own pattern,
+    so a wildcard or variable pattern learned nothing at all about the
+    scrutinee (its own equation `sc == x` being vacuous). For instance,
+    `match n { 0 -> { ... } _ -> { assert (pure (n =!= 0)); ... } }` now
+    verifies. The new hypotheses are pushed *before* the branch's own
+    equation, which must remain the last binding in scope for
+    `Pulse.Lib.Core.match_rename_tac` to find it. This is a strict
+    strengthening of the context, so existing proofs continue to work; only
+    error messages that print the proof context change.
+
   * Pulse now distinguishes terminating from possibly-divergent computations at
     the type and surface-syntax level. The computation type `stt` is split into
     `stt` (terminating, surface keyword `fn`) and `stt_div` (possibly divergent,
