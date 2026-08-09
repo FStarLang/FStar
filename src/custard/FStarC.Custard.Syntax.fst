@@ -112,6 +112,32 @@ let decl_flags (d:decl) : list flag =
 let has_flag (fs : list flag) (f : flag) : ML bool =
   List.existsb (fun f' -> f' = f) fs
 
+let rec type_names_of_cty (c : cty) : ML (list string) =
+  match c with
+  | TArrow (a, _, b) -> type_names_of_cty a @ type_names_of_cty b
+  | TTuple cs -> cs |> List.collect type_names_of_cty
+  | TBuf c | TRef c | TInline c -> type_names_of_cty c
+  | TApp (n, args) -> string_of_name n :: (args |> List.collect type_names_of_cty)
+  | _ -> []
+
+let type_names_of_decl (d : decl) : ML (list string) =
+  match d with
+  | DType t ->
+    (match t.dt_body with
+     | TAbbrev c -> type_names_of_cty c
+     | TRecord fs -> fs |> List.collect (fun (_, c) -> type_names_of_cty c)
+     | TVariant cs -> cs |> List.collect (fun (_, fs) ->
+                        fs |> List.collect (fun (_, c) -> type_names_of_cty c))
+     | TAbstract -> [])
+  | DLet l ->
+    (l.dl_binders |> List.collect (fun b -> type_names_of_cty b.b_ty))
+    @ type_names_of_cty l.dl_ret
+  | DExternal x -> type_names_of_cty x.dx_ty
+  | DExn e -> e.de_args |> List.collect type_names_of_cty
+
+let imported_unit (d : decl) : ML (option string) =
+  decl_flags d |> List.tryPick (function Imported u -> Some u | _ -> None)
+
 (* -------------------------------------------------------------------- *)
 (* Printing                                                             *)
 (*                                                                      *)

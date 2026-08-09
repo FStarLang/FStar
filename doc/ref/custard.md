@@ -3189,6 +3189,21 @@ of the post-`Layout`, post-`Rename` IR with the bodies stripped**.  It is not a
 source-level interface, because none of the decisions it has to pin down are
 source-level decisions.
 
+Because that is what it is, it is written with the same
+`Util.save_value_to_file` that stores a `.checked` file rather than with a
+printer and parser of its own: the IR is plain first-order data, so the
+mechanism already fits, and a hand-written text format would be several hundred
+lines to keep in step with an IR still in flux for no benefit that the version
+number in the header does not already give.  A `.cui` is a build artifact, not
+something anyone edits; `--custard_dump_cui` covers the case where a human
+wants to look.
+
+One exception to "everything the unit emitted": the `Inline` declarations —
+the projectors and discriminators that are substituted at their uses and never
+emitted at all — are excluded, since exporting one would name a symbol that
+does not exist.  A downstream unit re-derives them, which costs nothing.  So is
+anything whose *shape* the passes after `Layout` changed; see §12.5.
+
 ### 12.3 The specialization key
 
 Names do not need to be deterministic, and it would be a mistake to make the
@@ -3235,12 +3250,17 @@ printing option.  That is also exactly the string the interface stores.
    returns the interface's name, without normalizing or translating a body.
    This is where the saving is.
 2. **A new `Imported of string` flag** on a declaration, naming the unit it
-   came from, alongside `Private`/`Root`/`Erased`.  Every pass that rewrites a
-   signature or changes a representation has to leave flagged declarations
-   alone: `Layout` (erasure, newtype collapse, coercion elimination),
-   `Simplify.unused_params`, `inline_fields`, `records`, `depat`, `dce`.  This
-   is the same exemption §8.2 already grants types with custom rules, whose
-   representation is likewise fixed elsewhere.
+   came from, alongside `Private`/`Root`/`Erased`.  As implemented, imported
+   declarations are kept *out of the program* rather than flagged inside it,
+   which is a stronger version of the same thing: no pass can rewrite what it
+   cannot see, and no pass had to learn about linking.  They are carried
+   alongside — `Extract.imports` — and handed to the two places that do need
+   them, `Layout.run` (for the verdicts) and the backend (for the namespace to
+   qualify with).  The flag is still what marks them, so that those two places
+   can tell.
+
+   The one thing this does not buy is the *use-site* rewriting the later passes
+   would have done; that is the gap §12.5 describes.
 3. **`Simplify.scc`** (`Simplify.fst:939`) treats an imported declaration as a
    leaf.  Units are acyclic by construction — a unit is whatever was reachable
    and not already in a linked interface — so a recursive group cannot span a
@@ -3251,8 +3271,10 @@ printing option.  That is also exactly the string the interface stores.
 5. **`Rename`** uses the recorded name verbatim for an imported declaration,
    and treats every imported name as taken so that a local definition cannot
    shadow one.
-6. **`Driver`** writes the `.cui` after `Rename` (`Driver.fst:187`), which is
-   the only point at which both the layout verdicts and the final names exist.
+6. **`Driver`** writes the `.cui` after `Rename`, which is the only point at
+   which both the layout verdicts and the final names exist.  `Layout.run` and
+   `Rename.run` therefore both return the verdicts along with the program —
+   `Rename` because it renames record fields, which a verdict names.
 
 ### 12.5 Why freezing the layouts is sound
 
@@ -3268,6 +3290,31 @@ first — which §12.4 rule 1 guarantees.
 
 This is the load-bearing claim of the whole design, and it is the one to
 re-examine first if something goes wrong.
+
+The claim holds for a *layout* verdict because `Layout.run` takes the imported
+verdicts as an argument and seeds its tables with them, marked pinned.  Seeding
+rather than skipping is the point: uses of an imported type still have to be
+rewritten — a constructor of a collapsed type collapses at a downstream call
+site too — and the rewriter finds the rule in the same table it would have
+found a locally derived one in.
+
+It does **not** yet hold for the passes after `Layout`.  `Simplify` also
+changes what a type looks like: `records` turns a single-constructor variant
+into a record, `inline_fields` expands an inlined tuple field into the
+constructor holding it, `unused_params` drops a parameter nothing uses.  Each
+of those is a function of the whole program — `records`, for instance, refuses
+to convert a type any surviving pattern still matches on — so a downstream unit
+reaches its own answer, and the two disagree while agreeing about the type's
+name and its constructors' spelling.  Nothing in the interface currently says
+otherwise, and the mismatch is a miscompilation, not an error.
+
+Until those decisions are pinned the same way (M10f), the conservative half of
+the freeze applies: **a type whose shape `Simplify` changed is not exported,
+and neither is anything whose signature mentions one.**  A downstream unit
+compiles those for itself, which costs duplication and nothing else.
+`Driver.stable_types` computes this by comparing each type's shape as `Layout`
+left it against its shape after `Simplify`, and closing downwards — a type is
+usable across the boundary only if every type it is built out of is too.
 
 ### 12.6 What separate compilation does not do
 
@@ -3494,8 +3541,9 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M9j | Fix the normalizer's `when`-clause scope bug | Done. `Normalize.matches`.  On a definite match against a branch with a `when` clause, the reduction was turned into `if w then <this branch> else match scrutinee with <remaining branches>` and the *whole* term normalized in an environment already extended with this branch's pattern bindings.  The remaining branches are closed with respect to the environment *before* that extension, so every de Bruijn index in them was read `\|s\|` slots too shallow; a second guarded wildcard branch therefore resolved its references to the first branch's binder.  `SMTEncoding.EncodeTerm.encode_term` hit it as `Failure("Term variable not found")` -- `env` wanted at slot 13, present at 14, after two `_ when ...` branches each pushing one binding.  Fixed by deciding the guard in place when the pattern binds something: reduce to the branch if the guard is a constant, otherwise block the match, which never spans two environments.  A pre-existing bug, not a Custard one; Custard only reaches it because it normalizes whole applied definitions.  `tests/custard/MatchGuard.fst` covers `when` clauses, which the suite had no coverage of at all, but does not pin the bug: the small shapes never reach this reduction path |
 | M9k | Do not reduce fixpoints when normalizing a definition body | Done. `TcEnv.Exclude TcEnv.Zeta` in `custard_norm_steps`.  Custard never wants a fixpoint reduced -- a local `let rec` is lambda-lifted (§5.10), a top-level one is reached by a request -- so unfolding one only duplicates code, and against an open argument need not terminate.  `SMTEncoding.Term.termToSmt` found it: its inner `let rec aux'` opens with `let aux = aux (depth + 1) in`, a *partial* application of the recursive knot, and every unfolding produces another one; the budget error's histogram was 66k repeats of normalizing that one `let`'s type and no fvar unfoldings at all.  A fully applied recursive call does not diverge, which is why §5.10's tests never caught it.  With `PureSubtermsWithinComputations` already set, excluding zeta selects the normalizer's "no fixpoint reduction" branch, which normalizes under the `let rec` and puts it back.  Note zeta is on by default in `Cfg` and has to be turned off with `Exclude`, not by omission |
 | M9l | **`FStarC.Main.main` extracts whole** | Done. 113728 lines of OCaml from one entry point, no `TAny` and no generated `Obj.magic`.  The last two blockers were `Parser.AST.pp_list'`, the `sort_by` shape again -- a `pretty` dictionary built from a runtime function -- fixed with the same `[@@@monomorphize]` on the function, and the `--custard_fuel` default of 10000, sized for tests, which the compiler exceeds slightly; raised to 100000.  `--custard_max_specializations` remains the per-definition limit and is the one that catches a real runaway.  Extraction of the whole compiler was the M9 goal; what remains before the output can be *built* is §12's separate compilation and the `[@@custard_extern]` convention for the hand-written `.ml` realizations (§12.8 item 3) |
-| M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Needs M9a |
-| M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | The layout freeze of §12.5 |
-| M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | |
+| M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Done. `FStarC.Custard.Unit`, serialized with the same `Util.save_value_to_file` that stores a `.checked` file -- the IR is plain first-order data, and a hand-written printer and parser would be several hundred lines to keep in step with an IR still in flux for no benefit a version check does not already give.  `--custard_dump_cui` covers the case where a human wants to look.  The header records the backend and the layout-affecting options and a mismatch is an error, not a warning: two units built with different `--custard_monomorphize_types` settings lay their types out differently and the interface has no way to say so |
+| M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | Done. `Extract.import`, a dozen lines at the one choke point: a request whose key a linked unit exports is answered by a reference, its body is never looked at, and the requests that body would have made are never made either.  The layout freeze is `Layout.run`'s `imports` argument, which *seeds* the erasure, layout and constructor tables and marks the seeds pinned, rather than skipping imported declarations -- uses of an imported type still have to be rewritten, by the upstream unit's decisions.  Partial: see M10f |
+| M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | Done for OCaml.  A unit compiles to a module named after it and every reference to an import is qualified explicitly rather than brought into scope with `open`: §12.6 expects two sibling units to re-specialize the same upstream definition, and an `open` would make that clash silent and the choice positional.  An imported *value* needed no new machinery at all -- it is exactly an external whose target happens to be another generated module, so `PrintOCaml`'s existing `externals` table carries it.  Types, constructors and record fields needed a parallel table.  `--custard_backend C` and `Krml` reject `--custard_unit`/`--custard_link`: they need a header and a linker story they do not have yet |
+| M10f | Freeze the `Simplify`-stage type decisions the way the layout verdicts are frozen | The gap M10b leaves.  `Simplify` also changes what a type looks like -- `records` turns a single-constructor variant into a record, `inline_fields` expands an inlined tuple field into the constructor holding it, `unused_params` drops a parameter nothing uses -- and each decision is a function of the whole program, so a downstream unit reaches its own and the two disagree while agreeing on the name and the spelling.  Until they are pinned in the interface, a type whose shape `Simplify` changed is not exported and neither is anything whose signature mentions one; a downstream unit compiles those itself, which costs duplication and nothing else.  This is what makes the freeze sound rather than optimistic, and it is the main thing standing between M10 and a useful unit boundary: `Driver.stable_types` |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

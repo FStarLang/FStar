@@ -234,7 +234,23 @@ let rn_terms (fields:SMap.t string) (d:decl) : ML decl =
   | DExternal x -> DExternal { x with dx_ty = rn_cty empty_scope x.dx_ty }
   | DExn e -> DExn { e with de_args = e.de_args |> List.map (rn_cty empty_scope) }
 
-let run (prog:program) : ML program =
+(* The verdicts are rewritten after [rn_types] has published every renaming,
+   so that [ti_ctors] spells the field names the generated source spells. *)
+let rn_type_info (fields:SMap.t string) (ti:type_info) : ML type_info =
+  let rn_cl (cl:ctor_layout) : ML ctor_layout =
+    { cl with cl_fields = cl.cl_fields |> List.map (fun (f, c) ->
+                            (rn_field fields cl.cl_name f, c)) } in
+  { ti with
+    ti_ctors = ti.ti_ctors |> List.map rn_cl;
+    ti_layout =
+      match ti.ti_layout with
+      | L_newtype nt ->
+        L_newtype { nt with nt_field = rn_field fields nt.nt_ctor nt.nt_field }
+      | L_struct cls -> L_struct (cls |> List.map rn_cl)
+      | l -> l }
+
+let run (infos:list (name & type_info)) (prog:program) : ML (program & list (name & type_info)) =
   let fields : SMap.t string = SMap.create 50 in
   let prog = prog |> List.map (rn_types fields) in
-  prog |> List.map (rn_terms fields)
+  let prog = prog |> List.map (rn_terms fields) in
+  (prog, infos |> List.map (fun (n, ti) -> (n, rn_type_info fields ti)))

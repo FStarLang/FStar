@@ -304,6 +304,50 @@ $(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
 	$(Q)$<
 	$(Q)touch $@
 
+# Section 12: separate compilation.  SepLib is compiled once, on its own, as a
+# named unit; SepApp links against the .cui it left behind.  What is being
+# tested is not that the two agree at run time -- that is the easy half -- but
+# that SepApp *did not compile any of SepLib again*: the NOGREPs below are the
+# actual assertion, and the run only confirms that the references it emitted
+# instead denote what they should.
+$(OUTPUT_DIR)/SepLib.cui: $(CACHE_DIR)/SepLib.fst.checked
+	$(call msg, "CUSTARD-UNIT", SepLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_unit SepLib \
+	  --custard_entry SepLib.sum_areas --custard_entry SepLib.area \
+	  --custard_entry SepLib.bump --odir $(OUTPUT_DIR) SepLib.fst
+
+$(OUTPUT_DIR)/SepLib.ml: $(OUTPUT_DIR)/SepLib.cui
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/SepApp.ml: $(CACHE_DIR)/SepApp.fst.checked $(OUTPUT_DIR)/SepLib.cui
+	$(call msg, "CUSTARD-LINK", SepApp)
+	$(FSTAR) --codegen Custard $(WARN_ANY) \
+	  --custard_link $(OUTPUT_DIR)/SepLib.cui \
+	  --custard_main SepApp.main SepApp.fst -o $@
+	$(Q)for p in $(GREP_SepApp); do \
+	  grep -q -- "$$p" $@ \
+	    || { echo "ERROR: SepApp output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(NOGREP_SepApp); do \
+	  grep -q -- "$$p" $@ \
+	    && { echo "ERROR: SepApp output should not contain $$p"; exit 1; }; done; true
+
+# The imported function is called through its unit's module, and the imported
+# type, constructor and record field are all spelled with that qualification.
+GREP_SepApp  += "SepLib.sepLib_sum_areas"
+GREP_SepApp  += "SepLib.SepLib_Circle"
+# Not one line of SepLib was compiled again -- not its functions, not its types.
+NOGREP_SepApp += "let sepLib_sum_areas"
+NOGREP_SepApp += "let sepLib_area"
+NOGREP_SepApp += "type sepLib_shape"
+NOGREP_SepApp += "type sepLib_named"
+
+$(OUTPUT_DIR)/SepApp.exe: $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml
+	$(call msg, "OCAMLOPT", SepApp)
+	$(FSTAR_EXE) --ocamlopt -I $(OUTPUT_DIR) $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml -o $@
+
+all: $(OUTPUT_DIR)/SepApp.out.diff
+
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))

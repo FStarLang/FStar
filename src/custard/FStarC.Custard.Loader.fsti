@@ -48,3 +48,12 @@ val module_is_loaded : Dep.deps -> TcEnv.env -> string -> ML bool
     definitions are visible, loading [m]'s checked file if needed.  Fails if
     the module cannot be found or its checked file cannot be read. *)
 val ensure_loaded : Dep.deps -> TcEnv.env -> string -> ML TcEnv.env
+
+(** Every file whose checked module this run loaded, with its digest.  A unit
+    interface records these (section 12.2) so that linking against a stale unit
+    is an error rather than a miscompilation.  The *source* files are what is
+    hashed, and the list covers every module the extraction reached, not only
+    those that contributed an emitted declaration: a unit that inlines an
+    upstream [inline_for_extraction] definition depends on a body that appears
+    in no interface at all. *)
+val loaded_digests : unit -> ML (list (string & string))

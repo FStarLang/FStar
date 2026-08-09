@@ -75,3 +75,20 @@ val request : state -> spec_key -> ML name
 (** Drain the worklist and return the program in dependency order (definitions
     before their uses), which is the order the backends want. *)
 val run : state -> list Ident.lident -> option Ident.lident -> ML program
+
+(** The declarations this run took from a linked unit rather than compiling
+    (section 12.4).  They are deliberately *not* part of the program: they must
+    not be renamed, simplified or emitted.  The later passes consult them --
+    the layout analysis for their verdicts, the backends for the namespace to
+    qualify their names with. *)
+val imports : state -> ML (list (decl & option type_info))
+
+(** The specialization key each emitted declaration was created for, by the
+    declaration's name.  This is what a `.cui` exports as the identity of an
+    entry: a downstream unit recognizes an already-compiled definition by the
+    key its own request computes, and that key is a property of the F* term,
+    not of any name Custard invented for it (section 12.3). *)
+val exported_keys : state -> ML (list (string & string))
+
+(** See {!FStarC.Custard.Loader.loaded_digests}. *)
+val loaded_digests : state -> ML (list (string & string))

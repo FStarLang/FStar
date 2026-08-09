@@ -22,6 +22,7 @@ open FStarC.Custard.Syntax
 open FStarC.Errors.Msg
 open FStarC.Class.Show
 
+module SMap  = FStarC.SMap
 module BU    = FStarC.Util
 module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
@@ -37,6 +38,7 @@ module Rename  = FStarC.Custard.Rename
 module Simplify = FStarC.Custard.Simplify
 module Ident   = FStarC.Ident
 module TcEnv   = FStarC.TypeChecker.Env
+module Unit    = FStarC.Custard.Unit
 
 let entrypoints () =
   Options.custard_entries () |> List.map Ident.lid_of_str
@@ -154,6 +156,128 @@ let check_entrypoints (env:TcEnv.env) (roots:list Ident.lident) : ML unit =
         text "Make sure the module defining it is among the input files."
       ])
 
+(* -------------------------------------------------------------------- *)
+(* Unit interfaces (section 12)                                         *)
+(* -------------------------------------------------------------------- *)
+
+let imported_type_infos (imports:list (decl & option type_info))
+  : ML (list (name & type_info)) =
+  imports |> List.collect (fun (d, ti) ->
+    match d, ti with
+    | DType dt, Some ti -> [(dt.dt_name, ti)]
+    | _ -> [])
+
+(* What a unit exports.  Everything it emits, so that a downstream unit never
+   has to compile any of it again -- including the re-specializations it made
+   of *its* upstream's definitions, which are just as much this unit's code as
+   anything else it emitted (section 12.6).
+
+   [Inline] declarations are the exception, and are excluded rather than
+   forgotten: they are the projectors and discriminators that are substituted
+   at their uses and never emitted at all, so exporting one would name a symbol
+   that does not exist.  A downstream unit re-derives them, which costs
+   nothing.
+
+   A [DLet]'s body is dropped.  A `.cui` is an interface: what a downstream
+   unit needs is the name to call and the signature to call it at.  Keeping the
+   body would invite exactly the thing separate compilation is here to prevent. *)
+(* Which types a unit may export.
+
+   The layout analysis is frozen across units: a `.cui` records its verdicts
+   and a downstream unit adopts them (section 12.2).  The *later* passes are
+   not, yet.  [Simplify] also changes what a type looks like -- it turns a
+   single-constructor variant into a record, expands an inlined tuple field
+   into the constructor that holds it, drops a type parameter nothing uses --
+   and each of those decisions is a function of the whole program, so a
+   downstream unit reaches its own and the two disagree.  The disagreement is
+   not visible in the interface: both units call the type by the same name and
+   spell its constructor the same way, while laying it out differently.
+
+   So a type whose shape [Simplify] changed is not exported, and neither is
+   anything whose signature mentions one -- a downstream unit compiles those
+   for itself, which costs duplication and nothing else.  This is the
+   conservative half of the layout freeze, and it is what keeps the freeze
+   sound rather than merely optimistic; lifting it means pinning those
+   decisions in the interface the same way the layout verdicts already are. *)
+let stable_types (before:list (name & tydef & int)) (prog:program) : ML (SMap.t unit) =
+  let ok = SMap.create 50 in
+  let final = SMap.create 50 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DType t -> SMap.add final (string_of_name t.dt_name) (t.dt_body, List.length t.dt_params)
+    | _ -> ());
+  before |> List.iter (fun (n, body, nparams) ->
+    match SMap.try_find final (string_of_name n) with
+    | Some (body', nparams') when body = body' && nparams = nparams' ->
+      SMap.add ok (string_of_name n) ()
+    | _ -> ());
+  (* Close downwards: a type is only usable across the boundary if every type
+     it is built out of is too. *)
+  let rec settle (fuel:int) : ML unit =
+    if fuel <= 0 then () else
+    let changed = mk_ref false in
+    prog |> List.iter (fun d ->
+      match d with
+      | DType t when Some? (SMap.try_find ok (string_of_name t.dt_name)) ->
+        if type_names_of_decl d |> List.existsb (fun k ->
+             None? (SMap.try_find ok k) && Some? (SMap.try_find final k))
+        then (SMap.remove ok (string_of_name t.dt_name); changed := true)
+      | _ -> ());
+    if !changed then settle (fuel - 1) in
+  settle (List.length prog + 1);
+  ok
+
+let unit_entries (keys:list (string & string)) (stable:SMap.t unit)
+                 (prog:program) (infos:list (name & type_info))
+  : ML (list Unit.entry) =
+  let key_of (n:name) : ML (option string) =
+    keys |> List.tryPick (fun (n', k) ->
+      if n' = string_of_name n then Some k else None) in
+  let info_of (n:name) : ML (option type_info) =
+    infos |> List.tryPick (fun (n', ti) ->
+      if string_of_name n' = string_of_name n then Some ti else None) in
+  prog |> List.collect (fun d ->
+    if has_flag (decl_flags d) Inline || Some? (imported_unit d) then [] else
+    (* A declaration whose signature names a type this unit cannot export
+       cannot be exported either: a downstream unit would have no way to spell
+       its argument. *)
+    if type_names_of_decl d |> List.existsb (fun k ->
+         None? (SMap.try_find stable k)
+         && prog |> List.existsb (fun d' -> DType? d' && string_of_name (name_of_decl d') = k))
+    then [] else
+    if DType? d && None? (SMap.try_find stable (string_of_name (name_of_decl d))) then [] else
+    let d, ti =
+      match d with
+      | DLet dl -> DLet { dl with dl_body = unit_expr }, None
+      | DType dt -> d, info_of dt.dt_name
+      | _ -> d, None in
+    match key_of (name_of_decl d) with
+    (* A declaration no request created -- a lambda-lifted local function, say
+       -- has no key for a downstream unit to recognize it by, and so cannot be
+       exported.  It is still emitted; it is just not reusable. *)
+    | None -> []
+    | Some k -> [{ Unit.ue_key = k; Unit.ue_decl = d; Unit.ue_type = ti }])
+
+let write_unit_iface (st:Extract.state) (stable:SMap.t unit)
+                     (prog:program) (infos:list (name & type_info))
+  : ML unit =
+  match Options.custard_unit () with
+  | None -> ()
+  | Some u ->
+    let i = {
+      Unit.ui_header = {
+        Unit.uh_version = Unit.current_version;
+        Unit.uh_name    = u;
+        Unit.uh_backend = Options.custard_backend ();
+        Unit.uh_options = Unit.layout_options ();
+        Unit.uh_digests = Extract.loaded_digests st;
+      };
+      Unit.ui_entries = unit_entries (Extract.exported_keys st) stable prog infos;
+    } in
+    if Options.custard_dump_cui () then
+      Format.print_string (Unit.iface_to_string i);
+    Unit.write_iface (Find.prepend_output_dir (u ^ ".cui")) i
+
 let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let main = main_entry () in
   (* [--custard_main] is a root too, so that the common case needs only one
@@ -167,10 +291,27 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                    definitions reachable from the entry points."
     ];
   check_entrypoints env roots;
+  (* Section 12 is specified for the OCaml backend.  The C and karamel
+     backends need a header and a linker story of their own, which they do not
+     have yet; failing here is better than emitting a file that refers to
+     symbols nothing declares. *)
+  if (Some? (Options.custard_unit ()) || Cons? (Options.custard_links ()))
+     && Options.custard_backend () <> "OCaml" then
+    E.raise_error0 E.Fatal_OptionsNotCompatible [
+      text "Separate compilation (--custard_unit, --custard_link) is \
+            implemented for --custard_backend OCaml only.";
+      text "The C and karamel backends still compile a whole program at once."
+    ];
   (* Looking definitions up in the environment instantiates their universes,
      which needs the union-find; by the time a backend runs it has been put in
      read-only mode.  The ML extraction does the same thing. *)
-  let prog = UF.with_uf_enabled (fun () -> Extract.run (Extract.init deps env) roots main) in
+  let st = Extract.init deps env in
+  let prog = UF.with_uf_enabled (fun () -> Extract.run st roots main) in
+  (* Section 12.4: what a linked unit already compiled.  These never enter the
+     program -- renaming or emitting them would defeat the purpose -- but the
+     layout analysis has to adopt their verdicts and the backends have to know
+     where they live. *)
+  let imports = Extract.imports st in
   (* Phase 4 pass 1: let-normalization, before anything that moves a subterm
      (section 6). *)
   let prog = Simplify.anf prog in
@@ -180,12 +321,24 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let prog = if Options.custard_monomorphize_types ()
              then Monomorphize.run prog else prog in
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
-  let prog = Layout.run prog in
+  let prog, infos = Layout.run (imported_type_infos imports) prog in
+  (* The shape of every type as the layout analysis left it, so that the
+     interface can tell which ones the passes below went on to change. *)
+  let shapes_before = prog |> List.collect (fun d ->
+    match d with
+    | DType t -> [(t.dt_name, t.dt_body, List.length t.dt_params)]
+    | _ -> []) in
   (* Effect-guarded simplification (sections 6 and 7.3). *)
   let prog = Simplify.run prog in
+  (* Compared here rather than after [Rename], whose renamings are recorded in
+     the exported declaration itself and so cross the boundary intact. *)
+  let stable = stable_types shapes_before prog in
   (* Last: the passes above invent names, and the whole point is that what a
      reader sees is stable under everything that happened before. *)
-  let prog = Rename.run prog in
+  let prog, infos = Rename.run infos prog in
+  (* After [Rename], because the names a `.cui` exports are the names the
+     generated source actually spells. *)
+  write_unit_iface st stable prog infos;
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   if Options.custard_warn_any () then warn_any prog;
@@ -196,16 +349,21 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     match Options.output_to () with
     | Some fn -> fn
     | None ->
+      (* A named unit's file has to be named after the unit: that is what makes
+         its OCaml module name the one downstream units qualify with. *)
+      let base = match Options.custard_unit () with
+                 | Some u -> OCaml.module_name_of_unit u
+                 | None -> "Custard" in
       Find.prepend_output_dir
         (match backend with
-         | "Krml" -> "Custard.krml"
-         | "C" -> "Custard.c"
-         | _ -> "Custard.ml")
+         | "Krml" -> base ^ ".krml"
+         | "C" -> base ^ ".c"
+         | _ -> base ^ ".ml")
   in
   match backend with
   | "Krml" -> Krml.write_program ofile prog
-  | "C" -> BU.write_file ofile (C.print_program prog)
-  | "OCaml" -> BU.write_file ofile (OCaml.print_program prog)
+  | "C" -> BU.write_file ofile (C.print_program (List.map fst imports @ prog))
+  | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
   | b ->
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text ("Unknown --custard_backend " ^ b ^ ".");

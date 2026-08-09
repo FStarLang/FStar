@@ -28,6 +28,7 @@ module DsEnv = FStarC.Syntax.DsEnv
 module E     = FStarC.Errors
 module Ident = FStarC.Ident
 module N     = FStarC.TypeChecker.Normalize
+module BU    = FStarC.Util
 module SMap  = FStarC.SMap
 module Tc    = FStarC.TypeChecker.Tc
 module U     = FStarC.Syntax.Util
@@ -91,6 +92,8 @@ let rec prime_cache (deps:Dep.deps) (env:TcEnv.env) (fn:string) : ML unit =
    request -- an Error 47 the second time around. *)
 let iface_only : SMap.t unit = SMap.create 10
 
+let loaded_files : SMap.t unit = SMap.create 100
+
 let module_is_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML bool =
   let m' = String.lowercase m in
   let want_impl = Some? (Dep.implementation_of deps m') && None? (SMap.try_find iface_only m') in
@@ -114,6 +117,7 @@ let ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env =
         | Some tcr -> (fn, tcr)
     in
     let fn, tcr = first_usable (candidate_files deps m) in
+    SMap.add loaded_files fn ();
     (* We asked for an implementation and got an interface: the implementation
        is realized by hand and nothing ever checked it (section 8.2).  Record
        that, so later requests for this module stop asking.  If the driver had
@@ -161,3 +165,6 @@ let ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env =
               ignore (TcEnv.lookup_sigelt env l));
             env) env
     end
+
+let loaded_digests () : ML (list (string & string)) =
+  SMap.keys loaded_files |> List.map (fun fn -> (fn, BU.digest_of_file fn))

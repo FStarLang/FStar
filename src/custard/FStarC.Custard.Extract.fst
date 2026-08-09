@@ -43,6 +43,7 @@ module PC     = FStarC.Parser.Const
 module ExtractAs = FStarC.Parser.Const.ExtractAs
 module S      = FStarC.Syntax.Syntax
 module SMap   = FStarC.SMap
+module Unit   = FStarC.Custard.Unit
 module SS     = FStarC.Syntax.Subst
 module TcEnv  = FStarC.TypeChecker.Env
 module U      = FStarC.Syntax.Util
@@ -314,6 +315,16 @@ type state = {
      can tell a runtime parameter apart from a computation's result: the two
      need entirely different advice. *)
   effletdefs: SMap.t unit;
+  (* What the already-compiled units this run links against export, indexed by
+     specialization key (section 12.4).  This is the whole of separate
+     compilation on the extraction side: a request whose key is already in here
+     is answered by a reference rather than by a translation. *)
+  links:   Unit.links;
+  (* The imported declarations this run has referred to, reversed.  They are
+     not emitted, but the later passes need to see them: the layout analysis
+     has to adopt an imported type's verdict, and the backends have to know
+     which namespace to qualify a name with. *)
+  imports: ref (list (decl & option type_info));
 }
 
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
@@ -331,6 +342,8 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
   letdefs = SMap.create 100;
   effletdefs = SMap.create 100;
+  links   = Unit.load_links (Options.custard_links ());
+  imports = mk_ref [];
 }
 
 (* Just enough to fire the redexes that substituting a local function creates,
@@ -532,6 +545,9 @@ let rec request (st:state) (k:spec_key) : ML name =
   match SMap.try_find st.names key with
   | Some nm -> nm
   | None ->
+  match import st key with
+  | Some nm -> nm
+  | None ->
     check_budget st k;
     let l = k.sk_lid in
     let lstr = Ident.string_of_lid l in
@@ -568,6 +584,41 @@ let rec request (st:state) (k:spec_key) : ML name =
       SMap.add st.emitted key d;
       st.order := key :: !st.order;
       nm
+
+(* Section 12.4, rule 1.  A request whose key a linked unit already exports is
+   answered by a reference to that unit's definition: it is *not* translated,
+   its body is never looked at, and -- the part that makes separate compilation
+   worth anything -- the requests its body would have made are never made
+   either.  Cutting the traversal off here is the whole mechanism; everything
+   else is bookkeeping so that the later passes and the backend agree about
+   what the reference denotes.
+
+   The answer is recorded in [st.names] under the same key an ordinary
+   translation would have used, so a second request for it takes the fast path
+   above and nothing downstream can tell the two apart. *)
+and import (st:state) (key:string) : ML (option name) =
+  match Unit.lookup st.links key with
+  | None -> None
+  | Some (u, e) ->
+    (* The interface's declaration is post-[Layout] and post-[Rename]: the name
+       it carries is the one the upstream unit actually emitted, which is
+       exactly what a reference has to spell.  Keeping that name here -- rather
+       than minting a fresh one and remembering a mapping -- is what lets every
+       later pass treat an import as an ordinary declaration it happens not to
+       emit. *)
+    let d =
+      match e.ue_decl with
+      | DType dt    -> DType { dt with dt_flags = Imported u :: dt.dt_flags }
+      | DLet dl     -> DLet  { dl with dl_flags = Imported u :: dl.dl_flags }
+      | DExternal dx -> DExternal { dx with dx_flags = Imported u :: dx.dx_flags }
+      | DExn de     -> DExn de
+    in
+    let nm = name_of_decl d in
+    SMap.add st.names key nm;
+    st.imports := (d, e.ue_type) :: !st.imports;
+    if Options.custard_dump_specializations () then
+      BU.print2 "Custard: %s comes from unit %s\n" key u;
+    Some nm
 
 (* Section 3.6: the budget is checked *before* the definition is looked up and
    before its body is normalized, so that a diverging specialization is cut off
@@ -1947,3 +1998,10 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML pro
     match SMap.try_find st.emitted key with
     | Some d -> [d]
     | None -> [])
+
+let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.imports
+
+let exported_keys (st:state) : ML (list (string & string)) =
+  SMap.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
+
+let loaded_digests (_:state) : ML (list (string & string)) = Loader.loaded_digests ()

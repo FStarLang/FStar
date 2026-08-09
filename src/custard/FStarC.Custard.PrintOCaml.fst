@@ -36,6 +36,22 @@ let externals : ref (SMap.t string) = mk_ref (SMap.create 0)
 let external_target (n:name) : ML (option string) =
   SMap.try_find !externals (string_of_name n)
 
+(* Names belonging to a linked unit (section 12), by the OCaml module that
+   unit compiled to.  Every reference to one is qualified explicitly rather
+   than brought into scope with [open]: two sibling units may each have
+   re-specialized the same upstream definition -- which section 12.6 expects
+   -- and an [open] would make the clash silent and the choice positional.
+   Explicit qualification cannot be ambiguous. *)
+let qualifiers : ref (SMap.t string) = mk_ref (SMap.create 0)
+
+let qualifier (n:name) : ML (option string) =
+  SMap.try_find !qualifiers (string_of_name n)
+
+let qualify (n:name) (s:string) : ML string =
+  match qualifier n with
+  | Some m -> m ^ "." ^ s
+  | None -> s
+
 (* -------------------------------------------------------------------- *)
 (* Names                                                                *)
 (* -------------------------------------------------------------------- *)
@@ -89,6 +105,8 @@ let ocaml_type_name (n:name) : ML string =
 
 let ocaml_ctor_name (n:name) (c:string) : ML string =
   uppercase_first (sanitize (mangled_name n ^ "_" ^ c))
+
+let module_name_of_unit (u:string) : ML string = uppercase_first (sanitize u)
 
 let ocaml_var (x:string) : ML string =
   let s = lowercase_first (sanitize x) in
@@ -173,9 +191,11 @@ let rec ty (t:cty) : ML string =
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
-     | None -> ocaml_type_name n)
+     | None -> qualify n (ocaml_type_name n))
   | TApp (n, args) ->
-    let hd = match builtin_type n with Some s -> s | None -> ocaml_type_name n in
+    let hd = match builtin_type n with
+             | Some s -> s
+             | None -> qualify n (ocaml_type_name n) in
     "(" ^ String.concat ", " (List.map ty args) ^ ") " ^ hd
 
 (* -------------------------------------------------------------------- *)
@@ -290,7 +310,7 @@ let rec pattern (p:pat) : ML string =
 and ctor_ref (n:name) : ML string =
   match builtin_ctor n with
   | Some c -> c
-  | None -> uppercase_first (sanitize (mangled_name n))
+  | None -> qualify n (uppercase_first (sanitize (mangled_name n)))
 
 and builtin_ctor (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
@@ -330,10 +350,13 @@ let rec term (ind:string) (e:expr) : ML string =
     let ind' = ind ^ "  " in
     "(match " ^ term ind scrut ^ " with\n" ^
     String.concat "" (List.map (case ind') brs) ^ ind ^ ")"
-  | ERecord (_, fs) ->
-    "{ " ^ String.concat "; " (List.map (fun (f, e) ->
-              ocaml_var f ^ " = " ^ term ind e) fs) ^ " }"
-  | EProj (e1, _, f) -> "(" ^ term ind e1 ^ ")." ^ ocaml_var f
+  | ERecord (n, fs) ->
+    (* Qualifying the first field is enough for OCaml to resolve the record
+       type; qualifying every one would be noise. *)
+    "{ " ^ String.concat "; " (List.mapi (fun i (f, e) ->
+              (if i = 0 then qualify n (ocaml_var f) else ocaml_var f)
+              ^ " = " ^ term ind e) fs) ^ " }"
+  | EProj (e1, n, f) -> "(" ^ term ind e1 ^ ")." ^ qualify n (ocaml_var f)
   | EDiscrim (e1, n) ->
     "(match " ^ term ind e1 ^ " with " ^ ctor_ref n ^ " _ -> true | _ -> false)"
   (* Every machine width is a *distinct* OCaml type -- [Stdint.UintN.t], plain
@@ -483,7 +506,31 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
    mangled names. *)
 let print_program (p:program) : ML string =
   let tbl = SMap.create 50 in
+  let quals = SMap.create 50 in
   p |> List.iter (fun d ->
+    (* An imported value is exactly an external whose target happens to be
+       another generated module: nothing else about it is special, and reusing
+       the mechanism means no printing path has to learn about linking. *)
+    match imported_unit d with
+    | Some u ->
+      let m = module_name_of_unit u in
+      (match d with
+       | DLet l -> SMap.add tbl (string_of_name l.dl_name)
+                     (m ^ "." ^ ocaml_value_name l.dl_name)
+       | DExternal e ->
+         (* An external the upstream unit did not compile either: it resolves
+            to the same hand-written realization here, not to a symbol in the
+            upstream module. *)
+         SMap.add tbl (string_of_name e.dx_name)
+           (match e.dx_target with Some t -> t | None -> realization_of e.dx_name)
+       | DType t ->
+         SMap.add quals (string_of_name t.dt_name) m;
+         (match t.dt_body with
+          | TVariant cs -> cs |> List.iter (fun (cn, _) ->
+                             SMap.add quals (string_of_name cn) m)
+          | _ -> ())
+       | DExn _ -> ())
+    | None ->
     match d with
     | DExternal e ->
       SMap.add tbl (string_of_name e.dx_name)
@@ -492,6 +539,7 @@ let print_program (p:program) : ML string =
          | None -> realization_of e.dx_name)
     | _ -> ());
   externals := tbl;
+  qualifiers := quals;
   let header =
     "(* Generated by F* Custard extraction. Do not edit. *)\n\
      [@@@ocaml.warning \"-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70\"]\n" in
@@ -505,6 +553,9 @@ let print_program (p:program) : ML string =
     | _ -> None in
   let prev : ref (option (list string)) = mk_ref None in
   let ds = p |> List.collect (fun d ->
+             (* An imported declaration is in the program only so that the two
+                tables above could be built from it. *)
+             if Some? (imported_unit d) then [] else
              let g = group_of d in
              let first = None? g || g <> !prev in
              match print_decl first d with

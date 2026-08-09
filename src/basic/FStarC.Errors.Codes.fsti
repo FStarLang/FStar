@@ -394,6 +394,7 @@ type error_code =
   | Error_CustardUnextractableEffect
   | Warning_CustardLostRepresentation
   | Error_CustardNoCRepresentation
+  | Error_CustardBadUnitInterface
 
 type error_setting = error_code & error_flag & int
 

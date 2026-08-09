@@ -32,4 +32,9 @@ open FStarC
 open FStarC.Effect
 open FStarC.Custard.Syntax
 
-val run : program -> ML program
+(** [run infos prog] also carries the layout verdicts along, because a `.cui`
+    exports them and they name record fields, which this pass renames.  An
+    *imported* verdict passes through untouched: its fields belong to a type
+    this program does not declare, so they are not in scope for renaming and
+    the upstream unit's spelling is the one that must survive. *)
+val run : list (name & type_info) -> program -> ML (program & list (name & type_info))

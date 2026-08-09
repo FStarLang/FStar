@@ -206,6 +206,9 @@ let defaults = [
   ("custard_norm_budget"                       , Int 10000000);
   ("custard_monomorphize_types"                , Bool false);
   ("custard_backend"                           , String "OCaml");
+  ("custard_unit"                              , Unset);
+  ("custard_link"                              , List []);
+  ("custard_dump_cui"                          , Bool false);
   ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
   ("debug_all"                                 , Bool false);
@@ -488,6 +491,9 @@ let get_custard_max_specializations () = lookup_opt "custard_max_specializations
 let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
 let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
 let get_custard_backend         ()      = lookup_opt "custard_backend"          as_string
+let get_custard_unit            ()      = lookup_opt "custard_unit"            (as_option as_string)
+let get_custard_link            ()      = lookup_opt "custard_link"            (as_list as_string)
+let get_custard_dump_cui        ()      = lookup_opt "custard_dump_cui"        as_bool
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
@@ -957,6 +963,27 @@ binders explicitly marked [@@monomorphize] (default false)");
     EnumStr ["OCaml"; "Krml"; "C"],
     text "Language Custard emits: OCaml source, karamel's AST for \
 compilation to C, or self-contained C11 source (default OCaml)");
+
+  ( noshort,
+    "custard_unit",
+    SimpleStr "name",
+    text "Compile as a named Custard unit and write <name>.cui alongside the \
+generated source. Downstream units pass that file to --custard_link to reuse \
+this unit's code instead of compiling it again. Omit it to build a \
+self-contained whole program.");
+
+  ( noshort,
+    "custard_link",
+    Accumulated (PathStr "file.cui"),
+    text "Link against an already-compiled Custard unit. May be repeated. A \
+definition exported by a linked unit is called rather than recompiled, and \
+its layout decisions are adopted rather than re-derived.");
+
+  ( noshort,
+    "custard_dump_cui",
+    Const (Bool true),
+    text "Print a readable rendering of the unit interfaces this run writes \
+and reads");
 
   ( 'd',
     "",
@@ -2152,6 +2179,9 @@ let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 let custard_backend              () = get_custard_backend ()
+let custard_unit                 () = get_custard_unit ()
+let custard_links                () = get_custard_link ()
+let custard_dump_cui             () = get_custard_dump_cui ()
 
 let profile_group_by_decl        () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"

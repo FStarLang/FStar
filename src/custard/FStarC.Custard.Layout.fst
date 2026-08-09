@@ -44,6 +44,7 @@ type tbl = {
   erased:  SMap.t bool;                 (* type key   -> erasure         *)
   layouts: SMap.t layout;               (* type key   -> layout          *)
   ctors:   SMap.t (string & ctor_layout); (* ctor key -> owner key, layout *)
+  pinned:  SMap.t unit;                 (* type keys whose verdict is imported *)
   fresh:   ref int;
 }
 
@@ -113,6 +114,7 @@ let erasure_fixpoint (t:tbl) : ML unit =
       let old = match SMap.try_find t.erased k with
                 | Some b -> b
                 | None -> false in
+      if Some? (SMap.try_find t.pinned k) then () else
       let nw = dtype_erased t d in
       if nw <> old then (changed := true; SMap.add t.erased k nw));
     !changed
@@ -200,6 +202,7 @@ let compute_layouts (t:tbl) : ML unit =
   (* Pass 1: constructor layouts, and the newtype candidates. *)
   let cands = SMap.create 20 in
   SMap.iter t.types (fun k d ->
+    if Some? (SMap.try_find t.pinned k) then () else
     let erased = match SMap.try_find t.erased k with
                  | Some b -> b
                  | None -> false in
@@ -242,6 +245,11 @@ let compute_layouts (t:tbl) : ML unit =
    rewriter finds them through this table. *)
 let register_ctors (t:tbl) : ML unit =
   SMap.iter t.types (fun k d ->
+    (* A pinned type's constructor layouts came from the interface and were
+       registered when the table was seeded.  Recomputing them here would be
+       the same computation over a different program, which is precisely what
+       pinning exists to prevent. *)
+    if Some? (SMap.try_find t.pinned k) then () else
     ctor_layouts t d |> List.iter (fun cl -> SMap.add t.ctors (key cl.cl_name) (k, cl)))
 
 let ctor_owner (t:tbl) (n:name) : ML (option (layout & ctor_layout)) =
@@ -467,16 +475,28 @@ let rw_decl (t:tbl) (d:decl) : ML (list decl) =
   | DExternal dx -> [DExternal { dx with dx_ty = resolve t 100 dx.dx_ty }]
   | DExn de -> [DExn { de with de_args = de.de_args |> List.map (resolve t 100) }]
 
-let run (prog:program) : ML program =
+let run (imports:list (name & type_info)) (prog:program) : ML (program & list (name & type_info)) =
   let t = { types   = SMap.create 100;
             erased  = SMap.create 100;
             layouts = SMap.create 100;
             ctors   = SMap.create 100;
+            pinned  = SMap.create 10;
             fresh   = mk_ref 0 } in
   prog |> List.iter (fun d ->
     match d with
     | DType dt -> SMap.add t.types (key dt.dt_name) dt
     | _ -> ());
+  (* Seed the imported verdicts *before* the analysis, and mark them pinned.
+     Seeding rather than excluding is the point: [rw_decl] below looks every
+     type and constructor up in these same tables, so a use of an imported
+     type is rewritten by the upstream unit's decisions instead of being left
+     alone or, worse, rewritten by a locally re-derived guess. *)
+  imports |> List.iter (fun (n, ti) ->
+    let k = key n in
+    SMap.add t.pinned k ();
+    SMap.add t.erased k ti.ti_erased;
+    SMap.add t.layouts k ti.ti_layout;
+    ti.ti_ctors |> List.iter (fun cl -> SMap.add t.ctors (key cl.cl_name) (k, cl)));
   erasure_fixpoint t;
   compute_layouts t;
   register_ctors t;
@@ -485,4 +505,17 @@ let run (prog:program) : ML program =
     SMap.iter t.layouts (fun k l ->
       FStarC.Format.print2 "  %s : %s\n" k (layout_to_string l))
   end;
-  prog |> List.collect (rw_decl t)
+  let prog' = prog |> List.collect (rw_decl t) in
+  (* The verdicts this run *derived*, which is what an interface exports; a
+     pinned one came from somewhere else and is that unit's to export. *)
+  let infos =
+    SMap.keys t.types |> List.collect (fun k ->
+      if Some? (SMap.try_find t.pinned k) then [] else
+      match SMap.try_find t.types k, SMap.try_find t.layouts k with
+      | Some d, Some l ->
+        [(d.dt_name,
+          { ti_erased = (match SMap.try_find t.erased k with Some b -> b | None -> false);
+            ti_layout = l;
+            ti_ctors  = ctor_layouts t d })]
+      | _ -> []) in
+  (prog', infos)

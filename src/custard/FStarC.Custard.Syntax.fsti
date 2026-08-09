@@ -262,6 +262,11 @@ type flag =
       extractor for types F* considers non-informative; the layout analysis
       propagates it structurally. *)
   | Comment of string
+  | Imported of string
+  (** This declaration was compiled by an already-built unit (section 12), the
+      one named here.  It is present so that this unit's passes can see its
+      shape -- a type's layout, a function's signature -- but it is not emitted
+      and its uses print qualified by that unit's namespace. *)
 
 type tydef =
   | TAbbrev  of cty
@@ -314,6 +319,60 @@ type decl =
     can emit declarations as it discovers them. *)
 type program = list decl
 
+(** {1 Layout verdicts} *)
+
+(** A layout is not just a tag: it records *which* source field survives in
+    *which* target slot, because every constructor application, projection and
+    pattern has to be rewritten accordingly.  Knowing only that
+    [type foo = { a: prop; b: bool }] "is a newtype" does not say whether
+    [Mkfoo a b] translates to [a] or to [b].
+
+    These live here rather than in {!FStarC.Custard.Layout}, which is what
+    derives them, because a *linked* unit's verdicts arrive from its interface
+    instead (section 12.2) and both modules have to name them. *)
+
+(** Where a source field ends up in the target representation. *)
+type slot =
+  | S_erased            (** the field has no runtime representation *)
+  | S_at of int         (** the field lives at target position i *)
+
+type ctor_layout = {
+  cl_name:   name;
+  cl_tag:    option int;          (** [None] when the type has a single ctor *)
+  cl_slots:  list slot;           (** one per *source* field, in source order *)
+  cl_arity:  int;                 (** number of surviving fields *)
+  cl_fields: list (string & cty); (** the surviving fields, in target order *)
+}
+
+type newtype_layout = {
+  nt_ctor:  name;
+  nt_field: string;
+  nt_index: int;   (** index of the surviving field in the *source* field list *)
+  nt_ty:    cty;   (** the payload type, in terms of the type's parameters *)
+}
+
+type layout =
+  | L_erased                            (** no runtime representation at all *)
+  | L_newtype of newtype_layout         (** exactly one field survives *)
+  | L_struct  of list ctor_layout
+  | L_abbrev  of cty                    (** a transparent abbreviation *)
+  | L_opaque                            (** abstract or externally realized *)
+
+(** Everything a *downstream* unit has to be told about a type: not just its
+    declaration but the verdict reached about it, which the downstream unit
+    must adopt rather than re-derive.  A verdict is recorded for every type a
+    unit reached, including the ones that came out with no runtime
+    representation at all -- that is as much a verdict as any other. *)
+type type_info = {
+  ti_erased: bool;
+  ti_layout: layout;
+  ti_ctors:  list ctor_layout;
+  (** The constructor layouts, recorded separately because [L_newtype],
+      [L_erased] and [L_opaque] do not carry them and the rewriter still needs
+      them: an application or a pattern of a constructor of a collapsed type
+      has to be rewritten just the same. *)
+}
+
 (** {1 Helpers} *)
 
 (* Instantiate type variables, e.g. to specialize a polymorphic declaration's
@@ -325,6 +384,18 @@ val unit_expr : expr
 val name_of_decl : decl -> name
 val decl_flags : decl -> list flag
 val has_flag : list flag -> flag -> ML bool
+
+(** Every type name a type mentions, as [string_of_name] keys. *)
+val type_names_of_cty : cty -> ML (list string)
+
+(** Every type name a declaration's *signature* mentions -- what a caller has
+    to be able to name in order to use it.  A declaration's body is not
+    consulted: an interface does not export one. *)
+val type_names_of_decl : decl -> ML (list string)
+
+(** The unit a declaration was imported from, or [None] if this run compiled
+    it.  An imported declaration is never emitted. *)
+val imported_unit : decl -> ML (option string)
 
 (** {1 Printing} *)
 

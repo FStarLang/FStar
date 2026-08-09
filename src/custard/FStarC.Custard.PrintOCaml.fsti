@@ -31,4 +31,9 @@ open FStarC.Custard.Syntax
 val ocaml_value_name : name -> ML string
 val ocaml_type_name  : name -> ML string
 
+(** The OCaml module a Custard unit compiles to, which is both the name of the
+    file it is written to and the namespace downstream units qualify its
+    exports with. *)
+val module_name_of_unit : string -> ML string
+
 val print_program : program -> ML string
