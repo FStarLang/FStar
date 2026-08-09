@@ -63,6 +63,10 @@ let ocaml_keywords = [
   "lazy"; "let"; "match"; "method"; "module"; "mutable"; "new"; "nonrec";
   "object"; "of"; "open"; "or"; "private"; "rec"; "sig"; "struct"; "then";
   "to"; "true"; "try"; "type"; "val"; "virtual"; "when"; "while"; "with";
+  (* Infix operators spelled as words.  They are reserved just as firmly as
+     the rest -- `let mod = ...` does not parse -- and F\* code does use
+     `mod` as a name. *)
+  "asr"; "land"; "lor"; "lsl"; "lsr"; "lxor"; "mod";
 ]
 
 let is_alpha (i:int) : bool = (i >= 97 && i <= 122) || (i >= 65 && i <= 90)
@@ -202,6 +206,12 @@ let rec ty (t:cty) : ML string =
 (* Constants                                                            *)
 (* -------------------------------------------------------------------- *)
 
+(* F\* strings are sequences of Unicode code points, and OCaml string literals
+   are sequences of bytes, so a code point above 127 cannot be escaped
+   numerically: `\821` is not a byte.  The ML extraction's answer, which this
+   follows, is to escape only what has to be escaped and let everything else
+   through verbatim -- [string_of_char] renders a code point as its UTF-8
+   bytes, which is what the reader wanted in the first place. *)
 let escape (s:string) : ML string =
   let esc (c:char) : ML string =
     match c with
@@ -212,7 +222,7 @@ let escape (s:string) : ML string =
     | '\\' -> "\\\\"
     | c ->
       let i = BU.int_of_char c in
-      if i < 32 || i > 126 then "\\" ^ (if i < 10 then "00" else if i < 100 then "0" else "") ^ show i
+      if i < 32 || i = 127 then "\\" ^ (if i < 10 then "00" else "0") ^ show i
       else BU.string_of_char c
   in
   String.concat "" (List.map esc (String.list_of_string s))
@@ -228,7 +238,12 @@ let constant (c:constant) : ML string =
      [int_to_t] for signed ones. *)
   | CInt (s, Some sw) ->
     "(" ^ int_inj sw ^ " (Prims.parse_int \"" ^ s ^ "\"))"
-  | CChar c -> "(FStar_Char.char_of_int (" ^ show (BU.int_of_char c) ^ "))"
+  (* [FStar.Char.char] is realized as a plain OCaml [int] -- a code point, not
+     OCaml's byte-sized [char] -- so the literal is the code point itself.
+     That is what the ML extraction emits too, and it is what makes a char
+     usable as a *pattern*: `FStar_Char.char_of_int 39` is neither a pattern
+     nor even well-typed, since the realization takes a [Z.t]. *)
+  | CChar c -> show (BU.int_of_char c)
   | CString s -> "\"" ^ escape s ^ "\""
 
 (* -------------------------------------------------------------------- *)
