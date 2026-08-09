@@ -936,15 +936,15 @@ type ctor_info = {
   ci_fields: list (string & cty);
 }
 
-(* The imported types this run links against: each as the layout analysis left
-   it, as its home unit finally emitted it, and with the record verdict that
-   unit reached.  Both shapes are needed -- the questions this file asks are
-   about the *pre*-simplification declaration, while the answers it must not
-   contradict are visible only in the final one.  A [ref] rather than an
-   argument threaded through a dozen functions, for the same reason
-   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
-   program.  Set by {!run}. *)
-let imported_types : ref (list (dtype & dtype & bool)) = mk_ref []
+(* The types this run links against rather than compiles, as the units that
+   compiled them emitted them.  No pass here decides anything about them --
+   their representation is settled, and {!FStarC.Custard.Layout} hands it over
+   in a [verdicts] -- but the passes that ask how many constructors a type has,
+   or what its fields are called, still have to be able to see them.  A [ref]
+   rather than an argument threaded through a dozen functions, for the same
+   reason {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a
+   whole program.  Set by {!run}. *)
+let imported_types : ref (list dtype) = mk_ref []
 
 (* The program as the *type*-inspecting passes should see it.  Imported types
    are visible to a question about a declaration and invisible to everything
@@ -953,7 +953,7 @@ let imported_types : ref (list (dtype & dtype & bool)) = mk_ref []
 let with_imports (prog:program) : ML program =
   match !imported_types with
   | [] -> prog
-  | ts -> (ts |> List.map (fun (dt, _, _) -> DType dt)) @ prog
+  | ts -> (ts |> List.map (fun dt -> DType dt)) @ prog
 
 let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
   let m : SMap.t ctor_info = SMap.create 50 in
@@ -966,6 +966,11 @@ let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
            out end up on [EProj] nodes, where the marker has no meaning. *)
         let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
         SMap.add m (string_of_name cn) { ci_owner = tn; ci_count = n; ci_fields = fs })
+    (* A record is keyed on its type, which is what [ERecord], [EProj] and
+       [PRecord] all name.  It has one "constructor" by construction. *)
+    | DType ({ dt_name = tn; dt_body = TRecord fs }) ->
+      let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
+      SMap.add m (string_of_name tn) { ci_owner = tn; ci_count = 1; ci_fields = fs }
     | _ -> ());
   m
 
@@ -1013,75 +1018,39 @@ and psub_branch (sm:subst) (br:branch) : ML branch =
   let p, guard, b = br in
   (p, (match guard with None -> None | Some e -> Some (psub sm e)), psub sm b)
 
-(* A binding whose pattern cannot fail: one constructor, and no nested test. *)
-let irrefutable (tbl:SMap.t ctor_info) (p:pat) : ML (option (name & list pat & ctor_info)) =
+(* A binding whose pattern cannot fail: one constructor, and no nested test.
+   The result names the key an [EProj] on the scrutinee has to carry -- the
+   constructor for a variant, the type for a record -- and pairs each field
+   with the pattern standing for it. *)
+let irrefutable (tbl:SMap.t ctor_info) (p:pat)
+  : ML (option (name & list ((string & cty) & pat))) =
+  let plain (ps:list pat) : ML bool = ps |> List.for_all (fun p -> PVar? p || PWild? p) in
   match p with
   | PCtor (cn, ps) ->
     (match single_ctor tbl cn with
-     | Some ci when List.length ps = List.length ci.ci_fields
-                 && ps |> List.for_all (fun p -> PVar? p || PWild? p) -> Some (cn, ps, ci)
+     | Some ci when List.length ps = List.length ci.ci_fields && plain ps ->
+       Some (cn, List.zip ci.ci_fields ps)
+     | _ -> None)
+  (* A record pattern is irrefutable whatever it leaves out, and it names the
+     fields it does mention, so there is no arity to check. *)
+  | PRecord (tn, fs) ->
+    (match SMap.try_find tbl (string_of_name tn) with
+     | Some ci when plain (fs |> List.map snd) ->
+       Some (tn, fs |> List.collect (fun (f, q) ->
+         match ci.ci_fields |> List.tryFind (fun (g, _) -> g = f) with
+         | Some fd -> [(fd, q)]
+         | None -> []))
      | _ -> None)
   | _ -> None
 
-let rec pat_ctors (p:pat) : ML (list string) =
-  match p with
-  | PCtor (n, ps) -> string_of_name n :: List.collect pat_ctors ps
-  | PRecord (_, fs) -> List.collect (fun (_, q) -> pat_ctors q) fs
-  | PTuple ps | POr ps -> List.collect pat_ctors ps
-  | _ -> []
-
-(* The constructors the program matches on, ignoring the patterns [depat] is
-   about to consume when [tbl] is given.  Run before [depat] it says which
-   types will be free of [PCtor] afterwards, and hence which ones may become
-   records; run after, with no [tbl], it confirms it. *)
-let matched_ctors (tbl:option (SMap.t ctor_info)) (prog:program) : ML (SMap.t bool) =
-  let m : SMap.t bool = SMap.create 50 in
-  let mark (p:pat) : ML unit = pat_ctors p |> List.iter (fun n -> SMap.add m n true) in
-  let consumed (p:pat) : ML bool =
-    match tbl with
-    | Some tbl -> Some? (irrefutable tbl p)
-    | None -> false in
-  let rec go (x:expr) : ML unit =
-    let brs (bs:list branch) : ML unit =
-      bs |> List.iter (fun (p, gd, b) ->
-        mark p;
-        (match gd with None -> () | Some g -> go g);
-        go b) in
-    match x.e with
-    | EMatch (s, [(p, None, body)]) ->
-      go s;
-      if not (consumed p) then mark p;
-      go body
-    | EMatch (s, bs) -> go s; brs bs
-    | ETry (s, bs) -> go s; brs bs
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> ()
-    | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> go a; go b
-    | EApp (h, es) -> go h; List.iter go es
-    | EFun (_, b) -> go b
-    | EIf (c, a, b) -> go c; go a; go b
-    | ECtor (_, es) | ETuple es | EOp (_, es) -> List.iter go es
-    | ERaise e1 -> go e1
-    | ERecord (_, fs) -> fs |> List.iter (fun (_, e) -> go e)
-    | EProj (e, _, _) | EDiscrim (e, _) | ECast (e, _) -> go e in
-  prog |> List.iter (fun d ->
-    match d with DLet dl -> go dl.dl_body | _ -> ());
-  m
-
-let rec depat (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (x:expr) : ML expr =
-  let g = depat tbl blocked in
+let rec depat (tbl:SMap.t ctor_info) (x:expr) : ML expr =
+  let g = depat tbl in
   match x.e with
   | EMatch (s, [(p, None, body)]) ->
     let s = g s in
     let body = g body in
-    (* Projecting is only sound if the type really does become a record: an
-       [EProj] out of something still printed as a variant is not valid ML. *)
-    let irr = (match irrefutable tbl p with
-               | Some (cn, ps, ci) ->
-                 if Some? (SMap.try_find blocked (string_of_name cn))
-                 then None else Some (cn, ps, ci)
-               | None -> None) in
-    (match irr with
-     | Some (cn, ps, ci) ->
+    (match irrefutable tbl p with
+     | Some (cn, fps) ->
        (* Re-reading the scrutinee for every field is what makes the match
           disappear entirely; when that is not free, one [let] stands in. *)
        let bound, s' =
@@ -1089,10 +1058,10 @@ let rec depat (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (x:expr) : ML expr =
          else let v = rename "scrut" in
               Some v, { s with e = EVar v; eff = E_Pure } in
        let sm : subst = SMap.create 10 in
-       List.iter2 (fun p (f, ft) ->
+       fps |> List.iter (fun ((f, ft), p) ->
          match p with
          | PVar v -> SMap.add sm v (mk (EProj (s', cn, f)) ft E_Pure)
-         | _ -> ()) ps ci.ci_fields;
+         | _ -> ());
        let body = psub sm body in
        (match bound with
         | None -> body
@@ -1112,7 +1081,7 @@ let rec depat (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (x:expr) : ML expr =
   | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
   | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
   | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (depat_branch tbl blocked)) }
+  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (depat_branch tbl)) }
   | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
   | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
   | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
@@ -1123,85 +1092,38 @@ let rec depat (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (x:expr) : ML expr =
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
   | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
-  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (depat_branch tbl blocked)) }
+  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (depat_branch tbl)) }
 
-and depat_branch (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (br:branch) : ML branch =
+and depat_branch (tbl:SMap.t ctor_info) (br:branch) : ML branch =
   let p, guard, b = br in
-  (p, (match guard with None -> None | Some e -> Some (depat tbl blocked e)),
-   depat tbl blocked b)
+  (p, (match guard with None -> None | Some e -> Some (depat tbl e)),
+   depat tbl b)
 
 let depat_decls (prog:program) : ML program =
   let tbl = ctor_infos (with_imports prog) in
-  let blocked = matched_ctors (Some tbl) prog in
   prog |> List.map (fun d ->
     match d with
-    | DLet dl -> DLet { dl with dl_body = depat tbl blocked dl.dl_body }
+    | DLet dl -> DLet { dl with dl_body = depat tbl dl.dl_body }
     | d -> d)
 
 (* Turn the qualifying single-constructor variants into records.  A [PCtor]
    left over anywhere disqualifies its type: there is no record pattern in the
    IR to rewrite it to. *)
-let records (prog:program) : ML program =
-  let matched = matched_ctors None prog in
-  (* constructor name -> the record type it becomes *)
-  let recs : SMap.t name = SMap.create 50 in
-  prog |> List.iter (fun d ->
-    match d with
-    | DType ({ dt_name = tn; dt_body = TVariant [(cn, fs)] }) ->
-      (* A constructor whose arguments F* did not name gets the positional
-         names [_0], [_1], ...; those are perfectly good field names, and
-         making the conversion unconditional means no [EProj] anywhere is
-         left pointing at a variant. *)
-      if Cons? fs
-      && None? (SMap.try_find matched (string_of_name cn))
-      then SMap.add recs (string_of_name cn) tn
-    | _ -> ());
-  (* An imported type's verdict is adopted, not re-derived.  This is the one
-     decision in this file that really is a function of the whole program --
-     the [matched] test above rejects a type any surviving pattern still
-     matches on -- so the downstream program is the wrong program to ask.
-     Note the asymmetry with the loop above: a type its home unit left as a
-     variant must stay one here even if nothing in *this* program matches on
-     it. *)
-  !imported_types |> List.iter (fun (dt, _, is_record) ->
-    match dt.dt_body with
-    | TVariant [(cn, fs)] when is_record && Cons? fs ->
-      (* A pattern this program still has for it cannot be rewritten: the IR
-         has no record pattern.  [depat] removes the irrefutable single-branch
-         ones, so what is left is a constructor nested inside another pattern.
-         Reporting it beats miscompiling it; the fix is a record pattern in the
-         IR, not a different verdict. *)
-      if Some? (SMap.try_find matched (string_of_name cn)) then
-        E.raise_error0 E.Error_CustardBadUnitInterface [
-          text ("This program pattern-matches on " ^ string_of_name cn ^
-                ", but the unit that compiled " ^ string_of_name dt.dt_name ^
-                " gave it a record representation.");
-          text "Custard's IR has no record pattern, so the match cannot be \
-                translated. Bind the value and read its fields instead of \
-                matching on it inside another pattern."
-        ];
-      SMap.add recs (string_of_name cn) dt.dt_name
-    | _ -> ());
-  if SMap.keys recs = [] then prog else begin
-  let infos = ctor_infos (with_imports prog) in
-  let as_record (cn:name) : ML (option name) = SMap.try_find recs (string_of_name cn) in
+let records (vd:verdicts) (prog:program) : ML program =
+  let as_record (cn:name) : ML (option (name & list string)) =
+    SMap.try_find vd.vd_records (string_of_name cn) in
   let rec go (x:expr) : ML expr =
     match x.e with
     | ECtor (cn, es) ->
       let es = es |> List.map go in
       (match as_record cn with
-       | Some tn ->
-         (* the field names come from the declaration, which is unchanged here *)
-         let fs = (match SMap.try_find infos (string_of_name cn) with
-                   | Some ci -> ci.ci_fields |> List.map fst
-                   | None -> []) in
-         { x with e = ERecord (tn, List.zip fs es) }
+       | Some (tn, fs) -> { x with e = ERecord (tn, List.zip fs es) }
        | None -> { x with e = ECtor (cn, es) })
     (* [Rename] keys a record's fields on the type name and a variant's on the
        constructor name, so the node has to be re-tagged along with the type. *)
     | EProj (e1, n, f) ->
       let e1 = go e1 in
-      { x with e = EProj (e1, (match as_record n with Some tn -> tn | None -> n), f) }
+      { x with e = EProj (e1, (match as_record n with Some (tn, _) -> tn | None -> n), f) }
     | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
     | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, go a, go b) }
     | ESeq (a, b) -> { x with e = ESeq (go a, go b) }
@@ -1217,9 +1139,24 @@ let records (prog:program) : ML program =
     | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
     | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
     | ECast (e1, c) -> { x with e = ECast (go e1, c) }
+  (* A constructor pattern becomes a record pattern.  This is what the verdict
+     used to have to be a whole-program decision for: without [PRecord] there
+     was nothing to rewrite such a match to, so any surviving one disqualified
+     the type -- and whether one survives is a fact about the program. *)
+  and go_pat (p:pat) : ML pat =
+    match p with
+    | PCtor (cn, ps) ->
+      let ps = ps |> List.map go_pat in
+      (match as_record cn with
+       | Some (tn, fs) -> PRecord (tn, List.zip fs ps)
+       | None -> PCtor (cn, ps))
+    | PRecord (n, fs) -> PRecord (n, fs |> List.map (fun (f, q) -> (f, go_pat q)))
+    | PTuple ps -> PTuple (ps |> List.map go_pat)
+    | POr ps -> POr (ps |> List.map go_pat)
+    | p -> p
   and go_branch (br:branch) : ML branch =
     let p, gd, b = br in
-    (p, (match gd with None -> None | Some g -> Some (go g)), go b) in
+    (go_pat p, (match gd with None -> None | Some g -> Some (go g)), go b) in
   prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = go dl.dl_body }
@@ -1231,7 +1168,6 @@ let records (prog:program) : ML program =
           | None -> d)
        | _ -> d)
     | d -> d)
-  end
 
 (* -------------------------------------------------------------------- *)
 (* Inline fields                                                        *)
@@ -1248,25 +1184,11 @@ let records (prog:program) : ML program =
    is the only consumer, and it removes every marker it finds, whether or not
    it could act on it: no later pass and no backend knows the node exists. *)
 
-noeq
-type expansion = {
-  ex_ty:    cty;                  (* the field's declared type, [TApp (R, _)] *)
-  ex_type:  name;                 (* R *)
-  ex_ctor:  option name;          (* R's constructor, when R is a variant *)
-  ex_src:   list (string & cty);  (* R's fields, instantiated *)
-  ex_dst:   list (string & cty);  (* what they become in the outer constructor *)
-}
-
 (* [ECtor]/[ERecord] and [EProj] are keyed on the constructor name for a
    variant and on the type name for a record; [Rename] relies on that, so the
    nodes this pass builds have to agree. *)
 let ex_key (ex:expansion) : name =
   match ex.ex_ctor with Some c -> c | None -> ex.ex_type
-
-(* A plan for one constructor, in field order: each field's name before and
-   after, and what it expands to.  A field can be renamed without expanding,
-   because expanding its neighbour shifts the positional names along. *)
-type fplan = list (string & string & option expansion)
 
 let pure_ (e:expr') (t:cty) : expr = mk e t E_Pure
 
@@ -1294,120 +1216,8 @@ let ex_take (ex:expansion) (e:expr) : ML (option (list expr)) =
     else None
   | _ -> None
 
-(* [_0], [_1], ... are the names a constructor's unnamed arguments get.  A
-   constructor made only of those keeps them, renumbered, rather than growing
-   [_0__1]-shaped ones. *)
-let positional (f:string) : ML bool =
-  String.strlen f > 1 && String.substring f 0 1 = "_"
-
 let strip_inline (c:cty) : cty =
   match c with TInline c -> c | c -> c
-
-(* R's declaration, when R is a type this pass can take the fields out of:
-   exactly one constructor (or a record), and at least one field. *)
-let record_body (prog:program) (n:name)
-  : ML (option (list string & option name & list (string & cty))) =
-  match prog |> List.tryFind (fun d -> string_of_name (name_of_decl d) = string_of_name n) with
-  | Some (DType t) ->
-    (match t.dt_body with
-     | TRecord fs -> if Cons? fs then Some (t.dt_params, None, fs) else None
-     | TVariant [(cn, fs)] -> if Cons? fs then Some (t.dt_params, Some cn, fs) else None
-     | _ -> None)
-  | _ -> None
-
-(* The plan for every constructor with at least one marked field.  A field
-   whose type turns out not to be a record keeps its place; only the marker
-   goes. *)
-let plan_of (prog:program) : ML (SMap.t fplan) =
-  let m : SMap.t fplan = SMap.create 20 in
-  prog |> List.iter (fun d ->
-    match d with
-    | DType ({ dt_body = TVariant cs }) ->
-      cs |> List.iter (fun (cn, fs) ->
-        if fs |> List.existsb (fun (_, c) -> TInline? c) then begin
-          let allpos = fs |> List.for_all (fun (f, _) -> positional f) in
-          let next : SMap.t int = SMap.create 1 in
-          let fresh (f:string) (g:string) : ML string =
-            if allpos
-            then begin
-              let i = (match SMap.try_find next "n" with Some i -> i | None -> 0) in
-              SMap.add next "n" (i + 1);
-              "_" ^ string_of_int i
-            end
-            else if g = "" then f else f ^ "_" ^ g in
-          let plan = fs |> List.map (fun (f, c) ->
-            match c with
-            | TInline (TApp (rn, args)) ->
-              (match record_body (with_imports prog) rn with
-               | Some (ps, rc, rfs) ->
-                 if List.length ps <> List.length args then (f, fresh f "", None)
-                 else begin
-                   let sm = List.zip ps args in
-                   let src = rfs |> List.map (fun (g, gt) -> (g, subst_cty sm gt)) in
-                   let dst = src |> List.map (fun (g, gt) -> (fresh f g, gt)) in
-                   (f, f, Some { ex_ty = TApp (rn, args); ex_type = rn; ex_ctor = rc;
-                                 ex_src = src; ex_dst = dst })
-                 end
-               | None -> (f, fresh f "", None))
-            | _ -> (f, fresh f "", None)) in
-          SMap.add m (string_of_name cn) plan
-        end)
-    | _ -> ());
-  m
-
-(* Only [PVar], [PWild] and R's own constructor can be flattened into the outer
-   pattern; anything else at that position takes the field out of the plan,
-   everywhere, before a single node is rewritten. *)
-let blocked_fields (m:SMap.t fplan) (prog:program) : ML (SMap.t bool) =
-  let bad : SMap.t bool = SMap.create 20 in
-  let key (cn:name) (f:string) : ML string = string_of_name cn ^ "#" ^ f in
-  let rec scan_pat (p:pat) : ML unit =
-    (match p with
-     | PCtor (cn, ps) ->
-       (match SMap.try_find m (string_of_name cn) with
-        | Some fs ->
-          if List.length ps <> List.length fs
-          then fs |> List.iter (fun (f, _, _) -> SMap.add bad (key cn f) true)
-          else List.iter2 (fun (p:pat) (f, _, ex) ->
-                 match ex with
-                 | None -> ()
-                 | Some ex ->
-                   let ok = (match p with
-                             | PVar _ -> true
-                             | PWild -> true
-                             | PCtor (c, qs) ->
-                               (match ex.ex_ctor with
-                                | Some rc -> string_of_name c = string_of_name rc
-                                           && List.length qs = List.length ex.ex_src
-                                | None -> false)
-                             | _ -> false) in
-                   if not ok then SMap.add bad (key cn f) true) ps fs
-        | None -> ())
-     | _ -> ());
-    (match p with
-     | PCtor (_, ps) -> List.iter scan_pat ps
-     | PRecord (_, fs) -> fs |> List.iter (fun (_, q) -> scan_pat q)
-     | PTuple ps -> List.iter scan_pat ps
-     | POr ps -> List.iter scan_pat ps
-     | _ -> ()) in
-  let rec go (x:expr) : ML unit =
-    let brs (bs:list branch) : ML unit =
-      bs |> List.iter (fun (p, gd, b) ->
-        scan_pat p; (match gd with None -> () | Some g -> go g); go b) in
-    match x.e with
-    | EMatch (s, bs) -> go s; brs bs
-    | ETry (s, bs) -> go s; brs bs
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> ()
-    | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> go a; go b
-    | EApp (h, es) -> go h; List.iter go es
-    | EFun (_, b) -> go b
-    | EIf (c, a, b) -> go c; go a; go b
-    | ECtor (_, es) | ETuple es | EOp (_, es) -> List.iter go es
-    | ERaise e1 -> go e1
-    | ERecord (_, fs) -> fs |> List.iter (fun (_, e) -> go e)
-    | EProj (e, _, _) | EDiscrim (e, _) | ECast (e, _) -> go e in
-  prog |> List.iter (fun d -> match d with DLet dl -> go dl.dl_body | _ -> ());
-  bad
 
 (* An [EProj] out of a value that is right there.  The rewrites below leave one
    behind wherever a field had to be put back together, and this is what makes
@@ -1478,73 +1288,9 @@ let rec only_projected (v:string) (x:expr) : ML bool =
   | ERecord (_, fs) -> fs |> List.for_all (fun (_, e) -> g e)
   | EDiscrim (e1, _) | ECast (e1, _) -> g e1
 
-(* The names an imported constructor ended up with in the unit that emitted it.
-   This is the pinned answer: whatever plan is re-derived here has to agree
-   with it, field by field. *)
-let imported_ctor_fields (cn:string) : ML (option (list string)) =
-  !imported_types |> List.tryPick (fun (pre, fin, _) ->
-    let mine =
-      match pre.dt_body with
-      | TVariant cs -> cs |> List.existsb (fun (c, _) -> string_of_name c = cn)
-      | _ -> false in
-    if not mine then None else
-    match fin.dt_body with
-    | TVariant cs ->
-      cs |> List.tryPick (fun (c, fs) ->
-        if string_of_name c = cn then Some (fs |> List.map fst) else None)
-    (* [records] turned the constructor into the type itself. *)
-    | TRecord fs -> Some (fs |> List.map fst)
-    | _ -> None)
-
-let inline_fields (prog:program) : ML program =
-  (* Imported types are visible so that a constructor this program *applies*
-     gets the same plan the unit that declared it used.  They are not rewritten
-     -- they are not in [prog] -- and their plans are pinned below rather than
-     trusted. *)
-  let m0 = plan_of (with_imports prog) in
-  if SMap.keys m0 = [] then prog else begin
-  (* Drop the expansions the patterns will not take.  Renaming stays: it was
-     decided per constructor and the declaration follows it either way. *)
-  let bad = blocked_fields m0 prog in
-  (* An imported constructor's plan is settled by its home unit.  Re-deriving
-     it here can disagree in either direction -- this program may have a
-     pattern that blocked nothing there, or lack one that blocked something --
-     so the fields it actually has are what decides, and a local pattern that
-     cannot follow is an error rather than a reason to change the layout. *)
-  SMap.keys m0 |> List.iter (fun k ->
-    match SMap.try_find m0 k, imported_ctor_fields k with
-    | Some fs, Some finals ->
-      let pinned = fs |> List.map (fun (f, f', ex) ->
-        match ex with
-        | None -> (f, f', None)
-        | Some e ->
-          if e.ex_dst |> List.for_all (fun (g, _) -> List.mem g finals)
-          then begin
-            if Some? (SMap.try_find bad (k ^ "#" ^ f)) then
-              E.raise_error0 E.Error_CustardBadUnitInterface [
-                text ("This program matches on " ^ k ^ " in a way that its \
-                      field " ^ f ^ " cannot follow, but the unit that \
-                      compiled it expanded that field into the constructor.");
-                text "Bind the field and read it, rather than matching through it."
-              ];
-            (f, f', Some e)
-          end
-          else (f, f', None)) in
-      SMap.add m0 k pinned
-    | _ -> ());
-  let m : SMap.t fplan = SMap.create 20 in
-  SMap.keys m0 |> List.iter (fun k ->
-    match SMap.try_find m0 k with
-    | None -> ()
-    | Some fs ->
-      (* Already settled above, and not by this program's patterns. *)
-      if Some? (imported_ctor_fields k) then SMap.add m k fs else
-      SMap.add m k (fs |> List.map (fun (f, f', ex) ->
-        match ex with
-        | Some _ ->
-          if None? (SMap.try_find bad (k ^ "#" ^ f)) then (f, f', ex) else (f, f', None)
-        | None -> (f, f', None))));
-  let plan (cn:name) : ML (option fplan) = SMap.try_find m (string_of_name cn) in
+let inline_fields (vd:verdicts) (prog:program) : ML program =
+  if SMap.keys vd.vd_plans = [] then prog else begin
+  let plan (cn:name) : ML (option fplan) = SMap.try_find vd.vd_plans (string_of_name cn) in
 
   let rec go (x:expr) : ML expr =
     match x.e with
@@ -1670,14 +1416,14 @@ let inline_fields (prog:program) : ML program =
        | None -> plain ())
     | _ -> plain () in
 
-  let prog = prog |> List.map (fun d ->
+  prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = go dl.dl_body }
     | DType t ->
       (match t.dt_body with
        | TVariant cs ->
          DType { t with dt_body = TVariant (cs |> List.map (fun (cn, fs) ->
-           match SMap.try_find m (string_of_name cn) with
+           match plan cn with
            | Some pl ->
              if List.length pl <> List.length fs
              then (cn, fs |> List.map (fun (f, c) -> (f, strip_inline c)))
@@ -1688,15 +1434,21 @@ let inline_fields (prog:program) : ML program =
            | None -> (cn, fs |> List.map (fun (f, c) -> (f, strip_inline c))))) }
        | TRecord fs -> DType { t with dt_body = TRecord (fs |> List.map (fun (f, c) -> (f, strip_inline c))) }
        | _ -> d)
-    | d -> d) in
+    | d -> d)
+  end
+
+(* Wherever the rewrite above had to put a value back together, only to have a
+   field of it read straight back out.  Runs at the end of the pipeline rather
+   than as part of [inline_fields], because the projections it feeds on are
+   mostly what [depat] leaves behind. *)
+let unbuild_decls (prog:program) : ML program =
   let infos = ctor_infos (with_imports prog) in
   prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = unbuild infos dl.dl_body }
     | d -> d)
-  end
 
-let run (imports:list (dtype & dtype & bool)) (prog:program) : ML program =
+let run (imports:list dtype) (vd:verdicts) (prog:program) : ML program =
   imported_types := imports;
   let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
@@ -1707,10 +1459,17 @@ let run (imports:list (dtype & dtype & bool)) (prog:program) : ML program =
   let prog = depat_decls prog in
   (* After [depat]: a field of the record being inlined is read with an
      [EProj] only once [depat] has run, and that is what tells the pass a
-     reconstructed value will never actually be built. *)
-  let prog = inline_fields prog in
+     reconstructed value will never actually be built.  Neither this pass nor
+     [records] decides anything any more -- both only apply a verdict the
+     layout analysis already reached (section 5.5) -- so where they sit in the
+     pipeline is a question of code quality alone.
+
+     [inline_fields] before [records]: a plan is expressed in terms of the
+     constructor holding the field, which is exactly what [records] removes. *)
+  let prog = inline_fields vd prog in
+  let prog = unbuild_decls prog in
   let prog = prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
     | d -> d) in
-  records (scc (dce prog))
+  records vd (scc (dce prog))

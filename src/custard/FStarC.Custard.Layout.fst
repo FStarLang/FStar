@@ -490,7 +490,93 @@ let rw_decl (t:tbl) (d:decl) : ML (list decl) =
   | DExternal dx -> [DExternal { dx with dx_ty = resolve t 100 dx.dx_ty }]
   | DExn de -> [DExn { de with de_args = de.de_args |> List.map (resolve t 100) }]
 
-let run (imports:list (name & type_info)) (prog:program) : ML (program & list (name & type_info)) =
+(* -------------------------------------------------------------------- *)
+(* 5.5 Representation: records and inline fields                        *)
+(* -------------------------------------------------------------------- *)
+
+(* Two more verdicts, and the reason they are here rather than in
+   {!FStarC.Custard.Simplify}, where the rewriting that applies them still
+   lives: a type's representation must be a function of the type and of the
+   types it is built out of, and of nothing else.  Anything derived from the
+   program as a whole is a different answer in a different unit, and two units
+   that disagree about a representation while agreeing about a name is a
+   miscompilation no signature check can catch.
+
+   Both used to be whole-program.  [records] refused to convert a type that
+   any surviving pattern matched on, which the record pattern in the IR made
+   unnecessary; [inline_fields] refused a field whose patterns could not follow
+   the expansion, which cannot arise, since [Extract] emits only [PWild],
+   [PVar], [PConst] and [PCtor] and the first three impose nothing. *)
+
+(* A one-constructor type is a record.  Unconditionally: a constructor whose
+   arguments F* did not name gets the positional names [_0], [_1], ..., which
+   are perfectly good field names, and making the conversion unconditional
+   means no [EProj] anywhere is left pointing at a variant. *)
+let record_verdict (dt:dtype) : ML bool =
+  match dt.dt_body with
+  | TVariant [(_, fs)] -> Cons? fs
+  | _ -> false
+
+(* [_0], [_1], ... are the names a constructor's unnamed arguments get.  A
+   constructor made only of those keeps them, renumbered, rather than growing
+   [_0__1]-shaped ones. *)
+let positional (f:string) : ML bool =
+  String.strlen f > 1 && String.substring f 0 1 = "_"
+
+(* R's declaration, when R is a type whose fields can be taken out of it:
+   exactly one constructor (or a record), and at least one field. *)
+let record_body (look:name -> ML (option dtype)) (n:name)
+  : ML (option (list string & option name & list (string & cty))) =
+  match look n with
+  | Some t ->
+    (match t.dt_body with
+     | TRecord fs -> if Cons? fs then Some (t.dt_params, None, fs) else None
+     | TVariant [(cn, fs)] -> if Cons? fs then Some (t.dt_params, Some cn, fs) else None
+     | _ -> None)
+  | None -> None
+
+(* The plan for each of [dt]'s constructors that has at least one marked field.
+   A field whose type turns out not to be a record keeps its place; only the
+   marker goes.
+
+   [ex_ctor] names R's constructor, because the rewriting runs before the
+   record conversion above is applied and so still sees R as a variant. *)
+let ctor_plans (look:name -> ML (option dtype)) (dt:dtype) : ML (list (name & fplan)) =
+  match dt.dt_body with
+  | TVariant cs ->
+    cs |> List.collect (fun (cn, fs) ->
+      if not (fs |> List.existsb (fun (_, c) -> TInline? c)) then [] else begin
+        let allpos = fs |> List.for_all (fun (f, _) -> positional f) in
+        let next : SMap.t int = SMap.create 1 in
+        let fresh (f:string) (g:string) : ML string =
+          if allpos
+          then begin
+            let i = (match SMap.try_find next "n" with Some i -> i | None -> 0) in
+            SMap.add next "n" (i + 1);
+            "_" ^ string_of_int i
+          end
+          else if g = "" then f else f ^ "_" ^ g in
+        let plan = fs |> List.map (fun (f, c) ->
+          match c with
+          | TInline (TApp (rn, args)) ->
+            (match record_body look rn with
+             | Some (ps, rc, rfs) ->
+               if List.length ps <> List.length args then (f, fresh f "", None)
+               else begin
+                 let sm = List.zip ps args in
+                 let src = rfs |> List.map (fun (g, gt) -> (g, subst_cty sm gt)) in
+                 let dst = src |> List.map (fun (g, gt) -> (fresh f g, gt)) in
+                 (f, f, Some { ex_ty = TApp (rn, args); ex_type = rn; ex_ctor = rc;
+                               ex_src = src; ex_dst = dst })
+               end
+             | None -> (f, fresh f "", None))
+          | _ -> (f, fresh f "", None)) in
+        [(cn, plan)]
+      end)
+  | _ -> []
+
+let run (imports:list (dtype & type_info)) (prog:program)
+  : ML (program & list (name & type_info) & verdicts) =
   let t = { types   = SMap.create 100;
             erased  = SMap.create 100;
             layouts = SMap.create 100;
@@ -506,8 +592,8 @@ let run (imports:list (name & type_info)) (prog:program) : ML (program & list (n
      type and constructor up in these same tables, so a use of an imported
      type is rewritten by the upstream unit's decisions instead of being left
      alone or, worse, rewritten by a locally re-derived guess. *)
-  imports |> List.iter (fun (n, ti) ->
-    let k = key n in
+  imports |> List.iter (fun (dt, ti) ->
+    let k = key dt.dt_name in
     SMap.add t.pinned k ();
     SMap.add t.erased k ti.ti_erased;
     SMap.add t.layouts k ti.ti_layout;
@@ -521,6 +607,50 @@ let run (imports:list (name & type_info)) (prog:program) : ML (program & list (n
       FStarC.Format.print2 "  %s : %s\n" k (layout_to_string l))
   end;
   let prog' = prog |> List.collect (rw_decl t) in
+
+  (* The representation verdicts are read off the program as this pass leaves
+     it -- erasure has already deleted the fields it deletes, and a plan must
+     describe the fields that are actually there. *)
+  let final : SMap.t dtype = SMap.create 100 in
+  (* An imported declaration is the one its interface carries, which is the
+     one the backend will print; a local one is what [rw_decl] just produced.
+     Each is what the rewriter that applies the plan will actually see. *)
+  imports |> List.iter (fun (dt, _) -> SMap.add final (key dt.dt_name) dt);
+  prog' |> List.iter (fun d ->
+    match d with
+    | DType dt -> SMap.add final (key dt.dt_name) dt
+    | _ -> ());
+  let look (n:name) : ML (option dtype) = SMap.try_find final (key n) in
+
+  let vd = { vd_records = SMap.create 50; vd_plans = SMap.create 50 } in
+  (* An imported type's verdict is adopted rather than re-derived.  It would
+     come out the same either way -- that is the whole point of computing it
+     here -- but an interface should say what it means, and pinning keeps that
+     true across a future change to the functions above. *)
+  imports |> List.iter (fun (dt, ti) ->
+    (* The declaration an interface carries is the one its unit finally
+       printed, so a type that became a record arrives as [TRecord] and the
+       constructor the verdict is keyed on is only in [ti_ctors]. *)
+    (if ti.ti_record then
+       match dt.dt_body, ti.ti_ctors with
+       | TRecord fs, [cl] -> SMap.add vd.vd_records (key cl.cl_name) (dt.dt_name, fs |> List.map fst)
+       | TVariant [(cn, fs)], _ -> SMap.add vd.vd_records (key cn) (dt.dt_name, fs |> List.map fst)
+       | _ -> ());
+    ti.ti_plans |> List.iter (fun (cn, pl) -> SMap.add vd.vd_plans (key cn) pl));
+  let derived : SMap.t (bool & list (name & fplan)) = SMap.create 50 in
+  prog' |> List.iter (fun d ->
+    match d with
+    | DType dt when None? (SMap.try_find t.pinned (key dt.dt_name)) ->
+      let is_rec = record_verdict dt in
+      let plans = ctor_plans look dt in
+      SMap.add derived (key dt.dt_name) (is_rec, plans);
+      (match dt.dt_body with
+       | TVariant [(cn, fs)] when is_rec ->
+         SMap.add vd.vd_records (key cn) (dt.dt_name, fs |> List.map fst)
+       | _ -> ());
+      plans |> List.iter (fun (cn, pl) -> SMap.add vd.vd_plans (key cn) pl)
+    | _ -> ());
+
   (* The verdicts this run *derived*, which is what an interface exports; a
      pinned one came from somewhere else and is that unit's to export. *)
   let infos =
@@ -528,13 +658,15 @@ let run (imports:list (name & type_info)) (prog:program) : ML (program & list (n
       if Some? (SMap.try_find t.pinned k) then [] else
       match SMap.try_find t.types k, SMap.try_find t.layouts k with
       | Some d, Some l ->
+        let is_rec, plans =
+          match SMap.try_find derived k with
+          | Some v -> v
+          | None -> (false, []) in
         [(d.dt_name,
           { ti_erased = (match SMap.try_find t.erased k with Some b -> b | None -> false);
             ti_layout = l;
             ti_ctors  = ctor_layouts t d;
-            (* Filled in by the driver: this pass runs before [Simplify], and
-               these two record what [Simplify] then did. *)
-            ti_pre    = None;
-            ti_record = false })]
+            ti_record = is_rec;
+            ti_plans  = plans })]
       | _ -> []) in
-  (prog', infos)
+  (prog', infos, vd)

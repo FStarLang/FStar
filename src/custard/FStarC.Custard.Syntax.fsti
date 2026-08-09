@@ -364,6 +364,30 @@ type layout =
   | L_abbrev  of cty                    (** a transparent abbreviation *)
   | L_opaque                            (** abstract or externally realized *)
 
+(** How one inlined field is stored.
+
+    [| Bar of a & b] is how F* source spells a two-argument constructor, but
+    what it denotes is a constructor with *one* argument pointing at a pair, so
+    every [Bar] costs an allocation and an indirection nobody asked for
+    (FStarLang/FStar#4382).  An inline field says instead: keep the inner
+    record's fields in the constructor itself.  [Extract] marks such a field by
+    wrapping its type in [TInline] -- tuples without being asked, anything else
+    on [@@@custard_inline_field] -- and the layout analysis decides what to do
+    with the marker. *)
+noeq
+type expansion = {
+  ex_ty:    cty;                  (** the field's declared type, [TApp (R, _)] *)
+  ex_type:  name;                 (** R *)
+  ex_ctor:  option name;          (** R's constructor, when R is still a variant *)
+  ex_src:   list (string & cty);  (** R's fields, instantiated *)
+  ex_dst:   list (string & cty);  (** what they become in the outer constructor *)
+}
+
+(** A plan for one constructor, in field order: each field's name before and
+    after, and what it expands to.  A field can be renamed without expanding,
+    because expanding its neighbour shifts the positional names along. *)
+type fplan = list (string & string & option expansion)
+
 (** Everything a *downstream* unit has to be told about a type: not just its
     declaration but the verdict reached about it, which the downstream unit
     must adopt rather than re-derive.  A verdict is recorded for every type a
@@ -377,19 +401,25 @@ type type_info = {
       [L_erased] and [L_opaque] do not carry them and the rewriter still needs
       them: an application or a pattern of a collapsed type's constructor has
       to be rewritten just the same. *)
-  ti_pre:    option dtype;
-  (** The declaration as the layout analysis left it -- *before* [Simplify]
-      reshaped it.  A downstream unit's [Simplify] has to reach the same
-      conclusions this one did, and the passes that draw them read the
-      declaration at this point in the pipeline, not at the end of it: at the
-      time [inline_fields] asks whether a field's type is a one-constructor
-      variant, that type is still a variant even if [records] is about to turn
-      it into a record. *)
   ti_record: bool;
-  (** Whether [Simplify.records] turned it into a record.  This one *is* a
-      whole-program decision -- a constructor pattern surviving anywhere
-      disqualifies its type, because the IR has no record pattern to rewrite
-      one to -- so a downstream unit cannot re-derive it and must be told. *)
+  (** Whether the type is represented as a record rather than as a
+      one-constructor variant. *)
+  ti_plans:  list (name & fplan);
+  (** How each of its constructors stores its inlined fields. *)
+}
+
+(** The representation verdicts, keyed on the constructor they are about, for
+    every type the program uses -- the ones it compiled and the ones it linked
+    against alike.  The layout analysis derives them; the passes that apply
+    them look them up here and never decide anything themselves, which is what
+    keeps a representation a function of the type. *)
+noeq
+type verdicts = {
+  vd_records: FStarC.SMap.t (name & list string);
+  (** constructor -> the record type it becomes, and that record's fields in
+      declaration order *)
+  vd_plans:   FStarC.SMap.t fplan;
+  (** constructor -> how its inlined fields are stored *)
 }
 
 (** {1 Helpers} *)

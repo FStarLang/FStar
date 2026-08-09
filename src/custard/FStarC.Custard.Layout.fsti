@@ -48,4 +48,4 @@ val layout_to_string : layout -> ML string
     Returns the rewritten program together with the verdict of every type
     *this* program declares, which is what a `.cui` has to record (section
     12.2): the analysis is global, so a downstream unit cannot re-derive it. *)
-val run : list (name & type_info) -> program -> ML (program & list (name & type_info))
+val run : list (dtype & type_info) -> program -> ML (program & list (name & type_info) & verdicts)

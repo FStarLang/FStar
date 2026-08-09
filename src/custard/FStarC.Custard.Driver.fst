@@ -161,27 +161,17 @@ let check_entrypoints (env:TcEnv.env) (roots:list Ident.lident) : ML unit =
 (* -------------------------------------------------------------------- *)
 
 let imported_type_infos (imports:list (decl & option type_info))
-  : ML (list (name & type_info)) =
+  : ML (list (dtype & type_info)) =
   imports |> List.collect (fun (d, ti) ->
     match d, ti with
-    | DType dt, Some ti -> [(dt.dt_name, ti)]
+    | DType dt, Some ti -> [(dt, ti)]
     | _ -> [])
 
-(* What [Simplify] needs to know about an imported type: the declaration as the
-   *layout analysis* left it, the declaration the interface finally carries,
-   and the record verdict its home unit reached.  A type whose interface predates
-   [ti_pre] contributes nothing, which costs a re-derivation and not
-   correctness -- the export side refuses to export such a type in the first
-   place. *)
-let imported_shapes (imports:list (decl & option type_info))
-  : ML (list (dtype & dtype & bool)) =
-  imports |> List.collect (fun (d, ti) ->
-    match d, ti with
-    | DType fin, Some ti ->
-      (match ti.ti_pre with
-       | Some pre -> [(pre, fin, ti.ti_record)]
-       | None -> [])
-    | _ -> [])
+(* The imported *type* declarations, which is all [Simplify] needs to see of
+   them: their representation is settled and reaches it in the [verdicts]. *)
+let imported_decls (imports:list (decl & option type_info)) : ML (list dtype) =
+  imports |> List.collect (fun (d, _) ->
+    match d with DType dt -> [dt] | _ -> [])
 
 (* What a unit exports.  Everything it emits, so that a downstream unit never
    has to compile any of it again -- including the re-specializations it made
@@ -197,78 +187,17 @@ let imported_shapes (imports:list (decl & option type_info))
    A [DLet]'s body is dropped.  A `.cui` is an interface: what a downstream
    unit needs is the name to call and the signature to call it at.  Keeping the
    body would invite exactly the thing separate compilation is here to prevent. *)
-(* Which types a unit may export.
-
-   [Simplify] reshapes types as well as terms, and a downstream unit has to
-   reach the same conclusions.  Two of the three decisions travel: an imported
-   declaration's pre-[Simplify] shape and its record verdict go in the
-   interface, and [Simplify.run] takes them, so [inline_fields], [depat] and
-   [records] all see what the upstream unit saw.
-
-   [unused_params] is the one that does not.  Dropping a type parameter nothing
-   uses is a fact about the whole program, and an imported type is pessimized
-   rather than pinned (section 12.4 rule 4) -- so a unit that *did* drop a
-   parameter cannot export that type, because a downstream unit would spell it
-   with the parameter still there.  Nor can it export anything whose signature
-   mentions one; those get compiled downstream, which costs duplication and
-   nothing else. *)
-let stable_types (before:list (name & tydef & int)) (prog:program) : ML (SMap.t unit) =
-  let ok = SMap.create 50 in
-  let final = SMap.create 50 in
-  prog |> List.iter (fun d ->
-    match d with
-    | DType t -> SMap.add final (string_of_name t.dt_name) (List.length t.dt_params)
-    | _ -> ());
-  before |> List.iter (fun (n, _, nparams) ->
-    match SMap.try_find final (string_of_name n) with
-    | Some nparams' when nparams = nparams' -> SMap.add ok (string_of_name n) ()
-    | _ -> ());
-  (* Close downwards: a type is only usable across the boundary if every type
-     it is built out of is too. *)
-  let rec settle (fuel:int) : ML unit =
-    if fuel <= 0 then () else
-    let changed = mk_ref false in
-    prog |> List.iter (fun d ->
-      match d with
-      | DType t when Some? (SMap.try_find ok (string_of_name t.dt_name)) ->
-        if type_names_of_decl d |> List.existsb (fun k ->
-             None? (SMap.try_find ok k) && Some? (SMap.try_find final k))
-        then (SMap.remove ok (string_of_name t.dt_name); changed := true)
-      | _ -> ());
-    if !changed then settle (fuel - 1) in
-  settle (List.length prog + 1);
-  ok
-
-let unit_entries (keys:list (string & string)) (stable:SMap.t unit)
-                 (pre:list (string & dtype))
+let unit_entries (keys:list (string & string))
                  (prog:program) (infos:list (name & type_info))
   : ML (list Unit.entry) =
   let key_of (n:name) : ML (option string) =
     keys |> List.tryPick (fun (n', k) ->
       if n' = string_of_name n then Some k else None) in
-  let is_record (n:name) : ML bool =
-    prog |> List.existsb (fun d ->
-      match d with
-      | DType t -> string_of_name t.dt_name = string_of_name n && TRecord? t.dt_body
-      | _ -> false) in
   let info_of (n:name) : ML (option type_info) =
     infos |> List.tryPick (fun (n', ti) ->
-      if string_of_name n' = string_of_name n
-      then Some { ti with
-                  ti_pre = pre |> List.tryPick (fun (k, dt) ->
-                             if k = string_of_name n then Some dt else None);
-                  ti_record = is_record n }
-      else None) in
+      if string_of_name n' = string_of_name n then Some ti else None) in
   prog |> List.collect (fun d ->
     if has_flag (decl_flags d) Inline || Some? (imported_unit d) then [] else
-    (* A declaration whose signature names a type this unit cannot export
-       cannot be exported either: a downstream unit would have no way to spell
-       its argument. *)
-    if type_names_of_decl d |> List.existsb (fun k ->
-         None? (SMap.try_find stable k)
-         && prog |> List.existsb (fun d' -> DType? d' && string_of_name (name_of_decl d') = k))
-    then [] else
-    if DType? d && None? (SMap.try_find stable (string_of_name (name_of_decl d))) then [] else
     let d, ti =
       match d with
       | DLet dl -> DLet { dl with dl_body = unit_expr }, None
@@ -281,8 +210,7 @@ let unit_entries (keys:list (string & string)) (stable:SMap.t unit)
     | None -> []
     | Some k -> [{ Unit.ue_key = k; Unit.ue_decl = d; Unit.ue_type = ti }])
 
-let write_unit_iface (st:Extract.state) (stable:SMap.t unit)
-                     (pre:list (string & dtype))
+let write_unit_iface (st:Extract.state)
                      (prog:program) (infos:list (name & type_info))
   : ML unit =
   match Options.custard_unit () with
@@ -296,7 +224,7 @@ let write_unit_iface (st:Extract.state) (stable:SMap.t unit)
         Unit.uh_options = Unit.layout_options ();
         Unit.uh_digests = Extract.loaded_digests st;
       };
-      Unit.ui_entries = unit_entries (Extract.exported_keys st) stable pre prog infos;
+      Unit.ui_entries = unit_entries (Extract.exported_keys st) prog infos;
     } in
     if Options.custard_dump_cui () then
       Format.print_string (Unit.iface_to_string i);
@@ -345,29 +273,16 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let prog = if Options.custard_monomorphize_types ()
              then Monomorphize.run prog else prog in
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
-  let prog, infos = Layout.run (imported_type_infos imports) prog in
-  (* The shape of every type as the layout analysis left it, so that the
-     interface can tell which ones the passes below went on to change. *)
-  let shapes_before = prog |> List.collect (fun d ->
-    match d with
-    | DType t -> [(t.dt_name, t.dt_body, List.length t.dt_params)]
-    | _ -> []) in
-  (* [Simplify] is about to reshape these, and the interface has to carry the
-     shape it saw rather than the one it left behind: a downstream unit runs
-     the same passes and must be asking the same questions. *)
-  let pre_decls = prog |> List.collect (fun d ->
-    match d with DType t -> [(string_of_name t.dt_name, t)] | _ -> []) in
-  (* Effect-guarded simplification (sections 6 and 7.3). *)
-  let prog = Simplify.run (imported_shapes imports) prog in
-  (* Compared here rather than after [Rename], whose renamings are recorded in
-     the exported declaration itself and so cross the boundary intact. *)
-  let stable = stable_types shapes_before prog in
+  let prog, infos, vd = Layout.run (imported_type_infos imports) prog in
+  (* Effect-guarded simplification (sections 6 and 7.3).  [vd] is the
+     representation the analysis above settled on; nothing below decides one. *)
+  let prog = Simplify.run (imported_decls imports) vd prog in
   (* Last: the passes above invent names, and the whole point is that what a
      reader sees is stable under everything that happened before. *)
   let prog, infos = Rename.run infos prog in
   (* After [Rename], because the names a `.cui` exports are the names the
      generated source actually spells. *)
-  write_unit_iface st stable pre_decls prog infos;
+  write_unit_iface st prog infos;
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   if Options.custard_warn_any () then warn_any prog;

@@ -210,6 +210,7 @@ type constant = ...  // ints (with width), strings, chars, bool, unit
 type pat =
   | PWild | PVar of ident | PConst of constant
   | PCtor of name & list pat
+  | PRecord of name & list (string & pat)
   | PTuple of list pat
   | POr    of list pat
 
@@ -1665,19 +1666,17 @@ when `e` is pure.  That is worth doing on its own — the OCaml backend prints a
 discriminator as a whole `match` — but it also matters for the second half,
 which cannot fire while a discriminator still names the constructor.
 
-**The conversion.**  A one-constructor type with at least one field, and with
-no `PCtor` mentioning it left anywhere, becomes a `TRecord`; its `ECtor`
-becomes an `ERecord`.  The IR has no record *pattern*, which is why the
-surviving-`PCtor` condition is needed: a type that is still matched somewhere
-has to stay a variant.
+**The conversion.**  A one-constructor type with at least one field becomes a
+`TRecord`; its `ECtor` becomes an `ERecord` and its `PCtor` a `PRecord`.  The
+verdict is a function of the declaration alone, and nothing else — see the
+representation principle below.
 
-That condition is also why `depat` cannot simply project everything it can.  A
-type may be matched irrefutably in one place and refutably (a guard, or an
-extra `_` branch) in another; projecting the first while the second keeps the
-type a variant would leave an `EProj` out of a variant, which the OCaml backend
-prints as `e.f` and OCaml rejects.  So the set of blocked constructors is
-computed *before* `depat` runs, counting only the patterns `depat` will not
-consume, and `depat` skips the rest.
+That was not always so.  The IR originally had no record *pattern*, so a type
+that any surviving `PCtor` still matched had to stay a variant; and since
+whether one survives is a fact about the whole program, so was the verdict.
+Adding `PRecord` (which every backend has: OCaml prints `{ f = p; _ }`, karamel
+already had the node) removes the condition, and with it the reason `depat` had
+to skip constructors that some *other* match still mentioned refutably.
 
 The conversion is unconditional in the field names.  F\* names the arguments of
 a non-record constructor `_0`, `_1`, …; those are legal field names in all
@@ -1693,6 +1692,28 @@ dropping unit parameters (OCaml needs `()` to delay an effect), `void` returns,
 not testing the last match arm (OCaml checks matches syntactically), the brace
 and hoisting peepholes, and turning a one-cell stack allocation into a
 variable (which needs `&x`, and so has no ML analogue).
+
+**Where the decision lives.**  Both this verdict and §5.7's plan are computed
+in `Layout`, from the declarations alone, and recorded in the `verdicts` table
+`Layout.run` returns alongside the program.  `Simplify.records` and
+`Simplify.inline_fields` are pure appliers: they look a constructor up and
+rewrite, and decide nothing.  The principle they exist to enforce is
+
+> a type's representation is a function of the type and of the types it is
+> built out of, and of nothing else.
+
+Anything derived from the program as a whole is a different answer in a
+different unit, and two units that disagree about a representation while
+agreeing about a name is a miscompilation no signature check can catch (§12.5).
+The escape hatch of simply not exporting a reshaped type is not available:
+global variables and exceptions need *nominal* identity across units — a
+downstream copy would write to a different global, or throw an exception the
+upstream `try` cannot catch — so every declaration has to be exportable, and
+therefore every verdict has to be reproducible.
+
+Where the appliers sit in the pipeline is then a question of code quality
+alone, and they still run late (§6), because the projections they feed on are
+mostly what `depat` leaves behind.
 
 ### 5.6 Unreachable branches
 
@@ -1769,19 +1790,24 @@ For a field `f` of constructor `C` whose type is a record `R` with fields
   fields.  Chained through a further projection this costs nothing, because the
   pass finishes by reducing every `EProj` out of a value that is right there.
 
-A field is taken out of the plan, everywhere, if *any* pattern in the program
-matches it against something that cannot be flattened — a constant, an `or`
-pattern.  That scan runs before a single node is rewritten, exactly as in §5.5:
-a field that is inlined in the declaration and matched constructor-wise
-somewhere is not a worse program, it is an ill-typed one.
-
 Each of the residual cases is correct but no faster than before, which is what
 makes the pass safe to apply without measuring.
 
-It runs after §5.5, and that ordering is the point: a field of `R` is read with
-an `EProj` only once `depat` has turned the irrefutable match into projections,
-and that is what lets the pass see that a reconstructed value will never
-actually be built.
+The plan is computed in `Layout` and is a function of the declaration and of
+the declaration of the field's type: `Extract` put the `TInline` marker there,
+and the rest is a lookup.  There used to be one whole-program ingredient — a
+field was taken out of the plan everywhere if any pattern in the program
+matched it against something that could not be flattened — but `Extract` only
+ever emits `PWild`, `PVar`, `PConst` and `PCtor`, and at a record-typed
+position `PConst` is impossible while the other three are all handled, so that
+scan was defensive and is gone.
+
+The *rewriting* runs after `depat`, and that ordering is a code-quality
+question: a field of `R` is read with an `EProj` only once `depat` has turned
+the irrefutable match into projections, and that is what lets the rewriter see
+that a reconstructed value will never actually be built.  It runs before
+`records`, because a plan is expressed in terms of the constructor holding the
+field, which is exactly what `records` removes.
 
 Two things that look like they need this and do not.  `| Baz : x:a -> y:b -> t`
 is already a two-field constructor — the `of` syntax is the only one that
@@ -2118,48 +2144,22 @@ Phase 4 passes, in order:
    specification of every data structure it touched, and any error raised while
    doing so (a `Mono` binder in ghost code, say) was a spurious failure about
    code that was never going to be emitted.
-7. **Unused-parameter elimination** (`Simplify.unused_params`).
-   Monomorphization removes the type parameters a declaration is specialized
-   on, but §5.0's uniform compilation deliberately leaves the `Poly` ones
-   behind, and some of those describe nothing about the runtime
-   representation:
+7. **Representation rewriting** (`Simplify.inline_fields` and
+   `Simplify.records`), which apply the §5.5 and §5.7 verdicts and decide
+   nothing; see §5.5's "where the decision lives".
 
-   ```fstar
-   noeq type tagged (a:Type) (ph:Type) = | L : a -> tagged a ph | R : a -> tagged a ph
-   ```
-
-   `ph` is a phantom: no field mentions it, so every instantiation of `tagged`
-   has the same layout.  Carrying it costs nothing in OCaml, where the
-   parameter is only a name, but the direct-to-C backend (M8) has to
-   instantiate what it is given, so a phantom parameter there is a fork in the
-   monomorphization for no reason.  It is also just noise in code that is meant
-   to be read and checked in.
-
-   "Used" is a *least* fixed point over the whole program, because a parameter
-   can be used solely by being passed on: in `type chain (a:Type) (ph:Type) =
-   tagged a ph`, `ph` occurs in the body, but only in a position of `tagged`
-   that is itself about to be dropped.  Starting from "every parameter is
-   unused" and only ever adding uses gets that right, and gets the recursive
-   case right for the same reason — in `type t (a:Type) = ... t a ...`, a
-   parameter that reaches nothing but the recursive occurrence really is
-   unused.  A single pass in program order would settle the acyclic cases,
-   since the program is topologically sorted by then, but a cycle has no such
-   order, so the pass iterates.  The rewrite then drops the parameters and,
-   at every use site, the `TApp` and `EQual` arguments at their positions.
-
-   This is the analogue of
-   `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst`, which the
-   ML pipeline needs to satisfy F#.  Custard's version is both simpler and more
-   aggressive: because the program is whole, every use site is in hand, so
-   there is no need to keep an ABI-compatible record of the eliminated
-   positions for a separately compiled client to agree with, and the same
-   analysis extends from type abbreviations to inductives and to the type
-   parameters of functions.
-
-   The pass runs between two rounds of dead-code elimination.  The first is
-   what makes it precise — a use in a declaration that is about to be deleted
-   is not a use — and the second collects the declarations that the rewrite
-   itself orphaned, a type that was only ever mentioned in a phantom position.
+   There used to be an **unused-parameter elimination** here
+   (`Simplify.unused_params`), the analogue of
+   `src/extraction/FStarC.Extraction.ML.RemoveUnusedParameters.fst`: a
+   least-fixpoint scan over the whole program for type parameters that no
+   field mentions, followed by dropping them and their arguments at every use
+   site.  It is gone.  A phantom parameter costs nothing in OCaml, where the
+   parameter is only a name, and is gone before either C backend sees anything,
+   since monomorphization has run; and being a whole-program decision about a
+   type's *arity* it was exactly the sort of thing §5.5's principle forbids —
+   the one decision left that a separately compiled unit could not reproduce.
+   An author who wants a phantom parameter to cost nothing can wrap it in
+   `erased`, which §5.1 removes for reasons that are local to the type.
 8. **SCC computation and topological sort** of the final decl list
    (`Simplify.scc`, Tarjan).  The extraction loop appends a declaration once it
    has finished translating it, so everything a definition mentions precedes
@@ -3201,8 +3201,9 @@ wants to look.
 One exception to "everything the unit emitted": the `Inline` declarations —
 the projectors and discriminators that are substituted at their uses and never
 emitted at all — are excluded, since exporting one would name a symbol that
-does not exist.  A downstream unit re-derives them, which costs nothing.  So is
-anything whose *arity* `unused_params` changed; see §12.5.
+does not exist.  A downstream unit re-derives them, which costs nothing.
+Everything else is exported unconditionally, and §12.5 explains why that is
+both possible and necessary.
 
 ### 12.3 The specialization key
 
@@ -3259,25 +3260,18 @@ printing option.  That is also exactly the string the interface stores.
    qualify with).  The flag is still what marks them, so that those two places
    can tell.
 
-   `Simplify.run` takes them too, for the three passes that ask questions
-   about a *type declaration* rather than about a term: `depat`'s constructor
-   arities, `records`' single-constructor test, and `inline_fields`' inner
-   record lookup.  All three would otherwise silently answer "not a type I
-   know" and reshape a downstream use of an imported type differently from the
-   way its home unit shaped the declaration.
+   `Simplify.run` takes the imported declarations too, for `depat`, which
+   needs a constructor's arity, and the `verdicts` table, so that a downstream
+   use of an imported type is rewritten the way its home unit shaped the
+   declaration rather than left alone.
 3. **`Simplify.scc`** (`Simplify.fst:939`) treats an imported declaration as a
    leaf.  Units are acyclic by construction — a unit is whatever was reachable
    and not already in a linked interface — so a recursive group cannot span a
    boundary; the pass simply needs to know that it must not try.
-4. **`Simplify.unused_params`** pessimizes rather than specializes: a phantom
-   parameter that an imported signature mentions stays.  This needs no code —
-   the pass only rewrites applications of declarations it *has*, so an imported
-   type's parameters survive for free.  Phantom parameters are rare enough that
-   uniform treatment costs nothing worth measuring.
-5. **`Rename`** uses the recorded name verbatim for an imported declaration,
+4. **`Rename`** uses the recorded name verbatim for an imported declaration,
    and treats every imported name as taken so that a local definition cannot
    shadow one.
-6. **`Driver`** writes the `.cui` after `Rename`, which is the only point at
+5. **`Driver`** writes the `.cui` after `Rename`, which is the only point at
    which both the layout verdicts and the final names exist.  `Layout.run` and
    `Rename.run` therefore both return the verdicts along with the program —
    `Rename` because it renames record fields, which a verdict names.
@@ -3304,47 +3298,40 @@ rewritten — a constructor of a collapsed type collapses at a downstream call
 site too — and the rewriter finds the rule in the same table it would have
 found a locally derived one in.
 
-`Simplify` reshapes types as well, and its decisions are frozen the same way,
-though it took a second mechanism to do it.  Three passes change what a type
-looks like:
+The claim holds for a *representation* verdict — §5.5's record conversion and
+§5.7's inline-field plan — for a different and better reason: those are no
+longer whole-program decisions at all.  Both are computed in `Layout`, from the
+declarations alone, so a downstream unit that asked would get the same answer.
+They are still recorded in the interface (`ti_record`, `ti_plans`) and adopted
+rather than re-derived, because an interface should say what it means and
+because pinning keeps the claim true across a future change to the functions
+that derive them; but nothing depends on the recording being there.
 
-- **`records`** turns a single-constructor variant into a record.  This one
-  really is a function of the whole program: it refuses to convert a type that
-  any surviving pattern still matches on, because the IR has no record pattern
-  to rewrite such a match to.  So the verdict is *recorded* (`ti_record`) and
-  adopted, never re-derived — note the asymmetry, an imported type its home
-  unit left as a variant stays one even if nothing downstream matches on it.
-- **`inline_fields`** expands a field marked for inlining into the constructor
-  that holds it.  Its *plan* is declaration-local — it reads the `TInline`
-  markers in the constructor's own declaration and looks up the inner type —
-  so seeing the imported declarations is almost enough.  Almost, because a
-  local pattern can still block an expansion the upstream unit performed.  The
-  fields the imported constructor actually ended up with therefore decide, and
-  a local pattern that cannot follow is an error.
-- **`unused_params`** drops a parameter nothing uses, and needs nothing: see
-  §12.4 rule 4.
+Getting to that point took three changes, and the reasoning behind each is
+worth keeping.
 
-Two shapes of an imported type are needed to do this, not one.  The questions
-`Simplify` asks are about the declaration as it stood *before* `Simplify` ran —
-upstream runs `inline_fields` before `records`, so when `record_body` asks
-about a type it is still a variant — while the answers that must not be
-contradicted are visible only in the final declaration.  So the interface
-carries both: `ti_pre` is the post-`Layout` snapshot, and `ue_decl` is what the
-unit emitted.
+- **`records`** used to refuse to convert a type that any surviving pattern
+  still matched on — a fact about the program — because the IR had no record
+  pattern to rewrite such a match to.  Adding `PRecord` removes the condition
+  entirely, and the verdict becomes "one constructor, at least one field".
+- **`inline_fields`**' plan was already declaration-local; its one
+  whole-program ingredient was a scan for patterns that could not follow an
+  expansion, and that scan turned out to be unreachable (§5.7).
+- **`unused_params`** could not be fixed this way, only removed, which is what
+  happened (§6).
 
-That leaves `unused_params` as the one decision still unpinned, and the
-conservative rule now applies only to it: **a type whose arity `unused_params`
-changed is not exported, and neither is anything whose signature mentions
-one.**  A downstream unit compiles those for itself, which costs duplication
-and nothing else.  `Driver.stable_types` computes it, closing downwards — a
-type is usable across the boundary only if every type it is built out of is
-too.
+What forced the issue was that the previous answer — a type whose shape the
+passes changed is simply not exported, and a downstream unit compiles it for
+itself — is not available.  Duplicating a *type* is harmless; duplicating the
+declarations that mention it is not, because a global variable and an
+exception both have nominal identity.  A downstream copy of a `let mutable`
+would be a second cell, written by one unit and read by the other, and a
+downstream copy of an exception would not be caught by the upstream `try` that
+names it.  So every declaration has to be exportable, and therefore every
+verdict a unit reaches about a type has to be one another unit would reach too.
 
-The two cases that cannot be pinned raise
-`Error_CustardBadUnitInterface` rather than miscompiling: a downstream pattern
-that matches on an imported constructor its home unit turned into a record, and
-a downstream pattern that matches through a field its home unit inlined.  Both
-want a record pattern in the IR, which is the real fix.
+That is the whole content of the principle in §5.5, and with it there is no
+`stable_types` filter and no unpinnable case left to diagnose.
 
 ### 12.6 What separate compilation does not do
 
@@ -3551,7 +3538,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M6c | Bundled combinators (§3.9): weak-HNF substitution (§3.7), over-applied inlining and iota (§6 pass 5) | Done. `tests/custard/Combinators.fst`, extracted, compiled and run |
 | M6d | Mutual recursion (§6 pass 8): `Simplify.scc` and `and`-grouping in the OCaml backend | Done. `tests/custard/Mutual.fst` |
 | M6e | ANF (§6 pass 1): `Simplify.anf`, plus effect precision for externals (§7.3) | Done. `tests/custard/Anf.fst` |
-| M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done. `tests/custard/Phantom.fst` |
+| M6f | Unused-parameter elimination (§6 pass 7): `Simplify.unused_params` | Done, then **removed** by M10f: the optimization was a whole-program decision about a type's arity, which §5.5's principle forbids, and it bought nothing (`erased` covers the case).  `tests/custard/Phantom.fst` now asserts that a phantom parameter survives uniformly |
 | M6g | Deleting unit-shaped proof binders (§3.1, §5.1): `Mono.keep_thunk` | Done. `tests/custard/Implicits.fst` covers both halves of the guard |
 | M6h | `--custard_warn_any` (§5.9); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
 | M6i | Short-circuiting `&&`/`\|\|` (§6 pass 1): infix emission, bitwise guard | Done. `tests/custard/ShortCircuit.fst`, and the C side in `KrmlBasic.fst` |
@@ -3574,6 +3561,6 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M10a | The unit interface: `--custard_unit`, `--custard_link`, the `.cui` format, `Driver` emission (§12.2) | Done. `FStarC.Custard.Unit`, serialized with the same `Util.save_value_to_file` that stores a `.checked` file -- the IR is plain first-order data, and a hand-written printer and parser would be several hundred lines to keep in step with an IR still in flux for no benefit a version check does not already give.  `--custard_dump_cui` covers the case where a human wants to look.  The header records the backend and the layout-affecting options and a mismatch is an error, not a warning: two units built with different `--custard_monomorphize_types` settings lay their types out differently and the interface has no way to say so |
 | M10b | `request` interception, the `Imported` flag and the pass guards (§12.4) | Done. `Extract.import`, a dozen lines at the one choke point: a request whose key a linked unit exports is answered by a reference, its body is never looked at, and the requests that body would have made are never made either.  The layout freeze is `Layout.run`'s `imports` argument, which *seeds* the erasure, layout and constructor tables and marks the seeds pinned, rather than skipping imported declarations -- uses of an imported type still have to be rewritten, by the upstream unit's decisions.  The `Simplify`-stage decisions are frozen separately: see M10f |
 | M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | Done for OCaml.  A unit compiles to a module named after it and every reference to an import is qualified explicitly rather than brought into scope with `open`: §12.6 expects two sibling units to re-specialize the same upstream definition, and an `open` would make that clash silent and the choice positional.  An imported *value* needed no new machinery at all -- it is exactly an external whose target happens to be another generated module, so `PrintOCaml`'s existing `externals` table carries it.  Types, constructors and record fields needed a parallel table.  `--custard_backend C` and `Krml` reject `--custard_unit`/`--custard_link`: they need a header and a linker story they do not have yet |
-| M10f | Freeze the `Simplify`-stage type decisions the way the layout verdicts are frozen | Done, for two of the three.  `Simplify.run` takes the imported declarations, so `depat`, `records` and `inline_fields` see what the upstream unit saw; `records`' verdict is recorded in the interface (`ti_record`) and adopted rather than re-derived, since it is the one decision here that really is a function of the whole program; and `inline_fields`' re-derived plan is checked, field by field, against the fields the imported constructor actually has.  Two shapes travel, not one -- `ti_pre` is the declaration as `Layout` left it, which is what the passes ask about, while `ue_decl` is what the unit emitted, which is what they must not contradict.  `unused_params` stays unpinned and stays conservative, and `Driver.stable_types` shrank to just that.  The two unpinnable patterns -- a match on an imported constructor turned into a record, or through a field that was inlined -- are diagnosed, not miscompiled; both want a record pattern in the IR: `Simplify.run`, `Simplify.imported_ctor_fields`, `Driver.imported_shapes` |
+| M10f | Make every type-representation decision a function of the type, so that every declaration is exportable | Done.  The `records` and `inline_fields` *decisions* moved into `Layout` (§5.5, §5.7) and reach `Simplify` as a `verdicts` table; the two passes became appliers that decide nothing.  What made this possible: a new `PRecord` in the IR (every backend has one), which removes `records`' surviving-pattern condition; the observation that `inline_fields`' blocked-field scan was unreachable, since `Extract` only ever emits `PWild`/`PVar`/`PConst`/`PCtor`; and deleting `unused_params`.  What made it necessary: dropping a reshaped type from the interface is not an escape hatch, because global variables and exceptions have nominal identity across units (§12.5).  `Driver.stable_types`, `imported_shapes` and `ti_pre` are gone, and so is `Error_CustardBadUnitInterface`'s reason to fire: `Syntax.verdicts`, `Layout.record_verdict`, `Layout.ctor_plans`, `Simplify.records`, `Simplify.inline_fields`; `tests/custard/SepLib.fst` |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

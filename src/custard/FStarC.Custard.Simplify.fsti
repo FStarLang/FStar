@@ -35,20 +35,18 @@ val anf : program -> ML program
 
 (** Drop unused pure let-bindings, turn unused impure ones into sequencing,
     and contract [let x = e in x] to [e]. *)
-(** [run imports prog].  [imports] are the types this program uses but did not
-    compile, each as the layout analysis left it (see [ti_pre]) together with
-    the verdict its home unit reached about it.
+(** [run imports vd prog].
 
-    They are not part of [prog] and are never emitted; they are here because
-    two of the passes below decide something about a type by looking at *other*
-    types' declarations, and would otherwise silently reach a different answer
-    from the unit that actually compiled it:
+    [vd] is the representation verdict the layout analysis reached for every
+    type this program uses -- which of them are records, and how each
+    constructor stores its inlined fields (section 5.5).  The two passes that
+    apply it are the first ones to run, and they *only* apply it: a type's
+    representation is a function of the type and nothing else, so nothing here
+    is allowed to decide one.  Everything below them therefore sees the
+    representation the backend will print.
 
-      - [inline_fields] asks whether the type of a marked field is a
-        one-constructor variant, and expands the constructor if so;
-      - [depat] and [records] ask how many constructors a type has.
-
-    [unused_params] needs no such help: it only rewrites applications of
-    declarations it has, so an imported type's parameters are pessimized for
-    free, which is what section 12.4 asks for. *)
-val run : list (dtype & dtype & bool) -> program -> ML program
+    [imports] are the types this program links against rather than compiles.
+    Their representation is settled and arrives in [vd]; they are here because
+    the passes that ask how many constructors a type has, or what its fields
+    are called, still have to be able to see them. *)
+val run : list dtype -> verdicts -> program -> ML program
