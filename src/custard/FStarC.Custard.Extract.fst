@@ -51,6 +51,7 @@ module UF     = FStarC.Syntax.Unionfind
 module TcUtil = FStarC.TypeChecker.Util
 module Range = FStarC.Range
 
+
 (* -------------------------------------------------------------------- *)
 (* Specialization keys                                                  *)
 (* -------------------------------------------------------------------- *)
@@ -1302,6 +1303,17 @@ and callee_sig (st:state) (key:string) (tyargs:list cty) : ML cty =
       | [b] -> TArrow (b.b_ty, d.dl_eff, d.dl_ret)
       | b :: bs -> TArrow (b.b_ty, E_Pure, build bs) in
     subst_cty (zip d.dl_typars tyargs) (build d.dl_binders)
+  | Some (DExternal d) ->
+    (* A type parameter the call site did not supply -- the same shortfall
+       {!external_ty} handles for an unspecialized [Mono] binder, seen from
+       the other side -- becomes [any] rather than escaping as a free type
+       variable, which no backend can print. *)
+    let rec zipx (ps:list string) (ts:list cty) : list (string & cty) =
+      match ps, ts with
+      | p :: ps, t :: ts -> (p, t) :: zipx ps ts
+      | p :: ps, [] -> (p, TAny) :: zipx ps []
+      | [], _ -> [] in
+    subst_cty (zipx d.dx_typars tyargs) d.dx_ty
   | _ -> TAny
 
 (* Section 3.2: the two ways a call site can fail to be specializable.
@@ -1614,10 +1626,8 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     (* Section 8.1, kind 4: the F* "definition" is a specification (often
        literally [admit ()]); the real one lives in a hand-written .ml or .c
        file, and all we owe the backend is the type. *)
-    let ty = match TcEnv.try_lookup_lid (tcenv st) l with
-             | Some ((_, ty), _) -> ty_of_typ st ty
-             | None -> TAny in
-    DExternal { dx_name = nm; dx_ty = ty;
+    let typars, ty = external_ty st l margs in
+    DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                 dx_target = x.Builtins.x_name; dx_header = x.Builtins.x_header;
                 dx_flags = [] }
   | _ ->
@@ -1628,15 +1638,31 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     custard_error st E.Error_CustardEntryNotFound [
       text ("Custard cannot find a definition for " ^ Ident.string_of_lid l ^ ".")
     ]
-  | Some se when is_realized && Sig_let? se.sigel
-              && Builtins.is_value_realized_module (Ident.ns_of_lid l |> List.map Ident.string_of_id) ->
-    (* Section 8.2: the realization defines this value as well as the types it
-       is written against, so compiling the F* body would describe a
-       representation the target does not have. *)
-    let ty = match TcEnv.try_lookup_lid (tcenv st) l with
-             | Some ((_, ty), _) -> ty_of_typ st ty
-             | None -> TAny in
-    DExternal { dx_name = nm; dx_ty = ty; dx_target = None;
+  | Some se when is_realized && Sig_let? se.sigel && not (is_inlinable se)
+              && not (is_inline_for_extraction st se)
+              && not (Builtins.is_type_only_realized_module
+                        (Ident.ns_of_lid l |> List.map Ident.string_of_id)) ->
+    (* Section 8.2: a realization replaces the F* module, values included.
+       The F* definition is a model -- often written for proof rather than for
+       execution, and free to describe a representation the realization does
+       not use -- so compiling it would be picking silently between two
+       implementations of the same name.
+
+       Three kinds of declaration are not models, and stay compiled:
+
+       - a projector or discriminator, which is derived from the type
+         declaration Custard already has, and which section 5's inlining turns
+         into the one field read it is;
+       - anything [inline_for_extraction], which in a realized module means
+         precisely that the realization does *not* define it -- that is what
+         [FStarC.PSMap]'s own comment says about its [psmap_*] aliases -- so
+         an external would be an unresolved symbol at link time;
+       - a type abbreviation, which F* also represents as a [Sig_let]: it is
+         a type declaration, and there is no such thing as an external one.
+         A realized module's genuine types are handled by [with_realized]
+         below. *)
+    let typars, ty = external_ty st l margs in
+    DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty; dx_target = None;
                 dx_header = None; dx_flags = [] }
   | Some se ->
     let d = extract_sigelt st l nm margs n_holes se in
@@ -1670,6 +1696,21 @@ and fixup_extract_as (se:sigelt) : ML sigelt =
 (* The projectors and discriminators F* derives for an inductive are one field
    read or one tag test each; leaving them as calls would make the output
    unreadable and, in C, slow. *)
+(* [inline_for_extraction] in a realized module means the realization does not
+   define the symbol and expects to be named through what it stands for.  A
+   type abbreviation counts as one whether or not it says so: F* represents it
+   as a [Sig_let] whose result is a [Type], and a type is not a value. *)
+and is_inline_for_extraction (st:state) (se:sigelt) : ML bool =
+  se.sigquals |> List.existsb (fun q -> q = S.Inline_for_extraction)
+  || (match se.sigel with
+      | Sig_let {lbs=(_, [lb])} ->
+        let _, c = U.arrow_formals_comp lb.lbtyp in
+        (* Through {!Mono.is_type_binder}, because the result is written
+           [eqtype] as often as [Type] and an abbreviation has to be unfolded
+           before it can be recognised. *)
+        is_type_binder (tcenv st) (S.mk_binder (S.new_bv None (U.comp_result c)))
+      | _ -> false)
+
 and is_inlinable (se:sigelt) : ML bool =
   se.sigquals |> List.existsb (fun q ->
     match q with
@@ -1700,6 +1741,65 @@ and with_realized (d:decl) : ML decl =
   | DType t -> DType { t with dt_flags = Realized :: t.dt_flags }
   | d -> d
 
+(* The type an external is *used* at.  An external has no body to specialize,
+   but its declared type is still polymorphic, and taking it at face value
+   would type every call to [FStar.Pervasives.Native.fst] as returning [any] --
+   which is how a hand-written realization written polymorphically, as they all
+   are, would otherwise poison every program that touches it.
+
+   Nothing about the target changes: OCaml's [fst] really is polymorphic, so
+   naming its result type at the instantiation the call site asked for is
+   describing the target more precisely, not coercing it.  So the [Mono]
+   arguments are substituted into the declared type and their binders dropped,
+   exactly as [specialize] does for a definition; the [Poly] binders stay, and
+   erasure handles them as usual. *)
+and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
+  : ML (list string & cty) =
+  match TcEnv.try_lookup_lid (tcenv st) l with
+  | None -> ([], TAny)
+  | Some ((_, ty), _) ->
+    let cs = binder_classes st l in
+    let bs, c = U.arrow_formals_comp ty in
+    (* A [Mono] binder the call site did not supply is a call that could not be
+       specialized; its type variable is not a parameter the caller will
+       instantiate, so it becomes [any] here just as it did before, rather
+       than escaping as a free variable. *)
+    let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
+               (keep:binders) (anys:list string)
+      : ML (binders & list subst_elt & list string) =
+      match bs with
+      | [] -> (List.rev keep, subst, anys)
+      | b :: bs' ->
+        let cs' = match cs with [] -> [] | _ :: cs' -> cs' in
+        let cls = match cs with [] -> Poly | c :: _ -> c in
+        let sort = SS.subst subst b.binder_bv.sort in
+        let b' = { b with binder_bv = { b.binder_bv with sort = sort } } in
+        (match cls, margs |> List.tryFind (fun (j, _) -> j = i) with
+         | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys
+         | Mono, None when is_type_binder (tcenv st) b ->
+           go (i + 1) bs' cs' subst (b' :: keep) (name_of_bv b.binder_bv :: anys)
+         | _ -> go (i + 1) bs' cs' subst (b' :: keep) anys)
+    in
+    let keep, subst, anys = go 0 bs cs [] [] [] in
+    let c = SS.subst_comp subst c in
+    let typars = keep |> List.collect (fun b ->
+                   let n = name_of_bv b.binder_bv in
+                   if is_type_binder (tcenv st) b && not (List.mem n anys) then [n] else []) in
+    (* Built from [keep] rather than by handing [U.arrow keep c] to
+       {!ty_of_typ}: rebuilding the arrow closes its binders, and reopening
+       them names them afresh, so the [TVar]s in the result would no longer be
+       the ones [typars] lists and a call site's instantiation would miss
+       them. *)
+    let res = ty_of_typ st (Effects.result_typ (tcenv st) c) in
+    let e = eff_of_comp st c in
+    let vs = drop_flagged (Mono.erased_binders (tcenv st) (U.arrow keep c)) keep in
+    let rec build (bs:binders) : ML cty =
+      match bs with
+      | [] -> res
+      | [b] -> TArrow (ty_of_typ st b.binder_bv.sort, e, res)
+      | b :: bs -> TArrow (ty_of_typ st b.binder_bv.sort, E_Pure, build bs) in
+    (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs))
+
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                    (n_holes:int) (se:sigelt)
   : ML decl =
@@ -1716,7 +1816,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
              if is_erasable st se || is_prop_sig st lb.lbtyp
              then with_erased_flag d else d)
        else extract_letbinding st l nm lb is_rec margs n_holes
-     | None -> DExternal { dx_name = nm; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] })
+     | None -> DExternal { dx_name = nm; dx_typars = []; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] })
 
   | Sig_declare_typ {t} ->
     (* An [assume val], or a type whose definition is not available: an
@@ -1734,7 +1834,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
       DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
               dt_flags = (if is_erasable st se || is_prop_sig st t
                           then [Erased] else []) }
-    else DExternal { dx_name = nm; dx_ty = ty_of_typ st t; dx_target = None; dx_header = None; dx_flags = [] }
+    else DExternal { dx_name = nm; dx_typars = []; dx_ty = ty_of_typ st t; dx_target = None; dx_header = None; dx_flags = [] }
 
   | Sig_inductive_typ {params} ->
     let d = extract_inductive st l nm params in
@@ -1744,7 +1844,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
     (* Reached through a constructor application or pattern: what we actually
        want is the type it belongs to, which the layout analysis (M3) will
        need.  For now record it as external so the name exists. *)
-    DExternal { dx_name = nm; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] }
+    DExternal { dx_name = nm; dx_typars = []; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] }
 
   | Sig_bundle {ses} ->
     (match ses |> List.tryFind (fun se ->
@@ -1755,7 +1855,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
      | None -> DType { dt_name = nm; dt_params = []; dt_body = TAbstract; dt_flags = [] })
 
   | _ ->
-    DExternal { dx_name = nm; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] }
+    DExternal { dx_name = nm; dx_typars = []; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] }
 
 (* Section 5.1: a type declared [erasable] has no runtime representation at any
    instantiation, which is what makes it safe to erase uniformly (section

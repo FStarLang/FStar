@@ -308,6 +308,12 @@ type dlet = {
 
 type dexternal = {
   dx_name:  name;
+  dx_typars: list string;
+  (** The type parameters [dx_ty] is abstract in, as [dl_typars] is for a
+      compiled definition.  An external is not printed as a declaration, but a
+      call site still has to instantiate its signature: a realization written
+      polymorphically -- which they all are -- would otherwise make every
+      result [any]. *)
   dx_ty:    cty;
   dx_target: option string;
   (** The symbol's name in the target language, when it is not the one derived

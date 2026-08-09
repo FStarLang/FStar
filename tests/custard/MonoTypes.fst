@@ -15,7 +15,6 @@
 module MonoTypes
 
 open FStar.All
-open FStar.List.Tot
 
 type both a = { fst : a; snd : a }
 
@@ -34,10 +33,18 @@ let rec size (#a:Type) (t:tree a) : nat =
   | Leaf -> 0
   | Node (l, _, r) -> 1 + size l + size r
 
+(* Written out rather than calling FStar.List.Tot.Base.append, whose OCaml
+   realization is polymorphic and would therefore freeze 'list' (section
+   5.0), just like FStar.String.concat below. *)
+let rec append (#a:Type) (xs : list a) (ys : list a) : list a =
+  match xs with
+  | [] -> ys
+  | x :: rest -> x :: append rest ys
+
 let rec flatten (#a:Type) (t:tree a) : list a =
   match t with
   | Leaf -> []
-  | Node (l, x, r) -> flatten l @ (x :: flatten r)
+  | Node (l, x, r) -> append (flatten l) (x :: flatten r)
 
 let leaves (#a:Type) (x:a) (y:a) : tree a =
   Node (Node (Leaf, x, Leaf), y, Leaf)
@@ -46,10 +53,15 @@ let leaves (#a:Type) (x:a) (y:a) : tree a =
    has a name. *)
 let nested : list (list int) = [[1; 2]; [3]]
 
+let rec sum_one (xs : list int) : int =
+  match xs with
+  | [] -> 0
+  | x :: rest -> x + sum_one rest
+
 let rec sum_all (xss : list (list int)) : int =
   match xss with
   | [] -> 0
-  | xs :: rest -> fold_left (fun a b -> a + b) 0 xs + sum_all rest
+  | xs :: rest -> sum_one xs + sum_all rest
 
 (* 'pair_of_ints' is an abbreviation, so this must reuse the declaration that
    'mk 1 2' below asks for rather than making a second one. *)

@@ -608,22 +608,34 @@ let realized_modules : list (list string) = [
 let is_realized_module (ns : list string) : ML bool =
   realized_modules |> List.existsb (fun m -> m = ns)
 
-(* Realizing a module's *types* does not realize its values: an F* body that
-   only computes stays compiled, which is what lets [FStar.List.Tot.Base.map]
-   be monomorphized rather than reached through the realization's polymorphic
-   one.  A body that *inspects* a realized type is a different matter, because
-   the realization is free to represent it however it likes and the F* source
-   describes a representation that no longer exists.
+(* A realization *replaces* the F* module, values included: where there is a
+   hand-written [.ml] the F* definitions are a model, and a model that
+   disagrees with the realization is exactly the sort of thing extraction
+   must not silently pick between.  [FStar.Dyn] is the case that makes it
+   concrete -- [dyn] is [unit -> Dv value_type_bundle] in F* and [Obj.t] in
+   [FStar_Dyn.ml], so [undyn]'s body forces a thunk that is not one -- but the
+   rule is not about that one module: if a realization does not implement the
+   whole interface, that is a bug in the realization, and the OCaml linker
+   says so.
 
-   [FStar.Dyn] is that: [dyn] is [unit -> Dv value_type_bundle] in F* and
-   [Obj.t] in [FStar_Dyn.ml], so [undyn]'s body forces a thunk that is not
-   one.  So the values of these modules come from the realization too. *)
-let value_realized_modules : list (list string) = [
-  ["FStar"; "Dyn"];
+   The exceptions are the modules whose realization defines no representation
+   of its own, so that there is nothing for it to replace.  [FStar.Pervasives]
+   has no hand-written file at all and is listed above only so that the
+   [either] and [dtuple] types the realizations name in their signatures are
+   pinned.  [FStar.Pervasives.Native] does have one, but it is transparent --
+   [type ('a,'b) tuple2 = 'a * 'b], and every value a projection out of it --
+   and these are types Custard represents natively, so its [fst] and [snd] are
+   ordinary F* code over a representation both sides already agree on.
+   Compiling them is also what keeps [tuple2] monomorphizable: an external's
+   signature freezes the types in it (section 5.0), and a frozen [tuple2] has
+   no C representation at all. *)
+let type_only_realized_modules : list (list string) = [
+  ["FStar"; "Pervasives"];
+  ["FStar"; "Pervasives"; "Native"];
 ]
 
-let is_value_realized_module (ns : list string) : ML bool =
-  value_realized_modules |> List.existsb (fun m -> m = ns)
+let is_type_only_realized_module (ns : list string) : ML bool =
+  type_only_realized_modules |> List.existsb (fun m -> m = ns)
 
 (* The hardcoded rules: the registry populated by {!register_rule}, then the
    families matched by the shape of the name. *)

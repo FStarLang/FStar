@@ -2938,9 +2938,57 @@ next to the other rules is the same information in one place.  It is the set of
 module names for which `src/ml` or `ulib/ml` holds a file of the same name,
 plus `FStar.Pervasives`, which is extracted rather than hand-written but whose
 `either` and `dtuple` types the realizations use in their own signatures.
-Listing a module that declares no type is harmless: the rule has no effect on
-values, which are compiled from their F\* definitions as before, or emitted as
-externals when the module only declares them.
+
+**A realization replaces the module, values included.**  Where there is a
+hand-written `.ml`, the F\* definitions in the module are a *model*: they are
+written to be proved about, they are free to describe a representation the
+realization does not use, and where the two disagree the realization is the
+one that runs.  Compiling them would be picking silently between two
+implementations of the same name.  So a `Sig_let` in a realized module becomes
+a `DExternal` naming the realization, and an incomplete realization is a
+link error against a realization bug, rather than a program that quietly runs
+the model.
+
+`FStar.Dyn` is what makes the disagreement concrete: `dyn` is
+`unit -> Dv value_type_bundle` in F\* and `Obj.t` in `FStar_Dyn.ml`, so the
+compiled `undyn` forces a thunk that is not one.  But the rule is not about
+that module — it is what "the `.ml` *is* the module" means, applied to values.
+
+Three kinds of declaration are not models, and stay compiled:
+
+- a **projector or discriminator**, which is derived from the type declaration
+  Custard already has and which §5's inlining turns into the one field read it
+  is;
+- anything **`inline_for_extraction`**, which in a realized module means
+  precisely that the realization does *not* define it — that is what
+  `FStarC.PSMap`'s own comment says about its `psmap_*` aliases — so an
+  external would be an unresolved symbol;
+- a **type abbreviation**, which F\* also represents as a `Sig_let`.  There is
+  no such thing as an external type declaration; a realized module's genuine
+  types are handled by the `Realized` flag above.
+
+Two modules are listed for their types alone,
+`Builtins.type_only_realized_modules`, because their "realization" defines no
+representation of its own and so has nothing to replace.  `FStar.Pervasives`
+has no hand-written file at all.  `FStar.Pervasives.Native` does, but it is
+transparent — `type ('a,'b) tuple2 = 'a * 'b`, and every value a projection out
+of it — over types Custard represents natively, so its `fst` and `snd` are
+ordinary F\* code over a representation both sides already agree on.
+Compiling them is also what keeps `tuple2` monomorphizable: an external's
+signature freezes the types in it (§5.0), and a frozen `tuple2` has no C
+representation at all.
+
+**An external is instantiated at its call site.**  A realization is written
+polymorphically — `let fst = Stdlib.fst` — and taking its declared type at face
+value would type every call as returning `any`, which is how one polymorphic
+realization poisons every program that touches it.  So `DExternal` carries a
+`dx_typars` list beside its type, exactly as a compiled definition carries
+`dl_typars`, and §3.2's specialization substitutes the call site's type
+arguments into it.  Nothing about the target changes: OCaml's `fst` really is
+polymorphic, so naming its result at the instantiation the call site asked for
+describes the target more precisely rather than coercing it.  A type parameter
+the call site does not supply — an unspecialized `Mono` binder — becomes `any`,
+which is what it was before.
 
 `FStar.Pervasives.Native.tupleN` is the one realized type whose OCaml form is
 *syntax* rather than a name.  The type needs no help — the realization defines
@@ -3523,11 +3571,11 @@ against `src/**/*.fst` turns up, in rough order of size:
    the compiler and wrong for anything targeting C.
 3. ~~**The hand-written realizations.**~~  Done, as the per-module convention
    §8.2 asked for: `Rule_realized` and the list of realized modules in
-   `Builtins`.  A type declared in one of the fifty-odd modules that `src/ml`
-   or `ulib/ml` realizes is no longer compiled; it is referred to, under the
-   realization's own name.  `FStar.Pervasives.Native`'s tuples and `option`
-   are part of that, which is what makes the output callable from the
-   realizations at all.
+   `Builtins`.  Nothing declared in one of the fifty-odd modules that `src/ml`
+   or `ulib/ml` realizes is compiled — neither its types nor, since M10j, its
+   values; each is referred to under the realization's own name.
+   `FStar.Pervasives.Native`'s tuples and `option` are part of that, which is
+   what makes the output callable from the realizations at all.
 
    Getting there was a bug hunt rather than a feature; each of these was found
    by advancing the OCaml build of the extracted compiler by one error.
@@ -3816,20 +3864,16 @@ see a call from hand-written OCaml, so a definition that only the realization
 uses is dropped.  `--custard_entry` names it, which is the same idiom §4.4
 already asks of a library.  `tests/custard/SplitLo.add_one` is the regression.
 
-**A realized module can still contribute a file.**  Realizing a module's
-*types* does not realize its values (§8.2): `Prims.pow2`,
-`FStar.List.Tot.Base.map` and `FStar.Pervasives.Native.fst` have F\* bodies
-that no rule claims, so Custard compiles its own copies — which is what lets
-them be monomorphized instead of reached through the realization's polymorphic
-ones.  Those copies cannot go in the file the realization occupies, so they go
-in `Custard_<Module>.ml`, under mangled names since nothing in them is at home.
+**A realized module can still contribute a file.**  A realization replaces its
+module's values as well as its types (§8.2), so most of what a realized module
+would have contributed is now an external and takes no space at all.  What is
+left is what §8.2 exempts — a projector, an `inline_for_extraction` alias such
+as `FStarC.PSMap.psmap`, `FStar.Pervasives.Native.fst` — together with any
+specialization that lands there by the relocation rule.  None of that can go in
+the file the realization occupies, so it goes in `Custard_<Module>.ml`, under
+mangled names since nothing in it is at home.  Five such files survive in the
+compiler today.
 
-The exception is a body that *inspects* a realized type, because the
-realization is free to represent it however it likes.  `FStar.Dyn.dyn` is
-`unit -> Dv value_type_bundle` in F\* and `Obj.t` in `FStar_Dyn.ml`, so
-`undyn`'s body forces a thunk that is not one.  `Builtins`' second list,
-`value_realized_modules`, says the values of such a module come from the
-realization too.
 **What splitting does not do.**  It does not make Custard's data layout agree
 with ML extraction's.  A realization that only *names* a Custard type — which
 is what nearly all fourteen do — is fine, but one that constructs or matches a
@@ -3842,10 +3886,10 @@ realize the type too.
 ### 12.10 Where the extracted compiler stands
 
 With splitting, `--custard_entry FStarC.Main.main --custard_split` produces
-**178 files**, and those together with the hand-written realizations of
+**176 files**, and those together with the hand-written realizations of
 `src/ml` compile, in `ocamldep -sort` order, with no ordering error and no
-name clash.  Two bugs had to be fixed to get there, both found by advancing
-the build one error at a time and neither of them about splitting:
+name clash.  Three bugs had to be fixed to get there, found by advancing the
+build one error at a time and none of them about splitting:
 
 - **A record field mentioning a type variable the type does not bind.**
   `FStarC.Class.Monad.monad` is a class over `m : Type -> Type`, so `return`
@@ -3856,7 +3900,13 @@ the build one error at a time and neither of them about splitting:
   `Layout.close_fields` replaces such a variable with `TAny`, and it runs
   before anything reads a field's type — the layout analysis, the verdicts and
   §5.4's coercion insertion all take a declared field type at its word.
-- **`FStar.Dyn`'s values**, described above.
+- **A realization being shadowed by its model.**  `FStar_Dyn.ml` represents
+  `dyn` as `Obj.t`, so Custard's compiled `undyn` forced a thunk that is not
+  one.  The fix is the general rule of §8.2 — a realization replaces the
+  module's values too — not a list of exceptions.
+- **A polymorphic realization poisoning its callers.**  With `fst` and `snd`
+  external, every call was typed as returning `any`.  §8.2's `dx_typars`
+  instantiates an external's signature at the call site instead.
 
 What the build stops on now is an ordinary code-generation bug rather than a
 structural one: `FStarC.Interactive.CompletionTable` emits `trie_empty u_'a`,
@@ -3910,6 +3960,7 @@ and link the result, and the `Prims.int` question of item 8.
 | M10f | Make every type-representation decision a function of the type, so that every declaration is exportable | Done.  The `records` and `inline_fields` *decisions* moved into `Layout` (§5.5, §5.7) and reach `Simplify` as a `verdicts` table; the two passes became appliers that decide nothing.  What made this possible: a new `PRecord` in the IR (every backend has one), which removes `records`' surviving-pattern condition; the observation that `inline_fields`' blocked-field scan was unreachable, since `Extract` only ever emits `PWild`/`PVar`/`PConst`/`PCtor`; and deleting `unused_params`.  What made it necessary: dropping a reshaped type from the interface is not an escape hatch, because global variables and exceptions have nominal identity across units (§12.5).  `Driver.stable_types`, `imported_shapes` and `ti_pre` are gone, and so is `Error_CustardBadUnitInterface`'s reason to fire: `Syntax.verdicts`, `Layout.record_verdict`, `Layout.ctor_plans`, `Simplify.records`, `Simplify.inline_fields`; `tests/custard/SepLib.fst` |
 | M10g | Realized modules (§8.2) | Done.  `Rule_realized` and the list in `Builtins`: a type of a hand-written-OCaml module keeps its declaration for its shape but is not emitted, and every reference to it, to its constructors and to its fields prints as the realization's own name.  `FStar.Pervasives.Native`'s `option` and tuples are part of it, which is what makes the whole-program output callable from the realizations at all; tuples print in OCaml's tuple syntax, since they have no constructor to name.  Four bugs the OCaml build of the extracted compiler exposed on the way: abstract types lost their arity, eta-contracted abbreviations (`type psmap = t`) dropped their arguments, `try_with`'s thunk binder was dropped rather than bound to `()`, and `FStar.All.exit` was compiled to OCaml's `exit` rather than the realization that narrows the `Z.t`.  §12.8 item 3 |
 | M10h | Coercions at the `TAny` boundary (§5.4) | Done.  `Simplify.coerce_prog`, the last pass in the pipeline: a bidirectional walk that inserts an `ECast` exactly where a value crosses a *printed* boundary -- a declaration's binders and result, an external's type, a constructor's or record's field types -- whose declared type disagrees with what the value is.  Nowhere else: a node's own `ty` is believed only when it mentions no `TAny`, since `Extract` falls back to `TAny` as often for "not worked out" as for "no representation", and driving the pass off those was the first implementation, which magicked every application.  Two asymmetries make it work: a coercion *to* `TAny` is well-typed whatever the source, so it needs only that the term obviously has *some* representation; and a node that hands its expectation to its own result (`if`, `match`, `let`, `try`) is not asked again, which is what keeps a coercion off the `if` as well as inside each branch.  Unblocks §12.8 item 6 -- `FStarC.Class.Monad`, a class over `Type -> Type`, which neither the IR nor OCaml can name.  Also: `Layout.resolve` no longer expands a realized abbreviation (`FStar.Dyn.dyn`), unless it is `inline_for_extraction` (`FStarC.PSMap.psmap`).  `tests/custard/Magic.fst` |
-| M10i | Output splitting (§12.9) | Done.  `--custard_split` writes one OCaml file per F\* source module instead of one file for the whole program, so that F\*'s hand-written realizations — fourteen of which reference modules Custard compiles — can sit between the pieces; OCaml compilation units must form a DAG, and a single file made them circular.  Still one whole-program run: no unit interface, no re-specialization, just a partition of the already-sorted declaration list.  `Split.run` gives each declaration the latest home, in F\*'s own module order, among its own module and those of everything it references, which is what relocates a specialization that outgrew its source module; `PrintOCaml` prints a declaration under its plain identifier when it is at home, which is the name the realizations spell, and reuses the `Imported` flag of M10c for every cross-file reference.  Two codegen bugs fixed behind it: a record field mentioning a type variable the type does not bind (`Layout.close_fields`), and `FStar.Dyn`'s values, whose bodies inspect a type the realization makes opaque (`Builtins.value_realized_modules`).  The compiler splits into 178 files that compile with the realizations in `ocamldep -sort` order; §12.10.  `tests/custard/SplitLo.fst`, `SplitMid.ml`, `SplitHi.fst` |
+| M10i | Output splitting (§12.9) | Done.  `--custard_split` writes one OCaml file per F\* source module instead of one file for the whole program, so that F\*'s hand-written realizations — fourteen of which reference modules Custard compiles — can sit between the pieces; OCaml compilation units must form a DAG, and a single file made them circular.  Still one whole-program run: no unit interface, no re-specialization, just a partition of the already-sorted declaration list.  `Split.run` gives each declaration the latest home, in F\*'s own module order, among its own module and those of everything it references, which is what relocates a specialization that outgrew its source module; `PrintOCaml` prints a declaration under its plain identifier when it is at home, which is the name the realizations spell, and reuses the `Imported` flag of M10c for every cross-file reference.  Two codegen bugs fixed behind it: a record field mentioning a type variable the type does not bind (`Layout.close_fields`), and a realization shadowed by its model, which §12.10 and M10j turned into the general rule.  The compiler splits into files that compile with the realizations in `ocamldep -sort` order; §12.10.  `tests/custard/SplitLo.fst`, `SplitMid.ml`, `SplitHi.fst` |
+| M10j | A realization replaces its module's values (§8.2) | Done.  Where `src/ml` or `ulib/ml` holds a hand-written `.ml`, the F\* definitions in that module are a model, and a model that disagrees with the realization — `FStar.Dyn`'s `dyn` is `unit -> Dv value_type_bundle` in F\* and `Obj.t` in OCaml — is not something extraction may silently choose between.  Every `Sig_let` in a realized module becomes a `DExternal`; an incomplete realization is now a link error rather than a program running the model.  Exempted, because they are not models: projectors and discriminators, `inline_for_extraction` symbols (which in a realized module means the realization deliberately does not define them, as `FStarC.PSMap`'s `psmap_*` aliases do), type abbreviations, and the two modules whose realization defines no representation of its own (`Builtins.type_only_realized_modules`: `FStar.Pervasives`, which has no file, and `FStar.Pervasives.Native`, which is transparent over types Custard represents natively — and whose `fst`/`snd`, left external, would freeze `tuple2` and leave the C backend with no representation for it).  Externals gained `dx_typars` so that §3.2 instantiates a polymorphic realization's signature at the call site: without it one `let fst = Stdlib.fst` types every caller's result as `any`.  The cost, accepted: what a realization implements is no longer monomorphized |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

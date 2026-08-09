@@ -238,7 +238,9 @@ let rn_terms (fields:SMap.t string) (d:decl) : ML decl =
                   dl_binders = binders;
                   dl_ret = rn_cty ts l.dl_ret;
                   dl_body = rn_expr fields ts s l.dl_body }
-  | DExternal x -> DExternal { x with dx_ty = rn_cty empty_scope x.dx_ty }
+  | DExternal x ->
+    let typars, ts = bind_all empty_scope x.dx_typars in
+    DExternal { x with dx_typars = typars; dx_ty = rn_cty ts x.dx_ty }
   | DExn e -> DExn { e with de_args = e.de_args |> List.map (rn_cty empty_scope) }
 
 (* The verdicts are rewritten after [rn_types] has published every renaming,

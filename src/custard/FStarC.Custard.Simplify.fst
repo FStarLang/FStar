@@ -1669,7 +1669,7 @@ let coerce_prog (prog:program) : ML program =
         | [] -> dl.dl_ret
         | b :: bs -> TArrow (b.b_ty, E_Pure, build bs) in
       SMap.add sigs (string_of_name dl.dl_name) (dl.dl_typars, build dl.dl_binders)
-    | DExternal dx -> SMap.add sigs (string_of_name dx.dx_name) ([], dx.dx_ty)
+    | DExternal dx -> SMap.add sigs (string_of_name dx.dx_name) (dx.dx_typars, dx.dx_ty)
     | DExn _ -> ()) in
   let params_of (n:name) : ML (list string) =
     match SMap.try_find tparams (string_of_name n) with
