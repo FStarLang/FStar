@@ -31,6 +31,7 @@ CUSTARD_TESTS += LocalPoly
 CUSTARD_TESTS += MonoHoles
 CUSTARD_TESTS += DepParams
 CUSTARD_TESTS += MonoDyn
+CUSTARD_TESTS += MatchGuard
 # One shared specialization taking the dictionary at run time (the identity
 # skeleton), one fully specialized version for the static call site, and no
 # trace of the [dyn] marker itself.

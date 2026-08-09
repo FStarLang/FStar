@@ -2764,7 +2764,21 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                                            Clos([], t, mk_ref (if cfg.steps.hnf then None else Some (cfg, ([], t))), false),
                                            fresh_memo ()) :: env)
                       env s in
-                norm cfg env stack (guard_when_clause wopt b rest)
+                match wopt with
+                | Some w when Cons? s ->
+                  //[guard_when_clause] would build [if w then b else (match scrutinee with rest)]
+                  //and normalize the whole thing in [env]. But [rest] is closed with respect to
+                  //[env0]: its branch bodies have no de Bruijn slots for the variables that this
+                  //pattern just bound. Normalizing them in [env] shifts every index by |s|.
+                  //So, when the pattern does bind something, decide the guard here instead, and
+                  //fall back to blocking the reduction if we cannot.
+                  let w = norm cfg env [] w in
+                  (match (U.unmeta w).n with
+                   | Tm_constant (FC.Const_bool true) -> norm cfg env stack b
+                   | Tm_constant (FC.Const_bool false) -> matches scrutinee rest //note: [env0]
+                   | _ -> norm_and_rebuild_match ())
+                | _ ->
+                  norm cfg env stack (guard_when_clause wopt b rest)
         in
 
         if cfg.steps.iota

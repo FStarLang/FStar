@@ -414,7 +414,8 @@ let truncate_msg (s:string) : ML string =
 let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML term =
   try N.with_budget (Options.custard_norm_budget ())
                     (fun () -> N.normalize steps (tcenv st) t)
-  with N.Budget_exceeded ->
+  with
+  | N.Budget_exceeded ->
     custard_error st E.Error_CustardFuelExhausted [
       text ("Custard exceeded --custard_norm_budget (" ^
             show (Options.custard_norm_budget ()) ^
