@@ -315,7 +315,8 @@ $(OUTPUT_DIR)/SepLib.cui: $(CACHE_DIR)/SepLib.fst.checked
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_unit SepLib \
 	  --custard_entry SepLib.sum_areas --custard_entry SepLib.area \
-	  --custard_entry SepLib.bump --odir $(OUTPUT_DIR) SepLib.fst
+	  --custard_entry SepLib.bump --custard_entry SepLib.describe \
+	  --odir $(OUTPUT_DIR) SepLib.fst
 
 $(OUTPUT_DIR)/SepLib.ml: $(OUTPUT_DIR)/SepLib.cui
 	$(Q)test -f $@
@@ -341,6 +342,8 @@ NOGREP_SepApp += "let sepLib_sum_areas"
 NOGREP_SepApp += "let sepLib_area"
 NOGREP_SepApp += "type sepLib_shape"
 NOGREP_SepApp += "type sepLib_named"
+GREP_SepApp  += "SepLib.sepLib_describe"
+GREP_SepApp  += "SepLib.SepLib_Rect"
 
 $(OUTPUT_DIR)/SepApp.exe: $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml
 	$(call msg, "OCAMLOPT", SepApp)

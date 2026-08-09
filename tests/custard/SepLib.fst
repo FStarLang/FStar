@@ -6,7 +6,12 @@ open FStar.List.Tot
 
 type shape =
   | Circle : nat -> shape
-  | Rect   : nat -> nat -> shape
+  | Rect   : (nat & nat) -> shape
+
+(* A single-constructor type, which [Simplify] turns into a record, holding a
+   tuple field, which [inline_fields] expands into the constructor.  Both are
+   decisions the importer has to adopt rather than re-derive. *)
+type named = { label : string; body : shape }
 
 (* A one-field type, which the layout analysis collapses to its payload.  The
    importer must adopt that verdict rather than reach its own. *)
@@ -14,9 +19,11 @@ type tag = { untag : int }
 
 let area (s:shape) : int =
   match s with
-  | Circle r  -> 3 * r * r
-  | Rect w h  -> w * h
+  | Circle r        -> 3 * r * r
+  | Rect (w, h)     -> w * h
 
 let sum_areas (l:list shape) : int = fold_left (fun acc s -> acc + area s) 0 l
 
 let bump (t:tag) : tag = { untag = t.untag + 1 }
+
+let describe (n:named) : string = n.label

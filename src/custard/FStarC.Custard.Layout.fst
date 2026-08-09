@@ -516,6 +516,10 @@ let run (imports:list (name & type_info)) (prog:program) : ML (program & list (n
         [(d.dt_name,
           { ti_erased = (match SMap.try_find t.erased k with Some b -> b | None -> false);
             ti_layout = l;
-            ti_ctors  = ctor_layouts t d })]
+            ti_ctors  = ctor_layouts t d;
+            (* Filled in by the driver: this pass runs before [Simplify], and
+               these two record what [Simplify] then did. *)
+            ti_pre    = None;
+            ti_record = false })]
       | _ -> []) in
   (prog', infos)

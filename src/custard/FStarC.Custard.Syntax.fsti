@@ -369,8 +369,21 @@ type type_info = {
   ti_ctors:  list ctor_layout;
   (** The constructor layouts, recorded separately because [L_newtype],
       [L_erased] and [L_opaque] do not carry them and the rewriter still needs
-      them: an application or a pattern of a constructor of a collapsed type
-      has to be rewritten just the same. *)
+      them: an application or a pattern of a collapsed type's constructor has
+      to be rewritten just the same. *)
+  ti_pre:    option dtype;
+  (** The declaration as the layout analysis left it -- *before* [Simplify]
+      reshaped it.  A downstream unit's [Simplify] has to reach the same
+      conclusions this one did, and the passes that draw them read the
+      declaration at this point in the pipeline, not at the end of it: at the
+      time [inline_fields] asks whether a field's type is a one-constructor
+      variant, that type is still a variant even if [records] is about to turn
+      it into a record. *)
+  ti_record: bool;
+  (** Whether [Simplify.records] turned it into a record.  This one *is* a
+      whole-program decision -- a constructor pattern surviving anywhere
+      disqualifies its type, because the IR has no record pattern to rewrite
+      one to -- so a downstream unit cannot re-derive it and must be told. *)
 }
 
 (** {1 Helpers} *)

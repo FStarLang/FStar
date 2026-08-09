@@ -21,7 +21,9 @@ open FStarC.Effect
 open FStarC.List
 open FStarC.Class.Show
 open FStarC.Custard.Syntax
+open FStarC.Errors.Msg
 
+module E      = FStarC.Errors
 module SMap   = FStarC.SMap
 module GenSym = FStarC.GenSym
 
@@ -1118,6 +1120,25 @@ type ctor_info = {
   ci_fields: list (string & cty);
 }
 
+(* The imported types this run links against: each as the layout analysis left
+   it, as its home unit finally emitted it, and with the record verdict that
+   unit reached.  Both shapes are needed -- the questions this file asks are
+   about the *pre*-simplification declaration, while the answers it must not
+   contradict are visible only in the final one.  A [ref] rather than an
+   argument threaded through a dozen functions, for the same reason
+   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
+   program.  Set by {!run}. *)
+let imported_types : ref (list (dtype & dtype & bool)) = mk_ref []
+
+(* The program as the *type*-inspecting passes should see it.  Imported types
+   are visible to a question about a declaration and invisible to everything
+   else: they contribute no body, they are not re-decided, and they are not
+   emitted. *)
+let with_imports (prog:program) : ML program =
+  match !imported_types with
+  | [] -> prog
+  | ts -> (ts |> List.map (fun (dt, _, _) -> DType dt)) @ prog
+
 let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
   let m : SMap.t ctor_info = SMap.create 50 in
   prog |> List.iter (fun d ->
@@ -1293,7 +1314,7 @@ and depat_branch (tbl:SMap.t ctor_info) (blocked:SMap.t bool) (br:branch) : ML b
    depat tbl blocked b)
 
 let depat_decls (prog:program) : ML program =
-  let tbl = ctor_infos prog in
+  let tbl = ctor_infos (with_imports prog) in
   let blocked = matched_ctors (Some tbl) prog in
   prog |> List.map (fun d ->
     match d with
@@ -1318,8 +1339,34 @@ let records (prog:program) : ML program =
       && None? (SMap.try_find matched (string_of_name cn))
       then SMap.add recs (string_of_name cn) tn
     | _ -> ());
+  (* An imported type's verdict is adopted, not re-derived.  This is the one
+     decision in this file that really is a function of the whole program --
+     the [matched] test above rejects a type any surviving pattern still
+     matches on -- so the downstream program is the wrong program to ask.
+     Note the asymmetry with the loop above: a type its home unit left as a
+     variant must stay one here even if nothing in *this* program matches on
+     it. *)
+  !imported_types |> List.iter (fun (dt, _, is_record) ->
+    match dt.dt_body with
+    | TVariant [(cn, fs)] when is_record && Cons? fs ->
+      (* A pattern this program still has for it cannot be rewritten: the IR
+         has no record pattern.  [depat] removes the irrefutable single-branch
+         ones, so what is left is a constructor nested inside another pattern.
+         Reporting it beats miscompiling it; the fix is a record pattern in the
+         IR, not a different verdict. *)
+      if Some? (SMap.try_find matched (string_of_name cn)) then
+        E.raise_error0 E.Error_CustardBadUnitInterface [
+          text ("This program pattern-matches on " ^ string_of_name cn ^
+                ", but the unit that compiled " ^ string_of_name dt.dt_name ^
+                " gave it a record representation.");
+          text "Custard's IR has no record pattern, so the match cannot be \
+                translated. Bind the value and read its fields instead of \
+                matching on it inside another pattern."
+        ];
+      SMap.add recs (string_of_name cn) dt.dt_name
+    | _ -> ());
   if SMap.keys recs = [] then prog else begin
-  let infos = ctor_infos prog in
+  let infos = ctor_infos (with_imports prog) in
   let as_record (cn:name) : ML (option name) = SMap.try_find recs (string_of_name cn) in
   let rec go (x:expr) : ML expr =
     match x.e with
@@ -1474,7 +1521,7 @@ let plan_of (prog:program) : ML (SMap.t fplan) =
           let plan = fs |> List.map (fun (f, c) ->
             match c with
             | TInline (TApp (rn, args)) ->
-              (match record_body prog rn with
+              (match record_body (with_imports prog) rn with
                | Some (ps, rc, rfs) ->
                  if List.length ps <> List.length args then (f, fresh f "", None)
                  else begin
@@ -1613,17 +1660,67 @@ let rec only_projected (v:string) (x:expr) : ML bool =
   | ERecord (_, fs) -> fs |> List.for_all (fun (_, e) -> g e)
   | EDiscrim (e1, _) | ECast (e1, _) -> g e1
 
+(* The names an imported constructor ended up with in the unit that emitted it.
+   This is the pinned answer: whatever plan is re-derived here has to agree
+   with it, field by field. *)
+let imported_ctor_fields (cn:string) : ML (option (list string)) =
+  !imported_types |> List.tryPick (fun (pre, fin, _) ->
+    let mine =
+      match pre.dt_body with
+      | TVariant cs -> cs |> List.existsb (fun (c, _) -> string_of_name c = cn)
+      | _ -> false in
+    if not mine then None else
+    match fin.dt_body with
+    | TVariant cs ->
+      cs |> List.tryPick (fun (c, fs) ->
+        if string_of_name c = cn then Some (fs |> List.map fst) else None)
+    (* [records] turned the constructor into the type itself. *)
+    | TRecord fs -> Some (fs |> List.map fst)
+    | _ -> None)
+
 let inline_fields (prog:program) : ML program =
-  let m0 = plan_of prog in
+  (* Imported types are visible so that a constructor this program *applies*
+     gets the same plan the unit that declared it used.  They are not rewritten
+     -- they are not in [prog] -- and their plans are pinned below rather than
+     trusted. *)
+  let m0 = plan_of (with_imports prog) in
   if SMap.keys m0 = [] then prog else begin
   (* Drop the expansions the patterns will not take.  Renaming stays: it was
      decided per constructor and the declaration follows it either way. *)
   let bad = blocked_fields m0 prog in
+  (* An imported constructor's plan is settled by its home unit.  Re-deriving
+     it here can disagree in either direction -- this program may have a
+     pattern that blocked nothing there, or lack one that blocked something --
+     so the fields it actually has are what decides, and a local pattern that
+     cannot follow is an error rather than a reason to change the layout. *)
+  SMap.keys m0 |> List.iter (fun k ->
+    match SMap.try_find m0 k, imported_ctor_fields k with
+    | Some fs, Some finals ->
+      let pinned = fs |> List.map (fun (f, f', ex) ->
+        match ex with
+        | None -> (f, f', None)
+        | Some e ->
+          if e.ex_dst |> List.for_all (fun (g, _) -> List.mem g finals)
+          then begin
+            if Some? (SMap.try_find bad (k ^ "#" ^ f)) then
+              E.raise_error0 E.Error_CustardBadUnitInterface [
+                text ("This program matches on " ^ k ^ " in a way that its \
+                      field " ^ f ^ " cannot follow, but the unit that \
+                      compiled it expanded that field into the constructor.");
+                text "Bind the field and read it, rather than matching through it."
+              ];
+            (f, f', Some e)
+          end
+          else (f, f', None)) in
+      SMap.add m0 k pinned
+    | _ -> ());
   let m : SMap.t fplan = SMap.create 20 in
   SMap.keys m0 |> List.iter (fun k ->
     match SMap.try_find m0 k with
     | None -> ()
     | Some fs ->
+      (* Already settled above, and not by this program's patterns. *)
+      if Some? (imported_ctor_fields k) then SMap.add m k fs else
       SMap.add m k (fs |> List.map (fun (f, f', ex) ->
         match ex with
         | Some _ ->
@@ -1774,14 +1871,15 @@ let inline_fields (prog:program) : ML program =
        | TRecord fs -> DType { t with dt_body = TRecord (fs |> List.map (fun (f, c) -> (f, strip_inline c))) }
        | _ -> d)
     | d -> d) in
-  let infos = ctor_infos prog in
+  let infos = ctor_infos (with_imports prog) in
   prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = unbuild infos dl.dl_body }
     | d -> d)
   end
 
-let run (prog:program) : ML program =
+let run (imports:list (dtype & dtype & bool)) (prog:program) : ML program =
+  imported_types := imports;
   let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
   let prog = reduce_decls prog in
