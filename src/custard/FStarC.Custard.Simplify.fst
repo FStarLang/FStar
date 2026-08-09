@@ -26,6 +26,7 @@ open FStarC.Errors.Msg
 module E      = FStarC.Errors
 module SMap   = FStarC.SMap
 module GenSym = FStarC.GenSym
+module Format = FStarC.Format
 
 (* Does [v] occur free in [e]?  Custard's variable names come from F* bound
    variables and so already carry a unique index, but this deliberately does
@@ -1106,18 +1107,124 @@ let depat_decls (prog:program) : ML program =
     | DLet dl -> DLet { dl with dl_body = depat tbl dl.dl_body }
     | d -> d)
 
-(* Turn the qualifying single-constructor variants into records.  A [PCtor]
-   left over anywhere disqualifies its type: there is no record pattern in the
-   IR to rewrite it to. *)
+(* An under-applied constructor.  `Extract` builds an [ECtor] out of whatever
+   arguments the application node carried, so a constructor used as a function
+   -- `List.map Mktuple2 xs` -- arrives with fewer arguments than it has
+   fields.  No backend can print that: OCaml constructors are not first-class,
+   and a record has no partial application at all.  So it is eta-expanded here,
+   before anything reads a constructor's arity.  A full application is left
+   exactly as it was, so this pass is invisible to the overwhelming majority of
+   the program. *)
+let eta_ctors (vd:verdicts) (prog:program) : ML program =
+  let infos = ctor_infos (with_imports prog) in
+  (* The arity a use site is written against, which for an *imported*
+     constructor is not the arity of the declaration in hand: that one is
+     final, so section 5.7 has already replaced a field by the pieces of the
+     record it held, while the [ECtor] here has not been rewritten yet.  A
+     plan is stated in the pre-expansion fields, so its length is the arity
+     wanted -- and for a local constructor it agrees with the declaration. *)
+  let imported : SMap.t unit = SMap.create 20 in
+  !imported_types |> List.iter (fun (t:dtype) ->
+    match t.dt_body with
+    | TVariant cs -> cs |> List.iter (fun (cn, _) -> SMap.add imported (string_of_name cn) ())
+    | TRecord _ -> SMap.add imported (string_of_name t.dt_name) ()
+    | _ -> ());
+  (* Walk the plan and the final fields together to recover the fields the
+     constructor was declared with.  [ex_ty] is the type of the field that was
+     expanded, and an unexpanded position consumes exactly one final field. *)
+  let rec unplan (pl:fplan) (fs:list (string & cty)) : ML (list (string & cty)) =
+    match pl with
+    | [] -> []
+    | (f, _, None) :: pl ->
+      (match fs with
+       | (_, t) :: fs -> (f, t) :: unplan pl fs
+       | [] -> [])
+    | (f, _, Some ex) :: pl ->
+      let rec drop n l = if n <= 0 then l else (match l with [] -> [] | _ :: l -> drop (n - 1) l) in
+      (f, ex.ex_ty) :: unplan pl (drop (List.length ex.ex_dst) fs) in
+  let declared (cn:name) (ci:ctor_info) : ML (list (string & cty)) =
+    match SMap.try_find vd.vd_plans (string_of_name cn) with
+    | Some pl when Some? (SMap.try_find imported (string_of_name cn)) -> unplan pl ci.ci_fields
+    | _ -> ci.ci_fields in
+  let rec go (x:expr) : ML expr =
+    let g = go in
+    match x.e with
+    | ECtor (cn, es) ->
+      let es = es |> List.map g in
+      let alt = { x with e = ECtor (cn, es) } in
+      (match SMap.try_find infos (string_of_name cn) with
+       | Some ci ->
+         let n = List.length es in
+         let fs = declared cn ci in
+         if n >= List.length fs then alt
+         else begin
+           let missing = fs |> List.mapi (fun i f -> (i, f))
+                         |> List.collect (fun (i, f) -> if i < n then [] else [f]) in
+           let bs = missing |> List.map (fun (f, t) -> { b_name = rename f; b_ty = t }) in
+           let args = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in
+           (* [x.ty] is the datatype: `Extract` types an [ECtor] by its
+              constructor's result, however many arguments it was given. *)
+           let res = List.fold_right (fun (b:binder) t -> TArrow (b.b_ty, E_Pure, t))
+                                     bs x.ty in
+           mk (EFun (bs, { alt with e = ECtor (cn, es @ args) })) res E_Pure
+         end
+       | None -> alt)
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
+    | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
+    | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
+    | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
+    | EFun (bs, b) -> { x with e = EFun (bs, g b) }
+    | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
+    | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map go_branch) }
+    | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map go_branch) }
+    | ETuple es -> { x with e = ETuple (es |> List.map g) }
+    | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+    | ERaise e1 -> { x with e = ERaise (g e1) }
+    | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+    | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
+    | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
+    | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  and go_branch (br:branch) : ML branch =
+    let p, gd, b = br in
+    (p, (match gd with None -> None | Some e -> Some (go e)), go b) in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = go dl.dl_body }
+    | d -> d)
+
+(* Turn the single-constructor variants the layout analysis chose into records
+   (section 5.5).  This pass decides nothing: it applies [vd_records]. *)
 let records (vd:verdicts) (prog:program) : ML program =
+  (* The verdict says *whether*; the fields are read off the declaration the
+     rewrite is about to change, because [inline_fields] has already replaced
+     some of them with the pieces of the record they held (section 5.7). *)
+  let fields : SMap.t (list string) = SMap.create 100 in
+  let _ = with_imports prog |> List.iter (fun d ->
+    match d with
+    | DType t ->
+      (match t.dt_body with
+       | TRecord fs -> SMap.add fields (string_of_name t.dt_name) (fs |> List.map fst)
+       | TVariant [(_, fs)] -> SMap.add fields (string_of_name t.dt_name) (fs |> List.map fst)
+       | _ -> ())
+    | _ -> ()) in
   let as_record (cn:name) : ML (option (name & list string)) =
-    SMap.try_find vd.vd_records (string_of_name cn) in
+    match SMap.try_find vd.vd_records (string_of_name cn) with
+    | None -> None
+    | Some tn ->
+      (match SMap.try_find fields (string_of_name tn) with
+       | Some fs -> Some (tn, fs)
+       | None -> None) in
   let rec go (x:expr) : ML expr =
     match x.e with
     | ECtor (cn, es) ->
       let es = es |> List.map go in
       (match as_record cn with
-       | Some (tn, fs) -> { x with e = ERecord (tn, List.zip fs es) }
+       | Some (tn, fs) ->
+         if List.length fs <> List.length es
+         then failwith (Format.fmt3 "custard records: %s expects %s fields, applied to %s"
+                          (string_of_name cn) (show (List.length fs)) (show (List.length es)))
+         else { x with e = ERecord (tn, List.zip fs es) }
        | None -> { x with e = ECtor (cn, es) })
     (* [Rename] keys a record's fields on the type name and a variant's on the
        constructor name, so the node has to be re-tagged along with the type. *)
@@ -1148,7 +1255,11 @@ let records (vd:verdicts) (prog:program) : ML program =
     | PCtor (cn, ps) ->
       let ps = ps |> List.map go_pat in
       (match as_record cn with
-       | Some (tn, fs) -> PRecord (tn, List.zip fs ps)
+       | Some (tn, fs) ->
+         if List.length fs <> List.length ps
+         then failwith (Format.fmt3 "custard records pat: %s expects %s fields, matched %s"
+                          (string_of_name cn) (show (List.length fs)) (show (List.length ps)))
+         else PRecord (tn, List.zip fs ps)
        | None -> PCtor (cn, ps))
     | PRecord (n, fs) -> PRecord (n, fs |> List.map (fun (f, q) -> (f, go_pat q)))
     | PTuple ps -> PTuple (ps |> List.map go_pat)
@@ -1363,58 +1474,64 @@ let inline_fields (vd:verdicts) (prog:program) : ML program =
     | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
     | ECast (e1, c) -> { x with e = ECast (go e1, c) }
 
-  (* A branch is rewritten pattern first.  A nested constructor pattern is the
-     case that pays: it flattens.  A [PVar] standing for the whole field
-     becomes one variable per piece, and the body gets the field back as a
-     value -- substituted when it is read at most once, so that [unbuild] can
-     take it apart again, and behind a [let] otherwise, so that no allocation
-     is duplicated. *)
+  (* A branch is rewritten pattern first, and *every* constructor pattern in
+     it, not just the outermost: a plan applies wherever its constructor
+     appears.  A nested constructor pattern at an inlined position is the case
+     that pays -- it flattens.  A [PVar] standing for the whole field becomes
+     one variable per piece, and the body gets the field back as a value:
+     substituted when it is read at most once, so that [unbuild] takes it
+     apart again, and behind a [let] otherwise, so that no allocation is
+     duplicated. *)
   and go_branch (br:branch) : ML branch =
-    let plain () : ML branch =
-      let p, gd, b = br in
-      (p, (match gd with None -> None | Some g -> Some (go g)), go b) in
     let p, gd, b = br in
-    match p with
-    | PCtor (cn, ps) ->
-      (match plan cn with
-       | Some fs ->
-         if List.length ps <> List.length fs then plain ()
-         else begin
-           let sm : subst = SMap.create 10 in
-           let lets, ps =
-             List.fold_left2 (fun (lets, acc) (p:pat) (_, _, ex) ->
+    let sm : subst = SMap.create 10 in
+    let lets : ref (list (string & cty & expr)) = mk_ref [] in
+    (* Whether the value bound to [v] can be substituted rather than let-bound:
+       either it is read at most once, or every read of it is a projection,
+       which [unbuild] undoes. *)
+    let free (v:string) : ML bool =
+      let uses = count v b + (match gd with None -> 0 | Some g -> count v g) in
+      uses <= 1
+      || (only_projected v b && (match gd with None -> true | Some g -> only_projected v g)) in
+    let rec go_pat (p:pat) : ML pat =
+      match p with
+      | PCtor (cn, ps) ->
+        let ps = ps |> List.map go_pat in
+        (match plan cn with
+         | Some fs ->
+           if List.length ps <> List.length fs then PCtor (cn, ps)
+           else PCtor (cn,
+             List.fold_left2 (fun acc (p:pat) (_, _, ex) ->
                match ex with
-               | None -> (lets, acc @ [p])
+               | None -> acc @ [p]
                | Some ex ->
                  (match p with
-                  | PCtor (_, qs) -> (lets, acc @ qs)
-                  | PWild -> (lets, acc @ (ex.ex_dst |> List.map (fun _ -> PWild)))
+                  | PCtor (_, qs) -> acc @ qs
+                  | PWild -> acc @ (ex.ex_dst |> List.map (fun _ -> PWild))
                   | PVar v ->
                     let ns = ex.ex_src |> List.map (fun (g, gt) -> (rename g, gt)) in
                     let e = ex_build ex (ns |> List.map (fun (n, t) -> mk (EVar n) t E_Pure)) in
-                    let uses = count v b + (match gd with None -> 0 | Some g -> count v g) in
-                    let free = uses <= 1
-                            || (only_projected v b
-                                && (match gd with None -> true | Some g -> only_projected v g)) in
-                    let lets = if free
-                               then (SMap.add sm v e; lets)
-                               else lets @ [(v, ex.ex_ty, e)] in
-                    (lets, acc @ (ns |> List.map (fun (n, _) -> PVar n)))
-                  | _ -> (lets, acc @ [p])))
-               ([], []) ps fs in
-           (* A guard cannot be wrapped in a [let], so it always substitutes. *)
-           let gsm : subst = SMap.create 10 in
-           SMap.keys sm |> List.iter (fun k ->
-             match SMap.try_find sm k with Some e -> SMap.add gsm k e | None -> ());
-           lets |> List.iter (fun (v, t, e) -> SMap.add gsm v e);
-           let gd = (match gd with None -> None | Some g -> Some (go (psub gsm g))) in
-           let b = go (psub sm b) in
-           let b = List.fold_right (fun (v, t, e) acc -> { acc with e = ELet (v, t, e, acc) })
-                                   lets b in
-           (PCtor (cn, ps), gd, b)
-         end
-       | None -> plain ())
-    | _ -> plain () in
+                    (if free v then SMap.add sm v e
+                     else lets := !lets @ [(v, ex.ex_ty, e)]);
+                    acc @ (ns |> List.map (fun (n, _) -> PVar n))
+                  | _ -> acc @ [p]))
+               [] ps fs)
+         | None -> PCtor (cn, ps))
+      | PRecord (n, fs) -> PRecord (n, fs |> List.map (fun (f, q) -> (f, go_pat q)))
+      | PTuple ps -> PTuple (ps |> List.map go_pat)
+      | POr ps -> POr (ps |> List.map go_pat)
+      | p -> p in
+    let p = go_pat p in
+    (* A guard cannot be wrapped in a [let], so it always substitutes. *)
+    let gsm : subst = SMap.create 10 in
+    SMap.keys sm |> List.iter (fun k ->
+      match SMap.try_find sm k with Some e -> SMap.add gsm k e | None -> ());
+    !lets |> List.iter (fun (v, t, e) -> SMap.add gsm v e);
+    let gd = (match gd with None -> None | Some g -> Some (go (psub gsm g))) in
+    let b = go (psub sm b) in
+    let b = List.fold_right (fun (v, t, e) acc -> { acc with e = ELet (v, t, e, acc) })
+                            !lets b in
+    (p, gd, b) in
 
   prog |> List.map (fun d ->
     match d with
@@ -1450,6 +1567,8 @@ let unbuild_decls (prog:program) : ML program =
 
 let run (imports:list dtype) (vd:verdicts) (prog:program) : ML program =
   imported_types := imports;
+  (* First, because every pass below reads a constructor's arity. *)
+  let prog = eta_ctors vd prog in
   let prog = eta_reduce_decls prog in
   let prog = inline_decls prog in
   let prog = reduce_decls prog in

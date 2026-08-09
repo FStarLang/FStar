@@ -633,8 +633,8 @@ let run (imports:list (dtype & type_info)) (prog:program)
        constructor the verdict is keyed on is only in [ti_ctors]. *)
     (if ti.ti_record then
        match dt.dt_body, ti.ti_ctors with
-       | TRecord fs, [cl] -> SMap.add vd.vd_records (key cl.cl_name) (dt.dt_name, fs |> List.map fst)
-       | TVariant [(cn, fs)], _ -> SMap.add vd.vd_records (key cn) (dt.dt_name, fs |> List.map fst)
+       | TRecord _, [cl] -> SMap.add vd.vd_records (key cl.cl_name) dt.dt_name
+       | TVariant [(cn, _)], _ -> SMap.add vd.vd_records (key cn) dt.dt_name
        | _ -> ());
     ti.ti_plans |> List.iter (fun (cn, pl) -> SMap.add vd.vd_plans (key cn) pl));
   let derived : SMap.t (bool & list (name & fplan)) = SMap.create 50 in
@@ -645,8 +645,7 @@ let run (imports:list (dtype & type_info)) (prog:program)
       let plans = ctor_plans look dt in
       SMap.add derived (key dt.dt_name) (is_rec, plans);
       (match dt.dt_body with
-       | TVariant [(cn, fs)] when is_rec ->
-         SMap.add vd.vd_records (key cn) (dt.dt_name, fs |> List.map fst)
+       | TVariant [(cn, _)] when is_rec -> SMap.add vd.vd_records (key cn) dt.dt_name
        | _ -> ());
       plans |> List.iter (fun (cn, pl) -> SMap.add vd.vd_plans (key cn) pl)
     | _ -> ());

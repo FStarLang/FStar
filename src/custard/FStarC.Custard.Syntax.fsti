@@ -415,9 +415,10 @@ type type_info = {
     keeps a representation a function of the type. *)
 noeq
 type verdicts = {
-  vd_records: FStarC.SMap.t (name & list string);
-  (** constructor -> the record type it becomes, and that record's fields in
-      declaration order *)
+  vd_records: FStarC.SMap.t name;
+  (** constructor -> the record type it becomes.  Deliberately not the field
+      names: [inline_fields] changes those, so the only correct source for
+      them is the declaration the rewriter is looking at. *)
   vd_plans:   FStarC.SMap.t fplan;
   (** constructor -> how its inlined fields are stored *)
 }
