@@ -517,7 +517,10 @@ let visitM_term_univs #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : ter
   let dict : lvm m =
     tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu; proc_quotes = proc_quotes }
   in
-  f_term #_ #dict tm
+  (* [dyn] for the same reason as in [tie_bu]: this dictionary is the result
+     of an ML computation, so it is passed at run time rather than specialized
+     on.  See doc/ref/custard.md 3.2c1. *)
+  f_term #_ #(dyn dict) tm
 
 let visitM_term #m {| md : monad m |} (proc_quotes : bool) vt (tm : term) : ML (m term) =
   visitM_term_univs true vt return tm
@@ -526,7 +529,7 @@ let visitM_sigelt #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : sigelt)
   let dict : lvm m =
     tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu; proc_quotes = proc_quotes }
   in
-  on_sub_sigelt #_ #dict tm
+  on_sub_sigelt #_ #(dyn dict) tm
 
 
 (* Example: compute all lidents appearing in a sigelt:

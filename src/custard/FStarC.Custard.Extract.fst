@@ -75,6 +75,7 @@ let no_specialize_lid : Ident.lident = PC.p2l ["FStar"; "Custard"; "no_specializ
 
 let key_norm_steps : list TcEnv.step = [
   TcEnv.DontUnfoldAttr [no_specialize_lid];
+  TcEnv.Weak;
   TcEnv.AllowUnboundUniverses;
   TcEnv.EraseUniverses;
   TcEnv.Beta;
@@ -84,6 +85,27 @@ let key_norm_steps : list TcEnv.step = [
   TcEnv.Unmeta;
   TcEnv.UnfoldUntil delta_constant;
 ]
+
+(* [Weak] is what makes this reduction terminate, and it is not optional.
+
+   A key is reduced to a normal form, and strong normalization of a recursive
+   function does not terminate.  Reducing *under* a lambda means reducing
+   inside the branches of a [match] that cannot fire, because its scrutinee is
+   a bound variable; each branch contains recursive calls, which unfold into
+   more unreducible matches, without bound.  [FStarC.Class.Binders.hasNames_term]
+   is the case that found this: the key term is the single fvar
+   [hasNames_term], the instance [{ freeNames = Free.names }], and normalizing
+   it strongly unfolded [free_names_and_uvars] hundreds of times and was still
+   going after 500 million steps and fifty minutes.  Nothing about that
+   dictionary is unusual -- any instance whose method is recursive does it, and
+   the compiler is full of them.
+
+   [Weak] stops at a lambda, so a method body is a key as written.  The cost is
+   that two arguments differing only *inside* a lambda no longer share a
+   specialization even when reduction would identify them.  That duplicates
+   code; it does not miscompile.  It is the same trade-off, for the same
+   reason, that [subst_norm_steps] makes below, and the reduction that would
+   avoid it is the one that does not terminate. *)
 
 (* The same reduction, stopped as soon as the value's head constructor is
    visible.  This -- not [key_norm_steps] -- is what gets substituted into the
@@ -383,6 +405,12 @@ let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.docu
    budget the same program gets a fatal error naming the definition being
    specialized and the chain that reached it, which is the information needed
    to either fix the definition or raise the limit. *)
+(* A key can be megabytes long; the first few hundred characters are what a
+   reader needs and the rest is noise in a terminal. *)
+let truncate_msg (s:string) : ML string =
+  if String.length s <= 600 then s
+  else String.substring s 0 600 ^ " ... (" ^ show (String.length s) ^ " chars)"
+
 let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML term =
   try N.with_budget (Options.custard_norm_budget ())
                     (fun () -> N.normalize steps (tcenv st) t)
@@ -391,7 +419,12 @@ let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML 
       text ("Custard exceeded --custard_norm_budget (" ^
             show (Options.custard_norm_budget ()) ^
             " reduction steps) while normalizing " ^ what ^ ".");
-      text "Reduction of an argument to a monomorphized binder need not terminate: a recursive definition reachable from it may unfold without bound. Either avoid specializing on this value, or raise --custard_norm_budget if the term is merely large."
+      text "Reduction of an argument to a monomorphized binder need not terminate: a recursive definition reachable from it may unfold without bound. Either avoid specializing on this value, or raise --custard_norm_budget if the term is merely large.";
+      (* The term *as written* is what identifies the culprit.  The normalized
+         one does not exist -- that is the failure -- and the request chain
+         names the callee but not which of its arguments was written how. *)
+      text ("The term being normalized, before reduction, was: " ^
+            truncate_msg (FStarC.Syntax.Print.term_to_string' (TcEnv.dsenv (tcenv st)) t))
     ]
 
 (* -------------------------------------------------------------------- *)

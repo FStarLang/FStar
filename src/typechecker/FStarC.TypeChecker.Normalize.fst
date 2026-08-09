@@ -16,6 +16,7 @@
 
 module FStarC.TypeChecker.Normalize
 open FStarC.Effect
+open FStar.Custard
 open FStarC.List
 open FStarC
 open FStarC.Defensive
@@ -420,7 +421,9 @@ let closure_as_term cfg (env:env) (t:term) : ML term =
 let unembed_binder_knot : ref (option (EMB.embedding binder)) = mk_ref None
 let unembed_binder (t : term) : ML (option S.binder) =
     match !unembed_binder_knot with
-    | Some e -> EMB.try_unembed #_ #e t EMB.id_norm_cb
+    (* [dyn]: the embedding comes out of a ref set at run time, so it cannot be
+       specialized on and is passed instead.  See doc/ref/custard.md 3.2c1. *)
+    | Some e -> EMB.try_unembed #_ #(dyn e) t EMB.id_norm_cb
     | None ->
         Errors.log_issue t Errors.Warning_UnembedBinderKnot "unembed_binder_knot is unset!";
         None
