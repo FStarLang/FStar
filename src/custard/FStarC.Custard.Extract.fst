@@ -300,7 +300,7 @@ type state = {
      a recursive binder (by its IR variable name) to the lifted declaration's
      name, its type arguments, the captured variables its call sites have to
      supply, and its full arrow type.  See [lift_letrec]. *)
-  lifted:  SMap.t (name & list cty & list binder & cty);
+  lifted:  SMap.t (name & list cty & list binder & cty & list S.bv);
   (* The declaration currently being extracted, which is what a lifted local
      function is named after. *)
   cur:     ref name;
@@ -944,7 +944,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
 and lifted_ref (st:state) (b:S.bv) : ML (option expr) =
   match SMap.try_find st.lifted (name_of_bv b) with
   | None -> None
-  | Some (nm, tyargs, caps, ty) ->
+  | Some (nm, tyargs, caps, ty, _) ->
     let hd = mk (EQual (nm, tyargs)) ty E_Pure in
     (match caps with
      | [] -> Some hd
@@ -980,6 +980,23 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       | x :: xs -> x :: dedup (List.filter (fun (y:S.bv) -> not (S.bv_eq x y)) xs) in
     (* Sorted, so that the parameter order depends on the term and not on the
        order [Free.names] happened to walk it. *)
+    (* A free variable that is itself a lifted local is not a capture: every
+       reference to it becomes a call to its top-level name, applied to *its*
+       captures ({!lifted_ref}).  Those are what this nest has to receive, so
+       they replace it here.  Without this the emitted body would name
+       variables no parameter binds.  A nest's captures are expanded before
+       they are recorded, so one pass suffices; the fuel guards a cycle that
+       should not arise. *)
+    let rec expand (fuel:int) (l:list S.bv) : ML (list S.bv) =
+      if fuel <= 0 then l
+      else
+        let hit : ref bool = alloc false in
+        let l = l |> List.collect (fun (v:S.bv) ->
+                  match SMap.try_find st.lifted (name_of_bv v) with
+                  | Some (_, _, _, _, vs) -> hit := true; vs
+                  | None -> [v]) in
+        if !hit then expand (fuel - 1) l else l in
+    let free = expand 100 free in
     let free = dedup free |> List.sortWith (fun (x:S.bv) (y:S.bv) -> x.index - y.index) in
     let tyvars, valvars = List.partition (is_type_bv st) free in
     let typars = tyvars |> List.map name_of_bv in
@@ -998,26 +1015,32 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let nm = { ns = ns; id = base; spec = (if n = 0 then None else Some (show n)) } in
       let xs, _, _ = U.abs_formals lb.lbdef in
       let ret, eff = local_result st lb.lbtyp xs in
-      let arg_binders = xs |> List.map (fun (b:S.binder) ->
+      (* F* generalizes a local [let rec] just as it does a top-level one, so
+         the definiens may bind type variables of its own.  They hold no
+         runtime value (section 5.0) and no call site passes them, so they
+         belong in the declaration's type parameters, not its binders. *)
+      let tybs, valbs = List.partition (fun (b:S.binder) -> is_type_bv st b.binder_bv) xs in
+      let own_typars = tybs |> List.map (fun (b:S.binder) -> name_of_bv b.binder_bv) in
+      let arg_binders = valbs |> List.map (fun (b:S.binder) ->
                           { b_name = name_of_bv b.binder_bv;
                             b_ty   = ty_of_typ st b.binder_bv.sort }) in
       let binders = caps @ arg_binders in
       let ty = List.fold_right (fun (b:binder) (t, e) -> (TArrow (b.b_ty, e, t), E_Pure))
                                binders (ret, eff) |> fst in
-      SMap.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty);
-      (lb, nm, binders, ret, eff)) in
-    entries |> List.iter (fun (lb, nm, binders, ret, eff) ->
+      SMap.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty, free);
+      (lb, nm, binders, ret, eff, own_typars)) in
+    entries |> List.iter (fun (lb, nm, binders, ret, eff, own_typars) ->
       let _, def_body, _ = U.abs_formals lb.lbdef in
       let d = DLet {
         dl_name    = nm;
-        dl_typars  = typars;
+        dl_typars  = typars @ own_typars;
         dl_binders = binders;
         dl_ret     = ret;
         dl_eff     = eff;
         dl_body    = expr_of_term st def_body;
         (* Provisional, exactly as for a top-level definition: [Simplify.scc]
            recomputes it from the final call graph. *)
-        dl_flags   = [Rec (entries |> List.map (fun (_, nm, _, _, _) -> nm))];
+        dl_flags   = [Rec (entries |> List.map (fun (_, nm, _, _, _, _) -> nm))];
       } in
       (* Not a specialization of anything -- no source lid names it -- so it
          gets a key of its own, which nothing will ever request. *)
@@ -2021,8 +2044,16 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let typars = bs |> List.collect (fun b ->
                  if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []) in
   let bs = drop_flagged flags bs in
+  (* A type binder that survived [drop_flagged] is the one {!Mono.keep_thunk}
+     put back so that the definition does not become a value.  It carries no
+     type at runtime and no value either, and its callers pass [()]
+     ({!Mono.unit_binders}), so [unit] is both its honest type and the one that
+     needs no coercion -- typing it by its sort would make it [any] and put an
+     [Obj.magic] at every call. *)
   let binders = bs |> List.map (fun b ->
-    { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
+    { b_name = name_of_bv b.binder_bv;
+      b_ty = if is_type_binder (tcenv st) b then TUnit
+             else ty_of_typ st b.binder_bv.sort }) in
   (* The effect is the one of the *codomain*: [lbeff] is the effect of
      evaluating the lambda, which is always Tot. *)
   let rec peel (n:int) (e:eff) (t:cty) : ML (eff & cty) =
@@ -2030,7 +2061,21 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     else match t with
          | TArrow (_, e', r) -> peel (n - 1) e' r
          | _ -> (e, t) in
-  let eff, ret = peel n_extra (eff_of_comp st c) (ty_of_typ st (U.comp_result c)) in
+  (* The arrows the extra binders consume can be hidden behind an
+     abbreviation: [let st a = ctxt -> ML (a & ctxt)] makes [let get : st ctxt
+     = fun s -> (s, s)] a one-binder definition whose declared type is an
+     application, not an arrow.  Unfolding puts the arrows back where [peel]
+     can see them; without it the binder is emitted and the *whole* [st ctxt]
+     is emitted as the result type too. *)
+  let res_typ = U.comp_result c in
+  let res_typ =
+    if n_extra > 0
+    then norm_bounded st "a result type"
+           [TcEnv.AllowUnboundUniverses; TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
+            TcEnv.UnfoldUntil S.delta_constant]
+           res_typ
+    else res_typ in
+  let eff, ret = peel n_extra (eff_of_comp st c) (ty_of_typ st res_typ) in
   let dl_body = expr_of_term st body in
   st.cur := saved_cur;
   DLet {
@@ -2121,11 +2166,27 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML pro
   let mark (f:flag) (l:Ident.lident) : ML unit =
     let key = string_of_key { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
     let _ = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
-    (* Mark the root so backends know which symbols must survive. *)
+    (* Mark the root so backends know which symbols must survive.  A type is
+       as good a root as a function: a hand-written realization that mentions,
+       say, [FStarC_Range.t] needs the abbreviation emitted even though the
+       extracted code unfolds it and never refers to it (section 8.2). *)
     match SMap.try_find st.emitted key with
     | Some (DLet d) ->
       SMap.add st.emitted key (DLet { d with dl_flags = f :: d.dl_flags })
-    | _ -> () in
+    | Some (DType d) ->
+      SMap.add st.emitted key (DType { d with dt_flags = f :: d.dt_flags })
+    | Some (DExternal d) ->
+      SMap.add st.emitted key (DExternal { d with dx_flags = f :: d.dx_flags })
+    | Some _ -> ()
+    | None ->
+      (* Nothing was emitted for this root.  The driver's own check cannot see
+         entry points in modules it has not loaded, so this is where a
+         misspelled [--custard_entry] is caught. *)
+      E.log_issue0 E.Error_CustardEntryNotFound [
+        text ("Custard entry point " ^ Ident.string_of_lid l ^
+              " did not produce a declaration.");
+        text "It may be misspelled, or erased, or not defined in the module named."
+      ] in
   roots |> List.iter (mark Root);
   (match main with Some l -> mark Entrypoint l | None -> ());
   if Options.custard_dump_specializations () then dump_specializations st;

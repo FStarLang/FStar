@@ -34,6 +34,7 @@ module Find    = FStarC.Find
 module Layout  = FStarC.Custard.Layout
 module Monomorphize = FStarC.Custard.Monomorphize
 module OCaml   = FStarC.Custard.PrintOCaml
+module Loader  = FStarC.Custard.Loader
 module Rename  = FStarC.Custard.Rename
 module Simplify = FStarC.Custard.Simplify
 module Split    = FStarC.Custard.Split
@@ -155,15 +156,25 @@ let warn_any (prog:program) : ML unit =
 (* Check that every requested entry point actually resolves to a definition we
    can see.  Getting this wrong is by far the most likely user error, and the
    resulting "empty program" would otherwise be silent. *)
-let check_entrypoints (env:TcEnv.env) (roots:list Ident.lident) : ML unit =
+let check_entrypoints (deps:Dep.deps) (env:TcEnv.env) (roots:list Ident.lident) : ML unit =
+  (* The extraction loop loads a module when it first reaches one of its
+     definitions ({!FStarC.Custard.Loader}), so at this point the environment
+     holds only what the driver happened to load: an entry in a module that is
+     not loaded yet is not an error, and loading it here would clash with the
+     interface the driver already has.  Those entries are checked after the
+     fact instead, by {!Extract.run}, which reports one that produced no
+     declaration.  What is worth catching early is a typo in a module the
+     driver *did* load, which is the common case. *)
   roots |> List.iter (fun l ->
-    match TcEnv.lookup_sigelt env l with
-    | Some _ -> ()
-    | None ->
-      E.log_issue0 E.Error_CustardEntryNotFound [
-        text ("Custard entry point " ^ Ident.string_of_lid l ^ " is not in scope.");
-        text "Make sure the module defining it is among the input files."
-      ])
+    let m = Ident.string_of_lid (Ident.lid_of_ids (Ident.ns_of_lid l)) in
+    if m = "" || Loader.module_is_loaded deps env m then
+      match TcEnv.lookup_sigelt env l with
+      | Some _ -> ()
+      | None ->
+        E.log_issue0 E.Error_CustardEntryNotFound [
+          text ("Custard entry point " ^ Ident.string_of_lid l ^ " is not in scope.");
+          text "Make sure the module defining it is among the input files."
+        ])
 
 (* -------------------------------------------------------------------- *)
 (* Unit interfaces (section 12)                                         *)
@@ -251,7 +262,7 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       text "Custard is a whole-program compiler: it extracts exactly the \
                    definitions reachable from the entry points."
     ];
-  check_entrypoints env roots;
+  check_entrypoints deps env roots;
   (* Section 12 is specified for the OCaml backend.  The C and karamel
      backends need a header and a linker story of their own, which they do not
      have yet; failing here is better than emitting a file that refers to

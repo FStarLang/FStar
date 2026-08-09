@@ -311,11 +311,18 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
                let used, extra =
                  if List.length args > np then List.splitAt np args else (args, []) in
                let s = (try List.zip d.dt_params used with _ -> []) in
-               let r = resolve t (fuel - 1) (subst_cty s c) in
-               (match extra, r with
-                | [], _ -> r
-                | _, TApp (m, a) -> TApp (m, a @ extra)
-                | _ -> r)
+               let body = subst_cty s c in
+               (* The surplus has to be attached *before* the body is resolved.
+                  [uvars = FlatSet.t ctx_uvar] goes through [t = flat_set],
+                  which binds nothing, to [flat_set], which binds one thing:
+                  resolving that on its own would unfold it with its own
+                  parameter still free and then apply the surplus to the
+                  result, yielding [(t, ctx_uvar) list]. *)
+               let body = match extra, body with
+                          | [], _ -> body
+                          | _, TApp (m, a) -> TApp (m, a @ extra)
+                          | _ -> body in
+               resolve t (fuel - 1) body
              | _ -> TApp (n, args))
           | _ -> TApp (n, args)))
     | c -> c

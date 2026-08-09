@@ -163,7 +163,21 @@ let rec unfold_cty (st:state) (fuel:int) (c:cty) : ML cty =
   | TApp (n, args) ->
     (match SMap.try_find st.types (string_of_name n) with
      | Some ({ dt_body = TAbbrev b; dt_params = ps }) ->
-       unfold_cty st (fuel - 1) (subst_cty (zip_params ps args) b)
+       (* An eta-contracted abbreviation -- [type t = flat_set], which binds
+          nothing and stands for a type constructor -- takes more arguments
+          than it has parameters, and the surplus belongs to whatever the body
+          names.  It has to be attached before unfolding again, or the body
+          would be unfolded with its own parameter still free (see the same
+          case in {!FStarC.Custard.Layout.resolve}). *)
+       let np = List.length ps in
+       let used, extra =
+         if List.length args > np then List.splitAt np args else (args, []) in
+       let b = subst_cty (zip_params ps used) b in
+       let b = match extra, b with
+               | [], _ -> b
+               | _, TApp (m, a) -> TApp (m, a @ extra)
+               | _ -> b in
+       unfold_cty st (fuel - 1) b
      | _ -> c)
   | _ -> c
 

@@ -18,6 +18,8 @@ CUSTARD_TESTS += Combinators
 CUSTARD_TESTS += Mutual
 CUSTARD_TESTS += Anf
 CUSTARD_TESTS += Phantom
+CUSTARD_TESTS += PolyVal
+CUSTARD_TESTS += TypeEntry
 CUSTARD_TESTS += ShortCircuit
 CUSTARD_TESTS += MonoTypes
 CUSTARD_TESTS += InlineFields
@@ -179,6 +181,15 @@ NOGREP_Implicits = "implicits_clamp (Prims.parse_int \"3\") ()"
 # backend sees anything, since monomorphization has run.  What this checks is
 # that it survives *uniformly* -- every declaration keeps both parameters, so
 # no use site disagrees with a declaration about the arity.
+# The retained binder is a placeholder, so it is typed 'unit' and passed '()':
+# typing it by its sort would make it 'any' and put an Obj.magic at every call.
+# The abbreviation is emitted only because it is named as an entry point.
+FLAGS_TypeEntry  = --custard_entry TypeEntry.t
+GREP_TypeEntry   = "type typeEntry_t ="
+
+GREP_PolyVal   = "let polyVal_box_empty (tmp : unit)" "(polyVal_box_empty ())"
+NOGREP_PolyVal = "Obj.magic"
+
 GREP_Phantom   = "type ('a, 'ph) phantom_tagged" "and ('a, 'ph) phantom_even_t" \
                  "type ('a, 'ph) phantom_odd_t"
 

@@ -2990,6 +2990,33 @@ describes the target more precisely rather than coercing it.  A type parameter
 the call site does not supply — an unspecialized `Mono` binder — becomes `any`,
 which is what it was before.
 
+**A type can be an entry point.**  A realization does not only *call* into the
+extracted code, it names its types, and one kind of name is not there to be
+found: Custard unfolds type abbreviations rather than emitting them, because a
+monomorphized abbreviation has no generic form left to emit and because the
+backends need the representation behind the name (§5.0).  An abbreviation that
+only a realization mentions is therefore reached by nothing and dropped as
+dead code by §6 pass 6.
+
+`--custard_entry FStarC.Range.Type.t` says otherwise, and there is nothing
+special about it: a root is a root whichever kind of declaration it names, and
+this is the same idiom §12.9 uses for a realization's callees.  Two things had
+to agree with that.  `Extract.run` marks the root, and it used to mark only a
+`DLet`, so a type root was emitted and then dropped.  And
+`Driver.check_entrypoints` used to reject an entry it could not look up, which
+is stricter than the extraction loop: the loop loads a module when it first
+reaches one of its definitions (§4.2), so at that point the environment holds
+only what the driver happened to load, and loading it early would clash with
+the interface the driver already has.  The early check now covers the modules
+that *are* loaded, which catches the common case of a typo, and `Extract.run`
+reports a root that produced no declaration at all.
+
+What this does *not* buy is a type whose representation §5.5 is free to
+change: a one-constructor type collapses into its payload, so a realization
+that builds its constructor sees a tuple.  A root type arguably ought to keep
+its representation as well as its name, in the same way a realized one does;
+that is not implemented (§12.10).
+
 `FStar.Pervasives.Native.tupleN` is the one realized type whose OCaml form is
 *syntax* rather than a name.  The type needs no help — the realization defines
 `('a, 'b) tuple2` as an alias for `'a * 'b`, so the qualified spelling is
@@ -3886,38 +3913,90 @@ realize the type too.
 ### 12.10 Where the extracted compiler stands
 
 With splitting, `--custard_entry FStarC.Main.main --custard_split` produces
-**176 files**, and those together with the hand-written realizations of
-`src/ml` compile, in `ocamldep -sort` order, with no ordering error and no
-name clash.  Three bugs had to be fixed to get there, found by advancing the
-build one error at a time and none of them about splitting:
+**179 files**, and those together with the hand-written realizations of
+`src/ml` compile, in `ocamldep -sort` order, past the front end, the type
+checker, the SMT encoding and the ML extraction, up to the generated parser.
 
-- **A record field mentioning a type variable the type does not bind.**
-  `FStarC.Class.Monad.monad` is a class over `m : Type -> Type`, so `return`
-  has type `#a:Type -> a -> m a` and the `a` is bound by the *field*.  Neither
-  the IR nor an OCaml record field without an explicit universal can say that,
-  and `m a` is already `TAny` for the same reason, so the honest reading is
-  that the field has no representation on either side.
-  `Layout.close_fields` replaces such a variable with `TAny`, and it runs
-  before anything reads a field's type — the layout analysis, the verdicts and
-  §5.4's coercion insertion all take a declared field type at its word.
-- **A realization being shadowed by its model.**  `FStar_Dyn.ml` represents
-  `dyn` as `Obj.t`, so Custard's compiled `undyn` forced a thunk that is not
-  one.  The fix is the general rule of §8.2 — a realization replaces the
-  module's values too — not a list of exceptions.
-- **A polymorphic realization poisoning its callers.**  With `fst` and `snd`
-  external, every call was typed as returning `any`.  §8.2's `dx_typars`
-  instantiates an external's signature at the call site instead.
+Getting there was a matter of advancing the build one error at a time.  Two
+kinds of thing came up, and it is worth keeping them apart.
 
-What the build stops on now is an ordinary code-generation bug rather than a
-structural one: `FStarC.Interactive.CompletionTable` emits `trie_empty u_'a`,
-a type argument that erasure left in a value position.  Everything before it
-in the link order — a hundred-odd modules, the whole front end and most of the
-type checker — compiles.
+**Custard bugs.**  Five, each a real one that a smaller test had not reached:
 
-Still missing for a *runnable* compiler: build integration (item 7 of §12.8),
-which has to drive `menhir` and `sedlex` for the generated parser and lexer
-and link the result, and the `Prims.int` question of item 8.
+- **A type argument in value position.**  `Mono.keep_thunk` puts the last
+  binder back when dropping it would turn a definition into a value, and the
+  binder it puts back may be a *type* binder — as it is for an unannotated
+  polymorphic value like `let trie_empty = { bindings = []; namespaces = [] }`.
+  The definition then took a runtime argument that the call site answered with
+  the type, which happened to work where the type was concrete (§5.4 wrapped it
+  as `Obj.magic ()`) and emitted an unbound identifier where it was a type
+  variable.  A retained type binder carries no value, exactly like a
+  unit-shaped one, so `Mono.unit_binders` now includes it and the call site
+  passes `()`.  The binder is typed `unit` rather than by its sort, which is
+  both honest and the only typing that needs no coercion.
+- **A lambda-lifted local function that did not receive its callees'
+  captures.**  A reference to a lifted local becomes a call to its top-level
+  name applied to *its* captures (§5.10), so a nest that mentions another
+  lifted local does not capture it — it captures what that one captures.
+  `Extract.lift_letrec` was taking `Free.names` at face value and emitting
+  bodies that named variables no parameter bound.  It now expands a free
+  variable that is itself lifted into that nest's captures.
+- **A lambda-lifted local function that kept its own type binders as
+  parameters.**  F\* generalizes a local `let rec` just as it does a top-level
+  one, so `let rec collect (l : list 'a) = ...` binds `'a`.  Those binders hold
+  no runtime value and no call site passes them (§5.0); they belong in the
+  declaration's `dl_typars`, not its binders.  Left as binders they made every
+  call arity-mismatched.
+- **An eta-contracted abbreviation unfolded with its own parameter free.**
+  `uvars = FlatSet.t ctx_uvar` goes through `t = flat_set`, which binds
+  nothing, to `flat_set a = list a`, which binds one thing.  Both
+  `Layout.resolve` and `Monomorphize.unfold_cty` resolved the body first and
+  applied the surplus argument to the *result*, yielding `(t, ctx_uvar) list`.
+  The surplus has to be attached before the body is resolved.
+- **An arrow hidden behind an abbreviation.**  `let st a = ctxt -> ML (a &
+  ctxt)` makes `let get : st ctxt = fun s -> (s, s)` a definition with one
+  binder whose declared type is an application, not an arrow, so the result
+  type was emitted whole and the binder emitted as well.  The result type is
+  now unfolded to weak head normal form before the extra binders' arrows are
+  peeled off.
 
+**Realizations written against the ML extraction.**  These are not Custard
+bugs; they are places where a hand-written `.ml` assumed something the ML
+extraction did and Custard does not.
+
+- **Type abbreviations.**  Custard unfolds them rather than emitting them — a
+  monomorphized abbreviation has no generic form left to emit, and the backends
+  need the representation behind the name (§5.0) — so an abbreviation that only
+  a realization mentions is reached by nothing and dropped as dead.
+  `--custard_entry` names it, exactly as §12.9 uses it for a realization's
+  callees, and a root is a root whichever kind of declaration it is.  It took a
+  fix in two places: `Extract.run` only flagged a `DLet` as a `Root`, so §6
+  pass 6 dropped a type root as dead; and `Driver.check_entrypoints` looked
+  the entry up in an environment that had not loaded its module yet, which is
+  stricter than the extraction loop, which loads on demand (§4.2).  The check
+  now covers what is loaded and `Extract.run` reports a root that produced no
+  declaration.  `tests/custard/TypeEntry.fst` pins this.
+- **Constructor arity.**  F\* declares `MLP_CTor of mlpath & list mlpattern`
+  with *two* arguments and Custard emits it that way; the ML extraction packs
+  them into a tuple.  Writing the pattern out — `MLP_CTor (path, ps)` rather
+  than `MLP_CTor args` — means the same thing under both, which is what
+  `FStarC_Extraction_ML_PrintML.ml` now does.
+- **Private symbols.**  `FStarC.Parser.Const.Tuples.is_tuple_constructor_string`
+  was used by a realization without being in the interface, so no entry point
+  could name it.  It is exported now.
+
+What the build stops on is the third kind, and it is a real gap rather than a
+bug: `FStarC_Parser_Parse.mly`, the hand-written grammar, constructs and
+matches `FStarC.Parser.AST`'s constructors directly, and §5.5 is free to
+collapse a one-constructor type into its payload — `calc_step` becomes a
+`tuple3`.  A type named as an entry point is part of the program's external
+surface, so the natural rule is that a root type keeps its declaration *and*
+its representation, in the same way a realized one does (`Layout` already has
+the `NoNewtype` flag and the `Realized` exemptions to hang this on).  That is
+not implemented.
+
+Still missing for a *runnable* compiler beyond that: build integration (item 7
+of §12.8), which has to drive `menhir` and `sedlex` for the generated parser
+and lexer and link the result, and the `Prims.int` question of item 8.
 
 
 | M | Deliverable | Notes |
@@ -3962,5 +4041,6 @@ and link the result, and the `Prims.int` question of item 8.
 | M10h | Coercions at the `TAny` boundary (§5.4) | Done.  `Simplify.coerce_prog`, the last pass in the pipeline: a bidirectional walk that inserts an `ECast` exactly where a value crosses a *printed* boundary -- a declaration's binders and result, an external's type, a constructor's or record's field types -- whose declared type disagrees with what the value is.  Nowhere else: a node's own `ty` is believed only when it mentions no `TAny`, since `Extract` falls back to `TAny` as often for "not worked out" as for "no representation", and driving the pass off those was the first implementation, which magicked every application.  Two asymmetries make it work: a coercion *to* `TAny` is well-typed whatever the source, so it needs only that the term obviously has *some* representation; and a node that hands its expectation to its own result (`if`, `match`, `let`, `try`) is not asked again, which is what keeps a coercion off the `if` as well as inside each branch.  Unblocks §12.8 item 6 -- `FStarC.Class.Monad`, a class over `Type -> Type`, which neither the IR nor OCaml can name.  Also: `Layout.resolve` no longer expands a realized abbreviation (`FStar.Dyn.dyn`), unless it is `inline_for_extraction` (`FStarC.PSMap.psmap`).  `tests/custard/Magic.fst` |
 | M10i | Output splitting (§12.9) | Done.  `--custard_split` writes one OCaml file per F\* source module instead of one file for the whole program, so that F\*'s hand-written realizations — fourteen of which reference modules Custard compiles — can sit between the pieces; OCaml compilation units must form a DAG, and a single file made them circular.  Still one whole-program run: no unit interface, no re-specialization, just a partition of the already-sorted declaration list.  `Split.run` gives each declaration the latest home, in F\*'s own module order, among its own module and those of everything it references, which is what relocates a specialization that outgrew its source module; `PrintOCaml` prints a declaration under its plain identifier when it is at home, which is the name the realizations spell, and reuses the `Imported` flag of M10c for every cross-file reference.  Two codegen bugs fixed behind it: a record field mentioning a type variable the type does not bind (`Layout.close_fields`), and a realization shadowed by its model, which §12.10 and M10j turned into the general rule.  The compiler splits into files that compile with the realizations in `ocamldep -sort` order; §12.10.  `tests/custard/SplitLo.fst`, `SplitMid.ml`, `SplitHi.fst` |
 | M10j | A realization replaces its module's values (§8.2) | Done.  Where `src/ml` or `ulib/ml` holds a hand-written `.ml`, the F\* definitions in that module are a model, and a model that disagrees with the realization — `FStar.Dyn`'s `dyn` is `unit -> Dv value_type_bundle` in F\* and `Obj.t` in OCaml — is not something extraction may silently choose between.  Every `Sig_let` in a realized module becomes a `DExternal`; an incomplete realization is now a link error rather than a program running the model.  Exempted, because they are not models: projectors and discriminators, `inline_for_extraction` symbols (which in a realized module means the realization deliberately does not define them, as `FStarC.PSMap`'s `psmap_*` aliases do), type abbreviations, and the two modules whose realization defines no representation of its own (`Builtins.type_only_realized_modules`: `FStar.Pervasives`, which has no file, and `FStar.Pervasives.Native`, which is transparent over types Custard represents natively — and whose `fst`/`snd`, left external, would freeze `tuple2` and leave the C backend with no representation for it).  Externals gained `dx_typars` so that §3.2 instantiates a polymorphic realization's signature at the call site: without it one `let fst = Stdlib.fst` types every caller's result as `any`.  The cost, accepted: what a realization implements is no longer monomorphized |
+| M10k | Advancing the extracted-compiler build (§12.10) | Done.  Five code-generation bugs: a retained *type* binder passed as a runtime argument (`Mono.keep_thunk`/`unit_binders`, now typed `unit` so no `Obj.magic` is generated); a lambda-lifted local not receiving the captures of the lifted locals it calls; a lambda-lifted local keeping its own generalized type binders as value parameters instead of `dl_typars`; an eta-contracted abbreviation (`uvars = FlatSet.t ctx_uvar` through `t = flat_set`) unfolded with its own parameter still free, in both `Layout.resolve` and `Monomorphize.unfold_cty`; and a definition whose declared type hides its arrows behind an abbreviation (`let get : st ctxt = fun s -> ...`).  A *type* can now be a `--custard_entry`, which is how a realization gets at an abbreviation Custard unfolds rather than emits: `Extract.run` flags a `DType` root and `Driver.check_entrypoints` no longer rejects an entry whose module the on-demand loader has not reached.  `tests/custard/PolyVal.fst` and `TypeEntry.fst` |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

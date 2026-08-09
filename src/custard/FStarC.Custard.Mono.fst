@@ -142,13 +142,21 @@ let retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ) =
   bs |> List.filter (fun b -> not (is_erased_binder env b))
      |> List.map (fun b -> b.binder_bv.sort)
 
-(* The binders of [t] whose value is irrelevant because their type is
-   unit-shaped.  These are exactly the ones rule 1 declines to delete, so a
-   call site may -- and should -- pass [()] rather than whatever proof term the
-   source supplies, which can be a [Prims.magic ()] that aborts at runtime. *)
+(* The binders of [t] that are kept but carry no value, so a call site may --
+   and should -- pass [()] rather than whatever the source supplies.
+
+   Two kinds.  A unit-shaped binder is the one rule 1 declines to delete, and
+   what the source supplies for it can be a [Prims.magic ()] that aborts at
+   runtime, or an arbitrarily expensive piece of ghost code.  A *type* binder
+   is normally deleted outright, but {!keep_thunk} puts the last one back when
+   deleting it would turn the definition into a value; what the source supplies
+   for that one is a type, and a type is not a term.  Passing it produces
+   either an [Obj.magic ()] (when the argument is a concrete type, which
+   happens to work) or a reference to a type variable in value position (when
+   it is not, which does not). *)
 let unit_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in
-  bs |> List.map (fun b -> U.is_unit b.binder_bv.sort)
+  bs |> List.map (fun b -> U.is_unit b.binder_bv.sort || is_type_binder env b)
 
 let type_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in
