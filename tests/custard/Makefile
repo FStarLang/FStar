@@ -32,6 +32,21 @@ CUSTARD_TESTS += MonoHoles
 CUSTARD_TESTS += DepParams
 CUSTARD_TESTS += MonoDyn
 CUSTARD_TESTS += MatchGuard
+CUSTARD_TESTS += Magic
+# Section 5.4: a class over a type constructor is the one thing neither the IR
+# nor OCaml can name, so its dictionary fields are Obj.t and a coercion at each
+# boundary is unavoidable.  --warn_error -366 undoes WARN_ANY's escalation for
+# this one module; what is pinned here is that the coercions go exactly at the
+# Obj.t boundaries -- the scrutinee, the value built at the abstract result
+# type, the pattern variable read back at a concrete one -- and nowhere else.
+# In particular not around the match whose branches already carry one, which is
+# the ML extraction's characteristic Obj.t-and-back-again.
+FLAGS_Magic   = --warn_error -366
+GREP_Magic   += "(match (Obj.magic (tmp)) with"
+GREP_Magic   += "(Obj.magic ((FStar_Pervasives_Native.Some (tmp))))"
+GREP_Magic   += "(tmp1 (Obj.magic (v)))"
+NOGREP_Magic += "(Obj.magic ((match"
+NOGREP_Magic += "Obj.magic (magic_"
 # One shared specialization taking the dictionary at run time (the identity
 # skeleton), one fully specialized version for the static call site, and no
 # trace of the [dyn] marker itself.

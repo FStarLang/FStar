@@ -294,6 +294,12 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
           backends need to see the machine integer behind, say, [pos_us]. *)
        | _ ->
          (match SMap.try_find t.types (key n) with
+          (* A realized abbreviation is not one: the hand-written OCaml gives
+             the *name* a definition of its own ([FStar.Dyn.dyn] is [Obj.t],
+             not the [unit -> value_type_bundle] the F* source says), and
+             expanding it would replace a type the target has with one it does
+             not. *)
+          | Some d when has_flag d.dt_flags Realized -> TApp (n, args)
           | Some d ->
             (match d.dt_body with
              | TAbbrev c ->

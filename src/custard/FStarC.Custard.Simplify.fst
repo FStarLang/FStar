@@ -1565,6 +1565,363 @@ let unbuild_decls (prog:program) : ML program =
     | DLet dl -> DLet { dl with dl_body = unbuild infos dl.dl_body }
     | d -> d)
 
+(* {1 Coercions at the [TAny] boundary (section 5.4)}
+
+   [TAny] is what is left when Custard cannot name a value's representation.
+   Monomorphization removes almost every reason for that, but not all of them:
+   a class over a type *constructor* -- [FStarC.Class.Monad], whose [m] is a
+   [Type -> Type] -- has no counterpart in the IR's type language, so its
+   dictionary fields come out [TAny], and OCaml, which has no counterpart for
+   it either, has to be told to stop looking.  That is what [Obj.magic] is for,
+   and there is no avoiding it: `m t` is genuinely not an OCaml type.
+
+   What *can* be avoided is the ML extraction's habit of coercing a term and
+   then coercing it straight back -- a magic around an [if] and another around
+   each of its branches, unit to [Obj.t] to unit.  So this pass inserts a
+   coercion only where a value crosses a boundary that the target language will
+   actually see, and only when the two sides of that boundary genuinely
+   disagree.
+
+   Which boundaries those are is the whole subtlety, and it is not "wherever
+   two [expr.ty] fields differ".  A node's [ty] is what [Extract] could work
+   out at the time, and [TAny] there means two different things: sometimes the
+   value really has no representation, and sometimes the type was simply not
+   available -- a call to a not-yet-emitted recursive function, a head a
+   builtin rule rewrote.  Coercing on the strength of one of those produces
+   exactly the magic-everywhere output this pass exists to avoid.
+
+   The types that are *not* guesses are the ones a backend prints: a
+   declaration's parameter and result types, a constructor's or record's field
+   types, an external's declared type.  Those are the boundaries, and they are
+   what drives the walk.  It is bidirectional: [check] pushes an expectation
+   down from one of them, [infer] pulls a type up towards one, and a coercion
+   goes in where both are known and disagree.  Everywhere either side is
+   unknown, nothing is inserted -- OCaml infers, and a coercion would only be
+   noise.
+
+   A node's own [ty] is still used, but only when it is [TAny]-free, which is
+   the case where it is trustworthy: [Extract] falls back to [TAny], it never
+   invents a type it does not have. *)
+
+(* Do these two types disagree in a way the target language will notice?
+
+   Only a [TAny] against a concrete type counts, structurally.  Two *different*
+   concrete types are not this pass's business: either the IR is well-typed and
+   they are the same up to something [Layout] resolved, or it is not, and
+   papering over that with a coercion would hide the bug.  In particular a
+   [TVar] against anything is not a disagreement -- a type variable that
+   survived monomorphization stands for a value whose representation is
+   uniform, which is precisely what agreeing means here. *)
+let rec cty_mismatch (a b : cty) : ML bool =
+  match a, b with
+  | TAny, TAny -> false
+  | TAny, _ | _, TAny -> true
+  | TArrow (a1, _, a2), TArrow (b1, _, b2) -> cty_mismatch a1 b1 || cty_mismatch a2 b2
+  | TApp (n, xs), TApp (m, ys) ->
+    string_of_name n = string_of_name m && ctys_mismatch xs ys
+  | TBuf x, TBuf y
+  | TRef x, TRef y
+  | TInline x, TInline y -> cty_mismatch x y
+  | TTuple xs, TTuple ys -> ctys_mismatch xs ys
+  | _ -> false
+and ctys_mismatch (xs ys : list cty) : ML bool =
+  match xs, ys with
+  | [], [] -> false
+  | x :: xs, y :: ys -> cty_mismatch x y || ctys_mismatch xs ys
+  | _ -> false
+
+(* The types of [n] arguments and the result, when [c] says enough to tell.  It
+   may not: an over-application left behind by inlining, or a head whose own
+   type was never worked out. *)
+let rec peel_arrows (n:int) (c:cty) : option (list cty & cty) =
+  if n <= 0 then Some ([], c)
+  else match c with
+       | TArrow (a, _, r) ->
+         (match peel_arrows (n - 1) r with
+          | Some (ps, res) -> Some (a :: ps, res)
+          | None -> None)
+       | _ -> None
+
+let rec arrows (ts:list cty) (res:cty) : cty =
+  match ts with
+  | [] -> res
+  | t :: ts -> TArrow (t, E_Pure, arrows ts res)
+
+(* A local variable's type, when it is known.  [None] rather than a missing
+   entry is deliberate: a lambda binder whose [b_ty] is [TAny] is bound to
+   "unknown", because a lambda binder is not annotated in the output and so its
+   [TAny] was never a claim about the representation. *)
+type cenv = SMap.t (option cty)
+
+let coerce_prog (prog:program) : ML program =
+  let all = with_imports prog in
+  let infos = ctor_infos all in
+  let tparams : SMap.t (list string) = SMap.create 50 in
+  (* A declaration's signature as the backend will print it, with its type
+     parameters still abstract. *)
+  let sigs : SMap.t (list string & cty) = SMap.create 100 in
+  let _ = all |> List.iter (fun d ->
+    match d with
+    | DType dt -> SMap.add tparams (string_of_name dt.dt_name) dt.dt_params
+    | DLet dl ->
+      let rec build (bs:list binder) : cty =
+        match bs with
+        | [] -> dl.dl_ret
+        | b :: bs -> TArrow (b.b_ty, E_Pure, build bs) in
+      SMap.add sigs (string_of_name dl.dl_name) (dl.dl_typars, build dl.dl_binders)
+    | DExternal dx -> SMap.add sigs (string_of_name dx.dx_name) ([], dx.dx_ty)
+    | DExn _ -> ()) in
+  let params_of (n:name) : ML (list string) =
+    match SMap.try_find tparams (string_of_name n) with
+    | Some ps -> ps
+    | None -> [] in
+  let sig_of (n:name) (targs:list cty) : ML (option cty) =
+    match SMap.try_find sigs (string_of_name n) with
+    | None -> None
+    | Some (ps, t) ->
+      if List.length ps = List.length targs
+      then Some (subst_cty (List.zip ps targs) t)
+      else Some t in
+  (* The type a value must have for [key] -- a constructor name, or a record
+     type's own name -- to be read out of it.  Its arguments are unknown by
+     construction: this is only asked of a value already known to be [TAny], so
+     nothing about them can be recovered.  Saying [TAny] is honest, and the
+     target needs only the head -- OCaml infers the rest from the pattern or
+     the field name. *)
+  let owner_of (key:string) : ML (option cty) =
+    match SMap.try_find infos key with
+    | None -> None
+    | Some ci -> Some (TApp (ci.ci_owner, params_of ci.ci_owner |> List.map (fun _ -> TAny))) in
+  (* The declared field types of [key], seen through a value of type [owner],
+     which is where their type arguments come from.  When [owner] does not say,
+     the declared types come back unsubstituted; their [TVar]s then agree with
+     everything, which is the conservative answer. *)
+  let fields_of (key:string) (owner:option cty) : ML (list (string & cty)) =
+    match SMap.try_find infos key with
+    | None -> []
+    | Some ci ->
+      let ps = params_of ci.ci_owner in
+      let args = (match owner with Some (TApp (_, args)) -> args | _ -> []) in
+      if List.length ps = List.length args && Cons? ps
+      then (let s = List.zip ps args in
+            ci.ci_fields |> List.map (fun (f, c) -> (f, subst_cty s c)))
+      else ci.ci_fields in
+  let field_of (key:string) (owner:option cty) (f:string) : ML (option cty) =
+    match fields_of key owner |> List.tryFind (fun (g, _) -> g = f) with
+    | Some (_, t) -> Some t
+    | None -> None in
+  (* What a set of branches says its scrutinee is.  A constant or tuple pattern
+     names no declaration, so it contributes nothing; in practice a scrutinee
+     of unknown type is always matched against constructors. *)
+  let rec scrutinee_of (brs:list branch) : ML (option cty) =
+    match brs with
+    | [] -> None
+    | (p, _, _) :: brs ->
+      (match p with
+       | PCtor (n, _) | PRecord (n, _) -> owner_of (string_of_name n)
+       | _ -> scrutinee_of brs) in
+  (* A node's own type, when it is worth believing: when it mentions no [TAny]
+     at all.  [Extract] falls back to [TAny] and never invents a type it does
+     not have, so a [TAny] anywhere in a node's type means "not worked out"
+     just as often as it means "no representation", and acting on it is what
+     produces magic everywhere. *)
+  let rec has_any (c:cty) : ML bool =
+    match c with
+    | TAny -> true
+    | TArrow (a, _, b) -> has_any a || has_any b
+    | TApp (_, args) -> args |> List.existsb has_any
+    | TTuple cs -> cs |> List.existsb has_any
+    | TBuf c | TRef c | TInline c -> has_any c
+    | TVar _ | TInt _ | TUnit | TExn -> false in
+  let trust (c:cty) : ML (option cty) = if has_any c then None else Some c in
+  (* Does this term obviously have *some* representation, whatever it is?  When
+     a value of unknown type reaches a position declared [TAny], that is the
+     one question worth asking: a coercion *to* [TAny] is well-typed in the
+     target whatever the source turns out to be, so it can be inserted on this
+     much weaker evidence, and it has to be -- [Some x] built at type
+     [option Obj.t] is the [Class.Monad] case, and its node type mentions a
+     [TAny] that says nothing about the [option]. *)
+  let concrete_shape (x:expr) : ML bool =
+    match x.e with
+    | ECtor _ | ERecord _ | ETuple _ | EConst _ | EFun _ | EOp _ -> true
+    | _ -> false in
+  let lookup (env:cenv) (v:string) : ML (option (option cty)) = SMap.try_find env v in
+  let extend (env:cenv) (v:string) (t:option cty) : ML cenv =
+    let env' = SMap.copy env in
+    let _ = SMap.add env' v t in
+    env' in
+  let rec infer (env:cenv) (x:expr) : ML (option cty) =
+    match x.e with
+    | EVar v -> (match lookup env v with Some t -> t | None -> trust x.ty)
+    | EQual (n, targs) ->
+      (match sig_of n targs with Some t -> Some t | None -> trust x.ty)
+    | ECast (_, t) -> Some t
+    | EApp (h, es) ->
+      (match infer env h with
+       | Some t ->
+         (match peel_arrows (List.length es) t with
+          | Some (_, res) -> Some res
+          | None -> trust x.ty)
+       | None -> trust x.ty)
+    | EProj (e1, n, f) ->
+      (match field_of (string_of_name n) (infer env e1) f with
+       | Some t -> Some t
+       | None -> trust x.ty)
+    | ELet (v, t, e1, e2) -> infer (extend env v (binding env t e1)) e2
+    | ESeq (_, b) -> infer env b
+    | _ -> trust x.ty
+  (* What a [let]-bound variable's type is.  The annotation is [Extract]'s and
+     is not printed, so a [TAny] there is not a claim; the defining term is the
+     better witness. *)
+  and binding (env:cenv) (t:cty) (e1:expr) : ML (option cty) =
+    match trust t with
+    | Some t -> Some t
+    | None -> infer env e1 in
+  let first (a b : option cty) : option cty =
+    match a with Some _ -> a | None -> b in
+  (* Bind the variables a pattern introduces, at the field types of the
+     constructor it names as seen through [sc], the scrutinee's type. *)
+  let rec bind_pat (env:cenv) (sc:option cty) (p:pat) : ML cenv =
+    match p with
+    | PWild | PConst _ -> env
+    | PVar v -> extend env v sc
+    | POr ps -> List.fold_left (fun env p -> bind_pat env sc p) env ps
+    | PTuple ps ->
+      let ts = (match sc with
+                | Some (TTuple ts) when List.length ts = List.length ps -> ts |> List.map Some
+                | _ -> ps |> List.map (fun _ -> None)) in
+      List.fold_left (fun env (t, p) -> bind_pat env t p) env (List.zip ts ps)
+    | PCtor (n, ps) ->
+      let fs = fields_of (string_of_name n) sc in
+      if List.length fs = List.length ps
+      then List.fold_left (fun env ((_, t), p) -> bind_pat env (Some t) p) env (List.zip fs ps)
+      else List.fold_left (fun env p -> bind_pat env None p) env ps
+    | PRecord (n, fps) ->
+      fps |> List.fold_left (fun env (f, p) ->
+        bind_pat env (field_of (string_of_name n) sc f) p) env in
+  (* Rewrite [x] so that every boundary inside it agrees, then coerce [x]
+     itself if what it is meets what is expected of it. *)
+  (* The nodes whose [go] hands the expectation straight to whatever produces
+     their result.  Each of those results has already been coerced, so the node
+     agrees with the expectation by construction, and asking again would put a
+     second coercion around the [if] on top of the one inside each branch --
+     the ML extraction's exact pathology. *)
+  let pushes_down (x:expr) : ML bool =
+    match x.e with
+    | ELet _ | ESeq _ | EIf _ | EMatch _ | ETry _ -> true
+    | _ -> false in
+  let rec check (env:cenv) (exp:option cty) (x:expr) : ML expr =
+    let x = go env exp x in
+    if Some? exp && pushes_down x then x else
+    match exp, infer env x with
+    | Some e, Some t -> if cty_mismatch t e then mk (ECast (x, e)) e x.eff else x
+    | Some TAny, None -> if concrete_shape x then mk (ECast (x, TAny)) TAny x.eff else x
+    | _ -> x
+  and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
+    let same (e':expr') : expr = { x with e = e' } in
+    match x.e with
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | ECast (e1, t) -> same (ECast (go env None e1, t))
+    | EOp (o, es) -> same (EOp (o, es |> List.map (go env None)))
+    | EWhile (c, b) -> same (EWhile (go env None c, go env None b))
+    | ERaise e1 -> same (ERaise (check env (Some TExn) e1))
+    | ESeq (a, b) -> same (ESeq (go env None a, check env exp b))
+    | ELet (v, t, e1, e2) ->
+      let e1 = check env (trust t) e1 in
+      same (ELet (v, t, e1, check (extend env v (binding env t e1)) exp e2))
+    | EIf (c, a, b) ->
+      (* One expectation for both branches, so that a coercion goes on the one
+         that needs it rather than on the [if]. *)
+      let exp = first exp (first (infer env a) (infer env b)) in
+      same (EIf (go env None c, check env exp a, check env exp b))
+    | ETuple es ->
+      let ts = (match exp with
+                | Some (TTuple ts) when List.length ts = List.length es -> ts |> List.map Some
+                | _ -> es |> List.map (fun _ -> None)) in
+      same (ETuple (List.map2 (check env) ts es))
+    | EFun (bs, body) ->
+      (* The expectation, when there is one, is what the binders are; a lambda
+         binder is not annotated in the output, so its own [b_ty] is only a
+         hint. *)
+      let ps, res =
+        (match exp with
+         | Some t ->
+           (match peel_arrows (List.length bs) t with
+            | Some (ps, res) -> (ps |> List.map Some, Some res)
+            | None -> (bs |> List.map (fun (b:binder) -> trust b.b_ty), None))
+         | None -> (bs |> List.map (fun (b:binder) -> trust b.b_ty), None)) in
+      let env = List.fold_left (fun env ((b:binder), t) -> extend env b.b_name t)
+                               env (List.zip bs ps) in
+      same (EFun (bs, check env res body))
+    | EApp (h, es) ->
+      (match infer env h with
+       | Some t ->
+         (match peel_arrows (List.length es) t with
+          | Some (ps, _) ->
+            same (EApp (go env None h, List.map2 (fun p e -> check env (Some p) e) ps es))
+          | None ->
+            (* The head says nothing about its arguments, so the arguments say
+               what the head must be.  One coercion, on the head. *)
+            let es = es |> List.map (go env None) in
+            let ts = es |> List.map (infer env) in
+            let want =
+              (match exp with
+               | Some r when ts |> List.for_all Some? ->
+                 Some (arrows (ts |> List.map (fun t -> match t with Some t -> t | None -> TAny)) r)
+               | _ -> None) in
+            same (EApp (check env want h, es)))
+       | None -> same (EApp (go env None h, es |> List.map (go env None))))
+    | ECtor (n, es) ->
+      let fs = fields_of (string_of_name n) (first exp (trust x.ty)) in
+      if List.length fs = List.length es
+      then same (ECtor (n, List.map2 (fun (_, t) e -> check env (Some t) e) fs es))
+      else same (ECtor (n, es |> List.map (go env None)))
+    | ERecord (n, fs) ->
+      let owner = first exp (trust x.ty) in
+      same (ERecord (n, fs |> List.map (fun (f, e) ->
+        (f, check env (field_of (string_of_name n) owner f) e))))
+    (* A value known to have no representation cannot be taken apart until it
+       has one.  The guard is [TAny] exactly: [list Obj.t] is matched and
+       projected perfectly well as it stands. *)
+    | EProj (e1, n, f) ->
+      let e1 = go env None e1 in
+      (match infer env e1, owner_of (string_of_name n) with
+       | Some TAny, Some t -> same (EProj (mk (ECast (e1, t)) t e1.eff, n, f))
+       | _ -> same (EProj (e1, n, f)))
+    | EDiscrim (e1, n) ->
+      let e1 = go env None e1 in
+      (match infer env e1, owner_of (string_of_name n) with
+       | Some TAny, Some t -> same (EDiscrim (mk (ECast (e1, t)) t e1.eff, n))
+       | _ -> same (EDiscrim (e1, n)))
+    | EMatch (sc, brs) ->
+      let sc = go env None sc in
+      let sc = (match infer env sc, scrutinee_of brs with
+                | Some TAny, Some t -> mk (ECast (sc, t)) t sc.eff
+                | _ -> sc) in
+      let st = infer env sc in
+      let exp = first exp (branches_ty env brs) in
+      same (EMatch (sc, brs |> List.map (check_branch env st exp)))
+    | ETry (e1, brs) ->
+      let exp = first exp (first (infer env e1) (branches_ty env brs)) in
+      same (ETry (check env exp e1, brs |> List.map (check_branch env None exp)))
+  and check_branch (env:cenv) (sc:option cty) (exp:option cty) (br:branch) : ML branch =
+    let p, g, b = br in
+    let env = bind_pat env sc p in
+    (p, (match g with Some g -> Some (go env None g) | None -> None), check env exp b)
+  and branches_ty (env:cenv) (brs:list branch) : ML (option cty) =
+    match brs with
+    | [] -> None
+    | (p, _, b) :: brs -> first (infer (bind_pat env None p) b) (branches_ty env brs) in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl ->
+      (* A top-level binder and result *are* printed, so a [TAny] in one of
+         them is a claim: the value really is an [Obj.t] there. *)
+      let env : cenv = SMap.create 20 in
+      dl.dl_binders |> List.iter (fun (b:binder) -> SMap.add env b.b_name (Some b.b_ty));
+      DLet { dl with dl_body = check env (Some dl.dl_ret) dl.dl_body }
+    | d -> d)
+
 let run (imports:list dtype) (vd:verdicts) (prog:program) : ML program =
   imported_types := imports;
   (* First, because every pass below reads a constructor's arity. *)
@@ -1591,4 +1948,6 @@ let run (imports:list dtype) (vd:verdicts) (prog:program) : ML program =
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
     | d -> d) in
-  records vd (scc (dce prog))
+  (* Last: a coercion is inserted where two types disagree, so every pass that
+     can change a type has to have run.  Nothing below it may rewrite a term. *)
+  coerce_prog (records vd (scc (dce prog)))

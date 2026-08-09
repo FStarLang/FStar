@@ -64,12 +64,18 @@ let main_entry () : ML (option Ident.lident) =
    when the two sides have the same layout, and fuses nested ones; what is left
    is a coercion between representations Custard believes are genuinely
    different, which in OCaml is an [Obj.magic] and in C a reinterpretation.
-   The exception is a cast between two machine integers, which is not lost
+
+   Two kinds are not reported.  A cast between two machine integers is not lost
    information at all but the conversion the source asked for -- a real call
-   into [FStar.Int.Cast] -- so it is not reported. *)
+   into [FStar.Int.Cast].  And a cast to or from [TAny] is the *consequence* of
+   a [TAny], inserted by {!FStarC.Custard.Simplify.coerce_prog} at exactly the
+   boundary where one meets a concrete type; the [TAny] itself is reported at
+   the binder, field or result carrying it, and repeating the complaint once
+   per use would bury it. *)
 let lost_cast (e:expr) (t:cty) : bool =
   match e.ty, t with
   | TInt _, TInt _ -> false
+  | TAny, _ | _, TAny -> false
   | _ -> true
 
 let warn_any (prog:program) : ML unit =
@@ -139,9 +145,11 @@ let warn_any (prog:program) : ML unit =
                show (List.length ss) ^ " value(s) in '" ^
                string_of_name (name_of_decl d) ^ "':")
          :: (ss |> List.map (fun s -> text ("- " ^ s)))
-         @ [text "A whole, monomorphic program should not need these. The \
-                  generated code for them is unchecked: an Obj.magic in OCaml, \
-                  a reinterpretation in C."]))
+         @ [text "A whole, monomorphic program mostly should not need these: \
+                  each one is a place where the code generated to cross into \
+                  and out of it is unchecked -- an Obj.magic in OCaml, a \
+                  reinterpretation in C. Some are unavoidable, notably a class \
+                  over a type constructor, which no OCaml type can name."]))
 
 (* Check that every requested entry point actually resolves to a definition we
    can see.  Getting this wrong is by far the most likely user error, and the

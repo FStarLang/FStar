@@ -1618,13 +1618,100 @@ The reason is that two of the three sources above never reach phase 4:
 - `coerce_eq` extracts as an ordinary polymorphic identity function, which
   monomorphization then specializes and inlining then deletes.
 
-The only remaining producer of `ECast` is the machine-integer rules in
-`Builtins`, and those are not lost information at all: they are the conversion
-the source asked for, a real call into `FStar.Int.Cast`.  Rule 1 must not
-delete them, and rule 3 could only duplicate them across branches.
+The machine-integer rules in `Builtins` produce `ECast` too, and those are not
+lost information at all: they are the conversion the source asked for, a real
+call into `FStar.Int.Cast`.  Rule 1 must not delete them, and rule 3 could only
+duplicate them across branches.
 
 `--custard_warn_any` (§5.9) is what turns "we measured zero" into something
 that stays true.
+
+#### Coercion *insertion* (`Simplify.coerce_prog`)
+
+The measurement above holds for the test corpus and stopped holding for the F\*
+compiler itself.  `FStarC.Class.Monad` is a class over a type *constructor* —
+its `m` has kind `Type -> Type` — so `m a` is not an application of anything
+the IR's type language can name and its dictionary fields land on `TAny`.
+Monomorphization cannot help: `m` is not a `Mono` argument and could not be
+one, since a `Mono` argument stands for a value.  OCaml has no name for it
+either, so `TAny` prints as `Obj.t`, and something has to tell OCaml's type
+checker to stop looking.  That something is `Obj.magic`, and there is no
+avoiding it — `m t` is genuinely not an OCaml type.
+
+So the no-generated-`Obj.magic` property is a *goal*, not an invariant: the
+thing to minimise is `TAny`, and where a `TAny` genuinely remains, a coercion
+is the correct output.  What is still ruled out is the ML extraction's
+characteristic noise — a coercion around an `if` *and* another around each of
+its branches, `unit` to `Obj.t` and back — which is what made its output
+unreadable and unauditable.
+
+`coerce_prog` is the last pass in `Simplify.run`, after everything that can
+change a type.  It is a bidirectional walk: `check` pushes an expectation down
+from a boundary, `infer` pulls a type up towards one, and a coercion goes in
+where both are known and `cty_mismatch` says they disagree.  `cty_mismatch` is
+structural and fires *only* on a `TAny` against a concrete type; two different
+concrete types are not this pass's business, since either the IR is well-typed
+and they agree up to something `Layout` resolved, or it is not and a coercion
+would hide the bug.  A `TVar` agrees with everything, uniform compilation being
+exactly the statement that a type variable's representation is uniform.
+
+The subtlety is **which types the pass is allowed to believe**, and the answer
+is not "the `ty` field on every node".  A node's `ty` is what `Extract` could
+work out at the time, and a `TAny` there means "not worked out" as often as it
+means "no representation": a call to a not-yet-emitted recursive function falls
+back to `TAny` in `callee_sig`, and so does a head a builtin rule rewrote.
+Driving the pass off those produces a coercion at almost every application —
+which is precisely how the first implementation behaved, and precisely the
+output this pass exists to prevent.
+
+The types that are *not* guesses are the ones a backend prints:
+
+- a declaration's `dl_binders` and `dl_ret`, and an external's `dx_ty`;
+- a constructor's and a record's field types;
+- and nothing else.  A lambda binder is not annotated in the output, and
+  neither is a `let`; their `TAny`s were never claims.
+
+So those are the boundaries.  Everywhere either side is unknown, nothing is
+inserted: OCaml infers, and a coercion would only be noise.  A node's own `ty`
+is still used, but only when it mentions no `TAny` at all — the case where it
+is trustworthy, because `Extract` falls back but never invents.
+
+Two rules fall out of that and are worth naming:
+
+- **A coercion *to* `TAny` needs much weaker evidence than one *from* it.**
+  `Obj.magic e` is well-typed in the target whatever `e` turns out to be.  So
+  when a term of unknown type reaches a position declared `TAny`, it is enough
+  to know that the term obviously has *some* representation — it is a
+  constructor, a record, a tuple, a constant, a lambda, a primitive operation.
+  This is what makes the `Class.Monad` case work: `Some x` built at type
+  `option Obj.t` has a node type mentioning a `TAny` that says nothing about
+  the `option`.
+- **A node that hands its expectation to its own result does not get asked
+  again.**  `ELet`, `ESeq`, `EIf`, `EMatch` and `ETry` all push the expectation
+  down to the terms that produce their value, so each of those has already been
+  coerced and the node agrees by construction.  Asking a second time is exactly
+  how a coercion ends up around the `if` as well as inside each branch.
+
+A scrutinee, a projection and a discriminator are the one place the expectation
+is manufactured rather than read off: a value of type `Obj.t` cannot be taken
+apart until it has a representation, so it is coerced to the head of the type
+the pattern or the field name belongs to.  Its arguments are unrecoverable and
+come out `TAny`, which is honest — and the target needs only the head, since
+OCaml infers the rest from the pattern.  The guard is `TAny` *exactly*:
+`list Obj.t` is matched and projected perfectly well as it stands.
+
+Finally, `PrintOCaml` spells a coercion to or from `TAny` as a bare
+`Obj.magic`, at every width and every depth.  It must not change the
+representation, or the two directions would have to agree about which one is
+canonical — and they cannot, because the same value also crosses the boundary
+*inside* a structure (`uint32 list` to `Obj.t`), where no per-element
+conversion is possible.  A coercion between two machine integers is still the
+`FStar.Int.Cast` call described above.
+
+`tests/custard/Magic.fst` pins the result: a two-method class over
+`Type -> Type`, an `option` instance, one generic user and one concrete call
+site.  Its `GREP`/`NOGREP` pair requires a coercion at each of the three real
+boundaries and forbids one around the `match`.
 
 ### 5.5 Record recovery
 
@@ -3593,18 +3680,43 @@ against `src/**/*.fst` turns up, in rough order of size:
    Bounding it wants doing before M7 makes much more of the compiler
    reachable.
 
-6. **Higher-kinded classes have no representation.**  `FStarC.Class.Monad` is
-   a class over `m : Type -> Type`, and the IR's type language has no such
-   binder, so `monad`'s `return` and `bind` fields are `TAny` and the OCaml
-   backend prints them as `Obj.t`.  221 of them survive into the extracted
-   compiler, all from `Class.Monad` and `Syntax.VisitM`, and OCaml will not
-   coerce silently the way `Obj.t` needs.  Two ways out: insert `Obj.magic` at
-   every `TAny` boundary, which is what ML extraction does and which the
-   no-generated-`Obj.magic` rule of §5.0 exists to avoid; or specialize the
-   dictionary away, which is what the hole abstraction of §3.7 already does
-   for first-order classes and would have to be extended to reach a
-   type-constructor argument.  This is what the extracted compiler's OCaml
-   build stops on today.
+6. ~~**Higher-kinded classes have no representation.**~~  **Done.**
+   `FStarC.Class.Monad` is a class over `m : Type -> Type`, and the IR's type
+   language has no such binder, so `monad`'s `return` and `bind` fields are
+   `TAny` and the OCaml backend prints them as `Obj.t`.  221 of them survive
+   into the extracted compiler, all from `Class.Monad` and `Syntax.VisitM`.
+   `m t` is genuinely not an OCaml type, so the coercions are not avoidable and
+   the answer is to insert them *exactly* at the `Obj.t` boundary and nowhere
+   else: `Simplify.coerce_prog`, described in §5.4.  573 coercions in the
+   extracted compiler, one in the whole `tests/custard` corpus outside the two
+   modules written to exercise this.  Specializing the dictionary away — the
+   hole abstraction of §3.7, extended to reach a type-constructor argument —
+   remains the better answer where it applies, and would reduce the `TAny`
+   count rather than coerce around it; marking `Class.Monad`'s and `VisitM`'s
+   arguments `[@@@monomorphize]` is the cheap version of the same thing.  Both
+   are cleanup, not blockers.
+
+   Two further bugs surfaced behind this one, both about realized modules
+   (§8.2):
+
+   - A realized type abbreviation was being expanded.  `FStar.Dyn.dyn` is
+     `unit -> Dv value_type_bundle` in the F\* source and `Obj.t` in
+     `FStar_Dyn.ml`; expanding it replaced a type the target has with one it
+     does not.  `Layout.resolve` now stops at a `Realized` declaration.
+   - …but `FStarC.PSMap.psmap` is `inline_for_extraction type psmap = t`,
+     written that way precisely "so we don't have to define these in the
+     underlying ML file".  So the discriminator is the qualifier: `Extract`
+     marks a realized type `Realized` only when it is *not*
+     `inline_for_extraction`.
+
+   What the extracted compiler's OCaml build stops on now is neither: a
+   realized module's signature mentioning a type Custard compiles.
+   `FStarC.Parser.ParseIt`'s `ASTFragment` carries a `FStarC.Parser.AST.file`,
+   and `FStarC_Parser_AST.modul` (from the ML-extracted `fstar.compiler`) is
+   not `fStarC_Parser_AST_modul` (from Custard).  This is item 3's transitive
+   closure argument reaching a module with no hand-written `.ml` at all, and
+   the real fix is §12: compile `FStarC.Parser.AST` as a Custard *unit* and
+   link against it, rather than realizing ever more of the compiler.
 7. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
    leaves syntax, elaboration and the checked files unchanged.
@@ -3657,5 +3769,6 @@ against `src/**/*.fst` turns up, in rough order of size:
 | M10c | Per-unit namespacing: an OCaml module per unit, a C symbol prefix (§12.7) | Done for OCaml.  A unit compiles to a module named after it and every reference to an import is qualified explicitly rather than brought into scope with `open`: §12.6 expects two sibling units to re-specialize the same upstream definition, and an `open` would make that clash silent and the choice positional.  An imported *value* needed no new machinery at all -- it is exactly an external whose target happens to be another generated module, so `PrintOCaml`'s existing `externals` table carries it.  Types, constructors and record fields needed a parallel table.  `--custard_backend C` and `Krml` reject `--custard_unit`/`--custard_link`: they need a header and a linker story they do not have yet |
 | M10f | Make every type-representation decision a function of the type, so that every declaration is exportable | Done.  The `records` and `inline_fields` *decisions* moved into `Layout` (§5.5, §5.7) and reach `Simplify` as a `verdicts` table; the two passes became appliers that decide nothing.  What made this possible: a new `PRecord` in the IR (every backend has one), which removes `records`' surviving-pattern condition; the observation that `inline_fields`' blocked-field scan was unreachable, since `Extract` only ever emits `PWild`/`PVar`/`PConst`/`PCtor`; and deleting `unused_params`.  What made it necessary: dropping a reshaped type from the interface is not an escape hatch, because global variables and exceptions have nominal identity across units (§12.5).  `Driver.stable_types`, `imported_shapes` and `ti_pre` are gone, and so is `Error_CustardBadUnitInterface`'s reason to fire: `Syntax.verdicts`, `Layout.record_verdict`, `Layout.ctor_plans`, `Simplify.records`, `Simplify.inline_fields`; `tests/custard/SepLib.fst` |
 | M10g | Realized modules (§8.2) | Done.  `Rule_realized` and the list in `Builtins`: a type of a hand-written-OCaml module keeps its declaration for its shape but is not emitted, and every reference to it, to its constructors and to its fields prints as the realization's own name.  `FStar.Pervasives.Native`'s `option` and tuples are part of it, which is what makes the whole-program output callable from the realizations at all; tuples print in OCaml's tuple syntax, since they have no constructor to name.  Four bugs the OCaml build of the extracted compiler exposed on the way: abstract types lost their arity, eta-contracted abbreviations (`type psmap = t`) dropped their arguments, `try_with`'s thunk binder was dropped rather than bound to `()`, and `FStar.All.exit` was compiled to OCaml's `exit` rather than the realization that narrows the `Z.t`.  §12.8 item 3 |
+| M10h | Coercions at the `TAny` boundary (§5.4) | Done.  `Simplify.coerce_prog`, the last pass in the pipeline: a bidirectional walk that inserts an `ECast` exactly where a value crosses a *printed* boundary -- a declaration's binders and result, an external's type, a constructor's or record's field types -- whose declared type disagrees with what the value is.  Nowhere else: a node's own `ty` is believed only when it mentions no `TAny`, since `Extract` falls back to `TAny` as often for "not worked out" as for "no representation", and driving the pass off those was the first implementation, which magicked every application.  Two asymmetries make it work: a coercion *to* `TAny` is well-typed whatever the source, so it needs only that the term obviously has *some* representation; and a node that hands its expectation to its own result (`if`, `match`, `let`, `try`) is not asked again, which is what keeps a coercion off the `if` as well as inside each branch.  Unblocks §12.8 item 6 -- `FStarC.Class.Monad`, a class over `Type -> Type`, which neither the IR nor OCaml can name.  Also: `Layout.resolve` no longer expands a realized abbreviation (`FStar.Dyn.dyn`), unless it is `inline_for_extraction` (`FStarC.PSMap.psmap`).  `tests/custard/Magic.fst` |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

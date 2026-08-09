@@ -1631,7 +1631,12 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
   | Some se ->
     let d = extract_sigelt st l nm margs n_holes se in
     let d = if is_opaque || is_realized then with_no_newtype d else d in
-    let d = if is_realized then with_realized d else d in
+    (* [inline_for_extraction] on a type in a realized module means what it
+       says: the alias is not in the hand-written .ml, and the realization
+       expects to be named through what it stands for.  [FStarC.PSMap.psmap]
+       is that; [FStar.Dyn.dyn], which the realization does define, is not. *)
+    let inlined = se.sigquals |> List.existsb (fun q -> q = S.Inline_for_extraction) in
+    let d = if is_realized && not inlined then with_realized d else d in
     if is_inlinable se then with_inline d else d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]

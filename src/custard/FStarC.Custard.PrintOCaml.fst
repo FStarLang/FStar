@@ -472,7 +472,14 @@ let rec term (ind:string) (e:expr) : ML string =
      Both are exactly what [FStar.Int.Cast] specifies, so between two machine
      widths that is what we call.  [FStar.SizeT] is not in that module, but its
      conversions are exact by their own preconditions, so they can go through
-     [Prims.int] the way the realization itself does. *)
+     [Prims.int] the way the realization itself does.
+
+     A coercion to or from [TAny] is the opposite case: it must not change the
+     representation at all, or the two directions would have to agree about
+     which one is canonical -- and they cannot, because the same value also
+     crosses the boundary inside a structure ([uint32 list] to [TAny]), where
+     no per-element conversion is possible.  So it is a bare [Obj.magic], at
+     every width and at every depth. *)
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt sw1, TInt sw2 when sw1 = sw2 -> term ind e1
@@ -481,6 +488,7 @@ let rec term (ind:string) (e:expr) : ML string =
        " " ^ term ind e1 ^ ")"
      | TInt sw1, TInt sw2 ->
        "(" ^ int_inj sw2 ^ " (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
+     | TInt _, TAny | TAny, TInt _ -> "(Obj.magic (" ^ term ind e1 ^ "))"
      | TInt sw1, _ -> "(Obj.magic (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
      | _, TInt sw2 -> "(" ^ int_inj sw2 ^ " (Obj.magic (" ^ term ind e1 ^ ")))"
      | _ -> "(Obj.magic (" ^ term ind e1 ^ "))")
