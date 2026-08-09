@@ -28,5 +28,8 @@ let _ = fail_unless (bar 1 = 11)
 let rec loopid (x:nat) : Dv nat = loopid x
 
 #push-options "--warn_error -272" //Warning_TopLevelEffect
+(* Masking the effect of a top-level definition requires proving its
+   type inhabited; see issue #4401. *)
+let _ : nonempty nat = nonempty_intro 0
 let two = loopid 2
 #pop-options

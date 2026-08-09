@@ -15,7 +15,6 @@
 *)
 module Positivity
 open FStar.All
-open FStar.Nonempty
  
 let option_is_some ([@@@strictly_positive] a:Type) = o:option a { Some? o }
 

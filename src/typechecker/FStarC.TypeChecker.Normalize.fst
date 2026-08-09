@@ -2174,6 +2174,14 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
                      | _ -> tm, false
                end
              | _ -> tm, false
+        else if S.fv_eq_lid fv PC.nonempty_lid
+        then match args with
+             (* [nonempty t] holds when [t] is clearly inhabited. This reuses,
+                unchanged, the same criterion as the quantifier simplifications
+                above; anything it does not cover needs an explicit
+                [nonempty_intro] witness. *)
+             | [(ty, _)] when clearly_inhabited ty -> w U.t_true, false
+             | _ -> tm, false
         else if S.fv_eq_lid fv PC.b2t_lid
         then match args with
              | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true, false
