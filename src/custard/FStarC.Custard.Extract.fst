@@ -347,7 +347,19 @@ let custard_norm_steps : list TcEnv.step = [
   TcEnv.EraseUniverses;
   TcEnv.Beta;
   TcEnv.Iota;
-  TcEnv.Zeta;
+  (* No [Zeta].  Custard never wants a fixpoint reduced: a local [let rec] is
+     lambda-lifted to a top-level definition (section 5.10) and a top-level
+     one is reached through a specialization request, so unfolding one here
+     only duplicates code -- and, applied to an open argument, need not
+     terminate.  [FStarC.SMTEncoding.Term.termToSmt] is the case that found
+     this: its inner [let rec aux'] opens with [let aux = aux (depth + 1) in],
+     a partial application of the recursive knot, and each unfolding produces
+     another one.  Together with [PureSubtermsWithinComputations] below,
+     omitting [Zeta] selects the normalizer's "no fixpoint reduction" branch,
+     which normalizes under a [let rec] and puts it back rather than tying the
+     knot.  Note that beta, iota and zeta are on by default in [Cfg], so zeta
+     has to be switched off with [Exclude], not merely left out. *)
+  TcEnv.Exclude TcEnv.Zeta;
   TcEnv.Primops;
   TcEnv.Eager_unfolding;
   TcEnv.Inlining;

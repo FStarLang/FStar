@@ -24,6 +24,19 @@ let parity (base: bool) (n: nat) : bool =
   in
   even n
 
+(* A partial application of the recursive knot.  Reducing the fixpoint here
+   does not terminate -- every unfolding of [go] produces another [let go' =
+   go (d+1)] -- so the definition body must be normalized without zeta.
+   [FStarC.SMTEncoding.Term.termToSmt] is written this way. *)
+let staged (n: int) (l: list int) : int =
+  let rec go (d: int) (k: int) (xs: list int) : Tot int (decreases xs) =
+    let go' = go (d + 1) in
+    match xs with
+    | [] -> k + d
+    | y :: ys -> go' (k + y) ys
+  in
+  go 0 n l
+
 let main () : ML unit =
   let l = rev1 [1;2;3] in
   (match l with
@@ -33,4 +46,6 @@ let main () : ML unit =
   FStar.IO.print_string (string_of_int (sum_upto 4));
   FStar.IO.print_string " ";
   FStar.IO.print_string (string_of_bool (parity true 3));
+  FStar.IO.print_string " ";
+  FStar.IO.print_string (string_of_int (staged 5 [1;2;3]));
   FStar.IO.print_string "\n"
