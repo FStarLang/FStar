@@ -29,7 +29,55 @@ module L = FStar.List.Tot.Base
 module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 
-let br_typing_vis (g:env) (_:universe) (_:typ) (_:term) (_:pattern) (_:st_term) (_:comp_st) : Type = unit
+(*
+  Typing of a single branch of a match, in visual (rule) form:
+
+    G |- sc : sc_ty                      (at universe sc_u)
+    p is the pattern of this branch, prior are the patterns of all the
+    branches preceding it, in order
+    bs are the variables bound by p, fresh for G
+    G' = G, bs,
+           (neg_j : squash (mk_pat_matches_bool sc prior_j == false))_j,
+           hyp : squash (sc == elab_pat p bs)
+    G' |- e : c
+    ---------------------------------------------------------------------
+    G |- (p -> close bs e) : c
+
+  Note the negated branch conditions: a branch is only reached when the
+  scrutinee failed to match *every* preceding pattern, and the checker
+  gives each branch one hypothesis per preceding pattern recording that.
+  They are what makes a wildcard or variable pattern informative: its own
+  branch equality [sc == x] says nothing about sc.
+
+  The order of the bindings in G' matters, and is not just cosmetic.
+  When the scrutinee is not a variable we cannot install a [rewrites_to]
+  for it, so [check_branch] instead wraps the branch body in a RENAME
+  proof hint discharged by [Pulse.Lib.Core.match_rename_tac]. That tactic
+  recovers the scrutinee/pattern equation with [T.nth_var (-1)], i.e. it
+  assumes the equation is the *last* binding in scope. So [hyp] must be
+  pushed after the [neg_j], not before. Getting this backwards is silently
+  bad rather than an outright error: [match_rename_tac] would pick up a
+  [neg_j] instead, fail to rewrite with it, and fall through to its
+  [T.smt()] catch-all, losing the renaming.
+*)
+let br_typing_vis (g:env) (_:universe) (_:typ) (_:term)
+                  (_:list R.pattern) (* patterns of the preceding branches *)
+                  (_:pattern) (_:st_term) (_:comp_st) : Type = unit
+
+(* Extend [g] with one hypothesis per preceding pattern, recording that
+   the scrutinee [sc] does not match it.
+
+   Callers must push these *before* the branch equality: see the note on
+   binding order in the rule above ([match_rename_tac] reads the branch
+   equality off the end of the context with [T.nth_var (-1)]). *)
+let rec push_not_matches_hyps (g:env) (sc:term) (prior:list R.pattern)
+  : T.Tac (g':env { g' `env_extends` g })
+  = match prior with
+    | [] -> g
+    | p :: prior ->
+      let x = fresh g in
+      let g' = push_binding g x (mk_ppname_no_range "_br_neg") (mk_sq_pat_not_matches sc p) in
+      push_not_matches_hyps g' sc prior
 
 val tot_typing_weakening_n
    (#g:env) (#t:term) (#ty:term)
@@ -77,6 +125,7 @@ let check_branch
         (sc_ty:typ)
         (sc:term)
         (p0:R.pattern)
+        (prior_pats:list R.pattern) (* patterns of the preceding branches *)
         (e:st_term)
         (bs:list R.binding)
   : T.Tac (p:pattern
@@ -92,7 +141,6 @@ let check_branch
   assume (all_fresh g pulse_bs); (* The reflection API in F* should give us a way to guarantee this, but currently does not *)
   assume (RT.bindings_ok_for_pat (fstar_env g) bs p0);
   let g' = push_bindings g pulse_bs in
-  let hyp_var = fresh g' in
   let elab_p = RT.elaborate_pat p0 bs in
   if not (Some? elab_p) then
     fail g (Some e.range) "Failed to elab pattern into term";
@@ -108,7 +156,16 @@ let check_branch
     if use_rewrites_to
     then mk_sq_rewrites_to_p sc_u sc_ty sc elab_p_tm
     else mk_sq_eq2 sc_u sc_ty sc elab_p_tm in
-  let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = range_0 }) eq_typ in
+  (* NB: order is significant. The branch equality must be the *last*
+     binding in the environment, because the [match_rename_tac] installed
+     below recovers it with [T.nth_var (-1)]. So push the negated
+     conditions for the preceding patterns first, and the equality last. *)
+  let g_neg = push_not_matches_hyps g' sc prior_pats in
+  env_extends_trans g_neg g' post_hint.g;
+  assert (post_hint_for_env_p g_neg post_hint);
+  let hyp_var = fresh g_neg in
+  let g' = push_binding g_neg hyp_var ({name = Sealed.seal "branch equality"; range = range_0 }) eq_typ in
+  assert (post_hint_for_env_p g' post_hint);
   let e = open_st_term_bs e pulse_bs in
   let e =
     if norw || use_rewrites_to
@@ -145,6 +202,14 @@ let check_branches_aux_t
 = (br:branch
    & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (PostHint post_hint)})
 
+(* [prior_pats_of acc bnds] returns, for each entry of [bnds], the list of
+   patterns of all the entries preceding it (in order), prefixed by [acc]. *)
+let rec prior_pats_of (acc:list R.pattern) (bnds:list (R.pattern & list R.binding))
+  : Tot (r:list (list R.pattern) { L.length r == L.length bnds }) (decreases bnds)
+  = match bnds with
+    | [] -> []
+    | (p, _) :: bnds -> acc :: prior_pats_of (L.append acc [p]) bnds
+
 let check_branches_aux
         (g:env)
         (pre:term)
@@ -160,11 +225,12 @@ let check_branches_aux
             samepats brs0 (L.map dfst brs)
           })
 = if L.isEmpty brs0 then fail g None "empty match";
-  let tr1 (b: branch) (pbs:R.pattern & list R.binding)
+  let bnds = zip bnds (prior_pats_of [] bnds) in
+  let tr1 (b: branch) (pbs:(R.pattern & list R.binding) & list R.pattern)
     : T.Tac (check_branches_aux_t pre post_hint sc_u sc_ty sc)
     = let e = b.e in
-      let (p, bs) = pbs in
-      let (| p, e, c |) = check_branch b.norw g pre post_hint check sc_u sc_ty sc p e bs in
+      let ((p, bs), prior_pats) = pbs in
+      let (| p, e, c |) = check_branch b.norw g pre post_hint check sc_u sc_ty sc p prior_pats e bs in
       (| {pat=p; e; norw=b.norw}, c |)
   in
   let r = zipWith tr1 brs0 bnds in
