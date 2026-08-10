@@ -1113,7 +1113,6 @@ type fstar_top_env = g:fstar_env {
   forall x. None? (lookup_bvar g x )
 }
 
-open FStar.Nonempty
 
 // Note: even though the sigelt_typing judgement takes a list of universe
 // parameters, there is no way to exhibit typing judgements of terms

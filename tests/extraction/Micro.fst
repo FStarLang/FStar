@@ -66,7 +66,7 @@ let h9 (x:int) (y:bool) =
 type my_squash (t:prop) = squash t
 assume val f10: int -> Dv int
 assume val g10: int -> GTot int
-assume val h10: int -> my_squash (FStar.Nonempty.nonempty int)
+assume val h10: int -> my_squash (Prims.nonempty int)
 let test (x:int) =
   let _ =
     let y = g10 x in

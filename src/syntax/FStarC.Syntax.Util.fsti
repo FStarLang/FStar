@@ -463,6 +463,10 @@ val if_then_else (b t1 t2 : term) : ML term
 //////////////////////////////////////////////////////////////////////////////////////
 val mk_squash (p:term) : ML term
 
+(* [mk_nonempty u t] builds [Prims.nonempty u#u t], the proposition
+   that the type [t] is inhabited. *)
+val mk_nonempty (u:universe) (t:term) : ML term
+
 val un_squash (t:term) : ML (option term)
 
 val is_squash (t:term) : ML (option term)

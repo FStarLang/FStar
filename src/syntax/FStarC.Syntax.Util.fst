@@ -1176,6 +1176,10 @@ let mk_squash p =
     let sq = fvar_with_dd PC.squash_lid None in
     mk_app sq [as_arg p]
 
+let mk_nonempty (u:universe) (t:term) =
+    let ne = mk_Tm_uinst (fvar_with_dd PC.nonempty_lid None) [u] in
+    mk_app ne [as_arg t]
+
 let un_squash t =
     let head, args = head_and_args_full t in
     let head = unascribe head in
