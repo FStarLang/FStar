@@ -190,6 +190,15 @@ Guidelines for the changelog:
     Tactics that matched on `C_Eff _ _ res [(pre,_); (post,_)] decrs` should
     now match on `C_Eff _ _ res pre post decrs`.
 
+  * `inspect_pack_comp_inv` (and its re-export `inspect_pack_comp` in
+    `FStar.Reflection.Typing`) now has a precondition: the view must not be a
+    `C_Eff` naming `FStar.Pervasives.Lemma`. `inspect_comp` always returns a
+    `C_Lemma` for that effect, so such a view is not in the image of
+    `inspect_comp`; since both functions are primitive normalizer steps, the
+    unconditional axiom could be refuted and used to prove `False`. Code that
+    instantiates the lemma at a statically known view is unaffected; code that
+    instantiates it at an arbitrary view must now rule that case out.
+
 ## SMT
 
   * The kinding axiom for a non-total arrow type (`Typing for non-total
