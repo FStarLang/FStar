@@ -68,13 +68,54 @@ val init : Dep.deps -> TcEnv.env -> ML state
     Section 3.3 of the design doc explains each one. *)
 val custard_norm_steps : list TcEnv.step
 
+(** The typing environment as it stands, i.e. including whatever modules the
+    requests so far have caused to be loaded. *)
+val tcenv : state -> ML TcEnv.env
+
+(** Load the module a lid belongs to, if the run has not already.  A
+    generated declaration (section 13) has to do this by hand: it inspects
+    types the demand-driven loop has not asked about, and an abbreviation
+    whose module is not loaded does not unfold -- it merely looks abstract. *)
+val ensure_lid_available : state -> Ident.lident -> ML unit
+
+(** The IR name a lid is emitted under, before any specialization suffix.  It
+    is the [FStar.Stubs.*] rewrite (section 8.2) that makes this worth
+    exporting: a generated declaration must spell names the same way. *)
+val name_of_lid : Ident.lident -> ML name
+
 (** Request the extraction of a specialization, returning the IR name it will
     be emitted under.  Idempotent. *)
 val request : state -> spec_key -> ML name
 
+(** Translate an F* type, resp. term, exactly as the extraction loop would.
+    A generated declaration (section 13) is written as F* syntax and handed to
+    these, so that requesting, specialization, erasure and reification are the
+    ones the rest of the program gets and not a second implementation. *)
+val ty_of_typ : state -> FStarC.Syntax.Syntax.typ -> ML cty
+val expr_of_term : state -> FStarC.Syntax.Syntax.term -> ML expr
+
 (** Drain the worklist and return the program in dependency order (definitions
-    before their uses), which is the order the backends want. *)
-val run : state -> list Ident.lident -> option Ident.lident -> ML program
+    before their uses), which is the order the backends want.
+
+    The callback is invoked once per module the run loads, after everything
+    that module's definitions refer to has been extracted.  It is how
+    generated declarations get made without [Extract] having to depend on the
+    module that generates them (section 13). *)
+val run : state -> list Ident.lident -> option Ident.lident ->
+          (FStarC.Syntax.Syntax.modul -> ML unit) -> ML program
+
+(** [request] for a definition with no [Mono] binders, which is every
+    definition a *generated* declaration refers to (section 13). *)
+val request_lid : state -> Ident.lident -> ML name
+
+(** Add a declaration the extraction loop did not produce: a plugin
+    registration, or the [DExternal] for an OCaml-only symbol one refers to
+    (section 13).  The key is the declaration's identity for the purposes of
+    emitting it once; a second [emit] under a key already used is ignored. *)
+val emit : state -> string -> decl -> ML unit
+
+(** Whether [emit] has already been given this key. *)
+val emitted : state -> string -> ML bool
 
 (** The declarations this run took from a linked unit rather than compiling
     (section 12.4).  They are deliberately *not* part of the program: they must

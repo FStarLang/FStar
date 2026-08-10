@@ -4331,6 +4331,144 @@ result, in a fresh `--cache_dir`: as §12.10 says, a Custard-built compiler
 cannot read a dune-built one's `.checked` files.
 
 
+## 13. Plugins
+
+A definition marked `[@@plugin]` is compiled like any other definition, and in
+addition gets a *registration*: a top-level effectful `let` that installs it in
+the normalizer, together with the embeddings that convert between F\* terms and
+the compiled function's own arguments and result.  This is what makes
+`FStar.Tactics.Typeclasses.mk_class` run as compiled OCaml instead of being
+interpreted, and until it exists a Custard-built compiler cannot check anything
+that resolves a typeclass instance.
+
+`FStarC.Custard.RegEmb` is the Custard counterpart of
+`FStarC.Extraction.ML.RegEmb`.  The generated code is the same code.  It is
+generated differently, and that difference is the whole design.
+
+### 13.1 Generate F\* syntax, not IR
+
+The ML pipeline builds the interpretation function directly in ML syntax:
+`MLE_App`, `MLE_Fun`, `MLTY_Top` everywhere, names spelled as `mlpath`s.  It
+has to, because by the time it runs there is no F\* term left to speak about.
+
+Custard does not have that constraint, and generating IR would be a second,
+untyped copy of the extraction loop: every embedding it names is a definition
+that has to be *requested*, an `embedding a` is a typeclass-shaped value that
+has to be specialized (§3.1), the tactic combinators it calls are `Tac`
+functions that have to be reified (§7.5), and their arguments are subject to
+erasure (§5).  Doing any of that by hand means getting all of it right by hand.
+
+So `RegEmb` builds the interpretation function as **F\* syntax** and hands it to
+`Extract.expr_of_term`.  Requesting, specialization, monomorphization, erasure
+and reification then happen exactly as they do for hand-written code, and the
+result is typed IR rather than a pile of `TAny`.
+
+The one thing that cannot be generated this way is the outermost call:
+`FStarC.Tactics.Native.register_plugin` and `register_tactic` are defined in
+`src/ml/FStarC_Tactics_Native.ml` and are deliberately *not* in the module's
+`.fsti`, so there is no lid to refer to.  Those two are synthesized as
+`DExternal`s and applied in raw IR --- one node each, and nothing below it.
+
+### 13.2 What is generated
+
+For `f : t1 -> ... -> tn -> Tac r` the registration is
+
+```
+let __plugin_f : unit =
+  FStarC_Tactics_Native.register_tactic "M.f" (n+1)
+    (fun psc ncb us args ->
+       mk_tactic_interpretation_n "M.f (plugin)" f e1 .. en er psc ncb us args)
+```
+
+and for a pure `f : t1 -> ... -> tn -> r`
+
+```
+let __plugin_f : unit =
+  FStarC_Tactics_Native.register_plugin "M.f" n
+    (fun psc ncb us args ->
+       arrow_as_prim_step_n e1 .. en er f (lid_of_str "M.f") ncb us args)
+    (fun ncb us args -> NBETerm.arrow_as_prim_step_n ... )
+```
+
+Three things are worth spelling out.
+
+**Binder sorts come from the callee.**  The generated lambda never invents a
+type for its own binders.  `signature_of` looks the callee up, instantiates its
+leading implicit binders with the type arguments being passed, and returns the
+remaining binders; the lambda is built over *those*.  Every function the
+generated code calls happens to be polymorphic only in leading implicits ---
+which is what F\* makes of a `'a` --- so inserting the type arguments
+positionally is right, and `signature_of` raises if a binder it was told is
+implicit is not.  The single exception is the `psc` binder of the pure case,
+which the syntax-kind interpretation ignores and no callee mentions; its sort
+is spelled `FStarC.TypeChecker.Primops.Base.psc` by hand.
+
+**Reification makes `from_tactic_n` unnecessary.**  The ML pipeline wraps the
+plugin in a chain of `from_tactic_n` identities to move between ulib's `Tac`
+and the compiler's `tac`.  In Custard the two *are* the same type: §7.5
+compiles `Tac a` to `ref_proofstate -> Dv a`, which is what the compiler's
+`tac a` is, so the compiled plugin already has the type
+`mk_tactic_interpretation_n` expects and the wrappers are dropped.
+
+**No NBE interpretation for tactics.**  ML computes one and `register_tactic`
+discards it.  Custard does not compute it.
+
+### 13.3 Which modules get registrations
+
+Registrations are generated only for a module named by `--custard_entry`.
+
+Custard loads a module because something in it is called, which says nothing
+about whether its plugins are wanted: a program that merely uses `FStar.Tactics`
+would otherwise acquire a registration for every `[@@plugin]` in the tactic
+library, and with it all the embedding code they reach.  Naming the module is
+the request --- and it is the same thing that makes the plugin's own definition
+a root, since a plugin is a leaf of the program and nothing calls it.
+
+Two consequences for the loader, both of which needed fixing:
+
+* A module named this way need not be reachable from the file on the command
+  line, so it is absent from the *dependency graph* even though it is in the
+  file system map.  `Parser.Dep.deps_of` reported such a file as having no
+  dependences at all, which is indistinguishable from the truth about `Prims`
+  and made its checked file fail validation (§4.2's digest check).  It now
+  falls back to parsing the file, exactly as `--ext fly_deps` does for the
+  command-line file.
+* The `per_module` callback fires inside `Extract.run`'s *initializer fixpoint*
+  (§4.4).  It has to: generating a registration is itself a source of requests,
+  and hence of newly loaded modules --- `FStarC.Tactics.InterpFuns` is not
+  otherwise mentioned by the compiler --- whose own initializers must then run
+  as well.
+
+### 13.4 Embeddings
+
+`embedding_for` maps a type to a term of type `embedding t`.  A table copied
+from the ML pipeline covers the ground types and the parameterized ones
+(`list`, `option`, tuples, `either`, `sealed`); a `[@@plugin]` *datatype* is
+supposed to come with a generated `e_<name>` beside it.  Reaching either
+requires weak-head-normalizing the type first, since `ppname_t`, say, is
+`Sealed.sealed string` behind two abbreviations.
+
+The normalization has to be interleaved with loading.  An abbreviation whose
+module the run has not loaded does not unfold, and the failure is *silent*: the
+type merely looks abstract, and the embedding for it merely looks missing.
+Nothing has asked for these modules --- the type of a plugin's argument is not
+something the demand-driven loop looks at --- so `RegEmb.whnf` loads the head's
+module, unfolds, and repeats until the head stops changing.  Without this,
+`FStar.Tactics.CheckLN.check_ln : term -> Tac bool` reports "no embedding for
+`FStar.Tactics.NamedView.term`" for a `term` that is a bare abbreviation of one
+the table does cover.
+
+A type with no embedding is not fatal to the run: the plugin is skipped with
+error 238 (`Warning_PluginNotImplemented`, as in the ML pipeline) and the
+program is still emitted --- without a native implementation of that plugin.
+
+**Not yet implemented:** the generated `e_<name>` for a `[@@plugin]` datatype
+(19 of them: `FStar.Order.order`, 13 in `FStar.Tactics.NamedView`, 2 in
+`FStar.Reflection.V2.Formula`, 1 in `FStar.Tactics.PrettifyType`).  This is
+`mk_embed`/`mk_unembed` in the ML pipeline, and it is the last thing standing
+between here and a Custard-built compiler with working ulib plugins.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -4377,6 +4515,7 @@ cannot read a dune-built one's `.checked` files.
 | M10l | **The extracted compiler builds and runs** (§12.10) | Done.  A Custard-extracted `fstar.exe` verifies `FStar.List.Tot.Properties` from source and reports the same errors as the dune-built one.  What it took beyond M10k: **module initializers** --- an effectful top-level `let` is a root, and every loaded module contributes its own (§4.4), without which `FStarC.Options`' `let _ = clear ()` never ran; a `--custard_entry` that names a *module*, the only way to reach `FStarC.Hooks`, which exists solely for its side effects; and six codegen bugs, each listed in §12.10: a `ref` printed as an array (`lettys` and abbreviation unfolding), `-1` erased to `()` because the normalizer returns it as a `Tm_lazy` embedding, load-order-dependent extraction (`lookup_lid_typ`), an under-abstracted abbreviation, two lambda-lifted binders collapsed into one because `lift_letrec` opened the definiens twice, and OCaml record expressions resolving to the wrong record type.  `tests/custard/Literals.fst`, `Mymon.fst`, `Patlift.fst` |
 | M10m | **Build integration** (§12.11): `make custard`, `mk/custard.mk`, `src/custard/entrypoints.txt` | Done.  Builds a Custard-extracted `fstar.exe` into `stagec/` from a stage 2 compiler, driving `menhir --infer` against Custard's own interfaces rather than borrowing the dune build's answer, and generating `FStarC_Version.ml` itself because Custard mangles `_version` to `u__version`.  `make custard-smoke` runs it. |
 | M10n | **Reification** (§7.5) and the `custard_no_monomorphize` class opt-out (§3.1) | Done.  `Tac` is compiled through `tac_repr a wp = ref_proofstate -> Dv a`, in `Effects.{is_reifiable,reify_comp,maybe_reify}` and three call sites in `Extract`; `tests/custard/Reify.fst`.  The opt-out is what makes `embedding` a runtime value again, which reification and plugin registration both need. |
+| M10p | **Plugin registration** (§13) | Partly done.  `FStarC.Custard.RegEmb` generates the registration for a `[@@plugin]` in a module named by `--custard_entry`, as F\* syntax handed to `Extract.expr_of_term` rather than as IR.  `FStar.Tactics.CheckLN.check_ln` registers with the right embeddings and the right arity.  Fallout in the shared machinery: `Parser.Dep.deps_of` now parses a file the dependency scan never reached (§13.3), and `Extract` normalizes a definition body, its result type and its reification under the binders the specialization kept --- `FStar.Tactics.Util.map : ('a -> Tac 'b) -> ...` reifies to a comp whose universe mentions `'b`, and the top-level environment does not bind it.  Still missing: generated embeddings for `[@@plugin]` datatypes, and hence the ulib plugin roots in `entrypoints.txt` |
 | M10o | **The `FStar.Stubs.*` rename** (§8.2) | Done.  `Builtins.no_fstar_stubs`, applied in `Extract.name_of_lid`, so that a plugin's `FStar.Stubs.Tactics.Types.proofstate` and the compiler's `FStarC.Tactics.Types.proofstate` are one name.  Fallout: `solve` is now `inline_for_extraction` in its five copies (its `{| ev : a |}` binder made `#a` `Mono`, which §3.2b rejects once `embedding` is no longer specialized), and record ascription had to cover projections as well as record expressions (§5.5). |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

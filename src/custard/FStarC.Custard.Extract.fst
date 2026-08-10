@@ -453,9 +453,16 @@ let truncate_msg (s:string) : ML string =
   if String.length s <= 600 then s
   else String.substring s 0 600 ^ " ... (" ^ show (String.length s) ^ " chars)"
 
-let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML term =
+(* [env] is the top-level environment for almost every caller.  It is not for
+   a definition body, whose free variables are the binders the specialization
+   kept: normalizing an effectful application there reifies it, reification
+   computes the universe of the result type, and a result type that is one of
+   those binders has to be findable.  ([Tac 'b] in [FStar.Tactics.Util.map] is
+   the smallest example.) *)
+let norm_bounded_in (st:state) (env:TcEnv.env) (what:string)
+                    (steps:list TcEnv.step) (t:term) : ML term =
   try N.with_budget (Options.custard_norm_budget ())
-                    (fun () -> N.normalize steps (tcenv st) t)
+                    (fun () -> N.normalize steps env t)
   with
   | N.Budget_exceeded ->
     custard_error st E.Error_CustardFuelExhausted [
@@ -469,6 +476,9 @@ let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML 
       text ("The term being normalized, before reduction, was: " ^
             truncate_msg (FStarC.Syntax.Print.term_to_string' (TcEnv.dsenv (tcenv st)) t))
     ]
+
+let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML term =
+  norm_bounded_in st (tcenv st) what steps t
 
 (* -------------------------------------------------------------------- *)
 (* Loading                                                              *)
@@ -2167,7 +2177,8 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
   let polycs = List.map (fun _ -> Poly) hbs @ polycs in
   let applied = match spine with [] -> def | _ -> U.mk_app def spine in
   (* The chain in the error names the definition, so "a body" is enough. *)
-  let body = norm_bounded st "a definition body" custard_norm_steps applied in
+  let body = norm_bounded_in st (TcEnv.push_binders (tcenv st) poly)
+                             "a definition body" custard_norm_steps applied in
   (U.abs poly body None, c, polycs, poly)
 
 and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
@@ -2214,6 +2225,12 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      recorded even though they take no runtime argument. *)
   let typars = bs |> List.collect (fun b ->
                  if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+  (* Reification and the result-type normalization below both compute the
+     universe of a type that may be one of these binders -- [Tac 'b] in
+     [FStar.Tactics.Util.map] is the smallest example -- so they have to run in
+     an environment that binds them.  [bs] is what [abs_formals] opened and
+     what [c] was realigned to, so it is the right set. *)
+  let benv = TcEnv.push_binders (tcenv st) bs in
   let bs = drop_flagged flags bs in
   (* A type binder that survived [drop_flagged] is the one {!Mono.keep_thunk}
      put back so that the definition does not become a value.  It carries no
@@ -2241,7 +2258,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let res_typ = U.comp_result c in
   let res_typ =
     if n_extra > 0
-    then norm_bounded st "a result type"
+    then norm_bounded_in st benv "a result type"
            [TcEnv.AllowUnboundUniverses; TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
             TcEnv.UnfoldUntil S.delta_constant]
            res_typ
@@ -2251,15 +2268,15 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      closure the representation describes. *)
   let eff, ret =
     if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
-    then peel n_extra E_Pure (ty_of_typ st (Effects.reify_comp (tcenv st) c))
+    then peel n_extra E_Pure (ty_of_typ st (Effects.reify_comp benv c))
     else peel n_extra (eff_of_comp st c) (ty_of_typ st res_typ) in
   (* The body is reified against the residual effect of the lambdas
      [abs_formals] just opened, which is what actually describes it; [c] only
      agrees with it when there were no extra binders. *)
   let body =
     match rc with
-    | Some rc -> Effects.maybe_reify (tcenv st) body rc.residual_effect
-    | None -> Effects.maybe_reify (tcenv st) body (U.comp_effect_name c) in
+    | Some rc -> Effects.maybe_reify benv body rc.residual_effect
+    | None -> Effects.maybe_reify benv body (U.comp_effect_name c) in
   let dl_body = expr_of_term st body in
   st.cur := saved_cur;
   DLet {
@@ -2346,7 +2363,8 @@ let dump_specializations (st:state) : ML unit =
     if n > 1 then BU.print2 "  %s -> %s\n" l (show n));
   BU.print1 "  (total: %s)\n" (show (SMap.fold st.counts (fun _ n acc -> acc + n) 0))
 
-let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML program =
+let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
+         (per_module : S.modul -> ML unit) : ML program =
   let mark' (quiet:bool) (f:flag) (l:Ident.lident) : ML unit =
     let key = string_of_key { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
     let _ = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
@@ -2420,6 +2438,11 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML pro
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
           | _ -> ()));
+      (* Section 13: the same fixpoint carries the generated declarations,
+         because generating one is itself a source of requests and so of newly
+         loaded modules -- a plugin registration refers to the interpretation
+         functions, whose module the program may otherwise never mention. *)
+      fresh |> List.iter per_module;
       inits (fuel - 1)
     end in
   inits 100;
@@ -2428,6 +2451,23 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML pro
     match SMap.try_find st.emitted key with
     | Some d -> [d]
     | None -> [])
+
+let request_lid (st:state) (l:Ident.lident) : ML name =
+  request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }
+
+(* Section 13.  A generated declaration is not the translation of any F*
+   definition, so it has no specialization key; the key it is filed under is
+   its own name, which is unique by construction and cannot collide with a
+   real key (those always name a lid and a list of arguments). *)
+let emit (st:state) (key:string) (d:decl) : ML unit =
+  match SMap.try_find st.emitted key with
+  | Some _ -> ()
+  | None ->
+    SMap.add st.emitted key d;
+    st.order := key :: !st.order
+
+let emitted (st:state) (key:string) : ML bool =
+  Some? (SMap.try_find st.emitted key)
 
 let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.imports
 

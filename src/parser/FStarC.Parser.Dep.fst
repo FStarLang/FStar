@@ -1978,6 +1978,18 @@ let parsing_data_of_modul deps filename modul_opt =
   let direct_deps, _, _ = deps_from_parsing_data pd deps.file_system_map filename in
   pd, files_of_dependences filename deps.file_system_map deps.cmd_line_files direct_deps
 
+(* A file the dependency scan never reached is simply absent from the graph,
+   and the graph then reports it as having no dependences at all -- which is
+   indistinguishable from the truth about Prims, and wrong for everyone else.
+   Custard asks about such files: a plugin named by [--custard_entry] is a leaf
+   of the program, not a dependence of the file on the command line.  Parsing
+   answers the question, exactly as it does for the command-line file under
+   [--ext fly_deps]. *)
+let from_graph (deps:deps) (f:file_name) : ML (list file_name) =
+  match deps_try_find deps.dep_graph f with
+  | Some _ -> dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+  | None -> snd (parsing_data_of_modul deps f None)
+
 let deps_of =
   let cache = SMap.create 40 in
   fun deps (f:file_name) ->
@@ -1997,10 +2009,10 @@ let deps_of =
               snd (parsing_data_of_modul deps f None)
             )
             else (
-              dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+              from_graph deps f
             )
           )
-      else dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+      else from_graph deps f
     in
     SMap.add cache f res;
     res

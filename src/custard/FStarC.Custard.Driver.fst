@@ -35,6 +35,7 @@ module Layout  = FStarC.Custard.Layout
 module Monomorphize = FStarC.Custard.Monomorphize
 module OCaml   = FStarC.Custard.PrintOCaml
 module Loader  = FStarC.Custard.Loader
+module RegEmb  = FStarC.Custard.RegEmb
 module Rename  = FStarC.Custard.Rename
 module Simplify = FStarC.Custard.Simplify
 module Split    = FStarC.Custard.Split
@@ -278,7 +279,7 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      which needs the union-find; by the time a backend runs it has been put in
      read-only mode.  The ML extraction does the same thing. *)
   let st = Extract.init deps env in
-  let prog = UF.with_uf_enabled (fun () -> Extract.run st roots main) in
+  let prog = UF.with_uf_enabled (fun () -> Extract.run st roots main (RegEmb.handle_module st roots)) in
   (* Section 12.4: what a linked unit already compiled.  These never enter the
      program -- renaming or emitting them would defeat the purpose -- but the
      layout analysis has to adopt their verdicts and the backends have to know
