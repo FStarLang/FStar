@@ -27,6 +27,7 @@ module CSyn    = FStarC.Custard.Syntax
 module E       = FStarC.Errors
 module Extract = FStarC.Custard.Extract
 module Ident   = FStarC.Ident
+module Mono    = FStarC.Custard.Mono
 module N       = FStarC.TypeChecker.Normalize
 module PC      = FStarC.Parser.Const
 module RC      = FStarC.Reflection.V2.Constants
@@ -342,7 +343,11 @@ let whnf (st:Extract.state) (t:typ) : ML typ =
     | Some l when Some? (find_embedding l) -> t
     | Some l ->
       Extract.ensure_lid_available st l;
-      let t' = SS.compress (U.un_uinst (N.unfold_whnf (Extract.tcenv st) t)) in
+      let t' = Mono.norm_bounded (Extract.tcenv st) "an embedded type"
+                                 [TcEnv.Primops; TcEnv.Weak; TcEnv.HNF;
+                                  TcEnv.UnfoldUntil S.delta_constant; TcEnv.Beta]
+                                 t in
+      let t' = SS.compress (U.un_uinst t') in
       if fuel <= 0 then t' else
       (match head_lid t' with
        | Some l' when Ident.lid_equals l l' -> t'
@@ -627,7 +632,8 @@ let registration (st:Extract.state) (arity_opt:option int) (r:Range.t)
   let name_str = Ident.string_of_lid fv_lid in
   let key = "regemb:" ^ name_str in
   if Extract.emitted st key then () else
-  let t = N.normalize plugin_norm_steps (Extract.tcenv st) lb.lbtyp in
+  let t = Mono.norm_bounded (Extract.tcenv st) "a plugin's type"
+                            plugin_norm_steps lb.lbtyp in
   let bs, c = U.arrow_formals_comp t in
   (* An explicit [@@plugin n] says how many of the arrows are the plugin's
      arguments; the rest belong to its result. *)

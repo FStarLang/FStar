@@ -255,6 +255,12 @@ let builtin_type (n:name) : ML (option string) =
   | "Prims.int" -> Some "Prims.int"
   | "Prims.exn" -> Some "exn"
   | "Prims.list" -> Some "list"
+  (* An option is OCaml's own, for the same reason a list is: the
+     realization defines it as an alias of the stdlib type, so naming the
+     stdlib type is not a translation but the same thing said directly.  What
+     it buys is that the generated code no longer needs the realization to
+     say what an option *is* -- see {!ty}'s tuple case. *)
+  | "FStar.Pervasives.Native.option" -> Some "option"
   | "FStar.Char.char" -> Some "FStar_Char.char"
   | _ -> None
 
@@ -312,6 +318,16 @@ let rec ty (t:cty) : ML string =
      one-element array.  The buffer operations are shared with [TBuf], so the
      spelling of each one is chosen from the type of its pointer argument. *)
   | TRef t -> "(" ^ ty t ^ " ref)"
+  (* [FStar.Pervasives.Native.tupleN] is OCaml's own N-tuple.  The realization
+     says so -- [type ('a,'b) tuple2 = 'a * 'b] is an alias, not a definition
+     -- so writing the tuple type directly is not a translation of it but the
+     same type named without the detour.  It is also the only way to say it
+     that does not require the realization to be linked, which is the point:
+     the F* side of this module is ordinary code that both backends compile,
+     and the hand-written file exists for the ML extraction's sake, not
+     Custard's. *)
+  | TApp (n, args) when is_tuple_type n && Cons? args ->
+    "(" ^ String.concat " * " (List.map ty args) ^ ")"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -475,6 +491,8 @@ and builtin_ctor (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
   | "Prims.Nil" -> Some "[]"
   | "Prims.Cons" -> Some "::"
+  | "FStar.Pervasives.Native.None" -> Some "None"
+  | "FStar.Pervasives.Native.Some" -> Some "Some"
   | _ -> None
 
 (* Say which record type is meant.  OCaml resolves a label to the *last*

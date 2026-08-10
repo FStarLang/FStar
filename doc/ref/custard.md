@@ -3225,13 +3225,39 @@ realizations — `FStarC.Reflection.Types`, `FStarC.Tactics.Unseal` and
 (`FStarC.Tactics.Types`, `FStarC.Syntax.Syntax`, `FStarC.NormSteps`, …) are
 ordinary compiler modules that Custard compiles, and must not be.
 
-`FStar.Pervasives.Native.tupleN` is the one realized type whose OCaml form is
-*syntax* rather than a name.  The type needs no help — the realization defines
-`('a, 'b) tuple2` as an alias for `'a * 'b`, so the qualified spelling is
-already right — but it has no constructor to name and no field to project, so
-building one, matching one and reading a component out of one are printed in
-OCaml's tuple syntax.  A component is read by a match rather than a projection,
-since OCaml has none beyond `fst` and `snd`.
+#### Types the target already has
+
+`Rule_realized` answers "what does the hand-written file call this?".  For a
+few types there is a better answer: **the target has the type already**, and
+the realization only says so.  `Prims.list` is `'a list`;
+`FStar.Pervasives.Native.tuple2` is `type ('a,'b) tuple2 = 'a * 'b`, an
+*alias*; `option` is an alias of the stdlib's.  Naming the OCaml type
+directly is therefore not a translation of the realization but the same type
+said without the detour — and it is the only spelling that does not require
+the realization to be linked at all.
+
+So `builtin_type`/`builtin_ctor` map `option`, `list` and their constructors
+to OCaml's own, and `ty` prints `tupleN` in OCaml's tuple syntax.  After that
+no Custard-generated line in the extracted compiler names
+`FStar_Pervasives_Native`; what is left of that file is there for the ML
+extraction, not for Custard.
+
+A tuple stays an ordinary inductive *in the IR* — `PrintC` rejects a bare
+`TTuple`, and it is right to: the C backend has no tuple type and §5.6's
+field inlining is what gives it a representation.  This is a printing
+decision, and only the OCaml printer makes it.  A tuple has no constructor to
+name and no field to project, so building one, matching one and reading a
+component out of one are all written in OCaml's syntax; a component is read
+by a match rather than a projection, since OCaml has none beyond `fst` and
+`snd`.  Those two are `inline_for_extraction` in `ulib`, since a call to
+either buys an indirection over the field read every backend already emits.
+
+The rule this follows is worth naming, because the tempting generalization is
+wrong: **a realized type may be printed as a target type only when the
+realization defines it as an alias of that target type.**  `FStar.Dyn`'s
+`dyn` is also `Obj.t` in OCaml, but the F\* side is a different type, and
+§8.2 already records what happens when a model and a realization are allowed
+to disagree.
 
 ### 8.3 Pulse
 
@@ -3810,7 +3836,10 @@ against `src/**/*.fst` turns up, in rough order of size:
    or `ulib/ml` realizes is compiled — neither its types nor, since M10j, its
    values; each is referred to under the realization's own name.
    `FStar.Pervasives.Native`'s tuples and `option` are part of that, which is
-   what makes the output callable from the realizations at all.
+   what makes the output callable from the realizations at all --- though
+   those two are now printed as OCaml's own tuple and `option` rather than
+   under the realization's name, which is the same type by the realization's
+   own definition and needs nothing linked; see §8.2.
 
    Getting there was a bug hunt rather than a feature; each of these was found
    by advancing the OCaml build of the extracted compiler by one error.
@@ -3963,12 +3992,20 @@ against `src/**/*.fst` turns up, in rough order of size:
    Two things are worth keeping from this.  First, the diagnostic that
    actually discriminated was *whether fuel was being spent*: a runaway with
    no fuel spent cannot be a request loop, and cannot be a divergence either
-   if the keys repeat.  Second, `key_norm_steps` really is unbounded strong
-   normalization with `zeta` on, and that remains a latent hazard even though
-   it was not this one.  Nothing bounds the normalizer within a single key, so
-   a definition that does diverge there would hang with no diagnostic at all.
-   Bounding it wants doing before M7 makes much more of the compiler
-   reachable.
+   if the keys repeat.  Second, the hazard the wrong explanation described is
+   real even though it was not this bug: `key_norm_steps` reduces with `zeta`
+   on, so a definition reachable from a `Mono` argument can unfold without
+   bound, and nothing in the term says so in advance.  **Every** normalization
+   Custard performs therefore runs under `--custard_norm_budget`, through
+   `Extract.norm_bounded` or `Mono.norm_bounded` --- the same wrapper, the
+   first with the request chain of §3.6 attached and the second for the
+   callers below the extractor.  Exceeding it is error 364, naming the term
+   as written; `tests/custard/NormBudget.fst`.
+
+   The two are not interchangeable and the split is not cosmetic: a budget is
+   only useful if the message says *which* definition was being reduced, and
+   below the extractor there is no chain to say it with.  Anything that
+   normalizes and does have a chain should use `Extract.norm_bounded`.
 
 6. ~~**Higher-kinded classes have no representation.**~~  **Done.**
    `FStarC.Class.Monad` is a class over `m : Type -> Type`, and the IR's type
@@ -4744,4 +4781,5 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10p | **Plugin registration** (§13) | Done.  `FStarC.Custard.RegEmb` generates the registration for a `[@@plugin]` in a module named by `--custard_entry`, and the `e_<name>` for a `[@@plugin]` datatype with it, as F\* syntax handed to `Extract.expr_of_term` rather than as IR (§13.1, §13.4).  All 25 ulib plugin modules are roots in `entrypoints.txt`, and the acceptance test --- a source file declaring a typeclass, checked by the Custard-built `fstar.exe` --- passes.  The recursion in a generated embedding is tied by *substituting* the sub-embedding into the closure that uses it, not by binding it: a `let` hoists the knot out of the closure and the group diverges during module initialization (§13.4).  Fallout in the shared machinery: `Parser.Dep.deps_of` now parses a file the dependency scan never reached (§13.3), and `Extract` normalizes a definition body, its result type and its reification under the binders the specialization kept --- `FStar.Tactics.Util.map : ('a -> Tac 'b) -> ...` reifies to a comp whose universe mentions `'b`, and the top-level environment does not bind it.  Four miscompilations that only a running compiler could expose are in §13.5, the first of them the rule that a reduction whose reduct will be compiled must not fold a primitive step with an unrepresentable result (`Env.SafePrimops`, error 369) |
 | M10o | **The `FStar.Stubs.*` rename** (§8.2) | Done.  `Builtins.no_fstar_stubs`, applied in `Extract.name_of_lid`, so that a plugin's `FStar.Stubs.Tactics.Types.proofstate` and the compiler's `FStarC.Tactics.Types.proofstate` are one name.  Fallout: `solve` is now `inline_for_extraction` in its five copies (its `{| ev : a |}` binder made `#a` `Mono`, which §3.2b rejects once `embedding` is no longer specialized), and record ascription had to cover projections as well as record expressions (§5.5). |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | Done, and it is `make custard-plugin` (§12.12).  A `.cui` entry now records the *file* a declaration was emitted into (`ue_home`), not just the unit, because the compiler is built split; an import that carries one is folded into the printer's `homes` table, since an import from a split producer and a cross-file reference inside a split output are the same thing.  `Loader.ensure_loaded` registers a module's dependences before the module, which a plugin run needs and a whole-program run got for free.  The test reduces `irreducible` definitions with `norm [primops]`, so it fails without the plugin.  It exposed the sixth miscompilation of §13.5: specialization eta-expanded `Cfg.cached_steps`, reallocating its memo table per call, and the extracted compiler folded no primops at all |
+| M10q | Cleanup: bounded normalization everywhere, target-native tuples and `option` | Done.  Every normalization Custard performs now runs under `--custard_norm_budget`, through `Extract.norm_bounded` or the new `Mono.norm_bounded` for the callers below the extractor; the four sites in `Mono` and `RegEmb` that did not were the last unbounded ones (§12.8 item 8).  And a realized type that the realization defines as an *alias* of a type the target already has is printed as that target type: `FStar.Pervasives.Native`'s `tupleN` in OCaml's tuple syntax and its `option` as OCaml's `option`, so that no Custard-generated line in the extracted compiler names `FStar_Pervasives_Native` (§8.2).  `fst`/`snd` are `inline_for_extraction` |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

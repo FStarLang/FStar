@@ -45,7 +45,7 @@ CUSTARD_TESTS += Reify
 # [Type -> Type] that binds *no* binders.  The IR has no partial application
 # of a type constructor, so the abbreviation is eta-expanded from the binders
 # of its own type; left as is, its use as a monad loses an argument.
-GREP_Mymon += "let rec mymon_iterM__writer (f : ('a -> ((Prims.int) list, unit) FStar_Pervasives_Native.tuple2)) (l : ('a) list)"
+GREP_Mymon += "let rec mymon_iterM__writer (f : ('a -> ((Prims.int) list \* unit))) (l : ('a) list)"
 # Section 5.6: a local [let rec] is lambda-lifted, and its binders and its body
 # must come from *one* opening of the definiens -- [abs_formals] invents fresh
 # names every time, so opening twice gives the body variables that no binder
@@ -71,8 +71,8 @@ NOGREP_HigherKind  += ") a "
 # on it, and this module comes out entirely at [option] with no coercion at
 # all.  That is what is pinned here -- see HigherKind for the case that does
 # still need [Obj.t], where the dictionary is only known at run time.
-GREP_Magic   += "(magic_twice__option (FStar_Pervasives_Native.Some ((Prims.parse_int \"21\"))))"
-GREP_Magic   += "let magic_ret__option (tmp : 'a) : ('a) FStar_Pervasives_Native.option ="
+GREP_Magic   += "(magic_twice__option (Some ((Prims.parse_int \"21\"))))"
+GREP_Magic   += "let magic_ret__option (tmp : 'a) : ('a) option ="
 NOGREP_Magic += "Obj.magic"
 NOGREP_Magic += "Obj.t"
 # One shared specialization taking the dictionary at run time (the identity
@@ -141,7 +141,7 @@ GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go"
 NOGREP_LocalRec   = "let rec aux" "let rec go"
 
 # The collapsed newtype is the pair itself, and no [inline] marker escapes.
-GREP_NewtypeInline   = "(bool, string) FStar_Pervasives_Native.tuple2"
+GREP_NewtypeInline   = "(bool \* string)"
 NOGREP_NewtypeInline = "newtypeInline_step" "inline"
 
 # The dictionary built behind a local [let] is specialized away entirely, so

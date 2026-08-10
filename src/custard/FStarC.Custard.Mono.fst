@@ -32,6 +32,34 @@ module TcUtil = FStarC.TypeChecker.Util
 module U     = FStarC.Syntax.Util
 module N     = FStarC.TypeChecker.Normalize
 
+(* Custard reduces terms nobody wrote for it, and reduction need not
+   terminate: with [zeta] on, which is the default, a recursive definition is
+   unfolded without bound.  The failure mode is the worst kind -- not a wrong
+   answer or a rejection, but a compiler that never finishes and never says
+   why -- so *every* normalization Custard performs runs under a step budget.
+   [Extract.norm_bounded] is the same wrapper with the request chain of
+   section 3.6 attached; this one is for the callers below the extractor,
+   which have no chain to report.
+
+   A budget nests by saving and restoring, so wrapping a call that is already
+   inside one is harmless: the inner limit applies and the outer count
+   resumes where it left off. *)
+let norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
+  : ML typ =
+  try N.with_budget (FStarC.Options.custard_norm_budget ())
+                    (fun () -> N.normalize steps env t)
+  with
+  | N.Budget_exceeded ->
+    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardFuelExhausted [
+      Pprint.arbitrary_string
+        ("Custard exceeded --custard_norm_budget (" ^
+         show (FStarC.Options.custard_norm_budget ()) ^
+         " reduction steps) while normalizing " ^ what ^ ".");
+      Pprint.arbitrary_string
+        ("The term being normalized, before reduction, was: " ^
+         FStarC.Syntax.Print.term_to_string' (TcEnv.dsenv env) t)
+    ]
+
 let bclass_to_string (c:bclass) : string =
   match c with
   | Mono -> "Mono"
@@ -98,10 +126,11 @@ let rec is_arity_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
   | Tm_fvar _ | Tm_app _ | Tm_uinst _ ->
     not normed &&
     is_arity_aux true env
-      (N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                    TcEnv.Beta; TcEnv.Iota;
-                    TcEnv.UnfoldUntil delta_constant]
-                   env t)
+      (norm_bounded env "a binder's sort"
+                    [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                     TcEnv.Beta; TcEnv.Iota;
+                     TcEnv.UnfoldUntil delta_constant]
+                    t)
   | _ -> false
 
 let is_arity (env:TcEnv.env) (t:typ) : ML bool = is_arity_aux false env t
@@ -126,10 +155,11 @@ let rec is_star_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
   | Tm_fvar _ | Tm_app _ | Tm_uinst _ ->
     not normed &&
     is_star_aux true env
-      (N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                    TcEnv.Beta; TcEnv.Iota;
-                    TcEnv.UnfoldUntil delta_constant]
-                   env t)
+      (norm_bounded env "a binder's kind"
+                    [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                     TcEnv.Beta; TcEnv.Iota;
+                     TcEnv.UnfoldUntil delta_constant]
+                    t)
   | _ -> false
 
 let is_type_param (env:TcEnv.env) (b:binder) : ML bool =

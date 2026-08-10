@@ -36,6 +36,14 @@ type bclass =
      every call site.  This is rule 1 of section 3.1. *)
   | Dropped
 
+(** Normalize under [--custard_norm_budget], raising
+    [Error_CustardFuelExhausted] rather than running forever.  Every
+    normalization Custard performs goes through this or through
+    [Extract.norm_bounded], which is the same thing with a request chain
+    attached; see section 3.6. *)
+val norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
+  : ML typ
+
 val bclass_to_string : bclass -> string
 
 instance val showable_bclass : Class.Show.showable bclass
