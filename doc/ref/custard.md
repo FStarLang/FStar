@@ -4633,6 +4633,23 @@ it is in the ML pipeline.  `RegEmb.subst_expr` is the traversal; it needs no
 capture check, since a placeholder is a fresh name and what replaces it
 mentions only top-level declarations.
 
+#### What is not generated: a polymorphic plugin
+
+A plugin with a leading type binder is *rejected*, with the same
+"can not run natively" warning the ML pipeline uses, rather than registered.
+The ML pipeline handles it by embedding the type variable with `mk_any_emb`
+and pattern-matching the type arguments off the front of the `args` list, and
+Custard could do the same: it would be a match wrapped around the lambda
+`interp_term` already builds, peeling one argument per type binder.
+
+It has not been built, and the reason is a measurement rather than a
+difficulty.  Of the 163 `[@@plugin]` declarations in `ulib` and `src`, **none**
+is polymorphic, and a full `make custard` --- which registers all 25 ulib
+plugin modules --- emits no such warning at all.  Building `mk_any_emb`
+support now would be machinery with no caller, and a registration that
+unembeds at the wrong type is exactly the kind of silent wrongness §13.5 is
+about.  The rejection is the honest answer until something needs it.
+
 
 ### 13.5 What it took to run
 
