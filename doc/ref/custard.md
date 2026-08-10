@@ -3854,7 +3854,8 @@ against `src/**/*.fst` turns up, in rough order of size:
    with it.
 7. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
-   leaves syntax, elaboration and the checked files unchanged.
+   leaves syntax, elaboration and the checked files unchanged.  **Done** for
+   the compiler itself: `make custard`, described in §12.11.
 8. Smaller: `Prims.int` maps to a fixed-width integer on the Krml path
    (`PrintKrml.fst:111`), which is fine for an OCaml target and a latent
    miscompilation for a C one; and `FStar.Printf`'s type-level arity
@@ -4108,9 +4109,71 @@ they register into a different copy of the compiler's tables; any proof that
 needs one fails with "tactic got stuck".  Compiling them with Custard, in the
 same program, is M10d's business.
 
-Still missing for a *runnable* compiler beyond that: build integration (item 7
-of §12.8), which has to drive `menhir` and `sedlex` for the generated parser
-and lexer and link the result, and the `Prims.int` question of item 8.
+Build integration --- item 7 of §12.8, which has to drive `menhir` and `sedlex`
+for the generated parser and lexer and link the result --- is §12.11.  Beyond
+that the `Prims.int` question of item 8 remains.
+
+---
+
+### 12.11 `make custard`
+
+The recipe of §12.10 lived in shell one-liners for as long as the question was
+whether it could work at all.  It is now `mk/custard.mk`, reached by `make
+custard` (and `make custard-smoke`), building into `stagec/`.  It depends on a
+stage 2 compiler, which it needs twice over: to *run* the extraction, and for
+the `.checked` files the extraction reads.
+
+The entry points are no longer a command line.  `src/custard/entrypoints.txt`
+lists them one per line, `#` for comments, and the makefile turns each line
+into a `--custard_entry`.  Two kinds of line appear there, and the file says
+which is which: a declaration that some hand-written realization calls, which
+nothing in F\* refers to and demand-driven extraction would otherwise drop
+(§12.9); and a bare *module* name, kept for its initializers (§4.4).
+
+The four steps:
+
+1. **Cache.**  `stage2/ulib.checked` and `stage2/fstarc.checked` merged into
+   one directory, because `--cache_dir` takes one.
+2. **Split.**  `--codegen Custard --custard_split` from `FStarC.Main.main` plus
+   the entry file, into `stagec/split/` --- 185 files.
+3. **Assemble.**  Those, plus `src/ml/*.ml`, plus a two-line `zzMain.ml`, into
+   one flat directory.  The realizations win where a file exists on both sides:
+   a realized module's F\* definitions are a model and Custard does not emit
+   them (§8.2).  `FStarC_Version.ml` is generated here rather than copied from
+   the dune build, because it assigns to `FStarC.Options`' `_version`, and
+   Custard mangles a leading underscore to `u__` (§5.2) where the ML extraction
+   does not.
+4. **Parsers, then compile.**
+
+The parsers are the only interesting part.  `menhir --infer` types a grammar's
+semantic values by compiling a mock module against the surrounding code, and
+the surrounding code here is *Custard's* `FStarC_Parser_AST`, not the ML
+extraction's.  Borrowing the dune build's answer would be relying on the two
+extractions happening to lay out `FStarC.Parser.AST.term` the same way.  So the
+makefile drives menhir itself:
+
+```
+menhir --infer-write-query M.mock.ml M.mly
+ocamlfind ocamlc -I . -i M.mock.ml > M.reply
+menhir --explain --infer-read-reply M.reply M.mly
+```
+
+This needs `.cmi`s for everything the grammar's header opens, which is a
+chicken-and-egg: those modules are upstream of the parser, but `ocamldep` sees
+the whole set at once.  The way out is that they really are upstream, so a
+best-effort pass that runs `ocamlfind ocamlc -c` over `ocamldep -sort` order
+and *ignores every failure* is guaranteed to compile them; the modules that
+fail are exactly the ones downstream of the parser, and the final `ocamlopt`
+pass compiles everything again in order anyway.  Bytecode, because only the
+`.cmi` is wanted and `ocamlc` is much the faster.  `sedlex` needs no such
+help --- `-package sedlex.ppx` applies the ppx to the two lexers directly.
+
+The note in earlier drafts that editing `FStarC_Parser_Parse.mly` requires a
+full `make` is therefore obsolete.
+
+`make custard-smoke` checks `FStar.List.Tot.Properties` from source with the
+result, in a fresh `--cache_dir`: as §12.10 says, a Custard-built compiler
+cannot read a dune-built one's `.checked` files.
 
 
 | M | Deliverable | Notes |
@@ -4157,5 +4220,6 @@ and lexer and link the result, and the `Prims.int` question of item 8.
 | M10j | A realization replaces its module's values (§8.2) | Done.  Where `src/ml` or `ulib/ml` holds a hand-written `.ml`, the F\* definitions in that module are a model, and a model that disagrees with the realization — `FStar.Dyn`'s `dyn` is `unit -> Dv value_type_bundle` in F\* and `Obj.t` in OCaml — is not something extraction may silently choose between.  Every `Sig_let` in a realized module becomes a `DExternal`; an incomplete realization is now a link error rather than a program running the model.  Exempted, because they are not models: projectors and discriminators, `inline_for_extraction` symbols (which in a realized module means the realization deliberately does not define them, as `FStarC.PSMap`'s `psmap_*` aliases do), type abbreviations, and the two modules whose realization defines no representation of its own (`Builtins.type_only_realized_modules`: `FStar.Pervasives`, which has no file, and `FStar.Pervasives.Native`, which is transparent over types Custard represents natively — and whose `fst`/`snd`, left external, would freeze `tuple2` and leave the C backend with no representation for it).  Externals gained `dx_typars` so that §3.2 instantiates a polymorphic realization's signature at the call site: without it one `let fst = Stdlib.fst` types every caller's result as `any`.  The cost, accepted: what a realization implements is no longer monomorphized |
 | M10k | Advancing the extracted-compiler build (§12.10) | Done.  Five code-generation bugs: a retained *type* binder passed as a runtime argument (`Mono.keep_thunk`/`unit_binders`, now typed `unit` so no `Obj.magic` is generated); a lambda-lifted local not receiving the captures of the lifted locals it calls; a lambda-lifted local keeping its own generalized type binders as value parameters instead of `dl_typars`; an eta-contracted abbreviation (`uvars = FlatSet.t ctx_uvar` through `t = flat_set`) unfolded with its own parameter still free, in both `Layout.resolve` and `Monomorphize.unfold_cty`; and a definition whose declared type hides its arrows behind an abbreviation (`let get : st ctxt = fun s -> ...`).  A *type* can now be a `--custard_entry`, which is how a realization gets at an abbreviation Custard unfolds rather than emits: `Extract.run` flags a `DType` root and `Driver.check_entrypoints` no longer rejects an entry whose module the on-demand loader has not reached.  `tests/custard/PolyVal.fst` and `TypeEntry.fst` |
 | M10l | **The extracted compiler builds and runs** (§12.10) | Done.  A Custard-extracted `fstar.exe` verifies `FStar.List.Tot.Properties` from source and reports the same errors as the dune-built one.  What it took beyond M10k: **module initializers** --- an effectful top-level `let` is a root, and every loaded module contributes its own (§4.4), without which `FStarC.Options`' `let _ = clear ()` never ran; a `--custard_entry` that names a *module*, the only way to reach `FStarC.Hooks`, which exists solely for its side effects; and six codegen bugs, each listed in §12.10: a `ref` printed as an array (`lettys` and abbreviation unfolding), `-1` erased to `()` because the normalizer returns it as a `Tm_lazy` embedding, load-order-dependent extraction (`lookup_lid_typ`), an under-abstracted abbreviation, two lambda-lifted binders collapsed into one because `lift_letrec` opened the definiens twice, and OCaml record expressions resolving to the wrong record type.  `tests/custard/Literals.fst`, `Mymon.fst`, `Patlift.fst` |
+| M10m | **Build integration** (§12.11): `make custard`, `mk/custard.mk`, `src/custard/entrypoints.txt` | Done.  Builds a Custard-extracted `fstar.exe` into `stagec/` from a stage 2 compiler, driving `menhir --infer` against Custard's own interfaces rather than borrowing the dune build's answer, and generating `FStarC_Version.ml` itself because Custard mangles `_version` to `u__version`.  `make custard-smoke` runs it. |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

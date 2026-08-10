@@ -644,6 +644,32 @@ watch:
 	done
 
 
+### CUSTARD
+#
+# An F* compiler extracted by Custard instead of by the ML extraction
+# (doc/ref/custard.md section 12.10).  Needs a stage2 compiler, for the
+# extraction itself and for its checked files.
+
+.PHONY: custard custard-smoke clean-custard
+
+custard: 2.full
+	$(call bold_msg, "CUSTARD", "FSTAR")
+	+env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
+	  ULIB_CHECKED=stage2/ulib.checked \
+	  FSTARC_CHECKED=stage2/fstarc.checked \
+	  $(MAKE) -f mk/custard.mk all
+
+custard-smoke: 2.full
+	+env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
+	  ULIB_CHECKED=stage2/ulib.checked \
+	  FSTARC_CHECKED=stage2/fstarc.checked \
+	  $(MAKE) -f mk/custard.mk smoke
+
+clean-custard: .force
+	rm -rf stagec
+
 ### CLEAN
 
 clean-depend: .force
@@ -739,6 +765,8 @@ help:
 	echo "  package-src-2      create an OCaml source distribution for the stage 2 build"
 	echo "  package-src-3      create an OCaml source distribution for the stage 3 build (= package-src)"
 	echo "  all-packages       build the four previous rules"
+	echo "  custard            build an fstar.exe extracted by Custard (into stagec/)"
+	echo "  custard-smoke      build it and check a ulib module with it"
 	echo "  clean-depend       remove all .depend files, useful when files change name"
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
 	echo "  distclean          remove every generated file"
