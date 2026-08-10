@@ -1965,6 +1965,63 @@ let collect (all_cmd_line_files: list file_name)
   mk_deps dep_graph file_system_map valid_namespaces all_cmd_line_files (RBSet.from_list all_files) inlining_ifaces parse_results
 
 (* In public interface *)
+(* Every module the graph knows about, lowercased, in dependency order: a
+   module comes after everything its implementation and its interface depend
+   on.  This is the same walk [print_full] uses to order the .ml files it
+   hands to the OCaml compiler, so it is the order the build links in.
+
+   Whole-program extraction needs it to lay its output out (see
+   [FStarC.Custard.Split]).  Ordering by the *file* graph is not enough there,
+   because a module with an interface is reached through the interface alone
+   and its implementation's dependencies never enter the order --
+   [FStarC.Errors] would sort before [FStarC.Options] even though
+   [FStarC.Errors.fst] uses it.
+
+   [normalize] lets the caller collapse several source modules onto one node,
+   which whole-program extraction needs because it emits several F* modules
+   into one target module.  Collapsing can of course introduce a cycle where
+   the source had none; the walk then breaks it at whichever end it reached
+   first, as it must. *)
+let topological_order (deps:deps) (normalize : module_name -> ML module_name)
+  : ML (list module_name) =
+  let norm (m:module_name) : ML module_name = normalize m in
+  (* One node per normalized name, carrying the union of the edges of every
+     file that maps to it -- implementation and interface alike. *)
+  let edges : SMap.t (list module_name) = SMap.create 41 in
+  let add (m:module_name) (ds:list module_name) : ML unit =
+    let prev = Option.dflt [] (SMap.try_find edges m) in
+    SMap.add edges m (ds @ prev) in
+  let _ =
+    deps_keys deps.dep_graph |> List.iter (fun f ->
+      match maybe_module_name_of_file f with
+      | None -> ()
+      | Some m ->
+        let ds =
+          match deps_try_find deps.dep_graph f with
+          | None -> []
+          | Some ({edges=es}) -> es |> List.map (fun d -> norm (module_name_of_dep d)) in
+        add (norm m) ds) in
+  let order : ref (list module_name) = mk_ref [] in
+  let visited = SMap.create 41 in
+  let rec visit (m:module_name) : ML unit =
+    if Some? (SMap.try_find visited m) then () else begin
+      SMap.add visited m true;
+      Option.dflt [] (SMap.try_find edges m) |> List.iter visit;
+      order := m :: !order
+    end in
+  (* Command-line roots first, so that whatever they reach ranks before
+     anything reached only from elsewhere.  Ties have to be broken somehow --
+     two modules with no dependency between them can go in either order -- and
+     "what the program being built needs, first" is the tie-break that matches
+     the build: [fstar.exe]'s own modules come before the library modules it
+     merely loads. *)
+  deps.cmd_line_files |> List.iter (fun f ->
+    match maybe_module_name_of_file f with
+    | None -> ()
+    | Some m -> visit (norm m));
+  SMap.keys edges |> List.iter visit;
+  List.rev !order
+
 let parsing_data_of_modul deps filename modul_opt =
   let modul =
     match modul_opt with

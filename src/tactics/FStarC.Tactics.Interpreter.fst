@@ -73,6 +73,7 @@ let native_tactics_steps () : ML (list PO.primitive_step) =
     ; strong_reduction_ok          = s.strong_reduction_ok
     ; requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
     ; renorm_after                 = false
+    ; unrepresentable_result       = false
     ; interpretation               = s.tactic
     ; interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
     }

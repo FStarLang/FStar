@@ -26,6 +26,12 @@ open FStarC.Custard.Syntax
 module BU   = FStarC.Util
 module SMap = FStarC.SMap
 
+(* Section 12.9: the file currently being printed, when the output is split.
+   A reference to a name of *this* file must not be qualified, and everything
+   in {!qualifiers} is qualified by construction, so the two are reconciled
+   here rather than by keeping a second table per file. *)
+let current_module : ref (option string) = mk_ref None
+
 (* Symbols with no F* definition are references to a hand-written OCaml
    realization, so they are printed as that realization wherever they occur
    rather than bound to a local alias first.  The table is filled in by
@@ -33,8 +39,27 @@ module SMap = FStarC.SMap
    would be noise, since it is constant for a whole program. *)
 let externals : ref (SMap.t string) = mk_ref (SMap.create 0)
 
+(* A realization's path is absolute -- [FStarC_Syntax_Syntax.subst_elt] -- and
+   that is what a reference to it has to print everywhere except in the file
+   that *is* [FStarC_Syntax_Syntax], where OCaml has no way to name the module
+   being defined.  The case arises for ulib's [FStar.Stubs.*] restatements of
+   the compiler's API (section 8.3): a stub value is realized by the
+   compiler's own definition, and Custard compiles that definition into the
+   very file the stub's qualified name points at. *)
+let unqualify_self (t:string) : ML string =
+  match !current_module with
+  | None -> t
+  | Some m ->
+    let p = m ^ "." in
+    let lp = String.strlen p in
+    if String.strlen t > lp && String.substring t 0 lp = p
+    then String.substring t lp (String.strlen t - lp)
+    else t
+
 let external_target (n:name) : ML (option string) =
-  SMap.try_find !externals (string_of_name n)
+  match SMap.try_find !externals (string_of_name n) with
+  | Some t -> Some (unqualify_self t)
+  | None -> None
 
 (* Names belonging to a linked unit (section 12), by the OCaml module that
    unit compiled to.  Every reference to one is qualified explicitly rather
@@ -54,12 +79,6 @@ let realized : ref (SMap.t unit) = mk_ref (SMap.create 0)
 
 let is_realized (n:name) : ML bool =
   None? n.spec && Some? (SMap.try_find !realized (string_of_name n))
-
-(* Section 12.9: the file currently being printed, when the output is split.
-   A reference to a name of *this* file must not be qualified, and everything
-   in {!qualifiers} is qualified by construction, so the two are reconciled
-   here rather than by keeping a second table per file. *)
-let current_module : ref (option string) = mk_ref None
 
 (* Section 12.9: the names emitted under their plain F* identifier rather than
    their mangled one.  Mangling exists only to keep one flat file

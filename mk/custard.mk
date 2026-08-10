@@ -42,7 +42,12 @@ ENTRIES   := $(shell sed -e 's/[#].*//' -e '/^[[:space:]]*$$/d' $(ENTRYFILE) | s
 # usable as it stands.
 VERSION_SH := .scripts/make_fstar_version.sh
 
-REALIZATIONS := $(wildcard src/ml/*.ml)
+# ulib/ml/plugin holds the realizations of the modules ulib declares for
+# metaprograms -- FStar.Sealed, FStar.Issue, and the two Stubs modules that
+# are really the compiler's own tactic engine.  The dune build compiles them
+# into the plugin library rather than the compiler; a whole-program build has
+# only one link unit, so they go in beside the rest.
+REALIZATIONS := $(wildcard src/ml/*.ml) $(wildcard ulib/ml/plugin/*.ml)
 GRAMMARS     := FStarC_Parser_Parse FStarC_Parser_WarnError
 
 OCAMLPKGS := fstar.lib,sedlex,sedlex.ppx,zarith,batteries,menhirLib,pprint,ppxlib,ppx_deriving_yojson.runtime,memtrace,mtime.clock.os,process,stdint,yojson,dynlink
@@ -102,6 +107,7 @@ $(BUILD)/.touch: mk/custard.mk $(SPLIT)/.touch $(REALIZATIONS) $(addprefix src/m
 	$(Q)rm -rf $(BUILD) && mkdir -p $(BUILD)
 	$(Q)cp $(SPLIT)/*.ml $(BUILD)/
 	$(Q)cp -f --no-preserve=mode src/ml/*.ml src/ml/*.mly $(BUILD)/
+	$(Q)cp -f --no-preserve=mode ulib/ml/plugin/*.ml $(BUILD)/
 	$(Q)bash $(VERSION_SH) | sed 's/FStarC_Options\._/FStarC_Options.u__/' \
 	   > $(BUILD)/FStarC_Version.ml
 	$(Q)printf 'let () = FStarC_Main.main ()\n' > $(BUILD)/zzMain.ml

@@ -383,4 +383,5 @@ let default_settings : list error_setting =
     Warning_CustardLostRepresentation                 , CWarning, 366;
     Error_CustardNoCRepresentation                    , CAlwaysError, 367;
     Error_CustardBadUnitInterface                     , CAlwaysError, 368;
+    Error_CustardUnrepresentableValue                 , CAlwaysError, 369;
     ]

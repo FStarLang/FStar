@@ -218,6 +218,14 @@ let prims_rule (id:string) : ML (option rule) =
      own, so there is no layout to derive and nothing to instantiate.  Only
      OCaml has a representation for it (section 8.5). *)
   | "exn" -> Some (Rule_type (fun _ -> TExn))
+  (* [magic] and [admit] only typecheck because the caller has proved the
+     point unreachable -- either outright, or, as in
+     [FStar.Stubs.Tactics.V2.Builtins.raise], through a [False]
+     postcondition.  There is no value of the result type to produce and no
+     reason to produce one, so this aborts like [Pulse.Lib.Dv.unreachable].
+     [TAny] is what lets it stand where a value of any type is wanted. *)
+  | "magic" | "admit" ->
+    Some (Rule_prim (1, fun _ _ -> mk (EAbort ("Prims." ^ id)) TAny E_Impure))
   | _ -> None
 
 (* -------------------------------------------------------------------- *)
@@ -542,17 +550,17 @@ let rule_of_attributes (attrs : list S.term) : ML (option rule) =
 
 (* The modules whose OCaml realization is written by hand rather than
    extracted: every one of these has a file of the same name under [src/ml] or
-   [ulib/ml], and the build excludes it from extraction.  Custard links against
-   the same realizations, so a type declared in one of them belongs to that
-   file and must not be compiled again -- see {!Rule_realized}.
+   [ulib/ml/plugin], and the build excludes it from extraction.  Custard
+   links against the same realizations, so a type declared in one of them
+   belongs to that file and must not be compiled again -- see {!Rule_realized}.
 
    The list is the convention, not an attribute on each module: marking fifty
    interfaces one at a time would be a rule about the build expressed in the
    library, and it would still have to be kept in step with the build.  It is
-   the set of module names for which [src/ml] or [ulib/ml] holds a file of the
-   same name, plus [FStar.Pervasives], which is extracted rather than
-   hand-written but whose [either] and [dtuple] types the realizations use in
-   their own signatures.  Listing a module that declares no type is harmless:
+   the set of module names for which [src/ml] or [ulib/ml/plugin] holds a
+   file of the same name, plus [FStar.Pervasives], which is extracted rather
+   than hand-written but whose [either] and [dtuple] types the realizations
+   use in their own signatures.  Listing a module that declares no type is harmless:
    the rule has no effect on values. *)
 (* Section 8.3.  ulib declares the compiler's reflection and tactic API a
    second time, as the [FStar.Stubs.*] modules: abstract types and [assume
@@ -573,6 +581,22 @@ let no_fstar_stubs (ns : list string) : list string =
   | "FStar" :: "Stubs" :: rest -> "FStarC" :: rest
   | _ -> ns
 
+(* The rewrite says where a stub's definitions *live*; this recognises that
+   they are stubs at all.  A stub is a second declaration of something the
+   compiler already defines -- [FStar.Stubs.Syntax.Syntax.subst_elt] is the
+   compiler's [FStarC.Syntax.Syntax.subst_elt], written out again so that a
+   metaprogram can name it -- and compiling the stub's copy would put a second
+   definition of that type in the module that already has the first.
+
+   The consequences are drawn in [Extract.unstub_lid], which is where a
+   request for a stub is answered with the compiler's own declaration.  The
+   argument is the namespace *before* {!no_fstar_stubs}, since afterwards
+   there is nothing left to recognise. *)
+let is_stub_module (ns : list string) : bool =
+  match ns with
+  | "FStar" :: "Stubs" :: _ -> true
+  | _ -> false
+
 let realized_modules : list (list string) = [
   ["FStar"; "All"];
   ["FStar"; "Bytes"];
@@ -583,6 +607,7 @@ let realized_modules : list (list string) = [
   ["FStar"; "IO"];
   ["FStar"; "ImmutableArray"];
   ["FStar"; "ImmutableArray"; "Base"];
+  ["FStar"; "Issue"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
@@ -590,6 +615,7 @@ let realized_modules : list (list string) = [
   ["FStar"; "Pervasives"];
   ["FStar"; "Pervasives"; "Native"];
   ["FStar"; "Pprint"];
+  ["FStar"; "Sealed"];
   ["FStar"; "String"];
   ["FStar"; "UInt8"];
   ["FStarC"; "Array"];

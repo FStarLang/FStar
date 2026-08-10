@@ -125,15 +125,136 @@ let builtin_embeddings : list (Ident.lident & embedding_data) =
     (RC.fstar_refl_data_lid "qualifier",      rfl "e_qualifier");
   ]
 
-(* Embeddings generated for a [@@plugin] datatype in this run, by the type's
-   lid.  They are generated the first time the type is met and reused after
-   that, so this survives across modules. *)
-let generated : ref (list (Ident.lident & embedding_data)) = mk_ref []
-
 let find_embedding (l:Ident.lident) : ML (option embedding_data) =
-  match List.find (fun (l', _) -> Ident.lid_equals l l') (!generated @ builtin_embeddings) with
+  match List.find (fun (l', _) -> Ident.lid_equals l l') builtin_embeddings with
   | Some (_, d) -> Some d
   | None -> None
+
+(* -------------------------------------------------------------------- *)
+(* Embeddings generated for a [@@plugin] datatype                       *)
+(* -------------------------------------------------------------------- *)
+
+(* A [@@plugin] datatype has no embedding of its own; one is generated beside
+   it, as the ML pipeline does.  The generated embedding is a *declaration*,
+   not an F* definition, so there is no lid for {!embedding_for} to return --
+   and {!embedding_for} has to return F* syntax, because that is what the
+   whole design of this module rests on (section 13.1).
+
+   The way out is a placeholder: a fresh variable of type [embedding t], free
+   in whatever term is being generated.  {!compile} abstracts over the ones a
+   term actually mentions and applies the resulting IR lambda to the
+   declarations they stand for.  Nothing else in the module has to know. *)
+type gen_emb = {
+  ge_lid  : Ident.lident;
+  ge_ph   : bv;    (** the placeholder standing for this type's embedding *)
+  ge_emb  : name;  (** [e_t], the embedding itself *)
+  ge_knot : name;  (** [__knot_e_t], the thunk that breaks the recursion *)
+}
+
+let generated : ref (list gen_emb) = mk_ref []
+
+(* The mutual group whose declarations are being generated right now.  A
+   reference to one of *those* has to go through the thunk: [e_t] is defined
+   by unthunking, so a body reaching for it directly would be reading a
+   binding that is not initialized yet.  The ML pipeline has the same two
+   levels, for the same reason -- OCaml's [let rec] admits mutually recursive
+   *functions*, and [mk_extracted_embedding ...] is not one. *)
+let building : ref (list Ident.lident) = mk_ref []
+
+let find_generated (l:Ident.lident) : ML (option gen_emb) =
+  List.find (fun (g:gen_emb) -> Ident.lid_equals g.ge_lid l) !generated
+
+let emb_base (s:string) : ML Ident.lident =
+  Ident.lid_of_str ("FStarC.Syntax.Embeddings.Base." ^ s)
+
+let embedding_typ (t:typ) : ML typ =
+  U.mk_app (S.fvar (Ident.lid_of_str "FStarC.Syntax.Embeddings.Base.embedding") None)
+           [S.as_arg t]
+
+(* Replace a variable by an expression, everywhere it occurs.
+
+   This is a *substitution*, not a binding, and the difference is the whole
+   point.  Binding the placeholder -- [let x = __knot_e_t () in body] -- forces
+   the thunk before the body is built, and for a recursive type that is an
+   infinite loop: [e_pattern]'s [Pat_Cons] payload reaches for [e_pattern]
+   again.  The occurrences the generator wrote are inside the embedder and
+   unembedder closures, which run only once there is a value to embed, and
+   substitution is what leaves them there.  See {!building}.
+
+   Nothing here has to worry about capture: the placeholder is a fresh name and
+   the expression put in its place mentions only top-level declarations. *)
+let rec subst_expr (x:string) (v:expr) (e:expr) : ML expr =
+  let go = subst_expr x v in
+  let go_br (br:CSyn.branch) : ML CSyn.branch =
+    let (p, g, b) = br in (p, Option.map go g, go b) in
+  match e.e with
+  | EVar y when y = x -> v
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> e
+  | ELet (y, t, e1, e2) ->
+    (* A binder of the same name shadows the placeholder in its scope. *)
+    { e with e = ELet (y, t, go e1, (if y = x then e2 else go e2)) }
+  | EApp (h, args) -> { e with e = EApp (go h, List.map go args) }
+  | EFun (bs, b) ->
+    let shadows = List.existsb (fun (b:CSyn.binder) -> b.b_name = x) bs in
+    { e with e = EFun (bs, (if shadows then b else go b)) }
+  | EMatch (sc, brs) -> { e with e = EMatch (go sc, List.map go_br brs) }
+  | EIf (c, a, b) -> { e with e = EIf (go c, go a, go b) }
+  | ESeq (a, b) -> { e with e = ESeq (go a, go b) }
+  | ECtor (n, es) -> { e with e = ECtor (n, List.map go es) }
+  | ETuple es -> { e with e = ETuple (List.map go es) }
+  | ERecord (n, fs) ->
+    { e with e = ERecord (n, fs |> List.map (fun (f, a) -> (f, go a))) }
+  | EProj (a, n, f) -> { e with e = EProj (go a, n, f) }
+  | EDiscrim (a, n) -> { e with e = EDiscrim (go a, n) }
+  | ECast (a, t) -> { e with e = ECast (go a, t) }
+  | EOp (o, es) -> { e with e = EOp (o, List.map go es) }
+  | EWhile (c, b) -> { e with e = EWhile (go c, go b) }
+  | ERaise a -> { e with e = ERaise (go a) }
+  | ETry (a, brs) -> { e with e = ETry (go a, List.map go_br brs) }
+
+(* Translate a generated term, resolving its placeholders.  With none of them
+   this is just {!Extract.expr_of_term}; with some, each placeholder is
+   replaced, in place, by the declaration it stands for. *)
+let compile (st:Extract.state) (t:term) : ML expr =
+  let free = FStarC.Syntax.Free.names t in
+  let used = !generated |> List.filter (fun (g:gen_emb) ->
+               FStarC.Class.Setlike.mem g.ge_ph free) in
+  match used with
+  | [] -> Extract.expr_of_term st t
+  | _ ->
+    let e = Extract.expr_of_term st t in
+    used |> List.fold_left (fun (e:expr) (g:gen_emb) ->
+      let ety = Extract.ty_of_typ st g.ge_ph.sort in
+      let v =
+        if List.existsb (Ident.lid_equals g.ge_lid) !building
+        then CSyn.mk (EApp (CSyn.mk (EQual (g.ge_knot, []))
+                                    (TArrow (TUnit, E_Impure, ety)) E_Pure,
+                            [CSyn.mk (EConst CUnit) TUnit E_Pure])) ety E_Impure
+        else CSyn.mk (EQual (g.ge_emb, [])) ety E_Impure in
+      subst_expr (CSyn.uniq (Ident.string_of_id g.ge_ph.ppname) g.ge_ph.index) v e) e
+
+let dummy : Range.t = Range.dummyRange
+
+let ctor_fv (l:Ident.lident) : ML fv = S.lid_and_dd_as_fv l (Some Data_ctor)
+
+let pat_of (v:pat') : pat = withinfo v dummy
+
+let dot_pat : pat = pat_of (Pat_dot_term None)
+
+(* [[e1; ...; en]] at type [ty]. *)
+let rec term_list (ty:typ) (es:list term) : ML term =
+  match es with
+  | [] -> U.mk_app (S.tdataconstr PC.nil_lid) [S.iarg ty]
+  | e :: es -> U.mk_app (S.tdataconstr PC.cons_lid)
+                        [S.iarg ty; S.as_arg e; S.as_arg (term_list ty es)]
+
+let rec list_pat (vs:list bv) : ML pat =
+  match vs with
+  | [] -> pat_of (Pat_cons (ctor_fv PC.nil_lid, None, [(dot_pat, true)]))
+  | v :: vs -> pat_of (Pat_cons (ctor_fv PC.cons_lid, None,
+                                 [(dot_pat, true);
+                                  (pat_of (Pat_var v), false);
+                                  (list_pat vs, false)]))
 
 (* -------------------------------------------------------------------- *)
 (* Building F* syntax                                                   *)
@@ -215,6 +336,10 @@ let whnf (st:Extract.state) (t:typ) : ML typ =
   let rec go (fuel:int) (t:typ) : ML typ =
     match head_lid t with
     | None -> t
+    (* Stop at a type the table knows.  Unfolding is a means of *reaching* one
+       of those, and going past it loses: [range] is an abbreviation of
+       [FStarC.Range.Type.range], which nothing has an embedding for. *)
+    | Some l when Some? (find_embedding l) -> t
     | Some l ->
       Extract.ensure_lid_available st l;
       let t' = SS.compress (U.un_uinst (N.unfold_whnf (Extract.tcenv st) t)) in
@@ -258,10 +383,24 @@ let rec embedding_for (st:Extract.state) (k:kind) (t:typ) : ML term =
      | Some f -> call f tys (List.map (embedding_for st k) tys)
      | None -> raise (NoEmbedding ("no embedding for " ^ show t)))
 
-  | Tm_fvar _ ->
+  | Tm_fvar fv ->
     (match embedding_head st k t with
      | Some f -> call f [] []
-     | None -> raise (NoEmbedding ("no embedding for " ^ show t)))
+     | None ->
+       (* A [@@plugin] datatype gets an embedding generated for it, here and
+          now if this is the first time it is met.  Generating it on demand
+          rather than when its own module is handled means the order the
+          modules happen to arrive in cannot matter. *)
+       if not (TcEnv.fv_has_attr (Extract.tcenv st) fv PC.plugin_attr) then
+         raise (NoEmbedding ("no embedding for " ^ show t))
+       else match k with
+            | NBETerm -> nbe_unsupported t
+            | SyntaxTerm ->
+              let l = S.lid_of_fv fv in
+              ensure_generated st l;
+              (match find_generated l with
+               | Some g -> S.bv_to_name g.ge_ph
+               | None -> raise (NoEmbedding ("no embedding for " ^ show t))))
 
   | _ -> raise (NoEmbedding ("cannot embed type " ^ show t))
 
@@ -277,6 +416,120 @@ and embedding_head (st:Extract.state) (k:kind) (t:term) : ML (option Ident.liden
         | NBETerm -> d.nbe_emb)
      | None -> None)
   | _ -> None
+
+(* Generate the embeddings for the mutual group [l] belongs to, unless they
+   already exist.  Every member is registered *before* any body is built, so
+   that a type that mentions itself -- which is most of them -- terminates. *)
+and ensure_generated (st:Extract.state) (l:Ident.lident) : ML unit =
+  if Some? (find_generated l) then () else
+  match TcEnv.lookup_sigelt (Extract.tcenv st) l with
+  | Some ({sigel = Sig_inductive_typ {params; mutuals}}) ->
+    if Cons? params then
+      raise (NoEmbedding ("cannot generate an embedding for " ^ Ident.string_of_lid l ^
+                          ": the inductive has parameters"));
+    let group = l :: (mutuals |> List.filter (fun m -> not (Ident.lid_equals m l))) in
+    let entries = group |> List.map (fun (g:Ident.lident) ->
+      let nm = Extract.name_of_lid g in
+      let e = { ge_lid  = g;
+                ge_ph   = S.new_bv None (embedding_typ (S.fvar g None));
+                ge_emb  = { nm with id = "e_" ^ nm.id };
+                ge_knot = { nm with id = "__knot_e_" ^ nm.id } } in
+      generated := e :: !generated;
+      e) in
+    let saved = !building in
+    building := group @ saved;
+    entries |> List.iter (generate_one st);
+    building := saved
+  | _ ->
+    raise (NoEmbedding ("no inductive declaration for " ^ Ident.string_of_lid l))
+
+and generate_one (st:Extract.state) (g:gen_emb) : ML unit =
+  let env = Extract.tcenv st in
+  let gty = S.fvar g.ge_lid None in
+  let _, cs = TcEnv.datacons_of_typ env g.ge_lid in
+  let ctors = cs |> List.map (fun (c:Ident.lident) ->
+    match TcEnv.lookup_sigelt env c with
+    | Some ({sigel = Sig_datacon {t}}) -> (c, fst (U.arrow_formals t))
+    | _ -> raise (NoEmbedding ("no declaration for constructor " ^ Ident.string_of_lid c))) in
+  let body = compile st (call (emb_base "mk_extracted_embedding") [gty]
+                              [str (Ident.string_of_lid g.ge_lid);
+                               unembed_fun st gty ctors;
+                               embed_fun st gty ctors]) in
+  let ety = Extract.ty_of_typ st (embedding_typ gty) in
+  Extract.emit st ("regemb-knot:" ^ Ident.string_of_lid g.ge_lid)
+    (DLet { dl_name = g.ge_knot; dl_typars = [];
+            dl_binders = [{ b_name = "_thunk"; b_ty = TUnit }];
+            dl_ret = ety; dl_eff = E_Impure; dl_body = body;
+            dl_flags = [Comment ("Embedding for " ^ Ident.string_of_lid g.ge_lid)] });
+  Extract.emit st ("regemb-emb:" ^ Ident.string_of_lid g.ge_lid)
+    (DLet { dl_name = g.ge_emb; dl_typars = []; dl_binders = []; dl_ret = ety;
+            dl_eff = E_Impure;
+            dl_body = CSyn.mk (EApp (CSyn.mk (EQual (g.ge_knot, []))
+                                             (TArrow (TUnit, E_Impure, ety)) E_Pure,
+                                     [CSyn.mk (EConst CUnit) TUnit E_Pure])) ety E_Impure;
+            dl_flags = [] })
+
+(* [fun (x:t) -> match x with | C v1 .. vk -> mk_app (tdataconstr "M.C")
+                                                [as_arg (embed e1 v1); ...]] *)
+and embed_fun (st:Extract.state) (gty:typ)
+              (ctors:list (Ident.lident & list binder)) : ML term =
+  let x = S.new_bv None gty in
+  let arg_ty = S.fvar (Ident.lid_of_str "FStarC.Syntax.Syntax.arg") None in
+  let brs = ctors |> List.map (fun (c, bs) ->
+    let vs = bs |> List.map (fun (b:binder) -> S.new_bv None b.binder_bv.sort) in
+    let p = pat_of (Pat_cons (ctor_fv c, None,
+              List.map2 (fun (b:binder) (v:bv) ->
+                (pat_of (Pat_var v), Some? b.binder_qual)) bs vs)) in
+    let args = List.map2 (fun (b:binder) (v:bv) ->
+      call (Ident.lid_of_str "FStarC.Syntax.Syntax.as_arg") []
+        [call (emb_base "extracted_embed") [b.binder_bv.sort]
+              [embedding_for st SyntaxTerm b.binder_bv.sort; S.bv_to_name v]]) bs vs in
+    let head = call (Ident.lid_of_str "FStarC.Syntax.Syntax.tdataconstr") []
+                 [call (Ident.lid_of_str "FStarC.Ident.lid_of_str") []
+                       [str (Ident.string_of_lid c)]] in
+    SS.close_branch (p, None,
+      call (Ident.lid_of_str "FStarC.Syntax.Util.mk_app") []
+           [head; term_list arg_ty args])) in
+  U.abs [S.mk_binder x]
+        (S.mk (Tm_match { scrutinee = S.bv_to_name x; ret_opt = None;
+                          brs; rc_opt = None }) dummy) None
+
+(* [fun (tm : string & list term) -> match tm with
+     | ("M.C", [p1; ..; pk]) -> bind (unembed e1 p1) (fun v1 -> ... Some (C v1 ..))
+     | _ -> None] *)
+and unembed_fun (st:Extract.state) (gty:typ)
+                (ctors:list (Ident.lident & list binder)) : ML term =
+  let t_term = S.fvar (Ident.lid_of_str "FStarC.Syntax.Syntax.term") None in
+  let t_terms = U.mk_app (S.fvar PC.list_lid None) [S.as_arg t_term] in
+  let scrut_ty = U.mk_app (S.fvar (PC.mk_tuple_lid 2 dummy) None)
+                          [S.as_arg S.t_string; S.as_arg t_terms] in
+  let tm = S.new_bv None scrut_ty in
+  let none = U.mk_app (S.tdataconstr PC.none_lid) [S.iarg gty] in
+  let brs = ctors |> List.map (fun (c, bs) ->
+    let ps = bs |> List.map (fun _ -> S.new_bv None t_term) in
+    let vs = bs |> List.map (fun (b:binder) -> S.new_bv None b.binder_bv.sort) in
+    let p = pat_of (Pat_cons (ctor_fv (Ident.lid_of_str "FStar.Pervasives.Native.Mktuple2"),
+              None,
+              [(dot_pat, true); (dot_pat, true);
+               (pat_of (Pat_constant (Const_string (Ident.string_of_lid c, dummy))), false);
+               (list_pat ps, false)])) in
+    let ret = U.mk_app (S.tdataconstr PC.some_lid)
+                [S.iarg gty;
+                 S.as_arg (U.mk_app (S.tdataconstr c)
+                             (List.map2 (fun (b:binder) (v:bv) ->
+                                (S.bv_to_name v, U.aqual_of_binder b)) bs vs))] in
+    let steps = List.map2 (fun (b:binder) ((pv, v):bv & bv) -> (b, pv, v))
+                          bs (List.map2 (fun (a:bv) (b:bv) -> (a, b)) ps vs) in
+    let body = List.fold_right (fun ((b, pv, v):binder & bv & bv) (acc:term) ->
+      call (Ident.lid_of_str "FStarC.Option.bind") [b.binder_bv.sort; gty]
+        [call (emb_base "extracted_unembed") [b.binder_bv.sort]
+              [embedding_for st SyntaxTerm b.binder_bv.sort; S.bv_to_name pv];
+         U.abs [S.mk_binder v] acc None]) steps ret in
+    SS.close_branch (p, None, body)) in
+  let catchall = SS.close_branch (pat_of (Pat_var (S.new_bv None scrut_ty)), None, none) in
+  U.abs [S.mk_binder tm]
+        (S.mk (Tm_match { scrutinee = S.bv_to_name tm; ret_opt = None;
+                          brs = brs @ [catchall]; rc_opt = None }) dummy) None
 
 (* -------------------------------------------------------------------- *)
 (* The registration itself                                              *)
@@ -404,11 +657,11 @@ let registration (st:Extract.state) (arity_opt:option int) (r:Range.t)
     raise (NoEmbedding "tactic plugins can take at most 20 arguments");
   let string_ty = Extract.ty_of_typ st S.t_string in
   let int_ty    = Extract.ty_of_typ st S.t_int in
-  let interp = Extract.expr_of_term st (interp_term st SyntaxTerm tac fv_lid n bs res) in
+  let interp = compile st (interp_term st SyntaxTerm tac fv_lid n bs res) in
   let args, which, arity =
     if tac then [interp], "register_tactic", n + 1
     else
-      let nbe = Extract.expr_of_term st (interp_term st NBETerm tac fv_lid n bs res) in
+      let nbe = compile st (interp_term st NBETerm tac fv_lid n bs res) in
       [interp; nbe], "register_plugin", n in
   let fty = List.fold_right (fun (a:expr) (t:cty) -> TArrow (a.ty, E_Pure, t))
                             args TUnit in

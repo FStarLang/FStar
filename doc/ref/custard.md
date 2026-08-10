@@ -4064,12 +4064,39 @@ A valid slot always exists.  A specialization is created *because* some module
 specialization mentions; any linear extension of the DAG therefore has room
 after all of them and before `U`.  The rule that finds it:
 
-> `home(d)` is the latest, in F\*'s module order, of `d`'s own module and the
+> `home(d)` is the latest, in the *module order*, of `d`'s own module and the
 > homes of everything `d` references.
 
 One forward pass over the sorted program computes this, because every
 reference is already earlier in the list.  A declaration whose home is its own
 module is *at home*; everything else has been **relocated**.
+
+**The module order is the generated program's, not F\*'s.**  F\*'s dependency
+graph is the obvious candidate and it is the wrong one, because it is a graph
+over *sources* and the question is about *targets*.  It records a dependency on
+an interface where the code that comes out refers to the implementation's
+contents; it does not know that `FStar.Stubs.X` and `FStarC.X` have become one
+module (§8.2); and it has no opinion at all about the modules Custard
+synthesises.  So `Split.module_ranks` builds a graph whose nodes are the target
+modules and whose edges are the references actually emitted, and ranks by a
+topological sort of it.  That makes the invariant the split relies on --- every
+reference points at an earlier file --- true by construction, and a declaration
+then has to leave its own module only when it is caught in a *real* cycle
+between modules.
+
+Two details make that well-defined.  The reference graph can have cycles, so it
+is condensed with Tarjan (`Split.sccs`): components come out in dependency
+order, and inside a component --- where the modules genuinely do refer to each
+other, and no order is right --- the members are ordered by F\*'s source order,
+which is the order under which the fewest declarations have to move.  And the
+reference graph leaves the order of two mutually unreferencing modules free,
+which still matters, because the output is one flat directory in which a
+hand-written realization may sit anywhere; F\*'s source order is the tie-break
+throughout, and the fallback rank for a module that emits nothing at all.
+
+A realization is a fixed point of all this: it is a file Custard does not
+write, so it cannot be relocated and its rank is simply its source rank.  The
+declarations around it move instead, which is the whole point.
 
 **Names.**  A realization refers to `FStarC_Parser_AST.decl`, not to
 `FStarC_Parser_AST.fStarC_Parser_AST_decl`, so the split output has to present
@@ -4462,12 +4489,99 @@ A type with no embedding is not fatal to the run: the plugin is skipped with
 error 238 (`Warning_PluginNotImplemented`, as in the ML pipeline) and the
 program is still emitted --- without a native implementation of that plugin.
 
-**Not yet implemented:** the generated `e_<name>` for a `[@@plugin]` datatype
-(19 of them: `FStar.Order.order`, 13 in `FStar.Tactics.NamedView`, 2 in
-`FStar.Reflection.V2.Formula`, 1 in `FStar.Tactics.PrettifyType`).  This is
-`mk_embed`/`mk_unembed` in the ML pipeline, and it is the last thing standing
-between here and a Custard-built compiler with working ulib plugins.
+**Generated embeddings.**  A `[@@plugin]` datatype has no `e_<name>` to find,
+so one is generated: `RegEmb.embedding_for_datatype` builds an embedder that
+matches on the value and rebuilds it as a term, and an unembedder that matches
+on the term and rebuilds the value, and wraps the pair with
+`mk_extracted_embedding`.  Like the registration itself (§13.1) this is emitted
+as F\* syntax and handed to `Extract.expr_of_term`, so the constructors'
+argument embeddings are found by the same `embedding_for` as everywhere else.
 
+The one thing that is *not* ordinary F\* syntax is the recursion.  A datatype
+refers to itself --- `pattern`'s `Pat_Cons` carries a list of `pattern`s ---
+and the sub-embedding a constructor needs is a declaration that is still being
+generated, which F\* syntax has no way to name.  So `embedding_for` answers with
+a fresh **placeholder** variable, `RegEmb.compile` translates the term with the
+placeholders in it, and then replaces each one by the declaration it stood for:
+the embedding itself, or, when that embedding is part of the group currently
+being built, an application of its **knot** `__knot_e_<name> : unit -> ...`.
+
+That replacement has to be a *substitution*, and this is the subtle part.  The
+first implementation abstracted the term over its placeholders and applied the
+resulting lambda to the arguments, which is the same thing denotationally and
+prints as `let x = __knot_e_pattern () in ...`.  The occurrences the generator
+wrote are inside the embedder and unembedder closures, which run only once
+there is a value in hand; a `let` hoists the call *out* of them, so the knots
+of a recursive group call each other at module-initialization time and diverge
+before any closure is built.  The Custard-built compiler allocated for nine
+gigabytes and never printed its version.  Substituting in place leaves each
+occurrence where it was written, and the recursion is tied by the closure, as
+it is in the ML pipeline.  `RegEmb.subst_expr` is the traversal; it needs no
+capture check, since a placeholder is a fresh name and what replaces it
+mentions only top-level declarations.
+
+
+### 13.5 What it took to run
+
+A Custard-built compiler that merely *links* proves less than it looks like.
+Between linking and running the acceptance test --- a source file that declares
+a typeclass, which exercises the `FStar.Tactics.Typeclasses` plugin end to end
+--- were five bugs, and four of them were miscompilations that a smaller test
+could not have reached.
+
+- **An absurd postcondition erased a call.**
+  `FStar.Stubs.Tactics.V2.Builtins.raise` is `raise_core e; ()`, which
+  typechecks only because `raise_core`'s postcondition is `False`.  Extracted
+  literally, the `()` is the value of the function and the raise is dead.  The
+  general shape is "code after a call that never returns", and the general
+  answer is that such code is unreachable: `Prims.magic` and `Prims.admit` now
+  extract as `EAbort`, which prints as `failwith`, exactly as
+  `Pulse.Lib.Dv.unreachable` already did, and `raise` is written
+  `raise_core e; magic ()`.
+- **Static quotations extracted as `()`.**  `Tm_quoted` was handled in
+  `key_of_term` but not in `expr_of_term`, where it fell into the catch-all.
+  A `Quote_static` is now embedded as a term view and rebuilt with `pack_ln`,
+  with antiquotations resolved from `lookup_aq`, mirroring
+  `FStarC.Extraction.ML.Term`; a `Quote_dynamic` is an `EAbort`.
+- **A primitive step answered with a value that has no syntax.**  This is the
+  important one.  `FStarC.TypeChecker.Primops.Docs` implements
+  `FStar.Pprint.arbitrary_string` natively and `Primops.Errors.Msg` does the
+  same for `text` and `mkmsg`, so `mkmsg "..."` normalized to an embedded
+  `document` --- a `Tm_lazy` holding an OCaml object --- and was emitted as
+  `()`.  Every error message in the compiler was an empty list.  Two rules come
+  out of it, and both are now enforced:
+
+  > A reduction whose reduct will be *compiled* must not run a primitive step
+  > that can answer with a value having no term representation.  A reduction
+  > whose reduct is only *printed* --- a specialization key --- may.
+
+  The mechanism is a `unrepresentable_result` flag on `primitive_step`, set for
+  those two groups (which stay enabled, because `text` and `mkmsg` are `val`s
+  in the library interface and a tactic has no other way to evaluate them), and
+  a new normalization step `Env.SafePrimops` which is `Primops` minus them.
+  Custard's `custard_norm_steps` and `subst_norm_steps` ask for `SafePrimops`;
+  `key_norm_steps` asks for `Primops`.  Turning primops off wholesale, which
+  was the first fix, is *not* good enough: it stops an integer literal from
+  folding to a literal and stops `tests/custard/Unroll.fst` from terminating.
+
+  > Silence is the failure mode to design against.  Emitting `()` for an
+  > unrepresentable value produces a program that typechecks and is wrong.
+
+  So `expr_of_term` now has an explicit `Tm_lazy` case: unfold once with
+  `U.unfold_lazy`, which is what turns an embedded `fv` back into the
+  `pack_fv [...]` that rebuilds it, and otherwise raise error 369,
+  `Error_CustardUnrepresentableValue`.  It caught a second instance the moment
+  it was added.
+- **A local `let rec` in `Tac` code was extracted as pure.**  `expr_of_term`'s
+  `Tm_abs` case is the only place §7.5 reification happens, and `lift_letrec`
+  peels the lambda itself with `U.abs_formals`, so the body it translated was
+  never reified.  `FStar.Tactics.Typeclasses.extract_fundeps__aux` came out
+  with a pure signature and a body that matched a tuple against a closure.  The
+  rule: **any path that peels a lambda itself must reify explicitly.**
+  `lift_letrec` now reifies against the residual effect and computes its result
+  type through `Effects.reify_comp`, which is what `extract_letbinding` already
+  did at the top level.
+- **The generated embedding knots recursed eagerly**, described in §13.4.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -4515,7 +4629,7 @@ between here and a Custard-built compiler with working ulib plugins.
 | M10l | **The extracted compiler builds and runs** (§12.10) | Done.  A Custard-extracted `fstar.exe` verifies `FStar.List.Tot.Properties` from source and reports the same errors as the dune-built one.  What it took beyond M10k: **module initializers** --- an effectful top-level `let` is a root, and every loaded module contributes its own (§4.4), without which `FStarC.Options`' `let _ = clear ()` never ran; a `--custard_entry` that names a *module*, the only way to reach `FStarC.Hooks`, which exists solely for its side effects; and six codegen bugs, each listed in §12.10: a `ref` printed as an array (`lettys` and abbreviation unfolding), `-1` erased to `()` because the normalizer returns it as a `Tm_lazy` embedding, load-order-dependent extraction (`lookup_lid_typ`), an under-abstracted abbreviation, two lambda-lifted binders collapsed into one because `lift_letrec` opened the definiens twice, and OCaml record expressions resolving to the wrong record type.  `tests/custard/Literals.fst`, `Mymon.fst`, `Patlift.fst` |
 | M10m | **Build integration** (§12.11): `make custard`, `mk/custard.mk`, `src/custard/entrypoints.txt` | Done.  Builds a Custard-extracted `fstar.exe` into `stagec/` from a stage 2 compiler, driving `menhir --infer` against Custard's own interfaces rather than borrowing the dune build's answer, and generating `FStarC_Version.ml` itself because Custard mangles `_version` to `u__version`.  `make custard-smoke` runs it. |
 | M10n | **Reification** (§7.5) and the `custard_no_monomorphize` class opt-out (§3.1) | Done.  `Tac` is compiled through `tac_repr a wp = ref_proofstate -> Dv a`, in `Effects.{is_reifiable,reify_comp,maybe_reify}` and three call sites in `Extract`; `tests/custard/Reify.fst`.  The opt-out is what makes `embedding` a runtime value again, which reification and plugin registration both need. |
-| M10p | **Plugin registration** (§13) | Partly done.  `FStarC.Custard.RegEmb` generates the registration for a `[@@plugin]` in a module named by `--custard_entry`, as F\* syntax handed to `Extract.expr_of_term` rather than as IR.  `FStar.Tactics.CheckLN.check_ln` registers with the right embeddings and the right arity.  Fallout in the shared machinery: `Parser.Dep.deps_of` now parses a file the dependency scan never reached (§13.3), and `Extract` normalizes a definition body, its result type and its reification under the binders the specialization kept --- `FStar.Tactics.Util.map : ('a -> Tac 'b) -> ...` reifies to a comp whose universe mentions `'b`, and the top-level environment does not bind it.  Still missing: generated embeddings for `[@@plugin]` datatypes, and hence the ulib plugin roots in `entrypoints.txt` |
+| M10p | **Plugin registration** (§13) | Done.  `FStarC.Custard.RegEmb` generates the registration for a `[@@plugin]` in a module named by `--custard_entry`, and the `e_<name>` for a `[@@plugin]` datatype with it, as F\* syntax handed to `Extract.expr_of_term` rather than as IR (§13.1, §13.4).  All 25 ulib plugin modules are roots in `entrypoints.txt`, and the acceptance test --- a source file declaring a typeclass, checked by the Custard-built `fstar.exe` --- passes.  The recursion in a generated embedding is tied by *substituting* the sub-embedding into the closure that uses it, not by binding it: a `let` hoists the knot out of the closure and the group diverges during module initialization (§13.4).  Fallout in the shared machinery: `Parser.Dep.deps_of` now parses a file the dependency scan never reached (§13.3), and `Extract` normalizes a definition body, its result type and its reification under the binders the specialization kept --- `FStar.Tactics.Util.map : ('a -> Tac 'b) -> ...` reifies to a comp whose universe mentions `'b`, and the top-level environment does not bind it.  Four miscompilations that only a running compiler could expose are in §13.5, the first of them the rule that a reduction whose reduct will be compiled must not fold a primitive step with an unrepresentable result (`Env.SafePrimops`, error 369) |
 | M10o | **The `FStar.Stubs.*` rename** (§8.2) | Done.  `Builtins.no_fstar_stubs`, applied in `Extract.name_of_lid`, so that a plugin's `FStar.Stubs.Tactics.Types.proofstate` and the compiler's `FStarC.Tactics.Types.proofstate` are one name.  Fallout: `solve` is now `inline_for_extraction` in its five copies (its `{| ev : a |}` binder made `#a` `Mono`, which §3.2b rejects once `embedding` is no longer specialized), and record ascription had to cover projections as well as record expressions (§5.5). |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

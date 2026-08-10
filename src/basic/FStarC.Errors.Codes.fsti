@@ -395,6 +395,7 @@ type error_code =
   | Warning_CustardLostRepresentation
   | Error_CustardNoCRepresentation
   | Error_CustardBadUnitInterface
+  | Error_CustardUnrepresentableValue
 
 type error_setting = error_code & error_flag & int
 

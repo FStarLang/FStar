@@ -50,6 +50,11 @@ module U      = FStarC.Syntax.Util
 module UF     = FStarC.Syntax.Unionfind
 module TcUtil = FStarC.TypeChecker.Util
 module Range = FStarC.Range
+module R      = FStarC.Reflection.V2.Builtins
+module RD     = FStarC.Reflection.V2.Data
+module RC     = FStarC.Reflection.V2.Constants
+module RE     = FStarC.Reflection.V2.Embeddings
+module EMB    = FStarC.Syntax.Embeddings
 
 
 (* -------------------------------------------------------------------- *)
@@ -75,18 +80,19 @@ module Range = FStarC.Range
    erased later, by the builtin rule for [dyn] in [Custard.Builtins]. *)
 let no_specialize_lid : Ident.lident = PC.p2l ["FStar"; "Custard"; "no_specialize"]
 
-let key_norm_steps : list TcEnv.step = [
+let norm_steps_base : list TcEnv.step = [
   TcEnv.DontUnfoldAttr [no_specialize_lid];
   TcEnv.Weak;
   TcEnv.AllowUnboundUniverses;
   TcEnv.EraseUniverses;
   TcEnv.Beta;
   TcEnv.Iota;
-  TcEnv.Primops;
   TcEnv.Unascribe;
   TcEnv.Unmeta;
   TcEnv.UnfoldUntil delta_constant;
 ]
+
+let key_norm_steps : list TcEnv.step = TcEnv.Primops :: norm_steps_base
 
 (* [Weak] is what makes this reduction terminate, and it is not optional.
 
@@ -124,8 +130,12 @@ let key_norm_steps : list TcEnv.step = [
    gone.  Weak head normal form stops at the record constructor, leaving the
    fields' bodies as written, so a sub-combinator stays a *call* and gets a
    specialization (and a name) of its own. *)
+(* [SafePrimops] rather than [Primops], for the reason spelled out at
+   {!custard_norm_steps}: this is the reduct that gets *substituted into the
+   body*, so it is code.  The key keeps [Primops], because a key is only ever
+   printed. *)
 let subst_norm_steps : list TcEnv.step =
-  TcEnv.Weak :: TcEnv.HNF :: key_norm_steps
+  TcEnv.SafePrimops :: TcEnv.Weak :: TcEnv.HNF :: norm_steps_base
 
 (* -------------------------------------------------------------------- *)
 (* The key printer (section 12.3)                                       *)
@@ -390,7 +400,20 @@ let custard_norm_steps : list TcEnv.step = [
      knot.  Note that beta, iota and zeta are on by default in [Cfg], so zeta
      has to be switched off with [Exclude], not merely left out. *)
   TcEnv.Exclude TcEnv.Zeta;
-  TcEnv.Primops;
+  (* [SafePrimops], not [Primops].  A primitive step is free to answer with a
+     *value* that has no term representation: [FStarC.TypeChecker.Primops.Docs]
+     implements [FStar.Pprint.arbitrary_string] natively, so
+     [arbitrary_string "hi"] reduces to an embedded [document] -- a [Tm_lazy]
+     whose payload is an OCaml object.  That is exactly what the normalizer is
+     for when a tactic runs, and exactly wrong when the term is code to be
+     emitted: there is nothing to emit for it (that module's own FIXME says as
+     much about the steps it has already had to disable).  Those few steps are
+     marked [unrepresentable_result] and [SafePrimops] skips them; everything
+     else still folds, which is what makes an integer literal a literal and
+     what lets a loop over a constant bound unroll.  A specialization *key*
+     asks for plain [Primops] ([key_norm_steps]), because there the reduct is
+     only ever printed. *)
+  TcEnv.SafePrimops;
   TcEnv.Eager_unfolding;
   TcEnv.Inlining;
   TcEnv.PureSubtermsWithinComputations;
@@ -453,16 +476,43 @@ let truncate_msg (s:string) : ML string =
   if String.length s <= 600 then s
   else String.substring s 0 600 ^ " ... (" ^ show (String.length s) ^ " chars)"
 
-(* [env] is the top-level environment for almost every caller.  It is not for
-   a definition body, whose free variables are the binders the specialization
-   kept: normalizing an effectful application there reifies it, reification
-   computes the universe of the result type, and a result type that is one of
-   those binders has to be findable.  ([Tac 'b] in [FStar.Tactics.Util.map] is
-   the smallest example.) *)
+(* The extractor works on *open* terms almost everywhere: a definition body is
+   entered with its binders opened, and every lambda, [let] and match branch
+   underneath opens more.  The environment it carries around, on the other
+   hand, is the top-level one, in which none of those variables exist.
+
+   That is usually harmless, because normalization does not look a bound
+   variable up -- it is already a [Tm_bvar]-free name carrying its own sort.
+   It stops being harmless the moment normalization has to *typecheck*
+   something: reifying an effectful application computes the universe of the
+   result type, and if that type is one of the opened binders the lookup fails
+   with "Variable 'a not found", from inside the normalizer, with no useful
+   position.  ([Tac 'b] in [FStar.Tactics.Util.map] and [Tac 'a] in
+   [FStar.Tactics.V2.Derived.trytac] are the two smallest examples.)
+
+   Rather than thread a precise environment through every function -- which
+   means an extra parameter on the whole of [expr_of_term] and [ty_of_typ],
+   and a new way to get it wrong at each new recursive call -- we recover the
+   binders from the term itself.  A name that occurs free in what we are about
+   to normalize is exactly a name the normalizer may need, it carries its own
+   sort, and pushing it can shadow nothing, since names are unique after
+   opening.  The sorts may mention each other, so they go in creation order:
+   indices are handed out by a global counter, so ascending index is a
+   topological order on any set of names that arose from opening one term. *)
+let with_free_names (env:TcEnv.env) (bvs:list bv) : ML TcEnv.env =
+  TcEnv.push_bvs env
+    (List.sortWith (fun (a:bv) (b:bv) -> a.index - b.index) bvs)
+
+let env_for_term (env:TcEnv.env) (t:term) : ML TcEnv.env =
+  with_free_names env (elems (Free.names t))
+
+let env_for_comp (env:TcEnv.env) (c:comp) : ML TcEnv.env =
+  with_free_names env (elems (Free.names_comp c))
+
 let norm_bounded_in (st:state) (env:TcEnv.env) (what:string)
                     (steps:list TcEnv.step) (t:term) : ML term =
   try N.with_budget (Options.custard_norm_budget ())
-                    (fun () -> N.normalize steps env t)
+                    (fun () -> N.normalize steps (env_for_term env t) t)
   with
   | N.Budget_exceeded ->
     custard_error st E.Error_CustardFuelExhausted [
@@ -505,6 +555,40 @@ let lookup_lid_typ (st:state) (l:Ident.lident) : ML (option ((universes & typ) &
   ensure_lid_available st l;
   TcEnv.try_lookup_lid (tcenv st) l
 
+(* Section 8.3.  A [FStar.Stubs.*] declaration is not a definition of
+   anything: it is ulib restating, for metaprograms, something the compiler
+   already declares under its [FStarC.*] name.  The two declarations mangle to
+   one OCaml name, so compiling both would put two definitions of the same
+   type in the same file -- and worse, the stub's phrasing drags in the
+   realizations it is written against, which are themselves abbreviations back
+   into the module the stub belongs to, so the file ends up depending on
+   itself.  That is not a shape OCaml can compile at all.
+
+   So a request for a stub is answered with the compiler's own declaration
+   whenever there is one to answer it with.  When there is not -- the stub is
+   of something whose only implementation is hand-written OCaml, which is what
+   [FStar.Stubs.Tactics.V2.Builtins] and [FStar.Stubs.Reflection.Types] are --
+   the rewritten module has no checked file, the stub stands, and
+   {!Builtins.realized_modules} claims it in the usual way.
+
+   The ML pipeline does not have to decide this: it extracts ulib with
+   [--extract -FStar.Stubs] and the compiler separately, so the question never
+   comes up in one program. *)
+let unstub_lid (st:state) (l:Ident.lident) : ML Ident.lident =
+  let ns = List.map Ident.string_of_id (Ident.ns_of_lid l) in
+  if not (Builtins.is_stub_module ns) then l
+  else
+    let ns = Builtins.no_fstar_stubs ns in
+    let m = String.concat "." ns in
+    if not (Loader.module_is_loaded st.deps (tcenv st) m
+            || Cons? (Loader.candidate_files st.deps m))
+    then l
+    else
+      let l' = Ident.lid_of_path (ns @ [Ident.string_of_id (Ident.ident_of_lid l)])
+                                 (Ident.range_of_lid l) in
+      ensure_lid_available st l';
+      if Some? (TcEnv.lookup_qname (tcenv st) l') then l' else l
+
 (* -------------------------------------------------------------------- *)
 (* Names                                                                *)
 (* -------------------------------------------------------------------- *)
@@ -512,7 +596,9 @@ let lookup_lid_typ (st:state) (l:Ident.lident) : ML (option ((universes & typ) &
 (* Section 8.3: [no_fstar_stubs] is applied here, at the one place an F* lid
    becomes a Custard name, so that nothing downstream -- the realization
    tables, output splitting, the linker -- has to know the [FStar.Stubs.*]
-   spelling exists. *)
+   spelling exists.  By the time a lid gets here it has usually been through
+   {!unstub_lid} as well, and the rewrite is a no-op; it stays because the
+   stubs Custard does *not* resolve away still have to be named. *)
 let name_of_lid (l:Ident.lident) : ML name = {
   ns   = Builtins.no_fstar_stubs (List.map Ident.string_of_id (Ident.ns_of_lid l));
   id   = Ident.string_of_id (Ident.ident_of_lid l);
@@ -621,6 +707,7 @@ let note_abbrev (st:state) (d:decl) : ML unit =
 
 (* Section 3.3, step 3: this is where the demand-driven loop lives. *)
 let rec request (st:state) (k:spec_key) : ML name =
+  let k = { k with sk_lid = unstub_lid st k.sk_lid } in
   let key = string_of_key k in
   match SMap.try_find st.names key with
   | Some nm -> nm
@@ -805,7 +892,7 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
        arrow, which [ty_of_typ] reads off it like any other. *)
     let res, e =
       if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
-      then ty_of_typ st (Effects.reify_comp (tcenv st) c), E_Pure
+      then ty_of_typ st (Effects.reify_comp (env_for_comp (tcenv st) c) c), E_Pure
       else
         (* Section 7.2: a codomain of the form [stt b p q] contributes [b] as
            the result type and promotes the arrow to [E_Impure]. *)
@@ -929,7 +1016,9 @@ and expr_of_term (st:state) (t:term) : ML expr =
        lambda is pure. *)
     let body =
       match rc with
-      | Some rc -> Effects.maybe_reify (tcenv st) body rc.residual_effect
+      | Some rc ->
+        Effects.maybe_reify (env_for_term (tcenv st) body) body
+                            rc.residual_effect
       | None -> body in
     let body = expr_of_term st body in
     let bs =
@@ -964,7 +1053,8 @@ and expr_of_term (st:state) (t:term) : ML expr =
         result is [e]'s representation, applied to whatever [reify e] was
         applied to. *)
      | Tm_constant (Const_reify (Some l)) when Cons? args ->
-       let e = Effects.maybe_reify (tcenv st) (args |> List.hd |> fst) l in
+       let e0 = args |> List.hd |> fst in
+       let e = Effects.maybe_reify (env_for_term (tcenv st) e0) e0 l in
        expr_of_term st (S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos)
 
      | _ ->
@@ -1047,6 +1137,52 @@ and expr_of_term (st:state) (t:term) : ML expr =
 
   | Tm_ascribed {tm} -> expr_of_term st tm
   | Tm_meta {tm} -> expr_of_term st tm
+
+  (* A static quotation is a *value* of type [term]: the syntax tree it
+     quotes has to be rebuilt at runtime.  Reflection already knows how --
+     embed the term's view and apply [pack_ln] to it -- so the quotation is
+     turned into that ordinary term and extracted like any other, exactly as
+     [FStarC.Extraction.ML.Term] does.  A bound variable is either a genuine
+     [Tv_BVar] node of the quoted syntax or an antiquotation hole, in which
+     case what fills it is a term of the *enclosing* program. *)
+  | Tm_quoted (_, { qkind = Quote_dynamic }) ->
+    mk (EAbort "Custard: cannot evaluate open quotation at runtime") TAny E_Impure
+
+  | Tm_quoted (qt, { qkind = Quote_static; antiquotations = (shift, aqs) }) ->
+    let repack (tv:term) : ML expr =
+      expr_of_term st
+        (U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv]) in
+    (match R.inspect_ln qt with
+     | RD.Tv_BVar bv ->
+       if bv.index < shift
+       then repack (EMB.embed (RD.Tv_BVar bv) t.pos None EMB.id_norm_cb)
+       else expr_of_term st (S.lookup_aq bv (shift, aqs))
+     | tv ->
+       repack (EMB.embed #_ #(RE.e_term_view_aq (shift, aqs)) tv t.pos None
+                 EMB.id_norm_cb))
+
+  (* A lazy node stands for a value the compiler holds natively.  Most of them
+     do have syntax and [unfold_lazy] produces it: an embedded [fv] unfolds to
+     the [pack_fv [\"FStar\"; ...]] that rebuilds it, which is code and extracts
+     like any other.  [unlazy_emb] at the top of this function has already
+     handled the [Lazy_embedding] kind, so this is the rest; unfolding is tried
+     exactly once, because [unfold_lazy] hands back what it was given when
+     there is nothing to unfold and looping is the other failure mode.
+
+     What is left over is a value with no syntax at all -- an OCaml object some
+     primitive step produced.  There is nothing to emit for it, and quietly
+     emitting [()] instead is a miscompilation that typechecks only by
+     accident, which is how {!custard_norm_steps} came to drop [Primops]. *)
+  | Tm_lazy i ->
+    let u = U.unfold_lazy i in
+    (match (SS.compress u).n with
+     | Tm_lazy _ ->
+       custard_error st E.Error_CustardUnrepresentableValue [
+         text "Custard reached a value with no syntactic representation.";
+         text ("The term was: " ^ truncate_msg (show t));
+         text "This is a value produced by a primitive implementation rather than by the program, so there is no code to generate for it."
+       ]
+     | _ -> expr_of_term st u)
 
   (* Types and proofs in term position are erased. *)
   | Tm_type _ -> unit_expr
@@ -1155,7 +1291,21 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       (* Opened exactly once: each [abs_formals] invents *fresh* names for the
          binders it opens, so a second opening would give the body variables
          that no binder here binds. *)
-      let xs, def_body, _ = U.abs_formals lb.lbdef in
+      let xs, def_body, rc = U.abs_formals lb.lbdef in
+      (* Section 7.5, exactly as for a lambda ({!expr_of_term}'s [Tm_abs]) and
+         for a top-level definition: the body is reified against the effect the
+         definiens was written in, before it is translated.  [abs_formals] just
+         stripped the lambda, so the [Tm_abs] case will never see this body and
+         cannot do it for us -- and a local [let rec] in a tactic is written in
+         [Tac] as much as its enclosing function is. *)
+      let def_body =
+        let ambient () : ML Ident.lident =
+          let _, c = U.arrow_formals_comp lb.lbtyp in
+          U.comp_effect_name c in
+        let eff_name = match rc with
+                       | Some rc -> rc.residual_effect
+                       | None -> ambient () in
+        Effects.maybe_reify (env_for_term (tcenv st) def_body) def_body eff_name in
       let ret, eff = local_result st lb.lbtyp xs in
       (* F* generalizes a local [let rec] just as it does a top-level one, so
          the definiens may bind type variables of its own.  They hold no
@@ -1209,8 +1359,15 @@ and local_result (st:state) (ty:typ) (xs:binders) : ML (cty & eff) =
     else match t with
          | TArrow (_, e', r) -> peel (n - 1) e' r
          | _ -> (e, t) in
-  let eff, ret = peel (List.length xs - List.length bs)
-                      (eff_of_comp st c) (ty_of_typ st (U.comp_result c)) in
+  (* Section 7.5: a reifiable result type is replaced by its representation and
+     the definition becomes pure, the same trade the top level makes -- what it
+     returns is now the closure the representation describes. *)
+  let n_extra = List.length xs - List.length bs in
+  let eff, ret =
+    if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
+    then peel n_extra E_Pure
+              (ty_of_typ st (Effects.reify_comp (env_for_comp (tcenv st) c) c))
+    else peel n_extra (eff_of_comp st c) (ty_of_typ st (U.comp_result c)) in
   (ret, eff)
 
 (* Delete the entries flagged [true].  A flag list shorter than the list being
@@ -2268,15 +2425,18 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      closure the representation describes. *)
   let eff, ret =
     if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
-    then peel n_extra E_Pure (ty_of_typ st (Effects.reify_comp benv c))
+    then peel n_extra E_Pure
+              (ty_of_typ st (Effects.reify_comp (env_for_comp benv c) c))
     else peel n_extra (eff_of_comp st c) (ty_of_typ st res_typ) in
   (* The body is reified against the residual effect of the lambdas
      [abs_formals] just opened, which is what actually describes it; [c] only
      agrees with it when there were no extra binders. *)
   let body =
     match rc with
-    | Some rc -> Effects.maybe_reify benv body rc.residual_effect
-    | None -> Effects.maybe_reify benv body (U.comp_effect_name c) in
+    | Some rc -> Effects.maybe_reify (env_for_term benv body) body
+                                     rc.residual_effect
+    | None -> Effects.maybe_reify (env_for_term benv body) body
+                                  (U.comp_effect_name c) in
   let dl_body = expr_of_term st body in
   st.cur := saved_cur;
   DLet {

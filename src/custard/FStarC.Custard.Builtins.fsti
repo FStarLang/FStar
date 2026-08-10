@@ -89,6 +89,11 @@ val rule_of_attributes : list FStarC.Syntax.Syntax.term -> ML (option rule)
     name, or a metaprogram and the engine that runs it would not link. *)
 val no_fstar_stubs : list string -> list string
 
+(* Whether a namespace -- given as it was written, before {!no_fstar_stubs} --
+   is one of ulib's [FStar.Stubs.*] restatements of the compiler's own API.
+   Those are never compiled: the compiler already defines what they declare. *)
+val is_stub_module : list string -> bool
+
 (** Whether a module is realized by hand in OCaml (section 8.2), and so has a
     [.ml] of its own in [src/ml] or [ulib/ml] that Custard must neither
     compile over nor write a file on top of.  Takes a namespace that has

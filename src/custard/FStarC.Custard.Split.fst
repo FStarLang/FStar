@@ -30,36 +30,138 @@ let module_of (n:name) : ML string =
   | [] -> "Custard"
   | ns -> String.concat "." ns
 
-(* F\*'s own module order, as a rank per module: [m] follows everything it
-   depends on.  Post-order depth-first search over [Dep.deps_of_modul], which
-   is the same graph the driver loaded the checked files from, so a module
-   Custard reached is a module this can rank.  One it did not reach -- a
-   namespace that is not a module, or a realization whose dependencies were
-   never collected -- ranks 0, which places it before everything and is
-   exactly what a leaf deserves.
+(* The key a module ranks under.  Stub and counterpart share a slot:
+   [Extract.unstub_lid] answers a request for [FStar.Stubs.Tactics.Types] with
+   [FStarC.Tactics.Types], so as far as placement is concerned a dependency on
+   the one is a dependency on the other.  Lowercased because that is how the
+   dependency graph spells module names; spelled out rather than routed
+   through {!Builtins.no_fstar_stubs}, which matches on the capitalised form. *)
+let rank_key (m:string) : ML string =
+  match String.split ['.'] (String.lowercase m) with
+  | "fstar" :: "normsteps" :: rest -> String.concat "." ("fstarc" :: "normsteps" :: rest)
+  | "fstar" :: "stubs" :: rest -> String.concat "." ("fstarc" :: rest)
+  | _ -> String.lowercase m
 
-   The graph is acyclic, so no cycle detection is needed; the [busy] marker is
-   there only to keep a malformed graph from looping. *)
-let module_ranks (deps:Dep.deps) (ms : list string) : ML (SMap.t int) =
+(* F*'s own module order, as a rank per module.  This is only a tie-break: it
+   decides the order of two modules that do not refer to each other, which the
+   reference graph leaves free but which still matters, because the target
+   modules are laid out in one flat directory and a hand-written realization
+   may sit anywhere among them. *)
+let source_ranks (deps:Dep.deps) : ML (SMap.t int) =
   let rank : SMap.t int = SMap.create 100 in
-  let busy : SMap.t unit = SMap.create 100 in
-  let next : ref int = mk_ref 1 in
-  let rec visit (m:string) : ML int =
-    match SMap.try_find rank m with
-    | Some r -> r
-    | None ->
-      if Some? (SMap.try_find busy m) then 0
-      else begin
-        SMap.add busy m ();
-        let _ = Dep.deps_of_modul deps m |> List.iter (fun d -> let _ = visit d in ()) in
-        (* Assigned on the way *out*, so a module's rank exceeds every rank
-           handed out while its dependencies were being visited. *)
-        let r = !next in
-        next := r + 1;
-        SMap.add rank m r;
-        r
-      end in
-  let _ = ms |> List.iter (fun m -> let _ = visit m in ()) in
+  let n : ref int = mk_ref 0 in
+  Dep.topological_order deps rank_key |> List.iter (fun m ->
+    n := !n + 1;
+    SMap.add rank m !n);
+  rank
+
+(* Tarjan, iterative in the sense that matters: the components come out in
+   dependency order, each after every component it refers to, which is exactly
+   the order the files have to be emitted in.  A component with more than one
+   member is a genuine cycle between modules; its members cannot be separate
+   files and have to be merged. *)
+let sccs (nodes : list string) (succ : string -> ML (list string))
+  : ML (list (list string)) =
+  let index : SMap.t int = SMap.create 100 in
+  let low : SMap.t int = SMap.create 100 in
+  let onstack : SMap.t bool = SMap.create 100 in
+  let stack : ref (list string) = mk_ref [] in
+  let next : ref int = mk_ref 0 in
+  let out : ref (list (list string)) = mk_ref [] in
+  let get (m:SMap.t int) (k:string) : ML int =
+    match SMap.try_find m k with Some v -> v | None -> 0 in
+  let rec go (v:string) : ML unit =
+    SMap.add index v !next; SMap.add low v !next; next := !next + 1;
+    stack := v :: !stack; SMap.add onstack v true;
+    succ v |> List.iter (fun w ->
+      if None? (SMap.try_find index w)
+      then (go w; if get low w < get low v then SMap.add low v (get low w))
+      else if Some true = SMap.try_find onstack w
+      then (if get index w < get low v then SMap.add low v (get index w)));
+    if get low v = get index v
+    then begin
+      let rec pop (acc : list string) : ML (list string) =
+        match !stack with
+        | [] -> acc
+        | w :: rest ->
+          stack := rest; SMap.add onstack w false;
+          if w = v then w :: acc else pop (w :: acc) in
+      out := pop [] :: !out
+    end in
+  nodes |> List.iter (fun v -> if None? (SMap.try_find index v) then go v);
+  List.rev !out
+
+(* Where each module sits in the output, and which module a cycle of modules
+   collapses to.
+
+   The order comes from the program's *own* reference graph, not from F*'s
+   dependency graph.  The two agree wherever both say anything, but the source
+   graph says nothing about a great deal that matters here: it records a
+   dependency on an interface where the code that comes out refers to the
+   implementation's contents, it does not know that [FStar.Stubs.X] and
+   [FStarC.X] have become one module, and it has no opinion at all about the
+   modules Custard synthesises.  Ranking by the references that are actually
+   emitted makes the invariant the split relies on -- every reference points at
+   an earlier file -- true by construction, so a declaration only ever has to
+   leave its own module when it is caught in a real cycle between modules.
+
+   [source_ranks] survives as the tie-break, and as the fallback for a module
+   that emits nothing. *)
+let module_ranks (deps:Dep.deps) (prog:program) : ML (SMap.t int) =
+  let src = source_ranks deps in
+  let src_of (m:string) : ML int =
+    match SMap.try_find src (rank_key m) with Some r -> r | None -> 0 in
+  (* Which module each declaration came from, constructors included. *)
+  let owner : SMap.t string = SMap.create 100 in
+  let ctors = Simplify.ctor_owners prog in
+  let _ = prog |> List.iter (fun d ->
+            SMap.add owner (string_of_name (name_of_decl d))
+                           (module_of (name_of_decl d))) in
+  let owner_of (n:string) : ML (option string) =
+    let n = match SMap.try_find ctors n with Some o -> o | None -> n in
+    SMap.try_find owner n in
+  (* One node per module, edges to every module it refers to. *)
+  let succ : SMap.t (list string) = SMap.create 100 in
+  let seen : SMap.t bool = SMap.create 100 in
+  let node (m:string) : ML unit =
+    if None? (SMap.try_find seen m) then (SMap.add seen m true; SMap.add succ m []) in
+  let _ = prog |> List.iter (fun d ->
+            let m = module_of (name_of_decl d) in
+            node m;
+            Simplify.decl_deps d |> List.iter (fun n ->
+              match owner_of n with
+              | Some m' ->
+                if m' <> m
+                then begin
+                  node m';
+                  let es = match SMap.try_find succ m with Some es -> es | None -> [] in
+                  if not (List.mem m' es) then SMap.add succ m (m' :: es)
+                end
+              | None -> ())) in
+  (* Deterministic, and as close to F*'s order as the reference graph allows:
+     visit the roots in source order, and each node's successors likewise. *)
+  let by_source (a:string) (b:string) : ML int = src_of a - src_of b in
+  let nodes = BU.sort_with by_source (SMap.keys succ) in
+  let succ_of (m:string) : ML (list string) =
+    match SMap.try_find succ m with
+    | Some es -> BU.sort_with by_source es
+    | None -> [] in
+  let rank : SMap.t int = SMap.create 100 in
+  let n : ref int = mk_ref 0 in
+  (* Inside a component the modules do refer to each other in a cycle, so no
+     order of them is right and one has to be picked: source order, which is
+     the one the declarations are least likely to have to leave.  Whatever
+     order it is, the declarations that would point forwards under it get
+     relocated by {!run}, exactly as they did when every module was ranked this
+     way.  Between components the order is forced, and nothing moves. *)
+  let _ = sccs nodes succ_of |> List.iter (fun comp ->
+            BU.sort_with by_source comp |> List.iter (fun m ->
+              n := !n + 1; SMap.add rank m !n)) in
+  (* A module that emits nothing is never a destination, but [rank_of] is
+     still asked about it; put it after everything, in source order. *)
+  let _ = BU.sort_with by_source (SMap.keys src) |> List.iter (fun m ->
+            if None? (SMap.try_find rank m)
+            then (n := !n + 1; SMap.add rank m !n)) in
   rank
 
 (* The members of a recursive group have to stay together -- they are printed
@@ -109,10 +211,11 @@ let file_of (m:string) : ML string =
 
 let run (deps:Dep.deps) (prog:program) : ML (list (string & program)) =
   let gs = groups prog in
-  let mods = prog |> List.map (fun d -> module_of (name_of_decl d)) in
-  let rank = module_ranks deps mods in
+  let rank = module_ranks deps prog in
   let rank_of (m:string) : ML int =
-    match SMap.try_find rank m with Some r -> r | None -> 0 in
+    match SMap.try_find rank m with
+    | Some r -> r
+    | None -> (match SMap.try_find rank (rank_key m) with Some r -> r | None -> 0) in
   (* A reference to a constructor is a reference to its declaration. *)
   let own = Simplify.ctor_owners prog in
   let resolve (n:string) : ML string =
@@ -137,11 +240,21 @@ let run (deps:Dep.deps) (prog:program) : ML (list (string & program)) =
                match SMap.try_find home (resolve n) with
                | Some m -> [m]
                | None -> []))) in
-    let seed = match cands with
-               | m :: _ -> m
-               | [] -> module_of (name_of_decl (List.hd g)) in
-    let best = cands |> List.fold_left (fun acc m ->
-                 if rank_of m > rank_of acc then m else acc) seed in
+    let own = match cands with
+              | m :: _ -> m
+              | [] -> module_of (name_of_decl (List.hd g)) in
+    let top = cands |> List.fold_left (fun acc m ->
+                if rank_of m > rank_of acc then m else acc) own in
+    (* Stay at home unless something forces the move.  Relocation exists for
+       the declarations that cannot live in the module their name comes from
+       -- a specialization of [show] at a type declared later, say -- and for
+       nothing else: a declaration that has moved is reached under a mangled
+       name in a foreign module, which is both unreadable and, for anything a
+       hand-written realization calls by its plain name, wrong.  So the module
+       the declaration came from wins whenever it is late enough to host every
+       reference the group makes, and the highest-ranked candidate is a
+       fallback rather than the rule. *)
+    let best = if rank_of own >= rank_of top then own else top in
     let _ = g |> List.iter (fun d ->
               if emits d then SMap.add home (string_of_name (name_of_decl d)) best) in
     emit best g);

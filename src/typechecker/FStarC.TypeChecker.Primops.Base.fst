@@ -23,6 +23,7 @@ let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) : primitive
     strong_reduction_ok            = is_strong;
     requires_binder_substitution   = false;
     renorm_after                   = false;
+    unrepresentable_result         = false;
     interpretation                 = f;
     interpretation_nbe             = f_nbe;
 }
