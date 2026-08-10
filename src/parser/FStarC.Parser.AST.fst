@@ -167,6 +167,8 @@ let un_function p tm = match p.pat, tm.tm with
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
+let mkCalcStep rel just next = CalcStep (rel, just, next)
+
 let unit_const r = mk_term(Const Const_unit) r Expr
 let unit_type  r = mk_term (Var (Ident.lid_of_str (`%unit))) r Expr
 

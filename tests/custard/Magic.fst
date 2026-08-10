@@ -1,18 +1,13 @@
 module Magic
 
-(* Section 5.4: where the coercions go.
+(* Section 5.4/5.0: a class over a type *constructor* -- [m a] with [m] a bound
+   [Type -> Type] -- is not something the IR's type language or OCaml can name.
+   But [m] is a type binder like any other, so a call whose instance is known
+   specializes on it, and nothing abstract is left: everything below comes out
+   at [option], with no coercion anywhere.
 
-   A class over a type *constructor* is the one construct that genuinely has no
-   counterpart in either the IR's type language or OCaml's: [m a], with [m] a
-   bound [Type -> Type], is not an application of anything Custard can look up,
-   so the dictionary's fields land on [TAny] and print as [Obj.t].  A coercion
-   there is unavoidable, and this module is where the compiler is held to
-   putting exactly the unavoidable ones in.
-
-   The interesting placements are: the constructor built at the abstract result
-   type, the scrutinee matched at it, and the argument handed to a field whose
-   own parameter type survived.  What must *not* appear is a coercion anywhere
-   in [main], which is entirely concrete. *)
+   The case that genuinely cannot be named is the one where the dictionary is
+   only known at run time; that is [HigherKind]. *)
 
 open FStar.All
 

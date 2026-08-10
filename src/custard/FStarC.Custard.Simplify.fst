@@ -934,6 +934,7 @@ noeq
 type ctor_info = {
   ci_owner:  name;               (* the type this constructor belongs to *)
   ci_count:  int;                (* how many constructors that type has *)
+  ci_params: list string;        (* that type's parameters, in order *)
   ci_fields: list (string & cty);
 }
 
@@ -960,18 +961,20 @@ let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
   let m : SMap.t ctor_info = SMap.create 50 in
   prog |> List.iter (fun d ->
     match d with
-    | DType ({ dt_name = tn; dt_body = TVariant cs }) ->
+    | DType ({ dt_name = tn; dt_params = ps; dt_body = TVariant cs }) ->
       let n = List.length cs in
       cs |> List.iter (fun (cn, fs) ->
         (* [TInline] is [inline_fields]'s business; the types this table hands
            out end up on [EProj] nodes, where the marker has no meaning. *)
         let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
-        SMap.add m (string_of_name cn) { ci_owner = tn; ci_count = n; ci_fields = fs })
+        SMap.add m (string_of_name cn)
+          { ci_owner = tn; ci_count = n; ci_params = ps; ci_fields = fs })
     (* A record is keyed on its type, which is what [ERecord], [EProj] and
        [PRecord] all name.  It has one "constructor" by construction. *)
-    | DType ({ dt_name = tn; dt_body = TRecord fs }) ->
+    | DType ({ dt_name = tn; dt_params = ps; dt_body = TRecord fs }) ->
       let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
-      SMap.add m (string_of_name tn) { ci_owner = tn; ci_count = 1; ci_fields = fs }
+      SMap.add m (string_of_name tn)
+        { ci_owner = tn; ci_count = 1; ci_params = ps; ci_fields = fs }
     | _ -> ());
   m
 
@@ -1059,9 +1062,19 @@ let rec depat (tbl:SMap.t ctor_info) (x:expr) : ML expr =
          else let v = rename "scrut" in
               Some v, { s with e = EVar v; eff = E_Pure } in
        let sm : subst = SMap.create 10 in
+       (* A field's declared type speaks of the type's *parameters*; the
+          scrutinee says what they are here.  Left uninstantiated, the third
+          component of an [ident & bv & ref bool] comes out typed ['c], and a
+          [ref] the OCaml backend cannot see is printed as an array. *)
+       let inst (ft:cty) : ML cty =
+         match SMap.try_find tbl (string_of_name cn), s.ty with
+         | Some ci, TApp (_, args)
+             when Cons? ci.ci_params && List.length args = List.length ci.ci_params ->
+           subst_cty (List.zip ci.ci_params args) ft
+         | _ -> ft in
        fps |> List.iter (fun ((f, ft), p) ->
          match p with
-         | PVar v -> SMap.add sm v (mk (EProj (s', cn, f)) ft E_Pure)
+         | PVar v -> SMap.add sm v (mk (EProj (s', cn, f)) (inst ft) E_Pure)
          | _ -> ());
        let body = psub sm body in
        (match bound with
@@ -1750,35 +1763,6 @@ let coerce_prog (prog:program) : ML program =
     let env' = SMap.copy env in
     let _ = SMap.add env' v t in
     env' in
-  let rec infer (env:cenv) (x:expr) : ML (option cty) =
-    match x.e with
-    | EVar v -> (match lookup env v with Some t -> t | None -> trust x.ty)
-    | EQual (n, targs) ->
-      (match sig_of n targs with Some t -> Some t | None -> trust x.ty)
-    | ECast (_, t) -> Some t
-    | EApp (h, es) ->
-      (match infer env h with
-       | Some t ->
-         (match peel_arrows (List.length es) t with
-          | Some (_, res) -> Some res
-          | None -> trust x.ty)
-       | None -> trust x.ty)
-    | EProj (e1, n, f) ->
-      (match field_of (string_of_name n) (infer env e1) f with
-       | Some t -> Some t
-       | None -> trust x.ty)
-    | ELet (v, t, e1, e2) -> infer (extend env v (binding env t e1)) e2
-    | ESeq (_, b) -> infer env b
-    | _ -> trust x.ty
-  (* What a [let]-bound variable's type is.  The annotation is [Extract]'s and
-     is not printed, so a [TAny] there is not a claim; the defining term is the
-     better witness. *)
-  and binding (env:cenv) (t:cty) (e1:expr) : ML (option cty) =
-    match trust t with
-    | Some t -> Some t
-    | None -> infer env e1 in
-  let first (a b : option cty) : option cty =
-    match a with Some _ -> a | None -> b in
   (* Bind the variables a pattern introduces, at the field types of the
      constructor it names as seen through [sc], the scrutinee's type. *)
   let rec bind_pat (env:cenv) (sc:option cty) (p:pat) : ML cenv =
@@ -1799,6 +1783,49 @@ let coerce_prog (prog:program) : ML program =
     | PRecord (n, fps) ->
       fps |> List.fold_left (fun env (f, p) ->
         bind_pat env (field_of (string_of_name n) sc f) p) env in
+  let rec infer (env:cenv) (x:expr) : ML (option cty) =
+    match x.e with
+    | EVar v -> (match lookup env v with Some t -> t | None -> trust x.ty)
+    | EQual (n, targs) ->
+      (match sig_of n targs with Some t -> Some t | None -> trust x.ty)
+    | ECast (_, t) -> Some t
+    | EApp (h, es) ->
+      (match infer env h with
+       | Some t ->
+         (match peel_arrows (List.length es) t with
+          | Some (_, res) -> Some res
+          | None -> trust x.ty)
+       | None -> trust x.ty)
+    | EProj (e1, n, f) ->
+      (match field_of (string_of_name n) (infer env e1) f with
+       | Some t -> Some t
+       | None -> trust x.ty)
+    | ELet (v, t, e1, e2) -> infer (extend env v (binding env t e1)) e2
+    | ESeq (_, b) -> infer env b
+    (* A [match] is what projecting a method out of a runtime dictionary
+       compiles to, and its own node type is [TAny] as often as not.  The
+       branches know better: the scrutinee's type says what the pattern binds,
+       and the body then says what the whole thing is.
+
+       Only a branch that is itself a variable or a projection, and only the
+       first one.  [infer] is called at every node of every declaration, so
+       descending into a whole branch body would make it quadratic in a
+       compiler full of nested matches; the dictionary projection this exists
+       for is [| Mkc f -> f]. *)
+    | EMatch (sc, (p, _, b) :: _) ->
+      (match b.e with
+       | EVar _ | EProj _ | EQual _ -> infer (bind_pat env (infer env sc) p) b
+       | _ -> trust x.ty)
+    | _ -> trust x.ty
+  (* What a [let]-bound variable's type is.  The annotation is [Extract]'s and
+     is not printed, so a [TAny] there is not a claim; the defining term is the
+     better witness. *)
+  and binding (env:cenv) (t:cty) (e1:expr) : ML (option cty) =
+    match trust t with
+    | Some t -> Some t
+    | None -> infer env e1 in
+  let first (a b : option cty) : option cty =
+    match a with Some _ -> a | None -> b in
   (* Rewrite [x] so that every boundary inside it agrees, then coerce [x]
      itself if what it is meets what is expected of it. *)
   (* The nodes whose [go] hands the expectation straight to whatever produces
@@ -1870,7 +1897,20 @@ let coerce_prog (prog:program) : ML program =
                  Some (arrows (ts |> List.map (fun t -> match t with Some t -> t | None -> TAny)) r)
                | _ -> None) in
             same (EApp (check env want h, es)))
-       | None -> same (EApp (go env None h, es |> List.map (go env None))))
+       (* The head's own type is not worked out well enough to retype the
+          call, but a parameter it declares [TAny] is a boundary all the same:
+          a coercion *to* [TAny] is well-typed whatever the argument turns out
+          to be, and without one the argument's own type escapes into a
+          position that has none.  This is the method of a class over a type
+          constructor reached through a runtime dictionary (section 5.4): the
+          head is the [match] that projects it, so nothing but its own node
+          type says anything. *)
+       | None ->
+         let ps = (match peel_arrows (List.length es) h.ty with
+                   | Some (ps, _) -> ps |> List.map (fun p -> if TAny? p then Some TAny
+                                                              else None)
+                   | None -> es |> List.map (fun _ -> None)) in
+         same (EApp (go env None h, List.map2 (fun p e -> check env p e) ps es)))
     | ECtor (n, es) ->
       let fs = fields_of (string_of_name n) (first exp (trust x.ty)) in
       if List.length fs = List.length es

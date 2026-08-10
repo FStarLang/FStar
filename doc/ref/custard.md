@@ -588,12 +588,22 @@ arguments are `w1..wk`:
    canonical: the key printer already prints binders by sort and bound
    variables by de Bruijn index, so alpha-equivalent skeletons print
    identically and share a specialization.
-4. Emit the specialization with the hole binders appended to its own, and pass
-   the holes at the call site in the same order.
+4. Emit the specialization with the hole binders *prepended* to its own, and
+   pass the holes at the call site in the same order.
 
-The specialization's signature is therefore `poly ++ holes`, and holes are
+The specialization's signature is therefore `holes ++ poly`, and holes are
 ordered by their de Bruijn index so that the order cannot depend on the order
 the arguments happened to be visited in.
+
+They go first because neither end of a call's spine is otherwise stable.  A
+definition whose result type is an abbreviation hiding an arrow --
+`f_term : {| lvm m |} -> endo m term`, where `endo m a = a -> ML (m a)` -- has
+fewer binders in its type than a saturated call has arguments, so holes
+appended to the spine would land *after* the arguments the body's own lambdas
+bind.  A use that supplies fewer arguments than there are `Poly` binders --
+`map_optM f_aqual`, where `f_aqual`'s own argument is the one `map_optM` will
+supply -- would place them too early.  Only the front of the spine is the same
+position under both.
 
 The number of holes is part of the key (`sk_holes`), because the abstraction
 step is not injective on terms alone: an argument genuinely written as
@@ -1238,6 +1248,35 @@ Two separate things are being named here, and they used to be conflated.
   startup**.  There is at most one, and it is a root too, so the common case
   still needs only one option.
 
+A `--custard_entry` may also name a **module** rather than a definition, which
+loads the module and takes its initializers (below) as roots without naming
+anything in it.  That is the only way to reach a module which exists purely for
+its side effects: `FStarC.Hooks` defines nothing anyone calls and does nothing
+but install callbacks, and a compiler built without it fails at run time with
+"callback not yet set" rather than at compile time.
+
+#### Module initializers
+
+A top-level `let` whose definiens is *effectful* is a module initializer:
+`let _ = clear ()` in `FStarC.Options`, `let _ = register_pass ...` in
+`FStarC.Syntax.Resugar`, `let _ = iter register_tactic_primitive_step ops` in
+`FStarC.Hooks`.  Nothing in the program refers to it, so the demand-driven
+loop of §3.3 never reaches it, and dropping it does not merely lose code --- it
+silently changes what the program does, since the registration never happens.
+
+So once the closure from the roots is complete, **every module it pulled in
+contributes its initializers**, and that may pull in further modules, so the
+step is iterated to a fixpoint.  An initializer is requested after everything
+it can call, so it lands at the end of the declaration order and OCaml runs the
+emitted `let`s in the order they are printed; across a split (§12.9) the linker
+runs each file's in dependency order.  What is *not* defined is the relative
+order of two initializers in unrelated modules --- F\* gives that no meaning
+either.
+
+This is why the note in §7.3's legality table used to say that dead-code
+elimination of a top-level `DLet` is always legal.  It is legal only for a
+*pure* one.
+
 Omitting `--custard_main` is the normal thing to do when the generated code is
 to be embedded in a hand-written wrapper — which is the usual arrangement,
 since a generated `main` can only be reached by linking the whole program the
@@ -1801,6 +1840,18 @@ therefore every verdict has to be reproducible.
 Where the appliers sit in the pipeline is then a question of code quality
 alone, and they still run late (§6), because the projections they feed on are
 mostly what `depat` leaves behind.
+
+**Which record type an OCaml record expression has.**  OCaml resolves a record
+expression from its labels, and when two record types in the same module share
+their labels --- `namedv_view` and `binding` in `FStarC.Reflection.V2.Data` both
+have `uniq`, `sort`, `ppname` --- it takes the one declared *last*, unless the
+expression's type is already known from context.  Qualifying a label names the
+module, not the type, so it does not help.  `PrintOCaml` therefore ascribes
+every record expression, `({ ... } : (_, _) t)`, with the parameter count read
+off the type's own declaration.  The ML extraction gets away without this only
+because the shapes it emits usually have an expected type to hand; Custard's do
+not, and the failure is silent whenever the two types happen to be
+representation-compatible.
 
 ### 5.6 Unreachable branches
 
@@ -2673,7 +2724,7 @@ consult `eff`:
 | inline a `let x = e in C[x]` with one use | `e.eff ≤ E_Pure`, or the single use is in evaluation position and no impure computation is crossed |
 | duplicate a subterm (e.g. into two match branches) | `eff ≤ E_Pure` |
 | reorder two subterms | at most one is `E_Impure` |
-| DCE a whole top-level `DLet` | always legal: top-level effects are not supported (`--warn_error -272` territory) |
+| DCE a whole top-level `DLet` | its `eff ≤ E_Pure`.  An effectful one is a module initializer and is a root of the extraction (§4.4) |
 
 "Hoist" means: replace the dropped argument `e` by an enclosing
 `ELet (x, e.ty, e, ...)` so its effect still happens, in the right order, even
@@ -3011,11 +3062,13 @@ the interface the driver already has.  The early check now covers the modules
 that *are* loaded, which catches the common case of a typo, and `Extract.run`
 reports a root that produced no declaration at all.
 
-What this does *not* buy is a type whose representation §5.5 is free to
-change: a one-constructor type collapses into its payload, so a realization
-that builds its constructor sees a tuple.  A root type arguably ought to keep
-its representation as well as its name, in the same way a realized one does;
-that is not implemented (§12.10).
+What this does *not* buy, and must not, is a representation.  Being an entry
+point is a fact about a type's *users*, and §5.5's principle is that a type's
+representation is determined by the type alone: a one-constructor type
+collapses into its payload whether or not anyone outside names it.  A
+realization that spells out such a constructor is written against a
+representation that is not there, and it is the realization that has to give
+— see §12.10.
 
 `FStar.Pervasives.Native.tupleN` is the one realized type whose OCaml form is
 *syntax* rather than a name.  The type needs no help — the realization defines
@@ -3913,9 +3966,10 @@ realize the type too.
 ### 12.10 Where the extracted compiler stands
 
 With splitting, `--custard_entry FStarC.Main.main --custard_split` produces
-**179 files**, and those together with the hand-written realizations of
-`src/ml` compile, in `ocamldep -sort` order, past the front end, the type
-checker, the SMT encoding and the ML extraction, up to the generated parser.
+**185 files**, and those together with the hand-written realizations of
+`src/ml` compile, in `ocamldep -sort` order, link, and run.  Getting the *build*
+that far is what the rest of this section records; "It runs" below is what came
+after.
 
 Getting there was a matter of advancing the build one error at a time.  Two
 kinds of thing came up, and it is worth keeping them apart.
@@ -3984,15 +4038,75 @@ extraction did and Custard does not.
   was used by a realization without being in the interface, so no entry point
   could name it.  It is exported now.
 
-What the build stops on is the third kind, and it is a real gap rather than a
-bug: `FStarC_Parser_Parse.mly`, the hand-written grammar, constructs and
-matches `FStarC.Parser.AST`'s constructors directly, and §5.5 is free to
-collapse a one-constructor type into its payload — `calc_step` becomes a
-`tuple3`.  A type named as an entry point is part of the program's external
-surface, so the natural rule is that a root type keeps its declaration *and*
-its representation, in the same way a realized one does (`Layout` already has
-the `NoNewtype` flag and the `Realized` exemptions to hang this on).  That is
-not implemented.
+What the build stops on is one more of the second kind.
+`FStarC_Parser_Parse.mly`, the hand-written grammar, spells out
+`FStarC.Parser.AST`'s constructors, and §5.5 collapses a one-constructor type
+into its payload: `CalcStep of term & term & term` is a constructor with *one*
+argument of tuple type, so `calc_step` is that tuple and `CalcStep` is not a
+name in the emitted code at all.
+
+The rule that settles this is §5.5's, not a new one.  A representation is a
+property of a type, decided by the type and what it contains, and never by
+which of its users happen to be outside the extracted program — the same
+principle that removed unused-parameter elimination in M10f and moved the
+inlining and record passes into `Layout` in M10g.  A root type is emitted, and
+that is all being a root means.  So the realization gives: the AST already
+carries `mkTuple`, `mkDTuple`, `consTerm` and friends for exactly this reason,
+and a constructor a realization needs is reached through a function in the F\*
+source, which is compiled code and therefore right under either extraction.
+
+#### It runs
+
+With those out of the way the split compiles, links and **runs**: a
+Custard-extracted `fstar.exe` verifies `FStar.List.Tot.Properties` from source
+in about nine seconds and reports the same errors on the same programs as the
+one dune builds.  Six further code-generation bugs stood between "compiles" and
+"runs", and they are worth recording because each was invisible to the test
+suite:
+
+- **A `ref` dereference printed as an array read.**  ANF introduced
+  `let tmp = e ...` whose type came out `TAny`, so the backend's `TRef?` test
+  failed and `!x` printed as `x.(0)`.  Two causes, both fixed: under `--lax` a
+  typechecker-invented binder has no sort, so the local `let`'s own right-hand
+  side is now recorded and consulted (`Extract.lettys`); and a type
+  *abbreviation* is a name, not a shape, so applying arguments to a value of
+  abbreviated function type, or reading its effect, has to unfold it first
+  (`Extract.abbrevs`/`unfold_abbrev`).
+- **A negative literal erased to `()`.**  `-1` reaches the extractor as
+  `Tm_lazy`, because the normalizer hands a reduced arithmetic result back as
+  an *embedding*, and `expr_of_term`'s catch-all silently erased it.
+  `U.unlazy_emb` at the top of `expr_of_term`.  `tests/custard/Literals.fst`.
+- **Extraction that depended on request order.**  `TcEnv.try_lookup_lid`
+  returns `None` when the lid's module has not been loaded yet, and every
+  caller's fallback --- do not erase, do not filter, assume impure --- is
+  *silently wrong* rather than conservative.  Since loading is on demand
+  (§4.1), the same definition came out differently depending on what had been
+  extracted before it: a type constructor whose kind could not be read kept its
+  dictionary argument as if it were a type argument.  All nine sites now go
+  through `Extract.lookup_lid_typ`, which loads first.
+- **An under-abstracted type abbreviation.**  `let mymon = writer (list ps)`
+  has kind `Type -> Type` and binds nothing; the IR has no partial application
+  of a type constructor, so `extract_type_abbrev` eta-expands it from the
+  binders of its own type.  `tests/custard/Mymon.fst`.
+- **Two lambda-lifted binders collapsed into one.**  `U.abs_formals` invents
+  *fresh* names for the binders it opens, and `lift_letrec` called it twice ---
+  once for the binders, once for the body --- so the body named variables no
+  binder bound.  Where the two binders were both the compiler-generated
+  `uu___` of an inlined pattern, the emitted `match (tmp, tmp1)` came out as
+  `match (tmp, tmp)` and the second argument was silently dropped.  Opened once
+  now.  `tests/custard/Patlift.fst`.
+- **Ambiguous record expressions**, §5.5.
+
+Two things are known not to work yet.  A Custard-built compiler cannot read
+`.checked` files written by a dune-built one, and vice versa: a checked file is
+a `Marshal` dump, and the two extractions lay the same F\* types out
+differently.  That is expected and not a bug --- the cache is already versioned
+--- but it does mean a Custard-built compiler has to build its own cache.  And
+the ulib **plugins** (`[@@plugin]`, `FStar.Tactics.Typeclasses.mk_class` among
+them) are still compiled by the ML extraction and linked from `fstar.lib`, so
+they register into a different copy of the compiler's tables; any proof that
+needs one fails with "tactic got stuck".  Compiling them with Custard, in the
+same program, is M10d's business.
 
 Still missing for a *runnable* compiler beyond that: build integration (item 7
 of §12.8), which has to drive `menhir` and `sedlex` for the generated parser
@@ -4042,5 +4156,6 @@ and lexer and link the result, and the `Prims.int` question of item 8.
 | M10i | Output splitting (§12.9) | Done.  `--custard_split` writes one OCaml file per F\* source module instead of one file for the whole program, so that F\*'s hand-written realizations — fourteen of which reference modules Custard compiles — can sit between the pieces; OCaml compilation units must form a DAG, and a single file made them circular.  Still one whole-program run: no unit interface, no re-specialization, just a partition of the already-sorted declaration list.  `Split.run` gives each declaration the latest home, in F\*'s own module order, among its own module and those of everything it references, which is what relocates a specialization that outgrew its source module; `PrintOCaml` prints a declaration under its plain identifier when it is at home, which is the name the realizations spell, and reuses the `Imported` flag of M10c for every cross-file reference.  Two codegen bugs fixed behind it: a record field mentioning a type variable the type does not bind (`Layout.close_fields`), and a realization shadowed by its model, which §12.10 and M10j turned into the general rule.  The compiler splits into files that compile with the realizations in `ocamldep -sort` order; §12.10.  `tests/custard/SplitLo.fst`, `SplitMid.ml`, `SplitHi.fst` |
 | M10j | A realization replaces its module's values (§8.2) | Done.  Where `src/ml` or `ulib/ml` holds a hand-written `.ml`, the F\* definitions in that module are a model, and a model that disagrees with the realization — `FStar.Dyn`'s `dyn` is `unit -> Dv value_type_bundle` in F\* and `Obj.t` in OCaml — is not something extraction may silently choose between.  Every `Sig_let` in a realized module becomes a `DExternal`; an incomplete realization is now a link error rather than a program running the model.  Exempted, because they are not models: projectors and discriminators, `inline_for_extraction` symbols (which in a realized module means the realization deliberately does not define them, as `FStarC.PSMap`'s `psmap_*` aliases do), type abbreviations, and the two modules whose realization defines no representation of its own (`Builtins.type_only_realized_modules`: `FStar.Pervasives`, which has no file, and `FStar.Pervasives.Native`, which is transparent over types Custard represents natively — and whose `fst`/`snd`, left external, would freeze `tuple2` and leave the C backend with no representation for it).  Externals gained `dx_typars` so that §3.2 instantiates a polymorphic realization's signature at the call site: without it one `let fst = Stdlib.fst` types every caller's result as `any`.  The cost, accepted: what a realization implements is no longer monomorphized |
 | M10k | Advancing the extracted-compiler build (§12.10) | Done.  Five code-generation bugs: a retained *type* binder passed as a runtime argument (`Mono.keep_thunk`/`unit_binders`, now typed `unit` so no `Obj.magic` is generated); a lambda-lifted local not receiving the captures of the lifted locals it calls; a lambda-lifted local keeping its own generalized type binders as value parameters instead of `dl_typars`; an eta-contracted abbreviation (`uvars = FlatSet.t ctx_uvar` through `t = flat_set`) unfolded with its own parameter still free, in both `Layout.resolve` and `Monomorphize.unfold_cty`; and a definition whose declared type hides its arrows behind an abbreviation (`let get : st ctxt = fun s -> ...`).  A *type* can now be a `--custard_entry`, which is how a realization gets at an abbreviation Custard unfolds rather than emits: `Extract.run` flags a `DType` root and `Driver.check_entrypoints` no longer rejects an entry whose module the on-demand loader has not reached.  `tests/custard/PolyVal.fst` and `TypeEntry.fst` |
+| M10l | **The extracted compiler builds and runs** (§12.10) | Done.  A Custard-extracted `fstar.exe` verifies `FStar.List.Tot.Properties` from source and reports the same errors as the dune-built one.  What it took beyond M10k: **module initializers** --- an effectful top-level `let` is a root, and every loaded module contributes its own (§4.4), without which `FStarC.Options`' `let _ = clear ()` never ran; a `--custard_entry` that names a *module*, the only way to reach `FStarC.Hooks`, which exists solely for its side effects; and six codegen bugs, each listed in §12.10: a `ref` printed as an array (`lettys` and abbreviation unfolding), `-1` erased to `()` because the normalizer returns it as a `Tm_lazy` embedding, load-order-dependent extraction (`lookup_lid_typ`), an under-abstracted abbreviation, two lambda-lifted binders collapsed into one because `lift_letrec` opened the definiens twice, and OCaml record expressions resolving to the wrong record type.  `tests/custard/Literals.fst`, `Mymon.fst`, `Patlift.fst` |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

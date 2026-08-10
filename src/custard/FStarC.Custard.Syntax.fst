@@ -380,6 +380,8 @@ let flag_to_doc (f:flag) : ML document =
   | Inline -> text "inline"
   | Erased -> text "erased"
   | Comment s -> text ("(* " ^ s ^ " *)")
+  | Realized -> text "realized"
+  | Imported u -> text ("imported[" ^ u ^ "]")
 
 let flags_to_doc (fs : list flag) : ML document =
   match fs with

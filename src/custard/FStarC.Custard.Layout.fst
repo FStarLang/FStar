@@ -484,6 +484,38 @@ and rw_branch (t:tbl) (br:branch) : ML branch =
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
 
+(* The type variables a [cty] mentions. *)
+let rec cty_vars (c:cty) : ML (list string) =
+  match c with
+  | TVar x -> [x]
+  | TArrow (a, _, b) -> cty_vars a @ cty_vars b
+  | TApp (_, args) -> List.collect cty_vars args
+  | TBuf c | TInline c | TRef c -> cty_vars c
+  | TTuple cs -> List.collect cty_vars cs
+  | _ -> []
+
+(* The type constructors a [cty] applies. *)
+let rec cty_names (c:cty) : ML (list string) =
+  match c with
+  | TArrow (a, _, b) -> cty_names a @ cty_names b
+  | TApp (n, args) -> key n :: List.collect cty_names args
+  | TBuf c | TInline c | TRef c -> cty_names c
+  | TTuple cs -> List.collect cty_names cs
+  | _ -> []
+
+(* A collapsed type is replaced by its payload everywhere, so nothing in the
+   emitted program refers to it by name any more.  A hand-written realization
+   still can, though, and the name costs nothing: emit it as an abbreviation
+   for the payload, which says exactly what the collapse decided and changes
+   no representation.  Not when a parameter would be left unconstrained --
+   OCaml rejects [type 'a t = int] -- in which case there is nothing to say. *)
+let collapsed_abbrev (dt:dtype) (payload:cty) : ML (option decl) =
+  let vars = cty_vars payload in
+  if dt.dt_params |> List.for_all (fun p -> List.mem p vars)
+     && not (List.mem (key dt.dt_name) (cty_names payload))
+  then Some (DType { dt with dt_body = TAbbrev payload })
+  else None
+
 let rw_decl (t:tbl) (d:decl) : ML (list decl) =
   match d with
   | DType dt ->
@@ -492,9 +524,10 @@ let rw_decl (t:tbl) (d:decl) : ML (list decl) =
      (* An erased type has no runtime representation and no remaining
         references: every [TApp] of it resolved to [TUnit]. *)
      | Some L_erased -> []
-     (* A collapsed type is replaced by its payload everywhere, so the
-        declaration itself is dead. *)
-     | Some (L_newtype _) -> []
+     | Some (L_newtype nt) ->
+       (match collapsed_abbrev dt (resolve t 100 nt.nt_ty) with
+        | Some d -> [d]
+        | None -> [])
      | Some (L_struct cls) ->
        let body =
          match dt.dt_body with

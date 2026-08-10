@@ -894,7 +894,9 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     text "Entry point for whole-program extraction with --codegen Custard. \
 May be repeated; every occurrence is a root of the extraction. Custard only \
 compiles the definitions reachable from these roots. It does *not* make them \
-run: use --custard_main for that.");
+run: use --custard_main for that. A module name may be given instead of a \
+definition, which makes the module's top-level effects part of the program \
+without naming anything in it.");
 
   ( noshort,
     "custard_main",

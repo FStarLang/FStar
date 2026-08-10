@@ -549,7 +549,7 @@ let parse_fstar_incrementally
         let err : FStarC_Parser_AST_Util.error_message = { message = FStar_Errors_Msg.mkmsg "Syntax error parsing #lang-fstar block: "; range = r } in
         Inl err
   in
-  { parse_decls = f }
+  FStarC_Parser_AST_Util.mk_extension_lang_parser f
 let _ = FStarC_Parser_AST_Util.register_extension_lang_parser "fstar" parse_fstar_incrementally
 
 type lang_opts = string option

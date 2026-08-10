@@ -507,9 +507,9 @@ rawDecl:
   | SUB_EFFECT se=subEffect
       { SubEffect se }
   | POLYMONADIC_BIND b=polymonadic_bind
-      { Polymonadic_bind b }
+      { let (x, y, z, w) = b in Polymonadic_bind (x, y, z, w) }
   | POLYMONADIC_SUBCOMP c=polymonadic_subcomp
-      { Polymonadic_subcomp c }
+      { let (x, y, z) = c in Polymonadic_subcomp (x, y, z) }
   | blob=BLOB
       {
         let ext_name, contents, pos, snap = blob in
@@ -1271,7 +1271,7 @@ calcStep:
              | Some t -> t
              | None -> mk_term (Const Const_unit) (rr2 $loc($2) $loc($4)) Expr
          in
-         CalcStep (rel, justif, next)
+         mkCalcStep rel justif next
      }
 
 %public
@@ -1280,8 +1280,8 @@ typ:
 
 %public
 %inline quantifier:
-  | FORALL { fun x -> QForall x }
-  | EXISTS { fun x -> QExists x}
+  | FORALL { fun (x,y,z) -> QForall (x,y,z) }
+  | EXISTS { fun (x,y,z) -> QExists (x,y,z) }
   | op=FORALL_OP
     { 
       let op = mk_ident("forall" ^ op, rr $loc(op)) in

@@ -35,24 +35,48 @@ CUSTARD_TESTS += DepParams
 CUSTARD_TESTS += MonoDyn
 CUSTARD_TESTS += MatchGuard
 CUSTARD_TESTS += Magic
-# Section 5.4: a class over a type constructor is the one thing neither the IR
-# nor OCaml can name, so its dictionary fields are Obj.t and a coercion at each
-# boundary is unavoidable.  --warn_error -366 undoes WARN_ANY's escalation for
-# this one module; what is pinned here is that the coercions go exactly at the
-# Obj.t boundaries -- the scrutinee, the value built at the abstract result
-# type, the pattern variable read back at a concrete one -- and nowhere else.
-# In particular not around the match whose branches already carry one, which is
-# the ML extraction's characteristic Obj.t-and-back-again.
-FLAGS_Magic   = --warn_error -366
-GREP_Magic   += "(match (Obj.magic (tmp)) with"
-GREP_Magic   += "(Obj.magic ((FStar_Pervasives_Native.Some (tmp))))"
-GREP_Magic   += "(tmp1 (Obj.magic (v)))"
-NOGREP_Magic += "(Obj.magic ((match"
-NOGREP_Magic += "Obj.magic (magic_"
+CUSTARD_TESTS += HigherKind
+CUSTARD_TESTS += Literals
+CUSTARD_TESTS += Patlift
+CUSTARD_TESTS += Mymon
+# Section 5.0: [let mymon = writer (list int)] is an abbreviation of kind
+# [Type -> Type] that binds *no* binders.  The IR has no partial application
+# of a type constructor, so the abbreviation is eta-expanded from the binders
+# of its own type; left as is, its use as a monad loses an argument.
+GREP_Mymon += "let rec mymon_iterM__writer (f : ('a -> ((Prims.int) list, unit) FStar_Pervasives_Native.tuple2)) (l : ('a) list)"
+# Section 5.6: a local [let rec] is lambda-lifted, and its binders and its body
+# must come from *one* opening of the definiens -- [abs_formals] invents fresh
+# names every time, so opening twice gives the body variables that no binder
+# binds.  Here both binders are the same [uu___], so the two occurrences
+# collapsed into one and the second argument was silently dropped.
+GREP_Patlift += "match (tmp, tmp1) with"
+# Section 5.1: a negative literal is a *reduced* application, and the
+# normalizer hands the result back as an embedding rather than as a constant.
+# Left lazy it looks like a term with no runtime meaning and is erased to
+# [()], which typechecks nowhere and is silently wrong where it does.
+GREP_Literals += "(Prims.parse_int \"-1\")"
+# Section 5.0: [m : Type -> Type] is a type binder, so it is erased like any
+# other -- and so is a type argument in a spine whose head is a [match], which
+# is what a method call on a [dyn] dictionary compiles to.  Either one left
+# behind is an unbound variable in the emitted OCaml, which is what compiling
+# and running this test checks.  --warn_error -366 for the same reason as
+# Magic: a class over a type constructor has Obj.t fields.
+FLAGS_HigherKind    = --warn_error -366
+NOGREP_HigherKind  += ") a "
+# Section 5.4: a class over a type constructor used to be the one thing
+# neither the IR nor OCaml could name.  It no longer is: [m : Type -> Type] is
+# a type binder like any other, so a call whose instance is known specializes
+# on it, and this module comes out entirely at [option] with no coercion at
+# all.  That is what is pinned here -- see HigherKind for the case that does
+# still need [Obj.t], where the dictionary is only known at run time.
+GREP_Magic   += "(magic_twice__option (FStar_Pervasives_Native.Some ((Prims.parse_int \"21\"))))"
+GREP_Magic   += "let magic_ret__option (tmp : 'a) : ('a) FStar_Pervasives_Native.option ="
+NOGREP_Magic += "Obj.magic"
+NOGREP_Magic += "Obj.t"
 # One shared specialization taking the dictionary at run time (the identity
 # skeleton), one fully specialized version for the static call site, and no
 # trace of the [dyn] marker itself.
-GREP_MonoDyn += "monoDyn_render__0 (x : Prims.int) : ((Prims.int -> string) -> string)"
+GREP_MonoDyn += "monoDyn_render__0 (tmp : (Prims.int -> string)) : (Prims.int -> string)"
 GREP_MonoDyn += "monoDyn_render__int (x : Prims.int) : string"
 NOGREP_MonoDyn += dyn
 

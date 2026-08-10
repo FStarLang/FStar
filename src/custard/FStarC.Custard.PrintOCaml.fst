@@ -81,6 +81,16 @@ let is_at_home (n:name) : ML bool =
    name and its constructor's. *)
 let tuples : ref (SMap.t int) = mk_ref (SMap.create 0)
 
+(* How many type parameters each record type takes.  OCaml resolves a record
+   expression's type from its labels, and when two record types in the same
+   module share their label names -- [namedv_view] and [binding] in
+   [FStarC.Reflection.V2.Data] both have [uniq], [sort], [ppname] -- it picks
+   the one declared last, silently, unless the expression's type is already
+   known.  Qualifying a label names the module, not the type, so it does not
+   help.  An ascription does, and it needs the parameter count to write
+   [(_, _) t]. *)
+let record_params : ref (SMap.t int) = mk_ref (SMap.create 0)
+
 let is_tuple_type (n:name) : ML bool =
   None? n.spec &&
   n.ns = ["FStar"; "Pervasives"; "Native"] &&
@@ -473,11 +483,23 @@ let rec term (ind:string) (e:expr) : ML string =
             (by_position k "(Obj.magic ())"
                (fs |> List.map (fun (f, e) -> (f, term ind e)))) ^ ")"
   | ERecord (n, fs) ->
-    (* Qualifying the first field is enough for OCaml to resolve the record
-       type; qualifying every one would be noise. *)
-    "{ " ^ String.concat "; " (List.mapi (fun i (f, e) ->
-              (if i = 0 then qualify n (ocaml_var f) else ocaml_var f)
-              ^ " = " ^ term ind e) fs) ^ " }"
+    (* Qualifying the first field names the *module*, which is enough to find
+       the record type only when no other record in it shares these labels.
+       When one does, OCaml takes the last declared, so say which is meant
+       ({!record_params}). *)
+    let body =
+      "{ " ^ String.concat "; " (List.mapi (fun i (f, e) ->
+                (if i = 0 then qualify n (ocaml_var f) else ocaml_var f)
+                ^ " = " ^ term ind e) fs) ^ " }" in
+    (match SMap.try_find !record_params (string_of_name n) with
+     | None -> body
+     | Some k ->
+       let rec wilds (i:int) : ML (list string) =
+         if i <= 0 then [] else "_" :: wilds (i - 1) in
+       let args = if k = 0 then ""
+                  else if k = 1 then "_ "
+                  else "(" ^ String.concat ", " (wilds k) ^ ") " in
+       "(" ^ body ^ " : " ^ args ^ qualify n (ocaml_type_name n) ^ ")")
   (* A tuple has no projection in OCaml beyond [fst] and [snd], so every
      component is read by a match that names it and ignores the rest. *)
   | EProj (e1, n, f) when Some? (tuple_arity n) ->
@@ -742,10 +764,23 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
         | _ -> ()
       end
     | _ -> ());
+  (* Every record type in the program, realized or not: the ascription is
+     just as necessary for a realization's record, and just as harmless when
+     the labels happen to be unambiguous. *)
+  let recs : SMap.t int = SMap.create 100 in
+  p |> List.iter (fun d ->
+    match d with
+    | DType t ->
+      (match t.dt_body with
+       | TRecord _ -> SMap.add recs (string_of_name t.dt_name)
+                               (List.length t.dt_params)
+       | _ -> ())
+    | _ -> ());
   externals := tbl;
   qualifiers := quals;
   realized := real;
   tuples := tups;
+  record_params := recs;
   at_home := home
 
 let header : string =

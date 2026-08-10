@@ -51,6 +51,21 @@ instance val showable_bclass : Class.Show.showable bclass
     make the source arity worth preserving. *)
 val is_type_binder (env:TcEnv.env) (b:binder) : ML bool
 
+(** [is_type_param env b] holds of a binder of kind [Type] exactly: an arity
+    binder that the target can express as a type parameter.  A higher-kinded
+    one -- the [m] of [class monad (m:Type -> Type)] -- is erased like any
+    other type binder but cannot be declared or passed, so it is not one. *)
+val is_type_param (env:TcEnv.env) (b:binder) : ML bool
+
+(** Is this *argument* a type rather than a value?
+
+    A spine is usually filtered by its head's binders, but a head can be a
+    term no declaration describes -- a [match], a [let], a lambda left over
+    from beta-reducing a specialized definition.  Its type arguments still
+    have to go: types are erased, and one left behind is emitted as a term and
+    comes out as an unbound variable. *)
+val is_type_term (env:TcEnv.env) (t:term) : ML bool
+
 val is_erased_binder (env:TcEnv.env) (b:binder) : ML bool
 
 (** [erased_binders env t] applies [is_erased_binder] to each binder of [t]'s
@@ -73,6 +88,10 @@ val unit_binders (env:TcEnv.env) (t:typ) : ML (list bool)
     dual filter, used at the *type* level: the arguments of a type constructor
     that survive into a [cty] are exactly its type parameters. *)
 val type_binders (env:TcEnv.env) (t:typ) : ML (list bool)
+
+(** [type_params env t] marks the binders of [t] that {!is_type_param}
+    accepts: the parameters the emitted type declaration actually binds. *)
+val type_params (env:TcEnv.env) (t:typ) : ML (list bool)
 
 (** [classify env attrs t] classifies the binders of a definition of type [t]
     carrying the top-level attributes [attrs].  The returned list has one

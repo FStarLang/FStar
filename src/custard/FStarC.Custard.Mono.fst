@@ -59,18 +59,66 @@ let is_tcclass_binder (env:TcEnv.env) (b:binder) : ML bool =
   | Tm_fvar fv -> TcEnv.fv_has_attr env fv PC.tcclass_lid
   | _ -> false
 
-let is_type_binder (env:TcEnv.env) (b:binder) : ML bool =
-  (* [eqtype] and [Type0] are abbreviations, not [Tm_type]s, so the sort has to
-     be unfolded before it can be recognised.  Getting this wrong is not
-     harmless: the parameters of an inductive are exactly its type binders, and
-     a missed one becomes an unbound type variable in the emitted type. *)
-  let sort = N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                          TcEnv.Beta; TcEnv.Iota;
-                          TcEnv.UnfoldUntil delta_constant]
-                         env b.binder_bv.sort in
-  match (SS.compress (U.unrefine sort)).n with
+(* Does this sort classify types rather than values -- [Type], but also
+   [Type -> Type], the kind of the [m] in [class monad (m:Type -> Type)]?
+
+   [eqtype] and [Type0] are abbreviations, not [Tm_type]s, so the sort has to
+   be unfolded before it can be recognised.  Getting this wrong is not
+   harmless: the parameters of an inductive are exactly its type binders, and
+   a missed one becomes an unbound type variable in the emitted type -- or,
+   for a higher kind, an unbound *term* variable, because the binder is then
+   taken for a runtime one and its uses are compiled as values. *)
+let rec is_arity_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
+  let t = SS.compress (U.unrefine t) in
+  match t.n with
   | Tm_type _ -> true
+  (* Through [arrow_formals_comp], which opens the binders: normalizing a
+     codomain with loose de Bruijn indices in it fails outright. *)
+  | Tm_arrow _ ->
+    let bs, c = U.arrow_formals_comp t in
+    is_arity_aux false (TcEnv.push_binders env bs) (U.comp_result c)
+  (* Only a name can still be hiding one, and only normalization can tell.
+     Paying for it once, at the end, rather than at every step: this runs on
+     every binder of every definition the extraction visits. *)
+  | Tm_fvar _ | Tm_app _ | Tm_uinst _ ->
+    not normed &&
+    is_arity_aux true env
+      (N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                    TcEnv.Beta; TcEnv.Iota;
+                    TcEnv.UnfoldUntil delta_constant]
+                   env t)
   | _ -> false
+
+let is_arity (env:TcEnv.env) (t:typ) : ML bool = is_arity_aux false env t
+
+let is_type_binder (env:TcEnv.env) (b:binder) : ML bool =
+  is_arity env b.binder_bv.sort
+
+(* Of the sorts [is_arity] accepts, the ones of kind [Type] exactly.
+
+   The distinction is the target's, not F*'s.  Every arity binder is erased
+   from the value world alike -- that is [is_type_binder] -- but only a binder
+   of kind [Type] can become a *parameter* of a target type: neither OCaml nor
+   C has a type variable standing for a type constructor, so the [m] of [class
+   monad (m:Type -> Type)] can be neither declared nor passed.  Uniform
+   compilation (section 5.0) is what makes dropping it sound: [monad m] is
+   represented the same way whatever [m] is, and every field whose type
+   mentions [m] is already [any].  What is left is a parameterless [monad],
+   which is exactly what the fields say. *)
+let rec is_star_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
+  match (SS.compress (U.unrefine t)).n with
+  | Tm_type _ -> true
+  | Tm_fvar _ | Tm_app _ | Tm_uinst _ ->
+    not normed &&
+    is_star_aux true env
+      (N.normalize [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                    TcEnv.Beta; TcEnv.Iota;
+                    TcEnv.UnfoldUntil delta_constant]
+                   env t)
+  | _ -> false
+
+let is_type_param (env:TcEnv.env) (b:binder) : ML bool =
+  is_star_aux false env b.binder_bv.sort
 
 (* Rule 1: a non-informative binder carries no runtime value, so it is deleted
    rather than passed.  The *unit-shaped* ones are excluded here, and
@@ -89,6 +137,28 @@ let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   TcUtil.must_erase_for_extraction env sort
 
 let is_unit_binder (b:binder) : ML bool = U.is_unit b.binder_bv.sort
+
+(* The term-level counterpart of [is_type_binder]: a spine whose head no
+   declaration describes is filtered with this instead.  Structural, like the
+   ML extraction's [is_type]: what a term denotes is decided by its head. *)
+let rec is_type_term (env:TcEnv.env) (t:term) : ML bool =
+  match (SS.compress t).n with
+  | Tm_type _
+  | Tm_arrow _
+  | Tm_refine _ -> true
+  | Tm_uinst (t, _)
+  | Tm_ascribed {tm=t}
+  | Tm_meta {tm=t} -> is_type_term env t
+  | Tm_name bv -> is_arity env bv.sort
+  | Tm_fvar fv ->
+    (match TcEnv.try_lookup_lid env (S.lid_of_fv fv) with
+     | Some ((_, ty), _) -> is_arity env ty
+     | None -> false)
+  | Tm_app _ -> is_type_term env (fst (U.head_and_args_full t))
+  | Tm_abs _ ->
+    let bs, body, _ = U.abs_formals t in
+    is_type_term (TcEnv.push_binders env bs) body
+  | _ -> false
 
 let is_erased_binder (env:TcEnv.env) (b:binder) : ML bool =
   is_type_binder env b || is_dropped_binder env b
@@ -161,6 +231,13 @@ let unit_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
 let type_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in
   bs |> List.map (is_type_binder env)
+
+(* The binders that become parameters of the target type, positionally: a
+   higher-kinded one is erased like any other type binder but is not one of
+   them (see {!is_type_param}). *)
+let type_params (env:TcEnv.env) (t:typ) : ML (list bool) =
+  let bs, _ = U.arrow_formals_comp t in
+  bs |> List.map (is_type_param env)
 
 let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
   let bs, comp = U.arrow_formals_comp t in

@@ -1,6 +1,5 @@
 open FStarC_Range
 open FStarC_Tactics_Types
-open FStarC_Tactics_Result
 open FStarC_Tactics_Monad
 open FStarC_Syntax_Syntax
 

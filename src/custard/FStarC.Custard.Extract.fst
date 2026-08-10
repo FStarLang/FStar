@@ -316,6 +316,20 @@ type state = {
      can tell a runtime parameter apart from a computation's result: the two
      need entirely different advice. *)
   effletdefs: SMap.t unit;
+  (* The type a local [let] was given, keyed by its bound variable's index.
+     In a [--lax] run the typechecker leaves the sort of a binder it invented
+     itself (the [uu__] of an ANF-style [let]) unknown, so the *occurrence* of
+     such a variable extracts to [any] even though the right-hand side has a
+     perfectly good type.  That loses information the backends need -- whether
+     a value is a [ref] rather than a one-element run, for one -- so an
+     occurrence whose own sort says nothing falls back to this. *)
+  lettys: SMap.t cty;
+  (* Every type abbreviation emitted so far, keyed by its target name.  An
+     abbreviation is a name for a type, not a type of its own, so a use of it
+     in *function position* has to be seen through: [exported_id_set] is an
+     arrow, and an application of a value of that type has the arrow's result
+     type, not [any].  Section 5.5. *)
+  abbrevs: SMap.t (list string & cty);
   (* What the already-compiled units this run links against export, indexed by
      specialization key (section 12.4).  This is the whole of separate
      compilation on the extraction side: a request whose key is already in here
@@ -343,6 +357,8 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
   letdefs = SMap.create 100;
   effletdefs = SMap.create 100;
+  lettys  = SMap.create 100;
+  abbrevs = SMap.create 100;
   links   = Unit.load_links (Options.custard_links ());
   imports = mk_ref [];
 }
@@ -465,6 +481,20 @@ let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
   if m <> "" && not (Loader.module_is_loaded st.deps (tcenv st) m) then
     st.env := Loader.ensure_loaded st.deps (tcenv st) m
 
+(* Every consultation of a declaration's type goes through here.  Looking a
+   lid up in an environment that has not loaded its module yet does not fail
+   loudly: it returns [None], and every caller's fallback -- do not erase, do
+   not filter, assume the worst -- is silently wrong rather than merely
+   conservative.  A type constructor whose kind cannot be read keeps its
+   dictionary arguments as if they were type arguments, which is how
+   [writer<list _, monoid_list _, unit>] came about.  Whether the module is
+   loaded depends only on what has been extracted *before*, so the same
+   definition would come out differently depending on the order requests
+   happened to arrive in. *)
+let lookup_lid_typ (st:state) (l:Ident.lident) : ML (option ((universes & typ) & Range.range)) =
+  ensure_lid_available st l;
+  TcEnv.try_lookup_lid (tcenv st) l
+
 (* -------------------------------------------------------------------- *)
 (* Names                                                                *)
 (* -------------------------------------------------------------------- *)
@@ -516,29 +546,64 @@ let spec_suffix (st:state) (lstr:string) (args:list (int & term)) (n:int)
 
 let eff_of_comp (st:state) (c:comp) : ML eff = Effects.of_comp (tcenv st) c
 
+(* One step of abbreviation unfolding.  Custard emits an abbreviation as a
+   name (section 5.5), but a name is not a shape: to apply arguments to a
+   value of an abbreviated function type, or to read the effects of doing so,
+   the arrow behind the name has to be recovered. *)
+let unfold_abbrev (st:state) (ty:cty) : ML (option cty) =
+  match ty with
+  | TApp (n, args) ->
+    (match SMap.try_find st.abbrevs (string_of_name n) with
+     | Some (ps, body) ->
+       let rec zip (ps:list string) (ts:list cty) : list (string & cty) =
+         match ps, ts with
+         | p :: ps, t :: ts -> (p, t) :: zip ps ts
+         | p :: ps, [] -> (p, TAny) :: zip ps []
+         | [], _ -> [] in
+       Some (subst_cty (zip ps args) body)
+     | None -> None)
+  | _ -> None
+
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
    parameter, or a local closure -- gets its effect: there is no declaration to
    consult, only the type.  When the type is not arrow-shaped (typically
    [TAny]) we have to assume the worst, or section 7.3 would let us drop a call
    we know nothing about. *)
-let rec apply_eff (ty:cty) (n:int) : ML eff =
+let rec apply_eff (st:state) (ty:cty) (n:int) : ML eff =
   if n <= 0 then E_Pure
   else
     match ty with
-    | TArrow (_, e, r) -> join_eff e (apply_eff r (n - 1))
-    | _ -> E_Impure
+    | TArrow (_, e, r) -> join_eff e (apply_eff st r (n - 1))
+    | _ ->
+      match unfold_abbrev st ty with
+      | Some ty -> apply_eff st ty n
+      | None -> E_Impure
 
-let rec apply_result (ty:cty) (n:int) : ML cty =
+let rec apply_result (st:state) (ty:cty) (n:int) : ML cty =
   if n <= 0 then ty
   else
     match ty with
-    | TArrow (_, _, r) -> apply_result r (n - 1)
-    | _ -> TAny
+    | TArrow (_, _, r) -> apply_result st r (n - 1)
+    | _ ->
+      match unfold_abbrev st ty with
+      | Some ty -> apply_result st ty n
+      | None -> TAny
 
 (* -------------------------------------------------------------------- *)
 (* Requests                                                             *)
 (* -------------------------------------------------------------------- *)
+
+(* Remember an abbreviation's definition so that {!unfold_abbrev} can see
+   through it later.  Recorded for imported declarations too: an upstream
+   unit's abbreviation is just as opaque to a use site here. *)
+let note_abbrev (st:state) (d:decl) : ML unit =
+  match d with
+  | DType t ->
+    (match t.dt_body with
+     | TAbbrev body -> SMap.add st.abbrevs (string_of_name t.dt_name) (t.dt_params, body)
+     | _ -> ())
+  | _ -> ()
 
 (* Section 3.3, step 3: this is where the demand-driven loop lives. *)
 let rec request (st:state) (k:spec_key) : ML name =
@@ -583,6 +648,7 @@ let rec request (st:state) (k:spec_key) : ML name =
                 extract_lid st l nm k.sk_subst k.sk_holes) in
       st.chain := saved;
       SMap.add st.emitted key d;
+      note_abbrev st d;
       st.order := key :: !st.order;
       nm
 
@@ -616,6 +682,7 @@ and import (st:state) (key:string) : ML (option name) =
     in
     let nm = name_of_decl d in
     SMap.add st.names key nm;
+    note_abbrev st d;
     st.imports := (d, e.ue_type) :: !st.imports;
     if Options.custard_dump_specializations () then
       BU.print2 "Custard: %s comes from unit %s\n" key u;
@@ -697,8 +764,11 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
 and ty_of_typ (st:state) (t:typ) : ML cty =
   let t = SS.compress t in
   match t.n with
-  | Tm_bvar b
-  | Tm_name b -> TVar (name_of_bv b)
+  | Tm_bvar b -> TVar (name_of_bv b)
+  (* A name of higher kind binds no target type parameter, so there is nothing
+     for a [TVar] to refer to; uniform compilation says [any] instead. *)
+  | Tm_name b ->
+    if Mono.is_type_param (tcenv st) (S.mk_binder b) then TVar (name_of_bv b) else TAny
 
   | Tm_uinst (t, _) -> ty_of_typ st t
 
@@ -740,8 +810,8 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
           (* A type constructor's arguments survive into the [cty] exactly when
              they are types: an index like the [n] of [vec n] has no
              counterpart in the target's type language. *)
-          let keep = match TcEnv.try_lookup_lid (tcenv st) (S.lid_of_fv fv) with
-                     | Some ((_, k), _) -> Mono.type_binders (tcenv st) k
+          let keep = match lookup_lid_typ st (S.lid_of_fv fv) with
+                     | Some ((_, k), _) -> Mono.type_params (tcenv st) k
                                            |> List.map (fun b -> not b)
                      | None -> [] in
           ty_of_fv st fv (drop_flagged keep args |> List.map fst)
@@ -800,7 +870,11 @@ and is_data_ctor (fv:fv) : ML bool =
   | _ -> false
 
 and expr_of_term (st:state) (t:term) : ML expr =
-  let t = SS.compress t in
+  (* [unlazy_emb] before anything else: reducing a closed arithmetic
+     expression leaves the result as an *embedding* rather than as a
+     constant, so [-1] arrives as a [Tm_lazy] and would otherwise fall
+     through to the erasure catch-all below and become [()]. *)
+  let t = SS.compress (U.unlazy_emb t) in
   match t.n with
   | Tm_constant c ->
     (match constant_of_sconst c with
@@ -811,7 +885,15 @@ and expr_of_term (st:state) (t:term) : ML expr =
   | Tm_name b ->
     (match lifted_ref st b with
      | Some e -> e
-     | None -> mk (EVar (name_of_bv b)) (ty_of_typ st b.sort) E_Pure)
+     | None ->
+       let ty = ty_of_typ st b.sort in
+       let ty =
+         if TAny? ty then
+           match SMap.try_find st.lettys (show b.index) with
+           | Some ty' -> ty'
+           | None -> ty
+         else ty in
+       mk (EVar (name_of_bv b)) ty E_Pure)
 
   | Tm_uinst (t, _) -> expr_of_term st t
 
@@ -857,14 +939,21 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let flags = match (SS.compress hd_term).n with
                    | Tm_name bv -> Mono.erased_binders (tcenv st) bv.sort
                    | _ -> [] in
-       let args = drop_flagged flags args |> List.map fst |> List.map (expr_of_term st) in
+       (* A head with no type to consult -- a [match], a lambda left over from
+          beta-reducing a specialized definition -- still must not be given
+          its type arguments: they are erased, and one left behind is emitted
+          as an unbound term variable. *)
+       let args = drop_flagged flags args
+                  |> List.filter (fun (a, _) ->
+                       not (Mono.is_type_term (tcenv st) a)) in
+       let args = args |> List.map fst |> List.map (expr_of_term st) in
        (match args with
         | [] -> hd
         | _ ->
           let n = List.length args in
           let e = List.fold_left (fun e a -> join_eff e a.eff)
-                                 (join_eff hd.eff (apply_eff hd.ty n)) args in
-          mk (EApp (hd, args)) (apply_result hd.ty n) e))
+                                 (join_eff hd.eff (apply_eff st hd.ty n)) args in
+          mk (EApp (hd, args)) (apply_result st hd.ty n) e))
 
   | Tm_let {lbs=(true, lbs); body} -> lift_letrec st lbs body
 
@@ -895,8 +984,14 @@ and expr_of_term (st:state) (t:term) : ML expr =
        if e1.eff = E_Pure then
          SMap.add st.letdefs (show bv.index) lb.lbdef
        else SMap.add st.effletdefs (show bv.index) ();
+       (* The annotation the typechecker left is authoritative when it says
+          anything at all; a [--lax] run often leaves nothing, and then the
+          right-hand side's own type is the better answer. *)
+       let lty = ty_of_typ st lb.lbtyp in
+       let lty = if TAny? lty then e1.ty else lty in
+       SMap.add st.lettys (show bv.index) lty;
        let e2 = expr_of_term st body in
-       mk (ELet (name_of_bv bv, ty_of_typ st lb.lbtyp, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
+       mk (ELet (name_of_bv bv, lty, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
      | Inr _ ->
        (* A top-level binding cannot appear here. *)
        expr_of_term st body)
@@ -955,7 +1050,7 @@ and lifted_ref (st:state) (b:S.bv) : ML (option expr) =
        (* A partial application builds a closure, so it runs nothing: the
           lifted function always has at least the binders it was written
           with left over. *)
-       Some (mk (EApp (hd, args)) (apply_result ty n) E_Pure))
+       Some (mk (EApp (hd, args)) (apply_result st ty n) E_Pure))
 
 and is_type_bv (st:state) (b:S.bv) : ML bool =
   Mono.is_type_binder (tcenv st) (S.mk_binder b)
@@ -999,7 +1094,11 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
     let free = expand 100 free in
     let free = dedup free |> List.sortWith (fun (x:S.bv) (y:S.bv) -> x.index - y.index) in
     let tyvars, valvars = List.partition (is_type_bv st) free in
-    let typars = tyvars |> List.map name_of_bv in
+    (* A higher-kinded one is erased with the rest but is not a parameter the
+       target can bind ({!Mono.is_type_param}). *)
+    let typars = tyvars |> List.filter (fun (v:S.bv) ->
+                   Mono.is_type_param (tcenv st) (S.mk_binder v))
+                        |> List.map name_of_bv in
     let tyargs = typars |> List.map (fun v -> TVar v) in
     let caps = valvars |> List.map (fun (v:S.bv) ->
                  { b_name = name_of_bv v; b_ty = ty_of_typ st v.sort }) in
@@ -1013,7 +1112,10 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let n = (match SMap.try_find st.counts base with None -> 0 | Some n -> n) in
       SMap.add st.counts base (n + 1);
       let nm = { ns = ns; id = base; spec = (if n = 0 then None else Some (show n)) } in
-      let xs, _, _ = U.abs_formals lb.lbdef in
+      (* Opened exactly once: each [abs_formals] invents *fresh* names for the
+         binders it opens, so a second opening would give the body variables
+         that no binder here binds. *)
+      let xs, def_body, _ = U.abs_formals lb.lbdef in
       let ret, eff = local_result st lb.lbtyp xs in
       (* F* generalizes a local [let rec] just as it does a top-level one, so
          the definiens may bind type variables of its own.  They hold no
@@ -1028,9 +1130,8 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let ty = List.fold_right (fun (b:binder) (t, e) -> (TArrow (b.b_ty, e, t), E_Pure))
                                binders (ret, eff) |> fst in
       SMap.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty, free);
-      (lb, nm, binders, ret, eff, own_typars)) in
-    entries |> List.iter (fun (lb, nm, binders, ret, eff, own_typars) ->
-      let _, def_body, _ = U.abs_formals lb.lbdef in
+      (nm, binders, ret, eff, own_typars, def_body)) in
+    entries |> List.iter (fun (nm, binders, ret, eff, own_typars, def_body) ->
       let d = DLet {
         dl_name    = nm;
         dl_typars  = typars @ own_typars;
@@ -1040,7 +1141,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
         dl_body    = expr_of_term st def_body;
         (* Provisional, exactly as for a top-level definition: [Simplify.scc]
            recomputes it from the final call graph. *)
-        dl_flags   = [Rec (entries |> List.map (fun (_, nm, _, _, _, _) -> nm))];
+        dl_flags   = [Rec (entries |> List.map (fun (nm, _, _, _, _, _) -> nm))];
       } in
       (* Not a specialization of anything -- no source lid names it -- so it
          gets a key of its own, which nothing will ever request. *)
@@ -1107,7 +1208,7 @@ and drop_flagged (#a:Type) (flags:list bool) (xs:list a) : ML (list a) =
    at runtime. *)
 and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
   let l = S.lid_of_fv fv in
-  if erasable_app st (TcEnv.try_lookup_lid (tcenv st) l) (List.length args)
+  if erasable_app st (lookup_lid_typ st l) (List.length args)
   then unit_expr
   else
     match Builtins.lookup_rule l with
@@ -1145,7 +1246,7 @@ and erasable_result (st:state) (ty:typ) (n_args:int) : ML bool =
    under-applied use has to be eta-expanded rather than passed along. *)
 and prim_app (st:state) (l:Ident.lident) (n:int)
              (f : list cty -> list expr -> ML expr) (args:args) : ML expr =
-  let decl_ty = match TcEnv.try_lookup_lid (tcenv st) l with
+  let decl_ty = match lookup_lid_typ st l with
                 | Some ((_, ty), _) -> Some ty
                 | None -> None in
   let flags = match decl_ty with
@@ -1156,10 +1257,20 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
      are collected separately rather than reconstructed from it. *)
   let tyargs = match decl_ty with
                | Some ty ->
-                 keep_flagged (Mono.type_binders (tcenv st) ty) args
+                 keep_flagged (Mono.type_params (tcenv st) ty) args
                  |> List.map fst |> List.map (ty_of_typ st)
                | None -> [] in
-  let args = drop_flagged flags args |> List.map fst |> List.map (expr_of_term st) in
+  (* A rule may fire for a name the environment cannot type -- [FStar.Custard]
+     is not among the modules a whole-program run loads, so [dyn] arrives with
+     no declaration at all.  [flags] is then empty and the type arguments would
+     survive into the value spine, where the rule takes one of them for its
+     own argument and applies the result to the rest: [dyn e] came out as
+     [() e].  With nothing to consult, the terms decide, exactly as in the
+     application case above. *)
+  let args = if None? decl_ty
+             then args |> List.filter (fun (a, _) -> not (Mono.is_type_term (tcenv st) a))
+             else drop_flagged flags args in
+  let args = args |> List.map fst |> List.map (expr_of_term st) in
   let given, extra =
     if List.length args <= n then args, []
     else List.splitAt n args in
@@ -1186,9 +1297,9 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
     let e = f tyargs given in
     match extra with
     | [] -> e
-    | _ -> mk (EApp (e, extra)) (apply_result e.ty (List.length extra))
+    | _ -> mk (EApp (e, extra)) (apply_result st e.ty (List.length extra))
               (List.fold_left (fun x a -> join_eff x a.eff)
-                              (apply_eff e.ty (List.length extra)) extra)
+                              (apply_eff st e.ty (List.length extra)) extra)
 
 (* Which of a constructor's arguments do not survive, positionally.
 
@@ -1204,7 +1315,7 @@ and ctor_dropped_flags (st:state) (l:Ident.lident) : ML (list bool) =
   let n_params = match TcEnv.lookup_sigelt (tcenv st) l with
                  | Some { sigel = Sig_datacon {num_ty_params} } -> num_ty_params
                  | _ -> 0 in
-  match TcEnv.try_lookup_lid (tcenv st) l with
+  match lookup_lid_typ st l with
   | Some ((_, ty), _) ->
     Mono.erased_binders (tcenv st) ty
     |> List.mapi (fun i erased -> erased || i < n_params)
@@ -1220,7 +1331,7 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
   then
     let nm = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
     let flags = ctor_dropped_flags st l in
-    let ufs = match TcEnv.try_lookup_lid (tcenv st) l with
+    let ufs = match lookup_lid_typ st l with
               | Some ((_, ty), _) -> Mono.unit_binders (tcenv st) ty
               | None -> [] in
     mk (ECtor (nm, value_args st (drop_flagged flags ufs) (drop_flagged flags args)))
@@ -1242,21 +1353,32 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
        arguments, so everything left is passed at runtime. *)
     let rest = value_args st (call_unit_flags st l cs args) rest in
     (* Section 3.2c: the values abstracted out of the [Mono] arguments are
-       passed after the [Poly] ones, in the order [specialize] binds them. *)
-    let rest = rest @ List.map (fun (v:S.bv) -> expr_of_term st (S.bv_to_name v)) holes in
+       passed *first*, in the order [specialize] binds them.
+
+       First and not last, because neither end of the spine is otherwise
+       stable.  A definition whose result type is an abbreviation hiding an
+       arrow -- [f_term : {| lvm m |} -> endo m term], with [endo m a = a -> ML
+       (m a)] -- has fewer binders in its type than a saturated call has
+       arguments, so holes appended to the spine would land after the ones the
+       body's own lambdas bind; and a use that supplies fewer arguments than
+       there are [Poly] binders -- [map_optM f_aqual], where [f_aqual]'s own
+       argument is the one [map_optM] will pass -- would put them too early.
+       Only the front is the same position in both. *)
+    let hargs = List.map (fun (v:S.bv) -> expr_of_term st (S.bv_to_name v)) holes in
+    let rest = hargs @ rest in
     match rest with
     | [] -> hd
     | _ ->
       let e = List.fold_left (fun e a -> join_eff e a.eff)
                              (callee_eff st (string_of_key key) (List.length rest)) rest in
-      mk (EApp (hd, rest)) (apply_result hd_ty (List.length rest)) e
+      mk (EApp (hd, rest)) (apply_result st hd_ty (List.length rest)) e
 
 (* A constructor application's type is the constructor's result type with the
    inductive's parameters instantiated -- which the spine supplies, since the
    parameters come first.  karamel needs it: [ECons] carries the type of the
    value being built, and an [any] there makes its datatype passes fail. *)
 and ctor_result_ty (st:state) (l:Ident.lident) (spine:args) : ML cty =
-  match TcEnv.try_lookup_lid (tcenv st) l with
+  match lookup_lid_typ st l with
   | None -> TAny
   | Some ((_, ty), _) ->
     let bs, c = U.arrow_formals_comp ty in
@@ -1280,7 +1402,7 @@ and value_args (st:state) (ufs:list bool) (spine:args) : ML (list expr) =
 (* [Mono.unit_binders] restricted to the arguments a call actually passes, in
    the order [split_mono_args] leaves them. *)
 and call_unit_flags (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : ML (list bool) =
-  let ub = match TcEnv.try_lookup_lid (tcenv st) l with
+  let ub = match lookup_lid_typ st l with
            | Some ((_, ty), _) -> Mono.unit_binders (tcenv st) ty
            | None -> [] in
   let rec go (cs:list bclass) (uf:list bool) (sp:args) : ML (list bool) =
@@ -1298,7 +1420,7 @@ and call_unit_flags (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : 
    in [dl_typars]: source order, restricted to the type binders that survived
    as parameters rather than being specialized away. *)
 and call_type_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : ML (list cty) =
-  let tflags = match TcEnv.try_lookup_lid (tcenv st) l with
+  let tflags = match lookup_lid_typ st l with
                | Some ((_, ty), _) -> Mono.type_binders (tcenv st) ty
                | None -> [] in
   let rec go (cs:list bclass) (tf:list bool) (sp:args) : ML (list cty) =
@@ -1600,7 +1722,7 @@ and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
      and every other arithmetic primitive, which are all [Tot].  [apply_eff]
      still answers [E_Impure] when the type is not an arrow, so a symbol we
      genuinely know nothing about ([dx_ty = TAny]) stays opaque. *)
-  | Some (DExternal x) -> apply_eff x.dx_ty n_args
+  | Some (DExternal x) -> apply_eff st x.dx_ty n_args
   | _ -> E_Pure
 
 and branch_of_branch (st:state) (br:S.branch) : ML branch =
@@ -1778,7 +1900,7 @@ and with_realized (d:decl) : ML decl =
    erasure handles them as usual. *)
 and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
   : ML (list string & cty) =
-  match TcEnv.try_lookup_lid (tcenv st) l with
+  match lookup_lid_typ st l with
   | None -> ([], TAny)
   | Some ((_, ty), _) ->
     let cs = binder_classes st l in
@@ -1807,7 +1929,7 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
     let c = SS.subst_comp subst c in
     let typars = keep |> List.collect (fun b ->
                    let n = name_of_bv b.binder_bv in
-                   if is_type_binder (tcenv st) b && not (List.mem n anys) then [n] else []) in
+                   if Mono.is_type_param (tcenv st) b && not (List.mem n anys) then [n] else []) in
     (* Built from [keep] rather than by handing [U.arrow keep c] to
        {!ty_of_typ}: rebuilding the arrow closes its binders, and reopening
        them names them afresh, so the [TVar]s in the result would no longer be
@@ -1853,7 +1975,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
          be the same type constructor. *)
       let bs, _ = U.arrow_formals t in
       let ps = bs |> List.collect (fun b ->
-                 if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+                 if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []) in
       DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
               dt_flags = (if is_erasable st se || is_prop_sig st t
                           then [Erased] else []) }
@@ -1930,10 +2052,27 @@ and is_prop_sig (st:state) (t:typ) : ML bool =
 
 and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
   let bs, body, _ = U.abs_formals lb.lbdef in
+  (* An abbreviation may be *under-abstracted*: [let mymon = writer (list
+     primitive_step)] has kind [Type -> Type] but no binders at all.  The IR
+     has no partial application of a type constructor, so the missing
+     arguments have to become binders here; left alone, the abbreviation is
+     emitted with fewer parameters than its uses supply, and resolving it
+     leaves the *definition's* own parameters free.  Section 5.5. *)
+  let bs, body =
+    let kbs, _ = U.arrow_formals lb.lbtyp in
+    let n = List.length kbs - List.length bs in
+    if n <= 0 then bs, body
+    else
+      let extra = List.splitAt (List.length kbs - n) kbs |> snd
+                  |> List.map (fun (b:S.binder) ->
+                       S.mk_binder (S.new_bv None b.binder_bv.sort)) in
+      let args = extra |> List.map (fun (b:S.binder) -> S.as_arg (S.bv_to_name b.binder_bv)) in
+      bs @ extra, U.mk_app body args
+  in
   DType {
     dt_name   = nm;
     dt_params = bs |> List.collect (fun b ->
-                  if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []);
+                  if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []);
     dt_body   = TAbbrev (ty_of_typ st body);
     dt_flags  = [];
   }
@@ -1992,8 +2131,9 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
            ((S.bv_to_name bv, U.aqual_of_binder b) :: spine) (b' :: poly) (cls :: polycs)
   in
   let spine, poly, polycs, c = go 0 bs cs [] [] [] [] in
-  let poly = poly @ hbs in
-  let polycs = polycs @ List.map (fun _ -> Poly) hbs in
+  (* Before the [Poly] binders: see the call site in {!app_of_fv'}. *)
+  let poly = hbs @ poly in
+  let polycs = List.map (fun _ -> Poly) hbs @ polycs in
   let applied = match spine with [] -> def | _ -> U.mk_app def spine in
   (* The chain in the error names the definition, so "a body" is enough. *)
   let body = norm_bounded st "a definition body" custard_norm_steps applied in
@@ -2042,7 +2182,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      karamel backend resolves [TVar]s against this list, so they have to be
      recorded even though they take no runtime argument. *)
   let typars = bs |> List.collect (fun b ->
-                 if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+                 if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []) in
   let bs = drop_flagged flags bs in
   (* A type binder that survived [drop_flagged] is the one {!Mono.keep_thunk}
      put back so that the definition does not become a value.  It carries no
@@ -2123,7 +2263,7 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
   (* Only the *type* parameters become parameters of the target type; a value
      index has no counterpart in the target's type language. *)
   let ty_params = params |> List.collect (fun b ->
-                    if is_type_binder (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+                    if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []) in
   let ctor (c:Ident.lident) : ML (name & list (string & cty)) =
     let _, ty = TcEnv.lookup_datacon (tcenv st) c in
     let bs, _ = U.arrow_formals_comp ty in
@@ -2163,7 +2303,7 @@ let dump_specializations (st:state) : ML unit =
   BU.print1 "  (total: %s)\n" (show (SMap.fold st.counts (fun _ n acc -> acc + n) 0))
 
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML program =
-  let mark (f:flag) (l:Ident.lident) : ML unit =
+  let mark' (quiet:bool) (f:flag) (l:Ident.lident) : ML unit =
     let key = string_of_key { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
     let _ = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
     (* Mark the root so backends know which symbols must survive.  A type is
@@ -2178,6 +2318,7 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML pro
     | Some (DExternal d) ->
       SMap.add st.emitted key (DExternal { d with dx_flags = f :: d.dx_flags })
     | Some _ -> ()
+    | None when quiet -> ()
     | None ->
       (* Nothing was emitted for this root.  The driver's own check cannot see
          entry points in modules it has not loaded, so this is where a
@@ -2187,8 +2328,57 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident) : ML pro
               " did not produce a declaration.");
         text "It may be misspelled, or erased, or not defined in the module named."
       ] in
+  let mark = mark' false in
+  (* An entry point may name a *module* rather than a declaration.  That is the
+     only way to reach a module that exists purely for its side effects -- 
+     [FStarC.Hooks] defines nothing anyone calls and does nothing but install
+     callbacks -- which the demand-driven loop would otherwise never load, and
+     whose absence turns into a run-time failure ("callback not yet set")
+     rather than a compile-time one. *)
+  let modroots, roots =
+    roots |> List.partition (fun (l:Ident.lident) ->
+               Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l))) in
+  modroots |> List.iter (fun (l:Ident.lident) ->
+    st.env := Loader.ensure_loaded st.deps (tcenv st) (Ident.string_of_lid l));
   roots |> List.iter (mark Root);
   (match main with Some l -> mark Entrypoint l | None -> ());
+  (* A top-level [let] whose definiens is *effectful* is a module initializer:
+     [let _ = clear ()] in [FStarC.Options], [let _ = register_pass ...] in
+     [FStarC.Syntax.Resugar].  Nothing in the program refers to it, so the
+     demand-driven loop never reaches it, and dropping it silently changes what
+     the program does -- the registration never happens.  So once the closure
+     is complete, every module it pulled in contributes its initializers, and
+     that may pull in more modules, hence the fixpoint.
+
+     Order: an initializer is requested after everything it can call, so it
+     lands at the end of [st.order], and OCaml runs the emitted [let]s in the
+     order they appear.  Across a split, the linker runs each unit's in
+     dependency order.  What is *not* guaranteed is the order of two
+     initializers in unrelated modules; F* gives no meaning to that either. *)
+  let seen_inits : SMap.t unit = SMap.create 100 in
+  let rec inits (fuel:int) : ML unit =
+    if fuel <= 0 then () else
+    let fresh = TcEnv.modules (tcenv st) |> List.collect (fun (md:S.modul) ->
+      let m = Ident.string_of_lid md.name in
+      match SMap.try_find seen_inits m with
+      | Some () -> []
+      | None -> SMap.add seen_inits m (); [md]) in
+    if Nil? fresh then () else begin
+      fresh |> List.iter (fun (md:S.modul) ->
+        md.declarations |> List.iter (fun (se:S.sigelt) ->
+          match se.sigel with
+          | Sig_let {lbs=(_, lbs)} ->
+            lbs |> List.iter (fun lb ->
+              match lb.lbname with
+              | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) ->
+                (* An initializer may erase to nothing at all, which is fine
+                   and is not the user naming a missing entry point. *)
+                mark' true Root (S.lid_of_fv fv)
+              | _ -> ())
+          | _ -> ()));
+      inits (fuel - 1)
+    end in
+  inits 100;
   if Options.custard_dump_specializations () then dump_specializations st;
   List.rev !st.order |> List.collect (fun key ->
     match SMap.try_find st.emitted key with
