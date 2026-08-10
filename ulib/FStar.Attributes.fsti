@@ -442,6 +442,21 @@ val custard_extern (target: string) : unit
 (** Custard: the C header that declares a [custard_extern] symbol. *)
 val custard_c_header (header: string) : unit
 
+(** Custard: written on a [tcclass], this says that its instances are ordinary
+    runtime values rather than compile-time dictionaries, so an argument of
+    this class type is passed at run time instead of being specialized on (see
+    doc/ref/custard.md, section 3.1).
+
+    The class mechanism is how F* *resolves* such a value at elaboration time,
+    and monomorphizing on the result is normally the right answer -- it is what
+    turns a dictionary into direct calls.  But some classes exist only to make
+    resolution convenient for values that are built, stored and passed at run
+    time anyway: [FStarC.Syntax.Embeddings.Base.embedding] is one, and
+    [e_list e_sigelt] is a value the compiler computes.  Specializing on those
+    is not an optimization, it is a category error, and it makes every function
+    that takes one -- [unembed], say -- reject its own callers. *)
+val custard_no_monomorphize : unit
+
 (** Custard: compile this type from its F* definition, but treat its
     representation as fixed elsewhere, so that the layout analysis neither
     erases it nor collapses it as a newtype (see doc/ref/custard.md, 5.2). *)

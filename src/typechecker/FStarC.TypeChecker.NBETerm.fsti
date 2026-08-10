@@ -228,6 +228,9 @@ type nbe_cbs = {
    translate : term -> ML t;
 }
 
+(* See the note on the syntax embeddings' class in
+   FStarC.Syntax.Embeddings.Base: an embedding is a runtime value. *)
+[@@FStar.Attributes.custard_no_monomorphize]
 class embedding (a:Type0) = {
   em  : nbe_cbs -> a -> ML t;
   un  : nbe_cbs -> t -> ML (option a);

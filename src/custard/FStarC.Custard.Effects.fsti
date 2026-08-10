@@ -54,3 +54,35 @@ val result_typ : TcEnv.env -> comp -> ML typ
     promotion of section 7.2: [a -> stt b p q] is impure even though its F*
     effect name is [Tot]. *)
 val of_comp : TcEnv.env -> comp -> ML eff
+
+(** {1 Reification}
+
+    A *reifiable* effect -- one whose [effect_extraction_mode] is
+    [Extract_reify] -- is not compiled as an effect at all: it is compiled
+    through its representation type.  ulib's [Tac] is the case that matters.
+    Its representation is
+
+      [tac_repr a wp = ref_proofstate -> Dv a]
+
+    so [string -> Tac (list sigelt)] is compiled as
+    [string -> (ref_proofstate -> list sigelt)] -- which is exactly
+    [FStarC.Tactics.Monad.tac], the type the compiler's own tactics and the
+    hand-written [ulib/ml/plugin] realizations already have.  Getting this
+    wrong is not a matter of taste: compiling the effect away instead would
+    leave the proofstate nowhere, and the two halves of the tactic engine
+    would disagree about every call.
+
+    Section 7.5. *)
+
+(** Is [l] an effect Custard reaches through its representation? *)
+val is_reifiable : TcEnv.env -> Ident.lident -> ML bool
+
+(** The representation type of a reifiable computation: [Tac int] becomes
+    [ref_proofstate -> Dv int].  Only call it when {!is_reifiable} holds of the
+    computation's effect. *)
+val reify_comp : TcEnv.env -> comp -> ML typ
+
+(** [maybe_reify env t l] is [t] when [l] is not reifiable, and otherwise the
+    term [t] reified: [reify t] with the effect combinators unfolded, which is
+    a term of the representation type. *)
+val maybe_reify : TcEnv.env -> term -> Ident.lident -> ML term

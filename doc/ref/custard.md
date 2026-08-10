@@ -403,6 +403,23 @@ The classification is a function of the *definition*, computed once and cached.
    the fixpoint, so that rule 5 still gets the chance to promote it to `Mono`.
 7. Otherwise `Poly`.
 
+**Opting a class out.**  Rule 2 says that a dictionary is known statically, and
+for a type class that is what a type class is for.  But `tcclass` is also used
+for things that are only *resolved* like classes and are otherwise perfectly
+ordinary runtime values.  `FStarC.Syntax.Embeddings.Base.embedding` is the case
+that forced the issue: an `embedding a` is a record of functions, built at run
+time — `e_list e_sigelt` is a *call* — and passed around in lists and tables.
+Made `Mono` it is unspecializable, and the extraction stops with error 363 at
+the first binder whose embedding comes from a runtime parameter.
+
+So a class may carry `[@@FStar.Attributes.custard_no_monomorphize]`, and a
+binder whose head type constructor has it is `Poly`.  It beats the *inferred*
+`Mono` of rules 2, 3 (the definition-level `[@@monomorphize]`) and 4, and loses
+to a binder-level `[@@monomorphize]`, which is an explicit statement about that
+one binder.  It is not applied inside rule 5's fixpoint: an opted-out binder
+free in the type of a `Mono` binder is still promoted, because that promotion
+is what makes the `Mono` binder's own type well-formed.
+
 `Mono` binders are removed from the specialized definition's signature and
 replaced by their concrete arguments in the body.  `Poly` binders remain.
 
@@ -2653,10 +2670,11 @@ Every source computation type is mapped into this lattice by
 | a user effect with `Extract_none` | hard error, if reachable (code 365) |
 
 `Extract_reify` and `Extract_primitive` are not distinguished here.  Reification
-changes the *term* Custard extracts, not the drop/duplicate/reorder question,
-which is all `eff` is used for; Custard does not reify yet, and extracts a
-reifiable effect through its representation type, which is what the ML pipeline
-arrives at after reifying anyway.
+(§7.5) changes the *term* Custard extracts, and the type it gets, but not the
+drop/duplicate/reorder question, which is all `eff` is used for.  In fact after
+reification the reifiable effect has disappeared from the computation type
+entirely and what is left is the effect of the representation — `Dv` for `Tac`
+— so the row above describes a comp Custard only sees on its way past it.
 
 The three-way distinction comes from `TcUtil.effect_extraction_mode`
 (`src/typechecker/FStarC.TypeChecker.Util.fst:3288`, returning
@@ -2810,6 +2828,74 @@ easy cases, not in general.  So:
 
 Recovering scopes is a C-quality optimization, and "pretty C" is an explicit
 non-goal, so it is firmly optional.
+
+### 7.5 Reification
+
+An effect whose `effect_extraction_mode` is `Extract_reify` is not compiled as
+an effect at all.  It is compiled through its **representation type**, and the
+only effect that survives into the IR is the one the representation itself
+carries.  ulib's `Tac` is the case that matters:
+
+```
+  let tac_repr (a:Type) (wp:tac_wp_t a) = ref_proofstate -> Dv a
+```
+
+so a metaprogram
+
+```
+  val mk_class : string -> Tac (list sigelt)
+```
+
+is compiled as
+
+```
+  mk_class : string -> (ref_proofstate -> list sigelt)
+```
+
+— a *pure* function of the string, returning a closure that expects the
+proofstate, whose application is impure.  Note where the effect went: applying
+`mk_class` to its own argument builds a closure and runs nothing, so the arrow
+that returns the representation is `E_Pure`, and the `E_Impure` reappears on
+the representation's own arrow, which `ty_of_typ` reads off it like any other.
+
+This is not a matter of taste.  Compiling the effect away instead — giving
+`mk_class : string -> list sigelt` — leaves the proofstate nowhere, and the
+proofstate is not an implementation detail of the tactic engine: it *is* the
+tactic engine's state, threaded explicitly because a metaprogram may fail, be
+backtracked, or be resumed.  Worse, it would leave the two halves of the
+compiler disagreeing.  `FStarC.Tactics.Monad.tac r`, which is an ordinary type
+abbreviation and which Custard already compiles correctly as `proofstate ref ->
+r`, is *the same type* as `tac_repr r wp`; every hand-written realization under
+`ulib/ml/plugin` has it in its signature, and so does every
+`mk_tactic_interpretation_N` a plugin registration goes through.  A Custard that
+did not reify could not link a tactic against the engine that runs it.
+
+Three places implement it, mirroring the ML pipeline
+(`FStarC.Extraction.ML.Term.fst:656`):
+
+- **Types.**  `ty_of_typ`'s `Tm_arrow` case asks `Effects.is_reifiable` about
+  the codomain's effect, and if so replaces the codomain by
+  `Effects.reify_comp` — `TcEnv.reify_comp env c U_unknown` — and marks the
+  arrow `E_Pure`.
+- **Terms.**  `expr_of_term`'s `Tm_abs` case, and `extract_letbinding` for a
+  definition's body, wrap the body in `reify` against the residual effect the
+  binders were opened with, and normalize with `TcUtil.norm_reify`.  That
+  reduction has to finish the job: `reify e` is only a marker, and what makes
+  the result a term of the representation type is unfolding the effect's `bind`
+  and `return`.
+- **Leftovers.**  A `reify` written by hand — the tactic library does — arrives
+  as `Tm_constant (Const_reify (Some l))` at the head of an application, and is
+  performed on the spot in `expr_of_term`'s `Tm_app` case.  It is not a
+  function and has no value of its own, so leaving it alone would emit an
+  application of `()`.
+
+The reification is deliberately *not* folded into `custard_norm_steps`.  A
+`reify` has to be introduced against the effect that a particular term is known
+to have, which is a piece of information the normalizer does not carry, and
+enabling `Reify` globally would only unfold the `reify`s that were already
+there.
+
+`tests/custard/Reify.fst` pins the shape of the output.
 
 ---
 
@@ -4221,5 +4307,6 @@ cannot read a dune-built one's `.checked` files.
 | M10k | Advancing the extracted-compiler build (§12.10) | Done.  Five code-generation bugs: a retained *type* binder passed as a runtime argument (`Mono.keep_thunk`/`unit_binders`, now typed `unit` so no `Obj.magic` is generated); a lambda-lifted local not receiving the captures of the lifted locals it calls; a lambda-lifted local keeping its own generalized type binders as value parameters instead of `dl_typars`; an eta-contracted abbreviation (`uvars = FlatSet.t ctx_uvar` through `t = flat_set`) unfolded with its own parameter still free, in both `Layout.resolve` and `Monomorphize.unfold_cty`; and a definition whose declared type hides its arrows behind an abbreviation (`let get : st ctxt = fun s -> ...`).  A *type* can now be a `--custard_entry`, which is how a realization gets at an abbreviation Custard unfolds rather than emits: `Extract.run` flags a `DType` root and `Driver.check_entrypoints` no longer rejects an entry whose module the on-demand loader has not reached.  `tests/custard/PolyVal.fst` and `TypeEntry.fst` |
 | M10l | **The extracted compiler builds and runs** (§12.10) | Done.  A Custard-extracted `fstar.exe` verifies `FStar.List.Tot.Properties` from source and reports the same errors as the dune-built one.  What it took beyond M10k: **module initializers** --- an effectful top-level `let` is a root, and every loaded module contributes its own (§4.4), without which `FStarC.Options`' `let _ = clear ()` never ran; a `--custard_entry` that names a *module*, the only way to reach `FStarC.Hooks`, which exists solely for its side effects; and six codegen bugs, each listed in §12.10: a `ref` printed as an array (`lettys` and abbreviation unfolding), `-1` erased to `()` because the normalizer returns it as a `Tm_lazy` embedding, load-order-dependent extraction (`lookup_lid_typ`), an under-abstracted abbreviation, two lambda-lifted binders collapsed into one because `lift_letrec` opened the definiens twice, and OCaml record expressions resolving to the wrong record type.  `tests/custard/Literals.fst`, `Mymon.fst`, `Patlift.fst` |
 | M10m | **Build integration** (§12.11): `make custard`, `mk/custard.mk`, `src/custard/entrypoints.txt` | Done.  Builds a Custard-extracted `fstar.exe` into `stagec/` from a stage 2 compiler, driving `menhir --infer` against Custard's own interfaces rather than borrowing the dune build's answer, and generating `FStarC_Version.ml` itself because Custard mangles `_version` to `u__version`.  `make custard-smoke` runs it. |
+| M10n | **Reification** (§7.5) and the `custard_no_monomorphize` class opt-out (§3.1) | Done.  `Tac` is compiled through `tac_repr a wp = ref_proofstate -> Dv a`, in `Effects.{is_reifiable,reify_comp,maybe_reify}` and three call sites in `Extract`; `tests/custard/Reify.fst`.  The opt-out is what makes `embedding` a runtime value again, which reification and plugin registration both need. |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

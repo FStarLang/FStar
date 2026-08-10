@@ -88,3 +88,28 @@ let of_comp (env:TcEnv.env) (c:comp) : ML eff =
      every function of that type -- including one reached through a [Poly]
      binder, which is the whole point. *)
   if head_is_impure_marker env (U.comp_result c) then E_Impure else e
+
+(* -------------------------------------------------------------------- *)
+(* Reification (section 7.5)                                            *)
+(* -------------------------------------------------------------------- *)
+
+let is_reifiable (env:TcEnv.env) (l:Ident.lident) : ML bool =
+  match TcUtil.effect_extraction_mode env l with
+  | S.Extract_reify -> true
+  | _ -> false
+
+(* The steps are the ML extraction's, deliberately: this reduction has to
+   *finish the job*.  [reify e] is only a marker, and what makes it a term of
+   the representation type is unfolding the effect's [bind] and [return], which
+   is what [norm_reify] is for.  Leaving a [Tm_constant Const_reify] in the
+   term would reach the translator as a node it has no meaning for. *)
+let reify_steps : list TcEnv.step =
+  [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe]
+
+let reify_comp (env:TcEnv.env) (c:comp) : ML typ =
+  TcEnv.reify_comp env c S.U_unknown
+
+let maybe_reify (env:TcEnv.env) (t:term) (l:Ident.lident) : ML term =
+  if is_reifiable env l
+  then TcUtil.norm_reify env reify_steps (U.mk_reify t (Some l))
+  else t

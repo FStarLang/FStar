@@ -59,6 +59,21 @@ let is_tcclass_binder (env:TcEnv.env) (b:binder) : ML bool =
   | Tm_fvar fv -> TcEnv.fv_has_attr env fv PC.tcclass_lid
   | _ -> false
 
+(* Rule 2's opt-out.  [@@custard_no_monomorphize] on the class says that its
+   instances are runtime values and not compile-time dictionaries, which is the
+   truth about [embedding]: [e_list e_sigelt] is computed, stored and passed
+   around like any other value, and there is nothing to specialize on.  Without
+   the opt-out every function that takes one -- [unembed] is the one that
+   matters -- rejects each of its callers under section 3.2b.
+
+   It is the *binder's type* that is consulted, not how the binder was written,
+   so it applies to a [{| |}] binder and an explicit one alike. *)
+let is_unspecializable_binder (env:TcEnv.env) (b:binder) : ML bool =
+  let hd, _ = U.head_and_args_full (U.unrefine (SS.compress b.binder_bv.sort)) in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv -> TcEnv.fv_has_attr env fv PC.custard_no_monomorphize_attr
+  | _ -> false
+
 (* Does this sort classify types rather than values -- [Type], but also
    [Type -> Type], the kind of the [m] in [class monad (m:Type -> Type)]?
 
@@ -246,8 +261,15 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
   let init (b:binder) : ML bclass =
     if is_dropped_binder env b || is_unit_binder b                (* rule 1 *)
     then Dropped
-    else if all_mono                                                   (* rule 3 *)
-    || U.has_attribute b.binder_attrs PC.monomorphize_attr        (* rule 3 *)
+    else if U.has_attribute b.binder_attrs PC.monomorphize_attr   (* rule 3 *)
+    then Mono
+    (* Rule 2's opt-out beats the rules that infer [Mono], and loses to the
+       one that is written on the binder itself: a class can say that it is
+       not a compile-time dictionary, but it cannot overrule a specific
+       binder that asks to be specialized anyway. *)
+    else if is_unspecializable_binder env b
+    then Poly
+    else if all_mono                                              (* rule 3 *)
     || is_tcresolve_binder b                                      (* rule 2 *)
     || is_tcclass_binder env b                                    (* rule 2 *)
     || (mono_types && is_type_binder env b)                           (* rule 4 *)

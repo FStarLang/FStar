@@ -39,6 +39,7 @@ CUSTARD_TESTS += HigherKind
 CUSTARD_TESTS += Literals
 CUSTARD_TESTS += Patlift
 CUSTARD_TESTS += Mymon
+CUSTARD_TESTS += Reify
 # Section 5.0: [let mymon = writer (list int)] is an abbreviation of kind
 # [Type -> Type] that binds *no* binders.  The IR has no partial application
 # of a type constructor, so the abbreviation is eta-expanded from the binders
@@ -82,6 +83,15 @@ NOGREP_MonoDyn += dyn
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
+# Section 7.4: [Tac] is a reifiable effect, so it is compiled through its
+# representation type -- [tac_repr a wp = ref_proofstate -> Dv a] -- and not by
+# erasing the effect.  What is pinned is that the proofstate argument is there
+# and that the definition returning it is *pure*: applying a metaprogram to its
+# own arguments builds a closure and runs nothing.  [twice] is not reachable
+# from [main], so it is named as an entry point of its own.
+FLAGS_Reify = --custard_entry Reify.twice
+GREP_Reify += "let reify_add (x : Prims.int) : (fStar_Stubs_Tactics_Types_ref_proofstate -> Prims.int) ="
+GREP_Reify += "(fStar_Tactics_Effect_tac_bind (reify_add x) (fun tmp -> (reify_add tmp)))"
 # Section 12.3: --ugly is what made the old key printer collapse the two
 # 'tweak's into one key, so the test runs with it on.  A specialization key
 # must not depend on a printing option at all.

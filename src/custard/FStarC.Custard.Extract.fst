@@ -784,10 +784,18 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
 
   | Tm_arrow _ ->
     let bs, c = U.arrow_formals_comp t in
-    (* Section 7.2: a codomain of the form [stt b p q] contributes [b] as the
-       result type and promotes the arrow to [E_Impure]. *)
-    let res = ty_of_typ st (Effects.result_typ (tcenv st) c) in
-    let e = eff_of_comp st c in
+    (* Section 7.5: a reifiable codomain is replaced by its representation
+       type, which for [Tac a] is [ref_proofstate -> Dv a].  The arrow that
+       *returns* it is then pure -- applying the function yields a closure and
+       runs nothing -- and the effect reappears on the representation's own
+       arrow, which [ty_of_typ] reads off it like any other. *)
+    let res, e =
+      if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
+      then ty_of_typ st (Effects.reify_comp (tcenv st) c), E_Pure
+      else
+        (* Section 7.2: a codomain of the form [stt b p q] contributes [b] as
+           the result type and promotes the arrow to [E_Impure]. *)
+        ty_of_typ st (Effects.result_typ (tcenv st) c), eff_of_comp st c in
     let bs = drop_flagged (Mono.erased_binders (tcenv st) t) bs in
     (* The effect belongs to the last arrow only; the intermediate ones are the
        pure arrows a curried function is made of. *)
@@ -900,7 +908,15 @@ and expr_of_term (st:state) (t:term) : ML expr =
   | Tm_fvar fv -> app_of_fv st fv []
 
   | Tm_abs _ ->
-    let bs, body, _ = U.abs_formals t in
+    let bs, body, rc = U.abs_formals t in
+    (* Section 7.5: reify the body against the lambda's own residual effect,
+       before translating it.  After this the body is a term of the effect's
+       representation type -- a function expecting the proofstate -- and the
+       lambda is pure. *)
+    let body =
+      match rc with
+      | Some rc -> Effects.maybe_reify (tcenv st) body rc.residual_effect
+      | None -> body in
     let body = expr_of_term st body in
     let bs =
       let flags = bs |> List.map (Mono.is_erased_binder (tcenv st)) in
@@ -927,6 +943,16 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let hd, args = U.head_and_args_full t in
     (match (U.un_uinst hd).n with
      | Tm_fvar fv -> app_of_fv st fv args
+
+     (* Section 7.5: a [reify e] that survived the normalizer -- typically
+        because it was written by hand, as the tactic library does -- is
+        performed here.  It is not a function and has no value of its own; the
+        result is [e]'s representation, applied to whatever [reify e] was
+        applied to. *)
+     | Tm_constant (Const_reify (Some l)) when Cons? args ->
+       let e = Effects.maybe_reify (tcenv st) (args |> List.hd |> fst) l in
+       expr_of_term st (S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos)
+
      | _ ->
        let hd_term = hd in
        let erasable = match (SS.compress hd_term).n with
@@ -2146,7 +2172,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let saved_cur = !st.cur in
   st.cur := nm;
   let def, c, polycs, poly = specialize st lb.lbtyp lb.lbdef cs margs n_holes in
-  let bs, body, _ = U.abs_formals def in
+  let bs, body, rc = U.abs_formals def in
   (* [abs_formals] opens the binders under fresh names, but [c] still speaks of
      the ones [specialize] abstracted over.  Left unrelated, the two sets of
      names produce a signature whose result type mentions type variables no
@@ -2215,7 +2241,20 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
             TcEnv.UnfoldUntil S.delta_constant]
            res_typ
     else res_typ in
-  let eff, ret = peel n_extra (eff_of_comp st c) (ty_of_typ st res_typ) in
+  (* Section 7.5: a reifiable result type is replaced by its representation,
+     and the definition itself becomes pure -- what it now returns is the
+     closure the representation describes. *)
+  let eff, ret =
+    if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
+    then peel n_extra E_Pure (ty_of_typ st (Effects.reify_comp (tcenv st) c))
+    else peel n_extra (eff_of_comp st c) (ty_of_typ st res_typ) in
+  (* The body is reified against the residual effect of the lambdas
+     [abs_formals] just opened, which is what actually describes it; [c] only
+     agrees with it when there were no extra binders. *)
+  let body =
+    match rc with
+    | Some rc -> Effects.maybe_reify (tcenv st) body rc.residual_effect
+    | None -> Effects.maybe_reify (tcenv st) body (U.comp_effect_name c) in
   let dl_body = expr_of_term st body in
   st.cur := saved_cur;
   DLet {
