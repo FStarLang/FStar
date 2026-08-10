@@ -90,8 +90,11 @@ FLAGS_MonoTypes = --custard_monomorphize_types true
 # own arguments builds a closure and runs nothing.  [twice] is not reachable
 # from [main], so it is named as an entry point of its own.
 FLAGS_Reify = --custard_entry Reify.twice
-GREP_Reify += "let reify_add (x : Prims.int) : (fStar_Stubs_Tactics_Types_ref_proofstate -> Prims.int) ="
+GREP_Reify += "let reify_add (x : Prims.int) : (fStarC_Tactics_Types_ref_proofstate -> Prims.int) ="
 GREP_Reify += "(fStar_Tactics_Effect_tac_bind (reify_add x) (fun tmp -> (reify_add tmp)))"
+# Section 8.3: ulib's [FStar.Stubs.Tactics.Types] is a stub for the compiler's
+# own [FStarC.Tactics.Types], and the two have to be one name.
+NOGREP_Reify += "FStar_Stubs"
 # Section 12.3: --ugly is what made the old key printer collapse the two
 # 'tweak's into one key, so the test runs with it on.  A specialization key
 # must not depend on a printing option at all.
@@ -109,7 +112,7 @@ GREP_MonoTypes   = "type monoTypes_both__int" "type monoTypes_both__bool" \
                    "type prims_list__int" "type prims_list__list_int" \
                    "monoTypes_via_abbrev (p : monoTypes_both__int)" \
                    "type monoTypes_both__int = { fst : Prims.int; snd : Prims.int }" \
-                   "{ fst = (p).snd; snd = (p).fst }"
+                   "{ fst = ((p : monoTypes_both__int)).snd;"
 NOGREP_MonoTypes = "'" "Mkboth" "match p with"
 
 # Section 12.3: the two 'tweak's must get separate specializations, which they

@@ -91,6 +91,21 @@ let tuples : ref (SMap.t int) = mk_ref (SMap.create 0)
    [(_, _) t]. *)
 let record_params : ref (SMap.t int) = mk_ref (SMap.create 0)
 
+(* Which labels are actually contested: keyed by the label qualified with its
+   module, the number of record types in that module that declare it.  Only
+   those need the ascription, and leaving it off everywhere else keeps the
+   generated code readable.  Specializations count as separate types, so
+   [both__int] and [both__bool] do make [fst] ambiguous. *)
+let record_labels : ref (SMap.t int) = mk_ref (SMap.create 0)
+
+let label_key (n:name) (f:string) : string =
+  String.concat "." n.ns ^ "|" ^ f
+
+let ambiguous_label (n:name) (f:string) : ML bool =
+  match SMap.try_find !record_labels (label_key n f) with
+  | Some k -> k > 1
+  | None -> false
+
 let is_tuple_type (n:name) : ML bool =
   None? n.spec &&
   n.ns = ["FStar"; "Pervasives"; "Native"] &&
@@ -443,6 +458,25 @@ and builtin_ctor (n:name) : ML (option string) =
   | "Prims.Cons" -> Some "::"
   | _ -> None
 
+(* Say which record type is meant.  OCaml resolves a label to the *last*
+   record type declared with it, silently, so an expression built out of
+   labels alone -- or a projection out of a value whose type is not otherwise
+   known -- can be given the wrong type, and only fail somewhere else.  The
+   ascription has to spell the type constructor's parameters, hence
+   {!record_params}; they are all wildcards, since it is the type's identity
+   that is in question and never its arguments. *)
+let ascribe_record (n:name) (fs:list string) (s:string) : ML string =
+  match SMap.try_find !record_params (string_of_name n) with
+  | _ when not (fs |> List.existsb (ambiguous_label n)) -> s
+  | None -> s
+  | Some k ->
+    let rec wilds (i:int) : ML (list string) =
+      if i <= 0 then [] else "_" :: wilds (i - 1) in
+    let args = if k = 0 then ""
+               else if k = 1 then "_ "
+               else "(" ^ String.concat ", " (wilds k) ^ ") " in
+    "(" ^ s ^ " : " ^ args ^ qualify n (ocaml_type_name n) ^ ")"
+
 let rec term (ind:string) (e:expr) : ML string =
   match e.e with
   | EConst c -> constant c
@@ -491,22 +525,24 @@ let rec term (ind:string) (e:expr) : ML string =
       "{ " ^ String.concat "; " (List.mapi (fun i (f, e) ->
                 (if i = 0 then qualify n (ocaml_var f) else ocaml_var f)
                 ^ " = " ^ term ind e) fs) ^ " }" in
-    (match SMap.try_find !record_params (string_of_name n) with
-     | None -> body
-     | Some k ->
-       let rec wilds (i:int) : ML (list string) =
-         if i <= 0 then [] else "_" :: wilds (i - 1) in
-       let args = if k = 0 then ""
-                  else if k = 1 then "_ "
-                  else "(" ^ String.concat ", " (wilds k) ^ ") " in
-       "(" ^ body ^ " : " ^ args ^ qualify n (ocaml_type_name n) ^ ")")
+    ascribe_record n (List.map fst fs) body
   (* A tuple has no projection in OCaml beyond [fst] and [snd], so every
      component is read by a match that names it and ignores the rest. *)
   | EProj (e1, n, f) when Some? (tuple_arity n) ->
     let k = Some?.v (tuple_arity n) in
     "(match " ^ term ind e1 ^ " with (" ^
     String.concat ", " (by_position k "_" [(f, "custard_tup")]) ^ ") -> custard_tup)"
-  | EProj (e1, n, f) -> "(" ^ term ind e1 ^ ")." ^ qualify n (ocaml_var f)
+  (* Reading a field is ambiguous for exactly the reason writing one is, and
+     the fix is the same.  It is *more* often ambiguous, in fact: a record
+     expression at least names all of its labels, whereas [x.uniq] is one
+     label, and the only other thing that could decide the type is what [x] is
+     already known to be -- which, in a lambda Custard emits without binder
+     annotations, is nothing at all.  It surfaced when
+     [FStarC.Reflection.V2.Embeddings.e_namedv_view] stopped being specialized:
+     its [embed] closure projects [uniq], [sort] and [ppname], which [binding]
+     also has and declares later, so the closure was inferred at [binding] and
+     the embedding no longer agreed with its own [unembed]. *)
+  | EProj (e1, n, f) -> "(" ^ ascribe_record n [f] (term ind e1) ^ ")." ^ qualify n (ocaml_var f)
   (* A tuple type has one constructor, so the test is vacuous. *)
   | EDiscrim (_, n) when Some? (tuple_arity n) -> "true"
   | EDiscrim (e1, n) ->
@@ -768,12 +804,18 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
      just as necessary for a realization's record, and just as harmless when
      the labels happen to be unambiguous. *)
   let recs : SMap.t int = SMap.create 100 in
+  let labels : SMap.t int = SMap.create 100 in
   p |> List.iter (fun d ->
     match d with
     | DType t ->
       (match t.dt_body with
-       | TRecord _ -> SMap.add recs (string_of_name t.dt_name)
-                               (List.length t.dt_params)
+       | TRecord fs ->
+         SMap.add recs (string_of_name t.dt_name) (List.length t.dt_params);
+         fs |> List.iter (fun (f, _) ->
+           let k = label_key t.dt_name f in
+           SMap.add labels k (1 + (match SMap.try_find labels k with
+                                   | Some i -> i
+                                   | None -> 0)))
        | _ -> ())
     | _ -> ());
   externals := tbl;
@@ -781,6 +823,7 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
   realized := real;
   tuples := tups;
   record_params := recs;
+  record_labels := labels;
   at_home := home
 
 let header : string =

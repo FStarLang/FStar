@@ -499,8 +499,12 @@ let lookup_lid_typ (st:state) (l:Ident.lident) : ML (option ((universes & typ) &
 (* Names                                                                *)
 (* -------------------------------------------------------------------- *)
 
+(* Section 8.3: [no_fstar_stubs] is applied here, at the one place an F* lid
+   becomes a Custard name, so that nothing downstream -- the realization
+   tables, output splitting, the linker -- has to know the [FStar.Stubs.*]
+   spelling exists. *)
 let name_of_lid (l:Ident.lident) : ML name = {
-  ns   = List.map Ident.string_of_id (Ident.ns_of_lid l);
+  ns   = Builtins.no_fstar_stubs (List.map Ident.string_of_id (Ident.ns_of_lid l));
   id   = Ident.string_of_id (Ident.ident_of_lid l);
   spec = None;
 }
@@ -1812,7 +1816,8 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
   | Some se when is_realized && Sig_let? se.sigel && not (is_inlinable se)
               && not (is_inline_for_extraction st se)
               && not (Builtins.is_type_only_realized_module
-                        (Ident.ns_of_lid l |> List.map Ident.string_of_id)) ->
+                        (Builtins.no_fstar_stubs
+                           (Ident.ns_of_lid l |> List.map Ident.string_of_id))) ->
     (* Section 8.2: a realization replaces the F* module, values included.
        The F* definition is a model -- often written for proof rather than for
        execution, and free to describe a representation the realization does

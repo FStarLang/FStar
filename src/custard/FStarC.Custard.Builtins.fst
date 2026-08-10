@@ -554,6 +554,25 @@ let rule_of_attributes (attrs : list S.term) : ML (option rule) =
    hand-written but whose [either] and [dtuple] types the realizations use in
    their own signatures.  Listing a module that declares no type is harmless:
    the rule has no effect on values. *)
+(* Section 8.3.  ulib declares the compiler's reflection and tactic API a
+   second time, as the [FStar.Stubs.*] modules: abstract types and [assume
+   val]s, standing for definitions the compiler already has.  They are not a
+   separate implementation of anything, and a metaprogram that used them under
+   their own names would not link against the engine that runs it -- so the
+   namespace is rewritten to the one it is a stub for, and the two views become
+   one set of names.  This is the same rewrite the ML pipeline does in
+   [UEnv.no_fstar_stubs_ns], where it is conditional on [--codegen Plugin];
+   Custard does it unconditionally, because a whole-program compilation of the
+   compiler never mentions these modules at all -- the compiler uses the
+   [FStarC.*] originals -- so there is no second case to be in.
+
+   [FStar.NormSteps] is the same arrangement without the [Stubs] segment. *)
+let no_fstar_stubs (ns : list string) : list string =
+  match ns with
+  | "FStar" :: "NormSteps" :: rest -> "FStarC" :: "NormSteps" :: rest
+  | "FStar" :: "Stubs" :: rest -> "FStarC" :: rest
+  | _ -> ns
+
 let realized_modules : list (list string) = [
   ["FStar"; "All"];
   ["FStar"; "Bytes"];
@@ -593,6 +612,10 @@ let realized_modules : list (list string) = [
   ["FStarC"; "Plugins"; "Base"];
   ["FStarC"; "Pprint"];
   ["FStarC"; "Range"];
+  (* Reached under their [FStar.Stubs.*] names; see {!no_fstar_stubs}. *)
+  ["FStarC"; "Reflection"; "Types"];
+  ["FStarC"; "Tactics"; "Unseal"];
+  ["FStarC"; "Tactics"; "V2"; "Builtins"];
   ["FStarC"; "SMap"];
   ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
@@ -659,7 +682,7 @@ let builtin_rule (l:Ident.lident) : ML rule =
       let path = Ident.path_of_lid l in
       match List.rev path with
       | id :: rev_ns ->
-        let ns = List.rev rev_ns in
+        let ns = no_fstar_stubs (List.rev rev_ns) in
         (match machine_int_of_module ns with
          | Some sw -> machine_int_rule sw id
          | None ->

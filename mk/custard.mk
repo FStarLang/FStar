@@ -63,7 +63,14 @@ all: $(BIN)
 
 # ---------------------------------------------------------------- extraction
 
-$(CACHE)/.touch: mk/custard.mk
+# The cache is a *copy*, so it has to be refreshed whenever the checked files
+# it was copied from change -- otherwise an edit to the compiler is verified,
+# extracted and linked against a stale cache, and the failure is a link error
+# in generated code rather than anything that names the edit.  This makefile is
+# only read after `2.full' has run, so the wildcard sees the finished set.
+CHECKED_FILES := $(wildcard $(ULIB_CHECKED)/*.checked $(FSTARC_CHECKED)/*.checked)
+
+$(CACHE)/.touch: mk/custard.mk $(CHECKED_FILES)
 	$(call bold_msg, "CUSTARD", "CACHE")
 	$(Q)rm -rf $(CACHE) && mkdir -p $(CACHE)
 	$(Q)cp $(ULIB_CHECKED)/* $(CACHE)/

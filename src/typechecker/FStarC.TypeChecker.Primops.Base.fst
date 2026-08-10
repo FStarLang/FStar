@@ -33,6 +33,13 @@ let embed_simple {| EMB.embedding 'a |} (r:Range.t) (x:'a) : ML term =
 let try_unembed_simple {| EMB.embedding 'a |} (x:term) : ML (option 'a) =
     EMB.try_unembed x EMB.id_norm_cb
 
+(* This is the identity, and it exists only so that a class instance can be
+   named where the elaborator will resolve it.  It is inlined for extraction
+   so that no compilation of it has to make sense of a class binder whose sort
+   is a type variable: a whole-program monomorphizing backend would have to
+   specialize on [a], which at the call sites below is an [embedding] of the
+   *caller's* type parameter and hence not known statically. *)
+inline_for_extraction
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 let mk_interp1 #a #r

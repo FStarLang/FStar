@@ -1804,6 +1804,29 @@ that may already use its names; here the body stays where it is, and what is
 substituted into it are projections out of variables bound outside it, so
 nothing can capture.  Not renaming is what keeps `sz` from becoming `sz_41`.
 
+A field read printed as `e.lbl` is where OCaml's own record resolution takes
+over, and it resolves a *label*, not a type: two record types in the same module
+that share a label name send every unannotated use to whichever was declared
+last, silently.  Qualifying the label names the module, not the type, so it does
+not help.  `PrintOCaml.ascribe_record` therefore ascribes the target,
+`((e : _ _ Mod.t)).Mod.lbl`, and does the same for a record expression.
+
+It ascribes only when the label really is contested — a table built alongside
+`record_params` counts, per module, how many record types declare each label —
+because otherwise the annotation is on every projection in the program.  Whole
+compiler: 50 ascriptions, all of them `lazyinfo` and `sub_eff`.  Specializations
+count as distinct types, so `both__int` and `both__bool` do make `fst`
+ambiguous, and are ascribed.
+
+Projections need this more often than record expressions do, not less: a record
+expression at least names all of its labels at once, whereas `x.uniq` names one,
+and the only other thing that could decide the type is what `x` is already known
+to be — which, in a lambda Custard emits without binder annotations, is nothing
+at all.  It surfaced when `FStarC.Reflection.V2.Embeddings.e_namedv_view`
+stopped being specialized: its `embed` closure only projects `uniq`, `sort` and
+`ppname`, which `binding` also declares and declares later, so the closure was
+inferred at `binding` and no longer agreed with its own `unembed`.
+
 The same pass replaces `EDiscrim (e, C)` on a one-constructor type by `true`
 when `e` is pure.  That is worth doing on its own — the OCaml backend prints a
 discriminator as a whole `match` — but it also matters for the second half,
@@ -3156,6 +3179,43 @@ realization that spells out such a constructor is written against a
 representation that is not there, and it is the realization that has to give
 — see §12.10.
 
+**The stub modules are renamed.**  ulib declares the compiler's own
+reflection and tactic API a second time, under `FStar.Stubs.*` —
+`FStar.Stubs.Syntax.Syntax`, `FStar.Stubs.Tactics.Types`,
+`FStar.Stubs.Reflection.Types` and seven more — plus `FStar.NormSteps`.  These
+are not separate types: they are `FStarC.Syntax.Syntax`,
+`FStarC.Tactics.Types` and so on, seen from user code through an abstract
+interface.  A plugin compiled against the ulib names has to
+end up calling the compiler's, so the names have to be made to coincide, and
+`Builtins.no_fstar_stubs` does it:
+
+```fstar
+let no_fstar_stubs (ns : list string) : list string =
+  match ns with
+  | "FStar" :: "NormSteps" :: rest -> "FStarC" :: "NormSteps" :: rest
+  | "FStar" :: "Stubs" :: rest -> "FStarC" :: rest
+  | _ -> ns
+```
+
+ML extraction has the same rewrite (`UEnv.no_fstar_stubs_ns`) but applies it
+only under `--codegen Plugin`, because it also extracts ulib for its own sake,
+where the stub names are the right ones.  Custard has no such mode: it compiles
+whole programs, and a whole program that reaches
+`FStar.Stubs.Tactics.Types.proofstate` is one being linked into the compiler.
+So the rewrite is unconditional.
+
+It is applied in `Extract.name_of_lid`, the single funnel from an F\* lid to a
+Custard `name`.  Everything downstream — the realization tables,
+`Split.file_of`, the unit interfaces of §12, the linker — therefore sees one set of names, and
+nothing else in the pipeline has to know that the rewrite happened.  Loading is
+still by lid and is untouched.
+
+Three of the rewritten names land on modules that *do* have hand-written
+realizations — `FStarC.Reflection.Types`, `FStarC.Tactics.Unseal` and
+`FStarC.Tactics.V2.Builtins` — and are listed as realized.  The rest
+(`FStarC.Tactics.Types`, `FStarC.Syntax.Syntax`, `FStarC.NormSteps`, …) are
+ordinary compiler modules that Custard compiles, and must not be.
+
 `FStar.Pervasives.Native.tupleN` is the one realized type whose OCaml form is
 *syntax* rather than a name.  The type needs no help — the realization defines
 `('a, 'b) tuple2` as an alias for `'a * 'b`, so the qualified spelling is
@@ -4219,7 +4279,16 @@ nothing in F\* refers to and demand-driven extraction would otherwise drop
 The four steps:
 
 1. **Cache.**  `stage2/ulib.checked` and `stage2/fstarc.checked` merged into
-   one directory, because `--cache_dir` takes one.
+   one directory, because `--cache_dir` takes one.  It is a copy, so it has to
+   depend on the checked files themselves and not just on the makefile: a
+   stale cache is not a build error but a *silent* one, in which the previous
+   interface of an edited module is what extraction reads.  What it looks like
+   is a link failure in generated code — the last one was `Unbound value
+   FStarC_TypeChecker_Primops_Base.mk1`, from Custard finding only the old
+   `Sig_declare_typ` and emitting a `DExternal`.  Which gives the general
+   diagnostic: a reference printed as `Module.lowercase_id`, with a dot, in
+   unsplit output is an external or a realization; an ordinary reference is a
+   single mangled identifier, `fStarC_..._id`.
 2. **Split.**  `--codegen Custard --custard_split` from `FStarC.Main.main` plus
    the entry file, into `stagec/split/` --- 185 files.
 3. **Assemble.**  Those, plus `src/ml/*.ml`, plus a two-line `zzMain.ml`, into
@@ -4308,5 +4377,6 @@ cannot read a dune-built one's `.checked` files.
 | M10l | **The extracted compiler builds and runs** (§12.10) | Done.  A Custard-extracted `fstar.exe` verifies `FStar.List.Tot.Properties` from source and reports the same errors as the dune-built one.  What it took beyond M10k: **module initializers** --- an effectful top-level `let` is a root, and every loaded module contributes its own (§4.4), without which `FStarC.Options`' `let _ = clear ()` never ran; a `--custard_entry` that names a *module*, the only way to reach `FStarC.Hooks`, which exists solely for its side effects; and six codegen bugs, each listed in §12.10: a `ref` printed as an array (`lettys` and abbreviation unfolding), `-1` erased to `()` because the normalizer returns it as a `Tm_lazy` embedding, load-order-dependent extraction (`lookup_lid_typ`), an under-abstracted abbreviation, two lambda-lifted binders collapsed into one because `lift_letrec` opened the definiens twice, and OCaml record expressions resolving to the wrong record type.  `tests/custard/Literals.fst`, `Mymon.fst`, `Patlift.fst` |
 | M10m | **Build integration** (§12.11): `make custard`, `mk/custard.mk`, `src/custard/entrypoints.txt` | Done.  Builds a Custard-extracted `fstar.exe` into `stagec/` from a stage 2 compiler, driving `menhir --infer` against Custard's own interfaces rather than borrowing the dune build's answer, and generating `FStarC_Version.ml` itself because Custard mangles `_version` to `u__version`.  `make custard-smoke` runs it. |
 | M10n | **Reification** (§7.5) and the `custard_no_monomorphize` class opt-out (§3.1) | Done.  `Tac` is compiled through `tac_repr a wp = ref_proofstate -> Dv a`, in `Effects.{is_reifiable,reify_comp,maybe_reify}` and three call sites in `Extract`; `tests/custard/Reify.fst`.  The opt-out is what makes `embedding` a runtime value again, which reification and plugin registration both need. |
+| M10o | **The `FStar.Stubs.*` rename** (§8.2) | Done.  `Builtins.no_fstar_stubs`, applied in `Extract.name_of_lid`, so that a plugin's `FStar.Stubs.Tactics.Types.proofstate` and the compiler's `FStarC.Tactics.Types.proofstate` are one name.  Fallout: `solve` is now `inline_for_extraction` in its five copies (its `{| ev : a |}` binder made `#a` `Mono`, which §3.2b rejects once `embedding` is no longer specialized), and record ascription had to cover projections as well as record expressions (§5.5). |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

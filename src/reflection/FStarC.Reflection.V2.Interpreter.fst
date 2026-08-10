@@ -25,6 +25,9 @@ module RE    = FStarC.Reflection.V2.Embeddings
 open FStarC.Syntax.Syntax
 open FStarC.Reflection.V2.Constants
 
+(* Inlined for extraction: see the note on the copy in
+   FStarC.TypeChecker.Primops.Base. *)
+inline_for_extraction
 let solve (#a: Type) {| ev: a |} : Tot a = ev
 
 (* NB: assuming uarity = 0 for these three. Also, they are homogenous in KAM and NBE. *)
