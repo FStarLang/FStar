@@ -85,4 +85,5 @@ let incr_twice : m int int =
   let! _ = incr in
   get
 
+let _ : nonempty (int & int) = nonempty_intro (0, 0)
 let test_run : int & int = run incr_twice 0
