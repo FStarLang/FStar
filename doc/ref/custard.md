@@ -1480,14 +1480,43 @@ Four things make it work.
    flag delivers a completely monomorphic program there and only a mostly
    monomorphic one under the OCaml backend.
 
+   A `Realized` or `Imported` *type declaration* is frozen for the same
+   reason, and more directly.  Its representation is fixed outside this
+   program — by the hand-written OCaml of §8.2, or by the unit that already
+   compiled it — and it is not emitted here, so a clone of it would name a
+   member that no module defines.  `FStar.Pervasives.Native`'s `option` and
+   `tupleN` are the ones that matter: without this, `option int` asked for
+   `FStar_Pervasives_Native.option__int`, which the realization has never
+   heard of, and seven of the thirty-three modules in the test corpus failed
+   to compile under the flag.  This half applies to the OCaml backend only,
+   for the same reason the external half is empty in C: `Realized` records
+   that a hand-written *OCaml* module defines the type, and the C backends
+   link none of them and emit the declaration themselves.
+
+   Being frozen affects the type's **name** and nothing else.  Its fields are
+   still read back at the arguments the use site wrote, so `list int` inside a
+   frozen `tuple2` is still cloned and a `[]` pattern under it still renamed
+   to that clone's constructor.  Conflating the two — answering "no
+   instantiation" for a frozen type and so losing its arguments as well as its
+   name — left a subpattern matched at a bare type variable, which resolves
+   nothing, so a constructor nested inside it kept its polymorphic name while
+   its type was cloned out from under it.  Hence `Monomorphize.shape_of`,
+   which answers what a type names, alongside `resolve_owner`, which answers
+   whether it will be cloned.
+
 Ordering costs nothing: the clones are appended at the end of the program,
 because `Simplify.scc` topologically sorts the whole program — type
 declarations included — at the end of phase 4, which is after this pass runs.
 
 `tests/custard/MonoTypes.fst` is the test.  It asserts that two instantiations
 of one type become two declarations, that a nested `list (list int)` works,
-that an abbreviation and its expansion share a declaration, and that no type
-variable survives anywhere in the generated file.
+that an abbreviation and its expansion share a declaration, that no type
+variable survives anywhere in the generated file, and that a frozen `option`
+and `tuple2` keep their names while a `list int` inside the tuple does not.
+
+Beyond that one module, the whole of `tests/custard` has been re-extracted
+under the flag, compiled and run, and every module agrees with the output it
+produces without it.
 
 ### 5.1 Erasure
 
@@ -3143,9 +3172,11 @@ has no hand-written file at all.  `FStar.Pervasives.Native` does, but it is
 transparent — `type ('a,'b) tuple2 = 'a * 'b`, and every value a projection out
 of it — over types Custard represents natively, so its `fst` and `snd` are
 ordinary F\* code over a representation both sides already agree on.
-Compiling them is also what keeps `tuple2` monomorphizable: an external's
+Compiling them is also what keeps `tuple2` monomorphizable in C: an external's
 signature freezes the types in it (§5.0), and a frozen `tuple2` has no C
-representation at all.
+representation at all.  On the OCaml path `tuple2` is frozen regardless, by
+the other half of that rule — it carries `Realized`, and OCaml's tuple is
+what it must stay.
 
 **An external is instantiated at its call site.**  A realization is written
 polymorphically — `let fst = Stdlib.fst` — and taking its declared type at face
@@ -4768,8 +4799,8 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M6h | `--custard_warn_any` (§5.9); §5.4 rule 3 measured unnecessary | Done. Escalated to an error over the whole corpus; `tests/custard/WarnAny.fst` is the positive test |
 | M6i | Short-circuiting `&&`/`\|\|` (§6 pass 1): infix emission, bitwise guard | Done. `tests/custard/ShortCircuit.fst`, and the C side in `KrmlBasic.fst` |
 | M7 | v2 monomorphization: infer-and-promote (§3.2b), defunctionalized function arguments (§3.8) | |
-| M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | `MonoTypes`; whole corpus re-run under the flag |
-| M8b | Direct-to-C backend (§6): self-contained C11, no krmllib, function pointers but no closures | `KrmlBasic` and both Pulse modules compiled `-Wall -Wextra -Werror` and run; `CNoInt`/`CNoClosure` reject |
+| M8a | Type monomorphization: one declaration per instantiation (§5.0.1), which unlocks per-instantiation layouts | Done.  The pass and `MonoTypes` were built with M8c; what closed the milestone was the exit criterion, re-running the *whole* corpus under `--custard_monomorphize_types`, which seven of thirty-three modules failed.  One cause, in two halves: a `Realized` type was cloned, and the clone named a member of a hand-written OCaml module that does not define it (`FStar_Pervasives_Native.option__int`).  Freezing those declarations, as §5.0.1 rule 4 already froze the types an external's signature mentions, fixes six; the seventh needed the distinction between *naming* a declaration and *cloning* it (`Monomorphize.shape_of`), since a frozen type's fields are still at the arguments the use site wrote and dropping them left a `[]` pattern unrenamed under a cloned `list`.  Only on the OCaml path: in C nothing is realized by hand and freezing would leave a type variable, which C cannot size |
+| M8b | Direct-to-C backend (§6): self-contained C11, no krmllib, function pointers but no closures | Done.  `PrintC`, and the rejections by name of what C cannot express (error 367) — closures, exceptions, unbounded `Prims.int`, pattern disjunctions and guards, and a datatype containing itself by value — which `CNoInt` and `CNoClosure` pin.  The exit criterion that was still open is that the two Pulse modules were *compiled* and not run, because their `main` returned a computed value and so a nonzero exit status; each now checks its own answers and returns 0, and the suite runs the binary.  That is what makes the array, the struct-valued cell and the function pointer of `PulseHashTable` tested rather than merely accepted by a C compiler.  Still open, and noted in §12.8 item 8: `PrintKrml` maps `Prims.int` to a fixed-width integer, which the direct backend rejects outright but the krml path does not |
 | M8c | Inline constructor fields (§5.7): `Simplify.inline_fields`, `TInline`, `[@@@custard_inline_field]` | Done. `tests/custard/InlineFields.fst`; closes the `\| Bar of a & b` indirection of FStarLang/FStar#4382 |
 | M9a | An α-canonical, fully qualified, printer-independent key printer, replacing `show t` in `Extract.string_of_key` (§12.3) | Done. `Extract.key_of_term`; `tests/custard/KeyNames.fst`, which used to print `abab` |
 | M9b | Exceptions (§8.5): `TExn`, the `DExn` producer, `raise`/`try_with` rules | Done. `tests/custard/Exceptions.fst`; OCaml only |

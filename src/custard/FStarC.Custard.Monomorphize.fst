@@ -52,6 +52,7 @@ open FStarC.Custard.Syntax
 
 module SMap   = FStarC.SMap
 module String = FStarC.String
+module Options = FStarC.Options
 
 (* -------------------------------------------------------------------- *)
 (* Keys and hints                                                       *)
@@ -109,7 +110,22 @@ type state = {
    ['a list], then [list] has to stay one polymorphic declaration and every
    use of it has to agree.  So a type mentioned in an external's signature is
    frozen, along with everything reachable from it.  In C, where nothing is
-   realized polymorphically, this set is empty. *)
+   realized polymorphically, this set is empty.
+
+   A [Realized] or [Imported] type declaration is frozen for the same reason,
+   and more directly: its representation is fixed outside this program -- by
+   the hand-written OCaml, or by the unit that already compiled it -- and it
+   is not emitted here, so a clone of it would be a name that no module
+   defines.  [FStar.Pervasives.Native]'s [option] and [tupleN] are the ones
+   that matter: without this, [option int] asked for a clone
+   [FStar_Pervasives_Native.option__int] that the realization has never heard
+   of, and every module using one failed to compile.
+
+   Only on the OCaml path.  [Realized] records that a *hand-written OCaml*
+   module defines the type (section 8.2); the C backends link none of them and
+   emit the declaration themselves, so there freezing would leave a type
+   variable behind and C has no representation for one. *)
+let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
 let is_poly (st:state) (n:name) : ML bool =
   if Some? (SMap.try_find st.frozen (string_of_name n)) then false
   else match SMap.try_find st.types (string_of_name n) with
@@ -203,6 +219,18 @@ let resolve_owner (st:state) (t:cty) : ML (option (name & list cty)) =
   | TApp (n, args) when is_poly st n -> Some (n, args)
   | _ -> None
 
+(* The declaration a type names, and the arguments it is applied at, whether or
+   not it will be cloned.  Renaming a constructor and reading its field types
+   back are two different questions, and only the first of them is about
+   cloning: a *frozen* [tuple2] keeps its name but its fields are still at the
+   arguments the use site wrote, and answering [] for them leaves a subpattern
+   matched at a bare [TVar] -- which resolves nothing, so a constructor nested
+   inside it silently keeps its polymorphic name while its type is cloned. *)
+let shape_of (st:state) (t:cty) : ML (option (name & list cty)) =
+  match unfold_cty st 100 t with
+  | TApp (n, args) -> Some (n, args)
+  | _ -> None
+
 (* [resolve_owner] hands back the arguments as they were *written*, since a
    constructor's field types have to be substituted with those.  The clone,
    though, is keyed on the rewritten arguments -- that is what [mono_cty] uses
@@ -268,19 +296,25 @@ let rec mono_pat (st:state) (t:cty) (p:pat) : ML (pat & env) =
   let t = unfold_cty st 100 t in
   match p with
   | PCtor (cn, ps) ->
-    let cn', fields =
+    let fields =
+      match shape_of st t with
+      | Some (n, args) -> ctor_fields st n args cn
+      | None -> [] in
+    let cn' =
       match resolve_owner st t with
-      | Some (owner, args) ->
-        (with_spec (request_inst st owner args) cn, ctor_fields st owner args cn)
-      | None ->
-        (cn, (match t with TApp (n, _) -> ctor_fields st n [] cn | _ -> [])) in
+      | Some (owner, args) -> with_spec (request_inst st owner args) cn
+      | None -> cn in
     let ps', env = mono_pats st fields ps in
     (PCtor (cn', ps'), env)
   | PRecord (tn, fs) ->
-    let tn', fields =
+    let fields =
+      match shape_of st t with
+      | Some (n, args) -> record_fields st n args
+      | None -> [] in
+    let tn' =
       match resolve_owner st t with
-      | Some (owner, args) -> (request_inst st owner args, record_fields st owner args)
-      | None -> (tn, (match t with TApp (n, _) -> record_fields st n [] | _ -> [])) in
+      | Some (owner, args) -> request_inst st owner args
+      | None -> tn in
     let fs', env = List.fold_left (fun (acc, env) (f, q) ->
       let ft = (match fields |> List.tryFind (fun (g, _) -> g = f) with
                 | Some (_, ft) -> ft
@@ -436,6 +470,10 @@ let run (prog:program) : ML program =
     match d with
     | DExternal x -> freeze 100 x.dx_ty
     | DExn e -> e.de_args |> List.iter (freeze 100)
+    | DType t when freeze_realized ()
+                && t.dt_flags |> List.existsb (function
+                     | Realized | Imported _ -> true | _ -> false) ->
+      freeze 100 (TApp (t.dt_name, []))
     | _ -> ());
   (* The polymorphic declarations are replaced by their instantiations, so they
      are dropped here and everything else is rewritten in place.  Emission

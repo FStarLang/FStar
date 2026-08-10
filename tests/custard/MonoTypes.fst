@@ -75,6 +75,24 @@ let rec join (xs : list string) : string =
   | [] -> ""
   | x :: rest -> x ^ join rest
 
+(* A type of a *realized* module -- an OCaml module hand-written against the
+   polymorphic F* type -- may not be cloned: nothing here can rewrite the
+   realization, and the clone would be a name it does not define.  So
+   'option' and 'tuple2' stay one declaration each, and print in OCaml's own
+   syntax.  What this pins is that being frozen affects only the type's
+   *name*: its fields are still read at the arguments the use site wrote, so
+   the 'list int' inside the tuple below is still cloned and the '[]' pattern
+   under it still renamed to that clone's constructor. *)
+let unopt (o : option int) : int =
+  match o with
+  | None -> 0
+  | Some x -> x
+
+let rec through_tuple (q : list int & int) : Tot int (decreases (fst q)) =
+  match q with
+  | ([], y) -> y
+  | (x :: rest, y) -> x + through_tuple (rest, y)
+
 let main () : ML unit =
   let ints = swap (mk 1 2) in
   let bools = swap (mk true false) in
@@ -85,4 +103,7 @@ let main () : ML unit =
   FStar.IO.print_string (string_of_int (size (leaves "a" "b")));
   FStar.IO.print_string (join (flatten (leaves "x" "y")));
   FStar.IO.print_string (string_of_int (sum_all nested));
+  FStar.IO.print_string (string_of_int (unopt (Some 7)));
+  FStar.IO.print_string (string_of_int (unopt None));
+  FStar.IO.print_string (string_of_int (through_tuple ([1;2;3], 4)));
   FStar.IO.print_string "\n"

@@ -60,7 +60,7 @@ KRML_TESTS += PulseBasic
 KRML_TESTS += PulseHashTable
 
 # Same modules again, through the direct-to-C backend: no krml, no krmllib,
-# just a C11 compiler with the warnings turned on.  PulseHashTable is the
+# just a C11 compiler with the warnings turned on, and then run.  PulseHashTable is the
 # demanding one -- arrays, a struct-valued cell, and a hash function stored in
 # a record, which becomes a C function pointer.
 C_TESTS += PulseBasic
@@ -109,6 +109,14 @@ $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -x c $< -o $@
 
+# Each of these programs' [main] checks its own answers and exits 0 if they
+# are right, so running it is a test of the generated code and not only of the
+# C compiler's willingness to accept it.
+$(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
+	$(call msg, "RUN-C", $(basename $(notdir $@)))
+	$(Q)$<
+	$(Q)touch $@
+
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
 	$(Q)krml -silent -skip-linking -tmpdir $(OUTPUT_DIR)/$*_c $<
@@ -118,7 +126,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .grepped, $(GREP_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .mlchecked, $(OCAML_TESTS)))
-all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcexe, $(C_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 
 ifneq ($(shell command -v krml 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))

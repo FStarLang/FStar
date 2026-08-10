@@ -115,6 +115,16 @@ GREP_MonoTypes   = "type monoTypes_both__int" "type monoTypes_both__bool" \
                    "type monoTypes_both__int = { fst : Prims.int; snd : Prims.int }" \
                    "{ fst = ((p : monoTypes_both__int)).snd;"
 NOGREP_MonoTypes = "'" "Mkboth" "match p with"
+# Section 5.0.1: a type of a realized module is frozen, so it is neither
+# cloned nor emitted, and prints in OCaml's own syntax.  A clone of it would
+# name a member the realization does not define -- which is what every one of
+# these used to be.
+NOGREP_MonoTypes += "fStar_Pervasives_Native"
+GREP_MonoTypes   += "(o : (Prims.int) option)"
+GREP_MonoTypes   += "(q : (prims_list__int \* Prims.int))"
+# Frozen affects the name only: the list inside the tuple is still cloned, and
+# the pattern under it still renamed against that clone.
+GREP_MonoTypes   += "| Prims_Nil__int ->"
 
 # Section 12.3: the two 'tweak's must get separate specializations, which they
 # only do if the key printer distinguishes them.  The run itself is the real

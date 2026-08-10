@@ -52,11 +52,14 @@ fn vec_roundtrip (x:U32.t)
   y
 }
 
+(* [main] returns a process exit status, so it checks its two answers rather
+   than returning one of them: the C output is compiled *and run*, and a
+   miscompiled loop or vector shows up as a nonzero exit rather than having to
+   be read out of the generated source. *)
 fn main ()
   returns r:US.t
 {
   let a = count_up 10sz;
   let b = vec_roundtrip 7ul;
-  let _ = b;
-  a
+  if (US.(a =^ 10sz) && U32.(b =^ 7ul)) { 0sz } else { 1sz }
 }
