@@ -99,8 +99,12 @@ let module_is_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML bool =
   let want_impl = Some? (Dep.implementation_of deps m') && None? (SMap.try_find iface_only m') in
   loaded env m want_impl
 
-let ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env =
+(* Modules whose loading is in progress, to break the recursion below. *)
+let loading : SMap.t unit = SMap.create 100
+
+let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env =
   if module_is_loaded deps env m then env
+  else if Some? (SMap.try_find loading (String.lowercase m)) then env
   else
     let rec first_usable (fns:list string) : ML (string & Ch.tc_result) =
       match fns with
@@ -118,6 +122,25 @@ let ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env =
     in
     let fn, tcr = first_usable (candidate_files deps m) in
     SMap.add loaded_files fn ();
+    (* Desugaring [m]'s declarations resolves the names they mention, so every
+       module [m] depends on has to be in the desugaring environment first --
+       [FStarC.TypeChecker.NBETerm]'s [val]s say [ML], which lives in
+       [FStarC.Effect].  Batch mode gets this for free by walking the
+       dependency graph in order, and so does a whole-program Custard run whose
+       entry point transitively depends on everything.  A run whose entry point
+       does not -- a plugin, whose compiler-side references are reached through
+       a linked unit (section 12) rather than through its own imports -- does
+       not, and the failure is an Error 133 in a module nobody named.
+       [prime_cache] above is not enough: it validates checked files, it does
+       not register anything.  Recursion is broken by {!loading}, since a
+       module's dependences include its own interface. *)
+    SMap.add loading (String.lowercase m) ();
+    let env =
+      Dep.deps_of deps fn |> List.fold_left (fun env dfn ->
+        let dm = Dep.module_name_of_file dfn in
+        if String.lowercase dm = String.lowercase m then env
+        else ensure_loaded deps env dm) env in
+    SMap.remove loading (String.lowercase m);
     (* We asked for an implementation and got an interface: the implementation
        is realized by hand and nothing ever checked it (section 8.2).  Record
        that, so later requests for this module stop asking.  If the driver had

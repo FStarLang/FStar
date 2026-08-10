@@ -136,7 +136,10 @@ let type_names_of_decl (d : decl) : ML (list string) =
   | DExn e -> e.de_args |> List.collect type_names_of_cty
 
 let imported_unit (d : decl) : ML (option string) =
-  decl_flags d |> List.tryPick (function Imported u -> Some u | _ -> None)
+  decl_flags d |> List.tryPick (function Imported (u, _) -> Some u | _ -> None)
+
+let imported_home (d : decl) : ML (option string) =
+  decl_flags d |> List.tryPick (function Imported (_, h) -> h | _ -> None)
 
 (* -------------------------------------------------------------------- *)
 (* Printing                                                             *)
@@ -381,7 +384,8 @@ let flag_to_doc (f:flag) : ML document =
   | Erased -> text "erased"
   | Comment s -> text ("(* " ^ s ^ " *)")
   | Realized -> text "realized"
-  | Imported u -> text ("imported[" ^ u ^ "]")
+  | Imported (u, h) ->
+    text ("imported[" ^ u ^ (match h with Some m -> "@" ^ m | None -> "") ^ "]")
 
 let flags_to_doc (fs : list flag) : ML document =
   match fs with

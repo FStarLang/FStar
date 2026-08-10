@@ -277,11 +277,16 @@ type flag =
       and to its fields with the realization's own unmangled names.  Its
       representation is therefore fixed outside F*: no erasure, no newtype
       collapse and no inline-field expansion may touch it. *)
-  | Imported of string
+  | Imported of string & option string
   (** This declaration was compiled by an already-built unit (section 12), the
-      one named here.  It is present so that this unit's passes can see its
+      one named first.  It is present so that this unit's passes can see its
       shape -- a type's layout, a function's signature -- but it is not emitted
-      and its uses print qualified by that unit's namespace. *)
+      and its uses print qualified by that unit's namespace.
+
+      The second component is the F* module whose file it was emitted into,
+      when the upstream unit split its output (section 12.9): a reference then
+      has to name that file rather than the unit, and the declaration may be
+      spelled by its plain identifier rather than its mangled one. *)
 
 type tydef =
   | TAbbrev  of cty
@@ -461,6 +466,10 @@ val type_names_of_decl : decl -> ML (list string)
 (** The unit a declaration was imported from, or [None] if this run compiled
     it.  An imported declaration is never emitted. *)
 val imported_unit : decl -> ML (option string)
+
+(** The file an imported declaration lives in, for an upstream unit that split
+    its output; [None] for a local declaration or a whole-program upstream. *)
+val imported_home : decl -> ML (option string)
 
 (** {1 Printing} *)
 

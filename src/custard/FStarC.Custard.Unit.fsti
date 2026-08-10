@@ -41,6 +41,14 @@ type entry = {
   ue_key:   string;
   ue_decl:  decl;             (** post-[Layout], post-[Rename]; body stripped *)
   ue_type:  option type_info; (** present exactly for a [DType] *)
+  (** The F* module whose file this declaration was emitted into, when the
+      producing run split its output (section 12.9).  A whole-program unit
+      emits everything into one OCaml module named after the unit, and there is
+      nothing to say; a split one puts each declaration in a file of its own
+      choosing, and a downstream reference has to be qualified by *that* file,
+      not by the unit.  It is also what tells the consumer that the name it
+      sees may be an at-home one, spelled plainly rather than mangled. *)
+  ue_home:  option string;
 }
 
 (** The header exists to make a mismatch an error rather than a silent

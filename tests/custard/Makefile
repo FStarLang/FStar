@@ -25,6 +25,7 @@ CUSTARD_TESTS += MonoTypes
 CUSTARD_TESTS += InlineFields
 CUSTARD_TESTS += KeyNames
 CUSTARD_TESTS += Refs
+CUSTARD_TESTS += Thunk
 CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += LocalRec
 CUSTARD_TESTS += NewtypeInline

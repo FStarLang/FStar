@@ -167,7 +167,14 @@ let check_entrypoints (deps:Dep.deps) (env:TcEnv.env) (roots:list Ident.lident) 
      declaration.  What is worth catching early is a typo in a module the
      driver *did* load, which is the common case. *)
   roots |> List.iter (fun l ->
-    let m = Ident.string_of_lid (Ident.lid_of_ids (Ident.ns_of_lid l)) in
+    (* A root may name a *module* rather than a definition (section 13.3), and
+       then there is nothing to look up.  Checked first, because a module name
+       need not have a namespace at all and [Ident.lid_of_ids] rejects the
+       empty list. *)
+    if Loader.module_is_loaded deps env (Ident.string_of_lid l) then () else
+    let m = match Ident.ns_of_lid l with
+            | [] -> ""
+            | ns -> Ident.string_of_lid (Ident.lid_of_ids ns) in
     if m = "" || Loader.module_is_loaded deps env m then
       match TcEnv.lookup_sigelt env l with
       | Some _ -> ()
@@ -208,7 +215,7 @@ let imported_decls (imports:list (decl & option type_info)) : ML (list dtype) =
    A [DLet]'s body is dropped.  A `.cui` is an interface: what a downstream
    unit needs is the name to call and the signature to call it at.  Keeping the
    body would invite exactly the thing separate compilation is here to prevent. *)
-let unit_entries (keys:list (string & string))
+let unit_entries (keys:list (string & string)) (homes:SMap.t string)
                  (prog:program) (infos:list (name & type_info))
   : ML (list Unit.entry) =
   let key_of (n:name) : ML (option string) =
@@ -229,9 +236,11 @@ let unit_entries (keys:list (string & string))
        -- has no key for a downstream unit to recognize it by, and so cannot be
        exported.  It is still emitted; it is just not reusable. *)
     | None -> []
-    | Some k -> [{ Unit.ue_key = k; Unit.ue_decl = d; Unit.ue_type = ti }])
+    | Some k -> [{ Unit.ue_key = k; Unit.ue_decl = d; Unit.ue_type = ti;
+                   Unit.ue_home =
+                     SMap.try_find homes (string_of_name (name_of_decl d)) }])
 
-let write_unit_iface (st:Extract.state)
+let write_unit_iface (st:Extract.state) (homes:SMap.t string)
                      (prog:program) (infos:list (name & type_info))
   : ML unit =
   match Options.custard_unit () with
@@ -245,7 +254,7 @@ let write_unit_iface (st:Extract.state)
         Unit.uh_options = Unit.layout_options ();
         Unit.uh_digests = Extract.loaded_digests st;
       };
-      Unit.ui_entries = unit_entries (Extract.exported_keys st) prog infos;
+      Unit.ui_entries = unit_entries (Extract.exported_keys st) homes prog infos;
     } in
     if Options.custard_dump_cui () then
       Format.print_string (Unit.iface_to_string i);
@@ -301,9 +310,22 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   (* Last: the passes above invent names, and the whole point is that what a
      reader sees is stable under everything that happened before. *)
   let prog, infos = Rename.run infos prog in
+  (* Section 12.9: where each declaration ends up, when the output is split.
+     Computed before the interface is written, because the interface has to
+     record it: a downstream unit qualifies a reference by the *file* the
+     declaration was emitted into, not by the unit's name. *)
+  let files = if Options.custard_split () && Options.custard_backend () = "OCaml"
+              then Some (Split.run deps (List.map fst imports @ prog))
+              else None in
+  let homes : SMap.t string = SMap.create 100 in
+  let _ = match files with
+          | None -> ()
+          | Some fs -> fs |> List.iter (fun (m, ds) ->
+                         ds |> List.iter (fun d ->
+                           SMap.add homes (string_of_name (name_of_decl d)) m)) in
   (* After [Rename], because the names a `.cui` exports are the names the
      generated source actually spells. *)
-  write_unit_iface st prog infos;
+  write_unit_iface st homes prog infos;
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   if Options.custard_warn_any () then warn_any prog;
@@ -326,12 +348,11 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
          | _ -> base ^ ".ml")
   in
   match backend with
-  | "OCaml" when Options.custard_split () ->
+  | "OCaml" when Some? files ->
     (* Section 12.9.  One whole-program run, one file per F* source module:
        the hand-written realizations reference modules Custard compiles, and
        OCaml compilation units have to form a DAG. *)
-    let files = Split.run deps (List.map fst imports @ prog) in
-    OCaml.print_split files |> List.iter (fun (m, src) ->
+    OCaml.print_split (Some?.v files) |> List.iter (fun (m, src) ->
       BU.write_file (Find.prepend_output_dir (m ^ ".ml")) src)
   | "Krml" -> Krml.write_program ofile prog
   | "C" -> BU.write_file ofile (C.print_program (List.map fst imports @ prog))

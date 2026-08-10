@@ -734,11 +734,36 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
   let real = SMap.create 20 in
   let tups = SMap.create 20 in
   let home = SMap.create 50 in
+  (* Section 12.9 and 12.3: a declaration imported from a unit that *split* its
+     output lives in a file of its own, not in a module named after the unit,
+     and it may have been emitted there under its plain identifier.  That is
+     precisely what the [homes] treatment below expresses, so such an import
+     joins [homes] and is handled by exactly the same code -- which is what
+     makes a reference across a link and a reference across a split file print
+     the same way, because they are the same thing. *)
+  let homes =
+    match p |> List.collect (fun d ->
+            match imported_home d with
+            | Some m -> [(string_of_name (name_of_decl d), m)]
+            | None -> []) with
+    | [] -> homes
+    | hs ->
+      let homes' = SMap.copy homes in
+      hs |> List.iter (fun (n, m) -> SMap.add homes' n (module_name_of_unit m));
+      homes' in
   p |> List.iter (fun d ->
     (* An imported value is exactly an external whose target happens to be
        another generated module: nothing else about it is special, and reusing
        the mechanism means no printing path has to learn about linking. *)
     match imported_unit d with
+    | Some _ when Some? (imported_home d) ->
+      (* Handled by [homes]; an imported external still resolves to the
+         hand-written realization, exactly as below. *)
+      (match d with
+       | DExternal e ->
+         SMap.add tbl (string_of_name e.dx_name)
+           (match e.dx_target with Some t -> t | None -> realization_of e.dx_name)
+       | _ -> ())
     | Some u ->
       let m = module_name_of_unit u in
       (match d with

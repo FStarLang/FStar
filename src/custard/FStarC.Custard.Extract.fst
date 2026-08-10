@@ -774,11 +774,12 @@ and import (st:state) (key:string) : ML (option name) =
        than minting a fresh one and remembering a mapping -- is what lets every
        later pass treat an import as an ordinary declaration it happens not to
        emit. *)
+    let imp = Imported (u, e.ue_home) in
     let d =
       match e.ue_decl with
-      | DType dt    -> DType { dt with dt_flags = Imported u :: dt.dt_flags }
-      | DLet dl     -> DLet  { dl with dl_flags = Imported u :: dl.dl_flags }
-      | DExternal dx -> DExternal { dx with dx_flags = Imported u :: dx.dx_flags }
+      | DType dt    -> DType { dt with dt_flags = imp :: dt.dt_flags }
+      | DLet dl     -> DLet  { dl with dl_flags = imp :: dl.dl_flags }
+      | DExternal dx -> DExternal { dx with dx_flags = imp :: dx.dx_flags }
       | DExn de     -> DExn de
     in
     let nm = name_of_decl d in
@@ -2280,7 +2281,28 @@ and extract_type_abbrev (st:state) (nm:name) (lb:letbinding) : ML decl =
    spine made of the concrete [Mono] arguments and fresh names for the [Poly]
    ones, and let the normalizer do the substitution: that copes uniformly with
    definitions that are eta-short, that have more binders than their type
-   shows, or that are not syntactically lambdas at all. *)
+   shows, or that are not syntactically lambdas at all.
+
+   Applying a definition to a spine and re-abstracting is eta-expansion, and
+   eta-expansion is only meaning-preserving when reaching the lambda is pure.
+   [FStarC.TypeChecker.Cfg.cached_steps] is the counterexample:
+
+     let cached_steps : unit -> ML prim_step_set =
+       let memo = mk_ref (empty_prim_steps ()) in
+       fun () -> ...
+
+   The [ref] is allocated once, when the module is initialized, and every call
+   shares it.  Eta-expanded to [fun x -> (let memo = ... in fun () -> ...) x]
+   it is allocated per call and the memo table is always empty.  So the spine
+   is cut at the definition's own lambdas unless the definition is a value,
+   in which case duplicating it costs nothing. *)
+and eta_safe (t:term) : ML bool =
+  match (SS.compress (U.unascribe t)).n with
+  | Tm_abs _ | Tm_fvar _ | Tm_name _ | Tm_bvar _
+  | Tm_constant _ | Tm_uinst _ | Tm_type _ | Tm_arrow _ -> true
+  | Tm_meta {tm} -> eta_safe tm
+  | _ -> false
+
 and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int & term))
                (n_holes:int)
   : ML (term & comp & list bclass & binders) =
@@ -2305,11 +2327,30 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
     | _ -> [], margs
   in
   let bs, c = U.arrow_formals_comp ty in
+  (* How far the spine may run.  A value may be duplicated freely, so it takes
+     the whole arrow; anything else only takes the binders its own lambdas
+     absorb.  A [Mono] argument past that point has to be substituted all the
+     same -- there is no other way to specialize on it -- and the definition's
+     prefix is then re-evaluated per call; that has not come up, and rejecting
+     it would rule out eta-short definitions that are pure in practice. *)
+  let cut =
+    if eta_safe def then List.length bs
+    else
+      let dbs, _, _ = U.abs_formals def in
+      let n_lams = List.length dbs in
+      margs |> List.fold_left (fun n (j, _) -> if j + 1 > n then j + 1 else n) n_lams
+  in
   let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
              (spine:args) (poly:binders) (polycs:list bclass)
     : ML (args & binders & list bclass & comp) =
     match bs with
     | [] -> (List.rev spine, List.rev poly, List.rev polycs, SS.subst_comp subst c)
+    | _ :: _ when i >= cut ->
+      (* The residual arrow becomes the result type: the declaration is emitted
+         as a value of function type and its callers apply it, which is what
+         the source said. *)
+      (List.rev spine, List.rev poly, List.rev polycs,
+       S.mk_Total (U.arrow (SS.subst_binders subst bs) (SS.subst_comp subst c)))
     | b :: bs' ->
       let cls, cs' = match cs with
                      | [] -> Poly, []

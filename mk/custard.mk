@@ -12,11 +12,15 @@
 #      at best accidentally well-typed;
 #   4. compile and link, in `ocamldep -sort' order.
 #
-# The result is a working fstar.exe with two known limitations, both recorded
-# in section 12.10: it cannot read .checked files written by a dune-built
-# compiler (they are Marshal dumps of differently laid out types), and the
-# ulib plugins are still the ML-extracted ones, so anything that needs
-# FStar.Tactics.Typeclasses.mk_class fails with "tactic got stuck".
+# The result is a working fstar.exe -- ulib's plugins included, so tactics
+# like FStar.Tactics.Typeclasses.mk_class run natively -- with one known
+# limitation, recorded in section 12.10: it cannot read .checked files
+# written by a dune-built compiler, because those are Marshal dumps of
+# differently laid out types.
+#
+# The `plugin' target is the other half of section 12.8: a plugin that is
+# itself compiled by Custard, against this compiler's .cui, and loaded into
+# it with --load_cmxs.
 
 include mk/common.mk
 
@@ -62,7 +66,7 @@ OCAMLC    := $(OCAMLFIND) ocamlc   -package $(OCAMLPKGS) -w -a
 # Quieten findlib's deprecation chatter, which is about our *dependencies*.
 FILTER := 2>&1 | grep -v '^findlib\|Deprecated, use\|^Alert' || true
 
-.PHONY: all split build clean smoke
+.PHONY: all split build clean smoke plugin
 
 all: $(BIN)
 
@@ -86,7 +90,7 @@ $(SPLIT)/.touch: mk/custard.mk $(CACHE)/.touch $(ENTRYFILE)
 	$(call bold_msg, "CUSTARD", "SPLIT")
 	$(Q)rm -rf $(SPLIT) && mkdir -p $(SPLIT)
 	$(Q)env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
-	  --lax --codegen Custard --custard_split \
+	  --lax --codegen Custard --custard_split --custard_unit fstarc \
 	  --custard_entry FStarC.Main.main $(ENTRIES) \
 	  --cache_dir $(CACHE) --include src/ --already_cached ',*' \
 	  --warn_error -321-274-272-241 \
@@ -165,6 +169,43 @@ smoke: $(BIN)
 	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) \
 	   --cache_checked_modules --cache_dir $(OUT)/smoke \
 	   ulib/FStar.List.Tot.Properties.fst
+
+# ------------------------------------------------------------------- plugin
+
+# Section 12.8: a plugin compiled by Custard, loaded into the compiler
+# compiled by Custard.  The two runs are separate whole-program extractions
+# and agree only through $(SPLIT)/fstarc.cui, which records for every
+# compiler declaration the name Custard gave it *and* the file it landed in.
+#
+# The extraction runs with the dune-built compiler (the .checked files are
+# its), the load runs with the Custard-built one; nothing else would test
+# anything.  The plugin's own module is checked into $(CACHE) first because
+# --custard_link needs a checked file for it like any other.
+PLUGIN_SRC  := tests/custard/plugin
+PLUGIN_DIR  := $(OUT)/plugin
+PLUGIN_MOD  := CustardPlugin
+
+plugin: $(BIN)
+	$(call bold_msg, "CUSTARD", "PLUGIN")
+	$(Q)rm -rf $(PLUGIN_DIR) && mkdir -p $(PLUGIN_DIR)
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
+	  --cache_checked_modules --cache_dir $(CACHE) \
+	  --include src/ --include $(PLUGIN_SRC) --already_cached ',*' \
+	  --warn_error -321-274-272-241 $(PLUGIN_SRC)/$(PLUGIN_MOD).fst
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
+	  --lax --codegen Custard --custard_unit $(PLUGIN_MOD) \
+	  --custard_link $(SPLIT)/fstarc.cui --custard_entry $(PLUGIN_MOD) \
+	  --cache_dir $(CACHE) --include src/ --include $(PLUGIN_SRC) \
+	  --already_cached ',*' --warn_error -321-274-272-241 \
+	  $(PLUGIN_SRC)/$(PLUGIN_MOD).fst --odir $(PLUGIN_DIR)
+	$(Q)cd $(PLUGIN_DIR) && $(OCAMLOPT) -shared \
+	  -I $(abspath $(BUILD)) -o $(PLUGIN_MOD).cmxs $(PLUGIN_MOD).ml $(FILTER)
+	# The definitions the test reduces are irreducible, so this fails
+	# unless the native steps the plugin registered are the ones answering.
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) \
+	  --load_cmxs $(abspath $(PLUGIN_DIR))/$(PLUGIN_MOD) \
+	  --cache_dir $(PLUGIN_DIR)/cache \
+	  --include $(PLUGIN_SRC) $(PLUGIN_SRC)/$(PLUGIN_MOD)Test.fst
 
 clean:
 	rm -rf $(OUT)

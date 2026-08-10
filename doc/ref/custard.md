@@ -622,6 +622,15 @@ bind.  A use that supplies fewer arguments than there are `Poly` binders --
 supply -- would place them too early.  Only the front of the spine is the same
 position under both.
 
+Specialization does not take the definition apart to substitute; it applies
+the definition to a spine and re-abstracts over what is left, which copes
+uniformly with definitions that are eta-short, that have more binders than
+their type shows, or that are not lambdas at all.  That is eta-expansion, and
+so the spine stops at the definition's own lambdas unless the definition is a
+value: a definition that *computes* before returning a function --- allocating
+a memo table, say --- would otherwise compute again on every call.  See
+§13.5.
+
 The number of holes is part of the key (`sk_holes`), because the abstraction
 step is not injective on terms alone: an argument genuinely written as
 `fun (x:int) -> x` and an argument `x` with one `int` hole abstracted produce
@@ -3835,7 +3844,8 @@ against `src/**/*.fst` turns up, in rough order of size:
    not a realization problem.
 4. **Plugins, native tactics and embeddings** have no counterpart at all.  This
    is not an independent item so much as the acceptance test for §12: a plugin
-   *is* a separately compiled unit linking against the compiler.
+   *is* a separately compiled unit linking against the compiler.  Done (M10d),
+   and it is `make custard-plugin`; see §12.12.
 5. **§3.2b — a `Poly` argument in a `Mono` position — is a hard rejection**,
    and the compiler leans on `FStarC.Class.Show`/`Ord`/`Monad` everywhere.
    Measured (M9d).
@@ -4275,12 +4285,10 @@ Two things are known not to work yet.  A Custard-built compiler cannot read
 `.checked` files written by a dune-built one, and vice versa: a checked file is
 a `Marshal` dump, and the two extractions lay the same F\* types out
 differently.  That is expected and not a bug --- the cache is already versioned
---- but it does mean a Custard-built compiler has to build its own cache.  And
-the ulib **plugins** (`[@@plugin]`, `FStar.Tactics.Typeclasses.mk_class` among
-them) are still compiled by the ML extraction and linked from `fstar.lib`, so
-they register into a different copy of the compiler's tables; any proof that
-needs one fails with "tactic got stuck".  Compiling them with Custard, in the
-same program, is M10d's business.
+--- but it does mean a Custard-built compiler has to build its own cache.  The
+second, the ulib **plugins**, is gone: they are compiled by Custard into the
+same program now (M10p, §13), so `mk_class` and the rest register into the
+tables the compiler actually reads.
 
 Build integration --- item 7 of §12.8, which has to drive `menhir` and `sedlex`
 for the generated parser and lexer and link the result --- is §12.11.  Beyond
@@ -4356,6 +4364,74 @@ full `make` is therefore obsolete.
 `make custard-smoke` checks `FStar.List.Tot.Properties` from source with the
 result, in a fresh `--cache_dir`: as §12.10 says, a Custard-built compiler
 cannot read a dune-built one's `.checked` files.
+
+### 12.12 `make custard-plugin`
+
+Item 4 of §12.8 --- a plugin compiled by Custard, linking against a compiler
+compiled by Custard --- is the acceptance test for this whole section, because
+a plugin is the one thing that is *both* a separate compilation unit and a
+consumer of the compiler's own types.  It is `make custard-plugin`, and it is
+about forty lines of `mk/custard.mk`:
+
+1. check `tests/custard/plugin/CustardPlugin.fst` into the same `--cache_dir`
+   the compiler's own extraction used;
+2. extract it with `--custard_unit CustardPlugin --custard_link
+   stagec/split/fstarc.cui`, which is a *second* whole-program run that
+   happens to have the compiler as its upstream unit;
+3. `ocamlopt -shared -I stagec/build`;
+4. run `stagec/out/bin/fstar.exe --load_cmxs` on
+   `CustardPluginTest.fst`.
+
+The extraction in step 2 runs with the *dune-built* compiler, because the
+`.checked` files are its; the load in step 4 runs with the Custard-built one.
+Anything else would test nothing.
+
+The test file reduces four applications with `norm [primops]` and `trefl`,
+and every definition it applies is `irreducible`.  That is the whole point:
+with the plugin loaded they reduce, and without it the tactic fails with
+error 228, so the test cannot pass by having the interpreter quietly unfold
+the definitions instead.  An earlier version without `irreducible` passed
+with the plugin *and* without it.
+
+#### Linking against a split unit
+
+A `.cui` written before M10d recorded only the *unit* name, which is all a
+reference needs when the upstream was emitted as one file: the reference is
+`Unitname.x`.  But the compiler is built with `--custard_split`, so its
+declarations live in one file per F\* module and most of them are emitted
+under their plain identifier, at home in their own file.  A downstream unit
+that says `Fstarc.fStarC_Ident_lid_of_str` finds nothing.
+
+The observation that makes this small is that **an import from a split
+producer is the same thing as a cross-file reference inside a split output.**
+Both are "this name lives in that file"; the only difference is which run
+emitted it.  So the `.cui` entry gains an `ue_home : option string`, the F\*
+module whose file the declaration was written to, and `PrintOCaml.build_tables`
+folds every import that carries a home into the same `homes` table a local
+split fills in.  Nothing else in the printer changes --- including the
+at-home test, which reproduces the upstream's naming decision exactly because
+the `.cui` carries the *post-`Rename`* name.  The `.cui` format version goes
+7 → 8.
+
+`Driver.run` therefore has to split *before* it writes the unit interface,
+which is the reverse of the old order; the split's result is kept so that
+`write_unit_iface` can consult it.
+
+#### The loader has to register dependences
+
+Desugaring a declaration resolves the names it mentions, so before
+`FStarC.TypeChecker.NBETerm`'s `val`s can be desugared, `FStarC.Effect` has
+to be in the desugaring environment --- `ML` is one of its names.  Batch mode
+gets that for free by walking the dependency graph in order, and so does a
+whole-program run rooted at `FStarC.Main.main`, which transitively reaches
+everything.  A *plugin* run does not: its compiler-side references arrive
+through a linked unit, not through its own imports, so `Loader.ensure_loaded`
+pulls a module in on demand with nothing underneath it.
+
+`ensure_loaded` is now recursive: before registering a module it
+`ensure_loaded`s each of that module's own dependences.  A `loading` set
+breaks the cycle, which is real --- a module's dependences include its own
+interface.
 
 
 ## 13. Plugins
@@ -4583,6 +4659,42 @@ could not have reached.
   did at the top level.
 - **The generated embedding knots recursed eagerly**, described in §13.4.
 
+A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
+
+- **A stateful top-level value was eta-expanded.**  §3.2c specializes by
+  applying a definition to a spine and re-abstracting over what is left, which
+  copes uniformly with definitions that are eta-short or that are not
+  syntactically lambdas at all.  But applying and re-abstracting *is*
+  eta-expansion, and eta-expansion only preserves meaning when reaching the
+  lambda is pure.  `FStarC.TypeChecker.Cfg.cached_steps` is the
+  counterexample:
+
+  ```fstar
+  let cached_steps : unit -> ML prim_step_set =
+      let memo = mk_ref (empty_prim_steps ()) in
+      fun () -> if !extendable_primops_dirty then (...; memo := steps; steps)
+                else !memo
+  ```
+
+  The `ref` is allocated once, when the module is initialized, and every call
+  shares it.  Eta-expanded to `fun x -> (let memo = ... in fun () -> ...) x`
+  it is allocated per call: the first call clears `extendable_primops_dirty`
+  and every later one reads an empty table.  The Custard-built compiler folded
+  *no* primitive step at all --- `1 + 123` did not reduce --- which is also
+  why the plugin appeared not to run.
+
+  > A definition may only be applied to a spine it did not ask for if it is a
+  > value.  Everything else is emitted the way it was written.
+
+  `specialize` now cuts the spine at the definition's own lambdas unless the
+  definition is a value (`eta_safe`: a lambda, a name, a constant, a type),
+  and the residual arrow becomes the declaration's result type --- so
+  `cached_steps` comes out as a value of function type and its callers apply
+  it, which is what the source said.  A `Mono` argument past the cut still
+  forces the application, since there is no other way to specialize on it.
+  `tests/custard/Thunk.fst` is a counter that prints `123` if the reference
+  is shared and `111` if it is not.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -4631,5 +4743,5 @@ could not have reached.
 | M10n | **Reification** (§7.5) and the `custard_no_monomorphize` class opt-out (§3.1) | Done.  `Tac` is compiled through `tac_repr a wp = ref_proofstate -> Dv a`, in `Effects.{is_reifiable,reify_comp,maybe_reify}` and three call sites in `Extract`; `tests/custard/Reify.fst`.  The opt-out is what makes `embedding` a runtime value again, which reification and plugin registration both need. |
 | M10p | **Plugin registration** (§13) | Done.  `FStarC.Custard.RegEmb` generates the registration for a `[@@plugin]` in a module named by `--custard_entry`, and the `e_<name>` for a `[@@plugin]` datatype with it, as F\* syntax handed to `Extract.expr_of_term` rather than as IR (§13.1, §13.4).  All 25 ulib plugin modules are roots in `entrypoints.txt`, and the acceptance test --- a source file declaring a typeclass, checked by the Custard-built `fstar.exe` --- passes.  The recursion in a generated embedding is tied by *substituting* the sub-embedding into the closure that uses it, not by binding it: a `let` hoists the knot out of the closure and the group diverges during module initialization (§13.4).  Fallout in the shared machinery: `Parser.Dep.deps_of` now parses a file the dependency scan never reached (§13.3), and `Extract` normalizes a definition body, its result type and its reification under the binders the specialization kept --- `FStar.Tactics.Util.map : ('a -> Tac 'b) -> ...` reifies to a comp whose universe mentions `'b`, and the top-level environment does not bind it.  Four miscompilations that only a running compiler could expose are in §13.5, the first of them the rule that a reduction whose reduct will be compiled must not fold a primitive step with an unrepresentable result (`Env.SafePrimops`, error 369) |
 | M10o | **The `FStar.Stubs.*` rename** (§8.2) | Done.  `Builtins.no_fstar_stubs`, applied in `Extract.name_of_lid`, so that a plugin's `FStar.Stubs.Tactics.Types.proofstate` and the compiler's `FStarC.Tactics.Types.proofstate` are one name.  Fallout: `solve` is now `inline_for_extraction` in its five copies (its `{| ev : a |}` binder made `#a` `Mono`, which §3.2b rejects once `embedding` is no longer specialized), and record ascription had to cover projections as well as record expressions (§5.5). |
-| M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | The acceptance test for §12 |
+| M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | Done, and it is `make custard-plugin` (§12.12).  A `.cui` entry now records the *file* a declaration was emitted into (`ue_home`), not just the unit, because the compiler is built split; an import that carries one is folded into the printer's `homes` table, since an import from a split producer and a cross-file reference inside a split output are the same thing.  `Loader.ensure_loaded` registers a module's dependences before the module, which a plugin run needs and a whole-program run got for free.  The test reduces `irreducible` definitions with `norm [primops]`, so it fails without the plugin.  It exposed the sixth miscompilation of §13.5: specialization eta-expanded `Cfg.cached_steps`, reallocating its memo table per call, and the extracted compiler folded no primops at all |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

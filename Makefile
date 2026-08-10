@@ -650,7 +650,7 @@ watch:
 # (doc/ref/custard.md section 12.10).  Needs a stage2 compiler, for the
 # extraction itself and for its checked files.
 
-.PHONY: custard custard-smoke clean-custard
+.PHONY: custard custard-smoke custard-plugin clean-custard
 
 custard: 2.full
 	$(call bold_msg, "CUSTARD", "FSTAR")
@@ -666,6 +666,13 @@ custard-smoke: 2.full
 	  ULIB_CHECKED=stage2/ulib.checked \
 	  FSTARC_CHECKED=stage2/fstarc.checked \
 	  $(MAKE) -f mk/custard.mk smoke
+
+custard-plugin: 2.full
+	+env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
+	  ULIB_CHECKED=stage2/ulib.checked \
+	  FSTARC_CHECKED=stage2/fstarc.checked \
+	  $(MAKE) -f mk/custard.mk plugin
 
 clean-custard: .force
 	rm -rf stagec
@@ -767,6 +774,7 @@ help:
 	echo "  all-packages       build the four previous rules"
 	echo "  custard            build an fstar.exe extracted by Custard (into stagec/)"
 	echo "  custard-smoke      build it and check a ulib module with it"
+	echo "  custard-plugin     build it and load a Custard-compiled plugin into it"
 	echo "  clean-depend       remove all .depend files, useful when files change name"
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
 	echo "  distclean          remove every generated file"
