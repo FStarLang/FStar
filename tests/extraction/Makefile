@@ -2,6 +2,13 @@ FSTAR_ROOT ?= ../..
 
 SUBDIRS += cmi
 
+# Cross-backend matrix: every language feature and specially-handled
+# primitive, extracted, compiled and *run* on OCaml, C and Rust.
+# Needs krml and rustc, so it is opt-in.
+ifeq ($(FSTAR_TEST_BACKENDS),1)
+SUBDIRS += backends
+endif
+
 RUN += Eta_expand.fst
 
 # The Div test is based on testing a non-terminating program and
