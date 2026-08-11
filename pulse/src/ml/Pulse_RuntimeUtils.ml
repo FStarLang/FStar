@@ -170,11 +170,11 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
             let g = {g with instantiate_imp=false; phase1=true; admit=true} in
             let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
             let _ = FStarC_TypeChecker_Rel.resolve_implicits g guard in
-            let uvs = FlatSet.union Free.ord_ctx_uvar (Free.uvars e) (Free.uvars t) in
+            let uvs = P.union_ctx_uvars (Free.uvars e) (Free.uvars t) in
             if not (FlatSet.is_empty uvs)
             then None
             else (
-              let univs = FlatSet.union Free.ord_univ_uvar (Free.univs e) (Free.univs t) in
+              let univs = P.union_univ_uvars (Free.univs e) (Free.univs t) in
               let univs = FlatSet.elems univs in
               List.iter (fun univ -> FStarC_Syntax_Unionfind.univ_change univ S.U_unknown) univs;
               let t = FStarC_Syntax_Compress.deep_compress false true t in

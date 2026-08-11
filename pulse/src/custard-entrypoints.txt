@@ -20,9 +20,8 @@ FStarC.Syntax.Util.unlazy_as_t
 FStarC.Syntax.Free.ord_ctx_uvar
 FStarC.Syntax.Free.ord_univ_uvar
 
-# Not here, and it cannot be: FStarC.FlatSet.union takes a typeclass
-# dictionary, which section 3.1 classifies Mono, and a root has no call site
-# to specialize it at.  Custard says so (error 363, "the argument passed to
-# the monomorphized binder number 0 of FStarC.FlatSet.add is the runtime
-# parameter a").  Pulse_RuntimeUtils.ml still calls it, so it does not yet
-# compile against a Custard-built compiler; see doc/ref/custard.md 12.13.
+# FStarC.FlatSet.union is deliberately not here, and could not be: it takes a
+# typeclass dictionary, which section 3.1 classifies Mono, and a root has no
+# call site to specialize it at (error 363).  A Mono binder wants a call site,
+# so PulseSyntaxExtension.Env gives it one -- see union_ctx_uvars there, and
+# doc/ref/custard.md section 12.13.

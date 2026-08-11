@@ -4538,52 +4538,81 @@ entry in `Builtins.realized_modules`.  And none of the four realizations
 mentions a Pulse F\* module, so §12.9's output splitting is not needed here at
 all --- the circularity that forced splitting on the compiler does not exist.
 
-**Two things stop it.**  A third, the polymorphic plugin
-`check_pulse_after_desugar (decl:'a)`, is done: §13.4 now generates the
+**One thing stops it.**  Two others are done.  The polymorphic plugin
+`check_pulse_after_desugar (decl:'a)` is done: §13.4 now generates the
 `mk_any_emb` registration for it, and `Pulse.Main` extracts with no
-`--warn_error` suppression at all.
+`--warn_error` suppression at all.  And every compiler symbol the
+realizations name now resolves against a Custard-built compiler.
 
-1. **One symbol whose specialization has no call site.**  A Custard-built
-   compiler contains what its own entry points reach, and no more; a plugin's
-   hand-written OCaml calls it by OCaml name, through no request Custard can
-   see.  §12.11's `--custard_entrypoints` is the answer, and
-   `pulse/src/custard-entrypoints.txt` now carries Pulse's list.  Six of the
-   seven symbols `Pulse_RuntimeUtils.ml` needs go in it and land:
-   `Errors.with_error_bound`, `Syntax.Compress.deep_compress_uvars`,
-   `TypeChecker.Normalize.unfold_whnf'`, `Syntax.Util.unlazy_as_t` and the two
-   `Syntax.Free` `ord` instances.  (Its other 68 references to the compiler
-   resolve already, and were only ever *thought* to be at risk: a scan that
-   does not strip OCaml comments reports symbols that appear in a commented-out
-   block.)
+**How the realizations were made to resolve.**  A Custard-built compiler
+contains what its own entry points reach, and no more; a plugin's
+hand-written OCaml calls it by OCaml name, through no request Custard can
+see.  §12.11's `--custard_entrypoints` is the answer, and
+`pulse/src/custard-entrypoints.txt` now carries Pulse's list.  Six of the
+seven symbols `Pulse_RuntimeUtils.ml` needed go in it and land:
+`Errors.with_error_bound`, `Syntax.Compress.deep_compress_uvars`,
+`TypeChecker.Normalize.unfold_whnf'`, `Syntax.Util.unlazy_as_t` and the two
+`Syntax.Free` `ord` instances.  (Its other 68 references to the compiler
+resolved already, and were only ever *thought* to be at risk: a scan that
+does not strip OCaml comments reports symbols that appear in a commented-out
+block.)
 
-   The seventh cannot go in it.  `FStarC.FlatSet.union` takes a typeclass
-   dictionary, and §3.1 classifies such a binder `Mono`, so it is specialized
-   at each *call site* --- and a root has no call site.  Custard makes the
-   root's dictionary a runtime parameter and then fails one level down, where
-   `union` passes it to `add`:
+The seventh could not.  `FStarC.FlatSet.union` takes a typeclass dictionary,
+and §3.1 classifies such a binder `Mono`, so it is specialized at each *call
+site* --- and a root has no call site.  Custard makes the root's dictionary a
+runtime parameter and then fails one level down, where `union` passes it to
+`add`:
 
-   ```
-   Error 363: The argument passed to the monomorphized binder number 0 of
-   FStarC.FlatSet.add is the runtime parameter a, so there is nothing to
-   specialize on.  Reached through: FStarC.FlatSet.union
-   ```
+```
+Error 363: The argument passed to the monomorphized binder number 0 of
+FStarC.FlatSet.add is the runtime parameter a, so there is nothing to
+specialize on.  Reached through: FStarC.FlatSet.union
+```
 
-   This is not the entry-point mechanism failing.  It is the general question
-   of passing a `Poly` argument where a `Mono` binder is expected, which is a
-   performance cliff, was ruled out of v1 by design, and would need `add` and
-   everything below it compiled generically too.  Until then a plugin's
-   realization must not call a compiler function with a monomorphized binder;
-   `Pulse_RuntimeUtils.ml` does, in one line, and that is the whole of what is
-   left of this item.
+This is not the entry-point mechanism failing.  It is the general question of
+passing a `Poly` argument where a `Mono` binder is expected, which is a
+performance cliff, was ruled out of v1 by design, and would need `add` and
+everything below it compiled generically too.
 
-2. **Two units untried.**  Only `checker` has been extracted.  `extraction`
+The fix is the one the design already asks for: a `Mono` binder wants a call
+site, so give it one.  `PulseSyntaxExtension.Env` --- a Pulse F\* module,
+already built `--with_fstarc`, already named by `Pulse_RuntimeUtils.ml` ---
+gained two three-line wrappers,
+
+```fstar
+open FStarC.Syntax.Free {} // the ord instances for uvars
+
+let union_ctx_uvars (s1 s2 : FlatSet.t S.ctx_uvar) : ML (FlatSet.t S.ctx_uvar) =
+  FStarC.FlatSet.union s1 s2
+let union_univ_uvars (s1 s2 : FlatSet.t S.universe_uvar) : ML (FlatSet.t S.universe_uvar) =
+  FStarC.FlatSet.union s1 s2
+```
+
+and the realization calls those.  Note the `open ... {}`, which imports
+instances and nothing else: a `{| |}` binder cannot be supplied with
+`#`-syntax, so the instance has to be *in scope* rather than passed (error
+189, "Expected expression of type Type").  These are entry points of the
+*plugin*, not of the compiler, so they are specialized where Custard can see
+the type --- and in fact they specialize to code the compiler already has:
+
+```ocaml
+let union_ctx_uvars (s1 : FStarC_Syntax_Syntax.ctx_uvar list) =
+  FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__ctx_uvar s1
+```
+
+So no entry point was needed for `union` after all, and this is the general
+shape of the answer for any monomorphized compiler function a realization
+wants: name it from F\*, at the type you mean, and call the wrapper.
+
+With that, `PulseSyntaxExtension_Env.ml` and `Pulse_RuntimeUtils.ml` both
+compile against `stagec/build` with no unresolved symbol.
+
+1. **Two units untried.**  Only `checker` has been extracted.  `extraction`
    and `syntax_extension` remain, and the latter is built around a menhir
    grammar of its own, which §12.11 handles for the compiler's parser but has
-   not been asked to do for a plugin's.  `Pulse_RuntimeUtils.ml` also refers to
-   `PulseSyntaxExtension_Env`, so even item 1's file cannot be compiled on its
-   own until `syntax_extension` is built --- the measurement above stubs that
-   module out.
-
+   not been asked to do for a plugin's.  (`PulseSyntaxExtension.Env` itself
+   extracts, split, under `--custard_split`, which is how the wrapper above
+   was checked; it is the rest of the unit that is untried.)
 
 ## 13. Plugins
 
@@ -4962,7 +4991,8 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10o | **The `FStar.Stubs.*` rename** (§8.2) | Done.  `Builtins.no_fstar_stubs`, applied in `Extract.name_of_lid`, so that a plugin's `FStar.Stubs.Tactics.Types.proofstate` and the compiler's `FStarC.Tactics.Types.proofstate` are one name.  Fallout: `solve` is now `inline_for_extraction` in its five copies (its `{| ev : a |}` binder made `#a` `Mono`, which §3.2b rejects once `embedding` is no longer specialized), and record ascription had to cover projections as well as record expressions (§5.5). |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | Done, and it is `make custard-plugin` (§12.12).  A `.cui` entry now records the *file* a declaration was emitted into (`ue_home`), not just the unit, because the compiler is built split; an import that carries one is folded into the printer's `homes` table, since an import from a split producer and a cross-file reference inside a split output are the same thing.  `Loader.ensure_loaded` registers a module's dependences before the module, which a plugin run needs and a whole-program run got for free.  The test reduces `irreducible` definitions with `norm [primops]`, so it fails without the plugin.  It exposed the sixth miscompilation of §13.5: specialization eta-expanded `Cfg.cached_steps`, reallocating its memo table per call, and the extracted compiler folded no primops at all |
 | M10q | Cleanup: bounded normalization everywhere, target-native tuples and `option` | Done.  Every normalization Custard performs now runs under `--custard_norm_budget`, through `Extract.norm_bounded` or the new `Mono.norm_bounded` for the callers below the extractor; the four sites in `Mono` and `RegEmb` that did not were the last unbounded ones (§12.8 item 8).  And a realized type that the realization defines as an *alias* of a type the target already has is printed as that target type: `FStar.Pervasives.Native`'s `tupleN` in OCaml's tuple syntax and its `option` as OCaml's `option`, so that no Custard-generated line in the extracted compiler names `FStar_Pervasives_Native` (§8.2).  `fst`/`snd` are `inline_for_extraction` |
-| M10r | Extract the Pulse checker (§12.13) | Measured, not finished.  `Pulse.Main` extracts whole against the compiler's `.cui`, with no `--warn_error` suppression --- 7.6k lines, and both registrations come out correct: `check_pulse`'s nine-argument one and, since M10s, `check_pulse_after_desugar`'s polymorphic one.  Pulse needs no new `Builtins` entry and no output splitting, since its realizations name no Pulse module.  What is left: `Pulse_RuntimeUtils.ml` calls `FStarC.FlatSet.union`, whose typeclass dictionary is a `Mono` binder that a root cannot specialize (error 363, and the general fix is the v1-deferred `Poly`-into-`Mono` case); and the `extraction` and `syntax_extension` units are untried, the latter with a menhir grammar of its own |
+| M10r | Extract the Pulse checker (§12.13) | Measured, not finished.  `Pulse.Main` extracts whole against the compiler's `.cui`, with no `--warn_error` suppression --- 7.6k lines, and both registrations come out correct: `check_pulse`'s nine-argument one and, since M10s, `check_pulse_after_desugar`'s polymorphic one.  Pulse needs no new `Builtins` entry and no output splitting, since its realizations name no Pulse module.  Every compiler symbol its realizations name now resolves against `stagec/build`, and `Pulse_RuntimeUtils.ml` compiles there.  What is left: the `extraction` and `syntax_extension` units are untried, the latter with a menhir grammar of its own |
 | M10t | **Plugin-supplied entry points** (§12.11, §12.13) | Done.  `--custard_entrypoints FILE` reads a file of roots --- one per line, `#` for comments --- so the format is the compiler's rather than a `sed` in the makefile, and so a *plugin* can ship one: the compiler is built before the plugin exists, and a realization's callees have to be in the binary the plugin is loaded into.  `mk/custard.mk` now passes `src/custard/entrypoints.txt` and `pulse/src/custard-entrypoints.txt` this way, and takes more in `CUSTARD_ENTRYFILES`; `make custard` is itself the test, since all 328 compiler roots now arrive through the new option.  Six of the seven compiler symbols `Pulse_RuntimeUtils.ml` needs now resolve against `stagec/build` |
+| M10u | **A realization calling a monomorphized compiler function** (§12.13) | Done.  The seventh symbol, `FStarC.FlatSet.union`, could not be an entry point: its typeclass dictionary is a `Mono` binder and a root has no call site to specialize it at.  A `Mono` binder wants a call site, so `PulseSyntaxExtension.Env` --- a Pulse F\* module already built `--with_fstarc` and already named by the realization --- now gives it one, in two three-line wrappers at the types Pulse actually uses.  The instance has to be brought into scope with `open FStarC.Syntax.Free {}` rather than passed with `#`, since a `{| |}` binder is not an implicit one (error 189).  They specialize to `FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__ctx_uvar`, which the compiler already has, so no entry point was needed after all.  `PulseSyntaxExtension_Env.ml` and `Pulse_RuntimeUtils.ml` now both compile against `stagec/build` with nothing unresolved |
 | M10s | **Polymorphic plugins** (§13.4) | Done.  A `[@@plugin]` with leading type binders registers: the type variable's embedding is `mk_any_emb` on the type argument, and a generated match peels one argument per type binder off the front of the primitive step's argument list, so the registered arity counts the type arguments while the combinator's index does not.  Only leading type binders; one after a value binder is still rejected.  `tests/custard/plugin` adds `pid`, `psnd`, `pcount` and `pswap` (the last putting an identity embedding *under* an `e_tuple2`), all `irreducible`, so the test fails with error 228 without the plugin loaded.  Specializing `mk_any_emb` into a plugin also exposed that `Extract.import` never filed a linked declaration in `st.emitted`, so every cross-unit call was typed `TAny` and classified `E_Pure` --- `!Options.debug_embedding` printed as an array index, and an imported effectful call could have been dropped |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |
