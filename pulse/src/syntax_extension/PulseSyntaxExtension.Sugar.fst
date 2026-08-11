@@ -145,6 +145,7 @@ type stmt' =
     
   | If {
       head:stmt;
+      requires_slprop:option slprop;
       join_slprop:option ensures_slprop;
       then_:stmt;
       else_opt:option stmt;
@@ -329,9 +330,10 @@ let rec stmt_to_string (s:stmt) : ML string =
     ]
   | Block { stmt } ->
     "Block {" ^ stmt_to_string stmt ^ "}"
-  | If { head; join_slprop; then_; else_opt } ->
+  | If { head; requires_slprop; join_slprop; then_; else_opt } ->
     "If " ^ record_string [
       "head", stmt_to_string head;
+      "requires_slprop", show requires_slprop;
       "join_slprop", show join_slprop;
       "then_", stmt_to_string then_;
       "else_opt", FStarC.Common.string_of_option stmt_to_string else_opt;
@@ -487,8 +489,10 @@ and eq_stmt' (s1 s2:stmt') : ML bool =
     eq_opt AD.eq_term t1 t2 &&
     eq_let_init init1 init2
   | Block { stmt=s1 }, Block { stmt=s2 } -> eq_stmt s1 s2
-  | If { head=h1; join_slprop=j1; then_=t1; else_opt=e1 }, If { head=h2; join_slprop=j2; then_=t2; else_opt=e2 } ->
+  | If { head=h1; requires_slprop=q1; join_slprop=j1; then_=t1; else_opt=e1 },
+    If { head=h2; requires_slprop=q2; join_slprop=j2; then_=t2; else_opt=e2 } ->
     eq_stmt h1 h2 &&
+    eq_opt eq_slprop q1 q2 &&
     eq_opt eq_ensures_slprop j1 j2 &&
     eq_stmt t1 t2 &&
     eq_opt eq_stmt e1 e2
@@ -634,8 +638,9 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) : ML unit =
     cbs.scan_pattern p;
     iopt cbs.scan_term t
   | Block { stmt=s } -> scan_stmt cbs s
-  | If { head=h; join_slprop=j; then_=t; else_opt=e } ->
+  | If { head=h; requires_slprop=q; join_slprop=j; then_=t; else_opt=e } ->
     scan_stmt cbs h;
+    iopt (scan_slprop cbs) q;
     iopt (scan_ensures_slprop cbs) j;
     scan_stmt cbs t;
     iopt (scan_stmt cbs) e
@@ -717,7 +722,8 @@ let mk_unit rng = Expr { e = A.mk_term (A.Const FStarC.Const.Const_unit) rng A.E
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
 let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; pat; typ; init }
 let mk_block stmt = Block { stmt }
-let mk_if head join_slprop then_ else_opt = If { head; join_slprop; then_; else_opt }
+let mk_if head requires_slprop join_slprop then_ else_opt =
+  If { head; requires_slprop; join_slprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }
 let mk_while guard invariant body = While { guard; invariant; body }
 let mk_intro slprop witnesses = Introduce { slprop; witnesses }

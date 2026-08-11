@@ -604,8 +604,20 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
     | Block { stmt } ->
       desugar_stmt env stmt
 
-    | If { head; join_slprop; then_; else_opt } ->
+    | If { head; requires_slprop; join_slprop; then_; else_opt } ->
       let! head = desugar_stmt env head in
+      let! requires_slprop =
+        match requires_slprop, join_slprop with
+        | None, _ -> return None
+        | Some _, None ->
+          fail "A `requires` annotation on an `if` must be followed by an `ensures` annotation: \
+                the `requires` selects the part of the context the branches must transform, \
+                and the `ensures` describes what they establish for it."
+               s.range
+        | Some t, Some _ ->
+          let! vp = desugar_slprop env t in
+          return (Some vp)
+      in
       let! join_slprop =
         match join_slprop with
         | None -> return None
@@ -621,7 +633,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         | Some e ->
           desugar_stmt env e
       in
-      return (swr (PSBuild.tm_if head then_ else_ join_slprop) s.range)
+      return (swr (PSBuild.tm_if head then_ else_ requires_slprop join_slprop) s.range)
 
     | Match { head; returns_annot; branches } ->
       let! head = desugar_stmt env head in

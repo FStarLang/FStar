@@ -210,9 +210,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
               (st_term_to_string' (indent level) body)
               (match c.elaborated with | None -> "" | Some c -> " <: " ^ comp_to_string c)
 
-    | Tm_If { b; then_; else_ } ->
-      sprintf "if (%s)\n%s{\n%s%s\n%s}\n%selse\n%s{\n%s%s\n%s}"
+    | Tm_If { b; then_; else_; pre; post } ->
+      sprintf "if (%s)%s%s\n%s{\n%s%s\n%s}\n%selse\n%s{\n%s%s\n%s}"
         (st_term_to_string' level b)
+        (match pre with | None -> "" | Some p -> sprintf "\n%srequires %s" level (term_to_string p))
+        (match post with | None -> "" | Some p -> sprintf "\n%sensures %s" level (term_to_string p))
         level
         (indent level)
         (st_term_to_string' (indent level) then_)

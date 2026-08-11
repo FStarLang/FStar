@@ -203,8 +203,8 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_TotBind { binder; head; body } ->
     ret (Tm_TotBind { binder; head; body = with_open binder body })
 
-  | Tm_If { b; then_; else_; post } ->
-    ret (Tm_If { b = simplify_st_term g b; then_ = simplify_st_term g then_; else_ = simplify_st_term g else_; post })
+  | Tm_If { b; then_; else_; pre; post } ->
+    ret (Tm_If { b = simplify_st_term g b; then_ = simplify_st_term g then_; else_ = simplify_st_term g else_; pre; post })
 
   | Tm_Match { sc; returns_; brs } ->
     ret (Tm_Match { sc = simplify_st_term g sc; returns_; brs = T.map (simplify_branch g) brs })
@@ -295,11 +295,11 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
       else let body = open_erase_close g binder body in
            ret (Tm_TotBind { binder; head; body })
 
-    | Tm_If { b; then_; else_; post } ->
+    | Tm_If { b; then_; else_; pre; post } ->
       let b = erase_ghost_subterms g b in
       let then_ = erase_ghost_subterms g then_ in
       let else_ = erase_ghost_subterms g else_ in
-      ret (Tm_If { b; then_; else_; post })
+      ret (Tm_If { b; then_; else_; pre; post })
 
     | Tm_Match { sc; brs; returns_ } ->
       let sc = erase_ghost_subterms g sc in

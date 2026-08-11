@@ -112,7 +112,20 @@ let intro_post_hint g effect_annot ret_ty_opt post =
     post=post';
     }
 
-let post_hint_from_comp_typing g c = 
+let ambient_effect_annot (g:env) (post_hint:post_hint_opt g) : effect_annot =
+  match post_hint with
+  | PostHint ph -> ph.effect_annot
+  | _ ->
+    let rec aux (bs:list binding) : effect_annot =
+      match bs with
+      | BindingGotoLabel { post } :: _ ->
+        if C_STDiv? post then EffectAnnotSTTDiv else EffectAnnotSTT
+      | _ :: bs -> aux bs
+      | [] -> EffectAnnotSTT
+    in
+    aux (bindings g)
+
+let post_hint_from_comp_typing g c =
   let p : post_hint_t = 
     { g;
       effect_annot = effect_annot_of_comp c;
@@ -711,7 +724,7 @@ let convert_fstar_match (g:env) (t:term)
       let sc_st = mk_term (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=sc}) (RU.range_of_term sc) in
       Some (match results with
         | [(_pat1, body1); (_pat2, body2)] ->
-          mk_term (Tm_If { b = sc_st; then_ = body1; else_ = body2; post = None }) rng
+          mk_term (Tm_If { b = sc_st; then_ = body1; else_ = body2; pre = None; post = None }) rng
         | _ ->
           let pulse_brs : list branch = T.map (fun (rpat, e) ->
             match RB.readback_pat rpat with

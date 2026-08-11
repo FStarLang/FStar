@@ -13,6 +13,33 @@ Guidelines for the changelog:
 
 ## Pulse
 
+  * A Pulse conditional whose postcondition is annotated may now also carry a
+    `requires` clause, which restricts the annotation to a part of the context:
+
+    ```
+    let mut x = 6;
+    let mut y = 7;
+    if (!x < !y)
+      requires live y
+      ensures y |-> 42
+    { y := !x + 36; }
+    ```
+
+    The `requires` is proven against the context at the conditional, and the
+    leftover frame (here `x |-> 6`) is added back to the `ensures` to form the
+    postcondition of the conditional. Without a `requires`, an `ensures` must
+    still describe the whole context, as before, so existing code is unaffected.
+    Fixes https://github.com/FStarLang/FStar/issues/4417.
+
+  * An `if` annotated with an `ensures` (with or without a `requires`) now
+    infers its effect in all cases, rather than only when its branches do not
+    need the annotation themselves. Previously, a divergent call in a branch
+    that also allocated a mutable local (or otherwise required a postcondition
+    hint) was rejected even inside a `divergent fn`. As for labeled blocks, an
+    annotation on a conditional fixes only its postcondition slprop; its effect
+    is that of the enclosing computation.
+    Fixes https://github.com/FStarLang/FStar/issues/4418.
+
   * Each branch of a Pulse `match` is now checked under the additional
     hypotheses that the scrutinee does *not* match any of the *preceding*
     patterns, one hypothesis per preceding pattern, of the form
