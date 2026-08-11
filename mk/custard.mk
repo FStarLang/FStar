@@ -34,10 +34,14 @@ SPLIT   := $(OUT)/split
 BUILD   := $(OUT)/build
 BIN     := $(OUT)/out/bin/fstar.exe
 
-ENTRYFILE := src/custard/entrypoints.txt
-# NB: [#] rather than # in the regex; make would take a bare # for a comment.
-# The names are double-quoted because some of them end in a prime.
-ENTRIES   := $(shell sed -e 's/[#].*//' -e '/^[[:space:]]*$$/d' $(ENTRYFILE) | sed 's/.*/--custard_entry "&"/')
+# The compiler's own roots, and the roots a *plugin's* hand-written OCaml
+# needs: a realization calls the compiler by OCaml name, through no request
+# Custard can see, so the symbol has to be named in the build of the binary
+# the plugin is loaded into.  Pulse is built by this repo, so its list is
+# here; another plugin adds its file to CUSTARD_ENTRYFILES.
+ENTRYFILES := src/custard/entrypoints.txt pulse/src/custard-entrypoints.txt \
+              $(CUSTARD_ENTRYFILES)
+ENTRIES    := $(patsubst %,--custard_entrypoints %,$(ENTRYFILES))
 
 # The realizations, the two grammars and the two sedlex lexers.
 # The version stamp is a script that assigns to FStarC.Options' `_version'
@@ -86,7 +90,7 @@ $(CACHE)/.touch: mk/custard.mk $(CHECKED_FILES)
 	$(Q)cp -f $(FSTARC_CHECKED)/* $(CACHE)/
 	$(Q)touch $@
 
-$(SPLIT)/.touch: mk/custard.mk $(CACHE)/.touch $(ENTRYFILE)
+$(SPLIT)/.touch: mk/custard.mk $(CACHE)/.touch $(ENTRYFILES)
 	$(call bold_msg, "CUSTARD", "SPLIT")
 	$(Q)rm -rf $(SPLIT) && mkdir -p $(SPLIT)
 	$(Q)env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \

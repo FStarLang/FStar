@@ -43,8 +43,25 @@ module Ident   = FStarC.Ident
 module TcEnv   = FStarC.TypeChecker.Env
 module Unit    = FStarC.Custard.Unit
 
+(* The roots.  Section 4.4: Custard compiles what is reachable from these and
+   nothing else, so anything a *hand-written* file calls has to be named,
+   since no request Custard can see reaches it.  [--custard_entry] names one;
+   [--custard_entrypoints] names a file of them, which is how a plugin ships
+   the list of compiler symbols its own realizations call (section 12.13). *)
+let entrypoints_of_file (f:string) : ML (list string) =
+  if not (FStarC.Filepath.file_exists f) then
+    E.raise_error0 E.Error_CustardEntryNotFound [
+      text ("Custard cannot read the entry-point file " ^ f ^ ".")
+    ]
+  else
+    BU.file_get_lines f |> List.collect (fun line ->
+      let line = BU.trim_string (List.hd (BU.split line "#")) in
+      if line = "" then [] else [line])
+
 let entrypoints () =
-  Options.custard_entries () |> List.map Ident.lid_of_str
+  (Options.custard_entrypoint_files () |> List.collect entrypoints_of_file)
+  @ Options.custard_entries ()
+  |> List.map Ident.lid_of_str
 
 let main_entry () : ML (option Ident.lident) =
   match Options.custard_main () with

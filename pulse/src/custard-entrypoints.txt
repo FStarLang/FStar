@@ -1,0 +1,28 @@
+# Compiler entry points the Pulse plugin needs.
+#
+# Custard compiles exactly what is reachable from its roots, and the roots of
+# a compiler build are FStarC.Main.main plus src/custard/entrypoints.txt.  The
+# hand-written OCaml under pulse/src/ml is outside every extracted program:
+# it calls the compiler by OCaml name, through no request Custard can see, so
+# nothing reaches these and they are dropped.
+#
+# This file is passed to the *compiler's* build with --custard_entrypoints,
+# not to the plugin's -- the symbols have to be in the binary the plugin is
+# loaded into.  See doc/ref/custard.md section 12.13.
+#
+# Blank lines and lines starting with `#' are ignored.
+
+# Pulse_RuntimeUtils.ml
+FStarC.Errors.with_error_bound
+FStarC.Syntax.Compress.deep_compress_uvars
+FStarC.TypeChecker.Normalize.unfold_whnf'
+FStarC.Syntax.Util.unlazy_as_t
+FStarC.Syntax.Free.ord_ctx_uvar
+FStarC.Syntax.Free.ord_univ_uvar
+
+# Not here, and it cannot be: FStarC.FlatSet.union takes a typeclass
+# dictionary, which section 3.1 classifies Mono, and a root has no call site
+# to specialize it at.  Custard says so (error 363, "the argument passed to
+# the monomorphized binder number 0 of FStarC.FlatSet.add is the runtime
+# parameter a").  Pulse_RuntimeUtils.ml still calls it, so it does not yet
+# compile against a Custard-built compiler; see doc/ref/custard.md 12.13.

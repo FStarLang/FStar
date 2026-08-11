@@ -196,6 +196,7 @@ let defaults = [
   ("codegen-lib"                               , List []);
   ("codegen"                                   , Unset);
   ("custard_entry"                             , List []);
+  ("custard_entrypoints"                       , List []);
   ("custard_main"                              , Unset);
   ("custard_dump_ir"                           , Bool false);
   ("custard_dump_specializations"              , Bool false);
@@ -482,6 +483,7 @@ let get_no_cmi                  ()      = lookup_opt "no_cmi"                   
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
+let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      (as_list as_string)
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
@@ -897,6 +899,15 @@ compiles the definitions reachable from these roots. It does *not* make them \
 run: use --custard_main for that. A module name may be given instead of a \
 definition, which makes the module's top-level effects part of the program \
 without naming anything in it.");
+
+  ( noshort,
+    "custard_entrypoints",
+    Accumulated (PathStr "file"),
+    text "A file of --custard_entry roots, one per line; blank lines and \
+lines whose first non-blank character is # are ignored. May be repeated. A \
+plugin's hand-written realizations call the compiler by OCaml name, through \
+no request Custard can see, so the plugin ships such a file and the compiler \
+build reads it alongside its own.");
 
   ( noshort,
     "custard_main",
@@ -2182,6 +2193,7 @@ let codegen                      () =
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let custard_entries              () = get_custard_entry ()
+let custard_entrypoint_files     () = get_custard_entrypoints ()
 let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()
