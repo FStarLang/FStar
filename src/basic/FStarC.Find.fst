@@ -42,6 +42,7 @@ let clear () : ML unit =
 
 (* Internal state, settable with the functions exposed in the interface. *)
 let _include : ref (list string) = mk_ref []
+let _file_list : ref (list string) = mk_ref []
 let _cache_dir : ref (option string) = mk_ref None
 let _odir : ref (option string) = mk_ref None
 let _no_default_includes : ref bool = mk_ref false
@@ -51,6 +52,10 @@ let get_include_path () : ML (list string) = !_include
 let set_include_path (path : list string) : ML unit =
   clear ();
   _include := path
+
+let set_file_list (files : list string) : ML unit =
+  clear ();
+  _file_list := files
 
 let get_cache_dir () : ML (option string) = !_cache_dir
 let set_cache_dir (path : string) : ML unit =
@@ -127,6 +132,36 @@ let lib_paths () : ML _ =
   (Common.option_to_list (lib_root ()) |> expand_include_ds)
   @ fstarc_paths ()
 
+let rec path_is_at_or_below (root:string) (path:string) : ML bool =
+  if root = path then true
+  else
+    let parent = Filepath.dirname path in
+    parent <> path && path_is_at_or_below root parent
+
+(* Add existing command-line file parents as specific roots while preserving the cwd root.
+  This is only necessary when no include path is specified. For example, when running:
+  > fstar.exe test/Test01.fst
+  we add `test` as an include path under the assumption that the file defines the Test01 module. *)
+let command_line_include_paths () : ML (list string) =
+  match !_file_list with
+  | [] -> expand_include_d "."
+  | files ->
+    let explicit_roots = List.map Filepath.normalize_file_path !_include in
+    let file_roots =
+      List.fold_left (fun roots file ->
+        if Filepath.file_exists file && not (Filepath.is_directory file) then
+          let root = Filepath.normalize_file_path (Filepath.dirname file) in
+          if List.contains root roots then roots else roots @ [root]
+        else roots)
+        [] files
+    in
+    let uncovered_roots =
+      List.filter (fun root ->
+        not (List.existsb (fun explicit_root ->
+          path_is_at_or_below explicit_root root) explicit_roots)) file_roots
+    in
+    expand_include_ds uncovered_roots @ expand_include_d "."
+
 let full_include_path () : ML _ =
   // Stats.record "Find.full_include_path" fun () ->
   match !_full_include with
@@ -139,7 +174,7 @@ let full_include_path () : ML _ =
         | Some c -> [c]
       in
       let include_paths = !_include |> expand_include_ds in
-      cache_dir @ lib_paths () @ include_paths @ expand_include_d "."
+      cache_dir @ lib_paths () @ include_paths @ command_line_include_paths ()
     in
     _full_include := Some res;
     res

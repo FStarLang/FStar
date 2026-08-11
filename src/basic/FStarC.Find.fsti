@@ -23,6 +23,9 @@ open FStarC.Effect
 val get_include_path () : ML (list string)
 val set_include_path (path : list string) : ML unit
 
+(* Source files given on the command line. *)
+val set_file_list (files : list string) : ML unit
+
 (* --cache_dir *)
 val get_cache_dir () : ML (option string)
 val set_cache_dir (path : string) : ML unit

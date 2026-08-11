@@ -1811,6 +1811,8 @@ let parse_cmd_line () =
     let paths = as_list as_string (get_option "include") in
     paths |> List.iter (fun p -> !check_include_dir p);
     Find.set_include_path (Find.get_include_path () @ paths);
+    (* Preserve command-line spelling for diagnostics; Find derives parent roots. *)
+    Find.set_file_list !file_list_;
     ()
   in
   parsed_args_state := Some (snapshot_all ());
