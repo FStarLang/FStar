@@ -144,7 +144,6 @@ type decl =
   | Push       : int -> decl
   | Pop        : int -> decl
   | CheckSat
-  | GetUnsatCore
   | SetOption  : string -> string -> decl
   | GetStatistics
   | GetReasonUnknown
@@ -183,9 +182,6 @@ type decls_elt = {
 
 type decls_t = list decls_elt
 val escape: string -> string
-
-type error_label = (fv & Errors.error_message & Range.t)
-type error_labels = list error_label
 
 (*
  * AR: sym_name -> md5 -> auxiliary decls -> decls

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module X64.Poly1305
-#reset-options "--z3rlimit 20"
+#reset-options
 open X64.Machine_s
 open X64.Vale.State_i
 open X64.Vale.Decls

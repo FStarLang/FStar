@@ -169,6 +169,7 @@ let repr_related #kt #vt (r1 r2:repr_t kt vt) =
   r1.hashf == r2.hashf /\ r1.sz == r2.sz
 
 let repr_t_sz kt vt sz = r:repr_t kt vt { r.sz == sz}
+#push-options "--z3rlimit_factor 4"
 
 let lemma_clean_upd_lookup_walk #kt #vt #sz
       (spec1 spec2 : spec_t kt vt) 
@@ -224,7 +225,7 @@ let lemma_used_upd_lookup_walk #kt #vt #sz
                /\ walk repr2 idx' k' off == lookup_repr repr2 k')
         (ensures walk repr1 idx' k' off == walk repr2 idx' k' off)
         (decreases sz - off) 
-  = if off = repr1.sz then ()
+  = if off = sz then ()
     else if (idx' + off) % sz = idx then
       match repr1 @@ idx with
       | Used k'' _ ->
@@ -241,6 +242,7 @@ let lemma_used_upd_lookup_walk #kt #vt #sz
     end
   in
   aux 0
+#pop-options
 
 let lemma_del_lookup_walk #kt #vt #sz 
       (spec1 spec2 : spec_t kt vt)
@@ -326,6 +328,17 @@ let aunb_extend #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off 
           (ensures  all_used_not_by repr idx (off+1) k)
   = ()
 
+let saunb_extend #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off : nat) (k : kt)
+  : Lemma (requires strong_all_used_not_by repr idx off k
+                 /\ strong_used_not_by repr k ((idx+off) % repr.sz))
+          (ensures  strong_all_used_not_by repr idx (off+1) k)
+  = ()
+
+let saunb_weaken #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off : nat) (k : kt)
+  : Lemma (requires strong_all_used_not_by repr idx off k)
+          (ensures  all_used_not_by repr idx off k)
+  = ()
+
 let aunb_shrink #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off : nat) (k : kt)
   : Lemma (requires all_used_not_by repr idx off k /\ off > 0)
           (ensures  all_used_not_by repr ((idx+1) % repr.sz) (off-1) k)
@@ -349,7 +362,6 @@ let aunb_shrink #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off 
     Classical.forall_intro #(i:nat{i < off-1}) aux;
     ()
 
-#push-options "--z3rlimit 20"
 let lemma_walk_from_canonical_all_used #kt #kv (repr : repr_t kt kv) (off : nat{off < repr.sz}) k v 
   : Lemma (requires all_used_not_by repr (canonical_index k repr) off k
                  /\ repr @@ ((canonical_index k repr + off) % repr.sz) == Used k v)
@@ -375,7 +387,6 @@ let lemma_walk_from_canonical_all_used #kt #kv (repr : repr_t kt kv) (off : nat{
   assert (lookup_repr repr k == walk repr cidx k 0);
   assert (lookup_repr repr k == Some v);
   ()
-#pop-options
 
 let lemma_clean_upd #kt #vt spec (repr : repr_t kt vt) (off:nat{off < repr.sz}) k v 
   : Lemma
@@ -543,9 +554,7 @@ let lemma_del #kt #vt #sz spec (repr : repr_t_sz kt vt sz) idx k v
 let not_full #kt #vt (r:repr_t kt vt) : prop =
   exists i. ~(Used? (r @@ i ))
 
-#set-options "--split_queries always"
 #restart-solver
-#push-options "--z3rlimit_factor 4"
 let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 
   (repr : repr_t_sz kt vt sz{pht_models spec repr /\ not_full repr}) (k : kt) (v : vt) 
   (off:nat{off <= sz})
@@ -588,7 +597,8 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
         (**)lemma_used_upd spec repr off k v v';
         upd_ repr idx k v
       end else begin
-        assert (all_used_not_by repr cidx (off+1) k);
+        saunb_extend repr cidx off k;
+        saunb_weaken repr cidx (off+1) k;
         insert_repr_walk #kt #vt #sz #spec repr k v (off+1) cidx () ()
       end
     
@@ -613,7 +623,6 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
           (**)lemma_zombie_upd spec repr off k v;
           upd_ repr idx k v
         )
-#pop-options
 
 let insert_repr #kt #vt #sz
                 (#spec : erased (spec_t kt vt))
@@ -733,7 +742,6 @@ let upd_pht (#kt:eqtype) (#vt:Type) (pht:pht_t kt vt) idx (k:kt) (v:vt)
              repr = repr';
              inv = () }
 
-#push-options "--z3rlimit_factor 3"
 let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < r.sz})
   : Lemma 
     (requires strong_all_used_not_by r (canonical_index k r) r.sz k)
@@ -755,7 +763,6 @@ let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < 
         assert (Used? (r @@ ((j + 0) % r.sz)))
       )
     )
-#pop-options
 
 let full_not_full #kt #vt (r:repr_t kt vt) (k:kt)
   : Lemma 

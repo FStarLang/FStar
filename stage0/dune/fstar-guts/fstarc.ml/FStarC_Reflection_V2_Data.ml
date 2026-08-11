@@ -7,9 +7,33 @@ let as_ppname (x : Prims.string) : ppname_t= FStarC_Sealed.seal x
 type simple_binder = FStarC_Syntax_Syntax.binder
 type ident_view = (Prims.string * FStarC_Range_Type.t)
 type namedv = FStarC_Syntax_Syntax.bv
+type int_signedness =
+  | Signed 
+  | Unsigned 
+let uu___is_Signed (projectee : int_signedness) : Prims.bool=
+  match projectee with | Signed -> true | uu___ -> false
+let uu___is_Unsigned (projectee : int_signedness) : Prims.bool=
+  match projectee with | Unsigned -> true | uu___ -> false
+type int_width =
+  | Int8 
+  | Int16 
+  | Int32 
+  | Int64 
+  | Sizet 
+let uu___is_Int8 (projectee : int_width) : Prims.bool=
+  match projectee with | Int8 -> true | uu___ -> false
+let uu___is_Int16 (projectee : int_width) : Prims.bool=
+  match projectee with | Int16 -> true | uu___ -> false
+let uu___is_Int32 (projectee : int_width) : Prims.bool=
+  match projectee with | Int32 -> true | uu___ -> false
+let uu___is_Int64 (projectee : int_width) : Prims.bool=
+  match projectee with | Int64 -> true | uu___ -> false
+let uu___is_Sizet (projectee : int_width) : Prims.bool=
+  match projectee with | Sizet -> true | uu___ -> false
 type vconst =
   | C_Unit 
   | C_Int of Prims.int 
+  | C_MachineInt of (Prims.int * int_signedness * int_width) 
   | C_True 
   | C_False 
   | C_String of Prims.string 
@@ -24,6 +48,11 @@ let uu___is_C_Int (projectee : vconst) : Prims.bool=
   match projectee with | C_Int _0 -> true | uu___ -> false
 let __proj__C_Int__item___0 (projectee : vconst) : Prims.int=
   match projectee with | C_Int _0 -> _0
+let uu___is_C_MachineInt (projectee : vconst) : Prims.bool=
+  match projectee with | C_MachineInt _0 -> true | uu___ -> false
+let __proj__C_MachineInt__item___0 (projectee : vconst) :
+  (Prims.int * int_signedness * int_width)=
+  match projectee with | C_MachineInt _0 -> _0
 let uu___is_C_True (projectee : vconst) : Prims.bool=
   match projectee with | C_True -> true | uu___ -> false
 let uu___is_C_False (projectee : vconst) : Prims.bool=

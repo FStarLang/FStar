@@ -1,230 +1,89 @@
 module ID5
 
-open FStar.Ghost
+(* This file used to test the identity effect with a weakest-precondition
+   index.  The WP index and layered-effect declaration are gone; what remains
+   is the ordinary identity monad, used explicitly with let!. *)
 
-// The base type of WPs
-val wp0 (a : Type u#a) : Type u#a
-let wp0 a = (a -> prop) -> prop
+type id (a:Type u#a) : Type u#a = a
 
-val wp (a : Type u#a) : Type u#a
-let wp a = pure_wp a
+let return #a (x:a) : id a = x
+let bind #a #b (x:id a) (f:a -> id b) : id b = f x
+let (let!) #a #b (x:id a) (f:a -> id b) : id b = bind x f
 
-let repr (a : Type u#aa) (w : wp a) : Type u#aa =
-  // Hmmm, the explicit post bumps the universe level
-  p:erased (a -> prop) -> squash (w p) -> v:a{reveal p v}
+let test_f () : id int = return 3
 
-open FStar.Monotonic.Pure
-
-unfold
-let return_wp #a (x:a) : wp a =
-  as_pure_wp (fun p -> p x)
-
-let return (a : Type) (x : a) : repr a (return_wp x) =
- // Fun fact: using () instead of _ below makes us
- // lose the refinement and then this proof fails.
- // Keep that in mind all ye who enter here.
-  fun p _ -> x
-  
-unfold
-let bind_wp (#a:Type u#a) (#b:Type u#b)
-  (wp_v : wp a)
-  (wp_f : (x:a -> wp b))
-  : wp b
-  = elim_pure_wp_monotonicity_forall u#a ();
-    elim_pure_wp_monotonicity_forall u#b ();
-    as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
-
-let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
-    (v : repr a wp_v)
-    (f : (x:a -> repr b (wp_f x)))
-: repr b (bind_wp wp_v wp_f)
-= fun p _ -> let x = v (fun x -> wp_f x p) () in
-          f x p ()
-
-irreducible let refine : unit = ()
-
-let subcomp (a:Type u#uu) (w1 w2:wp a)
-    (f : repr a w1)
-: Pure (repr a w2)
-       (requires forall p. w2 p ==> w1 p)
-       (ensures fun _ -> True)
-= f
-
-// useful?
-//let subcomp (a b:Type u#uu) (w1:wp a) (w2: wp b)
-//    (f : repr a w1)
-//: Pure (repr b w2)
-//       (requires a `subtype_of` b /\ (forall (p:b->prop). w2 p ==> w1 (fun x -> p x)))
-//       (ensures fun _ -> True)
-//= fun p pf -> f (hide (fun x -> reveal p x)) ()
-
-unfold
-let ite_wp (#a:Type u#a) (wp1 wp2 : wp a) (b : bool) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
-  (as_pure_wp (fun (p:a -> prop) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
-
-let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
-  repr a (ite_wp wp1 wp2 p)
-
-let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
-: Type
-= repr a  wp
-
-unfold
-let strengthen_wp (#a:Type u#a) (w:wp a) (p:prop) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
-  as_pure_wp (fun post -> p /\ w post)
-
-let strengthen #a #w (p:prop) (f : squash p -> repr a w) : repr a (strengthen_wp w p) =
-  fun post _ -> f () post ()
-
-unfold
-let weaken_wp (#a:Type u#a) (w:wp a) (p:prop) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
-  as_pure_wp (fun post -> p ==> w post)
-
-let weaken #a #w (p:prop) (f : repr a w) : Pure (repr a (weaken_wp w p))
-                                                 (requires p)
-                                                 (ensures (fun _ -> True))
-  = fun post _ -> f post ()
-
-unfold
-let cut_wp (#a:Type u#a) (w:wp a) (p:prop) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
-  as_pure_wp (fun post -> p /\ (p ==> w post))
-
-let cut #a #w (p:prop) (f : repr a w) : repr a (cut_wp w p) =
-  strengthen p (fun _ -> weaken p f)
-  
-
-// requires to prove that
-// p  ==> f <: (if_then_else p f g)
-// ~p ==> g <: (if_then_else p f g)
-// if the effect definition fails, add lemmas for the
-// above with smtpats
-total
-reifiable
-reflectable
-effect {
-  ID (a:Type) (_:wp a)
-  with {repr; return; bind; subcomp; if_then_else}
-}
-
-effect Id (a:Type) (pre:prop) (post:a->prop) =
-        ID a (as_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
-
-effect I (a:Type) = Id a True (fun _ -> True)
-
-open FStar.Tactics.V2
-
-let lift_pure_nd (a:Type) (wp:wp a) (f:unit -> PURE a wp) :
-  Pure (repr a wp) (requires True)
-                   (ensures (fun _ -> True))
-  = fun p _ -> elim_pure f p
-
-sub_effect PURE ~> ID = lift_pure_nd
-
-//tests to make sure we are actually checking subcomp even now
-let apply (f:unit -> Id int True (fun x -> x > 3)) : Id int True (fun x -> x > 2) = f ()
-
-[@@expect_failure]
-let incorrect_apply (f:unit -> Id int True (fun x -> x > 3)) : Id int True (fun x -> x > 5) = f ()
-
-[@@expect_failure]
-let another_one (n:int) (f:(x:int -> Id int (x > 0) (fun _ -> True))) : Id int True (fun _ -> True) = f n
-
-let iassert (q:prop) : ID unit (as_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
-
-assume
-val iassume (q:prop) : ID unit (as_pure_wp (fun p -> q ==> p ()))
-
-(* Checking that it's kind of usable *)
-
-val test_f : unit -> ID int (as_pure_wp (fun p -> p 5 /\ p 3))
-let test_f () = 3
-
-let l () : int = reify (test_f ()) (fun _ -> True) ()
+let l () : int = test_f ()
 
 open FStar.List.Tot
 
-let rec map #a #b #pre
-  (f : (x:a -> Id b (requires (pre x)) (ensures (fun _ -> True))))
-  (l : list a)
-  : Id (list b)
-       (requires (forall x. memP x l ==> pre x))
-       (ensures (fun _ -> True))
+let rec pmap #a #b (f : a -> id b) (l : list a) : id (list b)
   = match l with
-    | [] -> []
-    | x::xs -> f x :: map #_ #_ #pre f xs
+    | [] -> return []
+    | x::xs ->
+      let! y = f x in
+      let! ys = pmap f xs in
+      return (y :: ys)
 
 let even x = x % 2 == 0
 
-//let fmap (x:nat) : Id nat (requires (even x)) (ensures (fun r -> r > x)) =
-// I cannot have a stronger post, subeffecting doesn't kick in in callmap?
-let fmap (x:nat) : Id nat (requires (even x)) (ensures (fun r -> r <= x)) = x/2
+let fmap (x:nat) : id nat =
+  let r = x / 2 in
+  return r
 
-let callmap () : Id (list nat) True (fun _ -> True) =
+let callmap () : id (list nat) =
  let lmap : list nat = [2;4;6;8] in
- map #_ #_ #even fmap lmap
+ pmap fmap lmap
 
-let rec count (n:nat) : I int
- = if n = 0 then 0 else count (n-1)
+let rec count (n:nat) : id int
+ = if n = 0 then return 0 else count (n-1)
  
-let rec pow2 (n:nat) : I int
- = if n = 0 then 1 else pow2 (n-1) + pow2 (n-1)
+let rec pow2 (n:nat) : id int
+ = if n = 0 then return 1 else
+   let! x = pow2 (n-1) in
+   let! y = pow2 (n-1) in
+   return (x + y)
  
-let rec fibl (i:nat) : I nat =
+let rec fibl (i:nat) : id nat =
   if i = 0 || i = 1
-  then 1
+  then return 1
   else fibl (i-1)
   
-let rec fibr (i:nat) : I nat =
+let rec fibr (i:nat) : id nat =
   if i = 0 || i = 1
-  then 1
+  then return 1
   else fibr (i-2)
 
-// TODO: I cannot use direct syntax and nat for the return type, or
-// subtyping fails to kick in? "expected int, got nat".
-let rec fib (i:nat) : I nat =
+let rec fib (i:nat) : id nat =
   if i < 2
-  then 1
-  else let x = fib (i-1) in
-       let y = fib (i-2) in
-       x+y
-  //else fib (i-1) + fib (i-2)
+  then return 1
+  else let! x = fib (i-1) in
+       let! y = fib (i-2) in
+       return (x+y)
 
-let test_assert () : ID unit (as_pure_wp (fun p -> p ())) =
-  ();
-  iassume False;
-  ();
-  iassert False;
-  ()
-
-let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
-                              (ensures (fun r -> r >= 0)) 
-                              (decreases a)
+let rec idiv (a b : nat{b > 0}) : id int
   =
   if a < b
-  then 0
-  else 1 + idiv (a-b) b
-
+  then return 0
+  else let! r = idiv (a-b) b in
+       return (1 + r)
+  
 #push-options "--admit_smt_queries true"
-let rec ack (m n : nat) : I nat =
+let rec ack (m n : nat) : id nat =
   match m, n with
-  | 0, n -> n+1
+  | 0, n -> return (n+1)
   | m, 0 -> ack (m-1) 1
-  | m, n -> ack (m-1) (ack m (n-1))
+  | m, n -> let! r = ack m (n-1) in ack (m-1) r
 #pop-options
 
-let add1 (x:int) : Id int (requires (x > 0)) (ensures (fun r -> r == x+1)) = x + 1
+let add1 (x:int) : Pure (id int) (requires (x > 0)) (ensures (fun r -> r == x+1)) = return (x + 1)
 
-let tot_i #a (f : unit -> Tot a) : I a =
+let tot_i #a (f : unit -> Tot a) : id a =
+  return (f ())
+
+let i_tot #a (f : unit -> id a) : Tot a =
   f ()
 
-let i_tot #a (f : unit -> I a) : Tot a =
-  reify (f ()) (fun _ -> True) ()
-
-let rec sum (l : list int) : I int
+let rec sum (l : list int) : id int
  = match l with
-   | [] -> 0
+   | [] -> return 0
    | x::xs -> sum xs

@@ -18,7 +18,7 @@ instance hasNames_comp : hasNames comp = {
                | Total t
                | GTotal t -> F.names t
                | Comp ct -> List.fold_left union (empty ())
-                             (F.names ct.result_typ :: (List.map (fun (a,_) -> F.names a) ct.effect_args)))
+                             [F.names ct.result_typ; F.names ct.comp_pre; F.names ct.comp_post])
 }
 
 instance hasBinders_list_bv = {

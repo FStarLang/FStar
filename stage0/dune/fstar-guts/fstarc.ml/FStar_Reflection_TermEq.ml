@@ -173,6 +173,11 @@ let const_cmp : FStarC_Reflection_V2_Data.vconst comparator_for=
         Obj.magic (Obj.repr Eq)
     | (FStarC_Reflection_V2_Data.C_Int i1, FStarC_Reflection_V2_Data.C_Int
        i2) -> Obj.magic (Obj.repr (eq_cmp i1 i2))
+    | (FStarC_Reflection_V2_Data.C_MachineInt (i1, s1, w1),
+       FStarC_Reflection_V2_Data.C_MachineInt (i2, s2, w2)) ->
+        Obj.magic
+          (Obj.repr
+             (if ((i1 = i2) && (s1 = s2)) && (w1 = w2) then Eq else Neq))
     | (FStarC_Reflection_V2_Data.C_True, FStarC_Reflection_V2_Data.C_True) ->
         Obj.magic (Obj.repr Eq)
     | (FStarC_Reflection_V2_Data.C_False, FStarC_Reflection_V2_Data.C_False)

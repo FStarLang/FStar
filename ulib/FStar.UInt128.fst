@@ -35,7 +35,7 @@ module T = FStar.Stubs.Tactics.V2.Builtins
 module TD = FStar.Tactics.V2.Derived
 module TM = FStar.Tactics.MApply
 
-#set-options "--fuel 0 --ifuel 0 --split_queries no"
+#set-options "--fuel 0 --ifuel 0"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection'"
 
 (* TODO: explain why exactly this is needed? It leads to failures in
@@ -240,7 +240,7 @@ let mod_add_small n1 n2 k =
 
 // This proof is pretty stable with the calc proof, but it can fail
 // ~1% of the times, so add a retry.
-#push-options "--split_queries no --z3rlimit 20 --retry 5"
+#push-options "--retry 5"
 let add_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a + v b) % pow2 128 = v r)) =
@@ -318,7 +318,6 @@ val u64_diff_wrap : a:U64.t -> b:U64.t ->
          (ensures (U64.v (U64.sub_mod a b) == U64.v a - U64.v b + pow2 64))
 let u64_diff_wrap a b = ()
 
-#push-options "--z3rlimit 20"
 val sub_mod_wrap1_ok : a:t -> b:t -> Lemma
   (requires (v a - v b < 0 /\ U64.v a.low < U64.v b.low))
   (ensures (v (sub_mod_impl a b) = v a - v b + pow2 128))
@@ -336,7 +335,6 @@ let sub_mod_wrap1_ok a b =
       u64_diff_wrap a.high b.high;
       ()
     end
-#pop-options
 #pop-options
 
 
@@ -365,7 +363,6 @@ let sub_mod_wrap_ok (a b:t) : Lemma
     else sub_mod_wrap2_ok a b
 
 #restart-solver
-#push-options "--z3rlimit 40"
 let sub_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> v r = (v a - v b) % pow2 128)) =
@@ -373,7 +370,6 @@ let sub_mod (a b: t) : Pure t
     then sub_mod_pos_ok a b
     else sub_mod_wrap_ok a b);
   sub_mod_impl a b
-#pop-options
 
 #restart-solver
 
@@ -507,7 +503,6 @@ let shift_left_large_val (#n1:nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_
   Math.paren_mul_right a2 (pow2 n1) (pow2 s);
   Math.pow2_plus n1 s
 
-#push-options "--z3rlimit 40"
 let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_t n2) (s: nat{s >= n2}) :
   Lemma (((a1 + a2 * pow2 n1) * pow2 s) % pow2 (n1+n2) ==
          (a1 * pow2 s) % pow2 (n1+n2)) =
@@ -516,7 +511,6 @@ let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.ui
   shift_past_mod a2 (n1+n2) (n1+s);
   mod_double (a1 * pow2 s) (pow2 (n1+n2));
   ()
-#pop-options
 
 val shift_left_large_lemma_t : a:t -> s:nat ->
   Lemma (requires (s >= 64))
@@ -548,7 +542,7 @@ let pow2_div_bound #b (n:UInt.uint_t b) (s:nat{s <= b}) :
   Lemma (n / pow2 s < pow2 (b - s)) =
   Math.lemma_div_lt n b s
 
-#push-options "--smtencoding.l_arith_repr native --z3rlimit 40"
+#push-options "--smtencoding.l_arith_repr native"
 let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r = (U64.v hi * pow2 (U32.v s)) % pow2 64 + U64.v lo / pow2 (64 - U32.v s))) =
@@ -686,7 +680,6 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
-#push-options "--z3rlimit 20"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -700,12 +693,11 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
     mod_spec_rew_n (a_l * pow2 s) (pow2 64);
     shift_t_mod_val a s;
     r
-#pop-options
 
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
 
-#push-options "--z3rlimit 50 --retry 5" // sporadically fails
+#push-options "--retry 5" // sporadically fails
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);
@@ -930,12 +922,10 @@ let mul32_digits x y = ()
 
 let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 
-#push-options "--z3rlimit 30"
 let u32_combine (hi lo: U64.t) : Pure U64.t
   (requires (U64.v lo < pow2 32))
   (ensures (fun r -> U64.v r = U64.v hi % pow2 32 * pow2 32 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
-#pop-options
 
 let product_bound (a b:nat) (k:pos) :
   Lemma (requires (a < k /\ b < k))
@@ -954,7 +944,7 @@ val u32_product_bound : a:nat{a < pow2 32} -> b:nat{b < pow2 32} ->
 let u32_product_bound a b =
   uint_product_bound #32 a b
 
-#push-options "--z3rlimit 15 --retry 5" // sporadically fails
+#push-options "--retry 5" // sporadically fails
 let mul32 x y =
   let x0 = u64_mod_32 x in
   let x1 = U64.shift_right x u32_32 in
@@ -1075,7 +1065,6 @@ let product_sums (a b c d:nat) :
 val u64_32_product (xl xh yl yh:UInt.uint_t 32) :
   Lemma ((xl + xh * pow2 32) * (yl + yh * pow2 32) ==
   xl * yl + (xl * yh) * pow2 32 + (xh * yl) * pow2 32 + (xh * yh) * pow2 64)
-#push-options "--z3rlimit 25"
 let u64_32_product xl xh yl yh =
   assert (xh >= 0); //flakiness; without this, can't prove that (xh * pow2 32) >= 0
   assert (pow2 32 >= 0); //flakiness; without this, can't prove that (xh * pow2 32) >= 0
@@ -1085,7 +1074,6 @@ let u64_32_product xl xh yl yh =
   assert (xl * (yh * pow2 32) == (xl * yh) * pow2 32);
   Math.pow2_plus 32 32;
   assert ((xh * pow2 32) * (yh * pow2 32) == (xh * yh) * pow2 64)
-#pop-options
 
 let product_expand (x y: U64.t) :
   Lemma (U64.v x * U64.v y == phh x y * pow2 64 +
@@ -1126,7 +1114,6 @@ let mul_wide_low_ok (x y: U64.t) :
 
 val product_high32 : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 32 == phh x y * pow2 32 + plh x y + phl x y + pll_h x y)
-#push-options "--z3rlimit 20"
 let product_high32 x y =
   Math.pow2_plus 32 32;
   product_expand x y;
@@ -1134,12 +1121,11 @@ let product_high32 x y =
   mul_div_cancel (phh x y * pow2 32) (pow2 32);
   mul_div_cancel (plh x y + phl x y + pll_h x y) (pow2 32);
   Math.small_division_lemma_1 (pll_l x y) (pow2 32)
-#pop-options
 
 val product_high_expand : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 64 == phh x y + (plh x y + phl x y + pll_h x y) / pow2 32)
 
-#push-options "--z3rlimit 15 --retry 5" // sporadically fails
+#push-options "--retry 5" // sporadically fails
 let product_high_expand x y =
   Math.pow2_plus 32 32;
   div_product (mul_wide_high x y) (pow2 32) (pow2 32);
@@ -1212,12 +1198,10 @@ let sum_shift_carry a b k =
   add_mod_then_mod b a k;
   Math.lemma_mod_spec (a+b) k
 
-#push-options "--z3rlimit 40"
 let mul_wide_high_ok (x y: U64.t) :
   Lemma ((U64.v x * U64.v y) / pow2 64 == mul_wide_high x y) =
   product_high_expand x y;
   sum_shift_carry (phl x y + pll_h x y) (plh x y) (pow2 32)
-#pop-options
 
 let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   Lemma (x * y / pow2 n < pow2 n) =

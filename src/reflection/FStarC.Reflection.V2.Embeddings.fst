@@ -53,6 +53,7 @@ let curry f x y = f (x,y)
 let curry3 f x y z = f (x,y,z)
 let curry4 f x y z w = f (x,y,z,w)
 let curry5 f x y z w v = f (x,y,z,w,v)
+let curry6 f x y z w v u = f (x,y,z,w,v,u)
 
 let head_fv_and_args (t : term) : ML (option (fv & args)) =
   let t = U.unascribe t in
@@ -576,12 +577,13 @@ let e_comp_view =
                                        S.as_arg (embed #_ #e_term rng pats)]
                         rng
 
-        | C_Eff (us, eff, res, args, decrs) ->
+        | C_Eff (us, eff, res, pre, post, decrs) ->
             S.mk_Tm_app ref_C_Eff.t
                 [ S.as_arg (embed rng us)
                 ; S.as_arg (embed rng eff)
                 ; S.as_arg (embed #_ #e_term rng res)
-                ; S.as_arg (embed #_ #(e_list e_argv) rng args)
+                ; S.as_arg (embed #_ #e_term rng pre)
+                ; S.as_arg (embed #_ #e_term rng post)
                 ; S.as_arg (embed #_ #(e_list e_term) rng decrs)] rng
 
 
@@ -594,7 +596,7 @@ let e_comp_view =
         | _ when S.fv_eq_lid fv ref_C_Lemma.lid ->
           run args (curry3 C_Lemma <$$> e_term <**> e_term <**> e_term)
         | _ when S.fv_eq_lid fv ref_C_Eff.lid ->
-          run args (curry5 C_Eff <$$> e_list e_universe <**> e_string_list <**> e_term <**> e_list e_argv <**> e_list e_term)
+          run args (curry6 C_Eff <$$> e_list e_universe <**> e_string_list <**> e_term <**> e_term <**> e_term <**> e_list e_term)
         | _ -> None
     in
     mk_emb embed_comp_view unembed_comp_view fstar_refl_comp_view_fv

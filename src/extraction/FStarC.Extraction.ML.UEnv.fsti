@@ -197,14 +197,6 @@ val extend_with_monad_op_name:
     mltyscheme ->
     ML (mlpath & lident & exp_binding & uenv)
 
-(** Extend with an action, returns both the ML identifer and generated F* lident *)
-val extend_with_action_name:
-    uenv ->
-    Syntax.eff_decl ->
-    Syntax.action ->
-    mltyscheme -> 
-    ML (mlpath & lident & exp_binding & uenv)
-
 (** The F* record field identifier is a pair of the *typename* and the field name *)
 val extend_record_field_name :
     uenv ->

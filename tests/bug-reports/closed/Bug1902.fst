@@ -46,7 +46,8 @@ let rec mk_tot_arr_decr (bs: list binder) (cod : term) decr : Tac term =
       (pack_comp (C_Eff [pack_universe Uv_Zero]
                         ["Prims"; "Tot"]
                         (mk_tot_arr_decr bs cod decr)
-                        []
+                        (`True)
+                        (`(fun _ -> True))
                         (if decr_at_every_level || FStar.List.Tot.length bs = 0
                          then [decr]
                          else []))))

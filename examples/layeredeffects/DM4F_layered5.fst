@@ -16,134 +16,59 @@
 
 module DM4F_layered5
 
-(* Same as DM4F, but layered over a layered PURE without monotonicity *)
-open ID5
+(* This used to be the same DM4F state example layered over ID5, without
+   monotonicity.  The layered encoding has been removed; the example is now the
+   same plain state monad, keeping the stateful sample programs. *)
+
 open DM4F_Utils
 
-unfold
-let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b =
-  ID5.bind_wp w1 w2
+type repr (a:Type u#ua) (st:Type0) : Type u#ua =
+  s0:st -> Pure (a & st)
 
-(* Simulating state effect in DM4F, hopefully doable by a tactic. *)
-
-type post_t st a = a -> st -> prop
-
-type wp0 (st:Type u#0) (a:Type u#ua) : Type u#ua =
-  st -> post_t st a -> prop
-
-let st_monotonic #st #a (w : wp0 st a) : prop =
-  //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
-  // ^ this version seems to be less SMT-friendly
-  forall s0 p1 p2. (forall x s1. p1 x s1 ==> p2 x s1) ==> w s0 p1 ==> w s0 p2
-
-type wp st a = w:(wp0 st a){st_monotonic w}
-
-open FStar.Monotonic.Pure
-
-type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
-  s0:st -> ID (a & st) (as_pure_wp (fun p -> wp s0 (curry p)))
-
-unfold
-let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a =
-  fun s0 p -> p x s0
-
-let return (a:Type) (x:a) (st:Type0) : repr a st (return_wp x) =
+let return (#a:Type) (#st:Type0) (x:a) : repr a st =
   fun s0 -> (x, s0)
 
-unfold
-let bind_wp (#a:Type) (#b:Type) (#st:Type0)
-  (w1 : wp st a) (w2 : a -> wp st b) : wp st b =
-  fun s0 p -> w1 s0 (fun y s1 -> w2 y s1 p)
-
-let bind (a:Type) (b:Type) (st:Type0)
-  (wp_c : wp st a)
-  (wp_f : a -> wp st b)
-  (c : repr a st wp_c)
-  (f : (x:a -> repr b st (wp_f x)))
-: repr b st (bind_wp wp_c wp_f)
+let bind (#a #b:Type) (#st:Type0)
+  (c : repr a st)
+  (f : a -> repr b st)
+: repr b st
 = fun s0 ->
-      //let (y, s1) = c s0 in
-      //f y s1
-      // GM: argh! using the match above introduces noise in the VC, a true precondition
-      // that becomes a pain since we don't have monotonicity nor even extensionality
-      let r = c s0 in
-      f (fst r) (snd r)
+    let r = c s0 in
+    f (fst r) (snd r)
 
-let ite_wp #a #st (b:bool) (w1 w2 : wp st a) : wp st a =
-  fun s0 p -> (b ==> w1 s0 p) /\ ((~b) ==> w2 s0 p)
+let (let!) (#a #b:Type) (#st:Type0) (c : repr a st) (f : a -> repr b st) : repr b st =
+  bind c f
 
-let if_then_else
-  (a:Type)
-  (st:Type0)
-  (wpf wpg : wp st a)
-  (f : repr a st wpf)
-  (g : repr a st wpg)
-  (b : bool)
-  : Type
-  = repr a st (ite_wp b wpf wpg)
+let run (#a:Type) (#st:Type0) (c:repr a st) (s0:st) : Pure (a & st) =
+  c s0
 
-let stronger
-  (#a:Type) (#st:Type0)
-  (w1 w2 : wp st a)
-  : prop
-  = forall s0 p. w1 s0 p ==> w2 s0 p
+let get #st () : repr st st =
+  fun s0 -> (s0, s0)
 
-let subcomp
-  (a:Type)
-  (st:Type0)
-  (wpf wpg : wp st a)
-  (#[@@@ refine] u : squash (stronger wpg wpf))
-  (f : repr a st wpf)
-  : repr a st wpg
-  = f
+let put #st (s:st) : repr unit st =
+  fun _ -> ((), s)
 
-total
-reifiable
-reflectable
-effect {
-  ST (a:Type) ([@@@ effect_param] st:Type0) (_:wp st a)
-  with {repr; return; bind; subcomp; if_then_else}
-}
+let test () : repr int int =
+  let! x = get () in
+  let! _ = put (x + x) in
+  let! y = get () in
+  let! z = get () in
+  return (y + z)
 
-let lift_id_st_wp #a #st (w : ID5.wp a) : wp st a =
-  elim_pure_wp_monotonicity w;
-  fun s0 p -> w (fun x -> p x s0)
+let addx (x:int) : repr unit int =
+  let! y = get () in
+  put (x + y)
 
-let lift_id_st a wp st (f : ID5.repr a wp)
-  : repr a st (lift_id_st_wp wp)
-  = fun s0 -> ID5.ID?.reflect (ID5.bind _ _ _ _ f (fun x -> ID5.return _ (x, s0)))
-
-sub_effect ID ~> ST = lift_id_st
-
-let null #st #a : wp st a =
-  fun s0 p -> forall x s1. p x s1
-
-let get #st () : ST st st (fun s0 p -> p s0 s0) =
-  ST?.reflect (fun s0 -> (s0, s0))
-
-let put #st (s:st) : ST unit st (fun _ p -> p () s) =
-  ST?.reflect (fun _ -> ((), s))
-
-// this now works!!!
-let test () : ST int int null =
-  let x = get () in
-  put (x + x);
-  get () + get ()
-
-let addx (x:int) : ST unit int (fun s0 p -> p () (s0+x)) =
-  let y = get () in
-  put (x+y)
-
-let add_via_state (x y : int) : ST int int (fun s0 p -> p (x+y) s0) =
-  let o = get () in
-  put x;
-  addx y;
-  let r = get () in
-  put o;
-  r
+let add_via_state (x y : int) : repr int int =
+  let! o = get () in
+  let! _ = put x in
+  let! _ = addx y in
+  let! r = get () in
+  let! _ = put o in
+  return r
 
 #push-options "--warn_error -272" //Warning_TopLevelEffect
 let main =
-  let r, n = reify (reify (add_via_state 1 2) 3) (Ghost.hide (fun _ -> True)) () in
+  let r, n = run (add_via_state 1 2) 3 in
   FStar.IO.print_string (FStar.Printf.sprintf "%d:%d\n" r n)
 #pop-options

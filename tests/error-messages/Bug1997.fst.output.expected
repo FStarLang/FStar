@@ -164,24 +164,22 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = (fun a b c -> a + b + c) == (fun a b c -> a + (b + c))
+  - Failed to prove: (fun a b c -> a + b + c) == (fun a b c -> a + (b + c))
   - See also Bug1997.fst(13,39-13,55)
 
 * Info at Bug1997.fst(21,27-21,38):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = (fun p q r -> p ==> q ==> r) == (fun p q r -> (p ==> q) ==> r)
+  - Failed to prove:
+      (fun p q r -> p ==> q ==> r) == (fun p q r -> (p ==> q) ==> r)
   - See also Bug1997.fst(21,39-21,67)
 
 * Info at Bug1997.fst(29,27-29,38):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r -> ((p ==> q) ==> r) /\ (r ==> p ==> q) <: Prims.prop) ==
       (fun p q r -> p ==> (q ==> r) /\ (r ==> q))
   - See also Bug1997.fst(29,39-29,63)
@@ -190,8 +188,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p ==> q /\ r ==> s) ==
       (fun p q r s -> p ==> q /\ (r ==> s))
   - See also Bug1997.fst(38,39-38,65)
@@ -200,8 +197,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p ==> q /\ r ==> s) ==
       (fun p q r s -> (p ==> q) /\ (r ==> s))
   - See also Bug1997.fst(39,39-39,65)
@@ -210,8 +206,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> (p ==> q) /\ (r ==> s)) ==
       (fun p q r s -> p ==> q /\ (r ==> s))
   - See also Bug1997.fst(40,39-40,65)
@@ -220,8 +215,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> (p ==> q) /\ (r ==> s)) ==
       (fun p q r s -> p ==> q /\ r ==> s)
   - See also Bug1997.fst(41,39-41,65)
@@ -230,8 +224,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p ==> q /\ (r ==> s)) ==
       (fun p q r s -> p ==> q /\ r ==> s)
   - See also Bug1997.fst(42,39-42,65)
@@ -240,8 +233,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r -> p ==> q /\ (p ==> Prims.l_False) ==> r) ==
       (fun p q r -> p ==> q /\ ((p ==> Prims.l_False) ==> r))
   - See also Bug1997.fst(51,39-51,59)
@@ -250,8 +242,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r -> p ==> q /\ (p ==> Prims.l_False) ==> r) ==
       (fun p q r -> (p ==> q) /\ ((p ==> Prims.l_False) ==> r))
   - See also Bug1997.fst(52,39-52,59)
@@ -260,8 +251,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r -> (p ==> q) /\ ((p ==> Prims.l_False) ==> r)) ==
       (fun p q r -> p ==> q /\ ((p ==> Prims.l_False) ==> r))
   - See also Bug1997.fst(53,39-53,59)
@@ -270,8 +260,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r -> (p ==> q) /\ ((p ==> Prims.l_False) ==> r)) ==
       (fun p q r -> p ==> q /\ (p ==> Prims.l_False) ==> r)
   - See also Bug1997.fst(54,39-54,59)
@@ -280,8 +269,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r -> p ==> q /\ ((p ==> Prims.l_False) ==> r)) ==
       (fun p q r -> p ==> q /\ (p ==> Prims.l_False) ==> r)
   - See also Bug1997.fst(55,39-55,59)
@@ -290,24 +278,21 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = (fun p q r -> p /\ q \/ r) == (fun p q r -> p /\ (q \/ r))
+  - Failed to prove: (fun p q r -> p /\ q \/ r) == (fun p q r -> p /\ (q \/ r))
   - See also Bug1997.fst(63,39-63,51)
 
 * Info at Bug1997.fst(64,27-64,38):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = (fun p q r -> p /\ q \/ r) == (fun p q r -> p /\ (q \/ r))
+  - Failed to prove: (fun p q r -> p /\ q \/ r) == (fun p q r -> p /\ (q \/ r))
   - See also Bug1997.fst(64,39-64,51)
 
 * Info at Bug1997.fst(75,27-75,38):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p /\ (q \/ r) /\ s) == (fun p q r s -> p /\ q \/ r /\ s)
   - See also Bug1997.fst(75,39-75,49)
 
@@ -315,8 +300,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p /\ (q \/ r) /\ s) == (fun p q r s -> p /\ q \/ r /\ s)
   - See also Bug1997.fst(76,39-76,49)
 
@@ -324,8 +308,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p /\ (q \/ r) /\ s) == (fun p q r s -> p /\ q \/ r /\ s)
   - See also Bug1997.fst(77,39-77,49)
 
@@ -333,8 +316,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p /\ (q \/ r) /\ s) == (fun p q r s -> p /\ q \/ r /\ s)
   - See also Bug1997.fst(78,39-78,49)
 
@@ -342,8 +324,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p \/ q /\ r \/ s) == (fun p q r s -> (p \/ q) /\ r \/ s)
   - See also Bug1997.fst(87,39-87,49)
 
@@ -351,8 +332,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p \/ q /\ r \/ s) == (fun p q r s -> (p \/ q) /\ (r \/ s))
   - See also Bug1997.fst(88,39-88,49)
 
@@ -360,8 +340,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> p \/ q /\ r \/ s) == (fun p q r s -> p \/ q /\ (r \/ s))
   - See also Bug1997.fst(89,39-89,49)
 
@@ -369,8 +348,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> (p \/ q) /\ r \/ s) ==
       (fun p q r s -> (p \/ q) /\ (r \/ s))
   - See also Bug1997.fst(90,39-90,49)
@@ -379,8 +357,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> (p \/ q) /\ r \/ s) == (fun p q r s -> p \/ q /\ (r \/ s))
   - See also Bug1997.fst(91,39-91,49)
 
@@ -388,8 +365,7 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-  - VC =
+  - Failed to prove:
       (fun p q r s -> (p \/ q) /\ (r \/ s)) ==
       (fun p q r s -> p \/ q /\ (r \/ s))
   - See also Bug1997.fst(92,39-92,49)

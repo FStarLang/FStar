@@ -1574,8 +1574,8 @@ using it at the moment with Z3 logs generated from F*.
 
 .. _Splitting_queries:
 
-Splitting Queries
-.................
+One Query per Proof Obligation
+..............................
 
 In the next two sections, we look at a small example that Alex Rozanov
 reported, shown below. It exhibits similar proof problems to our
@@ -1591,45 +1591,24 @@ The hypothesis is that ``unbounded f`` has exactly the same problem as
 the our unbounded hypothesis on factorial---the ``forall/exists``
 quantifier contains a matching loop. 
 
-This proof of ``find_above_for_g`` succeeds, but it takes a while and
-F* reports:
+This proof of ``find_above_for_g`` succeeds, but it takes a while.
 
-.. code-block:: none
+F* collects all the proof obligations in a top-level F* definition and
+presents them to Z3 as a *separate* query per obligation: the shared
+hypotheses are asserted once, and each leaf goal gets its own
+``(check-sat)``. This means that the proof search for one obligation
+cannot interfere with the proof search for another, and that the
+current rlimit setting applies to each obligation separately.
 
-    (Warning 349) The verification condition succeeded after splitting
-    it to localize potential errors, although the original non-split
-    verification condition failed. If you want to rely on splitting
-    queries for verifying your program please use the '--split_queries
-    always' option rather than relying on it implicitly.
+It also means that an obligation is proven only from the hypotheses
+that are in scope for it---the ground terms appearing in a *sibling*
+obligation are no longer part of Z3's congruence closure. So an
+intermediate ``assert`` only helps if it is stated in the vocabulary of
+the goal it is meant to feed.
 
-By default, F* collects all the proof obligations in a top-level F*
-definition and presents it to Z3 in a single query with several
-conjuncts. Usually, this allows Z3 to efficiently solve all the
-conjuncts together, e.g., the proof search for one conjunct may yield
-clauses useful to complete the search for other clauses. However,
-sometimes, the converse can be true: the proof search for separate
-conjuncts can interfere with each other negatively, leading to the
-entire proof to fail even when every conjunct may be provable if tried
-separately. Additionally, when F* calls Z3, it applies the current
-rlimit setting for every query. If a query contains N conjuncts,
-splitting the conjuncts into N separate conjuncts is effectively a
-rlimit multiplier, since each query can separately consume resources
-as much as the current rlimit.
-
-If the single query with several conjunct fails without Z3 reporting
-any further information that F* can reconstruct into a localized error
-message, F* splits the query into its conjuncts and tries each of
-them in isolation, so as to isolate the failing conjunct if
-any. However, sometimes, when tried in this mode, the proof of all
-conjuncts can succeed.
-
-One way to respond to Warning 349 is to follow what it says and enable
-``--split_queries always`` explicitly, at least for the program fragment in
-question. This can sometimes stabilize a previously unstable
-proof. However, it may also end up deferring an underlying
-proof-performance problem. Besides, even putting stability aside,
-splitting queries into their conjuncts results in somewhat slower
-proofs.
+Even so, the proof above is slow, because it relies on Z3 instantiating
+a quantifier that contains a matching loop. Splitting the query does
+not fix that; the next section shows how to.
 
 .. _UTH_opaque_to_smt:
 
@@ -1768,9 +1747,8 @@ not enough, since that doesn't mention ``g``.
 However, recall that there's a second pattern that's also applicable
 ``(HasType i Prims.nat)``--we can get Z3 to instantiate the quantifier
 if we can inject the predicate ``(HasType (n - 1) nat)`` into Z3's
-context. By using ``trigger_nat``, as shown below, does the trick,
-since F* inserts a proof obligation to show that the argument ``x`` in
-``trigger_nat x`` validates ``(HasType x Prims.nat)``.
+context. Asserting ``has_type (n - 1) nat`` directly, as shown below,
+does the trick.
 
 .. literalinclude:: ../code/AlexOpaque.fst
    :language: fstar
@@ -1849,171 +1827,3 @@ Of course, deciding which facts to filter from your context is not
 easy. For example, if you had only retained ``FStar.Seq`` and forgot
 to include ``Prims``, the proof would have failed. So, the
 ``--using_facts_from`` option isn't often very useful.
-
-Unsat Core and Hints
-~~~~~~~~~~~~~~~~~~~~
-
-When Z3 finds a proof, it can report which facts from the context were
-relevant to the proof. This collection of facts is called the unsat
-core, because Z3 has proven that the facts from the context and the
-negated goal are unsatisfiable. F* has an option to record and replay
-the unsat core for each query and F* refers to the recorded unsat cores
-as "hints".
-
-Here's how to use hints:
-
-
-1. Record hints
-
-   .. code-block:: none
-
-      fstar.exe --record_hints ContextPollution.fst
-
-   This produces a file called ``ContextPollution.fst.hints``
-
-   The format of a hints file is internal and subject to change,
-   but it is a textual format and you can roughly see what it
-   contains. Here's a fragment from it:
-
-   .. code-block:: none
-                   
-      [
-         "ContextPollution.test1",
-         1,
-         2,
-         1,
-         [
-           "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-           "int_inversion", "int_typing", "lemma_FStar.Seq.Base.lemma_eq_intro",
-           "lemma_FStar.Seq.Base.lemma_index_app1",
-           "lemma_FStar.Seq.Base.lemma_index_app2",
-           "lemma_FStar.Seq.Base.lemma_len_append",
-           "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-           "projection_inverse_BoxInt_proj_0",
-           "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-           "refinement_interpretation_Tm_refine_ac201cf927190d39c033967b63cb957b",
-           "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
-           "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length"
-         ],
-         0,
-         "3f144f59e410fbaa970cffb0e20df75d"
-       ]
-
-   This is the hint entry for the query with whose id is
-   ``(ContextPollution.test1, 1)``
-
-   The next two fields are the fuel and ifuel used for the query,
-   ``2`` and ``1`` in this case.
-   
-   Then, we have the names of all the facts in the unsat core for this
-   query: you can see that it was only about 20 facts that were
-   needed, out of the 20,000 that were originally present.
-
-   The second to last field is not used---it is always 0.
-
-   And the last field is a hash of the query that was issued.
-   
-2. Replaying hints
-
-   The following command requests F* to search for
-   ``ContextPollution.fst.hints`` in the include path and when
-   attempting to prove a query with a given id, it looks for a hint
-   for that query in the hints file, uses the fuel and ifuel settings
-   present in the hints, and prunes the context to include only the
-   facts present in the unsat core.
-   
-   .. code-block:: none
-
-      fstar.exe --use_hints ContextPollution.fst
-
-   Using the hints usually improves verification times substantially,
-   but in this case, we see that the our proof now goes through in
-   about 130 milliseconds, not nearly as fast as the 15 milliseconds
-   we saw earlier. That's because when using a hint, each query to Z3
-   spawns a new Z3 process initialized with just the facts in the
-   unsat core, and that incurs some basic start-up time costs.
-
-Many F* projects use hints as part of their build, including F*'s
-standard library. The .hints files are checked in to the repository
-and are periodically refreshed as proofs evolve. This helps improve
-the stability of proofs: it may take a while for a proof to go
-through, but once it does, you can record and replay the unsat core
-and subsequent attempts of the same proof (or even small variations of
-it) can go through quickly.
-
-Other projects do not use hints: some people (perhaps rightfully) see
-hints as a way of masking underlying proof performance problems and
-prefer to make proofs work quickly and robustly without hints. If you
-can get your project to this state, without relying on hints, then so
-much the better for you!
-
-Differential Profiling with qprofdiff
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you have a proof that takes very long without hints but goes
-through quickly with hints, then the hints might help you diagnose why
-the original proof was taking so long. This wiki page describes how to
-`compare two Z3 quantifier instantiation profiles
-<https://github.com/FStarLang/FStar/wiki/Profiling-Z3-queries#interpreting-the-results>`_
-with a tool that comes with Z3 called qprofdiff.
-
-
-Hints that fail to replay
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Sometimes, Z3 will report an unsat core, but when F* uses it to try to
-replay a proof, Z3 will be unable to find a proof of unsat, and F*
-will fall back to trying the proof again in its original context. The
-failure to find a proof of unsat from a previously reported unsat core
-is not a Z3 unsoundness or bug---it's because although the report core
-is really logically unsat, finding a proof of unsat may have relied on
-quantifier instantiation hints from facts that are not otherwise
-semantically relevant. The following example illustrates.
-
-.. literalinclude:: ../code/HintReplay.fst
-   :language: fstar
-
-
-Say you run the following:
-
-.. code-block:: none
-
-   fstar --record_hints HintReplay.fst
-   fstar --query_stats --use_hints HintReplay.fst
-
-You will see the following output from the second run:
-
-.. code-block:: none
-
-   (HintReplay.fst(15,27-15,39))   Query-stats (HintReplay.test, 1)        failed
-     {reason-unknown=unknown because (incomplete quantifiers)} (with hint)
-     in 42 milliseconds ..
-   
-   (HintReplay.fst(15,27-15,39))   Query-stats (HintReplay.test, 1)        succeeded
-     in 740 milliseconds ...
-
-The first attempt at the query failed when using the hint, and the
-second attempt at the query (without the hint) succeeded. 
-
-To see why, notice that to prove the assertion ``r x`` from the
-hypothesis ``q x``, logically, the assumption ``Q_R``
-suffices. Indeed, if you look in the hints file, you will see that it
-only mentions ``HintReplay.Q_R`` as part of the logical core. However,
-``Q_R`` is guarded by a pattern ``p x`` and in the absence of the
-assumption ``P_Q``, there is no way for the solver to derive an active
-term ``p x`` to instantiate ``Q_R``---so, with just the unsat core, it
-fails to complete the proof.
-
-Failures for hint replay usually point to some unusual quantifier
-triggering pattern in your proof. For instance, here we used ``p x``
-as a pattern, even though ``p x`` doesn't appear anywhere in
-``Q_R``---that's not usually a good choice, though sometimes, e.g.,
-when using :ref:`artificial triggers <Artificial_triggers>` it can
-come up.
-
-This `wiki page on hints
-<https://github.com/FStarLang/FStar/wiki/Robust,-replayable-proofs-using-unsat-cores,-(aka,-hints,-or-how-to-replay-verification-in-milliseconds-instead-of-minutes)>`_
-provides more information about diagnosing hint-replay failures,
-particularly in the context of the Low* libraries.
-
-

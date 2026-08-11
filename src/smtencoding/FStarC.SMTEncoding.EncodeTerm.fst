@@ -505,15 +505,17 @@ and encode_arith_term env head args_e : ML _ =
       we do not want to encode this*)
     let (tm_sz, _) : arg = List.hd args_e in
     let sz = getInteger tm_sz.n in
-    let sz_key = FStarC.Format.fmt1 "BitVector_%s" (show sz) in
-    let sz_decls =
-      let t_decls, constr_name, discriminator_name = mkBvConstructor sz in
+    (* Declarations for the boxing/unboxing functions of bitvectors of size n *)
+    let bv_size_decls (n:int) : ML decls_t =
+      let sz_key = FStarC.Format.fmt1 "BitVector_%s" (show n) in
+      let t_decls, constr_name, discriminator_name = mkBvConstructor n in
       //Typing inversion for bv_t n
       let decls, typing_inversion =
         (* forall (x:Term). HasType x (bv_t n) ==> is-BoxVec#n x *)
         let bv_t_n, decls =
           let head = S.lid_as_fv FStarC.Parser.Const.bv_t_lid None in
-          let t = U.mk_app (S.fv_to_tm head) [tm_sz, None] in
+          let n_tm = S.mk (Tm_constant (FStarC.Const.Const_int (show n, None))) tm_sz.pos in
+          let t = U.mk_app (S.fv_to_tm head) [n_tm, None] in
           encode_term t env
         in
         let xsym = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
@@ -542,6 +544,14 @@ and encode_arith_term env head args_e : ML _ =
         | _  -> (List.tail args_e, None)
     in
 
+    (* The result of bv_uext has the extended size, so its boxing functions
+       must be declared too. *)
+    let sz_decls =
+      bv_size_decls sz
+      @ (match ext_sz with
+         | Some ext -> bv_size_decls (sz + ext)
+         | None -> [])
+    in
     let arg_tms, decls = encode_args arg_tms env in
     let head_fv =
         match head.n with
@@ -954,7 +964,7 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
                let c = Env.unfold_effect_abbrev (Env.push_binders env.tcenv binders) res |> S.mk_Comp in
                let ct, _ = encode_term (c |> U.comp_result) env_bs in
-               let effect_args, _ = encode_args (c |> U.comp_effect_args) env_bs in
+               let effect_args, _ = encode_args [c |> U.comp_pre |> S.as_arg; c |> U.comp_post |> S.as_arg] env_bs in
                let tkey = mkForall t.pos
                  ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
                let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
@@ -999,20 +1009,28 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
              let tapp = mkApp(tsym, fv_tms) in
              let t_kinding =
                 let a_name = "non_total_function_typing_" ^tsym in
-                let axiom =
-                  (* We generate:
-                     forall v1 .. vn, (v1 hasType t1 /\ ... vn hasType tn) ==> tapp hasType Type *)
-                  (* NB: we use the conlusion (HasType tapp Type) as the pattern. Though Z3
-                  will probably pick the same one if left empty. *)
-                  mkForall t0.pos ([[mk_HasType tapp (mk_Term_type mk_U_unknown)]], fv_vars, //NS: REVIEW! Can we give it a more precise universe
-                    mkImp (mk_and_l fv_guards, mk_HasType tapp (mk_Term_type mk_U_unknown)))
-                in
+                (* We generate:
+                   forall v1 .. vn, (v1 hasType t1 /\ ... vn hasType tn) ==> tapp hasType Type *)
+                (* NB: we use the conlusion (HasType tapp Type) as the pattern. Though Z3
+                will probably pick the same one if left empty. *)
+                let concl = mk_HasType tapp (mk_Term_type mk_U_unknown) in //NS: REVIEW! Can we give it a more precise universe
+                let body = mkImp (mk_and_l fv_guards, concl) in
                 (* We furthermore must close over any variable that is
                 still free in the axiom. This can happen since the types
                 of the fvs we are closing over above may not be closed
-                in the current env. *)
-                let svars = Term.free_variables axiom in
-                let axiom = mkForall t0.pos ([], svars, axiom) in
+                in the current env.  In particular, the guard of a
+                type-valued variable is [HasType v (Tm_type u)], whose
+                universe [u] occurs *only* in the guard.
+
+                Such a variable must occur in the trigger as well, or Z3
+                instantiates the axiom over the cross product of every term of
+                that sort in the E-graph -- for a three-argument non-total
+                arrow this was observed to account for 99% of all quantifier
+                instantiations of a query.  So the guards join the conclusion
+                in a multi-pattern, which determines every bound variable. *)
+                let svars = Term.free_variables (mkForall t0.pos ([], fv_vars, body)) in
+                let pat = if Cons? svars then concl::fv_guards else [concl] in
+                let axiom = mkForall t0.pos ([pat], fv_vars@svars, body) in
                 Util.mkAssume (axiom, Some "Typing for non-total arrows", a_name)
              in
 
@@ -1175,18 +1193,7 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
               Term.DeclFun f [] Term_sort (Some "Imprecise reify") in
             mkFreeV <| mk_fv (f, Term_sort), [decl] |> mk_decls_trivial in
 
-          (match lopt with
-           | None -> fallback ()
-           | Some l
-             when l |> Env.norm_eff_name env.tcenv
-                    |> Env.is_layered_effect env.tcenv -> fallback ()
-           | _ ->             
-            let e0 = TcUtil.norm_reify env.tcenv []
-              (U.mk_reify (args_e |> List.hd |> fst) lopt) in
-            if !dbg_SMTEncodingReify
-            then Format.print1 "Result of normalization %s\n" (show e0);
-            let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) t0.pos in
-            encode_term e env)
+          fallback ()
 
         | Tm_constant (Const_reflect _), [(arg, _)] ->
             encode_term arg env
@@ -1447,7 +1454,7 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
               else
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
                 let body = if is_smt_reifiable_rc env.tcenv rc
-                           then TcUtil.norm_reify env.tcenv []
+                           then TcUtil.norm_reify envbody.tcenv []
                                   (U.mk_reify body (Some rc.residual_effect))
                            else body
                 in
@@ -1520,11 +1527,13 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
         failwith "Impossible: non-recursive let with multiple bindings"
 
       // A recursive local let. We encode this imprecisely, just generating a
-      // fresh variable.
+      // variable. The variable is keyed on a hash of the term, so that two
+      // occurrences of the same inner let rec are encoded by the same symbol.
       | Tm_let {lbs=(true, lbs)} ->
-        let f = varops.fresh env.current_module_name "inner_let_rec" in
+        let tkey_hash = FStarC.Hash.string_of_hash_code (FStarC.Syntax.Hash.ext_hash_term t0) in
+        let f = "Tm_inner_let_rec_" ^ BU.digest_of_string tkey_hash in
         let decl = Term.DeclFun f [] Term_sort (Some "Inner let rec") in
-        mkFreeV <| mk_fv (f, Term_sort), [decl] |> mk_decls_trivial
+        mkFreeV <| mk_fv (f, Term_sort), mk_decls f tkey_hash [decl] []
 
       | Tm_let _ ->
         failwith "Impossible: all cases handled above (encode_term)."
@@ -1546,24 +1555,30 @@ and encode_let
         let ee2, decls2 = encode_body e2 env' in
         ee2, decls1@decls2
 
+and encode_branch_pattern (env:env_t) (scr:term) (b:S.branch)
+    : ML (term & S.pat & S.term & env_t & decls_t)
+    =
+    let p, w, br = SS.open_branch b in
+    let _, pattern = encode_pat env p in
+    let guard = pattern.guard scr in
+    let projections = pattern.projections scr in
+    let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
+    let guard, decls =
+        match w with
+        | None -> guard, []
+        | Some w ->
+          let w, decls = encode_term w env in
+          mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls
+    in
+    guard, p, br, env, decls
+
 and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> ML (term & decls_t)) : ML (term & decls_t) =
     let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown Range.dummyRange)) in
     let scr, decls = encode_term e env in
     let match_tm, decls =
       let encode_branch b (else_case, decls) =
-        let p, w, br = SS.open_branch b in
-        let env0, pattern = encode_pat env p in
-        let guard = pattern.guard scr' in
-        let projections = pattern.projections scr' in
-        let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
-        let guard, decls2 =
-            match w with
-            | None -> guard, []
-            | Some w ->
-              let w, decls2 = encode_term w env in
-              mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls2
-       in
+       let guard, _, br, env, decls2 = encode_branch_pattern env scr' b in
        let br, decls3 = encode_br br env in
        mkITE(guard, br, else_case), decls@decls2@decls3
       in

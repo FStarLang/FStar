@@ -93,7 +93,8 @@ and comp_spec =
   | Cs_Eff    : us:list universe_spec ->
                 eff_name:name ->
                 result:term_spec ->
-                eff_args:list (term_spec & aqualv_spec) ->
+                pre:term_spec ->
+                post:term_spec ->
                 decrs:list term_spec ->
                 comp_spec
 
@@ -192,9 +193,10 @@ and denote_comp (c:comp) : Tot comp_spec (decreases c) =
   | C_Total t  -> Cs_Total (denote_term t)
   | C_GTotal t -> Cs_GTotal (denote_term t)
   | C_Lemma pre post pats -> Cs_Lemma (denote_term pre) (denote_term post) (denote_term pats)
-  | C_Eff us eff res args decrs ->
+  | C_Eff us eff res pre post decrs ->
     Cs_Eff (denote_universes us) eff (denote_term res)
-           (denote_args args)
+           (denote_term pre)
+           (denote_term post)
            (denote_terms decrs)
 
 and denote_args (a:list argv) : GTot (list (term_spec & aqualv_spec)) (decreases a) =
@@ -437,10 +439,11 @@ and subst_comp_spec (c:comp_spec) (ss:subst_spec)
     | Cs_GTotal t -> Cs_GTotal (subst_term_spec t ss)
     | Cs_Lemma pre post pats ->
       Cs_Lemma (subst_term_spec pre ss) (subst_term_spec post ss) (subst_term_spec pats ss)
-    | Cs_Eff us eff res args decrs ->
+    | Cs_Eff us eff res pre post decrs ->
       Cs_Eff us eff
              (subst_term_spec res ss)
-             (subst_args_spec args ss)
+             (subst_term_spec pre ss)
+             (subst_term_spec post ss)
              (subst_terms_spec decrs ss)
 
 and subst_terms_spec (ts:list term_spec) (ss:subst_spec)

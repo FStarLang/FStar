@@ -5,10 +5,12 @@
   - ‘Pulse.Lib.Reference.pts_to r 1’
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-      (r : Pulse.Lib.Reference.ref Prims.int) (__ : Prims.unit)
-      (__ : Prims.unit)
-  - VC = Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
+  - Failed to prove:
+      Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
+  - In context:
+      r: Pulse.Lib.Reference.ref Prims.int
+      __: Prims.unit
+      __: Prims.unit
   - See also TerminalActionPostConditionMismatch.fst(12,2-12,8)
 
 * Info at TerminalActionPostConditionMismatch.fst(23,2-23,4):
@@ -18,8 +20,10 @@
   - ‘Pulse.Lib.Reference.pts_to r 1’
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-      (r : Pulse.Lib.Reference.ref Prims.int) (__ : Prims.unit)
-      (__ : Prims.unit)
-  - VC = Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
+  - Failed to prove:
+      Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
+  - In context:
+      r: Pulse.Lib.Reference.ref Prims.int
+      __: Prims.unit
+      __: Prims.unit
 

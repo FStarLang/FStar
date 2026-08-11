@@ -18,145 +18,69 @@ module Effects.Coherence
 
 (*
  * Unit tests for effects orderings
+ *
+ * In the simplified effect system an effect is just a name, and a lift is
+ * just a rename: the specification of a computation is independent of its
+ * effect.  What is still checked is the shape of the lattice, which is what
+ * this file tests.
  *)
 
-type repr (a:Type) (_:unit) = a
+assume effect M1
+assume effect M2
+assume effect M3
 
-let return (a:Type) (x:a) : repr a () = x
-let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () = g f
-
-layered_effect {
-  M1 : Type -> unit -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind
-}
-
-new_effect M2 = M1
-new_effect M3 = M1
-
-let lift_pure_m (a:Type u#a) (wp:_) (f:unit -> PURE a wp)
-  : Pure (repr a ()) (requires wp (fun _ -> True)) (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ();
-    f ()
-sub_effect PURE ~> M1 = lift_pure_m
-
+assume sub_effect PURE ~> M1
 
 (*
- * Define an identity lift
- *)
-
-let lift_m_m (a:Type) (f:repr a ()) : repr a () = f
-
-(*
- * Define a stricter lift, that (unnecessarily) requires a proof of False
- *)
-let lift_m_m' (a:Type) (f:repr a ())
-  : Pure (repr a ()) (requires False) (ensures fun _ -> True)
-  = f
-
-(*
- * We now build:
+ * We build:
  *
  *   M1 --> M3
  *   M2 --> M3
  *)
 
-sub_effect M1 ~> M3 = lift_m_m
-sub_effect M2 ~> M3 = lift_m_m
+assume sub_effect M1 ~> M3
+assume sub_effect M2 ~> M3
 
-assume val f1 : unit -> M1 unit ()
+assume val f1 : unit -> M1 unit
 
+(* M1 can be lifted to M3 *)
+let f2 () : M3 unit = f1 ()
 
-(*
- * As expected, M1 can be lifted to M3
- *)
-let f2 () : M3 unit () = f1 ()
+assume val f4 : unit -> M3 unit
 
+(* And M1 and M3 compose, via M3 *)
+let f6 () : M3 unit = f1 (); f4 ()
 
-(*
- * Now add an edge from M1 to M2:
- *
- * With this edge, we are adding a new path from M1 to M3, that goes via M2
- *
- * At this point, to lift M1 to M3, F* will use this new path,
- *   so it looks like this now:
- *
- * M1 --> M2 --> M3
- *
- * To better test this, when we define life from M1 to M2,
- *   we use the artificial requires False lift
- *)
-sub_effect M1 ~> M2 = lift_m_m'
-
-
-(*
- * And now, lifting M1 to M3 fails, this same code succeeded earlier
- *
- * The reason is that lifting goes through M2 now and M2 -> M3 requires False
- *)
+(* But not the other way around: there is no lift out of M3 *)
 [@@expect_failure]
-let f3 () : M3 unit () = f1 ()
-
-(*
- * Similarly, composing M1 and M3 fails,
- *   since the only way to compose them is via lifting M1, which requires False
- *)
-assume val f4 : unit -> M3 unit ()
-
-[@@ expect_failure]
-let f5 () : M3 unit () = f1 (); f4 ()
-
-(*
- * But, if we define a polymonadic bind between M1 and M3,
- *   that always takes precedence, so this will succeed
- *)
-
-let m_m_pbind (a b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () = g f
-
-polymonadic_bind (M1, M3) |> M3 = m_m_pbind
-
-let f6 () : M3 unit () = f1 (); f4 ()
-
-
-(*
- * However, composing M3 and M1 would still fail,
- *   since that would try to lift M1 first
- *)
-[@@expect_failure]
-let f7 () : M3 unit () = f4 (); f1 ()
-
+let f7 () : M1 unit = f4 (); f1 ()
 
 //Testing for cycles and unique upper bounds
 
-new_effect M4 = M1
-new_effect M5 = M1
-new_effect M6 = M1
-new_effect M7 = M1
-
-
-(*
- * Make M6 as the least upper bound of M4 and M5
- *)
-
-sub_effect M4 ~> M6 = lift_m_m
-sub_effect M5 ~> M6 = lift_m_m
+assume effect M4
+assume effect M5
+assume effect M6
+assume effect M7
 
 (*
- * Try making M7 as another upper bound of M4 and M5
- *
- * It will fail
+ * Make M6 the least upper bound of M4 and M5
  *)
 
-sub_effect M4 ~> M7 = lift_m_m
+assume sub_effect M4 ~> M6
+assume sub_effect M5 ~> M6
+
+(*
+ * Try making M7 another upper bound of M4 and M5; it will fail
+ *)
+
+assume sub_effect M4 ~> M7
 [@@expect_failure]
-sub_effect M5 ~> M7 = lift_m_m
+assume sub_effect M5 ~> M7
 
-sub_effect M6 ~> M7 = lift_m_m
+assume sub_effect M6 ~> M7
 
 (*
- * This induces a cycle, M5 -> M6 -> M7 -> M5
+ * This would induce a cycle, M5 -> M6 -> M7 -> M5
  *)
 [@@expect_failure]
-sub_effect M7 ~> M5 = lift_m_m
+assume sub_effect M7 ~> M5

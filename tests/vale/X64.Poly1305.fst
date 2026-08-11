@@ -14,8 +14,7 @@
    limitations under the License.
 *)
 module X64.Poly1305
-#reset-options "--z3rlimit 40 --retry 5"
-#set-options "--hint_info"
+#reset-options "--retry 5"
 #set-options "--admit_smt_queries true"
 open X64.Machine_s
 open X64.Vale.State_i
@@ -383,7 +382,7 @@ irreducible let va_irreducible_lemma_poly1305_iteration va_b0 va_s0 va_sN d1 d2 
   let va_sM = (va_lemma_empty va_s14 va_sM) in
   (va_bM, va_sM, hh)
 let va_lemma_poly1305_iteration = va_irreducible_lemma_poly1305_iteration
-#reset-options "--z3rlimit 160"
+#reset-options
 
 val va_transparent_code_poly1305_blocks : va_dummy:unit -> Tot va_code
 let va_transparent_code_poly1305_blocks () =
@@ -622,7 +621,7 @@ irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
   let va_sM = (va_lemma_empty va_s44 va_sM) in
   (va_bM, va_sM, h)
 let va_lemma_poly1305_blocks = va_irreducible_lemma_poly1305_blocks
-#reset-options "--z3rlimit 200"
+#reset-options
 
 val va_transparent_code_poly1305_last_block : h0:va_dst_operand -> h1:va_dst_operand ->
   h2:va_dst_operand -> r0:va_operand -> s1:va_operand -> nExtra:va_operand -> Tot va_code
@@ -825,7 +824,7 @@ irreducible let va_irreducible_lemma_poly1305_last_block va_b0 va_s0 va_sN h0 h1
   let va_sM = (va_lemma_empty va_s51 va_sM) in
   (va_bM, va_sM)
 let va_lemma_poly1305_last_block = va_irreducible_lemma_poly1305_last_block
-#reset-options "--z3rlimit 20"
+#reset-options
 
 val va_transparent_code_poly1305_reduce_last : h0:va_dst_operand -> h1:va_dst_operand ->
   h2:va_operand -> Tot va_code
@@ -972,7 +971,7 @@ let modp_0 () : Lemma
 
 let bare_r (key_r:nat128) = FStar.UInt.logand #128 key_r 0x0ffffffc0ffffffc0ffffffc0fffffff 
 
-#reset-options "--z3rlimit 200"
+#reset-options
 
 
 val va_transparent_code_poly1305_impl : va_dummy:unit -> Tot va_code

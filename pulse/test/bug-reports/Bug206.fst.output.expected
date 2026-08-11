@@ -3,7 +3,7 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.nat)
-  - VC = x > 0
+  - Failed to prove: x > 0
+  - In context: x: Prims.nat
   - See also Bug206.fst(14,2-14,8)
 

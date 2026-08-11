@@ -153,8 +153,8 @@ let rec extract_meta (x : FStarC_Syntax_Syntax.term) :
   let uu___ = FStarC_Syntax_Subst.compress x in
   match uu___ with
   | { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
-      FStarC_Syntax_Syntax.pos = uu___1; FStarC_Syntax_Syntax.vars = uu___2;
-      FStarC_Syntax_Syntax.hash_code = uu___3;_} ->
+      FStarC_Syntax_Syntax.pos = uu___1;
+      FStarC_Syntax_Syntax.hash_code = uu___2;_} ->
       (match FStarC_Ident.string_of_lid (FStarC_Syntax_Syntax.lid_of_fv fv)
        with
        | "FStar.Attributes.PpxDerivingShow" ->
@@ -181,31 +181,31 @@ let rec extract_meta (x : FStarC_Syntax_Syntax.term) :
        | "Prims.deprecated" ->
            FStar_Pervasives_Native.Some
              (FStarC_Extraction_ML_Syntax.Deprecated "")
-       | uu___4 -> FStar_Pervasives_Native.None)
+       | uu___3 -> FStar_Pervasives_Native.None)
   | {
       FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_constant
         (FStarC_Const.Const_string ("KrmlPrivate", uu___1));
-      FStarC_Syntax_Syntax.pos = uu___2; FStarC_Syntax_Syntax.vars = uu___3;
-      FStarC_Syntax_Syntax.hash_code = uu___4;_} ->
+      FStarC_Syntax_Syntax.pos = uu___2;
+      FStarC_Syntax_Syntax.hash_code = uu___3;_} ->
       FStar_Pervasives_Native.Some FStarC_Extraction_ML_Syntax.Private
   | {
       FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_constant
         (FStarC_Const.Const_string ("c_inline", uu___1));
-      FStarC_Syntax_Syntax.pos = uu___2; FStarC_Syntax_Syntax.vars = uu___3;
-      FStarC_Syntax_Syntax.hash_code = uu___4;_} ->
+      FStarC_Syntax_Syntax.pos = uu___2;
+      FStarC_Syntax_Syntax.hash_code = uu___3;_} ->
       FStar_Pervasives_Native.Some FStarC_Extraction_ML_Syntax.CInline
   | {
       FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_constant
         (FStarC_Const.Const_string ("substitute", uu___1));
-      FStarC_Syntax_Syntax.pos = uu___2; FStarC_Syntax_Syntax.vars = uu___3;
-      FStarC_Syntax_Syntax.hash_code = uu___4;_} ->
+      FStarC_Syntax_Syntax.pos = uu___2;
+      FStarC_Syntax_Syntax.hash_code = uu___3;_} ->
       FStar_Pervasives_Native.Some FStarC_Extraction_ML_Syntax.Substitute
   | {
       FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_meta
         { FStarC_Syntax_Syntax.tm2 = x1;
           FStarC_Syntax_Syntax.meta = uu___1;_};
-      FStarC_Syntax_Syntax.pos = uu___2; FStarC_Syntax_Syntax.vars = uu___3;
-      FStarC_Syntax_Syntax.hash_code = uu___4;_} -> extract_meta x1
+      FStarC_Syntax_Syntax.pos = uu___2;
+      FStarC_Syntax_Syntax.hash_code = uu___3;_} -> extract_meta x1
   | uu___1 ->
       let uu___2 = FStarC_Syntax_Util.head_and_args_full x in
       (match uu___2 with
@@ -221,9 +221,8 @@ let rec extract_meta (x : FStarC_Syntax_Syntax.term) :
                   FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_constant
                     (FStarC_Const.Const_string (s, uu___4));
                   FStarC_Syntax_Syntax.pos = uu___5;
-                  FStarC_Syntax_Syntax.vars = uu___6;
-                  FStarC_Syntax_Syntax.hash_code = uu___7;_},
-                uu___8)::[]) ->
+                  FStarC_Syntax_Syntax.hash_code = uu___6;_},
+                uu___7)::[]) ->
                 (match FStarC_Ident.string_of_lid
                          (FStarC_Syntax_Syntax.lid_of_fv fv)
                  with
@@ -248,7 +247,7 @@ let rec extract_meta (x : FStarC_Syntax_Syntax.term) :
                  | "Prims.deprecated" ->
                      FStar_Pervasives_Native.Some
                        (FStarC_Extraction_ML_Syntax.Deprecated s)
-                 | uu___9 -> FStar_Pervasives_Native.None)
+                 | uu___8 -> FStar_Pervasives_Native.None)
             | (FStarC_Syntax_Syntax.Tm_fvar fv, uu___4::[]) when
                 FStarC_Syntax_Syntax.fv_eq_lid fv
                   FStarC_Parser_Const.remove_unused_type_parameters_lid
@@ -960,194 +959,6 @@ let extract_type_declaration (g : FStarC_Extraction_ML_UEnv.uenv)
                   }
                 else iface1 in
               (g1, iface2, mods)))
-let extract_reifiable_effect (g : FStarC_Extraction_ML_UEnv.uenv)
-  (ed : FStarC_Syntax_Syntax.eff_decl) :
-  (FStarC_Extraction_ML_UEnv.uenv * iface *
-    FStarC_Extraction_ML_Syntax.mlmodule1 Prims.list)=
-  let extend_iface lid mlp exp exp_binding =
-    let fv = FStarC_Syntax_Syntax.lid_as_fv lid FStar_Pervasives_Native.None in
-    let lb =
-      {
-        FStarC_Extraction_ML_Syntax.mllb_name =
-          (FStar_Pervasives_Native.snd mlp);
-        FStarC_Extraction_ML_Syntax.mllb_tysc = FStar_Pervasives_Native.None;
-        FStarC_Extraction_ML_Syntax.mllb_add_unit = false;
-        FStarC_Extraction_ML_Syntax.mllb_def = exp;
-        FStarC_Extraction_ML_Syntax.mllb_attrs = [];
-        FStarC_Extraction_ML_Syntax.mllb_meta = [];
-        FStarC_Extraction_ML_Syntax.print_typ = false
-      } in
-    ((iface_of_bindings [(fv, exp_binding)]),
-      (FStarC_Extraction_ML_Syntax.mk_mlmodule1
-         (FStarC_Extraction_ML_Syntax.MLM_Let
-            (FStarC_Extraction_ML_Syntax.NonRec, [lb])))) in
-  let rec extract_fv tm =
-    (let uu___1 = FStarC_Effect.op_Bang dbg_ExtractionReify in
-     if uu___1
-     then
-       let uu___2 =
-         FStarC_Class_Show.show FStarC_Syntax_Print.showable_term tm in
-       FStarC_Format.print1 "extract_fv term: %s\n" uu___2
-     else ());
-    (let uu___1 =
-       let uu___2 = FStarC_Syntax_Subst.compress tm in
-       uu___2.FStarC_Syntax_Syntax.n in
-     match uu___1 with
-     | FStarC_Syntax_Syntax.Tm_uinst (tm1, uu___2) -> extract_fv tm1
-     | FStarC_Syntax_Syntax.Tm_fvar fv ->
-         let mlp =
-           FStarC_Extraction_ML_UEnv.mlpath_of_lident g
-             fv.FStarC_Syntax_Syntax.fv_name in
-         let uu___2 =
-           FStarC_Extraction_ML_UEnv.lookup_fv tm.FStarC_Syntax_Syntax.pos g
-             fv in
-         (match uu___2 with
-          | { FStarC_Extraction_ML_UEnv.exp_b_name = uu___3;
-              FStarC_Extraction_ML_UEnv.exp_b_expr = uu___4;
-              FStarC_Extraction_ML_UEnv.exp_b_tscheme = tysc;
-              FStarC_Extraction_ML_UEnv.exp_b_eff = uu___5;_} ->
-              ((FStarC_Extraction_ML_Syntax.with_ty
-                  FStarC_Extraction_ML_Syntax.MLTY_Top
-                  (FStarC_Extraction_ML_Syntax.MLE_Name mlp)), tysc))
-     | uu___2 ->
-         let uu___3 =
-           let uu___4 =
-             FStarC_Range_Ops.string_of_range tm.FStarC_Syntax_Syntax.pos in
-           let uu___5 =
-             FStarC_Class_Show.show FStarC_Syntax_Print.showable_term tm in
-           FStarC_Format.fmt2 "(%s) Not an fv: %s" uu___4 uu___5 in
-         FStarC_Effect.failwith uu___3) in
-  let extract_action g1 a =
-    (let uu___1 = FStarC_Effect.op_Bang dbg_ExtractionReify in
-     if uu___1
-     then
-       let uu___2 =
-         FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-           a.FStarC_Syntax_Syntax.action_typ in
-       let uu___3 =
-         FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-           a.FStarC_Syntax_Syntax.action_defn in
-       FStarC_Format.print2 "Action type %s and term %s\n" uu___2 uu___3
-     else ());
-    (let lbname =
-       let uu___1 =
-         FStarC_Syntax_Syntax.new_bv
-           (FStar_Pervasives_Native.Some
-              ((a.FStarC_Syntax_Syntax.action_defn).FStarC_Syntax_Syntax.pos))
-           FStarC_Syntax_Syntax.tun in
-       FStar_Pervasives.Inl uu___1 in
-     let lb =
-       FStarC_Syntax_Syntax.mk_lb
-         (lbname, (a.FStarC_Syntax_Syntax.action_univs),
-           FStarC_Parser_Const.effect_Tot_lid,
-           (a.FStarC_Syntax_Syntax.action_typ),
-           (a.FStarC_Syntax_Syntax.action_defn), [],
-           ((a.FStarC_Syntax_Syntax.action_defn).FStarC_Syntax_Syntax.pos)) in
-     let lbs = (false, [lb]) in
-     let action_lb =
-       FStarC_Syntax_Syntax.mk
-         (FStarC_Syntax_Syntax.Tm_let
-            {
-              FStarC_Syntax_Syntax.lbs = lbs;
-              FStarC_Syntax_Syntax.body1 = FStarC_Syntax_Util.exp_false_bool
-            }) (a.FStarC_Syntax_Syntax.action_defn).FStarC_Syntax_Syntax.pos in
-     let uu___1 = FStarC_Extraction_ML_Term.term_as_mlexpr g1 action_lb in
-     match uu___1 with
-     | (a_let, uu___2, ty) ->
-         let uu___3 =
-           match a_let.FStarC_Extraction_ML_Syntax.expr with
-           | FStarC_Extraction_ML_Syntax.MLE_Let ((uu___4, mllb::[]), uu___5)
-               ->
-               (match mllb.FStarC_Extraction_ML_Syntax.mllb_tysc with
-                | FStar_Pervasives_Native.Some tysc ->
-                    ((mllb.FStarC_Extraction_ML_Syntax.mllb_def), tysc)
-                | FStar_Pervasives_Native.None ->
-                    FStarC_Effect.failwith "No type scheme")
-           | uu___4 -> FStarC_Effect.failwith "Impossible" in
-         (match uu___3 with
-          | (exp, tysc) ->
-              let uu___4 =
-                FStarC_Extraction_ML_UEnv.extend_with_action_name g1 ed a
-                  tysc in
-              (match uu___4 with
-               | (a_nm, a_lid, exp_b, g2) ->
-                   ((let uu___6 = FStarC_Effect.op_Bang dbg_ExtractionReify in
-                     if uu___6
-                     then
-                       let uu___7 =
-                         FStarC_Extraction_ML_Code.string_of_mlexpr a_nm
-                           a_let in
-                       FStarC_Format.print1 "Extracted action term: %s\n"
-                         uu___7
-                     else ());
-                    (let uu___7 = FStarC_Effect.op_Bang dbg_ExtractionReify in
-                     if uu___7
-                     then
-                       ((let uu___9 =
-                           FStarC_Extraction_ML_Code.string_of_mlty a_nm
-                             (FStar_Pervasives_Native.snd tysc) in
-                         FStarC_Format.print1 "Extracted action type: %s\n"
-                           uu___9);
-                        (let uu___9 =
-                           FStarC_Extraction_ML_Syntax.ty_param_names
-                             (FStar_Pervasives_Native.fst tysc) in
-                         FStarC_List.iter
-                           (fun x ->
-                              FStarC_Format.print1 "and binders: %s\n" x)
-                           uu___9))
-                     else ());
-                    (let uu___7 = extend_iface a_lid a_nm exp exp_b in
-                     match uu___7 with
-                     | (iface1, impl) -> (g2, (iface1, impl))))))) in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        let uu___3 =
-          FStarC_Option.must (FStarC_Syntax_Util.get_return_repr ed) in
-        FStar_Pervasives_Native.snd uu___3 in
-      extract_fv uu___2 in
-    match uu___1 with
-    | (return_tm, ty_sc) ->
-        let uu___2 =
-          FStarC_Extraction_ML_UEnv.extend_with_monad_op_name g ed "return"
-            ty_sc in
-        (match uu___2 with
-         | (return_nm, return_lid, return_b, g1) ->
-             let uu___3 =
-               extend_iface return_lid return_nm return_tm return_b in
-             (match uu___3 with | (iface1, impl) -> (g1, iface1, impl))) in
-  match uu___ with
-  | (g1, return_iface, return_decl) ->
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              FStarC_Option.must (FStarC_Syntax_Util.get_bind_repr ed) in
-            FStar_Pervasives_Native.snd uu___4 in
-          extract_fv uu___3 in
-        match uu___2 with
-        | (bind_tm, ty_sc) ->
-            let uu___3 =
-              FStarC_Extraction_ML_UEnv.extend_with_monad_op_name g1 ed
-                "bind" ty_sc in
-            (match uu___3 with
-             | (bind_nm, bind_lid, bind_b, g2) ->
-                 let uu___4 = extend_iface bind_lid bind_nm bind_tm bind_b in
-                 (match uu___4 with | (iface1, impl) -> (g2, iface1, impl))) in
-      (match uu___1 with
-       | (g2, bind_iface, bind_decl) ->
-           let uu___2 =
-             FStarC_Util.fold_map extract_action g2
-               ed.FStarC_Syntax_Syntax.actions in
-           (match uu___2 with
-            | (g3, actions) ->
-                let uu___3 = FStarC_List.unzip actions in
-                (match uu___3 with
-                 | (actions_iface, actions1) ->
-                     let uu___4 =
-                       iface_union_l (return_iface :: bind_iface ::
-                         actions_iface) in
-                     (g3, uu___4, (return_decl :: bind_decl :: actions1)))))
 let should_split_let_rec_types_and_terms
   (env : FStarC_Extraction_ML_UEnv.uenv)
   (lbs : FStarC_Syntax_Syntax.letbinding Prims.list) : Prims.bool=
@@ -1571,9 +1382,6 @@ let rec extract_sigelt_iface (g : FStarC_Extraction_ML_UEnv.uenv)
      | FStarC_Syntax_Syntax.Sig_assume uu___1 -> (g, empty_iface)
      | FStarC_Syntax_Syntax.Sig_sub_effect uu___1 -> (g, empty_iface)
      | FStarC_Syntax_Syntax.Sig_effect_abbrev uu___1 -> (g, empty_iface)
-     | FStarC_Syntax_Syntax.Sig_polymonadic_bind uu___1 -> (g, empty_iface)
-     | FStarC_Syntax_Syntax.Sig_polymonadic_subcomp uu___1 ->
-         (g, empty_iface)
      | FStarC_Syntax_Syntax.Sig_pragma p ->
          (FStarC_Syntax_Util.process_pragma p se2.FStarC_Syntax_Syntax.sigrng;
           (g, empty_iface))
@@ -1581,22 +1389,7 @@ let rec extract_sigelt_iface (g : FStarC_Extraction_ML_UEnv.uenv)
          FStarC_Effect.failwith "impossible: trying to extract splice"
      | FStarC_Syntax_Syntax.Sig_fail uu___1 ->
          FStarC_Effect.failwith "impossible: trying to extract Sig_fail"
-     | FStarC_Syntax_Syntax.Sig_new_effect ed ->
-         let uu___1 =
-           let uu___2 =
-             let uu___3 =
-               FStarC_TypeChecker_Util.effect_extraction_mode
-                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
-                 ed.FStarC_Syntax_Syntax.mname in
-             uu___3 = FStarC_Syntax_Syntax.Extract_reify in
-           if uu___2
-           then Prims.uu___is_Nil ed.FStarC_Syntax_Syntax.binders
-           else false in
-         if uu___1
-         then
-           let uu___2 = extract_reifiable_effect g ed in
-           (match uu___2 with | (env, iface1, uu___3) -> (env, iface1))
-         else (g, empty_iface))
+     | FStarC_Syntax_Syntax.Sig_new_effect ed -> (g, empty_iface))
 let extract_iface' (g : env_t) (modul : FStarC_Syntax_Syntax.modul) :
   (env_t * iface)=
   let uu___ = FStarC_Options.interactive () in
@@ -1924,13 +1717,6 @@ let rec extract_sig (g : env_t) (se : FStarC_Syntax_Syntax.sigelt) :
                           se2 in
                       FStarC_List.op_At ses uu___7 in
                     (g1, uu___6))
-           | FStarC_Syntax_Syntax.Sig_new_effect ed when
-               FStarC_TypeChecker_Env.is_reifiable_effect
-                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
-                 ed.FStarC_Syntax_Syntax.mname
-               ->
-               let uu___4 = extract_reifiable_effect g ed in
-               (match uu___4 with | (env, _iface, impl) -> (env, impl))
            | FStarC_Syntax_Syntax.Sig_splice uu___4 ->
                FStarC_Effect.failwith "impossible: trying to extract splice"
            | FStarC_Syntax_Syntax.Sig_fail uu___4 ->
@@ -2191,8 +1977,6 @@ let rec extract_sig (g : env_t) (se : FStarC_Syntax_Syntax.sigelt) :
            | FStarC_Syntax_Syntax.Sig_assume uu___4 -> (g, [])
            | FStarC_Syntax_Syntax.Sig_sub_effect uu___4 -> (g, [])
            | FStarC_Syntax_Syntax.Sig_effect_abbrev uu___4 -> (g, [])
-           | FStarC_Syntax_Syntax.Sig_polymonadic_bind uu___4 -> (g, [])
-           | FStarC_Syntax_Syntax.Sig_polymonadic_subcomp uu___4 -> (g, [])
            | FStarC_Syntax_Syntax.Sig_pragma p ->
                (FStarC_Syntax_Util.process_pragma p
                   se2.FStarC_Syntax_Syntax.sigrng;
@@ -2378,6 +2162,8 @@ and extract_sig_let (g : FStarC_Extraction_ML_UEnv.uenv)
                    (env.FStarC_TypeChecker_Env.missing_decl);
                  FStarC_TypeChecker_Env.iface_todo =
                    (env.FStarC_TypeChecker_Env.iface_todo);
+                 FStarC_TypeChecker_Env.iface_hidden =
+                   (env.FStarC_TypeChecker_Env.iface_hidden);
                  FStarC_TypeChecker_Env.iface_lids =
                    (env.FStarC_TypeChecker_Env.iface_lids);
                  FStarC_TypeChecker_Env.iface_val_lids =
@@ -2479,12 +2265,13 @@ and extract_sig_let (g : FStarC_Extraction_ML_UEnv.uenv)
                                               = e;
                                             FStarC_Syntax_Syntax.result_typ =
                                               uu___17;
-                                            FStarC_Syntax_Syntax.effect_args
-                                              = uu___18;
+                                            FStarC_Syntax_Syntax.comp_pre =
+                                              uu___18;
+                                            FStarC_Syntax_Syntax.comp_post =
+                                              uu___19;
                                             FStarC_Syntax_Syntax.flags =
-                                              uu___19;_};
-                                        FStarC_Syntax_Syntax.pos = uu___20;
-                                        FStarC_Syntax_Syntax.vars = uu___21;
+                                              uu___20;_};
+                                        FStarC_Syntax_Syntax.pos = uu___21;
                                         FStarC_Syntax_Syntax.hash_code =
                                           uu___22;_})
                                        when

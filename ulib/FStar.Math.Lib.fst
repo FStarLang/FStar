@@ -40,7 +40,7 @@ private let lemma_mul_minus_distr_l (a:int) (b:int) (c:int) : Lemma (a * (b - c)
   = ()
 
 (* Axiom: definition of the "b divides c" relation *)
-#reset-options "--z3rlimit 30"
+#reset-options
 val slash_star_axiom: a:nat -> b:pos -> c:nat -> Lemma
   (requires (a * b = c))
   (ensures  (a = c / b))

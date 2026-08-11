@@ -765,12 +765,13 @@ let e_comp_view =
         | C_Lemma (pre, post, pats) ->
             mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post); as_arg (embed e_term cb pats)]
 
-        | C_Eff (us, eff, res, args, decrs) ->
+        | C_Eff (us, eff, res, pre, post, decrs) ->
             mkConstruct ref_C_Eff.fv []
                 [ as_arg (embed (e_list e_universe) cb us)
                 ; as_arg (embed e_string_list cb eff)
                 ; as_arg (embed e_term cb res)
-                ; as_arg (embed (e_list e_argv) cb args)
+                ; as_arg (embed e_term cb pre)
+                ; as_arg (embed e_term cb post)
                 ; as_arg (embed (e_list e_term) cb decrs)]
     in
     let unembed_comp_view cb (t : t) : ML (option comp_view) =
@@ -791,14 +792,15 @@ let e_comp_view =
             Option.bind (unembed e_term cb pats) (fun pats ->
             Some <| C_Lemma (pre, post, pats))))
 
-        | Construct (fv, _, [(decrs, _); (args, _); (res, _); (eff, _); (us, _)])
+        | Construct (fv, _, [(decrs, _); (post, _); (pre, _); (res, _); (eff, _); (us, _)])
           when S.fv_eq_lid fv ref_C_Eff.lid ->
             Option.bind (unembed (e_list e_universe) cb us) (fun us ->
             Option.bind (unembed e_string_list cb eff) (fun eff ->
             Option.bind (unembed e_term cb res) (fun res->
-            Option.bind (unembed (e_list e_argv) cb args) (fun args ->
+            Option.bind (unembed e_term cb pre) (fun pre ->
+            Option.bind (unembed e_term cb post) (fun post ->
             Option.bind (unembed (e_list e_term) cb decrs) (fun decrs ->
-            Some <| C_Eff (us, eff, res, args, decrs))))))
+            Some <| C_Eff (us, eff, res, pre, post, decrs)))))))
 
         | _ ->
             Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded comp_view: %s" (t_to_string t));

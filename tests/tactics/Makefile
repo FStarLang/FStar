@@ -3,8 +3,12 @@ include $(FSTAR_ROOT)/mk/test.mk
 
 all: Hacl.Meta.Use.fst.test
 
-# The negative tests in this file may succeed with hints, force them off.
-$(CACHE_DIR)/Pruning.fst.checked: HINTS_ENABLED=
+# TacTest exercises reification of the Tac effect during extraction.
+all: $(OUTPUT_DIR)/TacTest.ml
+
+$(OUTPUT_DIR)/TacTest.ml: $(CACHE_DIR)/TacTest.fst.checked
+	$(call msg, "EXTRACT", TacTest.fst)
+	$(FSTAR) TacTest.fst --codegen Plugin --odir $(OUTPUT_DIR)
 
 Hacl_Meta.ml: $(CACHE_DIR)/Hacl.Meta.fst.checked
 	$(FSTAR) Hacl.Meta.fst --codegen Plugin

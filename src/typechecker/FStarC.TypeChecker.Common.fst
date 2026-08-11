@@ -33,6 +33,9 @@ open FStarC.Syntax.Print {}
 module BU = FStarC.Util
 module PC = FStarC.Parser.Const
 module C = FStarC.Parser.Const
+module SS = FStarC.Syntax.Subst
+module Free = FStarC.Syntax.Free
+open FStarC.Class.Setlike
 
 
 let as_tprob (p:prob) : ML (problem typ) = match p with
@@ -328,13 +331,13 @@ let lcomp_set_flags lc fs
              fs
              (fun () -> lc |> lcomp_comp |> (fun (c, g) -> comp_typ_set_flags c, g))
 
-let is_total_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_total_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL -> true | _ -> false)
 
 let is_tot_or_gtot_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid
                              || lid_equals c.eff_name PC.effect_GTot_lid
-                             || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
+                             || c.cflags |> BU.for_some (function TOTAL -> true | _ -> false)
 
-let is_lcomp_partial_return c : ML bool = c.cflags |> BU.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+let is_lcomp_partial_return c : ML bool = false
 
 let is_pure_lcomp lc : ML bool =
     is_total_lcomp lc
@@ -357,7 +360,7 @@ let lcomp_of_comp_guard c0 g : ML lcomp =
     let eff_name, flags =
         match c0.n with
         | Total _ -> PC.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
+        | GTotal _ -> PC.effect_GTot_lid, []
         | Comp c -> c.effect_name, c.flags in
     mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, g)
 
@@ -371,3 +374,37 @@ let check_positivity_qual subtyping p0 p1
          | Some BinderUnused, Some BinderStrictlyPositive -> true
          | _ -> false
     else false
+
+let one_point_defn (x:bv) (hyp:term) : ML (option (term & term)) =
+  let is_x (t:term) =
+    match (SS.compress t).n with
+    | Tm_name y -> S.bv_eq x y
+    | _ -> false in
+  let as_defn (t:term) : ML (option term) =
+    let hd, args = U.head_and_args_full t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [_; (lhs, _); (rhs, _)] when S.fv_eq_lid fv C.eq2_lid ->
+      if is_x lhs && not (mem x (Free.names rhs)) then Some rhs
+      else if is_x rhs && not (mem x (Free.names lhs)) then Some lhs
+      else None
+    | _ -> None in
+  let rec find (t:term) : ML (option (term & term)) =
+    let hd, args = U.head_and_args_full t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv C.and_lid ->
+      (match find a with
+       | Some (v, rest) -> Some (v, U.mk_conj_simp rest b)
+       | None ->
+         match find b with
+         | Some (v, rest) -> Some (v, U.mk_conj_simp a rest)
+         | None -> None)
+    | _ ->
+      match as_defn t with
+      | Some v -> Some (v, U.t_true)
+      | None -> None in
+  find hyp
+
+let post_obligation (x:bv) (hyp:term) (concl:term) : ML term =
+  match one_point_defn x hyp with
+  | Some (v, rest) -> SS.subst [NT (x, v)] (U.mk_imp_simp rest concl)
+  | None -> U.mk_forall_no_univ x (U.mk_imp hyp concl)

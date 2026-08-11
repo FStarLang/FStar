@@ -1089,7 +1089,7 @@ let apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
   RU.try_solve_single_valued_implicits (elab_env g) uvars;
   ty, tm
 
-#push-options "--split_queries always --z3rlimit 10"
+#push-options "--z3rlimit 10"
 let try_apply_elim_lemma (pg: penv) (lid: R.name) (i: nat) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals pg.penv_env [ctxt])) =
   let g = pg.penv_env in
@@ -1130,7 +1130,7 @@ let try_apply_elim_lemma (pg: penv) (lid: R.name) (i: nat) (ctxt: slprop_view) :
     None
 #pop-options
 
-#push-options "--split_queries always"
+#push-options ""
 let try_apply_eager_intro_lemma (pg: penv) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
     T.Tac (option (prover_result pg.penv_env ctxt [goal])) =
   let g = pg.penv_env in
@@ -1221,7 +1221,7 @@ let prover_result_solved_unpack #g #ctxt #goals (res: prover_result_solved g ctx
     cont_elab_trans k1 (cont_elab_frame k2 ctxt') |)
 
 #restart-solver
-#push-options "--split_queries always --z3rlimit 15"
+#push-options "--z3rlimit 15"
 let try_apply_intro_lemma (pg: penv) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
     T.Tac (option (
       g': env &
@@ -1494,7 +1494,7 @@ let k_unreach (g: env) (x: nvar { freshv g (snd x) }) (post_hint: post_hint_t { 
   k_elab_equiv tm_is_unreachable post_opened k_elim
 
 #restart-solver
-#push-options "--z3rlimit_factor 2 --split_queries always"
+#push-options "--z3rlimit_factor 2"
 let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (post_hint:post_hint_opt g) (rng:range)
   : T.Tac (checker_result_t g ctxt post_hint) =
 

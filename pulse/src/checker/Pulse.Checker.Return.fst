@@ -91,7 +91,7 @@ let rec free_named_vars (t:term) : T.Tac (list var) =
     (match R.inspect_comp c with
      | R.C_Total ret | R.C_GTotal ret -> free_named_vars ret
      | R.C_Lemma pre post pats -> free_named_vars pre ++ free_named_vars post ++ free_named_vars pats
-     | R.C_Eff _ _ ret _ _ -> free_named_vars ret)
+     | R.C_Eff _ _ ret _ _ _ -> free_named_vars ret)
   | R.Tv_Let _ _ _ def body -> free_named_vars def ++ free_named_vars body
   | R.Tv_Match sc _ brs ->
     TU.fold_left (fun (acc:list var) (br:R.branch) -> List.Tot.append acc (free_named_vars (snd br)))
@@ -138,7 +138,7 @@ let rec unrefine_result (t:term) : T.Tac term =
   | T.Tv_AscribedC e _ _ _ -> unrefine_result e
   | _ -> t
 
-#push-options "--z3rlimit_factor 16 --fuel 0 --ifuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 16 --fuel 0 --ifuel 1"
 #restart-solver
 let check_core
   (g:env)

@@ -34,7 +34,6 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
 
 open Pulse.Lib.BoundedIntegers
 
-#push-options "--z3rlimit_factor 4"
 
 fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   returns r:U32.t

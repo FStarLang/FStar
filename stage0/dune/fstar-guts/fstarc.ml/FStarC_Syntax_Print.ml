@@ -544,22 +544,13 @@ let tscheme_to_doc (ts : FStarC_Syntax_Syntax.tscheme) :
     FStar_Pprint.arbitrary_string uu___1
   else FStarC_Syntax_Print_Pretty.tscheme_to_doc ts
 let sub_eff_to_string (se : FStarC_Syntax_Syntax.sub_eff) : Prims.string=
-  let tsopt_to_string ts_opt =
-    if FStar_Pervasives_Native.uu___is_Some ts_opt
-    then
-      tscheme_to_string
-        (FStar_Pervasives_Native.__proj__Some__item__v ts_opt)
-    else "<None>" in
   let uu___ =
     FStarC_Class_Show.show FStarC_Ident.showable_lident
       se.FStarC_Syntax_Syntax.source in
   let uu___1 =
     FStarC_Class_Show.show FStarC_Ident.showable_lident
       se.FStarC_Syntax_Syntax.target in
-  let uu___2 = tsopt_to_string se.FStarC_Syntax_Syntax.lift in
-  let uu___3 = tsopt_to_string se.FStarC_Syntax_Syntax.lift_wp in
-  FStarC_Format.fmt4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s" uu___
-    uu___1 uu___2 uu___3
+  FStarC_Format.fmt2 "sub_effect %s ~> %s" uu___ uu___1
 let showable_sub_eff :
   FStarC_Syntax_Syntax.sub_eff FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = sub_eff_to_string }
@@ -686,22 +677,28 @@ let rec sigelt_to_string_short (x : FStarC_Syntax_Syntax.sigelt) :
       let uu___3 = sigelt_to_string_short (FStarC_List.hd ses) in
       FStarC_Format.fmt1 "[@@expect_failure] %s" uu___3
   | FStarC_Syntax_Syntax.Sig_new_effect ed ->
-      let kw =
-        if FStarC_Syntax_Util.is_layered ed
-        then "layered_effect"
-        else "new_effect" in
       let uu___ =
         FStarC_Class_Show.show FStarC_Ident.showable_lident
           ed.FStarC_Syntax_Syntax.mname in
-      FStarC_Format.fmt2 "%s { %s ... }" kw uu___
-  | FStarC_Syntax_Syntax.Sig_sub_effect se ->
+      FStarC_Format.fmt2 "%seffect %s"
+        (if
+           FStarC_List.contains FStarC_Syntax_Syntax.Assumption
+             x.FStarC_Syntax_Syntax.sigquals
+         then "assume "
+         else "") uu___
+  | FStarC_Syntax_Syntax.Sig_sub_effect sub ->
       let uu___ =
         FStarC_Class_Show.show FStarC_Ident.showable_lident
-          se.FStarC_Syntax_Syntax.source in
+          sub.FStarC_Syntax_Syntax.source in
       let uu___1 =
         FStarC_Class_Show.show FStarC_Ident.showable_lident
-          se.FStarC_Syntax_Syntax.target in
-      FStarC_Format.fmt2 "sub_effect %s ~> %s" uu___ uu___1
+          sub.FStarC_Syntax_Syntax.target in
+      FStarC_Format.fmt3 "%ssub_effect %s ~> %s"
+        (if
+           FStarC_List.contains FStarC_Syntax_Syntax.Assumption
+             x.FStarC_Syntax_Syntax.sigquals
+         then "assume "
+         else "") uu___ uu___1
   | FStarC_Syntax_Syntax.Sig_effect_abbrev
       { FStarC_Syntax_Syntax.lid4 = l; FStarC_Syntax_Syntax.us4 = uu___;
         FStarC_Syntax_Syntax.bs = tps; FStarC_Syntax_Syntax.comp1 = c;
@@ -724,22 +721,6 @@ let rec sigelt_to_string_short (x : FStarC_Syntax_Syntax.sigelt) :
         FStarC_String.concat "; " uu___2 in
       FStarC_Format.fmt3 "%splice%s[%s] (...)" "%s"
         (if is_typed then "_t" else "") uu___1
-  | FStarC_Syntax_Syntax.Sig_polymonadic_bind
-      { FStarC_Syntax_Syntax.m_lid = m; FStarC_Syntax_Syntax.n_lid = n;
-        FStarC_Syntax_Syntax.p_lid = p; FStarC_Syntax_Syntax.tm3 = uu___;
-        FStarC_Syntax_Syntax.typ = uu___1;
-        FStarC_Syntax_Syntax.kind1 = uu___2;_}
-      ->
-      FStarC_Format.fmt3 "polymonadic_bind (%s, %s) |> %s"
-        (FStarC_Ident.string_of_lid m) (FStarC_Ident.string_of_lid n)
-        (FStarC_Ident.string_of_lid p)
-  | FStarC_Syntax_Syntax.Sig_polymonadic_subcomp
-      { FStarC_Syntax_Syntax.m_lid1 = m; FStarC_Syntax_Syntax.n_lid1 = n;
-        FStarC_Syntax_Syntax.tm4 = uu___; FStarC_Syntax_Syntax.typ1 = uu___1;
-        FStarC_Syntax_Syntax.kind2 = uu___2;_}
-      ->
-      FStarC_Format.fmt2 "polymonadic_subcomp %s <: %s"
-        (FStarC_Ident.string_of_lid m) (FStarC_Ident.string_of_lid n)
 let binder_to_json (env : FStarC_Syntax_DsEnv.env)
   (b : FStarC_Syntax_Syntax.binder) : FStarC_Json.json=
   let n =
@@ -797,12 +778,9 @@ let cflag_to_string (c : FStarC_Syntax_Syntax.cflag) : Prims.string=
   match c with
   | FStarC_Syntax_Syntax.TOTAL -> "total"
   | FStarC_Syntax_Syntax.MLEFFECT -> "ml"
-  | FStarC_Syntax_Syntax.RETURN -> "return"
-  | FStarC_Syntax_Syntax.PARTIAL_RETURN -> "partial_return"
-  | FStarC_Syntax_Syntax.SOMETRIVIAL -> "sometrivial"
-  | FStarC_Syntax_Syntax.TRIVIAL_POSTCONDITION -> "trivial_postcondition"
-  | FStarC_Syntax_Syntax.SHOULD_NOT_INLINE -> "should_not_inline"
   | FStarC_Syntax_Syntax.LEMMA -> "lemma"
+  | FStarC_Syntax_Syntax.SMTPAT p ->
+      let uu___ = term_to_string p in Prims.strcat "smtpat " uu___
   | FStarC_Syntax_Syntax.DECREASES do1 ->
       let uu___ = FStarC_Class_Show.show showable_decreases_order do1 in
       Prims.strcat "decreases " uu___

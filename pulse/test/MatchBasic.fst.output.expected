@@ -3,7 +3,9 @@
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env = (xs : Prims.list Prims.int)
-  - VC = ~(Nil? xs) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context:
+      xs: Prims.list Prims.int
+      ~(Nil? xs)
   - Also see: MatchBasic.fst(134,8-134,10)
 

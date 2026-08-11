@@ -242,6 +242,10 @@ let fstar_refl_binder_view : FStarC_Syntax_Syntax.term=
   mk_refl_data_lid_as_term "binder_view"
 let fstar_refl_binder_view_fv : FStarC_Syntax_Syntax.fv=
   mk_refl_data_lid_as_fv "binder_view"
+let fstar_refl_int_signedness_fv : FStarC_Syntax_Syntax.fv=
+  mk_refl_data_lid_as_fv "int_signedness"
+let fstar_refl_int_width_fv : FStarC_Syntax_Syntax.fv=
+  mk_refl_data_lid_as_fv "int_width"
 let fstar_refl_vconst : FStarC_Syntax_Syntax.term=
   mk_refl_data_lid_as_term "vconst"
 let fstar_refl_vconst_fv : FStarC_Syntax_Syntax.fv=
@@ -345,10 +349,18 @@ let ref_NM : refl_constant= fstar_syntax_syntax_const ["NM"]
 let ref_NT : refl_constant= fstar_syntax_syntax_const ["NT"]
 let ref_UN : refl_constant= fstar_syntax_syntax_const ["UN"]
 let ref_UD : refl_constant= fstar_syntax_syntax_const ["UD"]
+let ref_Signed : refl_constant= fstar_refl_data_const "Signed"
+let ref_Unsigned : refl_constant= fstar_refl_data_const "Unsigned"
+let ref_Int8 : refl_constant= fstar_refl_data_const "Int8"
+let ref_Int16 : refl_constant= fstar_refl_data_const "Int16"
+let ref_Int32 : refl_constant= fstar_refl_data_const "Int32"
+let ref_Int64 : refl_constant= fstar_refl_data_const "Int64"
+let ref_Sizet : refl_constant= fstar_refl_data_const "Sizet"
 let ref_C_Unit : refl_constant= fstar_refl_data_const "C_Unit"
 let ref_C_True : refl_constant= fstar_refl_data_const "C_True"
 let ref_C_False : refl_constant= fstar_refl_data_const "C_False"
 let ref_C_Int : refl_constant= fstar_refl_data_const "C_Int"
+let ref_C_MachineInt : refl_constant= fstar_refl_data_const "C_MachineInt"
 let ref_C_String : refl_constant= fstar_refl_data_const "C_String"
 let ref_C_Range : refl_constant= fstar_refl_data_const "C_Range"
 let ref_C_Reify : refl_constant= fstar_refl_data_const "C_Reify"
