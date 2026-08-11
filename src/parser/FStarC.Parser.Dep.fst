@@ -909,13 +909,9 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | Splice (_, _, t)
     | Assume (_, t)
-    | SubEffect { lift_op = NonReifiableLift t }
-    | SubEffect { lift_op = LiftForFree t }
     | Val (_, t) ->
         collect_term t
-    | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
-        collect_term t0;
-        collect_term t1
+    | SubEffect _ -> ()
     | Tycon (_, tc, ts) ->
         begin
         if tc then
@@ -924,12 +920,8 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
         end
     | Exception (_, t) ->
         Option.iter collect_term t
-    | NewEffect ed
-    | LayeredEffect ed ->
+    | NewEffect ed ->
           collect_effect_decl ed
-
-    | Polymonadic_bind (_, _, _, t)
-    | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
 
     | DeclToBeDesugared tbs ->
         tbs.dep_scan 
@@ -979,10 +971,11 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
             collect_term t) r
 
   and collect_effect_decl (ed: effect_decl) : ML unit = match ed with
-    | DefineEffect (_, binders, t, decls) ->
+    | DeclareEffect (_, binders) ->
+        collect_binders binders
+    | DefineEffect (_, binders, decls) ->
         collect_binders binders;
-        collect_term t;
-        collect_decls decls
+        List.iter (fun d -> collect_decl d.d) decls
     | RedefineEffect (_, binders, t) ->
         collect_binders binders;
         collect_term t

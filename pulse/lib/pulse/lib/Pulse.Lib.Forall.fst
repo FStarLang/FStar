@@ -3,7 +3,6 @@ open Pulse.Class.Introducable
 #lang-pulse
 open Pulse.Main
 open Pulse.Lib.Core
-open FStar.Nonempty
 module F = FStar.FunctionalExtensionality
 
 let token (v:slprop) = v

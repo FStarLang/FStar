@@ -143,7 +143,6 @@ let e_any :
     {
       FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = r;
-      FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
     } in
   let un t _n = FStar_Pervasives_Native.Some t in
@@ -159,8 +158,6 @@ let e_unit : unit FStarC_Syntax_Embeddings_Base.embedding=
       FStarC_Syntax_Syntax.n =
         (FStarC_Syntax_Util.exp_unit.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = rng;
-      FStarC_Syntax_Syntax.vars =
-        (FStarC_Syntax_Util.exp_unit.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code =
         (FStarC_Syntax_Util.exp_unit.FStarC_Syntax_Syntax.hash_code)
     } in
@@ -184,7 +181,6 @@ let e_bool : Prims.bool FStarC_Syntax_Embeddings_Base.embedding=
     {
       FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = rng;
-      FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
     } in
   let un t _norm =
@@ -206,7 +202,6 @@ let e_char : FStar_Char.char FStarC_Syntax_Embeddings_Base.embedding=
     {
       FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = rng;
-      FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
     } in
   let un t _norm =
@@ -2702,7 +2697,6 @@ let e_order : FStarC_Order.order FStarC_Syntax_Embeddings_Base.embedding=
     {
       FStarC_Syntax_Syntax.n = (r.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = rng;
-      FStarC_Syntax_Syntax.vars = (r.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code = (r.FStarC_Syntax_Syntax.hash_code)
     } in
   let unembed_order t cb =

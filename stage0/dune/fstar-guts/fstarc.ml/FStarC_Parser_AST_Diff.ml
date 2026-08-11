@@ -563,22 +563,8 @@ let eq_lid : FStarC_Ident.lident -> FStarC_Ident.lident -> Prims.bool=
   FStarC_Ident.lid_equals
 let eq_lift (t1 : FStarC_Parser_AST.lift) (t2 : FStarC_Parser_AST.lift) :
   Prims.bool=
-  if
-    (eq_lid t1.FStarC_Parser_AST.msource t2.FStarC_Parser_AST.msource) &&
-      (eq_lid t1.FStarC_Parser_AST.mdest t2.FStarC_Parser_AST.mdest)
-  then
-    match ((t1.FStarC_Parser_AST.lift_op), (t2.FStarC_Parser_AST.lift_op))
-    with
-    | (FStarC_Parser_AST.NonReifiableLift t11,
-       FStarC_Parser_AST.NonReifiableLift t21) -> eq_term t11 t21
-    | (FStarC_Parser_AST.ReifiableLift (t11, t21),
-       FStarC_Parser_AST.ReifiableLift (t3, t4)) ->
-        let uu___ = eq_term t11 t3 in
-        (if uu___ then eq_term t21 t4 else false)
-    | (FStarC_Parser_AST.LiftForFree t11, FStarC_Parser_AST.LiftForFree t21)
-        -> eq_term t11 t21
-    | uu___ -> false
-  else false
+  (eq_lid t1.FStarC_Parser_AST.msource t2.FStarC_Parser_AST.msource) &&
+    (eq_lid t1.FStarC_Parser_AST.mdest t2.FStarC_Parser_AST.mdest)
 let eq_pragma (t1 : FStarC_Parser_AST.pragma) (t2 : FStarC_Parser_AST.pragma)
   : Prims.bool=
   match (t1, t2) with
@@ -684,20 +670,8 @@ let rec eq_decl' (d1 : FStarC_Parser_AST.decl')
       if uu___ then eq_option eq_term t1 t2 else false
   | (FStarC_Parser_AST.NewEffect ed1, FStarC_Parser_AST.NewEffect ed2) ->
       eq_effect_decl ed1 ed2
-  | (FStarC_Parser_AST.LayeredEffect ed1, FStarC_Parser_AST.LayeredEffect
-     ed2) -> eq_effect_decl ed1 ed2
   | (FStarC_Parser_AST.SubEffect l1, FStarC_Parser_AST.SubEffect l2) ->
       eq_lift l1 l2
-  | (FStarC_Parser_AST.Polymonadic_bind (lid1, lid2, lid3, t1),
-     FStarC_Parser_AST.Polymonadic_bind (lid4, lid5, lid6, t2)) ->
-      if ((eq_lid lid1 lid4) && (eq_lid lid2 lid5)) && (eq_lid lid3 lid6)
-      then eq_term t1 t2
-      else false
-  | (FStarC_Parser_AST.Polymonadic_subcomp (lid1, lid2, t1),
-     FStarC_Parser_AST.Polymonadic_subcomp (lid3, lid4, t2)) ->
-      if (eq_lid lid1 lid3) && (eq_lid lid2 lid4)
-      then eq_term t1 t2
-      else false
   | (FStarC_Parser_AST.Pragma p1, FStarC_Parser_AST.Pragma p2) ->
       eq_pragma p1 p2
   | (FStarC_Parser_AST.Assume (i1, t1), FStarC_Parser_AST.Assume (i2, t2)) ->
@@ -723,13 +697,15 @@ let rec eq_decl' (d1 : FStarC_Parser_AST.decl')
 and eq_effect_decl (t1 : FStarC_Parser_AST.effect_decl)
   (t2 : FStarC_Parser_AST.effect_decl) : Prims.bool=
   match (t1, t2) with
-  | (FStarC_Parser_AST.DefineEffect (i1, bs1, t11, ds1),
-     FStarC_Parser_AST.DefineEffect (i2, bs2, t21, ds2)) ->
+  | (FStarC_Parser_AST.DeclareEffect (i1, bs1),
+     FStarC_Parser_AST.DeclareEffect (i2, bs2)) ->
+      let uu___ = eq_ident i1 i2 in
+      if uu___ then eq_list eq_binder bs1 bs2 else false
+  | (FStarC_Parser_AST.DefineEffect (i1, bs1, ds1),
+     FStarC_Parser_AST.DefineEffect (i2, bs2, ds2)) ->
       let uu___ =
-        let uu___1 =
-          let uu___2 = eq_ident i1 i2 in
-          if uu___2 then eq_list eq_binder bs1 bs2 else false in
-        if uu___1 then eq_term t11 t21 else false in
+        let uu___1 = eq_ident i1 i2 in
+        if uu___1 then eq_list eq_binder bs1 bs2 else false in
       if uu___ then eq_list eq_decl ds1 ds2 else false
   | (FStarC_Parser_AST.RedefineEffect (i1, bs1, t11),
      FStarC_Parser_AST.RedefineEffect (i2, bs2, t21)) ->

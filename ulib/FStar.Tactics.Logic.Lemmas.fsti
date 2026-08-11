@@ -22,7 +22,7 @@ val split_lem : (#a:prop) -> (#b:prop) ->
 val imp_intro_lem : (#a:prop) -> (#b : prop) ->
                             (squash a -> squash b) ->
                             Lemma (a ==> b)
-val __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens
+val __lemma_to_squash (#req #ens : prop) (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens
 
 val vbind : (#p:prop) -> (#q:prop) -> squash p -> (squash p -> squash q) -> Lemma q
 

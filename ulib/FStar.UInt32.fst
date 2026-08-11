@@ -71,7 +71,7 @@ let lognot x = Mk (lognot (v x))
 
 let shift_right a s = Mk (shift_right (v a) (v s))
 
-#push-options "--z3rlimit 80 --fuel 1"  //AR: working around the interleaving semantics of pragmas
+#push-options "--fuel 1" //AR: working around the interleaving semantics of pragmas
 
 let shift_left a s = Mk (shift_left (v a) (v s))
 

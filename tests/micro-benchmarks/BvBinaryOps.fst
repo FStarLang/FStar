@@ -5,7 +5,6 @@ module BV = FStar.BV
 
 module UInt = FStar.UInt
 
-#set-options "--split_queries always"
 
 (** Tests for bvshl *)
 

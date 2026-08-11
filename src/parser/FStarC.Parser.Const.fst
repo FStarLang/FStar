@@ -39,6 +39,7 @@ let fstar_ns_lid          = p2l ["FStar"]
 let bool_lid         = pconst "bool"
 let unit_lid         = pconst "unit"
 let squash_lid       = pconst "squash"
+let nonempty_lid     = pconst "nonempty"
 let string_lid       = pconst "string"
 let bytes_lid        = pconst "bytes"
 let int_lid          = pconst "int"

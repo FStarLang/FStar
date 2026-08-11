@@ -237,15 +237,18 @@ let run_all () : ML bool =
     unify 13 bvs_13 tm1 tm2 Trivial;
 
     let tm1, tm2, bvs_14 =
+        (* Same as test 13, but with the type hidden behind a definition, so
+           that unification has to unfold it. *)
+        let _ = Pars.pars_and_tc_fragment "let test_post (a:Type) = a -> Type0" in
         let int_typ = tc "int" in
         let x = FStarC.Syntax.Syntax.new_bv None int_typ in
 
-        let typ = tc "pure_post unit" in
-        let l = tc ("fun (q:pure_post unit) -> q ()") in
+        let typ = tc "test_post unit" in
+        let l = tc ("fun (q:test_post unit) -> q ()") in
         let q = FStarC.Syntax.Syntax.new_bv None typ in
         let tm1 = norm (app l [FStarC.Syntax.Syntax.bv_to_name q]) in
 
-        let l = tc ("fun (p:pure_post unit) -> p") in
+        let l = tc ("fun (p:test_post unit) -> p") in
         let unit = tc "()" in
         let env = Env.push_binders (init()) [S.mk_binder x; S.mk_binder q] in
         let u_p, _, _ = FStarC.TypeChecker.Util.new_implicit_var "" dummyRange env typ false in

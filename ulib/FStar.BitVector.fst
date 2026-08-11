@@ -123,18 +123,21 @@ let rotate_left_vec_lemma (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n})
     : Lemma (ensures index (rotate_left_vec #n a s) i = index a ((i + s) % n))
       [SMTPat (index (rotate_left_vec #n a s) i)] =
   let s' = s % n in
-  if s' = 0 then ()
-  else if i < n - s' then ()
-  else ()
+  FStar.Math.Lemmas.lemma_mod_plus_distr_r i s n;
+  if i < n - s'
+  then FStar.Math.Lemmas.small_mod (i + s') n
+  else (FStar.Math.Lemmas.lemma_mod_sub (i + s') n 1;
+        FStar.Math.Lemmas.small_mod (i + s' - n) n)
 
 (** Relating the indexes of the rotated right vector to the original *)
 let rotate_right_vec_lemma (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n})
     : Lemma (ensures index (rotate_right_vec #n a s) i = index a ((i + n - (s % n)) % n))
       [SMTPat (index (rotate_right_vec #n a s) i)] =
   let s' = s % n in
-  if s' = 0 then ()
-  else if i < s' then ()
-  else ()
+  if i < s'
+  then FStar.Math.Lemmas.small_mod (i + n - s') n
+  else (FStar.Math.Lemmas.lemma_mod_sub (i + n - s') n 1;
+        FStar.Math.Lemmas.small_mod (i - s') n)
 
 (** Rotate left by n is identity *)
 let rotate_left_vec_full_identity (#n: pos) (a: bv_t n)

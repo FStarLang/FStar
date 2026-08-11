@@ -122,7 +122,6 @@ let len0_div_bs blocksize len len0 =
     len / blocksize;
   }
 
-#push-options "--z3rlimit 80"
 let split_len_lemma0 blocksize n len0 =
   let len = n * blocksize in
   let len1 = len - len0 in
@@ -142,7 +141,6 @@ let split_len_lemma0 blocksize n len0 =
 
   len0_div_bs blocksize len len0
   //assert (n0 + n1 = n)
-#pop-options
 
 let split_len_lemma blocksize len len0 =
   let len1 = len - len0 in
@@ -391,7 +389,6 @@ let len0_le_len_fraction blocksize len len0 =
   Math.Lemmas.lemma_div_le len0 len blocksize;
   Math.Lemmas.lemma_mult_le_right blocksize (len0 / blocksize) (len / blocksize)
 
-#push-options "--z3rlimit 100"
 let repeat_gen_blocks_split #inp_t #c blocksize len0 hi mi inp a f l acc0 =
   let len = length inp in
   let len1 = len - len0 in
@@ -425,7 +422,6 @@ let repeat_gen_blocks_split #inp_t #c blocksize len0 hi mi inp a f l acc0 =
     (==) { slice_slice_last #inp_t blocksize len0 inp }
     l (mi + n) (len % blocksize) (Seq.slice inp (n * blocksize) len) acc1;
     }
-#pop-options
 
 ////////////////////////
 // Start of repeat_blocks-related properties
@@ -660,7 +656,6 @@ let map_blocks_multi_acc_is_repeat_gen_blocks_multi #a blocksize mi hi n inp f a
 
 let map_blocks_acc_is_repeat_gen_blocks #a blocksize mi hi inp f l acc0 = ()
 
-#push-options "--z3rlimit 150"
 val map_blocks_multi_acc_is_map_blocks_multi_:
     #a:Type0
   -> blocksize:size_pos
@@ -714,7 +709,6 @@ let rec map_blocks_multi_acc_is_map_blocks_multi_ #a blocksize mi hi_f hi_g n in
       (==) { Seq.Base.append_assoc acc0 rp1 (f (mi + n - 1) block) }
       Seq.append acc0 (Seq.append rp1 (f (mi + n - 1) block));
       } end
-#pop-options
 
 let map_blocks_multi_acc_is_map_blocks_multi #a blocksize mi hi n inp f acc0 =
   let f_map = repeat_gen_blocks_map_f blocksize hi f in

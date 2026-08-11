@@ -338,6 +338,8 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
              (env.FStarC_TypeChecker_Env.missing_decl);
            FStarC_TypeChecker_Env.iface_todo =
              (env.FStarC_TypeChecker_Env.iface_todo);
+           FStarC_TypeChecker_Env.iface_hidden =
+             (env.FStarC_TypeChecker_Env.iface_hidden);
            FStarC_TypeChecker_Env.iface_lids =
              (env.FStarC_TypeChecker_Env.iface_lids);
            FStarC_TypeChecker_Env.iface_val_lids =
@@ -475,6 +477,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env1.FStarC_TypeChecker_Env.missing_decl);
                          FStarC_TypeChecker_Env.iface_todo =
                            (env1.FStarC_TypeChecker_Env.iface_todo);
+                         FStarC_TypeChecker_Env.iface_hidden =
+                           (env1.FStarC_TypeChecker_Env.iface_hidden);
                          FStarC_TypeChecker_Env.iface_lids =
                            (env1.FStarC_TypeChecker_Env.iface_lids);
                          FStarC_TypeChecker_Env.iface_val_lids =
@@ -585,6 +589,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env2.FStarC_TypeChecker_Env.missing_decl);
                          FStarC_TypeChecker_Env.iface_todo =
                            (env2.FStarC_TypeChecker_Env.iface_todo);
+                         FStarC_TypeChecker_Env.iface_hidden =
+                           (env2.FStarC_TypeChecker_Env.iface_hidden);
                          FStarC_TypeChecker_Env.iface_lids =
                            (env2.FStarC_TypeChecker_Env.iface_lids);
                          FStarC_TypeChecker_Env.iface_val_lids =

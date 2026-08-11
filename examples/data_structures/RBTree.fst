@@ -236,7 +236,7 @@ val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
              (requires (pre_balance c lt ky rt))
              (ensures (fun r -> post_balance c lt ky rt r))
 
-#reset-options "--z3rlimit 40"
+#reset-options
 
 (* it's pretty cool that the spec is proved easily without any hints ! *)
 let balance c lt ky rt =
@@ -247,7 +247,7 @@ let balance c lt ky rt =
     | (B, a, x, (T R b y (T R c z d))) -> T R (T B a x b) y (T B c z d)
     | _ -> T c lt ky rt
 
-#reset-options "--z3rlimit 10"
+#reset-options
 
 (*
  * a helper function that inserts a red node with new key, and calls

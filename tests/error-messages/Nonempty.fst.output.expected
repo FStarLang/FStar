@@ -1,0 +1,51 @@
+* Warning 272 at Nonempty.fst(15,0-15,28):
+  - Top-level let-bindings must be total; this term may have effects
+
+* Info at Nonempty.fst(15,10-15,15):
+  - Expected failure:
+  - This definition has a non-total effect, so its type must be provably inhabited; could not prove `nonempty (Prims.squash Prims.l_False)`
+  - The SMT solver could not prove the query.
+  - Failed to prove: Prims.nonempty (Prims.squash Prims.l_False)
+
+* Warning 272 at Nonempty.fst(20,0-20,58):
+  - Top-level let-bindings must be total; this term may have effects
+
+* Info at Nonempty.fst(20,21-20,45):
+  - Expected failure:
+  - This definition has a non-total effect, so its type must be provably inhabited; could not prove `nonempty (x: Prims.int{x > 0 /\ x < 0})`
+  - The SMT solver could not prove the query.
+  - Failed to prove: Prims.nonempty (x: Prims.int{x > 0 /\ x < 0})
+
+* Warning 272 at Nonempty.fst(26,0-26,36):
+  - Top-level let-bindings must be total; this term may have effects
+
+* Info at Nonempty.fst(26,17-26,23):
+  - Expected failure:
+  - This definition has a non-total effect, so its type must be provably inhabited; could not prove `nonempty (Nonempty.record)`
+  - The SMT solver could not prove the query.
+  - Failed to prove: Prims.nonempty Nonempty.record
+
+* Warning 272 at Nonempty.fst(32,0-32,32):
+  - Top-level let-bindings must be total; this term may have effects
+
+* Info at Nonempty.fst(32,13-32,18):
+  - Expected failure:
+  - This definition has a non-total effect, so its type must be provably inhabited; could not prove `nonempty (Prims.squash Prims.l_False)`
+  - The SMT solver could not prove the query.
+  - Failed to prove: Prims.nonempty (Prims.squash Prims.l_False)
+
+* Warning 272 at Nonempty.fst(35,0-35,29):
+  - Top-level let-bindings must be total; this term may have effects
+
+* Warning 272 at Nonempty.fst(36,0-36,31):
+  - Top-level let-bindings must be total; this term may have effects
+
+* Warning 272 at Nonempty.fst(37,0-37,35):
+  - Top-level let-bindings must be total; this term may have effects
+
+* Warning 272 at Nonempty.fst(38,0-38,39):
+  - Top-level let-bindings must be total; this term may have effects
+
+* Warning 272 at Nonempty.fst(42,0-42,35):
+  - Top-level let-bindings must be total; this term may have effects
+

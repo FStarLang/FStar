@@ -1,0 +1,30 @@
+* Info at SpecImplicits.fst(28,2-28,5):
+  - Expected failure:
+  - Failed to resolve implicit argument ?25
+    of type _: Prims.int -> Prims.prop
+    introduced for Instantiating implicit argument ‘p’
+  - This implicit argument only occurs in a pre- or postcondition, so it cannot
+    be inferred: a specification is a proof obligation, not part of the identity
+    of a computation. Write it out explicitly, or pass an argument whose
+    declared type determines it.
+
+* Info at SpecImplicits.fst(32,44-32,47):
+  - Expected failure:
+  - Failed to resolve implicit argument ?22
+    of type _: Prims.int -> Prims.prop
+    introduced for Instantiating implicit argument ‘p’
+  - This implicit argument only occurs in a pre- or postcondition, so it cannot
+    be inferred: a specification is a proof obligation, not part of the identity
+    of a computation. Write it out explicitly, or pass an argument whose
+    declared type determines it.
+
+* Info at SpecImplicits.fst(36,46-36,49):
+  - Expected failure:
+  - Failed to resolve implicit argument ?20
+    of type _: Prims.int -> Prims.prop
+    introduced for Instantiating implicit argument ‘p’
+  - This implicit argument only occurs in a pre- or postcondition, so it cannot
+    be inferred: a specification is a proof obligation, not part of the identity
+    of a computation. Write it out explicitly, or pass an argument whose
+    declared type determines it.
+

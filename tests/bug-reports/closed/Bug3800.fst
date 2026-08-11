@@ -1,5 +1,5 @@
 module Bug3800
-#set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
+#set-options "--fuel 0 --ifuel 1"
 
 assume new val u32: Type0
 assume new val u16: Type0

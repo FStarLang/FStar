@@ -19,7 +19,6 @@
 *)
 
 module Part2.WellFounded
-open FStar.Nonempty
 
 (*
  * The accessibility relation

@@ -939,7 +939,6 @@ let rec declToSmt' (print_captions:bool) (z3options:string) (decl:decl) : ML doc
   | RetainAssumptions _ ->
     FStarC.Pprint.empty
   | CheckSat -> doc_of_string "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
-  | GetUnsatCore -> doc_of_string "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
   | EmptyLine -> FStarC.Pprint.empty
   | Push n -> doc_of_string "(push) ;; push{" ^^ doc_of_string (show n)
   | Pop n -> doc_of_string "(pop) ;; " ^^ doc_of_string (show n) ^^ doc_of_string "}pop"
@@ -1280,7 +1279,6 @@ let decl_to_string_short d =
   | Push n -> Format.fmt1 "push %s" (show n)
   | Pop n -> Format.fmt1 "pop %s" (show n)
   | CheckSat -> "check-sat"
-  | GetUnsatCore -> "get-unsat-core"
   | EmptyLine -> "; empty line"
   | SetOption s v -> "SetOption " ^ s ^ " " ^ v
   | GetStatistics -> "get-statistics"

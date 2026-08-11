@@ -98,28 +98,26 @@ val comp_effect_name (c:comp) : lident
 
 val comp_flags (c:comp) : list cflag
 
-val comp_eff_name_res_and_args (c:comp) : lident & typ & args
+val comp_eff_name_and_res (c:comp) : lident & typ
 
-(*
- * For layered effects, given a (repr a is), return is
- * For wp effects, given a (unit -> M a wp), return wp
- *
- * The pattern matching is very syntactic inside this function
- * It is called from the computation types in the layered effect combinators
- *   e.g. f and g in bind
- * Layered effects typechecking code already makes sure that those types
- *   have this exact shape
- *)
-val effect_indices_from_repr (repr:term) (is_layered:bool) (r:range) (err:string)
-: ML (list term)
+(* The precondition of a computation, as a formula. *)
+val comp_pre (c:comp) : term
 
-val destruct_comp (c:comp_typ) : ML (universe & typ & typ)
+(* The postcondition of a computation, abstracted over its result:
+   a term of type [comp_result c -> prop]. *)
+val comp_post (c:comp) : ML term
+
 
 val is_named_tot (c:comp) : bool
 
-val is_total_comp (c:comp) : ML bool
+val un_uinst (t:term) : ML term
+val is_t_true (t:term) : ML bool
+val is_trivial_post (p:term) : ML bool
+(* A computation type has a trivial specification when both its pre- and
+   postcondition are [True]. *)
+val has_trivial_spec (c:comp) : ML bool
 
-val is_partial_return (c:comp) : ML bool
+val is_total_comp (c:comp) : ML bool
 
 val is_tot_or_gtot_comp (c:comp) : ML bool
 
@@ -141,7 +139,6 @@ val leftmost_head (t : term) : ML term
 
 val leftmost_head_and_args (t : term) : ML (term & args)
 
-val un_uinst (t:term) : ML term
 
 val is_ml_comp (c:comp) : ML bool
 
@@ -149,9 +146,8 @@ val comp_result (c:comp) : typ
 
 val set_result_typ (c:comp) (t:typ) : ML comp
 
-val is_trivial_wp (c:comp) : ML bool
-
-val comp_effect_args (c:comp) : args
+(* The SMT patterns attached to a Lemma, if any. *)
+val comp_smt_pats (c:comp) : ML (option term)
 
 (********************************************************************************)
 (*               Simple utils on the structure of a term                        *)
@@ -220,11 +216,9 @@ val field_projector_prefix : string (* = "__proj__" *)
 let field_projector_prefix = Ident.reserved_prefix ^ "proj__"
 >>
 
-   but it DOES NOT work with --use_hints on
-   examples/preorders/MRefHeap.fst (even after regenerating hints), it
-   will produce the following error:
+   but it DOES NOT work: on examples/preorders/MRefHeap.fst it will
+   produce the following error:
 
-   fstar.exe  --use_hints MRefHeap.fst
    ./MRefHeap.fst(55,51-58,27): (Error) Unknown assertion failed
    Verified module: MRefHeap (2150 milliseconds)
    1 error was reported (see above)
@@ -414,9 +408,16 @@ val mk_iff (phi1 phi2 : term) : ML term
 val b2t (e:term) : ML term
 val unb2t (e:term) : ML (option term)
 
-val is_t_true (t:term) : ML bool
 val mk_conj_simp (t1 t2 : term) : ML term
+val mk_imp_simp (t1 t2 : term) : ML term
 val mk_disj_simp (t1 t2 : term) : ML term
+(* The logical content of the typing hypothesis [v : t]: the refinement formula
+   when [t] is a refinement (or a [squash]), and [True] otherwise.  Used to keep
+   that information around when a binder of type [t] is eliminated. *)
+val mk_has_type (t x t' : term) : ML term
+val refinement_hypothesis (t:typ) (v:term) : ML term
+val apply_post (p:term) (e:term) : ML term
+val mk_conj_post (t:typ) (p1:term) (p2:term) : ML term
 
 val teq : term
 val mk_untyped_eq2 (e1 e2 : term) : ML term
@@ -424,7 +425,6 @@ val mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : ML term
 
 val mk_eq3_no_univ (t1 t2 e1 e2 : term) : ML term
 
-val mk_has_type (t x t' : term) : ML term
 
 val tforall : term 
 val texists : term 
@@ -463,6 +463,10 @@ val if_then_else (b t1 t2 : term) : ML term
 //////////////////////////////////////////////////////////////////////////////////////
 val mk_squash (p:term) : ML term
 
+(* [mk_nonempty u t] builds [Prims.nonempty u#u t], the proposition
+   that the type [t] is inhabited. *)
+val mk_nonempty (u:universe) (t:term) : ML term
+
 val un_squash (t:term) : ML (option term)
 
 val is_squash (t:term) : ML (option term)
@@ -477,7 +481,6 @@ val abs_one_ln (t:typ) : ML (option (binder & term))
 
 val is_free_in (bv:bv) (t:term) : ML bool
 
-val action_as_lb (eff_lid:lident) (a:action) (pos:range) : ML sigelt
 
 (* Some reification utilities *)
 val mk_reify (t:term) (lopt:option Ident.lident) : ML term
@@ -576,40 +579,14 @@ val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list unive
 
 (* Effect utilities *)
 
-(*
- * Mainly reading the combinators out of the eff_decl record
- *
- * For combinators that are present only in either wp or layered effects,
- *   their getters return option tscheme
- * Leaving it to the callers to deal with it
- *)
-
-val effect_sig_ts (sig:effect_signature) : tscheme
-
-val apply_eff_sig (f:tscheme -> ML tscheme) : effect_signature -> ML effect_signature
-
 val eff_decl_of_new_effect (se:sigelt) : ML eff_decl
 
-val is_layered (ed:eff_decl) : bool
-
-val apply_wp_eff_combinators (f:tscheme -> ML tscheme) (combs:wp_eff_combinators) : ML wp_eff_combinators
-val apply_layered_eff_combinators (f:tscheme -> ML tscheme) (combs:layered_eff_combinators) : ML layered_eff_combinators
-val apply_eff_combinators (f:tscheme -> ML tscheme) (combs:eff_combinators) : ML eff_combinators
-
-val get_layered_close_combinator (ed:eff_decl) : option tscheme
-val get_wp_close_combinator (ed:eff_decl) : option tscheme
-val get_eff_repr (ed:eff_decl) : option tscheme
-val get_bind_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combinator_kind
-val get_return_vc_combinator (ed:eff_decl) : tscheme
-val get_bind_repr (ed:eff_decl) : option tscheme
-
+(* Accessors for the (optional) monadic representation of an effect.
+   These are only used for reification, i.e. extraction and tactics. *)
+val get_eff_repr    (ed:eff_decl) : option tscheme
 val get_return_repr (ed:eff_decl) : option tscheme
-val get_wp_trivial_combinator (ed:eff_decl) : option tscheme
-val get_layered_if_then_else_combinator (ed:eff_decl) : option (tscheme & option indexed_effect_combinator_kind)
-val get_wp_if_then_else_combinator (ed:eff_decl) : option tscheme
-val get_wp_ite_combinator (ed:eff_decl) : option tscheme
-val get_stronger_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combinator_kind
-val get_stronger_repr (ed:eff_decl) : option tscheme
+val get_bind_repr   (ed:eff_decl) : option tscheme
+val apply_eff_combinators (f:tscheme -> ML tscheme) (combs:eff_combinators) : ML eff_combinators
 
 val aqual_is_erasable (aq:aqual) : ML bool
 

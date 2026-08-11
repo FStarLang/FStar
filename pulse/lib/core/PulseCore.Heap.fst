@@ -251,7 +251,6 @@ let disjoint_join (m0 m1 m2:heap)
     in
     ()
 
-#push-options "--z3rlimit 20 --split_queries always"
 let join_associative' (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -275,11 +274,9 @@ let join_associative' (m0 m1 m2:heap)
           | _ -> ()
     in
     ()
-#pop-options
 
 let join_associative (m0 m1 m2:heap) = disjoint_join m0 m1 m2; join_associative' m0 m1 m2
 
-#push-options "--z3rlimit 20 --split_queries always"
 let join_associative2 (m0 m1 m2:heap)
   : Lemma
     (requires
@@ -293,7 +290,6 @@ let join_associative2 (m0 m1 m2:heap)
   = disjoint_join m2 m0 m1;
     join_commutative (join m0 m1) m2;
     join_associative m2 m0 m1
-#pop-options
 
 let join_empty h = assert (join h empty_heap `mem_equiv` h)
 
@@ -529,7 +525,7 @@ let pts_to_compatible_fwd (#a:Type u#a)
               pts_to_cell pcm v1 c1 /\
               c == join_cells c0 c1)
 
-#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1 --split_queries always"
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
 #restart-solver
 let pts_to_compatible_bk 
       (#a:Type u#a)
@@ -808,7 +804,7 @@ let select_join #a #p (r:ref a p) (x:erased a) (h:full_heap) (hl hr:heap)
       sel_v r x h == op p vl vr))
   = ()
 
-#push-options "--z3rlimit_factor 16 --fuel 1 --initial_ifuel 2 --max_ifuel 2"
+#push-options "--fuel 1 --initial_ifuel 2 --max_ifuel 2"
 let select_refine_pre (#a:_) (#p:_)
                       (r:ref a p)
                       (x:erased a)
@@ -935,7 +931,7 @@ let select_join_both #a (p: pcm a) (r: addr) (h1: heap) (h2: heap { disjoint h1 
     : Lemma (select r (join h1 h2) == Some (Ref a p (op p x1 x2))) =
   ()
 
-#push-options "--split_queries always"
+#push-options ""
 
 let split_off_pcm_val #a (p: pcm a) x y (z:a { composable p y z /\ x == op p y z })
     r (h: heap { select r h == Some (Ref a p x) }) :
@@ -1013,7 +1009,8 @@ let upd_gen_fp0 #a #p r x frame (h: full_hheap (pts_to #a #p r x `star` frame)) 
 
 let upd_gen_fp2 #a p r (x: a) (y: a { composable p x y /\ p.refine (op p x y) }) (v: a) (f: frame_preserving_upd p x v) :
     Lemma (compatible p x (op p x y) /\ f (op p x y) == op p v y /\ composable p v y) =
-  p.comm x y; assert compatible p x (op p x y)
+  p.comm x y; assert compatible p x (op p x y);
+  let _ = f (op p x y) in ()
 
 let upd_gen_fp3 #a p r
     (x: a) (y: a { composable p x y })
@@ -1044,7 +1041,6 @@ let upd_gen_fp3 #a p r
   mem_equiv_eq (join h3 h2) h';
   h3
 
-#push-options "--z3rlimit 10"
 let upd_gen_frame_preserving #a #p r x v f : Lemma (is_frame_preserving mut_heap (upd_gen #a #p r x v f)) =
   introduce forall (frame: slprop) (h0:full_hheap (pts_to r x `star` frame)).
      (affine_star (pts_to r x) frame h0;
@@ -1064,7 +1060,6 @@ let upd_gen_frame_preserving #a #p r x v f : Lemma (is_frame_preserving mut_heap
     assert interp (pts_to r v `star` frame) h1;
     ()
   )
-#pop-options
 #pop-options
 
 let upd_gen_action #a #p r x y f =
@@ -1177,7 +1172,6 @@ let extend_alt
     intro_pts_to #a #pcm r x h2;
     (| r, h2 |)
 
-#push-options "--z3rlimit 10"
 let extend_fp #a #pcm x : Lemma (is_frame_preserving mut_heap (extend_alt #a #pcm x)) =
   introduce forall (frame: slprop) (h0:full_hheap (emp `star` frame)).
      (let (| r, h1 |) = extend_alt #a #pcm x h0 in
@@ -1193,14 +1187,13 @@ let extend_fp #a #pcm x : Lemma (is_frame_preserving mut_heap (extend_alt #a #pc
     assert (forall a. select a (join h2 h0) == select a h1);
     mem_equiv_eq (join h2 h0) h1
   )
-#pop-options
 
 let extend #a #pcm
         (x:a{pcm.refine x})
  : action #mut_heap emp (ref a pcm) (fun r -> pts_to r x)
  = extend_fp #a #pcm x; extend_alt x
 
-#push-options "--z3rlimit_factor 4 --max_fuel 1 --max_ifuel 1"
+#push-options "--max_fuel 1 --max_ifuel 1"
 #restart-solver
 let frame (#a:Type)
           #immut

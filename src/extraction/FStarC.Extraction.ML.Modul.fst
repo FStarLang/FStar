@@ -538,87 +538,6 @@ let extract_type_declaration (g:uenv) is_interface_val lid quals attrs univs t
            in
            g, iface, mods
 
-let extract_reifiable_effect g ed
-    : ML (uenv
-    & iface
-    & list mlmodule1) =
-    let extend_iface lid mlp exp exp_binding =
-        let fv = (S.lid_as_fv lid None) in
-        let lb = {
-            mllb_name=snd mlp;
-            mllb_tysc=None;
-            mllb_add_unit=false;
-            mllb_def=exp;
-            mllb_attrs=[];
-            mllb_meta = [];
-            print_typ=false
-            }
-        in
-        iface_of_bindings [fv, exp_binding], mk_mlmodule1 (MLM_Let(NonRec, [lb]))
-    in
-
-    let rec extract_fv tm : ML (mlexpr & mltyscheme) =
-        if !dbg_ExtractionReify then
-            Format.print1 "extract_fv term: %s\n" (show tm);
-        match (SS.compress tm).n with
-        | Tm_uinst (tm, _) -> extract_fv tm
-        | Tm_fvar fv ->
-            let mlp = mlpath_of_lident g fv.fv_name in
-            let ({exp_b_tscheme=tysc}) = UEnv.lookup_fv tm.pos g fv in
-            with_ty MLTY_Top <| MLE_Name mlp, tysc
-        | _ -> failwith (Format.fmt2 "(%s) Not an fv: %s"
-                                        (Range.string_of_range tm.pos)
-                                        (show tm))
-    in
-
-    let extract_action g (a:S.action) =
-        assert (match a.action_params with | [] -> true | _ -> false);
-        if !dbg_ExtractionReify then
-            Format.print2 "Action type %s and term %s\n"
-            (show a.action_typ)
-            (show a.action_defn);
-        let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
-        let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, [], a.action_defn.pos) in
-        let lbs = (false, [lb]) in
-        let action_lb = mk (Tm_let {lbs; body=U.exp_false_bool}) a.action_defn.pos in
-        let a_let, _, ty = Term.term_as_mlexpr g action_lb in
-        let exp, tysc = match a_let.expr with
-            | MLE_Let((_, [mllb]), _) ->
-                (match mllb.mllb_tysc with
-                | Some(tysc) -> mllb.mllb_def, tysc
-                | None -> failwith "No type scheme")
-            | _ -> failwith "Impossible" in
-        let a_nm, a_lid, exp_b, g = extend_with_action_name g ed a tysc in
-        if !dbg_ExtractionReify then
-            Format.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
-        if !dbg_ExtractionReify then begin
-            Format.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
-            List.iter (fun x -> Format.print1 "and binders: %s\n" x) (ty_param_names (fst tysc)) end;
-        let iface, impl = extend_iface a_lid a_nm exp exp_b in
-        g, (iface, impl)
-    in
-
-    let g, return_iface, return_decl =
-        let return_tm, ty_sc = extract_fv (ed |> U.get_return_repr |> Option.must |> snd) in
-        let return_nm, return_lid, return_b, g = extend_with_monad_op_name g ed "return" ty_sc in
-        let iface, impl = extend_iface return_lid return_nm return_tm return_b in
-        g, iface, impl
-    in
-
-    let g, bind_iface, bind_decl =
-        let bind_tm, ty_sc = extract_fv (ed |> U.get_bind_repr |> Option.must |> snd) in
-        let bind_nm, bind_lid, bind_b, g = extend_with_monad_op_name g ed "bind" ty_sc in
-        let iface, impl = extend_iface bind_lid bind_nm bind_tm bind_b in
-        g, iface, impl
-    in
-
-    let g, actions = BU.fold_map extract_action g ed.actions in
-    let actions_iface, actions = List.unzip actions in
-
-    g,
-    iface_union_l (return_iface::bind_iface::actions_iface),
-    return_decl::bind_decl::actions
-
 (* Returns false iff the letbinding are not homogeneous. The letbindings
 are homogeneous when they all have the same "kind" (defining and arity
 or a non-arity). *)
@@ -850,9 +769,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : ML (uenv & iface) =
 
     | Sig_assume _
     | Sig_sub_effect  _
-    | Sig_effect_abbrev _
-    | Sig_polymonadic_bind _
-    | Sig_polymonadic_subcomp _ ->
+    | Sig_effect_abbrev _ ->
       g, empty_iface
 
     | Sig_pragma (p) ->
@@ -865,12 +782,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : ML (uenv & iface) =
     | Sig_fail _ ->
       failwith "impossible: trying to extract Sig_fail"
 
-    | Sig_new_effect ed ->
-      if TcUtil.effect_extraction_mode (tcenv_of_uenv g) ed.mname = S.Extract_reify
-      && Nil? ed.binders //we do not extract parameterized effects
-      then let env, iface, _ = extract_reifiable_effect g ed in
-           env, iface
-      else g, empty_iface
+    | Sig_new_effect ed -> g, empty_iface
 
 let extract_iface' (g:env_t) modul : ML (env_t & iface) =
     if Options.interactive() then g, empty_iface else
@@ -1024,11 +936,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
       let g, ses = extract_bundle g se in
       g, ses @ maybe_register_plugin g se
 
-    | Sig_new_effect ed when Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname ->
-      let env, _iface, impl =
-        extract_reifiable_effect g ed in
-      env, impl
-
     | Sig_splice _ ->
       failwith "impossible: trying to extract splice"
 
@@ -1143,9 +1050,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
 
     | Sig_assume _ //not needed; purely logical
     | Sig_sub_effect  _
-    | Sig_effect_abbrev _ //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
-    | Sig_polymonadic_bind _
-    | Sig_polymonadic_subcomp _ ->
+    | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted
       g, []
     | Sig_pragma (p) ->
       U.process_pragma p se.sigrng;

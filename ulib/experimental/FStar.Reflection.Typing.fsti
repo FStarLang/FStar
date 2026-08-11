@@ -94,8 +94,13 @@ val pack_inspect_binder (t:R.binder)
    : Lemma (ensures (R.pack_binder (R.inspect_binder t) == t))
            [SMTPat (R.pack_binder (R.inspect_binder t))]
   
+(* See R.inspect_pack_comp_inv: a C_Eff view naming FStar.Pervasives.Lemma is not in the
+image of R.inspect_comp, which always produces a C_Lemma for that effect. *)
 val inspect_pack_comp (t:R.comp_view)
-  : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
+  : Lemma (requires (match t with
+                     | R.C_Eff _ eff_name _ _ _ _ -> eff_name <> ["FStar"; "Pervasives"; "Lemma"]
+                     | _ -> True))
+          (ensures (R.inspect_comp (R.pack_comp t) == t))
           [SMTPat (R.inspect_comp (R.pack_comp t))]
 
 val pack_inspect_comp (t:R.comp)
@@ -1113,7 +1118,6 @@ type fstar_top_env = g:fstar_env {
   forall x. None? (lookup_bvar g x )
 }
 
-open FStar.Nonempty
 
 // Note: even though the sigelt_typing judgement takes a list of universe
 // parameters, there is no way to exhibit typing judgements of terms

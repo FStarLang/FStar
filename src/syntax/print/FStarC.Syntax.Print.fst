@@ -351,12 +351,7 @@ let tscheme_to_doc ts : ML Pprint.document =
   else Pretty.tscheme_to_doc ts
 
 let sub_eff_to_string se : ML string =
-  let tsopt_to_string ts_opt =
-    if Some? ts_opt then ts_opt |> Some?.v |> tscheme_to_string
-    else "<None>" in
-  Format.fmt4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
-    (show se.source) (show se.target)
-    (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
+  Format.fmt2 "sub_effect %s ~> %s" (show se.source) (show se.target)
 
 instance showable_sub_eff = { show = sub_eff_to_string; }
 
@@ -413,14 +408,14 @@ let rec sigelt_to_string_short (x: sigelt) : ML string = match x.sigel with
     Format.fmt1 "[@@expect_failure] %s" (ses |> List.hd |> sigelt_to_string_short)
 
   | Sig_new_effect ed ->
-    let kw =
-      if SU.is_layered ed then "layered_effect"
-      else "new_effect"
-    in
-    Format.fmt2 "%s { %s ... }" kw (show ed.mname)
+    Format.fmt2 "%seffect %s"
+      (if List.contains Assumption x.sigquals then "assume " else "")
+      (show ed.mname)
 
-  | Sig_sub_effect se ->
-    Format.fmt2 "sub_effect %s ~> %s" (show se.source) (show se.target)
+  | Sig_sub_effect sub ->
+    Format.fmt3 "%ssub_effect %s ~> %s"
+      (if List.contains Assumption x.sigquals then "assume " else "")
+      (show sub.source) (show sub.target)
 
   | Sig_effect_abbrev {lid=l; bs=tps; comp=c} ->
     Format.fmt3 "effect %s %s = %s" (show l)
@@ -433,12 +428,6 @@ let rec sigelt_to_string_short (x: sigelt) : ML string = match x.sigel with
               (if is_typed then "_t" else "")
               (String.concat "; " <| List.map Ident.string_of_lid lids)
 
-  | Sig_polymonadic_bind {m_lid=m; n_lid=n; p_lid=p} ->
-    Format.fmt3 "polymonadic_bind (%s, %s) |> %s"
-              (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
-
-  | Sig_polymonadic_subcomp {m_lid=m; n_lid=n} ->
-    Format.fmt2 "polymonadic_subcomp %s <: %s" (Ident.string_of_lid m) (Ident.string_of_lid n)
 
 let binder_to_json env b : ML Json.json =
     let n = JsonStr (bqual_to_string' (nm_to_string b.binder_bv) b.binder_qual) in
@@ -470,12 +459,8 @@ let cflag_to_string (c:cflag) : ML string =
   match c with
   | TOTAL -> "total"
   | MLEFFECT -> "ml"
-  | RETURN -> "return"
-  | PARTIAL_RETURN -> "partial_return"
-  | SOMETRIVIAL -> "sometrivial"
-  | TRIVIAL_POSTCONDITION -> "trivial_postcondition"
-  | SHOULD_NOT_INLINE -> "should_not_inline"
   | LEMMA -> "lemma"
+  | SMTPAT p -> "smtpat " ^ term_to_string p
   | DECREASES do -> "decreases " ^ show do
 
 instance showable_cflag  = { show = cflag_to_string; }

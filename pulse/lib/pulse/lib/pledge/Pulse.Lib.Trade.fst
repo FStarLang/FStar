@@ -20,7 +20,6 @@ module T = FStar.Tactics
 #lang-pulse
 
 open Pulse.Lib.Pervasives
-open FStar.Nonempty
 
 let trade_elim_t is hyp extra concl : Type u#5 =
   unit -> trade_f #is hyp #extra concl

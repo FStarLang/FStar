@@ -15,7 +15,6 @@
 *)
 module FStar.Tactics.Effect
 
-open FStar.Monotonic.Pure
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Tactics.Types
 

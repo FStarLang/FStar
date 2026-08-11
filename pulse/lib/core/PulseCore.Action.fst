@@ -709,9 +709,15 @@ let impersonate_sem_act #a (l: loc_id) (k: Sem.action state a) :
       x, m3
   }
 
-#push-options "--split_queries always"
+(* The pattern here is essential: an unpatterned [forall x y. on l (x ** y) == on l x ** on l y]
+   makes Z3 infer the trigger [on l x], which loops. *)
+let on_star_eq_pat (l: loc_id) (x y: state.pred)
+  : Lemma (on l (x `state.star` y) == on l x `state.star` on l y)
+          [SMTPat (on l (x `state.star` y))]
+  = on_star_eq l x y
+
+#push-options ""
 let impersonate_stt #a #pre #post (l: loc_id) (k: stt a pre post) : stt a (on l pre) (fun x -> on l (post x)) =
-  introduce forall x y. on l (x `state.star` y) == on l x `state.star` on l y with on_star_eq l x y;
   on_emp l;
   fun _ -> Sem.apply_hom (on l) (fun act -> impersonate_sem_act l act) (k ())
 #pop-options

@@ -15,7 +15,6 @@
 *)
 module FStarC.SMTEncoding.Z3
 
-module U = FStarC.SMTEncoding.UnsatCore
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -38,19 +37,18 @@ type label = string
 
 let status_tag (s:z3status) : ML string = match s with
     | SAT  _ -> "sat"
-    | UNSAT _ -> "unsat"
+    | UNSAT -> "unsat"
     | UNKNOWN _ -> "unknown"
     | TIMEOUT _ -> "timeout"
     | KILLED -> "killed"
 
-let status_string_and_errors (s:z3status) : ML (string & error_labels) =
+let status_string (s:z3status) : ML string =
     match s with
     | KILLED
-    | UNSAT _ -> status_tag s, []
-    | SAT (errs, msg)
-    | UNKNOWN (errs, msg)
-    | TIMEOUT (errs, msg) -> Format.fmt2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
-                             //(match msg with None -> "unknown" | Some msg -> msg), errs
+    | UNSAT -> status_tag s
+    | SAT msg
+    | UNKNOWN msg
+    | TIMEOUT msg -> Format.fmt2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg)
 
 
 let query_logging : query_log =
@@ -244,7 +242,7 @@ let bg_z3_proc : ref bgproc =
     // just to be safe: the executable name in the_z3proc_params should
     // be enough to distinguish between the different executables.
     let make_new_z3_proc cmd_and_args =
-      if Options.hint_info () then
+      if Options.query_stats () then
         Format.print2 "Creating new z3proc (cmd=[%s], version=[%s])\n"
           (show cmd_and_args)
           (show (Options.z3_version ()));
@@ -266,7 +264,7 @@ let bg_z3_proc : ref bgproc =
         let old_params = Option.must (!the_z3proc_params) in
         let old_version = !the_z3proc_version in
 
-        if Options.hint_info () then
+        if Options.query_stats () then
           Format.print2 "Killing old z3proc (ask_count=%s, old_cmd=[%s])\n"
             (show !the_z3proc_ask_count)
             (show old_params);
@@ -298,10 +296,8 @@ type smt_output_section = list string
 type smt_output = {
   smt_result:         smt_output_section;
   smt_reason_unknown: option smt_output_section;
-  smt_unsat_core:     option smt_output_section;
   smt_initial_statistics : option smt_output_section;
   smt_statistics:     option smt_output_section;
-  smt_labels:         option smt_output_section;
 }
 
 let parse_stats (smt_stats : option smt_output_section) : ML z3statistics =
@@ -326,6 +322,40 @@ let parse_stats (smt_stats : option smt_output_section) : ML z3statistics =
       statistics
 
 
+(* Complain about any output the solver produced that we did not expect. *)
+let warn_unexpected (log_file:option string) (lines:list string) : ML unit =
+    match lines |> List.filter (fun l -> l <> "" && l <> "Done!" && l <> "killed") with
+    | [] -> ()
+    | remaining ->
+      let msg = String.concat "\n" remaining in
+      let suf =
+        let open FStarC.Errors.Msg in
+        let open FStarC.Pprint in
+        match log_file with
+        | Some log_file -> [text "Log file:" ^/^ doc_of_string log_file]
+        | None -> []
+      in
+      warn_handler suf msg
+
+(* Split the solver's output into one section per check-sat block, plus
+   whatever was printed outside of any such block. *)
+let smt_output_chunks (lines:list string) : (list (list string) & list string) =
+    let rec aux (cur:option (list string)) (acc:list (list string)) (out:list string) lines
+      : (list (list string) & list string)
+      = match lines with
+        | [] -> List.rev acc, List.rev out  //an unterminated chunk is dropped: the solver died
+        | l::lines ->
+          if l = "<goal>" then aux (Some []) acc out lines
+          else if l = "</goal>"
+          then (match cur with
+                | None -> aux None acc out lines
+                | Some c -> aux None (List.rev c :: acc) out lines)
+          else (match cur with
+                | None -> aux None acc (l::out) lines
+                | Some c -> aux (Some (l::c)) acc out lines)
+    in
+    aux None [] [] lines
+
 let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string) : ML smt_output =
     let rec until tag lines : ML (option (list string & list string)) =
         match lines with
@@ -347,7 +377,7 @@ let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string)
     in
     let initial_stats_opt, lines = find_section "initial_stats" lines in
     let result_opt, lines = find_section "result" lines in
-    let result = 
+    let result =
       match result_opt with
       | None ->
         failwith
@@ -355,33 +385,12 @@ let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string)
       | Some result -> result
     in
     let reason_unknown, lines = find_section "reason-unknown" lines in
-    let unsat_core, lines = find_section "unsat-core" lines in
     let statistics, lines = find_section "statistics" lines in
-    let labels, lines = find_section "labels" lines in
-    let remaining =
-      match until "Done!" lines with
-      | None -> lines
-      | Some (prefix, suffix) -> prefix@suffix in
-    let _ =
-        match remaining with
-        | [] -> ()
-        | _ ->
-          let msg = String.concat "\n" remaining in
-          let suf =
-            let open FStarC.Errors.Msg in
-            let open FStarC.Pprint in
-            match log_file with
-            | Some log_file -> [text "Log file:" ^/^ doc_of_string log_file]
-            | None -> []
-          in
-          warn_handler suf msg
-    in
-    {smt_result = Some?.v result_opt;
+    warn_unexpected log_file lines;
+    {smt_result = result;
      smt_reason_unknown = reason_unknown;
-     smt_unsat_core = unsat_core;
      smt_initial_statistics = initial_stats_opt;
-     smt_statistics = statistics;
-     smt_labels = labels}
+     smt_statistics = statistics}
 
 let with_solver_state (f: SolverState.solver_state -> ML ('a & SolverState.solver_state))
 : ML 'a
@@ -402,38 +411,16 @@ let do_refresh (using_facts_from:option SolverState.using_facts_from_setting) : 
     (!bg_z3_proc).refresh();
     with_solver_state_unit (SolverState.reset using_facts_from)
 
-let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string)
-  (* returns initial and final statistics *)
-  : ML (z3status & z3statistics & z3statistics)
+let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (queryid:string)
+  (* returns, per check-sat block, its status and its initial and final statistics *)
+  : ML (list (z3status & z3statistics & z3statistics))
 =
-  let parse (z3out:string) =
+  let parse (z3out:string) : ML (list (z3status & z3statistics & z3statistics)) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
-    let smt_output = smt_output_sections log_file r lines in
-    let unsat_core =
-        match smt_output.smt_unsat_core with
-        | None -> None
-        | Some s ->
-          let s = BU.trim_string (String.concat " " s) in
-          let s = BU.substring s 1 (String.length s - 2) in
-          if BU.starts_with s "error"
-          then None
-          else Some (BU.split s " " |> BU.sort_with String.compare)
-    in
-    let labels =
-        match smt_output.smt_labels with
-        | None -> []
-        | Some lines ->
-          let rec lblnegs lines =
-            match lines with
-            | lname::"false"::rest when BU.starts_with lname "label_" -> lname::lblnegs rest
-            | lname::_::rest when BU.starts_with lname "label_" -> lblnegs rest
-            | _ -> [] in
-          let lblnegs = lblnegs lines in
-          lblnegs |> List.collect
-            (fun l -> match label_messages |> List.tryFind (fun (m, _, _) -> fv_name m = l) with
-                   | None -> []
-                   | Some (lbl, msg, r) -> [(lbl, msg, r)])
-    in
+    let chunks, leftover = smt_output_chunks lines in
+    warn_unexpected log_file leftover;
+    chunks |> List.map (fun chunk ->
+    let smt_output = smt_output_sections log_file r chunk in
     let initial_statistics = parse_stats smt_output.smt_initial_statistics in
     let statistics = parse_stats smt_output.smt_statistics in
     let reason_unknown = smt_output.smt_reason_unknown |> Option.map (fun x ->
@@ -446,63 +433,30 @@ let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages
     let status =
       if Debug.any() then Format.print1 "Z3 says: %s\n" (String.concat "\n" smt_output.smt_result);
       match smt_output.smt_result with
-      | ["unsat"]   -> UNSAT unsat_core
-      | ["sat"]     -> SAT     (labels, reason_unknown)
-      | ["unknown"] -> UNKNOWN (labels, reason_unknown)
-      | ["timeout"] -> TIMEOUT (labels, reason_unknown)
+      | ["unsat"]   -> UNSAT
+      | ["sat"]     -> SAT     reason_unknown
+      | ["unknown"] -> UNKNOWN reason_unknown
+      | ["timeout"] -> TIMEOUT reason_unknown
       | ["killed"]  -> (!bg_z3_proc).restart(); KILLED
       | _ ->
         failwith (Format.fmt1 "Unexpected output from Z3: got output result: %s\n"
                           (String.concat "\n" smt_output.smt_result))
     in
-    status, initial_statistics, statistics
+    status, initial_statistics, statistics)
   in
-  let log_result (fwrite: string -> string -> ML unit) (r: z3status & z3statistics & z3statistics) : ML unit =
-    let (res, _initial_stats, _stats) = r in
+  let log_result (fwrite: string -> string -> ML unit) (rs: list (z3status & z3statistics & z3statistics)) : ML unit =
     (* If we are logging, write some more information to the
-    smt2 file, such as the result of the query and the new unsat
-    core generated. We take a call back to do so, since for the
-    bg z3 process we must call query_logging.append_to_log, but for
-    fresh invocations (such as hints) we must reopen the file to write
-    to it. *)
+    smt2 file, such as the result of the query. We take a call back to
+    do so, since for the bg z3 process we must call
+    query_logging.append_to_log, but for fresh invocations we must
+    reopen the file to write to it. *)
     begin match log_file with
     | Some fname ->
       fwrite fname ("; QUERY ID: " ^ queryid);
-      fwrite fname ("; STATUS: " ^ fst (status_string_and_errors res));
-      begin match res with
-      | UNSAT (Some core) ->
-        fwrite fname ("; UNSAT CORE GENERATED: " ^ String.concat ", " core)
-      | _ -> ()
-      end
+      rs |> List.iter (fun (res, _, _) ->
+        fwrite fname ("; STATUS: " ^ status_string res))
     | None -> ()
-    end;
-    let log_file_name =
-      match log_file with
-      | Some fname -> fname
-      | _ -> "<nofile>"
-    in
-    let _ = 
-      match reading_solver_state SolverState.would_have_pruned, res with
-      | Some names, UNSAT (Some core) -> (
-        let whitelist = ["BoxInt"; "BoxBool"; "BoxString"; "BoxReal"; "Tm_unit"; "FString_const"] in
-        let missing =
-          core |> List.filter (fun name ->
-            not (BU.for_some (fun wl -> BU.contains name wl) whitelist) &&
-            not (BU.starts_with name "binder_") &&
-            not (BU.starts_with name "@query") &&
-            not (BU.starts_with name "@MaxFuel") &&
-            not (BU.starts_with name "@MaxIFuel") &&
-            not (BU.for_some (fun name' -> name=name') names))
-        in
-        // Format.print2 "Query %s: Pruned theory would keep %s\n" queryid (String.concat ", " names);
-        match missing with
-        | [] -> ()
-        | _ -> 
-          Format.print3 "Query %s (%s): Pruned theory would miss %s\n" queryid log_file_name (String.concat ", " missing)
-      )
-      | _ -> ()
-    in
-    ()
+    end
   in
   if fresh then
     let proc = new_z3proc_with_id (z3_cmd_and_args ()) in
@@ -528,7 +482,6 @@ let z3_options (ver:string) : ML string =
     "(set-option :global-decls false)";
     "(set-option :smt.mbqi false)";
     "(set-option :auto_config false)";
-    "(set-option :produce-unsat-cores true)";
     "(set-option :model true)";
     "(set-option :smt.case_split 3)";
     "(set-option :smt.relevancy 2)";
@@ -578,7 +531,7 @@ let context_profile (theory:list decl) : ML unit =
                         (show n))
                modules
 
-let mk_input (fresh : bool) (theory : list decl) : ML (string & option string & option string) =
+let mk_input (fresh : bool) (theory : list decl) : ML (string & option string) =
     let ver = Options.z3_version () in
     let theory =
       (* Add a caption with some version info. *)
@@ -596,86 +549,21 @@ let mk_input (fresh : bool) (theory : list decl) : ML (string & option string & 
     in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") ^ "\n\n" in
     if Options.print_z3_statistics() then context_profile theory;
-    let r, hash =
-        if Options.record_hints()
-        || (Options.use_hints() && Options.use_hint_hashes()) then
-            //the suffix of a "theory" that follows the "CheckSat" call
-            //contains semantically irrelevant things
-            //(e.g., get-model, get-statistics etc.)
-            //that vary depending on some user options (e.g., record_hints etc.)
-            //They should not be included in the query hash,
-            //so split the prefix out and use only it for the hash
-            let prefix, check_sat, suffix =
-                theory |>
-                BU.prefix_until (function CheckSat -> true | _ -> false) |>
-                Option.must
-            in
-            let pp = List.map (declToSmt options) in
-            let suffix = check_sat::suffix in
-            let ps_lines = pp prefix in
-            let ss_lines = pp suffix in
-            let ps = String.concat "\n" ps_lines in
-            let ss = String.concat "\n" ss_lines in
-
-            (* Ignore captions AND ranges when hashing, otherwise we depend on file names *)
-            let hs =
-              if Options.keep_query_captions ()
-              then prefix
-                   |> List.map (declToSmt_no_caps options)
-                   |> String.concat "\n"
-              else ps
-            in
-            (* Add the Z3 version to the string, so we get a mismatch if we switch versions.
-            Same for rlimit and seed; otherwise we may save a hash with a large rlimit (or particular
-            seed), then decrease the limit (change the seed) and the proof would still succeed with the
-            old hash (seed), but be broken. *)
-            let hs = hs ^ "Z3 version: " ^ ver in
-            let hs = hs ^ "Z3 rlimit: " ^ (Options.z3_rlimit() |> show) in
-            let hs = hs ^ "Z3 seed: " ^ (Options.z3_seed() |> show) in
-            ps ^ "\n" ^ ss, Some (BU.digest_of_string hs)
-        else
-            List.map (declToSmt options) theory |> String.concat "\n", None
-    in
+    let r = List.map (declToSmt options) theory |> String.concat "\n" in
     let log_file_name =
         if Options.log_queries()
         then Some (query_logging.write_to_log fresh r)
         else None
     in
-    r, hash, log_file_name
-
-let cache_hit
-    (log_file:option string)
-    (cache:option string)
-    (qhash:option string) : ML (option z3result) =
-    if Options.use_hints() && Options.use_hint_hashes() then
-        match qhash with
-        | Some (x) when qhash = cache ->
-            let stats : z3statistics = SMap.create 0 in
-            SMap.add stats "fstar_cache_hit" "1";
-            let result = {
-              z3result_status = UNSAT None;
-              z3result_time = 0;
-              z3result_query_hash = qhash;
-              z3result_log_file = log_file;
-              (* fake stats *)
-              z3result_initial_statistics = stats;
-              z3result_statistics = stats;
-            } in
-            Some result
-        | _ ->
-            None
-    else
-        None
+    r, log_file_name
 
 let z3_job
        (log_file:_)
        (r:Range.t)
        fresh
-       (label_messages:error_labels)
        input
-       qhash
        queryid
-: ML z3result
+: ML (list z3result)
 = //This code is a little ugly:
   //We insert a profiling call to accumulate total time spent in Z3
   //But, we also record the time of this particular call so that we can
@@ -683,11 +571,13 @@ let z3_job
   //That field is printed out in the query-stats output, which is a separate
   //profiling feature. We could try in the future to unify all the different
   //kinds of profiling features ... but that's beyond scope for now.
-  let (status, initial_statistics, statistics), elapsed_time =
+  //Note the elapsed time is for the whole batch, not for an individual goal:
+  //the solver does not report per-check-sat wall clock times.
+  let results, elapsed_time =
     Profiling.profile
       (fun () ->
         try
-          Timing.record_ms (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
+          Timing.record_ms (fun () -> doZ3Exe log_file r fresh input queryid)
         with e ->
           do_refresh None; //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e
@@ -695,66 +585,37 @@ let z3_job
       (Some (query_logging.get_module_name()))
       "FStarC.SMTEncoding.Z3 (aggregate query time)"
   in
+  results |> List.map (fun (status, initial_statistics, statistics) ->
   { z3result_status     = status;
     z3result_time       = elapsed_time;
     z3result_initial_statistics = initial_statistics;
     z3result_statistics = statistics;
-    z3result_query_hash = qhash;
-    z3result_log_file   = log_file }
+    z3result_log_file   = log_file })
 
 let ask_text
     (r:Range.t)
-    (cache:option string)
-    (label_messages:error_labels)
     (qry:list decl)
     (queryid:string)
-    (core:option U.unsat_core)
   : ML string
   = (* Mimics a fresh ask, and just returns the string that would
     be sent to the solver. *)
-    let theory = 
-      match core with
-      | None -> reading_solver_state SolverState.all_decls
-      | Some core -> reading_solver_state (SolverState.filter_with_unsat_core queryid core)
-    in
-    let query_tail = Push 0 :: qry@[Pop 0] in
+    let theory = reading_solver_state SolverState.all_decls in
+    let query_tail = Push 0 :: qry@[Pop 0; Echo "Done!"] in
     let theory = theory @ query_tail in
-    let input, qhash, log_file_name = mk_input true theory in
+    let input, log_file_name = mk_input true theory in
     input
 
 let ask
     (r:Range.t)
-    (cache:option string)
-    (label_messages:error_labels)
     (qry:list decl)
     (queryid:string)
     (fresh:bool)
-    (core:option U.unsat_core)
-: ML z3result
+: ML (list z3result)
 = 
-  // push "query";
-  // giveZ3 qry;
-  let theory = 
-    match core with 
-    | None -> with_solver_state SolverState.flush
-    | Some core ->
-      if not fresh
-      then failwith "Unexpected: unsat core must only be used with fresh solvers";
-      reading_solver_state (SolverState.filter_with_unsat_core queryid core)
-  in
-  let theory = theory @ (Push 0:: qry @ [Pop 0; EmptyLine]) in
-  let input, qhash, log_file_name = mk_input fresh theory in
-  let just_ask () = z3_job log_file_name r fresh label_messages input qhash queryid in
-  let result =
-    if fresh then
-        match cache_hit log_file_name cache qhash with
-        | Some z3r -> z3r
-        | None -> just_ask ()
-    else
-        just_ask ()
-  in
-  // pop "query";
-  result
+  let theory = with_solver_state SolverState.flush in
+  let theory = theory @ (Push 0:: qry @ [Pop 0; Echo "Done!"; EmptyLine]) in
+  let input, log_file_name = mk_input fresh theory in
+  z3_job log_file_name r fresh input queryid
 
 let refresh (using_facts_from:option SolverState.using_facts_from_setting) : ML unit =
     do_refresh using_facts_from
@@ -790,7 +651,7 @@ let rollback (msg:string) (depth:option int) : ML unit =
   //   (show depth)
   //   (show init)
   //   (show final)
-let start_query (msg:string) (prefix_to_push:list decl) (query:decl) : ML unit = 
+let start_query (msg:string) (prefix_to_push:list decl) (query:list decl) : ML unit = 
   with_solver_state_unit (SolverState.start_query msg prefix_to_push query)
 let finish_query (msg:string) : ML unit =
   with_solver_state_unit (SolverState.finish_query msg)

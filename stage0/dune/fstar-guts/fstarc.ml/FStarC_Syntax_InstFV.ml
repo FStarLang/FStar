@@ -259,14 +259,18 @@ and inst_comp
   | FStarC_Syntax_Syntax.Comp ct ->
       let ct1 =
         let uu___ = inst s ct.FStarC_Syntax_Syntax.result_typ in
-        let uu___1 = inst_args s ct.FStarC_Syntax_Syntax.effect_args in
-        let uu___2 =
+        let uu___1 = inst s ct.FStarC_Syntax_Syntax.comp_pre in
+        let uu___2 = inst s ct.FStarC_Syntax_Syntax.comp_post in
+        let uu___3 =
           FStarC_List.map
-            (fun uu___3 ->
-               match uu___3 with
+            (fun uu___4 ->
+               match uu___4 with
                | FStarC_Syntax_Syntax.DECREASES dec_order ->
-                   let uu___4 = inst_decreases_order s dec_order in
-                   FStarC_Syntax_Syntax.DECREASES uu___4
+                   let uu___5 = inst_decreases_order s dec_order in
+                   FStarC_Syntax_Syntax.DECREASES uu___5
+               | FStarC_Syntax_Syntax.SMTPAT p ->
+                   let uu___5 = inst s p in
+                   FStarC_Syntax_Syntax.SMTPAT uu___5
                | f -> f) ct.FStarC_Syntax_Syntax.flags in
         {
           FStarC_Syntax_Syntax.comp_univs =
@@ -274,8 +278,9 @@ and inst_comp
           FStarC_Syntax_Syntax.effect_name =
             (ct.FStarC_Syntax_Syntax.effect_name);
           FStarC_Syntax_Syntax.result_typ = uu___;
-          FStarC_Syntax_Syntax.effect_args = uu___1;
-          FStarC_Syntax_Syntax.flags = uu___2
+          FStarC_Syntax_Syntax.comp_pre = uu___1;
+          FStarC_Syntax_Syntax.comp_post = uu___2;
+          FStarC_Syntax_Syntax.flags = uu___3
         } in
       FStarC_Syntax_Syntax.mk_Comp ct1
 and inst_decreases_order

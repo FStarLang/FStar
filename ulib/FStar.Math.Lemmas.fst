@@ -342,7 +342,6 @@ let lemma_mod_spec a p =
     a/p;
   }
 
-#push-options "--z3rlimit_factor 2"
 #restart-solver
 let lemma_mod_spec2 a p =
   calc (==) {
@@ -352,7 +351,6 @@ let lemma_mod_spec2 a p =
     == { lemma_div_mod a p }
     a;
   }
-#pop-options
 
 let lemma_mod_plus_distr_l a b p =
   let q = (a - (a % p)) / p in
@@ -590,7 +588,6 @@ let modulo_division_lemma_0 (a:nat) (b:pos) (c:pos) : Lemma
     division_sub_lemma a b ((a / (b*c)) * c);
     ()
 
-#push-options "--z3rlimit_factor 2"
 #restart-solver
 let modulo_division_lemma a b c =
   calc (==) {
@@ -606,7 +603,6 @@ let modulo_division_lemma a b c =
     == { lemma_div_mod (a/b) c }
     (a / b) % c;
   }
-#pop-options
 
 let modulo_modulo_lemma (a:int) (b:pos) (c:pos) =
   pos_times_pos_is_pos b c;

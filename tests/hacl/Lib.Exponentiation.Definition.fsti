@@ -2,7 +2,7 @@ module Lib.Exponentiation.Definition
 
 
 
-#set-options "--z3rlimit 50 --fuel 0 --ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 //we don't require to have an inverse element to be an abelian group
 //so this is just commutative monoid

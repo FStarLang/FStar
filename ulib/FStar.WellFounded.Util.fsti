@@ -18,7 +18,6 @@
 
 module FStar.WellFounded.Util
 open FStar.WellFounded
-open FStar.Nonempty
 (** Provides some utilities related to well-founded relations *)
 
 (* 1. Given a well-founded relation `r:binrel a`

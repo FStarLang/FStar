@@ -58,9 +58,10 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
      let qual_compat q1 q2 =
        match q1 with
        | FStarC_Syntax_Syntax.Assumption ->
-           (((((q2 = FStarC_Syntax_Syntax.Logic) || (inferred q2)) ||
-                (visibility q2))
-               || (assumption q2))
+           ((((((q2 = FStarC_Syntax_Syntax.Logic) || (inferred q2)) ||
+                 (visibility q2))
+                || (assumption q2))
+               || (q2 = FStarC_Syntax_Syntax.TotalEffect))
               ||
               (env.FStarC_TypeChecker_Env.is_iface &&
                  (q2 = FStarC_Syntax_Syntax.Inline_for_extraction)))
@@ -121,7 +122,8 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
               || (visibility q2))
              || (reification q2)
        | FStarC_Syntax_Syntax.TotalEffect ->
-           ((inferred q2) || (visibility q2)) || (reification q2)
+           (((inferred q2) || (visibility q2)) || (reification q2)) ||
+             (q2 = FStarC_Syntax_Syntax.Assumption)
        | FStarC_Syntax_Syntax.Logic ->
            (((q2 = FStarC_Syntax_Syntax.Assumption) || (inferred q2)) ||
               (visibility q2))
@@ -297,17 +299,62 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                     quals in
                 Prims.op_Negation uu___6 in
               if uu___5 then err [] else ()
-          | FStarC_Syntax_Syntax.Sig_new_effect uu___4 ->
-              let uu___5 =
-                let uu___6 =
-                  FStarC_Util.for_all
-                    (fun x ->
-                       (((x = FStarC_Syntax_Syntax.TotalEffect) ||
-                           (inferred x))
-                          || (visibility x))
-                         || (reification x)) quals in
-                Prims.op_Negation uu___6 in
-              if uu___5 then err [] else ()
+          | FStarC_Syntax_Syntax.Sig_new_effect ed ->
+              ((let uu___5 =
+                  let uu___6 =
+                    FStarC_Util.for_all
+                      (fun x ->
+                         ((((x = FStarC_Syntax_Syntax.TotalEffect) ||
+                              (x = FStarC_Syntax_Syntax.Assumption))
+                             || (inferred x))
+                            || (visibility x))
+                           || (reification x)) quals in
+                  Prims.op_Negation uu___6 in
+                if uu___5 then err [] else ());
+               (let assumed =
+                  FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals in
+                match ed.FStarC_Syntax_Syntax.combinators with
+                | FStar_Pervasives_Native.None ->
+                    if Prims.op_Negation assumed
+                    then
+                      err
+                        [FStarC_Errors_Msg.text
+                           "An effect declaration with no representation is an assumption; write `assume effect`."]
+                    else ()
+                | FStar_Pervasives_Native.Some uu___5 ->
+                    if assumed
+                    then
+                      err
+                        [FStarC_Errors_Msg.text
+                           "The combinators of an effect definition are checked, so it cannot be marked `assume`."]
+                    else ()))
+          | FStarC_Syntax_Syntax.Sig_sub_effect sub ->
+              ((let uu___5 =
+                  let uu___6 =
+                    FStarC_Util.for_all
+                      (fun x ->
+                         ((x = FStarC_Syntax_Syntax.Assumption) ||
+                            (inferred x))
+                           || (visibility x)) quals in
+                  Prims.op_Negation uu___6 in
+                if uu___5 then err [] else ());
+               (let assumed =
+                  FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals in
+                match sub.FStarC_Syntax_Syntax.lift with
+                | FStar_Pervasives_Native.None ->
+                    if Prims.op_Negation assumed
+                    then
+                      err
+                        [FStarC_Errors_Msg.text
+                           "A sub-effect with no lift is an assumption; write `assume sub_effect`."]
+                    else ()
+                | FStar_Pervasives_Native.Some uu___5 ->
+                    if assumed
+                    then
+                      err
+                        [FStarC_Errors_Msg.text
+                           "The lift of a sub-effect is checked, so it cannot be marked `assume`."]
+                    else ()))
           | FStarC_Syntax_Syntax.Sig_effect_abbrev uu___4 ->
               let uu___5 =
                 let uu___6 =
@@ -512,31 +559,29 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
            FStarC_Syntax_Syntax.cattributes = uu___3;
            FStarC_Syntax_Syntax.univs = uu___4;
            FStarC_Syntax_Syntax.binders = uu___5;
-           FStarC_Syntax_Syntax.signature = uu___6;
-           FStarC_Syntax_Syntax.combinators = uu___7;
-           FStarC_Syntax_Syntax.actions = uu___8;
-           FStarC_Syntax_Syntax.eff_attrs = uu___9;
-           FStarC_Syntax_Syntax.extraction_mode = uu___10;_}
+           FStarC_Syntax_Syntax.combinators = uu___6;
+           FStarC_Syntax_Syntax.eff_attrs = uu___7;
+           FStarC_Syntax_Syntax.extraction_mode = uu___8;_}
          ->
          if
            Prims.op_Negation
              (FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect quals)
          then
-           let uu___11 =
-             let uu___12 =
-               let uu___13 =
-                 let uu___14 =
+           let uu___9 =
+             let uu___10 =
+               let uu___11 =
+                 let uu___12 =
                    FStarC_Class_PP.pp FStarC_Ident.pretty_lident eff_name in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___14
+                 FStar_Pprint.op_Hat_Slash_Hat uu___12
                    (FStarC_Errors_Msg.text
                       "is marked erasable but only total effects are allowed to be erasable.") in
                FStar_Pprint.op_Hat_Slash_Hat
-                 (FStarC_Errors_Msg.text "Effect") uu___13 in
-             [uu___12] in
+                 (FStarC_Errors_Msg.text "Effect") uu___11 in
+             [uu___10] in
            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
              FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ()
              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-             (Obj.magic uu___11)
+             (Obj.magic uu___9)
          else ()
      | uu___3 ->
          FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r

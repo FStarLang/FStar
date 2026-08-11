@@ -1,10 +1,9 @@
 * Error 19 at IfaceNoSmtLeak.fst(5,35-5,37):
-  - Could not prove post-condition
+  - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC =
-      forall (p: Prims.pure_post Prims.unit).
-        (forall (pure_result: Prims.unit). IfaceNoSmtLeak.q x ==> p pure_result) ==>
-        (forall (any_result: Prims.unit). p any_result)
+  - Failed to prove: IfaceNoSmtLeak.q x
+  - In context:
+      x: Prims.int
+      uu___: Prims.unit
   - See also IfaceNoSmtLeak.fst(5,27-5,32)
 

@@ -60,6 +60,9 @@ let rec close_term (t:term) (i:index) (a:atom)
 let abs (a:atom) (t:term) = Lam (close_term t 0 a)
 
 #push-options "--warn_error -272" //top-level effect
+(* Masking the effect of a top-level definition requires proving its
+   type inhabited; see issue #4401. *)
+let _ : nonempty (unit -> ML atom) = nonempty_intro (fun () -> 0)
 let fresh_atom : unit -> ML atom  =
   let x : ref atom = alloc 0 in
   fun () ->

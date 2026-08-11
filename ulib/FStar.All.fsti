@@ -21,34 +21,36 @@ include FStar.Exn
 new
 val ref ([@@@ strictly_positive] a:Type0) : Type0
 
+(** References always exist, so [ref a] is inhabited. This cannot be
+    proven, since [alloc] below is itself effectful; it is an axiom
+    about the (OCaml) realization of [ref]. It is needed to define
+    top-level references, e.g. [let r : ref int = alloc 0]. *)
+val nonempty_ref (a:Type0) : Lemma (nonempty (ref a)) [SMTPat (nonempty (ref a))]
+
 (** References support decidable equality *)
 
-(** STATE effect: same WP as DIV (underspecified state) *)
-new_effect STATE = DIV
+(** STATE effect: underspecified state *)
+assume effect STATE
 
-unfold let lift_div_state (a:Type) (wp:pure_wp a) = wp
-sub_effect DIV ~> STATE = lift_div_state
+assume sub_effect DIV ~> STATE
 
-effect St (a:Type) = STATE a (pure_null_wp a)
+effect St (a:Type) = STATE a
 
 (** Reference operations — underspecified *)
 val alloc : #a:Type0 -> a -> St (ref a)
 val op_Bang : #a:Type0 -> ref a -> St a
 val op_Colon_Equals : #a:Type0 -> ref a -> a -> St unit
 
-(** ALL effect: same WP as EXN (combines state + exceptions + divergence) *)
-new_effect ALL = EXN
+(** ALL effect: combines state, exceptions and divergence *)
+assume effect ALL
 
-unfold let lift_exn_all (a:Type) (wp:ex_wp a) = wp
-sub_effect EXN ~> ALL = lift_exn_all
+assume sub_effect EXN ~> ALL
+assume sub_effect STATE ~> ALL
 
-unfold let lift_state_all (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
-sub_effect STATE ~> ALL = lift_state_all
+effect ML (a:Type) = ALL a
 
-effect ML (a:Type) = ALL a (fun (p:ex_post a) -> forall (r:result a). p r)
-
-val exit : int -> ML 'a
+val exit : int -> ML 'a (ensures fun _ -> False)
 val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
 
 exception Failure of string
-val failwith : s:string -> ALL 'a (fun p -> p (Err s))
+val failwith : s:string -> ML 'a (ensures fun _ -> False)

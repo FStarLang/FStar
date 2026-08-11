@@ -3,11 +3,16 @@
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-      (x : Prims.list Prims.int) (__ : Prims.unit) (__ : Prims.unit)
-      (__ : Prims.unit) (__ : Prims.unit) (_letpattern : Prims.list Prims.int)
-      (__ : Prims.squash (_letpattern == x))
-  - VC = ~(Cons? _letpattern) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context:
+      x: Prims.list Prims.int
+      __: Prims.unit
+      __: Prims.unit
+      __: Prims.unit
+      __: Prims.unit
+      _letpattern: Prims.list Prims.int
+      __: Prims.squash (_letpattern == x)
+      ~(Cons? _letpattern)
   - Also see: MatchRange.fst(13,6-13,12)
 
 * Info at MatchRange.fst(28,2-32,3):
@@ -15,9 +20,13 @@
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-      (x : Prims.list Prims.int) (__ : Prims.unit) (__ : Prims.unit)
-      (__ : Prims.unit) (__ : Prims.unit)
-  - VC = ~(Cons? x) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context:
+      x: Prims.list Prims.int
+      __: Prims.unit
+      __: Prims.unit
+      __: Prims.unit
+      __: Prims.unit
+      ~(Cons? x)
   - Also see: MatchRange.fst(28,8-28,9)
 

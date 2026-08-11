@@ -1781,86 +1781,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
          failwith "impossible -- Sig_fail should have been removed by Tc.fs"
      | Sig_pragma _
      | Sig_effect_abbrev _
-     | Sig_sub_effect _
-     | Sig_polymonadic_bind _
-     | Sig_polymonadic_subcomp _ -> [], env
+     | Sig_sub_effect _ -> [], env
 
-     | Sig_new_effect(ed) ->
-       if not (is_smt_reifiable_effect env.tcenv ed.mname)
-       then [], env
-       else (* The basic idea:
-                    1. Encode M.bind_repr: a:Type -> b:Type -> wp_a -> wp_b -> f:st_repr a wp_a -> g:(a -> st_repr b) : st_repr b
-                                       = e
-                       by encoding a function (erasing type arguments)
-                       M.bind_repr (f Term) (g Term) : [[e]]]
-
-                    2. Likewise for M.return_repr
-
-                    3. For each action, a : x1:n -> ... -> xn:tn -> st_repr t wp = fun x1..xn -> e
-                        encode forall x1..xn. Reify (Apply a x1 ... xn) = [[e]]
-            *)
-            let ed_univs_subst, ed_univs = SS.univ_var_opening ed.univs in
-            let close_effect_params tm =
-              SS.subst ed_univs_subst
-                (match ed.binders with
-                  | [] -> tm
-                  | _ -> U.abs_ln ed.binders tm
-                                      (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])))
-            in
-
-            let open_action_univs (a:S.action) =
-              let action_univs_subst, action_univs = SS.univ_var_opening a.action_univs in
-              SS.subst ed_univs_subst (SS.subst action_univs_subst a.action_defn),
-              SS.subst ed_univs_subst (SS.subst action_univs_subst a.action_typ),
-              action_univs
-
-            in
-
-            let encode_action env (a:S.action) =
-              let action_univs_subst, action_univs = SS.univ_var_opening a.action_univs in
-              let action_defn, action_typ, action_univs = open_action_univs a in
-              let action_defn = norm_before_encoding env (close_effect_params action_defn) in
-              let formals, _ = U.arrow_formals_comp action_typ in
-              let arity = List.length formals in
-              let univ_arity = List.length action_univs + List.length ed_univs in
-              let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name arity univ_arity in
-              let tm, decls = encode_term action_defn env in
-              let univ_sorts = ed_univs@action_univs |> List.map (fun _ -> univ_sort) in
-              let a_decls =
-                [Term.DeclFun aname (univ_sorts @ (formals |> List.map (fun _ -> Term_sort))) Term_sort (Some "Action");
-                  Term.DeclFun atok univ_sorts Term_sort (Some "Action token")]
-              in
-              let _, us_sorts, us = 
-                let aux u (env, acc_sorts, acc) =
-                  let fv, tm = encode_univ_name u in
-                  env, fv::acc_sorts, tm::acc
-                in
-                List.fold_right aux (ed_univs@action_univs) (env, [], [])
-              in
-              let _, xs_sorts, xs =
-                let aux ({binder_bv=bv}) (env, acc_sorts, acc) =
-                  let xxsym, xx, env = gen_term_var env bv in
-                  env, mk_fv (xxsym, Term_sort)::acc_sorts, xx::acc
-                in
-                List.fold_right aux formals (env, [], [])
-              in
-              let app = mkApp(aname, us@xs) in
-              let a_eq =
-                Util.mkAssume(mkForall (Ident.range_of_lid a.action_name) ([[app]], us_sorts@xs_sorts, mkEq(app, mk_Apply tm xs_sorts)),
-                            Some "Action equality",
-                            (aname ^"_equality"))
-              in
-              let tok_correspondence =
-                let tok_term = mkApp(atok, us) in
-                let tok_app = mk_Apply tok_term xs_sorts in
-                Util.mkAssume(mkForall (Ident.range_of_lid a.action_name) ([[tok_app]], us_sorts@xs_sorts, mkEq(tok_app, app)),
-                            Some "Action token correspondence", (aname ^ "_token_correspondence"))
-              in
-              env, decls@(a_decls@[a_eq; tok_correspondence] |> mk_decls_trivial)
-            in
-
-            let env, decls2 = BU.fold_map encode_action env ed.actions in
-            List.flatten decls2, env
+     | Sig_new_effect _ -> [], env
 
      | Sig_declare_typ {lid} when (lid_equals lid Const.precedes_lid) ->
         //precedes is added in the prelude, see FStarC.SMTEncoding.Term.fs
@@ -2109,11 +2032,6 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
     in
     let _, decls, env = List.fold_right encode_binding bindings (0, [], env) in
     decls, env
-
-let encode_labels (labs:list error_label) =
-    let prefix = labs |> List.map (fun (l, _, _) -> Term.DeclFun (fv_name l) [] Bool_sort None) in
-    let suffix = labs |> List.collect (fun (l, _, _) -> [Echo <| fv_name l; Eval (mkFreeV l)]) in
-    prefix, suffix
 
 (* caching encodings of the environment and the top-level API to the encoding *)
 let last_env : ref (list env_t) = mk_ref []
@@ -2431,9 +2349,7 @@ let encode_modul_from_cache tcenv tcmod (me:module_encoding) =
 open FStarC.SMTEncoding.Z3
 let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   : ML (list decl  //prelude, translation of  tcenv
-  & list ErrorReporting.label //labels in the query
-  & decl        //the query itself
-  & list decl)  //suffix, evaluating labels in the model, etc.
+  & ErrorReporting.goal_tree) //the goals of the query
   =
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
@@ -2459,9 +2375,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding
     then Format.print1 "Encoding query formula {: %s\n" (show q);
-    let (phi, qdecls), ms = Timing.record_ms (fun () -> encode_formula q env) in
-    let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
-    let label_prefix, label_suffix = encode_labels labels in
+    let (goals, qdecls), ms = Timing.record_ms (fun () -> ErrorReporting.split_goals use_env_msg env q) in
     let caption =
       (* If these options are off, the Captions will be dropped anyway,
       but by checking here we can skip the printing. *)
@@ -2472,15 +2386,12 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     in
     let query_prelude =
         env_decls
-        @(label_prefix |> mk_decls_trivial)
         @qdecls
         @(caption |> mk_decls_trivial) |> recover_caching_and_update_env env |> decls_list_of in  //recover caching and flatten
 
-    let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
-    let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     if Debug.medium () || !dbg_SMTEncoding
     then Format.print_string "} Done encoding\n";
     if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
     then Format.print1 "Encoding took %sms\n" (show ms);
-    query_prelude, labels, qry, suffix
+    query_prelude, goals
   )

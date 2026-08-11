@@ -842,6 +842,14 @@ let rec p_decl (d : FStarC_Parser_AST.decl) : FStar_Pprint.document=
           let uu___2 = p_qualifier FStarC_Parser_AST.Assumption in
           FStar_Pprint.op_Hat_Hat uu___2 FStar_Pprint.space
         else p_qualifiers d.FStarC_Parser_AST.quals
+    | ((FStarC_Parser_AST.Assumption)::[], FStarC_Parser_AST.NewEffect
+       (FStarC_Parser_AST.DeclareEffect uu___)) ->
+        let uu___1 = p_qualifier FStarC_Parser_AST.Assumption in
+        FStar_Pprint.op_Hat_Hat uu___1 FStar_Pprint.space
+    | ((FStarC_Parser_AST.Assumption)::[], FStarC_Parser_AST.SubEffect uu___)
+        ->
+        let uu___1 = p_qualifier FStarC_Parser_AST.Assumption in
+        FStar_Pprint.op_Hat_Hat uu___1 FStar_Pprint.space
     | uu___ -> p_qualifiers d.FStarC_Parser_AST.quals in
   let uu___ = p_attributes true d.FStarC_Parser_AST.attrs in
   let uu___1 =
@@ -1042,45 +1050,12 @@ and p_rawDecl (d : FStarC_Parser_AST.decl) : FStar_Pprint.document=
           FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
         FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___1 in
       FStar_Pprint.op_Hat_Hat (str "exception") uu___
-  | FStarC_Parser_AST.NewEffect ne ->
-      let uu___ =
-        let uu___1 = p_newEffect ne in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___1 in
-      FStar_Pprint.op_Hat_Hat (str "new_effect") uu___
+  | FStarC_Parser_AST.NewEffect ne -> p_newEffect ne
   | FStarC_Parser_AST.SubEffect se ->
       let uu___ =
         let uu___1 = p_subEffect se in
         FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___1 in
       FStar_Pprint.op_Hat_Hat (str "sub_effect") uu___
-  | FStarC_Parser_AST.LayeredEffect ne ->
-      let uu___ =
-        let uu___1 = p_newEffect ne in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___1 in
-      FStar_Pprint.op_Hat_Hat (str "layered_effect") uu___
-  | FStarC_Parser_AST.Polymonadic_bind (l1, l2, l3, t) ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 = p_quident l1 in
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = p_quident l2 in
-                let uu___7 =
-                  let uu___8 =
-                    let uu___9 =
-                      let uu___10 = p_quident l3 in
-                      let uu___11 =
-                        let uu___12 = p_simpleTerm false false t in
-                        FStar_Pprint.op_Hat_Hat FStar_Pprint.equals uu___12 in
-                      FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
-                    FStar_Pprint.op_Hat_Hat (str "|>") uu___9 in
-                  FStar_Pprint.op_Hat_Hat FStar_Pprint.rparen uu___8 in
-                FStar_Pprint.op_Hat_Hat uu___6 uu___7 in
-              FStar_Pprint.op_Hat_Hat break1 uu___5 in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.comma uu___4 in
-          FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu___1 in
-      FStar_Pprint.op_Hat_Hat (str "polymonadic_bind") uu___
   | FStarC_Parser_AST.Pragma p -> p_pragma p
   | FStarC_Parser_AST.Tycon (true, uu___, uu___1) ->
       FStarC_Effect.failwith
@@ -1431,9 +1406,54 @@ and p_newEffect (uu___ : FStarC_Parser_AST.effect_decl) :
   FStar_Pprint.document=
   match uu___ with
   | FStarC_Parser_AST.RedefineEffect (lid, bs, t) ->
-      p_effectRedefinition lid bs t
-  | FStarC_Parser_AST.DefineEffect (lid, bs, t, eff_decls) ->
-      p_effectDefinition lid bs t eff_decls
+      let uu___1 =
+        let uu___2 = p_effectRedefinition lid bs t in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+      FStar_Pprint.op_Hat_Hat (str "effect") uu___1
+  | FStarC_Parser_AST.DeclareEffect (lid, bs) ->
+      let uu___1 =
+        let uu___2 =
+          let uu___3 = p_uident lid in
+          let uu___4 = p_binders true bs in
+          surround_maybe_empty (Prims.of_int 2) Prims.int_one uu___3 uu___4
+            FStar_Pprint.empty in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+      FStar_Pprint.op_Hat_Hat (str "effect") uu___1
+  | FStarC_Parser_AST.DefineEffect (lid, bs, ds) ->
+      let uu___1 =
+        let uu___2 = p_effectDefinition lid bs ds in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
+      FStar_Pprint.op_Hat_Hat (str "effect") uu___1
+and p_effectDefinition (uid : FStarC_Ident.ident)
+  (bs : FStarC_Parser_AST.binder Prims.list)
+  (ds : FStarC_Parser_AST.decl Prims.list) : FStar_Pprint.document=
+  let uu___ =
+    let uu___1 =
+      let uu___2 = p_uident uid in
+      let uu___3 = p_binders true bs in
+      surround_maybe_empty (Prims.of_int 2) Prims.int_one uu___2 uu___3
+        (str "with") in
+    let uu___2 =
+      let uu___3 =
+        separate_map_last (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1)
+          p_effectDecl ds in
+      braces_with_nesting uu___3 in
+    FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
+  braces_with_nesting uu___
+and p_effectDecl (ps : Prims.bool) (d : FStarC_Parser_AST.decl) :
+  FStar_Pprint.document=
+  match d.FStarC_Parser_AST.d with
+  | FStarC_Parser_AST.Tycon
+      (false, false, (FStarC_Parser_AST.TyconAbbrev
+       (lid, [], FStar_Pervasives_Native.None, e))::[])
+      ->
+      let uu___ =
+        let uu___1 = p_lident lid in
+        FStar_Pprint.op_Hat_Hat uu___1
+          (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.equals) in
+      let uu___1 = p_simpleTerm ps false e in prefix2 uu___ uu___1
+  | uu___ ->
+      FStarC_Effect.failwith "Not a declaration of an effect combinator."
 and p_effectRedefinition (uid : FStarC_Ident.ident)
   (bs : FStarC_Parser_AST.binder Prims.list) (t : FStarC_Parser_AST.term) :
   FStar_Pprint.document=
@@ -1443,82 +1463,22 @@ and p_effectRedefinition (uid : FStarC_Ident.ident)
     let uu___3 = p_simpleTerm false false t in
     prefix2 FStar_Pprint.equals uu___3 in
   surround_maybe_empty (Prims.of_int 2) Prims.int_one uu___ uu___1 uu___2
-and p_effectDefinition (uid : FStarC_Ident.ident)
-  (bs : FStarC_Parser_AST.binder Prims.list) (t : FStarC_Parser_AST.term)
-  (eff_decls : FStarC_Parser_AST.decl Prims.list) : FStar_Pprint.document=
-  let binders = p_binders true bs in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        let uu___3 = p_uident uid in
-        let uu___4 = p_binders true bs in
-        let uu___5 =
-          let uu___6 = p_typ false false t in
-          prefix2 FStar_Pprint.colon uu___6 in
-        surround_maybe_empty (Prims.of_int 2) Prims.int_one uu___3 uu___4
-          uu___5 in
-      FStar_Pprint.group uu___2 in
-    let uu___2 =
-      let uu___3 =
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              separate_map_last
-                (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
-                   (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi
-                      FStar_Pprint.space)) p_effectDecl eff_decls in
-            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___6 in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___5 in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___4 in
-      FStar_Pprint.op_Hat_Hat (str "with") uu___3 in
-    FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
-  braces_with_nesting uu___
-and p_effectDecl (ps : Prims.bool) (d : FStarC_Parser_AST.decl) :
-  FStar_Pprint.document=
-  match d.FStarC_Parser_AST.d with
-  | FStarC_Parser_AST.Tycon
-      (false, uu___, (FStarC_Parser_AST.TyconAbbrev
-       (lid, [], FStar_Pervasives_Native.None, e))::[])
-      ->
-      let uu___1 =
-        let uu___2 = p_lident lid in
-        FStar_Pprint.op_Hat_Hat uu___2
-          (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.equals) in
-      let uu___2 = p_simpleTerm ps false e in prefix2 uu___1 uu___2
-  | uu___ ->
-      let uu___1 =
-        let uu___2 = FStarC_Class_Show.show FStarC_Parser_AST.showable_decl d in
-        FStarC_Format.fmt1
-          "Not a declaration of an effect member... or at least I hope so : %s"
-          uu___2 in
-      FStarC_Effect.failwith uu___1
 and p_subEffect (lift : FStarC_Parser_AST.lift) : FStar_Pprint.document=
-  let lift_op_doc =
-    let lifts =
-      match lift.FStarC_Parser_AST.lift_op with
-      | FStarC_Parser_AST.NonReifiableLift t -> [("lift_wp", t)]
-      | FStarC_Parser_AST.ReifiableLift (t1, t2) ->
-          [("lift_wp", t1); ("lift", t2)]
-      | FStarC_Parser_AST.LiftForFree t -> [("lift", t)] in
-    let p_lift ps uu___ =
-      match uu___ with
-      | (kwd, t) ->
-          let uu___1 = p_simpleTerm ps false t in
-          prefix2
-            (FStar_Pprint.op_Hat_Hat (str kwd)
-               (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
-                  FStar_Pprint.equals)) uu___1 in
-    separate_break_map_last FStar_Pprint.semi p_lift lifts in
-  let uu___ =
-    let uu___1 =
-      let uu___2 = p_quident lift.FStarC_Parser_AST.msource in
-      FStar_Pprint.op_Hat_Hat uu___2
+  let base =
+    let uu___ =
+      let uu___1 = p_quident lift.FStarC_Parser_AST.msource in
+      FStar_Pprint.op_Hat_Hat uu___1
         (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (str "~>")) in
-    let uu___2 = p_quident lift.FStarC_Parser_AST.mdest in
-    prefix2 uu___1 uu___2 in
-  FStar_Pprint.op_Hat_Hat uu___
-    (FStar_Pprint.op_Hat_Hat FStar_Pprint.space
-       (braces_with_nesting lift_op_doc))
+    let uu___1 = p_quident lift.FStarC_Parser_AST.mdest in
+    prefix2 uu___ uu___1 in
+  match lift.FStarC_Parser_AST.lift_op with
+  | FStar_Pervasives_Native.None -> base
+  | FStar_Pervasives_Native.Some t ->
+      let uu___ = p_simpleTerm false false t in
+      prefix2
+        (FStar_Pprint.op_Hat_Hat base
+           (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.equals))
+        uu___
 and p_qualifier (uu___ : FStarC_Parser_AST.qualifier) :
   FStar_Pprint.document=
   match uu___ with

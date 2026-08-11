@@ -698,6 +698,11 @@ let match_rewrite_tac (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_ext');
     T.trefl ()
 
+(* NB: [nth_var (-1)] means "the last variable in scope", which is
+   expected to be the scrutinee/pattern equality for the branch being
+   checked. Pulse.Checker.Match.check_branch is responsible for pushing
+   that equality last -- in particular after the hypotheses recording
+   that the scrutinee did not match any of the preceding patterns. *)
 let match_rename_tac (_:unit) : T.Tac unit =
     let open T in
     let b = T.nth_var (-1) in
