@@ -36,3 +36,24 @@ type record = { a : int; b : bool }
 irreducible
 let fr (x : record) : record =
   if x.b then { x with a = -x.a } else { x with b = true }
+
+(* Section 13.4: plugins polymorphic in a type.  Nothing can be done to a
+   value whose type is unknown, so the embedding for [a] is the identity on
+   the syntax the caller passed; the type arguments themselves arrive as
+   ordinary arguments and the generated interpretation drops them. *)
+
+[@@plugin]
+irreducible
+let pid (#a:Type) (x:a) : a = x
+
+[@@plugin]
+irreducible
+let psnd (#a:Type) (#b:Type) (x:a) (y:b) : b = y
+
+[@@plugin]
+irreducible
+let pcount (#a:Type) (x:a) (n:int) : int = n + 7
+
+[@@plugin]
+irreducible
+let pswap (#a:Type) (#b:Type) (x:a) (y:b) : b & a = (y, x)

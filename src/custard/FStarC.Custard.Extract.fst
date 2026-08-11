@@ -784,6 +784,14 @@ and import (st:state) (key:string) : ML (option name) =
     in
     let nm = name_of_decl d in
     SMap.add st.names key nm;
+    (* Filed under the same key an ordinary translation would have used, and
+       for the same reason: {!callee_sig} and {!callee_eff} read it to type a
+       call and to decide whether the call may be dropped or reordered.
+       Without this an import answers [TAny] and [E_Pure] -- so a
+       dereference of an imported [ref] prints as an array index, and a call
+       to an imported effectful function may be optimized away.  It does
+       *not* join [st.order], so nothing is emitted for it. *)
+    SMap.add st.emitted key d;
     note_abbrev st d;
     st.imports := (d, e.ue_type) :: !st.imports;
     if Options.custard_dump_specializations () then

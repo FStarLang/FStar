@@ -4521,13 +4521,12 @@ entry in `Builtins.realized_modules`.  And none of the four realizations
 mentions a Pulse F\* module, so §12.9's output splitting is not needed here at
 all --- the circularity that forced splitting on the compiler does not exist.
 
-**Three things stop it.**
+**Two things stop it.**  A third, the polymorphic plugin
+`check_pulse_after_desugar (decl:'a)`, is done: §13.4 now generates the
+`mk_any_emb` registration for it, and `Pulse.Main` extracts with no
+`--warn_error` suppression at all.
 
-1. **The polymorphic plugin.**  `check_pulse_after_desugar (decl:'a)` is
-   rejected (§13.4), and it is an error, not a warning, under Pulse's
-   `--warn_error`.  This is the `mk_any_emb` case, and this is its caller.
-
-2. **The compiler's API is dead-code eliminated.**  A Custard-built compiler
+1. **The compiler's API is dead-code eliminated.**  A Custard-built compiler
    contains what its own entry points reach, and no more.  A plugin's
    *hand-written* OCaml calls the compiler by OCaml name, through no request
    Custard can see: `Pulse_RuntimeUtils.ml` opens with
@@ -4541,12 +4540,12 @@ all --- the circularity that forced splitting on the compiler does not exist.
    list, or an exported-API list that does not depend on who calls it, is the
    design question.
 
-3. **Two units untried.**  Only `checker` has been extracted.  `extraction`
+2. **Two units untried.**  Only `checker` has been extracted.  `extraction`
    and `syntax_extension` remain, and the latter is built around a menhir
    grammar of its own, which §12.11 handles for the compiler's parser but has
    not been asked to do for a plugin's.
 
-Item 2 is the interesting one, because it is not a bug: it is the whole-program
+Item 1 is the interesting one, because it is not a bug: it is the whole-program
 assumption meeting a program that is not whole.  §12.6 already says a unit
 exports what its interface records; a hand-written realization linked into the
 same binary is a consumer that no interface describes.
@@ -4714,27 +4713,71 @@ it is in the ML pipeline.  `RegEmb.subst_expr` is the traversal; it needs no
 capture check, since a placeholder is a fresh name and what replaces it
 mentions only top-level declarations.
 
-#### What is not generated: a polymorphic plugin
+#### A polymorphic plugin
 
-A plugin with a leading type binder is *rejected*, with the same
-"can not run natively" warning the ML pipeline uses, rather than registered.
-The ML pipeline handles it by embedding the type variable with `mk_any_emb`
-and pattern-matching the type arguments off the front of the `args` list, and
-Custard could do the same: it would be a match wrapped around the lambda
-`interp_term` already builds, peeling one argument per type binder.
+A plugin may be polymorphic in a type.  Nothing can be *done* to a value whose
+type is unknown, so the embedding for such a type variable is the identity on
+the syntax the caller passed --- `mk_any_emb`, which both the syntax and the
+NBE embedding libraries provide, and which needs the type argument only to
+print it under `--__debug_embedding`.
 
-It has not been built.  Of the 163 `[@@plugin]` declarations in `ulib` and
-`src`, none is polymorphic, and a full `make custard` --- which registers all
-25 ulib plugin modules --- emits no such warning at all, so nothing the
-compiler itself builds needs this.
+The type arguments themselves are the awkward part.  The normalizer does not
+know that an argument was a type, so it hands the primitive step *all* of
+them, while `interp_term`'s combinator (`arrow_as_prim_step_n`,
+`mk_tactic_interpretation_n`) is built for the value arguments alone.  So a
+match wraps the lambda that `interp_term` already builds, peeling one argument
+off the front of the list per type binder and binding it to the variable its
+`mk_any_emb` reads:
 
-**Pulse does.**  `Pulse.Main.check_pulse_after_desugar (decl:'a)` is a genuine
-instance, and it is the first thing that stops a Custard build of the Pulse
-plugin (§12.13).  Its `'a` is an embedded term that the body immediately
-hands to `RU.unembed_pulse_decl`, which is exactly the shape `mk_any_emb` is
-for: the type variable never needs a real embedding, only a way to pass the
-term through untouched.  So this is now a known blocker with a known caller
-rather than speculative machinery.
+```ocaml
+register_plugin "CustardPlugin.pswap" 4
+  (fun psc cb us args -> match args with
+   | (tv0, _) :: (tv1, _) :: rest ->
+     arrow_as_prim_step_2 (mk_any_emb tv0) (mk_any_emb tv1)
+       (e_tuple2 (mk_any_emb tv1) (mk_any_emb tv0))
+       custardPlugin_pswap (lid_of_str "CustardPlugin.pswap") cb us rest
+   | _ -> failwith "...")
+```
+
+Two consequences of the type arguments being ordinary arguments.  The
+*registered* arity counts them --- 4 above, for two type binders and two value
+binders --- while the combinator's index does not; and the failure branch is a
+`failwith`, not a `None`, because a plugin applied to fewer arguments than its
+arity is a bug in the normalizer, not a step that declines to fire.
+
+Only *leading* type binders are peeled.  One after a value binder would have to
+come out of the middle of the list, and no caller needs that; it is left in
+place, where it has no embedding and the plugin is rejected as before.
+
+Nothing the compiler itself builds needs this: of the 163 `[@@plugin]`
+declarations in `ulib` and `src`, none is polymorphic.  **Pulse's is.**
+`Pulse.Main.check_pulse_after_desugar (decl:'a)` hands its `'a` straight to
+`RU.unembed_pulse_decl`, so the type variable never needs a real embedding ---
+exactly what `mk_any_emb` is for --- and it registers at arity 4 (one type
+argument, two value arguments, and the tactic's own).  `tests/custard/plugin`
+covers the four shapes that differ: one type binder used at the argument and
+at the result (`pid`), two of them (`psnd`), a type binder mixed with a
+concrete argument (`pcount`), and a type variable *under* a real embedding
+(`pswap`, whose result is `e_tuple2` of two identity embeddings).
+
+#### An import had no type
+
+Specializing `mk_any_emb` into a plugin is what first dereferenced an
+*imported* reference cell: its body reads `!Options.debug_embedding`, and
+`FStarC.Options` lives in the compiler unit the plugin links against.  It
+printed as `(FStarC_Options.debug_embedding).(0)`, an array index, which does
+not compile.
+
+`Extract.import` (§12.4) recorded a linked declaration in `st.names`, so
+references resolved to the right name, but not in `st.emitted`, which is where
+`callee_sig` and `callee_eff` look.  Every cross-unit call was therefore typed
+`TAny` and classified `E_Pure`.  The type is why the dereference printed
+wrongly --- the OCaml backend prints `!x` when the operand's type is `TRef` and
+an index otherwise --- and the effect is worse: a call to an imported effectful
+function could have been dropped or reordered.  Imports now go into
+`st.emitted` under the same key an ordinary translation would use.  They do
+*not* join `st.order`, which is what the emitted program is read off, so
+nothing new is printed.
 
 
 ### 13.5 What it took to run
@@ -4885,5 +4928,6 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10o | **The `FStar.Stubs.*` rename** (§8.2) | Done.  `Builtins.no_fstar_stubs`, applied in `Extract.name_of_lid`, so that a plugin's `FStar.Stubs.Tactics.Types.proofstate` and the compiler's `FStarC.Tactics.Types.proofstate` are one name.  Fallout: `solve` is now `inline_for_extraction` in its five copies (its `{| ev : a |}` binder made `#a` `Mono`, which §3.2b rejects once `embedding` is no longer specialized), and record ascription had to cover projections as well as record expressions (§5.5). |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | Done, and it is `make custard-plugin` (§12.12).  A `.cui` entry now records the *file* a declaration was emitted into (`ue_home`), not just the unit, because the compiler is built split; an import that carries one is folded into the printer's `homes` table, since an import from a split producer and a cross-file reference inside a split output are the same thing.  `Loader.ensure_loaded` registers a module's dependences before the module, which a plugin run needs and a whole-program run got for free.  The test reduces `irreducible` definitions with `norm [primops]`, so it fails without the plugin.  It exposed the sixth miscompilation of §13.5: specialization eta-expanded `Cfg.cached_steps`, reallocating its memo table per call, and the extracted compiler folded no primops at all |
 | M10q | Cleanup: bounded normalization everywhere, target-native tuples and `option` | Done.  Every normalization Custard performs now runs under `--custard_norm_budget`, through `Extract.norm_bounded` or the new `Mono.norm_bounded` for the callers below the extractor; the four sites in `Mono` and `RegEmb` that did not were the last unbounded ones (§12.8 item 8).  And a realized type that the realization defines as an *alias* of a type the target already has is printed as that target type: `FStar.Pervasives.Native`'s `tupleN` in OCaml's tuple syntax and its `option` as OCaml's `option`, so that no Custard-generated line in the extracted compiler names `FStar_Pervasives_Native` (§8.2).  `fst`/`snd` are `inline_for_extraction` |
-| M10r | Extract the Pulse checker (§12.13) | Measured, not finished.  `Pulse.Main` extracts whole against the compiler's `.cui` --- 7.6k lines, and `check_pulse`'s nine-argument registration comes out correct --- and Pulse needs no new `Builtins` entry and no output splitting, since its realizations name no Pulse module.  Three things stop a loadable plugin: `check_pulse_after_desugar (decl:'a)` is the polymorphic-plugin case of §13.4 and now has a caller; a plugin's hand-written OCaml calls compiler symbols that whole-program dead-code elimination dropped (`FStarC_Errors.with_error_bound`), which `entrypoints.txt` solves for F\*'s own realizations but a plugin has no way to extend; and the `extraction` and `syntax_extension` units are untried, the latter with a menhir grammar of its own |
+| M10r | Extract the Pulse checker (§12.13) | Measured, not finished.  `Pulse.Main` extracts whole against the compiler's `.cui`, with no `--warn_error` suppression --- 7.6k lines, and both registrations come out correct: `check_pulse`'s nine-argument one and, since M10s, `check_pulse_after_desugar`'s polymorphic one.  Pulse needs no new `Builtins` entry and no output splitting, since its realizations name no Pulse module.  Two things stop a loadable plugin: a plugin's hand-written OCaml calls compiler symbols that whole-program dead-code elimination dropped (`FStarC_Errors.with_error_bound`), which `entrypoints.txt` solves for F\*'s own realizations but a plugin has no way to extend; and the `extraction` and `syntax_extension` units are untried, the latter with a menhir grammar of its own |
+| M10s | **Polymorphic plugins** (§13.4) | Done.  A `[@@plugin]` with leading type binders registers: the type variable's embedding is `mk_any_emb` on the type argument, and a generated match peels one argument per type binder off the front of the primitive step's argument list, so the registered arity counts the type arguments while the combinator's index does not.  Only leading type binders; one after a value binder is still rejected.  `tests/custard/plugin` adds `pid`, `psnd`, `pcount` and `pswap` (the last putting an identity embedding *under* an `e_tuple2`), all `irreducible`, so the test fails with error 228 without the plugin loaded.  Specializing `mk_any_emb` into a plugin also exposed that `Extract.import` never filed a linked declaration in `st.emitted`, so every cross-unit call was typed `TAny` and classified `E_Pure` --- `!Options.debug_embedding` printed as an array index, and an imported effectful call could have been dropped |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

@@ -17,3 +17,15 @@ let _ = assert (CustardPlugin.flip (CustardPlugin.B (3, true)) == CustardPlugin.
 
 let _ = assert (CustardPlugin.fr ({ a = 3; b = true }) == ({ a = -3; b = true } <: CustardPlugin.record))
           by (norm [primops]; trefl ())
+
+let _ = assert (CustardPlugin.pid 3 == 3)
+          by (norm [primops]; trefl ())
+
+let _ = assert (CustardPlugin.psnd 3 true == true)
+          by (norm [primops]; trefl ())
+
+let _ = assert (CustardPlugin.pcount "x" 5 == 12)
+          by (norm [primops]; trefl ())
+
+let _ = assert (CustardPlugin.pswap 3 true == (true, 3))
+          by (norm [primops]; trefl ())

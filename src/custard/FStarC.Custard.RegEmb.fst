@@ -354,17 +354,40 @@ let whnf (st:Extract.state) (t:typ) : ML typ =
        | _ -> go (fuel - 1) t') in
   go 20 (SS.compress (U.un_uinst t))
 
+(* The type variables a polymorphic plugin is being registered under, each
+   paired with the variable that will hold its *type argument* at run time --
+   the piece of syntax the normalizer passes where the type used to be. *)
+type tvenv = list (bv & bv)
+
+let find_tv (env:tvenv) (b:bv) : ML (option bv) =
+  match env |> List.tryFind (fun ((a, _):bv & bv) -> S.bv_eq a b) with
+  | Some (_, v) -> Some v
+  | None -> None
+
 (* An F* term of type [embedding t] (or [NBET.embedding t]).
 
    Its ML counterpart builds ML syntax, and so has to name the *extracted*
    form of every combinator.  Building F* syntax instead means the result goes
    through {!Extract.expr_of_term} like anything else: the combinators are
    requested, specialized and typed by the ordinary loop. *)
-let rec embedding_for (st:Extract.state) (k:kind) (t:typ) : ML term =
+let rec embedding_for (st:Extract.state) (k:kind) (env:tvenv) (t:typ) : ML term =
   let t = whnf st t in
   match t.n with
-  | Tm_refine {b=x} -> embedding_for st k x.sort
-  | Tm_ascribed {tm=t} -> embedding_for st k t
+  | Tm_refine {b=x} -> embedding_for st k env x.sort
+  | Tm_ascribed {tm=t} -> embedding_for st k env t
+
+  (* A plugin's own type variable (section 13.4).  Nothing is known about the
+     type, so nothing can be done to a value of it: the embedding is the
+     identity on the syntax the caller passed, which is what [mk_any_emb]
+     builds out of the type argument bound by {!peel_type_args}.  The plugin
+     body can only pass such a value on, or hand it to a realization that
+     unembeds it itself, which is exactly what Pulse does. *)
+  | Tm_name bv when Some? (find_tv env bv) ->
+    let v = Some?.v (find_tv env bv) in
+    let comb = match k with
+               | SyntaxTerm -> lid "FStarC.Syntax.Embeddings.mk_any_emb"
+               | NBETerm    -> lid "FStarC.TypeChecker.NBETerm.mk_any_emb" in
+    call comb [] [S.bv_to_name v]
 
   | Tm_arrow _ when (match U.arrow_one_ln t with
                      | Some (_, c) -> U.is_pure_comp c
@@ -375,7 +398,7 @@ let rec embedding_for (st:Extract.state) (k:kind) (t:typ) : ML term =
     let comb = match k with
                | SyntaxTerm -> lid "FStarC.Syntax.Embeddings.e_arrow"
                | NBETerm    -> lid "FStarC.TypeChecker.NBETerm.e_arrow" in
-    call comb [t0; t1] [embedding_for st k t0; embedding_for st k t1]
+    call comb [t0; t1] [embedding_for st k env t0; embedding_for st k env t1]
 
   | Tm_app _ ->
     let head, args = U.head_and_args_full t in
@@ -385,7 +408,7 @@ let rec embedding_for (st:Extract.state) (k:kind) (t:typ) : ML term =
        application needs no table beyond the head's. *)
     let tys = List.map fst args in
     (match embedding_head st k head with
-     | Some f -> call f tys (List.map (embedding_for st k) tys)
+     | Some f -> call f tys (List.map (embedding_for st k env) tys)
      | None -> raise (NoEmbedding ("no embedding for " ^ show t)))
 
   | Tm_fvar fv ->
@@ -488,7 +511,7 @@ and embed_fun (st:Extract.state) (gty:typ)
     let args = List.map2 (fun (b:binder) (v:bv) ->
       call (Ident.lid_of_str "FStarC.Syntax.Syntax.as_arg") []
         [call (emb_base "extracted_embed") [b.binder_bv.sort]
-              [embedding_for st SyntaxTerm b.binder_bv.sort; S.bv_to_name v]]) bs vs in
+              [embedding_for st SyntaxTerm [] b.binder_bv.sort; S.bv_to_name v]]) bs vs in
     let head = call (Ident.lid_of_str "FStarC.Syntax.Syntax.tdataconstr") []
                  [call (Ident.lid_of_str "FStarC.Ident.lid_of_str") []
                        [str (Ident.string_of_lid c)]] in
@@ -528,7 +551,7 @@ and unembed_fun (st:Extract.state) (gty:typ)
     let body = List.fold_right (fun ((b, pv, v):binder & bv & bv) (acc:term) ->
       call (Ident.lid_of_str "FStarC.Option.bind") [b.binder_bv.sort; gty]
         [call (emb_base "extracted_unembed") [b.binder_bv.sort]
-              [embedding_for st SyntaxTerm b.binder_bv.sort; S.bv_to_name pv];
+              [embedding_for st SyntaxTerm [] b.binder_bv.sort; S.bv_to_name pv];
          U.abs [S.mk_binder v] acc None]) steps ret in
     SS.close_branch (p, None, body)) in
   let catchall = SS.close_branch (pat_of (Pat_var (S.new_bv None scrut_ty)), None, none) in
@@ -564,6 +587,41 @@ let ir_call (f:name) (fty:cty) (args:list expr) : ML expr =
   CSyn.mk (EApp (CSyn.mk (EQual (f, [])) fty E_Pure, args))
           (res fty (List.length args)) E_Impure
 
+(* What the normalizer hands a primitive step in place of each argument. *)
+let arg_typ (k:kind) : ML typ =
+  match k with
+  | SyntaxTerm -> S.fvar (lid "FStarC.Syntax.Syntax.term") None
+  | NBETerm    -> S.fvar (lid "FStarC.TypeChecker.NBETerm.t") None
+
+(* [match args with
+     | (tv_0, _) :: .. :: (tv_m, _) :: rest -> body
+     | _ -> failwith "arity mismatch"]
+
+   A polymorphic plugin's type arguments reach the primitive step like any
+   other argument, because the normalizer does not know they were types.  The
+   interpretation function below is built for the value arguments alone, so
+   the type ones are peeled off here: each is bound to the variable its
+   [mk_any_emb] embedding reads, and the shortened list is what the
+   interpretation function sees. *)
+let peel_type_args (st:Extract.state) (args_bv:bv) (tvs:list bv) (rest:bv)
+                   (res_ty:typ) (body:term) : ML term =
+  let rec go (tvs:list bv) : ML pat =
+    match tvs with
+    | [] -> pat_of (Pat_var rest)
+    | v :: tvs ->
+      let arg = pat_of (Pat_cons (ctor_fv (lid "FStar.Pervasives.Native.Mktuple2"), None,
+                          [(dot_pat, true); (dot_pat, true);
+                           (pat_of (Pat_var v), false);
+                           (pat_of (Pat_var (S.new_bv None S.tun)), false)])) in
+      pat_of (Pat_cons (ctor_fv PC.cons_lid, None,
+                        [(dot_pat, true); (arg, false); (go tvs, false)])) in
+  let fail = call (lid "FStarC.Effect.failwith") [res_ty]
+                  [str "Custard: a plugin was applied to too few arguments"] in
+  let catchall = SS.close_branch (pat_of (Pat_var (S.new_bv None args_bv.sort)), None, fail) in
+  S.mk (Tm_match { scrutinee = S.bv_to_name args_bv; ret_opt = None;
+                   brs = [SS.close_branch (go tvs, None, body); catchall];
+                   rc_opt = None }) dummy
+
 (* The interpretation function for a plugin, as an F* term.
 
    Its shape is fixed by the normalizer: a primitive step is a function of the
@@ -572,20 +630,34 @@ let ir_call (f:name) (fty:cty) (args:list expr) : ML expr =
    embeddings and the compiled definition; all this builds is the lambda that
    feeds that function the callbacks it was handed. *)
 let interp_term (st:Extract.state) (k:kind) (tac:bool) (fv_lid:Ident.lident)
-                (n:int) (bs:list binder) (res:typ) : ML term =
+                (n:int) (tvs:list binder) (bs:list binder) (res:typ) : ML term =
+  (* One variable per type binder, holding the syntax of the type argument. *)
+  let env : tvenv =
+    tvs |> List.map (fun (b:binder) ->
+             (b.binder_bv, S.new_bv None (arg_typ k))) in
   let tys = List.map (fun (b:binder) -> b.binder_bv.sort) bs @ [res] in
-  let embs = tys |> List.map (embedding_for st k) in
+  let embs = tys |> List.map (embedding_for st k env) in
   let f = S.fvar fv_lid None in
+  (* [vs] always ends in the argument list; with type binders the body sees a
+     shortened one, and the match that shortens it wraps the whole thing. *)
+  let wrap (vs:list bv) (res_ty:typ) (mk:list bv -> ML term) : ML term =
+    match env with
+    | [] -> mk vs
+    | _ ->
+      let pre, args_bv = BU.prefix vs in
+      let rest = S.new_bv None args_bv.sort in
+      peel_type_args st args_bv (List.map snd env) rest res_ty (mk (pre @ [rest])) in
   if tac then begin
     (* [mk_tactic_interpretation_n name t e1 .. en er psc ncb us args].  With
        the [Tac] effect reified (section 7.5) the compiled definition already
        has the type this expects -- a function into [tac] -- so unlike the ML
        pipeline there is no [from_tactic_n] to insert. *)
     let h = lid ("FStarC.Tactics.InterpFuns.mk_tactic_interpretation_" ^ show n) in
-    let hbs, _ = signature_of st h tys in
+    let hbs, hres = signature_of st h tys in
     let vs = fresh_bvs (last_binders 4 hbs) in
-    let body = call h tys ([str (Ident.string_of_lid fv_lid ^ " (plugin)"); f]
-                           @ embs @ List.map S.bv_to_name vs) in
+    let body = wrap vs hres (fun vs ->
+      call h tys ([str (Ident.string_of_lid fv_lid ^ " (plugin)"); f]
+                  @ embs @ List.map S.bv_to_name vs)) in
     U.abs (List.map S.mk_binder vs) body None
   end else begin
     (* [arrow_as_prim_step_n e1 .. en er f lid cb us args].  The syntax
@@ -595,11 +667,12 @@ let interp_term (st:Extract.state) (k:kind) (tac:bool) (fv_lid:Ident.lident)
     let h = match k with
             | SyntaxTerm -> lid ("FStarC.Syntax.Embeddings.arrow_as_prim_step_" ^ show n)
             | NBETerm    -> lid ("FStarC.TypeChecker.NBETerm.arrow_as_prim_step_" ^ show n) in
-    let hbs, _ = signature_of st h tys in
+    let hbs, hres = signature_of st h tys in
     (* [cb], then the [universes] and [args] of the returned function. *)
     let vs = fresh_bvs (last_binders 3 hbs) in
     let lid_of_str = call (lid "FStarC.Ident.lid_of_str") [] [str (Ident.string_of_lid fv_lid)] in
-    let body = call h tys (embs @ [f; lid_of_str] @ List.map S.bv_to_name vs) in
+    let body = wrap vs hres (fun vs ->
+      call h tys (embs @ [f; lid_of_str] @ List.map S.bv_to_name vs)) in
     let vs = match k with
              | NBETerm -> vs
              | SyntaxTerm ->
@@ -607,16 +680,15 @@ let interp_term (st:Extract.state) (k:kind) (tac:bool) (fv_lid:Ident.lident)
     U.abs (List.map S.mk_binder vs) body None
   end
 
-(* Strip the leading type binders, if any.  A plugin polymorphic in a type is
-   registered by the ML pipeline with an identity embedding for the variable
-   and a hand-written prefix match to drop the type arguments off the argument
-   list; Custard does not do that yet, and says so rather than registering
-   something that would unembed at the wrong type. *)
-let reject_type_binders (st:Extract.state) (bs:list binder) : ML unit =
-  bs |> List.iter (fun (b:binder) ->
-    match (SS.compress b.binder_bv.sort).n with
-    | Tm_type _ -> raise (NoEmbedding "plugins with type arguments are not supported yet")
-    | _ -> ())
+(* Split the leading type binders off, if any.  Only *leading* ones: a type
+   binder after a value binder would have to be peeled from the middle of the
+   argument list, and no caller needs that.  A later one is left in [bs],
+   where {!embedding_for} rejects it for having no embedding. *)
+let split_type_binders (bs:list binder) : ML (list binder & list binder) =
+  let is_type (b:binder) = Tm_type? (SS.compress b.binder_bv.sort).n in
+  match BU.prefix_until (fun (b:binder) -> not (is_type b)) bs with
+  | None -> bs, []
+  | Some (tvs, x, rest) -> tvs, x :: rest
 
 let plugin_norm_steps : list TcEnv.step = [
   TcEnv.EraseUniverses;
@@ -648,7 +720,8 @@ let registration (st:Extract.state) (arity_opt:option int) (r:Range.t)
         bs, S.mk_Total (U.arrow rest c)
       else raise (NoEmbedding (Format.fmt2 "expected arity at least %s; got %s"
                                  (show k) (show nbs))) in
-  reject_type_binders st bs;
+  let arity = List.length bs in
+  let tvs, bs = split_type_binders bs in
   let n = List.length bs in
   let res = U.comp_result c in
   let tac =
@@ -663,12 +736,14 @@ let registration (st:Extract.state) (arity_opt:option int) (r:Range.t)
     raise (NoEmbedding "tactic plugins can take at most 20 arguments");
   let string_ty = Extract.ty_of_typ st S.t_string in
   let int_ty    = Extract.ty_of_typ st S.t_int in
-  let interp = compile st (interp_term st SyntaxTerm tac fv_lid n bs res) in
+  let interp = compile st (interp_term st SyntaxTerm tac fv_lid n tvs bs res) in
+  (* The registered arity counts the type arguments too: they arrive as
+     ordinary arguments and are dropped by the generated match. *)
   let args, which, arity =
-    if tac then [interp], "register_tactic", n + 1
+    if tac then [interp], "register_tactic", arity + 1
     else
-      let nbe = compile st (interp_term st NBETerm tac fv_lid n bs res) in
-      [interp; nbe], "register_plugin", n in
+      let nbe = compile st (interp_term st NBETerm tac fv_lid n tvs bs res) in
+      [interp; nbe], "register_plugin", arity in
   let fty = List.fold_right (fun (a:expr) (t:cty) -> TArrow (a.ty, E_Pure, t))
                             args TUnit in
   let fty = TArrow (string_ty, E_Pure, TArrow (int_ty, E_Pure, fty)) in
