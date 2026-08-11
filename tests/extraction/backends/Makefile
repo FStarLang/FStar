@@ -89,9 +89,11 @@ XFAIL_C += ExtPrimsIntBignum
 # about an incomplete type. FINDINGS.md #8.
 XFAIL_C += ExtDatatypesRec ExtDatatypesMutual
 
-# The Rust backend does not terminate on a module containing two recursive
-# datatypes (see FINDINGS.md #9 for a 9-line repro). It also fails to box
-# mutually recursive types, giving `recursive type 'expr' has infinite size`.
+# krml does not terminate on a module containing two recursive datatypes, in
+# a phase shared by both backends (FINDINGS.md #9 has a 9-line repro), so
+# ExtDatatypesRec times out for C and Rust alike. The Rust backend separately
+# fails to box mutually recursive types: `recursive type 'expr' has infinite
+# size`.
 XFAIL_RUST += ExtDatatypesRec ExtDatatypesMutual
 
 # The Rust backend emits `crate::lowstar::ignore::ignore(...)` for an unused
@@ -111,9 +113,47 @@ OCAML_TESTS := $(filter-out $(NO_OCAML) $(XFAIL_OCAML),$(TESTS))
 C_TESTS     := $(filter-out $(NO_C)     $(XFAIL_C),$(TESTS))
 RUST_TESTS  := $(filter-out $(NO_RUST)  $(XFAIL_RUST),$(TESTS))
 
+# --------------------------------------------------------------------------
+# Which columns can we actually run?
+#
+# This directory runs unconditionally as part of `make test`, so it has to
+# cope with a tree where Karamel or rustc is unavailable rather than break the
+# build. Each column is enabled only if its toolchain is present; a missing
+# one is reported loudly and skipped. Set REQUIRE_BACKENDS=1 to turn those
+# skips into hard errors (what CI should eventually do, once every runner is
+# known to have the tools).
+#
+# mk/test.mk defaults KRML_EXE to $(FSTAR_ROOT)/out/bin/krml, which only
+# exists in a dev tree. `make install` also puts krml next to fstar.exe in
+# stageN/out/bin, which is what CI has, so try that too.
+# --------------------------------------------------------------------------
+
+KRML_CANDIDATES := $(KRML_EXE) $(dir $(FSTAR_EXE))krml $(FSTAR_ROOT)/karamel/out/bin/krml
+KRML_FOUND      := $(firstword $(wildcard $(KRML_CANDIDATES)) $(shell command -v krml 2>/dev/null))
+ifneq ($(KRML_FOUND),)
+  override KRML_EXE := $(KRML_FOUND)
+endif
+
+HAVE_KRML  := $(if $(KRML_FOUND),1,)
+HAVE_RUSTC := $(if $(shell command -v rustc 2>/dev/null),1,)
+
+ifeq ($(HAVE_KRML),)
+  ifeq ($(REQUIRE_BACKENDS),1)
+    $(error krml not found (looked in $(KRML_CANDIDATES) and on PATH), and REQUIRE_BACKENDS=1)
+  endif
+  $(info NOTE: krml not found, skipping the C and Rust extraction tests.)
+  $(info       Looked in: $(KRML_CANDIDATES) and on PATH.)
+endif
+ifeq ($(HAVE_RUSTC),)
+  ifeq ($(REQUIRE_BACKENDS),1)
+    $(error rustc not found on PATH, and REQUIRE_BACKENDS=1)
+  endif
+  $(info NOTE: rustc not found, skipping the Rust extraction tests.)
+endif
+
 # Karamel's C runtime support library (Prims_strcat, FStar_String_*, ...).
 # Built once, out of the karamel distribution that ships with the compiler.
-KRML_DIST     := $(shell $(KRML_EXE) -locate-krmllib)/dist/generic
+KRML_DIST     := $(if $(HAVE_KRML),$(shell $(KRML_EXE) -locate-krmllib)/dist/generic)
 KRMLLIB_DIR   := $(OUTPUT_DIR)/krmllib
 KRMLLIB       := $(KRMLLIB_DIR)/libkrmllib.a
 
@@ -148,10 +188,14 @@ all: ocaml c rust
 
 ocaml: $(patsubst %,$(OUTPUT_DIR)/ml/%.ok,$(OCAML_TESTS))
 ocaml: $(patsubst %,$(OUTPUT_DIR)/ml/%.xfail,$(XFAIL_OCAML))
+ifeq ($(HAVE_KRML),1)
 c:     $(patsubst %,$(OUTPUT_DIR)/c/%.ok,$(C_TESTS))
 c:     $(patsubst %,$(OUTPUT_DIR)/c/%.xfail,$(XFAIL_C))
+ifeq ($(HAVE_RUSTC),1)
 rust:  $(patsubst %,$(OUTPUT_DIR)/rs/%.ok,$(RUST_TESTS))
 rust:  $(patsubst %,$(OUTPUT_DIR)/rs/%.xfail,$(XFAIL_RUST))
+endif
+endif
 .PHONY: all ocaml c rust
 
 # Convenience: `make ExtFoo.ocaml`, `make ExtFoo.c`, `make ExtFoo.rust`.
@@ -252,18 +296,33 @@ $(OUTPUT_DIR)/rs/%.ok: $(OUTPUT_DIR)/rs/%.exe
 
 # Build the cell in a sub-make and require it to fail. The point is to notice
 # when a known bug gets fixed, so that the entry can be removed from XFAIL_*.
+#
+# The F* side is a *prerequisite*, not part of the sub-make: every bug we XFAIL
+# is on the backend side, so extraction itself must still succeed. Without
+# that, any breakage in the harness (a missing tool, a bad flag, an error in
+# mk/test.mk) would look like the expected failure and the cell would "pass"
+# for entirely the wrong reason.
 define xfail_rule
-$$(OUTPUT_DIR)/$(1)/%.xfail:
+$$(OUTPUT_DIR)/$(1)/%.xfail: $$(OUTPUT_DIR)/$(4)
 	$$(call msg, "XFAIL $(2)", $$*)
 	$$(Q)mkdir -p $$(dir $$@)
-	$$(Q)if $$(MAKE) NODEPEND=1 $$(OUTPUT_DIR)/$(1)/$$*.ok >$$@.log 2>&1; then \
+	$$(Q)if $$(MAKE) $$(OUTPUT_DIR)/$(1)/$$*.ok >$$@.log 2>&1; then \
 	  echo "UNEXPECTED PASS [$(2)] $$*: this cell is listed in XFAIL_$(3) but it"; \
 	  echo "  now works. Please remove it from the Makefile and FINDINGS.md."; \
+	  exit 1; \
+	fi
+	@# A cell must fail because of the bug it documents, not because the
+	@# harness fell over. Missing tools and make-level breakage are not
+	@# expected failures.
+	$$(Q)if grep -qE "(command not found|No such file or directory: (krml|rustc|cc)|not found$$$$|takes an argument but has none)" $$@.log; then \
+	  echo "BROKEN XFAIL [$(2)] $$*: the cell failed, but not because of the"; \
+	  echo "  documented bug. See $$@.log:"; \
+	  sed 's/^/    /' $$@.log | tail -n 5; \
 	  exit 1; \
 	fi
 	$$(Q)touch $$@
 endef
 
-$(eval $(call xfail_rule,ml,ocaml,OCAML))
-$(eval $(call xfail_rule,c,c,C))
-$(eval $(call xfail_rule,rs,rust,RUST))
+$(eval $(call xfail_rule,ml,ocaml,OCAML,ml/%.ml))
+$(eval $(call xfail_rule,c,c,C,%.krml))
+$(eval $(call xfail_rule,rs,rust,RUST,%.krml))

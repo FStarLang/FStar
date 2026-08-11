@@ -10,10 +10,12 @@ module ExtDatatypesRec
 /// the user gets a confusing error in generated code rather than a message
 /// about their F* source.
 ///
-/// The Rust backend does not fail either -- it simply never finishes. Two
-/// recursive datatypes in one module are enough to make krml spin at 100% CPU
-/// indefinitely (FINDINGS.md #9), which is why every krml invocation in this
-/// directory runs under a timeout. Only OCaml handles this module.
+/// In fact neither Karamel backend *fails* on this module: krml simply never
+/// finishes. Two recursive datatypes in one module are enough to make it spin
+/// at 100% CPU indefinitely, in a phase shared by both backends
+/// (FINDINGS.md #9), so this module times out for C and for Rust alike. That
+/// is why every krml invocation in this directory runs under a timeout. Only
+/// OCaml handles this module.
 
 module I32 = FStar.Int32
 module U32 = FStar.UInt32

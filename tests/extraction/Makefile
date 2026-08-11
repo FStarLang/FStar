@@ -3,11 +3,10 @@ FSTAR_ROOT ?= ../..
 SUBDIRS += cmi
 
 # Cross-backend matrix: every language feature and specially-handled
-# primitive, extracted, compiled and *run* on OCaml, C and Rust.
-# Needs krml and rustc, so it is opt-in.
-ifeq ($(FSTAR_TEST_BACKENDS),1)
+# primitive, extracted, compiled and *run* on OCaml, C and Rust. The C and
+# Rust columns need krml and rustc respectively; each is skipped (with a
+# message) if its toolchain is missing, so this is safe to run everywhere.
 SUBDIRS += backends
-endif
 
 RUN += Eta_expand.fst
 

@@ -123,6 +123,16 @@ KRML_TIMEOUT=300 make    # two known bugs make krml loop; every krml call is
                          # bounded (120s by default)
 ```
 
+This directory runs unconditionally as part of `make test`, so it degrades
+gracefully on a machine that is missing a toolchain: the `c` column is skipped
+if `krml` cannot be found (`$(KRML_EXE)`, then next to `fstar.exe`, then
+`karamel/out/bin/krml`, then `$PATH`), and the `rust` column is skipped if
+either `krml` or `rustc` is missing. Each skip prints a `NOTE:` line.
+
+```sh
+REQUIRE_BACKENDS=1 make   # turn those skips into hard errors
+```
+
 A failing cell prints the backend, the module, and the tag of the failing
 check, e.g.
 

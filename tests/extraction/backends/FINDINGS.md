@@ -33,7 +33,7 @@ Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 | 6 | `Prims_op_Star` is never defined in krmllib | 4 | ✓ | ✗ | – | `ExtPrimsIntMul` |
 | 7 | `Prims_int` is `int32_t`; literals silently truncate | **2** | ✓ | ✗ | – | `ExtPrimsIntBignum` |
 | 8 | recursive inductives emit uncompilable C, undiagnosed | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec`, `ExtDatatypesMutual` |
-| 9 | Rust backend does not terminate on two recursive datatypes | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec` |
+| 9 | krml does not terminate on two recursive datatypes (C *and* Rust) | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec` |
 | 10 | Rust backend references a `lowstar` module it never emits | 4 | ✓ | ✓ | ✗ | `ExtDatatypesRecord`, `ExtDatatypesVariant` |
 | 11 | projector applied to a constructor application crashes krml | 4 | ✓ | ✗ | ✗ | `ExtProjectorOfCtor` |
 | 12 | Rust backend cannot translate `EFun` and silently truncates the crate | 4 | ✓ | – | ✗ | `ExtBoolHigherOrder` |
@@ -233,10 +233,12 @@ T2.h:30:10: error: field 'case_Neg' has incomplete type
 
 The user gets an error about generated code rather than about their source.
 
-## 9. The Rust backend does not terminate on two recursive datatypes
+## 9. krml does not terminate on two recursive datatypes
 
 *Severity 4 — the toolchain hangs. Test: `ExtDatatypesRec`.*
 
+This affects **both** Karamel backends, so the loop is in a shared phase
+(monomorphization / the boxing fixpoint) rather than in `AstToMiniRust`.
 Nine lines are enough (>5 minutes at 100% CPU and ~1.5 GB RSS, no output):
 
 ```fstar
@@ -251,10 +253,16 @@ let rec tree_sum (t:tree) : U32.t =
 let main () : U32.t = U32.add_mod (length (Cons 1ul Nil)) (tree_sum (Leaf 1ul))
 ```
 
-Either type alone is translated in well under a second. A single recursive
+Either type alone is translated in well under a second, and a single recursive
 type also hangs when it is used by two different recursive functions *and*
-built with a nested constructor literal, so the trigger is probably in the
-monomorphization/boxing fixpoint rather than in the number of types as such.
+built with a nested constructor literal -- so the trigger is not the number of
+types as such.
+
+Because the C backend hangs before it can lay the types out, `ExtDatatypesRec`
+never even reaches the "incomplete type" error of #8; that one is observed on
+`ExtDatatypesMutual` and on single-type repros. This is also why every krml
+invocation in this directory runs under `timeout $(KRML_TIMEOUT)`: without it,
+`make` never finishes.
 
 Separately, mutually recursive types are not boxed at all, and rustc rejects
 the result:
