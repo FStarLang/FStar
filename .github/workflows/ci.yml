@@ -18,21 +18,17 @@ jobs:
 
   ci:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
       - uses: actions/checkout@master
         with:
-          path: FStar
           submodules: true
+
+      - uses: ./.github/actions/setup-fstar-deps
+        with:
+          dotnet: true
 
       - name: Run CI
         run: make -skj$(nproc) ci
-        working-directory: FStar
 
   # Branch protection points here
   ciok:
