@@ -65,8 +65,11 @@ runs:
         echo "z3-hash=$(sha256sum "$root/.scripts/get_fstar_z3.sh" | cut -c1-16)" >> "$GITHUB_OUTPUT"
         echo "opam-version=$(opam --version)" >> "$GITHUB_OUTPUT"
 
+    # NB: we use restore+save instead of actions/cache, so the switch is
+    # uploaded as soon as it is built instead of at the end of the job.
     - name: Restore opam cache
-      uses: actions/cache@v5
+      id: opam-cache
+      uses: actions/cache/restore@v5
       with:
         path: ~/.opam
         key: opam-${{ runner.os }}-${{ runner.arch }}-${{ steps.keys.outputs.opam-version }}-ocaml${{ inputs.ocaml-version }}-${{ steps.keys.outputs.opam-hash }}-${{ inputs.opam-packages }}
@@ -99,6 +102,13 @@ runs:
         # Keep the cached opam root small.
         opam clean --download-cache --logs --unused-repositories
 
+    - name: Save opam cache
+      if: steps.opam-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.opam
+        key: ${{ steps.opam-cache.outputs.cache-primary-key }}
+
     - name: Export opam environment
       shell: bash
       env:
@@ -119,7 +129,8 @@ runs:
         opam var bin >> "$GITHUB_PATH"
 
     - name: Restore Z3 cache
-      uses: actions/cache@v5
+      id: z3-cache
+      uses: actions/cache/restore@v5
       with:
         path: ~/bin/z3-*
         key: z3-${{ runner.os }}-${{ runner.arch }}-${{ steps.keys.outputs.z3-hash }}
@@ -131,3 +142,10 @@ runs:
       run: |
         set -eu
         "$FSTAR_ROOT/.scripts/get_fstar_z3.sh" "$HOME/bin"
+
+    - name: Save Z3 cache
+      if: steps.z3-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ~/bin/z3-*
+        key: ${{ steps.z3-cache.outputs.cache-primary-key }}
