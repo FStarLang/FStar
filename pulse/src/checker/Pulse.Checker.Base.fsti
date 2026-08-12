@@ -188,9 +188,16 @@ val apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
   (res_ppname:ppname)
   : T.Tac (st_typing_in_ctxt g ctxt (PostHint post_hint))
 
+val retype_checker_result_effect #g #pre
+    (p:post_hint_for_env g)
+    (p':post_hint_for_env g {
+      p'.u == p.u /\ p'.ret_ty == p.ret_ty /\ p'.post == p.post
+    })
+    (r:checker_result_t g pre (PostHint p))
+  : checker_result_t g pre (PostHint p')
+
 // Like apply_checker_result_k, but returns the checked computation with its
-// natural effect (rather than coercing it to post_hint's effect). Used to infer
-// the effect of a conditional's branches when the postcondition was inferred.
+// natural effect rather than coercing it to post_hint's effect.
 val apply_checker_result_k_nohint (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (PostHint post_hint))
   (res_ppname:ppname)

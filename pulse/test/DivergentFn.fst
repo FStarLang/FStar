@@ -113,6 +113,58 @@ divergent fn if_ensures_else_diverges () {
     ()
 }
 
+(* Regression for #4418: effect inference must continue through a live mutable
+   local in an annotated branch. *)
+divergent fn if_ensures_local_diverges () {
+    if (true) ensures emp {
+        let mut local = true;
+        diverge ();
+    } else {};
+    ()
+}
+
+[@@expect_failure [228]]
+fn if_ensures_local_diverges_bad () {
+    if (true) ensures emp {
+        let mut local = true;
+        diverge ();
+    } else {};
+    ()
+}
+
+divergent fn if_ensures_local_array_diverges () {
+    if (true) ensures emp {
+        let mut local = [| true; 1sz |];
+        diverge ();
+    } else {};
+    ()
+}
+
+[@@expect_failure [228]]
+fn if_ensures_local_array_diverges_bad () {
+    if (true) ensures emp {
+        let mut local = [| true; 1sz |];
+        diverge ();
+    } else {};
+    ()
+}
+
+fn if_ensures_local_terminates () {
+    if (true) ensures emp {
+        let mut local = true;
+        local := false;
+    } else {};
+    ()
+}
+
+fn if_ensures_local_array_terminates () {
+    if (true) ensures emp {
+        let mut local = [| true; 1sz |];
+        ()
+    } else {};
+    ()
+}
+
 (* An annotated `if` with only terminating branches stays `stt` and is accepted
    in a plain `fn`. *)
 fn if_ensures_terminating () {
