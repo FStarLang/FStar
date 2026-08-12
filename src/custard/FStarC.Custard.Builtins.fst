@@ -597,6 +597,20 @@ let is_stub_module (ns : list string) : bool =
   | "FStar" :: "Stubs" :: _ -> true
   | _ -> false
 
+(* A handful of stubs do not live where {!no_fstar_stubs} says they do.  An
+   exception is the clearest case: [FStar.Stubs.Tactics.Common.Stop] is how a
+   metaprogram names the exception the tactic engine raises to abort, and the
+   engine's own name for it is [FStarC.Errors.Stop] -- a different module, not
+   just a different namespace.  Exception identity in OCaml is by declaration,
+   so getting this wrong is not a naming inconvenience: the plugin declares a
+   second [Stop], raises that one, and the compiler's handler does not catch
+   it.  The failure is a Pulse tactic reporting
+   [Custard_FStarC_Tactics_Common.FStarC_Tactics_Common_Stop] as an error
+   message.  [UEnv.new_mlpath_of_lident] carries the same entry. *)
+let stub_aliases : list (string & string) = [
+  "FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop";
+]
+
 let realized_modules : list (list string) = [
   ["FStar"; "All"];
   ["FStar"; "Bytes"];

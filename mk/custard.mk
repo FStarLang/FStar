@@ -188,6 +188,10 @@ smoke: $(BIN)
 PLUGIN_SRC  := tests/custard/plugin
 PLUGIN_DIR  := $(OUT)/plugin
 PLUGIN_MOD  := CustardPlugin
+# Section 13.4: a registration is generated only for a module named by
+# --custard_entry, so every module of a plugin that carries [@@plugin] has to
+# be a root.  CustardPluginAux is a second one, reached from nothing.
+PLUGIN_AUX  := CustardPluginAux
 
 plugin: $(BIN)
 	$(call bold_msg, "CUSTARD", "PLUGIN")
@@ -195,15 +199,23 @@ plugin: $(BIN)
 	$(Q)env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
 	  --cache_checked_modules --cache_dir $(CACHE) \
 	  --include src/ --include $(PLUGIN_SRC) --already_cached ',*' \
-	  --warn_error -321-274-272-241 $(PLUGIN_SRC)/$(PLUGIN_MOD).fst
+	  --ext fly_deps=false \
+	  --warn_error -321-274-272-241 \
+	  $(PLUGIN_SRC)/$(PLUGIN_MOD).fst $(PLUGIN_SRC)/$(PLUGIN_AUX).fst
+	# --ext fly_deps=false: fly_deps allows only one file on the command
+	# line, and a plugin with two roots has two.
 	$(Q)env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
 	  --lax --codegen Custard --custard_unit $(PLUGIN_MOD) \
-	  --custard_link $(SPLIT)/fstarc.cui --custard_entry $(PLUGIN_MOD) \
+	  --custard_link $(SPLIT)/fstarc.cui \
+	  --custard_entry $(PLUGIN_MOD) --custard_entry $(PLUGIN_AUX) \
+	  --ext fly_deps=false \
 	  --cache_dir $(CACHE) --include src/ --include $(PLUGIN_SRC) \
 	  --already_cached ',*' --warn_error -321-274-272-241 \
-	  $(PLUGIN_SRC)/$(PLUGIN_MOD).fst --odir $(PLUGIN_DIR)
+	  $(PLUGIN_SRC)/$(PLUGIN_MOD).fst $(PLUGIN_SRC)/$(PLUGIN_AUX).fst \
+	  --odir $(PLUGIN_DIR)
 	$(Q)cd $(PLUGIN_DIR) && $(OCAMLOPT) -shared \
-	  -I $(abspath $(BUILD)) -o $(PLUGIN_MOD).cmxs $(PLUGIN_MOD).ml $(FILTER)
+	  -I $(abspath $(BUILD)) -o $(PLUGIN_MOD).cmxs \
+	  $$($(OCAMLFIND) ocamldep -sort *.ml) $(FILTER)
 	# The definitions the test reduces are irreducible, so this fails
 	# unless the native steps the plugin registered are the ones answering.
 	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) \

@@ -94,6 +94,11 @@ val no_fstar_stubs : list string -> list string
    Those are never compiled: the compiler already defines what they declare. *)
 val is_stub_module : list string -> bool
 
+(* Stubs whose compiler counterpart is in a different *module*, not merely a
+   different namespace: [no_fstar_stubs] cannot express these.  Keyed and
+   valued by the fully qualified lid, as a string. *)
+val stub_aliases : list (string & string)
+
 (** Whether a module is realized by hand in OCaml (section 8.2), and so has a
     [.ml] of its own in [src/ml] or [ulib/ml] that Custard must neither
     compile over nor write a file on top of.  Takes a namespace that has

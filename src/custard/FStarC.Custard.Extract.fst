@@ -578,14 +578,24 @@ let unstub_lid (st:state) (l:Ident.lident) : ML Ident.lident =
   let ns = List.map Ident.string_of_id (Ident.ns_of_lid l) in
   if not (Builtins.is_stub_module ns) then l
   else
-    let ns = Builtins.no_fstar_stubs ns in
+    (* A stub whose counterpart moved module is resolved from the table
+       rather than from the namespace rewrite.  The rest of the function is
+       the same either way, so that a name we fail to resolve still falls
+       back to the stub. *)
+    let ns, nm =
+      match List.tryFind (fun (a, _) -> a = Ident.string_of_lid l)
+                         Builtins.stub_aliases with
+      | Some (_, b) ->
+        let p = String.split ['.'] b in
+        List.init p, List.last p
+      | None ->
+        Builtins.no_fstar_stubs ns, Ident.string_of_id (Ident.ident_of_lid l) in
     let m = String.concat "." ns in
     if not (Loader.module_is_loaded st.deps (tcenv st) m
             || Cons? (Loader.candidate_files st.deps m))
     then l
     else
-      let l' = Ident.lid_of_path (ns @ [Ident.string_of_id (Ident.ident_of_lid l)])
-                                 (Ident.range_of_lid l) in
+      let l' = Ident.lid_of_path (ns @ [nm]) (Ident.range_of_lid l) in
       ensure_lid_available st l';
       if Some? (TcEnv.lookup_qname (tcenv st) l') then l' else l
 
@@ -1420,6 +1430,22 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
                                binders (ret, eff) |> fst in
       SMap.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty, free);
       (nm, binders, ret, eff, own_typars, def_body)) in
+    (* The whole group's signatures go in before any body is extracted: the
+       calls that make the group recursive are extracted from those bodies,
+       and {!callee_eff} has to find an exact effect for each of them or fall
+       back to [E_Impure] (see there).  The placeholder bodies are all
+       overwritten by the loop below. *)
+    let local_key (nm:name) : ML string = "<local>" ^ mangled_name nm in
+    entries |> List.iter (fun (nm, binders, ret, eff, own_typars, _) ->
+      SMap.add st.emitted (local_key nm) (DLet {
+        dl_name    = nm;
+        dl_typars  = typars @ own_typars;
+        dl_binders = binders;
+        dl_ret     = ret;
+        dl_eff     = eff;
+        dl_body    = mk (EAbort "Custard: provisional body") ret eff;
+        dl_flags   = [];
+      }));
     entries |> List.iter (fun (nm, binders, ret, eff, own_typars, def_body) ->
       let d = DLet {
         dl_name    = nm;
@@ -1434,7 +1460,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       } in
       (* Not a specialization of anything -- no source lid names it -- so it
          gets a key of its own, which nothing will ever request. *)
-      let key = "<local>" ^ mangled_name nm in
+      let key = local_key nm in
       SMap.add st.emitted key d;
       st.order := key :: !st.order);
     expr_of_term st body
@@ -2018,6 +2044,15 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
    been extracted by the time we get here (requests are depth-first). *)
 (* A *partially* applied callee is a closure, and building a closure is pure
    however impure calling it will be. *)
+(* The exception is a call into a recursion whose declaration is still being
+   built.  [extract_letbinding] and the local-[let rec] case both register a
+   *provisional* declaration -- the right signature, a placeholder body --
+   before extracting a body, so a self-recursive call still gets its exact
+   effect.  A call between two members of a mutually recursive group is
+   reached through a separate request and does not, and neither does anything
+   else that is missing here, so the fallback has to assume the worst: read
+   pure, a discarded [scan_stmt cbs s1; ...] is deleted by section 7.3 and the
+   recursion silently stops traversing half of its argument. *)
 and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
   match SMap.try_find st.emitted key with
   | Some (DLet l) ->
@@ -2030,7 +2065,7 @@ and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
      still answers [E_Impure] when the type is not an arrow, so a symbol we
      genuinely know nothing about ([dx_ty = TAny]) stays opaque. *)
   | Some (DExternal x) -> apply_eff st x.dx_ty n_args
-  | _ -> E_Pure
+  | _ -> E_Impure
 
 and branch_of_branch (st:state) (br:S.branch) : ML branch =
   let p, g, b = SS.open_branch br in
@@ -2723,6 +2758,24 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                                      rc.residual_effect
     | None -> Effects.maybe_reify (env_for_term benv body) body
                                   (U.comp_effect_name c) in
+  (* Register the signature before extracting the body, so that a
+     self-recursive call inside it finds an exact effect and an exact type
+     instead of {!callee_eff}'s and {!callee_sig}'s conservative fallbacks.
+     The body is a placeholder: nothing reads it, because [request] overwrites
+     the whole declaration below, and this key is not joined to [st.order]. *)
+  let () =
+    match !st.chain with
+    | key :: _ ->
+      SMap.add st.emitted key (DLet {
+        dl_name    = nm;
+        dl_typars  = typars;
+        dl_binders = binders;
+        dl_ret     = ret;
+        dl_eff     = eff;
+        dl_body    = mk (EAbort "Custard: provisional body") ret eff;
+        dl_flags   = [];
+      })
+    | [] -> () in
   let dl_body = expr_of_term st body in
   st.cur := saved_cur;
   DLet {

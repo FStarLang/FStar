@@ -29,3 +29,8 @@ let _ = assert (CustardPlugin.pcount "x" 5 == 12)
 
 let _ = assert (CustardPlugin.pswap 3 true == (true, 3))
           by (norm [primops]; trefl ())
+
+(* A [@@plugin] in a module nothing else refers to: it registers only because
+   CustardPluginAux is a --custard_entry of its own. *)
+let _ = assert (CustardPluginAux.aux 3 == 300)
+          by (norm [primops]; trefl ())

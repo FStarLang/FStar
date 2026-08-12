@@ -28,6 +28,7 @@ CUSTARD_TESTS += Refs
 CUSTARD_TESTS += Thunk
 CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += LocalRec
+CUSTARD_TESTS += RecEffect
 CUSTARD_TESTS += NewtypeInline
 CUSTARD_TESTS += SortBy
 CUSTARD_TESTS += LocalPoly
@@ -162,6 +163,13 @@ GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go"
                     "let rec localRec_parity__even" "and localRec_parity__odd" \
                     "localRec_sum_upto__go n"
 NOGREP_LocalRec   = "let rec aux" "let rec go"
+
+# Section 7.3 only deletes a *pure* discarded subterm, so the effect of a call
+# into a recursion still being extracted has to be assumed impure: the callee
+# is not in [st.emitted] yet, and read pure the first of two recursive calls
+# in [walk l; walk r] is silently deleted.  Deleting it is not a compile error
+# anywhere -- it is a traversal that stops visiting half of its argument.
+GREP_RecEffect = "recEffect_walk l" "recEffect_walk_r l" "recEffect_walk_local__go l"
 
 # The collapsed newtype is the pair itself, and no [inline] marker escapes.
 GREP_NewtypeInline   = "(bool \* string)"
