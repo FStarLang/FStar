@@ -13,15 +13,11 @@ let bind a b (x:repr a) (f:a -> Tot (repr b)) : Tot (repr b) =
     f v 0
 
 [@@ top_level_effect; primitive_extraction]
-total
 reifiable
-effect {
-  EE (a:Type)
-  with { repr; return; bind; }
-}
+effect { EE with { repr; return; bind } }
 
-let lift (a:Type) (w : pure_wp a) (f : unit -> PURE a w) : repr a =
-  fun _ -> admit(); f ()
+let lift (a:Type) (f : unit -> a) : repr a =
+  fun _ -> f ()
 
 sub_effect PURE ~> EE = lift
 

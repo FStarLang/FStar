@@ -2177,8 +2177,6 @@ let push_bv' (env1 : env) (x : FStarC_Ident.ident) :
         FStarC_Syntax_Syntax.n =
           (FStarC_Syntax_Syntax.tun.FStarC_Syntax_Syntax.n);
         FStarC_Syntax_Syntax.pos = r;
-        FStarC_Syntax_Syntax.vars =
-          (FStarC_Syntax_Syntax.tun.FStarC_Syntax_Syntax.vars);
         FStarC_Syntax_Syntax.hash_code =
           (FStarC_Syntax_Syntax.tun.FStarC_Syntax_Syntax.hash_code)
       } in
@@ -2670,22 +2668,20 @@ let elab_restriction
                                                                     uu___8));
                                                                     FStarC_Syntax_Syntax.pos
                                                                     = uu___9;
-                                                                    FStarC_Syntax_Syntax.vars
-                                                                    = uu___10;
                                                                     FStarC_Syntax_Syntax.hash_code
-                                                                    = uu___11;_},
+                                                                    = uu___10;_},
                                                                     FStar_Pervasives_Native.None)::[])
                                                                   ->
-                                                                  let uu___12
+                                                                  let uu___11
                                                                     =
-                                                                    let uu___13
+                                                                    let uu___12
                                                                     =
                                                                     FStarC_Ident.lid_of_str
                                                                     s in
-                                                                    (uu___13,
+                                                                    (uu___12,
                                                                     lid) in
                                                                   Obj.magic
-                                                                    [uu___12]
+                                                                    [uu___11]
                                                               | uu___8 ->
                                                                   Obj.magic
                                                                     [])

@@ -133,13 +133,11 @@ let zero_from_vec_lemma #n = to_vec_lemma_2 (from_vec (zero_vec #n)) (zero n)
 let one_to_vec_lemma #n i =
   if i = n - 1 then () else zero_to_vec_lemma #n i
 
-#push-options "--z3rlimit_factor 8"
 #restart-solver
 let rec pow2_to_vec_lemma #n p i =
   if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
   else pow2_to_vec_lemma #(n - 1) (p - 1) i
-#pop-options
 
 let pow2_from_vec_lemma #n p =
   to_vec_lemma_2 (from_vec (elem_vec #n p)) (pow2_n #n (n - p - 1))
@@ -292,7 +290,7 @@ let rec to_vec_lt_pow2 #n a m i =
       end
 
 (** Used in the next two lemmas *)
-#push-options "--initial_fuel 0 --max_fuel 1 --z3rlimit 40"
+#push-options "--initial_fuel 0 --max_fuel 1"
 let rec index_to_vec_ones #n m i =
    let a = pow2 m - 1 in
    pow2_le_compat n m;
@@ -321,7 +319,6 @@ let logor_disjoint #n a b m =
   small_modulo_lemma_1 b (pow2 m);
   assert (from_vec #m (slice (to_vec b) (n - m) n) == b)
 
-#push-options "--z3rlimit_factor 2"
 let logand_mask #n a m =
   pow2_lt_compat n m;
   Seq.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
@@ -340,7 +337,6 @@ let logand_mask #n a m =
   assert (from_vec #(n - m) (zero_vec #(n - m)) == 0);
   slice_right_lemma #n (to_vec a) m;
   assert (from_vec #m (slice (to_vec a) (n - m) n) == a % pow2 m)
-#pop-options
 
 let shift_left_lemma_1 #n a s i = ()
 
@@ -399,20 +395,16 @@ let shift_right_value_aux_1 #n a s =
 
 let shift_right_value_aux_2 #n a = assert_norm (pow2 0 == 1)
 
-#push-options "--z3rlimit 50"
 let shift_right_value_aux_3 #n a s =
   append_lemma #s #(n - s) (zero_vec #s) (slice (to_vec a) 0 (n - s));
   slice_left_lemma #n (to_vec a) (n - s)
-#pop-options
 
 let shift_right_value_lemma #n a s =
   if s >= n then shift_right_value_aux_1 #n a s
   else if s = 0 then shift_right_value_aux_2 #n a
   else shift_right_value_aux_3 #n a s
 
-#push-options "--z3rlimit 10"
 let lemma_msb_pow2 #n a = if n = 1 then () else from_vec_propriety (to_vec a) 1
-#pop-options
 
 val plus_one_mod : p:pos -> a:nat ->
     Lemma (requires (a < p /\ ((a + 1) % p == 0))) (ensures (a == p - 1))
@@ -427,7 +419,7 @@ let lemma_minus_zero #n a =
     logxor_lemma_2 #n (ones n)
   end
 
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
+#push-options "--fuel 1 --ifuel 0"
 let lemma_msb_gte #n a b =
   from_vec_propriety (to_vec a) 1;
   from_vec_propriety (to_vec b) 1
@@ -437,9 +429,7 @@ let lemma_msb_gte #n a b =
 
 // #set-options "--fuel 1 --ifuel 1"
 
-#push-options "--z3rlimit 80"
 let lemma_uint_mod #n a = ()
-#pop-options
 
 let lemma_add_sub_cancel #n a b =
   let ab = (a-b) % pow2 n in
@@ -490,7 +480,6 @@ let lemma_zero_extends #n m a =
   assert (from_vec #m hd0 = 0);
   assert (r = a)
 
-#push-options "--z3rlimit 40"
 let lemma_one_extend #n a =
   let hd1 = Seq.create 1 true in
   let av = to_vec a in
@@ -500,7 +489,6 @@ let lemma_one_extend #n a =
   assert (r = from_vec eav);
   from_vec_propriety #(n+1) eav 1;
   assert (r = pow2 n + a)
-#pop-options
 
 #push-options "--fuel 1 --ifuel 0 --z3rlimit 40"
 let lemma_lognot_zero_ext #n a =
@@ -550,7 +538,6 @@ let lemma_lognot_one_ext #n a =
   let neav_l = Seq.append hd0 nav in
   Seq.Base.lemma_eq_elim neav_l neav_r
 
-#push-options "--z3rlimit 60"
 let rec lemma_lognot_value_mod #n a =
     if n = 1 then () else
     begin
@@ -586,7 +573,6 @@ let rec lemma_lognot_value_mod #n a =
         lemma_one_extend tl
       end
     end
-#pop-options
 
 let lemma_lognot_value_zero #n a =
   let p = pow2 n in
@@ -609,16 +595,13 @@ let lemma_lognot_value_zero #n a =
   }
 #pop-options
 
-#push-options "--z3rlimit 150"
 private
 val lemma_mod_variation: #n:pos -> a:uint_t n ->
   Lemma (a <> 0 ==> ((-a) % pow2 n) - 1 % pow2 n = (((-a) % pow2 n) - 1) % pow2 n)
 let lemma_mod_variation #n a = assert (pow2 n =!= 0)
-#pop-options
 
 let lemma_one_mod_pow2 #n = ()
 
-#push-options "--z3rlimit 50"
 private
 val lemma_lognot_value_variation: #n:pos -> a:uint_t n{a <> 0} ->
   Lemma (lognot a = (-a) % pow2 n - 1 % pow2 n)
@@ -635,7 +618,6 @@ let lemma_lognot_value_variation #n a =
     == { FStar.Math.Lemmas.lemma_mod_sub_1 a p }
     (-a) % p - 1 % p;
   }
-#pop-options
 
 let lemma_lognot_value_nonzero #n a =
   let p = pow2 n in

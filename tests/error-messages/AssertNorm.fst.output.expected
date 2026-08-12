@@ -2,9 +2,10 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int) (y : Prims.int) (z : Prims.int)
-  - VC =
-      x + x == y + y /\
-      (forall (pure_result: Prims.unit). x + x == y + y ==> x + y == y + x)
+  - Failed to prove: x + x == y + y
+  - In context:
+      x: Prims.int
+      y: Prims.int
+      z: Prims.int
   - See also AssertNorm.fst(7,14-7,30)
 

@@ -3,9 +3,9 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___0 : Prims.unit)
-  - VC = Prims.l_False
-  - Also see: Prims.fst(642,18-642,24)
+  - Failed to prove: Prims.l_False
+  - In context: uu___0: Prims.unit
+  - Also see: Prims.fst(478,18-478,24)
 
 * Info at Bug94.fst(16,16-16,17):
   - Expected failure:
@@ -16,12 +16,12 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-      (uu___0 : Prims.unit)
-      (hundred
-        :
-        b: FStar.Ghost.erased Prims.int {b <> 0}
-          -> Prims.GTot (FStar.Ghost.erased Prims.int))
-      (__ : Prims.squash (hundred == Bug94.divide 100)) (__ : Prims.unit)
-  - VC = Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context:
+      uu___0: Prims.unit
+      hundred:
+      b: FStar.Ghost.erased Prims.int {b <> 0}
+          -> Prims.GTot (FStar.Ghost.erased Prims.int)
+      __: Prims.squash (hundred == Bug94.divide 100)
+      __: Prims.unit
 

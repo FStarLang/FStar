@@ -24,7 +24,7 @@ let split_lem #a #b sa sb = ()
 let imp_intro_lem #a #b f =
   Classical.arrow_to_impl #a #b f
 
-let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
+let __lemma_to_squash (#req #ens : prop) (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
   h ()
 
 let vbind #p #q sq f = f sq

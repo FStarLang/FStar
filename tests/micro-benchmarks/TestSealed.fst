@@ -32,7 +32,7 @@ let test3 (x y : int) =
 
 (* Sealed values do not have to be equal at
 different types. *)
-[@@expect_failure [19]]
+[@@expect_failure [19; 19]]
 let test4 (x : int) (y : nat) =
   assert (seal #int x == seal #nat y)
 

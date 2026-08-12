@@ -20,6 +20,6 @@ module ArgsAndQuals
  * see Guido's comment on #1486 on July 30 2018,
  * https://github.com/FStarLang/FStar/issues/1486#issuecomment-408958279 *)
 
-val test1 : #a:Type -> #wp1:pure_wp a -> $t1:(unit -> PURE a wp1) -> PURE a wp1
+val test1 : #a:Type -> #pre1:prop -> $t1:(unit -> PURE a (requires pre1)) -> PURE a (requires pre1)
 [@@(expect_failure [91])]
 let test1 #_ #_ #_ t1 = t1 ()

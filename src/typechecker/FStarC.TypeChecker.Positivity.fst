@@ -666,8 +666,7 @@ let mutuals_unused_in_type (mutuals:list lident) t : ML _ =
     | Total t -> ok t
     | GTotal t -> ok t
     | Comp c ->
-      ok c.result_typ &&
-      List.for_all (fun (a, _) -> ok a) c.effect_args              
+      ok c.result_typ && ok c.comp_pre && ok c.comp_post
   in
   ok t
 
@@ -877,7 +876,14 @@ let rec ty_strictly_positive_in_type (env:env)
           and that it is strictly positive in the return type");
        let sbs, c = U.arrow_formals_comp in_type in
        let return_type = FStarC.Syntax.Util.comp_result c in
-       let effect_args = U.comp_effect_args c in
+       (* Look under the binder of the postcondition: its (null) binder is
+          annotated with the result type, which would otherwise make every
+          computation type look like it mentions the mutuals. *)
+       let post_body =
+         match (SS.compress (U.comp_post c)).n with
+         | Tm_abs {body} -> body
+         | _ -> U.comp_post c in
+       let effect_args = [U.comp_pre c |> S.as_arg; post_body |> S.as_arg] in
        let ty_lid_not_to_left_of_arrow =
             L.for_all 
                (fun ({binder_bv=b}) -> mutuals_unused_in_type mutuals b.sort)

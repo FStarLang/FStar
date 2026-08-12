@@ -16,26 +16,15 @@
 
 module FStarC.Effect
 
-new_effect ALL = ALL_h unit
+assume effect ALL
 
-let all_pre = all_pre_h unit
-let all_post' (a : Type) (pre:prop) = all_post_h' unit a pre
-let all_post (a : Type) = all_post_h unit a
-let all_wp (a : Type) = all_wp_h unit a
+assume sub_effect PURE ~> ALL
+assume sub_effect GHOST ~> ALL
+assume sub_effect DIV ~> ALL
 
-let lift_pure_all (a:Type) (p:pure_wp a)
-  : all_wp a
-  = fun post h -> p (fun x -> post (V x) h)
+effect All (a:Type) = ALL a
 
-sub_effect PURE ~> ALL { lift_wp = lift_pure_all }
-
-sub_effect DIV ~> ALL { lift_wp = lift_pure_all }
-
-effect All (a:Type) (pre:all_pre) (post:(h:unit -> Tot (all_post' a (pre h)))) =
-  ALL a
-      (fun (p : all_post a) (h : unit) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1))
-
-effect ML (a:Type) = ALL a (fun (p:all_post a) (_:unit) -> forall (a:result a) (h:unit). p a h)
+effect ML (a:Type) = ALL a
 
 new
 val ref (a:Type) : Type0

@@ -205,7 +205,7 @@ let repeat_gen_blocks_multi_vec_step #inp_t w blocksize n hi_f inp a a_vec f f_v
 
   assert (repeat_gen_blocks_multi_vec_equiv_pre w blocksize n hi_f a a_vec f f_v normalize_v i b_v acc_v)
 
-#push-options "--z3rlimit_factor 16 --retry 2"
+#push-options "--retry 2"
 let lemma_repeat_gen_blocks_multi_vec #inp_t w blocksize n hi_f inp a a_vec f f_v normalize_v acc_v0 =
   let len = length inp in
   let blocksize_v = w * blocksize in
@@ -235,7 +235,7 @@ let lemma_repeat_gen_blocks_multi_vec #inp_t w blocksize n hi_f inp a a_vec f f_
 // End of proof of lemma_repeat_gen_blocks_multi_vec
 ////////////////////////
 
-#push-options "--z3rlimit 100 --retry 2"
+#push-options "--retry 2"
 let lemma_repeat_gen_blocks_vec #inp_t #c w blocksize inp n a a_vec f l f_v l_v normalize_v acc_v0 =
   let len = length inp in
   let blocksize_v = w * blocksize in
@@ -425,7 +425,6 @@ let normalize_v_map #a w blocksize n i b =
   b
 
 
-#push-options "--z3rlimit 75"
 let map_blocks_multi_vec_equiv_pre
   (#a:Type)
   (w:pos)
@@ -442,7 +441,6 @@ let map_blocks_multi_vec_equiv_pre
   Math.Lemmas.lemma_mult_le_right w (i + 1) n;
   repeat_gen_blocks_map_f #a (w * blocksize) n f_v i b_v acc_v `Seq.equal`
   map_blocks_multi_acc blocksize (w * i) hi_f w b_v f acc_v
-#pop-options
 
 // It means the following
 // Seq.append acc_v (f_v i b_v) ==
@@ -463,7 +461,6 @@ val lemma_map_blocks_multi_vec_equiv_pre_k:
   -> acc_v:map_blocks_a a (w * blocksize) n i ->
   Lemma (map_blocks_multi_vec_equiv_pre #a w blocksize n hi_f f f_v i b_v acc_v)
 
-#push-options "--z3rlimit 150"
 let lemma_map_blocks_multi_vec_equiv_pre_k #a w blocksize n hi_f f f_v i b_v pre acc_v =
   //let lp = repeat_gen_blocks_map_f #a (w * blocksize) n f_v i b_v acc_v in
   //assert (lp == Seq.append acc_v (f_v i b_v));
@@ -494,7 +491,6 @@ let lemma_map_blocks_multi_vec_equiv_pre_k #a w blocksize n hi_f f f_v i b_v pre
     (==) { Seq.lemma_eq_intro (Seq.append acc_v (f_v i b_v)) (repeat_gen_blocks_map_f #a (w * blocksize) n f_v i b_v acc_v) }
     repeat_gen_blocks_map_f #a (w * blocksize) n f_v i b_v acc_v;
     }
-#pop-options
 
 val lemma_map_blocks_multi_vec_equiv_pre:
     #a:Type
@@ -517,14 +513,12 @@ val lemma_map_blocks_multi_vec_equiv_pre:
      (repeat_gen_blocks_map_f (w * blocksize) n f_v)
      (normalize_v_map #a w blocksize n) i b_v acc_v)
 
-#push-options "--z3rlimit 75"
 let lemma_map_blocks_multi_vec_equiv_pre #a w blocksize n hi_f f f_v pre i b_v acc_v =
   lemma_map_blocks_multi_vec_equiv_pre_k #a w blocksize n hi_f f f_v i b_v pre acc_v;
   Math.Lemmas.cancel_mul_div w blocksize;
   Math.Lemmas.cancel_mul_mod w blocksize;
   Math.Lemmas.lemma_mult_le_right w (i + 1) n;
   map_blocks_multi_acc_is_repeat_gen_blocks_multi blocksize (w * i) hi_f w b_v f acc_v
-#pop-options
 
 let lemma_map_blocks_multi_vec #a w blocksize n inp f f_v =
   let blocksize_v = w * blocksize in
@@ -557,7 +551,6 @@ let lemma_map_blocks_multi_vec #a w blocksize n inp f f_v =
 // End of proof of map_blocks_multi_vec lemma
 ////////////////////////
 
-#push-options "--z3rlimit 75"
 let map_blocks_vec_equiv_pre
   (#a:Type)
   (w:pos)
@@ -577,7 +570,6 @@ let map_blocks_vec_equiv_pre
 
   repeat_gen_blocks_map_l (w * blocksize) n l_v n rem b_v acc_v `Seq.equal`
   map_blocks_acc blocksize (w * n) (w * n + w) b_v f l acc_v
-#pop-options
 
 val lemma_map_blocks_vec_equiv_pre_k_aux:
     #a:Type

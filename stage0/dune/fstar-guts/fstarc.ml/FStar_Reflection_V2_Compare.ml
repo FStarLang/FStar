@@ -69,6 +69,38 @@ let _ =
                   (FStarC_TypeChecker_NBETerm.e_unsupported ()) compare_fv
                   (FStarC_Ident.lid_of_str
                      "FStar.Reflection.V2.Compare.compare_fv") cb us args))
+let compare_int_signedness (s1 : FStarC_Reflection_V2_Data.int_signedness)
+  (s2 : FStarC_Reflection_V2_Data.int_signedness) : FStar_Order.order=
+  match (s1, s2) with
+  | (FStarC_Reflection_V2_Data.Signed, FStarC_Reflection_V2_Data.Signed) ->
+      FStar_Order.Eq
+  | (FStarC_Reflection_V2_Data.Unsigned, FStarC_Reflection_V2_Data.Unsigned)
+      -> FStar_Order.Eq
+  | (FStarC_Reflection_V2_Data.Signed, FStarC_Reflection_V2_Data.Unsigned) ->
+      FStar_Order.Lt
+  | (FStarC_Reflection_V2_Data.Unsigned, FStarC_Reflection_V2_Data.Signed) ->
+      FStar_Order.Gt
+let compare_int_width (w1 : FStarC_Reflection_V2_Data.int_width)
+  (w2 : FStarC_Reflection_V2_Data.int_width) : FStar_Order.order=
+  match (w1, w2) with
+  | (FStarC_Reflection_V2_Data.Int8, FStarC_Reflection_V2_Data.Int8) ->
+      FStar_Order.Eq
+  | (FStarC_Reflection_V2_Data.Int16, FStarC_Reflection_V2_Data.Int16) ->
+      FStar_Order.Eq
+  | (FStarC_Reflection_V2_Data.Int32, FStarC_Reflection_V2_Data.Int32) ->
+      FStar_Order.Eq
+  | (FStarC_Reflection_V2_Data.Int64, FStarC_Reflection_V2_Data.Int64) ->
+      FStar_Order.Eq
+  | (FStarC_Reflection_V2_Data.Sizet, FStarC_Reflection_V2_Data.Sizet) ->
+      FStar_Order.Eq
+  | (FStarC_Reflection_V2_Data.Int8, uu___) -> FStar_Order.Lt
+  | (uu___, FStarC_Reflection_V2_Data.Int8) -> FStar_Order.Gt
+  | (FStarC_Reflection_V2_Data.Int16, uu___) -> FStar_Order.Lt
+  | (uu___, FStarC_Reflection_V2_Data.Int16) -> FStar_Order.Gt
+  | (FStarC_Reflection_V2_Data.Int32, uu___) -> FStar_Order.Lt
+  | (uu___, FStarC_Reflection_V2_Data.Int32) -> FStar_Order.Gt
+  | (FStarC_Reflection_V2_Data.Int64, uu___) -> FStar_Order.Lt
+  | (uu___, FStarC_Reflection_V2_Data.Int64) -> FStar_Order.Gt
 let compare_const (c1 : FStarC_Reflection_V2_Data.vconst)
   (c2 : FStarC_Reflection_V2_Data.vconst) : FStar_Order.order=
   match (c1, c2) with
@@ -76,6 +108,14 @@ let compare_const (c1 : FStarC_Reflection_V2_Data.vconst)
       FStar_Order.Eq
   | (FStarC_Reflection_V2_Data.C_Int i, FStarC_Reflection_V2_Data.C_Int j) ->
       FStar_Order.order_from_int (i - j)
+  | (FStarC_Reflection_V2_Data.C_MachineInt (i1, s1, w1),
+     FStarC_Reflection_V2_Data.C_MachineInt (i2, s2, w2)) ->
+      let c = FStar_Order.order_from_int (i1 - i2) in
+      if c <> FStar_Order.Eq
+      then c
+      else
+        (let c3 = compare_int_signedness s1 s2 in
+         if c3 <> FStar_Order.Eq then c3 else compare_int_width w1 w2)
   | (FStarC_Reflection_V2_Data.C_True, FStarC_Reflection_V2_Data.C_True) ->
       FStar_Order.Eq
   | (FStarC_Reflection_V2_Data.C_False, FStarC_Reflection_V2_Data.C_False) ->
@@ -102,6 +142,10 @@ let compare_const (c1 : FStarC_Reflection_V2_Data.vconst)
   | (uu___, FStarC_Reflection_V2_Data.C_Unit) -> FStar_Order.Gt
   | (FStarC_Reflection_V2_Data.C_Int uu___, uu___1) -> FStar_Order.Lt
   | (uu___, FStarC_Reflection_V2_Data.C_Int uu___1) -> FStar_Order.Gt
+  | (FStarC_Reflection_V2_Data.C_MachineInt (uu___, uu___1, uu___2), uu___3)
+      -> FStar_Order.Lt
+  | (uu___, FStarC_Reflection_V2_Data.C_MachineInt (uu___1, uu___2, uu___3))
+      -> FStar_Order.Gt
   | (FStarC_Reflection_V2_Data.C_True, uu___) -> FStar_Order.Lt
   | (uu___, FStarC_Reflection_V2_Data.C_True) -> FStar_Order.Gt
   | (FStarC_Reflection_V2_Data.C_False, uu___) -> FStar_Order.Lt

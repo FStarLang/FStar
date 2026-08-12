@@ -140,20 +140,13 @@ let effect_as_etag :
             match ed_opt with
             | FStar_Pervasives_Native.Some (ed, qualifiers) ->
                 let uu___1 =
-                  FStarC_TypeChecker_Env.is_reifiable_effect
-                    (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
-                    ed.FStarC_Syntax_Syntax.mname in
-                if uu___1
-                then
                   let uu___2 =
-                    let uu___3 =
-                      get_extraction_mode
-                        (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
-                        ed.FStarC_Syntax_Syntax.mname in
-                    uu___3 = FStarC_Syntax_Syntax.Extract_reify in
-                  (if uu___2
-                   then FStarC_Extraction_ML_Syntax.E_PURE
-                   else FStarC_Extraction_ML_Syntax.E_IMPURE)
+                    get_extraction_mode
+                      (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
+                      ed.FStarC_Syntax_Syntax.mname in
+                  uu___2 = FStarC_Syntax_Syntax.Extract_reify in
+                if uu___1
+                then FStarC_Extraction_ML_Syntax.E_PURE
                 else FStarC_Extraction_ML_Syntax.E_IMPURE
             | FStar_Pervasives_Native.None ->
                 FStarC_Extraction_ML_Syntax.E_IMPURE))
@@ -2409,7 +2402,6 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                   FStarC_Syntax_Syntax.rc_opt1 = FStar_Pervasives_Native.None
                 });
            FStarC_Syntax_Syntax.pos = (head.FStarC_Syntax_Syntax.pos);
-           FStarC_Syntax_Syntax.vars = (head.FStarC_Syntax_Syntax.vars);
            FStarC_Syntax_Syntax.hash_code =
              (head.FStarC_Syntax_Syntax.hash_code)
          }
@@ -2839,10 +2831,9 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
              | (FStarC_Syntax_Syntax.Tm_uinst
                 ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
                    FStarC_Syntax_Syntax.pos = uu___3;
-                   FStarC_Syntax_Syntax.vars = uu___4;
-                   FStarC_Syntax_Syntax.hash_code = uu___5;_},
-                 uu___6),
-                uu___7) when
+                   FStarC_Syntax_Syntax.hash_code = uu___4;_},
+                 uu___5),
+                uu___6) when
                  (FStarC_Syntax_Syntax.fv_eq_lid fv
                     FStarC_Parser_Const.tac_bind_lid)
                    ||
@@ -2850,25 +2841,25 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                       FStarC_Parser_Const.lift_div_tac_lid)
                  ->
                  let lid = FStarC_Syntax_Syntax.lid_of_fv fv in
-                 let uu___8 =
+                 let uu___7 =
                    FStarC_TypeChecker_Env.lookup_definition
                      [FStarC_TypeChecker_Env.Unfold
                         FStarC_Syntax_Syntax.delta_constant]
                      (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
                      (FStarC_Syntax_Syntax.lid_of_fv fv) in
-                 (match uu___8 with
+                 (match uu___7 with
                   | FStar_Pervasives_Native.Some (us, defn) ->
-                      let uu___9 =
+                      let uu___8 =
                         FStarC_Syntax_Syntax.mk_Tm_app defn args
                           t.FStarC_Syntax_Syntax.pos in
-                      term_as_mlexpr g uu___9
+                      term_as_mlexpr g uu___8
                   | FStar_Pervasives_Native.None ->
-                      let uu___9 =
-                        let uu___10 =
+                      let uu___8 =
+                        let uu___9 =
                           FStarC_Class_Show.show
                             FStarC_Syntax_Syntax.showable_fv fv in
-                        Prims.strcat "cannot lookup definition of" uu___10 in
-                      FStarC_Effect.failwith uu___9)
+                        Prims.strcat "cannot lookup definition of" uu___9 in
+                      FStarC_Effect.failwith uu___8)
              | (FStarC_Syntax_Syntax.Tm_fvar fv, uu___3) when
                  (FStarC_Syntax_Syntax.fv_eq_lid fv
                     FStarC_Parser_Const.tac_bind_lid)
@@ -2964,8 +2955,6 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                           FStarC_Syntax_Syntax.n = uu___6;
                           FStarC_Syntax_Syntax.pos =
                             (head.FStarC_Syntax_Syntax.pos);
-                          FStarC_Syntax_Syntax.vars =
-                            (head.FStarC_Syntax_Syntax.vars);
                           FStarC_Syntax_Syntax.hash_code =
                             (head.FStarC_Syntax_Syntax.hash_code)
                         } in
@@ -3611,7 +3600,6 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
               {
                 FStarC_Syntax_Syntax.n = maybe_rewritten_let;
                 FStarC_Syntax_Syntax.pos = (top1.FStarC_Syntax_Syntax.pos);
-                FStarC_Syntax_Syntax.vars = (top1.FStarC_Syntax_Syntax.vars);
                 FStarC_Syntax_Syntax.hash_code =
                   (top1.FStarC_Syntax_Syntax.hash_code)
               } in

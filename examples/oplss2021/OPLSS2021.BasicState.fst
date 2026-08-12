@@ -53,67 +53,36 @@ let assoc a b c s (f:st a s) (g:a -> st b s) (h:b -> st c s)
            bind _ _ _ f (fun x -> bind _ _ _ (g x) h))
   = ()
 
-total // Enforce termination of ST programs
-reflectable // Allow coercing `st a s` functions to `ST a s` computations
-reifiable // Allow coercing `ST a s` computations to `st a s` functions
-effect {
-  ST (a:Type) (s:Type0)
-  with {
-  repr = st;      // the underlying representation is `st a s`
-  return; // with the return and bind shown above
-  bind;
-  get;
-  put
- }
-}
-
-/// Some actions for our new effect
-
-// let g #s : st s s = fun s -> s, s
-// /// get: read the current state
-// let get #s ()
-//   : ST s s
-//   = ST?.reflect g
-
-// let p #s x : st unit s = fun _ -> (), x
-// /// put: write the current state
-// let put #s (x:s)
-//   : ST unit s
-//   = ST?.reflect (p x)
-
-/// One technicality:
+/// F* used to let you package such a monad up as an *effect*, indexed by
+/// the state type, with `get` and `put` as effect actions:
 ///
-/// Pure terms in F* are given the type `pure a wp`
-/// where (wp : (a -> prop) -> prop)
-/// is a WP transformer for pure computations
+///   total reflectable reifiable effect {
+///     ST (a:Type) (s:Type0) with { repr = st; return; bind; get; put }
+///   }
 ///
-/// `pure a wp` is the type of a conditionally pure term it is
-/// equivalent to `Tot a`, but only when `wp (fun _ -> True)` is
-/// provable
-let pure a wp = unit -> PURE a wp
-
-/// We need a way to lift such pure computations
-/// into our new effect
-let lift_pure_st a s wp (f : pure a wp)
-  : Pure (st a s)
-         (requires wp (fun _ -> True))
-         (ensures fun _ -> True)
-  = fun s -> f(), s
-
-/// This tells F* how to lift PURE a wp
-/// terms to our new effect ST
-sub_effect PURE ~> ST = lift_pure_st
-
-/// Now we get to write ST terms in a direct syntax and F* elaborates
-/// them internally using the monadic definitions we've given
-let test (x:int) : ST int int = 
-  let y = ST?.get () in
-  ST?.put (x + y);
-  y
-
-let incr () : ST unit int = ST?.put (ST?.get() + 1)
-/// Now, all that work just to define a plain state monad doesn't seem
-/// like adding much beyond plain old do notation
+/// Effects are now just names, specified by a pre- and a postcondition.
+/// An effect definition survives only to guide extraction and
+/// reification, it may not be indexed, and it may only declare `repr`,
+/// `return` and `bind` --- there are no actions.
 ///
-/// But, we'll see next how this helps when defining fancier indexed
-/// effects
+/// So we program with `bind` directly.  The `let!` notation makes that
+/// pleasant, and it is really all the effect gave us here.
+
+let ( let! ) (#a #b:Type) (#s:Type0) (f:st a s) (g:a -> st b s)
+  : st b s
+  = bind a b s f g
+
+/// A pure computation is a stateful one that does not touch the state
+let lift_pure_st (a:Type) (s:Type0) (f : unit -> a)
+  : st a s
+  = fun s -> f (), s
+
+/// Now we get to write stateful terms in a direct syntax
+let test (x:int) : st int int =
+  let! y = get () in
+  let! _ = put (x + y) in
+  return _ y _
+
+let incr () : st unit int =
+  let! x = get () in
+  put (x + 1)

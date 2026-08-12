@@ -1274,10 +1274,7 @@ let build_initial_repl_state (filename: string) =
 let interactive_mode' init_st =
   write_hello ();
 
-  let exit_code =
-    let fn = List.hd (Options.file_list ()) in
-    SMTEncoding.Solver.with_hints_db fn (fun () -> go init_st)
-  in
+  let exit_code = go init_st in
   if exit_code <> 0 then exit exit_code
 
 let interactive_mode (filename:string): ML unit =

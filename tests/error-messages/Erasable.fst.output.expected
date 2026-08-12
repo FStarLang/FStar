@@ -6,14 +6,14 @@
 * Info at Erasable.fst(18,2-20,15):
   - Expected failure:
   - Computed type Prims.int
-    and effect Prims.GHOST
+    and effect GTot
     is not compatible with the annotated type Prims.int
     and effect Tot
 
 * Info at Erasable.fst(28,42-28,52):
   - Expected failure:
   - Computed type Prims.int
-    and effect GTot
+    and effect Prims.GHOST
     is not compatible with the annotated type Prims.int
     and effect Tot
 

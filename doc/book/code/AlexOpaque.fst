@@ -81,19 +81,18 @@ let find_above_for_g1 (m:nat) : Lemma(exists (i:nat). abs(g i) > m) =
 //SNIPPET_END: trigger_exists$
 
 //SNIPPET_START: trigger_nat$
-let trigger_nat (x:nat) = True
 let find_above_for_g2 (m:nat) : Lemma(exists (i:nat). abs(g i) > m) = 
   instantiate_unbounded f m;
   eliminate exists (n:nat). abs(f n) > m
   with begin
     let m1 = abs(f n) in
-    if n>=1 then assert (trigger_nat (n-1))
+    if n>=1 then assert (has_type (n-1) nat)
     else begin
       instantiate_unbounded f m1;
       eliminate exists (n1:nat). abs (f n1) > m1
       with 
       begin
-        assert (trigger_nat (n1-1))
+        assert (has_type (n1-1) nat)
       end 
     end 
   end 

@@ -11,7 +11,6 @@ module I32  = FStar.Int32
 module U8   = FStar.UInt8
 module U32  = FStar.UInt32
 
-#set-options "--z3rlimit 40"
 
 let check s (b:bool) : ML unit =
     if not b then failwith s

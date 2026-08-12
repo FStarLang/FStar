@@ -289,7 +289,9 @@ and eq_comp env (c1 c2:comp) : ML eq_result =
              eq_and (equal_if (Ident.lid_equals ct1.effect_name ct2.effect_name))
                     (fun _ ->
                       eq_and (eq_tm env ct1.result_typ ct2.result_typ)
-                             (fun _ -> eq_args env ct1.effect_args ct2.effect_args)))
+                             (fun _ ->
+                               eq_and (eq_tm env ct1.comp_pre ct2.comp_pre)
+                                      (fun _ -> eq_tm env ct1.comp_post ct2.comp_post))))
                              //ignoring cflags
   | _ -> NotEqual
 

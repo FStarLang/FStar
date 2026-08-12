@@ -743,40 +743,18 @@ let uu___is_DeclAttributes (projectee : decoration) : Prims.bool=
   match projectee with | DeclAttributes _0 -> true | uu___ -> false
 let __proj__DeclAttributes__item___0 (projectee : decoration) :
   term Prims.list= match projectee with | DeclAttributes _0 -> _0
-type lift_op =
-  | NonReifiableLift of term 
-  | ReifiableLift of (term * term) 
-  | LiftForFree of term 
-let uu___is_NonReifiableLift (projectee : lift_op) : Prims.bool=
-  match projectee with | NonReifiableLift _0 -> true | uu___ -> false
-let __proj__NonReifiableLift__item___0 (projectee : lift_op) : term=
-  match projectee with | NonReifiableLift _0 -> _0
-let uu___is_ReifiableLift (projectee : lift_op) : Prims.bool=
-  match projectee with | ReifiableLift _0 -> true | uu___ -> false
-let __proj__ReifiableLift__item___0 (projectee : lift_op) : (term * term)=
-  match projectee with | ReifiableLift _0 -> _0
-let uu___is_LiftForFree (projectee : lift_op) : Prims.bool=
-  match projectee with | LiftForFree _0 -> true | uu___ -> false
-let __proj__LiftForFree__item___0 (projectee : lift_op) : term=
-  match projectee with | LiftForFree _0 -> _0
 type lift =
   {
   msource: FStarC_Ident.lid ;
   mdest: FStarC_Ident.lid ;
-  lift_op: lift_op ;
-  braced: Prims.bool }
+  lift_op: term FStar_Pervasives_Native.option }
 let __proj__Mklift__item__msource (projectee : lift) : FStarC_Ident.lid=
-  match projectee with
-  | { msource; mdest; lift_op = lift_op1; braced;_} -> msource
+  match projectee with | { msource; mdest; lift_op;_} -> msource
 let __proj__Mklift__item__mdest (projectee : lift) : FStarC_Ident.lid=
-  match projectee with
-  | { msource; mdest; lift_op = lift_op1; braced;_} -> mdest
-let __proj__Mklift__item__lift_op (projectee : lift) : lift_op=
-  match projectee with
-  | { msource; mdest; lift_op = lift_op1; braced;_} -> lift_op1
-let __proj__Mklift__item__braced (projectee : lift) : Prims.bool=
-  match projectee with
-  | { msource; mdest; lift_op = lift_op1; braced;_} -> braced
+  match projectee with | { msource; mdest; lift_op;_} -> mdest
+let __proj__Mklift__item__lift_op (projectee : lift) :
+  term FStar_Pervasives_Native.option=
+  match projectee with | { msource; mdest; lift_op;_} -> lift_op
 type pragma =
   | ShowOptions 
   | SetOptions of Prims.string 
@@ -892,11 +870,7 @@ type decl' =
   | Val of (FStarC_Ident.ident * term) 
   | Exception of (FStarC_Ident.ident * term FStar_Pervasives_Native.option) 
   | NewEffect of effect_decl 
-  | LayeredEffect of effect_decl 
   | SubEffect of lift 
-  | Polymonadic_bind of (FStarC_Ident.lid * FStarC_Ident.lid *
-  FStarC_Ident.lid * term) 
-  | Polymonadic_subcomp of (FStarC_Ident.lid * FStarC_Ident.lid * term) 
   | Pragma of pragma 
   | Assume of (FStarC_Ident.ident * term) 
   | Splice of (Prims.bool * FStarC_Ident.ident Prims.list * term) 
@@ -912,7 +886,8 @@ and decl =
   quals: qualifiers ;
   attrs: attributes_ }
 and effect_decl =
-  | DefineEffect of (FStarC_Ident.ident * binder Prims.list * term * decl
+  | DeclareEffect of (FStarC_Ident.ident * binder Prims.list) 
+  | DefineEffect of (FStarC_Ident.ident * binder Prims.list * decl
   Prims.list) 
   | RedefineEffect of (FStarC_Ident.ident * binder Prims.list * term) 
 let uu___is_TopLevelModule (projectee : decl') : Prims.bool=
@@ -961,24 +936,10 @@ let uu___is_NewEffect (projectee : decl') : Prims.bool=
   match projectee with | NewEffect _0 -> true | uu___ -> false
 let __proj__NewEffect__item___0 (projectee : decl') : effect_decl=
   match projectee with | NewEffect _0 -> _0
-let uu___is_LayeredEffect (projectee : decl') : Prims.bool=
-  match projectee with | LayeredEffect _0 -> true | uu___ -> false
-let __proj__LayeredEffect__item___0 (projectee : decl') : effect_decl=
-  match projectee with | LayeredEffect _0 -> _0
 let uu___is_SubEffect (projectee : decl') : Prims.bool=
   match projectee with | SubEffect _0 -> true | uu___ -> false
 let __proj__SubEffect__item___0 (projectee : decl') : lift=
   match projectee with | SubEffect _0 -> _0
-let uu___is_Polymonadic_bind (projectee : decl') : Prims.bool=
-  match projectee with | Polymonadic_bind _0 -> true | uu___ -> false
-let __proj__Polymonadic_bind__item___0 (projectee : decl') :
-  (FStarC_Ident.lid * FStarC_Ident.lid * FStarC_Ident.lid * term)=
-  match projectee with | Polymonadic_bind _0 -> _0
-let uu___is_Polymonadic_subcomp (projectee : decl') : Prims.bool=
-  match projectee with | Polymonadic_subcomp _0 -> true | uu___ -> false
-let __proj__Polymonadic_subcomp__item___0 (projectee : decl') :
-  (FStarC_Ident.lid * FStarC_Ident.lid * term)=
-  match projectee with | Polymonadic_subcomp _0 -> _0
 let uu___is_Pragma (projectee : decl') : Prims.bool=
   match projectee with | Pragma _0 -> true | uu___ -> false
 let __proj__Pragma__item___0 (projectee : decl') : pragma=
@@ -1017,10 +978,15 @@ let __proj__Mkdecl__item__quals (projectee : decl) : qualifiers=
   match projectee with | { d; drange; quals; attrs;_} -> quals
 let __proj__Mkdecl__item__attrs (projectee : decl) : attributes_=
   match projectee with | { d; drange; quals; attrs;_} -> attrs
+let uu___is_DeclareEffect (projectee : effect_decl) : Prims.bool=
+  match projectee with | DeclareEffect _0 -> true | uu___ -> false
+let __proj__DeclareEffect__item___0 (projectee : effect_decl) :
+  (FStarC_Ident.ident * binder Prims.list)=
+  match projectee with | DeclareEffect _0 -> _0
 let uu___is_DefineEffect (projectee : effect_decl) : Prims.bool=
   match projectee with | DefineEffect _0 -> true | uu___ -> false
 let __proj__DefineEffect__item___0 (projectee : effect_decl) :
-  (FStarC_Ident.ident * binder Prims.list * term * decl Prims.list)=
+  (FStarC_Ident.ident * binder Prims.list * decl Prims.list)=
   match projectee with | DefineEffect _0 -> _0
 let uu___is_RedefineEffect (projectee : effect_decl) : Prims.bool=
   match projectee with | RedefineEffect _0 -> true | uu___ -> false
@@ -2282,21 +2248,12 @@ let decl'_to_string (d : decl') : Prims.string=
   | Val (i, uu___) -> Prims.strcat "val " (FStarC_Ident.string_of_id i)
   | Exception (i, uu___) ->
       Prims.strcat "exception " (FStarC_Ident.string_of_id i)
-  | NewEffect (DefineEffect (i, uu___, uu___1, uu___2)) ->
-      Prims.strcat "new_effect " (FStarC_Ident.string_of_id i)
+  | NewEffect (DeclareEffect (i, uu___)) ->
+      Prims.strcat "effect " (FStarC_Ident.string_of_id i)
+  | NewEffect (DefineEffect (i, uu___, uu___1)) ->
+      Prims.strcat "effect " (FStarC_Ident.string_of_id i)
   | NewEffect (RedefineEffect (i, uu___, uu___1)) ->
-      Prims.strcat "new_effect " (FStarC_Ident.string_of_id i)
-  | LayeredEffect (DefineEffect (i, uu___, uu___1, uu___2)) ->
-      Prims.strcat "layered_effect " (FStarC_Ident.string_of_id i)
-  | LayeredEffect (RedefineEffect (i, uu___, uu___1)) ->
-      Prims.strcat "layered_effect " (FStarC_Ident.string_of_id i)
-  | Polymonadic_bind (l1, l2, l3, uu___) ->
-      FStarC_Format.fmt3 "polymonadic_bind (%s, %s) |> %s"
-        (FStarC_Ident.string_of_lid l1) (FStarC_Ident.string_of_lid l2)
-        (FStarC_Ident.string_of_lid l3)
-  | Polymonadic_subcomp (l1, l2, uu___) ->
-      FStarC_Format.fmt2 "polymonadic_subcomp %s <: %s"
-        (FStarC_Ident.string_of_lid l1) (FStarC_Ident.string_of_lid l2)
+      Prims.strcat "effect " (FStarC_Ident.string_of_id i)
   | Splice (is_typed, ids, t) ->
       let uu___ =
         let uu___1 =
@@ -3457,27 +3414,6 @@ let pp_decl' (d : decl') : FStar_Pprint.document=
           uu___2 in
       ctor "Exception" uu___
   | NewEffect eff_def -> ctor "NewEffect" []
-  | LayeredEffect eff_def -> ctor "LayeredEffect" []
-  | Polymonadic_bind (l1, l2, l3, t) ->
-      let uu___ =
-        let uu___1 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l1 in
-        let uu___2 =
-          let uu___3 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l2 in
-          let uu___4 =
-            let uu___5 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l3 in
-            let uu___6 = let uu___7 = pp_term t in [uu___7] in uu___5 ::
-              uu___6 in
-          uu___3 :: uu___4 in
-        uu___1 :: uu___2 in
-      ctor "Polymonadic_bind" uu___
-  | Polymonadic_subcomp (l1, l2, t) ->
-      let uu___ =
-        let uu___1 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l1 in
-        let uu___2 =
-          let uu___3 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l2 in
-          let uu___4 = let uu___5 = pp_term t in [uu___5] in uu___3 :: uu___4 in
-        uu___1 :: uu___2 in
-      ctor "Polymonadic_subcomp" uu___
   | Splice (is_typed, ids, t) ->
       let uu___ =
         let uu___1 =

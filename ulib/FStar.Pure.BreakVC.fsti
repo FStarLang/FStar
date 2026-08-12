@@ -1,21 +1,8 @@
 module FStar.Pure.BreakVC
 
-open FStar.Tactics
-
-let break_wp' : pure_wp' unit =
-  fun p -> spinoff (p ())
-
-val mono_lem () : Lemma (pure_wp_monotonic unit break_wp')
-
-private
-let post () : Tac unit =
-  norm [delta_fully [`%mono_lem; `%break_wp']];
-  trefl()
-
-[@@postprocess_with post]
-unfold
-let break_wp : pure_wp unit =
-  let _ = mono_lem () in
-  break_wp'
-
-val break_vc () : PURE unit break_wp
+(* With the simplified pre/postcondition-based effect system, the
+   specification of a computation is just a precondition and a
+   postcondition; there is no way to express a computation that wraps its
+   continuation's verification condition in [spinoff].  [break_vc] is
+   therefore a no-op, kept only for source compatibility. *)
+val break_vc (_:unit) : Pure unit (requires True) (ensures fun _ -> True)

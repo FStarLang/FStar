@@ -70,73 +70,85 @@ type step_result s a =
  * the assertion [frame]
  *
  *)
+/// `OPLSS2021.NDS` used to package the nondeterministic state monad up
+/// as an effect, so that this interpreter could be written in direct
+/// style.  Effect definitions may no longer be indexed, so we use the
+/// monad directly, with the `let!` notation.
+
+/// The result of one reduction step of a program of size [n]
+let sr_t (s:Type0) (a:Type) (n:nat) =
+  sr:step_result s a { Ret? sr.reduct \/ sr.n < n }
+
+let ret_sr (#s:Type0) (#a:Type) (n:nat) (sr:sr_t s a n)
+  : nds (sr_t s a n) s
+  = return _ sr _
+
 let rec step (#s:Type0) #a #n (f:m s a n)
-  : NDS (sr:step_result s a { Ret? sr.reduct \/ sr.n < n } ) s
+  : Tot (nds (sr_t s a n) s)
         (decreases n)
   = match f with
     | Ret x ->
         //Nothing to do, just return
-        Step _ (Ret x)
+        ret_sr n (Step _ (Ret x))
 
     | Act act1 k ->
         //Evaluate the action and return the continuation as the reduct
-        let s0 = get () in
+        let! s0 = get () in
         let ( b, s1 ) = act1 s0 in
-        put s1;
-        Step _ (k b)
+        let! _ = put s1 in
+        ret_sr n (Step _ (k b))
 
     | Par n0 (Ret x0)
           n1 m1
-          n k ->
-        let Step n1' m1' = step m1 in
+          nk k ->
+        let! (Step n1' m1') = step m1 in
         begin
-        match m1' with 
+        match m1' with
         | Ret x1 ->
-          Step _ k
+          ret_sr n (Step _ k)
 
-        | _ -> 
-          Step _ (Par n0 (Ret x0) n1' m1' n k)
+        | _ ->
+          ret_sr n (Step _ (Par n0 (Ret x0) n1' m1' nk k))
         end
 
-    | Par n0 m0 
+    | Par n0 m0
           n1 (Ret x1)
-          n k ->
-        let Step n0' m0' =
-            step m0 in
+          nk k ->
+        let! (Step n0' m0') = step m0 in
         begin
-        match m0' with 
+        match m0' with
         | Ret x0 ->
-          Step _ k
+          ret_sr n (Step _ k)
 
-        | _ -> 
-          Step _ (Par n0' m0' n1 (Ret x1) n k)
+        | _ ->
+          ret_sr n (Step _ (Par n0' m0' n1 (Ret x1) nk k))
         end
 
     | Par n0 m0
           n1 m1
-          n k ->
+          nk k ->
         //Otherwise, sample a boolean and choose to go left or right to pick
         //the next command to reduce
         //The two sides are symmetric
-        if sample ()
-        then let Step _ m0' = step m0 in
-             Step _ (Par _ m0' _ m1 _ k)
-        else let Step _ m1' = step m1 in
-             Step _ (Par _ m0 _ m1' _ k)
+        let! b = sample () in
+        if b
+        then let! (Step _ m0') = step m0 in
+             ret_sr n (Step _ (Par _ m0' _ m1 _ k))
+        else let! (Step _ m1') = step m1 in
+             ret_sr n (Step _ (Par _ m0 _ m1' _ k))
 
 (**
 //  * [run i f state]: Top-level driver that repeatedly invokes [step]
 //  *
-//  * The type of [run] interprets `f` as a state-passing, 
-//  * tape-sampling function is the main theorem. 
+//  * The type of [run] interprets `f` as a state-passing,
+//  * tape-sampling function is the main theorem.
 //  *
 //  *)
 let rec run #s #a #n (f:m s a n)
-  : NDS a s
+  : Tot (nds a s) (decreases n)
   = match f with
-    | Ret x -> x
-    
-    | _ ->
-      let Step _ f' = step f in
-      run f'
+    | Ret x -> return _ x _
 
+    | _ ->
+      let! (Step _ f') = step f in
+      run f'

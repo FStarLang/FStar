@@ -202,7 +202,7 @@ let k_elab_equiv
     k_elab_equiv_prefix ctxt1' k in
   k
 
-#push-options "--fuel 3 --ifuel 1 --split_queries no --z3rlimit_factor 20"
+#push-options "--fuel 3 --ifuel 1 --z3rlimit_factor 20"
 open Pulse.PP
 let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   (c1:comp{stateful_comp c1})
@@ -363,7 +363,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   | _ -> 
     (| t, c |)
 
-#push-options "--z3rlimit_factor 4 --ifuel 1 --split_queries always"
+#push-options "--z3rlimit_factor 4 --ifuel 1"
 #restart-solver
 let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
   (post_hint:post_hint_opt g)
@@ -418,14 +418,23 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
 
   k (PostHint post_hint) d
 
+let retype_checker_result_effect #g #pre
+    (p:post_hint_for_env g)
+    (p':post_hint_for_env g {
+      p'.u == p.u /\ p'.ret_ty == p.ret_ty /\ p'.post == p.post
+    })
+    (r:checker_result_t g pre (PostHint p))
+  : checker_result_t g pre (PostHint p')
+  = let (| x, g1, t, ctxt, k |) = r in
+    (| x, g1, t, ctxt, k |)
+
 //
 // Like apply_checker_result_k, but reads back the *natural* effect of the
 // checked computation instead of coercing it to the postcondition's effect.
-// This is used to infer the effect of the branches of a conditional whose
-// postcondition (and effect) were not supplied by the user: a divergent branch
-// must yield a divergent computation rather than failing to compose against the
-// tentatively-inferred stt effect (issue #4366). The result matches the given
-// postcondition's return type and postcondition, but carries its own effect.
+// A divergent computation must retain that effect rather than failing to
+// compose against a tentatively-inferred stt effect. The result matches the
+// given postcondition's universe, return type and postcondition, but carries
+// its own effect.
 //
 let apply_checker_result_k_nohint (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (PostHint post_hint))
@@ -438,10 +447,10 @@ let apply_checker_result_k_nohint (#g:env) (#ctxt:slprop) (#post_hint:post_hint_
 
   let (| y, g1, (u_ty, ty_y), pre', k |) = r in
 
-  let u_ty_y = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty_y in
-
+  // The NoHint path rechecks the result universe in smaller environments while
+  // closing binds, so keep the canonical universe supplied by the post hint.
   let d : st_typing_in_ctxt g1 pre' (PostHint post_hint) =
-    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' () (PostHint post_hint) in
+    return_in_ctxt g1 y res_ppname post_hint.u ty_y pre' () (PostHint post_hint) in
   //
   // Coerce the trailing return to NoHint so that composing it with the body
   // uses the unbiased bind rules and reports the body's real effect.

@@ -186,8 +186,6 @@ val get_field_projector_name : env -> datacon:lident -> index:int -> ML lident
 
 (* update the env functions *)
 val update_env_sub_eff : env -> sub_eff -> Range.t -> ML env
-val update_env_polymonadic_bind :
-  env -> lident -> lident -> lident -> tscheme -> indexed_effect_combinator_kind -> ML env
 
 val try_lookup_record_type : env -> lident -> ML (option DsEnv.record_or_dc)
 val head_fv_of_typ (_:env) (t:typ) : ML (option fv)

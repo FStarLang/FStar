@@ -162,9 +162,10 @@ and open_close_inverse'_spec_comp (i:nat) (c:comp_spec { ln_spec'_comp c (i - 1)
       open_close_inverse'_spec i post x;
       open_close_inverse'_spec i pats x
 
-    | Cs_Eff _ _ res args decrs ->
+    | Cs_Eff _ _ res pre post decrs ->
       open_close_inverse'_spec i res x;
-      open_close_inverse'_spec_args i args x;
+      open_close_inverse'_spec i pre x;
+      open_close_inverse'_spec i post x;
       open_close_inverse'_spec_terms i decrs x
 
 and open_close_inverse'_spec_args (i:nat)
@@ -349,9 +350,10 @@ and close_open_inverse'_spec_comp (i:nat)
       close_open_inverse'_spec i post x;
       close_open_inverse'_spec i pats x
 
-    | Cs_Eff _ _ res args decrs ->
+    | Cs_Eff _ _ res pre post decrs ->
       close_open_inverse'_spec i res x;
-      close_open_inverse'_spec_args i args x;
+      close_open_inverse'_spec i pre x;
+      close_open_inverse'_spec i post x;
       close_open_inverse'_spec_terms i decrs x
 
 and close_open_inverse'_spec_args (i:nat)
@@ -639,9 +641,10 @@ and close_comp_with_not_free_var_spec (c:comp_spec) (x:var) (i:nat)
       close_with_not_free_var_spec pre x i;
       close_with_not_free_var_spec post x i;
       close_with_not_free_var_spec pats x i
-    | Cs_Eff _ _ t args decrs ->
+    | Cs_Eff _ _ t pre post decrs ->
       close_with_not_free_var_spec t x i;
-      close_args_with_not_free_var_spec args x i;
+      close_with_not_free_var_spec pre x i;
+      close_with_not_free_var_spec post x i;
       close_terms_with_not_free_var_spec decrs x i
 
 and close_args_with_not_free_var_spec (l:list (term_spec & aqualv_spec)) (x:var) (i:nat)
@@ -729,9 +732,10 @@ and open_with_gt_ln_spec_comp (c:comp_spec) (i:nat) (t:term_spec) (j:nat)
       open_with_gt_ln_spec pre i t j;
       open_with_gt_ln_spec post i t j;
       open_with_gt_ln_spec pats i t j
-    | Cs_Eff _ _ res args decrs ->
+    | Cs_Eff _ _ res pre post decrs ->
       open_with_gt_ln_spec res i t j;
-      open_with_gt_ln_spec_args args i t j;
+      open_with_gt_ln_spec pre i t j;
+      open_with_gt_ln_spec post i t j;
       open_with_gt_ln_spec_terms decrs i t j
 
 and open_with_gt_ln_spec_terms (l:list term_spec) (i:nat) (t:term_spec) (j:nat)

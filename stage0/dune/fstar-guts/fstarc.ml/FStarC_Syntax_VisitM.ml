@@ -842,86 +842,16 @@ let on_sub_br (d : 'm lvm)
                                          (_lvm_monad d) ()
                                          (Obj.magic (pat1, wopt1, body1))))
                                    uu___4))) uu___3))) uu___2)
-let on_sub_comp_typ (d : 'm lvm) (ct : FStarC_Syntax_Syntax.comp_typ) : 
-  'm=
-  let uu___ =
-    FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-      (fun uu___1 -> Obj.magic (f_univ d) uu___1)
-      (Obj.magic ct.FStarC_Syntax_Syntax.comp_univs) in
-  FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-    (fun uu___1 ->
-       (fun comp_univs ->
-          let comp_univs = Obj.magic comp_univs in
-          let effect_name = ct.FStarC_Syntax_Syntax.effect_name in
-          let uu___1 = f_term d ct.FStarC_Syntax_Syntax.result_typ in
-          Obj.magic
-            (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
-               (fun uu___2 ->
-                  (fun result_typ ->
-                     let result_typ = Obj.magic result_typ in
-                     let uu___2 =
-                       FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                         (fun uu___3 -> Obj.magic (f_arg d) uu___3)
-                         (Obj.magic ct.FStarC_Syntax_Syntax.effect_args) in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
-                          uu___2
-                          (fun uu___3 ->
-                             (fun effect_args ->
-                                let effect_args = Obj.magic effect_args in
-                                let flags = ct.FStarC_Syntax_Syntax.flags in
-                                Obj.magic
-                                  (FStarC_Class_Monad.return (_lvm_monad d)
-                                     ()
-                                     (Obj.magic
-                                        {
-                                          FStarC_Syntax_Syntax.comp_univs =
-                                            comp_univs;
-                                          FStarC_Syntax_Syntax.effect_name =
-                                            effect_name;
-                                          FStarC_Syntax_Syntax.result_typ =
-                                            result_typ;
-                                          FStarC_Syntax_Syntax.effect_args =
-                                            effect_args;
-                                          FStarC_Syntax_Syntax.flags = flags
-                                        }))) uu___3))) uu___2))) uu___1)
-let on_sub_comp (d : 'm lvm)
-  (c : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax) : 'm=
-  let uu___ =
-    match c.FStarC_Syntax_Syntax.n with
-    | FStarC_Syntax_Syntax.Total typ ->
-        let uu___1 = f_term d typ in
-        FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
-          (fun uu___2 ->
-             (fun uu___2 ->
-                let uu___2 = Obj.magic uu___2 in
-                Obj.magic (FStarC_Syntax_Syntax.Total uu___2)) uu___2) uu___1
-    | FStarC_Syntax_Syntax.GTotal typ ->
-        let uu___1 = f_term d typ in
-        FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
-          (fun uu___2 ->
-             (fun uu___2 ->
-                let uu___2 = Obj.magic uu___2 in
-                Obj.magic (FStarC_Syntax_Syntax.GTotal uu___2)) uu___2)
-          uu___1
-    | FStarC_Syntax_Syntax.Comp ct ->
-        let uu___1 = on_sub_comp_typ d ct in
-        FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
-          (fun uu___2 ->
-             (fun uu___2 ->
-                let uu___2 = Obj.magic uu___2 in
-                Obj.magic (FStarC_Syntax_Syntax.Comp uu___2)) uu___2) uu___1 in
-  FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-    (fun uu___1 ->
-       (fun cn ->
-          let cn = Obj.magic cn in
-          let uu___1 = FStarC_Syntax_Syntax.mk cn c.FStarC_Syntax_Syntax.pos in
-          Obj.magic
-            (FStarC_Class_Monad.return (_lvm_monad d) () (Obj.magic uu___1)))
-         uu___1)
 let __on_decreases (d : 'm lvm) (f : FStarC_Syntax_Syntax.term -> 'm)
   (cf : FStarC_Syntax_Syntax.cflag) : 'm=
   match cf with
+  | FStarC_Syntax_Syntax.SMTPAT p ->
+      let uu___ = f p in
+      FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
+        (fun uu___1 ->
+           (fun uu___1 ->
+              let uu___1 = Obj.magic uu___1 in
+              Obj.magic (FStarC_Syntax_Syntax.SMTPAT uu___1)) uu___1) uu___
   | FStarC_Syntax_Syntax.DECREASES (FStarC_Syntax_Syntax.Decreases_lex l) ->
       let uu___ =
         let uu___1 =
@@ -967,6 +897,112 @@ let __on_decreases (d : 'm lvm) (f : FStarC_Syntax_Syntax.term -> 'm)
               Obj.magic (FStarC_Syntax_Syntax.DECREASES uu___1)) uu___1)
         uu___
   | f1 -> FStarC_Class_Monad.return (_lvm_monad d) () (Obj.magic f1)
+let on_sub_comp_typ (d : 'm lvm) (ct : FStarC_Syntax_Syntax.comp_typ) : 
+  'm=
+  let uu___ =
+    FStarC_Class_Monad.mapM (_lvm_monad d) () ()
+      (fun uu___1 -> Obj.magic (f_univ d) uu___1)
+      (Obj.magic ct.FStarC_Syntax_Syntax.comp_univs) in
+  FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
+    (fun uu___1 ->
+       (fun comp_univs ->
+          let comp_univs = Obj.magic comp_univs in
+          let effect_name = ct.FStarC_Syntax_Syntax.effect_name in
+          let uu___1 = f_term d ct.FStarC_Syntax_Syntax.result_typ in
+          Obj.magic
+            (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
+               (fun uu___2 ->
+                  (fun result_typ ->
+                     let result_typ = Obj.magic result_typ in
+                     let uu___2 = f_term d ct.FStarC_Syntax_Syntax.comp_pre in
+                     Obj.magic
+                       (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
+                          uu___2
+                          (fun uu___3 ->
+                             (fun comp_pre ->
+                                let comp_pre = Obj.magic comp_pre in
+                                let uu___3 =
+                                  f_term d ct.FStarC_Syntax_Syntax.comp_post in
+                                Obj.magic
+                                  (FStarC_Class_Monad.op_let_Bang
+                                     (_lvm_monad d) () () uu___3
+                                     (fun uu___4 ->
+                                        (fun comp_post ->
+                                           let comp_post =
+                                             Obj.magic comp_post in
+                                           let uu___4 =
+                                             FStarC_Class_Monad.mapM
+                                               (_lvm_monad d) () ()
+                                               (fun uu___5 ->
+                                                  Obj.magic
+                                                    (__on_decreases d
+                                                       (f_term d)) uu___5)
+                                               (Obj.magic
+                                                  ct.FStarC_Syntax_Syntax.flags) in
+                                           Obj.magic
+                                             (FStarC_Class_Monad.op_let_Bang
+                                                (_lvm_monad d) () () uu___4
+                                                (fun uu___5 ->
+                                                   (fun flags ->
+                                                      let flags =
+                                                        Obj.magic flags in
+                                                      Obj.magic
+                                                        (FStarC_Class_Monad.return
+                                                           (_lvm_monad d) ()
+                                                           (Obj.magic
+                                                              {
+                                                                FStarC_Syntax_Syntax.comp_univs
+                                                                  =
+                                                                  comp_univs;
+                                                                FStarC_Syntax_Syntax.effect_name
+                                                                  =
+                                                                  effect_name;
+                                                                FStarC_Syntax_Syntax.result_typ
+                                                                  =
+                                                                  result_typ;
+                                                                FStarC_Syntax_Syntax.comp_pre
+                                                                  = comp_pre;
+                                                                FStarC_Syntax_Syntax.comp_post
+                                                                  = comp_post;
+                                                                FStarC_Syntax_Syntax.flags
+                                                                  = flags
+                                                              }))) uu___5)))
+                                          uu___4))) uu___3))) uu___2)))
+         uu___1)
+let on_sub_comp (d : 'm lvm)
+  (c : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax) : 'm=
+  let uu___ =
+    match c.FStarC_Syntax_Syntax.n with
+    | FStarC_Syntax_Syntax.Total typ ->
+        let uu___1 = f_term d typ in
+        FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
+          (fun uu___2 ->
+             (fun uu___2 ->
+                let uu___2 = Obj.magic uu___2 in
+                Obj.magic (FStarC_Syntax_Syntax.Total uu___2)) uu___2) uu___1
+    | FStarC_Syntax_Syntax.GTotal typ ->
+        let uu___1 = f_term d typ in
+        FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
+          (fun uu___2 ->
+             (fun uu___2 ->
+                let uu___2 = Obj.magic uu___2 in
+                Obj.magic (FStarC_Syntax_Syntax.GTotal uu___2)) uu___2)
+          uu___1
+    | FStarC_Syntax_Syntax.Comp ct ->
+        let uu___1 = on_sub_comp_typ d ct in
+        FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
+          (fun uu___2 ->
+             (fun uu___2 ->
+                let uu___2 = Obj.magic uu___2 in
+                Obj.magic (FStarC_Syntax_Syntax.Comp uu___2)) uu___2) uu___1 in
+  FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
+    (fun uu___1 ->
+       (fun cn ->
+          let cn = Obj.magic cn in
+          let uu___1 = FStarC_Syntax_Syntax.mk cn c.FStarC_Syntax_Syntax.pos in
+          Obj.magic
+            (FStarC_Class_Monad.return (_lvm_monad d) () (Obj.magic uu___1)))
+         uu___1)
 let on_sub_residual_comp (d : 'm lvm)
   (rc : FStarC_Syntax_Syntax.residual_comp) : 'm=
   let residual_effect = rc.FStarC_Syntax_Syntax.residual_effect in
@@ -1027,198 +1063,6 @@ let on_sub_univ (d : 'm lvm) (u : FStarC_Syntax_Syntax.universe) : 'm=
       FStarC_Class_Monad.return (_lvm_monad d) () (Obj.magic u1)
   | FStarC_Syntax_Syntax.U_unif uu___ ->
       FStarC_Class_Monad.return (_lvm_monad d) () (Obj.magic u1)
-let on_sub_wp_eff_combinators (d : 'm lvm)
-  (wpcs : FStarC_Syntax_Syntax.wp_eff_combinators) : 'm=
-  let uu___ = f_tscheme d wpcs.FStarC_Syntax_Syntax.ret_wp in
-  FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-    (fun uu___1 ->
-       (fun ret_wp ->
-          let ret_wp = Obj.magic ret_wp in
-          let uu___1 = f_tscheme d wpcs.FStarC_Syntax_Syntax.bind_wp in
-          Obj.magic
-            (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
-               (fun uu___2 ->
-                  (fun bind_wp ->
-                     let bind_wp = Obj.magic bind_wp in
-                     let uu___2 =
-                       f_tscheme d wpcs.FStarC_Syntax_Syntax.stronger in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
-                          uu___2
-                          (fun uu___3 ->
-                             (fun stronger ->
-                                let stronger = Obj.magic stronger in
-                                let uu___3 =
-                                  f_tscheme d
-                                    wpcs.FStarC_Syntax_Syntax.if_then_else in
-                                Obj.magic
-                                  (FStarC_Class_Monad.op_let_Bang
-                                     (_lvm_monad d) () () uu___3
-                                     (fun uu___4 ->
-                                        (fun if_then_else ->
-                                           let if_then_else =
-                                             Obj.magic if_then_else in
-                                           let uu___4 =
-                                             f_tscheme d
-                                               wpcs.FStarC_Syntax_Syntax.ite_wp in
-                                           Obj.magic
-                                             (FStarC_Class_Monad.op_let_Bang
-                                                (_lvm_monad d) () () uu___4
-                                                (fun uu___5 ->
-                                                   (fun ite_wp ->
-                                                      let ite_wp =
-                                                        Obj.magic ite_wp in
-                                                      let uu___5 =
-                                                        f_tscheme d
-                                                          wpcs.FStarC_Syntax_Syntax.close_wp in
-                                                      Obj.magic
-                                                        (FStarC_Class_Monad.op_let_Bang
-                                                           (_lvm_monad d) ()
-                                                           () uu___5
-                                                           (fun uu___6 ->
-                                                              (fun close_wp
-                                                                 ->
-                                                                 let close_wp
-                                                                   =
-                                                                   Obj.magic
-                                                                    close_wp in
-                                                                 let uu___6 =
-                                                                   f_tscheme
-                                                                    d
-                                                                    wpcs.FStarC_Syntax_Syntax.trivial in
-                                                                 Obj.magic
-                                                                   (FStarC_Class_Monad.op_let_Bang
-                                                                    (_lvm_monad
-                                                                    d) () ()
-                                                                    uu___6
-                                                                    (fun
-                                                                    uu___7 ->
-                                                                    (fun
-                                                                    trivial
-                                                                    ->
-                                                                    let trivial
-                                                                    =
-                                                                    Obj.magic
-                                                                    trivial in
-                                                                    let uu___7
-                                                                    =
-                                                                    FStarC_Class_Monad.map_optM
-                                                                    (_lvm_monad
-                                                                    d) () ()
-                                                                    (fun
-                                                                    uu___8 ->
-                                                                    Obj.magic
-                                                                    (f_tscheme
-                                                                    d) uu___8)
-                                                                    (Obj.magic
-                                                                    wpcs.FStarC_Syntax_Syntax.repr) in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    (_lvm_monad
-                                                                    d) () ()
-                                                                    uu___7
-                                                                    (fun
-                                                                    uu___8 ->
-                                                                    (fun repr
-                                                                    ->
-                                                                    let repr
-                                                                    =
-                                                                    Obj.magic
-                                                                    repr in
-                                                                    let uu___8
-                                                                    =
-                                                                    FStarC_Class_Monad.map_optM
-                                                                    (_lvm_monad
-                                                                    d) () ()
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    Obj.magic
-                                                                    (f_tscheme
-                                                                    d) uu___9)
-                                                                    (Obj.magic
-                                                                    wpcs.FStarC_Syntax_Syntax.return_repr) in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    (_lvm_monad
-                                                                    d) () ()
-                                                                    uu___8
-                                                                    (fun
-                                                                    uu___9 ->
-                                                                    (fun
-                                                                    return_repr
-                                                                    ->
-                                                                    let return_repr
-                                                                    =
-                                                                    Obj.magic
-                                                                    return_repr in
-                                                                    let uu___9
-                                                                    =
-                                                                    FStarC_Class_Monad.map_optM
-                                                                    (_lvm_monad
-                                                                    d) () ()
-                                                                    (fun
-                                                                    uu___10
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (f_tscheme
-                                                                    d)
-                                                                    uu___10)
-                                                                    (Obj.magic
-                                                                    wpcs.FStarC_Syntax_Syntax.bind_repr) in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    (_lvm_monad
-                                                                    d) () ()
-                                                                    uu___9
-                                                                    (fun
-                                                                    uu___10
-                                                                    ->
-                                                                    (fun
-                                                                    bind_repr
-                                                                    ->
-                                                                    let bind_repr
-                                                                    =
-                                                                    Obj.magic
-                                                                    bind_repr in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.return
-                                                                    (_lvm_monad
-                                                                    d) ()
-                                                                    (Obj.magic
-                                                                    {
-                                                                    FStarC_Syntax_Syntax.ret_wp
-                                                                    = ret_wp;
-                                                                    FStarC_Syntax_Syntax.bind_wp
-                                                                    = bind_wp;
-                                                                    FStarC_Syntax_Syntax.stronger
-                                                                    =
-                                                                    stronger;
-                                                                    FStarC_Syntax_Syntax.if_then_else
-                                                                    =
-                                                                    if_then_else;
-                                                                    FStarC_Syntax_Syntax.ite_wp
-                                                                    = ite_wp;
-                                                                    FStarC_Syntax_Syntax.close_wp
-                                                                    =
-                                                                    close_wp;
-                                                                    FStarC_Syntax_Syntax.trivial
-                                                                    = trivial;
-                                                                    FStarC_Syntax_Syntax.repr
-                                                                    = repr;
-                                                                    FStarC_Syntax_Syntax.return_repr
-                                                                    =
-                                                                    return_repr;
-                                                                    FStarC_Syntax_Syntax.bind_repr
-                                                                    =
-                                                                    bind_repr
-                                                                    })))
-                                                                    uu___10)))
-                                                                    uu___9)))
-                                                                    uu___8)))
-                                                                    uu___7)))
-                                                                uu___6)))
-                                                     uu___5))) uu___4)))
-                               uu___3))) uu___2))) uu___1)
 let mapTuple2 (uu___ : 'm FStarC_Class_Monad.monad) (f : 'a -> 'm)
   (g : 'c -> 'm) (t : ('a * 'c)) : 'm=
   let uu___1 =
@@ -1230,224 +1074,6 @@ let mapTuple2 (uu___ : 'm FStarC_Class_Monad.monad) (f : 'a -> 'm)
             Obj.magic (fun uu___4 -> (uu___3, uu___4))) uu___3) uu___2 in
   let uu___2 = g (FStar_Pervasives_Native.__proj__Mktuple2__item___2 t) in
   FStarC_Class_Monad.op_Less_Star_Greater uu___ () () uu___1 uu___2
-let mapTuple3 (uu___ : 'm FStarC_Class_Monad.monad) (f1 : 'a -> 'm)
-  (g : 'c -> 'm) (h : 'e -> 'm) (t : ('a * 'c * 'e)) : 'm=
-  let uu___1 =
-    let uu___2 =
-      let uu___3 = f1 (FStar_Pervasives_Native.__proj__Mktuple3__item___1 t) in
-      FStarC_Class_Monad.op_Less_Dollar_Greater uu___ () ()
-        (fun uu___4 ->
-           (fun uu___4 ->
-              let uu___4 = Obj.magic uu___4 in
-              Obj.magic (fun uu___5 uu___6 -> (uu___4, uu___5, uu___6)))
-             uu___4) uu___3 in
-    let uu___3 = g (FStar_Pervasives_Native.__proj__Mktuple3__item___2 t) in
-    FStarC_Class_Monad.op_Less_Star_Greater uu___ () () uu___2 uu___3 in
-  let uu___2 = h (FStar_Pervasives_Native.__proj__Mktuple3__item___3 t) in
-  FStarC_Class_Monad.op_Less_Star_Greater uu___ () () uu___1 uu___2
-let on_sub_layered_eff_combinators (d : 'm lvm)
-  (lecs : FStarC_Syntax_Syntax.layered_eff_combinators) : 'm=
-  let uu___ =
-    mapTuple2 (_lvm_monad d) (f_tscheme d) (f_tscheme d)
-      lecs.FStarC_Syntax_Syntax.l_repr in
-  FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-    (fun uu___1 ->
-       (fun l_repr ->
-          let l_repr = Obj.magic l_repr in
-          let uu___1 =
-            mapTuple2 (_lvm_monad d) (f_tscheme d) (f_tscheme d)
-              lecs.FStarC_Syntax_Syntax.l_return in
-          Obj.magic
-            (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
-               (fun uu___2 ->
-                  (fun l_return ->
-                     let l_return = Obj.magic l_return in
-                     let uu___2 =
-                       mapTuple3 (_lvm_monad d) (f_tscheme d) (f_tscheme d)
-                         (fun uu___3 ->
-                            Obj.magic
-                              (FStarC_Class_Monad.return (_lvm_monad d) ())
-                              uu___3) lecs.FStarC_Syntax_Syntax.l_bind in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
-                          uu___2
-                          (fun uu___3 ->
-                             (fun l_bind ->
-                                let l_bind = Obj.magic l_bind in
-                                let uu___3 =
-                                  mapTuple3 (_lvm_monad d) (f_tscheme d)
-                                    (f_tscheme d)
-                                    (fun uu___4 ->
-                                       Obj.magic
-                                         (FStarC_Class_Monad.return
-                                            (_lvm_monad d) ()) uu___4)
-                                    lecs.FStarC_Syntax_Syntax.l_subcomp in
-                                Obj.magic
-                                  (FStarC_Class_Monad.op_let_Bang
-                                     (_lvm_monad d) () () uu___3
-                                     (fun uu___4 ->
-                                        (fun l_subcomp ->
-                                           let l_subcomp =
-                                             Obj.magic l_subcomp in
-                                           let uu___4 =
-                                             mapTuple3 (_lvm_monad d)
-                                               (f_tscheme d) (f_tscheme d)
-                                               (fun uu___5 ->
-                                                  Obj.magic
-                                                    (FStarC_Class_Monad.return
-                                                       (_lvm_monad d) ())
-                                                    uu___5)
-                                               lecs.FStarC_Syntax_Syntax.l_if_then_else in
-                                           Obj.magic
-                                             (FStarC_Class_Monad.op_let_Bang
-                                                (_lvm_monad d) () () uu___4
-                                                (fun uu___5 ->
-                                                   (fun l_if_then_else ->
-                                                      let l_if_then_else =
-                                                        Obj.magic
-                                                          l_if_then_else in
-                                                      let uu___5 =
-                                                        FStarC_Class_Monad.map_optM
-                                                          (_lvm_monad d) ()
-                                                          ()
-                                                          (fun uu___6 ->
-                                                             Obj.magic
-                                                               (mapTuple2
-                                                                  (_lvm_monad
-                                                                    d)
-                                                                  (f_tscheme
-                                                                    d)
-                                                                  (f_tscheme
-                                                                    d))
-                                                               uu___6)
-                                                          (Obj.magic
-                                                             lecs.FStarC_Syntax_Syntax.l_close) in
-                                                      Obj.magic
-                                                        (FStarC_Class_Monad.op_let_Bang
-                                                           (_lvm_monad d) ()
-                                                           () uu___5
-                                                           (fun uu___6 ->
-                                                              (fun l_close ->
-                                                                 let l_close
-                                                                   =
-                                                                   Obj.magic
-                                                                    l_close in
-                                                                 Obj.magic
-                                                                   (FStarC_Class_Monad.return
-                                                                    (_lvm_monad
-                                                                    d) ()
-                                                                    (Obj.magic
-                                                                    {
-                                                                    FStarC_Syntax_Syntax.l_repr
-                                                                    = l_repr;
-                                                                    FStarC_Syntax_Syntax.l_return
-                                                                    =
-                                                                    l_return;
-                                                                    FStarC_Syntax_Syntax.l_bind
-                                                                    = l_bind;
-                                                                    FStarC_Syntax_Syntax.l_subcomp
-                                                                    =
-                                                                    l_subcomp;
-                                                                    FStarC_Syntax_Syntax.l_if_then_else
-                                                                    =
-                                                                    l_if_then_else;
-                                                                    FStarC_Syntax_Syntax.l_close
-                                                                    = l_close
-                                                                    })))
-                                                                uu___6)))
-                                                     uu___5))) uu___4)))
-                               uu___3))) uu___2))) uu___1)
-let on_sub_combinators (d : 'm lvm)
-  (cbs : FStarC_Syntax_Syntax.eff_combinators) : 'm=
-  match cbs with
-  | FStarC_Syntax_Syntax.Primitive_eff wpcs ->
-      let uu___ = on_sub_wp_eff_combinators d wpcs in
-      FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-        (fun uu___1 ->
-           (fun wpcs1 ->
-              let wpcs1 = Obj.magic wpcs1 in
-              Obj.magic
-                (FStarC_Class_Monad.return (_lvm_monad d) ()
-                   (Obj.magic (FStarC_Syntax_Syntax.Primitive_eff wpcs1))))
-             uu___1)
-  | FStarC_Syntax_Syntax.Layered_eff lecs ->
-      let uu___ = on_sub_layered_eff_combinators d lecs in
-      FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-        (fun uu___1 ->
-           (fun lecs1 ->
-              let lecs1 = Obj.magic lecs1 in
-              Obj.magic
-                (FStarC_Class_Monad.return (_lvm_monad d) ()
-                   (Obj.magic (FStarC_Syntax_Syntax.Layered_eff lecs1))))
-             uu___1)
-let on_sub_effect_signature (d : 'm lvm)
-  (es : FStarC_Syntax_Syntax.effect_signature) : 'm=
-  match es with
-  | FStarC_Syntax_Syntax.Layered_eff_sig (n, (us, t)) ->
-      let uu___ = f_term d t in
-      FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-        (fun uu___1 ->
-           (fun t1 ->
-              let t1 = Obj.magic t1 in
-              Obj.magic
-                (FStarC_Class_Monad.return (_lvm_monad d) ()
-                   (Obj.magic
-                      (FStarC_Syntax_Syntax.Layered_eff_sig (n, (us, t1))))))
-             uu___1)
-  | FStarC_Syntax_Syntax.WP_eff_sig (us, t) ->
-      let uu___ = f_term d t in
-      FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-        (fun uu___1 ->
-           (fun t1 ->
-              let t1 = Obj.magic t1 in
-              Obj.magic
-                (FStarC_Class_Monad.return (_lvm_monad d) ()
-                   (Obj.magic (FStarC_Syntax_Syntax.WP_eff_sig (us, t1)))))
-             uu___1)
-let on_sub_action (d : 'm lvm) (a : FStarC_Syntax_Syntax.action) : 'm=
-  let action_name = a.FStarC_Syntax_Syntax.action_name in
-  let action_unqualified_name =
-    a.FStarC_Syntax_Syntax.action_unqualified_name in
-  let action_univs = a.FStarC_Syntax_Syntax.action_univs in
-  let uu___ =
-    FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-      (fun uu___1 -> Obj.magic (f_binder d) uu___1)
-      (Obj.magic a.FStarC_Syntax_Syntax.action_params) in
-  FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-    (fun uu___1 ->
-       (fun action_params ->
-          let action_params = Obj.magic action_params in
-          let uu___1 = f_term d a.FStarC_Syntax_Syntax.action_defn in
-          Obj.magic
-            (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
-               (fun uu___2 ->
-                  (fun action_defn ->
-                     let action_defn = Obj.magic action_defn in
-                     let uu___2 = f_term d a.FStarC_Syntax_Syntax.action_typ in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
-                          uu___2
-                          (fun uu___3 ->
-                             (fun action_typ ->
-                                let action_typ = Obj.magic action_typ in
-                                Obj.magic
-                                  (FStarC_Class_Monad.return (_lvm_monad d)
-                                     ()
-                                     (Obj.magic
-                                        {
-                                          FStarC_Syntax_Syntax.action_name =
-                                            action_name;
-                                          FStarC_Syntax_Syntax.action_unqualified_name
-                                            = action_unqualified_name;
-                                          FStarC_Syntax_Syntax.action_univs =
-                                            action_univs;
-                                          FStarC_Syntax_Syntax.action_params
-                                            = action_params;
-                                          FStarC_Syntax_Syntax.action_defn =
-                                            action_defn;
-                                          FStarC_Syntax_Syntax.action_typ =
-                                            action_typ
-                                        }))) uu___3))) uu___2))) uu___1)
 let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
   fun d se ->
     match se with
@@ -1607,123 +1233,123 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
              (fun binders ->
                 let binders = Obj.magic binders in
                 let uu___1 =
-                  on_sub_effect_signature d ed.FStarC_Syntax_Syntax.signature in
+                  match ed.FStarC_Syntax_Syntax.combinators with
+                  | FStar_Pervasives_Native.None ->
+                      FStarC_Class_Monad.return (_lvm_monad d) ()
+                        (Obj.magic FStar_Pervasives_Native.None)
+                  | FStar_Pervasives_Native.Some c ->
+                      let uu___2 = f_tscheme d c.FStarC_Syntax_Syntax.repr in
+                      FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
+                        uu___2
+                        (fun uu___3 ->
+                           (fun repr ->
+                              let repr = Obj.magic repr in
+                              let uu___3 =
+                                f_tscheme d
+                                  c.FStarC_Syntax_Syntax.return_repr in
+                              Obj.magic
+                                (FStarC_Class_Monad.op_let_Bang
+                                   (_lvm_monad d) () () uu___3
+                                   (fun uu___4 ->
+                                      (fun return_repr ->
+                                         let return_repr =
+                                           Obj.magic return_repr in
+                                         let uu___4 =
+                                           f_tscheme d
+                                             c.FStarC_Syntax_Syntax.bind_repr in
+                                         Obj.magic
+                                           (FStarC_Class_Monad.op_let_Bang
+                                              (_lvm_monad d) () () uu___4
+                                              (fun uu___5 ->
+                                                 (fun bind_repr ->
+                                                    let bind_repr =
+                                                      Obj.magic bind_repr in
+                                                    Obj.magic
+                                                      (FStarC_Class_Monad.return
+                                                         (_lvm_monad d) ()
+                                                         (Obj.magic
+                                                            (FStar_Pervasives_Native.Some
+                                                               {
+                                                                 FStarC_Syntax_Syntax.repr
+                                                                   = repr;
+                                                                 FStarC_Syntax_Syntax.return_repr
+                                                                   =
+                                                                   return_repr;
+                                                                 FStarC_Syntax_Syntax.bind_repr
+                                                                   =
+                                                                   bind_repr
+                                                               })))) uu___5)))
+                                        uu___4))) uu___3) in
                 Obj.magic
                   (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
                      (fun uu___2 ->
-                        (fun signature ->
-                           let signature = Obj.magic signature in
+                        (fun combinators ->
+                           let combinators = Obj.magic combinators in
                            let uu___2 =
-                             on_sub_combinators d
-                               ed.FStarC_Syntax_Syntax.combinators in
+                             FStarC_Class_Monad.mapM (_lvm_monad d) () ()
+                               (fun uu___3 -> Obj.magic (f_term d) uu___3)
+                               (Obj.magic ed.FStarC_Syntax_Syntax.eff_attrs) in
                            Obj.magic
                              (FStarC_Class_Monad.op_let_Bang (_lvm_monad d)
                                 () () uu___2
                                 (fun uu___3 ->
-                                   (fun combinators ->
-                                      let combinators = Obj.magic combinators in
-                                      let uu___3 =
-                                        FStarC_Class_Monad.mapM
-                                          (_lvm_monad d) () ()
-                                          (fun uu___4 ->
-                                             Obj.magic (on_sub_action d)
-                                               uu___4)
-                                          (Obj.magic
-                                             ed.FStarC_Syntax_Syntax.actions) in
+                                   (fun eff_attrs ->
+                                      let eff_attrs = Obj.magic eff_attrs in
+                                      let extraction_mode =
+                                        ed.FStarC_Syntax_Syntax.extraction_mode in
+                                      let ed1 =
+                                        {
+                                          FStarC_Syntax_Syntax.mname = mname;
+                                          FStarC_Syntax_Syntax.cattributes =
+                                            cattributes;
+                                          FStarC_Syntax_Syntax.univs = univs;
+                                          FStarC_Syntax_Syntax.binders =
+                                            binders;
+                                          FStarC_Syntax_Syntax.combinators =
+                                            combinators;
+                                          FStarC_Syntax_Syntax.eff_attrs =
+                                            eff_attrs;
+                                          FStarC_Syntax_Syntax.extraction_mode
+                                            = extraction_mode
+                                        } in
                                       Obj.magic
-                                        (FStarC_Class_Monad.op_let_Bang
-                                           (_lvm_monad d) () () uu___3
-                                           (fun uu___4 ->
-                                              (fun actions ->
-                                                 let actions =
-                                                   Obj.magic actions in
-                                                 let uu___4 =
-                                                   FStarC_Class_Monad.mapM
-                                                     (_lvm_monad d) () ()
-                                                     (fun uu___5 ->
-                                                        Obj.magic (f_term d)
-                                                          uu___5)
-                                                     (Obj.magic
-                                                        ed.FStarC_Syntax_Syntax.eff_attrs) in
-                                                 Obj.magic
-                                                   (FStarC_Class_Monad.op_let_Bang
-                                                      (_lvm_monad d) () ()
-                                                      uu___4
-                                                      (fun uu___5 ->
-                                                         (fun eff_attrs ->
-                                                            let eff_attrs =
-                                                              Obj.magic
-                                                                eff_attrs in
-                                                            let extraction_mode
-                                                              =
-                                                              ed.FStarC_Syntax_Syntax.extraction_mode in
-                                                            let ed1 =
-                                                              {
-                                                                FStarC_Syntax_Syntax.mname
-                                                                  = mname;
-                                                                FStarC_Syntax_Syntax.cattributes
-                                                                  =
-                                                                  cattributes;
-                                                                FStarC_Syntax_Syntax.univs
-                                                                  = univs;
-                                                                FStarC_Syntax_Syntax.binders
-                                                                  = binders;
-                                                                FStarC_Syntax_Syntax.signature
-                                                                  = signature;
-                                                                FStarC_Syntax_Syntax.combinators
-                                                                  =
-                                                                  combinators;
-                                                                FStarC_Syntax_Syntax.actions
-                                                                  = actions;
-                                                                FStarC_Syntax_Syntax.eff_attrs
-                                                                  = eff_attrs;
-                                                                FStarC_Syntax_Syntax.extraction_mode
-                                                                  =
-                                                                  extraction_mode
-                                                              } in
-                                                            Obj.magic
-                                                              (FStarC_Class_Monad.return
-                                                                 (_lvm_monad
-                                                                    d) ()
-                                                                 (Obj.magic
-                                                                    (
-                                                                    FStarC_Syntax_Syntax.Sig_new_effect
-                                                                    ed1))))
-                                                           uu___5))) uu___4)))
-                                     uu___3))) uu___2))) uu___1)
+                                        (FStarC_Class_Monad.return
+                                           (_lvm_monad d) ()
+                                           (Obj.magic
+                                              (FStarC_Syntax_Syntax.Sig_new_effect
+                                                 ed1)))) uu___3))) uu___2)))
+               uu___1)
     | FStarC_Syntax_Syntax.Sig_sub_effect se1 ->
-        let source = se1.FStarC_Syntax_Syntax.source in
-        let target = se1.FStarC_Syntax_Syntax.target in
         let uu___ =
-          FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
-            (fun uu___1 -> Obj.magic (f_tscheme d) uu___1)
-            (Obj.magic se1.FStarC_Syntax_Syntax.lift_wp) in
+          match se1.FStarC_Syntax_Syntax.lift with
+          | FStar_Pervasives_Native.None ->
+              FStarC_Class_Monad.return (_lvm_monad d) ()
+                (Obj.magic FStar_Pervasives_Native.None)
+          | FStar_Pervasives_Native.Some ts ->
+              let uu___1 = f_tscheme d ts in
+              FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
+                (fun uu___2 ->
+                   (fun ts1 ->
+                      let ts1 = Obj.magic ts1 in
+                      Obj.magic
+                        (FStarC_Class_Monad.return (_lvm_monad d) ()
+                           (Obj.magic (FStar_Pervasives_Native.Some ts1))))
+                     uu___2) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
-             (fun lift_wp ->
-                let lift_wp = Obj.magic lift_wp in
-                let uu___1 =
-                  FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
-                    (fun uu___2 -> Obj.magic (f_tscheme d) uu___2)
-                    (Obj.magic se1.FStarC_Syntax_Syntax.lift) in
+             (fun lift ->
+                let lift = Obj.magic lift in
                 Obj.magic
-                  (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
-                     (fun uu___2 ->
-                        (fun lift ->
-                           let lift = Obj.magic lift in
-                           let kind = se1.FStarC_Syntax_Syntax.kind in
-                           Obj.magic
-                             (FStarC_Class_Monad.return (_lvm_monad d) ()
-                                (Obj.magic
-                                   (FStarC_Syntax_Syntax.Sig_sub_effect
-                                      {
-                                        FStarC_Syntax_Syntax.source = source;
-                                        FStarC_Syntax_Syntax.target = target;
-                                        FStarC_Syntax_Syntax.lift_wp =
-                                          lift_wp;
-                                        FStarC_Syntax_Syntax.lift = lift;
-                                        FStarC_Syntax_Syntax.kind = kind
-                                      })))) uu___2))) uu___1)
+                  (FStarC_Class_Monad.return (_lvm_monad d) ()
+                     (Obj.magic
+                        (FStarC_Syntax_Syntax.Sig_sub_effect
+                           {
+                             FStarC_Syntax_Syntax.source =
+                               (se1.FStarC_Syntax_Syntax.source);
+                             FStarC_Syntax_Syntax.target =
+                               (se1.FStarC_Syntax_Syntax.target);
+                             FStarC_Syntax_Syntax.lift = lift
+                           })))) uu___1)
     | FStarC_Syntax_Syntax.Sig_effect_abbrev
         { FStarC_Syntax_Syntax.lid4 = lid; FStarC_Syntax_Syntax.us4 = us;
           FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.comp1 = comp;
@@ -1795,64 +1421,6 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                            (FStarC_Syntax_Syntax.Eval t1))))) uu___1)
     | FStarC_Syntax_Syntax.Sig_pragma uu___ ->
         FStarC_Class_Monad.return (_lvm_monad d) () (Obj.magic se)
-    | FStarC_Syntax_Syntax.Sig_polymonadic_bind
-        { FStarC_Syntax_Syntax.m_lid = m_lid;
-          FStarC_Syntax_Syntax.n_lid = n_lid;
-          FStarC_Syntax_Syntax.p_lid = p_lid; FStarC_Syntax_Syntax.tm3 = tm;
-          FStarC_Syntax_Syntax.typ = typ;
-          FStarC_Syntax_Syntax.kind1 = kind;_}
-        ->
-        let uu___ = f_tscheme d tm in
-        FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-          (fun uu___1 ->
-             (fun tm1 ->
-                let tm1 = Obj.magic tm1 in
-                let uu___1 = f_tscheme d typ in
-                Obj.magic
-                  (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
-                     (fun uu___2 ->
-                        (fun typ1 ->
-                           let typ1 = Obj.magic typ1 in
-                           Obj.magic
-                             (FStarC_Class_Monad.return (_lvm_monad d) ()
-                                (Obj.magic
-                                   (FStarC_Syntax_Syntax.Sig_polymonadic_bind
-                                      {
-                                        FStarC_Syntax_Syntax.m_lid = m_lid;
-                                        FStarC_Syntax_Syntax.n_lid = n_lid;
-                                        FStarC_Syntax_Syntax.p_lid = p_lid;
-                                        FStarC_Syntax_Syntax.tm3 = tm1;
-                                        FStarC_Syntax_Syntax.typ = typ1;
-                                        FStarC_Syntax_Syntax.kind1 = kind
-                                      })))) uu___2))) uu___1)
-    | FStarC_Syntax_Syntax.Sig_polymonadic_subcomp
-        { FStarC_Syntax_Syntax.m_lid1 = m_lid;
-          FStarC_Syntax_Syntax.n_lid1 = n_lid; FStarC_Syntax_Syntax.tm4 = tm;
-          FStarC_Syntax_Syntax.typ1 = typ;
-          FStarC_Syntax_Syntax.kind2 = kind;_}
-        ->
-        let uu___ = f_tscheme d tm in
-        FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-          (fun uu___1 ->
-             (fun tm1 ->
-                let tm1 = Obj.magic tm1 in
-                let uu___1 = f_tscheme d typ in
-                Obj.magic
-                  (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
-                     (fun uu___2 ->
-                        (fun typ1 ->
-                           let typ1 = Obj.magic typ1 in
-                           Obj.magic
-                             (FStarC_Class_Monad.return (_lvm_monad d) ()
-                                (Obj.magic
-                                   (FStarC_Syntax_Syntax.Sig_polymonadic_subcomp
-                                      {
-                                        FStarC_Syntax_Syntax.m_lid1 = m_lid;
-                                        FStarC_Syntax_Syntax.n_lid1 = n_lid;
-                                        FStarC_Syntax_Syntax.tm4 = tm1;
-                                        FStarC_Syntax_Syntax.typ1 = typ1;
-                                        FStarC_Syntax_Syntax.kind2 = kind
-                                      })))) uu___2))) uu___1)
     | FStarC_Syntax_Syntax.Sig_fail
         { FStarC_Syntax_Syntax.errs = errs; FStarC_Syntax_Syntax.rng1 = rng;
           FStarC_Syntax_Syntax.fail_in_lax = fail_in_lax;

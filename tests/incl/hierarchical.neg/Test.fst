@@ -1,5 +1,5 @@
 (*
-   Copyright 2024 Microsoft Research
+   Copyright 2008-2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,12 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStarC.SMTEncoding.UnsatCore
-open FStarC.Effect
-open FStarC
-open FStarC.SMTEncoding.Term
-
-type unsat_core = list string
-
-val filter (s:unsat_core) (decls:list decl)
-: ML (list decl)
+module Test
+(* The file A/B/C.fst is known as A.B.C, not as the short name C. Opening C
+   therefore fails to resolve, so this test fails as expected. *)
+open C
+let y : int = x

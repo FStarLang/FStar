@@ -875,6 +875,8 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.missing_decl);
                  FStarC_TypeChecker_Env.iface_todo =
                    (env1.FStarC_TypeChecker_Env.iface_todo);
+                 FStarC_TypeChecker_Env.iface_hidden =
+                   (env1.FStarC_TypeChecker_Env.iface_hidden);
                  FStarC_TypeChecker_Env.iface_lids =
                    (env1.FStarC_TypeChecker_Env.iface_lids);
                  FStarC_TypeChecker_Env.iface_val_lids =
@@ -1802,6 +1804,8 @@ let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.missing_decl);
                                FStarC_TypeChecker_Env.iface_todo =
                                  (e.FStarC_TypeChecker_Env.iface_todo);
+                               FStarC_TypeChecker_Env.iface_hidden =
+                                 (e.FStarC_TypeChecker_Env.iface_hidden);
                                FStarC_TypeChecker_Env.iface_lids =
                                  (e.FStarC_TypeChecker_Env.iface_lids);
                                FStarC_TypeChecker_Env.iface_val_lids =
@@ -1956,6 +1960,8 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.missing_decl);
                                FStarC_TypeChecker_Env.iface_todo =
                                  (e.FStarC_TypeChecker_Env.iface_todo);
+                               FStarC_TypeChecker_Env.iface_hidden =
+                                 (e.FStarC_TypeChecker_Env.iface_hidden);
                                FStarC_TypeChecker_Env.iface_lids =
                                  (e.FStarC_TypeChecker_Env.iface_lids);
                                FStarC_TypeChecker_Env.iface_val_lids =
@@ -2069,6 +2075,8 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e1.FStarC_TypeChecker_Env.missing_decl);
                                FStarC_TypeChecker_Env.iface_todo =
                                  (e1.FStarC_TypeChecker_Env.iface_todo);
+                               FStarC_TypeChecker_Env.iface_hidden =
+                                 (e1.FStarC_TypeChecker_Env.iface_hidden);
                                FStarC_TypeChecker_Env.iface_lids =
                                  (e1.FStarC_TypeChecker_Env.iface_lids);
                                FStarC_TypeChecker_Env.iface_val_lids =
@@ -2944,6 +2952,8 @@ let __exact_now (set_expected_typ : Prims.bool)
                 (env1.FStarC_TypeChecker_Env.missing_decl);
               FStarC_TypeChecker_Env.iface_todo =
                 (env1.FStarC_TypeChecker_Env.iface_todo);
+              FStarC_TypeChecker_Env.iface_hidden =
+                (env1.FStarC_TypeChecker_Env.iface_hidden);
               FStarC_TypeChecker_Env.iface_lids =
                 (env1.FStarC_TypeChecker_Env.iface_lids);
               FStarC_TypeChecker_Env.iface_val_lids =
@@ -3748,19 +3758,15 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
 let lemma_or_sq (c : FStarC_Syntax_Syntax.comp) :
   (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term)
     FStar_Pervasives_Native.option=
-  let uu___ = FStarC_Syntax_Util.comp_eff_name_res_and_args c in
+  let uu___ = FStarC_Syntax_Util.comp_eff_name_and_res c in
   match uu___ with
-  | (eff_name, res, args) ->
+  | (eff_name, res) ->
       if
         FStarC_Ident.lid_equals eff_name FStarC_Parser_Const.effect_Lemma_lid
       then
         let uu___1 =
-          match args with
-          | pre::post::uu___2 ->
-              ((FStar_Pervasives_Native.fst pre),
-                (FStar_Pervasives_Native.fst post))
-          | uu___2 ->
-              FStarC_Effect.failwith "apply_lemma: impossible: not a lemma" in
+          let uu___2 = FStarC_Syntax_Util.comp_post c in
+          ((FStarC_Syntax_Util.comp_pre c), uu___2) in
         (match uu___1 with
          | (pre, post) ->
              let post1 =
@@ -3952,6 +3958,9 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                            FStarC_TypeChecker_Env.iface_todo
                                              =
                                              (env1.FStarC_TypeChecker_Env.iface_todo);
+                                           FStarC_TypeChecker_Env.iface_hidden
+                                             =
+                                             (env1.FStarC_TypeChecker_Env.iface_hidden);
                                            FStarC_TypeChecker_Env.iface_lids
                                              =
                                              (env1.FStarC_TypeChecker_Env.iface_lids);
@@ -5619,6 +5628,8 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
                                 (uu___9.FStarC_TypeChecker_Env.missing_decl);
                               FStarC_TypeChecker_Env.iface_todo =
                                 (uu___9.FStarC_TypeChecker_Env.iface_todo);
+                              FStarC_TypeChecker_Env.iface_hidden =
+                                (uu___9.FStarC_TypeChecker_Env.iface_hidden);
                               FStarC_TypeChecker_Env.iface_lids =
                                 (uu___9.FStarC_TypeChecker_Env.iface_lids);
                               FStarC_TypeChecker_Env.iface_val_lids =
@@ -6078,6 +6089,8 @@ let join_goals (uu___1 : FStarC_Tactics_Types.goal)
                                 (uu___3.FStarC_TypeChecker_Env.missing_decl);
                               FStarC_TypeChecker_Env.iface_todo =
                                 (uu___3.FStarC_TypeChecker_Env.iface_todo);
+                              FStarC_TypeChecker_Env.iface_hidden =
+                                (uu___3.FStarC_TypeChecker_Env.iface_hidden);
                               FStarC_TypeChecker_Env.iface_lids =
                                 (uu___3.FStarC_TypeChecker_Env.iface_lids);
                               FStarC_TypeChecker_Env.iface_val_lids =
@@ -6562,9 +6575,8 @@ let unshelve (t : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
                  FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uvar
                    (ctx_uvar, uu___2);
                  FStarC_Syntax_Syntax.pos = uu___3;
-                 FStarC_Syntax_Syntax.vars = uu___4;
-                 FStarC_Syntax_Syntax.hash_code = uu___5;_},
-               uu___6) ->
+                 FStarC_Syntax_Syntax.hash_code = uu___4;_},
+               uu___5) ->
                 let env2 =
                   {
                     FStarC_TypeChecker_Env.solver =
@@ -6672,6 +6684,8 @@ let unshelve (t : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
                       (env1.FStarC_TypeChecker_Env.missing_decl);
                     FStarC_TypeChecker_Env.iface_todo =
                       (env1.FStarC_TypeChecker_Env.iface_todo);
+                    FStarC_TypeChecker_Env.iface_hidden =
+                      (env1.FStarC_TypeChecker_Env.iface_hidden);
                     FStarC_TypeChecker_Env.iface_lids =
                       (env1.FStarC_TypeChecker_Env.iface_lids);
                     FStarC_TypeChecker_Env.iface_val_lids =
@@ -8080,6 +8094,9 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     FStarC_TypeChecker_Env.iface_todo
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.iface_todo);
+                                                                    FStarC_TypeChecker_Env.iface_hidden
+                                                                    =
+                                                                    (env1.FStarC_TypeChecker_Env.iface_hidden);
                                                                     FStarC_TypeChecker_Env.iface_lids
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.iface_lids);
@@ -8731,6 +8748,8 @@ let push_bv_dsenv (uu___1 : FStarC_TypeChecker_Env.env)
                 (e.FStarC_TypeChecker_Env.missing_decl);
               FStarC_TypeChecker_Env.iface_todo =
                 (e.FStarC_TypeChecker_Env.iface_todo);
+              FStarC_TypeChecker_Env.iface_hidden =
+                (e.FStarC_TypeChecker_Env.iface_hidden);
               FStarC_TypeChecker_Env.iface_lids =
                 (e.FStarC_TypeChecker_Env.iface_lids);
               FStarC_TypeChecker_Env.iface_val_lids =
@@ -9977,6 +9996,8 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                          (g1.FStarC_TypeChecker_Env.missing_decl);
                        FStarC_TypeChecker_Env.iface_todo =
                          (g1.FStarC_TypeChecker_Env.iface_todo);
+                       FStarC_TypeChecker_Env.iface_hidden =
+                         (g1.FStarC_TypeChecker_Env.iface_hidden);
                        FStarC_TypeChecker_Env.iface_lids =
                          (g1.FStarC_TypeChecker_Env.iface_lids);
                        FStarC_TypeChecker_Env.iface_val_lids =
@@ -10088,6 +10109,8 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                            (g2.FStarC_TypeChecker_Env.missing_decl);
                          FStarC_TypeChecker_Env.iface_todo =
                            (g2.FStarC_TypeChecker_Env.iface_todo);
+                         FStarC_TypeChecker_Env.iface_hidden =
+                           (g2.FStarC_TypeChecker_Env.iface_hidden);
                          FStarC_TypeChecker_Env.iface_lids =
                            (g2.FStarC_TypeChecker_Env.iface_lids);
                          FStarC_TypeChecker_Env.iface_val_lids =
@@ -10518,6 +10541,8 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                          (g2.FStarC_TypeChecker_Env.missing_decl);
                        FStarC_TypeChecker_Env.iface_todo =
                          (g2.FStarC_TypeChecker_Env.iface_todo);
+                       FStarC_TypeChecker_Env.iface_hidden =
+                         (g2.FStarC_TypeChecker_Env.iface_hidden);
                        FStarC_TypeChecker_Env.iface_lids =
                          (g2.FStarC_TypeChecker_Env.iface_lids);
                        FStarC_TypeChecker_Env.iface_val_lids =
@@ -10911,6 +10936,8 @@ let refl_try_unify (uu___3 : FStarC_TypeChecker_Env.env)
                                   (g1.FStarC_TypeChecker_Env.missing_decl);
                                 FStarC_TypeChecker_Env.iface_todo =
                                   (g1.FStarC_TypeChecker_Env.iface_todo);
+                                FStarC_TypeChecker_Env.iface_hidden =
+                                  (g1.FStarC_TypeChecker_Env.iface_hidden);
                                 FStarC_TypeChecker_Env.iface_lids =
                                   (g1.FStarC_TypeChecker_Env.iface_lids);
                                 FStarC_TypeChecker_Env.iface_val_lids =
@@ -11238,6 +11265,8 @@ let push_open_namespace (uu___1 : FStarC_TypeChecker_Env.env)
            (e.FStarC_TypeChecker_Env.missing_decl);
          FStarC_TypeChecker_Env.iface_todo =
            (e.FStarC_TypeChecker_Env.iface_todo);
+         FStarC_TypeChecker_Env.iface_hidden =
+           (e.FStarC_TypeChecker_Env.iface_hidden);
          FStarC_TypeChecker_Env.iface_lids =
            (e.FStarC_TypeChecker_Env.iface_lids);
          FStarC_TypeChecker_Env.iface_val_lids =
@@ -11347,6 +11376,8 @@ let push_module_abbrev (uu___2 : FStarC_TypeChecker_Env.env)
            (e.FStarC_TypeChecker_Env.missing_decl);
          FStarC_TypeChecker_Env.iface_todo =
            (e.FStarC_TypeChecker_Env.iface_todo);
+         FStarC_TypeChecker_Env.iface_hidden =
+           (e.FStarC_TypeChecker_Env.iface_hidden);
          FStarC_TypeChecker_Env.iface_lids =
            (e.FStarC_TypeChecker_Env.iface_lids);
          FStarC_TypeChecker_Env.iface_val_lids =
@@ -11499,6 +11530,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env2.FStarC_TypeChecker_Env.missing_decl);
           FStarC_TypeChecker_Env.iface_todo =
             (env2.FStarC_TypeChecker_Env.iface_todo);
+          FStarC_TypeChecker_Env.iface_hidden =
+            (env2.FStarC_TypeChecker_Env.iface_hidden);
           FStarC_TypeChecker_Env.iface_lids =
             (env2.FStarC_TypeChecker_Env.iface_lids);
           FStarC_TypeChecker_Env.iface_val_lids =
@@ -11604,6 +11637,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env3.FStarC_TypeChecker_Env.missing_decl);
           FStarC_TypeChecker_Env.iface_todo =
             (env3.FStarC_TypeChecker_Env.iface_todo);
+          FStarC_TypeChecker_Env.iface_hidden =
+            (env3.FStarC_TypeChecker_Env.iface_hidden);
           FStarC_TypeChecker_Env.iface_lids =
             (env3.FStarC_TypeChecker_Env.iface_lids);
           FStarC_TypeChecker_Env.iface_val_lids =
@@ -11709,6 +11744,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env4.FStarC_TypeChecker_Env.missing_decl);
           FStarC_TypeChecker_Env.iface_todo =
             (env4.FStarC_TypeChecker_Env.iface_todo);
+          FStarC_TypeChecker_Env.iface_hidden =
+            (env4.FStarC_TypeChecker_Env.iface_hidden);
           FStarC_TypeChecker_Env.iface_lids =
             (env4.FStarC_TypeChecker_Env.iface_lids);
           FStarC_TypeChecker_Env.iface_val_lids =
@@ -11838,6 +11875,8 @@ let proofstate_of_goal_ty (rng : FStarC_Range_Type.t)
         (env1.FStarC_TypeChecker_Env.missing_decl);
       FStarC_TypeChecker_Env.iface_todo =
         (env1.FStarC_TypeChecker_Env.iface_todo);
+      FStarC_TypeChecker_Env.iface_hidden =
+        (env1.FStarC_TypeChecker_Env.iface_hidden);
       FStarC_TypeChecker_Env.iface_lids =
         (env1.FStarC_TypeChecker_Env.iface_lids);
       FStarC_TypeChecker_Env.iface_val_lids =

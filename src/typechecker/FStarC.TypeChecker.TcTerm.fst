@@ -334,46 +334,18 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
         then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
-        else let norm_eff_name = U.comp_effect_name c |> Env.norm_eff_name env in
-             if norm_eff_name |> Env.is_layered_effect env
-             then begin
-               //
-               //If the layered effect has a default effect annotation,
-               //  use it
-               //We have already typechecked that the default effect
-               //  only takes as argument the result type
-               //
-               let def_eff_opt = Env.get_default_effect env norm_eff_name in
-               match def_eff_opt with
-               | None ->
-                 // hard error if layered effects are used without annotations
-                 raise_error e Errors.Error_LayeredMissingAnnot [
-                   text (Format.fmt1 "Missing annotation for a layered effect (%s) computation." (c |> U.comp_effect_name |> show));
-                 ]
-               | Some def_eff ->
-                 //
-                 //AR: TODO: it may be good hygiene to check that def_eff exists
-                 //
-                 let comp_univs, result_ty =
-                   match c.n with
-                   | Comp ({comp_univs=comp_univs; result_typ=result_ty}) ->
-                     comp_univs, result_ty
-                   | _ -> failwith "Impossible!" in
-                 let expected_c = {
-                   comp_univs = comp_univs;
-                   effect_name = def_eff;
-                   result_typ = result_ty;
-                   effect_args = [];
-                   flags = []} in
-                 //let expected_c, _, _ = tc_comp env expected_c in
-                 Some (S.mk_Comp expected_c),
-                 c,
-                 None                   
-             end
-             // Not a layered effect
-             else if Options.trivial_pre_for_unannotated_effectful_fns ()
-             then None, c, (let _, _, g = TcUtil.check_trivial_precondition_wp env c in
-                            Some g)
+        else if Options.trivial_pre_for_unannotated_effectful_fns ()
+             then
+               (* Same treatment as the pure case just above: an unannotated
+                  function gets the *default* specification of its effect, and
+                  its precondition becomes a proof obligation here.  Otherwise
+                  the pre- and postconditions of everything the body calls are
+                  accumulated into the inferred signature, which quickly grows
+                  unreadable (and does not match what phase 1 inferred). *)
+               let ct, _, g = TcUtil.check_trivial_precondition_wp env c in
+               None,
+               S.mk_triv_comp ct.comp_univs ct.effect_name ct.result_typ ct.flags,
+               Some g
              else None, c, None
   in
   def_check_scoped c.pos "check_expected_effect.c.before_norm" env c;
@@ -528,12 +500,11 @@ let check_smt_pat env t : ML unit =
     // Check patterns cover the bound vars
     if U.is_smt_lemma t then
       let bs, c = U.arrow_formals_comp t in
-      match c.n with
-      | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
+      match U.comp_smt_pats c with
+      | Some pats ->
           check_pat_fvs t.pos env pats bs;
           check_no_smt_theory_symbols env pats
-      | _ ->
-        failwith "Impossible: check_smt_pat: not Comp"
+      | None -> ()
 
 (************************************************************************************************************)
 (* Building the environment for the body of a let rec;                                                      *)
@@ -987,7 +958,10 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     then raise_error top Errors.Fatal_EffectCannotBeReified
            (Format.fmt1 "Effect %s cannot be reflected" (show effect_lid));
 
-    let u_c = expected_ct.comp_univs |> List.hd in
+    let u_c =
+      match expected_ct.comp_univs with
+      | u::_ -> u
+      | [] -> env0.universe_of env0 expected_ct.result_typ in
     let repr = Env.effect_repr env0 (expected_ct |> S.mk_Comp) u_c |> Option.must in
 
     // e <: Tot repr
@@ -1011,10 +985,33 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       let tm = S.mk_Tm_app tm [e, aqual] r in
       mk (Tm_ascribed {tm; asc=(Inr expected_c, None, use_eq); eff_opt=expected_c |> U.comp_effect_name |> Some}) r in
 
+    (* Reflection justifies only a *trivial* specification: the representation
+       type says nothing about the pre- and postcondition, so a reflected term
+       may not simply adopt the ascribed specification.  Check the ascription
+       by subsumption against the trivial computation instead, or a reflect
+       could claim any specification at all, including a false one. *)
+    let g_spec =
+      let c_reflect =
+        S.mk_Comp ({ comp_univs  = [u_c]
+                   ; effect_name = expected_ct.effect_name
+                   ; result_typ  = expected_ct.result_typ
+                   ; comp_pre    = S.trivial_pre
+                   ; comp_post   = S.trivial_post expected_ct.result_typ
+                   ; flags       = [] }) in
+      match Rel.sub_comp env0 c_reflect expected_c with
+      | Some g -> g
+      | None ->
+        raise_error top Errors.Fatal_UnexpectedEffect
+          (Format.fmt2
+            "A reflected term only has the trivial specification %s, \
+             which does not subsume the ascribed %s\n"
+            (show c_reflect) (show expected_c))
+    in
+
     //check the expected type in the env, if present
     let top, c, g_env = comp_check_expected_typ env top (expected_c |> TcComm.lcomp_of_comp) in
 
-    top, c, g_c ++ g_e ++ g_env
+    top, c, g_c ++ g_e ++ g_spec ++ g_env
 
   | Tm_ascribed {tm=e; asc=(Inr expected_c, None, use_eq)} ->
     let env0, _ = Env.clear_expected_typ env in
@@ -1100,6 +1097,11 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
                        (Format.fmt1 "Effect %s cannot be reified" (string_of_lid c.effect_name));
         let u_c = List.hd c.comp_univs in
 
+        (* The precondition of the reified computation becomes a proof obligation
+           right here; the postcondition is simply dropped, since the reified term
+           is an ordinary (pure or divergent) value of the representation type. *)
+        let g_pre = Env.guard_of_guard_formula (NonTrivial c.comp_pre) in
+
         let e = U.mk_reify e (Some c.effect_name) in
         let repr = Env.reify_comp env (S.mk_Comp c) u_c in
         let c =
@@ -1111,18 +1113,19 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
               (* Total. *)
               S.mk_Total repr |> TcComm.lcomp_of_comp
             else
-              (* Add a DIV effect for non-total effects. *)
+              (* Reifying a non-total effect yields a possibly divergent term. *)
               let ct = { comp_univs = [u_c]
-                       ; effect_name = Const.effect_Dv_lid
+                       ; effect_name = Const.effect_DIV_lid
                        ; result_typ = repr
-                       ; effect_args = []
+                       ; comp_pre = S.trivial_pre
+                       ; comp_post = S.trivial_post repr
                        ; flags = []
                        }
               in
               S.mk_Comp ct |> TcComm.lcomp_of_comp
         in
         let e, c, g' = comp_check_expected_typ env e c in
-        Inl (e, c, g ++ (g_c ++ g'))
+        Inl (e, c, msum [g; g_c; g_pre; g'])
 
       | Tm_constant (Const_reflect l), [(e, aqual)] ->
         if Some? aqual then
@@ -1158,20 +1161,14 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
 
           let g_eq = Rel.teq env_no_ex c_e.res_typ expected_repr_typ in
 
-          let eff_args =
-            match U.head_and_args_full expected_repr_typ with
-            | _, _::args -> args
-            | _ ->
-              raise_error top Errors.Fatal_UnexpectedEffect
-                (Format.fmt3 "Expected repr type for %s is not an application node (%s:%s)"
-                  (show l) (tag_of expected_repr_typ)
-                  (show expected_repr_typ)) in
-
+          (* Reflection gives back a computation with a trivial specification:
+             effect definitions play no role in typechecking. *)
           let c = S.mk_Comp ({
             comp_univs=[u_a];
             effect_name = ed.mname;
             result_typ=a;
-            effect_args=eff_args;
+            comp_pre = S.trivial_pre;
+            comp_post = S.trivial_post a;
             flags=[]
           }) |> TcComm.lcomp_of_comp in
 
@@ -2012,25 +2009,47 @@ and tc_comp env c : ML (comp                                      (* checked ver
       mk_GTotal t, u, g
 
     | Comp c ->
+      (* Effects are never universe-polymorphic: their signature is
+         uniformly [a:Type u#? -> Effect].  Any universes recorded in the
+         incoming comp are recomputed below from the result type. *)
       let head = S.fvar c.effect_name None in
-      let head = match c.comp_univs with
-         | [] -> head
-         | us -> S.mk (Tm_uinst(head, us)) c0.pos in
-      let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) c.result_typ.pos in
+      let tc = mk_Tm_app head [as_arg c.result_typ] c.result_typ.pos in
       let tc, _, f =
         (*
-         * AR: 11/18: TcUtil.weaken_result_typ by default logs a typing error and continues
-         *            Failing hard when typechecking computation types, since errors
-         *              like missing effect args can result in broken invariants in
-         *              the unifier or the normalizer
+         * Failing hard when typechecking computation types, since errors
+         *   can result in broken invariants in the unifier or the normalizer
          *)
         tc_check_tot_or_gtot_term ({ env with failhard = true }) tc S.teff None in
-      let head, args = U.head_and_args_full tc in
-      let comp_univs = match (SS.compress head).n with
-        | Tm_uinst(_, us) -> us
-        | _ -> [] in
-      let _, args = U.head_and_args_full tc in
-      let res, args = List.hd args, List.tl args in
+      let _head, args = U.head_and_args_full tc in
+      let res = List.hd args |> fst in
+      (* Check that the precondition is a proposition and that the
+         postcondition is a predicate over the result. *)
+      let env0, _ = Env.clear_expected_typ env in
+      (* The postcondition may mention the precondition, as in
+         [Lemma (requires m <= n) (ensures a / pow2 m < pow2 (n - m))], so it
+         is checked at [_:res{pre} -> prop], mirroring what the old
+         [pure_post' a pre] did.
+
+         Both are checked as the arguments of a single application: checking
+         them one after the other in two separate invocations would force the
+         unification variables created by the first one before the second gets
+         a chance to constrain them, and an unannotated binder would end up
+         with a less precise type than it should. *)
+      let pre, post, g_spec =
+        let b_pre = S.mk_binder (S.new_bv (Some c.comp_pre.pos) S.t_prop) in
+        let post_t =
+          U.arrow [S.null_binder (U.refine (S.new_bv (Some res.pos) res)
+                                           (S.bv_to_name b_pre.binder_bv))]
+                  (S.mk_Total S.t_prop) in
+        let f = U.abs [b_pre; S.null_binder post_t] S.unit_const
+                      (Some (U.residual_tot S.t_unit)) in
+        let tm = mk_Tm_app f [S.as_arg c.comp_pre; S.as_arg c.comp_post] c0.pos in
+        let tm, _, g = tc_check_tot_or_gtot_term env0 tm S.t_unit None in
+        match U.head_and_args_full tm with
+        | _, [(pre, _); (post, _)] -> pre, post, g
+        | _ -> failwith "tc_comp: unexpected shape of checked specification" in
+      let g_pre = g_spec in
+      let g_post = Env.trivial_guard in
       let flags, guards = c.flags |> List.map (function
         | DECREASES (Decreases_lex l) ->
           let env, _ = Env.clear_expected_typ env in
@@ -2065,15 +2084,23 @@ and tc_comp env c : ML (comp                                      (* checked ver
           let e, _, g_e = tc_tot_or_gtot_term (Env.set_expected_typ env a) e in
           DECREASES (Decreases_wf (rel, e)),
           g_a ++ g_rel ++ g_e
+        | SMTPAT p ->
+          (* Elaborate the SMT pattern: it is an ordinary term (a list of
+             FStar.Pervasives.pattern) and needs its implicit arguments
+             inserted before it can be destructed by Syntax.Util. *)
+          let env, _ = Env.clear_expected_typ env in
+          let p, _, g_p = tc_tot_or_gtot_term env p in
+          SMTPAT p, g_p
         | f -> f, mzero) |> List.unzip in
-      let u = env.universe_of env (fst res) in
+      let u = env.universe_of env res in
       let c = mk_Comp ({c with
-          comp_univs=comp_univs;
-          result_typ=fst res;
-          flags = flags;
-          effect_args=args}) in
+          comp_univs=[u];
+          result_typ=res;
+          comp_pre=pre;
+          comp_post=post;
+          flags = flags}) in
       let u_c = c |> TcUtil.universe_of_comp env u in
-      c, u_c, f ++ msum guards
+      c, u_c, f ++ g_pre ++ g_post ++ msum guards
 
 and tc_universe env u : ML universe =
    let rec aux u : ML universe =
@@ -2917,7 +2944,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
 //                if debug env Options.High then Format.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
             let xterm = S.bv_to_name x, aq in  //AR: fix for #1123, we were dropping the qualifiers
-            if TcComm.is_tot_or_gtot_lcomp c //early in prims, Tot and GTot are primitive, not defined in terms of Pure/Ghost yet
+            if TcComm.is_tot_or_gtot_lcomp c //Tot and GTot are primitive comps
             || TcUtil.is_pure_or_ghost_effect env c.eff_name
             then let subst = maybe_extend_subst subst (List.hd bs) e in
                  tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, fvs) rest rest'
@@ -3893,10 +3920,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
      // For other effects, we will close with substituting pattern variables with
      //   corresponding projector expressions applied to the scrutinee
      //
-     let close_branch_with_substitutions =
-       let m = c.eff_name |> Env.norm_eff_name env in
-       Env.is_layered_effect env m &&
-       None? (m |> Env.get_effect_decl env |> U.get_layered_close_combinator) in
+     let close_branch_with_substitutions = false in
 
      (* (b) *)
      let c_weak, g_when_weak =
@@ -3995,8 +4019,6 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
                                                | None -> g
                                                | Some eqs -> TcComm.weaken_guard_formula g eqs)
          |> TcUtil.close_layered_lcomp_with_substitutions (Env.push_bv env scrutinee) pat_bvs pat_bv_tms
-       else if c_weak.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env
-       then TcUtil.close_layered_lcomp_with_combinator (Env.push_bv env scrutinee) pat_bvs c_weak
        else TcUtil.close_wp_lcomp (Env.push_bv env scrutinee) pat_bvs c_weak in
 
     c_weak.eff_name,
@@ -4215,9 +4237,7 @@ and check_inner_let env e : ML _ =
 
        //AR: for layered effects, solve any deferred constraints first
        //    we can do it at other calls to close_guard_implicits too, but let's see
-       let g2 = TcUtil.close_guard_implicits env
-         (cres.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env)
-         xb g2 in
+       let g2 = TcUtil.close_guard_implicits env false xb g2 in
        let guard = g1 ++ g2 in
 
        if Some? (Env.expected_typ env)
@@ -4334,7 +4354,7 @@ and check_inner_let_rec env top : ML _ =
               cres
           in
           let cres = TcUtil.maybe_assume_result_eq_pure_term env e2 cres in
-          let cres = TcComm.lcomp_set_flags cres [SHOULD_NOT_INLINE] in //cf. issue #1362
+
           let guard = g_lbs ++ (Env.close_guard env (List.map S.mk_binder bvs) g2) in
           //
           //We need to close bvs in cres
@@ -4343,26 +4363,7 @@ and check_inner_let_rec env top : ML _ =
           //The code below only checks effect args,
           //  return type is checked at the end of this function
           //
-          let cres =
-            if cres.eff_name |> Env.norm_eff_name env
-                             |> Env.is_layered_effect env
-            then let bvss = from_list bvs in
-                 TcComm.apply_lcomp
-                   (fun c ->
-                    if (c |> U.comp_effect_args
-                          |> List.existsb (fun (t, _) ->
-                              t |> Free.names
-                                |> inter bvss
-                                |> is_empty
-                                |> not))
-                    then raise_error top Errors.Fatal_EscapedBoundVar
-                           "One of the inner let recs escapes in the \
-                            effect argument(s), try adding a type \
-                            annotation"
-                    else c)
-                   (fun g -> g)
-                   cres
-            else TcUtil.close_wp_lcomp env bvs cres in
+          let cres = TcUtil.close_wp_lcomp env bvs cres in
           let tres = norm env cres.res_typ in
           let cres = {cres with res_typ=tres} in
 

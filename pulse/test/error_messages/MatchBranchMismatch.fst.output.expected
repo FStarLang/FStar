@@ -5,16 +5,17 @@
   - ‘Pulse.Lib.Reference.pts_to r 1’
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env =
-      (r : Pulse.Lib.Reference.ref Prims.int) (x : Prims.int)
-      (_br_neg
-        :
-        Prims.squash ((match x with
+  - Failed to prove:
+      Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
+  - In context:
+      r: Pulse.Lib.Reference.ref Prims.int
+      x: Prims.int
+      _br_neg:
+      Prims.squash ((match x with
               | 0 -> true
               | _ -> false) ==
-            false))
-      (branch equality : Prims.squash (Pulse.Lib.Core.rewrites_to_p x 1))
-      (_br : Prims.unit)
-  - VC = Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
+            false)
+      branch equality: Prims.squash (Pulse.Lib.Core.rewrites_to_p x 1)
+      _br: Prims.unit
   - See also MatchBranchMismatch.fst(13,11-13,17)
 

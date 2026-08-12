@@ -668,6 +668,7 @@ let size_of_union_aux_1 #a #f (s1 s2: (z:ordset a f{z<>empty}))
     union_of_tails_size s1 s2;
     same_members_means_eq (intersect (tail s1) s2) (intersect s1 s2)
 
+
 let size_of_union_aux_2 #a #f (s1 s2: (z:ordset a f{z<>empty}))
   : Lemma (requires (head s1) <> (head s2) 
                  && not (f (head s1) (head s2)) 

@@ -5,8 +5,7 @@
   - Expected failure:
   - This definition has a non-total effect, so its type must be provably inhabited; could not prove `nonempty (Prims.squash Prims.l_False)`
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.nonempty (Prims.squash Prims.l_False)
+  - Failed to prove: Prims.nonempty (Prims.squash Prims.l_False)
 
 * Warning 272 at Nonempty.fst(20,0-20,58):
   - Top-level let-bindings must be total; this term may have effects
@@ -15,8 +14,7 @@
   - Expected failure:
   - This definition has a non-total effect, so its type must be provably inhabited; could not prove `nonempty (x: Prims.int{x > 0 /\ x < 0})`
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.nonempty (x: Prims.int{x > 0 /\ x < 0})
+  - Failed to prove: Prims.nonempty (x: Prims.int{x > 0 /\ x < 0})
 
 * Warning 272 at Nonempty.fst(26,0-26,36):
   - Top-level let-bindings must be total; this term may have effects
@@ -25,8 +23,7 @@
   - Expected failure:
   - This definition has a non-total effect, so its type must be provably inhabited; could not prove `nonempty (Nonempty.record)`
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.nonempty Nonempty.record
+  - Failed to prove: Prims.nonempty Nonempty.record
 
 * Warning 272 at Nonempty.fst(32,0-32,32):
   - Top-level let-bindings must be total; this term may have effects
@@ -35,8 +32,7 @@
   - Expected failure:
   - This definition has a non-total effect, so its type must be provably inhabited; could not prove `nonempty (Prims.squash Prims.l_False)`
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = Prims.nonempty (Prims.squash Prims.l_False)
+  - Failed to prove: Prims.nonempty (Prims.squash Prims.l_False)
 
 * Warning 272 at Nonempty.fst(35,0-35,29):
   - Top-level let-bindings must be total; this term may have effects

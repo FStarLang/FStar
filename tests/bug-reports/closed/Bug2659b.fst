@@ -33,23 +33,17 @@ let bind0
   : repr0 a1 b1 p1
   = r1 r0
 
-total reflectable effect {
-  E0 (a : Type) (b : bool0) (p : index b)
-  with {
-    repr   = repr0;
-    return = return0;
-    bind   = bind0;
-  }
-}
+//
+// The two monads are used directly: their indices cannot be effect indices
+// any more, since an effect representation must have shape a:Type -> Type.
+//
 
-let lift_pure_e0 (a : Type) (wp : pure_wp a) (f : unit -> PURE a wp)
-  : Pure (repr0 a BT IT)
-         (requires as_requires wp)
-         (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-    f ()
+let ( let! ) (a0 a1 : Type) (b0:bool0) (p0:index b0) (b1 : bool0) (p1 : index b1)
+             (r0 : repr0 a0 b0 p0) (r1 : a0 -> repr0 a1 b1 p1)
+  : repr0 a1 b1 p1
+  = bind0 a0 a1 b0 p0 b1 p1 r0 r1
 
-sub_effect PURE ~> E0 = lift_pure_e0
+let lift_pure_e0 (a : Type) (f : unit -> a) : repr0 a BT IT = f ()
 
 
 let repr1 (a : Type) (b : bool0) = a
@@ -67,24 +61,7 @@ let bind1
   : Pure (repr1 a1 b1) False (fun _ -> True)
   = false_elim ()
 
-total reifiable effect {
-  E1 (a : Type) (b : bool0)
-  with {
-    repr   = repr1;
-    return = return1;
-    bind   = bind1;
-  }
-}
-
-let lift_pure_e1 (a : Type) (wp : pure_wp a) (f : unit -> PURE a wp)
-  : Pure (repr1 a BT)
-         (requires wp (fun _ -> True))
-         (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-    f ()
-
-sub_effect PURE ~> E1 = lift_pure_e1
-
+let lift_pure_e1 (a : Type) (f : unit -> a) : repr1 a BT = f ()
 
 let lift_e0_e1
       (a : Type) (b : bool0) (p : index b)
@@ -92,24 +69,17 @@ let lift_e0_e1
   : repr1 a b
   = r
 
-sub_effect E0 ~> E1 = lift_e0_e1
 
+assume val return_False (_:unit) : repr0 (squash False) BT IT
 
-assume val return_False (_:unit) : E0 (squash False) BT IT
-
-let make_BF (f : squash False) : unit -> E0 unit BF (false_elim ()) = false_elim ()
+let make_BF (f : squash False) : unit -> repr0 unit BF (false_elim ()) = false_elim ()
 
 //
-// Here we compute:
-//   type of return_False () as E0 (squash False) BT IT
-//   type of make_BF f () as E0 unit BF (false_elim ())
+// Sequencing in the E1 monad is impossible: its bind has precondition False.
+// Under the old indexed-effect elaboration this was hidden, because the
+// indices of the continuation were typechecked in the top context.
 //
-// And then the index false_elim () is typechecked in the top context, since the bind looks like:
-//   M.bind #is #js f (fun (x:a) -> g), so the indices js of g are typechecked in the top context, without x
-//
-// And that fails in SMT
 
 [@@ expect_failure [19]]
-let absurd_e1 () : E1 unit BF =
-  let f = return_False () in
-  make_BF f ()
+let absurd_e1 () : repr1 unit BT =
+  bind1 _ _ _ _ (return1 _ ()) (fun _ -> return1 _ ())

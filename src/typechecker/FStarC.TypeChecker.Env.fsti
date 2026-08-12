@@ -93,47 +93,16 @@ type goal = term
 type must_tot = bool
 
 (*
- * AR: The mlift record that maintains functions to lift 'source' computation types
- *     and terms to 'target' computation types and terms (terms in the case of reifiable effects)
+ * Edge in the effect lattice.
  *
- *     The signature to lift computation types is quite nice: comp to comp
- *     For the terms, we don't require the indices (wps etc.) anymore since
- *     they are computationally irrelevant, in the previous code where we needed them
- *     all the clients were passing Tm_unknown, so what's the point
- *     Read the signature as: u_a:universe -> a:typ -> e:term -> term
- *
- *     Note that these types compose quite nicely along the effect lattice
- *)
-
-type lift_comp_t = env -> comp -> ML (comp & guard_t)
-
-(*
- * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
- *     read as: env -> c1 -> x -> c2 -> flags -> r -> (c * g)
- *)
-and polymonadic_bind_t =
-  env ->
-  comp_typ ->
-  option bv ->
-  comp_typ ->
-  list cflag ->
-  Range.t ->
-  ML (comp & guard_t)
-
-and mlift = {
-  mlift_wp:lift_comp_t;
-  mlift_term:option (universe -> typ -> term -> ML term)
-}
-
-(*
- * Edge in the effect lattice
+ * Effects no longer carry any lifting machinery: an edge is purely an
+ * ordering fact, so lifting a computation only renames its effect.
  *
  * May have been computed by composing other "edges"
  *)
-and edge = {
+type edge = {
   msource : lident;
   mtarget : lident;
-  mlift   : mlift;
   mpath   : list lident;  //this is just for debugging pusposes
                            //e.g. it is used when printing the effects graph
                            //it has no other role
@@ -144,8 +113,7 @@ and edge = {
 (*
  * The effects graph
  *
- * Each of order, joins, polymonadic binds, subcomps, are lists,
- *   that may have multiple entries for same nodes,
+ * order and joins are lists that may have multiple entries for the same nodes,
  *   e.g. multiple edges between effects M and N
  *
  * We keep adding the latest ones to the head of the list,
@@ -156,10 +124,10 @@ and edge = {
 
 and effects = {
   decls :list (eff_decl & list qualifier);
-  order :list edge;                                       (* transitive closure of the order in the signature *)
-  joins :list (lident & lident & lident & mlift & mlift); (* least upper bounds *)
-  polymonadic_binds :list (lident & lident & lident & polymonadic_bind_t);  (* (m, n) | p *)
-  polymonadic_subcomps :list (lident & lident & tscheme & S.indexed_effect_combinator_kind);  (* m <: n *)
+  order :list edge;                          (* transitive closure of the order in the signature *)
+  joins :list (lident & lident & lident);    (* least upper bounds *)
+  lifts :list (lident & lident & tscheme);   (* term-level lifts, as declared (not closed);
+                                                used only for reification *)
 }
 
 and env = {
@@ -263,7 +231,6 @@ and solver_t = {
     rollback        :string -> option solver_depth_t -> ML unit;
     encode_sig      :env -> sigelt -> ML unit;
     preprocess      :env -> goal -> ML (bool & list (env & goal & FStarC.Options.optionstate));
-    spinoff_strictly_positive_goals: option (env -> goal -> ML (list (env & goal)));
     handle_smt_goal :env -> goal -> ML (list (env & goal));
     solve           :option (unit -> ML string) -> env -> goal -> ML unit; //call to the smt solver
     solve_sync      :option (unit -> ML string) -> env -> goal -> ML bool; //call to the smt solver
@@ -450,6 +417,8 @@ val lookup_and_inst_datacon: env -> universes -> lident -> ML (typ)
 (* the boolean tells if the lident was actually a inductive *)
 
 val datacons_of_typ        : env -> lident -> ML ((bool & list lident))
+val discard_specs          : env -> ML bool
+val type_hypothesis        : env -> typ -> term -> ML term
 
 val typ_of_datacon         : env -> lident -> ML (lident)
 
@@ -540,17 +509,11 @@ val get_default_effect     : env -> lident -> ML (option lident)
 
 val get_top_level_effect   : env -> lident -> ML (option lident)
 
-val is_layered_effect      : env -> lident -> ML (bool)
+val join_opt               : env -> lident -> lident -> ML (option lident)
 
-val identity_mlift         : mlift
-
-val join_opt               : env -> lident -> lident -> ML (option (lident & mlift & mlift))
-
-val join                   : env -> lident -> lident -> ML (lident & mlift & mlift)
+val join                   : env -> lident -> lident -> ML lident
 
 val monad_leq              : env -> lident -> lident -> ML (option edge)
-
-val wp_signature           : env -> lident -> ML ((bv & term))
 
 val binders_of_bindings : list binding -> ML (binders)
 
@@ -608,21 +571,16 @@ val push_sigelt_force     : env -> sigelt -> ML env (* does not check for repeat
 
 val push_new_effect       : env -> (eff_decl & list qualifier) -> env
 
-//client constructs the mlift and gives it to us
-
-val exists_polymonadic_bind: env -> lident -> lident -> ML (option (lident & polymonadic_bind_t))
-
-val exists_polymonadic_subcomp: env -> lident -> lident -> ML (option (tscheme & S.indexed_effect_combinator_kind))
-
 //print the effects graph in dot format
 
 val print_effects_graph: env -> ML (string)
 
-val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> ML (env)
+val update_effect_lattice  : env -> src:lident -> tgt:lident -> ML (env)
 
-val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
-
-val add_polymonadic_subcomp: env -> m:lident -> n:lident -> (tscheme & S.indexed_effect_combinator_kind) -> env
+(* Register the term-level lift of a [sub_effect ... = e] declaration.
+   Lifts are only used for reification, never for typechecking. *)
+val add_lift              : env -> src:lident -> tgt:lident -> tscheme -> ML (env)
+val lookup_lift           : env -> src:lident -> tgt:lident -> ML (option tscheme)
 
 val push_bv               : env -> bv -> env
 
@@ -699,7 +657,6 @@ val abstract_guard_n          : list binder -> guard_t -> ML (guard_t)
 
 val abstract_guard            : binder -> guard_t -> ML (guard_t)
 
-val too_early_in_prims : env -> ML (bool)
 
 val apply_guard               : guard_t -> term -> ML (guard_t)
 
@@ -784,7 +741,6 @@ val get_letrec_arity : env -> lbname -> ML (option int)
 
 val fvar_of_nonqual_lid : env -> lident -> ML (term)
 
-val split_smt_query : env -> term -> ML (option (list (env & term)))
 
 (* Binding instances, mostly for defensive checks *)
 
