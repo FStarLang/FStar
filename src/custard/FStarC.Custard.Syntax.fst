@@ -107,7 +107,7 @@ let decl_flags (d:decl) : list flag =
   | DType t -> t.dt_flags
   | DLet l -> l.dl_flags
   | DExternal e -> e.dx_flags
-  | DExn _ -> []
+  | DExn e -> e.de_flags
 
 let has_flag (fs : list flag) (f : flag) : ML bool =
   List.existsb (fun f' -> f' = f) fs
@@ -384,6 +384,7 @@ let flag_to_doc (f:flag) : ML document =
   | Erased -> text "erased"
   | Comment s -> text ("(* " ^ s ^ " *)")
   | Realized -> text "realized"
+  | SourceRecord -> text "source-record"
   | Imported (u, h) ->
     text ("imported[" ^ u ^ (match h with Some m -> "@" ^ m | None -> "") ^ "]")
 
@@ -451,6 +452,7 @@ let decl_to_doc (d:decl) : ML document =
        | Some t -> space ^^ equals ^/^ dquotes (text t))))
 
   | DExn e ->
+    flags_to_doc e.de_flags ^^
     group (nest 2 (
       text "exception" ^^ space ^^ name_to_doc e.de_name ^^
       (match e.de_args with

@@ -109,7 +109,28 @@ let reify_steps : list TcEnv.step =
 let reify_comp (env:TcEnv.env) (c:comp) : ML typ =
   TcEnv.reify_comp env c S.U_unknown
 
-let maybe_reify (env:TcEnv.env) (t:term) (l:Ident.lident) : ML term =
-  if is_reifiable env l
-  then TcUtil.norm_reify env reify_steps (U.mk_reify t (Some l))
-  else t
+(* The normalizer reduces [reify (bind e k)] and [reify (return v)], but a
+   [let rec] is neither: it is not a monadic node, so [reify (let rec f = d in
+   e)] is stuck, and everything *after* the [let rec] is left as an unreified
+   [Tac] term.  Nothing downstream then knows those applications are effectful
+   and they compile as if they were pure values -- which type-checks in F* but
+   emits OCaml that adds a proofstate-taking closure to an integer.  A [let
+   rec] does not bind the effect, so the reify commutes with it; we push it
+   through by hand and reify the body, which is where the monadic structure
+   resumes. *)
+let rec maybe_reify (env:TcEnv.env) (t:term) (l:Ident.lident) : ML term =
+  if not (is_reifiable env l) then t
+  else
+    match (SS.compress t).n with
+    | Tm_let {lbs=(true, lbs); body} ->
+      let lbs, body = SS.open_let_rec lbs body in
+      let env' =
+        List.fold_left
+          (fun env lb -> match lb.lbname with
+                         | Inl bv -> TcEnv.push_bv env bv
+                         | Inr _ -> env)
+          env lbs in
+      let body = maybe_reify env' body l in
+      let lbs, body = SS.close_let_rec lbs body in
+      { t with n = Tm_let {lbs=(true, lbs); body} }
+    | _ -> TcUtil.norm_reify env reify_steps (U.mk_reify t (Some l))

@@ -56,8 +56,9 @@ val ctor_owners : program -> ML (FStarC.SMap.t string)
     is allowed to decide one.  Everything below them therefore sees the
     representation the backend will print.
 
-    [imports] are the types this program links against rather than compiles.
-    Their representation is settled and arrives in [vd]; they are here because
-    the passes that ask how many constructors a type has, or what its fields
-    are called, still have to be able to see them. *)
-val run : list dtype -> verdicts -> program -> ML program
+    [imports] are the declarations this program links against rather than
+    compiles.  A type's representation is settled and arrives in [vd]; they
+    are here because the passes that ask how many constructors a type has,
+    what its fields are called, or what an imported function's declared
+    argument types are, still have to be able to see them. *)
+val run : list decl -> verdicts -> program -> ML program

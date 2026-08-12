@@ -25,3 +25,28 @@ FStarC.Syntax.Free.ord_univ_uvar
 # call site to specialize it at (error 363).  A Mono binder wants a call site,
 # so PulseSyntaxExtension.Env gives it one -- see union_ctx_uvars there, and
 # doc/ref/custard.md section 12.13.
+
+# ExtractPulse / ExtractPulseC / ExtractPulseOCaml.  These are the krml
+# backend's extension hooks; the compiler declares them and never calls them,
+# so its own entry points do not reach them.  Duplicating a register_* in the
+# plugin is not merely wasteful: it mutates a private ref that the compiler
+# never reads, so the extension would register into the void.
+FStarC.Extraction.Krml.register_pre_translate_type_without_decay
+FStarC.Extraction.Krml.register_pre_translate_type
+FStarC.Extraction.Krml.register_pre_translate_expr
+FStarC.Extraction.Krml.register_pre_translate_type_decl
+FStarC.Extraction.Krml.register_pre_translate_let
+FStarC.Extraction.Krml.generate_is_null
+FStarC.Extraction.ML.Syntax.mlletbinding_to_string
+FStarC.Extraction.ML.Syntax.mlexpr_to_string
+
+# PulseSyntaxExtension.  register_extension_parser and
+# register_extension_tosyntax are the same story as the krml hooks above.
+# The rest are ordinary compiler definitions that nothing the compiler's own
+# entry points reach happens to use.
+FStarC.Parser.AST.Util.register_extension_parser
+FStarC.ToSyntax.ToSyntax.register_extension_tosyntax
+FStarC.Options.ide_filename
+FStarC.Parser.AST.uu___is_DeclAttributes
+FStar.Range.range_0
+FStar.Sealed.Inhabited.seal

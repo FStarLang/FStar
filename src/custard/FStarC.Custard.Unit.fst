@@ -29,7 +29,7 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 module SMap = FStarC.SMap
 
-let current_version = 8
+let current_version = 10
 
 (* The IR is plain first-order data -- no references, no closures, no
    hashconsing -- so the same mechanism that stores checked files stores a
@@ -159,3 +159,9 @@ let lookup (l:links) (k:string) : ML (option (string & entry)) =
   SMap.try_find l k
 
 let is_empty (l:links) : ML bool = SMap.keys l = []
+
+let link_homes (l:links) : ML (list string) =
+  SMap.fold l (fun _ (_, e) acc ->
+    match e.ue_home with
+    | Some h -> if List.mem h acc then acc else h :: acc
+    | None -> acc) []

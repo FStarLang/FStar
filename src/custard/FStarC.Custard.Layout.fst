@@ -573,6 +573,14 @@ let rw_decl (t:tbl) (d:decl) : ML (list decl) =
    are perfectly good field names, and making the conversion unconditional
    means no [EProj] anywhere is left pointing at a variant. *)
 let record_verdict (dt:dtype) : ML bool =
+  (* Section 5.0.1: a realized type's OCaml shape is the hand-written one, so
+     the question is not what Custard would choose but what the source said,
+     which is what a realization mirrors.  [FStar.Pervasives.dtuple4] is a
+     one-constructor *variant* in F* and in [FStar_Pervasives.ml]; making a
+     record of it would name fields the realization does not have.
+     [FStarC.Parser.ParseIt.code_fragment] is a record in both, and leaving it
+     a variant would emit a constructor pattern for an OCaml record. *)
+  if has_flag dt.dt_flags Realized then has_flag dt.dt_flags SourceRecord else
   match dt.dt_body with
   | TVariant [(_, fs)] -> Cons? fs
   | _ -> false

@@ -1563,7 +1563,12 @@ answer without looking at its operands:
 - `Extract.erasable_app` — a saturated call whose comp is pure or ghost and
   whose result type is non-informative becomes `()`.  The purity side
   condition is essential: an erased *result* says nothing about side effects,
-  so `unit -> ML (erased int)` is extracted normally.
+  so `unit -> ML (erased int)` is extracted normally.  The result type has to
+  be *instantiated* with the call's own arguments before it is judged, or a
+  polymorphic signature is judged on its variable: `Pulse.RuntimeUtils.magic :
+  #a:Type -> unit -> GTot a` has result `a`, which is informative for all this
+  test can tell, and a call to it survived into the output as a reference to a
+  name no realization defines — it is `GTot`, so nothing was ever meant to.
 - the `Tm_let` case of `Extract.expr_of_term` — same test on `lbtyp`/`lbeff`,
   so `let x : erased t = <ghost> in e` never visits `<ghost>`.
 - `Extract.ty_of_typ` — a non-informative `Tm_fvar`/`Tm_app` collapses to
@@ -1806,6 +1811,35 @@ conversion is possible.  A coercion between two machine integers is still the
 `Type -> Type`, an `option` instance, one generic user and one concrete call
 site.  Its `GREP`/`NOGREP` pair requires a coercion at each of the three real
 boundaries and forbids one around the `match`.
+
+**A boundary the pass cannot see is a boundary it will not insert at.**  This
+is worth stating as a rule, because the failure mode is silent: a coercion is
+simply not inserted, and the error appears in the OCaml output far from the
+call.  Two ways it happened.
+
+*An imported signature.*  `Simplify.run` is handed the declarations a linked
+unit already compiled (§12.4) so that its passes can see their shape.  That
+argument used to be filtered to types only — a type's layout is what
+`ctor_infos` and `records` ask about — and the consequence was that a call to
+an imported *function* found no signature at all and its argument and result
+boundaries disappeared.  `FStarC.List.Tot.Base.map` returning `list 'b` into a
+position expecting `list comp` is what surfaced it, in the Pulse checker
+against `fstarc.cui`.  It is now the whole declaration list.
+
+*A structured pattern under an `any` field.*  A coercion is an expression, and
+a pattern is not, so `Mkdtuple5 (y, g1, (u_ty, ty_y), pre', k)` — matching a
+pair against an `Obj.t` field — has nowhere to put one.  A pass `split_any`,
+run just before `coerce_prog`, rewrites the field to a fresh variable and the
+sub-pattern into an inner `match` on the coerced variable, where `coerce_prog`
+can then do its job.  Branches with guards are left alone.
+
+Two smaller boundaries in the same family.  A **comparison** is the one
+operator whose operand types must agree with each other rather than with a
+declaration, so when one side is `any` and the other is not, the `any` one is
+coerced to the other's type.  And an **application head** that nothing
+constrains and whose inferred type is `TAny` — `k`, the fifth field of a
+realized `dtuple5`, applied as a function — is wrapped in a coercion to `TAny`
+so that OCaml infers a function type for it rather than `Obj.t`.
 
 ### 5.5 Record recovery
 
@@ -2837,6 +2871,37 @@ arrows before its effect — `let mk (n:int) : ML (int -> Tot int) = fun y -> y 
 computation has to be syntactically a lambda, i.e. a value, and so has no
 effects to lose.
 
+That case does, however, decide the definition's **result type**, and getting
+it wrong is not subtle at all: each surplus binder consumes one arrow of the
+declared result, and a result type that still contains those arrows describes
+a function of higher arity than the one emitted.  The peeling has to run on
+the *term*, unfolding as it goes, because an arrow can be hidden behind an
+abbreviation, and behind another abbreviation past that one.  Pulse's prover
+is the case that showed this up:
+
+```fstar
+type continuation_elaborator g ctxt g' ctxt' =
+  post_hint_opt g -> st_typing_in_ctxt g' ctxt' post_hint ->
+  T.Tac (st_typing_in_ctxt g ctxt post_hint)
+let cont_elab g ps g' ps' =
+  frame: list slprop_view -> continuation_elaborator g ... g' ...
+let unreachable_elim (g: env) (goals: list slprop_view)
+    : cont_elab g [IsUnreachable] g goals = fun frame post t -> ...
+```
+
+Three surplus binders, one arrow behind `cont_elab` and two more behind the
+`continuation_elaborator` that unfolding it exposes.  Peeling the `cty`
+instead cannot work: `ty_of_typ` emits an abbreviation *by name*, and a name is
+not a `TArrow`, so the peel stops at the first one and leaves `unreachable_elim`
+with five parameters and a result type that still promises two of them.
+
+The term-level peel is not strictly stronger, so it falls back to the `cty`
+one.  `FStar.Set.set a = restricted_t a (fun _ -> bool)` only becomes `a ->
+bool` under a beta reduction *under* the binder, which only `ty_of_typ`'s own
+higher-kinded-abbreviation unfolding (§5.0) performs; `FStar.Set.union`'s
+declared result is `set a`, one arrow of which its fourth binder consumes.
+`tests/custard/RetArity.fst` is the regression.
+
 ANF is what makes this tractable, which is why it is phase 4's *first* pass
 (§6): after ANF every impure computation is a named `ELet` in a fixed order, so
 "reordering" is a question about statement order rather than about arbitrary
@@ -2949,6 +3014,26 @@ Three places implement it, mirroring the ML pipeline
   performed on the spot in `expr_of_term`'s `Tm_app` case.  It is not a
   function and has no value of its own, so leaving it alone would emit an
   application of `()`.
+
+**A `reify` can get stuck on a `let rec`.**  `Effects.maybe_reify` puts the
+marker on the body and normalizes; the normalizer discharges it by unfolding
+the effect's `bind` and `return`, which works exactly when the term under the
+marker is a monadic node.  A local `let rec` is not one.  Pulse's
+`Pulse.Typing.Env` has
+
+```fstar
+  let rec pp1 (x : ...) : T.Tac ... = ... in
+  T.Util.map pp1 tmp
+```
+
+and the `reify` sat in front of the `let rec` with nothing to reduce, so
+everything after it — the whole body, including a call taking a proofstate —
+was translated as if it were pure and the OCaml came out one argument short.
+So `maybe_reify` pushes through a `let rec` structurally: open the group, push
+its binders into the environment, reify the body, close it again.  The
+definienda themselves are reified where they are extracted, by
+`extract_letbinding`'s own lambda-lifting path.  `tests/custard/Reify.fst`'s
+`after_letrec` is the regression.
 
 The reification is deliberately *not* folded into `custard_norm_steps`.  A
 `reify` has to be introduced against the effect that a particular term is known
@@ -3126,8 +3211,39 @@ reference to it, to its constructors and to its fields prints as the
 realization's own unmangled name qualified by the support module —
 `FStarC_Platform_Base.sys`, `FStarC_Platform_Base.Win32`.  Its representation
 is fixed outside F\*, so `Realized` also implies no erasure, no newtype
-collapse and no inline-field expansion; the record recovery of §5.5 still
-applies, because F\* and OCaml agree on which declarations are records.
+collapse and no inline-field expansion.
+
+The record recovery of §5.5 still applies, but not unconditionally: for a
+realized type the question is not what Custard would choose but what the
+*source* said, because that is what a realization mirrors.
+`FStarC.Parser.ParseIt.code_fragment` is `type t = { code; range }` in F\* and
+a record in `FStarC_Parser_ParseIt.ml`; `FStar.Pervasives.dtuple3` is a
+one-constructor inductive in F\* and a variant in `FStar_Pervasives.ml`.
+Custard represents both as a `TVariant` and would normally make a record of
+either, so the source's own shape is recorded on the declaration as a
+`SourceRecord` flag, set from the `RecordType` qualifier, and
+`Layout.record_verdict` reads it for a realized type instead of deciding.
+Getting this wrong is not a warning but a type error at the far end: a
+constructor pattern for an OCaml record, or a field label the realization
+never declared.
+
+The same distinction reaches `Simplify.irrefutable`, which turns a
+single-constructor `match` into a field read (§5.5).  A realized *variant* has
+no field to read, so it must keep its `match`; a realized *record* is a record
+in OCaml too, its labels are the source's, and it projects like any other.
+
+Two further things a realized declaration owns rather than Custard.  Its
+**arity** is the realization's: `dtuple3`'s `b` and `c` are higher-kinded
+binders, which §5.0 drops from a compiled type constructor because the
+target's type language cannot hold them, but `FStar_Pervasives.dtuple3` takes
+three parameters and a use that passed one would not name it.  So a realized
+type keeps *every* type binder, writing the unrepresentable ones as `any`.
+And the unfolding that recovers a higher-kinded *abbreviation* (§5.0,
+`FStar.Set.set a = restricted_t a (fun _ -> bool)`) is for abbreviations only:
+there is nothing to unfold in an inductive, and applying it to one made
+`dtuple3` come out as `any`.
+
+`tests/custard/Realized.fst` is the regression for all of this.
 
 The list of realized modules lives in `Builtins` rather than as an attribute on
 each interface.  Fifty attributes would be a fact about the *build* recorded in
@@ -3680,10 +3796,22 @@ number in the header does not already give.  A `.cui` is a build artifact, not
 something anyone edits; `--custard_dump_cui` covers the case where a human
 wants to look.
 
-One exception to "everything the unit emitted": the `Inline` declarations —
+Two exceptions to "everything the unit emitted".  The `Inline` declarations —
 the projectors and discriminators that are substituted at their uses and never
 emitted at all — are excluded, since exporting one would name a symbol that
 does not exist.  A downstream unit re-derives them, which costs nothing.
+
+And a `DExternal` is excluded, because it is a hole the unit *leaves* rather
+than a symbol it provides.  A hand-written realization usually fills it — but
+so, sometimes, does another Custard unit: Pulse's `checker` has its own copy
+of `PulseSyntaxExtension.ASTBuilder.fsti` with no `.fst`, so `parse_pulse` is
+an external there and a real definition in the `syntax_extension` unit.
+Exporting it told `syntax_extension` the symbol was already compiled, and that
+unit then skipped the very definition it was there to contribute; the link came
+out with a reference and nothing to resolve it against.  A downstream unit
+derives an external's signature from the source anyway, exactly as the upstream
+one did, so nothing is lost.
+
 Everything else is exported unconditionally, and §12.5 explains why that is
 both possible and necessary.
 
@@ -4524,8 +4652,9 @@ interface.
 `tests/custard/plugin` is a plugin written for the purpose.  The Pulse
 checker is the real thing: 126 F\* files in three units, two `[@@plugin]`
 declarations, four hand-written OCaml realizations, and a menhir grammar.
-Pointing Custard at it is the honest measure of §12, and it has been done ---
-extraction only, not yet a loadable `.cmxs`.
+Pointing Custard at it is the honest measure of §12, and it has been done:
+**two units, linked against each other and against a Custard-built compiler,
+compile to one loadable `.cmxs`.**
 
 **What already works.**  `Pulse.Main` extracts whole against
 `stagec/split/fstarc.cui`: one unit, 7.6k lines of OCaml, in about two
@@ -4607,12 +4736,57 @@ wants: name it from F\*, at the type you mean, and call the wrapper.
 With that, `PulseSyntaxExtension_Env.ml` and `Pulse_RuntimeUtils.ml` both
 compile against `stagec/build` with no unresolved symbol.
 
-1. **Two units untried.**  Only `checker` has been extracted.  `extraction`
-   and `syntax_extension` remain, and the latter is built around a menhir
-   grammar of its own, which §12.11 handles for the compiler's parser but has
-   not been asked to do for a plugin's.  (`PulseSyntaxExtension.Env` itself
-   extracts, split, under `--custard_split`, which is how the wrapper above
-   was checked; it is the rest of the unit that is untried.)
+#### The two-unit link
+
+`checker` and `syntax_extension` are mutually dependent as F\* modules and
+strictly ordered as Custard units.  `checker` extracts first, linked against
+`stagec/split/fstarc.cui`; `syntax_extension` extracts second, linked against
+both `fstarc.cui` and `PulseChecker.cui`.  That second link is visible in the
+output: 33 generated `.ml` files become 13, the rest resolving through the
+interface.  The two directories are then compiled together — 82 generated
+files plus the four realizations and the two menhir grammars — into one
+`.cmxs`.  `--infer-write-query`/`--infer-read-reply` handles the grammars
+exactly as §12.11 does for the compiler's own parser; nothing about a plugin's
+grammar needed new machinery.
+
+Three things had to be got right, and each is a rule rather than a workaround.
+
+**Two units cannot share one checked-file cache.**  `PulseSyntaxExtension.
+ASTBuilder.fsti` and `Pulse.Main.fsti` exist in *both* units' source trees with
+different contents, so `checker.checked` and `syntax_extension.checked` contain
+different files of the same name.  Copying both into one directory silently
+gives one unit the other's interface, and the failure is a hash mismatch a
+long way from the cause.  `--debug CheckedFiles` prints `Differ at:
+Expected …/Got …`, which is the only practical way to find it.  The same
+applies to `--include`: `Find.full_include_path` is *cache dir, then library
+paths, then include paths, then `.`*, and the **last** directory wins.
+
+**A unit does not export its holes.**  See §12.2: `parse_pulse` is an external
+in `checker` and a definition in `syntax_extension`, and exporting the external
+made the definition disappear.
+
+**A cross-unit definition needs an entry point.**  Nothing *inside*
+`syntax_extension` calls `parse_pulse` or `desugar_pulse`; only `Pulse.Main`,
+in the other unit, does, and a call across a unit boundary is not a request
+Custard can see.  So they go in
+`pulse/src/syntax_extension/custard-entrypoints.txt` alongside the grammar's
+constructors, for exactly the reason §12.11 gives.
+
+#### What is left
+
+1. **The `extraction` unit is untried.**  `checker` and `syntax_extension`
+   are done; `ExtractPulse` and its two backends remain.
+2. **The realizations are written against ML extraction's names.**  Custard
+   gives a constructor's payload record its own type with the source's field
+   names — `term'__Tm_let__payload` with `lbs`, `lbs1`, `body` — where ML
+   extraction disambiguates duplicates across the whole module (`tm2`,
+   `body1`) and keeps a `letbindings` pair as a tuple.  So
+   `Pulse_Extract_CompilerLib.ml` needs a Custard-flavoured copy.  This is the
+   expected shape of the problem (§8.2): a realization is a contract with a
+   *particular* extractor, and Custard's names are the better ones.
+3. **The build is a script, not a make target.**  The recipe above lives in a
+   shell script; folding it into `pulse/mk` is what would make this a
+   regression rather than a demonstration.
 
 ## 13. Plugins
 
@@ -4991,8 +5165,10 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10o | **The `FStar.Stubs.*` rename** (§8.2) | Done.  `Builtins.no_fstar_stubs`, applied in `Extract.name_of_lid`, so that a plugin's `FStar.Stubs.Tactics.Types.proofstate` and the compiler's `FStarC.Tactics.Types.proofstate` are one name.  Fallout: `solve` is now `inline_for_extraction` in its five copies (its `{| ev : a |}` binder made `#a` `Mono`, which §3.2b rejects once `embedding` is no longer specialized), and record ascription had to cover projections as well as record expressions (§5.5). |
 | M10d | A Custard-compiled plugin linking against a Custard-compiled compiler (§12.8 item 4) | Done, and it is `make custard-plugin` (§12.12).  A `.cui` entry now records the *file* a declaration was emitted into (`ue_home`), not just the unit, because the compiler is built split; an import that carries one is folded into the printer's `homes` table, since an import from a split producer and a cross-file reference inside a split output are the same thing.  `Loader.ensure_loaded` registers a module's dependences before the module, which a plugin run needs and a whole-program run got for free.  The test reduces `irreducible` definitions with `norm [primops]`, so it fails without the plugin.  It exposed the sixth miscompilation of §13.5: specialization eta-expanded `Cfg.cached_steps`, reallocating its memo table per call, and the extracted compiler folded no primops at all |
 | M10q | Cleanup: bounded normalization everywhere, target-native tuples and `option` | Done.  Every normalization Custard performs now runs under `--custard_norm_budget`, through `Extract.norm_bounded` or the new `Mono.norm_bounded` for the callers below the extractor; the four sites in `Mono` and `RegEmb` that did not were the last unbounded ones (§12.8 item 8).  And a realized type that the realization defines as an *alias* of a type the target already has is printed as that target type: `FStar.Pervasives.Native`'s `tupleN` in OCaml's tuple syntax and its `option` as OCaml's `option`, so that no Custard-generated line in the extracted compiler names `FStar_Pervasives_Native` (§8.2).  `fst`/`snd` are `inline_for_extraction` |
-| M10r | Extract the Pulse checker (§12.13) | Measured, not finished.  `Pulse.Main` extracts whole against the compiler's `.cui`, with no `--warn_error` suppression --- 7.6k lines, and both registrations come out correct: `check_pulse`'s nine-argument one and, since M10s, `check_pulse_after_desugar`'s polymorphic one.  Pulse needs no new `Builtins` entry and no output splitting, since its realizations name no Pulse module.  Every compiler symbol its realizations name now resolves against `stagec/build`, and `Pulse_RuntimeUtils.ml` compiles there.  What is left: the `extraction` and `syntax_extension` units are untried, the latter with a menhir grammar of its own |
+| M10r | Extract the Pulse checker (§12.13) | Measured, not finished.  `Pulse.Main` extracts whole against the compiler's `.cui`, with no `--warn_error` suppression --- 7.6k lines, and both registrations come out correct: `check_pulse`'s nine-argument one and, since M10s, `check_pulse_after_desugar`'s polymorphic one.  Pulse needs no new `Builtins` entry and no output splitting, since its realizations name no Pulse module.  Every compiler symbol its realizations name now resolves against `stagec/build`, and `Pulse_RuntimeUtils.ml` compiles there.  Superseded by M10v, which compiles it |
 | M10t | **Plugin-supplied entry points** (§12.11, §12.13) | Done.  `--custard_entrypoints FILE` reads a file of roots --- one per line, `#` for comments --- so the format is the compiler's rather than a `sed` in the makefile, and so a *plugin* can ship one: the compiler is built before the plugin exists, and a realization's callees have to be in the binary the plugin is loaded into.  `mk/custard.mk` now passes `src/custard/entrypoints.txt` and `pulse/src/custard-entrypoints.txt` this way, and takes more in `CUSTARD_ENTRYFILES`; `make custard` is itself the test, since all 328 compiler roots now arrive through the new option.  Six of the seven compiler symbols `Pulse_RuntimeUtils.ml` needs now resolve against `stagec/build` |
 | M10u | **A realization calling a monomorphized compiler function** (§12.13) | Done.  The seventh symbol, `FStarC.FlatSet.union`, could not be an entry point: its typeclass dictionary is a `Mono` binder and a root has no call site to specialize it at.  A `Mono` binder wants a call site, so `PulseSyntaxExtension.Env` --- a Pulse F\* module already built `--with_fstarc` and already named by the realization --- now gives it one, in two three-line wrappers at the types Pulse actually uses.  The instance has to be brought into scope with `open FStarC.Syntax.Free {}` rather than passed with `#`, since a `{| |}` binder is not an implicit one (error 189).  They specialize to `FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__ctx_uvar`, which the compiler already has, so no entry point was needed after all.  `PulseSyntaxExtension_Env.ml` and `Pulse_RuntimeUtils.ml` now both compile against `stagec/build` with nothing unresolved |
 | M10s | **Polymorphic plugins** (§13.4) | Done.  A `[@@plugin]` with leading type binders registers: the type variable's embedding is `mk_any_emb` on the type argument, and a generated match peels one argument per type binder off the front of the primitive step's argument list, so the registered arity counts the type arguments while the combinator's index does not.  Only leading type binders; one after a value binder is still rejected.  `tests/custard/plugin` adds `pid`, `psnd`, `pcount` and `pswap` (the last putting an identity embedding *under* an `e_tuple2`), all `irreducible`, so the test fails with error 228 without the plugin loaded.  Specializing `mk_any_emb` into a plugin also exposed that `Extract.import` never filed a linked declaration in `st.emitted`, so every cross-unit call was typed `TAny` and classified `E_Pure` --- `!Options.debug_embedding` printed as an array index, and an imported effectful call could have been dropped |
+| M10v | **Compile the Pulse plugin** (§12.13) | Done.  `checker` and `syntax_extension` extract as two units, the second linked against the first --- 33 generated files become 13 --- and compile together with the four realizations and the two menhir grammars into one loadable `.cmxs`.  Rules the exercise settled: a unit does not export its `DExternal`s, because they are the holes it leaves and one of them (`parse_pulse`) is another unit's definition (§12.2); a cross-unit callee needs an entry point, since a call across a unit boundary is not a request Custard can see; and two units cannot share one checked-file cache, because `Pulse.Main.fsti` and `PulseSyntaxExtension.ASTBuilder.fsti` exist in both trees with different contents.  Left: the `extraction` unit, a Custard-flavoured `Pulse_Extract_CompilerLib.ml`, and folding the recipe into `pulse/mk` |
+| M10w | **Ten extraction bugs the Pulse plugin exposed** | Done, each with the rule it violated: a `reify` stuck in front of a local `let rec` (§7.5); a realized type's record-versus-variant shape, arity and projectability, all of which the realization owns and not Custard (§8.2, new `SourceRecord` flag); a result type peeled at the `cty` level, where an abbreviation is a name and not an arrow, so an eta-short definition claimed an arity it did not have (§7.3, `tests/custard/RetArity.fst`); a lambda that loses all its binders, where `expr_of_term` had a purity test `Mono.keep_thunk` says it must not have; four coercion boundaries the pass could not see --- an imported *value* signature, a structured pattern under an `any` field, a comparison, an application head (§5.4); and a `GTot` result judged on its uninstantiated type variable, which left a call to `Pulse.RuntimeUtils.magic` in the output (§5.1).  `tests/custard/Realized.fst` and `RetArity.fst`; the compiler's own build covers the realized-*record* case, `FStarC.Parser.ParseIt.code_fragment` |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |

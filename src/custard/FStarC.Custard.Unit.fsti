@@ -102,3 +102,8 @@ val load_links : list string -> ML links
 val lookup : links -> string -> ML (option (string & entry))
 
 val is_empty : links -> ML bool
+
+(** Every file the linked units emitted into (section 12.9).  These names are
+    taken: this run may not emit a file of the same name, or the target linker
+    would see two compilation units with one name. *)
+val link_homes : links -> ML (list string)

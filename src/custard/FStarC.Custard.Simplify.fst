@@ -936,45 +936,52 @@ type ctor_info = {
   ci_count:  int;                (* how many constructors that type has *)
   ci_params: list string;        (* that type's parameters, in order *)
   ci_fields: list (string & cty);
+  ci_realized: bool;             (* realized, and a variant there (section 8.2) *)
 }
 
-(* The types this run links against rather than compiles, as the units that
-   compiled them emitted them.  No pass here decides anything about them --
-   their representation is settled, and {!FStarC.Custard.Layout} hands it over
-   in a [verdicts] -- but the passes that ask how many constructors a type has,
-   or what its fields are called, still have to be able to see them.  A [ref]
-   rather than an argument threaded through a dozen functions, for the same
-   reason {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a
-   whole program.  Set by {!run}. *)
-let imported_types : ref (list dtype) = mk_ref []
+(* The declarations this run links against rather than compiles, as the units
+   that compiled them emitted them.  No pass here decides anything about them
+   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
+   over in a [verdicts] -- but the passes that ask how many constructors a type
+   has, what its fields are called, or what a function's declared argument
+   types are, still have to be able to see them.  The last of those is not
+   optional: a coercion is inserted where a declared type meets a value, and a
+   call to an imported function whose signature is invisible is a boundary
+   that silently disappears.  A [ref] rather than an argument threaded through
+   a dozen functions, for the same reason
+   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
+   program.  Set by {!run}. *)
+let imported_types : ref (list decl) = mk_ref []
 
-(* The program as the *type*-inspecting passes should see it.  Imported types
-   are visible to a question about a declaration and invisible to everything
-   else: they contribute no body, they are not re-decided, and they are not
+(* The program as the *declaration*-inspecting passes should see it.  An
+   imported declaration is visible to a question about a declaration and
+   invisible to everything else: it is not rewritten, not re-decided, and not
    emitted. *)
 let with_imports (prog:program) : ML program =
   match !imported_types with
   | [] -> prog
-  | ts -> (ts |> List.map (fun dt -> DType dt)) @ prog
+  | ds -> ds @ prog
 
 let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
   let m : SMap.t ctor_info = SMap.create 50 in
   prog |> List.iter (fun d ->
     match d with
-    | DType ({ dt_name = tn; dt_params = ps; dt_body = TVariant cs }) ->
+    | DType ({ dt_name = tn; dt_params = ps; dt_body = TVariant cs; dt_flags = fl }) ->
       let n = List.length cs in
       cs |> List.iter (fun (cn, fs) ->
         (* [TInline] is [inline_fields]'s business; the types this table hands
            out end up on [EProj] nodes, where the marker has no meaning. *)
         let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
         SMap.add m (string_of_name cn)
-          { ci_owner = tn; ci_count = n; ci_params = ps; ci_fields = fs })
+          { ci_owner = tn; ci_count = n; ci_params = ps; ci_fields = fs;
+            ci_realized = has_flag fl Realized && not (has_flag fl SourceRecord) })
     (* A record is keyed on its type, which is what [ERecord], [EProj] and
        [PRecord] all name.  It has one "constructor" by construction. *)
-    | DType ({ dt_name = tn; dt_params = ps; dt_body = TRecord fs }) ->
+    | DType ({ dt_name = tn; dt_params = ps; dt_body = TRecord fs; dt_flags = fl }) ->
       let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
       SMap.add m (string_of_name tn)
-        { ci_owner = tn; ci_count = 1; ci_params = ps; ci_fields = fs }
+        { ci_owner = tn; ci_count = 1; ci_params = ps; ci_fields = fs;
+          ci_realized = has_flag fl Realized && not (has_flag fl SourceRecord) }
     | _ -> ());
   m
 
@@ -1030,9 +1037,17 @@ let irrefutable (tbl:SMap.t ctor_info) (p:pat)
   : ML (option (name & list ((string & cty) & pat))) =
   let plain (ps:list pat) : ML bool = ps |> List.for_all (fun p -> PVar? p || PWild? p) in
   match p with
+  (* Section 8.2: a realized type's OCaml declaration is the hand-written one,
+     and [FStar.Pervasives.dtuple3] is a *variant* there, so it has no field to
+     project.  [records] leaves it alone for the same reason, and turning its
+     [match] into an [EProj] here would name a label the realization does not
+     have.  A realized type the source wrote as a record is not one of these:
+     its realization is an OCaml record, [records] does convert it, and its
+     labels are exactly the source's. *)
   | PCtor (cn, ps) ->
     (match single_ctor tbl cn with
-     | Some ci when List.length ps = List.length ci.ci_fields && plain ps ->
+     | Some ci when not ci.ci_realized
+                 && List.length ps = List.length ci.ci_fields && plain ps ->
        Some (cn, List.zip ci.ci_fields ps)
      | _ -> None)
   (* A record pattern is irrefutable whatever it leaves out, and it names the
@@ -1137,10 +1152,13 @@ let eta_ctors (vd:verdicts) (prog:program) : ML program =
      plan is stated in the pre-expansion fields, so its length is the arity
      wanted -- and for a local constructor it agrees with the declaration. *)
   let imported : SMap.t unit = SMap.create 20 in
-  !imported_types |> List.iter (fun (t:dtype) ->
-    match t.dt_body with
-    | TVariant cs -> cs |> List.iter (fun (cn, _) -> SMap.add imported (string_of_name cn) ())
-    | TRecord _ -> SMap.add imported (string_of_name t.dt_name) ()
+  !imported_types |> List.iter (fun (d:decl) ->
+    match d with
+    | DType t ->
+      (match t.dt_body with
+       | TVariant cs -> cs |> List.iter (fun (cn, _) -> SMap.add imported (string_of_name cn) ())
+       | TRecord _ -> SMap.add imported (string_of_name t.dt_name) ()
+       | _ -> ())
     | _ -> ());
   (* Walk the plan and the final fields together to recover the fields the
      constructor was declared with.  [ex_ty] is the type of the field that was
@@ -1578,6 +1596,88 @@ let unbuild_decls (prog:program) : ML program =
     | DLet dl -> DLet { dl with dl_body = unbuild infos dl.dl_body }
     | d -> d)
 
+(* A sub-pattern under a field whose declared type is [any] (section 5.4).  A
+   coercion is an expression, and a pattern is not, so the [Obj.magic] that
+   would make the two agree has nowhere to go: [Mkdtuple5 (y, g, (u, t), p, k)]
+   asks OCaml to match a pair against the [any] that [dtuple5]'s third
+   parameter compiles to, and it refuses.
+
+   The field is bound to a fresh variable instead, and the pattern that was
+   there becomes a [match] on a coercion of it -- which is exactly the same
+   test, run one step later, where a coercion is allowed.  A branch with a
+   guard is left alone: the guard is evaluated where the outer pattern binds,
+   and the variables would no longer be in scope there. *)
+let rec split_any (infos:SMap.t ctor_info) (p:pat) (body:expr) : ML (pat & expr) =
+  let simple (p:pat) : bool = PVar? p || PWild? p in
+  let field (t:cty) (p:pat) (body:expr) : ML (pat & expr) =
+    if TAny? t && not (simple p)
+    then let v = rename "any" in
+         let sc = mk (ECast (mk (EVar v) TAny E_Pure, TAny)) TAny E_Pure in
+         let p, body = split_any infos p body in
+         (PVar v, { body with e = EMatch (sc, [(p, None, body)]) })
+    else split_any infos p body in
+  let many (ts:list cty) (ps:list pat) (body:expr) : ML (list pat & expr) =
+    List.fold_right (fun (t, p) (ps, body) ->
+      let p, body = field t p body in
+      (p :: ps, body)) (List.zip ts ps) ([], body) in
+  match p with
+  | PCtor (cn, ps) ->
+    (match SMap.try_find infos (string_of_name cn) with
+     | Some ci when List.length ci.ci_fields = List.length ps ->
+       let ps, body = many (ci.ci_fields |> List.map snd) ps body in
+       (PCtor (cn, ps), body)
+     | _ -> (p, body))
+  | PRecord (tn, fps) ->
+    (match SMap.try_find infos (string_of_name tn) with
+     | Some ci ->
+       let ts = fps |> List.map (fun (f, _) ->
+         match ci.ci_fields |> List.tryFind (fun (g, _) -> g = f) with
+         | Some (_, t) -> t
+         | None -> TVar "?") in
+       let ps, body = many ts (fps |> List.map snd) body in
+       (PRecord (tn, List.zip (fps |> List.map fst) ps), body)
+     | None -> (p, body))
+  | PTuple ps ->
+    let ps, body = List.fold_right (fun p (ps, body) ->
+      let p, body = split_any infos p body in
+      (p :: ps, body)) ps ([], body) in
+    (PTuple ps, body)
+  | POr _ | PVar _ | PWild | PConst _ -> (p, body)
+
+let rec split_any_expr (infos:SMap.t ctor_info) (x:expr) : ML expr =
+  let g = split_any_expr infos in
+  let br (b0:branch) : ML branch =
+    let p, gd, b = b0 in
+    let b = g b in
+    match gd with
+    | Some gd -> (p, Some (g gd), b)
+    | None -> let p, b = split_any infos p b in (p, None, b) in
+  match x.e with
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
+  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
+  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
+  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
+  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
+  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
+  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map br) }
+  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map br) }
+  | ETuple es -> { x with e = ETuple (es |> List.map g) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
+  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
+  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+
+let split_any_decls (prog:program) : ML program =
+  let infos = ctor_infos (with_imports prog) in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = split_any_expr infos dl.dl_body }
+    | d -> d)
+
 (* {1 Coercions at the [TAny] boundary (section 5.4)}
 
    [TAny] is what is left when Custard cannot name a value's representation.
@@ -1783,6 +1883,30 @@ let coerce_prog (prog:program) : ML program =
     | PRecord (n, fps) ->
       fps |> List.fold_left (fun env (f, p) ->
         bind_pat env (field_of (string_of_name n) sc f) p) env in
+  (* Solve a polymorphic signature's type variables against the types of the
+     arguments actually supplied.  Without this a call to [List.map] comes back
+     as [list 'b] whatever it was applied to, and [list 'b] disagrees with
+     nothing -- so a [list any] flowing into a [list comp] passes unnoticed.
+     First-order and first-solution-wins: the signature is a declaration's, so
+     each variable occurs in argument position, and there is nothing to
+     backtrack over. *)
+  let rec unify_cty (p:cty) (a:cty) (acc:list (string & cty)) : ML (list (string & cty)) =
+    match p, a with
+    | TVar v, _ -> if acc |> List.existsb (fun (w, _) -> w = v) then acc else (v, a) :: acc
+    | TArrow (p1, _, p2), TArrow (a1, _, a2) -> unify_cty p2 a2 (unify_cty p1 a1 acc)
+    | TApp (n, ps), TApp (m, qs) ->
+      if string_of_name n = string_of_name m && List.length ps = List.length qs
+      then unify_ctys ps qs acc else acc
+    | TTuple ps, TTuple qs ->
+      if List.length ps = List.length qs then unify_ctys ps qs acc else acc
+    | TBuf p1, TBuf a1
+    | TRef p1, TRef a1
+    | TInline p1, TInline a1 -> unify_cty p1 a1 acc
+    | _ -> acc
+  and unify_ctys (ps qs : list cty) (acc:list (string & cty)) : ML (list (string & cty)) =
+    match ps, qs with
+    | p :: ps, q :: qs -> unify_ctys ps qs (unify_cty p q acc)
+    | _ -> acc in
   let rec infer (env:cenv) (x:expr) : ML (option cty) =
     match x.e with
     | EVar v -> (match lookup env v with Some t -> t | None -> trust x.ty)
@@ -1793,7 +1917,13 @@ let coerce_prog (prog:program) : ML program =
       (match infer env h with
        | Some t ->
          (match peel_arrows (List.length es) t with
-          | Some (_, res) -> Some res
+          | Some (ps, res) ->
+            let sub =
+              List.fold_left2 (fun acc p (e:expr) ->
+                match infer env e with
+                | Some a -> unify_cty p a acc
+                | None -> acc) [] ps es in
+            Some (subst_cty sub res)
           | None -> trust x.ty)
        | None -> trust x.ty)
     | EProj (e1, n, f) ->
@@ -1849,6 +1979,27 @@ let coerce_prog (prog:program) : ML program =
     match x.e with
     | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
     | ECast (e1, t) -> same (ECast (go env None e1, t))
+    (* A comparison's operands all have the one type, so an operand of unknown
+       representation is a boundary against whichever of them *is* known.
+       Nothing else says so: an operator has no declaration to push an
+       expectation down from, and without this a [Mkdtuple3]'s second field --
+       [any], the type being realized and its fields not Custard's to name --
+       is compared against a constructor of the type it really has. *)
+    | EOp (o, es) when (match o.po_op with
+                        | Eq | Neq | Lt | Lte | Gt | Gte -> true
+                        | _ -> false) ->
+      let es = es |> List.map (go env None) in
+      let ts = es |> List.map (infer env) in
+      let known = ts |> List.tryFind (fun t -> match t with
+                                               | Some c -> not (TAny? c)
+                                               | None -> false) in
+      (match known with
+       | Some (Some c) ->
+         same (EOp (o, List.map2 (fun t (e:expr) ->
+           match t with
+           | Some TAny -> mk (ECast (e, c)) c e.eff
+           | _ -> e) ts es))
+       | _ -> same (EOp (o, es)))
     | EOp (o, es) -> same (EOp (o, es |> List.map (go env None)))
     | EWhile (c, b) -> same (EWhile (go env None c, go env None b))
     | ERaise e1 -> same (ERaise (check env (Some TExn) e1))
@@ -1896,7 +2047,19 @@ let coerce_prog (prog:program) : ML program =
                | Some r when ts |> List.for_all Some? ->
                  Some (arrows (ts |> List.map (fun t -> match t with Some t -> t | None -> TAny)) r)
                | _ -> None) in
-            same (EApp (check env want h, es)))
+            (match want with
+             | Some _ -> same (EApp (check env want h, es))
+             | None ->
+               (* Nothing says what the head should be, but if what it *is* is
+                  [any] then it cannot be applied at all as it stands -- a
+                  value of no representation is not a function.  A coercion
+                  hands the target back a type it can infer from the
+                  arguments.  This is a field of a realized dependent tuple,
+                  whose parameters Custard cannot name (section 5.4). *)
+               let h = go env None h in
+               (match infer env h with
+                | Some TAny -> same (EApp (mk (ECast (h, TAny)) TAny h.eff, es))
+                | _ -> same (EApp (h, es)))))
        (* The head's own type is not worked out well enough to retype the
           call, but a parameter it declares [TAny] is a boundary all the same:
           a coercion *to* [TAny] is well-typed whatever the argument turns out
@@ -1962,7 +2125,7 @@ let coerce_prog (prog:program) : ML program =
       DLet { dl with dl_body = check env (Some dl.dl_ret) dl.dl_body }
     | d -> d)
 
-let run (imports:list dtype) (vd:verdicts) (prog:program) : ML program =
+let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   imported_types := imports;
   (* First, because every pass below reads a constructor's arity. *)
   let prog = eta_ctors vd prog in
@@ -1990,4 +2153,4 @@ let run (imports:list dtype) (vd:verdicts) (prog:program) : ML program =
     | d -> d) in
   (* Last: a coercion is inserted where two types disagree, so every pass that
      can change a type has to have run.  Nothing below it may rewrite a term. *)
-  coerce_prog (records vd (scc (dce prog)))
+  coerce_prog (split_any_decls (records vd (scc (dce prog))))

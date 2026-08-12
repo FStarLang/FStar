@@ -48,4 +48,4 @@ module Dep = FStarC.Parser.Dep
 
     The result never contains an empty piece, so a module realized by hand --
     whose declarations all print as nothing -- contributes no file. *)
-val run : Dep.deps -> program -> ML (list (string & program))
+val run : Dep.deps -> list string -> program -> ML (list (string & program))

@@ -212,11 +212,12 @@ let imported_type_infos (imports:list (decl & option type_info))
     | DType dt, Some ti -> [(dt, ti)]
     | _ -> [])
 
-(* The imported *type* declarations, which is all [Simplify] needs to see of
-   them: their representation is settled and reaches it in the [verdicts]. *)
-let imported_decls (imports:list (decl & option type_info)) : ML (list dtype) =
-  imports |> List.collect (fun (d, _) ->
-    match d with DType dt -> [dt] | _ -> [])
+(* The imported declarations, which [Simplify] reads but never rewrites: a
+   type's representation is settled and reaches it in the [verdicts], and a
+   value's declared type is a boundary that a coercion may have to be inserted
+   at (section 5.4). *)
+let imported_decls (imports:list (decl & option type_info)) : ML (list decl) =
+  imports |> List.map fst
 
 (* What a unit exports.  Everything it emits, so that a downstream unit never
    has to compile any of it again -- including the re-specializations it made
@@ -243,6 +244,16 @@ let unit_entries (keys:list (string & string)) (homes:SMap.t string)
       if string_of_name n' = string_of_name n then Some ti else None) in
   prog |> List.collect (fun d ->
     if has_flag (decl_flags d) Inline || Some? (imported_unit d) then [] else
+    (* An external is a hole this unit *leaves*, not a symbol it provides: a
+       hand-written realization defines it, or -- as with Pulse's checker,
+       whose copy of [PulseSyntaxExtension.ASTBuilder.fsti] has no [.fst] --
+       another Custard unit does.  Exporting it would tell a downstream unit
+       the symbol is already compiled, and that unit would then skip the very
+       definition it was there to contribute; the link would come out with a
+       reference and nothing to resolve it against.  A downstream unit derives
+       an external's signature from the source anyway, exactly as this one
+       did, so nothing is lost by leaving it out. *)
+    if DExternal? d then [] else
     let d, ti =
       match d with
       | DLet dl -> DLet { dl with dl_body = unit_expr }, None
@@ -332,7 +343,8 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      record it: a downstream unit qualifies a reference by the *file* the
      declaration was emitted into, not by the unit's name. *)
   let files = if Options.custard_split () && Options.custard_backend () = "OCaml"
-              then Some (Split.run deps (List.map fst imports @ prog))
+              then Some (Split.run deps (Extract.link_homes st)
+                                    (List.map fst imports @ prog))
               else None in
   let homes : SMap.t string = SMap.create 100 in
   let _ = match files with

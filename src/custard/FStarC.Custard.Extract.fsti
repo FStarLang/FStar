@@ -124,6 +124,9 @@ val emitted : state -> string -> ML bool
     qualify their names with. *)
 val imports : state -> ML (list (decl & option type_info))
 
+(** Every file the linked units emitted into; see {!Unit.link_homes}. *)
+val link_homes : state -> ML (list string)
+
 (** The specialization key each emitted declaration was created for, by the
     declaration's name.  This is what a `.cui` exports as the identity of an
     entry: a downstream unit recognizes an already-compiled definition by the

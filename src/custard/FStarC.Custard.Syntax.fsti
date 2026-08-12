@@ -277,6 +277,14 @@ type flag =
       and to its fields with the realization's own unmangled names.  Its
       representation is therefore fixed outside F*: no erasure, no newtype
       collapse and no inline-field expansion may touch it. *)
+  | SourceRecord
+  (** The source declaration was written as a record, [type t = { a; b }],
+      rather than as a one-constructor inductive.  Custard represents both the
+      same way and decides which to emit by layout (section 5.5), so the
+      distinction only matters for a [Realized] type: there the OCaml shape is
+      the hand-written one, and a realization mirrors what the F* source said
+      -- [FStarC.Parser.ParseIt.code_fragment] is an OCaml record and
+      [FStar.Pervasives.dtuple4] an OCaml variant. *)
   | Imported of string & option string
   (** This declaration was compiled by an already-built unit (section 12), the
       one named first.  It is present so that this unit's passes can see its
@@ -332,6 +340,7 @@ type dexternal = {
 type dexn = {
   de_name: name;
   de_args: list cty;
+  de_flags: list flag;
 }
 
 type decl =

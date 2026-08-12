@@ -209,7 +209,25 @@ let file_of (m:string) : ML string =
   if Builtins.is_realized_module (String.split ['.'] m)
   then "Custard." ^ m else m
 
-let run (deps:Dep.deps) (prog:program) : ML (list (string & program)) =
+(* The files a linked unit already emitted (section 12.9).  A unit is free to
+   re-specialize an upstream definition -- section 12.6 says that is its own
+   code -- and the specialization keeps the module its *name* comes from, which
+   is upstream's.  Emitting it into a file of that name would then declare a
+   second compilation unit called, say, [FStarC_Class_Show], and the target
+   linker has exactly one of those: for OCaml the plugin's copy either fails to
+   link or, worse, wins, and a reference upstream resolves against its own.
+
+   So a file name an upstream unit owns is not available to this one, and the
+   declaration goes to a mangled file instead.  The prefix is applied until it
+   is free, because an upstream unit may itself have mangled the same name. *)
+let avoid (foreign : list string) (m:string) : ML string =
+  let rec go (f:string) (fuel:int) : ML string =
+    if fuel = 0 || not (List.mem f foreign) then f
+    else go ("Custard." ^ f) (fuel - 1) in
+  go (file_of m) 10
+
+let run (deps:Dep.deps) (foreign:list string) (prog:program)
+  : ML (list (string & program)) =
   let gs = groups prog in
   let rank = module_ranks deps prog in
   let rank_of (m:string) : ML int =
@@ -266,4 +284,4 @@ let run (deps:Dep.deps) (prog:program) : ML (list (string & program)) =
     let ds = match SMap.try_find chunks m with
              | Some r -> List.rev !r
              | None -> [] in
-    if ds = [] then [] else [(file_of m, ds)])
+    if ds = [] then [] else [(avoid foreign m, ds)])

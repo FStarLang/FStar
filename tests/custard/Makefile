@@ -38,9 +38,12 @@ CUSTARD_TESTS += MatchGuard
 CUSTARD_TESTS += Magic
 CUSTARD_TESTS += HigherKind
 CUSTARD_TESTS += Literals
+CUSTARD_TESTS += RetArity
+CUSTARD_TESTS += Realized
 CUSTARD_TESTS += Patlift
 CUSTARD_TESTS += Mymon
 CUSTARD_TESTS += Reify
+CUSTARD_TESTS += AssumedProj
 # Section 5.0: [let mymon = writer (list int)] is an abbreviation of kind
 # [Type -> Type] that binds *no* binders.  The IR has no partial application
 # of a type constructor, so the abbreviation is eta-expanded from the binders
@@ -73,6 +76,13 @@ NOGREP_HigherKind  += ") a "
 # still need [Obj.t], where the dictionary is only known at run time.
 GREP_Magic   += "(magic_twice__option (Some ((Prims.parse_int \"21\"))))"
 GREP_Magic   += "let magic_ret__option (tmp : 'a) : ('a) option ="
+# Section 8.5: a projector or discriminator that [@@no_auto_projectors] left
+# as a bare [val] must be *derived* from the type declaration, not treated as
+# an external.  Left external it prints as a qualified call to a realization
+# that does not exist.
+NOGREP_AssumedProj += "AssumedProj\.u___proj"
+GREP_AssumedProj += "here = (Prims.parse_int \"7\")"
+
 NOGREP_Magic += "Obj.magic"
 NOGREP_Magic += "Obj.t"
 # One shared specialization taking the dictionary at run time (the identity
@@ -90,12 +100,15 @@ FLAGS_MonoTypes = --custard_monomorphize_types true
 # and that the definition returning it is *pure*: applying a metaprogram to its
 # own arguments builds a closure and runs nothing.  [twice] is not reachable
 # from [main], so it is named as an entry point of its own.
-FLAGS_Reify = --custard_entry Reify.twice
+FLAGS_Reify = --custard_entry Reify.twice --custard_entry Reify.after_letrec
 GREP_Reify += "let reify_add (x : Prims.int) : (fStarC_Tactics_Types_ref_proofstate -> Prims.int) ="
 GREP_Reify += "(fStar_Tactics_Effect_tac_bind (reify_add x) (fun tmp -> (reify_add tmp)))"
 # Section 8.3: ulib's [FStar.Stubs.Tactics.Types] is a stub for the compiler's
 # own [FStarC.Tactics.Types], and the two have to be one name.
 NOGREP_Reify += "FStar_Stubs"
+# Section 7.5: the [let] after the local [let rec] has to become a [tac_bind];
+# left unreified it compiles as if [add] returned an integer.
+GREP_Reify += "(fStar_Tactics_Effect_tac_bind (reify_add (reify_after_letrec__sum l)) (fun a ->"
 # Section 12.3: --ugly is what made the old key printer collapse the two
 # 'tweak's into one key, so the test runs with it on.  A specialization key
 # must not depend on a printing option at all.
@@ -482,3 +495,19 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 ifneq ($(shell command -v krml 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cran, $(KRML_TESTS)))
 endif
+
+# The result type is peeled down to the last arrow, through both abbreviations.
+GREP_RetArity += ") : Prims.int ="
+
+# Section 8.2: a realized type's OCaml shape is the hand-written one.
+# [FStar.Pervasives.dtuple3] is a one-constructor *variant* there, so there is
+# no record to recover and no field to project; and its two higher-kinded
+# parameters are still written, as [Obj.t], because the realization's arity is
+# three whatever Custard can name.  That [Obj.t] is the one thing here that is
+# genuinely lost, so 366 is not an error for this test.
+FLAGS_Realized    = --warn_error -366
+GREP_Realized     = "FStar_Pervasives.Mkdtuple3" \
+                    "(Prims.int, Obj.t, Obj.t) FStar_Pervasives.dtuple3" \
+                    "match d with"
+# No record recovery, no projection, and the erased GTot call is gone.
+NOGREP_Realized   = "u__1" "gmagic"

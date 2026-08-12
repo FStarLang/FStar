@@ -664,6 +664,23 @@ let unfold_abbrev (st:state) (ty:cty) : ML (option cty) =
      | None -> None)
   | _ -> None
 
+(* Unfold abbreviations until the head is something else.  A builtin rule
+   (section 8) dispatches on the *shape* of its argument's type -- section
+   8.4's [read] is a [BufRead] on a [TBuf] and a dereference on a [TRef] --
+   and an abbreviation hides that shape behind a name.  In a whole-program
+   run the abbreviation is usually gone by the time the rule fires; across a
+   unit boundary (section 12.6) it is not, because the imported declaration
+   keeps the name the upstream unit gave it.  [FStarC.Tactics.Types.ref_-
+   proofstate = ref proofstate] is the case that showed this up: read as a
+   [TApp] it printed [(ps).(0)], an array index into an OCaml [ref].
+   The fuel is against an abbreviation cycle, which F* rejects but a
+   hand-built [.cui] could still carry. *)
+let rec head_ty (st:state) (ty:cty) (fuel:int) : ML cty =
+  if fuel <= 0 then ty
+  else match unfold_abbrev st ty with
+       | Some ty' -> head_ty st ty' (fuel - 1)
+       | None -> ty
+
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
    parameter, or a local closure -- gets its effect: there is no declaration to
@@ -780,7 +797,7 @@ and import (st:state) (key:string) : ML (option name) =
       | DType dt    -> DType { dt with dt_flags = imp :: dt.dt_flags }
       | DLet dl     -> DLet  { dl with dl_flags = imp :: dl.dl_flags }
       | DExternal dx -> DExternal { dx with dx_flags = imp :: dx.dx_flags }
-      | DExn de     -> DExn de
+      | DExn de     -> DExn { de with de_flags = imp :: de.de_flags }
     in
     let nm = name_of_decl d in
     SMap.add st.names key nm;
@@ -830,7 +847,8 @@ and extract_exn (st:state) (l:Ident.lident) (nm:name) : ML decl =
   let bs, _ = U.arrow_formals_comp ty in
   let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
   DExn { de_name = nm;
-         de_args = bs |> List.map (fun b -> ty_of_typ st b.binder_bv.sort) }
+         de_args = bs |> List.map (fun b -> ty_of_typ st b.binder_bv.sort);
+         de_flags = [] }
 
 and datacon_owner (st:state) (l:Ident.lident) : ML (option Ident.lident) =
   match TcEnv.lookup_sigelt (tcenv st) l with
@@ -906,7 +924,13 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
         (* Section 7.2: a codomain of the form [stt b p q] contributes [b] as
            the result type and promotes the arrow to [E_Impure]. *)
         ty_of_typ st (Effects.result_typ (tcenv st) c), eff_of_comp st c in
-    let bs = drop_flagged (Mono.erased_binders (tcenv st) t) bs in
+    (* [keep_thunk] for the same reason [Mono.classify] applies it to a
+       definition's own binders: an arrow all of whose binders are erased would
+       stop being an arrow, and a value is not what a caller of it holds.  The
+       two have to agree -- one describes what a definition *is*, the other
+       what its type *says* -- so they run the same rule. *)
+    let bs = drop_flagged (Mono.keep_thunk (tcenv st) bs c
+                             (Mono.erased_binders (tcenv st) t)) bs in
     (* The effect belongs to the last arrow only; the intermediate ones are the
        pure arrows a curried function is made of. *)
     let rec build (bs:binders) : ML cty =
@@ -924,13 +948,32 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
      | None ->
        let hd, args = U.head_and_args_full t in
        (match (U.un_uinst hd).n with
+        (* An abbreviation with a binder the target's type language cannot
+           hold -- [restricted_t (a:Type) (b:a -> Type)], whose [b] is
+           higher-kinded -- loses that argument at its *definition*: the body
+           [x:a -> b x] compiles to [a -> any], and every use of the name
+           inherits the [any] however concrete its own arguments were.
+           [FStar.Set.set a = restricted_t a (fun _ -> bool)] is the case that
+           showed this up: named, it is [a -> Obj.t], and [union]'s [||] on
+           two of those does not typecheck.  Unfolding this one head recovers
+           it, because the argument is then in hand: the body beta-reduces to
+           [x:a -> bool].  Only heads of this shape are unfolded, and each
+           step removes one, so this terminates. *)
+        | Tm_fvar fv when has_unrepresentable_param st (S.lid_of_fv fv) ->
+          let t' = norm_bounded st "a higher-kinded type abbreviation"
+                     [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                      TcEnv.Beta; TcEnv.Iota;
+                      TcEnv.UnfoldOnly [S.lid_of_fv fv]] t in
+          if U.term_eq t' t then TAny else ty_of_typ st t'
         | Tm_fvar fv ->
           (* A type constructor's arguments survive into the [cty] exactly when
              they are types: an index like the [n] of [vec n] has no
              counterpart in the target's type language. *)
-          let keep = match lookup_lid_typ st (S.lid_of_fv fv) with
-                     | Some ((_, k), _) -> Mono.type_params (tcenv st) k
-                                           |> List.map (fun b -> not b)
+          let l = S.lid_of_fv fv in
+          let keep = match lookup_lid_typ st l with
+                     | Some ((_, k), _) ->
+                       fst (U.arrow_formals k)
+                       |> List.map (fun b -> not (keeps_param st l b))
                      | None -> [] in
           ty_of_fv st fv (drop_flagged keep args |> List.map fst)
         | _ -> TAny))
@@ -944,11 +987,52 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
   | Tm_type _
   | _ -> TAny
 
+(* A binder of a type constructor's kind that is a type but not a *type
+   parameter* -- one of higher kind, such as the [b:a -> Type] of
+   [restricted_t] -- has no counterpart in the target's type language, and so
+   is dropped both from the constructor's parameters and from every use of it.
+   For an inductive that is exactly right, uniform compilation being the
+   design (section 5.0), and [FStar.Pervasives.dtuple4] -- whose [b], [c] and
+   [d] are all of higher kind -- has to keep coming out as a [dtuple4].  For
+   an *abbreviation* it is not, because the body is a type the target does
+   write down; see the use in {!ty_of_typ}. *)
+and has_unrepresentable_param (st:state) (l:Ident.lident) : ML bool =
+  match TcEnv.lookup_sigelt (tcenv st) l with
+  | Some { sigel = Sig_let _ } ->
+    (match lookup_lid_typ st l with
+     | None -> false
+     | Some ((_, k), _) ->
+       let bs, _ = U.arrow_formals k in
+       bs |> List.existsb (fun b ->
+         is_type_binder (tcenv st) b && not (Mono.is_type_param (tcenv st) b)))
+  | _ -> false
+
+(* Which of a type constructor's binders become parameters of the target type.
+   Normally only the *type parameters*: a value index like the [n] of [vec n],
+   and a binder of higher kind like the [b:a -> Type] of [dtuple4], have no
+   counterpart in the target's type language, and uniform compilation (section
+   5.0) is free to drop them.
+
+   A *realized* type (section 8.2) is the exception, and it has to be: its
+   OCaml declaration is the hand-written one, so its arity is not Custard's to
+   choose.  [FStar.Pervasives.dtuple4] is [('a,'b,'c,'d) dtuple4] in
+   [FStar_Pervasives.ml] and every use of it has to be applied to four
+   arguments -- the three of higher kind simply come out as [any], which is
+   what a value of them has no representation *means*. *)
+and keeps_param (st:state) (l:Ident.lident) (b:S.binder) : ML bool =
+  if is_realized_type st l
+  then is_type_binder (tcenv st) b
+  else Mono.is_type_param (tcenv st) b
+
+and is_realized_type (st:state) (l:Ident.lident) : ML bool =
+  match Builtins.lookup_rule l with
+  | Some Builtins.Rule_realized -> true
+  | _ -> false
+
 (* Type constructors are compiled uniformly in their parameters (section 5.0),
    so an inductive is never specialized: it is always requested with an empty
    key. *)
-and ty_of_fv (st:state) (fv:fv) (args:list term) : ML cty =
-  let l = S.lid_of_fv fv in
+and ty_of_fv (st:state) (fv:fv) (args:list term) : ML cty =  let l = S.lid_of_fv fv in
   if Ident.lid_equals l PC.unit_lid then TUnit
   else
     let args = List.map (ty_of_typ st) args in
@@ -1032,9 +1116,15 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let body = expr_of_term st body in
     let bs =
       let flags = bs |> List.map (Mono.is_erased_binder (tcenv st)) in
-      (* Same guard as [Mono.erased_binders]: a lambda whose binders all vanish
-         would become a value, running its effects where it is built. *)
-      let flags = if List.for_all (fun b -> b) flags && not (is_pure body.eff)
+      (* Same guard as [Mono.keep_thunk], and unconditional for the same reason
+         its own first clause is: a lambda whose binders all vanish stops being
+         a lambda.  Its effects then run where it is built rather than where it
+         is applied -- and, even when there are none, whatever it is passed to
+         is still expecting a function.  A reified [let] whose bound variable
+         is a proof is exactly that: the continuation [fun (tok:squash p) -> k]
+         is [tac_bind]'s second argument, and [tac_bind] is polymorphic, so
+         nothing there drops an argument to match. *)
+      let flags = if Cons? flags && List.for_all (fun b -> b) flags
                   then (match List.rev flags with
                         | _ :: r -> List.rev (false :: r)
                         | [] -> flags)
@@ -1069,7 +1159,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
      | _ ->
        let hd_term = hd in
        let erasable = match (SS.compress hd_term).n with
-                      | Tm_name bv -> erasable_result st bv.sort (List.length args)
+                      | Tm_name bv -> erasable_result st bv.sort args
                       | _ -> false in
        if erasable then unit_expr else
        let hd = expr_of_term st hd in
@@ -1414,7 +1504,7 @@ and drop_flagged (#a:Type) (flags:list bool) (xs:list a) : ML (list a) =
    at runtime. *)
 and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
   let l = S.lid_of_fv fv in
-  if erasable_app st (lookup_lid_typ st l) (List.length args)
+  if erasable_app st (lookup_lid_typ st l) args
   then unit_expr
   else
     match Builtins.lookup_rule l with
@@ -1434,19 +1524,27 @@ and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
    The effect has to be pure or ghost for this to be sound: an erased *result*
    says nothing about whether the call has side effects to run, so
    [unit -> ML (erased int)] is extracted normally. *)
-and erasable_app (st:state) (lookup:option ((universes & typ) & Range.range)) (n_args:int)
+and erasable_app (st:state) (lookup:option ((universes & typ) & Range.range)) (args:args)
   : ML bool =
   match lookup with
   | None -> false
-  | Some ((_, ty), _) -> erasable_result st ty n_args
+  | Some ((_, ty), _) -> erasable_result st ty args
 
-and erasable_result (st:state) (ty:typ) (n_args:int) : ML bool =
+and erasable_result (st:state) (ty:typ) (args:args) : ML bool =
   let bs, c = U.arrow_formals_comp ty in
   (* Over-application leaves an unknown residue, and under-application leaves
      a closure; only an exactly saturated call has a result we can judge. *)
-  List.length bs = n_args &&
+  List.length bs = List.length args &&
   U.is_pure_or_ghost_comp c &&
-  TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c)
+  (* The result type has to be instantiated first, or a polymorphic signature
+     is judged on its *variable*: [Pulse.RuntimeUtils.magic : #a:Type -> unit
+     -> GTot a] has result [a], which is informative for all this test can
+     tell, and the call survives into the output as a reference to a name no
+     realization defines -- it is [GTot], so nothing was ever meant to.  With
+     the arguments substituted the result is the [squash] the call site asked
+     for, and the call disappears. *)
+  (let subst = List.map2 (fun (b:S.binder) (a, _) -> NT (b.binder_bv, a)) bs args in
+   TcUtil.must_erase_for_extraction (tcenv st) (SS.subst subst (U.comp_result c)))
 
 (* A primitive is a function in F* but an operator in the IR, so an
    under-applied use has to be eta-expanded rather than passed along. *)
@@ -1477,6 +1575,9 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
              then args |> List.filter (fun (a, _) -> not (Mono.is_type_term (tcenv st) a))
              else drop_flagged flags args in
   let args = args |> List.map fst |> List.map (expr_of_term st) in
+  (* Section 8's rules dispatch on the shape of an argument's type, so an
+     abbreviation has to be seen through first; see {!head_ty}. *)
+  let args = args |> List.map (fun (e:expr) -> { e with ty = head_ty st e.ty 10 }) in
   let given, extra =
     if List.length args <= n then args, []
     else List.splitAt n args in
@@ -2022,8 +2123,16 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     (* [inline_for_extraction] on a type in a realized module means what it
        says: the alias is not in the hand-written .ml, and the realization
        expects to be named through what it stands for.  [FStarC.PSMap.psmap]
-       is that; [FStar.Dyn.dyn], which the realization does define, is not. *)
-    let inlined = se.sigquals |> List.existsb (fun q -> q = S.Inline_for_extraction) in
+       is that; [FStar.Dyn.dyn], which the realization does define, is not.
+       [unfold] says the same thing more strongly -- the definition is one
+       the normalizer should always expand, so the name is not meant to
+       survive anywhere, least of all into a hand-written file.
+       [FStar.Stubs.Tactics.V2.Builtins.ret_t] is that case: flagged
+       [Realized] it printed a reference to a type its realization has no
+       reason to define, and left alone section 5.5 resolves it away. *)
+    let inlined = se.sigquals |> List.existsb (fun q ->
+                    q = S.Inline_for_extraction ||
+                    q = S.Unfold_for_unification_and_vcgen) in
     let d = if is_realized && not inlined then with_realized d else d in
     if is_inlinable se then with_inline d else d
 
@@ -2052,6 +2161,86 @@ and fixup_extract_as (se:sigelt) : ML sigelt =
    define the symbol and expects to be named through what it stands for.  A
    type abbreviation counts as one whether or not it says so: F* represents it
    as a [Sig_let] whose result is a [Type], and a type is not a value. *)
+(* The letbinding [TcInductive] would have produced for a projector or a
+   discriminator that [@@no_auto_projectors] left as a bare [val].  The shapes
+   are copied from that pass, so what Custard extracts here is exactly what it
+   extracts for an ordinary projector: the same match, which section 5's
+   inlining then collapses into one [EProj] or one [EDiscrim].
+
+   [t] is the declared type: the inductive's parameters and indices, then the
+   projectee.  The *constructor*'s binders are those parameters again followed
+   by the fields, so a field is looked for past the parameter count.  A
+   parameter is matched by a dot pattern, since the scrutinee's type
+   determines it and nothing stores it. *)
+and assumed_projector_lb (st:state) (se:sigelt) (l:Ident.lident) (t:typ)
+  : ML (option letbinding) =
+  let env = tcenv st in
+  match se.sigquals |> List.tryPick (function
+          | S.Projector (c, f) -> Some (c, Some f)
+          | S.Discriminator c  -> Some (c, None)
+          | _ -> None) with
+  | None -> None
+  | Some (ctor, field) ->
+    let bs, _ = U.arrow_formals_comp t in
+    match List.rev bs with
+    | [] -> None
+    | projectee :: _ ->
+      let _, cty = TcEnv.lookup_datacon env ctor in
+      let all_params, _ = U.arrow_formals cty in
+      let ntps = match TcEnv.num_inductive_ty_params env (TcEnv.typ_of_datacon env ctor) with
+                 | Some n -> n
+                 | None -> 0 in
+      let var (x:bv) : ML S.pat = S.withinfo (Pat_var x) Range.dummyRange in
+      let fresh (b:S.binder) : ML S.pat =
+        var (S.gen_bv (Ident.string_of_id b.binder_bv.ppname) None S.tun) in
+      (* [chosen] is the index of the field being projected, absent for a
+         discriminator, which looks at the tag and at no field. *)
+      let ctor_pat (chosen : option int) : ML S.pat =
+        let args = all_params |> List.mapi (fun j b ->
+          let imp = S.is_bqual_implicit_or_meta b.binder_qual in
+          let p = if imp && j < ntps
+                  then S.withinfo (Pat_dot_term None) Range.dummyRange
+                  else fresh b in
+          (p, imp)) in
+        S.withinfo (Pat_cons (S.lid_as_fv ctor None, None, args)) Range.dummyRange in
+      let scrut = S.bv_to_name projectee.binder_bv in
+      let body =
+        match field with
+        | None ->
+          let pt = ctor_pat None in
+          let pf = var (S.new_bv None S.tun) in
+          Some (S.mk (Tm_match { scrutinee = scrut; ret_opt = None;
+                                 brs = [U.branch (pt, None, U.exp_true_bool);
+                                        U.branch (pf, None, U.exp_false_bool)];
+                                 rc_opt = None }) Range.dummyRange)
+        | Some f ->
+          (* By name rather than by index: the projector's own binders say
+             nothing about where the field sits in the constructor. *)
+          let fname = Ident.string_of_id f in
+          match all_params |> List.mapi (fun j b ->
+                  if j >= ntps && Ident.string_of_id b.binder_bv.ppname = fname
+                  then [j] else []) |> List.flatten with
+          | [] -> None
+          | j :: _ ->
+            let x = S.gen_bv fname None S.tun in
+            let args = all_params |> List.mapi (fun k b ->
+              let imp = S.is_bqual_implicit_or_meta b.binder_qual in
+              let p = if k = j then var x
+                      else if imp && k < ntps
+                      then S.withinfo (Pat_dot_term None) Range.dummyRange
+                      else fresh b in
+              (p, imp)) in
+            let pat = S.withinfo (Pat_cons (S.lid_as_fv ctor None, None, args))
+                                 Range.dummyRange in
+            Some (S.mk (Tm_match { scrutinee = scrut; ret_opt = None;
+                                   brs = [U.branch (pat, None, S.bv_to_name x)];
+                                   rc_opt = None }) Range.dummyRange) in
+      match body with
+      | None -> None
+      | Some body ->
+        Some (U.mk_letbinding (Inr (S.lid_and_dd_as_fv l None)) []
+                t PC.effect_Tot_lid (U.abs bs body None) [] Range.dummyRange)
+
 and is_inline_for_extraction (st:state) (se:sigelt) : ML bool =
   se.sigquals |> List.existsb (fun q -> q = S.Inline_for_extraction)
   || (match se.sigel with
@@ -2087,7 +2276,15 @@ and with_no_newtype (d:decl) : ML decl =
    the passes can see its constructors and fields, but it belongs to the
    hand-written OCaml file and only the backend's reference to it is emitted.
    The flag rides on the declaration; {!with_no_newtype} above has already
-   pinned the representation. *)
+   pinned the representation.
+
+   This applies to an abbreviation too, and has to: [FStar.Set.set a = a ->
+   prop] is realized by an OCaml [type 'a set], and expanding the F\* model
+   instead would give every operation the model's type rather than the
+   realization's.  The obligation it puts on a realization is that every type
+   its interface names is in the .ml, abbreviations included -- ML extraction
+   does not need that, because it prints few type annotations, and Custard
+   does, because it prints them all.  See section 8.2. *)
 and with_realized (d:decl) : ML decl =
   match d with
   | DType t -> DType { t with dt_flags = Realized :: t.dt_flags }
@@ -2186,7 +2383,20 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
       DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
               dt_flags = (if is_erasable st se || is_prop_sig st t
                           then [Erased] else []) }
-    else DExternal { dx_name = nm; dx_typars = []; dx_ty = ty_of_typ st t; dx_target = None; dx_header = None; dx_flags = [] }
+    else
+      (* [@@no_auto_projectors] makes F* declare a type's projectors and
+         discriminators without defining them: [TcInductive] emits the [val]
+         and stops there.  They are still derived from the type declaration
+         and still mean exactly one field read or one tag test, so Custard
+         builds the definition F* would have built and extracts that.  Left
+         as externals they would be unresolved symbols at link time; Pulse's
+         [st_term] carries the attribute, and its projectors are what a
+         record update compiles to. *)
+      (match assumed_projector_lb st se l t with
+       | Some lb -> with_inline (extract_letbinding st l nm lb false margs n_holes)
+       | None ->
+         DExternal { dx_name = nm; dx_typars = []; dx_ty = ty_of_typ st t;
+                     dx_target = None; dx_header = None; dx_flags = [] })
 
   | Sig_inductive_typ {params} ->
     let d = extract_inductive st l nm params in
@@ -2458,17 +2668,44 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   (* The arrows the extra binders consume can be hidden behind an
      abbreviation: [let st a = ctxt -> ML (a & ctxt)] makes [let get : st ctxt
      = fun s -> (s, s)] a one-binder definition whose declared type is an
-     application, not an arrow.  Unfolding puts the arrows back where [peel]
-     can see them; without it the binder is emitted and the *whole* [st ctxt]
-     is emitted as the result type too. *)
+     application, not an arrow.  So the peeling runs on the *term*, unfolding
+     at each step, rather than on the [cty]: [ty_of_typ] emits an abbreviation
+     by name, and a name is not a [TArrow], so a [cty]-level peel stops at the
+     first one and leaves the arrows it should have consumed standing in the
+     result type while their binders are also emitted -- a definition that
+     claims a bigger arity than it has.  One unfolding is not enough either,
+     because the abbreviation an unfolding exposes can be another one: Pulse's
+     [cont_elab] unfolds to [frame:_ -> continuation_elaborator ...], and that
+     is two further arrows behind a second name. *)
+  let rec peel_typ (n:int) (e:eff) (t:typ) : ML (eff & cty) =
+    if n <= 0 then (e, ty_of_typ st t)
+    else
+      let t = norm_bounded_in st benv "a result type"
+                [TcEnv.AllowUnboundUniverses; TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
+                 TcEnv.UnfoldUntil S.delta_constant]
+                t in
+      match (SS.compress t).n with
+      | Tm_arrow _ ->
+        (* [arrow_formals_comp] flattens the *total* arrows only, so [c'] is
+           either the group's own effectful comp or the first non-arrow. *)
+        let bs, c' = U.arrow_formals_comp t in
+        let k = List.length bs in
+        if k > n
+        then (E_Pure, ty_of_typ st (U.arrow (List.splitAt n bs |> snd) c'))
+        (* Section 7.5, exactly as below: the binders run out on a reifiable
+           comp, so what is left is the representation and the definition is
+           pure. *)
+        else if k = n && Effects.is_reifiable (tcenv st) (U.comp_effect_name c')
+        then (E_Pure, ty_of_typ st (Effects.reify_comp (env_for_comp benv c') c'))
+        else peel_typ (n - k) (eff_of_comp st c') (U.comp_result c')
+      (* Not an arrow, but [ty_of_typ] may still make one of it: a
+         higher-kinded abbreviation such as [FStar.Set.set a = restricted_t a
+         (fun _ -> bool)] only becomes [a -> bool] under the beta reduction
+         *under the binder* that only {!ty_of_typ}'s own unfolding does.  So
+         the term-level peel hands what is left to the [cty]-level one, which
+         is exactly as far as anything can get. *)
+      | _ -> peel n e (ty_of_typ st t) in
   let res_typ = U.comp_result c in
-  let res_typ =
-    if n_extra > 0
-    then norm_bounded_in st benv "a result type"
-           [TcEnv.AllowUnboundUniverses; TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
-            TcEnv.UnfoldUntil S.delta_constant]
-           res_typ
-    else res_typ in
   (* Section 7.5: a reifiable result type is replaced by its representation,
      and the definition itself becomes pure -- what it now returns is the
      closure the representation describes. *)
@@ -2476,7 +2713,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
     then peel n_extra E_Pure
               (ty_of_typ st (Effects.reify_comp (env_for_comp benv c) c))
-    else peel n_extra (eff_of_comp st c) (ty_of_typ st res_typ) in
+    else peel_typ n_extra (eff_of_comp st c) res_typ in
   (* The body is reified against the residual effect of the lambdas
      [abs_formals] just opened, which is what actually describes it; [c] only
      agrees with it when there were no extra binders. *)
@@ -2533,7 +2770,7 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
   (* Only the *type* parameters become parameters of the target type; a value
      index has no counterpart in the target's type language. *)
   let ty_params = params |> List.collect (fun b ->
-                    if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+                    if keeps_param st l b then [name_of_bv b.binder_bv] else []) in
   let ctor (c:Ident.lident) : ML (name & list (string & cty)) =
     let _, ty = TcEnv.lookup_datacon (tcenv st) c in
     let bs, _ = U.arrow_formals_comp ty in
@@ -2555,11 +2792,18 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
      bs |> List.map (fun b ->
        (name_of_bv b.binder_bv, field_ty st b)))
   in
+  (* Section 5.5: whether the source said [{ a; b }] or [| C : ... -> t] does
+     not decide the target representation -- the layout does -- but it is the
+     one thing a *realization* mirrors, so it has to be recorded. *)
+  let is_record =
+    match TcEnv.lookup_sigelt (tcenv st) l with
+    | Some se -> se.sigquals |> List.existsb (fun q -> RecordType? q)
+    | None -> false in
   DType {
     dt_name   = nm;
     dt_params = ty_params;
     dt_body   = TVariant (ctors |> List.map ctor);
-    dt_flags  = [];
+    dt_flags  = (if is_record then [SourceRecord] else []);
   }
 
 (* -------------------------------------------------------------------- *)
@@ -2679,6 +2923,8 @@ let emitted (st:state) (key:string) : ML bool =
   Some? (SMap.try_find st.emitted key)
 
 let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.imports
+
+let link_homes (st:state) : ML (list string) = Unit.link_homes st.links
 
 let exported_keys (st:state) : ML (list (string & string)) =
   SMap.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
