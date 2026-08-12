@@ -132,15 +132,7 @@ let implies b1 b2 =
   | true, b2 -> b2
 
 let let_rec_arity (b:letbinding) : ML (int & list bool) =
-  let (ar, maybe_lst) = U.let_rec_arity b in
-  match maybe_lst with
-  | None ->
-    ar,
-    FStarC.Common.tabulate ar (fun _ -> true) (* treat all arguments as recursive *)
-  | Some lst ->
-    ar, lst
-    // let l = trim lst in
-    // List.length l, l
+  U.let_rec_arity b
 
 // NBE debuging
 
@@ -170,13 +162,35 @@ let reifying_true (cfg:config) =
   if not (cfg.core_cfg.reifying)
   then new_config ({cfg.core_cfg with reifying=true}) //blow away cache
   else cfg
-let zeta_false (cfg:config) =
+(* The configuration used to read back the branches of a stuck match.
+
+   This mirrors [cfg_exclude_zeta] in FStarC.TypeChecker.Normalize: under a
+   stuck scrutinee we stop unfolding altogether, keeping only the unfoldings
+   that are unconditional (inlining and eager unfolding). Besides matching the
+   reference normalizer, this is what makes it sound to unfold a recursive
+   definition applied to symbolic arguments: the recursive occurrences left in
+   the branches are not unfolded again, so the process terminates. *)
+let stuck_match_cfg (cfg:config) =
     let cfg_core = cfg.core_cfg in
-    if cfg_core.steps.zeta
-    then
-      let cfg_core' = {cfg_core with steps={cfg_core.steps with zeta=false}} in // disable zeta flag
-      new_config cfg_core' //blow away cache
-    else cfg
+    if cfg_core.steps.zeta_full
+    then cfg
+    else
+      let delta_level =
+        cfg_core.delta_level |> List.filter (function
+          | Env.InliningDelta
+          | Env.Eager_unfolding_only -> true
+          | _ -> false)
+      in
+      let steps = { cfg_core.steps with
+                    zeta = false;
+                    unfold_until = None;
+                    unfold_only = None;
+                    unfold_attr = None;
+                    unfold_qual = None;
+                    unfold_namespace = None;
+                    dont_unfold_attr = None }
+      in
+      new_config ({cfg_core with delta_level; steps}) //blow away cache
 let cache_add (cfg:config) (fv:fv) (v:t) =
   let lid = fv.fv_name in
   SMap.add cfg.fv_cache (string_of_lid lid) v
@@ -283,10 +297,21 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : ML (option (t
   in pickBranch_aux scrut branches branches
 
 // Tests if a recursive function should be reduced based on
-// the arguments provided and the arity/decreases clause of the function.
+// the arguments provided and the arity of the function.
+//
+// Note: this used to also refuse to unfold when one of the arguments that may
+// appear in the decreases clause was symbolic, to avoid looping. That is not
+// what the reference normalizer does -- it unfolds once and then gets stuck on
+// the match in the body -- and the difference was observable: e.g. under NBE,
+// `norm [delta_only [`%calc_chain_related]; iota; zeta] (calc_chain_related rs x y)`
+// was left completely unreduced, so FStar.Calc failed to verify.
+//
+// Termination is instead ensured by [stuck_match_cfg]: the branches of a stuck
+// match are read back with all unfolding directives removed, so the recursive
+// occurrences they contain are not unfolded again. This is exactly how the
+// reference normalizer stays terminating.
 // Returns:
-//  should_unfold: bool, true, if the application is full and if none of the recursive
-//                 arguments is symbolic.
+//  should_unfold: bool, true, if the application is full
 //  arguments : list arg, the arguments to the recursive function in reverse order
 //  residual args: list arg, any additional arguments, beyond the arity of the function
 let should_reduce_recursive_definition
@@ -300,11 +325,8 @@ let should_reduce_recursive_definition
       true, acc, ts
     | [], _ :: _ ->
       false, acc, []  (* It's partial! *)
-    | t :: ts, in_decreases_clause :: bs ->
-      if in_decreases_clause
-      && isAccu (fst t)  //one of the recursive arguments is symbolic, so we shouldn't reduce
-      then false, List.rev_append ts acc, []
-      else aux ts bs (t::acc)
+    | t :: ts, _ :: bs ->
+      aux ts bs (t::acc)
   in
   aux arguments formals_in_decreases []
 
@@ -447,7 +469,8 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
       if cfg.core_cfg.steps.for_extraction
       ||  cfg.core_cfg.steps.unrefine
       then translate cfg bs bv.sort //if we're only extracting, then drop the refinement
-      else mk_t <| Refinement ((fun (y:t) -> translate cfg (y::bs) tm),
+      else mk_t <| Refinement (bv,
+                              (fun (y:t) -> translate cfg (y::bs) tm),
                               (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
 
     | Tm_ascribed {tm=t} ->
@@ -572,7 +595,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
 
       (* Thunked computation that reconstructs the patterns *)
       let make_branches () : ML (list branch) =
-        let cfg = zeta_false cfg in
+        let cfg = stuck_match_cfg cfg in
         let rec process_pattern bs (p:pat) : ML (list t & pat) = (* returns new environment and pattern *)
           let (bs, p_new) =
             match p.v with
@@ -733,6 +756,24 @@ and translate_comp cfg bs (c:S.comp) : ML comp =
   | S.Comp   ctyp -> Comp (translate_comp_typ cfg bs ctyp)
 
 (* uncurried application *)
+(* A TopLevelLet/TopLevelRec node records the definition it stands for, but not
+   the configuration in which the decision to unfold it was taken. Before
+   actually unfolding it we must therefore re-check that it is still meant to be
+   unfolded in [cfg]: such a node can escape the configuration it was created in
+   by being passed around as a first-class value, and end up being applied under
+   e.g. [stuck_match_cfg], where no unfolding at all should happen.
+
+   Without this, `allP u faithful_univ us` (FStar.Reflection.TermEq) unfolded
+   `faithful_univ` inside the branches of a stuck match, where the reference
+   normalizer leaves it alone. *)
+and still_unfoldable (cfg:config) (lbname:lbname) : ML bool =
+  match lbname with
+  | Inl _ -> true // local let-binding: no delta level applies
+  | Inr fvar ->
+    let qninfo = Env.lookup_qname cfg.core_cfg.tcenv (S.lid_of_fv fvar) in
+    Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name qninfo)
+    && not (NU.Should_unfold_no? (NU.should_unfold false cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo))
+
 and iapp (cfg : config) (f:t) (args:args) : ML t =
   // meta and lazy nodes shouldn't block reduction
   let mk t = mk_rt f.nbe_r t in
@@ -799,7 +840,13 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
                 (show lb.lbname)
                 (show arity)
                 (show n_args_rev));
-    if n_args_rev >= arity
+    if n_args_rev >= arity && not (still_unfoldable cfg lb.lbname)
+    then (
+      let fv = Inr?.v lb.lbname in
+      debug cfg (fun () -> Format.print1 "Decided to not unfold %s (not unfoldable in this cfg)\n" (show fv));
+      iapp cfg (mk_rt (S.range_of_fv fv) (FV (fv, [], []))) (List.rev args_rev)
+    )
+    else if n_args_rev >= arity
     then let bs, body =
            (* Recover the full binder spine of the (now unary) abstraction so its
               length can be compared against the precomputed let-rec arity. *)
@@ -830,6 +877,7 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
     then let should_reduce, _, _ =
            should_reduce_recursive_definition args decreases_list
          in
+         let should_reduce = should_reduce && still_unfoldable cfg lb.lbname in
          if not should_reduce
          then begin
            let fv = Inr?.v lb.lbname in
@@ -907,7 +955,24 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): ML t =
    else
      match NU.should_unfold false cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo with
      | NU.Should_unfold_fully  ->
-       failwith "Not yet handled"
+       (* Unfold this fv, and everything within its body, with a cfg where
+          the selective unfolding steps are cleared and delta is set to
+          delta_constant. Mirrors decide_unfolding in Normalize.fst.
+          NB: the result depends on the (modified) cfg, so it must not be
+          added to the fv cache of [cfg]. *)
+       let cfg' =
+         let steps = { cfg.core_cfg.steps with
+                         unfold_only  = None
+                       ; unfold_once  = None
+                       ; unfold_fully = None
+                       ; unfold_attr  = None
+                       ; unfold_qual  = None
+                       ; unfold_namespace = None
+                       ; unfold_until = Some delta_constant } in
+         new_config ({ cfg.core_cfg with steps;
+                                         delta_level = [Env.Unfold delta_constant] }) //blow away cache
+       in
+       unfold_fv true cfg' bs fvar qninfo
 
      | NU.Should_unfold_no ->
        debug (fun () -> Format.print1 "(1) Decided to not unfold %s\n" (show fvar));
@@ -941,46 +1006,94 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): ML t =
        end
 
 
+     | NU.Should_unfold_once ->
+       (* Unfold this fv, but with a cfg where it has been removed from the
+          unfold_once list, so it is not unfolded again in its own body.
+          NB: the result depends on the (modified) cfg, so it must not be
+          added to the fv cache of [cfg]. *)
+       let cfg' =
+         let once = Some?.v cfg.core_cfg.steps.unfold_once in
+         let steps = { cfg.core_cfg.steps with
+                       unfold_once = Some <| List.filter (fun lid -> not (S.fv_eq_lid fvar lid)) once } in
+         new_config ({ cfg.core_cfg with steps }) //blow away cache
+       in
+       unfold_fv true cfg' bs fvar qninfo
+
      | NU.Should_unfold_reify
      | NU.Should_unfold_yes ->
-       let t =
-         let is_qninfo_visible =
-           Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name qninfo)
-         in
-         if is_qninfo_visible
-         then begin
-           match qninfo with
-           | Some (Inr ({ sigel = Sig_let {lbs=(is_rec, lbs); lids=names} }, _us_opt), _rng) ->
-             debug (fun () -> Format.print1 "(1) Decided to unfold %s\n" (show fvar));
-             let lbm = find_let lbs fvar in
-             begin match lbm with
-             | Some lb ->
-               if is_rec && cfg.core_cfg.steps.zeta
-               then
-                 let ar, lst = let_rec_arity lb in
-                 mk_rt (S.range_of_fv fvar) <| TopLevelRec(lb, ar, lst, [])
-               else
-                 translate_letbinding cfg bs lb
-             | None -> failwith "Could not find let binding"
-             end
-           | _ ->
-             debug (fun () -> Format.print1 "(1) qninfo is None for (%s)\n" (show fvar));
-             mkFV fvar [] []
-           end
-         else begin
-           debug (fun () -> Format.print1 "(1) qninfo is not visible at this level (%s)\n" (show fvar));
-           mkFV fvar [] []
-         end
-       in
+       let t = unfold_fv false cfg bs fvar qninfo in
        cache_add cfg fvar t;
        t
+
+(* Unfold the definition of [fvar], whose qninfo is [qninfo], in the
+   configuration [cfg]. Returns an opaque FV if the definition is not
+   visible at the current delta level.
+
+   If [now] is set, the definition is translated eagerly in [cfg], rather
+   than being delayed as a TopLevelLet node. This is needed when [cfg] is a
+   *modified* configuration (e.g. for delta_once/delta_fully), since a
+   TopLevelLet node does not record the configuration it was created in,
+   and would later be reduced in the ambient configuration instead. *)
+and unfold_fv (now:bool) (cfg:config) (bs:list t) (fvar:fv) (qninfo:qninfo) : ML t =
+  let debug = debug cfg in
+  let is_qninfo_visible =
+    Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name qninfo)
+  in
+  if is_qninfo_visible
+  then begin
+    match qninfo with
+    | Some (Inr ({ sigel = Sig_let {lbs=(is_rec, lbs); lids=names} }, _us_opt), _rng) ->
+      debug (fun () -> Format.print1 "(1) Decided to unfold %s\n" (show fvar));
+      let lbm = find_let lbs fvar in
+      begin match lbm with
+      | Some lb ->
+        if is_rec && cfg.core_cfg.steps.zeta
+        then
+          let ar, lst = let_rec_arity lb in
+          mk_rt (S.range_of_fv fvar) <| TopLevelRec(lb, ar, lst, [])
+        else if now
+        then translate_letbinding_now cfg bs lb
+        else translate_letbinding cfg bs lb
+      | None -> failwith "Could not find let binding"
+      end
+    | _ ->
+      debug (fun () -> Format.print1 "(1) qninfo is None for (%s)\n" (show fvar));
+      mkFV fvar [] []
+    end
+  else begin
+    debug (fun () -> Format.print1 "(1) qninfo is not visible at this level (%s)\n" (show fvar));
+    mkFV fvar [] []
+  end
+
+(* Translate a top-level let-binding eagerly in [cfg], without going through a
+   TopLevelLet node. Universe binders, if any, are consumed by a Lam of the
+   corresponding arity, matching how iapp handles TopLevelLet. *)
+and translate_letbinding_now (cfg:config) (bs:list t) (lb:letbinding) : ML t =
+  match lb.lbunivs with
+  | [] -> translate cfg bs lb.lbdef
+  | us ->
+    mk_rt (S.range_of_lbname lb.lbname) <| Lam {
+      interp = (fun args_rev -> translate cfg (List.map fst args_rev) lb.lbdef);
+      shape = Lam_args [];
+      arity = List.length us;
+    }
 
 (* translate a let-binding - local or global *)
 and translate_letbinding (cfg:config) (bs:list t) (lb:letbinding) : ML t =
   let debug = debug cfg in
   let us = lb.lbunivs in
   let formals, _ = U.arrow_formals lb.lbtyp in
-  let arity = List.length us + List.length formals in
+  (* The type may be an abbreviation that arrow_formals cannot see through
+     (e.g. `let no_extensions : extension_parser = fun s -> None`), so also
+     look at the binders of the definition itself. Getting this wrong means
+     the definition is unfolded eagerly instead of being delayed in a
+     TopLevelLet node, which loses the ability to keep it folded. *)
+  let n_def_binders =
+    match (U.unascribe lb.lbdef).n with
+    | Tm_abs _ -> List.length (let bs, _, _ = U.abs_formals_ln (U.unascribe lb.lbdef) in bs)
+    | _ -> 0
+  in
+  let arity = List.length us + max (List.length formals) n_def_binders in
   if arity = 0
   then translate cfg bs lb.lbdef
   else if Inr? lb.lbname
@@ -1175,11 +1288,12 @@ and readback (cfg:config) (x:t) : ML term =
         with_range body
       end
 
-    | Refinement (f, targ) ->
+    | Refinement (bv, f, targ) ->
       if cfg.core_cfg.steps.for_extraction
       then readback cfg (fst (targ ()))
       else
-        let x =  S.new_bv None (readback cfg (fst (targ ()))) in
+        // preserve the source name of the refinement binder, as the normalizer does
+        let x = { S.freshen_bv bv with sort = readback cfg (fst (targ ())) } in
         let body = readback cfg (f (mkAccuVar x)) in
         let refinement = U.refine x body in
         with_range (
@@ -1314,16 +1428,25 @@ and readback (cfg:config) (x:t) : ML term =
       with_range (U.mk_app hd args)
 
     | TopLevelLet(lb, arity, args_rev) ->
+      if not (still_unfoldable cfg lb.lbname)
+      then
+        (* Not meant to be unfolded here: read it back as the fv itself, rather
+           than forcing its definition. Going through iapp on an FV takes care
+           of separating the universe arguments from the term arguments. *)
+        let fv = Inr?.v lb.lbname in
+        readback cfg (iapp cfg (mk_rt (S.range_of_fv fv) (FV (fv, [], []))) (List.rev args_rev))
+      else
       let n_univs = List.length lb.lbunivs in
       let n_args = List.length args_rev in
       let args_rev, univs = BU.first_N (n_args - n_univs) args_rev in
       readback cfg (iapp cfg (translate cfg (List.map fst univs) lb.lbdef) (List.rev args_rev))
 
     | TopLevelRec(lb, _, _, args) ->
+      (* Going through iapp on an FV separates the universe arguments from the
+         term arguments; mapping readback over [args] directly would fail on a
+         universe argument. *)
       let fv = Inr?.v lb.lbname in
-      let head = S.mk (Tm_fvar fv) Range.dummyRange in
-      let args = List.map (fun (t, q) -> readback cfg t, q) args in
-      with_range (U.mk_app head args)
+      readback cfg (iapp cfg (mk_rt (S.range_of_fv fv) (FV (fv, [], []))) args)
 
     | LocalLetRec(i, _, lbs, bs, args, _ar, _ar_lst) ->
       (* if this point is reached then the local let rec is unreduced

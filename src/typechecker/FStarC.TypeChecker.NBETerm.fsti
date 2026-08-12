@@ -131,7 +131,8 @@ and t' =
   | Univ of universe
   | Unknown
   | Arrow of either (Thunk.t S.term) (list arg & comp)
-  | Refinement of (t -> ML t) & (unit -> ML arg)
+  // the bv is only there to preserve the source name on readback
+  | Refinement of bv & (t -> ML t) & (unit -> ML arg)
   | Reflect of t
   | Quote of S.term & S.quoteinfo
   | Lazy of (either S.lazyinfo (Dyn.dyn & emb_typ)) & Thunk.t t
