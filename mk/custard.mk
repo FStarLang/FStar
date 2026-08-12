@@ -70,7 +70,7 @@ OCAMLC    := $(OCAMLFIND) ocamlc   -package $(OCAMLPKGS) -w -a
 # Quieten findlib's deprecation chatter, which is about our *dependencies*.
 FILTER := 2>&1 | grep -v '^findlib\|Deprecated, use\|^Alert' || true
 
-.PHONY: all split build clean smoke plugin
+.PHONY: all split build clean smoke plugin pulse-plugin
 
 all: $(BIN)
 
@@ -222,6 +222,160 @@ plugin: $(BIN)
 	  --load_cmxs $(abspath $(PLUGIN_DIR))/$(PLUGIN_MOD) \
 	  --cache_dir $(PLUGIN_DIR)/cache \
 	  --include $(PLUGIN_SRC) $(PLUGIN_SRC)/$(PLUGIN_MOD)Test.fst
+
+# -------------------------------------------------------------- pulse plugin
+
+# Section 12.13: the real thing.  Pulse is 126 F* files in three units, three
+# [@@plugin] declarations, four hand-written OCaml realizations and two menhir
+# grammars; the three units link into one .cmxs that this compiler loads.
+#
+# The units are extracted in dependency order and each links against the ones
+# before it, so `checker' sees only the compiler, `syntax_extension' sees the
+# compiler and `checker', and `extraction' sees only the compiler again --
+# it depends on the krml backend and on nothing of Pulse's.
+#
+# Every module carrying [@@plugin] has to be a --custard_entry of its own
+# (section 13.4); pulse/mk/checker.mk's ROOTS line is the authority on which
+# those are, and Pulse.Lib.Tactics is the one that is not a unit root already.
+#
+# --ext fly_deps=false: fly_deps allows only one file on the command line, and
+# every one of these units has more than one root.
+
+PULSE       := pulse
+PULSE_OUT   := $(OUT)/pulse
+PULSE_LIBS  := lib.common lib.core lib.pulse
+
+# One cache per unit, and never one shared between two: Pulse.Main.fsti and
+# PulseSyntaxExtension.ASTBuilder.fsti exist in *two* units' trees with
+# different contents, so a shared directory silently gives one unit the
+# other's interface (section 12.13).
+#
+# $(1) is the unit, $(2) the extra checked directories it needs.
+define pulse_cache
+$(PULSE_OUT)/cache.$(1)/.touch:
+	$$(Q)rm -rf $$(dir $$@) && mkdir -p $$(dir $$@)
+	$$(Q)cp $(ULIB_CHECKED)/* $$(dir $$@)
+	$$(Q)cp -f $(FSTARC_CHECKED)/* $$(dir $$@)
+	$$(Q)for d in $(2); do cp -f $(PULSE)/build/$$$$d.checked/* $$(dir $$@); done
+	$$(Q)touch $$@
+endef
+
+$(eval $(call pulse_cache,checker,$(PULSE_LIBS) checker))
+$(eval $(call pulse_cache,syntax_extension,$(PULSE_LIBS) checker syntax_extension))
+$(eval $(call pulse_cache,extraction,$(PULSE_LIBS) extraction))
+
+# --already_cached '*,' is what makes the cache authoritative: everything is
+# taken from a checked file and nothing is rechecked here.  It has to come
+# last, since F* keeps only the final setting of the option.
+PULSE_FLAGS := --lax --codegen Custard --custard_split \
+               --warn_error -321-242-250 \
+               --with_fstarc --ext fly_deps=false --already_cached '*,'
+
+pulse-plugin: $(BIN) $(PULSE_OUT)/x.cmxs
+	$(call bold_msg, "CUSTARD", "PULSE SMOKE")
+	$(Q)rm -rf $(PULSE_OUT)/smoke && mkdir -p $(PULSE_OUT)/smoke
+	$(Q)cd $(PULSE) && env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) \
+	  --load_cmxs $(abspath $(PULSE_OUT))/x \
+	  --cache_checked_modules --cache_dir $(abspath $(PULSE_OUT))/smoke \
+	  --include lib/pulse --include lib/core --include lib/common \
+	  --include test test/CalcInPulse.fst
+
+# --include $(ULIB_CHECKED): the prelude has to come from stage2 and not from
+# the *installed* fstarc/src.checked, which is where --with_fstarc otherwise
+# finds Prims and FStar.Pervasives.  Those are the fstarc flavour, and their
+# `fstar.prelude'/`fstar.reflection.typing' bundle hashes are not the ones
+# Pulse.Main.fsti.checked was written against; the failure is Error 317 with
+# no mention of a prelude anywhere.  A copy in the cache does not help: the
+# cache is searched *first* and the last hit wins (section 12.13).
+$(PULSE_OUT)/checker/.touch: mk/custard.mk $(SPLIT)/.touch \
+                             $(PULSE_OUT)/cache.checker/.touch
+	$(call bold_msg, "CUSTARD", "PULSE CHECKER")
+	$(Q)rm -rf $(dir $@) && mkdir -p $(dir $@)
+	$(Q)cd $(PULSE) && env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
+	  $(PULSE_FLAGS) \
+	  --include lib/common --include src/checker \
+	  --include $(ULIB_CHECKED) \
+	  --smtencoding.elim_box true --z3smtopt '(set-option :smt.arith.nl false)' \
+	  --cache_dir $(abspath $(PULSE_OUT))/cache.checker \
+	  --custard_unit PulseChecker \
+	  --custard_link $(abspath $(SPLIT))/fstarc.cui \
+	  --custard_entry Pulse.Main --custard_entry Pulse.Lib.Tactics \
+	  src/checker/Pulse.Main.fst lib/common/Pulse.Lib.Tactics.fsti \
+	  --odir $(abspath $(dir $@))
+	$(Q)touch $@
+
+$(PULSE_OUT)/syntax_extension/.touch: mk/custard.mk $(PULSE_OUT)/checker/.touch \
+                             $(PULSE_OUT)/cache.syntax_extension/.touch \
+                             $(PULSE)/src/syntax_extension/custard-entrypoints.txt
+	$(call bold_msg, "CUSTARD", "PULSE SYNTAX")
+	$(Q)rm -rf $(dir $@) && mkdir -p $(dir $@)
+	$(Q)cd $(PULSE) && env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
+	  $(PULSE_FLAGS) --ext optimize_let_vc \
+	  --include lib/common --include src/checker \
+	  --include src/syntax_extension --include ../src \
+	  --cache_dir $(abspath $(PULSE_OUT))/cache.syntax_extension \
+	  --custard_unit PulseSyntaxExtension \
+	  --custard_link $(abspath $(SPLIT))/fstarc.cui \
+	  --custard_link $(abspath $(PULSE_OUT))/checker/PulseChecker.cui \
+	  --custard_entry PulseSyntaxExtension.ASTBuilder \
+	  --custard_entry PulseSyntaxExtension.Printing \
+	  --custard_entrypoints src/syntax_extension/custard-entrypoints.txt \
+	  src/syntax_extension/PulseSyntaxExtension.ASTBuilder.fst \
+	  src/syntax_extension/PulseSyntaxExtension.Printing.fst \
+	  --odir $(abspath $(dir $@))
+	$(Q)touch $@
+
+$(PULSE_OUT)/extraction/.touch: mk/custard.mk $(SPLIT)/.touch \
+                             $(PULSE_OUT)/cache.extraction/.touch
+	$(call bold_msg, "CUSTARD", "PULSE EXTRACTION")
+	$(Q)rm -rf $(dir $@) && mkdir -p $(dir $@)
+	$(Q)cd $(PULSE) && env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
+	  $(PULSE_FLAGS) --ext optimize_let_vc \
+	  --include src/extraction \
+	  --cache_dir $(abspath $(PULSE_OUT))/cache.extraction \
+	  --custard_unit PulseExtraction \
+	  --custard_link $(abspath $(SPLIT))/fstarc.cui \
+	  --custard_entry ExtractPulse --custard_entry ExtractPulseC \
+	  --custard_entry ExtractPulseOCaml \
+	  src/extraction/ExtractPulse.fst src/extraction/ExtractPulseC.fst \
+	  src/extraction/ExtractPulseOCaml.fst \
+	  --odir $(abspath $(dir $@))
+	$(Q)touch $@
+
+# The three units, the four realizations and the two grammars, in one flat
+# directory and one link -- the same shape as $(BUILD), and for the same
+# reason.  src/ml/custard overlays src/ml: see the header of the one file it
+# holds.  The grammars are inferred against *these* interfaces, exactly as
+# the compiler's own are.
+PULSE_UNITDIRS := $(PULSE_OUT)/checker $(PULSE_OUT)/syntax_extension \
+                  $(PULSE_OUT)/extraction
+
+$(PULSE_OUT)/x.cmxs: mk/custard.mk $(BIN) \
+                     $(addsuffix /.touch,$(PULSE_UNITDIRS)) \
+                     $(wildcard $(PULSE)/src/ml/*.ml $(PULSE)/src/ml/*.mly) \
+                     $(wildcard $(PULSE)/src/ml/custard/*.ml)
+	$(call bold_msg, "CUSTARD", "PULSE LINK")
+	$(Q)rm -rf $(PULSE_OUT)/link && mkdir -p $(PULSE_OUT)/link
+	$(Q)cp $(addsuffix /*.ml,$(PULSE_UNITDIRS)) $(PULSE_OUT)/link/
+	$(Q)cp -f --no-preserve=mode $(PULSE)/src/ml/*.ml $(PULSE)/src/ml/*.mly \
+	   $(PULSE_OUT)/link/
+	$(Q)cp -f --no-preserve=mode $(PULSE)/src/ml/custard/*.ml $(PULSE_OUT)/link/
+	$(Q)cd $(PULSE_OUT)/link && for f in \
+	     $$($(OCAMLFIND) ocamldep -package $(OCAMLPKGS) -sort *.ml 2>/dev/null); do \
+	   $(OCAMLC) -I . -I $(abspath $(BUILD)) -c $$f >/dev/null 2>&1 || true; \
+	 done
+	# One parser out of two grammars: pulseparser.mly is an extension of
+	# the compiler's own, and menhir builds them together.
+	$(Q)cd $(PULSE_OUT)/link && \
+	   menhir --base Pulse_FStar_Parser --infer-write-query mock.ml \
+	     pulseparser.mly FStarC_Parser_Parse.mly 2>/dev/null && \
+	   $(OCAMLC) -I . -I $(abspath $(BUILD)) -i mock.ml > reply 2>/dev/null && \
+	   menhir --explain --base Pulse_FStar_Parser --infer-read-reply reply \
+	     pulseparser.mly FStarC_Parser_Parse.mly 2>/dev/null
+	$(Q)cd $(PULSE_OUT)/link && rm -f Pulse_FStar_Parser.mli mock.ml reply *.cm* *.o
+	$(Q)cd $(PULSE_OUT)/link && $(OCAMLOPT) -shared -I . -I $(abspath $(BUILD)) \
+	   -o x.cmxs $$($(OCAMLFIND) ocamldep -package $(OCAMLPKGS) -sort *.ml) $(FILTER)
+	$(Q)cp -f $(PULSE_OUT)/link/x.cmxs $@
 
 clean:
 	rm -rf $(OUT)

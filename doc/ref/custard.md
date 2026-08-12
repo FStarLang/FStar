@@ -4712,8 +4712,8 @@ Pointing Custard at it is the honest measure of §12, and it has been done:
 compiler, compile to one loadable `.cmxs`, and that compiler checks the whole
 of `pulse/test` --- 58 files, 58 pass.**
 
-That is the end of the demonstration §12 was aiming at.  What remains is
-build engineering (the recipe is still a script) and one realization file.
+That is the end of the demonstration §12 was aiming at, and it is a make
+target rather than a demonstration: `make custard-pulse-plugin`.
 
 **What already works.**  `Pulse.Main` extracts whole against
 `stagec/split/fstarc.cui`: one unit, 7.6k lines of OCaml, in about two
@@ -4875,20 +4875,48 @@ all: it is a *silent miscompilation*, it had been there since the beginning,
 and no test in `tests/custard` --- nor any amount of reading --- had found it.
 A 126-file program did, in a day.
 
+#### `make custard-pulse-plugin`
+
+The recipe is `mk/custard.mk`'s `pulse-plugin` target: three extractions, a
+link, and a check of `pulse/test/CalcInPulse.fst` with the result loaded,
+which is a Pulse program that exercises the parser, the checker and the
+dependency scanner at once.  It depends on `pulse/build/*.checked`, so `make`
+(or `make 3.full`) has to have run.  Each unit gets a cache of its own, built
+from `stage2/ulib.checked`, `stage2/fstarc.checked`, the three `lib.*`
+units and the unit's own checked files, in that order.
+
+Two things about the checked files are worth writing down, because both cost
+an hour and neither is about Custard.
+
+`--include $(ULIB_CHECKED)` is needed by the `checker` unit.  Under
+`--with_fstarc` the prelude is otherwise found in the *installed*
+`fstarc/src.checked`, and those are the fstarc flavour of `Prims` and
+`FStar.Pervasives`: their `fstar.prelude` and `fstar.reflection.typing` bundle
+hashes are not the ones `Pulse.Main.fsti.checked` was written against.  What
+this reports is Error 317 on `Pulse.Main.fsti`, with no mention of a prelude
+anywhere; `--debug CheckedFiles` and its `Differ at:` lines are the only way
+to see it.  Putting a copy in the cache does *not* help --- the cache is
+searched first and the **last** hit wins.
+
+`--already_cached '*,'` has to be the last such option on the command line,
+since F\* keeps only the final setting.  An earlier `--already_cached
+'Prims,FStar'`, which is what `pulse/mk`'s own `DEPFLAGS` would suggest, is
+simply dead: that one belongs to a separate `--dep` invocation which this
+build does not make.
+
 #### What is left
 
-1. **The realizations are written against ML extraction's names.**  Custard
-   gives a constructor's payload record its own type with the source's field
-   names — `term'__Tm_let__payload` with `lbs`, `lbs1`, `body` — where ML
-   extraction disambiguates duplicates across the whole module (`tm2`,
-   `body1`) and keeps a `letbindings` pair as a tuple.  So
-   `Pulse_Extract_CompilerLib.ml` needs a Custard-flavoured copy.  This is the
-   expected shape of the problem (§8.2): a realization is a contract with a
-   *particular* extractor, and Custard's names are the better ones.  The build
-   currently `sed`s the field names, which is not a thing to keep.
-2. **The build is a script, not a make target.**  The recipe above lives in a
-   shell script; folding it into `pulse/mk` is what would make this a
-   regression rather than a demonstration.
+1. **Nothing, for the plugin itself.**  The one realization whose names
+   differ, `Pulse_Extract_CompilerLib.ml`, now has a Custard-flavoured copy in
+   `pulse/src/ml/custard/`, which the link step overlays on `pulse/src/ml/`.
+   The two differences are both about the record a constructor's payload
+   becomes: ML extraction disambiguates field names across the whole module,
+   so `Tm_meta`'s `tm` is `tm2` and `Tm_let`'s `body` is `body1`; and §5.7
+   inlines the `letbindings` *pair* into the record that holds it, so one
+   `lbs` field becomes `lbs` and `lbs1`.  This is the expected shape of the
+   problem (§8.2): a realization is a contract with a *particular*
+   extractor, there is no one file that satisfies both, and Custard's names
+   are the better ones.
 
 ## 13. Plugins
 
@@ -5287,5 +5315,6 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10s | **Polymorphic plugins** (§13.4) | Done.  A `[@@plugin]` with leading type binders registers: the type variable's embedding is `mk_any_emb` on the type argument, and a generated match peels one argument per type binder off the front of the primitive step's argument list, so the registered arity counts the type arguments while the combinator's index does not.  Only leading type binders; one after a value binder is still rejected.  `tests/custard/plugin` adds `pid`, `psnd`, `pcount` and `pswap` (the last putting an identity embedding *under* an `e_tuple2`), all `irreducible`, so the test fails with error 228 without the plugin loaded.  Specializing `mk_any_emb` into a plugin also exposed that `Extract.import` never filed a linked declaration in `st.emitted`, so every cross-unit call was typed `TAny` and classified `E_Pure` --- `!Options.debug_embedding` printed as an array index, and an imported effectful call could have been dropped |
 | M10v | **Compile the Pulse plugin** (§12.13) | Done.  `checker` and `syntax_extension` extract as two units, the second linked against the first --- 33 generated files become 13 --- and compile together with the four realizations and the two menhir grammars into one loadable `.cmxs`.  Rules the exercise settled: a unit does not export its `DExternal`s, because they are the holes it leaves and one of them (`parse_pulse`) is another unit's definition (§12.2); a cross-unit callee needs an entry point, since a call across a unit boundary is not a request Custard can see; and two units cannot share one checked-file cache, because `Pulse.Main.fsti` and `PulseSyntaxExtension.ASTBuilder.fsti` exist in both trees with different contents.  Left: the `extraction` unit, a Custard-flavoured `Pulse_Extract_CompilerLib.ml`, and folding the recipe into `pulse/mk` |
 | M10w | **Ten extraction bugs the Pulse plugin exposed** | Done, each with the rule it violated: a `reify` stuck in front of a local `let rec` (§7.5); a realized type's record-versus-variant shape, arity and projectability, all of which the realization owns and not Custard (§8.2, new `SourceRecord` flag); a result type peeled at the `cty` level, where an abbreviation is a name and not an arrow, so an eta-short definition claimed an arity it did not have (§7.3, `tests/custard/RetArity.fst`); a lambda that loses all its binders, where `expr_of_term` had a purity test `Mono.keep_thunk` says it must not have; four coercion boundaries the pass could not see --- an imported *value* signature, a structured pattern under an `any` field, a comparison, an application head (§5.4); and a `GTot` result judged on its uninstantiated type variable, which left a call to `Pulse.RuntimeUtils.magic` in the output (§5.1).  `tests/custard/Realized.fst` and `RetArity.fst`; the compiler's own build covers the realized-*record* case, `FStarC.Parser.ParseIt.code_fragment` |
-| M10x | **Run the Pulse plugin** (§12.13) | Done.  The `extraction` unit makes it three, and the three link into one `.cmxs` that loads into a Custard-built compiler and checks all 58 files of `pulse/test`.  Three bugs stood in the way, none of them about separate compilation: a `[@@plugin]` module that was not a root, so its tactic got stuck with no diagnostic (§13.3, `tests/custard/plugin/CustardPluginAux.fst`); a duplicated `Stop` exception, which OCaml gives an identity per declaration, so the plugin raised what the compiler could not catch (§8.5, new `Builtins.stub_aliases`); and a recursive call assumed pure, so §7.3 deleted the first of `walk l; walk r` and Pulse's dependency scanner stopped traversing half of every statement --- a silent miscompilation that had been there from the start (§7.3, `tests/custard/RecEffect.fst`).  Left: a Custard-flavoured `Pulse_Extract_CompilerLib.ml`, and folding the recipe into `pulse/mk` |
+| M10x | **Run the Pulse plugin** (§12.13) | Done.  The `extraction` unit makes it three, and the three link into one `.cmxs` that loads into a Custard-built compiler and checks all 58 files of `pulse/test`.  Three bugs stood in the way, none of them about separate compilation: a `[@@plugin]` module that was not a root, so its tactic got stuck with no diagnostic (§13.3, `tests/custard/plugin/CustardPluginAux.fst`); a duplicated `Stop` exception, which OCaml gives an identity per declaration, so the plugin raised what the compiler could not catch (§8.5, new `Builtins.stub_aliases`); and a recursive call assumed pure, so §7.3 deleted the first of `walk l; walk r` and Pulse's dependency scanner stopped traversing half of every statement --- a silent miscompilation that had been there from the start (§7.3, `tests/custard/RecEffect.fst`) |
+| M10y | **`make custard-pulse-plugin`** (§12.13) | Done.  The three extractions, the link and a load-and-check smoke test are `mk/custard.mk`'s `pulse-plugin` target, so the Pulse plugin is a regression rather than a demonstration.  `pulse/src/ml/custard/` holds the one realization whose field names differ from ML extraction's, replacing the `sed` the script used.  Two checked-file rules the exercise settled, neither about Custard: the prelude has to come from `stage2/ulib.checked` and not from the installed `fstarc/src.checked`, whose flavour of `Prims` carries a different bundle hash; and `--already_cached` keeps only its last setting, so the `DEPFLAGS` one that `pulse/mk` suggests is dead |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |
