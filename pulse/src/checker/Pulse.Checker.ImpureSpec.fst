@@ -142,6 +142,30 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
     else
       false, t
 
+  | R.Tv_Let recf attrs b def body ->
+    (* A `let p = def in body` occurring in a spec (e.g. `let p = x in
+       exists* v. pts_to p #1.0R v ** observe (!p)`, issue #4421). Without
+       this case the `let` was left completely unprocessed by the fallback
+       branch below (it is not an application), so any stateful read (e.g.
+       `!p`) nested in its body was never rewritten to its pure result. *)
+    debug g (fun _ -> [text "symb eval subterms let 0"; pp t]);
+    let changed_def, def = symb_eval_subterms g ctxt def in
+    let b = R.inspect_binder b in
+    let x = fresh g in
+    let ppname = mk_ppname_no_range (T.unseal b.ppname) in
+    let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
+    let b_ty, b_u = tc_type_phase1 g b_ty in
+    debug g (fun _ -> [text "symb eval subterms let 1"; pp changed1; pp b_ty]);
+    let b = { b with sort = b_ty } in
+    let g' = push_binding g x ppname b.sort in
+    let body = open_term_nv body (ppname, x) in
+    let changed2, body = symb_eval_subterms g' ctxt body in
+    debug g (fun _ -> [text "symb eval subterms let 2"; pp changed2; pp body]);
+    if changed_def || changed1 || changed2 then
+      true, R.pack_ln (R.Tv_Let recf attrs (R.pack_binder b) def (close_term body x))
+    else
+      false, t
+
   | R.Tv_Match sc ret brs ->
     let changed_sc, sc = symb_eval_subterms g ctxt sc in
     // TODO: branches
@@ -381,6 +405,22 @@ let rec purify_spec_core (g: env) (ctxt: ctxt') (ts: list slprop) : T.Tac (optio
   match ts with
   | [] -> None
   | t::ts ->
+    match R.inspect_ln t with
+    | R.Tv_Let false _ _ def body ->
+      (* Issue #4421: a spec-level `let p = def in body` (e.g. `let p = x in
+         exists* v. pts_to p #1.0R v ** observe (!p)`) is a pure alias, not
+         an effectful binding. Inline it by substituting `def` for the
+         let-bound variable in `body` (rather than opening `body` with a
+         fresh, unrelated variable), so that any slprop structure
+         (`exists*`, `**`, etc.) nested inside becomes visible to the same
+         splitting logic below, exactly as if `p` had been written as `def`
+         directly. Recursive lets fall through to the generic atom handling
+         below instead. *)
+      let _, def = symb_eval_subterms g ctxt def in
+      let body = open_term' body def 0 in
+      purify_spec_core g ctxt (body :: ts)
+
+    | _ ->
     match inspect_ast_term t with
     | Tm_Star t s ->
       purify_spec_core g ctxt (t::s::ts)
