@@ -94,6 +94,34 @@ ensures pts_to y #q 'vy
 }
 //end max_alt$
 
+//max_alt3$
+fn max_alt3 #p #q (x y:ref int)
+preserves pts_to x #p 'vx
+requires pts_to y #q 'vy
+returns n:int
+ensures pts_to y #q 'vy
+        ** pure (n == max_spec 'vx 'vy)
+{
+    let mut result = 0;
+    let vx = !x;
+    let vy = !y;
+    if (vx > vy)
+    requires live result
+    ensures
+     exists* r.
+       pts_to result r **
+       pure (r == max_spec 'vx 'vy)
+    {
+        result := vx;
+    }
+    else
+    {
+        result := vy;
+    };
+    !result;
+}
+//end max_alt3$
+
 
 //nullable_ref$
 let nullable_ref (a: Type0) = option (ref a)

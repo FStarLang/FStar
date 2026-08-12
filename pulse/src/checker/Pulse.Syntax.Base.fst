@@ -236,11 +236,12 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_ElimExists {p=p2} ->
       eq_tm p1 p2
 
-    | Tm_If { b=g1; then_=ethen1; else_=eelse1; post=p1},
-      Tm_If { b=g2; then_=ethen2; else_=eelse2; post=p2} ->
+    | Tm_If { b=g1; then_=ethen1; else_=eelse1; pre=q1; post=p1},
+      Tm_If { b=g2; then_=ethen2; else_=eelse2; pre=q2; post=p2} ->
       eq_st_term g1 g2 &&
       eq_st_term ethen1 ethen2 &&
       eq_st_term eelse1 eelse2 &&
+      eq_tm_opt q1 q2 &&
       eq_tm_opt p1 p2
     
     | Tm_Match {sc=sc1; returns_=r1; brs=br1},

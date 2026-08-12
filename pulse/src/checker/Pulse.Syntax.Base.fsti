@@ -240,6 +240,8 @@ type st_term' =
       b:st_term;
       then_:st_term;
       else_:st_term;
+      pre:option slprop;   // an explicit `requires`, if any; the remaining
+                           // context is framed out and added to `post`
       post:option slprop;
     }
   | Tm_Match {

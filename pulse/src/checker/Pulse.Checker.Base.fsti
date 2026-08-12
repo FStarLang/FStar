@@ -59,6 +59,23 @@ val intro_post_hint
       effect_annot_labels_match h.effect_annot effect_annot
     })
 
+(* The effect annotation (STT vs STT_Div) that the enclosing computation admits.
+   A block whose postcondition alone is annotated (a labeled block, or an `if`
+   with an `ensures`) fixes only the postcondition slprop: its effect must still
+   be the one of the surrounding computation, or a divergent call in such a
+   block would be rejected in an otherwise `divergent fn`.
+
+   We recover it from, in order:
+     - the post hint, when the block is in tail position;
+     - the innermost enclosing goto label in the environment. Every fn body is
+       wrapped in a `_return` label (see PulseSyntaxExtension.Desugar), so this
+       records the ambient effect even when the block is the head of a bind and
+       is therefore checked with no hint.
+   Note we must *not* recover it by having `bind` synthesize a PostHint for the
+   head of a bind: proving the head's own post against such a hint sends the
+   prover into a loop on loop-heavy code. *)
+val ambient_effect_annot (g:env) (post_hint:post_hint_opt g) : effect_annot
+
 val post_hint_from_comp_typing (g:env) (c:comp_st)
   : post_hint_for_env g
 

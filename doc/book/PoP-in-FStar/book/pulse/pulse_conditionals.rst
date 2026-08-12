@@ -57,6 +57,24 @@ Here's an annotated version of ``max_alt`` that succeeds.
    :start-after: //max_alt$
    :end-before: //end max_alt$
 
+Note that the ``ensures`` annotation has to describe the *entire* context
+after the conditional, including ``pts_to x #p 'vx`` and ``pts_to y #q 'vy``,
+which the conditional does not modify at all.
+
+To avoid repeating the untouched parts of the context, the conditional can
+also be annotated with a ``requires`` clause. In that case, the annotation
+only describes the part of the context that the conditional transforms: the
+``requires`` is proven against the context at the conditional, and whatever is
+left over is framed away and silently added back to the ``ensures``.
+
+.. literalinclude:: ../code/pulse/PulseTutorial.Conditionals.fst
+   :language: pulse
+   :start-after: //max_alt3$
+   :end-before: //end max_alt3$
+
+The framed-out part of the context is still usable within the branches; it
+just does not have to be repeated in the annotation.
+
 We are working on adding inference for non-tail conditionals.
 
 Pattern matching with nullable references

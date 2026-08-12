@@ -199,3 +199,44 @@ fn label_ensures_diverges_bad () {
     label done:;
     ()
 }
+
+(* Regression for #4418: the branch of an annotated `if` may itself need the
+   post hint (here to allocate a mutable local), in which case the divergent
+   call is composed against that hint. The hint must therefore carry the effect
+   admitted by the enclosing computation, not a hard-coded `stt`. *)
+divergent fn if_ensures_local_diverges_nested () {
+    if (true) ensures emp {
+        if (true) ensures emp {
+            let mut local = true;
+            diverge ();
+        };
+        ()
+    };
+    ()
+}
+
+(* The same, for an `if` carrying both a `requires` and an `ensures`. *)
+divergent fn if_requires_ensures_diverges () {
+    let mut x = 0;
+    if (true)
+      requires live x
+      ensures live x
+    {
+        let mut local = true;
+        diverge ();
+    };
+    ()
+}
+
+[@@expect_failure [228]]
+fn if_requires_ensures_diverges_bad () {
+    let mut x = 0;
+    if (true)
+      requires live x
+      ensures live x
+    {
+        let mut local = true;
+        diverge ();
+    };
+    ()
+}
