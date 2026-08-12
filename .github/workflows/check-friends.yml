@@ -11,12 +11,16 @@ defaults:
 jobs:
   build-steel:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       - uses: actions/download-artifact@v8
         with:
@@ -42,14 +46,18 @@ jobs:
 
   build-steel-proofs:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     needs:
       - build-steel
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       - uses: actions/download-artifact@v8
         with:
@@ -68,14 +76,18 @@ jobs:
 
   test-steel:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     needs:
       - build-steel
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       - uses: actions/download-artifact@v8
         with:
@@ -94,12 +106,16 @@ jobs:
 
   build-everparse:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
       - run: opam install -y hex re ctypes sha sexplib
       - run: sudo apt-get update && sudo apt-get install -y libssl-dev
 
@@ -137,14 +153,18 @@ jobs:
 
   test-everparse:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     needs:
       - build-everparse
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
       - run: opam install -y hex re ctypes sha sexplib
       - run: sudo apt-get update && sudo apt-get install -y libssl-dev cmake python3-venv
 
@@ -185,14 +205,18 @@ jobs:
 
   starmalloc:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     needs:
       - build-steel
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       - uses: actions/download-artifact@v8
         with:
@@ -219,12 +243,16 @@ jobs:
 
   secrefstar:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       - uses: actions/download-artifact@v8
         with:
@@ -246,12 +274,16 @@ jobs:
 
   sciostar:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       - uses: actions/download-artifact@v8
         with:
@@ -274,12 +306,16 @@ jobs:
 
   c2pulse:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       # Install rust toolchain
       - uses: dtolnay/rust-toolchain@stable
@@ -318,12 +354,16 @@ jobs:
 
   algostar:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       - uses: actions/download-artifact@v8
         with:
@@ -352,12 +392,16 @@ jobs:
 
   pulse-verified-gc:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
     steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
+      # Sparse checkout of F*, just to get the setup action and the
+      # helper scripts it uses.
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          sparse-checkout: |
+            .github/actions
+            .scripts
+      - uses: ./FStar/.github/actions/setup-fstar-deps
 
       - uses: actions/download-artifact@v8
         with:
