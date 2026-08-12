@@ -27,6 +27,8 @@ noeq type ctxt = {
 
 val purify_term (g: env) (ctxt: ctxt) (t: term) : T.Tac term
 
+val purify_call_args (g: env) (ctxt: ctxt) (t: term) : T.Tac term
+
 val purify_spec (g: env) (ctxt: ctxt) (t: slprop) :
   T.Tac slprop
 

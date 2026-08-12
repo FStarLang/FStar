@@ -563,6 +563,23 @@ let purify_term (g: env) (ctxt: ctxt) (t: term) : T.Tac term =
   let _, t = symb_eval_subterms g ctxt t in
   t
 
+(* Purify only the *arguments* of an application `t = head arg1 .. argn`,
+   leaving the outer application itself untouched. This is meant for a
+   genuinely effectful call used as a Pulse statement (see issue #4423):
+   `t` as a whole is not a spec expression and must not be routed through
+   `symb_eval_stateful_app` (which requires a `rewrites_to` postcondition
+   annotation, appropriate only for spec-level pure-reads-as-sugar like
+   `!r`, not for arbitrary stateful function calls). But any spec-sugar
+   (e.g. `!r`) nested inside `t`'s arguments -- including inside an
+   explicit type argument's refinement type -- still needs purifying
+   before elaboration. *)
+let purify_call_args (g: env) (ctxt: ctxt) (t: term) : T.Tac term =
+  let g', xs, ctxt = run_elim_ctxt g ctxt in
+  let ctxt = { ctxt; in_old = false } in
+  let head, args = T.collect_app_ln t in
+  let _, changed, args = symb_eval_subterms_args g' ctxt args in
+  if changed then RU.mk_app_flat head args (T.range_of_term t) else t
+
 let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   let t = t0 in
   let g', xs, ctxt = run_elim_ctxt g ctxt in

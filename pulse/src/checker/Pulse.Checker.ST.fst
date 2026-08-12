@@ -26,6 +26,7 @@ module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 open Pulse.Checker.Prover
+open Pulse.Checker.ImpureSpec
 open Pulse.Show
 
 let should_allow_ambiguous (t:term) : T.Tac bool =
@@ -50,6 +51,14 @@ let check
       text "Internal error: trailing combinator arguments not lifted in Tm_ST";
       fquotes (pp t)
     ];
+  // Purify any spec-level `!r`-style sugar (stateful reads) that may be
+  // nested in `e`'s *arguments*, including inside explicit type
+  // arguments' refinement types (see issue #4423) -- this term's
+  // arguments are not otherwise routed through `Pulse.Checker.ImpureSpec`,
+  // unlike asserts, rewrites, and while-loop invariants/measures. Only the
+  // arguments are purified, not the whole application `e`, since `e`
+  // itself is a genuinely effectful call (a statement), not a spec.
+  let e = purify_call_args g { ctxt_now = ctxt; ctxt_old = None } e in
   let e, ty, eff = tc_term_phase1 g e in
   match Pulse.Readback.readback_comp ty with
   | None -> fail g (Some range) (Printf.sprintf "readback of %s failed" (show ty))
