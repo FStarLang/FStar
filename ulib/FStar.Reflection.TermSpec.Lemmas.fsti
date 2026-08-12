@@ -107,9 +107,10 @@ and freevars_comp_spec (c:comp_spec)
       freevars_spec post `Set.union`
       freevars_spec pats
 
-    | Cs_Eff _ _ res args decrs ->
+    | Cs_Eff _ _ res pre post decrs ->
       freevars_spec res `Set.union`
-      freevars_args_spec args `Set.union`
+      freevars_spec pre `Set.union`
+      freevars_spec post `Set.union`
       freevars_terms_spec decrs
 
 and freevars_args_spec (ts:list (term_spec & aqualv_spec))
@@ -241,9 +242,10 @@ and ln_spec'_comp (c:comp_spec) (i:int)
       ln_spec' post i &&
       ln_spec' pats i
 
-    | Cs_Eff _ _ res args decrs ->
+    | Cs_Eff _ _ res pre post decrs ->
       ln_spec' res i &&
-      ln_spec'_args args i &&
+      ln_spec' pre i &&
+      ln_spec' post i &&
       ln_spec'_terms decrs i
 
 and ln_spec'_args (ts:list (term_spec & aqualv_spec)) (i:int)

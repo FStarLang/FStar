@@ -204,3 +204,15 @@ val lcomp_of_comp : comp -> ML lcomp
 
 val check_positivity_qual (subtyping:bool) (p0 p1:option positivity_qualifier)
   : bool
+
+(* [one_point_defn x hyp] returns [Some (v, rest)] when [hyp] is a conjunction
+   one of whose conjuncts is a defining equation [x == v] (or [v == x]) with [x]
+   not free in [v]; [rest] is the conjunction of the remaining conjuncts.  It is
+   used to substitute [v] for [x] instead of quantifying over [x], which is what
+   keeps the postconditions produced by [return_value] from littering the
+   verification condition with trivial quantifiers. *)
+val one_point_defn : bv -> term -> ML (option (term & term))
+
+(* [post_obligation x hyp concl] is [forall x. hyp ==> concl], with the
+   quantifier eliminated by the one-point rule whenever [hyp] pins [x] down. *)
+val post_obligation : bv -> term -> term -> ML term

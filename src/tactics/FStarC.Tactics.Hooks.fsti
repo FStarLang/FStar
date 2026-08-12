@@ -25,7 +25,6 @@ module O   = FStarC.Options
 module Env = FStarC.TypeChecker.Env
 
 val preprocess      : Env.env -> term -> ML (bool & list (Env.env & term & O.optionstate))
-val spinoff_strictly_positive_goals      : Env.env -> term -> ML (list (Env.env & term))
 val synthesize      : Env.env -> typ -> term -> range -> ML term
 val solve_implicits : Env.env -> term -> Env.implicits -> ML unit
 val handle_smt_goal : Env.env -> Env.goal -> ML (list (Env.env & term))

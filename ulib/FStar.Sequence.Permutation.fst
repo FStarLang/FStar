@@ -95,7 +95,7 @@ let count_head (#a:eqtype) (x:seq a{ S.length x > 0 })
   = reveal_opaque (`%count) (count #a)
 
 #restart-solver
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+#push-options "--fuel 0 --ifuel 0"
 let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
   : Tot (seqperm s0 s1)
         (decreases (S.length s0))

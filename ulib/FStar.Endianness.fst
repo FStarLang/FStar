@@ -217,7 +217,7 @@ let rec be_of_seq_uint64 s =
 /// Pure indexing & update over sequences
 /// -------------------------------------
 
-#set-options "--max_fuel 1 --ifuel 0 --z3rlimit 50"
+#set-options "--max_fuel 1 --ifuel 0"
 
 let rec offset_uint32_be (b: bytes) (n: nat) (i: nat) =
   if S.length b = 0 then
@@ -263,7 +263,7 @@ let rec offset_uint64_le (b: bytes) (n: nat) (i: nat) =
 /// Appending and slicing sequences of integers
 /// -------------------------------------------
 
-#set-options "--max_fuel 1 --z3rlimit 20"
+#set-options "--max_fuel 1"
 
 (* TODO: move to FStar.Seq.Properties, with the pattern *)
 let tail_cons (#a: Type) (hd: a) (tl: S.seq a): Lemma

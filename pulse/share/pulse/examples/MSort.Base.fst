@@ -24,7 +24,6 @@ module S = FStar.Seq
 module SZ = FStar.SizeT
 open MSort.SeqLemmas
 
-#set-options "--z3rlimit 20"
 
 
 fn

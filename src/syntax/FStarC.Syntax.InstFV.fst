@@ -109,10 +109,12 @@ and inst_comp s c : ML comp = match c.n with
     | Total t -> S.mk_Total (inst s t)
     | GTotal t -> S.mk_GTotal (inst s t)
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
-                                   effect_args=inst_args s ct.effect_args;
+                                   comp_pre=inst s ct.comp_pre;
+                                   comp_post=inst s ct.comp_post;
                                    flags=ct.flags |> List.map (function
                                         | DECREASES dec_order ->
                                           DECREASES (inst_decreases_order s dec_order)
+                                        | SMTPAT p -> SMTPAT (inst s p)
                                         | f -> f)} in
                  S.mk_Comp ct
 

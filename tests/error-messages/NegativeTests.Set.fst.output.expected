@@ -2,31 +2,31 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (u : Prims.unit)
-  - VC =
+  - Failed to prove:
       FStar.TSet.mem NegativeTests.Set.b
         (FStar.TSet.singleton NegativeTests.Set.a)
+  - In context: u: Prims.unit
 
 * Info at NegativeTests.Set.fst(33,9-33,67):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (u : Prims.unit)
-  - VC =
+  - Failed to prove:
       FStar.TSet.subset (FStar.TSet.union (FStar.TSet.singleton NegativeTests.Set.a
               )
             (FStar.TSet.singleton NegativeTests.Set.b))
         (FStar.TSet.singleton NegativeTests.Set.a)
+  - In context: u: Prims.unit
 
 * Info at NegativeTests.Set.fst(38,9-38,52):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (u : Prims.unit)
-  - VC =
+  - Failed to prove:
       FStar.TSet.mem NegativeTests.Set.c
         (FStar.TSet.union (FStar.TSet.singleton NegativeTests.Set.a)
             (FStar.TSet.singleton NegativeTests.Set.b))
+  - In context: u: Prims.unit
 
 * Warning 240 at NegativeTests.Set.fst(35,4-35,16):
   - NegativeTests.Set.should_fail3 is declared but no definition was found

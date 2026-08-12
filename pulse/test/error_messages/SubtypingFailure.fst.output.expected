@@ -3,7 +3,7 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (x : Prims.int)
-  - VC = x >= 0
-  - Also see: Prims.fst(642,18-642,24)
+  - Failed to prove: x >= 0
+  - In context: x: Prims.int
+  - Also see: Prims.fst(478,18-478,24)
 

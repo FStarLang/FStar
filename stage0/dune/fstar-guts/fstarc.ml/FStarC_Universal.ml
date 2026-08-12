@@ -110,6 +110,8 @@ let with_dsenv_of_tcenv (tcenv : FStarC_TypeChecker_Env.env)
             (tcenv.FStarC_TypeChecker_Env.missing_decl);
           FStarC_TypeChecker_Env.iface_todo =
             (tcenv.FStarC_TypeChecker_Env.iface_todo);
+          FStarC_TypeChecker_Env.iface_hidden =
+            (tcenv.FStarC_TypeChecker_Env.iface_hidden);
           FStarC_TypeChecker_Env.iface_lids =
             (tcenv.FStarC_TypeChecker_Env.iface_lids);
           FStarC_TypeChecker_Env.iface_val_lids =
@@ -149,14 +151,11 @@ let with_env (env : uenv) (f : uenv -> 'a) : 'a=
   let res = f env1 in let uu___ = pop_env env1 in res
 let iface_solver_frames :
   (FStarC_TypeChecker_Env.solver_depth_t * (FStarC_Syntax_Syntax.modul *
-    (FStarC_SMTEncoding_Term.decls_t * FStarC_SMTEncoding_Env.fvar_binding
-    Prims.list)) Prims.list) Prims.list FStarC_Effect.ref=
+    FStarC_SMTEncoding_Env.module_encoding) Prims.list) Prims.list
+    FStarC_Effect.ref=
   FStarC_Effect.mk_ref []
 let record_encoded_modul (m : FStarC_Syntax_Syntax.modul)
-  (smt_decls :
-    (FStarC_SMTEncoding_Term.decls_t * FStarC_SMTEncoding_Env.fvar_binding
-      Prims.list))
-  : unit=
+  (smt_decls : FStarC_SMTEncoding_Env.module_encoding) : unit=
   let uu___ =
     let uu___1 = FStarC_Effect.op_Bang iface_solver_frames in
     FStarC_List.map
@@ -197,8 +196,8 @@ let pop_iface_solver_frame (env : uenv) (name : Prims.string) : unit=
              match uu___4 with
              | (tcmod, smt_decls) ->
                  (if
-                    ((FStar_Pervasives_Native.fst smt_decls) <> []) ||
-                      ((FStar_Pervasives_Native.snd smt_decls) <> [])
+                    Prims.op_Negation
+                      (FStarC_SMTEncoding_Env.is_empty_encoding smt_decls)
                   then
                     FStarC_SMTEncoding_Encode.encode_modul_from_cache tcenv
                       tcmod smt_decls
@@ -813,7 +812,8 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                                 {
                                   FStarC_CheckedFiles.checked_module = tcmod;
                                   FStarC_CheckedFiles.mii = mii;
-                                  FStarC_CheckedFiles.smt_decls = smt_decls;
+                                  FStarC_CheckedFiles.smt_encoding =
+                                    smt_decls;
                                   FStarC_CheckedFiles.tc_time = tc_time;
                                   FStarC_CheckedFiles.extraction_time =
                                     (extract_time + iface_extraction_time)
@@ -919,7 +919,6 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                      (tc_result, mllib, env1))))
           | FStar_Pervasives_Native.Some tc_result ->
               let tcmod = tc_result.FStarC_CheckedFiles.checked_module in
-              let smt_decls = tc_result.FStarC_CheckedFiles.smt_decls in
               ((let uu___4 =
                   FStarC_Options.dump_module
                     (FStarC_Ident.string_of_lid
@@ -947,15 +946,19 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                       (restore_opts ();
                        if Prims.op_Negation skip_solver
                        then
-                         (if
-                            ((FStar_Pervasives_Native.fst smt_decls) <> [])
-                              ||
-                              ((FStar_Pervasives_Native.snd smt_decls) <> [])
-                          then
-                            FStarC_SMTEncoding_Encode.encode_modul_from_cache
-                              env1 tcmod1 smt_decls
-                          else ();
-                          record_encoded_modul tcmod1 smt_decls)
+                         FStarC_SMTEncoding_Encode.defer_encoding
+                           (fun uu___8 ->
+                              let smt_decls =
+                                tc_result.FStarC_CheckedFiles.smt_encoding in
+                              if
+                                Prims.op_Negation
+                                  (FStarC_SMTEncoding_Env.is_empty_encoding
+                                     smt_decls)
+                              then
+                                FStarC_SMTEncoding_Encode.encode_modul_from_cache
+                                  env1 tcmod1 smt_decls
+                              else ();
+                              record_encoded_modul tcmod1 smt_decls)
                        else ();
                        ((), env1)) in
                 let env1 =
@@ -1182,6 +1185,8 @@ and fly_deps_check (filename : Prims.string) (env : uenv)
                               (tcenv.FStarC_TypeChecker_Env.missing_decl);
                             FStarC_TypeChecker_Env.iface_todo =
                               (tcenv.FStarC_TypeChecker_Env.iface_todo);
+                            FStarC_TypeChecker_Env.iface_hidden =
+                              (tcenv.FStarC_TypeChecker_Env.iface_hidden);
                             FStarC_TypeChecker_Env.iface_lids =
                               (tcenv.FStarC_TypeChecker_Env.iface_lids);
                             FStarC_TypeChecker_Env.iface_val_lids =
@@ -1322,6 +1327,8 @@ and scan_and_load_fly_deps_internal (filename : Prims.string) (env : uenv)
           (env1.FStarC_TypeChecker_Env.missing_decl);
         FStarC_TypeChecker_Env.iface_todo =
           (env1.FStarC_TypeChecker_Env.iface_todo);
+        FStarC_TypeChecker_Env.iface_hidden =
+          (env1.FStarC_TypeChecker_Env.iface_hidden);
         FStarC_TypeChecker_Env.iface_lids =
           (env1.FStarC_TypeChecker_Env.iface_lids);
         FStarC_TypeChecker_Env.iface_val_lids =
@@ -1684,6 +1691,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env.FStarC_TypeChecker_Env.missing_decl);
       FStarC_TypeChecker_Env.iface_todo =
         (env.FStarC_TypeChecker_Env.iface_todo);
+      FStarC_TypeChecker_Env.iface_hidden =
+        (env.FStarC_TypeChecker_Env.iface_hidden);
       FStarC_TypeChecker_Env.iface_lids =
         (env.FStarC_TypeChecker_Env.iface_lids);
       FStarC_TypeChecker_Env.iface_val_lids =
@@ -1781,6 +1790,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env1.FStarC_TypeChecker_Env.missing_decl);
       FStarC_TypeChecker_Env.iface_todo =
         (env1.FStarC_TypeChecker_Env.iface_todo);
+      FStarC_TypeChecker_Env.iface_hidden =
+        (env1.FStarC_TypeChecker_Env.iface_hidden);
       FStarC_TypeChecker_Env.iface_lids =
         (env1.FStarC_TypeChecker_Env.iface_lids);
       FStarC_TypeChecker_Env.iface_val_lids =
@@ -1878,6 +1889,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env2.FStarC_TypeChecker_Env.missing_decl);
       FStarC_TypeChecker_Env.iface_todo =
         (env2.FStarC_TypeChecker_Env.iface_todo);
+      FStarC_TypeChecker_Env.iface_hidden =
+        (env2.FStarC_TypeChecker_Env.iface_hidden);
       FStarC_TypeChecker_Env.iface_lids =
         (env2.FStarC_TypeChecker_Env.iface_lids);
       FStarC_TypeChecker_Env.iface_val_lids =
@@ -1974,6 +1987,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env3.FStarC_TypeChecker_Env.missing_decl);
       FStarC_TypeChecker_Env.iface_todo =
         (env3.FStarC_TypeChecker_Env.iface_todo);
+      FStarC_TypeChecker_Env.iface_hidden =
+        (env3.FStarC_TypeChecker_Env.iface_hidden);
       FStarC_TypeChecker_Env.iface_lids =
         (env3.FStarC_TypeChecker_Env.iface_lids);
       FStarC_TypeChecker_Env.iface_val_lids =
@@ -2070,6 +2085,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env4.FStarC_TypeChecker_Env.missing_decl);
       FStarC_TypeChecker_Env.iface_todo =
         (env4.FStarC_TypeChecker_Env.iface_todo);
+      FStarC_TypeChecker_Env.iface_hidden =
+        (env4.FStarC_TypeChecker_Env.iface_hidden);
       FStarC_TypeChecker_Env.iface_lids =
         (env4.FStarC_TypeChecker_Env.iface_lids);
       FStarC_TypeChecker_Env.iface_val_lids =

@@ -15,8 +15,6 @@
 *)
 module Bug1370b
 
-open FStar.Monotonic.Pure
-
 [@@(expect_failure [316])]
 effect Ouch1 (a:Type) = Tot False
 
@@ -25,6 +23,6 @@ effect Ouch2 (x:int) (a:Type) = Tot a
 
 effect Good3 (a:Type) (x:int) = Tot a
 
-effect Good4 (a:Type) (x:int) = PURE a (as_pure_wp (fun p -> x > 0 /\ (forall y. p y)))
+effect Good4 (a:Type) (x:int) = PURE a (requires x > 0) (ensures fun _ -> True)
 
-effect Good5 (a:Type) (wp:pure_wp a) = PURE a wp
+effect Good5 (a:Type) (p:prop) = PURE a (requires p) (ensures fun _ -> True)

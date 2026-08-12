@@ -97,6 +97,7 @@ let mk_if_cond (g: env) (t: st_term) (cond: nvar) : T.Tac st_term =
         term = unit_const;
       };
       else_ = t;
+      pre = None;
       post = None;
     } }
 
@@ -204,9 +205,9 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
         body = close_st_term body x;
       } }
   )
-  | Tm_If { b; then_; else_; post } -> (
+  | Tm_If { b; then_; else_; pre; post } -> (
     let ret then_ else_ =
-      Some { t with term = Tm_If { b; then_; else_; post = None } } in
+      Some { t with term = Tm_If { b; then_; else_; pre = None; post = None } } in
     match conditionalize g then_ cond, conditionalize g else_ cond with
     | Some then_, Some else_ -> ret then_ else_
     | Some then_, None -> ret then_ (add_write_if_necessary g else_ cond)
@@ -262,6 +263,7 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
                   term = tm_false;
                 };
                 else_ = condition;
+                pre = None;
                 post = None;
               }
           };
@@ -353,11 +355,12 @@ let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
     let g' = push_binding g x binder.binder_ppname binder.binder_ty in
     let body = close_st_term (elim_gotos g' (open_st_term_nv body (binder.binder_ppname, x))) x in
     { t with term = Tm_TotBind { binder; head; body } }
-  | Tm_If { b; then_; else_; post } ->
+  | Tm_If { b; then_; else_; pre; post } ->
     { t with term = Tm_If {
       b;
       then_ = elim_gotos g then_;
       else_ = elim_gotos g else_;
+      pre;
       post;
     } }
   | Tm_Match { sc; returns_; brs } ->

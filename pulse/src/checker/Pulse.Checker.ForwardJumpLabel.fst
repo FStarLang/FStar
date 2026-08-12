@@ -30,35 +30,17 @@ let starts_with (a b: string) : bool =
   else String.sub a 0 (String.length b) = b
 
 (* The effect annotation (STT vs STT_Div) of a labeled block is inherited from
-   its enclosing computation; a label only fixes the postcondition. We recover
-   it from, in order:
-     - the comp recorded on the label node itself: `while` loops containing a
-       `break` are elaborated into a Tm_ForwardJumpLabel whose post is the
-       loop's comp (see Pulse.Checker.While), so it is already tagged;
-     - the post hint, when the label is in tail position;
-     - the innermost enclosing goto label in the environment. Every fn body is
-       wrapped in a `_return` label (see PulseSyntaxExtension.Desugar), so this
-       records the ambient effect even when the label is the head of a bind and
-       is therefore checked with no hint.
-   Note we must *not* recover it by handing the label a synthesized PostHint
-   from `bind`: proving the label's own post against such a hint sends the
-   prover into a loop on loop-heavy code. *)
+   its enclosing computation; a label only fixes the postcondition. In addition
+   to the sources consulted by Pulse.Checker.Base.ambient_effect_annot, we first
+   consult the comp recorded on the label node itself: `while` loops containing
+   a `break` are elaborated into a Tm_ForwardJumpLabel whose post is the loop's
+   comp (see Pulse.Checker.While), so it is already tagged. *)
 let ambient_effect_annot (g:env) (c:comp_st) (post_hint0:post_hint_opt g)
   : effect_annot
   = if C_STDiv? c then EffectAnnotSTTDiv
-    else match post_hint0 with
-    | PostHint ph -> ph.effect_annot
-    | _ ->
-      let rec aux (bs:list binding) : effect_annot =
-        match bs with
-        | BindingGotoLabel { post } :: _ ->
-          if C_STDiv? post then EffectAnnotSTTDiv else EffectAnnotSTT
-        | _ :: bs -> aux bs
-        | [] -> EffectAnnotSTT
-      in
-      aux (bindings g)
+    else Pulse.Checker.Base.ambient_effect_annot g post_hint0
 
-#push-options "--z3rlimit 10 --split_queries always"
+#push-options "--z3rlimit 10"
 let check
     (g:env)
     (pre:term)

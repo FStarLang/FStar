@@ -147,8 +147,7 @@ type dpe_cmd = {
   dpe_cmd_cid: U64.t;
   dpe_cmd_args: cbor;
 }
-
-#push-options "--z3rlimit 128" // to let z3 cope with CDDL specs
+#push-options "--z3rlimit 128 --max_ifuel 4" // to let z3 cope with CDDL specs
 #restart-solver
 let destruct_spec_command_message
   (v: raw_data_item)
@@ -162,8 +161,7 @@ let destruct_spec_command_message
 = match v with
   | Array [Int64 _ cid'; vargs'] -> ()
   | _ ->
-    assert_norm (Spec.command_message v);
-    assert False
+    assert_norm (Spec.command_message v ==> False)
 
 noextract [@@noextract_to "krml"]
 let parse_dpe_cmd_args_postcond
@@ -231,7 +229,7 @@ let parse_dpe_cmd_post
       )
 
 
-#push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 1"
+#push-options "--fuel 2 --ifuel 1"
 #restart-solver
 fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
                  (#p:perm)

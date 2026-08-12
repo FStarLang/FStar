@@ -201,12 +201,14 @@ and hash_comp' (c : FStarC_Syntax_Syntax.comp) : FStarC_Hash.hash_code mm=
             let uu___5 =
               let uu___6 = hash_term ct.FStarC_Syntax_Syntax.result_typ in
               let uu___7 =
-                let uu___8 =
-                  hash_list hash_arg ct.FStarC_Syntax_Syntax.effect_args in
+                let uu___8 = hash_term ct.FStarC_Syntax_Syntax.comp_pre in
                 let uu___9 =
-                  let uu___10 =
-                    hash_list hash_flag ct.FStarC_Syntax_Syntax.flags in
-                  [uu___10] in
+                  let uu___10 = hash_term ct.FStarC_Syntax_Syntax.comp_post in
+                  let uu___11 =
+                    let uu___12 =
+                      hash_list hash_flag ct.FStarC_Syntax_Syntax.flags in
+                    [uu___12] in
+                  uu___10 :: uu___11 in
                 uu___8 :: uu___9 in
               uu___6 :: uu___7 in
             uu___4 :: uu___5 in
@@ -457,11 +459,8 @@ and hash_flag (f : FStarC_Syntax_Syntax.cflag) : FStarC_Hash.hash_code mm=
   | FStarC_Syntax_Syntax.TOTAL -> of_int (Prims.of_int 947)
   | FStarC_Syntax_Syntax.MLEFFECT -> of_int (Prims.of_int 953)
   | FStarC_Syntax_Syntax.LEMMA -> of_int (Prims.of_int 967)
-  | FStarC_Syntax_Syntax.RETURN -> of_int (Prims.of_int 971)
-  | FStarC_Syntax_Syntax.PARTIAL_RETURN -> of_int (Prims.of_int 977)
-  | FStarC_Syntax_Syntax.SOMETRIVIAL -> of_int (Prims.of_int 983)
-  | FStarC_Syntax_Syntax.TRIVIAL_POSTCONDITION -> of_int (Prims.of_int 991)
-  | FStarC_Syntax_Syntax.SHOULD_NOT_INLINE -> of_int (Prims.of_int 997)
+  | FStarC_Syntax_Syntax.SMTPAT p ->
+      let uu___ = hash_term p in mix (of_int (Prims.of_int 971)) uu___
   | FStarC_Syntax_Syntax.DECREASES (FStarC_Syntax_Syntax.Decreases_lex ts) ->
       let uu___ = hash_list hash_term ts in
       mix (of_int (Prims.of_int 1013)) uu___
@@ -732,23 +731,30 @@ and equal_comp (c1 : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax)
          let uu___ =
            let uu___1 =
              let uu___2 =
-               if
-                 FStarC_Ident.lid_equals ct1.FStarC_Syntax_Syntax.effect_name
-                   ct2.FStarC_Syntax_Syntax.effect_name
+               let uu___3 =
+                 if
+                   FStarC_Ident.lid_equals
+                     ct1.FStarC_Syntax_Syntax.effect_name
+                     ct2.FStarC_Syntax_Syntax.effect_name
+                 then
+                   equal_list equal_universe
+                     ct1.FStarC_Syntax_Syntax.comp_univs
+                     ct2.FStarC_Syntax_Syntax.comp_univs
+                 else false in
+               if uu___3
                then
-                 equal_list equal_universe
-                   ct1.FStarC_Syntax_Syntax.comp_univs
-                   ct2.FStarC_Syntax_Syntax.comp_univs
+                 equal_term ct1.FStarC_Syntax_Syntax.result_typ
+                   ct2.FStarC_Syntax_Syntax.result_typ
                else false in
              if uu___2
              then
-               equal_term ct1.FStarC_Syntax_Syntax.result_typ
-                 ct2.FStarC_Syntax_Syntax.result_typ
+               equal_term ct1.FStarC_Syntax_Syntax.comp_pre
+                 ct2.FStarC_Syntax_Syntax.comp_pre
              else false in
            if uu___1
            then
-             equal_list equal_arg ct1.FStarC_Syntax_Syntax.effect_args
-               ct2.FStarC_Syntax_Syntax.effect_args
+             equal_term ct1.FStarC_Syntax_Syntax.comp_post
+               ct2.FStarC_Syntax_Syntax.comp_post
            else false in
          if uu___
          then
@@ -1094,6 +1100,8 @@ and equal_flag (f1 : FStarC_Syntax_Syntax.cflag)
   match (f1, f2) with
   | (FStarC_Syntax_Syntax.DECREASES t1, FStarC_Syntax_Syntax.DECREASES t2) ->
       equal_decreases_order t1 t2
+  | (FStarC_Syntax_Syntax.SMTPAT p1, FStarC_Syntax_Syntax.SMTPAT p2) ->
+      equal_term p1 p2
   | uu___ -> f1 = f2
 and equal_decreases_order (d1 : FStarC_Syntax_Syntax.decreases_order)
   (d2 : FStarC_Syntax_Syntax.decreases_order) : Prims.bool=

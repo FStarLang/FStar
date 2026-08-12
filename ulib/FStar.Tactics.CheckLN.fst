@@ -56,10 +56,11 @@ and check_comp (c:comp) : Tac bool =
     if not (check pre) then false else
     if not (check post) then false else
     check pats
-  | C_Eff us nm res args decrs ->
+  | C_Eff us nm res pre post decrs ->
      if not (for_all check_u us) then false else
      if not (check res) then false else
-     if not (for_all (fun (a,q) -> check a) args) then false else
+     if not (check pre) then false else
+     if not (check post) then false else
      if not (for_all check decrs) then false else
      true
  

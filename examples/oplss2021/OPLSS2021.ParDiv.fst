@@ -331,48 +331,23 @@ let bnd (a:Type u#a) (b:Type u#b) (p:hm.r) (q: a -> hm.r) (r: b -> hm.r)
   : comp b p r
   = fun _ -> bind (f()) (fun x -> g x ())
 
-reifiable
-reflectable
-effect {
-   C (a:Type) (pre:hm.r) (q: a -> hm.r)
-   with { repr = comp;
-          return = ret;
-          bind = bnd }
-}
+/// F* used to package such an indexed monad up as an *effect*:
+///
+///   reifiable reflectable effect {
+///     C (a:Type) (pre:hm.r) (q: a -> hm.r)
+///     with { repr = comp; return = ret; bind = bnd }
+///   }
+///
+/// together with polymonadic binds lifting PURE and DIV into it.
+/// Effects are now just names, specified by a pre- and a postcondition,
+/// and an effect definition (which only guides extraction and
+/// reification) may not be indexed.  So we program with `bnd` directly;
+/// the `let!` notation makes that pleasant.
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Some technicalities to lift pure and divergent computations to our new effect
-////////////////////////////////////////////////////////////////////////////////
-assume
-val bind_pure_c_ (a:Type) (b:Type)
-  (wp:pure_wp a)
-  (pre:hm.r)
-  (post:b -> hm.r)
-  (f:unit -> PURE a wp)
-  (g:(x:a -> comp b pre post))
- : Pure (comp b
-              pre
-              post)
-        (requires wp (fun _ -> True))
-        (ensures fun _ -> True)
-
-polymonadic_bind (PURE, C) |> C = bind_pure_c_
-
-assume
-val bind_div_c_ (a:Type) (b:Type)
-  (wp:pure_wp a)
-  (pre:hm.r)
-  (post:b -> hm.r)
-  (f:unit -> DIV a wp)
-  (g:(x:a -> comp b pre post))
- : Pure (comp b
-              pre
-              post)
-        (requires wp (fun _ -> True))
-        (ensures fun _ -> True)
-
-polymonadic_bind (DIV, C) |> C = bind_div_c_
+let ( let! ) (#a:Type u#a) (#b:Type u#b) (#p:hm.r) (#q: a -> hm.r) (#r: b -> hm.r)
+             (f:comp a p q) (g: (x:a -> comp b (q x) r))
+  : comp b p r
+  = bnd a b p q r f g
 
 ////////////////////////////////////////////////////////////////////////////////
 // Assuming a simple heap model for this demo
@@ -425,14 +400,14 @@ val upd_ok (x:ref 'a) (v0:erased 'a) (v:'a) (h:heap) (frame:hm.r)
 
 assume
 val rewrite (#a:Type u#a) (p: a -> hm.r) (x:erased a) (y:a)
-    : C unit (p y  `star` pure (reveal x == y)) (fun _ -> p x)
+    : comp unit (p y  `star` pure (reveal x == y)) (fun _ -> p x)
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Here's a sample action for dereference
 let (!) (#v0:erased 'a) (x:ref 'a)
-  : C 'a (pts_to x v0) (fun v -> pts_to x v0 `star` pure (reveal v0 == v))
-  = C?.reflect (fun _ ->
+  : comp 'a (pts_to x v0) (fun v -> pts_to x v0 `star` pure (reveal v0 == v))
+  = (fun _ ->
     let act : action hm 'a =
     {
       pre = pts_to x v0;
@@ -446,8 +421,8 @@ let (!) (#v0:erased 'a) (x:ref 'a)
 
 /// And a sample action for assignment
 let (:=) (#v0:erased 'a) (x:ref 'a) (v:'a)
-  : C unit (pts_to x v0) (fun _ -> pts_to x v)
-  = C?.reflect (fun _ ->
+  : comp unit (pts_to x v0) (fun _ -> pts_to x v)
+  = (fun _ ->
     let act : action hm unit =
     {
       pre = pts_to x v0;
@@ -460,29 +435,26 @@ let (:=) (#v0:erased 'a) (x:ref 'a) (v:'a)
     Act act Ret)
 
 let frame_r (#a:Type u#a) (#p:hm.r) (#q: a -> hm.r) (#fr:hm.r)
-            (f: unit -> C a p q)
-    : C a (p `star` fr) (fun x -> q x `star` fr)
-    = let ff : m a p q = (reify (f())) () in
-      C?.reflect (fun () -> frame fr ff)
+            (f: unit -> comp a p q)
+    : comp a (p `star` fr) (fun x -> q x `star` fr)
+    = fun () -> frame fr (f () ())
 
 let par_c (#p0:hm.r) (#q0: hm.r)
           (#p1:hm.r) (#q1: hm.r)
-          ($f0: unit -> C unit p0 (fun _ -> q0))
-          ($f1: unit -> C unit p1 (fun _ -> q1))
-    : C unit (p0 `star` p1) (fun _ -> q0 `star` q1)
-    = let ff0 : m unit p0 (fun _ -> q0) = reify (f0()) () in
-      let ff1 : m unit p1 (fun _ -> q1) = reify (f1()) () in
-      C?.reflect (fun () -> par ff0 ff1)
+          ($f0: unit -> comp unit p0 (fun _ -> q0))
+          ($f1: unit -> comp unit p1 (fun _ -> q1))
+    : comp unit (p0 `star` p1) (fun _ -> q0 `star` q1)
+    = fun () -> par (f0 () ()) (f1 () ())
 
 let incr (#v0:erased int) (x:ref int)
-  : C unit (pts_to x v0) (fun u -> pts_to x (v0 + 1))
-  = let v = !x in
-    frame_r (fun _ -> x := v + 1);
+  : comp unit (pts_to x v0) (fun u -> pts_to x (v0 + 1))
+  = let! v = !x in
+    let! _ = frame_r (fun _ -> x := v + 1) in
     rewrite (fun y -> pts_to x (y + 1)) v0 v
 
 let par_incr (#v0 #v1:erased int)
              (x0 x1: ref int)
-  : C unit (pts_to x0 v0 `star` pts_to x1 v1)
+  : comp unit (pts_to x0 v0 `star` pts_to x1 v1)
            (fun _ -> pts_to x0 (v0 + 1) `star` pts_to x1 (v1 + 1))
   = par_c (fun _ -> incr x0)
           (fun _ -> incr x1)

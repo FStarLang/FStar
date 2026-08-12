@@ -22,7 +22,6 @@ module RT = FStar.Reflection.Typing
 module RTS = FStar.Reflection.TermSpec
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
-open FStar.Nonempty
 
 // ---------------------------------------------------------------------------
 // The ulib `ts-unseal` slice removed the `pack_inspect_inv` axiom

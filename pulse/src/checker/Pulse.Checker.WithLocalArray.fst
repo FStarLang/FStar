@@ -66,7 +66,7 @@ let is_annotated_type_array (t:term) : option term =
 
   | _ -> None
 
-#push-options "--z3rlimit_factor 40 --fuel 0 --ifuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 40 --fuel 0 --ifuel 1"
 let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
   let Tm_WithLocalArray { initializer; binder } = t.term in
   match initializer with
@@ -146,11 +146,12 @@ let check
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in
         assume ~(x `Set.mem` freevars post.post);
+          let open Pulse.Typing.Combinators in
           let body_post = extend_post_hint g post init_t init x binder.binder_ppname in
           let (| opened_body, c_body |) =
             let r =
               check g_extended body_pre (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
-            apply_checker_result_k r binder.binder_ppname in
+            apply_checker_result_k_nohint r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c_st = {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
@@ -160,5 +161,10 @@ let check
               x
           in
           let st = wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array init_t) binder.binder_ppname; initializer=init; length=len; body }) in
-          checker_result_for_st_typing (| st, c |) res_ppname
+          let natural_post : post_hint_for_env g =
+            { post with effect_annot = effect_annot_of_comp c } in
+          let r = checker_result_for_st_typing
+            ((| st, c |) <: st_typing_in_ctxt g pre (PostHint natural_post))
+            res_ppname in
+          retype_checker_result_effect natural_post post r
 #pop-options

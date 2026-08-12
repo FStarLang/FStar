@@ -188,14 +188,14 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
     = let Inr b = b in
       b in
     Pulse.Checker.Base.hoist g (Inr t) true rebuild
-  | Tm_If {b; then_=e1; else_=e2; post} ->
+  | Tm_If {b; then_=e1; else_=e2; pre; post} ->
     (match b.term with
      | Tm_Return { expected_type; insert_eq; term=bt } ->
        let rebuild (bt':either term st_term {Inl? bt'})
        : T.Tac st_term
        = let Inl bt' = bt' in
          let b' = { b with term = Tm_Return { expected_type; insert_eq; term = bt' } } in
-         {t with term=Tm_If { b=b'; then_=e1; else_=e2; post }}
+         {t with term=Tm_If { b=b'; then_=e1; else_=e2; pre; post }}
        in
        Pulse.Checker.Base.hoist g (Inl bt) true rebuild
      | _ ->
@@ -203,7 +203,7 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
        let binder = mk_binder_ppname Pulse.Typing.tm_bool (mk_ppname_no_range "_if_cond") in
        let bv0 = Pulse.Syntax.Pure.tm_bvar { bv_index = 0; bv_ppname = ppname_default } in
        let pure_b = mk_term (Tm_Return { expected_type = Pulse.Typing.tm_bool; insert_eq = false; term = bv0 }) b.range in
-       let inner_if = {t with term = Tm_If { b = pure_b; then_ = e1; else_ = e2; post }} in
+       let inner_if = {t with term = Tm_If { b = pure_b; then_ = e1; else_ = e2; pre; post }} in
        Some (mk_term (Tm_Bind { binder; head = b; body = inner_if }) t.range))
   | Tm_Match {sc; returns_=post_match; brs} ->
     (match sc.term with
@@ -365,30 +365,56 @@ let rec check
       | Tm_TotBind _ ->
         Bind.check_tot_bind g pre post_hint res_ppname t check
 
-      | Tm_If { b; then_=e1; else_=e2; post=post_if } -> (
-        let annot_post : option (post_hint_for_env g) =
-          match post_if, post_hint with
-          | Some p, PostHint q ->
-            Pulse.Typing.Env.fail g (Some t.range) 
-              (Printf.sprintf 
-                  "Multiple annotated postconditions---remove one of them.\n\
-                  The context expects the postcondition %s,\n\
-                  but this conditional was annotated with postcondition %s"
-                  (P.term_to_string (q <: post_hint_t).post)
-                  (P.term_to_string p))
-          | Some p, _ ->
-            //We set the computation type to be STT here, but the effect is
-            //re-inferred from the branches in Pulse.Checker.If, so that a
-            //divergent branch is accepted (issue #4368). This only fixes the
-            //postcondition slprop.
-            let p = ImpureSpec.purify_spec g { ctxt_old = Some pre; ctxt_now = tm_emp } p in
-            Some (Checker.Base.intro_post_hint g EffectAnnotSTT None p)
-          | None, _ ->
-            None
-        in
-        let (| x, t, pre', g1, k |) : checker_result_t g pre post_hint =
-          If.check g pre post_hint annot_post res_ppname b e1 e2 check in
-        (| x, t, pre', g1, k |)
+      | Tm_If { b; then_=e1; else_=e2; pre=req_if; post=post_if } -> (
+        (match post_if, post_hint with
+         | Some p, PostHint q ->
+           Pulse.Typing.Env.fail g (Some t.range) 
+             (Printf.sprintf 
+                 "Multiple annotated postconditions---remove one of them.\n\
+                 The context expects the postcondition %s,\n\
+                 but this conditional was annotated with postcondition %s"
+                 (P.term_to_string (q <: post_hint_t).post)
+                 (P.term_to_string p))
+         | _ -> ());
+        //
+        // The effect of an annotated conditional is not fixed by its `ensures`:
+        // the annotation only fixes the postcondition slprop, and the effect is
+        // re-inferred from the branches in Pulse.Checker.If. We still hand the
+        // branches the effect admitted by the enclosing computation, so that a
+        // divergent branch is accepted in a `divergent fn` even when the branch
+        // itself needs the hint (e.g. to allocate a local); see issues #4368
+        // and #4418.
+        //
+        let effect_annot = Checker.Base.ambient_effect_annot g post_hint in
+        match req_if, post_if with
+        | Some r, Some p ->
+          //
+          // With an explicit `requires`, the annotations describe only the part
+          // of the context the conditional transforms (issue #4417): we prove
+          // the `requires` against the current context and add the leftover
+          // frame back to the `ensures` to get the postcondition of the
+          // conditional.
+          //
+          let r = ImpureSpec.purify_spec g { ctxt_old = None; ctxt_now = pre } r in
+          let (| g1, frame, k_frame |) = Pulse.Checker.Prover.prove t.range g pre r false in
+          let p = ImpureSpec.purify_spec g1 { ctxt_old = Some pre; ctxt_now = tm_emp } p in
+          let annot_post = Checker.Base.intro_post_hint g1 effect_annot None (tm_star p frame) in
+          let (| x, g2, ty, ctxt', k |) : checker_result_t g1 (tm_star r frame) post_hint =
+            If.check g1 (tm_star r frame) post_hint (Some annot_post) res_ppname b e1 e2 check in
+          (| x, g2, ty, ctxt', k_elab_trans k_frame k |)
+
+        | _ ->
+          let annot_post : option (post_hint_for_env g) =
+            match post_if with
+            | Some p ->
+              let p = ImpureSpec.purify_spec g { ctxt_old = Some pre; ctxt_now = tm_emp } p in
+              Some (Checker.Base.intro_post_hint g effect_annot None p)
+            | None ->
+              None
+          in
+          let (| x, g1, ty, ctxt', k |) : checker_result_t g pre post_hint =
+            If.check g pre post_hint annot_post res_ppname b e1 e2 check in
+          (| x, g1, ty, ctxt', k |)
       )
 
       | Tm_While .. -> (

@@ -17,7 +17,14 @@ module Bug016
 
 open FStar.All
 
-val impossible : u : unit { False } -> Tot 'a
+(* Masking a non-total effect at a top-level definition requires proving the
+   type inhabited (issue #4401). Naming the type turns the obligation into a
+   ground fact that a local witness can discharge. *)
+let impossible_ty = #a:Type0 -> u:unit{False} -> Tot a
+let _ : nonempty impossible_ty =
+  nonempty_intro #impossible_ty (fun (#a:Type0) (u:unit{False}) -> false_elim #a ())
+
+val impossible : impossible_ty
 #push-options "--warn_error -272" //Warning_TopLevelEffect
 let impossible = failwith "this won't happen"
 #pop-options

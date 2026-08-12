@@ -24,7 +24,7 @@ module P = X64.Print_s
 
 #reset-options "--z3smtopt '(set-option :smt.arith.nl true)' --using_facts_from Prims --using_facts_from FStar.Math"
 let lemma_mul_nat (x:nat) (y:nat) : Lemma (ensures 0 <= (x * y)) = ()
-#reset-options "--fuel 2 --initial_ifuel 1 --z3rlimit_factor 10 --retry 5 --query_stats"
+#reset-options "--fuel 2 --initial_ifuel 1 --retry 5 --query_stats"
 #set-options "--z3smtopt '(set-option :smt.qi.eager_threshold 20)' --ext pretyping_axioms"
 #restart-solver
 let cf = Lemmas_i.cf
@@ -244,7 +244,6 @@ irreducible val va_irreducible_lemma_Add64Wrap : va_b0:va_codes -> va_s0:va_stat
     nat64_max) /\ (va_state_eq va_sM (va_update_flags va_sM (va_update_ok va_sM
     (va_update_dst_operand dst va_sM va_s0)))))))
 
-#push-options "--z3rlimit_factor 20"
 let add_wrap_lemma (x y:UInt64.t)
 : Lemma 
   (ensures add_wrap (UInt64.v x) (UInt64.v y) == UInt64.v (S.add_mod64 x y))
@@ -263,7 +262,6 @@ irreducible let va_irreducible_lemma_Add64Wrap va_b0 va_s0 va_sN dst src =
     (va_eval_dst_operand_uint64 va_s0 dst) (va_eval_operand_uint64 va_s0 src))
   );
   (va_bM, va_sM)
-#pop-options
 
 let va_lemma_Add64Wrap = va_irreducible_lemma_Add64Wrap
 
@@ -315,7 +313,6 @@ irreducible val va_irreducible_lemma_Adc64Wrap : va_b0:va_codes -> va_s0:va_stat
     (va_get_flags va_s0)) then 1 else 0) >= nat64_max) /\ (va_state_eq va_sM (va_update_flags va_sM
     (va_update_ok va_sM (va_update_dst_operand dst va_sM va_s0)))))))
 
-#push-options "--z3rlimit_factor 20"
 #restart-solver
 irreducible let va_irreducible_lemma_Adc64Wrap va_b0 va_s0 va_sN dst src =
   admit(); //this succeeds, but takes a very long time, needlessly bloating CI
@@ -335,7 +332,6 @@ irreducible let va_irreducible_lemma_Adc64Wrap va_b0 va_s0 va_sN dst src =
     (va_update_ok va_sM (va_update_dst_operand dst va_sM va_s0))))
   );
   (va_bM, va_sM)
-#pop-options
 let va_lemma_Adc64Wrap = va_irreducible_lemma_Adc64Wrap
 
 val va_transparent_code_Sub64 : dst:va_dst_operand -> src:va_operand -> Tot va_code
@@ -386,12 +382,14 @@ irreducible val va_irreducible_lemma_Sub64Wrap : va_b0:va_codes -> va_s0:va_stat
     /\ (va_get_ok va_sM) /\ (va_eval_dst_operand_uint64 va_sM dst) == ((va_eval_dst_operand_uint64
     va_s0 dst) - (va_eval_operand_uint64 va_s0 src)) `op_Modulus` nat64_max /\ (va_state_eq va_sM
     (va_update_flags va_sM (va_update_ok va_sM (va_update_dst_operand dst va_sM va_s0)))))))
+#push-options "--z3rlimit_factor 8"
 irreducible let va_irreducible_lemma_Sub64Wrap va_b0 va_s0 va_sN dst src =
   (va_reveal_opaque (va_transparent_code_Sub64Wrap dst src));
   let (va_old_s:va_state) = va_s0 in
   let (va_sM, (va_cM:va_code), va_bM) = (va_lemma_block va_b0 va_s0 va_sN) in
   regs_eval_code_one (va_transparent_code_Sub64Wrap dst src) dst va_s0 va_sM;
   (va_bM, va_sM)
+#pop-options
 let va_lemma_Sub64Wrap = va_irreducible_lemma_Sub64Wrap
 
 val va_transparent_code_Mul64Wrap : src:va_operand -> Tot va_code

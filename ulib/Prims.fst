@@ -33,6 +33,7 @@ module Prims
     Beyond that all definitions are fully verified *)
 
 
+
 (** Type of attributes *)
 assume new
 type attribute : Type0 
@@ -146,6 +147,28 @@ assume val l_True : prop
 (** Written with the `False` syntax, `l_False` is the false proposition. *)
 [@@ smt_theory_symbol]
 assume val l_False : prop
+
+(**** Effects
+
+    In this simplified effect system an effect is just a name.  A
+    computation type is [M t (requires pre) (ensures post)], where
+    [pre] is a proposition and [post] is a predicate on the result. *)
+
+total assume effect PURE
+total assume effect GHOST
+
+(** [PURE] computations can be lifted to [GHOST] (but not vice versa),
+    *)
+assume sub_effect PURE ~> GHOST
+
+(** Hoare-style abbreviations.  Effect abbreviations are parameterized
+    by the result type only; any pre/postcondition written at the use
+    site is conjoined with the one in the abbreviation. *)
+effect Pure  (a: Type) = PURE a
+effect Tot   (a: Type) = PURE a
+effect Ghost (a: Type) = GHOST a
+effect GTot  (a: Type) = GHOST a
+
 
 (** The type of provable equalities, defined as the usual inductive
     type with a single constructor for reflexivity.  As with the other
@@ -269,196 +292,13 @@ assume val l_Forall (#a: Type) ([@@@strictly_positive] p: (a -> GTot prop)) : pr
 let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
 #pop-options
 
-(**** The PURE effect *)
+(**** Escape hatches *)
 
-(** The type of pure preconditions *)
-let pure_pre = prop
-
-(** Pure postconditions, predicates on [a], on which the precondition
-    [pre] is also valid. This provides a way for postcondition formula
-    to be typed in a context where they can assume the validity of the
-    precondition. This is discussed extensively in Issue #57 *)
-let pure_post' (a: Type) (pre: prop) = _: a{pre} -> prop
-let pure_post (a: Type) = pure_post' a True
-
-(** A pure weakest precondition transforms postconditions on [a]-typed
-    results to pure preconditions
-
-    We require the weakest preconditions to satisfy the monotonicity
-    property over the postconditions
-    To enforce it, we first define a vanilla wp type,
-    and then refine it with the monotonicity condition *)
-let pure_wp' (a: Type) = pure_post a -> pure_pre
-
-(** The monotonicity predicate is marked opaque_to_smt,
-    meaning that its definition is hidden from the SMT solver,
-    and if required, will need to be explicitly revealed
-    This has the advantage that clients that do not need to work with it
-    directly, don't have the (quantified) definition in their solver context *)
-
-let pure_wp_monotonic0 (a:Type) (wp:pure_wp' a) =
-  forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)
-
-[@@ "opaque_to_smt"]
-let pure_wp_monotonic = pure_wp_monotonic0
-
-let pure_wp (a: Type) = wp:pure_wp' a{pure_wp_monotonic a wp}
-
-(** This predicate is an internal detail, used to optimize the
-    encoding of some quantifiers to SMT by omitting their typing
-    guards. This is safe to use only when the quantifier serves to
-    introduce a local macro---use with caution. *)
-assume
-type guard_free : prop -> prop 
-
-(** The return combinator for the PURE effect requires
-    proving the postcondition only on [x]
-    
-    Clients should not use it directly,
-    instead use FStar.Pervasives.pure_return *)
-unfold
-let pure_return0 (a: Type) (x: a) : pure_wp a =
-  fun (p: pure_post a) ->
-  forall (return_val: a). return_val == x ==> p return_val
-
-(** Sequential composition for the PURE effect
-
-    Clients should not use it directly,
-    instead use FStar.Pervasives.pure_bind_wp *)
-unfold
-let pure_bind_wp0
-      (a b: Type)
-      (wp1: pure_wp a)
-      (wp2: (a -> GTot (pure_wp b)))
-      : pure_wp b
-     = fun (p: pure_post b) ->
-       wp1 (fun (bind_result_1: a) -> wp2 bind_result_1 p)
-
-(** Conditional composition for the PURE effect 
-
-    The combinator is optimized to make use of how the typechecker generates VC
-    for conditionals.
-
-    The more intuitive form of the combinator would have been:
-    [(p ==> wp_then post) /\ (~p ==> wp_else post)]
-
-    However, the way the typechecker constructs the VC, [wp_then] is already
-    weakened with [p].
-
-    Hence, here we only weaken [wp_else]
-
-    Clients should not use it directly,
-    instead use FStar.Pervasives.pure_if_then_else *)
-unfold
-let pure_if_then_else0 (a: Type) (p: prop) (wp_then wp_else: pure_wp a) : pure_wp a =
-  fun (post: pure_post a) ->
-  wp_then post /\ (~p ==> wp_else post)
-
-(** Conditional composition for the PURE effect, while trying to avoid
-    duplicating the postcondition by giving it a local name [k].
-
-    Note the use of [guard_free] here: [k] is just meant to be a macro
-    for [post].
-        
-    Clients should not use it directly,
-    instead use FStar.Pervasives.pure_ite_wp *)
-unfold
-let pure_ite_wp0 (a: Type) (wp: pure_wp a) : pure_wp a =
-  fun (post: pure_post a) ->
-    forall (k: pure_post a). (forall (x: a). {:pattern (guard_free (k x))} post x ==> k x) ==> wp k
-
-(** Subsumption for the PURE effect *)
-unfold
-let pure_stronger (a: Type) (wp1 wp2: pure_wp a) =
-    forall (p: pure_post a). wp1 p ==> wp2 p
-
-(** Closing a PURE WP under a binder for [b]
-   
-    Clients should not use it directly,
-    instead use FStar.Pervasives.pure_close_wp *)
-unfold
-let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) : pure_wp a =
-    fun (p: pure_post a) -> forall (b: b). wp b p
-
-(** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
-unfold
-let pure_trivial (a: Type) (wp: pure_wp a) = wp (fun (trivial_result: a) -> True)
-
-(** Introduces the PURE effect.
-    The definition of the PURE effect is fixed.
-    NO USER SHOULD EVER CHANGE THIS. *)
-total
-new_effect {
-  PURE : a: Type -> wp: pure_wp a -> Effect
-  with
-    return_wp    = pure_return0
-  ; bind_wp      = pure_bind_wp0
-  ; if_then_else = pure_if_then_else0
-  ; ite_wp       = pure_ite_wp0
-  ; stronger     = pure_stronger
-  ; close_wp     = pure_close_wp0
-  ; trivial      = pure_trivial
-}
-
-(** [Pure] is a Hoare-style counterpart of [PURE]
-    
-    Note the type of post, which allows to assume the precondition
-    for the well-formedness of the postcondition. c.f. #57 *)
-effect Pure (a: Type) (pre: prop) (post: pure_post' a pre) =
-  PURE a
-    (fun (p: pure_post a) -> pre /\ (forall (pure_result: a). post pure_result ==> p pure_result))
-
-(** [Admit] is an effect abbreviation for a computation that
-    disregards the verification condition of its continuation *)
-effect Admit (a: Type) = PURE a (fun (p: pure_post a) -> True)
-
-(** The primitive effect [Tot] is definitionally equal to an instance of [PURE] *)
-
-(** Clients should not use it directly, instead use FStar.Pervasives.pure_null_wp *)
-unfold
-let pure_null_wp0 (a: Type) : pure_wp a = fun (p: pure_post a) -> forall (any_result: a). p any_result
-
-(** [Tot]: From here on, we have [Tot] as a defined symbol in F*. *)
-effect Tot (a: Type) = PURE a (pure_null_wp0 a)
-
-(** Clients should not use it directly, instead use FStar.Pervasives.pure_assert_wp *)
-[@@ "opaque_to_smt"]
-unfold
-let pure_assert_wp0 (p: prop) : pure_wp unit = fun (post: pure_post unit) -> p /\ post ()
-
-(** Clients should not use it directly, instead use FStar.Pervasives.pure_assume_wp *)
-[@@ "opaque_to_smt"]
-unfold
-let pure_assume_wp0 (p: prop) : pure_wp unit = fun (post: pure_post unit) -> p ==> post ()
-
-(**** The [GHOST] effect *)
-
-(** [GHOST] is logically equivalent to [PURE], but distinguished from
-    it nominally so that specific, computationally irrelevant
-    operations, are provided only in [GHOST] and are erased during
-    extraction *)
-total
-new_effect GHOST = PURE
-
-unfold
-let purewp_id (a: Type) (wp: pure_wp a) = wp
-
-(** [PURE] computations can be lifted to the [GHOST] effect (but not
-    vice versa) using just the identity lifting on pure wps *)
-sub_effect PURE ~> GHOST { lift_wp = purewp_id }
-
-(** [Ghost] is a the Hoare-style counterpart of [GHOST] *)
-effect Ghost (a: Type) (pre: prop) (post: pure_post' a pre) =
-  GHOST a
-    (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). post ghost_result ==> p ghost_result)
-    )
-
-(** As with [Tot], the primitive effect [GTot] is definitionally equal
-    to an instance of GHOST *)
-effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
-
+(** [Admit] discards the verification condition of its continuation *)
+effect Admit (a: Type) = PURE a (ensures (fun _ -> l_False))
 
 (***** End trusted primitives *****)
+
 
 (** This point onward, F* fully verifies all the definitions *)
 
@@ -577,16 +417,6 @@ type list (a: Type) =
   | Nil : list a
   | Cons : hd: a -> tl: list a -> list a
 
-(** [as_requires] turns a WP into a precondition, by applying it to
-    a trivial postcondition *)
-unfold
-let as_requires (#a: Type) (wp: pure_wp a) : prop = wp (fun x -> True)
-
-(** [as_ensures] turns a WP into a postcondition, relying on a kind of
-    double negation translation. *)
-unfold
-let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun y -> y =!= x))
-
 (** The keyword term-level keyword [assume] is desugared to [_assume].
     It explicitly provides an escape hatch to assume a given property
     [p]. *)
@@ -632,11 +462,17 @@ For some background on the axiom, see:
 assume val indefinite_description (#a: Type) (p: (a -> prop) { exists x. p x })
   : GTot (x: a { p x })
 
-(* prop-to-bool coercion *)
+(* prop-to-bool coercion.
+
+   [t2b_pred] is a top-level definition rather than a local one on purpose: the
+   witness for [indefinite_description]'s existential is found by instantiating
+   it with the applications appearing in the assertion below, which only works
+   as long as they survive as applications. *)
+let t2b_pred (p: prop) (b: bool) : prop = b <==> p
+
 irreducible let t2b (p: prop) : GTot (b:bool { b <==> p }) =
-  let f (b: bool) = b <==> p in
-  assert f true \/ f false;
-  indefinite_description f
+  assert t2b_pred p true \/ t2b_pred p false;
+  indefinite_description (t2b_pred p)
 
 (** The type of non-negative integers *)
 type nat = i: int{i >= 0}
@@ -687,3 +523,32 @@ val string_of_bool: bool -> Tot string
 (** A primitive printer for [int] *)
 assume
 val string_of_int: int -> Tot string
+
+(** An artificial tag used in the definition of [nonempty] below. It
+    exists only to make sure the body of the existential mentions the
+    bound variable, so that F*'s simplifier does not turn
+    [exists (x:a). True] into [True]. *)
+let nonempty_tag (#a: Type) (x: a) : prop = True
+
+(** [nonempty a] holds exactly when the type [a] is inhabited.
+
+    This is a lang item: the typechecker requires a proof of
+    [nonempty t] for every top-level definition [let x : t = e] where
+    [e] has a potentially divergent effect (i.e., any effect other than
+    [Tot] or [GTot]). Without this obligation, a divergent term could
+    be used to inhabit any type, including [False].
+
+    It is stated as [nonempty a] rather than [exists (x:a). True] so
+    that libraries can register SMT patterns for it. *)
+let nonempty (a: Type) : prop = exists (x: a). nonempty_tag x
+
+(** Any element of [a] witnesses that [a] is nonempty. *)
+let nonempty_intro (#a: Type) (x: a) : nonempty a = _assert (nonempty_tag x)
+
+(** The axiom of choice: from a proof that [a] is inhabited, we can
+    (ghostly) obtain an element of [a]. *)
+let nonempty_elim (a: Type { nonempty a }) : GTot a =
+  indefinite_description (fun (_: a) -> True)
+
+(** A version of [nonempty_elim] taking the proof explicitly. *)
+let nonempty_elim' (#a: Type) (h: nonempty a) : GTot a = nonempty_elim a

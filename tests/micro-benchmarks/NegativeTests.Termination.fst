@@ -29,7 +29,7 @@ let rec repeat_diverge n count =
 
 
 val ackermann_bad: m:int -> n:int -> Tot int
-[@@ (expect_failure [19])]
+[@@ (expect_failure [19; 19; 19])]
 let rec ackermann_bad m n = (* expected failure *)
   if m=0 then n + 1
   else if n = 0 then ackermann_bad (m - 1) 1

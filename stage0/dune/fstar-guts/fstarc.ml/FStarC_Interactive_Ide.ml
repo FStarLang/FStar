@@ -1534,6 +1534,8 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
              (uu___.FStarC_TypeChecker_Env.missing_decl);
            FStarC_TypeChecker_Env.iface_todo =
              (uu___.FStarC_TypeChecker_Env.iface_todo);
+           FStarC_TypeChecker_Env.iface_hidden =
+             (uu___.FStarC_TypeChecker_Env.iface_hidden);
            FStarC_TypeChecker_Env.iface_lids =
              (uu___.FStarC_TypeChecker_Env.iface_lids);
            FStarC_TypeChecker_Env.iface_val_lids =

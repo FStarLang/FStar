@@ -65,4 +65,13 @@ val encode_args : l:args -> env:env_t -> ML (list term & decls_t)
 
 val encode_formula : phi:typ -> env:env_t -> ML (term & decls_t)
 
+(* Encode the pattern of a branch against an already-encoded scrutinee.
+   Returns the guard under which the branch is taken, the (opened) pattern and
+   body, and an environment in which the pattern variables are bound to the
+   corresponding projections of the scrutinee. *)
+val encode_branch_pattern : env:env_t
+                         -> scr:term
+                         -> b:Syntax.branch
+                         -> ML (term & Syntax.pat & Syntax.term & env_t & decls_t)
+
 val encode_function_type_as_formula : t:typ -> env:env_t -> ML (term & decls_t)

@@ -133,10 +133,11 @@ and faithful_comp c =
   | C_Total t -> faithful t
   | C_GTotal t -> faithful t
   | C_Lemma pre post pats -> faithful pre /\ faithful post /\ faithful pats
-  | C_Eff us ef r args decs ->
+  | C_Eff us ef r pre post decs ->
     allP c faithful_univ us
      /\ faithful r
-     /\ allP c faithful_arg args
+     /\ faithful pre
+     /\ faithful post
      /\ allP c faithful decs
 
 let faithful_term     = t:term{faithful t}

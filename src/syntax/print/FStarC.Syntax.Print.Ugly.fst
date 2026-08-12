@@ -425,12 +425,13 @@ and comp_to_string c : ML string =
     | Comp c ->
         let basic =
           if (Options.print_effect_args())
-          then Format.fmt5 "%s<%s> (%s) %s (attributes %s)"
-                            (sli c.effect_name)
-                            (c.comp_univs |> List.map univ_to_string |> String.concat ", ")
-                            (term_to_string c.result_typ)
-                            (c.effect_args |> List.map arg_to_string |> String.concat ", ")
-                            (cflags_to_string c.flags)
+          then Format.fmt "%s<%s> (%s) (requires %s) (ensures %s) (attributes %s)"
+                            [sli c.effect_name;
+                             c.comp_univs |> List.map univ_to_string |> String.concat ", ";
+                             term_to_string c.result_typ;
+                             term_to_string c.comp_pre;
+                             term_to_string c.comp_post;
+                             cflags_to_string c.flags]
           else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
           && not (Options.print_effect_args())
           then Format.fmt1 "Tot %s" (term_to_string c.result_typ)
@@ -465,11 +466,7 @@ and cflag_to_string c : ML string =
     match c with
         | TOTAL -> "total"
         | MLEFFECT -> "ml"
-        | RETURN -> "return"
-        | PARTIAL_RETURN -> "partial_return"
-        | SOMETRIVIAL -> "sometrivial"
-        | TRIVIAL_POSTCONDITION -> "trivial_postcondition"
-        | SHOULD_NOT_INLINE -> "should_not_inline"
+        | SMTPAT p -> "smtpat " ^ term_to_string p
         | LEMMA -> "lemma"
         | DECREASES _ -> "" (* TODO : already printed for now *)
 
@@ -507,81 +504,12 @@ let tscheme_to_string s : ML string =
     let (us, t) = s in
     Format.fmt2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
 
-let action_to_string a : ML string =
-    Format.fmt5 "%s%s %s : %s = %s"
-        (sli a.action_name)
-        (binders_to_string " " a.action_params)
-        (enclose_universes <| univ_names_to_string a.action_univs)
-        (term_to_string a.action_typ)
-        (term_to_string a.action_defn)
-
-let wp_eff_combinators_to_string combs : ML string =
-  let tscheme_opt_to_string = function
-    | Some ts -> tscheme_to_string ts
-    | None -> "None" in
-
-  Format.fmt "{\n\
-    ret_wp       = %s\n\
-  ; bind_wp      = %s\n\
-  ; stronger     = %s\n\
-  ; if_then_else = %s\n\
-  ; ite_wp       = %s\n\
-  ; close_wp     = %s\n\
-  ; trivial      = %s\n\
-  ; repr         = %s\n\
-  ; return_repr  = %s\n\
-  ; bind_repr    = %s\n\
-  }\n"
-    [ tscheme_to_string combs.ret_wp;
-      tscheme_to_string combs.bind_wp;
-      tscheme_to_string combs.stronger;
-      tscheme_to_string combs.if_then_else;
-      tscheme_to_string combs.ite_wp;
-      tscheme_to_string combs.close_wp;
-      tscheme_to_string combs.trivial;
-      tscheme_opt_to_string combs.repr;
-      tscheme_opt_to_string combs.return_repr;
-      tscheme_opt_to_string combs.bind_repr ]
-
 let sub_eff_to_string se : ML string =
-  let tsopt_to_string ts_opt =
-    if Some? ts_opt then ts_opt |> Option.must |> tscheme_to_string
-    else "<None>" in
-  Format.fmt4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
+  Format.fmt3 "sub_effect %s ~> %s%s"
     (lid_to_string se.source) (lid_to_string se.target)
-    (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
-
-let layered_eff_combinators_to_string combs : ML string =
-  let to_str (ts_t, ts_ty, kopt) =
-    Format.fmt3 "(%s) : (%s)<%s>"
-      (tscheme_to_string ts_t) (tscheme_to_string ts_ty)
-      (show kopt) in
-
-  let to_str2 (ts_t, ts_ty) =
-    Format.fmt2 "(%s) : (%s)"
-      (tscheme_to_string ts_t) (tscheme_to_string ts_ty) in
-
-  Format.fmt "{\n\
-  ; l_repr = %s\n\
-  ; l_return = %s\n\
-  ; l_bind = %s\n\
-  ; l_subcomp = %s\n\
-  ; l_if_then_else = %s\n
-  %s
-  }\n"
-    [ to_str2 combs.l_repr;
-      to_str2 combs.l_return;
-      to_str  combs.l_bind;
-      to_str  combs.l_subcomp;
-      to_str  combs.l_if_then_else;
-
-      (if None? combs.l_close then ""
-       else Format.fmt1 "; l_close = %s\n" (combs.l_close |> Option.must |> to_str2));
-    ]
-
-let eff_combinators_to_string (x:eff_combinators) : ML string = match x with
-  | Primitive_eff combs -> wp_eff_combinators_to_string combs
-  | Layered_eff combs -> layered_eff_combinators_to_string combs
+    (match se.lift with
+     | None -> ""
+     | Some ts -> " = " ^ tscheme_to_string ts)
 
 let eff_extraction_mode_to_string (x:eff_extraction_mode) : ML string = match x with
   | Extract_none s -> Format.fmt1 "none (%s)" s
@@ -589,24 +517,20 @@ let eff_extraction_mode_to_string (x:eff_extraction_mode) : ML string = match x 
   | Extract_primitive -> "primitive"
 
 let eff_decl_to_string ed : ML string =
-    let actions_to_string actions =
-        actions |>
-        List.map action_to_string |>
-        String.concat ",\n\t" in
-    let eff_name = if SU.is_layered ed then "layered_effect" else "new_effect" in
-    Format.fmt "%s%s { \
-      %s%s %s : %s \n  \
-        %s\n\
-      and effect_actions\n\t%s\n}\n"
-        [eff_name;
-         "" ;
-         lid_to_string ed.mname;
-         enclose_universes <| univ_names_to_string ed.univs;
-         binders_to_string " " ed.binders;
-         ed.signature |> SU.effect_sig_ts |> tscheme_to_string;
-         eff_combinators_to_string ed.combinators;
-         actions_to_string ed.actions]
-
+    match ed.combinators with
+    | None ->
+      Format.fmt3 "assume effect %s%s%s\n"
+        (lid_to_string ed.mname)
+        (enclose_universes <| univ_names_to_string ed.univs)
+        (binders_to_string " " ed.binders)
+    | Some c ->
+      Format.fmt6 "effect { %s%s%s with { repr = %s; return = %s; bind = %s } }\n"
+        (lid_to_string ed.mname)
+        (enclose_universes <| univ_names_to_string ed.univs)
+        (binders_to_string " " ed.binders)
+        (tscheme_to_string c.repr)
+        (tscheme_to_string c.return_repr)
+        (tscheme_to_string c.bind_repr)
 
 let rec sigelt_to_string (x: sigelt) : ML string =
    let basic =
@@ -661,30 +585,6 @@ let rec sigelt_to_string (x: sigelt) : ML string =
           (if is_typed then "_t" else "")
           (String.concat "; " <| List.map show lids)
           (term_to_string t)
-      | Sig_polymonadic_bind {m_lid=m;
-                              n_lid=n;
-                              p_lid=p;
-                              tm=t;
-                              typ=ty;
-                              kind=k} ->
-        Format.fmt6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
-          (show m)
-          (show n)
-          (show p)
-          (tscheme_to_string t)
-          (tscheme_to_string ty)
-          (show k)
-      | Sig_polymonadic_subcomp {m_lid=m;
-                                 n_lid=n;
-                                 tm=t;
-                                 typ=ty;
-                                 kind=k} ->
-        Format.fmt5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
-          (show m)
-          (show n)
-          (tscheme_to_string t)
-          (tscheme_to_string ty)
-          (show k)
       in
       match x.sigattrs with
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter

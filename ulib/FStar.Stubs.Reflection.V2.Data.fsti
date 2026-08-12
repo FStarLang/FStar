@@ -181,7 +181,8 @@ type comp_view =
   | C_Eff       : us:universes ->
                   eff_name:name ->
                   result:term ->
-                  eff_args:(list argv) ->
+                  pre:term ->
+                  post:term ->
                   decrs:list term ->
                   comp_view
 

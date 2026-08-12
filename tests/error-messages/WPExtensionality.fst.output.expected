@@ -2,9 +2,9 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Prims.unit)
-  - VC =
-      forall (p: Prims.pure_post Prims.unit) (any_result: Prims.unit).
-        p any_result
-  - See also Prims.fst(419,90-419,102)
+  - Failed to prove: Prims.l_False
+  - In context:
+      uu___: Prims.unit
+      uu___: Prims.unit
+  - See also WPExtensionality.fst(60,19-60,24)
 

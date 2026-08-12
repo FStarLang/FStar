@@ -10,24 +10,24 @@
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = ~(None? _) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context: ~(None? _)
   - Also see: PatternMatch.fst(21,4-21,8)
 
 * Info:
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = ~(Some? _) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context: ~(Some? _)
   - Also see: PatternMatch.fst(24,4-24,11)
 
 * Info:
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = ~(_ = true) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context: ~(_ = true)
   - Also see: PatternMatch.fst(29,4-29,8)
 
 * Info at PatternMatch.fst(32,4-32,9):
@@ -43,8 +43,8 @@
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = ~(A? _) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context: ~(A? _)
   - Also see: PatternMatch.fst(38,4-38,5)
 
 * Info at PatternMatch.fst(41,3-41,24):
@@ -63,16 +63,16 @@
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = ~(_._2 = true) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context: ~(_._2 = true)
   - Also see: PatternMatch.fst(61,5-61,12)
 
 * Info:
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query.
-  - Env =
-  - VC = ~(_._1 = false && _._2 = false) ==> Prims.l_False
+  - Failed to prove: Prims.l_False
+  - In context: ~(_._1 = false && _._2 = false)
   - Also see: PatternMatch.fst(64,5-64,20)
 
 * Info at PatternMatch.fst(69,5-69,15):

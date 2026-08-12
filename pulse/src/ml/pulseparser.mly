@@ -423,6 +423,10 @@ withBinders:
   | WITH bs=nonempty_list(multiBinder) DOT
     { List.flatten bs }
 
+requiresSLProp:
+  | REQUIRES s=pulseSLProp
+    { s }
+
 ensuresSLProp:
   | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseSLProp maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
     { ret, s, maybe_opens }
@@ -455,8 +459,8 @@ pulseStmt:
     }
 
 ifStmt:
-  | IF tm=appTermNoRecordExp vp=option(ensuresSLProp) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
-    { PulseSyntaxExtension_Sugar.mk_if (PulseSyntaxExtension_Sugar.mk_stmt (PulseSyntaxExtension_Sugar.mk_expr tm []) (rr $loc(tm))) vp th e }
+  | IF tm=appTermNoRecordExp req=option(requiresSLProp) vp=option(ensuresSLProp) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
+    { PulseSyntaxExtension_Sugar.mk_if (PulseSyntaxExtension_Sugar.mk_stmt (PulseSyntaxExtension_Sugar.mk_expr tm []) (rr $loc(tm))) req vp th e }
 
 elseBlock:
   | ELSE LBRACE p=pulseStmt RBRACE

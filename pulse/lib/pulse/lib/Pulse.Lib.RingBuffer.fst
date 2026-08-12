@@ -353,6 +353,8 @@ fn pop_front (#t:Type0) (rb:ringbuffer t)
   
   // Prove the new contents are correct
   lemma_pop_contents buf (SZ.v h) (SZ.v cnt) cap;
+  // (new_head + new_count) % cap == ((h+1) % cap + (cnt-1)) % cap == (h + cnt) % cap
+  ML.lemma_mod_plus_distr_l (SZ.v h + 1) (SZ.v cnt - 1) cap;
   
   fold (is_ringbuffer rb (Seq.tail s) cap);
   elem

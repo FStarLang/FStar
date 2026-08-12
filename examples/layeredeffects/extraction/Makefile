@@ -1,18 +1,20 @@
-include ../../Makefile.include
+FSTAR_ROOT ?= ../../..
+FSTAR_EXE ?= $(FSTAR_ROOT)/stage2/out/bin/fstar.exe
+FSTAR := $(abspath $(FSTAR_EXE))
 
-include $(FSTAR_ULIB)/ml/Makefile.include
+# LL and MSeqExn were removed with the layered-effect examples.  InformativeIndices
+# was a negative test for effect indices, which no longer exist.
+FILES=ParametricST
 
-FILES=../MSeqExn ../LL ../HoareST ParametricST
+all: $(addsuffix .cmp, $(FILES)) DM4F_layered5_cmp
 
-all: $(addsuffix .cmp, $(FILES)) DM4F_layered5_cmp #InformativeIndices.errcmp
+accept: $(addsuffix .accept, $(FILES)) DM4F_layered5_accept
 
-accept: $(addsuffix .accept, $(FILES)) DM4F_layered5_accept #InformativeIndices.erraccept
+FSTAR_ARGS=--odir out --codegen OCaml --no_cmi --warn_error -272-333-330 --include .. --admit_smt_queries true
 
-FSTAR_ARGS=$(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --warn_error -272-333-330 --include .. --admit_smt_queries true
-
-DM4F_layered5_gen:
-	$(FSTAR) $(FSTAR_ARGS) --extract 'ID5 DM4F_layered5' ../DM4F_layered5.fst
-	$(OCAMLOPT) -I out out/ID5.ml out/DM4F_layered5.ml -o out/DM4F_layered5.exe
+DM4F_layered5_gen: out
+	$(FSTAR) $(FSTAR_ARGS) --extract 'DM4F_layered5' ../DM4F_layered5.fst
+	$(FSTAR) --ocamlopt out/DM4F_layered5.ml -o out/DM4F_layered5.exe
 	./out/DM4F_layered5.exe >out/DM4F_layered5.out 2>&1
 
 DM4F_layered5_cmp: DM4F_layered5_gen
@@ -23,7 +25,7 @@ DM4F_layered5_accept: DM4F_layered5_gen
 
 %.gen: %.fst out
 	$(FSTAR) $(FSTAR_ARGS) --extract $(*F) $<
-	$(OCAMLOPT) out/$(*F).ml -o out/$(*F).exe
+	$(FSTAR) --ocamlopt out/$(*F).ml -o out/$(*F).exe
 	./out/$(*F).exe >out/$(*F).out 2>&1
 
 %.cmp: %.gen
@@ -31,15 +33,6 @@ DM4F_layered5_accept: DM4F_layered5_gen
 
 %.accept: %.gen
 	cp out/$(*F).out $(*F).expected
-
-%.errgen: %.fst out
-	$(FSTAR) $(FSTAR_ARGS) --extract $(*F) $< >out/$(*F).err 2>&1
-
-%.errcmp: %.errgen
-	diff -u --strip-trailing-cr $(*F).expected out/$(*F).err
-
-%.erraccept: %.errgen
-	cp out/$(*F).err $(*F).expected
 
 out:
 	mkdir -p out

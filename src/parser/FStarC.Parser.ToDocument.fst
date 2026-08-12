@@ -742,6 +742,11 @@ let rec p_decl (d: decl): ML document =
         p_qualifier Assumption ^^ space
       else
         p_qualifiers d.quals
+    (* `assume` is part of the syntax of an effect declaration without a
+       representation, and of a sub-effect without a lift. *)
+    | ([Assumption], NewEffect (DeclareEffect _))
+    | ([Assumption], SubEffect _) ->
+      p_qualifier Assumption ^^ space
     | _ -> p_qualifiers d.quals
   in
   p_attributes true d.attrs ^^
@@ -819,15 +824,9 @@ and p_rawDecl d : ML _ = match d.d with
   | Exception(uid, t_opt) ->
     str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> break1 ^^ str "of" ^/+^ p_typ false false t) t_opt
   | NewEffect(ne) ->
-    str "new_effect" ^^ space ^^ p_newEffect ne
+    p_newEffect ne
   | SubEffect(se) ->
     str "sub_effect" ^^ space ^^ p_subEffect se
-  | LayeredEffect(ne) ->
-    str "layered_effect" ^^ space ^^ p_newEffect ne
-  | Polymonadic_bind (l1, l2, l3, t) ->
-    (str "polymonadic_bind")
-          ^^ lparen ^^ p_quident l1 ^^ comma ^^ break1 ^^ p_quident l2 ^^ rparen
-          ^^ (str "|>") ^^ p_quident l3 ^^ equals ^^ p_simpleTerm false false t
   | Pragma p ->
     p_pragma p
   | Tycon(true, _, _) ->
@@ -1006,39 +1005,34 @@ and p_term_list ps pb l : ML _ =
 
 and p_newEffect : _ -> ML _ = function
   | RedefineEffect (lid, bs, t) ->
-    p_effectRedefinition lid bs t
-  | DefineEffect (lid, bs, t, eff_decls) ->
-    p_effectDefinition lid bs t eff_decls
+    str "effect" ^^ space ^^ p_effectRedefinition lid bs t
+  | DeclareEffect (lid, bs) ->
+    (* The required `assume` qualifier is printed by [p_decl]. *)
+    str "effect" ^^ space ^^
+    surround_maybe_empty 2 1 (p_uident lid) (p_binders true bs) empty
+  | DefineEffect (lid, bs, ds) ->
+    str "effect" ^^ space ^^ p_effectDefinition lid bs ds
+
+and p_effectDefinition uid bs ds : ML _ =
+    braces_with_nesting (
+      surround_maybe_empty 2 1 (p_uident uid) (p_binders true bs) (str "with") ^/^
+      braces_with_nesting (separate_map_last (semi ^^ break1) p_effectDecl ds))
+
+and p_effectDecl ps d : ML _ =
+  match d.d with
+  | Tycon(false, false, [TyconAbbrev(lid, [], None, e)]) ->
+      prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
+  | _ ->
+      failwith "Not a declaration of an effect combinator."
 
 and p_effectRedefinition uid bs t : ML _ =
     surround_maybe_empty 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm false false t))
 
-and p_effectDefinition uid bs t eff_decls : ML _ =
-  let binders = p_binders true bs in
-  braces_with_nesting (
-    group (surround_maybe_empty 2 1 (p_uident uid) (p_binders true bs) (prefix2 colon (p_typ false false t))) ^/^
-    (str "with") ^^ hardline ^^ space ^^ space ^^ (separate_map_last (hardline ^^ semi ^^ space) p_effectDecl eff_decls))
-
-and p_effectDecl ps d : ML _ = match d.d with
-  | Tycon(false, _, [TyconAbbrev(lid, [], None, e)]) ->
-      prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
-  | _ ->
-      failwith (Format.fmt1 "Not a declaration of an effect member... or at least I hope so : %s"
-                              (show d))
-
 and p_subEffect lift : ML _ =
-  let lift_op_doc =
-    let lifts =
-      match lift.lift_op with
-        | NonReifiableLift t -> ["lift_wp", t]
-        | ReifiableLift (t1, t2) -> ["lift_wp", t1 ; "lift", t2]
-        | LiftForFree t -> ["lift", t]
-    in
-    let p_lift ps (kwd, t) = prefix2 (str kwd ^^ space ^^ equals) (p_simpleTerm ps false t) in
-    separate_break_map_last semi p_lift lifts
-  in
-  prefix2 (p_quident lift.msource ^^ space ^^ str "~>") (p_quident lift.mdest) ^^
-    space ^^ braces_with_nesting lift_op_doc
+  let base = prefix2 (p_quident lift.msource ^^ space ^^ str "~>") (p_quident lift.mdest) in
+  match lift.lift_op with
+  | None -> base
+  | Some t -> prefix2 (base ^^ space ^^ equals) (p_simpleTerm false false t)
 
 
 (* ****************************************************************************)
