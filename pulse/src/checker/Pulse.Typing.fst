@@ -334,14 +334,15 @@ let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
         post=tm_exists_sl u b p
       }
 
-let comp_while_cond (inv:term) (post_cond:term)
+let comp_while_cond (inv:term) (post_cond:term) (div:bool)
   : comp
-  = C_ST {
+  = let sc = {
            u=u0;
            res=tm_bool;
            pre=inv;
            post=post_cond
-         }
+         } in
+    if div then C_STDiv sc else C_ST sc
 
 let mk_precedes u ty a b =
   R.mk_app (R.pack_ln <| R.Tv_UInst (R.pack_fv ["Prims"; "precedes"]) [u; u]) [

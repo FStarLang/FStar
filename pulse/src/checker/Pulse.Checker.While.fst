@@ -217,6 +217,19 @@ let check_while
   let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv (PostHint ph)) =
     let res_cond = retype_checker_result NoHint res_cond in
     let ph = Pulse.JoinComp.infer_post res_cond in
+    // The postcondition/return-type here was only tentatively inferred above
+    // (via infer_post); its effect was left at the default (stt). A while
+    // loop with no `decreases` is divergent throughout -- the body and break
+    // label are already checked as such (see `div` above) -- so the
+    // condition must be allowed to be divergent too, e.g. when its guard
+    // calls a `divergent fn`. Conversely, when the loop *is* measured
+    // (div = false), the condition must still be non-divergent, exactly as
+    // before. Fix up the tentative post hint's effect to reflect `div`
+    // before composing (proving) against it, so the composition in
+    // `apply_checker_result_k` (mk_bind) sees a consistent, already
+    // divergence-aware target instead of failing with "Cannot compose
+    // computations in this divergent block".
+    let ph = { ph with effect_annot = (if div then EffectAnnotSTTDiv else EffectAnnotSTT) } in
     let r_cond = Pulse.Checker.Prover.prove_post_hint res_cond (PostHint ph) cond.range in
     (| ph, apply_checker_result_k r_cond ppname_default |)
   in
@@ -293,7 +306,7 @@ let check_while
   in
   let (| cond, comp_cond |) = r_cond in
   let (| body, comp_body |) = apply_checker_result_k r_body ppname_default in
-  assume (comp_cond == (comp_while_cond inv body_pre_open)); // regressed by term_spec re-index (pre-authorized)
+  assume (comp_cond == (comp_while_cond inv body_pre_open div)); // regressed by term_spec re-index (pre-authorized)
   assert (comp_post comp_body == comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div));
   assert (comp_pre comp_body == comp_pre (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div));
   assert (comp_u comp_body == comp_u (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div));
