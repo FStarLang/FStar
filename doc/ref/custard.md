@@ -2108,6 +2108,30 @@ higher-kinded polymorphism (`#f:Type0 -> Type0`, `x: f int`) has no
 counterpart in the target type language and lands on `TAny` throughout — which
 is the honest answer, and now a visible one.
 
+That last is the honest answer only while `f` really is a *parameter*.  When
+it is `Mono` — and rule 5 of §3.1 makes it so as soon as a `Mono` binder's
+type mentions it, which for a `{| monad m |}` dictionary is always — the
+instantiation is in hand and `f int` has a perfectly good spelling.  It was
+still coming out as `any`, for a reason that shows up nowhere else: a
+higher-kinded argument arrives as a **lambda**.  `specialize` substitutes it
+with `SS.subst`, which does not reduce, so `m a` becomes
+`(fun a -> ctxt -> ML (a & ctxt)) a` — a beta-redex whose head is a `Tm_abs`
+rather than a name, in a position only `SS.subst` touched, because only the
+definition *body* is normalized. `ty_of_typ` had no case for it and fell
+through.
+
+`FStarC.SMTEncoding.Pruning` is where this was noticed. Its scanning loop is
+a state monad, `st a = ctxt -> ML (a & ctxt)`, written against
+`FStarC.Class.Monad`; every `let!` in it was an `Obj.magic`, and every
+signature said `Obj.t` where it meant `ctxt -> ('a * ctxt)`. Reducing the
+redex — beta only, and only when the head really is a lambda, so each step
+removes one and it cannot loop — takes the compiler's own extracted output
+from **528 `Obj.magic` to 80** and from **21 `Obj.t` to 11**. What is left is
+genuine: the `monad` and `lvm` *record types* are compiled once and are
+uniform in `m` (§5.0), so their fields really are `Obj.t`, and
+`FStarC.Syntax.VisitM`'s `lvm` dictionary is built at run time. The
+regression is `tests/custard/MonoState.fst`.
+
 ### 5.10 Local `let rec`
 
 A local `let rec` is lambda-lifted to a top-level `DLet` rather than given an
@@ -5399,3 +5423,4 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10y | **`make custard-pulse-plugin`** (§12.13) | Done.  The three extractions, the link and a load-and-check smoke test are `mk/custard.mk`'s `pulse-plugin` target, so the Pulse plugin is a regression rather than a demonstration.  `pulse/src/ml/custard/` holds the one realization whose field names differ from ML extraction's, replacing the `sed` the script used.  Two checked-file rules the exercise settled, neither about Custard: the prelude has to come from `stage2/ulib.checked` and not from the installed `fstarc/src.checked`, whose flavour of `Prims` carries a different bundle hash; and `--already_cached` keeps only its last setting, so the `DEPFLAGS` one that `pulse/mk` suggests is dead |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Done. `Extract.hint_of_term`/`hints_of`/`fit`, and lifted locals inherit their enclosing suffix. 243→121 numeric, 409→204 fallbacks, 225→100 chars |
 | M10z | **Output layout** (§6) | Done.  `Simplify.float_lets` turns the nest of definiens-position bindings ANF leaves behind into a flat chain, and the OCaml backend prints a run of bindings and statements at one column inside one pair of parentheses, a discarded expression with `;` (through `ignore` when its type is not unit), and a record --- declaration or literal --- one field per line unless it fits in 80 columns |
+| M10α | **Higher-kinded `Mono` arguments** (§5.9) | Done.  A higher-kinded argument arrives as a lambda, so substituting it leaves a beta-redex in type position, whose head is a `Tm_abs` and which nothing normalizes: `ty_of_typ` read it as `any` and a state monad written against `FStarC.Class.Monad` came out as `Obj.t` with an `Obj.magic` at every bind.  Reducing it takes the compiler's own output from 528 `Obj.magic` to 80 and from 21 `Obj.t` to 11, `FStarC.SMTEncoding.Pruning` included.  `tests/custard/MonoState.fst` |

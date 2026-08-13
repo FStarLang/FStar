@@ -22,6 +22,7 @@ CUSTARD_TESTS += PolyVal
 CUSTARD_TESTS += TypeEntry
 CUSTARD_TESTS += ShortCircuit
 CUSTARD_TESTS += MonoTypes
+CUSTARD_TESTS += MonoState
 CUSTARD_TESTS += InlineFields
 CUSTARD_TESTS += KeyNames
 CUSTARD_TESTS += Refs
@@ -197,6 +198,17 @@ GREP_LocalPoly    += "let a = (fun y" "let b = (fun y" "let c = (fun y"
 # be opened before its sorts are looked at.
 GREP_DepParams     = "type .a depParams_labelled = {" "tag : string;" "value : .a;"
 NOGREP_DepParams   = "p_int"
+
+# Section 5.0: a higher-kinded Mono argument arrives as a *lambda*, so
+# substituting it leaves a beta-redex in type position -- [m a] becomes
+# [(fun a -> ctxt -> ML (a & ctxt)) a].  Read as [any] that made the whole of
+# a state monad's plumbing Obj.t; the compiler's own output had 528 Obj.magic
+# and has 80.  So the assertion is that the state type is written down, and
+# that nothing here is an Obj at all -- which --custard_warn_any, on by
+# default for these tests, independently checks.
+GREP_MonoState     = "(monoState_ctxt -> ('a \* monoState_ctxt))" \
+                     "let rec monoState_walk (l : (Prims.int) list) : (monoState_ctxt -> (unit \* monoState_ctxt))"
+NOGREP_MonoState   = "Obj"
 
 # Section 3.2c: a Mono argument that mentions a runtime value is specialized
 # on its *shape*, with the runtime parts passed as extra parameters.  The

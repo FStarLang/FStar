@@ -1086,6 +1086,27 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
                       TcEnv.Beta; TcEnv.Iota;
                       TcEnv.UnfoldOnly [S.lid_of_fv fv]] t in
           if U.term_eq t' t then TAny else ty_of_typ st t'
+        (* A beta-redex in *type* position, which is how a higher-kinded
+           [Mono] argument arrives.  [FStarC.SMTEncoding.Pruning] is the case:
+           its state monad is [st a = ctxt -> ML (a & ctxt)], and a [monad st]
+           dictionary specializes [bind : m a -> (a -> m b) -> m b] with
+           [m := fun a -> ctxt -> ML (a & ctxt)] -- rule 5 of section 3.1
+           makes the higher-kinded [m] [Mono], since the dictionary's type
+           mentions it.  {!specialize} substitutes that into the binder sorts
+           and the result comp with [SS.subst], which does not reduce, so
+           every [m a] becomes [(fun a -> ...) a].  Only the *body* is
+           normalized, so the redex survives in the signature alone, and the
+           head is a [Tm_abs] rather than a name: without this it fell through
+           to [any], and the state monad's whole plumbing came out as [Obj.t]
+           with an [Obj.magic] at every bind.
+
+           Beta alone, and only when the head really is a lambda, so this
+           cannot loop: each step removes one. *)
+        | Tm_abs _ ->
+          let t' = norm_bounded st "a type-level beta-redex"
+                     [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                      TcEnv.Beta] t in
+          if U.term_eq t' t then TAny else ty_of_typ st t'
         | Tm_fvar fv ->
           (* A type constructor's arguments survive into the [cty] exactly when
              they are types: an index like the [n] of [vec n] has no
