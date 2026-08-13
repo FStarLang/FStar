@@ -5022,6 +5022,73 @@ build does not make.
    extractor, there is no one file that satisfies both, and Custard's names
    are the better ones.
 
+### 12.14 Where the time goes
+
+`--profile_component FStarC.Custard` prints a breakdown of an extraction.
+The counters are Custard's own (`FStarC.Custard.Prof`) rather than
+`FStarC.Profiling`'s, for one reason: extraction is a single mutually
+recursive traversal, so its counters nest --- `ty_of_typ` calls
+`expr_of_term`, which requests a declaration whose body `expr_of_term`
+extracts again --- and *inclusive* time attributes everything to the
+outermost frame.  `Prof` records **exclusive** time instead: the time in a
+counter minus the time in counters called from it, at any depth.  Exclusive
+times sum to the whole, which is what makes them comparable.  The guard is
+cached, because these sit on functions called a million times and
+`Options.profile_enabled` is a namespace-filter match on a string.
+
+The measurement that prompted this: extracting the whole compiler, from
+`FStarC.Main.main` plus the 328 entry points, on one core.
+
+| stage | before | after |
+|---|---|---|
+| SPLIT (the extraction) | 77 s | 50 s |
+| ASSEMBLE (file copies) | 0.1 s | 0.1 s |
+| MENHIR (grammars + the bytecode pre-pass) | 51 s | 51 s |
+| COMPILE (one `ocamlopt`, 221 modules) | 78 s | 78 s |
+| **`make custard`, cache warm** | **3 min 45 s** | **3 min 3 s** |
+
+Peak RSS is 4.4 GB and every stage is single-threaded.
+
+Three things were wrong, and all three were accidentally quadratic rather
+than anything about the design.
+
+1. **`Loader.loaded` scanned every loaded module.**  It is asked on the path
+   from a name to its declaration --- `ensure_lid_available`, which every
+   lookup and every call site goes through, about 700k times --- and it
+   answered by walking `TcEnv.modules` and lowercasing each of a thousand
+   names.  A positive answer is now remembered; only a positive one, since a
+   module is never unloaded, and "no" is exactly what the caller is about to
+   change.  Worth 27 s, a third of the extraction.
+
+2. **The `Mono` binder-flag queries were recomputed at every call site.**
+   `unit_binders`, `type_binders` and `erased_binders` are properties of a
+   declaration's *type*, and answering one normalizes every binder's sort;
+   they were being asked once per call of the declaration.  `binder_flags`
+   caches them per lid, as `binder_classes` already did for §3.1.  Calls into
+   the normalizer from `Mono` fall from 634k to 189k, and `must_erase` from
+   196k to 60k.  Worth 4 s.
+
+3. **`unit_entries` was quadratic in the program.**  Writing the `.cui` looked
+   each declaration's key and type info up by a linear scan of a list as long
+   as the program.  Indexing them first takes the `iface` phase from 6.9 s to
+   65 ms.
+
+What is left, in exclusive time, is roughly: `app_of_fv` 6.8 s (the call-site
+path itself, `request` included), `Extract.run` 6.6 s, `Simplify.run` 4.8 s,
+`expr_of_term` 4.4 s over 555k calls, `split_mono_args` 3.6 s, normalization
+3.4 s over 52k calls, `must_erase_for_extraction` 2.6 s over 578k calls,
+`ty_of_typ` 2.5 s over 601k calls.  That is a flat profile: no one place left
+to fix, and the shape one expects of a traversal that consults the
+typechecker at every node.
+
+The build stages are the larger target now, and both are embarrassingly
+parallel work run in sequence on a 256-core machine.  MENHIR's 51 s is a
+best-effort `ocamlc -c` of *every* module, done only to have the `.cmi`s the
+grammar headers open; compiling the transitive closure of those headers
+instead would be a fraction of it.  COMPILE's 78 s is one `ocamlopt` over 221
+modules in `ocamldep -sort` order; a generated makefile and `make -j` would
+cut it to the depth of the dependency graph.  Neither has been done.
+
 ## 13. Plugins
 
 A definition marked `[@@plugin]` is compiled like any other definition, and in
@@ -5424,3 +5491,4 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Done. `Extract.hint_of_term`/`hints_of`/`fit`, and lifted locals inherit their enclosing suffix. 243→121 numeric, 409→204 fallbacks, 225→100 chars |
 | M10z | **Output layout** (§6) | Done.  `Simplify.float_lets` turns the nest of definiens-position bindings ANF leaves behind into a flat chain, and the OCaml backend prints a run of bindings and statements at one column inside one pair of parentheses, a discarded expression with `;` (through `ignore` when its type is not unit), and a record --- declaration or literal --- one field per line unless it fits in 80 columns |
 | M10α | **Higher-kinded `Mono` arguments** (§5.9) | Done.  A higher-kinded argument arrives as a lambda, so substituting it leaves a beta-redex in type position, whose head is a `Tm_abs` and which nothing normalizes: `ty_of_typ` read it as `any` and a state monad written against `FStarC.Class.Monad` came out as `Obj.t` with an `Obj.magic` at every bind.  Reducing it takes the compiler's own output from 528 `Obj.magic` to 80 and from 21 `Obj.t` to 11, `FStarC.SMTEncoding.Pruning` included.  `tests/custard/MonoState.fst` |
+| M10β | **Performance of the extraction** (§12.14) | Done.  `--profile_component FStarC.Custard` now prints an *exclusive*-time breakdown, from Custard's own `Prof` rather than `FStarC.Profiling`, because a mutually recursive traversal's inclusive counters all report the outermost frame.  It found three accidentally quadratic spots: `Loader.loaded` scanned every loaded module on every name resolution (27 s of 77), the `Mono` binder-flag queries were recomputed at every call site rather than per declaration (4 s), and `unit_entries` looked each declaration up by linear scan (6.9 s to 65 ms).  Extraction of the whole compiler goes from 77 s to 50 s and `make custard` from 3 min 45 s to 3 min 3 s.  What remains is flat; the build stages, MENHIR's 51 s and `ocamlopt`'s 78 s, are both sequential work on a 256-core machine and are the larger target |

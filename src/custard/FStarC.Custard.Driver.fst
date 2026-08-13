@@ -42,6 +42,7 @@ module Split    = FStarC.Custard.Split
 module Ident   = FStarC.Ident
 module TcEnv   = FStarC.TypeChecker.Env
 module Unit    = FStarC.Custard.Unit
+module Prof    = FStarC.Custard.Prof
 
 (* The roots.  Section 4.4: Custard compiles what is reachable from these and
    nothing else, so anything a *hand-written* file calls has to be named,
@@ -236,12 +237,21 @@ let imported_decls (imports:list (decl & option type_info)) : ML (list decl) =
 let unit_entries (keys:list (string & string)) (homes:SMap.t string)
                  (prog:program) (infos:list (name & type_info))
   : ML (list Unit.entry) =
+  (* Both lookups are once per declaration over a list as long as the program,
+     which is quadratic in it and was the second-largest phase of extracting
+     the compiler (section 12.14).  Indexing them first makes it linear. *)
+  let key_map : SMap.t string = SMap.create 100 in
+  (* [tryPick] takes the first match, so a later duplicate must not win. *)
+  keys |> List.iter (fun (n', k) ->
+    if None? (SMap.try_find key_map n') then SMap.add key_map n' k);
+  let info_map : SMap.t type_info = SMap.create 100 in
+  infos |> List.iter (fun (n', ti) ->
+    let k = string_of_name n' in
+    if None? (SMap.try_find info_map k) then SMap.add info_map k ti);
   let key_of (n:name) : ML (option string) =
-    keys |> List.tryPick (fun (n', k) ->
-      if n' = string_of_name n then Some k else None) in
+    SMap.try_find key_map (string_of_name n) in
   let info_of (n:name) : ML (option type_info) =
-    infos |> List.tryPick (fun (n', ti) ->
-      if string_of_name n' = string_of_name n then Some ti else None) in
+    SMap.try_find info_map (string_of_name n) in
   prog |> List.collect (fun d ->
     if has_flag (decl_flags d) Inline || Some? (imported_unit d) then [] else
     (* An external is a hole this unit *leaves*, not a symbol it provides: a
@@ -288,7 +298,12 @@ let write_unit_iface (st:Extract.state) (homes:SMap.t string)
       Format.print_string (Unit.iface_to_string i);
     Unit.write_iface (Find.prepend_output_dir (u ^ ".cui")) i
 
-let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
+(* Every phase of section 1.1 is a counter, so that
+   [--profile_component FStarC.Custard] answers "where did the time go" for a
+   whole-program extraction without a rebuild.  See section 12.14. *)
+let phase (name:string) (f : unit -> ML 'a) : ML 'a = Prof.timed name f
+
+let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let main = main_entry () in
   (* [--custard_main] is a root too, so that the common case needs only one
      option. *)
@@ -300,7 +315,7 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       text "Custard is a whole-program compiler: it extracts exactly the \
                    definitions reachable from the entry points."
     ];
-  check_entrypoints deps env roots;
+  phase "entrypoints" (fun () -> check_entrypoints deps env roots);
   (* Section 12 is specified for the OCaml backend.  The C and karamel
      backends need a header and a linker story of their own, which they do not
      have yet; failing here is better than emitting a file that refers to
@@ -316,7 +331,9 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      which needs the union-find; by the time a backend runs it has been put in
      read-only mode.  The ML extraction does the same thing. *)
   let st = Extract.init deps env in
-  let prog = UF.with_uf_enabled (fun () -> Extract.run st roots main (RegEmb.handle_module st roots)) in
+  let prog = phase "extract" (fun () ->
+               UF.with_uf_enabled (fun () ->
+                 Extract.run st roots main (RegEmb.handle_module st roots))) in
   (* Section 12.4: what a linked unit already compiled.  These never enter the
      program -- renaming or emitting them would defeat the purpose -- but the
      layout analysis has to adopt their verdicts and the backends have to know
@@ -324,27 +341,31 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let imports = Extract.imports st in
   (* Phase 4 pass 1: let-normalization, before anything that moves a subterm
      (section 6). *)
-  let prog = Simplify.anf prog in
+  let prog = phase "anf" (fun () -> Simplify.anf prog) in
   (* Section 5.0: one type declaration per instantiation.  Before the layout
      analysis, so that with no type variables left it may be precise per
      instantiation rather than uniform. *)
   let prog = if Options.custard_monomorphize_types ()
-             then Monomorphize.run prog else prog in
+             then phase "monomorphize" (fun () -> Monomorphize.run prog)
+             else prog in
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
-  let prog, infos, vd = Layout.run (imported_type_infos imports) prog in
+  let prog, infos, vd =
+    phase "layout" (fun () -> Layout.run (imported_type_infos imports) prog) in
   (* Effect-guarded simplification (sections 6 and 7.3).  [vd] is the
      representation the analysis above settled on; nothing below decides one. *)
-  let prog = Simplify.run (imported_decls imports) vd prog in
+  let prog = phase "simplify" (fun () ->
+               Simplify.run (imported_decls imports) vd prog) in
   (* Last: the passes above invent names, and the whole point is that what a
      reader sees is stable under everything that happened before. *)
-  let prog, infos = Rename.run infos prog in
+  let prog, infos = phase "rename" (fun () -> Rename.run infos prog) in
   (* Section 12.9: where each declaration ends up, when the output is split.
      Computed before the interface is written, because the interface has to
      record it: a downstream unit qualifies a reference by the *file* the
      declaration was emitted into, not by the unit's name. *)
   let files = if Options.custard_split () && Options.custard_backend () = "OCaml"
-              then Some (Split.run deps (Extract.link_homes st)
-                                    (List.map fst imports @ prog))
+              then Some (phase "split" (fun () ->
+                     Split.run deps (Extract.link_homes st)
+                               (List.map fst imports @ prog)))
               else None in
   let homes : SMap.t string = SMap.create 100 in
   let _ = match files with
@@ -354,7 +375,7 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                            SMap.add homes (string_of_name (name_of_decl d)) m)) in
   (* After [Rename], because the names a `.cui` exports are the names the
      generated source actually spells. *)
-  write_unit_iface st homes prog infos;
+  phase "iface" (fun () -> write_unit_iface st homes prog infos);
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   if Options.custard_warn_any () then warn_any prog;
@@ -381,8 +402,9 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     (* Section 12.9.  One whole-program run, one file per F* source module:
        the hand-written realizations reference modules Custard compiles, and
        OCaml compilation units have to form a DAG. *)
-    OCaml.print_split (Some?.v files) |> List.iter (fun (m, src) ->
-      BU.write_file (Find.prepend_output_dir (m ^ ".ml")) src)
+    phase "print" (fun () ->
+      OCaml.print_split (Some?.v files) |> List.iter (fun (m, src) ->
+        BU.write_file (Find.prepend_output_dir (m ^ ".ml")) src))
   | "Krml" -> Krml.write_program ofile prog
   | "C" -> BU.write_file ofile (C.print_program (List.map fst imports @ prog))
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
@@ -391,3 +413,10 @@ let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       text ("Unknown --custard_backend " ^ b ^ ".");
       text "The backends are OCaml (the default), Krml and C."
     ]
+
+(* [--profile_component FStarC.Custard] prints the phase breakdown.  Custard
+   runs after the last module is checked, so nothing else would report these
+   counters; the report is here rather than in [Universal] for that reason. *)
+let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
+  phase "driver" (fun () -> run_phases deps env);
+  Prof.report ()

@@ -35,6 +35,7 @@ module Effects = FStarC.Custard.Effects
 module Free   = FStarC.Syntax.Free
 module Ident  = FStarC.Ident
 module Loader = FStarC.Custard.Loader
+module Prof   = FStarC.Custard.Prof
 module Mono   = FStarC.Custard.Mono
 module Builtins = FStarC.Custard.Builtins
 module GenSym = FStarC.GenSym
@@ -274,10 +275,11 @@ and key_of_lb (lb:S.letbinding) : ML string =
   " : " ^ key_of_term lb.lbtyp ^ " = " ^ key_of_term lb.lbdef
 
 let string_of_key (k:spec_key) : ML string =
+  Prof.timed "key" (fun () ->
   Ident.string_of_lid k.sk_lid ^
   (if k.sk_holes = 0 then "" else "/" ^ show k.sk_holes) ^
   (k.sk_args |> List.map (fun (i, t) -> "#" ^ show i ^ "=" ^ key_of_term t)
-             |> String.concat "")
+             |> String.concat ""))
 
 (* -------------------------------------------------------------------- *)
 (* State                                                                *)
@@ -296,6 +298,11 @@ type state = {
   order:   ref (list string);
   (* lid -> its binder classification (section 3.1), computed once. *)
   classes: SMap.t (list bclass);
+  (* Which of a declaration's binders are erased, unit-shaped or type
+     parameters: a property of its F* type, asked at every *call site* of it
+     and answered by normalizing every binder's sort.  Keyed by a tag and the
+     lid; see {!binder_flags} and section 12.14. *)
+  bflags:  SMap.t (list bool);
   (* lid -> how many specializations of it we have created so far. *)
   counts:  SMap.t int;
   (* The mangled names handed out already, so that two specializations whose
@@ -359,6 +366,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   emitted = SMap.create 100;
   order   = mk_ref [];
   classes = SMap.create 100;
+  bflags = SMap.create 100;
   counts  = SMap.create 100;
   suffixes = SMap.create 100;
   fuel    = mk_ref (Options.custard_fuel ());
@@ -500,8 +508,9 @@ let truncate_msg (s:string) : ML string =
    indices are handed out by a global counter, so ascending index is a
    topological order on any set of names that arose from opening one term. *)
 let with_free_names (env:TcEnv.env) (bvs:list bv) : ML TcEnv.env =
-  TcEnv.push_bvs env
-    (List.sortWith (fun (a:bv) (b:bv) -> a.index - b.index) bvs)
+  Prof.timed "env" (fun () ->
+    TcEnv.push_bvs env
+      (List.sortWith (fun (a:bv) (b:bv) -> a.index - b.index) bvs))
 
 let env_for_term (env:TcEnv.env) (t:term) : ML TcEnv.env =
   with_free_names env (elems (Free.names t))
@@ -511,8 +520,10 @@ let env_for_comp (env:TcEnv.env) (c:comp) : ML TcEnv.env =
 
 let norm_bounded_in (st:state) (env:TcEnv.env) (what:string)
                     (steps:list TcEnv.step) (t:term) : ML term =
-  try N.with_budget (Options.custard_norm_budget ())
-                    (fun () -> N.normalize steps (env_for_term env t) t)
+  try let env = env_for_term env t in
+      Prof.timed "norm" (fun () ->
+        N.with_budget (Options.custard_norm_budget ())
+                      (fun () -> N.normalize steps env t))
   with
   | N.Budget_exceeded ->
     custard_error st E.Error_CustardFuelExhausted [
@@ -539,7 +550,7 @@ let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML 
 let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
   let m = Ident.nsstr l in
   if m <> "" && not (Loader.module_is_loaded st.deps (tcenv st) m) then
-    st.env := Loader.ensure_loaded st.deps (tcenv st) m
+    st.env := Prof.timed "load" (fun () -> Loader.ensure_loaded st.deps (tcenv st) m)
 
 (* Every consultation of a declaration's type goes through here.  Looking a
    lid up in an environment that has not loaded its module yet does not fail
@@ -553,7 +564,7 @@ let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
    happened to arrive in. *)
 let lookup_lid_typ (st:state) (l:Ident.lident) : ML (option ((universes & typ) & Range.range)) =
   ensure_lid_available st l;
-  TcEnv.try_lookup_lid (tcenv st) l
+  Prof.timed "lookup" (fun () -> TcEnv.try_lookup_lid (tcenv st) l)
 
 (* Section 8.3.  A [FStar.Stubs.*] declaration is not a definition of
    anything: it is ulib restating, for metaprograms, something the compiler
@@ -940,6 +951,7 @@ and import (st:state) (key:string) : ML (option name) =
    before its body is normalized, so that a diverging specialization is cut off
    after a negligible amount of work. *)
 and check_budget (st:state) (k:spec_key) : ML unit =
+  Prof.timed "budget" (fun () ->
   let lstr = Ident.string_of_lid k.sk_lid in
   let n = match SMap.try_find st.counts lstr with None -> 0 | Some n -> n in
   if n >= Options.custard_max_specializations () then
@@ -955,7 +967,7 @@ and check_budget (st:state) (k:spec_key) : ML unit =
     custard_error st E.Error_CustardFuelExhausted [
       text ("Custard ran out of specialization fuel while requesting " ^ lstr ^
             "; see --custard_fuel.")
-    ]
+    ])
 
 (* [exception Foo of string] desugars to a data constructor of [Prims.exn],
    which is the one inductive with no [Sig_inductive_typ] to hang fields on:
@@ -983,6 +995,7 @@ and datacon_owner (st:state) (l:Ident.lident) : ML (option Ident.lident) =
 (* Section 3.1.  Computed once per definition and cached: it is a property of
    the definition, not of a call site. *)
 and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
+  Prof.timed "binder_classes" (fun () ->
   let key = Ident.string_of_lid l in
   match SMap.try_find st.classes key with
   | Some cs -> cs
@@ -1004,20 +1017,22 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
       | None -> []
     in
     SMap.add st.classes key cs;
-    cs
+    cs)
 
 (* -------------------------------------------------------------------- *)
 (* Types                                                                *)
 (* -------------------------------------------------------------------- *)
 
 and ty_of_typ (st:state) (t:typ) : ML cty =
+  Prof.timed "ty" (fun () ->
   let t = SS.compress t in
   match t.n with
   | Tm_bvar b -> TVar (name_of_bv b)
   (* A name of higher kind binds no target type parameter, so there is nothing
      for a [TVar] to refer to; uniform compilation says [any] instead. *)
   | Tm_name b ->
-    if Mono.is_type_param (tcenv st) (S.mk_binder b) then TVar (name_of_bv b) else TAny
+    if Prof.timed "is_type_param" (fun () -> Mono.is_type_param (tcenv st) (S.mk_binder b))
+    then TVar (name_of_bv b) else TAny
 
   | Tm_uinst (t, _) -> ty_of_typ st t
 
@@ -1027,7 +1042,8 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
      exist at runtime; [Pulse.Lib.HashTable.Spec.repr_t] and its [Seq]/[nat]
      entourage are the motivating example. *)
   | Tm_fvar _
-  | Tm_app _ when TcUtil.must_erase_for_extraction (tcenv st) t -> TUnit
+  | Tm_app _ when Prof.timed "must_erase" (fun () ->
+                    TcUtil.must_erase_for_extraction (tcenv st) t) -> TUnit
 
   | Tm_fvar fv -> ty_of_fv st fv []
 
@@ -1050,8 +1066,9 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
        stop being an arrow, and a value is not what a caller of it holds.  The
        two have to agree -- one describes what a definition *is*, the other
        what its type *says* -- so they run the same rule. *)
-    let bs = drop_flagged (Mono.keep_thunk (tcenv st) bs c
-                             (Mono.erased_binders (tcenv st) t)) bs in
+    let bs = Prof.timed "erased_binders" (fun () ->
+               drop_flagged (Mono.keep_thunk (tcenv st) bs c
+                               (Mono.erased_binders (tcenv st) t)) bs) in
     (* The effect belongs to the last arrow only; the intermediate ones are the
        pure arrows a curried function is made of. *)
     let rec build (bs:binders) : ML cty =
@@ -1063,7 +1080,8 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
     build bs
 
   | Tm_app _ ->
-    (match Effects.impure_effect_result (tcenv st) t with
+    (match Prof.timed "impure_result" (fun () ->
+             Effects.impure_effect_result (tcenv st) t) with
      (* Section 7.2, rule 1: [stt b p q] is represented by [b]. *)
      | Some a -> ty_of_typ st a
      | None ->
@@ -1127,7 +1145,7 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
   (* A type in type position: this is where a higher-kinded or dependent type
      would land.  M1 does not represent those. *)
   | Tm_type _
-  | _ -> TAny
+  | _ -> TAny)
 
 (* A binder of a type constructor's kind that is a type but not a *type
    parameter* -- one of higher kind, such as the [b:a -> Type] of
@@ -1145,8 +1163,9 @@ and has_unrepresentable_param (st:state) (l:Ident.lident) : ML bool =
      | None -> false
      | Some ((_, k), _) ->
        let bs, _ = U.arrow_formals k in
-       bs |> List.existsb (fun b ->
-         is_type_binder (tcenv st) b && not (Mono.is_type_param (tcenv st) b)))
+       Prof.timed "is_type_param" (fun () ->
+         bs |> List.existsb (fun b ->
+           is_type_binder (tcenv st) b && not (Mono.is_type_param (tcenv st) b))))
   | _ -> false
 
 (* Which of a type constructor's binders become parameters of the target type.
@@ -1162,9 +1181,10 @@ and has_unrepresentable_param (st:state) (l:Ident.lident) : ML bool =
    arguments -- the three of higher kind simply come out as [any], which is
    what a value of them has no representation *means*. *)
 and keeps_param (st:state) (l:Ident.lident) (b:S.binder) : ML bool =
+  Prof.timed "is_type_param" (fun () ->
   if is_realized_type st l
   then is_type_binder (tcenv st) b
-  else Mono.is_type_param (tcenv st) b
+  else Mono.is_type_param (tcenv st) b)
 
 and is_realized_type (st:state) (l:Ident.lident) : ML bool =
   match Builtins.lookup_rule l with
@@ -1214,6 +1234,7 @@ and is_data_ctor (fv:fv) : ML bool =
   | _ -> false
 
 and expr_of_term (st:state) (t:term) : ML expr =
+  Prof.timed "expr" (fun () ->
   (* [unlazy_emb] before anything else: reducing a closed arithmetic
      expression leaves the result as an *embedding* rather than as a
      constant, so [-1] arrives as a [Tm_lazy] and would otherwise fall
@@ -1427,7 +1448,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
 
   (* Types and proofs in term position are erased. *)
   | Tm_type _ -> unit_expr
-  | _ -> unit_expr
+  | _ -> unit_expr)
 
 (* -------------------------------------------------------------------- *)
 (* Local [let rec] (section 5.10)                                       *)
@@ -1712,6 +1733,7 @@ and erasable_app (st:state) (lookup:option ((universes & typ) & Range.range)) (a
   | Some ((_, ty), _) -> erasable_result st ty args
 
 and erasable_result (st:state) (ty:typ) (args:args) : ML bool =
+  Prof.timed "erasable" (fun () ->
   let bs, c = U.arrow_formals_comp ty in
   (* Over-application leaves an unknown residue, and under-application leaves
      a closure; only an exactly saturated call has a result we can judge. *)
@@ -1725,7 +1747,7 @@ and erasable_result (st:state) (ty:typ) (args:args) : ML bool =
      the arguments substituted the result is the [squash] the call site asked
      for, and the call disappears. *)
   (let subst = List.map2 (fun (b:S.binder) (a, _) -> NT (b.binder_bv, a)) bs args in
-   TcUtil.must_erase_for_extraction (tcenv st) (SS.subst subst (U.comp_result c)))
+   TcUtil.must_erase_for_extraction (tcenv st) (SS.subst subst (U.comp_result c))))
 
 (* A primitive is a function in F* but an operator in the IR, so an
    under-applied use has to be eta-expanded rather than passed along. *)
@@ -1799,29 +1821,42 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
    test: a parameter can be a typeclass dictionary, which is not erased where
    it stands but is still not a field.  The remaining arguments are the real
    fields, and those go by erasure as usual. *)
+(* Cached [Mono] binder-flag queries.  The answer depends only on the
+   declaration's type, which does not change once its module is loaded, and
+   [lookup_lid_typ] has loaded it; a [None] there is not cached, because that
+   is the one case that can still change. *)
+and binder_flags (st:state) (tag:string) (l:Ident.lident)
+                 (f : TcEnv.env -> typ -> ML (list bool)) : ML (list bool) =
+  let key = tag ^ Ident.string_of_lid l in
+  match SMap.try_find st.bflags key with
+  | Some fs -> fs
+  | None ->
+    match lookup_lid_typ st l with
+    | None -> []
+    | Some ((_, ty), _) ->
+      let fs = f (tcenv st) ty in
+      SMap.add st.bflags key fs;
+      fs
+
 and ctor_dropped_flags (st:state) (l:Ident.lident) : ML (list bool) =
   let n_params = match TcEnv.lookup_sigelt (tcenv st) l with
                  | Some { sigel = Sig_datacon {num_ty_params} } -> num_ty_params
                  | _ -> 0 in
-  match lookup_lid_typ st l with
-  | Some ((_, ty), _) ->
-    Mono.erased_binders (tcenv st) ty
-    |> List.mapi (fun i erased -> erased || i < n_params)
-  | None -> []
+  binder_flags st "e:" l Mono.erased_binders
+  |> List.mapi (fun i erased -> erased || i < n_params)
 
 and repeat_unit (n:int) : ML (list unit) =
   if n <= 0 then [] else () :: repeat_unit (n - 1)
 
 and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
+  Prof.timed "app_of_fv" (fun () ->
   let l = S.lid_of_fv fv in
   ensure_lid_available st l;
   if is_data_ctor fv
   then
     let nm = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in
     let flags = ctor_dropped_flags st l in
-    let ufs = match lookup_lid_typ st l with
-              | Some ((_, ty), _) -> Mono.unit_binders (tcenv st) ty
-              | None -> [] in
+    let ufs = binder_flags st "u:" l Mono.unit_binders in
     mk (ECtor (nm, value_args st (drop_flagged flags ufs) (drop_flagged flags args)))
        (ctor_result_ty st l args) E_Pure
   else
@@ -1859,7 +1894,7 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     | _ ->
       let e = List.fold_left (fun e a -> join_eff e a.eff)
                              (callee_eff st (string_of_key key) (List.length rest)) rest in
-      mk (EApp (hd, rest)) (apply_result st hd_ty (List.length rest)) e
+      mk (EApp (hd, rest)) (apply_result st hd_ty (List.length rest)) e)
 
 (* A constructor application's type is the constructor's result type with the
    inductive's parameters instantiated -- which the spine supplies, since the
@@ -1890,9 +1925,8 @@ and value_args (st:state) (ufs:list bool) (spine:args) : ML (list expr) =
 (* [Mono.unit_binders] restricted to the arguments a call actually passes, in
    the order [split_mono_args] leaves them. *)
 and call_unit_flags (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : ML (list bool) =
-  let ub = match lookup_lid_typ st l with
-           | Some ((_, ty), _) -> Mono.unit_binders (tcenv st) ty
-           | None -> [] in
+  Prof.timed "call_unit_flags" (fun () ->
+  let ub = binder_flags st "u:" l Mono.unit_binders in
   let rec go (cs:list bclass) (uf:list bool) (sp:args) : ML (list bool) =
     match cs, sp with
     | [], _ -> []
@@ -1902,15 +1936,14 @@ and call_unit_flags (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : 
                   | [] -> (false, []) in
       if Poly? c then u :: go cs uf sp else go cs uf sp
     | _, [] -> [] in
-  go cs ub spine
+  go cs ub spine)
 
 (* The type arguments of a call, in the order [extract_letbinding] records them
    in [dl_typars]: source order, restricted to the type binders that survived
    as parameters rather than being specialized away. *)
 and call_type_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : ML (list cty) =
-  let tflags = match lookup_lid_typ st l with
-               | Some ((_, ty), _) -> Mono.type_binders (tcenv st) ty
-               | None -> [] in
+  Prof.timed "call_type_args" (fun () ->
+  let tflags = binder_flags st "t:" l Mono.type_binders in
   let rec go (cs:list bclass) (tf:list bool) (sp:args) : ML (list cty) =
     match cs, tf, sp with
     | c :: cs, t :: tf, (a, _) :: sp ->
@@ -1918,12 +1951,13 @@ and call_type_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : M
       then ty_of_typ st a :: go cs tf sp
       else go cs tf sp
     | _ -> [] in
-  go cs tflags spine
+  go cs tflags spine)
 
 (* The callee's signature, instantiated at this call site.  It is available
    because requests are depth-first; a recursive call is the exception, and
    falls back to [TAny]. *)
 and callee_sig (st:state) (key:string) (tyargs:list cty) : ML cty =
+  Prof.timed "callee_sig" (fun () ->
   match SMap.try_find st.emitted key with
   | Some (DLet d) ->
     let rec zip (ps:list string) (ts:list cty) : list (string & cty) =
@@ -1947,13 +1981,14 @@ and callee_sig (st:state) (key:string) (tyargs:list cty) : ML cty =
       | p :: ps, [] -> (p, TAny) :: zipx ps []
       | [], _ -> [] in
     subst_cty (zipx d.dx_typars tyargs) d.dx_ty
-  | _ -> TAny
+  | _ -> TAny)
 
 (* Section 3.2: the two ways a call site can fail to be specializable.
    Returns the key arguments, the terms to substitute into the body, and the
    remaining spine. *)
 and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
   : ML (list (int & term) & list (int & term) & args & list S.bv) =
+  Prof.timed "split_mono_args" (fun () ->
   if not (has_mono cs) && not (has_dropped cs) then ([], [], spine, [])
   else
     let n_args = List.length spine in
@@ -2001,7 +2036,7 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       let abs (t:term) : ML term = U.abs (List.map S.mk_binder holes) t None in
       (List.map (fun (i, t) -> (i, abs t)) margs,
        List.map (fun (i, t) -> (i, abs t)) msubst,
-       rest, holes)
+       rest, holes))
 
 (* Section 3.2c: the runtime values a call's [Mono] arguments still mention,
    in a deterministic order.

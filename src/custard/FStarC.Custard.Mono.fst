@@ -31,6 +31,7 @@ module TcEnv = FStarC.TypeChecker.Env
 module TcUtil = FStarC.TypeChecker.Util
 module U     = FStarC.Syntax.Util
 module N     = FStarC.TypeChecker.Normalize
+module Prof  = FStarC.Custard.Prof
 
 (* Custard reduces terms nobody wrote for it, and reduction need not
    terminate: with [zeta] on, which is the default, a recursive definition is
@@ -46,8 +47,9 @@ module N     = FStarC.TypeChecker.Normalize
    resumes where it left off. *)
 let norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
   : ML typ =
-  try N.with_budget (FStarC.Options.custard_norm_budget ())
-                    (fun () -> N.normalize steps env t)
+  try Prof.timed "Mono.norm" (fun () ->
+        N.with_budget (FStarC.Options.custard_norm_budget ())
+                      (fun () -> N.normalize steps env t))
   with
   | N.Budget_exceeded ->
     FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardFuelExhausted [
@@ -133,7 +135,8 @@ let rec is_arity_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
                     t)
   | _ -> false
 
-let is_arity (env:TcEnv.env) (t:typ) : ML bool = is_arity_aux false env t
+let is_arity (env:TcEnv.env) (t:typ) : ML bool =
+  Prof.timed "Mono.is_arity" (fun () -> is_arity_aux false env t)
 
 let is_type_binder (env:TcEnv.env) (b:binder) : ML bool =
   is_arity env b.binder_bv.sort
@@ -179,7 +182,8 @@ let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   let sort = b.binder_bv.sort in
   not (U.is_unit sort) &&
   not (is_type_binder env b) &&
-  TcUtil.must_erase_for_extraction env sort
+  Prof.timed "Mono.must_erase" (fun () ->
+    TcUtil.must_erase_for_extraction env sort)
 
 let is_unit_binder (b:binder) : ML bool = U.is_unit b.binder_bv.sort
 

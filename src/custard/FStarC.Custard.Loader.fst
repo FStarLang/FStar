@@ -39,11 +39,30 @@ module TcEnv = FStarC.TypeChecker.Env
    Custard runs, every module the entry point depends on has already been
    loaded through its *interface*, whose [val]s say nothing about how anything
    is computed.  Section 4.2. *)
+(* Answering it is a scan of every module loaded so far, and the question is
+   asked on the path from a name to its declaration -- [ensure_lid_available],
+   which every lookup and every call site goes through.  That is a linear scan
+   per name resolution over a list that ends up a thousand long, and it
+   dominated the extraction of the compiler (section 12.14).
+
+   So a positive answer is remembered.  Only a positive one: a module is never
+   *un*loaded, so "yes" stays true, while "no" is exactly what the caller is
+   about to change.  The key carries [want_impl] because a module loaded
+   through its interface answers yes to one and no to the other. *)
+let loaded_memo : SMap.t unit = SMap.create 100
+
 let loaded (env:TcEnv.env) (m:string) (want_impl:bool) : ML bool =
   let m = String.lowercase m in
-  TcEnv.modules env |> List.existsb (fun md ->
-    String.lowercase (Ident.string_of_lid md.name) = m
-    && not (want_impl && md.is_interface))
+  let key = (if want_impl then "!" else "?") ^ m in
+  match SMap.try_find loaded_memo key with
+  | Some () -> true
+  | None ->
+    let b =
+      TcEnv.modules env |> List.existsb (fun md ->
+        String.lowercase (Ident.string_of_lid md.name) = m
+        && not (want_impl && md.is_interface)) in
+    if b then SMap.add loaded_memo key ();
+    b
 
 (* Section 4.2: an abstract [val] in an interface tells an extractor nothing,
    so we go for the implementation whenever there is one.  Loading it pulls in
