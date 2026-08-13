@@ -109,6 +109,32 @@ XFAIL_RUST += ExtDatatypesRecord ExtDatatypesVariant
 XFAIL_C    += ExtProjectorOfCtor
 XFAIL_RUST += ExtProjectorOfCtor
 
+# The Rust backend has no notion of a 128-bit integer: every function touching
+# FStar.UInt128/FStar.Int128 fails with
+#   Failure("unexpected: [type] no casts in Low* -> Rust")
+# and krml then dies with an uncaught `Not_found` while emitting the crate.
+# FINDINGS.md #14.
+XFAIL_RUST += ExtUInt128 ExtInt128
+
+# krmllib realizes FStar.UInt128 (fstar_uint128_gcc64.h, ..._msvc.h,
+# FStar_UInt128_Verified.h) but ships *nothing* for FStar.Int128. Karamel
+# happily emits references to the type `FStar_Int128_t` and to
+# `FStar_Int128_{mul_wide,add,sub,mul,div,rem,eq,lt,gt,...}`, none of which
+# exist, so the generated C does not compile. FINDINGS.md #15.
+XFAIL_C += ExtInt128
+
+# krmllib *declares* but never *defines* FStar_U?Int{8,16,32,64}_rotate_left
+# and _rotate_right (dist/minimal/FStar_UInt_8_16_32_64.h), so any program that
+# rotates extracts to C that compiles but does not link. The same holds for
+# `minus`, `ne` and `of_string`. FINDINGS.md #16.
+XFAIL_C += ExtUIntRotate
+
+# The Rust backend rejects rotates, eq_mask/gte_mask and minus with
+#   Failure("unexpected: [type] no casts in Low* -> Rust")
+# (AstToMiniRust.ml:541, the TAny case of translate_type) and then dies with an
+# uncaught `Not_found`. FINDINGS.md #14 and #17.
+XFAIL_RUST += ExtUIntRotate ExtUIntMask
+
 OCAML_TESTS := $(filter-out $(NO_OCAML) $(XFAIL_OCAML),$(TESTS))
 C_TESTS     := $(filter-out $(NO_C)     $(XFAIL_C),$(TESTS))
 RUST_TESTS  := $(filter-out $(NO_RUST)  $(XFAIL_RUST),$(TESTS))

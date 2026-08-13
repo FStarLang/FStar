@@ -37,6 +37,11 @@ Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 | 10 | Rust backend references a `lowstar` module it never emits | 4 | ✓ | ✓ | ✗ | `ExtDatatypesRecord`, `ExtDatatypesVariant` |
 | 11 | projector applied to a constructor application crashes krml | 4 | ✓ | ✗ | ✗ | `ExtProjectorOfCtor` |
 | 12 | Rust backend cannot translate `EFun` and silently truncates the crate | 4 | ✓ | – | ✗ | `ExtBoolHigherOrder` |
+| 13 | F\* cannot evaluate 32/64-bit bitwise specs on concrete values | – | – | – | – | (affects how tests are written) |
+| 14 | Rust backend has no 128-bit integers, and dies with `Not_found` | 4 | ✓ | ✓ | ✗ | `ExtUInt128`, `ExtInt128` |
+| 15 | krmllib ships no `FStar_Int128` at all; generated C does not compile | 4 | ✓ | ✗ | ✗ | `ExtInt128` |
+| 16 | krmllib declares but never defines `rotate_left`/`rotate_right`/`minus`/`of_string` | 4 | ✓ | ✗ | ✗ | `ExtUIntRotate` |
+| 17 | Rust backend rejects `eq_mask`, `gte_mask` and `minus` | 4 | ✓ | ✓ | ✗ | `ExtUIntMask` |
 
 `–` means "not applicable": the backend rejects the feature by design (closures
 are not Low\*; the Rust backend refuses mathematical integers outright).
@@ -336,6 +341,185 @@ library that is missing definitions. It is why the `rust` rule in the
 
 ---
 
+## 13. F\* cannot evaluate 32/64-bit bitwise specifications on concrete values
+
+*Not an extraction bug, but it shapes every test in this directory, so it is
+recorded here. Referenced by `ExtIntSigned`, `ExtIntShiftArith`,
+`ExtUIntUnsigned`, `ExtUInt8Lognot`, `ExtUInt128`, `ExtInt128`,
+`ExtUIntRotate` and `ExtUIntMask`.*
+
+Since every check in this suite must be **statically provable** (`chk` takes
+`b:bool{b}`), a test may only assert a value F\* can prove. For arithmetic,
+comparisons, casts and division that is automatic. For anything defined through
+`FStar.BitVector` — `logand`, `logor`, `logxor`, `lognot`,
+`shift_arithmetic_right`, `rotate_left`, `rotate_right`, `minus` — it is not:
+
+* `assert_norm` on `FStar.UInt.logand` succeeds at `n = 4` but gets stuck at
+  `n = 8` and above; the normalizer does not get through `Seq.slice` /
+  `Seq.index`.
+* With `--fuel 20 --ifuel 20 --z3rlimit 200` the SMT solver *does* unfold the
+  definition at `n = 8`. At `n = 32` it fails even at fuel 40 after four
+  minutes. **Eight bits is the practical ceiling for a literal-valued general
+  bitwise fact.**
+* `FStar.Tactics.BV.bv_tac` does not apply: it fails with
+  `Variable "n" not found` in `FStar.Tactics.BV.Lemmas.fsti`.
+* `normalize_term` at the *call site* would discharge the obligation but
+  **must never be used**: it rewrites the argument of `chk` to the literal
+  `true`, so the extracted program stops testing anything. This is the central
+  trap of the whole design.
+
+The three ways out, in order of preference:
+
+1. **Identity lemmas.** `FStar.UInt` proves `logand a a = a`, `logor a 0 = a`,
+   `logxor a a = 0`, `lognot (lognot a) = a`, `logand a (2^m - 1) = a % 2^m`
+   and both `rotate_*_inverse` lemmas at any width. Cases that look like they
+   "just worked" at 32 bits are always one of these in disguise — for example
+   `logand 0xffffffff x = x` is `logand_lemma_2`, not evaluation.
+2. **Signed → unsigned bridges.** `FStar.Int`'s bitwise operations are
+   *definitionally* the `FStar.UInt` ones applied to the two's complement
+   representation, so
+
+   ```fstar
+   let logand_bridge (#n:pos) (a b : Int.int_t n)
+     : Lemma (Int.logand a b ==
+              Int.from_uint (UInt.logand (Int.to_uint a) (Int.to_uint b)))
+     = ()
+   ```
+
+   discharges in 0.35s and unlocks the entire `FStar.UInt` lemma library for
+   signed operands. `ExtIntSigned` and `ExtInt128` both use this.
+   Note that `FStar.Int` has `logand_self` and `logxor_self` but **no
+   `logor_self` and no `lognot_self`**, so those two always need the bridge.
+3. **Weaken the claim.** `FStar.Int.nth_lemma` proves concrete
+   `shift_arithmetic_right` values but blows up on `INT_MIN`, so
+   `ExtIntShiftArith` and `ExtInt128` check only that the result is still
+   negative (via `sign_bit_negative`) — one bit, but the *only* bit a
+   logical-shift bug would get wrong.
+
+`FStar.UInt` also lacks a lemma for `rotate_left a 0`, even though `s = 0` is
+inside the precondition of `UIntN.rotate_left`; `ExtUIntRotate` proves it from
+`nth_lemma` in two lines.
+
+---
+
+## 14. The Rust backend has no 128-bit integers, and dies with `Not_found`
+
+*Severity 4. Tests: `ExtUInt128`, `ExtInt128`.*
+
+Every function mentioning `FStar.UInt128` or `FStar.Int128` fails to translate:
+
+```
+ERROR translating ExtUInt128.carry_tests: Failure("unexpected: [type] no casts in Low* -> Rust")
+...
+5 total errors
+ERROR looking up: extuint128::carry_tests
+Fatal error: exception Not_found
+```
+
+The message comes from the `TAny` case of `translate_type` in
+[`karamel/lib/AstToMiniRust.ml:541`](../../../karamel/lib/AstToMiniRust.ml).
+Unlike #1, #11 and #12, krml does **not** exit 0 here: after reporting the
+translation errors it tries to look the function up anyway and escapes with an
+uncaught `Not_found`, so the user gets an OCaml backtrace rather than a
+diagnostic. Rust has a native `u128`/`i128`, so this is a missing mapping
+rather than a fundamental limitation.
+
+---
+
+## 15. krmllib ships no `FStar_Int128` at all
+
+*Severity 4. Test: `ExtInt128`.*
+
+`krmllib/dist/generic` contains `FStar_UInt128.h`, `FStar_UInt128_Verified.h`,
+`fstar_uint128_gcc64.h`, `fstar_uint128_msvc.h` and
+`fstar_uint128_struct_endianness.h` — and **nothing whatsoever for
+`FStar.Int128`**. Karamel nevertheless emits references to the type and to the
+functions without any diagnostic beyond the generic "no corresponding
+implementation" warning, so the generated C simply does not compile:
+
+```
+ExtInt128.h:19:1: error: unknown type name 'FStar_Int128_t'; did you mean 'FStar_UInt128_t'?
+ExtInt128.c:22:10: error: implicit declaration of function 'FStar_Int128_mul_wide'
+ExtInt128.c:47:46: error: 'FStar_Int128_zero' undeclared
+```
+
+`FStar.Int128` is a perfectly ordinary ulib module that verifies and extracts
+to OCaml, so nothing warns the user that the C backend cannot support it.
+Either krmllib should realize it — a signed 128-bit type is `__int128` on gcc
+and clang, exactly parallel to the existing unsigned support — or krml should
+reject the module with a real error.
+
+---
+
+## 16. krmllib declares but never defines `rotate_left`, `rotate_right`, `minus`, `ne` and `of_string`
+
+*Severity 4. Test: `ExtUIntRotate`.*
+
+`krmllib/dist/minimal/FStar_UInt_8_16_32_64.h` contains
+
+```c
+extern uint32_t FStar_UInt32_rotate_left(uint32_t a, uint32_t s);
+```
+
+and there is no definition anywhere in the distribution. The generated C
+therefore *compiles* and then fails at **link** time:
+
+```
+undefined reference to `FStar_UInt8_rotate_left'
+undefined reference to `FStar_UInt8_rotate_right'
+```
+
+Checking every `extern` in that header against the `.c` files in the
+distribution, the declared-but-undefined set is, for each of the four unsigned
+widths: `rotate_left`, `rotate_right`, `minus`, `ne`, `of_string`,
+`__proj__Mk__item__v` and `uu___is_Mk`. (`ne` is separately #1.) Note the
+asymmetry with the signed widths, which *are* defined.
+
+This is the worst diagnostic in the suite: extraction succeeds, the C compiler
+is happy, and the failure only surfaces at link time in whatever downstream
+project happens to call a rotate.
+
+`ExtUIntRotate` also pins down the `s = 0` case, which is inside the
+precondition of `UIntN.rotate_left` but which the textbook
+`(x << s) | (x >> (n - s))` lowering turns into a shift by the full width —
+undefined behaviour in C and a panic in debug Rust. Any implementation added
+to krmllib has to handle it.
+
+---
+
+## 17. The Rust backend rejects `eq_mask`, `gte_mask` and `minus`
+
+*Severity 4. Test: `ExtUIntMask`.*
+
+The constant-time comparison primitives fail with the same
+`Failure("unexpected: [type] no casts in Low* -> Rust")` as #14, followed by
+the same uncaught `Not_found`:
+
+```
+ERROR translating ExtUIntMask.gte_mask_8_16: Failure("unexpected: [type] no casts in Low* -> Rust")
+ERROR translating ExtUIntMask.mask_use_tests: Failure("unexpected: [type] no casts in Low* -> Rust")
+8 total errors
+ERROR looking up: extuintmask::eq_mask_32
+Fatal error: exception Not_found
+```
+
+Every width is affected, and so is `rotate_left`/`rotate_right` (#16). A
+minimal reproduction with no lemma calls and no ghost arguments —
+
+```fstar
+let a32 : U32.t = 3735928559ul
+let s7  : U32.t = 7ul
+let main () : I32.t =
+  if U32.eq (U32.rotate_left a32 s7) (U32.rotate_left a32 s7) then 0l else 1l
+```
+
+— fails identically, so this is about the primitives themselves and not about
+anything the test does around them. `eq_mask` and `gte_mask` are what HACL\*
+uses for every branch-free comparison, so in practice no constant-time F\* code
+can be extracted to Rust today.
+
+---
+
 ## Things that were checked and are *correct*
 
 Recording these matters as much as the bugs — they are the cells of the matrix
@@ -361,6 +545,33 @@ that are now pinned down and will not silently regress.
 * **Tagged unions** (`ExtDatatypesVariant`) on OCaml and C, including `option`.
 * **`Prims.int`** small-value arithmetic and comparison on OCaml and C
   (`ExtPrimsInt`).
+* **Unsigned division and remainder** at all four widths, including every
+  operand whose top bit is set (`ExtUIntDivRem`). This is the case a backend
+  implementing `div` with a *signed* machine division gets silently wrong —
+  `0xFFFFFFFF / 3` is `1431655765` unsigned but `0` signed — and all three
+  backends get it right.
+* **Signed division and remainder** at all four widths, in all four sign
+  combinations, including `INT_MIN / 3` and `x / -1` (`ExtIntDivRem`). All
+  three backends truncate towards zero and give the remainder the sign of the
+  dividend, matching `FStar.Int`. `INT_MIN / -1` is excluded because F\*
+  rejects it, which is correct: it overflows and is undefined in C.
+* **`FStar.UInt128`** on OCaml and C (`ExtUInt128`): carry between the two
+  64-bit halves, `mul_wide`, `uint64_to_uint128`/`uint128_to_uint64`
+  truncation, comparisons that must look at both halves, shifts across the
+  64-bit boundary, and the bitwise identities. This is worth more than it
+  looks, because OCaml uses the F\*-extracted two-word implementation while C
+  uses a native `unsigned __int128` — two entirely different programs agreeing.
+* **`FStar.Int128`** on OCaml only (`ExtInt128`); see #15 for C and #14 for
+  Rust.
+* **`eq_mask` and `gte_mask`** at all four widths on OCaml and C
+  (`ExtUIntMask`), including that `gte_mask` is an unsigned comparison and that
+  the "true" result really is all-ones rather than merely non-zero — the tests
+  use the masks as masks (`x &^ eq_mask a b`) rather than just comparing them.
+  The `[@ CNoInline ]` attribute they carry does not disturb extraction.
+* **`minus`** (two's complement negation of an unsigned value) on OCaml and C,
+  including `minus 0 = 0` and `x + minus x = 0`.
+* **Rotations** on OCaml (`ExtUIntRotate`), including the `s = 0` case; see
+  #16 for C and #17 for Rust.
 
 ## Notes for whoever extends this
 

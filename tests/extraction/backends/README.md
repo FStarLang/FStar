@@ -33,13 +33,34 @@ module ExtFoo
 module I32 = FStar.Int32
 
 (* boilerplate: see any other module in this directory *)
-let chk (n:I32.t) (b:bool) : I32.t = if b then 0l else n
+let chk (n:I32.t) (b:bool{b}) : I32.t = if b then 0l else n
 let ( &&& ) (a b : I32.t) : I32.t = if a = 0l then b else a
 
 let main () : I32.t =
      chk 1l (...)
  &&& chk 2l (...)
 ```
+
+### Why `b:bool{b}`?
+
+`chk` takes a boolean that F\* must be able to **prove**. Without the
+refinement a check only asserts that the three backends agree with a constant
+somebody typed into the test; with it, the expected value is verified first, so
+a failing cell always means F\* and a backend genuinely disagree — which is the
+severity-2 bug class this suite exists to find.
+
+The refinement is erased at extraction and F\* does no value propagation from
+it, so the runtime test survives intact: the generated C for
+`chk 50l (U8.eq (U8.logand m8_32 seven) 0uy)` really does read
+`chk(50, (m8_32 & 7) == 0)`. `ExtSmoke` check 9 guards this property, and
+`ExtSmoke` is also the one module allowed to use the unrefined `chk_raw`,
+because it deliberately exercises *failing* checks to validate the plumbing.
+
+**Never discharge the obligation with `normalize_term` at the call site.** It
+rewrites the argument to the literal `true` and the extracted program stops
+testing anything. See FINDINGS.md #13 for the proof recipes that are safe —
+identity lemmas, the signed→unsigned bridges, and the eight-bit ceiling on
+literal-valued bitwise facts.
 
 ### Why top-level constants?
 
@@ -79,6 +100,13 @@ a fatal warning 9. So bind literals, not expressions.
 * Applying a projector directly to a constructor application
   (`Circle?.radius (Circle x)`) — that crashes krml (FINDINGS.md #11). Bind the
   constructor application with `let` first.
+* Long `&&&` chains in a single function when the checks need real proof work.
+  The path condition accumulates, and the solver times out on the *last* check
+  for reasons that have nothing to do with it. Split into per-width or
+  per-feature functions and combine them in `main`; `ExtUIntMask` and
+  `ExtIntShiftArith` were both split for this reason.
+* Shift and rotate counts are always `FStar.UInt32.t`, whatever the width of
+  the value being shifted.
 
 ## Expected failures
 
@@ -106,6 +134,10 @@ Every `XFAIL_` entry carries a comment pointing at the relevant section of
 3. If a backend cannot support the feature at all, add the module to
    `NO_<backend>`; if the backend is simply buggy, add it to
    `XFAIL_<backend>` and write the analysis up in `FINDINGS.md`.
+
+Verification cost is part of the cost of this directory: it runs in CI. Keep
+`--z3rlimit` and `--fuel` bumps scoped with `#push-options` around the smallest
+function that needs them rather than at module level.
 
 Prefer one module per issue. A module that mixes a working feature with a
 broken one has to be XFAILed wholesale, which loses the coverage of the part
