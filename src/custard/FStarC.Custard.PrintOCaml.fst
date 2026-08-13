@@ -514,6 +514,10 @@ let ascribe_record (n:name) (fs:list string) (s:string) : ML string =
                else "(" ^ String.concat ", " (wilds k) ^ ") " in
     "(" ^ s ^ " : " ^ args ^ qualify n (ocaml_type_name n) ^ ")"
 
+(* Past this many columns a line stops being one a reader takes in at a
+   glance, which is the only thing the layout here is for. *)
+let line_width : int = 80
+
 let rec term (ind:string) (e:expr) : ML string =
   match e.e with
   | EConst c -> constant c
@@ -535,13 +539,10 @@ let rec term (ind:string) (e:expr) : ML string =
   | EFun (bs, body) ->
     "(fun " ^ String.concat " " (List.map (fun b -> ocaml_var b.b_name) bs) ^
     " -> " ^ term ind body ^ ")"
-  | ELet (x, _, e1, e2) ->
-    let ind' = ind ^ "  " in
-    "(let " ^ ocaml_var x ^ " = " ^ term ind' e1 ^ " in\n" ^ ind' ^ term ind' e2 ^ ")"
-  | ESeq (e1, e2) ->
-    (* [let _ = ...] rather than [;]: the discarded expression need not have
-       type unit, and OCaml warns about that. *)
-    "(let _ = " ^ term ind e1 ^ " in\n" ^ ind ^ term ind e2 ^ ")"
+  (* A binding and a statement both open a *sequence*, which {!stmts} prints
+     as one: at one column and inside one pair of parentheses, rather than
+     nesting a pair and an indentation step per element. *)
+  | ELet _ | ESeq _ -> "(" ^ stmts ind e ^ ")"
   | EIf (c, t, f) ->
     "(if " ^ term ind c ^ " then " ^ term ind t ^ " else " ^ term ind f ^ ")"
   | EMatch (scrut, brs) ->
@@ -558,10 +559,21 @@ let rec term (ind:string) (e:expr) : ML string =
        the record type only when no other record in it shares these labels.
        When one does, OCaml takes the last declared, so say which is meant
        ({!record_params}). *)
+    (* One field per line, unless the whole literal fits on the one it is
+       already on: a record is where a reader looks up what a value is made
+       of, and the fields of the ones this compiler builds are whole
+       expressions rather than names -- but a two-field record of variables is
+       not clearer for being spread over two lines. *)
+    let ind' = ind ^ "  " in
+    let parts = List.mapi (fun i (f, e) ->
+                  (if i = 0 then qualify n (ocaml_var f) else ocaml_var f)
+                  ^ " = " ^ term ind' e) fs in
+    let one = "{ " ^ String.concat "; " parts ^ " }" in
     let body =
-      "{ " ^ String.concat "; " (List.mapi (fun i (f, e) ->
-                (if i = 0 then qualify n (ocaml_var f) else ocaml_var f)
-                ^ " = " ^ term ind e) fs) ^ " }" in
+      if String.length ind + String.length one <= line_width
+         && not (List.existsb (fun c -> c = '\n') (String.list_of_string one))
+      then one
+      else "{ " ^ String.concat (";\n" ^ ind') parts ^ " }" in
     ascribe_record n (List.map fst fs) body
   (* A tuple has no projection in OCaml beyond [fst] and [snd], so every
      component is read by a match that names it and ignores the rest. *)
@@ -673,6 +685,21 @@ and index (ind:string) (e:expr) : ML string =
      | TInt sw -> "(Z.to_int (" ^ int_module sw ^ ".v " ^ term ind e ^ "))"
      | _ -> "(Obj.magic (" ^ term ind e ^ "))")
 
+(* The elements of a sequence, at [ind], without the enclosing parentheses.
+   [let ... in] and [;] both extend as far right as they can in OCaml, so one
+   pair around the whole run is exactly as many as are needed. *)
+and stmts (ind:string) (e:expr) : ML string =
+  match e.e with
+  | ELet (x, _, e1, e2) ->
+    "let " ^ ocaml_var x ^ " = " ^ term (ind ^ "  ") e1 ^ " in\n" ^ ind ^ stmts ind e2
+  | ESeq (e1, e2) ->
+    (* The discarded expression need not have type unit, and OCaml warns about
+       that, so one that is not goes through [ignore]. *)
+    let s = term ind e1 in
+    let s = if TUnit? e1.ty then s else "(ignore " ^ s ^ ")" in
+    s ^ ";\n" ^ ind ^ stmts ind e2
+  | _ -> term ind e
+
 and case (ind:string) (br:branch) : ML string =
   let p, g, b = br in
   let _, p, eqs = defer_ints 0 p in
@@ -702,9 +729,9 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
        | TAbstract -> Some (hd)
        | TAbbrev c -> Some (hd ^ " = " ^ ty c)
        | TRecord fs ->
-         Some (hd ^ " = { " ^
-               String.concat "; " (List.map (fun (f, c) ->
-                 ocaml_var f ^ " : " ^ ty c) fs) ^ " }")
+         Some (hd ^ " = {\n" ^
+               String.concat "" (List.map (fun (f, c) ->
+                 "  " ^ ocaml_var f ^ " : " ^ ty c ^ ";\n") fs) ^ "}")
        | TVariant cs ->
          Some (hd ^ " =\n" ^
                String.concat "" (List.map (fun (c, fs) ->

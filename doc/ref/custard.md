@@ -2376,6 +2376,43 @@ Phase 4 passes, in order:
    datatypes, and there karamel emits the same unreachable default for the ML
    pipeline as it does for Custard.
 
+   A fourth, and purely for the reader: **let-floating**
+   (`Simplify.float_lets`).  ANF hoists every impure operand into a binding of
+   its own, and an operand that was itself an application arrives already
+   carrying the bindings *its* operands needed — so the definiens of a
+   binding is very often another binding, and a body that was five
+   applications deep came out as
+   `let x = (let y = (let z = ... in ...) in ...) in ...`, nested as deep as
+   the original expression.  That is the same program as
+   `let z = ... in let y = ... in let x = ... in ...`: the bindings run in
+   that order either way, and only the spelling differs.  The pass rewrites
+   `ELet (x, ELet (y, a, b), c)` to `ELet (y, a, ELet (x, b, c))` and
+   `ELet (x, ESeq (a, b), c)` to `ESeq (a, ELet (x, b, c))`, folded into
+   `simpl`'s bottom-up descent so it reaches a fixed point for free.  It
+   relies on variable names being unique within a definition, which the IR
+   already guarantees (only *copying* a definition can break it, and `sub`
+   renames when it copies): floating `y` outward extends its scope over the
+   outer body, where a *different* `y` would be captured.  The C backend has
+   always emitted the flat form, since C has no other; this gives OCaml the
+   same.
+
+   Three matching changes in the OCaml backend, which is where the result is
+   read (`PrintOCaml.term`, `PrintOCaml.stmts`):
+
+   - A run of bindings and statements is printed as **one sequence**: at one
+     column, inside **one** pair of parentheses.  `let ... in` and `;` both
+     extend as far right as they can in OCaml, so one pair around the whole
+     run is as many as are needed, where a pair and an indentation step per
+     element walked a long function off the right of the page and closed with
+     a pile of a dozen brackets.
+   - `ESeq` prints as `a; b` rather than `let _ = a in b`.  The discarded
+     expression need not have type unit and OCaml warns about that, so one
+     whose type is not `TUnit` goes through `ignore`.
+   - A **record** — a type declaration or a literal — gets one field per
+     line.  A literal that fits in `line_width` (80) columns where it already
+     is stays on one line, since a two-field record of variables is not
+     clearer for being spread over two.
+
 6. **Dead-code elimination**: reachability from the declarations flagged
    `Root`/`Entrypoint`, following the names in bodies, binder types, result
    types and field types (a constructor name resolves to its `DType`).  The
@@ -5361,3 +5398,4 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10x | **Run the Pulse plugin** (§12.13) | Done.  The `extraction` unit makes it three, and the three link into one `.cmxs` that loads into a Custard-built compiler and checks all 58 files of `pulse/test`.  Three bugs stood in the way, none of them about separate compilation: a `[@@plugin]` module that was not a root, so its tactic got stuck with no diagnostic (§13.3, `tests/custard/plugin/CustardPluginAux.fst`); a duplicated `Stop` exception, which OCaml gives an identity per declaration, so the plugin raised what the compiler could not catch (§8.5, new `Builtins.stub_aliases`); and a recursive call assumed pure, so §7.3 deleted the first of `walk l; walk r` and Pulse's dependency scanner stopped traversing half of every statement --- a silent miscompilation that had been there from the start (§7.3, `tests/custard/RecEffect.fst`) |
 | M10y | **`make custard-pulse-plugin`** (§12.13) | Done.  The three extractions, the link and a load-and-check smoke test are `mk/custard.mk`'s `pulse-plugin` target, so the Pulse plugin is a regression rather than a demonstration.  `pulse/src/ml/custard/` holds the one realization whose field names differ from ML extraction's, replacing the `sed` the script used.  Two checked-file rules the exercise settled, neither about Custard: the prelude has to come from `stage2/ulib.checked` and not from the installed `fstarc/src.checked`, whose flavour of `Prims` carries a different bundle hash; and `--already_cached` keeps only its last setting, so the `DEPFLAGS` one that `pulse/mk` suggests is dead |
 | M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Done. `Extract.hint_of_term`/`hints_of`/`fit`, and lifted locals inherit their enclosing suffix. 243→121 numeric, 409→204 fallbacks, 225→100 chars |
+| M10z | **Output layout** (§6) | Done.  `Simplify.float_lets` turns the nest of definiens-position bindings ANF leaves behind into a flat chain, and the OCaml backend prints a run of bindings and statements at one column inside one pair of parentheses, a discarded expression with `;` (through `ignore` when its type is not unit), and a record --- declaration or literal --- one field per line unless it fits in 80 columns |

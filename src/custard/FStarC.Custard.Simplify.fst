@@ -241,11 +241,36 @@ let as_if (brs:list branch) : ML (option (expr & expr)) =
      | _ -> None)
   | _ -> None
 
+(* Let-floating.  ANF hoists every impure operand into a binding of its own,
+   and an operand that was itself an application arrives already carrying the
+   bindings *its* operands needed, so the definiens of a binding is very often
+   another binding: [let x = (let y = (let z = ... in ...) in ...) in ...],
+   nested as deep as the original expression was.  That is the same program as
+   [let z = ... in let y = ... in let x = ... in ...] -- the bindings run in
+   that order either way -- and the flat spelling is the one a reader can
+   follow, which is why the C backend has always emitted it.
+
+   [k] receives the definiens with its leading bindings stripped and builds
+   whatever the caller was going to build; the spine is rebuilt around the
+   result.  Every rebuilt node reuses [x], so it carries the type of the whole
+   original expression (which is what each of these nodes now returns) and its
+   effect (an over-approximation for the inner ones, in the safe direction).
+
+   This relies on variable names being unique within a definition, which they
+   are (see {!sub}): floating [y] outward extends its scope over the outer
+   body, and a *different* [y] there would be captured. *)
+let rec float_lets (x:expr) (e1:expr) (k : expr -> ML expr) : ML expr =
+  match e1.e with
+  | ELet (w, t, a, b) -> { x with e = ELet (w, t, a, float_lets x b k) }
+  | ESeq (a, b) -> { x with e = ESeq (a, float_lets x b k) }
+  | _ -> k e1
+
 let rec simpl (x:expr) : ML expr =
   match x.e with
   | ELet (v, ty, e1, e2) ->
     let e1 = simpl e1 in
     let e2 = simpl e2 in
+    float_lets x e1 (fun e1 ->
     (* [let x = e in x] is just [e], whatever [e]'s effect: nothing moves. *)
     if (match e2.e with EVar w -> w = v | _ -> false) then e1
     else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
@@ -253,12 +278,13 @@ let rec simpl (x:expr) : ML expr =
        unobservable; otherwise it becomes a statement, which keeps its effect
        and its position. *)
     else if is_pure e1.eff then e2
-    else { x with e = ESeq (e1, e2) }
+    else { x with e = ESeq (e1, e2) })
 
   | ESeq (e1, e2) ->
     let e1 = simpl e1 in
     let e2 = simpl e2 in
-    if is_pure e1.eff then e2 else { x with e = ESeq (e1, e2) }
+    float_lets x e1 (fun e1 ->
+      if is_pure e1.eff then e2 else { x with e = ESeq (e1, e2) })
 
   | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
   | EApp (h, es) -> { x with e = EApp (simpl h, es |> List.map simpl) }

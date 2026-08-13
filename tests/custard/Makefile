@@ -128,7 +128,7 @@ GREP_MonoTypes   = "type monoTypes_both__int" "type monoTypes_both__bool" \
                    "monoTypes_tree__int" "monoTypes_tree__string" \
                    "type prims_list__int" "type prims_list__list_int" \
                    "monoTypes_via_abbrev (p : monoTypes_both__int)" \
-                   "type monoTypes_both__int = { fst : Prims.int; snd : Prims.int }" \
+                   "type monoTypes_both__int = {" "fst : Prims.int;" "snd : Prims.int;" \
                    "{ fst = ((p : monoTypes_both__int)).snd;"
 NOGREP_MonoTypes = "'" "Mkboth" "match p with"
 # Section 5.0.1: a type of a realized module is frozen, so it is neither
@@ -195,7 +195,7 @@ GREP_LocalPoly    += "let a = (fun y" "let b = (fun y" "let c = (fun y"
 
 # A dependent inductive parameter list ({| printable a |} after a:Type) has to
 # be opened before its sorts are looked at.
-GREP_DepParams     = "type .a depParams_labelled = { tag : string; value : .a }"
+GREP_DepParams     = "type .a depParams_labelled = {" "tag : string;" "value : .a;"
 NOGREP_DepParams   = "p_int"
 
 # Section 3.2c: a Mono argument that mentions a runtime value is specialized
@@ -212,7 +212,7 @@ NOGREP_MonoHoles   = "set_tag" "fun y"
 GREP_InlineFields   = "InlineFields_Bar of bool \* string" \
                       "InlineFields_W of bool \* string" \
                       "InlineFields_W (pa, pb)) -> (if pa then pb else " \
-                      "keep = { p : inlineFields_pair; n : Prims.int }"
+                      "type inlineFields_keep = {" "p : inlineFields_pair;"
 NOGREP_InlineFields = "tuple2" "Mktuple2" "let p = {"
 
 # GREP_<name>/NOGREP_<name> additionally assert on the generated .ml.  For
