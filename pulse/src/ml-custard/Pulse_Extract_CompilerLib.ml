@@ -1,4 +1,4 @@
-(* The Custard flavour of ../Pulse_Extract_CompilerLib.ml.
+(* The Custard flavour of ../ml/Pulse_Extract_CompilerLib.ml.
 
    A realization is a contract with a *particular* extractor (custard.md
    section 8.2), and this file is the one place in Pulse where the two
@@ -15,7 +15,12 @@
 
    Custard's names are the better ones, and there is no way to write one file
    that satisfies both, so the Custard build overlays this directory on top of
-   ../ after copying it.  Nothing else in src/ml needs a copy. *)
+   src/ml after copying it.  Nothing else in src/ml needs a copy.
+
+   It is a sibling of src/ml rather than a subdirectory of it because
+   stage3/dune/pulse-plugin symlinks src/ml into a library declared
+   `include_subdirs unqualified', which would pick up a subdirectory and then
+   complain that Pulse_Extract_CompilerLib appears in several directories. *)
 
 module U = FStarC_Syntax_Util
 module C = FStarC_Parser_Const

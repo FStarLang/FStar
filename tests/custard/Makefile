@@ -49,7 +49,7 @@ CUSTARD_TESTS += AssumedProj
 # [Type -> Type] that binds *no* binders.  The IR has no partial application
 # of a type constructor, so the abbreviation is eta-expanded from the binders
 # of its own type; left as is, its use as a monad loses an argument.
-GREP_Mymon += "let rec mymon_iterM__writer (f : ('a -> ((Prims.int) list \* unit))) (l : ('a) list)"
+GREP_Mymon += "let rec mymon_iterM__writer_list_int (f : ('a -> ((Prims.int) list \* unit))) (l : ('a) list)"
 # Section 5.6: a local [let rec] is lambda-lifted, and its binders and its body
 # must come from *one* opening of the definiens -- [abs_formals] invents fresh
 # names every time, so opening twice gives the body variables that no binder
@@ -89,9 +89,11 @@ NOGREP_Magic += "Obj.t"
 # One shared specialization taking the dictionary at run time (the identity
 # skeleton), one fully specialized version for the static call site, and no
 # trace of the [dyn] marker itself.
-GREP_MonoDyn += "monoDyn_render__0 (tmp : (Prims.int -> string)) : (Prims.int -> string)"
+GREP_MonoDyn += "monoDyn_render__int_dyn_printable (tmp : (Prims.int -> string)) : (Prims.int -> string)"
 GREP_MonoDyn += "monoDyn_render__int (x : Prims.int) : string"
-NOGREP_MonoDyn += dyn
+# The marker itself must be gone; it survives only inside the *name* of the
+# specialization that asked for it, which is exactly what it means.
+NOGREP_MonoDyn += "Custard_dyn"
 
 # FLAGS_<name> are extra options for that test's extraction.
 FLAGS_MonoTypes = --custard_monomorphize_types true
@@ -202,7 +204,7 @@ NOGREP_DepParams   = "p_int"
 # record never appears at runtime) and its data is not (the tag arrives as an
 # argument).  The closure case is the same mechanism and leaves no closure at
 # all.
-GREP_MonoHoles     = "monoHoles_render__0" "monoHoles_twice__0"
+GREP_MonoHoles     = "monoHoles_render__int" "monoHoles_twice__op_Addition"
 NOGREP_MonoHoles   = "set_tag" "fun y"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to

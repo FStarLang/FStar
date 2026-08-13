@@ -3877,11 +3877,51 @@ design depend on their being so: two type-class instances for the same type
 will always need a disambiguating subscript from somewhere.  The interface
 records the **full emitted name**, and downstream reads it.  So
 `spec_suffix`'s discovery-order counter (`Extract.spec_suffix`, `Extract.request`)
-is fine as it stands, and making specialization names more readable — folding
-the structural scheme `Monomorphize.request` already uses for types
-(`Monomorphize.fst:134`, which is what produces `tuple3@tree_int_int_tree_int`)
-over *all* the `Mono` arguments of a value specialization, instead of taking the
-head symbol of the first — is output polish, decoupled from everything here.
+would be fine as it stands.  It is nonetheless worth not having: a name that
+says only *when* a specialization was discovered is a name a reader has to
+look up, and the output of this pipeline is meant to be read.
+
+So the structural scheme `Monomorphize.request` already uses for types
+(`Monomorphize.hint_of_cty`, which is what produces
+`tuple3@tree_int_int_tree_int`) is folded over **all** the `Mono` arguments of
+a value specialization, rather than the head symbol of the first
+(`Extract.hint_of_term`, `Extract.hints_of`, `Extract.hint_of_args`).  A
+`Mono` argument is an arbitrary term — a whole function body, in the §3.2
+sense — so unlike a `cty` there is no bound on its depth and the recursion is
+fuel-limited, at three levels.  Four rules do most of the work:
+
+- A **constructed value is dropped** when a sibling argument had something to
+  say.  Almost every one is a type-class dictionary, which is a function of
+  the type it was built for — and that type is usually one of the siblings, so
+  the constructor name only repeats it.  `Combinators.parse` specialized at
+  `parser_combinator (t & t)` is `parse__tuple2_t_t`, not
+  `parse__tuple2_t_t_Mkparser_combinator`.  It is kept when it is all there
+  is, since a constructor name still beats a number.  The test is
+  `TcEnv.lookup_sigelt` and `Sig_datacon?`; `fv.fv_qual` looks like the test
+  and is not, being `None` for most data-constructor `fv`s.  It sees through
+  the lambda §3.2c's hole abstraction wraps a skeleton in, since a dictionary
+  with a runtime field is still a dictionary.
+- Two arguments that **spell the same thing say it once**: `show__int`, not
+  `show__int_int`.
+- The hint is **cut to `hint_width` = 48 characters**, dropping components
+  from the right, since the leftmost argument is the one a reader recognizes.
+  The first component survives whatever its length, because a hint of nothing
+  is worse than a long one.  Without this the compiler produced a
+  225-character name of which the first 40 carried the content.
+- A **lambda-lifted local inherits its enclosing definition's suffix**, the
+  way `Monomorphize.with_spec` gives a constructor its type's.  It is one
+  function per specialization of the definition it sits in, and numbering
+  those by discovery order says nothing.  `st.cur` is set to the lifted name
+  while its body is extracted, so a local nested in a local inherits in turn.
+
+Dropping a component can make two hints collide, which is the case
+`spec_suffix`'s `claim` already handled by appending the sequence number.
+
+Measured over the compiler's own extracted output (`stagec/split/*.ml`, 1796
+distinct mangled names): bare numeric suffixes fell from **243 to 121**, the
+collision fallback from **409 to 204**, and the longest name from **225 to
+100** characters.  What is left is mostly genuine — several distinct locals
+called `aux` in one definition — or compiler-generated (`uu_`).
 
 What *does* have to be stable is the **key**, because that is the lookup.
 Until M9a it was not, and the reason is worth recording because it was a live
@@ -4908,7 +4948,10 @@ build does not make.
 
 1. **Nothing, for the plugin itself.**  The one realization whose names
    differ, `Pulse_Extract_CompilerLib.ml`, now has a Custard-flavoured copy in
-   `pulse/src/ml/custard/`, which the link step overlays on `pulse/src/ml/`.
+   `pulse/src/ml-custard/`, which the link step overlays on `pulse/src/ml/`.
+   (A *sibling* of `src/ml` and not a subdirectory of it: the dune build
+   symlinks `src/ml` into an `include_subdirs unqualified` library, which
+   would pick a subdirectory up as a second definition of the module.)
    The two differences are both about the record a constructor's payload
    becomes: ML extraction disambiguates field names across the whole module,
    so `Tm_meta`'s `tm` is `tm2` and `Tm_let`'s `body` is `body1`; and §5.7
@@ -5317,4 +5360,4 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10w | **Ten extraction bugs the Pulse plugin exposed** | Done, each with the rule it violated: a `reify` stuck in front of a local `let rec` (§7.5); a realized type's record-versus-variant shape, arity and projectability, all of which the realization owns and not Custard (§8.2, new `SourceRecord` flag); a result type peeled at the `cty` level, where an abbreviation is a name and not an arrow, so an eta-short definition claimed an arity it did not have (§7.3, `tests/custard/RetArity.fst`); a lambda that loses all its binders, where `expr_of_term` had a purity test `Mono.keep_thunk` says it must not have; four coercion boundaries the pass could not see --- an imported *value* signature, a structured pattern under an `any` field, a comparison, an application head (§5.4); and a `GTot` result judged on its uninstantiated type variable, which left a call to `Pulse.RuntimeUtils.magic` in the output (§5.1).  `tests/custard/Realized.fst` and `RetArity.fst`; the compiler's own build covers the realized-*record* case, `FStarC.Parser.ParseIt.code_fragment` |
 | M10x | **Run the Pulse plugin** (§12.13) | Done.  The `extraction` unit makes it three, and the three link into one `.cmxs` that loads into a Custard-built compiler and checks all 58 files of `pulse/test`.  Three bugs stood in the way, none of them about separate compilation: a `[@@plugin]` module that was not a root, so its tactic got stuck with no diagnostic (§13.3, `tests/custard/plugin/CustardPluginAux.fst`); a duplicated `Stop` exception, which OCaml gives an identity per declaration, so the plugin raised what the compiler could not catch (§8.5, new `Builtins.stub_aliases`); and a recursive call assumed pure, so §7.3 deleted the first of `walk l; walk r` and Pulse's dependency scanner stopped traversing half of every statement --- a silent miscompilation that had been there from the start (§7.3, `tests/custard/RecEffect.fst`) |
 | M10y | **`make custard-pulse-plugin`** (§12.13) | Done.  The three extractions, the link and a load-and-check smoke test are `mk/custard.mk`'s `pulse-plugin` target, so the Pulse plugin is a regression rather than a demonstration.  `pulse/src/ml/custard/` holds the one realization whose field names differ from ML extraction's, replacing the `sed` the script used.  Two checked-file rules the exercise settled, neither about Custard: the prelude has to come from `stage2/ulib.checked` and not from the installed `fstarc/src.checked`, whose flavour of `Prims` carries a different bundle hash; and `--already_cached` keeps only its last setting, so the `DEPFLAGS` one that `pulse/mk` suggests is dead |
-| M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Output polish, independent of everything else |
+| M10e | Structural specialization suffixes over all `Mono` arguments (§12.3) | Done. `Extract.hint_of_term`/`hints_of`/`fit`, and lifted locals inherit their enclosing suffix. 243→121 numeric, 409→204 fallbacks, 225→100 chars |

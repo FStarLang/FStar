@@ -618,18 +618,129 @@ let name_of_lid (l:Ident.lident) : ML name = {
 let name_of_bv (b:bv) : ML string =
   uniq (Ident.string_of_id b.ppname) b.index
 
-(* A readable suffix for a specialization: the head symbol of its first [Mono]
-   argument is almost always the interesting one (the type, or the instance). *)
-let hint_of_args (args:list (int & term)) : ML (option string) =
-  match args with
+(* A readable spelling of one [Mono] argument, structurally: the same scheme
+   {!Monomorphize.hint_of_cty} uses for a type instantiation, over terms.
+   [mapM] specialized at the tactic monad and at [list] should be called
+   [mapM__tac_list], not [mapM__1].
+
+   The fuel is not decoration.  A [Mono] argument is any term known at
+   specialization time, which includes a whole function body (section 3.2),
+   so unlike a [cty] there is no bound on how deep this can go; three levels
+   is enough for the type applications and dictionaries that make up almost
+   all of them, and anything deeper is not readable as a name anyway.
+
+   [None] means "nothing worth saying", not "failed": a [Tm_name] is a binder
+   of the enclosing definition and its gensym index is noise, and a wildcard
+   contributes nothing.  The caller drops those and keeps the rest, so one
+   uninformative argument does not cost the others their spelling. *)
+(* Is this argument a constructed value -- a typeclass dictionary or any other
+   record -- rather than something with a name of its own?  Seen through the
+   lambda that section 3.2c's hole abstraction wraps a skeleton in, since a
+   dictionary with a runtime field is still a dictionary. *)
+let rec datacon_headed (st:state) (t:term) : ML bool =
+  let hd, _ = U.head_and_args_full t in
+  match (U.un_uinst (SS.compress hd)).n with
+  | Tm_fvar fv ->
+    (match TcEnv.lookup_sigelt (tcenv st) (S.lid_of_fv fv) with
+     | Some se -> Sig_datacon? se.sigel
+     | None -> false)
+  | Tm_abs {body} -> datacon_headed st body
+  | _ -> false
+
+let rec hint_of_term (st:state) (fuel:int) (t:term) : ML (option string) =
+  if fuel <= 0 then None
+  else
+    let sub (ts:list term) : ML (list string) = hints_of st (fuel - 1) ts in
+    let hd, args = U.head_and_args_full t in
+    match (U.un_uinst (SS.compress hd)).n with
+    (* A data constructor names itself and stops.  Almost every one that gets
+       here is a typeclass dictionary, whose contents are a function of the
+       type it was built for -- and that type is another [Mono] argument of
+       the same call, so spelling the dictionary out repeats it.  Repeats it
+       at length: the unbounded version of this produced
+       [cons__tuple4_int_deferred_reason_ref_either_prob_clist_tuple4_int_-
+       deferred_reason_ref_prob_Mklistlike_tuple4_..._CCons_tuple4], 225
+       characters of which the first 40 were the whole content. *)
+    | Tm_fvar fv when datacon_headed st hd ->
+      Some (Ident.string_of_id (Ident.ident_of_lid (S.lid_of_fv fv)))
+    | Tm_fvar fv ->
+      let h = Ident.string_of_id (Ident.ident_of_lid (S.lid_of_fv fv)) in
+      Some (String.concat "_" (h :: sub (args |> List.map fst)))
+    | Tm_constant c ->
+      (match c with
+       | Const_int (s, _) -> Some s
+       | Const_bool b     -> Some (if b then "true" else "false")
+       | Const_string (s, _) -> Some s
+       | Const_unit       -> Some "unit"
+       | _ -> None)
+    (* A type-level lambda is how a higher-kinded argument arrives --
+       [fun a -> option a] instantiating an [m:Type -> Type] -- and what names
+       it is its body. *)
+    | Tm_abs {body} -> hint_of_term st (fuel - 1) body
+    | Tm_arrow _ -> Some "fn"
+    | Tm_type _ -> Some "type"
+    | Tm_refine {b} -> hint_of_term st (fuel - 1) b.sort
+    | _ -> None
+
+(* The hints of a run of sibling terms -- the arguments of one application, or
+   the [Mono] arguments of one call.  A constructed value is dropped when some
+   sibling had something to say: it is a function of the type it was built for,
+   and that type is almost always one of those siblings, so the constructor
+   name only repeats it.  [parse] specialized at [parser_combinator (t & t)]
+   wants to be called [parse__tuple2_t_t], not
+   [parse__tuple2_t_t_Mkparser_combinator].  Kept when it is all there is,
+   since a constructor name still beats a sequence number. *)
+and hints_of (st:state) (fuel:int) (ts:list term) : ML (list string) =
+  let hs = ts |> List.collect (fun t ->
+                   match hint_of_term st fuel t with
+                   | Some s -> [(datacon_headed st t, s)]
+                   | None -> []) in
+  match hs |> List.filter (fun (dc, _) -> not dc) |> List.map snd with
+  | [] -> List.map snd hs
+  | plain -> plain
+
+(* The readable half of a specialization's name: every [Mono] argument in
+   order, which is what makes two specializations of the same definition
+   distinguishable *by their names* rather than by a number whose meaning is
+   discovery order (section 12.3). *)
+(* Two arguments that spell the same thing say it once: a dictionary and the
+   type it is for very often agree, and [show__int_int] is no more informative
+   than [show__int]. *)
+let rec dedup (seen:list string) (hs:list string) : ML (list string) =
+  match hs with
+  | [] -> []
+  | h :: hs ->
+    if List.existsb (fun s -> s = h) seen
+    then dedup seen hs
+    else h :: dedup (h :: seen) hs
+
+(* A name is for reading, and past some width it stops being readable however
+   much information it carries.  Components are dropped from the right until
+   the hint fits, since the leftmost argument is the one a reader recognizes;
+   the first is kept whatever its length, because a hint of nothing is worse
+   than a long one.  Dropping components can make two hints collide, which is
+   exactly the case {!spec_suffix}'s [claim] already handles by falling back
+   to the sequence number. *)
+let hint_width : int = 48
+
+let rec fit (budget:int) (hs:list string) : ML (list string) =
+  match hs with
+  | [] -> []
+  | h :: hs ->
+    let n = String.length h in
+    (* [budget < 0] is the marker for "nothing has been kept yet", so that the
+       first component goes in whatever its length. *)
+    if budget >= 0 && n > budget then []
+    else h :: fit ((if budget < 0 then hint_width else budget) - n - 1) hs
+
+(* The readable half of a specialization's name: every [Mono] argument in
+   order, which is what makes two specializations of the same definition
+   distinguishable *by their names* rather than by a number whose meaning is
+   discovery order (section 12.3). *)
+let hint_of_args (st:state) (args:list (int & term)) : ML (option string) =
+  match hints_of st 3 (args |> List.map snd) with
   | [] -> None
-  | (_, t) :: _ ->
-    let hd, _ = U.head_and_args_full t in
-    (match (U.un_uinst (SS.compress hd)).n with
-     | Tm_fvar fv -> Some (Ident.string_of_id (Ident.ident_of_lid (S.lid_of_fv fv)))
-     | Tm_constant (Const_int (s, _)) -> Some s
-     | Tm_constant (Const_bool b) -> Some (if b then "true" else "false")
-     | _ -> None)
+  | hs -> Some (String.concat "_" (fit (-1) (dedup [] hs)))
 
 (* The suffix that distinguishes one specialization of [lstr] from its
    siblings.  A definition that was not specialized at all keeps its bare
@@ -645,7 +756,7 @@ let spec_suffix (st:state) (lstr:string) (args:list (int & term)) (n:int)
       let key = lstr ^ "__" ^ s in
       if Some? (SMap.try_find st.suffixes key) then false
       else (SMap.add st.suffixes key true; true) in
-    match hint_of_args args with
+    match hint_of_args st args with
     | Some h when claim h -> Some h
     | Some h -> Some (h ^ "_" ^ show n)
     | None -> Some (show n)
@@ -1392,11 +1503,26 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
        a self-call. *)
     let entries = lbs |> List.map (fun lb ->
       let bv = Inl?.v lb.lbname in
+      (* A lifted local inherits the *enclosing* specialization's suffix, the
+         way {!Monomorphize.with_spec} gives a constructor its type's: it is
+         one function per specialization of its enclosing definition, and
+         numbering them by discovery order says only that.  This is where the
+         great majority of the numeric suffixes came from -- 43 of them for
+         [show_list_aux] alone, one per instance [show] was specialized at.
+         The counter stays as a tiebreak, for the definition that has two
+         locals of the same name in different scopes. *)
       let base = (!st.cur).id ^ "__" ^ Ident.string_of_id bv.ppname in
       let ns = (!st.cur).ns in
-      let n = (match SMap.try_find st.counts base with None -> 0 | Some n -> n) in
-      SMap.add st.counts base (n + 1);
-      let nm = { ns = ns; id = base; spec = (if n = 0 then None else Some (show n)) } in
+      let esp = (!st.cur).spec in
+      let ckey = base ^ (match esp with None -> "" | Some s -> "@" ^ s) in
+      let n = (match SMap.try_find st.counts ckey with None -> 0 | Some n -> n) in
+      SMap.add st.counts ckey (n + 1);
+      let nm = { ns = ns; id = base;
+                 spec = (match esp, n with
+                         | None,   0 -> None
+                         | None,   n -> Some (show n)
+                         | Some s, 0 -> Some s
+                         | Some s, n -> Some (s ^ "_" ^ show n)) } in
       (* Opened exactly once: each [abs_formals] invents *fresh* names for the
          binders it opens, so a second opening would give the body variables
          that no binder here binds. *)
@@ -1447,6 +1573,13 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
         dl_flags   = [];
       }));
     entries |> List.iter (fun (nm, binders, ret, eff, own_typars, def_body) ->
+      (* A local nested inside this one is lifted too, and names itself after
+         whatever [st.cur] holds: that must be *this* definition, not the
+         top-level one we are somewhere inside of, or every specialization of
+         an enclosing local contributes another indistinguishable numbered
+         copy of the same inner name. *)
+      let saved_cur = !st.cur in
+      st.cur := nm;
       let d = DLet {
         dl_name    = nm;
         dl_typars  = typars @ own_typars;
@@ -1461,6 +1594,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       (* Not a specialization of anything -- no source lid names it -- so it
          gets a key of its own, which nothing will ever request. *)
       let key = local_key nm in
+      st.cur := saved_cur;
       SMap.add st.emitted key d;
       st.order := key :: !st.order);
     expr_of_term st body
