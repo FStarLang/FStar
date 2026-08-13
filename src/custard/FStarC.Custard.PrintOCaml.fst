@@ -25,6 +25,7 @@ open FStarC.Custard.Syntax
 
 module BU   = FStarC.Util
 module SMap = FStarC.SMap
+module Prof = FStarC.Custard.Prof
 
 (* Section 12.9: the file currently being printed, when the output is split.
    A reference to a name of *this* file must not be qualified, and everything
@@ -969,11 +970,11 @@ let print_split (files : list (string & program)) : ML (list (string & string)) 
     let m = module_name_of_unit m in
     ds |> List.iter (fun d ->
       SMap.add homes (string_of_name (name_of_decl d)) m));
-  build_tables homes (List.collect snd files);
+  Prof.timed "p.tables" (fun () -> build_tables homes (List.collect snd files));
   let rendered = files |> List.map (fun (m, ds) ->
     let m = module_name_of_unit m in
     current_module := Some m;
-    let r = (m, print_decls ds) in
+    let r = (m, Prof.timed "p.decls" (fun () -> print_decls ds)) in
     current_module := None;
     r) in
   (* A module all of whose declarations are references -- a realized one, or
@@ -991,4 +992,5 @@ let print_split (files : list (string & program)) : ML (list (string & string)) 
   let calls = entry_calls (List.collect snd files) in
   current_module := None;
   rendered |> List.mapi (fun i (m, ds) ->
-    (m, assemble (if i = n - 1 then ds @ calls else ds)))
+    (m, Prof.timed "p.render"
+          (fun () -> assemble (if i = n - 1 then ds @ calls else ds))))

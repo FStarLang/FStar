@@ -856,6 +856,7 @@ let note_abbrev (st:state) (d:decl) : ML unit =
 
 (* Section 3.3, step 3: this is where the demand-driven loop lives. *)
 let rec request (st:state) (k:spec_key) : ML name =
+  Prof.timed "request" (fun () ->
   let k = { k with sk_lid = unstub_lid st k.sk_lid } in
   let key = string_of_key k in
   match SMap.try_find st.names key with
@@ -895,12 +896,13 @@ let rec request (st:state) (k:spec_key) : ML name =
          what an *internal* failure -- a [failwith] from the normalizer, say --
          reports, and without it such a failure names no definition at all. *)
       let d = E.with_ctx ("While extracting " ^ key) (fun () ->
-                extract_lid st l nm k.sk_subst k.sk_holes) in
+                Prof.timed "extract_lid"
+                  (fun () -> extract_lid st l nm k.sk_subst k.sk_holes)) in
       st.chain := saved;
       SMap.add st.emitted key d;
       note_abbrev st d;
       st.order := key :: !st.order;
-      nm
+      nm)
 
 (* Section 12.4, rule 1.  A request whose key a linked unit already exports is
    answered by a reference to that unit's definition: it is *not* translated,
@@ -2289,7 +2291,8 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
 
 and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                 (n_holes:int) : ML decl =
-  let se = TcEnv.lookup_sigelt (tcenv st) l |> Option.map fixup_extract_as in
+  let se = Prof.timed "sigelt"
+             (fun () -> TcEnv.lookup_sigelt (tcenv st) l |> Option.map fixup_extract_as) in
   (* A rule declared by the definition's own attributes wins over the built-in
      table, so that a program can override a rule it does not like. *)
   let rule = match se with
@@ -2343,7 +2346,8 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty; dx_target = None;
                 dx_header = None; dx_flags = [] }
   | Some se ->
-    let d = extract_sigelt st l nm margs n_holes se in
+    let d = Prof.timed "extract_sigelt"
+              (fun () -> extract_sigelt st l nm margs n_holes se) in
     let d = if is_opaque || is_realized then with_no_newtype d else d in
     (* [inline_for_extraction] on a type in a realized module means what it
        says: the alias is not in the hand-written .ml, and the realization
@@ -2586,10 +2590,11 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
      | Some lb ->
        (* A type abbreviation is a [Sig_let] too; it must not become a value. *)
        if is_type_sig st lb.lbtyp
-       then (let d = extract_type_abbrev st nm lb in
+       then (let d = Prof.timed "abbrev" (fun () -> extract_type_abbrev st nm lb) in
              if is_erasable st se || is_prop_sig st lb.lbtyp
              then with_erased_flag d else d)
-       else extract_letbinding st l nm lb is_rec margs n_holes
+       else Prof.timed "letbinding"
+              (fun () -> extract_letbinding st l nm lb is_rec margs n_holes)
      | None -> DExternal { dx_name = nm; dx_typars = []; dx_ty = TAny; dx_target = None; dx_header = None; dx_flags = [] })
 
   | Sig_declare_typ {t} ->
@@ -2624,7 +2629,7 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
                      dx_target = None; dx_header = None; dx_flags = [] })
 
   | Sig_inductive_typ {params} ->
-    let d = extract_inductive st l nm params in
+    let d = Prof.timed "inductive" (fun () -> extract_inductive st l nm params) in
     if is_erasable st se then with_erased_flag d else d
 
   | Sig_datacon _ ->
@@ -2828,7 +2833,8 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   (* Lifted local functions are named after whatever encloses them. *)
   let saved_cur = !st.cur in
   st.cur := nm;
-  let def, c, polycs, poly = specialize st lb.lbtyp lb.lbdef cs margs n_holes in
+  let def, c, polycs, poly = Prof.timed "specialize"
+    (fun () -> specialize st lb.lbtyp lb.lbdef cs margs n_holes) in
   let bs, body, rc = U.abs_formals def in
   (* [abs_formals] opens the binders under fresh names, but [c] still speaks of
      the ones [specialize] abstracted over.  Left unrelated, the two sets of
@@ -2871,7 +2877,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      [FStar.Tactics.Util.map] is the smallest example -- so they have to run in
      an environment that binds them.  [bs] is what [abs_formals] opened and
      what [c] was realigned to, so it is the right set. *)
-  let benv = TcEnv.push_binders (tcenv st) bs in
+  let benv = Prof.timed "push_binders" (fun () -> TcEnv.push_binders (tcenv st) bs) in
   let bs = drop_flagged flags bs in
   (* A type binder that survived [drop_flagged] is the one {!Mono.keep_thunk}
      put back so that the definition does not become a value.  It carries no
@@ -2943,11 +2949,12 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      [abs_formals] just opened, which is what actually describes it; [c] only
      agrees with it when there were no extra binders. *)
   let body =
+    Prof.timed "reify" (fun () ->
     match rc with
     | Some rc -> Effects.maybe_reify (env_for_term benv body) body
                                      rc.residual_effect
     | None -> Effects.maybe_reify (env_for_term benv body) body
-                                  (U.comp_effect_name c) in
+                                  (U.comp_effect_name c)) in
   (* Register the signature before extracting the body, so that a
      self-recursive call inside it finds an exact effect and an exact type
      instead of {!callee_eff}'s and {!callee_sig}'s conservative fallbacks.
@@ -3096,10 +3103,12 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
   let modroots, roots =
     roots |> List.partition (fun (l:Ident.lident) ->
                Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l))) in
-  modroots |> List.iter (fun (l:Ident.lident) ->
-    st.env := Loader.ensure_loaded st.deps (tcenv st) (Ident.string_of_lid l));
-  roots |> List.iter (mark Root);
-  (match main with Some l -> mark Entrypoint l | None -> ());
+  Prof.timed "run.modroots" (fun () ->
+    modroots |> List.iter (fun (l:Ident.lident) ->
+      st.env := Loader.ensure_loaded st.deps (tcenv st) (Ident.string_of_lid l)));
+  Prof.timed "run.roots" (fun () -> roots |> List.iter (mark Root));
+  Prof.timed "run.main" (fun () ->
+    match main with Some l -> mark Entrypoint l | None -> ());
   (* A top-level [let] whose definiens is *effectful* is a module initializer:
      [let _ = clear ()] in [FStarC.Options], [let _ = register_pass ...] in
      [FStarC.Syntax.Resugar].  Nothing in the program refers to it, so the
@@ -3122,7 +3131,8 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
       | Some () -> []
       | None -> SMap.add seen_inits m (); [md]) in
     if Nil? fresh then () else begin
-      fresh |> List.iter (fun (md:S.modul) ->
+      Prof.timed "inits" (fun () ->
+       fresh |> List.iter (fun (md:S.modul) ->
         md.declarations |> List.iter (fun (se:S.sigelt) ->
           match se.sigel with
           | Sig_let {lbs=(_, lbs)} ->
@@ -3133,20 +3143,21 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
                    and is not the user naming a missing entry point. *)
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
-          | _ -> ()));
+          | _ -> ())));
       (* Section 13: the same fixpoint carries the generated declarations,
          because generating one is itself a source of requests and so of newly
          loaded modules -- a plugin registration refers to the interpretation
          functions, whose module the program may otherwise never mention. *)
-      fresh |> List.iter per_module;
+      Prof.timed "regemb" (fun () -> fresh |> List.iter per_module);
       inits (fuel - 1)
     end in
-  inits 100;
+  Prof.timed "run.inits" (fun () -> inits 100);
   if Options.custard_dump_specializations () then dump_specializations st;
-  List.rev !st.order |> List.collect (fun key ->
-    match SMap.try_find st.emitted key with
-    | Some d -> [d]
-    | None -> [])
+  Prof.timed "run.collect" (fun () ->
+    List.rev !st.order |> List.collect (fun key ->
+      match SMap.try_find st.emitted key with
+      | Some d -> [d]
+      | None -> []))
 
 let request_lid (st:state) (l:Ident.lident) : ML name =
   request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }

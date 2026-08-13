@@ -27,6 +27,7 @@ module E      = FStarC.Errors
 module SMap   = FStarC.SMap
 module GenSym = FStarC.GenSym
 module Format = FStarC.Format
+module Prof   = FStarC.Custard.Prof
 
 (* Does [v] occur free in [e]?  Custard's variable names come from F* bound
    variables and so already carry a unique index, but this deliberately does
@@ -2152,16 +2153,18 @@ let coerce_prog (prog:program) : ML program =
     | d -> d)
 
 let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
+  let pass (n:string) (f : program -> ML program) (p:program) : ML program =
+    Prof.timed ("s." ^ n) (fun () -> f p) in
   imported_types := imports;
   (* First, because every pass below reads a constructor's arity. *)
-  let prog = eta_ctors vd prog in
-  let prog = eta_reduce_decls prog in
-  let prog = inline_decls prog in
-  let prog = reduce_decls prog in
+  let prog = pass "eta_ctors" (eta_ctors vd) prog in
+  let prog = pass "eta_reduce" eta_reduce_decls prog in
+  let prog = pass "inline" inline_decls prog in
+  let prog = pass "reduce" reduce_decls prog in
   (* Before [depat]: dropping a branch can leave a match with a single
      irrefutable one, which is exactly what [depat] removes entirely. *)
-  let prog = prune_decls prog in
-  let prog = depat_decls prog in
+  let prog = pass "prune" prune_decls prog in
+  let prog = pass "depat" depat_decls prog in
   (* After [depat]: a field of the record being inlined is read with an
      [EProj] only once [depat] has run, and that is what tells the pass a
      reconstructed value will never actually be built.  Neither this pass nor
@@ -2171,12 +2174,16 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
 
      [inline_fields] before [records]: a plan is expressed in terms of the
      constructor holding the field, which is exactly what [records] removes. *)
-  let prog = inline_fields vd prog in
-  let prog = unbuild_decls prog in
-  let prog = prog |> List.map (fun d ->
+  let prog = pass "inline_fields" (inline_fields vd) prog in
+  let prog = pass "unbuild" unbuild_decls prog in
+  let prog = pass "simpl" (fun prog -> prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
-    | d -> d) in
+    | d -> d)) prog in
   (* Last: a coercion is inserted where two types disagree, so every pass that
      can change a type has to have run.  Nothing below it may rewrite a term. *)
-  coerce_prog (split_any_decls (records vd (scc (dce prog))))
+  let prog = pass "dce" dce prog in
+  let prog = pass "scc" scc prog in
+  let prog = pass "records" (records vd) prog in
+  let prog = pass "split_any" split_any_decls prog in
+  pass "coerce" coerce_prog prog

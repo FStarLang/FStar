@@ -22,6 +22,7 @@ open FStarC.Errors.Msg
 open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 
+module Prof = FStarC.Custard.Prof
 module Ch    = FStarC.CheckedFiles
 module Dep   = FStarC.Parser.Dep
 module DsEnv = FStarC.Syntax.DsEnv
@@ -102,7 +103,7 @@ let rec prime_cache (deps:Dep.deps) (env:TcEnv.env) (fn:string) : ML unit =
   | None ->
     SMap.add cache_primed fn ();
     Dep.deps_of deps fn |> List.iter (prime_cache deps env);
-    ignore (Ch.load_module_from_cache env fn)
+    Prof.timed "cachefile" (fun () -> ignore (Ch.load_module_from_cache env fn))
 
 (* Modules whose implementation is in the dependency graph but has no usable
    checked file, so the interface is the best we will ever get.  Without this,
@@ -135,7 +136,7 @@ let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env 
         ]
       | fn :: fns ->
         prime_cache deps env fn;
-        match Ch.load_module_from_cache env fn with
+        match Prof.timed "cachefile" (fun () -> Ch.load_module_from_cache env fn) with
         | None -> first_usable fns
         | Some tcr -> (fn, tcr)
     in

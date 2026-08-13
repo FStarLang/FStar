@@ -5058,7 +5058,7 @@ The measurement that prompted this: extracting the whole compiler, from
 
 | stage | before | after |
 |---|---|---|
-| SPLIT (the extraction) | 77 s | 50 s |
+| SPLIT (the extraction) | 77 s | 48 s |
 | ASSEMBLE (file copies) | 0.1 s | 0.1 s |
 | MENHIR (grammars + the bytecode pre-pass) | 51 s | --- |
 | COMPILE (the OCaml build) | 78 s | 18 s |
@@ -5090,13 +5090,60 @@ accidentally quadratic rather than anything about the design.
    as the program.  Indexing them first takes the `iface` phase from 6.9 s to
    65 ms.
 
-What is left, in exclusive time, is roughly: `app_of_fv` 6.8 s (the call-site
-path itself, `request` included), `Extract.run` 6.6 s, `Simplify.run` 4.8 s,
-`expr_of_term` 4.4 s over 555k calls, `split_mono_args` 3.6 s, normalization
-3.4 s over 52k calls, `must_erase_for_extraction` 2.6 s over 578k calls,
-`ty_of_typ` 2.5 s over 601k calls.  That is a flat profile: no one place left
-to fix, and the shape one expects of a traversal that consults the
-typechecker at every node.
+#### The breakdown
+
+With counters down to the level of individual passes, the 48 s the extraction
+now takes divides like this.  Everything is exclusive, so the column sums.
+
+| what | time | calls |
+|---|---|---|
+| `expr_of_term` | 4.4 s | 555k |
+| **reading checked files** | **4.2 s** | **808** |
+| `specialize` (§3) | 3.6 s | 9.8k |
+| `split_mono_args` | 3.6 s | 101k |
+| normalization (`norm_bounded_in`) | 3.4 s | 52k |
+| `must_erase_for_extraction` | 2.6 s | 578k |
+| `Split.run` (§12.9) | 2.5 s | 1 |
+| `ty_of_typ` | 2.2 s | 601k |
+| reification (`Effects.maybe_reify`, §7.5) | 2.2 s | 9.8k |
+| walking the dependency graph for the module roots | 2.2 s | 1 |
+| `Simplify`'s `scc` | 1.9 s | 1 |
+| printing OCaml (`p.decls`) | 1.4 s | 248 files |
+| `string_of_key` | 1.2 s | 970k |
+| `Layout`'s rewrite | 0.9 s | 1 |
+| `app_of_fv` | 0.9 s | 148k |
+| `Rename.run` | 0.8 s | 1 |
+| `Simplify`'s `dce` | 0.7 s | 1 |
+| `request` itself | 0.7 s | 776k |
+| `Simplify`'s `coerce`, `inline` | 0.6 s each | 1 |
+| everything else, none over 0.5 s | ~3 s | |
+
+Read as phases rather than as functions: **extraction proper is 32 s**,
+**reading checked files 6.4 s**, **the simplification passes 4.7 s**, **the
+output side --- `Split`, `Rename`, `Layout` and the printer --- 6.0 s**.
+
+Three things in that are worth saying out loud.
+
+**Reading checked files is 13% and it is not on demand.**  Custard's
+demand-driven loader (§4.1) fires exactly *three* times in a whole-compiler
+build: batch mode has already loaded everything the entry point's module
+depends on.  The 808 loads are the *module* entry points --- the ones listed
+for their initializers alone (§4.4), which nothing in the dependency graph
+reaches --- and each pulls its own transitive closure through `prime_cache`.
+That is unmarshalling, and there is no clever way around wanting those
+modules.
+
+**No pass dominates.**  The simplification pipeline is thirteen passes and
+the largest, `scc`, is 1.9 s; the printer is 1.4 s for 248 files.  Neither is
+where the time is.
+
+**The traversal is the cost, and it is spread over its own machinery.**
+`expr_of_term`, `ty_of_typ`, `request` and `string_of_key` together are 8.5 s
+over about two million calls, and `must_erase_for_extraction` alone is 578k
+calls --- one per node that could be erased.  The two heavier per-definition
+steps, `specialize` and reification, are 5.8 s over 9.8k definitions.  That
+is a flat profile: no one place left to fix, and the shape one expects of a
+traversal that consults the typechecker at every node.
 
 The build stages were the larger target, and both were embarrassingly
 parallel work run in sequence on a 256-core machine.  MENHIR's 51 s was a
@@ -5107,7 +5154,7 @@ grammar headers open.  COMPILE's 78 s was one `ocamlopt` over 221 modules in
 Both are gone: the hand-rolled pipeline is now a generated dune project
 (§12.11), which does the menhir `--infer` pre-pass properly instead of by
 brute force and compiles in parallel.  129 s of the two became 18 s, and the
-whole `make custard` 3 min 3 s became 1 min 19 s --- of which 50 s is the
+whole `make custard` 3 min 3 s became 1 min 19 s --- of which 48 s is the
 extraction, now much the largest stage again.
 
 ## 13. Plugins

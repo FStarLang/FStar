@@ -24,6 +24,7 @@ open FStarC.Custard.Syntax
 module BU = FStarC.Util
 module SMap = FStarC.SMap
 module Options = FStarC.Options
+module Prof = FStarC.Custard.Prof
 
 open FStarC.Class.Show
 
@@ -703,15 +704,15 @@ let run (imports:list (dtype & type_info)) (prog:program)
     SMap.add t.erased k ti.ti_erased;
     SMap.add t.layouts k ti.ti_layout;
     ti.ti_ctors |> List.iter (fun cl -> SMap.add t.ctors (key cl.cl_name) (k, cl)));
-  erasure_fixpoint t;
-  compute_layouts t;
-  register_ctors t;
+  Prof.timed "l.erasure" (fun () -> erasure_fixpoint t);
+  Prof.timed "l.layouts" (fun () -> compute_layouts t);
+  Prof.timed "l.ctors" (fun () -> register_ctors t);
   if Options.custard_dump_layouts () then begin
     FStarC.Format.print_string "Custard layouts:\n";
     SMap.iter t.layouts (fun k l ->
       FStarC.Format.print2 "  %s : %s\n" k (layout_to_string l))
   end;
-  let prog' = prog |> List.collect (rw_decl t) in
+  let prog' = Prof.timed "l.rewrite" (fun () -> prog |> List.collect (rw_decl t)) in
 
   (* The representation verdicts are read off the program as this pass leaves
      it -- erasure has already deleted the fields it deletes, and a plan must
