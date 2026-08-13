@@ -126,12 +126,10 @@ let logand_pos_le #n a b =
 let logand_pow2_minus_one #n a m =
   UInt.logand_le (to_uint a) (to_uint (pow2_minus_one #n m))
 
-#push-options "--z3rlimit_factor 2"
 let logand_max #n a =
   sign_bit_positive a;
   sign_bit_positive #n (max_int n);
   nth_lemma a (logand a (max_int n))
-#pop-options
 
 let logxor_commutative #n a b = nth_lemma #n (logxor #n a b) (logxor #n b a)
 
@@ -178,7 +176,6 @@ let rotate_left_full_identity #n a = nth_lemma (rotate_left #n a n) a
 
 let rotate_right_full_identity #n a = nth_lemma (rotate_right #n a n) a
 
-#push-options "--split_queries always --z3rlimit 10"
 let rotate_left_right_inverse #n a s = nth_lemma (rotate_right #n (rotate_left #n a s) s) a
 
 private let rec rotate_mod_lemma (i:nat) (s:nat) (n:pos)
@@ -198,4 +195,3 @@ let rotate_right_left_inverse #n a s =
   in
   Classical.forall_intro aux;
   nth_lemma (rotate_left #n (rotate_right #n a s) s) a
-#pop-options

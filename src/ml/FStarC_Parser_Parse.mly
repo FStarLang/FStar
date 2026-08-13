@@ -188,7 +188,7 @@ let rec pat_names (bs : pattern list) : ident list =
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN
 %token PIPE_LEFT PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SPLICET SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT SPLICE SPLICET SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES DECREASES LBRACE_COLON_WELL_FOUNDED
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
@@ -290,10 +290,7 @@ startOfNextDeclToken:
  | SPLICET  { None }
  | EXCEPTION  { None }
  | NEW_EFFECT  { None }
- | LAYERED_EFFECT  { None }
  | SUB_EFFECT { None }
- | POLYMONADIC_BIND  { None }
- | POLYMONADIC_SUBCOMP  { None }
  | b=BLOB { let _, _, _, snap = b in Some snap }
  | b=USE_LANG_BLOB { let _, _, _, snap = b in Some snap }
  
@@ -472,8 +469,12 @@ rawDecl:
       {  TopLevelModule uid }
   | TYPE tcdefs=separated_nonempty_list(AND,typeDecl)
       { Tycon (false, false, tcdefs) }
-  | EFFECT uid=uident tparams=typars EQUALS t=typ
-      { Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t))]) }
+  | EFFECT uid=uident tparams=typars def=option(EQUALS t=typ {t})
+      { match def with
+        | Some t -> Tycon(true, false, [(TyconAbbrev(uid, tparams, None, t))])
+        | None -> NewEffect (DeclareEffect (uid, tparams)) }
+  | EFFECT ne=effectDefinition
+      { NewEffect ne }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
         let r = rr $loc in
@@ -500,16 +501,8 @@ rawDecl:
       { Exception(lid, t_opt) }
   | NEW_EFFECT ne=newEffect
       { NewEffect ne }
-  | LAYERED_EFFECT ne=effectDefinition
-      { LayeredEffect ne }
-  | EFFECT ne=layeredEffectDefinition
-      { LayeredEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
-  | POLYMONADIC_BIND b=polymonadic_bind
-      { let (x, y, z, w) = b in Polymonadic_bind (x, y, z, w) }
-  | POLYMONADIC_SUBCOMP c=polymonadic_subcomp
-      { let (x, y, z) = c in Polymonadic_subcomp (x, y, z) }
   | blob=BLOB
       {
         let ext_name, contents, pos, snap = blob in
@@ -613,24 +606,12 @@ effectRedefinition:
   | lid=uident EQUALS t=simpleTerm
     { RedefineEffect(lid, [], t) }
 
+/* An effect with a monadic representation, used for reification only:
+     effect { Tac with { repr = tac_repr; return = tac_return; bind = tac_bind } }
+   The combinators play no role in typechecking. */
 effectDefinition:
-  | LBRACE lid=uident bs=binders COLON typ=tmArrow(tmNoEq)
-           WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
-    RBRACE
-    { DefineEffect(lid, bs, typ, eds) }
-
-layeredEffectDefinition:
   | LBRACE lid=uident bs=binders WITH r=tmNoEq RBRACE
     {
-      let typ =  (* bs -> Effect *)
-        let first_b, last_b =
-          match bs with
-          | [] ->
-             raise_error_text (range_of_id lid) Fatal_SyntaxError
-                          "Syntax error: unexpected empty binders list in the layered effect definition"
-          | _ -> hd bs, last bs in
-        let r = union_ranges first_b.brange last_b.brange in
-        mk_term (Product (bs, mk_term (Name (lid_of_str "Effect")) r Type_level)) r Type_level in
       let rec decls (r:term) =
         match r.tm with
         | Paren r -> decls r
@@ -642,51 +623,17 @@ layeredEffectDefinition:
                                       t.range [])
         | _ ->
            raise_error_text r.range Fatal_SyntaxError
-                        "Syntax error: layered effect combinators should be declared as a record"
+                        "Syntax error: effect combinators should be declared as a record"
       in
-      DefineEffect (lid, [], typ, decls r) }
+      DefineEffect (lid, bs, decls r) }
 
-effectDecl:
-  | lid=lident action_params=binders EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rr $loc) [] }
-
+/* A sub-effect declaration is an edge in the effect lattice, optionally
+   carrying a term-level lift used only for reification. */
 subEffect:
-  | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
-      { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift; braced=false } }
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident
-    LBRACE
-      lift1=separated_pair(IDENT, EQUALS, simpleTerm)
-      lift2_opt=ioption(separated_pair(SEMICOLON id=IDENT {id}, EQUALS, simpleTerm))
-      /* might be nice for homogeneity if possible : ioption(SEMICOLON) */
-    RBRACE
-     {
-       match lift2_opt with
-       | None ->
-          begin match lift1 with
-          | ("lift", lift) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = LiftForFree lift; braced=true }
-          | ("lift_wp", lift_wp) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp; braced=true }
-          | _ ->
-             raise_error_text (rr $loc) Fatal_UnexpectedIdentifier "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}"
-          end
-       | Some (id2, tm2) ->
-          let (id1, tm1) = lift1 in
-          let lift, lift_wp = match (id1, id2) with
-                  | "lift_wp", "lift" -> tm1, tm2
-                  | "lift", "lift_wp" -> tm2, tm1
-                  | _ -> raise_error_text (rr $loc) Fatal_UnexpectedIdentifier "Unexpected identifier; expected {'lift', 'lift_wp'}"
-          in
-          { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp); braced=true }
-     }
-
-polymonadic_bind:
-  | LPAREN m_eff=quident COMMA n_eff=quident RPAREN PIPE_RIGHT p_eff=quident EQUALS bind=simpleTerm
-      { (m_eff, n_eff, p_eff, bind) }
-
-polymonadic_subcomp:
-  | m_eff=quident SUBTYPE n_eff=quident EQUALS subcomp=simpleTerm
-    { (m_eff, n_eff, subcomp) }
+      { { msource = src_eff; mdest = tgt_eff; lift_op = None } }
+  | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
+      { { msource = src_eff; mdest = tgt_eff; lift_op = Some lift } }
 
 
 /******************************************************************************/

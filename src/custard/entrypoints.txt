@@ -160,10 +160,8 @@ FStarC.TypeChecker.Env.goal
 FStarC.TypeChecker.Env.guard_t
 FStarC.TypeChecker.Env.implicit
 FStarC.TypeChecker.Env.implicits
-FStarC.TypeChecker.Env.lift_comp_t
 FStarC.TypeChecker.Env.must_tot
 FStarC.TypeChecker.Env.name_prefix
-FStarC.TypeChecker.Env.polymonadic_bind_t
 FStarC.TypeChecker.Env.proof_namespace
 FStarC.TypeChecker.Env.qninfo
 FStarC.TypeChecker.Env.sig_binding

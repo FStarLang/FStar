@@ -106,13 +106,17 @@ FLAGS_MonoTypes = --custard_monomorphize_types true
 # from [main], so it is named as an entry point of its own.
 FLAGS_Reify = --custard_entry Reify.twice --custard_entry Reify.after_letrec
 GREP_Reify += "let reify_add (x : Prims.int) : (fStarC_Tactics_Types_ref_proofstate -> Prims.int) ="
-GREP_Reify += "(fStar_Tactics_Effect_tac_bind (reify_add x) (fun tmp -> (reify_add tmp)))"
+# The bind is fully reduced: what is left is the proofstate threaded through
+# two calls in sequence, which is what the representation type means.
+GREP_Reify += "(fun ps -> (let x1 = (reify_add x ps) in"
+GREP_Reify += "(reify_add x1 ps)))"
 # Section 8.3: ulib's [FStar.Stubs.Tactics.Types] is a stub for the compiler's
 # own [FStarC.Tactics.Types], and the two have to be one name.
 NOGREP_Reify += "FStar_Stubs"
-# Section 7.5: the [let] after the local [let rec] has to become a [tac_bind];
-# left unreified it compiles as if [add] returned an integer.
-GREP_Reify += "(fStar_Tactics_Effect_tac_bind (reify_add (reify_after_letrec__sum l)) (fun a ->"
+# Section 7.5: the [let] after the local [let rec] has to be reified too; left
+# unreified it compiles as if [add] returned an integer -- and, since a call
+# that returns a value looks pure, is deleted outright.
+GREP_Reify += "(fun ps -> (let x = (reify_add (reify_after_letrec__sum l) ps) in"
 # Section 12.3: --ugly is what made the old key printer collapse the two
 # 'tweak's into one key, so the test runs with it on.  A specialization key
 # must not depend on a printing option at all.

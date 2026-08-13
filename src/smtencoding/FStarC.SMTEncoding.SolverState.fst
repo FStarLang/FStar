@@ -23,7 +23,6 @@ open FStarC.Class.Show
 open FStarC.Class.Setlike
 module BU = FStarC.Util
 module Pruning = FStarC.SMTEncoding.Pruning
-module U = FStarC.SMTEncoding.UnsatCore
 module TcEnv = FStarC.TypeChecker.Env
 
 let decl_name_set = PSMap.t bool
@@ -410,14 +409,23 @@ let name_of_decl (d:decl) : ML string =
   | DefineFun a _ _ _ _ -> a
   | _ -> failwith "Expected an assumption"
 
+(* Declarations must precede the definitions and assumptions that mention
+   them, otherwise Z3 rejects the input with "unknown constant". *)
+let decl_rank (d:decl) : int =
+  match d with
+  | DeclFun _ _ _ _ -> 0
+  | DefineFun _ _ _ _ _ -> 1
+  | _ -> 2
+
 let compare_decls (d0 d1:decl) : ML int =
-  match d0, d1 with
-  | DeclFun a0 _ _ _, DeclFun a1 _ _ _
-  | DefineFun a0 _ _ _ _, DefineFun a1 _ _ _ _
-  | Assume {assumption_name=a0}, Assume{assumption_name=a1} -> BU.compare a0 a1
-  | DeclFun _ _ _ _, _ -> -1
-  | DefineFun _ _ _ _ _, _ -> -1
-  | _ -> failwith "Unexpected decl in compare decls"
+  let r = decl_rank d0 - decl_rank d1 in
+  if r <> 0 then r
+  else
+    match d0, d1 with
+    | DeclFun a0 _ _ _, DeclFun a1 _ _ _
+    | DefineFun a0 _ _ _ _, DefineFun a1 _ _ _ _
+    | Assume {assumption_name=a0}, Assume{assumption_name=a1} -> BU.compare a0 a1
+    | _ -> 0
 
 (* Prune the context with respect to a set of roots *)
 let prune_level (roots:list decl) (hd:decls_at_level) (s:solver_state)
@@ -469,10 +477,10 @@ let prune_sim (roots:list decl) (s:solver_state)
   List.map name_of_decl (List.filter Assume? roots@can_give)
 
 (* Start a query context, registering and pushing the roots *)
-let start_query (msg:string) (roots_to_push:list decl) (qry:decl) (s:solver_state)
+let start_query (msg:string) (roots_to_push:list decl) (qry:list decl) (s:solver_state)
 : ML solver_state
 = let hd, tl = peek s in
-  let s = { s with levels = { hd with pruning_roots = Some (qry::roots_to_push) } :: tl } in
+  let s = { s with levels = { hd with pruning_roots = Some (qry@roots_to_push) } :: tl } in
   let s = push s in
   let s = give [Caption msg] s in
   give_now false (Given roots_to_push) s
@@ -484,19 +492,6 @@ let finish_query (msg:string) (s:solver_state)
   let s = pop s in
   let hd, tl = peek s in
   { s with levels = { hd with pruning_roots = None } :: tl }
-
-(* Filter all declarations visible with an unsat core *)
-let filter_with_unsat_core queryid (core:U.unsat_core) (s:solver_state) 
-: ML (list decl)
-= let rec all_decls levels = 
-    match levels with
-    | [last] -> last.all_decls_at_level_rev
-    | level :: levels -> 
-      level.all_decls_at_level_rev@Given [Push <| List.length levels]::all_decls levels
-  in
-  let all_decls = all_decls s.levels in
-  let all_decls = List.flatten <| List.rev <| List.map force_given all_decls in
-  U.filter core all_decls
 
 let would_have_pruned (s:solver_state) : ML (option (list string)) =
   if not (Options.Ext.enabled "context_pruning_sim")

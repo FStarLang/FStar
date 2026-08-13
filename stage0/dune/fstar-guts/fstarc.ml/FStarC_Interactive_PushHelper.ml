@@ -126,6 +126,8 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
       (env.FStarC_TypeChecker_Env.missing_decl);
     FStarC_TypeChecker_Env.iface_todo =
       (env.FStarC_TypeChecker_Env.iface_todo);
+    FStarC_TypeChecker_Env.iface_hidden =
+      (env.FStarC_TypeChecker_Env.iface_hidden);
     FStarC_TypeChecker_Env.iface_lids =
       (env.FStarC_TypeChecker_Env.iface_lids);
     FStarC_TypeChecker_Env.iface_val_lids =

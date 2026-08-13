@@ -533,8 +533,7 @@ and tc_one_file_no_frame
           extracted_defs,
           env
       in
-      SMT.with_hints_db (Pars.find_file fn) 
-        check_mod
+      check_mod ()
   in
   if not (Options.cache_off()) then
       let r = 
@@ -580,7 +579,7 @@ and tc_one_file_no_frame
         let parsing_data, tc_result, mllib, env = tc_source_file () in
 
         if FStarC.Errors.get_err_count() = 0
-        && Options.should_check (string_of_lid tc_result.checked_module.name)
+        && Options.should_write_checked_file fn
         then begin
           Ch.store_module_to_cache (tcenv_of_uenv env) fn parsing_data tc_result
         end;
@@ -884,7 +883,6 @@ let init_env deps : ML TcEnv.env =
   let solver =
     {SMT.solver with
       preprocess=FStarC.Tactics.Hooks.preprocess;
-      spinoff_strictly_positive_goals=Some FStarC.Tactics.Hooks.spinoff_strictly_positive_goals;
       handle_smt_goal=FStarC.Tactics.Hooks.handle_smt_goal
     } in
   let env =

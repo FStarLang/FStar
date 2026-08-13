@@ -169,7 +169,8 @@ type comp_view =
     | C_Total of typ
     | C_GTotal of typ
     | C_Lemma of term & term & term
-    | C_Eff of universes & name & term & list argv & list term  // list term is the decreases clause
+    // pre, post, and then the decreases clause
+    | C_Eff of universes & name & term & term & term & list term
 
 type ctor = name & typ
 

@@ -38,7 +38,6 @@ module FStar.LexicographicOrdering
 ///   - Constructing Recursion Operators in Type Theory, L. Paulson  JSC (1986) 2, 325-355
 
 open FStar.WellFounded
-open FStar.Nonempty
 
 
 /// Definition of lexicographic ordering as a relation over dependent tuples

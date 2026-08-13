@@ -33,14 +33,115 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
 
+let mk_l_exists (u:R.universe) (ty:R.term) (p:R.term) : R.term =
+  let hd = R.pack_ln (R.Tv_UInst (R.pack_fv R.exists_qn) [u]) in
+  let hd = R.pack_ln (R.Tv_App hd (ty, R.Q_Implicit)) in
+  R.pack_ln (R.Tv_App hd (p, R.Q_Explicit))
+
+let mk_and (l r:R.term) : R.term =
+  let hd = R.pack_ln (R.Tv_FVar (R.pack_fv R.and_qn)) in
+  R.mk_app hd [(l, R.Q_Explicit); (r, R.Q_Explicit)]
+
+(* Split [post] into the list of pure propositions mentioning [y] and the
+   remainder of [post] (with those propositions removed).
+
+   Returns [None] if [y] occurs anywhere else than in a pure proposition, i.e.,
+   if [y] is constrained by an actual slprop of [post]. *)
+let rec split_pure_deps (y:var) (post:slprop)
+: T.Tac (option (list term & slprop))
+= if not (y `Set.mem` freevars post) then Some ([], post)
+  else
+    match inspect_term post with
+    | Tm_Star l r -> (
+      match split_pure_deps y l with
+      | None -> None
+      | Some (pl, l') ->
+        match split_pure_deps y r with
+        | None -> None
+        | Some (pr, r') -> Some (pl@pr, tm_star l' r')
+    )
+    | Tm_Pure p -> Some ([p], tm_emp)
+    | Tm_WithPure p n body -> (
+      (* The body lives under a (proof-irrelevant) [squash p] binder; open it,
+         as the prover itself does, so that we can look inside. *)
+      let body = open_term' body unit_const 0 in
+      match split_pure_deps y body with
+      | None -> None
+      | Some (ps, body') ->
+        if y `Set.mem` freevars p
+        then Some (p::ps, body')
+        else Some (ps, tm_with_pure p n body')
+    )
+    | _ -> None
+
+(* Hoist the [exists*] of [post] to prenex position, opening their binders with
+   fresh variables. Returns the hoisted binders, outermost first, together with
+   the quantifier-free body. *)
+let rec hoist_exists (g:env) (post:slprop)
+: T.Tac (env & list (universe & binder & var) & slprop)
+= match inspect_term post with
+  | Tm_Star l r ->
+    let g, bsl, l = hoist_exists g l in
+    let g, bsr, r = hoist_exists g r in
+    g, bsl@bsr, tm_star l r
+  | Tm_ExistsSL u b body ->
+    let x = fresh g in
+    let g = push_binding g x b.binder_ppname b.binder_ty in
+    let body = open_term_nv body (b.binder_ppname, x) in
+    let g, bs, body = hoist_exists g body in
+    g, (u, b, x)::bs, body
+  | Tm_WithPure p n body ->
+    let g, bs, body = hoist_exists g (open_term' body unit_const 0) in
+    g, bs, tm_with_pure p n body
+  | _ -> g, [], post
+
+(* Inverse of [hoist_exists]; binders that became unused are dropped, since an
+   [exists*] with an unused binder would need a witness for no reason. *)
+let rec close_hoisted_exists (bs:list (universe & binder & var)) (post:slprop)
+: T.Tac slprop
+= match bs with
+  | [] -> post
+  | (u, b, x)::bs ->
+    let post = close_hoisted_exists bs post in
+    if not (x `Set.mem` freevars post)
+    then post
+    else tm_exists_sl u b (close_term post x)
+
 let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
 : T.Tac slprop
-= let maybe_close (n, y,ty) (post:slprop) = 
+= let quantify_pure_deps (n:ppname) (y:var) (ty:typ) (u:universe)
+                         (preds:list term) (rest:slprop)
+  : T.Tac slprop
+  = match preds with
+    | [] -> rest
+    | p::ps ->
+      let pred = List.Tot.fold_left mk_and p ps in
+      let abs =
+        mk_abs_with_name_and_range n.name n.range ty R.Q_Explicit (close_term pred y) in
+      tm_star (tm_pure (mk_l_exists u ty abs)) rest
+  in
+  let maybe_close ((n, y, ty) : ppname & var & typ) (post:slprop) = 
     if not (y `Set.mem` freevars post) then post
     else (
-      let b = {binder_ty=ty; binder_ppname=n; binder_attrs=[]} in
       let u = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
-      tm_exists_sl u b (close_term post y)
+      let fallback () =
+        let b = {binder_ty=ty; binder_ppname=n; binder_attrs=[]} in
+        tm_exists_sl u b (close_term post y)
+      in
+      (* If [y] is not constrained by any slprop, an [exists*] over it leaves
+         the prover with no way of finding a witness. Push the quantifier into
+         the pure propositions instead, where the SMT solver can discharge it.
+         If the pure propositions mentioning [y] are spread across nested
+         [exists*], first hoist those to prenex position. *)
+      match split_pure_deps y post with
+      | Some (p::ps, rest) -> quantify_pure_deps n y ty u (p::ps) rest
+      | _ ->
+        let _, bs, body = hoist_exists g1 post in
+        begin match bs, split_pure_deps y body with
+        | _::_, Some (p::ps, rest) ->
+          close_hoisted_exists bs (quantify_pure_deps n y ty u (p::ps) rest)
+        | _ -> fallback ()
+        end
     )
   in
   let maybe_elim_rewrites_to pr (post:term) : T.Tac term =

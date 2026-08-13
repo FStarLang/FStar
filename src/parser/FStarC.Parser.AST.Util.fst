@@ -142,12 +142,8 @@ let lidents_of_tycon (tc:tycon) : ML _ =
     opt_map lidents_of_term k @
     concat_map lidents_of_tycon_variant tcs
 
-let lidents_of_lift (l:lift) : ML _ = 
-  [l.msource; l.mdest]@
-  (match l.lift_op with
-   | NonReifiableLift t -> lidents_of_term t
-   | ReifiableLift (t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
-   | LiftForFree t -> lidents_of_term t)
+let lidents_of_lift (l:lift) : ML _ =
+  [l.msource; l.mdest]
 
 let rec lidents_of_decl (d:decl) : ML _ =
   match d.d with
@@ -161,11 +157,8 @@ let rec lidents_of_decl (d:decl) : ML _ =
   | Val (_, t) -> lidents_of_term t
   | Exception (_, None) -> []
   | Exception (_, Some t) -> lidents_of_term t
-  | NewEffect ed
-  | LayeredEffect ed -> lidents_of_effect_decl ed
+  | NewEffect ed -> lidents_of_effect_decl ed
   | SubEffect lift -> lidents_of_lift lift
-  | Polymonadic_bind(l0, l1, l2, t) -> l0::l1::l2::lidents_of_term t
-  | Polymonadic_subcomp(l0, l1, t) -> l0::l1::lidents_of_term t
   | Pragma _ -> []
   | Assume (_, t) -> lidents_of_term t
   | Splice (_, _, t) -> lidents_of_term t
@@ -174,9 +167,10 @@ let rec lidents_of_decl (d:decl) : ML _ =
 
 and lidents_of_effect_decl (ed:effect_decl) : ML _ =
   match ed with
-  | DefineEffect  (_, bs, t, ds) ->
+  | DeclareEffect (_, bs) ->
+    concat_map lidents_of_binder bs
+  | DefineEffect (_, bs, ds) ->
     concat_map lidents_of_binder bs @
-    lidents_of_term t @
     concat_map lidents_of_decl ds
   | RedefineEffect (_, bs, t) -> 
     concat_map lidents_of_binder bs @

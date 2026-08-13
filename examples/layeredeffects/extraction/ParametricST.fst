@@ -16,29 +16,31 @@
 
 module ParametricST
 
-/// This module defined a state effect parametric in the type of state.
-/// It is used as a testcase for extraction of indexed effects
+/// This used to test extraction of an effect indexed by the state type.
+/// Effect indices no longer exist, so this is now the same state monad
+/// specialized to int state and declared with the new reflectable syntax.
 
-type repr (a:Type) (s:Type0) = s -> a & s
-let return a x s : repr a s = fun s -> x, s
-let bind a b s (f:repr a s) (g:a -> repr b s) : repr b s =
+#set-options "--warn_error -272" // top-level effect
+
+type repr (a:Type) = int -> a & int
+let return (a:Type) (x:a) : repr a = fun s -> x, s
+let bind (a b:Type) (f:repr a) (g:a -> repr b) : repr b =
   fun s ->
   let x, s = f s in
-  (g x) s
+  g x s
+
 reifiable
 reflectable
-effect {
-  ST (a:Type) ([@@@ effect_param] s:Type0) with {repr;return;bind}
-}
-let lift_PURE_ST a wp s (f:unit -> PURE a wp)
-  : Pure (repr a s) (requires wp (fun _ -> True)) (ensures fun _ -> True) =
+effect { ST with {repr; return; bind} }
 
+let lift_PURE_ST (a:Type) (f:unit -> PURE a) : repr a =
   fun s -> f (), s
 sub_effect PURE ~> ST = lift_PURE_ST
 
-let get #s () : ST s s = ST?.reflect (fun s -> s, s)
-let put #s (v:s) : ST unit s = ST?.reflect (fun _ -> (), v)
-let incr () : ST unit int =
+let get () : ST int = ST?.reflect (fun s -> s, s)
+let put (v:int) : ST unit = ST?.reflect (fun _ -> (), v)
+
+let incr () : ST unit =
   let n = get () in
   put (n+1)
 

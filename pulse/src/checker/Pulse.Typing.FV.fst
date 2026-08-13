@@ -119,7 +119,7 @@ let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
     | SHOW_PROOF_STATE _ -> ()
 
 // Needs a bit more rlimit sometimes. Also splitting is too expensive
-#push-options "--z3rlimit 20 --split_queries always"
+#push-options "--z3rlimit 20"
 #restart-solver
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
   : Lemma
@@ -161,10 +161,11 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' head x i;
       freevars_close_st_term' body x (i + 1)
 
-    | Tm_If { b; then_; else_; post } ->
+    | Tm_If { b; then_; else_; pre; post } ->
       freevars_close_st_term' b x i;    
       freevars_close_st_term' then_ x i;    
       freevars_close_st_term' else_ x i;          
+      freevars_close_term_opt' pre x i;
       freevars_close_term_opt' post x (i + 1)      
 
     | Tm_Match _ ->

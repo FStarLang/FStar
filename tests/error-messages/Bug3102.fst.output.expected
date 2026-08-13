@@ -5,7 +5,7 @@
 
 * Info at Bug3102.fst(21,90-21,91):
   - Expected failure:
-  - Failed to resolve implicit argument ?52
+  - Failed to resolve implicit argument ?83
     of type
 
             g: FStar.Stubs.Reflection.Types.env ->
@@ -13,11 +13,13 @@
             t2: FStar.Tactics.NamedView.term
           -> FStar.Reflection.TermSpec.term_spec
     introduced for
-        user-provided implicit term at Bug3102.fst(21,90-21,91); force delayed
+        flex-flex quasi: lhs=user-provided implicit term at
+        Bug3102.fst(21,90-21,91) rhs=user-provided implicit term at
+        Bug3102.fst(21,90-21,91); force delayed
 
 * Info at Bug3102.fst(30,4-30,27):
   - Expected failure:
-  - (*?u31*)_ is not equal to the expected type e2
+  - (*?u41*)_ is not equal to the expected type e2
 
 * Info at Bug3102.fst(34,29-36,27):
   - Expected failure:

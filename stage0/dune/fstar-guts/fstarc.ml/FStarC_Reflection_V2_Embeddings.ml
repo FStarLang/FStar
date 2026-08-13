@@ -178,7 +178,6 @@ let e_aqualv :
     {
       FStarC_Syntax_Syntax.n = (r.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = rng;
-      FStarC_Syntax_Syntax.vars = (r.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code = (r.FStarC_Syntax_Syntax.hash_code)
     } in
   let unembed_aqualv t =
@@ -353,6 +352,113 @@ let e_universe_view :
                          else FStar_Pervasives_Native.None) in
   mk_emb embed_universe_view unembed_universe_view
     FStarC_Reflection_V2_Constants.fstar_refl_universe_view_fv
+let e_int_signedness :
+  FStarC_Reflection_V2_Data.int_signedness
+    FStarC_Syntax_Embeddings_Base.embedding=
+  let embed_int_signedness rng s =
+    let t =
+      match s with
+      | FStarC_Reflection_V2_Data.Signed ->
+          FStarC_Reflection_V2_Constants.ref_Signed.FStarC_Reflection_V2_Constants.t
+      | FStarC_Reflection_V2_Data.Unsigned ->
+          FStarC_Reflection_V2_Constants.ref_Unsigned.FStarC_Reflection_V2_Constants.t in
+    {
+      FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
+      FStarC_Syntax_Syntax.pos = rng;
+      FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
+    } in
+  let unembed_int_signedness t =
+    let uu___ = head_fv_and_args t in
+    FStarC_Syntax_Embeddings_AppEmb.op_let_Question uu___
+      (fun uu___1 ->
+         match uu___1 with
+         | (fv, args) ->
+             if
+               FStarC_Syntax_Syntax.fv_eq_lid fv
+                 FStarC_Reflection_V2_Constants.ref_Signed.FStarC_Reflection_V2_Constants.lid
+             then
+               FStarC_Syntax_Embeddings_AppEmb.run args
+                 (FStarC_Syntax_Embeddings_AppEmb.pure
+                    FStarC_Reflection_V2_Data.Signed)
+             else
+               if
+                 FStarC_Syntax_Syntax.fv_eq_lid fv
+                   FStarC_Reflection_V2_Constants.ref_Unsigned.FStarC_Reflection_V2_Constants.lid
+               then
+                 FStarC_Syntax_Embeddings_AppEmb.run args
+                   (FStarC_Syntax_Embeddings_AppEmb.pure
+                      FStarC_Reflection_V2_Data.Unsigned)
+               else FStar_Pervasives_Native.None) in
+  mk_emb embed_int_signedness unembed_int_signedness
+    FStarC_Reflection_V2_Constants.fstar_refl_int_signedness_fv
+let e_int_width :
+  FStarC_Reflection_V2_Data.int_width FStarC_Syntax_Embeddings_Base.embedding=
+  let embed_int_width rng w =
+    let t =
+      match w with
+      | FStarC_Reflection_V2_Data.Int8 ->
+          FStarC_Reflection_V2_Constants.ref_Int8.FStarC_Reflection_V2_Constants.t
+      | FStarC_Reflection_V2_Data.Int16 ->
+          FStarC_Reflection_V2_Constants.ref_Int16.FStarC_Reflection_V2_Constants.t
+      | FStarC_Reflection_V2_Data.Int32 ->
+          FStarC_Reflection_V2_Constants.ref_Int32.FStarC_Reflection_V2_Constants.t
+      | FStarC_Reflection_V2_Data.Int64 ->
+          FStarC_Reflection_V2_Constants.ref_Int64.FStarC_Reflection_V2_Constants.t
+      | FStarC_Reflection_V2_Data.Sizet ->
+          FStarC_Reflection_V2_Constants.ref_Sizet.FStarC_Reflection_V2_Constants.t in
+    {
+      FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
+      FStarC_Syntax_Syntax.pos = rng;
+      FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
+    } in
+  let unembed_int_width t =
+    let uu___ = head_fv_and_args t in
+    FStarC_Syntax_Embeddings_AppEmb.op_let_Question uu___
+      (fun uu___1 ->
+         match uu___1 with
+         | (fv, args) ->
+             if
+               FStarC_Syntax_Syntax.fv_eq_lid fv
+                 FStarC_Reflection_V2_Constants.ref_Int8.FStarC_Reflection_V2_Constants.lid
+             then
+               FStarC_Syntax_Embeddings_AppEmb.run args
+                 (FStarC_Syntax_Embeddings_AppEmb.pure
+                    FStarC_Reflection_V2_Data.Int8)
+             else
+               if
+                 FStarC_Syntax_Syntax.fv_eq_lid fv
+                   FStarC_Reflection_V2_Constants.ref_Int16.FStarC_Reflection_V2_Constants.lid
+               then
+                 FStarC_Syntax_Embeddings_AppEmb.run args
+                   (FStarC_Syntax_Embeddings_AppEmb.pure
+                      FStarC_Reflection_V2_Data.Int16)
+               else
+                 if
+                   FStarC_Syntax_Syntax.fv_eq_lid fv
+                     FStarC_Reflection_V2_Constants.ref_Int32.FStarC_Reflection_V2_Constants.lid
+                 then
+                   FStarC_Syntax_Embeddings_AppEmb.run args
+                     (FStarC_Syntax_Embeddings_AppEmb.pure
+                        FStarC_Reflection_V2_Data.Int32)
+                 else
+                   if
+                     FStarC_Syntax_Syntax.fv_eq_lid fv
+                       FStarC_Reflection_V2_Constants.ref_Int64.FStarC_Reflection_V2_Constants.lid
+                   then
+                     FStarC_Syntax_Embeddings_AppEmb.run args
+                       (FStarC_Syntax_Embeddings_AppEmb.pure
+                          FStarC_Reflection_V2_Data.Int64)
+                   else
+                     if
+                       FStarC_Syntax_Syntax.fv_eq_lid fv
+                         FStarC_Reflection_V2_Constants.ref_Sizet.FStarC_Reflection_V2_Constants.lid
+                     then
+                       FStarC_Syntax_Embeddings_AppEmb.run args
+                         (FStarC_Syntax_Embeddings_AppEmb.pure
+                            FStarC_Reflection_V2_Data.Sizet)
+                     else FStar_Pervasives_Native.None) in
+  mk_emb embed_int_width unembed_int_width
+    FStarC_Reflection_V2_Constants.fstar_refl_int_width_fv
 let e_vconst :
   FStarC_Reflection_V2_Data.vconst FStarC_Syntax_Embeddings_Base.embedding=
   let embed_const rng c =
@@ -375,6 +481,28 @@ let e_vconst :
             [uu___1] in
           FStarC_Syntax_Syntax.mk_Tm_app
             FStarC_Reflection_V2_Constants.ref_C_Int.FStarC_Reflection_V2_Constants.t
+            uu___ FStarC_Range_Type.dummyRange
+      | FStarC_Reflection_V2_Data.C_MachineInt (i, signedness, width) ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                let uu___3 =
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+                FStarC_Syntax_Util.exp_int uu___3 in
+              FStarC_Syntax_Syntax.as_arg uu___2 in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = embed e_int_signedness rng signedness in
+                FStarC_Syntax_Syntax.as_arg uu___4 in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 = embed e_int_width rng width in
+                  FStarC_Syntax_Syntax.as_arg uu___6 in
+                [uu___5] in
+              uu___3 :: uu___4 in
+            uu___1 :: uu___2 in
+          FStarC_Syntax_Syntax.mk_Tm_app
+            FStarC_Reflection_V2_Constants.ref_C_MachineInt.FStarC_Reflection_V2_Constants.t
             uu___ FStarC_Range_Type.dummyRange
       | FStarC_Reflection_V2_Data.C_String s ->
           let uu___ =
@@ -427,7 +555,6 @@ let e_vconst :
     {
       FStarC_Syntax_Syntax.n = (r.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = rng;
-      FStarC_Syntax_Syntax.vars = (r.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code = (r.FStarC_Syntax_Syntax.hash_code)
     } in
   let unembed_const t =
@@ -472,65 +599,80 @@ let e_vconst :
                    else
                      if
                        FStarC_Syntax_Syntax.fv_eq_lid fv
-                         FStarC_Reflection_V2_Constants.ref_C_String.FStarC_Reflection_V2_Constants.lid
+                         FStarC_Reflection_V2_Constants.ref_C_MachineInt.FStarC_Reflection_V2_Constants.lid
                      then
                        FStarC_Syntax_Embeddings_AppEmb.run args
-                         (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                            (fun uu___2 ->
-                               FStarC_Reflection_V2_Data.C_String uu___2)
-                            FStarC_Syntax_Embeddings.e_string)
+                         (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
+                            (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
+                               (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                                  (curry3
+                                     (fun uu___2 ->
+                                        FStarC_Reflection_V2_Data.C_MachineInt
+                                          uu___2))
+                                  FStarC_Syntax_Embeddings.e_int)
+                               e_int_signedness) e_int_width)
                      else
                        if
                          FStarC_Syntax_Syntax.fv_eq_lid fv
-                           FStarC_Reflection_V2_Constants.ref_C_Range.FStarC_Reflection_V2_Constants.lid
+                           FStarC_Reflection_V2_Constants.ref_C_String.FStarC_Reflection_V2_Constants.lid
                        then
                          FStarC_Syntax_Embeddings_AppEmb.run args
                            (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
                               (fun uu___2 ->
-                                 FStarC_Reflection_V2_Data.C_Range uu___2)
-                              FStarC_Syntax_Embeddings.e_range)
+                                 FStarC_Reflection_V2_Data.C_String uu___2)
+                              FStarC_Syntax_Embeddings.e_string)
                        else
                          if
                            FStarC_Syntax_Syntax.fv_eq_lid fv
-                             FStarC_Reflection_V2_Constants.ref_C_Reify.FStarC_Reflection_V2_Constants.lid
+                             FStarC_Reflection_V2_Constants.ref_C_Range.FStarC_Reflection_V2_Constants.lid
                          then
                            FStarC_Syntax_Embeddings_AppEmb.run args
-                             (FStarC_Syntax_Embeddings_AppEmb.pure
-                                FStarC_Reflection_V2_Data.C_Reify)
+                             (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                                (fun uu___2 ->
+                                   FStarC_Reflection_V2_Data.C_Range uu___2)
+                                FStarC_Syntax_Embeddings.e_range)
                          else
                            if
                              FStarC_Syntax_Syntax.fv_eq_lid fv
-                               FStarC_Reflection_V2_Constants.ref_C_Reflect.FStarC_Reflection_V2_Constants.lid
+                               FStarC_Reflection_V2_Constants.ref_C_Reify.FStarC_Reflection_V2_Constants.lid
                            then
                              FStarC_Syntax_Embeddings_AppEmb.run args
-                               (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                                  (fun uu___2 ->
-                                     FStarC_Reflection_V2_Data.C_Reflect
-                                       uu___2)
-                                  FStarC_Syntax_Embeddings.e_string_list)
+                               (FStarC_Syntax_Embeddings_AppEmb.pure
+                                  FStarC_Reflection_V2_Data.C_Reify)
                            else
                              if
                                FStarC_Syntax_Syntax.fv_eq_lid fv
-                                 FStarC_Reflection_V2_Constants.ref_C_Real.FStarC_Reflection_V2_Constants.lid
+                                 FStarC_Reflection_V2_Constants.ref_C_Reflect.FStarC_Reflection_V2_Constants.lid
                              then
                                FStarC_Syntax_Embeddings_AppEmb.run args
                                  (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
                                     (fun uu___2 ->
-                                       FStarC_Reflection_V2_Data.C_Real
+                                       FStarC_Reflection_V2_Data.C_Reflect
                                          uu___2)
-                                    FStarC_Syntax_Embeddings.e_string)
+                                    FStarC_Syntax_Embeddings.e_string_list)
                              else
                                if
                                  FStarC_Syntax_Syntax.fv_eq_lid fv
-                                   FStarC_Reflection_V2_Constants.ref_C_Char.FStarC_Reflection_V2_Constants.lid
+                                   FStarC_Reflection_V2_Constants.ref_C_Real.FStarC_Reflection_V2_Constants.lid
                                then
                                  FStarC_Syntax_Embeddings_AppEmb.run args
                                    (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
                                       (fun uu___2 ->
-                                         FStarC_Reflection_V2_Data.C_Char
+                                         FStarC_Reflection_V2_Data.C_Real
                                            uu___2)
-                                      FStarC_Syntax_Embeddings.e_char)
-                               else FStar_Pervasives_Native.None) in
+                                      FStarC_Syntax_Embeddings.e_string)
+                               else
+                                 if
+                                   FStarC_Syntax_Syntax.fv_eq_lid fv
+                                     FStarC_Reflection_V2_Constants.ref_C_Char.FStarC_Reflection_V2_Constants.lid
+                                 then
+                                   FStarC_Syntax_Embeddings_AppEmb.run args
+                                     (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                                        (fun uu___2 ->
+                                           FStarC_Reflection_V2_Data.C_Char
+                                             uu___2)
+                                        FStarC_Syntax_Embeddings.e_char)
+                                 else FStar_Pervasives_Native.None) in
   mk_emb embed_const unembed_const
     FStarC_Reflection_V2_Constants.fstar_refl_vconst_fv
 let rec e_pattern_aq :
@@ -940,7 +1082,6 @@ let e_term_view_aq (aq : FStarC_Syntax_Syntax.antiquotations) :
         {
           FStarC_Syntax_Syntax.n = (uu___.FStarC_Syntax_Syntax.n);
           FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (uu___.FStarC_Syntax_Syntax.vars);
           FStarC_Syntax_Syntax.hash_code =
             (uu___.FStarC_Syntax_Syntax.hash_code)
         }
@@ -950,7 +1091,6 @@ let e_term_view_aq (aq : FStarC_Syntax_Syntax.antiquotations) :
         {
           FStarC_Syntax_Syntax.n = (uu___.FStarC_Syntax_Syntax.n);
           FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (uu___.FStarC_Syntax_Syntax.vars);
           FStarC_Syntax_Syntax.hash_code =
             (uu___.FStarC_Syntax_Syntax.hash_code)
         } in
@@ -1855,7 +1995,6 @@ let e_sigelt_view :
         {
           FStarC_Syntax_Syntax.n = (uu___.FStarC_Syntax_Syntax.n);
           FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (uu___.FStarC_Syntax_Syntax.vars);
           FStarC_Syntax_Syntax.hash_code =
             (uu___.FStarC_Syntax_Syntax.hash_code)
         } in
@@ -2032,7 +2171,6 @@ let e_qualifier :
     {
       FStarC_Syntax_Syntax.n = (r.FStarC_Syntax_Syntax.n);
       FStarC_Syntax_Syntax.pos = rng;
-      FStarC_Syntax_Syntax.vars = (r.FStarC_Syntax_Syntax.vars);
       FStarC_Syntax_Syntax.hash_code = (r.FStarC_Syntax_Syntax.hash_code)
     } in
   let unembed t =

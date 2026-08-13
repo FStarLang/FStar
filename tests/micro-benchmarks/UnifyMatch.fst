@@ -28,7 +28,7 @@ type s =
 assume val x : s
 assume val y : s
 assume val ff : int -> int
-assume val wp : int -> pure_wp int  //(int -> Type) -> Type
+assume val wp : int -> prop
 
 type unat = | Z : unat | S : unat -> unat
 let rec nat2unary (n: nat) : Tot unat = if n = 0 then Z else S (nat2unary (n - 1))
@@ -113,12 +113,12 @@ let tests () : Tac (list (term & term & bool)) = [
    true);
 
   (* Not about matches, just reusing the file *)
-  (`(x:int -> PURE int (wp x)),
-   `(x:int -> PURE int (wp x)),
+  (`(x:int -> PURE int (requires wp x)),
+   `(x:int -> PURE int (requires wp x)),
    true);
 
-  (`(x:int -> PURE int (wp ((1 + 1) + x))),
-   `(x:int -> PURE int (wp (2 + x))),
+  (`(x:int -> PURE int (requires wp ((1 + 1) + x))),
+   `(x:int -> PURE int (requires wp (2 + x))),
    true);
   ]
 

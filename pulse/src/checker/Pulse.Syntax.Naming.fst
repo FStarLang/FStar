@@ -140,7 +140,7 @@ let close_open_inverse_ascription' (t:comp_ascription)
      | None -> ()
      | Some c -> close_open_inverse_comp' c x i)
 
-#push-options "--z3rlimit_factor 40 --fuel 2 --ifuel 2 --split_queries no"
+#push-options "--z3rlimit_factor 40 --fuel 2 --ifuel 2"
 #restart-solver
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
@@ -190,10 +190,11 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' condition x i;
       close_open_inverse_st' body x i
 
-    | Tm_If { b; then_; else_; post } ->
+    | Tm_If { b; then_; else_; pre; post } ->
       close_open_inverse_st' b x i;    
       close_open_inverse_st' then_ x i;    
       close_open_inverse_st' else_ x i;
+      close_open_inverse_opt' pre x i;
       close_open_inverse_opt' post x (i + 1)
 
     | Tm_Match { sc; returns_; brs } ->

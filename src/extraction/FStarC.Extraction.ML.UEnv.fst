@@ -618,16 +618,6 @@ let extend_with_monad_op_name g (ed:Syntax.eff_decl) nm ts =
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
-(** The actions of an effect declaration are qualified to the module
-    name in which they are defined. *)
-let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
-    let nm = string_of_id (ident_of_lid a.action_name) in
-    let module_name = ns_of_lid ed.mname in
-    let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
-    let g, mlid, exp_b = extend_fv g (lid_as_fv lid None) ts false in
-    let mlp = mlns_of_lid lid, mlid in
-    mlp, lid, exp_b, g
-
 (** Record field names are in a separate namespace in ML and cannot
     clash with type names, top-level names, local identifiers etc.
 

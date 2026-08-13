@@ -363,7 +363,6 @@ let default_settings : list error_setting =
     Error_BadLetOpenRecord                            , CAlwaysError, 346;
     Error_UnexpectedTypeclassInstance                 , CAlwaysError, 347;
     Warning_AmbiguousResolveImplicitsHook             , CWarning, 348;
-    Warning_SplitAndRetryQueries                      , CWarning, 349;
     Warning_DeprecatedLightDoNotation                 , CWarning, 350;
     Warning_FailedToCheckInitialTacticGoal            , CSilent,  351;
     Warning_Adhoc_IndexedEffect_Combinator            , CWarning, 352;

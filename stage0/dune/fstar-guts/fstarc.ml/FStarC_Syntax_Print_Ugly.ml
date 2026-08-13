@@ -809,21 +809,35 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
              let uu___1 = FStarC_Options.print_effect_args () in
              if uu___1
              then
-               let uu___2 = sli c1.FStarC_Syntax_Syntax.effect_name in
-               let uu___3 =
+               let uu___2 =
+                 let uu___3 = sli c1.FStarC_Syntax_Syntax.effect_name in
                  let uu___4 =
-                   FStarC_List.map univ_to_string
-                     c1.FStarC_Syntax_Syntax.comp_univs in
-                 FStarC_String.concat ", " uu___4 in
-               let uu___4 = term_to_string c1.FStarC_Syntax_Syntax.result_typ in
-               let uu___5 =
-                 let uu___6 =
-                   FStarC_List.map arg_to_string
-                     c1.FStarC_Syntax_Syntax.effect_args in
-                 FStarC_String.concat ", " uu___6 in
-               let uu___6 = cflags_to_string c1.FStarC_Syntax_Syntax.flags in
-               FStarC_Format.fmt5 "%s<%s> (%s) %s (attributes %s)" uu___2
-                 uu___3 uu___4 uu___5 uu___6
+                   let uu___5 =
+                     let uu___6 =
+                       FStarC_List.map univ_to_string
+                         c1.FStarC_Syntax_Syntax.comp_univs in
+                     FStarC_String.concat ", " uu___6 in
+                   let uu___6 =
+                     let uu___7 =
+                       term_to_string c1.FStarC_Syntax_Syntax.result_typ in
+                     let uu___8 =
+                       let uu___9 =
+                         term_to_string c1.FStarC_Syntax_Syntax.comp_pre in
+                       let uu___10 =
+                         let uu___11 =
+                           term_to_string c1.FStarC_Syntax_Syntax.comp_post in
+                         let uu___12 =
+                           let uu___13 =
+                             cflags_to_string c1.FStarC_Syntax_Syntax.flags in
+                           [uu___13] in
+                         uu___11 :: uu___12 in
+                       uu___9 :: uu___10 in
+                     uu___7 :: uu___8 in
+                   uu___5 :: uu___6 in
+                 uu___3 :: uu___4 in
+               FStarC_Format.fmt
+                 "%s<%s> (%s) (requires %s) (ensures %s) (attributes %s)"
+                 uu___2
              else
                (let uu___2 =
                   let uu___3 =
@@ -922,11 +936,8 @@ and cflag_to_string (c : FStarC_Syntax_Syntax.cflag) : Prims.string=
   match c with
   | FStarC_Syntax_Syntax.TOTAL -> "total"
   | FStarC_Syntax_Syntax.MLEFFECT -> "ml"
-  | FStarC_Syntax_Syntax.RETURN -> "return"
-  | FStarC_Syntax_Syntax.PARTIAL_RETURN -> "partial_return"
-  | FStarC_Syntax_Syntax.SOMETRIVIAL -> "sometrivial"
-  | FStarC_Syntax_Syntax.TRIVIAL_POSTCONDITION -> "trivial_postcondition"
-  | FStarC_Syntax_Syntax.SHOULD_NOT_INLINE -> "should_not_inline"
+  | FStarC_Syntax_Syntax.SMTPAT p ->
+      let uu___ = term_to_string p in Prims.strcat "smtpat " uu___
   | FStarC_Syntax_Syntax.LEMMA -> "lemma"
   | FStarC_Syntax_Syntax.DECREASES uu___ -> ""
 and cflags_to_string (fs : FStarC_Syntax_Syntax.cflag Prims.list) :
@@ -955,130 +966,15 @@ let tscheme_to_string (s : FStarC_Syntax_Syntax.tscheme) : Prims.string=
         let uu___2 = univ_names_to_string us in enclose_universes uu___2 in
       let uu___2 = term_to_string t in
       FStarC_Format.fmt2 "%s%s" uu___1 uu___2
-let action_to_string (a : FStarC_Syntax_Syntax.action) : Prims.string=
-  let uu___ = sli a.FStarC_Syntax_Syntax.action_name in
-  let uu___1 = binders_to_string " " a.FStarC_Syntax_Syntax.action_params in
-  let uu___2 =
-    let uu___3 = univ_names_to_string a.FStarC_Syntax_Syntax.action_univs in
-    enclose_universes uu___3 in
-  let uu___3 = term_to_string a.FStarC_Syntax_Syntax.action_typ in
-  let uu___4 = term_to_string a.FStarC_Syntax_Syntax.action_defn in
-  FStarC_Format.fmt5 "%s%s %s : %s = %s" uu___ uu___1 uu___2 uu___3 uu___4
-let wp_eff_combinators_to_string
-  (combs : FStarC_Syntax_Syntax.wp_eff_combinators) : Prims.string=
-  let tscheme_opt_to_string uu___ =
-    match uu___ with
-    | FStar_Pervasives_Native.Some ts -> tscheme_to_string ts
-    | FStar_Pervasives_Native.None -> "None" in
-  let uu___ =
-    let uu___1 = tscheme_to_string combs.FStarC_Syntax_Syntax.ret_wp in
-    let uu___2 =
-      let uu___3 = tscheme_to_string combs.FStarC_Syntax_Syntax.bind_wp in
-      let uu___4 =
-        let uu___5 = tscheme_to_string combs.FStarC_Syntax_Syntax.stronger in
-        let uu___6 =
-          let uu___7 =
-            tscheme_to_string combs.FStarC_Syntax_Syntax.if_then_else in
-          let uu___8 =
-            let uu___9 = tscheme_to_string combs.FStarC_Syntax_Syntax.ite_wp in
-            let uu___10 =
-              let uu___11 =
-                tscheme_to_string combs.FStarC_Syntax_Syntax.close_wp in
-              let uu___12 =
-                let uu___13 =
-                  tscheme_to_string combs.FStarC_Syntax_Syntax.trivial in
-                let uu___14 =
-                  let uu___15 =
-                    tscheme_opt_to_string combs.FStarC_Syntax_Syntax.repr in
-                  let uu___16 =
-                    let uu___17 =
-                      tscheme_opt_to_string
-                        combs.FStarC_Syntax_Syntax.return_repr in
-                    let uu___18 =
-                      let uu___19 =
-                        tscheme_opt_to_string
-                          combs.FStarC_Syntax_Syntax.bind_repr in
-                      [uu___19] in
-                    uu___17 :: uu___18 in
-                  uu___15 :: uu___16 in
-                uu___13 :: uu___14 in
-              uu___11 :: uu___12 in
-            uu___9 :: uu___10 in
-          uu___7 :: uu___8 in
-        uu___5 :: uu___6 in
-      uu___3 :: uu___4 in
-    uu___1 :: uu___2 in
-  FStarC_Format.fmt
-    "{\nret_wp       = %s\n; bind_wp      = %s\n; stronger     = %s\n; if_then_else = %s\n; ite_wp       = %s\n; close_wp     = %s\n; trivial      = %s\n; repr         = %s\n; return_repr  = %s\n; bind_repr    = %s\n}\n"
-    uu___
 let sub_eff_to_string (se : FStarC_Syntax_Syntax.sub_eff) : Prims.string=
-  let tsopt_to_string ts_opt =
-    if FStar_Pervasives_Native.uu___is_Some ts_opt
-    then let uu___ = FStarC_Option.must ts_opt in tscheme_to_string uu___
-    else "<None>" in
   let uu___ = lid_to_string se.FStarC_Syntax_Syntax.source in
   let uu___1 = lid_to_string se.FStarC_Syntax_Syntax.target in
-  let uu___2 = tsopt_to_string se.FStarC_Syntax_Syntax.lift in
-  let uu___3 = tsopt_to_string se.FStarC_Syntax_Syntax.lift_wp in
-  FStarC_Format.fmt4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s" uu___
-    uu___1 uu___2 uu___3
-let layered_eff_combinators_to_string
-  (combs : FStarC_Syntax_Syntax.layered_eff_combinators) : Prims.string=
-  let to_str uu___ =
-    match uu___ with
-    | (ts_t, ts_ty, kopt) ->
-        let uu___1 = tscheme_to_string ts_t in
-        let uu___2 = tscheme_to_string ts_ty in
-        let uu___3 =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.show_option
-               FStarC_Syntax_Syntax.showable_indexed_effect_combinator_kind)
-            kopt in
-        FStarC_Format.fmt3 "(%s) : (%s)<%s>" uu___1 uu___2 uu___3 in
-  let to_str2 uu___ =
-    match uu___ with
-    | (ts_t, ts_ty) ->
-        let uu___1 = tscheme_to_string ts_t in
-        let uu___2 = tscheme_to_string ts_ty in
-        FStarC_Format.fmt2 "(%s) : (%s)" uu___1 uu___2 in
-  let uu___ =
-    let uu___1 = to_str2 combs.FStarC_Syntax_Syntax.l_repr in
-    let uu___2 =
-      let uu___3 = to_str2 combs.FStarC_Syntax_Syntax.l_return in
-      let uu___4 =
-        let uu___5 = to_str combs.FStarC_Syntax_Syntax.l_bind in
-        let uu___6 =
-          let uu___7 = to_str combs.FStarC_Syntax_Syntax.l_subcomp in
-          let uu___8 =
-            let uu___9 = to_str combs.FStarC_Syntax_Syntax.l_if_then_else in
-            let uu___10 =
-              let uu___11 =
-                if
-                  FStar_Pervasives_Native.uu___is_None
-                    combs.FStarC_Syntax_Syntax.l_close
-                then ""
-                else
-                  (let uu___12 =
-                     let uu___13 =
-                       FStarC_Option.must combs.FStarC_Syntax_Syntax.l_close in
-                     to_str2 uu___13 in
-                   FStarC_Format.fmt1 "; l_close = %s\n" uu___12) in
-              [uu___11] in
-            uu___9 :: uu___10 in
-          uu___7 :: uu___8 in
-        uu___5 :: uu___6 in
-      uu___3 :: uu___4 in
-    uu___1 :: uu___2 in
-  FStarC_Format.fmt
-    "{\n; l_repr = %s\n; l_return = %s\n; l_bind = %s\n; l_subcomp = %s\n; l_if_then_else = %s\n\n  %s\n  }\n"
-    uu___
-let eff_combinators_to_string (x : FStarC_Syntax_Syntax.eff_combinators) :
-  Prims.string=
-  match x with
-  | FStarC_Syntax_Syntax.Primitive_eff combs ->
-      wp_eff_combinators_to_string combs
-  | FStarC_Syntax_Syntax.Layered_eff combs ->
-      layered_eff_combinators_to_string combs
+  let uu___2 =
+    match se.FStarC_Syntax_Syntax.lift with
+    | FStar_Pervasives_Native.None -> ""
+    | FStar_Pervasives_Native.Some ts ->
+        let uu___3 = tscheme_to_string ts in Prims.strcat " = " uu___3 in
+  FStarC_Format.fmt3 "sub_effect %s ~> %s%s" uu___ uu___1 uu___2
 let eff_extraction_mode_to_string
   (x : FStarC_Syntax_Syntax.eff_extraction_mode) : Prims.string=
   match x with
@@ -1086,46 +982,26 @@ let eff_extraction_mode_to_string
   | FStarC_Syntax_Syntax.Extract_reify -> "reify"
   | FStarC_Syntax_Syntax.Extract_primitive -> "primitive"
 let eff_decl_to_string (ed : FStarC_Syntax_Syntax.eff_decl) : Prims.string=
-  let actions_to_string actions =
-    let uu___ = FStarC_List.map action_to_string actions in
-    FStarC_String.concat ",\n\t" uu___ in
-  let eff_name =
-    if FStarC_Syntax_Util.is_layered ed
-    then "layered_effect"
-    else "new_effect" in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        let uu___3 = lid_to_string ed.FStarC_Syntax_Syntax.mname in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 = univ_names_to_string ed.FStarC_Syntax_Syntax.univs in
-            enclose_universes uu___6 in
-          let uu___6 =
-            let uu___7 =
-              binders_to_string " " ed.FStarC_Syntax_Syntax.binders in
-            let uu___8 =
-              let uu___9 =
-                tscheme_to_string
-                  (FStarC_Syntax_Util.effect_sig_ts
-                     ed.FStarC_Syntax_Syntax.signature) in
-              let uu___10 =
-                let uu___11 =
-                  eff_combinators_to_string
-                    ed.FStarC_Syntax_Syntax.combinators in
-                let uu___12 =
-                  let uu___13 =
-                    actions_to_string ed.FStarC_Syntax_Syntax.actions in
-                  [uu___13] in
-                uu___11 :: uu___12 in
-              uu___9 :: uu___10 in
-            uu___7 :: uu___8 in
-          uu___5 :: uu___6 in
-        uu___3 :: uu___4 in
-      "" :: uu___2 in
-    eff_name :: uu___1 in
-  FStarC_Format.fmt
-    "%s%s { %s%s %s : %s \n  %s\nand effect_actions\n\t%s\n}\n" uu___
+  match ed.FStarC_Syntax_Syntax.combinators with
+  | FStar_Pervasives_Native.None ->
+      let uu___ = lid_to_string ed.FStarC_Syntax_Syntax.mname in
+      let uu___1 =
+        let uu___2 = univ_names_to_string ed.FStarC_Syntax_Syntax.univs in
+        enclose_universes uu___2 in
+      let uu___2 = binders_to_string " " ed.FStarC_Syntax_Syntax.binders in
+      FStarC_Format.fmt3 "assume effect %s%s%s\n" uu___ uu___1 uu___2
+  | FStar_Pervasives_Native.Some c ->
+      let uu___ = lid_to_string ed.FStarC_Syntax_Syntax.mname in
+      let uu___1 =
+        let uu___2 = univ_names_to_string ed.FStarC_Syntax_Syntax.univs in
+        enclose_universes uu___2 in
+      let uu___2 = binders_to_string " " ed.FStarC_Syntax_Syntax.binders in
+      let uu___3 = tscheme_to_string c.FStarC_Syntax_Syntax.repr in
+      let uu___4 = tscheme_to_string c.FStarC_Syntax_Syntax.return_repr in
+      let uu___5 = tscheme_to_string c.FStarC_Syntax_Syntax.bind_repr in
+      FStarC_Format.fmt6
+        "effect { %s%s%s with { repr = %s; return = %s; bind = %s } }\n"
+        uu___ uu___1 uu___2 uu___3 uu___4 uu___5
 let rec sigelt_to_string (x : FStarC_Syntax_Syntax.sigelt) : Prims.string=
   let basic =
     match x.FStarC_Syntax_Syntax.sigel with
@@ -1293,40 +1169,7 @@ let rec sigelt_to_string (x : FStarC_Syntax_Syntax.sigelt) : Prims.string=
           FStarC_String.concat "; " uu___1 in
         let uu___1 = term_to_string t in
         FStarC_Format.fmt3 "splice%s[%s] (%s)"
-          (if is_typed then "_t" else "") uu___ uu___1
-    | FStarC_Syntax_Syntax.Sig_polymonadic_bind
-        { FStarC_Syntax_Syntax.m_lid = m; FStarC_Syntax_Syntax.n_lid = n;
-          FStarC_Syntax_Syntax.p_lid = p; FStarC_Syntax_Syntax.tm3 = t;
-          FStarC_Syntax_Syntax.typ = ty; FStarC_Syntax_Syntax.kind1 = k;_}
-        ->
-        let uu___ = FStarC_Class_Show.show FStarC_Ident.showable_lident m in
-        let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident n in
-        let uu___2 = FStarC_Class_Show.show FStarC_Ident.showable_lident p in
-        let uu___3 = tscheme_to_string t in
-        let uu___4 = tscheme_to_string ty in
-        let uu___5 =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.show_option
-               FStarC_Syntax_Syntax.showable_indexed_effect_combinator_kind)
-            k in
-        FStarC_Format.fmt6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
-          uu___ uu___1 uu___2 uu___3 uu___4 uu___5
-    | FStarC_Syntax_Syntax.Sig_polymonadic_subcomp
-        { FStarC_Syntax_Syntax.m_lid1 = m; FStarC_Syntax_Syntax.n_lid1 = n;
-          FStarC_Syntax_Syntax.tm4 = t; FStarC_Syntax_Syntax.typ1 = ty;
-          FStarC_Syntax_Syntax.kind2 = k;_}
-        ->
-        let uu___ = FStarC_Class_Show.show FStarC_Ident.showable_lident m in
-        let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident n in
-        let uu___2 = tscheme_to_string t in
-        let uu___3 = tscheme_to_string ty in
-        let uu___4 =
-          FStarC_Class_Show.show
-            (FStarC_Class_Show.show_option
-               FStarC_Syntax_Syntax.showable_indexed_effect_combinator_kind)
-            k in
-        FStarC_Format.fmt5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
-          uu___ uu___1 uu___2 uu___3 uu___4 in
+          (if is_typed then "_t" else "") uu___ uu___1 in
   match x.FStarC_Syntax_Syntax.sigattrs with
   | [] -> Prims.strcat "[@ ]" (Prims.strcat "\n" basic)
   | uu___ ->

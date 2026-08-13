@@ -1841,6 +1841,17 @@ constrains and whose inferred type is `TAny` — `k`, the fifth field of a
 realized `dtuple5`, applied as a function — is wrapped in a coercion to `TAny`
 so that OCaml infers a function type for it rather than `Obj.t`.
 
+The same head is a boundary in the other direction too.  When its type is not
+trusted as a whole, each *parameter* of it that mentions no `any` is still the
+best claim there is about that position, and an argument that arrives as `any`
+has to be coerced to it.  The second component of a dependent pair is the
+value that arrives that way: its type mentions the first, so the pair is
+realized with an `any` field, and `let (| br, c |) = ... in ...` hands a `comp`
+position an `Obj.t`.  Nothing else speaks for that argument --- the head is a
+local closure, and a local closure's type is not printed, so OCaml infers it
+from the body rather than believing Custard.  Pulse's `Pulse.Checker.If` is
+the case that showed this up.
+
 ### 5.5 Record recovery
 
 Extraction reads ML syntax, which has already forgotten which of F\*'s
@@ -2960,6 +2971,20 @@ arrows before its effect — `let mk (n:int) : ML (int -> Tot int) = fun y -> y 
 — is sound for a subtler reason: for the surplus binders to exist, the effectful
 computation has to be syntactically a lambda, i.e. a value, and so has no
 effects to lose.
+
+*Over*-application is the mirror image, and §7.5 makes it the ordinary case
+rather than a curiosity.  A `Tac` function extracts as a *pure* declaration
+whose result type is the representation `ref_proofstate -> Dv a`, so a reified
+call site supplies one argument more than the declaration has binders and the
+effect that matters is the one on that last arrow.  `callee_eff` therefore
+peels the surplus arguments off `dl_ret` with `apply_eff` and joins what it
+finds there; reading `dl_eff` alone calls the whole call pure, and §7.3 then
+deletes every tactic call whose result is discarded.
+`FStar.Tactics.Typeclasses` is the case that showed this up: `__tcresolve`'s
+`tcresolve' st0; debug ...` lost its first statement, so `tcresolve'` became
+unreachable and was dropped as well, and the extracted compiler ran a
+typeclass resolution that resolved nothing --- every `{| ... |}` argument in
+ulib came back uninstantiated.
 
 That case does, however, decide the definition's **result type**, and getting
 it wrong is not subtle at all: each surplus binder consumes one arrow of the
@@ -5561,3 +5586,4 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10α | **Higher-kinded `Mono` arguments** (§5.9) | Done.  A higher-kinded argument arrives as a lambda, so substituting it leaves a beta-redex in type position, whose head is a `Tm_abs` and which nothing normalizes: `ty_of_typ` read it as `any` and a state monad written against `FStarC.Class.Monad` came out as `Obj.t` with an `Obj.magic` at every bind.  Reducing it takes the compiler's own output from 528 `Obj.magic` to 80 and from 21 `Obj.t` to 11, `FStarC.SMTEncoding.Pruning` included.  `tests/custard/MonoState.fst` |
 | M10β | **Performance of the extraction** (§12.14) | Done.  `--profile_component FStarC.Custard` now prints an *exclusive*-time breakdown, from Custard's own `Prof` rather than `FStarC.Profiling`, because a mutually recursive traversal's inclusive counters all report the outermost frame.  It found three accidentally quadratic spots: `Loader.loaded` scanned every loaded module on every name resolution (27 s of 77), the `Mono` binder-flag queries were recomputed at every call site rather than per declaration (4 s), and `unit_entries` looked each declaration up by linear scan (6.9 s to 65 ms).  Extraction of the whole compiler goes from 77 s to 50 s and `make custard` from 3 min 45 s to 3 min 3 s.  What remains is flat; the build stages, MENHIR's 51 s and `ocamlopt`'s 78 s, are both sequential work on a 256-core machine and are the larger target |
 | M10γ | **A dune build for Custard** (§12.11) | Done.  `mk/custard.mk`'s hand-rolled menhir and `ocamlopt` stages are replaced by a dune project generated into `stagec/dune/`: a `wrapped false` library over `stagec/split/`, `src/ml/` and `ulib/ml/plugin/`, plus a one-module executable.  Dune's `menhir` stanza does the `--infer` pre-pass against *this* library, which was the reason the build was hand-rolled in the first place, and does it without the best-effort `ocamlc -c` of every module.  `-linkall` moves onto the library, so that `fstar.lib`'s `FStar_Order` is not force-linked against Custard's own.  129 s of build becomes 18 s, and `make custard` 3 min 3 s becomes 1 min 19 s.  Plugins now link against `.fstarcompiler.objs/{byte,native}` |
+| M10δ | **Master merge: the simplified effect system** | Done.  `comp_typ` lost `effect_args` and gained `comp_pre`/`comp_post`, so `Extract.key_of_comp` hashes those instead, and `TypeChecker.Env.lift_comp_t` and `polymonadic_bind_t` left `src/custard/entrypoints.txt` with them.  It also uncovered two extraction bugs that had been latent: `callee_eff` read an *over*-applied callee's effect off the declaration rather than off the surplus arrows of its result type, which is exactly the shape §7.5 gives every reified `Tac` call, so `tcresolve' st0; ...` was deleted as pure and no typeclass constraint in ulib could be solved by the extracted compiler; and the coercion pass asked nothing of an argument whose position an untrusted head still typed concretely, so a dependent pair's realized `any` second component reached a `comp` parameter (§5.4) |

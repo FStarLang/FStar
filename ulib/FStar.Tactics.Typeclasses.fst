@@ -507,7 +507,6 @@ let debug' (f : unit -> Tac string) : Tac unit =
   if debugging () then
     print (f ())
     
-#push-options "--z3rlimit_factor 2"
 [@@plugin]
 let mk_class (nm:string) : Tac decls =
     let ns = explode_qn nm in
@@ -624,4 +623,3 @@ let mk_class (nm:string) : Tac decls =
       // debug' (fun () -> "trying to return : " ^ term_to_string (quote se));
       se
     )
-#pop-options

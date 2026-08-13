@@ -135,48 +135,10 @@ let is_internal_qualifier (q:qualifier) : bool =
   | _ ->
       false
 
-instance showable_indexed_effect_binder_kind : showable indexed_effect_binder_kind = {
-  show = (function
-          | Type_binder -> "Type_binder"
-          | Substitutive_binder -> "Substitutive_binder"
-          | BindCont_no_abstraction_binder -> "BindCont_no_abstraction_binder"
-          | Range_binder -> "Range_binder"
-          | Repr_binder -> "Repr_binder"
-          | Ad_hoc_binder -> "Ad_hoc_binder"
-  );
-}
-
-instance tagged_indexed_effect_binder_kind : tagged indexed_effect_binder_kind = {
-  tag_of = (function
-            | Type_binder -> "Type_binder"
-            | Substitutive_binder -> "Substitutive_binder"
-            | BindCont_no_abstraction_binder -> "BindCont_no_abstraction_binder"
-            | Range_binder -> "Range_binder"
-            | Repr_binder -> "Repr_binder"
-            | Ad_hoc_binder -> "Ad_hoc_binder"
-  );
-}
-
-instance showable_indexed_effect_combinator_kind : showable indexed_effect_combinator_kind = {
-  show = (function
-          | Substitutive_combinator ks -> "Substitutive_combinator " ^ show ks
-          | Substitutive_invariant_combinator -> "Substitutive_invariant_combinator"
-          | Ad_hoc_combinator -> "Ad_hoc_combinator"
-  );
-}
-
-instance tagged_indexed_effect_combinator_kind : tagged indexed_effect_combinator_kind = {
-  tag_of = (function
-            | Substitutive_combinator _ -> "Substitutive_combinator"
-            | Substitutive_invariant_combinator -> "Substitutive_invariant_combinator"
-            | Ad_hoc_combinator -> "Ad_hoc_combinator"
-  );
-}
-
 instance showable_eff_extraction_mode : showable eff_extraction_mode = {
   show = (function
           | Extract_none s -> "Extract_none " ^ s
-          | Extract_reify -> "Extract_reify"	
+          | Extract_reify -> "Extract_reify"
           | Extract_primitive -> "Extract_primitive"
   );
 }
@@ -297,13 +259,6 @@ let mk_GTotal t : ML comp = mk (GTotal t) t.pos
 
 let mk_Comp (ct:comp_typ) : ML comp = mk (Comp ct) ct.result_typ.pos
 
-let mk_Tac t =
-    mk_Comp ({ comp_univs = [U_zero];
-               effect_name = PC.effect_Tac_lid;
-               result_typ = t;
-               effect_args = [];
-               flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
-            })
 
 let order_bv (x y : bv) : int  = x.index - y.index
 let bv_eq    (x y : bv) : bool = order_bv x y = 0
@@ -452,6 +407,34 @@ let lid_as_fv l dq : fv = {
 let fv_to_tm (fv:fv) : ML term = mk (Tm_fvar fv) (range_of_lid fv.fv_name)
 let fvar_with_dd l dq : ML term = fv_to_tm (lid_and_dd_as_fv l dq)
 let fvar l dq : ML term = fv_to_tm (lid_as_fv l dq)
+(* [True], the trivial precondition. *)
+let trivial_pre = fvar PC.true_lid None
+
+(* Postconditions are [Tot] predicates.  Recording that in the residual comp of
+   the abstraction matters: the SMT encoder falls back to an imprecise encoding
+   of any function literal whose effect it cannot determine. *)
+let post_rc : residual_comp = {
+  residual_effect = PC.effect_Tot_lid;
+  residual_typ = Some (mk (Tm_type U_zero) Range.dummyRange);
+  residual_flags = [TOTAL]
+}
+
+(* [fun (_:t) -> True], the trivial postcondition for a computation returning [t].
+   Postconditions in a [comp_typ] are always abstracted over the result. *)
+let trivial_post (t:typ) : ML term =
+  mk (Tm_abs {b=null_binder t; body=trivial_pre; rc_opt=Some post_rc}) t.pos
+
+(* A computation type with no interesting specification. *)
+let mk_triv_comp (univs:universes) (eff:lident) (t:typ) (flags:list cflag) : ML comp =
+  mk_Comp ({ comp_univs = univs;
+             effect_name = eff;
+             result_typ = t;
+             comp_pre = trivial_pre;
+             comp_post = trivial_post t;
+             flags = flags })
+
+let mk_Tac t : ML comp = mk_triv_comp [U_zero] PC.effect_Tac_lid t []
+
 let fv_eq fv1 fv2 = lid_equals fv1.fv_name fv2.fv_name
 let fv_eq_lid fv lid = lid_equals fv.fv_name lid
 
@@ -784,8 +767,6 @@ instance tagged_sigelt : tagged sigelt = {
   | Sig_effect_abbrev .. -> "Sig_effect_abbrev"
   | Sig_pragma _ -> "Sig_pragma"
   | Sig_splice .. -> "Sig_splice"
-  | Sig_polymonadic_bind .. -> "Sig_polymonadic_bind"
-  | Sig_polymonadic_subcomp .. -> "Sig_polymonadic_subcomp"
   | Sig_fail .. -> "Sig_fail"
   );
 }

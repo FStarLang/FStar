@@ -309,6 +309,22 @@ let __proj__Mkfvar_binding__item__needs_fuel_and_universe_instantiations
       smt_fuel_partial_app; fvb_thunked;
       needs_fuel_and_universe_instantiations;_} ->
       needs_fuel_and_universe_instantiations
+type module_encoding =
+  {
+  me_index: FStarC_SMTEncoding_Pruning.elt_summary Prims.list ;
+  me_fvbs: fvar_binding Prims.list ;
+  me_decls: unit -> FStarC_SMTEncoding_Term.decls_t }
+let __proj__Mkmodule_encoding__item__me_index (projectee : module_encoding) :
+  FStarC_SMTEncoding_Pruning.elt_summary Prims.list=
+  match projectee with | { me_index; me_fvbs; me_decls;_} -> me_index
+let __proj__Mkmodule_encoding__item__me_fvbs (projectee : module_encoding) :
+  fvar_binding Prims.list=
+  match projectee with | { me_index; me_fvbs; me_decls;_} -> me_fvbs
+let __proj__Mkmodule_encoding__item__me_decls (projectee : module_encoding) :
+  unit -> FStarC_SMTEncoding_Term.decls_t=
+  match projectee with | { me_index; me_fvbs; me_decls;_} -> me_decls
+let is_empty_encoding (me : module_encoding) : Prims.bool=
+  (Prims.uu___is_Nil me.me_index) && (Prims.uu___is_Nil me.me_fvbs)
 let list_of (i : Prims.int) (f : Prims.int -> 'a) : 'a Prims.list=
   let rec aux i1 out =
     if i1 = Prims.int_zero
@@ -466,8 +482,7 @@ type env_t =
   encode_non_total_function_typ: Prims.bool ;
   current_module_name: Prims.string ;
   encoding_quantifier: Prims.bool ;
-  global_cache:
-    (FStarC_SMTEncoding_Term.decls_elt * FStarC_Ident.lident) FStarC_SMap.t }
+  global_cache: (Prims.string Prims.list * FStarC_Ident.lident) FStarC_SMap.t }
 let __proj__Mkenv_t__item__bvar_bindings (projectee : env_t) :
   (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term) FStarC_PIMap.t
     FStarC_PSMap.t=
@@ -526,7 +541,7 @@ let __proj__Mkenv_t__item__encoding_quantifier (projectee : env_t) :
       use_zfuel_name; encode_non_total_function_typ; current_module_name;
       encoding_quantifier; global_cache;_} -> encoding_quantifier
 let __proj__Mkenv_t__item__global_cache (projectee : env_t) :
-  (FStarC_SMTEncoding_Term.decls_elt * FStarC_Ident.lident) FStarC_SMap.t=
+  (Prims.string Prims.list * FStarC_Ident.lident) FStarC_SMap.t=
   match projectee with
   | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
       use_zfuel_name; encode_non_total_function_typ; current_module_name;

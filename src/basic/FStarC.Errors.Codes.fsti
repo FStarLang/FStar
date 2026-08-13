@@ -375,7 +375,6 @@ type error_code =
   | Error_BadLetOpenRecord
   | Error_UnexpectedTypeclassInstance
   | Warning_AmbiguousResolveImplicitsHook
-  | Warning_SplitAndRetryQueries
   | Warning_DeprecatedLightDoNotation
   | Warning_FailedToCheckInitialTacticGoal
   | Warning_Adhoc_IndexedEffect_Combinator

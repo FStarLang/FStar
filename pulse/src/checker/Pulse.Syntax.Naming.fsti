@@ -95,9 +95,10 @@ and r_freevars_comp (c:R.comp)
       r_freevars pre `Set.union`
       r_freevars post `Set.union`
       r_freevars pats
-    | R.C_Eff us eff_name res args decrs ->
+    | R.C_Eff us eff_name res pre post decrs ->
       r_freevars res `Set.union`
-      r_freevars_args args `Set.union`
+      r_freevars pre `Set.union`
+      r_freevars post `Set.union`
       r_freevars_terms decrs
 
 and r_freevars_args (ts:list R.argv)
@@ -219,9 +220,10 @@ and r_ln'_comp (c:R.comp) (i:int)
       r_ln' pre i &&
       r_ln' post i &&
       r_ln' pats i
-    | R.C_Eff us eff_name res args decrs ->
+    | R.C_Eff us eff_name res pre post decrs ->
       r_ln' res i &&
-      r_ln'_args args i &&
+      r_ln' pre i &&
+      r_ln' post i &&
       r_ln'_terms decrs i
 
 and r_ln'_args (ts:list R.argv) (i:int)
@@ -375,10 +377,10 @@ let rec freevars_st (t:st_term)
       freevars binder.binder_ty ++
       freevars head ++
       freevars_st body
-    | Tm_If { b; then_; else_; post } ->
+    | Tm_If { b; then_; else_; pre; post } ->
       freevars_st b ++
       freevars_st then_ ++
-      (freevars_st else_ ++ freevars_term_opt post)
+      (freevars_st else_ ++ freevars_term_opt pre ++ freevars_term_opt post)
 
     | Tm_Match { sc ; returns_; brs } ->
       freevars_st sc ++
@@ -564,10 +566,11 @@ let rec ln_st' (t:st_term) (i:int)
       ln' head i &&
       ln_st' body (i + 1)
 
-    | Tm_If { b; then_; else_; post } ->
+    | Tm_If { b; then_; else_; pre; post } ->
       ln_st' b i &&
       ln_st' then_ i &&
       ln_st' else_ i &&
+      ln_opt' ln' pre i &&
       ln_opt' ln' post (i + 1)
   
     | Tm_Match {sc; returns_; brs } ->
@@ -816,10 +819,11 @@ let rec subst_st_term (t:st_term) (ss:subst)
                    head = subst_term head ss;
                    body = subst_st_term body (shift_subst ss) }
 
-    | Tm_If { b; then_; else_; post } ->
+    | Tm_If { b; then_; else_; pre; post } ->
       Tm_If { b = subst_st_term b ss;
               then_ = subst_st_term then_ ss;
               else_ = subst_st_term else_ ss;
+              pre = subst_term_opt pre ss;
               post = subst_term_opt post (shift_subst ss) }
 
     | Tm_Match { sc; returns_; brs } ->

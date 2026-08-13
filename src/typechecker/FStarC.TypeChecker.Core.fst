@@ -556,7 +556,7 @@ let rec is_arrow (g:env) (t:term)
                   (show x)
                   (show x.binder_bv.sort)
                   (show c));
-              let (pre, _)::(post, _)::_ = U.comp_effect_args c in
+              let pre, post = U.comp_pre c, U.comp_post c in
               let arg_typ = U.refine x.binder_bv pre in
               let res_typ =
                 let g, r = new_binder g (U.comp_result c) (U.comp_result c).pos in
@@ -1438,15 +1438,18 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
           check_relation g EQUALITY res0 res1 ;!
           check_relation_args g EQUALITY args0 args1
         in
-        let eff0, res0, args0 = U.comp_eff_name_res_and_args c0 in
-        let eff1, res1, args1 = U.comp_eff_name_res_and_args c1 in
+        let eff0, res0 = U.comp_eff_name_and_res c0 in
+        let args0 = [U.comp_pre c0 |> as_arg; U.comp_post c0 |> as_arg] in
+        let eff1, res1 = U.comp_eff_name_and_res c1 in
+        let args1 = [U.comp_pre c1 |> as_arg; U.comp_post c1 |> as_arg] in
         if I.lid_equals eff0 eff1
         then ct_eq res0 args0 res1 args1
         else (
           let ct0 = Env.unfold_effect_abbrev g.tcenv c0 in
           let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in
           if I.lid_equals ct0.effect_name ct1.effect_name
-          then ct_eq ct0.result_typ ct0.effect_args ct1.result_typ ct1.effect_args
+          then ct_eq ct0.result_typ [ct0.comp_pre |> as_arg; ct0.comp_post |> as_arg]
+                     ct1.result_typ [ct1.comp_pre |> as_arg; ct1.comp_post |> as_arg]
           else
             fail [
               text "Subcomp failed: Unequal computation types"
@@ -1884,7 +1887,7 @@ and check_comp (g:env) (c:comp)
       else let u = List.hd ct.comp_univs in
            let effect_app_tm =
              let head = S.mk_Tm_uinst (S.fvar ct.effect_name None) [u] in
-             S.mk_Tm_app head ((as_arg ct.result_typ)::ct.effect_args) ct.result_typ.pos in
+             S.mk_Tm_app head [as_arg ct.result_typ] ct.result_typ.pos in
            let! _, t = check "effectful comp" g effect_app_tm in
            with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!
            let c_lid = Env.norm_eff_name g.tcenv ct.effect_name in

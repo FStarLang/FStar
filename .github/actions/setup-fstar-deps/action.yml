@@ -1,0 +1,151 @@
+name: 'Setup F* dependencies'
+description: >
+  Installs the system packages needed to build and test F*, an opam switch
+  with F*'s OCaml dependencies (restored from the actions cache when
+  possible), and the Z3 versions used by F*.
+
+inputs:
+  ocaml-version:
+    description: 'OCaml compiler version used for the opam switch.'
+    required: false
+    default: '5.3.0'
+  opam-packages:
+    description: 'Extra opam packages to install, space separated.'
+    required: false
+    default: 'domainslib'
+  dotnet:
+    description: 'Install a .NET 8 SDK (needed for the F# library and its tests).'
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Install system dependencies
+      shell: bash
+      run: |
+        set -eu
+        sudo apt-get update -qq
+        # NB: libgmp-dev and pkg-config should be pulled in by opam's depext
+        # support, but that does not work reliably, so we install them here.
+        sudo apt-get install -y -qq --no-install-recommends \
+          ca-certificates \
+          curl \
+          git \
+          jq \
+          libffi-dev \
+          libgmp-dev \
+          opam \
+          pkg-config \
+          python3 \
+          python-is-python3 \
+          time \
+          unzip \
+          wget
+
+    - name: Install .NET 8 SDK
+      if: inputs.dotnet == 'true'
+      shell: bash
+      run: |
+        set -eu
+        if dotnet --list-sdks 2>/dev/null | grep -q '^8\.'; then
+          echo ">>> .NET 8 SDK already present"
+        else
+          sudo apt-get install -y -qq dotnet-sdk-8.0
+        fi
+
+    - name: Compute cache keys
+      id: keys
+      shell: bash
+      run: |
+        set -eu
+        root=$(cd "$GITHUB_ACTION_PATH/../../.." && pwd)
+        echo "root=$root" >> "$GITHUB_OUTPUT"
+        echo "opam-hash=$(sha256sum "$root/fstar.opam" | cut -c1-16)" >> "$GITHUB_OUTPUT"
+        echo "z3-hash=$(sha256sum "$root/.scripts/get_fstar_z3.sh" | cut -c1-16)" >> "$GITHUB_OUTPUT"
+        echo "opam-version=$(opam --version)" >> "$GITHUB_OUTPUT"
+
+    # NB: we use restore+save instead of actions/cache, so the switch is
+    # uploaded as soon as it is built instead of at the end of the job.
+    - name: Restore opam cache
+      id: opam-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.opam
+        key: opam-${{ runner.os }}-${{ runner.arch }}-${{ steps.keys.outputs.opam-version }}-ocaml${{ inputs.ocaml-version }}-${{ steps.keys.outputs.opam-hash }}-${{ inputs.opam-packages }}
+        restore-keys: |
+          opam-${{ runner.os }}-${{ runner.arch }}-${{ steps.keys.outputs.opam-version }}-ocaml${{ inputs.ocaml-version }}-${{ steps.keys.outputs.opam-hash }}-
+          opam-${{ runner.os }}-${{ runner.arch }}-${{ steps.keys.outputs.opam-version }}-ocaml${{ inputs.ocaml-version }}-
+
+    - name: Set up opam switch
+      shell: bash
+      env:
+        OPAMYES: '1'
+        OPAMCONFIRMLEVEL: unsafe-yes
+        OCAML_VERSION: ${{ inputs.ocaml-version }}
+        OPAM_PACKAGES: ${{ inputs.opam-packages }}
+        FSTAR_ROOT: ${{ steps.keys.outputs.root }}
+      run: |
+        set -eu
+        if [ ! -d "$HOME/.opam" ]; then
+          opam init --bare --disable-sandboxing --no-setup
+        fi
+        if ! opam switch list --short | grep -qx "$OCAML_VERSION"; then
+          opam switch create "$OCAML_VERSION"
+        fi
+        export OPAMSWITCH="$OCAML_VERSION"
+        opam option depext-run-installs=true
+        opam install --deps-only "$FSTAR_ROOT/fstar.opam"
+        if [ -n "$OPAM_PACKAGES" ]; then
+          opam install $OPAM_PACKAGES
+        fi
+        # Keep the cached opam root small.
+        opam clean --download-cache --logs --unused-repositories
+
+    - name: Save opam cache
+      if: steps.opam-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.opam
+        key: ${{ steps.opam-cache.outputs.cache-primary-key }}
+
+    - name: Export opam environment
+      shell: bash
+      env:
+        OCAML_VERSION: ${{ inputs.ocaml-version }}
+      run: |
+        set -eu
+        eval $(opam env --switch="$OCAML_VERSION" --set-switch)
+        {
+          echo "OPAMYES=1"
+          echo "OPAMSWITCH=$OCAML_VERSION"
+          echo "OPAM_SWITCH_PREFIX=$OPAM_SWITCH_PREFIX"
+          echo "CAML_LD_LIBRARY_PATH=$CAML_LD_LIBRARY_PATH"
+          echo "OCAML_TOPLEVEL_PATH=$OCAML_TOPLEVEL_PATH"
+          echo "OCAMLTOP_INCLUDE_PATH=$OCAMLTOP_INCLUDE_PATH"
+        } >> "$GITHUB_ENV"
+        mkdir -p "$HOME/bin"
+        echo "$HOME/bin" >> "$GITHUB_PATH"
+        opam var bin >> "$GITHUB_PATH"
+
+    - name: Restore Z3 cache
+      id: z3-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/bin/z3-*
+        key: z3-${{ runner.os }}-${{ runner.arch }}-${{ steps.keys.outputs.z3-hash }}
+
+    - name: Install Z3
+      shell: bash
+      env:
+        FSTAR_ROOT: ${{ steps.keys.outputs.root }}
+      run: |
+        set -eu
+        "$FSTAR_ROOT/.scripts/get_fstar_z3.sh" "$HOME/bin"
+
+    - name: Save Z3 cache
+      if: steps.z3-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ~/bin/z3-*
+        key: ${{ steps.z3-cache.outputs.cache-primary-key }}

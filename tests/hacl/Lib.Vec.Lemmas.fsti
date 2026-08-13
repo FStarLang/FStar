@@ -283,7 +283,6 @@ val lemma_map_blocks_multi_vec:
     map_blocks_multi (w * blocksize) n n inp f_v ==
     map_blocks_multi blocksize (w * n) (w * n) inp f))
 
-#push-options "--z3rlimit_factor 2"
 let map_blocks_vec_equiv_pre_k
   (#a:Type)
   (w:pos)
@@ -308,7 +307,6 @@ let map_blocks_vec_equiv_pre_k
     mod_div_lt blocksize k rem;
     assert (k % blocksize < rem % blocksize);
     Seq.index (l_v n rem b_v) k == Seq.index (l j (rem % blocksize) block_l) (k % blocksize) end
-#pop-options
 
 val lemma_map_blocks_vec:
      #a:Type

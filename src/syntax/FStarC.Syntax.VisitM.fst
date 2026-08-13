@@ -241,17 +241,26 @@ let on_sub_br #m {|d : lvm m |} br : ML (m _) =
   let! body = body |> f_term in
   return (pat, wopt, body)
 
+let __on_decreases #m {|d : lvm m |} (f : term -> ML (m term)) (cf : cflag) : ML (m cflag) =
+  match cf with
+  | SMTPAT p                         -> SMTPAT <$> f p
+  | DECREASES (Decreases_lex l)      -> DECREASES <$> (Decreases_lex <$> mapM f l)
+  | DECREASES (Decreases_wf (r, t))  -> DECREASES <$> (Decreases_wf <$> (Mktuple2 <$> f r <*>  f t))
+  | f -> return f
+
 let on_sub_comp_typ #m {|d : lvm m |} ct : ML (m _) =
   let! comp_univs = ct.comp_univs |> mapM f_univ in
   let  effect_name = ct.effect_name in
   let! result_typ = ct.result_typ |> f_term in
-  let! effect_args = ct.effect_args |> mapM (f_arg #m #d) in
-  let  flags = ct.flags in
+  let! comp_pre = ct.comp_pre |> f_term in
+  let! comp_post = ct.comp_post |> f_term in
+  let! flags = ct.flags |> mapM (__on_decreases #m #d f_term) in
   return <| {
     comp_univs;
     effect_name;
     result_typ;
-    effect_args;
+    comp_pre;
+    comp_post;
     flags;
   }
 
@@ -263,12 +272,6 @@ let on_sub_comp #m {|d : lvm m |} c : ML (m comp) =
     | Comp ct -> Comp <$> on_sub_comp_typ ct
   in
   return <| Syntax.mk cn c.pos
-
-let __on_decreases #m {|d : lvm m |} (f : term -> ML (m term)) (cf : cflag) : ML (m cflag) =
-  match cf with
-  | DECREASES (Decreases_lex l)      -> DECREASES <$> (Decreases_lex <$> mapM f l)
-  | DECREASES (Decreases_wf (r, t))  -> DECREASES <$> (Decreases_wf <$> (Mktuple2 <$> f r <*>  f t))
-  | f -> return f
 
 let on_sub_residual_comp #m {|d : lvm m |} (rc : residual_comp) : ML (m residual_comp) =
   let  residual_effect = rc.residual_effect in
@@ -296,89 +299,8 @@ let on_sub_univ #m {|d : lvm m |} (u : universe) : ML (m universe) =
   | U_unif _ ->
     return u
 
-let on_sub_wp_eff_combinators #m {|d : lvm m |} (wpcs : wp_eff_combinators) : ML (m wp_eff_combinators) =
-  let! ret_wp       = wpcs.ret_wp        |> f_tscheme in
-  let! bind_wp      = wpcs.bind_wp       |> f_tscheme in
-  let! stronger     = wpcs.stronger      |> f_tscheme in
-  let! if_then_else = wpcs.if_then_else  |> f_tscheme in
-  let! ite_wp       = wpcs.ite_wp        |> f_tscheme in
-  let! close_wp     = wpcs.close_wp      |> f_tscheme in
-  let! trivial      = wpcs.trivial       |> f_tscheme in
-
-  let! repr        = wpcs.repr        |> map_optM (f_tscheme #m #d) in // FIXME: implicits
-  let! return_repr = wpcs.return_repr |> map_optM (f_tscheme #m #d) in
-  let! bind_repr   = wpcs.bind_repr   |> map_optM (f_tscheme #m #d) in
-  return <| {
-    ret_wp;
-    bind_wp;
-    stronger;
-    if_then_else;
-    ite_wp;
-    close_wp;
-    trivial;
-
-    repr;
-    return_repr;
-    bind_repr;
-  }
-
 let mapTuple2 #m {| monad m |} (f : 'a -> ML (m 'b)) (g : 'c -> ML (m 'd)) (t : 'a & 'c) : ML (m ('b & 'd)) =
   Mktuple2 <$> f t._1 <*> g t._2
-
-let mapTuple3 #m {| monad m |} (f : 'a -> ML (m 'b)) (g : 'c -> ML (m 'd)) (h : 'e -> ML (m 'f)) (t : 'a & 'c & 'e) : ML (m ('b & 'd & 'f)) =
-  Mktuple3 <$> f t._1 <*> g t._2 <*> h t._3
-
-let on_sub_layered_eff_combinators #m {|d : lvm m |} (lecs : layered_eff_combinators) : ML (m layered_eff_combinators) =
-  let! l_repr         = lecs.l_repr         |> mapTuple2 (f_tscheme #m #d) (f_tscheme #m #d) in
-  let! l_return       = lecs.l_return       |> mapTuple2 (f_tscheme #m #d) (f_tscheme #m #d) in
-  let! l_bind         = lecs.l_bind         |> mapTuple3 (f_tscheme #m #d) (f_tscheme #m #d) return in
-  let! l_subcomp      = lecs.l_subcomp      |> mapTuple3 (f_tscheme #m #d) (f_tscheme #m #d) return in
-  let! l_if_then_else = lecs.l_if_then_else |> mapTuple3 (f_tscheme #m #d) (f_tscheme #m #d) return in
-  let! l_close        = lecs.l_close        |> map_optM (mapTuple2 (f_tscheme #m #d) (f_tscheme #m #d)) in
-  return <| {
-    l_repr;
-    l_return;
-    l_bind;
-    l_subcomp;
-    l_if_then_else;
-    l_close;
-  }
-
-let on_sub_combinators #m {|d : lvm m |} (cbs : eff_combinators) : ML (m eff_combinators) =
-  match cbs with
-  | Primitive_eff wpcs ->
-    let! wpcs = on_sub_wp_eff_combinators wpcs in
-    return <| Primitive_eff wpcs
-
-  | Layered_eff lecs ->
-    let! lecs = on_sub_layered_eff_combinators lecs in
-    return <| Layered_eff lecs
-
-let on_sub_effect_signature #m {|d : lvm m |} (es : effect_signature) : ML (m effect_signature) =
-  match es with
-  | Layered_eff_sig (n, (us, t)) ->
-    let! t = f_term t in
-    return <| Layered_eff_sig (n, (us, t))
-
-  | WP_eff_sig (us, t) ->
-    let! t = f_term t in
-    return <| WP_eff_sig (us, t)
-
-let on_sub_action #m {|d : lvm m |} (a : action) : ML (m action) =
-  let  action_name             = a.action_name in
-  let  action_unqualified_name = a.action_unqualified_name in
-  let  action_univs            = a.action_univs in
-  let! action_params           = a.action_params |> mapM f_binder in
-  let! action_defn             = a.action_defn |> f_term in
-  let! action_typ              = a.action_typ |> f_term in
-  return <| {
-    action_name;
-    action_unqualified_name;
-    action_univs;
-    action_params;
-    action_defn;
-    action_typ;
-  }
 
 let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
   match se with
@@ -412,21 +334,27 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
     let  cattributes     = ed.cattributes in
     let  univs           = ed.univs in
     let! binders         = ed.binders |> mapM f_binder in
-    let! signature       = ed.signature |> on_sub_effect_signature in
-    let! combinators     = ed.combinators |> on_sub_combinators in
-    let! actions         = ed.actions |> mapM on_sub_action in
+    let! combinators =
+      match ed.combinators with
+      | None -> return None
+      | Some c ->
+        let! repr        = c.repr        |> f_tscheme in
+        let! return_repr = c.return_repr |> f_tscheme in
+        let! bind_repr   = c.bind_repr   |> f_tscheme in
+        return (Some { repr; return_repr; bind_repr })
+    in
     let! eff_attrs       = ed.eff_attrs |> mapM f_term in
     let  extraction_mode = ed.extraction_mode in
-    let ed = { mname; cattributes; univs; binders; signature; combinators; actions; eff_attrs; extraction_mode; } in
+    let ed = { mname; cattributes; univs; binders; combinators; eff_attrs; extraction_mode; } in
     return <| Sig_new_effect ed
 
   | Sig_sub_effect se ->
-    let  source  = se.source in
-    let  target  = se.target in
-    let! lift_wp = se.lift_wp |> map_optM (f_tscheme #m #d) in
-    let! lift    = se.lift    |> map_optM (f_tscheme #m #d) in
-    let  kind    = se.kind in
-    return <| Sig_sub_effect { source; target; lift_wp; lift; kind; }
+    let! lift =
+      match se.lift with
+      | None -> return None
+      | Some ts -> let! ts = ts |> f_tscheme in return (Some ts)
+    in
+    return <| Sig_sub_effect { se with lift }
 
   | Sig_effect_abbrev {lid; us; bs; comp; cflags} ->
     let! binders = bs |> mapM f_binder in
@@ -443,20 +371,6 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
     let! t = f_term t in
     return <| Sig_pragma (Eval t)
   | Sig_pragma _ -> return se
-
-  | Sig_polymonadic_bind {m_lid; n_lid; p_lid; tm; typ; kind} ->
-    let! tm  = f_tscheme tm in
-    let! typ = f_tscheme typ in
-    return <| Sig_polymonadic_bind {m_lid; n_lid; p_lid; tm; typ; kind}
-
-  | Sig_polymonadic_subcomp {m_lid;
-                             n_lid;
-                             tm;
-                             typ;
-                             kind} ->
-    let! tm  = f_tscheme tm in
-    let! typ = f_tscheme typ in
-    return <| Sig_polymonadic_subcomp {m_lid; n_lid; tm; typ; kind}
 
   (* These two below are hardly used, since they disappear after
   typechecking, but are still useful so the desugarer can make use of

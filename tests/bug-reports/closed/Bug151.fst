@@ -28,7 +28,7 @@ type seq_int_2 = seq int_2
 assume val eval:
   a:seq int -> len:nat{ len <= length a } -> Tot int
 
-[@@expect_failure [19]]
+[@@expect_failure [19; 19; 19; 19]]
 assume val bla2:
   a:seq_int_1{ length a = 10 } ->
   b:seq_int_2{ (length b = length a) /\ (eval a (length a) = eval b (length b)) }

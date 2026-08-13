@@ -26,7 +26,6 @@ let rec nat2unary (n: nat) : unary_nat =
   if n = 0 then U0  else US (nat2unary (n - 1))
 
 open FStar.Tactics.V2
-open FStar.Nonempty
 
 let even0 () : Lemma (nonempty (even U0)) = nonempty_intro Even0
 let evenSSn (n: unary_nat) : 

@@ -4,7 +4,7 @@ open FStar.Algebra.CommMonoid
 open CanonCommSemiring
 open FStar.Tactics.V2
 
-#set-options "--fuel 0 --ifuel 0 --z3rlimit 10 --tactics_info"
+#set-options "--fuel 0 --ifuel 0 --tactics_info"
 
 ///
 ///  Ring of integers

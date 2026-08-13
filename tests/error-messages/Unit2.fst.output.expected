@@ -2,8 +2,10 @@
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___ : Type) (uu___ : _)
-  - VC =
+  - Failed to prove:
       (a: Type0 -> x: Prims.nat -> Unit2.vector a x) ==
       (b: Type0 -> y: Unit2.zat -> Unit2.vector b y)
+  - In context:
+      uu___: Type
+      uu___: _
 

@@ -193,7 +193,7 @@ let rec tcompile #t (e : texp t) (ts : tstack) : Tot (tprog ts (t :: ts)) (decre
       tconcat (tcompile e2 _)
         (tconcat (tcompile e1 _) (TCons (TiBinop b) TNil))
 
-#reset-options "--z3rlimit 10"
+#reset-options
 
 let rec tconcat_correct #ts #ts' #ts''
                        (p : tprog ts ts') (p' : tprog ts' ts'') (s : vstack ts) :

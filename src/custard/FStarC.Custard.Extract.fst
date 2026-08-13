@@ -250,7 +250,7 @@ and key_of_comp (c:S.comp) : ML string =
   | GTotal t -> "GTot " ^ key_of_term t
   | Comp ct  ->
     Ident.string_of_lid ct.effect_name ^ " " ^ key_of_term ct.result_typ ^
-    (ct.effect_args |> List.map (fun a -> " " ^ key_of_arg a) |> String.concat "")
+    " " ^ key_of_term ct.comp_pre ^ " " ^ key_of_term ct.comp_post
 
 and key_of_branch (br:S.branch) : ML string =
   let (p, w, e) = br in
@@ -2248,7 +2248,16 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
 and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
   match SMap.try_find st.emitted key with
   | Some (DLet l) ->
-    if n_args >= List.length l.dl_binders then l.dl_eff else E_Pure
+    let n = List.length l.dl_binders in
+    if n_args < n then E_Pure
+    else
+      (* Over-application is not a curiosity here, it is what section 7.5
+         produces: a [Tac] function extracts with a *pure* declaration whose
+         result type is the representation [ref_proofstate -> Dv a], so a
+         reified call site has one argument more than the declaration has
+         binders and the effect that matters is the one on that arrow.  Reading
+         only [dl_eff] would call it pure and let section 7.3 delete it. *)
+      join_eff l.dl_eff (apply_eff st l.dl_ret (n_args - n))
   (* An external's declared arrow type is the whole contract we have with its
      realization, exactly as for a call through a variable -- and it is the
      same contract the ML pipeline and karamel work from.  Treating every

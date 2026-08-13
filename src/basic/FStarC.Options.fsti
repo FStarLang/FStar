@@ -39,7 +39,6 @@ type codegen_t =
 
 //let __test_norm_all = mk_ref false
 
-type split_queries_t = | No | OnFailure | Always
 
 type message_format_t = | Json | Human | Github
 
@@ -171,6 +170,11 @@ val should_check_file           : string  -> ML bool (* Should check this file, 
 
 val should_verify_file          : string  -> ML bool (* Should check this file with verification enabled. *)
 
+(* Should a checked file be written for this file? True only for the files
+   given on the command line; note this is per *file*, not per module, so
+   `fstar.exe A.fst` does not write A.fsti.checked. *)
+val should_write_checked_file   : string  -> ML bool
+
 val should_print_message        : string  -> ML bool
 
 val custom_prims                : unit    -> ML (option string)
@@ -229,9 +233,7 @@ val defensive_abort             : unit    -> ML bool // true if "abort"
 
 val dep                         : unit    -> ML (option string)
 
-val detail_errors               : unit    -> ML bool
 
-val detail_hint_replay          : unit    -> ML bool
 
 val any_dump_module             : unit    -> ML bool
 
@@ -255,9 +257,7 @@ val help                        : unit    -> ML bool
 
 val hide_uvar_nums              : unit    -> ML bool
 
-val hint_info                   : unit    -> ML bool
 
-val hint_file_for_src           : string  -> ML string
 
 val ide                         : unit    -> ML bool
 
@@ -358,13 +358,11 @@ val locate_z3                   : unit    -> ML (option string)
 
 val read_krml_file              : unit    -> ML (option string)
 
-val record_hints                : unit    -> ML bool
 
 val record_options              : unit    -> ML bool
 
 val retry                       : unit    -> ML bool
 
-val reuse_hint_for              : unit    -> ML (option string)
 
 val report_assumes              : unit    -> ML (option string)
 
@@ -384,7 +382,6 @@ val smtencoding_l_arith_native  : unit    -> ML bool
 
 val smtencoding_l_arith_default : unit    -> ML bool
 
-val split_queries               : unit    -> ML split_queries_t
 
 val stats                       : unit    -> ML bool
 
@@ -412,9 +409,7 @@ val unsafe_tactic_exec          : unit    -> ML bool
 
 val use_eq_at_higher_order      : unit    -> ML bool
 
-val use_hints                   : unit    -> ML bool
 
-val use_hint_hashes             : unit    -> ML bool
 
 val use_native_tactics          : unit    -> ML (option string)
 

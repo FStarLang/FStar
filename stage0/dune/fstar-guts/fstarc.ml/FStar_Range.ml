@@ -8,10 +8,7 @@ let mk_range (file : Prims.string) (from_line : Prims.int)
     (FStarC_Range_Type.mk_pos from_line from_col)
     (FStarC_Range_Type.mk_pos to_line to_col)
 let pos_leq (p1 : FStarC_Range_Type.pos) (p2 : FStarC_Range_Type.pos) :
-  Prims.bool=
-  (p1.FStarC_Range_Type.line < p2.FStarC_Range_Type.line) ||
-    ((p1.FStarC_Range_Type.line = p2.FStarC_Range_Type.line) &&
-       (p1.FStarC_Range_Type.col <= p2.FStarC_Range_Type.col))
+  Prims.bool= p1 <= p2
 let min_pos (p1 : FStarC_Range_Type.pos) (p2 : FStarC_Range_Type.pos) :
   FStarC_Range_Type.pos= if pos_leq p1 p2 then p1 else p2
 let max_pos (p1 : FStarC_Range_Type.pos) (p2 : FStarC_Range_Type.pos) :
@@ -31,7 +28,11 @@ let join_range (r1 : range) (r2 : range) : range=
 let explode (r : range) :
   (Prims.string * Prims.int * Prims.int * Prims.int * Prims.int)=
   (((r.FStarC_Range_Type.def_range).FStarC_Range_Type.file_name),
-    (((r.FStarC_Range_Type.def_range).FStarC_Range_Type.start_pos).FStarC_Range_Type.line),
-    (((r.FStarC_Range_Type.def_range).FStarC_Range_Type.start_pos).FStarC_Range_Type.col),
-    (((r.FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos).FStarC_Range_Type.line),
-    (((r.FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos).FStarC_Range_Type.col))
+    (FStarC_Range_Type.pos_line
+       (r.FStarC_Range_Type.def_range).FStarC_Range_Type.start_pos),
+    (FStarC_Range_Type.pos_col
+       (r.FStarC_Range_Type.def_range).FStarC_Range_Type.start_pos),
+    (FStarC_Range_Type.pos_line
+       (r.FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos),
+    (FStarC_Range_Type.pos_col
+       (r.FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos))

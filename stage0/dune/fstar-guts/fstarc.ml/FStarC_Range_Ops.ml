@@ -1,13 +1,6 @@
 open Prims
 let compare_pos (p1 : FStarC_Range_Type.pos) (p2 : FStarC_Range_Type.pos) :
-  FStarC_Order.order=
-  let uu___ =
-    FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1.FStarC_Range_Type.line
-      p2.FStarC_Range_Type.line in
-  FStarC_Order.lex uu___
-    (fun uu___1 ->
-       FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1.FStarC_Range_Type.col
-         p2.FStarC_Range_Type.col)
+  FStarC_Order.order= FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1 p2
 let deq_pos : FStarC_Range_Type.pos FStarC_Class_Deq.deq=
   { FStarC_Class_Deq.op_Equals_Question = (=) }
 let ord_pos : FStarC_Range_Type.pos FStarC_Class_Ord.ord=
@@ -49,10 +42,10 @@ let rng_included (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
 let string_of_pos (pos : FStarC_Range_Type.pos) : Prims.string=
   let uu___ =
     FStarC_Class_Show.show FStarC_Class_Show.showable_int
-      pos.FStarC_Range_Type.line in
+      (FStarC_Range_Type.pos_line pos) in
   let uu___1 =
     FStarC_Class_Show.show FStarC_Class_Show.showable_int
-      pos.FStarC_Range_Type.col in
+      (FStarC_Range_Type.pos_col pos) in
   FStarC_Format.fmt2 "%s,%s" uu___ uu___1
 let file_of_range (r : FStarC_Range_Type.range) : Prims.string=
   (r.FStarC_Range_Type.def_range).FStarC_Range_Type.file_name
@@ -89,9 +82,9 @@ let start_of_use_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.pos=
 let end_of_use_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.pos=
   (r.FStarC_Range_Type.use_range).FStarC_Range_Type.end_pos
 let line_of_pos (p : FStarC_Range_Type.pos) : Prims.int=
-  p.FStarC_Range_Type.line
+  FStarC_Range_Type.pos_line p
 let col_of_pos (p : FStarC_Range_Type.pos) : Prims.int=
-  p.FStarC_Range_Type.col
+  FStarC_Range_Type.pos_col p
 let end_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.range=
   FStarC_Range_Type.mk_range
     (r.FStarC_Range_Type.def_range).FStarC_Range_Type.file_name
@@ -103,13 +96,7 @@ let compare_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
     FStar_String.compare r1.FStarC_Range_Type.file_name
       r2.FStarC_Range_Type.file_name in
   if fcomp = Prims.int_zero
-  then
-    let start1 = r1.FStarC_Range_Type.start_pos in
-    let start2 = r2.FStarC_Range_Type.start_pos in
-    let lcomp = start1.FStarC_Range_Type.line - start2.FStarC_Range_Type.line in
-    (if lcomp = Prims.int_zero
-     then start1.FStarC_Range_Type.col - start2.FStarC_Range_Type.col
-     else lcomp)
+  then r1.FStarC_Range_Type.start_pos - r2.FStarC_Range_Type.start_pos
   else fcomp
 let compare (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) :
   Prims.int=
@@ -121,10 +108,8 @@ let range_before_pos (m1 : FStarC_Range_Type.range)
   (p : FStarC_Range_Type.pos) : Prims.bool=
   FStarC_Class_Ord.op_Greater_Equals_Question ord_pos p (end_of_range m1)
 let end_of_line (p : FStarC_Range_Type.pos) : FStarC_Range_Type.pos=
-  {
-    FStarC_Range_Type.line = (p.FStarC_Range_Type.line);
-    FStarC_Range_Type.col = FStarC_Util.max_int
-  }
+  FStarC_Range_Type.mk_pos (FStarC_Range_Type.pos_line p)
+    (FStarC_Range_Type.col_limit - Prims.int_one)
 let extend_to_end_of_line (r : FStarC_Range_Type.range) :
   FStarC_Range_Type.range=
   FStarC_Range_Type.mk_range (file_of_range r) (start_of_range r)

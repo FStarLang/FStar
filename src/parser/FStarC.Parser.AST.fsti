@@ -211,16 +211,14 @@ type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list term
 
-type lift_op =
-  | NonReifiableLift of term
-  | ReifiableLift    of term & term //lift_wp, lift
-  | LiftForFree      of term
-
+(* A sub-effect declaration is an edge in the effect lattice:
+     sub_effect Pure ~> Div
+   optionally carrying a term-level lift used only for reification:
+     sub_effect Pure ~> Tac = pure_to_tac *)
 type lift = {
   msource: lid;
   mdest:   lid;
-  lift_op: lift_op;
-  braced: bool; //a detail: for incremental parsing, we need to know if it is delimited by bracces  
+  lift_op: option term;
 }
 
 type pragma =
@@ -264,10 +262,7 @@ type decl' =
   | Val of ident & term  (* bool is for logic val *)
   | Exception of ident & option term
   | NewEffect of effect_decl
-  | LayeredEffect of effect_decl
   | SubEffect of lift
-  | Polymonadic_bind of lid & lid & lid & term
-  | Polymonadic_subcomp of lid & lid & term
   | Pragma of pragma
   | Assume of ident & term
   | Splice of bool & list ident & term  (* bool is true for a typed splice *)
@@ -285,8 +280,13 @@ and decl = {
   attrs: attributes_;
 }
 and effect_decl =
-  (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
-  | DefineEffect   of ident & list binder & term & list decl
+  (* [assume effect M]: an effect is just a name. *)
+  | DeclareEffect  of ident & list binder
+  (* [effect { M with { repr = ...; return = ...; bind = ... } }]: an effect
+     with a monadic representation, used for reification/extraction only.
+     The [list decl] holds the combinator definitions. *)
+  | DefineEffect   of ident & list binder & list decl
+  (* [effect M a p q = N a p' q']: an effect abbreviation. *)
   | RedefineEffect of ident & list binder & term
 
 instance val hasRange_decl : hasRange decl

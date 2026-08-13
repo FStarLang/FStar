@@ -37,7 +37,6 @@ export STAGE3
 include $(PULSE_ROOT)/mk/locate.mk
 .DEFAULT_GOAL := all
 
-HINTS_ENABLED?=
 
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
@@ -71,7 +70,7 @@ FSTAR = $(RAMON) $(FSTAR_EXE) $(SIL) 				\
 	--odir $(OUTPUT_DIR)				\
 	--cache_dir $(CACHE_DIR)			\
 	--already_cached Prims,FStar,Pulse.Nolib,Pulse.Lib,Pulse.Class,PulseCore	\
-	 $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED)
+	 $(OTHERFLAGS) $(MAYBE_ADMIT)
 
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(NODEPEND),) # Set NODEPEND=1 to not dependency analysis

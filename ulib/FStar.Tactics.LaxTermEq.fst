@@ -186,7 +186,7 @@ and comp_eq c1 c2 =
     if not <| term_eq post1 post2 then false else
     term_eq pat1 pat2
 
-  | C_Eff us1 ef1 t1 args1 dec1, C_Eff us2 ef2 t2 args2 dec2 ->
+  | C_Eff us1 ef1 t1 _pre1 _post1 dec1, C_Eff us2 ef2 t2 _pre2 _post2 dec2 ->
     // Ignoring universes
     (* if not <| list_eq univ_eq us1 us2 then false else *)
     if not <| (ef1 = ef2) then false else

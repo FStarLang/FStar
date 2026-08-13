@@ -329,7 +329,6 @@ let e_exn : Prims.exn FStarC_Syntax_Embeddings_Base.embedding=
         {
           FStarC_Syntax_Syntax.n = (uu___2.FStarC_Syntax_Syntax.n);
           FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (uu___2.FStarC_Syntax_Syntax.vars);
           FStarC_Syntax_Syntax.hash_code =
             (uu___2.FStarC_Syntax_Syntax.hash_code)
         }
@@ -338,7 +337,6 @@ let e_exn : Prims.exn FStarC_Syntax_Embeddings_Base.embedding=
         {
           FStarC_Syntax_Syntax.n = (uu___2.FStarC_Syntax_Syntax.n);
           FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (uu___2.FStarC_Syntax_Syntax.vars);
           FStarC_Syntax_Syntax.hash_code =
             (uu___2.FStarC_Syntax_Syntax.hash_code)
         }
@@ -346,7 +344,6 @@ let e_exn : Prims.exn FStarC_Syntax_Embeddings_Base.embedding=
         {
           FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
           FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
           FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
         }
     | e1 ->

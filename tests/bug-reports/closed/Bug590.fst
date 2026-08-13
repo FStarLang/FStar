@@ -16,7 +16,6 @@
 module Bug590
 
 open FStar.List.Tot
-#set-options "--z3rlimit 40"
 
 
 let transport (a b:Type) (x:a) : Pure b (requires (a == b)) (ensures (fun y -> a == b /\ y == x)) = x

@@ -427,7 +427,7 @@ let go_normal () : ML unit =
               Options.add_verify_module m;
               let default_flydeps () =
                 //by default, just initialize an empty dep graph
-                //return the file, its interface if any, and go
+                //return the file and go
                 let deps = FStarC.Parser.Dep.empty_deps [fn] in
                 let filenames =
                   if FStarC.Parser.Dep.is_implementation fn
@@ -439,7 +439,23 @@ let go_normal () : ML unit =
                     FStarC.Parser.Dep.set_root_friends (friends_of_implementation fn);
                     match FStarC.Parser.Dep.interface_of deps m with
                     | None -> [fn]
-                    | Some iface -> [iface; fn]
+                    | Some iface ->
+                      (* If the interface already has a usable checked file, do
+                         not seed it into the batch: scanning the module header
+                         of [fn] makes the interface an on-the-fly dependence,
+                         so it is *loaded* from [M.fsti.checked] rather than
+                         rechecked and rewritten (see #4399). Otherwise we have
+                         to check it, and it must come first.
+
+                         With -o, [tc_one_file] deliberately ignores the cache
+                         for the module being written, so there is no point in
+                         relying on it here; nothing is clobbered in that mode
+                         either, since the checked file is written to the -o
+                         path. *)
+                      if None? (Options.output_to ())
+                      && Some? (CheckedFiles.scan_deps_and_check_cache_validity iface)
+                      then [fn]
+                      else [iface; fn]
                   )
                   else [fn]
                 in

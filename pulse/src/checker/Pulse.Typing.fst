@@ -77,6 +77,47 @@ let mk_sq_eq2 (u:universe)
   = let eq = mk_eq2 u t e0 e1 in
     (tm_pureapp (tm_fvar (as_fv R.squash_qn)) None eq)
 
+(* Erases from a pattern everything that may refer to the variables the
+   pattern itself binds, namely the sorts of its variables and its dot
+   terms; dot patterns are inaccessible and always match, so replacing
+   them by wildcards does not change which values the pattern matches.
+
+   This is needed to state the *negated* branch conditions of a match:
+   the condition "the scrutinee does not match pattern p" is used in the
+   branches that follow p's, where p's variables are not in scope. *)
+let rec erase_pat_scope (p:R.pattern)
+  : Tot R.pattern (decreases p)
+  = match p with
+    | R.Pat_Constant _ -> p
+    | R.Pat_Var _ ppname -> R.Pat_Var RT.sort_default ppname
+    | R.Pat_Dot_Term _ -> R.Pat_Var RT.sort_default RT.pp_name_default
+    | R.Pat_Cons fv us subpats -> R.Pat_Cons fv us (erase_sub_pats_scope subpats)
+and erase_sub_pats_scope (ps:list (R.pattern & bool))
+  : Tot (list (R.pattern & bool)) (decreases ps)
+  = match ps with
+    | [] -> []
+    | (p, i) :: ps -> (erase_pat_scope p, i) :: erase_sub_pats_scope ps
+
+(* [mk_pat_matches_bool sc p] is the boolean term
+
+     match sc with | p -> true | _ -> false
+
+   deciding whether the scrutinee [sc] matches the pattern [p]. Stating it
+   as a match, rather than as a conjunction of discriminators and
+   equalities, means F* computes the branch condition for us, for
+   arbitrarily nested patterns. *)
+let mk_pat_matches_bool (sc:term) (p:R.pattern) : term =
+  let wildcard = R.Pat_Var RT.sort_default RT.pp_name_default in
+  R.pack_ln (R.Tv_Match sc None [(erase_pat_scope p, tm_true); (wildcard, tm_false)])
+
+(* The proposition stating that the scrutinee [sc] does *not* match the
+   pattern [p]. Every branch of a match is checked under the hypothesis
+   that all the patterns preceding it failed to match; without those, a
+   wildcard or variable pattern learns nothing about the scrutinee, since
+   its own branch equality [sc == x] is vacuous. *)
+let mk_sq_pat_not_matches (sc:term) (p:R.pattern) : term =
+  mk_sq_eq2 u0 tm_bool (mk_pat_matches_bool sc p) tm_false
+
 let mk_slprop_eq (e0 e1:term) : term =
   mk_eq2 u2 tm_slprop e0 e1
 
@@ -293,14 +334,15 @@ let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
         post=tm_exists_sl u b p
       }
 
-let comp_while_cond (inv:term) (post_cond:term)
+let comp_while_cond (inv:term) (post_cond:term) (div:bool)
   : comp
-  = C_ST {
+  = let sc = {
            u=u0;
            res=tm_bool;
            pre=inv;
            post=post_cond
-         }
+         } in
+    if div then C_STDiv sc else C_ST sc
 
 let mk_precedes u ty a b =
   R.mk_app (R.pack_ln <| R.Tv_UInst (R.pack_fv ["Prims"; "precedes"]) [u; u]) [

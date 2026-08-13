@@ -182,7 +182,8 @@ and comp_typ = {
   comp_univs:universes;
   effect_name:lident;
   result_typ:t;
-  effect_args:args;
+  comp_pre:t;
+  comp_post:t;
   flags:list cflag
 }
 
@@ -195,12 +196,8 @@ and residual_comp = {
 and cflag =
   | TOTAL
   | MLEFFECT
-  | RETURN
-  | PARTIAL_RETURN
-  | SOMETRIVIAL
-  | TRIVIAL_POSTCONDITION
-  | SHOULD_NOT_INLINE
   | LEMMA
+  | SMTPAT of t
   | DECREASES_lex of list t
   | DECREASES_wf of (t & t)
 

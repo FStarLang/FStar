@@ -191,7 +191,6 @@ let tag_with_range (t : FStarC_Syntax_Syntax.term)
          {
            FStarC_Syntax_Syntax.n = t';
            FStarC_Syntax_Syntax.pos = r1;
-           FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
            FStarC_Syntax_Syntax.hash_code =
              (t.FStarC_Syntax_Syntax.hash_code)
          })
@@ -276,6 +275,8 @@ let subst_flags' (s : FStarC_Syntax_Syntax.subst_ts)
        | FStarC_Syntax_Syntax.DECREASES dec_order ->
            let uu___1 = subst_dec_order' s dec_order in
            FStarC_Syntax_Syntax.DECREASES uu___1
+       | FStarC_Syntax_Syntax.SMTPAT p ->
+           let uu___1 = subst' s p in FStarC_Syntax_Syntax.SMTPAT uu___1
        | f -> f) flags
 let subst_bqual' (s : FStarC_Syntax_Syntax.subst_ts)
   (i : FStarC_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option)
@@ -313,21 +314,16 @@ let subst_comp_typ'
           t.FStarC_Syntax_Syntax.comp_univs in
       let uu___2 = tag_lid_with_range t.FStarC_Syntax_Syntax.effect_name s in
       let uu___3 = subst' s t.FStarC_Syntax_Syntax.result_typ in
-      let uu___4 =
-        FStarC_List.map
-          (fun uu___5 ->
-             match uu___5 with
-             | (t1, imp) ->
-                 let uu___6 = subst' s t1 in
-                 let uu___7 = subst_aqual' s imp in (uu___6, uu___7))
-          t.FStarC_Syntax_Syntax.effect_args in
-      let uu___5 = subst_flags' s t.FStarC_Syntax_Syntax.flags in
+      let uu___4 = subst' s t.FStarC_Syntax_Syntax.comp_pre in
+      let uu___5 = subst' s t.FStarC_Syntax_Syntax.comp_post in
+      let uu___6 = subst_flags' s t.FStarC_Syntax_Syntax.flags in
       {
         FStarC_Syntax_Syntax.comp_univs = uu___1;
         FStarC_Syntax_Syntax.effect_name = uu___2;
         FStarC_Syntax_Syntax.result_typ = uu___3;
-        FStarC_Syntax_Syntax.effect_args = uu___4;
-        FStarC_Syntax_Syntax.flags = uu___5
+        FStarC_Syntax_Syntax.comp_pre = uu___4;
+        FStarC_Syntax_Syntax.comp_post = uu___5;
+        FStarC_Syntax_Syntax.flags = uu___6
       }
 let subst_comp'
   (s :
@@ -590,7 +586,6 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
           {
             FStarC_Syntax_Syntax.n = uu___2;
             FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
-            FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
             FStarC_Syntax_Syntax.hash_code =
               (t.FStarC_Syntax_Syntax.hash_code)
           } in

@@ -1,6 +1,5 @@
 module BugRaise
 #set-options "--print_implicits --print_universes"
-open FStar.Nonempty
 
 // [raisable u#a u#b] iff [u#a <= u#b]
 assume val raisable : p:prop { nonempty (Type u#(max a b)) } // hack to specify universe parameters for raisable

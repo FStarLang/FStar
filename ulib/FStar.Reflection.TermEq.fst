@@ -545,10 +545,11 @@ let denote_comp_Lemma (c:comp) (pre post pats:term)
   : Lemma (requires inspect_comp c == C_Lemma pre post pats)
           (ensures denote_comp c == Cs_Lemma (denote_term pre) (denote_term post) (denote_term pats)) = ()
 
-let denote_comp_Eff (c:comp) (us:universes) (eff:name) (res:term) (args:list argv) (decrs:list term)
-  : Lemma (requires inspect_comp c == C_Eff us eff res args decrs)
+let denote_comp_Eff (c:comp) (us:universes) (eff:name) (res:term) (pre:term) (post:term) (decrs:list term)
+  : Lemma (requires inspect_comp c == C_Eff us eff res pre post decrs)
           (ensures denote_comp c ==
-                   Cs_Eff (denote_universes us) eff (denote_term res) (denote_args args) (denote_terms decrs)) = ()
+                   Cs_Eff (denote_universes us) eff (denote_term res)
+                          (denote_term pre) (denote_term post) (denote_terms decrs)) = ()
 
 let denote_Pat_Cons (head:fv) (us:option (list universe)) (subpats:list (pattern & bool))
   : Lemma (denote_pattern (Pat_Cons head us subpats) ==
@@ -613,17 +614,17 @@ let head_lemma (t:term)
 
 let cs_head (s:comp_spec) : GTot nat =
   match s with
-  | Cs_Total _ -> 0 | Cs_GTotal _ -> 1 | Cs_Lemma _ _ _ -> 2 | Cs_Eff _ _ _ _ _ -> 3
+  | Cs_Total _ -> 0 | Cs_GTotal _ -> 1 | Cs_Lemma _ _ _ -> 2 | Cs_Eff _ _ _ _ _ _ -> 3
 
 let cv_head (c:comp) : GTot nat =
   match inspect_comp c with
-  | C_Total _ -> 0 | C_GTotal _ -> 1 | C_Lemma _ _ _ -> 2 | C_Eff _ _ _ _ _ -> 3
+  | C_Total _ -> 0 | C_GTotal _ -> 1 | C_Lemma _ _ _ -> 2 | C_Eff _ _ _ _ _ _ -> 3
 
 let comp_head_lemma (c:comp)
   : Lemma (cs_head (denote_comp c) == cv_head c)
           [SMTPat (denote_comp c)]
   = match inspect_comp c with
-    | C_Total _ | C_GTotal _ | C_Lemma _ _ _ | C_Eff _ _ _ _ _ -> ()
+    | C_Total _ | C_GTotal _ | C_Lemma _ _ _ | C_Eff _ _ _ _ _ _ -> ()
 
 let ps_head (s:pattern_spec) : GTot nat =
   match s with
@@ -666,7 +667,7 @@ val pat_arg_cmp      : comparator_for' pareq
 val br_cmp           : comparator_for' breq
 val match_returns_ascription_cmp : comparator_for' maeq
 
-#push-options "--z3rlimit 40 --fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2"
 
 let rec term_cmp t1 t2 =
   let tv1 = inspect_ln t1 in
@@ -798,15 +799,16 @@ and comp_cmp c1 c2 =
     co (term_cmp pre1 pre2 &&& term_cmp post1 post2 &&& term_cmp pat1 pat2)
        (denote_comp_Lemma c1 pre1 post1 pat1; denote_comp_Lemma c2 pre2 post2 pat2)
 
-  | C_Eff us1 ef1 t1 args1 dec1, C_Eff us2 ef2 t2 args2 dec2 ->
+  | C_Eff us1 ef1 t1 pre1 post1 dec1, C_Eff us2 ef2 t2 pre2 post2 dec2 ->
     co (list_dec_cmp' c1 c2 univ_cmp us1 us2
         &&& eq_cmp ef1 ef2
         &&& term_cmp t1 t2
-        &&& list_dec_cmp' c1 c2 arg_cmp args1 args2
+        &&& term_cmp pre1 pre2
+        &&& term_cmp post1 post2
         &&& list_dec_cmp' c1 c2 term_cmp dec1 dec2)
-       (denote_comp_Eff c1 us1 ef1 t1 args1 dec1;
-        denote_comp_Eff c2 us2 ef2 t2 args2 dec2;
-        bridge_universes us1 us2; bridge_args args1 args2; bridge_terms dec1 dec2)
+       (denote_comp_Eff c1 us1 ef1 t1 pre1 post1 dec1;
+        denote_comp_Eff c2 us2 ef2 t2 pre2 post2 dec2;
+        bridge_universes us1 us2; bridge_terms dec1 dec2)
 
   | _ -> Neq
 
@@ -905,7 +907,7 @@ and univ_faithful_lemma_list #b (u1 u2 : b) (us1 : list universe{us1 << u1}) (us
 (* Just a placeholder for now *)
 val faithful_lemma (t1:term) (t2:term) : Lemma (requires faithful t1 /\ faithful t2) (ensures defined (term_cmp t1 t2))
 
-#push-options "--z3rlimit 40 --fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2"
 
 let faithful_Tv_UInst (t : term) (f : fv) (us : list universe)
   : Lemma (requires inspect_ln t == Tv_UInst f us
@@ -968,20 +970,22 @@ let pat_eq_Pat_Cons (p1 p2 : pattern) (f1 f2 : fv) (ous1 ous2 : option universes
                      &&& opt_dec_cmp' p1 p2 (list_dec_cmp' p1 p2 univ_cmp) ous1 ous2
                      &&& list_dec_cmp' p1 p2 pat_arg_cmp args1 args2)) // #2908
 
-let comp_eq_C_Eff (c1 c2 : comp) (us1 us2 : universes) (ef1 ef2 : name) (t1 t2 : typ) (args1 args2 : list argv) (dec1 dec2 : list term)
-  : Lemma (requires inspect_comp c1 == C_Eff us1 ef1 t1 args1 dec1
-                  /\ inspect_comp c2 == C_Eff us2 ef2 t2 args2 dec2)
+let comp_eq_C_Eff (c1 c2 : comp) (us1 us2 : universes) (ef1 ef2 : name) (t1 t2 : typ) (pre1 pre2 post1 post2 : term) (dec1 dec2 : list term)
+  : Lemma (requires inspect_comp c1 == C_Eff us1 ef1 t1 pre1 post1 dec1
+                  /\ inspect_comp c2 == C_Eff us2 ef2 t2 pre2 post2 dec2)
           (ensures defined (comp_cmp c1 c2) <==>
                    defined (list_dec_cmp' c1 c2 univ_cmp us1 us2
                             &&& eq_cmp ef1 ef2
                             &&& term_cmp t1 t2
-                            &&& list_dec_cmp' c1 c2 arg_cmp args1 args2
+                            &&& term_cmp pre1 pre2
+                            &&& term_cmp post1 post2
                             &&& list_dec_cmp' c1 c2 term_cmp dec1 dec2))
   = assume (defined (comp_cmp c1 c2) <==>
             defined (list_dec_cmp' c1 c2 univ_cmp us1 us2
                      &&& eq_cmp ef1 ef2
                      &&& term_cmp t1 t2
-                     &&& list_dec_cmp' c1 c2 arg_cmp args1 args2
+                     &&& term_cmp pre1 pre2
+                     &&& term_cmp post1 post2
                      &&& list_dec_cmp' c1 c2 term_cmp dec1 dec2)) // #2908, assert_norm doesn't work
 
 let rec faithful_lemma (t1 t2 : term) =
@@ -1153,18 +1157,11 @@ and faithful_lemma_comp (c1 c2 : comp) : Lemma (requires faithful_comp c1 /\ fai
     faithful_lemma pre1 pre2;
     faithful_lemma post1 post2;
     faithful_lemma pat1 pat2
-  | C_Eff us1 e1 r1 args1 dec1, C_Eff us2 e2 r2 args2 dec2 ->
+  | C_Eff us1 e1 r1 pre1 post1 dec1, C_Eff us2 e2 r2 pre2 post2 dec2 ->
     univ_faithful_lemma_list_dec c1 c2 us1 us2;
     faithful_lemma r1 r2;
-    introduce forall x y. L.memP x args1 /\ L.memP y args2 ==> defined (arg_cmp x y) with
-     (introduce forall y. L.memP x args1 /\ L.memP y args2 ==> defined (arg_cmp x y) with
-      (introduce (L.memP x args1 /\ L.memP y args2) ==> (defined (arg_cmp x y)) with (
-       faithful_lemma_arg x y
-       )
-      )
-     )
-    ;
-    defined_list_dec c1 c2 arg_cmp args1 args2;
+    faithful_lemma pre1 pre2;
+    faithful_lemma post1 post2;
     introduce forall x y. L.memP x dec1 /\ L.memP y dec2 ==> defined (term_cmp x y) with
      (introduce forall y. L.memP x dec1 /\ L.memP y dec2 ==> defined (term_cmp x y) with
       (introduce (L.memP x dec1 /\ L.memP y dec2) ==> (defined (term_cmp x y)) with (
@@ -1174,7 +1171,7 @@ and faithful_lemma_comp (c1 c2 : comp) : Lemma (requires faithful_comp c1 /\ fai
      )
     ;
     defined_list_dec c1 c2 term_cmp dec1 dec2;
-    (***)comp_eq_C_Eff c1 c2 us1 us2 e1 e2 r1 r2 args1 args2 dec1 dec2;
+    (***)comp_eq_C_Eff c1 c2 us1 us2 e1 e2 r1 r2 pre1 pre2 post1 post2 dec1 dec2;
     ()
   | _ -> ()
 

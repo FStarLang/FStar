@@ -174,7 +174,7 @@ let rec remove (x:int) (t:tree{count x t > 0}) : Tot tree (decreases t) =
 //It seems to require too much fuel to go through, although it should only need 2
 //Z3-4.5.1 nightly successfully solves it with initial_fuel 2
 //NS: 05/08 added a pattern on y to stabilize the proof
-#reset-options "--z3rlimit 20 --initial_fuel 2 --initial_ifuel 2"
+#reset-options "--initial_fuel 2 --initial_ifuel 2"
 let rec count_remove_root (t:tree{Node? t}) :
     Lemma (ensures (let r = Node?.root t in
                    (count r (remove_root t) = count r t - 1) /\

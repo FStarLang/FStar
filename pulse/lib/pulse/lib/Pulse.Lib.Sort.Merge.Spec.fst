@@ -74,7 +74,6 @@ let rec list_index_append_r
   | [] -> ()
   | _ :: q -> list_index_append_r q l2 i
 
-#push-options "--z3rlimit 16"
 
 #restart-solver
 let rec spec_merge_correct
@@ -141,7 +140,6 @@ let rec spec_merge_correct
       spec_merge_correct order compare accu' l1 l2'
     end
 
-#pop-options
 
 let rec list_splitAt_length
   (#t: Type)
@@ -205,9 +203,9 @@ let exists4_elim
 : Lemma
   (requires exists x1 x2 x3 x4 . p x1 x2 x3 x4)
   (ensures q)
-= Classical.forall_intro_4 (fun x1 x2 x3 x4 -> Classical.move_requires (prf x1 x2 x3) x4)
+= Classical.forall_intro_4 (Classical.move_requires_4 prf)
 
-#push-options "--split_queries always"
+#push-options ""
 
 #restart-solver
 let rec spec_sort_correct

@@ -2094,11 +2094,20 @@ let coerce_prog (prog:program) : ML program =
           position that has none.  This is the method of a class over a type
           constructor reached through a runtime dictionary (section 5.4): the
           head is the [match] that projects it, so nothing but its own node
-          type says anything. *)
+          type says anything.
+
+          The converse boundary is a parameter the head declares with a real
+          type, given an argument that has none: the second component of a
+          dependent pair is realized as [any] -- its type mentions the first --
+          so [dsnd r] read out of a local closure's result is an [any] flowing
+          into a [comp] parameter.  Its type is untrusted as a whole, but each
+          parameter that mentions no [any] is still the best claim there is
+          about that position, and coercing to it is what the target needs. *)
        | None ->
          let ps = (match peel_arrows (List.length es) h.ty with
                    | Some (ps, _) -> ps |> List.map (fun p -> if TAny? p then Some TAny
-                                                              else None)
+                                                              else if has_any p then None
+                                                              else Some p)
                    | None -> es |> List.map (fun _ -> None)) in
          same (EApp (go env None h, List.map2 (fun p e -> check env p e) ps es)))
     | ECtor (n, es) ->

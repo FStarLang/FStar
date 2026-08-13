@@ -969,71 +969,131 @@ let dep_subsumed_by (d : dependence) (d' : dependence) : Prims.bool=
 let warned_about :
   intf_and_impl FStar_Pervasives_Native.option Prims.list FStarC_Effect.ref=
   FStarC_Effect.mk_ref []
+type ns_entry =
+  {
+  ne_suffix: Prims.string ;
+  ne_file: intf_and_impl ;
+  ne_shadowed: intf_and_impl FStar_Pervasives_Native.option }
+let __proj__Mkns_entry__item__ne_suffix (projectee : ns_entry) :
+  Prims.string=
+  match projectee with | { ne_suffix; ne_file; ne_shadowed;_} -> ne_suffix
+let __proj__Mkns_entry__item__ne_file (projectee : ns_entry) : intf_and_impl=
+  match projectee with | { ne_suffix; ne_file; ne_shadowed;_} -> ne_file
+let __proj__Mkns_entry__item__ne_shadowed (projectee : ns_entry) :
+  intf_and_impl FStar_Pervasives_Native.option=
+  match projectee with | { ne_suffix; ne_file; ne_shadowed;_} -> ne_shadowed
+let ns_index_memo :
+  (files_for_module_name * ns_entry Prims.list FStarC_SMap.t)
+    FStar_Pervasives_Native.option FStarC_Effect.ref=
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
+let namespace_index (m : files_for_module_name) :
+  ns_entry Prims.list FStarC_SMap.t=
+  let uu___ = FStarC_Effect.op_Bang ns_index_memo in
+  match uu___ with
+  | FStar_Pervasives_Native.Some (m', idx) when
+      FStarC_Util.physical_equality m m' -> idx
+  | uu___1 ->
+      let idx = FStarC_SMap.create (Prims.of_int 100) in
+      let suffix_exists mopt =
+        match mopt with
+        | FStar_Pervasives_Native.None -> false
+        | FStar_Pervasives_Native.Some (intf, impl) ->
+            (FStar_Pervasives_Native.uu___is_Some intf) ||
+              (FStar_Pervasives_Native.uu___is_Some impl) in
+      (FStarC_SMap.iter m
+         (fun k fn ->
+            let rec prefixes acc segs =
+              match segs with
+              | [] -> ()
+              | uu___3::[] -> ()
+              | seg::rest ->
+                  let p = Prims.strcat acc (Prims.strcat seg ".") in
+                  let suffix =
+                    FStarC_String.substring k (FStarC_String.length p)
+                      ((FStarC_String.length k) - (FStarC_String.length p)) in
+                  let shadowed =
+                    let so = FStarC_SMap.try_find m suffix in
+                    if suffix_exists so
+                    then so
+                    else FStar_Pervasives_Native.None in
+                  let e =
+                    {
+                      ne_suffix = suffix;
+                      ne_file = fn;
+                      ne_shadowed = shadowed
+                    } in
+                  let cur =
+                    let uu___3 = FStarC_SMap.try_find idx p in
+                    match uu___3 with
+                    | FStar_Pervasives_Native.None -> []
+                    | FStar_Pervasives_Native.Some l -> l in
+                  (FStarC_SMap.add idx p (e :: cur); prefixes p rest) in
+            prefixes "" (FStarC_String.split [46] k));
+       (let uu___4 = FStarC_SMap.keys idx in
+        FStarC_List.iter
+          (fun p ->
+             let uu___5 =
+               let uu___6 =
+                 let uu___7 = FStarC_SMap.try_find idx p in
+                 FStarC_Option.must uu___7 in
+               FStarC_List.rev uu___6 in
+             FStarC_SMap.add idx p uu___5) uu___4);
+       FStarC_Effect.op_Colon_Equals ns_index_memo
+         (FStar_Pervasives_Native.Some (m, idx));
+       idx)
 let enter_namespace (original_map : files_for_module_name)
   (working_map : files_for_module_name) (sprefix : Prims.string)
   (implicit_open : Prims.bool) : Prims.bool=
-  let found = FStarC_Effect.mk_ref false in
   let sprefix1 = Prims.strcat sprefix "." in
-  let suffix_exists mopt =
-    match mopt with
-    | FStar_Pervasives_Native.None -> false
-    | FStar_Pervasives_Native.Some (intf, impl) ->
-        (FStar_Pervasives_Native.uu___is_Some intf) ||
-          (FStar_Pervasives_Native.uu___is_Some impl) in
-  FStarC_SMap.iter original_map
-    (fun k _fn ->
-       if FStarC_Util.starts_with k sprefix1
-       then
-         let suffix =
-           FStarC_String.substring k (FStarC_String.length sprefix1)
-             ((FStarC_String.length k) - (FStarC_String.length sprefix1)) in
-         ((let suffix_filename = FStarC_SMap.try_find original_map suffix in
-           let uu___2 =
-             if implicit_open && (suffix_exists suffix_filename)
-             then
-               let uu___3 =
-                 let uu___4 = FStarC_Effect.op_Bang warned_about in
-                 FStarC_List.mem suffix_filename uu___4 in
-               Prims.op_Negation uu___3
-             else false in
-           if uu___2
-           then
-             let str =
-               let uu___3 = FStarC_Option.must suffix_filename in
-               intf_and_impl_to_string uu___3 in
-             ((let uu___4 =
-                 let uu___5 = FStarC_Effect.op_Bang warned_about in
-                 suffix_filename :: uu___5 in
-               FStarC_Effect.op_Colon_Equals warned_about uu___4);
-              FStarC_Errors.log_issue0
-                FStarC_Errors_Codes.Warning_UnexpectedFile ()
-                (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                (Obj.magic
-                   [FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
-                      [FStarC_Errors_Msg.text "Implicitly opening namespace";
-                      FStarC_Errors_Msg.fquotes
-                        (FStar_Pprint.doc_of_string sprefix1);
-                      FStarC_Errors_Msg.text "shadows module";
-                      FStarC_Errors_Msg.fquotes
-                        (FStar_Pprint.doc_of_string suffix);
-                      FStarC_Errors_Msg.text "in file";
-                      FStar_Pprint.op_Hat_Hat
-                        (FStarC_Errors_Msg.fquotes
-                           (FStar_Pprint.doc_of_string str)) FStar_Pprint.dot];
-                   FStar_Pprint.op_Hat_Slash_Hat
-                     (FStarC_Errors_Msg.text "Rename")
-                     (FStar_Pprint.op_Hat_Slash_Hat
-                        (FStarC_Errors_Msg.fquotes
-                           (FStar_Pprint.doc_of_string str))
-                        (FStarC_Errors_Msg.text "to avoid conflicts."))]))
-           else ());
-          (let filename =
-             let uu___2 = FStarC_SMap.try_find original_map k in
-             FStarC_Option.must uu___2 in
-           FStarC_SMap.add working_map suffix filename;
-           FStarC_Effect.op_Colon_Equals found true))
-       else ());
-  FStarC_Effect.op_Bang found
+  let entries =
+    let uu___ =
+      let uu___1 = namespace_index original_map in
+      FStarC_SMap.try_find uu___1 sprefix1 in
+    match uu___ with
+    | FStar_Pervasives_Native.None -> []
+    | FStar_Pervasives_Native.Some l -> l in
+  FStarC_List.iter
+    (fun e ->
+       (match e.ne_shadowed with
+        | FStar_Pervasives_Native.Some uu___2 when
+            if implicit_open
+            then
+              let uu___3 =
+                let uu___4 = FStarC_Effect.op_Bang warned_about in
+                FStarC_List.mem e.ne_shadowed uu___4 in
+              Prims.op_Negation uu___3
+            else false ->
+            let str =
+              let uu___3 = FStarC_Option.must e.ne_shadowed in
+              intf_and_impl_to_string uu___3 in
+            ((let uu___4 =
+                let uu___5 = FStarC_Effect.op_Bang warned_about in
+                (e.ne_shadowed) :: uu___5 in
+              FStarC_Effect.op_Colon_Equals warned_about uu___4);
+             FStarC_Errors.log_issue0
+               FStarC_Errors_Codes.Warning_UnexpectedFile ()
+               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+               (Obj.magic
+                  [FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
+                     [FStarC_Errors_Msg.text "Implicitly opening namespace";
+                     FStarC_Errors_Msg.fquotes
+                       (FStar_Pprint.doc_of_string sprefix1);
+                     FStarC_Errors_Msg.text "shadows module";
+                     FStarC_Errors_Msg.fquotes
+                       (FStar_Pprint.doc_of_string e.ne_suffix);
+                     FStarC_Errors_Msg.text "in file";
+                     FStar_Pprint.op_Hat_Hat
+                       (FStarC_Errors_Msg.fquotes
+                          (FStar_Pprint.doc_of_string str)) FStar_Pprint.dot];
+                  FStar_Pprint.op_Hat_Slash_Hat
+                    (FStarC_Errors_Msg.text "Rename")
+                    (FStar_Pprint.op_Hat_Slash_Hat
+                       (FStarC_Errors_Msg.fquotes
+                          (FStar_Pprint.doc_of_string str))
+                       (FStarC_Errors_Msg.text "to avoid conflicts."))]))
+        | uu___2 -> ());
+       FStarC_SMap.add working_map e.ne_suffix e.ne_file) entries;
+  Prims.uu___is_Cons entries
 let prelude_lid : FStarC_Ident.lident=
   FStarC_Ident.lid_of_str "FStar.Prelude"
 let prelude : (open_kind * FStarC_Ident.lid) Prims.list=
@@ -1127,26 +1187,8 @@ let collect_module_or_decls (filename : Prims.string)
              | (pat, t) -> (collect_pattern pat; collect_term t)) patterms
     | FStarC_Parser_AST.Splice (uu___, uu___1, t) -> collect_term t
     | FStarC_Parser_AST.Assume (uu___, t) -> collect_term t
-    | FStarC_Parser_AST.SubEffect
-        { FStarC_Parser_AST.msource = uu___;
-          FStarC_Parser_AST.mdest = uu___1;
-          FStarC_Parser_AST.lift_op = FStarC_Parser_AST.NonReifiableLift t;
-          FStarC_Parser_AST.braced = uu___2;_}
-        -> collect_term t
-    | FStarC_Parser_AST.SubEffect
-        { FStarC_Parser_AST.msource = uu___;
-          FStarC_Parser_AST.mdest = uu___1;
-          FStarC_Parser_AST.lift_op = FStarC_Parser_AST.LiftForFree t;
-          FStarC_Parser_AST.braced = uu___2;_}
-        -> collect_term t
     | FStarC_Parser_AST.Val (uu___, t) -> collect_term t
-    | FStarC_Parser_AST.SubEffect
-        { FStarC_Parser_AST.msource = uu___;
-          FStarC_Parser_AST.mdest = uu___1;
-          FStarC_Parser_AST.lift_op = FStarC_Parser_AST.ReifiableLift
-            (t0, t1);
-          FStarC_Parser_AST.braced = uu___2;_}
-        -> (collect_term t0; collect_term t1)
+    | FStarC_Parser_AST.SubEffect uu___ -> ()
     | FStarC_Parser_AST.Tycon (uu___, tc, ts) ->
         (if tc
          then add_to_parsing_data (P_lid FStarC_Parser_Const.tcclass_lid)
@@ -1155,11 +1197,6 @@ let collect_module_or_decls (filename : Prims.string)
     | FStarC_Parser_AST.Exception (uu___, t) ->
         FStarC_Option.iter collect_term t
     | FStarC_Parser_AST.NewEffect ed -> collect_effect_decl ed
-    | FStarC_Parser_AST.LayeredEffect ed -> collect_effect_decl ed
-    | FStarC_Parser_AST.Polymonadic_bind (uu___, uu___1, uu___2, t) ->
-        collect_term t
-    | FStarC_Parser_AST.Polymonadic_subcomp (uu___, uu___1, t) ->
-        collect_term t
     | FStarC_Parser_AST.DeclToBeDesugared tbs ->
         tbs.FStarC_Parser_AST.dep_scan
           {
@@ -1229,8 +1266,11 @@ let collect_module_or_decls (filename : Prims.string)
               collect_term t)) r
   and collect_effect_decl ed =
     match ed with
-    | FStarC_Parser_AST.DefineEffect (uu___, binders, t, decls) ->
-        (collect_binders binders; collect_term t; collect_decls decls)
+    | FStarC_Parser_AST.DeclareEffect (uu___, binders) ->
+        collect_binders binders
+    | FStarC_Parser_AST.DefineEffect (uu___, binders, decls) ->
+        (collect_binders binders;
+         FStarC_List.iter (fun d -> collect_decl d.FStarC_Parser_AST.d) decls)
     | FStarC_Parser_AST.RedefineEffect (uu___, binders, t) ->
         (collect_binders binders; collect_term t)
   and collect_binders binders = FStarC_List.iter collect_binder binders

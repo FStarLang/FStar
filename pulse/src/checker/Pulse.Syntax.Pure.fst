@@ -192,7 +192,7 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
     in
     match c_view with
     | R.C_Total c_t -> ret c_t
-    | R.C_Eff _ eff_name c_t _ _ ->
+    | R.C_Eff _ eff_name c_t _ _ _ ->
       //
       // Consider Tot effect with decreases also
       //

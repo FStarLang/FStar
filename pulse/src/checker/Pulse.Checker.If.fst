@@ -87,6 +87,10 @@ let check
   // conditional carries an `ensures` annotation, check the branches against that
   // postcondition slprop but leave the effect to be inferred from the branches
   // (issue #4368); with no annotation, infer the postcondition too (issue #4366).
+  // Note that `annot_post` carries the effect admitted by the enclosing
+  // computation (see Pulse.Checker.Base.ambient_effect_annot), which is what a
+  // branch that needs the hint itself is checked against (issue #4418); the
+  // effect of the conditional is still read back from the branches below.
   //
   let branch_hint : post_hint_opt g =
     match post_hint with
@@ -160,7 +164,7 @@ let check
       J.join_comps (g_with_eq tm_true) e1 c1 (g_with_eq tm_false) e2 c2 post_final in
     let c_typing = comp_typing_from_post_hint c post_final in
     let b_st = mk_term (Tm_Return { expected_type = tm_bool; insert_eq = false; term = b }) e1.range in
-    let if_st = wrst c (Tm_If { b=b_st; then_=e1; else_=e2; post=None }) in
+    let if_st = wrst c (Tm_If { b=b_st; then_=e1; else_=e2; pre=None; post=None }) in
     let d : st_typing_in_ctxt g pre (PostHint post_final) =
       (| if_st, c |) in
     let res : checker_result_t g pre (PostHint post_final) = checker_result_for_st_typing d res_ppname in
