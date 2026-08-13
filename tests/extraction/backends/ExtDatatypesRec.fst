@@ -20,7 +20,7 @@ module ExtDatatypesRec
 module I32 = FStar.Int32
 module U32 = FStar.UInt32
 
-let chk (n:I32.t) (b:bool) : I32.t = if b then 0l else n
+let chk (n:I32.t) (b:bool{b}) : I32.t = if b then 0l else n
 let ( &&& ) (a b : I32.t) : I32.t = if a = 0l then b else a
 
 let one : U32.t = 1ul

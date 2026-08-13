@@ -17,7 +17,7 @@ module I32 = FStar.Int32
 module I64 = FStar.Int64
 module U32 = FStar.UInt32
 
-let chk (n:I32.t) (b:bool) : I32.t = if b then 0l else n
+let chk (n:I32.t) (b:bool{b}) : I32.t = if b then 0l else n
 let ( &&& ) (a b : I32.t) : I32.t = if a = 0l then b else a
 
 (* Operands are top-level names so that extraction cannot constant-fold the
@@ -83,7 +83,55 @@ let div_rem_small () : I32.t =
 
 /// Logical operations are specified on the two's complement bit vector, so
 /// they must produce the F*-predicted value even for negative operands.
+///
+/// `chk` requires its argument to be *provably* true, and that turns out to be
+/// the hard part here: F* cannot evaluate a general 32/64-bit `logand`/`logxor`
+/// on concrete values (see FINDINGS.md #13), so each expected value has to be
+/// derived from a lemma instead. The bridges below say that the signed
+/// operation is the unsigned one on the two's complement representation --
+/// they hold definitionally -- which then gives access to the `FStar.UInt`
+/// lemma library. All of this is erased at extraction, so the runtime check is
+/// exactly the same as before.
+module I = FStar.Int
+module U = FStar.UInt
+
+let logand_bridge (#n:pos) (a b : I.int_t n)
+  : Lemma (I.logand a b == I.from_uint (U.logand (I.to_uint a) (I.to_uint b))) = ()
+let logor_bridge (#n:pos) (a b : I.int_t n)
+  : Lemma (I.logor a b == I.from_uint (U.logor (I.to_uint a) (I.to_uint b))) = ()
+let logxor_bridge (#n:pos) (a b : I.int_t n)
+  : Lemma (I.logxor a b == I.from_uint (U.logxor (I.to_uint a) (I.to_uint b))) = ()
+let lognot_bridge (#n:pos) (a : I.int_t n)
+  : Lemma (I.lognot a == I.from_uint (U.lognot (I.to_uint a))) = ()
+
+/// lognot of all-ones is zero, at every width: lognot (ones n) = zero n,
+/// obtained from `lognot (zero n) = ones n` and involutivity.
+let lognot_ones (n:pos) : Lemma (U.lognot #n (U.ones n) == U.zero n) =
+  U.lognot_lemma_1 #n;
+  U.lognot_self #n (U.zero n)
+
 let logic_tests () : I32.t =
+  (* 40-44: lognot (-1) = 0 and lognot 0 = -1, at all four widths. *)
+  lognot_bridge #32 (-1); lognot_ones 32;
+  lognot_bridge #8  (-1); lognot_ones 8;
+  lognot_bridge #16 (-1); lognot_ones 16;
+  lognot_bridge #64 (-1); lognot_ones 64;
+  lognot_bridge #32 0; U.lognot_lemma_1 #32;
+  (* 45, 49: logand a (-1) = a, i.e. `logand a (ones n) = a` unsigned. *)
+  logand_bridge #32 (-1) (I32.v mask32); U.logand_lemma_2 #32 (I.to_uint (I32.v mask32));
+  U.logand_commutative #32 (U.ones 32) (I.to_uint (I32.v mask32));
+  logand_bridge #8 (-1) (I8.v mask8); U.logand_lemma_2 #8 (I.to_uint (I8.v mask8));
+  U.logand_commutative #8 (U.ones 8) (I.to_uint (I8.v mask8));
+  (* 46: logor 0 a = a. *)
+  logor_bridge #32 0 (I32.v mask32); U.logor_lemma_1 #32 (I.to_uint (I32.v mask32));
+  U.logor_commutative #32 (U.zero 32) (I.to_uint (I32.v mask32));
+  (* 47: logxor a a = 0. *)
+  logxor_bridge #32 (I32.v mask32) (I32.v mask32);
+  U.logxor_self #32 (I.to_uint (I32.v mask32));
+  (* 48: logxor (-1) a = lognot a. *)
+  logxor_bridge #32 (-1) (I32.v mask32); lognot_bridge #32 (I32.v mask32);
+  U.logxor_lemma_2 #32 (I.to_uint (I32.v mask32));
+  U.logxor_commutative #32 (U.ones 32) (I.to_uint (I32.v mask32));
      chk 40l (I32.eq (I32.lognot m1_32) 0l)
  &&& chk 41l (I32.eq (I32.lognot 0l) (-1l))
  &&& chk 42l (I8.eq  (I8.lognot  m1_8)  0y)
@@ -94,9 +142,19 @@ let logic_tests () : I32.t =
  &&& chk 47l (I32.eq (I32.logxor mask32 mask32) 0l)
  &&& chk 48l (I32.eq (I32.logxor m1_32 mask32) (I32.lognot mask32))
  &&& chk 49l (I8.eq  (I8.logand m1_8 mask8) mask8)
-     (* logand of a negative with a small positive keeps low bits *)
- &&& chk 50l (I32.eq (I32.logand m8_32 7l) 0l)
+
+/// Masking off the low 3 bits of a negative number is a modulo on the two's
+/// complement representation, so it keeps the low bits rather than saturating.
+/// Split out of `logic_tests` (and given a larger budget) because
+/// `logand_mask` reasons about `pow2 32`, which is expensive for the solver.
+#push-options "--z3rlimit 60"
+let mask_tests () : I32.t =
+  assert_norm (Prims.pow2 3 - 1 == 7);
+  logand_bridge #32 (I32.v m8_32) (I32.v 7l); U.logand_mask #32 (I.to_uint (I32.v m8_32)) 3;
+  logand_bridge #32 (I32.v m7) (I32.v 7l); U.logand_mask #32 (I.to_uint (I32.v m7)) 3;
+     chk 50l (I32.eq (I32.logand m8_32 7l) 0l)
  &&& chk 51l (I32.eq (I32.logand m7 7l) 1l)
+#pop-options
 
 /// Non-wrapping arithmetic at the extremes of the range.
 let arith_tests () : I32.t =
@@ -131,5 +189,6 @@ let main () : I32.t =
      div_rem_32 ()
  &&& div_rem_small ()
  &&& logic_tests ()
+ &&& mask_tests ()
  &&& arith_tests ()
  &&& cmp_tests ()

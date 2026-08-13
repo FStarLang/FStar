@@ -15,8 +15,9 @@ module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module I32 = FStar.Int32
+module U   = FStar.UInt
 
-let chk (n:I32.t) (b:bool) : I32.t = if b then 0l else n
+let chk (n:I32.t) (b:bool{b}) : I32.t = if b then 0l else n
 let ( &&& ) (a b : I32.t) : I32.t = if a = 0l then b else a
 
 let u8_max  : U8.t  = 255uy
@@ -54,16 +55,48 @@ let wrap_tests () : I32.t =
 /// `lognot` must complement all n bits and nothing more, i.e. the result has
 /// to be truncated back to the declared width. (UInt8 is broken in the OCaml
 /// backend; that case lives in ExtUInt8Lognot.fst.)
+/// `chk` demands a *proof* that each check holds. F* cannot evaluate a general
+/// 32-bit bitwise operation on concrete values (FINDINGS.md #13), so the
+/// expected values come from the `FStar.UInt` lemmas: `lognot 0 = ones`,
+/// `logand a ones = a`, `logor a 0 = a`, and `logxor a ones = lognot a`. The
+/// check 27 is stated relationally (`logxor a ones` must agree with `lognot a`)
+/// because pinning the literal result of a general 32-bit operation is out of
+/// reach for the solver; `general_tests` below keeps literal-valued coverage at
+/// a width where F* *can* compute. All of it is erased at extraction.
+#push-options "--z3rlimit 60"
 let lognot_tests () : I32.t =
+  U.lognot_lemma_1 #16; U.lognot_lemma_1 #32; U.lognot_lemma_1 #64;
+  U.logand_lemma_2 #32 0x0000ff00; U.logand_commutative #32 (U.ones 32) 0x0000ff00;
+  U.logor_lemma_1 #32 0x0000ff00;  U.logor_commutative #32 0x0000ff00 (U.zero 32);
+  U.logxor_lemma_2 #32 0x0000ff00; U.logxor_commutative #32 (U.ones 32) 0x0000ff00;
      chk 21l (U16.eq (U16.lognot 0us) 65535us)
  &&& chk 22l (U32.eq (U32.lognot 0ul) 4294967295ul)
  &&& chk 23l (U64.eq (U64.lognot 0uL) 18446744073709551615uL)
  &&& chk 26l (U32.eq (U32.logand u32_max 0x0000ff00ul) 0x0000ff00ul)
- &&& chk 27l (U32.eq (U32.logxor u32_max 0x0000ff00ul) 0xffff00fful)
+ &&& chk 27l (U32.eq (U32.logxor u32_max 0x0000ff00ul) (U32.lognot 0x0000ff00ul))
  &&& chk 28l (U32.eq (U32.logor  0ul 0x0000ff00ul) 0x0000ff00ul)
+#pop-options
+
+/// Bitwise operations on *general* operands, with the expected value written
+/// out as a literal. Only 8-bit: F* can evaluate `FStar.UInt` at that width
+/// (with enough fuel to unroll `to_vec`/`from_vec`), but not at 32 or 64.
+#push-options "--fuel 20 --ifuel 20 --z3rlimit 200"
+let general_tests () : I32.t =
+  assert_norm (U.logand #8 0xf8 0x0f == 0x08);
+  assert_norm (U.logor  #8 0xf0 0x0f == 0xff);
+  assert_norm (U.logxor #8 0xf5 0x0f == 0xfa);
+  assert_norm (U.lognot #8 0x0f == 0xf0);
+     chk 70l (U8.eq (U8.logand 0xf8uy 0x0fuy) 0x08uy)
+ &&& chk 71l (U8.eq (U8.logor  0xf0uy 0x0fuy) 0xffuy)
+ &&& chk 72l (U8.eq (U8.logxor 0xf5uy 0x0fuy) 0xfauy)
+ &&& chk 73l (U8.eq (U8.lognot 0x0fuy) 0xf0uy)
+#pop-options
 
 /// Shifts are *logical* for unsigned values, and the narrow widths must not
-/// keep the bits that overflow past the top.
+/// keep the bits that overflow past the top. `shift_left/right_value_lemma`
+/// give `a * pow2 s % pow2 n` and `a / pow2 s`, so the checks are provable, but
+/// the 64-bit ones make the solver reason about `pow2 64` and need a budget.
+#push-options "--z3rlimit 120"
 let shift_tests () : I32.t =
      chk 30l (U8.eq  (U8.shift_left  0x81uy 1ul) 0x02uy)
  &&& chk 31l (U8.eq  (U8.shift_right 0x81uy 1ul) 0x40uy)
@@ -77,6 +110,7 @@ let shift_tests () : I32.t =
      (* a shift by zero is the identity *)
  &&& chk 39l (U8.eq  (U8.shift_right u8_max 0ul) 255uy)
  &&& chk 40l (U32.eq (U32.shift_left u32_max 0ul) 4294967295ul)
+#pop-options
 
 /// Division and remainder are the easy cases (both operands non-negative), but
 /// they must not be signed: 0xFFFFFFFF / 2 is 0x7FFFFFFF, not 0.
@@ -104,6 +138,7 @@ let cmp_tests () : I32.t =
 let main () : I32.t =
      wrap_tests ()
  &&& lognot_tests ()
+ &&& general_tests ()
  &&& shift_tests ()
  &&& div_tests ()
  &&& cmp_tests ()

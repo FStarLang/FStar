@@ -27,17 +27,26 @@ module ExtUInt8Lognot
 module U8  = FStar.UInt8
 module I32 = FStar.Int32
 
-let chk (n:I32.t) (b:bool) : I32.t = if b then 0l else n
+let chk (n:I32.t) (b:bool{b}) : I32.t = if b then 0l else n
 let ( &&& ) (a b : I32.t) : I32.t = if a = 0l then b else a
 
 let zero8 : U8.t = 0uy
 let max8  : U8.t = 255uy
 let lo8   : U8.t = 0x0fuy
 
+/// `chk` requires a proof of each check. At 8 bits F* can still evaluate the
+/// `FStar.UInt` bit-vector spec, provided it is given enough fuel to unroll
+/// `to_vec`/`from_vec` (32 and 64 bits are out of reach -- FINDINGS.md #13).
+/// The proof is erased at extraction, so what the backends run is unchanged.
+#push-options "--fuel 20 --ifuel 20 --z3rlimit 200"
 let main () : I32.t =
+  assert_norm (FStar.UInt.lognot #8 0 == 255);
+  assert_norm (FStar.UInt.lognot #8 255 == 0);
+  assert_norm (FStar.UInt.lognot #8 0x0f == 0xf0);
      chk 1l (U8.eq (U8.lognot zero8) 255uy)
  &&& chk 2l (U8.eq (U8.lognot max8) 0uy)
  &&& chk 3l (U8.eq (U8.lognot lo8) 0xf0uy)
      (* the bad value is not even in range, so ordering breaks too *)
  &&& chk 4l (U8.gt (U8.lognot zero8) 0uy)
  &&& chk 5l (U8.lte (U8.lognot zero8) 255uy)
+#pop-options

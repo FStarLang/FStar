@@ -27,7 +27,7 @@ module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 
-let chk (n:I32.t) (b:bool) : I32.t = if b then 0l else n
+let chk (n:I32.t) (b:bool{b}) : I32.t = if b then 0l else n
 let ( &&& ) (a b : I32.t) : I32.t = if a = 0l then b else a
 
 let a32 : I32.t = 3l

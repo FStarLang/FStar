@@ -14,7 +14,7 @@ module ExtBoolHigherOrder
 
 module I32 = FStar.Int32
 
-let chk (n:I32.t) (b:bool) : I32.t = if b then 0l else n
+let chk (n:I32.t) (b:bool{b}) : I32.t = if b then 0l else n
 let ( &&& ) (a b : I32.t) : I32.t = if a = 0l then b else a
 
 let tru : bool = true
