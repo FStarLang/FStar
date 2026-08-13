@@ -6,11 +6,12 @@
 #      entry points in src/custard/entrypoints.txt, into one .ml per F*
 #      module;
 #   2. drop the hand-written realizations of src/ml in beside them;
-#   3. generate the two menhir parsers against *these* interfaces, not the
-#      ones the ML extraction produced -- the two extractions lay the same F*
-#      types out differently, so a parser inferred against the wrong ones is
-#      at best accidentally well-typed;
-#   4. compile and link, in `ocamldep -sort' order.
+#   3. build the result with dune, in a project laid out like stage1's and
+#      stage2's.  That is what generates the two menhir parsers against
+#      *these* interfaces, not the ones the ML extraction produced -- the two
+#      extractions lay the same F* types out differently, so a parser
+#      inferred against the wrong ones is at best accidentally well-typed --
+#      and what makes the build parallel (section 12.14).
 #
 # The result is a working fstar.exe -- ulib's plugins included, so tactics
 # like FStar.Tactics.Typeclasses.mk_class run natively -- with one known
@@ -31,8 +32,14 @@ $(call need_dir, FSTARC_CHECKED, checked files for src)
 OUT     ?= stagec
 CACHE   := $(OUT)/cache
 SPLIT   := $(OUT)/split
-BUILD   := $(OUT)/build
+BUILD   := $(OUT)/dune
 BIN     := $(OUT)/out/bin/fstar.exe
+
+# Where dune leaves the library's artifacts.  Two directories, because with
+# `(modes native)' the .cmi files are still under byte/ and only the .cmx and
+# .o are under native/.  A plugin compiles against both (section 12.11).
+OBJS    := $(BUILD)/_build/default/fstar-guts/.fstarcompiler.objs
+INCS    := -I $(abspath $(OBJS))/byte -I $(abspath $(OBJS))/native
 
 # The compiler's own roots, and the roots a *plugin's* hand-written OCaml
 # needs: a realization calls the compiler by OCaml name, through no request
@@ -105,61 +112,81 @@ split: $(SPLIT)/.touch
 
 # ------------------------------------------------------------------ assembly
 
-# The generated modules and the realizations sit in one flat directory, which
-# is what makes a realization able to call compiled code and vice versa
-# (section 12.9).  The realizations win where both exist: a realized module's
-# F* definitions are a model (section 8.2, M10j) and Custard does not emit
-# them, but FStarC_Version.ml and the like have no F* side at all.
-$(BUILD)/.touch: mk/custard.mk $(SPLIT)/.touch $(REALIZATIONS) $(addprefix src/ml/,$(addsuffix .mly,$(GRAMMARS))) $(VERSION_SH) version.txt
+# A dune project laid out like stage1's and stage2's: one `wrapped false'
+# library out of the generated modules and the realizations, and one
+# executable that calls FStarC_Main.main.  Section 12.14.
+#
+# Doing it this way rather than by hand buys three things.  Dune runs the
+# menhir `--infer' pre-pass itself, and against *this* library, which is the
+# whole point of not borrowing the stage2 parser; it compiles in parallel,
+# which the hand-rolled `ocamldep -sort' pipeline could not; and it is the
+# same recipe the rest of the repo already uses, so there is one build to
+# understand rather than two.
+#
+# The pieces are symlinked rather than copied, so an edit to a realization is
+# picked up without re-running the extraction.  Nothing overlaps: a realized
+# module's F* definitions are a model (section 8.2, M10j) and Custard does not
+# emit them, so `$(SPLIT)' and `src/ml' are disjoint.
+#
+# `fstar.lib' supplies Prims and the rest of the app-side realizations, and
+# its FStar_Order collides with the one Custard emits.  `-linkall' therefore
+# goes on the *library* rather than on the executable: an archive module that
+# something already defines is then simply not pulled in, which is what the
+# hand-rolled link relied on too.
+
+DUNE_LIBS := batteries zarith stdint yojson ppxlib dynlink menhirLib pprint \
+             process sedlex mtime.clock fstar.lib
+
+$(BUILD)/.touch: mk/custard.mk $(SPLIT)/.touch
 	$(call bold_msg, "CUSTARD", "ASSEMBLE")
-	$(Q)rm -rf $(BUILD) && mkdir -p $(BUILD)
-	$(Q)cp $(SPLIT)/*.ml $(BUILD)/
-	$(Q)cp -f --no-preserve=mode src/ml/*.ml src/ml/*.mly $(BUILD)/
-	$(Q)cp -f --no-preserve=mode ulib/ml/plugin/*.ml $(BUILD)/
-	$(Q)bash $(VERSION_SH) | sed 's/FStarC_Options\._/FStarC_Options.u__/' \
-	   > $(BUILD)/FStarC_Version.ml
-	$(Q)printf 'let () = FStarC_Main.main ()\n' > $(BUILD)/zzMain.ml
-	$(Q)touch $@
-
-# --------------------------------------------------------------- the parsers
-#
-# menhir infers the types of the grammar's semantic values by compiling a mock
-# module against the surrounding code, which is the dune `menhir' stanza's
-# --infer.  Doing it here rather than borrowing dune's answer is the whole
-# point: the mock has to see *Custard's* FStarC_Parser_AST.
-#
-# Compiling the mock needs the interfaces of everything the grammar's header
-# opens, so there is a first, best-effort pass that compiles as much as it can
-# to bytecode -- fast, and .cmi is all that is wanted.  The modules that fail
-# are exactly those downstream of the parser, and the final pass compiles
-# everything again in order.
-
-$(BUILD)/.parsers: mk/custard.mk $(BUILD)/.touch
-	$(call bold_msg, "CUSTARD", "MENHIR")
-	$(Q)cd $(BUILD) && for f in $$($(OCAMLFIND) ocamldep -package $(OCAMLPKGS) -sort *.ml 2>/dev/null); do \
-	   $(OCAMLC) -I . -c $$f >/dev/null 2>&1 || true; \
-	 done
-	$(Q)cd $(BUILD) && for g in $(GRAMMARS); do \
-	   menhir --infer-write-query $$g.mock.ml $$g.mly 2>/dev/null && \
-	   $(OCAMLC) -I . -i $$g.mock.ml > $$g.reply 2>/dev/null && \
-	   menhir --explain --infer-read-reply $$g.reply $$g.mly 2>/dev/null; \
-	 done
-	$(Q)cd $(BUILD) && rm -f *.mock.ml *.reply *.cm* *.o
-	# The generated .mli would have to be compiled before its dependencies,
-	# which `ocamldep -sort' over .ml files alone cannot arrange.  Nothing
-	# here needs the parsers' interfaces narrowed.
-	$(Q)cd $(BUILD) && rm -f $(addsuffix .mli, $(GRAMMARS))
+	$(Q)rm -rf $(BUILD) && mkdir -p $(BUILD)/fstar-guts $(BUILD)/fstar-exe
+	$(Q)printf '(lang dune 3.15)\n(name fstarc-custard)\n(using menhir 2.1)\n' \
+	   > $(BUILD)/dune-project
+	$(Q)printf '(env (_ (bin_annot false) (flags (:standard -w -A))))\n' \
+	   > $(BUILD)/dune
+	$(Q)ln -sfT $(abspath $(SPLIT))        $(BUILD)/fstar-guts/split
+	$(Q)ln -sfT $(abspath src/ml)          $(BUILD)/fstar-guts/ml
+	$(Q)ln -sfT $(abspath ulib/ml/plugin)  $(BUILD)/fstar-guts/plugin
+	$(Q)ln -sf  $(abspath $(VERSION_SH))   $(BUILD)/fstar-guts/
+	$(Q)ln -sf  $(abspath version.txt)     $(BUILD)/fstar-guts/
+	$(Q)for g in $(GRAMMARS); do \
+	   ln -sf $(abspath src/ml)/$$g.mly $(BUILD)/fstar-guts/; done
+	$(Q){ \
+	   echo '(include_subdirs unqualified)'; \
+	   echo '(library'; \
+	   echo ' (name fstarcompiler)'; \
+	   echo ' (wrapped false)'; \
+	   echo ' (modes native)'; \
+	   echo ' (library_flags (-linkall))'; \
+	   echo ' (libraries $(DUNE_LIBS))'; \
+	   echo ' (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx)))'; \
+	   for g in $(GRAMMARS); do echo "(menhir (modules $$g))"; done; \
+	   echo '(rule'; \
+	   echo '  (target FStarC_Version.ml)'; \
+	   echo '  (deps (:script $(notdir $(VERSION_SH))) version.txt)'; \
+	   echo '  (action (with-stdout-to FStarC_Version.ml'; \
+	   echo "    (system \"bash %{script} | sed s/FStarC_Options[.]_/FStarC_Options.u__/\"))))"; \
+	 } > $(BUILD)/fstar-guts/dune
+	$(Q){ \
+	   echo '(executable'; \
+	   echo ' (name zzMain)'; \
+	   echo ' (modes (native exe))'; \
+	   echo ' (libraries fstarcompiler memtrace))'; \
+	 } > $(BUILD)/fstar-exe/dune
+	$(Q)printf 'let () = FStarC_Main.main ()\n' > $(BUILD)/fstar-exe/zzMain.ml
 	$(Q)touch $@
 
 # ------------------------------------------------------------------- compile
 
-$(BIN): mk/custard.mk $(BUILD)/.parsers
+# No file list: dune reads the symlinked directories itself, so this rule runs
+# on every `make' and does nothing when nothing changed.
+$(BIN): mk/custard.mk $(BUILD)/.touch $(REALIZATIONS) \
+        $(addprefix src/ml/,$(addsuffix .mly,$(GRAMMARS))) \
+        $(VERSION_SH) version.txt
 	$(call bold_msg, "CUSTARD", "COMPILE")
+	$(Q)cd $(BUILD) && dune build --display=quiet fstar-exe/zzMain.exe
 	$(Q)mkdir -p $(dir $(BIN))
-	$(Q)cd $(BUILD) && $(OCAMLFIND) ocamldep -package $(OCAMLPKGS) -sort *.ml 2>/dev/null \
-	   | head -1 > .order
-	$(Q)cd $(BUILD) && $(OCAMLOPT) -g -linkpkg -I . -o fstar.exe $$(cat .order) $(FILTER)
-	$(Q)cp -f $(BUILD)/fstar.exe $(BIN)
+	$(Q)cp -f $(BUILD)/_build/default/fstar-exe/zzMain.exe $(BIN)
 
 build: $(BIN)
 
@@ -214,7 +241,7 @@ plugin: $(BIN)
 	  $(PLUGIN_SRC)/$(PLUGIN_MOD).fst $(PLUGIN_SRC)/$(PLUGIN_AUX).fst \
 	  --odir $(PLUGIN_DIR)
 	$(Q)cd $(PLUGIN_DIR) && $(OCAMLOPT) -shared \
-	  -I $(abspath $(BUILD)) -o $(PLUGIN_MOD).cmxs \
+	  $(INCS) -o $(PLUGIN_MOD).cmxs \
 	  $$($(OCAMLFIND) ocamldep -sort *.ml) $(FILTER)
 	# The definitions the test reduces are irreducible, so this fails
 	# unless the native steps the plugin registered are the ones answering.
@@ -343,8 +370,9 @@ $(PULSE_OUT)/extraction/.touch: mk/custard.mk $(SPLIT)/.touch \
 	$(Q)touch $@
 
 # The three units, the four realizations and the two grammars, in one flat
-# directory and one link -- the same shape as $(BUILD), and for the same
-# reason.  src/ml-custard overlays src/ml: see the header of the one file it
+# directory and one link.  Not a dune project like the compiler's own build:
+# this is a .cmxs against an already built library, which is the one shape
+# dune has no stanza for.  src/ml-custard overlays src/ml: see the header of the one file it
 # holds.  The grammars are inferred against *these* interfaces, exactly as
 # the compiler's own are.
 PULSE_UNITDIRS := $(PULSE_OUT)/checker $(PULSE_OUT)/syntax_extension \
@@ -362,18 +390,18 @@ $(PULSE_OUT)/x.cmxs: mk/custard.mk $(BIN) \
 	$(Q)cp -f --no-preserve=mode $(PULSE)/src/ml-custard/*.ml $(PULSE_OUT)/link/
 	$(Q)cd $(PULSE_OUT)/link && for f in \
 	     $$($(OCAMLFIND) ocamldep -package $(OCAMLPKGS) -sort *.ml 2>/dev/null); do \
-	   $(OCAMLC) -I . -I $(abspath $(BUILD)) -c $$f >/dev/null 2>&1 || true; \
+	   $(OCAMLC) -I . $(INCS) -c $$f >/dev/null 2>&1 || true; \
 	 done
 	# One parser out of two grammars: pulseparser.mly is an extension of
 	# the compiler's own, and menhir builds them together.
 	$(Q)cd $(PULSE_OUT)/link && \
 	   menhir --base Pulse_FStar_Parser --infer-write-query mock.ml \
 	     pulseparser.mly FStarC_Parser_Parse.mly 2>/dev/null && \
-	   $(OCAMLC) -I . -I $(abspath $(BUILD)) -i mock.ml > reply 2>/dev/null && \
+	   $(OCAMLC) -I . $(INCS) -i mock.ml > reply 2>/dev/null && \
 	   menhir --explain --base Pulse_FStar_Parser --infer-read-reply reply \
 	     pulseparser.mly FStarC_Parser_Parse.mly 2>/dev/null
 	$(Q)cd $(PULSE_OUT)/link && rm -f Pulse_FStar_Parser.mli mock.ml reply *.cm* *.o
-	$(Q)cd $(PULSE_OUT)/link && $(OCAMLOPT) -shared -I . -I $(abspath $(BUILD)) \
+	$(Q)cd $(PULSE_OUT)/link && $(OCAMLOPT) -shared -I . $(INCS) \
 	   -o x.cmxs $$($(OCAMLFIND) ocamldep -package $(OCAMLPKGS) -sort *.ml) $(FILTER)
 	$(Q)cp -f $(PULSE_OUT)/link/x.cmxs $@
 
