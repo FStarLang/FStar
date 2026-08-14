@@ -267,6 +267,28 @@ let ty (t:cty) : ML string = decl_of t ""
    is worth recognizing on sight. *)
 let unit_value : string = "((custard_unit)0)"
 
+(* The suffix a decimal literal of this width needs.  [U] is enough below 64
+   bits, since a value that fits in [uint32_t] fits in [long] anyway on every
+   target F\* supports; at 64 bits there is no wider standard type, so the
+   suffix is the only thing that gives the literal a type. *)
+let int_suffix (sw : signedness & width) : string =
+  let s, w = sw in
+  let wide = (match w with Int64 -> true | Sizet -> true | _ -> false) in
+  match s with
+  | Unsigned -> if wide then "ULL" else "U"
+  | Signed -> if wide then "LL" else ""
+
+(* [-9223372036854775808LL] is not a literal: it is unary minus applied to
+   [9223372036854775808LL], whose magnitude is one past [LLONG_MAX].  Every
+   signed width has this one value, and only at 64 bits is there no wider type
+   to fall back on -- so it is written the way [<stdint.h>] writes [INT64_MIN]. *)
+let int_literal (sw : signedness & width) (s:string) : ML string =
+  let sg, w = sw in
+  let wide = (match w with Int64 -> true | Sizet -> true | _ -> false) in
+  if Signed? sg && wide && s = "-9223372036854775808"
+  then "(-9223372036854775807LL - 1)"
+  else s ^ int_suffix sw
+
 let escape (s:string) : ML string =
   let esc (c:char) : ML string =
     match c with
@@ -291,8 +313,13 @@ let constant (c:constant) : ML string =
   | CBool b -> if b then "true" else "false"
   | CInt (s, Some sw) ->
     (* The cast pins the type: an unsuffixed literal is [int], which would make
-       [x + 1] promote and then wrap at the wrong width. *)
-    "((" ^ int_type sw ^ ")" ^ s ^ ")"
+       [x + 1] promote and then wrap at the wrong width.  The *suffix* is a
+       separate question, and a cast cannot answer it: C gives a decimal
+       literal the first *signed* type it fits in (6.4.4.1), so
+       [18446744073709551615] has no type at all and a conforming compiler
+       must diagnose it.  So a literal that needs more than an [int] carries
+       the suffix of the width it is meant to have, and the cast only narrows. *)
+    "((" ^ int_type sw ^ ")" ^ int_literal sw s ^ ")"
   | CInt (s, None) ->
     reject ("the unbounded integer literal " ^ s)
       ["Prims.int has no C representation; use a machine integer type."]
@@ -331,6 +358,31 @@ let prefix_op (o:prim_op) : ML (option string) =
   | Not -> Some (if Some? o.po_int then "~" else "!")
   | BNot -> Some "~"
   | _ -> None
+
+(* C promotes anything narrower than [int] before it operates on it, so at
+   [uint8_t] and [uint16_t] the result of a C operator is an [int] and can sit
+   outside the width it came from.  For most operators that cannot happen: F\*
+   proves that [add], [sub] and [mul] do not overflow, and [/], [%], [&], [|]
+   and [^] cannot leave the range in the first place.  It happens for exactly
+   the operators whose F\* meaning is *modular*: [lognot], [shift_left] and the
+   [_mod] family.  [FStar.UInt8.lognot 0uy] is [255uy], and [~(uint8_t)0] read
+   as an [int] is [-1] -- a wrong answer, not a warning, wherever the result is
+   used before it is stored back.
+
+   At 32 and 64 bits there is no promotion, and C's own wrapping is the one F\*
+   specifies. *)
+let truncate (o:prim_op) (s:string) : ML string =
+  let modular =
+    match o.po_op with
+    | Not -> Some? o.po_int   (* [~] at a width; [!] on a bool is not this *)
+    | BNot | BShiftL | AddW | SubW | MultW -> true
+    | _ -> false in
+  match o.po_int with
+  | Some sw ->
+    let _, w = sw in
+    let narrow = (match w with Int8 -> true | Int16 -> true | _ -> false) in
+    if modular && narrow then "((" ^ int_type sw ^ ")" ^ s ^ ")" else s
+  | None -> s
 
 (* -------------------------------------------------------------------- *)
 (* Expressions                                                          *)
@@ -568,9 +620,10 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EOp ({ po_op = BufNull }, []) -> "(" ^ ty e.ty ^ ")NULL"
   | EOp ({ po_op = BufIsNull }, [b]) -> "(" ^ c_expr out ind b ^ " == NULL)"
   | EOp (o, [a; b]) when Some? (infix_op o) ->
-    "(" ^ c_expr out ind a ^ " " ^ Some?.v (infix_op o) ^ " " ^ c_expr out ind b ^ ")"
+    truncate o ("(" ^ c_expr out ind a ^ " " ^ Some?.v (infix_op o) ^ " " ^
+                c_expr out ind b ^ ")")
   | EOp (o, [a]) when Some? (prefix_op o) ->
-    "(" ^ Some?.v (prefix_op o) ^ c_expr out ind a ^ ")"
+    truncate o ("(" ^ Some?.v (prefix_op o) ^ c_expr out ind a ^ ")")
   | EOp (o, args) ->
     reject ("an operator applied to " ^ show (List.length args) ^ " arguments") []
   | EFun _ ->

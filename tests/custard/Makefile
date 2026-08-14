@@ -312,7 +312,7 @@ CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag"
 # of an exhaustive match is not guarded.
 CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
                     "if (s.tag == KRMLBASIC_SQUARE) return (s.val.KrmlBasic_Square._0" \
-                    "if ((n == ((uint32_t)0))) return acc;"
+                    "if ((n == ((uint32_t)0U))) return acc;"
 CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
 
 # Each of these is extracted with --custard_entry and *no* --custard_main, as a

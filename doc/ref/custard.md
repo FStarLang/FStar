@@ -5952,6 +5952,128 @@ backends agree and the arm Pulse proved unreachable is absent from both.
 
 
 
+## 16. The cross-backend matrix: tests/extraction/backends
+
+`tests/extraction/backends` is a matrix of self-contained modules, each
+exposing `main : unit -> Int32.t` that returns `0l` when every check in it
+passed and otherwise the tag of the first check that failed.  Every module is
+extracted, compiled and *run* on every backend, and the runtime answer is
+compared against what F* proved statically.  It arrived on master with three
+columns, for ML extraction and karamel's two backends; Custard adds four.
+
+### 16.1 The four columns
+
+Custard has three backends and its Krml one feeds both of karamel's, so:
+
+| id | pipeline |
+| --- | --- |
+| `custard-ocaml` | `--custard_backend OCaml` then `ocamlfind ocamlopt` |
+| `custard-c` | `--custard_backend C` then `cc` -- no karamel at all |
+| `custard-krml-c` | `--custard_backend Krml` then `krml`, then `cc` |
+| `custard-krml-rust` | `--custard_backend Krml` then `krml -backend rust` |
+
+The `.ml`, `.c` and `.krml` intermediates are produced once each and shared,
+so the two karamel columns run off one `.krml`.
+
+`main : unit -> Int32.t` is exactly the shape `--custard_main` wants (§4.4),
+so three of the four columns need no driver: Custard emits the `int main` and
+makes the F* result the process exit status.  The exception is
+`custard-krml-c`, where the name `main` belongs to karamel's module rather
+than to the F* one, so the rule generates a two-line driver.
+
+### 16.2 Four bugs in Custard
+
+Running twenty-five modules on four columns turned up four defects, three of
+them in code generation.
+
+**The OCaml entry point discarded the exit status.**  `entry_calls` in
+`PrintOCaml` emitted `let _ = m_main ()`, so a program that returned `50l`
+exited `0`.  §4.4 already said the result becomes the exit status and
+`PrintC` already did it; the OCaml backend now emits
+`let _ = Stdlib.exit (Z.to_int (FStar_Int32.v (...)))` when the entry point
+returns a machine integer.
+
+**Integer literals had no width suffix.**  Custard wrote
+`((uint64_t)18446744073709551615)`, which does not compile: C gives a decimal
+literal the first *signed* type it fits in (C99 6.4.4.1), and that one fits
+none, so the cast has nothing to convert.  The suffix belongs on the literal,
+not on the cast.  `PrintC` now emits `U` below 64 bits unsigned, `ULL` at 64
+and `size_t`, `LL` for signed 64, and nothing for signed below -- with the
+one special case that `-9223372036854775808LL` is not a literal at all but
+unary minus applied to a magnitude one past `LLONG_MAX`, so it is written the
+way `<stdint.h>` writes `INT64_MIN`.  This one fix took the direct C column
+from eight compile failures to one.
+
+**Narrow modular operators were not truncated.**  C promotes anything
+narrower than `int` before operating, so `~(uint8_t)0` evaluates to `-1`, not
+to `255`.  `PrintC.truncate` now casts the result back at `Int8` and `Int16`
+width, and only for the operators whose F* meaning is modular: `Not` at a
+width, `BNot`, `BShiftL`, and the wrapping `AddW`/`SubW`/`MultW`.  `add`,
+`sub` and `mul` carry no-overflow preconditions, and `/`, `%`, `&`, `|`, `^`
+cannot leave the range, so none of them needs it.
+
+**Nested casts were fused unconditionally.**  This one is severity 2.  The
+`ECast` case of `Layout.rw_expr` collapsed `ECast (ECast (e, _), c)` to
+`ECast (e, c)`.  That is sound for a representation coercion -- `magic (magic
+x)` is `magic x` -- and wrong for a machine-width conversion, where each cast
+is a computation: `uint8_to_uint32 (uint32_to_uint8 x)` came out as bare `x`,
+silently keeping the bits F* had asked to lose.  It was wrong on *every*
+Custard backend and had gone unnoticed because nothing else round-trips a
+value through a narrower type.  Fusion is now refused when both types are
+`TInt`.
+
+### 16.3 One bug still open: the machine-integer modules
+
+`ExtIntNe`, `ExtIntShiftArith` and `ExtUIntRotate` are XFAIL on the columns
+recorded in the Makefile, for a reason worth stating here because the fix
+belongs in Custard rather than in this test directory.
+
+`Builtins.realized_modules` lists `FStar.UInt8` but not `FStar.UInt16/32/64`
+or any of the four signed modules.  For those seven, the operations Custard
+recognizes are the ones with a primitive rule -- arithmetic, comparison, the
+bitwise trio, the shifts, `v`, `uint_to_t`, and the `FStar.Int.Cast`
+conversions.  `ne`, `lognot`, `shift_arithmetic_right`, the rotates and the
+masks have none, so they fall through and Custard compiles what F* actually
+defines them to be: a fold over a `bool` bit vector in `Prims.int`.  That
+does not typecheck on the OCaml backend and reaches error 367 on the C ones.
+The realizations do define every one of these operations, which is why the
+plain `ocaml` column passes what `custard-ocaml` fails.  The fix is to add
+the seven modules to `realized_modules` or to give the missing operations
+primitive rules; it is written up as finding #18.
+
+### 16.4 NO_ versus XFAIL_, and why Custard needed its own rule
+
+The directory distinguishes a cell that *makes no sense* on a backend
+(`NO_`, not built) from one that is *known broken* (`XFAIL_`, built and
+required to fail, so that a fix cannot go unrecorded).  The existing
+`xfail_rule` takes the F* step as a prerequisite on purpose: for the original
+three columns every XFAILed bug is on the backend side, so extraction must
+still succeed, and a missing tool or a harness typo cannot masquerade as the
+expected failure.
+
+Custard breaks that assumption, because Custard *is* the extractor: finding
+#18 stops the pipeline at `fstar.exe`.  A `custard_xfail_rule` was added
+whose prerequisite is only the `.checked` file, so an extraction failure can
+be XFAILed while a verification failure still cannot.  This matters for
+honesty rather than for coverage: error 367 on `ExtIntShiftArith` is a
+correct diagnosis about the program Custard was handed and a wrong one about
+the program that was written, so the cell records a defect, not a boundary.
+Error 367 on `ExtPrimsIntBignum` or `ExtBoolHigherOrder` really is a
+boundary, and those stay `NO_CUSTARD_C`.
+
+### 16.5 Where Custard wins
+
+Custard passes five cells the older pipeline XFAILs.  It compiles projectors
+itself, so `ExtProjectorOfCtor` never reaches the karamel code that crashes
+on a projector applied to a constructor application (#11).  It does not route
+`FStar.UInt8` through krmllib, so `ExtUInt8Lognot` is right on the direct C
+backend where the ML column is wrong (#3).  And its Krml output avoids three
+shapes karamel's Rust backend cannot handle: the missing `lowstar` module
+(#10), `ExtUInt128` (#14) and `ExtUIntMask` (#17).  It loses only through
+finding #18.
+
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -6018,3 +6140,4 @@ backends agree and the arm Pulse proved unreachable is absent from both.
 | M10δ | **Master merge: the simplified effect system** | Done.  `comp_typ` lost `effect_args` and gained `comp_pre`/`comp_post`, so `Extract.key_of_comp` hashes those instead, and `TypeChecker.Env.lift_comp_t` and `polymonadic_bind_t` left `src/custard/entrypoints.txt` with them.  It also uncovered two extraction bugs that had been latent: `callee_eff` read an *over*-applied callee's effect off the declaration rather than off the surplus arrows of its result type, which is exactly the shape §7.5 gives every reified `Tac` call, so `tcresolve' st0; ...` was deleted as pure and no typeclass constraint in ulib could be solved by the extracted compiler; and the coercion pass asked nothing of an argument whose position an untrusted head still typed concretely, so a dependent pair's realized `any` second component reached a `comp` parameter (§5.4) |
 | M10ε | **The DICE example, through both C backends** (§14) | Done.  `pulse/share/pulse/examples/dice` extracts from its six entry points to 1535 lines of C through karamel or 968 lines of C directly, each compiling with `-Wall -Wextra -Werror`, and the direct output includes four C standard headers and six lines of the example's own and nothing else -- no krmllib, which is the point of replacing karamel rather than sitting on top of it.  `custard.Makefile` builds either.  Eleven compiler fixes and *no change to the example's F\* sources*, all of them general: abbreviations unfolded in binder queries (§14.1), `extract_as` on a `val` (§14.2), `n_extra` counting erased binders (§14.3), eta expansion bounded by the callee's arity (§14.4), external types, by attribute or by `--custard_extern_type` (§14.5), globals with computed initializers (§14.6), let-bound lambdas inlined at their call on the C backend only (§14.7), abbreviations canonicalized before a type instance is keyed (§14.8), a match whose last test pruning deleted (§14.9), `void` where C means it (§14.10), and empty blocks (§14.11).  Three of the eleven were caught by a regression rather than by the example: `tests/custard/EraseAbbrev`, `make custard-smoke`, and the empty-block invariant §14.11 added, which immediately caught an empty `custard_init_globals` left by §14.6.  `tests/custard/CExtern` is the new C test, covering both spellings of an external type, a computed global, and a unit-valued match with do-nothing arms |
 | M10ζ | **The Pulse test suite** (§15) | Done.  All twenty extraction tests in `pulse/test` go through Custard, ten of them straight to C, four through karamel because they compute on `Prims.int` (§15.2), six to OCaml, and the `.expected` files were regenerated.  The enabling piece is `--custard_entry_module`, which roots every top-level value of a module (§15.1) --- a test module has no `main`, and listing its `fn`s in the makefile would let a new one silently stop being extracted.  Rooting a *module* means rooting its specifications too, so a root now skips an erased definition.  Five fixes, three of them about the karamel path the DICE example barely used: karamel prepends its own `Prims` and rejects ours as duplicates, `-bundle X=*` needs `X` to exist, and a `BufIsNull` without a type application was silently *dropped* by karamel’s Low\* re-check, taking `Null_test` with it.  The other two: an `if` whose arms are both empty, caught by §14.11’s invariant, and a `null` an OCaml `ref` can actually hold --- the immediate `0`, tested with `Obj.is_block`, since a sentinel allocation is not one value under `--custard_split`.  `pulse/mk/custard-test.mk` |
+| M10η | **The cross-backend matrix** (§16) | Done.  All four Custard columns of `tests/extraction/backends` -- OCaml, direct C, and karamel's C and Rust off one shared `.krml` -- run green over the suite's twenty-five modules, each extracted, compiled and *run*, with its exit status compared against what F\* proved.  Four bugs in Custard: the OCaml entry point discarded the exit status §4.4 promised; C integer literals carried no width suffix, so `((uint64_t)18446744073709551615)` did not compile (a decimal literal takes the first *signed* type it fits, C99 6.4.4.1, and the cast cannot rescue it); `Int8`/`Int16` modular operators were not truncated back after C's integer promotion, so `~(uint8_t)0` was `-1`; and, severity 2 on every backend, `Layout.rw_expr` fused nested casts unconditionally, so `uint8_to_uint32 (uint32_to_uint8 x)` became bare `x` -- sound for a representation coercion, a silent miscompilation for a width conversion.  One bug left open and written up as finding #18: only `FStar.UInt8` is a realized module, so `ne`, `lognot`, `shift_arithmetic_right`, the rotates and the masks at the other seven widths are compiled from their bit-vector *model* in `Prims.int`.  A `custard_xfail_rule` was needed because Custard is the extractor, so a bug in it can fail the F\* step, which the existing rule takes as a prerequisite.  Custard passes five cells the older pipeline XFAILs (§16.5) |

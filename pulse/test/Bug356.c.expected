@@ -15,12 +15,12 @@ void Bug356_test_unit_admit(bool x);
 
 uint32_t Bug356_test(bool b) {
   (void)b;
-  return ((uint32_t)1);
+  return ((uint32_t)1U);
 }
 
 uint32_t Bug356_test_final_admit(bool b) {
   (void)b;
-  return ((uint32_t)1);
+  return ((uint32_t)1U);
 }
 
 void Bug356_test_unit_admit(bool x) {

@@ -135,6 +135,98 @@ XFAIL_C += ExtUIntRotate
 # uncaught `Not_found`. FINDINGS.md #14 and #17.
 XFAIL_RUST += ExtUIntRotate ExtUIntMask
 
+# --------------------------------------------------------------------------
+# Custard.
+#
+# Custard is the whole-program monomorphizing pipeline (doc/ref/custard.md).
+# It is a *different extractor*, not a different backend behind the same one,
+# so it gets its own columns rather than sharing the ones above -- and the
+# point of running it here is exactly that the two disagree: several cells
+# that are XFAIL for the pipeline above pass under Custard, and the F* -> IR
+# half of Custard is itself a place a bug can hide that no `krml` column would
+# see.
+#
+# Custard has three backends, and its `Krml` one feeds both of karamel's, so
+# there are four columns:
+#
+#   custard-ocaml       --custard_backend OCaml + ocamlfind ocamlopt
+#   custard-c           --custard_backend C     + cc      (no karamel at all)
+#   custard-krml-c      --custard_backend Krml  + krml    + cc
+#   custard-krml-rust   --custard_backend Krml  + krml -backend rust + rustc
+#
+# Every module here has `main : unit -> Int32.t`, which is what
+# --custard_main wants: Custard calls it from the generated code and makes its
+# result the process exit status, so these columns need no driver of their own
+# except on the karamel C path, where the name `main` belongs to the krml
+# module rather than to the F* one.
+# --------------------------------------------------------------------------
+
+NO_CUSTARD_OCAML :=
+
+# The direct C backend diagnoses what C cannot represent (error 367) instead
+# of mistranslating it, which is the same judgement NO_ records for the other
+# columns: an unbounded Prims.int, a closure, and an inductive that contains
+# itself by value have no C representation.
+NO_CUSTARD_C := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul ExtPrimsIntBignum \
+                ExtBoolHigherOrder ExtDatatypesRec ExtDatatypesMutual \
+                ExtInt128
+
+# As for the plain Rust column: the Rust backend refuses mathematical
+# integers, and it cannot translate a closure.
+NO_CUSTARD_KRML_RUST := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul \
+                        ExtPrimsIntBignum ExtBoolHigherOrder
+
+NO_CUSTARD_KRML_C := ExtBoolHigherOrder
+
+# --- shared with the pipeline above ---------------------------------------
+
+# FINDINGS.md #18: FStar.{U,}Int{8,16,32,64} are not realized modules for
+# Custard the way FStar.UInt8 is, and only the operations with a primitive
+# rule (arithmetic, comparison, the bitwise pair) are recognized. Everything
+# else -- `ne`, `lognot`, `shift_arithmetic_right`, the rotates, the masks --
+# is compiled from its F* *model*, which is a fold over a bit vector of
+# Prims.int. That does not even typecheck on the OCaml backend, and on the C
+# ones it reaches Prims.int and is rejected.
+XFAIL_CUSTARD_OCAML     += ExtIntNe ExtIntShiftArith ExtUIntRotate
+XFAIL_CUSTARD_C         += ExtIntShiftArith ExtUIntRotate
+XFAIL_CUSTARD_KRML_C    += ExtIntShiftArith ExtUIntRotate ExtUIntMask
+XFAIL_CUSTARD_KRML_RUST += ExtIntShiftArith ExtUIntRotate
+#
+# On the direct C column these are XFAIL rather than NO, even though they too
+# stop at error 367: the diagnosis is right about the *program it was given*
+# (a bit-vector fold really has no C representation) but wrong about the
+# program that was written, which is a rotate. The bug is in Builtins, not in
+# the C backend, so the cell records a defect rather than a boundary.
+
+# FINDINGS.md #3: `FStar.UInt8` *is* a realized module for Custard, so its
+# OCaml column inherits the realization's untruncated `lognot` exactly as the
+# plain OCaml column does.
+XFAIL_CUSTARD_OCAML += ExtUInt8Lognot
+
+# FINDINGS.md #5, #6, #7: the krml C column shares krmllib's Prims.int with
+# the plain C column, and so shares its three bugs.
+XFAIL_CUSTARD_KRML_C += ExtPrimsIntDiv ExtPrimsIntMul ExtPrimsIntBignum
+
+# FINDINGS.md #8, #9: heap-allocated inductives, and krml not terminating on
+# two recursive datatypes.
+XFAIL_CUSTARD_KRML_C    += ExtDatatypesRec ExtDatatypesMutual
+XFAIL_CUSTARD_KRML_RUST += ExtDatatypesRec ExtDatatypesMutual
+
+# FINDINGS.md #14, #15: karamel has no 128-bit integers in Rust, and krmllib
+# ships no FStar.Int128 for C.
+XFAIL_CUSTARD_KRML_C    += ExtInt128 ExtUInt128
+XFAIL_CUSTARD_KRML_RUST += ExtInt128
+
+# FINDINGS.md #4: karamel's C backend drops a narrowing cast inside a
+# comparison. Custard emits the cast, karamel then removes it, exactly as in
+# the plain `c` column.
+XFAIL_CUSTARD_KRML_C    += ExtIntCast
+
+CUSTARD_OCAML_TESTS     := $(filter-out $(NO_CUSTARD_OCAML)     $(XFAIL_CUSTARD_OCAML),$(TESTS))
+CUSTARD_C_TESTS         := $(filter-out $(NO_CUSTARD_C)         $(XFAIL_CUSTARD_C),$(TESTS))
+CUSTARD_KRML_C_TESTS    := $(filter-out $(NO_CUSTARD_KRML_C)    $(XFAIL_CUSTARD_KRML_C),$(TESTS))
+CUSTARD_KRML_RUST_TESTS := $(filter-out $(NO_CUSTARD_KRML_RUST) $(XFAIL_CUSTARD_KRML_RUST),$(TESTS))
+
 OCAML_TESTS := $(filter-out $(NO_OCAML) $(XFAIL_OCAML),$(TESTS))
 C_TESTS     := $(filter-out $(NO_C)     $(XFAIL_C),$(TESTS))
 RUST_TESTS  := $(filter-out $(NO_RUST)  $(XFAIL_RUST),$(TESTS))
@@ -211,23 +303,37 @@ ULIB_KRML      := $(patsubst %,$(OUTPUT_DIR)/%.krml,$(subst .,_,$(ULIB_KRML_MODS
 CC ?= cc
 
 all: ocaml c rust
+all: custard-ocaml custard-c custard-krml-c custard-krml-rust
 
 ocaml: $(patsubst %,$(OUTPUT_DIR)/ml/%.ok,$(OCAML_TESTS))
 ocaml: $(patsubst %,$(OUTPUT_DIR)/ml/%.xfail,$(XFAIL_OCAML))
+
+custard-ocaml: $(patsubst %,$(OUTPUT_DIR)/cml/%.ok,$(CUSTARD_OCAML_TESTS))
+custard-ocaml: $(patsubst %,$(OUTPUT_DIR)/cml/%.xfail,$(XFAIL_CUSTARD_OCAML))
+custard-c: $(patsubst %,$(OUTPUT_DIR)/cc/%.ok,$(CUSTARD_C_TESTS))
+custard-c: $(patsubst %,$(OUTPUT_DIR)/cc/%.xfail,$(XFAIL_CUSTARD_C))
 ifeq ($(HAVE_KRML),1)
 c:     $(patsubst %,$(OUTPUT_DIR)/c/%.ok,$(C_TESTS))
 c:     $(patsubst %,$(OUTPUT_DIR)/c/%.xfail,$(XFAIL_C))
+custard-krml-c: $(patsubst %,$(OUTPUT_DIR)/ckc/%.ok,$(CUSTARD_KRML_C_TESTS))
+custard-krml-c: $(patsubst %,$(OUTPUT_DIR)/ckc/%.xfail,$(XFAIL_CUSTARD_KRML_C))
 ifeq ($(HAVE_RUSTC),1)
 rust:  $(patsubst %,$(OUTPUT_DIR)/rs/%.ok,$(RUST_TESTS))
 rust:  $(patsubst %,$(OUTPUT_DIR)/rs/%.xfail,$(XFAIL_RUST))
+custard-krml-rust: $(patsubst %,$(OUTPUT_DIR)/ckr/%.ok,$(CUSTARD_KRML_RUST_TESTS))
+custard-krml-rust: $(patsubst %,$(OUTPUT_DIR)/ckr/%.xfail,$(XFAIL_CUSTARD_KRML_RUST))
 endif
 endif
-.PHONY: all ocaml c rust
+.PHONY: all ocaml c rust custard-ocaml custard-c custard-krml-c custard-krml-rust
 
 # Convenience: `make ExtFoo.ocaml`, `make ExtFoo.c`, `make ExtFoo.rust`.
 %.ocaml: $(OUTPUT_DIR)/ml/%.ok ; @true
 %.c:     $(OUTPUT_DIR)/c/%.ok  ; @true
 %.rust:  $(OUTPUT_DIR)/rs/%.ok ; @true
+%.custard-ocaml:     $(OUTPUT_DIR)/cml/%.ok ; @true
+%.custard-c:         $(OUTPUT_DIR)/cc/%.ok  ; @true
+%.custard-krml-c:    $(OUTPUT_DIR)/ckc/%.ok ; @true
+%.custard-krml-rust: $(OUTPUT_DIR)/ckr/%.ok ; @true
 
 ###############
 # OCaml       #
@@ -316,6 +422,139 @@ $(OUTPUT_DIR)/rs/%.ok: $(OUTPUT_DIR)/rs/%.exe
 	$(Q)./$< || { echo "FAIL [rust] $*: check #$$? (grep the module for that tag)"; exit 1; }
 	$(Q)touch $@
 
+###########
+# Custard #
+###########
+
+# Custard is whole-program: it starts from an entry point and follows what it
+# reaches, so there is no --extract_module and no per-module dependency graph
+# to hand to karamel. One .fst goes in, one translation unit comes out.
+#
+# The .checked file is the only prerequisite named, which is coarser than it
+# looks: a run reads far more than that, but everything else it reads is ulib,
+# and ulib does not change while this directory is being built.
+#
+# --custard_main names `main` as *the* entry point, which is what makes the
+# generated code call it and turn its Int32 result into the exit status.
+CUSTARD = --codegen Custard --custard_main $*.main
+
+$(OUTPUT_DIR)/custard/%.ml: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD ml", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(FSTAR) $< $(CUSTARD) -o $@
+
+# Type monomorphization (section 5.0.1) is a prerequisite for the direct C
+# backend: without it the program still has type variables, which have no size.
+$(OUTPUT_DIR)/custard/%.c: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD c", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(FSTAR) $< $(CUSTARD) --custard_backend C \
+	    --custard_monomorphize_types true -o $@
+	@# The invariant of tests/custard and pulse/test: a block with nothing in
+	@# it is a branch the backend failed to notice was empty.
+	$(Q)awk '/\{$$/ { open = NR; next } \
+	         /^[ \t]*\}/ && open == NR - 1 { print NR; found = 1 } \
+	         { open = 0 } END { exit found }' $@ \
+	  || { echo "FAIL [custard-c] $*: empty block, at the lines above"; exit 1; }
+
+$(OUTPUT_DIR)/custard/%.krml: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD krml", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(FSTAR) $< $(CUSTARD) --custard_backend Krml -o $@
+
+# --- custard-ocaml --------------------------------------------------------
+
+$(OUTPUT_DIR)/cml/%.exe: $(OUTPUT_DIR)/custard/%.ml
+	$(call msg, "OCAMLOPT", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(FSTAR_EXE) --ocamlopt $< -o $@
+
+$(OUTPUT_DIR)/cml/%.ok: $(OUTPUT_DIR)/cml/%.exe
+	$(call msg, "RUN custard-ocaml", $*)
+	$(Q)./$< || { echo "FAIL [custard-ocaml] $*: check #$$? (grep the module for that tag)"; exit 1; }
+	$(Q)touch $@
+
+# --- custard-c ------------------------------------------------------------
+
+# A self-contained C11 translation unit over the standard headers: no krmllib,
+# no include path, no karamel. -Werror is part of the test -- an unused
+# variable or a missing cast is a bug in the backend, not a style question.
+#
+# -Wtype-limits and -Wtautological-compare are off because they fire on
+# properties of the *test*: a module that pins `lognot 0uy <= 255uy` is saying
+# something about F*, and that the bound holds for a uint8_t at all is exactly
+# what it means to have got the width right.
+CUSTARD_CFLAGS ?= -std=c11 -Wall -Wextra -Werror \
+                  -Wno-type-limits -Wno-tautological-compare
+
+$(OUTPUT_DIR)/cc/%.exe: $(OUTPUT_DIR)/custard/%.c
+	$(call msg, "CC", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(CC) $(CUSTARD_CFLAGS) -o $@ $<
+
+$(OUTPUT_DIR)/cc/%.ok: $(OUTPUT_DIR)/cc/%.exe
+	$(call msg, "RUN custard-c", $*)
+	$(Q)./$< || { echo "FAIL [custard-c] $*: check #$$? (grep the module for that tag)"; exit 1; }
+	$(Q)touch $@
+
+# --- custard-krml-c -------------------------------------------------------
+
+# A whole-program krml file holds exactly one module, named Custard, so there
+# is nothing to bundle and karamel writes Custard.c whatever the test is
+# called. -no-prefix Custard drops that one prefix, which leaves the F* names:
+# `main` is `ExtFoo_main`, not `main`, so unlike the column above this one
+# needs a driver. krml writes the include path it wants into compile_flags.txt,
+# which is the only portable way to find krmllib's headers.
+$(OUTPUT_DIR)/ckc/%.exe: $(OUTPUT_DIR)/custard/%.krml $(KRMLLIB)
+	$(call msg, "KRML C", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)rm -rf $(OUTPUT_DIR)/ckc/$*
+	$(Q)$(TIMEOUT) $(KRML_EXE) $(KRML_FLAGS) $(KRML_COMMON) $(KRML_C_FLAGS) \
+	    -skip-linking -skip-makefiles -no-prefix Custard \
+	    -tmpdir $(OUTPUT_DIR)/ckc/$* $<
+	@# krml exits 0 even when an unhandled exception stops it from writing
+	@# anything; do not let that look like a successful extraction.
+	$(Q)ls $(OUTPUT_DIR)/ckc/$*/*.o >/dev/null 2>&1 || \
+	    { echo "FAIL [custard-krml-c] $*: krml produced no object file"; exit 1; }
+	$(Q){ echo '#include "Custard.h"'; \
+	      echo 'int main(void) {'; \
+	      grep -q krmlinit_globals $(OUTPUT_DIR)/ckc/$*/Custard.h && \
+	        echo '  krmlinit_globals();' || true; \
+	      echo '  return (int)$*_main();'; \
+	      echo '}'; } > $(OUTPUT_DIR)/ckc/$*/driver.c
+	$(call msg, "CC", $*)
+	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/ckc/$*/compile_flags.txt) \
+	    -o $@ $(OUTPUT_DIR)/ckc/$*/driver.c $(OUTPUT_DIR)/ckc/$*/*.o $(KRMLLIB)
+
+$(OUTPUT_DIR)/ckc/%.ok: $(OUTPUT_DIR)/ckc/%.exe
+	$(call msg, "RUN custard-krml-c", $*)
+	$(Q)./$< || { echo "FAIL [custard-krml-c] $*: check #$$? (grep the module for that tag)"; exit 1; }
+	$(Q)touch $@
+
+# --- custard-krml-rust ----------------------------------------------------
+
+# karamel's Rust backend flattens the F* prefix away, so here `main` really is
+# `main` and the rename of the plain Rust column applies unchanged.
+$(OUTPUT_DIR)/ckr/%.rs: $(OUTPUT_DIR)/custard/%.krml
+	$(call msg, "KRML RUST", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)rm -rf $(OUTPUT_DIR)/ckr/$*
+	$(Q)$(TIMEOUT) $(KRML_EXE) $(KRML_FLAGS) $(KRML_COMMON) -backend rust \
+	    -tmpdir $(OUTPUT_DIR)/ckr/$* $<
+	$(Q)sed 's/^pub fn main()/pub fn krml_main()/' $(OUTPUT_DIR)/ckr/$*/*.rs > $@
+	$(Q)grep -q '^pub fn krml_main()' $@ || \
+	    { echo "FAIL [custard-krml-rust] $*: krml did not emit 'main' in the generated crate"; exit 1; }
+	$(Q)echo 'fn main() { std::process::exit(krml_main()) }' >> $@
+
+$(OUTPUT_DIR)/ckr/%.exe: $(OUTPUT_DIR)/ckr/%.rs
+	$(call msg, "RUSTC", $*)
+	$(Q)rustc --edition 2021 -A warnings -o $@ $<
+
+$(OUTPUT_DIR)/ckr/%.ok: $(OUTPUT_DIR)/ckr/%.exe
+	$(call msg, "RUN custard-krml-rust", $*)
+	$(Q)./$< || { echo "FAIL [custard-krml-rust] $*: check #$$? (grep the module for that tag)"; exit 1; }
+	$(Q)touch $@
+
 #####################
 # Expected failures #
 #####################
@@ -352,3 +591,35 @@ endef
 $(eval $(call xfail_rule,ml,ocaml,OCAML,ml/%.ml))
 $(eval $(call xfail_rule,c,c,C,%.krml))
 $(eval $(call xfail_rule,rs,rust,RUST,%.krml))
+
+# The Custard columns need their own version of the same rule, because for
+# them extraction is *not* a prerequisite that must succeed: Custard is the
+# extractor, so a bug in it can stop the pipeline at the F* step, and cell
+# #18 below is exactly such a case. The failure is required to be a failure of
+# the pipeline, not of the harness -- which the grep at the end of the rule
+# above already checks -- but it may happen at any stage of it.
+#
+# The prerequisite is therefore the .checked file: a cell that cannot even be
+# type-checked is broken in a way this directory does not mean to record.
+define custard_xfail_rule
+$$(OUTPUT_DIR)/$(1)/%.xfail: $$(CACHE_DIR)/%.fst.checked
+	$$(call msg, "XFAIL $(2)", $$*)
+	$$(Q)mkdir -p $$(dir $$@)
+	$$(Q)if $$(MAKE) $$(OUTPUT_DIR)/$(1)/$$*.ok >$$@.log 2>&1; then \
+	  echo "UNEXPECTED PASS [$(2)] $$*: this cell is listed in XFAIL_$(3) but it"; \
+	  echo "  now works. Please remove it from the Makefile and FINDINGS.md."; \
+	  exit 1; \
+	fi
+	$$(Q)if grep -qE "(command not found|No such file or directory: (krml|rustc|cc)|not found$$$$|takes an argument but has none)" $$@.log; then \
+	  echo "BROKEN XFAIL [$(2)] $$*: the cell failed, but not because of the"; \
+	  echo "  documented bug. See $$@.log:"; \
+	  sed 's/^/    /' $$@.log | tail -n 5; \
+	  exit 1; \
+	fi
+	$$(Q)touch $$@
+endef
+
+$(eval $(call custard_xfail_rule,cml,custard-ocaml,CUSTARD_OCAML))
+$(eval $(call custard_xfail_rule,cc,custard-c,CUSTARD_C))
+$(eval $(call custard_xfail_rule,ckc,custard-krml-c,CUSTARD_KRML_C))
+$(eval $(call custard_xfail_rule,ckr,custard-krml-rust,CUSTARD_KRML_RUST))

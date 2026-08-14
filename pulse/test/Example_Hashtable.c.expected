@@ -92,14 +92,14 @@ size_t Pulse_Lib_HashTable_size_t_mod(size_t x, size_t y) {
 }
 
 Pulse_Lib_HashTable_Spec_cell__uintsize_data Pulse_Lib_Vec_replace_i_ref__cell_t_data(Pulse_Lib_HashTable_Spec_cell__uintsize_data **r, size_t i, Pulse_Lib_HashTable_Spec_cell__uintsize_data x) {
-  Pulse_Lib_HashTable_Spec_cell__uintsize_data *vc = r[((size_t)0)];
+  Pulse_Lib_HashTable_Spec_cell__uintsize_data *vc = r[((size_t)0ULL)];
   Pulse_Lib_HashTable_Spec_cell__uintsize_data y = vc[i];
   vc[i] = x;
   return y;
 }
 
 void Pulse_Lib_Vec_write_ref__cell_t_data(Pulse_Lib_HashTable_Spec_cell__uintsize_data **r, size_t i, Pulse_Lib_HashTable_Spec_cell__uintsize_data x) {
-  Pulse_Lib_HashTable_Spec_cell__uintsize_data *vc = r[((size_t)0)];
+  Pulse_Lib_HashTable_Spec_cell__uintsize_data *vc = r[((size_t)0ULL)];
   vc[i] = x;
 }
 
@@ -107,7 +107,7 @@ FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize Pulse_Lib_Has
   size_t (*hashf)(size_t) = ht.hashf;
   Pulse_Lib_HashTable_Spec_cell__uintsize_data *contents = ht.contents;
   size_t cidx = Pulse_Lib_HashTable_size_t_mod(hashf(k), ht.sz);
-  size_t off = ((size_t)0);
+  size_t off = ((size_t)0ULL);
   FStar_Pervasives_Native_option__uintsize ret = (FStar_Pervasives_Native_option__uintsize){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__UINTSIZE };
   bool _break = false;
   while (true) {
@@ -129,7 +129,7 @@ FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize Pulse_Lib_Has
           _break = true;
         }
         else {
-          off = (voff + ((size_t)1));
+          off = (voff + ((size_t)1ULL));
           (void)(Pulse_Lib_Vec_replace_i_ref__cell_t_data(&contents, idx, (Pulse_Lib_HashTable_Spec_cell__uintsize_data){ .tag = PULSE_LIB_HASHTABLE_SPEC_USED__UINTSIZE_DATA, .val = { .Pulse_Lib_HashTable_Spec_Used__uintsize_data = { .k = c.val.Pulse_Lib_HashTable_Spec_Used__uintsize_data.k, .v = c.val.Pulse_Lib_HashTable_Spec_Used__uintsize_data.v } } }));
         }
       }
@@ -138,7 +138,7 @@ FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize Pulse_Lib_Has
         _break = true;
       }
       else {
-        off = (voff + ((size_t)1));
+        off = (voff + ((size_t)1ULL));
         (void)(Pulse_Lib_Vec_replace_i_ref__cell_t_data(&contents, idx, c));
       }
     }
@@ -155,8 +155,8 @@ FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_bool Pulse_Lib_HashTable_inse
   size_t (*hashf)(size_t) = ht.hashf;
   Pulse_Lib_HashTable_Spec_cell__uintsize_data *contents = ht.contents;
   size_t cidx = Pulse_Lib_HashTable_size_t_mod(hashf(k), ht.sz);
-  size_t off = ((size_t)0);
-  size_t idx = ((size_t)0);
+  size_t off = ((size_t)0ULL);
+  size_t idx = ((size_t)0ULL);
   bool _break = false;
   while (true) {
     bool _ct1;
@@ -175,7 +175,7 @@ FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_bool Pulse_Lib_HashTable_inse
       }
       else {
         Pulse_Lib_Vec_write_ref__cell_t_data(&contents, vidx, (Pulse_Lib_HashTable_Spec_cell__uintsize_data){ .tag = PULSE_LIB_HASHTABLE_SPEC_USED__UINTSIZE_DATA, .val = { .Pulse_Lib_HashTable_Spec_Used__uintsize_data = { .k = c.val.Pulse_Lib_HashTable_Spec_Used__uintsize_data.k, .v = c.val.Pulse_Lib_HashTable_Spec_Used__uintsize_data.v } } });
-        off = (voff + ((size_t)1));
+        off = (voff + ((size_t)1ULL));
       }
     }
     else if (c.tag == PULSE_LIB_HASHTABLE_SPEC_CLEAN__UINTSIZE_DATA) {
@@ -221,11 +221,11 @@ void Pulse_Lib_HashTable_dealloc__t_data(Pulse_Lib_HashTable_Type_ht_t__uintsize
 }
 
 void Example_Hashtable_insert_lookup_and_replace(void) {
-  Pulse_Lib_HashTable_Type_ht_t__uintsize_data h = Pulse_Lib_HashTable_alloc__t_data(Example_Hashtable_hash, ((size_t)100));
-  FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_bool _letpattern = Pulse_Lib_HashTable_insert__t_data(h, ((size_t)1), (Example_Hashtable_data){ .left = true, .right = false });
-  FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize _letpattern1 = Pulse_Lib_HashTable_lookup__t_data(_letpattern._1, ((size_t)1));
+  Pulse_Lib_HashTable_Type_ht_t__uintsize_data h = Pulse_Lib_HashTable_alloc__t_data(Example_Hashtable_hash, ((size_t)100ULL));
+  FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_bool _letpattern = Pulse_Lib_HashTable_insert__t_data(h, ((size_t)1ULL), (Example_Hashtable_data){ .left = true, .right = false });
+  FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize _letpattern1 = Pulse_Lib_HashTable_lookup__t_data(_letpattern._1, ((size_t)1ULL));
   if (_letpattern1._2.tag == FSTAR_PERVASIVES_NATIVE_SOME__UINTSIZE) {
-    FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_data _letpattern2 = Pulse_Lib_HashTable_replace__t_data(_letpattern1._1, _letpattern1._2.val.FStar_Pervasives_Native_Some__uintsize.v, ((size_t)1), (Example_Hashtable_data){ .left = false, .right = true });
+    FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_data _letpattern2 = Pulse_Lib_HashTable_replace__t_data(_letpattern1._1, _letpattern1._2.val.FStar_Pervasives_Native_Some__uintsize.v, ((size_t)1ULL), (Example_Hashtable_data){ .left = false, .right = true });
     Pulse_Lib_HashTable_dealloc__t_data(_letpattern2._1);
   }
   else Pulse_Lib_HashTable_dealloc__t_data(_letpattern1._1);

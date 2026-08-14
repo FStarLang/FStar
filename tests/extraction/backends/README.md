@@ -11,6 +11,18 @@ runtime result is compared against what F\* proves statically.
 | `ocaml` | `fstar.exe --codegen OCaml` + `ocamlfind ocamlopt`             |
 | `c`     | `fstar.exe --codegen krml` + `krml` (C backend) + `cc`         |
 | `rust`  | `fstar.exe --codegen krml` + `krml -backend rust` + `rustc`    |
+| `custard-ocaml`     | `--codegen Custard --custard_backend OCaml` + `ocamlopt` |
+| `custard-c`         | `--codegen Custard --custard_backend C` + `cc`           |
+| `custard-krml-c`    | `--codegen Custard --custard_backend Krml` + `krml` + `cc` |
+| `custard-krml-rust` | `--codegen Custard --custard_backend Krml` + `krml -backend rust` + `rustc` |
+
+The first three go through `FStarC.Extraction`; the last four go through
+Custard (`doc/ref/custard.md`), which is a *different extractor* rather than a
+different backend behind the same one. Running both matters in each direction:
+Custard passes several cells the pipeline above XFAILs, and the F\* -> IR half
+of Custard is a place a bug can hide that no `krml` column would ever see. The
+suite found one such bug (`FINDINGS.md` #18) and three miscompilations in
+Custard's own backends.
 
 ## How a test works
 
@@ -125,6 +137,15 @@ The `Makefile` has two kinds of exclusion:
 Every `XFAIL_` entry carries a comment pointing at the relevant section of
 `FINDINGS.md`.
 
+For the first three columns an XFAILed cell must still *extract*: the bug is
+on the backend side, so the F\* step is a prerequisite of the `xfail` rule
+rather than part of what is allowed to fail. Without that, a missing tool or a
+typo in the harness would look like the expected failure. The Custard columns
+use `custard_xfail_rule` instead, whose prerequisite is only the `.checked`
+file, because there Custard *is* the extractor and a bug in it can stop the
+pipeline at the F\* step -- which is exactly what `FINDINGS.md` #18 does. Both
+rules check that the failure was not merely the harness falling over.
+
 ## Adding a test
 
 1. Drop `ExtSomething.fst` in this directory. It is picked up automatically
@@ -149,7 +170,9 @@ that works — several modules here were split for exactly that reason.
 make                     # everything
 make ocaml               # only the OCaml column
 make c rust              # only the Karamel columns
+make custard-c           # only Custard's direct-to-C column
 make ExtIntSigned.ocaml  # a single cell of the matrix
+make ExtIntSigned.custard-c
 V=1 make ...             # show the commands
 KRML_TIMEOUT=300 make    # two known bugs make krml loop; every krml call is
                          # bounded (120s by default)

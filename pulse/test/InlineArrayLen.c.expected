@@ -18,64 +18,64 @@ int32_t InlineArrayLen_use_gen_len_st(void);
 
 int32_t InlineArrayLen_basic(void) {
   int32_t *arr;
-  int32_t _cbuf1[((size_t)2)];
-  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2)); _ci2++) {
+  int32_t _cbuf1[((size_t)2ULL)];
+  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2ULL)); _ci2++) {
     _cbuf1[_ci2] = ((int32_t)123);
   }
   arr = _cbuf1;
-  return arr[((size_t)0)];
+  return arr[((size_t)0ULL)];
 }
 
 int32_t InlineArrayLen_use(void) {
   int32_t *arr;
-  int32_t _cbuf1[((size_t)2)];
-  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2)); _ci2++) {
+  int32_t _cbuf1[((size_t)2ULL)];
+  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2ULL)); _ci2++) {
     _cbuf1[_ci2] = ((int32_t)123);
   }
   arr = _cbuf1;
-  return arr[((size_t)0)];
+  return arr[((size_t)0ULL)];
 }
 
 int32_t InlineArrayLen_use_gen_init(void) {
   int32_t *arr;
-  int32_t _cbuf1[((size_t)2)];
-  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2)); _ci2++) {
+  int32_t _cbuf1[((size_t)2ULL)];
+  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2ULL)); _ci2++) {
     _cbuf1[_ci2] = ((int32_t)123);
   }
   arr = _cbuf1;
-  return arr[((size_t)0)];
+  return arr[((size_t)0ULL)];
 }
 
 int32_t InlineArrayLen_use_gen_init_st(void) {
   int32_t __anf0 = ((int32_t)123);
   int32_t *arr;
-  int32_t _cbuf1[((size_t)2)];
-  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2)); _ci2++) {
+  int32_t _cbuf1[((size_t)2ULL)];
+  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2ULL)); _ci2++) {
     _cbuf1[_ci2] = __anf0;
   }
   arr = _cbuf1;
-  return arr[((size_t)0)];
+  return arr[((size_t)0ULL)];
 }
 
 int32_t InlineArrayLen_use_gen_len(void) {
   int32_t *arr;
-  int32_t _cbuf1[((size_t)2)];
-  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2)); _ci2++) {
+  int32_t _cbuf1[((size_t)2ULL)];
+  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)2ULL)); _ci2++) {
     _cbuf1[_ci2] = ((int32_t)123);
   }
   arr = _cbuf1;
-  return arr[((size_t)0)];
+  return arr[((size_t)0ULL)];
 }
 
 int32_t InlineArrayLen_use_gen_len_st(void) {
-  size_t __anf0 = ((size_t)42);
+  size_t __anf0 = ((size_t)42ULL);
   int32_t *arr;
   int32_t _cbuf1[__anf0];
   for (size_t _ci2 = 0; _ci2 < (size_t)(__anf0); _ci2++) {
     _cbuf1[_ci2] = ((int32_t)123);
   }
   arr = _cbuf1;
-  return arr[((size_t)0)];
+  return arr[((size_t)0ULL)];
 }
 
 

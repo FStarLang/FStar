@@ -468,12 +468,18 @@ let rec rw_expr (t:tbl) (x:expr) : ML expr =
      | _ -> { x with e = EDiscrim (e1, n) })
 
   (* Section 5.4: a cast that has become the identity after collapse is
-     dropped, and nested casts are fused. *)
+     dropped, and nested casts are fused.
+
+     Fusing is sound for a *representation* coercion, which is what section 5.4
+     is about: [magic (magic x)] is [magic x], because neither one computes.  A
+     machine-width conversion does compute, and dropping the inner one of
+     [(uint32_t)(uint8_t)x] keeps exactly the bits F\* asked to lose.  So an
+     inner cast between two machine widths stays. *)
   | ECast (e1, c) ->
     let c = resolve t 100 c in
     let e1 = rw_expr t e1 in
     let e1 = match e1.e with
-             | ECast (e2, _) -> e2
+             | ECast (e2, ti) when not (TInt? ti && TInt? e2.ty) -> e2
              | _ -> e1 in
     if e1.ty = c then e1 else { x with e = ECast (e1, c) }
 

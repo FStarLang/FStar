@@ -954,14 +954,23 @@ let print_decls (p:program) : ML (list string) =
     | None -> [])
 
 (* Custard compiles standalone programs (section 4.4), so the entry points are
-   called from the generated code itself. *)
+   called from the generated code itself.  An entry point returning a machine
+   integer is the process exit status, exactly as it is on the C backend --
+   the two must agree, or the same program tested on both reports success on
+   one and failure on the other. *)
 let entry_calls (p:program) : ML (list string) =
   p |> List.collect (fun d ->
     match d with
     | DLet l when l.dl_flags |> List.existsb Entrypoint?
                && l.dl_binders |> List.for_all (fun b -> TUnit? b.b_ty) ->
       let args = String.concat " " (List.map (fun _ -> "()") l.dl_binders) in
-      ["let _ = " ^ qualify l.dl_name (ocaml_value_name l.dl_name) ^ " " ^ args]
+      let call = qualify l.dl_name (ocaml_value_name l.dl_name) ^ " " ^ args in
+      (match l.dl_ret with
+       (* [v] lands in [Prims.int], which is zarith's, and is the one
+          conversion every width's realization has. *)
+       | TInt sw ->
+         ["let _ = Stdlib.exit (Z.to_int (" ^ int_module sw ^ ".v (" ^ call ^ ")))"]
+       | _ -> ["let _ = " ^ call])
     | _ -> [])
 
 let assemble (ds : list string) : ML string =
