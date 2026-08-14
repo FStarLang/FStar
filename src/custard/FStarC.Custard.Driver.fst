@@ -81,21 +81,24 @@ let main_entry () : ML (option Ident.lident) =
    wrong upstream -- and, unlike the ML extraction's [Obj.magic] sprinkles,
    one that can be pointed at.
 
-   A surviving [ECast] is the other half.  Section 5.4 eliminates a coercion
+   A surviving [ECoerce] is the other half.  Section 5.4 eliminates a coercion
    when the two sides have the same layout, and fuses nested ones; what is left
    is a coercion between representations Custard believes are genuinely
    different, which in OCaml is an [Obj.magic] and in C a reinterpretation.
 
-   Two kinds are not reported.  A cast between two machine integers is not lost
-   information at all but the conversion the source asked for -- a real call
-   into [FStar.Int.Cast].  And a cast to or from [TAny] is the *consequence* of
-   a [TAny], inserted by {!FStarC.Custard.Simplify.coerce_prog} at exactly the
-   boundary where one meets a concrete type; the [TAny] itself is reported at
-   the binder, field or result carrying it, and repeating the complaint once
-   per use would bury it. *)
+   An [ECast] is never reported: it is not lost information at all but the
+   width conversion the source asked for, a real call into [FStar.Int.Cast].
+   Keeping the two apart in the IR is what makes that a matter of which node
+   this is rather than of inspecting the types on either side.
+
+   A coercion to or from [TAny] is not reported either.  It is the
+   *consequence* of a [TAny], inserted by
+   {!FStarC.Custard.Simplify.coerce_prog} at exactly the boundary where one
+   meets a concrete type; the [TAny] itself is reported at the binder, field
+   or result carrying it, and repeating the complaint once per use would bury
+   it. *)
 let lost_cast (e:expr) (t:cty) : bool =
   match e.ty, t with
-  | TInt _, TInt _ -> false
   | TAny, _ | _, TAny -> false
   | _ -> true
 
@@ -114,7 +117,7 @@ let warn_any (prog:program) : ML unit =
     if any_cty c then note ("the " ^ where ^ " has type " ^ show c) in
   let rec go (x:expr) : ML unit =
     (match x.e with
-     | ECast (e1, t) when lost_cast e1 t ->
+     | ECoerce (e1, t) when lost_cast e1 t ->
        note ("a coercion from " ^ show e1.ty ^ " to " ^ show t)
      | _ -> ());
     let sub (es:list expr) : ML unit = es |> List.iter go in
@@ -133,7 +136,7 @@ let warn_any (prog:program) : ML unit =
     | ERaise e1 -> go e1
     | ERecord (_, fs) -> sub (fs |> List.map snd)
     | EProj (e, _, _) | EDiscrim (e, _) -> go e
-    | ECast (e, _) -> go e
+    | ECast (e, _) | ECoerce (e, _) -> go e
     | EWhile (c, b) -> sub [c; b]
   and go_branch (br:branch) : ML unit =
     let _, g, b = br in

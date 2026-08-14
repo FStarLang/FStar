@@ -519,6 +519,22 @@ let ascribe_record (n:name) (fs:list string) (s:string) : ML string =
    glance, which is the only thing the layout here is for. *)
 let line_width : int = 80
 
+(* Whether a width conversion can change the mathematical value.  Signed to
+   unsigned always can, because of the negatives; otherwise it is a question
+   of range.  [FStar.SizeT] is 64 bits at every target F* supports. *)
+let width_bits (w:width) : int =
+  match w with
+  | Int8 -> 8 | Int16 -> 16 | Int32 -> 32 | Int64 -> 64 | Sizet -> 64
+
+let value_preserving (a b : signedness & width) : bool =
+  let sa, wa = a in
+  let sb, wb = b in
+  match sa, sb with
+  | Unsigned, Unsigned
+  | Signed, Signed -> width_bits wa <= width_bits wb
+  | Unsigned, Signed -> width_bits wa < width_bits wb
+  | Signed, Unsigned -> false
+
 let rec term (ind:string) (e:expr) : ML string =
   match e.e with
   | EConst c -> constant c
@@ -607,11 +623,11 @@ let rec term (ind:string) (e:expr) : ML string =
      conversions are exact by their own preconditions, so they can go through
      [Prims.int] the way the realization itself does.
 
-     A coercion to or from [TAny] is the opposite case: it must not change the
-     representation at all, or the two directions would have to agree about
-     which one is canonical -- and they cannot, because the same value also
-     crosses the boundary inside a structure ([uint32 list] to [TAny]), where
-     no per-element conversion is possible.  So it is a bare [Obj.magic], at
+     A *coercion* is the opposite case: it must not change the representation
+     at all, or the two directions would have to agree about which one is
+     canonical -- and they cannot, because the same value also crosses the
+     boundary inside a structure ([uint32 list] to [TAny]), where no
+     per-element conversion is possible.  So it is a bare [Obj.magic], at
      every width and at every depth. *)
   | ECast (e1, t) ->
     (match e1.ty, t with
@@ -621,10 +637,10 @@ let rec term (ind:string) (e:expr) : ML string =
        " " ^ term ind e1 ^ ")"
      | TInt sw1, TInt sw2 ->
        "(" ^ int_inj sw2 ^ " (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
-     | TInt _, TAny | TAny, TInt _ -> "(Obj.magic (" ^ term ind e1 ^ "))"
-     | TInt sw1, _ -> "(Obj.magic (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
-     | _, TInt sw2 -> "(" ^ int_inj sw2 ^ " (Obj.magic (" ^ term ind e1 ^ ")))"
-     | _ -> "(Obj.magic (" ^ term ind e1 ^ "))")
+     (* The operand's representation was lost upstream, so there is nothing to
+        convert *from*; all that can be done is to assert the target. *)
+     | _ -> coerce ind e1 t)
+  | ECoerce (e1, t) -> coerce ind e1 t
   (* An OCaml array is indexed by [int], the IR by a machine integer. *)
   | EOp ({ po_op = BufCreate _ }, [init; len]) ->
     if TRef? e.ty then "(ref " ^ term ind init ^ ")"
@@ -683,12 +699,34 @@ let rec term (ind:string) (e:expr) : ML string =
 
 (* An array index: the IR value is a machine integer, whose OCaml realization
    is a [Stdint] value with a [v] projection into a [Z.t]. *)
+(* A coercion changes no representation, so between two types that have one it
+   is [Obj.magic] and nothing else.  The two exceptions are the widths whose
+   OCaml representation is *boxed*: [FStar.SizeT] is an [Sz] and [FStar.UInt8]
+   a plain [int], so a coercion that puts one of those where an unrepresented
+   value is expected -- or takes one out -- has to open and close the box, or
+   the [Obj.magic] would hand the other side a pointer where it wanted a
+   scalar.  [TAny] on the other side is not such a case: it is opaque, so
+   whatever the box is, it survives. *)
+and coerce (ind:string) (e1:expr) (t:cty) : ML string =
+  match e1.ty, t with
+  | TInt _, TAny | TAny, TInt _ -> "(Obj.magic (" ^ term ind e1 ^ "))"
+  | TInt sw1, _ -> "(Obj.magic (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
+  | _, TInt sw2 -> "(" ^ int_inj sw2 ^ " (Obj.magic (" ^ term ind e1 ^ ")))"
+  | _ -> "(Obj.magic (" ^ term ind e1 ^ "))"
+
 and index (ind:string) (e:expr) : ML string =
   match e.e with
   (* A literal index is the common case, and going through [Z.t] to say [0]
      would drown the output. *)
   | EConst (CInt (s, _)) -> s
-  | ECast (e1, _) -> index ind e1
+  (* A coercion does not change the value, and neither does a conversion to a
+     width that can hold every value of the one it came from -- which is what
+     [uint32_to_sizet] on a length is.  A *narrowing* one does, so it has to be
+     evaluated rather than looked through. *)
+  | ECoerce (e1, _) -> index ind e1
+  | ECast (e1, t) when (match e1.ty, t with
+                        | TInt a, TInt b -> value_preserving a b
+                        | _ -> false) -> index ind e1
   | _ ->
     (match e.ty with
      | TInt sw -> "(Z.to_int (" ^ int_module sw ^ ".v " ^ term ind e ^ "))"

@@ -489,7 +489,8 @@ let rec vars_of (e:expr) : ML (list string) =
   | ECtor (_, es) | ETuple es | EOp (_, es) -> List.collect vars_of es
   | ERaise e1 -> vars_of e1
   | ERecord (_, fs) -> List.collect (fun (_, e) -> vars_of e) fs
-  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> vars_of a
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
+  | ECoerce (a, _) -> vars_of a
 
 and vars_of_branch (br:branch) : ML (list string) =
   let _, g, b = br in
@@ -514,7 +515,8 @@ let rec mutates (x:string) (e:expr) : ML bool =
   | ECtor (_, es) | ETuple es | EOp (_, es) -> any es
   | ERaise e1 -> mutates x e1
   | ERecord (_, fs) -> List.existsb (fun (_, e) -> mutates x e) fs
-  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> mutates x a
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
+  | ECoerce (a, _) -> mutates x a
 
 and mutates_branch (x:string) (br:branch) : ML bool =
   let _, g, b = br in
@@ -544,7 +546,8 @@ let rec is_pure (e:expr) : ML bool =
   | EIf (a, b, c) -> is_pure a && is_pure b && is_pure c
   | EMatch (sc, brs) -> is_pure sc && List.for_all is_pure_branch brs
   | ERecord (_, fs) -> List.for_all (fun (_, e) -> is_pure e) fs
-  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) -> is_pure a
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
+  | ECoerce (a, _) -> is_pure a
 
 and is_pure_branch (br:branch) : ML bool =
   let _, g, b = br in
@@ -595,10 +598,16 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      | EQual (n, _) when Some? (SMap.try_find !void_fns (string_of_name n)) ->
        out := !out ^ ind ^ call ^ ";\n"; unit_value
      | _ -> call)
+  (* Both nodes are a C cast, but for opposite reasons: a conversion is what
+     the cast *does*, and a coercion is a reinterpretation the C type system
+     needs told about and the generated code does not act on. *)
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt a, TInt b when a = b -> c_expr out ind e1
      | _ -> "(" ^ ty t ^ ")" ^ c_expr out ind e1)
+  | ECoerce (e1, t) ->
+    if e1.ty = t then c_expr out ind e1
+    else "(" ^ ty t ^ ")" ^ c_expr out ind e1
   | EProj (e1, _, f) -> proj (c_expr out ind e1) e1.ty f
   | EDiscrim (e1, cn) ->
     (match find_ctor cn with
@@ -1199,15 +1208,57 @@ let signature (l:dlet) : ML string =
   if TUnit? l.dl_ret then "void " ^ hd else decl_of l.dl_ret hd
 
 (* A definition with no parameters is a C *variable*, not a function of no
-   arguments, and C requires its initializer to be a constant expression --
-   which the body of an arbitrary F* definition is not.  So it is declared
-   uninitialized and assigned by [custard_init_globals], which the generated
-   [main] calls before anything else and which a program embedding this
-   translation unit has to call itself.  This is what karamel's
-   [krmlinit_globals] does, for the same reason. *)
+   arguments, and C requires the initializer of one with static storage
+   duration to be a constant expression -- which the body of an arbitrary F*
+   definition is not.
+
+   Most of them are, though.  A global whose body is a literal, or a cast of
+   one, is initialized where it is declared, so that the linker puts it in
+   [.data] or [.rodata] and nothing runs before [main]; anything else is
+   declared uninitialized and assigned by [custard_init_globals], which the
+   generated [main] calls before anything else and which a program embedding
+   this translation unit has to call itself.  This is what karamel's
+   [krmlinit_globals] does, for the same reason -- karamel just always takes
+   the second road.
+
+   The subset recognized here is deliberately small.  C's own notion of a
+   constant expression is wider (arithmetic on literals is one), but a
+   constant *initializer* is checked by the compiler rather than evaluated at
+   runtime, so anything admitted here that C does not accept is a build
+   failure rather than a slower program.  A struct or array initializer is
+   left out for a sharper reason: the compound literal Custard emits for one
+   is not a constant expression at file scope, however constant its
+   contents. *)
+let rec static_init (x:expr) : ML (option string) =
+  match x.e with
+  | EConst c ->
+    (match c with
+     | CInt (_, None) -> None
+     | _ -> Some (constant c))
+  | ECast (e1, t) ->
+    (match e1.ty, t, static_init e1 with
+     | TInt a, TInt b, Some v when a = b -> Some v
+     | _, _, Some v -> Some ("(" ^ ty t ^ ")" ^ v)
+     | _ -> None)
+  | ECoerce (e1, t) ->
+    (match static_init e1 with
+     | Some v -> if e1.ty = t then Some v else Some ("(" ^ ty t ^ ")" ^ v)
+     | None -> None)
+  (* A null pointer constant, which is what an uninitialized buffer global is
+     and the one aggregate-typed thing on this list. *)
+  | EOp ({ po_op = BufNull }, []) -> Some ("(" ^ ty x.ty ^ ")NULL")
+  | _ -> None
+
+let has_static_init (l:dlet) : ML bool =
+  current := string_of_name l.dl_name;
+  Some? (static_init l.dl_body)
+
 let global_decl (l:dlet) : ML string =
   current := string_of_name l.dl_name;
-  decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"
+  let d = decl_of l.dl_ret (c_name l.dl_name) in
+  match static_init l.dl_body with
+  | Some v -> d ^ " = " ^ v ^ ";\n"
+  | None -> d ^ ";\n"
 
 let global_init (l:dlet) : ML string =
   current := string_of_name l.dl_name;
@@ -1399,7 +1450,7 @@ let print_program (p:program) : ML string =
      one: a global whose initializer reads another global sees it set. *)
   let inits = p |> List.collect (fun d ->
     match d with
-    | DLet l when Nil? l.dl_binders -> [global_init l]
+    | DLet l when Nil? l.dl_binders && not (has_static_init l) -> [global_init l]
     | _ -> []) in
   (* A program with no globals has nothing to initialize, and an empty
      function that [main] calls anyway is two lines of noise plus a block

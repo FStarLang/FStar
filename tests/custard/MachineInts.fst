@@ -39,6 +39,15 @@ let widen (x : U8.t) : U64.t = Cast.uint8_to_uint64 x
 let narrow32 (x : U32.t) : U8.t = Cast.uint32_to_uint8 x
 let resign (x : I32.t) : I8.t = Cast.int32_to_int8 x
 
+(* A *round trip* through a narrower width.  Every backend spells a conversion
+   as a cast, and it is tempting to fuse two of them -- which is right for a
+   representation coercion, where nothing computes, and a miscompilation here:
+   the inner conversion is exactly the one that throws the top bits away.  The
+   IR keeps the two apart ([ECast] against [ECoerce]) so that no pass has to
+   guess which it is looking at. *)
+let round_trip (x : U32.t) : U32.t =
+  Cast.uint8_to_uint32 (Cast.uint32_to_uint8 x)
+
 (* [FStar.SizeT]'s conversions are compiled as coercions rather than as calls,
    because C has no support library for them. *)
 let to_sz (x : U16.t) : SZ.t = SZ.uint16_to_sizet x
@@ -60,4 +69,6 @@ let main () : ML unit =
   print_string (I8.to_string (resign (-129l)));
   print_string " ";
   print_string (U64.to_string (of_sz (to_sz 60000us)));
+  print_string " ";
+  show32 (round_trip 0x1234ff12ul);
   print_string "\n"

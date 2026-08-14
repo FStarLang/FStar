@@ -48,7 +48,8 @@ let rec occurs (v:string) (x:expr) : ML bool =
   | ECtor (_, es) | ETuple es | EOp (_, es) -> occurs_list v es
   | ERaise e1 -> occurs v e1
   | ERecord (_, fs) -> occurs_list v (fs |> List.map snd)
-  | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _) -> occurs v e1
+  | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _)
+  | ECoerce (e1, _) -> occurs v e1
   | EWhile (a, b) -> occurs v a || occurs v b
   | ETry (a, brs) -> occurs v a || occurs_branches v brs
 
@@ -183,6 +184,7 @@ let anf_expr (x0:expr) : ML expr =
         | EProj (e, n, f)  -> { x with e = EProj (operand e, n, f) }
         | EDiscrim (e, n)  -> { x with e = EDiscrim (operand e, n) }
         | ECast (e, c)     -> { x with e = ECast (operand e, c) }
+        | ECoerce (e, c)   -> { x with e = ECoerce (operand e, c) }
         | EIf (c, a, b) ->
           let c = operand c in
           let a = norm a in
@@ -306,6 +308,7 @@ let rec simpl (x:expr) : ML expr =
   | EProj (e1, n, f) -> { x with e = EProj (simpl e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (simpl e1, n) }
   | ECast (e1, c) -> { x with e = ECast (simpl e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (simpl e1, c) }
   | EWhile (a, b) -> { x with e = EWhile (simpl a, simpl b) }
   | ETry (a, brs) -> { x with e = ETry (simpl a, brs |> List.map simpl_branch) }
 
@@ -357,6 +360,7 @@ let rec sub (sm:subst) (x:expr) : ML expr =
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
   | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
   | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (sub_branch sm)) }
 
@@ -400,7 +404,8 @@ let rec count (v:string) (x:expr) : ML int =
     | ECtor (_, es) | ETuple es | EOp (_, es) -> count_list v es
     | ERaise e1 -> count v e1
     | ERecord (_, fs) -> count_list v (fs |> List.map snd)
-    | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _) -> count v e1
+    | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _)
+    | ECoerce (e1, _) -> count v e1
     | EWhile (a, b) -> imin 2 (count v a + count v b)
     | ETry (a, brs) -> imin 2 (count v a + (brs |> List.fold_left (fun acc (_, _, b) ->
                                 imax acc (count v b)) 0))
@@ -525,7 +530,8 @@ let rec called_only (v:string) (x:expr) : ML bool =
   | ECtor (_, es) | ETuple es | EOp (_, es) -> called_only_list v es
   | ERaise e1 -> called_only v e1
   | ERecord (_, fs) -> called_only_list v (fs |> List.map snd)
-  | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _) -> called_only v e1
+  | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _)
+  | ECoerce (e1, _) -> called_only v e1
   | ETry (a, brs) -> called_only v a && called_only_branches v brs
 
 and called_only_list (v:string) (es:list expr) : ML bool =
@@ -590,6 +596,7 @@ let rec reduce (x:expr) : ML expr =
   | EProj (e1, n, f) -> { x with e = EProj (reduce e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (reduce e1, n) }
   | ECast (e1, c) -> { x with e = ECast (reduce e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (reduce e1, c) }
   | EWhile (a, b) -> { x with e = EWhile (reduce a, reduce b) }
   | ETry (a, brs) -> { x with e = ETry (reduce a, brs |> List.map reduce_branch) }
 
@@ -646,6 +653,7 @@ let rec inline_expr (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (x:
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
   | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
   | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (inline_branch tbl used)) }
 
@@ -715,7 +723,7 @@ let rec cheap_expr (x:expr) : ML bool =
   (match x.e with
    | EConst _ | EVar _ | EQual _ -> true
    | EApp (f, args) -> cheap_expr f && List.for_all cheap_expr args
-   | ECast (e, _) | EProj (e, _, _) -> cheap_expr e
+   | ECast (e, _) | ECoerce (e, _) | EProj (e, _, _) -> cheap_expr e
    | _ -> false)
 
 let rec arrow_arity (c:cty) : ML int =
@@ -853,7 +861,7 @@ let rec expr_deps (x:expr) : ML (list string) =
         | EIf (c, a, b) -> sub [c; a; b]
         | ESeq (a, b) -> sub [a; b]
         | ETuple es | EOp (_, es) -> sub es
-        | ECast (e, t) -> cty_deps t @ expr_deps e
+        | ECast (e, t) | ECoerce (e, t) -> cty_deps t @ expr_deps e
         | EWhile (c, b) -> sub [c; b]
         | ETry (e, brs) ->
           expr_deps e @ (brs |> List.collect (fun (p, g, b) ->
@@ -1082,6 +1090,7 @@ let rec prune (x:expr) : ML expr =
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
   | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map prune_branch) }
 
 and prune_branch (br:branch) : ML branch =
@@ -1203,6 +1212,7 @@ let rec psub (sm:subst) (x:expr) : ML expr =
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
   | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
   | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (psub_branch sm)) }
 
@@ -1301,6 +1311,7 @@ let rec depat (tbl:SMap.t ctor_info) (x:expr) : ML expr =
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
   | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
   | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (depat_branch tbl)) }
 
@@ -1397,6 +1408,7 @@ let eta_ctors (vd:verdicts) (prog:program) : ML program =
     | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
     | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
     | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+    | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
   and go_branch (br:branch) : ML branch =
     let p, gd, b = br in
     (p, (match gd with None -> None | Some e -> Some (go e)), go b) in
@@ -1458,6 +1470,7 @@ let records (vd:verdicts) (prog:program) : ML program =
     | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
     | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
     | ECast (e1, c) -> { x with e = ECast (go e1, c) }
+    | ECoerce (e1, c) -> { x with e = ECoerce (go e1, c) }
   (* A constructor pattern becomes a record pattern.  This is what the verdict
      used to have to be a whole-program decision for: without [PRecord] there
      was nothing to rewrite such a match to, so any surviving one disqualified
@@ -1585,6 +1598,7 @@ let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
   | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
 
 and unbuild_branch (infos:SMap.t ctor_info) (br:branch) : ML branch =
   let p, gd, b = br in
@@ -1609,7 +1623,7 @@ let rec only_projected (v:string) (x:expr) : ML bool =
   | ECtor (_, es) | ETuple es | EOp (_, es) -> es |> List.for_all g
   | ERaise e1 -> g e1
   | ERecord (_, fs) -> fs |> List.for_all (fun (_, e) -> g e)
-  | EDiscrim (e1, _) | ECast (e1, _) -> g e1
+  | EDiscrim (e1, _) | ECast (e1, _) | ECoerce (e1, _) -> g e1
 
 let inline_fields (vd:verdicts) (prog:program) : ML program =
   if SMap.keys vd.vd_plans = [] then prog else begin
@@ -1685,6 +1699,7 @@ let inline_fields (vd:verdicts) (prog:program) : ML program =
     | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
     | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
     | ECast (e1, c) -> { x with e = ECast (go e1, c) }
+    | ECoerce (e1, c) -> { x with e = ECoerce (go e1, c) }
 
   (* A branch is rewritten pattern first, and *every* constructor pattern in
      it, not just the outermost: a plan applies wherever its constructor
@@ -1793,7 +1808,7 @@ let rec split_any (infos:SMap.t ctor_info) (p:pat) (body:expr) : ML (pat & expr)
   let field (t:cty) (p:pat) (body:expr) : ML (pat & expr) =
     if TAny? t && not (simple p)
     then let v = rename "any" in
-         let sc = mk (ECast (mk (EVar v) TAny E_Pure, TAny)) TAny E_Pure in
+         let sc = mk (ECoerce (mk (EVar v) TAny E_Pure, TAny)) TAny E_Pure in
          let p, body = split_any infos p body in
          (PVar v, { body with e = EMatch (sc, [(p, None, body)]) })
     else split_any infos p body in
@@ -1851,6 +1866,7 @@ let rec split_any_expr (infos:SMap.t ctor_info) (x:expr) : ML expr =
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
 
 let split_any_decls (prog:program) : ML program =
   let infos = ctor_infos (with_imports prog) in
@@ -2093,7 +2109,7 @@ let coerce_prog (prog:program) : ML program =
     | EVar v -> (match lookup env v with Some t -> t | None -> trust x.ty)
     | EQual (n, targs) ->
       (match sig_of n targs with Some t -> Some t | None -> trust x.ty)
-    | ECast (_, t) -> Some t
+    | ECast (_, t) | ECoerce (_, t) -> Some t
     | EApp (h, es) ->
       (match infer env h with
        | Some t ->
@@ -2152,14 +2168,15 @@ let coerce_prog (prog:program) : ML program =
     let x = go env exp x in
     if Some? exp && pushes_down x then x else
     match exp, infer env x with
-    | Some e, Some t -> if cty_mismatch t e then mk (ECast (x, e)) e x.eff else x
-    | Some TAny, None -> if concrete_shape x then mk (ECast (x, TAny)) TAny x.eff else x
+    | Some e, Some t -> if cty_mismatch t e then mk (ECoerce (x, e)) e x.eff else x
+    | Some TAny, None -> if concrete_shape x then mk (ECoerce (x, TAny)) TAny x.eff else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
     match x.e with
     | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
     | ECast (e1, t) -> same (ECast (go env None e1, t))
+    | ECoerce (e1, t) -> same (ECoerce (go env None e1, t))
     (* A comparison's operands all have the one type, so an operand of unknown
        representation is a boundary against whichever of them *is* known.
        Nothing else says so: an operator has no declaration to push an
@@ -2178,7 +2195,7 @@ let coerce_prog (prog:program) : ML program =
        | Some (Some c) ->
          same (EOp (o, List.map2 (fun t (e:expr) ->
            match t with
-           | Some TAny -> mk (ECast (e, c)) c e.eff
+           | Some TAny -> mk (ECoerce (e, c)) c e.eff
            | _ -> e) ts es))
        | _ -> same (EOp (o, es)))
     | EOp (o, es) -> same (EOp (o, es |> List.map (go env None)))
@@ -2239,7 +2256,7 @@ let coerce_prog (prog:program) : ML program =
                   whose parameters Custard cannot name (section 5.4). *)
                let h = go env None h in
                (match infer env h with
-                | Some TAny -> same (EApp (mk (ECast (h, TAny)) TAny h.eff, es))
+                | Some TAny -> same (EApp (mk (ECoerce (h, TAny)) TAny h.eff, es))
                 | _ -> same (EApp (h, es)))))
        (* The head's own type is not worked out well enough to retype the
           call, but a parameter it declares [TAny] is a boundary all the same:
@@ -2279,17 +2296,17 @@ let coerce_prog (prog:program) : ML program =
     | EProj (e1, n, f) ->
       let e1 = go env None e1 in
       (match infer env e1, owner_of (string_of_name n) with
-       | Some TAny, Some t -> same (EProj (mk (ECast (e1, t)) t e1.eff, n, f))
+       | Some TAny, Some t -> same (EProj (mk (ECoerce (e1, t)) t e1.eff, n, f))
        | _ -> same (EProj (e1, n, f)))
     | EDiscrim (e1, n) ->
       let e1 = go env None e1 in
       (match infer env e1, owner_of (string_of_name n) with
-       | Some TAny, Some t -> same (EDiscrim (mk (ECast (e1, t)) t e1.eff, n))
+       | Some TAny, Some t -> same (EDiscrim (mk (ECoerce (e1, t)) t e1.eff, n))
        | _ -> same (EDiscrim (e1, n)))
     | EMatch (sc, brs) ->
       let sc = go env None sc in
       let sc = (match infer env sc, scrutinee_of brs with
-                | Some TAny, Some t -> mk (ECast (sc, t)) t sc.eff
+                | Some TAny, Some t -> mk (ECoerce (sc, t)) t sc.eff
                 | _ -> sc) in
       let st = infer env sc in
       let exp = first exp (branches_ty env brs) in

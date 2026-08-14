@@ -28,8 +28,10 @@
         representation analysis, and erased things are deleted rather than
         replaced by [unit];
       - discriminators are IR nodes ([EDiscrim]), not generated functions;
-      - there is a single coercion node ([ECast]) standing for all of
-        [Obj.magic], [Ghost.reveal]/[hide] and representation changes;
+      - a coercion node ([ECoerce]) stands for all of [Obj.magic],
+        [Ghost.reveal]/[hide] and representation changes, and is kept
+        distinct from the machine-integer conversion ([ECast]) even though
+        both are spelled as a cast in C: only the former is a no-op;
       - there are no function-local recursive let-bindings: they are lifted to
         the top level, which breaks the cycle between the declaration and term
         types.
@@ -225,7 +227,16 @@ and expr' =
   | ERecord  of name & list (string & expr)
   | EProj    of expr & name & string
   | EDiscrim of expr & name
+  | ECoerce  of expr & cty
+  (** A change of *representation*: [Obj.magic], [Ghost.reveal]/[hide], and
+      the boundaries section 5.4 inserts where [TAny] meets a concrete type.
+      It computes nothing, so nested coercions fuse and a coercion to the type
+      the operand already has is dropped. *)
   | ECast    of expr & cty
+  (** A machine-integer conversion: [FStar.Int.Cast.uint32_to_uint8] and
+      friends (section 5.5).  It is *not* a no-op -- narrowing loses bits and a
+      sign change reinterprets them -- so it never fuses with anything.  The
+      target is always a [TInt]. *)
   | EAny
   (** An arbitrary value of the node's type: what an uninitialized stack
       allocation is filled with.  Only a rule may introduce it. *)

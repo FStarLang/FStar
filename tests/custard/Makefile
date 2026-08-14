@@ -295,16 +295,21 @@ KRML_TESTS += KrmlBasic
 C_TESTS += KrmlBasic CExtern
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
-# global whose initializer is a computation.
+# global whose initializer is a computation -- against one that is a constant
+# expression, which is declared with its value and stays out of
+# custard_init_globals so that the linker can put it in .rodata.
 FLAGS_CExtern   = --custard_extern_type 'CExtern.tag=cextern_tag_t@CExtern_stubs.h'
 CGREP_CExtern   = "include \"CExtern_stubs.h" \
                   "cextern_handle_t b_h;" \
                   "void custard_init_globals(void)" \
                   "CExtern_gt = cextern_mk_tag();" \
-                  "if (c.tag == CEXTERN_BUMP) cextern_bump("
+                  "if (c.tag == CEXTERN_BUMP) cextern_bump(" \
+                  "uint32_t CExtern_base = ((uint32_t)7U);" \
+                  "uint8_t CExtern_low = (uint8_t)((uint32_t)300U);"
 # No definition is emitted for either external type, and neither is declared
 # as an abstract struct the way a Custard-owned opaque type would be.
-CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag"
+CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag" \
+                  "  CExtern_base =" "  CExtern_low ="
 
 # CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
 # output-quality invariants of section 6: a unit parameter is a thunk, which C

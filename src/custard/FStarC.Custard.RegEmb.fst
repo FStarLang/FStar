@@ -208,6 +208,7 @@ let rec subst_expr (x:string) (v:expr) (e:expr) : ML expr =
   | EProj (a, n, f) -> { e with e = EProj (go a, n, f) }
   | EDiscrim (a, n) -> { e with e = EDiscrim (go a, n) }
   | ECast (a, t) -> { e with e = ECast (go a, t) }
+  | ECoerce (a, t) -> { e with e = ECoerce (go a, t) }
   | EOp (o, es) -> { e with e = EOp (o, List.map go es) }
   | EWhile (c, b) -> { e with e = EWhile (go c, go b) }
   | ERaise a -> { e with e = ERaise (go a) }

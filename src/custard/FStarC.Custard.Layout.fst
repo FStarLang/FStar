@@ -467,20 +467,29 @@ let rec rw_expr (t:tbl) (x:expr) : ML expr =
        hoist [e1] { x with e = EConst (CBool true) }
      | _ -> { x with e = EDiscrim (e1, n) })
 
-  (* Section 5.4: a cast that has become the identity after collapse is
-     dropped, and nested casts are fused.
+  (* Section 5.4: a coercion that has become the identity after collapse is
+     dropped, and nested coercions are fused.  Both are sound because a
+     coercion computes nothing: [magic (magic x)] is [magic x].
 
-     Fusing is sound for a *representation* coercion, which is what section 5.4
-     is about: [magic (magic x)] is [magic x], because neither one computes.  A
-     machine-width conversion does compute, and dropping the inner one of
-     [(uint32_t)(uint8_t)x] keeps exactly the bits F\* asked to lose.  So an
-     inner cast between two machine widths stays. *)
-  | ECast (e1, c) ->
+     This is exactly why the IR distinguishes [ECoerce] from [ECast].  A
+     machine-width conversion *does* compute -- dropping the inner one of
+     [(uint32_t)(uint8_t)x] keeps the very bits F\* asked to lose -- so the
+     [ECast] case below fuses nothing.  When the two shared a node this rule
+     had to guess which it was looking at, and got it wrong. *)
+  | ECoerce (e1, c) ->
     let c = resolve t 100 c in
     let e1 = rw_expr t e1 in
     let e1 = match e1.e with
-             | ECast (e2, ti) when not (TInt? ti && TInt? e2.ty) -> e2
+             | ECoerce (e2, _) -> e2
              | _ -> e1 in
+    if e1.ty = c then e1 else { x with e = ECoerce (e1, c) }
+
+  (* A conversion to the width the operand already has is the only one that is
+     the identity, and it is worth dropping: [Builtins] emits one for every
+     [uint32_to_uint32] and for [FStar.SizeT]'s round trips. *)
+  | ECast (e1, c) ->
+    let c = resolve t 100 c in
+    let e1 = rw_expr t e1 in
     if e1.ty = c then e1 else { x with e = ECast (e1, c) }
 
 and rw_branch (t:tbl) (br:branch) : ML branch =

@@ -288,7 +288,9 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
               [ (K.PCons (mangled_name n, wilds), K.EBool true);
                 (K.PVar (dummy_binder "_"), K.EBool false) ])
 
-  | ECast (e1, t) -> K.ECast (krml_expr env e1, krml_typ env t)
+  (* Karamel has the one node; the distinction has already done its work in
+     the passes above, and both are a cast in the C it emits. *)
+  | ECast (e1, t) | ECoerce (e1, t) -> K.ECast (krml_expr env e1, krml_typ env t)
 
   (* The buffer operations are karamel nodes rather than operators: the C
      backend needs to see the address computation, not a call. *)

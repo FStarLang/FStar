@@ -335,8 +335,11 @@ let rec expr_to_doc' (prec:int) (e:expr) : ML document =
   | EDiscrim (e1, n) ->
     name_to_doc n ^^ text "?" ^^ parens (expr_to_doc' 0 e1)
 
-  | ECast (e1, t) ->
+  | ECoerce (e1, t) ->
     group (parens (nest 2 (expr_to_doc' 0 e1 ^/^ text "<:" ^/^ cty_to_doc t)))
+
+  | ECast (e1, t) ->
+    group (parens (nest 2 (expr_to_doc' 0 e1 ^/^ text ":>" ^/^ cty_to_doc t)))
 
   | EOp (op, args) ->
     group (text ("`" ^ op_to_string op ^ "`") ^^

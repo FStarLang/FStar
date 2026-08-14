@@ -169,6 +169,7 @@ let rec rn_expr (fields:SMap.t string) (ts:scope) (s:scope) (x:expr) : ML expr =
     | EProj (e1, n, f) -> EProj (go e1, n, rn_field fields n f)
     | EDiscrim (e1, n) -> EDiscrim (go e1, n)
     | ECast (e1, t) -> ECast (go e1, rn_cty ts t)
+    | ECoerce (e1, t) -> ECoerce (go e1, rn_cty ts t)
     | EOp (o, es) -> EOp (o, es |> List.map go)
     | EWhile (c, b) -> EWhile (go c, go b)
     | ERaise e1 -> ERaise (go e1)

@@ -232,7 +232,8 @@ and expr' =
   | ERecord of name & list (string & expr)
   | EProj   of expr & name & string          // record/ctor field projection
   | EDiscrim of expr & name                  // NEW: `Foo? e`
-  | ECast   of expr & cty                    // the *only* unsafe coercion node
+  | ECoerce of expr & cty                    // the *only* unsafe coercion node
+  | ECast   of expr & cty                    // a machine-integer conversion
   | EOp     of prim_op & list expr           // built-in ops (see §8)
   | EWhile  of expr & expr                   // statement-shaped, see §7.4
   | ERaise  of expr                          // §8.5; the value is an ECtor
@@ -248,11 +249,16 @@ Notes:
   projectors are ordinary generated `Sig_let`s that get extracted as functions;
   see `Modul.fst`, and the `Projector`/`Discriminator` qualifier special-casing
   in `RegEmb.fst:826`.)
-- **`ECast` replaces `MLE_Coerce` + `Obj.magic` + `FStar.Ghost.reveal`/`hide` +
-  `admit`-style repr changes.**  It is `repr/magic built-in`.  Phase 4 cancels
-  `ECast (ECast (e, t1), t2)` and drops `ECast (e, t)` when `e.ty` and `t`
-  have the same layout — which, after newtype collapse, is very often the
-  case.  This is the "can be optimized away" requirement.
+- **`ECoerce` replaces `MLE_Coerce` + `Obj.magic` + `FStar.Ghost.reveal`/`hide`
+  + `admit`-style repr changes.**  It is `repr/magic built-in`.  Phase 4
+  cancels `ECoerce (ECoerce (e, t1), t2)` and drops `ECoerce (e, t)` when
+  `e.ty` and `t` have the same layout — which, after newtype collapse, is very
+  often the case.  This is the "can be optimized away" requirement.
+- **`ECast` is a different thing that happens to be spelled the same way in
+  C.**  It is the machine-integer conversion of `FStar.Int.Cast` and
+  `FStar.SizeT` (§8.1): it *computes*, so it fuses with nothing and is dropped
+  only when the two widths are equal.  The two were one node until §17.2; see
+  there for the miscompilation that cost.
 - **No local `letrec`.**  `ELet` is non-recursive; local recursive functions
   and local closures that need to be recursive are lambda-lifted to top-level
   decls during phase 2 (which is easy: the extraction loop already creates
@@ -1712,21 +1718,21 @@ happens afterwards, so no rewrite is ever done on a stale assumption.
 
 ### 5.4 Coercion elimination
 
-`ECast` nodes come from three sources: source-level `Obj.magic`/`coerce_eq`,
+`ECoerce` nodes come from three sources: source-level `Obj.magic`/`coerce_eq`,
 `Ghost.reveal`/`hide`, and the subtyping mismatches that Custard itself
 introduces (mostly around `TAny`).  Phase 4 runs:
 
-1. `ECast (e, t)` → `e` when `layout t = layout e.ty` (after collapse);
-2. `ECast (ECast (e, _), t)` → `ECast (e, t)`;
-3. push casts towards the leaves so that (1) fires more often.
+1. `ECoerce (e, t)` → `e` when `layout t = layout e.ty` (after collapse);
+2. `ECoerce (ECoerce (e, _), t)` → `ECoerce (e, t)`;
+3. push coercions towards the leaves so that (1) fires more often.
 
 Rules 1 and 2 are implemented, in `Layout.rw_expr`.  Rule 3 is **not
-implemented, and as of M6h has nothing to bite on**: no `ECast` at all survives
-to the backend, anywhere in the test corpus (all sixteen `tests/custard`
-modules and both Pulse tests, including `PulseHashTable`, which is exactly the
-`repr`-over-erased-index style this section is about).  The generated OCaml
-corpus contains no `Obj.magic`.  That is the goal met, not a gap, so rule 3 is
-deferred until an input demonstrates it is needed.
+implemented, and as of M6h has nothing to bite on**: no `ECoerce` at all
+survives to the backend, anywhere in the test corpus (all sixteen
+`tests/custard` modules and both Pulse tests, including `PulseHashTable`, which
+is exactly the `repr`-over-erased-index style this section is about).  The
+generated OCaml corpus contains no `Obj.magic`.  That is the goal met, not a
+gap, so rule 3 is deferred until an input demonstrates it is needed.
 
 The reason is that two of the three sources above never reach phase 4:
 
@@ -1736,10 +1742,12 @@ The reason is that two of the three sources above never reach phase 4:
 - `coerce_eq` extracts as an ordinary polymorphic identity function, which
   monomorphization then specializes and inlining then deletes.
 
-The machine-integer rules in `Builtins` produce `ECast` too, and those are not
-lost information at all: they are the conversion the source asked for, a real
-call into `FStar.Int.Cast`.  Rule 1 must not delete them, and rule 3 could only
-duplicate them across branches.
+The machine-integer rules in `Builtins` produce `ECast`, which is a *different
+node* (§17.2) precisely so that none of the three rules can be applied to one
+by accident.  A conversion is not lost information at all: it is what the
+source asked for, a real call into `FStar.Int.Cast`.  Rule 1 would be sound on
+it only when the two widths are equal, rule 2 never is, and rule 3 could only
+duplicate it across branches.
 
 `--custard_warn_any` (§5.9) is what turns "we measured zero" into something
 that stays true.
@@ -2115,7 +2123,7 @@ Custard can lose track of what a value looks like at runtime:
   declaration type.  `TAny` is the analogue of the ML extraction's `MLTY_Top`;
   in a whole, monomorphic program there is almost always an answer, so an
   occurrence is a place something went wrong upstream.
-- a surviving **`ECast`** whose two sides are not both machine integers.
+- a surviving **`ECoerce`**.
 
 One warning is emitted per declaration, listing its sites, rather than one per
 occurrence: the IR has no source positions, so a flat list of anonymous
@@ -2924,7 +2932,7 @@ consult `eff`:
 | drop an unused `ELet` (§6, pass 4) | body's `eff ≤ E_Pure` |
 | drop an erased field/argument (§5.1) | argument's `eff ≤ E_Pure`, else hoist |
 | drop the non-surviving args of a collapsed ctor (§5.2) | same |
-| drop a redundant `ECast` (§5.4) | always legal — `ECast` is pure |
+| drop a redundant `ECoerce` (§5.4) | always legal — `ECoerce` is pure |
 | inline a `let x = e in C[x]` with one use | `e.eff ≤ E_Pure`, or the single use is in evaluation position and no impure computation is crossed |
 | duplicate a subterm (e.g. into two match branches) | `eff ≤ E_Pure` |
 | reorder two subterms | at most one is `E_Impure` |
@@ -3208,7 +3216,8 @@ Concretely, the rules fall into six kinds:
 4. **Hand-realized definitions**: `assume val`s implemented in an `.ml`/`.c`
    file.  These become `DExternal` plus a link-time obligation.
 5. **Width conversions**: `FStar.Int.Cast` and `FStar.SizeT`'s
-   `uintN_to_sizet` family map to the IR's single coercion node, `ECast`.
+   `uintN_to_sizet` family map to the IR's `ECast`, which is a conversion and
+   *not* the coercion node `ECoerce` (§17.2).
 6. **Hand-declared types**: a type with no F\* definition whose layout the
    target fixes.  `[@@custard_extern]` on the declaration when the program
    owns it, `--custard_extern_type` when it does not; §14.5.
@@ -5700,7 +5709,8 @@ program embedding the translation unit has to call itself.  This is what
 karamel's `krmlinit_globals` does, for the same reason.  The order is
 declaration order, which the SCC pass has already made a topological one.  A
 program with no globals gets no `custard_init_globals` at all, and no call to
-it; see section 14.11 for how that omission came to be noticed.
+it; see section 14.11 for how that omission came to be noticed.  Section 17.1
+narrows this to the globals that actually need it.
 
 ### 14.7 A let-bound lambda that is only called
 
@@ -6074,6 +6084,82 @@ finding #18.
 
 
 
+## 17. Two things about the C output
+
+### 17.1 Globals that C can initialize
+
+Section 14.6 gave every parameterless definition the same treatment: declare
+the variable uninitialized, assign it in `custard_init_globals`, have `main`
+call that first.  That is what karamel does, and for `DPE.gst` -- a
+mutex-protected session table built by a computation -- there is no
+alternative.
+
+Most globals are not that.  `ExtIntSigned` has twenty-three, every one of them
+a literal or a width conversion of one, and all twenty-three were being written
+at startup by a function fifty lines long.  A global written that way is not
+just slower to start: it cannot be `const`, it occupies `.bss` and is dirtied
+on first touch rather than living in `.data` or `.rodata`, and it is invisible
+to the constant folding the C compiler would otherwise do at its uses.
+
+`PrintC.static_init` now recognizes the initializers C accepts where the
+variable is declared, and those globals are emitted as `int32_t m7 =
+((int32_t)-7);`.  For `ExtIntSigned` that removes `custard_init_globals`
+entirely, and with it the call from `main`.  A module that has both kinds keeps
+the function for the ones that need it: `tests/custard/CExtern` pins exactly
+that, a record-valued and an external-valued global in the initializer
+alongside two that are not.
+
+The recognized subset is deliberately narrow -- a constant, and a cast or
+coercion of one, plus the null pointer -- for two different reasons.  C's own
+notion of a constant expression is wider (arithmetic on literals is one), but
+nothing is lost by leaving that out, because a global whose initializer is
+`2 + 2` has already been folded to `4` by the time `PrintC` sees it.  Struct
+and array initializers are left out for a sharper reason: what Custard emits
+for a record is a *compound literal*, and a compound literal is not a constant
+expression at file scope however constant its contents, so admitting one would
+turn a working program into a compile error.
+
+### 17.2 `ECast` against `ECoerce`
+
+The IR used to have one node for two unrelated things.  `ECast (e, t)` was
+both the representation coercion of section 5.4 -- `Obj.magic`,
+`Ghost.reveal`/`hide`, the `TAny` boundaries `coerce_prog` inserts -- and the
+machine-integer conversion of section 8.1, `FStar.Int.Cast.uint32_to_uint8` and
+friends.  They look alike in C, where both are a cast, and nowhere else.
+
+The difference that matters is that a coercion *computes nothing* and a
+conversion does.  Section 5.4's rule 2 fuses nested coercions, which is sound
+because `magic (magic x)` is `magic x`; applied to a conversion it deletes the
+narrowing that was the whole point, and `uint8_to_uint32 (uint32_to_uint8 x)`
+becomes bare `x` -- a severity-2 miscompilation on every backend, which is
+exactly what section 16.2 found.  The fix at the time was a side condition on
+the fusion rule, testing whether both sides were `TInt`.  That works, but it
+puts the burden on every pass to re-derive from the types a fact the front end
+knew for certain, and to remember to.
+
+So the node is split.  `ECoerce` is section 5.4's; `ECast` is section 8.1's,
+and its target is always a `TInt`.  Nothing else changed about either, and the
+split pays for itself immediately in three places:
+
+* `Layout.rw_expr` fuses `ECoerce` unconditionally and fuses `ECast` never.
+  Neither rule has a side condition, so neither can have the wrong one.
+* `Driver.lost_cast`, which decides what `--custard_warn_any` reports, loses
+  its `TInt, TInt -> false` clause: a conversion is not lost information, and
+  now that is a question of which node this is rather than of what its types
+  happen to be.
+* `PrintOCaml` had one case analysis doing both jobs, since OCaml needs a real
+  call for a conversion and a bare `Obj.magic` for a coercion.  It is now two
+  functions, and `index` -- which looks through a cast to keep array subscripts
+  readable -- looks through a coercion always and through a conversion only
+  when the target width can hold every value of the source.  That was the same
+  latent bug in a second place.
+
+`tests/custard/MachineInts` gained the round trip, so the fast suite pins it
+too; `tests/extraction/backends/ExtIntCast` pins it end to end on all seven
+columns.
+
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -6141,3 +6227,4 @@ finding #18.
 | M10ε | **The DICE example, through both C backends** (§14) | Done.  `pulse/share/pulse/examples/dice` extracts from its six entry points to 1535 lines of C through karamel or 968 lines of C directly, each compiling with `-Wall -Wextra -Werror`, and the direct output includes four C standard headers and six lines of the example's own and nothing else -- no krmllib, which is the point of replacing karamel rather than sitting on top of it.  `custard.Makefile` builds either.  Eleven compiler fixes and *no change to the example's F\* sources*, all of them general: abbreviations unfolded in binder queries (§14.1), `extract_as` on a `val` (§14.2), `n_extra` counting erased binders (§14.3), eta expansion bounded by the callee's arity (§14.4), external types, by attribute or by `--custard_extern_type` (§14.5), globals with computed initializers (§14.6), let-bound lambdas inlined at their call on the C backend only (§14.7), abbreviations canonicalized before a type instance is keyed (§14.8), a match whose last test pruning deleted (§14.9), `void` where C means it (§14.10), and empty blocks (§14.11).  Three of the eleven were caught by a regression rather than by the example: `tests/custard/EraseAbbrev`, `make custard-smoke`, and the empty-block invariant §14.11 added, which immediately caught an empty `custard_init_globals` left by §14.6.  `tests/custard/CExtern` is the new C test, covering both spellings of an external type, a computed global, and a unit-valued match with do-nothing arms |
 | M10ζ | **The Pulse test suite** (§15) | Done.  All twenty extraction tests in `pulse/test` go through Custard, ten of them straight to C, four through karamel because they compute on `Prims.int` (§15.2), six to OCaml, and the `.expected` files were regenerated.  The enabling piece is `--custard_entry_module`, which roots every top-level value of a module (§15.1) --- a test module has no `main`, and listing its `fn`s in the makefile would let a new one silently stop being extracted.  Rooting a *module* means rooting its specifications too, so a root now skips an erased definition.  Five fixes, three of them about the karamel path the DICE example barely used: karamel prepends its own `Prims` and rejects ours as duplicates, `-bundle X=*` needs `X` to exist, and a `BufIsNull` without a type application was silently *dropped* by karamel’s Low\* re-check, taking `Null_test` with it.  The other two: an `if` whose arms are both empty, caught by §14.11’s invariant, and a `null` an OCaml `ref` can actually hold --- the immediate `0`, tested with `Obj.is_block`, since a sentinel allocation is not one value under `--custard_split`.  `pulse/mk/custard-test.mk` |
 | M10η | **The cross-backend matrix** (§16) | Done.  All four Custard columns of `tests/extraction/backends` -- OCaml, direct C, and karamel's C and Rust off one shared `.krml` -- run green over the suite's twenty-five modules, each extracted, compiled and *run*, with its exit status compared against what F\* proved.  Four bugs in Custard: the OCaml entry point discarded the exit status §4.4 promised; C integer literals carried no width suffix, so `((uint64_t)18446744073709551615)` did not compile (a decimal literal takes the first *signed* type it fits, C99 6.4.4.1, and the cast cannot rescue it); `Int8`/`Int16` modular operators were not truncated back after C's integer promotion, so `~(uint8_t)0` was `-1`; and, severity 2 on every backend, `Layout.rw_expr` fused nested casts unconditionally, so `uint8_to_uint32 (uint32_to_uint8 x)` became bare `x` -- sound for a representation coercion, a silent miscompilation for a width conversion.  One bug left open and written up as finding #18: only `FStar.UInt8` is a realized module, so `ne`, `lognot`, `shift_arithmetic_right`, the rotates and the masks at the other seven widths are compiled from their bit-vector *model* in `Prims.int`.  A `custard_xfail_rule` was needed because Custard is the extractor, so a bug in it can fail the F\* step, which the existing rule takes as a prerequisite.  Custard passes five cells the older pipeline XFAILs (§16.5) |
+| M10θ | **Two things about the C output** (§17) | Done.  A global whose initializer is a C constant expression is now emitted as `int32_t m7 = ((int32_t)-7);` rather than assigned at startup, so the linker can put it in `.data`/`.rodata` and the C compiler can fold it at its uses; `ExtIntSigned` loses its `custard_init_globals` and its call from `main` entirely, and `CExtern` pins a module that keeps the function for the two globals that still need it.  The recognized subset is a constant and a cast of one: wider arithmetic is pointless (`2 + 2` has been folded long before `PrintC` sees it) and a record is not merely pointless but wrong, since the compound literal Custard emits for one is not a constant expression at file scope.  And the IR's single cast node is split in two: `ECoerce` for §5.4's representation coercion, which computes nothing and therefore fuses, and `ECast` for §8.1's machine-integer conversion, which computes and therefore does not.  They were one node, and §16.2's severity-2 miscompilation was §5.4's fusion rule applied to a conversion; the fix then was a side condition testing whether both sides were `TInt`, which works but asks every pass to re-derive a fact the front end knew.  The split removes the side condition from `Layout`, removes a clause from `Driver.lost_cast`, and turned up the same latent bug a second time in `PrintOCaml.index`, which looked through a narrowing conversion to keep a subscript readable |

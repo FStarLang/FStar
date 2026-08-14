@@ -399,6 +399,7 @@ let rec mono_expr (st:state) (env:env) (x:expr) : ML expr =
     | EProj (e, cn, f) -> EProj (go e, rename (type_of e) cn, f)
     | EDiscrim (e, cn) -> EDiscrim (go e, rename (type_of e) cn)
     | ECast (e, c) -> ECast (go e, mono_cty st c)
+    | ECoerce (e, c) -> ECoerce (go e, mono_cty st c)
     | EOp (o, es) -> EOp (o, es |> List.map go)
     | EWhile (c, b) -> EWhile (go c, go b)
   in

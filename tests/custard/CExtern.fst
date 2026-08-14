@@ -64,7 +64,17 @@ let apply (c:cmd) : ML unit =
 let gh : boxed = { b_h = make 41ul; b_n = 1ul }
 let gt : tag = mk_tag ()
 
+(* The other road: a literal, and a width conversion of one, are C constant
+   expressions, so these are initialized where they are declared and never
+   mentioned in custard_init_globals.  A record is *not*, however constant its
+   fields: the compound literal Custard emits for it is not a constant
+   expression at file scope. *)
+let base : U32.t = 7ul
+let low : FStar.UInt8.t = FStar.Int.Cast.uint32_to_uint8 300ul
+
 let main () : ML I32.t =
   apply Nop; apply (Bump 2ul); apply Skip; apply (Bump 3ul);
   let n = U32.add_mod (U32.add_mod (get gh.b_h) gh.b_n) (tag_val gt) in
-  if U32.eq n 49ul && U32.eq (get_total ()) 5ul then 0l else 1l
+  if U32.eq n 49ul && U32.eq (get_total ()) 5ul
+     && U32.eq base 7ul && FStar.UInt8.eq low 44uy
+  then 0l else 1l
