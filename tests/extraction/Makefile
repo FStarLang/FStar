@@ -2,6 +2,12 @@ FSTAR_ROOT ?= ../..
 
 SUBDIRS += cmi
 
+# Cross-backend matrix: every language feature and specially-handled
+# primitive, extracted, compiled and *run* on OCaml, C and Rust. The C and
+# Rust columns need krml and rustc respectively; each is skipped (with a
+# message) if its toolchain is missing, so this is safe to run everywhere.
+SUBDIRS += backends
+
 RUN += Eta_expand.fst
 
 # The Div test is based on testing a non-terminating program and
