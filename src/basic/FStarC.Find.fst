@@ -33,11 +33,19 @@ let cached_fun #a (cache : SMap.t a) (f : string -> ML a) : string -> ML a =
 
 (* caches *)
 let _full_include : ref (option (list string)) = mk_ref None
+let _full_include_normalized : ref (option (list string)) = mk_ref None
 let find_file_cache : SMap.t (option string) = SMap.create 100
+
+(* Bumped every time the include path (or anything else affecting file
+resolution) changes. Clients that cache results derived from the include path
+can use this to invalidate their own caches. *)
+let _epoch : ref int = mk_ref 0
 
 let clear () : ML unit =
   SMap.clear find_file_cache;
   _full_include := None;
+  _full_include_normalized := None;
+  _epoch := !_epoch + 1;
   ()
 
 (* Internal state, settable with the functions exposed in the interface. *)
@@ -162,6 +170,8 @@ let command_line_include_paths () : ML (list string) =
     in
     expand_include_ds uncovered_roots @ expand_include_d "."
 
+let epoch () : ML int = !_epoch
+
 let full_include_path () : ML _ =
   // Stats.record "Find.full_include_path" fun () ->
   match !_full_include with
@@ -177,6 +187,18 @@ let full_include_path () : ML _ =
       cache_dir @ lib_paths () @ include_paths @ command_line_include_paths ()
     in
     _full_include := Some res;
+    res
+
+(* Normalizing every entry of the include path is not cheap (it involves
+querying the cwd for relative entries), and callers such as
+[FStarC.Parser.Dep.module_name_from_include_path] need it once per module in
+the dependency graph, so memoize it just like [full_include_path]. *)
+let full_include_path_normalized () : ML _ =
+  match !_full_include_normalized with
+  | Some paths -> paths
+  | None ->
+    let res = List.map Filepath.normalize_file_path (full_include_path ()) in
+    _full_include_normalized := Some res;
     res
 
 let do_find (paths : list string) (filename : string) : ML (option string) =

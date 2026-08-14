@@ -199,7 +199,7 @@ let list_of_pair (intf, impl) =
    not a valid F* source file. *)
 let module_name_from_include_path (f:string) : ML (option string) =
   let f = Filepath.normalize_file_path f in
-  let include_dirs = List.map Filepath.normalize_file_path (Find.full_include_path ()) in
+  let include_dirs = Find.full_include_path_normalized () in
   let best =
     List.fold_left (fun (acc:option string) d ->
       if Util.starts_with f (d ^ "/")
@@ -216,11 +216,31 @@ let module_name_from_include_path (f:string) : ML (option string) =
     | None -> None
     | Some stem -> Some (Util.replace_char (Util.replace_char stem '\\' '.') '/' '.')
 
+(* [maybe_module_name_of_file] is called once per dependency edge in the
+dependency graph, and is a pure function of the file name and the include
+path, so we memoize it, invalidating the cache whenever the include path
+changes. *)
+let module_name_cache : SMap.t (option string) = SMap.create 100
+let module_name_cache_epoch : ref int = mk_ref (-1)
+
 (* In public interface *)
 let maybe_module_name_of_file f =
-  match module_name_from_include_path f with
-  | Some longname -> Some longname
-  | None -> check_and_strip_suffix (Filepath.basename f)
+  let epoch = Find.epoch () in
+  if !module_name_cache_epoch <> epoch then (
+    SMap.clear module_name_cache;
+    module_name_cache_epoch := epoch
+  );
+  match SMap.try_find module_name_cache f with
+  | Some res -> res
+  | None ->
+    let res =
+      match module_name_from_include_path f with
+      | Some longname -> Some longname
+      | None -> check_and_strip_suffix (Filepath.basename f)
+    in
+    SMap.add module_name_cache f res;
+    res
+
 let module_name_of_file f =
     match maybe_module_name_of_file f with
     | Some longname ->
@@ -579,15 +599,28 @@ let module_candidate_of_file (ns_prefix:list string) (path:string) (filename:str
   | None -> []
   | Some modname -> [(String.concat "." (ns_prefix @ [modname]), path)]
 
+(* A directory can only contribute module names if its name can appear as a
+   namespace component, i.e. if it is a valid F* identifier: it must start with
+   a letter and contain only letters, digits, '_' and '\''. This prunes, e.g.,
+   hidden directories, '_build', 'fstar-lib' or 'a.b', which can never be part
+   of a module name, and (importantly) avoids descending into large build trees
+   that hold no reachable modules. Note that include roots themselves are always
+   traversed on their own (see [build_inclusion_candidates_list]), so no include
+   directory is lost by this. *)
+let can_be_namespace_component (s:string) : ML bool =
+  String.length s > 0
+  && Util.is_letter (String.get s 0)
+  && (List.for_all (fun c -> Util.is_letter_or_digit c || c = '_' || c = '\'')
+                   (String.list_of_string s))
+
 (* Enumerate the (long name, file path) candidates found under a single include
   directory [root], descending into subdirectories and turning each directory
   name into a namespace component: a file at [X/Y/Z.fst] (relative to [root]) is
-  mapped to the long name [X.Y.Z]. Directories whose name starts with a '.'
-  (e.g. [.git]) are skipped, since they can never be a valid namespace
-  component. We also never descend into a subdirectory that is itself an
-  include root, so that each include root owns its own traversal. [cwd] is the
-  normalized current directory: files under it are reported by their bare path
-  relative to [cwd]. *)
+  mapped to the long name [X.Y.Z]. Directories whose name cannot be a namespace
+  component (e.g. [.git]) are skipped. We also never descend into a
+  subdirectory that is itself an include root, so that each include root owns
+  its own traversal. [cwd] is the normalized current directory: files under it
+  are reported by their bare path relative to [cwd]. *)
 let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:string)
   : ML (list (string & string)) =
   let has_include_manifest = Filepath.file_exists (Filepath.join_paths root "fstar.include") in
@@ -601,14 +634,19 @@ let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:
       let entry = Filepath.basename entry in
       let rel' = if rel = "" then entry else Filepath.join_paths rel entry in
       let entry_path = Filepath.join_paths root rel' in
-      if Filepath.is_directory entry_path then
+      (* Check the name before touching the filesystem: an entry that can be
+         neither a namespace component nor an F* source file needs no [stat]. *)
+      if not (can_be_namespace_component entry)
+         && None? (check_and_strip_suffix entry)
+      then []
+      else if Filepath.is_directory entry_path then
         (* A manifest explicitly selects the child roots to scan; those roots
           are expanded separately by [Find.full_include_path]. *)
         if has_include_manifest
         then []
-        (* Never descend into hidden directories (they cannot be namespace
-           components). *)
-        else if String.length entry > 0 && String.get entry 0 = '.'
+        (* Never descend into directories that cannot be namespace components
+           (e.g. hidden directories, or build directories such as '_build'). *)
+        else if not (can_be_namespace_component entry)
         then []
         (* If this directory is itself an include root, let that root's own
            traversal cover it. *)
@@ -652,8 +690,7 @@ let check_unique_module_names_for_dir (dir:string)
     [X.Y.Z.fst] and a nested [X/Y/Z.fst]). *)
 (* In public interface *)
 let build_inclusion_candidates_list (): ML (list (string & string)) =
-  let include_directories = Find.full_include_path () in
-  let include_directories = List.map Filepath.normalize_file_path include_directories in
+  let include_directories = Find.full_include_path_normalized () in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in

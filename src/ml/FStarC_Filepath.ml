@@ -30,6 +30,17 @@ let canonicalize path_str =
   let path = of_string path_str in
   to_string (normalize_in_tree path)
 
+(* The cwd never changes during a run of F* (we never call chdir), so we
+   cache it: normalize_file_path is called very often on relative paths. *)
+let cwd_cache : string option ref = ref None
+let cached_getcwd () =
+  match !cwd_cache with
+  | Some cwd -> cwd
+  | None ->
+    let cwd = BatSys.getcwd () in
+    cwd_cache := Some cwd;
+    cwd
+
 let normalize_file_path (path_str:string) =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
@@ -40,7 +51,7 @@ let normalize_file_path (path_str:string) =
     if is_path_absolute path_str
     then path
     else
-      let cwd = of_string (BatSys.getcwd ()) in
+      let cwd = of_string (cached_getcwd ()) in
       cwd //@ path
   in
   (* Normalize *)
@@ -60,6 +71,7 @@ let paths_to_same_file f g =
   (i,j) = (i',j')
 
 let file_exists = Sys.file_exists
-(* Sys.is_directory raises Sys_error if the path does not exist *)
-let is_directory f = Sys.file_exists f && Sys.is_directory f
+(* NB: Sys.is_directory raises Sys_error if the path does not exist. We catch
+   it instead of testing existence first, to only do a single stat. *)
+let is_directory f = try Sys.is_directory f with Sys_error _ -> false
 
