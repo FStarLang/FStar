@@ -51,8 +51,18 @@ val lib_root () : ML (option string)
 all transitive includes. *)
 val expand_include_d (dirname : string) : ML (list string)
 
+(* A counter that is bumped whenever the include path (or any other setting
+affecting file resolution) changes. Clients caching results derived from the
+include path can compare it to detect that their caches are stale. *)
+val epoch () : ML int
+
 (* The full include path. We search files in all of these directories. *)
 val full_include_path () : ML (list string)
+
+(* The full include path, with every entry normalized into an absolute path.
+This is memoized (and invalidated together with [full_include_path]), so it is
+cheap to call repeatedly. *)
+val full_include_path_normalized () : ML (list string)
 
 (* Try to find a file in the include path with a given basename. *)
 val find_file (basename : string) : ML (option string)
