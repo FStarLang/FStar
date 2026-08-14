@@ -428,7 +428,22 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     Some (Rule_prim (1, fun _ _ ->
       mk (EAbort "Pulse.Lib.Dv.unreachable") TAny E_Impure))
 
-  (* [mk_gvar]/[read_gvar] are the two halves of a global initializer. *)
+  (* [mk_gvar]/[read_gvar] are the two halves of a global initializer.  A
+     [gvar p] *is* the value it guards -- the slprop is ghost -- so the type is
+     its own first type argument, making the variable a plain global; [mk_gvar
+     init] is the initializer run, and [read_gvar x] is [x].  These mirror the
+     three rules Pulse's karamel extension registers (ExtractPulse.fst). *)
+  | ["Pulse"; "Lib"; "GlobalVar"], "gvar" ->
+    Some (Rule_type (fun tys -> elt_of tys))
+  | ["Pulse"; "Lib"; "GlobalVar"], "mk_gvar" ->
+    Some (Rule_prim (1, fun tys args ->
+      match args with
+      | init :: _ ->
+        let ret = match init.ty with
+                  | TArrow (_, _, r) -> r
+                  | _ -> elt_of tys in
+        mk (EApp (init, [unit_expr])) ret E_Impure
+      | [] -> unit_expr))
   | ["Pulse"; "Lib"; "GlobalVar"], "read_gvar" -> Some (identity_rule 1)
 
   | _ -> None
@@ -610,6 +625,17 @@ let is_stub_module (ns : list string) : bool =
 let stub_aliases : list (string & string) = [
   "FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop";
 ]
+
+(* [FStar.Bytes.bytes] is [struct { uint32_t length; const char *data; }] in
+   krmllib's [compat.h], which every karamel-generated program includes; the
+   direct-to-C backend has to ask for it by name. *)
+let extern_types : list (string & extern) = [
+  "FStar.Bytes.bytes", { x_name = None; x_header = Some "krml/internal/compat.h" };
+]
+
+let extern_type_of_lid (l:Ident.lident) : ML (option extern) =
+  let s = Ident.string_of_lid l in
+  extern_types |> List.tryPick (fun (k, x) -> if k = s then Some x else None)
 
 let realized_modules : list (list string) = [
   ["FStar"; "All"];

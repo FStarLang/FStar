@@ -384,6 +384,9 @@ let flag_to_doc (f:flag) : ML document =
   | Erased -> text "erased"
   | Comment s -> text ("(* " ^ s ^ " *)")
   | Realized -> text "realized"
+  | Extern (n, h) ->
+    text ("extern" ^ (match n with Some n -> " " ^ n | None -> "") ^
+                     (match h with Some h -> " <" ^ h ^ ">" | None -> ""))
   | SourceRecord -> text "source-record"
   | Imported (u, h) ->
     text ("imported[" ^ u ^ (match h with Some m -> "@" ^ m | None -> "") ^ "]")

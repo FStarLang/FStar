@@ -253,6 +253,42 @@ let erased_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in
   bs |> List.map (is_erased_binder env)
 
+(* [U.arrow_formals_comp] flattens nested arrows, but an abbreviation is not an
+   arrow node: it stops there.  A declaration whose type is written
+   [a:hash_alg -> compute_st a], with [compute_st] an [inline_for_extraction]
+   abbreviation hiding nine more binders, therefore looks like a one-binder
+   function.  Every argument past the first is then unclassified, and the
+   permissive default -- leave the surplus spine alone -- passes the erased
+   ones at runtime.  The caller, whose own erased binders were correctly
+   deleted, has no such values to send, so the call names variables that no
+   longer exist: EverCrypt's [compute] is the case that showed this up.
+
+   So the spine is walked with an unfolding step at each name, exactly as
+   [Extract.extract_letbinding]'s result-type peel does, and bounded for the
+   same reason -- one unfolding can expose another, and a self-referential
+   abbreviation must not spin.  Only a *total* codomain is peeled: an effectful
+   one is where the function ends, whatever it abbreviates. *)
+let rec arrow_formals_unfold_aux (fuel:int) (env:TcEnv.env) (t:typ)
+  : ML (binders & comp) =
+  let bs, c = U.arrow_formals_comp t in
+  if fuel <= 0 || not (U.is_total_comp c) then bs, c
+  else
+    let env = TcEnv.push_binders env bs in
+    let r = norm_bounded env "an arrow spine"
+              [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+               TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
+               TcEnv.UnfoldUntil delta_constant]
+              (U.comp_result c) in
+    match (SS.compress r).n with
+    | Tm_arrow _ ->
+      let bs', c' = arrow_formals_unfold_aux (fuel - 1) env r in
+      bs @ bs', c'
+    | _ -> bs, c
+
+let arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp) =
+  Prof.timed "Mono.arrow_formals_unfold" (fun () ->
+    arrow_formals_unfold_aux 8 env t)
+
 (* The sorts of the binders [erased_binders] retains, in order: exactly what a
    caller still has to supply.  Used to type the binders introduced when a
    primitive has to be eta-expanded, which would otherwise be [TAny]. *)
@@ -274,11 +310,11 @@ let retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ) =
    happens to work) or a reference to a type variable in value position (when
    it is not, which does not). *)
 let unit_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
-  let bs, _ = U.arrow_formals_comp t in
+  let bs, _ = arrow_formals_unfold env t in
   bs |> List.map (fun b -> U.is_unit b.binder_bv.sort || is_type_binder env b)
 
 let type_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
-  let bs, _ = U.arrow_formals_comp t in
+  let bs, _ = arrow_formals_unfold env t in
   bs |> List.map (is_type_binder env)
 
 (* The binders that become parameters of the target type, positionally: a
@@ -289,7 +325,7 @@ let type_params (env:TcEnv.env) (t:typ) : ML (list bool) =
   bs |> List.map (is_type_param env)
 
 let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
-  let bs, comp = U.arrow_formals_comp t in
+  let bs, comp = arrow_formals_unfold env t in
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
   let init (b:binder) : ML bclass =

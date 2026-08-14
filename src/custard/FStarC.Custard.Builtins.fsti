@@ -99,6 +99,14 @@ val is_stub_module : list string -> bool
    valued by the fully qualified lid, as a string. *)
 val stub_aliases : list (string & string)
 
+(** Types that have no F* definition *and* none that Custard should emit,
+    because a header outside F* already declares them: [FStar.Bytes.bytes] is
+    a struct krmllib defines.  This is additive rather than a {!rule}: the
+    module may also be realized in OCaml (section 8.2), which is a separate
+    and unrelated fact about the same declaration.  A program declares its own
+    with [@@custard_extern] (section 8.1, kind 4). *)
+val extern_type_of_lid : Ident.lident -> ML (option extern)
+
 (** Whether a module is realized by hand in OCaml (section 8.2), and so has a
     [.ml] of its own in [src/ml] or [ulib/ml] that Custard must neither
     compile over nor write a file on top of.  Takes a namespace that has

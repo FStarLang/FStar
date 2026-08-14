@@ -74,6 +74,17 @@ let lident_of_name (n:name) : ML K.lident =
            | Some s -> n.id ^ "__" ^ s in
   (n.ns, id)
 
+(* The external types of the program being printed, by mangled name, mapped to
+   the C name they are declared under.  karamel does not prefix an lident whose
+   namespace is empty, so an entry here reaches the C output verbatim. *)
+let extern_types : ref (SMap.t string) = mk_ref (SMap.create 0)
+
+let type_lident_of_name (n:name) : ML K.lident =
+  let lid = lident_of_name n in
+  match SMap.try_find !extern_types (string_of_name n) with
+  | Some t -> ([], t)
+  | None -> lid
+
 let krml_width (sw : signedness & width) : K.width =
   match sw with
   | (Signed, Int8) -> K.Int8
@@ -129,8 +140,8 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   | TApp (n, []) ->
     (match prim_type n with
      | Some t -> t
-     | None -> K.TQualified (lident_of_name n))
-  | TApp (n, args) -> K.TApp (lident_of_name n, args |> List.map (krml_typ env))
+     | None -> K.TQualified (type_lident_of_name n))
+  | TApp (n, args) -> K.TApp (type_lident_of_name n, args |> List.map (krml_typ env))
 
 let binder_of (env:kenv) (b:binder) : ML K.binder =
   { K.name = b.b_name; K.typ = krml_typ env b.b_ty; K.mut = false; K.meta = [] }
@@ -364,7 +375,12 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
                cs |> List.map (fun (cn, fs) ->
                  (mangled_name cn,
                   fs |> List.map (fun (f, c) -> (f, (krml_typ env c, false)))))))
-     | TAbstract -> Some (K.DTypeAbstractStruct lid))
+     | TAbstract ->
+       (* An external type is declared by a header karamel does not know
+          about, so emitting an abstract struct for it would be a conflicting
+          redeclaration.  Its uses already print as the plain C name. *)
+       if t.dt_flags |> List.existsb Extern? then None
+       else Some (K.DTypeAbstractStruct lid))
 
   | DExternal x ->
     (* A [@@custard_extern "f"] symbol is declared under exactly that C name;
@@ -395,7 +411,20 @@ let ctor_table (p:program) : ML (SMap.t int) =
     | _ -> ());
   t
 
+let extern_type_table (p:program) : ML (SMap.t string) =
+  let t = SMap.create 20 in
+  p |> List.iter (fun d ->
+    match d with
+    | DType ty ->
+      ty.dt_flags |> List.iter (fun f ->
+        match f with
+        | Extern (Some target, _) -> SMap.add t (string_of_name ty.dt_name) target
+        | _ -> ())
+    | _ -> ());
+  t
+
 let print_program (p:program) : ML (list Krml.file) =
+  extern_types := extern_type_table p;
   let env = { names = []; names_t = []; ctor_arity = ctor_table p; tvars_any = false } in
   let ds = p |> List.collect (fun d ->
              match krml_decl env d with

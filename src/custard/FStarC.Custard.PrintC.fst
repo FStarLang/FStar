@@ -220,6 +220,15 @@ and base_ty (t:cty) : ML string =
      | Some s -> s
      | None ->
        (match find_type n with
+        (* An external type is declared in a header, so its size and its name
+           are someone else's business (section 8.1, kind 4). *)
+        | Some { dt_body = TAbstract; dt_flags = fs }
+          when List.existsb Extern? fs ->
+          (match List.tryPick (fun f -> match f with
+                                        | Extern (t, _) -> t
+                                        | _ -> None) fs with
+           | Some t -> t
+           | None -> c_name n)
         | Some { dt_body = TAbstract } ->
           reject ("the abstract type " ^ string_of_name n)
             ["A type with no definition has no size, so C cannot store it.";
@@ -1092,11 +1101,23 @@ let signature (l:dlet) : ML string =
   if TUnit? l.dl_ret then "void " ^ hd else decl_of l.dl_ret hd
 
 (* A definition with no parameters is a C *variable*, not a function of no
-   arguments, and its initializer has to be a constant expression -- which the
-   body of an arbitrary F* definition is not.  So it becomes a function of no
-   arguments plus a call at each use, which is what the extractor already
-   emits: an [EQual] with an empty spine is applied nowhere, so it would be a
-   function pointer.  Rejecting is honest; nothing in the corpus needs it. *)
+   arguments, and C requires its initializer to be a constant expression --
+   which the body of an arbitrary F* definition is not.  So it is declared
+   uninitialized and assigned by [custard_init_globals], which the generated
+   [main] calls before anything else and which a program embedding this
+   translation unit has to call itself.  This is what karamel's
+   [krmlinit_globals] does, for the same reason. *)
+let global_decl (l:dlet) : ML string =
+  current := string_of_name l.dl_name;
+  decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"
+
+let global_init (l:dlet) : ML string =
+  current := string_of_name l.dl_name;
+  ctr := 0;
+  void_ret := false;
+  reset_scope ();
+  emit "  " (D_Assign (c_name l.dl_name)) l.dl_body
+
 let let_decl (l:dlet) : ML string =
   current := string_of_name l.dl_name;
   ctr := 0;
@@ -1198,6 +1219,11 @@ let print_program (p:program) : ML string =
     p |> List.collect (fun d ->
       match d with
       | DExternal ({ dx_header = Some h }) -> ["#include \"" ^ h ^ "\""]
+      | DType ty ->
+        ty.dt_flags |> List.collect (fun f ->
+          match f with
+          | Extern (_, Some h) -> ["#include \"" ^ h ^ "\""]
+          | _ -> [])
       | _ -> []) in
   let includes = dedup includes in
 
@@ -1221,6 +1247,9 @@ let print_program (p:program) : ML string =
      wants a prototype, not a group. *)
   let protos = p |> List.collect (fun d ->
     match d with
+    | DLet l when Nil? l.dl_binders ->
+      [(if l.dl_flags |> List.existsb Private? then "static " else "") ^
+       global_decl l]
     | DLet l when Cons? l.dl_binders ->
       current := string_of_name l.dl_name;
       reset_scope ();
@@ -1231,9 +1260,19 @@ let print_program (p:program) : ML string =
 
   let defs = p |> List.collect (fun d ->
     match d with
+    | DLet l when Nil? l.dl_binders -> []
     | DLet l -> [(if l.dl_flags |> List.existsb Private? then "static " else "") ^
                  let_decl l]
     | _ -> []) in
+
+  (* In declaration order, which the SCC pass has already made a topological
+     one: a global whose initializer reads another global sees it set. *)
+  let inits = p |> List.collect (fun d ->
+    match d with
+    | DLet l when Nil? l.dl_binders -> [global_init l]
+    | _ -> []) in
+  let init_fn = "void custard_init_globals(void) {\n" ^
+                String.concat "" inits ^ "}\n" in
 
   (* Custard compiles standalone programs (section 4.4).  An entry point
      returning a machine integer is the process exit status, which is what a C
@@ -1245,10 +1284,11 @@ let print_program (p:program) : ML string =
       let args = String.concat ", "
                    (kept_binders l |> List.map (fun _ -> unit_value)) in
       let call = c_name l.dl_name ^ "(" ^ args ^ ")" in
+      let pre = "int main(void) {\n  custard_init_globals();\n" in
       (match l.dl_ret with
-       | TInt _ -> ["int main(void) {\n  return (int)" ^ call ^ ";\n}\n"]
-       | TUnit -> ["int main(void) {\n  " ^ call ^ ";\n  return 0;\n}\n"]
-       | _ -> ["int main(void) {\n  (void)" ^ call ^ ";\n  return 0;\n}\n"])
+       | TInt _ -> [pre ^ "  return (int)" ^ call ^ ";\n}\n"]
+       | TUnit -> [pre ^ "  " ^ call ^ ";\n  return 0;\n}\n"]
+       | _ -> [pre ^ "  (void)" ^ call ^ ";\n  return 0;\n}\n"])
     | _ -> []) in
 
   let body =
@@ -1257,6 +1297,6 @@ let print_program (p:program) : ML string =
   String.concat "" tys ^ (match tys with [] -> "" | _ -> "\n") ^
   String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
-  String.concat "\n" defs ^
+  String.concat "\n" defs ^ "\n" ^ init_fn ^
     (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
   body

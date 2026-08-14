@@ -28,6 +28,7 @@ module SMap   = FStarC.SMap
 module GenSym = FStarC.GenSym
 module Format = FStarC.Format
 module Prof   = FStarC.Custard.Prof
+module Options = FStarC.Options
 
 (* Does [v] occur free in [e]?  Custard's variable names come from F* bound
    variables and so already carry a unique index, but this deliberately does
@@ -239,6 +240,15 @@ let as_if (brs:list branch) : ML (option (expr & expr)) =
                            | Some c2 -> c1 <> c2 in
        if not complementary then None
        else if c1 then Some (b1, b2) else Some (b2, b1)
+     | _ -> None)
+  (* Dead-branch pruning can leave a boolean match with one arm.  Left as a
+     match it prints as [scrut == true] in C, which is both noise and a
+     [-Wparentheses] warning; as an [if] the dead arm is where it belongs. *)
+  | [(p1, None, b1)] ->
+    (match bool_alt p1 b1 with
+     | Some (Some c1) ->
+       let dead = { b1 with e = EAbort "unreachable branch" } in
+       Some (if c1 then (b1, dead) else (dead, b1))
      | _ -> None)
   | _ -> None
 
@@ -505,6 +515,35 @@ let rec iota (brs:list branch) (scrut:expr) (at:expr) : ML expr =
    which iota turns into [f x] and beta into [f]'s body.  Neither rule fires on
    its own, and each one exposes work for the other, so a rewritten node is
    re-examined rather than merely rebuilt. *)
+(* Does every occurrence of [v] in [x] sit in the head position of an
+   application?  ([v] not occurring at all counts.) *)
+let rec called_only (v:string) (x:expr) : ML bool =
+  if not (occurs v x) then true
+  else match x.e with
+  | EVar _ -> false
+  | EConst _ | EQual _ | EAny | EAbort _ -> true
+  | EApp (h, es) ->
+    (match h.e with
+     | EVar w -> w = v && called_only_list v es
+     | _ -> called_only v h && called_only_list v es)
+  | ELet (_, _, e1, e2) -> called_only v e1 && called_only v e2
+  | EFun (_, b) -> called_only v b
+  | EMatch (s, brs) -> called_only v s && called_only_branches v brs
+  | EIf (c, a, b) -> called_only v c && called_only v a && called_only v b
+  | ESeq (a, b) | EWhile (a, b) -> called_only v a && called_only v b
+  | ECtor (_, es) | ETuple es | EOp (_, es) -> called_only_list v es
+  | ERaise e1 -> called_only v e1
+  | ERecord (_, fs) -> called_only_list v (fs |> List.map snd)
+  | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _) -> called_only v e1
+  | ETry (a, brs) -> called_only v a && called_only_branches v brs
+
+and called_only_list (v:string) (es:list expr) : ML bool =
+  es |> List.for_all (called_only v)
+
+and called_only_branches (v:string) (brs:list branch) : ML bool =
+  brs |> List.for_all (fun (_, g, b) ->
+    (match g with None -> true | Some g -> called_only v g) && called_only v b)
+
 let rec reduce (x:expr) : ML expr =
   match x.e with
   | EApp (h, args) ->
@@ -526,7 +565,29 @@ let rec reduce (x:expr) : ML expr =
     else { x with e = EMatch (scrut, brs |> List.map reduce_branch) }
 
   | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-  | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, reduce e1, reduce e2) }
+  (* Section 3.1: the backends have no closures, so a let-bound lambda that is
+     only ever *called* has to reach its call, where beta can fire.  A lambda
+     is a value, so moving it duplicates no work, and a single occurrence
+     duplicates no code.  Pulse's [with_invariants] produces exactly this
+     shape: a thunk bound to a name and applied to [()] two lines later, twice
+     over.
+
+     Restricted to occurrences in head position, and to the direct-to-C
+     backend.  A lambda that is *passed* rather than called is a closure
+     however it is bound, so moving it buys nothing; and beta gives the result
+     the type of the application node it replaces, which is not always as
+     precise as the body's own -- on the OCaml path that turned a [ref] into
+     [any], and an [any] prints as an array rather than as a [ref].  C has no
+     closures at all, so there the inlining is not an optimization but the
+     only way the program compiles. *)
+  | ELet (v, ty, e1, e2) ->
+    let e1 = reduce e1 in
+    if Options.custard_backend () = "C"
+       && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
+      let sm : subst = SMap.create 5 in
+      SMap.add sm v e1;
+      reduce (sub sm e2)
+    else { x with e = ELet (v, ty, e1, reduce e2) }
   | EFun (bs, b) -> { x with e = EFun (bs, reduce b) }
   | EIf (c, a, b) -> { x with e = EIf (reduce c, reduce a, reduce b) }
   | ESeq (a, b) -> { x with e = ESeq (reduce a, reduce b) }
@@ -639,6 +700,93 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
        eta_reduce bs' body' ret' E_Pure
      | _ -> (bs, body, ret, ef))
   | _ -> (bs, body, ret, ef)
+
+(* -------------------------------------------------------------------- *)
+(* Eta expansion                                                        *)
+(* -------------------------------------------------------------------- *)
+
+(* The opposite direction, and for the opposite reason.  A definition whose
+   result type is still an arrow is a partial application, which OCaml is happy
+   with and C is not: karamel reports "cannot enforce arity at call-site" and
+   emits a call through a function pointer that no longer type-checks.  Three
+   shapes in the dice example are exactly this -- [let hacl_hash = hacl_hash0],
+   a Pulse [fn] whose last argument [eta_reduce] had just removed, and a
+   wrapper that forwards a field.
+
+   Only a *cheap* body may be expanded, because expansion re-evaluates it on
+   every call.  An under-applied call allocates a closure and runs nothing, so
+   it qualifies; anything that computes before returning a function does not,
+   which is the hazard section 13.5 records for specialization.  Effects are
+   excluded for the same reason, and that is also what keeps a top-level
+   stateful value from being turned into a function. *)
+let rec cheap_expr (x:expr) : ML bool =
+  is_pure x.eff &&
+  (match x.e with
+   | EConst _ | EVar _ | EQual _ -> true
+   | EApp (f, args) -> cheap_expr f && List.for_all cheap_expr args
+   | ECast (e, _) | EProj (e, _, _) -> cheap_expr e
+   | _ -> false)
+
+let rec arrow_arity (c:cty) : ML int =
+  match c with
+  | TArrow (_, _, b) -> 1 + arrow_arity b
+  | _ -> 0
+
+(* How many arguments the callee still wants.  Bounding the expansion by this
+   rather than by the result type is what makes the pass safe: a definition
+   whose declared result type carries more arrows than its body has room for
+   -- which [eta_reduce] and the abbreviation peeling of section 7.3 can both
+   produce -- would otherwise be expanded into an over-application. *)
+let decl_arity (prog:program) : ML (SMap.t int) =
+  let tbl : SMap.t int = SMap.create 100 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet l -> SMap.add tbl (string_of_name l.dl_name) (List.length l.dl_binders)
+    | DExternal x -> SMap.add tbl (string_of_name x.dx_name) (arrow_arity x.dx_ty)
+    | _ -> ());
+  tbl
+
+let eta_expand_decl (tbl : SMap.t int) (l:dlet) : ML dlet =
+  (* Only a head this program declares, and only a *pure* body: expansion
+     re-evaluates the body on every call, and an under-applied call allocates a
+     closure and runs nothing, which is why it qualifies. *)
+  let missing =
+    if not (is_pure l.dl_eff) || not (cheap_expr l.dl_body) then 0
+    else
+      let head, nargs = match l.dl_body.e with
+                        | EApp ({ e = EQual (n, _) }, args) -> (Some n, List.length args)
+                        | EQual (n, _) -> (Some n, 0)
+                        | _ -> (None, 0) in
+      match head with
+      | None -> 0
+      | Some n ->
+        (match SMap.try_find tbl (string_of_name n) with
+         | Some a when a > nargs ->
+           let want = a - nargs in
+           let have = arrow_arity l.dl_ret in
+           if want < have then want else have
+         | _ -> 0) in
+  let rec go (n:int) (bs:list binder) (body:expr) (ret:cty) (ef:eff)
+    : ML (list binder & expr & cty & eff) =
+    if n <= 0 then (bs, body, ret, ef)
+    else match ret with
+         | TArrow (a, e, b) ->
+           let v = rename "eta" in
+           let arg = mk (EVar v) a E_Pure in
+           let body' = match body.e with
+                       | EApp (f, args) -> mk (EApp (f, args @ [arg])) b e
+                       | _ -> mk (EApp (body, [arg])) b e in
+           go (n - 1) (bs @ [{ b_name = v; b_ty = a }]) body' b e
+         | _ -> (bs, body, ret, ef) in
+  let bs, body, ret, ef = go missing l.dl_binders l.dl_body l.dl_ret l.dl_eff in
+  { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
+
+let eta_expand_decls (prog:program) : ML program =
+  let tbl = decl_arity prog in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet l -> DLet (eta_expand_decl tbl l)
+    | d -> d)
 
 let eta_reduce_decls (prog:program) : ML program =
   prog |> List.map (fun d ->
@@ -2189,6 +2337,9 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
     | d -> d)) prog in
+  (* After every pass that can leave a definition eta-short, and before [dce],
+     which reads the final call graph. *)
+  let prog = pass "eta_expand" eta_expand_decls prog in
   (* Last: a coercion is inserted where two types disagree, so every pass that
      can change a type has to have run.  Nothing below it may rewrite a term. *)
   let prog = pass "dce" dce prog in

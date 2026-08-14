@@ -186,6 +186,12 @@ let rec unfold_cty (st:state) (fuel:int) (c:cty) : ML cty =
           would be unfolded with its own parameter still free (see the same
           case in {!FStarC.Custard.Layout.resolve}). *)
        let np = List.length ps in
+       (* An abbreviation applied to *fewer* arguments than it has parameters
+          cannot be unfolded: the body would keep the missing parameters as
+          free variables, which is worse than the abbreviation it replaced.
+          Only [TApp] can carry the remaining arguments, so a partial
+          application stays as written. *)
+       if List.length args < np then c else
        let used, extra =
          if List.length args > np then List.splitAt np args else (args, []) in
        let b = subst_cty (zip_params ps used) b in
@@ -201,7 +207,15 @@ let rec unfold_cty (st:state) (fuel:int) (c:cty) : ML cty =
    arguments are rewritten first, so [list (list int)] asks for [list__int]
    before asking for the outer one. *)
 let rec mono_cty (st:state) (c:cty) : ML cty =
-  match unfold_cty st 100 c with
+  (* The unfolded form is what is *returned*, not merely what is matched on:
+     an abbreviation that stands for something other than a [TApp] -- [sid_t =
+     U16.t] in the DICE example -- would otherwise survive, and a use site
+     that wrote [option sid_t] would ask for a different clone than one that
+     wrote [option U16.t] even though the two are the same type.  With
+     [--custard_monomorphize_types] those are two C structs with identical
+     fields and no conversion between them. *)
+  let c = unfold_cty st 100 c in
+  match c with
   | TApp (n, args) ->
     let args = args |> List.map (mono_cty st) in
     if is_poly st n then TApp (request st n args, []) else TApp (n, args)

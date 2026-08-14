@@ -5523,6 +5523,183 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
   `tests/custard/Thunk.fst` is a counter that prints `123` if the reference
   is shared and `111` if it is not.
 
+## 14. Migrating an example: DICE
+
+`pulse/share/pulse/examples/dice` is a DICE Protection Environment: about
+forty Pulse and F\* modules over a hash table of sessions, calling into
+EverCrypt for hashing and signing.  It is the largest Pulse program outside
+the compiler, it was already extracted to C through karamel, and every C
+feature it uses -- a mutex, a global, a struct-valued hash table, a function
+pointer, hand-written C on the other side of an interface -- is one that a
+whole-program compiler has to get right.  Migrating it was therefore worth
+more as a test of Custard than as a saving for the example.
+
+Both C paths work: Custard emits a `.krml` file that karamel turns into
+1535 lines of C, or emits 1047 lines of C itself.  Each compiles with
+`-Wall -Wextra -Werror`.  `custard.Makefile` alongside the existing
+`c.Makefile` builds either.
+
+The comparison with `c.Makefile` is the point.  That file passes karamel a
+`-bundle` for `HACL`, a second one for `DPE`, a `-library` naming three
+modules, two `-add-include`s, and a `--extract` filter listing seven
+namespaces to keep and six to drop.  Custard's invocation names the six entry
+points and nothing else: there is one translation unit, so there is nothing to
+bundle, and the reachable set is computed rather than described.
+
+What the migration cost was eight fixes to Custard and one attribute in the
+example.  None of them is specific to DICE.
+
+### 14.1 A binder query must unfold abbreviations
+
+`EverCrypt.HMAC.compute` is `a:hash_alg -> compute_st a`, and `compute_st` is
+an `inline_for_extraction noextract` abbreviation hiding nine further binders,
+four of them erased.  `U.arrow_formals_comp` flattens total arrows and
+descends into refinements but never delta-unfolds, so every Custard query that
+reads "the binders of this declaration" off its *type* stopped at the first
+abbreviation and saw a one-binder function.  The surplus spine entries were
+left alone, so the caller passed its erased binders at run time and the
+karamel backend reported `unbound variable pkey`.
+
+`Extract.peel_typ` already solved this for *result* types, by peeling on the
+term and unfolding at each step; `Mono.arrow_formals_unfold` is the same idea
+for the binder side, and `Mono.unit_binders`, `Mono.type_binders` and
+`Mono.classify` now use it.  Both have to be fuelled, because one unfolding
+can expose another -- Pulse's `cont_elab` is the documented case.
+
+### 14.2 `extract_as` on a `val`
+
+`Pulse.Lib.Core.as_atomic` came out as an unresolved external.  It is a `val`
+carrying an `[@@extract_as]` attribute, and `fixup_extract_as` -- like the ML
+pipeline's `fixup_sigelt_extract_as` -- only handled `Sig_let`.  The ML
+pipeline can afford that, because `--cmi` always loads the `.fst`; Custard
+meets declarations whose `.fst` was never installed, and `Pulse.Lib.Core` is
+one (only its `.fsti` ships).
+
+`fixup_extract_as` now synthesizes the `Sig_let` from a `Sig_declare_typ` plus
+its `extract_as` implementation, and marks it `Inline_for_extraction`.  The
+marking matters: every `extract_as` in the tree is a small identity or
+constant wrapper, and krml rejects `let tmp = r[0] <- x in as_atomic tmp`
+because an assignment has to be in statement position.  Inlining the wrapper
+removes the binding along with it.
+
+### 14.3 A declaration's result type may not out-run its body
+
+`n_extra` -- how many arrows of the result type the definition's own lambdas
+consume -- counted only the binders that *survive* erasure.  An erased binder
+still had an arrow in the source type, so a definition written through an
+abbreviation over an erased binder came out claiming a larger arity than its
+body has:
+
+```ocaml
+let eraseAbbrev_add3 (x : Prims.int) (eta : Prims.int) : (Prims.int -> Prims.int) =
+  (Prims.op_Addition x eta)
+```
+
+which `ocamlopt` rejects.  It now counts every binder past the specialization
+spine.  `tests/custard/EraseAbbrev.fst` is the regression test, and it was
+written for §14.1 -- it caught this on the way.
+
+### 14.4 Eta expansion, bounded by the callee's arity
+
+krml refuses a partial application at a call site (`Cannot enforce arity at
+call-site for Pulse.Lib.Reference.replace`), and emitted
+`(HACL_hacl_hash(alg), (void*)0U)(...)`.  `Simplify.eta_expand_decls` gives a
+definition whose body is a partial application the arguments it is missing.
+
+The bound is the *callee's* real arity, not the number of arrows in the
+caller's result type.  `dl_ret` can legitimately carry more arrows than the
+body has room for -- `eta_reduce` moves one there, and §7.3's abbreviation
+peeling can leave another -- so expanding by "however many arrows `dl_ret`
+has" over-applies, which is how the pass first shipped and how it produced
+`Prims.op_Addition x eta eta1`.  Only a body that is `EQual` or an `EApp` of
+one, and that passes `cheap_expr`, may be expanded: a body that *computes*
+before returning a function must not be re-run per call, which is the
+`Cfg.cached_steps` hazard of §13.5 again.
+
+### 14.5 External types
+
+Two types in the example have no F\* definition and must not get a C one
+either: `Spec.Hash.Definitions.hash_alg`, a C enum declared by EverCrypt's
+`EverCrypt_Base.h`, and `FStar.Bytes.bytes`, a struct declared by krmllib's
+`compat.h`.  An abstract `val t : Type0` was previously a `DType` with a
+`TAbstract` body, which `PrintKrml` turned into a `DTypeAbstractStruct` and
+`PrintC` rejected outright (error 367).  Either way the C output redeclared a
+type the headers already define.
+
+The facility is the value one, extended to types.  `[@@custard_extern "Name"]`
+and `[@@custard_c_header "h.h"]` on an abstract type declaration produce a
+`DType` carrying the new `Extern (target, header)` flag.  `PrintKrml` emits no
+declaration for it and spells its uses with the target name; `PrintC` emits no
+typedef, includes the header, and stops rejecting it.  The type is also
+`NoNewtype`, for the same reason `Rule_opaque` is: its representation is fixed
+outside F\*.
+
+`FStar.Bytes` is in ulib and cannot be annotated for one example, and it is
+also a `Realized` module -- an OCaml realization and a C header are two
+unrelated facts about the same declaration, so this is not a `rule` but an
+additive table, `Builtins.extern_type_of_lid`.
+
+This is Custard's answer to karamel's `-library M`, which does not help here:
+`-library` works per bundle or per file, and a whole-program compiler has one
+file.
+
+### 14.6 Globals in the direct-to-C backend
+
+`DPE.gst` is a mutex-protected session table, initialized by a computation.  C
+requires a constant initializer, so `PrintC` used to reject a parameterless
+definition by name.  It now declares the variable uninitialized and assigns it
+in `custard_init_globals`, which the generated `main` calls first and which a
+program embedding the translation unit has to call itself.  This is what
+karamel's `krmlinit_globals` does, for the same reason.  The order is
+declaration order, which the SCC pass has already made a topological one.
+
+### 14.7 A let-bound lambda that is only called
+
+Pulse's `with_invariants` compiles to a thunk bound to a name and applied to
+`()` two lines later, twice over.  krml's own optimizer inlines that; the
+direct-to-C backend has no closures at all and rejected it.  `Simplify.reduce`
+now substitutes a let-bound lambda into its use when the use is a call and
+there is at most one of them.
+
+It does this **only on the direct-to-C backend**, which is the interesting
+part.  Beta gives the result the type of the application node it replaces, and
+that is not always as precise as the body's own; on the OCaml path a
+`ref bool` became `any`, and the OCaml backend prints an `any` reference as an
+array, so `used_marker := true` came out as `used_marker.(0) <- true` and the
+Custard-built compiler did not compile.  A closure is a legal value on the
+other two backends, so there the inlining buys nothing and is not worth that.
+
+> A transformation that only one backend needs belongs behind a test on the
+> backend, not in the shared pipeline.
+
+### 14.8 Two clones of one type
+
+With `--custard_monomorphize_types`, `option sid_t` and `option U16.t` asked
+for two different clones -- two C structs with identical fields and no
+conversion between them -- because `sid_t` is `type sid_t : eqtype = U16.t`
+and `Monomorphize.mono_cty` matched on the *unfolded* type but returned the
+one it was given whenever the unfolding was not itself a `TApp`.  It now
+returns the unfolded form.  `unfold_cty` also stops unfolding an abbreviation
+applied to fewer arguments than it has parameters, where the body would keep
+the missing ones as free variables.
+
+### 14.9 A boolean match with one arm
+
+Dead-branch pruning can leave `match sid < ctr with | true -> ...`, which
+`as_if` did not recognize because it only looked at two-branch matches, and
+which krml renders as `sid < ctr == true` -- noise, and a `-Wparentheses`
+warning.  A single constant arm now becomes an `EIf` whose dead side is an
+`EAbort`.
+
+### 14.10 What is still hand-written
+
+The example's `Pulse_Lib_SpinLock.c` is not copied into the Custard build:
+`c.Makefile` passes `-library Pulse.Lib.SpinLock`, but Custard compiles
+`Pulse.Lib.SpinLock` from its Pulse source like anything else, and copying the
+hand-written file as well is a duplicate definition.  `EverCrypt_Base.h` and
+the EverCrypt objects are still external, as they are in the baseline: they
+are C, not F\*.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -5587,3 +5764,4 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
 | M10β | **Performance of the extraction** (§12.14) | Done.  `--profile_component FStarC.Custard` now prints an *exclusive*-time breakdown, from Custard's own `Prof` rather than `FStarC.Profiling`, because a mutually recursive traversal's inclusive counters all report the outermost frame.  It found three accidentally quadratic spots: `Loader.loaded` scanned every loaded module on every name resolution (27 s of 77), the `Mono` binder-flag queries were recomputed at every call site rather than per declaration (4 s), and `unit_entries` looked each declaration up by linear scan (6.9 s to 65 ms).  Extraction of the whole compiler goes from 77 s to 50 s and `make custard` from 3 min 45 s to 3 min 3 s.  What remains is flat; the build stages, MENHIR's 51 s and `ocamlopt`'s 78 s, are both sequential work on a 256-core machine and are the larger target |
 | M10γ | **A dune build for Custard** (§12.11) | Done.  `mk/custard.mk`'s hand-rolled menhir and `ocamlopt` stages are replaced by a dune project generated into `stagec/dune/`: a `wrapped false` library over `stagec/split/`, `src/ml/` and `ulib/ml/plugin/`, plus a one-module executable.  Dune's `menhir` stanza does the `--infer` pre-pass against *this* library, which was the reason the build was hand-rolled in the first place, and does it without the best-effort `ocamlc -c` of every module.  `-linkall` moves onto the library, so that `fstar.lib`'s `FStar_Order` is not force-linked against Custard's own.  129 s of build becomes 18 s, and `make custard` 3 min 3 s becomes 1 min 19 s.  Plugins now link against `.fstarcompiler.objs/{byte,native}` |
 | M10δ | **Master merge: the simplified effect system** | Done.  `comp_typ` lost `effect_args` and gained `comp_pre`/`comp_post`, so `Extract.key_of_comp` hashes those instead, and `TypeChecker.Env.lift_comp_t` and `polymonadic_bind_t` left `src/custard/entrypoints.txt` with them.  It also uncovered two extraction bugs that had been latent: `callee_eff` read an *over*-applied callee's effect off the declaration rather than off the surplus arrows of its result type, which is exactly the shape §7.5 gives every reified `Tac` call, so `tcresolve' st0; ...` was deleted as pure and no typeclass constraint in ulib could be solved by the extracted compiler; and the coercion pass asked nothing of an argument whose position an untrusted head still typed concretely, so a dependent pair's realized `any` second component reached a `comp` parameter (§5.4) |
+| M10ε | **The DICE example, through both C backends** (§14) | Done.  `pulse/share/pulse/examples/dice` extracts from its six entry points to 1535 lines of C through karamel or 1047 lines of C directly, each compiling with `-Wall -Wextra -Werror`; `custard.Makefile` builds either.  Eight compiler fixes and one attribute in the example, all of them general: abbreviations unfolded in binder queries (§14.1), `extract_as` on a `val` (§14.2), `n_extra` counting erased binders (§14.3), eta expansion bounded by the callee's arity (§14.4), external types (§14.5), globals with computed initializers (§14.6), let-bound lambdas inlined at their call on the C backend only (§14.7), abbreviations canonicalized before a type instance is keyed (§14.8), and a one-armed boolean match (§14.9).  Two of the eight were caught by the regression they broke rather than by the example: §14.3 by `tests/custard/EraseAbbrev`, §14.7 by `make custard-smoke`, which is what those two exist for |

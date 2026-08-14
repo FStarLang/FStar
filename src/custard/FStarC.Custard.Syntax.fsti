@@ -277,6 +277,14 @@ type flag =
       and to its fields with the realization's own unmangled names.  Its
       representation is therefore fixed outside F*: no erasure, no newtype
       collapse and no inline-field expansion may touch it. *)
+  | Extern of option string & option string
+  (** The type is defined outside F*: an abstract [val t : Type0] carrying
+      [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration
+      so that uses of the type have a name to refer to, but emits no
+      definition for it; the C backends spell it with the name in the first
+      component -- the mangled one when it is [None] -- and, when the second
+      is set, include that header.  Its representation is fixed outside F*,
+      so no erasure and no newtype collapse may touch it. *)
   | SourceRecord
   (** The source declaration was written as a record, [type t = { a; b }],
       rather than as a one-constructor inductive.  Custard represents both the

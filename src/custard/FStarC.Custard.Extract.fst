@@ -2311,6 +2311,23 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                 | None -> Builtins.lookup_rule l)
              | None -> Builtins.lookup_rule l in
   match rule with
+  | Some (Builtins.Rule_extern x) when (match se with
+                                        | Some { sigel = Sig_declare_typ {t} } ->
+                                          is_type_sig st t
+                                        | _ -> false) ->
+    (* An external *type*: [Spec.Hash.Definitions.hash_alg] is a C enum the
+       hand-written HACL headers declare, and [FStar.Bytes.bytes] a struct
+       krmllib declares.  There is nothing to emit -- the declaration exists
+       only so that uses have a name -- but the arity still has to be right,
+       or a use carrying type arguments would not be the same constructor. *)
+    let t = (match se with
+             | Some { sigel = Sig_declare_typ {t} } -> t
+             | _ -> failwith "unreachable") in
+    let bs, _ = U.arrow_formals t in
+    let ps = bs |> List.collect (fun b ->
+               if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+    DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
+            dt_flags = [Extern (x.Builtins.x_name, x.Builtins.x_header); NoNewtype] }
   | Some (Builtins.Rule_extern x) ->
     (* Section 8.1, kind 4: the F* "definition" is a specification (often
        literally [admit ()]); the real one lives in a hand-written .ml or .c
@@ -2390,6 +2407,19 @@ and fixup_extract_as (se:sigelt) : ML sigelt =
                | Inr fv -> mem (S.lid_of_fv fv) (Free.fvars impl)
                | Inl _ -> false in
     { se with sigel = Sig_let {lids; lbs=(is_rec || self, [{lb with lbdef = impl}])} }
+  (* A [val] with the attribute is the case the ML pipeline does not handle,
+     because there the implementation is always in scope: [--cmi] loads the
+     [.fst] alongside the [.fsti].  Custard meets declarations whose [.fst] was
+     never installed -- [Pulse.Lib.Core] is checked into the Pulse plugin and
+     only its interface is shipped -- and for those the attribute is the whole
+     of what we know.  It is also exactly what it was written for: [as_atomic]
+     is an [admit ()] whose [extract_as] says "compile me as the identity". *)
+  | Sig_declare_typ {lid; us; t}, Some impl ->
+    let fv = S.lid_as_fv lid None in
+    let lb = U.mk_letbinding (Inr fv) us t PC.effect_Tot_lid impl [] se.sigrng in
+    { se with sigel = Sig_let {lids=[lid];
+                               lbs=(mem lid (Free.fvars impl), [lb])};
+              sigquals = S.Inline_for_extraction :: se.sigquals }
   | _ -> se
 
 (* The projectors and discriminators F* derives for an inductive are one field
@@ -2491,10 +2521,18 @@ and is_inline_for_extraction (st:state) (se:sigelt) : ML bool =
       | _ -> false)
 
 and is_inlinable (se:sigelt) : ML bool =
-  se.sigquals |> List.existsb (fun q ->
-    match q with
-    | S.Projector _ | S.Discriminator _ -> true
-    | _ -> false)
+  (se.sigquals |> List.existsb (fun q ->
+     match q with
+     | S.Projector _ | S.Discriminator _ -> true
+     | _ -> false))
+  (* An [inline_for_extraction] definition given by [extract_as] is a wrapper
+     written to disappear: every one of them in ulib and Pulse is an identity
+     or a constant.  Left standing they defeat the backends that need to see
+     the operation itself -- karamel rejects [let tmp = r[0] <- x in as_atomic
+     tmp], because an assignment is a statement and only the inlined form puts
+     it in statement position. *)
+  || (se.sigquals |> List.existsb (fun q -> q = S.Inline_for_extraction)
+      && Some? (List.tryPick ExtractAs.is_extract_as_attr se.sigattrs))
 
 and with_inline (d:decl) : ML decl =
   match d with
@@ -2619,9 +2657,12 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
       let bs, _ = U.arrow_formals t in
       let ps = bs |> List.collect (fun b ->
                  if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+      let extern = match Builtins.extern_type_of_lid l with
+                   | Some x -> [Extern (x.Builtins.x_name, x.Builtins.x_header); NoNewtype]
+                   | None -> [] in
       DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
-              dt_flags = (if is_erasable st se || is_prop_sig st t
-                          then [Erased] else []) }
+              dt_flags = extern @ (if is_erasable st se || is_prop_sig st t
+                                   then [Erased] else []) }
     else
       (* [@@no_auto_projectors] makes F* declare a type's projectors and
          discriminators without defining them: [TcInductive] emits the [val]
@@ -2872,10 +2913,12 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   (* [abs_formals] sees through nested lambdas, so a definition written
      [let f x = fun y -> e] has more binders than its type has arrows.  Each
      such extra binder consumes one arrow of the result type -- and its
-     effect, which is the one that matters at a call site. *)
-  let n_extra =
-    flags |> List.mapi (fun i f -> if not f && i >= n_poly then 1 else 0)
-          |> List.fold_left (fun a b -> a + b) 0 in
+     effect, which is the one that matters at a call site.  *Every* extra
+     binder does, including the ones [flags] drops: a binder that disappears
+     from the emitted signature because it is erased still had an arrow in the
+     source type, and leaving that arrow in the result type would make the
+     declaration claim a larger arity than its body has (section 13.5). *)
+  let n_extra = let n = List.length bs - n_poly in if n > 0 then n else 0 in
   (* Erased type binders carry no value but do parameterize the signature; the
      karamel backend resolves [TVar]s against this list, so they have to be
      recorded even though they take no runtime argument. *)
