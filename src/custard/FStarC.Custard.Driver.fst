@@ -308,10 +308,10 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   (* [--custard_main] is a root too, so that the common case needs only one
      option. *)
   let roots = entrypoints () @ (match main with Some l -> [l] | None -> []) in
-  if Nil? roots then
+  if Nil? roots && Nil? (Options.custard_entry_modules ()) then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text "--codegen Custard requires at least one --custard_entry or \
-            --custard_main.";
+      text "--codegen Custard requires at least one --custard_entry, \
+            --custard_entry_module or --custard_main.";
       text "Custard is a whole-program compiler: it extracts exactly the \
                    definitions reachable from the entry points."
     ];
@@ -333,7 +333,13 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let st = Extract.init deps env in
   let prog = phase "extract" (fun () ->
                UF.with_uf_enabled (fun () ->
-                 Extract.run st roots main (RegEmb.handle_module st roots))) in
+                 (* A module named by --custard_entry_module is requested by
+                    name just as one named by --custard_entry is, so its
+                    plugins are wanted too. *)
+                 let requested =
+                   roots @ (Options.custard_entry_modules ()
+                            |> List.map Ident.lid_of_str) in
+                 Extract.run st roots main (RegEmb.handle_module st requested))) in
   (* Section 12.4: what a linked unit already compiled.  These never enter the
      program -- renaming or emitting them would defeat the purpose -- but the
      layout analysis has to adopt their verdicts and the backends have to know

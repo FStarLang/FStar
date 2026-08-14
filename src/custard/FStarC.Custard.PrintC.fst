@@ -756,9 +756,15 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     (* An empty arm is not worth a pair of braces.  When it is the [then] arm,
        negating the condition is what removes it -- which happens whenever a
        branch's only job is to fall through, as an [if] with no [else] in the
-       source does. *)
+       source does.  When it is *both*, the test is not worth emitting either:
+       [c_expr] has already hoisted whatever evaluating the condition does
+       into [out], so what is left of it is pure and discarding it changes
+       nothing.  Pulse's [return] compiles to a flag and a test of that flag
+       around the rest of the block, so a [return] in the last position leaves
+       exactly this behind. *)
     !out ^
-    (if tt = "" && ft <> "" then ind ^ "if (!(" ^ cs ^ "))" ^ brace ind ft
+    (if tt = "" && ft = "" then ""
+     else if tt = "" then ind ^ "if (!(" ^ cs ^ "))" ^ brace ind ft
      else ind ^ "if (" ^ cs ^ ")" ^ brace ind tt ^
           (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
 

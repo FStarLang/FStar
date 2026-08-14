@@ -197,6 +197,7 @@ let defaults = [
   ("codegen"                                   , Unset);
   ("custard_entry"                             , List []);
   ("custard_entrypoints"                       , List []);
+  ("custard_entry_module"                      , List []);
   ("custard_main"                              , Unset);
   ("custard_dump_ir"                           , Bool false);
   ("custard_dump_specializations"              , Bool false);
@@ -472,6 +473,7 @@ let get_codegen                 ()      = lookup_opt "codegen"                  
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
 let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      (as_list as_string)
+let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
@@ -887,6 +889,18 @@ lines whose first non-blank character is # are ignored. May be repeated. A \
 plugin's hand-written realizations call the compiler by OCaml name, through \
 no request Custard can see, so the plugin ships such a file and the compiler \
 build reads it alongside its own.");
+
+  ( noshort,
+    "custard_entry_module",
+    Accumulated (SimpleStr "module_name"),
+    text "Every top-level definition of the named module is a root of the \
+extraction with --codegen Custard, as --extract_module does for the other \
+backends. May be repeated. This is how a module is compiled as a library \
+rather than as the program reachable from one entry point, and it is what a \
+test of a module's generated code wants: a definition added to the module is \
+extracted without anyone having to name it. A definition with nothing to \
+extract -- a specification, a proof, an [inline_for_extraction] -- is passed \
+over rather than reported, unlike --custard_entry.");
 
   ( noshort,
     "custard_main",
@@ -2130,6 +2144,7 @@ let codegen                      () =
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let custard_entries              () = get_custard_entry ()
 let custard_entrypoint_files     () = get_custard_entrypoints ()
+let custard_entry_modules        () = get_custard_entry_module ()
 let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()

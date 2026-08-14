@@ -40,6 +40,7 @@ module Mono   = FStarC.Custard.Mono
 module Builtins = FStarC.Custard.Builtins
 module GenSym = FStarC.GenSym
 module N      = FStarC.TypeChecker.Normalize
+module Options = FStarC.Options
 module PC     = FStarC.Parser.Const
 module ExtractAs = FStarC.Parser.Const.ExtractAs
 module S      = FStarC.Syntax.Syntax
@@ -3118,6 +3119,16 @@ let dump_specializations (st:state) : ML unit =
     if n > 1 then BU.print2 "  %s -> %s\n" l (show n));
   BU.print1 "  (total: %s)\n" (show (SMap.fold st.counts (fun _ n acc -> acc + n) 0))
 
+(* Whether a top-level definition has anything to extract, judged from its
+   declared type alone: a ghost computation has no runtime meaning, and
+   neither has one whose result is [prop], [slprop], [squash] or any other
+   type the extraction must erase.  [--custard_entry_module] is the only
+   caller -- a root named one at a time is taken at its word. *)
+let erased_definition (st:state) (ty:typ) : ML bool =
+  let _, c = U.arrow_formals_comp ty in
+  U.is_ghost_effect (U.comp_effect_name c) ||
+  TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c)
+
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
          (per_module : S.modul -> ML unit) : ML program =
   let mark' (quiet:bool) (f:flag) (l:Ident.lident) : ML unit =
@@ -3158,6 +3169,48 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
   Prof.timed "run.modroots" (fun () ->
     modroots |> List.iter (fun (l:Ident.lident) ->
       st.env := Loader.ensure_loaded st.deps (tcenv st) (Ident.string_of_lid l)));
+  (* [--custard_entry_module M] roots every top-level definition of [M], which
+     is what [--extract_module] means for the other backends: the module is
+     compiled as a *library*, not as the program reachable from one name.
+
+     Quietly, unlike [--custard_entry].  Naming a definition that extracts to
+     nothing is a mistake worth reporting; naming a *module* is not, because a
+     module normally holds specifications and proofs alongside the code, and
+     the request is "whatever of this is code", not "all of this is code".
+
+     Only values.  A type is rooted by the definitions that use it, and under
+     [--custard_monomorphize_types] a parametric type has no single instance
+     to root anyway.  A projector or a discriminator is derived rather than
+     written, and comes along with its type. *)
+  Prof.timed "run.entry_modules" (fun () ->
+    Options.custard_entry_modules () |> List.iter (fun (m:string) ->
+      st.env := Loader.ensure_loaded st.deps (tcenv st) m;
+      match TcEnv.modules (tcenv st)
+            |> List.tryFind (fun (md:S.modul) -> Ident.string_of_lid md.name = m) with
+      | None ->
+        E.log_issue0 E.Error_CustardEntryNotFound [
+          text ("Custard entry module " ^ m ^ " was not loaded.");
+          text "It may be misspelled, or not among the input files."
+        ]
+      | Some md ->
+        md.declarations |> List.iter (fun (se:S.sigelt) ->
+          match se.sigel with
+          | Sig_let {lbs=(_, lbs)}
+            when not (se.sigquals |> List.existsb (function
+                        | NoExtract | Projector _ | Discriminator _ -> true
+                        | _ -> false)) ->
+            lbs |> List.iter (fun lb ->
+              match lb.lbname with
+              (* A specification is a definition too.  [Null.live r : slprop]
+                 and [Null.null_or_live] are proof-level, and rooting them
+                 puts a function returning [unit] and doing nothing into the
+                 output.  Nothing calls them, so only being a root keeps them
+                 alive; asking whether the result has a runtime meaning is
+                 what tells them apart from a genuine [unit] function. *)
+              | Inr fv when not (erased_definition st lb.lbtyp) ->
+                mark' true Root (S.lid_of_fv fv)
+              | _ -> ())
+          | _ -> ())));
   Prof.timed "run.roots" (fun () -> roots |> List.iter (mark Root));
   Prof.timed "run.main" (fun () ->
     match main with Some l -> mark Entrypoint l | None -> ());

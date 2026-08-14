@@ -636,14 +636,22 @@ let rec term (ind:string) (e:expr) : ML string =
     if TRef? b.ty then "((" ^ term ind b ^ ") := " ^ term ind v ^ ")"
     else "((" ^ term ind b ^ ").(" ^ index ind i ^ ") <- " ^ term ind v ^ ")"
   | EOp ({ po_op = BufFree }, [_]) -> "()"
-  (* A [ref] has no null, and no room to invent one: the empty array that
-     stands in for a null buffer has no [ref] counterpart.  Refused at run
-     time, like [BufSub]. *)
+  (* An empty array stands in for a null buffer, but a [ref] has no empty.
+     What it does have is a representation: an OCaml [ref] is a one-field
+     record, so it is always a *block*, and no block is the immediate 0.  That
+     makes 0 a null every [ref] type has room for and none can collide with,
+     and the test for it needs no state -- which matters, because under
+     [--custard_split] a sentinel defined per file would not be one value.
+
+     Pulse's own realization ([Pulse_Lib_Reference.null]) allocates a dummy
+     cell instead and compares against it; that is the same idea with the
+     drawback that dereferencing its null quietly reads the dummy.  Here it
+     is a null dereference, which is what the program wrote. *)
   | EOp ({ po_op = BufNull }, []) ->
-    if TRef? e.ty then "(failwith \"Custard: a null reference has no OCaml representation\")"
+    if TRef? e.ty then "(Obj.magic 0)"
     else "[||]"
   | EOp ({ po_op = BufIsNull }, [b]) ->
-    if TRef? b.ty then "(failwith \"Custard: a null reference has no OCaml representation\")"
+    if TRef? b.ty then "(not (Obj.is_block (Obj.repr " ^ term ind b ^ ")))"
     else "(Array.length (" ^ term ind b ^ ") = 0)"
   | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
     "(Array.blit " ^ term ind src ^ " " ^ index ind si ^ " " ^

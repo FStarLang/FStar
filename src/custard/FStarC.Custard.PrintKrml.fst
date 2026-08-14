@@ -123,6 +123,32 @@ let prim_type (n:name) : option K.typ =
   | "Prims.string" -> Some (K.TQualified (["Prims"], "string"))
   | _ -> None
 
+(* The definitions karamel supplies itself.  It prepends a [Prims] file of its
+   own to every program ([Krml.Builtin.prepare]) holding the arithmetic on
+   [Prims.int] -- which it compiles to [krml_checked_int_t], a machine integer
+   with an overflow check, since C has no unbounded integer.  Custard reaches
+   the same operators as ordinary externals, and emitting a declaration for
+   one is a duplicate that karamel rejects outright ("duplicate global name in
+   identical namespace").  Ours is the one to drop: karamel's is what its own
+   translation of the *uses* refers to. *)
+let karamel_declares (n:name) : bool =
+  match String.concat "." (n.ns @ [n.id]) with
+  | "Prims.op_Addition"
+  | "Prims.op_Subtraction"
+  | "Prims.op_Multiply"
+  | "Prims.op_Division"
+  | "Prims.op_Modulus"
+  | "Prims.op_Minus"
+  | "Prims.op_LessThan"
+  | "Prims.op_LessThanOrEqual"
+  | "Prims.op_GreaterThan"
+  | "Prims.op_GreaterThanOrEqual"
+  | "Prims.pow2"
+  | "Prims.abs"
+  | "Prims.strcat"
+  | "Prims.string_of_int" -> true
+  | _ -> false
+
 let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   match t with
   | TUnit -> K.TUnit
@@ -279,9 +305,16 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EOp ({ po_op = BufNull }, []) ->
     K.EBufNull (match e.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny)
   | EOp ({ po_op = BufIsNull }, [b]) ->
-    (* karamel has no [is_null], so compare against a null of the same type. *)
+    (* karamel has no [is_null], so compare against a null of the same type.
+       Equality on pointers is the *polymorphic* one, and karamel types that
+       only through an explicit type application naming the operand type -- as
+       the [Eq]/[Neq] case below does.  Left as a bare [EOp (Eq, Bool)] the
+       checker reads the width as the operand type, decides the arguments
+       should be booleans, and drops the whole declaration as not Low\*. *)
     let t = match b.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny in
-    K.EApp (K.EOp (K.Eq, K.Bool), [krml_expr env b; K.EBufNull t])
+    let pt = K.TBuf t in
+    K.EApp (K.ETypApp (K.EOp (K.Eq, K.Bool), [pt]),
+            [krml_expr env b; K.EBufNull t])
   | EOp ({ po_op = BufBlit }, [src; srci; dst; dsti; len]) ->
     K.EBufBlit (krml_expr env src, krml_expr env srci,
                 krml_expr env dst, krml_expr env dsti, krml_expr env len)
@@ -381,6 +414,8 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
           redeclaration.  Its uses already print as the plain C name. *)
        if t.dt_flags |> List.existsb Extern? then None
        else Some (K.DTypeAbstractStruct lid))
+
+  | DExternal x when None? x.dx_target && karamel_declares x.dx_name -> None
 
   | DExternal x ->
     (* A [@@custard_extern "f"] symbol is declared under exactly that C name;

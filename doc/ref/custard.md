@@ -1273,6 +1273,25 @@ Two separate things are being named here, and they used to be conflated.
 - `--custard_main` names the definition the generated program **invokes on
   startup**.  There is at most one, and it is a root too, so the common case
   still needs only one option.
+- `--custard_entry_module` names a **module every top-level definition of
+  which is a root**, which is what `--extract_module` means for the other
+  backends.  It may be repeated.
+
+`--custard_entry_module` is for the two cases where naming definitions one at
+a time is the wrong shape.  One is a module compiled as a *library*, where the
+program is whoever links against it rather than anything Custard can see.  The
+other is a *test* of generated code (§15): a test module is a handful of
+functions that exist to be looked at, and the property such a test needs is
+that a function added to it is extracted without anyone having to remember to
+name it.
+
+It roots values only.  A type is rooted by the definitions that use it, and
+under `--custard_monomorphize_types` a parametric type has no single instance
+to root anyway.  A definition with nothing to extract --- a specification, a
+proof, an `inline_for_extraction noextract` --- is passed over silently, unlike
+`--custard_entry`, which reports one: naming a definition that extracts to
+nothing is a mistake, while naming a module that holds some is not, because a
+module normally holds specifications and proofs alongside its code.
 
 A `--custard_entry` may also name a **module** rather than a definition, which
 loads the module and takes its initializers (below) as roots without naming
@@ -5795,6 +5814,144 @@ hand-written file as well is a duplicate definition.  `EverCrypt_Base.h` and
 the EverCrypt objects are still external, as they are in the baseline: they
 are C, not F\*.
 
+## 15. Migrating a test suite: pulse/test
+
+`pulse/test` is Pulse's extraction regression suite: fifty-eight `.fst` files
+that are checked, and twenty of them that are also extracted and compared
+against a checked-in `.expected` file --- fourteen to C and six to OCaml.  It
+is a different kind of exercise from the DICE example of §14.  DICE is one
+program with six entry points and a build of its own; `pulse/test` is twenty
+unrelated programs with *no* entry points at all, each one a handful of `fn`s
+written to exercise one feature of the extractor, and each one built by the
+same three lines of a shared makefile.  What it tests is not that the output
+runs but that the output does not change without someone noticing.
+
+The whole suite now goes through Custard.  The `.expected` files were
+regenerated, which the exercise was authorized to do: they record one correct
+output, not the only one.
+
+### 15.1 Rooting a module
+
+A test module has no `main`.  It has three or four `fn`s that the makefile
+extracted by naming the *module*, which is what `--extract_module` means to
+the other backends, and what a whole-program compiler has no notion of: a
+root is a definition, and a definition is reachable or it is not.
+
+Listing the definitions in the makefile was the obvious repair and the wrong
+one.  A test that gains an `fn` would silently stop extracting it, and an
+expected-output test that quietly covers less than it says is worse than no
+test.  So Custard gained `--custard_entry_module M`, which roots every
+top-level `let` of `M`:
+
+```
+--custard_entry_module Break --custard_entry_module Goto
+```
+
+It roots *values* only.  A type is rooted by the definitions that use it, and
+under `--custard_monomorphize_types` a parametric type has no single instance
+to root in the first place.  It skips `NoExtract`, projectors and
+discriminators, and it skips a definition that is erased --- ghost, or a
+result type `must_erase_for_extraction` rejects --- because a Pulse module
+states its invariants next to the code that maintains them, and `Null.live
+#a (r : ref a) : slprop` is a specification that came out as `let null_live
+(r : 'a ref) : unit = ()`.
+
+And unlike `--custard_entry`, it is *quiet*: naming a definition that
+extracts to nothing is a mistake worth reporting, and naming a module is
+not, because a module normally holds proofs alongside its code.
+
+### 15.2 What still goes through karamel
+
+Four of the fourteen C tests --- `ANF`, `Null`, and both of
+`bug-reports` --- have a definition over `Prims.int`.  karamel represents
+an unbounded integer as `krml_checked_int_t`, a 64-bit integer with an
+overflow check, which is a deliberate affordance for exactly this: test code
+that is about something else.  Custard's direct backend has no
+representation for an unbounded integer and says so (error 367).
+
+So the harness has two C rules.  `CUSTARD_KRML_C` lists the modules that go
+through `--codegen krml` and karamel; everything else is `--codegen c`.  The
+list is two names long in `pulse/test` and two in `pulse/test/bug-reports`,
+and every one of them is there for `Prims.int`.
+
+### 15.3 The harness
+
+`pulse/mk/custard-test.mk` is included *after* `mk/test.mk` and replaces its
+`.ml`, `.krml` and `.c` rules; checking, diffing and recursion are untouched,
+so `make accept`, `make ACCEPT=1` and the `.output.expected` tests all still
+work.  A later pattern rule with the same pattern overrides an earlier one,
+which is how `tests/custard/Makefile` is already structured.
+
+Two make details are worth writing down.  The dotted module name cannot be
+recovered from an underscored file name by text substitution, so the `.ml`
+and `.krml` rules read it off `$<` (whose prerequisites `.depend` supplies)
+and the `.c` rules are generated by a `foreach`/`eval` loop over
+`$(wildcard *.fst)`, because `.depend` knows nothing about a target Custard
+invented.  And `CUSTARD_CFLAGS := <base> $(CUSTARD_CFLAGS)` rather than
+`?=`, so that a `+=` in the client makefile before the include survives.
+
+Every direct-C output is checked by the empty-block invariant of §14.11,
+which is how the first of the fixes below was found.
+
+### 15.4 Five fixes
+
+None of the twenty test modules needed a source change.  Five compiler bugs
+did come out, three of them about the karamel path, which the DICE example
+had exercised much less:
+
+1. **karamel already declares `Prims`.**  karamel prepends its own `Prims`
+   file (`Krml.Builtin.prepare`) with the arithmetic on `Prims.int` in it, so
+   the `DExternal` Custard emitted for `Prims.op_Addition` was a duplicate
+   karamel rejected outright.  `PrintKrml.karamel_declares` names the
+   fourteen, and Custard drops its own; karamel's translation of the *uses*
+   refers to karamel's anyway.
+
+2. **`BufIsNull` was mistyped.**  karamel has no `is_null`, so Custard
+   compares against a null of the same type.  Pointer equality is the
+   *polymorphic* one and karamel types it only through an explicit type
+   application; left as a bare `EOp (Eq, Bool)` the checker read the width as
+   the operand type and dropped the whole declaration.  `Null_test`
+   disappeared from `Null.c` this way, with only a `Warning 4` to say so ---
+   karamel drops a declaration that fails its Low\* re-check rather than
+   failing, so a migration has to diff the declaration list and not just look
+   for errors.
+
+3. **`-bundle X=*` is not a rename.**  `X` has to name a module that exists,
+   and a whole-program krml file holds exactly one, named `Custard`.  The
+   rule builds in a per-test temporary directory with `-no-prefix Custard`
+   and copies `Custard.c` out under the test's name.
+
+4. **An `if` with two empty arms.**  The `EIf` case of `PrintC` already
+   dropped an empty *else*, and negated the condition to drop an empty
+   *then*, but printed `if (c) { }` when both were empty --- which is what
+   Pulse's encoding of `return` leaves behind.  It now prints nothing.  This
+   is §14.11's invariant catching its second bug.
+
+5. **`null` on the OCaml backend was a `failwith`.**  ML extraction used
+   Pulse's own realization: a sentinel `ref` allocated once and compared with
+   `==`.  Custard cannot, because under `--custard_split` a per-file sentinel
+   is not one value.  So null is the immediate `0` and `is_null b` is `not
+   (Obj.is_block (Obj.repr b))` --- an OCaml `ref` is always a block, so the
+   test is exact, and it is stateless.
+
+### 15.5 The output
+
+The C is smaller than karamel's and structurally the same.
+`Example_Hashtable.c` is 234 lines against 454, with its function pointers
+and tagged unions intact; `Break.c` is 75 against 102, because Custard does
+not duplicate the loop condition; `Example_Slice.c` is a self-contained unit
+over four C standard headers.  The OCaml is close to ML extraction's modulo
+Custard's naming and its flatter `let` chains (§6).
+
+Two things are noted rather than fixed.  `InlineArrayLen` produces a VLA,
+`int32_t _cbuf1[__anf0]`, which C11 makes optional and C++ forbids; it
+compiles under `-std=c11 -Wall -Wextra -Werror` today.  And
+`Example_Unreachable.ml` is now a one-armed `match x with | Some b -> b`,
+which is partial, but the C output projects unconditionally too, so the two
+backends agree and the arm Pulse proved unreachable is absent from both.
+
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -5860,3 +6017,4 @@ are C, not F\*.
 | M10γ | **A dune build for Custard** (§12.11) | Done.  `mk/custard.mk`'s hand-rolled menhir and `ocamlopt` stages are replaced by a dune project generated into `stagec/dune/`: a `wrapped false` library over `stagec/split/`, `src/ml/` and `ulib/ml/plugin/`, plus a one-module executable.  Dune's `menhir` stanza does the `--infer` pre-pass against *this* library, which was the reason the build was hand-rolled in the first place, and does it without the best-effort `ocamlc -c` of every module.  `-linkall` moves onto the library, so that `fstar.lib`'s `FStar_Order` is not force-linked against Custard's own.  129 s of build becomes 18 s, and `make custard` 3 min 3 s becomes 1 min 19 s.  Plugins now link against `.fstarcompiler.objs/{byte,native}` |
 | M10δ | **Master merge: the simplified effect system** | Done.  `comp_typ` lost `effect_args` and gained `comp_pre`/`comp_post`, so `Extract.key_of_comp` hashes those instead, and `TypeChecker.Env.lift_comp_t` and `polymonadic_bind_t` left `src/custard/entrypoints.txt` with them.  It also uncovered two extraction bugs that had been latent: `callee_eff` read an *over*-applied callee's effect off the declaration rather than off the surplus arrows of its result type, which is exactly the shape §7.5 gives every reified `Tac` call, so `tcresolve' st0; ...` was deleted as pure and no typeclass constraint in ulib could be solved by the extracted compiler; and the coercion pass asked nothing of an argument whose position an untrusted head still typed concretely, so a dependent pair's realized `any` second component reached a `comp` parameter (§5.4) |
 | M10ε | **The DICE example, through both C backends** (§14) | Done.  `pulse/share/pulse/examples/dice` extracts from its six entry points to 1535 lines of C through karamel or 968 lines of C directly, each compiling with `-Wall -Wextra -Werror`, and the direct output includes four C standard headers and six lines of the example's own and nothing else -- no krmllib, which is the point of replacing karamel rather than sitting on top of it.  `custard.Makefile` builds either.  Eleven compiler fixes and *no change to the example's F\* sources*, all of them general: abbreviations unfolded in binder queries (§14.1), `extract_as` on a `val` (§14.2), `n_extra` counting erased binders (§14.3), eta expansion bounded by the callee's arity (§14.4), external types, by attribute or by `--custard_extern_type` (§14.5), globals with computed initializers (§14.6), let-bound lambdas inlined at their call on the C backend only (§14.7), abbreviations canonicalized before a type instance is keyed (§14.8), a match whose last test pruning deleted (§14.9), `void` where C means it (§14.10), and empty blocks (§14.11).  Three of the eleven were caught by a regression rather than by the example: `tests/custard/EraseAbbrev`, `make custard-smoke`, and the empty-block invariant §14.11 added, which immediately caught an empty `custard_init_globals` left by §14.6.  `tests/custard/CExtern` is the new C test, covering both spellings of an external type, a computed global, and a unit-valued match with do-nothing arms |
+| M10ζ | **The Pulse test suite** (§15) | Done.  All twenty extraction tests in `pulse/test` go through Custard, ten of them straight to C, four through karamel because they compute on `Prims.int` (§15.2), six to OCaml, and the `.expected` files were regenerated.  The enabling piece is `--custard_entry_module`, which roots every top-level value of a module (§15.1) --- a test module has no `main`, and listing its `fn`s in the makefile would let a new one silently stop being extracted.  Rooting a *module* means rooting its specifications too, so a root now skips an erased definition.  Five fixes, three of them about the karamel path the DICE example barely used: karamel prepends its own `Prims` and rejects ours as duplicates, `-bundle X=*` needs `X` to exist, and a `BufIsNull` without a type application was silently *dropped* by karamel’s Low\* re-check, taking `Null_test` with it.  The other two: an `if` whose arms are both empty, caught by §14.11’s invariant, and a `null` an OCaml `ref` can actually hold --- the immediate `0`, tested with `Obj.is_block`, since a sentinel allocation is not one value under `--custard_split`.  `pulse/mk/custard-test.mk` |
