@@ -24,4 +24,10 @@ static inline cextern_tag_t cextern_mk_tag(void) { return (uint32_t)7; }
 
 static inline uint32_t cextern_tag_val(cextern_tag_t t) { return t; }
 
+static uint32_t cextern_total_v = 0;
+
+static inline void cextern_bump(uint32_t n) { cextern_total_v += n; }
+
+static inline uint32_t cextern_total(void) { return cextern_total_v; }
+
 #endif

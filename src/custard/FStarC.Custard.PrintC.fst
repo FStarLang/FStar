@@ -953,18 +953,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      indirection. *)
   let direct = is_stable scrut in
   let x = if direct then sv else fresh "s" in
-  let looked_at =
-    brs |> List.existsb (fun (p, _, _) ->
-      let ts, bs = pat_tests x scrut.ty p in
-      Cons? ts || Cons? bs) in
   let ind' = ind ^ "  " in
-  if not looked_at then
-    (match brs with
-     | (_, None, b) :: _ -> !out ^ finish ind D_Ignore sv ^ emit ind d b
-     | _ -> !out ^ finish ind D_Ignore sv ^ ind ^ "abort();\n")
-  else
-  let head = if direct then !out
-             else !out ^ ind ^ decl_of scrut.ty x ^ " = " ^ sv ^ ";\n" in
   (* The bindings of a branch are aliases, not declarations (see
      [bind_alias]), so a branch body is emitted with them in scope and the
      scope is restored afterwards. *)
@@ -975,6 +964,55 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
     let body = emit bi d b in
     scope := saved;
     body in
+  (* A branch whose body emits nothing is an empty block, which is worth
+     removing for the same reason [EIf] already removes an empty arm.  Two
+     things make it less free than it looks.  It is sound only at the *end* of
+     the chain: dropping an empty [else if (c) {}] from the middle would let
+     the inputs that satisfied [c] fall through to a later arm.  And the arm
+     that becomes last has to keep its test, because it is no longer the arm
+     that runs when nothing else did -- it is one of several, with the
+     do-nothing cases now falling off the end.
+
+     A unit-valued match with several unit branches is where these come from,
+     and Pulse writes them all the time: only one case of a session state does
+     anything, and the rest return [()]. *)
+  (* Whether a body emits anything is easiest to answer by emitting it, but a
+     trial emission must leave nothing behind: [fresh] and the name allocator
+     are counters, and letting them run would renumber the variables of the
+     branch that is kept ([ns] would come out as [ns_3]).  [scope] is already
+     saved by [branch_body]; these two are saved here. *)
+  let emits_nothing (p:pat) (b:expr) : ML bool =
+    let saved_ctr = !ctr in
+    let saved_declared = SMap.copy !declared in
+    let s = branch_body ind' p b in
+    ctr := saved_ctr;
+    declared := saved_declared;
+    s = "" in
+  let rec trim (rbs:list branch) : ML (list branch) =
+    match rbs with
+    | (p, _, b) :: rest when emits_nothing p b -> trim rest
+    | _ -> rbs in
+  let kept = List.rev (trim (List.rev brs)) in
+  let all_tested = List.length kept < List.length brs in
+  (* Nothing left to run at all: the match is just its scrutinee. *)
+  if Nil? kept then !out ^ finish ind D_Ignore sv else
+  (* The scrutinee is read once per test and once per binding, so it normally
+     has to be named.  When it is already a name -- or a projection out of one,
+     which the backend never assigns to -- naming it again would only add an
+     indirection.  When no surviving branch looks at it, naming it would leave
+     an unused variable behind; that happens for a single catch-all branch,
+     which is what a [let] over an irrefutable pattern turns into. *)
+  let looked_at =
+    kept |> List.existsb (fun (p, _, _) ->
+      let ts, bs = pat_tests x scrut.ty p in
+      Cons? ts || Cons? bs) in
+  if not looked_at then
+    (match kept with
+     | (_, None, b) :: _ -> !out ^ finish ind D_Ignore sv ^ emit ind d b
+     | _ -> !out ^ finish ind D_Ignore sv ^ ind ^ "abort();\n")
+  else
+  let head = if direct then !out
+             else !out ^ ind ^ decl_of scrut.ty x ^ " = " ^ sv ^ ";\n" in
   let rec go (first:bool) (brs:list branch) : ML string =
     (* The arm that runs when no earlier one did.  With no [if] before it there
        is nothing to attach a block to, so it is emitted flat -- otherwise the
@@ -989,8 +1027,9 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
        is the one that runs when no earlier one did: its tests would always
        succeed, and testing them anyway would only add a branch C cannot see
        is dead.  This is the same reasoning that lets a projector be emitted
-       without a tag check. *)
-    | [(p, g, b)] ->
+       without a tag check.  Unless arms were trimmed, in which case it is not
+       the last branch of the match any more. *)
+    | [(p, g, b)] when not all_tested ->
       if Some? g then guard_rejected ();
       last p b
     | (p, g, b) :: rest ->
@@ -1004,7 +1043,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
         "if (" ^ String.concat " && " tests ^ ")" ^
         brace ind (branch_body ind' p b) ^
         go false rest in
-  head ^ go true brs
+  head ^ go true kept
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
@@ -1303,8 +1342,15 @@ let print_program (p:program) : ML string =
     match d with
     | DLet l when Nil? l.dl_binders -> [global_init l]
     | _ -> []) in
-  let init_fn = "void custard_init_globals(void) {\n" ^
-                String.concat "" inits ^ "}\n" in
+  (* A program with no globals has nothing to initialize, and an empty
+     function that [main] calls anyway is two lines of noise plus a block
+     that says nothing.  It is also part of this file's interface, so it is
+     emitted whenever there is anything to do and omitted otherwise -- a
+     caller that has to know which is a caller that can read the header. *)
+  let init_fn = match inits with
+                | [] -> ""
+                | _ -> "void custard_init_globals(void) {\n" ^
+                       String.concat "" inits ^ "}\n" in
 
   (* Custard compiles standalone programs (section 4.4).  An entry point
      returning a machine integer is the process exit status, which is what a C
@@ -1316,7 +1362,8 @@ let print_program (p:program) : ML string =
       let args = String.concat ", "
                    (kept_binders l |> List.map (fun _ -> unit_value)) in
       let call = c_name l.dl_name ^ "(" ^ args ^ ")" in
-      let pre = "int main(void) {\n  custard_init_globals();\n" in
+      let pre = "int main(void) {\n" ^
+                (match inits with [] -> "" | _ -> "  custard_init_globals();\n") in
       (match l.dl_ret with
        | TInt _ -> [pre ^ "  return (int)" ^ call ^ ";\n}\n"]
        | TUnit -> [pre ^ "  " ^ call ^ ";\n  return 0;\n}\n"]
@@ -1329,6 +1376,6 @@ let print_program (p:program) : ML string =
   String.concat "" tys ^ (match tys with [] -> "" | _ -> "\n") ^
   String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
-  String.concat "\n" defs ^ "\n" ^ init_fn ^
+  String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^
     (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
   body

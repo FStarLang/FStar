@@ -1,6 +1,7 @@
 module CExtern
 module U32 = FStar.UInt32
 module I32 = FStar.Int32
+open FStar.All
 open FStar.Attributes
 
 (* Two things the direct-to-C backend has to get right that no other backend
@@ -37,15 +38,33 @@ assume val mk_tag (_:unit) : tag
 [@@custard_extern "cextern_tag_val"; custard_c_header "CExtern_stubs.h"]
 assume val tag_val (t:tag) : U32.t
 
+[@@custard_extern "cextern_bump"; custard_c_header "CExtern_stubs.h"]
+assume val bump (n:U32.t) : ML unit
+
+[@@custard_extern "cextern_total"; custard_c_header "CExtern_stubs.h"]
+assume val get_total (_:unit) : ML U32.t
+
 (* An external type also has to survive being a *field*, which is how DICE
    meets it: the program passes the record around without ever building or
    reading the field. *)
 noeq type boxed = { b_h : handle; b_n : U32.t }
 
+(* A unit-valued match most of whose arms do nothing, which is what Pulse
+   code looks like: one case of a state does something and the rest return
+   [()].  Each of those used to be an empty [else if (...) { }] in the C. *)
+type cmd = | Nop | Skip | Bump of U32.t
+
+let apply (c:cmd) : ML unit =
+  match c with
+  | Bump n -> bump n
+  | Nop -> ()
+  | Skip -> ()
+
 (* Computed at run time, so not a C initializer. *)
 let gh : boxed = { b_h = make 41ul; b_n = 1ul }
 let gt : tag = mk_tag ()
 
-let main () : I32.t =
+let main () : ML I32.t =
+  apply Nop; apply (Bump 2ul); apply Skip; apply (Bump 3ul);
   let n = U32.add_mod (U32.add_mod (get gh.b_h) gh.b_n) (tag_val gt) in
-  if U32.eq n 49ul then 0l else 1l
+  if U32.eq n 49ul && U32.eq (get_total ()) 5ul then 0l else 1l

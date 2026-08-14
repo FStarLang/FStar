@@ -5538,7 +5538,7 @@ whole-program compiler has to get right.  Migrating it was therefore worth
 more as a test of Custard than as a saving for the example.
 
 Both C paths work: Custard emits a `.krml` file that karamel turns into
-1535 lines of C, or emits 996 lines of C itself.  Each compiles with
+1535 lines of C, or emits 968 lines of C itself.  Each compiles with
 `-Wall -Wextra -Werror`, and the direct output includes four C standard
 headers and six lines of the example's own, and nothing else.
 `custard.Makefile` alongside the existing `c.Makefile` builds either.
@@ -5550,8 +5550,8 @@ namespaces to keep and six to drop.  Custard's invocation names the six entry
 points and nothing else: there is one translation unit, so there is nothing to
 bundle, and the reachable set is computed rather than described.
 
-What the migration cost was ten fixes to Custard and *no change to the
-example's F\* sources*.  None of the ten is specific to DICE.
+What the migration cost was eleven fixes to Custard and *no change to the
+example's F\* sources*.  None of the eleven is specific to DICE.
 
 ### 14.1 A binder query must unfold abbreviations
 
@@ -5679,7 +5679,9 @@ definition by name.  It now declares the variable uninitialized and assigns it
 in `custard_init_globals`, which the generated `main` calls first and which a
 program embedding the translation unit has to call itself.  This is what
 karamel's `krmlinit_globals` does, for the same reason.  The order is
-declaration order, which the SCC pass has already made a topological one.
+declaration order, which the SCC pass has already made a topological one.  A
+program with no globals gets no `custard_init_globals` at all, and no call to
+it; see section 14.11 for how that omission came to be noticed.
 
 ### 14.7 A let-bound lambda that is only called
 
@@ -5751,7 +5753,40 @@ it was not declared to take one.  An argument list that empties out is spelled
 `(void)` rather than `()`, which in C means "unspecified" and would hide the
 next arity mismatch.
 
-### 14.11 What is still hand-written
+### 14.11 Blocks that say nothing
+
+The C had runs of `else if (s.tag == DPE_INUSE) {\n}`.  They come from a
+unit-valued match most of whose arms return `()`, which is what Pulse code
+looks like -- one case of a session state does something and the rest do not.
+`EIf` had removed an empty arm since the backend was written; `emit_match`
+had not.
+
+Two things make it less free than it looks, and both are about the *last*
+arm.  Trimming is sound only at the end of the chain: dropping an empty
+`else if (c) {}` from the middle would let the inputs that satisfied `c` fall
+through to a later arm.  And `emit_match` emits the last arm *without its
+test*, on the grounds that F\* has checked the match is exhaustive so nothing
+else can run -- which stops being true the moment an arm is trimmed, since the
+do-nothing cases now fall off the end instead.  So a trimmed match keeps every
+test and has no `else` tail.
+
+Whether a body emits anything is easiest to answer by emitting it, but a trial
+emission has to leave nothing behind: `fresh` and the name allocator are
+counters, and letting them run renumbered the variables of the branch that was
+*kept* (`ns` came out as `ns_3`).  `scope` was already saved and restored;
+`ctr` and `declared` now are too.
+
+Thirty lines of the DICE output went, and the test the fix suggested found one
+more, in the previous section's own work: `custard_init_globals` was emitted
+even for a program with no globals, an empty function that `main` then called.
+It is now emitted only when there is something to initialize.
+
+`tests/custard`'s C rule rejects an empty block anywhere in the output, for
+every C test rather than by name -- an invariant is cheaper to keep than a
+list of the shapes that have violated it -- and `CExtern.fst` has a
+three-armed unit-valued match to give it something to catch.
+
+### 14.12 What is still hand-written
 
 The example's `Pulse_Lib_SpinLock.c` is not copied into the Custard build:
 `c.Makefile` passes `-library Pulse.Lib.SpinLock`, but Custard compiles
@@ -5824,4 +5859,4 @@ are C, not F\*.
 | M10β | **Performance of the extraction** (§12.14) | Done.  `--profile_component FStarC.Custard` now prints an *exclusive*-time breakdown, from Custard's own `Prof` rather than `FStarC.Profiling`, because a mutually recursive traversal's inclusive counters all report the outermost frame.  It found three accidentally quadratic spots: `Loader.loaded` scanned every loaded module on every name resolution (27 s of 77), the `Mono` binder-flag queries were recomputed at every call site rather than per declaration (4 s), and `unit_entries` looked each declaration up by linear scan (6.9 s to 65 ms).  Extraction of the whole compiler goes from 77 s to 50 s and `make custard` from 3 min 45 s to 3 min 3 s.  What remains is flat; the build stages, MENHIR's 51 s and `ocamlopt`'s 78 s, are both sequential work on a 256-core machine and are the larger target |
 | M10γ | **A dune build for Custard** (§12.11) | Done.  `mk/custard.mk`'s hand-rolled menhir and `ocamlopt` stages are replaced by a dune project generated into `stagec/dune/`: a `wrapped false` library over `stagec/split/`, `src/ml/` and `ulib/ml/plugin/`, plus a one-module executable.  Dune's `menhir` stanza does the `--infer` pre-pass against *this* library, which was the reason the build was hand-rolled in the first place, and does it without the best-effort `ocamlc -c` of every module.  `-linkall` moves onto the library, so that `fstar.lib`'s `FStar_Order` is not force-linked against Custard's own.  129 s of build becomes 18 s, and `make custard` 3 min 3 s becomes 1 min 19 s.  Plugins now link against `.fstarcompiler.objs/{byte,native}` |
 | M10δ | **Master merge: the simplified effect system** | Done.  `comp_typ` lost `effect_args` and gained `comp_pre`/`comp_post`, so `Extract.key_of_comp` hashes those instead, and `TypeChecker.Env.lift_comp_t` and `polymonadic_bind_t` left `src/custard/entrypoints.txt` with them.  It also uncovered two extraction bugs that had been latent: `callee_eff` read an *over*-applied callee's effect off the declaration rather than off the surplus arrows of its result type, which is exactly the shape §7.5 gives every reified `Tac` call, so `tcresolve' st0; ...` was deleted as pure and no typeclass constraint in ulib could be solved by the extracted compiler; and the coercion pass asked nothing of an argument whose position an untrusted head still typed concretely, so a dependent pair's realized `any` second component reached a `comp` parameter (§5.4) |
-| M10ε | **The DICE example, through both C backends** (§14) | Done.  `pulse/share/pulse/examples/dice` extracts from its six entry points to 1535 lines of C through karamel or 996 lines of C directly, each compiling with `-Wall -Wextra -Werror`, and the direct output includes four C standard headers and six lines of the example's own and nothing else -- no krmllib, which is the point of replacing karamel rather than sitting on top of it.  `custard.Makefile` builds either.  Ten compiler fixes and *no change to the example's F\* sources*, all of them general: abbreviations unfolded in binder queries (§14.1), `extract_as` on a `val` (§14.2), `n_extra` counting erased binders (§14.3), eta expansion bounded by the callee's arity (§14.4), external types, by attribute or by `--custard_extern_type` (§14.5), globals with computed initializers (§14.6), let-bound lambdas inlined at their call on the C backend only (§14.7), abbreviations canonicalized before a type instance is keyed (§14.8), a match whose last test pruning deleted (§14.9), and `void` where C means it (§14.10).  Two of the ten were caught by the regression they broke rather than by the example: `tests/custard/EraseAbbrev` and `make custard-smoke`, which is what those two exist for.  `tests/custard/CExtern` is the new C test, covering both spellings of an external type and a computed global |
+| M10ε | **The DICE example, through both C backends** (§14) | Done.  `pulse/share/pulse/examples/dice` extracts from its six entry points to 1535 lines of C through karamel or 968 lines of C directly, each compiling with `-Wall -Wextra -Werror`, and the direct output includes four C standard headers and six lines of the example's own and nothing else -- no krmllib, which is the point of replacing karamel rather than sitting on top of it.  `custard.Makefile` builds either.  Eleven compiler fixes and *no change to the example's F\* sources*, all of them general: abbreviations unfolded in binder queries (§14.1), `extract_as` on a `val` (§14.2), `n_extra` counting erased binders (§14.3), eta expansion bounded by the callee's arity (§14.4), external types, by attribute or by `--custard_extern_type` (§14.5), globals with computed initializers (§14.6), let-bound lambdas inlined at their call on the C backend only (§14.7), abbreviations canonicalized before a type instance is keyed (§14.8), a match whose last test pruning deleted (§14.9), `void` where C means it (§14.10), and empty blocks (§14.11).  Three of the eleven were caught by a regression rather than by the example: `tests/custard/EraseAbbrev`, `make custard-smoke`, and the empty-block invariant §14.11 added, which immediately caught an empty `custard_init_globals` left by §14.6.  `tests/custard/CExtern` is the new C test, covering both spellings of an external type, a computed global, and a unit-valued match with do-nothing arms |

@@ -300,7 +300,8 @@ FLAGS_CExtern   = --custard_extern_type 'CExtern.tag=cextern_tag_t@CExtern_stubs
 CGREP_CExtern   = "include \"CExtern_stubs.h" \
                   "cextern_handle_t b_h;" \
                   "void custard_init_globals(void)" \
-                  "CExtern_gt = cextern_mk_tag();"
+                  "CExtern_gt = cextern_mk_tag();" \
+                  "if (c.tag == CEXTERN_BUMP) cextern_bump("
 # No definition is emitted for either external type, and neither is declared
 # as an abstract struct the way a Custard-owned opaque type would be.
 CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag"
@@ -418,6 +419,11 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	$(Q)for p in $(CNOGREP_$*); do \
 	  grep -qF -- "$$p" $@ \
 	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
+	$(Q)awk '/\{$$/ { open = NR; next } \
+	         /^[ \t]*\}/ && open == NR - 1 { print NR; found = 1 } \
+	         { open = 0 } END { exit found }' $@ \
+	  || { echo "ERROR: $* C output has an empty block, at the lines above"; \
+	       exit 1; }
 
 $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
 	$(call msg, "CC", $(basename $(notdir $@)))
