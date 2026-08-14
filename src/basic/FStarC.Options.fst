@@ -210,6 +210,7 @@ let defaults = [
   ("custard_split"                             , Bool false);
   ("custard_unit"                              , Unset);
   ("custard_link"                              , List []);
+  ("custard_extern_type"                       , List []);
   ("custard_dump_cui"                          , Bool false);
   ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
@@ -484,6 +485,7 @@ let get_custard_backend         ()      = lookup_opt "custard_backend"          
 let get_custard_split           ()      = lookup_opt "custard_split"           as_bool
 let get_custard_unit            ()      = lookup_opt "custard_unit"            (as_option as_string)
 let get_custard_link            ()      = lookup_opt "custard_link"            (as_list as_string)
+let get_custard_extern_type     ()      = lookup_opt "custard_extern_type"     (as_list as_string)
 let get_custard_dump_cui        ()      = lookup_opt "custard_dump_cui"        as_bool
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
@@ -979,6 +981,15 @@ self-contained whole program.");
     text "Link against an already-compiled Custard unit. May be repeated. A \
 definition exported by a linked unit is called rather than recompiled, and \
 its layout decisions are adopted rather than re-derived.");
+
+  ( noshort,
+    "custard_extern_type",
+    Accumulated (SimpleStr "Lid[=name][@header]"),
+    text "Treat a type as declared by the target rather than by F*: emit no \
+definition for it, spell it <name> if one is given, and include <header> in \
+the generated C if one is given. May be repeated. This is for types whose \
+representation is fixed outside F* and that cannot carry a [@@custard_extern] \
+attribute, such as one declared in a library the program does not own.");
 
   ( noshort,
     "custard_dump_cui",
@@ -2132,6 +2143,7 @@ let custard_backend              () = get_custard_backend ()
 let custard_split                () = get_custard_split ()
 let custard_unit                 () = get_custard_unit ()
 let custard_links                () = get_custard_link ()
+let custard_extern_types         () = get_custard_extern_type ()
 let custard_dump_cui             () = get_custard_dump_cui ()
 
 let profile_group_by_decl        () = get_profile_group_by_decl ()

@@ -292,7 +292,18 @@ KRML_TESTS += KrmlBasic
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
-C_TESTS += KrmlBasic
+C_TESTS += KrmlBasic CExtern
+
+# Section 14.5 and 14.6: a type the target declares, said both ways, and a
+# global whose initializer is a computation.
+FLAGS_CExtern   = --custard_extern_type 'CExtern.tag=cextern_tag_t@CExtern_stubs.h'
+CGREP_CExtern   = "include \"CExtern_stubs.h" \
+                  "cextern_handle_t b_h;" \
+                  "void custard_init_globals(void)" \
+                  "CExtern_gt = cextern_mk_tag();"
+# No definition is emitted for either external type, and neither is declared
+# as an abstract struct the way a Custard-owned opaque type would be.
+CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag"
 
 # CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
 # output-quality invariants of section 6: a unit parameter is a thunk, which C
@@ -399,7 +410,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
 $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend C \
 	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
 	$(Q)for p in $(CGREP_$*); do \
 	  grep -qF -- "$$p" $@ \
@@ -410,7 +421,7 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 
 $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
 	$(call msg, "CC", $(basename $(notdir $@)))
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -x c $< -o $@
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -x c $< -o $@
 
 $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 	$(call msg, "RUN-C", $(basename $(notdir $@)))

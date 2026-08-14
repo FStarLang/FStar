@@ -28,6 +28,8 @@ module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module U     = FStarC.Syntax.Util
 module PC    = FStarC.Parser.Const
+module Options = FStarC.Options
+module String = FStarC.String
 
 (* -------------------------------------------------------------------- *)
 (* The registry                                                         *)
@@ -629,13 +631,42 @@ let stub_aliases : list (string & string) = [
 (* [FStar.Bytes.bytes] is [struct { uint32_t length; const char *data; }] in
    krmllib's [compat.h], which every karamel-generated program includes; the
    direct-to-C backend has to ask for it by name. *)
-let extern_types : list (string & extern) = [
-  "FStar.Bytes.bytes", { x_name = None; x_header = Some "krml/internal/compat.h" };
-]
+(* [Lid], [Lid=name], [Lid@header] or [Lid=name@header].  An empty component
+   is the same as an absent one, so [Lid=@h] is legal and means "keep the
+   mangled name, include [h]". *)
+let parse_extern_type (spec:string) : ML (option (string & extern)) =
+  let opt (s:string) : option string = if s = "" then None else Some s in
+  let lid, rest =
+    match String.split ['@'] spec with
+    | [a] -> a, None
+    | [a; h] -> a, opt h
+    | _ -> spec, None in
+  let lid, nm =
+    match String.split ['='] lid with
+    | [a] -> a, None
+    | [a; n] -> a, opt n
+    | _ -> lid, None in
+  if lid = "" then None
+  else Some (lid, { x_name = nm; x_header = rest })
+
+(* Deliberately empty.  A type with no F* definition and a representation
+   fixed by the target is a fact about the *program being built*, not about
+   F*: [FStar.Bytes.bytes] is a struct of a particular shape only because
+   some C library says so, and hardcoding one library's answer here would
+   make every other program wrong.  Hence [--custard_extern_type], and hence
+   nothing built in. *)
+let extern_types : list (string & extern) = []
 
 let extern_type_of_lid (l:Ident.lident) : ML (option extern) =
   let s = Ident.string_of_lid l in
-  extern_types |> List.tryPick (fun (k, x) -> if k = s then Some x else None)
+  let from_cmdline =
+    Options.custard_extern_types () |> List.collect (fun spec ->
+      match parse_extern_type spec with
+      | Some (k, x) when k = s -> [x]
+      | _ -> []) in
+  match from_cmdline with
+  | x :: _ -> Some x
+  | [] -> extern_types |> List.tryPick (fun (k, x) -> if k = s then Some x else None)
 
 let realized_modules : list (list string) = [
   ["FStar"; "All"];

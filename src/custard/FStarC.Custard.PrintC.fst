@@ -1141,6 +1141,17 @@ let let_decl (l:dlet) : ML string =
    we include the header and say nothing more; otherwise we declare it from
    its Custard type, which is exactly the contract the hand-written C has to
    meet. *)
+(* The argument types of an arrow spine, left to right, and what it returns. *)
+let rec arg_ctys (t:cty) : ML (list cty) =
+  match t with
+  | TArrow (a, _, b) -> a :: arg_ctys b
+  | _ -> []
+
+let rec ret_cty (t:cty) : ML cty =
+  match t with
+  | TArrow (_, _, b) -> ret_cty b
+  | _ -> t
+
 let extern_decl (x:dexternal) : ML (option string) =
   if Some? x.dx_header then None else
   let nm = match SMap.try_find !externs (string_of_name x.dx_name) with
@@ -1153,9 +1164,16 @@ let extern_decl (x:dexternal) : ML (option string) =
     | _ -> (match acc with [] -> None | _ -> Some (List.rev acc, t)) in
   match spine x.dx_ty [] with
   | Some (args, ret) ->
-    Some ("extern " ^
-          decl_of ret (nm ^ "(" ^ String.concat ", " (args |> List.map ty) ^ ")") ^
-          ";\n")
+    (* The unit parameters the call sites drop have to go from the prototype
+       too, and an argument list that empties out is spelled [void] -- an empty
+       one in C means "unspecified", which -Wstrict-prototypes objects to and
+       which would hide a real arity mismatch. *)
+    let args = args |> List.filter (fun a -> not (TUnit? a)) in
+    let params = match args with
+                 | [] -> "void"
+                 | _ -> String.concat ", " (args |> List.map ty) in
+    let hd = nm ^ "(" ^ params ^ ")" in
+    Some ("extern " ^ (if TUnit? ret then "void " ^ hd else decl_of ret hd) ^ ";\n")
   | None -> Some ("extern " ^ decl_of x.dx_ty nm ^ ";\n")
 
 (* -------------------------------------------------------------------- *)
@@ -1185,7 +1203,21 @@ let print_program (p:program) : ML string =
       SMap.add xt (string_of_name x.dx_name)
         (match x.dx_target with
          | Some "" | None -> c_name x.dx_name
-         | Some t -> escape_kw (sanitize t))
+         | Some t -> escape_kw (sanitize t));
+      (* A unit parameter of an *external* goes too, and unconditionally: the
+         function on the other side is C, C has no unit value, and whatever it
+         was declared as it was not declared to take one.  There is no body to
+         consult, but there is nothing to consult it about -- a unit argument
+         carries no information.  karamel does the same, which is why
+         [EverCrypt_AutoConfig2_init()] is what both C paths must emit. *)
+      let flags = arg_ctys x.dx_ty |> List.map (fun a -> not (TUnit? a)) in
+      if List.existsb (fun b -> not b) flags then
+        SMap.add kt (string_of_name x.dx_name) flags;
+      (* Same for a unit *result*: the target function returns [void], and a
+         prototype saying otherwise is a declaration that does not match the
+         definition it will be linked against. *)
+      if Cons? flags && TUnit? (ret_cty x.dx_ty) then
+        SMap.add vt (string_of_name x.dx_name) true
     | DLet l ->
       let used = vars_of l.dl_body in
       let flags = l.dl_binders |> List.map (fun b ->

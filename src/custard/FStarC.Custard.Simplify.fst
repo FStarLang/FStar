@@ -241,15 +241,6 @@ let as_if (brs:list branch) : ML (option (expr & expr)) =
        if not complementary then None
        else if c1 then Some (b1, b2) else Some (b2, b1)
      | _ -> None)
-  (* Dead-branch pruning can leave a boolean match with one arm.  Left as a
-     match it prints as [scrut == true] in C, which is both noise and a
-     [-Wparentheses] warning; as an [if] the dead arm is where it belongs. *)
-  | [(p1, None, b1)] ->
-    (match bool_alt p1 b1 with
-     | Some (Some c1) ->
-       let dead = { b1 with e = EAbort "unreachable branch" } in
-       Some (if c1 then (b1, dead) else (dead, b1))
-     | _ -> None)
   | _ -> None
 
 (* Let-floating.  ANF hoists every impure operand into a binding of its own,
@@ -1052,6 +1043,21 @@ let rec prune (x:expr) : ML expr =
        scrutinee kept only if evaluating it is observable. *)
     (match live, brs with
      | [], (_, _, b) :: _ -> take x s b
+     (* One live branch is the same situation one step on: the match was
+        exhaustive before pruning, so if every other arm is unreachable this
+        one is taken unconditionally, and testing the scrutinee against its
+        pattern is a test whose answer is already known.  The pattern has to
+        bind nothing beyond the scrutinee itself for the body to survive
+        without it; a constructor pattern that does bind is left alone, since
+        [depat] turns exactly that into projections. *)
+     | [(p, None, b)], _ ->
+       (match p with
+        | PWild | PConst _ -> take x s b
+        (* The name stands for the whole scrutinee, so a binding replaces the
+           match -- and when the name is unused, not even that. *)
+        | PVar v -> if occurs v b then { x with e = ELet (v, s.ty, s, b) }
+                    else take x s b
+        | _ -> { x with e = EMatch (s, live) })
      | _ -> { x with e = EMatch (s, (if Nil? live then brs else live)) })
 
   | EIf (c, a, b) ->

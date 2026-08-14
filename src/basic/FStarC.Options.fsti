@@ -221,6 +221,7 @@ val custard_backend             : unit    -> ML string
 val custard_split               : unit    -> ML bool
 val custard_unit                : unit    -> ML (option string)
 val custard_links               : unit    -> ML (list string)
+val custard_extern_types        : unit    -> ML (list string)
 val custard_dump_cui            : unit    -> ML bool
 
 val profile_group_by_decl       : unit    -> ML bool
