@@ -49,6 +49,7 @@ module U  = FStarC.Syntax.Util
 module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
+module Overload = FStarC.TypeChecker.Overload
 module Print = FStarC.Syntax.Print
 module CList = FStarC.CList
 module Free = FStarC.Syntax.Free
@@ -1277,23 +1278,21 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
             let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
             tc_term env term
         in
-        //We have e.f, use the type of e to disambiguate
+        //We have e.f, use the type of e to disambiguate.
+        //This is a speculative check: its guard is dropped on purpose, since
+        //[e] is checked again as part of the application we ultimately build.
         let _, lc, _ =
           let env, _ = Env.clear_expected_typ env in
           tc_term env e
         in
         Inl (begin
-        let t0 = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env lc.res_typ in
-        let thead, _ = U.head_and_args_full t0 in
         if !dbg_RFD
-        then (
-          Format.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
-            (show lc.res_typ)
-            (show t0)
-            (show thead)
-        );
-        match (SS.compress (U.un_uinst thead)).n with
-        | Tm_fvar type_name -> (
+        then Format.print1 "Got lc.res_typ=%s\n" (show lc.res_typ);
+        (* The discriminating signal here is the rigid head symbol of the type
+           of the *first* argument, and nothing else.
+           See FStarC.TypeChecker.Overload. *)
+        match Overload.base_head_fv env lc.res_typ with
+        | Some type_name -> (
           match TcUtil.try_lookup_record_type env type_name.fv_name with
           | None -> proceed_with candidate
           | Some rdc ->
@@ -1315,7 +1314,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
               in
               proceed_with (Some choice)
           )
-        | _ -> proceed_with candidate
+        | None -> proceed_with candidate
         end)
 
       | _ ->

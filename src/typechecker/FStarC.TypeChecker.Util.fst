@@ -48,6 +48,7 @@ module C = FStarC.Parser.Const
 module UF = FStarC.Syntax.Unionfind
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module Print = FStarC.Syntax.Print
+module Overload = FStarC.TypeChecker.Overload
 
 open FStarC.Class.Setlike
 
@@ -2494,10 +2495,10 @@ let try_lookup_record_type env (typename:lident)
  *)
 
 let head_fv_of_typ env (t:typ) : ML (option fv) =
-    let t, _ = U.head_and_args_full (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t) in
-    match (SS.compress (U.un_uinst t)).n with
-    | Tm_fvar fv -> Some fv
-    | _ -> None
+    (* One shared implementation of "the rigid head symbol of a type", so that
+       record, projector and general-name resolution all classify types the same
+       way. See FStarC.TypeChecker.Overload. *)
+    Overload.base_head_fv env t
 
 let find_record_or_dc_from_head_fv env (head_fv:option fv) (uc:unresolved_constructor) rng : ML _ =
     let default_rdc () =
