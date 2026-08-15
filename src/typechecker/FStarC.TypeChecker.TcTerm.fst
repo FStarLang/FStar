@@ -1317,6 +1317,12 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
         | None -> proceed_with candidate
         end)
 
+      | Tm_fvar {fv_qual=Some (Unresolved_name _)}, _
+      | Tm_uinst({n=Tm_fvar {fv_qual=Some (Unresolved_name _)}}, _), _ ->
+        (* ToSyntax left an overloaded name; use type information to pick
+           among the candidates. See TYPE_BASED_OVERLOADING.md. *)
+        Inr (resolve_overloaded_head env lhead largs, largs)
+
       | _ ->
         if U.is_synth_by_tactic lhead && not env.phase1
         then (
@@ -1735,6 +1741,64 @@ and tc_tactic (a:typ) (b:typ) (env:Env.env) (tau:term) : ML (term & lcomp & guar
     let env = { env with failhard = true } in
     tc_check_tot_or_gtot_term env tau (t_tac_of a b) None
 
+and speculate_base env (e:term) : ML Overload.base_typ =
+  (* Typecheck [e] just far enough to learn the head symbol of its type,
+     then undo everything: the unifier state is rolled back and any errors
+     are swallowed. [Base_rigid] only holds an fv, so the answer survives
+     the rollback.
+
+     [admit] is set so that the speculative pass is uniformly lax. That is
+     what makes overload resolution insensitive to whether we are lax
+     checking or not: a name must resolve the same way in an interactive
+     lax pass and in the full check, or the two would disagree about what
+     the program means. *)
+  let tx = UF.new_transaction () in
+  let res =
+    BU.finally (fun () -> UF.rollback tx) (fun () ->
+      let _, res =
+        Errors.catch_errors_and_ignore_rest (fun () ->
+          let env, _ = Env.clear_expected_typ env in
+          let _, lc, _ = tc_term ({env with admit=true}) e in
+          Overload.base_of_typ env lc.res_typ)
+      in
+      res)
+  in
+  match res with
+  | Some b -> b
+  | None -> Overload.Base_unknown
+
+and resolve_overloaded_head env (lhead:term) (largs:args) : ML term =
+  let fv, us =
+    match (SS.compress lhead).n with
+    | Tm_fvar fv -> fv, []
+    | Tm_uinst({n=Tm_fvar fv}, us) -> fv, us
+    | _ -> failwith "resolve_overloaded_head: not an fvar"
+  in
+  let alts =
+    match fv.fv_qual with
+    | Some (Unresolved_name alts) -> alts
+    | _ -> []
+  in
+  let primary = {fv with fv_qual = None} in
+  let explicit_args =
+    largs |> List.collect (fun (a, aq) ->
+      match aq with
+      | Some {aqual_implicit=true} -> []
+      | _ -> [a])
+  in
+  let expected =
+    match Env.expected_typ env with
+    | Some (t, _) -> Some t
+    | None -> None
+  in
+  let choice = Overload.resolve env (speculate_base env) primary alts explicit_args expected in
+  (* The qualifier is dropped, so re-checking the rebuilt term cannot loop. *)
+  let choice = {choice with fv_qual = None} in
+  let h = S.mk (Tm_fvar choice) lhead.pos in
+  match us with
+  | [] -> h
+  | _ -> S.mk_Tm_uinst h us
+
 and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option S.fv_qual) (e:term) (t0:typ)
   : ML (term & lcomp & guard_t)
   =
@@ -1823,6 +1887,12 @@ and tc_value env (e:term) : ML (term
   | Tm_uinst({n=Tm_fvar fv}, _)
   | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid && not env.phase1 ->
     raise_error env Errors.Fatal_BadlyInstantiatedSynthByTactic "Badly instantiated synth_by_tactic"
+
+  | Tm_uinst({n=Tm_fvar {fv_qual=Some (Unresolved_name _)}}, _)
+  | Tm_fvar {fv_qual=Some (Unresolved_name _)} ->
+    (* An overloaded name used without arguments; only the expected type
+       can discriminate here. See TYPE_BASED_OVERLOADING.md. *)
+    tc_term env (resolve_overloaded_head env top [])
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in

@@ -113,3 +113,44 @@ val arity_compatible : env -> typ -> int -> ML bool
 (** Render a candidate set for an error message or a debug trace: each
     candidate's fully qualified name and type, one per line. *)
 val candidates_doc : env -> list fv -> ML (list Pprint.document)
+
+(** Pick a candidate for an overloaded name.
+
+    [resolve env speculate primary alts args expected] chooses among
+    [primary :: alts], which are given in scope order so that [primary] is
+    exactly what name resolution answers today.
+
+    [speculate] classifies the type of an argument term. It is supplied by the
+    caller because this module cannot depend on the typechecker; it is expected
+    to typecheck the term speculatively and to return [Base_unknown] rather
+    than raising if that fails. It is called at most once per explicit
+    argument, and only while more than one candidate is still in play.
+
+    [args] are the *explicit* arguments at the application site, in order;
+    [expected] is the expected type of the whole application, if known.
+
+    The algorithm is a sequence of filters -- arity, then each argument
+    left to right, then the result type -- and it is conservative in three
+    separate ways:
+
+      - a candidate is eliminated only when its formal and the argument have
+        two *different rigid heads*, so anything unknown eliminates nothing;
+      - if a filter would eliminate *every* remaining candidate it is skipped
+        entirely, so we never turn a type error into a resolution error;
+      - if several candidates survive, we return the first, which is the
+        candidate that would have been chosen anyway.
+
+    Together these guarantee that a program that typechecks today still
+    typechecks, and still means the same thing.
+
+    Under [--ext fstar:overload=strict] the last point is an error instead,
+    which is what phase p7 uses to measure how often genuine ambiguity
+    arises. *)
+val resolve :
+     env
+  -> (term -> ML base_typ)
+  -> fv
+  -> list fv
+  -> list term
+  -> option typ
+  -> ML fv

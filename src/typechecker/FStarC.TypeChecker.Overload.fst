@@ -109,3 +109,123 @@ let candidates_doc env cands =
       | None -> doc_of_string "<unknown type>"
     in
     group (pp l ^^ doc_of_string " :" ^/^ align ty))
+
+(* Classification must never be able to break a program: a candidate whose
+   type we cannot even look at is simply never eliminated. Binder sorts come
+   from an opened arrow and so mention free names that are not in [env];
+   normalizing those is fine in practice but we do not want to bet the whole
+   feature on it. *)
+let base_of_typ_safe env t : ML base_typ =
+  try base_of_typ env t with _ -> Base_unknown
+
+let type_of_fv env fv : ML (option typ) =
+  match Env.try_lookup_lid env (lid_of_fv fv) with
+  | Some ((_, t), _) -> Some t
+  | None -> None
+
+(* The types of the explicit formals of [t] after [n] explicit arguments have
+   been consumed, together with its result type. Implicit and meta binders are
+   skipped: at an application site the elaborator inserts them, so they line up
+   with nothing the user wrote. *)
+let explicit_shape env t n : ML (list typ & typ) =
+  let bs, c = formals_of_typ env t in
+  let rec go bs n : ML (list typ & typ) =
+    match bs with
+    | [] -> [], U.comp_result c
+    | b :: bs ->
+      if is_bqual_implicit_or_meta b.binder_qual
+      then go bs n
+      else if n > 0
+      then go bs (n - 1)
+      else
+        let rest, r = go bs 0 in
+        b.binder_bv.sort :: rest, r
+  in
+  go bs n
+
+(* Could a candidate of type [t], applied to [n] explicit arguments, have the
+   expected type [te]? Compares the remaining explicit formals pairwise and
+   then the results, always by rigid head only.
+
+   When the two shapes have a different number of explicit formals we conclude
+   nothing: that can be currying, or a type abbreviation we did not unfold, and
+   guessing there would be exactly the kind of false elimination that could
+   break a working program. *)
+let expected_compatible env t n te : ML bool =
+  let ts, rt = explicit_shape env t n in
+  let es, re = explicit_shape env te 0 in
+  let rec cmp ts es : ML bool =
+    match ts, es with
+    | t1 :: ts, e1 :: es ->
+      compatible (base_of_typ_safe env t1) (base_of_typ_safe env e1) && cmp ts es
+    | [], [] -> compatible (base_of_typ_safe env rt) (base_of_typ_safe env re)
+    | _ -> true
+  in
+  cmp ts es
+
+(* Apply a filter, but never let it empty the candidate set. Dropping every
+   candidate would mean reporting an unresolvable name where today the user
+   gets an ordinary type error on the primary candidate, which is both less
+   useful and a behavior change. *)
+let narrow (p : (fv & option typ) -> ML bool) (cs : list (fv & option typ))
+  : ML (list (fv & option typ))
+  = match List.filter p cs with
+    | [] -> cs
+    | cs' -> cs'
+
+(* A candidate whose type we do not know is never eliminated. *)
+let keep_if (f : typ -> ML bool) : (fv & option typ) -> ML bool =
+  fun (_, ot) ->
+    match ot with
+    | None -> true
+    | Some t -> f t
+
+let resolve env speculate primary alts args expected =
+  let cands = (primary :: alts) |> List.map (fun fv -> fv, type_of_fv env fv) in
+  let nargs = List.length args in
+
+  if !dbg then
+    Format.print2 "(Overload) resolving %s among %s\n"
+      (show (lid_of_fv primary))
+      (show (List.map (fun fv -> lid_of_fv fv) (primary :: alts)));
+
+  let cands = narrow (keep_if (fun t -> arity_compatible env t nargs)) cands in
+
+  let rec by_args i cands : ML (list (fv & option typ)) =
+    if i >= nargs || List.length cands <= 1
+    then cands
+    else
+      let b_arg = speculate (List.nth args i) in
+      let cands =
+        match b_arg with
+        | Base_unknown -> cands
+        | _ ->
+          narrow (keep_if (fun t -> compatible b_arg (nth_explicit_formal_base env t i))) cands
+      in
+      by_args (i + 1) cands
+  in
+  let cands = by_args 0 cands in
+
+  let cands =
+    if List.length cands <= 1 then cands
+    else
+      match expected with
+      | None -> cands
+      | Some te -> narrow (keep_if (fun t -> expected_compatible env t nargs te)) cands
+  in
+
+  match cands with
+  | [(fv, _)] ->
+    if !dbg then Format.print1 "(Overload) resolved to %s\n" (show (lid_of_fv fv));
+    fv
+  | (fv, _) :: _ ->
+    if Options.Overload_strict? (Options.overload_mode ())
+    then Errors.raise_error (lid_of_fv primary) Errors.Fatal_IdentifierNotFound (
+           [Errors.Msg.text (Format.fmt1 "The name %s is ambiguous; candidates are:"
+                               (show (lid_of_fv primary)))]
+           @ candidates_doc env (List.map fst cands))
+    else (
+      if !dbg then Format.print1 "(Overload) ambiguous, defaulting to %s\n" (show (lid_of_fv fv));
+      fv
+    )
+  | [] -> primary
