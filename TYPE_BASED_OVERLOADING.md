@@ -407,17 +407,42 @@ is, and p6 includes a regression test that it is unchanged.
 
 ## 8. Progress
 
-| phase | status | notes |
-|---|---|---|
-| p0-option | pending | |
-| p1-skeleton | pending | |
-| p2-syntax | pending | |
-| p3-dsenv | pending | |
-| p4-tosyntax | pending | |
-| p5-tctc | pending | |
-| p6-tests | pending | |
-| p7-measure | pending | |
-| p8-default | pending | |
+| phase | status | commit | notes |
+|---|---|---|---|
+| p0-option | done | `36e16071e4` | `--ext fstar:overload` = `off` (default) / `compat` / `strict`, `Options.overload_mode ()` |
+| p1-skeleton | done | `ecbbce9bc7` | `FStarC.TypeChecker.Overload`; `TcUtil.head_fv_of_typ` and the projector path rewired onto it |
+| p2-syntax | done | `a6636f7562` | `Unresolved_name of list fv`; `cache_version_number` 89 → 90 |
+| p3-dsenv | done | `39e38d86ce` | `_gen collect` variants of the four lookup functions; `try_lookup_lid_alternatives` |
+| p4-tosyntax | done | `0cc0a8b747` | alternatives attached in `desugar_name'`; operator fallback becomes the last candidate |
+| p5-tctc | done | `e88107f542` | `Overload.resolve`; hooks in the `Tm_app` dispatcher and `tc_value`; Pulse `RuntimeUtils` bail-out narrowed |
+| p6-tests | done | `ac2755948c` | `tests/overloading/` and `tests/overloading/strict/` |
+| p7-measure | in progress | | `make ci` with the option `off` (must match master), then `strict` to count ambiguities |
+| p8-default | pending | | flip the default only once p7 is clean |
+
+### Deviations from the plan as written above
+
+- **p1** shipped a smaller skeleton than §2.3 describes: `base_of_typ`, `compatible`,
+  `formals_of_typ`, `arity_compatible` and `candidates_doc`, but *not* speculation or
+  memoisation. Speculation landed in p5, in `TcTerm.speculate_base`, because it needs
+  `tc_term` and so cannot live in a module the typechecker depends on. **Memoisation is
+  still not implemented** — see risk 1 and 2 in §5.
+- **p1** rewired two of the three existing paths (`TcUtil.head_fv_of_typ`, which the record
+  literal and record pattern paths both go through, and the projector path). There was no
+  third distinct copy to rewire.
+- **p3** did not add the debug assert that the collected head equals `try_lookup_lid`'s
+  answer. It is structurally guaranteed instead: the option-returning functions are *defined*
+  as the head of the collecting ones, so the two cannot disagree.
+- **p3** deliberately did **not** make `find_in_module_with_includes` collect across an
+  include chain; it still short-circuits at the first module that has the name. Fewer
+  candidates is strictly more conservative, and include chains are exactly where accidental
+  ambiguity would be most surprising.
+- **p5**'s expected-type filter compares the *shapes* of the two types (remaining explicit
+  formals pairwise, then results) rather than only the result head. Without that, a bare
+  occurrence such as `let h : int -> int = f` is not disambiguated at all, since both the
+  expected type and every candidate are arrows and arrows classify as `Base_unknown`.
+- **p6** covers the cases in §4 that are about resolution. It does not yet cover the
+  `--quake` stability check, the lax/non-lax extraction comparison, or `open ... { ... }`
+  restrictions.
 
 ---
 
