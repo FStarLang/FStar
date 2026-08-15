@@ -694,6 +694,7 @@ instance showable_fv_qual : showable fv_qual = {
           | Record_ctor      p -> "Record_ctor (" ^ show p ^ ")"
           | Unresolved_projector p -> "Unresolved_projector (" ^ show p^ ")"
           | Unresolved_constructor p -> "Unresolved_constructor (" ^ show p ^ ")"
+          | Unresolved_name alts -> "Unresolved_name (" ^ show alts ^ ")"
   );
 }
 
