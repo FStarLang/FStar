@@ -2043,12 +2043,13 @@ let output_ext                   () = get_output_ext                  ()
 
 let overload_mode                () =
   match String.lowercase (Ext.get "fstar:overload") with
-  (* The empty string is what Ext.get returns for an unset key. The other
-     spellings of "off" match Ext.enabled's notion of disabled, so that
-     `Ext.enabled "fstar:overload"` and `overload_mode () <> Overload_off`
-     always agree. *)
-  | "" | "off" | "false" | "0" -> Overload_off
-  | "compat" | "on" | "true" | "1" -> Overload_compat
+  (* The empty string is what Ext.get returns for an unset key: the
+     default is `compat`, which resolves a name by type only when doing so
+     eliminates candidates that name resolution would otherwise have
+     discarded silently. It never changes the meaning of a program that
+     checks today. Use `off` to get the pre-overloading behaviour. *)
+  | "" | "compat" | "on" | "true" | "1" -> Overload_compat
+  | "off" | "false" | "0" -> Overload_off
   | "strict" -> Overload_strict
   | illegal ->
     failwith ("Option `--ext fstar:overload` expects one of `off`, `compat` or \

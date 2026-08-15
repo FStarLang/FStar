@@ -335,6 +335,8 @@ Tracked in SQL. Each is a separate commit and must leave `make -skj$(nproc) 3` g
   overloading, bump stage0 via `./.scripts/bump-stage0-from-stage1.sh` in a commit containing
   nothing else (CONTRIBUTING.md). Update `doc/` — user-visible language change.
 
+The p7 numbers, and the change to how `strict` reports, are in §8.
+
 ---
 
 ## 5. Risks, ranked
@@ -363,8 +365,9 @@ Not a risk: dependency analysis. `Parser.Dep` records deps from `open`/`include`
 
 - **Backwards compatibility** — conservative extension with scope-order tie-break (§2.1),
   so default-on is a realistic goal and `[@@overloadable]` is not needed.
-- **Unknown argument type** — scope-order fallback or error is **decided empirically by p7**;
-  land on `compat`.
+- **Unknown argument type** — scope-order fallback, decided empirically by p7: `strict` finds
+  0 genuine ambiguities in `ulib` but 4843 in `src`, essentially all of them benign (§8).
+  Erroring is therefore not viable; `compat` is the default and `strict` stays a diagnostic.
 - **Types and terms are handled uniformly** (§2.7). F* has no special distinction between
   types and terms; all names are handled the same way.
 - **Operators are handled uniformly too** (§2.8). Mangling stays special; resolution does
@@ -409,15 +412,15 @@ is, and p6 includes a regression test that it is unchanged.
 
 | phase | status | commit | notes |
 |---|---|---|---|
-| p0-option | done | `36e16071e4` | `--ext fstar:overload` = `off` (default) / `compat` / `strict`, `Options.overload_mode ()` |
+| p0-option | done | `36e16071e4` | `--ext fstar:overload` = `off` / `compat` / `strict`, `Options.overload_mode ()` (defaulted to `off` until p8) |
 | p1-skeleton | done | `ecbbce9bc7` | `FStarC.TypeChecker.Overload`; `TcUtil.head_fv_of_typ` and the projector path rewired onto it |
 | p2-syntax | done | `a6636f7562` | `Unresolved_name of list fv`; `cache_version_number` 89 → 90 |
 | p3-dsenv | done | `39e38d86ce` | `_gen collect` variants of the four lookup functions; `try_lookup_lid_alternatives` |
 | p4-tosyntax | done | `0cc0a8b747` | alternatives attached in `desugar_name'`; operator fallback becomes the last candidate |
 | p5-tctc | done | `e88107f542` | `Overload.resolve`; hooks in the `Tm_app` dispatcher and `tc_value`; Pulse `RuntimeUtils` bail-out narrowed |
 | p6-tests | done | `ac2755948c` | `tests/overloading/` and `tests/overloading/strict/` |
-| p7-measure | in progress | | `make ci` with the option `off` (must match master), then `strict` to count ambiguities |
-| p8-default | pending | | flip the default only once p7 is clean |
+| p7-measure | done | `1bdcf61952` | `make ci` green with `off`; strict sweep of `ulib` and `src`; ~1% cost on `src`, none on `ulib` |
+| p8-default | done | `<p8>` | default is now `compat`; `off` is the escape hatch and has its own test directory |
 
 ### Deviations from the plan as written above
 
@@ -443,6 +446,48 @@ is, and p6 includes a regression test that it is unchanged.
 - **p6** covers the cases in §4 that are about resolution. It does not yet cover the
   `--quake` stability check, the lax/non-lax extraction comparison, or `open ... { ... }`
   restrictions.
+- **p7** turned the `strict` ambiguity report from a raised `Fatal_IdentifierNotFound` into a
+  logged `Error_AmbiguousName` (error 362, `CError`). Logging rather than raising means a
+  single file reports *all* of its ambiguities instead of stopping at the first, and `CError`
+  rather than `CAlwaysError` means `--warn_error +362` can demote it to a warning — which is
+  what makes a whole-corpus sweep possible at all.
+
+### p7 measurements
+
+Method: re-check each file of a corpus against the already-checked dependencies
+(`--already_cached '*'`, `--admit_smt_queries true`, and `--lax` for `src/`, matching how the
+build checks it), with `--ext fstar:overload=strict --warn_error +362`, and count reports.
+
+| corpus | files | ambiguity reports |
+|---|---|---|
+| `ulib` | 310 | **0** |
+| `src` (the compiler itself) | 365 | 4843 |
+
+`ulib` is completely unambiguous. The `src` reports concentrate in a small number of names,
+and every one inspected is benign under `compat`:
+
+- **Same definition reached two ways** — `FStarC.List.op_At` vs `FStar.List.Tot.Base.append`
+  (730), `FStarC.TypeChecker.Common.guard_t` vs `FStarC.TypeChecker.Env.guard_t` (270).
+  Either answer is the same function or the same type; scope order picks one.
+- **Type names in type position** — `FStarC.SMTEncoding.Term.term` vs
+  `FStarC.Syntax.Syntax.term` (785). Both are `Type0`, there are no arguments and no expected
+  type, so nothing can discriminate. This is inherent, not a gap in the implementation.
+- **No expected type propagated to the occurrence** — `FStar.Pprint.empty` vs `Prims.empty`
+  (64). Here the types *do* differ; the occurrence just has no expected type available.
+
+So `strict` is a diagnostic tool, not a usable mode, exactly as §2.1 anticipated. It stays
+opt-in. Under `compat` all 4843 of these fall back to scope order, i.e. to today's answer, so
+none of them is a behaviour change.
+
+Cost (128-way parallel re-check of the whole corpus, `off` vs `compat`, two runs each):
+
+| corpus | `off` | `compat` |
+|---|---|---|
+| `src` (lax) | 31.50 s / 31.63 s | 31.94 s / 31.84 s |
+| `ulib` | 4.97 s / 5.03 s | 4.98 s / 4.99 s |
+
+About 1% on `src` and nothing measurable on `ulib`. That is low enough that risk 1
+(memoisation) does not block the default; it stays on the follow-up list.
 
 ---
 

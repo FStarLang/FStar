@@ -46,13 +46,14 @@ type message_format_t = | Json | Human | Github
 
    - [Overload_off]: no candidate collection at all; names resolve exactly as
      they always have, first-match-wins in scope order.
-   - [Overload_compat]: collect candidates and eliminate the definitely
-     type-incompatible ones, but if several remain, silently pick the first in
-     scope order, i.e. today's answer. A conservative extension: no program that
-     checks today can change meaning.
-   - [Overload_strict]: as above, but report an ambiguity error when several
-     candidates remain. Used to measure how often overloading is genuinely
-     ambiguous; not intended as a default. *)
+   - [Overload_compat]: the default. Collect candidates and eliminate the
+     definitely type-incompatible ones, but if several remain, silently pick the
+     first in scope order, i.e. today's answer. A conservative extension: no
+     program that checks today can change meaning.
+   - [Overload_strict]: as above, but report an ambiguity error (error 362,
+     demotable with `--warn_error +362`) when several candidates remain. Used to
+     measure how often overloading is genuinely ambiguous; not intended as a
+     default. *)
 type overload_mode_t = | Overload_off | Overload_compat | Overload_strict
 
 type option_val =
