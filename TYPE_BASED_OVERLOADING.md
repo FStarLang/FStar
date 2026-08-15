@@ -425,7 +425,7 @@ is, and p6 includes a regression test that it is unchanged.
 | p5-tctc | done | `e88107f542` | `Overload.resolve`; hooks in the `Tm_app` dispatcher and `tc_value`; Pulse `RuntimeUtils` bail-out narrowed |
 | p6-tests | done | `ac2755948c` | `tests/overloading/` and `tests/overloading/strict/` |
 | p7-measure | done | `1bdcf61952` | `make ci` green with `off`; strict sweep of `ulib` and `src`; ~1% cost on `src`, none on `ulib` |
-| p8-default | done | `<p8>` | default is now `compat`; `off` is the escape hatch and has its own test directory |
+| p8-default | done | `b30cb6029c` + `976aaa27ae` | default is now `compat`; `off` is the escape hatch and has its own test directory |
 
 ### Deviations from the plan as written above
 
