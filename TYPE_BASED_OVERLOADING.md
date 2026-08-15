@@ -448,9 +448,10 @@ is, and p6 includes a regression test that it is unchanged.
   formals pairwise, then results) rather than only the result head. Without that, a bare
   occurrence such as `let h : int -> int = f` is not disambiguated at all, since both the
   expected type and every candidate are arrows and arrows classify as `Base_unknown`.
-- **p6** covers the cases in §4 that are about resolution. It does not yet cover the
-  `--quake` stability check, the lax/non-lax extraction comparison, or `open ... { ... }`
-  restrictions.
+- **p6** covers the cases in §4 that are about resolution. The lax/non-lax comparison it left
+  out was done in p7 by measurement instead (see below). Still uncovered by a checked-in
+  test: `--quake` stability (resolution happens entirely before any SMT query, so `--quake`,
+  which only replays queries, cannot affect it) and `open ... { ... }` restrictions.
 - **p7** turned the `strict` ambiguity report from a raised `Fatal_IdentifierNotFound` into a
   logged `Error_AmbiguousName` (error 362, `CError`). Logging rather than raising means a
   single file reports *all* of its ambiguities instead of stopping at the first, and `CError`
@@ -522,6 +523,19 @@ Two changes address this:
 
 `tests/overloading/OvlCoercions.fst` covers both, and `--debug Overload` reports
 `keeping X: it checks after all` whenever the verification step fires.
+
+### Lax and non-lax resolve identically
+
+Risk 3 in §5 — the same source resolving differently in an interactive lax pass and in a full
+check, which would silently change extracted code — is discharged by construction:
+`speculate_base` and `speculate_ok` both run with `admit=true`, so the speculative pass is
+uniformly lax either way. Measured by re-checking all of `src/` twice with `--debug Overload`,
+once with `--lax` and once with `--admit_smt_queries true`, and diffing the decisions
+per file:
+
+- 9722 resolution decisions in each run, **0 files differing**.
+- The same comparison over `tests/overloading` agrees decision for decision, and `ulib`
+  reaches no multi-candidate site at all.
 
 The probe runs only where the answer would otherwise change, i.e. on programs that do not
 check today plus programs genuinely using overloading, which is why it does not show up in
