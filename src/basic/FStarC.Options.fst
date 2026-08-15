@@ -2041,6 +2041,19 @@ let krmloutput                   () = get_krmloutput                  () ||| out
 let output_deps_to               () = get_output_deps_to              () ||| output_to ()
 let output_ext                   () = get_output_ext                  ()
 
+let overload_mode                () =
+  match String.lowercase (Ext.get "fstar:overload") with
+  (* The empty string is what Ext.get returns for an unset key. The other
+     spellings of "off" match Ext.enabled's notion of disabled, so that
+     `Ext.enabled "fstar:overload"` and `overload_mode () <> Overload_off`
+     always agree. *)
+  | "" | "off" | "false" | "0" -> Overload_off
+  | "compat" | "on" | "true" | "1" -> Overload_compat
+  | "strict" -> Overload_strict
+  | illegal ->
+    failwith ("Option `--ext fstar:overload` expects one of `off`, `compat` or \
+               `strict`, but got `" ^ illegal ^ "`")
+
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
