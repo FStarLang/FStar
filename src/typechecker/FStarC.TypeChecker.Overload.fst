@@ -220,10 +220,16 @@ let resolve env speculate primary alts args expected =
     fv
   | (fv, _) :: _ ->
     if Options.Overload_strict? (Options.overload_mode ())
-    then Errors.raise_error (lid_of_fv primary) Errors.Fatal_IdentifierNotFound (
+    then (
+      // Reported (not raised) so that a single file reports all its
+      // ambiguities, and so that `--warn_error -362` can demote this to a
+      // warning and recover the scope-order answer.
+      Errors.log_issue (lid_of_fv primary) Errors.Error_AmbiguousName (
            [Errors.Msg.text (Format.fmt1 "The name %s is ambiguous; candidates are:"
                                (show (lid_of_fv primary)))]
-           @ candidates_doc env (List.map fst cands))
+           @ candidates_doc env (List.map fst cands));
+      fv
+    )
     else (
       if !dbg then Format.print1 "(Overload) ambiguous, defaulting to %s\n" (show (lid_of_fv fv));
       fv

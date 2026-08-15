@@ -387,6 +387,7 @@ type error_code =
   | Warning_ProofRecovery
   | Error_CannotResolveRecord
   | Error_MissingPopOptions
+  | Error_AmbiguousName
 
 type error_setting = error_code & error_flag & int
 
