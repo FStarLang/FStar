@@ -285,6 +285,11 @@ order (`c0` = today's answer), `k` explicit arguments `a1..ak`, optional expecte
    result type after `k` applications.
 7. Pick: `|C| = 1` → it. `|C| > 1` → **head of `C`** under `compat`, ambiguity error under
    `strict`. `|C| = 0` → `c0`, so the user sees exactly today's type error.
+8. If the pick is not `c0`, speculatively check `c0 a1..ak` against `T`. If it checks, use
+   `c0` after all. Steps 4–6 compare head symbols and so cannot see refinements, subtyping,
+   implicit coercions or typeclass constraints; this step is what makes "no program that
+   checks today can change meaning" hold unconditionally rather than only as far as those
+   steps are accurate. It runs only when the answer would otherwise change.
 
 ---
 
@@ -483,11 +488,49 @@ Cost (128-way parallel re-check of the whole corpus, `off` vs `compat`, two runs
 
 | corpus | `off` | `compat` |
 |---|---|---|
-| `src` (lax) | 31.50 s / 31.63 s | 31.94 s / 31.84 s |
-| `ulib` | 4.97 s / 5.03 s | 4.98 s / 4.99 s |
+| `src` (lax) | 31.53 s / 31.46 s | 31.65 s / 31.59 s |
+| `ulib` | 4.93 s | 4.96 s |
 
-About 1% on `src` and nothing measurable on `ulib`. That is low enough that risk 1
+Well under 1% on `src` and nothing measurable on `ulib`. That is low enough that risk 1
 (memoisation) does not block the default; it stays on the follow-up list.
+
+### The conservative-extension guarantee is now enforced, not just intended
+
+Flipping the default turned up five regressions in `make ci`, and they all had the same
+shape: the filter eliminated the candidate that name resolution picks today, even though that
+candidate would have checked. The head-symbol test does not know about
+
+- **implicit coercions** — `sorted (x::l) /\ ...` in `examples/algorithms/IntSort.fst`. The
+  expected type is `prop` and the local `IntSort.sorted` returns `bool`, so it was eliminated
+  in favour of `FStar.List.Tot.Properties.sorted`, whose extra explicit formal made its
+  result an arrow and therefore unclassifiable. In reality `b2t` would have been inserted.
+- **typeclass constraints** — `PulsePointStruct.fst`, where the displaced candidate needed a
+  `has_pts_to` instance that is only resolved much later.
+- **refinements and subtyping** in general.
+
+Two changes address this:
+
+1. `compatible` now models the built-in coercion families: `Prims.bool` and `Prims.prop` are
+   compatible with each other and with `Base_type` (`b2t`, `squash` and `t2b` relate all
+   three), and `FStar.Ghost.erased` is compatible with everything (`hide`/`reveal`).
+2. More importantly, `TcTerm.resolve_overloaded_head` **verifies before it displaces**: if
+   filtering picks a candidate other than the primary, the primary is speculatively
+   typechecked, applied to the actual arguments and against the actual expected type. If it
+   checks, it is kept. So the guarantee "no program that checks today can change meaning" is
+   now a property of the implementation rather than of how well the filter models the type
+   system, and any future hole in `compatible` costs performance instead of correctness.
+
+`tests/overloading/OvlCoercions.fst` covers both, and `--debug Overload` reports
+`keeping X: it checks after all` whenever the verification step fires.
+
+The probe runs only where the answer would otherwise change, i.e. on programs that do not
+check today plus programs genuinely using overloading, which is why it does not show up in
+the timings above.
+
+Two unrelated latent bugs in test makefiles surfaced once `make clean` was run before `make
+ci`, and are fixed here: `tests/simple_hello` did not delete its `.checked` file on `clean`
+(so a stale one survived a compiler change), and `examples/dependencies` had an order-only
+prerequisite on `out` with no rule to create it.
 
 ---
 

@@ -30,6 +30,7 @@ module SS = FStarC.Syntax.Subst
 module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
 module Env = FStarC.TypeChecker.Env
+module PC = FStarC.Parser.Const
 module Print = FStarC.Syntax.Print
 
 let dbg = Debug.get_toggle "Overload"
@@ -65,12 +66,35 @@ let base_head_fv env t =
   | Base_rigid fv -> Some fv
   | _ -> None
 
+(* Two base types are compatible when a term of the first could be passed
+   where the second is expected. This is deliberately *not* just equality:
+   the typechecker inserts implicit coercions (Util.find_coercion), so a
+   [bool] is acceptable where a [prop] or a [Type] is expected and vice
+   versa, an [erased t] where a [t] is, and any [@@coercion]-annotated
+   function defines further pairs. Modelling every one of those here would
+   be a losing game, so we model the built-in families -- which are by far
+   the most common, [b2t] especially -- and let TcTerm's verification step
+   (which re-checks the displaced candidate before accepting a different
+   answer) cover the rest. *)
+let coerces_to_anything fv =
+  (* [reveal]/[hide] are inserted silently in both directions. *)
+  fv_eq_lid fv PC.erased_lid
+
+(* [b2t], [squash] and [t2b] relate bool, prop and Type0 in every direction. *)
+let prop_like fv = fv_eq_lid fv PC.bool_lid || fv_eq_lid fv PC.prop_lid
+
 let compatible b1 b2 =
   match b1, b2 with
   | Base_unknown, _
   | _, Base_unknown -> true
   | Base_type, Base_type -> true
-  | Base_rigid fv1, Base_rigid fv2 -> fv_eq fv1 fv2
+  | Base_rigid fv1, Base_rigid fv2 ->
+    fv_eq fv1 fv2
+    || (prop_like fv1 && prop_like fv2)
+    || coerces_to_anything fv1 || coerces_to_anything fv2
+  | Base_type, Base_rigid fv
+  | Base_rigid fv, Base_type ->
+    prop_like fv || coerces_to_anything fv
   | _ -> false
 
 let formals_of_typ env t =

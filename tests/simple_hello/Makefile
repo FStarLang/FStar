@@ -33,7 +33,7 @@ Hello.%.test: Hello.%
 	$(FSTAR_EXE) --ocamlc $< -o $@
 
 clean:
-	rm -f *.ml *.exe *.byte *.cm* *.o
+	rm -f *.ml *.exe *.byte *.cm* *.o *.checked
 
 # Keep intermediate files
 .SECONDARY:
