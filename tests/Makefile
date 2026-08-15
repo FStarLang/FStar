@@ -18,6 +18,7 @@ SUBDIRS += hacl
 SUBDIRS += calc
 SUBDIRS += friends
 SUBDIRS += extraction
+SUBDIRS += overloading
 
 # These have special makefiles
 SUBDIRS_ALL += simple_hello

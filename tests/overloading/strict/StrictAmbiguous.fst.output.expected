@@ -1,0 +1,6 @@
+* Info at StrictAmbiguous.fst(10,10-10,11):
+  - Expected failure:
+  - The name StrictBool.f is ambiguous; candidates are:
+  - StrictBool.f : x: Prims.bool -> Prims.bool
+  - StrictInt.f : x: Prims.int -> Prims.int
+
