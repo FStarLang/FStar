@@ -546,6 +546,79 @@ ci`, and are fixed here: `tests/simple_hello` did not delete its `.checked` file
 (so a stale one survived a compiler change), and `examples/dependencies` had an order-only
 prerequisite on `out` with no rule to create it.
 
+### Anatomy of the coercion regressions, and how much of the safety net is load-bearing
+
+Two things guard the conservative-extension guarantee: the coercion families modelled in
+`Overload.compatible` (§2.4), and the `speculate_ok` verification net in
+`TcTerm.resolve_overloaded_head` (step 8 of §3). They were introduced together, so it was not
+known which was doing the work. Measured by building a compiler with each independently
+switchable and running the whole of `make test` (tests, examples, Pulse tests and examples,
+book code) from cold caches in each configuration:
+
+| coercions in `compatible` | `speculate_ok` net | result |
+|---|---|---|
+| on | on | green (this is what is committed) |
+| on | **off** | **green** |
+| **off** | **off** | 7 failures in 6 files |
+
+So on the whole corpus the net never changes an answer. Every regression is explained by the
+coercion families alone.
+
+The six files, with the candidate set and the filter that fired:
+
+| file | primary (correct) | competitor | dropped by | coercion needed |
+|---|---|---|---|---|
+| `examples/algorithms/IntSort.fst:26` | `IntSort.sorted : list int -> bool` | `FStar.List.Tot.Properties.sorted` | `expected` | `b2t` |
+| `examples/algorithms/Huffman.fst:52` | `Huffman.sorted : list ... -> bool` | `FStar.List.Tot.Properties.sorted` | `expected` | `b2t` |
+| `tests/calc/CalcImpl.fst:50` | `CalcImpl.op_Equals_Equals_Greater = (<)` | `Prims.l_imp` | `expected` | `b2t` |
+| `tests/error-messages/CalcImpl.fst` | same | same | `expected` | `b2t` |
+| `tests/overloading/OvlCoercions.fst:23` | local `sorted` | `FStar.List.Tot.Properties.sorted` | `expected` | `b2t` |
+| `pulse/share/pulse/examples/c/PulsePointStruct.fst:27` | `Pulse.C.Types.Base.pts_to (r: ref td) (v: Ghost.erased t)` | `Pulse.Class.PtsTo.pts_to` | `arg1` | `hide` |
+| `pulse/share/pulse/examples/dice/dpe/DPE.fst:233` | `DPE.singleton : sid_t -> perm -> trace -> pcm_t` | `FStar.Pervasives.singleton` | `expected` | `hide` |
+
+Only two of F*'s coercions are implicated: `b2t` (a `bool` result where `prop` or `Type` is
+expected) and `hide` (a `t` where `Ghost.erased t` is expected). `t2b`, `squash` on its own,
+and user `[@@coercion]` functions never came up. The `erased` rule was added on suspicion; the
+two Pulse failures show it is in fact necessary.
+
+**In every case there was exactly one viable candidate and the filter eliminated it.** None of
+these is a tie broken by a coercion. In each one the surviving competitor is not merely a worse
+fit, it does not typecheck at all: `Properties.sorted` wants a comparator and is still a
+function after one argument (`Error 12`/`Error 66`), `Prims.l_imp` wants `prop` where the calc
+supplies `int` (`Error 189`), `Pulse.Class.PtsTo.pts_to` leaves an unsolvable typeclass
+constraint (`Error 228`), `FStar.Pervasives.singleton` takes one argument and got three
+(`Error 173`).
+
+That matters for the design, because it means the coercion knowledge is not a preference
+policy that could be swapped for a different one — it is a soundness condition on the filter.
+§2.4 says the filter may only eliminate a candidate that is *definitely* incompatible; a
+candidate reachable by coercion is not definitely incompatible, so eliminating it was simply a
+bug in the filter. No ranking scheme ("prefer the exact match over the coerced one") would have
+helped here, because the exact match is the one being thrown away.
+
+The competitors survive for a second, independent reason worth recording: they are
+*unclassifiable*, not viable. `Properties.sorted`'s first formal is an arrow, which
+`base_of_typ` reports as `Base_unknown` and which is therefore never eliminated; and after one
+argument it has explicit formals left over, so `expected_compatible` compares shapes of
+different lengths and concludes nothing (§2.4). A filter that could rule out "still a function
+where a non-function is expected" would have resolved IntSort, Huffman and DPE correctly
+without knowing anything about coercions. That is the more promising direction if the filter is
+ever to be made sharper; see §7.
+
+Costs. The coercion families cost no resolution precision on the corpus that has ambiguity:
+re-running the `src` sweep with them disabled gives byte-identical decisions, 9722 for 9722, in
+every one of 365 files. The net costs nothing measurable either, because it only runs when the
+filter and scope order disagree, which happens 0 times in `src`.
+
+Whether to keep the net is therefore a judgement call rather than a measurement. The argument
+for keeping it: `compatible` models two coercion families out of a set that users can extend
+arbitrarily with `[@@coercion]`, and the corpus happens not to exercise the rest. The net is
+what turns "we modelled the coercions we knew about" into "we cannot change the meaning of a
+program that checks today". The argument against: it makes resolution depend on speculative
+typechecking, so a program's meaning depends on whether a candidate happens to check, which is
+harder to explain and to keep stable under unrelated changes; and under `strict` it is the
+wrong shape entirely, since there the right answer to an ambiguity is to report it.
+
 ---
 
 ## Appendix A: original proposal (verbatim)

@@ -191,11 +191,19 @@ let expected_compatible env t n te : ML bool =
    candidate would mean reporting an unresolvable name where today the user
    gets an ordinary type error on the primary candidate, which is both less
    useful and a behavior change. *)
-let narrow (p : (fv & option typ) -> ML bool) (cs : list (fv & option typ))
+let narrow_at (stage : string) (p : (fv & option typ) -> ML bool) (cs : list (fv & option typ))
   : ML (list (fv & option typ))
   = match List.filter p cs with
-    | [] -> cs
-    | cs' -> cs'
+    | [] ->
+      if !dbg && List.length cs > 1 then
+        Format.print1 "(Overload)   [%s] eliminated everything, keeping all\n" stage;
+      cs
+    | cs' ->
+      if !dbg && List.length cs' < List.length cs then
+        Format.print2 "(Overload)   [%s] dropped %s\n" stage
+          (show (cs |> List.filter (fun (fv, _) -> not (cs' |> List.existsb (fun (fv', _) -> fv_eq fv fv')))
+                    |> List.map (fun (fv, _) -> lid_of_fv fv)));
+      cs'
 
 (* A candidate whose type we do not know is never eliminated. *)
 let keep_if (f : typ -> ML bool) : (fv & option typ) -> ML bool =
@@ -213,7 +221,7 @@ let resolve env speculate primary alts args expected =
       (show (lid_of_fv primary))
       (show (List.map (fun fv -> lid_of_fv fv) (primary :: alts)));
 
-  let cands = narrow (keep_if (fun t -> arity_compatible env t nargs)) cands in
+  let cands = narrow_at "arity" (keep_if (fun t -> arity_compatible env t nargs)) cands in
 
   let rec by_args i cands : ML (list (fv & option typ)) =
     if i >= nargs || List.length cands <= 1
@@ -224,7 +232,7 @@ let resolve env speculate primary alts args expected =
         match b_arg with
         | Base_unknown -> cands
         | _ ->
-          narrow (keep_if (fun t -> compatible b_arg (nth_explicit_formal_base env t i))) cands
+          narrow_at (Format.fmt1 "arg%s" (show i)) (keep_if (fun t -> compatible b_arg (nth_explicit_formal_base env t i))) cands
       in
       by_args (i + 1) cands
   in
@@ -235,7 +243,7 @@ let resolve env speculate primary alts args expected =
     else
       match expected with
       | None -> cands
-      | Some te -> narrow (keep_if (fun t -> expected_compatible env t nargs te)) cands
+      | Some te -> narrow_at "expected" (keep_if (fun t -> expected_compatible env t nargs te)) cands
   in
 
   match cands with
