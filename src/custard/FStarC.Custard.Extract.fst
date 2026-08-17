@@ -1331,8 +1331,11 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let hd = expr_of_term st hd in
        (* No declaration to consult, so the filter has to come from the head's
           own type; a head we cannot type is left alone. *)
+       (* Unfolding, not the plain [erased_binders]: this filters a *call
+          spine*, and a call runs straight through an abbreviation that the
+          local's sort stops at.  Section 18.1. *)
        let flags = match (SS.compress hd_term).n with
-                   | Tm_name bv -> Mono.erased_binders (tcenv st) bv.sort
+                   | Tm_name bv -> Mono.erased_binders_unfold (tcenv st) bv.sort
                    | _ -> [] in
        (* A head with no type to consult -- a [match], a lambda left over from
           beta-reducing a specialized definition -- still must not be given

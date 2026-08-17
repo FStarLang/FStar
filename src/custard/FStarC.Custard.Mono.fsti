@@ -85,9 +85,17 @@ val keep_thunk (env:TcEnv.env) (bs:binders) (c:comp) (flags:list bool) : ML (lis
 
 (** [erased_binders env t] applies [is_erased_binder] to each binder of [t]'s
     outermost arrow, in order.  Used wherever a spine has to be filtered but no
-    full [classify] is available: constructor applications, applications of a
-    variable, and type applications. *)
+    full [classify] is available: constructor applications and type
+    applications, where the flags are aligned against binders that came from
+    [arrow_formals_comp] too. *)
 val erased_binders (env:TcEnv.env) (t:typ) : ML (list bool)
+
+(** [erased_binders_unfold env t] is [erased_binders] over the whole arrow
+    spine, unfolding abbreviations in the codomain as [classify] does.  This is
+    what filtering a *call spine* wants: a call may run straight through an
+    abbreviation that the type stops at, and leaving the surplus alone passes
+    erased arguments the callee has deleted. *)
+val erased_binders_unfold (env:TcEnv.env) (t:typ) : ML (list bool)
 
 (** [retained_sorts env t] is the sorts of the binders [erased_binders] keeps,
     in order: exactly what a caller still has to supply.  Used to type the

@@ -6202,6 +6202,50 @@ between a record and a variant, and a variant reaching itself directly.  It is
 compiled and run, so the pointers are dereferenced and not merely declared.
 
 
+## 18. A call spine is longer than its head's type
+
+### 18.1 Erased arguments through a variable
+
+`U.arrow_formals_comp` flattens arrows, and an abbreviation is not an arrow
+node, so it stops there.  A definition whose codomain is written as an
+abbreviation therefore looks like it takes fewer arguments than it does, and
+every argument past that point is *unclassified*.  The permissive default --
+leave the surplus spine alone -- then passes the erased ones at runtime, to a
+callee that deleted the corresponding parameters.  What comes out is a `()`
+in a position that no longer exists, and every argument after it shifted by
+one.
+
+This is why `Mono.arrow_formals_unfold` exists, and `classify`, `unit_binders`
+and `type_binders` have all used it since EverCrypt's `compute` showed the
+problem up.  `erased_binders` did not, and it is what filters the spine of a
+call whose head is a *variable* rather than a name:
+
+```fstar
+let step_t (n:int) = x:int -> g:G.erased int -> y:int -> Tot int
+let twice (f : step_t 0) (x:int) : int = f (f x (G.hide 1) 1) (G.hide 2) 2
+```
+
+`f`'s sort is `step_t 0`, which has no arrows at all, so nothing was filtered
+and `twice` came out as `f (f x () 1) () 2` against a two-parameter `f`.
+
+The fix is `Mono.erased_binders_unfold`, and the reason it is a second
+function rather than a change to the first is that the two callers want
+different things.  Filtering a definition's own binders, or a type's own
+arrows, wants the plain one: the binders in hand came from
+`arrow_formals_comp`, and flags that outran them would be aligned against
+nothing.  Filtering a *call spine* wants the unfolding one, because the spine
+is as long as the call is.
+
+Reported against EverParse's CBOR stack, where the shape is a Pulse `fn rec`:
+a recursive `fn` hands its own recursive call to its body as a closure, so the
+head is a local whose sort is the `fn`'s type -- an abbreviation.  The symptom
+was `Custard: unbound variable pm reached the karamel backend`, `pm` being an
+erased `perm` that the definition had correctly dropped and the call site had
+not.  `tests/custard/EraseAbbrev` had the name-headed half of this all along
+and now has the variable-headed half too, through a binder and through a
+`let`.
+
+
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -6272,3 +6316,4 @@ compiled and run, so the pointers are dereferenced and not merely declared.
 | M10η | **The cross-backend matrix** (§16) | Done.  All four Custard columns of `tests/extraction/backends` -- OCaml, direct C, and karamel's C and Rust off one shared `.krml` -- run green over the suite's twenty-five modules, each extracted, compiled and *run*, with its exit status compared against what F\* proved.  Four bugs in Custard: the OCaml entry point discarded the exit status §4.4 promised; C integer literals carried no width suffix, so `((uint64_t)18446744073709551615)` did not compile (a decimal literal takes the first *signed* type it fits, C99 6.4.4.1, and the cast cannot rescue it); `Int8`/`Int16` modular operators were not truncated back after C's integer promotion, so `~(uint8_t)0` was `-1`; and, severity 2 on every backend, `Layout.rw_expr` fused nested casts unconditionally, so `uint8_to_uint32 (uint32_to_uint8 x)` became bare `x` -- sound for a representation coercion, a silent miscompilation for a width conversion.  One bug left open and written up as finding #18: only `FStar.UInt8` is a realized module, so `ne`, `lognot`, `shift_arithmetic_right`, the rotates and the masks at the other seven widths are compiled from their bit-vector *model* in `Prims.int`.  A `custard_xfail_rule` was needed because Custard is the extractor, so a bug in it can fail the F\* step, which the existing rule takes as a prerequisite.  Custard passes five cells the older pipeline XFAILs (§16.5) |
 | M10θ | **Two things about the C output** (§17) | Done.  A global whose initializer is a C constant expression is now emitted as `int32_t m7 = ((int32_t)-7);` rather than assigned at startup, so the linker can put it in `.data`/`.rodata` and the C compiler can fold it at its uses; `ExtIntSigned` loses its `custard_init_globals` and its call from `main` entirely, and `CExtern` pins a module that keeps the function for the two globals that still need it.  The recognized subset is a constant and a cast of one: wider arithmetic is pointless (`2 + 2` has been folded long before `PrintC` sees it) and a record is not merely pointless but wrong, since the compound literal Custard emits for one is not a constant expression at file scope.  And the IR's single cast node is split in two: `ECoerce` for §5.4's representation coercion, which computes nothing and therefore fuses, and `ECast` for §8.1's machine-integer conversion, which computes and therefore does not.  They were one node, and §16.2's severity-2 miscompilation was §5.4's fusion rule applied to a conversion; the fix then was a side condition testing whether both sides were `TInt`, which works but asks every pass to re-derive a fact the front end knew.  The split removes the side condition from `Layout`, removes a clause from `Driver.lost_cast`, and turned up the same latent bug a second time in `PrintOCaml.index`, which looked through a narrowing conversion to keep a subscript readable |
 | M10ι | **Recursive datatypes in the direct-to-C backend** (§17.3) | Done.  A struct reaching itself through a pointer is legal C and `check_finite` correctly accepts it, but `PrintC` emitted every struct as an anonymous typedef, so a field naming the type under definition named something that did not exist yet -- and no ordering of the declarations can fix that, since that is what recursion means.  Every struct now carries a tag `t_s` and every tag is forward-declared in one block ahead of all the definitions, which makes the order irrelevant rather than merely computable.  Reported against EverParse's `cbor_raw`, where it was the *only* defect: with tags added by hand and nothing else changed, the output compiles clean under `-std=c11 -Wall -Wextra -Werror`.  `tests/custard/CRecType.fst` pins the three shapes that failed differently, compiled and run |
+| M10κ | **Erased arguments in a call through a variable** (§18.1) | Done.  `arrow_formals_comp` stops at an abbreviation, so a definition whose codomain is one looks shorter than it is and every argument past that point goes unfiltered -- which passes at runtime the erased arguments the callee deleted, as a `()` in a position that no longer exists, shifting the rest of the spine.  `classify`, `unit_binders` and `type_binders` have unfolded since EverCrypt's `compute`; `erased_binders`, which filters the spine of a call through a *variable*, had not.  Split into `erased_binders_unfold` rather than changed, because filtering a definition's own binders wants flags aligned against `arrow_formals_comp` and filtering a call spine wants flags as long as the call.  Reported against EverParse's CBOR stack as `unbound variable pm reached the karamel backend`: a Pulse `fn rec` hands its recursive call to its body as a closure, so the head is a local whose sort is an abbreviation.  `tests/custard/EraseAbbrev` gains the variable-headed half of a case it already had by name |

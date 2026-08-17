@@ -45,7 +45,11 @@ CUSTARD_TESTS += Realized
 CUSTARD_TESTS += Patlift
 CUSTARD_TESTS += EraseAbbrev
 GREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) (x : Prims.int) (y : Prims.int) : Prims.int"
-NOGREP_EraseAbbrev = "Prims.int -> Prims.int"
+# The failure this guards against is [add4] keeping its abbreviated codomain
+# as an arrow instead of taking its binders: [let add4 (n : Prims.int) : ...].
+# Naming [add4] is what makes it specific -- a plain arrow is a perfectly
+# good type for a parameter, and [twice] takes one.
+NOGREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) :"
 CUSTARD_TESTS += Mymon
 CUSTARD_TESTS += Reify
 CUSTARD_TESTS += AssumedProj

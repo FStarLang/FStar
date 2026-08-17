@@ -289,6 +289,27 @@ let arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp) =
   Prof.timed "Mono.arrow_formals_unfold" (fun () ->
     arrow_formals_unfold_aux 8 env t)
 
+(* {!erased_binders} against the *whole* arrow spine, abbreviations included.
+
+   Which of the two a caller wants depends on what it is filtering.  Filtering
+   a definition's own binders, or a type's own arrows, wants the plain one:
+   the binders in hand came from [arrow_formals_comp] and the flags have to be
+   positionally aligned with them.  Filtering a *call spine* wants this one,
+   because the spine is as long as the call is, and a call may go straight
+   through an abbreviation that the type stops at.
+
+   [classify], [unit_binders] and [type_binders] already unfold, which is why
+   a call through a name is right and a call through a *variable* was not: the
+   local's sort is the abbreviation as written, so [erased_binders] saw no
+   arrows past it, every argument beyond them was left alone, and the erased
+   ones went out at runtime -- as a [()] where the callee had deleted the
+   parameter, so the whole spine shifted by one.  A [fn rec] hands its own
+   recursive call to the body as a closure, which is exactly a local of
+   abbreviated arrow type; section 18.1. *)
+let erased_binders_unfold (env:TcEnv.env) (t:typ) : ML (list bool) =
+  let bs, _ = arrow_formals_unfold env t in
+  bs |> List.map (is_erased_binder env)
+
 (* The sorts of the binders [erased_binders] retains, in order: exactly what a
    caller still has to supply.  Used to type the binders introduced when a
    primitive has to be eta-expanded, which would otherwise be [TAny]. *)
