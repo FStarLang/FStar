@@ -1004,6 +1004,9 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
   | Some cs -> cs
   | None ->
     ensure_lid_available st l;
+    let attrs = match TcEnv.lookup_sigelt (tcenv st) l with
+                | Some se -> se.sigattrs
+                | None -> [] in
     let cs =
       match TcEnv.lookup_sigelt (tcenv st) l with
       | Some se ->
@@ -1019,6 +1022,25 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
          | _ -> [])
       | None -> []
     in
+    (* Section 18.4.  An empty classification is not "everything is [Poly]":
+       [split_mono_args] short-circuits on it and hands the *whole* spine
+       through unfiltered, so an erased argument is passed at runtime to a
+       callee that deleted the parameter -- the section 18.1 failure, reached
+       by the other path.
+
+       [lookup_sigelt] is the narrower of the two lookups this module has.  It
+       misses whenever the declaration is not a [Sig_let] or [Sig_declare_typ]
+       the environment will hand back whole, which [try_lookup_lid] -- what
+       {!binder_flags} has always used for the unit and erased flags -- still
+       answers.  The two disagreeing is what let the spine and the flags be
+       computed from different declarations.  Attributes are only on the
+       sigelt, so a fallback classification cannot see a [@@monomorphize]; it
+       does see every erased binder, which is the one that miscompiles. *)
+    let cs =
+      if Cons? cs then cs
+      else match lookup_lid_typ st l with
+           | Some ((_, ty), _) -> classify (tcenv st) attrs ty
+           | None -> [] in
     SMap.add st.classes key cs;
     cs)
 

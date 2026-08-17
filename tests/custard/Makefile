@@ -296,7 +296,7 @@ KRML_TESTS += KrmlBasic
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
-C_TESTS += KrmlBasic CExtern CRecType IndexedSquash
+C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
 # global whose initializer is a computation -- against one that is a constant
@@ -333,6 +333,14 @@ CGREP_CRecType   = "typedef struct CRecType_tree_s CRecType_tree;" \
 # No struct typedef is anonymous any more, and the recursive types are not
 # rejected as infinite: the recursion goes through a pointer.
 CNOGREP_CRecType = "typedef struct {" "} CRecType_tree;" "} CRecType_node;"
+
+# Section 18.4: a field held by value needs a complete type, so the struct
+# definitions are topologically sorted over the by-value edges -- which are
+# acyclic even when the group as a whole is cyclic through a pointer.  The
+# real assertion is that this compiles: without the sort, [arr] holds a
+# [slice__raw] that is still incomplete at that point, which is an error.
+CGREP_CByValue   = "CByValue_slice__raw a_ptr;" "CByValue_raw *s_base;"
+CNOGREP_CByValue = "typedef struct {"
 
 # CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
 # output-quality invariants of section 6: a unit parameter is a thunk, which C

@@ -6381,6 +6381,114 @@ each run re-derives the specializations of everything the root reaches.
 `--profile FStarC.Custard` reports the phase breakdown when a run does need
 to be explained.
 
+## 19. What the retest found
+
+The four fixes of sections 17.3 and 18 were retested against EverParse's CBOR
+stack, and the headline is that whole-module extraction of
+`CBOR.Pulse.API.Det.C` now runs to completion -- 3419 lines and 333 functions
+of direct C, where before it died on `Error 367` in `Prims.dtuple2`.  Three
+things survived, and they are what this section is about.
+
+### 19.1 A field held by value needs a definition, not a tag
+
+Section 17.3 forward-declares every struct, which is what a field reaching
+its own type *through a pointer* needs: an incomplete type is enough to
+declare a pointer.  A field held **by value** is not enough, because the
+compiler has to know its size to lay out the struct containing it, and the
+forward declaration says nothing about size.
+
+Custard receives its declarations in the SCC pass's order, which is computed
+over *all* dependencies.  A pointer edge is one of those, so a group made
+cyclic through pointers is a single SCC and the order inside it is arbitrary
+-- and that is exactly where a by-value field lands ahead of its definition:
+
+```c
+typedef struct Pulse_Lib_Slice_slice__cbor_raw_s Pulse_Lib_Slice_slice__cbor_raw;
+...
+struct CBOR_Pulse_Raw_Type_cbor_array_s {
+  uint8_t cbor_array_length_size;
+  Pulse_Lib_Slice_slice__cbor_raw cbor_array_ptr;   /* incomplete here */
+};
+...
+struct Pulse_Lib_Slice_slice__cbor_raw_s { ... };   /* only at the end */
+```
+
+The by-value edges are necessarily acyclic -- that is precisely what
+`check_finite` establishes -- so they always have a topological order, and
+`PrintC.sort_types` emits the definitions in one.  It is a depth-first walk
+in the original order, so a type with no unmet dependency keeps its place and
+the diff against the previous output stays small.  The forward declarations
+are unchanged and still absorb every pointer edge, which are the ones that
+make the graph cyclic in the first place.
+
+`tests/custard/CByValue.fst`.  Getting it to bite took one attempt more than
+expected: a source bundle of mutually recursive types is *already* ordered by
+dependency, so no arrangement of `type ... and ...` reproduces it.  The
+container has to be **polymorphic** -- `slice raw` is a monomorphized
+instance, created when the request for the type that holds it reaches it, and
+so emitted after it.  Which is EverParse's shape exactly, `slice` being
+`Pulse.Lib.Slice.slice`.
+
+### 19.2 An empty classification is not "everything is Poly"
+
+Section 18.1 fixed a call spine whose head is a *local variable*.  The report
+came back with the same symptom on a head that is an **fv**, which that
+section explicitly claimed was always right, on the ground that
+`Mono.classify` unfolds abbreviations and so always sees the full arity.
+
+That is true of `classify`.  It is not true of the path that calls it.
+`Extract.binder_classes` looks the declaration up with `TcEnv.lookup_sigelt`
+and returns `[]` on any miss -- and `[]` is not "every binder is `Poly`", it
+is a short-circuit: `split_mono_args` sees no `Mono` and no `Dropped`, hands
+the *whole* spine back untouched, and `call_unit_flags` runs out immediately.
+Every erased argument is then passed at runtime, to a callee that deleted the
+parameter, which shifts the rest of the spine -- the section 18.1 failure,
+reached by a different road.
+
+`lookup_sigelt` is the narrower of the two lookups this module has.
+`binder_flags`, which computes the erased and unit flags, has always used
+`TcEnv.try_lookup_lid`, which still answers when the sigelt is not handed
+back whole.  The two disagreeing is what let the spine and the flags be
+computed from different declarations.  `binder_classes` now falls back to
+`lookup_lid_typ` when the sigelt path yields nothing.  Attributes live on the
+sigelt, so a fallback classification cannot see a `[@@monomorphize]`; it does
+see every erased binder, which is the one that miscompiles.
+
+This is **inference, not a reproduction**.  The reporter tried eight shapes
+without minimizing it and so did we, including the Pulse `fn` with an
+abbreviation-ascribed curried type, mid-spine erased binders with real
+arguments after them, and an `inline_for_extraction` combinator applying an
+abbreviation-typed parameter at full arity -- `pulse/test` extracts all of
+them correctly.  The fallback is a real gap closed on the evidence available;
+whether it is *the* gap is unconfirmed.
+
+### 19.3 The C backend should not print a name it cannot resolve
+
+The defect in 19.2 is in the IR, and only the karamel backend caught it.  It
+catches it by accident of representation: karamel's terms are De Bruijn, so
+the translation has to *find* an index, and `PrintKrml.find` fails loudly
+when it cannot.  The direct-to-C backend prints names as names, and
+`lookup_var` fell back to `c_var x` on a miss -- so the same broken spine
+came out silently, and surfaced as seventy gcc diagnostics about the code
+*after* it.
+
+`lookup_var` now rejects.  Every binder reaches `bind_var`, `bind_cell` or
+`bind_alias` before its scope is printed and `reset_scope` runs per
+definition, so a miss is real; top-level names are `EQual` and never come
+through it.  The message is `reject_ir` rather than `reject`, a distinction
+worth drawing in the output: `reject` says C cannot express this, which is a
+fact about the source and something the reader can act on, and `reject_ir`
+says the IR is malformed, which is a fact about the compiler and something to
+report.
+
+### 19.4 What is still open
+
+* The 6m30s whole-module normalization is unchanged, as expected -- section
+  18.3 was about reporting.  Still not reproduced as super-linear locally.
+* karamel's Rust backend prints `ERROR translating C._zero_for_deref` on
+  every Custard `.krml`, and emits a dead `cbor_raw_tags` enum.  Both are
+  karamel-side.
+
 
 
 | M | Deliverable | Notes |
@@ -6455,3 +6563,4 @@ to be explained.
 | M10κ | **Erased arguments in a call through a variable** (§18.1) | Done.  `arrow_formals_comp` stops at an abbreviation, so a definition whose codomain is one looks shorter than it is and every argument past that point goes unfiltered -- which passes at runtime the erased arguments the callee deleted, as a `()` in a position that no longer exists, shifting the rest of the spine.  `classify`, `unit_binders` and `type_binders` have unfolded since EverCrypt's `compute`; `erased_binders`, which filters the spine of a call through a *variable*, had not.  Split into `erased_binders_unfold` rather than changed, because filtering a definition's own binders wants flags aligned against `arrow_formals_comp` and filtering a call spine wants flags as long as the call.  Reported against EverParse's CBOR stack as `unbound variable pm reached the karamel backend`: a Pulse `fn rec` hands its recursive call to its body as a closure, so the head is a local whose sort is an abbreviation.  `tests/custard/EraseAbbrev` gains the variable-headed half of a case it already had by name |
 | M10λ | **An arity indexed only by values is a type parameter** (§18.2) | Done.  `is_type_param` held of kind `Type` and nothing else, on the ground that no target has a type variable standing for a type constructor.  True of `m:Type -> Type`; false of `b:header -> Type`, which takes a *value*, and values are erased from the target's type language, so it denotes exactly one target type.  Dropping it left `dtuple2`'s second field typed by a name no parameter bound -- `any`, which direct-to-C rejects outright and which the krml path turns into a `(void *)` cast gcc rejects.  Three pieces: `is_value_indexed_arity`, translating an application `b x` as the parameter itself, and translating the argument lambda `fun h -> payload h` as its body.  It also un-breaks `FStar.Set.set`, whose abbreviation no longer needs `has_unrepresentable_param` to unfold it and so reaches §13.5's result-type peel as a `TApp`; the peel goes through `head_ty` now.  Reported against EverParse as the highest-impact item: this is the whole LowParse idiom, a parsed header indexing the payload's type, and it was `any` throughout |
 | M10μ | **The request chain reaches the normalization budget below the extractor** (§18.3) | Done.  Error 364 is only useful if it names the definition being reduced.  `Extract.norm_bounded_in` always did, from the request chain of §3.6; `Mono.norm_bounded` did not, and it is the one that fires on type-level work -- a binder's sort, a binder's kind, an arrow spine -- which is exactly the case the EverParse report had to bisect a module to explain.  `Mono.chain_reporter` is a `ref` to a reporting function that `Driver` points at `Extract.request_chain`, defaulting to reporting nothing so that `Mono` stays usable with no extraction in progress; a hook rather than threading the extractor's state through every arity test.  `is_value_indexed_arity` also became syntactic-first in the same pass, looking for the arrow before it normalizes anything, since `is_type_param` is asked about every binder of every definition and the overwhelming majority are values that stop at `Cons?` having paid nothing.  Reported alongside a 6m30s whole-module extraction that no local sweep reproduces as super-linear; keys are per-call-site, so more roots mean more output, and whole-program remains the intended workflow with many `--custard_entry` runs a bisection tool rather than a speed-up (§18.3). |
+| M10ν | **Retest fixes: by-value type order, fv-headed spines, unbound names in C** (§19) | Done.  A forward declaration is enough for a field held through a *pointer* and not for one held **by value**, which needs a size; the SCC order is over all dependencies, so a group made cyclic by pointers is one SCC whose internal order is arbitrary, and that is where a by-value field lands ahead of its definition.  The by-value edges are acyclic -- `check_finite` says so -- and `PrintC.sort_types` emits a topological order of them, depth-first in the original order so the diff stays small.  `tests/custard/CByValue.fst`, which needs a *polymorphic* container to bite, a source bundle of mutual types being already ordered.  Separately, `Extract.binder_classes` returned `[]` whenever `lookup_sigelt` missed, and `[]` is a short-circuit rather than "all `Poly`": the whole spine goes through unfiltered, which is §18.1's miscompilation reached by the fv path instead of the variable path.  It now falls back to `lookup_lid_typ`, the lookup `binder_flags` has always used, so the spine and the flags come from one declaration; inferred rather than reproduced, since neither we nor the reporter could minimize it.  And `PrintC.lookup_var` no longer prints a name it cannot resolve -- the karamel backend caught this IR defect only because its terms are De Bruijn -- rejecting through a new `reject_ir` that says the IR is malformed rather than that C cannot express it. |

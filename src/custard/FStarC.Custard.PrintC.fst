@@ -69,6 +69,15 @@ let reject (#a:Type) (what:string) (why:list string) : ML a =
     ([text ("Custard: " ^ what ^ " has no C representation, in " ^ !current ^ ".")]
      @ List.map text why)
 
+(* The other kind of refusal: not "C cannot express this", which is a fact
+   about the source, but "the IR is malformed", which is a fact about the
+   compiler.  Worth telling apart in the message, since only one of the two is
+   something the reader can act on. *)
+let reject_ir (#a:Type) (what:string) (why:list string) : ML a =
+  E.raise_error0 E.Error_CustardNoCRepresentation
+    ([text ("Custard: " ^ what ^ " reached the C backend, in " ^ !current ^ ".")]
+     @ List.map text why)
+
 (* -------------------------------------------------------------------- *)
 (* Names                                                                *)
 (* -------------------------------------------------------------------- *)
@@ -437,10 +446,24 @@ let bind_cell (x:string) : ML string = bind_gen x true
 let bind_alias (x:string) (path:string) : ML unit =
   scope := (x, (path, false)) :: !scope
 
+(* Section 18.4.  A name that no binder in the enclosing function introduced
+   is a defect in the IR, not something to print and hope for.  The karamel
+   backend catches it because its terms are De Bruijn and the conversion has
+   to find an index; this backend prints names as names, and so used to emit
+   the broken call silently -- an argument the callee does not take, naming a
+   variable the caller does not have, which surfaces as a heap of unrelated
+   gcc diagnostics about the function *after* it in the file.
+
+   Every binder reaches [bind_var], [bind_cell] or [bind_alias] before its
+   scope is printed, and [reset_scope] runs per definition, so a miss here is
+   real.  Top-level names are [EQual] and never come through this. *)
 let lookup_var (x:string) : ML string =
   match !scope |> List.tryFind (fun (y, _) -> y = x) with
   | Some (_, (nm, _)) -> nm
-  | None -> c_var x
+  | None ->
+    reject_ir ("the unbound variable " ^ x)
+      ["No binder in this definition introduces it.";
+       "This is a compiler bug: please report it, with the definition named above."]
 
 let is_cell (x:string) : ML bool =
   match !scope |> List.tryFind (fun (y, _) -> y = x) with
@@ -1177,6 +1200,69 @@ let type_fwd (d:dtype) : ML (option string) =
        Some ("typedef struct " ^ struct_tag n ^ " " ^ n ^ ";\n")
   else None
 
+(* The types [d] must see the *definition* of, not merely the name.
+
+   A field held by value needs a complete type: the compiler has to know its
+   size to lay out the struct containing it.  A field held through a pointer
+   does not, which is what the forward declarations above are for, and it is
+   also the only way a cycle can arise -- [check_finite] rejects a by-value
+   cycle outright.  So the by-value edges form a DAG, and emitting the
+   definitions in one of its topological orders is always possible.
+
+   The order Custard receives is the SCC pass's, which is computed over *all*
+   dependencies.  A pointer edge is one of those, so a group that is cyclic
+   through pointers is an SCC, and the order within it is arbitrary -- which
+   is exactly where a by-value field can end up ahead of its definition.
+   EverParse's [cbor_array] holding a [slice cbor_raw] by value, in a group
+   made cyclic by [cbor_raw] pointing back, is the reported case. *)
+let rec value_deps (t:cty) : ML (list string) =
+  match t with
+  | TApp (n, args) -> string_of_name n :: List.collect value_deps args
+  | TTuple ts -> List.collect value_deps ts
+  (* A pointer is a size, and a function is a pointer: an incomplete type is
+     enough to declare either. *)
+  | TBuf _ | TRef _ | TArrow _ -> []
+  | _ -> []
+
+let body_value_deps (b:tydef) : ML (list string) =
+  match b with
+  | TAbbrev c -> value_deps c
+  | TRecord fs -> fs |> List.collect (fun (_, c) -> value_deps c)
+  | TVariant cs ->
+    cs |> List.collect (fun (_, fs) -> fs |> List.collect (fun (_, c) -> value_deps c))
+  | TAbstract -> []
+
+(* A depth-first emit in the original order, each type preceded by the ones it
+   holds by value.  Stable: a type with no unmet dependency keeps its place,
+   so the diff against the previous output stays small.
+
+   [busy] guards against a by-value cycle rather than trusting that
+   [check_finite] has already run -- it runs from [type_decl], which is below
+   this -- and a cycle here would not terminate.  Leaving the node for the
+   caller to place is the right recovery: [check_finite] will reject it with a
+   message about the source, which is more use than one about this traversal. *)
+let sort_types (ds:list dtype) : ML (list dtype) =
+  let index : SMap.t dtype = SMap.create 64 in
+  ds |> List.iter (fun d -> SMap.add index (string_of_name d.dt_name) d);
+  let out : ref (list dtype) = mk_ref [] in
+  let seen : SMap.t bool = SMap.create 64 in
+  let busy : SMap.t bool = SMap.create 64 in
+  let rec visit (d:dtype) : ML unit =
+    let k = string_of_name d.dt_name in
+    if Some? (SMap.try_find seen k) || Some? (SMap.try_find busy k) then () else begin
+      SMap.add busy k true;
+      body_value_deps d.dt_body |> List.iter (fun n ->
+        match SMap.try_find index n with
+        | Some d' -> visit d'
+        | None -> ());
+      SMap.remove busy k;
+      SMap.add seen k true;
+      out := d :: !out
+    end
+  in
+  ds |> List.iter visit;
+  List.rev !out
+
 let type_decl (d:dtype) : ML (option string) =
   if Some? (builtin_type d.dt_name) then None else
   let n = c_name d.dt_name in
@@ -1449,8 +1535,10 @@ let print_program (p:program) : ML string =
 
   (* Every struct's name exists before any type is defined, so that a type
      that reaches itself, or another one later in the file, through a pointer
-     needs no analysis here.  Definition order is still the SCC pass's
-     topological one, which is what a field held *by value* needs. *)
+     needs no analysis here.  A field held *by value* does need one, and
+     [sort_types] is it: the SCC pass's order is over all dependencies, so a
+     group made cyclic by pointers is one SCC and the order inside it is
+     arbitrary. *)
   let fwds = p |> List.collect (fun d ->
     match d with
     | DType t ->
@@ -1458,12 +1546,11 @@ let print_program (p:program) : ML string =
       (match type_fwd t with Some s -> [s] | None -> [])
     | _ -> []) in
 
-  let tys = p |> List.collect (fun d ->
-    match d with
-    | DType t ->
-      current := string_of_name t.dt_name;
-      (match type_decl t with Some s -> [s] | None -> [])
-    | _ -> []) in
+  let tys = sort_types (p |> List.collect (fun d ->
+                          match d with DType t -> [t] | _ -> []))
+            |> List.collect (fun t ->
+    current := string_of_name t.dt_name;
+    (match type_decl t with Some s -> [s] | None -> [])) in
 
   (* Every function is declared before any is defined, so that a recursive
      group needs no analysis: the SCC pass has already grouped them, but C
