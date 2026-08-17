@@ -1,6 +1,6 @@
 module Bug3865b
 
-[@@PpxDerivingShow; no_auto_projectors]
+[@@PpxDerivingShow]
 type ast0_wf_typ : int -> Type =
   | WfTRewrite:
     (x1 : int) ->

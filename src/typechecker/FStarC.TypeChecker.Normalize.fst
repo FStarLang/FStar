@@ -135,10 +135,212 @@ let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bo
     in
     check a
 
-(* Check for strict applications (both strict_on_arguments and projectors, when
-the flag for reducing projections is set). The boolean is whether we
-should "force" then unfolding regardless of what delta says. We set it to true
-for projectors. *)
+(* Reduce a projector or discriminator applied to a constructor, structurally.
+
+   Projectors and discriminators are declared (Sig_declare_typ carrying a
+   Projector/Discriminator qualifier) rather than defined; see
+   TcInductive.mk_discriminator_and_indexed_projectors.  The SMT encoder
+   already axiomatizes them directly against its theory of datatypes
+   (Encode.mk_disc_proj_axioms), and this is the corresponding rule for the
+   normalizer.
+
+   Doing it here rather than by unfolding a definition into a [match] avoids
+   materializing that match at all: it is large (one branch per field, plus a
+   catch-all), it is re-traversed by every subsequent normalization, and its
+   binders are a recurring source of higher-order unification problems.
+
+   This is an iota rule --- it reduces a destructor applied to a constructor ---
+   so it is gated on cfg.steps.iota only, just like the reduction of a match on
+   a constructor.  In particular the delta level does not apply: there is no
+   longer a definition whose visibility it could control. *)
+
+(* Is [head] a projector or discriminator whose reduction is currently enabled?
+   If so, return the data constructor it belongs to, whether it is a
+   discriminator, the number of arguments preceding the scrutinee, and (for a
+   projector) the position of the field among the constructor's arguments. *)
+let disc_proj_head (cfg : Cfg.cfg) (head : term) : ML (option (Ident.lident & bool & int & option int)) =
+  if not cfg.steps.iota || Options.Ext.enabled "no_prim_proj" then None else
+  match (U.un_uinst head).n with
+  | Tm_fvar h -> (
+    match Env.disc_proj_info cfg.tcenv h.fv_name with
+    | None -> None
+    | Some (q, n_indexed, idx) ->
+      match q with
+      | Projector (d, _) -> Some (d, false, n_indexed, idx)
+      | Discriminator d -> Some (d, true, n_indexed, idx)
+      | _ -> failwith "disc_proj_head: impossible")
+  | _ -> None
+
+(* Given the scrutinee's weak head normal form, select the projected field (or
+   compute the discriminator's value).  [None] means the projection is stuck. *)
+let reduce_disc_proj (cfg : Cfg.cfg)
+                     (d : Ident.lident) (is_disc : bool) (idx : option int)
+                     (scrutinee : term)
+  : ML (option term) =
+  (* The scrutinee may be a lazily embedded value (tactics pass those around);
+     force it, exactly as matches_pat does. *)
+  match U.hua (U.unlazy (U.unmeta scrutinee)) with
+  | None -> None
+  | Some (c, _, cargs) ->
+    if not (Env.is_datacon cfg.tcenv c.fv_name) then None else
+    let same = Ident.lid_equals c.fv_name d in
+    if is_disc
+    then
+      (* Well-typedness guarantees c and d belong to the same inductive, so a
+         mismatch really does mean the discriminator is false. *)
+      Some (if same then U.exp_true_bool else U.exp_false_bool)
+    else
+      (* Projecting out of a different constructor is stuck, not false. *)
+      if not same then None else
+      match idx with
+      | None -> None
+      | Some i ->
+        if List.length cargs <= i then None
+        else Some (fst (List.nth cargs i))
+
+
+(* Projectors and discriminators are declaration-only (see
+   TcInductive.mk_discriminator_and_indexed_projectors): the typechecker gives
+   them a primitive iota rule and the SMT encoder axiomatizes them directly.
+   Extraction, though, needs real code, both for the projector's own definition
+   (Extraction.ML.Modul) and to inline it at call sites (see
+   unfold_disc_proj_for_extraction below).  Rather than emitting ML syntax by
+   hand, rebuild here exactly the F* definition that TcInductive used to
+   generate and let the regular extraction path handle it, so that types,
+   records, erasure and every backend keep working. *)
+let disc_proj_lb (tcenv:Env.env) (lid:Ident.lident) (us:univ_names) (t:typ) (q:qualifier)
+  : ML (option letbinding) =
+    let d = match q with
+            | Projector (d, _) -> d
+            | Discriminator d -> d
+            | _ -> failwith "disc_proj_lb: impossible" in
+    match Env.datacon_decl tcenv d with
+    | None -> None
+    | Some (fvq, ntps, (dus, dt)) ->
+      let us, t' = SS.open_univ_vars us t in
+      let binders, _ = U.arrow_formals t' in
+      (* The data constructor is universe-polymorphic in the same universes as
+         the inductive, hence as the projector; instantiate it at those so the
+         field types below are well scoped. *)
+      let dt =
+        if List.length dus = List.length us
+        then snd (Env.inst_tscheme_with (dus, dt) (us |> List.map U_name))
+        else snd (SS.open_univ_vars dus dt)
+      in
+      let cbs, dres = U.arrow_formals dt in
+      (* The projector's type is [params -> indices -> projectee:_ -> field_ty].
+         U.arrow_formals flattens through field_ty when the field is itself a
+         function, so recover the arity from the data constructor's result type
+         [tc params indices] and truncate. *)
+      let n_imp = List.length (snd (U.head_and_args_full dres)) in
+      if List.length binders <= n_imp || List.length cbs < ntps || n_imp < ntps then None else
+      let binders, _ = BU.first_N (n_imp + 1) binders in
+      let arg_exp = S.bv_to_name (List.last binders).binder_bv in
+      let cparams, cfields = BU.first_N ntps cbs in
+      let ty_params, _ = BU.first_N ntps binders in
+      (* The inductive's j-th parameter is the projector's j-th binder. *)
+      let subst =
+        List.map2 (fun (cb:binder) (b:binder) -> NT (cb.binder_bv, S.bv_to_name b.binder_bv))
+                  cparams ty_params
+      in
+      let _, field_bvs =
+        List.fold_left
+          (fun (subst, out) (cb:binder) ->
+            let x = S.gen_bv (Ident.string_of_id cb.binder_bv.ppname) None
+                             (SS.subst subst cb.binder_bv.sort) in
+            NT (cb.binder_bv, S.bv_to_name x) :: subst, x :: out)
+          (subst, [])
+          cfields
+      in
+      let field_bvs = List.rev field_bvs in
+      (* Mirrors the patterns TcInductive built (and the typechecker then
+         elaborated): the inductive's parameters become dot patterns carrying
+         the projector's own binders — extraction reads them to instantiate the
+         data constructor's ML type scheme — and the fields become pattern
+         variables at their real types. *)
+      let arg_pats =
+        (ty_params |> List.map (fun (b:binder) ->
+           withinfo (Pat_dot_term (Some (S.bv_to_name b.binder_bv))) Range.dummyRange, true)) @
+        (List.map2 (fun (cb:binder) x ->
+           withinfo (Pat_var x) Range.dummyRange, S.is_bqual_implicit_or_meta cb.binder_qual)
+           cfields field_bvs)
+      in
+      let pat_cons = withinfo (Pat_cons (S.lid_as_fv d (Some fvq), None, arg_pats)) Range.dummyRange in
+      let body_opt =
+        match q with
+        | Discriminator _ ->
+          (* With at most one constructor there is nothing to discriminate;
+             TcInductive used to emit [true] here too. *)
+          if List.length (snd (Env.datacons_of_typ tcenv (Env.typ_of_datacon tcenv d))) <= 1
+          then Some U.exp_true_bool
+          else
+          let wild = S.new_bv None (List.last binders).binder_bv.sort in
+          Some (S.mk (Tm_match {scrutinee=arg_exp;
+                                ret_opt=None;
+                                brs=[U.branch (pat_cons, None, U.exp_true_bool);
+                                     U.branch (withinfo (Pat_var wild) Range.dummyRange,
+                                               None, U.exp_false_bool)];
+                                rc_opt=None}) Range.dummyRange)
+        | _ ->
+          (* Recover the field index the same way TcInductive named the
+             projector, so that unnamed fields work too. *)
+          let idx =
+            cfields |> List.mapi (fun j b -> (j, b))
+                    |> List.tryPick (fun (j, ({binder_bv=x})) ->
+                         if Ident.lid_equals (U.mk_field_projector_name d x j) lid
+                         then Some j else None)
+          in
+          match idx with
+          | None -> None
+          | Some i ->
+            Some (S.mk (Tm_match {scrutinee=arg_exp;
+                                  ret_opt=None;
+                                  brs=[U.branch (pat_cons, None,
+                                                 S.bv_to_name (List.nth field_bvs i))];
+                                  rc_opt=None}) Range.dummyRange)
+      in
+      match body_opt with
+      | None -> None
+      | Some body ->
+        let imp = U.abs binders body None in
+        Some (U.mk_letbinding (Inr (S.lid_and_dd_as_fv lid None))
+                              us
+                              t
+                              PC.effect_Tot_lid
+                              (SS.close_univ_vars us imp)
+                              []
+                              Range.dummyRange)
+
+(* When extracting, a projector or discriminator that cannot be reduced (its
+   scrutinee is not a constructor application) is unfolded into the [match] it
+   stands for, exactly as when it was an ordinary definition.  The backends
+   compile that match to a field access or a tag test, whereas a residual
+   application would be compiled to a call of the projector function, which is
+   both slower and much less readable --- especially in C.
+
+   Returns the definition as a universe-closed type scheme; the caller
+   instantiates it, exactly as do_unfold_fv does for ordinary definitions. *)
+let unfold_disc_proj_for_extraction (cfg : Cfg.cfg) (head : term) : ML (option tscheme) =
+  if not cfg.steps.for_extraction then None else
+  match (SS.compress head).n with
+  | Tm_fvar fv
+  | Tm_uinst ({n=Tm_fvar fv}, _) -> (
+    (* A field projection written with dot notation carries a Record_projector
+       qualifier, and extraction turns it into an ML record projection, which is
+       better than the match we would produce here. *)
+    if Record_projector? (Option.dflt Data_ctor fv.fv_qual) then None else
+    let lid = fv.fv_name in
+    match Env.disc_proj_qual cfg.tcenv lid with
+    | None -> None
+    | Some q ->
+      match Env.lookup_qname cfg.tcenv lid with
+      | Some (Inr ({ sigel = Sig_declare_typ {us=dus; t} }, _), _) -> (
+        match disc_proj_lb cfg.tcenv lid dus t q with
+        | None -> None
+        | Some lb -> Some (lb.lbunivs, lb.lbdef))
+      | _ -> None)
+  | _ -> None
+
 let check_strict (cfg : Cfg.cfg) (hua : fv & universes & args) : ML (option bool) =
   let open FStarC.Class.Monad in
   if check_strict_app cfg hua then (
@@ -1228,7 +1430,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             (* Recover the whole application spine (head and all arguments); the
                node is now unary, holding a single argument. *)
             let head, args = U.head_and_args_full t in
-            let stack =
+            let push_args env args stack =
               List.fold_right
                 (fun (a, aq) stack ->
                   let a =
@@ -1254,8 +1456,62 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 args
                 stack
             in
-            log cfg (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
-            norm cfg env stack head
+            let fallback () =
+              let stack = push_args env args stack in
+              log cfg (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
+              norm cfg env stack head
+            in
+            (* Projections and discriminators are reduced here, on the way down,
+               rather than in [rebuild].  All that is needed of the scrutinee is
+               its head constructor, so reducing it to weak head normal form is
+               enough and the selected field is then normalized exactly once.
+               Reducing in [rebuild] instead would normalize the whole scrutinee
+               first and then normalize the selected field again, which is
+               exponential in the nesting depth of the projections. *)
+            let unfold_fallback () =
+              (* Only when extracting; see unfold_disc_proj_for_extraction. *)
+              match unfold_disc_proj_for_extraction cfg head with
+              | None -> fallback ()
+              | Some (us_names, def) ->
+                (* The universes of the head may be bound in [env] (that is how
+                   do_unfold_fv passes them along), so normalize them before
+                   substituting; the definition itself is closed, hence the
+                   empty environment below. *)
+                let us =
+                  match (SS.compress head).n with
+                  | Tm_uinst (_, us) -> us |> List.map (norm_universe cfg env)
+                  | _ -> []
+                in
+                let us =
+                  if List.length us = List.length us_names then Some us
+                  else if cfg.steps.erase_universes || cfg.steps.allow_unbound_universes
+                  then Some (us_names |> List.map (fun _ -> U_unknown))
+                  else None
+                in
+                match us with
+                | None -> fallback ()
+                | Some us ->
+                  let def = snd (Env.inst_tscheme_with (us_names, def) us) in
+                  let stack = push_args env args stack in
+                  norm cfg empty_env stack def
+            in
+            (match disc_proj_head cfg head with
+             | Some (d, is_disc, n_indexed, idx) when List.length args > n_indexed ->
+               let scrutinee = fst (List.nth args n_indexed) in
+               let scrutinee = norm ({cfg with steps={cfg.steps with hnf=true}}) env [] scrutinee in
+               (match reduce_disc_proj cfg d is_disc idx scrutinee with
+                | None -> unfold_fallback ()
+                | Some field ->
+                  log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
+                                                   (show t) (show field));
+                  (* A projector may be over-applied (e.g. [QProc?.wp qc k s0]);
+                     the extra arguments are re-applied to the selected field.
+                     [field] is closed: hnf normalization pushes the environment
+                     into the arguments it does not reduce. *)
+                  let _, rest = BU.first_N (n_indexed + 1) args in
+                  let stack = push_args env rest stack in
+                  norm cfg empty_env stack field)
+             | _ -> fallback ())
 
           | Tm_refine {b=x}
               when cfg.steps.for_extraction
@@ -2284,6 +2540,27 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
       match U.hua t with
       | None -> do_rebuild cfg env stack t
       | Some hua ->
+        let h, _, args = hua in
+        (* The application may have been assembled here rather than descended
+           into by [norm] --- e.g. the head only became a projector after being
+           delta-unfolded --- so the rule of [disc_proj_head] is repeated here.
+           This term is already normalized, hence [do_rebuild] below; only an
+           over-applied projector needs to keep normalizing. *)
+        match (match disc_proj_head cfg (S.fv_to_tm h) with
+               | Some (d, is_disc, n_indexed, idx) when List.length args > n_indexed ->
+                 (match reduce_disc_proj cfg d is_disc idx (fst (List.nth args n_indexed)) with
+                  | None -> None
+                  | Some field ->
+                    let _, rest = BU.first_N (n_indexed + 1) args in
+                    Some (field, rest))
+               | _ -> None) with
+        | Some (field, rest) ->
+          log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
+                                           (show t) (show field));
+          if Nil? rest
+          then do_rebuild cfg env stack field
+          else norm cfg env stack (U.mk_app field rest)
+        | None ->
         match check_strict cfg hua with
         | Some force -> (
           let h, u, a = hua in

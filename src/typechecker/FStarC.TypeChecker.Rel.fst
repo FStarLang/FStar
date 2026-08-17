@@ -1394,12 +1394,12 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : ML (match_result & opti
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
           begin
-          match Env.lookup_definition
-                    [Env.Unfold delta_constant;
-                     Env.Eager_unfolding_only]
-                    env
-                    fv.fv_name
-          with
+          (* Projectors and discriminators have no definition to look up: they
+             are reduced primitively by Normalize.reduce_disc_proj.  Inlining
+             them is still worthwhile, so treat them as unfoldable. *)
+          let defn = Env.lookup_definition [Env.Unfold delta_constant; Env.Eager_unfolding_only] env fv.fv_name in
+          let can_unfold : bool = Some? defn || Some? (Env.disc_proj_qual env fv.fv_name) in
+          match (if can_unfold then Some () else None) with
           | None ->
             if !dbg_RelDelta then
                 Format.print1 "No definition found for %s\n" (show head);
