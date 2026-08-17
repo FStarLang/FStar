@@ -216,6 +216,20 @@ let keep_if (f : typ -> ML bool) : (fv & option typ) -> ML bool =
     | None -> true
     | Some t -> f t
 
+(* Ambiguities already reported, keyed by the range of the occurrence and the
+   candidates in play. See [reset_ambiguity_reports] in the interface for why
+   one occurrence reaches [resolve] more than once. *)
+let reported : ref (list (string & list string)) = mk_ref []
+
+let reset_ambiguity_reports () = reported := []
+
+let already_reported (l : Ident.lident) (cands : list fv) : ML bool =
+  let key = (Range.string_of_range (Ident.range_of_lid l),
+             List.map (fun fv -> Ident.string_of_lid (lid_of_fv fv)) cands) in
+  if List.mem key !reported
+  then true
+  else (reported := key :: !reported; false)
+
 let resolve env speculate primary alts args expected =
   let cands = (primary :: alts) |> List.map (fun fv -> fv, type_of_fv env fv) in
   let nargs = List.length args in
@@ -260,10 +274,11 @@ let resolve env speculate primary alts args expected =
       // Reported (not raised) so that a single file reports all its
       // ambiguities, and so that `--warn_error -362` can demote this to a
       // warning and recover the scope-order answer.
-      Errors.log_issue (lid_of_fv primary) Errors.Error_AmbiguousName (
-           [Errors.Msg.text (Format.fmt1 "The name %s is ambiguous; candidates are:"
-                               (show (lid_of_fv primary)))]
-           @ candidates_doc env (List.map fst cands));
+      if not (already_reported (lid_of_fv primary) (List.map fst cands)) then
+        Errors.log_issue (lid_of_fv primary) Errors.Error_AmbiguousName (
+             [Errors.Msg.text (Format.fmt1 "The name %s is ambiguous; candidates are:"
+                                 (show (lid_of_fv primary)))]
+             @ candidates_doc env (List.map fst cands));
       fv
     )
     else (

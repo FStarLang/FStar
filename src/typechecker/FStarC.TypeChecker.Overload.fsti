@@ -115,6 +115,19 @@ val arity_compatible : env -> typ -> int -> ML bool
     candidate's fully qualified name and type, one per line. *)
 val candidates_doc : env -> list fv -> ML (list Pprint.document)
 
+(** Forget which ambiguities have been reported.
+
+    The typechecker elaborates a declaration more than once -- the two phases of
+    [tc_decl], the annotation of a [let rec] checked separately from its body,
+    a language extension driving the checker itself -- so a single occurrence
+    reaches [resolve] several times and would otherwise be reported once per
+    visit. Reporting is therefore idempotent per occurrence, and this resets
+    that memory. It must be called once per top-level declaration: often enough
+    that re-checking a declaration reports afresh, which the interactive mode
+    depends on, and not so often that the repeated visits within one declaration
+    are treated as distinct. *)
+val reset_ambiguity_reports : unit -> ML unit
+
 (** Pick a candidate for an overloaded name.
 
     [resolve env speculate primary alts args expected] chooses among
@@ -169,7 +182,8 @@ val candidates_doc : env -> list fv -> ML (list Pprint.document)
     resolved. The first survivor is still returned, so that a single file
     reports all of its ambiguities rather than stopping at the first, and so
     that [--warn_error] can demote the report and recover the scope-order
-    answer. *)
+    answer. A given occurrence is reported at most once per top-level
+    declaration; see [reset_ambiguity_reports]. *)
 val resolve :
      env
   -> (term -> ML base_typ)
@@ -178,3 +192,4 @@ val resolve :
   -> list term
   -> option typ
   -> ML fv
+

@@ -1,0 +1,5 @@
+* Warning 362 at StrictDuplicate.fst(14,40-14,44):
+  - The name StrictBool.same is ambiguous; candidates are:
+  - StrictBool.same : Prims.int
+  - StrictInt.same : Prims.int
+

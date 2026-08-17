@@ -917,6 +917,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
  * check for sigmeta_already_checked below. *)
 let tc_decl env se: ML (list sigelt & list sigelt & Env.env) =
   FStarC.GenSym.reset_gensym();
+  FStarC.TypeChecker.Overload.reset_ambiguity_reports();
   let env0 = env in
   let env = set_hint_correlator env se in
   let env =

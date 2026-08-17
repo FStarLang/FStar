@@ -397,8 +397,9 @@ Not a risk: dependency analysis. `Parser.Dep` records deps from `open`/`include`
 - **Backwards compatibility** — conservative extension with scope-order tie-break (§2.1),
   so default-on is a realistic goal and `[@@overloadable]` is not needed.
 - **Unknown argument type** — scope-order fallback, decided empirically by p7: `strict` finds
-  0 genuine ambiguities in `ulib` but 4843 in `src`, essentially all of them benign (§8).
-  Erroring is therefore not viable; `compat` is the default and `strict` stays a diagnostic.
+  0 ambiguities in `ulib` but 3386 in `src`, and 1757 across tests, examples, Pulse and the
+  book, of which 86% are a module deliberately shadowing a library name (§8). Erroring is
+  therefore not viable; `compat` is the default and `strict` stays a diagnostic.
 - **Types and terms are handled uniformly** (§2.7). F* has no special distinction between
   types and terms; all names are handled the same way.
 - **Operators are handled uniformly too** (§2.8). Mangling stays special; resolution does
@@ -448,17 +449,7 @@ apart. Note also that coercion is directional (computed → expected) whereas `c
 symmetric; the symmetric version is the safe approximation, and a directional test would
 eliminate strictly more candidates.
 
-### 7.5 Make `strict` reports worth reading
-
-Two mechanical defects make `strict` noisier than the ambiguities warrant, measured in §8:
-argument speculation re-enters `resolve` for a use site that has already been reported, so
-43% of reports are duplicates; and a candidate set whose members are definitionally the same
-thing, such as `TypeChecker.Env.guard_t` and the `TypeChecker.Common.guard_t` it abbreviates,
-is reported even though the choice cannot matter. Deduplicating by position and comparing
-unfoldings before reporting would remove roughly two thirds of the reports in `src` without
-suppressing a single real ambiguity.
-
-### 7.6 Classify arrows rather than treating them as unknown
+### 7.5 Classify arrows rather than treating them as unknown
 
 `base_of_typ` reports an arrow as `Base_unknown`, and `expected_compatible` concludes nothing
 when the two shapes have different numbers of explicit formals. Together these mean a
@@ -524,7 +515,7 @@ build checks it), with `--ext fstar:overload=strict --warn_error +362`, and coun
 | corpus | files | ambiguity reports |
 |---|---|---|
 | `ulib` | 310 | **0** |
-| `src` (the compiler itself) | 365 | 4843 |
+| `src` (the compiler itself) | 365 | 4843 (3386 once duplicate reports were fixed, below) |
 
 `ulib` is completely unambiguous. The `src` reports concentrate in a small number of names,
 and every one inspected is benign under `compat`:
@@ -539,8 +530,8 @@ and every one inspected is benign under `compat`:
   (64). Here the types *do* differ; the occurrence just has no expected type available.
 
 So `strict` is a diagnostic tool, not a usable mode, exactly as §2.1 anticipated. It stays
-opt-in. Under `compat` all 4843 of these fall back to scope order, i.e. to today's answer, so
-none of them is a behaviour change.
+opt-in. Under `compat` every one of these falls back to scope order, so none is a behaviour
+change.
 
 Cost (128-way parallel re-check of the whole corpus, `off` vs `compat`, two runs each):
 
@@ -693,20 +684,23 @@ in scope and really do fit.
 `env_t`, `guard_t`, `args`, `pos` — spread across modules that are routinely opened together.
 The single largest group, 785 sites, is `SMTEncoding.Term.term` against `Syntax.Syntax.term`.
 
-Two of the reports are noise that should be fixed whether or not `strict` is ever promoted:
+The `src` figures above were inflated by duplicate reports, which have since been fixed: the
+typechecker elaborates a declaration more than once — the two phases of `tc_decl`, the
+computation type of a `let rec` checked both while extracting the annotation and with the
+body, a language extension such as Pulse driving the checker — so one occurrence reached
+`resolve` repeatedly and was reported each time. Some sites were reported 15 times.
+`Overload` now remembers which occurrences it has reported and `Tc.tc_decl` clears that
+memory per declaration, which is often enough for a re-checked declaration to report afresh
+(the interactive mode depends on this) and rare enough that the repeated visits within one
+declaration collapse. The `src` sweep went from 4649 reports to 3386, one per position and
+no position reported twice.
 
-- **43% of reports are duplicates at a position already reported.** Argument speculation
-  re-enters `resolve` for the same use site, and each entry reports.
-- **Some candidate sets are vacuous**: in `src`, 11 of the 71 sets, accounting for 687
-  reports, are candidates that are *definitionally the same thing*, e.g.
-  `TypeChecker.Env.guard_t` is declared `type guard_t = TcComm.guard_t`
-  (`FStarC.TypeChecker.Env.fsti:314`). Which one is chosen cannot matter. Comparing
-  unfoldings before reporting would suppress these.
-
-Fixing both would cut the `src` figure by roughly two thirds, and is worthwhile because it
-makes `strict` usable for its actual purpose: auditing a module for names that a reader could
-plausibly misread. It would not make `strict` a viable default, because the 86% majority is
-code that is behaving as designed.
+What remains is not noise and cannot be filtered away. A residual class worth naming is
+candidates that are *definitionally the same thing* — `TypeChecker.Env.guard_t` is declared
+`type guard_t = TcComm.guard_t` (`FStarC.TypeChecker.Env.fsti:314`), 527 reports in `src` —
+where the choice provably cannot matter. Suppressing those would mean comparing unfoldings,
+which is a different and much less principled test than the head-symbol comparison the rest
+of the design is built on, so it is not done.
 
 ---
 
