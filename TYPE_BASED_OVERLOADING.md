@@ -550,22 +550,22 @@ ci`, and are fixed here: `tests/simple_hello` did not delete its `.checked` file
 (so a stale one survived a compiler change), and `examples/dependencies` had an order-only
 prerequisite on `out` with no rule to create it.
 
-### Anatomy of the coercion regressions, and how much of the safety net is load-bearing
+### Anatomy of the coercion regressions, and how much of the fallback is load-bearing
 
 Two things guard the conservative-extension guarantee: the coercion families modelled in
-`Overload.compatible` (§2.4), and the `speculate_ok` verification net in
+`Overload.compatible` (§2.4), and the `speculate_ok` re-check in
 `TcTerm.resolve_overloaded_head` (step 8 of §3). They were introduced together, so it was not
 known which was doing the work. Measured by building a compiler with each independently
 switchable and running the whole of `make test` (tests, examples, Pulse tests and examples,
 book code) from cold caches in each configuration:
 
-| coercions in `compatible` | `speculate_ok` net | result |
+| coercions in `compatible` | `speculate_ok` re-check | result |
 |---|---|---|
 | on | on | green (this is what is committed) |
 | on | **off** | **green** |
 | **off** | **off** | 7 failures in 6 files |
 
-So on the whole corpus the net never changes an answer. Every regression is explained by the
+So on the whole corpus the re-check never changes an answer. Every regression is explained by the
 coercion families alone.
 
 The six files, with the candidate set and the filter that fired:
@@ -611,12 +611,12 @@ ever to be made sharper; see §7.
 
 Costs. The coercion families cost no resolution precision on the corpus that has ambiguity:
 re-running the `src` sweep with them disabled gives byte-identical decisions, 9722 for 9722, in
-every one of 365 files. The net costs nothing measurable either, because it only runs when the
+every one of 365 files. The re-check costs nothing measurable either, because it only runs when the
 filter and scope order disagree, which happens 0 times in `src`.
 
-Whether to keep the net is therefore a judgement call rather than a measurement. The argument
+Whether to keep the re-check is therefore a judgement call rather than a measurement. The argument
 for keeping it: `compatible` models two coercion families out of a set that users can extend
-arbitrarily with `[@@coercion]`, and the corpus happens not to exercise the rest. The net is
+arbitrarily with `[@@coercion]`, and the corpus happens not to exercise the rest. The re-check is
 what turns "we modelled the coercions we knew about" into "we cannot change the meaning of a
 program that checks today". The argument against: it makes resolution depend on speculative
 typechecking, so a program's meaning depends on whether a candidate happens to check, which is
