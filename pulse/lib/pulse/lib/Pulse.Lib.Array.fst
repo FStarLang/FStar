@@ -137,7 +137,7 @@ fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
 
 
 
-fn zeroize (l:US.t) (a:larray U8.t (US.v l))
+fn zeroize (l:US.t) (a:array U8.t { US.v l == length a })
   requires pts_to a 's
   ensures exists* (s:Seq.seq U8.t).
     pts_to a s **

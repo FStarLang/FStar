@@ -3348,13 +3348,6 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
     let mkclass lid =
       let r = range_of_lid lid in
       let body =
-      if U.has_attribute d_attrs C.meta_projectors_attr then
-        (* new meta projectors *)
-        U.mk_app (S.tabbrev C.mk_projs_lid)
-                 [S.as_arg (U.exp_bool true);
-                  S.as_arg (U.exp_string (string_of_lid lid))]
-      else
-        (* old mk_class *)
         U.mk_app (S.tabbrev C.mk_class_lid)
                  [S.as_arg (U.exp_string (string_of_lid lid))]
       in

@@ -149,7 +149,6 @@ type bigger =
   ) bool
   ) bool
 
-[@@no_auto_projectors] // makes it a bit faster
 %splice[huger] (entry "huger" (`%bigger))
 
 let _ = huger
