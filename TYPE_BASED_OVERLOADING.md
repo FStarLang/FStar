@@ -459,6 +459,19 @@ correctly rejected everything else (§8). Recognising "still a function where a 
 expected" would be a genuine sharpening, and unlike the coercion work it makes the filter
 *more* discriminating rather than less.
 
+### 7.6 Answer an IDE lookup from the info table more often
+
+`QueryHelper.symlookup` answers from the info table when the requested position lies on an
+identifier in a fragment that has been checked; every other lookup falls through to scope-order
+resolution, which for an overloaded name is a guess (§8). The guess is now labelled, but for a
+*checked* buffer a better answer is available: the client sends the symbol text as well as the
+position, so when the position misses, the info table could be scanned for entries on that row
+whose name matches the symbol, and a unique match used. That would turn a lookup one column off
+the occurrence — the common case when an editor sends point rather than the start of the symbol
+— from a labelled guess into the name the typechecker actually chose. It does nothing for an
+unchecked region, where no answer exists, and it needs the uniqueness condition to avoid
+picking between two occurrences of the same name on one line.
+
 ---
 
 ## 8. Progress
@@ -724,6 +737,61 @@ candidates that are *definitionally the same thing* — `TypeChecker.Env.guard_t
 where the choice provably cannot matter. Suppressing those would mean comparing unfoldings,
 which is a different and much less principled test than the head-symbol comparison the rest
 of the design is built on, so it is not done.
+
+### The IDE reports the scope-order name, not the resolved one
+
+Hovering over `f` in `let a : int = f 0` can make the IDE say `OvlBool.f : x:bool -> bool`,
+even though the occurrence resolves to `OvlInt.f`.
+
+The lookup is `QueryHelper.symlookup`
+(`src/interactive/FStarC.Interactive.QueryHelper.fst`), and it has two paths. The first,
+`TcErr.info_at_pos`, reads the identifier-info table that typechecking populates, so it
+reports the name the typechecker actually chose. It is right: all eight overloaded sites of
+`tests/overloading/OvlBasic.fst` answer correctly through it. The second is a fallback,
+`info_of_lid_str`, which resolves the *symbol text* through
+`DsEnv.resolve_to_fully_qualified_name`. That is desugaring-level, scope-order resolution: it
+has no term, no arguments and no expected type, so it cannot do what `Overload.resolve` does
+and always answers the innermost binding.
+
+What sent the report through the fallback was not the position but the *file name*. The info
+table is a map keyed by the file as ranges name it, and `Range.Ops.set_file_of_range` stores a
+basename. Clients are under no obligation to send one: fstar-mode passes on the name it was
+given, which is usually a basename and so matches, but the VS Code extension sends a
+`file://` URI. The trace the user's session left in `tests/overloading/OvlBasic.fst.in` shows
+the query arriving with the right symbol at the right column and the filename
+`file:///home/.../OvlBasic.fst`, which matches no key at all. So it was not that the info
+table occasionally missed — for that client it was **never consulted**, and every lookup in
+every file was answered by scope order. Overloading looked broken in the IDE while resolution
+was in fact correct.
+
+The fix is to retry the lookup on `Filepath.basename` of what the client sent. That accepts a
+basename, an absolute path and a URI alike, since `basename` keeps only what follows the last
+separator; it is tried only after the raw name misses, so it cannot change an answer that
+already worked. Two files with the same basename can collide, but the table is keyed that way
+throughout the compiler, so this matches the existing keying rather than introducing a new
+ambiguity.
+
+That leaves the cases where no answer is recoverable. `id_info_at_pos` answers only for a
+position lying on an identifier, so with `f` at column 15 of `OvlBasic.fst:7`, columns 15 and
+16 are answered from the info table and 13, 14 and 17 fall through — one column off is enough,
+on a fully checked buffer. The fallback also fires for any position in a fragment that has not
+been checked yet, and for a lookup sent with no position at all, which is how completion asks.
+
+For those, since there is genuinely no way to know the answer from a name alone, the fix is to
+stop asserting one. When `DsEnv.try_lookup_lid_alternatives` reports that the name is overloaded,
+the fallback still returns the scope-order candidate — clients need a name, and jump-to-
+definition should keep working — but the response now carries a note saying the answer is
+only what scope order gives and listing every candidate with its type, rendered by the same
+`Overload.candidates_doc` the ambiguity error uses. The note is attached whether or not
+documentation was requested, since it qualifies the answer rather than documenting the
+symbol. `info_at_pos` answers are untouched and carry no note. With `--ext fstar:overload=off`
+the alternatives list is empty and the behaviour is exactly as before.
+
+`tests/ide/emacs/OvlIde.lookup-checked.in` pins all of it — the exact position under a
+basename, under an absolute path and under a `file://` URI, all three answered from the info
+table with the resolved name and no note, and one column past the occurrence answered by the
+labelled fallback — and `OvlIde.lookup-unchecked.in` pins the unchecked-region and no-position
+routes. §7.6 records what more could be done for the checked case.
 
 ---
 
