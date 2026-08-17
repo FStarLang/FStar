@@ -36,6 +36,12 @@ type bclass =
      every call site.  This is rule 1 of section 3.1. *)
   | Dropped
 
+(** A callback the extractor installs so that this module's errors can report
+    the request chain of section 3.6.  Everything here runs below the
+    extractor and so has no state to read it from; the default reports
+    nothing.  See {!norm_bounded}. *)
+val chain_reporter : ref (unit -> ML (list FStarC.Pprint.document))
+
 (** Normalize under [--custard_norm_budget], raising
     [Error_CustardFuelExhausted] rather than running forever.  Every
     normalization Custard performs goes through this or through

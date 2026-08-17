@@ -94,6 +94,11 @@ val request : state -> spec_key -> ML name
 val ty_of_typ : state -> FStarC.Syntax.Syntax.typ -> ML cty
 val expr_of_term : state -> FStarC.Syntax.Syntax.term -> ML expr
 
+(** Give {!FStarC.Custard.Mono} a way to report the request chain of section
+    3.6.  It runs below the extractor and has no [state] to read; without this
+    a budget exhausted in a type-level normalization names no definition. *)
+val install_chain_reporter : state -> ML unit
+
 (** Drain the worklist and return the program in dependency order (definitions
     before their uses), which is the order the backends want.
 

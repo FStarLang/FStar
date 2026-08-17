@@ -334,6 +334,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      which needs the union-find; by the time a backend runs it has been put in
      read-only mode.  The ML extraction does the same thing. *)
   let st = Extract.init deps env in
+  Extract.install_chain_reporter st;
   let prog = phase "extract" (fun () ->
                UF.with_uf_enabled (fun () ->
                  (* A module named by --custard_entry_module is requested by

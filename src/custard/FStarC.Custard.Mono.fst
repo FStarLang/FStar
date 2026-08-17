@@ -38,13 +38,31 @@ module Prof  = FStarC.Custard.Prof
    unfolded without bound.  The failure mode is the worst kind -- not a wrong
    answer or a rejection, but a compiler that never finishes and never says
    why -- so *every* normalization Custard performs runs under a step budget.
-   [Extract.norm_bounded] is the same wrapper with the request chain of
-   section 3.6 attached; this one is for the callers below the extractor,
-   which have no chain to report.
+   [Extract.norm_bounded] is the same wrapper reading the request chain of
+   section 3.6 out of its own state; this one is for the callers below the
+   extractor, which have no state to read.
 
    A budget nests by saving and restoring, so wrapping a call that is already
    inside one is harmless: the inner limit applies and the outer count
    resumes where it left off. *)
+
+(* The chain is the whole diagnostic value of the message -- a budget is
+   exhausted on a *term*, and which term that is is a question about the
+   definition being extracted, not about this module.  This module is below
+   the extractor and cannot ask it, so the extractor leaves a way to ask
+   behind.  Nothing installs it in a plugin or a unit-test run, hence the
+   default that reports nothing rather than a dependency that would have to
+   be threaded through every arity test.
+
+   Without it a budget exhausted in a *type-level* normalization -- an arity
+   spine, a binder's kind -- named no definition at all, which is what the
+   EverParse report ran into on
+   [LowParse.Pulse.Recursive.validate_recursive_step_count]: the term was
+   printed and the reader still had to bisect the module to learn what was
+   being extracted when it appeared. *)
+let chain_reporter : ref (unit -> ML (list Pprint.document)) =
+  mk_ref (fun () -> [])
+
 let norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
   : ML typ =
   try Prof.timed "Mono.norm" (fun () ->
@@ -52,7 +70,7 @@ let norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
                       (fun () -> N.normalize steps env t))
   with
   | N.Budget_exceeded ->
-    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardFuelExhausted [
+    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardFuelExhausted ([
       Pprint.arbitrary_string
         ("Custard exceeded --custard_norm_budget (" ^
          show (FStarC.Options.custard_norm_budget ()) ^
@@ -60,7 +78,7 @@ let norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
       Pprint.arbitrary_string
         ("The term being normalized, before reduction, was: " ^
          FStarC.Syntax.Print.term_to_string' (TcEnv.dsenv env) t)
-    ]
+    ] @ (!chain_reporter) ())
 
 let bclass_to_string (c:bclass) : string =
   match c with
@@ -177,13 +195,20 @@ let rec is_star_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
    [b] leaves the second field typed by a name that no parameter binds, so it
    is [any]; kept, it is an ordinary type parameter, and a monomorphizing run
    fills it in with [payload].  EverParse's whole validate/parse/serialize
-   idiom is a value-indexed [dtuple2] and was [any] throughout. *)
+   idiom is a value-indexed [dtuple2] and was [any] throughout.
+
+   The arrow is looked for *syntactically*, before anything is normalized.
+   [is_type_param] is asked about every binder of every definition the
+   extraction visits, the overwhelming majority of which are values, and
+   [is_arity] on a sort like [int] costs a normalization.  [U.arrow_formals]
+   of a non-arrow is [([], t)], so those stop at [Cons?] having done nothing.
+   The cost of that is an arity hidden behind an abbreviation, which is not
+   recognized; it is the same trade [is_star_aux] makes one level up. *)
 let is_value_indexed_arity (env:TcEnv.env) (t:typ) : ML bool =
-  is_arity env t &&
-  (let bs, res = U.arrow_formals t in
-   Cons? bs &&
-   is_star_aux false env res &&
-   bs |> List.for_all (fun (b:binder) -> not (is_arity env b.binder_bv.sort)))
+  let bs, res = U.arrow_formals t in
+  Cons? bs &&
+  is_star_aux false env res &&
+  bs |> List.for_all (fun (b:binder) -> not (is_arity env b.binder_bv.sort))
 
 let is_type_param (env:TcEnv.env) (b:binder) : ML bool =
   is_star_aux false env b.binder_bv.sort ||

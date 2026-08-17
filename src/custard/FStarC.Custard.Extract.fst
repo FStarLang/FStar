@@ -3142,6 +3142,13 @@ let dump_specializations (st:state) : ML unit =
     if n > 1 then BU.print2 "  %s -> %s\n" l (show n));
   BU.print1 "  (total: %s)\n" (show (SMap.fold st.counts (fun _ n acc -> acc + n) 0))
 
+(* {!Mono} runs below the extractor and so cannot read the chain out of a
+   [state]; it holds a callback instead, and this is where it is filled in.
+   A budget exhausted in a *type-level* normalization -- an arity spine, a
+   binder's kind -- otherwise named no definition at all. *)
+let install_chain_reporter (st:state) : ML unit =
+  Mono.chain_reporter := (fun () -> request_chain st)
+
 (* Whether a top-level definition has anything to extract, judged from its
    declared type alone: a ghost computation has no runtime meaning, and
    neither has one whose result is [prop], [slprop], [squash] or any other

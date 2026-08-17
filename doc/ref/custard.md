@@ -4379,9 +4379,11 @@ against `src/**/*.fst` turns up, in rough order of size:
    as written; `tests/custard/NormBudget.fst`.
 
    The two are not interchangeable and the split is not cosmetic: a budget is
-   only useful if the message says *which* definition was being reduced, and
-   below the extractor there is no chain to say it with.  Anything that
-   normalizes and does have a chain should use `Extract.norm_bounded`.
+   only useful if the message says *which* definition was being reduced.
+   `Mono` is below the extractor and cannot ask it for the chain, so the
+   extractor leaves a way to ask behind; see section 18.3.  Anything that
+   normalizes and does have a chain directly should still use
+   `Extract.norm_bounded`.
 
 6. ~~**Higher-kinded classes have no representation.**~~  **Done.**
    `FStarC.Class.Monad` is a class over `m : Type -> Type`, and the IR's type
@@ -6318,6 +6320,67 @@ compiled and run through the direct C backend; `tests/custard/Realized` had
 `(Prims.int, Obj.t, Obj.t) dtuple3` pinned as expected output and now has
 `(Prims.int, bool, string)`.
 
+### 18.3 A budget is only as good as the name it prints
+
+Error 364 says a normalization ran past `--custard_norm_budget`, and the only
+thing a reader can do with it is find the definition that provoked it.
+`Extract.norm_bounded_in` printed that all along: the extractor holds a
+request chain (section 3.6), and the message ends with `Reached through:` and
+the keys that led to the term.
+
+`Mono.norm_bounded` did not, and it is the one that matters for the hard
+cases.  `Mono` sits below the extractor -- `is_arity_aux` normalizes a
+binder's sort, `is_star_aux` a binder's kind, `arrow_formals_unfold` an arrow
+spine -- so a budget exhausted in *type-level* work named no definition at
+all.  That is what the EverParse report hit on
+`LowParse.Pulse.Recursive.validate_recursive_step_count`: the term was
+printed and the reader still had to bisect the module to learn what was being
+extracted when it appeared.
+
+The fix is a hook rather than a dependency.  `Mono.chain_reporter` is a `ref`
+to a `unit -> list document`, defaulting to reporting nothing, which
+`Driver` points at `Extract.request_chain` for the one state it builds.
+Threading the extractor's state into `Mono` instead would have meant
+threading it through every arity test, and the default keeps `Mono` usable
+from a plugin or a unit test where there is no extraction in progress.
+
+A synthetic reproduction is worth recording, because the obvious ones do not
+work.  A module's *body* normalizations are budgeted too and are almost
+always the more expensive, so any ordinary module fails in `Extract` first.
+And `Mono`'s step lists have no `Primops`, so a recursive type-level
+definition guarded by `if n = 0` stops after two steps rather than unfolding.
+What does it is a long chain of abbreviations, each of which is one unfold,
+in a definition with no body to speak of:
+
+```fstar
+let a0 = Prims.int
+let a1 = a0
+(* ... 300 of them ... *)
+let f (x : a299) : Prims.int = 1
+```
+
+extracted with `--custard_entry NBChain3.f --custard_norm_budget 50`.  Before
+the hook the message ended at ``The term ... was: a299``; now it ends with
+`Reached through: NBChain3.f`.  There is no regression test: `tests/custard`
+has no negative-test rule, and adding one for a diagnostic is not worth a
+category.
+
+Two things the same report asked about and the answer is honestly "not
+reproduced".  Whole-module extraction of `CBOR.Pulse.API.Det.C` took 6m30s
+against seconds for individual entries, and no sweep built locally shows
+anything super-linear.  The explanation that fits without a leak is that a
+specialization key is per-call-site: more roots reach more call sites, so
+more distinct keys are normalized and more specializations emitted, and the
+growth is in the output rather than in the algorithm.  The intended workflow
+is therefore whole-module or whole-program extraction -- one run, one
+interned specialization table, section 4.4 -- and many `--custard_entry`
+runs are a *debugging* tool, for bisecting which root provokes a failure,
+not a way to go faster.  Splitting for speed also gives up the sharing:
+each run re-derives the specializations of everything the root reaches.
+
+`--profile FStarC.Custard` reports the phase breakdown when a run does need
+to be explained.
+
 
 
 | M | Deliverable | Notes |
@@ -6391,3 +6454,4 @@ compiled and run through the direct C backend; `tests/custard/Realized` had
 | M10ι | **Recursive datatypes in the direct-to-C backend** (§17.3) | Done.  A struct reaching itself through a pointer is legal C and `check_finite` correctly accepts it, but `PrintC` emitted every struct as an anonymous typedef, so a field naming the type under definition named something that did not exist yet -- and no ordering of the declarations can fix that, since that is what recursion means.  Every struct now carries a tag `t_s` and every tag is forward-declared in one block ahead of all the definitions, which makes the order irrelevant rather than merely computable.  Reported against EverParse's `cbor_raw`, where it was the *only* defect: with tags added by hand and nothing else changed, the output compiles clean under `-std=c11 -Wall -Wextra -Werror`.  `tests/custard/CRecType.fst` pins the three shapes that failed differently, compiled and run |
 | M10κ | **Erased arguments in a call through a variable** (§18.1) | Done.  `arrow_formals_comp` stops at an abbreviation, so a definition whose codomain is one looks shorter than it is and every argument past that point goes unfiltered -- which passes at runtime the erased arguments the callee deleted, as a `()` in a position that no longer exists, shifting the rest of the spine.  `classify`, `unit_binders` and `type_binders` have unfolded since EverCrypt's `compute`; `erased_binders`, which filters the spine of a call through a *variable*, had not.  Split into `erased_binders_unfold` rather than changed, because filtering a definition's own binders wants flags aligned against `arrow_formals_comp` and filtering a call spine wants flags as long as the call.  Reported against EverParse's CBOR stack as `unbound variable pm reached the karamel backend`: a Pulse `fn rec` hands its recursive call to its body as a closure, so the head is a local whose sort is an abbreviation.  `tests/custard/EraseAbbrev` gains the variable-headed half of a case it already had by name |
 | M10λ | **An arity indexed only by values is a type parameter** (§18.2) | Done.  `is_type_param` held of kind `Type` and nothing else, on the ground that no target has a type variable standing for a type constructor.  True of `m:Type -> Type`; false of `b:header -> Type`, which takes a *value*, and values are erased from the target's type language, so it denotes exactly one target type.  Dropping it left `dtuple2`'s second field typed by a name no parameter bound -- `any`, which direct-to-C rejects outright and which the krml path turns into a `(void *)` cast gcc rejects.  Three pieces: `is_value_indexed_arity`, translating an application `b x` as the parameter itself, and translating the argument lambda `fun h -> payload h` as its body.  It also un-breaks `FStar.Set.set`, whose abbreviation no longer needs `has_unrepresentable_param` to unfold it and so reaches §13.5's result-type peel as a `TApp`; the peel goes through `head_ty` now.  Reported against EverParse as the highest-impact item: this is the whole LowParse idiom, a parsed header indexing the payload's type, and it was `any` throughout |
+| M10μ | **The request chain reaches the normalization budget below the extractor** (§18.3) | Done.  Error 364 is only useful if it names the definition being reduced.  `Extract.norm_bounded_in` always did, from the request chain of §3.6; `Mono.norm_bounded` did not, and it is the one that fires on type-level work -- a binder's sort, a binder's kind, an arrow spine -- which is exactly the case the EverParse report had to bisect a module to explain.  `Mono.chain_reporter` is a `ref` to a reporting function that `Driver` points at `Extract.request_chain`, defaulting to reporting nothing so that `Mono` stays usable with no extraction in progress; a hook rather than threading the extractor's state through every arity test.  `is_value_indexed_arity` also became syntactic-first in the same pass, looking for the arrow before it normalizes anything, since `is_type_param` is asked about every binder of every definition and the overwhelming majority are values that stop at `Cons?` having paid nothing.  Reported alongside a 6m30s whole-module extraction that no local sweep reproduces as super-linear; keys are per-call-site, so more roots mean more output, and whole-program remains the intended workflow with many `--custard_entry` runs a bisection tool rather than a speed-up (§18.3). |
