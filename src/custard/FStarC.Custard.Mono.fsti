@@ -59,10 +59,17 @@ instance val showable_bclass : Class.Show.showable bclass
     make the source arity worth preserving. *)
 val is_type_binder (env:TcEnv.env) (b:binder) : ML bool
 
-(** [is_type_param env b] holds of a binder of kind [Type] exactly: an arity
-    binder that the target can express as a type parameter.  A higher-kinded
-    one -- the [m] of [class monad (m:Type -> Type)] -- is erased like any
-    other type binder but cannot be declared or passed, so it is not one. *)
+(** [is_value_indexed_arity env t] holds of an arity all of whose arguments are
+    values: [header -> Type], not [Type -> Type].  Values are erased from the
+    target's type language, so such an arity denotes one target type and can be
+    a type parameter; section 18.2. *)
+val is_value_indexed_arity (env:TcEnv.env) (t:typ) : ML bool
+
+(** [is_type_param env b] holds of an arity binder the target can express as a
+    type parameter: one of kind [Type], or one indexed only by values (see
+    {!is_value_indexed_arity}).  A genuinely higher-kinded one -- the [m] of
+    [class monad (m:Type -> Type)] -- is erased like any other type binder but
+    cannot be declared or passed, so it is not one. *)
 val is_type_param (env:TcEnv.env) (b:binder) : ML bool
 
 (** Is this *argument* a type rather than a value?

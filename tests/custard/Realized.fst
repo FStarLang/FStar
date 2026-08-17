@@ -5,9 +5,10 @@ open FStar.Pervasives
 (* Section 8.2: [FStar.Pervasives.dtuple3] is realized by hand-written OCaml,
    where it is a one-constructor *variant*.  Custard's record recovery
    (section 5.5) must leave it alone, its match must stay a match rather than
-   becoming a field read, and its higher-kinded parameters must still be
-   written -- the realization's arity is three however few of them Custard can
-   name. *)
+   becoming a field read, and its arity parameters must still be written --
+   the realization's arity is three.  Section 18.2 is what makes them nameable
+   rather than [Obj.t]: [fun _ -> bool] and [fun _ _ -> string] take values
+   only, so each denotes one target type. *)
 type triple = dtuple3 int (fun _ -> bool) (fun _ _ -> string)
 
 let mk (n:int) : triple = (| n, true, "ok" |)

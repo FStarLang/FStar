@@ -296,7 +296,7 @@ KRML_TESTS += KrmlBasic
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
-C_TESTS += KrmlBasic CExtern CRecType
+C_TESTS += KrmlBasic CExtern CRecType IndexedSquash
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
 # global whose initializer is a computation -- against one that is a constant
@@ -314,6 +314,14 @@ CGREP_CExtern   = "include \"CExtern_stubs.h" \
 # as an abstract struct the way a Custard-owned opaque type would be.
 CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag" \
                   "  CExtern_base =" "  CExtern_low ="
+
+# Section 18.2: an inductive indexed by a value that occurs only under [squash].
+# The index is dropped from [payload], as it should be, but [dtuple2]'s second
+# parameter is an arity over that index -- and dropping *that* left the second
+# field typed by a name no parameter bound, so it was [any] and had no C
+# representation at all.  This is EverParse's whole parse/serialize idiom.
+CGREP_IndexedSquash   = "IndexedSquash_payload _2;"
+CNOGREP_IndexedSquash = "void *"
 
 # Section 17.3: recursion through a pointer.  Every struct is tagged and every
 # tag is forward-declared, so a field may name a type that is defined later --
@@ -567,13 +575,15 @@ GREP_RetArity += ") : Prims.int ="
 
 # Section 8.2: a realized type's OCaml shape is the hand-written one.
 # [FStar.Pervasives.dtuple3] is a one-constructor *variant* there, so there is
-# no record to recover and no field to project; and its two higher-kinded
-# parameters are still written, as [Obj.t], because the realization's arity is
-# three whatever Custard can name.  That [Obj.t] is the one thing here that is
-# genuinely lost, so 366 is not an error for this test.
+# no record to recover and no field to project.  Its second and third
+# parameters are arities -- [a -> Type] and [a -> b a -> Type] -- and section
+# 18.2 is what lets them be written honestly: every argument they take is a
+# value, so each denotes one target type and [bool] and [string] are it.  They
+# used to be [Obj.t].
 FLAGS_Realized    = --warn_error -366
 GREP_Realized     = "FStar_Pervasives.Mkdtuple3" \
-                    "(Prims.int, Obj.t, Obj.t) FStar_Pervasives.dtuple3" \
+                    "(Prims.int, bool, string) FStar_Pervasives.dtuple3" \
                     "match d with"
 # No record recovery, no projection, and the erased GTot call is gone.
-NOGREP_Realized   = "u__1" "gmagic"
+# No record recovery, no projection, no erased GTot call -- and no [Obj.t].
+NOGREP_Realized   = "u__1" "gmagic" "Obj.t"

@@ -164,6 +164,11 @@ only ever used in erased positions does not need to be monomorphized even under
 Detecting this needs a per-parameter "used relevantly?" analysis on top of the
 layout table of §5, which is why it is deferred.
 
+This is *not* what §18.2 does, though it is what the EverParse report took it
+for.  §18.2 is about an arity binder that was dropped and should not have
+been; this note is about a parameter that is kept and cloned and need not be.
+Both are still open in the second sense.
+
 ### 2.2 Sketch of the syntax
 
 `src/custard/FStarC.Custard.Syntax.fsti`:
@@ -6245,6 +6250,74 @@ not.  `tests/custard/EraseAbbrev` had the name-headed half of this all along
 and now has the variable-headed half too, through a binder and through a
 `let`.
 
+### 18.2 An arity indexed only by values is a type parameter
+
+`is_type_param` used to hold of a binder of kind `Type` and of nothing else.
+The reason is real: neither OCaml nor C has a type variable standing for a
+type *constructor*, so the `m` of `class monad (m:Type -> Type)` can be
+neither declared nor passed, and uniform compilation makes dropping it sound
+because every field whose type mentions `m` is already `any`.
+
+But an arity is not always a type constructor.  `b : header -> Type` takes a
+*value*, and values are erased from the target's type language, so `b h` and
+`b h'` are the same target type -- there is exactly one of it, and a type
+parameter is precisely what names one type.  The distinction that matters is
+therefore not "is this `Type`" but "does any argument it takes have kind
+`Type`":
+
+```fstar
+noeq type payload (h: header) =
+  | Small : squash (is_big h == false) -> (v: U8.t) -> payload h
+  | Big   : squash (is_big h == true)  -> (v: U8.t) -> payload h
+
+let parse (t: U8.t) : dtuple2 header (fun h -> payload h) = ...
+```
+
+`payload`'s own index is dropped correctly -- it is a value index and has no
+counterpart in a target type.  What went wrong was `dtuple2`, whose second
+parameter is `b : a -> Type`: dropped, `Mkdtuple2`'s second field is typed by
+a name that no parameter binds, so it is `any`.  Direct-to-C then rejects the
+program outright (error 367) and the krml path emits `._2 = (void
+*)IndexedSquash_mk(h)`, which gcc rejects.  Kept, the field is an ordinary
+`TVar` and a monomorphizing run fills it in:
+
+```c
+struct Prims_dtuple2__header_payload_s {
+  uint8_t _1;
+  IndexedSquash_payload _2;
+};
+```
+
+Three pieces, and each is forced by the first:
+
+* `Mono.is_value_indexed_arity`, and `is_type_param` accepting it.
+* `ty_of_typ` translating an *application* of such a binder, `b x`, as the
+  parameter itself.  The arguments are values, which is what made the binder
+  representable, so there is nothing for them to do.
+* `ty_of_typ` translating the *argument*, which the source writes as a lambda
+  -- `fun h -> payload h`.  Its binders are values and a value cannot reach a
+  `cty`, so the body's own translation is the answer; a body that really does
+  depend on its index is a `match` or a bare name and falls through to `any`
+  on its own, exactly as before.
+
+One thing this breaks and then fixes.  `FStar.Set.set a = restricted_t a (fun
+_ -> bool)` was the motivating case for `has_unrepresentable_param`, which
+unfolds an abbreviation whose parameter the type language cannot hold.  Now
+it *can* hold it, so nothing unfolds, and `set a` is an honest `TApp` of a
+two-parameter abbreviation whose body is an arrow.  Section 13.5's result-type
+peel looked for a `TArrow` and a `TApp` is not one, so `union` came out with
+three parameters and a result type that still had the third arrow in it.  The
+peel now goes through `head_ty`, which is the same unfolding every other
+consumer of an abbreviation already does.
+
+Reported against EverParse, where the shape is the whole LowParse idiom -- a
+parsed header value indexing the type of the payload -- and `Prims.dtuple2@-
+initial_byte_t` being `any` took out validate, parse, equal and serialize
+alike.  `tests/custard/IndexedSquash.fst` is the reporter's own reduction,
+compiled and run through the direct C backend; `tests/custard/Realized` had
+`(Prims.int, Obj.t, Obj.t) dtuple3` pinned as expected output and now has
+`(Prims.int, bool, string)`.
+
 
 
 | M | Deliverable | Notes |
@@ -6317,3 +6390,4 @@ and now has the variable-headed half too, through a binder and through a
 | M10θ | **Two things about the C output** (§17) | Done.  A global whose initializer is a C constant expression is now emitted as `int32_t m7 = ((int32_t)-7);` rather than assigned at startup, so the linker can put it in `.data`/`.rodata` and the C compiler can fold it at its uses; `ExtIntSigned` loses its `custard_init_globals` and its call from `main` entirely, and `CExtern` pins a module that keeps the function for the two globals that still need it.  The recognized subset is a constant and a cast of one: wider arithmetic is pointless (`2 + 2` has been folded long before `PrintC` sees it) and a record is not merely pointless but wrong, since the compound literal Custard emits for one is not a constant expression at file scope.  And the IR's single cast node is split in two: `ECoerce` for §5.4's representation coercion, which computes nothing and therefore fuses, and `ECast` for §8.1's machine-integer conversion, which computes and therefore does not.  They were one node, and §16.2's severity-2 miscompilation was §5.4's fusion rule applied to a conversion; the fix then was a side condition testing whether both sides were `TInt`, which works but asks every pass to re-derive a fact the front end knew.  The split removes the side condition from `Layout`, removes a clause from `Driver.lost_cast`, and turned up the same latent bug a second time in `PrintOCaml.index`, which looked through a narrowing conversion to keep a subscript readable |
 | M10ι | **Recursive datatypes in the direct-to-C backend** (§17.3) | Done.  A struct reaching itself through a pointer is legal C and `check_finite` correctly accepts it, but `PrintC` emitted every struct as an anonymous typedef, so a field naming the type under definition named something that did not exist yet -- and no ordering of the declarations can fix that, since that is what recursion means.  Every struct now carries a tag `t_s` and every tag is forward-declared in one block ahead of all the definitions, which makes the order irrelevant rather than merely computable.  Reported against EverParse's `cbor_raw`, where it was the *only* defect: with tags added by hand and nothing else changed, the output compiles clean under `-std=c11 -Wall -Wextra -Werror`.  `tests/custard/CRecType.fst` pins the three shapes that failed differently, compiled and run |
 | M10κ | **Erased arguments in a call through a variable** (§18.1) | Done.  `arrow_formals_comp` stops at an abbreviation, so a definition whose codomain is one looks shorter than it is and every argument past that point goes unfiltered -- which passes at runtime the erased arguments the callee deleted, as a `()` in a position that no longer exists, shifting the rest of the spine.  `classify`, `unit_binders` and `type_binders` have unfolded since EverCrypt's `compute`; `erased_binders`, which filters the spine of a call through a *variable*, had not.  Split into `erased_binders_unfold` rather than changed, because filtering a definition's own binders wants flags aligned against `arrow_formals_comp` and filtering a call spine wants flags as long as the call.  Reported against EverParse's CBOR stack as `unbound variable pm reached the karamel backend`: a Pulse `fn rec` hands its recursive call to its body as a closure, so the head is a local whose sort is an abbreviation.  `tests/custard/EraseAbbrev` gains the variable-headed half of a case it already had by name |
+| M10λ | **An arity indexed only by values is a type parameter** (§18.2) | Done.  `is_type_param` held of kind `Type` and nothing else, on the ground that no target has a type variable standing for a type constructor.  True of `m:Type -> Type`; false of `b:header -> Type`, which takes a *value*, and values are erased from the target's type language, so it denotes exactly one target type.  Dropping it left `dtuple2`'s second field typed by a name no parameter bound -- `any`, which direct-to-C rejects outright and which the krml path turns into a `(void *)` cast gcc rejects.  Three pieces: `is_value_indexed_arity`, translating an application `b x` as the parameter itself, and translating the argument lambda `fun h -> payload h` as its body.  It also un-breaks `FStar.Set.set`, whose abbreviation no longer needs `has_unrepresentable_param` to unfold it and so reaches §13.5's result-type peel as a `TApp`; the peel goes through `head_ty` now.  Reported against EverParse as the highest-impact item: this is the whole LowParse idiom, a parsed header indexing the payload's type, and it was `any` throughout |

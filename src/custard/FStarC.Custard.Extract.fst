@@ -1128,6 +1128,14 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
                      [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                       TcEnv.Beta] t in
           if U.term_eq t' t then TAny else ty_of_typ st t'
+        (* Section 18.2: a value-indexed arity is a type parameter, so an
+           application of one is the parameter itself.  The arguments are
+           values and values are erased from types, so [b h] and [b h'] are
+           the same target type -- which is what made [b] representable in
+           the first place.  Without this the field types of [dtuple2] name
+           [b] only under an application and so came out [any]. *)
+        | Tm_name bv when Mono.is_value_indexed_arity (tcenv st) bv.sort ->
+          TVar (name_of_bv bv)
         | Tm_fvar fv ->
           (* A type constructor's arguments survive into the [cty] exactly when
              they are types: an index like the [n] of [vec n] has no
@@ -1140,6 +1148,17 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
                      | None -> [] in
           ty_of_fv st fv (drop_flagged keep args |> List.map fst)
         | _ -> TAny))
+
+  (* Section 18.2: the argument supplied for a value-indexed arity, which the
+     source writes as a lambda -- [dtuple2 header (fun h -> payload h)].  The
+     binders are values, and a value cannot reach a [cty], so the body's own
+     translation is the answer; if it does depend on its index the body is a
+     [match] or a name and falls through to [any] on its own. *)
+  | Tm_abs _ when (let bs, _, _ = U.abs_formals t in
+                   bs |> List.for_all (fun (b:S.binder) ->
+                           not (Mono.is_type_binder (tcenv st) b))) ->
+    let _, body, _ = U.abs_formals t in
+    ty_of_typ st body
 
   | Tm_refine {b} -> ty_of_typ st b.sort
   | Tm_ascribed {tm} -> ty_of_typ st tm
@@ -2985,13 +3004,14 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
         else if k = n && Effects.is_reifiable (tcenv st) (U.comp_effect_name c')
         then (E_Pure, ty_of_typ st (Effects.reify_comp (env_for_comp benv c') c'))
         else peel_typ (n - k) (eff_of_comp st c') (U.comp_result c')
-      (* Not an arrow, but [ty_of_typ] may still make one of it: a
-         higher-kinded abbreviation such as [FStar.Set.set a = restricted_t a
-         (fun _ -> bool)] only becomes [a -> bool] under the beta reduction
-         *under the binder* that only {!ty_of_typ}'s own unfolding does.  So
-         the term-level peel hands what is left to the [cty]-level one, which
-         is exactly as far as anything can get. *)
-      | _ -> peel n e (ty_of_typ st t) in
+      (* Not an arrow that the term level can see, so what is left is handed
+         to the [cty]-level peel -- through {!head_ty}, because the arrows may
+         still be behind an abbreviation *there*.  [FStar.Set.set a =
+         restricted_t a (fun _ -> bool)] is the case: [restricted_t]'s second
+         parameter is a value-indexed arity (section 18.2), so the application
+         is a perfectly ordinary [TApp] of a two-parameter abbreviation whose
+         body is an arrow -- and a [TApp] is not a [TArrow]. *)
+      | _ -> peel n e (head_ty st (ty_of_typ st t) 10) in
   let res_typ = U.comp_result c in
   (* Section 7.5: a reifiable result type is replaced by its representation,
      and the definition itself becomes pure -- what it now returns is the

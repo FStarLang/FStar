@@ -165,8 +165,29 @@ let rec is_star_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
                     t)
   | _ -> false
 
+(* Section 18.2.  An arity that is not [Type] itself still denotes a single
+   target type, provided every argument it takes is a *value*: values are
+   erased from the target's type language, so [b : header -> Type] has one
+   representation for every [h] and [b h] is that representation.  Only an
+   argument of kind [Type] makes it a real type constructor -- the [m] of
+   [class monad (m:Type -> Type)] -- and that is what neither OCaml nor C can
+   name.
+
+   This is what [Prims.dtuple2 header (fun h -> payload h)] needs.  Dropping
+   [b] leaves the second field typed by a name that no parameter binds, so it
+   is [any]; kept, it is an ordinary type parameter, and a monomorphizing run
+   fills it in with [payload].  EverParse's whole validate/parse/serialize
+   idiom is a value-indexed [dtuple2] and was [any] throughout. *)
+let is_value_indexed_arity (env:TcEnv.env) (t:typ) : ML bool =
+  is_arity env t &&
+  (let bs, res = U.arrow_formals t in
+   Cons? bs &&
+   is_star_aux false env res &&
+   bs |> List.for_all (fun (b:binder) -> not (is_arity env b.binder_bv.sort)))
+
 let is_type_param (env:TcEnv.env) (b:binder) : ML bool =
-  is_star_aux false env b.binder_bv.sort
+  is_star_aux false env b.binder_bv.sort ||
+  is_value_indexed_arity env b.binder_bv.sort
 
 (* Rule 1: a non-informative binder carries no runtime value, so it is deleted
    rather than passed.  The *unit-shaped* ones are excluded here, and
