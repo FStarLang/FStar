@@ -448,7 +448,17 @@ apart. Note also that coercion is directional (computed → expected) whereas `c
 symmetric; the symmetric version is the safe approximation, and a directional test would
 eliminate strictly more candidates.
 
-### 7.5 Classify arrows rather than treating them as unknown
+### 7.5 Make `strict` reports worth reading
+
+Two mechanical defects make `strict` noisier than the ambiguities warrant, measured in §8:
+argument speculation re-enters `resolve` for a use site that has already been reported, so
+43% of reports are duplicates; and a candidate set whose members are definitionally the same
+thing, such as `TypeChecker.Env.guard_t` and the `TypeChecker.Common.guard_t` it abbreviates,
+is reported even though the choice cannot matter. Deduplicating by position and comparing
+unfoldings before reporting would remove roughly two thirds of the reports in `src` without
+suppressing a single real ambiguity.
+
+### 7.6 Classify arrows rather than treating them as unknown
 
 `base_of_typ` reports an arrow as `Base_unknown`, and `expected_compatible` concludes nothing
 when the two shapes have different numbers of explicit formals. Together these mean a
@@ -656,6 +666,47 @@ the corpus does this, but it is the failure mode to watch, and the fix if it app
 extend `compatible` — driving it from `Util.find_coercion`'s own table, including the
 `[@@coercion]` sigelts reachable via `Env.lookup_attr`, rather than from a hardcoded pair
 list (§7).
+
+### Why `strict` is a lint and not a candidate default
+
+`strict` reports every use site where more than one candidate survives the filter. Measured
+over the whole repository by demoting 362 to a warning (`--warn_error +362`) so that a run
+collects every site rather than stopping at the first:
+
+| corpus | files reporting | positions | distinct candidate sets |
+|---|---|---|---|
+| `ulib/` (310 files) | **0** | **0** | 0 |
+| `src/` (365 files) | 132 | 3293 | 71 |
+| tests + examples + Pulse + book | 238 | 1757 | 133 |
+
+`ulib` is already clean, which shows the discipline is achievable and worth keeping an eye on.
+Everything else is not, and the reason is visible in what gets reported: **86% of the sites in
+the test corpus have one candidate defined in the very file being checked** — `SfBasic.nat`
+against `Prims.nat`, `PulseTutorial.LinkedList.llist` against
+`FStar.List.Tot.Properties.llist`, `Sec2.HIFC.sel` against `FStar.Map.sel`. Deliberately
+shadowing a library name with a local one is ordinary F* style, and under `compat` it does
+exactly what the author intends. `strict` turns each such use into an error. That is not a
+blind spot in the filter that better type information could close: both candidates really are
+in scope and really do fit.
+
+`src/` fails differently. It has few local shadows but a large shared vocabulary — `term`,
+`env_t`, `guard_t`, `args`, `pos` — spread across modules that are routinely opened together.
+The single largest group, 785 sites, is `SMTEncoding.Term.term` against `Syntax.Syntax.term`.
+
+Two of the reports are noise that should be fixed whether or not `strict` is ever promoted:
+
+- **43% of reports are duplicates at a position already reported.** Argument speculation
+  re-enters `resolve` for the same use site, and each entry reports.
+- **Some candidate sets are vacuous**: in `src`, 11 of the 71 sets, accounting for 687
+  reports, are candidates that are *definitionally the same thing*, e.g.
+  `TypeChecker.Env.guard_t` is declared `type guard_t = TcComm.guard_t`
+  (`FStarC.TypeChecker.Env.fsti:314`). Which one is chosen cannot matter. Comparing
+  unfoldings before reporting would suppress these.
+
+Fixing both would cut the `src` figure by roughly two thirds, and is worthwhile because it
+makes `strict` usable for its actual purpose: auditing a module for names that a reader could
+plausibly misread. It would not make `strict` a viable default, because the 86% majority is
+code that is behaving as designed.
 
 ---
 
