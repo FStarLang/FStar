@@ -87,16 +87,26 @@ their head symbol: ``list int`` and ``list bool`` are not distinguishable this
 way, and neither is a candidate whose argument type is still unknown at that
 point.
 
-If more than one candidate survives, F* silently takes the innermost one — the
-one that the last ``open`` brought into scope, which is the one it would have
-picked before overloading existed. Overloading therefore never changes the
-meaning of a program that already type-checks; it only lets programs that used
-to be rejected, or that had to be written with a module qualifier, work as
-written. A module-qualified name such as ``IntOps.f`` is never overloaded, and a
-local variable always shadows everything.
+Whatever survives, F* takes the innermost of the survivors — the one brought
+into scope by the latest ``open``. So when nothing has been eliminated the
+answer is the innermost binding, exactly as it would be without overloading;
+what overloading adds is that an inner binding which cannot possibly fit steps
+aside and lets an outer one through. A module-qualified name such as
+``IntOps.f`` is never overloaded, and a local variable always shadows
+everything.
 
-Two options control this, both rarely needed:
+For this to leave existing programs alone, eliminating a candidate has to be a
+judgement F* is sure of, and there is nothing downstream that revisits the
+decision. That is why the test is as coarse as it is: it compares head symbols
+only, treats an unknown type as fitting anything, and accounts for the implicit
+coercions the elaborator may insert, so that e.g. a ``bool`` still counts as
+fitting where a ``prop`` is expected. Should a name nevertheless resolve
+somewhere you did not intend, qualifying it is always available, as is turning
+the feature off.
 
+Three modes are selectable, and the default rarely wants changing:
+
+* ``--ext fstar:overload=compat`` is the default described above.
 * ``--ext fstar:overload=off`` restores the old behaviour, where a name resolves
   to the innermost binding and nothing else.
 * ``--ext fstar:overload=strict`` reports an error (number 362) wherever more

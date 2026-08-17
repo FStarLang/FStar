@@ -2043,11 +2043,12 @@ let output_ext                   () = get_output_ext                  ()
 
 let overload_mode                () =
   match String.lowercase (Ext.get "fstar:overload") with
-  (* The empty string is what Ext.get returns for an unset key: the
-     default is `compat`, which resolves a name by type only when doing so
-     eliminates candidates that name resolution would otherwise have
-     discarded silently. It never changes the meaning of a program that
-     checks today. Use `off` to get the pre-overloading behaviour. *)
+  (* The empty string is what Ext.get returns for an unset key, so the
+     default is `compat`: among the candidates for a name, discard those
+     whose types cannot fit the use site, then apply ordinary scope order
+     to what is left. `off` skips the discarding, recovering scope order
+     alone, and `strict` reports the leftover ambiguities instead of
+     resolving them. *)
   | "" | "compat" | "on" | "true" | "1" -> Overload_compat
   | "off" | "false" | "0" -> Overload_off
   | "strict" -> Overload_strict
