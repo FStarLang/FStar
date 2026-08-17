@@ -134,18 +134,32 @@ val candidates_doc : env -> list fv -> ML (list Pprint.document)
     separate ways:
 
       - a candidate is eliminated only when its formal and the argument have
-        two *different rigid heads*, so anything unknown eliminates nothing;
+        two *different rigid heads*, so anything unknown eliminates nothing,
+        and "different rigid heads" is weaker than "different types" on
+        purpose: the elaborator inserts coercions, so [compatible] treats
+        [bool], [prop] and [Type] as mutually possible, and likewise [erased t]
+        and [t];
       - if a filter would eliminate *every* remaining candidate it is skipped
         entirely, so we never turn a type error into a resolution error;
-      - if several candidates survive, we return the first, which is the
-        candidate that would have been chosen anyway.
+      - if several candidates survive, we return the first of *them*, in scope
+        order.
 
-    Together these guarantee that a program that typechecks today still
-    typechecks, and still means the same thing.
+    Note that the last point does not say "the candidate that would have been
+    chosen anyway". That candidate is [primary], and [primary] may itself have
+    been filtered out, in which case we answer with an alternative even though
+    more than one survived. [resolve] on its own therefore does not guarantee
+    that a program which typechecks today still typechecks and still means the
+    same thing; that guarantee is completed by
+    [TcTerm.resolve_overloaded_head], which whenever this function returns
+    anything other than [primary] re-checks [primary] at the real arguments and
+    expected type, and keeps it if it checks.
 
-    Under [--ext fstar:overload=strict] the last point is an error instead,
-    which is what phase p7 uses to measure how often genuine ambiguity
-    arises. *)
+    Under [--ext fstar:overload=strict] a surviving set of more than one
+    candidate is reported as [Error_AmbiguousName] instead of being silently
+    resolved. The first survivor is still returned, so that a single file
+    reports all of its ambiguities rather than stopping at the first, and so
+    that [--warn_error] can demote the report and recover the scope-order
+    answer. *)
 val resolve :
      env
   -> (term -> ML base_typ)

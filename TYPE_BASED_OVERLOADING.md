@@ -52,13 +52,17 @@ Instead, **scope order is retained as the tie-breaker**:
    compatibility mechanism; it must not be discarded.
 3. Eliminate candidates that are *definitely* type-incompatible (§2.4).
 4. Exactly one survives → resolve to it.
-5. Several survive → **pick the first**, i.e. exactly today's answer.
+5. Several survive → **pick the first of them**, which is today's answer whenever today's
+   answer was not itself eliminated in step 3.
 6. None survive → resolve to the first anyway, so the user sees exactly today's error.
 
-Under this rule **no currently-working program changes meaning**: today's winner is always
-candidate #1, and is only passed over when it is definitely ill-typed. Programs that used
-to *fail* can start succeeding; nothing that succeeded can fail. This is what makes
-"on by default" a realistic goal.
+Under this rule **no currently-working program changes meaning** *provided step 3 really
+does eliminate only ill-typed candidates*. Today's winner is always candidate #1, and steps
+5 and 6 pass over it only when step 3 rejected it. That proviso is the whole difficulty:
+§2.4 is a head-symbol test and cannot see coercions, subtyping or typeclass constraints, so
+in practice step 3 has to be backed by an explicit re-check of the displaced candidate
+(step 8 of §3). Programs that used to *fail* can start succeeding; nothing that succeeded
+can fail. This is what makes "on by default" a realistic goal.
 
 ### 2.2 The fv keeps the scope-order winner; the qualifier carries only alternatives
 
