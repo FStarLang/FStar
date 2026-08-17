@@ -273,8 +273,11 @@ the uniform rules apply.
   serious correctness hazard in the design.
 - **No unresolved fv survives `tc_term`.** Add a defensive check. §2.2 makes a leak
   degrade rather than crash, but it should still be caught.
-- Adding an overload to a module must not break distant clients — guaranteed by §2.1, since
-  a new candidate can only ever be *added* after the existing winner.
+- **Candidates are filtered independently of one another.** Adding an overload therefore
+  cannot cause an existing candidate to be eliminated, so a client whose winner survives the
+  filter keeps that winner. The two ways a new overload can still reach a client: it precedes
+  the old winner in scope order and the old winner was already being eliminated, or, under
+  `strict`, it makes a use site newly ambiguous.
 
 ---
 
