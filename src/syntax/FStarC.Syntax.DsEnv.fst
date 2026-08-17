@@ -435,10 +435,11 @@ let find_in_module_with_includes
    first-match-wins behaviour.
 
    With [collect=true] it keeps walking and returns *all* the hits, in
-   scope order, so the head of the list is still today's answer. This
-   is what feeds type-based overloading (see TYPE_BASED_OVERLOADING.md):
-   later candidates are only ever used to recover from a resolution
-   that would otherwise have failed or been type-incorrect.
+   scope order, so the head of the list is the same singleton answer
+   [collect=false] would have given. This is what feeds type-based
+   overloading (see TYPE_BASED_OVERLOADING.md): later candidates are only
+   ever used to recover from a resolution that would otherwise have failed
+   or been type-incorrect.
 
    Local binders and recursive bindings are never overloaded: if the
    scope walk reaches one, it is the answer, full stop. This is sound

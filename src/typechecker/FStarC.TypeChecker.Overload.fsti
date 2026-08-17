@@ -33,7 +33,8 @@
     The overriding invariant is that classification here must
     *over-approximate* compatibility: a candidate may be eliminated only when it
     is definitely ill-typed. A false-positive elimination is the only way
-    overloading can break a program that checks today. *)
+    overloading can reject a program that scope-order name resolution alone
+    would have accepted. *)
 module FStarC.TypeChecker.Overload
 
 open FStarC
@@ -117,8 +118,9 @@ val candidates_doc : env -> list fv -> ML (list Pprint.document)
 (** Pick a candidate for an overloaded name.
 
     [resolve env speculate primary alts args expected] chooses among
-    [primary :: alts], which are given in scope order so that [primary] is
-    exactly what name resolution answers today.
+    [primary :: alts], which are given in scope order, innermost binding first.
+    [primary] is therefore the candidate that scope-order name resolution
+    selects on its own, i.e. the answer when overloading is disabled.
 
     [speculate] classifies the type of an argument term. It is supplied by the
     caller because this module cannot depend on the typechecker; it is expected
@@ -144,15 +146,21 @@ val candidates_doc : env -> list fv -> ML (list Pprint.document)
       - if several candidates survive, we return the first of *them*, in scope
         order.
 
-    Note that the last point does not say "the candidate that would have been
-    chosen anyway". That candidate is [primary], and [primary] may itself have
-    been filtered out, in which case we answer with an alternative even though
-    more than one survived. [resolve] on its own therefore does not guarantee
-    that a program which typechecks today still typechecks and still means the
-    same thing; that guarantee is completed by
-    [TcTerm.resolve_overloaded_head], which whenever this function returns
-    anything other than [primary] re-checks [primary] at the real arguments and
-    expected type, and keeps it if it checks.
+    Note that the last point returns the first *surviving* candidate, which is
+    [primary] only when [primary] survived every filter. If [primary] was
+    eliminated and more than one alternative remains, the answer is an
+    alternative. [resolve] thus preserves the scope-order answer exactly when
+    the filters do not reject it, and it never revisits a rejection.
+
+    That is why [resolve] is only half of the mechanism. Its answer is no
+    better than the head-symbol approximation in [compatible], which cannot see
+    coercions, subtyping or typeclass constraints and so can reject a candidate
+    that would in fact have typechecked. [TcTerm.resolve_overloaded_head]
+    closes that gap: whenever [resolve] answers something other than [primary],
+    it re-checks [primary] against the real arguments and expected type and
+    keeps [primary] if that succeeds. Only the two together implement the
+    intended contract, namely that the scope-order candidate is displaced only
+    when it genuinely does not typecheck.
 
     Under [--ext fstar:overload=strict] a surviving set of more than one
     candidate is reported as [Error_AmbiguousName] instead of being silently

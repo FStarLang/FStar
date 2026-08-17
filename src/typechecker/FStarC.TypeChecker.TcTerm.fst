@@ -1825,13 +1825,14 @@ and resolve_overloaded_head env (lhead:term) (largs:args) : ML term =
          so it does not know about refinements, subtyping, implicit coercions
          or typeclass constraints, and it can therefore eliminate a candidate
          that would in truth have worked. Before letting it change the answer,
-         check that the answer it displaced -- the one name resolution gives
-         today -- really does fail. If it checks, keep it, and the program
-         means exactly what it meant before.
+         check that the candidate it displaced -- [primary], the one
+         scope-order name resolution selects -- really does fail. If it
+         checks, keep it: the program then means what it means with
+         overloading disabled.
 
-         This runs only where the answer would change, which is the set of
-         programs that do not check today plus the ones genuinely using
-         overloading. *)
+         This probe runs only where the two disagree, i.e. on programs that
+         do not typecheck under scope-order resolution plus programs genuinely
+         using overloading. *)
       if speculate_ok env (rebuild primary)
       then (
         if !Overload.dbg then

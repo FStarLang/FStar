@@ -188,9 +188,10 @@ let expected_compatible env t n te : ML bool =
   cmp ts es
 
 (* Apply a filter, but never let it empty the candidate set. Dropping every
-   candidate would mean reporting an unresolvable name where today the user
-   gets an ordinary type error on the primary candidate, which is both less
-   useful and a behavior change. *)
+   candidate would mean reporting an unresolvable name, where keeping them
+   yields an ordinary type error on the scope-order candidate. The latter is
+   both the more useful message and the one the user gets with overloading
+   disabled. *)
 let narrow_at (stage : string) (p : (fv & option typ) -> ML bool) (cs : list (fv & option typ))
   : ML (list (fv & option typ))
   = match List.filter p cs with

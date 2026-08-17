@@ -215,11 +215,12 @@ type lenv_t = list bv
 (* --- Type-based overloading: attaching candidate lists ---------------
 
    See TYPE_BASED_OVERLOADING.md. When a name resolves to several
-   top-level definitions we keep resolving it exactly as before (the
+   top-level definitions we resolve it by scope order as usual (the
    innermost one wins) but record the shadowed alternatives on the fv,
    as [Unresolved_name alts]. The typechecker may later pick a different
-   candidate, but only when the primary one is definitely type-incorrect
-   -- so no program that works today can change meaning.
+   candidate, but only when the scope-order one is definitely
+   type-incorrect, so a program that typechecks under scope-order
+   resolution keeps its meaning.
 
    The qualifier is only ever attached to an fv that has no qualifier of
    its own; data constructors and record projectors keep their existing
