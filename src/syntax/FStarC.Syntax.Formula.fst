@@ -103,7 +103,7 @@ let patterns t : ML (list (list arg) & term) =
         | Tm_meta {tm=t; meta=Meta_pattern (_, pats)} -> pats, SS.compress t
         | _ -> [], t
 
-let destruct_q_conn t : ML (option connective) =
+let rec destruct_q_conn t : ML (option connective) =
     let is_q (fa:bool) (fv:fv) : ML bool =
         if fa
         then U.is_forall fv.fv_name
@@ -137,10 +137,37 @@ let destruct_q_conn t : ML (option connective) =
           let pats, body = patterns t in
           if b
           then Some (QAll(bs, pats, body))
-          else Some  (QEx(bs, pats, body))
+          else collect_nested <| Some (QEx(bs, pats, body))
 
         | _ -> None in
     aux None [] t
+
+(* The loop above stops collecting binders whenever the body of the quantifier
+   is not *syntactically* another application of the same quantifier. In
+   particular it stops at a Tm_meta node, even an empty Meta_pattern, which is
+   how the body of the specifications of FStar.Classical.Sugar's
+   indefinite_descriptionN appear. That would leave us with
+   nested existentials where a single one would do, and the nesting is very bad
+   for the SMT solver: it has no trigger for the outer quantifier that mentions
+   the inner binders, and falls back to a multi-pattern of the typing
+   hypotheses of the outer binders, hence enumerating every tuple of terms of
+   the right type. See issue #4405.
+
+   The [patterns] call above has stripped that Tm_meta node, so simply try to
+   destruct the body again and merge. We only do so when neither existential
+   carries SMT patterns, since merging two levels that do have patterns would
+   turn them into a single (conjunctive, and possibly ill-formed) multi-pattern.
+   We also only do it for existentials: universals are far more common in
+   hypotheses, and merging those perturbs the triggers Z3 infers for a lot of
+   already-fragile proofs, for no benefit here. *)
+and collect_nested f : ML (option connective) =
+    match f with
+    | Some (QEx (bs, [], phi)) ->
+        begin match destruct_q_conn phi with
+        | Some (QEx (bs', [], psi)) -> Some <| QEx(bs@bs', [], psi)
+        | _ -> f
+        end
+    | _ -> f
 
 let rec destruct_sq_forall t : ML (option connective) =
     let! t = U.un_squash t in
