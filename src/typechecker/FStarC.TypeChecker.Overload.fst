@@ -72,10 +72,13 @@ let base_head_fv env t =
    [bool] is acceptable where a [prop] or a [Type] is expected and vice
    versa, an [erased t] where a [t] is, and any [@@coercion]-annotated
    function defines further pairs. Modelling every one of those here would
-   be a losing game, so we model the built-in families -- which are by far
-   the most common, [b2t] especially -- and let TcTerm's verification step
-   (which re-checks the displaced candidate before accepting a different
-   answer) cover the rest. *)
+   be a losing game, so we model the built-in families, which are the ones
+   that arise in practice -- [b2t] especially.
+
+   Anything this relation calls incompatible is eliminated for good, so an
+   unmodelled coercion is a way to answer with the wrong candidate. If that
+   ever bites, the fix is to derive these cases from [Util.find_coercion]
+   itself rather than to widen the list here by hand. *)
 let coerces_to_anything fv =
   (* [reveal]/[hide] are inserted silently in both directions. *)
   fv_eq_lid fv PC.erased_lid

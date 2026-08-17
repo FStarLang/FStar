@@ -5,8 +5,10 @@ open OvlBool
 
 (* Regression: these are the shapes that broke when 'compat' first became
    the default. In each case the filter, which only ever compares head
-   symbols, wants to eliminate the candidate that name resolution picks
-   today -- and that candidate nevertheless checks. *)
+   symbols, would eliminate the scope-order candidate even though that
+   candidate is the one that checks. Nothing recovers from a wrong
+   elimination, so Overload.compatible has to be generous enough not to
+   make one. *)
 
 (* 1. Implicit coercion. This module's own `sorted` shadows
    FStar.List.Tot.Properties.sorted, opened above, so it is the primary
@@ -27,6 +29,6 @@ let use_sorted x l = ()
    type of `nat -> int`, even though the argument heads do not match. *)
 let sub_ok : nat -> int = id
 
-(* 3. When the primary candidate does check, it is kept, so this still
-   means OvlBool.f exactly as it did before overloading existed. *)
+(* 3. When nothing discriminates, the scope-order candidate is returned,
+   so this means OvlBool.f, as it does with overloading disabled. *)
 let primary_kept (x:bool) : bool = f x
