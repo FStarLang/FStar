@@ -292,7 +292,7 @@ KRML_TESTS += KrmlBasic
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
-C_TESTS += KrmlBasic CExtern
+C_TESTS += KrmlBasic CExtern CRecType
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
 # global whose initializer is a computation -- against one that is a constant
@@ -310,6 +310,17 @@ CGREP_CExtern   = "include \"CExtern_stubs.h" \
 # as an abstract struct the way a Custard-owned opaque type would be.
 CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag" \
                   "  CExtern_base =" "  CExtern_low ="
+
+# Section 17.3: recursion through a pointer.  Every struct is tagged and every
+# tag is forward-declared, so a field may name a type that is defined later --
+# which a self-referential type always does.
+CGREP_CRecType   = "typedef struct CRecType_tree_s CRecType_tree;" \
+                   "typedef struct CRecType_node_s CRecType_node;" \
+                   "struct CRecType_node_s {" \
+                   "CRecType_tree *left;"
+# No struct typedef is anonymous any more, and the recursive types are not
+# rejected as infinite: the recursion goes through a pointer.
+CNOGREP_CRecType = "typedef struct {" "} CRecType_tree;" "} CRecType_node;"
 
 # CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
 # output-quality invariants of section 6: a unit parameter is a thunk, which C

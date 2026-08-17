@@ -1147,18 +1147,49 @@ let check_finite (d:dtype) : ML unit =
        "Use an explicit pointer (a Pulse ref, array or box) for the \
         recursive field."]
 
+(* Every struct Custard emits carries a *tag*, and every one is
+   forward-declared before any of them is defined.
+
+   A type that reaches itself through a pointer -- a [ref t] or a [t *] inside
+   a [t], which is how every tree and every linked structure is written -- is
+   perfectly good C, and [check_finite] above lets it through for that reason.
+   But the field mentioning it is written before the type it names exists, so
+   the name has to be introduced first, and an anonymous
+   [typedef struct { ... } t;] offers nowhere to do that: there is no tag to
+   forward-declare.  So the definition is [struct t_s { ... };], with
+   [typedef struct t_s t;] hoisted above every definition.
+
+   Only a struct needs this.  An enum cannot be recursive, and C has no
+   incomplete enum type to forward-declare anyway; a typedef of a pointer is
+   already fine, because the forward declarations precede it. *)
+let struct_tag (n:string) : string = n ^ "_s"
+
+let is_struct (d:dtype) : ML bool =
+  match d.dt_body with
+  | TRecord _ -> true
+  | TVariant _ -> not (is_enum d)
+  | TAbbrev _ | TAbstract -> false
+
+let type_fwd (d:dtype) : ML (option string) =
+  if Some? (builtin_type d.dt_name) then None else
+  if is_struct d
+  then let n = c_name d.dt_name in
+       Some ("typedef struct " ^ struct_tag n ^ " " ^ n ^ ";\n")
+  else None
+
 let type_decl (d:dtype) : ML (option string) =
   if Some? (builtin_type d.dt_name) then None else
   let n = c_name d.dt_name in
+  let open_struct () : string = "struct " ^ struct_tag n ^ " {\n" in
   match d.dt_body with
   | TAbstract -> None
   | TAbbrev c -> Some ("typedef " ^ decl_of c n ^ ";\n")
   | TRecord fs ->
     check_finite d;
-    Some ("typedef struct {\n" ^
+    Some (open_struct () ^
           String.concat "" (fs |> List.map (fun (f, c) ->
             "  " ^ decl_of c (c_var f) ^ ";\n")) ^
-          "} " ^ n ^ ";\n")
+          "};\n")
   | TVariant cs ->
     check_finite d;
     if is_enum d then
@@ -1167,17 +1198,17 @@ let type_decl (d:dtype) : ML (option string) =
             "\n} " ^ n ^ ";\n")
     else if single_ctor d then
       let _, fs = List.hd cs in
-      Some ("typedef struct {\n" ^
+      Some (open_struct () ^
             String.concat "" (fs |> List.map (fun (f, c) ->
               "  " ^ decl_of c (c_var f) ^ ";\n")) ^
-            "} " ^ n ^ ";\n")
+            "};\n")
     else
       (* A tagged union.  The per-constructor structs are anonymous members of
          one union, named after the constructor, so that a use site can name a
          field knowing only the constructor -- which after monomorphization it
          always does. *)
       let nonempty = cs |> List.filter (fun (_, fs) -> Cons? fs) in
-      Some ("typedef struct {\n" ^
+      Some (open_struct () ^
             "  enum {\n" ^
             String.concat ",\n" (cs |> List.map (fun (c, _) -> "    " ^ c_tag c)) ^
             "\n  } tag;\n" ^
@@ -1191,7 +1222,7 @@ let type_decl (d:dtype) : ML (option string) =
                    "      " ^ decl_of t (c_var f) ^ ";\n")) ^
                  "    } " ^ c_var (mangled_name c) ^ ";\n")) ^
                "  } val;\n") ^
-            "} " ^ n ^ ";\n")
+            "};\n")
 
 let kept_binders (l:dlet) : ML (list binder) =
   match SMap.try_find !keeps (string_of_name l.dl_name) with
@@ -1416,6 +1447,17 @@ let print_program (p:program) : ML string =
       reject "an exception declaration" ["C has no exceptions."]
     | _ -> []) in
 
+  (* Every struct's name exists before any type is defined, so that a type
+     that reaches itself, or another one later in the file, through a pointer
+     needs no analysis here.  Definition order is still the SCC pass's
+     topological one, which is what a field held *by value* needs. *)
+  let fwds = p |> List.collect (fun d ->
+    match d with
+    | DType t ->
+      current := string_of_name t.dt_name;
+      (match type_fwd t with Some s -> [s] | None -> [])
+    | _ -> []) in
+
   let tys = p |> List.collect (fun d ->
     match d with
     | DType t ->
@@ -1483,6 +1525,7 @@ let print_program (p:program) : ML string =
   let body =
     header ^ "\n" ^
   (match includes with [] -> "" | _ -> String.concat "\n" includes ^ "\n\n") ^
+  String.concat "" fwds ^ (match fwds with [] -> "" | _ -> "\n") ^
   String.concat "" tys ^ (match tys with [] -> "" | _ -> "\n") ^
   String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^

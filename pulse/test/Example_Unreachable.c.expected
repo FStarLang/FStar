@@ -9,7 +9,9 @@ than void, so that it can be stored in a variable and returned like any
 other value. */
 typedef uint8_t custard_unit;
 
-typedef struct {
+typedef struct FStar_Pervasives_Native_option__bool_s FStar_Pervasives_Native_option__bool;
+
+struct FStar_Pervasives_Native_option__bool_s {
   enum {
     FSTAR_PERVASIVES_NATIVE_NONE__BOOL,
     FSTAR_PERVASIVES_NATIVE_SOME__BOOL
@@ -19,7 +21,7 @@ typedef struct {
       bool v;
     } FStar_Pervasives_Native_Some__bool;
   } val;
-} FStar_Pervasives_Native_option__bool;
+};
 
 bool Example_Unreachable_test(FStar_Pervasives_Native_option__bool x);
 

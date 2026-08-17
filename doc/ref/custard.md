@@ -6158,6 +6158,49 @@ split pays for itself immediately in three places:
 too; `tests/extraction/backends/ExtIntCast` pins it end to end on all seven
 columns.
 
+### 17.3 Tagged structs, and why a recursive type needs them
+
+C has no way to say "a struct containing itself", and section 8b's `check_finite`
+rejects that outright.  What it does *not* reject, correctly, is a struct
+reaching itself through a *pointer*: `occurs` stops at a pointer, because a
+pointer is a size.  `type tree = ... | Node of node and node = { left: ref tree }`
+is therefore accepted, and is ordinary C.
+
+It was not, however, emitted as ordinary C.  Every struct went out as an
+anonymous typedef:
+
+```c
+typedef struct { CRecType_tree *left; } CRecType_node;
+```
+
+and the name `CRecType_tree` does not exist yet -- it cannot, since `tree`
+mentions `node`.  Reordering the declarations does not help; that is what
+recursion means.  gcc says `unknown type name`, and the whole translation unit
+is lost.  Reported against EverParse's `cbor_raw`, where it was the only defect
+in the output: adding tags by hand and changing nothing else gave C that
+compiles clean under `-std=c11 -Wall -Wextra -Werror`.
+
+So every struct now carries a tag, `t_s` for a type named `t`, and every tag is
+forward-declared in one block before any type is defined:
+
+```c
+typedef struct CRecType_node_s CRecType_node;
+typedef struct CRecType_tree_s CRecType_tree;
+
+struct CRecType_node_s { CRecType_tree *left; ... };
+struct CRecType_tree_s { ... };
+```
+
+An incomplete type is enough to declare a pointer to it, so the order of the
+definitions stops mattering and Custard does not have to compute one.  This
+applies to a record, and to a variant that is not an enum -- an enum is not a
+struct and needs nothing.  Type abbreviations are unchanged.
+
+`tests/custard/CRecType.fst` covers the three shapes that failed differently:
+a variant reaching itself through a record declared after it, mutual recursion
+between a record and a variant, and a variant reaching itself directly.  It is
+compiled and run, so the pointers are dereferenced and not merely declared.
+
 
 
 | M | Deliverable | Notes |
@@ -6228,3 +6271,4 @@ columns.
 | M10ζ | **The Pulse test suite** (§15) | Done.  All twenty extraction tests in `pulse/test` go through Custard, ten of them straight to C, four through karamel because they compute on `Prims.int` (§15.2), six to OCaml, and the `.expected` files were regenerated.  The enabling piece is `--custard_entry_module`, which roots every top-level value of a module (§15.1) --- a test module has no `main`, and listing its `fn`s in the makefile would let a new one silently stop being extracted.  Rooting a *module* means rooting its specifications too, so a root now skips an erased definition.  Five fixes, three of them about the karamel path the DICE example barely used: karamel prepends its own `Prims` and rejects ours as duplicates, `-bundle X=*` needs `X` to exist, and a `BufIsNull` without a type application was silently *dropped* by karamel’s Low\* re-check, taking `Null_test` with it.  The other two: an `if` whose arms are both empty, caught by §14.11’s invariant, and a `null` an OCaml `ref` can actually hold --- the immediate `0`, tested with `Obj.is_block`, since a sentinel allocation is not one value under `--custard_split`.  `pulse/mk/custard-test.mk` |
 | M10η | **The cross-backend matrix** (§16) | Done.  All four Custard columns of `tests/extraction/backends` -- OCaml, direct C, and karamel's C and Rust off one shared `.krml` -- run green over the suite's twenty-five modules, each extracted, compiled and *run*, with its exit status compared against what F\* proved.  Four bugs in Custard: the OCaml entry point discarded the exit status §4.4 promised; C integer literals carried no width suffix, so `((uint64_t)18446744073709551615)` did not compile (a decimal literal takes the first *signed* type it fits, C99 6.4.4.1, and the cast cannot rescue it); `Int8`/`Int16` modular operators were not truncated back after C's integer promotion, so `~(uint8_t)0` was `-1`; and, severity 2 on every backend, `Layout.rw_expr` fused nested casts unconditionally, so `uint8_to_uint32 (uint32_to_uint8 x)` became bare `x` -- sound for a representation coercion, a silent miscompilation for a width conversion.  One bug left open and written up as finding #18: only `FStar.UInt8` is a realized module, so `ne`, `lognot`, `shift_arithmetic_right`, the rotates and the masks at the other seven widths are compiled from their bit-vector *model* in `Prims.int`.  A `custard_xfail_rule` was needed because Custard is the extractor, so a bug in it can fail the F\* step, which the existing rule takes as a prerequisite.  Custard passes five cells the older pipeline XFAILs (§16.5) |
 | M10θ | **Two things about the C output** (§17) | Done.  A global whose initializer is a C constant expression is now emitted as `int32_t m7 = ((int32_t)-7);` rather than assigned at startup, so the linker can put it in `.data`/`.rodata` and the C compiler can fold it at its uses; `ExtIntSigned` loses its `custard_init_globals` and its call from `main` entirely, and `CExtern` pins a module that keeps the function for the two globals that still need it.  The recognized subset is a constant and a cast of one: wider arithmetic is pointless (`2 + 2` has been folded long before `PrintC` sees it) and a record is not merely pointless but wrong, since the compound literal Custard emits for one is not a constant expression at file scope.  And the IR's single cast node is split in two: `ECoerce` for §5.4's representation coercion, which computes nothing and therefore fuses, and `ECast` for §8.1's machine-integer conversion, which computes and therefore does not.  They were one node, and §16.2's severity-2 miscompilation was §5.4's fusion rule applied to a conversion; the fix then was a side condition testing whether both sides were `TInt`, which works but asks every pass to re-derive a fact the front end knew.  The split removes the side condition from `Layout`, removes a clause from `Driver.lost_cast`, and turned up the same latent bug a second time in `PrintOCaml.index`, which looked through a narrowing conversion to keep a subscript readable |
+| M10ι | **Recursive datatypes in the direct-to-C backend** (§17.3) | Done.  A struct reaching itself through a pointer is legal C and `check_finite` correctly accepts it, but `PrintC` emitted every struct as an anonymous typedef, so a field naming the type under definition named something that did not exist yet -- and no ordering of the declarations can fix that, since that is what recursion means.  Every struct now carries a tag `t_s` and every tag is forward-declared in one block ahead of all the definitions, which makes the order irrelevant rather than merely computable.  Reported against EverParse's `cbor_raw`, where it was the *only* defect: with tags added by hand and nothing else changed, the output compiles clean under `-std=c11 -Wall -Wextra -Werror`.  `tests/custard/CRecType.fst` pins the three shapes that failed differently, compiled and run |
