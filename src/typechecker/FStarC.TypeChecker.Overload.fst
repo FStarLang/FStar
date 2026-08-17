@@ -217,8 +217,8 @@ let keep_if (f : typ -> ML bool) : (fv & option typ) -> ML bool =
     | Some t -> f t
 
 (* Ambiguities already reported, keyed by the range of the occurrence and the
-   candidates in play. See [reset_ambiguity_reports] in the interface for why
-   one occurrence reaches [resolve] more than once. *)
+   candidates in play. Elaboration duplicates terms, so one occurrence reaches
+   [resolve] several times; see [reset_ambiguity_reports] in the interface. *)
 let reported : ref (list (string & list string)) = mk_ref []
 
 let reset_ambiguity_reports () = reported := []

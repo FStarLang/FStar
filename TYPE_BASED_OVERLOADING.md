@@ -684,16 +684,39 @@ in scope and really do fit.
 `env_t`, `guard_t`, `args`, `pos` — spread across modules that are routinely opened together.
 The single largest group, 785 sites, is `SMTEncoding.Term.term` against `Syntax.Syntax.term`.
 
-The `src` figures above were inflated by duplicate reports, which have since been fixed: the
-typechecker elaborates a declaration more than once — the two phases of `tc_decl`, the
-computation type of a `let rec` checked both while extracting the annotation and with the
-body, a language extension such as Pulse driving the checker — so one occurrence reached
-`resolve` repeatedly and was reported each time. Some sites were reported 15 times.
-`Overload` now remembers which occurrences it has reported and `Tc.tc_decl` clears that
-memory per declaration, which is often enough for a re-checked declaration to report afresh
-(the interactive mode depends on this) and rare enough that the repeated visits within one
-declaration collapse. The `src` sweep went from 4649 reports to 3386, one per position and
-no position reported twice.
+The `src` figures above were inflated by duplicate reports, which have since been fixed. The
+cause is not that a name is resolved twice: resolution happens in phase 1 only. Instrumenting
+`resolve` to record `env.phase1` gives 9722 calls across `src`, every one of them in phase 1
+and none in phase 2, because `TcTerm.resolve_overloaded_head` writes the chosen candidate
+back with `fv_qual = None`, so the elaborated term phase 2 receives carries no alternatives
+and there is nothing left to resolve.
+
+What repeats is the *term*. Elaboration makes several copies of one piece of source, each
+copy keeping the range it came from, and each is checked. Instrumenting the trace with
+source ranges and reading the sites that repeat identifies at least four independent
+producers: the computation type of a `let rec`, which `TcUtil.extract_let_rec_annotation`
+lifts into the type of the binding while leaving the ascription on the body; the binder
+types of a `let rec`, which appear both in that lifted type and on the lambda; the body of
+a `match` branch, elaborated once per or-pattern disjunct; and the head of a record update,
+visited again while the fields are resolved. This is ordinary F\* behaviour rather than
+anything to do with overloading — a `[@@deprecated]` attribute warns eight times at a single
+occurrence inside the `requires` of a `let rec`, where overloading reported twice.
+
+Fixing one producer was tried and rejected. Dropping the ascription from the body of a
+`let rec` once its computation type has moved into `lbtyp` — which is exactly what the
+value-type case of `extract_let_rec_annotation` already does — is a genuine improvement and
+takes the `src` sweep from 4649 reports to 3900, but it still leaves 571 positions reported
+more than once, because it addresses only one of the four producers. The others are not
+similarly removable: a lambda needs its binders and a branch needs its body. Since the
+duplication is structural and pervasive, reporting once per occurrence has to be done by
+remembering occurrences. `Overload` does that, and `Tc.tc_decl` clears the memory per
+declaration, which is often enough for a re-checked declaration to report afresh (the
+interactive mode depends on this) and rare enough that the repeated visits within one
+declaration collapse. That alone takes the sweep from 4649 reports to 3386, one per
+position and no position reported twice — strictly better than the cause fix, which was
+therefore left out as unrelated surgery on the termination checker.
+`tests/overloading/strict/StrictDuplicate.fst` pins one report per occurrence for three of
+the four producers.
 
 What remains is not noise and cannot be filtered away. A residual class worth naming is
 candidates that are *definitionally the same thing* — `TypeChecker.Env.guard_t` is declared

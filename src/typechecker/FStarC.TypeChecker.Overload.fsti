@@ -117,15 +117,19 @@ val candidates_doc : env -> list fv -> ML (list Pprint.document)
 
 (** Forget which ambiguities have been reported.
 
-    The typechecker elaborates a declaration more than once -- the two phases of
-    [tc_decl], the annotation of a [let rec] checked separately from its body,
-    a language extension driving the checker itself -- so a single occurrence
+    Resolution itself runs in phase 1 only; what repeats is the term.
+    Elaboration makes several copies of one piece of source, each keeping the
+    range it came from, and checks each: the computation type of a [let rec] is
+    lifted into the type of the binding while the ascription stays on the body,
+    the binders of a [let rec] appear in both, the body of a branch is
+    elaborated once per or-pattern disjunct, the head of a record update is
+    visited again while its fields are resolved. A single occurrence therefore
     reaches [resolve] several times and would otherwise be reported once per
-    visit. Reporting is therefore idempotent per occurrence, and this resets
-    that memory. It must be called once per top-level declaration: often enough
-    that re-checking a declaration reports afresh, which the interactive mode
-    depends on, and not so often that the repeated visits within one declaration
-    are treated as distinct. *)
+    visit. Reporting is instead idempotent per occurrence, and this resets that
+    memory. It must be called once per top-level declaration: often enough that
+    re-checking a declaration reports afresh, which the interactive mode depends
+    on, and not so often that the repeated visits within one declaration are
+    treated as distinct. *)
 val reset_ambiguity_reports : unit -> ML unit
 
 (** Pick a candidate for an overloaded name.

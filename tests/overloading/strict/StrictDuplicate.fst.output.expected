@@ -1,4 +1,14 @@
-* Warning 362 at StrictDuplicate.fst(14,40-14,44):
+* Warning 362 at StrictDuplicate.fst(20,54-20,58):
+  - The name StrictBool.same is ambiguous; candidates are:
+  - StrictBool.same : Prims.int
+  - StrictInt.same : Prims.int
+
+* Warning 362 at StrictDuplicate.fst(27,14-27,18):
+  - The name StrictBool.same is ambiguous; candidates are:
+  - StrictBool.same : Prims.int
+  - StrictInt.same : Prims.int
+
+* Warning 362 at StrictDuplicate.fst(34,48-34,52):
   - The name StrictBool.same is ambiguous; candidates are:
   - StrictBool.same : Prims.int
   - StrictInt.same : Prims.int
