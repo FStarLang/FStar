@@ -1767,20 +1767,6 @@ and speculate_base env (e:term) : ML Overload.base_typ =
   | Some b -> b
   | None -> Overload.Base_unknown
 
-and speculate_ok env (e:term) : ML bool =
-  (* Does [e] check in [env], including against its expected type? Used to
-     verify that a candidate the type filter wants to displace really does
-     not work. Same discipline as [speculate_base]: roll the unifier back
-     and swallow the errors, and run [admit] so that the answer does not
-     depend on whether SMT obligations are being discharged. *)
-  let tx = UF.new_transaction () in
-  BU.finally (fun () -> UF.rollback tx) (fun () ->
-    let errs, res =
-      Errors.catch_errors_and_ignore_rest (fun () ->
-        tc_term ({env with admit=true}) e)
-    in
-    Some? res && Nil? errs)
-
 and resolve_overloaded_head env (lhead:term) (largs:args) : ML term =
   let fv, us =
     match (SS.compress lhead).n with
@@ -1805,43 +1791,15 @@ and resolve_overloaded_head env (lhead:term) (largs:args) : ML term =
     | Some (t, _) -> Some t
     | None -> None
   in
+  (* [Overload.resolve] is authoritative: whatever it answers is the name this
+     occurrence denotes, and the term is then checked like any other. In
+     particular the answer is not second-guessed by re-checking the candidate
+     it passed over. That keeps resolution a function of the candidates' types
+     and the application site alone, rather than of whether some other
+     candidate happens to typecheck. The cost is that a candidate wrongly
+     eliminated by [Overload.compatible] is really gone, which is why that
+     relation must over-approximate compatibility. *)
   let choice = Overload.resolve env (speculate_base env) primary alts explicit_args expected in
-  (* The qualifier is dropped, so re-checking a rebuilt term cannot loop. *)
-  let rebuild fv =
-    let h = S.mk (Tm_fvar ({fv with fv_qual = None})) lhead.pos in
-    let h = match us with
-            | [] -> h
-            | _ -> S.mk_Tm_uinst h us in
-    match largs with
-    | [] -> h
-    | _ -> S.mk_Tm_app h largs lhead.pos
-  in
-  let choice =
-    if lid_equals (lid_of_fv choice) (lid_of_fv primary)
-    then choice
-    else
-      (* This is what makes overloading a conservative extension in fact and
-         not merely by intention. The filter reasons about head symbols only,
-         so it does not know about refinements, subtyping, implicit coercions
-         or typeclass constraints, and it can therefore eliminate a candidate
-         that would in truth have worked. Before letting it change the answer,
-         check that the candidate it displaced -- [primary], the one
-         scope-order name resolution selects -- really does fail. If it
-         checks, keep it: the program then means what it means with
-         overloading disabled.
-
-         This probe runs only where the two disagree, i.e. on programs that
-         do not typecheck under scope-order resolution plus programs genuinely
-         using overloading. *)
-      if speculate_ok env (rebuild primary)
-      then (
-        if !Overload.dbg then
-          Format.print1 "(Overload) keeping %s: it checks after all\n"
-            (show (lid_of_fv primary));
-        primary
-      )
-      else choice
-  in
   let choice = {choice with fv_qual = None} in
   let h = S.mk (Tm_fvar choice) lhead.pos in
   match us with

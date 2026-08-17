@@ -152,15 +152,17 @@ val candidates_doc : env -> list fv -> ML (list Pprint.document)
     alternative. [resolve] thus preserves the scope-order answer exactly when
     the filters do not reject it, and it never revisits a rejection.
 
-    That is why [resolve] is only half of the mechanism. Its answer is no
-    better than the head-symbol approximation in [compatible], which cannot see
-    coercions, subtyping or typeclass constraints and so can reject a candidate
-    that would in fact have typechecked. [TcTerm.resolve_overloaded_head]
-    closes that gap: whenever [resolve] answers something other than [primary],
-    it re-checks [primary] against the real arguments and expected type and
-    keeps [primary] if that succeeds. Only the two together implement the
-    intended contract, namely that the scope-order candidate is displaced only
-    when it genuinely does not typecheck.
+    The answer is final: the caller uses it as the meaning of the occurrence
+    and checks the resulting term like any other. Nothing re-checks the
+    candidates that were passed over, so which name an occurrence denotes is a
+    function of the candidates' types and of the application site, and not of
+    whether some other candidate would have typechecked.
+
+    The whole weight of the design therefore rests on [compatible] being an
+    over-approximation. It reasons about rigid head symbols and cannot see
+    refinements, subtyping, implicit coercions or typeclass constraints, so
+    anything it cannot rule out it must keep; a candidate eliminated in error
+    is not recoverable later.
 
     Under [--ext fstar:overload=strict] a surviving set of more than one
     candidate is reported as [Error_AmbiguousName] instead of being silently

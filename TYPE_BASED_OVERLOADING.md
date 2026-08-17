@@ -52,17 +52,19 @@ Instead, **scope order is retained as the tie-breaker**:
    compatibility mechanism; it must not be discarded.
 3. Eliminate candidates that are *definitely* type-incompatible (§2.4).
 4. Exactly one survives → resolve to it.
-5. Several survive → **pick the first of them**, which is today's answer whenever today's
-   answer was not itself eliminated in step 3.
-6. None survive → resolve to the first anyway, so the user sees exactly today's error.
+5. Several survive → **pick the first of them**, which is the scope-order answer whenever
+   the scope-order answer was not itself eliminated in step 3.
+6. None survive → resolve to the first anyway, so the user sees the same error as with
+   overloading disabled.
 
 Under this rule **no currently-working program changes meaning** *provided step 3 really
-does eliminate only ill-typed candidates*. Today's winner is always candidate #1, and steps
-5 and 6 pass over it only when step 3 rejected it. That proviso is the whole difficulty:
-§2.4 is a head-symbol test and cannot see coercions, subtyping or typeclass constraints, so
-in practice step 3 has to be backed by an explicit re-check of the displaced candidate
-(step 8 of §3). Programs that used to *fail* can start succeeding; nothing that succeeded
-can fail. This is what makes "on by default" a realistic goal.
+does eliminate only ill-typed candidates*. The scope-order winner is always candidate #1,
+and steps 5 and 6 pass over it only when step 3 rejected it. That proviso carries the whole
+argument, and it is not free: §2.4 is a head-symbol test and cannot see coercions,
+subtyping or typeclass constraints, so it has to be deliberately generous, treating
+`bool`/`prop`/`Type` and `erased t`/`t` as mutually possible (§2.4). What it does not
+rule out, it must keep. Programs that used to *fail* can start succeeding; nothing that
+succeeded can fail. This is what makes "on by default" a realistic goal.
 
 ### 2.2 The fv keeps the scope-order winner; the qualifier carries only alternatives
 
@@ -152,6 +154,13 @@ working code.
   abbreviation we chose not to unfold.
 
 **`Unknown` never eliminates.** Elimination requires two distinct rigid heads.
+
+**Two distinct rigid heads are not sufficient either**, because the elaborator inserts
+coercions, so a value of one head type may legitimately appear where another is expected.
+`compatible` therefore also treats `Prims.bool`, `Prims.prop` and `Tm_type` as mutually
+possible (`b2t`, `squash`, `t2b`) and `FStar.Ghost.erased` as possible against anything
+(`hide`, `reveal`). Nothing downstream re-examines an elimination, so any coercion missing
+from this list is a way to resolve to the wrong candidate; see §7.4.
 
 Rejected alternatives: full `U.eq_tm` on the unrefined type (breaks the moment a uvar or
 abbreviation appears); unifiability via `Rel.try_teq` (order-dependent, and speculative
@@ -272,7 +281,8 @@ the uniform rules apply.
 ## 3. The resolution rule (normative)
 
 For an occurrence of an unqualified name `f` with candidates `C = [c0; …; cn]` in scope
-order (`c0` = today's answer), `k` explicit arguments `a1..ak`, optional expected type `T`:
+order (`c0` = the scope-order answer, i.e. what resolution gives with overloading
+disabled), `k` explicit arguments `a1..ak`, optional expected type `T`:
 
 1. If `f` resolved to a local binder or rec binding, `C = [c0]`. **Locals are never
    overloaded.**
@@ -288,12 +298,18 @@ order (`c0` = today's answer), `k` explicit arguments `a1..ak`, optional expecte
 6. If `|C| > 1` and `T` is available, apply the same test to `T` against each candidate's
    result type after `k` applications.
 7. Pick: `|C| = 1` → it. `|C| > 1` → **head of `C`** under `compat`, ambiguity error under
-   `strict`. `|C| = 0` → `c0`, so the user sees exactly today's type error.
-8. If the pick is not `c0`, speculatively check `c0 a1..ak` against `T`. If it checks, use
-   `c0` after all. Steps 4–6 compare head symbols and so cannot see refinements, subtyping,
-   implicit coercions or typeclass constraints; this step is what makes "no program that
-   checks today can change meaning" hold unconditionally rather than only as far as those
-   steps are accurate. It runs only when the answer would otherwise change.
+   `strict`. `|C| = 0` → `c0`, so the user sees the same type error as with overloading
+   disabled.
+
+The pick is final. The occurrence denotes it, and the term is checked like any other; the
+candidates that were passed over are not re-examined. Which name an occurrence denotes is
+therefore a function of the candidates' types and of the application site, not of whether
+some other candidate happens to typecheck.
+
+All the weight consequently falls on step 3's elimination test being an over-approximation
+(§2.4): steps 4–6 compare head symbols and cannot see refinements, subtyping, implicit
+coercions or typeclass constraints, so whatever they cannot rule out they must keep. A
+candidate eliminated in error is gone for good.
 
 ---
 
@@ -353,7 +369,10 @@ The p7 numbers, and the change to how `strict` reports, are in §8.
 1. **Cost on the common path** — collection runs at every identifier occurrence, and with
    types included that is now every type annotation too. p3 must short-circuit hard at 0 or 1
    candidate and memoise per `(scope_mods fingerprint, ident)`.
-2. **Speculative re-typechecking blowup** on nested applications (§2.5).
+2. **Speculative re-typechecking blowup** on nested applications (§2.5). Bounded by
+   `speculate_base` being called at most once per explicit argument and only while more than
+   one candidate is in play; the whole-application re-check that used to compound this is
+   gone (§8).
 3. **Lax/non-lax divergence** silently changing extracted code (§2.9).
 4. **False-positive elimination** from over-eager delta-unfolding of abstract types (§2.4).
 5. **IDE regression** — `DsEnv.resolve_to_fully_qualified_name` (DsEnv.fst:829) backs
@@ -414,6 +433,27 @@ disappears entirely.
 (`Env.is_effect_name` at ToSyntax.fst:2195; `try_lookup_effect_name`, returning the
 `Eff_name` branch of `foundname` rather than `Term_name`). That path is left exactly as it
 is, and p6 includes a regression test that it is unchanged.
+
+### 7.4 Derive `compatible` from the real coercion table
+
+`Overload.compatible` hardcodes the two coercion families that arise in practice,
+`bool`/`prop`/`Type` and `erased t`/`t`. The authority is `Util.find_coercion`, which also
+honours `[@@coercion]`-annotated definitions found through
+`Env.lookup_attr env "FStar.Attributes.coercion"`. Driving `compatible` from that table
+instead would make user-defined coercions participate and would stop the two from drifting
+apart. Note also that coercion is directional (computed → expected) whereas `compatible` is
+symmetric; the symmetric version is the safe approximation, and a directional test would
+eliminate strictly more candidates.
+
+### 7.5 Classify arrows rather than treating them as unknown
+
+`base_of_typ` reports an arrow as `Base_unknown`, and `expected_compatible` concludes nothing
+when the two shapes have different numbers of explicit formals. Together these mean a
+partially-applied candidate can never be eliminated, which is how
+`FStar.List.Tot.Properties.sorted` and `FStar.Pervasives.singleton` survived filters that
+correctly rejected everything else (§8). Recognising "still a function where a non-function is
+expected" would be a genuine sharpening, and unlike the coercion work it makes the filter
+*more* discriminating rather than less.
 
 ---
 
@@ -499,51 +539,39 @@ Cost (128-way parallel re-check of the whole corpus, `off` vs `compat`, two runs
 Well under 1% on `src` and nothing measurable on `ulib`. That is low enough that risk 1
 (memoisation) does not block the default; it stays on the follow-up list.
 
-### The conservative-extension guarantee is now enforced, not just intended
+### Flipping the default exposed the filter's blind spots
 
-Flipping the default turned up five regressions in `make ci`, and they all had the same
-shape: the filter eliminated the candidate that name resolution picks today, even though that
-candidate would have checked. The head-symbol test does not know about
+Making `compat` the default turned up five regressions in `make ci`, all of the same shape:
+the filter eliminated the scope-order candidate even though that candidate would have
+checked. The head-symbol test does not know about implicit coercions, typeclass
+constraints, refinements or subtyping.
 
-- **implicit coercions** — `sorted (x::l) /\ ...` in `examples/algorithms/IntSort.fst`. The
-  expected type is `prop` and the local `IntSort.sorted` returns `bool`, so it was eliminated
-  in favour of `FStar.List.Tot.Properties.sorted`, whose extra explicit formal made its
-  result an arrow and therefore unclassifiable. In reality `b2t` would have been inserted.
-- **typeclass constraints** — `PulsePointStruct.fst`, where the displaced candidate needed a
-  `has_pts_to` instance that is only resolved much later.
-- **refinements and subtyping** in general.
+The fix is to make `compatible` model the coercion families that actually arise, so that it
+over-approximates as §2.4 requires: `Prims.bool` and `Prims.prop` are compatible with each
+other and with `Base_type` (`b2t`, `squash` and `t2b` relate all three), and
+`FStar.Ghost.erased` is compatible with everything (`hide`/`reveal`). `tests/overloading/
+OvlCoercions.fst` covers these.
 
-Two changes address this:
-
-1. `compatible` now models the built-in coercion families: `Prims.bool` and `Prims.prop` are
-   compatible with each other and with `Base_type` (`b2t`, `squash` and `t2b` relate all
-   three), and `FStar.Ghost.erased` is compatible with everything (`hide`/`reveal`).
-2. More importantly, `TcTerm.resolve_overloaded_head` **verifies before it displaces**: if
-   filtering picks a candidate other than the primary, the primary is speculatively
-   typechecked, applied to the actual arguments and against the actual expected type. If it
-   checks, it is kept. So the guarantee "no program that checks today can change meaning" is
-   now a property of the implementation rather than of how well the filter models the type
-   system, and any future hole in `compatible` costs performance instead of correctness.
-
-`tests/overloading/OvlCoercions.fst` covers both, and `--debug Overload` reports
-`keeping X: it checks after all` whenever the verification step fires.
+An earlier version of this work also had `TcTerm.resolve_overloaded_head` re-check the
+displaced candidate and keep it if it checked, as a second line of defence. That was
+removed. It made the meaning of a name depend on whether an unrelated candidate happened to
+typecheck, which is hard to explain, hard to keep stable, and simply the wrong answer under
+`strict`, where an ambiguity should be reported rather than silently resolved. The
+measurements below show it was also never load-bearing. `Overload.resolve` is now
+authoritative: what it answers is what the occurrence means.
 
 ### Lax and non-lax resolve identically
 
 Risk 3 in §5 — the same source resolving differently in an interactive lax pass and in a full
 check, which would silently change extracted code — is discharged by construction:
-`speculate_base` and `speculate_ok` both run with `admit=true`, so the speculative pass is
-uniformly lax either way. Measured by re-checking all of `src/` twice with `--debug Overload`,
+`speculate_base` runs with `admit=true`, so the speculative pass is uniformly lax either
+way. Measured by re-checking all of `src/` twice with `--debug Overload`,
 once with `--lax` and once with `--admit_smt_queries true`, and diffing the decisions
 per file:
 
 - 9722 resolution decisions in each run, **0 files differing**.
 - The same comparison over `tests/overloading` agrees decision for decision, and `ulib`
   reaches no multi-candidate site at all.
-
-The probe runs only where the answer would otherwise change, i.e. on programs that do not
-check today plus programs genuinely using overloading, which is why it does not show up in
-the timings above.
 
 Two unrelated latent bugs in test makefiles surfaced once `make clean` was run before `make
 ci`, and are fixed here: `tests/simple_hello` did not delete its `.checked` file on `clean`
@@ -553,24 +581,26 @@ prerequisite on `out` with no rule to create it.
 ### Anatomy of the coercion regressions, and how much of the fallback is load-bearing
 
 Two things guard the conservative-extension guarantee: the coercion families modelled in
-`Overload.compatible` (§2.4), and the `speculate_ok` re-check in
-`TcTerm.resolve_overloaded_head` (step 8 of §3). They were introduced together, so it was not
-known which was doing the work. Measured by building a compiler with each independently
-switchable and running the whole of `make test` (tests, examples, Pulse tests and examples,
-book code) from cold caches in each configuration:
+`Overload.compatible` (§2.4), and a since-removed re-check in
+`TcTerm.resolve_overloaded_head` that speculatively typechecked the displaced candidate and
+kept it if it checked. They were introduced together, so it was not known which was doing the
+work. Measured by building a compiler with each independently switchable and running the whole
+of `make test` (tests, examples, Pulse tests and examples, book code) from cold caches in each
+configuration:
 
-| coercions in `compatible` | `speculate_ok` re-check | result |
+| coercions in `compatible` | re-check | result |
 |---|---|---|
-| on | on | green (this is what is committed) |
+| on | on | green |
 | on | **off** | **green** |
 | **off** | **off** | 7 failures in 6 files |
 
-So on the whole corpus the re-check never changes an answer. Every regression is explained by the
-coercion families alone.
+So on the whole corpus the re-check never changed an answer: every regression is explained by
+the coercion families alone. That is what justified deleting it, leaving `Overload.resolve`
+authoritative.
 
 The six files, with the candidate set and the filter that fired:
 
-| file | primary (correct) | competitor | dropped by | coercion needed |
+| file | scope-order candidate (correct) | competitor | dropped by | coercion needed |
 |---|---|---|---|---|
 | `examples/algorithms/IntSort.fst:26` | `IntSort.sorted : list int -> bool` | `FStar.List.Tot.Properties.sorted` | `expected` | `b2t` |
 | `examples/algorithms/Huffman.fst:52` | `Huffman.sorted : list ... -> bool` | `FStar.List.Tot.Properties.sorted` | `expected` | `b2t` |
@@ -611,17 +641,18 @@ ever to be made sharper; see §7.
 
 Costs. The coercion families cost no resolution precision on the corpus that has ambiguity:
 re-running the `src` sweep with them disabled gives byte-identical decisions, 9722 for 9722, in
-every one of 365 files. The re-check costs nothing measurable either, because it only runs when the
-filter and scope order disagree, which happens 0 times in `src`.
+every one of 365 files.
 
-Whether to keep the re-check is therefore a judgement call rather than a measurement. The argument
-for keeping it: `compatible` models two coercion families out of a set that users can extend
-arbitrarily with `[@@coercion]`, and the corpus happens not to exercise the rest. The re-check is
-what turns "we modelled the coercions we knew about" into "we cannot change the meaning of a
-program that checks today". The argument against: it makes resolution depend on speculative
-typechecking, so a program's meaning depends on whether a candidate happens to check, which is
-harder to explain and to keep stable under unrelated changes; and under `strict` it is the
-wrong shape entirely, since there the right answer to an ambiguity is to report it.
+The residual exposure, now that nothing re-checks a displaced candidate, is a coercion
+`compatible` does not model. `b2t`/`squash`/`t2b` and `hide`/`reveal` are built in and are
+covered; user `[@@coercion]` functions are not, and neither is any coercion added to the
+language later. A program that relies on one of those to make the scope-order candidate
+typecheck, *and* has a second candidate of the same name in scope, *and* whose expected or
+argument types have different rigid heads, would resolve to the wrong candidate. Nothing in
+the corpus does this, but it is the failure mode to watch, and the fix if it appears is to
+extend `compatible` — driving it from `Util.find_coercion`'s own table, including the
+`[@@coercion]` sigelts reachable via `Env.lookup_attr`, rather than from a hardcoded pair
+list (§7).
 
 ---
 
