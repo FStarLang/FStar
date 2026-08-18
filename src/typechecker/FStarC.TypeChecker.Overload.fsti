@@ -84,14 +84,36 @@ val base_of_typ : env -> typ -> ML base_typ
     one. *)
 val base_head_fv : env -> typ -> ML (option fv)
 
+(** The source and target of a [@@coercion]-annotated function of type [f_typ],
+    classified by rigid head symbol: [f : b1 -> ... -> bN -> TB -> M TC] is a
+    way of turning a [TB] into a [TC], so this returns the head of [TB] and the
+    head of [TC].
+
+    [None] when [f_typ] is not an arrow, or when either end has no rigid head;
+    [Util.find_coercion] declines such a candidate for exactly that reason.
+
+    Exported so that [find_coercion] and [compatible] agree by construction on
+    which coercions exist. *)
+val coercion_source_and_target : env -> typ -> ML (option (fv & fv))
+
 (** Are these two classifications *possibly* compatible?
 
     [Base_unknown] is compatible with everything; this is the
     over-approximation that keeps resolution conservative. Two rigid heads are
-    compatible exactly when they are the same lident. Note this relation is
-    reflexive and symmetric but deliberately *not* transitive, since
-    [Base_unknown] relates everything. *)
-val compatible : base_typ -> base_typ -> bool
+    compatible when they are the same lident, and also when a coercion relates
+    them, since the elaborator will insert one: [bool], [prop] and [Type] are
+    related by [b2t], [squash] and [t2b]; [erased t] is related to every type by
+    [hide] and [reveal]; and every [@@coercion]-annotated function in scope
+    relates its argument's head to its result's head. The last of these is read
+    out of [env] on demand, and only once the heads are already known to
+    differ.
+
+    The relation is reflexive and symmetric -- symmetric because callers compare
+    formals of two function types, which stand in contravariant position, so the
+    direction of a coercion is not determined; symmetry only ever keeps more
+    candidates. It is deliberately *not* transitive, since [Base_unknown]
+    relates everything. *)
+val compatible : env -> base_typ -> base_typ -> ML bool
 
 (** Split [t] into its formals and result, normalizing enough to see through
     type abbreviations and [Tot] wrappers. Implicit binders are retained; the
@@ -155,9 +177,8 @@ val reset_ambiguity_reports : unit -> ML unit
       - a candidate is eliminated only when its formal and the argument have
         two *different rigid heads*, so anything unknown eliminates nothing,
         and "different rigid heads" is weaker than "different types" on
-        purpose: the elaborator inserts coercions, so [compatible] treats
-        [bool], [prop] and [Type] as mutually possible, and likewise [erased t]
-        and [t];
+        purpose: the elaborator inserts coercions, so [compatible] relates two
+        heads whenever a coercion in scope does;
       - if a filter would eliminate *every* remaining candidate it is skipped
         entirely, so we never turn a type error into a resolution error;
       - if several candidates survive, we return the first of *them*, in scope
@@ -176,10 +197,10 @@ val reset_ambiguity_reports : unit -> ML unit
     whether some other candidate would have typechecked.
 
     The whole weight of the design therefore rests on [compatible] being an
-    over-approximation. It reasons about rigid head symbols and cannot see
-    refinements, subtyping, implicit coercions or typeclass constraints, so
-    anything it cannot rule out it must keep; a candidate eliminated in error
-    is not recoverable later.
+    over-approximation. It reasons about rigid head symbols and, although it
+    knows which heads a coercion can bridge, it cannot see refinements,
+    subtyping or typeclass constraints, so anything it cannot rule out it must
+    keep; a candidate eliminated in error is not recoverable later.
 
     Under [--ext fstar:overload=strict] a surviving set of more than one
     candidate is reported as [Error_AmbiguousName] instead of being silently

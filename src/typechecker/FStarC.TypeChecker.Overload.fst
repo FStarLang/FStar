@@ -66,39 +66,90 @@ let base_head_fv env t =
   | Base_rigid fv -> Some fv
   | _ -> None
 
+let is_base_lid l b =
+  match b with
+  | Base_rigid fv -> fv_eq_lid fv l
+  | _ -> false
+
+(* The source and target of a [@@coercion]-annotated function, classified.
+
+   [Util.find_coercion] accepts a candidate of type [b1 -> ... -> bN -> TB ->
+   M TC] as a way of turning a [TB] into a [TC], and selects it by comparing
+   the head symbol of [TB] with that of the term's type and the head symbol of
+   [TC] with that of the expected type -- taking those heads under exactly the
+   normalization [base_of_typ] performs. That comparison is this function, and
+   [find_coercion] calls it too, so the pairs overload resolution allows for
+   and the pairs the typechecker will actually insert are computed by one piece
+   of code and cannot drift apart.
+
+   A candidate that is not an arrow, or whose last argument or result does not
+   have a rigid head, relates nothing: [find_coercion] cannot use it either. *)
+let coercion_source_and_target env f_typ : ML (option (fv & fv)) =
+  let f_bs, f_c = U.arrow_formals_comp f_typ in
+  if Nil? f_bs then None
+  else
+    let src = base_head_fv (Env.push_binders env (List.init f_bs))
+                           (List.last f_bs).binder_bv.sort in
+    let tgt = base_head_fv (Env.push_binders env f_bs) (U.comp_result f_c) in
+    match src, tgt with
+    | Some src, Some tgt -> Some (src, tgt)
+    | _ -> None
+
+(* Every [@@coercion] function in scope, as a relation on head symbols. *)
+let user_coercions env : ML (list (fv & fv)) =
+  Env.lookup_attr env (Ident.string_of_lid PC.coercion_lid) |> List.collect (fun se ->
+    let typ =
+      match se.sigel with
+      | Sig_let {lbs=(_, [lb])} -> Some (lb.lbunivs, lb.lbtyp)
+      | Sig_declare_typ {us; t} -> Some (us, t)
+      | _ -> None
+    in
+    match typ with
+    | None -> []
+    | Some (us, t) ->
+      let _, t = SS.open_univ_vars us t in
+      match coercion_source_and_target env t with
+      | Some p -> [p]
+      | None -> [])
+
+(* The coercions [Util.find_coercion] has built in, transcribed as a relation
+   on base types. Each line is one of its cases, in order. *)
+let builtin_coercion b1 b2 =
+  let is_bool = is_base_lid PC.bool_lid in
+  let is_prop = is_base_lid PC.prop_lid in
+     (is_bool b1 && is_prop b2)     (* b2t *)
+  || (is_prop b1 && Base_type? b2)  (* squash *)
+  || (is_bool b1 && Base_type? b2)  (* squash of b2t *)
+  || (is_prop b1 && is_bool b2)     (* t2b *)
+
 (* Two base types are compatible when a term of the first could be passed
-   where the second is expected. This is deliberately *not* just equality:
-   the typechecker inserts implicit coercions (Util.find_coercion), so a
-   [bool] is acceptable where a [prop] or a [Type] is expected and vice
-   versa, an [erased t] where a [t] is, and any [@@coercion]-annotated
-   function defines further pairs. Modelling every one of those here would
-   be a losing game, so we model the built-in families, which are the ones
-   that arise in practice -- [b2t] especially.
+   where the second is expected. This is deliberately *not* equality, because
+   the typechecker inserts coercions: it is equality up to every coercion that
+   [Util.maybe_coerce_lc] can apply.
 
-   Anything this relation calls incompatible is eliminated for good, so an
-   unmodelled coercion is a way to answer with the wrong candidate. If that
-   ever bites, the fix is to derive these cases from [Util.find_coercion]
-   itself rather than to widen the list here by hand. *)
-let coerces_to_anything fv =
-  (* [reveal]/[hide] are inserted silently in both directions. *)
-  fv_eq_lid fv PC.erased_lid
-
-(* [b2t], [squash] and [t2b] relate bool, prop and Type0 in every direction. *)
-let prop_like fv = fv_eq_lid fv PC.bool_lid || fv_eq_lid fv PC.prop_lid
-
-let compatible b1 b2 =
+   The relation is taken symmetrically. Callers compare a candidate's type
+   against an expected type, and formals of the two occur in contravariant
+   position, so which of the pair is the source of the coercion is not
+   something this module can tell; and being symmetric only ever keeps more
+   candidates, which is the safe direction (see [resolve]). *)
+let compatible env b1 b2 : ML bool =
+  (* [maybe_coerce_lc] inserts [hide] and [reveal] around any type at all, so
+     [erased] is not one end of a pair but a base compatible with everything. *)
+  let is_erased = is_base_lid PC.erased_lid in
   match b1, b2 with
   | Base_unknown, _
   | _, Base_unknown -> true
   | Base_type, Base_type -> true
-  | Base_rigid fv1, Base_rigid fv2 ->
-    fv_eq fv1 fv2
-    || (prop_like fv1 && prop_like fv2)
-    || coerces_to_anything fv1 || coerces_to_anything fv2
-  | Base_type, Base_rigid fv
-  | Base_rigid fv, Base_type ->
-    prop_like fv || coerces_to_anything fv
-  | _ -> false
+  | Base_rigid fv1, Base_rigid fv2 when fv_eq fv1 fv2 -> true
+  | _ ->
+    (* The heads differ, so the candidate is about to be eliminated unless some
+       coercion relates them. Only here do we pay for consulting the
+       environment, which keeps the cost off the common path. *)
+    is_erased b1 || is_erased b2
+    || builtin_coercion b1 b2 || builtin_coercion b2 b1
+    || (let related (src, tgt) = (is_base_lid (lid_of_fv src) b1 && is_base_lid (lid_of_fv tgt) b2)
+                             || (is_base_lid (lid_of_fv src) b2 && is_base_lid (lid_of_fv tgt) b1) in
+        user_coercions env |> List.existsb related)
 
 let formals_of_typ env t =
   (* unfold_whnf sees through type abbreviations, so a candidate declared as
@@ -184,8 +235,8 @@ let expected_compatible env t n te : ML bool =
   let rec cmp ts es : ML bool =
     match ts, es with
     | t1 :: ts, e1 :: es ->
-      compatible (base_of_typ_safe env t1) (base_of_typ_safe env e1) && cmp ts es
-    | [], [] -> compatible (base_of_typ_safe env rt) (base_of_typ_safe env re)
+      compatible env (base_of_typ_safe env t1) (base_of_typ_safe env e1) && cmp ts es
+    | [], [] -> compatible env (base_of_typ_safe env rt) (base_of_typ_safe env re)
     | _ -> true
   in
   cmp ts es
@@ -250,7 +301,7 @@ let resolve env speculate primary alts args expected =
         match b_arg with
         | Base_unknown -> cands
         | _ ->
-          narrow_at (Format.fmt1 "arg%s" (show i)) (keep_if (fun t -> compatible b_arg (nth_explicit_formal_base env t i))) cands
+          narrow_at (Format.fmt1 "arg%s" (show i)) (keep_if (fun t -> compatible env b_arg (nth_explicit_formal_base env t i))) cands
       in
       by_args (i + 1) cands
   in
