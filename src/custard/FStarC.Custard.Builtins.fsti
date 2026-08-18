@@ -107,10 +107,35 @@ val stub_aliases : list (string & string)
     with [@@custard_extern] (section 8.1, kind 4). *)
 val extern_type_of_lid : Ident.lident -> ML (option extern)
 
+(** Whether karamel supplies this module itself on the backend being emitted
+    for, so that Custard must emit neither its types nor its definitions and
+    must leave every use of them under the F* name (section 20).  Only ever
+    true under [--custard_backend KrmlRust], where [Pulse.Lib.Slice] becomes
+    Rust's own borrowed slice rather than the owning struct its F* definition
+    describes. *)
+val is_krml_model : list string -> ML bool
+
+(** As {!is_krml_model}, for a declaration rather than a module: karamel also
+    models [FStar.Pervasives.Native.tupleN] on the Rust path, because its
+    [split_at] hook destructures a real tuple and crashes on a struct. *)
+val is_krml_model_name : list string -> string -> ML bool
+
+(** Whether karamel actually has a translation for this operation of a
+    modelled module (section 20).  A model is a promise Custard makes on
+    karamel's behalf -- "emit the F* name and karamel will rewrite it" -- and
+    an operation karamel does not recognize is a promise it cannot keep: the
+    name survives the Rust pass as a call to a function whose body was never
+    emitted, and what should have been a diagnostic becomes a link error or,
+    worse, an operation on the wrong representation.  Only the built-in models
+    are checked; a module named by [--custard_krml_model] is the caller's
+    assertion and is taken at its word. *)
+val is_known_krml_model_op : list string -> string -> ML bool
+
 (** Whether a module is realized by hand in OCaml (section 8.2), and so has a
     [.ml] of its own in [src/ml] or [ulib/ml] that Custard must neither
-    compile over nor write a file on top of.  Takes a namespace that has
-    already been through {!no_fstar_stubs}. *)
+    compile over nor write a file on top of, or is one karamel models itself
+    ({!is_krml_model}).  Takes a namespace that has already been through
+    {!no_fstar_stubs}. *)
 val is_realized_module : list string -> ML bool
 
 (** Whether a realized module is realized for its *types only*, so that its

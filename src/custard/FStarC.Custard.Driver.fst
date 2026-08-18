@@ -402,8 +402,8 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                  | Some u -> OCaml.module_name_of_unit u
                  | None -> "Custard" in
       Find.prepend_output_dir
-        (match backend with
-         | "Krml" -> base ^ ".krml"
+        (if Options.custard_backend_krml () then base ^ ".krml"
+         else match backend with
          | "C" -> base ^ ".c"
          | _ -> base ^ ".ml")
   in
@@ -415,13 +415,13 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     phase "print" (fun () ->
       OCaml.print_split (Some?.v files) |> List.iter (fun (m, src) ->
         BU.write_file (Find.prepend_output_dir (m ^ ".ml")) src))
-  | "Krml" -> Krml.write_program ofile prog
+  | "KrmlC" | "KrmlRust" -> Krml.write_program ofile prog
   | "C" -> BU.write_file ofile (C.print_program (List.map fst imports @ prog))
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
   | b ->
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text ("Unknown --custard_backend " ^ b ^ ".");
-      text "The backends are OCaml (the default), Krml and C."
+      text "The backends are OCaml (the default), KrmlC, KrmlRust and C."
     ]
 
 (* [--profile_component FStarC.Custard] prints the phase breakdown.  Custard

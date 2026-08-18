@@ -2420,7 +2420,8 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
          below. *)
     let typars, ty = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty; dx_target = None;
-                dx_header = None; dx_flags = [] }
+                dx_header = None;
+                dx_flags = if is_modelled_lid l then [Modelled] else [] }
   | Some se ->
     let d = Prof.timed "extract_sigelt"
               (fun () -> extract_sigelt st l nm margs n_holes se) in
@@ -2439,6 +2440,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                     q = S.Inline_for_extraction ||
                     q = S.Unfold_for_unification_and_vcgen) in
     let d = if is_realized && not inlined then with_realized d else d in
+    let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     if is_inlinable se then with_inline d else d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
@@ -2615,6 +2617,23 @@ and with_realized (d:decl) : ML decl =
   match d with
   | DType t -> DType { t with dt_flags = Realized :: t.dt_flags }
   | d -> d
+
+(* Section 20.  Unlike {!with_realized} this marks values too: a model's
+   operations are karamel's to translate, at their use sites, so Custard must
+   emit no declaration for them either.  Everything else about the declaration
+   is kept -- the shape, the arity, the polymorphism -- because the passes
+   still have to typecheck uses of it. *)
+and with_modelled (d:decl) : ML decl =
+  match d with
+  | DType t -> DType { t with dt_flags = Modelled :: t.dt_flags }
+  | DExternal x -> DExternal { x with dx_flags = Modelled :: x.dx_flags }
+  | DLet l -> DLet { l with dl_flags = Modelled :: l.dl_flags }
+  | d -> d
+
+and is_modelled_lid (l:Ident.lident) : ML bool =
+  Builtins.is_krml_model_name
+    (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id))
+    (Ident.string_of_id (Ident.ident_of_lid l))
 
 (* The type an external is *used* at.  An external has no body to specialize,
    but its declared type is still polymorphic, and taking it at face value

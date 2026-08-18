@@ -287,7 +287,7 @@ NOGREP_PolyVal = "Obj.magic"
 GREP_Phantom   = "type ('a, 'ph) phantom_tagged" "and ('a, 'ph) phantom_even_t" \
                  "type ('a, 'ph) phantom_odd_t"
 
-# Each of these is extracted with --custard_backend Krml, run through karamel
+# Each of these is extracted with --custard_backend KrmlC, run through karamel
 # to produce C, compiled and run; the program must exit 0.  Skipped when
 # karamel is not installed.
 KRML_TESTS += KrmlBasic
@@ -457,7 +457,7 @@ $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked
 
 $(OUTPUT_DIR)/%.krml:
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend Krml \
+	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend KrmlC \
 	  --custard_main $*.main $< -o $@
 
 # karamel emits its own compile_flags.txt, which is the only portable way to

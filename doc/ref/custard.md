@@ -2587,7 +2587,7 @@ Emission:
   `Universal.fst:408`).  This is the first backend to build, because it gets us
   end-to-end C output with no new code generator.  Karamel's own
   monomorphization then has nothing left to do.  Select it with
-  `--custard_backend Krml` (the default is `OCaml`); the output file defaults
+  `--custard_backend KrmlC` (the default is `OCaml`); the output file defaults
   to `Custard.krml`.
 
   To make the AST shareable, it was moved verbatim out of
@@ -5986,8 +5986,8 @@ Custard has three backends and its Krml one feeds both of karamel's, so:
 | --- | --- |
 | `custard-ocaml` | `--custard_backend OCaml` then `ocamlfind ocamlopt` |
 | `custard-c` | `--custard_backend C` then `cc` -- no karamel at all |
-| `custard-krml-c` | `--custard_backend Krml` then `krml`, then `cc` |
-| `custard-krml-rust` | `--custard_backend Krml` then `krml -backend rust` |
+| `custard-krml-c` | `--custard_backend KrmlC` then `krml`, then `cc` |
+| `custard-krml-rust` | `--custard_backend KrmlRust` then `krml -backend rust` |
 
 The `.ml`, `.c` and `.krml` intermediates are produced once each and shared,
 so the two karamel columns run off one `.krml`.
@@ -6989,11 +6989,12 @@ what the language extracts.  Not done; noted here so the trade is on record.
   C._zero_for_deref` (which karamel reports while still exiting 0).  All
   karamel-side.
 
-## 20. Design: `Pulse.Lib.Slice` on the Rust path
+## 20. `Pulse.Lib.Slice` on the Rust path
 
 Section 19.15 established the fault: karamel recognizes a slice by name, and
-Custard's monomorphization erases the name.  This section is the proposed fix.
-Nothing here is built yet.
+Custard's monomorphization erases the name.  Sections 20.1 to 20.4 are the
+design; section 20.5 is what building it actually took, which was not quite
+what 20.3 said.
 
 ### 20.1 What karamel is actually asking for
 
@@ -7145,6 +7146,67 @@ mode we are fixing was a *silent miscompilation*, and the only reason it was
 caught is that the borrow checker happened to object.  Something in Custard
 should object first.
 
+### 20.5 What building it took
+
+All five items of 20.3 are built and `tests/custard/pulse/PulseSlice.fst`
+compiles to Rust that borrows, runs, and agrees with the C column.  Four
+things the design did not anticipate, each found by a failure rather than by
+reading:
+
+**A model is not a realization, and needs its own flag.**  20.3 item 2 leans
+on `Rule_realized` and the first implementation went further and reused
+`Realized` itself, dropping the type declaration of anything carrying it on
+the karamel path.  That deletes `FStar.Pervasives.Native.tuple2`, which is
+realized in OCaml and has nothing to do with Rust.  The two facts are
+genuinely different: a realization is hand-written *OCaml*, so on the karamel
+backends the declaration is still Custard's to emit; a model is the target
+compiler's on the backend it applies to and never is.  Hence a separate
+`Modelled` decl flag, set by `Extract` alongside `Realized`, and read by
+`PrintKrml` and by the freeze.
+
+**A modelled value must still be emitted, as an external.**  Dropping the
+`DExternal` for `Pulse.Lib.Slice.from_array` is the obvious reading of "leave
+it to karamel", and karamel refuses it: `Warning 2: Reference to
+Pulse.Lib.Slice.from_array has no corresponding implementation`, fatal, from
+the checker, which resolves every reference *before* the Rust pass rewrites
+any of them.  Only the *type* declaration is dropped.
+
+**A modelled external's type variables must be `TBound`, not `TAny`.**
+`PrintKrml` sets `tvars_any` for an external because a hand-written
+realization really is polymorphic and C's answer to polymorphism is
+`void*`.  For a model that is fatal --- `Failure("unexpected: [type] no casts
+in Low* -> Rust")` --- since the reference is going to become a Rust operator
+and Rust has no cast from `any`.  The variables the external binds are the
+right answer and reach karamel as `TBound`.
+
+**Tuples must be real tuples, and `krml` needs `-fkeep-tuples`.**
+`Pulse.Lib.Slice.split` becomes `split_at_mut`, whose result karamel
+destructures with `OptimizeMiniRust.retrieve_pair_type`; that function
+*crashes* on anything but `MiniRust.Tuple [t; t]`.  So on `KrmlRust`,
+`FStar.Pervasives.Native.tupleN` and `MktupleN` are modelled too and print as
+the IR's `TTuple`/`ETuple`/`PTuple` --- which have existed all along, and
+which `PrintKrml` has always printed; what was missing was any reason to
+produce them, a struct being what C wants and the C backends being all there
+was.  Only the tuples, not the whole of `FStar.Pervasives.Native`: `option`
+is in the same module and karamel compiles it happily.  And without
+`-fkeep-tuples`, `Monomorphization.visit_TTuple` has already turned the tuple
+into a struct by the time the Rust backend looks at it.
+
+The whitelist of 20.4 is built as `Builtins.is_known_krml_model_op`, checked
+in `PrintKrml` at the point of no return, and lists exactly the seven
+operations `AstToMiniRust` matches.  A module named by `--custard_krml_model`
+is not checked: that flag is the caller's assertion and is taken at its word.
+
+One thing the test exposed that is *not* about slices.  `Pulse.Lib.Slice.split`
+is polymorphic and returns a tuple, so with types compiled uniformly (§6) the
+`.krml` for the C column holds `tuple2<slice<'t>, slice<'t>>`: a type
+application whose arguments are not ground.  karamel's own monomorphizer only
+instantiates closed applications, so its checker then reports `tuple2` as an
+undefined type.  `--custard_monomorphize_types true` sidesteps it and the test
+passes it on that column.  Pre-existing, and unrelated to §20; `PulseSlice` is
+simply the first test in the suite to return a tuple from a polymorphic
+function.
+
 ### 20.4 What this does not solve
 
 `Pulse.Lib.Slice` has around twenty `val`s and karamel translates seven.  The
@@ -7244,3 +7306,4 @@ build if a second module ever needs this.
 | M10ο | **A normalizer returns a meaning, not a tag; and a cell written but never read** (§19.7, §19.8) | Done.  The reporter found the root cause of §19.2 himself and it is one line: `norm` unfolds `jumper parse_header` into exactly the arrow that was wanted, wrapped in a `Tm_ascribed`, and `SS.compress` does not strip an ascription, so `| Tm_arrow _ ->` never fired and the spine stopped one abbreviation short.  His tag census over one `jump_header` run says this is the common case and not a corner: six arrows behind an ascription, twenty-four refinements behind one.  So the fix is generalized rather than local -- `Mono.strip` alternates `unascribe` and `unrefine` to a fixed point, and no shape test in `Mono` reads a tag without it (`is_arity_aux`, `is_star_aux`, `arrow_formals_unfold_aux`), nor do `Extract.peel_typ` and `Extract.is_prop_sig`.  The failure mode is why: reading a tag off a wrapper answers "not an arrow" and "not an arity", and both are wrong in the direction that miscompiles.  Generalizing found a second instance and a trap: `peel_typ` matched on the *stripped* term but then called `U.arrow_formals_comp` on the unstripped one, which yields zero binders, so `peel_typ (n - 0)` recursed forever -- `Effects.fst` hung for minutes with no budget error at all, which is the signature of a Custard-level loop rather than a big reduction.  Stripping for the match is not enough; the term has to be rebound.  This also supersedes M10ξ's claim to be the EverParse cause: `classify_def` cannot fire there, because the declaration comes from an interface and `lb.lbdef` is `Tm_unknown`, so there are no surplus binders to read.  It stays, with a real single-file reproduction.  With the ascription fix, whole-module direct-to-C of `CBOR.Pulse.API.Det.C` succeeds, the 3419 lines compile under `gcc -Wall -Wextra`, and all 57 entry points extract individually.  The two remaining `-Werror` blockers are also closed, both in `PrintC`: §19.5's dead binding now uses `is_droppable` rather than `is_pure`, since a read of a collapsed cell cannot *move* across a write but can always *go*; and `cell_dead`/`drop_writes` delete a one-cell allocation every occurrence of which is the target of a write, which is what Pulse's `fn while` measure erases to.  `Goto_test1` goes from six lines to one.  Reverted with these: the ulib `inline_for_extraction` on `fst`/`snd`, which changed standard ML extraction repo-wide for a cosmetic Custard gain (§19.8a). |
 | M10π | **A redundant alias, and a specification named as an entry point** (§19.10, §19.11) | Done.  The `_letpattern` that survived M10ο is not a dead binding -- the name *is* read, by the match that scrutinizes it -- so the reporter dumped the IR instead of guessing, and the answer is that `emit_match` takes the direct path on a stable scrutinee, emits no read of it, and binds the branch's fields with `bind_alias`, which emits nothing when the body does not use them; the declaration is left with no users at all.  It is a **redundant alias**: `let x = <stable expr> in e2` declares a second name for a value this backend never assigns to, and `bind_alias` is already the answer to that everywhere else in the printer.  No side condition beyond `is_stable`, which is the licence `emit_match` has always taken.  The live cases collapse too, which is most of the value: `Pulse_Lib_HashTable` loses four copies of a function pointer and `Example_Slice` a pointer copy, and `_letpattern` bound to a plain variable appears 335 times in EverParse's output.  Separately, `--custard_entry` on a separation-logic predicate -- `cbor_det_match : perm -> cbor_det_t -> Spec.cbor -> slprop` -- was rejected with error 367 for the recursive datatype `Prims.list`, which is true about `Spec.cbor` and no answer at all to what was asked: the result is `slprop`, the index is ghost, and nothing in the program holds one.  `--custard_entry_module` already declined to root these (`erased_definition`); an explicit root was taken at its word, which is defensible until the word is `slprop`.  `Extract.root_is_erased` now asks before requesting, and reports rather than skipping, on the same reasoning that makes a misspelled entry an error.  The predicate is deliberately *not* `erased_definition`, and two rounds of the suite said why: `must_erase_for_extraction` answers yes for `unit`, so the effect has to be total or ghost as well (`main : unit -> ML unit` returns nothing and is the whole program), and a *type* is exempt outright, since its result is `Type` and a type abbreviation named by `--custard_entry` is exactly what a hand-written realization needs emitted (`TypeEntry.fst` caught it).  `tests/custard/pulse/PulseSpecRoot.fst`, the suite's one negative test and so a rule of its own. |
 | M10ρ | **A lambda without a name, and a proposition nobody asked about** (§19.12, §19.13, §19.14) | Done.  Three findings from the CDDL half of the reporter's corpus, and the first is the reporter's own bisection: Custard already emits function pointers in structs exactly as karamel does, so the entire gap between `FunPtrRecord.fst` (works) and `CDDL.Pulse.AST.Det.C.cbor_det_impl` (error 367) is that the second writes its functions inline.  A closed lambda is a function nobody named; `Simplify.lift_lambdas` names it, before `dce` so the new declarations are in the call graph and before `scc` so they are ordered, inheriting the enclosing declaration's type parameters so free type variables cost nothing.  C only -- OCaml has closures and karamel has its own treatment.  Nobody writes these by hand: all eleven come from an `inline_for_extraction` record of thunks whose fields beta-reduce, against nineteen bare names that already worked and ten erased ghost fields.  A lambda that still reaches `PrintC` therefore genuinely captures, and says so.  Second, the advice attached to a type-variable rejection recommended `--custard_monomorphize_types`, which the reporter had set; `PrintC.mono_advice` asks first, and reports a Custard bug when the flag is already on, because advice that names the reader's own command line is worse than none.  Third, error 364 exhausting 10^9 steps "normalizing a type signature" on `env9 : bundle_env ... { bundle_env_included ... /\ ... }` -- a machine-generated CDDL well-formedness proof, which `is_type_sig` normalized whole and then discarded.  Both `is_type_sig` and `is_prop_sig` now `Mono.strip` first; `Mono` was already right, since `is_arity_aux` never lets a `Tm_refine` reach its normalizer.  `tests/custard/RefStrip.fst` is a 2^40-step proposition in a refinement under a 20000-step budget, and the reproduction that does *not* work is worth recording: a recursive function in the refinement is never unfolded by this step list, so it has to be a chain of abbreviations. |
+| M10σ | **`Pulse.Lib.Slice` compiles to a Rust slice** (§19.15, §20) | Done.  karamel recognizes a slice by name and Custard's monomorphization erased the name, so every borrow became an owning `Box` and the reporter's program read back zeroes -- a miscompilation, not a build failure, which is why the test runs the Rust binary and checks its own answers.  `--custard_backend Krml` splits into `KrmlC` and `KrmlRust`, because the two want *different programs* and no property of the F\* source distinguishes them; `tests/extraction/backends` had already had them as separate rows passing identical flags.  A new `Modelled` decl flag, deliberately not `Realized`: a realization is hand-written OCaml and its declaration is still Custard's to emit on the karamel path, a model is the target compiler's and never is -- sharing the flag deleted `FStar.Pervasives.Native.tuple2`.  Only the *type* declaration is dropped; the operations stay as externals, since karamel's checker resolves every reference before the Rust pass rewrites any of them, and their type variables print as `TBound` rather than the usual external's `TAny`, Rust having no cast from `any`.  `FStar.Pervasives.Native.tupleN` is modelled too on that backend and prints as the IR's long-unused `TTuple`/`ETuple`/`PTuple`, because `split` becomes `split_at_mut` and `OptimizeMiniRust.retrieve_pair_type` *crashes* on a struct; `krml -fkeep-tuples` is not optional for the same reason.  `Builtins.is_known_krml_model_op` whitelists the seven operations `AstToMiniRust` actually matches, so a future runtime `val` in a modelled module is rejected here rather than by rustc.  `tests/custard/pulse/PulseSlice.fst`, compiled and run on both columns; its C column needs `--custard_monomorphize_types`, a pre-existing limit unrelated to slices (§20.5). |

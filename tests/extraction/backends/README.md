@@ -13,8 +13,8 @@ runtime result is compared against what F\* proves statically.
 | `rust`  | `fstar.exe --codegen krml` + `krml -backend rust` + `rustc`    |
 | `custard-ocaml`     | `--codegen Custard --custard_backend OCaml` + `ocamlopt` |
 | `custard-c`         | `--codegen Custard --custard_backend C` + `cc`           |
-| `custard-krml-c`    | `--codegen Custard --custard_backend Krml` + `krml` + `cc` |
-| `custard-krml-rust` | `--codegen Custard --custard_backend Krml` + `krml -backend rust` + `rustc` |
+| `custard-krml-c`    | `--codegen Custard --custard_backend KrmlC` + `krml` + `cc` |
+| `custard-krml-rust` | `--codegen Custard --custard_backend KrmlRust` + `krml -backend rust` + `rustc` |
 
 The first three go through `FStarC.Extraction`; the last four go through
 Custard (`doc/ref/custard.md`), which is a *different extractor* rather than a

@@ -59,6 +59,25 @@ OCAML_TESTS += PulseHashTable
 # the C compiler must build it.
 KRML_TESTS += PulseBasic
 KRML_TESTS += PulseHashTable
+KRML_TESTS += PulseSlice
+# PulseSlice needs one extra flag on the C column.  Pulse.Lib.Slice.split is
+# polymorphic and returns a tuple, so with types compiled uniformly (section
+# 6) the .krml holds 'tuple2<slice<'t>, slice<'t>>' -- a type application whose
+# arguments are not ground.  karamel's own monomorphizer only instantiates
+# closed applications, so its checker then reports tuple2 as an undefined
+# type.  Asking Custard to monomorphize the types too sidesteps it.  This is
+# not specific to slices and not new in section 20; PulseSlice is simply the
+# first test in this suite to return a tuple from a polymorphic function.
+KRML_FLAGS_PulseSlice += --custard_monomorphize_types true
+
+# Section 20.  The Rust column, which exists for one reason: karamel compiles
+# Pulse.Lib.Slice to Rust's own borrowed slice, and only if Custard leaves the
+# type alone for it to recognize.  Compiled *and run*, because the bug this
+# closes was a miscompilation and not a build failure -- with the borrows
+# silenced the generated code wrote through a temporary and read back zeroes
+# (section 19.15), which a program that checks its own answers catches and a
+# program that merely builds does not.
+RUST_TESTS += PulseSlice
 
 # Same modules again, through the direct-to-C backend: no krml, no krmllib,
 # just a C11 compiler with the warnings turned on, and then run.  PulseHashTable is the
@@ -97,8 +116,41 @@ $(OUTPUT_DIR)/%.mlchecked: $(OUTPUT_DIR)/%.custard.ml
 $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend Krml --custard_main $*.main \
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC $(KRML_FLAGS_$*) \
+	  --custard_main $*.main $*.fst -o $@
+
+# Section 20.  KrmlRust is a different backend and not a flag on this one: it
+# models Pulse.Lib.Slice away, so this .krml does not hold the program the C
+# column needs and the C column's does not hold the one Rust needs.
+$(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD-KRML-RUST", $(basename $(notdir $@)))
+	$(Q)mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlRust --custard_main $*.main \
 	  $*.fst -o $@
+
+# -fkeep-tuples is not optional here and is part of what section 20 documents:
+# karamel's split_at hook destructures a real tuple, and without the flag the
+# tuple has already become a struct by the time the Rust backend sees it.
+$(OUTPUT_DIR)/%.rs: $(OUTPUT_DIR)/%.custard.rust.krml
+	$(call msg, "KRML-RUST", $(basename $(notdir $@)))
+	$(Q)rm -rf $(OUTPUT_DIR)/$*_rs
+	$(Q)krml -silent -fkeep-tuples -skip-linking -backend rust \
+	  -tmpdir $(OUTPUT_DIR)/$*_rs $<
+	$(Q)sed 's/^pub fn main()/pub fn krml_main()/' $(OUTPUT_DIR)/$*_rs/*.rs > $@
+	$(Q)grep -q '^pub fn krml_main()' $@ || \
+	  { echo "ERROR: $*: krml did not emit 'main' in the generated crate"; exit 1; }
+	@# The whole point of the exercise: a slice must be a borrow, not an
+	@# owning Box, or every write through it lands in a temporary.
+	$(Q)grep -q 'Box<' $@ \
+	  && { echo "ERROR: $*: a slice was compiled to an owning Box"; exit 1; }; true
+	$(Q)echo 'fn main() { std::process::exit(krml_main() as i32) }' >> $@
+
+$(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/%.rs
+	$(call msg, "RUSTC", $(basename $(notdir $@)))
+	$(Q)rustc --edition 2021 -A warnings -o $(OUTPUT_DIR)/$*.rsexe $<
+	$(call msg, "RUN-RUST", $(basename $(notdir $@)))
+	$(Q)$(OUTPUT_DIR)/$*.rsexe
+	$(Q)touch $@
 
 $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
@@ -158,4 +210,7 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 
 ifneq ($(shell command -v krml 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))
+ifneq ($(shell command -v rustc 2>/dev/null),)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
+endif
 endif

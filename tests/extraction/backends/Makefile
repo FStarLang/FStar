@@ -151,8 +151,8 @@ XFAIL_RUST += ExtUIntRotate ExtUIntMask
 #
 #   custard-ocaml       --custard_backend OCaml + ocamlfind ocamlopt
 #   custard-c           --custard_backend C     + cc      (no karamel at all)
-#   custard-krml-c      --custard_backend Krml  + krml    + cc
-#   custard-krml-rust   --custard_backend Krml  + krml -backend rust + rustc
+#   custard-krml-c      --custard_backend KrmlC    + krml    + cc
+#   custard-krml-rust   --custard_backend KrmlRust + krml -backend rust + rustc
 #
 # Every module here has `main : unit -> Int32.t`, which is what
 # --custard_main wants: Custard calls it from the generated code and makes its
@@ -457,10 +457,18 @@ $(OUTPUT_DIR)/custard/%.c: $(CACHE_DIR)/%.fst.checked
 	         { open = 0 } END { exit found }' $@ \
 	  || { echo "FAIL [custard-c] $*: empty block, at the lines above"; exit 1; }
 
-$(OUTPUT_DIR)/custard/%.krml: $(CACHE_DIR)/%.fst.checked
-	$(call msg, "CUSTARD krml", $*)
+# Two rules, not one, because KrmlC and KrmlRust are two backends: karamel
+# models Pulse.Lib.Slice on the Rust path only, so a .krml built for one
+# target does not hold the program the other needs (section 20).
+$(OUTPUT_DIR)/custard/%.krmlc.krml: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD krml-c", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(FSTAR) $< $(CUSTARD) --custard_backend Krml -o $@
+	$(Q)$(FSTAR) $< $(CUSTARD) --custard_backend KrmlC -o $@
+
+$(OUTPUT_DIR)/custard/%.krmlrust.krml: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD krml-rust", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(FSTAR) $< $(CUSTARD) --custard_backend KrmlRust -o $@
 
 # --- custard-ocaml --------------------------------------------------------
 
@@ -505,7 +513,7 @@ $(OUTPUT_DIR)/cc/%.ok: $(OUTPUT_DIR)/cc/%.exe
 # `main` is `ExtFoo_main`, not `main`, so unlike the column above this one
 # needs a driver. krml writes the include path it wants into compile_flags.txt,
 # which is the only portable way to find krmllib's headers.
-$(OUTPUT_DIR)/ckc/%.exe: $(OUTPUT_DIR)/custard/%.krml $(KRMLLIB)
+$(OUTPUT_DIR)/ckc/%.exe: $(OUTPUT_DIR)/custard/%.krmlc.krml $(KRMLLIB)
 	$(call msg, "KRML C", $*)
 	$(Q)mkdir -p $(dir $@)
 	$(Q)rm -rf $(OUTPUT_DIR)/ckc/$*
@@ -535,7 +543,7 @@ $(OUTPUT_DIR)/ckc/%.ok: $(OUTPUT_DIR)/ckc/%.exe
 
 # karamel's Rust backend flattens the F* prefix away, so here `main` really is
 # `main` and the rename of the plain Rust column applies unchanged.
-$(OUTPUT_DIR)/ckr/%.rs: $(OUTPUT_DIR)/custard/%.krml
+$(OUTPUT_DIR)/ckr/%.rs: $(OUTPUT_DIR)/custard/%.krmlrust.krml
 	$(call msg, "KRML RUST", $*)
 	$(Q)mkdir -p $(dir $@)
 	$(Q)rm -rf $(OUTPUT_DIR)/ckr/$*

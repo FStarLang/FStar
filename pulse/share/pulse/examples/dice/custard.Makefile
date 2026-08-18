@@ -46,7 +46,7 @@ all: krml direct
 
 $(OUT)/DPE.krml: dpe/DPE.fst
 	@mkdir -p $(OUT)
-	$(FSTAR) --custard_backend Krml \
+	$(FSTAR) --custard_backend KrmlC \
 	  $(foreach t,$(EXTERN_TYPES),--custard_extern_type $(t)) \
 	  dpe/DPE.fst -o $@
 

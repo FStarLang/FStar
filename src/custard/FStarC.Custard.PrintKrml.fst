@@ -27,6 +27,8 @@ module Krml = FStarC.Extraction.Krml
 module SMap = FStarC.SMap
 module BU   = FStarC.Util
 module E    = FStarC.Errors
+module Options = FStarC.Options
+module B    = FStarC.Custard.Builtins
 
 open FStarC.Errors.Msg
 
@@ -84,6 +86,19 @@ let type_lident_of_name (n:name) : ML K.lident =
   match SMap.try_find !extern_types (string_of_name n) with
   | Some t -> ([], t)
   | None -> lid
+
+(* [FStar.Pervasives.Native.tupleN] and its constructor, recognized by name
+   because that is all a printer has.  Only ever true on the Rust path: on
+   every other the declaration is compiled and these are ordinary names. *)
+let is_tuple_type_name (n:name) : ML bool =
+  n.ns = ["FStar"; "Pervasives"; "Native"] &&
+  FStarC.Util.starts_with n.id "tuple" &&
+  Options.custard_backend () = "KrmlRust"
+
+let is_tuple_ctor_name (n:name) : ML bool =
+  n.ns = ["FStar"; "Pervasives"; "Native"] &&
+  FStarC.Util.starts_with n.id "Mktuple" &&
+  Options.custard_backend () = "KrmlRust"
 
 let krml_width (sw : signedness & width) : K.width =
   match sw with
@@ -167,6 +182,13 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
     (match prim_type n with
      | Some t -> t
      | None -> K.TQualified (type_lident_of_name n))
+  (* Section 20.  On the Rust path a tuple has to reach karamel as a tuple:
+     [split_at]'s result is destructured by [OptimizeMiniRust.retrieve_pair_
+     type], which fails -- crashes, rather than reporting -- on anything that
+     is not [Tuple [t; t]].  The type stays polymorphic and undeclared
+     ([Builtins.is_krml_model_name]) so that it is still an application here
+     and its arguments are still visible. *)
+  | TApp (n, args) when is_tuple_type_name n -> K.TTuple (args |> List.map (krml_typ env))
   | TApp (n, args) -> K.TApp (type_lident_of_name n, args |> List.map (krml_typ env))
 
 let binder_of (env:kenv) (b:binder) : ML K.binder =
@@ -206,6 +228,10 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
   | PConst (CInt (s, None)) -> (env, K.PConstant (K.CInt, s))
   | PConst (CInt (s, Some sw)) -> (env, K.PConstant (krml_width sw, s))
   | PConst _ -> (extend env "_", K.PVar (dummy_binder "_"))
+  | PCtor (n, ps) when is_tuple_ctor_name n ->
+    let env, ps = krml_pats env ps in
+    (env, K.PTuple ps)
+
   | PCtor (n, ps) ->
     let env, ps = krml_pats env ps in
     (env, K.PCons (mangled_name n, ps))
@@ -265,6 +291,9 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
        type as [TAny], which would then clash with what karamel infers. *)
     let b = { K.name = "_"; K.typ = K.TAny; K.mut = false; K.meta = [] } in
     K.ELet (b, krml_expr env e1, krml_expr (extend env "_") e2)
+
+  | ECtor (n, args) when is_tuple_ctor_name n ->
+    K.ETuple (args |> List.map (krml_expr env))
 
   | ECtor (n, args) ->
     K.ECons (krml_typ env e.ty, mangled_name n, args |> List.map (krml_expr env))
@@ -395,6 +424,16 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
                                 lident_of_name l.dl_name,
                                 bs |> List.map (binder_of env), body)))
 
+  (* Section 20: karamel supplies a modelled *type* itself and recognizes it at
+     the use, as [TApp (lid, [t])], which [krml_typ] already emits for any
+     applied name.  A declaration here would be a second and conflicting
+     answer to what the type is -- karamel drops its own models' type
+     declarations for exactly that reason ([Builtin.make_abstract] keeps only
+     abbreviations).  The model's *operations* are a different matter and are
+     emitted: karamel's checker resolves every reference before the Rust pass
+     rewrites it, so dropping them is "no corresponding implementation". *)
+  | DType t when has_flag t.dt_flags Modelled -> None
+
   | DType t ->
     let env = with_typars env t.dt_params in
     let n_t = List.length t.dt_params in
@@ -425,8 +464,30 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
     let lid = match x.dx_target with
               | Some t -> ([], t)
               | None -> lident_of_name x.dx_name in
+    (* Section 20.  An ordinary external's type variables print as [TAny],
+       because the hand-written realization really is polymorphic and C's
+       answer to that is a void pointer.  A model's do not: karamel is going
+       to rewrite every use of it into a Rust operator, and Rust has no cast
+       from [any] -- the translation fails outright with "no casts in Low* ->
+       Rust".  The variables it binds are the right answer, and reach karamel
+       as [TBound]. *)
+    let env = if has_flag x.dx_flags Modelled
+              then with_typars env x.dx_typars
+              else { env with tvars_any = true } in
+    (* And a model is only good for the operations karamel really rewrites.
+       An unrecognized one reaches Rust as a call to a function nothing ever
+       defines, so say so here rather than let rustc find it. *)
+    if has_flag x.dx_flags Modelled &&
+       not (B.is_known_krml_model_op x.dx_name.ns x.dx_name.id)
+    then E.raise_error0 E.Fatal_ExtractionUnsupported [
+      text ("Custard: " ^ string_of_name x.dx_name ^ " is in a module karamel \
+            models on this backend, but karamel has no translation for it.");
+      text "Only the operations karamel recognizes can be used from a modelled \
+           module; use the F* definition through --custard_backend KrmlC, or \
+           extend the model in karamel."
+    ];
     Some (K.DExternal (None, krml_flags x.dx_flags, lid,
-                       krml_typ ({ env with tvars_any = true }) x.dx_ty, []))
+                       krml_typ env x.dx_ty, []))
 
   | DExn e ->
     E.log_issue0 E.Warning_DefinitionNotTranslated [

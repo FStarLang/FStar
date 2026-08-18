@@ -48,7 +48,7 @@ $(OUTPUT_DIR)/$(subst .,_,%).ml:
 # karamel's input.  Whole-program, so --extract_module is meaningless here.
 $(OUTPUT_DIR)/$(subst .,_,%).krml:
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
-	$(FSTAR) $< $(CUSTARD) --custard_backend Krml \
+	$(FSTAR) $< $(CUSTARD) --custard_backend KrmlC \
 	  --custard_entry_module $(basename $(basename $(notdir $<))) \
 	  $(CUSTARD_FLAGS_$(basename $(basename $(notdir $<)))) -o $@
 

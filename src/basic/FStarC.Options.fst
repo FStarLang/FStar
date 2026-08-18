@@ -212,6 +212,7 @@ let defaults = [
   ("custard_unit"                              , Unset);
   ("custard_link"                              , List []);
   ("custard_extern_type"                       , List []);
+  ("custard_krml_model"                        , List []);
   ("custard_dump_cui"                          , Bool false);
   ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
@@ -488,6 +489,7 @@ let get_custard_split           ()      = lookup_opt "custard_split"           a
 let get_custard_unit            ()      = lookup_opt "custard_unit"            (as_option as_string)
 let get_custard_link            ()      = lookup_opt "custard_link"            (as_list as_string)
 let get_custard_extern_type     ()      = lookup_opt "custard_extern_type"     (as_list as_string)
+let get_custard_krml_model      ()      = lookup_opt "custard_krml_model"      (as_list as_string)
 let get_custard_dump_cui        ()      = lookup_opt "custard_dump_cui"        as_bool
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
@@ -968,9 +970,12 @@ binders explicitly marked [@@monomorphize] (default false)");
 
   ( noshort,
     "custard_backend",
-    EnumStr ["OCaml"; "Krml"; "C"],
+    EnumStr ["OCaml"; "KrmlC"; "KrmlRust"; "C"],
     text "Language Custard emits: OCaml source, karamel's AST for \
-compilation to C, or self-contained C11 source (default OCaml)");
+compilation to C or to Rust, or self-contained C11 source (default OCaml). \
+KrmlC and KrmlRust share a printer but not a program: karamel models some \
+modules on the Rust path only, so a .krml built for one target cannot be \
+compiled for the other (section 20)");
 
   ( noshort,
     "custard_split",
@@ -1004,6 +1009,11 @@ definition for it, spell it <name> if one is given, and include <header> in \
 the generated C if one is given. May be repeated. This is for types whose \
 representation is fixed outside F* and that cannot carry a [@@custard_extern] \
 attribute, such as one declared in a library the program does not own.");
+
+  ( noshort,
+    "custard_krml_model",
+    Accumulated (SimpleStr "Module"),
+    text "Treat a module as one karamel models itself: emit neither its type declarations nor its definitions, and leave every use of them under the F* name, which is what karamel's Rust backend matches on. May be repeated. Only under --custard_backend KrmlRust; Pulse.Lib.Slice is registered already. See section 20 of doc/ref/custard.md.");
 
   ( noshort,
     "custard_dump_cui",
@@ -2155,10 +2165,13 @@ let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 let custard_backend              () = get_custard_backend ()
+let custard_backend_krml         () = let b = get_custard_backend () in
+                                      b = "KrmlC" || b = "KrmlRust"
 let custard_split                () = get_custard_split ()
 let custard_unit                 () = get_custard_unit ()
 let custard_links                () = get_custard_link ()
 let custard_extern_types         () = get_custard_extern_type ()
+let custard_krml_models          () = get_custard_krml_model ()
 let custard_dump_cui             () = get_custard_dump_cui ()
 
 let profile_group_by_decl        () = get_profile_group_by_decl ()

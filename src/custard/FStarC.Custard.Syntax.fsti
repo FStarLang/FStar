@@ -288,6 +288,27 @@ type flag =
       and to its fields with the realization's own unmangled names.  Its
       representation is therefore fixed outside F*: no erasure, no newtype
       collapse and no inline-field expansion may touch it. *)
+  | Modelled
+  (** karamel supplies this declaration itself on the backend being emitted
+      for, and recognizes it by its F* name (section 20).
+      [Pulse.Lib.Slice.slice] under [--custard_backend KrmlRust] is the case
+      and today the only one: karamel matches
+      [TApp ((["Pulse"; "Lib"; "Slice"], "slice"), [t])] and rewrites it to
+      Rust's own borrowed slice, and matches each operation as an [ETApp] of
+      its own lid and rewrites it at the *use site*.
+
+      So Custard keeps the declaration for its shape and emits nothing at all
+      for it -- not even the abstract declaration an {!Extern} gets, because
+      karamel is going to supply its own answer and two would conflict -- and
+      the type must additionally stay *polymorphic*, since the shape karamel
+      matches is an application and an application with no arguments is not
+      one.  {!FStarC.Custard.Monomorphize} freezes it for that reason.
+
+      Deliberately not {!Realized}, though the two say almost the same thing.
+      A realization is hand-written OCaml, so on the karamel path a [Realized]
+      declaration is still Custard's to emit; a model is the target compiler's
+      and never is.  Sharing the flag dropped [FStar.Pervasives.Native.tuple2]
+      from the karamel output, which every [split] needs. *)
   | Extern of option string & option string
   (** The type is defined outside F*: an abstract [val t : Type0] carrying
       [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration

@@ -124,7 +124,15 @@ type state = {
    Only on the OCaml path.  [Realized] records that a *hand-written OCaml*
    module defines the type (section 8.2); the C backends link none of them and
    emit the declaration themselves, so there freezing would leave a type
-   variable behind and C has no representation for one. *)
+   variable behind and C has no representation for one.
+
+   A [Modelled] declaration (section 20) is frozen on every path, and for a
+   sharper reason than the others: karamel matches a slice as an *application*
+   of its lid, and an application with no arguments is not one, so the type
+   has to keep its parameter or the hook cannot fire.  The transitivity earns
+   its keep here -- a struct with a slice field must not be cloned
+   per-instantiation either, or karamel's lifetime fixpoint would not find the
+   [TApp] inside it. *)
 let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
 let is_poly (st:state) (n:name) : ML bool =
   if Some? (SMap.try_find st.frozen (string_of_name n)) then false
@@ -485,6 +493,9 @@ let run (prog:program) : ML program =
     match d with
     | DExternal x -> freeze 100 x.dx_ty
     | DExn e -> e.de_args |> List.iter (freeze 100)
+    | DType t when t.dt_flags |> List.existsb (function
+                     | Modelled -> true | _ -> false) ->
+      freeze 100 (TApp (t.dt_name, []))
     | DType t when freeze_realized ()
                 && t.dt_flags |> List.existsb (function
                      | Realized | Imported _ -> true | _ -> false) ->

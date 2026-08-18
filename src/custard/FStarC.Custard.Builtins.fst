@@ -725,8 +725,74 @@ let realized_modules : list (list string) = [
   ["Prims"];
 ]
 
+(* Section 20.  karamel's Rust backend recognizes [Pulse.Lib.Slice] by name --
+   the type as [TApp ((["Pulse"; "Lib"; "Slice"], "slice"), [t])] and each
+   operation as an [ETApp] of its own lid -- and turns them into Rust's own
+   slices, which are borrowed views rather than owning structs.  Compiling the
+   F* definition instead, which is what Custard did and what is right for C,
+   gives karamel a struct that owns its buffer, so [split] deep-copies and
+   every write lands in a temporary (section 19.15).
+
+   A module karamel models is realized in exactly the sense of section 8.2 --
+   the target language defines it, keep the shape and do not emit it -- with
+   one difference: the realization is reached under the F* name, so there is
+   nothing to rename.  That is why this feeds [is_realized_module] rather than
+   being a rule kind of its own.
+
+   Only under [--custard_backend KrmlRust].  On the C path the F* definition
+   is the implementation, and modelling it away would leave the program with
+   no slice at all.
+
+   Which modules karamel models is a fact about karamel, not about F*, so the
+   list is data and [--custard_krml_model] can correct it without a rebuild.
+   [Pulse.Lib.Slice] is the one karamel has today. *)
+let builtin_krml_models : list (list string) = [
+  ["Pulse"; "Lib"; "Slice"];
+]
+
+let is_krml_model (ns : list string) : ML bool =
+  Options.custard_backend () = "KrmlRust" &&
+  (builtin_krml_models |> List.existsb (fun m -> m = ns) ||
+   Options.custard_krml_models () |> List.existsb (fun m ->
+     m = String.concat "." ns))
+
+(* karamel's Rust backend needs a *tuple*, not a struct that happens to have
+   two fields: [Pulse.Lib.Slice.split] becomes [split_at], whose result it
+   destructures with [retrieve_pair_type], and which fails outright -- a
+   crash, not a diagnostic -- on anything but [MiniRust.Tuple [t; t]].
+
+   So on that path [FStar.Pervasives.Native.tupleN] is modelled too.  Custard's
+   IR has had [TTuple], [ETuple] and [PTuple] all along and [PrintKrml] prints
+   all three; what it has never had is a reason to produce them, because a
+   struct is what C wants and the C backends are all there was.
+
+   Only the tuples, not the whole of [FStar.Pervasives.Native]: [option] is in
+   the same module and karamel is happy to compile it. *)
+let is_krml_model_name (ns : list string) (id : string) : ML bool =
+  is_krml_model ns ||
+  (Options.custard_backend () = "KrmlRust" &&
+   ns = ["FStar"; "Pervasives"; "Native"] &&
+   (FStarC.Util.starts_with id "tuple" ||
+    FStarC.Util.starts_with id "Mktuple"))
+
+(* The operations of [Pulse.Lib.Slice] that karamel's Rust backend rewrites,
+   from [AstToMiniRust.translate_expr]'s match on
+   [EApp (ETApp (EQualified (["Pulse";"Lib";"Slice"], op), _, _, _), _)].
+   Anything else in the module is modelled away with nothing to model it. *)
+let builtin_krml_model_ops : list (list string & list string) = [
+  ["Pulse"; "Lib"; "Slice"],
+  ["from_array"; "op_Array_Access"; "op_Array_Assignment";
+   "split"; "subslice"; "copy"; "len"];
+]
+
+let is_known_krml_model_op (ns : list string) (id : string) : ML bool =
+  match builtin_krml_model_ops |> List.tryFind (fun (m, _) -> m = ns) with
+  | None -> true
+  | Some (_, ops) -> ops |> List.existsb (fun o -> o = id)
 let is_realized_module (ns : list string) : ML bool =
   realized_modules |> List.existsb (fun m -> m = ns)
+  || is_krml_model ns
+
 
 (* A realization *replaces* the F* module, values included: where there is a
    hand-written [.ml] the F* definitions are a model, and a model that
