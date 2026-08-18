@@ -134,7 +134,7 @@ val return_as_ref (#t: Type) (a: ref t) (#p: perm) (#v:t) (#s: ptr t) : stt_ghos
     (fun _ -> pts_to s #p (Seq.create 1 (Ghost.reveal v)))
 
 (* Written x.(i) *)
-fn op_Array_Access
+fn op_Dot_Lparen_Rparen
         (#t: Type)
         (a: ptr t)
         (i: SZ.t)
@@ -150,7 +150,7 @@ fn op_Array_Access
            res == Seq.index s (SZ.v i))
 
 (* Written a.(i) <- v *)
-fn op_Array_Assignment
+fn op_Dot_Lparen_Rparen_Less_Minus
         (#t: Type)
         (a: ptr t)
         (i: SZ.t)

@@ -956,13 +956,11 @@ and mlletbinding_to_doc (lbs : (mlletflavor * mllb Prims.list)) :
   FStar_Pprint.document=
   let uu___ =
     let uu___1 =
-      let uu___2 =
-        list_to_doc (FStar_Pervasives_Native.__proj__Mktuple2__item___2 lbs)
-          mllb_to_doc in
+      let uu___2 = list_to_doc (match lbs with | (_1, _2) -> _2) mllb_to_doc in
       FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string ", ") uu___2 in
     FStar_Pprint.op_Hat_Hat
       (FStar_Pprint.doc_of_string
-         (match FStar_Pervasives_Native.__proj__Mktuple2__item___1 lbs with
+         (match match lbs with | (_1, _2) -> _1 with
           | Rec -> "Rec"
           | NonRec -> "NonRec")) uu___1 in
   FStar_Pprint.parens uu___

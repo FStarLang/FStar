@@ -1320,7 +1320,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       | Tm_fvar {fv_qual=Some (Unresolved_name _)}, _
       | Tm_uinst({n=Tm_fvar {fv_qual=Some (Unresolved_name _)}}, _), _ ->
         (* ToSyntax left an overloaded name; use type information to pick
-           among the candidates. See TYPE_BASED_OVERLOADING.md. *)
+           among the candidates. See FStarC.TypeChecker.Overload. *)
         Inr (resolve_overloaded_head env lhead largs, largs)
 
       | _ ->
@@ -1898,7 +1898,7 @@ and tc_value env (e:term) : ML (term
   | Tm_uinst({n=Tm_fvar {fv_qual=Some (Unresolved_name _)}}, _)
   | Tm_fvar {fv_qual=Some (Unresolved_name _)} ->
     (* An overloaded name used without arguments; only the expected type
-       can discriminate here. See TYPE_BASED_OVERLOADING.md. *)
+       can discriminate here. See FStarC.TypeChecker.Overload. *)
     tc_term env (resolve_overloaded_head env top [])
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->

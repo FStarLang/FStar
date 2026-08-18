@@ -126,8 +126,9 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
   | (FStarC_Syntax_Syntax.Tm_name a, FStarC_Syntax_Syntax.Tm_name b) ->
       equal_if (FStarC_Syntax_Syntax.bv_eq a b)
   | uu___ when
-      FStar_Pervasives_Native.uu___is_Some heads_and_args_in_case_both_data
-      ->
+      match heads_and_args_in_case_both_data with
+      | FStar_Pervasives_Native.Some v -> true
+      | uu___1 -> false ->
       let uu___1 = FStarC_Option.must heads_and_args_in_case_both_data in
       (match uu___1 with
        | (f, args1, g, args2, n) -> equal_data f args1 g args2 n)

@@ -151,22 +151,22 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
            (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
 assume new type int : Type0
-assume val op_AmpAmp             : bool -> bool -> Tot bool
-assume val op_BarBar             : bool -> bool -> Tot bool
-assume val op_Negation           : bool -> Tot bool
+assume val op_Amp_Amp             : bool -> bool -> Tot bool
+assume val op_Bar_Bar             : bool -> bool -> Tot bool
+assume val not           : bool -> Tot bool
 assume val op_Multiply           : int -> int -> Tot int
-assume val op_Subtraction        : int -> int -> Tot int
-assume val op_Addition           : int -> int -> Tot int
-assume val op_Minus              : int -> Tot int
-assume val op_LessThanOrEqual    : int -> int -> Tot bool
-assume val op_GreaterThan        : int -> int -> Tot bool
-assume val op_GreaterThanOrEqual : int -> int -> Tot bool
-assume val op_LessThan           : int -> int -> Tot bool
+assume val op_Minus        : int -> int -> Tot int
+assume val op_Plus           : int -> int -> Tot int
+assume val op_Tilde_Minus              : int -> Tot int
+assume val op_Less_Equals    : int -> int -> Tot bool
+assume val op_Greater        : int -> int -> Tot bool
+assume val op_Greater_Equals : int -> int -> Tot bool
+assume val op_Less           : int -> int -> Tot bool
 (* Primitive (structural) equality.
    Restricted to small types.
    But, still allows functions ... TODO: disallow functions *)
-assume val op_Equality :    #a:Type0 -> a -> a -> Tot bool
-assume val op_disEquality : #a:Type0 -> a -> a -> Tot bool
+assume val op_Equals :    #a:Type0 -> a -> a -> Tot bool
+assume val op_Less_Greater : #a:Type0 -> a -> a -> Tot bool
 assume new type char   : Type0
 assume new type float  : Type0
 assume new type string : Type0
@@ -567,8 +567,8 @@ type nonzero = i:int{i<>0}
 (*    we'll need to return to this point anyway, when we discuss how to *)
 (*    soundly map F* ints to something in F#/OCaml.  *)
 
-assume val op_Modulus            : int -> nonzero -> Tot int
-assume val op_Division           : nat -> nonzero -> Tot int
+assume val op_Percent            : int -> nonzero -> Tot int
+assume val op_Slash           : nat -> nonzero -> Tot int
 
 assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string

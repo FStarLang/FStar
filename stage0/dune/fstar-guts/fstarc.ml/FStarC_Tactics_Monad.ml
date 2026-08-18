@@ -122,8 +122,7 @@ let rec fold_right :
          | hd::tl ->
              run (bind (fold_right f tl x) (fun r -> let t = f hd r in t)) ps)
 exception Bad of Prims.string 
-let uu___is_Bad (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Bad uu___ -> true | uu___ -> false
+let uu___is_Bad (projectee : Prims.exn) : Prims.bool= true
 let __proj__Bad__item__uu___ (projectee : Prims.exn) : Prims.string=
   match projectee with | Bad uu___ -> uu___
 let nwarn : Prims.int FStarC_Effect.ref= FStarC_Effect.mk_ref Prims.int_zero
@@ -140,13 +139,13 @@ let check_valid_goal (g : FStarC_Tactics_Types.goal) : unit=
                  let uu___4 =
                    let uu___5 = FStarC_Tactics_Types.goal_witness g in
                    FStarC_TypeChecker_Env.closed env uu___5 in
-                 Prims.op_Negation uu___4 in
+                 Prims.not uu___4 in
                if uu___3 then FStarC_Effect.raise (Bad "witness") else ());
               (let uu___4 =
                  let uu___5 =
                    let uu___6 = FStarC_Tactics_Types.goal_type g in
                    FStarC_TypeChecker_Env.closed env uu___6 in
-                 Prims.op_Negation uu___5 in
+                 Prims.not uu___5 in
                if uu___4 then FStarC_Effect.raise (Bad "goal type") else ());
               (let rec aux e =
                  match FStarC_TypeChecker_Env.pop_bv e with
@@ -156,7 +155,7 @@ let check_valid_goal (g : FStarC_Tactics_Types.goal) : unit=
                          let uu___6 =
                            FStarC_TypeChecker_Env.closed e1
                              bv.FStarC_Syntax_Syntax.sort in
-                         Prims.op_Negation uu___6 in
+                         Prims.not uu___6 in
                        if uu___5
                        then
                          let uu___6 =
@@ -294,7 +293,7 @@ let remove_solved_goals : unit tac=
          FStarC_List.filter
            (fun g ->
               let uu___ = FStarC_Tactics_Types.check_goal_solved g in
-              Prims.op_Negation uu___) gs in
+              Prims.not uu___) gs in
        set_goals gs1)
 let dismiss_all : unit tac= set_goals []
 let dismiss : unit tac=
@@ -723,7 +722,7 @@ let is_goal_safe_as_well_typed (g : FStarC_Tactics_Types.goal) : Prims.bool=
 let register_goal (g : FStarC_Tactics_Types.goal) : unit=
   let uu___ =
     let uu___1 = FStarC_Options.compat_pre_core_should_register () in
-    Prims.op_Negation uu___1 in
+    Prims.not uu___1 in
   if uu___
   then ()
   else
@@ -741,7 +740,9 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
           let uu___3 =
             FStarC_Syntax_Util.ctx_uvar_should_check
               g.FStarC_Tactics_Types.goal_ctx_uvar in
-          FStarC_Syntax_Syntax.uu___is_Allow_untyped uu___3 in
+          match uu___3 with
+          | FStarC_Syntax_Syntax.Allow_untyped _0 -> true
+          | uu___4 -> false in
         if uu___2
         then ()
         else
@@ -865,7 +866,7 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
               FStarC_Format.print1 "(%s) Registering goal\n" uu___5
             else ());
            (let should_register = is_goal_safe_as_well_typed g in
-            if Prims.op_Negation should_register
+            if Prims.not should_register
             then
               let uu___5 =
                 let uu___6 = FStarC_Effect.op_Bang dbg_Core in
@@ -931,7 +932,8 @@ let get_phi (g : FStarC_Tactics_Types.goal) :
       (FStarC_Tactics_Types.goal_env g) uu___1 in
   FStarC_Syntax_Util.un_squash uu___
 let is_irrelevant (g : FStarC_Tactics_Types.goal) : Prims.bool=
-  let uu___ = get_phi g in FStar_Pervasives_Native.uu___is_Some uu___
+  let uu___ = get_phi g in
+  match uu___ with | FStar_Pervasives_Native.Some v -> true | uu___1 -> false
 let goal_typedness_deps (g : FStarC_Tactics_Types.goal) :
   FStarC_Syntax_Syntax.ctx_uvar Prims.list=
   FStarC_Syntax_Util.ctx_uvar_typedness_deps

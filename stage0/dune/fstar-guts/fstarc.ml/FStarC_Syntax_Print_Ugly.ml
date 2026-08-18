@@ -49,7 +49,7 @@ let filter_imp_args
        match uu___ with
        | (uu___1, FStar_Pervasives_Native.None) -> true
        | (uu___1, FStar_Pervasives_Native.Some a) ->
-           Prims.op_Negation a.FStarC_Syntax_Syntax.aqual_implicit) args
+           Prims.not a.FStarC_Syntax_Syntax.aqual_implicit) args
 let filter_imp_binders (bs : FStarC_Syntax_Syntax.binder Prims.list) :
   FStarC_Syntax_Syntax.binder Prims.list=
   FStarC_List.filter (fun b -> filter_imp b.FStarC_Syntax_Syntax.binder_qual)
@@ -397,8 +397,9 @@ let rec term_to_string (x : FStarC_Syntax_Syntax.term) : Prims.string=
                      let uu___4 = term_to_string t2 in
                      let uu___5 =
                        if
-                         FStar_Pervasives_Native.uu___is_None
-                           rc.FStarC_Syntax_Syntax.residual_typ
+                         match rc.FStarC_Syntax_Syntax.residual_typ with
+                         | FStar_Pervasives_Native.None -> true
+                         | uu___6 -> false
                        then "None"
                        else
                          (let uu___6 =
@@ -469,8 +470,9 @@ let rec term_to_string (x : FStarC_Syntax_Syntax.term) : Prims.string=
                  FStarC_Options.print_implicits () ->
                  let uu___1 =
                    if
-                     FStar_Pervasives_Native.uu___is_None
-                       lc1.FStarC_Syntax_Syntax.residual_typ
+                     match lc1.FStarC_Syntax_Syntax.residual_typ with
+                     | FStar_Pervasives_Native.None -> true
+                     | uu___2 -> false
                    then "None"
                    else
                      (let uu___2 =
@@ -593,8 +595,7 @@ and pat_to_string (x : FStarC_Syntax_Syntax.pat) : Prims.string=
       let uu___ = fv_to_string l in
       let uu___1 =
         let uu___2 =
-          let uu___3 = FStarC_Options.print_universes () in
-          Prims.op_Negation uu___3 in
+          let uu___3 = FStarC_Options.print_universes () in Prims.not uu___3 in
         if uu___2
         then " "
         else
@@ -726,10 +727,10 @@ and binder_to_string' (is_arrow : Prims.bool)
     Prims.strcat attrs uu___
   else
     (let uu___ =
-       if Prims.op_Negation is_arrow
+       if Prims.not is_arrow
        then
          let uu___1 = FStarC_Options.print_bound_var_types () in
-         Prims.op_Negation uu___1
+         Prims.not uu___1
        else false in
      if uu___
      then
@@ -787,7 +788,7 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
                 let uu___3 =
                   let uu___4 = FStarC_Options.print_implicits () in
                   if uu___4 then true else FStarC_Options.print_universes () in
-                Prims.op_Negation uu___3 -> term_to_string t
+                Prims.not uu___3 -> term_to_string t
             | uu___2 ->
                 let uu___3 = term_to_string t in
                 FStarC_Format.fmt1 "Tot %s" uu___3)
@@ -800,7 +801,7 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
                 let uu___3 =
                   let uu___4 = FStarC_Options.print_implicits () in
                   if uu___4 then true else FStarC_Options.print_universes () in
-                Prims.op_Negation uu___3 -> term_to_string t
+                Prims.not uu___3 -> term_to_string t
             | uu___2 ->
                 let uu___3 = term_to_string t in
                 FStarC_Format.fmt1 "GTot %s" uu___3)
@@ -849,7 +850,7 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
                   if uu___3
                   then
                     let uu___4 = FStarC_Options.print_effect_args () in
-                    Prims.op_Negation uu___4
+                    Prims.not uu___4
                   else false in
                 if uu___2
                 then
@@ -861,11 +862,11 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
                      let uu___4 =
                        let uu___5 =
                          let uu___6 = FStarC_Options.print_effect_args () in
-                         Prims.op_Negation uu___6 in
+                         Prims.not uu___6 in
                        if uu___5
                        then
                          let uu___6 = FStarC_Options.print_implicits () in
-                         Prims.op_Negation uu___6
+                         Prims.not uu___6
                        else false in
                      if uu___4
                      then
@@ -879,7 +880,7 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
                      (let uu___4 =
                         let uu___5 =
                           let uu___6 = FStarC_Options.print_effect_args () in
-                          Prims.op_Negation uu___6 in
+                          Prims.not uu___6 in
                         if uu___5
                         then
                           FStarC_Util.for_some

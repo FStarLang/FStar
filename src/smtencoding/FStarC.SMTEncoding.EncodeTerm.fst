@@ -299,22 +299,22 @@ let rec curried_arrow_formals_comp k =
 let is_arithmetic_primitive head args =
     match head.n, args with
     | Tm_fvar fv, [_;_]->
-      S.fv_eq_lid fv Const.op_Addition
-      || S.fv_eq_lid fv Const.op_Subtraction
+      S.fv_eq_lid fv Const.op_Plus
+      || S.fv_eq_lid fv Const.op_Minus
       || S.fv_eq_lid fv Const.op_Star
-      || S.fv_eq_lid fv Const.op_Division
-      || S.fv_eq_lid fv Const.op_Modulus
+      || S.fv_eq_lid fv Const.op_Slash
+      || S.fv_eq_lid fv Const.op_Percent
       || S.fv_eq_lid fv Const.real_op_LT
       || S.fv_eq_lid fv Const.real_op_LTE
       || S.fv_eq_lid fv Const.real_op_GT
       || S.fv_eq_lid fv Const.real_op_GTE
-      || S.fv_eq_lid fv Const.real_op_Addition
-      || S.fv_eq_lid fv Const.real_op_Subtraction
-      || S.fv_eq_lid fv Const.real_op_Multiply
-      || S.fv_eq_lid fv Const.real_op_Division
+      || S.fv_eq_lid fv Const.real_op_Plus
+      || S.fv_eq_lid fv Const.real_op_Minus
+      || S.fv_eq_lid fv Const.real_op_Star
+      || S.fv_eq_lid fv Const.real_op_Slash
 
     | Tm_fvar fv, [_] ->
-      S.fv_eq_lid fv Const.op_Minus
+      S.fv_eq_lid fv Const.op_Tilde_Minus
 
     | _ -> false
 
@@ -479,16 +479,16 @@ and encode_arith_term env head args_e : ML _ =
     let div (box: _ -> ML _) (unbox: _ -> ML _) nm = mk_nl box unbox nm Util.mkDiv in
     let modulus (box: _ -> ML _) (unbox: _ -> ML _) = mk_nl box unbox "_mod" Util.mkMod in
     let ops : list (Ident.lident & (list term -> ML term)) =
-        [(Const.op_Addition,    add Term.boxInt Term.unboxInt);
-         (Const.op_Subtraction, sub Term.boxInt Term.unboxInt);
+        [(Const.op_Plus,    add Term.boxInt Term.unboxInt);
+         (Const.op_Minus, sub Term.boxInt Term.unboxInt);
          (Const.op_Star,        mul Term.boxInt Term.unboxInt "_mul");
-         (Const.op_Division,    div Term.boxInt Term.unboxInt "_div");
-         (Const.op_Modulus,     modulus Term.boxInt Term.unboxInt);
-         (Const.op_Minus,       minus Term.boxInt Term.unboxInt);
-         (Const.real_op_Addition,    add Term.boxReal Term.unboxReal);
-         (Const.real_op_Subtraction, sub Term.boxReal Term.unboxReal);
-         (Const.real_op_Multiply,    mul Term.boxReal Term.unboxReal "_rmul");
-         (Const.real_op_Division,    mk_nl Term.boxReal Term.unboxReal "_rdiv" Util.mkRealDiv);
+         (Const.op_Slash,    div Term.boxInt Term.unboxInt "_div");
+         (Const.op_Percent,     modulus Term.boxInt Term.unboxInt);
+         (Const.op_Tilde_Minus,       minus Term.boxInt Term.unboxInt);
+         (Const.real_op_Plus,    add Term.boxReal Term.unboxReal);
+         (Const.real_op_Minus, sub Term.boxReal Term.unboxReal);
+         (Const.real_op_Star,    mul Term.boxReal Term.unboxReal "_rmul");
+         (Const.real_op_Slash,    mk_nl Term.boxReal Term.unboxReal "_rdiv" Util.mkRealDiv);
          (Const.real_op_LT,          mk_l Term.boxBool Util.mkLT  (binary Term.unboxReal));
          (Const.real_op_LTE,         mk_l Term.boxBool Util.mkLTE (binary Term.unboxReal));
          (Const.real_op_GT,          mk_l Term.boxBool Util.mkGT  (binary Term.unboxReal));

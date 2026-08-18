@@ -41,7 +41,7 @@ let lemma_g2_f2 x = ()
 
 val lemma_mid'_mid : x:nat64 -> y:nat64{y <= x /\ y<>0L}
                 -> Lemma
-                  (requires ((Prims.op_LessThanOrEqual (Prims.op_Addition (as_int x) (as_int y))
+                  (requires ((Prims.op_Less_Equals (Prims.op_Plus (as_int x) (as_int y))
                                                        Int64.max_value_int)
                              /\ ((x + y) % 2L) = 0L))
                   (ensures (mid_nat x y = mid_nat' x y))

@@ -181,7 +181,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     EBufCreate (ManuallyManaged, cb x, cb n)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; _p; _w ])
-    when string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ->
+    when string_of_mlpath p = "Pulse.Lib.Vec.op_Dot_Lparen_Rparen" ->
     EBufRead (cb e, cb i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; _p; _w; _m ])
@@ -189,7 +189,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     EBufRead (cb e, cb i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; v; _w ])
-    when string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ->
+    when string_of_mlpath p = "Pulse.Lib.Vec.op_Dot_Lparen_Rparen_Less_Minus" ->
     EBufWrite (cb e, cb i, cb v)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; v; _; _ ])
@@ -218,7 +218,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
 
   (* Pulse array pointers (ArrayPtr, as an underlying C extraction for slices *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; _p; _w ])
-    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.op_Array_Access" ->
+    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.op_Dot_Lparen_Rparen" ->
     EBufRead (translate_expr env e, translate_expr env i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _p; _w ])
@@ -233,7 +233,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     EBufSub (translate_expr env a, translate_expr env i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, (e :: i :: v :: _))
-    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.op_Array_Assignment" ->
+    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.op_Dot_Lparen_Rparen_Less_Minus" ->
     EBufWrite (translate_expr env e, translate_expr env i, translate_expr env v)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; e1; e2; e3; e4; e5; _; _ ])

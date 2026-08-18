@@ -33,7 +33,7 @@ val add (a:t) (b:t) : Pure t
   (requires (size (v a + v b) n))
   (ensures (fun c -> v a + v b = v c))
 
-(* Subtraction primitives *)
+(* Minus primitives *)
 val sub (a:t) (b:t) : Pure t
   (requires (size (v a - v b) n))
   (ensures (fun c -> v a - v b = v c))

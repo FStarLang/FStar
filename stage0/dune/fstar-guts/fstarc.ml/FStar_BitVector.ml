@@ -52,11 +52,11 @@ let rec lognot_vec (n : Prims.pos) (a : Obj.t bv_t) : Obj.t bv_t=
   if n = Prims.int_one
   then
     FStar_Seq_Base.create Prims.int_one
-      (Prims.op_Negation (FStar_Seq_Base.index a Prims.int_zero))
+      (Prims.not (FStar_Seq_Base.index a Prims.int_zero))
   else
     FStar_Seq_Base.append
       (FStar_Seq_Base.create Prims.int_one
-         (Prims.op_Negation (FStar_Seq_Base.index a Prims.int_zero)))
+         (Prims.not (FStar_Seq_Base.index a Prims.int_zero)))
       (lognot_vec (n - Prims.int_one)
          (FStar_Seq_Base.slice a Prims.int_one n))
 let shift_left_vec (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) :

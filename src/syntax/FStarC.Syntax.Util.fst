@@ -439,15 +439,15 @@ let primops =
    PC.op_LTE;
    PC.op_GT;
    PC.op_GTE;
-   PC.op_Subtraction;
    PC.op_Minus;
-   PC.op_Addition;
+   PC.op_Tilde_Minus;
+   PC.op_Plus;
    PC.op_Star;
-   PC.op_Division;
-   PC.op_Modulus;
+   PC.op_Slash;
+   PC.op_Percent;
    PC.op_And;
    PC.op_Or;
-   PC.op_Negation;]
+   PC.op_Not;]
 let is_primop_lid l = primops |> U.for_some (lid_equals l)
 
 let is_primop f = match f.n with
@@ -1137,7 +1137,7 @@ let mk_and_l l = match l with
     | [] -> exp_true_bool
     | hd::tl -> List.fold_left mk_and hd tl
 let mk_boolean_negation b = 
-  mk_Tm_app (fvar_const PC.op_Negation) [as_arg b] b.pos
+  mk_Tm_app (fvar_const PC.op_Not) [as_arg b] b.pos
 let mk_residual_comp l t f = {
     residual_effect=l;
     residual_typ=t;

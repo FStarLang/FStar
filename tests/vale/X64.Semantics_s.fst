@@ -28,10 +28,10 @@ let map (key:eqtype) (value:Type) = Map.t key value
 
 // syntax for map accesses, m.[key] and m.[key] <- value
 unfold
-let op_String_Access (#a:eqtype) (#b:Type) (x:Map.t a b) (y:a) : Tot b = Map.sel x y
+let ( .[] ) (#a:eqtype) (#b:Type) (x:Map.t a b) (y:a) : Tot b = Map.sel x y
 
 unfold
-let op_String_Assignment = Map.upd
+let ( .[]<- ) = Map.upd
 
 type ins =
   | Mov64      : dst:dst_op -> src:operand -> ins

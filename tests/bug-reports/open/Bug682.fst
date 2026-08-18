@@ -34,7 +34,7 @@ let rec map2 n f l1 l2 =
   | Nil, Nil ->
       Nil
 
-(* ./bug682.fst(17,4-17,8) : (Error) (?41694 'a 'b 'c n f l1 l2) is not equal to the expected type (Bug682.vec (?41538 'a 'b 'c n f l1 l2) (Prims.op_Addition n1 1)) *)
+(* ./bug682.fst(17,4-17,8) : (Error) (?41694 'a 'b 'c n f l1 l2) is not equal to the expected type (Bug682.vec (?41538 'a 'b 'c n f l1 l2) (Prims.op_Plus n1 1)) *)
 
 (* The following snippet does work: *)
 

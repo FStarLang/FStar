@@ -49,7 +49,7 @@ module Cast = FStar.Int.Cast
 open Pulse.Lib.BoundedIntegers
 module B = Pulse.Lib.Box
 open Pulse.Lib.Box { box, (:=), (!) }
-open Pulse.Lib.Vec { op_Array_Access, op_Array_Assignment }
+open Pulse.Lib.Vec { op_Dot_Lparen_Rparen, op_Dot_Lparen_Rparen_Less_Minus }
 
 #push-options "--fuel 0 --ifuel 0 --warn_error @288"
 
@@ -341,7 +341,7 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
             pts_to i wi **
             V.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             V.pts_to b2 s2
-    decreases (Prims.op_Subtraction 32 (v (!i)))
+    decreases (Prims.op_Minus 32 (v (!i)))
     {
       let x1 = b1.(!i);
       let x2 = b2.(!i);

@@ -24,17 +24,25 @@ let bool_and_monoid : Prims.bool monoid=
 let bool_or_monoid : Prims.bool monoid=
   let or_ b1 b2 = b1 || b2 in intro_monoid false or_
 let bool_xor_monoid : Prims.bool monoid=
-  let xor b1 b2 = (b1 || b2) && (Prims.op_Negation (b1 && b2)) in
+  let xor b1 b2 = (b1 || b2) && (Prims.not (b1 && b2)) in
   intro_monoid false xor
 let lift_monoid_option (m : 'a monoid) :
   'a FStar_Pervasives_Native.option monoid=
   let mult x y =
     match (x, y) with
     | (FStar_Pervasives_Native.Some x0, FStar_Pervasives_Native.Some y0) ->
-        FStar_Pervasives_Native.Some (__proj__Monoid__item__mult m x0 y0)
+        FStar_Pervasives_Native.Some
+          ((match m with
+            | Monoid
+                (unit, mult1, right_unitality, left_unitality, associativity)
+                -> mult1 x0 y0))
     | (uu___, uu___1) -> FStar_Pervasives_Native.None in
-  intro_monoid (FStar_Pervasives_Native.Some (__proj__Monoid__item__unit m))
-    mult
+  intro_monoid
+    (FStar_Pervasives_Native.Some
+       (match m with
+        | Monoid
+            (unit, mult1, right_unitality, left_unitality, associativity) ->
+            unit)) mult
 type ('a, 'b, 'f, 'ma, 'mb) monoid_morphism =
   | MonoidMorphism of unit * unit 
 let uu___is_MonoidMorphism (f : 'a -> 'b) (ma : 'a monoid) (mb : 'b monoid)

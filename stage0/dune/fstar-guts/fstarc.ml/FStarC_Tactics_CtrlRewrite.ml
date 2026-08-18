@@ -169,7 +169,7 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
             let uu___1 =
               let uu___2 =
                 FStarC_TypeChecker_Common.is_pure_or_ghost_lcomp lcomp in
-              Prims.op_Negation uu___2 in
+              Prims.not uu___2 in
             if uu___1
             then
               Obj.magic
@@ -191,7 +191,9 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                      let uu___4 =
                        let uu___5 = FStarC_Syntax_Subst.compress typ_norm in
                        uu___5.FStarC_Syntax_Syntax.n in
-                     FStarC_Syntax_Syntax.uu___is_Tm_refine uu___4 in
+                     match uu___4 with
+                     | FStarC_Syntax_Syntax.Tm_refine _0 -> true
+                     | uu___5 -> false in
                    (if uu___3
                     then
                       let typ' =

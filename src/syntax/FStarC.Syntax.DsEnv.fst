@@ -324,15 +324,6 @@ let set_bv_range bv r =
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 
-let unmangleMap = [("op_ColonColon", "Cons", Some Data_ctor);
-                   ("not", "op_Negation", None)]
-
-let unmangleOpName (id:ident) : ML (option term) =
-  FStarC.Util.find_map unmangleMap (fun (x,y,dq) ->
-    if string_of_id id = x
-    then Some (S.fvar_with_dd (lid_of_path ["Prims"; y] (range_of_id id)) dq)
-    else None)
-
 type cont_t 'a =
     | Cont_ok of 'a  (* found *)
     | Cont_fail      (* not found, do not retry *)
@@ -437,7 +428,7 @@ let find_in_module_with_includes
    With [collect=true] it keeps walking and returns *all* the hits, in
    scope order, so the head of the list is the same singleton answer
    [collect=false] would have given. This is what feeds type-based
-   overloading (see TYPE_BASED_OVERLOADING.md): later candidates are only
+   overloading (see FStarC.TypeChecker.Overload): later candidates are only
    ever used to recover from a resolution that would otherwise have failed
    or been type-incorrect.
 
@@ -559,10 +550,7 @@ let find_in_module env lid (k_global_def: _ -> _ -> ML _) k_not_found : ML _ =
     end
 
 let try_lookup_id env (id:ident) : ML (option term) =
-  match unmangleOpName id with
-  | Some f -> Some f
-  | _ ->
-    try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding (range_of_id id) r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
+  try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding (range_of_id id) r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
 
 (* Unqualified identifier lookup, if lookup in all open namespaces failed. *)
 
@@ -801,26 +789,7 @@ let try_lookup_name_gen (collect:bool) any_val exclude_interf env (lid:lident) :
     Some (Term_name(S.fvar_with_dd (set_lid_range l (range_of_lid lid)) None, []))
   in
 
-  let found_unmangled = match ns_of_lid lid with
-  | [] ->
-    begin match unmangleOpName (ident_of_lid lid) with
-    | Some t -> Some (Term_name (t, []))
-    | _ -> None
-    end
-  | _ -> None
-  in
-
-  match found_unmangled with
-  | None -> resolve_in_open_namespaces'_gen collect env lid k_local_binding k_rec_binding k_global_def
-  | Some x ->
-    (* [unmangleOpName] historically short-circuited the scope walk entirely,
-       so e.g. a user-defined [not] in scope was silently ignored. Under
-       overloading the unmangled name stays the *primary* candidate (so
-       nothing that used to work changes meaning) but the names in scope
-       become alternatives. *)
-    if not collect
-    then [x]
-    else x :: resolve_in_open_namespaces'_gen collect env lid k_local_binding k_rec_binding k_global_def
+  resolve_in_open_namespaces'_gen collect env lid k_local_binding k_rec_binding k_global_def
 
 let try_lookup_name any_val exclude_interf env (lid:lident) : ML (option foundname) =
   match try_lookup_name_gen false any_val exclude_interf env lid with
@@ -938,8 +907,9 @@ let try_lookup_lid (env:env) l : ML _ = try_lookup_lid_with_attributes env l |> 
    *same* definition reached by two paths, not two alternatives.
 
    Candidates that are not plain [fv]s are dropped from the tail. Handling
-   data constructors and projectors uniformly is deferred; see
-   TYPE_BASED_OVERLOADING.md §7.1. *)
+   data constructors and projectors uniformly is deferred: they keep
+   their own qualifiers and go through the pre-existing
+   Unresolved_constructor / Unresolved_projector machinery. *)
 let try_lookup_lid_alternatives (env:env) (lid:lident) : ML (list fv) =
   if Options.Overload_off? (Options.overload_mode ()) then []
   else if Cons? (ns_of_lid lid) then []

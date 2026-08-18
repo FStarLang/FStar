@@ -44,8 +44,7 @@ let is_unsigned (k : machint_kind) : Prims.bool=
   | UInt64 -> true
   | UInt128 -> true
   | SizeT -> true
-let is_signed (k : machint_kind) : Prims.bool=
-  Prims.op_Negation (is_unsigned k)
+let is_signed (k : machint_kind) : Prims.bool= Prims.not (is_unsigned k)
 let width (k : machint_kind) : Prims.int=
   match k with
   | Int8 -> Prims.of_int 8

@@ -71,9 +71,9 @@ let simple_ops : list primitive_step = [
   mk1 0 PC.bool_of_string_lid (function "true" -> Some true | "false" -> Some false | _ -> None);
 
   (* Integer opts *)
-  mk1 0 PC.op_Minus        (fun x -> -x);
-  mk2 0 PC.op_Addition     (+);
-  mk2 0 PC.op_Subtraction  (-);
+  mk1 0 PC.op_Tilde_Minus        (fun x -> -x);
+  mk2 0 PC.op_Plus     (+);
+  mk2 0 PC.op_Minus  (-);
   mk2 0 PC.op_Star         ( * );
   mk2 0 PC.op_LT           (<);
   mk2 0 PC.op_LTE          (<=);
@@ -81,13 +81,13 @@ let simple_ops : list primitive_step = [
   mk2 0 PC.op_GTE          (>=);
 
   (* Use ' variant to allow for non-reduction. Impl is the same on each normalizer. *)
-  mk2' 0 PC.op_Division (division_modulus_op ( / )) ((division_modulus_op ( / )));
-  mk2' 0 PC.op_Modulus  (division_modulus_op ( % )) ((division_modulus_op ( % )));
+  mk2' 0 PC.op_Slash (division_modulus_op ( / )) ((division_modulus_op ( / )));
+  mk2' 0 PC.op_Percent  (division_modulus_op ( % )) ((division_modulus_op ( % )));
 
   (* Bool opts. NB: && and || are special-cased since they are
   short-circuiting, and can run even if their second arg does not
   try_unembed_simple. Otherwise the strict variants are defined as below. *)
-  mk1 0 PC.op_Negation not;
+  mk1 0 PC.op_Not not;
   // mk2 0 PC.op_And (&&);
   // mk2 0 PC.op_Or  ( || );
 

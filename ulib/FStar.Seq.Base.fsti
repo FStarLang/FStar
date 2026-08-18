@@ -59,7 +59,7 @@ val append: #a:Type -> seq a -> seq a -> Tot (seq a)
 
 let cons (#a:Type) (x:a) (s:seq a) : Tot (seq a) = append (create 1 x) s
 
-let op_At_Bar (#a:Type) (s1:seq a) (s2:seq a) = append s1 s2
+let ( @| ) (#a:Type) (s1:seq a) (s2:seq a) = append s1 s2
 
 val slice:  #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (seq a)
 

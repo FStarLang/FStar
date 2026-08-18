@@ -175,7 +175,7 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
                other.FStarC_Syntax_Syntax.sigattrs) candidates1 in
       let candidates2 =
         FStarC_List.filter
-          (fun c -> let uu___ = is_overridden c in Prims.op_Negation uu___)
+          (fun c -> let uu___ = is_overridden c in Prims.not uu___)
           candidates1 in
       (match candidates2 with
        | [] -> FStar_Pervasives_Native.None
@@ -212,11 +212,13 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
   | uu___ -> FStar_Pervasives_Native.None
 let should_defer_uvar_to_user_tac (env : FStarC_TypeChecker_Env.env)
   (u : FStarC_Syntax_Syntax.ctx_uvar) : Prims.bool=
-  if Prims.op_Negation env.FStarC_TypeChecker_Env.enable_defer_to_tac
+  if Prims.not env.FStarC_TypeChecker_Env.enable_defer_to_tac
   then false
   else
     (let uu___ = find_user_tac_for_uvar env u in
-     FStar_Pervasives_Native.uu___is_Some uu___)
+     match uu___ with
+     | FStar_Pervasives_Native.Some v -> true
+     | uu___1 -> false)
 let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
   (deferred_goals : FStarC_TypeChecker_Common.implicits)
   (tac : FStarC_Syntax_Syntax.sigelt) : unit=
@@ -354,7 +356,7 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
 let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
   (g : FStarC_TypeChecker_Common.guard_t) :
   FStarC_TypeChecker_Common.guard_t=
-  if Prims.op_Negation env.FStarC_TypeChecker_Env.enable_defer_to_tac
+  if Prims.not env.FStarC_TypeChecker_Env.enable_defer_to_tac
   then g
   else
     (let deferred = g.FStarC_TypeChecker_Common.deferred_to_tac in

@@ -148,11 +148,14 @@ let load_checked_file (fn : Prims.string) (checked_fn : Prims.string) :
        FStarC_Format.print1 "Trying to load checked file result %s\n"
          checked_fn);
   (let elt = try_find_in_cache checked_fn in
-   if FStar_Pervasives_Native.uu___is_Some elt
+   if
+     match elt with
+     | FStar_Pervasives_Native.Some v -> true
+     | uu___1 -> false
    then FStarC_Option.must elt
    else
      (let add_and_return1 = add_and_return checked_fn in
-      if Prims.op_Negation (FStarC_Filepath.file_exists checked_fn)
+      if Prims.not (FStarC_Filepath.file_exists checked_fn)
       then
         let msg =
           FStarC_Format.fmt1 "checked file %s does not exist" checked_fn in
@@ -205,7 +208,9 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : Prims.string)
        let source_hash = FStarC_Util.digest_of_file fn1 in
        let has_interface =
          let uu___1 = FStarC_Parser_Dep.interface_of deps module_name in
-         FStar_Pervasives_Native.uu___is_Some uu___1 in
+         match uu___1 with
+         | FStar_Pervasives_Native.Some v -> true
+         | uu___2 -> false in
        let interface_source_file_name =
          let uu___1 =
            let uu___2 = FStarC_Parser_Dep.is_implementation fn1 in
@@ -223,7 +228,7 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : Prims.string)
                   let uu___3 = FStarC_Parser_Dep.lowercase_module_name fn2 in
                   uu___3 = module_name
                 else false in
-              Prims.op_Negation uu___1) deps_of_fn in
+              Prims.not uu___1) deps_of_fn in
        let binary_deps1 =
          FStarC_List.sortWith
            (fun fn11 fn2 ->
@@ -487,7 +492,7 @@ let load_module_from_cache_internal :
                    then true
                    else FStarC_Effect.op_Bang already_failed in
                  let uu___2 =
-                   if Prims.op_Negation suppress_warning
+                   if Prims.not suppress_warning
                    then true
                    else FStarC_Effect.op_Bang dbg in
                  if uu___2
@@ -529,7 +534,10 @@ let load_module_from_cache_internal :
              let uu___1 =
                let uu___2 = FStarC_Parser_Dep.is_implementation fn in
                if uu___2
-               then FStar_Pervasives_Native.uu___is_Some i_fn_opt
+               then
+                 match i_fn_opt with
+                 | FStar_Pervasives_Native.Some v -> true
+                 | uu___3 -> false
                else false in
              if uu___1
              then
@@ -590,7 +598,7 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env)
   let uu___ =
     let uu___2 = FStarC_Options.cache_checked_modules () in
     if uu___2
-    then let uu___3 = FStarC_Options.cache_off () in Prims.op_Negation uu___3
+    then let uu___3 = FStarC_Options.cache_off () in Prims.not uu___3
     else false in
   if uu___
   then
@@ -630,64 +638,92 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env)
         | FStar_Pervasives_Native.Some fn1 -> fn1
         | FStar_Pervasives_Native.None ->
             FStarC_Parser_Dep.cache_file_name fn in
-      let uu___4 = parsing_data_and_direct_deps in
-      match uu___4 with
-      | (parsing_data, deps_of_fn) ->
-          let digest =
-            hash_dependences (FStarC_TypeChecker_Env.dep_graph env) fn
-              deps_of_fn in
-          (match digest with
-           | FStar_Pervasives.Inr hashes ->
-               let stage1 =
-                 let uu___5 = FStarC_Util.digest_of_file fn in
-                 {
-                   version = cache_version_number;
-                   digest = uu___5;
-                   parsing_data
-                 } in
-               let stored =
-                 {
-                   stored_checked_module = (tc_result1.checked_module);
-                   stored_mii = (tc_result1.mii);
-                   stored_smt_index =
-                     ((tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_index);
-                   stored_smt_fvbs =
-                     ((tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_fvbs)
-                 } in
-               let stage2 = { deps_dig = hashes; tc_res = stored } in
-               let checked_digest =
-                 let uu___5 =
-                   (tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_decls
-                     () in
-                 store_values_to_cache cache_file stage1 stage2 uu___5 in
-               let uu___5 =
-                 add_and_return cache_file
-                   ((Valid checked_digest),
-                     (FStar_Pervasives.Inr parsing_data)) in
-               ()
-           | FStar_Pervasives.Inl msg ->
-               (debug
-                  (fun uu___6 ->
-                     let uu___7 =
-                       FStarC_Class_Show.show
-                         (FStarC_Class_Show.show_list
-                            FStarC_Class_Show.showable_string) deps_of_fn in
-                     FStarC_Format.print2
-                       "FAILING to store cache file for %s, with deps %s\n"
-                       fn uu___7);
-                FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
-                  (FStarC_Range_Type.mk_range fn
-                     (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero)
-                     (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero))
-                  FStarC_Errors_Codes.Warning_FileNotWritten ()
-                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                  (Obj.magic
-                     [FStarC_Errors_Msg.text
-                        (FStarC_Format.fmt1
-                           "Checked file %s was not written." cache_file);
-                     FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-                       (FStar_Pprint.doc_of_string "Reason:")
-                       (FStarC_Errors_Msg.text msg)])))))
+      let already_valid =
+        let uu___4 =
+          let uu___5 =
+            let uu___6 = FStarC_Options.output_to () in
+            match uu___6 with
+            | FStar_Pervasives_Native.None -> true
+            | uu___7 -> false in
+          if uu___5
+          then let uu___6 = FStarC_Options.force () in Prims.not uu___6
+          else false in
+        if uu___4
+        then
+          let uu___5 = try_find_in_cache cache_file in
+          match uu___5 with
+          | FStar_Pervasives_Native.Some (Valid uu___6, uu___7) -> true
+          | uu___6 -> false
+        else false in
+      if already_valid
+      then
+        debug
+          (fun uu___4 ->
+             FStarC_Format.print1
+               "Not rewriting checked file %s: it is already present and valid\n"
+               cache_file)
+      else
+        (let uu___4 = parsing_data_and_direct_deps in
+         match uu___4 with
+         | (parsing_data, deps_of_fn) ->
+             let digest =
+               hash_dependences (FStarC_TypeChecker_Env.dep_graph env) fn
+                 deps_of_fn in
+             (match digest with
+              | FStar_Pervasives.Inr hashes ->
+                  let stage1 =
+                    let uu___5 = FStarC_Util.digest_of_file fn in
+                    {
+                      version = cache_version_number;
+                      digest = uu___5;
+                      parsing_data
+                    } in
+                  let stored =
+                    {
+                      stored_checked_module = (tc_result1.checked_module);
+                      stored_mii = (tc_result1.mii);
+                      stored_smt_index =
+                        ((tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_index);
+                      stored_smt_fvbs =
+                        ((tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_fvbs)
+                    } in
+                  let stage2 = { deps_dig = hashes; tc_res = stored } in
+                  let checked_digest =
+                    let uu___5 =
+                      (tc_result1.smt_encoding).FStarC_SMTEncoding_Env.me_decls
+                        () in
+                    store_values_to_cache cache_file stage1 stage2 uu___5 in
+                  let uu___5 =
+                    add_and_return cache_file
+                      ((Valid checked_digest),
+                        (FStar_Pervasives.Inr parsing_data)) in
+                  ()
+              | FStar_Pervasives.Inl msg ->
+                  (debug
+                     (fun uu___6 ->
+                        let uu___7 =
+                          FStarC_Class_Show.show
+                            (FStarC_Class_Show.show_list
+                               FStarC_Class_Show.showable_string) deps_of_fn in
+                        FStarC_Format.print2
+                          "FAILING to store cache file for %s, with deps %s\n"
+                          fn uu___7);
+                   FStarC_Errors.log_issue
+                     FStarC_Class_HasRange.hasRange_range
+                     (FStarC_Range_Type.mk_range fn
+                        (FStarC_Range_Type.mk_pos Prims.int_zero
+                           Prims.int_zero)
+                        (FStarC_Range_Type.mk_pos Prims.int_zero
+                           Prims.int_zero))
+                     FStarC_Errors_Codes.Warning_FileNotWritten ()
+                     (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic
+                        [FStarC_Errors_Msg.text
+                           (FStarC_Format.fmt1
+                              "Checked file %s was not written." cache_file);
+                        FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
+                          (FStar_Pprint.doc_of_string "Reason:")
+                          (FStarC_Errors_Msg.text msg)]))))))
   else ()
 let unsafe_raw_load_checked_file (checked_fn : Prims.string) :
   (FStarC_Parser_Dep.parsing_data * Prims.string Prims.list * tc_result)

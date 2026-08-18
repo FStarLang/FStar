@@ -391,14 +391,15 @@ let __proj__Mkembedding__item__e_typ (projectee : 'a embedding) :
   unit -> FStarC_Syntax_Syntax.emb_typ=
   match projectee with | { em; un; typ; e_typ;_} -> e_typ
 let em (projectee : 'a embedding) : nbe_cbs -> 'a -> t=
-  __proj__Mkembedding__item__em projectee
+  match projectee with | { em = em1; un; typ; e_typ;_} -> em1
 let un (projectee : 'a embedding) :
   nbe_cbs -> t -> 'a FStar_Pervasives_Native.option=
-  __proj__Mkembedding__item__un projectee
+  match projectee with | { em = em1; un = un1; typ; e_typ;_} -> un1
 let typ (projectee : 'a embedding) : unit -> t=
-  __proj__Mkembedding__item__typ projectee
+  match projectee with | { em = em1; un = un1; typ = typ1; e_typ;_} -> typ1
 let e_typ (projectee : 'a embedding) : unit -> FStarC_Syntax_Syntax.emb_typ=
-  __proj__Mkembedding__item__e_typ projectee
+  match projectee with
+  | { em = em1; un = un1; typ = typ1; e_typ = e_typ1;_} -> e_typ1
 let equal_if (uu___ : Prims.bool) :
   FStarC_TypeChecker_TermEqAndSimplify.eq_result=
   if uu___
@@ -709,16 +710,16 @@ let rec t_to_string (x : t) : Prims.string=
       let uu___2 =
         let uu___3 =
           FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv
-            (FStar_Pervasives.__proj__Inr__item__v
-               lb.FStarC_Syntax_Syntax.lbname) in
+            (match lb.FStarC_Syntax_Syntax.lbname with
+             | FStar_Pervasives.Inr v -> v) in
         Prims.strcat uu___3 ")" in
       Prims.strcat "TopLevelLet (" uu___2
   | TopLevelRec (lb, uu___, uu___1, uu___2) ->
       let uu___3 =
         let uu___4 =
           FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv
-            (FStar_Pervasives.__proj__Inr__item__v
-               lb.FStarC_Syntax_Syntax.lbname) in
+            (match lb.FStarC_Syntax_Syntax.lbname with
+             | FStar_Pervasives.Inr v -> v) in
         Prims.strcat uu___4 ")" in
       Prims.strcat "TopLevelRec (" uu___3
   | Meta (t1, uu___) ->

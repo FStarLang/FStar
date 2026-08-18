@@ -15,7 +15,7 @@
 *)
 module Bug609
 
-let add' = let x = op_Addition in assert (x 1 2 = 3)
+let add' = let x = op_Plus in assert (x 1 2 = 3)
 
 let add'' = let x = (+) in assert (x 1 2 = 3)
 

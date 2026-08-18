@@ -32,7 +32,7 @@ class bounded_int (t:eqtype) = {
     ( <= ) : (x:t -> y:t -> b:bool { b = (v x <= v y)});
     ( > ) : (x:t -> y:t -> b:bool { b = (v x > v y)});
     ( >= ) : (x:t -> y:t -> b:bool { b = (v x >= v y)});
-    ( % ) : (x:t -> y:t -> Pure t (requires v y `Prims.(op_GreaterThan)` 0 /\ fits (v x % v y)) (ensures fun z -> v z == v x % v y));
+    ( % ) : (x:t -> y:t -> Pure t (requires v y `Prims.(op_Greater)` 0 /\ fits (v x % v y)) (ensures fun z -> v z == v x % v y));
     ( / ) : (x:t -> y:t -> Pure t (requires v y <> 0 /\ fits (v x / v y)) (ensures fun z -> v z == v x / v y));
     [@@@TC.no_method]
     properties: squash (
@@ -47,14 +47,14 @@ instance bounded_int_int : bounded_int int = {
     fits = (fun _ -> True);
     v = id;
     u = id;
-    ( + ) = (fun x y -> Prims.op_Addition x y);
-    ( - ) = (fun x y -> Prims.op_Subtraction x y);
-    ( < ) = (fun x y -> Prims.op_LessThan x y);
-    ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
-    ( > ) = (fun x y -> Prims.op_GreaterThan x y);
-    ( >= ) = (fun x y -> Prims.op_GreaterThanOrEqual x y);
-    ( % ) = (fun x y -> Prims.op_Modulus x y);
-    ( / ) = (fun x y -> Prims.op_Division x y);
+    ( + ) = (fun x y -> Prims.op_Plus x y);
+    ( - ) = (fun x y -> Prims.op_Minus x y);
+    ( < ) = (fun x y -> Prims.op_Less x y);
+    ( <= ) = (fun x y -> Prims.op_Less_Equals x y);
+    ( > ) = (fun x y -> Prims.op_Greater x y);
+    ( >= ) = (fun x y -> Prims.op_Greater_Equals x y);
+    ( % ) = (fun x y -> Prims.op_Percent x y);
+    ( / ) = (fun x y -> Prims.op_Slash x y);
     properties = ()
 }
 
@@ -193,14 +193,14 @@ instance bounded_int_nat : bounded_int nat = {
     fits = (fun x -> x >= 0);
     v = nat_as_int;
     u = (fun x -> x);
-    ( + ) = (fun x y -> Prims.op_Addition x y);
-    ( - ) = (fun x y -> Prims.op_Subtraction x y);
-    ( < ) = (fun x y -> Prims.op_LessThan x y);
-    ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
-    ( > ) = (fun x y -> Prims.op_GreaterThan x y);
-    ( >= ) = (fun x y -> Prims.op_GreaterThanOrEqual x y);
-    ( % ) = (fun x y -> Prims.op_Modulus x y);
-    ( / ) = (fun x y -> Prims.op_Division x y);
+    ( + ) = (fun x y -> Prims.op_Plus x y);
+    ( - ) = (fun x y -> Prims.op_Minus x y);
+    ( < ) = (fun x y -> Prims.op_Less x y);
+    ( <= ) = (fun x y -> Prims.op_Less_Equals x y);
+    ( > ) = (fun x y -> Prims.op_Greater x y);
+    ( >= ) = (fun x y -> Prims.op_Greater_Equals x y);
+    ( % ) = (fun x y -> Prims.op_Percent x y);
+    ( / ) = (fun x y -> Prims.op_Slash x y);
     properties = ()
 }
 //with an instance for nat this works
@@ -213,14 +213,14 @@ instance bounded_int_pos : bounded_int pos = {
     fits = (fun x -> x > 0);
     v = pos_as_int;
     u = (fun x -> x);
-    ( + ) = (fun x y -> Prims.op_Addition x y);
-    ( - ) = (fun x y -> Prims.op_Subtraction x y);
-    ( < ) = (fun x y -> Prims.op_LessThan x y);
-    ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
-    ( > ) = (fun x y -> Prims.op_GreaterThan x y);
-    ( >= ) = (fun x y -> Prims.op_GreaterThanOrEqual x y);
-    ( % ) = (fun x y -> Prims.op_Modulus x y);
-    ( / ) = (fun x y -> Prims.op_Division x y);
+    ( + ) = (fun x y -> Prims.op_Plus x y);
+    ( - ) = (fun x y -> Prims.op_Minus x y);
+    ( < ) = (fun x y -> Prims.op_Less x y);
+    ( <= ) = (fun x y -> Prims.op_Less_Equals x y);
+    ( > ) = (fun x y -> Prims.op_Greater x y);
+    ( >= ) = (fun x y -> Prims.op_Greater_Equals x y);
+    ( % ) = (fun x y -> Prims.op_Percent x y);
+    ( / ) = (fun x y -> Prims.op_Slash x y);
     properties = ()
 }
 

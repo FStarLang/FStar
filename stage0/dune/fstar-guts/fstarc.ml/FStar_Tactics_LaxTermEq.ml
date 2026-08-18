@@ -1,6 +1,6 @@
 open Prims
 type 't comparator_for =
-  't -> 't -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr
+  't -> 't -> FStarC_Tactics_Types.ref_proofstate -> Prims.bool
 let opt_eq (cmp : 'a comparator_for) :
   'a FStar_Pervasives_Native.option comparator_for=
   fun o1 o2 ->
@@ -142,24 +142,24 @@ let rec term_eq : FStarC_Reflection_Types.term comparator_for=
        FStarC_Reflection_V2_Data.Tv_Uvar (n2, _u2)) -> n1 = n2
     | (FStarC_Reflection_V2_Data.Tv_Let (r1, attrs1, sb1, e1, b1),
        FStarC_Reflection_V2_Data.Tv_Let (r2, attrs2, sb2, e2, b2)) ->
-        if (Prims.op_Negation r1) = r2
+        if (Prims.not r1) = r2
         then false
         else
-          (let x4 = let x5 = binder_eq sb1 sb2 ps in Prims.op_Negation x5 in
+          (let x4 = let x5 = binder_eq sb1 sb2 ps in Prims.not x5 in
            if x4
            then false
            else
-             (let x5 = let x6 = term_eq e1 e2 ps in Prims.op_Negation x6 in
+             (let x5 = let x6 = term_eq e1 e2 ps in Prims.not x6 in
               if x5 then false else term_eq b1 b2 ps))
     | (FStarC_Reflection_V2_Data.Tv_Match (sc1, o1, brs1),
        FStarC_Reflection_V2_Data.Tv_Match (sc2, o2, brs2)) ->
-        let x4 = let x5 = term_eq sc1 sc2 ps in Prims.op_Negation x5 in
+        let x4 = let x5 = term_eq sc1 sc2 ps in Prims.not x5 in
         if x4
         then false
         else
           (let x5 =
              let x6 = opt_eq match_returns_ascription_eq o1 o2 ps in
-             Prims.op_Negation x6 in
+             Prims.not x6 in
            if x5 then false else list_eq br_eq brs1 brs2 ps)
     | (FStarC_Reflection_V2_Data.Tv_AscribedT (t11, uu___, uu___1, uu___2),
        uu___3) -> term_eq t11 x1 ps
@@ -199,19 +199,19 @@ and match_returns_ascription_eq :
         let x1 = asc2 in
         (match x1 with
          | (b2, (tc2, tacopt2, eq2)) ->
-             let x2 = let x3 = binder_eq b1 b2 ps in Prims.op_Negation x3 in
+             let x2 = let x3 = binder_eq b1 b2 ps in Prims.not x3 in
              if x2
              then false
              else
                (let x3 =
                   let x4 = either_eq term_eq comp_eq tc1 tc2 ps in
-                  Prims.op_Negation x4 in
+                  Prims.not x4 in
                 if x3
                 then false
                 else
                   (let x4 =
                      let x5 = opt_eq term_eq tacopt1 tacopt2 ps in
-                     Prims.op_Negation x5 in
+                     Prims.not x5 in
                    if x4 then false else eq1 = eq2)))
 and binder_eq : FStarC_Reflection_Types.binder comparator_for=
   fun b1 b2 ps ->
@@ -221,7 +221,7 @@ and binder_eq : FStarC_Reflection_Types.binder comparator_for=
       let x3 =
         term_eq x.FStarC_Reflection_V2_Data.sort2
           x1.FStarC_Reflection_V2_Data.sort2 ps in
-      Prims.op_Negation x3 in
+      Prims.not x3 in
     if x2
     then false
     else
@@ -229,7 +229,7 @@ and binder_eq : FStarC_Reflection_Types.binder comparator_for=
          let x4 =
            aqual_eq x.FStarC_Reflection_V2_Data.qual
              x1.FStarC_Reflection_V2_Data.qual ps in
-         Prims.op_Negation x4 in
+         Prims.not x4 in
        if x3
        then false
        else
@@ -246,18 +246,19 @@ and comp_eq : FStarC_Reflection_Types.comp comparator_for=
        FStarC_Reflection_V2_Data.C_GTotal t2) -> term_eq t1 t2 ps
     | (FStarC_Reflection_V2_Data.C_Lemma (pre1, post1, pat1),
        FStarC_Reflection_V2_Data.C_Lemma (pre2, post2, pat2)) ->
-        let x2 = let x3 = term_eq pre1 pre2 ps in Prims.op_Negation x3 in
+        let x2 = let x3 = term_eq pre1 pre2 ps in Prims.not x3 in
         if x2
         then false
         else
-          (let x3 = let x4 = term_eq post1 post2 ps in Prims.op_Negation x4 in
+          (let x3 = let x4 = term_eq post1 post2 ps in Prims.not x4 in
            if x3 then false else term_eq pat1 pat2 ps)
-    | (FStarC_Reflection_V2_Data.C_Eff (us1, ef1, t1, args1, dec1),
-       FStarC_Reflection_V2_Data.C_Eff (us2, ef2, t2, args2, dec2)) ->
-        if Prims.op_Negation (ef1 = ef2)
+    | (FStarC_Reflection_V2_Data.C_Eff (us1, ef1, t1, _pre1, _post1, dec1),
+       FStarC_Reflection_V2_Data.C_Eff (us2, ef2, t2, _pre2, _post2, dec2))
+        ->
+        if Prims.not (ef1 = ef2)
         then false
         else
-          (let x2 = let x3 = term_eq t1 t2 ps in Prims.op_Negation x3 in
+          (let x2 = let x3 = term_eq t1 t2 ps in Prims.not x3 in
            if x2 then false else true)
     | uu___ -> false
 and br_eq : FStarC_Reflection_V2_Data.branch comparator_for=
@@ -266,7 +267,7 @@ and br_eq : FStarC_Reflection_V2_Data.branch comparator_for=
       let x1 =
         pat_eq (FStar_Pervasives_Native.fst br1)
           (FStar_Pervasives_Native.fst br2) ps in
-      Prims.op_Negation x1 in
+      Prims.not x1 in
     if x
     then false
     else
@@ -284,7 +285,7 @@ and pat_eq : FStarC_Reflection_V2_Data.pattern comparator_for=
     | (FStarC_Reflection_V2_Data.Pat_Cons (head1, us1, subpats1),
        FStarC_Reflection_V2_Data.Pat_Cons (head2, us2, subpats2)) ->
         if
-          Prims.op_Negation
+          Prims.not
             ((FStarC_Reflection_V2_Builtins.inspect_fv head1) =
                (FStarC_Reflection_V2_Builtins.inspect_fv head2))
         then (fun uu___ -> false)
@@ -296,12 +297,12 @@ and pat_arg_eq :
     match (uu___, uu___1) with
     | ((p1, b1), (p2, b2)) ->
         (fun ps ->
-           let x = let x1 = pat_eq p1 p2 ps in Prims.op_Negation x1 in
+           let x = let x1 = pat_eq p1 p2 ps in Prims.not x1 in
            if x then false else b1 = b2)
 let lax_term_eq (t1 : FStarC_Reflection_Types.term)
-  (t2 : FStarC_Reflection_Types.term) :
-  (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr=
-  fun ps -> let x = term_eq t1 t2 ps in x
+  (t2 : FStarC_Reflection_Types.term)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : Prims.bool=
+  let x = term_eq t1 t2 ps in x
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.LaxTermEq.lax_term_eq"
     (Prims.of_int 3)
@@ -317,7 +318,7 @@ let _ =
                FStarC_Syntax_Embeddings.e_bool psc ncb us args)
 let lax_univ_eq (u1 : FStarC_Reflection_Types.universe)
   (u2 : FStarC_Reflection_Types.universe) :
-  (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr= univ_eq u1 u2
+  FStarC_Tactics_Types.ref_proofstate -> Prims.bool= univ_eq u1 u2
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.LaxTermEq.lax_univ_eq"
     (Prims.of_int 3)

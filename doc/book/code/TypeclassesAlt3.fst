@@ -36,14 +36,14 @@ class bounded_unsigned_int_ops (a:Type) = {
    [@@@TC.no_method]
    base       : bounded_unsigned_int a;
    add        : (x:a -> y:a { fits ( + ) x y } -> a);
-   sub        : (x:a -> y:a { fits op_Subtraction x y } -> a);
+   sub        : (x:a -> y:a { fits op_Minus x y } -> a);
    lt         : (a -> a -> bool);
    [@@@TC.no_method]
    properties : squash (
      related_ops ( + ) add /\
-     related_ops op_Subtraction sub /\      
+     related_ops op_Minus sub /\      
      (forall (x y:a). lt x y <==> as_nat x < as_nat y) /\ // lt is related to <
-     (forall (x:a). fits op_Subtraction bound x) //subtracting from the maximum element never triggers underflow
+     (forall (x:a). fits op_Minus bound x) //subtracting from the maximum element never triggers underflow
    )
 }
 //SNIPPET_END: bui_ops$
@@ -63,7 +63,7 @@ let ( +^ ) #a {| bounded_unsigned_int_ops a |}
 
 let ( -^ ) #a {| bounded_unsigned_int_ops a |}
            (x : a)
-           (y : a { fits op_Subtraction x y })
+           (y : a { fits op_Minus x y })
   : a
   = sub x y
 

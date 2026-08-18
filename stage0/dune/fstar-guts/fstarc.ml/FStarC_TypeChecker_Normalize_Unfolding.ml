@@ -76,23 +76,34 @@ let should_unfold (allow_strict : Prims.bool)
          cfg.FStarC_TypeChecker_Cfg.delta_level in
      yesno uu___2) in
   let selective_unfold =
-    (((((FStar_Pervasives_Native.uu___is_Some
-           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only)
-          ||
-          (FStar_Pervasives_Native.uu___is_Some
-             (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once))
+    (((((match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only
+         with
+         | FStar_Pervasives_Native.Some v -> true
+         | uu___ -> false) ||
+          (match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once
+           with
+           | FStar_Pervasives_Native.Some v -> true
+           | uu___ -> false))
          ||
-         (FStar_Pervasives_Native.uu___is_Some
-            (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully))
+         (match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully
+          with
+          | FStar_Pervasives_Native.Some v -> true
+          | uu___ -> false))
         ||
-        (FStar_Pervasives_Native.uu___is_Some
-           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_attr))
+        (match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_attr
+         with
+         | FStar_Pervasives_Native.Some v -> true
+         | uu___ -> false))
        ||
-       (FStar_Pervasives_Native.uu___is_Some
-          (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_qual))
+       (match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_qual
+        with
+        | FStar_Pervasives_Native.Some v -> true
+        | uu___ -> false))
       ||
-      (FStar_Pervasives_Native.uu___is_Some
-         (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_namespace) in
+      (match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_namespace
+       with
+       | FStar_Pervasives_Native.Some v -> true
+       | uu___ -> false) in
   let res =
     let uu___ = FStarC_TypeChecker_Env.qninfo_is_action qninfo in
     if uu___
@@ -110,12 +121,14 @@ let should_unfold (allow_strict : Prims.bool)
        if b then reif else no)
     else
       (let uu___1 =
-         if Prims.op_Negation allow_strict
+         if Prims.not allow_strict
          then
            let uu___2 =
              FStarC_TypeChecker_Env.fv_has_strict_args
                cfg.FStarC_TypeChecker_Cfg.tcenv fv in
-           FStar_Pervasives_Native.uu___is_Some uu___2
+           match uu___2 with
+           | FStar_Pervasives_Native.Some v -> true
+           | uu___3 -> false
          else false in
        if uu___1
        then
@@ -127,7 +140,9 @@ let should_unfold (allow_strict : Prims.bool)
        else
          (let uu___2 =
             let uu___3 = FStarC_TypeChecker_Cfg.find_prim_step cfg fv in
-            FStar_Pervasives_Native.uu___is_Some uu___3 in
+            match uu___3 with
+            | FStar_Pervasives_Native.Some v -> true
+            | uu___4 -> false in
           if uu___2
           then
             (FStarC_TypeChecker_Cfg.log_unfolding cfg
@@ -161,12 +176,15 @@ let should_unfold (allow_strict : Prims.bool)
                   no)
              | (uu___3, true) when
                  if
-                   FStar_Pervasives_Native.uu___is_Some
-                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once
+                   match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once
+                   with
+                   | FStar_Pervasives_Native.Some v -> true
+                   | uu___4 -> false
                  then
                    FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv)
-                     (FStar_Pervasives_Native.__proj__Some__item__v
-                        (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once)
+                     (match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once
+                      with
+                      | FStar_Pervasives_Native.Some v -> v)
                  else false ->
                  (FStarC_TypeChecker_Cfg.log_unfolding cfg
                     (fun uu___5 ->
@@ -190,7 +208,9 @@ let should_unfold (allow_strict : Prims.bool)
                    let uu___12 =
                      FStarC_Util.find_map attrs1
                        FStarC_Parser_Const_ExtractAs.is_extract_as_attr in
-                   FStar_Pervasives_Native.uu___is_Some uu___12
+                   match uu___12 with
+                   | FStar_Pervasives_Native.Some v -> true
+                   | uu___13 -> false
                  else false ->
                  (FStarC_TypeChecker_Cfg.log_unfolding cfg
                     (fun uu___13 ->
@@ -213,10 +233,10 @@ let should_unfold (allow_strict : Prims.bool)
                  uu___11),
                 uu___12) when
                  (is_rec &&
-                    (Prims.op_Negation
+                    (Prims.not
                        (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta))
                    &&
-                   (Prims.op_Negation
+                   (Prims.not
                       (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full)
                  ->
                  (FStarC_TypeChecker_Cfg.log_unfolding cfg
@@ -245,7 +265,9 @@ let should_unfold (allow_strict : Prims.bool)
                                  [FStarC_TypeChecker_Env.Eager_unfolding_only;
                                  FStarC_TypeChecker_Env.InliningDelta]
                                  fv.FStarC_Syntax_Syntax.fv_name qninfo in
-                             FStar_Pervasives_Native.uu___is_Some uu___8 in
+                             match uu___8 with
+                             | FStar_Pervasives_Native.Some v -> true
+                             | uu___9 -> false in
                            yesno uu___7
                          else no in
                        let uu___7 =
@@ -326,13 +348,16 @@ let should_unfold (allow_strict : Prims.bool)
                    meets_some_criterion))
              | uu___3 when
                  if
-                   FStar_Pervasives_Native.uu___is_Some
-                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr
+                   match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr
+                   with
+                   | FStar_Pervasives_Native.Some v -> true
+                   | uu___4 -> false
                  then
                    FStarC_List.existsb
                      (fun fa -> FStarC_Syntax_Util.has_attribute attrs fa)
-                     (FStar_Pervasives_Native.__proj__Some__item__v
-                        (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr)
+                     (match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr
+                      with
+                      | FStar_Pervasives_Native.Some v -> v)
                  else false ->
                  (FStarC_TypeChecker_Cfg.log_unfolding cfg
                     (fun uu___5 ->

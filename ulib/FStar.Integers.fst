@@ -201,7 +201,7 @@ let ( +% ) (#sw:_{Unsigned? sw})
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold
 noextract
-let op_Subtraction #sw
+let ( - ) #sw
                    (x:int_t sw)
                    (y:int_t sw{within_bounds sw (v x - v y)})
     : Tot          (int_t sw)
@@ -221,7 +221,7 @@ let op_Subtraction #sw
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold
 noextract
-let op_Subtraction_Question
+let ( -? )
         (#sw:_{Unsigned? sw})
         (x:int_t sw)
         (y:int_t sw)
@@ -237,7 +237,7 @@ let op_Subtraction_Question
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold
 noextract
-let op_Subtraction_Percent
+let ( -% )
          (#sw:_{Unsigned? sw})
          (x:int_t sw)
          (y:int_t sw)
@@ -253,7 +253,7 @@ let op_Subtraction_Percent
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold
 noextract
-let op_Minus
+let ( ~- )
          (#sw:_{Signed? sw})
          (x:int_t sw{within_bounds sw (0 - v x)})
   : Tot  (int_t sw)
@@ -390,7 +390,7 @@ let ( / ) (#sw:signed_width{sw <> Unsigned W128})
           (y:int_t sw{0 <> (v y <: Prims.int) /\
                       (match sw with
                        | Unsigned _ -> within_bounds sw (v x / v y)
-                       | Signed _ -> within_bounds sw (v x `FStar.Int.op_Slash_Subtraction` v y))})
+                       | Signed _ -> within_bounds sw (v x `FStar.Int.op_Slash_Minus` v y))})
    : Tot (int_t sw)
    = match sw with
      | Signed Winfinite -> x / y
@@ -414,7 +414,7 @@ let ( % ) (#sw:signed_width{sw <> Unsigned W128})
                        | Unsigned _ -> within_bounds sw (FStar.UInt.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))
                        | Signed Winfinite -> True
                        | Signed _ -> within_bounds sw (FStar.Int.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))) /\
-                       within_bounds sw (FStar.Int.op_Slash_Subtraction (v x) (v y))})
+                       within_bounds sw (FStar.Int.op_Slash_Minus (v x) (v y))})
    : Tot (int_t sw)
    = match sw with
      | Signed Winfinite -> x % y

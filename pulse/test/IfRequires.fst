@@ -180,7 +180,7 @@ ensures  exists* a b. pts_to x a ** pts_to y b
   let mut i = 0;
   while (!i < 10)
   invariant exists* a b v. pts_to x a ** pts_to y b ** pts_to i v ** pure (v <= 10)
-  decreases (Prims.op_Subtraction 10 (!i))
+  decreases (Prims.op_Minus 10 (!i))
   {
     if (!i % 2 = 0)
       requires exists* b. pts_to y b

@@ -197,7 +197,7 @@ let tr_expr (g:uenv) (t:term) : ML (mlexpr & e_tag & mlty) =
     e, E_PURE, mlty
 
   | _, _, [(b, _)]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Prims.op_Negation") ->
+      when S.fv_eq_lid fv (Ident.lid_of_str "Prims.not") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "not" in
     let e = with_ty mlty <| MLE_App (bang, [(cb g b)._1]) in

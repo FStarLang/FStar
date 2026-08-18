@@ -1313,7 +1313,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     EnumStr ["native"; "wrapped"; "boxwrap"],
     text "Control the representation of non-linear arithmetic functions in the SMT encoding:" ^^
     bulleted [
-      text "if 'boxwrap' use 'Prims.op_Star, Prims.op_Division, Prims.op_Modulus'";
+      text "if 'boxwrap' use 'Prims.op_Star, Prims.op_Slash, Prims.op_Percent'";
       text "if 'native' use '*, div, mod'";
       text "if 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'";
     ] ^^
@@ -1324,7 +1324,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     EnumStr ["native"; "boxwrap"],
     text "Toggle the representation of linear arithmetic functions in the SMT encoding:" ^^
     bulleted [
-      text "if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'";
+      text "if 'boxwrap', use 'Prims.op_Plus, Prims.op_Minus, Prims.op_Minus'";
       text "if 'native', use '+, -, -'";
     ] ^^
     text "(default 'boxwrap')");

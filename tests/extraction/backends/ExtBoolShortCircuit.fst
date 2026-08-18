@@ -12,7 +12,7 @@ module ExtBoolShortCircuit
 /// invisible to a test that only compares results.
 ///
 /// The partially-applied case (where extraction must fall back on the plain
-/// two-argument `Prims.op_AmpAmp` and therefore loses the short circuit) lives
+/// two-argument `Prims.op_Amp_Amp` and therefore loses the short circuit) lives
 /// in ExtBoolHigherOrder, which needs closures and so cannot target C.
 
 module I32 = FStar.Int32

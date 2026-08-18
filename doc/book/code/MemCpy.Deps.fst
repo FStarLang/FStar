@@ -92,7 +92,7 @@ let ( < ) x y = U32.(x <^ y)
 
 let ( + ) (x:U32.t) (y:U32.t{FStar.UInt.size (v x + v y) U32.n}) = U32.(x +^ y)
 
-let op_Subtraction (x:U32.t) 
+let ( - ) (x:U32.t) 
                    (y:U32.t{FStar.UInt.size (v x - v y) U32.n})
                    = U32.(x -^ y)
 

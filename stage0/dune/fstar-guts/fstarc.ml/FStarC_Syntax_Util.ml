@@ -503,8 +503,9 @@ let rec is_pure_or_ghost_function (t : FStarC_Syntax_Syntax.typ) :
            let uu___2 =
              let uu___3 = FStarC_Syntax_Subst.compress res in
              uu___3.FStarC_Syntax_Syntax.n in
-           FStarC_Syntax_Syntax.uu___is_Tm_arrow uu___2 ->
-           is_pure_or_ghost_function res
+           match uu___2 with
+           | FStarC_Syntax_Syntax.Tm_arrow _0 -> true
+           | uu___3 -> false -> is_pure_or_ghost_function res
        | uu___2 -> is_pure_or_ghost_comp c)
   | uu___1 -> true
 let rec head_of (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
@@ -673,15 +674,15 @@ let primops : FStarC_Ident.lident Prims.list=
   FStarC_Parser_Const.op_LTE;
   FStarC_Parser_Const.op_GT;
   FStarC_Parser_Const.op_GTE;
-  FStarC_Parser_Const.op_Subtraction;
   FStarC_Parser_Const.op_Minus;
-  FStarC_Parser_Const.op_Addition;
+  FStarC_Parser_Const.op_Tilde_Minus;
+  FStarC_Parser_Const.op_Plus;
   FStarC_Parser_Const.op_Star;
-  FStarC_Parser_Const.op_Division;
-  FStarC_Parser_Const.op_Modulus;
+  FStarC_Parser_Const.op_Slash;
+  FStarC_Parser_Const.op_Percent;
   FStarC_Parser_Const.op_And;
   FStarC_Parser_Const.op_Or;
-  FStarC_Parser_Const.op_Negation]
+  FStarC_Parser_Const.op_Not]
 let is_primop_lid (l : FStarC_Ident.lident) : Prims.bool=
   FStarC_Util.for_some (FStarC_Ident.lid_equals l) primops
 let is_primop (f : FStarC_Syntax_Syntax.term) : Prims.bool=
@@ -1095,7 +1096,10 @@ let abs (bs : FStarC_Syntax_Syntax.binders) (t : FStarC_Syntax_Syntax.term)
         let uu___1 = FStarC_Syntax_Subst.close bs t in
         FStarC_Syntax_Subst.compress uu___1 in
       let lopt1 =
-        if FStarC_Syntax_Syntax.uu___is_Tm_abs body.FStarC_Syntax_Syntax.n
+        if
+          match body.FStarC_Syntax_Syntax.n with
+          | FStarC_Syntax_Syntax.Tm_abs _0 -> true
+          | uu___1 -> false
         then FStar_Pervasives_Native.None
         else close_lopt lopt in
       let uu___1 = FStarC_Syntax_Subst.close_binders bs in
@@ -1154,7 +1158,7 @@ let rec arrow_formals_comp_ln (k : FStarC_Syntax_Syntax.term) :
       let uu___ =
         let uu___1 = is_total_comp c in
         if uu___1
-        then let uu___2 = has_decreases c in Prims.op_Negation uu___2
+        then let uu___2 = has_decreases c in Prims.not uu___2
         else false in
       if uu___
       then
@@ -1199,14 +1203,16 @@ let rec arrow_node_formals_comp_ln (k : FStarC_Syntax_Syntax.term) :
         let uu___2 =
           let uu___3 = is_total_comp comp in
           if uu___3
-          then let uu___4 = has_decreases comp in Prims.op_Negation uu___4
+          then let uu___4 = has_decreases comp in Prims.not uu___4
           else false in
         if uu___2
         then
           let uu___3 =
             let uu___4 = FStarC_Syntax_Subst.compress (comp_result comp) in
             uu___4.FStarC_Syntax_Syntax.n in
-          FStarC_Syntax_Syntax.uu___is_Tm_arrow uu___3
+          match uu___3 with
+          | FStarC_Syntax_Syntax.Tm_arrow _0 -> true
+          | uu___4 -> false
         else false in
       if uu___1
       then
@@ -1488,7 +1494,7 @@ let open_univ_vars_binders_and_comp (uvs : FStarC_Syntax_Syntax.univ_names)
            let uu___2 = arrow_formals_comp_ln_strict t'1 in
            (match uu___2 with
             | (binders1, c1) ->
-                if Prims.uu___is_Nil binders1
+                if (match binders1 with | [] -> true | uu___3 -> false)
                 then FStarC_Effect.failwith "Impossible"
                 else (uvs1, binders1, c1)))
 let is_tuple_constructor (t : FStarC_Syntax_Syntax.typ) : Prims.bool=
@@ -1898,7 +1904,7 @@ let mk_and_l (l : FStarC_Syntax_Syntax.term Prims.list) :
   | hd::tl -> FStarC_List.fold_left mk_and hd tl
 let mk_boolean_negation (b : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.term=
-  let uu___ = fvar_const FStarC_Parser_Const.op_Negation in
+  let uu___ = fvar_const FStarC_Parser_Const.op_Not in
   FStarC_Syntax_Syntax.mk_Tm_app uu___ [FStarC_Syntax_Syntax.as_arg b]
     b.FStarC_Syntax_Syntax.pos
 let mk_residual_comp (l : FStarC_Ident.lident)
@@ -2024,6 +2030,14 @@ let mk_squash (p : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
     FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.squash_lid
       FStar_Pervasives_Native.None in
   mk_app sq [FStarC_Syntax_Syntax.as_arg p]
+let mk_nonempty (u : FStarC_Syntax_Syntax.universe)
+  (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
+  let ne =
+    let uu___ =
+      FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.nonempty_lid
+        FStar_Pervasives_Native.None in
+    FStarC_Syntax_Syntax.mk_Tm_uinst uu___ [u] in
+  mk_app ne [FStarC_Syntax_Syntax.as_arg t]
 let un_squash (t : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
   let uu___ = head_and_args_full t in
@@ -2835,8 +2849,7 @@ and antiquotations_eq_dbg (dbg : Prims.bool)
   | ([], uu___) -> false
   | (uu___, []) -> false
   | (t1::a11, t2::a21) ->
-      let uu___ =
-        let uu___1 = term_eq_dbg dbg t1 t2 in Prims.op_Negation uu___1 in
+      let uu___ = let uu___1 = term_eq_dbg dbg t1 t2 in Prims.not uu___1 in
       if uu___ then false else antiquotations_eq_dbg dbg a11 a21
 and bqual_eq_dbg (dbg : Prims.bool) (a1 : FStarC_Syntax_Syntax.bqual)
   (a2 : FStarC_Syntax_Syntax.bqual) : Prims.bool=
@@ -2866,8 +2879,8 @@ and aqual_eq_dbg (dbg : Prims.bool) (a1 : FStarC_Syntax_Syntax.aqual)
       then
         FStarC_List.fold_left2
           (fun out t1 t2 ->
-             if Prims.op_Negation out then false else term_eq_dbg dbg t1 t2)
-          true a11.FStarC_Syntax_Syntax.aqual_attributes
+             if Prims.not out then false else term_eq_dbg dbg t1 t2) true
+          a11.FStarC_Syntax_Syntax.aqual_attributes
           a21.FStarC_Syntax_Syntax.aqual_attributes
       else false
   | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> true
@@ -2939,8 +2952,8 @@ let get_attribute (attr : FStarC_Ident.lident)
 let remove_attr (attr : FStarC_Ident.lident)
   (attrs : FStarC_Syntax_Syntax.attribute Prims.list) :
   FStarC_Syntax_Syntax.attribute Prims.list=
-  FStarC_List.filter
-    (fun a -> let uu___ = is_fvar attr a in Prims.op_Negation uu___) attrs
+  FStarC_List.filter (fun a -> let uu___ = is_fvar attr a in Prims.not uu___)
+    attrs
 let process_pragma (p : FStarC_Syntax_Syntax.pragma)
   (r : FStarC_Range_Type.range) : unit=
   FStarC_Errors.set_option_warning_callback_range
@@ -2988,8 +3001,7 @@ let process_pragma (p : FStarC_Syntax_Syntax.pragma)
    | FStarC_Syntax_Syntax.RestartSolver -> ()
    | FStarC_Syntax_Syntax.PopOptions ->
        let uu___1 =
-         let uu___2 = FStarC_Options.internal_pop () in
-         Prims.op_Negation uu___2 in
+         let uu___2 = FStarC_Options.internal_pop () in Prims.not uu___2 in
        if uu___1
        then
          FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
@@ -3542,7 +3554,7 @@ let check_mutual_universes (lbs : FStarC_Syntax_Syntax.letbinding Prims.list)
                 let uu___2 =
                   FStarC_List.forall2 FStarC_Ident.ident_equals
                     lb1.FStarC_Syntax_Syntax.lbunivs expected in
-                Prims.op_Negation uu___2 in
+                Prims.not uu___2 in
               if uu___1
               then
                 FStarC_Errors.raise_error

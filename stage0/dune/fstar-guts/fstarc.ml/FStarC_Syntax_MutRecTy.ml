@@ -99,7 +99,7 @@ let disentangle_abbrevs_from_bundle
                             FStarC_Syntax_Syntax.lbpos = uu___9;_}::[]);
                        FStarC_Syntax_Syntax.lids1 = uu___10;_}
                      ->
-                     Prims.op_Negation
+                     Prims.not
                        (FStarC_Ident.lid_equals lid
                           fv.FStarC_Syntax_Syntax.fv_name)
                  | uu___3 -> true) uu___2 in
@@ -277,8 +277,7 @@ let disentangle_abbrevs_from_bundle
         FStarC_List.filter
           (fun lid ->
              FStarC_List.for_all
-               (fun lid' ->
-                  Prims.op_Negation (FStarC_Ident.lid_equals lid lid'))
+               (fun lid' -> Prims.not (FStarC_Ident.lid_equals lid lid'))
                type_abbrevs) l in
       let inductives_with_abbrevs_unfolded =
         let find_in_unfolded fv =

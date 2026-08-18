@@ -20,7 +20,7 @@ module ExtPrimsIntDiv
 /// silently wrong (severity 2). Since F* proves `x % 5 >= 0`, the bad value
 /// can be laundered into an out-of-bounds index, which is why this is worse
 /// than it looks. OCaml is fine because extraction routes these through
-/// `Prims.op_Division`/`op_Modulus`, which are Zarith `ediv`/`erem`.
+/// `Prims.op_Slash`/`op_Percent`, which are Zarith `ediv`/`erem`.
 
 module I32 = FStar.Int32
 
