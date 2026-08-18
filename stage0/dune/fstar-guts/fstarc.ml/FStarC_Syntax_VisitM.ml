@@ -56,24 +56,52 @@ let __proj__Mklvm__item__proc_quotes (projectee : 'm lvm) : Prims.bool=
   | { lvm_monad; f_term; f_binder; f_binding_bv; f_br; f_comp;
       f_residual_comp; f_univ; proc_quotes;_} -> proc_quotes
 let lvm_monad (projectee : 'm lvm) : 'm FStarC_Class_Monad.monad=
-  __proj__Mklvm__item__lvm_monad projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term; f_binder; f_binding_bv; f_br; f_comp;
+      f_residual_comp; f_univ; proc_quotes;_} -> lvm_monad1
 let f_term (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.term) endo=
-  __proj__Mklvm__item__f_term projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder; f_binding_bv; 
+      f_br; f_comp; f_residual_comp; f_univ; proc_quotes;_} -> f_term1
 let f_binder (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.binder) endo=
-  __proj__Mklvm__item__f_binder projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
+      f_binding_bv; f_br; f_comp; f_residual_comp; f_univ; proc_quotes;_} ->
+      f_binder1
 let f_binding_bv (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.bv) endo=
-  __proj__Mklvm__item__f_binding_bv projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
+      f_binding_bv = f_binding_bv1; f_br; f_comp; f_residual_comp; f_univ;
+      proc_quotes;_} -> f_binding_bv1
 let f_br (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.branch) endo=
-  __proj__Mklvm__item__f_br projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
+      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp; f_residual_comp;
+      f_univ; proc_quotes;_} -> f_br1
 let f_comp (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.comp) endo=
-  __proj__Mklvm__item__f_comp projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
+      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp = f_comp1;
+      f_residual_comp; f_univ; proc_quotes;_} -> f_comp1
 let f_residual_comp (projectee : 'm lvm) :
   ('m, FStarC_Syntax_Syntax.residual_comp) endo=
-  __proj__Mklvm__item__f_residual_comp projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
+      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp = f_comp1;
+      f_residual_comp = f_residual_comp1; f_univ; proc_quotes;_} ->
+      f_residual_comp1
 let f_univ (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.universe) endo=
-  __proj__Mklvm__item__f_univ projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
+      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp = f_comp1;
+      f_residual_comp = f_residual_comp1; f_univ = f_univ1; proc_quotes;_} ->
+      f_univ1
 let proc_quotes (projectee : 'm lvm) : Prims.bool=
-  __proj__Mklvm__item__proc_quotes projectee
+  match projectee with
+  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
+      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp = f_comp1;
+      f_residual_comp = f_residual_comp1; f_univ = f_univ1;
+      proc_quotes = proc_quotes1;_} -> proc_quotes1
 let _lvm_monad (uu___ : 'm lvm) : 'm FStarC_Class_Monad.monad=
   lvm_monad uu___
 let novfs (uu___ : 'm FStarC_Class_Monad.monad) : 'm lvm=
@@ -1066,13 +1094,13 @@ let on_sub_univ (d : 'm lvm) (u : FStarC_Syntax_Syntax.universe) : 'm=
 let mapTuple2 (uu___ : 'm FStarC_Class_Monad.monad) (f : 'a -> 'm)
   (g : 'c -> 'm) (t : ('a * 'c)) : 'm=
   let uu___1 =
-    let uu___2 = f (FStar_Pervasives_Native.__proj__Mktuple2__item___1 t) in
+    let uu___2 = f (match t with | (_1, _2) -> _1) in
     FStarC_Class_Monad.op_Less_Dollar_Greater uu___ () ()
       (fun uu___3 ->
          (fun uu___3 ->
             let uu___3 = Obj.magic uu___3 in
             Obj.magic (fun uu___4 -> (uu___3, uu___4))) uu___3) uu___2 in
-  let uu___2 = g (FStar_Pervasives_Native.__proj__Mktuple2__item___2 t) in
+  let uu___2 = g (match t with | (_1, _2) -> _2) in
   FStarC_Class_Monad.op_Less_Star_Greater uu___ () () uu___1 uu___2
 let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
   fun d se ->

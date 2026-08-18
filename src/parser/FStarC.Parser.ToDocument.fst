@@ -262,9 +262,12 @@ let is_general_construction e =
   not (ListLiteral? e.tm)
 
 let is_general_prefix_op op =
-  let op_starting_char =  char_at (Ident.string_of_id op) 0 in
+  let op_s = Ident.string_of_id op in
+  let op_starting_char =  char_at op_s 0 in
   op_starting_char = '!' || op_starting_char = '?' ||
-  (op_starting_char = '~' && Ident.string_of_id op <> "~")
+  (* "~-" is prefix unary minus, but it is printed as "-" (see p_tmEqWith'),
+     which needs the extra care of a dedicated case since "-" is also infix. *)
+  (op_starting_char = '~' && op_s <> "~" && op_s <> "~-")
 
 (* might already exist somewhere *)
 let head_and_args_full e =
@@ -395,7 +398,7 @@ let is_operatorInfix34 =
 
 let handleable_args_length (op:ident) =
   let op_s = Ident.string_of_id op in
-  if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
+  if is_general_prefix_op op || List.mem op_s [ "~-" ; "~" ] then 1
   else if (is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
     List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"; ".(||)"; ".[||]"])
@@ -406,7 +409,7 @@ let handleable_args_length (op:ident) =
 let handleable_op op args =
   match List.length args with
   | 0 -> true
-  | 1 -> is_general_prefix_op op || List.mem (Ident.string_of_id op) [ "-" ; "~" ]
+  | 1 -> is_general_prefix_op op || List.mem (Ident.string_of_id op) [ "~-" ; "~" ]
   | 2 ->
     is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
@@ -658,9 +661,11 @@ let p_lidentOrOperator' l s_l (p_l: _ -> ML _) : ML _ =
   let lstr = s_l l in 
   if lstr `starts_with` "op_" then
     match AST.string_to_op lstr with
-    | None -> 
-      str "( " ^^  p_l l ^^ str " )"
-    | Some (s, _) -> 
+    | None ->
+      (* Not the mangling of an operator, just an identifier that happens
+         to start with "op_"; print it as is. *)
+      p_l l
+    | Some s -> 
       str "( " ^^ str s ^^ str " )"
   else
     p_l l
@@ -1155,7 +1160,7 @@ and p_atomicPattern p : ML _ = match p.pat with
     p_constant c
   | PatVQuote e -> group (str "`%" ^^ p_noSeqTermAndComment false false e)
   | PatVar (lid, aqual, attrs) ->
-    optional p_aqual aqual ^^ p_attributes false attrs ^^ p_lident lid
+    optional p_aqual aqual ^^ p_attributes false attrs ^^ p_lidentOrOperator lid
   | PatName uid ->
       p_quident uid
   | PatOr _ -> failwith "Inner or pattern !"
@@ -1936,7 +1941,9 @@ and p_tmEqWith' (p_X: _ -> ML _) curr e : ML _ = match e.tm with
       paren_if_gt curr mine (infix0 (str <| op) (p_tmEqWith' p_X left e1) (p_tmEqWith' p_X right e2))
   | Op(id, [ e1; e2 ]) when string_of_id id = ":=" ->
       group (p_tmEqWith p_X e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEqWith p_X e2)
-  | Op(id, [e]) when string_of_id id = "-" ->
+  | Op(id, [e]) when string_of_id id = "~-" ->
+      (* Prefix unary minus is named "~-", but "-" is the usual notation for it
+         (as in OCaml), so that is how we print it. *)
       let left, mine, right = levels "-" in
       minus ^/^ p_tmEqWith' p_X mine e
   | _ -> p_tmNoEqWith p_X e

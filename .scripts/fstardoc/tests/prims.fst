@@ -417,17 +417,17 @@ val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to
 (** [&&] boolean conjunction *)
 [@smt_theory_symbol]
 assume
-val op_AmpAmp             : bool -> bool -> Tot bool
+val op_Amp_Amp             : bool -> bool -> Tot bool
 
 (** [||] boolean disjunction *)
 [@smt_theory_symbol]
 assume
-val op_BarBar             : bool -> bool -> Tot bool
+val op_Bar_Bar             : bool -> bool -> Tot bool
 
 (** [not] boolean negation *)
 [@smt_theory_symbol]
 assume
-val op_Negation           : bool -> Tot bool
+val not           : bool -> Tot bool
 
 (** Integer multiplication, no special symbol. See FStar.Mul *)
 [@smt_theory_symbol]
@@ -437,47 +437,47 @@ val op_Multiply           : int -> int -> Tot int
 (** [-] integer subtraction *)
 [@smt_theory_symbol]
 assume
-val op_Subtraction        : int -> int -> Tot int
+val op_Minus        : int -> int -> Tot int
 
 (** [+] integer addition *)
 [@smt_theory_symbol]
 assume
-val op_Addition           : int -> int -> Tot int
+val op_Plus           : int -> int -> Tot int
 
 (** [-] prefix unary integer negation *)
 [@smt_theory_symbol]
 assume
-val op_Minus              : int -> Tot int
+val op_Tilde_Minus              : int -> Tot int
 
 (** [<=] integer comparison *)
 [@smt_theory_symbol]
 assume
-val op_LessThanOrEqual    : int -> int -> Tot bool
+val op_Less_Equals    : int -> int -> Tot bool
 
 (** [>] integer comparison *)
 [@smt_theory_symbol]
 assume
-val op_GreaterThan        : int -> int -> Tot bool
+val op_Greater        : int -> int -> Tot bool
 
 (** [>=] integer comparison *)
 [@smt_theory_symbol]
 assume
-val op_GreaterThanOrEqual : int -> int -> Tot bool
+val op_Greater_Equals : int -> int -> Tot bool
 
 (** [<] integer comparison *)
 [@smt_theory_symbol]
 assume
-val op_LessThan           : int -> int -> Tot bool
+val op_Less           : int -> int -> Tot bool
 
 (** [=] decidable equality on [eqtype] *)
 [@smt_theory_symbol]
 assume
-val op_Equality :    #a:eqtype -> a -> a -> Tot bool
+val op_Equals :    #a:eqtype -> a -> a -> Tot bool
 
 (** [<>] decidable dis-equality on [eqtype] *)
 [@smt_theory_symbol]
 assume
-val op_disEquality : #a:eqtype -> a -> a -> Tot bool
+val op_Less_Greater : #a:eqtype -> a -> a -> Tot bool
 
 (** The extensible open inductive type of exceptions *)
 assume new
@@ -656,12 +656,12 @@ type nonzero = i:int{i<>0}
 (** Euclidean modulus *)
 [@smt_theory_symbol]
 assume
-val op_Modulus            : int -> nonzero -> Tot int
+val op_Percent            : int -> nonzero -> Tot int
 
 (** Euclidean division, written [/] *)
 [@smt_theory_symbol]
 assume
-val op_Division           : int -> nonzero -> Tot int
+val op_Slash           : int -> nonzero -> Tot int
 
 (** [pow2 x] is [2^x]:
 

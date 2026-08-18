@@ -1,1 +1,1 @@
-let op_Array_Access arr i () () = Array.get arr (Stdint.Uint64.to_int i)
+let op_Dot_Lparen_Rparen arr i () () = Array.get arr (Stdint.Uint64.to_int i)

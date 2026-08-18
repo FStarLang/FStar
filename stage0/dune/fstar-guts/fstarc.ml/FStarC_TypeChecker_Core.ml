@@ -1076,8 +1076,8 @@ let check_positivity_qual (rel : relation)
     FStarC_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option)
   : unit result=
   if
-    FStarC_TypeChecker_Common.check_positivity_qual (uu___is_SUBTYPING rel)
-      p0 p1
+    FStarC_TypeChecker_Common.check_positivity_qual
+      (match rel with | SUBTYPING _0 -> true | uu___ -> false) p0 p1
   then
     fun uu___ ->
       fun cache -> Success (((), FStar_Pervasives_Native.None), cache)
@@ -1170,9 +1170,7 @@ let apply_predicate (x : FStarC_Syntax_Syntax.binder)
 let is_gtot_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   let uu___ = FStarC_Syntax_Util.is_tot_or_gtot_comp c in
   if uu___
-  then
-    let uu___1 = FStarC_Syntax_Util.is_total_comp c in
-    Prims.op_Negation uu___1
+  then let uu___1 = FStarC_Syntax_Util.is_total_comp c in Prims.not uu___1
   else false
 let rec context_included (g0 : FStarC_Syntax_Syntax.binding Prims.list)
   (g1 : FStarC_Syntax_Syntax.binding Prims.list) : Prims.bool=
@@ -1550,7 +1548,7 @@ let lookup (g : env) (e : FStarC_Syntax_Syntax.term) :
                   if uu___4
                   then
                     let uu___5 = FStarC_Effect.op_Bang dbg_DisableCoreCache in
-                    Prims.op_Negation uu___5
+                    Prims.not uu___5
                   else false in
                 if uu___3
                 then
@@ -1608,7 +1606,7 @@ let check_no_escape (bs : FStarC_Syntax_Syntax.binders)
            FStarC_Class_Setlike.mem
              (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv)
              b.FStarC_Syntax_Syntax.binder_bv xs in
-         Prims.op_Negation uu___1) bs in
+         Prims.not uu___1) bs in
   if uu___
   then
     fun uu___1 ->
@@ -2011,7 +2009,7 @@ let rec check_relation' (g : env) (rel : relation)
       | Success ((x, g1), cache1) ->
           let uu___1 =
             let uu___2 =
-              let guard_ok = Prims.op_Negation x in
+              let guard_ok = Prims.not x in
               let head_matches t01 t11 =
                 let head0 = FStarC_Syntax_Util.leftmost_head t01 in
                 let head1 = FStarC_Syntax_Util.leftmost_head t11 in
@@ -2988,7 +2986,7 @@ let rec check_relation' (g : env) (rel : relation)
                           (match uu___7 with
                            | (head1, args1) ->
                                if
-                                 Prims.op_Negation
+                                 Prims.not
                                    (head_matches1 &&
                                       ((FStarC_List.length args0) =
                                          (FStarC_List.length args1)))
@@ -3057,7 +3055,7 @@ let rec check_relation' (g : env) (rel : relation)
                           (match uu___7 with
                            | (head1, args1) ->
                                if
-                                 Prims.op_Negation
+                                 Prims.not
                                    (head_matches1 &&
                                       ((FStarC_List.length args0) =
                                          (FStarC_List.length args1)))
@@ -3126,7 +3124,7 @@ let rec check_relation' (g : env) (rel : relation)
                           (match uu___7 with
                            | (head1, args1) ->
                                if
-                                 Prims.op_Negation
+                                 Prims.not
                                    (head_matches1 &&
                                       ((FStarC_List.length args0) =
                                          (FStarC_List.length args1)))
@@ -3195,7 +3193,7 @@ let rec check_relation' (g : env) (rel : relation)
                           (match uu___7 with
                            | (head1, args1) ->
                                if
-                                 Prims.op_Negation
+                                 Prims.not
                                    (head_matches1 &&
                                       ((FStarC_List.length args0) =
                                          (FStarC_List.length args1)))
@@ -3264,7 +3262,7 @@ let rec check_relation' (g : env) (rel : relation)
                           (match uu___7 with
                            | (head1, args1) ->
                                if
-                                 Prims.op_Negation
+                                 Prims.not
                                    (head_matches1 &&
                                       ((FStarC_List.length args0) =
                                          (FStarC_List.length args1)))
@@ -3333,7 +3331,7 @@ let rec check_relation' (g : env) (rel : relation)
                           (match uu___7 with
                            | (head1, args1) ->
                                if
-                                 Prims.op_Negation
+                                 Prims.not
                                    (head_matches1 &&
                                       ((FStarC_List.length args0) =
                                          (FStarC_List.length args1)))
@@ -3823,7 +3821,7 @@ let rec check_relation' (g : env) (rel : relation)
                           (p1, FStar_Pervasives_Native.None, body1)) ->
                            let uu___9 =
                              let uu___10 = FStarC_Syntax_Syntax.eq_pat p0 p1 in
-                             Prims.op_Negation uu___10 in
+                             Prims.not uu___10 in
                            if uu___9
                            then fail_str "patterns not equal"
                            else
@@ -4295,7 +4293,7 @@ and memo_check (g : env) (e : FStarC_Syntax_Syntax.term) :
               | FStar_Pervasives.Inr err -> fail_propagate err in
             uu___2 ctx cache'
         | Error err -> let uu___2 = fail_propagate err in uu___2 ctx cache in
-  if Prims.op_Negation g.should_read_cache
+  if Prims.not g.should_read_cache
   then check_then_memo g e
   else
     (fun ctx ->
@@ -7567,7 +7565,7 @@ and check_comp (g : env) (c : FStarC_Syntax_Syntax.comp) :
                                              q =
                                                FStarC_Syntax_Syntax.TotalEffect)
                                           uu___8 in
-                                      if Prims.op_Negation is_total
+                                      if Prims.not is_total
                                       then
                                         fun uu___8 ->
                                           fun cache ->
@@ -7804,7 +7802,10 @@ and check_pat (g : env) (p : FStarC_Syntax_Syntax.pat)
            | Error err -> Error err)
   | FStarC_Syntax_Syntax.Pat_cons (fv, usopt, pats) ->
       let us =
-        if FStar_Pervasives_Native.uu___is_None usopt
+        if
+          match usopt with
+          | FStar_Pervasives_Native.None -> true
+          | uu___ -> false
         then []
         else FStarC_Option.must usopt in
       let uu___ =
@@ -8559,7 +8560,7 @@ and pattern_branch_condition (g : env)
         match uu___ with
         | (is_induc, datacons) ->
             if
-              (Prims.op_Negation is_induc) ||
+              (Prims.not is_induc) ||
                 ((FStarC_List.length datacons) > Prims.int_one)
             then
               let discriminator =
@@ -8671,7 +8672,7 @@ let check_term_top' (g : FStarC_TypeChecker_Env.env)
                            if eff = E_Ghost
                            then
                              let uu___6 = non_informative g1 t in
-                             Prims.op_Negation uu___6
+                             Prims.not uu___6
                            else false in
                          if uu___5
                          then fail_str "expected total effect, found ghost"
@@ -8862,7 +8863,7 @@ let check_term_top (g : FStarC_TypeChecker_Env.env)
                          (fun binding_env ->
                             match binding_env with
                             | FStarC_Syntax_Syntax.Binding_var bv_env ->
-                                Prims.op_Negation
+                                Prims.not
                                   (FStarC_Syntax_Syntax.bv_eq bv_env bv)
                             | uu___9 -> true) g.FStarC_TypeChecker_Env.gamma)
                     guard_names in
@@ -8995,7 +8996,7 @@ let check_term_equality (guard_ok : Prims.bool) (unfolding_ok1 : Prims.bool)
    else ());
   (let ctx =
      {
-       no_guard = (Prims.op_Negation guard_ok);
+       no_guard = (Prims.not guard_ok);
        unfolding_ok = unfolding_ok1;
        error_context = [("Eq", FStar_Pervasives_Native.None)]
      } in
@@ -9034,7 +9035,7 @@ let check_term_subtyping (guard_ok : Prims.bool) (unfolding_ok1 : Prims.bool)
   let g1 = initial_env g in
   let ctx =
     {
-      no_guard = (Prims.op_Negation guard_ok);
+      no_guard = (Prims.not guard_ok);
       unfolding_ok = unfolding_ok1;
       error_context = [("Subtyping", FStar_Pervasives_Native.None)]
     } in

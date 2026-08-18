@@ -22,9 +22,6 @@ let __proj__CR__item__opp (projectee : 'a cr) : 'a -> 'a=
   match projectee with
   | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) -> opp
 
-
-
-
 let norm_fully (x : 'a) : 'a= x
 type index = Prims.nat
 type varlist =
@@ -80,11 +77,19 @@ let rec canonical_sum_merge :
   'a . 'a cr -> 'a canonical_sum -> 'a canonical_sum -> 'a canonical_sum =
   fun r s1 s2 ->
     let aplus =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_add r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_add
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     let aone =
-      FStar_Algebra_CommMonoid.__proj__CM__item__unit
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> unit in
     match s1 with
     | Cons_monom (c1, l1, t1) -> csm_aux r c1 l1 t1 s2
     | Cons_varlist (l1, t1) -> csm_aux r aone l1 t1 s2
@@ -97,11 +102,19 @@ and csm_aux :
   =
   fun r c1 l1 t1 s2 ->
     let aplus =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_add r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_add
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     let aone =
-      FStar_Algebra_CommMonoid.__proj__CM__item__unit
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> unit in
     match s2 with
     | Cons_monom (c2, l2, t2) ->
         if l1 = l2
@@ -122,11 +135,19 @@ let rec monom_insert :
   'a . 'a cr -> 'a -> varlist -> 'a canonical_sum -> 'a canonical_sum =
   fun r c1 l1 s2 ->
     let aplus =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_add r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_add
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     let aone =
-      FStar_Algebra_CommMonoid.__proj__CM__item__unit
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> unit in
     match s2 with
     | Cons_monom (c2, l2, t2) ->
         if l1 = l2
@@ -149,15 +170,23 @@ let rec monom_insert :
 let varlist_insert (r : 'a cr) (l1 : varlist) (s2 : 'a canonical_sum) :
   'a canonical_sum=
   let aone =
-    FStar_Algebra_CommMonoid.__proj__CM__item__unit
-      (__proj__CR__item__cm_mult r) in
+    match match r with
+          | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+              cm_mult
+    with
+    | FStar_Algebra_CommMonoid.CM
+        (unit, mult, identity, associativity, commutativity) -> unit in
   monom_insert r aone l1 s2
 let rec canonical_sum_scalar :
   'a . 'a cr -> 'a -> 'a canonical_sum -> 'a canonical_sum =
   fun r c0 s ->
     let amult =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     match s with
     | Cons_monom (c, l, t) ->
         Cons_monom ((amult c0 c), l, (canonical_sum_scalar r c0 t))
@@ -177,8 +206,12 @@ let rec canonical_sum_scalar3 :
   'a . 'a cr -> 'a -> varlist -> 'a canonical_sum -> 'a canonical_sum =
   fun r c0 l0 s ->
     let amult =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     match s with
     | Cons_monom (c, l, t) ->
         monom_insert r (amult c0 c) (varlist_merge l0 l)
@@ -239,14 +272,26 @@ let rec canonical_sum_simplify :
   'a . 'a cr -> 'a canonical_sum -> 'a canonical_sum =
   fun r s ->
     let azero =
-      FStar_Algebra_CommMonoid.__proj__CM__item__unit
-        (__proj__CR__item__cm_add r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_add
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> unit in
     let aone =
-      FStar_Algebra_CommMonoid.__proj__CM__item__unit
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> unit in
     let aplus =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_add r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_add
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     match s with
     | Cons_monom (c, l, t) ->
         if c = azero
@@ -267,10 +312,10 @@ let rec quote_list :
   'a .
     FStar_Tactics_NamedView.term ->
       ('a ->
-         (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr)
+         FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term)
         ->
         'a Prims.list ->
-          (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr
+          FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term
   =
   fun ta quotea xs ->
     match xs with
@@ -302,67 +347,66 @@ let rec quote_list :
              x1)
 let quote_vm (ta : FStar_Tactics_NamedView.term)
   (quotea :
-    'a -> (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr)
-  (vm : 'a vmap) :
-  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    let x p ps1 =
-      let x1 =
-        let x2 =
-          let x3 =
-            let x4 =
-              let x5 =
-                let x6 = quotea (FStar_Pervasives_Native.snd p) ps1 in
-                (x6, FStarC_Reflection_V2_Data.Q_Explicit) in
-              [x5] in
-            ((FStar_Tactics_NamedView.pack
-                (FStar_Tactics_NamedView.Tv_Const
-                   (FStarC_Reflection_V2_Data.C_Int
-                      (FStar_Pervasives_Native.fst p)))),
-              FStarC_Reflection_V2_Data.Q_Explicit) :: x4 in
-          (ta, FStarC_Reflection_V2_Data.Q_Implicit) :: x3 in
-        ((FStarC_Reflection_V2_Builtins.pack_ln
-            (FStarC_Reflection_V2_Data.Tv_FVar
-               (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "nat"]))),
-          FStarC_Reflection_V2_Data.Q_Implicit) :: x2 in
-      FStar_Reflection_V2_Derived.mk_app
-        (FStarC_Reflection_V2_Builtins.pack_ln
-           (FStarC_Reflection_V2_Data.Tv_FVar
-              (FStarC_Reflection_V2_Builtins.pack_fv
-                 ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))) x1 in
+    'a -> FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term)
+  (vm : 'a vmap) (ps : FStarC_Tactics_Types.ref_proofstate) :
+  FStar_Tactics_NamedView.term=
+  let x p ps1 =
     let x1 =
-      FStar_Reflection_V2_Derived.mk_e_app
-        (FStarC_Reflection_V2_Builtins.pack_ln
-           (FStarC_Reflection_V2_Data.Tv_FVar
-              (FStarC_Reflection_V2_Builtins.pack_fv
-                 ["FStar"; "Pervasives"; "Native"; "tuple2"])))
-        [FStarC_Reflection_V2_Builtins.pack_ln
-           (FStarC_Reflection_V2_Data.Tv_FVar
-              (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "nat"]));
-        ta] in
-    let x2 = quote_list x1 x (FStar_Pervasives_Native.fst vm) ps in
-    let x3 =
-      FStar_Reflection_V2_Derived.mk_e_app
-        (FStarC_Reflection_V2_Builtins.pack_ln
-           (FStarC_Reflection_V2_Data.Tv_FVar
-              (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "list"])))
-        [x1] in
-    let x4 =
-      let x5 =
-        let x6 =
-          let x7 =
-            let x8 =
-              let x9 = quotea (FStar_Pervasives_Native.snd vm) ps in
-              (x9, FStarC_Reflection_V2_Data.Q_Explicit) in
-            [x8] in
-          (x2, FStarC_Reflection_V2_Data.Q_Explicit) :: x7 in
-        (ta, FStarC_Reflection_V2_Data.Q_Implicit) :: x6 in
-      (x3, FStarC_Reflection_V2_Data.Q_Implicit) :: x5 in
+      let x2 =
+        let x3 =
+          let x4 =
+            let x5 =
+              let x6 = quotea (FStar_Pervasives_Native.snd p) ps1 in
+              (x6, FStarC_Reflection_V2_Data.Q_Explicit) in
+            [x5] in
+          ((FStar_Tactics_NamedView.pack
+              (FStar_Tactics_NamedView.Tv_Const
+                 (FStarC_Reflection_V2_Data.C_Int
+                    (FStar_Pervasives_Native.fst p)))),
+            FStarC_Reflection_V2_Data.Q_Explicit) :: x4 in
+        (ta, FStarC_Reflection_V2_Data.Q_Implicit) :: x3 in
+      ((FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_FVar
+             (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "nat"]))),
+        FStarC_Reflection_V2_Data.Q_Implicit) :: x2 in
     FStar_Reflection_V2_Derived.mk_app
       (FStarC_Reflection_V2_Builtins.pack_ln
          (FStarC_Reflection_V2_Data.Tv_FVar
             (FStarC_Reflection_V2_Builtins.pack_fv
-               ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))) x4
+               ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))) x1 in
+  let x1 =
+    FStar_Reflection_V2_Derived.mk_e_app
+      (FStarC_Reflection_V2_Builtins.pack_ln
+         (FStarC_Reflection_V2_Data.Tv_FVar
+            (FStarC_Reflection_V2_Builtins.pack_fv
+               ["FStar"; "Pervasives"; "Native"; "tuple2"])))
+      [FStarC_Reflection_V2_Builtins.pack_ln
+         (FStarC_Reflection_V2_Data.Tv_FVar
+            (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "nat"]));
+      ta] in
+  let x2 = quote_list x1 x (FStar_Pervasives_Native.fst vm) ps in
+  let x3 =
+    FStar_Reflection_V2_Derived.mk_e_app
+      (FStarC_Reflection_V2_Builtins.pack_ln
+         (FStarC_Reflection_V2_Data.Tv_FVar
+            (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "list"]))) 
+      [x1] in
+  let x4 =
+    let x5 =
+      let x6 =
+        let x7 =
+          let x8 =
+            let x9 = quotea (FStar_Pervasives_Native.snd vm) ps in
+            (x9, FStarC_Reflection_V2_Data.Q_Explicit) in
+          [x8] in
+        (x2, FStarC_Reflection_V2_Data.Q_Explicit) :: x7 in
+      (ta, FStarC_Reflection_V2_Data.Q_Implicit) :: x6 in
+    (x3, FStarC_Reflection_V2_Data.Q_Implicit) :: x5 in
+  FStar_Reflection_V2_Derived.mk_app
+    (FStarC_Reflection_V2_Builtins.pack_ln
+       (FStarC_Reflection_V2_Data.Tv_FVar
+          (FStarC_Reflection_V2_Builtins.pack_fv
+             ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))) x4
 let interp_var (vm : 'a vmap) (i : index) : 'a=
   match FStar_List_Tot_Base.assoc i (FStar_Pervasives_Native.fst vm) with
   | FStar_Pervasives_Native.Some x -> x
@@ -370,34 +414,54 @@ let interp_var (vm : 'a vmap) (i : index) : 'a=
 let rec ivl_aux : 'a . 'a cr -> 'a vmap -> index -> varlist -> 'a =
   fun r vm x t ->
     let amult =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     match t with
     | Nil_var -> interp_var vm x
     | Cons_var (x', t') -> amult (interp_var vm x) (ivl_aux r vm x' t')
 let interp_vl (r : 'a cr) (vm : 'a vmap) (l : varlist) : 'a=
   let aone =
-    FStar_Algebra_CommMonoid.__proj__CM__item__unit
-      (__proj__CR__item__cm_mult r) in
+    match match r with
+          | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+              cm_mult
+    with
+    | FStar_Algebra_CommMonoid.CM
+        (unit, mult, identity, associativity, commutativity) -> unit in
   match l with | Nil_var -> aone | Cons_var (x, t) -> ivl_aux r vm x t
 let interp_m (r : 'a cr) (vm : 'a vmap) (c : 'a) (l : varlist) : 'a=
   let amult =
-    FStar_Algebra_CommMonoid.__proj__CM__item__mult
-      (__proj__CR__item__cm_mult r) in
+    match match r with
+          | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+              cm_mult
+    with
+    | FStar_Algebra_CommMonoid.CM
+        (unit, mult, identity, associativity, commutativity) -> mult in
   match l with | Nil_var -> c | Cons_var (x, t) -> amult c (ivl_aux r vm x t)
 let rec ics_aux : 'a . 'a cr -> 'a vmap -> 'a -> 'a canonical_sum -> 'a =
   fun r vm x s ->
     let aplus =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_add r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_add
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     match s with
     | Nil_monom -> x
     | Cons_varlist (l, t) -> aplus x (ics_aux r vm (interp_vl r vm l) t)
     | Cons_monom (c, l, t) -> aplus x (ics_aux r vm (interp_m r vm c l) t)
 let interp_cs (r : 'a cr) (vm : 'a vmap) (s : 'a canonical_sum) : 'a=
   let azero =
-    FStar_Algebra_CommMonoid.__proj__CM__item__unit
-      (__proj__CR__item__cm_add r) in
+    match match r with
+          | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+              cm_add
+    with
+    | FStar_Algebra_CommMonoid.CM
+        (unit, mult, identity, associativity, commutativity) -> unit in
   match s with
   | Nil_monom -> azero
   | Cons_varlist (l, t) -> ics_aux r vm (interp_vl r vm l) t
@@ -405,11 +469,19 @@ let interp_cs (r : 'a cr) (vm : 'a vmap) (s : 'a canonical_sum) : 'a=
 let rec interp_sp : 'a . 'a cr -> 'a vmap -> 'a spolynomial -> 'a =
   fun r vm p ->
     let aplus =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_add r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_add
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     let amult =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     match p with
     | SPconst c -> c
     | SPvar i -> interp_var vm i
@@ -459,10 +531,18 @@ let rec polynomial_normalize :
           (polynomial_normalize r q)
     | Popp p1 ->
         canonical_sum_scalar3 r
-          (__proj__CR__item__opp r
-             (FStar_Algebra_CommMonoid.__proj__CM__item__unit
-                (__proj__CR__item__cm_mult r))) Nil_var
-          (polynomial_normalize r p1)
+          ((match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                opp)
+             (match match r with
+                    | CR
+                        (cm_add, cm_mult, opp, add_opp, distribute,
+                         mult_zero_l)
+                        -> cm_mult
+              with
+              | FStar_Algebra_CommMonoid.CM
+                  (unit, mult, identity, associativity, commutativity) ->
+                  unit)) Nil_var (polynomial_normalize r p1)
 let polynomial_simplify (r : 'a cr) (p : 'a polynomial) : 'a canonical_sum=
   canonical_sum_simplify r (polynomial_normalize r p)
 let rec spolynomial_of : 'a . 'a cr -> 'a polynomial -> 'a spolynomial =
@@ -475,31 +555,52 @@ let rec spolynomial_of : 'a . 'a cr -> 'a polynomial -> 'a spolynomial =
     | Popp p1 ->
         SPmult
           ((SPconst
-              (__proj__CR__item__opp r
-                 (FStar_Algebra_CommMonoid.__proj__CM__item__unit
-                    (__proj__CR__item__cm_mult r)))), (spolynomial_of r p1))
+              (((match r with
+                 | CR
+                     (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l)
+                     -> opp))
+                 (match match r with
+                        | CR
+                            (cm_add, cm_mult, opp, add_opp, distribute,
+                             mult_zero_l)
+                            -> cm_mult
+                  with
+                  | FStar_Algebra_CommMonoid.CM
+                      (unit, mult, identity, associativity, commutativity) ->
+                      unit))), (spolynomial_of r p1))
 let rec interp_p : 'a . 'a cr -> 'a vmap -> 'a polynomial -> 'a =
   fun r vm p ->
     let aplus =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_add r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_add
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     let amult =
-      FStar_Algebra_CommMonoid.__proj__CM__item__mult
-        (__proj__CR__item__cm_mult r) in
+      match match r with
+            | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+                cm_mult
+      with
+      | FStar_Algebra_CommMonoid.CM
+          (unit, mult, identity, associativity, commutativity) -> mult in
     match p with
     | Pconst c -> c
     | Pvar i -> interp_var vm i
     | Pplus (p1, p2) -> aplus (interp_p r vm p1) (interp_p r vm p2)
     | Pmult (p1, p2) -> amult (interp_p r vm p1) (interp_p r vm p2)
-    | Popp p1 -> __proj__CR__item__opp r (interp_p r vm p1)
-let ddump (m : Prims.string) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    let x = FStarC_Tactics_V2_Builtins.debugging () ps in
-    if x then FStarC_Tactics_V2_Builtins.dump m ps else ()
+    | Popp p1 ->
+        ((match r with
+          | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+              opp)) (interp_p r vm p1)
+let ddump (m : Prims.string) (ps : FStarC_Tactics_Types.ref_proofstate) :
+  unit=
+  let x = FStarC_Tactics_V2_Builtins.debugging () ps in
+  if x then FStarC_Tactics_V2_Builtins.dump m ps else ()
 let rec find_aux (n : Prims.nat) (x : FStar_Tactics_NamedView.term)
   (xs : FStar_Tactics_NamedView.term Prims.list) :
-  (Prims.nat FStar_Pervasives_Native.option, Obj.t)
-    FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate ->
+    Prims.nat FStar_Pervasives_Native.option=
   match xs with
   | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
   | x'::xs' ->
@@ -509,27 +610,26 @@ let rec find_aux (n : Prims.nat) (x : FStar_Tactics_NamedView.term)
 let find :
   FStar_Tactics_NamedView.term ->
     FStar_Tactics_NamedView.term Prims.list ->
-      (Prims.nat FStar_Pervasives_Native.option, Obj.t)
-        FStar_Tactics_Effect.tac_repr=
+      FStarC_Tactics_Types.ref_proofstate ->
+        Prims.nat FStar_Pervasives_Native.option=
   find_aux Prims.int_zero
 let make_fvar (t : FStar_Tactics_NamedView.term)
   (unquotea :
-    FStar_Tactics_NamedView.term -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr)
-  (ts : FStar_Tactics_NamedView.term Prims.list) (vm : 'a vmap) :
-  (('a polynomial * FStar_Tactics_NamedView.term Prims.list * 'a vmap),
-    Obj.t) FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    let x = find t ts ps in
-    match x with
-    | FStar_Pervasives_Native.Some v -> ((Pvar v), ts, vm)
-    | FStar_Pervasives_Native.None ->
-        let x1 = FStar_List_Tot_Base.length ts in
-        let x2 = unquotea t ps in
-        ((Pvar x1), (FStar_List_Tot_Base.op_At ts [t]), (update x1 x2 vm))
+    FStar_Tactics_NamedView.term -> FStarC_Tactics_Types.ref_proofstate -> 'a)
+  (ts : FStar_Tactics_NamedView.term Prims.list) (vm : 'a vmap)
+  (ps : FStarC_Tactics_Types.ref_proofstate) :
+  ('a polynomial * FStar_Tactics_NamedView.term Prims.list * 'a vmap)=
+  let x = find t ts ps in
+  match x with
+  | FStar_Pervasives_Native.Some v -> ((Pvar v), ts, vm)
+  | FStar_Pervasives_Native.None ->
+      let x1 = FStar_List_Tot_Base.length ts in
+      let x2 = unquotea t ps in
+      ((Pvar x1), (FStar_List_Tot_Base.op_At ts [t]), (update x1 x2 vm))
 let rec reification_aux :
   'a .
     (FStar_Tactics_NamedView.term ->
-       ('a, Obj.t) FStar_Tactics_Effect.tac_repr)
+       FStarC_Tactics_Types.ref_proofstate -> 'a)
       ->
       FStar_Tactics_NamedView.term Prims.list ->
         'a vmap ->
@@ -538,9 +638,9 @@ let rec reification_aux :
               FStar_Tactics_NamedView.term ->
                 FStar_Tactics_NamedView.term ->
                   FStar_Tactics_NamedView.term ->
-                    (('a polynomial * FStar_Tactics_NamedView.term Prims.list
-                       * 'a vmap),
-                      Obj.t) FStar_Tactics_Effect.tac_repr
+                    FStarC_Tactics_Types.ref_proofstate ->
+                      ('a polynomial * FStar_Tactics_NamedView.term
+                        Prims.list * 'a vmap)
   =
   fun unquotea ts vm add opp mone mult t ps ->
     let x = FStar_Reflection_V2_Derived_Lemmas.collect_app_ref t in
@@ -608,43 +708,43 @@ let steps : FStarC_NormSteps.norm_step Prims.list=
     "FStar.Pervasives.Native.__proj__Mktuple2__item___2";
     "FStar.List.Tot.Base.op_At";
     "FStar.List.Tot.Base.append"]]
-let canon_norm (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+let canon_norm (uu___ : unit) : FStarC_Tactics_Types.ref_proofstate -> unit=
   FStarC_Tactics_V2_Builtins.norm steps
 let reification
   (unquotea :
-    FStar_Tactics_NamedView.term -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr)
+    FStar_Tactics_NamedView.term -> FStarC_Tactics_Types.ref_proofstate -> 'a)
   (quotea :
-    'a -> (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr)
+    'a -> FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term)
   (tadd : FStar_Tactics_NamedView.term) (topp : FStar_Tactics_NamedView.term)
   (tmone : FStar_Tactics_NamedView.term)
   (tmult : FStar_Tactics_NamedView.term) (munit : 'a)
-  (ts : FStar_Tactics_NamedView.term Prims.list) :
-  (('a polynomial Prims.list * 'a vmap), Obj.t) FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    let x = tadd in
-    let x1 = topp in
-    let x2 = tmone in
-    let x3 = tmult in
-    let x4 =
-      FStar_Tactics_Util.map (FStar_Tactics_V2_Derived.norm_term steps) ts ps in
-    let x5 =
-      FStar_Tactics_Util.fold_left
-        (fun uu___ t ->
-           match uu___ with
-           | (es, vs, vm) ->
-               (fun ps1 ->
-                  let x6 = reification_aux unquotea vs vm x x1 x2 x3 t ps1 in
-                  match x6 with | (e, vs1, vm1) -> ((e :: es), vs1, vm1)))
-        ([], [], ([], munit)) x4 ps in
-    match x5 with | (es, uu___, vm) -> ((FStar_List_Tot_Base.rev es), vm)
+  (ts : FStar_Tactics_NamedView.term Prims.list)
+  (ps : FStarC_Tactics_Types.ref_proofstate) :
+  ('a polynomial Prims.list * 'a vmap)=
+  let x = tadd in
+  let x1 = topp in
+  let x2 = tmone in
+  let x3 = tmult in
+  let x4 =
+    FStar_Tactics_Util.map (FStar_Tactics_V2_Derived.norm_term steps) ts ps in
+  let x5 =
+    FStar_Tactics_Util.fold_left
+      (fun uu___ t ->
+         match uu___ with
+         | (es, vs, vm) ->
+             (fun ps1 ->
+                let x6 = reification_aux unquotea vs vm x x1 x2 x3 t ps1 in
+                match x6 with | (e, vs1, vm1) -> ((e :: es), vs1, vm1)))
+      ([], [], ([], munit)) x4 ps in
+  match x5 with | (es, uu___, vm) -> ((FStar_List_Tot_Base.rev es), vm)
 let rec quote_polynomial :
   'a .
     FStar_Tactics_NamedView.term ->
       ('a ->
-         (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr)
+         FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term)
         ->
         'a polynomial ->
-          (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr
+          FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term
   =
   fun ta quotea e ->
     match e with
@@ -705,14 +805,14 @@ let rec quote_polynomial :
                       ["FStar"; "Tactics"; "CanonCommSemiring"; "Popp"]))) x)
 let canon_semiring_aux (ta : FStar_Tactics_NamedView.term)
   (unquotea :
-    FStar_Tactics_NamedView.term -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr)
+    FStar_Tactics_NamedView.term -> FStarC_Tactics_Types.ref_proofstate -> 'a)
   (quotea :
-    'a -> (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr)
+    'a -> FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term)
   (tr : FStar_Tactics_NamedView.term) (tadd : FStar_Tactics_NamedView.term)
   (topp : FStar_Tactics_NamedView.term)
   (tmone : FStar_Tactics_NamedView.term)
   (tmult : FStar_Tactics_NamedView.term) (munit : 'a) :
-  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate -> unit=
   FStar_Tactics_V2_Derived.focus
     (fun uu___ ps ->
        FStarC_Tactics_V2_Builtins.norm [] ps;
@@ -810,35 +910,36 @@ let canon_semiring_aux (ta : FStar_Tactics_NamedView.term)
               let x4 = FStarC_Tactics_V2_Builtins.term_to_string x1 ps in
               Prims.strcat "Goal should be an equality: " x4 in
             FStar_Tactics_V2_Derived.fail x3 ps))
-let canon_semiring (r : 'a cr) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    let x = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-    let x1 = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-    let x2 =
-      let x3 =
-        Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-      FStar_Tactics_V2_Derived.norm_term steps x3 ps in
-    let x3 =
-      let x4 =
-        Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-      FStar_Tactics_V2_Derived.norm_term steps x4 ps in
-    let x4 =
-      let x5 =
-        Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-      FStar_Tactics_V2_Derived.norm_term steps x5 ps in
-    let x5 =
-      let x6 =
-        Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-      FStar_Tactics_V2_Derived.norm_term steps x6 ps in
-    canon_semiring_aux x FStarC_Tactics_V2_Builtins.unquote
-      (fun x6 uu___ ->
-         Obj.magic (failwith "Cannot evaluate open quotation at runtime")) x1
-      x2 x3 x4 x5
-      (FStar_Algebra_CommMonoid.__proj__CM__item__unit
-         (__proj__CR__item__cm_add r)) ps
+let canon_semiring (r : 'a cr) (ps : FStarC_Tactics_Types.ref_proofstate) :
+  unit=
+  let x = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+  let x1 = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+  let x2 =
+    let x3 = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+    FStar_Tactics_V2_Derived.norm_term steps x3 ps in
+  let x3 =
+    let x4 = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+    FStar_Tactics_V2_Derived.norm_term steps x4 ps in
+  let x4 =
+    let x5 = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+    FStar_Tactics_V2_Derived.norm_term steps x5 ps in
+  let x5 =
+    let x6 = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+    FStar_Tactics_V2_Derived.norm_term steps x6 ps in
+  canon_semiring_aux x FStarC_Tactics_V2_Builtins.unquote
+    (fun uu___1 uu___ ->
+       (fun x6 uu___ ->
+          Obj.magic (failwith "Cannot evaluate open quotation at runtime"))
+         uu___1 uu___) x1 x2 x3 x4 x5
+    (match match r with
+           | CR (cm_add, cm_mult, opp, add_opp, distribute, mult_zero_l) ->
+               cm_add
+     with
+     | FStar_Algebra_CommMonoid.CM
+         (unit, mult, identity, associativity, commutativity) -> unit) ps
 let int_cr : Prims.int cr=
   CR
     (FStar_Algebra_CommMonoid.int_plus_cm,
       FStar_Algebra_CommMonoid.int_multiply_cm, (~-), (), (), ())
 let int_semiring (uu___ : unit) :
-  (unit, Obj.t) FStar_Tactics_Effect.tac_repr= canon_semiring int_cr
+  FStarC_Tactics_Types.ref_proofstate -> unit= canon_semiring int_cr

@@ -62,7 +62,7 @@ fn unfold_pure2 (#x:nat)
   (Nor do you need to, since it's eliminated/introduced automatically).
   Pulse complains with the error message:
   fold` and `unfold` expect a single user-defined predicate as an argument, but pure (
-        Prims.op_GreaterThan x 2) is a primitive term that cannot be folded or unfolded
+        Prims.op_Greater x 2) is a primitive term that cannot be folded or unfolded
 *)
 [@@expect_failure]
 

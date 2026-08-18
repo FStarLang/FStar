@@ -59,7 +59,7 @@ unobservable fn array_slice u#t (#t: Type u#t) #a (x: array t) (#y: erased (seq 
 }
 
 inline_for_extraction noextract
-fn op_Array_Access u#t (#t: Type u#t) #a (x: array t) (#y: erased (seq t)) (i: SizeT.t)
+fn op_Dot_Lparen_Rparen u#t (#t: Type u#t) #a (x: array t) (#y: erased (seq t)) (i: SizeT.t)
   preserves lifetime_alive a
   preserves array_bpts_to a x y
   requires with_pure (SizeT.v i < Seq.length y)

@@ -2,10 +2,10 @@ open Prims
 let term_eq :
   FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term -> Prims.bool=
   FStar_Reflection_TermEq_Simple.term_eq
-let dump (m : Prims.string) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    let x = FStarC_Tactics_V2_Builtins.debugging () ps in
-    if x then FStarC_Tactics_V2_Builtins.dump m ps else ()
+let dump (m : Prims.string) (ps : FStarC_Tactics_Types.ref_proofstate) :
+  unit=
+  let x = FStarC_Tactics_V2_Builtins.debugging () ps in
+  if x then FStarC_Tactics_V2_Builtins.dump m ps else ()
 type atom = Prims.nat
 type exp =
   | Unit 
@@ -44,20 +44,30 @@ let rec mdenote : 'a . 'a FStar_Algebra_CommMonoid.cm -> 'a amap -> exp -> 'a
   =
   fun m am e ->
     match e with
-    | Unit -> FStar_Algebra_CommMonoid.__proj__CM__item__unit m
+    | Unit ->
+        (match m with
+         | FStar_Algebra_CommMonoid.CM
+             (unit, mult, identity, associativity, commutativity) -> unit)
     | Atom x -> select x am
     | Mult (e1, e2) ->
-        FStar_Algebra_CommMonoid.__proj__CM__item__mult m (mdenote m am e1)
-          (mdenote m am e2)
+        ((match m with
+          | FStar_Algebra_CommMonoid.CM
+              (unit, mult, identity, associativity, commutativity) -> mult))
+          (mdenote m am e1) (mdenote m am e2)
 let rec xsdenote :
   'a . 'a FStar_Algebra_CommMonoid.cm -> 'a amap -> atom Prims.list -> 'a =
   fun m am xs ->
     match xs with
-    | [] -> FStar_Algebra_CommMonoid.__proj__CM__item__unit m
+    | [] ->
+        (match m with
+         | FStar_Algebra_CommMonoid.CM
+             (unit, mult, identity, associativity, commutativity) -> unit)
     | x::[] -> select x am
     | x::xs' ->
-        FStar_Algebra_CommMonoid.__proj__CM__item__mult m (select x am)
-          (xsdenote m am xs')
+        ((match m with
+          | FStar_Algebra_CommMonoid.CM
+              (unit, mult, identity, associativity, commutativity) -> mult))
+          (select x am) (xsdenote m am xs')
 let rec flatten (e : exp) : atom Prims.list=
   match e with
   | Unit -> []
@@ -73,8 +83,8 @@ let sort : permute=
 let canon (e : exp) : atom Prims.list= sort (flatten e)
 let rec where_aux (n : Prims.nat) (x : FStar_Tactics_NamedView.term)
   (xs : FStar_Tactics_NamedView.term Prims.list) :
-  (Prims.nat FStar_Pervasives_Native.option, Obj.t)
-    FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate ->
+    Prims.nat FStar_Pervasives_Native.option=
   match xs with
   | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
   | x'::xs' ->
@@ -84,8 +94,8 @@ let rec where_aux (n : Prims.nat) (x : FStar_Tactics_NamedView.term)
 let where :
   FStar_Tactics_NamedView.term ->
     FStar_Tactics_NamedView.term Prims.list ->
-      (Prims.nat FStar_Pervasives_Native.option, Obj.t)
-        FStar_Tactics_Effect.tac_repr=
+      FStarC_Tactics_Types.ref_proofstate ->
+        Prims.nat FStar_Pervasives_Native.option=
   where_aux Prims.int_zero
 let rec reification_aux :
   'a .
@@ -94,8 +104,8 @@ let rec reification_aux :
         FStar_Tactics_NamedView.term ->
           FStar_Tactics_NamedView.term ->
             FStar_Tactics_NamedView.term ->
-              ((exp * FStar_Tactics_NamedView.term Prims.list * 'a amap),
-                Obj.t) FStar_Tactics_Effect.tac_repr
+              FStarC_Tactics_Types.ref_proofstate ->
+                (exp * FStar_Tactics_NamedView.term Prims.list * 'a amap)
   =
   fun ts am mult unit t ps ->
     let x = FStar_Reflection_V2_Derived_Lemmas.collect_app_ref t in
@@ -134,97 +144,93 @@ let rec reification_aux :
              if term_eq t unit then (Unit, ts, am) else x1 t ts am ps)
 let reification (m : 'a FStar_Algebra_CommMonoid.cm)
   (ts : FStar_Tactics_NamedView.term Prims.list) (am : 'a amap)
-  (t : FStar_Tactics_NamedView.term) :
-  ((exp * FStar_Tactics_NamedView.term Prims.list * 'a amap), Obj.t)
-    FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    let x =
-      let x1 =
-        Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-      FStar_Tactics_V2_Derived.norm_term
-        [FStarC_NormSteps.delta;
-        FStarC_NormSteps.zeta;
-        FStarC_NormSteps.iota] x1 ps in
-    let x1 =
-      let x2 =
-        Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-      FStar_Tactics_V2_Derived.norm_term
-        [FStarC_NormSteps.delta;
-        FStarC_NormSteps.zeta;
-        FStarC_NormSteps.iota] x2 ps in
-    let x2 =
-      FStar_Tactics_V2_Derived.norm_term
-        [FStarC_NormSteps.delta;
-        FStarC_NormSteps.zeta;
-        FStarC_NormSteps.iota] t ps in
-    reification_aux ts am x x1 x2 ps
-let canon_monoid (m : 'a FStar_Algebra_CommMonoid.cm) :
-  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    FStarC_Tactics_V2_Builtins.norm [] ps;
-    (let x1 =
-       let x2 = FStar_Tactics_V2_Derived.cur_goal () ps in
-       FStar_Reflection_V2_Formula.term_as_formula x2 ps in
-     match x1 with
-     | FStar_Reflection_V2_Formula.Comp
-         (FStar_Reflection_V2_Formula.Eq (FStar_Pervasives_Native.Some t),
-          t1, t2)
-         ->
-         let x2 =
-           let x3 =
-             Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
-           term_eq t x3 in
-         if x2
-         then
-           let x3 =
-             reification m []
-               (const (FStar_Algebra_CommMonoid.__proj__CM__item__unit m)) t1
-               ps in
-           (match x3 with
-            | (r1, ts, am) ->
-                let x4 = reification m ts am t2 ps in
-                (match x4 with
-                 | (r2, uu___, am1) ->
-                     ((let x6 =
-                         let x7 =
-                           let x8 =
-                             Obj.magic
-                               (failwith
-                                  "Cannot evaluate open quotation at runtime") in
-                           FStarC_Tactics_V2_Builtins.term_to_string x8 ps in
-                         Prims.strcat "am =" x7 in
-                       dump x6 ps);
-                      (let x7 =
-                         Obj.magic
-                           (failwith
-                              "Cannot evaluate open quotation at runtime") in
-                       FStar_Tactics_V2_Derived.change_sq x7 ps);
-                      FStar_Tactics_V2_Derived.apply
-                        (FStarC_Reflection_V2_Builtins.pack_ln
-                           (FStarC_Reflection_V2_Data.Tv_FVar
-                              (FStarC_Reflection_V2_Builtins.pack_fv
-                                 ["FStar";
-                                 "Tactics";
-                                 "CanonCommMonoidSimple";
-                                 "monoid_reflect"]))) ps;
-                      FStarC_Tactics_V2_Builtins.norm
-                        [FStarC_NormSteps.delta_only
-                           ["FStar.Tactics.CanonCommMonoidSimple.canon";
-                           "FStar.Tactics.CanonCommMonoidSimple.xsdenote";
-                           "FStar.Tactics.CanonCommMonoidSimple.flatten";
-                           "FStar.Tactics.CanonCommMonoidSimple.sort";
-                           "FStar.Tactics.CanonCommMonoidSimple.select";
-                           "FStar.List.Tot.Base.assoc";
-                           "FStar.Pervasives.Native.fst";
-                           "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                           "FStar.List.Tot.Base.op_At";
-                           "FStar.List.Tot.Base.append";
-                           "FStar.List.Tot.Base.sortWith";
-                           "FStar.List.Tot.Base.partition";
-                           "FStar.List.Tot.Base.bool_of_compare";
-                           "FStar.List.Tot.Base.compare_of_bool"];
-                        FStarC_NormSteps.primops] ps)))
-         else
-           FStar_Tactics_V2_Derived.fail
-             "Goal should be an equality at the right monoid type" ps
-     | uu___ -> FStar_Tactics_V2_Derived.fail "Goal should be an equality" ps)
+  (t : FStar_Tactics_NamedView.term)
+  (ps : FStarC_Tactics_Types.ref_proofstate) :
+  (exp * FStar_Tactics_NamedView.term Prims.list * 'a amap)=
+  let x =
+    let x1 = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+    FStar_Tactics_V2_Derived.norm_term
+      [FStarC_NormSteps.delta; FStarC_NormSteps.zeta; FStarC_NormSteps.iota]
+      x1 ps in
+  let x1 =
+    let x2 = Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+    FStar_Tactics_V2_Derived.norm_term
+      [FStarC_NormSteps.delta; FStarC_NormSteps.zeta; FStarC_NormSteps.iota]
+      x2 ps in
+  let x2 =
+    FStar_Tactics_V2_Derived.norm_term
+      [FStarC_NormSteps.delta; FStarC_NormSteps.zeta; FStarC_NormSteps.iota]
+      t ps in
+  reification_aux ts am x x1 x2 ps
+let canon_monoid (m : 'a FStar_Algebra_CommMonoid.cm)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : unit=
+  FStarC_Tactics_V2_Builtins.norm [] ps;
+  (let x1 =
+     let x2 = FStar_Tactics_V2_Derived.cur_goal () ps in
+     FStar_Reflection_V2_Formula.term_as_formula x2 ps in
+   match x1 with
+   | FStar_Reflection_V2_Formula.Comp
+       (FStar_Reflection_V2_Formula.Eq (FStar_Pervasives_Native.Some t), t1,
+        t2)
+       ->
+       let x2 =
+         let x3 =
+           Obj.magic (failwith "Cannot evaluate open quotation at runtime") in
+         term_eq t x3 in
+       if x2
+       then
+         let x3 =
+           reification m []
+             (const
+                (match m with
+                 | FStar_Algebra_CommMonoid.CM
+                     (unit, mult, identity, associativity, commutativity) ->
+                     unit)) t1 ps in
+         (match x3 with
+          | (r1, ts, am) ->
+              let x4 = reification m ts am t2 ps in
+              (match x4 with
+               | (r2, uu___, am1) ->
+                   ((let x6 =
+                       let x7 =
+                         let x8 =
+                           Obj.magic
+                             (failwith
+                                "Cannot evaluate open quotation at runtime") in
+                         FStarC_Tactics_V2_Builtins.term_to_string x8 ps in
+                       Prims.strcat "am =" x7 in
+                     dump x6 ps);
+                    (let x7 =
+                       Obj.magic
+                         (failwith
+                            "Cannot evaluate open quotation at runtime") in
+                     FStar_Tactics_V2_Derived.change_sq x7 ps);
+                    FStar_Tactics_V2_Derived.apply
+                      (FStarC_Reflection_V2_Builtins.pack_ln
+                         (FStarC_Reflection_V2_Data.Tv_FVar
+                            (FStarC_Reflection_V2_Builtins.pack_fv
+                               ["FStar";
+                               "Tactics";
+                               "CanonCommMonoidSimple";
+                               "monoid_reflect"]))) ps;
+                    FStarC_Tactics_V2_Builtins.norm
+                      [FStarC_NormSteps.delta_only
+                         ["FStar.Tactics.CanonCommMonoidSimple.canon";
+                         "FStar.Tactics.CanonCommMonoidSimple.xsdenote";
+                         "FStar.Tactics.CanonCommMonoidSimple.flatten";
+                         "FStar.Tactics.CanonCommMonoidSimple.sort";
+                         "FStar.Tactics.CanonCommMonoidSimple.select";
+                         "FStar.List.Tot.Base.assoc";
+                         "FStar.Pervasives.Native.fst";
+                         "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
+                         "FStar.List.Tot.Base.op_At";
+                         "FStar.List.Tot.Base.append";
+                         "FStar.List.Tot.Base.sortWith";
+                         "FStar.List.Tot.Base.partition";
+                         "FStar.List.Tot.Base.bool_of_compare";
+                         "FStar.List.Tot.Base.compare_of_bool"];
+                      FStarC_NormSteps.primops] ps)))
+       else
+         FStar_Tactics_V2_Derived.fail
+           "Goal should be an equality at the right monoid type" ps
+   | uu___ -> FStar_Tactics_V2_Derived.fail "Goal should be an equality" ps)

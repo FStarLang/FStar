@@ -24,6 +24,10 @@ let curry4 (f : ('uuuuu * 'uuuuu1 * 'uuuuu2 * 'uuuuu3) -> 'uuuuu4)
 let curry5 (f : ('uuuuu * 'uuuuu1 * 'uuuuu2 * 'uuuuu3 * 'uuuuu4) -> 'uuuuu5)
   (x : 'uuuuu) (y : 'uuuuu1) (z : 'uuuuu2) (w : 'uuuuu3) (v : 'uuuuu4) :
   'uuuuu5= f (x, y, z, w, v)
+let curry6
+  (f : ('uuuuu * 'uuuuu1 * 'uuuuu2 * 'uuuuu3 * 'uuuuu4 * 'uuuuu5) -> 'uuuuu6)
+  (x : 'uuuuu) (y : 'uuuuu1) (z : 'uuuuu2) (w : 'uuuuu3) (v : 'uuuuu4)
+  (u : 'uuuuu5) : 'uuuuu6= f (x, y, z, w, v, u)
 let head_fv_and_args (t : FStarC_Syntax_Syntax.term) :
   (FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.args)
     FStar_Pervasives_Native.option=
@@ -1591,7 +1595,7 @@ let e_comp_view :
         FStarC_Syntax_Syntax.mk_Tm_app
           FStarC_Reflection_V2_Constants.ref_C_Lemma.FStarC_Reflection_V2_Constants.t
           uu___ rng
-    | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, args, decrs) ->
+    | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, pre, post, decrs) ->
         let uu___ =
           let uu___1 =
             let uu___2 =
@@ -1608,16 +1612,20 @@ let e_comp_view :
                 FStarC_Syntax_Syntax.as_arg uu___6 in
               let uu___6 =
                 let uu___7 =
-                  let uu___8 =
-                    embed (FStarC_Syntax_Embeddings.e_list e_argv) rng args in
+                  let uu___8 = embed e_term rng pre in
                   FStarC_Syntax_Syntax.as_arg uu___8 in
                 let uu___8 =
                   let uu___9 =
-                    let uu___10 =
-                      embed (FStarC_Syntax_Embeddings.e_list e_term) rng
-                        decrs in
+                    let uu___10 = embed e_term rng post in
                     FStarC_Syntax_Syntax.as_arg uu___10 in
-                  [uu___9] in
+                  let uu___10 =
+                    let uu___11 =
+                      let uu___12 =
+                        embed (FStarC_Syntax_Embeddings.e_list e_term) rng
+                          decrs in
+                      FStarC_Syntax_Syntax.as_arg uu___12 in
+                    [uu___11] in
+                  uu___9 :: uu___10 in
                 uu___7 :: uu___8 in
               uu___5 :: uu___6 in
             uu___3 :: uu___4 in
@@ -1671,16 +1679,16 @@ let e_comp_view :
                           (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
                              (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
                                 (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
-                                   (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                                      (curry5
-                                         (fun uu___2 ->
-                                            FStarC_Reflection_V2_Data.C_Eff
-                                              uu___2))
-                                      (FStarC_Syntax_Embeddings.e_list
-                                         e_universe))
-                                   FStarC_Syntax_Embeddings.e_string_list)
-                                e_term)
-                             (FStarC_Syntax_Embeddings.e_list e_argv))
+                                   (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
+                                      (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                                         (curry6
+                                            (fun uu___2 ->
+                                               FStarC_Reflection_V2_Data.C_Eff
+                                                 uu___2))
+                                         (FStarC_Syntax_Embeddings.e_list
+                                            e_universe))
+                                      FStarC_Syntax_Embeddings.e_string_list)
+                                   e_term) e_term) e_term)
                           (FStarC_Syntax_Embeddings.e_list e_term))
                    else FStar_Pervasives_Native.None) in
   mk_emb embed_comp_view unembed_comp_view

@@ -5,17 +5,18 @@ let uu___is_MkSeq (projectee : 'a seq) : Prims.bool= true
 let __proj__MkSeq__item__l (projectee : 'a seq) : 'a Prims.list=
   match projectee with | MkSeq l -> l
 let length (s : 'uuuuu seq) : Prims.nat=
-  FStar_List_Tot_Base.length (__proj__MkSeq__item__l s)
+  FStar_List_Tot_Base.length (match s with | MkSeq l -> l)
 let seq_to_list (s : 'uuuuu seq) : 'uuuuu Prims.list=
   match s with | MkSeq l -> l
 let seq_of_list (l : 'uuuuu Prims.list) : 'uuuuu seq= MkSeq l
 let index (s : 'uuuuu seq) (i : Prims.nat) : 'uuuuu=
-  FStar_List_Tot_Base.index (__proj__MkSeq__item__l s) i
+  FStar_List_Tot_Base.index (match s with | MkSeq l -> l) i
 let _cons (x : 'a) (s : 'a seq) : 'a seq=
-  MkSeq (x :: (__proj__MkSeq__item__l s))
-let hd (s : 'a seq) : 'a= FStar_List_Tot_Base.hd (__proj__MkSeq__item__l s)
+  MkSeq (x :: (match s with | MkSeq l -> l))
+let hd (s : 'a seq) : 'a=
+  FStar_List_Tot_Base.hd (match s with | MkSeq l -> l)
 let tl (s : 'a seq) : 'a seq=
-  MkSeq (FStar_List_Tot_Base.tl (__proj__MkSeq__item__l s))
+  MkSeq (FStar_List_Tot_Base.tl (match s with | MkSeq l -> l))
 let rec create : 'uuuuu . Prims.nat -> 'uuuuu -> 'uuuuu seq =
   fun len v ->
     if len = Prims.int_zero
@@ -43,8 +44,8 @@ let rec upd' : 'a . 'a seq -> Prims.nat -> 'a -> 'a seq =
 let upd : 'a seq -> Prims.nat -> 'a -> 'a seq= upd'
 let append (s1 : 'uuuuu seq) (s2 : 'uuuuu seq) : 'uuuuu seq=
   MkSeq
-    (FStar_List_Tot_Base.append (__proj__MkSeq__item__l s1)
-       (__proj__MkSeq__item__l s2))
+    (FStar_List_Tot_Base.append (match s1 with | MkSeq l -> l)
+       (match s2 with | MkSeq l -> l))
 let cons (x : 'a) (s : 'a seq) : 'a seq= append (create Prims.int_one x) s
 let op_At_Bar (s1 : 'a seq) (s2 : 'a seq) : 'a seq= append s1 s2
 let rec slice' : 'a . 'a seq -> Prims.nat -> Prims.nat -> 'a seq =

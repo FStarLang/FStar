@@ -18,11 +18,9 @@ let id_norm_cb : norm_cb=
         FStarC_Syntax_Syntax.fv_to_tm
           (FStarC_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None)
 exception Embedding_failure 
-let uu___is_Embedding_failure (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Embedding_failure -> true | uu___ -> false
+let uu___is_Embedding_failure (projectee : Prims.exn) : Prims.bool= true
 exception Unembedding_failure 
-let uu___is_Unembedding_failure (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Unembedding_failure -> true | uu___ -> false
+let uu___is_Unembedding_failure (projectee : Prims.exn) : Prims.bool= true
 let map_shadow (s : shadow_term)
   (f : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term) : shadow_term=
   FStarC_Option.map (FStarC_Thunk.map f) s
@@ -50,16 +48,20 @@ let __proj__Mkembedding__item__e_typ (projectee : 'a embedding) :
   unit -> FStarC_Syntax_Syntax.emb_typ=
   match projectee with | { em; un; print; typ; e_typ;_} -> e_typ
 let em (projectee : 'a embedding) : 'a -> embed_t=
-  __proj__Mkembedding__item__em projectee
+  match projectee with | { em = em1; un; print; typ; e_typ;_} -> em1
 let un (projectee : 'a embedding) :
   FStarC_Syntax_Syntax.term -> 'a unembed_t=
-  __proj__Mkembedding__item__un projectee
+  match projectee with | { em = em1; un = un1; print; typ; e_typ;_} -> un1
 let print (projectee : 'a embedding) : 'a printer=
-  __proj__Mkembedding__item__print projectee
+  match projectee with
+  | { em = em1; un = un1; print = print1; typ; e_typ;_} -> print1
 let typ (projectee : 'a embedding) : unit -> FStarC_Syntax_Syntax.typ=
-  __proj__Mkembedding__item__typ projectee
+  match projectee with
+  | { em = em1; un = un1; print = print1; typ = typ1; e_typ;_} -> typ1
 let e_typ (projectee : 'a embedding) : unit -> FStarC_Syntax_Syntax.emb_typ=
-  __proj__Mkembedding__item__e_typ projectee
+  match projectee with
+  | { em = em1; un = un1; print = print1; typ = typ1; e_typ = e_typ1;_} ->
+      e_typ1
 let emb_typ_of (e : 'a embedding) (uu___ : unit) :
   FStarC_Syntax_Syntax.emb_typ= e.e_typ ()
 let unknown_printer (typ1 : FStarC_Syntax_Syntax.term) (uu___ : 'a) :
@@ -150,7 +152,7 @@ let try_unembed (e : 'a embedding) (t : FStarC_Syntax_Syntax.term)
 let unembed (e : 'a embedding) (t : FStarC_Syntax_Syntax.term) (n : norm_cb)
   : 'a FStar_Pervasives_Native.option=
   let r = try_unembed e t n in
-  if FStar_Pervasives_Native.uu___is_None r
+  if (match r with | FStar_Pervasives_Native.None -> true | uu___1 -> false)
   then
     (let uu___1 =
        let uu___2 =

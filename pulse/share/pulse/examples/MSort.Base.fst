@@ -54,7 +54,7 @@ copy_array
             SZ.v len == S.length s_src /\
             SZ.v len == S.length s_tgt /\
             (vi `SZ.lt` len == false ==> SZ.v vi == SZ.v len))
-  decreases (Prims.op_Subtraction (SZ.v len) (SZ.v (!i)))
+  decreases (Prims.op_Minus (SZ.v len) (SZ.v (!i)))
   {
     let ii = !i;
 
@@ -128,7 +128,7 @@ merge_impl
       pure (SZ.v vi <= SZ.v l1 /\ SZ.v vj <= SZ.v l2 /\ vk == vi `SZ.add` vj /\
             (ss == S.append (merge (stake (SZ.v vi) (reveal s1)) (stake (SZ.v vj) (reveal s2)))
                                 (sdrop (SZ.v vk) (S.append s1 s2))))
-  decreases (Prims.op_Subtraction (SZ.v l1) (SZ.v (!i)) + Prims.op_Subtraction (SZ.v l2) (SZ.v (!j)))
+  decreases (Prims.op_Minus (SZ.v l1) (SZ.v (!i)) + Prims.op_Minus (SZ.v l2) (SZ.v (!j)))
   {
     let vi = !i;
     let vj = !j;

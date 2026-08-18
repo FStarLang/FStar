@@ -16,7 +16,7 @@
 
 module Arrows
 
-val op_At_Bar (#a: Type) (s1 s2: array a)
+val ( @| ) (#a: Type) (s1 s2: array a)
     : ST (array a)
       (requires (fun h -> contains h s1 /\ contains h s2))
       (ensures
@@ -24,7 +24,7 @@ val op_At_Bar (#a: Type) (s1 s2: array a)
             contains h0 s1 /\ contains h0 s2 /\ contains h1 s /\
             sel h1 s == Seq.append (sel h0 s1) (sel h0 s2) /\ modifies Set.empty h0 h1))
 
-let op_At_Bar: #a: Type -> s1: array a -> s2: array a
+let ( @| ): #a: Type -> s1: array a -> s2: array a
   -> ST (array a)
       (requires (fun h -> contains h s1 /\ contains h s2))
       (ensures

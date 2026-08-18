@@ -141,7 +141,7 @@ fn get (#t:Type0) (v:rvec t) (i:SZ.t) (#s:erased (Seq.seq t){SZ.v i < Seq.length
   let current_vec = op_Bang v.vec_box;
   rewrite (V.pts_to vec buf) as (V.pts_to current_vec buf);
   
-  let opt_x = V.op_Array_Access current_vec i;
+  let opt_x = V.op_Dot_Lparen_Rparen current_vec i;
   let x = Some?.v opt_x;
   
   rewrite (V.pts_to current_vec buf) as (V.pts_to vec buf);
@@ -161,7 +161,7 @@ fn set (#t:Type0) (v:rvec t) (i:SZ.t) (x:t) (#s:erased (Seq.seq t){SZ.v i < Seq.
   let current_vec = op_Bang v.vec_box;
   rewrite (V.pts_to vec buf) as (V.pts_to current_vec buf);
   
-  V.op_Array_Assignment current_vec i (Some x);
+  V.op_Dot_Lparen_Rparen_Less_Minus current_vec i (Some x);
   with buf'. _;
   rewrite (V.pts_to current_vec buf') as (V.pts_to vec buf');
   
@@ -198,7 +198,7 @@ fn push (#t:Type0) (v:rvec t) (x:t) (#s:erased (Seq.seq t)) (#cap:erased nat { S
   
   rewrite (V.pts_to vec buf) as (V.pts_to current_vec buf);
   
-  V.op_Array_Assignment current_vec current_sz (Some x);
+  V.op_Dot_Lparen_Rparen_Less_Minus current_vec current_sz (Some x);
   with buf'. _;
   
   ( := ) v.size_box (SZ.add current_sz 1sz);
@@ -224,7 +224,7 @@ fn pop (#t:Type0) (v:rvec t) (#s:erased (Seq.seq t){Seq.length s > 0}) (#cap:era
   let current_vec = op_Bang v.vec_box;
   rewrite (V.pts_to vec buf) as (V.pts_to current_vec buf);
   
-  let opt_x = V.op_Array_Access current_vec last_idx;
+  let opt_x = V.op_Dot_Lparen_Rparen current_vec last_idx;
   let x = Some?.v opt_x;
   
   ( := ) v.size_box last_idx;

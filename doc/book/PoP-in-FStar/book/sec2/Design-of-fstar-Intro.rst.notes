@@ -154,7 +154,7 @@ integers. Its elements are formed from the literals ``0, 1, 2, ...``,
 and the following primitive operators:
 
 * ``-``: Unary negation (prefix)
-* ``-``: Subtraction (infix)
+* ``-``: Minus (infix)
 * ``+``: Addition (infix)
 * ``/``: Euclidean division (infix)
 * ``%``: Euclidean modulus (infix)

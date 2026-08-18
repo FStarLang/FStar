@@ -52,8 +52,10 @@ let matrix_add_generator (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   (ma : ('c, Obj.t, Obj.t) matrix) (mb : ('c, Obj.t, Obj.t) matrix) :
   ('c, Obj.t, Obj.t) matrix_generator=
   fun i j ->
-    FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__mult eq add
-      (ijth m n ma i j) (ijth m n mb i j)
+    (match add with
+     | FStar_Algebra_CommMonoid_Equiv.CM
+         (unit, mult, identity, associativity, commutativity, congruence) ->
+         mult) (ijth m n ma i j) (ijth m n mb i j)
 let matrix_add (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv) (m : Prims.pos)
   (n : Prims.pos) (add : ('c, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm)
   (ma : ('c, Obj.t, Obj.t) matrix) (mb : ('c, Obj.t, Obj.t) matrix) :
@@ -64,7 +66,10 @@ let matrix_add_zero (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   (n : Prims.pos) : ('c, Obj.t, Obj.t) matrix=
   matrix_of_seq m n
     (FStar_Seq_Base.create (m * n)
-       (FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__unit eq add))
+       (match add with
+        | FStar_Algebra_CommMonoid_Equiv.CM
+            (unit, mult, identity, associativity, commutativity, congruence)
+            -> unit))
 let matrix_add_comm_monoid (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   (add : ('c, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm) (m : Prims.pos)
   (n : Prims.pos) :
@@ -89,8 +94,11 @@ let seq_op_const (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   else
     FStar_Seq_Base.init_aux (FStar_Seq_Base.length s) Prims.int_zero
       (fun i ->
-         FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__mult eq cm
-           (FStar_Seq_Base.index s i) const)
+         (match cm with
+          | FStar_Algebra_CommMonoid_Equiv.CM
+              (unit, mult, identity, associativity, commutativity,
+               congruence)
+              -> mult) (FStar_Seq_Base.index s i) const)
 let const_op_seq (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   (cm : ('c, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm) (const : 'c)
   (s : 'c FStar_Seq_Base.seq) : 'c FStar_Seq_Base.seq=
@@ -99,8 +107,11 @@ let const_op_seq (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   else
     FStar_Seq_Base.init_aux (FStar_Seq_Base.length s) Prims.int_zero
       (fun i ->
-         FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__mult eq cm const
-           (FStar_Seq_Base.index s i))
+         (match cm with
+          | FStar_Algebra_CommMonoid_Equiv.CM
+              (unit, mult, identity, associativity, commutativity,
+               congruence)
+              -> mult) const (FStar_Seq_Base.index s i))
 let seq_of_products (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   (mul : ('c, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm)
   (s : 'c FStar_Seq_Base.seq) (t : 'c FStar_Seq_Base.seq) :
@@ -110,8 +121,11 @@ let seq_of_products (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   else
     FStar_Seq_Base.init_aux (FStar_Seq_Base.length s) Prims.int_zero
       (fun i ->
-         FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__mult eq mul
-           (FStar_Seq_Base.index s i) (FStar_Seq_Base.index t i))
+         (match mul with
+          | FStar_Algebra_CommMonoid_Equiv.CM
+              (unit, mult, identity, associativity, commutativity,
+               congruence)
+              -> mult) (FStar_Seq_Base.index s i) (FStar_Seq_Base.index t i))
 let dot (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   (add : ('c, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm)
   (mul : ('c, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm)
@@ -138,5 +152,14 @@ let matrix_mul_unit (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   init m m
     (fun i j ->
        if i = j
-       then FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__unit eq mul
-       else FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__unit eq add)
+       then
+         match mul with
+         | FStar_Algebra_CommMonoid_Equiv.CM
+             (unit, mult, identity, associativity, commutativity, congruence)
+             -> unit
+       else
+         (match add with
+          | FStar_Algebra_CommMonoid_Equiv.CM
+              (unit, mult, identity, associativity, commutativity,
+               congruence)
+              -> unit))

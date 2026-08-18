@@ -6,10 +6,10 @@ module FT = FStar.Tactics.V2
 // #push-options "--debug NBE"
 
 let test_normalise (): unit =
-  assert (forall (i: int). op_LessThanOrEqual == op_LessThanOrEqual)
+  assert (forall (i: int). op_Less_Equals == op_Less_Equals)
     by (
       // the nbe step will eta expand the primops, but using units instead of ints:
-      // > (fun (u1: unit) (u2: unit) -> op_LessThanOrEqual u1 u2)
+      // > (fun (u1: unit) (u2: unit) -> op_Less_Equals u1 u2)
       FT.norm [nbe];
       FT.dump "";
       // trying to intro the forall will typecheck the expression, so tactic fails

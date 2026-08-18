@@ -19,12 +19,12 @@ defaulting to returning the original term elsewhere. For instance, this
 
   visit (fun t ->
     match head_and_args_full t with
-    | (Tm_fvar plus, [a1;a2]) where fv_eq_lid plus PC.op_Addition ->
+    | (Tm_fvar plus, [a1;a2]) where fv_eq_lid plus PC.op_Plus ->
       let n1 = unembed a1 in
       let n2 = unembed a2 in
       mk (Tm_const (C_int n2))
 
-    | (Tm_fvar plus, _) where fv_eq_lid plus PC.op_Addition ->
+    | (Tm_fvar plus, _) where fv_eq_lid plus PC.op_Plus ->
       raise BadApplication
 
     | _ -> t

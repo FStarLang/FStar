@@ -324,15 +324,16 @@ let uu___is_Tv_Unknown (projectee : term_view) : Prims.bool=
 let uu___is_Tv_Unsupp (projectee : term_view) : Prims.bool=
   match projectee with | Tv_Unsupp -> true | uu___ -> false
 let notAscription (tv : term_view) : Prims.bool=
-  (Prims.op_Negation (uu___is_Tv_AscribedT tv)) &&
-    (Prims.op_Negation (uu___is_Tv_AscribedC tv))
+  (Prims.not (match tv with | Tv_AscribedT _0 -> true | uu___ -> false)) &&
+    (Prims.not (match tv with | Tv_AscribedC _0 -> true | uu___ -> false))
 type comp_view =
   | C_Total of typ 
   | C_GTotal of typ 
   | C_Lemma of (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
   FStarC_Syntax_Syntax.term) 
-  | C_Eff of (universes * name * FStarC_Syntax_Syntax.term * argv Prims.list
-  * FStarC_Syntax_Syntax.term Prims.list) 
+  | C_Eff of (universes * name * FStarC_Syntax_Syntax.term *
+  FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
+  FStarC_Syntax_Syntax.term Prims.list) 
 let uu___is_C_Total (projectee : comp_view) : Prims.bool=
   match projectee with | C_Total _0 -> true | uu___ -> false
 let __proj__C_Total__item___0 (projectee : comp_view) : typ=
@@ -350,8 +351,8 @@ let __proj__C_Lemma__item___0 (projectee : comp_view) :
 let uu___is_C_Eff (projectee : comp_view) : Prims.bool=
   match projectee with | C_Eff _0 -> true | uu___ -> false
 let __proj__C_Eff__item___0 (projectee : comp_view) :
-  (universes * name * FStarC_Syntax_Syntax.term * argv Prims.list *
-    FStarC_Syntax_Syntax.term Prims.list)=
+  (universes * name * FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
+    FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term Prims.list)=
   match projectee with | C_Eff _0 -> _0
 type ctor = (name * typ)
 type lb_view =

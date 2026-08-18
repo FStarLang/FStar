@@ -160,7 +160,7 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
            match uu___2 with
            | (uu___3, uu___4, c) ->
                FStarC_Syntax_Util.is_pure_or_ghost_comp c) lecs in
-    Prims.op_Negation uu___1 in
+    Prims.not uu___1 in
   if uu___
   then FStar_Pervasives_Native.None
   else
@@ -354,8 +354,9 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
            FStarC_List.concatMap
              (fun u ->
                 if
-                  FStar_Pervasives_Native.uu___is_Some
-                    u.FStarC_Syntax_Syntax.ctx_uvar_meta
+                  match u.FStarC_Syntax_Syntax.ctx_uvar_meta with
+                  | FStar_Pervasives_Native.Some v -> true
+                  | uu___2 -> false
                 then []
                 else
                   (let uu___2 =
@@ -390,7 +391,7 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                                      FStarC_Class_Setlike.is_empty
                                        (FStarC_FlatSet.setlike_flat_set
                                           FStarC_Syntax_Syntax.ord_bv) free in
-                                   Prims.op_Negation uu___8 in
+                                   Prims.not uu___8 in
                                  if uu___7
                                  then []
                                  else
@@ -457,8 +458,8 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                                    let instantiate_lbname_with_app tm fv =
                                      if
                                        FStarC_Syntax_Syntax.fv_eq fv
-                                         (FStar_Pervasives.__proj__Inr__item__v
-                                            lbname)
+                                         (match lbname with
+                                          | FStar_Pervasives.Inr v -> v)
                                      then
                                        FStarC_Syntax_Syntax.mk_Tm_app tm
                                          tvar_args

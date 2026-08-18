@@ -22,7 +22,7 @@ class hasPlus 'a = { ( + ): 'a -> 'a -> 'a }
 instance stringHasPlus: hasPlus string
   = { (+) = ( ^ ); }
 instance intHasPlus: hasPlus int
-  = { (+) = Prims.op_Addition; }
+  = { (+) = Prims.op_Plus; }
 
 let _ =
   assert (3 + 39 == 42);

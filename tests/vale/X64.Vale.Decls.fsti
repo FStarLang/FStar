@@ -406,7 +406,7 @@ val va_lemma_Sub64Wrap : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> d
     va_s0)))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state)) -> ((va_ensure va_b0 va_bM va_s0 va_sM va_sN)
     /\ (va_get_ok va_sM) /\ (va_eval_dst_operand_uint64 va_sM dst) == ((va_eval_dst_operand_uint64
-    va_s0 dst) - (va_eval_operand_uint64 va_s0 src)) `op_Modulus` nat64_max /\ (va_state_eq va_sM
+    va_s0 dst) - (va_eval_operand_uint64 va_s0 src)) `op_Percent` nat64_max /\ (va_state_eq va_sM
     (va_update_flags va_sM (va_update_ok va_sM (va_update_dst_operand dst va_sM va_s0)))))))
 
 val va_code_Mul64Wrap : src:va_operand -> Tot va_code

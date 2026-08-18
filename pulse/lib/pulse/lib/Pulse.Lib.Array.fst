@@ -50,7 +50,7 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
     pts_to a2 #p2 's2 **
     pure (vi <= l
        /\ (forall (i:nat). i < US.v vi ==> Seq.index 's1 i == Seq.index 's2 i)))
-  decreases (Prims.op_Subtraction (US.v l) (US.v !i))
+  decreases (Prims.op_Minus (US.v l) (US.v !i))
   {
     i := !i + 1sz;
   };
@@ -79,7 +79,7 @@ fn memcpy_l (#t:Type0) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
        /\ (forall (i:nat). i < US.v vi ==> Seq.index src0 i == Seq.index s i)
        /\ (forall (i:nat). (US.v vi <= i /\ i < Seq.length s) ==> Seq.index s i == Seq.index dst0 i)))
 
-  decreases (Prims.op_Subtraction (US.v l) (US.v !i))
+  decreases (Prims.op_Minus (US.v l) (US.v !i))
   {
     let vi = !i;
     (dst.(vi) <- src.(vi));
@@ -127,7 +127,7 @@ fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
     pure (vi <= l
         /\ Seq.length s == US.v l
         /\ (forall (i:nat). i < US.v vi ==> Seq.index s i == v)))
-  decreases (Prims.op_Subtraction (US.v l) (US.v !i))
+  decreases (Prims.op_Minus (US.v l) (US.v !i))
   {
     let vi = !i; 
     (a.(vi) <- v);

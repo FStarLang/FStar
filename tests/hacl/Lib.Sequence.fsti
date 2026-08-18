@@ -111,11 +111,11 @@ val member: #a:eqtype -> #len: size_nat -> a -> lseq a len -> Tot bool
 
 (** Operator for accessing an element of a fixed-length Sequence *)
 unfold
-let op_String_Access #a #len = index #a #len
+let ( .[] ) #a #len = index #a #len
 
 (** Operator for updating an element of a fixed-length Sequence *)
 unfold
-let op_String_Assignment #a #len = upd #a #len
+let ( .[]<- ) #a #len = upd #a #len
 
 (** Selecting a subset of a fixed-length Sequence *)
 val sub:

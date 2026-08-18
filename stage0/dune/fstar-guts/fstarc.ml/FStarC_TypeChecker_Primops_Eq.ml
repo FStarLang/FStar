@@ -6,8 +6,8 @@ let s_eq (env : FStarC_TypeChecker_Env.env_t)
   Prims.bool FStar_Pervasives_Native.option=
   let uu___ =
     FStarC_TypeChecker_TermEqAndSimplify.eq_tm env
-      (FStarC_Syntax_Embeddings.__proj__Abstract__item__t x)
-      (FStarC_Syntax_Embeddings.__proj__Abstract__item__t y) in
+      (match x with | FStarC_Syntax_Embeddings.Abstract t -> t)
+      (match y with | FStarC_Syntax_Embeddings.Abstract t -> t) in
   match uu___ with
   | FStarC_TypeChecker_TermEqAndSimplify.Equal ->
       FStar_Pervasives_Native.Some true
@@ -21,8 +21,8 @@ let nbe_eq (env : FStarC_TypeChecker_Env.env_t)
   Prims.bool FStar_Pervasives_Native.option=
   let uu___ =
     FStarC_TypeChecker_NBETerm.eq_t env
-      (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t x)
-      (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t y) in
+      (match x with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t)
+      (match y with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t) in
   match uu___ with
   | FStarC_TypeChecker_TermEqAndSimplify.Equal ->
       FStar_Pervasives_Native.Some true
@@ -38,8 +38,8 @@ let negopt3
      let r = g x y z in
      Obj.magic
        (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
-          (fun uu___ -> Obj.magic Prims.op_Negation uu___) (Obj.magic r)))
-    uu___3 uu___2 uu___1 uu___
+          (fun uu___ -> Obj.magic Prims.not uu___) (Obj.magic r))) uu___3
+    uu___2 uu___1 uu___
 let dec_eq_ops (env : FStarC_TypeChecker_Env.env_t) :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let s1 =
@@ -70,8 +70,8 @@ let s_eq2 (env : FStarC_TypeChecker_Env.env_t)
   FStarC_Syntax_Embeddings.abstract_term FStar_Pervasives_Native.option=
   let uu___ =
     FStarC_TypeChecker_TermEqAndSimplify.eq_tm env
-      (FStarC_Syntax_Embeddings.__proj__Abstract__item__t x)
-      (FStarC_Syntax_Embeddings.__proj__Abstract__item__t y) in
+      (match x with | FStarC_Syntax_Embeddings.Abstract t -> t)
+      (match y with | FStarC_Syntax_Embeddings.Abstract t -> t) in
   match uu___ with
   | FStarC_TypeChecker_TermEqAndSimplify.Equal ->
       FStar_Pervasives_Native.Some
@@ -87,8 +87,8 @@ let nbe_eq2 (env : FStarC_TypeChecker_Env.env_t)
   FStarC_TypeChecker_NBETerm.abstract_nbe_term FStar_Pervasives_Native.option=
   let uu___ =
     FStarC_TypeChecker_NBETerm.eq_t env
-      (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t x)
-      (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t y) in
+      (match x with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t)
+      (match y with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t) in
   match uu___ with
   | FStarC_TypeChecker_TermEqAndSimplify.Equal ->
       FStar_Pervasives_Native.Some
@@ -113,12 +113,12 @@ let s_eq3 (env : FStarC_TypeChecker_Env.env_t)
   let uu___ =
     let uu___1 =
       FStarC_TypeChecker_TermEqAndSimplify.eq_tm env
-        (FStarC_Syntax_Embeddings.__proj__Abstract__item__t typ1)
-        (FStarC_Syntax_Embeddings.__proj__Abstract__item__t typ2) in
+        (match typ1 with | FStarC_Syntax_Embeddings.Abstract t -> t)
+        (match typ2 with | FStarC_Syntax_Embeddings.Abstract t -> t) in
     let uu___2 =
       FStarC_TypeChecker_TermEqAndSimplify.eq_tm env
-        (FStarC_Syntax_Embeddings.__proj__Abstract__item__t x)
-        (FStarC_Syntax_Embeddings.__proj__Abstract__item__t y) in
+        (match x with | FStarC_Syntax_Embeddings.Abstract t -> t)
+        (match y with | FStarC_Syntax_Embeddings.Abstract t -> t) in
     (uu___1, uu___2) in
   match uu___ with
   | (FStarC_TypeChecker_TermEqAndSimplify.Equal,
@@ -141,12 +141,12 @@ let nbe_eq3 (env : FStarC_TypeChecker_Env.env_t)
   let uu___ =
     let uu___1 =
       FStarC_TypeChecker_NBETerm.eq_t env
-        (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t typ1)
-        (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t typ2) in
+        (match typ1 with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t)
+        (match typ2 with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t) in
     let uu___2 =
       FStarC_TypeChecker_NBETerm.eq_t env
-        (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t x)
-        (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t y) in
+        (match x with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t)
+        (match y with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t) in
     (uu___1, uu___2) in
   match uu___ with
   | (FStarC_TypeChecker_TermEqAndSimplify.Equal,

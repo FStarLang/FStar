@@ -22,7 +22,7 @@ let h : int =
         let l = fresh_uvar None in // None: we don't provide a type
         let r = fresh_uvar None in
         let e = cur_env () in
-        apply (`op_Addition);
+        apply (`op_Plus);
         exact l;
         exact r;
         let ocho = `8 in

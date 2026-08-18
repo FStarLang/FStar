@@ -50,7 +50,7 @@ fn fibonacci (k:pos)
           vctr <= k /\
           vi == fib (vctr - 1) /\
           vj == fib vctr)
-  decreases (Prims.op_Subtraction k (!ctr))
+  decreases (Prims.op_Minus k (!ctr))
   {
       let vi = !i;
       ctr := !ctr + 1;
@@ -79,7 +79,7 @@ fn fibonacci32 (k:U32.t)
            vctr <= k /\
            fib (v (vctr - 1ul)) == v vi/\
            fib (v vctr) == v vj)
-  decreases (Prims.op_Subtraction (U32.v k) (U32.v (!ctr)))
+  decreases (Prims.op_Minus (U32.v k) (U32.v (!ctr)))
   {
      let vi = !i;
      ctr := !ctr + 1ul;
@@ -111,7 +111,7 @@ fn fibo (n:pos)
            vi == fib (vctr - 1) /\
            vj == fib vctr)
   )
-  decreases (Prims.op_Subtraction n (!ctr))
+  decreases (Prims.op_Minus n (!ctr))
   {
      let vi = !i;
      i := !j;
@@ -139,7 +139,7 @@ fn fibo2 (n:pos)
            vi == fib (vctr - 1) /\
            vj == fib vctr)
   )
-  decreases (Prims.op_Subtraction n (!ctr))
+  decreases (Prims.op_Minus n (!ctr))
   {
      let vi = !i;
      i := !j;
@@ -165,7 +165,7 @@ fn fibo3 (n:pos)
            vi == fib (vctr - 1) /\
            vj == fib vctr)
   )
-  decreases (Prims.op_Subtraction n (!ctr))
+  decreases (Prims.op_Minus n (!ctr))
   {
      let vi = !i;
      i := !j;

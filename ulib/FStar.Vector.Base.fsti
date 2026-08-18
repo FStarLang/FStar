@@ -155,7 +155,7 @@ val index:
   -> Tot a
 
 /// `v.[i]` is shorthand for `index v i`
-unfold let op_String_Access #a #l = index #a #l
+unfold let ( .[] ) #a #l = index #a #l
 
 /// `update v i x`:
 ///     - a new vector that differs from `v` only at index `i`, where it contains `x`.
@@ -170,7 +170,7 @@ val update:
   -> Tot (raw a l)
 
 /// `v.[i] <- x` is shorthand for `update v i x`
-unfold let op_String_Assignment #a #l = update #a #l
+unfold let ( .[]<- ) #a #l = update #a #l
 
 /// `append v1 v2`:
 ///     - requires proving that the sum of the lengths of v1 and v2 still fit in a u32
@@ -305,7 +305,7 @@ val from_raw_as_raw:
 
 /// `v.(i)` accesses the ith element of v
 unfold
-let op_Array_Access
+let ( .() )
     (#a:Type)
     (x:t a)
     (i:index_t (as_raw x))
@@ -314,7 +314,7 @@ let op_Array_Access
 
 /// `v.(i) <- x` is a new t-vector that differs from v only at i
 unfold
-let op_Array_Assignment
+let ( .()<- )
     (#a:Type)
     (x:t a)
     (i:index_t (as_raw x))
