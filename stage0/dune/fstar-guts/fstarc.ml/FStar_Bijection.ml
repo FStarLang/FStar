@@ -16,7 +16,6 @@ type ('a, 'b) cbij = {
   bij: unit ;
   cright: 'a -> 'b ;
   cleft: 'b -> 'a }
-
 let __proj__Mkcbij__item__cright (projectee : ('a, 'b) cbij) : 'a -> 'b=
   match projectee with | { bij; cright; cleft;_} -> cright
 let __proj__Mkcbij__item__cleft (projectee : ('a, 'b) cbij) : 'b -> 'a=

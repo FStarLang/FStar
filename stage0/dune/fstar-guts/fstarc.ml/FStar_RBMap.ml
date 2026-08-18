@@ -77,7 +77,7 @@ let rec remove :
           if FStar_Class_Ord_Raw.op_Greater_Question uu___ x y
           then balance c l y vy (remove uu___ x r)
           else
-            if uu___is_L r
+            if (match r with | L -> true | uu___1 -> false)
             then l
             else
               (let uu___1 = extract_min uu___ r in

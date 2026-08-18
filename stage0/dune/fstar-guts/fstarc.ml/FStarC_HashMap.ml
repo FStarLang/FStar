@@ -33,12 +33,14 @@ let get (uu___ : 'k FStarC_Class_Deq.deq)
   (uu___1 : 'k FStarC_Class_Hashable.hashable) (key : 'k)
   (m : ('k, 'v) hashmap) : 'v=
   let uu___2 = lookup uu___ uu___1 key m in
-  FStar_Pervasives_Native.__proj__Some__item__v uu___2
+  match uu___2 with | FStar_Pervasives_Native.Some v1 -> v1
 let mem (uu___ : 'k FStarC_Class_Deq.deq)
   (uu___1 : 'k FStarC_Class_Hashable.hashable) (key : 'k)
   (m : ('k, 'v) hashmap) : Prims.bool=
   let uu___2 = lookup uu___ uu___1 key m in
-  FStar_Pervasives_Native.uu___is_Some uu___2
+  match uu___2 with
+  | FStar_Pervasives_Native.Some v1 -> true
+  | uu___3 -> false
 let fold (uu___ : 'k FStarC_Class_Deq.deq)
   (uu___1 : 'k FStarC_Class_Hashable.hashable) (f : 'k -> 'v -> 'a -> 'a)
   (m : ('k, 'v) hashmap) (init : 'a) : 'a=

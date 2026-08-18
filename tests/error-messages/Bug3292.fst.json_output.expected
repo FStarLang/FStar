@@ -3,7 +3,7 @@ module Bug3292
 Declarations: [
 #set-options "--print_implicits"
 let op_Plus #a x y = x, y
-let op_Minus #a x y = x, y
+let op_Tilde_Minus #a x y = x, y
 let op_Slash #a x y = x, y
 let op_Greater #a x y = x, y
 let op_Less #a x y = x, y
@@ -30,7 +30,7 @@ module Bug3292
 Declarations: [
 #set-options "--print_implicits"
 let op_Plus x y = x, y
-let op_Minus x y = x, y
+let op_Tilde_Minus x y = x, y
 let op_Slash x y = x, y
 let op_Greater x y = x, y
 let op_Less x y = x, y
@@ -57,7 +57,7 @@ module Bug3292
 Declarations: [
 #set-options "--print_implicits"
 let op_Plus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Minus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Tilde_Minus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
 let op_Slash #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
 let op_Greater #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
 let op_Less #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y

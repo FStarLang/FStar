@@ -76,7 +76,7 @@ let do_record (key : Prims.string) (f : unit -> 'a) : 'a=
      (let uu___4 =
         let uu___5 = FStarC_Effect.op_Bang stack in FStarC_List.tl uu___5 in
       FStarC_Effect.op_Colon_Equals stack uu___4);
-     if Prims.op_Negation was_running
+     if Prims.not was_running
      then
        (add key
           {
@@ -132,7 +132,7 @@ let print_all (uu___ : unit) : Prims.string=
          let uu___1 =
            let uu___2 =
              let uu___3 = FStarC_SMap.try_find st k in
-             FStar_Pervasives_Native.__proj__Some__item__v uu___3 in
+             match uu___3 with | FStar_Pervasives_Native.Some v -> v in
            FStar_Pervasives_Native.snd uu___2 in
          (k, uu___1)) keys in
   let points1 =

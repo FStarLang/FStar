@@ -112,7 +112,7 @@ let restricted_t (a: Type) (b: (a -> Type)) = f: arrow a b {is_restricted a f}
       arrows.
  *)
 unfold
-let op_Hat_Subtraction_Greater (a b: Type) = restricted_t a (fun _ -> b)
+let ( ^-> ) (a b: Type) = restricted_t a (fun _ -> b)
 
 (** [on_dom a f]:
      A convenience function to introduce a restricted, dependent function
@@ -175,7 +175,7 @@ let restricted_g_t (a: Type) (b: (a -> Type)) = f: arrow_g a b {is_restricted_g 
       a to [b].
  *)
 unfold
-let op_Hat_Subtraction_Greater_Greater (a b: Type) = restricted_g_t a (fun _ -> b)
+let ( ^->> ) (a b: Type) = restricted_g_t a (fun _ -> b)
 
 (** [on_dom_g a f]:
      A convenience function to introduce a restricted, ghost, dependent function

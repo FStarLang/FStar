@@ -23,38 +23,38 @@ let const_on (f : 'k cmp) (d : ('k, Obj.t) FStar_OrdSet.ordset) (x : 'v) :
     else FStar_Pervasives_Native.None in
   Mk_map (d, g)
 let select (f : 'k cmp) (x : 'k) (m : ('k, 'v, Obj.t) ordmap) :
-  'v FStar_Pervasives_Native.option= __proj__Mk_map__item__m f m x
+  'v FStar_Pervasives_Native.option= match m with | Mk_map (d, m1) -> m1 x
 let insert (f : 'a cmp) (x : 'a) (s : ('a, Obj.t) FStar_OrdSet.ordset) :
   ('a, Obj.t) FStar_OrdSet.ordset=
   FStar_OrdSet.union f (FStar_OrdSet.singleton f x) s
 let update (f : 'k cmp) (x : 'k) (y : 'v) (m : ('k, 'v, Obj.t) ordmap) :
   ('k, 'v, Obj.t) ordmap=
-  let s' = insert f x (__proj__Mk_map__item__d f m) in
+  let s' = insert f x (match m with | Mk_map (d, m1) -> d) in
   let g' x1 =
     if x1 = x
     then FStar_Pervasives_Native.Some y
-    else __proj__Mk_map__item__m f m x1 in
+    else (match m with | Mk_map (d, m1) -> m1 x1) in
   Mk_map (s', g')
 let contains (f : 'k cmp) (x : 'k) (m : ('k, 'v, Obj.t) ordmap) : Prims.bool=
-  FStar_OrdSet.mem f x (__proj__Mk_map__item__d f m)
+  FStar_OrdSet.mem f x (match m with | Mk_map (d, m1) -> d)
 let dom (f : 'k cmp) (m : ('k, 'v, Obj.t) ordmap) :
-  ('k, Obj.t) FStar_OrdSet.ordset= __proj__Mk_map__item__d f m
+  ('k, Obj.t) FStar_OrdSet.ordset= match m with | Mk_map (d, m1) -> d
 let remove (f : 'k cmp) (x : 'k) (m : ('k, 'v, Obj.t) ordmap) :
   ('k, 'v, Obj.t) ordmap=
-  let s' = FStar_OrdSet.remove f x (__proj__Mk_map__item__d f m) in
+  let s' = FStar_OrdSet.remove f x (match m with | Mk_map (d, m1) -> d) in
   let g' x1 =
     if x1 = x
     then FStar_Pervasives_Native.None
-    else __proj__Mk_map__item__m f m x1 in
+    else (match m with | Mk_map (d, m1) -> m1 x1) in
   Mk_map (s', g')
 let choose (f : 'k cmp) (m : ('k, 'v, Obj.t) ordmap) :
   ('k * 'v) FStar_Pervasives_Native.option=
-  match FStar_OrdSet.choose f (__proj__Mk_map__item__d f m) with
+  match FStar_OrdSet.choose f (match m with | Mk_map (d, m1) -> d) with
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
   | FStar_Pervasives_Native.Some x ->
       FStar_Pervasives_Native.Some
         (x,
-          (FStar_Pervasives_Native.__proj__Some__item__v
-             (__proj__Mk_map__item__m f m x)))
+          ((match match m with | Mk_map (d, m1) -> m1 x with
+            | FStar_Pervasives_Native.Some v1 -> v1)))
 let size (f : 'k cmp) (m : ('k, 'v, Obj.t) ordmap) : Prims.nat=
-  FStar_OrdSet.size f (__proj__Mk_map__item__d f m)
+  FStar_OrdSet.size f (match m with | Mk_map (d, m1) -> d)

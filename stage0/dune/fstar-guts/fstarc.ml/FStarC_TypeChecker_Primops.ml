@@ -84,16 +84,16 @@ let simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
        | "false" -> FStar_Pervasives_Native.Some false
        | uu___1 -> FStar_Pervasives_Native.None);
   FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
-    FStarC_Parser_Const.op_Minus FStarC_Syntax_Embeddings.e_int
+    FStarC_Parser_Const.op_Tilde_Minus FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int (fun x -> - x);
   FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
-    FStarC_Parser_Const.op_Addition FStarC_Syntax_Embeddings.e_int
+    FStarC_Parser_Const.op_Plus FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int (+);
   FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
-    FStarC_Parser_Const.op_Subtraction FStarC_Syntax_Embeddings.e_int
+    FStarC_Parser_Const.op_Minus FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int (-);
@@ -123,21 +123,21 @@ let simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_bool
     FStarC_TypeChecker_NBETerm.e_bool (>=);
   FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-    FStarC_Parser_Const.op_Division FStarC_Syntax_Embeddings.e_int
+    FStarC_Parser_Const.op_Slash FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int (division_modulus_op (/))
     (division_modulus_op (/));
   FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-    FStarC_Parser_Const.op_Modulus FStarC_Syntax_Embeddings.e_int
+    FStarC_Parser_Const.op_Percent FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int (division_modulus_op (mod))
     (division_modulus_op (mod));
   FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
-    FStarC_Parser_Const.op_Negation FStarC_Syntax_Embeddings.e_bool
+    FStarC_Parser_Const.op_Not FStarC_Syntax_Embeddings.e_bool
     FStarC_TypeChecker_NBETerm.e_bool FStarC_Syntax_Embeddings.e_bool
-    FStarC_TypeChecker_NBETerm.e_bool Prims.op_Negation;
+    FStarC_TypeChecker_NBETerm.e_bool Prims.not;
   FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
     FStarC_Parser_Const.string_concat_lid FStarC_Syntax_Embeddings.e_string
     FStarC_TypeChecker_NBETerm.e_string

@@ -240,7 +240,7 @@ let rec destruct_sq_forall (uu___ : FStarC_Syntax_Syntax.term) :
                 | FStar_Pervasives_Native.Some (b, c) ->
                     let uu___2 =
                       let uu___3 = FStarC_Syntax_Util.is_tot_or_gtot_comp c in
-                      Prims.op_Negation uu___3 in
+                      Prims.not uu___3 in
                     if uu___2
                     then Obj.magic FStar_Pervasives_Native.None
                     else

@@ -107,12 +107,12 @@ let _assume () = ()
 let _assert x = ()
 let magic () = failwith "no magic"
 let unsafe_coerce x = unbox (box x)
-let op_Negation x = not x
+let not x = not x
 
-let op_Equality x y = x = y
-let op_disEquality x y = x<>y
-let op_AmpAmp x y = x && y
-let op_BarBar x y  = x || y
+let op_Equals x y = x = y
+let op_Less_Greater x y = x<>y
+let op_Amp_Amp x y = x && y
+let op_Bar_Bar x y  = x || y
 let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
 let uu___is_Cons l = not (uu___is_Nil l)
 let strcat x y = x ^ y

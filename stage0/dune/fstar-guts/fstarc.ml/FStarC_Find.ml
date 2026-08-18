@@ -9,13 +9,24 @@ let cached_fun (cache : 'a FStarC_SMap.t) (f : Prims.string -> 'a)
 let _full_include :
   Prims.string Prims.list FStar_Pervasives_Native.option FStarC_Effect.ref=
   FStarC_Effect.mk_ref FStar_Pervasives_Native.None
+let _full_include_normalized :
+  Prims.string Prims.list FStar_Pervasives_Native.option FStarC_Effect.ref=
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let find_file_cache :
   Prims.string FStar_Pervasives_Native.option FStarC_SMap.t=
   FStarC_SMap.create (Prims.of_int 100)
+let _epoch : Prims.int FStarC_Effect.ref= FStarC_Effect.mk_ref Prims.int_zero
 let clear (uu___ : unit) : unit=
   FStarC_SMap.clear find_file_cache;
-  FStarC_Effect.op_Colon_Equals _full_include FStar_Pervasives_Native.None
+  FStarC_Effect.op_Colon_Equals _full_include FStar_Pervasives_Native.None;
+  FStarC_Effect.op_Colon_Equals _full_include_normalized
+    FStar_Pervasives_Native.None;
+  (let uu___5 =
+     let uu___6 = FStarC_Effect.op_Bang _epoch in uu___6 + Prims.int_one in
+   FStarC_Effect.op_Colon_Equals _epoch uu___5)
 let _include : Prims.string Prims.list FStarC_Effect.ref=
+  FStarC_Effect.mk_ref []
+let _file_list : Prims.string Prims.list FStarC_Effect.ref=
   FStarC_Effect.mk_ref []
 let _cache_dir :
   Prims.string FStar_Pervasives_Native.option FStarC_Effect.ref=
@@ -29,6 +40,8 @@ let get_include_path (uu___ : unit) : Prims.string Prims.list=
   FStarC_Effect.op_Bang _include
 let set_include_path (path : Prims.string Prims.list) : unit=
   clear (); FStarC_Effect.op_Colon_Equals _include path
+let set_file_list (files : Prims.string Prims.list) : unit=
+  clear (); FStarC_Effect.op_Colon_Equals _file_list files
 let get_cache_dir (uu___ : unit) :
   Prims.string FStar_Pervasives_Native.option=
   FStarC_Effect.op_Bang _cache_dir
@@ -80,7 +93,7 @@ let read_fstar_include (fn : Prims.string) :
                     let uu___2 =
                       let uu___3 = FStarC_String.get s1 Prims.int_zero in
                       uu___3 = 35 in
-                    Prims.op_Negation uu___2
+                    Prims.not uu___2
                   else false) uu___1 in
            FStar_Pervasives_Native.Some subdirs) ()
   with
@@ -93,7 +106,7 @@ let rec expand_include_d (dirname : Prims.string) : Prims.string Prims.list=
   then
     let subdirs =
       let uu___ = read_fstar_include dot_inc_path in
-      FStar_Pervasives_Native.__proj__Some__item__v uu___ in
+      match uu___ with | FStar_Pervasives_Native.Some v -> v in
     let uu___ =
       FStarC_List.collect
         (fun subd ->
@@ -117,6 +130,47 @@ let lib_paths (uu___ : unit) : Prims.string Prims.list=
       let uu___3 = lib_root () in FStarC_Common.option_to_list uu___3 in
     expand_include_ds uu___2 in
   let uu___2 = fstarc_paths () in FStar_List_Tot_Base.op_At uu___1 uu___2
+let rec path_is_at_or_below (root : Prims.string) (path : Prims.string) :
+  Prims.bool=
+  if root = path
+  then true
+  else
+    (let parent = FStarC_Filepath.dirname path in
+     if parent <> path then path_is_at_or_below root parent else false)
+let command_line_include_paths (uu___ : unit) : Prims.string Prims.list=
+  let uu___1 = FStarC_Effect.op_Bang _file_list in
+  match uu___1 with
+  | [] -> expand_include_d "."
+  | files ->
+      let explicit_roots =
+        let uu___2 = FStarC_Effect.op_Bang _include in
+        FStarC_List.map FStarC_Filepath.normalize_file_path uu___2 in
+      let file_roots =
+        FStarC_List.fold_left
+          (fun roots file ->
+             if
+               (FStarC_Filepath.file_exists file) &&
+                 (Prims.not (FStarC_Filepath.is_directory file))
+             then
+               let root =
+                 FStarC_Filepath.normalize_file_path
+                   (FStarC_Filepath.dirname file) in
+               (if FStarC_List.contains root roots
+                then roots
+                else FStar_List_Tot_Base.op_At roots [root])
+             else roots) [] files in
+      let uncovered_roots =
+        FStarC_List.filter
+          (fun root ->
+             let uu___2 =
+               FStarC_List.existsb
+                 (fun explicit_root -> path_is_at_or_below explicit_root root)
+                 explicit_roots in
+             Prims.not uu___2) file_roots in
+      let uu___2 = expand_include_ds uncovered_roots in
+      let uu___3 = expand_include_d "." in
+      FStar_List_Tot_Base.op_At uu___2 uu___3
+let epoch (uu___ : unit) : Prims.int= FStarC_Effect.op_Bang _epoch
 let full_include_path (uu___ : unit) : Prims.string Prims.list=
   let uu___1 = FStarC_Effect.op_Bang _full_include in
   match uu___1 with
@@ -134,11 +188,22 @@ let full_include_path (uu___ : unit) : Prims.string Prims.list=
         let uu___2 =
           let uu___3 = lib_paths () in
           let uu___4 =
-            let uu___5 = expand_include_d "." in
+            let uu___5 = command_line_include_paths () in
             FStar_List_Tot_Base.op_At include_paths uu___5 in
           FStar_List_Tot_Base.op_At uu___3 uu___4 in
         FStar_List_Tot_Base.op_At cache_dir uu___2 in
       (FStarC_Effect.op_Colon_Equals _full_include
+         (FStar_Pervasives_Native.Some res);
+       res)
+let full_include_path_normalized (uu___ : unit) : Prims.string Prims.list=
+  let uu___1 = FStarC_Effect.op_Bang _full_include_normalized in
+  match uu___1 with
+  | FStar_Pervasives_Native.Some paths -> paths
+  | FStar_Pervasives_Native.None ->
+      let res =
+        let uu___2 = full_include_path () in
+        FStarC_List.map FStarC_Filepath.normalize_file_path uu___2 in
+      (FStarC_Effect.op_Colon_Equals _full_include_normalized
          (FStar_Pervasives_Native.Some res);
        res)
 let do_find (paths : Prims.string Prims.list) (filename : Prims.string) :

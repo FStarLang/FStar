@@ -311,12 +311,18 @@ type term_ctxt =
   | Ctxt_hole 
   | Ctxt_app_head of term_ctxt * (unit * unit) 
   | Ctxt_app_arg of unit * unit * term_ctxt 
-let uu___is_Ctxt_hole uu___ =
-  match uu___ with | Ctxt_hole _ -> true | _ -> false
-let uu___is_Ctxt_app_head uu___ =
-  match uu___ with | Ctxt_app_head _ -> true | _ -> false
-let uu___is_Ctxt_app_arg uu___ =
-  match uu___ with | Ctxt_app_arg _ -> true | _ -> false
+let uu___is_Ctxt_hole (projectee : term_ctxt) : Prims.bool=
+  match projectee with | Ctxt_hole -> true | uu___ -> false
+let uu___is_Ctxt_app_head (projectee : term_ctxt) : Prims.bool=
+  match projectee with | Ctxt_app_head (_0, _1) -> true | uu___ -> false
+let __proj__Ctxt_app_head__item___0 (projectee : term_ctxt) : term_ctxt=
+  match projectee with | Ctxt_app_head (_0, _1) -> _0
+let __proj__Ctxt_app_head__item___1 (projectee : term_ctxt) : (unit * unit)=
+  match projectee with | Ctxt_app_head (_0, _1) -> _1
+let uu___is_Ctxt_app_arg (projectee : term_ctxt) : Prims.bool=
+  match projectee with | Ctxt_app_arg (_0, _1, _2) -> true | uu___ -> false
+let __proj__Ctxt_app_arg__item___2 (projectee : term_ctxt) : term_ctxt=
+  match projectee with | Ctxt_app_arg (_0, _1, _2) -> _2
 type ('dummyV0, 'dummyV1) constant_typing =
   | CT_Unit 
   | CT_True 
@@ -340,22 +346,52 @@ and ('dummyV0, 'dummyV1) univ_leq =
   | UNLEQ_Refl of unit 
   | UNLEQ_Succ of unit * unit * (Obj.t, Obj.t) univ_leq 
   | UNLEQ_Max of unit * unit 
-let uu___is_UN_Refl uu___1 uu___ uu___2 =
-  match uu___2 with | UN_Refl _ -> true | _ -> false
-let uu___is_UN_MaxCongL uu___1 uu___ uu___2 =
-  match uu___2 with | UN_MaxCongL _ -> true | _ -> false
-let uu___is_UN_MaxCongR uu___1 uu___ uu___2 =
-  match uu___2 with | UN_MaxCongR _ -> true | _ -> false
-let uu___is_UN_MaxComm uu___1 uu___ uu___2 =
-  match uu___2 with | UN_MaxComm _ -> true | _ -> false
-let uu___is_UN_MaxLeq uu___1 uu___ uu___2 =
-  match uu___2 with | UN_MaxLeq _ -> true | _ -> false
-let uu___is_UNLEQ_Refl uu___1 uu___ uu___2 =
-  match uu___2 with | UNLEQ_Refl _ -> true | _ -> false
-let uu___is_UNLEQ_Succ uu___1 uu___ uu___2 =
-  match uu___2 with | UNLEQ_Succ _ -> true | _ -> false
-let uu___is_UNLEQ_Max uu___1 uu___ uu___2 =
-  match uu___2 with | UNLEQ_Max _ -> true | _ -> false
+let uu___is_UN_Refl (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_eq) : Prims.bool=
+  match projectee with | UN_Refl u -> true | uu___2 -> false
+let uu___is_UN_MaxCongL (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_eq) : Prims.bool=
+  match Obj.magic projectee with
+  | UN_MaxCongL (u, u', v, _3) -> true
+  | uu___2 -> false
+let __proj__UN_MaxCongL__item___3 (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_eq) : (Obj.t, Obj.t) univ_eq=
+  match Obj.magic projectee with | UN_MaxCongL (u, u', v, _3) -> _3
+let uu___is_UN_MaxCongR (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_eq) : Prims.bool=
+  match Obj.magic projectee with
+  | UN_MaxCongR (u, v, v', _3) -> true
+  | uu___2 -> false
+let __proj__UN_MaxCongR__item___3 (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_eq) : (Obj.t, Obj.t) univ_eq=
+  match Obj.magic projectee with | UN_MaxCongR (u, v, v', _3) -> _3
+let uu___is_UN_MaxComm (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_eq) : Prims.bool=
+  match Obj.magic projectee with
+  | UN_MaxComm (u, v) -> true
+  | uu___2 -> false
+let uu___is_UN_MaxLeq (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_eq) : Prims.bool=
+  match Obj.magic projectee with
+  | UN_MaxLeq (u, v, _2) -> true
+  | uu___2 -> false
+let __proj__UN_MaxLeq__item___2 (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_eq) : (Obj.t, Obj.t) univ_leq=
+  match Obj.magic projectee with | UN_MaxLeq (u, v, _2) -> _2
+let uu___is_UNLEQ_Refl (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_leq) : Prims.bool=
+  match projectee with | UNLEQ_Refl u -> true | uu___2 -> false
+let uu___is_UNLEQ_Succ (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_leq) : Prims.bool=
+  match Obj.magic projectee with
+  | UNLEQ_Succ (u, v, _2) -> true
+  | uu___2 -> false
+let __proj__UNLEQ_Succ__item___2 (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_leq) : (Obj.t, Obj.t) univ_leq=
+  match Obj.magic projectee with | UNLEQ_Succ (u, v, _2) -> _2
+let uu___is_UNLEQ_Max (uu___ : unit) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) univ_leq) : Prims.bool=
+  match Obj.magic projectee with | UNLEQ_Max (u, v) -> true | uu___2 -> false
 let mk_if (scrutinee : FStarC_Reflection_Types.term)
   (then_ : FStarC_Reflection_Types.term)
   (else_ : FStarC_Reflection_Types.term) : FStarC_Reflection_Types.term=
@@ -439,20 +475,96 @@ type ('dummyV0, 'dummyV1) non_informative =
   | Non_informative_ghost_arrow of FStarC_Reflection_Types.env * unit * unit
   * unit 
   | Non_informative_token of FStarC_Reflection_Types.env * unit * unit 
-let uu___is_Non_informative_type uu___1 uu___ uu___2 =
-  match uu___2 with | Non_informative_type _ -> true | _ -> false
-let uu___is_Non_informative_fv uu___1 uu___ uu___2 =
-  match uu___2 with | Non_informative_fv _ -> true | _ -> false
-let uu___is_Non_informative_uinst uu___1 uu___ uu___2 =
-  match uu___2 with | Non_informative_uinst _ -> true | _ -> false
-let uu___is_Non_informative_app uu___1 uu___ uu___2 =
-  match uu___2 with | Non_informative_app _ -> true | _ -> false
-let uu___is_Non_informative_total_arrow uu___1 uu___ uu___2 =
-  match uu___2 with | Non_informative_total_arrow _ -> true | _ -> false
-let uu___is_Non_informative_ghost_arrow uu___1 uu___ uu___2 =
-  match uu___2 with | Non_informative_ghost_arrow _ -> true | _ -> false
-let uu___is_Non_informative_token uu___1 uu___ uu___2 =
-  match uu___2 with | Non_informative_token _ -> true | _ -> false
+let uu___is_Non_informative_type (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) : Prims.bool=
+  match Obj.magic projectee with
+  | Non_informative_type (g, u) -> true
+  | uu___2 -> false
+let __proj__Non_informative_type__item__g
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | Non_informative_type (g, u) -> g
+let uu___is_Non_informative_fv (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) : Prims.bool=
+  match Obj.magic projectee with
+  | Non_informative_fv (g, x) -> true
+  | uu___2 -> false
+let __proj__Non_informative_fv__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) :
+  FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | Non_informative_fv (g, x) -> g
+let __proj__Non_informative_fv__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) :
+  FStarC_Reflection_Types.fv=
+  match Obj.magic projectee with | Non_informative_fv (g, x) -> x
+let uu___is_Non_informative_uinst (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) : Prims.bool=
+  match Obj.magic projectee with
+  | Non_informative_uinst (g, x, us) -> true
+  | uu___2 -> false
+let __proj__Non_informative_uinst__item__g
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | Non_informative_uinst (g, x, us) -> g
+let __proj__Non_informative_uinst__item__x
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) : FStarC_Reflection_Types.fv=
+  match Obj.magic projectee with | Non_informative_uinst (g, x, us) -> x
+let __proj__Non_informative_uinst__item__us
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) : unit Prims.list=
+  match Obj.magic projectee with | Non_informative_uinst (g, x, us) -> us
+let uu___is_Non_informative_app (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) : Prims.bool=
+  match Obj.magic projectee with
+  | Non_informative_app (g, t, arg, q, _4) -> true
+  | uu___2 -> false
+let __proj__Non_informative_app__item__g
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | Non_informative_app (g, t, arg, q, _4) -> g
+let __proj__Non_informative_app__item___4
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) :
+  (Obj.t, Obj.t) non_informative=
+  match Obj.magic projectee with
+  | Non_informative_app (g, t, arg, q, _4) -> _4
+let uu___is_Non_informative_total_arrow (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) : Prims.bool=
+  match Obj.magic projectee with
+  | Non_informative_total_arrow (g, t0, q, t1, _4) -> true
+  | uu___2 -> false
+let __proj__Non_informative_total_arrow__item__g
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | Non_informative_total_arrow (g, t0, q, t1, _4) -> g
+let __proj__Non_informative_total_arrow__item___4
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) :
+  (Obj.t, Obj.t) non_informative=
+  match Obj.magic projectee with
+  | Non_informative_total_arrow (g, t0, q, t1, _4) -> _4
+let uu___is_Non_informative_ghost_arrow (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) : Prims.bool=
+  match Obj.magic projectee with
+  | Non_informative_ghost_arrow (g, t0, q, t1) -> true
+  | uu___2 -> false
+let __proj__Non_informative_ghost_arrow__item__g
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | Non_informative_ghost_arrow (g, t0, q, t1) -> g
+let uu___is_Non_informative_token (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (projectee : (Obj.t, Obj.t) non_informative) : Prims.bool=
+  match projectee with
+  | Non_informative_token (g, t, _2) -> true
+  | uu___2 -> false
+let __proj__Non_informative_token__item__g
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (projectee : (Obj.t, Obj.t) non_informative) : FStarC_Reflection_Types.env=
+  match projectee with | Non_informative_token (g, t, _2) -> g
 let binding_to_namedv (b : FStarC_Reflection_V2_Data.binding) :
   FStarC_Reflection_Types.namedv=
   FStarC_Reflection_V2_Builtins.pack_namedv
@@ -611,70 +723,1036 @@ and ('g, 'scuu, 'scuty, 'sc, 'rty, 'dummyV0, 'dummyV1) branch_typing =
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) match_is_complete =
   | MC_Tok of FStarC_Reflection_Types.env * unit * unit * unit Prims.list *
   FStarC_Reflection_V2_Data.binding Prims.list Prims.list * unit 
-let uu___is_T_Token uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Token _ -> true | _ -> false
-let uu___is_T_Var uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Var _ -> true | _ -> false
-let uu___is_T_FVar uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_FVar _ -> true | _ -> false
-let uu___is_T_UInst uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_UInst _ -> true | _ -> false
-let uu___is_T_Const uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Const _ -> true | _ -> false
-let uu___is_T_Abs uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Abs _ -> true | _ -> false
-let uu___is_T_App uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_App _ -> true | _ -> false
-let uu___is_T_Let uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Let _ -> true | _ -> false
-let uu___is_T_Arrow uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Arrow _ -> true | _ -> false
-let uu___is_T_Refine uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Refine _ -> true | _ -> false
-let uu___is_T_PropIrrelevance uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_PropIrrelevance _ -> true | _ -> false
-let uu___is_T_Sub uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Sub _ -> true | _ -> false
-let uu___is_T_If uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_If _ -> true | _ -> false
-let uu___is_T_Match uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_Match _ -> true | _ -> false
-let uu___is_Rel_refl uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_refl _ -> true | _ -> false
-let uu___is_Rel_sym uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_sym _ -> true | _ -> false
-let uu___is_Rel_trans uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_trans _ -> true | _ -> false
-let uu___is_Rel_univ uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_univ _ -> true | _ -> false
-let uu___is_Rel_beta uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_beta _ -> true | _ -> false
-let uu___is_Rel_eq_token uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_eq_token _ -> true | _ -> false
-let uu___is_Rel_subtyping_token uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_subtyping_token _ -> true | _ -> false
-let uu___is_Rel_equiv uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_equiv _ -> true | _ -> false
-let uu___is_Rel_arrow uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_arrow _ -> true | _ -> false
-let uu___is_Rel_abs uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_abs _ -> true | _ -> false
-let uu___is_Rel_ctxt uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_ctxt _ -> true | _ -> false
-let uu___is_Relc_typ uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Relc_typ _ -> true | _ -> false
-let uu___is_Relc_total_ghost uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Relc_total_ghost _ -> true | _ -> false
-let uu___is_Relc_ghost_total uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Relc_ghost_total _ -> true | _ -> false
-let uu___is_BT_Nil uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
-  match uu___7 with | BT_Nil _ -> true | _ -> false
-let uu___is_BT_S uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
-  match uu___7 with | BT_S _ -> true | _ -> false
-let uu___is_BO uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
-  match uu___7 with | BO _ -> true | _ -> false
-let uu___is_MC_Tok uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
-  match uu___5 with | MC_Tok _ -> true | _ -> false
+let uu___is_T_Token (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match projectee with | T_Token (g, e, c, _3) -> true | uu___3 -> false
+let __proj__T_Token__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match projectee with | T_Token (g, e, c, _3) -> g
+let __proj__T_Token__item__c (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Tactics_Types_Reflection.comp_spec_typ=
+  match projectee with | T_Token (g, e, c, _3) -> c
+let uu___is_T_Var (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with | T_Var (g, x) -> true | uu___3 -> false
+let __proj__T_Var__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | T_Var (g, x) -> g
+let __proj__T_Var__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Reflection_Types.namedv=
+  match Obj.magic projectee with | T_Var (g, x) -> x
+let uu___is_T_FVar (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with | T_FVar (g, x) -> true | uu___3 -> false
+let __proj__T_FVar__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | T_FVar (g, x) -> g
+let __proj__T_FVar__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.fv=
+  match Obj.magic projectee with | T_FVar (g, x) -> x
+let uu___is_T_UInst (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_UInst (g, x, us) -> true
+  | uu___3 -> false
+let __proj__T_UInst__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | T_UInst (g, x, us) -> g
+let __proj__T_UInst__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.fv=
+  match Obj.magic projectee with | T_UInst (g, x, us) -> x
+let __proj__T_UInst__item__us (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Reflection_Types.universe Prims.list=
+  match Obj.magic projectee with | T_UInst (g, x, us) -> us
+let uu___is_T_Const (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_Const (g, v, t, _3) -> true
+  | uu___3 -> false
+let __proj__T_Const__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | T_Const (g, v, t, _3) -> g
+let __proj__T_Const__item__v (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Reflection_V2_Data.vconst=
+  match Obj.magic projectee with | T_Const (g, v, t, _3) -> v
+let __proj__T_Const__item___3 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  (Obj.t, Obj.t) constant_typing=
+  match Obj.magic projectee with | T_Const (g, v, t, _3) -> _3
+let uu___is_T_Abs (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_Abs (g, x, ty, body, body_c, u, q, ty_eff, _8, _9) -> true
+  | uu___3 -> false
+let __proj__T_Abs__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | T_Abs (g, x, ty, body, body_c, u, q, ty_eff, _8, _9) -> g
+let __proj__T_Abs__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_V2_Data.var=
+  match Obj.magic projectee with
+  | T_Abs (g, x, ty, body, body_c, u, q, ty_eff, _8, _9) -> x
+let __proj__T_Abs__item__ty (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.term=
+  match Obj.magic projectee with
+  | T_Abs (g, x, ty, body, body_c, u, q, ty_eff, _8, _9) -> ty
+let __proj__T_Abs__item__body_c (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Tactics_Types_Reflection.comp_spec_typ=
+  match Obj.magic projectee with
+  | T_Abs (g, x, ty, body, body_c, u, q, ty_eff, _8, _9) -> body_c
+let __proj__T_Abs__item__ty_eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Abs (g, x, ty, body, body_c, u, q, ty_eff, _8, _9) -> ty_eff
+let __proj__T_Abs__item___8 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Abs (g, x, ty, body, body_c, u, q, ty_eff, _8, _9) -> _8
+let __proj__T_Abs__item___9 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Abs (g, x, ty, body, body_c, u, q, ty_eff, _8, _9) -> _9
+let uu___is_T_App (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_App (g, e1, e2, x, t, eff, _6, _7) -> true
+  | uu___3 -> false
+let __proj__T_App__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | T_App (g, e1, e2, x, t, eff, _6, _7) -> g
+let __proj__T_App__item__eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_App (g, e1, e2, x, t, eff, _6, _7) -> eff
+let __proj__T_App__item___6 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with | T_App (g, e1, e2, x, t, eff, _6, _7) -> _6
+let __proj__T_App__item___7 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with | T_App (g, e1, e2, x, t, eff, _6, _7) -> _7
+let uu___is_T_Let (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_Let (g, x, e1, t1, e2, t2, eff, _7, _8) -> true
+  | uu___3 -> false
+let __proj__T_Let__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | T_Let (g, x, e1, t1, e2, t2, eff, _7, _8) -> g
+let __proj__T_Let__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_V2_Data.var=
+  match Obj.magic projectee with
+  | T_Let (g, x, e1, t1, e2, t2, eff, _7, _8) -> x
+let __proj__T_Let__item__t1 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.typ=
+  match Obj.magic projectee with
+  | T_Let (g, x, e1, t1, e2, t2, eff, _7, _8) -> t1
+let __proj__T_Let__item__eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Let (g, x, e1, t1, e2, t2, eff, _7, _8) -> eff
+let __proj__T_Let__item___7 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Let (g, x, e1, t1, e2, t2, eff, _7, _8) -> _7
+let __proj__T_Let__item___8 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Let (g, x, e1, t1, e2, t2, eff, _7, _8) -> _8
+let uu___is_T_Arrow (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) -> true
+  | uu___3 -> false
+let __proj__T_Arrow__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) -> g
+let __proj__T_Arrow__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_V2_Data.var=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) -> x
+let __proj__T_Arrow__item__t1 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.term=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) -> t1
+let __proj__T_Arrow__item__eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) -> eff
+let __proj__T_Arrow__item__t1_eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) ->
+      t1_eff
+let __proj__T_Arrow__item__t2_eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) ->
+      t2_eff
+let __proj__T_Arrow__item___10 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) -> _10
+let __proj__T_Arrow__item___11 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Arrow (g, x, t1, t2, u1, u2, q, eff, t1_eff, t2_eff, _10, _11) -> _11
+let uu___is_T_Refine (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_Refine (g, x, t, e, u1, u2, t_eff, e_eff, _8, _9) -> true
+  | uu___3 -> false
+let __proj__T_Refine__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | T_Refine (g, x, t, e, u1, u2, t_eff, e_eff, _8, _9) -> g
+let __proj__T_Refine__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_V2_Data.var=
+  match Obj.magic projectee with
+  | T_Refine (g, x, t, e, u1, u2, t_eff, e_eff, _8, _9) -> x
+let __proj__T_Refine__item__t (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.term=
+  match Obj.magic projectee with
+  | T_Refine (g, x, t, e, u1, u2, t_eff, e_eff, _8, _9) -> t
+let __proj__T_Refine__item__t_eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Refine (g, x, t, e, u1, u2, t_eff, e_eff, _8, _9) -> t_eff
+let __proj__T_Refine__item__e_eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Refine (g, x, t, e, u1, u2, t_eff, e_eff, _8, _9) -> e_eff
+let __proj__T_Refine__item___8 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Refine (g, x, t, e, u1, u2, t_eff, e_eff, _8, _9) -> _8
+let __proj__T_Refine__item___9 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Refine (g, x, t, e, u1, u2, t_eff, e_eff, _8, _9) -> _9
+let uu___is_T_PropIrrelevance (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_PropIrrelevance (g, e, t, e_eff, t_eff, _5, _6) -> true
+  | uu___3 -> false
+let __proj__T_PropIrrelevance__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | T_PropIrrelevance (g, e, t, e_eff, t_eff, _5, _6) -> g
+let __proj__T_PropIrrelevance__item__e_eff
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_PropIrrelevance (g, e, t, e_eff, t_eff, _5, _6) -> e_eff
+let __proj__T_PropIrrelevance__item__t_eff
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_PropIrrelevance (g, e, t, e_eff, t_eff, _5, _6) -> t_eff
+let __proj__T_PropIrrelevance__item___5 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_PropIrrelevance (g, e, t, e_eff, t_eff, _5, _6) -> _5
+let __proj__T_PropIrrelevance__item___6 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_PropIrrelevance (g, e, t, e_eff, t_eff, _5, _6) -> _6
+let uu___is_T_Sub (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match projectee with
+  | T_Sub (g, e, c, c', _4, _5) -> true
+  | uu___3 -> false
+let __proj__T_Sub__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match projectee with | T_Sub (g, e, c, c', _4, _5) -> g
+let __proj__T_Sub__item__c (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Tactics_Types_Reflection.comp_spec_typ=
+  match projectee with | T_Sub (g, e, c, c', _4, _5) -> c
+let __proj__T_Sub__item__c' (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Tactics_Types_Reflection.comp_spec_typ=
+  match projectee with | T_Sub (g, e, c, c', _4, _5) -> c'
+let __proj__T_Sub__item___4 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match projectee with | T_Sub (g, e, c, c', _4, _5) -> _4
+let __proj__T_Sub__item___5 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related_comp=
+  match projectee with | T_Sub (g, e, c, c', _4, _5) -> _5
+let uu___is_T_If (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> true
+  | uu___3 -> false
+let __proj__T_If__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> g
+let __proj__T_If__item__scrutinee (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.term=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> scrutinee
+let __proj__T_If__item__then_ (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.term=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> then_
+let __proj__T_If__item__else_ (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.term=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> else_
+let __proj__T_If__item__ty (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.term=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> ty
+let __proj__T_If__item__hyp (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_V2_Data.var=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> hyp
+let __proj__T_If__item__eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> eff
+let __proj__T_If__item__ty_eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> ty_eff
+let __proj__T_If__item___9 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> _9
+let __proj__T_If__item___10 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> _10
+let __proj__T_If__item___11 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> _11
+let __proj__T_If__item___12 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match projectee with
+  | T_If
+      (g, scrutinee, then_, else_, ty, u_ty, hyp, eff, ty_eff, _9, _10, _11,
+       _12)
+      -> _12
+let uu___is_T_Match (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : Prims.bool=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> true
+  | uu___3 -> false
+let __proj__T_Match__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> g
+let __proj__T_Match__item__sc_u (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Reflection_Types.universe=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> sc_u
+let __proj__T_Match__item__sc_ty (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.typ=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> sc_ty
+let __proj__T_Match__item__sc (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : FStarC_Reflection_Types.term=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> sc
+let __proj__T_Match__item__ty_eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> ty_eff
+let __proj__T_Match__item___5 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> _5
+let __proj__T_Match__item__eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> eff
+let __proj__T_Match__item___7 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (Obj.t, Obj.t, Obj.t) typing=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> _7
+let __proj__T_Match__item__branches (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) : (unit * unit) Prims.list=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> branches
+let __proj__T_Match__item__ty (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Tactics_Types_Reflection.comp_spec_typ=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> ty
+let __proj__T_Match__item__bnds (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  FStarC_Reflection_V2_Data.binding Prims.list Prims.list=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> bnds
+let __proj__T_Match__item__complet (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) match_is_complete=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> complet
+let __proj__T_Match__item___12 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t) typing) :
+  (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing=
+  match Obj.magic projectee with
+  | T_Match
+      (g, sc_u, sc_ty, sc, ty_eff, _5, eff, _7, branches, ty, bnds, complet,
+       _12)
+      -> _12
+let uu___is_Rel_refl (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match projectee with | Rel_refl (g, t, rel) -> true | uu___4 -> false
+let __proj__Rel_refl__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Rel_refl (g, t, rel) -> g
+let __proj__Rel_refl__item__rel (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : relation=
+  match projectee with | Rel_refl (g, t, rel) -> rel
+let uu___is_Rel_sym (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match projectee with | Rel_sym (g, t0, t1, _3) -> true | uu___4 -> false
+let __proj__Rel_sym__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Rel_sym (g, t0, t1, _3) -> g
+let __proj__Rel_sym__item___3 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match projectee with | Rel_sym (g, t0, t1, _3) -> _3
+let uu___is_Rel_trans (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match projectee with
+  | Rel_trans (g, t0, t1, t2, rel, _5, _6) -> true
+  | uu___4 -> false
+let __proj__Rel_trans__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Rel_trans (g, t0, t1, t2, rel, _5, _6) -> g
+let __proj__Rel_trans__item__rel (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : relation=
+  match projectee with | Rel_trans (g, t0, t1, t2, rel, _5, _6) -> rel
+let __proj__Rel_trans__item___5 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match projectee with | Rel_trans (g, t0, t1, t2, rel, _5, _6) -> _5
+let __proj__Rel_trans__item___6 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match projectee with | Rel_trans (g, t0, t1, t2, rel, _5, _6) -> _6
+let uu___is_Rel_univ (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match Obj.magic projectee with
+  | Rel_univ (g, u, v, _3) -> true
+  | uu___4 -> false
+let __proj__Rel_univ__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | Rel_univ (g, u, v, _3) -> g
+let __proj__Rel_univ__item___3 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t) univ_eq=
+  match Obj.magic projectee with | Rel_univ (g, u, v, _3) -> _3
+let uu___is_Rel_beta (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match Obj.magic projectee with
+  | Rel_beta (g, t, q, e, arg) -> true
+  | uu___4 -> false
+let __proj__Rel_beta__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match Obj.magic projectee with | Rel_beta (g, t, q, e, arg) -> g
+let uu___is_Rel_eq_token (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match projectee with
+  | Rel_eq_token (g, t0, t1, _3) -> true
+  | uu___4 -> false
+let __proj__Rel_eq_token__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Rel_eq_token (g, t0, t1, _3) -> g
+let uu___is_Rel_subtyping_token (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match projectee with
+  | Rel_subtyping_token (g, t0, t1, _3) -> true
+  | uu___4 -> false
+let __proj__Rel_subtyping_token__item__g
+  (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit) (uu___2 : relation)
+  (uu___3 : unit) (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Rel_subtyping_token (g, t0, t1, _3) -> g
+let uu___is_Rel_equiv (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match projectee with
+  | Rel_equiv (g, t0, t1, rel, _4) -> true
+  | uu___4 -> false
+let __proj__Rel_equiv__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Rel_equiv (g, t0, t1, rel, _4) -> g
+let __proj__Rel_equiv__item__rel (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : relation=
+  match projectee with | Rel_equiv (g, t0, t1, rel, _4) -> rel
+let __proj__Rel_equiv__item___4 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match projectee with | Rel_equiv (g, t0, t1, rel, _4) -> _4
+let uu___is_Rel_arrow (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> true
+  | uu___4 -> false
+let __proj__Rel_arrow__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> g
+let __proj__Rel_arrow__item__t1 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.term=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> t1
+let __proj__Rel_arrow__item__t2 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.term=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> t2
+let __proj__Rel_arrow__item__c1 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Tactics_Types_Reflection.comp_spec_typ=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> c1
+let __proj__Rel_arrow__item__c2 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Tactics_Types_Reflection.comp_spec_typ=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> c2
+let __proj__Rel_arrow__item__rel (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : relation=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> rel
+let __proj__Rel_arrow__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_V2_Data.var=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> x
+let __proj__Rel_arrow__item___8 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> _8
+let __proj__Rel_arrow__item___9 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related_comp=
+  match Obj.magic projectee with
+  | Rel_arrow (g, t1, t2, q, c1, c2, rel, x, _8, _9) -> _9
+let uu___is_Rel_abs (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match Obj.magic projectee with
+  | Rel_abs (g, t1, t2, q, e1, e2, x, _7, _8) -> true
+  | uu___4 -> false
+let __proj__Rel_abs__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match Obj.magic projectee with
+  | Rel_abs (g, t1, t2, q, e1, e2, x, _7, _8) -> g
+let __proj__Rel_abs__item__t1 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.term=
+  match Obj.magic projectee with
+  | Rel_abs (g, t1, t2, q, e1, e2, x, _7, _8) -> t1
+let __proj__Rel_abs__item__t2 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.term=
+  match Obj.magic projectee with
+  | Rel_abs (g, t1, t2, q, e1, e2, x, _7, _8) -> t2
+let __proj__Rel_abs__item__x (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_V2_Data.var=
+  match Obj.magic projectee with
+  | Rel_abs (g, t1, t2, q, e1, e2, x, _7, _8) -> x
+let __proj__Rel_abs__item___7 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match Obj.magic projectee with
+  | Rel_abs (g, t1, t2, q, e1, e2, x, _7, _8) -> _7
+let __proj__Rel_abs__item___8 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match Obj.magic projectee with
+  | Rel_abs (g, t1, t2, q, e1, e2, x, _7, _8) -> _8
+let uu___is_Rel_ctxt (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : Prims.bool=
+  match projectee with
+  | Rel_ctxt (g, t0, t1, ctxt, _4) -> true
+  | uu___4 -> false
+let __proj__Rel_ctxt__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Rel_ctxt (g, t0, t1, ctxt, _4) -> g
+let __proj__Rel_ctxt__item__ctxt (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) : term_ctxt=
+  match projectee with | Rel_ctxt (g, t0, t1, ctxt, _4) -> ctxt
+let __proj__Rel_ctxt__item___4 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : relation) (uu___3 : unit)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match projectee with | Rel_ctxt (g, t0, t1, ctxt, _4) -> _4
+let uu___is_Relc_typ (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) : Prims.bool=
+  match projectee with
+  | Relc_typ (g, t0, t1, eff, rel, _5) -> true
+  | uu___4 -> false
+let __proj__Relc_typ__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Relc_typ (g, t0, t1, eff, rel, _5) -> g
+let __proj__Relc_typ__item__eff (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) :
+  FStarC_TypeChecker_Core.tot_or_ghost=
+  match projectee with | Relc_typ (g, t0, t1, eff, rel, _5) -> eff
+let __proj__Relc_typ__item__rel (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) : relation=
+  match projectee with | Relc_typ (g, t0, t1, eff, rel, _5) -> rel
+let __proj__Relc_typ__item___5 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) :
+  (Obj.t, Obj.t, Obj.t, Obj.t) related=
+  match projectee with | Relc_typ (g, t0, t1, eff, rel, _5) -> _5
+let uu___is_Relc_total_ghost (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) : Prims.bool=
+  match projectee with | Relc_total_ghost (g, t) -> true | uu___4 -> false
+let __proj__Relc_total_ghost__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Relc_total_ghost (g, t) -> g
+let uu___is_Relc_ghost_total (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) : Prims.bool=
+  match projectee with
+  | Relc_ghost_total (g, t, _2) -> true
+  | uu___4 -> false
+let __proj__Relc_ghost_total__item__g (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) :
+  FStarC_Reflection_Types.env=
+  match projectee with | Relc_ghost_total (g, t, _2) -> g
+let __proj__Relc_ghost_total__item___2 (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (uu___2 : relation)
+  (uu___3 : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t) related_comp) :
+  (Obj.t, Obj.t) non_informative=
+  match projectee with | Relc_ghost_total (g, t, _2) -> _2
+let uu___is_BT_Nil (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (brs : (unit * unit) Prims.list)
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing)
+  : Prims.bool= match projectee with | BT_Nil -> true | uu___ -> false
+let uu___is_BT_S (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (brs : (unit * unit) Prims.list)
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing)
+  : Prims.bool=
+  match projectee with
+  | BT_S (br, bnds1, pf, rest_br, rest_bnds, rest) -> true
+  | uu___ -> false
+let __proj__BT_S__item__br (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (brs : (unit * unit) Prims.list)
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing)
+  : (unit * unit)=
+  match projectee with | BT_S (br, bnds1, pf, rest_br, rest_bnds, rest) -> br
+let __proj__BT_S__item__bnds (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (brs : (unit * unit) Prims.list)
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing)
+  : FStarC_Reflection_V2_Data.binding Prims.list=
+  match projectee with
+  | BT_S (br, bnds1, pf, rest_br, rest_bnds, rest) -> bnds1
+let __proj__BT_S__item__pf (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (brs : (unit * unit) Prims.list)
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing)
+  : (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branch_typing=
+  match projectee with | BT_S (br, bnds1, pf, rest_br, rest_bnds, rest) -> pf
+let __proj__BT_S__item__rest_br (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (brs : (unit * unit) Prims.list)
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing)
+  : (unit * unit) Prims.list=
+  match projectee with
+  | BT_S (br, bnds1, pf, rest_br, rest_bnds, rest) -> rest_br
+let __proj__BT_S__item__rest_bnds (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (brs : (unit * unit) Prims.list)
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing)
+  : FStarC_Reflection_V2_Data.binding Prims.list Prims.list=
+  match projectee with
+  | BT_S (br, bnds1, pf, rest_br, rest_bnds, rest) -> rest_bnds
+let __proj__BT_S__item__rest (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ)
+  (brs : (unit * unit) Prims.list)
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing)
+  : (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branches_typing=
+  match projectee with
+  | BT_S (br, bnds1, pf, rest_br, rest_bnds, rest) -> rest
+let uu___is_BO (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ) (br : (unit * unit))
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branch_typing)
+  : Prims.bool= true
+let __proj__BO__item__pat (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ) (br : (unit * unit))
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branch_typing)
+  : FStarC_Reflection_V2_Data.pattern=
+  match projectee with | BO (pat, bnds1, hyp_var, body, uu___, _5) -> pat
+let __proj__BO__item__bnds (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ) (br : (unit * unit))
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branch_typing)
+  : FStarC_Reflection_V2_Data.binding Prims.list=
+  match projectee with | BO (pat, bnds1, hyp_var, body, uu___, _5) -> bnds1
+let __proj__BO__item__hyp_var (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ) (br : (unit * unit))
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branch_typing)
+  : FStarC_Reflection_V2_Data.var=
+  match projectee with | BO (pat, bnds1, hyp_var, body, uu___, _5) -> hyp_var
+let __proj__BO__item___5 (g : FStarC_Reflection_Types.env)
+  (sc_u : FStarC_Reflection_Types.universe)
+  (sc_ty : FStarC_Reflection_Types.typ) (sc : FStarC_Reflection_Types.term)
+  (rty : FStarC_Tactics_Types_Reflection.comp_spec_typ) (br : (unit * unit))
+  (bnds : FStarC_Reflection_V2_Data.binding Prims.list)
+  (projectee :
+    (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) branch_typing)
+  : (Obj.t, Obj.t, Obj.t) typing=
+  match projectee with | BO (pat, bnds1, hyp_var, body, uu___, _5) -> _5
+let uu___is_MC_Tok (uu___ : FStarC_Reflection_Types.env) (uu___1 : unit)
+  (uu___2 : unit) (uu___3 : unit Prims.list)
+  (uu___4 : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) match_is_complete) :
+  Prims.bool= true
+let __proj__MC_Tok__item__env (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : unit) (uu___3 : unit Prims.list)
+  (uu___4 : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) match_is_complete) :
+  FStarC_Reflection_Types.env=
+  match projectee with | MC_Tok (env, sc, ty, pats, bnds, _5) -> env
+let __proj__MC_Tok__item__pats (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : unit) (uu___3 : unit Prims.list)
+  (uu___4 : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) match_is_complete) :
+  unit Prims.list=
+  match projectee with | MC_Tok (env, sc, ty, pats, bnds, _5) -> pats
+let __proj__MC_Tok__item__bnds (uu___ : FStarC_Reflection_Types.env)
+  (uu___1 : unit) (uu___2 : unit) (uu___3 : unit Prims.list)
+  (uu___4 : FStarC_Reflection_V2_Data.binding Prims.list Prims.list)
+  (projectee : (Obj.t, Obj.t, Obj.t, Obj.t, Obj.t) match_is_complete) :
+  FStarC_Reflection_V2_Data.binding Prims.list Prims.list=
+  match projectee with | MC_Tok (env, sc, ty, pats, bnds, _5) -> bnds
 type ('g, 't1, 't2) sub_typing = ('g, 't1, Obj.t, 't2) related
 type ('g, 'c1, 'c2) sub_comp = ('g, 'c1, Obj.t, 'c2) related_comp
 type ('g, 't1, 't2) equiv = ('g, 't1, Obj.t, 't2) related
@@ -759,7 +1837,7 @@ type ('g, 't) dsl_tac_result_t =
 type dsl_tac_t =
   (fstar_top_env * FStarC_Reflection_Types.typ
     FStar_Pervasives_Native.option) ->
-    ((Obj.t, Obj.t) dsl_tac_result_t, Obj.t) FStar_Tactics_Effect.tac_repr
+    FStarC_Tactics_Types.ref_proofstate -> (Obj.t, Obj.t) dsl_tac_result_t
 let mkif (uu___12 : fstar_env) (uu___11 : FStarC_Reflection_Types.term)
   (uu___10 : FStarC_Reflection_Types.term)
   (uu___9 : FStarC_Reflection_Types.term)

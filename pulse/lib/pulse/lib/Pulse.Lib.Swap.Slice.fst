@@ -57,7 +57,7 @@ fn slice_swap_aux (#t: Type0) (a: S.slice t)
     decreases (SZ.v d - SZ.v !pi)
   {
     let i = !pi;
-    let save = S.op_Array_Access a i;
+    let save = S.op_Dot_Lparen_Rparen a i;
     let mut pj = 0sz;
     let mut pidx = i;
     while (SZ.lt !pj (SZ.sub q 1sz))
@@ -76,9 +76,9 @@ fn slice_swap_aux (#t: Type0) (a: S.slice t)
       let j = !pj;
       let idx = !pidx;
       let idx' = impl_jump 0sz (S.len a) mb idx ();
-      let x = S.op_Array_Access a idx';
+      let x = S.op_Dot_Lparen_Rparen a idx';
       let j' = SZ.add j 1sz;
-      S.op_Array_Assignment a idx x;
+      S.op_Dot_Lparen_Rparen_Less_Minus a idx x;
       pj := j';
       pidx := idx';
       // #set-options "--z3refresh" { () } //restart the solver to prove the invariant at the end in a clean state
@@ -90,7 +90,7 @@ fn slice_swap_aux (#t: Type0) (a: S.slice t)
     with s . assert (pts_to a s);
     with j . assert (pts_to pj j);
     let idx = !pidx;
-    S.op_Array_Assignment a idx save;
+    S.op_Dot_Lparen_Rparen_Less_Minus a idx save;
     let i' = SZ.add i 1sz;
     pi := i';
     with s. assert pts_to a s;

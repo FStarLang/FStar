@@ -4,7 +4,7 @@ type 'a printable = {
 let __proj__Mkprintable__item__to_string (projectee : 'a printable) :
   'a -> Prims.string= match projectee with | { to_string;_} -> to_string
 let to_string (projectee : 'a printable) : 'a -> Prims.string=
-  __proj__Mkprintable__item__to_string projectee
+  match projectee with | { to_string = to_string1;_} -> to_string1
 let printable_unit : unit printable= { to_string = (fun uu___ -> "()") }
 let printable_bool : Prims.bool printable=
   { to_string = Prims.string_of_bool }

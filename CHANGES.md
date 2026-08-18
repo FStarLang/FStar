@@ -129,6 +129,39 @@ Guidelines for the changelog:
 
 ## Syntax
 
+  * Operator names are now mangled uniformly. An operator is turned into an
+    identifier by naming each of its characters and joining the names with
+    underscores, under an `op_` prefix; there are no longer any special cases.
+    For instance `( + )` is `op_Plus` (not `op_Addition`), `( <= )` is
+    `op_Less_Equals` (not `op_LessThanOrEqual`) and `( .[] )` is
+    `op_Dot_Lbrack_Rbrack` (not `op_String_Access`). Prefix (unary) minus is now
+    the operator `( ~- )`, as in OCaml and F#, hence `op_Tilde_Minus`; the name
+    `op_Minus` now denotes binary subtraction. As in OCaml, `-x` remains the
+    usual notation for prefix minus (it is sugar for `~-x`) and is still how F*
+    prints it; only *defining* a prefix minus changes, from `let ( - ) x = ...`
+    to `let ( ~- ) x = ...`. As a consequence `Prims` (and
+    other libraries) declare their operators in operator syntax, e.g.
+    `val ( + ) : int -> int -> Tot int`, and resolution of an operator no longer
+    depends on its arity or on a table of hardwired names. Code that mentions
+    mangled names directly must be updated:
+
+    | Old                            | New                     |
+    |--------------------------------|-------------------------|
+    | `op_Addition`                  | `op_Plus`               |
+    | `op_Subtraction`               | `op_Minus`              |
+    | `op_Minus` (prefix)            | `op_Tilde_Minus`        |
+    | `op_Division`                  | `op_Slash`              |
+    | `op_Modulus`                   | `op_Percent`            |
+    | `op_Negation`                  | `not`                   |
+    | `op_AmpAmp` / `op_BarBar`      | `op_Amp_Amp` / `op_Bar_Bar` |
+    | `op_LessThan` / `op_GreaterThan` | `op_Less` / `op_Greater` |
+    | `op_LessThanOrEqual` / `op_GreaterThanOrEqual` | `op_Less_Equals` / `op_Greater_Equals` |
+    | `op_Equality` / `op_disEquality` | `op_Equals` / `op_Less_Greater` |
+    | `op_String_Access` / `op_String_Assignment` | `op_Dot_Lbrack_Rbrack` / `op_Dot_Lbrack_Rbrack_Less_Minus` |
+    | `op_Array_Access` / `op_Array_Assignment` | `op_Dot_Lparen_Rparen` / `op_Dot_Lparen_Rparen_Less_Minus` |
+    | `op_Brack_Lens_Access` / `op_Brack_Lens_Assignment` | `op_Dot_Lbrack_Bar_Bar_Rbrack` / `op_Dot_Lbrack_Bar_Bar_Rbrack_Less_Minus` |
+    | `op_Lens_Access` / `op_Lens_Assignment` | `op_Dot_Lparen_Bar_Bar_Rparen` / `op_Dot_Lparen_Bar_Bar_Rparen_Less_Minus` |
+
   * The `introduce`/`eliminate` sugar for logical connectives no longer binds
     names for hypotheses, and `eliminate` no longer takes a `returns` clause.
     The eliminated hypotheses are instead available in the proof context (i.e.
@@ -1118,7 +1151,7 @@ Date:   Mon Apr 30 16:57:21 2018 -0700
   We now restrict implicit generalization to variables whose type is a
   closed refinement of `Type`, e.g.,
     `let id x = x` has the same type as before;
-    `let eq = op_Equality` has the type `#a:eqtype -> a -> a -> bool`;
+    `let eq = op_Equals` has the type `#a:eqtype -> a -> a -> bool`;
      etc.
 
   This restriction is a breaking change. For a sampling of the changes

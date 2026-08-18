@@ -92,7 +92,7 @@ val get:
     (requires True)
     (ensures (fun y -> y == S.index (reveal b) (U32.v pos)))
 
-unfold let op_String_Access = get
+unfold let ( .[] ) = get
 
 unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
 
@@ -134,7 +134,7 @@ val append:
   -> Pure bytes
          (requires (UInt.size (length b1 + length b2) U32.n))
          (ensures (fun b -> reveal b == S.append (reveal b1) (reveal b2)))
-unfold let op_At_Bar = append
+unfold let ( @| ) = append
 
 val slice:
     b:bytes

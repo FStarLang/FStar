@@ -706,34 +706,34 @@ val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to
 
 ## Basic operators on booleans and integers
 
-#### op_AmpAmp
+#### op_Amp_Amp
 
 `&&` boolean conjunction
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_AmpAmp             : bool -> bool -> Tot bool
+val op_Amp_Amp             : bool -> bool -> Tot bool
 ```
 
-#### op_BarBar
+#### op_Bar_Bar
 
 `||` boolean disjunction
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_BarBar             : bool -> bool -> Tot bool
+val op_Bar_Bar             : bool -> bool -> Tot bool
 ```
 
-#### op_Negation
+#### not
 
 `not` boolean negation
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_Negation           : bool -> Tot bool
+val not           : bool -> Tot bool
 ```
 
 #### op_Multiply
@@ -746,94 +746,94 @@ assume
 val op_Multiply           : int -> int -> Tot int
 ```
 
-#### op_Subtraction
+#### op_Minus
 
 `-` integer subtraction
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_Subtraction        : int -> int -> Tot int
+val op_Minus        : int -> int -> Tot int
 ```
 
-#### op_Addition
+#### op_Plus
 
 `+` integer addition
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_Addition           : int -> int -> Tot int
+val op_Plus           : int -> int -> Tot int
 ```
 
-#### op_Minus
+#### op_Tilde_Minus
 
 `-` prefix unary integer negation
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_Minus              : int -> Tot int
+val op_Tilde_Minus              : int -> Tot int
 ```
 
-#### op_LessThanOrEqual
+#### op_Less_Equals
 
 `<=` integer comparison
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_LessThanOrEqual    : int -> int -> Tot bool
+val op_Less_Equals    : int -> int -> Tot bool
 ```
 
-#### op_GreaterThan
+#### op_Greater
 
 `>` integer comparison
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_GreaterThan        : int -> int -> Tot bool
+val op_Greater        : int -> int -> Tot bool
 ```
 
-#### op_GreaterThanOrEqual
+#### op_Greater_Equals
 
 `>=` integer comparison
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_GreaterThanOrEqual : int -> int -> Tot bool
+val op_Greater_Equals : int -> int -> Tot bool
 ```
 
-#### op_LessThan
+#### op_Less
 
 `<` integer comparison
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_LessThan           : int -> int -> Tot bool
+val op_Less           : int -> int -> Tot bool
 ```
 
-#### op_Equality
+#### op_Equals
 
 `=` decidable equality on [`eqtype`](#eqtype)
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_Equality :    #a:eqtype -> a -> a -> Tot bool
+val op_Equals :    #a:eqtype -> a -> a -> Tot bool
 ```
 
-#### op_disEquality
+#### op_Less_Greater
 
 `<>` decidable dis-equality on [`eqtype`](#eqtype)
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_disEquality : #a:eqtype -> a -> a -> Tot bool
+val op_Less_Greater : #a:eqtype -> a -> a -> Tot bool
 ```
 
 #### exn
@@ -1143,24 +1143,24 @@ type nonzero = i:int{i<>0}
 > operations are Euclidean and are mapped to the corresponding
 > theory symbols in the SMT encoding
 
-#### op_Modulus
+#### op_Percent
 
 Euclidean modulus
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_Modulus            : int -> nonzero -> Tot int
+val op_Percent            : int -> nonzero -> Tot int
 ```
 
-#### op_Division
+#### op_Slash
 
 Euclidean division, written `/`
 
 ```fstar
 [@smt_theory_symbol]
 assume
-val op_Division           : int -> nonzero -> Tot int
+val op_Slash           : int -> nonzero -> Tot int
 ```
 
 #### pow2

@@ -1703,6 +1703,6 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
 
 [@@canon_attr]
 let int_cr : cr int =
-  CR int_plus_cm int_multiply_cm op_Minus (fun x -> ()) (fun x y z -> ()) (fun x -> ())
+  CR int_plus_cm int_multiply_cm op_Tilde_Minus (fun x -> ()) (fun x y z -> ()) (fun x -> ())
 
 let int_semiring () : Tac unit = canon_semiring int_cr

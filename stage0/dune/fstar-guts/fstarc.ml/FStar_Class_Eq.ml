@@ -5,7 +5,7 @@ type 'a deq = {
 let __proj__Mkdeq__item__raw (projectee : 'a deq) :
   'a FStar_Class_Eq_Raw.deq= match projectee with | { raw; eq_dec;_} -> raw
 let raw (projectee : 'a deq) : 'a FStar_Class_Eq_Raw.deq=
-  __proj__Mkdeq__item__raw projectee
+  match projectee with | { raw = raw1; eq_dec;_} -> raw1
 let deq_raw_deq (d : 'a deq) : 'a FStar_Class_Eq_Raw.deq= d.raw
 let eq (d : 'a deq) (x : 'a) (y : 'a) : Prims.bool=
   (d.raw).FStar_Class_Eq_Raw.eq x y

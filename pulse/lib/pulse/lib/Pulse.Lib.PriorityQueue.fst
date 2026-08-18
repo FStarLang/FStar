@@ -1090,7 +1090,7 @@ let grandparent_after_swap #t {| total_order t |}
     // heap_down_at s child means: s[child] <=? s[left_idx child] and s[child] <=? s[right_idx child]
     ()
 
-#push-options "--fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
 fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.t)
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s /\ SZ.v len == Seq.length s /\ 
                           SZ.fits (2 * Seq.length s + 2)})
@@ -1104,7 +1104,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
                                      Seq.index s (parent_idx (SZ.v idx)) <=? Seq.index s (right_idx (SZ.v idx)))))
   ensures exists* s'. is_rvec pq s' cap ** pure (Seq.length s' == Seq.length s /\ is_heap s' /\
                                               (forall (y:t). count y s' == count y s))
-  decreases (Prims.op_Subtraction (SZ.v len) (SZ.v idx))
+  decreases (Prims.op_Minus (SZ.v len) (SZ.v idx))
 {
   // We know: fits(2*len + 2), so fits(2*idx + 1) since idx < len
   let left : SZ.t = SZ.add (SZ.mul 2sz idx) 1sz;

@@ -6,7 +6,7 @@ let open_comb (r : FStarC_Range_Type.t) (n : Prims.int)
   let uu___ = ts in
   match uu___ with
   | (us, t) ->
-      if Prims.uu___is_Nil us
+      if (match us with | [] -> true | uu___1 -> false)
       then
         let uu___1 =
           if n = Prims.int_one
@@ -94,7 +94,7 @@ let check_total_repr (env : FStarC_TypeChecker_Env.env)
             | (uu___4, c) ->
                 let uu___5 =
                   let uu___6 = FStarC_Syntax_Util.is_total_comp c in
-                  Prims.op_Negation uu___6 in
+                  Prims.not uu___6 in
                 if uu___5
                 then
                   let uu___6 =
@@ -241,10 +241,10 @@ let tc_lift (env : FStarC_TypeChecker_Env.env)
     match sub.FStarC_Syntax_Syntax.lift with
     | FStar_Pervasives_Native.None ->
         (if
-           (FStar_Pervasives_Native.uu___is_Some
-              ed_tgt.FStarC_Syntax_Syntax.combinators)
-             &&
-             (Prims.op_Negation
+           (match ed_tgt.FStarC_Syntax_Syntax.combinators with
+            | FStar_Pervasives_Native.Some v -> true
+            | uu___2 -> false) &&
+             (Prims.not
                 (((FStarC_Syntax_Util.is_pure_effect
                      sub.FStarC_Syntax_Syntax.source)
                     ||
@@ -295,9 +295,9 @@ let tc_lift (env : FStarC_TypeChecker_Env.env)
                    sub.FStarC_Syntax_Syntax.source in
                match uu___2 with
                | FStar_Pervasives_Native.Some (ed_src, uu___3) when
-                   FStar_Pervasives_Native.uu___is_Some
-                     ed_src.FStarC_Syntax_Syntax.combinators
-                   ->
+                   match ed_src.FStarC_Syntax_Syntax.combinators with
+                   | FStar_Pervasives_Native.Some v -> true
+                   | uu___4 -> false ->
                    let uu___4 =
                      FStarC_Option.must
                        (FStarC_Syntax_Util.get_eff_repr ed_src) in
@@ -353,7 +353,7 @@ let tc_effect_abbrev (env : FStarC_TypeChecker_Env.env)
   | (lid, uvs, tps, c) ->
       let env0 = env in
       let uu___1 =
-        if Prims.uu___is_Nil uvs
+        if match uvs with | [] -> true | uu___2 -> false
         then (env, uvs, tps, c)
         else
           (let uu___2 = FStarC_Syntax_Subst.univ_var_opening uvs in
@@ -398,7 +398,7 @@ let tc_effect_abbrev (env : FStarC_TypeChecker_Env.env)
                                   ->
                                   (if
                                      is_default_effect &&
-                                       (Prims.op_Negation (tl = []))
+                                       (Prims.not (tl = []))
                                    then
                                      FStarC_Errors.raise_error
                                        FStarC_Class_HasRange.hasRange_range r
@@ -430,7 +430,7 @@ let tc_effect_abbrev (env : FStarC_TypeChecker_Env.env)
                               let uu___8 =
                                 FStarC_TypeChecker_Rel.teq_nosmt_force env3
                                   expected_result_typ def_result_typ in
-                              Prims.op_Negation uu___8 in
+                              Prims.not uu___8 in
                             if uu___7
                             then
                               let uu___8 =
@@ -456,7 +456,10 @@ let tc_effect_abbrev (env : FStarC_TypeChecker_Env.env)
                            (let tps4 = FStarC_Syntax_Subst.close_binders tps3 in
                             let c4 = FStarC_Syntax_Subst.close_comp tps4 c3 in
                             let gen_tps =
-                              if Prims.uu___is_Nil tps4
+                              if
+                                match tps4 with
+                                | [] -> true
+                                | uu___7 -> false
                               then
                                 let uu___7 =
                                   FStarC_Syntax_Syntax.null_binder
@@ -497,7 +500,10 @@ let tc_effect_abbrev (env : FStarC_TypeChecker_Env.env)
                                 (match uu___8 with
                                  | (tps', c5) ->
                                      let uu___9 =
-                                       if Prims.uu___is_Nil tps4
+                                       if
+                                         match tps4 with
+                                         | [] -> true
+                                         | uu___10 -> false
                                        then ([], c5)
                                        else (tps', c5) in
                                      (match uu___9 with

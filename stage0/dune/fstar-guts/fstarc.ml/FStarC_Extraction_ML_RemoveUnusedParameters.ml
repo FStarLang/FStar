@@ -224,8 +224,7 @@ and elim_mlexpr (env : env_t) (e : FStarC_Extraction_ML_Syntax.mlexpr) :
     FStarC_Extraction_ML_Syntax.loc = (e.FStarC_Extraction_ML_Syntax.loc)
   }
 exception Drop_tydef 
-let uu___is_Drop_tydef (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Drop_tydef -> true | uu___ -> false
+let uu___is_Drop_tydef (projectee : Prims.exn) : Prims.bool= true
 let elim_tydef (env : env_t) (name : Prims.string)
   (metadata : FStarC_Extraction_ML_Syntax.meta Prims.list)
   (parameters : FStarC_Extraction_ML_Syntax.ty_param Prims.list)

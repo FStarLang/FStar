@@ -475,21 +475,45 @@ let valid_float_literal (s:string) : bool =
     | _ -> false
 
 let mk_bool_op = function
-  | "op_Negation" ->
+  | "not" ->
       Some Not
-  | "op_AmpAmp" ->
+  | "op_Amp_Amp" ->
       Some And
-  | "op_BarBar" ->
+  | "op_Bar_Bar" ->
       Some Or
-  | "op_Equality" ->
+  | "op_Equals" ->
       Some Eq
-  | "op_disEquality" ->
+  | "op_Less_Greater" ->
       Some Neq
   | _ ->
       None
 
 let is_bool_op op =
   mk_bool_op op <> None
+
+(* The Prims integer operators are not extracted: KaRaMeL provides them as
+   builtins (see karamel/lib/Builtin.ml) implemented by krmllib/c/prims.c.
+   KaRaMeL still refers to them by the names F* used to give them before
+   operator mangling was made uniform, so translate the names here. This
+   mapping can be dropped once KaRaMeL is updated. *)
+let krml_compat_name (n : list string & string) : list string & string =
+  match n with
+  | ([ "Prims" ], op) ->
+    let op =
+      match op with
+      | "op_Plus" -> "op_Addition"
+      | "op_Minus" -> "op_Subtraction"
+      | "op_Tilde_Minus" -> "op_Minus"
+      | "op_Slash" -> "op_Division"
+      | "op_Percent" -> "op_Modulus"
+      | "op_Less" -> "op_LessThan"
+      | "op_Less_Equals" -> "op_LessThanOrEqual"
+      | "op_Greater" -> "op_GreaterThan"
+      | "op_Greater_Equals" -> "op_GreaterThanOrEqual"
+      | op -> op
+    in
+    ([ "Prims" ], op)
+  | n -> n
 
 let mk_op = function
   | "add" | "add_underspec"  -> Some Add
@@ -857,7 +881,7 @@ and translate_expr' env e: ML expr =
       EOp (Option.must (mk_bool_op op), Bool)
 
   | MLE_Name n ->
-      EQualified n
+      EQualified (krml_compat_name n)
 
   | MLE_Let ((flavor, [{
       mllb_name = name;
@@ -908,7 +932,7 @@ and translate_expr' env e: ML expr =
     translate_expr env e
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
-    when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
+    when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Dot_Lparen_Rparen"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
       || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex"
       || string_of_mlpath p = "LowStar.ConstBuffer.index"
@@ -1039,7 +1063,7 @@ and translate_expr' env e: ML expr =
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
-    when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment"
+    when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Dot_Lparen_Rparen_Less_Minus"
     || string_of_mlpath p = "LowStar.Monotonic.Buffer.upd'"
     || string_of_mlpath p = "LowStar.UninitializedBuffer.uupd"
     ->

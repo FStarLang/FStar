@@ -29,7 +29,7 @@ val add_mod (a:t) (b:t)
 //SNIPPET_END: add_mod$  
 
 //SNIPPET_START: sub_mod$
-(** Subtraction modulo [2^n]
+(** Minus modulo [2^n]
 
     Unsigned machine integers can always be subtracted, but the postcondition is now
     in terms of subtraction modulo [2^n] on mathematical integers *)

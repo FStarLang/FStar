@@ -28,7 +28,7 @@ let empty_bytes = ""
 let empty_unique (b:bytes) = ()
 
 let get (b:bytes) (pos:u32) = int_of_char (String.get b (Z.to_int (U32.to_int pos)))
-let op_String_Access = get
+let op_Dot_Lbrack_Rbrack = get
 
 let index (b:bytes) (i:Z.t) = get b (U32.uint_to_t i)
 

@@ -1,10 +1,8 @@
 open Prims
 exception Embedding_failure 
-let uu___is_Embedding_failure (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Embedding_failure -> true | uu___ -> false
+let uu___is_Embedding_failure (projectee : Prims.exn) : Prims.bool= true
 exception Unembedding_failure 
-let uu___is_Unembedding_failure (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Unembedding_failure -> true | uu___ -> false
+let uu___is_Unembedding_failure (projectee : Prims.exn) : Prims.bool= true
 let map_shadow (s : FStarC_Syntax_Embeddings_Base.shadow_term)
   (f : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Embeddings_Base.shadow_term=
@@ -1776,103 +1774,102 @@ let e_vconfig :
               let uu___10 =
                 let uu___11 =
                   FStarC_Syntax_Embeddings_Base.embed e_bool
-                    vcfg.FStar_VConfig.detail_errors rng
+                    vcfg.FStar_VConfig.no_smt rng
                     FStar_Pervasives_Native.None norm in
                 FStarC_Syntax_Syntax.as_arg uu___11 in
               let uu___11 =
                 let uu___12 =
                   let uu___13 =
-                    FStarC_Syntax_Embeddings_Base.embed e_bool
-                      vcfg.FStar_VConfig.detail_hint_replay rng
+                    FStarC_Syntax_Embeddings_Base.embed e_int
+                      vcfg.FStar_VConfig.quake_lo rng
                       FStar_Pervasives_Native.None norm in
                   FStarC_Syntax_Syntax.as_arg uu___13 in
                 let uu___13 =
                   let uu___14 =
                     let uu___15 =
-                      FStarC_Syntax_Embeddings_Base.embed e_bool
-                        vcfg.FStar_VConfig.no_smt rng
+                      FStarC_Syntax_Embeddings_Base.embed e_int
+                        vcfg.FStar_VConfig.quake_hi rng
                         FStar_Pervasives_Native.None norm in
                     FStarC_Syntax_Syntax.as_arg uu___15 in
                   let uu___15 =
                     let uu___16 =
                       let uu___17 =
-                        FStarC_Syntax_Embeddings_Base.embed e_int
-                          vcfg.FStar_VConfig.quake_lo rng
+                        FStarC_Syntax_Embeddings_Base.embed e_bool
+                          vcfg.FStar_VConfig.quake_keep rng
                           FStar_Pervasives_Native.None norm in
                       FStarC_Syntax_Syntax.as_arg uu___17 in
                     let uu___17 =
                       let uu___18 =
                         let uu___19 =
-                          FStarC_Syntax_Embeddings_Base.embed e_int
-                            vcfg.FStar_VConfig.quake_hi rng
+                          FStarC_Syntax_Embeddings_Base.embed e_bool
+                            vcfg.FStar_VConfig.retry rng
                             FStar_Pervasives_Native.None norm in
                         FStarC_Syntax_Syntax.as_arg uu___19 in
                       let uu___19 =
                         let uu___20 =
                           let uu___21 =
                             FStarC_Syntax_Embeddings_Base.embed e_bool
-                              vcfg.FStar_VConfig.quake_keep rng
+                              vcfg.FStar_VConfig.smtencoding_elim_box rng
                               FStar_Pervasives_Native.None norm in
                           FStarC_Syntax_Syntax.as_arg uu___21 in
                         let uu___21 =
                           let uu___22 =
                             let uu___23 =
-                              FStarC_Syntax_Embeddings_Base.embed e_bool
-                                vcfg.FStar_VConfig.retry rng
-                                FStar_Pervasives_Native.None norm in
+                              FStarC_Syntax_Embeddings_Base.embed e_string
+                                vcfg.FStar_VConfig.smtencoding_nl_arith_repr
+                                rng FStar_Pervasives_Native.None norm in
                             FStarC_Syntax_Syntax.as_arg uu___23 in
                           let uu___23 =
                             let uu___24 =
                               let uu___25 =
-                                FStarC_Syntax_Embeddings_Base.embed e_bool
-                                  vcfg.FStar_VConfig.smtencoding_elim_box rng
-                                  FStar_Pervasives_Native.None norm in
+                                FStarC_Syntax_Embeddings_Base.embed e_string
+                                  vcfg.FStar_VConfig.smtencoding_l_arith_repr
+                                  rng FStar_Pervasives_Native.None norm in
                               FStarC_Syntax_Syntax.as_arg uu___25 in
                             let uu___25 =
                               let uu___26 =
                                 let uu___27 =
-                                  FStarC_Syntax_Embeddings_Base.embed
-                                    e_string
-                                    vcfg.FStar_VConfig.smtencoding_nl_arith_repr
-                                    rng FStar_Pervasives_Native.None norm in
+                                  FStarC_Syntax_Embeddings_Base.embed e_bool
+                                    vcfg.FStar_VConfig.tcnorm rng
+                                    FStar_Pervasives_Native.None norm in
                                 FStarC_Syntax_Syntax.as_arg uu___27 in
                               let uu___27 =
                                 let uu___28 =
                                   let uu___29 =
                                     FStarC_Syntax_Embeddings_Base.embed
-                                      e_string
-                                      vcfg.FStar_VConfig.smtencoding_l_arith_repr
+                                      e_bool vcfg.FStar_VConfig.no_plugins
                                       rng FStar_Pervasives_Native.None norm in
                                   FStarC_Syntax_Syntax.as_arg uu___29 in
                                 let uu___29 =
                                   let uu___30 =
                                     let uu___31 =
                                       FStarC_Syntax_Embeddings_Base.embed
-                                        e_bool vcfg.FStar_VConfig.tcnorm rng
-                                        FStar_Pervasives_Native.None norm in
+                                        e_bool vcfg.FStar_VConfig.no_tactics
+                                        rng FStar_Pervasives_Native.None norm in
                                     FStarC_Syntax_Syntax.as_arg uu___31 in
                                   let uu___31 =
                                     let uu___32 =
                                       let uu___33 =
                                         FStarC_Syntax_Embeddings_Base.embed
-                                          e_bool
-                                          vcfg.FStar_VConfig.no_plugins rng
+                                          e_string_list
+                                          vcfg.FStar_VConfig.z3cliopt rng
                                           FStar_Pervasives_Native.None norm in
                                       FStarC_Syntax_Syntax.as_arg uu___33 in
                                     let uu___33 =
                                       let uu___34 =
                                         let uu___35 =
                                           FStarC_Syntax_Embeddings_Base.embed
-                                            e_bool
-                                            vcfg.FStar_VConfig.no_tactics rng
+                                            e_string_list
+                                            vcfg.FStar_VConfig.z3smtopt rng
                                             FStar_Pervasives_Native.None norm in
                                         FStarC_Syntax_Syntax.as_arg uu___35 in
                                       let uu___35 =
                                         let uu___36 =
                                           let uu___37 =
                                             FStarC_Syntax_Embeddings_Base.embed
-                                              e_string_list
-                                              vcfg.FStar_VConfig.z3cliopt rng
+                                              e_bool
+                                              vcfg.FStar_VConfig.z3refresh
+                                              rng
                                               FStar_Pervasives_Native.None
                                               norm in
                                           FStarC_Syntax_Syntax.as_arg uu___37 in
@@ -1880,8 +1877,8 @@ let e_vconfig :
                                           let uu___38 =
                                             let uu___39 =
                                               FStarC_Syntax_Embeddings_Base.embed
-                                                e_string_list
-                                                vcfg.FStar_VConfig.z3smtopt
+                                                e_int
+                                                vcfg.FStar_VConfig.z3rlimit
                                                 rng
                                                 FStar_Pervasives_Native.None
                                                 norm in
@@ -1891,8 +1888,8 @@ let e_vconfig :
                                             let uu___40 =
                                               let uu___41 =
                                                 FStarC_Syntax_Embeddings_Base.embed
-                                                  e_bool
-                                                  vcfg.FStar_VConfig.z3refresh
+                                                  e_int
+                                                  vcfg.FStar_VConfig.z3rlimit_factor
                                                   rng
                                                   FStar_Pervasives_Native.None
                                                   norm in
@@ -1903,7 +1900,7 @@ let e_vconfig :
                                                 let uu___43 =
                                                   FStarC_Syntax_Embeddings_Base.embed
                                                     e_int
-                                                    vcfg.FStar_VConfig.z3rlimit
+                                                    vcfg.FStar_VConfig.z3seed
                                                     rng
                                                     FStar_Pervasives_Native.None
                                                     norm in
@@ -1913,8 +1910,8 @@ let e_vconfig :
                                                 let uu___44 =
                                                   let uu___45 =
                                                     FStarC_Syntax_Embeddings_Base.embed
-                                                      e_int
-                                                      vcfg.FStar_VConfig.z3rlimit_factor
+                                                      e_string
+                                                      vcfg.FStar_VConfig.z3version
                                                       rng
                                                       FStar_Pervasives_Native.None
                                                       norm in
@@ -1924,51 +1921,14 @@ let e_vconfig :
                                                   let uu___46 =
                                                     let uu___47 =
                                                       FStarC_Syntax_Embeddings_Base.embed
-                                                        e_int
-                                                        vcfg.FStar_VConfig.z3seed
+                                                        e_bool
+                                                        vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                                                         rng
                                                         FStar_Pervasives_Native.None
                                                         norm in
                                                     FStarC_Syntax_Syntax.as_arg
                                                       uu___47 in
-                                                  let uu___47 =
-                                                    let uu___48 =
-                                                      let uu___49 =
-                                                        FStarC_Syntax_Embeddings_Base.embed
-                                                          e_string
-                                                          vcfg.FStar_VConfig.z3version
-                                                          rng
-                                                          FStar_Pervasives_Native.None
-                                                          norm in
-                                                      FStarC_Syntax_Syntax.as_arg
-                                                        uu___49 in
-                                                    let uu___49 =
-                                                      let uu___50 =
-                                                        let uu___51 =
-                                                          FStarC_Syntax_Embeddings_Base.embed
-                                                            e_bool
-                                                            vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
-                                                            rng
-                                                            FStar_Pervasives_Native.None
-                                                            norm in
-                                                        FStarC_Syntax_Syntax.as_arg
-                                                          uu___51 in
-                                                      let uu___51 =
-                                                        let uu___52 =
-                                                          let uu___53 =
-                                                            FStarC_Syntax_Embeddings_Base.embed
-                                                              (e_option
-                                                                 e_string)
-                                                              vcfg.FStar_VConfig.reuse_hint_for
-                                                              rng
-                                                              FStar_Pervasives_Native.None
-                                                              norm in
-                                                          FStarC_Syntax_Syntax.as_arg
-                                                            uu___53 in
-                                                        [uu___52] in
-                                                      uu___50 :: uu___51 in
-                                                    uu___48 :: uu___49 in
-                                                  uu___46 :: uu___47 in
+                                                  [uu___46] in
                                                 uu___44 :: uu___45 in
                                               uu___42 :: uu___43 in
                                             uu___40 :: uu___41 in
@@ -2006,75 +1966,73 @@ let e_vconfig :
             | (FStarC_Syntax_Syntax.Tm_fvar fv,
                (initial_fuel, uu___2)::(max_fuel, uu___3)::(initial_ifuel,
                                                             uu___4)::
-               (max_ifuel, uu___5)::(detail_errors, uu___6)::(detail_hint_replay,
-                                                              uu___7)::
-               (no_smt, uu___8)::(quake_lo, uu___9)::(quake_hi, uu___10)::
-               (quake_keep, uu___11)::(retry, uu___12)::(smtencoding_elim_box,
-                                                         uu___13)::(smtencoding_nl_arith_repr,
-                                                                    uu___14)::
-               (smtencoding_l_arith_repr, uu___15)::(tcnorm, uu___16)::
-               (no_plugins, uu___17)::(no_tactics, uu___18)::(z3cliopt,
-                                                              uu___19)::
-               (z3smtopt, uu___20)::(z3refresh, uu___21)::(z3rlimit, uu___22)::
-               (z3rlimit_factor, uu___23)::(z3seed, uu___24)::(z3version,
-                                                               uu___25)::
-               (trivial_pre_for_unannotated_effectful_fns, uu___26)::
-               (reuse_hint_for, uu___27)::[]) when
+               (max_ifuel, uu___5)::(no_smt, uu___6)::(quake_lo, uu___7)::
+               (quake_hi, uu___8)::(quake_keep, uu___9)::(retry, uu___10)::
+               (smtencoding_elim_box, uu___11)::(smtencoding_nl_arith_repr,
+                                                 uu___12)::(smtencoding_l_arith_repr,
+                                                            uu___13)::
+               (tcnorm, uu___14)::(no_plugins, uu___15)::(no_tactics,
+                                                          uu___16)::(z3cliopt,
+                                                                    uu___17)::
+               (z3smtopt, uu___18)::(z3refresh, uu___19)::(z3rlimit, uu___20)::
+               (z3rlimit_factor, uu___21)::(z3seed, uu___22)::(z3version,
+                                                               uu___23)::
+               (trivial_pre_for_unannotated_effectful_fns, uu___24)::[]) when
                 FStarC_Syntax_Syntax.fv_eq_lid fv
                   FStarC_Parser_Const.mkvconfig_lid
                 ->
                 Obj.magic
                   (Obj.repr
-                     (let uu___28 =
+                     (let uu___25 =
                         FStarC_Syntax_Embeddings_Base.try_unembed e_int
                           initial_fuel norm in
                       FStarC_Class_Monad.op_let_Bang
                         FStarC_Class_Monad.monad_option () ()
-                        (Obj.magic uu___28)
-                        (fun uu___29 ->
+                        (Obj.magic uu___25)
+                        (fun uu___26 ->
                            (fun initial_fuel1 ->
                               let initial_fuel1 = Obj.magic initial_fuel1 in
-                              let uu___29 =
+                              let uu___26 =
                                 FStarC_Syntax_Embeddings_Base.try_unembed
                                   e_int max_fuel norm in
                               Obj.magic
                                 (FStarC_Class_Monad.op_let_Bang
                                    FStarC_Class_Monad.monad_option () ()
-                                   (Obj.magic uu___29)
-                                   (fun uu___30 ->
+                                   (Obj.magic uu___26)
+                                   (fun uu___27 ->
                                       (fun max_fuel1 ->
                                          let max_fuel1 = Obj.magic max_fuel1 in
-                                         let uu___30 =
+                                         let uu___27 =
                                            FStarC_Syntax_Embeddings_Base.try_unembed
                                              e_int initial_ifuel norm in
                                          Obj.magic
                                            (FStarC_Class_Monad.op_let_Bang
                                               FStarC_Class_Monad.monad_option
-                                              () () (Obj.magic uu___30)
-                                              (fun uu___31 ->
+                                              () () (Obj.magic uu___27)
+                                              (fun uu___28 ->
                                                  (fun initial_ifuel1 ->
                                                     let initial_ifuel1 =
                                                       Obj.magic
                                                         initial_ifuel1 in
-                                                    let uu___31 =
+                                                    let uu___28 =
                                                       FStarC_Syntax_Embeddings_Base.try_unembed
                                                         e_int max_ifuel norm in
                                                     Obj.magic
                                                       (FStarC_Class_Monad.op_let_Bang
                                                          FStarC_Class_Monad.monad_option
                                                          () ()
-                                                         (Obj.magic uu___31)
-                                                         (fun uu___32 ->
+                                                         (Obj.magic uu___28)
+                                                         (fun uu___29 ->
                                                             (fun max_ifuel1
                                                                ->
                                                                let max_ifuel1
                                                                  =
                                                                  Obj.magic
                                                                    max_ifuel1 in
-                                                               let uu___32 =
+                                                               let uu___29 =
                                                                  FStarC_Syntax_Embeddings_Base.try_unembed
                                                                    e_bool
-                                                                   detail_errors
+                                                                   no_smt
                                                                    norm in
                                                                Obj.magic
                                                                  (FStarC_Class_Monad.op_let_Bang
@@ -2082,23 +2040,89 @@ let e_vconfig :
                                                                     () ()
                                                                     (
                                                                     Obj.magic
-                                                                    uu___32)
+                                                                    uu___29)
                                                                     (
                                                                     fun
+                                                                    uu___30
+                                                                    ->
+                                                                    (fun
+                                                                    no_smt1
+                                                                    ->
+                                                                    let no_smt1
+                                                                    =
+                                                                    Obj.magic
+                                                                    no_smt1 in
+                                                                    let uu___30
+                                                                    =
+                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
+                                                                    e_int
+                                                                    quake_lo
+                                                                    norm in
+                                                                    Obj.magic
+                                                                    (FStarC_Class_Monad.op_let_Bang
+                                                                    FStarC_Class_Monad.monad_option
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___30)
+                                                                    (fun
+                                                                    uu___31
+                                                                    ->
+                                                                    (fun
+                                                                    quake_lo1
+                                                                    ->
+                                                                    let quake_lo1
+                                                                    =
+                                                                    Obj.magic
+                                                                    quake_lo1 in
+                                                                    let uu___31
+                                                                    =
+                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
+                                                                    e_int
+                                                                    quake_hi
+                                                                    norm in
+                                                                    Obj.magic
+                                                                    (FStarC_Class_Monad.op_let_Bang
+                                                                    FStarC_Class_Monad.monad_option
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___31)
+                                                                    (fun
+                                                                    uu___32
+                                                                    ->
+                                                                    (fun
+                                                                    quake_hi1
+                                                                    ->
+                                                                    let quake_hi1
+                                                                    =
+                                                                    Obj.magic
+                                                                    quake_hi1 in
+                                                                    let uu___32
+                                                                    =
+                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
+                                                                    e_bool
+                                                                    quake_keep
+                                                                    norm in
+                                                                    Obj.magic
+                                                                    (FStarC_Class_Monad.op_let_Bang
+                                                                    FStarC_Class_Monad.monad_option
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___32)
+                                                                    (fun
                                                                     uu___33
                                                                     ->
                                                                     (fun
-                                                                    detail_errors1
+                                                                    quake_keep1
                                                                     ->
-                                                                    let detail_errors1
+                                                                    let quake_keep1
                                                                     =
                                                                     Obj.magic
-                                                                    detail_errors1 in
+                                                                    quake_keep1 in
                                                                     let uu___33
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
                                                                     e_bool
-                                                                    detail_hint_replay
+                                                                    retry
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2110,17 +2134,16 @@ let e_vconfig :
                                                                     uu___34
                                                                     ->
                                                                     (fun
-                                                                    detail_hint_replay1
-                                                                    ->
-                                                                    let detail_hint_replay1
+                                                                    retry1 ->
+                                                                    let retry1
                                                                     =
                                                                     Obj.magic
-                                                                    detail_hint_replay1 in
+                                                                    retry1 in
                                                                     let uu___34
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
                                                                     e_bool
-                                                                    no_smt
+                                                                    smtencoding_elim_box
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2132,17 +2155,17 @@ let e_vconfig :
                                                                     uu___35
                                                                     ->
                                                                     (fun
-                                                                    no_smt1
+                                                                    smtencoding_elim_box1
                                                                     ->
-                                                                    let no_smt1
+                                                                    let smtencoding_elim_box1
                                                                     =
                                                                     Obj.magic
-                                                                    no_smt1 in
+                                                                    smtencoding_elim_box1 in
                                                                     let uu___35
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_int
-                                                                    quake_lo
+                                                                    e_string
+                                                                    smtencoding_nl_arith_repr
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2154,17 +2177,17 @@ let e_vconfig :
                                                                     uu___36
                                                                     ->
                                                                     (fun
-                                                                    quake_lo1
+                                                                    smtencoding_nl_arith_repr1
                                                                     ->
-                                                                    let quake_lo1
+                                                                    let smtencoding_nl_arith_repr1
                                                                     =
                                                                     Obj.magic
-                                                                    quake_lo1 in
+                                                                    smtencoding_nl_arith_repr1 in
                                                                     let uu___36
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_int
-                                                                    quake_hi
+                                                                    e_string
+                                                                    smtencoding_l_arith_repr
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2176,17 +2199,17 @@ let e_vconfig :
                                                                     uu___37
                                                                     ->
                                                                     (fun
-                                                                    quake_hi1
+                                                                    smtencoding_l_arith_repr1
                                                                     ->
-                                                                    let quake_hi1
+                                                                    let smtencoding_l_arith_repr1
                                                                     =
                                                                     Obj.magic
-                                                                    quake_hi1 in
+                                                                    smtencoding_l_arith_repr1 in
                                                                     let uu___37
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
                                                                     e_bool
-                                                                    quake_keep
+                                                                    tcnorm
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2198,17 +2221,17 @@ let e_vconfig :
                                                                     uu___38
                                                                     ->
                                                                     (fun
-                                                                    quake_keep1
+                                                                    tcnorm1
                                                                     ->
-                                                                    let quake_keep1
+                                                                    let tcnorm1
                                                                     =
                                                                     Obj.magic
-                                                                    quake_keep1 in
+                                                                    tcnorm1 in
                                                                     let uu___38
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
                                                                     e_bool
-                                                                    retry
+                                                                    no_plugins
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2220,16 +2243,17 @@ let e_vconfig :
                                                                     uu___39
                                                                     ->
                                                                     (fun
-                                                                    retry1 ->
-                                                                    let retry1
+                                                                    no_plugins1
+                                                                    ->
+                                                                    let no_plugins1
                                                                     =
                                                                     Obj.magic
-                                                                    retry1 in
+                                                                    no_plugins1 in
                                                                     let uu___39
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
                                                                     e_bool
-                                                                    smtencoding_elim_box
+                                                                    no_tactics
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2241,17 +2265,17 @@ let e_vconfig :
                                                                     uu___40
                                                                     ->
                                                                     (fun
-                                                                    smtencoding_elim_box1
+                                                                    no_tactics1
                                                                     ->
-                                                                    let smtencoding_elim_box1
+                                                                    let no_tactics1
                                                                     =
                                                                     Obj.magic
-                                                                    smtencoding_elim_box1 in
+                                                                    no_tactics1 in
                                                                     let uu___40
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_string
-                                                                    smtencoding_nl_arith_repr
+                                                                    e_string_list
+                                                                    z3cliopt
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2263,17 +2287,17 @@ let e_vconfig :
                                                                     uu___41
                                                                     ->
                                                                     (fun
-                                                                    smtencoding_nl_arith_repr1
+                                                                    z3cliopt1
                                                                     ->
-                                                                    let smtencoding_nl_arith_repr1
+                                                                    let z3cliopt1
                                                                     =
                                                                     Obj.magic
-                                                                    smtencoding_nl_arith_repr1 in
+                                                                    z3cliopt1 in
                                                                     let uu___41
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_string
-                                                                    smtencoding_l_arith_repr
+                                                                    e_string_list
+                                                                    z3smtopt
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2285,17 +2309,17 @@ let e_vconfig :
                                                                     uu___42
                                                                     ->
                                                                     (fun
-                                                                    smtencoding_l_arith_repr1
+                                                                    z3smtopt1
                                                                     ->
-                                                                    let smtencoding_l_arith_repr1
+                                                                    let z3smtopt1
                                                                     =
                                                                     Obj.magic
-                                                                    smtencoding_l_arith_repr1 in
+                                                                    z3smtopt1 in
                                                                     let uu___42
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
                                                                     e_bool
-                                                                    tcnorm
+                                                                    z3refresh
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2307,17 +2331,17 @@ let e_vconfig :
                                                                     uu___43
                                                                     ->
                                                                     (fun
-                                                                    tcnorm1
+                                                                    z3refresh1
                                                                     ->
-                                                                    let tcnorm1
+                                                                    let z3refresh1
                                                                     =
                                                                     Obj.magic
-                                                                    tcnorm1 in
+                                                                    z3refresh1 in
                                                                     let uu___43
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_bool
-                                                                    no_plugins
+                                                                    e_int
+                                                                    z3rlimit
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2329,17 +2353,17 @@ let e_vconfig :
                                                                     uu___44
                                                                     ->
                                                                     (fun
-                                                                    no_plugins1
+                                                                    z3rlimit1
                                                                     ->
-                                                                    let no_plugins1
+                                                                    let z3rlimit1
                                                                     =
                                                                     Obj.magic
-                                                                    no_plugins1 in
+                                                                    z3rlimit1 in
                                                                     let uu___44
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_bool
-                                                                    no_tactics
+                                                                    e_int
+                                                                    z3rlimit_factor
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2351,17 +2375,17 @@ let e_vconfig :
                                                                     uu___45
                                                                     ->
                                                                     (fun
-                                                                    no_tactics1
+                                                                    z3rlimit_factor1
                                                                     ->
-                                                                    let no_tactics1
+                                                                    let z3rlimit_factor1
                                                                     =
                                                                     Obj.magic
-                                                                    no_tactics1 in
+                                                                    z3rlimit_factor1 in
                                                                     let uu___45
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_string_list
-                                                                    z3cliopt
+                                                                    e_int
+                                                                    z3seed
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2373,17 +2397,17 @@ let e_vconfig :
                                                                     uu___46
                                                                     ->
                                                                     (fun
-                                                                    z3cliopt1
+                                                                    z3seed1
                                                                     ->
-                                                                    let z3cliopt1
+                                                                    let z3seed1
                                                                     =
                                                                     Obj.magic
-                                                                    z3cliopt1 in
+                                                                    z3seed1 in
                                                                     let uu___46
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_string_list
-                                                                    z3smtopt
+                                                                    e_string
+                                                                    z3version
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2395,17 +2419,17 @@ let e_vconfig :
                                                                     uu___47
                                                                     ->
                                                                     (fun
-                                                                    z3smtopt1
+                                                                    z3version1
                                                                     ->
-                                                                    let z3smtopt1
+                                                                    let z3version1
                                                                     =
                                                                     Obj.magic
-                                                                    z3smtopt1 in
+                                                                    z3version1 in
                                                                     let uu___47
                                                                     =
                                                                     FStarC_Syntax_Embeddings_Base.try_unembed
                                                                     e_bool
-                                                                    z3refresh
+                                                                    trivial_pre_for_unannotated_effectful_fns
                                                                     norm in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
@@ -2417,145 +2441,12 @@ let e_vconfig :
                                                                     uu___48
                                                                     ->
                                                                     (fun
-                                                                    z3refresh1
-                                                                    ->
-                                                                    let z3refresh1
-                                                                    =
-                                                                    Obj.magic
-                                                                    z3refresh1 in
-                                                                    let uu___48
-                                                                    =
-                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_int
-                                                                    z3rlimit
-                                                                    norm in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___48)
-                                                                    (fun
-                                                                    uu___49
-                                                                    ->
-                                                                    (fun
-                                                                    z3rlimit1
-                                                                    ->
-                                                                    let z3rlimit1
-                                                                    =
-                                                                    Obj.magic
-                                                                    z3rlimit1 in
-                                                                    let uu___49
-                                                                    =
-                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_int
-                                                                    z3rlimit_factor
-                                                                    norm in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___49)
-                                                                    (fun
-                                                                    uu___50
-                                                                    ->
-                                                                    (fun
-                                                                    z3rlimit_factor1
-                                                                    ->
-                                                                    let z3rlimit_factor1
-                                                                    =
-                                                                    Obj.magic
-                                                                    z3rlimit_factor1 in
-                                                                    let uu___50
-                                                                    =
-                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_int
-                                                                    z3seed
-                                                                    norm in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___50)
-                                                                    (fun
-                                                                    uu___51
-                                                                    ->
-                                                                    (fun
-                                                                    z3seed1
-                                                                    ->
-                                                                    let z3seed1
-                                                                    =
-                                                                    Obj.magic
-                                                                    z3seed1 in
-                                                                    let uu___51
-                                                                    =
-                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_string
-                                                                    z3version
-                                                                    norm in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___51)
-                                                                    (fun
-                                                                    uu___52
-                                                                    ->
-                                                                    (fun
-                                                                    z3version1
-                                                                    ->
-                                                                    let z3version1
-                                                                    =
-                                                                    Obj.magic
-                                                                    z3version1 in
-                                                                    let uu___52
-                                                                    =
-                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    e_bool
-                                                                    trivial_pre_for_unannotated_effectful_fns
-                                                                    norm in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___52)
-                                                                    (fun
-                                                                    uu___53
-                                                                    ->
-                                                                    (fun
                                                                     trivial_pre_for_unannotated_effectful_fns1
                                                                     ->
                                                                     let trivial_pre_for_unannotated_effectful_fns1
                                                                     =
                                                                     Obj.magic
                                                                     trivial_pre_for_unannotated_effectful_fns1 in
-                                                                    let uu___53
-                                                                    =
-                                                                    FStarC_Syntax_Embeddings_Base.try_unembed
-                                                                    (e_option
-                                                                    e_string)
-                                                                    reuse_hint_for
-                                                                    norm in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___53)
-                                                                    (fun
-                                                                    uu___54
-                                                                    ->
-                                                                    (fun
-                                                                    reuse_hint_for1
-                                                                    ->
-                                                                    let reuse_hint_for1
-                                                                    =
-                                                                    Obj.magic
-                                                                    reuse_hint_for1 in
                                                                     Obj.magic
                                                                     (FStar_Pervasives_Native.Some
                                                                     {
@@ -2571,12 +2462,6 @@ let e_vconfig :
                                                                     FStar_VConfig.max_ifuel
                                                                     =
                                                                     max_ifuel1;
-                                                                    FStar_VConfig.detail_errors
-                                                                    =
-                                                                    detail_errors1;
-                                                                    FStar_VConfig.detail_hint_replay
-                                                                    =
-                                                                    detail_hint_replay1;
                                                                     FStar_VConfig.no_smt
                                                                     = no_smt1;
                                                                     FStar_VConfig.quake_lo
@@ -2629,17 +2514,8 @@ let e_vconfig :
                                                                     z3version1;
                                                                     FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                                                                     =
-                                                                    trivial_pre_for_unannotated_effectful_fns1;
-                                                                    FStar_VConfig.reuse_hint_for
-                                                                    =
-                                                                    reuse_hint_for1
+                                                                    trivial_pre_for_unannotated_effectful_fns1
                                                                     }))
-                                                                    uu___54)))
-                                                                    uu___53)))
-                                                                    uu___52)))
-                                                                    uu___51)))
-                                                                    uu___50)))
-                                                                    uu___49)))
                                                                     uu___48)))
                                                                     uu___47)))
                                                                     uu___46)))
@@ -2656,9 +2532,12 @@ let e_vconfig :
                                                                     uu___35)))
                                                                     uu___34)))
                                                                     uu___33)))
-                                                              uu___32)))
-                                                   uu___31))) uu___30)))
-                             uu___29)))
+                                                                    uu___32)))
+                                                                    uu___31)))
+                                                                    uu___30)))
+                                                              uu___29)))
+                                                   uu___28))) uu___27)))
+                             uu___26)))
             | uu___2 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
       uu___1 uu___ in
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un

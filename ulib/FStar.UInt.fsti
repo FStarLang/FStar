@@ -98,7 +98,7 @@ val add_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
 let add_mod (#n:nat) (a:uint_t n) (b:uint_t n) : Tot (uint_t n) =
   (a + b) % (pow2 n)
 
-(* Subtraction primitives *)
+(* Minus primitives *)
 let sub (#n:nat) (a:uint_t n) (b:uint_t n) : Pure (uint_t n)
   (requires (size (a - b) n))
   (ensures (fun _ -> True))

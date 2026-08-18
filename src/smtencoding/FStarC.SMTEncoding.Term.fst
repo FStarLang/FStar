@@ -1176,15 +1176,15 @@ let getBoxedInteger (t:term) =
 let rng_of t t' = set_range t' (range_of_term t)
 let mk_PreType t      = rng_of t (mkApp("PreType", [t]))
 let mk_Valid t        = match t with
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_Equality") [_; t1; t2] _)] _ -> rng_of t (mkEq (t1, t2))
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_disEquality") [_; t1; t2] _)] _ -> rng_of t (mkNot (mkEq (t1, t2)))
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_LessThanOrEqual") [t1; t2] _)] _ -> rng_of t (mkLTE (unboxInt t1, unboxInt t2))
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_LessThan") [t1; t2] _)] _ -> rng_of t (mkLT (unboxInt t1, unboxInt t2))
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_GreaterThanOrEqual") [t1; t2] _)] _ -> rng_of t (mkGTE (unboxInt t1, unboxInt t2))
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_GreaterThan") [t1; t2] _)] _ -> rng_of t (mkGT (unboxInt t1, unboxInt t2))
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_AmpAmp") [t1; t2] _)] _ -> rng_of t (mkAnd (unboxBool t1, unboxBool t2))
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_BarBar") [t1; t2] _)] _ -> rng_of t (mkOr (unboxBool t1, unboxBool t2))
-    | App (Var "Prims.b2t") [(App (Var "Prims.op_Negation") [t] _)] _ -> rng_of t (mkNot (unboxBool t))
+    | App (Var "Prims.b2t") [(App (Var "Prims.op_Equals") [_; t1; t2] _)] _ -> rng_of t (mkEq (t1, t2))
+    | App (Var "Prims.b2t") [(App (Var "Prims.op_Less_Greater") [_; t1; t2] _)] _ -> rng_of t (mkNot (mkEq (t1, t2)))
+    | App (Var "Prims.b2t") [(App (Var "Prims.op_Less_Equals") [t1; t2] _)] _ -> rng_of t (mkLTE (unboxInt t1, unboxInt t2))
+    | App (Var "Prims.b2t") [(App (Var "Prims.op_Less") [t1; t2] _)] _ -> rng_of t (mkLT (unboxInt t1, unboxInt t2))
+    | App (Var "Prims.b2t") [(App (Var "Prims.op_Greater_Equals") [t1; t2] _)] _ -> rng_of t (mkGTE (unboxInt t1, unboxInt t2))
+    | App (Var "Prims.b2t") [(App (Var "Prims.op_Greater") [t1; t2] _)] _ -> rng_of t (mkGT (unboxInt t1, unboxInt t2))
+    | App (Var "Prims.b2t") [(App (Var "Prims.op_Amp_Amp") [t1; t2] _)] _ -> rng_of t (mkAnd (unboxBool t1, unboxBool t2))
+    | App (Var "Prims.b2t") [(App (Var "Prims.op_Bar_Bar") [t1; t2] _)] _ -> rng_of t (mkOr (unboxBool t1, unboxBool t2))
+    | App (Var "Prims.b2t") [(App (Var "Prims.not") [t] _)] _ -> rng_of t (mkNot (unboxBool t))
     | App (Var "Prims.b2t") [(App (Var "FStar.BV.bvult") [t0; t1;t2] _)] _
     | App (Var "Prims.equals") [_; (App (Var "FStar.BV.bvult") [t0; t1;t2] _); _] _
             when (Some? (getBoxedInteger t0))->

@@ -49,12 +49,12 @@ type int_t (n:pos) = x:int{size x n}
 /// Multiplicative operator semantics, see C11 6.5.5
 
 (* Truncation towards zero division: (/-) *)
-let op_Slash_Subtraction (a:int) (b:int{b <> 0}) : Tot int =
+let ( /- ) (a:int) (b:int{b <> 0}) : Tot int =
   if (a >= 0 && b < 0) || (a < 0 && b >= 0) then - (abs a / abs b)
   else abs a / abs b
 
 (* Wrap-around modulo: wraps into [-p/2; p/2[ *)
-let op_At_Percent (v:int) (p:int{p>0/\ p%2=0}) : Tot int =
+let ( @% ) (v:int) (p:int{p>0/\ p%2=0}) : Tot int =
   let m = v % p in if m >= p/2 then m - p else m
 
 /// Constants
@@ -105,7 +105,7 @@ let add (#n:pos) (a:int_t n) (b:int_t n)
 let add_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
   (a + b) @% (pow2 n)
 
-(* Subtraction primitives *)
+(* Minus primitives *)
 let sub (#n:pos) (a:int_t n) (b:int_t n)
     : Pure (int_t n)
       (requires (size (a - b) n))

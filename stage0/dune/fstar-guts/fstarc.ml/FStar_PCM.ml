@@ -4,7 +4,6 @@ type 'a pcm' = {
   composable: unit ;
   op: 'a -> 'a -> 'a ;
   one: 'a }
-
 let __proj__Mkpcm'__item__op (projectee : 'a pcm') : 'a -> 'a -> 'a=
   match projectee with | { composable; op; one;_} -> op
 let __proj__Mkpcm'__item__one (projectee : 'a pcm') : 'a=
@@ -23,10 +22,6 @@ type 'a pcm =
   refine: unit }
 let __proj__Mkpcm__item__p (projectee : 'a pcm) : 'a pcm'=
   match projectee with | { p; comm; assoc; assoc_r; is_unit; refine;_} -> p
-
-
-
-
 let op (p : 'a pcm) (x : 'a) (y : 'a) : 'a= (p.p).op x y
 type ('a, 'p, 'x, 'y) frame_preserving_upd = 'a -> 'a
 let frame_preserving_val_to_fp_upd (p : 'a pcm) (x : unit) (v : 'a) :

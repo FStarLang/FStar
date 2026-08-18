@@ -84,7 +84,7 @@ val add_mod (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c -> FStar.UInt.add_mod (v a) (v b) = v c))
 
-(**** Subtraction primitives *)
+(**** Minus primitives *)
 
 
 (** Bounds-respecting subtraction
@@ -104,7 +104,7 @@ val sub_underspec (a:t) (b:t) : Pure t
   (ensures (fun c ->
     size (v a - v b) n ==> v a - v b = v c))
 
-(** Subtraction modulo [2^n]
+(** Minus modulo [2^n]
 
     Machine integers can always be subtractd, but the postcondition is
     now in terms of subtraction modulo [2^n] on mathematical integers *)

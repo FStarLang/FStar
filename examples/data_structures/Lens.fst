@@ -47,10 +47,10 @@ let ( |.. ) (m:lens 'a 'b) (l:lens 'b 'c) : lens 'a 'c = {
 
 (* Using these operators provides slightly better notation *)
 /// `x.[l] <- v`: updates the l-focused component of x with v
-let op_String_Assignment (x:'a) (l:lens 'a 'b) (v:'b) : 'a = (x |:= l) v
+let ( .[]<- ) (x:'a) (l:lens 'a 'b) (v:'b) : 'a = (x |:= l) v
 
 /// `x.[l]`: accesses the l-focused component
-let op_String_Access (x:'a) (l:lens 'a 'b) : 'b = x |. l
+let ( .[] ) (x:'a) (l:lens 'a 'b) : 'b = x |. l
 
 (** Now for some pure examples **)
 

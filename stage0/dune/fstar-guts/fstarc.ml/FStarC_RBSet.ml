@@ -78,7 +78,7 @@ let rec remove : 'a . 'a FStarC_Class_Ord.ord -> 'a -> 'a rbset -> 'a rbset =
            if uu___2
            then let uu___3 = remove uu___ x r in balance c l y uu___3
            else
-             if uu___is_L r
+             if (match r with | L -> true | uu___3 -> false)
              then l
              else
                (let uu___3 = extract_min uu___ r in

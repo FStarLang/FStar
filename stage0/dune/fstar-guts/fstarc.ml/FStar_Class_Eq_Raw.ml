@@ -4,7 +4,7 @@ type 'a deq = {
 let __proj__Mkdeq__item__eq (projectee : 'a deq) : 'a -> 'a -> Prims.bool=
   match projectee with | { eq;_} -> eq
 let eq (projectee : 'a deq) : 'a -> 'a -> Prims.bool=
-  __proj__Mkdeq__item__eq projectee
+  match projectee with | { eq = eq1;_} -> eq1
 let eq_instance_of_eqtype (uu___ : unit) : 'a deq=
   { eq = (fun x y -> x = y) }
 let int_has_eq : Prims.int deq= eq_instance_of_eqtype ()
