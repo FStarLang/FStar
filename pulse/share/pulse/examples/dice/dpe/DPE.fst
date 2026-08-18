@@ -249,7 +249,7 @@ let safe_incr (i:U16.t)
   : r:option U16.t { Some? r ==> (U16.v (Some?.v r) == U16.v i + 1) } =
 
   let open FStar.UInt16 in
-  if i <^ 0xffffus
+  if i < 0xffffus
   then Some (i + 1us)
   else None
 

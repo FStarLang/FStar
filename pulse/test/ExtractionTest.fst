@@ -72,13 +72,13 @@ fn write10 (x:ref U32.t)
   ensures pts_to x 0ul
 {
   let mut ctr = 10ul;
-  while (!ctr >^ 0ul)
+  while (!ctr > 0ul)
   invariant
     exists* n i.
       pts_to x n **
       pts_to ctr i **
-      pure (i <=^ 10ul /\ 
-           (i <^ 10ul ==> n == 0ul))
+      pure (i <= 10ul /\ 
+           (i < 10ul ==> n == 0ul))
   decreases (U32.v (!ctr))
   {
     test_write_10 x;
@@ -103,7 +103,7 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
     exists* (vi:SZ.t) (s:Seq.seq U32.t).
       pts_to i vi **
       pts_to x s **
-      pure (SZ.(vi <=^ n) /\
+      pure (SZ.(vi <= n) /\
             Seq.length s == Seq.length 's /\
             (forall (j:nat). j < SZ.v vi ==> Seq.index s j == v))
   decreases (SZ.v n - SZ.v (!i))
@@ -135,9 +135,9 @@ type opt a =
 let my_safe_add (x y : SZ.t)
   : o:opt SZ.t { Some? o ==> SZ.v (Some?.v o) == SZ.v x + SZ.v y } 
   = let open SZ in
-    if x <=^ 0xffffsz
+    if x <= 0xffffsz
     then (
-      if (y <=^ 0xffffsz - x)
+      if (y <= 0xffffsz - x)
       then Some (x + y)
       else None
     )

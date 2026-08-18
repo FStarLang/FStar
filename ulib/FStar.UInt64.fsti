@@ -346,10 +346,10 @@ inline_for_extraction unfold let ( <<<^ ) = rotate_left
 inline_for_extraction unfold let ( >>>^ ) = rotate_right
 inline_for_extraction unfold let ( =^ )  = eq
 inline_for_extraction unfold let ( <>^ ) = ne
-inline_for_extraction unfold let ( >^ )  = gt
-inline_for_extraction unfold let ( >=^ ) = gte
-inline_for_extraction unfold let ( <^ )  = lt
-inline_for_extraction unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( > )  = gt
+inline_for_extraction unfold let ( >= ) = gte
+inline_for_extraction unfold let ( < )  = lt
+inline_for_extraction unfold let ( <= ) = lte
 
 (**** To input / output constants *)
 (** In decimal representation *)

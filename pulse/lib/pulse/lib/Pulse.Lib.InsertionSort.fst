@@ -147,7 +147,7 @@ ensures exists* s'. (a |-> s') **
   pure (sorted #t s' /\ permutation s s')
 {
   let mut j = 1sz;
-  while (SZ.(!j <^ len))
+  while (SZ.(!j < len))
     invariant live j
     invariant live a
     invariant

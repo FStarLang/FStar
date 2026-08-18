@@ -39,7 +39,7 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
   )
 {
   let mut i = 0sz;
-  while (let vi = !i; if US.(vi <^ l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
+  while (let vi = !i; if US.(vi < l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
   invariant exists* (vi:US.t). ( 
     R.pts_to i vi **
     A.pts_to a1 #p1 s1 **
@@ -72,7 +72,7 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
       )
 {
    let mut i = 0sz;
-   while (let vi = !i; US.(vi <^ l))
+   while (let vi = !i; US.(vi < l))
    invariant exists* (s:Seq.seq t) (vi:US.t). (
       A.pts_to a s **
       R.pts_to i vi **
@@ -298,16 +298,16 @@ fn sort3 (a:array U32.t)
    let x = a.(0sz);
    let y = a.(1sz);
    let z = a.(2sz);
-   if (x >^ y) 
+   if (x > y) 
    {
-      if (y >^ z)
+      if (y > z)
       {
          a.(0sz) <- z;
          a.(1sz) <- y;
          a.(2sz) <- x;
       }
       else {
-         if (x >^ z)
+         if (x > z)
          {
             a.(0sz) <- y;
             a.(1sz) <- z;
@@ -322,8 +322,8 @@ fn sort3 (a:array U32.t)
       }
    }
    else {
-      if (y >^ z) {
-         if (x >^ z) {
+      if (y > z) {
+         if (x > z) {
             a.(0sz) <- z;
             a.(1sz) <- x;
             a.(2sz) <- y;
@@ -359,21 +359,21 @@ fn sort3_alt (a:array U32.t)
    let vx = !x;
    let vy = !y;
    let vz = !z;
-   if (vy <^ vx) 
+   if (vy < vx) 
    {
       x := vy;
       y := vx;
    };
    let vx = !x;
    let vz = !z;
-   if (vz <^ vx)
+   if (vz < vx)
    {
       x := vz;
       z := vx;
    };
    let vy = !y;
    let vz = !z;
-   if (vz <^ vy)
+   if (vz < vy)
    {
       y := vz;
       z := vy;

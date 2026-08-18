@@ -121,7 +121,7 @@ instance u32_instance_cmp : comparable_bounded_unsigned_int FStar.UInt32.t =
   let open FStar.UInt32 in
   {
     base = u32_instance_base;
-    comp = (fun x y -> x <^ y);
+    comp = (fun x y -> x < y);
     properties = ()
   }
 
@@ -155,7 +155,7 @@ instance u64_instance_cmp : comparable_bounded_unsigned_int FStar.UInt64.t =
   let open FStar.UInt64 in
   {
     base = u64_instance_base;
-    comp = (fun x y -> x <^ y);
+    comp = (fun x y -> x < y);
     properties = ()
   }
 

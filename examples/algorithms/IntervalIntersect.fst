@@ -105,7 +105,7 @@ type interval = | I: from:offset -> to:offset -> interval
 let rec goodLIs (is:list interval) (lb:offset) =
   match is with
   | [] -> true
-  | I f t :: is -> lb <=^ f && f <^ t && goodLIs is t
+  | I f t :: is -> lb <= f && f < t && goodLIs is t
 
 /// Contrary to Joachim's informal claims, already in his Coq development
 /// intervals are however not necessarily non-adjacent. This is a good example
@@ -135,7 +135,7 @@ let intervals = is:list interval{good is}
 
 let needs_reorder (is1 is2:intervals) : nat =
  match is1, is2 with
-  | I f1 t1 :: _, I f2 t2 :: _ -> if t1 <^ t2 then 1 else 0
+  | I f1 t1 :: _, I f2 t2 :: _ -> if t1 < t2 then 1 else 0
   | _, _ -> 0
 
 /// Joachim is right, the code of `intersect` is the kind of functional code
@@ -165,7 +165,7 @@ private let rec go (is1 is2:intervals)
          (ensures (fun ris ->
           ( is1=[] \/ is2=[] ==> ris=[])
         /\ ( Cons? is1 /\ Cons? is1 /\ Cons? ris  ==>
-            (hd ris).from >=^ max (hd is1).from (hd is2).from  )
+            (hd ris).from >= max (hd is1).from (hd is2).from  )
          ))
          (decreases %[List.length is1 + List.length is2; needs_reorder is1 is2]) =
 
@@ -182,9 +182,9 @@ private let rec go (is1 is2:intervals)
     begin
       let f' = max i1.from i2.from in
       // reorder for symmetry
-      if i1.to <^ i2.to then  go (i2::is2) (i1::is1)
+      if i1.to < i2.to then  go (i2::is2) (i1::is1)
       // disjoint
-      else if i1.from >=^ i2.to then go (i1::is1) is2
+      else if i1.from >= i2.to then go (i1::is1) is2
       // subset
       else if i1.to = i2.to then I f' i1.to :: go is1 is2
       // overlapping
@@ -272,14 +272,14 @@ let intersect (is1 is2:intervals) =
 /// extensional description of integer ranges, but make the intensional
 /// definition ghost. This means that it never has to be extracted to OCaml code.
 
-let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <=^ z &&
-  z <^ t)
+let rangeGT (f t:offset): GTot (Set.set offset) = Set.intension (fun z -> f <= z &&
+  z < t)
 
 let mem_rangeGT (f t:offset) (x:offset)
 : Lemma
-  (Set.mem x (rangeGT f t) == (f <=^ x && x <^ t))
+  (Set.mem x (rangeGT f t) == (f <= x && x < t))
   [SMTPat (Set.mem x (rangeGT f t))]
-= Set.mem_intension x (fun z -> f <=^ z && z <^ t)
+= Set.mem_intension x (fun z -> f <= z && z < t)
 
 /// Because of the immaturity of F\* and the need for abstraction to
 /// simultaneously support verification and extraction, I had to fix and extend
@@ -290,7 +290,7 @@ let mem_rangeGT (f t:offset) (x:offset)
 let rec range (f:offset) (t:offset): Tot (r:Set.set offset{r==rangeGT f t})
   (decreases %[v t- v f])
   =
-  if f>=^t then (
+  if f>=t then (
     Set.lemma_equal_elim (rangeGT f t) Set.empty;
     Set.empty
   ) else (
@@ -340,7 +340,7 @@ let lemma_semI_sem_disjoint (i:interval) (is:intervals)
   =
   let rec lemma_semI_sem_lb_disjoint (i:interval) (is:intervals) (lb:offset)
     : Lemma
-      (requires goodLIs is lb /\ i.to <=^ lb)
+      (requires goodLIs is lb /\ i.to <= lb)
       (ensures Set.disjoint (semI i) (sem is))
     =
     if (Cons? is) then
@@ -369,7 +369,7 @@ let lemma_semI_sem_disjoint (i:interval) (is:intervals)
 
 let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
   : Lemma
-    (requires (hd is1).from >=^ (hd is2).to )
+    (requires (hd is1).from >= (hd is2).to )
     (ensures (Set.intersect (sem is1) (sem is2) == Set.intersect (sem (is1)) (sem (tl is2))))
   =
   let h2 = hd is2 in
@@ -382,7 +382,7 @@ let lemma_disjoint_prefix (is1:intervals{Cons? is1})  (is2:intervals{Cons? is2})
 
 let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
-    (requires (hd is1).to = (hd is2).to /\ (hd is1).from <^ (hd is2).to)
+    (requires (hd is1).to = (hd is2).to /\ (hd is1).from < (hd is2).to)
     (ensures (
       let h1::t1, h2::t2 = is1,is2 in
       let f' = max h1.from h2.from in
@@ -420,7 +420,7 @@ let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
 
 let lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
-    (requires (hd is1).to >^ (hd is2).to /\ (hd is1).from <^ (hd is2).to)
+    (requires (hd is1).to > (hd is2).to /\ (hd is1).from < (hd is2).to)
     (ensures (
       let h1::t1 = is1 in let h2::t2 = is2 in
       let f' = max h1.from h2.from in
@@ -487,9 +487,9 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
     begin
        let f' = max (i1.from) (i2.from) in
        // reorder for symmetry
-       if i1.to <^ i2.to then lemma_intersection_spec (i2::is2) (i1::is1)
+       if i1.to < i2.to then lemma_intersection_spec (i2::is2) (i1::is1)
        // disjoint: i2.from < i2.to <= i1.from < i1.to
-       else if i1.from >=^ i2.to then (
+       else if i1.from >= i2.to then (
          // lemma_disjoint_intro (semI i1) (semI i2); //needed if SMTPat is removed
          assert (Set.disjoint (semI i1) (semI i2));
          lemma_intersection_spec (i1::is1) is2;

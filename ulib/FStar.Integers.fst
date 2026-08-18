@@ -319,16 +319,16 @@ noextract
 let ( > ) #sw (x:int_t sw) (y:int_t sw) : bool =
     match sw with
     | Signed Winfinite -> x > y
-    | Unsigned W8 -> FStar.UInt8.(x >^ y)
-    | Unsigned W16 -> FStar.UInt16.(x >^ y)
-    | Unsigned W32 -> FStar.UInt32.(x >^ y)
-    | Unsigned W64 -> FStar.UInt64.(x >^ y)
-    | Unsigned W128 -> FStar.UInt128.(x >^ y)
-    | Signed W8 -> FStar.Int8.(x >^ y)
-    | Signed W16 -> FStar.Int16.(x >^ y)
-    | Signed W32 -> FStar.Int32.(x >^ y)
-    | Signed W64 -> FStar.Int64.(x >^ y)
-    | Signed W128 -> FStar.Int128.(x >^ y)
+    | Unsigned W8 -> FStar.UInt8.(x > y)
+    | Unsigned W16 -> FStar.UInt16.(x > y)
+    | Unsigned W32 -> FStar.UInt32.(x > y)
+    | Unsigned W64 -> FStar.UInt64.(x > y)
+    | Unsigned W128 -> FStar.UInt128.(x > y)
+    | Signed W8 -> FStar.Int8.(x > y)
+    | Signed W16 -> FStar.Int16.(x > y)
+    | Signed W32 -> FStar.Int32.(x > y)
+    | Signed W64 -> FStar.Int64.(x > y)
+    | Signed W128 -> FStar.Int128.(x > y)
 
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold
@@ -336,16 +336,16 @@ noextract
 let ( >= ) #sw (x:int_t sw) (y:int_t sw) : bool =
     match sw with
     | Signed Winfinite -> x >= y
-    | Unsigned W8 -> FStar.UInt8.(x >=^ y)
-    | Unsigned W16 -> FStar.UInt16.(x >=^ y)
-    | Unsigned W32 -> FStar.UInt32.(x >=^ y)
-    | Unsigned W64 -> FStar.UInt64.(x >=^ y)
-    | Unsigned W128 -> FStar.UInt128.(x >=^ y)
-    | Signed W8 -> FStar.Int8.(x >=^ y)
-    | Signed W16 -> FStar.Int16.(x >=^ y)
-    | Signed W32 -> FStar.Int32.(x >=^ y)
-    | Signed W64 -> FStar.Int64.(x >=^ y)
-    | Signed W128 -> FStar.Int128.(x >=^ y)
+    | Unsigned W8 -> FStar.UInt8.(x >= y)
+    | Unsigned W16 -> FStar.UInt16.(x >= y)
+    | Unsigned W32 -> FStar.UInt32.(x >= y)
+    | Unsigned W64 -> FStar.UInt64.(x >= y)
+    | Unsigned W128 -> FStar.UInt128.(x >= y)
+    | Signed W8 -> FStar.Int8.(x >= y)
+    | Signed W16 -> FStar.Int16.(x >= y)
+    | Signed W32 -> FStar.Int32.(x >= y)
+    | Signed W64 -> FStar.Int64.(x >= y)
+    | Signed W128 -> FStar.Int128.(x >= y)
 
 
 [@@mark_for_norm; strict_on_arguments [0]]
@@ -354,16 +354,16 @@ noextract
 let ( < ) #sw (x:int_t sw) (y:int_t sw) : bool =
     match sw with
     | Signed Winfinite -> x < y
-    | Unsigned W8 -> FStar.UInt8.(x <^ y)
-    | Unsigned W16 -> FStar.UInt16.(x <^ y)
-    | Unsigned W32 -> FStar.UInt32.(x <^ y)
-    | Unsigned W64 -> FStar.UInt64.(x <^ y)
-    | Unsigned W128 -> FStar.UInt128.(x <^ y)
-    | Signed W8 -> FStar.Int8.(x <^ y)
-    | Signed W16 -> FStar.Int16.(x <^ y)
-    | Signed W32 -> FStar.Int32.(x <^ y)
-    | Signed W64 -> FStar.Int64.(x <^ y)
-    | Signed W128 -> FStar.Int128.(x <^ y)
+    | Unsigned W8 -> FStar.UInt8.(x < y)
+    | Unsigned W16 -> FStar.UInt16.(x < y)
+    | Unsigned W32 -> FStar.UInt32.(x < y)
+    | Unsigned W64 -> FStar.UInt64.(x < y)
+    | Unsigned W128 -> FStar.UInt128.(x < y)
+    | Signed W8 -> FStar.Int8.(x < y)
+    | Signed W16 -> FStar.Int16.(x < y)
+    | Signed W32 -> FStar.Int32.(x < y)
+    | Signed W64 -> FStar.Int64.(x < y)
+    | Signed W128 -> FStar.Int128.(x < y)
 
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold
@@ -371,16 +371,16 @@ noextract
 let ( <= ) #sw (x:int_t sw) (y:int_t sw) : bool =
     match sw with
     | Signed Winfinite -> x <= y
-    | Unsigned W8 -> FStar.UInt8.(x <=^ y)
-    | Unsigned W16 -> FStar.UInt16.(x <=^ y)
-    | Unsigned W32 -> FStar.UInt32.(x <=^ y)
-    | Unsigned W64 -> FStar.UInt64.(x <=^ y)
-    | Unsigned W128 -> FStar.UInt128.(x <=^ y)
-    | Signed W8 -> FStar.Int8.(x <=^ y)
-    | Signed W16 -> FStar.Int16.(x <=^ y)
-    | Signed W32 -> FStar.Int32.(x <=^ y)
-    | Signed W64 -> FStar.Int64.(x <=^ y)
-    | Signed W128 -> FStar.Int128.(x <=^ y)
+    | Unsigned W8 -> FStar.UInt8.(x <= y)
+    | Unsigned W16 -> FStar.UInt16.(x <= y)
+    | Unsigned W32 -> FStar.UInt32.(x <= y)
+    | Unsigned W64 -> FStar.UInt64.(x <= y)
+    | Unsigned W128 -> FStar.UInt128.(x <= y)
+    | Signed W8 -> FStar.Int8.(x <= y)
+    | Signed W16 -> FStar.Int16.(x <= y)
+    | Signed W32 -> FStar.Int32.(x <= y)
+    | Signed W64 -> FStar.Int64.(x <= y)
+    | Signed W128 -> FStar.Int128.(x <= y)
 
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold

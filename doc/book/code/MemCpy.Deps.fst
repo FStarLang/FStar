@@ -40,7 +40,7 @@ let live h (b:buffer 'a) = B.live h b
 
 unfold
 let ( .() ) (b:buffer 'a) (i:U32.t)
-  : ST 'a (requires fun h -> live h b /\ i <^ length b)
+  : ST 'a (requires fun h -> live h b /\ i < length b)
          (ensures  (fun h y h' -> h == h' /\ y == Seq.index (as_seq h b) (U32.v i)))
   = B.index b i
 
@@ -49,7 +49,7 @@ let ( .()<- ) (b:buffer 'a) (i:U32.t) (v:'a)
   : ST unit 
     (requires (fun h -> 
       live h b /\
-      i <^ length b))
+      i < length b))
     (ensures (fun h _ h' -> 
       modifies b h h' /\
       live h' b /\
@@ -60,7 +60,7 @@ unfold
 let suffix (#a:Type) 
            (b:buffer a)
            (from:U32.t) 
-           (len:U32.t{len <=^ length b /\ from <=^ len})
+           (len:U32.t{len <= length b /\ from <= len})
   : ST (buffer a)
        (requires (fun h -> 
          U32.v from + U32.v len <= U32.v (length b) /\
@@ -71,24 +71,24 @@ let suffix (#a:Type)
 unfold
 let disjoint (b0 b1:B.buffer 'a) = B.disjoint b0 b1
 
-let lbuffer (len:U32.t) (a:Type) = b:B.buffer a{len <=^ length b}
+let lbuffer (len:U32.t) (a:Type) = b:B.buffer a{len <= length b}
 
 let prefix_equal (#l:uint32) (#a:Type) 
                  (h:HS.mem)
                  (b1 b2: lbuffer l a)
-                 (i:uint32{i <=^ l})
+                 (i:uint32{i <= l})
   : prop 
-  = forall (j:uint32). j <^ i ==>
+  = forall (j:uint32). j < i ==>
                   B.get h b1 (U32.v j) == B.get h b2 (U32.v j)
 
   
 
 
 unfold
-let ( <= ) x y = U32.(x <=^ y)
+let ( <= ) x y = U32.(x <= y)
 
 unfold
-let ( < ) x y = U32.(x <^ y)
+let ( < ) x y = U32.(x < y)
 
 let ( + ) (x:U32.t) (y:U32.t{FStar.UInt.size (v x + v y) U32.n}) = U32.(x + y)
 

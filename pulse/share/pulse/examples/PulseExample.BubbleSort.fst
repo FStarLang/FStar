@@ -227,7 +227,7 @@ fn bubble_sort
   // Outer loop: each pass fixes one more element at the end
   let mut i: SZ.t = len - 1sz;
   
-  while (!i >^ 0sz)
+  while (!i > 0sz)
   invariant exists* vi s.
     R.pts_to i vi **
     A.pts_to a s **
@@ -246,7 +246,7 @@ fn bubble_sort
     // Inner loop: bubble the maximum element to position vi
     let mut j: SZ.t = 0sz;
     
-    while (!j <^ vi)
+    while (!j < vi)
     invariant live j
     invariant live a
     invariant pure (

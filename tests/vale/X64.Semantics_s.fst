@@ -269,10 +269,10 @@ let eval_ocmp (s:state) (c:ocmp) :bool =
   match c with
   | OEq o1 o2 -> eval_operand o1 s = eval_operand o2 s
   | ONe o1 o2 -> eval_operand o1 s <> eval_operand o2 s
-  | OLe o1 o2 -> eval_operand o1 s <=^ eval_operand o2 s
-  | OGe o1 o2 -> eval_operand o1 s >=^ eval_operand o2 s
-  | OLt o1 o2 -> eval_operand o1 s <^ eval_operand o2 s
-  | OGt o1 o2 -> eval_operand o1 s >^ eval_operand o2 s
+  | OLe o1 o2 -> eval_operand o1 s <= eval_operand o2 s
+  | OGe o1 o2 -> eval_operand o1 s >= eval_operand o2 s
+  | OLt o1 o2 -> eval_operand o1 s < eval_operand o2 s
+  | OGt o1 o2 -> eval_operand o1 s > eval_operand o2 s
 
 (* These wrappers of the operators from FStar.UInt are only present
    because we discovered that using specs of the form (v a + v b) % pow2 64

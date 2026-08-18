@@ -80,12 +80,12 @@ fn mult32' (x y:U32.t)
 {  
     let mut ctr = 0ul;
     let mut acc = 0ul;
-    while (!ctr <^ x)
+    while (!ctr < x)
     invariant
     exists* c a.
         pts_to ctr c **
         pts_to acc a **
-        pure (c <=^ x /\
+        pure (c <= x /\
               i a == (i c * i y))
     decreases (Prims.op_Minus (U32.v x) (U32.v (!ctr)))
     {

@@ -91,7 +91,7 @@ fn majority
   assert (pure (count_until votes_0 s 1 == 1));
   // while loop for phase 1
   while (
-    (!i <^ len)
+    (!i < len)
   )
   invariant (
     pts_to votes #p s **
@@ -134,14 +134,14 @@ fn majority
   // a couple of optimizations
   if (vk = 0sz) {
     None
-  } else if (len <^ 2sz * vk) {
+  } else if (len < 2sz * vk) {
     Some vcand
   } else {
     i := 0sz;
     k := 0sz;
     // while loop for phase 2
     while (
-      (!i <^ len)
+      (!i < len)
     )
     invariant (
       pts_to votes #p s **
@@ -166,7 +166,7 @@ fn majority
     };
 
     let vk = !k;
-    if (len <^ 2sz * vk) {
+    if (len < 2sz * vk) {
       Some vcand
     } else {
       None

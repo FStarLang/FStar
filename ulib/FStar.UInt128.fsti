@@ -165,7 +165,7 @@ inline_for_extraction noextract let ( |^ ) = logor
 inline_for_extraction noextract let ( <<^ ) = shift_left
 inline_for_extraction noextract let ( >>^ ) = shift_right
 inline_for_extraction noextract let ( =^ ) = eq
-inline_for_extraction noextract let ( >^ ) = gt
-inline_for_extraction noextract let ( <^ ) = lt
-inline_for_extraction noextract let ( >=^ ) = gte
-inline_for_extraction noextract let ( <=^ ) = lte
+inline_for_extraction noextract let ( > ) = gt
+inline_for_extraction noextract let ( < ) = lt
+inline_for_extraction noextract let ( >= ) = gte
+inline_for_extraction noextract let ( <= ) = lte

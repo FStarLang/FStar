@@ -32,7 +32,7 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
       )
 {
    let mut i = 0sz;
-   while (let vi = !i; US.(vi <^ l))
+   while (let vi = !i; US.(vi < l))
    invariant exists* (s:Seq.seq t) (vi:US.t). ( 
       A.pts_to a s **
       R.pts_to i vi **

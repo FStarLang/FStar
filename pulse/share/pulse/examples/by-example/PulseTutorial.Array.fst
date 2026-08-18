@@ -93,7 +93,7 @@ fn compare
   let mut i = 0sz;
   while (
     let vi = !i;
-    if (vi <^ l) {
+    if (vi < l) {
       (a1.(vi) = a2.(vi))
     } else {
       false
@@ -136,7 +136,7 @@ fn copy
 {
   let mut i = 0sz;
   while (
-    (!i <^ l)
+    (!i < l)
   )
   invariant
   exists* vi s1. ( 
@@ -178,7 +178,7 @@ fn copy2
 {
   let mut i = 0sz;
   while (
-    (!i <^ l)
+    (!i < l)
   )
   invariant
   exists* vi s1. ( 

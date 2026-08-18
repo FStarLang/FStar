@@ -107,7 +107,7 @@ val lte (x y: t) : Pure bool
 (** Infix notations *)
 
 inline_for_extraction unfold let ( + ) = add
-inline_for_extraction unfold let ( >^ ) = gt
-inline_for_extraction unfold let ( >=^ ) = gte
-inline_for_extraction unfold let ( <^ ) = lt
-inline_for_extraction unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( > ) = gt
+inline_for_extraction unfold let ( >= ) = gte
+inline_for_extraction unfold let ( < ) = lt
+inline_for_extraction unfold let ( <= ) = lte

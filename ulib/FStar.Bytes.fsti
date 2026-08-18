@@ -110,15 +110,15 @@ val extensionality:
 val create:
     len:u32
   -> v:byte
-  -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}).{:pattern b.[i]} b.[i] == v}
+  -> b:lbytes (U32.v len){forall (i:u32{U32.(i < len)}).{:pattern b.[i]} b.[i] == v}
 
 unfold
 let create_ (n:nat{FStar.UInt.size n U32.n}) v = create (U32.uint_to_t n) v
 
 val init:
     len:u32
-  -> f:(i:u32{U32.(i <^ len)} -> byte)
-  -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}).{:pattern b.[i]} b.[i] == f i}
+  -> f:(i:u32{U32.(i < len)} -> byte)
+  -> b:lbytes (U32.v len){forall (i:u32{U32.(i < len)}).{:pattern b.[i]} b.[i] == f i}
 
 // this is a hack JROESCH
 val abyte (b:byte) : lbytes 1
@@ -139,7 +139,7 @@ unfold let ( @| ) = append
 val slice:
     b:bytes
   -> s:u32
-  -> e:u32{U32.(s <=^ e) /\ U32.v e <= length b}
+  -> e:u32{U32.(s <= e) /\ U32.v e <= length b}
   -> r:bytes{reveal r == Seq.slice (reveal b) (U32.v s) (U32.v e)}
 let slice_ b (s:nat) (e:nat{s <= e /\ e <= length b}) = slice b (U32.uint_to_t s) (U32.uint_to_t e)
 

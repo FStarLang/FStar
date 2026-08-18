@@ -199,7 +199,7 @@ fn while_count2 (r:ref U32.t)
   decreases (dist10 (!r))
   {
     let x = !r;
-    if (x <^ 10ul)
+    if (x < 10ul)
     {
       r := x + 1ul
     }
