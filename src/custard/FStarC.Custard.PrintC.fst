@@ -576,6 +576,99 @@ and is_pure_branch (br:branch) : ML bool =
   let _, g, b = br in
   (match g with Some g -> is_pure g | None -> true) && is_pure b
 
+(* [is_pure] answers "may this be *moved*"; this answers "may this be
+   *deleted*", and the second is weaker.  The only difference is a read: a
+   read of a collapsed cell cannot move across a write to it, and it can
+   always go when nothing wants its value, because reading a cell Pulse has
+   established is live does nothing observable.  Nothing else changes -- a
+   call, a write, an allocation, a loop and an abort are as undeletable as
+   they are unmovable. *)
+let rec is_droppable (e:expr) : ML bool =
+  let all (es:list expr) : ML bool = List.for_all is_droppable es in
+  match e.e with
+  | EConst _ | EVar _ | EQual _ | EAny -> true
+  | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
+  | EOp ({ po_op = BufRead }, es) -> all es
+  | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
+  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
+  | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
+  | ELet (_, _, a, b) | ESeq (a, b) -> is_droppable a && is_droppable b
+  | EIf (a, b, c) -> is_droppable a && is_droppable b && is_droppable c
+  | EMatch (sc, brs) -> is_droppable sc && List.for_all is_droppable_branch brs
+  | ERecord (_, fs) -> List.for_all (fun (_, e) -> is_droppable e) fs
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
+  | ECoerce (a, _) -> is_droppable a
+
+and is_droppable_branch (br:branch) : ML bool =
+  let _, g, b = br in
+  (match g with Some g -> is_droppable g | None -> true) && is_droppable b
+
+(* Section 19.8.  A cell that is written and never read.  Pulse's loop measure
+   is one: [fn while] carries a decreasing value the checker needs and the
+   program does not, so it arrives as a [let mut] whose type has erased to
+   [custard_unit] and whose writes assign a constant.  C says
+   -Wunused-but-set-variable and C is right.
+
+   [cell_dead] is the side condition, and it has to be stricter than "never
+   read".  Every occurrence of the name must be the cell operand of a write,
+   which rules out the two ways a cell can be used without being read: an
+   address taken and passed somewhere, and a read the surrounding term does
+   something else with.  The written values must be pure as well, since
+   dropping the write drops them, and the index must be too.  For the measure
+   all of this is trivially true; the point of checking is that nothing else
+   is quietly caught by it. *)
+let rec cell_dead (x:string) (e:expr) : ML bool =
+  let all (es:list expr) : ML bool = List.for_all (cell_dead x) es in
+  match e.e with
+  | EVar y -> y <> x
+  | EOp ({ po_op = BufWrite }, [{ e = EVar y }; i; v]) when y = x ->
+    is_droppable i && is_droppable v
+  | EConst _ | EQual _ | EAny | EAbort _ -> true
+  | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> cell_dead x a && cell_dead x b
+  | EApp (h, es) -> cell_dead x h && all es
+  | EFun (_, b) | ERaise b -> cell_dead x b
+  | EMatch (sc, brs) -> cell_dead x sc && List.for_all (cell_dead_branch x) brs
+  | ETry (a, brs) -> cell_dead x a && List.for_all (cell_dead_branch x) brs
+  | EIf (a, b, c) -> cell_dead x a && cell_dead x b && cell_dead x c
+  | ECtor (_, es) | ETuple es | EOp (_, es) -> all es
+  | ERecord (_, fs) -> List.for_all (fun (_, e) -> cell_dead x e) fs
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
+  | ECoerce (a, _) -> cell_dead x a
+
+and cell_dead_branch (x:string) (br:branch) : ML bool =
+  let _, g, b = br in
+  (match g with Some g -> cell_dead x g | None -> true) && cell_dead x b
+
+(* The writes [cell_dead] licensed, replaced by the unit they evaluate to.
+   Nothing else in the term mentions the cell, so this is the whole of it. *)
+let rec drop_writes (x:string) (e:expr) : ML expr =
+  let go (e:expr) : ML expr = drop_writes x e in
+  let go_branch (br:branch) : ML branch =
+    let p, g, b = br in
+    (p, (match g with Some g -> Some (go g) | None -> None), go b) in
+  let e' =
+    match e.e with
+    | EOp ({ po_op = BufWrite }, [{ e = EVar y }; _; _]) when y = x -> EConst CUnit
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> e.e
+    | ELet (n, t, a, b) -> ELet (n, t, go a, go b)
+    | ESeq (a, b) -> ESeq (go a, go b)
+    | EWhile (a, b) -> EWhile (go a, go b)
+    | EApp (h, es) -> EApp (go h, List.map go es)
+    | EFun (bs, b) -> EFun (bs, go b)
+    | ERaise a -> ERaise (go a)
+    | EMatch (sc, brs) -> EMatch (go sc, List.map go_branch brs)
+    | ETry (a, brs) -> ETry (go a, List.map go_branch brs)
+    | EIf (a, b, c) -> EIf (go a, go b, go c)
+    | ECtor (n, es) -> ECtor (n, List.map go es)
+    | ETuple es -> ETuple (List.map go es)
+    | EOp (o, es) -> EOp (o, List.map go es)
+    | ERecord (n, fs) -> ERecord (n, List.map (fun (f, e) -> (f, go e)) fs)
+    | EProj (a, n, f) -> EProj (go a, n, f)
+    | EDiscrim (a, n) -> EDiscrim (go a, n)
+    | ECast (a, t) -> ECast (go a, t)
+    | ECoerce (a, t) -> ECoerce (go a, t) in
+  { e with e = e' }
+
 (* A [BufCreate] of exactly one cell: what Pulse emits for [let mut]. *)
 let is_one (e:expr) : bool =
   match e.e with EConst (CInt ("1", _)) -> true | _ -> false
@@ -792,6 +885,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     scope := saved;
     s2
 
+  (* Section 19.8: written, never read.  The writes go with the cell. *)
+  | ELet (x, TRef t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
+  | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
+      when is_one len && is_droppable init && cell_dead x e2 ->
+    emit ind d (drop_writes x e2)
+
   | ELet (x, TRef t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
       when is_one len ->
@@ -807,12 +906,17 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      leaves one behind -- [let _letpattern = x in ...] -- and C, told
      [-Werror=unused-variable], refuses the file over it.  [vars_of]
      over-approximates the uses, so this only fires when the name is
-     definitely dead, and [is_pure] is what says the initializer can go with
-     it; an impure one still has to run, and falls through to the general
-     case, where the declaration is the only thing that would be unused.  We
-     do not have a way to say "declared and unused on purpose" in C89, and
-     an attribute would be one more thing to spell per compiler. *)
-  | ELet (x, _, e1, e2) when is_pure e1 && not (List.mem x (vars_of e2)) ->
+     definitely dead.
+
+     What licenses dropping the initializer with it is not [is_pure] but
+     something weaker, and the difference matters: [is_pure] answers "can this
+     be *moved*", and a read of a collapsed cell cannot, since a later write
+     changes it.  Dropping is not moving.  A read whose result nothing wants
+     can always go, because reading a cell that Pulse has established is live
+     does nothing observable -- which is exactly the case the report hit,
+     [_letpattern] bound to a cell.  So: no calls, no writes, no allocation,
+     no loops, and reads are free. *)
+  | ELet (x, _, e1, e2) when is_droppable e1 && not (List.mem x (vars_of e2)) ->
     emit ind d e2
 
   | ELet (x, t, e1, e2) ->

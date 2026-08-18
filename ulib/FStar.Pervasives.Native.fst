@@ -53,13 +53,8 @@ type option (a: Type) =
     notation compatible with OCaml's. Or, better, as [a & b]. *)
 type tuple2 'a 'b = | Mktuple2 : _1: 'a -> _2: 'b -> tuple2 'a 'b
 
-(** The fst and snd projections on pairs are very common.  They are
-    [inline_for_extraction] because a projection out of a pair is what every
-    backend already emits for a field read, so leaving them as calls buys an
-    indirection and nothing else. *)
-inline_for_extraction
+(** The fst and snd projections on pairs are very common *)
 let fst (x: tuple2 'a 'b) : 'a = Mktuple2?._1 x
-inline_for_extraction
 let snd (x: tuple2 'a 'b) : 'b = Mktuple2?._2 x
 
 type tuple3 'a 'b 'c = | Mktuple3 : _1: 'a -> _2: 'b -> _3: 'c -> tuple3 'a 'b 'c

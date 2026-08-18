@@ -50,6 +50,13 @@ val chain_reporter : ref (unit -> ML (list FStarC.Pprint.document))
 val norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
   : ML typ
 
+(** [strip t] peels the nodes that carry no meaning -- [Tm_ascribed] and
+    [Tm_refine] -- until neither is outermost, compressing as it goes.  A
+    normalizer returns a term that *means* an arrow, not necessarily one whose
+    tag is [Tm_arrow], so every shape test in this module goes through here.
+    Section 19.7. *)
+val strip (t:typ) : ML typ
+
 val bclass_to_string : bclass -> string
 
 instance val showable_bclass : Class.Show.showable bclass

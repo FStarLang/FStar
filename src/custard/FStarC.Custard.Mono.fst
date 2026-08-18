@@ -80,6 +80,36 @@ let norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
          FStarC.Syntax.Print.term_to_string' (TcEnv.dsenv env) t)
     ] @ (!chain_reporter) ())
 
+(* Section 19.7.  A normalizer does not promise to hand back a term whose
+   outermost node is the one you are looking for.  It hands back one that
+   *means* what you are looking for, and F* has two nodes that mean nothing at
+   all: [Tm_ascribed], which records a type the elaborator wrote down, and
+   [Tm_refine], which records a proposition erased long before any of this.
+   [SS.compress] resolves unification variables and delayed substitutions and
+   strips neither.
+
+   That is not a corner case here, it is the common case.  Over one extraction
+   of EverParse's [jump_header], six of the terms this module tested for
+   [Tm_arrow] were arrows wrapped in an ascription, and twenty-four more were
+   refinements likewise wrapped.  Reading the tag off the wrapper silently
+   answers "not an arrow" and "not an arity", and both answers are wrong in
+   the direction that miscompiles rather than the direction that rejects.
+
+   So no shape test in this module reads a tag directly.  They all go through
+   here, which is a fixed point rather than one peel: an ascription can hide a
+   refinement and a refinement's base can be ascribed, and the two have to
+   alternate away.  The bound is for the same reason every other loop in
+   Custard has one -- this runs on terms nobody wrote for it. *)
+let rec strip_aux (fuel:int) (t:typ) : ML typ =
+  let t = SS.compress t in
+  if fuel <= 0 then t
+  else match t.n with
+       | Tm_ascribed _ -> strip_aux (fuel - 1) (U.unascribe t)
+       | Tm_refine _ -> strip_aux (fuel - 1) (U.unrefine t)
+       | _ -> t
+
+let strip (t:typ) : ML typ = strip_aux 16 t
+
 let bclass_to_string (c:bclass) : string =
   match c with
   | Mono -> "Mono"
@@ -132,7 +162,7 @@ let is_unspecializable_binder (env:TcEnv.env) (b:binder) : ML bool =
    for a higher kind, an unbound *term* variable, because the binder is then
    taken for a runtime one and its uses are compiled as values. *)
 let rec is_arity_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
-  let t = SS.compress (U.unrefine t) in
+  let t = strip t in
   match t.n with
   | Tm_type _ -> true
   (* Through [arrow_formals_comp], which opens the binders: normalizing a
@@ -171,7 +201,7 @@ let is_type_binder (env:TcEnv.env) (b:binder) : ML bool =
    mentions [m] is already [any].  What is left is a parameterless [monad],
    which is exactly what the fields say. *)
 let rec is_star_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
-  match (SS.compress (U.unrefine t)).n with
+  match (strip t).n with
   | Tm_type _ -> true
   | Tm_fvar _ | Tm_app _ | Tm_uinst _ ->
     not normed &&
@@ -325,7 +355,11 @@ let rec arrow_formals_unfold_aux (fuel:int) (env:TcEnv.env) (t:typ)
                TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
                TcEnv.UnfoldUntil delta_constant]
               (U.comp_result c) in
-    match (SS.compress r).n with
+    (* Section 19.7: the normalizer returns the arrow inside the ascription
+       the elaborator wrote, and the tag of an ascription is not [Tm_arrow].
+       This is the whole of the EverParse [jumper] miscompilation. *)
+    let r = strip r in
+    match r.n with
     | Tm_arrow _ ->
       let bs', c' = arrow_formals_unfold_aux (fuel - 1) env r in
       bs @ bs', c'

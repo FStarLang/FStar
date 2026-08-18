@@ -2793,7 +2793,7 @@ and is_prop_sig (st:state) (t:typ) : ML bool =
                           TcEnv.Beta; TcEnv.Iota;
                           TcEnv.UnfoldUntil delta_constant]
                          (U.comp_result c) in
-  match (SS.compress (U.unrefine res)).n with
+  match (Mono.strip res).n with
   | Tm_fvar fv -> S.fv_eq_lid fv PC.prop_lid
   | _ -> false
 
@@ -3017,7 +3017,14 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                 [TcEnv.AllowUnboundUniverses; TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
                  TcEnv.UnfoldUntil S.delta_constant]
                 t in
-      match (SS.compress t).n with
+      (* Section 19.7, exactly as in [Mono.arrow_formals_unfold]: what comes
+         back is an arrow inside the ascription the elaborator wrote.  The
+         stripped term is what the rest of this branch works on, and not
+         merely what the tag is read off: [arrow_formals_comp] of an
+         ascription yields *no* binders, so peeling zero of [n] and recursing
+         on the same term is a loop that never ends. *)
+      let t = Mono.strip t in
+      match t.n with
       | Tm_arrow _ ->
         (* [arrow_formals_comp] flattens the *total* arrows only, so [c'] is
            either the group's own effectful comp or the first non-arrow. *)

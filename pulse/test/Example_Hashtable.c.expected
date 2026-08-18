@@ -70,6 +70,8 @@ size_t Pulse_Lib_HashTable_size_t_mod(size_t x, size_t y);
 Pulse_Lib_HashTable_Spec_cell__uintsize_data Pulse_Lib_Vec_replace_i_ref__cell_t_data(Pulse_Lib_HashTable_Spec_cell__uintsize_data **r, size_t i, Pulse_Lib_HashTable_Spec_cell__uintsize_data x);
 void Pulse_Lib_Vec_write_ref__cell_t_data(Pulse_Lib_HashTable_Spec_cell__uintsize_data **r, size_t i, Pulse_Lib_HashTable_Spec_cell__uintsize_data x);
 FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize Pulse_Lib_HashTable_lookup__t_data(Pulse_Lib_HashTable_Type_ht_t__uintsize_data ht, size_t k);
+Pulse_Lib_HashTable_Type_ht_t__uintsize_data FStar_Pervasives_Native_fst__ht_t_t_data_option_t(FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize x);
+FStar_Pervasives_Native_option__uintsize FStar_Pervasives_Native_snd__ht_t_t_data_option_t(FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize x);
 Pulse_Lib_HashTable_Spec_cell__uintsize_data Pulse_Lib_HashTable_mk_used_cell__t_data(size_t k, Example_Hashtable_data v);
 FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_bool Pulse_Lib_HashTable_insert__t_data(Pulse_Lib_HashTable_Type_ht_t__uintsize_data ht, size_t k, Example_Hashtable_data v);
 FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_data Pulse_Lib_HashTable_replace__t_data(Pulse_Lib_HashTable_Type_ht_t__uintsize_data ht, size_t idx, size_t k, Example_Hashtable_data v);
@@ -155,6 +157,14 @@ FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize Pulse_Lib_Has
   return (FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize){ ._1 = ht1, ._2 = ret };
 }
 
+Pulse_Lib_HashTable_Type_ht_t__uintsize_data FStar_Pervasives_Native_fst__ht_t_t_data_option_t(FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize x) {
+  return x._1;
+}
+
+FStar_Pervasives_Native_option__uintsize FStar_Pervasives_Native_snd__ht_t_t_data_option_t(FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize x) {
+  return x._2;
+}
+
 Pulse_Lib_HashTable_Spec_cell__uintsize_data Pulse_Lib_HashTable_mk_used_cell__t_data(size_t k, Example_Hashtable_data v) {
   return (Pulse_Lib_HashTable_Spec_cell__uintsize_data){ .tag = PULSE_LIB_HASHTABLE_SPEC_USED__UINTSIZE_DATA, .val = { .Pulse_Lib_HashTable_Spec_Used__uintsize_data = { .k = k, .v = v } } };
 }
@@ -196,10 +206,10 @@ FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_bool Pulse_Lib_HashTable_inse
       Pulse_Lib_HashTable_Type_ht_t__uintsize_data ht1 = (Pulse_Lib_HashTable_Type_ht_t__uintsize_data){ .sz = ht.sz, .hashf = hashf, .contents = vcontents };
       FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize res = Pulse_Lib_HashTable_lookup__t_data(ht1, k);
       Pulse_Lib_HashTable_Spec_cell__uintsize_data *_ct2;
-      Pulse_Lib_HashTable_Type_ht_t__uintsize_data scrut = res._1;
+      Pulse_Lib_HashTable_Type_ht_t__uintsize_data scrut = FStar_Pervasives_Native_fst__ht_t_t_data_option_t(res);
       _ct2 = scrut.contents;
       contents = _ct2;
-      FStar_Pervasives_Native_option__uintsize o = res._2;
+      FStar_Pervasives_Native_option__uintsize o = FStar_Pervasives_Native_snd__ht_t_t_data_option_t(res);
       if (o.tag == FSTAR_PERVASIVES_NATIVE_SOME__UINTSIZE) {
         Pulse_Lib_Vec_write_ref__cell_t_data(&contents, o.val.FStar_Pervasives_Native_Some__uintsize.v, (Pulse_Lib_HashTable_Spec_cell__uintsize_data){ .tag = PULSE_LIB_HASHTABLE_SPEC_ZOMBIE__UINTSIZE_DATA });
         idx = vidx;
