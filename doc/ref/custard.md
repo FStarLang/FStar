@@ -6771,6 +6771,167 @@ compiles and mentions no `tree`, the two explicit roots report a
 specification -- and is the suite's one negative test, so it has a rule of
 its own.
 
+### 19.12 A closed lambda is a function without a name
+
+C has no closures, and the direct backend rejects a lambda for that reason.
+That is the right answer only when the lambda *captures* something.  A closed
+one is an ordinary function that nobody named, and the address of a top-level
+function is a value C stores in a struct and passes as an argument without
+complaint.
+
+The reporter isolated it to one pair of files.  A record of function fields
+filled in with *names* already worked, and produces exactly the C the karamel
+path produces:
+
+```c
+struct FunPtrRecord_iter_t_s {
+  uint64_t contents;
+  bool     (*impl_validate)(uint64_t);
+};
+...
+  return (FunPtrRecord_iter_t){ .contents = x,
+                                .impl_validate = FunPtrRecord_is_even };
+```
+
+The same record written with the function inline was error 367.  So the whole
+of the gap is whether the function had a name, and the whole of the fix is to
+give it one.
+
+`Simplify.lift_lambdas` walks each definition, and every `EFun` with no free
+term variables becomes a fresh top-level `DLet` named after the definition it
+came out of, with an `EQual` in its place.  It runs before `dce`, which reads
+the final call graph and would otherwise drop the new declarations as
+unreachable, and before `scc`, which orders them.  Free *type* variables are
+not an obstacle: the lifted declaration takes the enclosing one's type
+parameters and the reference instantiates them, which costs nothing under
+`--custard_monomorphize_types` and stays correct without it.
+
+Only for `--custard_backend C`.  OCaml has closures and karamel has its own
+treatment, so lifting for either would churn the output to no purpose.
+
+Nobody writes these.  They come from an `inline_for_extraction` record of
+thunks -- `val cbor_det_share () : share_t cbor_det_match` -- whose fields
+beta-reduce to bare lambdas when the record is built.  Of the forty fields of
+EverParse's `CDDL.Pulse.AST.Det.C.cbor_impl`, nineteen are bare names and
+already worked, ten are erased ghost fields, and the remaining eleven are
+lambdas -- every one of them closed.
+
+The diagnostic changed with it, because it was giving the wrong advice half
+the time.  A lambda that reaches `PrintC` now has survived lifting, so it
+captures, so it really is a closure; the message says that, and offers naming
+the captured values as parameters alongside the `[@@@monomorphize]` route.
+`tests/custard/CFunPtr.fst` is the positive test and `CNoClosure.fst`, which
+captures, remains the negative one.
+
+### 19.13 Advice that names a flag the reader has already set
+
+`--custard_monomorphize_types true` was set, and the direct backend said:
+
+```
+  - Custard: the type variable 't has no C representation, in ...
+  - The direct-to-C backend requires --custard_monomorphize_types true.
+```
+
+Unactionable, and worse than unactionable: it sends the reader to check their
+command line, which is the one place the problem is not.  `PrintC.mono_advice`
+asks whether the flag is on.  If it is off, it is still the whole answer.  If
+it is on, the monomorphization pass ran and did not reach this type, which is
+a Custard bug and is now reported as one.
+
+### 19.14 A refinement is a proposition, and no question here depends on one
+
+`Extract.is_type_sig` decides whether a declaration is a type or a value, by
+normalizing its result type and looking for `Type`.  `is_prop_sig` asks the
+neighbouring question about `prop`.  Both normalized the result *whole*,
+including any refinement on it, and then peeled the refinement off the answer
+and threw it away.
+
+For most declarations that is a small waste.  For EverParse's CDDL layer it
+is a hard stop:
+
+```
+* Error 364:
+  - Custard exceeded --custard_norm_budget (1000000000 reduction steps)
+    while normalizing a type signature.
+  - The term being normalized, before reduction, was: e':
+    CDDL.Pulse.AST.Bundle.bundle_env ... { bundle_env_included ... /\
+    e'.be_ast == wf_ast_env_extend_typ_with_weak ... }
+```
+
+`env9`'s type is a well-formedness condition on a machine-generated CDDL
+environment built up one entry at a time, so each successive definition drags
+in the whole accumulated chain.  A budget of 10^9 steps is not the problem and
+raising it would not have helped; the proposition has no bearing on whether
+`env9` is a type.
+
+So both tests strip first.  `Mono.strip` is syntactic, so this moves the peel
+from after the normalization to before it and the answer is unchanged by
+construction -- `is_type_sig` already looked through `Tm_refine`, and
+`is_prop_sig` already ran `Mono.strip` on the result.
+
+`tests/custard/RefStrip.fst` is forty abbreviations of `q(n) = q(n-1) /\
+q(n-1)`, so the proposition costs 2^40 steps and says `True`.  It appears in
+one refinement and nowhere else, and the test runs under
+`--custard_norm_budget 20000`: extracting at all is the assertion.
+
+This is the same observation as section 18.3's two hot spots, and the third
+time in this round that the extractor turns out to be doing arithmetic on a
+proof.  Section 5.1 erases proof-level *values*; what these want is the same
+discipline applied to the terms the extractor normalizes in order to make a
+decision, and it is worth a pass over every `norm` call in `Extract` asking
+what the answer could possibly depend on.
+
+### 19.15 Why the Rust output does not compile, and why it is not the aliases
+
+The reporter closed off the standing hypothesis with a census: of 431
+ownership errors from `rustc`, twenty so much as mention `_letpattern`, and
+in those the binding is incidental.  The representative one is a function
+*parameter*.
+
+The cause is one decision.  karamel logs
+
+```
+Pulse.Lib.Slice.slice__uint8_t (FLAT): lifetime=false box=true
+```
+
+and emits an owning struct, `{ elt: Box<[u8]>, len: usize }`.  Owning means
+not `Copy`, and not `Copy` means every by-value use of a slice is a move.
+
+That it is *owning* is the part that matters, and it is worse than a build
+failure.  Because the struct owns its buffer, `split` cannot return aliases
+into its parent and deep-copies instead, so a write through either half lands
+in a temporary that is dropped.  The reporter silenced the borrow errors with
+the `.clone()` calls rustc itself suggests and got zeroes where the C backend
+gets `[0, 0, 170, 170, 170, 0, 0, 0]`.  The borrow checker is currently the
+only thing standing between this path and a silent wrong answer, which is the
+argument for fixing the representation rather than the diagnostics.
+
+The reason karamel gets it wrong is on *our* side of the line.  karamel's
+Rust backend recognizes a slice by name and arity:
+
+```ocaml
+| TApp ((["Pulse"; "Lib"; "Slice"], "slice"), [ t ]) ->
+    Ref (config.lifetime, Shared, Slice (translate_type_with_config env config t))
+```
+
+and separately treats the whole `Pulse_Lib_Slice` module as a model, replacing
+its definitions with `val`s, when `Options.rust ()`.  Custard monomorphizes
+types (section 5.0.1) and emits one flat translation unit, so by the time
+karamel sees the program there is no `TApp` of `slice` to match -- there is a
+`slice__uint8` struct with a definition -- and no `Pulse_Lib_Slice` module to
+model.  Both hooks miss, and karamel falls back to compiling the F* definition,
+which is the correct thing to do for C and the wrong thing for Rust.
+
+So the fix belongs here: for `--custard_backend Krml`, `Pulse.Lib.Slice.slice`
+and the operations over it have to survive as the abstract type and the
+`val`s that karamel is expecting, rather than being monomorphized and
+compiled.  That is what `--custard_extern_type` already does for a type whose
+definition Custard must not look at, and the operations are what
+`[@@custard_extern]` is for; what is missing is that the choice is
+target-dependent -- C wants the definition compiled and Rust wants it
+abstract -- and Custard's Krml backend does not currently know which of the
+two karamel is going to be asked for.  Not done, and not a small change.
+
 ### 19.8a A branch of ulib is not a Custard decision
 
 Custard's C output for `Example_Hashtable` carried two one-line wrapper
@@ -6792,9 +6953,12 @@ what the language extracts.  Not done; noted here so the trade is on record.
 
 * The two expensive normalizations of section 18.3, now named.  The next
   step is not a faster normalizer but not asking for those terms: both are
-  specification-only and reached through type-level positions.  Section
-  19.11 is the same observation one level up, and it is suggestive: the
-  extractor keeps being handed proof-level terms to make decisions about.
+  specification-only and reached through type-level positions.  Sections
+  19.11 and 19.14 are the same observation one and two levels up, and
+  together they are more than suggestive: three times in two rounds the
+  extractor has turned out to be computing with a proof.  What is wanted is
+  a pass over every `norm` call in `Extract`, asking of each what the
+  answer could depend on.
 * `--custard_profile_norm`, which would print the request chain for any
   single normalization over a wall-time threshold.  The reporter has asked
   for it twice and has been bisecting by hand instead.
@@ -6803,6 +6967,19 @@ what the language extracts.  Not done; noted here so the trade is on record.
   a specification: it is real code whose *ghost* index reaches the layout
   pass.  19.11 does not fix it, and whether it needs anything beyond the same
   erasure one level deeper is not yet known.
+* The Rust slice representation (§19.15).  Diagnosed and not fixed, and the
+  correction that matters is that it is *not* karamel-side: karamel's two
+  hooks key on the `Pulse.Lib.Slice.slice` lid and on the module name, and
+  whole-program monomorphization erases both.  It is also a
+  miscompilation, not just a build failure, so it outranks the rest of this
+  list.
+* CDDL error 363: `[@@monomorphize]` does not propagate through a runtime
+  parameter in `CDDL.Pulse.Bundle.Base`.  This is the known M7 gap and
+  wants M7, not a patch.
+* Integration, all three reported together and none addressed: the direct
+  backend emits no `.h`, so nothing can call the output; every one of the
+  159 functions is exported, with no `static` for those with a single
+  caller; and `--custard_split` is OCaml-only.
 * karamel's Rust backend, now FStarLang/FStar#4443: 431 ownership errors on
   `cbor_det_serialize` -- 296 `E0507`, 132 `E0382`, 3 `E0505` -- dominated by
   non-`Copy` slice structs dereferenced out of shared references, plus five
@@ -6886,3 +7063,4 @@ what the language extracts.  Not done; noted here so the trade is on record.
 | M10ξ | **A definition's arity comes from its lambda, and dead bindings do not reach C** (§19.4, §19.5) | Done.  `Mono.classify` reads a definition's binders off its *type* and `Extract.extract_letbinding` reads them off its *lambda*, and when an abbreviation stops the arrow spine short the two disagree -- the definition deletes an erased binder that every call site keeps passing.  EverParse's `jump_header : unit -> jumper parse_header` is five binders that the type shows as one.  Unfolding harder is not the fix: a refinement is not a `Tm_arrow` however much unfolding is allowed, and these step lists omit `Zeta` on purpose.  `Mono.classify_def` extends the classification with the lambda's surplus binders, filtered by `is_erased_binder` -- verbatim the rule `extract_letbinding` already applied to them -- so `split_mono_args`, `call_unit_flags` and `call_type_args` all agree with the definition, and the two sides come from one list instead of two that usually coincide.  A no-op wherever the spine is already complete.  This supersedes the M10ν `lookup_sigelt` diagnosis, which the reporter's instrumented build disproved: the lookup never misses and the classification is short, not empty; the fallback stays because a short-circuit indistinguishable from an answer is worth closing regardless.  Separately, `PrintC` drops an `ELet` whose name the body never reads when the initializer is pure, which is what a pattern match using none of its fields leaves behind and what `-Werror=unused-variable` refuses; in the printer rather than `Simplify` because it is a fact about C.  `tests/custard/EraseAbbrev.fst` (checked to fail without the fix, emitting `add5 () x () 6`) and `tests/custard/CDeadLet.fst`.  The 6m20s whole-module profile also arrived and §18.3's explanation was wrong: `Extract.norm` is 374.7s of 380s and the growth is in per-call cost, not call count, and is sub-additive in roots. |
 | M10ο | **A normalizer returns a meaning, not a tag; and a cell written but never read** (§19.7, §19.8) | Done.  The reporter found the root cause of §19.2 himself and it is one line: `norm` unfolds `jumper parse_header` into exactly the arrow that was wanted, wrapped in a `Tm_ascribed`, and `SS.compress` does not strip an ascription, so `| Tm_arrow _ ->` never fired and the spine stopped one abbreviation short.  His tag census over one `jump_header` run says this is the common case and not a corner: six arrows behind an ascription, twenty-four refinements behind one.  So the fix is generalized rather than local -- `Mono.strip` alternates `unascribe` and `unrefine` to a fixed point, and no shape test in `Mono` reads a tag without it (`is_arity_aux`, `is_star_aux`, `arrow_formals_unfold_aux`), nor do `Extract.peel_typ` and `Extract.is_prop_sig`.  The failure mode is why: reading a tag off a wrapper answers "not an arrow" and "not an arity", and both are wrong in the direction that miscompiles.  Generalizing found a second instance and a trap: `peel_typ` matched on the *stripped* term but then called `U.arrow_formals_comp` on the unstripped one, which yields zero binders, so `peel_typ (n - 0)` recursed forever -- `Effects.fst` hung for minutes with no budget error at all, which is the signature of a Custard-level loop rather than a big reduction.  Stripping for the match is not enough; the term has to be rebound.  This also supersedes M10ξ's claim to be the EverParse cause: `classify_def` cannot fire there, because the declaration comes from an interface and `lb.lbdef` is `Tm_unknown`, so there are no surplus binders to read.  It stays, with a real single-file reproduction.  With the ascription fix, whole-module direct-to-C of `CBOR.Pulse.API.Det.C` succeeds, the 3419 lines compile under `gcc -Wall -Wextra`, and all 57 entry points extract individually.  The two remaining `-Werror` blockers are also closed, both in `PrintC`: §19.5's dead binding now uses `is_droppable` rather than `is_pure`, since a read of a collapsed cell cannot *move* across a write but can always *go*; and `cell_dead`/`drop_writes` delete a one-cell allocation every occurrence of which is the target of a write, which is what Pulse's `fn while` measure erases to.  `Goto_test1` goes from six lines to one.  Reverted with these: the ulib `inline_for_extraction` on `fst`/`snd`, which changed standard ML extraction repo-wide for a cosmetic Custard gain (§19.8a). |
 | M10π | **A redundant alias, and a specification named as an entry point** (§19.10, §19.11) | Done.  The `_letpattern` that survived M10ο is not a dead binding -- the name *is* read, by the match that scrutinizes it -- so the reporter dumped the IR instead of guessing, and the answer is that `emit_match` takes the direct path on a stable scrutinee, emits no read of it, and binds the branch's fields with `bind_alias`, which emits nothing when the body does not use them; the declaration is left with no users at all.  It is a **redundant alias**: `let x = <stable expr> in e2` declares a second name for a value this backend never assigns to, and `bind_alias` is already the answer to that everywhere else in the printer.  No side condition beyond `is_stable`, which is the licence `emit_match` has always taken.  The live cases collapse too, which is most of the value: `Pulse_Lib_HashTable` loses four copies of a function pointer and `Example_Slice` a pointer copy, and `_letpattern` bound to a plain variable appears 335 times in EverParse's output.  Separately, `--custard_entry` on a separation-logic predicate -- `cbor_det_match : perm -> cbor_det_t -> Spec.cbor -> slprop` -- was rejected with error 367 for the recursive datatype `Prims.list`, which is true about `Spec.cbor` and no answer at all to what was asked: the result is `slprop`, the index is ghost, and nothing in the program holds one.  `--custard_entry_module` already declined to root these (`erased_definition`); an explicit root was taken at its word, which is defensible until the word is `slprop`.  `Extract.root_is_erased` now asks before requesting, and reports rather than skipping, on the same reasoning that makes a misspelled entry an error.  The predicate is deliberately *not* `erased_definition`, and two rounds of the suite said why: `must_erase_for_extraction` answers yes for `unit`, so the effect has to be total or ghost as well (`main : unit -> ML unit` returns nothing and is the whole program), and a *type* is exempt outright, since its result is `Type` and a type abbreviation named by `--custard_entry` is exactly what a hand-written realization needs emitted (`TypeEntry.fst` caught it).  `tests/custard/pulse/PulseSpecRoot.fst`, the suite's one negative test and so a rule of its own. |
+| M10ρ | **A lambda without a name, and a proposition nobody asked about** (§19.12, §19.13, §19.14) | Done.  Three findings from the CDDL half of the reporter's corpus, and the first is the reporter's own bisection: Custard already emits function pointers in structs exactly as karamel does, so the entire gap between `FunPtrRecord.fst` (works) and `CDDL.Pulse.AST.Det.C.cbor_det_impl` (error 367) is that the second writes its functions inline.  A closed lambda is a function nobody named; `Simplify.lift_lambdas` names it, before `dce` so the new declarations are in the call graph and before `scc` so they are ordered, inheriting the enclosing declaration's type parameters so free type variables cost nothing.  C only -- OCaml has closures and karamel has its own treatment.  Nobody writes these by hand: all eleven come from an `inline_for_extraction` record of thunks whose fields beta-reduce, against nineteen bare names that already worked and ten erased ghost fields.  A lambda that still reaches `PrintC` therefore genuinely captures, and says so.  Second, the advice attached to a type-variable rejection recommended `--custard_monomorphize_types`, which the reporter had set; `PrintC.mono_advice` asks first, and reports a Custard bug when the flag is already on, because advice that names the reader's own command line is worse than none.  Third, error 364 exhausting 10^9 steps "normalizing a type signature" on `env9 : bundle_env ... { bundle_env_included ... /\ ... }` -- a machine-generated CDDL well-formedness proof, which `is_type_sig` normalized whole and then discarded.  Both `is_type_sig` and `is_prop_sig` now `Mono.strip` first; `Mono` was already right, since `is_arity_aux` never lets a `Tm_refine` reach its normalizer.  `tests/custard/RefStrip.fst` is a 2^40-step proposition in a refinement under a 20000-step budget, and the reproduction that does *not* work is worth recording: a recursive function in the refinement is never unfolded by this step list, so it has to be a chain of abbreviations. |

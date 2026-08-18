@@ -2765,11 +2765,19 @@ and with_erased_flag (d:decl) : ML decl =
    before we can tell a type declaration from a value declaration. *)
 and is_type_sig (st:state) (t:typ) : ML bool =
   let _, c = U.arrow_formals_comp t in
+  (* Section 19.14.  Strip *before* normalizing, not only after.  A refinement
+     is a proposition, and whether a declaration is a type does not depend on
+     one; handing the whole [x: t{p}] to the normalizer reduces [p] in full
+     and then discards it.  On EverParse's CDDL layer that is a hard stop
+     rather than a cost: [env9 : bundle_env ... { bundle_env_included ... /\
+     ... == wf_ast_env_extend_typ_with_weak ... }] exhausts a budget of 10^9
+     steps in a proof that has no bearing on the answer.  [Mono.strip] is
+     syntactic and costs nothing. *)
   let res = norm_bounded st "a type signature"
                          [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                           TcEnv.Beta; TcEnv.Iota;
                           TcEnv.UnfoldUntil delta_constant]
-                         (U.comp_result c) in
+                         (Mono.strip (U.comp_result c)) in
   (* [eqtype] is a refinement of [Type0], so peel refinements too.  [prop] is
      [assume val prop : Type0], i.e. opaque, so the normalizer cannot reduce it
      to a [Tm_type]; but a [prop]-valued definition such as [eq2] or [l_and] is
@@ -2788,11 +2796,14 @@ and is_type_sig (st:state) (t:typ) : ML bool =
    closure to (fail to) discover it: these are all opaque. *)
 and is_prop_sig (st:state) (t:typ) : ML bool =
   let _, c = U.arrow_formals_comp t in
+  (* Section 19.14, exactly as in [is_type_sig]: the result is already stripped
+     below, so stripping first only moves the same peel to the cheap side of
+     the normalization. *)
   let res = norm_bounded st "a type signature"
                          [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                           TcEnv.Beta; TcEnv.Iota;
                           TcEnv.UnfoldUntil delta_constant]
-                         (U.comp_result c) in
+                         (Mono.strip (U.comp_result c)) in
   match (Mono.strip res).n with
   | Tm_fvar fv -> S.fv_eq_lid fv PC.prop_lid
   | _ -> false

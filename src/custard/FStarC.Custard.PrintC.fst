@@ -53,6 +53,7 @@ module BU     = FStarC.Util
 module SMap   = FStarC.SMap
 module E      = FStarC.Errors
 module String = FStarC.String
+module Options = FStarC.Options
 
 (* -------------------------------------------------------------------- *)
 (* Rejections                                                           *)
@@ -188,6 +189,21 @@ let int_type (sw : signedness & width) : string =
    to a machine width is the one mistranslation that would be invisible in the
    output.  Section 6 makes the same argument for leaving the [Prims]
    arithmetic operators as unresolved symbols. *)
+(* Section 19.13.  What to say about a type the direct backend cannot size.
+   The obvious advice -- turn on [--custard_monomorphize_types] -- is only
+   advice when it is not already on, and telling a reader to set a flag they
+   have set sends them looking in the wrong place.  When it is on, the pass
+   ran and this type is one it did not reach, which is a bug report rather
+   than a configuration change. *)
+let mono_advice () : ML (list string) =
+  if Options.custard_monomorphize_types ()
+  then ["--custard_monomorphize_types is already set, so this type is one the \
+         monomorphization pass did not reach (section 5.0.1).";
+        "That is a Custard bug, not a configuration problem: please report it, \
+         with the definition named above."]
+  else ["The direct-to-C backend requires --custard_monomorphize_types true \
+         (section 5.0.1)."]
+
 let builtin_type (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
   | "Prims.unit" -> Some "custard_unit"
@@ -244,14 +260,15 @@ and base_ty (t:cty) : ML string =
              "Prims.int in particular is unbounded: use a machine integer type \
               instead."]
         | _ -> c_name n))
+  (* Section 19.13.  Advice the reader can act on, which means not naming a
+     flag that is already set.  With [--custard_monomorphize_types] off, that
+     flag is the whole answer; with it on, the pass ran and did not reach this
+     type, which is a different problem with a different cause and deserves to
+     be told apart. *)
   | TApp (n, _) ->
-    reject ("the polymorphic type " ^ string_of_name n)
-      ["The direct-to-C backend requires --custard_monomorphize_types true \
-        (section 5.0.1)."]
+    reject ("the polymorphic type " ^ string_of_name n) (mono_advice ())
   | TVar x ->
-    reject ("the type variable '" ^ x)
-      ["The direct-to-C backend requires --custard_monomorphize_types true \
-        (section 5.0.1)."]
+    reject ("the type variable '" ^ x) (mono_advice ())
   | TTuple _ ->
     reject "an anonymous tuple type"
       ["Tuples reach the backend as FStar.Pervasives.Native.tupleN, which is \
@@ -751,10 +768,19 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     truncate o ("(" ^ Some?.v (prefix_op o) ^ c_expr out ind a ^ ")")
   | EOp (o, args) ->
     reject ("an operator applied to " ^ show (List.length args) ^ " arguments") []
+  (* Section 19.12.  A *closed* lambda has been lifted to a top-level function
+     by now, so one that reaches here captures something, and that is a real
+     closure.  Saying so is the difference between an accurate diagnostic and
+     one that sends the reader after an annotation that would not have helped
+     -- the earlier message advised [@@@monomorphize] for both cases, which is
+     the right advice only for this one. *)
   | EFun _ ->
-    reject "a lambda"
-      ["C has no closures.  Mark the parameter it is passed to \
-        [@@@monomorphize] so that it is specialized away (section 3.1)."]
+    reject "a lambda that captures a local variable"
+      ["C has no closures, and this one is not closed, so it cannot be lifted \
+        to a top-level function (section 19.12).";
+       "Mark the parameter it is passed to [@@@monomorphize] so that it is \
+        specialized away (section 3.1), or name the captured values as extra \
+        parameters of a top-level function."]
   | ETuple _ ->
     reject "an anonymous tuple"
       ["Tuples reach the backend as FStar.Pervasives.Native.MktupleN."]

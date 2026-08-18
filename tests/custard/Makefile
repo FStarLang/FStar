@@ -296,7 +296,8 @@ KRML_TESTS += KrmlBasic
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
-C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet
+C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet CFunPtr
+C_TESTS += RefStrip
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
 # global whose initializer is a computation -- against one that is a constant
@@ -349,6 +350,25 @@ CNOGREP_CByValue = "typedef struct {"
 # not declared under any name.
 CGREP_CDeadLet   = "return dflt;" "return s.val.CDeadLet_Rect._1;"
 CNOGREP_CDeadLet = " = p;" "_letpattern"
+
+# Section 19.14: the refinement on [table] costs 2^40 steps to normalize and
+# has no bearing on any question Custard asks about the declaration.  The
+# budget is what makes this a test: it is far below what normalizing the
+# proposition would take, so extracting at all is the assertion.
+FLAGS_RefStrip   = --custard_norm_budget 20000
+CGREP_RefStrip   = "uint32_t RefStrip_table = ((uint32_t)7U);"
+CNOGREP_RefStrip = "q40"
+
+# Section 19.12: a closed lambda is lifted to a top-level function and the
+# record stores its address, which is the same C the named version produces.
+# The two greps are the two halves: a lifted function exists, and no lambda
+# survived anywhere (a surviving one would not have compiled, so this pins
+# down that the fix was lifting and not something else).
+CGREP_CFunPtr   = "bool CFunPtr_mk_lambda__lam(uint64_t" \
+                  ".impl_validate = CFunPtr_mk_lambda__lam" \
+                  ".impl_validate = CFunPtr_is_even" \
+                  "CFunPtr_quarter__lam"
+CNOGREP_CFunPtr = "(*)("
 
 # CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
 # output-quality invariants of section 6: a unit parameter is a thunk, which C

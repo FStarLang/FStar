@@ -2332,6 +2332,129 @@ let coerce_prog (prog:program) : ML program =
       DLet { dl with dl_body = check env (Some dl.dl_ret) dl.dl_body }
     | d -> d)
 
+(* Section 19.12.  A lambda in a value position, lifted to a top level.
+
+   C has no closures, so a lambda reaching the direct backend is rejected --
+   and that is right only when the lambda *captures* something.  A closed one
+   is a function that happens not to have been given a name, and giving it one
+   is the whole of the fix: the address of a top-level function is a value C
+   is perfectly happy to store in a struct or pass as an argument.  It is also
+   exactly the model the karamel path already produces for this code, a struct
+   of pointers to named functions and no closures anywhere.
+
+   These are not written by anyone.  They come from an [inline_for_extraction]
+   record of thunks -- [val cbor_det_share () : share_t ...] -- whose fields
+   beta-reduce to bare lambdas when the record is built.  In EverParse's CDDL
+   layer, eleven of one record's forty fields are of this shape and every one
+   of them is closed.
+
+   Free *type* variables are not an obstacle: the lifted declaration takes the
+   enclosing one's type parameters and the reference instantiates them, which
+   costs nothing where there are none (the direct backend, which is the only
+   caller) and stays correct where there are.
+
+   Only for [--custard_backend C].  OCaml has closures and karamel has its own
+   treatment, so lifting there would churn the output to no purpose. *)
+let lift_lambdas (prog:program) : ML program =
+  (* Free term variables, minus the ones bound on the way in.  Unlike
+     [occurs] this has to track binders, because the question is whether the
+     lambda is closed and a name it binds itself does not count. *)
+  let rec fvs (bound:list string) (x:expr) : ML (list string) =
+    let l (es:list expr) : ML (list string) = List.collect (fvs bound) es in
+    match x.e with
+    | EVar v -> if List.mem v bound then [] else [v]
+    | EConst _ | EQual _ | EAny | EAbort _ -> []
+    | ELet (v, _, e1, e2) -> fvs bound e1 @ fvs (v :: bound) e2
+    | EApp (h, es) -> fvs bound h @ l es
+    | EFun (bs, b) -> fvs (List.map (fun (b:binder) -> b.b_name) bs @ bound) b
+    | EMatch (sc, brs) -> fvs bound sc @ List.collect (fvs_branch bound) brs
+    | ETry (a, brs) -> fvs bound a @ List.collect (fvs_branch bound) brs
+    | EIf (a, b, c) -> l [a; b; c]
+    | ESeq (a, b) | EWhile (a, b) -> l [a; b]
+    | ECtor (_, es) | ETuple es | EOp (_, es) -> l es
+    | ERaise e1 -> fvs bound e1
+    | ERecord (_, fs) -> l (List.map snd fs)
+    | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
+    | ECoerce (a, _) -> fvs bound a
+  and fvs_branch (bound:list string) (br:branch) : ML (list string) =
+    let p, g, b = br in
+    let bound = pat_vars p @ bound in
+    (match g with Some g -> fvs bound g | None -> []) @ fvs bound b
+  and pat_vars (p:pat) : ML (list string) =
+    match p with
+    | PWild | PConst _ -> []
+    | PVar v -> [v]
+    | PCtor (_, ps) -> List.collect pat_vars ps
+    | PRecord (_, fs) -> List.collect pat_vars (List.map snd fs) in
+  let taken : SMap.t bool = SMap.create 100 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet d -> SMap.add taken (string_of_name d.dl_name) true
+    | DType d -> SMap.add taken (string_of_name d.dt_name) true
+    | DExternal d -> SMap.add taken (string_of_name d.dx_name) true
+    | DExn d -> SMap.add taken (string_of_name d.de_name) true);
+  let lifted : ref (list decl) = mk_ref [] in
+  (* One declaration at a time, so that a lifted function is emitted next to
+     the definition it came out of and the names stay readable. *)
+  let go_decl (dl:dlet) : ML dlet =
+    let n = mk_ref 0 in
+    let fresh_name () : ML name =
+      let pick (i:int) : ML string =
+        dl.dl_name.id ^ "__lam" ^ (if i = 0 then "" else "_" ^ show i) in
+      let rec first (i:int) : ML name =
+        let cand = { dl.dl_name with id = pick i } in
+        if Some? (SMap.try_find taken (string_of_name cand))
+        then first (i + 1)
+        else (SMap.add taken (string_of_name cand) true; cand) in
+      let r = first !n in
+      n := !n + 1; r in
+    let rec go (x:expr) : ML expr =
+      let same (e':expr') : expr = { x with e = e' } in
+      match x.e with
+      | EFun (bs, body) ->
+        let body = go body in
+        let bound = List.map (fun (b:binder) -> b.b_name) bs in
+        if Cons? (fvs bound body)
+        then same (EFun (bs, body))
+        else
+          let nm = fresh_name () in
+          lifted := DLet { dl_name = nm; dl_typars = dl.dl_typars;
+                           dl_binders = bs; dl_ret = body.ty;
+                           dl_eff = body.eff; dl_body = body;
+                           dl_flags = [] } :: !lifted;
+          { x with e = EQual (nm, dl.dl_typars |> List.map (fun v -> TVar v)) }
+      | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+      | ELet (v, t, e1, e2) -> same (ELet (v, t, go e1, go e2))
+      | EApp (h, es) -> same (EApp (go h, List.map go es))
+      | EMatch (sc, brs) -> same (EMatch (go sc, List.map go_branch brs))
+      | ETry (a, brs) -> same (ETry (go a, List.map go_branch brs))
+      | EIf (a, b, c) -> same (EIf (go a, go b, go c))
+      | ESeq (a, b) -> same (ESeq (go a, go b))
+      | EWhile (a, b) -> same (EWhile (go a, go b))
+      | ECtor (nm, es) -> same (ECtor (nm, List.map go es))
+      | ETuple es -> same (ETuple (List.map go es))
+      | EOp (o, es) -> same (EOp (o, List.map go es))
+      | ERaise e1 -> same (ERaise (go e1))
+      | ERecord (nm, fs) -> same (ERecord (nm, fs |> List.map (fun (f, e) -> (f, go e))))
+      | EProj (a, nm, f) -> same (EProj (go a, nm, f))
+      | EDiscrim (a, nm) -> same (EDiscrim (go a, nm))
+      | ECast (a, t) -> same (ECast (go a, t))
+      | ECoerce (a, t) -> same (ECoerce (go a, t))
+    and go_branch (br:branch) : ML branch =
+      let p, g, b = br in
+      (p, (match g with Some g -> Some (go g) | None -> None), go b) in
+    { dl with dl_body = go dl.dl_body } in
+  (* A lifted function is emitted *before* the definition that refers to it,
+     which is what the C backend's forward declarations expect and what keeps
+     the [scc] pass from seeing a use ahead of its definition. *)
+  prog |> List.collect (fun d ->
+    match d with
+    | DLet dl ->
+      lifted := [];
+      let dl = go_decl dl in
+      List.rev !lifted @ [DLet dl]
+    | d -> [d])
+
 let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   let pass (n:string) (f : program -> ML program) (p:program) : ML program =
     Prof.timed ("s." ^ n) (fun () -> f p) in
@@ -2363,6 +2486,11 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   (* After every pass that can leave a definition eta-short, and before [dce],
      which reads the final call graph. *)
   let prog = pass "eta_expand" eta_expand_decls prog in
+  (* Before [dce], which reads the final call graph and would otherwise drop
+     every lifted function as unreachable, and before [scc], which orders
+     them. *)
+  let prog = if Options.custard_backend () = "C"
+             then pass "lift_lambdas" lift_lambdas prog else prog in
   (* Last: a coercion is inserted where two types disagree, so every pass that
      can change a type has to have run.  Nothing below it may rewrite a term. *)
   let prog = pass "dce" dce prog in
