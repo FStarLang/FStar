@@ -49,7 +49,7 @@ let timeless p = Sep.timeless p
 let emp = emp
 
 let pure p = pure p
-let op_Star_Star = star
+let ( ** ) = star
 let op_exists_Star #a p = op_exists_Star #a p
 let implies = implies
 let later_credit = later_credit

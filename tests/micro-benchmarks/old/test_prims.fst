@@ -154,7 +154,7 @@ assume new type int : Type0
 assume val op_Amp_Amp             : bool -> bool -> Tot bool
 assume val op_Bar_Bar             : bool -> bool -> Tot bool
 assume val not           : bool -> Tot bool
-assume val op_Multiply           : int -> int -> Tot int
+assume val op_Star               : int -> int -> Tot int
 assume val op_Minus        : int -> int -> Tot int
 assume val op_Plus           : int -> int -> Tot int
 assume val op_Tilde_Minus              : int -> Tot int

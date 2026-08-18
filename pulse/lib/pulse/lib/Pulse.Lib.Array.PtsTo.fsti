@@ -83,7 +83,7 @@ fn alloc
 
 (* Written x.(i) *)
 inline_for_extraction
-fn op_Dot_Lparen_Rparen
+fn ( .() )
         u#a (#t: Type u#a)
         (a: array t)
         (i: SZ.t)
@@ -96,7 +96,7 @@ fn op_Dot_Lparen_Rparen
 
 (* Written x.(i) <- v *)
 inline_for_extraction
-fn op_Dot_Lparen_Rparen_Less_Minus
+fn ( .()<- )
         u#a (#t: Type u#a)
         (a: array t)
         (i: SZ.t)

@@ -57,7 +57,7 @@ let sorted_concat
   (ensures sorted (Seq.append s0 s1))
 = () 
 
-fn op_Dot_Lparen_Rparen_Less_Minus u#a
+fn ( .()<- ) u#a
         (#t: Type u#a)
         (a: array t)
         (i: SZ.t)
