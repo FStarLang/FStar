@@ -1963,9 +1963,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
          eliminate exists x1 ... xn. p
          with e
          desugars to
-         let (| x1, ..., xk |) = indefinite_descriptionk (fun x1 ... xk -> exists xk+1 ... xn. p) in
-         ... continuing with the remaining binders, at most
-         max_indefinite_description_arity at a time ...
+         let (| x1, (| ..., xn |) |) = indefinite_descriptionn (fun x1 ... xn -> p) in e
+         using a single call whenever n <= max_indefinite_description_arity.
       *)
       let pat_of_binder (b:binder) : ML pattern =
         let v aq attrs x = mk_pattern (PatVar (x, aq, attrs)) b.brange in
@@ -1977,20 +1976,35 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
           raise_error b Fatal_UnexpectedTerm
             "Unexpected unnamed binder in 'eliminate exists'"
       in
+      (* `indefinite_descriptionk` returns a right-nested chain of dependent
+         pairs, so the binding pattern is nested to match. *)
+      let rec nested_pat (pats:list pattern) (r:Range.range) : ML pattern =
+        match pats with
+        | [pat] -> pat
+        | pat::pats -> mk_pattern (PatTuple ([pat; nested_pat pats r], true)) r
+        | [] -> raise_error top Fatal_UnexpectedTerm "Empty binders in 'eliminate exists'"
+      in
       let rec aux (bs:list binder) : ML term =
         match bs with
         | [] -> e
         | _ ->
           let n = List.length bs in
-          (* When all the binders fit in a single indefinite_descriptionk we
-             use it, and the obligation is the (flat) existential the user
-             wrote. Otherwise we must nest, and then the obligation of the
-             outer call is `exists x1 ... xk. (exists xk+1 ... xn. p)`. The
-             solver has no trigger for the outer existential that mentions the
-             inner binders, so it falls back to a multi-pattern of the typing
-             hypotheses of x1 ... xk and enumerates every k-tuple of terms of
-             the right type. Peeling off one binder at a time keeps that
-             enumeration linear instead of exponential in k. See issue #4405. *)
+          (* Taking all the binders in one step is important. Chaining several
+             calls is bad in two independent ways. First, the obligation of a
+             non-final call is `exists x1 ... xk. (exists xk+1 ... xn. p)`, and
+             the solver has no trigger for the outer existential that mentions
+             the inner binders, so it falls back to a multi-pattern of the
+             typing hypotheses of x1 ... xk and enumerates every k-tuple of
+             terms of the right type (issue #4405). Second, each step restates
+             the remaining existential as its own postcondition, and
+             normalizing the resulting VC costs about 2x per extra step, so the
+             elaboration time grows exponentially in the number of steps
+             (issue #4444).
+
+             Beyond max_indefinite_description_arity we have no combinator of
+             the right arity, so we peel off one binder at a time: that at
+             least keeps the trigger enumeration linear rather than
+             exponential in k. *)
           let k = if n <= C.max_indefinite_description_arity
                   then n
                   else 1
@@ -2004,12 +2018,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
           let pred = mk_term (Abs (List.map pat_of_binder hd, body)) r Expr in
           let head = mk_term (Var (C.indefinite_description_lid k)) r Expr in
           let rhs = mkExplicitApp head [pred] r in
-          let pats = List.map pat_of_binder hd in
-          let pat =
-            match pats with
-            | [pat] -> pat
-            | _ -> mk_pattern (PatTuple (pats, true)) r
-          in
+          let pat = nested_pat (List.map pat_of_binder hd) r in
           mk_term (Let (LocalNoLetQualifier, [(None, (pat, rhs))], aux tl)) top.range Expr
       in
       if Nil? bs
