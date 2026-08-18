@@ -243,7 +243,7 @@ let n_minus_one = UInt32.uint_to_t (n - 1)
 
     Note, the branching on [a=b] is just for proof-purposes.
   *)
-#push-options "--z3rlimit 80 --fuel 1"
+#push-options "--fuel 1"
 [@ CNoInline ]
 let eq_mask (a:t) (b:t)
   : Pure t
