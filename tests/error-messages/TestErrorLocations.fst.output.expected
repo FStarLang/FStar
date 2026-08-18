@@ -114,7 +114,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: exists (x1: Prims.nat). x1 = 0
   - In context: uu___: Prims.unit
-  - See also FStar.Classical.Sugar.fsti(191,14-191,29)
+  - See also FStar.Classical.Sugar.fsti(209,14-209,29)
 
 * Info at TestErrorLocations.fst(92,28-92,33):
   - Expected failure:
