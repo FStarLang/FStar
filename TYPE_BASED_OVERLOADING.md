@@ -165,7 +165,7 @@ relates the head of its last argument to the head of its result. That last group
 by `Overload.coercion_source_and_target`, which `Util.find_coercion` also uses to select a
 coercion, so the two cannot disagree about which coercions exist. Nothing downstream
 re-examines an elimination, so a coercion this relation missed would be a way to resolve to
-the wrong candidate.
+the wrong candidate; "How `compatible` treats coercions" in §8 gives the full rule.
 
 Rejected alternatives: full `U.eq_tm` on the unrefined type (breaks the moment a uvar or
 abbreviation appears); unifiability via `Rel.try_teq` (order-dependent, and speculative
@@ -558,11 +558,9 @@ checked. The head-symbol test does not know about implicit coercions, typeclass
 constraints, refinements or subtyping.
 
 The fix is to make `compatible` relate two heads whenever a coercion does, so that it
-over-approximates as §2.4 requires: `Prims.bool` and `Prims.prop` are compatible with each
-other and with `Base_type` (`b2t`, `squash` and `t2b` relate all three), and
-`FStar.Ghost.erased` is compatible with everything (`hide`/`reveal`). `tests/overloading/
-OvlCoercions.fst` covers these. User coercions were added later and are read from the
-environment; see "Coercions are read from the environment" below.
+over-approximates as §2.4 requires; see "How `compatible` treats coercions" below for the
+rule it applies. `tests/overloading/OvlCoercions.fst` covers the shapes these five
+regressions had.
 
 An earlier version of this work also had `TcTerm.resolve_overloaded_head` re-check the
 displaced candidate and keep it if it checked, as a second line of defence. That was
@@ -656,13 +654,8 @@ re-running the `src` sweep with them disabled gives byte-identical decisions, 97
 every one of 365 files.
 
 The residual exposure, now that nothing re-checks a displaced candidate, is a coercion
-`compatible` does not model. That set is now empty by construction rather than by
-enumeration: `compatible` derives the relation from the environment, sharing
-`Overload.coercion_source_and_target` with `Util.find_coercion` (see "Coercions are read from
-the environment" below). What remains is a coercion added to the language in some *other*
-way — a new built-in case in `find_coercion` or `maybe_coerce_lc` that is not driven by the
-`[@@coercion]` attribute. Those two functions are the place to look, and the built-in cases
-are transcribed next to each other in `Overload.builtin_coercion`.
+`compatible` does not relate. See "How `compatible` treats coercions" below for which
+conversions it covers and how, and for what would fall outside it.
 
 ### Why `strict` is a lint and not a candidate default
 
@@ -731,42 +724,60 @@ where the choice provably cannot matter. Suppressing those would mean comparing 
 which is a different and much less principled test than the head-symbol comparison the rest
 of the design is built on, so it is not done.
 
-### Coercions are read from the environment
+### How `compatible` treats coercions
 
-`compatible` originally listed the coercion families it knew about: `bool`/`prop`/`Type` and
-`erased t`/`t`. That was enough for the corpus (see the table above — only `b2t` and `hide`
-were ever implicated), but it made the guarantee an empirical one. A `[@@coercion]`-annotated
-function extends the set of conversions the elaborator will insert silently, so a candidate
-that typechecks only because of one would be eliminated before the coercion was ever
-considered, and nothing recovers from a wrong elimination.
+A candidate may be eliminated only when it is definitely ill-typed, and nothing downstream
+re-examines an elimination. The elaborator silently converts between types, so two different
+head symbols do not make a candidate ill-typed: `compatible` must relate two heads whenever
+some conversion the elaborator would insert relates them. The set of such conversions is not
+fixed by this module — a `[@@coercion]`-annotated definition anywhere in scope adds to it —
+so `compatible` asks the environment rather than carrying a list.
 
-The relation is now derived rather than listed. `Util.find_coercion` selects a user coercion
-`f : b1 -> ... -> bN -> TB -> M TC` by comparing the head symbol of `TB` against the term's
-type and the head symbol of `TC` against the expected type, taking those heads under exactly
-the normalization `Overload.base_of_typ` performs. That pair is now computed by
-`Overload.coercion_source_and_target`, which `find_coercion` calls for its own pre-filter and
-`compatible` calls for every `[@@coercion]` sigelt `Env.lookup_attr` returns. The two cannot
-drift apart, because there is one piece of code.
+`Util.maybe_coerce_lc` is the authority on which conversions exist, and it draws them from
+three places. `compatible` mirrors each:
 
-The built-in cases stay written out, but as a transcription of `find_coercion`'s first four
-branches (`Overload.builtin_coercion`) rather than as a summary of them, and `erased` stays
-special because `maybe_coerce_lc` applies `hide`/`reveal` at *every* type — it is not one end
-of a pair but a head compatible with all others.
+| conversion | where it is applied | how `compatible` sees it |
+|---|---|---|
+| `b2t`, `squash`, `squash ∘ b2t`, `t2b` | first four branches of `find_coercion` | `Overload.builtin_coercion`, one line per branch, relating `bool`, `prop` and `Base_type` |
+| `hide`, `reveal` | the `check_erased` branch of `maybe_coerce_lc` | `erased` is compatible with *every* head, since these apply at any type |
+| `[@@coercion]` functions | the last branch of `find_coercion` | `Overload.coercion_source_and_target` over `Env.lookup_attr env "…coercion"` |
 
-Three properties keep this cheap and safe. The environment is consulted only after the two
-heads are known to differ and no built-in relates them, which is exactly the point at which a
-candidate would otherwise be eliminated, so the common path pays nothing; measured against
-`--ext fstar:overload=off` over 33 `ulib` modules, the whole of overloading costs 0.35% of
-check time, within noise. The relation is taken symmetrically, because callers compare
-formals of two function types, which stand in contravariant position, so which end is the
-source is not something the module can know — and symmetry only ever keeps more candidates.
-And a candidate whose type is not an arrow, or either of whose ends has no rigid head,
-relates nothing, matching `find_coercion`'s own refusal to use it.
+The third row is shared code rather than a parallel implementation. A user coercion has type
+`f : b1 -> ... -> bN -> TB -> M TC`, and `find_coercion` decides whether it applies by
+comparing the head symbol of `TB` against the term's type and the head symbol of `TC` against
+the expected type, taking those heads under exactly the normalization `Overload.base_of_typ`
+performs. `Overload.coercion_source_and_target` computes that pair; `find_coercion` calls it
+to select a coercion and `compatible` calls it to decide which heads a coercion can bridge,
+so the two cannot disagree about which coercions exist. A candidate whose type is not an
+arrow, or either of whose ends has no rigid head, relates nothing — `find_coercion` declines
+to use such a definition for the same reason.
 
-`tests/overloading/OvlUserCoercion.fst` covers both filters: a `meters` argument selects
-`OvlInt.f` over the scope-order `OvlBool.f` through `meters -> int`, and an expected `meters`
-selects `OvlMetersB.pick : int -> int` over the scope-order `OvlMetersA.pick : int -> bool`
-through `int -> meters`.
+Two further properties:
+
+*The relation is symmetric*, while a coercion is directional (computed → expected). Callers
+compare the formals of two function types, which stand in contravariant position, so which
+end of a comparison is the source of a conversion is not something this module can know. The
+symmetric reading is the safe approximation: it only ever keeps more candidates, and a
+directional test would eliminate strictly more.
+
+*The environment is consulted late.* `compatible` reaches the coercion cases only once the
+two heads are known to differ and no built-in relates them, which is exactly the point at
+which a candidate would otherwise be eliminated, so equal heads and the common built-in cases
+cost nothing. Measured against `--ext fstar:overload=off` over 33 `ulib` modules, the whole of
+overloading costs 0.35% of check time, within noise.
+
+The consequence for §2.4's over-approximation requirement is that the gap is closed by
+construction rather than by enumeration. What would still escape it is a conversion applied
+somewhere other than these three places — a new built-in branch in `find_coercion` or
+`maybe_coerce_lc`. Those two functions are where to look, and the built-in cases are
+transcribed next to each other in `Overload.builtin_coercion` so that a new one is visible as
+a missing line.
+
+`tests/overloading/OvlCoercions.fst` covers the built-in families.
+`tests/overloading/OvlUserCoercion.fst` covers user coercions in both filters: a `meters`
+argument selects `OvlInt.f` over the scope-order `OvlBool.f` through `meters -> int`, and an
+expected `meters` selects `OvlMetersB.pick : int -> int` over the scope-order
+`OvlMetersA.pick : int -> bool` through `int -> meters`.
 
 ### The IDE reports the scope-order name, not the resolved one
 
