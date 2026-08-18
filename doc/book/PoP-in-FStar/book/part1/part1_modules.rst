@@ -95,6 +95,24 @@ aside and lets an outer one through. A module-qualified name such as
 ``IntOps.f`` is never overloaded, and a local variable always shadows
 everything.
 
+Operators participate on the same terms. An operator is an ordinary name
+written in a special way — ``( + )`` is the name ``op_Plus`` — so a ``( + )``
+of your own and the ``( + )`` on ``int`` that ``Prims`` defines are simply two
+candidates for one name:
+
+.. code-block:: fstar
+
+   module Vec
+   type vec = | V of int & int
+
+   let ( + ) (a b : vec) : vec =
+     let V (x1, y1) = a in
+     let V (x2, y2) = b in
+     V (x1 + x2, y1 + y2)
+
+   let vsum = V (1, 2) + V (3, 4)   // Vec.( + )
+   let isum : int = 1 + 2           // Prims.( + )
+
 Overload resolution also allows for the conversions F* inserts on your behalf,
 since a candidate whose type differs from yours only by one of those does fit. A
 ``bool`` may stand where a ``prop`` or a ``Type`` is wanted, and a ``prop``
