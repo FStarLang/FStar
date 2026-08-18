@@ -32,10 +32,10 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
   = if n = m then ()
     else fib_mono (n - 1) m
 
-open Pulse.Lib.BoundedIntegers
+open FStar.UInt32 { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 
-fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
+fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits (fib (v k))))
   returns r:U32.t
   ensures pure (v r == fib (v k))
 {

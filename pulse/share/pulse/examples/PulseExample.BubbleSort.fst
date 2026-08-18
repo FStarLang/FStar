@@ -31,7 +31,6 @@ open Pulse.Lib.Array
 open Pulse.Lib.Reference
 open Pulse.Lib.TotalOrder
 open FStar.SizeT
-open Pulse.Lib.BoundedIntegers
 
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference

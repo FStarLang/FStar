@@ -47,9 +47,8 @@ fn mult (x y:nat)
 }
 
 
-open Pulse.Lib.BoundedIntegers
 fn mult32 (x y:U32.t)
-    requires pure (fits #U32.t (v x * v y))
+    requires pure (fits (v x * v y))
     returns z:U32.t
     ensures pure (v z == v x * v y)
 {  

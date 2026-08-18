@@ -4,7 +4,7 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 open FStar.Seq
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 let starts_with_at (#a:Type) (i:nat) (s0 s1:seq a) = 
   i + Seq.length s0 <= Seq.length s1 /\

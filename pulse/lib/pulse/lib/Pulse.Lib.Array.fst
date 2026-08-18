@@ -28,7 +28,7 @@ open Pulse.Class.PtsTo
 open FStar.Ghost
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 module A = Pulse.Lib.Array.Core
 
 fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)

@@ -252,7 +252,6 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
     else fib_mono (n - 1) m
 
 open FStar.UInt32
-open Pulse.Lib.BoundedIntegers
 module U32 = FStar.UInt32
 
 noextract

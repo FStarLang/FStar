@@ -5,7 +5,7 @@ module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open Pulse.Lib.TotalOrder
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 fn binary_search u#a
       (#t:Type u#a)

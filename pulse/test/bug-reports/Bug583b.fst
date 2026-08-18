@@ -1,7 +1,7 @@
 module Bug583b
 open Pulse
 #lang-pulse
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 module SZ = FStar.SizeT
 module R  = Pulse.Lib.Reference
 

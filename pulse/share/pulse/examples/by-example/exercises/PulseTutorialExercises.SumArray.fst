@@ -66,7 +66,6 @@ fn mk_even_explicit (r:R.ref int)
 
 
 module A = Pulse.Lib.Array
-module BoundedInts = Pulse.Lib.BoundedIntegers
 
 
 fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t) 
@@ -82,7 +81,6 @@ fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t)
     pure (res <==> Seq.equal 's1 's2)
   )
 {
-  open BoundedInts;
   let mut i = 0sz;
   while (
     let vi = !i;
@@ -149,7 +147,6 @@ fn sum #p (#s:erased _) (arr:array int) (len:SZ.t { v len == Seq.length s })
   returns res:int
   ensures pure (res == sum_spec s)
 {
-  open BoundedInts;
   admit()
 }
 

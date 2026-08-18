@@ -12,7 +12,7 @@ let rec sum_spec (s:Seq.seq int) : Tot int (decreases Seq.length s) =
        let last = Seq.index s (Seq.length s - 1) in
         sum_spec prefix + last
 
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 
 fn sum #p (#s:erased _) (arr:array int) (len:SZ.t { v len == Seq.length s })

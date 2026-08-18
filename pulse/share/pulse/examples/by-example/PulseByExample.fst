@@ -114,7 +114,7 @@ fn test (r:ref int)
 
 open Pulse.Lib.Array
 module SZ = FStar.SizeT
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 (* 
   Things to note:
