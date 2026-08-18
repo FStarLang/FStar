@@ -492,10 +492,16 @@ let is_bool_op op =
   mk_bool_op op <> None
 
 (* The Prims integer operators are not extracted: KaRaMeL provides them as
-   builtins (see karamel/lib/Builtin.ml) implemented by krmllib/c/prims.c.
-   KaRaMeL still refers to them by the names F* used to give them before
-   operator mangling was made uniform, so translate the names here. This
-   mapping can be dropped once KaRaMeL is updated. *)
+   builtins (see karamel/lib/Builtin.ml) implemented by krmllib/c/prims.c, and
+   it spells them the way F* spelled them before operator mangling was made
+   uniform. Translate the names here, so that a KaRaMeL built against an older
+   F* keeps working; this mapping can be dropped once KaRaMeL is updated.
+
+   Note this covers only names KaRaMeL matches on and does not extract. The
+   machine integer operators of FStar.UInt32 & co. are not among them: KaRaMeL
+   matches those on the underlying [add], [sub], ... (see karamel/lib/Helpers.ml),
+   and the operators themselves are inlined away before extraction, so renaming
+   them needs nothing here. *)
 let krml_compat_name (n : list string & string) : list string & string =
   match n with
   | ([ "Prims" ], op) ->

@@ -159,6 +159,13 @@ thing for these modules, since they also export names as common as ``t``,
 
    open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
+These nine operators used to be spelled ``+^``, ``-^``, ``*^``, ``/^``, ``%^``,
+``<^``, ``<=^``, ``>^`` and ``>=^``; the ``^`` was there only to keep them apart
+from ``Prims`` and from the other widths, which is now overload resolution's
+job. The old spellings are still exported, deprecated, so that code written
+before the change keeps working; each use reports warning 288, which
+``--warn_error -288`` silences.
+
 Overload resolution also allows for the conversions F* inserts on your behalf,
 since a candidate whose type differs from yours only by one of those does fit. A
 ``bool`` may stand where a ``prop`` or a ``Type`` is wanted, and a ``prop``

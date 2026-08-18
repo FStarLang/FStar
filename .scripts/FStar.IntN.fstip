@@ -153,6 +153,23 @@ inline_for_extraction unfold let ( >= ) = gte
 inline_for_extraction unfold let ( < )  = lt
 inline_for_extraction unfold let ( <= ) = lte
 
+(* Deprecated infix notations
+
+   The nine operators above used to carry a [^] suffix, to keep them apart from
+   the ones on [int] and from those of the other widths. Type-based overloading
+   now tells them apart, so they are spelled without the suffix. The old
+   spellings remain, deprecated, so that code written against the earlier
+   library keeps checking. *)
+[@@deprecated "use ( + )"]  inline_for_extraction unfold let ( +^ )  = add
+[@@deprecated "use ( - )"]  inline_for_extraction unfold let ( -^ )  = sub
+[@@deprecated "use ( * )"]  inline_for_extraction unfold let ( *^ )  = mul
+[@@deprecated "use ( / )"]  inline_for_extraction unfold let ( /^ )  = div
+[@@deprecated "use ( % )"]  inline_for_extraction unfold let ( %^ )  = rem
+[@@deprecated "use ( > )"]  inline_for_extraction unfold let ( >^ )  = gt
+[@@deprecated "use ( >= )"] inline_for_extraction unfold let ( >=^ ) = gte
+[@@deprecated "use ( < )"]  inline_for_extraction unfold let ( <^ )  = lt
+[@@deprecated "use ( <= )"] inline_for_extraction unfold let ( <=^ ) = lte
+
 (* To input / output constants *)
 (* .. in decimal representation *)
 val to_string: t -> Tot string

@@ -187,6 +187,18 @@ inline_for_extraction unfold let ( >= ) = gte
 inline_for_extraction unfold let ( < )  = lt
 inline_for_extraction unfold let ( <= ) = lte
 
+(** Deprecated infix notations: the spellings the nine operators above had
+    before type-based overloading made the [^] suffix unnecessary. *)
+[@@deprecated "use ( + )"]  inline_for_extraction unfold let ( +^ )  = add
+[@@deprecated "use ( - )"]  inline_for_extraction unfold let ( -^ )  = sub
+[@@deprecated "use ( * )"]  inline_for_extraction unfold let ( *^ )  = mul
+[@@deprecated "use ( / )"]  inline_for_extraction unfold let ( /^ )  = div
+[@@deprecated "use ( % )"]  inline_for_extraction unfold let ( %^ )  = rem
+[@@deprecated "use ( > )"]  inline_for_extraction unfold let ( >^ )  = gt
+[@@deprecated "use ( >= )"] inline_for_extraction unfold let ( >=^ ) = gte
+[@@deprecated "use ( < )"]  inline_for_extraction unfold let ( <^ )  = lt
+[@@deprecated "use ( <= )"] inline_for_extraction unfold let ( <=^ ) = lte
+
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,

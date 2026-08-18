@@ -49,11 +49,14 @@ Guidelines for the changelog:
     `>^` and `>=^`, whose `^` existed only to avoid clashing with `Prims` and
     with each other. Overloading removes the need for it.
 
-    To update existing code, drop the `^` from those nine operators. The other
-    `^`-suffixed operators are unchanged: the wrapping and underspecified
-    arithmetic (`+%^`, `+?^`, `-%^`, `-?^`, `*%^`, `*?^`), the bitwise and shift
-    operators (`&^`, `|^`, `^^`, `<<^`, `>>^`), and equality (`=^`, `<>^`).
-    Equality keeps its `^` because `Prims.( = )` has type
+    To update existing code, drop the `^` from those nine operators. The old
+    spellings remain as deprecated aliases (warning 288), so code written
+    against the earlier library still checks, and a downstream project can be
+    migrated at its own pace; `--warn_error -288` silences the warning
+    meanwhile. The other `^`-suffixed operators are unchanged: the wrapping and
+    underspecified arithmetic (`+%^`, `+?^`, `-%^`, `-?^`, `*%^`, `*?^`), the
+    bitwise and shift operators (`&^`, `|^`, `^^`, `<<^`, `>>^`), and equality
+    (`=^`, `<>^`). Equality keeps its `^` because `Prims.( = )` has type
     `#a:eqtype -> a -> a -> bool`, whose argument type is not a rigid head, so
     the `Prims` candidate could never be eliminated.
 

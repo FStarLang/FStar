@@ -169,3 +169,12 @@ inline_for_extraction noextract let ( > ) = gt
 inline_for_extraction noextract let ( < ) = lt
 inline_for_extraction noextract let ( >= ) = gte
 inline_for_extraction noextract let ( <= ) = lte
+
+(* Deprecated infix notations: the spellings the six operators above had before
+   type-based overloading made the [^] suffix unnecessary. *)
+[@@deprecated "use ( + )"]  inline_for_extraction noextract let ( +^ )  = add
+[@@deprecated "use ( - )"]  inline_for_extraction noextract let ( -^ )  = sub
+[@@deprecated "use ( > )"]  inline_for_extraction noextract let ( >^ )  = gt
+[@@deprecated "use ( < )"]  inline_for_extraction noextract let ( <^ )  = lt
+[@@deprecated "use ( >= )"] inline_for_extraction noextract let ( >=^ ) = gte
+[@@deprecated "use ( <= )"] inline_for_extraction noextract let ( <=^ ) = lte
