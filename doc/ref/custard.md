@@ -6973,8 +6973,8 @@ what the language extracts.  Not done; noted here so the trade is on record.
   whole-program monomorphization erases both.  It is also a
   miscompilation, not just a build failure, so it outranks the rest of this
   list.  Section 20 is the design; the two things it needs that do not
-  exist are a `--custard_krml_target` and a `Realized` kind that does not
-  rename.
+  exist are splitting `--custard_backend Krml` into `KrmlC` and `KrmlRust`,
+  and a `Realized` kind that does not rename.
 * CDDL error 363: `[@@monomorphize]` does not propagate through a runtime
   parameter in `CDDL.Pulse.Bundle.Base`.  This is the known M7 gap and
   wants M7, not a patch.
@@ -7055,19 +7055,42 @@ genuinely absent: the ability to make a decision that depends on which
 
 ### 20.3 The proposal
 
-**1. A target option.**  `--custard_krml_target c|rust`, defaulting to `c`.
+**1. Split the backend in two.**  `--custard_backend` gains `KrmlC` and
+`KrmlRust` and loses `Krml`.
 
-This is the part with no existing analogue and it is worth saying why it has
-to exist rather than being inferred.  Custard's Krml backend emits a `.krml`
-file; karamel decides C or Rust later, from its own command line.  The two
-want *different programs*: for C, `Pulse.Lib.Slice` should be compiled from
-its F\* definition, which is what it is for and what works today; for Rust it
-must be absent and abstract.  No property of the F\* program distinguishes
-them.  Custard cannot infer the answer and must be told.
+The thing that has to be said is not inferrable, and it is worth being clear
+about why.  Custard's Krml backend emits a `.krml` file; karamel decides C or
+Rust later, from its own command line.  The two want *different programs*: for
+C, `Pulse.Lib.Slice` should be compiled from its F\* definition, which is what
+it is for and what works today; for Rust it must be absent and abstract.  No
+property of the F\* program distinguishes them, so Custard must be told.
 
-It follows that a `.krml` file is now target-specific, which is a real cost
-and should be recorded: the `.cui` header (M10a) already refuses to link units
-built with mismatched layout options, and this belongs in that set.
+The first draft of this section proposed a separate `--custard_krml_target`
+flag alongside `--custard_backend Krml`.  Two backend names is better, and
+`tests/extraction/backends` is the argument: the matrix already has
+`custard-krml-c` and `custard-krml-rust` as distinct rows, and they currently
+pass *identical* F\* flags and diverge only in what they hand to karamel
+afterwards.  The two targets are already two things everywhere except in the
+one place that has to know.
+
+It is also the honest shape.  A `.krml` file built for Rust cannot be compiled
+to C -- the slice is gone from it -- so this is not a modifier on a backend,
+it is a different backend that happens to share a printer.  A flag would have
+let the two be set inconsistently and would have needed the `.cui` header
+(M10a) to police the combination; a name cannot be.  `uh_backend` already
+records the backend and already refuses a mismatch, so the existing check
+covers this for free.
+
+`EnumStr` makes an unknown name an error at parse time, so the removal of
+`Krml` is diagnosed at the command line rather than by `Driver`'s fallthrough.
+Six call sites in the tree pass `--custard_backend Krml` and all six know
+which target they are building for, four of them in the very Makefiles that
+already say so in their rule names.
+
+Mechanically this is a predicate, not a fork: `Driver`'s dispatch, the `.krml`
+extension and `PrintKrml` want "is this a Krml backend", and only the freeze
+seeding of item 3 wants to tell them apart.  So `Options.custard_backend_krml
+()` alongside the two literal comparisons, rather than duplicated branches.
 
 **2. A rule kind, `Rule_slice`, or more honestly `Rule_krml_model`.**
 
@@ -7081,16 +7104,16 @@ copying it.
 
 The list is data, not code, for the same reason `extern_types` is empty in
 §8.2: which modules karamel models is a fact about karamel, and today it is
-one module.  A `--custard_krml_model <lid>` flag with `Pulse.Lib.Slice`
-pre-registered under `--custard_krml_target rust` keeps the fact where it can
-be corrected without a rebuild.
+one module.  A `--custard_krml_model <lid>` flag, with `Pulse.Lib.Slice`
+pre-registered under `KrmlRust`, keeps the fact where it can be corrected
+without a rebuild.
 
 **3. Freeze the type.**
 
 `Monomorphize.freeze_realized` currently reads
 `Options.custard_backend () = "OCaml"`, with the comment that the C backends
-realize nothing.  That premise is what changes: under
-`--custard_krml_target rust` the Krml backend realizes exactly one module.
+realize nothing.  That premise is what changes: `KrmlRust` realizes exactly
+one module.
 So the guard becomes a question about the *program* -- is this declaration
 `Realized`, whatever the backend -- and the backend-specific part shrinks to
 which declarations get marked.
@@ -7115,7 +7138,7 @@ documented configuration rather than a new demand.
 
 **5. Reject the mixture.**
 
-Under `--custard_krml_target rust`, a `slice` reaching `Layout` or the
+Under `--custard_backend KrmlRust`, a `slice` reaching `Layout` or the
 monomorphizer un-frozen is a bug in the freeze seeding, and should say so
 rather than producing the struct silently.  This is §19.13's rule: the failure
 mode we are fixing was a *silent miscompilation*, and the only reason it was
