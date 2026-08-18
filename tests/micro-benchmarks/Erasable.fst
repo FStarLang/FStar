@@ -22,9 +22,14 @@ let test (x:t) : GTot int =
   | This i -> i
   | That _ -> 0
 
+//projectors and discriminators of an erasable type are ghost
 [@@(expect_failure [34])]
 let test1_fail (x:t{This? x}) : Tot int = This?._0 x
 let test1 (x:t{This? x}) : GTot int = This?._0 x
+
+[@@(expect_failure [34])]
+let test2_fail (x:t) : Tot bool = This? x
+let test2 (x:t) : GTot bool = This? x
 
 let test_promotion (x:t) : Tot t =
   match x with
