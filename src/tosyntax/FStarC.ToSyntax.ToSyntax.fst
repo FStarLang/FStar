@@ -2026,9 +2026,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         | [] -> e
         | _ ->
           let n = List.length bs in
-          let k = if n < C.max_indefinite_description_arity
+          (* When all the binders fit in a single indefinite_descriptionk we
+             use it, and the obligation is the (flat) existential the user
+             wrote. Otherwise we must nest, and then the obligation of the
+             outer call is `exists x1 ... xk. (exists xk+1 ... xn. p)`. The
+             solver has no trigger for the outer existential that mentions the
+             inner binders, so it falls back to a multi-pattern of the typing
+             hypotheses of x1 ... xk and enumerates every k-tuple of terms of
+             the right type. Peeling off one binder at a time keeps that
+             enumeration linear instead of exponential in k. See issue #4405. *)
+          let k = if n <= C.max_indefinite_description_arity
                   then n
-                  else C.max_indefinite_description_arity
+                  else 1
           in
           let hd, tl = List.splitAt k bs in
           let r = List.fold_right (fun (b:binder) r -> Range.union_ranges b.brange r) hd p.range in
