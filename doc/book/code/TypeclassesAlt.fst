@@ -66,7 +66,7 @@ instance u32_instance : bounded_unsigned_int FStar.UInt32.t =
     add      = (fun x y -> add x y);
     sub      = (fun x y -> sub x y);
     mul      = (fun x y -> mul x y);
-    lt       = ( <^ );
+    lt       = ( < );
     properties = ()
 }
 
@@ -80,7 +80,7 @@ instance u64_instance : bounded_unsigned_int FStar.UInt64.t =
     add      = (fun x y -> add x y);
     sub      = (fun x y -> sub x y);
     mul      = (fun x y -> mul x y);
-    lt       = ( <^ );
+    lt       = ( < );
     properties = ()
 }
 

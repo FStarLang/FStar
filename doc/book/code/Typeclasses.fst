@@ -139,7 +139,7 @@ instance u32_instance : bounded_unsigned_int FStar.UInt32.t =
                            0 <= res /\ res <= FStar.UInt.max_int 32);
     add      = (fun x y -> add x y);
     sub      = (fun x y -> sub x y);
-    lt       = ( <^ );
+    lt       = ( < );
     properties = ()
 }
 
@@ -154,7 +154,7 @@ instance u64_instance : bounded_unsigned_int FStar.UInt64.t =
                            0 <= res /\ res <= FStar.UInt.max_int 64);
     add      = (fun x y -> add x y);
     sub      = (fun x y -> sub x y);
-    lt       = ( <^ );
+    lt       = ( < );
     properties = ()
 }
 

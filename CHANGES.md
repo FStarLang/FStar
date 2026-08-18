@@ -11,6 +11,64 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Overloading by type
+
+  * **A name may now denote several things at once, and F* uses the types at
+    the occurrence to decide which is meant.** Previously, when two modules in
+    scope defined the same name, the innermost `open` won and the other name
+    could only be reached by qualifying it.
+
+    ```fstar
+    module IntOps  let f (x:int) : int = x + 1
+    module BoolOps let f (x:bool) : bool = not x
+
+    module Client
+    open IntOps
+    open BoolOps
+    let a : int  = f 0      // IntOps.f
+    let b : bool = f true   // BoolOps.f
+    let c : int -> int = f  // IntOps.f, from the expected type alone
+    ```
+
+    Resolution filters the candidates by arity, then by the type of each
+    explicit argument, then by the expected type; it eliminates a candidate
+    only when its type definitely does not fit, comparing types by their head
+    symbol alone and allowing for the coercions F* inserts. Whatever survives,
+    the innermost is taken, which is the answer scope-order resolution would
+    have given, so a program that typechecked before still typechecks and still
+    means the same thing. Operators participate on the same terms, `( + )`
+    being simply the name `op_Plus`.
+
+    `--ext fstar:overload=off` restores the old behaviour.
+    `--ext fstar:overload=strict` reports error 362 wherever more than one
+    candidate survives, as a diagnostic aid.
+
+  * **The machine integer modules name their operators `+ - * / % < <= > >=`.**
+    `FStar.UInt8/16/32/64/128`, `FStar.Int8/16/32/64/128`, `FStar.SizeT` and
+    `FStar.PtrdiffT` used to export `+^`, `-^`, `*^`, `/^`, `%^`, `<^`, `<=^`,
+    `>^` and `>=^`, whose `^` existed only to avoid clashing with `Prims` and
+    with each other. Overloading removes the need for it.
+
+    To update existing code, drop the `^` from those nine operators. The other
+    `^`-suffixed operators are unchanged: the wrapping and underspecified
+    arithmetic (`+%^`, `+?^`, `-%^`, `-?^`, `*%^`, `*?^`), the bitwise and shift
+    operators (`&^`, `|^`, `^^`, `<<^`, `>>^`), and equality (`=^`, `<>^`).
+    Equality keeps its `^` because `Prims.( = )` has type
+    `#a:eqtype -> a -> a -> bool`, whose argument type is not a rigid head, so
+    the `Prims` candidate could never be eliminated.
+
+  * **`Pulse.Lib.BoundedIntegers` is gone.** It emulated the above with a
+    typeclass. Replace `open Pulse.Lib.BoundedIntegers` with an `open` of the
+    integer module you use, optionally restricted:
+
+    ```fstar
+    open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
+    ```
+
+    Uses that were generic in the class rather than at one integer type need a
+    concrete definition instead; overloading resolves a name by type but is not
+    parametric polymorphism.
+
 ## Pulse
 
   * A Pulse conditional whose postcondition is annotated may now also carry a

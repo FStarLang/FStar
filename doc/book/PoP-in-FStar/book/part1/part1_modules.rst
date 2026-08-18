@@ -113,6 +113,52 @@ candidates for one name:
    let vsum = V (1, 2) + V (3, 4)   // Vec.( + )
    let isum : int = 1 + 2           // Prims.( + )
 
+The machine integer modules of the standard library are the largest use of
+this. ``FStar.UInt8``, ``FStar.UInt16``, ``FStar.UInt32``, ``FStar.UInt64``,
+``FStar.UInt128``, their signed counterparts ``FStar.Int8`` and so on,
+``FStar.SizeT`` and ``FStar.PtrdiffT`` each name their arithmetic and
+comparison operators ``+``, ``-``, ``*``, ``/``, ``%``, ``<``, ``<=``, ``>``
+and ``>=``, the same names ``Prims`` uses for ``int``. Several of them may be
+open at once, together with the ``Prims`` operators, and each occurrence is
+decided by the types at hand:
+
+.. code-block:: fstar
+
+   module Client
+   open FStar.UInt32
+   open FStar.SizeT
+
+   let f (x y : FStar.UInt32.t) (n m : FStar.SizeT.t) (i j : int)
+     : Pure (FStar.UInt32.t & FStar.SizeT.t & int)
+            (requires FStar.UInt32.fits (v x + v y) /\ FStar.SizeT.fits (v n + v m))
+            (ensures fun _ -> True)
+     = x + y,     // FStar.UInt32.( + )
+       n + m,     // FStar.SizeT.( + )
+       i + j      // Prims.( + )
+
+``v x`` and ``v n`` are decided the same way, from the type of their argument.
+``fits`` is qualified because both modules declare it on ``int``: nothing
+distinguishes the two candidates, so the unqualified name would have taken the
+innermost one.
+
+The two meanings may even be mixed within one expression, which is what the
+standard library's ``FStar.Vector.Base`` does when it writes
+
+.. code-block:: fstar
+
+   v2:raw a l2 { UInt.size U32.(v l1 + v l2) U32.n } -> Tot (raw a U32.(l1 + l2))
+
+Here ``v l1 + v l2`` adds two ``int``\ s and ``l1 + l2`` adds two ``U32.t``\ s,
+under the same ``U32.(...)`` scope.
+
+An ``open`` may be restricted to the names you want, which is often the right
+thing for these modules, since they also export names as common as ``t``,
+``add`` and ``eq``:
+
+.. code-block:: fstar
+
+   open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
+
 Overload resolution also allows for the conversions F* inserts on your behalf,
 since a candidate whose type differs from yours only by one of those does fit. A
 ``bool`` may stand where a ``prop`` or a ``Type`` is wanted, and a ``prop``
