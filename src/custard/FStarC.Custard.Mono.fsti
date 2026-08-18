@@ -134,6 +134,14 @@ val type_params (env:TcEnv.env) (t:typ) : ML (list bool)
     entry per binder of [t]'s outermost arrow, in order. *)
 val classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass)
 
+(** [classify_def env attrs t def] is {!classify}, extended to the binders of
+    [def]'s own lambda that [t]'s arrow spine stops short of -- which is what
+    an abbreviation in the codomain does.  Those are filtered by
+    {!is_erased_binder}, which is the rule the emitted definition applies to
+    them, so a call site and the definition agree.  Section 19.4. *)
+val classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term)
+  : ML (list bclass)
+
 (** True if any binder is [Mono], i.e. uses of this definition have to be
     specialized. *)
 val has_mono (cs:list bclass) : ML bool

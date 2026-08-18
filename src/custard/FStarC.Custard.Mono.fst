@@ -461,6 +461,46 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
     | Dropped -> if dropped then Dropped else Poly
     | c -> c)
 
+(* Section 19.4.  [classify] reads a definition's binders off its *type*, and
+   an abbreviation stops that type short of the definition's real arity: the
+   [jumper p] of LowParse is four binders that [unit -> jumper p] shows as
+   one.  [arrow_formals_unfold] exists to unfold past exactly that, and does
+   not always manage it -- the abbreviation may not be reducible in the
+   environment the classification runs in.
+
+   The definition itself never had this problem, because it works from its
+   *lambda*, which has every binder written out.  [Extract.extract_letbinding]
+   says so directly: a binder past the end of the classification is filtered
+   by [is_erased_binder] on the spot.  A call site had no such rule, so it
+   passed the erased arguments the definition had deleted -- section 18.1's
+   miscompilation once more, reached by neither the variable path nor a
+   missing declaration but by a classification that is simply too short.
+
+   So the extension happens here, once, in the same order and by the same
+   predicate.  Every consumer of a classification -- [split_mono_args],
+   [call_unit_flags], [call_type_args] -- then agrees with the definition
+   without knowing that anything was extended, which is the property that was
+   missing: the two sides have to be derived from one list, not from two lists
+   that usually coincide.
+
+   Only [is_erased_binder] and not [is_unit_binder], deliberately: the
+   definition keeps a unit-shaped binder past its classification, so a call
+   site must keep passing one. *)
+let classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term)
+  : ML (list bclass) =
+  let cs = classify env attrs t in
+  match def with
+  | None -> cs
+  | Some d ->
+    let bs, _, _ = U.abs_formals d in
+    let rec extra (n:int) (bs:binders) : ML (list bclass) =
+      match bs with
+      | [] -> []
+      | b :: bs ->
+        if n > 0 then extra (n - 1) bs
+        else (if is_erased_binder env b then Dropped else Poly) :: extra 0 bs in
+    cs @ extra (List.length cs) bs
+
 let has_mono (cs:list bclass) : ML bool =
   cs |> List.existsb Mono?
 

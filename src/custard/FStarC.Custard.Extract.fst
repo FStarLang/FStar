@@ -1016,7 +1016,12 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
                     match lb.lbname with
                     | Inr fv -> Ident.lid_equals (S.lid_of_fv fv) l
                     | Inl _ -> false) with
-            | Some lb -> classify (tcenv st) (se.sigattrs @ lb.lbattrs) lb.lbtyp
+            | Some lb ->
+              (* Section 19.4: [lbdef] is what makes the classification as
+                 long as the definition really is.  [lbtyp] stops at an
+                 abbreviation in the codomain; the lambda does not. *)
+              Mono.classify_def (tcenv st) (se.sigattrs @ lb.lbattrs)
+                                lb.lbtyp (Some lb.lbdef)
             | None -> [])
          | Sig_declare_typ {t} -> classify (tcenv st) se.sigattrs t
          | _ -> [])

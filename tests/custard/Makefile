@@ -296,7 +296,7 @@ KRML_TESTS += KrmlBasic
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
-C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue
+C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
 # global whose initializer is a computation -- against one that is a constant
@@ -341,6 +341,14 @@ CNOGREP_CRecType = "typedef struct {" "} CRecType_tree;" "} CRecType_node;"
 # [slice__raw] that is still incomplete at that point, which is an error.
 CGREP_CByValue   = "CByValue_slice__raw a_ptr;" "CByValue_raw *s_base;"
 CNOGREP_CByValue = "typedef struct {"
+
+# Section 19.5: a pattern that names fields the body never reads leaves a
+# declaration with an initializer and no use, which -Werror=unused-variable
+# refuses.  The real assertion is that this file compiles at all; the greps
+# only pin down that the *live* binding is still there and the dead ones are
+# not declared under any name.
+CGREP_CDeadLet   = "return dflt;" "return s.val.CDeadLet_Rect._1;"
+CNOGREP_CDeadLet = " = p;" "_letpattern"
 
 # CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
 # output-quality invariants of section 6: a unit parameter is a thunk, which C

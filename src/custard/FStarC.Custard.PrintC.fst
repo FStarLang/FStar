@@ -803,6 +803,18 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     scope := saved;
     !out ^ ind ^ decl_of t nm ^ " = " ^ iv ^ ";\n" ^ s2
 
+  (* A binding nothing reads.  A pattern match that names no field it uses
+     leaves one behind -- [let _letpattern = x in ...] -- and C, told
+     [-Werror=unused-variable], refuses the file over it.  [vars_of]
+     over-approximates the uses, so this only fires when the name is
+     definitely dead, and [is_pure] is what says the initializer can go with
+     it; an impure one still has to run, and falls through to the general
+     case, where the declaration is the only thing that would be unused.  We
+     do not have a way to say "declared and unused on purpose" in C89, and
+     an attribute would be one more thing to spell per compiler. *)
+  | ELet (x, _, e1, e2) when is_pure e1 && not (List.mem x (vars_of e2)) ->
+    emit ind d e2
+
   | ELet (x, t, e1, e2) ->
     let saved = !scope in
     let s1 =

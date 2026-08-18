@@ -6365,18 +6365,34 @@ the hook the message ended at ``The term ... was: a299``; now it ends with
 has no negative-test rule, and adding one for a diagnostic is not worth a
 category.
 
-Two things the same report asked about and the answer is honestly "not
-reproduced".  Whole-module extraction of `CBOR.Pulse.API.Det.C` took 6m30s
-against seconds for individual entries, and no sweep built locally shows
-anything super-linear.  The explanation that fits without a leak is that a
-specialization key is per-call-site: more roots reach more call sites, so
-more distinct keys are normalized and more specializations emitted, and the
-growth is in the output rather than in the algorithm.  The intended workflow
-is therefore whole-module or whole-program extraction -- one run, one
-interned specialization table, section 4.4 -- and many `--custard_entry`
-runs are a *debugging* tool, for bisecting which root provokes a failure,
-not a way to go faster.  Splitting for speed also gives up the sharing:
-each run re-derives the specializations of everything the root reaches.
+Whole-module extraction of `CBOR.Pulse.API.Det.C` takes 6m20s against seconds
+for individual entries, and the reporter profiled it.  The numbers settle the
+question and they contradict what this section first claimed:
+
+```
+374692 ms  Extract.norm   (509 calls)
+   598 ms  Mono.norm    (11631 calls)
+   557 ms  cachefile      (287 calls)
+```
+
+`Extract.norm` is 374.7s of a 380s run and everything else is noise.  Against
+call counts of 329, 374, 393 and 509 for growing root sets -- times 17.7s,
+19.1s, 19.0s and 374.7s -- the call count rises by 30% while the time rises
+twentyfold, and adding roots is *sub-additive*, which is the specialization
+cache doing its job.  So the earlier explanation, that more roots mean more
+per-call-site keys and the growth is in the output, is **wrong**: the growth
+is in the per-call cost.  A handful of individual normalizations are enormous,
+and the recursive-parser step counts are the standing suspicion, since
+`LowParse.Pulse.Recursive.jump_recursive_step_count` is what exhausted the
+budget in the first place.  Nothing here is super-linear in the number of
+roots; whole-module extraction simply reaches a few definitions that
+individual entries do not.
+
+That does not change the intended workflow -- one run, one interned
+specialization table (section 4.4) -- since splitting gives up the sharing.
+It does change what to look at next, which is a bisection down to the
+individual definitions whose normalization is expensive, rather than anything
+about keys or interning.
 
 `--profile FStarC.Custard` reports the phase breakdown when a run does need
 to be explained.
@@ -6386,8 +6402,14 @@ to be explained.
 The four fixes of sections 17.3 and 18 were retested against EverParse's CBOR
 stack, and the headline is that whole-module extraction of
 `CBOR.Pulse.API.Det.C` now runs to completion -- 3419 lines and 333 functions
-of direct C, where before it died on `Error 367` in `Prims.dtuple2`.  Three
-things survived, and they are what this section is about.
+of direct C, where before it died on `Error 367` in `Prims.dtuple2`.
+
+What follows is three rounds of that loop rather than one, because the first
+two fixes were partial and one of them was aimed at the wrong cause.  19.1
+and 19.3 were confirmed on the real output; 19.3 earned its keep immediately,
+turning three functions that had been silently emitting broken spines into
+three honest errors.  19.2 records a diagnosis that the next round disproved,
+and 19.4 is what the defect actually was.
 
 ### 19.1 A field held by value needs a definition, not a tag
 
@@ -6436,31 +6458,23 @@ came back with the same symptom on a head that is an **fv**, which that
 section explicitly claimed was always right, on the ground that
 `Mono.classify` unfolds abbreviations and so always sees the full arity.
 
-That is true of `classify`.  It is not true of the path that calls it.
-`Extract.binder_classes` looks the declaration up with `TcEnv.lookup_sigelt`
-and returns `[]` on any miss -- and `[]` is not "every binder is `Poly`", it
-is a short-circuit: `split_mono_args` sees no `Mono` and no `Dropped`, hands
-the *whole* spine back untouched, and `call_unit_flags` runs out immediately.
-Every erased argument is then passed at runtime, to a callee that deleted the
-parameter, which shifts the rest of the spine -- the section 18.1 failure,
-reached by a different road.
+The first guess was that `Extract.binder_classes` had lost the declaration:
+it looks it up with `TcEnv.lookup_sigelt` and returns `[]` on a miss, and `[]`
+is not "every binder is `Poly`" but a short-circuit -- `split_mono_args` sees
+no `Mono` and no `Dropped` and hands the whole spine back untouched.  It now
+falls back to `lookup_lid_typ`, which is the lookup `binder_flags` has always
+used, so that the spine and the flags cannot be computed from different
+declarations.
 
-`lookup_sigelt` is the narrower of the two lookups this module has.
-`binder_flags`, which computes the erased and unit flags, has always used
-`TcEnv.try_lookup_lid`, which still answers when the sigelt is not handed
-back whole.  The two disagreeing is what let the spine and the flags be
-computed from different declarations.  `binder_classes` now falls back to
-`lookup_lid_typ` when the sigelt path yields nothing.  Attributes live on the
-sigelt, so a fallback classification cannot see a `[@@monomorphize]`; it does
-see every erased binder, which is the one that miscompiles.
-
-This is **inference, not a reproduction**.  The reporter tried eight shapes
-without minimizing it and so did we, including the Pulse `fn` with an
-abbreviation-ascribed curried type, mid-spine erased binders with real
-arguments after them, and an `inline_for_extraction` combinator applying an
-abbreviation-typed parameter at full arity -- `pulse/test` extracts all of
-them correctly.  The fallback is a real gap closed on the evidence available;
-whether it is *the* gap is unconfirmed.
+**That guess was wrong, and the instrumented retest said so plainly**: the
+sigelt lookup never misses, and the classification comes back *short* rather
+than empty -- one entry for a call spine of four.  The real cause is section
+19.4, and the fallback survives only because a short-circuit that cannot be
+told from an answer is worth closing whatever else is true.  It is recorded
+here rather than quietly deleted because the shape of the mistake is the
+useful part: an inference from "which code path could produce this symptom"
+picked a plausible path and the wrong one, and only a `printf` in the
+reporter's own build settled it.
 
 ### 19.3 The C backend should not print a name it cannot resolve
 
@@ -6481,15 +6495,93 @@ fact about the source and something the reader can act on, and `reject_ir`
 says the IR is malformed, which is a fact about the compiler and something to
 report.
 
-### 19.4 What is still open
+### 19.4 A definition's arity is a fact about its lambda
 
-* The 6m30s whole-module normalization is unchanged, as expected -- section
-  18.3 was about reporting.  Still not reproduced as super-linear locally.
-* karamel's Rust backend prints `ERROR translating C._zero_for_deref` on
-  every Custard `.krml`, and emits a dead `cbor_raw_tags` enum.  Both are
-  karamel-side.
+This is what 19.2 actually was, and the instrumented retest points straight
+at it.  `Mono.classify` reads a definition's binders off its **type**;
+`Extract.extract_letbinding` reads them off the definition's own **lambda**,
+via `U.abs_formals`.  Those two agree almost always, and when they do not,
+the emitted definition and its call sites disagree about how many arguments
+there are.
 
+EverParse's `jump_header : unit -> jumper parse_header` is the case.  The
+lambda has five binders; the arrow spine of the type has one, because
+`jumper` is an abbreviation and `Mono.arrow_formals_unfold` -- which exists
+precisely to unfold past one -- did not manage it here.  So the definition
+came out at the right arity, with the erased `pm` and `v` deleted, while the
+call site filtered a five-argument spine by a one-entry classification and
+passed all five.  Section 18.1's miscompilation once more, by a third route.
 
+The tempting fix is to unfold harder, and it is the wrong one.  Whether an
+abbreviation can be seen through is a fact about the environment the
+normalization happens to run in, and there is always another way to write a
+type whose arrows are not syntactically arrows -- the regression test uses a
+refinement, `(r:step_t 0{...})`, which is a `Tm_refine` and therefore not a
+`Tm_arrow` no matter how much unfolding is allowed.  A type-level `let rec`
+does it too, since these step lists deliberately omit `Zeta`.
+
+So the fix is to derive both sides from the same list.  `Mono.classify_def`
+is `classify` extended with the binders of the definition's own lambda that
+the type's spine stopped short of, classified by `Mono.is_erased_binder` --
+which is, verbatim, the rule `extract_letbinding` already applied to exactly
+those binders:
+
+```fstar
+let flags = bs |> List.mapi (fun i b ->
+              nth_class i || (i >= n_poly && Mono.is_erased_binder (tcenv st) b))
+```
+
+`binder_classes` calls it with `lb.lbdef` in hand.  Every consumer of a
+classification -- `split_mono_args`, `call_unit_flags`, `call_type_args` --
+then agrees with the definition without knowing anything was extended, which
+is the property that was missing: the two sides were derived from two lists
+that usually coincide, and now they are derived from one.
+
+Deliberately `is_erased_binder` and not also `is_unit_binder`: a definition
+*keeps* a unit-shaped binder past its classification, so a call site has to
+keep passing one.  The extension is a no-op whenever the type's spine is
+already as long as the lambda, which is the overwhelmingly common case, so
+nothing that worked before can change.
+
+`tests/custard/EraseAbbrev.fst` grows the case, and it was checked to fail
+without the fix, with the emitted call reading `add5 () x () 6` against a
+three-parameter definition -- the reported symptom exactly.
+
+### 19.5 A binding nothing reads
+
+A pattern match names the fields of the constructor it matched, and a body is
+under no obligation to use any of them.  The match compiler emitted the
+binding anyway, so C came out with a declaration, an initializer and no use,
+and a build with `-Werror=unused-variable` refused the file over it:
+
+```c
+CBOR_Pulse_Raw_Type_cbor_raw _letpattern_8 = x_;
+```
+
+`PrintC` now drops an `ELet` whose bound name does not occur in the body,
+provided the initializer is `is_pure`.  Purity is the side condition that
+matters and it is not negotiable: an initializer that does something still
+has to run, and one that does not can go with the name.  `vars_of`
+over-approximates the occurrences -- it ignores shadowing -- which is the
+safe direction, since the only question asked of it is whether a name is
+*definitely* unused.
+
+This lives in the printer rather than in `Simplify` on purpose.  It is a fact
+about C, which has no way to say "declared and unused on purpose" that does
+not vary by compiler, and not a fact about the IR; OCaml's warnings are off
+in the generated header and karamel does its own elimination.
+
+`tests/custard/CDeadLet.fst` covers it, and since these tests compile with
+`-Wall -Wextra -Werror`, the file building at all is the assertion.
+
+### 19.6 What is still open
+
+* The expensive normalizations of section 18.3.  The profile now says where
+  the time goes; the next step is bisecting to the individual definitions.
+* karamel's Rust backend gives 76 *ownership* errors on `cbor_det_serialize`
+  -- moved values, moves out of shared references -- which read as by-value
+  slice passing on the karamel side, along with `ERROR translating
+  C._zero_for_deref` and a dead `cbor_raw_tags` enum.  All karamel-side.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -6564,3 +6656,4 @@ report.
 | M10λ | **An arity indexed only by values is a type parameter** (§18.2) | Done.  `is_type_param` held of kind `Type` and nothing else, on the ground that no target has a type variable standing for a type constructor.  True of `m:Type -> Type`; false of `b:header -> Type`, which takes a *value*, and values are erased from the target's type language, so it denotes exactly one target type.  Dropping it left `dtuple2`'s second field typed by a name no parameter bound -- `any`, which direct-to-C rejects outright and which the krml path turns into a `(void *)` cast gcc rejects.  Three pieces: `is_value_indexed_arity`, translating an application `b x` as the parameter itself, and translating the argument lambda `fun h -> payload h` as its body.  It also un-breaks `FStar.Set.set`, whose abbreviation no longer needs `has_unrepresentable_param` to unfold it and so reaches §13.5's result-type peel as a `TApp`; the peel goes through `head_ty` now.  Reported against EverParse as the highest-impact item: this is the whole LowParse idiom, a parsed header indexing the payload's type, and it was `any` throughout |
 | M10μ | **The request chain reaches the normalization budget below the extractor** (§18.3) | Done.  Error 364 is only useful if it names the definition being reduced.  `Extract.norm_bounded_in` always did, from the request chain of §3.6; `Mono.norm_bounded` did not, and it is the one that fires on type-level work -- a binder's sort, a binder's kind, an arrow spine -- which is exactly the case the EverParse report had to bisect a module to explain.  `Mono.chain_reporter` is a `ref` to a reporting function that `Driver` points at `Extract.request_chain`, defaulting to reporting nothing so that `Mono` stays usable with no extraction in progress; a hook rather than threading the extractor's state through every arity test.  `is_value_indexed_arity` also became syntactic-first in the same pass, looking for the arrow before it normalizes anything, since `is_type_param` is asked about every binder of every definition and the overwhelming majority are values that stop at `Cons?` having paid nothing.  Reported alongside a 6m30s whole-module extraction that no local sweep reproduces as super-linear; keys are per-call-site, so more roots mean more output, and whole-program remains the intended workflow with many `--custard_entry` runs a bisection tool rather than a speed-up (§18.3). |
 | M10ν | **Retest fixes: by-value type order, fv-headed spines, unbound names in C** (§19) | Done.  A forward declaration is enough for a field held through a *pointer* and not for one held **by value**, which needs a size; the SCC order is over all dependencies, so a group made cyclic by pointers is one SCC whose internal order is arbitrary, and that is where a by-value field lands ahead of its definition.  The by-value edges are acyclic -- `check_finite` says so -- and `PrintC.sort_types` emits a topological order of them, depth-first in the original order so the diff stays small.  `tests/custard/CByValue.fst`, which needs a *polymorphic* container to bite, a source bundle of mutual types being already ordered.  Separately, `Extract.binder_classes` returned `[]` whenever `lookup_sigelt` missed, and `[]` is a short-circuit rather than "all `Poly`": the whole spine goes through unfiltered, which is §18.1's miscompilation reached by the fv path instead of the variable path.  It now falls back to `lookup_lid_typ`, the lookup `binder_flags` has always used, so the spine and the flags come from one declaration; inferred rather than reproduced, since neither we nor the reporter could minimize it.  And `PrintC.lookup_var` no longer prints a name it cannot resolve -- the karamel backend caught this IR defect only because its terms are De Bruijn -- rejecting through a new `reject_ir` that says the IR is malformed rather than that C cannot express it. |
+| M10ξ | **A definition's arity comes from its lambda, and dead bindings do not reach C** (§19.4, §19.5) | Done.  `Mono.classify` reads a definition's binders off its *type* and `Extract.extract_letbinding` reads them off its *lambda*, and when an abbreviation stops the arrow spine short the two disagree -- the definition deletes an erased binder that every call site keeps passing.  EverParse's `jump_header : unit -> jumper parse_header` is five binders that the type shows as one.  Unfolding harder is not the fix: a refinement is not a `Tm_arrow` however much unfolding is allowed, and these step lists omit `Zeta` on purpose.  `Mono.classify_def` extends the classification with the lambda's surplus binders, filtered by `is_erased_binder` -- verbatim the rule `extract_letbinding` already applied to them -- so `split_mono_args`, `call_unit_flags` and `call_type_args` all agree with the definition, and the two sides come from one list instead of two that usually coincide.  A no-op wherever the spine is already complete.  This supersedes the M10ν `lookup_sigelt` diagnosis, which the reporter's instrumented build disproved: the lookup never misses and the classification is short, not empty; the fallback stays because a short-circuit indistinguishable from an answer is worth closing regardless.  Separately, `PrintC` drops an `ELet` whose name the body never reads when the initializer is pure, which is what a pattern match using none of its fields leaves behind and what `-Werror=unused-variable` refuses; in the printer rather than `Simplify` because it is a fact about C.  `tests/custard/EraseAbbrev.fst` (checked to fail without the fix, emitting `add5 () x () 6`) and `tests/custard/CDeadLet.fst`.  The 6m20s whole-module profile also arrived and §18.3's explanation was wrong: `Extract.norm` is 374.7s of 380s and the growth is in per-call cost, not call count, and is sub-additive in roots. |
