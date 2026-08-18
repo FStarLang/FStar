@@ -95,16 +95,11 @@ aside and lets an outer one through. A module-qualified name such as
 ``IntOps.f`` is never overloaded, and a local variable always shadows
 everything.
 
-For this to leave existing programs alone, eliminating a candidate has to be a
-judgement F* is sure of, and there is nothing downstream that revisits the
-decision. That is why the test is as coarse as it is: it compares head symbols
-only, and treats a type it cannot yet determine as fitting anything.
-
-It must also allow for the conversions F* inserts on your behalf, since a
-candidate whose type differs from yours only by one of those does fit. A
+Overload resolution also allows for the conversions F* inserts on your behalf,
+since a candidate whose type differs from yours only by one of those does fit. A
 ``bool`` may stand where a ``prop`` or a ``Type`` is wanted, and a ``prop``
-where a ``bool`` is; a ``t`` may stand where an ``FStar.Ghost.erased t``
-is wanted, and the reverse; and any function you mark with the ``coercion``
+where a ``bool`` is; a ``t`` may stand where an ``FStar.Ghost.erased t`` is
+wanted, and the reverse; and any function you mark with the ``coercion``
 attribute lets its argument type stand where its result type is wanted:
 
 .. code-block:: fstar
@@ -135,7 +130,7 @@ available, as is turning the feature off.
 Three modes are selectable, and the default rarely wants changing:
 
 * ``--ext fstar:overload=compat`` is the default described above.
-* ``--ext fstar:overload=off`` restores the old behaviour, where a name resolves
+* ``--ext fstar:overload=off`` turns off overload resolution and a name resolves
   to the innermost binding and nothing else.
 * ``--ext fstar:overload=strict`` reports an error (number 362) wherever more
   than one candidate survives, instead of quietly taking the innermost. This is
