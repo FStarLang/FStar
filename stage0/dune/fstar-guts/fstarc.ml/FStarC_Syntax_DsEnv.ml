@@ -865,13 +865,14 @@ let find_in_module_with_includes (eikind : exported_id_kind)
          | Cont_ignore -> aux (FStarC_List.op_At mincludes q)
          | uu___ -> look_into) in
   aux [(ns, id)]
-let try_lookup_id'' (env1 : env) (id : FStarC_Ident.ident)
-  (eikind : exported_id_kind) (k_local_binding : local_binding -> 'a cont_t)
+let try_lookup_id''_gen (collect : Prims.bool) (env1 : env)
+  (id : FStarC_Ident.ident) (eikind : exported_id_kind)
+  (k_local_binding : local_binding -> 'a cont_t)
   (k_rec_binding : rec_binding -> 'a cont_t)
   (k_record : record_or_dc -> 'a cont_t)
   (find_in_module : FStarC_Ident.lident -> 'a cont_t)
   (lookup_default_id : 'a cont_t -> FStarC_Ident.ident -> 'a cont_t) :
-  'a FStar_Pervasives_Native.option=
+  'a Prims.list=
   let check_local_binding_id uu___ =
     match uu___ with
     | (id', uu___2, uu___3) ->
@@ -928,14 +929,45 @@ let try_lookup_id'' (env1 : env) (id : FStarC_Ident.ident)
         then k_record r
         else Cont_ignore
     | uu___2 -> Cont_ignore in
-  let rec aux l =
+  let is_local_scope_mod uu___ =
+    match uu___ with
+    | Local_bindings uu___2 -> true
+    | Rec_binding uu___2 -> true
+    | uu___2 -> false in
+  let rec aux acc l =
     match l with
     | a1::q ->
-        let uu___ = proc a1 in option_of_cont (fun uu___2 -> aux q) uu___
+        let uu___ = proc a1 in
+        (match uu___ with
+         | Cont_ok v ->
+             if Prims.not collect
+             then [v]
+             else
+               if is_local_scope_mod a1
+               then
+                 (match acc with | [] -> [v] | uu___2 -> FStarC_List.rev acc)
+               else aux (v :: acc) q
+         | Cont_fail -> FStarC_List.rev acc
+         | Cont_ignore -> aux acc q)
     | [] ->
         let uu___ = lookup_default_id Cont_fail id in
-        option_of_cont (fun uu___2 -> FStar_Pervasives_Native.None) uu___ in
-  aux env1.scope_mods
+        (match uu___ with
+         | Cont_ok v -> FStarC_List.rev (v :: acc)
+         | uu___2 -> FStarC_List.rev acc) in
+  aux [] env1.scope_mods
+let try_lookup_id'' (env1 : env) (id : FStarC_Ident.ident)
+  (eikind : exported_id_kind) (k_local_binding : local_binding -> 'a cont_t)
+  (k_rec_binding : rec_binding -> 'a cont_t)
+  (k_record : record_or_dc -> 'a cont_t)
+  (find_in_module : FStarC_Ident.lident -> 'a cont_t)
+  (lookup_default_id : 'a cont_t -> FStarC_Ident.ident -> 'a cont_t) :
+  'a FStar_Pervasives_Native.option=
+  let uu___ =
+    try_lookup_id''_gen false env1 id eikind k_local_binding k_rec_binding
+      k_record find_in_module lookup_default_id in
+  match uu___ with
+  | [] -> FStar_Pervasives_Native.None
+  | v::uu___2 -> FStar_Pervasives_Native.Some v
 let found_local_binding (r : FStarC_Range_Type.range) (lb : local_binding) :
   FStarC_Syntax_Syntax.term=
   let uu___ = lb in match uu___ with | (id', x, uu___2) -> bv_to_name x r
@@ -1073,13 +1105,13 @@ let shorten_module_path (env1 : env) (ids : FStarC_Ident.ident Prims.list)
     | FStar_Pervasives_Native.Some m when module_is_open env1 m -> (ids, [])
     | uu___2 -> do_shorten env1 ids
   else do_shorten env1 ids
-let resolve_in_open_namespaces'' (env1 : env) (lid : FStarC_Ident.lident)
-  (eikind : exported_id_kind) (k_local_binding : local_binding -> 'a cont_t)
+let resolve_in_open_namespaces''_gen (collect : Prims.bool) (env1 : env)
+  (lid : FStarC_Ident.lident) (eikind : exported_id_kind)
+  (k_local_binding : local_binding -> 'a cont_t)
   (k_rec_binding : rec_binding -> 'a cont_t)
   (k_record : record_or_dc -> 'a cont_t)
   (f_module : FStarC_Ident.lident -> 'a cont_t)
-  (l_default : 'a cont_t -> FStarC_Ident.ident -> 'a cont_t) :
-  'a FStar_Pervasives_Native.option=
+  (l_default : 'a cont_t -> FStarC_Ident.ident -> 'a cont_t) : 'a Prims.list=
   match FStarC_Ident.ns_of_lid lid with
   | uu___::uu___2 ->
       let uu___3 =
@@ -1088,20 +1120,51 @@ let resolve_in_open_namespaces'' (env1 : env) (lid : FStarC_Ident.lident)
           FStarC_Ident.set_lid_range uu___5 (FStarC_Ident.range_of_lid lid) in
         resolve_module_name env1 uu___4 true in
       (match uu___3 with
-       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+       | FStar_Pervasives_Native.None -> []
        | FStar_Pervasives_Native.Some modul ->
            let uu___4 =
              find_in_module_with_includes eikind f_module Cont_fail env1
                modul (FStarC_Ident.ident_of_lid lid) in
-           option_of_cont (fun uu___5 -> FStar_Pervasives_Native.None) uu___4)
+           (match uu___4 with | Cont_ok v -> [v] | uu___5 -> []))
   | [] ->
-      try_lookup_id'' env1 (FStarC_Ident.ident_of_lid lid) eikind
+      try_lookup_id''_gen collect env1 (FStarC_Ident.ident_of_lid lid) eikind
         k_local_binding k_rec_binding k_record f_module l_default
+let resolve_in_open_namespaces'' (env1 : env) (lid : FStarC_Ident.lident)
+  (eikind : exported_id_kind) (k_local_binding : local_binding -> 'a cont_t)
+  (k_rec_binding : rec_binding -> 'a cont_t)
+  (k_record : record_or_dc -> 'a cont_t)
+  (f_module : FStarC_Ident.lident -> 'a cont_t)
+  (l_default : 'a cont_t -> FStarC_Ident.ident -> 'a cont_t) :
+  'a FStar_Pervasives_Native.option=
+  let uu___ =
+    resolve_in_open_namespaces''_gen false env1 lid eikind k_local_binding
+      k_rec_binding k_record f_module l_default in
+  match uu___ with
+  | [] -> FStar_Pervasives_Native.None
+  | v::uu___2 -> FStar_Pervasives_Native.Some v
 let cont_of_option (k_none : 'a cont_t)
   (uu___ : 'a FStar_Pervasives_Native.option) : 'a cont_t=
   match uu___ with
   | FStar_Pervasives_Native.Some v -> Cont_ok v
   | FStar_Pervasives_Native.None -> k_none
+let resolve_in_open_namespaces'_gen (collect : Prims.bool) (env1 : env)
+  (lid : FStarC_Ident.lident)
+  (k_local_binding : local_binding -> 'a FStar_Pervasives_Native.option)
+  (k_rec_binding : rec_binding -> 'a FStar_Pervasives_Native.option)
+  (k_global_def :
+    FStarC_Ident.lident ->
+      (FStarC_Syntax_Syntax.sigelt * Prims.bool) ->
+        'a FStar_Pervasives_Native.option)
+  : 'a Prims.list=
+  let k_global_def' k lid1 def =
+    let uu___ = k_global_def lid1 def in cont_of_option k uu___ in
+  let f_module lid' =
+    let k = Cont_ignore in find_in_module env1 lid' (k_global_def' k) k in
+  let l_default k i = lookup_default_id env1 i (k_global_def' k) k in
+  resolve_in_open_namespaces''_gen collect env1 lid Exported_id_term_type
+    (fun l -> let uu___ = k_local_binding l in cont_of_option Cont_fail uu___)
+    (fun r -> let uu___ = k_rec_binding r in cont_of_option Cont_fail uu___)
+    (fun uu___ -> Cont_ignore) f_module l_default
 let resolve_in_open_namespaces' (env1 : env) (lid : FStarC_Ident.lident)
   (k_local_binding : local_binding -> 'a FStar_Pervasives_Native.option)
   (k_rec_binding : rec_binding -> 'a FStar_Pervasives_Native.option)
@@ -1110,15 +1173,12 @@ let resolve_in_open_namespaces' (env1 : env) (lid : FStarC_Ident.lident)
       (FStarC_Syntax_Syntax.sigelt * Prims.bool) ->
         'a FStar_Pervasives_Native.option)
   : 'a FStar_Pervasives_Native.option=
-  let k_global_def' k lid1 def =
-    let uu___ = k_global_def lid1 def in cont_of_option k uu___ in
-  let f_module lid' =
-    let k = Cont_ignore in find_in_module env1 lid' (k_global_def' k) k in
-  let l_default k i = lookup_default_id env1 i (k_global_def' k) k in
-  resolve_in_open_namespaces'' env1 lid Exported_id_term_type
-    (fun l -> let uu___ = k_local_binding l in cont_of_option Cont_fail uu___)
-    (fun r -> let uu___ = k_rec_binding r in cont_of_option Cont_fail uu___)
-    (fun uu___ -> Cont_ignore) f_module l_default
+  let uu___ =
+    resolve_in_open_namespaces'_gen false env1 lid k_local_binding
+      k_rec_binding k_global_def in
+  match uu___ with
+  | [] -> FStar_Pervasives_Native.None
+  | v::uu___2 -> FStar_Pervasives_Native.Some v
 let fv_qual_of_se (se : FStarC_Syntax_Syntax.sigelt) :
   FStarC_Syntax_Syntax.fv_qual FStar_Pervasives_Native.option=
   match se.FStarC_Syntax_Syntax.sigel with
@@ -1166,9 +1226,9 @@ let ns_of_lid_equals (lid : FStarC_Ident.lident) (ns : FStarC_Ident.lident) :
     let uu___ = FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid lid) in
     FStarC_Ident.lid_equals uu___ ns
   else false
-let try_lookup_name (any_val : Prims.bool) (exclude_interf : Prims.bool)
-  (env1 : env) (lid : FStarC_Ident.lident) :
-  foundname FStar_Pervasives_Native.option=
+let try_lookup_name_gen (collect : Prims.bool) (any_val : Prims.bool)
+  (exclude_interf : Prims.bool) (env1 : env) (lid : FStarC_Ident.lident) :
+  foundname Prims.list=
   let occurrence_range = FStarC_Ident.range_of_lid lid in
   let k_global_def source_lid uu___ =
     match uu___ with
@@ -1292,8 +1352,15 @@ let try_lookup_name (any_val : Prims.bool) (exclude_interf : Prims.bool)
               (uu___5, []) in
             Term_name uu___4 in
           FStar_Pervasives_Native.Some uu___3)) in
-  resolve_in_open_namespaces' env1 lid k_local_binding k_rec_binding
-    k_global_def
+  resolve_in_open_namespaces'_gen collect env1 lid k_local_binding
+    k_rec_binding k_global_def
+let try_lookup_name (any_val : Prims.bool) (exclude_interf : Prims.bool)
+  (env1 : env) (lid : FStarC_Ident.lident) :
+  foundname FStar_Pervasives_Native.option=
+  let uu___ = try_lookup_name_gen false any_val exclude_interf env1 lid in
+  match uu___ with
+  | [] -> FStar_Pervasives_Native.None
+  | v::uu___2 -> FStar_Pervasives_Native.Some v
 let try_lookup_effect_name' (exclude_interf : Prims.bool) (env1 : env)
   (lid : FStarC_Ident.lident) :
   (FStarC_Syntax_Syntax.sigelt * FStarC_Ident.lident)
@@ -1525,6 +1592,64 @@ let try_lookup_lid_with_attributes (env1 : env) (l : FStarC_Ident.lident) :
 let try_lookup_lid (env1 : env) (l : FStarC_Ident.lident) :
   FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
   let uu___ = try_lookup_lid_with_attributes env1 l in drop_attributes uu___
+let try_lookup_lid_alternatives (env1 : env) (lid : FStarC_Ident.lident) :
+  FStarC_Syntax_Syntax.fv Prims.list=
+  let uu___ =
+    let uu___2 = FStarC_Options.overload_mode () in
+    match uu___2 with | FStarC_Options.Overload_off -> true | uu___3 -> false in
+  if uu___
+  then []
+  else
+    if
+      (match FStarC_Ident.ns_of_lid lid with
+       | hd::tl -> true
+       | uu___2 -> false)
+    then []
+    else
+      (let as_fv f =
+         match f with
+         | Term_name (e, uu___2) ->
+             let uu___3 =
+               let uu___4 = FStarC_Syntax_Subst.compress e in
+               uu___4.FStarC_Syntax_Syntax.n in
+             (match uu___3 with
+              | FStarC_Syntax_Syntax.Tm_fvar fv when
+                  match fv.FStarC_Syntax_Syntax.fv_qual with
+                  | FStar_Pervasives_Native.None -> true
+                  | uu___4 -> false -> FStar_Pervasives_Native.Some fv
+              | uu___4 -> FStar_Pervasives_Native.None)
+         | uu___2 -> FStar_Pervasives_Native.None in
+       let uu___2 = try_lookup_name_gen true env1.iface false env1 lid in
+       match uu___2 with
+       | [] -> []
+       | uu___3::[] -> []
+       | c0::rest ->
+           let uu___3 = as_fv c0 in
+           (match uu___3 with
+            | FStar_Pervasives_Native.None -> []
+            | FStar_Pervasives_Native.Some fv0 ->
+                let rec dedup seen l =
+                  match l with
+                  | [] -> []
+                  | c::tl ->
+                      let uu___4 = as_fv c in
+                      (match uu___4 with
+                       | FStar_Pervasives_Native.None -> dedup seen tl
+                       | FStar_Pervasives_Native.Some fv ->
+                           let uu___5 =
+                             FStarC_List.existsb
+                               (fun l1 ->
+                                  FStarC_Ident.lid_equals l1
+                                    fv.FStarC_Syntax_Syntax.fv_name) seen in
+                           if uu___5
+                           then dedup seen tl
+                           else
+                             (let uu___6 =
+                                dedup ((fv.FStarC_Syntax_Syntax.fv_name) ::
+                                  seen) tl in
+                              fv :: uu___6)) in
+                let uu___4 = dedup [fv0.FStarC_Syntax_Syntax.fv_name] rest in
+                (match uu___4 with | [] -> [] | alts -> fv0 :: alts)))
 let resolve_to_fully_qualified_name (env1 : env) (l : FStarC_Ident.lident) :
   FStarC_Ident.lident FStar_Pervasives_Native.option=
   let r =

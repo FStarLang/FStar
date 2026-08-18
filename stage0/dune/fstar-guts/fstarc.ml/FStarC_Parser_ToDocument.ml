@@ -317,10 +317,10 @@ let is_general_construction (e : FStarC_Parser_AST.term) : Prims.bool=
      | FStarC_Parser_AST.ListLiteral _0 -> true
      | uu___ -> false)
 let is_general_prefix_op (op : FStarC_Ident.ident) : Prims.bool=
-  let op_starting_char =
-    FStarC_Util.char_at (FStarC_Ident.string_of_id op) Prims.int_zero in
+  let op_s = FStarC_Ident.string_of_id op in
+  let op_starting_char = FStarC_Util.char_at op_s Prims.int_zero in
   ((op_starting_char = 33) || (op_starting_char = 63)) ||
-    ((op_starting_char = 126) && ((FStarC_Ident.string_of_id op) <> "~"))
+    (((op_starting_char = 126) && (op_s <> "~")) && (op_s <> "~-"))
 let head_and_args_full (e : FStarC_Parser_AST.term) :
   (FStarC_Parser_AST.term * (FStarC_Parser_AST.term * FStarC_Parser_AST.imp)
     Prims.list)=
@@ -470,7 +470,7 @@ let handleable_args_length (op : FStarC_Ident.ident) : Prims.int=
   let op_s = FStarC_Ident.string_of_id op in
   let uu___ =
     let uu___1 = is_general_prefix_op op in
-    if uu___1 then true else FStarC_List.mem op_s ["~"] in
+    if uu___1 then true else FStarC_List.mem op_s ["~-"; "~"] in
   if uu___
   then Prims.int_one
   else
@@ -507,7 +507,7 @@ let handleable_op (op : FStarC_Ident.ident) (args : 'uuuuu Prims.list) :
       let uu___1 = is_general_prefix_op op in
       if uu___1
       then true
-      else FStarC_List.mem (FStarC_Ident.string_of_id op) ["~"]
+      else FStarC_List.mem (FStarC_Ident.string_of_id op) ["~-"; "~"]
   | uu___ when uu___ = (Prims.of_int 2) ->
       let uu___1 =
         let uu___2 = is_operatorInfix0ad12 op in
@@ -759,10 +759,7 @@ let p_lidentOrOperator' (l : 'uuuuu) (s_l : 'uuuuu -> Prims.string)
   then
     let uu___ = FStarC_Parser_AST.string_to_op lstr in
     match uu___ with
-    | FStar_Pervasives_Native.None ->
-        let uu___1 =
-          let uu___2 = p_l l in FStar_Pprint.op_Hat_Hat uu___2 (str " )") in
-        FStar_Pprint.op_Hat_Hat (str "( ") uu___1
+    | FStar_Pervasives_Native.None -> p_l l
     | FStar_Pervasives_Native.Some s ->
         FStar_Pprint.op_Hat_Hat (str "( ")
           (FStar_Pprint.op_Hat_Hat (str s) (str " )"))
@@ -1685,7 +1682,8 @@ and p_atomicPattern (p : FStarC_Parser_AST.pattern) : FStar_Pprint.document=
       let uu___ = FStarC_Pprint.optional p_aqual aqual in
       let uu___1 =
         let uu___2 = p_attributes false attrs in
-        let uu___3 = p_lident lid in FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        let uu___3 = p_lidentOrOperator lid in
+        FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
       FStar_Pprint.op_Hat_Hat uu___ uu___1
   | FStarC_Parser_AST.PatName uid -> p_quident uid
   | FStarC_Parser_AST.PatOr uu___ ->
@@ -3276,6 +3274,13 @@ and p_tmEqWith' (p_X : FStarC_Parser_AST.term -> FStar_Pprint.document)
           FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___3 in
         FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
       FStar_Pprint.group uu___
+  | FStarC_Parser_AST.Op (id, e1::[]) when
+      (FStarC_Ident.string_of_id id) = "~-" ->
+      let uu___ = levels "-" in
+      (match uu___ with
+       | (left, mine, right) ->
+           let uu___1 = p_tmEqWith' p_X mine e1 in
+           FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.minus uu___1)
   | uu___ -> p_tmNoEqWith p_X e
 and p_tmNoEqWith (p_X : FStarC_Parser_AST.term -> FStar_Pprint.document)
   (e : FStarC_Parser_AST.term) : FStar_Pprint.document=

@@ -296,6 +296,7 @@ and fv_qual =
   | Record_ctor of (FStarC_Ident.lident * FStarC_Ident.ident Prims.list) 
   | Unresolved_projector of fv FStar_Pervasives_Native.option 
   | Unresolved_constructor of unresolved_constructor 
+  | Unresolved_name of fv Prims.list 
 and unresolved_constructor =
   {
   uc_base_term: Prims.bool ;
@@ -788,6 +789,10 @@ let uu___is_Unresolved_constructor (projectee : fv_qual) : Prims.bool=
 let __proj__Unresolved_constructor__item___0 (projectee : fv_qual) :
   unresolved_constructor=
   match projectee with | Unresolved_constructor _0 -> _0
+let uu___is_Unresolved_name (projectee : fv_qual) : Prims.bool=
+  match projectee with | Unresolved_name _0 -> true | uu___ -> false
+let __proj__Unresolved_name__item___0 (projectee : fv_qual) : fv Prims.list=
+  match projectee with | Unresolved_name _0 -> _0
 let __proj__Mkunresolved_constructor__item__uc_base_term
   (projectee : unresolved_constructor) : Prims.bool=
   match projectee with
@@ -2619,7 +2624,14 @@ let showable_fv_qual : fv_qual FStarC_Class_Show.showable=
                let uu___2 =
                  FStarC_Class_Show.show showable_unresolved_constructor p in
                Prims.strcat uu___2 ")" in
-             Prims.strcat "Unresolved_constructor (" uu___1)
+             Prims.strcat "Unresolved_constructor (" uu___1
+         | Unresolved_name alts ->
+             let uu___1 =
+               let uu___2 =
+                 FStarC_Class_Show.show
+                   (FStarC_Class_Show.show_list showable_fv) alts in
+               Prims.strcat uu___2 ")" in
+             Prims.strcat "Unresolved_name (" uu___1)
   }
 let deq_lazy_kind : lazy_kind FStarC_Class_Deq.deq=
   {

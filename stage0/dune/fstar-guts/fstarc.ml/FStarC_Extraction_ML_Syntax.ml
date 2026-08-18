@@ -101,7 +101,6 @@ let fsharpkeywords : Prims.string Prims.list=
   "mutable";
   "namespace";
   "new";
-  "not";
   "null";
   "of";
   "open";
