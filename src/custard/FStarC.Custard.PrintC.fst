@@ -885,6 +885,23 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     scope := saved;
     s2
 
+  (* Section 19.10.  [let x = <stable expr> in e2] declares a second name for
+     a value the backend never assigns to, and a second name is not worth a
+     variable: [x] can be bound to the path itself, which is what [emit_match]
+     already does for a stable scrutinee and for every pattern binding.  The
+     rule below it, which drops a binding nothing reads, does not reach these
+     -- the [_letpattern] of a match *is* read, by the match -- so a match
+     that ends up emitting no read of its scrutinee left the declaration
+     behind with no users at all, which C refuses. *)
+  | ELet (x, _, e1, e2) when is_stable e1 ->
+    let out = mk_ref "" in
+    let path = c_expr out ind e1 in
+    let saved = !scope in
+    bind_alias x path;
+    let s2 = emit ind d e2 in
+    scope := saved;
+    !out ^ s2
+
   (* Section 19.8: written, never read.  The writes go with the cell. *)
   | ELet (x, TRef t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)

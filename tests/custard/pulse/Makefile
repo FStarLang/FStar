@@ -41,7 +41,8 @@ NOGREP_PulseHashTable += "PulseCore"
 NOGREP_PulseHashTable += "prims_unit"
 # Section 5.5: 'ht_t' comes back as a record rather than a one-constructor
 # variant, and the two 'unreachable' branches are gone.
-GREP_PulseHashTable += "pulse_Lib_HashTable_Type_ht_t = { sz : FStar_SizeT.t;"
+GREP_PulseHashTable += "pulse_Lib_HashTable_Type_ht_t = {"
+GREP_PulseHashTable += "  sz : FStar_SizeT.t;"
 GREP_PulseHashTable += "(ht).sz"
 NOGREP_PulseHashTable += "Mkht_t"
 NOGREP_PulseHashTable += "failwith"
@@ -124,6 +125,33 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
 	  -c $(OUTPUT_DIR)/$*_c/Custard.c -o $@
 
+# Section 19.11.  A specification named as an explicit entry point.  Two
+# assertions, and the negative one is the point: '--custard_entry' on an
+# slprop-valued 'val' must say that it is a specification, not reject the
+# recursive datatype that only ever indexes it.  This is the suite's one
+# negative test, so it is a rule of its own rather than a GREP_TESTS entry.
+$(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked
+	$(call msg, "CUSTARD-C", PulseSpecRoot)
+	$(Q)mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard --custard_backend C \
+	  --custard_entry_module PulseSpecRoot PulseSpecRoot.fst \
+	  -o $(OUTPUT_DIR)/PulseSpecRoot.c
+	$(Q)grep -q 'PulseSpecRoot_size' $(OUTPUT_DIR)/PulseSpecRoot.c \
+	  || { echo "ERROR: PulseSpecRoot.c is missing PulseSpecRoot_size"; exit 1; }
+	$(Q)grep -q 'tree' $(OUTPUT_DIR)/PulseSpecRoot.c \
+	  && { echo "ERROR: PulseSpecRoot.c should not mention tree"; exit 1; }; true
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -c -x c \
+	  $(OUTPUT_DIR)/PulseSpecRoot.c -o $(OUTPUT_DIR)/PulseSpecRoot.o
+	$(Q)for e in rep rep_abs; do \
+	  $(FSTAR) --codegen Custard --custard_backend C \
+	    --custard_entry PulseSpecRoot.$$e PulseSpecRoot.fst \
+	    -o $(OUTPUT_DIR)/PulseSpecRoot_$$e.c > $(OUTPUT_DIR)/$$e.out 2>&1; \
+	  grep -q 'is a specification, not code' $(OUTPUT_DIR)/$$e.out \
+	    || { echo "ERROR: --custard_entry PulseSpecRoot.'$$e' did not report a \
+specification:"; cat $(OUTPUT_DIR)/$$e.out; exit 1; }; done
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/PulseSpecRoot.specroot
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .grepped, $(GREP_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .mlchecked, $(OCAML_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))

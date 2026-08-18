@@ -6689,6 +6689,88 @@ an unused *parameter*, where it is the only option -- a parameter cannot be
 deleted without changing the signature.  A local can, and a suppression that
 keeps a dead variable is worse output than no variable.
 
+### 19.10 A second name is not worth a variable
+
+The `_letpattern` of 19.8 survived, and the reporter dumped the IR rather
+than guess at why.  The dead-let rule was right to decline: the name *is*
+read, by the match it scrutinizes.
+
+```
+let _letpattern : cbor_raw = x' in
+match _letpattern with
+| CBOR_Case_Tagged(tg) -> res1
+```
+
+What happens next is that `emit_match` finds the scrutinee `is_stable`, takes
+the direct path and emits no read of it, and binds `tg` with `bind_alias`,
+which emits nothing because the body never mentions it.  The declaration is
+left with, in the end, no users at all.
+
+So this is not a dead binding, it is a **redundant alias**: `let x = <stable
+expr> in e2` declares a second name for a value the backend never assigns to.
+The machinery was already there and already used for exactly this reason --
+`emit_match`'s direct path, and every pattern binding -- so the fix is to
+bind `x` to the path instead of declaring a copy of it.  No side condition
+beyond `is_stable`, which is the same licence `emit_match` has always taken:
+a variable that is not a collapsed cell, or a projection out of one, is
+something this backend never writes to.
+
+It is worth more than the two warnings it closes, because the *live* case
+collapses too.  `Pulse_Lib_HashTable` loses four copies of a function
+pointer:
+
+```c
+- size_t (*hashf)(size_t) = ht.hashf;
+- size_t cidx = ..._mod(hashf(k), ht.sz);
++ size_t cidx = ..._mod(ht.hashf(k), ht.sz);
+```
+
+and `Example_Slice` loses a pointer copy in a two-line function.  In
+EverParse's output `_letpattern` bound to a plain variable appears 335 times.
+
+### 19.11 A specification named as an entry point
+
+`--custard_entry CBOR.Pulse.API.Det.C.cbor_det_match` was rejected with error
+367, the recursive datatype `Prims.list`.  Every word of that message is true
+and none of it is an answer to what was asked.  `cbor_det_match` is a
+separation-logic predicate:
+
+```fstar
+val cbor_det_match : perm -> cbor_det_t -> Spec.cbor -> slprop
+```
+
+Its result is `slprop`, so it has no runtime content at all; `Spec.cbor` is a
+*ghost index*, and nothing in the program holds one.  The layout pass was
+asked to lay out a type that exists only in the proof.
+
+The whole-module path already got this right, and had for a while:
+`erased_definition` is what keeps `--custard_entry_module` from rooting the
+specifications a module keeps alongside its code.  A root named one at a time
+was "taken at its word", which is a defensible policy for a name the user
+typed and an indefensible one when the word is `slprop`.  So the same
+question is now asked of an explicit root, in `Extract.root_is_erased`, before
+it is requested rather than after.
+
+Not silently.  A misspelled `--custard_entry` is an error rather than an
+empty output, and a correctly spelled one that turns out to name a proof is
+the same kind of mistake: the user asked for something and did not get it.
+
+The predicate is *not* `erased_definition`, and finding out why took two
+rounds of the test suite.  `must_erase_for_extraction` answers yes for
+`unit` -- correct about the value, wrong about the definition, since `main :
+unit -> ML unit` returns nothing and is the entire program.  A definition is
+contentless only when its result is non-informative *and* computing it does
+nothing, so the effect has to be total or ghost.  And a *type* is exempt
+outright, for the reason it is a legitimate root at all: its result is
+`Type`, than which nothing is less informative, and a type abbreviation named
+by `--custard_entry` is exactly what a hand-written realization needs emitted
+(section 12.7, and `tests/custard/TypeEntry.fst`, which is what caught this).
+
+`tests/custard/pulse/PulseSpecRoot.fst` covers both halves -- the module path
+compiles and mentions no `tree`, the two explicit roots report a
+specification -- and is the suite's one negative test, so it has a rule of
+its own.
+
 ### 19.8a A branch of ulib is not a Custard decision
 
 Custard's C output for `Example_Hashtable` carried two one-line wrapper
@@ -6710,17 +6792,23 @@ what the language extracts.  Not done; noted here so the trade is on record.
 
 * The two expensive normalizations of section 18.3, now named.  The next
   step is not a faster normalizer but not asking for those terms: both are
-  specification-only and reached through type-level positions.
+  specification-only and reached through type-level positions.  Section
+  19.11 is the same observation one level up, and it is suggestive: the
+  extractor keeps being handed proof-level terms to make decisions about.
 * `--custard_profile_norm`, which would print the request chain for any
   single normalization over a wall-time threshold.  The reporter has asked
   for it twice and has been bisecting by hand instead.
 * Inlining trivial projector functions in `Simplify`, per 19.8a.
-* karamel's Rust backend gives ownership errors on `cbor_det_serialize` --
-  440 of them in the latest run, up from 76 as more of the module compiles --
-  moved values and moves out of shared references, which read as by-value
-  slice passing on the karamel side, along with `ERROR translating
-  C._zero_for_deref` and a dead `cbor_raw_tags` enum.  All karamel-side, and
-  worth a karamel issue rather than anything here.
+* `cbor_det_elim_simple` is the one of the five 19.11 rejections that is not
+  a specification: it is real code whose *ghost* index reaches the layout
+  pass.  19.11 does not fix it, and whether it needs anything beyond the same
+  erasure one level deeper is not yet known.
+* karamel's Rust backend, now FStarLang/FStar#4443: 431 ownership errors on
+  `cbor_det_serialize` -- 296 `E0507`, 132 `E0382`, 3 `E0505` -- dominated by
+  non-`Copy` slice structs dereferenced out of shared references, plus five
+  struct literals emitted as bare `match` scrutinees, plus `ERROR translating
+  C._zero_for_deref` (which karamel reports while still exiting 0).  All
+  karamel-side.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -6797,3 +6885,4 @@ what the language extracts.  Not done; noted here so the trade is on record.
 | M10ν | **Retest fixes: by-value type order, fv-headed spines, unbound names in C** (§19) | Done.  A forward declaration is enough for a field held through a *pointer* and not for one held **by value**, which needs a size; the SCC order is over all dependencies, so a group made cyclic by pointers is one SCC whose internal order is arbitrary, and that is where a by-value field lands ahead of its definition.  The by-value edges are acyclic -- `check_finite` says so -- and `PrintC.sort_types` emits a topological order of them, depth-first in the original order so the diff stays small.  `tests/custard/CByValue.fst`, which needs a *polymorphic* container to bite, a source bundle of mutual types being already ordered.  Separately, `Extract.binder_classes` returned `[]` whenever `lookup_sigelt` missed, and `[]` is a short-circuit rather than "all `Poly`": the whole spine goes through unfiltered, which is §18.1's miscompilation reached by the fv path instead of the variable path.  It now falls back to `lookup_lid_typ`, the lookup `binder_flags` has always used, so the spine and the flags come from one declaration; inferred rather than reproduced, since neither we nor the reporter could minimize it.  And `PrintC.lookup_var` no longer prints a name it cannot resolve -- the karamel backend caught this IR defect only because its terms are De Bruijn -- rejecting through a new `reject_ir` that says the IR is malformed rather than that C cannot express it. |
 | M10ξ | **A definition's arity comes from its lambda, and dead bindings do not reach C** (§19.4, §19.5) | Done.  `Mono.classify` reads a definition's binders off its *type* and `Extract.extract_letbinding` reads them off its *lambda*, and when an abbreviation stops the arrow spine short the two disagree -- the definition deletes an erased binder that every call site keeps passing.  EverParse's `jump_header : unit -> jumper parse_header` is five binders that the type shows as one.  Unfolding harder is not the fix: a refinement is not a `Tm_arrow` however much unfolding is allowed, and these step lists omit `Zeta` on purpose.  `Mono.classify_def` extends the classification with the lambda's surplus binders, filtered by `is_erased_binder` -- verbatim the rule `extract_letbinding` already applied to them -- so `split_mono_args`, `call_unit_flags` and `call_type_args` all agree with the definition, and the two sides come from one list instead of two that usually coincide.  A no-op wherever the spine is already complete.  This supersedes the M10ν `lookup_sigelt` diagnosis, which the reporter's instrumented build disproved: the lookup never misses and the classification is short, not empty; the fallback stays because a short-circuit indistinguishable from an answer is worth closing regardless.  Separately, `PrintC` drops an `ELet` whose name the body never reads when the initializer is pure, which is what a pattern match using none of its fields leaves behind and what `-Werror=unused-variable` refuses; in the printer rather than `Simplify` because it is a fact about C.  `tests/custard/EraseAbbrev.fst` (checked to fail without the fix, emitting `add5 () x () 6`) and `tests/custard/CDeadLet.fst`.  The 6m20s whole-module profile also arrived and §18.3's explanation was wrong: `Extract.norm` is 374.7s of 380s and the growth is in per-call cost, not call count, and is sub-additive in roots. |
 | M10ο | **A normalizer returns a meaning, not a tag; and a cell written but never read** (§19.7, §19.8) | Done.  The reporter found the root cause of §19.2 himself and it is one line: `norm` unfolds `jumper parse_header` into exactly the arrow that was wanted, wrapped in a `Tm_ascribed`, and `SS.compress` does not strip an ascription, so `| Tm_arrow _ ->` never fired and the spine stopped one abbreviation short.  His tag census over one `jump_header` run says this is the common case and not a corner: six arrows behind an ascription, twenty-four refinements behind one.  So the fix is generalized rather than local -- `Mono.strip` alternates `unascribe` and `unrefine` to a fixed point, and no shape test in `Mono` reads a tag without it (`is_arity_aux`, `is_star_aux`, `arrow_formals_unfold_aux`), nor do `Extract.peel_typ` and `Extract.is_prop_sig`.  The failure mode is why: reading a tag off a wrapper answers "not an arrow" and "not an arity", and both are wrong in the direction that miscompiles.  Generalizing found a second instance and a trap: `peel_typ` matched on the *stripped* term but then called `U.arrow_formals_comp` on the unstripped one, which yields zero binders, so `peel_typ (n - 0)` recursed forever -- `Effects.fst` hung for minutes with no budget error at all, which is the signature of a Custard-level loop rather than a big reduction.  Stripping for the match is not enough; the term has to be rebound.  This also supersedes M10ξ's claim to be the EverParse cause: `classify_def` cannot fire there, because the declaration comes from an interface and `lb.lbdef` is `Tm_unknown`, so there are no surplus binders to read.  It stays, with a real single-file reproduction.  With the ascription fix, whole-module direct-to-C of `CBOR.Pulse.API.Det.C` succeeds, the 3419 lines compile under `gcc -Wall -Wextra`, and all 57 entry points extract individually.  The two remaining `-Werror` blockers are also closed, both in `PrintC`: §19.5's dead binding now uses `is_droppable` rather than `is_pure`, since a read of a collapsed cell cannot *move* across a write but can always *go*; and `cell_dead`/`drop_writes` delete a one-cell allocation every occurrence of which is the target of a write, which is what Pulse's `fn while` measure erases to.  `Goto_test1` goes from six lines to one.  Reverted with these: the ulib `inline_for_extraction` on `fst`/`snd`, which changed standard ML extraction repo-wide for a cosmetic Custard gain (§19.8a). |
+| M10π | **A redundant alias, and a specification named as an entry point** (§19.10, §19.11) | Done.  The `_letpattern` that survived M10ο is not a dead binding -- the name *is* read, by the match that scrutinizes it -- so the reporter dumped the IR instead of guessing, and the answer is that `emit_match` takes the direct path on a stable scrutinee, emits no read of it, and binds the branch's fields with `bind_alias`, which emits nothing when the body does not use them; the declaration is left with no users at all.  It is a **redundant alias**: `let x = <stable expr> in e2` declares a second name for a value this backend never assigns to, and `bind_alias` is already the answer to that everywhere else in the printer.  No side condition beyond `is_stable`, which is the licence `emit_match` has always taken.  The live cases collapse too, which is most of the value: `Pulse_Lib_HashTable` loses four copies of a function pointer and `Example_Slice` a pointer copy, and `_letpattern` bound to a plain variable appears 335 times in EverParse's output.  Separately, `--custard_entry` on a separation-logic predicate -- `cbor_det_match : perm -> cbor_det_t -> Spec.cbor -> slprop` -- was rejected with error 367 for the recursive datatype `Prims.list`, which is true about `Spec.cbor` and no answer at all to what was asked: the result is `slprop`, the index is ghost, and nothing in the program holds one.  `--custard_entry_module` already declined to root these (`erased_definition`); an explicit root was taken at its word, which is defensible until the word is `slprop`.  `Extract.root_is_erased` now asks before requesting, and reports rather than skipping, on the same reasoning that makes a misspelled entry an error.  The predicate is deliberately *not* `erased_definition`, and two rounds of the suite said why: `must_erase_for_extraction` answers yes for `unit`, so the effect has to be total or ghost as well (`main : unit -> ML unit` returns nothing and is the whole program), and a *type* is exempt outright, since its result is `Type` and a type abbreviation named by `--custard_entry` is exactly what a hand-written realization needs emitted (`TypeEntry.fst` caught it).  `tests/custard/pulse/PulseSpecRoot.fst`, the suite's one negative test and so a rule of its own. |

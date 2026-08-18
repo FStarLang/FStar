@@ -3186,12 +3186,60 @@ let install_chain_reporter (st:state) : ML unit =
 (* Whether a top-level definition has anything to extract, judged from its
    declared type alone: a ghost computation has no runtime meaning, and
    neither has one whose result is [prop], [slprop], [squash] or any other
-   type the extraction must erase.  [--custard_entry_module] is the only
-   caller -- a root named one at a time is taken at its word. *)
+   type the extraction must erase. *)
 let erased_definition (st:state) (ty:typ) : ML bool =
   let _, c = U.arrow_formals_comp ty in
   U.is_ghost_effect (U.comp_effect_name c) ||
   TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c)
+
+(* Section 19.11.  The same question asked of an explicit root, before it is
+   requested rather than after.
+
+   [--custard_entry_module] skips a specification quietly, because "whatever
+   of this module is code" does not include one.  A root named one at a time
+   used to be taken at its word, and taking a separation-logic predicate at
+   its word means extracting it: [rep : tree -> sizet -> slprop] becomes a
+   function whose argument is a recursive datatype, and the direct backend
+   rejects that with error 367 -- a true statement about [tree] and a
+   thoroughly misleading answer to what was asked, since nothing in the
+   program holds a [tree] at runtime and the whole-module path compiles the
+   same file.
+
+   So the answer is given here, where the question was asked.  Not silently:
+   a name the user typed that turns out to have no runtime content is worth
+   saying out loud, which is the same reasoning that makes a misspelled
+   [--custard_entry] an error rather than an empty output.
+
+   The predicate is *not* [erased_definition], and the difference is the
+   effect.  [non_info_norm] answers yes for [unit], which is right about the
+   value and wrong about the definition: [main : unit -> ML unit] returns
+   nothing and is the whole program.  A definition is contentless only when
+   its result is non-informative *and* computing it does nothing -- a total
+   or ghost computation.  An effectful one is called for what it does.
+
+   A *type* is exempt for the same reason it is a legitimate root at all: its
+   result is [Type], which is as non-informative as a result gets, and yet a
+   type abbreviation named by [--custard_entry] is exactly what a
+   hand-written realization needs emitted (see [tests/custard/TypeEntry.fst]). *)
+let root_is_erased (st:state) (l:Ident.lident) : ML bool =
+  let contentless (ty:typ) : ML bool =
+    let _, c = U.arrow_formals_comp ty in
+    not (is_type_sig st ty) &&
+    (U.is_ghost_effect (U.comp_effect_name c) ||
+     (U.is_pure_or_ghost_comp c &&
+      TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c))) in
+  match lookup_lid_typ st l with
+  | Some ((_, ty), _) when contentless ty ->
+    E.log_issue0 E.Error_CustardEntryNotFound [
+      text ("Custard entry point " ^ Ident.string_of_lid l ^
+            " is a specification, not code.");
+      text "Its result type is erased -- ghost, prop, slprop or squash -- so \
+            there is nothing to extract from it.";
+      text "Name the function that uses it instead, or use \
+            --custard_entry_module, which skips specifications."
+    ];
+    true
+  | _ -> false
 
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
          (per_module : S.modul -> ML unit) : ML program =
@@ -3275,7 +3323,8 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
           | _ -> ())));
-  Prof.timed "run.roots" (fun () -> roots |> List.iter (mark Root));
+  Prof.timed "run.roots" (fun () ->
+    roots |> List.iter (fun l -> if not (root_is_erased st l) then mark Root l));
   Prof.timed "run.main" (fun () ->
     match main with Some l -> mark Entrypoint l | None -> ());
   (* A top-level [let] whose definiens is *effectful* is a module initializer:

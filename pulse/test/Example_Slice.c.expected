@@ -31,8 +31,7 @@ void Pulse_Lib_Slice_copy__t(Pulse_Lib_Slice_slice__uint8 dst, Pulse_Lib_Slice_s
 void Example_Slice_test(uint8_t *arr);
 
 Pulse_Lib_Slice_slice__uint8 Pulse_Lib_Slice_from_array__t(uint8_t *a, size_t alen) {
-  uint8_t *ptr = a;
-  return (Pulse_Lib_Slice_slice__uint8){ .elt = ptr, .len = alen };
+  return (Pulse_Lib_Slice_slice__uint8){ .elt = a, .len = alen };
 }
 
 FStar_Pervasives_Native_tuple2__slice_uint8_slice_uint8 Pulse_Lib_Slice_split__t(Pulse_Lib_Slice_slice__uint8 s, size_t i) {
