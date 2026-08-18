@@ -98,11 +98,39 @@ everything.
 For this to leave existing programs alone, eliminating a candidate has to be a
 judgement F* is sure of, and there is nothing downstream that revisits the
 decision. That is why the test is as coarse as it is: it compares head symbols
-only, treats an unknown type as fitting anything, and accounts for the implicit
-coercions the elaborator may insert, so that e.g. a ``bool`` still counts as
-fitting where a ``prop`` is expected. Should a name nevertheless resolve
-somewhere you did not intend, qualifying it is always available, as is turning
-the feature off.
+only, and treats a type it cannot yet determine as fitting anything.
+
+It must also allow for the conversions F* inserts on your behalf, since a
+candidate whose type differs from yours only by one of those does fit. A
+``bool`` may stand where a ``prop`` or a ``Type`` is wanted, and a ``prop``
+where a ``bool`` is; a ``t`` may stand where an ``FStar.Ghost.erased t``
+is wanted, and the reverse; and any function you mark with the ``coercion``
+attribute lets its argument type stand where its result type is wanted:
+
+.. code-block:: fstar
+
+   module Metres
+   type metres = | Metres of int
+
+   [@@coercion]
+   let metres_to_int (m:metres) : int = Metres?._0 m
+
+.. code-block:: fstar
+
+   module Client
+   open IntOps
+   open BoolOps
+   open Metres
+
+   let d : int = f (Metres 3)   // IntOps.f, and the coercion is inserted
+
+Neither ``f`` takes a ``metres``. But ``IntOps.f`` is the one whose argument a
+``metres`` can be converted to, so ``BoolOps.f`` is the candidate that steps
+aside, and ``metres_to_int`` is then applied as it would be anywhere else.
+Resolution and coercion are decided together in this way: a candidate is set
+aside only when no conversion in scope could bridge the difference. Should a
+name nevertheless resolve somewhere you did not intend, qualifying it is always
+available, as is turning the feature off.
 
 Three modes are selectable, and the default rarely wants changing:
 
