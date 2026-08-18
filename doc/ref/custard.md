@@ -6972,7 +6972,9 @@ what the language extracts.  Not done; noted here so the trade is on record.
   hooks key on the `Pulse.Lib.Slice.slice` lid and on the module name, and
   whole-program monomorphization erases both.  It is also a
   miscompilation, not just a build failure, so it outranks the rest of this
-  list.
+  list.  Section 20 is the design; the two things it needs that do not
+  exist are a `--custard_krml_target` and a `Realized` kind that does not
+  rename.
 * CDDL error 363: `[@@monomorphize]` does not propagate through a runtime
   parameter in `CDDL.Pulse.Bundle.Base`.  This is the known M7 gap and
   wants M7, not a patch.
@@ -6986,6 +6988,161 @@ what the language extracts.  Not done; noted here so the trade is on record.
   struct literals emitted as bare `match` scrutinees, plus `ERROR translating
   C._zero_for_deref` (which karamel reports while still exiting 0).  All
   karamel-side.
+
+## 20. Design: `Pulse.Lib.Slice` on the Rust path
+
+Section 19.15 established the fault: karamel recognizes a slice by name, and
+Custard's monomorphization erases the name.  This section is the proposed fix.
+Nothing here is built yet.
+
+### 20.1 What karamel is actually asking for
+
+Not "leave the module alone".  Two specific syntactic shapes, and it is worth
+being precise about them because they decide the whole design.
+
+The type must reach karamel as an **applied type constructor** carrying its
+original lid.  `AstToMiniRust.translate_type_with_config` matches
+
+```ocaml
+| TApp ((["Pulse"; "Lib"; "Slice"], "slice"), [ t ]) ->
+    Ref (config.lifetime, Shared, Slice (translate_type_with_config env config t))
+```
+
+and two further passes (`has_pointer`, and the struct fixpoint that decides
+`lifetime`/`box`) match the same shape.  A `TQualified (["Pulse"; "Lib";
+"Slice"], "slice__uint8_t")` -- which is what Custard emits today -- matches
+none of them, and there is no other channel by which the information could
+arrive.
+
+Each operation must reach karamel as a **type application of its original
+lid**, `EApp (ETApp (EQualified (["Pulse"; "Lib"; "Slice"], op), ..., ts), es)`,
+for `from_array`, `op_Array_Access`, `op_Array_Assignment`, `split`,
+`subslice`, `copy` and `len`.  Each becomes a Rust operator or method call --
+`Index`, `Assign (Index ...)`, `MethodCall (_, ["split_at"], _)`,
+`copy_from_slice`, `len` -- at the *use site*.  The declarations themselves are
+deleted outright in step 0 of `translate_files`.
+
+So the requirement is stronger than "do not compile the module".  The type has
+to stay **polymorphic**, because the shape karamel matches is an application,
+and an application with no arguments is not one.  This is the single hard
+constraint on the design, and everything below follows from it.
+
+### 20.2 What Custard already has
+
+Almost all of it, which is the encouraging part.
+
+`Monomorphize.frozen` is a set of type declarations that must stay
+polymorphic, and `Monomorphize.freeze` is a transitive closure over it that
+already runs from three seeds: the signature of a `DExternal`, a `Realized`
+declaration, and an `Imported` one.  A frozen type keeps its name and its
+parameters and is not cloned; `is_poly` reads the set and `shape_of` respects
+it.  This is exactly the mechanism a slice needs, built for a different reason
+(§12.5, M8a) and already load-bearing on the OCaml path.
+
+`PrintKrml` already emits both shapes.  `krml_typ` sends `TApp (n, args)` with
+`args <> []` to `K.TApp (lid, ...)`, and `krml_expr` sends `EQual (n, tys)`
+with `tys <> []` to `K.ETypApp (K.EQualified lid, ...)`.  Neither is a special
+case; they are the general treatment of an applied name.
+
+`lident_of_name` preserves the namespace and only mangles when `n.spec` is
+set -- that is, only for a *specialization*.  An unspecialized
+`Pulse.Lib.Slice.len` therefore prints as `(["Pulse"; "Lib"; "Slice"], "len")`
+already, which is the lid karamel matches, character for character.
+
+What is missing is a reason for any of this to happen, and one thing that is
+genuinely absent: the ability to make a decision that depends on which
+*karamel target* is downstream.
+
+### 20.3 The proposal
+
+**1. A target option.**  `--custard_krml_target c|rust`, defaulting to `c`.
+
+This is the part with no existing analogue and it is worth saying why it has
+to exist rather than being inferred.  Custard's Krml backend emits a `.krml`
+file; karamel decides C or Rust later, from its own command line.  The two
+want *different programs*: for C, `Pulse.Lib.Slice` should be compiled from
+its F\* definition, which is what it is for and what works today; for Rust it
+must be absent and abstract.  No property of the F\* program distinguishes
+them.  Custard cannot infer the answer and must be told.
+
+It follows that a `.krml` file is now target-specific, which is a real cost
+and should be recorded: the `.cui` header (M10a) already refuses to link units
+built with mismatched layout options, and this belongs in that set.
+
+**2. A rule kind, `Rule_slice`, or more honestly `Rule_krml_model`.**
+
+Section 8.2's `Rule_realized` is nearly right -- "a hand-written module in the
+target language defines this; keep the declaration for its shape, do not emit
+it" -- and differs in exactly one respect: `Rule_realized` renames every
+reference to the realization's own name, and here the name is already correct.
+So the new kind is `Rule_realized` minus the renaming, and it should be
+implemented by giving `Rule_realized` an optional target name rather than by
+copying it.
+
+The list is data, not code, for the same reason `extern_types` is empty in
+§8.2: which modules karamel models is a fact about karamel, and today it is
+one module.  A `--custard_krml_model <lid>` flag with `Pulse.Lib.Slice`
+pre-registered under `--custard_krml_target rust` keeps the fact where it can
+be corrected without a rebuild.
+
+**3. Freeze the type.**
+
+`Monomorphize.freeze_realized` currently reads
+`Options.custard_backend () = "OCaml"`, with the comment that the C backends
+realize nothing.  That premise is what changes: under
+`--custard_krml_target rust` the Krml backend realizes exactly one module.
+So the guard becomes a question about the *program* -- is this declaration
+`Realized`, whatever the backend -- and the backend-specific part shrinks to
+which declarations get marked.
+
+Freezing is already transitive, which handles the consequence automatically: a
+struct with a `slice` field must not be cloned per-instantiation either,
+because karamel's `lifetime`/`box` fixpoint has to see the `TApp` inside it.
+The existing closure does that without being asked.
+
+**4. Emit the operations as externals.**
+
+`Extract` stops at a `Rule_realized` declaration today (`Extract.fst:1240`,
+`2391`), keeping the signature and not the body.  Sending those to
+`PrintKrml` as `DExternal` rather than dropping them gives karamel a
+well-typed program; `EQual (op, [t])` at each use site is then already an
+`ETypApp` and already matches.
+
+A polymorphic `DExternal` needs karamel's `-fallow-tapps`, which the Rust
+pipeline sets anyway (`Checker.ml:129`, `Monomorphization.ml:236`) -- this is
+how every karamel model with type parameters already works, so it is a
+documented configuration rather than a new demand.
+
+**5. Reject the mixture.**
+
+Under `--custard_krml_target rust`, a `slice` reaching `Layout` or the
+monomorphizer un-frozen is a bug in the freeze seeding, and should say so
+rather than producing the struct silently.  This is §19.13's rule: the failure
+mode we are fixing was a *silent miscompilation*, and the only reason it was
+caught is that the borrow checker happened to object.  Something in Custard
+should object first.
+
+### 20.4 What this does not solve
+
+`Pulse.Lib.Slice` has around twenty `val`s and karamel translates seven.  The
+rest are ghost (`pts_to`, `is_split`, `share`, `gather`) and erase before any
+of this, which is why the count works out -- but that is a property of today's
+`Pulse.Lib.Slice`, not a guarantee.  A future runtime operation would extract
+as an external karamel has no rule for, and fail at the `ETApp` with no useful
+message.  The check in item 5 should therefore be a *whitelist* of the seven,
+not a check that the module was frozen.
+
+`Pulse.Lib.Array` and `Pulse.Lib.Reference` have the same shape and are not
+addressed.  The mechanism generalizes; the entries do not exist.
+
+And the honest limitation: this makes Custard's Krml backend carry a model of
+what karamel's Rust backend recognizes, in two places that must agree and have
+no way to check that they do.  The alternative -- karamel recognizing a
+*monomorphized* slice by name prefix -- was considered and is worse: it makes
+a name-mangling convention into an interface, and Custard's mangling is
+already something §12.7 wanted the freedom to change.  A shared declaration of
+the seven lids, read by both, would be better than either, and is the thing to
+build if a second module ever needs this.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
