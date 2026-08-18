@@ -133,29 +133,11 @@ let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
 let lt ( a:t) (b:t) : Tot bool = lt  #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
-(* Infix notations *)
-inline_for_extraction unfold let ( +^ )  = add
-inline_for_extraction unfold let ( -^ )  = sub
-inline_for_extraction unfold let ( *^ )  = mul
-inline_for_extraction unfold let ( /^ )  = div
-inline_for_extraction unfold let ( %^ )  = rem
-inline_for_extraction unfold let ( ^^ )  = logxor
-inline_for_extraction unfold let ( &^ )  = logand
-inline_for_extraction unfold let ( |^ )  = logor
-inline_for_extraction unfold let ( <<^ ) = shift_left
-inline_for_extraction unfold let ( >>^ ) = shift_right
-inline_for_extraction unfold let ( >>>^) = shift_arithmetic_right
-inline_for_extraction unfold let ( =^ )  = eq
-inline_for_extraction unfold let ( <>^ ) = ne
-inline_for_extraction unfold let ( >^ )  = gt
-inline_for_extraction unfold let ( >=^ ) = gte
-inline_for_extraction unfold let ( <^ )  = lt
-inline_for_extraction unfold let ( <=^ ) = lte
 
 #push-options "--fuel 0 --ifuel 0"
 inline_for_extraction
 let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
-  let mask = a >>>^ UInt32.uint_to_t (n - 1) in
+  let mask = shift_arithmetic_right a (UInt32.uint_to_t (n - 1)) in
   if 0 <= v a then
     begin
     sign_bit_positive (v a);
@@ -170,8 +152,27 @@ let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
     lognot_negative (v a);
     UInt.lemma_lognot_value #n (to_uint (v a))
     end;
-  (a ^^ mask) -^ mask
+  sub (logxor a mask) mask
 #pop-options
+
+(* Infix notations *)
+inline_for_extraction unfold let ( + )  = add
+inline_for_extraction unfold let ( - )  = sub
+inline_for_extraction unfold let ( * )  = mul
+inline_for_extraction unfold let ( / )  = div
+inline_for_extraction unfold let ( % )  = rem
+inline_for_extraction unfold let ( ^^ )  = logxor
+inline_for_extraction unfold let ( &^ )  = logand
+inline_for_extraction unfold let ( |^ )  = logor
+inline_for_extraction unfold let ( <<^ ) = shift_left
+inline_for_extraction unfold let ( >>^ ) = shift_right
+inline_for_extraction unfold let ( >>>^) = shift_arithmetic_right
+inline_for_extraction unfold let ( =^ )  = eq
+inline_for_extraction unfold let ( <>^ ) = ne
+inline_for_extraction unfold let ( >^ )  = gt
+inline_for_extraction unfold let ( >=^ ) = gte
+inline_for_extraction unfold let ( <^ )  = lt
+inline_for_extraction unfold let ( <=^ ) = lte
 
 (* To input / output constants *)
 (* .. in decimal representation *)
@@ -192,6 +193,7 @@ unfold
 let __int_to_t (x:int) : t =
   int_to_t x
 
+// Prims.op_Star, since ( * ) is this module's multiplication on t
 val mul_wide: a:Int64.t -> b:Int64.t -> Pure t
   (requires True)
-  (ensures (fun c -> v c = Int64.v a * Int64.v b))
+  (ensures (fun c -> v c = Int64.v a `Prims.op_Star` Int64.v b))

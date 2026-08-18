@@ -285,11 +285,11 @@ fn push_back (#t:Type0) (rb:ringbuffer t) (x:t)
     with buf'. assert (pts_to rb.buffer buf');
     
     // Update tail with wrap-around
-    let new_tail = (t +^ 1sz) %^ rb.cap;
+    let new_tail = (t + 1sz) % rb.cap;
     rb.tail := new_tail;
     
     // Increment count
-    let new_count = c +^ 1sz;
+    let new_count = c + 1sz;
     rb.count := new_count;
     
     // Prove the new contents are correct
@@ -343,12 +343,12 @@ fn pop_front (#t:Type0) (rb:ringbuffer t)
   let elem = rb.buffer.(hd);
   
   // Update head with wrap-around
-  let new_head = (hd +^ 1sz) %^ rb.cap;
+  let new_head = (hd + 1sz) % rb.cap;
   rb.head := new_head;
   
   // Decrement count
   let c = !rb.count;
-  let new_count = c -^ 1sz;
+  let new_count = c - 1sz;
   rb.count := new_count;
   
   // Prove the new contents are correct

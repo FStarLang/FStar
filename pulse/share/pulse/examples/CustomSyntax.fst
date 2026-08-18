@@ -201,11 +201,11 @@ fn while_count2 (r:ref U32.t)
     let x = !r;
     if (x <^ 10ul)
     {
-      r := x +^ 1ul
+      r := x + 1ul
     }
     else
     {
-      r := x -^ 1ul
+      r := x - 1ul
     }
   }
 }

@@ -255,7 +255,7 @@ val xor_append:
   -> b2:bytes{FStar.UInt.size (length b1 + length b2) U32.n}
   -> x1:bytes{len x1 = len b1}
   -> x2:bytes{len x2 = len b2}
-  -> Lemma (ensures (xor U32.(len b1 +^ len b2)
+  -> Lemma (ensures (xor U32.(len b1 + len b2)
                         (b1 @| b2)
                         (x1 @| x2)
                     ==

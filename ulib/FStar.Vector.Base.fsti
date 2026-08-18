@@ -182,7 +182,7 @@ val append:
   -> #l2:len_t
   -> v1:raw a l1
   -> v2:raw a l2{UInt.size U32.(v l1 + v l2) U32.n}
-  -> Tot (raw a U32.(l1 +^ l2))
+  -> Tot (raw a U32.(l1 + l2))
 
 /// `v1 @| v2`: shorthand for `append v1 v2`
 unfold let (@|) #a #l1 #l2 = append #a #l1 #l2
@@ -197,7 +197,7 @@ val sub:
   -> v:raw a l
   -> i:len_t
   -> j:len_t{U32.(v i <= v j /\ v j <= v l)}
-  -> Tot (raw a U32.(j -^ i))
+  -> Tot (raw a U32.(j - i))
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Lemmas about the basic operations, all rather boring

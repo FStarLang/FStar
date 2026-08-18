@@ -105,7 +105,7 @@ instance bounded_int_u32 : bounded_int FStar.UInt32.t = {
     op_Minus = (fun x y -> FStar.UInt32.sub x y);
     ( < ) = FStar.UInt32.(fun x y -> x <^ y);
     ( <= ) = FStar.UInt32.(fun x y -> x <=^ y);
-    ( % ) = FStar.UInt32.(fun x y -> x %^ y);
+    ( % ) = FStar.UInt32.(fun x y -> x % y);
     properties = ()
 }
 
@@ -124,7 +124,7 @@ instance bounded_int_u64 : bounded_int FStar.UInt64.t = {
     op_Minus = (fun x y -> FStar.UInt64.sub x y);
     ( < ) = FStar.UInt64.(fun x y -> x <^ y);
     ( <= ) = FStar.UInt64.(fun x y -> x <=^ y);
-    ( % ) = FStar.UInt64.(fun x y -> x %^ y);
+    ( % ) = FStar.UInt64.(fun x y -> x % y);
     properties = ()
 }
 
@@ -190,7 +190,7 @@ instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     op_Minus = (fun x y -> FStar.SizeT.sub x y);
     ( < ) = (fun x y -> FStar.SizeT.(x <^ y));
     ( <= ) = (fun x y -> FStar.SizeT.(x <=^ y));
-    ( % ) = (fun x y -> FStar.SizeT.(x %^ y));
+    ( % ) = (fun x y -> FStar.SizeT.(x % y));
     properties = ();
 }
 

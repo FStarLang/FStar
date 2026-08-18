@@ -44,7 +44,7 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
    {
       let vi = !i; 
       (a.(vi) <- v);
-      i := US.(vi +^ 1sz);
+      i := US.(vi + 1sz);
       ()
    };
    ()

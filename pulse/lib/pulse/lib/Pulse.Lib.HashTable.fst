@@ -80,7 +80,7 @@ fn dealloc
 
 let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz })
 : z:SZ.t { SZ.v z == SZ.v x % SZ.v y }
-  = SZ.(x %^ y)
+  = SZ.(x % y)
 
 #push-options "--fuel 1 --ifuel 1"
 fn lookup
@@ -121,7 +121,7 @@ fn lookup
     let voff = !off;
     if (voff = ht.sz) { break };
 
-    let sum = cidx +^ voff;
+    let sum = cidx + voff;
     let idx = size_t_mod sum ht.sz;
     let c = V.replace_i_ref contents idx Zombie;
     match c
@@ -140,13 +140,13 @@ fn lookup
           break;
         } else
         {
-          off := voff +^ 1sz;
+          off := voff + 1sz;
           let _ = V.replace_i_ref contents idx (Used k' v');
           with vcontents. assert (pts_to contents vcontents);
           with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
           assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff)
-            == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+^1sz))));
+            == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+1sz))));
         }
       }
       Clean ->
@@ -161,13 +161,13 @@ fn lookup
       }
       Zombie ->
       {
-        off := voff +^ 1sz;
+        off := voff + 1sz;
         let _ = V.replace_i_ref contents idx c;
         with vcontents. assert (pts_to contents vcontents);
         with s. assert (pts_to vcontents s);
         assert (pure (Seq.equal s pht.repr.seq));
         assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff)
-          == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+^1sz))));
+          == walk_get_idx pht.repr (SZ.v cidx) k (SZ.v (voff+1sz))));
       }
     }
   };
@@ -303,7 +303,7 @@ fn insert
           with vcontents. assert (pts_to contents vcontents);
           with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
-          off := SZ.(voff +^ 1sz);
+          off := SZ.(voff + 1sz);
         };
       }
       Clean -> {
@@ -525,7 +525,7 @@ fn delete
         }
         else
         {
-          off := SZ.(voff +^ 1sz);
+          off := SZ.(voff + 1sz);
         }
       }
       Clean ->
@@ -535,7 +535,7 @@ fn delete
       }
       Zombie ->
       {
-        off := SZ.(voff +^ 1sz);
+        off := SZ.(voff + 1sz);
       }
     }
   };

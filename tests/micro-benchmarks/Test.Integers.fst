@@ -55,14 +55,14 @@ let ex5_uint32_ok (x:uint_32) (y:uint_32{ok ( * ) y y /\ ok (+) x (y * y)}) = x 
 
 /// Despite the overloading, one can still use the explicit operations
 /// if desired, in mixture with the types that support overloading
-let ex6 (x:uint_32) (y:uint_32{ok ( + ) x y }) = FStar.UInt32.(x +^ y)
+let ex6 (x:uint_32) (y:uint_32{ok ( + ) x y }) = FStar.UInt32.(x + y)
 
 /// Unfortunately, we still have trouble parsing `( - )` as an operator
 /// So, you have to write it as `op_Minus`
 let ex9 (x:int_32{ok op_Minus 0l x}) = 0l - x
 
 /// Though, it's arguably still a bit cleaner than before
-let ex10 (x:FStar.Int32.t{FStar.Int.size (Prims.op_Tilde_Minus (FStar.Int32.v x)) 32}) = FStar.Int32.(0l -^ x)
+let ex10 (x:FStar.Int32.t{FStar.Int.size (Prims.op_Tilde_Minus (FStar.Int32.v x)) 32}) = FStar.Int32.(0l - x)
 
 /// We also have a generic bounds-respecting cast operator among the integer types
 /// This one does an an addition in uint_32, with checks on both the cast and the addition
@@ -87,7 +87,7 @@ let ex14 = 0ul + 1ul
 let ex15 : uint_32 = 0ul + 1ul
 
 /// Or, one can still explicitly use the non-overloaded operators
-let ex16 = FStar.UInt32.(0ul +^ 1ul)
+let ex16 = FStar.UInt32.(0ul + 1ul)
 
 /// Types from FStar.Integers can also be mixed with
 /// the machine integer types

@@ -137,11 +137,26 @@ val uint128_to_uint64: a:t -> b:U64.t{U64.v b == v a % pow2 64}
 //val to_string: t -> Tot string
 //val of_string: string -> Tot t
 
-(* Infix notations *)
-inline_for_extraction noextract let ( +^ ) = add
+(* Multiplication primitives *)
+(* Note that unlike UIntN, we do not provide uint128 * uint128 primitives (mul,
+  mul_underspec, mul_mod, and mul_div) *)
+val mul32: x:U64.t -> y:U32.t -> Pure t
+  (requires True)
+  (ensures (fun r -> v r == U64.v x * U32.v y))
+
+val mul_wide: x:U64.t -> y:U64.t -> Pure t
+  (requires True)
+  (ensures (fun r -> v r == U64.v x * U64.v y))
+
+(* Infix notations. Deliberately the last declarations in this interface: a
+   declaration of the interface is hidden from the implementation until the
+   implementation has discharged everything that precedes it, so keeping these
+   at the end means FStar.UInt128.fst never resolves [+] or [-] to this
+   module's operators and always gets Prims' integer arithmetic. *)
+inline_for_extraction noextract let ( + ) = add
 inline_for_extraction noextract let ( +?^ ) = add_underspec
 inline_for_extraction noextract let ( +%^ ) = add_mod
-inline_for_extraction noextract let ( -^ ) = sub
+inline_for_extraction noextract let ( - ) = sub
 inline_for_extraction noextract let ( -?^ ) = sub_underspec
 inline_for_extraction noextract let ( -%^ ) = sub_mod
 inline_for_extraction noextract let ( &^ ) = logand
@@ -154,14 +169,3 @@ inline_for_extraction noextract let ( >^ ) = gt
 inline_for_extraction noextract let ( <^ ) = lt
 inline_for_extraction noextract let ( >=^ ) = gte
 inline_for_extraction noextract let ( <=^ ) = lte
-
-(* Multiplication primitives *)
-(* Note that unlike UIntN, we do not provide uint128 * uint128 primitives (mul,
-  mul_underspec, mul_mod, and mul_div) *)
-val mul32: x:U64.t -> y:U32.t -> Pure t
-  (requires True)
-  (ensures (fun r -> v r == U64.v x * U32.v y))
-
-val mul_wide: x:U64.t -> y:U64.t -> Pure t
-  (requires True)
-  (ensures (fun r -> v r == U64.v x * U64.v y))

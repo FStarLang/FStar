@@ -34,7 +34,7 @@ fn test_read_write (x:ref U32.t)
   preserves pts_to x 'n
 {
   let n = !x;
-  x := n +^ (zero());
+  x := n + (zero());
 }
 
 
@@ -82,7 +82,7 @@ fn write10 (x:ref U32.t)
   decreases (U32.v (!ctr))
   {
     test_write_10 x;
-    ctr := !ctr -^ 1ul;
+    ctr := !ctr - 1ul;
   }
 }
 
@@ -127,7 +127,7 @@ fn sub_array (x: array U32.t)
 
 
 module SZ = FStar.SizeT
-let test0 (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 })) = let open SZ in x %^ y
+let test0 (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 })) = let open SZ in x % y
 type opt a =
   | None
   | Some : v:a -> opt a
@@ -137,8 +137,8 @@ let my_safe_add (x y : SZ.t)
   = let open SZ in
     if x <=^ 0xffffsz
     then (
-      if (y <=^ 0xffffsz -^ x)
-      then Some (x +^ y)
+      if (y <=^ 0xffffsz - x)
+      then Some (x + y)
       else None
     )
     else None
@@ -148,7 +148,7 @@ fn testbi (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 }))
   returns z:SZ.t
 {
   open SZ;
-  (x %^ y)
+  (x % y)
 }
 
 

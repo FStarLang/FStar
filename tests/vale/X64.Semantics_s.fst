@@ -120,12 +120,12 @@ let cf (flags:uint64) : bool =
 let update_cf (flags:uint64) (new_cf:bool) : (new_flags:uint64{cf new_flags == new_cf}) =
   if new_cf then
     if not (cf flags) then
-      flags +^ 1uL
+      flags + 1uL
     else
       flags
   else
     if (cf flags) then
-      flags -^ 1uL
+      flags - 1uL
     else
       flags
 

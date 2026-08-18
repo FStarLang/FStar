@@ -111,7 +111,7 @@ fn compare
   )
   decreases (SZ.v l - SZ.v (!i))
   {
-    i := !i +^ 1sz
+    i := !i + 1sz
   };
   (!i = l);
 }
@@ -153,7 +153,7 @@ fn copy
   {
     let vi = !i;
     a1.(vi) <- a2.(vi);
-    i := vi +^ 1sz
+    i := vi + 1sz
   }
 }
 //end copy$
@@ -196,7 +196,7 @@ fn copy2
     let vi = !i;
     let v = a2.(vi);
     a1.(vi) <- v;
-    i := vi +^ 1sz
+    i := vi + 1sz
   };
   //copy2rewriting$
   // after the loop

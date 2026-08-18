@@ -52,7 +52,7 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
   decreases (US.v l - US.v (!i))
   {
     let vi = !i; 
-    i := US.(vi +^ 1sz);
+    i := US.(vi + 1sz);
     ()
   };
   let vi = !i;
@@ -84,7 +84,7 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
    {
       let vi = !i; 
       a.(vi) <- v;
-      i := US.(vi +^ 1sz);
+      i := US.(vi + 1sz);
       ()
    };
    ()

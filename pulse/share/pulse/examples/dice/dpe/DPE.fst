@@ -250,7 +250,7 @@ let safe_incr (i:U16.t)
 
   let open FStar.UInt16 in
   if i <^ 0xffffus
-  then Some (i +^ 1us)
+  then Some (i + 1us)
   else None
 
 noextract

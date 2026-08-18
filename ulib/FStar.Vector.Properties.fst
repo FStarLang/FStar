@@ -20,8 +20,8 @@ module U32 = FStar.UInt32
 
 /// This coercion seems to be necessary in some places
 ///
-/// For example,  when trying to treat a    `raw a (l1 +^ l2)`
-///                                    as a `raw a (m1 +^ m2)`
+/// For example,  when trying to treat a    `raw a (l1 + l2)`
+///                                    as a `raw a (m1 + m2)`
 /// F* type inference tries matches on the head symbol of the index
 /// and tries to prove `l1 = m1 /\ l2 = m2`
 /// which is often too strong.
@@ -59,8 +59,8 @@ let append_inj
     (v2:raw a m2{ok (+) m1 m2})
   : Lemma
     (requires (let open U32 in
-               m1 +^ m2 = l1 +^ l2 /\
-               equal (u1@|u2) (coerce (v1@|v2) (l1 +^ l2)) /\
+               m1 + m2 = l1 + l2 /\
+               equal (u1@|u2) (coerce (v1@|v2) (l1 + l2)) /\
                (l1 == m1 \/ l2 == m2)))
     (ensures (l1 = m1 /\
               l2 = m2 /\
@@ -73,7 +73,7 @@ let head (#a:Type) (#l:len_t{l <> 0ul}) (v:raw a l)
   = v.[0ul]
 
 let tail (#a:Type) (#l:len_t{l <> 0ul}) (v:raw a l)
-  : Tot (raw a U32.(l -^ 1ul))
+  : Tot (raw a U32.(l - 1ul))
   = sub v 1ul l
 
 let head_append

@@ -65,8 +65,8 @@ let suffix (#a:Type)
        (requires (fun h -> 
          U32.v from + U32.v len <= U32.v (length b) /\
          live h b))
-       (ensures  (fun h y h' -> h == h' /\ y == mgsub _ b from (len -^ from)))
-  = B.sub b from (len -^ from)
+       (ensures  (fun h y h' -> h == h' /\ y == mgsub _ b from (len - from)))
+  = B.sub b from (len - from)
 
 unfold
 let disjoint (b0 b1:B.buffer 'a) = B.disjoint b0 b1
@@ -90,11 +90,11 @@ let ( <= ) x y = U32.(x <=^ y)
 unfold
 let ( < ) x y = U32.(x <^ y)
 
-let ( + ) (x:U32.t) (y:U32.t{FStar.UInt.size (v x + v y) U32.n}) = U32.(x +^ y)
+let ( + ) (x:U32.t) (y:U32.t{FStar.UInt.size (v x + v y) U32.n}) = U32.(x + y)
 
 let ( - ) (x:U32.t) 
                    (y:U32.t{FStar.UInt.size (v x - v y) U32.n})
-                   = U32.(x -^ y)
+                   = U32.(x - y)
 
 inline_for_extraction
 let malloc (init:'a) (len:U32.t)

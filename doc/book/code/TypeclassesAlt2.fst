@@ -166,21 +166,21 @@ module U64 = FStar.UInt64
 //            (y:U32.t)
 //   = if x <= 0xffffffful &&
 //        y <= 0xffffffful
-//     then Some (x +^ y)
+//     then Some (x + y)
 //     else None
 
 // let test64 (x y:U64.t)
 //   = if x <= 0xfffffffuL &&
 //        y <= 0xfffffffuL
-//     then Some (x +^ y)
+//     then Some (x + y)
 //     else None
 
 // module L = FStar.List.Tot
 
 // let try_add (x:U32.t)
 //             (y:U32.t)
-//   = if x <= (bound -^ y)
-//     then x +^ y
+//   = if x <= (bound - y)
+//     then x + y
 //     else y
 
 #push-options "--query_stats --fuel 0 --ifuel 1"

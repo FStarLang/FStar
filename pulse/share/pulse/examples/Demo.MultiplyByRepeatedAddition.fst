@@ -89,8 +89,8 @@ fn mult32' (x y:U32.t)
               i a == (i c * i y))
     decreases (Prims.op_Minus (U32.v x) (U32.v (!ctr)))
     {
-        acc := !acc +^ y;
-        ctr := !ctr +^ 1ul;
+        acc := !acc + y;
+        ctr := !ctr + 1ul;
     };
     !acc
 }

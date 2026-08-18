@@ -294,8 +294,8 @@ let rec range (f:offset) (t:offset): Tot (r:Set.set offset{r==rangeGT f t})
     Set.lemma_equal_elim (rangeGT f t) Set.empty;
     Set.empty
   ) else (
-    Set.lemma_equal_elim (rangeGT f t) (Set.union (Set.singleton f) (rangeGT (f+^ int_to_t 1) t ));
-    Set.union (Set.singleton f) ( range (f+^ int_to_t 1) t )
+    Set.lemma_equal_elim (rangeGT f t) (Set.union (Set.singleton f) (rangeGT (f+ int_to_t 1) t ));
+    Set.union (Set.singleton f) ( range (f+ int_to_t 1) t )
   )
 
 /// The proof that the extensionally defined set is the same as the
