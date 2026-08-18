@@ -1779,7 +1779,20 @@ and resolve_overloaded_head env (lhead:term) (largs:args) : ML term =
     | Some (Unresolved_name alts) -> alts
     | _ -> []
   in
-  let primary = {fv with fv_qual = None} in
+  (* While checking an implementation against an interface, the declarations of
+     the interface that the implementation has not yet reached are hidden
+     ([Env.is_iface_hidden]). Such a candidate cannot be the meaning of this
+     occurrence -- looking it up raises "declared further down the interface" --
+     so drop it before resolving and promote the first visible candidate to
+     primary. If every candidate is hidden nothing is dropped, and the usual
+     error is reported. *)
+  let primary, alts =
+    match List.filter (fun fv -> not (Env.is_iface_hidden env (lid_of_fv fv)))
+                      (fv :: alts) with
+    | p :: rest -> p, rest
+    | [] -> fv, alts
+  in
+  let primary = {primary with fv_qual = None} in
   let explicit_args =
     largs |> List.collect (fun (a, aq) ->
       match aq with
