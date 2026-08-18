@@ -145,7 +145,7 @@ ensures
   fold pts_to s #p v;
 }
 
-fn op_Dot_Lparen_Rparen
+fn ( .() )
         (#t: Type)
         (a: slice t)
         (i: SZ.t)
@@ -164,7 +164,7 @@ ensures
     res
 }
 
-fn op_Dot_Lparen_Rparen_Less_Minus
+fn ( .()<- )
         (#t: Type)
         (a: slice t)
         (i: SZ.t)

@@ -209,7 +209,7 @@ ensures
   fold (pts_to s #p (Seq.create 1 (Ghost.reveal v)));
 }
 
-fn op_Dot_Lparen_Rparen
+fn ( .() )
         (#t: Type)
         (a: ptr t)
         (i: SZ.t)
@@ -231,7 +231,7 @@ fn op_Dot_Lparen_Rparen
     res
 }
 
-fn op_Dot_Lparen_Rparen_Less_Minus
+fn ( .()<- )
         (#t: Type)
         (a: ptr t)
         (i: SZ.t)
