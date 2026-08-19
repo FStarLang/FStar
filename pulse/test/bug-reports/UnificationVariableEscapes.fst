@@ -19,6 +19,7 @@ module UnificationVariableEscapes
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
+open FStar.SizeT { (+), (<) }
 module R = Pulse.Lib.Reference
 
 
@@ -32,7 +33,7 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
       )
 {
    let mut i = 0sz;
-   while (let vi = !i; US.(vi < l))
+   while (let vi = !i; vi < l)
    invariant exists* (s:Seq.seq t) (vi:US.t). ( 
       A.pts_to a s **
       R.pts_to i vi **
@@ -44,7 +45,7 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
    {
       let vi = !i; 
       (a.(vi) <- v);
-      i := US.(vi + 1sz);
+      i := vi + 1sz;
       ()
    };
    ()

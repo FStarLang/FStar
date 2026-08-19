@@ -26,7 +26,7 @@ fn binary_search_style_FAILS
       SZ.v vlo <= SZ.v vhi /\
       SZ.v vhi <= 100
     )
-  decreases (Prims.op_Minus (SZ.v (!hi)) (SZ.v (!lo)))
+  decreases (SZ.v (!hi) - SZ.v (!lo))
   {
     let vlo = !lo;
     let vhi = !hi;

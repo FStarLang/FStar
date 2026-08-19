@@ -2,6 +2,7 @@ module Example.BreakReturnContinue
 #lang-pulse
 open Pulse
 module SZ = FStar.SizeT
+open FStar.SizeT { (<) }
 
 divergent fn find_element (#a:eqtype) (x:array a) (len:SZ.t) (v:a) #p
 preserves live x #p
@@ -16,7 +17,7 @@ ensures pure (
 {
   pts_to_len x;
   let mut i = 0sz;
-  while (SZ.(!i < len))
+  while (!i < len)
   invariant live i
   invariant pure (
     SZ.v !i <= Seq.length (value_of x) /\
@@ -43,7 +44,7 @@ ensures pure (
 {
   pts_to_len x;
   let mut i = 0sz;
-  while (SZ.(!i < len))
+  while (!i < len)
   invariant live i
   invariant pure (
     SZ.v !i <= Seq.length (value_of x) /\
@@ -72,7 +73,7 @@ ensures pure (
   pts_to_len x;
   let vres = value_of res;
   let mut i = 0sz;
-  while (SZ.(!i < len))
+  while (!i < len)
   invariant live i
   invariant res |-> vres //note the invariant says that the res is unchanged
   invariant pure (
@@ -105,7 +106,7 @@ ensures pure (
 {
   pts_to_len x;
   let mut i = 0sz;
-  while (SZ.(!i < len))
+  while (!i < len)
   invariant live i
   //we need to add `live res` to the invariant to give us permission to change it
   //without it, you get a mysterious error message at the break
@@ -139,7 +140,7 @@ ensures pure (
   pts_to_len x;
   let mut i = 0sz;
   let mut acc : nat = 0;
-  while (SZ.(!i < len))
+  while (!i < len)
   invariant live i
   invariant live acc
   invariant pure (SZ.v !i <= Seq.length (value_of x))

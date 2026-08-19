@@ -43,10 +43,9 @@ EOF
   if [ $i -eq 128 ]; then
       cat >> $f <<EOF
 
-// Prims.op_Star, since ( * ) is this module's multiplication on t
 val mul_wide: a:Int64.t -> b:Int64.t -> Pure t
   (requires True)
-  (ensures (fun c -> v c = Int64.v a \`Prims.op_Star\` Int64.v b))
+  (ensures (fun c -> v c = Int64.v a * Int64.v b))
 EOF
   fi
 done

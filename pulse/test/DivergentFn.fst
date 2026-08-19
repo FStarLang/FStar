@@ -44,7 +44,7 @@ ensures  emp
     while (!i < 10)
     invariant live i
     invariant pure (!i <= 10)
-    decreases (Prims.op_Minus 10 (!i))
+    decreases (10 - !i)
     { i := !i + 1; }
 }
 

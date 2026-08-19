@@ -35,7 +35,7 @@ fn sum #p (#s:erased _) (arr:array int) (len:SZ.t { v len == Seq.length s })
          v vi <= v len /\
          vres == sum_spec (Seq.slice s 0 (v vi))
        )))
-  decreases (Prims.op_Minus (v len) (v (!i)))
+  decreases (v len - v (!i))
   {
     let vi = !i;
     let v = arr.(vi);

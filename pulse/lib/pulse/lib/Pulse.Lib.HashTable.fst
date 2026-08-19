@@ -20,6 +20,7 @@ open Pulse.Lib.Pervasives
 module V = Pulse.Lib.Vec
 module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
+open FStar.SizeT { (+), (%), (<), (<=) }
 module PHT = Pulse.Lib.HashTable.Spec
 
 open Pulse.Lib.HashTable.Spec
@@ -80,7 +81,7 @@ fn dealloc
 
 let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz })
 : z:SZ.t { SZ.v z == SZ.v x % SZ.v y }
-  = SZ.(x % y)
+  = x % y
 
 #push-options "--fuel 1 --ifuel 1"
 fn lookup
@@ -262,7 +263,7 @@ fn insert
     invariant pure (
         related ht pht /\
         V.is_full_vec !contents /\
-        SZ.(!off <= ht.sz) /\
+        !off <= ht.sz /\
         strong_all_used_not_by pht.repr (SZ.v cidx) (SZ.v !off) k /\
         walk pht.repr (SZ.v cidx) k (SZ.v !off) == lookup_repr pht.repr k /\
         insert_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k v (SZ.v !off) (SZ.v cidx) () ()
@@ -303,7 +304,7 @@ fn insert
           with vcontents. assert (pts_to contents vcontents);
           with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
-          off := SZ.(voff + 1sz);
+          off := voff + 1sz;
         };
       }
       Clean -> {
@@ -399,17 +400,17 @@ fn not_full
   let mut i = 0sz;
   unfold (models ht pht);
 
-  while (SZ.(!i < ht.sz))
+  while (!i < ht.sz)
     invariant V.pts_to (!contents) pht.repr.seq
     invariant live i
     invariant pure (
       V.is_full_vec (!contents) /\
       SZ.v ht.sz == pht_sz pht /\
-      SZ.(!i <= ht.sz) /\
+      !i <= ht.sz /\
       (forall (j:nat). j < SZ.v !i ==> Used? (pht.repr @@ j))
     )
     decreases (SZ.v ht.sz - SZ.v !i)
-    ensures (SZ.(!i < ht.sz) /\ not (Used? (pht.repr @@ (SZ.v !i))))
+    ensures (!i < ht.sz /\ not (Used? (pht.repr @@ (SZ.v !i))))
   {
     let vi = !i;
     let c = V.replace_i_ref contents vi Zombie;
@@ -496,7 +497,7 @@ fn delete
     invariant pure (
       V.is_full_vec (!contents) /\
       SZ.v ht.sz == pht_sz pht /\
-      SZ.(!off <= ht.sz) /\
+      !off <= ht.sz /\
       all_used_not_by pht.repr (SZ.v cidx) (SZ.v !off) k /\
       walk pht.repr (SZ.v cidx) k (SZ.v !off) == lookup_repr pht.repr k /\
       delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v !off) (SZ.v cidx) () ()
@@ -525,7 +526,7 @@ fn delete
         }
         else
         {
-          off := SZ.(voff + 1sz);
+          off := voff + 1sz;
         }
       }
       Clean ->
@@ -535,7 +536,7 @@ fn delete
       }
       Zombie ->
       {
-        off := SZ.(voff + 1sz);
+        off := voff + 1sz;
       }
     }
   };

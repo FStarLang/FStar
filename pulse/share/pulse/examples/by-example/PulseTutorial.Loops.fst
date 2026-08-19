@@ -274,7 +274,7 @@ fn fibonacci32 (k:U32.t)
            vctr <= k /\
            fib (v (vctr - 1ul)) == v vi/\
            fib (v vctr) == v vj)
-  decreases (Prims.op_Minus (v k) (v (!ctr)))
+  decreases (v k - v (!ctr))
   {
      let vi = !i;
      let vj = !j;

@@ -52,7 +52,7 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits (fib (v k))))
            fib (v vctr - 1) == v vi/\
            fib (v vctr) == v vj)
   )
-  decreases (Prims.op_Minus (v k) (v (!ctr)))
+  decreases (v k - v (!ctr))
   {
      let vc = !ctr;
      let vi = !i;

@@ -88,6 +88,7 @@ fn write10 (x:ref U32.t)
 
 
 module SZ = FStar.SizeT
+open FStar.SizeT { (<), (<=) }
 module A = Pulse.Lib.Array
 
 
@@ -98,12 +99,12 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
 {
   A.pts_to_len x;
   let mut i : SZ.t = 0sz;
-  while (SZ.(!i `SZ.lt` n))
+  while (!i < n)
   invariant
     exists* (vi:SZ.t) (s:Seq.seq U32.t).
       pts_to i vi **
       pts_to x s **
-      pure (SZ.(vi <= n) /\
+      pure (vi <= n /\
             Seq.length s == Seq.length 's /\
             (forall (j:nat). j < SZ.v vi ==> Seq.index s j == v))
   decreases (SZ.v n - SZ.v (!i))

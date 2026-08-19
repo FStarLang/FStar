@@ -21,6 +21,7 @@ module U32 = FStar.UInt32
 module A = Pulse.Lib.Array
 module V = Pulse.Lib.Vec
 module US = FStar.SizeT
+open FStar.SizeT { (+), (<) }
 module R = Pulse.Lib.Reference
 
 let some_f (x:'a) : GTot _ = ()
@@ -39,7 +40,7 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
   )
 {
   let mut i = 0sz;
-  while (let vi = !i; if US.(vi < l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
+  while (let vi = !i; if (vi < l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
   invariant exists* (vi:US.t). ( 
     R.pts_to i vi **
     A.pts_to a1 #p1 s1 **
@@ -52,7 +53,7 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
   decreases (US.v l - US.v (!i))
   {
     let vi = !i; 
-    i := US.(vi + 1sz);
+    i := vi + 1sz;
     ()
   };
   let vi = !i;
@@ -72,7 +73,7 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
       )
 {
    let mut i = 0sz;
-   while (let vi = !i; US.(vi < l))
+   while (let vi = !i; vi < l)
    invariant exists* (s:Seq.seq t) (vi:US.t). (
       A.pts_to a s **
       R.pts_to i vi **
@@ -84,7 +85,7 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
    {
       let vi = !i; 
       a.(vi) <- v;
-      i := US.(vi + 1sz);
+      i := vi + 1sz;
       ()
    };
    ()
