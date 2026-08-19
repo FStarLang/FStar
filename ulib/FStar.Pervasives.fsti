@@ -328,6 +328,7 @@ unfold let eqtype_as_type (a:eqtype) : Type = a
     to [b]. In most cases, F* will silently coerce from [a] to [b]
     along a provable equality (as in the body of this
     function). Occasionally, you may need to apply this explicitly *)
+inline_for_extraction noextract
 let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
 
 (** This attribute decorates a let binding, e.g.,
