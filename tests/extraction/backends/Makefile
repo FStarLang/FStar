@@ -101,14 +101,6 @@ XFAIL_RUST += ExtDatatypesRec ExtDatatypesMutual
 # FINDINGS.md #10.
 XFAIL_RUST += ExtDatatypesRecord ExtDatatypesVariant
 
-# Applying a projector directly to a constructor application crashes krml with
-# an unhandled OCaml exception. The Rust backend emits
-# `match shape::Circle { radius: seven } { ... }`, which rustc rejects
-# ("struct literals are not allowed here") for want of parentheses.
-# FINDINGS.md #11.
-XFAIL_C    += ExtProjectorOfCtor
-XFAIL_RUST += ExtProjectorOfCtor
-
 # The Rust backend has no notion of a 128-bit integer: every function touching
 # FStar.UInt128/FStar.Int128 fails with
 #   Failure("unexpected: [type] no casts in Low* -> Rust")

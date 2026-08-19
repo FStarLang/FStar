@@ -35,7 +35,7 @@ Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 | 8 | recursive inductives emit uncompilable C, undiagnosed | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec`, `ExtDatatypesMutual` |
 | 9 | krml does not terminate on two recursive datatypes (C *and* Rust) | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec` |
 | 10 | Rust backend references a `lowstar` module it never emits | 4 | ✓ | ✓ | ✗ | `ExtDatatypesRecord`, `ExtDatatypesVariant` |
-| 11 | projector applied to a constructor application crashes krml | 4 | ✓ | ✗ | ✗ | `ExtProjectorOfCtor` |
+| 11 | projector applied to a constructor application crashes krml (**fixed**) | 4 | ✓ | ✓ | ✓ | `ExtProjectorOfCtor` |
 | 12 | Rust backend cannot translate `EFun` and silently truncates the crate | 4 | ✓ | – | ✗ | `ExtBoolHigherOrder` |
 | 13 | F\* cannot evaluate 32/64-bit bitwise specs on concrete values | – | – | – | – | (affects how tests are written) |
 | 14 | Rust backend has no 128-bit integers, and dies with `Not_found` | 4 | ✓ | ✓ | ✗ | `ExtUInt128`, `ExtInt128` |
@@ -328,9 +328,15 @@ error[E0433]: cannot find `lowstar` in `crate`
 Any module with a record or a multi-constructor datatype hits this, so it
 affects essentially every non-trivial Rust extraction of an inductive.
 
-## 11. A projector applied to a constructor application crashes krml
+## 11. A projector applied to a constructor application crashes krml (fixed)
 
 *Severity 4 — unhandled exception in krml. Test: `ExtProjectorOfCtor`.*
+
+**Fixed.** Now that projectors and discriminators are declaration-only, the
+normalizer reduces `Circle?.radius (Circle seven)` to `seven` before
+extraction, so no anonymous struct literal ever reaches krml. The test is kept
+as a regression test and passes on all three backends. The description below
+records the original failure.
 
 ```fstar
 let seven : U32.t = 7ul

@@ -440,7 +440,6 @@ let b2t_ty : R.term = R.pack_ln (R.Tv_Arrow (mk_binder (seal "x") bool_ty_tm Q_E
 // If this is useful only for app, then may be we should remove it,
 //   and add app rules to the equiv relation itself
 
-[@@ no_auto_projectors]
 noeq
 type term_ctxt =
   | Ctxt_hole     : term_ctxt
@@ -459,7 +458,6 @@ type constant_typing: vconst -> term_spec -> Type0 =
   | CT_True: constant_typing C_True bool_ty
   | CT_False: constant_typing C_False bool_ty
 
-[@@ no_auto_projectors]
 noeq
 type univ_eq : universe_spec -> universe_spec -> Type0 = 
   | UN_Refl : 
@@ -597,7 +595,6 @@ let bindings_to_refl_bindings (bs : list binding) : list R.binding =
 let refl_bindings_to_bindings (bs : list R.binding) : list binding =
   L.map (fun (b:R.binding) -> b.uniq, b.sort) bs
 
-[@@ no_auto_projectors]
 noeq
 type non_informative : env -> term_spec -> Type0 =
   | Non_informative_type:
@@ -692,7 +689,6 @@ let rec elaborate_pat (p : pattern) (bs : list R.binding) : Tot (option (term & 
   | Pat_Dot_Term None, _ -> None
   | _ -> None
 
-[@@ no_auto_projectors]
 noeq
 type typing : env -> term_spec -> comp_spec_typ -> Type0 =
   | T_Token :

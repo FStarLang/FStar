@@ -24,6 +24,15 @@ open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Cfg
 
+(* Rebuild the definition of a declaration-only projector or discriminator
+   (see FStarC.TypeChecker.TcInductive.mk_discriminator_and_indexed_projectors):
+   an abstraction over the inductive's parameters, indices and the scrutinee
+   whose body matches on the scrutinee.  Extraction needs this, since it must
+   emit real code for these names.  [q] must be a Projector or Discriminator
+   qualifier, and [us, t] the declared type scheme. *)
+val disc_proj_lb (tcenv:Env.env) (lid:Ident.lident) (us:univ_names) (t:typ) (q:qualifier)
+  : ML (option letbinding)
+
 val unembed_binder_knot : ref (option (FStarC.Syntax.Embeddings.embedding binder))
 
 (* A step budget for normalization.
@@ -97,3 +106,4 @@ needed to discover the shape of the arrow. The binders are opened. *)
 val get_n_binders : Env.env -> int -> term -> ML (list binder & comp)
 
 val maybe_unfold_head : Env.env -> term -> ML (option term)
+

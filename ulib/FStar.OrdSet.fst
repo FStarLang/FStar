@@ -25,8 +25,8 @@ let rec simple_induction #t #f (p: ordset t f -> prop) (x: ordset t f)
           (ensures p x) = match x with
   | [] -> ()
   | ph::pt -> simple_induction p pt;
-            assert (p (Cons?.tl (ph::pt)))
-  
+            eliminate forall (l: ordset t f{Cons? l}). p (Cons?.tl l) ==> p l
+            with (ph::pt)
 let rec base_induction #t #f (p: ordset t f -> prop) (x: ordset t f)
   : Lemma (requires (forall (l: ordset t f{List.Tot.Base.length l < 2}). p l) 
                   /\ (forall (l: ordset t f{Cons? l}). p (Cons?.tl l) ==> p l))
@@ -35,7 +35,8 @@ let rec base_induction #t #f (p: ordset t f -> prop) (x: ordset t f)
   if List.Tot.Base.length x < 2 then ()
   else match x with
   | ph::pt -> base_induction p pt;
-            assert (p (Cons?.tl (ph::pt)))
+            eliminate forall (l: ordset t f{Cons? l}). p (Cons?.tl l) ==> p l
+            with (ph::pt)
             
 let empty #_ #_ = []
 

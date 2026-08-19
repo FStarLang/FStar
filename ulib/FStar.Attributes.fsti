@@ -378,20 +378,17 @@ val extract_as_impure_effect : unit
   *)
 val unused : unit
 
-(** This attribute may be added to an inductive type
-    to disable auto generated projectors
+(** Deprecated, and ignored by the typechecker.
 
-    Normally there should not be any need to use this unless:
-    for some reason F* cannot typecheck the auto-generated projectors.
-
-    Another reason to use this attribute may be to avoid generating and
-    typechecking lot of projectors, most of which are not going to be used
-    in the rest of the program
-  *)
+    Projectors and discriminators are now declaration-only: they are
+    reduced by a primitive rule in the normalizer and axiomatized
+    directly in the SMT encoding, so generating them costs essentially
+    nothing and there is no longer any reason to suppress them. *)
+[@@deprecated "projectors are declaration-only; this attribute is a no-op"]
 val no_auto_projectors : unit
 
-(** As [no_auto_projectors] but also do not even generate declarations
-    for them. *)
+(** Deprecated, and ignored by the typechecker. See [no_auto_projectors]. *)
+[@@deprecated "projectors are declaration-only; this attribute is a no-op"]
 val no_auto_projectors_decls : unit
 
 (** This attribute can be added to a let definition

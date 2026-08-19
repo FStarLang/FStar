@@ -270,7 +270,6 @@ let mk_squash (t:term) : term =
 //   where Tm_FStar is the catch all case
 // See also the is_view_of predicate below
 //
-[@@ no_auto_projectors]
 noeq
 type term_view =
   | Tm_Emp        : term_view

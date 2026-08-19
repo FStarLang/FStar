@@ -1,7 +1,8 @@
 module Bug3166
 
-open FStar.Tactics
-open FStar.Tactics.MkProjectors
+(* A record whose field types mention earlier fields. Projectors used to be
+generated with a `match` body, which did not typecheck here; now they are
+declaration-only, so nothing needs to be suppressed. *)
 
 unfold
 let maybe_ghost (b:bool) (post : unit -> prop) =
@@ -9,19 +10,12 @@ let maybe_ghost (b:bool) (post : unit -> prop) =
   then unit -> squash (post ())
   else unit -> squash (post ())
 
-[@@no_auto_projectors_decls]
 noeq
 type r (p:Type) = {
    ghost : bool;
    pred : p -> prop;
    bang : y:p -> maybe_ghost ghost (fun _ -> pred y);
 }
-
-%splice[
-  __proj__Mkr__item__ghost;
-  __proj__Mkr__item__pred;
-  __proj__Mkr__item__bang
-] (mk_projs false (`%r))
 
 let test (x : r int) : bool = x.ghost
 
@@ -30,13 +24,8 @@ let v : r int = { ghost = true; pred = (fun i -> i > 2); bang = (fun y () -> adm
 let _ = assert_norm (v.ghost == true)
 #pop-options
 
-[@@no_auto_projectors_decls]
 noeq
 type r2 (p:Type) (k : Type -> int) =
   | Mkr2 : a:nat -> b:bool -> #c:bool -> r2 p k
 
-%splice[
-  __proj__Mkr2__item__a;
-  __proj__Mkr2__item__b;
-  __proj__Mkr2__item__c
-] (mk_projs false (`%r2))
+let test2 (x : r2 int (fun _ -> 0)) : nat = Mkr2?.a x

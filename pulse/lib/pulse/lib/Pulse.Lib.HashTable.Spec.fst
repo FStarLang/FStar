@@ -169,7 +169,7 @@ let repr_related #kt #vt (r1 r2:repr_t kt vt) =
   r1.hashf == r2.hashf /\ r1.sz == r2.sz
 
 let repr_t_sz kt vt sz = r:repr_t kt vt { r.sz == sz}
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 
 let lemma_clean_upd_lookup_walk #kt #vt #sz
       (spec1 spec2 : spec_t kt vt) 
@@ -242,7 +242,6 @@ let lemma_used_upd_lookup_walk #kt #vt #sz
     end
   in
   aux 0
-#pop-options
 
 let lemma_del_lookup_walk #kt #vt #sz 
       (spec1 spec2 : spec_t kt vt)
@@ -311,6 +310,7 @@ let lemma_zombie_upd_lookup_walk #kt #vt #sz
   in
   aux 0
 
+#pop-options
 let strong_used_not_by #kt #kv (repr : repr_t kt kv) (k : kt) (i : nat{i < repr.sz}): prop =
   (Used? (repr @@ i) /\ Used?.k (repr @@ i) <> k)
 
