@@ -7229,6 +7229,53 @@ already something §12.7 wanted the freedom to change.  A shared declaration of
 the seven lids, read by both, would be better than either, and is the thing to
 build if a second module ever needs this.
 
+## 21. A projector whose field is a function
+
+Master made projectors and discriminators *declaration-only* (#4389): F\*
+emits the `val` and no longer a `Sig_let`, leaving it to each extraction
+backend to inline the projection or emit a record access.  Custard already had
+the machinery, `Extract.assumed_projector_lb`, written for
+`[@@no_auto_projectors]` -- it rebuilds the definition `TcInductive` would
+have built, a match on the projectee returning the chosen field, which §5's
+inlining then collapses to one `EProj` or one `EDiscrim`.  What changed is
+that this path went from an attribute nobody uses to the path *every*
+projector takes, and it had a bug that the narrow case never exposed.
+
+It took the projectee to be the **last** binder of the projector's type.  That
+is right only when the projected field is not itself a function.
+`U.arrow_formals_comp` flattens the whole spine, so for
+
+```fstar
+type iter_t = { contents: U64.t; impl_validate: U64.t -> bool; ... }
+```
+
+the projector's type is `iter_t -> U64.t -> bool` and the last binder is the
+field's own argument.  The synthesized match then scrutinized *that*, and
+
+```fstar
+let run (i : iter_t) : U64.t =
+  if i.impl_validate i.contents then i.impl_parse i.contents else 0uL
+```
+
+came out as `i.contents.impl_validate` -- a miscompilation, not a rejection,
+and the interesting kind: the three CI failures it produced were a C one
+("the field `impl_validate` has no C representation ... its owner is not a
+declared type"), a Pulse one ("the constructor `Mkht_t` ... belongs to no type
+declaration in the program") and an *OCaml type error* in the generated code,
+none of which names a projector.
+
+The projectee is now found by its type: the first binder headed by the
+inductive that the constructor belongs to.  Everything before it is a
+parameter or an index, everything after belongs to the field, and the trailing
+binders are kept with the match applied to them -- verbatim the shape F\*
+itself used to generate here, and the one `Simplify.eta_reduce` already exists
+to clean up.  Dropping them instead would leave the definition with fewer
+binders than its declared type, which is §19.4's failure in the other
+direction.
+
+Also from the merge: `FStar.Tactics.MkProjectors` is deleted, and
+`src/custard/entrypoints.txt` named it.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -7307,3 +7354,4 @@ build if a second module ever needs this.
 | M10π | **A redundant alias, and a specification named as an entry point** (§19.10, §19.11) | Done.  The `_letpattern` that survived M10ο is not a dead binding -- the name *is* read, by the match that scrutinizes it -- so the reporter dumped the IR instead of guessing, and the answer is that `emit_match` takes the direct path on a stable scrutinee, emits no read of it, and binds the branch's fields with `bind_alias`, which emits nothing when the body does not use them; the declaration is left with no users at all.  It is a **redundant alias**: `let x = <stable expr> in e2` declares a second name for a value this backend never assigns to, and `bind_alias` is already the answer to that everywhere else in the printer.  No side condition beyond `is_stable`, which is the licence `emit_match` has always taken.  The live cases collapse too, which is most of the value: `Pulse_Lib_HashTable` loses four copies of a function pointer and `Example_Slice` a pointer copy, and `_letpattern` bound to a plain variable appears 335 times in EverParse's output.  Separately, `--custard_entry` on a separation-logic predicate -- `cbor_det_match : perm -> cbor_det_t -> Spec.cbor -> slprop` -- was rejected with error 367 for the recursive datatype `Prims.list`, which is true about `Spec.cbor` and no answer at all to what was asked: the result is `slprop`, the index is ghost, and nothing in the program holds one.  `--custard_entry_module` already declined to root these (`erased_definition`); an explicit root was taken at its word, which is defensible until the word is `slprop`.  `Extract.root_is_erased` now asks before requesting, and reports rather than skipping, on the same reasoning that makes a misspelled entry an error.  The predicate is deliberately *not* `erased_definition`, and two rounds of the suite said why: `must_erase_for_extraction` answers yes for `unit`, so the effect has to be total or ghost as well (`main : unit -> ML unit` returns nothing and is the whole program), and a *type* is exempt outright, since its result is `Type` and a type abbreviation named by `--custard_entry` is exactly what a hand-written realization needs emitted (`TypeEntry.fst` caught it).  `tests/custard/pulse/PulseSpecRoot.fst`, the suite's one negative test and so a rule of its own. |
 | M10ρ | **A lambda without a name, and a proposition nobody asked about** (§19.12, §19.13, §19.14) | Done.  Three findings from the CDDL half of the reporter's corpus, and the first is the reporter's own bisection: Custard already emits function pointers in structs exactly as karamel does, so the entire gap between `FunPtrRecord.fst` (works) and `CDDL.Pulse.AST.Det.C.cbor_det_impl` (error 367) is that the second writes its functions inline.  A closed lambda is a function nobody named; `Simplify.lift_lambdas` names it, before `dce` so the new declarations are in the call graph and before `scc` so they are ordered, inheriting the enclosing declaration's type parameters so free type variables cost nothing.  C only -- OCaml has closures and karamel has its own treatment.  Nobody writes these by hand: all eleven come from an `inline_for_extraction` record of thunks whose fields beta-reduce, against nineteen bare names that already worked and ten erased ghost fields.  A lambda that still reaches `PrintC` therefore genuinely captures, and says so.  Second, the advice attached to a type-variable rejection recommended `--custard_monomorphize_types`, which the reporter had set; `PrintC.mono_advice` asks first, and reports a Custard bug when the flag is already on, because advice that names the reader's own command line is worse than none.  Third, error 364 exhausting 10^9 steps "normalizing a type signature" on `env9 : bundle_env ... { bundle_env_included ... /\ ... }` -- a machine-generated CDDL well-formedness proof, which `is_type_sig` normalized whole and then discarded.  Both `is_type_sig` and `is_prop_sig` now `Mono.strip` first; `Mono` was already right, since `is_arity_aux` never lets a `Tm_refine` reach its normalizer.  `tests/custard/RefStrip.fst` is a 2^40-step proposition in a refinement under a 20000-step budget, and the reproduction that does *not* work is worth recording: a recursive function in the refinement is never unfolded by this step list, so it has to be a chain of abbreviations. |
 | M10σ | **`Pulse.Lib.Slice` compiles to a Rust slice** (§19.15, §20) | Done.  karamel recognizes a slice by name and Custard's monomorphization erased the name, so every borrow became an owning `Box` and the reporter's program read back zeroes -- a miscompilation, not a build failure, which is why the test runs the Rust binary and checks its own answers.  `--custard_backend Krml` splits into `KrmlC` and `KrmlRust`, because the two want *different programs* and no property of the F\* source distinguishes them; `tests/extraction/backends` had already had them as separate rows passing identical flags.  A new `Modelled` decl flag, deliberately not `Realized`: a realization is hand-written OCaml and its declaration is still Custard's to emit on the karamel path, a model is the target compiler's and never is -- sharing the flag deleted `FStar.Pervasives.Native.tuple2`.  Only the *type* declaration is dropped; the operations stay as externals, since karamel's checker resolves every reference before the Rust pass rewrites any of them, and their type variables print as `TBound` rather than the usual external's `TAny`, Rust having no cast from `any`.  `FStar.Pervasives.Native.tupleN` is modelled too on that backend and prints as the IR's long-unused `TTuple`/`ETuple`/`PTuple`, because `split` becomes `split_at_mut` and `OptimizeMiniRust.retrieve_pair_type` *crashes* on a struct; `krml -fkeep-tuples` is not optional for the same reason.  `Builtins.is_known_krml_model_op` whitelists the seven operations `AstToMiniRust` actually matches, so a future runtime `val` in a modelled module is rejected here rather than by rustc.  `tests/custard/pulse/PulseSlice.fst`, compiled and run on both columns; its C column needs `--custard_monomorphize_types`, a pre-existing limit unrelated to slices (§20.5). |
+| M10τ | **A projector whose field is a function** (§21) | Done.  Master's #4389 makes projectors and discriminators declaration-only, so `Extract.assumed_projector_lb` -- written for `[@@no_auto_projectors]`, and until now reached by almost nothing -- became the path every projector takes, and it took the projectee to be the *last* binder of the projector's type.  `U.arrow_formals_comp` flattens the whole spine, so when the projected field is itself a function the last binder is the field's own argument and the synthesized match scrutinized that: `i.impl_validate i.contents` came out as `i.contents.impl_validate`.  A miscompilation rather than a rejection, and it surfaced three modules away as a C field with no owner, a Pulse constructor with no type, and an OCaml type error in generated code.  The projectee is now the first binder headed by the inductive the constructor belongs to; the trailing binders are kept and the match applied to them, which is the shape F\* used to generate and the one `Simplify.eta_reduce` exists for.  `tests/custard/CFunPtr.fst`, `MonoHoles.fst` and `pulse/test`'s `Example.Hashtable` all reproduce it.  Also `FStar.Tactics.MkProjectors`, deleted by the same merge, removed from `src/custard/entrypoints.txt`. |

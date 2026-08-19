@@ -192,7 +192,6 @@ FStar.Tactics.Easy
 FStar.Tactics.Effect
 FStar.Tactics.LaxTermEq
 FStar.Tactics.MApply0
-FStar.Tactics.MkProjectors
 FStar.Tactics.NamedView
 FStar.Tactics.Names
 FStar.Tactics.Parametricity

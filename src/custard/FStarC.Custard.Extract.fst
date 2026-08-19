@@ -2502,9 +2502,38 @@ and assumed_projector_lb (st:state) (se:sigelt) (l:Ident.lident) (t:typ)
   | None -> None
   | Some (ctor, field) ->
     let bs, _ = U.arrow_formals_comp t in
-    match List.rev bs with
-    | [] -> None
-    | projectee :: _ ->
+    (* The projectee is *not* the last binder.  [arrow_formals_comp] flattens
+       the whole spine, and when the projected field's own type is an arrow --
+       [impl_validate: U64.t -> bool] -- the spine runs on past the projectee
+       into that arrow.  Taking the last binder then scrutinizes the field's
+       argument instead of the record, which is a miscompilation and not a
+       rejection: [run] came out as [i.contents.impl_validate].  So find it by
+       its type instead, as the first binder headed by the inductive that
+       [ctor] belongs to; everything before it is a parameter or an index, and
+       everything after belongs to the field.
+
+       The trailing binders are kept and the match is applied to them, which
+       is verbatim the shape F* itself used to generate for this case and the
+       one [Simplify.eta_reduce] exists to clean up.  Dropping them instead
+       would leave the definition with fewer binders than its declared type,
+       which section 19.4 is about. *)
+    let ind = TcEnv.typ_of_datacon env ctor in
+    let is_projectee (b:S.binder) : ML bool =
+      let hd, _ = U.leftmost_head_and_args (Mono.strip b.binder_bv.sort) in
+      match (SS.compress hd).n with
+      | Tm_fvar fv -> Ident.lid_equals (S.lid_of_fv fv) ind
+      | Tm_uinst ({n=Tm_fvar fv}, _) -> Ident.lid_equals (S.lid_of_fv fv) ind
+      | _ -> false in
+    let rec split_at_projectee (bs:list S.binder)
+      : ML (option (S.binder & list S.binder)) =
+      match bs with
+      | [] -> None
+      | b :: rest ->
+        if is_projectee b then Some (b, rest)
+        else split_at_projectee rest in
+    match split_at_projectee bs with
+    | None -> None
+    | Some (projectee, post) ->
       let _, cty = TcEnv.lookup_datacon env ctor in
       let all_params, _ = U.arrow_formals cty in
       let ntps = match TcEnv.num_inductive_ty_params env (TcEnv.typ_of_datacon env ctor) with
@@ -2558,6 +2587,14 @@ and assumed_projector_lb (st:state) (se:sigelt) (l:Ident.lident) (t:typ)
       match body with
       | None -> None
       | Some body ->
+        (* The match returns the field; if the field is itself a function the
+           spine had more binders, and they are handed straight back to it. *)
+        let body = match post with
+                   | [] -> body
+                   | _ -> S.mk_Tm_app body
+                            (post |> List.map (fun (b:S.binder) ->
+                               S.as_arg (S.bv_to_name b.binder_bv)))
+                            Range.dummyRange in
         Some (U.mk_letbinding (Inr (S.lid_and_dd_as_fv l None)) []
                 t PC.effect_Tot_lid (U.abs bs body None) [] Range.dummyRange)
 
