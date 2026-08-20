@@ -668,18 +668,82 @@ var DG = (function () {
   /* source viewer                                                       */
   /* ------------------------------------------------------------------ */
 
-  var KW = /\b(let|rec|and|in|val|type|match|with|if|then|else|fun|function|module|open|include|assume|new|private|noeq|unopteq|irreducible|inline_for_extraction|noextract|abstract|effect|sub_effect|total|logic|instance|class|exception|try|begin|end|of|when|as|friend|by|calc|returns|ensures|requires|decreases|forall|exists)\b/g;
+  var KW = {};
+  ('let rec and in val type match with if then else fun function module open include ' +
+   'assume new private noeq unopteq irreducible inline_for_extraction noextract abstract ' +
+   'effect sub_effect total logic instance class exception try begin end of when as friend ' +
+   'by calc returns ensures requires decreases forall exists').split(' ')
+    .forEach(function (k) { KW[k] = 1; });
+
+  function isIdStart(c) { return (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c === 95; }
+  function isIdChar(c) { return isIdStart(c) || (c >= 48 && c <= 57) || c === 39; }
+
+  /* Tokenize the whole file into [start, end, class] spans.  Done over the
+     full text rather than line by line so that block comments and strings
+     spanning several lines are handled, and emitted by slicing the original
+     text -- never by rewriting already-generated markup. */
+  function tokenize(text) {
+    var toks = [], n = text.length, i = 0;
+    function push(s, e, c) { if (e > s) toks.push([s, e, c]); }
+    while (i < n) {
+      var c0 = text.charCodeAt(i), j;
+      if (c0 === 40 /* ( */ && text.charCodeAt(i + 1) === 42 /* * */) {
+        var depth = 1; j = i + 2;
+        while (j < n && depth > 0) {
+          if (text.charCodeAt(j) === 40 && text.charCodeAt(j + 1) === 42) { depth++; j += 2; }
+          else if (text.charCodeAt(j) === 42 && text.charCodeAt(j + 1) === 41) { depth--; j += 2; }
+          else j++;
+        }
+        push(i, j, 'cm'); i = j;
+      } else if (c0 === 47 /* / */ && text.charCodeAt(i + 1) === 47) {
+        j = text.indexOf('\n', i); if (j < 0) j = n;
+        push(i, j, 'cm'); i = j;
+      } else if (c0 === 34 /* " */) {
+        j = i + 1;
+        while (j < n) {
+          var cj = text.charCodeAt(j);
+          if (cj === 92 /* \ */) { j += 2; continue; }
+          j++;
+          if (cj === 34) break;
+        }
+        push(i, j, 'st'); i = j;
+      } else if (isIdStart(c0)) {
+        j = i + 1;
+        while (j < n && isIdChar(text.charCodeAt(j))) j++;
+        push(i, j, KW[text.slice(i, j)] ? 'kw' : '');
+        i = j;
+      } else {
+        j = i + 1;
+        while (j < n) {
+          var cn = text.charCodeAt(j);
+          if (isIdStart(cn) || cn === 34 || cn === 40 || cn === 47) break;
+          j++;
+        }
+        push(i, j, ''); i = j;
+      }
+    }
+    return toks;
+  }
 
   function renderSource(text, from, to) {
-    var lines = text.split('\n');
+    var toks = tokenize(text);
+    var lines = [], cur = '';
+    for (var t = 0; t < toks.length; t++) {
+      var seg = text.slice(toks[t][0], toks[t][1]), cls = toks[t][2];
+      var parts = seg.split('\n');
+      for (var p = 0; p < parts.length; p++) {
+        if (p > 0) { lines.push(cur); cur = ''; }
+        if (parts[p] === '') continue;
+        var e = esc(parts[p]);
+        cur += cls ? '<span class="' + cls + '">' + e + '</span>' : e;
+      }
+    }
+    lines.push(cur);
     var out = [];
     for (var i = 0; i < lines.length; i++) {
-      var raw = esc(lines[i]);
-      raw = raw.replace(/(\(\*[\s\S]*?\*\)|\/\/.*$)/g, '<span class="cm">$1</span>');
-      raw = raw.replace(/(&quot;[^&]*?&quot;)/g, '<span class="st">$1</span>');
-      raw = raw.replace(KW, '<span class="kw">$1</span>');
       var hl = (i + 1 >= from && i + 1 <= to) ? ' hl' : '';
-      out.push('<div class="ln' + hl + '" id="L' + (i + 1) + '"><span class="n">' + (i + 1) + '</span><span class="c">' + raw + '</span></div>');
+      out.push('<div class="ln' + hl + '" id="L' + (i + 1) + '"><span class="n">' + (i + 1) +
+               '</span><span class="c">' + lines[i] + '</span></div>');
     }
     return out.join('');
   }
