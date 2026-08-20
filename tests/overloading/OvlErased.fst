@@ -11,7 +11,7 @@ open OvlGhostCoercionB
    look at. [hide] and [reveal] relate an [erased t] to a [t] and to nothing
    else, so an [erased t] reaches exactly what a [t] reaches -- treating
    [erased] as a head compatible with everything instead keeps candidates the
-   elaborator can never reach. See #4471. *)
+   elaborator can never reach. *)
 
 (* 1. The report. [FStar.UInt64] is opened over [Prims], so [>=] is
    [FStar.UInt64.op_Greater_Equals] by scope order. Its formals are
