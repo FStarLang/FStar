@@ -92,27 +92,34 @@ val base_head_fv : env -> typ -> ML (option fv)
     [None] when [f_typ] is not an arrow, or when either end has no rigid head;
     [Util.find_coercion] declines such a candidate for exactly that reason.
 
-    Exported so that [find_coercion] and [compatible] agree by construction on
+    Exported so that [find_coercion] and [coercible] agree by construction on
     which coercions exist. *)
 val coercion_source_and_target : env -> typ -> ML (option (fv & fv))
 
-(** Are these two classifications *possibly* compatible?
+(** Could a term whose type classifies as [src] *possibly* be passed where a
+    [tgt] is expected?
 
-    [Base_unknown] is compatible with everything; this is the
+    [Base_unknown] is coercible to and from everything; this is the
     over-approximation that keeps resolution conservative. Two rigid heads are
-    compatible when they are the same lident, and also when a coercion relates
-    them, since the elaborator will insert one: [bool], [prop] and [Type] are
-    related by [b2t], [squash] and [t2b]; [erased t] is related to every type by
-    [hide] and [reveal]; and every [@@coercion]-annotated function in scope
-    relates its argument's head to its result's head. The last of these is read
-    out of [env] on demand, and only once the heads are already known to
-    differ.
+    coercible when they are the same lident, and also when a coercion relates
+    them in that direction, since the elaborator will insert one: [bool] to
+    [prop] and [Type] by [b2t] and [squash], [prop] to [bool] by [t2b];
+    [erased t] to and from every type by [hide] and [reveal]; and every
+    [@@coercion]-annotated function in scope relates its argument's head to its
+    result's head. The last of these is read out of [env] on demand, and only
+    once the heads are already known to differ.
 
-    The relation is reflexive and symmetric -- symmetric because callers compare
-    formals of two function types, which stand in contravariant position, so the
-    direction of a coercion is not determined; symmetry only ever keeps more
-    candidates. It is deliberately *not* transitive, since [Base_unknown]
-    relates everything. *)
+    The direction matters: a user coercion [t -> int] makes an argument of type
+    [t] acceptable where an [int] is expected, but says nothing about the
+    reverse, and treating it as if it did would keep candidates that cannot
+    apply. The relation is therefore reflexive but neither symmetric nor -- with
+    [Base_unknown] relating everything -- transitive. *)
+val coercible : env -> base_typ -> base_typ -> ML bool
+
+(** [coercible] in either direction, for the positions where the caller cannot
+    tell which of the pair the elaborator would coerce: formals of two function
+    types stand in contravariant position, so the direction is not determined.
+    Symmetry only ever keeps more candidates, which is the safe direction. *)
 val compatible : env -> base_typ -> base_typ -> ML bool
 
 (** Split [t] into its formals and result, normalizing enough to see through
@@ -175,10 +182,11 @@ val reset_ambiguity_reports : unit -> ML unit
     separate ways:
 
       - a candidate is eliminated only when its formal and the argument have
-        two *different rigid heads*, so anything unknown eliminates nothing,
-        and "different rigid heads" is weaker than "different types" on
-        purpose: the elaborator inserts coercions, so [compatible] relates two
-        heads whenever a coercion in scope does;
+        two *different rigid heads* that no coercion bridges, so anything
+        unknown eliminates nothing, and "different rigid heads" is weaker than
+        "different types" on purpose: the elaborator inserts coercions, so
+        [coercible] relates two heads whenever a coercion in scope turns one
+        into the other;
       - if a filter would eliminate *every* remaining candidate it is skipped
         entirely, so we never turn a type error into a resolution error;
       - if several candidates survive, we return the first of *them*, in scope
@@ -196,7 +204,7 @@ val reset_ambiguity_reports : unit -> ML unit
     function of the candidates' types and of the application site, and not of
     whether some other candidate would have typechecked.
 
-    The whole weight of the design therefore rests on [compatible] being an
+    The whole weight of the design therefore rests on [coercible] being an
     over-approximation. It reasons about rigid head symbols and, although it
     knows which heads a coercion can bridge, it cannot see refinements,
     subtyping or typeclass constraints, so anything it cannot rule out it must

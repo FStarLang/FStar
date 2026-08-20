@@ -122,21 +122,16 @@ let builtin_coercion b1 b2 =
   || (is_bool b1 && Base_type? b2)  (* squash of b2t *)
   || (is_prop b1 && is_bool b2)     (* t2b *)
 
-(* Two base types are compatible when a term of the first could be passed
-   where the second is expected. This is deliberately *not* equality, because
-   the typechecker inserts coercions: it is equality up to every coercion that
-   [Util.maybe_coerce_lc] can apply.
-
-   The relation is taken symmetrically. Callers compare a candidate's type
-   against an expected type, and formals of the two occur in contravariant
-   position, so which of the pair is the source of the coercion is not
-   something this module can tell; and being symmetric only ever keeps more
-   candidates, which is the safe direction (see [resolve]). *)
-let compatible env b1 b2 : ML bool =
+(* A term whose type classifies as [src] can be passed where a [tgt] is
+   expected when the two agree, or when a coercion bridges them. This is
+   deliberately *not* equality, because the typechecker inserts coercions: it
+   is equality up to every coercion that [Util.maybe_coerce_lc] can apply, in
+   the direction it applies it. *)
+let coercible env src tgt : ML bool =
   (* [maybe_coerce_lc] inserts [hide] and [reveal] around any type at all, so
      [erased] is not one end of a pair but a base compatible with everything. *)
   let is_erased = is_base_lid PC.erased_lid in
-  match b1, b2 with
+  match src, tgt with
   | Base_unknown, _
   | _, Base_unknown -> true
   | Base_type, Base_type -> true
@@ -145,11 +140,17 @@ let compatible env b1 b2 : ML bool =
     (* The heads differ, so the candidate is about to be eliminated unless some
        coercion relates them. Only here do we pay for consulting the
        environment, which keeps the cost off the common path. *)
-    is_erased b1 || is_erased b2
-    || builtin_coercion b1 b2 || builtin_coercion b2 b1
-    || (let related (src, tgt) = (is_base_lid (lid_of_fv src) b1 && is_base_lid (lid_of_fv tgt) b2)
-                             || (is_base_lid (lid_of_fv src) b2 && is_base_lid (lid_of_fv tgt) b1) in
-        user_coercions env |> List.existsb related)
+    is_erased src || is_erased tgt
+    || builtin_coercion src tgt
+    || (user_coercions env |> List.existsb (fun (s, t) ->
+          is_base_lid (lid_of_fv s) src && is_base_lid (lid_of_fv t) tgt))
+
+(* [coercible] with the direction forgotten, for the positions where this
+   module cannot tell which of the pair the elaborator would coerce; being
+   symmetric only ever keeps more candidates, which is the safe direction
+   (see [resolve]). *)
+let compatible env b1 b2 : ML bool =
+  coercible env b1 b2 || coercible env b2 b1
 
 let formals_of_typ env t =
   (* unfold_whnf sees through type abbreviations, so a candidate declared as
@@ -223,7 +224,9 @@ let explicit_shape env t n : ML (list typ & typ) =
 
 (* Could a candidate of type [t], applied to [n] explicit arguments, have the
    expected type [te]? Compares the remaining explicit formals pairwise and
-   then the results, always by rigid head only.
+   then the results, always by rigid head only. The results are compared with
+   the direction the elaborator would coerce in; the leftover formals occur in
+   contravariant position and are compared symmetrically.
 
    When the two shapes have a different number of explicit formals we conclude
    nothing: that can be currying, or a type abbreviation we did not unfold, and
@@ -236,7 +239,7 @@ let expected_compatible env t n te : ML bool =
     match ts, es with
     | t1 :: ts, e1 :: es ->
       compatible env (base_of_typ_safe env t1) (base_of_typ_safe env e1) && cmp ts es
-    | [], [] -> compatible env (base_of_typ_safe env rt) (base_of_typ_safe env re)
+    | [], [] -> coercible env (base_of_typ_safe env rt) (base_of_typ_safe env re)
     | _ -> true
   in
   cmp ts es
@@ -301,7 +304,7 @@ let resolve env speculate primary alts args expected =
         match b_arg with
         | Base_unknown -> cands
         | _ ->
-          narrow_at (Format.fmt1 "arg%s" (show i)) (keep_if (fun t -> compatible env b_arg (nth_explicit_formal_base env t i))) cands
+          narrow_at (Format.fmt1 "arg%s" (show i)) (keep_if (fun t -> coercible env b_arg (nth_explicit_formal_base env t i))) cands
       in
       by_args (i + 1) cands
   in
@@ -327,8 +330,9 @@ let resolve env speculate primary alts args expected =
       // warning and recover the scope-order answer.
       if not (already_reported (lid_of_fv primary) (List.map fst cands)) then
         Errors.log_issue (lid_of_fv primary) Errors.Error_AmbiguousName (
-             [Errors.Msg.text (Format.fmt1 "The name %s is ambiguous; candidates are:"
-                                 (show (lid_of_fv primary)))]
+             [group (Errors.Msg.text "The name"
+                     ^/^ Errors.Msg.fquotes (pp (Ident.ident_of_lid (lid_of_fv primary)))
+                     ^/^ Errors.Msg.text "is ambiguous; candidates are:")]
              @ candidates_doc env (List.map fst cands));
       fv
     )
