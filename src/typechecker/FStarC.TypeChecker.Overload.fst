@@ -35,11 +35,15 @@ module Print = FStarC.Syntax.Print
 
 let dbg = Debug.get_toggle "Overload"
 
+let rec show_base_typ (b : base_typ) : ML string =
+  match b with
+  | Base_rigid fv -> "Base_rigid " ^ show fv
+  | Base_type -> "Base_type"
+  | Base_erased (_, b) -> "Base_erased (" ^ show_base_typ b ^ ")"
+  | Base_unknown -> "Base_unknown"
+
 instance showable_base_typ : showable base_typ = {
-  show = (function
-          | Base_rigid fv -> "Base_rigid " ^ show fv
-          | Base_type -> "Base_type"
-          | Base_unknown -> "Base_unknown");
+  show = show_base_typ;
 }
 
 (* The normalization steps that define what "the base type" means: strip
@@ -48,27 +52,37 @@ instance showable_base_typ : showable base_typ = {
    has always used. *)
 let base_steps : list Env.step = [Unascribe; Unmeta; Unrefine]
 
-let base_of_typ env t =
+let rec base_of_typ env t =
   let t = N.unfold_whnf' base_steps env t in
-  let hd, _ = U.head_and_args_full t in
+  let hd, args = U.head_and_args_full t in
   let r =
-    match (SS.compress (U.un_uinst hd)).n with
-    | Tm_fvar fv -> Base_rigid fv
-    | Tm_type _ -> Base_type
+    match (SS.compress (U.un_uinst hd)).n, args with
+    (* [erased a] records the classification of [a] too: [hide] and [reveal]
+       relate the two, so the argument is what says which types this one can
+       reach. Every other head is compared by symbol alone. *)
+    | Tm_fvar fv, [(a, _)] when fv_eq_lid fv PC.erased_lid ->
+      Base_erased (fv, base_of_typ env a)
+    | Tm_fvar fv, _ -> Base_rigid fv
+    | Tm_type _, _ -> Base_type
     | _ -> Base_unknown
   in
   if !dbg then
     Format.print2 "(Overload) base_of_typ %s = %s\n" (show t) (show r);
   r
 
+(* The head symbol, [erased] included. This is what [find_coercion] compares
+   against, so it must stay a purely syntactic head: an [erased t] is headed by
+   [erased], whatever [t] is. *)
 let base_head_fv env t =
   match base_of_typ env t with
-  | Base_rigid fv -> Some fv
+  | Base_rigid fv
+  | Base_erased (fv, _) -> Some fv
   | _ -> None
 
 let is_base_lid l b =
   match b with
-  | Base_rigid fv -> fv_eq_lid fv l
+  | Base_rigid fv
+  | Base_erased (fv, _) -> fv_eq_lid fv l
   | _ -> false
 
 (* The source and target of a [@@coercion]-annotated function, classified.
@@ -122,16 +136,30 @@ let builtin_coercion b1 b2 =
   || (is_bool b1 && Base_type? b2)  (* squash of b2t *)
   || (is_prop b1 && is_bool b2)     (* t2b *)
 
+(* [maybe_coerce_lc] inserts [reveal] to go from an [erased t] to a [t] and
+   [hide] to go the other way, and those two coercions relate no other pair of
+   types. So an [erased t] reaches exactly what a [t] reaches, and the way to
+   account for the pair is to strip [erased] off both ends and compare what is
+   underneath -- iterating, since an [erased (erased t)] reveals twice.
+
+   Treating [erased] as a base compatible with everything, which is what this
+   module used to do, is not the conservative reading of that: it makes an
+   [erased nat] look like it could reach a [FStar.UInt64.t], so an overload on
+   machine integers survives a ghost argument and then wins on scope order. *)
+let rec strip_erased b =
+  match b with
+  | Base_erased (_, b) -> strip_erased b
+  | _ -> b
+
 (* A term whose type classifies as [src] can be passed where a [tgt] is
    expected when the two agree, or when a coercion bridges them. This is
    deliberately *not* equality, because the typechecker inserts coercions: it
    is equality up to every coercion that [Util.maybe_coerce_lc] can apply, in
    the direction it applies it. *)
 let coercible env src tgt : ML bool =
-  (* [maybe_coerce_lc] inserts [hide] and [reveal] around any type at all, so
-     [erased] is not one end of a pair but a base compatible with everything. *)
-  let is_erased = is_base_lid PC.erased_lid in
-  match src, tgt with
+  let src' = strip_erased src in
+  let tgt' = strip_erased tgt in
+  match src', tgt' with
   | Base_unknown, _
   | _, Base_unknown -> true
   | Base_type, Base_type -> true
@@ -140,10 +168,16 @@ let coercible env src tgt : ML bool =
     (* The heads differ, so the candidate is about to be eliminated unless some
        coercion relates them. Only here do we pay for consulting the
        environment, which keeps the cost off the common path. *)
-    is_erased src || is_erased tgt
-    || builtin_coercion src tgt
-    || (user_coercions env |> List.existsb (fun (s, t) ->
-          is_base_lid (lid_of_fv s) src && is_base_lid (lid_of_fv t) tgt))
+    builtin_coercion src' tgt'
+    || (let cs = user_coercions env in
+        let related src tgt =
+          cs |> List.existsb (fun (s, t) ->
+            is_base_lid (lid_of_fv s) src && is_base_lid (lid_of_fv t) tgt)
+        in
+        (* Both the stripped and the unstripped classifications: a user
+           coercion out of or into [erased t] itself names [erased] as its end,
+           and [find_coercion] will select it on that head. *)
+        related src' tgt' || related src tgt)
 
 (* [coercible] with the direction forgotten, for the positions where this
    module cannot tell which of the pair the elaborator would coerce; being
@@ -176,6 +210,7 @@ let arity_compatible env t n =
        cannot be applied any further; anything else might. *)
     match base_of_typ env (U.comp_result c) with
     | Base_rigid _
+    | Base_erased _
     | Base_type -> false
     | Base_unknown -> true
 

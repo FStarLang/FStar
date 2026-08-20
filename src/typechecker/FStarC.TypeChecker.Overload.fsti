@@ -58,6 +58,19 @@ type base_typ =
       comparing universes would make universe-polymorphic candidates look
       incompatible when they are not. *)
   | Base_type
+  (** The head is [FStar.Ghost.erased], applied to one argument: the [fv] is
+      that head and the [base_typ] is the classification of the argument.
+
+      [erased t] is the one head whose arguments matter, because it is the one
+      head the elaborator will strip: [maybe_coerce_lc] inserts [reveal] to
+      turn an [erased t] into a [t] and [hide] to turn a [t] into an [erased
+      t], and those are the only types those two coercions relate. Recording
+      the argument is what lets [coercible] say that [erased nat] can reach an
+      [int] but not a [FStar.UInt32.t]; classifying it as a rigid [erased]
+      alone leaves no way to tell those apart, and treating [erased] as
+      compatible with everything makes every machine-integer overload survive
+      a ghost argument. *)
+  | Base_erased of fv & base_typ
   (** A unification variable, a bound or type variable, an unresolved implicit,
       an arrow, or a type we simply could not compute. Never eliminates
       anything. Arrows land here on purpose, since a candidate's formal may be a
@@ -76,7 +89,11 @@ instance val showable_base_typ : Class.Show.showable base_typ
     Normalization must not unfold abstract types. [FStar.UInt32.t] is declared
     [new val t : eqtype] and so stays rigid; were it to collapse to [Prims.int],
     an overload of [+] on machine integers would be indistinguishable from the
-    one on [int]. *)
+    one on [int].
+
+    [FStar.Ghost.erased t] is the sole exception to "head symbol only": it
+    yields [Base_erased], which carries the classification of [t] as well. See
+    that constructor. *)
 val base_of_typ : env -> typ -> ML base_typ
 
 (** [base_of_typ] restricted to the rigid case. This is the signal the record
@@ -103,11 +120,17 @@ val coercion_source_and_target : env -> typ -> ML (option (fv & fv))
     over-approximation that keeps resolution conservative. Two rigid heads are
     coercible when they are the same lident, and also when a coercion relates
     them in that direction, since the elaborator will insert one: [bool] to
-    [prop] and [Type] by [b2t] and [squash], [prop] to [bool] by [t2b];
-    [erased t] to and from every type by [hide] and [reveal]; and every
-    [@@coercion]-annotated function in scope relates its argument's head to its
-    result's head. The last of these is read out of [env] on demand, and only
-    once the heads are already known to differ.
+    [prop] and [Type] by [b2t] and [squash], [prop] to [bool] by [t2b]; and
+    every [@@coercion]-annotated function in scope relates its argument's head
+    to its result's head. The last of these is read out of [env] on demand, and
+    only once the heads are already known to differ.
+
+    [hide] and [reveal] are handled by stripping [Base_erased] off both ends
+    before any of that, since those two coercions relate [erased t] to [t] and
+    to nothing else. An [erased t] therefore reaches exactly what a [t]
+    reaches. A [@@coercion] function that names [erased] at either end is still
+    honoured on the unstripped classification, so declaring one cannot lose a
+    candidate.
 
     The direction matters: a user coercion [t -> int] makes an argument of type
     [t] acceptable where an [int] is expected, but says nothing about the
