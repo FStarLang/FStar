@@ -632,7 +632,7 @@ let prims : prims_t=
                                                                   uu___46 in
                                                               quant Eq xy
                                                                 uu___45 in
-                                                            (FStarC_Parser_Const.real_op_Addition,
+                                                            (FStarC_Parser_Const.real_op_Plus,
                                                               uu___44) in
                                                           let uu___44 =
                                                             let uu___45 =
@@ -658,7 +658,7 @@ let prims : prims_t=
                                                                     uu___48 in
                                                                 quant Eq xy
                                                                   uu___47 in
-                                                              (FStarC_Parser_Const.real_op_Multiply,
+                                                              (FStarC_Parser_Const.real_op_Star,
                                                                 uu___46) in
                                                             let uu___46 =
                                                               let uu___47 =
@@ -711,7 +711,7 @@ let prims : prims_t=
                                                                     Eq xy
                                                                     uu___49
                                                                     uu___50 in
-                                                                (FStarC_Parser_Const.real_op_Division,
+                                                                (FStarC_Parser_Const.real_op_Slash,
                                                                   uu___48) in
                                                               let uu___48 =
                                                                 let uu___49 =

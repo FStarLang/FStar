@@ -3,7 +3,7 @@ let dbg : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "CheckedFiles"
 let debug (f : unit -> unit) : unit=
   let uu___ = FStarC_Effect.op_Bang dbg in if uu___ then f () else ()
-let cache_version_number : Prims.int= Prims.of_int 89
+let cache_version_number : Prims.int= Prims.of_int 90
 type tc_result =
   {
   checked_module: FStarC_Syntax_Syntax.modul ;

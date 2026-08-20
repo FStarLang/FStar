@@ -2041,6 +2041,21 @@ let krmloutput                   () = get_krmloutput                  () ||| out
 let output_deps_to               () = get_output_deps_to              () ||| output_to ()
 let output_ext                   () = get_output_ext                  ()
 
+let overload_mode                () =
+  match String.lowercase (Ext.get "fstar:overload") with
+  (* The empty string is what Ext.get returns for an unset key, so the
+     default is `compat`: among the candidates for a name, discard those
+     whose types cannot fit the use site, then apply ordinary scope order
+     to what is left. `off` skips the discarding, recovering scope order
+     alone, and `strict` reports the leftover ambiguities instead of
+     resolving them. *)
+  | "" | "compat" | "on" | "true" | "1" -> Overload_compat
+  | "off" | "false" | "0" -> Overload_off
+  | "strict" -> Overload_strict
+  | illegal ->
+    failwith ("Option `--ext fstar:overload` expects one of `off`, `compat` or \
+               `strict`, but got `" ^ illegal ^ "`")
+
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()

@@ -120,12 +120,12 @@ let cf (flags:uint64) : bool =
 let update_cf (flags:uint64) (new_cf:bool) : (new_flags:uint64{cf new_flags == new_cf}) =
   if new_cf then
     if not (cf flags) then
-      flags +^ 1uL
+      flags + 1uL
     else
       flags
   else
     if (cf flags) then
-      flags -^ 1uL
+      flags - 1uL
     else
       flags
 
@@ -269,10 +269,10 @@ let eval_ocmp (s:state) (c:ocmp) :bool =
   match c with
   | OEq o1 o2 -> eval_operand o1 s = eval_operand o2 s
   | ONe o1 o2 -> eval_operand o1 s <> eval_operand o2 s
-  | OLe o1 o2 -> eval_operand o1 s <=^ eval_operand o2 s
-  | OGe o1 o2 -> eval_operand o1 s >=^ eval_operand o2 s
-  | OLt o1 o2 -> eval_operand o1 s <^ eval_operand o2 s
-  | OGt o1 o2 -> eval_operand o1 s >^ eval_operand o2 s
+  | OLe o1 o2 -> eval_operand o1 s <= eval_operand o2 s
+  | OGe o1 o2 -> eval_operand o1 s >= eval_operand o2 s
+  | OLt o1 o2 -> eval_operand o1 s < eval_operand o2 s
+  | OGt o1 o2 -> eval_operand o1 s > eval_operand o2 s
 
 (* These wrappers of the operators from FStar.UInt are only present
    because we discovered that using specs of the form (v a + v b) % pow2 64

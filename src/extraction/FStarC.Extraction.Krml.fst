@@ -491,11 +491,40 @@ let mk_bool_op = function
 let is_bool_op op =
   mk_bool_op op <> None
 
-(* The Prims integer operators are not extracted: KaRaMeL provides them as
-   builtins (see karamel/lib/Builtin.ml) implemented by krmllib/c/prims.c.
-   KaRaMeL still refers to them by the names F* used to give them before
-   operator mangling was made uniform, so translate the names here. This
-   mapping can be dropped once KaRaMeL is updated. *)
+(* KaRaMeL recognizes a handful of F* definitions by name, and it spells those
+   names the way F* spelled them before operator mangling was made uniform. We
+   therefore rewrite those names on the way out, so that a KaRaMeL built against
+   an older F* keeps working.
+
+   THIS WHOLE MAPPING IS TEMPORARY. It exists only because KaRaMeL lives in
+   another repository and cannot be updated in the same commit as F*. Delete
+   [krml_compat_name] and its call sites once KaRaMeL has been taught the
+   current names; nothing else depends on it.
+
+   The mapping must be applied at *every* point where an F* top-level name is
+   emitted into the KaRaMeL AST -- both references ([MLE_Name]) and the
+   declarations they resolve to ([krml_decl_name], used by every declaration
+   site). Applying it to only one of the two renames a use away from its own
+   definition, and KaRaMeL then reports the definition as missing.
+
+   Type *references* are the one exception: [translate_type_without_decay] and
+   [assert_lid] emit [TQualified]/[TApp] without consulting the mapping. That is
+   sound only because no name in the table is a type; adding one would require
+   giving those two the same treatment.
+
+   The two groups of names:
+
+   - The Prims integer operators, which are not extracted at all: KaRaMeL
+     provides them as builtins (see karamel/lib/Builtin.ml) implemented by
+     krmllib/c/prims.c. Only references to them are ever emitted.
+
+   - Pulse.Lib.Slice's indexing operators, which the Rust backend matches on to
+     emit native indexing (see karamel/lib/AstToMiniRust.ml).
+
+   Note the machine integer operators of FStar.UInt32 & co. need nothing here,
+   even though they too were renamed: KaRaMeL matches those on the underlying
+   [add], [sub], ... (see karamel/lib/Helpers.ml), never on the operator names,
+   and the operators themselves are inlined away before extraction. *)
 let krml_compat_name (n : list string & string) : list string & string =
   match n with
   | ([ "Prims" ], op) ->
@@ -513,7 +542,20 @@ let krml_compat_name (n : list string & string) : list string & string =
       | op -> op
     in
     ([ "Prims" ], op)
+  | ([ "Pulse"; "Lib"; "Slice" ], op) ->
+    let op =
+      match op with
+      | "op_Dot_Lparen_Rparen" -> "op_Array_Access"
+      | "op_Dot_Lparen_Rparen_Less_Minus" -> "op_Array_Assignment"
+      | op -> op
+    in
+    ([ "Pulse"; "Lib"; "Slice" ], op)
   | n -> n
+
+(* The name KaRaMeL should see for a top-level definition in [module_name].
+   Every declaration site must go through this, see [krml_compat_name]. *)
+let krml_decl_name (module_name : list string) (n : string) : list string & string =
+  krml_compat_name (module_name, n)
 
 let mk_op = function
   | "add" | "add_underspec"  -> Some Add
@@ -1407,7 +1449,7 @@ let translate_type_decl' env ty: ML (option decl) =
        tydecl_parameters=args;
        tydecl_meta=flags;
        tydecl_defn= Some (MLTD_Abbrev t)} ->
-        let name = env.module_name, name in
+        let name = krml_decl_name env.module_name name in
         let env = List.fold_left (fun env {ty_param_name} -> extend_t env ty_param_name) env args in
         if assumed && List.mem Syntax.CAbstract flags then
           Some (DTypeAbstractStruct name)
@@ -1424,7 +1466,7 @@ let translate_type_decl' env ty: ML (option decl) =
        tydecl_parameters=args;
        tydecl_meta=flags;
        tydecl_defn=Some (MLTD_Record fields)} ->
-        let name = env.module_name, name in
+        let name = krml_decl_name env.module_name name in
         let env = List.fold_left (fun env {ty_param_name} -> extend_t env ty_param_name) env args in
         Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
           f, (translate_type_without_decay env t, false)) fields))
@@ -1433,7 +1475,7 @@ let translate_type_decl' env ty: ML (option decl) =
        tydecl_parameters=args;
        tydecl_meta=flags;
        tydecl_defn=Some (MLTD_DType branches)} ->
-        let name = env.module_name, name in
+        let name = krml_decl_name env.module_name name in
         let flags = translate_flags flags in
         let env = args |> ty_param_names |> List.fold_left extend_t env in
         Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
@@ -1456,7 +1498,7 @@ let translate_let' env flavor lb: ML (option decl) =
       mllb_def = e;
       mllb_meta = meta
     } when BU.for_some (function Syntax.Assumed -> true | _ -> false) meta ->
-      let name = env.module_name, name in
+      let name = krml_decl_name env.module_name name in
       let arg_names = match e.expr with
         | MLE_Fun (bs, _) -> List.map (fun {mlbinder_name} -> mlbinder_name) bs
         | _ -> []
@@ -1487,7 +1529,7 @@ let translate_let' env flavor lb: ML (option decl) =
           | t ->
               i, eff, t
         in
-        let name = env.module_name, name in
+        let name = krml_decl_name env.module_name name in
         let i, eff, t = find_return_type E_PURE (List.length args) t0 in
         if i > 0 && not (Options.silent ()) then begin
           let msg = "function type annotation has less arrows than the \
@@ -1541,7 +1583,7 @@ let translate_let' env flavor lb: ML (option decl) =
         let meta = translate_flags meta in
         let env = tvars |> ty_param_names |> List.fold_left (fun env name -> extend_t env name) env in
         let t = translate_type env t in
-        let name = env.module_name, name in
+        let name = krml_decl_name env.module_name name in
         begin try
           let expr = translate_expr env expr in
           Some (DGlobal (meta, name, List.length tvars, t, expr))

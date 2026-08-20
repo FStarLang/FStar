@@ -468,16 +468,14 @@ let is_arithmetic_primitive
                FStarC_Parser_Const.real_op_GTE))
            ||
            (FStarC_Syntax_Syntax.fv_eq_lid fv
-              FStarC_Parser_Const.real_op_Addition))
+              FStarC_Parser_Const.real_op_Plus))
           ||
           (FStarC_Syntax_Syntax.fv_eq_lid fv
              FStarC_Parser_Const.real_op_Minus))
          ||
-         (FStarC_Syntax_Syntax.fv_eq_lid fv
-            FStarC_Parser_Const.real_op_Multiply))
+         (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.real_op_Star))
         ||
-        (FStarC_Syntax_Syntax.fv_eq_lid fv
-           FStarC_Parser_Const.real_op_Division)
+        (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.real_op_Slash)
   | (FStarC_Syntax_Syntax.Tm_fvar fv, uu___::[]) ->
       FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.op_Tilde_Minus
   | uu___ -> false
@@ -786,16 +784,16 @@ and encode_arith_term (env : FStarC_SMTEncoding_Env.env_t)
         (FStarC_Parser_Const.op_Tilde_Minus,
           (minus FStarC_SMTEncoding_Term.boxInt
              FStarC_SMTEncoding_Term.unboxInt));
-        (FStarC_Parser_Const.real_op_Addition,
+        (FStarC_Parser_Const.real_op_Plus,
           (add FStarC_SMTEncoding_Term.boxReal
              FStarC_SMTEncoding_Term.unboxReal));
         (FStarC_Parser_Const.real_op_Minus,
           (sub FStarC_SMTEncoding_Term.boxReal
              FStarC_SMTEncoding_Term.unboxReal));
-        (FStarC_Parser_Const.real_op_Multiply,
+        (FStarC_Parser_Const.real_op_Star,
           (mul FStarC_SMTEncoding_Term.boxReal
              FStarC_SMTEncoding_Term.unboxReal "_rmul"));
-        (FStarC_Parser_Const.real_op_Division,
+        (FStarC_Parser_Const.real_op_Slash,
           (mk_nl FStarC_SMTEncoding_Term.boxReal
              FStarC_SMTEncoding_Term.unboxReal "_rdiv"
              FStarC_SMTEncoding_Util.mkRealDiv));

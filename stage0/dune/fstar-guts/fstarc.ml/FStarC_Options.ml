@@ -31,6 +31,16 @@ let uu___is_Human (projectee : message_format_t) : Prims.bool=
   match projectee with | Human -> true | uu___ -> false
 let uu___is_Github (projectee : message_format_t) : Prims.bool=
   match projectee with | Github -> true | uu___ -> false
+type overload_mode_t =
+  | Overload_off 
+  | Overload_compat 
+  | Overload_strict 
+let uu___is_Overload_off (projectee : overload_mode_t) : Prims.bool=
+  match projectee with | Overload_off -> true | uu___ -> false
+let uu___is_Overload_compat (projectee : overload_mode_t) : Prims.bool=
+  match projectee with | Overload_compat -> true | uu___ -> false
+let uu___is_Overload_strict (projectee : overload_mode_t) : Prims.bool=
+  match projectee with | Overload_strict -> true | uu___ -> false
 type option_val =
   | Bool of Prims.bool 
   | String of Prims.string 
@@ -3251,6 +3261,25 @@ let output_deps_to (uu___ : unit) :
   let uu___4 = output_to () in op_Bar_Bar_Bar uu___3 uu___4
 let output_ext (uu___ : unit) : Prims.string FStar_Pervasives_Native.option=
   get_output_ext ()
+let overload_mode (uu___ : unit) : overload_mode_t=
+  let uu___3 =
+    let uu___4 = FStarC_Options_Ext.get "fstar:overload" in
+    FStarC_String.lowercase uu___4 in
+  match uu___3 with
+  | "" -> Overload_compat
+  | "compat" -> Overload_compat
+  | "on" -> Overload_compat
+  | "true" -> Overload_compat
+  | "1" -> Overload_compat
+  | "off" -> Overload_off
+  | "false" -> Overload_off
+  | "0" -> Overload_off
+  | "strict" -> Overload_strict
+  | illegal ->
+      FStarC_Effect.failwith
+        (FStarC_String.op_Hat
+           "Option `--ext fstar:overload` expects one of `off`, `compat` or `strict`, but got `"
+           (FStarC_String.op_Hat illegal "`"))
 let ugly (uu___ : unit) : Prims.bool= get_ugly ()
 let print_bound_var_types (uu___ : unit) : Prims.bool=
   get_print_bound_var_types ()

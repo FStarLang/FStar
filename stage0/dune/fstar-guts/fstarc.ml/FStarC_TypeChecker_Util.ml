@@ -2858,82 +2858,32 @@ let find_coercion (env : FStarC_TypeChecker_Env.env)
                                              (match uu___9 with
                                               | (uu___10, f_typ1) ->
                                                   let uu___11 =
-                                                    FStarC_Syntax_Util.arrow_formals_comp
-                                                      f_typ1 in
-                                                  (match uu___11 with
-                                                   | (f_bs, f_c) ->
-                                                       let uu___12 =
-                                                         bool_guard
-                                                           (f_bs <> []) in
-                                                       op_let_Question ()
-                                                         uu___12
-                                                         (fun uu___13 ->
-                                                            let f_res =
-                                                              FStarC_Syntax_Util.comp_result
-                                                                f_c in
-                                                            let f_res1 =
-                                                              let uu___14 =
-                                                                FStarC_TypeChecker_Env.push_binders
-                                                                  env f_bs in
-                                                              head_unfold
-                                                                uu___14 f_res in
-                                                            let uu___14 =
-                                                              head_lid_of
-                                                                f_res1 in
-                                                            op_let_Question
-                                                              () uu___14
-                                                              (fun
-                                                                 f_res_head_lid
-                                                                 ->
-                                                                 let uu___15
-                                                                   =
-                                                                   bool_guard
-                                                                    (FStarC_Ident.lid_equals
+                                                    FStarC_TypeChecker_Overload.coercion_source_and_target
+                                                      env f_typ1 in
+                                                  op_let_Question () uu___11
+                                                    (fun uu___12 ->
+                                                       match uu___12 with
+                                                       | (src_fv, tgt_fv) ->
+                                                           let uu___13 =
+                                                             bool_guard
+                                                               (FStarC_Ident.lid_equals
+                                                                  computed_head_lid
+                                                                  (FStarC_Syntax_Syntax.lid_of_fv
+                                                                    src_fv)) in
+                                                           op_let_Question ()
+                                                             uu___13
+                                                             (fun uu___14 ->
+                                                                let uu___15 =
+                                                                  bool_guard
+                                                                    (
+                                                                    FStarC_Ident.lid_equals
                                                                     exp_head_lid
-                                                                    f_res_head_lid) in
-                                                                 op_let_Question
-                                                                   () uu___15
-                                                                   (fun
+                                                                    (FStarC_Syntax_Syntax.lid_of_fv
+                                                                    tgt_fv)) in
+                                                                op_let_Question
+                                                                  () uu___15
+                                                                  (fun
                                                                     uu___16
-                                                                    ->
-                                                                    let b =
-                                                                    FStarC_List.last
-                                                                    f_bs in
-                                                                    let b_ty
-                                                                    =
-                                                                    (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                                                    let b_ty1
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    FStarC_TypeChecker_Env.push_binders
-                                                                    env
-                                                                    (FStarC_List.init
-                                                                    f_bs) in
-                                                                    head_unfold
-                                                                    uu___17
-                                                                    b_ty in
-                                                                    let uu___17
-                                                                    =
-                                                                    head_lid_of
-                                                                    b_ty1 in
-                                                                    op_let_Question
-                                                                    ()
-                                                                    uu___17
-                                                                    (fun
-                                                                    b_head_lid
-                                                                    ->
-                                                                    let uu___18
-                                                                    =
-                                                                    bool_guard
-                                                                    (FStarC_Ident.lid_equals
-                                                                    computed_head_lid
-                                                                    b_head_lid) in
-                                                                    op_let_Question
-                                                                    ()
-                                                                    uu___18
-                                                                    (fun
-                                                                    uu___19
                                                                     ->
                                                                     let f_tm
                                                                     =
@@ -2946,7 +2896,7 @@ let find_coercion (env : FStarC_TypeChecker_Env.env)
                                                                     [
                                                                     FStarC_Syntax_Syntax.as_arg
                                                                     e] in
-                                                                    let uu___20
+                                                                    let uu___17
                                                                     =
                                                                     env.FStarC_TypeChecker_Env.tc_term
                                                                     {
@@ -3117,7 +3067,7 @@ let find_coercion (env : FStarC_TypeChecker_Env.env)
                                                                     (env.FStarC_TypeChecker_Env.iface_val_lids)
                                                                     } tt in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___20)))))))))
+                                                                    uu___17))))))
                                  candidates)))))
 let maybe_coerce_lc (env : FStarC_TypeChecker_Env.env)
   (e : FStarC_Syntax_Syntax.term) (lc : FStarC_TypeChecker_Common.lcomp)
@@ -4617,23 +4567,7 @@ let try_lookup_record_type (env : FStarC_TypeChecker_Env.env)
 let head_fv_of_typ (env : FStarC_TypeChecker_Env.env)
   (t : FStarC_Syntax_Syntax.typ) :
   FStarC_Syntax_Syntax.fv FStar_Pervasives_Native.option=
-  let uu___ =
-    let uu___1 =
-      FStarC_TypeChecker_Normalize.unfold_whnf'
-        [FStarC_TypeChecker_Env.Unascribe;
-        FStarC_TypeChecker_Env.Unmeta;
-        FStarC_TypeChecker_Env.Unrefine] env t in
-    FStarC_Syntax_Util.head_and_args_full uu___1 in
-  match uu___ with
-  | (t1, uu___1) ->
-      let uu___2 =
-        let uu___3 =
-          let uu___4 = FStarC_Syntax_Util.un_uinst t1 in
-          FStarC_Syntax_Subst.compress uu___4 in
-        uu___3.FStarC_Syntax_Syntax.n in
-      (match uu___2 with
-       | FStarC_Syntax_Syntax.Tm_fvar fv -> FStar_Pervasives_Native.Some fv
-       | uu___3 -> FStar_Pervasives_Native.None)
+  FStarC_TypeChecker_Overload.base_head_fv env t
 let find_record_or_dc_from_head_fv (env : FStarC_TypeChecker_Env.env)
   (head_fv : FStarC_Syntax_Syntax.fv FStar_Pervasives_Native.option)
   (uc : FStarC_Syntax_Syntax.unresolved_constructor)

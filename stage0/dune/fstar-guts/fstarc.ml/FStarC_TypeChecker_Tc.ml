@@ -3791,11 +3791,12 @@ let tc_decl (env : FStarC_TypeChecker_Env.env)
   (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_Syntax_Syntax.sigelt
     Prims.list * FStarC_TypeChecker_Env.env)=
   FStarC_GenSym.reset_gensym ();
+  FStarC_TypeChecker_Overload.reset_ambiguity_reports ();
   (let env0 = env in
    let env1 = set_hint_correlator env se in
    let env2 =
-     let uu___1 = FStarC_Options.admit_smt_queries () in
-     if uu___1
+     let uu___2 = FStarC_Options.admit_smt_queries () in
+     if uu___2
      then
        {
          FStarC_TypeChecker_Env.solver = (env1.FStarC_TypeChecker_Env.solver);
@@ -3901,22 +3902,22 @@ let tc_decl (env : FStarC_TypeChecker_Env.env)
            (env1.FStarC_TypeChecker_Env.iface_val_lids)
        }
      else env1 in
-   (let uu___2 = FStarC_Debug.any () in
-    if uu___2
-    then
-      let uu___3 = FStarC_Syntax_Print.sigelt_to_string_short se in
-      FStarC_Format.print1 "Processing %s\n" uu___3
-    else ());
-   (let uu___3 = FStarC_Debug.medium () in
+   (let uu___3 = FStarC_Debug.any () in
     if uu___3
     then
-      let uu___4 =
+      let uu___4 = FStarC_Syntax_Print.sigelt_to_string_short se in
+      FStarC_Format.print1 "Processing %s\n" uu___4
+    else ());
+   (let uu___4 = FStarC_Debug.medium () in
+    if uu___4
+    then
+      let uu___5 =
         FStarC_Class_Show.show FStarC_Class_Show.showable_bool
           env2.FStarC_TypeChecker_Env.admit in
-      let uu___5 =
+      let uu___6 =
         FStarC_Class_Show.show FStarC_Syntax_Print.showable_sigelt se in
-      FStarC_Format.print2 ">>>>>>>>>>>>>>tc_decl admit=%s %s\n" uu___4
-        uu___5
+      FStarC_Format.print2 ">>>>>>>>>>>>>>tc_decl admit=%s %s\n" uu___5
+        uu___6
     else ());
    (let result =
       if
@@ -4041,16 +4042,16 @@ let tc_decl (env : FStarC_TypeChecker_Env.env)
                } se in
            result1)
         else tc_decl' env2 se in
-    (let uu___4 = result in
-     match uu___4 with
-     | (ses, uu___5, uu___6) ->
+    (let uu___5 = result in
+     match uu___5 with
+     | (ses, uu___6, uu___7) ->
          FStarC_List.iter
            (FStarC_TypeChecker_Quals.check_sigelt_quals_post env2) ses);
     (match () with
      | () ->
          let result1 =
-           let uu___4 = result in
-           match uu___4 with
+           let uu___5 = result in
+           match uu___5 with
            | (ses, ses_e, env3) ->
                (ses, ses_e,
                  {

@@ -1104,7 +1104,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
                                      Seq.index s (parent_idx (SZ.v idx)) <=? Seq.index s (right_idx (SZ.v idx)))))
   ensures exists* s'. is_rvec pq s' cap ** pure (Seq.length s' == Seq.length s /\ is_heap s' /\
                                               (forall (y:t). count y s' == count y s))
-  decreases (Prims.op_Minus (SZ.v len) (SZ.v idx))
+  decreases (SZ.v len - SZ.v idx)
 {
   // We know: fits(2*len + 2), so fits(2*idx + 1) since idx < len
   let left : SZ.t = SZ.add (SZ.mul 2sz idx) 1sz;

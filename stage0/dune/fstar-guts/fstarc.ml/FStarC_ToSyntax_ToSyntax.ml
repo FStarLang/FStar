@@ -242,6 +242,55 @@ let unit_ty (rng : FStarC_Range_Type.range) : FStarC_Parser_AST.term=
     FStarC_Parser_AST.Type_level
 type env_t = FStarC_Syntax_DsEnv.env
 type lenv_t = FStarC_Syntax_Syntax.bv Prims.list
+let overloadable_qual
+  (q : FStarC_Syntax_Syntax.fv_qual FStar_Pervasives_Native.option) :
+  Prims.bool=
+  match q with
+  | FStar_Pervasives_Native.None -> true
+  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Unresolved_name uu___)
+      -> true
+  | uu___ -> false
+let set_alternatives (t : FStarC_Syntax_Syntax.term)
+  (alts : FStarC_Syntax_Syntax.fv Prims.list) : FStarC_Syntax_Syntax.term=
+  match alts with
+  | [] -> t
+  | uu___ ->
+      let uu___1 =
+        let uu___2 = FStarC_Syntax_Subst.compress t in
+        uu___2.FStarC_Syntax_Syntax.n in
+      (match uu___1 with
+       | FStarC_Syntax_Syntax.Tm_fvar fv when
+           overloadable_qual fv.FStarC_Syntax_Syntax.fv_qual ->
+           FStarC_Syntax_Syntax.mk
+             (FStarC_Syntax_Syntax.Tm_fvar
+                {
+                  FStarC_Syntax_Syntax.fv_name =
+                    (fv.FStarC_Syntax_Syntax.fv_name);
+                  FStarC_Syntax_Syntax.fv_qual =
+                    (FStar_Pervasives_Native.Some
+                       (FStarC_Syntax_Syntax.Unresolved_name alts))
+                }) t.FStarC_Syntax_Syntax.pos
+       | uu___2 -> t)
+let maybe_add_alternatives (env : env_t) (l : FStarC_Ident.lid)
+  (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
+  let uu___ =
+    let uu___1 = FStarC_Syntax_Subst.compress t in
+    uu___1.FStarC_Syntax_Syntax.n in
+  match uu___ with
+  | FStarC_Syntax_Syntax.Tm_fvar fv when
+      match fv.FStarC_Syntax_Syntax.fv_qual with
+      | FStar_Pervasives_Native.None -> true
+      | uu___1 -> false ->
+      let uu___1 = FStarC_Syntax_DsEnv.try_lookup_lid_alternatives env l in
+      (match uu___1 with
+       | fv0::alts ->
+           if
+             (match alts with | hd::tl -> true | uu___2 -> false) &&
+               (FStarC_Syntax_Syntax.fv_eq fv fv0)
+           then set_alternatives t alts
+           else t
+       | uu___2 -> t)
+  | uu___1 -> t
 let desugar_name'
   (setpos : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
   (env : env_t) (resolve : Prims.bool) (l : FStarC_Ident.lid) :
@@ -253,7 +302,8 @@ let desugar_name'
   match tm_attrs_opt with
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
   | FStar_Pervasives_Native.Some (tm, attrs) ->
-      let tm1 = setpos tm in FStar_Pervasives_Native.Some tm1
+      let tm1 = if resolve then maybe_add_alternatives env l tm else tm in
+      let tm2 = setpos tm1 in FStar_Pervasives_Native.Some tm2
 let desugar_name (mk : 'uuuuu)
   (setpos : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
   (env : env_t) (resolve : Prims.bool) (l : FStarC_Ident.lident) :

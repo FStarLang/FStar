@@ -23,7 +23,7 @@ open FStar.List.Tot
 module T = Pulse.Lib.Trade.Util
 module FA = Pulse.Lib.Forall.Util
 module U32 = FStar.UInt32
-open Pulse.Lib.BoundedIntegers
+open FStar.UInt32 { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 module Box = Pulse.Lib.Box
 open Pulse.Lib.Box { box, (:=), (!) }
 
@@ -368,11 +368,7 @@ fn length_iter (#t:Type) (x: llist t)
     pure (
         List.Tot.length 'l >= List.Tot.length suffix /\
         n == List.Tot.length 'l - List.Tot.length suffix)
-    (* ^ Having the bounded_int nat instance in BoundedIntegers means we try to
-    to check the subtraction as a nat, which fails without the extra condition.
-    We can also just write `n + len suff = len 'l`. *)
-    //Also below, the bounded integer stuff leads to problems
-  decreases  (List.Tot.length 'l `Prims.op_Minus` value_of ctr)
+  decreases  (List.Tot.length 'l - value_of ctr)
   {
     with _n _ll suffix. _;
     let n = Pulse.Lib.Reference.(!ctr);

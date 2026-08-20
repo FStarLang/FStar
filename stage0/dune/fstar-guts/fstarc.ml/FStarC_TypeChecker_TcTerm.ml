@@ -3270,91 +3270,96 @@ and tc_maybe_toplevel_term (env : FStarC_TypeChecker_Env.env)
                    (match uu___5 with
                     | (uu___6, lc, uu___7) ->
                         let uu___8 =
-                          let t0 =
-                            FStarC_TypeChecker_Normalize.unfold_whnf'
-                              [FStarC_TypeChecker_Env.Unascribe;
-                              FStarC_TypeChecker_Env.Unmeta;
-                              FStarC_TypeChecker_Env.Unrefine] env1
-                              lc.FStarC_TypeChecker_Common.res_typ in
-                          let uu___9 =
-                            FStarC_Syntax_Util.head_and_args_full t0 in
-                          match uu___9 with
-                          | (thead, uu___10) ->
-                              ((let uu___12 = FStarC_Effect.op_Bang dbg_RFD in
-                                if uu___12
-                                then
-                                  let uu___13 =
-                                    FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_term
-                                      lc.FStarC_TypeChecker_Common.res_typ in
-                                  let uu___14 =
-                                    FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_term t0 in
-                                  let uu___15 =
-                                    FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_term thead in
-                                  FStarC_Format.print3
-                                    "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
-                                    uu___13 uu___14 uu___15
-                                else ());
-                               (let uu___12 =
-                                  let uu___13 =
-                                    let uu___14 =
-                                      FStarC_Syntax_Util.un_uinst thead in
-                                    FStarC_Syntax_Subst.compress uu___14 in
-                                  uu___13.FStarC_Syntax_Syntax.n in
-                                match uu___12 with
-                                | FStarC_Syntax_Syntax.Tm_fvar type_name ->
-                                    let uu___13 =
-                                      FStarC_TypeChecker_Util.try_lookup_record_type
-                                        env1
-                                        type_name.FStarC_Syntax_Syntax.fv_name in
-                                    (match uu___13 with
+                          (let uu___10 = FStarC_Effect.op_Bang dbg_RFD in
+                           if uu___10
+                           then
+                             let uu___11 =
+                               FStarC_Class_Show.show
+                                 FStarC_Syntax_Print.showable_term
+                                 lc.FStarC_TypeChecker_Common.res_typ in
+                             FStarC_Format.print1 "Got lc.res_typ=%s\n"
+                               uu___11
+                           else ());
+                          (let uu___10 =
+                             FStarC_TypeChecker_Overload.base_head_fv env1
+                               lc.FStarC_TypeChecker_Common.res_typ in
+                           match uu___10 with
+                           | FStar_Pervasives_Native.Some type_name ->
+                               let uu___11 =
+                                 FStarC_TypeChecker_Util.try_lookup_record_type
+                                   env1
+                                   type_name.FStarC_Syntax_Syntax.fv_name in
+                               (match uu___11 with
+                                | FStar_Pervasives_Native.None ->
+                                    proceed_with candidate
+                                | FStar_Pervasives_Native.Some rdc ->
+                                    let i =
+                                      FStarC_List.tryFind
+                                        (fun uu___12 ->
+                                           match uu___12 with
+                                           | (i1, uu___13, uu___14) ->
+                                               FStarC_TypeChecker_Util.field_name_matches
+                                                 field_name rdc i1)
+                                        rdc.FStarC_Syntax_DsEnv.fields in
+                                    (match i with
                                      | FStar_Pervasives_Native.None ->
                                          proceed_with candidate
-                                     | FStar_Pervasives_Native.Some rdc ->
-                                         let i =
-                                           FStarC_List.tryFind
-                                             (fun uu___14 ->
-                                                match uu___14 with
-                                                | (i1, uu___15, uu___16) ->
-                                                    FStarC_TypeChecker_Util.field_name_matches
-                                                      field_name rdc i1)
-                                             rdc.FStarC_Syntax_DsEnv.fields in
-                                         (match i with
-                                          | FStar_Pervasives_Native.None ->
-                                              proceed_with candidate
-                                          | FStar_Pervasives_Native.Some
-                                              (i1, uu___14, uu___15) ->
-                                              let constrname =
-                                                FStarC_Ident.lid_of_ids
-                                                  (FStarC_List.op_At
-                                                     (FStarC_Ident.ns_of_lid
-                                                        rdc.FStarC_Syntax_DsEnv.typename)
-                                                     [rdc.FStarC_Syntax_DsEnv.constrname]) in
-                                              let projname =
-                                                FStarC_Syntax_Util.mk_field_projector_name_from_ident
-                                                  constrname i1 in
-                                              let qual =
-                                                if
-                                                  rdc.FStarC_Syntax_DsEnv.is_record
-                                                then
-                                                  FStar_Pervasives_Native.Some
-                                                    (FStarC_Syntax_Syntax.Record_projector
-                                                       (constrname, i1))
-                                                else
-                                                  FStar_Pervasives_Native.None in
-                                              let choice =
-                                                FStarC_Syntax_Syntax.lid_as_fv
-                                                  (FStarC_Ident.set_lid_range
-                                                     projname
-                                                     (FStarC_Ident.range_of_lid
-                                                        field_name)) qual in
-                                              proceed_with
-                                                (FStar_Pervasives_Native.Some
-                                                   choice)))
-                                | uu___13 -> proceed_with candidate)) in
+                                     | FStar_Pervasives_Native.Some
+                                         (i1, uu___12, uu___13) ->
+                                         let constrname =
+                                           FStarC_Ident.lid_of_ids
+                                             (FStarC_List.op_At
+                                                (FStarC_Ident.ns_of_lid
+                                                   rdc.FStarC_Syntax_DsEnv.typename)
+                                                [rdc.FStarC_Syntax_DsEnv.constrname]) in
+                                         let projname =
+                                           FStarC_Syntax_Util.mk_field_projector_name_from_ident
+                                             constrname i1 in
+                                         let qual =
+                                           if
+                                             rdc.FStarC_Syntax_DsEnv.is_record
+                                           then
+                                             FStar_Pervasives_Native.Some
+                                               (FStarC_Syntax_Syntax.Record_projector
+                                                  (constrname, i1))
+                                           else FStar_Pervasives_Native.None in
+                                         let choice =
+                                           FStarC_Syntax_Syntax.lid_as_fv
+                                             (FStarC_Ident.set_lid_range
+                                                projname
+                                                (FStarC_Ident.range_of_lid
+                                                   field_name)) qual in
+                                         proceed_with
+                                           (FStar_Pervasives_Native.Some
+                                              choice)))
+                           | FStar_Pervasives_Native.None ->
+                               proceed_with candidate) in
                         FStar_Pervasives.Inl uu___8)
+               | (FStarC_Syntax_Syntax.Tm_fvar
+                  { FStarC_Syntax_Syntax.fv_name = uu___5;
+                    FStarC_Syntax_Syntax.fv_qual =
+                      FStar_Pervasives_Native.Some
+                      (FStarC_Syntax_Syntax.Unresolved_name uu___6);_},
+                  uu___7) ->
+                   let uu___8 =
+                     let uu___9 = resolve_overloaded_head env1 lhead largs in
+                     (uu___9, largs) in
+                   FStar_Pervasives.Inr uu___8
+               | (FStarC_Syntax_Syntax.Tm_uinst
+                  ({
+                     FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar
+                       { FStarC_Syntax_Syntax.fv_name = uu___5;
+                         FStarC_Syntax_Syntax.fv_qual =
+                           FStar_Pervasives_Native.Some
+                           (FStarC_Syntax_Syntax.Unresolved_name uu___6);_};
+                     FStarC_Syntax_Syntax.pos = uu___7;
+                     FStarC_Syntax_Syntax.hash_code = uu___8;_},
+                   uu___9),
+                  uu___10) ->
+                   let uu___11 =
+                     let uu___12 = resolve_overloaded_head env1 lhead largs in
+                     (uu___12, largs) in
+                   FStar_Pervasives.Inr uu___11
                | uu___5 ->
                    let uu___6 =
                      let uu___7 = FStarC_Syntax_Util.is_synth_by_tactic lhead in
@@ -4311,6 +4316,211 @@ and tc_tactic (a : FStarC_Syntax_Syntax.typ) (b : FStarC_Syntax_Syntax.typ)
     } in
   let uu___ = FStarC_Syntax_Syntax.t_tac_of a b in
   tc_check_tot_or_gtot_term env1 tau uu___ FStar_Pervasives_Native.None
+and speculate_base (env : FStarC_TypeChecker_Env.env)
+  (e : FStarC_Syntax_Syntax.term) : FStarC_TypeChecker_Overload.base_typ=
+  let tx = FStarC_Syntax_Unionfind.new_transaction () in
+  let res =
+    FStarC_Util.finally (fun uu___ -> FStarC_Syntax_Unionfind.rollback tx)
+      (fun uu___ ->
+         let uu___1 =
+           FStarC_Errors.catch_errors_and_ignore_rest
+             (fun uu___2 ->
+                let uu___3 = FStarC_TypeChecker_Env.clear_expected_typ env in
+                match uu___3 with
+                | (env1, uu___4) ->
+                    let uu___5 =
+                      tc_term
+                        {
+                          FStarC_TypeChecker_Env.solver =
+                            (env1.FStarC_TypeChecker_Env.solver);
+                          FStarC_TypeChecker_Env.range =
+                            (env1.FStarC_TypeChecker_Env.range);
+                          FStarC_TypeChecker_Env.curmodule =
+                            (env1.FStarC_TypeChecker_Env.curmodule);
+                          FStarC_TypeChecker_Env.gamma =
+                            (env1.FStarC_TypeChecker_Env.gamma);
+                          FStarC_TypeChecker_Env.gamma_sig =
+                            (env1.FStarC_TypeChecker_Env.gamma_sig);
+                          FStarC_TypeChecker_Env.gamma_cache =
+                            (env1.FStarC_TypeChecker_Env.gamma_cache);
+                          FStarC_TypeChecker_Env.modules =
+                            (env1.FStarC_TypeChecker_Env.modules);
+                          FStarC_TypeChecker_Env.expected_typ =
+                            (env1.FStarC_TypeChecker_Env.expected_typ);
+                          FStarC_TypeChecker_Env.sigtab =
+                            (env1.FStarC_TypeChecker_Env.sigtab);
+                          FStarC_TypeChecker_Env.attrtab =
+                            (env1.FStarC_TypeChecker_Env.attrtab);
+                          FStarC_TypeChecker_Env.instantiate_imp =
+                            (env1.FStarC_TypeChecker_Env.instantiate_imp);
+                          FStarC_TypeChecker_Env.effects =
+                            (env1.FStarC_TypeChecker_Env.effects);
+                          FStarC_TypeChecker_Env.generalize =
+                            (env1.FStarC_TypeChecker_Env.generalize);
+                          FStarC_TypeChecker_Env.letrecs =
+                            (env1.FStarC_TypeChecker_Env.letrecs);
+                          FStarC_TypeChecker_Env.top_level =
+                            (env1.FStarC_TypeChecker_Env.top_level);
+                          FStarC_TypeChecker_Env.check_uvars =
+                            (env1.FStarC_TypeChecker_Env.check_uvars);
+                          FStarC_TypeChecker_Env.use_eq_strict =
+                            (env1.FStarC_TypeChecker_Env.use_eq_strict);
+                          FStarC_TypeChecker_Env.is_iface =
+                            (env1.FStarC_TypeChecker_Env.is_iface);
+                          FStarC_TypeChecker_Env.admit = true;
+                          FStarC_TypeChecker_Env.phase1 =
+                            (env1.FStarC_TypeChecker_Env.phase1);
+                          FStarC_TypeChecker_Env.failhard =
+                            (env1.FStarC_TypeChecker_Env.failhard);
+                          FStarC_TypeChecker_Env.flychecking =
+                            (env1.FStarC_TypeChecker_Env.flychecking);
+                          FStarC_TypeChecker_Env.uvar_subtyping =
+                            (env1.FStarC_TypeChecker_Env.uvar_subtyping);
+                          FStarC_TypeChecker_Env.intactics =
+                            (env1.FStarC_TypeChecker_Env.intactics);
+                          FStarC_TypeChecker_Env.nocoerce =
+                            (env1.FStarC_TypeChecker_Env.nocoerce);
+                          FStarC_TypeChecker_Env.tc_term =
+                            (env1.FStarC_TypeChecker_Env.tc_term);
+                          FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
+                            (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
+                          FStarC_TypeChecker_Env.universe_of =
+                            (env1.FStarC_TypeChecker_Env.universe_of);
+                          FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                            =
+                            (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                          FStarC_TypeChecker_Env.teq_nosmt_force =
+                            (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
+                          FStarC_TypeChecker_Env.subtype_nosmt_force =
+                            (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
+                          FStarC_TypeChecker_Env.qtbl_name_and_index =
+                            (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
+                          FStarC_TypeChecker_Env.normalized_eff_names =
+                            (env1.FStarC_TypeChecker_Env.normalized_eff_names);
+                          FStarC_TypeChecker_Env.fv_delta_depths =
+                            (env1.FStarC_TypeChecker_Env.fv_delta_depths);
+                          FStarC_TypeChecker_Env.proof_ns =
+                            (env1.FStarC_TypeChecker_Env.proof_ns);
+                          FStarC_TypeChecker_Env.synth_hook =
+                            (env1.FStarC_TypeChecker_Env.synth_hook);
+                          FStarC_TypeChecker_Env.try_solve_implicits_hook =
+                            (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
+                          FStarC_TypeChecker_Env.splice =
+                            (env1.FStarC_TypeChecker_Env.splice);
+                          FStarC_TypeChecker_Env.mpreprocess =
+                            (env1.FStarC_TypeChecker_Env.mpreprocess);
+                          FStarC_TypeChecker_Env.postprocess =
+                            (env1.FStarC_TypeChecker_Env.postprocess);
+                          FStarC_TypeChecker_Env.identifier_info =
+                            (env1.FStarC_TypeChecker_Env.identifier_info);
+                          FStarC_TypeChecker_Env.tc_hooks =
+                            (env1.FStarC_TypeChecker_Env.tc_hooks);
+                          FStarC_TypeChecker_Env.dsenv =
+                            (env1.FStarC_TypeChecker_Env.dsenv);
+                          FStarC_TypeChecker_Env.nbe =
+                            (env1.FStarC_TypeChecker_Env.nbe);
+                          FStarC_TypeChecker_Env.strict_args_tab =
+                            (env1.FStarC_TypeChecker_Env.strict_args_tab);
+                          FStarC_TypeChecker_Env.erasable_types_tab =
+                            (env1.FStarC_TypeChecker_Env.erasable_types_tab);
+                          FStarC_TypeChecker_Env.enable_defer_to_tac =
+                            (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
+                          FStarC_TypeChecker_Env.unif_allow_ref_guards =
+                            (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
+                          FStarC_TypeChecker_Env.erase_erasable_args =
+                            (env1.FStarC_TypeChecker_Env.erase_erasable_args);
+                          FStarC_TypeChecker_Env.core_check =
+                            (env1.FStarC_TypeChecker_Env.core_check);
+                          FStarC_TypeChecker_Env.missing_decl =
+                            (env1.FStarC_TypeChecker_Env.missing_decl);
+                          FStarC_TypeChecker_Env.iface_todo =
+                            (env1.FStarC_TypeChecker_Env.iface_todo);
+                          FStarC_TypeChecker_Env.iface_hidden =
+                            (env1.FStarC_TypeChecker_Env.iface_hidden);
+                          FStarC_TypeChecker_Env.iface_lids =
+                            (env1.FStarC_TypeChecker_Env.iface_lids);
+                          FStarC_TypeChecker_Env.iface_val_lids =
+                            (env1.FStarC_TypeChecker_Env.iface_val_lids)
+                        } e in
+                    (match uu___5 with
+                     | (uu___6, lc, uu___7) ->
+                         FStarC_TypeChecker_Overload.base_of_typ env1
+                           lc.FStarC_TypeChecker_Common.res_typ)) in
+         match uu___1 with | (uu___2, res1) -> res1) in
+  match res with
+  | FStar_Pervasives_Native.Some b -> b
+  | FStar_Pervasives_Native.None -> FStarC_TypeChecker_Overload.Base_unknown
+and resolve_overloaded_head (env : FStarC_TypeChecker_Env.env)
+  (lhead : FStarC_Syntax_Syntax.term) (largs : FStarC_Syntax_Syntax.args) :
+  FStarC_Syntax_Syntax.term=
+  let uu___ =
+    let uu___1 =
+      let uu___2 = FStarC_Syntax_Subst.compress lhead in
+      uu___2.FStarC_Syntax_Syntax.n in
+    match uu___1 with
+    | FStarC_Syntax_Syntax.Tm_fvar fv -> (fv, [])
+    | FStarC_Syntax_Syntax.Tm_uinst
+        ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
+           FStarC_Syntax_Syntax.pos = uu___2;
+           FStarC_Syntax_Syntax.hash_code = uu___3;_},
+         us)
+        -> (fv, us)
+    | uu___2 -> FStarC_Effect.failwith "resolve_overloaded_head: not an fvar" in
+  match uu___ with
+  | (fv, us) ->
+      let alts =
+        match fv.FStarC_Syntax_Syntax.fv_qual with
+        | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Unresolved_name
+            alts1) -> alts1
+        | uu___1 -> [] in
+      let uu___1 =
+        let uu___2 =
+          FStarC_List.filter
+            (fun fv1 ->
+               let uu___3 =
+                 FStarC_TypeChecker_Env.is_iface_hidden env
+                   (FStarC_Syntax_Syntax.lid_of_fv fv1) in
+               Prims.not uu___3) (fv :: alts) in
+        match uu___2 with | p::rest -> (p, rest) | [] -> (fv, alts) in
+      (match uu___1 with
+       | (primary, alts1) ->
+           let primary1 =
+             {
+               FStarC_Syntax_Syntax.fv_name =
+                 (primary.FStarC_Syntax_Syntax.fv_name);
+               FStarC_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.None
+             } in
+           let explicit_args =
+             FStarC_List.collect
+               (fun uu___2 ->
+                  match uu___2 with
+                  | (a, aq) ->
+                      (match aq with
+                       | FStar_Pervasives_Native.Some
+                           { FStarC_Syntax_Syntax.aqual_implicit = true;
+                             FStarC_Syntax_Syntax.aqual_attributes = uu___3;_}
+                           -> []
+                       | uu___3 -> [a])) largs in
+           let expected =
+             match FStarC_TypeChecker_Env.expected_typ env with
+             | FStar_Pervasives_Native.Some (t, uu___2) ->
+                 FStar_Pervasives_Native.Some t
+             | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
+           let choice =
+             FStarC_TypeChecker_Overload.resolve env (speculate_base env)
+               primary1 alts1 explicit_args expected in
+           let choice1 =
+             {
+               FStarC_Syntax_Syntax.fv_name =
+                 (choice.FStarC_Syntax_Syntax.fv_name);
+               FStarC_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.None
+             } in
+           let h =
+             FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_fvar choice1)
+               lhead.FStarC_Syntax_Syntax.pos in
+           (match us with
+            | [] -> h
+            | uu___2 -> FStarC_Syntax_Syntax.mk_Tm_uinst h us))
 and check_instantiated_fvar (env : FStarC_TypeChecker_Env.env)
   (v : FStarC_Syntax_Syntax.var)
   (q : FStarC_Syntax_Syntax.fv_qual FStar_Pervasives_Native.option)
@@ -4483,6 +4693,25 @@ and tc_value (env : FStarC_TypeChecker_Env.env)
          FStarC_Errors_Codes.Fatal_BadlyInstantiatedSynthByTactic ()
          (Obj.magic FStarC_Errors_Msg.is_error_message_string)
          (Obj.magic "Badly instantiated synth_by_tactic")
+   | FStarC_Syntax_Syntax.Tm_uinst
+       ({
+          FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar
+            { FStarC_Syntax_Syntax.fv_name = uu___1;
+              FStarC_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
+                (FStarC_Syntax_Syntax.Unresolved_name uu___2);_};
+          FStarC_Syntax_Syntax.pos = uu___3;
+          FStarC_Syntax_Syntax.hash_code = uu___4;_},
+        uu___5)
+       ->
+       let uu___6 = resolve_overloaded_head env1 top [] in
+       tc_term env1 uu___6
+   | FStarC_Syntax_Syntax.Tm_fvar
+       { FStarC_Syntax_Syntax.fv_name = uu___1;
+         FStarC_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
+           (FStarC_Syntax_Syntax.Unresolved_name uu___2);_}
+       ->
+       let uu___3 = resolve_overloaded_head env1 top [] in
+       tc_term env1 uu___3
    | FStarC_Syntax_Syntax.Tm_uinst
        ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
           FStarC_Syntax_Syntax.pos = uu___1;

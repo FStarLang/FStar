@@ -4,7 +4,7 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 open FStar.Seq
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 let starts_with_at (#a:Type) (i:nat) (s0 s1:seq a) = 
   i + Seq.length s0 <= Seq.length s1 /\
@@ -55,7 +55,7 @@ ensures
         )
     ensures
       (!i1 < len1 /\ !i0 < len0 /\ Seq.index s1 (SZ.v !i1) =!= Seq.index s0 (SZ.v !i0))
-    decreases (Prims.op_Minus (SZ.v len0) (SZ.v (!i0)))
+    decreases (SZ.v len0 - SZ.v (!i0))
     {
       let v0 = !i0;
       let v1 = !i1;
@@ -101,7 +101,7 @@ ensures
       !j <= len1 /\
       (forall (k:nat). k < SZ.v (!j) ==> ~(starts_with_at k s0 s1))
     )
-    decreases (Prims.op_Minus (SZ.v len1) (SZ.v (!j)))
+    decreases (SZ.v len1 - SZ.v (!j))
   {
     if (check_starts_with_at a0 a1 len0 len1 (!j)) {
       return true;

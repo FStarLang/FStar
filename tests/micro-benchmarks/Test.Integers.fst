@@ -33,18 +33,18 @@ let ex2_nat_int_pos (x:nat) (y:int) (z:pos) = x + y + z
 /// You can define your own
 let ex3_nat_custom_int_pos (x:nat) (y:int{y > x}) (z:pos) : nat = x + y + z
 
-/// You can still use these with the integer operations in prims But,
-/// it's a bit ugly.  In particular, the operators in prims are
-/// (poorly) named `op_Plus, ...` etc. rather than `(+), ...`
-/// etc. We should fix this.
+/// You can still use the integer operations in prims directly. Both
+/// `FStar.Integers.( + )` and `Prims.( + )` apply here, so which one
+/// you get is decided by overload resolution: a local `Prims.(...)`
+/// scope makes `Prims.( + )` the innermost binding and so wins.
 let ex4_prims_again (x:nat) (y:int{y > x}) (z:pos) : nat =
-  Prims.(x `op_Plus` y `op_Plus` z)
+  Prims.(x + y + z)
 
 /// The same operations can also be used on machine integers, although
 /// they come with bounds checks, as should be expected.
 ///
 /// Note the inferred type: `int_t (Unsigned W32)`
-let ex4_uint32_plus (x:uint_32) (y:uint_32{FStar.UInt.size (FStar.UInt32.(v x `Prims.op_Plus` v y)) 32}) =
+let ex4_uint32_plus (x:uint_32) (y:uint_32{FStar.UInt.size (FStar.UInt32.(Prims.(v x + v y))) 32}) =
   x + y
 
 /// But, rather than the clumsy bounds check above, we can write it
@@ -55,14 +55,14 @@ let ex5_uint32_ok (x:uint_32) (y:uint_32{ok ( * ) y y /\ ok (+) x (y * y)}) = x 
 
 /// Despite the overloading, one can still use the explicit operations
 /// if desired, in mixture with the types that support overloading
-let ex6 (x:uint_32) (y:uint_32{ok ( + ) x y }) = FStar.UInt32.(x +^ y)
+let ex6 (x:uint_32) (y:uint_32{ok ( + ) x y }) = FStar.UInt32.(x + y)
 
 /// Unfortunately, we still have trouble parsing `( - )` as an operator
 /// So, you have to write it as `op_Minus`
 let ex9 (x:int_32{ok op_Minus 0l x}) = 0l - x
 
 /// Though, it's arguably still a bit cleaner than before
-let ex10 (x:FStar.Int32.t{FStar.Int.size (Prims.op_Tilde_Minus (FStar.Int32.v x)) 32}) = FStar.Int32.(0l -^ x)
+let ex10 (x:FStar.Int32.t{FStar.Int.size (Prims.(-(FStar.Int32.v x))) 32}) = FStar.Int32.(0l - x)
 
 /// We also have a generic bounds-respecting cast operator among the integer types
 /// This one does an an addition in uint_32, with checks on both the cast and the addition
@@ -87,7 +87,7 @@ let ex14 = 0ul + 1ul
 let ex15 : uint_32 = 0ul + 1ul
 
 /// Or, one can still explicitly use the non-overloaded operators
-let ex16 = FStar.UInt32.(0ul +^ 1ul)
+let ex16 = FStar.UInt32.(0ul + 1ul)
 
 /// Types from FStar.Integers can also be mixed with
 /// the machine integer types

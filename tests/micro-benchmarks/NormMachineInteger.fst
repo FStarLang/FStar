@@ -13,5 +13,5 @@ let check_norm ()
       else fail "Not syntactically equal"
     | _ -> fail "Unexpected goal"
 
-let test = assert (1ul +^ 2ul == 3ul)
+let test = assert (1ul + 2ul == 3ul)
                by (check_norm())

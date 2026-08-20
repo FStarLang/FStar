@@ -2,7 +2,6 @@ module FStar.Injection
 
 open FStar.Fin
 open FStar.Functions
-open FStar.SizeT { (/^), (%^), (+^), (-^), ( *^ )  }
 open FStar.Tactics.Easy
 
 (* A theory of injections. As for bijections, injections are erasable

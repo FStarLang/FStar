@@ -114,7 +114,7 @@ fn test (r:ref int)
 
 open Pulse.Lib.Array
 module SZ = FStar.SizeT
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 (* 
   Things to note:
@@ -168,7 +168,7 @@ fn max (n:SZ.t) (a:larray nat (v n))
     max |-> vmax **
     pure (vi <= n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
-  decreases (Prims.op_Minus (v n) (v (!i)))
+  decreases (v n - v (!i))
   {
     let vi = !i;
     let v = a.(vi);
@@ -199,7 +199,7 @@ fn max_alt (n:SZ.t) (a:larray nat (v n))
     max |-> vmax **
     pure (vi <= n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
-  decreases (Prims.op_Minus (v n) (v (!i)))
+  decreases (v n - v (!i))
   {
     let v = a.(!i);
     i := !i + 1sz;

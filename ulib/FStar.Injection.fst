@@ -1,6 +1,5 @@
 module FStar.Injection
 
-open FStar.SizeT { (/^), (%^), (+^), (-^), ( *^ )  }
 open FStar.Fin
 module Functions = FStar.Functions
 open FStar.Tactics.Easy

@@ -374,6 +374,7 @@ type error_code =
   | Warning_ProofRecovery 
   | Error_CannotResolveRecord 
   | Error_MissingPopOptions 
+  | Error_AmbiguousName 
 let uu___is_Error_DependencyAnalysisFailed (projectee : error_code) :
   Prims.bool=
   match projectee with
@@ -1632,6 +1633,8 @@ let uu___is_Error_CannotResolveRecord (projectee : error_code) : Prims.bool=
   match projectee with | Error_CannotResolveRecord -> true | uu___ -> false
 let uu___is_Error_MissingPopOptions (projectee : error_code) : Prims.bool=
   match projectee with | Error_MissingPopOptions -> true | uu___ -> false
+let uu___is_Error_AmbiguousName (projectee : error_code) : Prims.bool=
+  match projectee with | Error_AmbiguousName -> true | uu___ -> false
 type error_setting = (error_code * error_flag * Prims.int)
 let default_settings : error_setting Prims.list=
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
@@ -1996,4 +1999,5 @@ let default_settings : error_setting Prims.list=
   (Warning_SolverVersionMismatch, CError, (Prims.of_int 358));
   (Warning_ProofRecovery, CWarning, (Prims.of_int 359));
   (Error_CannotResolveRecord, CAlwaysError, (Prims.of_int 360));
-  (Error_MissingPopOptions, CWarning, (Prims.of_int 361))]
+  (Error_MissingPopOptions, CWarning, (Prims.of_int 361));
+  (Error_AmbiguousName, CError, (Prims.of_int 362))]

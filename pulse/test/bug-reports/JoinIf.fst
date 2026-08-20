@@ -41,21 +41,21 @@ fn sort3_alt (a:array U32.t)
    let mut z = a.(2sz);
    let vx = !x;
    let vy = !y;
-   if (vy <^ vx)
+   if (vy < vx)
    {
       x := vy;
       y := vx;
    };
    let vx = !x;
    let vz = !z;
-   if (vz <^ vx)
+   if (vz < vx)
    {
       x := vz;
       z := vx;
    };
    let vy = !y;
    let vz = !z;
-   if (vz <^ vy)
+   if (vz < vy)
    {
       y := vz;
       z := vy;
@@ -81,10 +81,10 @@ fn sort3_alt2 (a:array U32.t)
    let mut z = a.(2sz);
    let vx0 = !x;
    let vy0 = !y;
-   if (vy0 <^ vx0)
+   if (vy0 < vx0)
    ensures (
-    R.pts_to x (if vy0 <^ vx0 then vy0 else vx0) **
-    R.pts_to y (if vy0 <^ vx0 then vx0 else vy0) **
+    R.pts_to x (if vy0 < vx0 then vy0 else vx0) **
+    R.pts_to y (if vy0 < vx0 then vx0 else vy0) **
     A.pts_to a s **
     (z |-> Seq.index s 2)
    )
@@ -94,11 +94,11 @@ fn sort3_alt2 (a:array U32.t)
    };
    let vx1 = !x;
    let vz1 = !z;
-   if (vz1 <^ vx1)
+   if (vz1 < vx1)
    ensures (
-    R.pts_to x (if vz1 <^ vx1 then vz1 else vx1) **
-    R.pts_to y (if vy0 <^ vx0 then vx0 else vy0) **
-    R.pts_to z (if vz1 <^ vx1 then vx1 else vz1) **
+    R.pts_to x (if vz1 < vx1 then vz1 else vx1) **
+    R.pts_to y (if vy0 < vx0 then vx0 else vy0) **
+    R.pts_to z (if vz1 < vx1 then vx1 else vz1) **
     A.pts_to a s
    )
    {
@@ -107,11 +107,11 @@ fn sort3_alt2 (a:array U32.t)
    };
    let vy2 = !y;
    let vz2 = !z;
-   if (vz2 <^ vy2)
+   if (vz2 < vy2)
    ensures (
-    R.pts_to x (if vz1 <^ vx1 then vz1 else vx1) **
-    R.pts_to y (if vz2 <^ vy2 then vz2 else vy2) **
-    R.pts_to z (if vz2 <^ vy2 then vy2 else vz2) **
+    R.pts_to x (if vz1 < vx1 then vz1 else vx1) **
+    R.pts_to y (if vz2 < vy2 then vz2 else vy2) **
+    R.pts_to z (if vz2 < vy2 then vy2 else vz2) **
     A.pts_to a s
    )
    {

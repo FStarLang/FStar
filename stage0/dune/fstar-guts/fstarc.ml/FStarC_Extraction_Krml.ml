@@ -1447,6 +1447,24 @@ let mk_bool_op (uu___ : Prims.string) : op FStar_Pervasives_Native.option=
   | uu___1 -> FStar_Pervasives_Native.None
 let is_bool_op (op1 : Prims.string) : Prims.bool=
   (mk_bool_op op1) <> FStar_Pervasives_Native.None
+let krml_compat_name (n : (Prims.string Prims.list * Prims.string)) :
+  (Prims.string Prims.list * Prims.string)=
+  match n with
+  | ("Prims"::[], op1) ->
+      let op2 =
+        match op1 with
+        | "op_Plus" -> "op_Addition"
+        | "op_Minus" -> "op_Subtraction"
+        | "op_Tilde_Minus" -> "op_Minus"
+        | "op_Slash" -> "op_Division"
+        | "op_Percent" -> "op_Modulus"
+        | "op_Less" -> "op_LessThan"
+        | "op_Less_Equals" -> "op_LessThanOrEqual"
+        | "op_Greater" -> "op_GreaterThan"
+        | "op_Greater_Equals" -> "op_GreaterThanOrEqual"
+        | op3 -> op3 in
+      (["Prims"], op2)
+  | n1 -> n1
 let mk_op (uu___ : Prims.string) : op FStar_Pervasives_Native.option=
   match uu___ with
   | "add" -> FStar_Pervasives_Native.Some Add
@@ -1900,7 +1918,7 @@ and translate_expr' (env1 : env) (e : FStarC_Extraction_ML_Syntax.mlexpr) :
       let uu___ =
         let uu___1 = FStarC_Option.must (mk_bool_op op1) in (uu___1, Bool) in
       EOp uu___
-  | FStarC_Extraction_ML_Syntax.MLE_Name n -> EQualified n
+  | FStarC_Extraction_ML_Syntax.MLE_Name n -> EQualified (krml_compat_name n)
   | FStarC_Extraction_ML_Syntax.MLE_Let
       ((flavor,
         { FStarC_Extraction_ML_Syntax.mllb_name = name1;

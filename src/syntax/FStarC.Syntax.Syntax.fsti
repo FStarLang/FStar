@@ -341,6 +341,14 @@ and fv_qual =
   | Record_ctor of lident & list ident         (* the type of the record being constructed and its (unmangled) fields in order *)
   | Unresolved_projector of option fv          (* ToSyntax's best guess at what the projector is (based only on scoping rules) *)
   | Unresolved_constructor of unresolved_constructor (* ToSyntax's best guess at what the constructor is (based only on scoping rules) *)
+  | Unresolved_name of list fv                 (* Type-based overloading: the *alternatives* to this name, in scope order.
+                                                  The fv carrying this qualifier is already the answer ToSyntax would have
+                                                  given without overloading, i.e. the first candidate in scope order, so
+                                                  every consumer that does not know about overloading sees an ordinary
+                                                  resolved name and behaves exactly as before. The typechecker may replace
+                                                  it with one of the alternatives once argument and expected types are
+                                                  known. Only ever attached to names that would otherwise have no
+                                                  qualifier, and only when there are at least two candidates. *)
 and unresolved_constructor = {
   uc_base_term : bool;      // The base term is `e` when the user writes `{ e with f1=v1; ... }`
   uc_typename: option lident; // The constructed type, as determined by the ToSyntax's scoping rules

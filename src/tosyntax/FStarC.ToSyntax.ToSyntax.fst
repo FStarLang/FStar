@@ -212,6 +212,59 @@ let unit_ty rng = mk_term (Name C.unit_lid) rng Type_level
 type env_t = Env.env
 type lenv_t = list bv
 
+(* --- Type-based overloading: attaching candidate lists ---------------
+
+   See FStarC.TypeChecker.Overload. When a name resolves to several
+   top-level definitions we resolve it by scope order as usual (the
+   innermost one wins) but record the shadowed alternatives on the fv,
+   as [Unresolved_name alts]. The typechecker may later pick a different
+   candidate, but only when the scope-order one is definitely
+   type-incorrect, so a program that typechecks under scope-order
+   resolution keeps its meaning.
+
+   The qualifier is only ever attached to an fv that has no qualifier of
+   its own; data constructors and record projectors keep their existing
+   Data_ctor / Record_ctor / Record_projector qualifiers and are handled
+   by the pre-existing Unresolved_constructor / Unresolved_projector
+   machinery. *)
+
+(* Only qualifier-less fvs (and fvs that already carry alternatives) take
+   part in overloading. Data constructors and record projectors keep
+   their own qualifiers and go through the pre-existing
+   Unresolved_constructor / Unresolved_projector machinery. *)
+let overloadable_qual (q:option fv_qual) : bool =
+  match q with
+  | None -> true
+  | Some (Unresolved_name _) -> true
+  | _ -> false
+
+(* Record [alts] as the overloading candidates of [t]. Anything that is
+   not an overloadable fvar is returned untouched. *)
+let set_alternatives (t:S.term) (alts:list fv) : ML S.term =
+  match alts with
+  | [] -> t
+  | _ ->
+    match (SS.compress t).n with
+    | Tm_fvar fv when overloadable_qual fv.fv_qual ->
+      S.mk (Tm_fvar ({fv with fv_qual = Some (Unresolved_name alts)})) t.pos
+    | _ -> t
+
+(* Attach the alternatives that [l] resolves to, if [t] is indeed the
+   primary candidate. If it is not (e.g. because the primary is a data
+   constructor, which we filter out) we attach nothing: it is always
+   sound to have fewer candidates. *)
+let maybe_add_alternatives (env:env_t) (l:lid) (t:S.term) : ML S.term =
+  match (SS.compress t).n with
+  | Tm_fvar fv when None? fv.fv_qual ->
+    begin match Env.try_lookup_lid_alternatives env l with
+    | fv0 :: alts ->
+      if Cons? alts && S.fv_eq fv fv0
+      then set_alternatives t alts
+      else t
+    | _ -> t
+    end
+  | _ -> t
+
 let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : ML (option S.term) =
     let tm_attrs_opt =
         if resolve
@@ -221,6 +274,7 @@ let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : ML (option S.te
     match tm_attrs_opt with
     | None -> None
     | Some (tm, attrs) ->
+        let tm = if resolve then maybe_add_alternatives env l tm else tm in
         let tm = setpos tm in
         Some tm
 

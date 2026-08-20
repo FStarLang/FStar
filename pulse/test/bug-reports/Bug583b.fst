@@ -1,7 +1,7 @@
 module Bug583b
 open Pulse
 #lang-pulse
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 module SZ = FStar.SizeT
 module R  = Pulse.Lib.Reference
 
@@ -26,7 +26,7 @@ fn binary_search_style_FAILS
       SZ.v vlo <= SZ.v vhi /\
       SZ.v vhi <= 100
     )
-  decreases (Prims.op_Minus (SZ.v (!hi)) (SZ.v (!lo)))
+  decreases (SZ.v (!hi) - SZ.v (!lo))
   {
     let vlo = !lo;
     let vhi = !hi;

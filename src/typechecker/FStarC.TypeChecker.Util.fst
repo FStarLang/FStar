@@ -48,6 +48,7 @@ module C = FStarC.Parser.Const
 module UF = FStarC.Syntax.Unionfind
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module Print = FStarC.Syntax.Print
+module Overload = FStarC.TypeChecker.Overload
 
 open FStarC.Class.Setlike
 
@@ -1782,26 +1783,16 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 
       let _, f_typ = SS.open_univ_vars f_us f_typ in
 
-      (* `f` must have type `b1 -> b2 -> .... -> bN -> TB -> M TC ...,
-         Before attempting unification, which is expensive, we will
-         check that the head of B is an fvar which matches the expected
-         type, and that the head of A is and fvar which matches the type
-         of e.
-      *)
-      let f_bs, f_c = U.arrow_formals_comp f_typ in
-      bool_guard (f_bs <> []);? (* If not a function, ignore *)
-      let f_res = U.comp_result f_c in
-      let f_res = head_unfold (Env.push_binders env f_bs) f_res in
-      let? f_res_head_lid = head_lid_of f_res in
-      (* ^ The lid at the head of TC, the result type *)
-      bool_guard (lid_equals exp_head_lid f_res_head_lid);?
-
-      let b = List.last f_bs in
-      let b_ty = b.binder_bv.sort in
-      let b_ty = head_unfold (Env.push_binders env (List.init f_bs)) b_ty in
-      let? b_head_lid = head_lid_of b_ty in
-      (* ^ The lid at the head of TB, the last argument *)
-      bool_guard (lid_equals computed_head_lid b_head_lid);?
+      (* `f` must have type `b1 -> b2 -> .... -> bN -> TB -> M TC ...`.
+         Before attempting unification, which is expensive, we check that the
+         head of TB is an fvar which matches the type of e, and that the head of
+         TC is an fvar which matches the expected type. That is exactly the pair
+         `Overload.coercion_source_and_target` computes; overload resolution
+         consults the same function to decide which types a coercion can bridge,
+         so the two cannot disagree about which coercions exist. *)
+      let? src_fv, tgt_fv = Overload.coercion_source_and_target env f_typ in
+      bool_guard (lid_equals computed_head_lid (S.lid_of_fv src_fv));?
+      bool_guard (lid_equals exp_head_lid (S.lid_of_fv tgt_fv));?
 
       (* We will now typecheck the coercion applied to `e` at expected type
          `exp_t` likely causing implicits to be instantiated for the coercion
@@ -2494,10 +2485,10 @@ let try_lookup_record_type env (typename:lident)
  *)
 
 let head_fv_of_typ env (t:typ) : ML (option fv) =
-    let t, _ = U.head_and_args_full (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t) in
-    match (SS.compress (U.un_uinst t)).n with
-    | Tm_fvar fv -> Some fv
-    | _ -> None
+    (* One shared implementation of "the rigid head symbol of a type", so that
+       record, projector and general-name resolution all classify types the same
+       way. See FStarC.TypeChecker.Overload. *)
+    Overload.base_head_fv env t
 
 let find_record_or_dc_from_head_fv env (head_fv:option fv) (uc:unresolved_constructor) rng : ML _ =
     let default_rdc () =

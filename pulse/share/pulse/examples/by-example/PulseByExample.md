@@ -69,9 +69,9 @@ You've seen references; now we'll introduce arrays.
 But first, a note on integers. 
 In the following code snippet, we use non-primitive integers for the first time: `FStar.SizeT` is a module for machine integers of at least 16 bits, depending on the machine. 
 #lang-pulse
-The module `Pulse.Class.BoundedIntegers` offers arithmetic operations on various types of bounded integers, including `FStar.SizeT` and `FStar.U32`. 
+`FStar.SizeT` names its arithmetic and comparison operators `+`, `-`, `*`, `/`, `%`, `<`, `<=`, `>` and `>=`, just as `Prims` does for `int`, and `open FStar.SizeT` brings them into scope alongside them.
 #lang-pulse
-The bounded integer class overloads arithmetic operators, like `<`, to allow, e.g., the comparison of `SizeT`s `i < n` on line X and comparison of `nat`s `k < v n` on line X (`v` elaborates to `SZ.v` and converts a `SizeT` to a nat). 
+F* then picks between them by type at each occurrence, so `i < n` compares two `SizeT`s and `k < v n` compares two `nat`s in the very same expression (`v` converts a `SizeT` to a `nat`).
 
 Let's get back to arrays. 
 The Pulse program `arr_swap` swaps the values at indices `i` and `j` in an input array. 
@@ -90,7 +90,7 @@ ocaml
 open Pulse.Lib.Array
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
-open Pulse.Class.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 ``pulse
 fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))

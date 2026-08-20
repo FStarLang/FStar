@@ -31,7 +31,6 @@ open Pulse.Lib.Array
 open Pulse.Lib.Reference
 open Pulse.Lib.TotalOrder
 open FStar.SizeT
-open Pulse.Lib.BoundedIntegers
 
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
@@ -227,7 +226,7 @@ fn bubble_sort
   // Outer loop: each pass fixes one more element at the end
   let mut i: SZ.t = len - 1sz;
   
-  while (!i >^ 0sz)
+  while (!i > 0sz)
   invariant exists* vi s.
     R.pts_to i vi **
     A.pts_to a s **
@@ -246,7 +245,7 @@ fn bubble_sort
     // Inner loop: bubble the maximum element to position vi
     let mut j: SZ.t = 0sz;
     
-    while (!j <^ vi)
+    while (!j < vi)
     invariant live j
     invariant live a
     invariant pure (
@@ -259,7 +258,7 @@ fn bubble_sort
         prefix_le_suffix (value_of a) (SZ.v vi + 1) /\
         (SZ.v !j > 0 ==> is_max_up_to (value_of a) (SZ.v !j))
       )
-    decreases (Prims.op_Minus (SZ.v vi) (SZ.v (!j)))
+    decreases (SZ.v vi - SZ.v (!j))
     {
       let vj = !j;
       
