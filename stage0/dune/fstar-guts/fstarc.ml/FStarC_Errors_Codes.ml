@@ -362,7 +362,6 @@ type error_code =
   | Error_BadLetOpenRecord 
   | Error_UnexpectedTypeclassInstance 
   | Warning_AmbiguousResolveImplicitsHook 
-  | Warning_SplitAndRetryQueries 
   | Warning_DeprecatedLightDoNotation 
   | Warning_FailedToCheckInitialTacticGoal 
   | Warning_Adhoc_IndexedEffect_Combinator 
@@ -375,6 +374,7 @@ type error_code =
   | Warning_ProofRecovery 
   | Error_CannotResolveRecord 
   | Error_MissingPopOptions 
+  | Error_AmbiguousName 
 let uu___is_Error_DependencyAnalysisFailed (projectee : error_code) :
   Prims.bool=
   match projectee with
@@ -1597,11 +1597,6 @@ let uu___is_Warning_AmbiguousResolveImplicitsHook (projectee : error_code) :
   match projectee with
   | Warning_AmbiguousResolveImplicitsHook -> true
   | uu___ -> false
-let uu___is_Warning_SplitAndRetryQueries (projectee : error_code) :
-  Prims.bool=
-  match projectee with
-  | Warning_SplitAndRetryQueries -> true
-  | uu___ -> false
 let uu___is_Warning_DeprecatedLightDoNotation (projectee : error_code) :
   Prims.bool=
   match projectee with
@@ -1638,6 +1633,8 @@ let uu___is_Error_CannotResolveRecord (projectee : error_code) : Prims.bool=
   match projectee with | Error_CannotResolveRecord -> true | uu___ -> false
 let uu___is_Error_MissingPopOptions (projectee : error_code) : Prims.bool=
   match projectee with | Error_MissingPopOptions -> true | uu___ -> false
+let uu___is_Error_AmbiguousName (projectee : error_code) : Prims.bool=
+  match projectee with | Error_AmbiguousName -> true | uu___ -> false
 type error_setting = (error_code * error_flag * Prims.int)
 let default_settings : error_setting Prims.list=
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
@@ -1991,7 +1988,6 @@ let default_settings : error_setting Prims.list=
   (Error_BadLetOpenRecord, CAlwaysError, (Prims.of_int 346));
   (Error_UnexpectedTypeclassInstance, CAlwaysError, (Prims.of_int 347));
   (Warning_AmbiguousResolveImplicitsHook, CWarning, (Prims.of_int 348));
-  (Warning_SplitAndRetryQueries, CWarning, (Prims.of_int 349));
   (Warning_DeprecatedLightDoNotation, CWarning, (Prims.of_int 350));
   (Warning_FailedToCheckInitialTacticGoal, CSilent, (Prims.of_int 351));
   (Warning_Adhoc_IndexedEffect_Combinator, CWarning, (Prims.of_int 352));
@@ -2003,4 +1999,5 @@ let default_settings : error_setting Prims.list=
   (Warning_SolverVersionMismatch, CError, (Prims.of_int 358));
   (Warning_ProofRecovery, CWarning, (Prims.of_int 359));
   (Error_CannotResolveRecord, CAlwaysError, (Prims.of_int 360));
-  (Error_MissingPopOptions, CWarning, (Prims.of_int 361))]
+  (Error_MissingPopOptions, CWarning, (Prims.of_int 361));
+  (Error_AmbiguousName, CError, (Prims.of_int 362))]

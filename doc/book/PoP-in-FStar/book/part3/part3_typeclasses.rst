@@ -447,7 +447,7 @@ However, now when writing programs that expect both subtractable and
 comparable integers, we end up with a coherence problem.
 
 The ``sub`` operation fails to verify, with F* complaining that it
-cannot prove ``fits op_Subtraction bound acc``, i.e., this ``sub`` may
+cannot prove ``fits op_Minus bound acc``, i.e., this ``sub`` may
 underflow.
 
 .. literalinclude:: ../code/TypeclassesAlt2.fst

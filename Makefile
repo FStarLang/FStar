@@ -568,10 +568,12 @@ _doc: _doc_book_code
 _doc_book_code: need_fstar_exe .force
 	+$(MAKE) -C doc/book/code
 
-_unit-tests: need_fstar_exe .force
+# The tests and examples extract to C with krml, so make sure Karamel is
+# built (and not being rebuilt concurrently) before running them.
+_unit-tests: need_fstar_exe karamel .force
 	+$(MAKE) -C tests all
 
-_examples: need_fstar_exe .force
+_examples: need_fstar_exe karamel .force
 	+$(MAKE) -C examples all
 
 ci: .force

@@ -309,10 +309,8 @@ let inspect_comp (c : FStarC_Syntax_Syntax.comp) :
            let uu___2 = get_dec ct.FStarC_Syntax_Syntax.flags in
            ((ct.FStarC_Syntax_Syntax.comp_univs), uu___1,
              (ct.FStarC_Syntax_Syntax.result_typ),
-             [((ct.FStarC_Syntax_Syntax.comp_pre),
-                FStarC_Reflection_V2_Data.Q_Explicit);
-             ((ct.FStarC_Syntax_Syntax.comp_post),
-               FStarC_Reflection_V2_Data.Q_Explicit)], uu___2) in
+             (ct.FStarC_Syntax_Syntax.comp_pre),
+             (ct.FStarC_Syntax_Syntax.comp_post), uu___2) in
          FStarC_Reflection_V2_Data.C_Eff uu___)
 let pack_comp (cv : FStarC_Reflection_V2_Data.comp_view) :
   FStarC_Syntax_Syntax.comp=
@@ -338,36 +336,24 @@ let pack_comp (cv : FStarC_Reflection_V2_Data.comp_view) :
             [FStarC_Syntax_Syntax.LEMMA; FStarC_Syntax_Syntax.SMTPAT pats]
         } in
       FStarC_Syntax_Syntax.mk_Comp ct
-  | FStarC_Reflection_V2_Data.C_Eff (us, ef, res, args, decrs) ->
+  | FStarC_Reflection_V2_Data.C_Eff (us, ef, res, pre, post, decrs) ->
       let flags =
-        if Prims.uu___is_Nil decrs
+        if match decrs with | [] -> true | uu___ -> false
         then []
         else
           [FStarC_Syntax_Syntax.DECREASES
              (FStarC_Syntax_Syntax.Decreases_lex decrs)] in
-      let uu___ =
-        match args with
-        | (pre, uu___1)::(post, uu___2)::uu___3 -> (pre, post)
-        | (pre, uu___1)::[] ->
-            let uu___2 = FStarC_Syntax_Syntax.trivial_post res in
-            (pre, uu___2)
-        | [] ->
-            let uu___1 = FStarC_Syntax_Syntax.trivial_post res in
-            (FStarC_Syntax_Syntax.trivial_pre, uu___1) in
-      (match uu___ with
-       | (pre, post) ->
-           let ct =
-             let uu___1 =
-               FStarC_Ident.lid_of_path ef FStarC_Range_Type.dummyRange in
-             {
-               FStarC_Syntax_Syntax.comp_univs = us;
-               FStarC_Syntax_Syntax.effect_name = uu___1;
-               FStarC_Syntax_Syntax.result_typ = res;
-               FStarC_Syntax_Syntax.comp_pre = pre;
-               FStarC_Syntax_Syntax.comp_post = post;
-               FStarC_Syntax_Syntax.flags = flags
-             } in
-           FStarC_Syntax_Syntax.mk_Comp ct)
+      let ct =
+        let uu___ = FStarC_Ident.lid_of_path ef FStarC_Range_Type.dummyRange in
+        {
+          FStarC_Syntax_Syntax.comp_univs = us;
+          FStarC_Syntax_Syntax.effect_name = uu___;
+          FStarC_Syntax_Syntax.result_typ = res;
+          FStarC_Syntax_Syntax.comp_pre = pre;
+          FStarC_Syntax_Syntax.comp_post = post;
+          FStarC_Syntax_Syntax.flags = flags
+        } in
+      FStarC_Syntax_Syntax.mk_Comp ct
 let pack_const (c : FStarC_Reflection_V2_Data.vconst) :
   FStarC_Syntax_Syntax.sconst=
   match c with
@@ -850,8 +836,8 @@ let pack_sigelt (sv : FStarC_Reflection_V2_Data.sigelt_view) :
         let c_lids =
           FStarC_List.map
             (fun se ->
-               FStar_Pervasives_Native.__proj__Some__item__v
-                 (FStarC_Syntax_Util.lid_of_sigelt se)) ctor_ses in
+               match FStarC_Syntax_Util.lid_of_sigelt se with
+               | FStar_Pervasives_Native.Some v -> v) ctor_ses in
         let ind_se =
           FStarC_Syntax_Syntax.mk_sigelt
             (FStarC_Syntax_Syntax.Sig_inductive_typ
@@ -1234,15 +1220,18 @@ and comp_eq (c1 : FStarC_Syntax_Syntax.comp) (c2 : FStarC_Syntax_Syntax.comp)
         let uu___2 = term_eq pre1 pre2 in
         if uu___2 then term_eq post1 post2 else false in
       if uu___1 then term_eq pats1 pats2 else false
-  | (FStarC_Reflection_V2_Data.C_Eff (us1, name1, t1, args1, decrs1),
-     FStarC_Reflection_V2_Data.C_Eff (us2, name2, t2, args2, decrs2)) ->
+  | (FStarC_Reflection_V2_Data.C_Eff (us1, name1, t1, pre1, post1, decrs1),
+     FStarC_Reflection_V2_Data.C_Eff (us2, name2, t2, pre2, post2, decrs2))
+      ->
       let uu___1 =
         let uu___2 =
           let uu___3 =
-            let uu___4 = univs_eq us1 us2 in
-            if uu___4 then name1 = name2 else false in
-          if uu___3 then term_eq t1 t2 else false in
-        if uu___2 then eqlist () arg_eq args1 args2 else false in
+            let uu___4 =
+              let uu___5 = univs_eq us1 us2 in
+              if uu___5 then name1 = name2 else false in
+            if uu___4 then term_eq t1 t2 else false in
+          if uu___3 then term_eq pre1 pre2 else false in
+        if uu___2 then term_eq post1 post2 else false in
       if uu___1 then eqlist () term_eq decrs1 decrs2 else false
   | uu___1 -> false
 and match_ret_asc_eq (a1 : FStarC_Syntax_Syntax.match_returns_ascription)

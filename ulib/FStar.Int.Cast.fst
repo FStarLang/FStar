@@ -24,7 +24,7 @@ module I16 = FStar.Int16
 module I32 = FStar.Int32
 module I64 = FStar.Int64
 
-let op_At_Percent = FStar.Int.op_At_Percent
+let ( @% ) = FStar.Int.op_At_Percent
 
 /// Unsigned to unsigned
 

@@ -2,15 +2,14 @@
   - Expected failure:
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query.
-  - Failed to prove: Calc.eta Prims.op_GreaterThanOrEqual x y
+  - Failed to prove: Calc.eta Prims.op_Greater_Equals x y
   - In context:
       uu___: Prims.unit
       x: Prims.int
       y: Prims.int
       exists (w: Prims.int).
-        (exists (w: Prims.int).
-            x == w /\ Calc.eta Prims.op_GreaterThanOrEqual w w) /\
-        Calc.eta Prims.op_LessThanOrEqual w y
+        (exists (w: Prims.int). x == w /\ Calc.eta Prims.op_Greater_Equals w w) /\
+        Calc.eta Prims.op_Less_Equals w y
   - See also FStar.Calc.fsti(43,50-43,55)
 
 * Info at Calc.fst(21,2-27,3):

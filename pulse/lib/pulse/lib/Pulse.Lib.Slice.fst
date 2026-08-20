@@ -145,7 +145,7 @@ ensures
   fold pts_to s #p v;
 }
 
-fn op_Array_Access
+fn ( .() )
         (#t: Type)
         (a: slice t)
         (i: SZ.t)
@@ -159,12 +159,12 @@ ensures
             pure (res == Seq.index s (SZ.v i))
 {
     unfold pts_to a #p s;
-    let res = AP.op_Array_Access a.elt i;
+    let res = AP.op_Dot_Lparen_Rparen a.elt i;
     fold pts_to a #p s;
     res
 }
 
-fn op_Array_Assignment
+fn ( .()<- )
         (#t: Type)
         (a: slice t)
         (i: SZ.t)
@@ -176,7 +176,7 @@ fn op_Array_Assignment
             exists* s'. pts_to a s' ** pure (s' ==Seq.upd s (SZ.v i) v)
 {
     unfold pts_to a s;
-    AP.op_Array_Assignment a.elt i v;
+    AP.op_Dot_Lparen_Rparen_Less_Minus a.elt i v;
     fold pts_to a (Seq.upd s (SZ.v i) v);
     ()
 }

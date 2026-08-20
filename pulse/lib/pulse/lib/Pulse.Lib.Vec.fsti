@@ -67,7 +67,7 @@ fn alloc
           pure (length v == SZ.v n /\ is_full_vec v)
 
 (* Written x.(i) *)
-fn op_Array_Access
+fn ( .() )
   (#a: Type0)
   (v:vec a)
   (i:SZ.t)
@@ -79,7 +79,7 @@ fn op_Array_Access
            rewrites_to res (Seq.index s (SZ.v i))
 
 (* Written x.(i) <- v *)
-fn op_Array_Assignment
+fn ( .()<- )
   (#a:Type0)
   (v:vec a)
   (i:SZ.t)

@@ -36,7 +36,7 @@ let __def_check_scoped (uu___ : 'envut FStarC_Class_Binders.hasBinders)
       FStarC_Class_Setlike.subset
         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv) free
         scope in
-    Prims.op_Negation uu___4 in
+    Prims.not uu___4 in
   if uu___3
   then
     let uu___4 =

@@ -265,6 +265,7 @@ let cancel_mul_mod (a:int) (n:pos) =
   small_mod 0 n;
   lemma_mod_plus 0 a n
 
+#push-options "--z3rlimit_factor 4"
 let lemma_mod_add_distr (a:int) (b:int) (n:pos) =
   calc (==) {
     (a + b%n) % n;
@@ -273,6 +274,7 @@ let lemma_mod_add_distr (a:int) (b:int) (n:pos) =
     == { lemma_div_mod b n }
     (a + b) % n;
   }
+#pop-options
 
 let lemma_mod_sub_distr (a:int) (b:int) (n:pos) =
   calc (==) {

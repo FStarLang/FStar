@@ -494,7 +494,7 @@ let rec eraseTypeDeep (unfold_ty : unfold_t)
   | uu___ -> t
 let prims_op_equality : FStarC_Extraction_ML_Syntax.mlexpr=
   FStarC_Extraction_ML_Syntax.with_ty FStarC_Extraction_ML_Syntax.MLTY_Top
-    (FStarC_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_Equality"))
+    (FStarC_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_Equals"))
 let prims_op_amp_amp : FStarC_Extraction_ML_Syntax.mlexpr=
   let uu___ =
     mk_ty_fun
@@ -511,7 +511,7 @@ let prims_op_amp_amp : FStarC_Extraction_ML_Syntax.mlexpr=
         FStarC_Extraction_ML_Syntax.mlbinder_attrs = []
       }] FStarC_Extraction_ML_Syntax.ml_bool_ty in
   FStarC_Extraction_ML_Syntax.with_ty uu___
-    (FStarC_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_AmpAmp"))
+    (FStarC_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_Amp_Amp"))
 let conjoin (e1 : FStarC_Extraction_ML_Syntax.mlexpr)
   (e2 : FStarC_Extraction_ML_Syntax.mlexpr) :
   FStarC_Extraction_ML_Syntax.mlexpr=

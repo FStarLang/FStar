@@ -2205,8 +2205,8 @@ decreases (SZ.v capacity - SZ.v i)
     // Create a fresh empty list for slot i
     let empty_list = LL.create (entry k v);
     
-    // Write the empty list pointer to slot i using Vec's op_Array_Assignment
-    V.op_Array_Assignment buckets i empty_list;
+    // Write the empty list pointer to slot i using Vec's op_Dot_Lparen_Rparen_Less_Minus
+    V.op_Dot_Lparen_Rparen_Less_Minus buckets i empty_list;
     with s'. _;
     
     // s' == Seq.upd bucket_ptrs (SZ.v i) empty_list
@@ -2347,7 +2347,7 @@ ensures pure (result == reveal m key)
   unfold_bucket_at bucket_ptrs bucket_contents idx_nat;
   
   // Get the actual bucket pointer from the vector
-  let b = V.op_Array_Access h.buckets idx;
+  let b = V.op_Dot_Lparen_Rparen h.buckets idx;
   
   // The bucket from vector should equal the one from sequence
   // rewrite to use b
@@ -2399,7 +2399,7 @@ ensures is_ht h (insert_pmap m key value) (FS.insert key keys)
   let idx_nat : nat = SZ.v idx;
   
   // Read the bucket pointer from the vector (concrete value)
-  let b = V.op_Array_Access h.buckets idx;
+  let b = V.op_Dot_Lparen_Rparen h.buckets idx;
   
   // Split on_range at idx using on_range_get
   range_get (bucket_at bucket_ptrs bucket_contents) 0 idx_nat (SZ.v h.capacity);
@@ -2427,7 +2427,7 @@ ensures is_ht h (insert_pmap m key value) (FS.insert key keys)
   let new_entries : Ghost.erased (list (entry k v)) = new_entry :: removed_entries;
   
   // Write the new bucket pointer back to the vector
-  V.op_Array_Assignment h.buckets idx new_b;
+  V.op_Dot_Lparen_Rparen_Less_Minus h.buckets idx new_b;
   with new_bucket_ptrs. _;
   
   // new_bucket_ptrs == Seq.upd bucket_ptrs idx_nat new_b
@@ -2565,7 +2565,7 @@ ensures pure (removed == Some? (reveal m key))
   let idx_nat : nat = SZ.v idx;
   
   // Read the bucket pointer from the vector (concrete value)
-  let b = V.op_Array_Access h.buckets idx;
+  let b = V.op_Dot_Lparen_Rparen h.buckets idx;
   
   // Split on_range at idx using on_range_get
   range_get (bucket_at bucket_ptrs bucket_contents) 0 idx_nat (SZ.v h.capacity);
@@ -2585,7 +2585,7 @@ ensures pure (removed == Some? (reveal m key))
   let new_entries : Ghost.erased (list (entry k v)) = fst (remove_from_bucket old_entries key);
   
   // Write the new bucket pointer back to the vector
-  V.op_Array_Assignment h.buckets idx new_b;
+  V.op_Dot_Lparen_Rparen_Less_Minus h.buckets idx new_b;
   with new_bucket_ptrs. _;
   
   // Create new bucket_contents with updated bucket
@@ -2804,7 +2804,7 @@ decreases (SZ.v capacity - SZ.v i)
     range_uncons (bucket_at bucket_ptrs bucket_contents) (SZ.v i) (SZ.v capacity);
     
     // Read the bucket pointer
-    let b = V.op_Array_Access buckets i;
+    let b = V.op_Dot_Lparen_Rparen buckets i;
     
     // Unfold bucket_at
     unfold_bucket_at bucket_ptrs bucket_contents (SZ.v i);
@@ -3528,7 +3528,7 @@ decreases (SZ.v capacity - SZ.v start_idx)
     unfold_bucket_at bucket_ptrs bucket_contents (SZ.v start_idx);
     
     // Read bucket pointer from actual vector (not ghost sequence)
-    let bucket_ptr = V.op_Array_Access buckets start_idx;
+    let bucket_ptr = V.op_Dot_Lparen_Rparen buckets start_idx;
     rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v start_idx)) 
                         (Seq.index bucket_contents (SZ.v start_idx)))
          as (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v start_idx)));
@@ -3604,7 +3604,7 @@ ensures exists* remaining'.
   unfold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
   
   // Get bucket pointer from vector (not from ghost sequence)
-  let bucket_ptr = V.op_Array_Access it.it_ht.buckets bi;
+  let bucket_ptr = V.op_Dot_Lparen_Rparen it.it_ht.buckets bi;
   rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
                       (Seq.index bucket_contents (SZ.v bi)))
         as (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)));
@@ -3707,7 +3707,7 @@ ensures exists* remaining'.
     get_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v next_bi);
     unfold_bucket_at bucket_ptrs bucket_contents (SZ.v next_bi);
     
-    let next_bucket_ptr = V.op_Array_Access it.it_ht.buckets next_bi;
+    let next_bucket_ptr = V.op_Dot_Lparen_Rparen it.it_ht.buckets next_bi;
     rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v next_bi)) 
                         (Seq.index bucket_contents (SZ.v next_bi)))
           as (LL.is_list next_bucket_ptr (Seq.index bucket_contents (SZ.v next_bi)));

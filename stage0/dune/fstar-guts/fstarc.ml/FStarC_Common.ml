@@ -53,7 +53,7 @@ let rollback (msg : Prims.string) (pop : unit -> 'a)
 let raise_failed_assertion (msg : Prims.string) : 'uuuuu=
   FStarC_Effect.failwith (FStarC_Format.fmt1 "Assertion failed: %s" msg)
 let runtime_assert (b : Prims.bool) (msg : Prims.string) : unit=
-  if Prims.op_Negation b then raise_failed_assertion msg else ()
+  if Prims.not b then raise_failed_assertion msg else ()
 let __string_of_list (delim : Prims.string) (f : 'a -> Prims.string)
   (l : 'a Prims.list) : Prims.string=
   match l with

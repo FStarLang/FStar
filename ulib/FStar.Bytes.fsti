@@ -92,7 +92,7 @@ val get:
     (requires True)
     (ensures (fun y -> y == S.index (reveal b) (U32.v pos)))
 
-unfold let op_String_Access = get
+unfold let ( .[] ) = get
 
 unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
 
@@ -110,15 +110,15 @@ val extensionality:
 val create:
     len:u32
   -> v:byte
-  -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}).{:pattern b.[i]} b.[i] == v}
+  -> b:lbytes (U32.v len){forall (i:u32{U32.(i < len)}).{:pattern b.[i]} b.[i] == v}
 
 unfold
 let create_ (n:nat{FStar.UInt.size n U32.n}) v = create (U32.uint_to_t n) v
 
 val init:
     len:u32
-  -> f:(i:u32{U32.(i <^ len)} -> byte)
-  -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}).{:pattern b.[i]} b.[i] == f i}
+  -> f:(i:u32{U32.(i < len)} -> byte)
+  -> b:lbytes (U32.v len){forall (i:u32{U32.(i < len)}).{:pattern b.[i]} b.[i] == f i}
 
 // this is a hack JROESCH
 val abyte (b:byte) : lbytes 1
@@ -134,12 +134,12 @@ val append:
   -> Pure bytes
          (requires (UInt.size (length b1 + length b2) U32.n))
          (ensures (fun b -> reveal b == S.append (reveal b1) (reveal b2)))
-unfold let op_At_Bar = append
+unfold let ( @| ) = append
 
 val slice:
     b:bytes
   -> s:u32
-  -> e:u32{U32.(s <=^ e) /\ U32.v e <= length b}
+  -> e:u32{U32.(s <= e) /\ U32.v e <= length b}
   -> r:bytes{reveal r == Seq.slice (reveal b) (U32.v s) (U32.v e)}
 let slice_ b (s:nat) (e:nat{s <= e /\ e <= length b}) = slice b (U32.uint_to_t s) (U32.uint_to_t e)
 
@@ -255,7 +255,7 @@ val xor_append:
   -> b2:bytes{FStar.UInt.size (length b1 + length b2) U32.n}
   -> x1:bytes{len x1 = len b1}
   -> x2:bytes{len x2 = len b2}
-  -> Lemma (ensures (xor U32.(len b1 +^ len b2)
+  -> Lemma (ensures (xor U32.(len b1 + len b2)
                         (b1 @| b2)
                         (x1 @| x2)
                     ==

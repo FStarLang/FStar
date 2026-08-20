@@ -19,9 +19,7 @@ let maybe_bound_range (r : FStarC_Range_Type.t) : FStarC_Range_Type.t=
   | FStar_Pervasives_Native.None -> r
 exception Invalid_warn_error_setting of Prims.string 
 let uu___is_Invalid_warn_error_setting (projectee : Prims.exn) : Prims.bool=
-  match projectee with
-  | Invalid_warn_error_setting uu___ -> true
-  | uu___ -> false
+  true
 let __proj__Invalid_warn_error_setting__item__uu___ (projectee : Prims.exn) :
   Prims.string=
   match projectee with | Invalid_warn_error_setting uu___ -> uu___
@@ -133,16 +131,13 @@ type error =
   (FStarC_Errors_Codes.error_code * FStarC_Errors_Msg.error_message *
     FStarC_Range_Type.t * context_t)
 exception Error of error 
-let uu___is_Error (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Error uu___ -> true | uu___ -> false
+let uu___is_Error (projectee : Prims.exn) : Prims.bool= true
 let __proj__Error__item__uu___ (projectee : Prims.exn) : error=
   match projectee with | Error uu___ -> uu___
 exception Stop 
-let uu___is_Stop (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Stop -> true | uu___ -> false
+let uu___is_Stop (projectee : Prims.exn) : Prims.bool= true
 exception Empty_frag 
-let uu___is_Empty_frag (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Empty_frag -> true | uu___ -> false
+let uu___is_Empty_frag (projectee : Prims.exn) : Prims.bool= true
 type issue_level =
   | ENotImplemented 
   | EInfo 
@@ -406,7 +401,9 @@ let print_issue_github (issue1 : issue) : unit=
   | EInfo -> ()
   | EError ->
       let level =
-        if uu___is_EError issue1.issue_level then "error" else "warning" in
+        if match issue1.issue_level with | EError -> true | uu___ -> false
+        then "error"
+        else "warning" in
       let rng =
         FStarC_Option.dflt FStarC_Range_Type.dummyRange issue1.issue_range in
       let msg = format_issue' true issue1 in
@@ -431,7 +428,9 @@ let print_issue_github (issue1 : issue) : unit=
       FStarC_Format.print_warning uu___
   | EWarning ->
       let level =
-        if uu___is_EError issue1.issue_level then "error" else "warning" in
+        if match issue1.issue_level with | EError -> true | uu___ -> false
+        then "error"
+        else "warning" in
       let rng =
         FStarC_Option.dflt FStarC_Range_Type.dummyRange issue1.issue_range in
       let msg = format_issue' true issue1 in
@@ -496,12 +495,14 @@ let fixup_issue_range
           else
             (let uu___ =
                let uu___1 = FStarC_Effect.op_Bang fallback_range in
-               FStar_Pervasives_Native.uu___is_Some uu___1 in
+               match uu___1 with
+               | FStar_Pervasives_Native.Some v -> true
+               | uu___2 -> false in
              if uu___
              then
                let uu___1 =
                  let uu___2 = FStarC_Effect.op_Bang fallback_range in
-                 FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
+                 match uu___2 with | FStar_Pervasives_Native.Some v -> v in
                FStarC_Range_Type.use_range uu___1
              else use_rng) in
         FStar_Pervasives_Native.Some
@@ -1036,7 +1037,7 @@ let log_issue_text (rng : FStarC_Range_Type.t)
 let uu___1 : unit=
   FStarC_Effect.op_Colon_Equals FStarC_Options.check_include_dir
     (fun s ->
-       if Prims.op_Negation (FStarC_Filepath.is_directory s)
+       if Prims.not (FStarC_Filepath.is_directory s)
        then
          log_issue FStarC_Class_HasRange.hasRange_range
            FStarC_Range_Type.dummyRange

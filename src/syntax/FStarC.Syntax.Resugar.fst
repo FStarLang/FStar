@@ -151,15 +151,15 @@ let resugar_universe' (env: DsEnv.env) (u:S.universe) r: ML A.term =
 type expected_arity = option int
 
 (* GM: This almost never actually returns an expected arity. It does so
-only for subtraction, I think. *)
+only for tuples and dependent tuples. *)
 let rec resugar_term_as_op (t:S.term) : ML (option (string&expected_arity)) =
   let infix_prim_ops = [
-    (C.op_Addition    , "+" );
-    (C.op_Subtraction , "-" );
+    (C.op_Plus        , "+" );
     (C.op_Minus       , "-" );
+    (C.op_Tilde_Minus , "~-");
     (C.op_Star        , "*" );
-    (C.op_Division    , "/" );
-    (C.op_Modulus     , "%" );
+    (C.op_Slash       , "/" );
+    (C.op_Percent     , "%" );
     (C.read_lid       , "!" );
     (C.list_append_lid, "@" );
     (C.list_tot_append_lid,"@");
@@ -173,7 +173,7 @@ let rec resugar_term_as_op (t:S.term) : ML (option (string&expected_arity)) =
     (C.op_GTE         , ">=");
     (C.op_LT          , "<" );
     (C.op_GT          , ">" );
-    (C.op_Modulus     , "mod");
+    (C.op_Percent     , "mod");
     (C.and_lid     , "/\\");
     (C.or_lid      , "\\/");
     (C.imp_lid     , "==>");
@@ -208,7 +208,7 @@ let rec resugar_term_as_op (t:S.term) : ML (option (string&expected_arity)) =
       let s = if length=0 then string_of_lid fv.fv_name
               else BU.substring_from (string_of_lid fv.fv_name) (length+1) in
       begin match string_to_op s with
-        | Some t -> Some t
+        | Some t -> Some (t, None)
         | _ -> fallback fv
       end
     | Tm_uinst(e, us) ->
@@ -746,7 +746,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                 let decompile_op op =
                    match FStarC.Parser.AST.string_to_op op with
                    | None -> op
-                  | Some (op, _) -> op
+                   | Some op -> op
                 in
                 let flavor_matches t =
                   match t.tm, op with
@@ -1360,7 +1360,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : ML A.pattern =
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
       begin match string_to_op (string_of_id v.ppname) with
-       | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, (range_of_id v.ppname))))
+       | Some op -> mk (A.PatOp (Ident.mk_ident (op, (range_of_id v.ppname))))
        | None -> resugar_bv_as_pat' env v (to_arg_qual imp_opt) branch_bv None
       end
 

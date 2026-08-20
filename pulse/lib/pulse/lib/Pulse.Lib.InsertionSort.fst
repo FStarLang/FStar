@@ -3,6 +3,7 @@ module Pulse.Lib.InsertionSort
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
+open FStar.SizeT { (+), (-), (<) }
 module Seq = FStar.Seq
 open Pulse.Lib.TotalOrder
 
@@ -57,7 +58,7 @@ let sorted_concat
   (ensures sorted (Seq.append s0 s1))
 = () 
 
-fn op_Array_Assignment u#a
+fn ( .()<- ) u#a
         (#t: Type u#a)
         (a: array t)
         (i: SZ.t)
@@ -107,7 +108,7 @@ let step_inner_invariant
     Seq.index s0 (SZ.v vi) >? key /\
     s1 == Seq.upd s0 (SZ.v vi + 1 <: nat) (Seq.index s0 (SZ.v vi)))
   (ensures (
-    let vi' = if vi = 0sz then 0sz else SZ.(vi -^ 1sz) in
+    let vi' = if vi = 0sz then 0sz else vi - 1sz in
     let done = (vi = 0sz) in
     inner_invariant s s1 key vi' vj done))
 = () 
@@ -147,7 +148,7 @@ ensures exists* s'. (a |-> s') **
   pure (sorted #t s' /\ permutation s s')
 {
   let mut j = 1sz;
-  while (SZ.(!j <^ len))
+  while (!j < len)
     invariant live j
     invariant live a
     invariant
@@ -162,9 +163,9 @@ ensures exists* s'. (a |-> s') **
   {
     pts_to_len a;
     let vj = !j;
-    j := SZ.(vj +^ 1sz);
+    j := vj + 1sz;
     let key = a.(vj);
-    let mut i : SZ.t = SZ.(vj -^ 1sz);
+    let mut i : SZ.t = vj - 1sz;
     let mut done = false;
     with ss. assert (a |-> ss);
     while (
@@ -178,11 +179,11 @@ ensures exists* s'. (a |-> s') **
     {
       let vi = !i;
       with s0. assert (a |-> s0);
-      a.(SZ.(vi +^ 1sz)) <- a.(vi);
+      a.(vi + 1sz) <- a.(vi);
       with s1. assert (a |-> s1);
       step_inner_invariant ss s0 s1 key vi vj;
       if (vi = 0sz) { done := true; break }
-      else { i := SZ.(vi -^ 1sz); }
+      else { i := vi - 1sz; }
     };
     with s0. assert (a |-> s0);
     let vi = !i;
@@ -195,7 +196,7 @@ ensures exists* s'. (a |-> s') **
     }
     else 
     {
-      a.(SZ.(vi +^ 1sz)) <- key;
+      a.(vi + 1sz) <- key;
     }
   };
   with s'. assert (a |-> s');

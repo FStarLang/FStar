@@ -45,7 +45,7 @@ let is_send_mutex_live #a m #p v #_ = Tactics.Typeclasses.solve
 
 let pts_to mg #p x = pts_to mg #p x
 
-let op_Bang #a mg #x #p = R.op_Bang #a mg #x #p
+let ( ! ) #a mg #x #p = R.op_Bang #a mg #x #p
 
 fn ( := ) (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
   requires mg `pts_to` x

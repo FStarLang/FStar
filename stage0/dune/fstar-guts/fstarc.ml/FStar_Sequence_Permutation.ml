@@ -43,8 +43,12 @@ let rec permutation_from_equal_counts :
 let foldm_back (m : 'a FStar_Algebra_CommMonoid.cm)
   (s : 'a FStar_Sequence_Base.seq) : 'a=
   FStar_Sequence_Util.fold_back
-    (FStar_Algebra_CommMonoid.__proj__CM__item__mult m) s
-    (FStar_Algebra_CommMonoid.__proj__CM__item__unit m)
+    (match m with
+     | FStar_Algebra_CommMonoid.CM
+         (unit, mult, identity, associativity, commutativity) -> mult) s
+    (match m with
+     | FStar_Algebra_CommMonoid.CM
+         (unit, mult, identity, associativity, commutativity) -> unit)
 let remove_i (s : 'a FStar_Sequence_Base.seq) (i : Prims.nat) :
   ('a * 'a FStar_Sequence_Base.seq)=
   let uu___ = FStar_Sequence_Util.split s i in

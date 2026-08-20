@@ -1,30 +1,18 @@
 open Prims
-type 'a tac_wp_t0 = unit
-type 'a tac_wp_t = unit
-type ('a, 'wp) tac_repr = FStarC_Tactics_Types.ref_proofstate -> 'a
-
-let tac_return (x : 'a) : ('a, Obj.t) tac_repr= fun uu___ -> x
-
-
-let tac_bind (wp_f : unit) (wp_g : unit) (t1 : ('a, Obj.t) tac_repr)
-  (t2 : 'a -> ('b, Obj.t) tac_repr) : ('b, Obj.t) tac_repr=
-  fun ps -> let x = t1 ps in t2 x ps
-
-type ('a, 'wputhen, 'wpuelse, 'f, 'g, 'b) tac_if_then_else =
-  ('a, Obj.t) tac_repr
-let tac_subcomp (wp_f : unit) (wp_g : unit) (f : ('a, Obj.t) tac_repr) :
-  ('a, Obj.t) tac_repr= f
-type ('a, 'b, 'wpuf, 'f) tac_close = ('a, Obj.t) tac_repr
-let __proj__TAC__item__return = tac_return
-let __proj__TAC__item__bind = tac_bind
-
-let lift_div_tac (wp : unit) (f : unit -> 'a) : ('a, Obj.t) tac_repr=
-  fun uu___ -> f ()
-let rewrite_with_tactic (uu___ : unit -> (unit, Obj.t) tac_repr)
+type 'a tac_repr = FStarC_Tactics_Types.ref_proofstate -> 'a
+let tac_return (x : 'a) (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a= x
+let tac_bind (t1 : FStarC_Tactics_Types.ref_proofstate -> 'a)
+  (t2 : 'a -> FStarC_Tactics_Types.ref_proofstate -> 'b)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : 'b= let x = t1 ps in t2 x ps
+let lift_div_tac (f : unit -> 'a)
+  (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a= f ()
+let rewrite_with_tactic
+  (uu___ : unit -> FStarC_Tactics_Types.ref_proofstate -> unit)
   (uu___1 : unit) (p : Obj.t) : Obj.t= p
-let synth_by_tactic (uu___ : unit -> (unit, Obj.t) tac_repr) : 'uuuuu=
+let synth_by_tactic
+  (uu___ : unit -> FStarC_Tactics_Types.ref_proofstate -> unit) : 'uuuuu=
   Prims.admit ()
-let assume_safe (tau : unit -> ('a, Obj.t) tac_repr) : ('a, Obj.t) tac_repr=
-  tau ()
-type ('a, 'b) tac = 'a -> ('b, Obj.t) tac_repr
+let assume_safe (tau : unit -> FStarC_Tactics_Types.ref_proofstate -> 'a) :
+  FStarC_Tactics_Types.ref_proofstate -> 'a= tau ()
+type ('a, 'b) tac = 'a -> FStarC_Tactics_Types.ref_proofstate -> 'b
 type 'a tactic = (unit, 'a) tac

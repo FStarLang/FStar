@@ -568,7 +568,7 @@ that are now pinned down and will not silently regress.
   short circuit as a *crash* (division by zero under a guard) rather than as a
   performance difference, which is the only way a test can see it. Note that
   the short circuit is a property of the syntactic full application: passing
-  `&&` as a value yields the strict `Prims.op_AmpAmp`, which is correct but
+  `&&` as a value yields the strict `Prims.op_Amp_Amp`, which is correct but
   worth knowing.
 * **Signed and unsigned machine arithmetic** at all four widths: `div`/`rem`
   sign semantics, `add_mod`/`sub_mod`/`mul_mod` wraparound, logical operations,

@@ -354,9 +354,10 @@ val as_frag : list decl -> ML inputFragment
 // TODO: Move to something like FStarC.Util
 val strip_prefix : string -> string -> ML (option string)
 
-val compile_op : int -> string -> range -> ML string
-val compile_op' : string -> range -> ML string
-val string_to_op : string -> ML (option (string & option int)) // returns operator symbol and optional arity
+(* Mangle an operator (e.g. "+.") into an identifier (e.g. "op_Plus_Dot") *)
+val compile_op : string -> range -> ML string
+(* The inverse of compile_op: unmangle an identifier into an operator, if it is one *)
+val string_to_op : string -> ML (option string)
 
 val string_of_fsdoc : string & list (string & string) -> ML string
 val string_of_let_qualifier : let_qualifier -> string

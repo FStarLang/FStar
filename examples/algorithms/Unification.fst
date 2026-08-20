@@ -31,7 +31,7 @@ module Unification
 open FStar.List.Tot
 
 (* First, a missing lemma from the list library *)
-let op_At = append
+let ( @ ) = append
 val lemma_shift_append: #a:eqtype -> l:list a -> x:a -> m:list a -> Lemma
   (ensures ( (l@(x::m)) = ((l@[x])@m)))
 let rec lemma_shift_append #a l x m = match l with

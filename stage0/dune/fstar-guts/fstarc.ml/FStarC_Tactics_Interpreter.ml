@@ -136,7 +136,10 @@ let unembed_tactic_0 (eb : 'b FStarC_Syntax_Embeddings_Base.embedding)
                            -> Obj.magic FStar_Pervasives_Native.None
                        | uu___ -> Obj.magic (FStar_Pervasives_Native.Some t))
                       uu___) h_result) in
-          if FStar_Pervasives_Native.uu___is_None r
+          if
+            match r with
+            | FStar_Pervasives_Native.None -> true
+            | uu___ -> false
           then
             FStar_Pprint.doc_of_string
               "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"

@@ -46,8 +46,14 @@ let foldm_snoc (eq : 'a FStar_Algebra_CommMonoid_Equiv.equiv)
   (m : ('a, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm)
   (s : 'a FStar_Seq_Base.seq) : 'a=
   FStar_Seq_Properties.foldr_snoc
-    (FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__mult eq m) s
-    (FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__unit eq m)
+    (match m with
+     | FStar_Algebra_CommMonoid_Equiv.CM
+         (unit, mult, identity, associativity, commutativity, congruence) ->
+         mult) s
+    (match m with
+     | FStar_Algebra_CommMonoid_Equiv.CM
+         (unit, mult, identity, associativity, commutativity, congruence) ->
+         unit)
 let remove_i (s : 'a FStar_Seq_Base.seq) (i : Prims.nat) :
   ('a * 'a FStar_Seq_Base.seq)=
   let uu___ = FStar_Seq_Properties.split s i in
@@ -77,4 +83,7 @@ let init_func_from_expr (n0 : Prims.int)
 let func_sum (eq : 'c FStar_Algebra_CommMonoid_Equiv.equiv)
   (cm : ('c, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm) (f : 'a -> 'c)
   (g : 'a -> 'c) (x : 'a) : 'c=
-  FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__mult eq cm (f x) (g x)
+  (match cm with
+   | FStar_Algebra_CommMonoid_Equiv.CM
+       (unit, mult, identity, associativity, commutativity, congruence) ->
+       mult) (f x) (g x)

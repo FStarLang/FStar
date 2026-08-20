@@ -52,6 +52,9 @@ $(OUT_DIR)/%.ml:
 %.cmx:
 	$(FSTAR_EXE) --ocamlopt -I $(OUT_DIR) -c $< -o $@
 
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
+
 $(OUT_DIR)/test.exe: $(subst .ml,.cmx,$(ALL_ML_FILES)) | $(OUT_DIR)
 	$(FSTAR_EXE) --ocamlopt -I $(OUT_DIR) -o $(OUT_DIR)/test.exe $(subst .ml,.cmx,$(ALL_ML_FILES))
 

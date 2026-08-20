@@ -16,8 +16,7 @@ let finished_message (fmods : (Prims.bool * FStarC_Ident.lident) Prims.list)
     if errs > Prims.int_zero
     then FStarC_Format.print_error
     else FStarC_Format.print_string in
-  let uu___ =
-    let uu___1 = FStarC_Options.silent () in Prims.op_Negation uu___1 in
+  let uu___ = let uu___1 = FStarC_Options.silent () in Prims.not uu___1 in
   if uu___
   then
     (FStarC_List.iter
@@ -175,13 +174,17 @@ let go_normal (uu___ : unit) : unit=
           let uu___4 =
             let uu___5 =
               let uu___6 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___6 in
+              match uu___6 with
+              | FStar_Pervasives_Native.Some v -> true
+              | uu___7 -> false in
             if uu___5
             then
               let uu___6 =
                 let uu___7 = FStarC_Options.dep () in
-                FStar_Pervasives_Native.uu___is_Some uu___7 in
-              Prims.op_Negation uu___6
+                match uu___7 with
+                | FStar_Pervasives_Native.Some v -> true
+                | uu___8 -> false in
+              Prims.not uu___6
             else false in
           if uu___4
           then (FStarC_List.length filenames0) > Prims.int_one
@@ -207,7 +210,7 @@ let go_normal (uu___ : unit) : unit=
         let filenames =
           FStarC_List.map
             (fun f ->
-               if Prims.op_Negation (FStarC_Filepath.file_exists f)
+               if Prims.not (FStarC_Filepath.file_exists f)
                then f
                else
                  (let uu___3 = checked_of f in
@@ -248,7 +251,7 @@ let go_normal (uu___ : unit) : unit=
         (let uu___6 = FStarC_Find.get_cache_dir () in
          FStarC_Option.iter (FStarC_Util.mkdir false true) uu___6);
         (let check_no_filenames opt =
-           if Prims.uu___is_Cons filenames
+           if match filenames with | hd::tl -> true | uu___6 -> false
            then
              (FStarC_Format.print1_error
                 "error: No filenames should be passed with option %s\n" opt;
@@ -304,10 +307,12 @@ let go_normal (uu___ : unit) : unit=
                  FStarC_Prettyprint.generate printing_mode filenames
              | FStarC_Getopt.Success when
                  let uu___8 = FStarC_Options.read_checked_file () in
-                 FStar_Pervasives_Native.uu___is_Some uu___8 ->
+                 match uu___8 with
+                 | FStar_Pervasives_Native.Some v -> true
+                 | uu___9 -> false ->
                  let path =
                    let uu___8 = FStarC_Options.read_checked_file () in
-                   FStar_Pervasives_Native.__proj__Some__item__v uu___8 in
+                   match uu___8 with | FStar_Pervasives_Native.Some v -> v in
                  let env =
                    let uu___8 = FStarC_Parser_Dep.empty_deps filenames in
                    FStarC_Universal.init_env uu___8 in
@@ -358,10 +363,12 @@ let go_normal (uu___ : unit) : unit=
                         FStarC_Format.print1 "SMT fvars: %s\n" uu___12)))
              | FStarC_Getopt.Success when
                  let uu___8 = FStarC_Options.read_krml_file () in
-                 FStar_Pervasives_Native.uu___is_Some uu___8 ->
+                 match uu___8 with
+                 | FStar_Pervasives_Native.Some v -> true
+                 | uu___9 -> false ->
                  let path =
                    let uu___8 = FStarC_Options.read_krml_file () in
-                   FStar_Pervasives_Native.__proj__Some__item__v uu___8 in
+                   match uu___8 with | FStar_Pervasives_Native.Some v -> v in
                  let uu___8 = FStarC_Util.load_value_from_file path in
                  (match uu___8 with
                   | FStar_Pervasives_Native.None ->
@@ -423,7 +430,9 @@ let go_normal (uu___ : unit) : unit=
                       uu___11)))
              | FStarC_Getopt.Success when
                  let uu___8 = FStarC_Options.expand_include () in
-                 FStar_Pervasives_Native.uu___is_Some uu___8 ->
+                 match uu___8 with
+                 | FStar_Pervasives_Native.Some v -> true
+                 | uu___9 -> false ->
                  let uu___8 = FStarC_Options.expand_include () in
                  (match uu___8 with
                   | FStar_Pervasives_Native.Some d ->
@@ -457,11 +466,13 @@ let go_normal (uu___ : unit) : unit=
                   FStarC_Effect.exit Prims.int_zero)
              | FStarC_Getopt.Success when
                  let uu___8 = FStarC_Options.locate_file () in
-                 FStar_Pervasives_Native.uu___is_Some uu___8 ->
+                 match uu___8 with
+                 | FStar_Pervasives_Native.Some v -> true
+                 | uu___9 -> false ->
                  (check_no_filenames "--locate_file";
                   (let f =
                      let uu___9 = FStarC_Options.locate_file () in
-                     FStar_Pervasives_Native.__proj__Some__item__v uu___9 in
+                     match uu___9 with | FStar_Pervasives_Native.Some v -> v in
                    let uu___9 = FStarC_Find.find_file f in
                    match uu___9 with
                    | FStar_Pervasives_Native.None ->
@@ -474,11 +485,14 @@ let go_normal (uu___ : unit) : unit=
                         FStarC_Effect.exit Prims.int_zero)))
              | FStarC_Getopt.Success when
                  let uu___8 = FStarC_Options.locate_z3 () in
-                 FStar_Pervasives_Native.uu___is_Some uu___8 ->
+                 match uu___8 with
+                 | FStar_Pervasives_Native.Some v -> true
+                 | uu___9 -> false ->
                  (check_no_filenames "--locate_z3";
                   (let v =
                      let uu___9 = FStarC_Options.locate_z3 () in
-                     FStar_Pervasives_Native.__proj__Some__item__v uu___9 in
+                     match uu___9 with
+                     | FStar_Pervasives_Native.Some v1 -> v1 in
                    let uu___9 = FStarC_Find_Z3.locate_z3 v in
                    match uu___9 with
                    | FStar_Pervasives_Native.None ->
@@ -566,7 +580,8 @@ let go_normal (uu___ : unit) : unit=
                        | filename::[] ->
                            FStarC_Interactive_Ide.interactive_mode filename))
                    else
-                     (if Prims.uu___is_Nil filenames
+                     (if
+                        (match filenames with | [] -> true | uu___14 -> false)
                       then
                         FStarC_Errors.raise_error0
                           FStarC_Errors_Codes.Error_MissingFileName ()
@@ -602,7 +617,29 @@ let go_normal (uu___ : unit) : unit=
                                          | FStar_Pervasives_Native.None ->
                                              [fn]
                                          | FStar_Pervasives_Native.Some iface
-                                             -> [iface; fn]))
+                                             ->
+                                             let uu___21 =
+                                               let uu___22 =
+                                                 let uu___23 =
+                                                   FStarC_Options.output_to
+                                                     () in
+                                                 match uu___23 with
+                                                 | FStar_Pervasives_Native.None
+                                                     -> true
+                                                 | uu___24 -> false in
+                                               if uu___22
+                                               then
+                                                 let uu___23 =
+                                                   FStarC_CheckedFiles.scan_deps_and_check_cache_validity
+                                                     iface in
+                                                 match uu___23 with
+                                                 | FStar_Pervasives_Native.Some
+                                                     v -> true
+                                                 | uu___24 -> false
+                                               else false in
+                                             if uu___21
+                                             then [fn]
+                                             else [iface; fn]))
                                      else [fn] in
                                    (filenames1, deps, true) in
                                  let uu___17 = FStarC_Options.force () in

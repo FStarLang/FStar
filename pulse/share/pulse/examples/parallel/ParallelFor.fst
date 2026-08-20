@@ -326,7 +326,7 @@ let wsr_loop_inv_f
        R.pts_to i ii
     ** full_post ii
     ** (forall+ (k:nat{ii <= k /\ k < n}). post k)
-    ** pure (b == (Prims.op_LessThan ii n))
+    ** pure (b == (ii < n))
 
 let wsr_loop_inv_tf
   (pre : (nat -> slprop))

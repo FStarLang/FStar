@@ -253,20 +253,20 @@ let build_binding_pattern ?ty (sym : mlident) : pattern =
 
 let resugar_prims_ops path: expression =
   (match path with
-  | (["Prims"], "op_Addition") -> mk_lident "+"
-  | (["Prims"], "op_Subtraction") -> mk_lident "-"
+  | (["Prims"], "op_Plus") -> mk_lident "+"
+  | (["Prims"], "op_Minus") -> mk_lident "-"
   | (["Prims"], "op_Star") -> mk_lident "*"
-  | (["Prims"], "op_Division") -> mk_lident "/"
-  | (["Prims"], "op_Equality") -> mk_lident "="
+  | (["Prims"], "op_Slash") -> mk_lident "/"
+  | (["Prims"], "op_Equals") -> mk_lident "="
   | (["Prims"], "op_Colon_Equals") -> mk_lident ":="
-  | (["Prims"], "op_disEquality") -> mk_lident "<>"
-  | (["Prims"], "op_AmpAmp") -> mk_lident "&&"
-  | (["Prims"], "op_BarBar") -> mk_lident "||"
-  | (["Prims"], "op_LessThanOrEqual") -> mk_lident "<="
-  | (["Prims"], "op_GreaterThanOrEqual") -> mk_lident ">="
-  | (["Prims"], "op_LessThan") -> mk_lident "<"
-  | (["Prims"], "op_GreaterThan") -> mk_lident ">"
-  | (["Prims"], "op_Modulus") ->
+  | (["Prims"], "op_Less_Greater") -> mk_lident "<>"
+  | (["Prims"], "op_Amp_Amp") -> mk_lident "&&"
+  | (["Prims"], "op_Bar_Bar") -> mk_lident "||"
+  | (["Prims"], "op_Less_Equals") -> mk_lident "<="
+  | (["Prims"], "op_Greater_Equals") -> mk_lident ">="
+  | (["Prims"], "op_Less") -> mk_lident "<"
+  | (["Prims"], "op_Greater") -> mk_lident ">"
+  | (["Prims"], "op_Percent") ->
     (* Use "(mod)" here instead of "mod" to work around as issue in
     newer versions of pprintast, which may print this as "\#mod" instead,
     which is not supported in OCaml versions below 5.2.0. We could
@@ -274,7 +274,7 @@ let resugar_prims_ops path: expression =
 
     https://github.com/ocaml/opam-repository/pull/28610#issuecomment-3362301901 *)
     mk_lident "(mod)"
-  | (["Prims"], "op_Minus") -> mk_lident "~-"
+  | (["Prims"], "op_Tilde_Minus") -> mk_lident "~-"
   | path -> path_to_ident path)
   |> pexp_ident ~loc
 

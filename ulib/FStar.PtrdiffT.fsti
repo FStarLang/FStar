@@ -106,8 +106,16 @@ val lte (x y: t) : Pure bool
 
 (** Infix notations *)
 
-inline_for_extraction unfold let op_Plus_Hat = add
-inline_for_extraction unfold let op_Greater_Hat = gt
-inline_for_extraction unfold let op_Greater_Equals_Hat = gte
-inline_for_extraction unfold let op_Less_Hat = lt
-inline_for_extraction unfold let op_Less_Equals_Hat = lte
+inline_for_extraction unfold let ( + ) = add
+inline_for_extraction unfold let ( > ) = gt
+inline_for_extraction unfold let ( >= ) = gte
+inline_for_extraction unfold let ( < ) = lt
+inline_for_extraction unfold let ( <= ) = lte
+
+(** Deprecated infix notations: the spellings the five operators above had
+    before type-based overloading made the [^] suffix unnecessary. *)
+[@@deprecated "use ( + )"]  inline_for_extraction unfold let ( +^ )  = add
+[@@deprecated "use ( > )"]  inline_for_extraction unfold let ( >^ )  = gt
+[@@deprecated "use ( >= )"] inline_for_extraction unfold let ( >=^ ) = gte
+[@@deprecated "use ( < )"]  inline_for_extraction unfold let ( <^ )  = lt
+[@@deprecated "use ( <= )"] inline_for_extraction unfold let ( <=^ ) = lte

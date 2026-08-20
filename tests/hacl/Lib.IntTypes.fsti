@@ -332,7 +332,7 @@ val byte_to_uint8: s:byte_t -> u:uint8{u == u8 (v s)}
 
 [@(strict_on_arguments [0])]
 inline_for_extraction
-let op_At_Percent_Dot x t =
+let ( @%. ) x t =
   if unsigned t then x % modulus t
   else FStar.Int.(x @% modulus t)
 

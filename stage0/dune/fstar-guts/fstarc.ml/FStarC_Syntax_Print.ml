@@ -45,7 +45,7 @@ let filter_imp_args (args : FStarC_Syntax_Syntax.args) :
        match uu___ with
        | (uu___1, FStar_Pervasives_Native.None) -> true
        | (uu___1, FStar_Pervasives_Native.Some a) ->
-           Prims.op_Negation a.FStarC_Syntax_Syntax.aqual_implicit) args
+           Prims.not a.FStarC_Syntax_Syntax.aqual_implicit) args
 let filter_imp_binders (bs : FStarC_Syntax_Syntax.binder Prims.list) :
   FStarC_Syntax_Syntax.binders=
   FStarC_List.filter (fun b -> filter_imp b.FStarC_Syntax_Syntax.binder_qual)

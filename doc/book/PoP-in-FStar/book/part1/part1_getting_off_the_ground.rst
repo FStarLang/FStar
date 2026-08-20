@@ -135,7 +135,7 @@ and the following primitive operators, in decreasing order of
 precedence.
 
 * ``-``: Unary negation (prefix)
-* ``-``: Subtraction (infix)
+* ``-``: Minus (infix)
 * ``+``: Addition (infix)
 * ``/``: Euclidean division (infix)
 * ``%``: Euclidean modulus (infix)

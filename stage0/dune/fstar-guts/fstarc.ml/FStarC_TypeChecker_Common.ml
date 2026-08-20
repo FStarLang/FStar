@@ -252,7 +252,7 @@ let check_uvar_ctx_invariant (reason : Prims.string)
         reason uu___2 (if should_check then "true" else "false") uu___3
         uu___4 in
     FStarC_Effect.failwith uu___1 in
-  if Prims.op_Negation should_check
+  if Prims.not should_check
   then ()
   else
     (let uu___ =
@@ -813,3 +813,104 @@ let check_positivity_qual (subtyping : Prims.bool)
           (FStarC_Syntax_Syntax.BinderStrictlyPositive)) -> true
        | uu___ -> false)
     else false
+let one_point_defn (x : FStarC_Syntax_Syntax.bv)
+  (hyp : FStarC_Syntax_Syntax.term) :
+  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term)
+    FStar_Pervasives_Native.option=
+  let is_x t =
+    let uu___ =
+      let uu___1 = FStarC_Syntax_Subst.compress t in
+      uu___1.FStarC_Syntax_Syntax.n in
+    match uu___ with
+    | FStarC_Syntax_Syntax.Tm_name y -> FStarC_Syntax_Syntax.bv_eq x y
+    | uu___1 -> false in
+  let as_defn t =
+    let uu___ = FStarC_Syntax_Util.head_and_args_full t in
+    match uu___ with
+    | (hd, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStarC_Syntax_Util.un_uinst hd in
+            uu___3.FStarC_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStarC_Syntax_Syntax.Tm_fvar fv,
+            uu___2::(lhs, uu___3)::(rhs, uu___4)::[]) when
+             FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.eq2_lid ->
+             let uu___5 =
+               let uu___6 = is_x lhs in
+               if uu___6
+               then
+                 let uu___7 =
+                   let uu___8 = FStarC_Syntax_Free.names rhs in
+                   FStarC_Class_Setlike.mem
+                     (FStarC_FlatSet.setlike_flat_set
+                        FStarC_Syntax_Syntax.ord_bv) x uu___8 in
+                 Prims.not uu___7
+               else false in
+             if uu___5
+             then FStar_Pervasives_Native.Some rhs
+             else
+               (let uu___6 =
+                  let uu___7 = is_x rhs in
+                  if uu___7
+                  then
+                    let uu___8 =
+                      let uu___9 = FStarC_Syntax_Free.names lhs in
+                      FStarC_Class_Setlike.mem
+                        (FStarC_FlatSet.setlike_flat_set
+                           FStarC_Syntax_Syntax.ord_bv) x uu___9 in
+                    Prims.not uu___8
+                  else false in
+                if uu___6
+                then FStar_Pervasives_Native.Some lhs
+                else FStar_Pervasives_Native.None)
+         | uu___2 -> FStar_Pervasives_Native.None) in
+  let rec find t =
+    let uu___ = FStarC_Syntax_Util.head_and_args_full t in
+    match uu___ with
+    | (hd, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStarC_Syntax_Util.un_uinst hd in
+            uu___3.FStarC_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStarC_Syntax_Syntax.Tm_fvar fv, (a, uu___2)::(b, uu___3)::[])
+             when
+             FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.and_lid ->
+             let uu___4 = find a in
+             (match uu___4 with
+              | FStar_Pervasives_Native.Some (v, rest) ->
+                  let uu___5 =
+                    let uu___6 = FStarC_Syntax_Util.mk_conj_simp rest b in
+                    (v, uu___6) in
+                  FStar_Pervasives_Native.Some uu___5
+              | FStar_Pervasives_Native.None ->
+                  let uu___5 = find b in
+                  (match uu___5 with
+                   | FStar_Pervasives_Native.Some (v, rest) ->
+                       let uu___6 =
+                         let uu___7 = FStarC_Syntax_Util.mk_conj_simp a rest in
+                         (v, uu___7) in
+                       FStar_Pervasives_Native.Some uu___6
+                   | FStar_Pervasives_Native.None ->
+                       FStar_Pervasives_Native.None))
+         | uu___2 ->
+             let uu___3 = as_defn t in
+             (match uu___3 with
+              | FStar_Pervasives_Native.Some v ->
+                  FStar_Pervasives_Native.Some (v, FStarC_Syntax_Util.t_true)
+              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)) in
+  find hyp
+let post_obligation (x : FStarC_Syntax_Syntax.bv)
+  (hyp : FStarC_Syntax_Syntax.term) (concl : FStarC_Syntax_Syntax.term) :
+  FStarC_Syntax_Syntax.term=
+  let uu___ = one_point_defn x hyp in
+  match uu___ with
+  | FStar_Pervasives_Native.Some (v, rest) ->
+      let uu___1 = FStarC_Syntax_Util.mk_imp_simp rest concl in
+      FStarC_Syntax_Subst.subst [FStarC_Syntax_Syntax.NT (x, v)] uu___1
+  | FStar_Pervasives_Native.None ->
+      let uu___1 = FStarC_Syntax_Util.mk_imp hyp concl in
+      FStarC_Syntax_Util.mk_forall_no_univ x uu___1

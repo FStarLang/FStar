@@ -46,7 +46,7 @@ let emp = emp
 let timeless_emp = Sep.timeless_emp ()
 let pure = pure
 let timeless_pure p = Sep.timeless_pure p
-let op_Star_Star = op_Star_Star
+let ( ** ) = op_Star_Star
 let timeless_star p q = Sep.timeless_star p q
 let op_exists_Star = op_exists_Star
 let exists_extensional (#a:Type u#a) (p q: a -> slprop)

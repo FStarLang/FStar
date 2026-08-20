@@ -1417,7 +1417,7 @@ let valid_float_literal (s : Prims.string) : Prims.bool=
     | uu___1 -> (before_dot, (before_dot <> cs)) in
   match uu___ with
   | (after_mantissa, has_mantissa_digit) ->
-      if Prims.op_Negation has_mantissa_digit
+      if Prims.not has_mantissa_digit
       then false
       else
         (match after_mantissa with
@@ -1439,14 +1439,32 @@ let valid_float_literal (s : Prims.string) : Prims.bool=
          | uu___1 -> false)
 let mk_bool_op (uu___ : Prims.string) : op FStar_Pervasives_Native.option=
   match uu___ with
-  | "op_Negation" -> FStar_Pervasives_Native.Some Not
-  | "op_AmpAmp" -> FStar_Pervasives_Native.Some And
-  | "op_BarBar" -> FStar_Pervasives_Native.Some Or
-  | "op_Equality" -> FStar_Pervasives_Native.Some Eq
-  | "op_disEquality" -> FStar_Pervasives_Native.Some Neq
+  | "not" -> FStar_Pervasives_Native.Some Not
+  | "op_Amp_Amp" -> FStar_Pervasives_Native.Some And
+  | "op_Bar_Bar" -> FStar_Pervasives_Native.Some Or
+  | "op_Equals" -> FStar_Pervasives_Native.Some Eq
+  | "op_Less_Greater" -> FStar_Pervasives_Native.Some Neq
   | uu___1 -> FStar_Pervasives_Native.None
 let is_bool_op (op1 : Prims.string) : Prims.bool=
   (mk_bool_op op1) <> FStar_Pervasives_Native.None
+let krml_compat_name (n : (Prims.string Prims.list * Prims.string)) :
+  (Prims.string Prims.list * Prims.string)=
+  match n with
+  | ("Prims"::[], op1) ->
+      let op2 =
+        match op1 with
+        | "op_Plus" -> "op_Addition"
+        | "op_Minus" -> "op_Subtraction"
+        | "op_Tilde_Minus" -> "op_Minus"
+        | "op_Slash" -> "op_Division"
+        | "op_Percent" -> "op_Modulus"
+        | "op_Less" -> "op_LessThan"
+        | "op_Less_Equals" -> "op_LessThanOrEqual"
+        | "op_Greater" -> "op_GreaterThan"
+        | "op_Greater_Equals" -> "op_GreaterThanOrEqual"
+        | op3 -> op3 in
+      (["Prims"], op2)
+  | n1 -> n1
 let mk_op (uu___ : Prims.string) : op FStar_Pervasives_Native.option=
   match uu___ with
   | "add" -> FStar_Pervasives_Native.Some Add
@@ -1613,7 +1631,7 @@ let generate_is_null (t : typ) (x : expr) : expr=
   EApp ((ETypApp ((EOp (Eq, dummy)), [TBuf t])), [x; EBufNull t])
 exception NotSupportedByKrmlExtension 
 let uu___is_NotSupportedByKrmlExtension (projectee : Prims.exn) : Prims.bool=
-  match projectee with | NotSupportedByKrmlExtension -> true | uu___ -> false
+  true
 type translate_type_without_decay_t =
   env -> FStarC_Extraction_ML_Syntax.mlty -> typ
 let ref_translate_type_without_decay :
@@ -1857,7 +1875,7 @@ let rec translate_type_without_decay' (env1 : env)
       let uu___ = FStarC_List.map (translate_type_without_decay env1) args in
       TTuple uu___
   | FStarC_Extraction_ML_Syntax.MLTY_Named (args, lid) ->
-      if Prims.uu___is_Cons args
+      if (match args with | hd::tl -> true | uu___ -> false)
       then
         let uu___ =
           let uu___1 =
@@ -1900,7 +1918,7 @@ and translate_expr' (env1 : env) (e : FStarC_Extraction_ML_Syntax.mlexpr) :
       let uu___ =
         let uu___1 = FStarC_Option.must (mk_bool_op op1) in (uu___1, Bool) in
       EOp uu___
-  | FStarC_Extraction_ML_Syntax.MLE_Name n -> EQualified n
+  | FStarC_Extraction_ML_Syntax.MLE_Name n -> EQualified (krml_compat_name n)
   | FStarC_Extraction_ML_Syntax.MLE_Let
       ((flavor,
         { FStarC_Extraction_ML_Syntax.mllb_name = name1;
@@ -2063,7 +2081,7 @@ and translate_expr' (env1 : env) (e : FStarC_Extraction_ML_Syntax.mlexpr) :
             "FStar.Buffer.index")
            ||
            ((FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
-              "FStar.Buffer.op_Array_Access"))
+              "FStar.Buffer.op_Dot_Lparen_Rparen"))
           ||
           ((FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
              "LowStar.Monotonic.Buffer.index"))
@@ -2593,7 +2611,7 @@ and translate_expr' (env1 : env) (e : FStarC_Extraction_ML_Syntax.mlexpr) :
            "FStar.Buffer.upd")
           ||
           ((FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
-             "FStar.Buffer.op_Array_Assignment"))
+             "FStar.Buffer.op_Dot_Lparen_Rparen_Less_Minus"))
          ||
          ((FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
             "LowStar.Monotonic.Buffer.upd'"))
@@ -2868,7 +2886,7 @@ and translate_expr' (env1 : env) (e : FStarC_Extraction_ML_Syntax.mlexpr) :
          FStarC_Extraction_ML_Syntax.mlty = uu___2;
          FStarC_Extraction_ML_Syntax.loc = uu___3;_}::[])
       when is_float_width (mk_width m) ->
-      (if Prims.op_Negation (valid_float_literal s)
+      (if Prims.not (valid_float_literal s)
        then
          FStarC_Effect.failwith
            (FStarC_Format.fmt2
@@ -3289,7 +3307,7 @@ and assert_lid (env1 : env) (t : FStarC_Extraction_ML_Syntax.mlty) :
   typ=
   match t with
   | FStarC_Extraction_ML_Syntax.MLTY_Named (ts, lid) ->
-      if Prims.uu___is_Cons ts
+      if (match ts with | hd::tl -> true | uu___ -> false)
       then
         let uu___ =
           let uu___1 = FStarC_List.map (translate_type env1) ts in
@@ -3473,8 +3491,7 @@ let translate_type_decl' (env1 : env)
         then
           (let name3 = FStarC_Extraction_ML_Syntax.string_of_mlpath name2 in
            (let uu___2 =
-              let uu___3 = FStarC_Options.silent () in
-              Prims.op_Negation uu___3 in
+              let uu___3 = FStarC_Options.silent () in Prims.not uu___3 in
             if uu___2
             then
               FStarC_Format.print1_warning
@@ -3602,7 +3619,7 @@ let translate_let' (env1 : env)
                      FStarC_Extraction_ML_Syntax.mlbinder_attrs = uu___6;_}
                      -> mlbinder_name) bs
         | uu___3 -> [] in
-      if Prims.uu___is_Nil tvars
+      if (match tvars with | [] -> true | uu___3 -> false)
       then
         let uu___3 =
           let uu___4 =
@@ -3614,7 +3631,7 @@ let translate_let' (env1 : env)
         FStar_Pervasives_Native.Some uu___3
       else
         ((let uu___4 =
-            let uu___5 = FStarC_Options.silent () in Prims.op_Negation uu___5 in
+            let uu___5 = FStarC_Options.silent () in Prims.not uu___5 in
           if uu___4
           then
             FStarC_Format.print1_warning
@@ -3660,9 +3677,7 @@ let translate_let' (env1 : env)
          | (i, eff, t) ->
              let uu___6 =
                if i > Prims.int_zero
-               then
-                 let uu___7 = FStarC_Options.silent () in
-                 Prims.op_Negation uu___7
+               then let uu___7 = FStarC_Options.silent () in Prims.not uu___7
                else false in
              if uu___6
              then
@@ -3856,7 +3871,7 @@ let translate_decl (env1 : env) (d : FStarC_Extraction_ML_Syntax.mlmodule1) :
       FStarC_Effect.failwith "todo: translate_decl [MLM_Top]"
   | FStarC_Extraction_ML_Syntax.MLM_Exn (m, uu___) ->
       ((let uu___2 =
-          let uu___3 = FStarC_Options.silent () in Prims.op_Negation uu___3 in
+          let uu___3 = FStarC_Options.silent () in Prims.not uu___3 in
         if uu___2
         then
           FStarC_Format.print1_warning
@@ -3900,8 +3915,7 @@ let translate (ue : FStarC_Extraction_ML_UEnv.uenv)
             match () with
             | () ->
                 ((let uu___2 =
-                    let uu___3 = FStarC_Options.silent () in
-                    Prims.op_Negation uu___3 in
+                    let uu___3 = FStarC_Options.silent () in Prims.not uu___3 in
                   if uu___2
                   then
                     FStarC_Format.print1

@@ -11,6 +11,67 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Overloading by type
+
+  * **A name may now denote several things at once, and F* uses the types at
+    the occurrence to decide which is meant.** Previously, when two modules in
+    scope defined the same name, the innermost `open` won and the other name
+    could only be reached by qualifying it.
+
+    ```fstar
+    module IntOps  let f (x:int) : int = x + 1
+    module BoolOps let f (x:bool) : bool = not x
+
+    module Client
+    open IntOps
+    open BoolOps
+    let a : int  = f 0      // IntOps.f
+    let b : bool = f true   // BoolOps.f
+    let c : int -> int = f  // IntOps.f, from the expected type alone
+    ```
+
+    Resolution filters the candidates by arity, then by the type of each
+    explicit argument, then by the expected type; it eliminates a candidate
+    only when its type definitely does not fit, comparing types by their head
+    symbol alone and allowing for the coercions F* inserts. Whatever survives,
+    the innermost is taken, which is the answer scope-order resolution would
+    have given, so a program that typechecked before still typechecks and still
+    means the same thing. Operators participate on the same terms, `( + )`
+    being simply the name `op_Plus`.
+
+    `--ext fstar:overload=off` restores the old behaviour.
+    `--ext fstar:overload=strict` reports error 362 wherever more than one
+    candidate survives, as a diagnostic aid.
+
+  * **The machine integer modules name their operators `+ - * / % < <= > >=`.**
+    `FStar.UInt8/16/32/64/128`, `FStar.Int8/16/32/64/128`, `FStar.SizeT` and
+    `FStar.PtrdiffT` used to export `+^`, `-^`, `*^`, `/^`, `%^`, `<^`, `<=^`,
+    `>^` and `>=^`, whose `^` existed only to avoid clashing with `Prims` and
+    with each other. Overloading removes the need for it.
+
+    To update existing code, drop the `^` from those nine operators. The old
+    spellings remain as deprecated aliases (warning 288), so code written
+    against the earlier library still checks, and a downstream project can be
+    migrated at its own pace; `--warn_error -288` silences the warning
+    meanwhile. The other `^`-suffixed operators are unchanged: the wrapping and
+    underspecified arithmetic (`+%^`, `+?^`, `-%^`, `-?^`, `*%^`, `*?^`), the
+    bitwise and shift operators (`&^`, `|^`, `^^`, `<<^`, `>>^`), and equality
+    (`=^`, `<>^`). Equality keeps its `^` because `Prims.( = )` has type
+    `#a:eqtype -> a -> a -> bool`, whose argument type is not a rigid head, so
+    the `Prims` candidate could never be eliminated.
+
+  * **`Pulse.Lib.BoundedIntegers` is gone.** It emulated the above with a
+    typeclass. Replace `open Pulse.Lib.BoundedIntegers` with an `open` of the
+    integer module you use, optionally restricted:
+
+    ```fstar
+    open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
+    ```
+
+    Uses that were generic in the class rather than at one integer type need a
+    concrete definition instead; overloading resolves a name by type but is not
+    parametric polymorphism.
+
 ## Pulse
 
   * A Pulse conditional whose postcondition is annotated may now also carry a
@@ -128,6 +189,39 @@ Guidelines for the changelog:
     whereas `FStar.Nonempty.nonempty` was abstract.
 
 ## Syntax
+
+  * Operator names are now mangled uniformly. An operator is turned into an
+    identifier by naming each of its characters and joining the names with
+    underscores, under an `op_` prefix; there are no longer any special cases.
+    For instance `( + )` is `op_Plus` (not `op_Addition`), `( <= )` is
+    `op_Less_Equals` (not `op_LessThanOrEqual`) and `( .[] )` is
+    `op_Dot_Lbrack_Rbrack` (not `op_String_Access`). Prefix (unary) minus is now
+    the operator `( ~- )`, as in OCaml and F#, hence `op_Tilde_Minus`; the name
+    `op_Minus` now denotes binary subtraction. As in OCaml, `-x` remains the
+    usual notation for prefix minus (it is sugar for `~-x`) and is still how F*
+    prints it; only *defining* a prefix minus changes, from `let ( - ) x = ...`
+    to `let ( ~- ) x = ...`. As a consequence `Prims` (and
+    other libraries) declare their operators in operator syntax, e.g.
+    `val ( + ) : int -> int -> Tot int`, and resolution of an operator no longer
+    depends on its arity or on a table of hardwired names. Code that mentions
+    mangled names directly must be updated:
+
+    | Old                            | New                     |
+    |--------------------------------|-------------------------|
+    | `op_Addition`                  | `op_Plus`               |
+    | `op_Subtraction`               | `op_Minus`              |
+    | `op_Minus` (prefix)            | `op_Tilde_Minus`        |
+    | `op_Division`                  | `op_Slash`              |
+    | `op_Modulus`                   | `op_Percent`            |
+    | `op_Negation`                  | `not`                   |
+    | `op_AmpAmp` / `op_BarBar`      | `op_Amp_Amp` / `op_Bar_Bar` |
+    | `op_LessThan` / `op_GreaterThan` | `op_Less` / `op_Greater` |
+    | `op_LessThanOrEqual` / `op_GreaterThanOrEqual` | `op_Less_Equals` / `op_Greater_Equals` |
+    | `op_Equality` / `op_disEquality` | `op_Equals` / `op_Less_Greater` |
+    | `op_String_Access` / `op_String_Assignment` | `op_Dot_Lbrack_Rbrack` / `op_Dot_Lbrack_Rbrack_Less_Minus` |
+    | `op_Array_Access` / `op_Array_Assignment` | `op_Dot_Lparen_Rparen` / `op_Dot_Lparen_Rparen_Less_Minus` |
+    | `op_Brack_Lens_Access` / `op_Brack_Lens_Assignment` | `op_Dot_Lbrack_Bar_Bar_Rbrack` / `op_Dot_Lbrack_Bar_Bar_Rbrack_Less_Minus` |
+    | `op_Lens_Access` / `op_Lens_Assignment` | `op_Dot_Lparen_Bar_Bar_Rparen` / `op_Dot_Lparen_Bar_Bar_Rparen_Less_Minus` |
 
   * The `introduce`/`eliminate` sugar for logical connectives no longer binds
     names for hypotheses, and `eliminate` no longer takes a `returns` clause.
@@ -1118,7 +1212,7 @@ Date:   Mon Apr 30 16:57:21 2018 -0700
   We now restrict implicit generalization to variables whose type is a
   closed refinement of `Type`, e.g.,
     `let id x = x` has the same type as before;
-    `let eq = op_Equality` has the type `#a:eqtype -> a -> a -> bool`;
+    `let eq = op_Equals` has the type `#a:eqtype -> a -> a -> bool`;
      etc.
 
   This restriction is a breaking change. For a sampling of the changes

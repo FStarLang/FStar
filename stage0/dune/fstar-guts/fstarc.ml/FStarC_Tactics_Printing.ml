@@ -55,7 +55,7 @@ let unshadow (bs : FStarC_Syntax_Syntax.binders)
                  FStarC_Class_Show.show FStarC_Ident.showable_ident
                    bv0.FStarC_Syntax_Syntax.ppname in
                fresh_until uu___1
-                 (fun s -> Prims.op_Negation (FStarC_List.mem s seen)) in
+                 (fun s -> Prims.not (FStarC_List.mem s seen)) in
              let bv = sset bv0 nbs in
              let b2 =
                FStarC_Syntax_Syntax.mk_binder_with_attrs bv q
@@ -398,8 +398,7 @@ let ps_to_json (p : (Prims.string * FStarC_Tactics_Types.proofstate)) :
 let do_dump_proofstate (ps : FStarC_Tactics_Types.proofstate)
   (msg : Prims.string) : unit=
   let uu___ =
-    let uu___1 =
-      let uu___2 = FStarC_Options.silent () in Prims.op_Negation uu___2 in
+    let uu___1 = let uu___2 = FStarC_Options.silent () in Prims.not uu___2 in
     if uu___1 then true else FStarC_Options.interactive () in
   if uu___
   then

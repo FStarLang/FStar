@@ -9,9 +9,9 @@ let __proj__Mkmonad__item__bind (projectee : 'm monad) :
   unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm=
   match projectee with | { return; bind;_} -> bind
 let return (projectee : 'm monad) : unit -> Obj.t -> 'm=
-  __proj__Mkmonad__item__return projectee
+  match projectee with | { return = return1; bind;_} -> return1
 let bind (projectee : 'm monad) : unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm=
-  __proj__Mkmonad__item__bind projectee
+  match projectee with | { return = return1; bind = bind1;_} -> bind1
 let op_let_Bang : 'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm= bind
 let op_Greater_Greater_Equals :
   'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm= bind

@@ -47,9 +47,8 @@ fn mult (x y:nat)
 }
 
 
-open Pulse.Lib.BoundedIntegers
 fn mult32 (x y:U32.t)
-    requires pure (fits #U32.t (v x * v y))
+    requires pure (fits (v x * v y))
     returns z:U32.t
     ensures pure (v z == v x * v y)
 {  
@@ -62,7 +61,7 @@ fn mult32 (x y:U32.t)
         pts_to acc a **
         pure (c <= x /\
               v a == (v c * v y))
-    decreases (Prims.op_Subtraction (U32.v x) (U32.v (!ctr)))
+    decreases (U32.v x - U32.v (!ctr))
     {
         acc := !acc + y;
         ctr := !ctr + 1ul;
@@ -80,17 +79,17 @@ fn mult32' (x y:U32.t)
 {  
     let mut ctr = 0ul;
     let mut acc = 0ul;
-    while (!ctr <^ x)
+    while (!ctr < x)
     invariant
     exists* c a.
         pts_to ctr c **
         pts_to acc a **
-        pure (c <=^ x /\
+        pure (c <= x /\
               i a == (i c * i y))
-    decreases (Prims.op_Subtraction (U32.v x) (U32.v (!ctr)))
+    decreases (U32.v x - U32.v (!ctr))
     {
-        acc := !acc +^ y;
-        ctr := !ctr +^ 1ul;
+        acc := !acc + y;
+        ctr := !ctr + 1ul;
     };
     !acc
 }

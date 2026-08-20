@@ -96,6 +96,13 @@ val try_lookup_definition: env -> lident -> ML (option term)
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> ML (option (term & list attribute))
 val try_lookup_lid_with_attributes: env -> lident -> ML (option (term & list attribute))
 val try_lookup_lid: env -> lident -> ML (option term)
+
+(* All the top-level names an unqualified [lident] could denote, in scope
+   order; the head is exactly [try_lookup_lid]'s answer and the tail holds
+   the shadowed alternatives available to type-based overloading. Returns
+   [] when the name is not overloaded (see the implementation for the
+   precise conditions) and always [] unless `--ext fstar:overload` is on. *)
+val try_lookup_lid_alternatives: env -> lident -> ML (list fv)
 val resolve_to_fully_qualified_name : env:env -> l:lident -> ML (option lident)
 val shorten_lid: env -> lid -> ML lid
 val try_lookup_lid_with_attributes_no_resolve: env -> lident -> ML (option (term & list attribute))

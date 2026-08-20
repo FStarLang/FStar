@@ -212,6 +212,59 @@ let unit_ty rng = mk_term (Name C.unit_lid) rng Type_level
 type env_t = Env.env
 type lenv_t = list bv
 
+(* --- Type-based overloading: attaching candidate lists ---------------
+
+   See FStarC.TypeChecker.Overload. When a name resolves to several
+   top-level definitions we resolve it by scope order as usual (the
+   innermost one wins) but record the shadowed alternatives on the fv,
+   as [Unresolved_name alts]. The typechecker may later pick a different
+   candidate, but only when the scope-order one is definitely
+   type-incorrect, so a program that typechecks under scope-order
+   resolution keeps its meaning.
+
+   The qualifier is only ever attached to an fv that has no qualifier of
+   its own; data constructors and record projectors keep their existing
+   Data_ctor / Record_ctor / Record_projector qualifiers and are handled
+   by the pre-existing Unresolved_constructor / Unresolved_projector
+   machinery. *)
+
+(* Only qualifier-less fvs (and fvs that already carry alternatives) take
+   part in overloading. Data constructors and record projectors keep
+   their own qualifiers and go through the pre-existing
+   Unresolved_constructor / Unresolved_projector machinery. *)
+let overloadable_qual (q:option fv_qual) : bool =
+  match q with
+  | None -> true
+  | Some (Unresolved_name _) -> true
+  | _ -> false
+
+(* Record [alts] as the overloading candidates of [t]. Anything that is
+   not an overloadable fvar is returned untouched. *)
+let set_alternatives (t:S.term) (alts:list fv) : ML S.term =
+  match alts with
+  | [] -> t
+  | _ ->
+    match (SS.compress t).n with
+    | Tm_fvar fv when overloadable_qual fv.fv_qual ->
+      S.mk (Tm_fvar ({fv with fv_qual = Some (Unresolved_name alts)})) t.pos
+    | _ -> t
+
+(* Attach the alternatives that [l] resolves to, if [t] is indeed the
+   primary candidate. If it is not (e.g. because the primary is a data
+   constructor, which we filter out) we attach nothing: it is always
+   sound to have fewer candidates. *)
+let maybe_add_alternatives (env:env_t) (l:lid) (t:S.term) : ML S.term =
+  match (SS.compress t).n with
+  | Tm_fvar fv when None? fv.fv_qual ->
+    begin match Env.try_lookup_lid_alternatives env l with
+    | fv0 :: alts ->
+      if Cons? alts && S.fv_eq fv fv0
+      then set_alternatives t alts
+      else t
+    | _ -> t
+    end
+  | _ -> t
+
 let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : ML (option S.term) =
     let tm_attrs_opt =
         if resolve
@@ -221,30 +274,22 @@ let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : ML (option S.te
     match tm_attrs_opt with
     | None -> None
     | Some (tm, attrs) ->
+        let tm = if resolve then maybe_add_alternatives env l tm else tm in
         let tm = setpos tm in
         Some tm
 
 let desugar_name mk setpos env resolve l : ML _ =
     fail_or env (desugar_name' setpos env resolve) l
 
-let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
+let compile_op_lid s r = [mk_ident(compile_op s r, r)] |> lid_of_ids
 
-let op_as_term env arity op : ML (option S.term) =
+(* Some operators are notations for entities that have ordinary names,
+   rather than operators defined under their mangled name. They are
+   resolved here, if the mangled name is not in scope. *)
+let op_as_term env op : ML (option S.term) =
   let r l = Some (S.lid_and_dd_as_fv (set_lid_range l (range_of_id op)) None |> S.fv_to_tm) in
   let fallback () =
     match Ident.string_of_id op with
-    | "=" -> r C.op_Eq
-    | "<" -> r C.op_LT
-    | "<=" -> r C.op_LTE
-    | ">" -> r C.op_GT
-    | ">=" -> r C.op_GTE
-    | "&&" -> r C.op_And
-    | "||" -> r C.op_Or
-    | "+" -> r C.op_Addition
-    | "-" when (arity=1) -> r C.op_Minus
-    | "-" -> r C.op_Subtraction
-    | "/" -> r C.op_Division
-    | "%" -> r C.op_Modulus
     | "@" ->
       FStarC.Errors.log_issue op FStarC.Errors.Warning_DeprecatedGeneric [
           Errors.Msg.text "The operator '@' has been resolved to FStar.List.Tot.append even though \
@@ -252,7 +297,6 @@ let op_as_term env arity op : ML (option S.term) =
                            stop relying on this deprecated, special treatment of '@'."];
       r C.list_tot_append_lid
 
-    | "<>" -> r C.op_notEq
     | "~"   -> r C.not_lid
     | "=="  -> r C.eq2_lid
     | "<<" -> r C.precedes_lid
@@ -262,10 +306,10 @@ let op_as_term env arity op : ML (option S.term) =
     | "<==>" -> r C.iff_lid
     | _ -> None
   in
-  match desugar_name' (fun t -> {t with pos=(range_of_id op)})
-        env true (compile_op_lid arity (string_of_id op) (range_of_id op)) with
+  let setpos t = {t with pos=(range_of_id op)} in
+  match desugar_name' setpos env true (compile_op_lid (string_of_id op) (range_of_id op)) with
   | Some t -> Some t
-  | _ -> fallback()
+  | None -> fallback()
 
 let head_and_args_full t =
     let rec aux args t : ML _ = match (unparen t).tm with
@@ -650,7 +694,7 @@ let rec desugar_data_pat
 
       | PatOp op ->
         (* Turn into a PatVar and recurse *)
-        let id_op = mk_ident (compile_op 0 (string_of_id op) (range_of_id op), (range_of_id op)) in
+        let id_op = mk_ident (compile_op (string_of_id op) (range_of_id op), (range_of_id op)) in
         let p = { p with pat = PatVar (id_op, None, []) } in
         aux loc aqs env p
 
@@ -834,7 +878,7 @@ and desugar_binding_pat_maybe_top top env p
     let mklet x ty (tacopt : option S.term) : ML (env_t & bnd & list annotated_pat) =
         env, LetBinder(qualify env x, (ty, tacopt)), []
     in
-    let op_to_ident x = mk_ident (compile_op 0 (string_of_id x) (range_of_id x), (range_of_id x)) in
+    let op_to_ident x = mk_ident (compile_op (string_of_id x) (range_of_id x), (range_of_id x)) in
     match p.pat with
     | PatOp x ->
         mklet (op_to_ident x) (tun_r (range_of_id x)) None, []
@@ -987,7 +1031,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
 
     | Op(s, args) ->
       begin
-      match op_as_term env (List.length args) s with
+      match op_as_term env s with
       | None ->
         raise_error s Errors.Fatal_UnexpectedOrUnboundOperator
                     ("Unexpected or unbound operator: " ^
@@ -1741,7 +1785,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         in
         match (unparen rel).tm with
         | Op (id, _) ->
-            begin match op_as_term env 2 id with
+            begin match op_as_term env id with
             | Some t -> is_impl_t t
             | None -> false
             end
@@ -2429,7 +2473,7 @@ and desugar_formula env (f:term) : ML S.term =
     
     | QuantOp(i, [b], pats, body) ->
       let q_head =
-        match op_as_term env 0 i with
+        match op_as_term env i with
         | None -> 
           raise_error i Errors.Fatal_VariableNotFound
                       (Format.fmt1 "quantifier operator %s not found" (Ident.string_of_id i))

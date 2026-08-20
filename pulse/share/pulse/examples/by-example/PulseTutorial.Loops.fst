@@ -252,7 +252,6 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
     else fib_mono (n - 1) m
 
 open FStar.UInt32
-open Pulse.Lib.BoundedIntegers
 module U32 = FStar.UInt32
 
 noextract
@@ -275,7 +274,7 @@ fn fibonacci32 (k:U32.t)
            vctr <= k /\
            fib (v (vctr - 1ul)) == v vi/\
            fib (v vctr) == v vj)
-  decreases (Prims.op_Subtraction (v k) (v (!ctr)))
+  decreases (v k - v (!ctr))
   {
      let vi = !i;
      let vj = !j;

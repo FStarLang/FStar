@@ -38,8 +38,8 @@ effect St (a:Type) = STATE a
 
 (** Reference operations — underspecified *)
 val alloc : #a:Type0 -> a -> St (ref a)
-val op_Bang : #a:Type0 -> ref a -> St a
-val op_Colon_Equals : #a:Type0 -> ref a -> a -> St unit
+val ( ! ) : #a:Type0 -> ref a -> St a
+val ( := ) : #a:Type0 -> ref a -> a -> St unit
 
 (** ALL effect: combines state, exceptions and divergence *)
 assume effect ALL

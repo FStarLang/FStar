@@ -861,18 +861,18 @@ ident:
 qlidentOrOperator:
   | qid=qlident { qid }
   | LPAREN id=operator RPAREN
-    { lid_of_ns_and_id [] (id_of_text (compile_op' (string_of_id id) (range_of_id id))) }
+    { lid_of_ns_and_id [] (id_of_text (compile_op (string_of_id id) (range_of_id id))) }
 
 %public
 %inline lidentOrOperator:
   | id=lident { id }
   | LPAREN id=operator RPAREN
-    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
+    { mk_ident (compile_op (string_of_id id) (range_of_id id), range_of_id id) }
 
 %inline identOrOperator:
   | id=ident { id }
   | LPAREN id=operator RPAREN
-    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
+    { mk_ident (compile_op (string_of_id id) (range_of_id id), range_of_id id) }
 
 matchMaybeOp:
   | MATCH {None}

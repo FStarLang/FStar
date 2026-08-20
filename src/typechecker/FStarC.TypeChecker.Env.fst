@@ -1363,15 +1363,15 @@ let is_interpreted (env:env) head : ML bool =
         Const.op_LTE;
         Const.op_GT;
         Const.op_GTE;
-        Const.op_Subtraction;
         Const.op_Minus;
-        Const.op_Addition;
+        Const.op_Tilde_Minus;
+        Const.op_Plus;
         Const.op_Star;
-        Const.op_Division;
-        Const.op_Modulus;
+        Const.op_Slash;
+        Const.op_Percent;
         Const.op_And;
         Const.op_Or;
-        Const.op_Negation] in
+        Const.op_Not] in
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
           BU.for_some (Ident.lid_equals fv.fv_name) interpreted_symbols ||

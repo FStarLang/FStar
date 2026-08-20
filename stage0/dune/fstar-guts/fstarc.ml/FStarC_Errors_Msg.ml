@@ -11,7 +11,7 @@ let __proj__Mkis_error_message__item__to_doc_list
   (projectee : 't is_error_message) : 't -> error_message=
   match projectee with | { to_doc_list;_} -> to_doc_list
 let to_doc_list (projectee : 't is_error_message) : 't -> error_message=
-  __proj__Mkis_error_message__item__to_doc_list projectee
+  match projectee with | { to_doc_list = to_doc_list1;_} -> to_doc_list1
 let is_error_message_string : Prims.string is_error_message=
   { to_doc_list = (fun s -> [FStar_Pprint.arbitrary_string s]) }
 let is_error_message_list_doc :

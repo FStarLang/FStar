@@ -182,8 +182,8 @@ let lift (op: int -> int -> int) (n m:dyn) : dyn
     | DInt i, DInt j -> DInt (op i j)
     | _ -> DErr "Expected integers"
 let mul = lift op_Star
-let sub = lift op_Subtraction
-let add = lift op_Addition
+let sub = lift op_Minus
+let add = lift op_Plus
 let div (n m:dyn)
   = match n, m with
     | DInt i, DInt j -> 
