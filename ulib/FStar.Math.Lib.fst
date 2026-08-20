@@ -107,9 +107,9 @@ let signed_modulo v p =
   if v >= 0 then v % p
   else 0 - ( (0-v) % p)
 
-val op_Plus_Percent : a:int -> p:pos -> 
+val ( +% ) : a:int -> p:pos -> 
   Tot (res:int{ (a >= 0 ==> res = a % p) /\ (a < 0 ==> res = -((-a) % p)) }) 
-let op_Plus_Percent a p = signed_modulo a p
+let ( +% ) a p = signed_modulo a p
 
 (** Useful lemmas for future proofs **)
 

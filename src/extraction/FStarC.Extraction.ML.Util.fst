@@ -348,9 +348,9 @@ let rec eraseTypeDeep unfold_ty (t:mlty) : ML mlty =
     | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep unfold_ty) lty)
     | _ ->  t
 
-let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
+let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equals")
 let prims_op_amp_amp  = with_ty (mk_ty_fun [{mlbinder_name="x";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]};
-                                            {mlbinder_name="y";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]}] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
+                                            {mlbinder_name="y";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]}] ml_bool_ty) <| MLE_Name (["Prims"], "op_Amp_Amp")
 let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with
     | None, None -> None

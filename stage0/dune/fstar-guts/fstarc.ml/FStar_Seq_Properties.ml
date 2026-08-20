@@ -115,8 +115,9 @@ let seq_find (f : 'a -> Prims.bool) (l : 'a FStar_Seq_Base.seq) :
   'a FStar_Pervasives_Native.option=
   seq_find_aux f l (FStar_Seq_Base.length l)
 let for_all (f : 'a -> Prims.bool) (l : 'a FStar_Seq_Base.seq) : Prims.bool=
-  FStar_Pervasives_Native.uu___is_None
-    (seq_find (fun i -> Prims.op_Negation (f i)) l)
+  match seq_find (fun i -> Prims.not (f i)) l with
+  | FStar_Pervasives_Native.None -> true
+  | uu___ -> false
 let createL (l : 'a Prims.list) : 'a FStar_Seq_Base.seq=
   let s = FStar_Seq_Base.seq_of_list l in s
 let of_list (l : 'a Prims.list) : 'a FStar_Seq_Base.seq=

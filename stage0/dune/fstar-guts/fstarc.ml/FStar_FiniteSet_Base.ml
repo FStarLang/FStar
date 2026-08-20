@@ -6,8 +6,7 @@ let rec list_nonrepeating : 'a . 'a Prims.list -> Prims.bool =
     match xs with
     | [] -> true
     | hd::tl ->
-        (Prims.op_Negation (FStar_List_Tot_Base.mem hd tl)) &&
-          (list_nonrepeating tl)
+        (Prims.not (FStar_List_Tot_Base.mem hd tl)) && (list_nonrepeating tl)
 let rec remove_repeats : 'a . 'a Prims.list -> 'a Prims.list =
   fun xs ->
     match xs with
@@ -45,9 +44,9 @@ let rec difference_lists :
         let zs' = difference_lists tl ys in
         if FStar_List_Tot_Base.mem hd ys then zs' else hd :: zs'
 let difference (s1 : 'a set) (s2 : 'a set) : 'a set=
-  intro_set (fun x -> (s1 x) && (Prims.op_Negation (s2 x))) ()
+  intro_set (fun x -> (s1 x) && (Prims.not (s2 x))) ()
 let remove (x : 'a) (s : 'a set) : 'a set= difference s (singleton x)
-let notin (x : 'a) (s : 'a set) : Prims.bool= Prims.op_Negation (mem x s)
+let notin (x : 'a) (s : 'a set) : Prims.bool= Prims.not (mem x s)
 let rec remove_from_nonrepeating_list :
   'a . 'a -> 'a Prims.list -> 'a Prims.list =
   fun x xs ->

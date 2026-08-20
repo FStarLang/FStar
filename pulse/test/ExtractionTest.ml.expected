@@ -64,7 +64,7 @@ let rec testbi (x : FStar_SizeT.t) (y : FStar_SizeT.t) : FStar_SizeT.t=
 let rec testbi2 (x : FStar_SizeT.t) (y : FStar_SizeT.t) : FStar_SizeT.t opt=
   my_safe_add x y
 let rec extract_match (x : Prims.bool opt) : Prims.bool=
-  match x with | None -> false | Some b -> Prims.op_Negation b
+  match x with | None -> false | Some b -> Prims.not b
 let rec fib (x : Prims.nat) : Prims.nat=
   if x <= Prims.int_one
   then Prims.int_one

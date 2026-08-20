@@ -3,7 +3,7 @@ module ExtBoolHigherOrder
 /// `&&` / `||` used as *values* rather than fully applied.
 ///
 /// F* only gives `&&` its short-circuit typing at full application. Passed as
-/// a function argument it becomes `Prims.op_AmpAmp`, an ordinary strict
+/// a function argument it becomes `Prims.op_Amp_Amp`, an ordinary strict
 /// two-argument function, so both operands are evaluated. That is not a bug,
 /// but the resulting *value* must still be right, and the code must compile.
 /// Because both operands really are evaluated here, we must not hide a
@@ -20,7 +20,7 @@ let ( &&& ) (a b : I32.t) : I32.t = if a = 0l then b else a
 let tru : bool = true
 let fls : bool = false
 
-/// `&&` used as a value: extraction must fall back on `Prims.op_AmpAmp`.
+/// `&&` used as a value: extraction must fall back on `Prims.op_Amp_Amp`.
 /// Both operands are evaluated, so we must not put a division under it -- we
 /// only check that the *value* is still right and that it compiles at all.
 let ap (f : bool -> bool -> bool) (a b : bool) : bool = f a b

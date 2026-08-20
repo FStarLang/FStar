@@ -17,8 +17,8 @@ module Asm1
 
 module Map=FStar.Map
 let map = Map.t
-let op_String_Access = Map.sel
-let op_String_Assignment = Map.upd
+let ( .[] ) = Map.sel
+let ( .[]<- ) = Map.upd
 let contains = Map.contains
 
 ///////////////// Trusted definitions /////////////////

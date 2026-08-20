@@ -184,7 +184,7 @@ let max_uniformly_recursive_parameters (env : FStarC_TypeChecker_Env.env_t)
      (let uu___2 =
         FStarC_List.for_all
           (fun mutual ->
-             let uu___3 = ty_occurs_in mutual ty2 in Prims.op_Negation uu___3)
+             let uu___3 = ty_occurs_in mutual ty2 in Prims.not uu___3)
           mutuals in
       if uu___2
       then n_params
@@ -446,8 +446,9 @@ let mark_uniform_type_parameters (env : FStarC_TypeChecker_Env.env_t)
       let uu___ =
         FStarC_List.partition
           (fun se ->
-             FStarC_Syntax_Syntax.uu___is_Sig_inductive_typ
-               se.FStarC_Syntax_Syntax.sigel) ses in
+             match se.FStarC_Syntax_Syntax.sigel with
+             | FStarC_Syntax_Syntax.Sig_inductive_typ _0 -> true
+             | uu___1 -> false) ses in
       (match uu___ with
        | (tcs, datas) ->
            let tcs1 =
@@ -748,7 +749,7 @@ let mutuals_unused_in_type (mutuals : FStarC_Ident.lident Prims.list)
   let mutuals_occur_in t1 =
     FStarC_Util.for_some (fun lid -> ty_occurs_in lid t1) mutuals in
   let rec ok t1 =
-    let uu___ = let uu___1 = mutuals_occur_in t1 in Prims.op_Negation uu___1 in
+    let uu___ = let uu___1 = mutuals_occur_in t1 in Prims.not uu___1 in
     if uu___
     then true
     else
@@ -884,8 +885,8 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
   (let uu___1 =
      FStarC_List.for_all
        (fun mutual ->
-          let uu___2 = ty_occurs_in mutual in_type1 in
-          Prims.op_Negation uu___2) mutuals in
+          let uu___2 = ty_occurs_in mutual in_type1 in Prims.not uu___2)
+       mutuals in
    if uu___1
    then true
    else
@@ -1016,7 +1017,7 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                     FStarC_TypeChecker_Env.lookup_effect_quals env uu___8 in
                   FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect
                     uu___7) in
-             if Prims.op_Negation check_comp
+             if Prims.not check_comp
              then
                (debug_positivity env
                   (fun uu___7 ->
@@ -1222,7 +1223,7 @@ and ty_strictly_positive_in_args (env : FStarC_TypeChecker_Env.env)
                   if FStarC_Syntax_Util.is_binder_strictly_positive b
                   then ty_strictly_positive_in_type env mutuals arg unfolded
                   else false in
-              if Prims.op_Negation this_occurrence_ok
+              if Prims.not this_occurrence_ok
               then
                 (debug_positivity env
                    (fun uu___5 ->
@@ -1278,7 +1279,7 @@ and ty_strictly_positive_in_arguments_to_fvar
       let uu___2 = FStarC_TypeChecker_Env.datacons_of_typ env fv in
       match uu___2 with
       | (b, idatas) ->
-          if Prims.op_Negation b
+          if Prims.not b
           then ty_strictly_positive_in_args env mutuals fv_ty args unfolded
           else
             (check_no_index_occurrences_in_arities env mutuals t;
@@ -1418,8 +1419,7 @@ let name_unused_in_type (env : FStarC_TypeChecker_Env.env)
   let uu___ = name_as_fv_in_t t bv in
   match uu___ with
   | (t1, fv_lid) ->
-      let uu___1 =
-        let uu___2 = ty_occurs_in fv_lid t1 in Prims.op_Negation uu___2 in
+      let uu___1 = let uu___2 = ty_occurs_in fv_lid t1 in Prims.not uu___2 in
       if uu___1
       then true
       else
@@ -1466,7 +1466,7 @@ let ty_strictly_positive_in_datacon_decl (env : FStarC_TypeChecker_Env.env_t)
                              name_unused_in_type env
                                b.FStarC_Syntax_Syntax.binder_bv
                                (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                           Prims.op_Negation uu___5
+                           Prims.not uu___5
                          else false in
                        if uu___4
                        then true
@@ -1477,7 +1477,7 @@ let ty_strictly_positive_in_datacon_decl (env : FStarC_TypeChecker_Env.env_t)
                               name_strictly_positive_in_type env
                                 b.FStarC_Syntax_Syntax.binder_bv
                                 (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                            Prims.op_Negation uu___5)
+                            Prims.not uu___5)
                          else false) ty_bs1 in
                 match incorrectly_annotated_binder with
                 | FStar_Pervasives_Native.None -> ()
@@ -1509,7 +1509,7 @@ let ty_strictly_positive_in_datacon_decl (env : FStarC_TypeChecker_Env.env_t)
                           ty_strictly_positive_in_type env1 mutuals
                             (field.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
                             unfolded in
-                        Prims.op_Negation uu___6 in
+                        Prims.not uu___6 in
                       if uu___5
                       then false
                       else
@@ -1528,7 +1528,7 @@ let check_strict_positivity (env : FStarC_TypeChecker_Env.env_t)
         FStarC_List.filter
           (fun m ->
              let uu___1 = FStarC_TypeChecker_Env.is_datacon env1 m in
-             Prims.op_Negation uu___1) mutuals in
+             Prims.not uu___1) mutuals in
       let mutuals2 =
         let uu___1 =
           FStarC_List.existsML (FStarC_Ident.lid_equals ty_lid) mutuals1 in

@@ -4,21 +4,6 @@ type pattern = unit
 
 type eqtype_u = unit
 let id (x : 'a) : 'a= x
-
-
-
-
-
-
-
-
-
-
-
-type 'heap st_pre_h = unit
-type ('heap, 'a, 'pre) st_post_h' = unit
-type ('heap, 'a) st_post_h = unit
-type ('heap, 'a) st_wp_h = unit
 type 'a result =
   | V of 'a 
   | E of Prims.exn 
@@ -35,16 +20,6 @@ let uu___is_Err (projectee : 'a result) : Prims.bool=
   match projectee with | Err msg -> true | uu___ -> false
 let __proj__Err__item__msg (projectee : 'a result) : Prims.string=
   match projectee with | Err msg -> msg
-type ex_pre = unit
-type ('a, 'pre) ex_post' = unit
-type 'a ex_post = unit
-type 'a ex_wp = unit
-
-
-type 'h all_pre_h = unit
-type ('h, 'a, 'pre) all_post_h' = unit
-type ('h, 'a) all_post_h = unit
-type ('h, 'a) all_wp_h = unit
 type ('a, 'b) either =
   | Inl of 'a 
   | Inr of 'b 
@@ -57,9 +32,9 @@ let uu___is_Inr (projectee : ('a, 'b) either) : Prims.bool=
 let __proj__Inr__item__v (projectee : ('a, 'b) either) : 'b=
   match projectee with | Inr v -> v
 let dfst (t : ('a, 'b) Prims.dtuple2) : 'a=
-  Prims.__proj__Mkdtuple2__item___1 t
+  match t with | Prims.Mkdtuple2 (_1, _2) -> _1
 let dsnd (t : ('a, 'b) Prims.dtuple2) : 'b=
-  Prims.__proj__Mkdtuple2__item___2 t
+  match t with | Prims.Mkdtuple2 (_1, _2) -> _2
 type ('a, 'b, 'c) dtuple3 =
   | Mkdtuple3 of 'a * 'b * 'c 
 let uu___is_Mkdtuple3 (projectee : ('a, 'b, 'c) dtuple3) : Prims.bool= true

@@ -324,15 +324,6 @@ let set_bv_range bv r =
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 
-let unmangleMap = [("op_ColonColon", "Cons", Some Data_ctor);
-                   ("not", "op_Negation", None)]
-
-let unmangleOpName (id:ident) : ML (option term) =
-  FStarC.Util.find_map unmangleMap (fun (x,y,dq) ->
-    if string_of_id id = x
-    then Some (S.fvar_with_dd (lid_of_path ["Prims"; y] (range_of_id id)) dq)
-    else None)
-
 type cont_t 'a =
     | Cont_ok of 'a  (* found *)
     | Cont_fail      (* not found, do not retry *)
@@ -509,10 +500,7 @@ let find_in_module env lid (k_global_def: _ -> _ -> ML _) k_not_found : ML _ =
     end
 
 let try_lookup_id env (id:ident) : ML (option term) =
-  match unmangleOpName id with
-  | Some f -> Some f
-  | _ ->
-    try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding (range_of_id id) r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
+  try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding (range_of_id id) r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
 
 (* Unqualified identifier lookup, if lookup in all open namespaces failed. *)
 
@@ -719,18 +707,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : ML (option foundna
     Some (Term_name(S.fvar_with_dd (set_lid_range l (range_of_lid lid)) None, []))
   in
 
-  let found_unmangled = match ns_of_lid lid with
-  | [] ->
-    begin match unmangleOpName (ident_of_lid lid) with
-    | Some t -> Some (Term_name (t, []))
-    | _ -> None
-    end
-  | _ -> None
-  in
-
-  match found_unmangled with
-  | None -> resolve_in_open_namespaces'  env lid k_local_binding k_rec_binding k_global_def
-  | x -> x
+  resolve_in_open_namespaces' env lid k_local_binding k_rec_binding k_global_def
 
 let try_lookup_effect_name' exclude_interf env (lid:lident) : ML (option (sigelt&lident)) =
   match try_lookup_name true exclude_interf env lid with

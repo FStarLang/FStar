@@ -132,8 +132,8 @@ let as_primitive_step is_strong l arity u_arity (f:interp_t) (f_nbe : nbe_interp
 
 let ops : list primitive_step =
   let s1 = mk1 0 PC.real_of_int of_int in
-  let s2 = as_primitive_step true PC.real_op_Addition 2 0 add_op add_op_nbe in
-  let s3 = as_primitive_step true PC.real_op_Multiply 2 0 mul_op mul_op_nbe in
+  let s2 = as_primitive_step true PC.real_op_Plus 2 0 add_op add_op_nbe in
+  let s3 = as_primitive_step true PC.real_op_Star 2 0 mul_op mul_op_nbe in
   [s1; s2; s3]
 
 let simplify_ops = [

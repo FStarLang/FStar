@@ -100,7 +100,9 @@ let set_level_high (uu___ : unit) : unit=
 let set_level_extreme (uu___ : unit) : unit=
   FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int 4)
 let enable_toggles (keys : Prims.string Prims.list) : unit=
-  if Prims.uu___is_Cons keys then enable () else ();
+  if (match keys with | hd::tl -> true | uu___1 -> false)
+  then enable ()
+  else ();
   FStarC_List.iter
     (fun k ->
        match k with

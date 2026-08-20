@@ -486,5 +486,5 @@ let check_goal_solved' (goal1 : goal) :
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let check_goal_solved (goal1 : goal) : Prims.bool=
   let uu___ = check_goal_solved' goal1 in
-  FStar_Pervasives_Native.uu___is_Some uu___
+  match uu___ with | FStar_Pervasives_Native.Some v -> true | uu___1 -> false
 type 'a tref = 'a FStarC_Effect.ref

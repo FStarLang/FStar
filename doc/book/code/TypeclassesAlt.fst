@@ -14,15 +14,15 @@ class bounded_unsigned_int (a:Type) = {
    as_nat     : a -> nat;
    from_nat   : (x:nat { x <= as_nat bound }) -> a;
    add        : (x:a -> y:a { fits bound as_nat from_nat ( + ) x y } -> a);
-   sub        : (x:a -> y:a { fits bound as_nat from_nat ( op_Subtraction ) x y } -> a);
+   sub        : (x:a -> y:a { fits bound as_nat from_nat ( op_Minus ) x y } -> a);
    mul        : (x:a -> y:a { fits bound as_nat from_nat ( op_Star ) x y } -> a);
    lt         : (a -> a -> bool);
 
    [@@@no_method]
    properties : squash (
      (forall (x y:a). fits bound as_nat from_nat ( + ) x y ==> as_nat (add x y) = as_nat x + as_nat y) /\
-     (forall (x y:a). fits bound as_nat from_nat ( op_Subtraction ) x y ==> as_nat (sub x y) = as_nat x - as_nat y) /\
-     (forall (x:a). fits bound as_nat from_nat ( op_Subtraction ) bound x) /\
+     (forall (x y:a). fits bound as_nat from_nat ( op_Minus ) x y ==> as_nat (sub x y) = as_nat x - as_nat y) /\
+     (forall (x:a). fits bound as_nat from_nat ( op_Minus ) bound x) /\
      (forall (x y:a). fits bound as_nat from_nat ( op_Star ) x y ==> as_nat (mul x y) = as_nat x * as_nat y) /\
      (forall (x:a). as_nat x <= as_nat bound) /\
      (forall (x:a). from_nat (as_nat x) == x) /\
@@ -41,7 +41,7 @@ let ( +^ ) {| bounded_unsigned_int 'a |}
 
 let ( -^ ) {| bounded_unsigned_int 'a |}
            (x : 'a)
-           (y : 'a { ok ( op_Subtraction ) x y })
+           (y : 'a { ok ( op_Minus ) x y })
   : 'a
   = sub x y
 

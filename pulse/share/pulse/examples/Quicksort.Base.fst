@@ -156,7 +156,7 @@ let permutation_refl (s: Seq.seq int)
 
 (** Overriding array accesses and assignment with the pts_to_range version **)
 
-let op_Array_Access
+let ( .() )
   (#t: Type)
   (a: A.array t)
   (i: SZ.t)
@@ -173,7 +173,7 @@ let op_Array_Access
             res == Seq.index s (SZ.v i - l)))
 = pts_to_range_index a i #l #r #s #p
 
-let op_Array_Assignment
+let ( .()<- )
   (#t: Type)
   (a: A.array t)
   (i: SZ.t)

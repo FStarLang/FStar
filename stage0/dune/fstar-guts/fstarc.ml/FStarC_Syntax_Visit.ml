@@ -27,7 +27,7 @@ let visit_term (pq : Prims.bool)
       (FStarC_Syntax_VisitM.visitM_term uu___0 pq
          (fun uu___1 ->
             (fun x -> let uu___1 = vt x in Obj.magic (I uu___1)) uu___1) t) in
-  __proj__I__item__run uu___
+  match uu___ with | I run -> run
 let visit_term_univs (pq : Prims.bool)
   (vt : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
   (vu : FStarC_Syntax_Syntax.universe -> FStarC_Syntax_Syntax.universe)
@@ -39,7 +39,7 @@ let visit_term_univs (pq : Prims.bool)
             (fun x -> let uu___1 = vt x in Obj.magic (I uu___1)) uu___1)
          (fun uu___1 ->
             (fun x -> let uu___1 = vu x in Obj.magic (I uu___1)) uu___1) t) in
-  __proj__I__item__run uu___
+  match uu___ with | I run -> run
 let visit_sigelt (pq : Prims.bool)
   (vt : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
   (vu : FStarC_Syntax_Syntax.universe -> FStarC_Syntax_Syntax.universe)
@@ -51,4 +51,4 @@ let visit_sigelt (pq : Prims.bool)
             (fun x -> let uu___1 = vt x in Obj.magic (I uu___1)) uu___1)
          (fun uu___1 ->
             (fun x -> let uu___1 = vu x in Obj.magic (I uu___1)) uu___1) se) in
-  __proj__I__item__run uu___
+  match uu___ with | I run -> run

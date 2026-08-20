@@ -35,16 +35,16 @@ let ex3_nat_custom_int_pos (x:nat) (y:int{y > x}) (z:pos) : nat = x + y + z
 
 /// You can still use these with the integer operations in prims But,
 /// it's a bit ugly.  In particular, the operators in prims are
-/// (poorly) named `op_Addition, ...` etc. rather than `(+), ...`
+/// (poorly) named `op_Plus, ...` etc. rather than `(+), ...`
 /// etc. We should fix this.
 let ex4_prims_again (x:nat) (y:int{y > x}) (z:pos) : nat =
-  Prims.(x `op_Addition` y `op_Addition` z)
+  Prims.(x `op_Plus` y `op_Plus` z)
 
 /// The same operations can also be used on machine integers, although
 /// they come with bounds checks, as should be expected.
 ///
 /// Note the inferred type: `int_t (Unsigned W32)`
-let ex4_uint32_plus (x:uint_32) (y:uint_32{FStar.UInt.size (FStar.UInt32.(v x `Prims.op_Addition` v y)) 32}) =
+let ex4_uint32_plus (x:uint_32) (y:uint_32{FStar.UInt.size (FStar.UInt32.(v x `Prims.op_Plus` v y)) 32}) =
   x + y
 
 /// But, rather than the clumsy bounds check above, we can write it
@@ -58,11 +58,11 @@ let ex5_uint32_ok (x:uint_32) (y:uint_32{ok ( * ) y y /\ ok (+) x (y * y)}) = x 
 let ex6 (x:uint_32) (y:uint_32{ok ( + ) x y }) = FStar.UInt32.(x +^ y)
 
 /// Unfortunately, we still have trouble parsing `( - )` as an operator
-/// So, you have to write it as `op_Subtraction`
-let ex9 (x:int_32{ok op_Subtraction 0l x}) = 0l - x
+/// So, you have to write it as `op_Minus`
+let ex9 (x:int_32{ok op_Minus 0l x}) = 0l - x
 
 /// Though, it's arguably still a bit cleaner than before
-let ex10 (x:FStar.Int32.t{FStar.Int.size (Prims.op_Minus (FStar.Int32.v x)) 32}) = FStar.Int32.(0l -^ x)
+let ex10 (x:FStar.Int32.t{FStar.Int.size (Prims.op_Tilde_Minus (FStar.Int32.v x)) 32}) = FStar.Int32.(0l -^ x)
 
 /// We also have a generic bounds-respecting cast operator among the integer types
 /// This one does an an addition in uint_32, with checks on both the cast and the addition

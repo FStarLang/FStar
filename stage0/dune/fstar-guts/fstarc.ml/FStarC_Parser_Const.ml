@@ -16,6 +16,7 @@ let fstar_ns_lid : FStarC_Ident.lident= p2l ["FStar"]
 let bool_lid : FStarC_Ident.lident= pconst "bool"
 let unit_lid : FStarC_Ident.lident= pconst "unit"
 let squash_lid : FStarC_Ident.lident= pconst "squash"
+let nonempty_lid : FStarC_Ident.lident= pconst "nonempty"
 let string_lid : FStarC_Ident.lident= pconst "string"
 let bytes_lid : FStarC_Ident.lident= pconst "bytes"
 let int_lid : FStarC_Ident.lident= pconst "int"
@@ -135,29 +136,28 @@ let order_lid : FStarC_Ident.lident= p2l ["FStar"; "Order"; "order"]
 let vconfig_lid : FStarC_Ident.lident= p2l ["FStar"; "VConfig"; "vconfig"]
 let mkvconfig_lid : FStarC_Ident.lident=
   p2l ["FStar"; "VConfig"; "Mkvconfig"]
-let op_Eq : FStarC_Ident.lident= pconst "op_Equality"
-let op_notEq : FStarC_Ident.lident= pconst "op_disEquality"
-let op_LT : FStarC_Ident.lident= pconst "op_LessThan"
-let op_LTE : FStarC_Ident.lident= pconst "op_LessThanOrEqual"
-let op_GT : FStarC_Ident.lident= pconst "op_GreaterThan"
-let op_GTE : FStarC_Ident.lident= pconst "op_GreaterThanOrEqual"
-let op_Subtraction : FStarC_Ident.lident= pconst "op_Subtraction"
+let op_Eq : FStarC_Ident.lident= pconst "op_Equals"
+let op_notEq : FStarC_Ident.lident= pconst "op_Less_Greater"
+let op_LT : FStarC_Ident.lident= pconst "op_Less"
+let op_LTE : FStarC_Ident.lident= pconst "op_Less_Equals"
+let op_GT : FStarC_Ident.lident= pconst "op_Greater"
+let op_GTE : FStarC_Ident.lident= pconst "op_Greater_Equals"
 let op_Minus : FStarC_Ident.lident= pconst "op_Minus"
-let op_Addition : FStarC_Ident.lident= pconst "op_Addition"
+let op_Tilde_Minus : FStarC_Ident.lident= pconst "op_Tilde_Minus"
+let op_Plus : FStarC_Ident.lident= pconst "op_Plus"
 let op_Star : FStarC_Ident.lident= pconst "op_Star"
-let op_Division : FStarC_Ident.lident= pconst "op_Division"
-let op_Modulus : FStarC_Ident.lident= pconst "op_Modulus"
-let op_And : FStarC_Ident.lident= pconst "op_AmpAmp"
-let op_Or : FStarC_Ident.lident= pconst "op_BarBar"
-let op_Negation : FStarC_Ident.lident= pconst "op_Negation"
+let op_Slash : FStarC_Ident.lident= pconst "op_Slash"
+let op_Percent : FStarC_Ident.lident= pconst "op_Percent"
+let op_And : FStarC_Ident.lident= pconst "op_Amp_Amp"
+let op_Or : FStarC_Ident.lident= pconst "op_Bar_Bar"
+let op_Not : FStarC_Ident.lident= pconst "not"
 let real_const (s : Prims.string) : FStarC_Ident.lident=
   p2l ["FStar"; "Real"; s]
 let real_op_LT : FStarC_Ident.lident= real_const "op_Less_Dot"
 let real_op_LTE : FStarC_Ident.lident= real_const "op_Less_Equals_Dot"
 let real_op_GT : FStarC_Ident.lident= real_const "op_Greater_Dot"
 let real_op_GTE : FStarC_Ident.lident= real_const "op_Greater_Equals_Dot"
-let real_op_Subtraction : FStarC_Ident.lident=
-  real_const "op_Subtraction_Dot"
+let real_op_Minus : FStarC_Ident.lident= real_const "op_Minus_Dot"
 let real_op_Addition : FStarC_Ident.lident= real_const "op_Plus_Dot"
 let real_op_Multiply : FStarC_Ident.lident= real_const "op_Star_Dot"
 let real_op_Division : FStarC_Ident.lident= real_const "op_Slash_Dot"
@@ -313,9 +313,6 @@ let primitive_extraction_attr : FStarC_Ident.lident=
 let binder_strictly_positive_attr : FStarC_Ident.lident=
   pconst "strictly_positive"
 let binder_unused_attr : FStarC_Ident.lident= attr "unused"
-let no_auto_projectors_decls_attr : FStarC_Ident.lident=
-  attr "no_auto_projectors_decls"
-let no_auto_projectors_attr : FStarC_Ident.lident= attr "no_auto_projectors"
 let no_subtping_attr_lid : FStarC_Ident.lident= attr "no_subtyping"
 let admit_termination_lid : FStarC_Ident.lident= attr "admit_termination"
 let admitted_lid : FStarC_Ident.lident= attr "admitted"
@@ -386,10 +383,6 @@ let lift_div_tac_lid : FStarC_Ident.lid=
   fstar_tactics_lid' ["Effect"; "lift_div_tac"]
 let tactic_lid : FStarC_Ident.lid= fstar_tactics_lid' ["Effect"; "tactic"]
 let tac_opaque_attr : FStarC_Ident.lident= pconst "tac_opaque"
-let meta_projectors_attr : FStarC_Ident.lid=
-  fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
-let mk_projs_lid : FStarC_Ident.lid=
-  fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
 let mk_class_lid : FStarC_Ident.lid=
   fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid : FStarC_Ident.lid=

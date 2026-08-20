@@ -9,18 +9,18 @@ let __proj__Mkord__item__cmp (projectee : 'a ord) :
   'a -> 'a -> FStar_Order.order=
   match projectee with | { super; cmp;_} -> cmp
 let super (projectee : 'a ord) : 'a FStar_Class_Eq_Raw.deq=
-  __proj__Mkord__item__super projectee
+  match projectee with | { super = super1; cmp;_} -> super1
 let cmp (projectee : 'a ord) : 'a -> 'a -> FStar_Order.order=
-  __proj__Mkord__item__cmp projectee
+  match projectee with | { super = super1; cmp = cmp1;_} -> cmp1
 let ord_eq (d : 'a ord) : 'a FStar_Class_Eq_Raw.deq= d.super
 let op_Less_Question (uu___ : 'a ord) (x : 'a) (y : 'a) : Prims.bool=
-  FStar_Order.uu___is_Lt (cmp uu___ x y)
+  match cmp uu___ x y with | FStar_Order.Lt -> true | uu___1 -> false
 let op_Greater_Question (uu___ : 'a ord) (x : 'a) (y : 'a) : Prims.bool=
-  FStar_Order.uu___is_Gt (cmp uu___ x y)
+  match cmp uu___ x y with | FStar_Order.Gt -> true | uu___1 -> false
 let op_Less_Equals_Question (uu___ : 'a ord) (x : 'a) (y : 'a) : Prims.bool=
-  Prims.op_Negation (op_Greater_Question uu___ x y)
+  Prims.not (op_Greater_Question uu___ x y)
 let op_Greater_Equals_Question (uu___ : 'a ord) (x : 'a) (y : 'a) :
-  Prims.bool= Prims.op_Negation (op_Less_Question uu___ x y)
+  Prims.bool= Prims.not (op_Less_Question uu___ x y)
 let min (uu___ : 'a ord) (x : 'a) (y : 'a) : 'a=
   if op_Less_Equals_Question uu___ x y then x else y
 let max (uu___ : 'a ord) (x : 'a) (y : 'a) : 'a=

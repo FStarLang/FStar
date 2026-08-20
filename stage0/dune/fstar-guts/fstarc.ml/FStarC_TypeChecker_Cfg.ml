@@ -2568,9 +2568,11 @@ let find_prim_step (cfg1 : cfg) (fv : FStarC_Syntax_Syntax.fv) :
   FStarC_PSMap.try_find cfg1.primitive_steps
     (FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name)
 let is_prim_step (cfg1 : cfg) (fv : FStarC_Syntax_Syntax.fv) : Prims.bool=
-  FStar_Pervasives_Native.uu___is_Some
-    (FStarC_PSMap.try_find cfg1.primitive_steps
-       (FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name))
+  match FStarC_PSMap.try_find cfg1.primitive_steps
+          (FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name)
+  with
+  | FStar_Pervasives_Native.Some v -> true
+  | uu___ -> false
 let log (cfg1 : cfg) (f : unit -> unit) : unit=
   if (cfg1.debug).gen then f () else ()
 let log_top (cfg1 : cfg) (f : unit -> unit) : unit=
@@ -2803,7 +2805,7 @@ let config'
       erase_erasable_args = uu___11
     } in
   let uu___1 =
-    if Prims.op_Negation steps.pure_subterms_within_computations
+    if Prims.not steps.pure_subterms_within_computations
     then true
     else FStarC_Options.normalize_pure_terms_for_extraction () in
   let uu___2 = FStarC_Options_Ext.enabled "compat:normalizer_memo_ignore_cfg" in
@@ -2858,8 +2860,7 @@ let should_reduce_local_let (cfg1 : cfg)
            then true
            else
              (FStarC_Syntax_Util.is_ghost_effect n) &&
-               (Prims.op_Negation
-                  (cfg1.steps).pure_subterms_within_computations))))
+               (Prims.not (cfg1.steps).pure_subterms_within_computations))))
 let translate_norm_step (s : FStarC_NormSteps.norm_step) :
   FStarC_TypeChecker_Env.step Prims.list=
   match s with

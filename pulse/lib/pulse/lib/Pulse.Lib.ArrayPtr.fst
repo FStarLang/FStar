@@ -209,7 +209,7 @@ ensures
   fold (pts_to s #p (Seq.create 1 (Ghost.reveal v)));
 }
 
-fn op_Array_Access
+fn ( .() )
         (#t: Type)
         (a: ptr t)
         (i: SZ.t)
@@ -231,7 +231,7 @@ fn op_Array_Access
     res
 }
 
-fn op_Array_Assignment
+fn ( .()<- )
         (#t: Type)
         (a: ptr t)
         (i: SZ.t)

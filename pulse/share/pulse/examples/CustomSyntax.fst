@@ -333,7 +333,7 @@ fn sum2 (r:ref nat) (n:nat)
     invariant live sum
     invariant pure (!i <= n)
     invariant pure (!sum == sum_spec (!i))
-    decreases (Prims.op_Subtraction n (!i))
+    decreases (Prims.op_Minus n (!i))
    {
      let m = !i;
      let s = !sum;

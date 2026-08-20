@@ -1,12 +1,10 @@
 open Prims
 exception NoEmbedding of Prims.string 
-let uu___is_NoEmbedding (projectee : Prims.exn) : Prims.bool=
-  match projectee with | NoEmbedding uu___ -> true | uu___ -> false
+let uu___is_NoEmbedding (projectee : Prims.exn) : Prims.bool= true
 let __proj__NoEmbedding__item__uu___ (projectee : Prims.exn) : Prims.string=
   match projectee with | NoEmbedding uu___ -> uu___
 exception Unsupported of Prims.string 
-let uu___is_Unsupported (projectee : Prims.exn) : Prims.bool=
-  match projectee with | Unsupported uu___ -> true | uu___ -> false
+let uu___is_Unsupported (projectee : Prims.exn) : Prims.bool= true
 let __proj__Unsupported__item__uu___ (projectee : Prims.exn) : Prims.string=
   match projectee with | Unsupported uu___ -> uu___
 let splitlast (s : 'uuuuu Prims.list) : ('uuuuu Prims.list * 'uuuuu)=
@@ -1117,7 +1115,7 @@ let rec embedding_for (tcenv : FStarC_TypeChecker_Env.env)
       let s =
         let uu___ =
           let uu___1 = FStarC_Option.find (find_env_entry bv) env in
-          FStar_Pervasives_Native.__proj__Some__item__v uu___1 in
+          match uu___1 with | FStar_Pervasives_Native.Some v -> v in
         FStar_Pervasives_Native.snd uu___ in
       mk (FStarC_Extraction_ML_Syntax.MLE_App (comb, [str_to_name s]))
   | FStarC_Syntax_Syntax.Tm_refine
@@ -1135,7 +1133,7 @@ let rec embedding_for (tcenv : FStarC_TypeChecker_Env.env)
       | FStar_Pervasives_Native.None -> false ->
       let uu___1 =
         let uu___2 = FStarC_Syntax_Util.arrow_one t3 in
-        FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
+        match uu___2 with | FStar_Pervasives_Native.Some v -> v in
       (match uu___1 with
        | (b, c) ->
            let t0 =
@@ -1171,7 +1169,9 @@ let rec embedding_for (tcenv : FStarC_TypeChecker_Env.env)
            (head, [FStarC_Extraction_ML_Syntax.ml_unit]))
   | FStarC_Syntax_Syntax.Tm_fvar fv when
       let uu___ = find_fv_embedding' fv.FStarC_Syntax_Syntax.fv_name in
-      FStar_Pervasives_Native.uu___is_Some uu___ ->
+      match uu___ with
+      | FStar_Pervasives_Native.Some v -> true
+      | uu___1 -> false ->
       let emb_data = find_fv_embedding fv.FStarC_Syntax_Syntax.fv_name in
       (match k with
        | SyntaxTerm -> ml_name emb_data.syn_emb
@@ -1800,8 +1800,8 @@ let __do_handle_plugin (g : FStarC_Extraction_ML_UEnv.uenv)
       ->
       let mk_registration lb =
         let fv =
-          FStar_Pervasives.__proj__Inr__item__v
-            lb.FStarC_Syntax_Syntax.lbname in
+          match lb.FStarC_Syntax_Syntax.lbname with
+          | FStar_Pervasives.Inr v -> v in
         let fv_lid = fv.FStarC_Syntax_Syntax.fv_name in
         let fv_t = lb.FStarC_Syntax_Syntax.lbtyp in
         let ml_name_str =
@@ -1879,7 +1879,7 @@ let __do_handle_plugin (g : FStarC_Extraction_ML_UEnv.uenv)
               FStarC_Syntax_Syntax.ds = uu___6;
               FStarC_Syntax_Syntax.injective_type_params = uu___7;_}
             ->
-            (if Prims.uu___is_Cons ps
+            (if (match ps with | hd::tl -> true | uu___9 -> false)
              then FStarC_Effect.raise (Unsupported "parameters on inductive")
              else ();
              (let ns = FStarC_Ident.ns_of_lid tlid in
@@ -2049,7 +2049,7 @@ let maybe_register_plugin (g : FStarC_Extraction_ML_UEnv.uenv)
                let uu___2 =
                  FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.plugin_attr
                    head in
-               Prims.op_Negation uu___2 in
+               Prims.not uu___2 in
              if uu___1
              then FStar_Pervasives_Native.None
              else
@@ -2067,7 +2067,7 @@ let maybe_register_plugin (g : FStarC_Extraction_ML_UEnv.uenv)
       let uu___2 = FStarC_Options.codegen () in
       FStarC_List.mem uu___2
         [FStar_Pervasives_Native.Some FStarC_Options.Plugin] in
-    Prims.op_Negation uu___1 in
+    Prims.not uu___1 in
   if uu___
   then []
   else

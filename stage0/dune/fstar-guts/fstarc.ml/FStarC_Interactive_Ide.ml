@@ -64,7 +64,7 @@ let run_repl_transaction (st : FStarC_Interactive_Ide_Types.repl_state)
         let uu___2 =
           let uu___3 = FStarC_Errors.get_err_count () in
           uu___3 = Prims.int_zero in
-        if uu___2 then Prims.op_Negation must_rollback else false in
+        if uu___2 then Prims.not must_rollback else false in
       let uu___1 =
         let uu___2 =
           with_captured_errors env FStarC_Util.sigint_raise
@@ -552,7 +552,7 @@ let buffer_input_queries (st : FStarC_Interactive_Ide_Types.repl_state) :
       } in
     let uu___ =
       let uu___1 = FStarC_Util.poll_stdin (FStarC_Util.float_of_string "0.0") in
-      Prims.op_Negation uu___1 in
+      Prims.not uu___1 in
     if uu___
     then done1 qs st1
     else
@@ -1297,7 +1297,7 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env)
              trunc_modul tc_result.FStarC_CheckedFiles.checked_module pred in
            (match uu___3 with
             | (found_decl, m) ->
-                if Prims.op_Negation found_decl
+                if Prims.not found_decl
                 then
                   FStarC_Effect.failwith
                     (Prims.strcat "did not find declaration with lident "
@@ -1600,7 +1600,7 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
                    | uu___3 -> false) errs in
             ((match code_or_decl with
               | FStar_Pervasives.Inr (d, s) ->
-                  if Prims.op_Negation has_error
+                  if Prims.not has_error
                   then
                     write_full_buffer_fragment_progress
                       (FStarC_Interactive_Incremental.FragmentSuccess
@@ -1696,8 +1696,7 @@ let run_push (st : FStarC_Interactive_Ide_Types.repl_state)
     FStar_Pervasives.either)=
   let uu___ =
     let uu___1 =
-      let uu___2 = FStarC_Parser_Dep.fly_deps_enabled () in
-      Prims.op_Negation uu___2 in
+      let uu___2 = FStarC_Parser_Dep.fly_deps_enabled () in Prims.not uu___2 in
     if uu___1 then nothing_left_to_pop st else false in
   if uu___
   then run_push_with_deps st query
@@ -2184,8 +2183,7 @@ let json_of_search_result (tcenv : FStarC_TypeChecker_Env.env)
     [uu___1; ("type", (FStarC_Json.JsonStr typ_str))] in
   FStarC_Json.JsonAssoc uu___
 exception InvalidSearch of Prims.string 
-let uu___is_InvalidSearch (projectee : Prims.exn) : Prims.bool=
-  match projectee with | InvalidSearch uu___ -> true | uu___ -> false
+let uu___is_InvalidSearch (projectee : Prims.exn) : Prims.bool= true
 let __proj__InvalidSearch__item__uu___ (projectee : Prims.exn) :
   Prims.string= match projectee with | InvalidSearch uu___ -> uu___
 let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
@@ -2635,17 +2633,16 @@ let build_initial_repl_state (filename : Prims.string) :
 let interactive_mode' (init_st : FStarC_Interactive_Ide_Types.repl_state) :
   unit=
   write_hello ();
-  (let exit_code =
-     let fn =
-       let uu___1 = FStarC_Options.file_list () in FStarC_List.hd uu___1 in
-     FStarC_SMTEncoding_Solver.with_hints_db fn (fun uu___1 -> go init_st) in
+  (let exit_code = go init_st in
    if exit_code <> Prims.int_zero then FStarC_Effect.exit exit_code else ())
 let interactive_mode (filename : Prims.string) : unit=
   install_ide_mode_hooks FStarC_Interactive_JsonHelper.write_json;
   FStarC_Util.set_sigint_handler FStarC_Util.sigint_ignore;
   (let uu___3 =
      let uu___4 = FStarC_Options.codegen () in
-     FStar_Pervasives_Native.uu___is_Some uu___4 in
+     match uu___4 with
+     | FStar_Pervasives_Native.Some v -> true
+     | uu___5 -> false in
    if uu___3
    then
      FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_IDEIgnoreCodeGen ()

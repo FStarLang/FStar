@@ -52,7 +52,7 @@ let stt_ghost_lid = pulse_lib_core_lid "stt_ghost"
 let stt_atomic_lid = pulse_lib_core_lid "stt_atomic"
 let neutral_lid = Ident.lid_of_path ["PulseCore"; "Observability"; "Neutral"] r_
 let op_colon_equals_lid r = Ident.lid_of_path ["op_Colon_Equals"] r
-let op_array_assignment_lid r = Ident.lid_of_path ["op_Array_Assignment"] r
+let op_array_assignment_lid r = Ident.lid_of_path ["op_Dot_Lparen_Rparen_Less_Minus"] r
 let op_bang_lid = pulse_lib_ref_lid "op_Bang"
 #pop-options
 

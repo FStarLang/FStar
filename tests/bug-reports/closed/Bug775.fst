@@ -35,5 +35,5 @@ let bind_sats_prop #a #b pa pb s f =
 (*
 Subtyping check failed; expected type (sats_prop b pb); got type
 (sats_prop b
-  (fun y yn -> (l_Forall (fun xn -> (l_imp (pa s xn@0) (pb y@2 (op_Addition xn@0 yn@1)))))))
+  (fun y yn -> (l_Forall (fun xn -> (l_imp (pa s xn@0) (pb y@2 (op_Plus xn@0 yn@1)))))))
 *)

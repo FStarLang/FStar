@@ -132,7 +132,7 @@ fn read
   res
 }
 
-let op_Array_Access = read
+let ( .() ) = read
 
 inline_for_extraction
 fn write
@@ -149,7 +149,7 @@ fn write
   fold pts_to a #1.0R (Seq.upd s (SZ.v i) v);
 }
 
-let op_Array_Assignment = write
+let ( .()<- ) = write
 
 inline_for_extraction
 fn free

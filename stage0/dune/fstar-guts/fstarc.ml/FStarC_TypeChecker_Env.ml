@@ -492,8 +492,6 @@ and solver_t =
       goal ->
         (Prims.bool * (env * goal * FStarC_Options.optionstate) Prims.list)
     ;
-  spinoff_strictly_positive_goals:
-    (env -> goal -> (env * goal) Prims.list) FStar_Pervasives_Native.option ;
   handle_smt_goal: env -> goal -> (env * goal) Prims.list ;
   solve:
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
@@ -1391,75 +1389,58 @@ let __proj__Mkenv__item__iface_val_lids (projectee : env) :
       iface_val_lids
 let __proj__Mksolver_t__item__init (projectee : solver_t) : env -> unit=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> init
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> init
 let __proj__Mksolver_t__item__snapshot (projectee : solver_t) :
   Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit)=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> snapshot
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> snapshot
 let __proj__Mksolver_t__item__rollback (projectee : solver_t) :
   Prims.string ->
     (Prims.int * Prims.int * Prims.int) FStar_Pervasives_Native.option ->
       unit=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> rollback
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> rollback
 let __proj__Mksolver_t__item__encode_sig (projectee : solver_t) :
   env -> FStarC_Syntax_Syntax.sigelt -> unit=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> encode_sig
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> encode_sig
 let __proj__Mksolver_t__item__preprocess (projectee : solver_t) :
   env ->
     goal ->
       (Prims.bool * (env * goal * FStarC_Options.optionstate) Prims.list)=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> preprocess
-let __proj__Mksolver_t__item__spinoff_strictly_positive_goals
-  (projectee : solver_t) :
-  (env -> goal -> (env * goal) Prims.list) FStar_Pervasives_Native.option=
-  match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> spinoff_strictly_positive_goals
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> preprocess
 let __proj__Mksolver_t__item__handle_smt_goal (projectee : solver_t) :
   env -> goal -> (env * goal) Prims.list=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> handle_smt_goal
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> handle_smt_goal
 let __proj__Mksolver_t__item__solve (projectee : solver_t) :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     env -> goal -> unit=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> solve
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> solve
 let __proj__Mksolver_t__item__solve_sync (projectee : solver_t) :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     env -> goal -> Prims.bool=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> solve_sync
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> solve_sync
 let __proj__Mksolver_t__item__finish (projectee : solver_t) : unit -> unit=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> finish
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> finish
 let __proj__Mksolver_t__item__refresh (projectee : solver_t) :
   proof_namespace FStar_Pervasives_Native.option -> unit=
   match projectee with
-  | { init; snapshot; rollback; encode_sig; preprocess;
-      spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-      finish; refresh;_} -> refresh
+  | { init; snapshot; rollback; encode_sig; preprocess; handle_smt_goal;
+      solve; solve_sync; finish; refresh;_} -> refresh
 let __proj__Mktcenv_hooks__item__tc_push_in_gamma_hook
   (projectee : tcenv_hooks) :
   env ->
@@ -2111,7 +2092,7 @@ let consume_iface_todo (e : env)
      iface_val_lids = (e.iface_val_lids)
    })
 let is_iface_hidden (e : env) (l : FStarC_Ident.lident) : Prims.bool=
-  if Prims.uu___is_Cons e.iface_todo
+  if match e.iface_todo with | hd::tl -> true | uu___ -> false
   then
     FStarC_Class_Setlike.mem
       (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) l
@@ -2186,7 +2167,9 @@ let set_iface_lids (e : env) (ls : FStarC_Ident.lident Prims.list)
     iface_val_lids = uu___1
   }
 let has_iface (e : env) : Prims.bool=
-  FStar_Pervasives_Native.uu___is_Some e.iface_lids
+  match e.iface_lids with
+  | FStar_Pervasives_Native.Some v -> true
+  | uu___ -> false
 let declared_in_iface (e : env) (l : FStarC_Ident.lident) : Prims.bool=
   match e.iface_lids with
   | FStar_Pervasives_Native.None -> false
@@ -2209,7 +2192,7 @@ type qninfo =
     FStar_Pervasives_Native.option
 type sigtable = FStarC_Syntax_Syntax.sigelt FStarC_SMap.t
 let should_verify (env1 : env) : Prims.bool=
-  if Prims.op_Negation env1.admit
+  if Prims.not env1.admit
   then
     FStarC_Options.should_verify (FStarC_Ident.string_of_lid env1.curmodule)
   else false
@@ -3104,7 +3087,10 @@ let lookup_qname (env1 : env) (lid : FStarC_Ident.lident) : qninfo=
                | uu___2 -> FStar_Pervasives_Native.None)
       | se -> se
     else FStar_Pervasives_Native.None in
-  if FStar_Pervasives_Native.uu___is_Some found
+  if
+    match found with
+    | FStar_Pervasives_Native.Some v -> true
+    | uu___ -> false
   then found
   else
     (let uu___ = is_iface_hidden env1 lid in
@@ -3136,7 +3122,7 @@ let lookup_attr_all (env1 : env) (attr : Prims.string) :
 let lookup_attr (env1 : env) (attr : Prims.string) :
   FStarC_Syntax_Syntax.sigelt Prims.list=
   let ses = lookup_attr_all env1 attr in
-  if Prims.uu___is_Nil env1.iface_todo
+  if match env1.iface_todo with | [] -> true | uu___ -> false
   then ses
   else
     FStarC_List.filter
@@ -3147,7 +3133,7 @@ let lookup_attr (env1 : env) (attr : Prims.string) :
                 FStarC_Class_Setlike.mem
                   (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv) l
                   env1.iface_hidden) (FStarC_Syntax_Util.lids_of_sigelt se) in
-         Prims.op_Negation uu___) ses
+         Prims.not uu___) ses
 let add_se_to_attrtab (env1 : env) (se : FStarC_Syntax_Syntax.sigelt) : 
   unit=
   let add_one env2 se1 attr =
@@ -3171,28 +3157,32 @@ let try_add_sigelt (force : Prims.bool) (env1 : env)
   (se : FStarC_Syntax_Syntax.sigelt) (l : FStarC_Ident.lident) : unit=
   let s = FStarC_Ident.string_of_lid l in
   (let uu___1 =
-     if Prims.op_Negation force
+     if Prims.not force
      then
        let uu___2 = FStarC_SMap.try_find (sigtab env1) s in
-       FStar_Pervasives_Native.uu___is_Some uu___2
+       match uu___2 with
+       | FStar_Pervasives_Native.Some v -> true
+       | uu___3 -> false
      else false in
    if uu___1
    then
      let old_se =
        let uu___2 = FStarC_SMap.try_find (sigtab env1) s in
-       FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
+       match uu___2 with | FStar_Pervasives_Native.Some v -> v in
      (if
-        (FStarC_Syntax_Syntax.uu___is_Sig_declare_typ
-           old_se.FStarC_Syntax_Syntax.sigel)
-          &&
-          (((FStarC_Syntax_Syntax.uu___is_Sig_let
-               se.FStarC_Syntax_Syntax.sigel)
-              ||
-              (FStarC_Syntax_Syntax.uu___is_Sig_inductive_typ
-                 se.FStarC_Syntax_Syntax.sigel))
+        (match old_se.FStarC_Syntax_Syntax.sigel with
+         | FStarC_Syntax_Syntax.Sig_declare_typ _0 -> true
+         | uu___2 -> false) &&
+          (((match se.FStarC_Syntax_Syntax.sigel with
+             | FStarC_Syntax_Syntax.Sig_let _0 -> true
+             | uu___2 -> false) ||
+              (match se.FStarC_Syntax_Syntax.sigel with
+               | FStarC_Syntax_Syntax.Sig_inductive_typ _0 -> true
+               | uu___2 -> false))
              ||
-             (FStarC_Syntax_Syntax.uu___is_Sig_datacon
-                se.FStarC_Syntax_Syntax.sigel))
+             (match se.FStarC_Syntax_Syntax.sigel with
+              | FStarC_Syntax_Syntax.Sig_datacon _0 -> true
+              | uu___2 -> false))
       then ()
       else
         (let uu___2 =
@@ -3649,7 +3639,7 @@ let lookup_univ (env1 : env) (x : FStarC_Syntax_Syntax.univ_name) :
          | FStarC_Syntax_Syntax.Binding_univ y ->
              (FStarC_Ident.string_of_id x) = (FStarC_Ident.string_of_id y)
          | uu___2 -> false) env1.gamma in
-  FStar_Pervasives_Native.uu___is_Some uu___
+  match uu___ with | FStar_Pervasives_Native.Some v -> true | uu___1 -> false
 let try_lookup_val_decl (env1 : env) (lid : FStarC_Ident.lident) :
   (FStarC_Syntax_Syntax.tscheme * FStarC_Syntax_Syntax.qualifier Prims.list)
     FStar_Pervasives_Native.option=
@@ -3778,6 +3768,8 @@ let datacons_of_typ (env1 : env) (lid : FStarC_Ident.lident) :
        uu___15)
       -> (true, dcs)
   | uu___1 -> (false, [])
+let discard_specs (env1 : env) : Prims.bool=
+  if env1.phase1 then true else FStarC_Options.admit_smt_queries ()
 let type_hypothesis (env1 : env) (t : FStarC_Syntax_Syntax.typ)
   (v : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
   let phi = FStarC_Syntax_Util.refinement_hypothesis t v in
@@ -3863,6 +3855,179 @@ let num_datacon_non_injective_ty_params (env1 : env)
       then FStar_Pervasives_Native.Some Prims.int_zero
       else FStar_Pervasives_Native.Some num_ty_params
   | uu___1 -> FStar_Pervasives_Native.None
+let num_datacon_ty_params (env1 : env) (lid : FStarC_Ident.lident) :
+  Prims.int FStar_Pervasives_Native.option=
+  let uu___ = lookup_qname env1 lid in
+  match uu___ with
+  | FStar_Pervasives_Native.Some
+      (FStar_Pervasives.Inr
+       ({
+          FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_datacon
+            { FStarC_Syntax_Syntax.lid1 = uu___1;
+              FStarC_Syntax_Syntax.us1 = uu___2;
+              FStarC_Syntax_Syntax.t1 = uu___3;
+              FStarC_Syntax_Syntax.ty_lid = uu___4;
+              FStarC_Syntax_Syntax.num_ty_params = num_ty_params;
+              FStarC_Syntax_Syntax.mutuals1 = uu___5;
+              FStarC_Syntax_Syntax.injective_type_params1 = uu___6;
+              FStarC_Syntax_Syntax.proj_disc_lids = uu___7;_};
+          FStarC_Syntax_Syntax.sigrng = uu___8;
+          FStarC_Syntax_Syntax.sigquals = uu___9;
+          FStarC_Syntax_Syntax.sigmeta = uu___10;
+          FStarC_Syntax_Syntax.sigattrs = uu___11;
+          FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___12;
+          FStarC_Syntax_Syntax.sigopts = uu___13;_},
+        uu___14),
+       uu___15)
+      -> FStar_Pervasives_Native.Some num_ty_params
+  | uu___1 -> FStar_Pervasives_Native.None
+let datacon_decl (env1 : env) (lid : FStarC_Ident.lident) :
+  (FStarC_Syntax_Syntax.fv_qual * Prims.int * FStarC_Syntax_Syntax.tscheme)
+    FStar_Pervasives_Native.option=
+  let uu___ = lookup_qname env1 lid in
+  match uu___ with
+  | FStar_Pervasives_Native.Some
+      (FStar_Pervasives.Inr
+       ({
+          FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_datacon
+            { FStarC_Syntax_Syntax.lid1 = uu___1;
+              FStarC_Syntax_Syntax.us1 = us; FStarC_Syntax_Syntax.t1 = t;
+              FStarC_Syntax_Syntax.ty_lid = ty_lid;
+              FStarC_Syntax_Syntax.num_ty_params = num_ty_params;
+              FStarC_Syntax_Syntax.mutuals1 = uu___2;
+              FStarC_Syntax_Syntax.injective_type_params1 = uu___3;
+              FStarC_Syntax_Syntax.proj_disc_lids = uu___4;_};
+          FStarC_Syntax_Syntax.sigrng = uu___5;
+          FStarC_Syntax_Syntax.sigquals = sigquals;
+          FStarC_Syntax_Syntax.sigmeta = uu___6;
+          FStarC_Syntax_Syntax.sigattrs = uu___7;
+          FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___8;
+          FStarC_Syntax_Syntax.sigopts = uu___9;_},
+        uu___10),
+       uu___11)
+      ->
+      let fvq =
+        let uu___12 =
+          FStarC_Util.find_map sigquals
+            (fun uu___13 ->
+               match uu___13 with
+               | FStarC_Syntax_Syntax.RecordConstructor (uu___14, fs) ->
+                   FStar_Pervasives_Native.Some
+                     (FStarC_Syntax_Syntax.Record_ctor (ty_lid, fs))
+               | uu___14 -> FStar_Pervasives_Native.None) in
+        match uu___12 with
+        | FStar_Pervasives_Native.Some q -> q
+        | FStar_Pervasives_Native.None -> FStarC_Syntax_Syntax.Data_ctor in
+      FStar_Pervasives_Native.Some (fvq, num_ty_params, (us, t))
+  | uu___1 -> FStar_Pervasives_Native.None
+let disc_proj_qual (env1 : env) (l : FStarC_Ident.lident) :
+  FStarC_Syntax_Syntax.qualifier FStar_Pervasives_Native.option=
+  let n = FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l) in
+  if
+    Prims.not
+      ((FStarC_Util.starts_with n FStarC_Syntax_Util.field_projector_prefix)
+         ||
+         (FStarC_Util.starts_with n
+            (Prims.strcat FStarC_Ident.reserved_prefix "is_")))
+  then FStar_Pervasives_Native.None
+  else
+    (let uu___ = lookup_qname env1 l in
+     match uu___ with
+     | FStar_Pervasives_Native.Some
+         (FStar_Pervasives.Inr
+          ({ FStarC_Syntax_Syntax.sigel = uu___1;
+             FStarC_Syntax_Syntax.sigrng = uu___2;
+             FStarC_Syntax_Syntax.sigquals = quals;
+             FStarC_Syntax_Syntax.sigmeta = uu___3;
+             FStarC_Syntax_Syntax.sigattrs = uu___4;
+             FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___5;
+             FStarC_Syntax_Syntax.sigopts = uu___6;_},
+           uu___7),
+          uu___8)
+         ->
+         FStarC_List.tryPick
+           (fun uu___9 ->
+              match uu___9 with
+              | FStarC_Syntax_Syntax.Projector (d, f) ->
+                  FStar_Pervasives_Native.Some
+                    (FStarC_Syntax_Syntax.Projector (d, f))
+              | FStarC_Syntax_Syntax.Discriminator d ->
+                  FStar_Pervasives_Native.Some
+                    (FStarC_Syntax_Syntax.Discriminator d)
+              | uu___10 -> FStar_Pervasives_Native.None) quals
+     | uu___1 -> FStar_Pervasives_Native.None)
+let disc_proj_info (env1 : env) (l : FStarC_Ident.lident) :
+  (FStarC_Syntax_Syntax.qualifier * Prims.int * Prims.int
+    FStar_Pervasives_Native.option) FStar_Pervasives_Native.option=
+  let uu___ = disc_proj_qual env1 l in
+  match uu___ with
+  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+  | FStar_Pervasives_Native.Some q ->
+      let d =
+        match q with
+        | FStarC_Syntax_Syntax.Projector (d1, uu___1) -> d1
+        | FStarC_Syntax_Syntax.Discriminator d1 -> d1
+        | uu___1 -> FStarC_Effect.failwith "disc_proj_info: impossible" in
+      let n_indexed =
+        let ty_lid = typ_of_datacon env1 d in
+        let uu___1 = lookup_lid env1 ty_lid in
+        match uu___1 with
+        | ((uu___2, k), uu___3) ->
+            let uu___4 =
+              let uu___5 = FStarC_Syntax_Util.arrow_formals_comp_ln k in
+              FStar_Pervasives_Native.fst uu___5 in
+            FStarC_List.length uu___4 in
+      (match q with
+       | FStarC_Syntax_Syntax.Discriminator uu___1 ->
+           FStar_Pervasives_Native.Some
+             (q, n_indexed, FStar_Pervasives_Native.None)
+       | uu___1 ->
+           let uu___2 = num_datacon_ty_params env1 d in
+           (match uu___2 with
+            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+            | FStar_Pervasives_Native.Some n_ty_params ->
+                let uu___3 = lookup_datacon env1 d in
+                (match uu___3 with
+                 | (uu___4, ctor_t) ->
+                     let uu___5 =
+                       FStarC_Syntax_Util.arrow_formals_comp_ln_strict ctor_t in
+                     (match uu___5 with
+                      | (bs, uu___6) ->
+                          if (FStarC_List.length bs) < n_ty_params
+                          then FStar_Pervasives_Native.None
+                          else
+                            (let uu___7 = FStarC_Util.first_N n_ty_params bs in
+                             match uu___7 with
+                             | (uu___8, fields) ->
+                                 let idx =
+                                   let uu___9 =
+                                     FStarC_List.mapi (fun j b -> (j, b))
+                                       fields in
+                                   FStarC_List.tryPick
+                                     (fun uu___10 ->
+                                        match uu___10 with
+                                        | (j, b) ->
+                                            let uu___11 =
+                                              let uu___12 =
+                                                FStarC_Syntax_Util.mk_field_projector_name
+                                                  d
+                                                  b.FStarC_Syntax_Syntax.binder_bv
+                                                  j in
+                                              FStarC_Ident.lid_equals uu___12
+                                                l in
+                                            if uu___11
+                                            then
+                                              FStar_Pervasives_Native.Some j
+                                            else FStar_Pervasives_Native.None)
+                                     uu___9 in
+                                 (match idx with
+                                  | FStar_Pervasives_Native.None ->
+                                      FStar_Pervasives_Native.None
+                                  | FStar_Pervasives_Native.Some j ->
+                                      FStar_Pervasives_Native.Some
+                                        (q, n_indexed,
+                                          (FStar_Pervasives_Native.Some
+                                             (n_ty_params + j)))))))))
 let visible_with (delta_levels : delta_level Prims.list)
   (quals : FStarC_Syntax_Syntax.qualifier Prims.list) : Prims.bool=
   FStarC_Util.for_some (fun dl -> FStarC_Util.for_some (visible_at dl) quals)
@@ -3882,12 +4047,12 @@ let lookup_definition_qninfo_aux (rec_ok : Prims.bool)
            when
            let uu___2 =
              visible_with delta_levels se.FStarC_Syntax_Syntax.sigquals in
-           if uu___2 then (Prims.op_Negation is_rec) || rec_ok else false ->
+           if uu___2 then (Prims.not is_rec) || rec_ok else false ->
            FStarC_Util.find_map lbs
              (fun lb ->
                 let fv =
-                  FStar_Pervasives.__proj__Inr__item__v
-                    lb.FStarC_Syntax_Syntax.lbname in
+                  match lb.FStarC_Syntax_Syntax.lbname with
+                  | FStar_Pervasives.Inr v -> v in
                 if FStarC_Syntax_Syntax.fv_eq_lid fv lid
                 then
                   FStar_Pervasives_Native.Some
@@ -3935,17 +4100,28 @@ let rec delta_depth_of_qninfo_lid (env1 : env) (lid : FStarC_Ident.lident)
              then FStarC_Syntax_Syntax.delta_equational
              else FStarC_Syntax_Syntax.delta_constant in
            let uu___3 =
-             let uu___4 =
-               FStarC_Util.for_some FStarC_Syntax_Syntax.uu___is_Assumption
-                 se.FStarC_Syntax_Syntax.sigquals in
-             if uu___4
-             then
-               let uu___5 =
-                 FStarC_Util.for_some FStarC_Syntax_Syntax.uu___is_New
-                   se.FStarC_Syntax_Syntax.sigquals in
-               Prims.op_Negation uu___5
-             else false in
-           if uu___3 then FStarC_Syntax_Syntax.Delta_abstract d0 else d0
+             FStarC_Util.for_some
+               (fun uu___4 ->
+                  match uu___4 with
+                  | FStarC_Syntax_Syntax.Projector uu___5 -> true
+                  | FStarC_Syntax_Syntax.Discriminator uu___5 -> true
+                  | uu___5 -> false) se.FStarC_Syntax_Syntax.sigquals in
+           if uu___3
+           then FStarC_Syntax_Syntax.Delta_equational_at_level Prims.int_one
+           else
+             (let uu___4 =
+                let uu___5 =
+                  FStarC_Util.for_some
+                    FStarC_Syntax_Syntax.uu___is_Assumption
+                    se.FStarC_Syntax_Syntax.sigquals in
+                if uu___5
+                then
+                  let uu___6 =
+                    FStarC_Util.for_some FStarC_Syntax_Syntax.uu___is_New
+                      se.FStarC_Syntax_Syntax.sigquals in
+                  Prims.not uu___6
+                else false in
+              if uu___4 then FStarC_Syntax_Syntax.Delta_abstract d0 else d0)
        | FStarC_Syntax_Syntax.Sig_let
            { FStarC_Syntax_Syntax.lbs1 = (uu___2, lbs);
              FStarC_Syntax_Syntax.lids1 = uu___3;_}
@@ -3954,8 +4130,8 @@ let rec delta_depth_of_qninfo_lid (env1 : env) (lid : FStarC_Ident.lident)
              FStarC_Util.find_map lbs
                (fun lb ->
                   let fv =
-                    FStar_Pervasives.__proj__Inr__item__v
-                      lb.FStarC_Syntax_Syntax.lbname in
+                    match lb.FStarC_Syntax_Syntax.lbname with
+                    | FStar_Pervasives.Inr v -> v in
                   if FStarC_Syntax_Syntax.fv_eq_lid fv lid
                   then
                     let uu___5 =
@@ -4009,7 +4185,7 @@ and fv_delta_depth (env1 : env) (fv : FStarC_Syntax_Syntax.fv) :
       if
         ((FStarC_Ident.string_of_lid env1.curmodule) =
            (FStarC_Ident.nsstr fv.FStarC_Syntax_Syntax.fv_name))
-          && (Prims.op_Negation env1.is_iface)
+          && (Prims.not env1.is_iface)
       then FStarC_Syntax_Syntax.Delta_constant_at_level l
       else FStarC_Syntax_Syntax.delta_constant
   | d1 -> d1
@@ -4252,7 +4428,8 @@ let lookup_effect_abbrev (env1 : env)
                     FStarC_Syntax_Util.arrow_formals_comp_ln_strict t1 in
                   (match uu___12 with
                    | (binders1, c1) ->
-                       if Prims.uu___is_Nil binders1
+                       if
+                         (match binders1 with | [] -> true | uu___13 -> false)
                        then FStarC_Effect.failwith "Impossible"
                        else FStar_Pervasives_Native.Some (binders1, c1))))
   | uu___1 -> FStar_Pervasives_Native.None
@@ -4396,7 +4573,7 @@ let lookup_projector (env1 : env) (lid : FStarC_Ident.lident) (i : Prims.int)
       let uu___2 = FStarC_Syntax_Util.arrow_formals_comp_ln_strict t in
       (match uu___2 with
        | (binders, uu___3) ->
-           if Prims.uu___is_Nil binders
+           if (match binders with | [] -> true | uu___4 -> false)
            then fail ()
            else
              if (i < Prims.int_zero) || (i >= (FStarC_List.length binders))
@@ -4518,15 +4695,15 @@ let is_interpreted (env1 : env) (head : FStarC_Syntax_Syntax.term) :
     FStarC_Parser_Const.op_LTE;
     FStarC_Parser_Const.op_GT;
     FStarC_Parser_Const.op_GTE;
-    FStarC_Parser_Const.op_Subtraction;
     FStarC_Parser_Const.op_Minus;
-    FStarC_Parser_Const.op_Addition;
+    FStarC_Parser_Const.op_Tilde_Minus;
+    FStarC_Parser_Const.op_Plus;
     FStarC_Parser_Const.op_Star;
-    FStarC_Parser_Const.op_Division;
-    FStarC_Parser_Const.op_Modulus;
+    FStarC_Parser_Const.op_Slash;
+    FStarC_Parser_Const.op_Percent;
     FStarC_Parser_Const.op_And;
     FStarC_Parser_Const.op_Or;
-    FStarC_Parser_Const.op_Negation] in
+    FStarC_Parser_Const.op_Not] in
   let uu___ =
     let uu___1 = FStarC_Syntax_Util.un_uinst head in
     uu___1.FStarC_Syntax_Syntax.n in
@@ -4669,7 +4846,7 @@ let get_lid_valued_effect_attr (env1 : env) (eff_lid : FStarC_Ident.lident)
   match attr_args with
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
   | FStar_Pervasives_Native.Some args ->
-      if Prims.uu___is_Nil args
+      if (match args with | [] -> true | uu___ -> false)
       then default_if_attr_has_no_arg
       else
         (match FStarC_List.hd args with
@@ -4999,8 +5176,9 @@ let is_reifiable_effect (env1 : env) (effect_lid : FStarC_Ident.lident) :
   match uu___ with
   | FStar_Pervasives_Native.None -> false
   | FStar_Pervasives_Native.Some (ed, uu___1) ->
-      FStar_Pervasives_Native.uu___is_Some
-        ed.FStarC_Syntax_Syntax.combinators
+      (match ed.FStarC_Syntax_Syntax.combinators with
+       | FStar_Pervasives_Native.Some v -> true
+       | uu___2 -> false)
 let is_reifiable_rc (env1 : env) (c : FStarC_Syntax_Syntax.residual_comp) :
   Prims.bool= is_reifiable_effect env1 c.FStarC_Syntax_Syntax.residual_effect
 let is_reifiable_comp (env1 : env) (c : FStarC_Syntax_Syntax.comp) :
@@ -5022,8 +5200,7 @@ let is_reifiable_function (env1 : env) (t : FStarC_Syntax_Syntax.term) :
 let reify_comp (env1 : env) (c : FStarC_Syntax_Syntax.comp)
   (u_c : FStarC_Syntax_Syntax.universe) : FStarC_Syntax_Syntax.term=
   let l = FStarC_Syntax_Util.comp_effect_name c in
-  (let uu___1 =
-     let uu___2 = is_reifiable_effect env1 l in Prims.op_Negation uu___2 in
+  (let uu___1 = let uu___2 = is_reifiable_effect env1 l in Prims.not uu___2 in
    if uu___1
    then
      FStarC_Errors.raise_error hasRange_env env1
@@ -5425,8 +5602,9 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
                           match uu___3 with
                           | (uu___4, uu___5, k') ->
                               let uu___6 = find_edge order (k, k') in
-                              FStar_Pervasives_Native.uu___is_Some uu___6) l)
-              l in
+                              (match uu___6 with
+                               | FStar_Pervasives_Native.Some v -> true
+                               | uu___7 -> false)) l) l in
           if (FStarC_List.length lubs) <> Prims.int_one
           then
             FStarC_Errors.raise_error hasRange_env env1
@@ -6271,9 +6449,9 @@ let guard_form (g : guard_t) : FStarC_TypeChecker_Common.guard_formula=
   g.FStarC_TypeChecker_Common.guard_f
 let is_trivial (g : guard_t) : Prims.bool=
   if
-    (((FStarC_TypeChecker_Common.uu___is_Trivial
-         g.FStarC_TypeChecker_Common.guard_f)
-        &&
+    (((match g.FStarC_TypeChecker_Common.guard_f with
+       | FStarC_TypeChecker_Common.Trivial -> true
+       | uu___ -> false) &&
         (FStarC_Class_Listlike.is_empty (FStarC_CList.listlike_clist ())
            g.FStarC_TypeChecker_Common.deferred))
        &&
@@ -6289,7 +6467,9 @@ let is_trivial (g : guard_t) : Prims.bool=
            let uu___1 =
              FStarC_Syntax_Util.ctx_uvar_should_check
                imp.FStarC_TypeChecker_Common.imp_uvar in
-           FStarC_Syntax_Syntax.uu___is_Allow_unresolved uu___1 in
+           match uu___1 with
+           | FStarC_Syntax_Syntax.Allow_unresolved _0 -> true
+           | uu___2 -> false in
          if uu___
          then true
          else
@@ -6699,12 +6879,6 @@ let fvar_of_nonqual_lid (env1 : env) (lid : FStarC_Ident.lident) :
   FStarC_Syntax_Syntax.term=
   let qn = lookup_qname env1 lid in
   FStarC_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None
-let split_smt_query (e : env) (q : FStarC_Syntax_Syntax.term) :
-  (env * FStarC_Syntax_Syntax.term) Prims.list FStar_Pervasives_Native.option=
-  match (e.solver).spinoff_strictly_positive_goals with
-  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some p ->
-      let uu___ = p e q in FStar_Pervasives_Native.Some uu___
 let hashable_env : env FStarC_Class_Hashable.hashable=
   {
     FStarC_Class_Hashable.hash =

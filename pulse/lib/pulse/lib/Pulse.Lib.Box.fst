@@ -55,7 +55,7 @@ fn alloc (#a:Type0) (x:a)
 }
 #pop-options
 
-fn op_Bang (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
+fn ( ! ) (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
   preserves pts_to b #p v
   returns  x : a
   ensures rewrites_to x v
@@ -66,7 +66,7 @@ fn op_Bang (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
   x
 }
 
-fn op_Colon_Equals (#a:Type0) (b:box a) (x:a) (#v:erased a)
+fn ( := ) (#a:Type0) (b:box a) (x:a) (#v:erased a)
   requires pts_to b v
   ensures  pts_to b (hide x)
 {

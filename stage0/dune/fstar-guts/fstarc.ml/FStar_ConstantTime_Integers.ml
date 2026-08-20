@@ -11,8 +11,6 @@ type qual =
   | Public of FStar_Integers.signed_width 
 let uu___is_Secret (projectee : qual) : Prims.bool=
   match projectee with | Secret (sl, l, sw1) -> true | uu___ -> false
-
-
 let __proj__Secret__item__sw (projectee : qual) : sw=
   match projectee with | Secret (sl, l, sw1) -> sw1
 let uu___is_Public (projectee : qual) : Prims.bool=

@@ -21,10 +21,10 @@ let rec item_list_doesnt_repeat_keys :
     match items with
     | [] -> true
     | (k, v)::tl ->
-        (Prims.op_Negation (key_in_item_list k tl)) &&
+        (Prims.not (key_in_item_list k tl)) &&
           (item_list_doesnt_repeat_keys tl)
 let lookup (key : 'a) (m : ('a, 'b) map) : 'b=
-  FStar_Pervasives_Native.__proj__Some__item__v (elements m key)
+  match elements m key with | FStar_Pervasives_Native.Some v -> v
 let emptymap (uu___ : unit) : ('a, 'b) map=
   Prims.Mkdtuple2
     ((FStar_FiniteSet_Base.emptyset ()),
@@ -52,5 +52,4 @@ let subtract (m : ('a, 'b) map) (s : 'a FStar_FiniteSet_Base.set) :
   Prims.Mkdtuple2 (keys', f')
 let remove (key : 'a) (m : ('a, 'b) map) : ('a, 'b) map=
   subtract m (FStar_FiniteSet_Base.singleton key)
-let notin (key : 'a) (m : ('a, 'b) map) : Prims.bool=
-  Prims.op_Negation (mem key m)
+let notin (key : 'a) (m : ('a, 'b) map) : Prims.bool= Prims.not (mem key m)

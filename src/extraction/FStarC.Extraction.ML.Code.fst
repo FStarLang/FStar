@@ -123,7 +123,7 @@ let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : ML mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
-    | "Prims.op_Modulus" -> (["Prims"], "mod_f")
+    | "Prims.op_Percent" -> (["Prims"], "mod_f")
     | _ ->
      let ns, x = x in
      (path_of_ns currentModule ns, x)
@@ -148,19 +148,19 @@ let ptctor (currentModule : mlsymbol) (mlp : mlpath) : ML mlsymbol =
 
 (* -------------------------------------------------------------------- *)
 let infix_prim_ops = [
-    ("op_Addition"       , e_bin_prio_op1   , "+" );
-    ("op_Subtraction"    , e_bin_prio_op1   , "-" );
+    ("op_Plus"       , e_bin_prio_op1   , "+" );
+    ("op_Minus"    , e_bin_prio_op1   , "-" );
     ("op_Star"           , e_bin_prio_op1   , "*" );
-    ("op_Division"       , e_bin_prio_op1   , "/" );
-    ("op_Equality"       , e_bin_prio_eq    , "=" );
+    ("op_Slash"       , e_bin_prio_op1   , "/" );
+    ("op_Equals"       , e_bin_prio_eq    , "=" );
     ("op_Colon_Equals"   , e_bin_prio_eq    , ":=");
-    ("op_disEquality"    , e_bin_prio_eq    , "<>");
-    ("op_AmpAmp"         , e_bin_prio_and   , "&&");
-    ("op_BarBar"         , e_bin_prio_or    , "||");
-    ("op_LessThanOrEqual"   , e_bin_prio_order , "<=");
-    ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
-    ("op_LessThan"          , e_bin_prio_order , "<" );
-    ("op_GreaterThan"       , e_bin_prio_order , ">" );
+    ("op_Less_Greater"    , e_bin_prio_eq    , "<>");
+    ("op_Amp_Amp"         , e_bin_prio_and   , "&&");
+    ("op_Bar_Bar"         , e_bin_prio_or    , "||");
+    ("op_Less_Equals"   , e_bin_prio_order , "<=");
+    ("op_Greater_Equals", e_bin_prio_order , ">=");
+    ("op_Less"          , e_bin_prio_order , "<" );
+    ("op_Greater"       , e_bin_prio_order , ">" );
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -168,8 +168,8 @@ let prim_uni_ops () =
     let op_minus = if Util.codegen_fsharp()
                    then "-"
                    else "~-" in
-    [ ("op_Negation", "not");
-      ("op_Minus", op_minus);
+    [ ("not", "not");
+      ("op_Tilde_Minus", op_minus);
       ("op_Bang","Support.ST.read") ]
 
 (* -------------------------------------------------------------------- *)

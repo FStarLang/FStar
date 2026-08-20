@@ -372,7 +372,7 @@ fn length_iter (#t:Type) (x: llist t)
     to check the subtraction as a nat, which fails without the extra condition.
     We can also just write `n + len suff = len 'l`. *)
     //Also below, the bounded integer stuff leads to problems
-  decreases  (List.Tot.length 'l `Prims.op_Subtraction` value_of ctr)
+  decreases  (List.Tot.length 'l `Prims.op_Minus` value_of ctr)
   {
     with _n _ll suffix. _;
     let n = Pulse.Lib.Reference.(!ctr);

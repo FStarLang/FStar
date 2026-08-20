@@ -12,6 +12,8 @@ let upd (m : ('k, 'v) t) (x : 'k) (y : 'v) : ('k, 'v) t=
 let remove (m : ('k, 'v) t) (x : 'k) : ('k, 'v) t=
   fun x1 -> if x1 = x then FStar_Pervasives_Native.None else m x1
 let contains (m : ('k, 'v) t) (x : 'k) : Prims.bool=
-  FStar_Pervasives_Native.uu___is_Some (sel m x)
+  match sel m x with
+  | FStar_Pervasives_Native.Some v1 -> true
+  | uu___ -> false
 let const (y : 'v) : ('k, 'v) t=
   literal (fun x -> FStar_Pervasives_Native.Some y)

@@ -22,7 +22,7 @@ end))
 let sel = (fun ( m  :  ('key, 'value) t ) ( k  :  'key ) -> (m.mappings k))
 
 
-let upd = (fun ( m  :  ('key, 'value) t ) ( k  :  'key ) ( v  :  'value ) -> {mappings = (FStar_FunctionalExtensionality.on_domain (fun ( x  :  'key ) -> (match ((Prims.op_Equality x k)) with
+let upd = (fun ( m  :  ('key, 'value) t ) ( k  :  'key ) ( v  :  'value ) -> {mappings = (FStar_FunctionalExtensionality.on_domain (fun ( x  :  'key ) -> (match ((Prims.op_Equals x k)) with
 | true -> begin
 v
 end

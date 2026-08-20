@@ -273,14 +273,14 @@ let extract_top_level_sig
 // TODO: add machine integers binops?
 //
 let is_binop (s:string) : option binop =
-  if s = "Prims.op_Addition" ||
+  if s = "Prims.op_Plus" ||
      s = "FStar.UInt8.add" ||
      s = "FStar.UInt16.add" ||
      s = "FStar.UInt32.add" ||
      s = "FStar.UInt64.add" ||
      s = "FStar.SizeT.add"
   then Some Add
-  else if s = "Prims.op_Subtraction" ||
+  else if s = "Prims.op_Minus" ||
           s = "FStar.SizeT.sub" ||
           s = "FStar.UInt8.sub" ||
           s = "FStar.UInt16.sub" ||
@@ -296,37 +296,37 @@ let is_binop (s:string) : option binop =
           s = "FStar.SizeT.mul" ||
           s = "FStar.SizeT.op_Star_Hat"
   then Some Mul
-  else if s = "Prims.op_disEquality"
+  else if s = "Prims.op_Less_Greater"
   then Some Ne
-  else if s = "Prims.op_LessThanOrEqual" ||
+  else if s = "Prims.op_Less_Equals" ||
           s = "FStar.UInt8.lte" ||
           s = "FStar.UInt16.lte" ||
           s = "FStar.UInt32.lte" ||
           s = "FStar.UInt64.lte" ||
           s = "FStar.SizeT.lte"
   then Some Le
-  else if s = "Prims.op_LessThan" ||
+  else if s = "Prims.op_Less" ||
           s = "FStar.UInt8.lt" ||
           s = "FStar.UInt16.lt" ||
           s = "FStar.UInt32.lt" ||
           s = "FStar.UInt64.lt" ||
           s = "FStar.SizeT.lt"
   then Some Lt
-  else if s = "Prims.op_GreaterThanOrEqual" ||
+  else if s = "Prims.op_Greater_Equals" ||
           s = "FStar.UInt8.gte" ||
           s = "FStar.UInt16.gte" ||
           s = "FStar.UInt32.gte" ||
           s = "FStar.UInt64.gte" ||
           s = "FStar.SizeT.gte"
   then Some Ge
-  else if s = "Prims.op_GreaterThan" ||
+  else if s = "Prims.op_Greater" ||
           s = "FStar.UInt8.gt" ||
           s = "FStar.UInt16.gt" ||
           s = "FStar.UInt32.gt" ||
           s = "FStar.UInt64.gt" ||
           s = "FStar.SizeT.gt"
   then Some Gt
-  else if s = "Prims.op_Equality"
+  else if s = "Prims.op_Equals"
   then Some Eq
   else if s = "Prims.rem" ||
           s = "FStar.UInt8.rem" ||
@@ -335,9 +335,9 @@ let is_binop (s:string) : option binop =
           s = "FStar.UInt64.rem" ||
           s = "FStar.SizeT.rem"
   then Some Rem
-  else if s = "Prims.op_AmpAmp"
+  else if s = "Prims.op_Amp_Amp"
   then Some And
-  else if s = "Prims.op_BarBar"
+  else if s = "Prims.op_Bar_Bar"
   then Some Or
   else if
     s = "FStar.UInt8.shift_left" ||
@@ -499,7 +499,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
        mk_method_call elit "to_string" [] 
      | _ -> elit)
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
-    when S.string_of_mlpath p = "Prims.op_Negation" ->
+    when S.string_of_mlpath p = "Prims.not" ->
     mk_not (extract_mlexpr g e)
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
@@ -619,16 +619,16 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e::i::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.mask_read" ||
-         S.string_of_mlpath p = "Pulse.Lib.Slice.op_Array_Access" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ||
+         S.string_of_mlpath p = "Pulse.Lib.Slice.op_Dot_Lparen_Rparen" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Dot_Lparen_Rparen" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.read_ref" ->
 
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e1::e2::e3::_)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.mask_write" ||
-         S.string_of_mlpath p = "Pulse.Lib.Slice.op_Array_Assignment" ||
-         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
+         S.string_of_mlpath p = "Pulse.Lib.Slice.op_Dot_Lparen_Rparen_Less_Minus" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Dot_Lparen_Rparen_Less_Minus" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.write_ref" ->
 
     let e1 = extract_mlexpr g e1 in

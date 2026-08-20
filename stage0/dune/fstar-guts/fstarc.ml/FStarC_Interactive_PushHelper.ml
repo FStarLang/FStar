@@ -170,7 +170,7 @@ let deps_and_repl_ld_tasks_of_our_file (filename : Prims.string) :
              | intf::impl::[] ->
                  ((let uu___3 =
                      let uu___4 = FStarC_Parser_Dep.is_interface intf in
-                     Prims.op_Negation uu___4 in
+                     Prims.not uu___4 in
                    if uu___3
                    then
                      FStarC_Errors.raise_error0
@@ -182,7 +182,7 @@ let deps_and_repl_ld_tasks_of_our_file (filename : Prims.string) :
                    else ());
                   (let uu___4 =
                      let uu___5 = FStarC_Parser_Dep.is_implementation impl in
-                     Prims.op_Negation uu___5 in
+                     Prims.not uu___5 in
                    if uu___4
                    then
                      FStarC_Errors.raise_error0
@@ -329,7 +329,7 @@ let should_reset (task : FStarC_Interactive_Ide_Types.repl_task) :
   Prims.bool=
   match task with
   | FStarC_Interactive_Ide_Types.PushFragment (uu___, uu___1, uu___2, deps)
-      -> Prims.uu___is_Cons deps
+      -> (match deps with | hd::tl -> true | uu___3 -> false)
   | uu___ -> false
 let pop_repl (msg : Prims.string)
   (st : FStarC_Interactive_Ide_Types.repl_state) :

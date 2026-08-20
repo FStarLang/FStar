@@ -153,7 +153,7 @@ val mk5 #a #b #c #d #e #r
   (f : a -> b -> c -> d -> e -> r)
   : primitive_step
 
-(* Duplication for op_Division / op_Modulus which can prevent reduction. The `f`
+(* Duplication for op_Slash / op_Percent which can prevent reduction. The `f`
 already returns something in the option monad, so we add an extra join. Also for
 decidable eq which needs different impls in each normalizer *)
 val mk1' #a #r #na #nr

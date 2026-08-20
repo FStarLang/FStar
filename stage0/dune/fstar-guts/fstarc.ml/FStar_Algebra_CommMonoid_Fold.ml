@@ -20,5 +20,7 @@ let rec fold :
     if b = a
     then expr b
     else
-      FStar_Algebra_CommMonoid_Equiv.__proj__CM__item__mult eq cm
-        (fold eq cm a (b - Prims.int_one) expr) (expr b)
+      ((match cm with
+        | FStar_Algebra_CommMonoid_Equiv.CM
+            (unit, mult, identity, associativity, commutativity, congruence)
+            -> mult)) (fold eq cm a (b - Prims.int_one) expr) (expr b)

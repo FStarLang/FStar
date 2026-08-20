@@ -1165,8 +1165,7 @@ let rec scan (ds : passumption Prims.list) : unit st=
                                                         let uu___6 =
                                                           should_retain_assumption
                                                             assumption in
-                                                        Prims.op_Negation
-                                                          uu___6 in
+                                                        Prims.not uu___6 in
                                                       if uu___5
                                                       then
                                                         Obj.magic
@@ -1303,7 +1302,7 @@ let prune (p : pruning_state)
         (let decls_and_defs =
            let uu___4 =
              let uu___5 = FStarC_Options_Ext.enabled "prune_decls" in
-             Prims.op_Negation uu___5 in
+             Prims.not uu___5 in
            if uu___4
            then []
            else

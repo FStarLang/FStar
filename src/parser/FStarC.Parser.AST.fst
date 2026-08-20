@@ -149,7 +149,11 @@ let mk_uminus t rminus r l =
     | Const (Const_int (s, Some (Signed, width))) ->
         Const (Const_int ("-" ^ s, Some (Signed, width)))
     | _ ->
-        Op(mk_ident ("-", rminus), [t])
+        (* Prefix (unary) minus is the operator ( ~- ), as in OCaml and
+           F#. Writing it this way keeps it distinct from the binary
+           subtraction operator ( - ), and hence allows operator names to
+           be compiled independently of their arity. *)
+        Op(mk_ident ("~-", rminus), [t])
   in
   mk_term t r l
 
@@ -367,111 +371,105 @@ let strip_prefix (prefix s: string): ML (option string)
     then Some (substring_from s (String.length prefix))
     else None
 
-let compile_op arity s r : ML string =
-    let name_of_char = function
-      |'&' -> "Amp"
-      |'@'  -> "At"
-      |'+' -> "Plus"
-      |'-' when (arity=1) -> "Minus"
-      |'-' -> "Subtraction"
-      |'~' -> "Tilde"
-      |'/' -> "Slash"
-      |'\\' -> "Backslash"
-      |'<' -> "Less"
-      |'=' -> "Equals"
-      |'>' -> "Greater"
-      |'_' -> "Underscore"
-      |'|' -> "Bar"
-      |'!' -> "Bang"
-      |'^' -> "Hat"
-      |'%' -> "Percent"
-      |'*' -> "Star"
-      |'?' -> "Question"
-      |':' -> "Colon"
-      |'$' -> "Dollar"
-      |'.' -> "Dot"
-      | c -> "u" ^ show (Util.int_of_char c)
-    in
-    match s with
-    | ".[]<-" -> "op_String_Assignment"
-    | ".()<-" -> "op_Array_Assignment"
-    | ".[||]<-" -> "op_Brack_Lens_Assignment"
-    | ".(||)<-" -> "op_Lens_Assignment"
-    | ".[]" -> "op_String_Access"
-    | ".()" -> "op_Array_Access"
-    | ".[||]" -> "op_Brack_Lens_Access"
-    | ".(||)" -> "op_Lens_Access"
-    | _ -> // handle let operators (i.e. [let?] or [and*], and [exists*] and [forall*])
-          let prefix, s = 
-            if starts_with s "let" || starts_with s "and"
-            then substring s 0 3 ^ "_", substring_from s 3
-            else if starts_with s "exists" || starts_with s "forall"
-            then substring s 0 6 ^ "_", substring_from s 6
-            else "", s in
-          "op_" ^ prefix ^ String.concat "_" (List.map name_of_char (String.list_of_string s))
+(* The name of each character that may appear in an operator. This is
+   the basis of the (purely syntactic) mangling of operator names into
+   ordinary identifiers, see compile_op below. *)
+let name_of_char c : ML string =
+  match c with
+  |'&' -> "Amp"
+  |'@'  -> "At"
+  |'+' -> "Plus"
+  |'-' -> "Minus"
+  |'~' -> "Tilde"
+  |'/' -> "Slash"
+  |'\\' -> "Backslash"
+  |'<' -> "Less"
+  |'=' -> "Equals"
+  |'>' -> "Greater"
+  |'_' -> "Underscore"
+  |'|' -> "Bar"
+  |'!' -> "Bang"
+  |'^' -> "Hat"
+  |'%' -> "Percent"
+  |'*' -> "Star"
+  |'?' -> "Question"
+  |':' -> "Colon"
+  |'$' -> "Dollar"
+  |'.' -> "Dot"
+  |'[' -> "Lbrack"
+  |']' -> "Rbrack"
+  |'(' -> "Lparen"
+  |')' -> "Rparen"
+  | c -> "u" ^ show (Util.int_of_char c)
 
-let compile_op' s r : ML string =
-  compile_op (-1) s r
+(* Operators are mangled into ordinary identifiers by naming each of
+   their characters and joining the names with underscores, under an
+   "op_" prefix. There are no special cases: string_to_op below is the
+   inverse of this function. E.g.,
 
-let string_to_op s : ML (option (string & option int)) =
+      ( + )    ~~>  op_Plus
+      ( +. )   ~~>  op_Plus_Dot
+      ( ~- )   ~~>  op_Tilde_Minus
+      ( .[] )  ~~>  op_Dot_Lbrack_Rbrack
+
+   The only wrinkle is that let/and operators (e.g. [let?] or [and*])
+   and quantifier operators (e.g. [exists*]) begin with a keyword,
+   which is kept as-is (e.g. [let?] ~~> op_let_Question). *)
+let compile_op s r : ML string =
+    let prefix, s =
+      if starts_with s "let" || starts_with s "and"
+      then substring s 0 3 ^ "_", substring_from s 3
+      else if starts_with s "exists" || starts_with s "forall"
+      then substring s 0 6 ^ "_", substring_from s 6
+      else "", s in
+    "op_" ^ prefix ^ String.concat "_" (List.map name_of_char (String.list_of_string s))
+
+let string_to_op s : ML (option string) =
   let name_of_op s =
     match s with
-    | "Amp" ->  Some ("&", None)
-    | "At" -> Some ("@", None)
-    | "Plus" -> Some ("+", Some 2)
-    | "Minus" -> Some ("-", None)
-    | "Subtraction" -> Some ("-", Some 2)
-    | "Tilde" -> Some ("~", None)
-    | "Slash" -> Some ("/", Some 2)
-    | "Backslash" -> Some ("\\", None)
-    | "Less" -> Some ("<", Some 2)
-    | "Equals" -> Some ("=", None)
-    | "Greater" -> Some (">", Some 2)
-    | "Underscore" -> Some ("_", None)
-    | "Bar" -> Some ("|", None)
-    | "Bang" -> Some ("!", None)
-    | "Hat" -> Some ("^", None)
-    | "Percent" -> Some ("%", None)
-    | "Star" -> Some ("*", None)
-    | "Question" -> Some ("?", None)
-    | "Colon" -> Some (":", None)
-    | "Dollar" -> Some ("$", None)
-    | "Dot" -> Some (".", None)
-    | "let" | "and" | "forall" | "exists" -> Some (s, None)
-    | _ -> None
+    | "Amp" ->  Some "&"
+    | "At" -> Some "@"
+    | "Plus" -> Some "+"
+    | "Minus" -> Some "-"
+    | "Tilde" -> Some "~"
+    | "Slash" -> Some "/"
+    | "Backslash" -> Some "\\"
+    | "Less" -> Some "<"
+    | "Equals" -> Some "="
+    | "Greater" -> Some ">"
+    | "Underscore" -> Some "_"
+    | "Bar" -> Some "|"
+    | "Bang" -> Some "!"
+    | "Hat" -> Some "^"
+    | "Percent" -> Some "%"
+    | "Star" -> Some "*"
+    | "Question" -> Some "?"
+    | "Colon" -> Some ":"
+    | "Dollar" -> Some "$"
+    | "Dot" -> Some "."
+    | "Lbrack" -> Some "["
+    | "Rbrack" -> Some "]"
+    | "Lparen" -> Some "("
+    | "Rparen" -> Some ")"
+    | "let" | "and" | "forall" | "exists" -> Some s
+    | s ->
+      (* An unnamed character is encoded by its code point, e.g. u8226 *)
+      if starts_with s "u"
+      then safe_int_of_string (substring_from s 1)
+           |> Option.map (fun c -> string_of_char (char_of_int c))
+      else None
   in
-  match s with
-  | "op_String_Assignment" -> Some (".[]<-", None)
-  | "op_Array_Assignment" -> Some (".()<-", None)
-  | "op_Brack_Lens_Assignment" -> Some (".[||]<-", None)
-  | "op_Lens_Assignment" -> Some (".(||)<-", None)
-  | "op_String_Access" -> Some (".[]", None)
-  | "op_Array_Access" -> Some (".()", None)
-  | "op_Brack_Lens_Access" -> Some (".[||]", None)
-  | "op_Lens_Access" -> Some (".(||)", None)
-  | _ ->
-    if starts_with s "op_"
-    then let frags = split (substring_from s (String.length "op_")) "_" in
-         match frags with
-         | [op] ->
-                if starts_with op "u"
-                then safe_int_of_string (substring_from op 1) |> Option.map (
-                       fun op -> (string_of_char (char_of_int op), None)
-                     )
-                else name_of_op op
-         | _ ->
-           let maybeop =
-             List.fold_left (fun acc x -> match acc with
-                                          | None -> None
-                                          | Some acc ->
-                                              match x with
-                                              | Some (op, _) -> Some (acc ^ op)
-                                              | None -> None)
-                            (Some "")
-                            (List.map name_of_op frags)
-           in
-           Option.map (fun o -> (o, None)) maybeop
-    else None
+  if starts_with s "op_"
+  then
+    let frags = split (substring_from s (String.length "op_")) "_" in
+    List.fold_left
+      (fun acc frag ->
+        match acc, name_of_op frag with
+        | Some acc, Some op -> Some (acc ^ op)
+        | _ -> None)
+      (Some "")
+      frags
+  else None
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging

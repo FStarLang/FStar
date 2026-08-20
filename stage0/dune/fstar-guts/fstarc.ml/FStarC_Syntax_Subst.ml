@@ -590,7 +590,7 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
               (t.FStarC_Syntax_Syntax.hash_code)
           } in
         tag_with_range uu___1 s in
-      if Prims.op_Negation resolve_uvars
+      if Prims.not resolve_uvars
       then fallback ()
       else
         (let uu___ =
@@ -737,8 +737,9 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
              let lbd =
                if
                  is_rec &&
-                   (FStar_Pervasives.uu___is_Inl
-                      lb.FStarC_Syntax_Syntax.lbname)
+                   (match lb.FStarC_Syntax_Syntax.lbname with
+                    | FStar_Pervasives.Inl v -> true
+                    | uu___ -> false)
                then subst' sn lb.FStarC_Syntax_Syntax.lbdef
                else subst' s lb.FStarC_Syntax_Syntax.lbdef in
              let lbname =
@@ -1186,8 +1187,8 @@ let open_let_rec (lbs : FStarC_Syntax_Syntax.letbinding Prims.list)
            | (i, lbs1, out) ->
                let x =
                  FStarC_Syntax_Syntax.freshen_bv
-                   (FStar_Pervasives.__proj__Inl__item__v
-                      lb.FStarC_Syntax_Syntax.lbname) in
+                   (match lb.FStarC_Syntax_Syntax.lbname with
+                    | FStar_Pervasives.Inl v -> v) in
                ((i + Prims.int_one),
                  ({
                     FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inl x);
@@ -1256,8 +1257,8 @@ let close_let_rec (lbs : FStarC_Syntax_Syntax.letbinding Prims.list)
            | (i, out) ->
                ((i + Prims.int_one),
                  ((FStarC_Syntax_Syntax.NM
-                     ((FStar_Pervasives.__proj__Inl__item__v
-                         lb.FStarC_Syntax_Syntax.lbname), i)) :: out))) lbs
+                     (((match lb.FStarC_Syntax_Syntax.lbname with
+                        | FStar_Pervasives.Inl v -> v)), i)) :: out))) lbs
         (Prims.int_zero, []) in
   match uu___ with
   | (n_let_recs, let_rec_closing) ->

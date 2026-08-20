@@ -20,8 +20,8 @@ open FStar.Map
 
 (* syntax for map accesses, m.[key] and m.[key] <- value *)
 type map (key:eqtype) (value:Type) = Map.t key value
-let op_String_Access     = sel
-let op_String_Assignment = upd
+let ( .[] )     = sel
+let ( .[]<- ) = upd
 
 let nat128_max = 0x100000000000000000000000000000000
 let _ = assert_norm (pow2 128 = nat128_max) 

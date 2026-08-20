@@ -217,7 +217,7 @@ let s_hide (a : FStarC_Syntax_Embeddings.abstract_term)
   match e with
   | Reveal (a', x) when
       FStarC_Syntax_Util.term_eq
-        (FStarC_Syntax_Embeddings.__proj__Abstract__item__t a) a'
+        (match a with | FStarC_Syntax_Embeddings.Abstract t -> t) a'
       -> FStar_Pervasives_Native.Some x
   | uu___ -> FStar_Pervasives_Native.None
 let nbe_hide (a : FStarC_TypeChecker_NBETerm.abstract_nbe_term)
@@ -229,7 +229,7 @@ let nbe_hide (a : FStarC_TypeChecker_NBETerm.abstract_nbe_term)
   match e with
   | Reveal (a', x) when
       FStarC_TypeChecker_NBETerm.term_eq
-        (FStarC_TypeChecker_NBETerm.__proj__AbstractNBE__item__t a) a'
+        (match a with | FStarC_TypeChecker_NBETerm.AbstractNBE t -> t) a'
       -> FStar_Pervasives_Native.Some x
   | uu___ -> FStar_Pervasives_Native.None
 let simplify_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=

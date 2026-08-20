@@ -268,7 +268,7 @@ val int2bv_add:
     squash (bvadd #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (add_mod #n x y) == z)
 
-(** Subtraction *)
+(** Minus *)
 val bvsub (#n: pos) (a b: bv_t n) : Tot (bv_t n)
 
 val int2bv_sub:

@@ -46,12 +46,12 @@ instance addable_base {| d : addable_bounded_unsigned_int 'a |}
 class subtractable_bounded_unsigned_int (a:Type) = {
    [@@@no_method]
    base   : bounded_unsigned_int a;
-   sub    : (x:a -> y:a { fits op_Subtraction x y } -> a);
+   sub    : (x:a -> y:a { fits op_Minus x y } -> a);
 
    [@@@no_method]
    properties : squash (
-     related_ops op_Subtraction sub /\
-     (forall (x:a). fits op_Subtraction bound x)
+     related_ops op_Minus sub /\
+     (forall (x:a). fits op_Minus bound x)
    )
 }
 

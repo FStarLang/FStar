@@ -3,8 +3,7 @@ let compress1_t (allow_uvars : Prims.bool) (allow_names : Prims.bool)
   (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
   let mk x = FStarC_Syntax_Syntax.mk x t.FStarC_Syntax_Syntax.pos in
   match t.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Tm_uvar (uv, s) when Prims.op_Negation allow_uvars
-      ->
+  | FStarC_Syntax_Syntax.Tm_uvar (uv, s) when Prims.not allow_uvars ->
       let uu___ =
         let uu___1 =
           FStarC_Class_Show.show FStarC_Syntax_Print.showable_ctxu uv in
@@ -15,7 +14,7 @@ let compress1_t (allow_uvars : Prims.bool) (allow_names : Prims.bool)
         FStarC_Errors_Codes.Error_UnexpectedUnresolvedUvar ()
         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
         (Obj.magic uu___)
-  | FStarC_Syntax_Syntax.Tm_name bv when Prims.op_Negation allow_names ->
+  | FStarC_Syntax_Syntax.Tm_name bv when Prims.not allow_names ->
       ((let uu___1 = FStarC_Debug.any () in
         if uu___1
         then
@@ -64,7 +63,7 @@ let compress1_t (allow_uvars : Prims.bool) (allow_names : Prims.bool)
 let compress1_u (allow_uvars : Prims.bool) (allow_names : Prims.bool)
   (u : FStarC_Syntax_Syntax.universe) : FStarC_Syntax_Syntax.universe=
   match u with
-  | FStarC_Syntax_Syntax.U_name bv when Prims.op_Negation allow_names ->
+  | FStarC_Syntax_Syntax.U_name bv when Prims.not allow_names ->
       ((let uu___1 = FStarC_Debug.any () in
         if uu___1
         then
@@ -77,7 +76,7 @@ let compress1_u (allow_uvars : Prims.bool) (allow_names : Prims.bool)
             (Obj.magic uu___2)
         else ());
        u)
-  | FStarC_Syntax_Syntax.U_unif uv when Prims.op_Negation allow_uvars ->
+  | FStarC_Syntax_Syntax.U_unif uv when Prims.not allow_uvars ->
       let uu___ =
         let uu___1 =
           let uu___2 = FStarC_Syntax_Unionfind.univ_uvar_id uv in

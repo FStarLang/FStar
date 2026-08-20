@@ -1095,7 +1095,7 @@ let mk_uminus (t : term) (rminus : FStarC_Range_Type.range)
           (FStarC_Const.Const_int
              ((Prims.strcat "-" s),
                (FStar_Pervasives_Native.Some (FStarC_Const.Signed, width))))
-    | uu___ -> Op ((FStarC_Ident.mk_ident ("-", rminus)), [t]) in
+    | uu___ -> Op ((FStarC_Ident.mk_ident ("~-", rminus)), [t]) in
   mk_term t1 r l
 let mk_pattern (p : pattern') (r : FStarC_Range_Type.range) : pattern=
   { pat = p; prange = r }
@@ -1438,198 +1438,124 @@ let strip_prefix (prefix : Prims.string) (s : Prims.string) :
     let uu___ = FStarC_Util.substring_from s (FStarC_String.length prefix) in
     FStar_Pervasives_Native.Some uu___
   else FStar_Pervasives_Native.None
-let compile_op (arity : Prims.int) (s : Prims.string)
-  (r : FStarC_Range_Type.range) : Prims.string=
-  let name_of_char uu___ =
-    match uu___ with
-    | 38 -> "Amp"
-    | 64 -> "At"
-    | 43 -> "Plus"
-    | 45 when arity = Prims.int_one -> "Minus"
-    | 45 -> "Subtraction"
-    | 126 -> "Tilde"
-    | 47 -> "Slash"
-    | 92 -> "Backslash"
-    | 60 -> "Less"
-    | 61 -> "Equals"
-    | 62 -> "Greater"
-    | 95 -> "Underscore"
-    | 124 -> "Bar"
-    | 33 -> "Bang"
-    | 94 -> "Hat"
-    | 37 -> "Percent"
-    | 42 -> "Star"
-    | 63 -> "Question"
-    | 58 -> "Colon"
-    | 36 -> "Dollar"
-    | 46 -> "Dot"
-    | c ->
-        let uu___1 =
-          FStarC_Class_Show.show FStarC_Class_Show.showable_int
-            (FStarC_Util.int_of_char c) in
-        Prims.strcat "u" uu___1 in
-  match s with
-  | ".[]<-" -> "op_String_Assignment"
-  | ".()<-" -> "op_Array_Assignment"
-  | ".[||]<-" -> "op_Brack_Lens_Assignment"
-  | ".(||)<-" -> "op_Lens_Assignment"
-  | ".[]" -> "op_String_Access"
-  | ".()" -> "op_Array_Access"
-  | ".[||]" -> "op_Brack_Lens_Access"
-  | ".(||)" -> "op_Lens_Access"
-  | uu___ ->
+let name_of_char (c : FStar_Char.char) : Prims.string=
+  match c with
+  | 38 -> "Amp"
+  | 64 -> "At"
+  | 43 -> "Plus"
+  | 45 -> "Minus"
+  | 126 -> "Tilde"
+  | 47 -> "Slash"
+  | 92 -> "Backslash"
+  | 60 -> "Less"
+  | 61 -> "Equals"
+  | 62 -> "Greater"
+  | 95 -> "Underscore"
+  | 124 -> "Bar"
+  | 33 -> "Bang"
+  | 94 -> "Hat"
+  | 37 -> "Percent"
+  | 42 -> "Star"
+  | 63 -> "Question"
+  | 58 -> "Colon"
+  | 36 -> "Dollar"
+  | 46 -> "Dot"
+  | 91 -> "Lbrack"
+  | 93 -> "Rbrack"
+  | 40 -> "Lparen"
+  | 41 -> "Rparen"
+  | c1 ->
+      let uu___ =
+        FStarC_Class_Show.show FStarC_Class_Show.showable_int
+          (FStarC_Util.int_of_char c1) in
+      Prims.strcat "u" uu___
+let compile_op (s : Prims.string) (r : FStarC_Range_Type.range) :
+  Prims.string=
+  let uu___ =
+    if (FStarC_Util.starts_with s "let") || (FStarC_Util.starts_with s "and")
+    then
       let uu___1 =
-        if
-          (FStarC_Util.starts_with s "let") ||
-            (FStarC_Util.starts_with s "and")
-        then
-          let uu___2 =
-            let uu___3 =
-              FStarC_Util.substring s Prims.int_zero (Prims.of_int 3) in
-            Prims.strcat uu___3 "_" in
-          let uu___3 = FStarC_Util.substring_from s (Prims.of_int 3) in
-          (uu___2, uu___3)
-        else
-          if
-            (FStarC_Util.starts_with s "exists") ||
-              (FStarC_Util.starts_with s "forall")
-          then
-            (let uu___2 =
-               let uu___3 =
-                 FStarC_Util.substring s Prims.int_zero (Prims.of_int 6) in
-               Prims.strcat uu___3 "_" in
-             let uu___3 = FStarC_Util.substring_from s (Prims.of_int 6) in
-             (uu___2, uu___3))
-          else ("", s) in
-      (match uu___1 with
-       | (prefix, s1) ->
+        let uu___2 = FStarC_Util.substring s Prims.int_zero (Prims.of_int 3) in
+        Prims.strcat uu___2 "_" in
+      let uu___2 = FStarC_Util.substring_from s (Prims.of_int 3) in
+      (uu___1, uu___2)
+    else
+      if
+        (FStarC_Util.starts_with s "exists") ||
+          (FStarC_Util.starts_with s "forall")
+      then
+        (let uu___1 =
            let uu___2 =
-             let uu___3 =
-               let uu___4 =
-                 FStarC_List.map name_of_char
-                   (FStarC_String.list_of_string s1) in
-               FStarC_String.concat "_" uu___4 in
-             Prims.strcat prefix uu___3 in
-           Prims.strcat "op_" uu___2)
-let compile_op' (s : Prims.string) (r : FStarC_Range_Type.range) :
-  Prims.string= compile_op (Prims.of_int (-1)) s r
+             FStarC_Util.substring s Prims.int_zero (Prims.of_int 6) in
+           Prims.strcat uu___2 "_" in
+         let uu___2 = FStarC_Util.substring_from s (Prims.of_int 6) in
+         (uu___1, uu___2))
+      else ("", s) in
+  match uu___ with
+  | (prefix, s1) ->
+      let uu___1 =
+        let uu___2 =
+          let uu___3 =
+            FStarC_List.map name_of_char (FStarC_String.list_of_string s1) in
+          FStarC_String.concat "_" uu___3 in
+        Prims.strcat prefix uu___2 in
+      Prims.strcat "op_" uu___1
 let string_to_op (s : Prims.string) :
-  (Prims.string * Prims.int FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.option=
+  Prims.string FStar_Pervasives_Native.option=
   let name_of_op s1 =
     match s1 with
-    | "Amp" ->
-        FStar_Pervasives_Native.Some ("&", FStar_Pervasives_Native.None)
-    | "At" ->
-        FStar_Pervasives_Native.Some ("@", FStar_Pervasives_Native.None)
-    | "Plus" ->
-        FStar_Pervasives_Native.Some
-          ("+", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
-    | "Minus" ->
-        FStar_Pervasives_Native.Some ("-", FStar_Pervasives_Native.None)
-    | "Subtraction" ->
-        FStar_Pervasives_Native.Some
-          ("-", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
-    | "Tilde" ->
-        FStar_Pervasives_Native.Some ("~", FStar_Pervasives_Native.None)
-    | "Slash" ->
-        FStar_Pervasives_Native.Some
-          ("/", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
-    | "Backslash" ->
-        FStar_Pervasives_Native.Some ("\\", FStar_Pervasives_Native.None)
-    | "Less" ->
-        FStar_Pervasives_Native.Some
-          ("<", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
-    | "Equals" ->
-        FStar_Pervasives_Native.Some ("=", FStar_Pervasives_Native.None)
-    | "Greater" ->
-        FStar_Pervasives_Native.Some
-          (">", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
-    | "Underscore" ->
-        FStar_Pervasives_Native.Some ("_", FStar_Pervasives_Native.None)
-    | "Bar" ->
-        FStar_Pervasives_Native.Some ("|", FStar_Pervasives_Native.None)
-    | "Bang" ->
-        FStar_Pervasives_Native.Some ("!", FStar_Pervasives_Native.None)
-    | "Hat" ->
-        FStar_Pervasives_Native.Some ("^", FStar_Pervasives_Native.None)
-    | "Percent" ->
-        FStar_Pervasives_Native.Some ("%", FStar_Pervasives_Native.None)
-    | "Star" ->
-        FStar_Pervasives_Native.Some ("*", FStar_Pervasives_Native.None)
-    | "Question" ->
-        FStar_Pervasives_Native.Some ("?", FStar_Pervasives_Native.None)
-    | "Colon" ->
-        FStar_Pervasives_Native.Some (":", FStar_Pervasives_Native.None)
-    | "Dollar" ->
-        FStar_Pervasives_Native.Some ("$", FStar_Pervasives_Native.None)
-    | "Dot" ->
-        FStar_Pervasives_Native.Some (".", FStar_Pervasives_Native.None)
-    | "let" ->
-        FStar_Pervasives_Native.Some (s1, FStar_Pervasives_Native.None)
-    | "and" ->
-        FStar_Pervasives_Native.Some (s1, FStar_Pervasives_Native.None)
-    | "forall" ->
-        FStar_Pervasives_Native.Some (s1, FStar_Pervasives_Native.None)
-    | "exists" ->
-        FStar_Pervasives_Native.Some (s1, FStar_Pervasives_Native.None)
-    | uu___ -> FStar_Pervasives_Native.None in
-  match s with
-  | "op_String_Assignment" ->
-      FStar_Pervasives_Native.Some (".[]<-", FStar_Pervasives_Native.None)
-  | "op_Array_Assignment" ->
-      FStar_Pervasives_Native.Some (".()<-", FStar_Pervasives_Native.None)
-  | "op_Brack_Lens_Assignment" ->
-      FStar_Pervasives_Native.Some (".[||]<-", FStar_Pervasives_Native.None)
-  | "op_Lens_Assignment" ->
-      FStar_Pervasives_Native.Some (".(||)<-", FStar_Pervasives_Native.None)
-  | "op_String_Access" ->
-      FStar_Pervasives_Native.Some (".[]", FStar_Pervasives_Native.None)
-  | "op_Array_Access" ->
-      FStar_Pervasives_Native.Some (".()", FStar_Pervasives_Native.None)
-  | "op_Brack_Lens_Access" ->
-      FStar_Pervasives_Native.Some (".[||]", FStar_Pervasives_Native.None)
-  | "op_Lens_Access" ->
-      FStar_Pervasives_Native.Some (".(||)", FStar_Pervasives_Native.None)
-  | uu___ ->
-      if FStarC_Util.starts_with s "op_"
-      then
-        let frags =
-          let uu___1 =
-            FStarC_Util.substring_from s (FStarC_String.length "op_") in
-          FStarC_Util.split uu___1 "_" in
-        (match frags with
-         | op::[] ->
-             if FStarC_Util.starts_with op "u"
-             then
-               let uu___1 =
-                 let uu___2 = FStarC_Util.substring_from op Prims.int_one in
-                 FStarC_Util.safe_int_of_string uu___2 in
-               FStarC_Option.map
-                 (fun op1 ->
-                    ((FStarC_Util.string_of_char
-                        (FStarC_Util.char_of_int op1)),
-                      FStar_Pervasives_Native.None)) uu___1
-             else name_of_op op
-         | uu___1 ->
-             let maybeop =
-               let uu___2 = FStarC_List.map name_of_op frags in
-               FStarC_List.fold_left
-                 (fun acc x ->
-                    match acc with
-                    | FStar_Pervasives_Native.None ->
-                        FStar_Pervasives_Native.None
-                    | FStar_Pervasives_Native.Some acc1 ->
-                        (match x with
-                         | FStar_Pervasives_Native.Some (op, uu___3) ->
-                             FStar_Pervasives_Native.Some
-                               (Prims.strcat acc1 op)
-                         | FStar_Pervasives_Native.None ->
-                             FStar_Pervasives_Native.None))
-                 (FStar_Pervasives_Native.Some "") uu___2 in
-             FStarC_Option.map (fun o -> (o, FStar_Pervasives_Native.None))
-               maybeop)
-      else FStar_Pervasives_Native.None
+    | "Amp" -> FStar_Pervasives_Native.Some "&"
+    | "At" -> FStar_Pervasives_Native.Some "@"
+    | "Plus" -> FStar_Pervasives_Native.Some "+"
+    | "Minus" -> FStar_Pervasives_Native.Some "-"
+    | "Tilde" -> FStar_Pervasives_Native.Some "~"
+    | "Slash" -> FStar_Pervasives_Native.Some "/"
+    | "Backslash" -> FStar_Pervasives_Native.Some "\\"
+    | "Less" -> FStar_Pervasives_Native.Some "<"
+    | "Equals" -> FStar_Pervasives_Native.Some "="
+    | "Greater" -> FStar_Pervasives_Native.Some ">"
+    | "Underscore" -> FStar_Pervasives_Native.Some "_"
+    | "Bar" -> FStar_Pervasives_Native.Some "|"
+    | "Bang" -> FStar_Pervasives_Native.Some "!"
+    | "Hat" -> FStar_Pervasives_Native.Some "^"
+    | "Percent" -> FStar_Pervasives_Native.Some "%"
+    | "Star" -> FStar_Pervasives_Native.Some "*"
+    | "Question" -> FStar_Pervasives_Native.Some "?"
+    | "Colon" -> FStar_Pervasives_Native.Some ":"
+    | "Dollar" -> FStar_Pervasives_Native.Some "$"
+    | "Dot" -> FStar_Pervasives_Native.Some "."
+    | "Lbrack" -> FStar_Pervasives_Native.Some "["
+    | "Rbrack" -> FStar_Pervasives_Native.Some "]"
+    | "Lparen" -> FStar_Pervasives_Native.Some "("
+    | "Rparen" -> FStar_Pervasives_Native.Some ")"
+    | "let" -> FStar_Pervasives_Native.Some s1
+    | "and" -> FStar_Pervasives_Native.Some s1
+    | "forall" -> FStar_Pervasives_Native.Some s1
+    | "exists" -> FStar_Pervasives_Native.Some s1
+    | s2 ->
+        if FStarC_Util.starts_with s2 "u"
+        then
+          let uu___ =
+            let uu___1 = FStarC_Util.substring_from s2 Prims.int_one in
+            FStarC_Util.safe_int_of_string uu___1 in
+          FStarC_Option.map
+            (fun c -> FStarC_Util.string_of_char (FStarC_Util.char_of_int c))
+            uu___
+        else FStar_Pervasives_Native.None in
+  if FStarC_Util.starts_with s "op_"
+  then
+    let frags =
+      let uu___ = FStarC_Util.substring_from s (FStarC_String.length "op_") in
+      FStarC_Util.split uu___ "_" in
+    FStarC_List.fold_left
+      (fun acc frag ->
+         let uu___ = let uu___1 = name_of_op frag in (acc, uu___1) in
+         match uu___ with
+         | (FStar_Pervasives_Native.Some acc1, FStar_Pervasives_Native.Some
+            op) -> FStar_Pervasives_Native.Some (Prims.strcat acc1 op)
+         | uu___1 -> FStar_Pervasives_Native.None)
+      (FStar_Pervasives_Native.Some "") frags
+  else FStar_Pervasives_Native.None
 let string_of_fsdoc
   (ck : (Prims.string * (Prims.string * Prims.string) Prims.list)) :
   Prims.string=
@@ -2306,7 +2232,7 @@ let check_id (id : FStarC_Ident.ident) : unit=
   let first_char =
     FStarC_String.substring (FStarC_Ident.string_of_id id) Prims.int_zero
       Prims.int_one in
-  if Prims.op_Negation ((FStarC_String.lowercase first_char) = first_char)
+  if Prims.not ((FStarC_String.lowercase first_char) = first_char)
   then
     let uu___ =
       let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_ident id in

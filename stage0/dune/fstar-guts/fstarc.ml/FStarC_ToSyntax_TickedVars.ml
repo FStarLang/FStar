@@ -7,7 +7,9 @@ let ident_is_ticked (id : FStarC_Ident.ident) : Prims.bool=
 let lident_is_ticked (id : FStarC_Ident.lident) : Prims.bool=
   let ns = FStarC_Ident.ns_of_lid id in
   let id1 = FStarC_Ident.ident_of_lid id in
-  if Prims.uu___is_Nil ns then ident_is_ticked id1 else false
+  if match ns with | [] -> true | uu___ -> false
+  then ident_is_ticked id1
+  else false
 let uu___0 : FStarC_Ident.ident FStarC_RBSet.t FStarC_Class_Monoid.monoid=
   let uu___ =
     FStarC_Class_Setlike.empty
@@ -39,7 +41,9 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
           let uu___2 =
             FStarC_Syntax_DsEnv.try_lookup_id env
               (FStarC_Ident.ident_of_lid a) in
-          FStar_Pervasives_Native.uu___is_None uu___2
+          match uu___2 with
+          | FStar_Pervasives_Native.None -> true
+          | uu___3 -> false
         else false in
       if uu___
       then emit1 (FStarC_Ident.ident_of_lid a)
@@ -385,7 +389,9 @@ and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
              if uu___2
              then
                let uu___3 = FStarC_Syntax_DsEnv.try_lookup_id env x in
-               FStar_Pervasives_Native.uu___is_None uu___3
+               match uu___3 with
+               | FStar_Pervasives_Native.None -> true
+               | uu___4 -> false
              else false in
            if uu___1
            then emit1 x
@@ -412,7 +418,9 @@ and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
              if uu___2
              then
                let uu___3 = FStarC_Syntax_DsEnv.try_lookup_id env x in
-               FStar_Pervasives_Native.uu___is_None uu___3
+               match uu___3 with
+               | FStar_Pervasives_Native.None -> true
+               | uu___4 -> false
              else false in
            if uu___1
            then emit1 x
@@ -479,7 +487,7 @@ let tm_type (r : FStarC_Range_Type.range) : FStarC_Parser_AST.term=
 let close (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) :
   FStarC_Parser_AST.term=
   let ftv = free_ticked_vars env t in
-  if Prims.uu___is_Nil ftv
+  if match ftv with | [] -> true | uu___ -> false
   then t
   else
     (let binders =
@@ -505,7 +513,7 @@ let close (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) :
 let close_fun (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) :
   FStarC_Parser_AST.term=
   let ftv = free_ticked_vars env t in
-  if Prims.uu___is_Nil ftv
+  if match ftv with | [] -> true | uu___ -> false
   then t
   else
     (let binders =

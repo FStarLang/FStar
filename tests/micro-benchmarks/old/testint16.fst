@@ -42,7 +42,7 @@ let lemma_g2_f2 x = ()
 
 val lemma_mid'_mid : x:nat16 -> y:nat16{y <= x /\ y<>0s}
                 -> Lemma
-                  (requires ((Prims.op_LessThanOrEqual (Prims.op_Addition (as_int x) (as_int y))
+                  (requires ((Prims.op_Less_Equals (Prims.op_Plus (as_int x) (as_int y))
                                                        Int16.max_value_int)
                              /\ ((x + y) % 2s) = 0s))
                   (ensures (mid_nat x y = mid_nat' x y))

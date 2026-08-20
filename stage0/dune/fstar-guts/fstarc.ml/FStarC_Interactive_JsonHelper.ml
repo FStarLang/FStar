@@ -7,13 +7,11 @@ let try_assoc (key : Prims.string) (d : assoct) :
       (fun uu___1 -> match uu___1 with | (k, uu___2) -> k = key) d in
   FStarC_Option.map FStar_Pervasives_Native.snd uu___
 exception InvalidQuery of Prims.string 
-let uu___is_InvalidQuery (projectee : Prims.exn) : Prims.bool=
-  match projectee with | InvalidQuery uu___ -> true | uu___ -> false
+let uu___is_InvalidQuery (projectee : Prims.exn) : Prims.bool= true
 let __proj__InvalidQuery__item__uu___ (projectee : Prims.exn) : Prims.string=
   match projectee with | InvalidQuery uu___ -> uu___
 exception UnexpectedJsonType of (Prims.string * FStarC_Json.json) 
-let uu___is_UnexpectedJsonType (projectee : Prims.exn) : Prims.bool=
-  match projectee with | UnexpectedJsonType uu___ -> true | uu___ -> false
+let uu___is_UnexpectedJsonType (projectee : Prims.exn) : Prims.bool= true
 let __proj__UnexpectedJsonType__item__uu___ (projectee : Prims.exn) :
   (Prims.string * FStarC_Json.json)=
   match projectee with | UnexpectedJsonType uu___ -> uu___

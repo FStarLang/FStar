@@ -1,7 +1,7 @@
 open Prims
 let rec apply_squash_or_lem (d : Prims.nat)
   (t : FStar_Tactics_NamedView.term) :
-  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate -> unit=
   FStar_Tactics_V2_Derived.try_with
     (fun uu___ -> match () with | () -> FStar_Tactics_V2_Derived.apply t)
     (fun uu___ ->
@@ -99,7 +99,7 @@ let rec apply_squash_or_lem (d : Prims.nat)
                           FStar_Tactics_V2_Derived.fail
                             "mapply: can't apply (3)" ps))))
 let mapply0 (t : FStar_Tactics_NamedView.term) :
-  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate -> unit=
   apply_squash_or_lem (Prims.of_int 10) t
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.MApply0.mapply0"

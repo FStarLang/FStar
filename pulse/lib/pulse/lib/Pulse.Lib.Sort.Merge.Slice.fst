@@ -156,9 +156,9 @@ requires
         let prf1 = SM.seq_list_match_cons_elim_trade c1' l1 vmatch;
         let prf2 = SM.seq_list_match_cons_elim_trade c2' l2 vmatch;
         let i1 = !pi1;
-        let x1 = S.op_Array_Access a i1;
+        let x1 = S.op_Dot_Lparen_Rparen a i1;
         let i2 = !pi2;
-        let x2 = S.op_Array_Access a i2;
+        let x2 = S.op_Dot_Lparen_Rparen a i2;
         Trade.rewrite_with_trade (vmatch (Seq.head c1') (List.Tot.hd l1))
             (vmatch x1 (List.Tot.hd l1));
         Trade.trans_hyp_l (vmatch x1 (List.Tot.hd l1)) _ _ _;

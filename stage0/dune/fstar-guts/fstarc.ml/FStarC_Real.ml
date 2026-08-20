@@ -12,7 +12,7 @@ let rec dropWhile :
     | x::xs1 -> if f x then dropWhile f xs1 else x :: xs1
 let int_frac (r : real) :
   (Prims.string * Prims.string) FStar_Pervasives_Native.option=
-  match FStarC_String.split [46] (__proj__Real__item___0 r) with
+  match FStarC_String.split [46] (match r with | Real _0 -> _0) with
   | i::f::[] ->
       let i1 = FStarC_String.list_of_string i in
       let f1 = FStarC_String.list_of_string f in

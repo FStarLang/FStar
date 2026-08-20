@@ -1947,7 +1947,7 @@ let e_comp_view :
         mkConstruct
           FStarC_Reflection_V2_Constants.ref_C_Lemma.FStarC_Reflection_V2_Constants.fv
           [] uu___
-    | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, args, decrs) ->
+    | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, pre, post, decrs) ->
         let uu___ =
           let uu___1 =
             let uu___2 =
@@ -1966,17 +1966,21 @@ let e_comp_view :
                 FStarC_TypeChecker_NBETerm.as_arg uu___6 in
               let uu___6 =
                 let uu___7 =
-                  let uu___8 =
-                    FStarC_TypeChecker_NBETerm.embed
-                      (FStarC_TypeChecker_NBETerm.e_list e_argv) cb args in
+                  let uu___8 = FStarC_TypeChecker_NBETerm.embed e_term cb pre in
                   FStarC_TypeChecker_NBETerm.as_arg uu___8 in
                 let uu___8 =
                   let uu___9 =
                     let uu___10 =
-                      FStarC_TypeChecker_NBETerm.embed
-                        (FStarC_TypeChecker_NBETerm.e_list e_term) cb decrs in
+                      FStarC_TypeChecker_NBETerm.embed e_term cb post in
                     FStarC_TypeChecker_NBETerm.as_arg uu___10 in
-                  [uu___9] in
+                  let uu___10 =
+                    let uu___11 =
+                      let uu___12 =
+                        FStarC_TypeChecker_NBETerm.embed
+                          (FStarC_TypeChecker_NBETerm.e_list e_term) cb decrs in
+                      FStarC_TypeChecker_NBETerm.as_arg uu___12 in
+                    [uu___11] in
+                  uu___9 :: uu___10 in
                 uu___7 :: uu___8 in
               uu___5 :: uu___6 in
             uu___3 :: uu___4 in
@@ -2024,40 +2028,45 @@ let e_comp_view :
                             (pre1, post1, pats1)))))
     | FStarC_TypeChecker_NBETerm.Construct
         (fv, uu___,
-         (decrs, uu___1)::(args, uu___2)::(res, uu___3)::(eff, uu___4)::
-         (us, uu___5)::[])
+         (decrs, uu___1)::(post, uu___2)::(pre, uu___3)::(res, uu___4)::
+         (eff, uu___5)::(us, uu___6)::[])
         when
         FStarC_Syntax_Syntax.fv_eq_lid fv
           FStarC_Reflection_V2_Constants.ref_C_Eff.FStarC_Reflection_V2_Constants.lid
         ->
-        let uu___6 =
+        let uu___7 =
           FStarC_TypeChecker_NBETerm.unembed
             (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us in
-        FStarC_Option.bind uu___6
+        FStarC_Option.bind uu___7
           (fun us1 ->
-             let uu___7 =
+             let uu___8 =
                FStarC_TypeChecker_NBETerm.unembed
                  FStarC_TypeChecker_NBETerm.e_string_list cb eff in
-             FStarC_Option.bind uu___7
+             FStarC_Option.bind uu___8
                (fun eff1 ->
-                  let uu___8 =
+                  let uu___9 =
                     FStarC_TypeChecker_NBETerm.unembed e_term cb res in
-                  FStarC_Option.bind uu___8
+                  FStarC_Option.bind uu___9
                     (fun res1 ->
-                       let uu___9 =
-                         FStarC_TypeChecker_NBETerm.unembed
-                           (FStarC_TypeChecker_NBETerm.e_list e_argv) cb args in
-                       FStarC_Option.bind uu___9
-                         (fun args1 ->
-                            let uu___10 =
-                              FStarC_TypeChecker_NBETerm.unembed
-                                (FStarC_TypeChecker_NBETerm.e_list e_term) cb
-                                decrs in
-                            FStarC_Option.bind uu___10
-                              (fun decrs1 ->
-                                 FStar_Pervasives_Native.Some
-                                   (FStarC_Reflection_V2_Data.C_Eff
-                                      (us1, eff1, res1, args1, decrs1)))))))
+                       let uu___10 =
+                         FStarC_TypeChecker_NBETerm.unembed e_term cb pre in
+                       FStarC_Option.bind uu___10
+                         (fun pre1 ->
+                            let uu___11 =
+                              FStarC_TypeChecker_NBETerm.unembed e_term cb
+                                post in
+                            FStarC_Option.bind uu___11
+                              (fun post1 ->
+                                 let uu___12 =
+                                   FStarC_TypeChecker_NBETerm.unembed
+                                     (FStarC_TypeChecker_NBETerm.e_list
+                                        e_term) cb decrs in
+                                 FStarC_Option.bind uu___12
+                                   (fun decrs1 ->
+                                      FStar_Pervasives_Native.Some
+                                        (FStarC_Reflection_V2_Data.C_Eff
+                                           (us1, eff1, res1, pre1, post1,
+                                             decrs1))))))))
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
