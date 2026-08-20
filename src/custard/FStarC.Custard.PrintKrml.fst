@@ -61,6 +61,15 @@ let find_t (env:kenv) (x:string) : ML int =
   try List.index (fun y -> y = x) env.names_t
   with _ -> failwith ("Custard: unbound type variable " ^ x ^ " reached the karamel backend")
 
+(* A name for a binder Custard invents, that no reference in scope can resolve
+   to.  [find] takes the first match, so reusing a name already bound would
+   capture every outer use of it. *)
+let fresh_local (env:kenv) (base:string) : ML string =
+  let rec go (n:int) : ML string =
+    let x = if n = 0 then base else base ^ show n in
+    if env.names |> List.existsb (fun y -> y = x) then go (n + 1) else x in
+  go 0
+
 (* -------------------------------------------------------------------- *)
 (* Names                                                                *)
 (* -------------------------------------------------------------------- *)
@@ -288,9 +297,23 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | ESeq (e1, e2) ->
     (* [TAny] rather than [krml_typ env e1.ty]: a discarded value's type is of
        no interest to anyone, and Custard is happy to leave a call's result
-       type as [TAny], which would then clash with what karamel infers. *)
-    let b = { K.name = "_"; K.typ = K.TAny; K.mut = false; K.meta = [] } in
-    K.ELet (b, krml_expr env e1, krml_expr (extend env "_") e2)
+       type as [TAny], which would then clash with what karamel infers.
+
+       The name matters, and must not be [_].  karamel's use analysis, finding
+       the binder unread, rewrites the binding into [let b = e1 in ignore b],
+       and its Rust backend prints a binder's name verbatim: a binder named
+       [_] then yields [ignore(_)], and [_] is not an expression in Rust.  (In
+       C it is harmless, because that backend renames.)  Any ordinary
+       identifier works, and karamel prepends its own [_] if the binder really
+       does end up unread, which is what Rust wants anyway.
+
+       Freshened against the enclosing scope because [find] resolves a
+       reference by the *first* matching name: [Rename] gives a local its bare
+       source spelling, so a program with its own [discarded] in scope would
+       otherwise have every reference to it captured by this binder. *)
+    let x = fresh_local env "discarded" in
+    let b = { K.name = x; K.typ = K.TAny; K.mut = false; K.meta = [] } in
+    K.ELet (b, krml_expr env e1, krml_expr (extend env x) e2)
 
   | ECtor (n, args) when is_tuple_ctor_name n ->
     K.ETuple (args |> List.map (krml_expr env))

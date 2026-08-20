@@ -7207,6 +7207,66 @@ passes it on that column.  Pre-existing, and unrelated to §20; `PulseSlice` is
 simply the first test in the suite to return a tuple from a polymorphic
 function.
 
+### 20.6 A slice in a field, and two more from round 9
+
+The round-9 report took `--custard_backend KrmlRust` to EverParse and got 436
+Rust errors down to 28, with the miscompilation itself gone.  Two of the
+remaining classes are worth recording, because one is Custard's and one is
+not, and telling them apart took a reproduction.
+
+**`_` in expression position** is Custard's.  `PrintKrml` compiled an `ESeq`
+whose first component is not `unit` into a `let`, karamel requiring every
+element of a sequence but the last to be of unit type, and named that binder
+`_`.  karamel's use analysis then finds the binder unread and rewrites the
+binding into `let b = e1 in ignore b` -- and its Rust backend prints a
+binder's name verbatim, so the reference came out as `ignore(_)`, and `_` is
+not an expression in Rust.  The C backend renames, which is why this had gone
+unnoticed.  The binder now gets an ordinary name, freshened against the
+enclosing scope because `find` resolves a reference by the first matching
+name and `Rename` gives a local its bare source spelling.  Visible in
+`PulseHashTable`, so it needed no new test.
+
+**A slice in a field of a returned struct** is karamel's, and the reporter's
+diagnosis of it was close but not right.  He read `cbor_array` and
+`cbor_tagged` as "structurally identical types that disagree with
+themselves", one emitting `&[cbor_raw]` and the other `Box<[cbor_raw]>`.
+They are not identical: `AstToMiniRust` translates `TApp (slice, [t])` to
+`Ref (..., Slice ...)` unconditionally and has no path from a slice to a
+`Box`, so a field that came out `Box<[T]>` was a *buffer* in the IR and not a
+slice at all.  That is a question about the F\* source, not about the backend.
+
+The real defect is the other half, and it is exactly the `E0106`s.  karamel
+sorts a struct that holds pointers into one of two disjoint sets
+(`compute_struct_info`): **returned** by value, so it owns its pointees and
+they become `Box`; or **not returned**, so it borrows them and the struct
+gains a lifetime.  A slice belongs to neither.  It is a borrow by
+construction and cannot be owned, so when a struct holding one lands in the
+returned set it gets `box=true, lifetime=false` and its slice field is
+emitted as `&[T]` inside a type that binds no lifetime.
+
+`tests/custard/pulse/PulseSliceRec.fst` is three declarations that reproduce
+it -- a record with a slice field, a variant with one, and a variant that
+reaches itself through one, which is `cbor_raw`/`cbor_array` in miniature.
+All three are correct while the struct is only ever passed as an argument:
+
+```rust
+pub struct view <'a> { pub bytes: &'a [u8], pub tag: u8 }
+pub enum tree <'a> { Leaf { _0: u8 }, Node { _0: &'a [tree <'a>] } }
+```
+
+Adding one total function that returns a `view` by value, and nothing else,
+is enough to flip it:
+
+```rust
+pub struct view { pub bytes: &[u8], pub tag: u8 }   // E0106
+```
+
+`krml -fno-box` empties the returned set and every such struct gets its
+lifetime back; the test passes it, compiles, and runs.  That is a workaround
+and not the fix -- it also declines to box structs that genuinely should be
+-- but it costs nothing here, since a slice is the only pointer these
+programs hold.  Reported as karamel#753.
+
 ### 20.4 What this does not solve
 
 `Pulse.Lib.Slice` has around twenty `val`s and karamel translates seven.  The
@@ -7355,3 +7415,4 @@ Also from the merge: `FStar.Tactics.MkProjectors` is deleted, and
 | M10ρ | **A lambda without a name, and a proposition nobody asked about** (§19.12, §19.13, §19.14) | Done.  Three findings from the CDDL half of the reporter's corpus, and the first is the reporter's own bisection: Custard already emits function pointers in structs exactly as karamel does, so the entire gap between `FunPtrRecord.fst` (works) and `CDDL.Pulse.AST.Det.C.cbor_det_impl` (error 367) is that the second writes its functions inline.  A closed lambda is a function nobody named; `Simplify.lift_lambdas` names it, before `dce` so the new declarations are in the call graph and before `scc` so they are ordered, inheriting the enclosing declaration's type parameters so free type variables cost nothing.  C only -- OCaml has closures and karamel has its own treatment.  Nobody writes these by hand: all eleven come from an `inline_for_extraction` record of thunks whose fields beta-reduce, against nineteen bare names that already worked and ten erased ghost fields.  A lambda that still reaches `PrintC` therefore genuinely captures, and says so.  Second, the advice attached to a type-variable rejection recommended `--custard_monomorphize_types`, which the reporter had set; `PrintC.mono_advice` asks first, and reports a Custard bug when the flag is already on, because advice that names the reader's own command line is worse than none.  Third, error 364 exhausting 10^9 steps "normalizing a type signature" on `env9 : bundle_env ... { bundle_env_included ... /\ ... }` -- a machine-generated CDDL well-formedness proof, which `is_type_sig` normalized whole and then discarded.  Both `is_type_sig` and `is_prop_sig` now `Mono.strip` first; `Mono` was already right, since `is_arity_aux` never lets a `Tm_refine` reach its normalizer.  `tests/custard/RefStrip.fst` is a 2^40-step proposition in a refinement under a 20000-step budget, and the reproduction that does *not* work is worth recording: a recursive function in the refinement is never unfolded by this step list, so it has to be a chain of abbreviations. |
 | M10σ | **`Pulse.Lib.Slice` compiles to a Rust slice** (§19.15, §20) | Done.  karamel recognizes a slice by name and Custard's monomorphization erased the name, so every borrow became an owning `Box` and the reporter's program read back zeroes -- a miscompilation, not a build failure, which is why the test runs the Rust binary and checks its own answers.  `--custard_backend Krml` splits into `KrmlC` and `KrmlRust`, because the two want *different programs* and no property of the F\* source distinguishes them; `tests/extraction/backends` had already had them as separate rows passing identical flags.  A new `Modelled` decl flag, deliberately not `Realized`: a realization is hand-written OCaml and its declaration is still Custard's to emit on the karamel path, a model is the target compiler's and never is -- sharing the flag deleted `FStar.Pervasives.Native.tuple2`.  Only the *type* declaration is dropped; the operations stay as externals, since karamel's checker resolves every reference before the Rust pass rewrites any of them, and their type variables print as `TBound` rather than the usual external's `TAny`, Rust having no cast from `any`.  `FStar.Pervasives.Native.tupleN` is modelled too on that backend and prints as the IR's long-unused `TTuple`/`ETuple`/`PTuple`, because `split` becomes `split_at_mut` and `OptimizeMiniRust.retrieve_pair_type` *crashes* on a struct; `krml -fkeep-tuples` is not optional for the same reason.  `Builtins.is_known_krml_model_op` whitelists the seven operations `AstToMiniRust` actually matches, so a future runtime `val` in a modelled module is rejected here rather than by rustc.  `tests/custard/pulse/PulseSlice.fst`, compiled and run on both columns; its C column needs `--custard_monomorphize_types`, a pre-existing limit unrelated to slices (§20.5). |
 | M10τ | **A projector whose field is a function** (§21) | Done.  Master's #4389 makes projectors and discriminators declaration-only, so `Extract.assumed_projector_lb` -- written for `[@@no_auto_projectors]`, and until now reached by almost nothing -- became the path every projector takes, and it took the projectee to be the *last* binder of the projector's type.  `U.arrow_formals_comp` flattens the whole spine, so when the projected field is itself a function the last binder is the field's own argument and the synthesized match scrutinized that: `i.impl_validate i.contents` came out as `i.contents.impl_validate`.  A miscompilation rather than a rejection, and it surfaced three modules away as a C field with no owner, a Pulse constructor with no type, and an OCaml type error in generated code.  The projectee is now the first binder headed by the inductive the constructor belongs to; the trailing binders are kept and the match applied to them, which is the shape F\* used to generate and the one `Simplify.eta_reduce` exists for.  `tests/custard/CFunPtr.fst`, `MonoHoles.fst` and `pulse/test`'s `Example.Hashtable` all reproduce it.  Also `FStar.Tactics.MkProjectors`, deleted by the same merge, removed from `src/custard/entrypoints.txt`. |
+| M10υ | **A discarded value's name, and a slice in a returned struct** (§20.6) | Done.  Round 9 of the EverParse report: 436 Rust errors down to 28, miscompilation gone, and two of the remaining classes worth chasing.  `PrintKrml` named the binder it invents for a discarded `ESeq` component `_`; karamel's use analysis rewrites an unread binding into `let b = e1 in ignore b`, and its Rust backend prints a binder's name verbatim, so the reference came out as `ignore(_)`, which is not an expression in Rust.  Now an ordinary name, freshened against the scope because `find` takes the first match and `Rename` gives a local its bare source spelling.  The other is karamel's, and the report's reading of it was off: `AstToMiniRust` has no path from a slice to a `Box`, so a field emitted as `Box<[T]>` held a *buffer* and the two types were not structurally identical after all.  The real defect is the `E0106`s: karamel sorts a pointer-holding struct into returned (own them, `Box`) or not-returned (borrow them, lifetime), and a slice fits neither, so a returned struct with a slice field gets `box=true, lifetime=false` and emits `&[T]` in a type binding no lifetime.  `tests/custard/pulse/PulseSliceRec.fst` reproduces it in three declarations and one total function; `krml -fno-box` is the workaround the test uses.  Reported as karamel#753. |

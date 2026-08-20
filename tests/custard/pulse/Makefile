@@ -78,6 +78,7 @@ KRML_FLAGS_PulseSlice += --custard_monomorphize_types true
 # (section 19.15), which a program that checks its own answers catches and a
 # program that merely builds does not.
 RUST_TESTS += PulseSlice
+RUST_TESTS += PulseSliceRec
 
 # Same modules again, through the direct-to-C backend: no krml, no krmllib,
 # just a C11 compiler with the warnings turned on, and then run.  PulseHashTable is the
@@ -131,10 +132,19 @@ $(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked
 # -fkeep-tuples is not optional here and is part of what section 20 documents:
 # karamel's split_at hook destructures a real tuple, and without the flag the
 # tuple has already become a struct by the time the Rust backend sees it.
+#
+# -fno-box is section 20.6.  karamel sorts a struct holding pointers into one
+# of two disjoint sets: returned by value, so it owns its pointees and they
+# become Box; or not returned, so it borrows them and the struct gains a
+# lifetime.  A slice fits neither -- it is a borrow by construction and cannot
+# be owned -- so a *returned* struct with a slice field comes out as
+# `struct view { bytes: &[u8] }`, a borrow in a type that binds no lifetime,
+# which is E0106.  -fno-box empties the returned set and every such struct
+# gets its lifetime.  A karamel-side bug, and this is the workaround.
 $(OUTPUT_DIR)/%.rs: $(OUTPUT_DIR)/%.custard.rust.krml
 	$(call msg, "KRML-RUST", $(basename $(notdir $@)))
 	$(Q)rm -rf $(OUTPUT_DIR)/$*_rs
-	$(Q)krml -silent -fkeep-tuples -skip-linking -backend rust \
+	$(Q)krml -silent -fkeep-tuples -fno-box -skip-linking -backend rust \
 	  -tmpdir $(OUTPUT_DIR)/$*_rs $<
 	$(Q)sed 's/^pub fn main()/pub fn krml_main()/' $(OUTPUT_DIR)/$*_rs/*.rs > $@
 	$(Q)grep -q '^pub fn krml_main()' $@ || \
