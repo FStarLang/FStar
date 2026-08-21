@@ -177,75 +177,140 @@ let or_decide (p q:prop)
     b
 
 (** Pick a witness for an existential.
-    `indefinite_descriptionN` picks witnesses for `N` nested existentials at
-    once, packaged in a dependent tuple, so that
-    `eliminate exists x1 ... xN. p with e` can be desugared into
-    `let (| x1, ..., xN |) = indefinite_descriptionN (fun x1 ... xN -> p) in e`.
-    For more than `max_indefinite_description_arity` binders, the desugaring
-    nests several of these. *)
+
+    `indefinite_descriptionN` picks witnesses for `N` nested existentials in a
+    single step, packaged in a right-nested chain of dependent pairs, so that
+    `eliminate exists x1 ... xN. p with e` desugars into
+
+      `let (| x1, (| ..., xN |) |) = indefinite_descriptionN (fun x1 ... xN -> p) in e`
+
+    Doing all `N` binders at once matters for performance. If the desugaring
+    instead chained several smaller combinators, each intermediate step would
+    restate the remaining existential as its own postcondition, and the cost of
+    normalizing the resulting verification condition grows exponentially in the
+    number of steps. Nesting also gives the outer existentials no usable SMT
+    trigger, so Z3 falls back to enumerating tuples of typed terms (see issues
+    #4405 and #4444).
+
+    The chain is built from `dtuple2` alone rather than from wider tuple types,
+    so no new tuple types are needed to support large arities.
+
+    Only arities up to `max_indefinite_description_arity` are provided; beyond
+    that the desugaring peels off one binder at a time. The cap is kept modest
+    because checking `indefinite_descriptionN` itself currently costs time
+    exponential in `N`; that is a normalizer problem, not a Z3 one (every query
+    in this file is discharged well under an rlimit of 1). *)
+
 irreducible
 let indefinite_description1
-      (#a:Type)
-      (p: a -> prop)
-  : Ghost a
+      (#a1:Type)
+      (p: a1 -> prop)
+  : Ghost a1
     (requires exists x1. p x1)
     (ensures fun x1 -> p x1)
   = indefinite_description p
 
 irreducible
 let indefinite_description2
-      (#a:Type)
-      (#b:a -> GTot Type)
-      (p: (x1:a -> b x1 -> prop))
-  : Ghost (dtuple2 a b)
+      (#a1:Type)
+      (#a2:(x1:a1 -> GTot Type))
+      (p: (x1:a1 -> x2:a2 x1 -> prop))
+  : Ghost (x1:a1 & a2 x1)
     (requires exists x1 x2. p x1 x2)
     (ensures fun r -> let (| x1, x2 |) = r in p x1 x2)
-  = let x1 = indefinite_description (fun (x1:a) -> exists x2. p x1 x2) in
-    let x2 = indefinite_description1 #(b x1) (fun x2 -> p x1 x2) in
-    (| x1, x2 |)
+  = let x1 = indefinite_description (fun (x1:a1) -> exists x2. p x1 x2) in
+    let rest = indefinite_description1 #(a2 x1) (fun x2 -> p x1 x2) in
+    (| x1, rest |)
 
 irreducible
 let indefinite_description3
-      (#a:Type)
-      (#b:a -> GTot Type)
-      (#c:(x1:a -> b x1 -> GTot Type))
-      (p: (x1:a -> x2:b x1 -> c x1 x2 -> prop))
-  : Ghost (dtuple3 a b c)
+      (#a1:Type)
+      (#a2:(x1:a1 -> GTot Type))
+      (#a3:(x1:a1 -> x2:a2 x1 -> GTot Type))
+      (p: (x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> prop))
+  : Ghost (x1:a1 & (x2:a2 x1 & a3 x1 x2))
     (requires exists x1 x2 x3. p x1 x2 x3)
-    (ensures fun r -> let (| x1, x2, x3 |) = r in p x1 x2 x3)
-  = let x1 = indefinite_description (fun (x1:a) -> exists x2 x3. p x1 x2 x3) in
-    let (| x2, x3 |) = indefinite_description2 #(b x1) #(c x1) (fun x2 x3 -> p x1 x2 x3) in
-    (| x1, x2, x3 |)
+    (ensures fun r -> let (| x1, (| x2, x3 |) |) = r in p x1 x2 x3)
+  = let x1 = indefinite_description (fun (x1:a1) -> exists x2 x3. p x1 x2 x3) in
+    let rest = indefinite_description2 #(a2 x1) #(a3 x1) (fun x2 x3 -> p x1 x2 x3) in
+    (| x1, rest |)
 
 irreducible
 let indefinite_description4
-      (#a:Type)
-      (#b:a -> GTot Type)
-      (#c:(x1:a -> b x1 -> GTot Type))
-      (#d:(x1:a -> x2:b x1 -> c x1 x2 -> GTot Type))
-      (p: (x1:a -> x2:b x1 -> x3:c x1 x2 -> d x1 x2 x3 -> prop))
-  : Ghost (dtuple4 a b c d)
+      (#a1:Type)
+      (#a2:(x1:a1 -> GTot Type))
+      (#a3:(x1:a1 -> x2:a2 x1 -> GTot Type))
+      (#a4:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> GTot Type))
+      (p: (x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> prop))
+  : Ghost (x1:a1 & (x2:a2 x1 & (x3:a3 x1 x2 & a4 x1 x2 x3)))
     (requires exists x1 x2 x3 x4. p x1 x2 x3 x4)
-    (ensures fun r -> let (| x1, x2, x3, x4 |) = r in p x1 x2 x3 x4)
-  = let x1 = indefinite_description (fun (x1:a) -> exists x2 x3 x4. p x1 x2 x3 x4) in
-    let (| x2, x3, x4 |) =
-      indefinite_description3 #(b x1) #(c x1) #(d x1) (fun x2 x3 x4 -> p x1 x2 x3 x4)
-    in
-    (| x1, x2, x3, x4 |)
+    (ensures fun r -> let (| x1, (| x2, (| x3, x4 |) |) |) = r in p x1 x2 x3 x4)
+  = let x1 = indefinite_description (fun (x1:a1) -> exists x2 x3 x4. p x1 x2 x3 x4) in
+    let rest = indefinite_description3 #(a2 x1) #(a3 x1) #(a4 x1) (fun x2 x3 x4 -> p x1 x2 x3 x4) in
+    (| x1, rest |)
 
 irreducible
 let indefinite_description5
-      (#a:Type)
-      (#b:a -> GTot Type)
-      (#c:(x1:a -> b x1 -> GTot Type))
-      (#d:(x1:a -> x2:b x1 -> c x1 x2 -> GTot Type))
-      (#e:(x1:a -> x2:b x1 -> x3:c x1 x2 -> d x1 x2 x3 -> GTot Type))
-      (p: (x1:a -> x2:b x1 -> x3:c x1 x2 -> x4:d x1 x2 x3 -> e x1 x2 x3 x4 -> prop))
-  : Ghost (dtuple5 a b c d e)
+      (#a1:Type)
+      (#a2:(x1:a1 -> GTot Type))
+      (#a3:(x1:a1 -> x2:a2 x1 -> GTot Type))
+      (#a4:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> GTot Type))
+      (#a5:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> GTot Type))
+      (p: (x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> prop))
+  : Ghost (x1:a1 & (x2:a2 x1 & (x3:a3 x1 x2 & (x4:a4 x1 x2 x3 & a5 x1 x2 x3 x4))))
     (requires exists x1 x2 x3 x4 x5. p x1 x2 x3 x4 x5)
-    (ensures fun r -> let (| x1, x2, x3, x4, x5 |) = r in p x1 x2 x3 x4 x5)
-  = let x1 = indefinite_description (fun (x1:a) -> exists x2 x3 x4 x5. p x1 x2 x3 x4 x5) in
-    let (| x2, x3, x4, x5 |) =
-      indefinite_description4 #(b x1) #(c x1) #(d x1) #(e x1) (fun x2 x3 x4 x5 -> p x1 x2 x3 x4 x5)
-    in
-    (| x1, x2, x3, x4, x5 |)
+    (ensures fun r -> let (| x1, (| x2, (| x3, (| x4, x5 |) |) |) |) = r in p x1 x2 x3 x4 x5)
+  = let x1 = indefinite_description (fun (x1:a1) -> exists x2 x3 x4 x5. p x1 x2 x3 x4 x5) in
+    let rest = indefinite_description4 #(a2 x1) #(a3 x1) #(a4 x1) #(a5 x1) (fun x2 x3 x4 x5 -> p x1 x2 x3 x4 x5) in
+    (| x1, rest |)
+
+irreducible
+let indefinite_description6
+      (#a1:Type)
+      (#a2:(x1:a1 -> GTot Type))
+      (#a3:(x1:a1 -> x2:a2 x1 -> GTot Type))
+      (#a4:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> GTot Type))
+      (#a5:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> GTot Type))
+      (#a6:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> GTot Type))
+      (p: (x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> x6:a6 x1 x2 x3 x4 x5 -> prop))
+  : Ghost (x1:a1 & (x2:a2 x1 & (x3:a3 x1 x2 & (x4:a4 x1 x2 x3 & (x5:a5 x1 x2 x3 x4 & a6 x1 x2 x3 x4 x5)))))
+    (requires exists x1 x2 x3 x4 x5 x6. p x1 x2 x3 x4 x5 x6)
+    (ensures fun r -> let (| x1, (| x2, (| x3, (| x4, (| x5, x6 |) |) |) |) |) = r in p x1 x2 x3 x4 x5 x6)
+  = let x1 = indefinite_description (fun (x1:a1) -> exists x2 x3 x4 x5 x6. p x1 x2 x3 x4 x5 x6) in
+    let rest = indefinite_description5 #(a2 x1) #(a3 x1) #(a4 x1) #(a5 x1) #(a6 x1) (fun x2 x3 x4 x5 x6 -> p x1 x2 x3 x4 x5 x6) in
+    (| x1, rest |)
+
+irreducible
+let indefinite_description7
+      (#a1:Type)
+      (#a2:(x1:a1 -> GTot Type))
+      (#a3:(x1:a1 -> x2:a2 x1 -> GTot Type))
+      (#a4:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> GTot Type))
+      (#a5:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> GTot Type))
+      (#a6:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> GTot Type))
+      (#a7:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> x6:a6 x1 x2 x3 x4 x5 -> GTot Type))
+      (p: (x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> x6:a6 x1 x2 x3 x4 x5 -> x7:a7 x1 x2 x3 x4 x5 x6 -> prop))
+  : Ghost (x1:a1 & (x2:a2 x1 & (x3:a3 x1 x2 & (x4:a4 x1 x2 x3 & (x5:a5 x1 x2 x3 x4 & (x6:a6 x1 x2 x3 x4 x5 & a7 x1 x2 x3 x4 x5 x6))))))
+    (requires exists x1 x2 x3 x4 x5 x6 x7. p x1 x2 x3 x4 x5 x6 x7)
+    (ensures fun r -> let (| x1, (| x2, (| x3, (| x4, (| x5, (| x6, x7 |) |) |) |) |) |) = r in p x1 x2 x3 x4 x5 x6 x7)
+  = let x1 = indefinite_description (fun (x1:a1) -> exists x2 x3 x4 x5 x6 x7. p x1 x2 x3 x4 x5 x6 x7) in
+    let rest = indefinite_description6 #(a2 x1) #(a3 x1) #(a4 x1) #(a5 x1) #(a6 x1) #(a7 x1) (fun x2 x3 x4 x5 x6 x7 -> p x1 x2 x3 x4 x5 x6 x7) in
+    (| x1, rest |)
+
+irreducible
+let indefinite_description8
+      (#a1:Type)
+      (#a2:(x1:a1 -> GTot Type))
+      (#a3:(x1:a1 -> x2:a2 x1 -> GTot Type))
+      (#a4:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> GTot Type))
+      (#a5:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> GTot Type))
+      (#a6:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> GTot Type))
+      (#a7:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> x6:a6 x1 x2 x3 x4 x5 -> GTot Type))
+      (#a8:(x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> x6:a6 x1 x2 x3 x4 x5 -> x7:a7 x1 x2 x3 x4 x5 x6 -> GTot Type))
+      (p: (x1:a1 -> x2:a2 x1 -> x3:a3 x1 x2 -> x4:a4 x1 x2 x3 -> x5:a5 x1 x2 x3 x4 -> x6:a6 x1 x2 x3 x4 x5 -> x7:a7 x1 x2 x3 x4 x5 x6 -> x8:a8 x1 x2 x3 x4 x5 x6 x7 -> prop))
+  : Ghost (x1:a1 & (x2:a2 x1 & (x3:a3 x1 x2 & (x4:a4 x1 x2 x3 & (x5:a5 x1 x2 x3 x4 & (x6:a6 x1 x2 x3 x4 x5 & (x7:a7 x1 x2 x3 x4 x5 x6 & a8 x1 x2 x3 x4 x5 x6 x7)))))))
+    (requires exists x1 x2 x3 x4 x5 x6 x7 x8. p x1 x2 x3 x4 x5 x6 x7 x8)
+    (ensures fun r -> let (| x1, (| x2, (| x3, (| x4, (| x5, (| x6, (| x7, x8 |) |) |) |) |) |) |) = r in p x1 x2 x3 x4 x5 x6 x7 x8)
+  = let x1 = indefinite_description (fun (x1:a1) -> exists x2 x3 x4 x5 x6 x7 x8. p x1 x2 x3 x4 x5 x6 x7 x8) in
+    let rest = indefinite_description7 #(a2 x1) #(a3 x1) #(a4 x1) #(a5 x1) #(a6 x1) #(a7 x1) #(a8 x1) (fun x2 x3 x4 x5 x6 x7 x8 -> p x1 x2 x3 x4 x5 x6 x7 x8) in
+    (| x1, rest |)
