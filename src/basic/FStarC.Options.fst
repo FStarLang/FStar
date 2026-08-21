@@ -195,6 +195,25 @@ let defaults = [
   ("no_cmi"                                     , Bool false);
   ("codegen-lib"                               , List []);
   ("codegen"                                   , Unset);
+  ("custard_entry"                             , List []);
+  ("custard_entrypoints"                       , List []);
+  ("custard_entry_module"                      , List []);
+  ("custard_main"                              , Unset);
+  ("custard_dump_ir"                           , Bool false);
+  ("custard_dump_specializations"              , Bool false);
+  ("custard_dump_layouts"                     , Bool false);
+  ("custard_warn_any"                          , Bool false);
+  ("custard_fuel"                              , Int 100000);
+  ("custard_max_specializations"               , Int 1000);
+  ("custard_norm_budget"                       , Int 10000000);
+  ("custard_monomorphize_types"                , Bool false);
+  ("custard_backend"                           , String "OCaml");
+  ("custard_split"                             , Bool false);
+  ("custard_unit"                              , Unset);
+  ("custard_link"                              , List []);
+  ("custard_extern_type"                       , List []);
+  ("custard_krml_model"                        , List []);
+  ("custard_dump_cui"                          , Bool false);
   ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
   ("debug_all"                                 , Bool false);
@@ -453,6 +472,25 @@ let get_print_cache_version     ()      = lookup_opt "print_cache_version"      
 let get_no_cmi                  ()      = lookup_opt "no_cmi"                   as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
+let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
+let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      (as_list as_string)
+let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
+let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
+let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
+let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
+let get_custard_dump_layouts ()          = lookup_opt "custard_dump_layouts"          as_bool
+let get_custard_warn_any ()             = lookup_opt "custard_warn_any"             as_bool
+let get_custard_fuel            ()      = lookup_opt "custard_fuel"             as_int
+let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
+let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
+let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
+let get_custard_backend         ()      = lookup_opt "custard_backend"          as_string
+let get_custard_split           ()      = lookup_opt "custard_split"           as_bool
+let get_custard_unit            ()      = lookup_opt "custard_unit"            (as_option as_string)
+let get_custard_link            ()      = lookup_opt "custard_link"            (as_list as_string)
+let get_custard_extern_type     ()      = lookup_opt "custard_extern_type"     (as_list as_string)
+let get_custard_krml_model      ()      = lookup_opt "custard_krml_model"      (as_list as_string)
+let get_custard_dump_cui        ()      = lookup_opt "custard_dump_cui"        as_bool
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_dump_ast                ()      = lookup_opt "dump_ast"                 as_bool
@@ -827,13 +865,161 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "codegen",
-    EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"],
+    EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"; "Custard"],
     text "Generate code for further compilation to executable code, or build a compiler plugin");
 
   ( noshort,
     "codegen-lib",
     Accumulated (SimpleStr "namespace"),
     text "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
+
+  ( noshort,
+    "custard_entry",
+    Accumulated (SimpleStr "long_name"),
+    text "Entry point for whole-program extraction with --codegen Custard. \
+May be repeated; every occurrence is a root of the extraction. Custard only \
+compiles the definitions reachable from these roots. It does *not* make them \
+run: use --custard_main for that. A module name may be given instead of a \
+definition, which makes the module's top-level effects part of the program \
+without naming anything in it.");
+
+  ( noshort,
+    "custard_entrypoints",
+    Accumulated (PathStr "file"),
+    text "A file of --custard_entry roots, one per line; blank lines and \
+lines whose first non-blank character is # are ignored. May be repeated. A \
+plugin's hand-written realizations call the compiler by OCaml name, through \
+no request Custard can see, so the plugin ships such a file and the compiler \
+build reads it alongside its own.");
+
+  ( noshort,
+    "custard_entry_module",
+    Accumulated (SimpleStr "module_name"),
+    text "Every top-level definition of the named module is a root of the \
+extraction with --codegen Custard, as --extract_module does for the other \
+backends. May be repeated. This is how a module is compiled as a library \
+rather than as the program reachable from one entry point, and it is what a \
+test of a module's generated code wants: a definition added to the module is \
+extracted without anyone having to name it. A definition with nothing to \
+extract -- a specification, a proof, an [inline_for_extraction] -- is passed \
+over rather than reported, unlike --custard_entry.");
+
+  ( noshort,
+    "custard_main",
+    SimpleStr "long_name",
+    text "The definition to invoke when the extracted program starts. It is \
+also a root of the extraction, so --custard_entry need not repeat it. Omit it \
+to extract a program that is meant to be driven by a hand-written wrapper.");
+
+  ( noshort,
+    "custard_dump_ir",
+    Const (Bool true),
+    text "Print the Custard IR of the extracted program to standard output");
+
+  ( noshort,
+    "custard_dump_specializations",
+    Const (Bool true),
+    text "Print, for every definition Custard specialized, how many \
+specializations of it were emitted. Useful to diagnose code bloat and \
+specialization fuel exhaustion.");
+
+  ( noshort,
+    "custard_dump_layouts",
+    Const (Bool true),
+    text "Print the layout Custard computed for every type: erased, collapsed \
+to a single field, or a struct. Useful to understand why a field or argument \
+disappeared from the generated code.");
+
+  ( noshort,
+    "custard_warn_any",
+    Const (Bool true),
+    text "Report every place where Custard lost track of a value's \
+representation: a type it had to leave as 'any', or a coercion it could not \
+eliminate. Because a Custard program is whole and monomorphic, these should be \
+rare, and each one is a place where the generated code is less checked than \
+the rest.");
+
+  ( noshort,
+    "custard_fuel",
+    IntStr "positive_integer",
+    text "Total number of specializations Custard may create before giving up \
+(default 100000).  This is a whole-program backstop; \
+--custard_max_specializations is the per-definition limit, and is the one \
+that catches a definition recursing through a monomorphized binder");
+
+  ( noshort,
+    "custard_max_specializations",
+    IntStr "positive_integer",
+    text "Number of specializations Custard may create for any single \
+definition before giving up (default 1000)");
+
+  ( noshort,
+    "custard_norm_budget",
+    IntStr "positive_integer",
+    text "Number of reduction steps Custard may spend normalizing any single \
+term -- a specialization key, a substituted argument, or a definition's body \
+-- before giving up (default 10000000).  Normalization need not terminate, so \
+without this a definition that diverges under reduction would hang the \
+compiler rather than report an error");
+
+  ( noshort,
+    "custard_monomorphize_types",
+    BoolStr,
+    text "Monomorphize type binders too, not just type-class dictionaries and \
+binders explicitly marked [@@monomorphize] (default false)");
+
+  ( noshort,
+    "custard_backend",
+    EnumStr ["OCaml"; "KrmlC"; "KrmlRust"; "C"],
+    text "Language Custard emits: OCaml source, karamel's AST for \
+compilation to C or to Rust, or self-contained C11 source (default OCaml). \
+KrmlC and KrmlRust share a printer but not a program: karamel models some \
+modules on the Rust path only, so a .krml built for one target cannot be \
+compiled for the other (section 20)");
+
+  ( noshort,
+    "custard_split",
+    Const (Bool true),
+    text "Write one OCaml file per F* source module instead of one file for \
+the whole program. This is still a single whole-program run; it exists \
+because F*'s hand-written OCaml realizations reference modules Custard \
+compiles, and a single output file would make those references circular. \
+--odir names the directory the files are written to.");
+
+  ( noshort,
+    "custard_unit",
+    SimpleStr "name",
+    text "Compile as a named Custard unit and write <name>.cui alongside the \
+generated source. Downstream units pass that file to --custard_link to reuse \
+this unit's code instead of compiling it again. Omit it to build a \
+self-contained whole program.");
+
+  ( noshort,
+    "custard_link",
+    Accumulated (PathStr "file.cui"),
+    text "Link against an already-compiled Custard unit. May be repeated. A \
+definition exported by a linked unit is called rather than recompiled, and \
+its layout decisions are adopted rather than re-derived.");
+
+  ( noshort,
+    "custard_extern_type",
+    Accumulated (SimpleStr "Lid[=name][@header]"),
+    text "Treat a type as declared by the target rather than by F*: emit no \
+definition for it, spell it <name> if one is given, and include <header> in \
+the generated C if one is given. May be repeated. This is for types whose \
+representation is fixed outside F* and that cannot carry a [@@custard_extern] \
+attribute, such as one declared in a library the program does not own.");
+
+  ( noshort,
+    "custard_krml_model",
+    Accumulated (SimpleStr "Module"),
+    text "Treat a module as one karamel models itself: emit neither its type declarations nor its definitions, and leave every use of them under the F* name, which is what karamel's Rust backend matches on. May be repeated. Only under --custard_backend KrmlRust; Pulse.Lib.Slice is registered already. See section 20 of doc/ref/custard.md.");
+
+  ( noshort,
+    "custard_dump_cui",
+    Const (Bool true),
+    text "Print a readable rendering of the unit interfaces this run writes \
+and reads");
 
   ( 'd',
     "",
@@ -937,7 +1123,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     "extract",
     Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
     text "Extract only those modules whose names or namespaces match the provided options. \
-     'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}. \
+     'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension, Custard}. \
      A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. \
      For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means \
      for OCaml, extract everything in the A namespace only except A.B; \
@@ -1949,6 +2135,7 @@ let parse_codegen =
   | "krml" -> Some Krml
   | "Plugin" -> Some Plugin
   | "Extension" -> Some Extension
+  | "Custard" -> Some Custard
   | _ -> None
 
 let print_codegen =
@@ -1958,12 +2145,34 @@ let print_codegen =
   | Krml -> "krml"
   | Plugin -> "Plugin"
   | Extension -> "Extension"
+  | Custard -> "Custard"
 
 let codegen                      () =
     Option.map (fun s -> parse_codegen s |> Some?.v)
                (get_codegen())
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
+let custard_entries              () = get_custard_entry ()
+let custard_entrypoint_files     () = get_custard_entrypoints ()
+let custard_entry_modules        () = get_custard_entry_module ()
+let custard_main                 () = get_custard_main ()
+let custard_dump_ir              () = get_custard_dump_ir ()
+let custard_dump_specializations () = get_custard_dump_specializations ()
+let custard_dump_layouts ()         = get_custard_dump_layouts ()
+let custard_warn_any ()             = get_custard_warn_any ()
+let custard_fuel                 () = get_custard_fuel ()
+let custard_max_specializations  () = get_custard_max_specializations ()
+let custard_norm_budget          () = get_custard_norm_budget ()
+let custard_monomorphize_types   () = get_custard_monomorphize_types ()
+let custard_backend              () = get_custard_backend ()
+let custard_backend_krml         () = let b = get_custard_backend () in
+                                      b = "KrmlC" || b = "KrmlRust"
+let custard_split                () = get_custard_split ()
+let custard_unit                 () = get_custard_unit ()
+let custard_links                () = get_custard_link ()
+let custard_extern_types         () = get_custard_extern_type ()
+let custard_krml_models          () = get_custard_krml_model ()
+let custard_dump_cui             () = get_custard_dump_cui ()
 
 let profile_group_by_decl        () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
@@ -2214,7 +2423,7 @@ let extract_settings
         | Some x -> [tgt,x]
       in
       {
-        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;Extension];
+        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;Extension;Custard];
         default_settings = merge_setting p0.default_settings p1.default_settings
       }
     in

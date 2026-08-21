@@ -30,6 +30,9 @@ val mk_tuple_data_lid (arity : int) (r : range) : ML lid
 val get_tuple_datacon_arity (s:string) : option int
 val get_tuple_tycon_arity (s:string) : option int
 
+(* Used by the hand-written FStarC.Extraction.ML.PrintML. *)
+val is_tuple_constructor_string (s:string) : bool
+
 val is_tuple_constructor_lid (lid : lident) : bool
 val is_tuple_data_lid (f : lident) (n : int) : ML bool
 val is_tuple_datacon_lid (f : lident) : bool

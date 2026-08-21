@@ -16,6 +16,7 @@
 
 module FStarC.TypeChecker.Normalize
 open FStarC.Effect
+open FStar.Custard
 open FStarC.List
 open FStarC
 open FStarC.Defensive
@@ -675,7 +676,9 @@ let closure_as_term cfg (env:env) (t:term) : ML term =
 let unembed_binder_knot : ref (option (EMB.embedding binder)) = mk_ref None
 let unembed_binder (t : term) : ML (option S.binder) =
     match !unembed_binder_knot with
-    | Some e -> EMB.try_unembed #_ #e t EMB.id_norm_cb
+    (* [dyn]: the embedding comes out of a ref set at run time, so it cannot be
+       specialized on and is passed instead.  See doc/ref/custard.md 3.2c1. *)
+    | Some e -> EMB.try_unembed #_ #(dyn e) t EMB.id_norm_cb
     | None ->
         Errors.log_issue t Errors.Warning_UnembedBinderKnot "unembed_binder_knot is unset!";
         None
@@ -1231,8 +1234,29 @@ let is_norm_request_head (fv : S.fv) : ML (option norm_request_kind) =
  * information when --debug NormTop is given, which makes it a
  * whole lot easier to find normalization calls that are taking a long
  * time. *)
+(* See the interface.  [budget] is the number of reduction steps still
+   allowed; negative means unbounded, which is the default. *)
+let budget : ref int = mk_ref (-1)
+
+
+let with_budget (n:int) (f: unit -> ML 'a) : ML 'a =
+  let saved = !budget in
+  budget := n;
+  let r = try f () with e -> (budget := saved; raise e) in
+  budget := saved;
+  r
+
+(* Charged once per call to [norm], which is the reduction machine's single
+   entry point, so the count is proportional to the work actually done. *)
+let charge_step () : ML unit =
+  let b = !budget in
+  if b >= 0 then
+    if b = 0 then raise Budget_exceeded
+    else budget := b - 1
+
 let rec norm : cfg -> env -> stack -> term -> ML term =
     fun cfg env stack t ->
+        charge_step ();
         let rec collapse_metas st =
           match st with
           (* Keep only the outermost Meta_monadic *)
@@ -1676,10 +1700,18 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 let ty = norm cfg env [] lb.lbtyp in
                 let lbname = Inl ({Inl?.v lb.lbname with sort=ty}) in
                 let xs, def_body, lopt = U.abs_formals lb.lbdef in
-                let xs = norm_binders cfg env xs in
+                (* A definiens lives under the recursively bound names, and the
+                   binders' *sorts* are part of the definiens: opening replaces
+                   the recursive occurrences but does not renumber anything
+                   around them, so the slots are still there and the sorts
+                   still count them.  Normalizing [xs] in the outer [env]
+                   therefore looks an outer variable up one slot too shallow --
+                   a "Failed to find" failure on any inner [let rec] whose
+                   arguments mention an outer type variable. *)
+                let rec_env = List.map (fun _ -> dummy ()) lbs @ env in
+                let xs = norm_binders cfg rec_env xs in
                 let env = List.map (fun _ -> dummy ()) xs //first the bound vars for the arguments
-                        @ List.map (fun _ -> dummy ()) lbs //then the recursively bound names
-                        @ env in
+                        @ rec_env in                      //then the recursively bound names
                 let def_body = norm cfg env [] def_body in
                 let lopt =
                   match lopt with
@@ -3038,7 +3070,21 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                          Clos([], t, m, false),
                          fresh_memo ()) :: env)
                       env s in
-                norm cfg env stack (guard_when_clause wopt b rest)
+                match wopt with
+                | Some w when Cons? s ->
+                  //[guard_when_clause] would build [if w then b else (match scrutinee with rest)]
+                  //and normalize the whole thing in [env]. But [rest] is closed with respect to
+                  //[env0]: its branch bodies have no de Bruijn slots for the variables that this
+                  //pattern just bound. Normalizing them in [env] shifts every index by |s|.
+                  //So, when the pattern does bind something, decide the guard here instead, and
+                  //fall back to blocking the reduction if we cannot.
+                  let w = norm cfg env [] w in
+                  (match (U.unmeta w).n with
+                   | Tm_constant (FC.Const_bool true) -> norm cfg env stack b
+                   | Tm_constant (FC.Const_bool false) -> matches scrutinee rest //note: [env0]
+                   | _ -> norm_and_rebuild_match ())
+                | _ ->
+                  norm cfg env stack (guard_when_clause wopt b rest)
         in
 
         if cfg.steps.iota

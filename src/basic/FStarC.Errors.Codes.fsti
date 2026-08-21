@@ -387,6 +387,14 @@ type error_code =
   | Warning_ProofRecovery
   | Error_CannotResolveRecord
   | Error_MissingPopOptions
+  | Error_CustardEntryNotFound
+  | Error_CustardCannotMonomorphize
+  | Error_CustardFuelExhausted
+  | Error_CustardUnextractableEffect
+  | Warning_CustardLostRepresentation
+  | Error_CustardNoCRepresentation
+  | Error_CustardBadUnitInterface
+  | Error_CustardUnrepresentableValue
   | Error_AmbiguousName
 
 type error_setting = error_code & error_flag & int

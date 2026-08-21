@@ -1,0 +1,55 @@
+# Compiler entry points the Pulse plugin needs.
+#
+# Custard compiles exactly what is reachable from its roots, and the roots of
+# a compiler build are FStarC.Main.main plus src/custard/entrypoints.txt.  The
+# hand-written OCaml under pulse/src/ml is outside every extracted program:
+# it calls the compiler by OCaml name, through no request Custard can see, so
+# nothing reaches these and they are dropped.
+#
+# This file is passed to the *compiler's* build with --custard_entrypoints,
+# not to the plugin's -- the symbols have to be in the binary the plugin is
+# loaded into.  See doc/ref/custard.md section 12.13.
+#
+# Blank lines and lines starting with `#' are ignored.
+
+# Pulse_RuntimeUtils.ml
+FStarC.Errors.with_error_bound
+FStarC.Syntax.Compress.deep_compress_uvars
+FStarC.TypeChecker.Normalize.unfold_whnf'
+FStarC.Syntax.Util.unlazy_as_t
+FStarC.Syntax.Free.ord_ctx_uvar
+FStarC.Syntax.Free.ord_univ_uvar
+# Declaration-only since #4389, so nothing reaches it but the hand-written
+# OCaml; Custard synthesizes the body (section 21).
+FStarC.Syntax.Syntax.uu___is_Unresolved_name
+
+# FStarC.FlatSet.union is deliberately not here, and could not be: it takes a
+# typeclass dictionary, which section 3.1 classifies Mono, and a root has no
+# call site to specialize it at (error 363).  A Mono binder wants a call site,
+# so PulseSyntaxExtension.Env gives it one -- see union_ctx_uvars there, and
+# doc/ref/custard.md section 12.13.
+
+# ExtractPulse / ExtractPulseC / ExtractPulseOCaml.  These are the krml
+# backend's extension hooks; the compiler declares them and never calls them,
+# so its own entry points do not reach them.  Duplicating a register_* in the
+# plugin is not merely wasteful: it mutates a private ref that the compiler
+# never reads, so the extension would register into the void.
+FStarC.Extraction.Krml.register_pre_translate_type_without_decay
+FStarC.Extraction.Krml.register_pre_translate_type
+FStarC.Extraction.Krml.register_pre_translate_expr
+FStarC.Extraction.Krml.register_pre_translate_type_decl
+FStarC.Extraction.Krml.register_pre_translate_let
+FStarC.Extraction.Krml.generate_is_null
+FStarC.Extraction.ML.Syntax.mlletbinding_to_string
+FStarC.Extraction.ML.Syntax.mlexpr_to_string
+
+# PulseSyntaxExtension.  register_extension_parser and
+# register_extension_tosyntax are the same story as the krml hooks above.
+# The rest are ordinary compiler definitions that nothing the compiler's own
+# entry points reach happens to use.
+FStarC.Parser.AST.Util.register_extension_parser
+FStarC.ToSyntax.ToSyntax.register_extension_tosyntax
+FStarC.Options.ide_filename
+FStarC.Parser.AST.uu___is_DeclAttributes
+FStar.Range.range_0
+FStar.Sealed.Inhabited.seal

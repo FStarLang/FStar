@@ -35,6 +35,27 @@ val disc_proj_lb (tcenv:Env.env) (lid:Ident.lident) (us:univ_names) (t:typ) (q:q
 
 val unembed_binder_knot : ref (option (FStarC.Syntax.Embeddings.embedding binder))
 
+(* A step budget for normalization.
+
+   Normalization is not guaranteed to terminate: with [zeta] on (which is the
+   default -- see [Cfg.default_steps], so leaving [Zeta] out of a step list
+   does not disable it) a recursive definition may be unfolded without bound,
+   and a caller reducing terms it did not write has no way to rule that out in
+   advance.  Without a budget such a caller does not get a bad answer, it
+   hangs, with no indication of which term was responsible.
+
+   [with_budget n f] runs [f] with a limit of [n] reduction steps, raising
+   [Budget_exceeded] if it is reached.  The budget is a *step count* rather
+   than a time limit deliberately: a compiler that fails should fail the same
+   way on every machine and every run.
+
+   Budgets nest by saving and restoring, and a budget of a negative number
+   means unbounded, which is the default and what every existing caller
+   continues to get. *)
+exception Budget_exceeded
+
+val with_budget : int -> (unit -> ML 'a) -> ML 'a
+
 val reflection_env_hook : ref (option Env.env)
 
 val normalize_with_primitive_steps : list Primops.primitive_step -> steps -> Env.env -> term -> ML term

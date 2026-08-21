@@ -422,3 +422,49 @@ val desugar_of_variant_record (type_name: string): unit
 
 (** Tag for implicits that are to be solved by a tactic. *)
 val defer_to (#a:Type) (tag : a) : unit
+
+(** Marks a binder for whole-program monomorphization by the Custard
+    extraction pipeline (see doc/ref/custard.md): every call site must supply a
+    specialization-time-known argument, and one copy of the definition is
+    emitted per distinct argument.  Attached to a whole definition, it marks
+    all of its non-erased binders. *)
+val monomorphize : unit
+
+(** Custard: do not compile this definition from its F* body; emit a reference
+    to an external symbol instead (see doc/ref/custard.md, section 8).  The
+    argument is the name of that symbol in the target language; the empty
+    string means "use the name Custard would have generated". *)
+val custard_extern (target: string) : unit
+
+(** Custard: the C header that declares a [custard_extern] symbol. *)
+val custard_c_header (header: string) : unit
+
+(** Custard: written on a [tcclass], this says that its instances are ordinary
+    runtime values rather than compile-time dictionaries, so an argument of
+    this class type is passed at run time instead of being specialized on (see
+    doc/ref/custard.md, section 3.1).
+
+    The class mechanism is how F* *resolves* such a value at elaboration time,
+    and monomorphizing on the result is normally the right answer -- it is what
+    turns a dictionary into direct calls.  But some classes exist only to make
+    resolution convenient for values that are built, stored and passed at run
+    time anyway: [FStarC.Syntax.Embeddings.Base.embedding] is one, and
+    [e_list e_sigelt] is a value the compiler computes.  Specializing on those
+    is not an optimization, it is a category error, and it makes every function
+    that takes one -- [unembed], say -- reject its own callers. *)
+val custard_no_monomorphize : unit
+
+(** Custard: compile this type from its F* definition, but treat its
+    representation as fixed elsewhere, so that the layout analysis neither
+    erases it nor collapses it as a newtype (see doc/ref/custard.md, 5.2). *)
+val custard_opaque : unit
+
+(** Custard: store this constructor field's contents directly in the
+    constructor rather than behind a pointer to it.  The field's type must be a
+    record (or a one-constructor inductive); its fields take the place of this
+    one.  Tuple fields are inlined without asking, since the indirection there
+    is never what the source meant (see doc/ref/custard.md, 5.6).
+
+    Written on the field's binder:
+    [noeq type wrap = | W : [@@@custard_inline_field] p:pair -> wrap] *)
+val custard_inline_field : unit
