@@ -46,8 +46,8 @@ fn vec_roundtrip (x:U32.t)
   returns r:U32.t
 {
   let v = V.alloc x 4sz;
-  V.op_Array_Assignment v 2sz x;
-  let y = V.op_Array_Access v 2sz;
+  V.op_Dot_Lparen_Rparen_Less_Minus v 2sz x;
+  let y = V.op_Dot_Lparen_Rparen v 2sz;
   V.free v;
   y
 }

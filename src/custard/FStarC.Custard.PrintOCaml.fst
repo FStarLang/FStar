@@ -404,11 +404,11 @@ let op_name (o:prim_op) : ML string =
      | And -> "logand" | Or -> "logor" | Not -> "lognot")
   | None ->
     (match o.po_op with
-     | Add -> "Prims.op_Addition" | AddW -> "Prims.op_Addition"
-     | Sub -> "Prims.op_Subtraction" | SubW -> "Prims.op_Subtraction"
-     | Mult -> "Prims.op_Multiply" | MultW -> "Prims.op_Multiply"
-     | Div -> "Prims.op_Division" | DivW -> "Prims.op_Division"
-     | Mod -> "Prims.op_Modulus"
+     | Add -> "Prims.op_Plus" | AddW -> "Prims.op_Plus"
+     | Sub -> "Prims.op_Minus" | SubW -> "Prims.op_Minus"
+     | Mult -> "Prims.op_Star" | MultW -> "Prims.op_Star"
+     | Div -> "Prims.op_Slash" | DivW -> "Prims.op_Slash"
+     | Mod -> "Prims.op_Percent"
      | Eq -> "(=)" | Neq -> "(<>)" | Lt -> "(<)" | Lte -> "(<=)"
      | Gt -> "(>)" | Gte -> "(>=)"
      | And -> "(&&)" | Or -> "(||)" | Not -> "not"

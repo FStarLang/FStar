@@ -19,6 +19,9 @@ FStarC.TypeChecker.Normalize.unfold_whnf'
 FStarC.Syntax.Util.unlazy_as_t
 FStarC.Syntax.Free.ord_ctx_uvar
 FStarC.Syntax.Free.ord_univ_uvar
+# Declaration-only since #4389, so nothing reaches it but the hand-written
+# OCaml; Custard synthesizes the body (section 21).
+FStarC.Syntax.Syntax.uu___is_Unresolved_name
 
 # FStarC.FlatSet.union is deliberately not here, and could not be: it takes a
 # typeclass dictionary, which section 3.1 classifies Mono, and a root has no

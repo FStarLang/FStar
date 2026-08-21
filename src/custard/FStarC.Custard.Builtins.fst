@@ -197,7 +197,7 @@ let int_cast_rule (id:string) : ML (option rule) =
 (* -------------------------------------------------------------------- *)
 
 (* The boolean connectives.  Without these they would be emitted as calls to
-   [Prims_op_AmpAmp], which has no realization in C.  The comparison and
+   [Prims_op_Amp_Amp], which has no realization in C.  The comparison and
    arithmetic operators of [Prims] are deliberately *not* here: they act on
    unbounded integers, which no C backend can represent, so leaving them as
    ordinary calls keeps the failure at link time and legible. *)
@@ -207,15 +207,15 @@ let prims_rule (id:string) : ML (option rule) =
     Some (Rule_prim (arity, fun _ args ->
             mk (EOp (po, args)) (TApp (bool_name, [])) E_Pure)) in
   match id with
-  | "op_AmpAmp"   -> bool_op And 2
-  | "op_BarBar"   -> bool_op Or 2
-  | "op_Negation" -> bool_op Not 1
+  | "op_Amp_Amp" -> bool_op And 2
+  | "op_Bar_Bar" -> bool_op Or 2
+  | "not"        -> bool_op Not 1
   (* Decidable equality is an operator, not a call: leaving it as an external
      gives C a [void *] signature that no eqtype fits.  The type argument is
      deliberately ignored, exactly as [FStarC.Extraction.Krml.mk_bool_op] does
      -- the operands' own types say what is being compared. *)
-  | "op_Equality"    -> bool_op Eq 2
-  | "op_disEquality" -> bool_op Neq 2
+  | "op_Equals"       -> bool_op Eq 2
+  | "op_Less_Greater" -> bool_op Neq 2
   (* [Prims.exn] is the one extensible variant: it has no constructors of its
      own, so there is no layout to derive and nothing to instantiate.  Only
      OCaml has a representation for it (section 8.5). *)
@@ -360,9 +360,9 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     Some (buf_prim 2 (BufCreate LHeap) E_Impure buf (fun args -> args))
   | ["Pulse"; "Lib"; "Vec"], "free" ->
     Some (buf_prim 1 BufFree E_Impure unit_ty (fun args -> args))
-  | ["Pulse"; "Lib"; "Vec"], "op_Array_Access" ->
+  | ["Pulse"; "Lib"; "Vec"], "op_Dot_Lparen_Rparen" ->
     Some (buf_prim 2 BufRead E_Impure elt_of_arg (fun args -> args))
-  | ["Pulse"; "Lib"; "Vec"], "op_Array_Assignment" ->
+  | ["Pulse"; "Lib"; "Vec"], "op_Dot_Lparen_Rparen_Less_Minus" ->
     Some (buf_prim 3 BufWrite E_Impure unit_ty (fun args -> args))
   | ["Pulse"; "Lib"; "Vec"], "vec_to_array" -> Some (identity_rule 1)
 
@@ -385,9 +385,9 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     Some (buf_prim 2 BufSub E_Pure self (fun args -> args))
 
   (* An array pointer is a raw pointer. *)
-  | ["Pulse"; "Lib"; "ArrayPtr"], "op_Array_Access" ->
+  | ["Pulse"; "Lib"; "ArrayPtr"], "op_Dot_Lparen_Rparen" ->
     Some (buf_prim 2 BufRead E_Impure elt_of_arg (fun args -> args))
-  | ["Pulse"; "Lib"; "ArrayPtr"], "op_Array_Assignment" ->
+  | ["Pulse"; "Lib"; "ArrayPtr"], "op_Dot_Lparen_Rparen_Less_Minus" ->
     Some (buf_prim 3 BufWrite E_Impure unit_ty (fun args -> args))
   | ["Pulse"; "Lib"; "ArrayPtr"], "split" ->
     Some (buf_prim 2 BufSub E_Pure self (fun args -> args))
@@ -775,6 +775,36 @@ let is_krml_model_name (ns : list string) (id : string) : ML bool =
    (FStarC.Util.starts_with id "tuple" ||
     FStarC.Util.starts_with id "Mktuple"))
 
+(* karamel recognizes a handful of F* definitions by name, and it spells those
+   names the way F* spelled them before operator mangling was made uniform.
+   Custard rewrites them on the way out for the same reason
+   [FStarC.Extraction.Krml.krml_compat_name] does, and the two tables must
+   agree: karamel lives in another repository and cannot be updated in the
+   same commit.  Delete both once it has been taught the current names.
+
+   The Prims operators are never extracted -- karamel supplies them as
+   builtins ([Krml.Builtin.prepare]) -- so only references to them are ever
+   emitted, but the name a reference carries still has to be the one karamel
+   declares.  The [Pulse.Lib.Slice] operators are the ones its Rust backend
+   matches on to emit native indexing (section 20). *)
+let krml_compat_name (ns : list string) (id : string) : list string & string =
+  match ns, id with
+  | ["Prims"], "op_Plus"           -> ns, "op_Addition"
+  | ["Prims"], "op_Minus"          -> ns, "op_Subtraction"
+  | ["Prims"], "op_Tilde_Minus"    -> ns, "op_Minus"
+  | ["Prims"], "op_Star"           -> ns, "op_Multiply"
+  | ["Prims"], "op_Slash"          -> ns, "op_Division"
+  | ["Prims"], "op_Percent"        -> ns, "op_Modulus"
+  | ["Prims"], "op_Less"           -> ns, "op_LessThan"
+  | ["Prims"], "op_Less_Equals"    -> ns, "op_LessThanOrEqual"
+  | ["Prims"], "op_Greater"        -> ns, "op_GreaterThan"
+  | ["Prims"], "op_Greater_Equals" -> ns, "op_GreaterThanOrEqual"
+  | ["Pulse"; "Lib"; "Slice"], "op_Dot_Lparen_Rparen" ->
+    ns, "op_Array_Access"
+  | ["Pulse"; "Lib"; "Slice"], "op_Dot_Lparen_Rparen_Less_Minus" ->
+    ns, "op_Array_Assignment"
+  | _ -> ns, id
+
 (* The operations of [Pulse.Lib.Slice] that karamel's Rust backend rewrites,
    from [AstToMiniRust.translate_expr]'s match on
    [EApp (ETApp (EQualified (["Pulse";"Lib";"Slice"], op), _, _, _), _)].
@@ -785,10 +815,14 @@ let builtin_krml_model_ops : list (list string & list string) = [
    "split"; "subslice"; "copy"; "len"];
 ]
 
+(* Against the *karamel* spelling, since that is what the table lists and what
+   the emitted reference will carry. *)
 let is_known_krml_model_op (ns : list string) (id : string) : ML bool =
   match builtin_krml_model_ops |> List.tryFind (fun (m, _) -> m = ns) with
   | None -> true
-  | Some (_, ops) -> ops |> List.existsb (fun o -> o = id)
+  | Some (_, ops) ->
+    let _, id = krml_compat_name ns id in
+    ops |> List.existsb (fun o -> o = id)
 let is_realized_module (ns : list string) : ML bool =
   realized_modules |> List.existsb (fun m -> m = ns)
   || is_krml_model ns

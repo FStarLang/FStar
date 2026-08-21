@@ -80,10 +80,15 @@ let fresh_local (env:kenv) (base:string) : ML string =
    operators, the Pulse primitives) by their fully qualified name.  Only the
    specialization suffix is new. *)
 let lident_of_name (n:name) : ML K.lident =
+  (* Every value name reaches karamel through here, which is what
+     [B.krml_compat_name] needs: mapping a reference but not the declaration it
+     resolves to renames the use away from its own definition.  Before the
+     specialization suffix, since the table is keyed on the source name. *)
+  let ns, id = B.krml_compat_name n.ns n.id in
   let id = match n.spec with
-           | None -> n.id
-           | Some s -> n.id ^ "__" ^ s in
-  (n.ns, id)
+           | None -> id
+           | Some s -> id ^ "__" ^ s in
+  (ns, id)
 
 (* The external types of the program being printed, by mangled name, mapped to
    the C name they are declared under.  karamel does not prefix an lident whose
@@ -155,8 +160,9 @@ let prim_type (n:name) : option K.typ =
    one is a duplicate that karamel rejects outright ("duplicate global name in
    identical namespace").  Ours is the one to drop: karamel's is what its own
    translation of the *uses* refers to. *)
-let karamel_declares (n:name) : bool =
-  match String.concat "." (n.ns @ [n.id]) with
+let karamel_declares (n:name) : ML bool =
+  let ns, id = lident_of_name n in
+  match String.concat "." (ns @ [id]) with
   | "Prims.op_Addition"
   | "Prims.op_Subtraction"
   | "Prims.op_Multiply"

@@ -177,6 +177,7 @@ let krml_compat_name (n : list string & string) : list string & string =
       | "op_Plus" -> "op_Addition"
       | "op_Minus" -> "op_Subtraction"
       | "op_Tilde_Minus" -> "op_Minus"
+      | "op_Star" -> "op_Multiply"
       | "op_Slash" -> "op_Division"
       | "op_Percent" -> "op_Modulus"
       | "op_Less" -> "op_LessThan"

@@ -80,16 +80,16 @@ fn main ()
 {
   let arr = A.alloc 0uy 6sz;
   A.pts_to_len arr;
-  A.op_Array_Assignment arr 1sz 1uy;
-  A.op_Array_Assignment arr 2sz 2uy;
-  A.op_Array_Assignment arr 3sz 3uy;
-  A.op_Array_Assignment arr 4sz 4uy;
-  A.op_Array_Assignment arr 5sz 5uy;
+  A.op_Dot_Lparen_Rparen_Less_Minus arr 1sz 1uy;
+  A.op_Dot_Lparen_Rparen_Less_Minus arr 2sz 2uy;
+  A.op_Dot_Lparen_Rparen_Less_Minus arr 3sz 3uy;
+  A.op_Dot_Lparen_Rparen_Less_Minus arr 4sz 4uy;
+  A.op_Dot_Lparen_Rparen_Less_Minus arr 5sz 5uy;
   test arr;
   A.pts_to_len arr;
-  let a = A.op_Array_Access arr 1sz;
-  let b = A.op_Array_Access arr 2sz;
-  let c = A.op_Array_Access arr 4sz;
+  let a = A.op_Dot_Lparen_Rparen arr 1sz;
+  let b = A.op_Dot_Lparen_Rparen arr 2sz;
+  let c = A.op_Dot_Lparen_Rparen arr 4sz;
   A.free arr;
   if (U8.(a =^ 5uy) && U8.(b =^ 4uy) && U8.(c =^ 4uy)) { 0sz } else { 1sz }
 }

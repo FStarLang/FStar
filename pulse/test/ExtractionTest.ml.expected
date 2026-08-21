@@ -67,14 +67,14 @@ let extractionTest_extract_match (x : (bool) extractionTest_opt) : bool =
   )
 
 let rec extractionTest_fib (x : Prims.int) : Prims.int =
-  (if (Prims.op_LessThanOrEqual x (Prims.parse_int "1")) then (Prims.parse_int "1") else (let x1 = (extractionTest_fib (Prims.op_Subtraction x (Prims.parse_int "1"))) in
-  let x2 = (extractionTest_fib (Prims.op_Subtraction x (Prims.parse_int "2"))) in
-  (Prims.op_Addition x1 x2)))
+  (if (Prims.op_Less_Equals x (Prims.parse_int "1")) then (Prims.parse_int "1") else (let x1 = (extractionTest_fib (Prims.op_Minus x (Prims.parse_int "1"))) in
+  let x2 = (extractionTest_fib (Prims.op_Minus x (Prims.parse_int "2"))) in
+  (Prims.op_Plus x1 x2)))
 
 let extractionTest_fib2 (x : Prims.int) : Prims.int =
   (let n = (extractionTest_fib x) in
-  let m = (extractionTest_fib (Prims.op_Addition x (Prims.parse_int "1"))) in
-  (Prims.op_Addition m n))
+  let m = (extractionTest_fib (Prims.op_Plus x (Prims.parse_int "1"))) in
+  (Prims.op_Plus m n))
 
 type ('a, 'b) extractionTest_data =
   | ExtractionTest_One of 'a * 'b

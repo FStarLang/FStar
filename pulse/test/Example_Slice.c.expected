@@ -24,9 +24,9 @@ struct FStar_Pervasives_Native_tuple2__slice_uint8_slice_uint8_s {
 Pulse_Lib_Slice_slice__uint8 Pulse_Lib_Slice_from_array__t(uint8_t *a, size_t alen);
 FStar_Pervasives_Native_tuple2__slice_uint8_slice_uint8 Pulse_Lib_Slice_split__t(Pulse_Lib_Slice_slice__uint8 s, size_t i);
 Pulse_Lib_Slice_slice__uint8 Pulse_Lib_Slice_subslice__t(Pulse_Lib_Slice_slice__uint8 s, size_t i, size_t j);
-uint8_t Pulse_Lib_Slice_op_Array_Access__t(Pulse_Lib_Slice_slice__uint8 a, size_t i);
+uint8_t Pulse_Lib_Slice_op_Dot_Lparen_Rparen__t(Pulse_Lib_Slice_slice__uint8 a, size_t i);
 size_t Pulse_Lib_Slice_len__t(Pulse_Lib_Slice_slice__uint8 s);
-void Pulse_Lib_Slice_op_Array_Assignment__t(Pulse_Lib_Slice_slice__uint8 a, size_t i, uint8_t v);
+void Pulse_Lib_Slice_op_Dot_Lparen_Rparen_Less_Minus__t(Pulse_Lib_Slice_slice__uint8 a, size_t i, uint8_t v);
 void Pulse_Lib_Slice_copy__t(Pulse_Lib_Slice_slice__uint8 dst, Pulse_Lib_Slice_slice__uint8 src);
 void Example_Slice_test(uint8_t *arr);
 
@@ -46,7 +46,7 @@ Pulse_Lib_Slice_slice__uint8 Pulse_Lib_Slice_subslice__t(Pulse_Lib_Slice_slice__
   return (Pulse_Lib_Slice_slice__uint8){ .elt = elt_, .len = (j - i) };
 }
 
-uint8_t Pulse_Lib_Slice_op_Array_Access__t(Pulse_Lib_Slice_slice__uint8 a, size_t i) {
+uint8_t Pulse_Lib_Slice_op_Dot_Lparen_Rparen__t(Pulse_Lib_Slice_slice__uint8 a, size_t i) {
   return a.elt[i];
 }
 
@@ -54,7 +54,7 @@ size_t Pulse_Lib_Slice_len__t(Pulse_Lib_Slice_slice__uint8 s) {
   return s.len;
 }
 
-void Pulse_Lib_Slice_op_Array_Assignment__t(Pulse_Lib_Slice_slice__uint8 a, size_t i, uint8_t v) {
+void Pulse_Lib_Slice_op_Dot_Lparen_Rparen_Less_Minus__t(Pulse_Lib_Slice_slice__uint8 a, size_t i, uint8_t v) {
   a.elt[i] = v;
 }
 
@@ -66,8 +66,8 @@ void Example_Slice_test(uint8_t *arr) {
   Pulse_Lib_Slice_slice__uint8 slice = Pulse_Lib_Slice_from_array__t(arr, ((size_t)6ULL));
   FStar_Pervasives_Native_tuple2__slice_uint8_slice_uint8 s_ = Pulse_Lib_Slice_split__t(slice, ((size_t)2ULL));
   Pulse_Lib_Slice_slice__uint8 s2_ = Pulse_Lib_Slice_subslice__t(s_._2, ((size_t)1ULL), ((size_t)4ULL));
-  uint8_t x = Pulse_Lib_Slice_op_Array_Access__t(s2_, Pulse_Lib_Slice_len__t(s_._1));
-  Pulse_Lib_Slice_op_Array_Assignment__t(s_._1, ((size_t)1ULL), x);
+  uint8_t x = Pulse_Lib_Slice_op_Dot_Lparen_Rparen__t(s2_, Pulse_Lib_Slice_len__t(s_._1));
+  Pulse_Lib_Slice_op_Dot_Lparen_Rparen_Less_Minus__t(s_._1, ((size_t)1ULL), x);
   FStar_Pervasives_Native_tuple2__slice_uint8_slice_uint8 s_1 = Pulse_Lib_Slice_split__t(s_._2, ((size_t)2ULL));
   Pulse_Lib_Slice_copy__t(s_1._1, s_1._2);
 }

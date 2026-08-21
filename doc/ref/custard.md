@@ -7336,6 +7336,78 @@ direction.
 Also from the merge: `FStar.Tactics.MkProjectors` is deleted, and
 `src/custard/entrypoints.txt` named it.
 
+## 22. Operators get their names changed underneath us
+
+Master made operator name mangling uniform: an operator becomes an identifier
+by naming each of its characters and joining the names with underscores, with
+no special cases, so `( + )` is `op_Plus` rather than `op_Addition` and
+`( .() )` is `op_Dot_Lparen_Rparen` rather than `op_Array_Access`.  Mangling no
+longer depends on arity either, so prefix minus is `( ~- )` and `op_Minus` now
+means *binary* subtraction.
+
+Custard reads and writes those names in four places, and each had to move.
+
+**What Custard recognizes.**  `Builtins.prims_rule` keys the boolean
+connectives on their mangled names, and all five changed: `op_Amp_Amp`,
+`op_Bar_Bar`, `op_Equals`, `op_Less_Greater`, and `not` -- which was
+`op_Negation` and is now just the ordinary function it always was.  The same
+for `Pulse.Lib.Vec` and `Pulse.Lib.ArrayPtr`'s indexing.  These are silent
+failures if missed: an unrecognized name is not an error, it is an ordinary
+call to something C has no definition for, so the failure surfaces at link
+time or, worse, as a `void *` signature.
+
+**What Custard emits to karamel.**  karamel recognizes a handful of F\*
+definitions by name and spells them the old way, because it is a separate
+repository and cannot be updated in the same commit.  Master added
+`FStarC.Extraction.Krml.krml_compat_name` to rewrite them on the way out;
+`Builtins.krml_compat_name` is its twin, and the two tables have to agree.
+It is applied in `PrintKrml.lident_of_name`, which every value name passes
+through -- mapping a reference but not the declaration it resolves to renames
+a use away from its own definition, and karamel then reports the definition as
+missing.  Before the specialization suffix, since the table is keyed on the
+source name and `op_Array_Access__t` is not in it.
+
+Master's table was missing one entry, `op_Star`.  It is the only Prims operator
+whose old name is not recoverable from the new one by the same rule as the
+rest -- `Multiply` against `Star` -- so it was the one that got overlooked, and
+`Prims_op_Star` was undefined in the generated C.  That was finding #6 in
+`tests/extraction/backends/FINDINGS.md`, an `XFAIL` in two columns; adding the
+entry fixes both.
+
+**What Custard emits to OCaml.**  `PrintOCaml` names the Prims arithmetic
+functions directly, and the generated `Prims.ml` now defines them under the
+new names.  The direct C backend gets no mapping and wants none: nothing
+downstream matches on those names, so `Pulse_Lib_Slice_op_Dot_Lparen_Rparen`
+is simply what the function is now called.
+
+**Two entry points that moved.**  `FStarC.Parser.AST.compile_op'` is gone,
+uniform mangling having removed the arity argument that made it separate;
+`compile_op` is what remains.  And `Pulse_RuntimeUtils.ml` picked up a use of
+`FStarC.Syntax.Syntax.uu___is_Unresolved_name`, which is the interesting one.
+
+### 22.1 A root that is a discriminator
+
+A projector or a discriminator is `Inline`: it is substituted at its uses and
+never emitted, because it is one field read or one tag test and a declaration
+for it would be a call where an access belongs.  That is right for everything
+inside the extracted program, and wrong for one that is named as a root.
+
+A root exists precisely because something *outside* the program calls it --
+`--custard_entrypoints` is how the hand-written OCaml under `pulse/src/ml`
+reaches the compiler, by OCaml name, through no request Custard can see
+(section 12.13).  That caller has nothing to inline into.  Adding the name to
+`pulse/src/custard-entrypoints.txt` was therefore not enough on its own: the
+declaration was extracted, marked `Root`, and then dropped anyway.
+
+Two changes, because the flag is read in two places.  `Extract` now records
+every root before any of them is marked -- a root is reached like anything
+else, and a discriminator that some *other* root gets to first would be
+extracted, marked `Inline` and cached before its own turn came -- and does not
+mark a rooted projector or discriminator `Inline`.  `Simplify.inline_decls`
+keeps a declaration that is `Root` even when it is `Inline`, which is what
+actually makes it survive.  Uses inside the program are still substituted;
+only the declaration stays.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -7416,3 +7488,4 @@ Also from the merge: `FStar.Tactics.MkProjectors` is deleted, and
 | M10σ | **`Pulse.Lib.Slice` compiles to a Rust slice** (§19.15, §20) | Done.  karamel recognizes a slice by name and Custard's monomorphization erased the name, so every borrow became an owning `Box` and the reporter's program read back zeroes -- a miscompilation, not a build failure, which is why the test runs the Rust binary and checks its own answers.  `--custard_backend Krml` splits into `KrmlC` and `KrmlRust`, because the two want *different programs* and no property of the F\* source distinguishes them; `tests/extraction/backends` had already had them as separate rows passing identical flags.  A new `Modelled` decl flag, deliberately not `Realized`: a realization is hand-written OCaml and its declaration is still Custard's to emit on the karamel path, a model is the target compiler's and never is -- sharing the flag deleted `FStar.Pervasives.Native.tuple2`.  Only the *type* declaration is dropped; the operations stay as externals, since karamel's checker resolves every reference before the Rust pass rewrites any of them, and their type variables print as `TBound` rather than the usual external's `TAny`, Rust having no cast from `any`.  `FStar.Pervasives.Native.tupleN` is modelled too on that backend and prints as the IR's long-unused `TTuple`/`ETuple`/`PTuple`, because `split` becomes `split_at_mut` and `OptimizeMiniRust.retrieve_pair_type` *crashes* on a struct; `krml -fkeep-tuples` is not optional for the same reason.  `Builtins.is_known_krml_model_op` whitelists the seven operations `AstToMiniRust` actually matches, so a future runtime `val` in a modelled module is rejected here rather than by rustc.  `tests/custard/pulse/PulseSlice.fst`, compiled and run on both columns; its C column needs `--custard_monomorphize_types`, a pre-existing limit unrelated to slices (§20.5). |
 | M10τ | **A projector whose field is a function** (§21) | Done.  Master's #4389 makes projectors and discriminators declaration-only, so `Extract.assumed_projector_lb` -- written for `[@@no_auto_projectors]`, and until now reached by almost nothing -- became the path every projector takes, and it took the projectee to be the *last* binder of the projector's type.  `U.arrow_formals_comp` flattens the whole spine, so when the projected field is itself a function the last binder is the field's own argument and the synthesized match scrutinized that: `i.impl_validate i.contents` came out as `i.contents.impl_validate`.  A miscompilation rather than a rejection, and it surfaced three modules away as a C field with no owner, a Pulse constructor with no type, and an OCaml type error in generated code.  The projectee is now the first binder headed by the inductive the constructor belongs to; the trailing binders are kept and the match applied to them, which is the shape F\* used to generate and the one `Simplify.eta_reduce` exists for.  `tests/custard/CFunPtr.fst`, `MonoHoles.fst` and `pulse/test`'s `Example.Hashtable` all reproduce it.  Also `FStar.Tactics.MkProjectors`, deleted by the same merge, removed from `src/custard/entrypoints.txt`. |
 | M10υ | **A discarded value's name, and a slice in a returned struct** (§20.6) | Done.  Round 9 of the EverParse report: 436 Rust errors down to 28, miscompilation gone, and two of the remaining classes worth chasing.  `PrintKrml` named the binder it invents for a discarded `ESeq` component `_`; karamel's use analysis rewrites an unread binding into `let b = e1 in ignore b`, and its Rust backend prints a binder's name verbatim, so the reference came out as `ignore(_)`, which is not an expression in Rust.  Now an ordinary name, freshened against the scope because `find` takes the first match and `Rename` gives a local its bare source spelling.  The other is karamel's, and the report's reading of it was off: `AstToMiniRust` has no path from a slice to a `Box`, so a field emitted as `Box<[T]>` held a *buffer* and the two types were not structurally identical after all.  The real defect is the `E0106`s: karamel sorts a pointer-holding struct into returned (own them, `Box`) or not-returned (borrow them, lifetime), and a slice fits neither, so a returned struct with a slice field gets `box=true, lifetime=false` and emits `&[T]` in a type binding no lifetime.  `tests/custard/pulse/PulseSliceRec.fst` reproduces it in three declarations and one total function; `krml -fno-box` is the workaround the test uses.  Reported as karamel#753. |
+| M10φ | **Operators get their names changed underneath us** (§22) | Done.  Merging master brought uniform operator mangling: `( + )` is `op_Plus`, `( .() )` is `op_Dot_Lparen_Rparen`, and `op_Minus` now means binary subtraction rather than negation.  Custard reads those names in `Builtins.prims_rule` and the `Pulse.Lib.Vec`/`ArrayPtr` rules, and writes them in `PrintOCaml` and to karamel, which still spells them the old way; `Builtins.krml_compat_name` is the twin of master's `FStarC.Extraction.Krml.krml_compat_name` and is applied in `lident_of_name`, before the specialization suffix, so that references and declarations move together.  Master's table was missing `op_Star`, the one Prims operator whose old name is not derivable from the new one by the same rule as the rest; adding it fixes FINDINGS.md #6 in both the C and krml C columns.  Separately, `Pulse_RuntimeUtils.ml` now calls a *discriminator* by OCaml name, and a discriminator is `Inline` and never emitted -- so `Extract` records roots before marking and does not inline a rooted one, and `Simplify.inline_decls` keeps an `Inline` declaration that is also `Root` (§22.1). |

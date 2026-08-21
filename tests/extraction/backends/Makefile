@@ -74,10 +74,6 @@ XFAIL_OCAML += ExtUInt8Lognot
 # every negative dividend is silently wrong. FINDINGS.md #5.
 XFAIL_C += ExtPrimsIntDiv
 
-# F* emits `Prims_op_Star` for `*`, but krmllib only ever defines
-# `Prims_op_Multiply`. FINDINGS.md #6.
-XFAIL_C += ExtPrimsIntMul
-
 # `Prims_int` is `int32_t` in C. Operations trap via RETURN_OR, but literals
 # are printed verbatim and truncated by the C compiler. FINDINGS.md #7.
 XFAIL_C += ExtPrimsIntBignum
@@ -195,9 +191,9 @@ XFAIL_CUSTARD_KRML_RUST += ExtIntShiftArith ExtUIntRotate
 # plain OCaml column does.
 XFAIL_CUSTARD_OCAML += ExtUInt8Lognot
 
-# FINDINGS.md #5, #6, #7: the krml C column shares krmllib's Prims.int with
-# the plain C column, and so shares its three bugs.
-XFAIL_CUSTARD_KRML_C += ExtPrimsIntDiv ExtPrimsIntMul ExtPrimsIntBignum
+# FINDINGS.md #5, #7: the krml C column shares krmllib's Prims.int with the
+# plain C column, and so shares its bugs.
+XFAIL_CUSTARD_KRML_C += ExtPrimsIntDiv ExtPrimsIntBignum
 
 # FINDINGS.md #8, #9: heap-allocated inductives, and krml not terminating on
 # two recursive datatypes.

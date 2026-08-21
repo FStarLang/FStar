@@ -30,7 +30,7 @@ Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 | 3 | `UInt8.lognot` is not truncated in OCaml | **2** | ✗ | ✓ | ✓ | `ExtUInt8Lognot` |
 | 4 | narrowing casts dropped inside comparisons | **2** | ✓ | ✗ | ✓ | `ExtIntCast` |
 | 5 | `Prims.int` `/` and `%` truncate instead of Euclidean in C | **2** | ✓ | ✗ | – | `ExtPrimsIntDiv` |
-| 6 | `Prims_op_Star` is never defined in krmllib | 4 | ✓ | ✗ | – | `ExtPrimsIntMul` |
+| 6 | `Prims_op_Star` is never defined in krmllib — **fixed** | 4 | – | – | – | `ExtPrimsIntMul` |
 | 7 | `Prims_int` is `int32_t`; literals silently truncate | **2** | ✓ | ✗ | – | `ExtPrimsIntBignum` |
 | 8 | recursive inductives emit uncompilable C, undiagnosed | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec`, `ExtDatatypesMutual` |
 | 9 | krml does not terminate on two recursive datatypes (C *and* Rust) | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec` |
@@ -221,17 +221,23 @@ which makes this another way to produce an out-of-bounds index from verified
 code. OCaml is correct because extraction routes these through Zarith's
 `ediv`/`erem`.
 
-## 6. `Prims_op_Star` is never defined
+## 6. `Prims_op_Star` is never defined -- fixed
 
 *Severity 4. Test: `ExtPrimsIntMul`.*
 
-F\* extraction emits `Prims.op_Star` for `*` on `Prims.int`, and the C backend
-turns that into a call to `Prims_op_Star`. krmllib only ever defines
-`Prims_op_Multiply`, so the generated C fails to compile:
+F\* extraction emitted `Prims.op_Star` for `*` on `Prims.int`, and the C
+backend turned that into a call to `Prims_op_Star`. krmllib only ever defines
+`Prims_op_Multiply`, so the generated C failed to compile:
 
 ```
 error: implicit declaration of function 'Prims_op_Star'
 ```
+
+`krml_compat_name` rewrites the Prims operators to the spellings karamel
+hardwires, and `op_Star` was the one entry missing from its table -- the only
+Prims operator whose pre-mangling name was not derivable from the new one by
+the same rule as the rest. Adding it fixes the cell in both the C and the
+krml C columns.
 
 ## 7. `Prims_int` is 32 bits, and literals bypass the overflow check
 

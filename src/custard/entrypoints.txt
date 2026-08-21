@@ -33,7 +33,7 @@ FStarC.Parser.AST.attributes_
 FStarC.Parser.AST.branch
 FStarC.Parser.AST.calc_step
 FStarC.Parser.AST.check_id
-FStarC.Parser.AST.compile_op'
+FStarC.Parser.AST.compile_op
 FStarC.Parser.AST.consPat
 FStarC.Parser.AST.consTerm
 FStarC.Parser.AST.constructor_payload

@@ -358,6 +358,13 @@ type state = {
      has to adopt an imported type's verdict, and the backends have to know
      which namespace to qualify a name with. *)
   imports: ref (list (decl & option type_info));
+  (* The lids named as roots, by string.  A projector or a discriminator is
+     normally substituted at its uses and never emitted (section 21), which is
+     right for anything inside the program but wrong for one that was asked
+     for by name: an entry point exists precisely because something outside
+     the extracted program calls it, and that caller has nothing to inline
+     into.  See [pulse/src/custard-entrypoints.txt]. *)
+  roots:   SMap.t bool;
 }
 
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
@@ -380,6 +387,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   abbrevs = SMap.create 100;
   links   = Unit.load_links (Options.custard_links ());
   imports = mk_ref [];
+  roots   = SMap.create 20;
 }
 
 (* Just enough to fire the redexes that substituting a local function creates,
@@ -2441,7 +2449,8 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                     q = S.Unfold_for_unification_and_vcgen) in
     let d = if is_realized && not inlined then with_realized d else d in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
-    if is_inlinable se then with_inline d else d
+    if is_inlinable se && not (Some? (SMap.try_find st.roots (Ident.string_of_lid l)))
+    then with_inline d else d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
    for extraction.  This is how Pulse hands us its programs: the F* definition
@@ -3342,6 +3351,11 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      callbacks -- which the demand-driven loop would otherwise never load, and
      whose absence turns into a run-time failure ("callback not yet set")
      rather than a compile-time one. *)
+  (* Before any of them is marked: a root is reached like anything else, and a
+     projector or discriminator that some *other* root gets to first would be
+     extracted, marked [Inline] and cached before its own turn came. *)
+  roots |> List.iter (fun (l:Ident.lident) ->
+    SMap.add st.roots (Ident.string_of_lid l) true);
   let modroots, roots =
     roots |> List.partition (fun (l:Ident.lident) ->
                Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l))) in

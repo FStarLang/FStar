@@ -10,7 +10,7 @@ open FStar.All
 let a : int = 3
 let b : int = -1
 let c : int = 0 - 1
-let d : int = op_Minus 1
+let d : int = op_Tilde_Minus 1
 let e (n:int) : int = 0 - n
 
 let main () : ML unit =

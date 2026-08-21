@@ -810,7 +810,13 @@ let inline_decls (prog:program) : ML program =
     | d -> d) in
   prog |> List.filter (fun d ->
     match d with
+    (* [Root] survives inlining.  A root was asked for by name, and what asks
+       for it is outside the extracted program -- hand-written OCaml calling
+       the compiler, which has nothing to inline into (section 12.13).  Every
+       *use* inside the program is still substituted; only the declaration
+       stays. *)
     | DLet dl -> not (dl.dl_flags |> List.existsb Inline?)
+              || dl.dl_flags |> List.existsb Root?
               || Some? (SMap.try_find used (string_of_name dl.dl_name))
     | _ -> true)
 

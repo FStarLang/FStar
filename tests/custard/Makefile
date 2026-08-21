@@ -227,7 +227,7 @@ NOGREP_MonoState   = "Obj"
 # record never appears at runtime) and its data is not (the tag arrives as an
 # argument).  The closure case is the same mechanism and leaves no closure at
 # all.
-GREP_MonoHoles     = "monoHoles_render__int" "monoHoles_twice__op_Addition"
+GREP_MonoHoles     = "monoHoles_render__int" "monoHoles_twice__op_Plus"
 NOGREP_MonoHoles   = "set_tag" "fun y"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to

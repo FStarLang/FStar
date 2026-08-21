@@ -120,6 +120,16 @@ val is_krml_model : list string -> ML bool
     [split_at] hook destructures a real tuple and crashes on a struct. *)
 val is_krml_model_name : list string -> string -> ML bool
 
+(** The names karamel spells the way F* spelled them before operator mangling
+    was made uniform, rewritten on the way out so that a karamel built against
+    an older F* keeps working.  The twin of
+    [FStarC.Extraction.Krml.krml_compat_name], and temporary for the same
+    reason: karamel is a separate repository and cannot be updated in the same
+    commit.  Must be applied wherever a top-level name reaches the karamel AST,
+    references and declarations alike, or a use is renamed away from its own
+    definition. *)
+val krml_compat_name : list string -> string -> list string & string
+
 (** Whether karamel actually has a translation for this operation of a
     modelled module (section 20).  A model is a promise Custard makes on
     karamel's behalf -- "emit the F* name and karamel will rewrite it" -- and
