@@ -1744,7 +1744,7 @@ and tc_tactic (a:typ) (b:typ) (env:Env.env) (tau:term) : ML (term & lcomp & guar
 and speculate_base env (e:term) : ML Overload.base_typ =
   (* Typecheck [e] just far enough to learn the head symbol of its type,
      then undo everything: the unifier state is rolled back and any errors
-     are swallowed. [Base_rigid] only holds an fv, so the answer survives
+     are swallowed. A [base_typ] only ever holds fvs, so the answer survives
      the rollback.
 
      [admit] is set so that the speculative pass is uniformly lax. That is
