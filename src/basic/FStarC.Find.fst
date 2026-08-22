@@ -146,29 +146,32 @@ let rec path_is_at_or_below (root:string) (path:string) : ML bool =
     let parent = Filepath.dirname path in
     parent <> path && path_is_at_or_below root parent
 
-(* Add existing command-line file parents as specific roots while preserving the cwd root.
-  This is only necessary when no include path is specified. For example, when running:
+(* Add command-line file parents not already owned by an explicit root as flat
+  roots. Roots declared by their [fstar.include] are flat too. For example, when running:
   > fstar.exe test/Test01.fst
   we add `test` as an include path under the assumption that the file defines the Test01 module. *)
 let command_line_include_paths () : ML (list string) =
   match !_file_list with
-  | [] -> expand_include_d "."
+  | [] -> []
   | files ->
     let explicit_roots = List.map Filepath.normalize_file_path !_include in
+    let cwd = Filepath.normalize_file_path (Filepath.getcwd ()) in
     let file_roots =
       List.fold_left (fun roots file ->
-        if Filepath.file_exists file && not (Filepath.is_directory file) then
-          let root = Filepath.normalize_file_path (Filepath.dirname file) in
+        let root = Filepath.normalize_file_path (Filepath.dirname file) in
+        let is_file = Filepath.file_exists file && not (Filepath.is_directory file) in
+        (* Nonexistent entries may be unsaved files supplied through the IDE VFS,
+          but synthetic paths outside cwd must not introduce broad include roots. *)
+        if is_file || (not (Filepath.file_exists file) && path_is_at_or_below cwd root) then
           if List.contains root roots then roots else roots @ [root]
         else roots)
         [] files
     in
-    let uncovered_roots =
-      List.filter (fun root ->
-        not (List.existsb (fun explicit_root ->
-          path_is_at_or_below explicit_root root) explicit_roots)) file_roots
-    in
-    expand_include_ds uncovered_roots @ expand_include_d "."
+    file_roots
+    |> List.filter (fun root ->
+       not (List.existsb (fun explicit_root ->
+         path_is_at_or_below explicit_root root) explicit_roots))
+    |> expand_include_ds
 
 let epoch () : ML int = !_epoch
 
@@ -185,9 +188,14 @@ let full_include_path () : ML _ =
       in
       let include_paths = !_include |> expand_include_ds in
       cache_dir @ lib_paths () @ include_paths @ command_line_include_paths ()
+      @ expand_include_d "."
     in
     _full_include := Some res;
     res
+
+let recursive_include_path_normalized () : ML (list string) =
+  (!_include |> expand_include_ds)
+  |> List.map Filepath.normalize_file_path
 
 (* Normalizing every entry of the include path is not cheap (it involves
 querying the cwd for relative entries), and callers such as
