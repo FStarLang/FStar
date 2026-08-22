@@ -200,9 +200,11 @@ let list_of_pair (intf, impl) =
 let module_name_from_include_path (f:string) : ML (option string) =
   let f = Filepath.normalize_file_path f in
   let include_dirs = Find.full_include_path_normalized () in
+  let recursive_include_dirs = Find.recursive_include_path_normalized () in
   let best =
     List.fold_left (fun (acc:option string) d ->
       if Util.starts_with f (d ^ "/")
+      && (List.contains d recursive_include_dirs || Filepath.dirname f = d)
       && (match acc with Some a -> String.length d > String.length a | None -> true)
       then Some d
       else acc)
@@ -703,12 +705,23 @@ let check_unique_module_names_for_dir (dir:string)
 (* In public interface *)
 let build_inclusion_candidates_list (): ML (list (string & string)) =
   let include_directories = Find.full_include_path_normalized () in
+  let recursive_include_directories = Find.recursive_include_path_normalized () in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
+  let recursive_include_directories = List.unique recursive_include_directories in
   let cwd = Filepath.normalize_file_path (getcwd ()) in
   include_directories |> List.concatMap (fun d ->
-    let candidates = hierarchical_modules_for_dir cwd include_directories d in
+    let candidates =
+      if List.contains d recursive_include_directories
+      then hierarchical_modules_for_dir cwd recursive_include_directories d
+      else
+        safe_readdir_for_include d |> List.concatMap (fun entry ->
+          let entry = Filepath.basename entry in
+          let path = if d = cwd then entry else Filepath.join_paths d entry in
+          if Filepath.is_directory path then []
+          else module_candidate_of_file [] path entry)
+    in
     check_unique_module_names_for_dir d candidates;
     candidates)
 
