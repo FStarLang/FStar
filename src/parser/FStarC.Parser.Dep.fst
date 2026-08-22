@@ -190,13 +190,9 @@ let list_of_option = function Some x -> [x] | None -> []
 let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
-(* Given a source file path, if it lives (possibly transitively, through
-   subdirectories) under one of the include directories, recover its full
-   dotted module name. We match against the *longest* include directory that is
-   a path-boundary prefix of the file and turn the remaining relative path into
-   a dotted name: an include directory [d] and a file [d/X/Y/Z.fst] yield
-   "X.Y.Z". Returns None if the file is not under any include directory or is
-   not a valid F* source file. *)
+(* Recover a source file's module name relative to the longest applicable
+  include root. Recursive roots map [d/X/Y/Z.fst] to [X.Y.Z]; flat roots only
+  apply to immediate files. *)
 let module_name_from_include_path (f:string) : ML (option string) =
   let f = Filepath.normalize_file_path f in
   let include_dirs = Find.full_include_path_normalized () in
@@ -637,7 +633,6 @@ let can_be_namespace_component (s:string) : ML bool =
   are reported by their bare path relative to [cwd]. *)
 let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:string)
   : ML (list (string & string)) =
-  let has_include_manifest = Filepath.file_exists (Filepath.join_paths root "fstar.include") in
   (* [ns_prefix] is the list of namespace components corresponding to the
      subdirectories walked so far (in order); [rel] is the path, relative to
      [root], of the directory currently being scanned ("" for [root] itself). *)
@@ -654,13 +649,9 @@ let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:
          && None? (check_and_strip_suffix entry)
       then []
       else if Filepath.is_directory entry_path then
-        (* A manifest explicitly selects the child roots to scan; those roots
-          are expanded separately by [Find.full_include_path]. *)
-        if has_include_manifest
-        then []
         (* Never descend into directories that cannot be namespace components
            (e.g. hidden directories, or build directories such as '_build'). *)
-        else if not (can_be_namespace_component entry)
+        if not (can_be_namespace_component entry)
         then []
         (* If this directory is itself an include root, let that root's own
            traversal cover it. *)
@@ -692,12 +683,9 @@ let check_unique_module_names_for_dir (dir:string)
       ]
     | None -> SMap.add seen key path)
 
-(** Enumerate all F* files in all include directories, returning a list of pairs
-    of long names and full paths.
-
-    We descend into subdirectories, mapping a file at [X/Y/Z.fst] to the long
-    name [X.Y.Z] (matching is case-insensitive; long names are lowercased in
-    [build_map]).
+(** Enumerate F* files in all include directories, returning pairs of long names
+    and full paths. Explicit roots are scanned recursively, mapping [X/Y/Z.fst]
+    to [X.Y.Z]; implicit roots are scanned flat.
 
     We fail hard if any module long name is provided by more than one file of
     the same role within a single include directory (e.g. both a flat
@@ -714,7 +702,7 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
   include_directories |> List.concatMap (fun d ->
     let candidates =
       if List.contains d recursive_include_directories
-      then hierarchical_modules_for_dir cwd recursive_include_directories d
+      then hierarchical_modules_for_dir cwd include_directories d
       else
         safe_readdir_for_include d |> List.concatMap (fun entry ->
           let entry = Filepath.basename entry in

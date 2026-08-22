@@ -59,8 +59,9 @@ val epoch () : ML int
 (* The full include path. We search files in all of these directories. *)
 val full_include_path () : ML (list string)
 
-(* The include roots that should be scanned recursively for hierarchical
-modules. Unlike [full_include_path], this excludes the implicit cwd root. *)
+(* Explicit include roots, including roots from their [fstar.include],
+normalized into absolute paths. These roots are scanned recursively for
+hierarchical modules; all other roots in [full_include_path] remain flat. *)
 val recursive_include_path_normalized () : ML (list string)
 
 (* The full include path, with every entry normalized into an absolute path.

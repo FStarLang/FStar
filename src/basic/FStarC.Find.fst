@@ -146,7 +146,8 @@ let rec path_is_at_or_below (root:string) (path:string) : ML bool =
     let parent = Filepath.dirname path in
     parent <> path && path_is_at_or_below root parent
 
-(* Add command-line file parents not already covered by an explicit include root. For example, when running:
+(* Add command-line file parents not already owned by an explicit root as flat
+  roots. Roots declared by their [fstar.include] are flat too. For example, when running:
   > fstar.exe test/Test01.fst
   we add `test` as an include path under the assumption that the file defines the Test01 module. *)
 let command_line_include_paths () : ML (list string) =
@@ -166,12 +167,11 @@ let command_line_include_paths () : ML (list string) =
         else roots)
         [] files
     in
-    let uncovered_roots =
-      List.filter (fun root ->
-        not (List.existsb (fun explicit_root ->
-          path_is_at_or_below explicit_root root) explicit_roots)) file_roots
-    in
-    expand_include_ds uncovered_roots
+    file_roots
+    |> List.filter (fun root ->
+       not (List.existsb (fun explicit_root ->
+         path_is_at_or_below explicit_root root) explicit_roots))
+    |> expand_include_ds
 
 let epoch () : ML int = !_epoch
 
@@ -187,18 +187,14 @@ let full_include_path () : ML _ =
         | Some c -> [c]
       in
       let include_paths = !_include |> expand_include_ds in
-      cache_dir @ lib_paths () @ include_paths @ command_line_include_paths () @ ["."]
+      cache_dir @ lib_paths () @ include_paths @ command_line_include_paths ()
+      @ expand_include_d "."
     in
     _full_include := Some res;
     res
 
 let recursive_include_path_normalized () : ML (list string) =
-  let cache_dir =
-    match !_cache_dir with
-    | None -> []
-    | Some c -> [c]
-  in
-  cache_dir @ lib_paths () @ (!_include |> expand_include_ds) @ command_line_include_paths ()
+  (!_include |> expand_include_ds)
   |> List.map Filepath.normalize_file_path
 
 (* Normalizing every entry of the include path is not cheap (it involves
