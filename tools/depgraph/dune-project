@@ -1,0 +1,2 @@
+(lang dune 3.6)
+(name fstar-depgraph)
