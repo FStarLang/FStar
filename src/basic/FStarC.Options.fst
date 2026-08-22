@@ -1840,11 +1840,6 @@ let with_restored_cmd_line_options (f:unit -> ML 'a) : ML 'a =
   let _ = restore_cmd_line_options true in
   finally (fun _ -> history := h; restore_all snap) f
 
-let module_name_of_file_name f =
-    let f = Filepath.basename f in
-    let f = String.substring f 0 (String.length f - String.length (Filepath.get_file_extension f) - 1) in
-    String.lowercase f
-
 (* Basically returns true when the module is in the command line *)
 let should_check m =
   let l = get_verify_module () in
@@ -1853,14 +1848,9 @@ let should_check m =
 let should_verify m =
   not (get_admit_smt_queries ()) && not (get_lax ()) && should_check m
 
-let should_check_file fn =
-    should_check (module_name_of_file_name fn)
-
-let should_verify_file fn =
-    should_verify (module_name_of_file_name fn)
-
+(* TODO:RM *)
 (* Whether a checked file should be written for [fn].
-   Unlike [should_check_file], this is about the *file*, not the module: running
+  This is about the *file*, not the module: running
    [fstar.exe A.fst] verifies A.fsti too, but it must not write A.fsti.checked.
    Otherwise the contents of the interface's checked file would depend on which
    of the two files happened to be checked --- checking A.fst reveals the
