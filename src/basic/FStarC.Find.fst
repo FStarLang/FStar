@@ -34,6 +34,7 @@ let cached_fun #a (cache : SMap.t a) (f : string -> ML a) : string -> ML a =
 (* caches *)
 let _full_include : ref (option (list string)) = mk_ref None
 let _full_include_normalized : ref (option (list string)) = mk_ref None
+let _recursive_include_normalized : ref (option (list string)) = mk_ref None
 let find_file_cache : SMap.t (option string) = SMap.create 100
 
 (* Bumped every time the include path (or anything else affecting file
@@ -45,6 +46,7 @@ let clear () : ML unit =
   SMap.clear find_file_cache;
   _full_include := None;
   _full_include_normalized := None;
+  _recursive_include_normalized := None;
   _epoch := !_epoch + 1;
   ()
 
@@ -120,9 +122,12 @@ let read_fstar_include (fn : string) : ML (option (list string)) =
     failwith ("Could not read " ^ fn);
     None
 
+let has_fstar_include (dirname:string) : ML bool =
+  Filepath.file_exists (dirname ^ "/fstar.include")
+
 let rec expand_include_d (dirname : string) : ML (list string) =
-  let dot_inc_path = dirname ^ "/fstar.include" in
-  if Filepath.file_exists dot_inc_path then (
+  if has_fstar_include dirname then (
+    let dot_inc_path = dirname ^ "/fstar.include" in
     let subdirs = Some?.v <| read_fstar_include dot_inc_path in
     dirname :: List.collect (fun subd -> expand_include_d (dirname ^ "/" ^ subd)) subdirs
   ) else
@@ -131,14 +136,24 @@ let rec expand_include_d (dirname : string) : ML (list string) =
 let expand_include_ds (dirnames : list string) : ML (list string) =
   List.collect expand_include_d dirnames
 
-let fstarc_paths () : ML _ =
+let recursive_include_d (dirname:string) : ML (list string) =
+  expand_include_d dirname |> List.filter (fun d -> not (has_fstar_include d))
+
+let recursive_manifest_include_d (dirname:string) : ML (list string) =
+  match expand_include_d dirname with
+  | _::paths -> paths |> List.filter (fun d -> not (has_fstar_include d))
+  | [] -> []
+
+let fstarc_roots () : ML (list string) =
   if !_with_fstarc
-  then expand_include_d (Filepath.canonicalize <| fstar_bin_directory ^ "/../lib/fstar/fstarc")
+  then [Filepath.canonicalize <| fstar_bin_directory ^ "/../lib/fstar/fstarc"]
   else []
 
-let lib_paths () : ML _ =
-  (Common.option_to_list (lib_root ()) |> expand_include_ds)
-  @ fstarc_paths ()
+let lib_roots () : ML (list string) =
+  Common.option_to_list (lib_root ()) @ fstarc_roots ()
+
+let lib_paths () : ML (list string) =
+  lib_roots () |> expand_include_ds
 
 let rec path_is_at_or_below (root:string) (path:string) : ML bool =
   if root = path then true
@@ -150,11 +165,16 @@ let rec path_is_at_or_below (root:string) (path:string) : ML bool =
   roots. Roots declared by their [fstar.include] are flat too. For example, when running:
   > fstar.exe test/Test01.fst
   we add `test` as an include path under the assumption that the file defines the Test01 module. *)
-let command_line_include_paths () : ML (list string) =
+let command_line_include_roots () : ML (list string) =
   match !_file_list with
   | [] -> []
   | files ->
-    let explicit_roots = List.map Filepath.normalize_file_path !_include in
+    let explicit_roots =
+      !_include |> expand_include_ds |> List.map Filepath.normalize_file_path
+    in
+    let recursive_explicit_roots =
+      !_include |> List.collect recursive_include_d |> List.map Filepath.normalize_file_path
+    in
     let cwd = Filepath.normalize_file_path (Filepath.getcwd ()) in
     let file_roots =
       List.fold_left (fun roots file ->
@@ -169,9 +189,12 @@ let command_line_include_paths () : ML (list string) =
     in
     file_roots
     |> List.filter (fun root ->
-       not (List.existsb (fun explicit_root ->
-         path_is_at_or_below explicit_root root) explicit_roots))
-    |> expand_include_ds
+        not (List.contains root explicit_roots
+          || List.existsb (fun explicit_root ->
+            path_is_at_or_below explicit_root root) recursive_explicit_roots))
+
+let command_line_include_paths () : ML (list string) =
+  command_line_include_roots () |> expand_include_ds
 
 let epoch () : ML int = !_epoch
 
@@ -194,8 +217,17 @@ let full_include_path () : ML _ =
     res
 
 let recursive_include_path_normalized () : ML (list string) =
-  (!_include |> expand_include_ds)
-  |> List.map Filepath.normalize_file_path
+  match !_recursive_include_normalized with
+  | Some paths -> paths
+  | None ->
+    let paths =
+      ((!_include |> List.collect recursive_include_d)
+       @ ((lib_roots () @ command_line_include_roots () @ ["."])
+          |> List.collect recursive_manifest_include_d))
+      |> List.map Filepath.normalize_file_path
+    in
+    _recursive_include_normalized := Some paths;
+    paths
 
 (* Normalizing every entry of the include path is not cheap (it involves
 querying the cwd for relative entries), and callers such as

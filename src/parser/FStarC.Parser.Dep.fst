@@ -684,8 +684,9 @@ let check_unique_module_names_for_dir (dir:string)
     | None -> SMap.add seen key path)
 
 (** Enumerate F* files in all include directories, returning pairs of long names
-    and full paths. Explicit roots are scanned recursively, mapping [X/Y/Z.fst]
-    to [X.Y.Z]; implicit roots are scanned flat.
+  and full paths. Explicit and manifest-declared roots are scanned recursively,
+  mapping [X/Y/Z.fst] to [X.Y.Z]. Implicit roots and roots containing their
+  own [fstar.include] are scanned flat.
 
     We fail hard if any module long name is provided by more than one file of
     the same role within a single include directory (e.g. both a flat
@@ -697,7 +698,6 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
-  let recursive_include_directories = List.unique recursive_include_directories in
   let cwd = Filepath.normalize_file_path (getcwd ()) in
   include_directories |> List.concatMap (fun d ->
     let candidates =
