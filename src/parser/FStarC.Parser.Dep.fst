@@ -195,24 +195,25 @@ let list_of_pair (intf, impl) =
   apply to immediate files. *)
 let module_name_from_include_path (f:string) : ML (option string) =
   let f = Filepath.normalize_file_path f in
-  let include_dirs = Find.full_include_path_normalized () in
-  let recursive_include_dirs = Find.recursive_include_path_normalized () in
+  let include_paths = Find.module_include_paths_normalized () in
   let best =
-    List.fold_left (fun (acc:option string) d ->
-      if Util.starts_with f (d ^ "/")
-      && (List.contains d recursive_include_dirs || Filepath.dirname f = d)
-      && (match acc with Some a -> String.length d > String.length a | None -> true)
-      then Some d
+    List.fold_left (fun (acc:option Find.module_include_path) (path:Find.module_include_path) ->
+      if Util.starts_with f (path.dir ^ "/")
+      && (Some? path.prefix || Filepath.dirname f = path.dir)
+      && (match acc with Some prev -> String.length path.dir > String.length prev.dir | None -> true)
+      then Some path
       else acc)
-      None include_dirs
+      None include_paths
   in
   match best with
   | None -> None
-  | Some d ->
-    let rel = Util.substring_from f (String.length d + 1) in
+  | Some path ->
+    let rel = Util.substring_from f (String.length path.dir + 1) in
     match check_and_strip_suffix rel with
     | None -> None
-    | Some stem -> Some (Util.replace_char (Util.replace_char stem '\\' '.') '/' '.')
+    | Some stem ->
+      let stem = Util.replace_char (Util.replace_char stem '\\' '.') '/' '.' in
+      Some (String.concat "." (Option.dflt [] path.prefix @ [stem]))
 
 (* [maybe_module_name_of_file] is called once per dependency edge in the
 dependency graph, and is a pure function of the file name and the include
@@ -631,7 +632,8 @@ let can_be_namespace_component (s:string) : ML bool =
   subdirectory that is itself an include root, so that each include root owns
   its own traversal. [cwd] is the normalized current directory: files under it
   are reported by their bare path relative to [cwd]. *)
-let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:string)
+let hierarchical_modules_for_dir (cwd:string) (include_roots:list string)
+                                 (root:string) (prefix:list string)
   : ML (list (string & string)) =
   (* [ns_prefix] is the list of namespace components corresponding to the
      subdirectories walked so far (in order); [rel] is the path, relative to
@@ -660,7 +662,7 @@ let hierarchical_modules_for_dir (cwd:string) (include_roots:list string) (root:
         else walk (ns_prefix @ [entry]) rel'
       else module_candidate_of_file ns_prefix (if root = cwd then rel' else entry_path) entry)
   in
-  walk [] ""
+  walk prefix ""
 
 (* Build a map from module long name (and interface/implementation role) to the
   file providing it within a single include directory, and check that this map
@@ -693,24 +695,24 @@ let check_unique_module_names_for_dir (dir:string)
     [X.Y.Z.fst] and a nested [X/Y/Z.fst]). *)
 (* In public interface *)
 let build_inclusion_candidates_list (): ML (list (string & string)) =
-  let include_directories = Find.full_include_path_normalized () in
-  let recursive_include_directories = Find.recursive_include_path_normalized () in
+  let include_paths = Find.module_include_paths_normalized () in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
-  let include_directories = List.unique include_directories in
+  let include_paths = List.unique include_paths in
+  let include_directories = List.map (fun (path:Find.module_include_path) -> path.dir) include_paths in
   let cwd = Filepath.normalize_file_path (getcwd ()) in
-  include_directories |> List.concatMap (fun d ->
+  include_paths |> List.concatMap (fun (path:Find.module_include_path) ->
     let candidates =
-      if List.contains d recursive_include_directories
-      then hierarchical_modules_for_dir cwd include_directories d
-      else
-        safe_readdir_for_include d |> List.concatMap (fun entry ->
+      match path.prefix with
+      | Some prefix -> hierarchical_modules_for_dir cwd include_directories path.dir prefix
+      | None ->
+        safe_readdir_for_include path.dir |> List.concatMap (fun entry ->
           let entry = Filepath.basename entry in
-          let path = if d = cwd then entry else Filepath.join_paths d entry in
-          if Filepath.is_directory path then []
-          else module_candidate_of_file [] path entry)
+          let file_path = if path.dir = cwd then entry else Filepath.join_paths path.dir entry in
+          if Filepath.is_directory file_path then []
+          else module_candidate_of_file [] file_path entry)
     in
-    check_unique_module_names_for_dir d candidates;
+    check_unique_module_names_for_dir path.dir candidates;
     candidates)
 
 (** List the contents of all include directories, then build a map from long

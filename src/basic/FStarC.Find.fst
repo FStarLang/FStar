@@ -33,8 +33,7 @@ let cached_fun #a (cache : SMap.t a) (f : string -> ML a) : string -> ML a =
 
 (* caches *)
 let _full_include : ref (option (list string)) = mk_ref None
-let _full_include_normalized : ref (option (list string)) = mk_ref None
-let _recursive_include_normalized : ref (option (list string)) = mk_ref None
+let _module_include_paths_normalized : ref (option (list module_include_path)) = mk_ref None
 let find_file_cache : SMap.t (option string) = SMap.create 100
 
 (* Bumped every time the include path (or anything else affecting file
@@ -45,8 +44,7 @@ let _epoch : ref int = mk_ref 0
 let clear () : ML unit =
   SMap.clear find_file_cache;
   _full_include := None;
-  _full_include_normalized := None;
-  _recursive_include_normalized := None;
+  _module_include_paths_normalized := None;
   _epoch := !_epoch + 1;
   ()
 
@@ -216,30 +214,24 @@ let full_include_path () : ML _ =
     _full_include := Some res;
     res
 
-let recursive_include_path_normalized () : ML (list string) =
-  match !_recursive_include_normalized with
+let module_include_paths_normalized () : ML (list module_include_path) =
+  match !_module_include_paths_normalized with
   | Some paths -> paths
   | None ->
-    let paths =
+    let recursive_dirs =
       ((!_include |> List.collect recursive_include_d)
        @ ((lib_roots () @ command_line_include_roots () @ ["."])
           |> List.collect recursive_manifest_include_d))
       |> List.map Filepath.normalize_file_path
     in
-    _recursive_include_normalized := Some paths;
+    let paths =
+      full_include_path ()
+      |> List.map (fun dir ->
+        let dir = Filepath.normalize_file_path dir in
+        { dir; prefix=if List.contains dir recursive_dirs then Some [] else None })
+    in
+    _module_include_paths_normalized := Some paths;
     paths
-
-(* Normalizing every entry of the include path is not cheap (it involves
-querying the cwd for relative entries), and callers such as
-[FStarC.Parser.Dep.module_name_from_include_path] need it once per module in
-the dependency graph, so memoize it just like [full_include_path]. *)
-let full_include_path_normalized () : ML _ =
-  match !_full_include_normalized with
-  | Some paths -> paths
-  | None ->
-    let res = List.map Filepath.normalize_file_path (full_include_path ()) in
-    _full_include_normalized := Some res;
-    res
 
 let do_find (paths : list string) (filename : string) : ML (option string) =
   // Stats.record "Find.do_find" fun () ->
