@@ -346,18 +346,28 @@ let query_info settings (g:goal) z3result =
           with
           | _ -> "unknown"
         in
+        (* Z3 reports the time of the last check-sat, in seconds, with two
+        decimals; it omits the statistic entirely when it rounds to zero. Note
+        this is the time of this goal alone: the wall clock time we could
+        measure here covers the whole batch of goals in the round trip. *)
+        let time_str =
+          match SMap.try_find z3result.z3result_statistics "time" with
+          | Some t -> t
+          | None -> "0.00"
+        in
         if Options.Ext.enabled "query_stats_trace"
         then (
           Format.print "At %s\nQuery term is %s\n"
                 [BU.stack_dump();
                  show settings.query_term]
         );
-        Format.print "%s\tQuery-stats (%s, %s)\tgoal %s %s with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
+        Format.print "%s\tQuery-stats (%s, %s)\tgoal %s %s in %s seconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
              [  range;
                 settings.query_name;
                 show settings.query_index;
                 show g.goal_id;
                 tag;
+                time_str;
                 show settings.query_fuel;
                 show settings.query_ifuel;
                 show settings.query_rlimit;
