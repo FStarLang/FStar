@@ -199,7 +199,9 @@ let module_name_from_include_path (f:string) : ML (option string) =
   let best =
     List.fold_left (fun (acc:option Find.module_include_path) (path:Find.module_include_path) ->
       if Util.starts_with f (path.dir ^ "/")
-      && (Some? path.prefix || Filepath.dirname f = path.dir)
+      && (match path.kind with
+          | Find.Flat -> Filepath.dirname f = path.dir
+          | Find.Recursive _ -> true)
       && (match acc with Some prev -> String.length path.dir > String.length prev.dir | None -> true)
       then Some path
       else acc)
@@ -213,7 +215,9 @@ let module_name_from_include_path (f:string) : ML (option string) =
     | None -> None
     | Some stem ->
       let stem = Util.replace_char (Util.replace_char stem '\\' '.') '/' '.' in
-      Some (String.concat "." (Option.dflt [] path.prefix @ [stem]))
+      match path.kind with
+      | Find.Flat -> Some stem
+      | Find.Recursive prefix -> Some (String.concat "." (prefix @ [stem]))
 
 (* [maybe_module_name_of_file] is called once per dependency edge in the
 dependency graph, and is a pure function of the file name and the include
@@ -703,9 +707,9 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
   let cwd = Filepath.normalize_file_path (getcwd ()) in
   include_paths |> List.concatMap (fun (path:Find.module_include_path) ->
     let candidates =
-      match path.prefix with
-      | Some prefix -> hierarchical_modules_for_dir cwd include_directories path.dir prefix
-      | None ->
+      match path.kind with
+      | Find.Recursive prefix -> hierarchical_modules_for_dir cwd include_directories path.dir prefix
+      | Find.Flat ->
         safe_readdir_for_include path.dir |> List.concatMap (fun entry ->
           let entry = Filepath.basename entry in
           let file_path = if path.dir = cwd then entry else Filepath.join_paths path.dir entry in

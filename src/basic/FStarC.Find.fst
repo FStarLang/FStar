@@ -123,24 +123,33 @@ let read_fstar_include (fn : string) : ML (option (list string)) =
 let has_fstar_include (dirname:string) : ML bool =
   Filepath.file_exists (dirname ^ "/fstar.include")
 
-let rec expand_include_d (dirname : string) : ML (list string) =
+let rec expand_module_include_path
+  (root_kind:module_include_path_kind)
+  (dirname:string)
+  : ML (list module_include_path)
+=
   if has_fstar_include dirname then (
     let dot_inc_path = dirname ^ "/fstar.include" in
     let subdirs = Some?.v <| read_fstar_include dot_inc_path in
-    dirname :: List.collect (fun subd -> expand_include_d (dirname ^ "/" ^ subd)) subdirs
+    { dir=dirname; kind=Flat }
+    :: List.collect
+         (fun subd -> expand_module_include_path (Recursive []) (dirname ^ "/" ^ subd))
+         subdirs
   ) else
-    [dirname]
+    [{ dir=dirname; kind=root_kind }]
 
-let expand_include_ds (dirnames : list string) : ML (list string) =
-  List.collect expand_include_d dirnames
+let expand_module_include_paths
+  (root_kind:module_include_path_kind)
+  (dirnames:list string)
+  : ML (list module_include_path)
+=
+  List.collect (expand_module_include_path root_kind) dirnames
 
-let recursive_include_d (dirname:string) : ML (list string) =
-  expand_include_d dirname |> List.filter (fun d -> not (has_fstar_include d))
+let include_dirs (paths:list module_include_path) : ML (list string) =
+  paths |> List.map (fun path -> path.dir)
 
-let recursive_manifest_include_d (dirname:string) : ML (list string) =
-  match expand_include_d dirname with
-  | _::paths -> paths |> List.filter (fun d -> not (has_fstar_include d))
-  | [] -> []
+let expand_include_d (dirname:string) : ML (list string) =
+  expand_module_include_path Flat dirname |> include_dirs
 
 let fstarc_roots () : ML (list string) =
   if !_with_fstarc
@@ -150,8 +159,8 @@ let fstarc_roots () : ML (list string) =
 let lib_roots () : ML (list string) =
   Common.option_to_list (lib_root ()) @ fstarc_roots ()
 
-let lib_paths () : ML (list string) =
-  lib_roots () |> expand_include_ds
+let lib_paths () : ML (list module_include_path) =
+  lib_roots () |> expand_module_include_paths Flat
 
 let rec path_is_at_or_below (root:string) (path:string) : ML bool =
   if root = path then true
@@ -167,11 +176,17 @@ let command_line_include_roots () : ML (list string) =
   match !_file_list with
   | [] -> []
   | files ->
+    let explicit_paths = !_include |> expand_module_include_paths (Recursive []) in
     let explicit_roots =
-      !_include |> expand_include_ds |> List.map Filepath.normalize_file_path
+      explicit_paths |> include_dirs |> List.map Filepath.normalize_file_path
     in
     let recursive_explicit_roots =
-      !_include |> List.collect recursive_include_d |> List.map Filepath.normalize_file_path
+      explicit_paths
+      |> List.collect (fun path ->
+           match path.kind with
+           | Flat -> []
+           | Recursive _ -> [path.dir])
+      |> List.map Filepath.normalize_file_path
     in
     let cwd = Filepath.normalize_file_path (Filepath.getcwd ()) in
     let file_roots =
@@ -191,8 +206,20 @@ let command_line_include_roots () : ML (list string) =
           || List.existsb (fun explicit_root ->
             path_is_at_or_below explicit_root root) recursive_explicit_roots))
 
-let command_line_include_paths () : ML (list string) =
-  command_line_include_roots () |> expand_include_ds
+let command_line_include_paths () : ML (list module_include_path) =
+  command_line_include_roots () |> expand_module_include_paths Flat
+
+let module_include_paths () : ML (list module_include_path) =
+  let cache_dir =
+    match !_cache_dir with
+    | None -> []
+    | Some dir -> [{ dir; kind=Flat }]
+  in
+  cache_dir
+  @ lib_paths ()
+  @ expand_module_include_paths (Recursive []) !_include
+  @ command_line_include_paths ()
+  @ expand_module_include_path Flat "."
 
 let epoch () : ML int = !_epoch
 
@@ -201,16 +228,7 @@ let full_include_path () : ML _ =
   match !_full_include with
   | Some paths -> paths
   | None ->
-    let res =
-      let cache_dir =
-        match !_cache_dir with
-        | None -> []
-        | Some c -> [c]
-      in
-      let include_paths = !_include |> expand_include_ds in
-      cache_dir @ lib_paths () @ include_paths @ command_line_include_paths ()
-      @ expand_include_d "."
-    in
+    let res = module_include_paths () |> include_dirs in
     _full_include := Some res;
     res
 
@@ -218,17 +236,10 @@ let module_include_paths_normalized () : ML (list module_include_path) =
   match !_module_include_paths_normalized with
   | Some paths -> paths
   | None ->
-    let recursive_dirs =
-      ((!_include |> List.collect recursive_include_d)
-       @ ((lib_roots () @ command_line_include_roots () @ ["."])
-          |> List.collect recursive_manifest_include_d))
-      |> List.map Filepath.normalize_file_path
-    in
     let paths =
-      full_include_path ()
-      |> List.map (fun dir ->
-        let dir = Filepath.normalize_file_path dir in
-        { dir; prefix=if List.contains dir recursive_dirs then Some [] else None })
+      module_include_paths ()
+      |> List.map (fun path ->
+        { path with dir=Filepath.normalize_file_path path.dir })
     in
     _module_include_paths_normalized := Some paths;
     paths

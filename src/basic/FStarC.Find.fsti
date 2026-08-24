@@ -19,9 +19,15 @@ operations. *)
 
 open FStarC.Effect
 
+(* [Flat] provides only immediate files. [Recursive prefix] also provides files
+in subdirectories, extending [prefix] with their relative path. *)
+type module_include_path_kind =
+    | Flat
+    | Recursive of list string
+
 type module_include_path = {
     dir: string;
-    prefix: option (list string)
+    kind: module_include_path_kind
 }
 
 (* --include *)
@@ -64,9 +70,7 @@ val epoch () : ML int
 (* The full include path. We search files in all of these directories. *)
 val full_include_path () : ML (list string)
 
-(* Directories providing modules, normalized into absolute paths and paired
-with their hierarchy prefix. [None] means that only immediate files belong to
-the directory; [Some prefix] means that subdirectories extend [prefix]. *)
+(* Directories providing modules, normalized into absolute paths. *)
 val module_include_paths_normalized () : ML (list module_include_path)
 
 (* Try to find a file in the include path with a given basename. *)
