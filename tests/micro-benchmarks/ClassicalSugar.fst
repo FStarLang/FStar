@@ -313,13 +313,24 @@ let test_elim_exists_dependent (t: int -> Type) (p: (x:int -> t x -> prop))
   = eliminate exists (x:int) (y:t x). p x y
     with ()
 
-// More binders than max_indefinite_description_arity: the desugaring nests
-// several indefinite_description combinators.
+// Up to max_indefinite_description_arity binders are taken in a single call.
 let test_elim_exists_7 (p: int -> int -> int -> int -> int -> int -> int -> prop)
   : Lemma
     (requires exists a b c d e f g. p a b c d e f g)
     (ensures exists a b c d e f g. p a b c d e f g)
   = eliminate exists a b c d e f g. p a b c d e f g
+    with ()
+
+// More binders than max_indefinite_description_arity: the desugaring peels off
+// one binder at a time down to a final n-ary call. This used to need a huge
+// rlimit (issue #4405) and, later, minutes of elaboration (issue #4444).
+let test_elim_exists_15
+      (p: int -> int -> int -> int -> int -> int -> int -> int
+          -> int -> int -> int -> int -> int -> int -> int -> prop)
+  : Lemma
+    (requires exists a b c d e f g h i j k l m n o. p a b c d e f g h i j k l m n o)
+    (ensures exists a b c d e f g h i j k l m n o. p a b c d e f g h i j k l m n o)
+  = eliminate exists a b c d e f g h i j k l m n o. p a b c d e f g h i j k l m n o
     with ()
 
 let test_elim_exists_witness (p: int -> prop) (f: (x:int -> squash (p x) -> squash False))

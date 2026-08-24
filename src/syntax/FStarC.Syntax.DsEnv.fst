@@ -380,6 +380,85 @@ let is_exported_id_field = function
   | _ -> false
 
 
+(* [find_in_module_with_includes_gen collect ...] walks the include graph of
+   [ns] as a worklist: [ns] itself, then the modules it includes in order,
+   then theirs.
+
+   The first answer found is returned as a [cont_t] -- that is the one plain
+   name resolution wants, the innermost definition. With [collect] the walk
+   keeps going past it and also returns the definitions it shadowed, in the
+   same order, for type-based overloading to choose among (see
+   FStarC.TypeChecker.Overload). With [collect=false] it stops at the first
+   hit exactly as it always has, so ordinary resolution pays nothing.
+
+   The [cont_t] is not folded into the list because it carries a distinction
+   the list cannot: [Cont_fail] means "not found, do not retry" and
+   [Cont_ignore] means "not found, retry", and [try_lookup_id''_gen] ends the
+   whole scope walk on the former. An empty list conflates the two.
+
+   [seen] keeps the walk finite, keyed by module *and* identifier since a
+   restriction may rename, so one module can legitimately be visited for two
+   names. Collecting would otherwise follow an include cycle forever, where
+   returning on the first hit merely made it unobservable. *)
+let find_in_module_with_includes_gen
+    (collect: bool)
+    (eikind: exported_id_kind)
+    (find_in_module: lident -> ML (cont_t 'a))
+    (find_in_module_default: cont_t 'a)
+    env
+    (ns: lident)
+    (id: ident)
+    : ML (cont_t 'a & list 'a) =
+  let rec aux (seen: list (string & string))
+              (found: option (cont_t 'a))
+              (acc: list 'a)
+              (x: list (lident & ident))
+    : ML (cont_t 'a & list 'a) =
+    let finish () = match found with
+      | None -> (find_in_module_default, [])
+      | Some k -> (k, List.rev acc)
+    in
+    match x with
+    | [] -> finish ()
+    | (modul, id) :: q ->
+      let mname = string_of_lid modul in
+      let key = (mname, string_of_id id) in
+      if List.mem key seen then aux seen found acc q
+      else
+        let seen = key :: seen in
+        let not_shadowed = match get_exported_id_set env mname with
+        | None -> true
+        | Some mex ->
+          let mexports = !(mex eikind) in
+          mem (string_of_id id) mexports
+        in
+        let mincludes = match SMap.try_find env.includes mname with
+        | None -> []
+        | Some minc ->
+          !minc |> filter_map (fun (ns, restriction) ->
+            let opt = is_ident_allowed_by_restriction id restriction in
+            Option.map (fun id -> (ns, id)) opt)
+        in
+        let look_into =
+         if not_shadowed
+         then find_in_module (qual modul id)
+         else Cont_ignore
+        in
+        begin match look_into with
+        | Cont_ignore -> aux seen found acc (mincludes @ q)
+        | Cont_fail ->
+          (* "do not retry" ends the walk; an answer already in hand stands. *)
+          finish ()
+        | Cont_ok v ->
+          match found with
+          | None ->
+            if not collect
+            then (Cont_ok v, [])
+            else aux seen (Some (Cont_ok v)) acc (mincludes @ q)
+          | Some _ -> aux seen found (v :: acc) (mincludes @ q)
+        end
+  in aux [] None [] [ (ns, id) ]
+
 let find_in_module_with_includes
     (eikind: exported_id_kind)
     (find_in_module: lident -> ML (cont_t 'a))
@@ -388,36 +467,7 @@ let find_in_module_with_includes
     (ns: lident)
     (id: ident)
     : ML (cont_t 'a) =
-  let rec aux (x: list (lident & ident)) : ML (cont_t 'a) = match x with
-  | [] ->
-    find_in_module_default
-  | (modul, id) :: q ->
-    let mname = string_of_lid modul in
-    let not_shadowed = match get_exported_id_set env mname with
-    | None -> true
-    | Some mex ->
-      let mexports = !(mex eikind) in
-      mem (string_of_id id) mexports
-    in
-    let mincludes = match SMap.try_find env.includes mname with
-    | None -> []
-    | Some minc ->
-      !minc |> filter_map (fun (ns, restriction) ->
-        let opt = is_ident_allowed_by_restriction id restriction in
-        Option.map (fun id -> (ns, id)) opt)
-    in
-    let look_into =
-     if not_shadowed
-     then find_in_module (qual modul id)
-     else Cont_ignore
-    in
-    begin match look_into with
-    | Cont_ignore ->
-      aux (mincludes @ q)
-    | _ ->
-      look_into
-    end
-  in aux [ (ns, id) ]
+  fst (find_in_module_with_includes_gen false eikind find_in_module find_in_module_default env ns id)
 
 (* [try_lookup_id''_gen collect ...] walks the scope, innermost first.
 
@@ -504,16 +554,30 @@ let try_lookup_id''_gen
       | Rec_binding _ -> true
       | _ -> false
     in
+    (* One [open] can reach several definitions of [id], when the module it
+       names [include]s others. [proc] answers with the first, which is the
+       right answer for plain resolution; when collecting we ask for the rest
+       as well. [k] is unchanged either way, so the head of the result is
+       still exactly what scope order alone would have picked. *)
+    let step (a:scope_mod) : ML (cont_t 'a & list 'a) =
+      match a with
+      | Open_module_or_namespace ((ns, Open_module, restriction),_) when collect ->
+        ( match is_ident_allowed_by_restriction id restriction with
+        | None -> (Cont_ignore, [])
+        | Some id -> find_in_module_with_includes_gen true eikind find_in_module Cont_ignore env ns id)
+      | _ -> (proc a, [])
+    in
     let rec aux (acc:list 'a) (l:list scope_mod) : ML (list 'a) = match l with
       | a :: q ->
-        begin match proc a with
+        let k, alts = step a in
+        begin match k with
         | Cont_ok v ->
           if not collect then [v]
           else if is_local_scope_mod a
           then (match acc with
                 | [] -> [v]
                 | _ -> List.rev acc)  // unreachable in practice: locals are innermost
-          else aux (v::acc) q
+          else aux (List.rev alts @ (v::acc)) q
         | Cont_fail -> List.rev acc
         | Cont_ignore -> aux acc q
         end

@@ -499,7 +499,11 @@ let implies_elim_lid = classical_sugar_lid "implies_elim"
 let or_elim_lid = classical_sugar_lid "or_elim"
 let and_elim_lid = classical_sugar_lid "and_elim"
 let or_decide_lid = classical_sugar_lid "or_decide"
-let max_indefinite_description_arity = 5
+(* The largest N for which FStar.Classical.Sugar provides
+   `indefinite_descriptionN`. `eliminate exists` uses a single call whenever it
+   can, since chaining several of them is exponentially more expensive to
+   elaborate; see the comment on `ElimExists` in FStarC.ToSyntax.ToSyntax. *)
+let max_indefinite_description_arity = 8
 let indefinite_description_lid (n:int) : ML lid =
   classical_sugar_lid ("indefinite_description" ^ string_of_int n)
 

@@ -160,7 +160,7 @@ let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bo
    discriminator, the number of arguments preceding the scrutinee, and (for a
    projector) the position of the field among the constructor's arguments. *)
 let disc_proj_head (cfg : Cfg.cfg) (head : term) : ML (option (Ident.lident & bool & int & option int)) =
-  if not cfg.steps.iota || Options.Ext.enabled "no_prim_proj" then None else
+  if not cfg.steps.iota then None else
   match (U.un_uinst head).n with
   | Tm_fvar h -> (
     match Env.disc_proj_info cfg.tcenv h.fv_name with
@@ -369,10 +369,13 @@ let check_strict (cfg : Cfg.cfg) (hua : fv & universes & args) : ML (option bool
  * then strongly reduced), and the results of these two modes are not
  * interchangeable. To avoid each mode invalidating the memo of the
  * other one (causing repeated recomputation, see issue #4394), we keep
- * two independent memo cells: one for weak normalization and one for
- * strong normalization. *)
+ * independent memo cells, one per mode. There are three modes: strong
+ * normalization, weak normalization, and weak head normalization (the
+ * last one is used to reduce the scrutinee of a projector or
+ * discriminator; see whnf_cfg and issue #4463). *)
 type cfg_memo 'a = {
   weak_memo   : memo (Cfg.cfg & 'a);
+  whnf_memo   : memo (Cfg.cfg & 'a);
   strong_memo : memo (Cfg.cfg & 'a);
 }
 
@@ -380,16 +383,21 @@ let fresh_memo (#a:Type) () : ML (memo a) = mk_ref None
 
 let fresh_cfg_memo (#a:Type) () : ML (cfg_memo a) = {
   weak_memo   = mk_ref None;
+  whnf_memo   = mk_ref None;
   strong_memo = mk_ref None;
 }
 
 (* Select the memo cell corresponding to the normalization mode of cfg. *)
 let memo_cell (cfg:Cfg.cfg) (r:cfg_memo 'a) : memo (Cfg.cfg & 'a) =
-  if cfg.steps.weak then r.weak_memo else r.strong_memo
+  if not cfg.steps.weak then r.strong_memo
+  else if cfg.steps.hnf then r.whnf_memo
+  else r.weak_memo
 
-(* The cell for the *other* normalization mode. *)
-let other_memo_cell (cfg:Cfg.cfg) (r:cfg_memo 'a) : memo (Cfg.cfg & 'a) =
-  if cfg.steps.weak then r.strong_memo else r.weak_memo
+(* The cells for the *other* normalization modes. *)
+let other_memo_cells (cfg:Cfg.cfg) (r:cfg_memo 'a) : list (memo (Cfg.cfg & 'a)) =
+  if not cfg.steps.weak then [r.weak_memo; r.whnf_memo]
+  else if cfg.steps.hnf then [r.weak_memo; r.strong_memo]
+  else [r.whnf_memo; r.strong_memo]
 
 type closure =
   | Clos of env & term & cfg_memo (env & term) & bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
@@ -447,6 +455,26 @@ let weak_cfg (cfg:Cfg.cfg) : ML Cfg.cfg =
       weak_cfg_cache := Some (cfg, cfg');
       cfg'
 
+(* The cfg used to reduce the scrutinee of a projector or discriminator to
+   weak head normal form (see the Tm_app case of norm). Like weak_cfg it is
+   cached, so that the same object is reused across calls and memo lookups
+   succeed on physical equality (issue #4463).
+
+   It sets [weak], not just [hnf]: otherwise the result would land in the memo
+   cell of the enclosing strong normalization and the two modes would evict
+   each other's memos, which is exactly the pathology of issue #4394. *)
+let whnf_cfg_cache : ref (option (Cfg.cfg & Cfg.cfg)) = mk_ref None
+
+let whnf_cfg (cfg:Cfg.cfg) : ML Cfg.cfg =
+  if cfg.steps.weak && cfg.steps.hnf then cfg
+  else
+    match !whnf_cfg_cache with
+    | Some (cfg0, cfg0') when BU.physical_equality cfg cfg0 -> cfg0'
+    | _ ->
+      let cfg' = { cfg with steps = { cfg.steps with weak = true; hnf = true } } in
+      whnf_cfg_cache := Some (cfg, cfg');
+      cfg'
+
 let read_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
   let read (c:memo (Cfg.cfg & 'a)) : ML (option 'a) =
     match !c with
@@ -460,9 +488,9 @@ let read_memo cfg (r:cfg_memo 'a) : ML (option 'a) =
   | Some a -> Some a
   | None ->
     (* In compatibility mode, any memoized value is accepted, including one
-    computed in the other normalization mode. *)
+    computed in another normalization mode. *)
     if cfg.compat_memo_ignore_cfg
-    then read (other_memo_cell cfg r)
+    then other_memo_cells cfg r |> List.tryPick read
     else None
 
 let set_memo cfg (r:cfg_memo 'a) (t:'a) : ML unit =
@@ -1454,9 +1482,12 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             (* Recover the whole application spine (head and all arguments); the
                node is now unary, holding a single argument. *)
             let head, args = U.head_and_args_full t in
-            let push_args env args stack =
+            (* Each argument is pushed together with the environment it lives
+               in: they are usually all under [env], but a scrutinee that we
+               have already reduced (see below) is closed. *)
+            let push_args_env args stack =
               List.fold_right
-                (fun (a, aq) stack ->
+                (fun ((a, aq), env) stack ->
                   let a =
                     if ((Cfg.cfg_env cfg).erase_erasable_args ||
                         cfg.steps.for_extraction ||
@@ -1480,8 +1511,11 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 args
                 stack
             in
-            let fallback () =
-              let stack = push_args env args stack in
+            let push_args env args stack =
+              push_args_env (args |> List.map (fun a -> (a, env))) stack
+            in
+            let fallback args =
+              let stack = push_args_env args stack in
               log cfg (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
               norm cfg env stack head
             in
@@ -1491,11 +1525,19 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                enough and the selected field is then normalized exactly once.
                Reducing in [rebuild] instead would normalize the whole scrutinee
                first and then normalize the selected field again, which is
-               exponential in the nesting depth of the projections. *)
-            let unfold_fallback () =
+               exponential in the nesting depth of the projections.
+
+               That weak head normalization is however *speculative*: when the
+               projection turns out to be stuck, the enclosing normalization
+               walks the very same subterm all over again.  For a chain of
+               stuck projections that is quadratic in the length of the chain
+               (issue #4463), so instead of throwing the reduced scrutinee away
+               we put it back into the application: the enclosing pass then
+               only has to normalize what is left. *)
+            let unfold_fallback args =
               (* Only when extracting; see unfold_disc_proj_for_extraction. *)
               match unfold_disc_proj_for_extraction cfg head with
-              | None -> fallback ()
+              | None -> fallback args
               | Some (us_names, def) ->
                 (* The universes of the head may be bound in [env] (that is how
                    do_unfold_fv passes them along), so normalize them before
@@ -1513,29 +1555,37 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                   else None
                 in
                 match us with
-                | None -> fallback ()
+                | None -> fallback args
                 | Some us ->
                   let def = snd (Env.inst_tscheme_with (us_names, def) us) in
-                  let stack = push_args env args stack in
+                  let stack = push_args_env args stack in
                   norm cfg empty_env stack def
             in
             (match disc_proj_head cfg head with
              | Some (d, is_disc, n_indexed, idx) when List.length args > n_indexed ->
-               let scrutinee = fst (List.nth args n_indexed) in
-               let scrutinee = norm ({cfg with steps={cfg.steps with hnf=true}}) env [] scrutinee in
+               let scrutinee0, aq = List.nth args n_indexed in
+               let cfg' = whnf_cfg cfg in
+               (* The reduced scrutinee is closed, hence the empty environments
+                  below. *)
+               let scrutinee = norm cfg' env [] scrutinee0 in
                (match reduce_disc_proj cfg d is_disc idx scrutinee with
-                | None -> unfold_fallback ()
+                | None ->
+                  (* Stuck: keep the weak head normal form we just computed
+                     rather than making the enclosing pass recompute it. *)
+                  let args =
+                    args |> List.mapi (fun i a ->
+                      if i = n_indexed then ((scrutinee, aq), empty_env) else (a, env))
+                  in
+                  unfold_fallback args
                 | Some field ->
                   log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
                                                    (show t) (show field));
                   (* A projector may be over-applied (e.g. [QProc?.wp qc k s0]);
-                     the extra arguments are re-applied to the selected field.
-                     [field] is closed: hnf normalization pushes the environment
-                     into the arguments it does not reduce. *)
+                     the extra arguments are re-applied to the selected field. *)
                   let _, rest = BU.first_N (n_indexed + 1) args in
                   let stack = push_args env rest stack in
                   norm cfg empty_env stack field)
-             | _ -> fallback ())
+             | _ -> fallback (args |> List.map (fun a -> (a, env))))
 
           | Tm_refine {b=x}
               when cfg.steps.for_extraction
@@ -2589,7 +2639,12 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
         | Some (field, rest) ->
           log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
                                            (show t) (show field));
-          if Nil? rest
+          (* A projector can be over-applied both within this term and on the
+             stack (e.g. [CM?.mult r x y], whose two extra arguments are still
+             pending). Either way the selected field ends up applied, so hand it
+             back to [norm] to reduce the redex that just appeared. *)
+          let stack_has_arg = match stack with Arg _ :: _ -> true | _ -> false in
+          if Nil? rest && not stack_has_arg
           then do_rebuild cfg env stack field
           else norm cfg env stack (U.mk_app field rest)
         | None ->
