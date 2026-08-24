@@ -182,6 +182,22 @@ Guidelines for the changelog:
     Once it can, library patterns will discharge these obligations
     automatically.)
 
+  * Fixes https://github.com/FStarLang/FStar/issues/4463. Normalizing a nested
+    chain of projections that are *stuck* (because the scrutinee never reduces
+    to a constructor) is no longer quadratic in the depth of the chain. The
+    normalizer reduces the scrutinee of a projector to weak head normal form
+    speculatively, and used to discard that work whenever the projection turned
+    out to be stuck, so the enclosing pass reduced the very same subterms all
+    over again; the reduced scrutinee is now kept. Two related fixes: the weak
+    head normal form is memoized in its own cell instead of evicting the memo of
+    the enclosing strong normalization (the pathology of #4394), and the config
+    it uses is cached so that memo lookups still succeed on physical equality.
+
+  * The `--ext no_prim_proj` option is removed. It was meant as an escape hatch
+    for the switch to declaration-only projectors, but since projectors no
+    longer have a definition to fall back to, all it did was make every
+    projection permanently stuck.
+
   * `nonempty` is now a lang item and lives in `Prims`; the module
     `FStar.Nonempty` has been removed. Replace `FStar.Nonempty.nonempty` (and
     `nonempty_intro`/`nonempty_elim`) with the corresponding `Prims` names, and
@@ -559,8 +575,10 @@ Guidelines for the changelog:
       function is expected still works, but code that relied on the projector
       being an ordinary `let` (for instance to unfold it explicitly) may need
       adjustment.
-    - `--ext no_prim_proj` restores the old behaviour for a single
-      `#push-options` scope, as an escape hatch for proofs that regress.
+    - `--ext no_prim_proj` was briefly available as an escape hatch, but it is
+      now removed: since projectors have no definition to fall back to,
+      disabling the primitive iota rule only made projections permanently
+      stuck rather than restoring the old behaviour.
 
   * As a consequence of the above, the machinery that existed to work around
     the cost of generating projectors is gone:

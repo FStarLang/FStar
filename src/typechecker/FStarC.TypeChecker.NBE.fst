@@ -734,7 +734,6 @@ and translate_comp cfg bs (c:S.comp) : ML comp =
 
 (* uncurried application *)
 and reduce_disc_proj (cfg : config) (h:fv) (args:args) : ML (option t) =
-  if Options.Ext.enabled "no_prim_proj" then None else
   let tcenv = Cfg.cfg_env cfg.core_cfg in
   if not cfg.core_cfg.steps.iota then None else
   match Env.disc_proj_info tcenv (S.lid_of_fv h) with
