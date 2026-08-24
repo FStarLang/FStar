@@ -151,7 +151,7 @@ XFAIL_RUST += ExtUIntRotate ExtUIntMask
 
 NO_CUSTARD_OCAML :=
 
-# The direct C backend diagnoses what C cannot represent (error 367) instead
+# The direct C backend diagnoses what C cannot represent (error 368) instead
 # of mistranslating it, which is the same judgement NO_ records for the other
 # columns: an unbounded Prims.int, a closure, and an inductive that contains
 # itself by value have no C representation.
@@ -181,7 +181,7 @@ XFAIL_CUSTARD_KRML_C    += ExtIntShiftArith ExtUIntRotate ExtUIntMask
 XFAIL_CUSTARD_KRML_RUST += ExtIntShiftArith ExtUIntRotate
 #
 # On the direct C column these are XFAIL rather than NO, even though they too
-# stop at error 367: the diagnosis is right about the *program it was given*
+# stop at error 368: the diagnosis is right about the *program it was given*
 # (a bit-vector fold really has no C representation) but wrong about the
 # program that was written, which is a rotate. The bug is in Builtins, not in
 # the C backend, so the cell records a defect rather than a boundary.

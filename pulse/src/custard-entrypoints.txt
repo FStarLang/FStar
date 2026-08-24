@@ -25,7 +25,7 @@ FStarC.Syntax.Syntax.uu___is_Unresolved_name
 
 # FStarC.FlatSet.union is deliberately not here, and could not be: it takes a
 # typeclass dictionary, which section 3.1 classifies Mono, and a root has no
-# call site to specialize it at (error 363).  A Mono binder wants a call site,
+# call site to specialize it at (error 364).  A Mono binder wants a call site,
 # so PulseSyntaxExtension.Env gives it one -- see union_ctx_uvars there, and
 # doc/ref/custard.md section 12.13.
 

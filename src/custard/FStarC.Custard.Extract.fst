@@ -3276,7 +3276,7 @@ let erased_definition (st:state) (ty:typ) : ML bool =
    used to be taken at its word, and taking a separation-logic predicate at
    its word means extracting it: [rep : tree -> sizet -> slprop] becomes a
    function whose argument is a recursive datatype, and the direct backend
-   rejects that with error 367 -- a true statement about [tree] and a
+   rejects that with error 368 -- a true statement about [tree] and a
    thoroughly misleading answer to what was asked, since nothing in the
    program holds a [tree] at runtime and the whole-module path compiles the
    same file.

@@ -32,7 +32,7 @@
     to a destination, and [c_expr], which prints an expression that really is a
     C expression, hoisting anything that is not into a preceding statement.
 
-    What C cannot express is *rejected by name*, with error 367, rather than
+    What C cannot express is *rejected by name*, with error 368, rather than
     mistranslated: closures, exceptions, unbounded [Prims.int], pattern
     disjunctions and guards, and datatypes that contain themselves by value.
     Section 5.0.1's type monomorphization is a prerequisite -- without it the

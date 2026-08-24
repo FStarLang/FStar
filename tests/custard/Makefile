@@ -73,9 +73,9 @@ GREP_Literals += "(Prims.parse_int \"-1\")"
 # other -- and so is a type argument in a spine whose head is a [match], which
 # is what a method call on a [dyn] dictionary compiles to.  Either one left
 # behind is an unbound variable in the emitted OCaml, which is what compiling
-# and running this test checks.  --warn_error -366 for the same reason as
+# and running this test checks.  --warn_error -367 for the same reason as
 # Magic: a class over a type constructor has Obj.t fields.
-FLAGS_HigherKind    = --warn_error -366
+FLAGS_HigherKind    = --warn_error -367
 NOGREP_HigherKind  += ") a "
 # Section 5.4: a class over a type constructor used to be the one thing
 # neither the IR nor OCaml could name.  It no longer is: [m : Type -> Type] is
@@ -391,7 +391,7 @@ NOGREP_Library = library_unused "let _ ="
 # the diagnostics of sections 3.2 and 3.6.
 REJECT_TESTS += MonoPoly
 REJECT_TESTS += MonoEffect
-CODE_MonoEffect = 363
+CODE_MonoEffect = 364
 REJECT_TESTS += MonoPartial
 REJECT_TESTS += MonoFuel
 REJECT_TESTS += NormBudget
@@ -405,20 +405,20 @@ REJECT_TESTS += CNoInt
 REJECT_TESTS += CNoClosure
 FLAGS_CNoInt     = --custard_backend C --custard_monomorphize_types true
 FLAGS_CNoClosure = --custard_backend C --custard_monomorphize_types true
-CODE_CNoInt      = 367
-CODE_CNoClosure  = 367
-CODE_MonoPoly    = 363
-CODE_MonoPartial = 363
-CODE_MonoFuel    = 364
-CODE_NormBudget  = 364
-CODE_WarnAny     = 366
+CODE_CNoInt      = 368
+CODE_CNoClosure  = 368
+CODE_MonoPoly    = 364
+CODE_MonoPartial = 364
+CODE_MonoFuel    = 365
+CODE_NormBudget  = 365
+CODE_WarnAny     = 367
 
 include $(FSTAR_ROOT)/mk/test.mk
 
 # --custard_warn_any escalated to an error (section 5.6): no declaration in the
 # corpus may lose the representation of a value.  This is what keeps the "no
 # surviving ECast, no surviving TAny" measurement of section 5.4 true.
-WARN_ANY = --custard_warn_any --warn_error @366
+WARN_ANY = --custard_warn_any --warn_error @367
 
 # Override the default OCaml extraction rule from test.mk: we drive the Custard
 # pipeline instead, which is whole-program and hence keyed on an entry point.
@@ -616,7 +616,7 @@ GREP_RetArity += ") : Prims.int ="
 # 18.2 is what lets them be written honestly: every argument they take is a
 # value, so each denotes one target type and [bool] and [string] are it.  They
 # used to be [Obj.t].
-FLAGS_Realized    = --warn_error -366
+FLAGS_Realized    = --warn_error -367
 GREP_Realized     = "FStar_Pervasives.Mkdtuple3" \
                     "(Prims.int, bool, string) FStar_Pervasives.dtuple3" \
                     "match d with"

@@ -90,7 +90,7 @@ C_TESTS += PulseHashTable
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose
 # the representation of a value.
-WARN_ANY = --custard_warn_any --warn_error @366
+WARN_ANY = --custard_warn_any --warn_error @367
 
 $(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
