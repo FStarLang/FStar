@@ -79,6 +79,13 @@ KRML_FLAGS_PulseSlice += --custard_monomorphize_types true
 # program that merely builds does not.
 RUST_TESTS += PulseSlice
 RUST_TESTS += PulseSliceRec
+# A reduced CBOR well-formedness checker over a slice, run against a curated
+# corpus of 48 boundary vectors.  Unlike the tests above it does not merely
+# build: it writes each vector through the slice and checks its own answer,
+# so a borrow compiled as an owning Box (section 19.15) fails it rather than
+# passing silently.  The corpus is mutation-adequate against the extracted C
+# -- see CborBoundarySlice.mutants.py, which reproduces the numbers.
+RUST_TESTS += CborBoundarySlice
 
 # Same modules again, through the direct-to-C backend: no krml, no krmllib,
 # just a C11 compiler with the warnings turned on, and then run.  PulseHashTable is the
@@ -86,6 +93,7 @@ RUST_TESTS += PulseSliceRec
 # a record, which becomes a C function pointer.
 C_TESTS += PulseBasic
 C_TESTS += PulseHashTable
+C_TESTS += CborBoundarySlice
 
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose
