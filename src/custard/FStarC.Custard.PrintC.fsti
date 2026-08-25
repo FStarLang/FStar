@@ -18,5 +18,11 @@ module FStarC.Custard.PrintC
 open FStarC.Effect
 open FStarC.Custard.Syntax
 
-(** The whole program as one self-contained C11 file (section 6, M8). *)
-val print_program : program -> ML string
+(** The whole program as one self-contained C11 translation unit (section 6,
+    M8): a header and a source, in that order.  The argument is the stem of
+    the output file, which the source includes and the include guard is
+    derived from.
+
+    Only the [Root] declarations appear in the header; everything else is
+    [static] (section 24). *)
+val print_program : string -> program -> ML (string & string)

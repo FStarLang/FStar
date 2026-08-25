@@ -2663,14 +2663,14 @@ Emission:
   the residual polymorphic decls after monomorphization are few.  It is not a
   priority: if it does not typecheck, falling back to `TAny` (`Obj.t`) at the
   offending parameter is an acceptable answer.
-- **C directly**: `FStarC.Custard.PrintC` (`--custard_backend C`) prints C11
-  source with no runtime of its own — the only headers are `<stdint.h>`,
-  `<stdlib.h>`, `<stdbool.h>` and `<string.h>`, and the only definition the
-  backend contributes is `typedef uint8_t custard_unit;`.  No krmllib, no
-  macros: a generated file is meant to be readable, and to be compilable by
-  any C11 compiler with nothing installed.  "Pretty C" is still a non-goal;
-  *warning-free* C is not, and the corpus compiles with `-Wall -Wextra
-  -Werror`.
+- **C directly**: `FStarC.Custard.PrintC` (`--custard_backend C`) prints a C11
+  header and a C11 source (§24) with no runtime of their own — the only
+  headers are `<stdint.h>`, `<stdlib.h>`, `<stdbool.h>` and `<string.h>`, and
+  the only definition the backend contributes is `typedef uint8_t
+  custard_unit;`.  No krmllib, no macros: a generated file is meant to be
+  readable, and to be compilable by any C11 compiler with nothing installed.
+  "Pretty C" is still a non-goal; *warning-free* C is not, and the corpus
+  compiles with `-Wall -Wextra -Werror`.
 
   This is the backend that has the least to work with, so it is the one that
   most depends on the earlier phases.  It **requires
@@ -7536,6 +7536,102 @@ column that section 20 exists for, and the `Box` regression test of section
 directory's own `Makefile` already gates its krml and Rust columns on those
 tools being present.
 
+## 24. The unit is a header and a source
+
+Until now `--custard_backend C` wrote one file.  Everything in it had external
+linkage, and there was no declaration of anything for a caller to include, so
+a program that wanted to call an extracted function had to write the
+prototypes out by hand, and a program that linked two extracted units risked a
+duplicate symbol for every name they happened to share.  Neither is a
+theoretical worry: the DICE example (`pulse/share/pulse/examples/dice`) links
+Custard's C against hand-written C, and the reason the direct backend has not
+been offered as a drop-in replacement for a krml-produced `CBORDet.c` is that
+a drop-in replacement has to come with `CBORDet.h`.
+
+`print_program` now returns a pair, and the driver writes `<stem>.h` beside
+`<stem>.c`, where the stem is the output path with its extension removed --
+extension-agnostic on purpose, because the test suite asks for `-o
+_output/Foo.dc` and would otherwise get `Foo.dc.h`.
+
+### 24.1 What is public
+
+The IR has had a `Private` flag on declarations since M2, and `PrintC` read
+it.  Nothing ever produced it.  That is the whole reason every definition had
+external linkage: the flag was live in the printer and dead in the pipeline,
+and a test that greps for `static` would have been the only way to notice.
+
+Rather than start producing it, storage is derived from the flag that already
+means what we need.  A declaration is **public exactly when it is a `Root` and
+not the `Entrypoint`**; everything else gets `static`.  This is not a new
+notion of visibility, it is the one the user already stated: a `Root` exists
+because `--custard_entry` or `--custard_entry_module` named it, and naming a
+declaration as a root is precisely the claim that a caller Custard cannot see
+will call it.  Everything else is reachable only from inside the unit -- that
+is what §6's dead-code elimination proved when it kept the declaration at all.
+
+The entry point is excluded because it is a root for a different reason.
+`Driver.run_phases` adds `--custard_main`'s target to the roots so that the
+common case needs only one option, but that root exists to keep the
+declaration alive through DCE, not to offer it to a linker; the generated
+`main` calls it from inside the same file.  The imprecision this leaves is
+that `--custard_entry F --custard_main F` does not export `F`.  That is
+deliberate and, if it ever matters, the fix is to distinguish the two roots
+rather than to widen the test.
+
+There is no `-Wunused-function` exposure in making things `static`, because
+DCE runs first: every declaration that reaches the printer is reachable from
+a root or from the entry point, so a `static` one is always called within its
+own file.  The four suites compile with `-Wall -Wextra -Werror` and agree.
+
+### 24.2 What is in the header
+
+The header carries the unit's **whole type language** -- every forward
+declaration, `typedef`, `struct` body and extern-type include -- and only the
+public prototypes.  The asymmetry is deliberate.  `struct` and `typedef` have
+no linkage, so emitting all of them costs nothing and collides with nothing,
+whereas a reachability-trimmed subset buys an incomplete header: a public
+function whose argument is a struct we decided not to emit produces "field has
+incomplete type" at the first include, and the trimming would have to
+re-derive, per public declaration, the transitive closure the `Layout`
+fixpoint already computed.  Prototypes are different: a prototype *is* the
+linkage claim, so the private ones stay in the source, where they are still
+needed to order mutually recursive definitions.
+
+A parameterless definition is a C variable, not a function.  Its definition
+stays in the source, `static` if private, and the header gets `extern <type>
+<name>;` -- the one place where the header's spelling is not the source's.
+`custard_init_globals` is public and gets a prototype whenever there is a
+non-constant global initializer to run, since a caller who links the unit is
+the one who has to call it.
+
+The source `#include`s its own header, before anything else it emits.  This is
+what makes the header *checked* rather than merely shipped: a prototype that
+disagrees with its definition is a compile error in the unit that generated
+both, not in some downstream consumer.  The include guard is `__<STEM>_H`,
+from the sanitized upper-cased stem.
+
+### 24.3 Testing
+
+`tests/custard/Makefile`'s `CGREP_`/`CNOGREP_` assertions now search `$@` and
+`$(basename $@).h` together, so an existing expectation about the C output
+keeps holding wherever the declaration ended up, and a test can pin the split
+by asserting on one file that a name is absent from the other.
+`pulse/mk/custard-test.mk` gained a no-op rule making the `.h` depend on the
+`.c`, which is enough for `mk/test.mk`'s generic `%.diff` rule to pick up the
+ten new `*.h.expected` goldens.
+
+The shape the change produces, on `Example_Slice`: the header is the guard,
+the four standard includes, `custard_unit`, the slice and tuple types, and
+exactly one line of prototype, `void Example_Slice_test(uint8_t *arr);`; the
+source has fourteen `static` declarations and one that is not.  On DICE, 144
+declarations become `static` and the six `--custard_entry` names are the six
+that do not.  On a `--custard_main` program such as `CRecType`, nothing is
+exported but `main`.
+
+`PrintKrml` still maps `Private` to karamel's `Private` qualifier, so the flag
+stays in the IR; it is simply not what the direct backend consults.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -7619,3 +7715,4 @@ tools being present.
 | M10φ | **Operators get their names changed underneath us** (§22) | Done.  Merging master brought uniform operator mangling: `( + )` is `op_Plus`, `( .() )` is `op_Dot_Lparen_Rparen`, and `op_Minus` now means binary subtraction rather than negation.  Custard reads those names in `Builtins.prims_rule` and the `Pulse.Lib.Vec`/`ArrayPtr` rules, and writes them in `PrintOCaml` and to karamel, which still spells them the old way; `Builtins.krml_compat_name` is the twin of master's `FStarC.Extraction.Krml.krml_compat_name` and is applied in `lident_of_name`, before the specialization suffix, so that references and declarations move together.  Master's table was missing `op_Star`, the one Prims operator whose old name is not derivable from the new one by the same rule as the rest; adding it fixes FINDINGS.md #6 in both the C and krml C columns.  Separately, `Pulse_RuntimeUtils.ml` now calls a *discriminator* by OCaml name, and a discriminator is `Inline` and never emitted -- so `Extract` records roots before marking and does not inline a rooted one, and `Simplify.inline_decls` keeps an `Inline` declaration that is also `Root` (§22.2). |
 | M10χ | **Custard's error codes moved up by one** (§22.1) | Done.  Master assigned 362 to `Error_AmbiguousName` while this branch already held 362-369, and 362 is not free to move: `tests/overloading/strict/StrictDuplicate.fst` demotes it with `--warn_error +362` and the book names it by number.  A published number outranks a branch-local one, so Custard's codes are now **363-370**.  The numbers in `FStarC.Errors.Codes.fst` are explicit rather than positional, so this is a relabelling; what it touches is every place a number is spelled out by hand -- the `CODE_*` variables the suite greps for, the `--warn_error @367` of the `--custard_warn_any` tests, two comments in `PrintC` and `Extract`, and the prose of sections 18 through 21.  Numbers cited in older bug reports are one lower than the ones the compiler now prints. |
 | M10ψ | **"It compiles" is not an acceptance criterion** (§23) | Done, from #4482.  Every backend test until now asserted a golden file or a clean compile, and section 19.15 is the proof that neither is a specification: karamel compiled a borrowed slice as an owning `Box`, writes through it were discarded, and nothing failed because nothing ran anything.  Two reduced deterministic-CBOR checkers now do -- `tests/custard/CborBoundary.fst` over a `ref`-linked list, which needs no Pulse and so runs under stage1 and stage2 too, and `tests/custard/pulse/CborBoundarySlice.fst` over a `Pulse.Lib.Slice.slice byte`, which is what EverParse's parsers take and the only one that drives the Rust column.  One corpus of 48 boundary vectors, one independent Python oracle, one adequacy script, all in `cbor-corpus/`; the two copies the PR arrived with were byte-identical and free to drift.  The result worth keeping is the measurement, not the test: greedy set cover over *line coverage* shrinks a 12,110-input corpus 400x with **identical coverage and 13% fewer mutants killed**, while reducing against mutants reproduces the full corpus on a held-out family it was never fitted to (152/152 against 57/152 at the same size).  Coverage is not the signal to minimise against.  Sanitizers are on by default, since one mutant was otherwise detected only when binary layout made its memory unsafety observable.  Also `_test_pulse` now runs `tests/custard/pulse/`, which `make ci` reaches through `test-3` -- until this change the entire Rust column, section 20.6's `Box` regression included, guarded nothing (§23.3). |
+| M10ω | **The unit is a header and a source** (§24) | Done.  The direct-to-C backend wrote one file, everything in it had external linkage, and there was no declaration of anything for a caller to include -- so calling an extracted function meant writing its prototype out by hand, and linking two units risked a duplicate symbol for every shared name.  `print_program` now returns a header and a source, and the driver writes `<stem>.h` beside the source.  The flag that decides storage is not a new one: the IR has carried `Private` since M2 and `PrintC` read it, but **nothing ever produced it**, which is why nothing was ever `static`.  Storage now comes from `Root`, which already means what we need -- a declaration is a root because `--custard_entry` named it, and naming a root is exactly the claim that a caller Custard cannot see will call it.  The `Entrypoint` is excluded because `--custard_main` makes its target a root only to keep it alive through DCE, and the generated `main` calls it from the same file.  The header carries the unit's whole type language rather than a reachability-trimmed subset -- `struct` and `typedef` have no linkage, so emitting all of them collides with nothing, while trimming buys "field has incomplete type" at the first include -- and only the public prototypes, since a prototype *is* the linkage claim.  The source includes its own header, which is what makes the header checked rather than merely shipped.  On DICE 144 declarations become `static` and the six `--custard_entry` names are the six that do not; `tests/custard`'s greps now cover both files, and `pulse/test` gained ten `*.h.expected` goldens. |

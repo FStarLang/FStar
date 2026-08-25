@@ -416,7 +416,21 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       OCaml.print_split (Some?.v files) |> List.iter (fun (m, src) ->
         BU.write_file (Find.prepend_output_dir (m ^ ".ml")) src))
   | "KrmlC" | "KrmlRust" -> Krml.write_program ofile prog
-  | "C" -> BU.write_file ofile (C.print_program (List.map fst imports @ prog))
+  | "C" ->
+    (* The header is named after the source, and the source includes it by
+       that name, so the two travel together and a caller has something to
+       include (section 24). *)
+    let stem =
+      let b = FStarC.Filepath.basename ofile in
+      (* The suite writes [-o Foo.dc], the default is [Foo.c]: drop whatever
+         the extension is rather than matching on one of them. *)
+      let parts = FStarC.String.split ['.'] b in
+      if List.length parts <= 1 then b
+      else FStarC.String.concat "." (List.rev (List.tl (List.rev parts))) in
+    let hdr, src = C.print_program stem (List.map fst imports @ prog) in
+    BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)
+                     (stem ^ ".h")) hdr;
+    BU.write_file ofile src
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
   | b ->
     E.raise_error0 E.Fatal_OptionsNotCompatible [

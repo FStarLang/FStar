@@ -67,6 +67,14 @@ $(OUTPUT_DIR)/$(subst .,_,$(1)).c: $(CACHE_DIR)/$(1).fst.checked $$(ALL_CHECKED_
 	  --custard_monomorphize_types true --custard_entry_module $(1) \
 	  $$(CUSTARD_FLAGS_$(1)) -o $$@
 	$$(Q)$$(call custard_no_empty_blocks,$$@)
+
+# The unit is a header and a source (section 24).  Custard writes both from
+# the one invocation above, so this rule only tells make that the header is
+# already there -- and it exists so that a $$(1).h.expected is diffed like
+# any other golden file, since the header is output the suite would otherwise
+# never look at.
+$(OUTPUT_DIR)/$(subst .,_,$(1)).h: $(OUTPUT_DIR)/$(subst .,_,$(1)).c
+	@true
 endef
 
 # A whole-program krml file holds exactly one module, named Custard, so there

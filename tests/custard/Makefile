@@ -484,11 +484,14 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend C \
 	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+	@# The unit is a header and a source (section 24), so the assertions are
+	@# over both: a type declaration lives in the header now, and an
+	@# assertion that something is *absent* means absent from the unit.
 	$(Q)for p in $(CGREP_$*); do \
-	  grep -qF -- "$$p" $@ \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
 	    || { echo "ERROR: $* C output is missing $$p"; exit 1; }; done
 	$(Q)for p in $(CNOGREP_$*); do \
-	  grep -qF -- "$$p" $@ \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
 	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
 	$(Q)awk '/\{$$/ { open = NR; next } \
 	         /^[ \t]*\}/ && open == NR - 1 { print NR; found = 1 } \
