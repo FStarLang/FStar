@@ -298,6 +298,13 @@ KRML_TESTS += KrmlBasic
 # monomorphization (section 5.0.1).
 C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet CFunPtr
 C_TESTS += RefStrip
+# A reduced deterministic-CBOR checker.  Unlike the tests above it is not
+# aimed at one backend feature: it is a differential regression test, run
+# over a curated corpus of inputs whose expected results are computed by an
+# independent model (CborBoundary.model.py).  CborBoundary.md documents the
+# corpus, and pulse/CborBoundarySlice.fst is the same checker over a slice,
+# which this directory cannot host because stage1 and stage2 have no Pulse.
+C_TESTS += CborBoundary
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
 # global whose initializer is a computation -- against one that is a constant
