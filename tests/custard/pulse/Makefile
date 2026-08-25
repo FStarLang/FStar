@@ -4,7 +4,8 @@ PULSE_ROOT ?= $(FSTAR_ROOT)/pulse
 # Pulse programs can only be *parsed* by a compiler with the Pulse syntax
 # extension linked in, which is stage3.  So, unlike ../Makefile, these tests
 # run against the installed stage3 compiler, and are not part of the default
-# `make test` of tests/custard.
+# `make test` of tests/custard: they are reached from the root Makefile's
+# _test_pulse instead, which only test-3 runs.
 STAGE3 ?= 1
 FSTAR_EXE ?= $(FSTAR_ROOT)/stage3/out/bin/fstar.exe
 

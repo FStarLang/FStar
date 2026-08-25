@@ -531,13 +531,21 @@ unit-tests: _unit-tests
 # NB: FSTAR_EXE, KRML_EXE and STAGE3 are set by the pulse test
 # makefiles themselves (via the exported FSTAR_ROOT), so we don't pass
 # them here.
-_test_pulse: _test_pulse_test _test_pulse_examples
+_test_pulse: _test_pulse_test _test_pulse_examples _test_pulse_custard
 
 _test_pulse_test: karamel
 	$(MAKE) -C pulse/test/
 
 _test_pulse_examples: karamel
 	$(MAKE) -C pulse/share/pulse/examples/
+
+# The Custard tests that need Pulse. They live under tests/custard rather
+# than under pulse/, but they can only be parsed by a compiler with the
+# Pulse syntax extension linked in, so they are reached from here (test-3)
+# and not from _test, which test-1 and test-2 also run. Their own Makefile
+# gates the krml and rustc columns on those tools being present.
+_test_pulse_custard: karamel
+	$(MAKE) -C tests/custard/pulse/
 
 accept_pulse_test:
 	$(MAKE) -C pulse/test/ accept
@@ -547,7 +555,7 @@ accept_pulse_examples:
 
 accept_pulse: accept_pulse_test accept_pulse_examples
 
-.PHONY: _test_pulse_test _test_pulse_examples accept_pulse_test accept_pulse_examples accept_pulse
+.PHONY: _test_pulse_test _test_pulse_examples _test_pulse_custard accept_pulse_test accept_pulse_examples accept_pulse
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
