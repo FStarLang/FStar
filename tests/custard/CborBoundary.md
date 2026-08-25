@@ -2,6 +2,20 @@
 
 Two extraction tests built from one corpus and one model:
 
+```
+cbor-corpus/valid.txt        26 vectors expected to be accepted
+cbor-corpus/malformed.txt    22 vectors expected to be rejected
+cbor-corpus/model.py        the independent oracle both modules are generated against
+cbor-corpus/mutants.py      the adequacy measurement, run against either module
+CborBoundary.{core.in,gen.py,parsers.txt,fst}
+pulse/CborBoundarySlice.{core.in,gen.py,parsers.txt,fst}
+```
+
+The corpus, the oracle and the measurement exist **once**.  Two checkers
+generated from two copies of the same vectors would be free to drift into
+testing different things while both stayed green, which is the failure mode
+this whole directory exists to argue against.
+
 | test | language | columns | runs under | cost |
 |---|---|---|---|---|
 | `CborBoundary.fst` | pure F\* | direct-C | stage1/2/3, every push | 7.9 s |
@@ -31,12 +45,25 @@ there is no `FStar.IO.print_string` to link against.
 ## Regenerating and reproducing
 
 ```
-python3 CborBoundary.gen.py CborBoundary.valid.txt,CborBoundary.malformed.txt CborBoundary.fst
-python3 CborBoundary.mutants.py ops      # after `make _output/CborBoundary.dc`
-python3 CborBoundary.mutants.py consts
+python3 CborBoundary.gen.py CborBoundary.fst
+python3 cbor-corpus/mutants.py ops    _output/CborBoundary.dc   # after `make`
+python3 cbor-corpus/mutants.py consts _output/CborBoundary.dc
+
+cd pulse
+python3 CborBoundarySlice.gen.py CborBoundarySlice.fst
+python3 ../cbor-corpus/mutants.py ops    _output/CborBoundarySlice.dc
+python3 ../cbor-corpus/mutants.py consts _output/CborBoundarySlice.dc
 ```
 
-`CborBoundary.model.py` is an independent Python model of the reduced
+Each generator defaults to the shared corpus, so neither can be pointed at
+the wrong vectors by accident.  `mutants.py` derives the symbol prefix from
+the name of the `.dc` and reads the functions it is allowed to mutate from
+the module's `.parsers.txt`; mutating anything else -- the embedded vector
+constructors above all -- corrupts the test data rather than the parser and
+inflates the kill count, which is a mistake that was actually made and
+caught here.
+
+`cbor-corpus/model.py` is an independent Python model of the reduced
 grammar. It is what decides whether each vector is expected to be accepted,
 so the expected values in the generated module do not come from the parser
 under test.
@@ -130,4 +157,4 @@ was never probed at `0xC0`.
 Both were fixed by adding the class rather than the witness — one
 truncated-argument vector per argument width, and the just-inside and
 just-outside pair for each of the two `hi1` defaults — and every added vector
-was confirmed against `CborBoundary.model.py` first.
+was confirmed against `cbor-corpus/model.py` first.

@@ -1,12 +1,25 @@
 import re, sys, os, subprocess, json
 from concurrent.futures import ThreadPoolExecutor
 
+# Mutation adequacy of the shared corpus, against whichever of the two
+# checkers is named.  Usage:
+#
+#   python3 ../cbor-corpus/mutants.py [ops|consts] _output/CborBoundary.dc
+#
+# The prefix is derived from the basename of the .dc, and the parser
+# functions to mutate are read from <Module>.parsers.txt next to the module.
+# Mutating anything else -- the embedded vector constructors in particular --
+# corrupts the test data rather than the parser and inflates the kill count.
+FAMILY = sys.argv[1] if len(sys.argv) > 1 else 'ops'
 SRC = sys.argv[2] if len(sys.argv) > 2 else '_output/CborBoundary.dc'
-WORK = '_output/mutants'
-PREFIX = 'CborBoundary_'
-PARSER = [PREFIX + n for n in ['in_range', 'len64', 'uncons', 'utf8_take', 'take_be',
-                               'drop', 'arg_is_minimal', 'decode_arg', 'item',
-                               'items', 'validate']]
+WORK = os.path.join(os.path.dirname(SRC) or '.', 'mutants')
+MOD = os.path.basename(SRC)[:-len('.dc')]
+PREFIX = MOD + '_'
+
+_pl = os.path.join(os.path.dirname(os.path.abspath(SRC)), os.pardir,
+                   MOD + '.parsers.txt')
+PARSER = [PREFIX + l.strip() for l in open(_pl) if l.strip()
+          and not l.startswith('#')]
 
 lines = open(SRC).read().split('\n')
 
@@ -34,7 +47,6 @@ body = [lines[i] for i in sorted(rr)]
 uniq = [l for l in body if cnt[l] == 1 and len(l.strip()) >= 8]
 print('parser body lines:', len(rr), 'unambiguous:', len(uniq))
 
-FAMILY = sys.argv[1] if len(sys.argv) > 1 else 'ops'
 if FAMILY == 'ops':
     subs = [(r'\bif \((.*?) < (.*?)\)', r'if (\1 <= \2)', 'lt->le'),
             (r'\bif \((.*?) <= (.*?)\)', r'if (\1 < \2)', 'le->lt'),

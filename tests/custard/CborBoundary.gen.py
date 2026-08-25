@@ -1,13 +1,21 @@
 import sys, os, importlib.util
 
+# The corpus and the model live in cbor-corpus/ and are shared with
+# pulse/CborBoundarySlice.fst, which parses the same 48 vectors over a slice.
+# There is exactly one copy of the vectors and one copy of the model, so the
+# two checkers cannot drift into testing different things.
 _here = os.path.dirname(os.path.abspath(__file__))
+_corpus = os.path.join(_here, 'cbor-corpus')
 _spec = importlib.util.spec_from_file_location(
-    'cb_model', os.path.join(_here, 'CborBoundary.model.py'))
+    'cb_model', os.path.join(_corpus, 'model.py'))
 model = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(model)
 
 core = open(os.path.join(_here, 'CborBoundary.core.in')).read()
-vecfiles=sys.argv[1].split(','); out=sys.argv[2]
+out = sys.argv[1]
+vecfiles = (sys.argv[2].split(',') if len(sys.argv) > 2 else
+            [os.path.join(_corpus, 'valid.txt'),
+             os.path.join(_corpus, 'malformed.txt')])
 vecs=[l.strip() for f in vecfiles for l in open(f) if l.strip()]
 seen=set(); V=[]
 for v in vecs:

@@ -7430,6 +7430,112 @@ keeps a declaration that is `Root` even when it is `Inline`, which is what
 actually makes it survive.  Uses inside the program are still substituted;
 only the declaration stays.
 
+## 23. "It compiles" is not an acceptance criterion
+
+Every backend test in this suite up to now asserted one of two things: that
+extraction produces the output we expected, character for character, or that
+the output compiles with the warnings turned on.  Both are worth asserting
+and neither is a specification.  A backend can emit code that compiles
+cleanly, matches a golden file nobody has re-read in months, and computes the
+wrong answer -- and section 19.15 is the case in point, where karamel
+compiled a borrowed slice as an owning `Box` and writes through it were
+silently discarded.  Nothing in the suite failed, because nothing in the
+suite ran anything.
+
+`tests/custard/CborBoundary.fst` and `tests/custard/pulse/CborBoundarySlice.fst`
+are the answer: two reduced deterministic-CBOR well-formedness checkers,
+generated from one corpus of 48 boundary vectors whose expected results come
+from an independent Python model of the same grammar, so that the table of
+answers is not the parser under test agreeing with itself.  Each `main`
+writes every vector, runs the checker, compares against the model's answer
+and reports through its exit status.  `CborBoundary.md` documents the corpus.
+
+### 23.1 Line coverage is the wrong thing to minimise against
+
+The corpus is small because it was made small deliberately, and the way it
+was made small is the part worth keeping.
+
+Greedy set cover over line coverage reduces a 12,110-input random corpus to
+**28 inputs with identical line coverage** -- a 400x reduction, and an
+attractive one.  It is also 13% worse: against 135 mutants of the extracted
+C that the full corpus kills, the 28-input set kills 118.  The lines are all
+executed; they are simply never executed with the operand values that
+discriminate.  Reducing against *mutants* instead gives a set of the same
+order of magnitude that reproduces the full corpus exactly, and does so on a
+held-out mutation family it was not fitted to -- 152 of 152, against 57 of
+152 for the coverage-reduced set at essentially the same size.
+
+So the rule this directory encodes is: **equal coverage is not equal defect
+detection, and coverage is not the signal to minimise against.**  Anyone
+proposing to shrink this corpus should be pointed at those two numbers
+first, because the obvious shrink was tried, measured, and was silently
+worse.
+
+The corpus that resulted strictly dominates the random one it came from: no
+mutant that the 680 KB corpus catches is missed by the 13 KB one, and its
+line coverage is a strict superset.  The vectors that survive minimisation
+are visibly the boundary corpus -- `63e0a080`, `63ed9fbf`, `64f0908080`,
+`64f48fbfbf`, `62dfbf`, `617f` -- because those are the ones that
+discriminate.
+
+Two measurement mistakes are recorded in `CborBoundary.md` because both
+would otherwise be made again.  A 40-mutant sample said the small corpus was
+already at parity; at 300 mutants that collapsed to 126 of 135, so the
+parity result was a small-sample artifact that would have shipped a worse
+corpus.  And a mutation generator that selected lines from anywhere the two
+variants shared text was corrupting the *embedded vector constructors* --
+mutating the test data rather than the parser, and inflating the kill count
+with trivially-detected mutants.  `mutants.py` therefore reads the functions
+it may mutate from a per-module `.parsers.txt`.
+
+Everything runs under `-fsanitize=address,undefined -fno-sanitize-recover=all`,
+by default rather than on request, because one mutant was otherwise detected
+only when binary layout happened to make its memory unsafety observable.  A
+test whose outcome depends on layout is not a test.
+
+### 23.2 Two representations, one corpus
+
+The two checkers differ only in how the input is represented, and that is
+why both are kept.  `CborBoundary.fst` consumes a `ref`-linked cons cell,
+which is what a pure-F\* module can have; it needs no Pulse, and so it is the
+one that runs under stage1 and stage2 as well as stage3.
+`CborBoundarySlice.fst` consumes a `Pulse.Lib.Slice.slice byte` over a stack
+array, which is what EverParse's parsers take, and is the only one of the
+two that can drive the Rust column at all.
+
+That difference is not cosmetic, and the evidence is a mutant.  Porting the
+checker onto a buffer exposed a hole in the corpus that the list version
+could not have: `peek` was never called at `i == len` by any of the 40
+vectors then in the corpus, so no vector was truncated *inside a header's
+argument bytes*, despite truncation being one of the four classes the corpus
+claimed to cover.  A list running off its end returns `None` structurally,
+so the bounds check that the buffer version needs did not exist to be
+mutated.  The corpus grew to 48 by adding the principled class -- one
+truncated-argument vector per argument width -- rather than the individual
+witness, which would have been fitting to the held-out family and would have
+destroyed its value.
+
+The constraint that separates the two is a **staging** one and not a
+representation one: a `#lang-pulse` module cannot be parsed by stage1 or
+stage2, which have no Pulse syntax extension, so it cannot live in
+`tests/custard/` without breaking `test-1` and `test-2`.  That is the reason
+`tests/custard/pulse/` exists, and it is worth stating because the plausible
+reading -- that Pulse's array abstractions are unavailable and therefore a
+contiguous buffer is unreachable from direct-to-C -- is false.  Both
+`let mut arr = [| ... |]` and `Pulse.Lib.Vec.alloc` extract to a stack array
+and a `{ elt; len }` slice in C, and to `&mut [u8]` in Rust.
+
+### 23.3 The Pulse Custard tests now run in CI
+
+`tests/custard/pulse` was reachable only by hand: `_test_pulse` ran
+`pulse/test/` and `pulse/share/pulse/examples/`, not this directory.  So
+`PulseSlice`, `PulseSliceRec` and `PulseHashTable` -- including the Rust
+column that section 20 exists for, and the `Box` regression test of section
+20.6 -- guarded nothing.  The root `Makefile`'s `_test_pulse` now also runs
+`tests/custard/pulse/`, which `make ci` reaches through `test-3`; the
+directory's own `Makefile` already gates its krml and Rust columns on those
+tools being present.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -7512,3 +7618,4 @@ only the declaration stays.
 | M10υ | **A discarded value's name, and a slice in a returned struct** (§20.6) | Done.  Round 9 of the EverParse report: 436 Rust errors down to 28, miscompilation gone, and two of the remaining classes worth chasing.  `PrintKrml` named the binder it invents for a discarded `ESeq` component `_`; karamel's use analysis rewrites an unread binding into `let b = e1 in ignore b`, and its Rust backend prints a binder's name verbatim, so the reference came out as `ignore(_)`, which is not an expression in Rust.  Now an ordinary name, freshened against the scope because `find` takes the first match and `Rename` gives a local its bare source spelling.  The other is karamel's, and the report's reading of it was off: `AstToMiniRust` has no path from a slice to a `Box`, so a field emitted as `Box<[T]>` held a *buffer* and the two types were not structurally identical after all.  The real defect is the `E0106`s: karamel sorts a pointer-holding struct into returned (own them, `Box`) or not-returned (borrow them, lifetime), and a slice fits neither, so a returned struct with a slice field gets `box=true, lifetime=false` and emits `&[T]` in a type binding no lifetime.  `tests/custard/pulse/PulseSliceRec.fst` reproduces it in three declarations and one total function; `krml -fno-box` is the workaround the test uses.  Reported as karamel#753. |
 | M10φ | **Operators get their names changed underneath us** (§22) | Done.  Merging master brought uniform operator mangling: `( + )` is `op_Plus`, `( .() )` is `op_Dot_Lparen_Rparen`, and `op_Minus` now means binary subtraction rather than negation.  Custard reads those names in `Builtins.prims_rule` and the `Pulse.Lib.Vec`/`ArrayPtr` rules, and writes them in `PrintOCaml` and to karamel, which still spells them the old way; `Builtins.krml_compat_name` is the twin of master's `FStarC.Extraction.Krml.krml_compat_name` and is applied in `lident_of_name`, before the specialization suffix, so that references and declarations move together.  Master's table was missing `op_Star`, the one Prims operator whose old name is not derivable from the new one by the same rule as the rest; adding it fixes FINDINGS.md #6 in both the C and krml C columns.  Separately, `Pulse_RuntimeUtils.ml` now calls a *discriminator* by OCaml name, and a discriminator is `Inline` and never emitted -- so `Extract` records roots before marking and does not inline a rooted one, and `Simplify.inline_decls` keeps an `Inline` declaration that is also `Root` (§22.2). |
 | M10χ | **Custard's error codes moved up by one** (§22.1) | Done.  Master assigned 362 to `Error_AmbiguousName` while this branch already held 362-369, and 362 is not free to move: `tests/overloading/strict/StrictDuplicate.fst` demotes it with `--warn_error +362` and the book names it by number.  A published number outranks a branch-local one, so Custard's codes are now **363-370**.  The numbers in `FStarC.Errors.Codes.fst` are explicit rather than positional, so this is a relabelling; what it touches is every place a number is spelled out by hand -- the `CODE_*` variables the suite greps for, the `--warn_error @367` of the `--custard_warn_any` tests, two comments in `PrintC` and `Extract`, and the prose of sections 18 through 21.  Numbers cited in older bug reports are one lower than the ones the compiler now prints. |
+| M10ψ | **"It compiles" is not an acceptance criterion** (§23) | Done, from #4482.  Every backend test until now asserted a golden file or a clean compile, and section 19.15 is the proof that neither is a specification: karamel compiled a borrowed slice as an owning `Box`, writes through it were discarded, and nothing failed because nothing ran anything.  Two reduced deterministic-CBOR checkers now do -- `tests/custard/CborBoundary.fst` over a `ref`-linked list, which needs no Pulse and so runs under stage1 and stage2 too, and `tests/custard/pulse/CborBoundarySlice.fst` over a `Pulse.Lib.Slice.slice byte`, which is what EverParse's parsers take and the only one that drives the Rust column.  One corpus of 48 boundary vectors, one independent Python oracle, one adequacy script, all in `cbor-corpus/`; the two copies the PR arrived with were byte-identical and free to drift.  The result worth keeping is the measurement, not the test: greedy set cover over *line coverage* shrinks a 12,110-input corpus 400x with **identical coverage and 13% fewer mutants killed**, while reducing against mutants reproduces the full corpus on a held-out family it was never fitted to (152/152 against 57/152 at the same size).  Coverage is not the signal to minimise against.  Sanitizers are on by default, since one mutant was otherwise detected only when binary layout made its memory unsafety observable.  Also `_test_pulse` now runs `tests/custard/pulse/`, which `make ci` reaches through `test-3` -- until this change the entire Rust column, section 20.6's `Box` regression included, guarded nothing (§23.3). |
