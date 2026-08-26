@@ -541,6 +541,45 @@ and called_only_branches (v:string) (brs:list branch) : ML bool =
   brs |> List.for_all (fun (_, g, b) ->
     (match g with None -> true | Some g -> called_only v g) && called_only v b)
 
+(* A *forwarder* is a pure, non-recursive definition whose body is exactly one
+   of its own binders -- [let id_fn phi = phi], and, in EverParse's CDDL
+   library, [CDDL.Spec.EqTest.mk_eq_test], which lowers to [return phi;].
+   Applied to all its arguments it is the identity on one of them, so a
+   saturated call reduces to that argument.
+
+   Doing this is what turns [let wrapped = id_fn band] into [let wrapped =
+   band], which the [EQual] case of [eta_expand_decl] then expands into a real
+   function.  Without it the definition stays a *variable* of function-pointer
+   type, initialized in [custard_init_globals] -- and section 27 is what that
+   costs: a pure, total, compile-time-constant function becomes runtime state,
+   and the public entry point calling it segfaults on a null pointer if the
+   initializer has not run.
+
+   Unlike widening [cheap_expr], this cannot duplicate work: it *removes* a
+   call rather than moving one into every call site.  That distinction is the
+   whole reason to prefer it -- [cheap_expr] admits [EApp] of arbitrary named
+   functions, so relaxing the arity bound in [eta_expand_decl] would let
+   [let table : int -> int = build_table 1000000] be re-evaluated per call. *)
+let forwarders : ref (SMap.t (int & int)) = mk_ref (SMap.create 0)
+
+let forwarder_table (prog:program) : ML (SMap.t (int & int)) =
+  let t : SMap.t (int & int) = SMap.create 50 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet l when Cons? l.dl_binders && is_pure l.dl_eff
+               && not (l.dl_flags |> List.existsb Rec?) ->
+      (match l.dl_body.e with
+       | EVar v ->
+         let n = List.length l.dl_binders in
+         let found =
+           l.dl_binders |> List.fold_left (fun (acc, k) (b:binder) ->
+             ((if b.b_name = v && acc < 0 then k else acc), k + 1)) (-1, 0) in
+         let found = fst found in
+         if found >= 0 then SMap.add t (string_of_name l.dl_name) (n, found)
+       | _ -> ())
+    | _ -> ());
+  t
+
 let rec reduce (x:expr) : ML expr =
   match x.e with
   | EApp (h, args) ->
@@ -549,6 +588,19 @@ let rec reduce (x:expr) : ML expr =
     (match h.e with
      | EFun (bs, body) when List.length bs <= List.length args ->
        reduce (beta bs body args { x with e = EApp (h, args) })
+     (* Every argument must be pure, because the ones not returned are
+        dropped.  ANF has already made each operand pure, so this holds in
+        practice and costs nothing to check. *)
+     | EQual (n, _) when (match SMap.try_find !forwarders (string_of_name n) with
+                          | Some (a, _) -> a = List.length args
+                                        && args |> List.for_all (fun (e:expr) -> is_pure e.eff)
+                          | None -> false) ->
+       let _, i = Some?.v (SMap.try_find !forwarders (string_of_name n)) in
+       let arg = List.nth args i in
+       (* The call site's type, not the argument's: they denote the same type
+          but the caller's is the one the surrounding code was built against,
+          and an abbreviation is the better name for it. *)
+       { arg with ty = x.ty }
      | _ -> { x with e = EApp (h, args) })
 
   | EMatch (scrut, brs) ->
@@ -2496,7 +2548,8 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   let prog = pass "eta_ctors" (eta_ctors vd) prog in
   let prog = pass "eta_reduce" eta_reduce_decls prog in
   let prog = pass "inline" inline_decls prog in
-  let prog = pass "reduce" reduce_decls prog in
+  let prog = pass "reduce" (fun prog ->
+    forwarders := forwarder_table prog; reduce_decls prog) prog in
   (* Before [depat]: dropping a branch can leave a match with a single
      irrefutable one, which is exactly what [depat] removes entirely. *)
   let prog = pass "prune" prune_decls prog in

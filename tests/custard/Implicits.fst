@@ -16,10 +16,12 @@ let idi (#a:Type) (x:a) : a = x
 let ide (a:Type) (x:a) : a = x
 
 (* A proof binder is non-informative (section 3.1, rule 1) and disappears too,
-   whether it is written implicitly or explicitly. *)
+   whether it is written implicitly or explicitly.  The bodies are not bare
+   binders, so that section 27.4's forwarder rule leaves them alone and this
+   test goes on testing erasure. *)
 let pred (x:int) : prop = x >= 0
-let clamp (x:int) (_:squash (pred x)) : int = x
-let clampi (x:int) (#_:squash (pred x)) : int = x
+let clamp (x:int) (_:squash (pred x)) : int = if x > 100 then 100 else x
+let clampi (x:int) (#_:squash (pred x)) : int = if x > 100 then 100 else x
 
 (* Two cases where the proof binder has to stay, because from the type alone it
    is indistinguishable from something that matters.  [only_proof] would become

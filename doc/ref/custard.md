@@ -7632,7 +7632,11 @@ stays in the source, `static` if private, and the header gets `extern <type>
 <name>;` -- the one place where the header's spelling is not the source's.
 `custard_init_globals` is public and gets a prototype whenever there is a
 non-constant global initializer to run, since a caller who links the unit is
-the one who has to call it.
+the one who has to call it.  Read that as an obligation of *memory safety* and
+not of freshness: a global of function-pointer type is null until it runs, and
+a public entry point that reaches one jumps through null.  Section 27 removes
+the largest class of definitions that had no business being globals in the
+first place, but the obligation stands for the ones that remain.
 
 The source `#include`s its own header, before anything else it emits.  This is
 what makes the header *checked* rather than merely shipped: a prototype that
@@ -7914,6 +7918,123 @@ unless something forces them to be; the call-arity check is that forcing
 function, and it is worth more than the individual fixes.
 
 
+## 27. A constant function compiled to mutable state
+
+Round 21 of the EverParse report is mostly good news: both section 26 fixes
+hold, a full regression over 12,109 CBOR inputs is byte-identical between the
+C and the Rust paths, and the real CDDL combinator library now extracts and
+runs given three `[@@@monomorphize]` attributes.  What is left is one finding,
+and it is not a code-quality complaint.
+
+### 27.1 The shape
+
+```fstar
+let id_fn (phi: (bool -> bool -> bool)) : (bool -> bool -> bool) = phi
+let band (a: bool) (b: bool) : bool = a && b
+let wrapped : bool -> bool -> bool = id_fn band
+let use (a: bool) (b: bool) : bool = wrapped a b
+```
+
+`wrapped` used to come out as a `static` variable of function-pointer type,
+declared empty and assigned inside `custard_init_globals`, with `use`
+dereferencing it.  In EverParse the same shape arises from
+`CDDL.Spec.EqTest.mk_eq_test`, whose whole body is `return phi;`.
+
+### 27.2 Why this is a safety bug and not a slow path
+
+Section 24 lists `custard_init_globals` as a *linking* obligation: call it
+before anything else in the unit.  This turns it into a **memory-safety**
+obligation.  `use` is a public entry point, `wrapped` is a null pointer until
+the initializer runs, and so a caller who links the unit correctly but forgets
+one call gets a jump through null rather than a wrong answer.  The definition
+that earned this has no state in it: it is pure, total, and a compile-time
+constant.
+
+It is also a cost on the hot path -- an indirect call through memory where a
+direct call to a known `static` function would do, which is precisely the call
+an optimizer cannot inline.
+
+### 27.3 Why the obvious fix is wrong
+
+The blocker is *not* section 25.3's `cheap_expr`, which already admits this
+body.  It is the arity bound in `eta_expand_decl`: the head `id_fn` has arity
+one and is given one argument, so nothing is missing and no expansion is owed.
+
+The tempting repair is to expand whenever the head is a known top-level
+function whose arguments are cheap.  That is unsound as a *performance*
+matter, and section 25.3 says why in passing without drawing the conclusion:
+`cheap_expr` was only ever safe because it was applied to an **under**-applied
+head, and an under-applied call allocates a closure and runs nothing.  Lift
+that restriction and
+
+```fstar
+let table : int -> int = build_table 1000000
+```
+
+becomes `table x = build_table 1000000 x`, rebuilding the table on every call.
+`build_table` is a known top-level function and `1000000` is cheap, so the
+proposed rule fires and the program silently acquires a new asymptotic
+complexity.  A miscompilation announces itself; this would not.
+
+### 27.4 Forwarders
+
+The repair Custard takes instead removes a call rather than moving one.  Call
+a definition a **forwarder** when it is pure, non-recursive, and its body is
+*exactly one of its own binders*.  Such a definition, fully applied, is the
+identity on that argument, so
+
+    f a1 ... an   -->   ai
+
+whenever `f` is a forwarder returning its `i`th binder and the call is
+saturated.  The other arguments are dropped, which is why they are required to
+be pure -- ANF (§6 pass 1) has already made every operand pure, so the check
+never fails in practice and is there to keep the rule honest if ANF ever
+stops.
+
+This cannot duplicate work, because the right-hand side is a subterm of the
+left.  Where the general rule would have made `build_table` run per call, this
+one deletes an indirection and nothing else.
+
+`id_fn band` therefore reduces to `band`, leaving a definition whose body is a
+name -- and the `EQual` case of `eta_expand_decl` already knows how to turn
+that into a real function.  So `wrapped` becomes a `static` C function, the
+call at the use site becomes direct, `id_fn` is unreachable and dies in DCE,
+and `custard_init_globals` is empty and is not emitted at all.  The fix for
+the safety bug and the fix for the hot path are the same fix.
+
+The rule lives in `Simplify.reduce`, next to beta and iota, with its table
+built at the start of the `reduce` pass.  Putting it there rather than in a
+pass of its own matters: `reduce` runs bottom-up, so a call to a forwarder
+whose argument is itself such a call collapses in one traversal, and `reduce`
+runs well before `eta_expand`, which is what has to see the result.
+
+### 27.5 What it cost the test suite
+
+Four existing tests contained a forwarder incidentally and stopped testing
+what they were written for once the rule deleted it -- `Implicits` (proof
+binder erasure), `RetArity` (peeling abbreviations off a result type),
+`WarnAny` (the `TAny` warning), `CVarArity` (§26.1's function-pointer
+lowering).  Each was rewritten so that its subject function *uses* its
+arguments instead of returning one, and each now says so in its header
+comment.  That is the honest reading of four broken tests: the rule was doing
+its job in four places where the test author had not thought about it.
+
+`CVarArity` is the interesting one, because the shape it pins -- a global of
+function-pointer type -- is still reachable and still has to be lowered that
+way; §25.3 keeps it deliberately.  The forwarder rule narrows the set of
+programs that get there; it does not empty it.
+
+### 27.6 Still open
+
+`custard_init_globals` remains a real obligation for programs that genuinely
+have initialized global state, and section 24 should be read as saying that
+skipping it is undefined behaviour and not merely a wrong answer.
+
+`LamStruct` -- a lambda stored in a record field -- is still an honest 368
+with no workaround, and is the shape a CDDL `bundle` uses.  The three
+`[@@@monomorphize]` attributes CDDL needs would be inferred by M7.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -8001,3 +8122,4 @@ function, and it is worth more than the individual fixes.
 | M10αα | **An argument goes missing between two definitions** (§25) | Done.  Round 19 of the EverParse report reduced everything still blocking CDDL to one eleven-line module.  `let g : bool -> bool -> bool = f` is parameterless in the source and arity two in its type; `g` itself was eta-expanded correctly, but its *callers* were not, and `let call_g a b = g a b` came out one parameter short, calling `Wrap_g(a)` -- "too few arguments" against a prototype the same run had emitted.  The sharp part is that `call_g` and `call_g_partial` produced **byte-identical C** although one is a full application and the other partial: an argument went missing, and the IR was wrong before the backend saw it.  Two correct passes: `eta_reduce` shortens `fun a b -> g a b` to `fun a -> g a`, and `eta_expand` exists to undo that for C -- but it bounded expansion by a table of arities computed once, from the program as it found it, so it read `g` as arity 0 while the same sweep was giving `g` its two binders.  The table was stale by exactly one link, which is why the control `call_f` was clean.  `eta_expand_decls` now runs to a fixpoint; each round can only add binders and never more than `arrow_arity dl_ret`, so it terminates.  Separately, `PrintC` printed `EApp` without ever asking the callee's arity, which is why this reached a C compiler instead of a diagnostic: it now records every arity and refuses a mismatch -- under-application as 368 with the `[@@@monomorphize]` remedy named, over-application as the malformed-IR refusal.  `CEtaChain.fst` (four links, so one round cannot pass it) and `CLamField.fst`.  Not fixed, deliberately: a definition whose body is a call returning a function stays a global variable, because expanding it would re-evaluate the call at every use (§25.3). |
 | M10ββ | **A green result that is not evidence** (§23.4) | Done, from #4484.  Section 24's `#include "<Module>.h"` meant the generated source no longer compiles from a directory other than the one extraction wrote it to, and `mutants.py` builds each mutant in `_output/mutants/`.  Every mutant became uncompilable and both adequacy figures collapsed to `killed 0 / 0 (uncompilable 46)`.  The include path is the trivial half; the half worth recording is that **the script did not error out** -- `killed 0 / 0` is a pass under any "did it fail?" reading, so the study would have gone on reporting success while measuring nothing, which is section 23's own thesis pointed at section 23's own tooling.  The uncompilable count is now fatal rather than reported, as is a zero-mutant run: an uncompilable mutant is an absent test, not a weak one, and it is always a defect in the script or the backend, never a property of the corpus.  Verified both ways -- the guard exits 1 on the broken include path and 0 once fixed, and the four figures return to 46/46, 46/46, 48/49, 46/59. |
 | M10γγ | **Two more ways to lose an argument** (§26) | Done.  Round 20 found two arity defects section 25's check did not catch, one of which it *had* caught in a different program.  (1) `let e : bool -> bool -> bool = ap band` is lowered to a **variable** of function-pointer type, because §25.3's `cheap_expr` guard declines to expand a body that computes before returning a function -- and both the arity table and the new check recorded *definitions*, keyed on binder count, so both read `e` as arity 0 and `call_e` stayed eta-short.  The variable/function lowering turned out to be load-bearing for correctness: becoming a variable is what made the callee invisible.  Both tables now read a parameterless arrow-typed definition's arity off its **type**, which is what the emitted object accepts.  (2) `Extract`'s `peel` consumes one arrow per extra lambda binder and called `head_ty` **once, on the way in**; `eq_test` unfolds to one arrow whose codomain is another abbreviation hiding the second, so peeling two binders consumed one arrow, landed on a name and stopped, while both binders were emitted -- a definition declared to return `bool -> bool` over a body of type `bool`.  It now unfolds at every step, like its term-level twin `peel_typ`.  Worth noting on severity: gcc 13 accepts that with `-Wint-conversion` and prints the right answer because a `bool` round-trips through a pointer on that ABI, while gcc 14 rejects it -- right only on the compiler it was tested against.  `CVarArity.fst`, `CAbbrevArity.fst` (which is `CDDL.Spec.EqTest.eq_test` verbatim), and `CPartialCall.fst` for the check firing on a *local* partial application, which eta-expansion cannot reach.  Both defects are the same mistake at different scales: an arity read off the wrong representation (§26.4). |
+| M10δδ | **A constant function compiled to mutable state** (§27) | Done.  Round 21 confirmed both §26 fixes and got the real CDDL combinator library extracting and running, and left one finding: a pure, total, compile-time-constant function was being lowered to a `static` function pointer assigned in `custard_init_globals`, which makes skipping the initializer a null-pointer call from a *public* entry point rather than a wrong answer, and puts an indirect call on the hot path.  The blocker was not §25.3's `cheap_expr`, which already admits the body, but the arity bound in `eta_expand_decl`, which only fires on an under-applied head.  Relaxing that bound as proposed would be unsound as a performance matter -- `build_table 1000000` is a known top-level function with cheap arguments, so `let table : int -> int = build_table 1000000` would be re-evaluated per call -- so `Simplify.reduce` instead gains a rule that *removes* a call: a **forwarder**, a pure non-recursive definition whose body is exactly one of its own binders, applied to all its arguments reduces to that argument.  `id_fn band` becomes `band`, which the existing `EQual` case of `eta_expand_decl` expands into a real `static` function; `id_fn` dies in DCE and `custard_init_globals` is not emitted.  `tests/custard/CInitTrap.fst`, whose second forwarder returns its *second* binder.  Four existing tests contained an incidental forwarder and were rewritten to use their arguments rather than return one (§27.5); all five suites, the DICE example, and all four CBOR mutation-adequacy figures are unchanged |

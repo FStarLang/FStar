@@ -320,6 +320,17 @@ CNOGREP_CVarArity = "CVarArity_e(a);"
 C_TESTS += CAbbrevArity
 CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool(bool x, bool x1)"
 CNOGREP_CAbbrevArity = "(*CAbbrevArity_mk_eq_test__bool"
+# Section 27.4: a saturated call to a forwarder is the identity on one of its
+# arguments, so the definition becomes a real function instead of a mutable
+# function pointer assigned in custard_init_globals.  The NOGREPs are the
+# point: no pointer, no initializer, and no indirect call at the use site.
+C_TESTS += CInitTrap
+FLAGS_CInitTrap = --custard_entry CInitTrap.use --custard_entry CInitTrap.direct
+CGREP_CInitTrap = "CInitTrap_wrapped(bool eta, bool eta1)" \
+                  "return CInitTrap_band(eta, eta1);" \
+                  "CInitTrap_picked(bool"
+CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
+                    "custard_init_globals" "CInitTrap_id_fn" "CInitTrap_snd_fn"
 # A reduced deterministic-CBOR checker.  Unlike the tests above it is not
 # aimed at one backend feature: it is a differential regression test, run
 # over a curated corpus of inputs whose expected results are computed by an

@@ -11,12 +11,17 @@ module WarnAny
    [Mono] argument and could not be one -- a Mono argument stands for a value.
 
    So this module is a *rejection* test: extraction of it must report warning
-   366, which the suite escalates to an error. *)
+   366, which the suite escalates to an error.
+
+   [hk] *chooses* between its two [f int] arguments rather than returning one
+   of them, so that section 27.4's forwarder rule does not collapse the call
+   and delete the very declaration whose type is being complained about. *)
 
 open FStar.All
 
-let hk (#f: Type0 -> Type0) (x: f int) : f int = x
+let hk (#f: Type0 -> Type0) (n: bool) (x: f int) (y: f int) : f int =
+  if n then x else y
 
 let main () : ML unit =
-  let l : list int = hk #(fun a -> list a) [1; 2; 3] in
+  let l : list int = hk #(fun a -> list a) true [1; 2; 3] [] in
   FStar.IO.print_string (string_of_int (List.length l))

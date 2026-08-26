@@ -16,14 +16,21 @@ module CVarArity
    Both tables now read a parameterless arrow-typed definition's arity off its
    type, which is what the emitted object actually accepts.
 
+   [ap] deliberately *chooses* between its two function arguments rather than
+   returning one of them outright: section 27.4's forwarder rule collapses the
+   plain [fun phi -> phi] shape, and this test needs the function-pointer
+   lowering to survive so that it still tests what it was written for.
+
    [call_e] is *also* a root, so this covers the shape that has no downstream
    over-application to catch it: with [main] deleted, nothing applied [call_e]
    to two arguments and the only symptom was the C compiler. *)
 
-let ap (phi: (bool -> bool -> bool)) : (bool -> bool -> bool) = phi
+let ap (n: bool) (phi: (bool -> bool -> bool)) (psi: (bool -> bool -> bool))
+  : (bool -> bool -> bool) = if n then phi else psi
 let band (a: bool) (b: bool) : bool = a && b
+let bor (a: bool) (b: bool) : bool = a || b
 
-let e : bool -> bool -> bool = ap band
+let e : bool -> bool -> bool = ap true band bor
 let call_e (a: bool) (b: bool) : bool = e a b
 
 let ck (b: bool) : FStar.UInt32.t = if b then 0ul else 1ul
