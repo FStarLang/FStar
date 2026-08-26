@@ -360,7 +360,7 @@ let token_to_string (uu___ : token) : Prims.string=
   | Exact s -> s
   | UnicodeOperator -> "<unicode-op>"
 let is_non_latin_char (s : FStar_Char.char) : Prims.bool=
-  (FStarC_Util.int_of_char s) > (Prims.of_int 0x024f)
+  (FStarC_Util.int_of_char s) > (Prims.of_int 0x24f)
 let matches_token (s : Prims.string) (uu___ : token) : Prims.bool=
   match uu___ with
   | StartsWith c ->
@@ -3781,10 +3781,13 @@ and p_constant (uu___ : FStarC_Const.sconst) : FStar_Pprint.document=
   | FStarC_Const.Const_effect -> str "Effect"
   | FStarC_Const.Const_unit -> str "()"
   | FStarC_Const.Const_bool b -> FStar_Pprint.doc_of_bool b
-  | FStarC_Const.Const_real r -> str (Prims.strcat r "R")
+  | FStarC_Const.Const_real r ->
+      str (Prims.strcat (FStarC_Real.to_string r) "R")
   | FStarC_Const.Const_char x -> p_char_literal x
   | FStarC_Const.Const_string (s, uu___1) -> p_string_literal s
-  | FStarC_Const.Const_int (repr, sign_width_opt) ->
+  | FStarC_Const.Const_int (v, b) ->
+      str (FStarC_Const.string_of_int_literal v b)
+  | FStarC_Const.Const_machine_int (v, b, sw, w) ->
       let signedness uu___1 =
         match uu___1 with
         | FStarC_Const.Unsigned -> str "u"
@@ -3797,12 +3800,13 @@ and p_constant (uu___ : FStarC_Const.sconst) : FStar_Pprint.document=
         | FStarC_Const.Int64 -> str "L" in
       let suffix uu___1 =
         match uu___1 with
-        | (s, w) ->
-            (match (s, w) with
+        | (s, w1) ->
+            (match (s, w1) with
              | (uu___2, FStarC_Const.Sizet) -> str "sz"
-             | uu___2 -> FStar_Pprint.op_Hat_Hat (signedness s) (width w)) in
-      let ending = default_or_map FStar_Pprint.empty suffix sign_width_opt in
-      FStar_Pprint.op_Hat_Hat (str repr) ending
+             | uu___2 -> FStar_Pprint.op_Hat_Hat (signedness s) (width w1)) in
+      let ending = suffix (sw, w) in
+      FStar_Pprint.op_Hat_Hat (str (FStarC_Const.string_of_int_literal v b))
+        ending
   | FStarC_Const.Const_range_of -> str "range_of"
   | FStarC_Const.Const_set_range_of -> str "set_range_of"
   | FStarC_Const.Const_range r ->
@@ -3854,8 +3858,8 @@ and p_universeFrom (u : FStarC_Parser_AST.term) : FStar_Pprint.document=
 and p_atomicUniverse (u : FStarC_Parser_AST.term) : FStar_Pprint.document=
   match u.FStarC_Parser_AST.tm with
   | FStarC_Parser_AST.Wild -> FStar_Pprint.underscore
-  | FStarC_Parser_AST.Const (FStarC_Const.Const_int (r, sw)) ->
-      p_constant (FStarC_Const.Const_int (r, sw))
+  | FStarC_Parser_AST.Const (FStarC_Const.Const_int (v, b)) ->
+      p_constant (FStarC_Const.Const_int (v, b))
   | FStarC_Parser_AST.Uvar id -> str (FStarC_Ident.string_of_id id)
   | FStarC_Parser_AST.Paren u1 ->
       let uu___ = p_universeFrom u1 in soft_parens_with_nesting uu___

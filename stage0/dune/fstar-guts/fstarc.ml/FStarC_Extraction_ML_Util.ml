@@ -23,8 +23,14 @@ let mlconst_of_const' (sctt : FStarC_Const.sconst) :
   | FStarC_Const.Const_range uu___ -> FStarC_Extraction_ML_Syntax.MLC_Unit
   | FStarC_Const.Const_unit -> FStarC_Extraction_ML_Syntax.MLC_Unit
   | FStarC_Const.Const_char c -> FStarC_Extraction_ML_Syntax.MLC_Char c
-  | FStarC_Const.Const_int (s, i) ->
-      FStarC_Extraction_ML_Syntax.MLC_Int (s, i)
+  | FStarC_Const.Const_int (v, b) ->
+      FStarC_Extraction_ML_Syntax.MLC_Int
+        ((FStarC_Const.string_of_int_literal v b),
+          FStar_Pervasives_Native.None)
+  | FStarC_Const.Const_machine_int (v, b, s, w) ->
+      FStarC_Extraction_ML_Syntax.MLC_Int
+        ((FStarC_Const.string_of_int_literal v b),
+          (FStar_Pervasives_Native.Some (s, w)))
   | FStarC_Const.Const_bool b -> FStarC_Extraction_ML_Syntax.MLC_Bool b
   | FStarC_Const.Const_string (s, uu___) ->
       FStarC_Extraction_ML_Syntax.MLC_String s

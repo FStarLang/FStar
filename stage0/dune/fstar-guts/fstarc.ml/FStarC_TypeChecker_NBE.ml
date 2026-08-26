@@ -274,10 +274,7 @@ let pickBranch (cfg : config) (scrut : FStarC_TypeChecker_NBETerm.t)
                 | FStarC_TypeChecker_NBETerm.Constant
                     (FStarC_TypeChecker_NBETerm.Int i) ->
                     (match s1 with
-                     | FStarC_Const.Const_int
-                         (p1, FStar_Pervasives_Native.None) ->
-                         let uu___2 = FStarC_Util.int_of_string p1 in
-                         i = uu___2
+                     | FStarC_Const.Const_int (p1, uu___2) -> i = p1
                      | uu___2 -> false)
                 | FStarC_TypeChecker_NBETerm.Constant
                     (FStarC_TypeChecker_NBETerm.String (st, uu___2)) ->
@@ -1205,76 +1202,70 @@ and translate_comp (cfg : config)
 and reduce_disc_proj (cfg : config) (h : FStarC_Syntax_Syntax.fv)
   (args : FStarC_TypeChecker_NBETerm.args) :
   FStarC_TypeChecker_NBETerm.t FStar_Pervasives_Native.option=
-  let uu___ = FStarC_Options_Ext.enabled "no_prim_proj" in
-  if uu___
+  let tcenv = FStarC_TypeChecker_Cfg.cfg_env cfg.core_cfg in
+  if
+    Prims.not
+      ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.iota
   then FStar_Pervasives_Native.None
   else
-    (let tcenv = FStarC_TypeChecker_Cfg.cfg_env cfg.core_cfg in
-     if
-       Prims.not
-         ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.iota
-     then FStar_Pervasives_Native.None
-     else
-       (let uu___1 =
-          FStarC_TypeChecker_Env.disc_proj_info tcenv
-            (FStarC_Syntax_Syntax.lid_of_fv h) in
-        match uu___1 with
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some (q, n_indexed, idx) ->
-            let d =
-              match q with
-              | FStarC_Syntax_Syntax.Projector (d1, uu___2) -> d1
-              | FStarC_Syntax_Syntax.Discriminator d1 -> d1
-              | uu___2 ->
-                  FStarC_Effect.failwith "reduce_disc_proj: impossible" in
-            if (FStarC_List.length args) <= n_indexed
-            then FStar_Pervasives_Native.None
-            else
-              (let scrutinee =
-                 FStar_Pervasives_Native.fst (FStarC_List.nth args n_indexed) in
-               let uu___2 =
-                 FStarC_List.splitAt (n_indexed + Prims.int_one) args in
-               match uu___2 with
-               | (uu___3, rest) ->
-                   let reapply x =
-                     if match rest with | [] -> true | uu___4 -> false
-                     then x
-                     else iapp cfg x rest in
-                   let uu___4 =
-                     let uu___5 = unlazy_unmeta scrutinee in
-                     uu___5.FStarC_TypeChecker_NBETerm.nbe_t in
-                   (match uu___4 with
-                    | FStarC_TypeChecker_NBETerm.Construct
-                        (c, uu___5, cargs_rev) ->
-                        let same =
-                          FStarC_Ident.lid_equals
-                            (FStarC_Syntax_Syntax.lid_of_fv c) d in
-                        (match q with
-                         | FStarC_Syntax_Syntax.Discriminator uu___6 ->
-                             let uu___7 =
-                               reapply
-                                 (mk_t
-                                    (FStarC_TypeChecker_NBETerm.Constant
-                                       (FStarC_TypeChecker_NBETerm.Bool same))) in
-                             FStar_Pervasives_Native.Some uu___7
-                         | uu___6 ->
-                             if Prims.not same
-                             then FStar_Pervasives_Native.None
-                             else
-                               (match idx with
-                                | FStar_Pervasives_Native.None ->
-                                    FStar_Pervasives_Native.None
-                                | FStar_Pervasives_Native.Some i ->
-                                    let cargs = FStarC_List.rev cargs_rev in
-                                    if (FStarC_List.length cargs) <= i
-                                    then FStar_Pervasives_Native.None
-                                    else
-                                      (let uu___7 =
-                                         reapply
-                                           (FStar_Pervasives_Native.fst
-                                              (FStarC_List.nth cargs i)) in
-                                       FStar_Pervasives_Native.Some uu___7)))
-                    | uu___5 -> FStar_Pervasives_Native.None))))
+    (let uu___ =
+       FStarC_TypeChecker_Env.disc_proj_info tcenv
+         (FStarC_Syntax_Syntax.lid_of_fv h) in
+     match uu___ with
+     | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+     | FStar_Pervasives_Native.Some (q, n_indexed, idx) ->
+         let d =
+           match q with
+           | FStarC_Syntax_Syntax.Projector (d1, uu___1) -> d1
+           | FStarC_Syntax_Syntax.Discriminator d1 -> d1
+           | uu___1 -> FStarC_Effect.failwith "reduce_disc_proj: impossible" in
+         if (FStarC_List.length args) <= n_indexed
+         then FStar_Pervasives_Native.None
+         else
+           (let scrutinee =
+              FStar_Pervasives_Native.fst (FStarC_List.nth args n_indexed) in
+            let uu___1 = FStarC_List.splitAt (n_indexed + Prims.int_one) args in
+            match uu___1 with
+            | (uu___2, rest) ->
+                let reapply x =
+                  if match rest with | [] -> true | uu___3 -> false
+                  then x
+                  else iapp cfg x rest in
+                let uu___3 =
+                  let uu___4 = unlazy_unmeta scrutinee in
+                  uu___4.FStarC_TypeChecker_NBETerm.nbe_t in
+                (match uu___3 with
+                 | FStarC_TypeChecker_NBETerm.Construct
+                     (c, uu___4, cargs_rev) ->
+                     let same =
+                       FStarC_Ident.lid_equals
+                         (FStarC_Syntax_Syntax.lid_of_fv c) d in
+                     (match q with
+                      | FStarC_Syntax_Syntax.Discriminator uu___5 ->
+                          let uu___6 =
+                            reapply
+                              (mk_t
+                                 (FStarC_TypeChecker_NBETerm.Constant
+                                    (FStarC_TypeChecker_NBETerm.Bool same))) in
+                          FStar_Pervasives_Native.Some uu___6
+                      | uu___5 ->
+                          if Prims.not same
+                          then FStar_Pervasives_Native.None
+                          else
+                            (match idx with
+                             | FStar_Pervasives_Native.None ->
+                                 FStar_Pervasives_Native.None
+                             | FStar_Pervasives_Native.Some i ->
+                                 let cargs = FStarC_List.rev cargs_rev in
+                                 if (FStarC_List.length cargs) <= i
+                                 then FStar_Pervasives_Native.None
+                                 else
+                                   (let uu___6 =
+                                      reapply
+                                        (FStar_Pervasives_Native.fst
+                                           (FStarC_List.nth cargs i)) in
+                                    FStar_Pervasives_Native.Some uu___6)))
+                 | uu___4 -> FStar_Pervasives_Native.None)))
 and iapp (cfg : config) (f : FStarC_TypeChecker_NBETerm.t)
   (args : FStarC_TypeChecker_NBETerm.args) : FStarC_TypeChecker_NBETerm.t=
   let mk t = mk_rt f.FStarC_TypeChecker_NBETerm.nbe_r t in
@@ -1941,9 +1932,7 @@ and translate_constant (c : FStarC_Syntax_Syntax.sconst) :
   match c with
   | FStarC_Const.Const_unit -> FStarC_TypeChecker_NBETerm.Unit
   | FStarC_Const.Const_bool b -> FStarC_TypeChecker_NBETerm.Bool b
-  | FStarC_Const.Const_int (s, FStar_Pervasives_Native.None) ->
-      let uu___ = FStarC_Util.int_of_string s in
-      FStarC_TypeChecker_NBETerm.Int uu___
+  | FStarC_Const.Const_int (i, uu___) -> FStarC_TypeChecker_NBETerm.Int i
   | FStarC_Const.Const_string (s, r) ->
       FStarC_TypeChecker_NBETerm.String (s, r)
   | FStarC_Const.Const_char c1 -> FStarC_TypeChecker_NBETerm.Char c1
@@ -2132,11 +2121,7 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) :
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Bool
        false) -> with_range FStarC_Syntax_Util.exp_false_bool
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Int i)
-       ->
-       let uu___1 =
-         let uu___2 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-         FStarC_Syntax_Util.exp_int uu___2 in
-       with_range uu___1
+       -> let uu___1 = FStarC_Syntax_Util.exp_int i in with_range uu___1
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.String
        (s, r)) ->
        mk
@@ -2151,8 +2136,7 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) :
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Real r)
        ->
        FStarC_TypeChecker_Primops_Base.embed_simple
-         FStarC_Syntax_Embeddings.e_real x.FStarC_TypeChecker_NBETerm.nbe_r
-         (FStarC_Real.Real r)
+         FStarC_Syntax_Embeddings.e_real x.FStarC_TypeChecker_NBETerm.nbe_r r
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.SConst
        c) -> mk (FStarC_Syntax_Syntax.Tm_constant c)
    | FStarC_TypeChecker_NBETerm.Meta (t, m) ->

@@ -321,7 +321,7 @@ let rec as_arith_expr (t : FStarC_Reflection_Types.term) : expr tm=
            then liftM (fun uu___1 -> Neg uu___1) aa
            else atom t
        | (FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_Int
-          i), uu___1) -> return (Lit i)
+          (i, uu___1)), uu___2) -> return (Lit i)
        | uu___1 -> atom t)
 let is_arith_expr (t : FStarC_Reflection_Types.term) : expr tm=
   op_let_Bang (as_arith_expr t)
