@@ -162,16 +162,12 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
       Unknown
 
     | Tm_constant (Const_real r1), Tm_constant (Const_real r2) ->
-      // We cannot simply compare strings (they are not canonicalized, e.g.
-      // "01.R" and "1.0R"). Call the proper comparison in FStarC.Real, which
-      // returns None for unknown.
-      begin match Real.cmp (Real.Real r1) (Real.Real r2) with
-        | Some Order.Eq -> Equal
-        | Some Order.Lt
-        | Some Order.Gt -> NotEqual
-        | None ->
-          // We don't know.
-          Unknown
+      // Real literals are parsed into a mantissa/exponent pair, so they
+      // can be compared numerically. c.f. #2806.
+      begin match Real.cmp r1 r2 with
+        | Order.Eq -> Equal
+        | Order.Lt
+        | Order.Gt -> NotEqual
       end
 
     | Tm_constant c, Tm_constant d ->

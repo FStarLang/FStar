@@ -32,7 +32,7 @@ val mkTrue : term
 val mkFalse : term
 val mkInteger : string -> ML term
 val mkInteger' : int -> ML term
-val mkReal : string -> ML term
+val mkReal : FStarC.Real.real -> ML term
 val mkBoundV : int -> ML term
 val mkFreeV : fv -> ML term
 

@@ -168,7 +168,7 @@ let prims =
         (Const.real_op_Minus, (quant Eq xy  (boxReal <| mkSub(unboxReal x, unboxReal y))));
         (Const.real_op_Plus,    (quant Eq xy  (boxReal <| mkAdd(unboxReal x, unboxReal y))));
         (Const.real_op_Star,    (quant Eq xy  (boxReal <| mkMul(unboxReal x, unboxReal y))));
-        (Const.real_op_Slash,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxReal y, mkReal "0")))) (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
+        (Const.real_op_Slash,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxReal y, mkReal (FStarC.Real.of_int 0))))) (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
         (Const.real_of_int,         (quant Eq qx  (boxReal <| mkRealOfInt (unboxInt x))))
         ]
     in

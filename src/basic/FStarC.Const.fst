@@ -25,6 +25,7 @@ let eq_const c1 c2 =
       FStarC.Util.ensure_decimal s1 = FStarC.Util.ensure_decimal s2 &&
       o1=o2
     | Const_string(a, _), Const_string(b, _) -> a=b
+    | Const_real r1, Const_real r2 -> Real.cmp r1 r2 = FStarC.Order.Eq
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
     | Const_reify _, Const_reify _ -> true
     | _ -> c1=c2

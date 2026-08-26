@@ -40,6 +40,13 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
+(* Real literals are parsed into an exact mantissa/exponent
+   representation; the lexer guarantees the lexeme is well-formed. *)
+let real_of_lexeme (s:string) : FStarC_Real.real =
+  match FStarC_Real.of_string s with
+  | Some r -> r
+  | None -> failwith ("Invalid real literal: " ^ s)
+
 let none_to_empty_list x =
   match x with
   | None -> []
@@ -1636,7 +1643,7 @@ constant:
   | s=STRING { Const_string (s, rr $loc) }
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
-  | r=REAL { Const_real r }
+  | r=REAL { Const_real (real_of_lexeme r) }
   | n=UINT8  { Const_int (n, Some (Unsigned, Int8)) }
   | n=INT8   { Const_int (n, Some (Signed,   Int8)) }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }

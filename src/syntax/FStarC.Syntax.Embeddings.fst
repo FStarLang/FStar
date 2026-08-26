@@ -292,17 +292,18 @@ let e_string =
         (fun x -> "\"" ^ x ^ "\"")
         (fun () -> emb_t_string)
 
+(* An embedding for reals *as constants*, i.e. into a term Const_real of type
+FStar.Real.real. See the note in the interface file: this is deliberately not
+an instance, since it would overlap with e_real_literal below. *)
 let e_real =
-    let open FStarC.Real in
     let ty = S.t_real in
     let emb_t_real = ET_app(PC.real_lid |> Ident.string_of_lid, []) in
-    let em (r:real) (rng:range) _shadow _norm : ML term =
-      let Real s = r in
-      mk (Tm_constant (Const.Const_real s)) rng
+    let em (r:Real.real) (rng:range) _shadow _norm : ML term =
+      mk (Tm_constant (Const.Const_real r)) rng
     in
-    let un (t:term) _norm : ML (option real) =
+    let un (t:term) _norm : ML (option Real.real) =
       match (unmeta_div_results t).n with
-      | Tm_constant (Const.Const_real s) -> Some (Real s)
+      | Tm_constant (Const.Const_real r) -> Some r
       | _ -> None
     in
     mk_emb_full
@@ -311,6 +312,41 @@ let e_real =
         (fun () -> ty)
         (fun _ -> "<real>")
         (fun () -> emb_t_real)
+
+(* An embedding for real literals *as literals*, i.e. into a term of type
+FStar.RealLiteral.real_literal (a record of a mantissa and an exponent),
+instead of a term of type FStar.Real.real as e_real above does. This is
+what the reflection API uses for the payload of C_Real.
+
+This is deliberately not an instance, as it would overlap with e_real: both
+embed the same (compiler-side) type, but into different F* types. Neither is
+an instance; both are always passed explicitly. *)
+let e_real_literal =
+    let emb_t = ET_app(PC.real_literal_lid |> Ident.string_of_lid, []) in
+    let em (r:Real.real) (rng:range) _shadow norm : ML term =
+      S.mk_Tm_app (tdataconstr PC.mkreal_literal_lid)
+                  [S.as_arg (embed (Real.mantissa r) rng None norm);
+                   S.as_arg (embed (Real.exponent r) rng None norm)]
+                  rng
+    in
+    let un (t:term) norm : ML (option Real.real) =
+      let hd, args = U.head_and_args_full t in
+      match (U.un_uinst hd).n, args with
+      | Tm_fvar fv, [(mantissa, _); (exponent, _)] when S.fv_eq_lid fv PC.mkreal_literal_lid ->
+        let open FStarC.Class.Monad in
+        let! mantissa = try_unembed mantissa norm in
+        let! exponent = try_unembed exponent norm in
+        (* NB: mk canonicalizes, so an ill-formed (non-canonical) literal
+        unembeds to the literal denoting the same number. *)
+        Some (Real.mk mantissa exponent)
+      | _ -> None
+    in
+    mk_emb_full
+        em
+        un
+        (fun () -> S.tconst PC.real_literal_lid)
+        Real.to_string
+        (fun () -> emb_t)
 
 let e_option (ea : embedding 'a) : Tot _ =
     let typ () = S.t_option_of (type_of ea) in

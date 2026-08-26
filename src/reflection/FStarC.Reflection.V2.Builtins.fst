@@ -168,7 +168,7 @@ let inspect_const (c:sconst) : ML vconst =
     | FStarC.Const.Const_range r -> C_Range r
     | FStarC.Const.Const_reify _ -> C_Reify
     | FStarC.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
-    | FStarC.Const.Const_real s -> C_Real s
+    | FStarC.Const.Const_real r -> C_Real r
     | FStarC.Const.Const_char c -> C_Char c
     | _ -> failwith (Format.fmt1 "unknown constant: %s" (show c))
 

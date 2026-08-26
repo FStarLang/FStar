@@ -60,17 +60,19 @@ instance nbe_e_tf : NBETerm.embedding tf =
   mk_emb em un (fun () -> lid_as_typ PC.bool_lid [] []) (Syntax.Embeddings.emb_typ_of tf)
 
 let lt (r1 r2 : Real.real) : ML (option tf) =
-  Real.cmp r1 r2 |> Class.Monad.fmap (function Lt -> T | _ -> F)
+  Some (match Real.cmp r1 r2 with Lt -> T | _ -> F)
 let le (r1 r2 : Real.real) : ML (option tf) =
-  Real.cmp r1 r2 |> Class.Monad.fmap (function Lt | Eq -> T | _ -> F)
+  Some (match Real.cmp r1 r2 with Lt | Eq -> T | _ -> F)
 let gt (r1 r2 : Real.real) : ML (option tf) =
-  Real.cmp r1 r2 |> Class.Monad.fmap (function Gt -> T | _ -> F)
+  Some (match Real.cmp r1 r2 with Gt -> T | _ -> F)
 let ge (r1 r2 : Real.real) : ML (option tf) =
-  Real.cmp r1 r2 |> Class.Monad.fmap (function Gt | Eq -> T | _ -> F)
+  Some (match Real.cmp r1 r2 with Gt | Eq -> T | _ -> F)
 
-let is_lit (s:string) (t:term)  : ML bool =
-  match try_unembed_simple t with
-  | Some r -> Real.cmp r (Real.Real s) = Some Eq
+let is_lit (v:Real.real) (t:term)  : ML bool =
+  (* NB: e_real is not an instance (it would overlap with e_real_literal),
+  so it is passed explicitly here and below. *)
+  match try_unembed_simple #Real.real #e_real t with
+  | Some r -> Real.cmp r v = Eq
   | _ -> false
 
 let bogus_cbs = {
@@ -78,15 +80,15 @@ let bogus_cbs = {
     NBETerm.translate = (fun _ -> failwith "bogus_cbs translate");
 }
 
-let is_nbe_lit (s:string) (t:NBETerm.t)  : ML bool =
+let is_nbe_lit (v:Real.real) (t:NBETerm.t)  : ML bool =
   match NBETerm.unembed NBETerm.e_real bogus_cbs t with
-  | Some r -> Real.cmp r (Real.Real s) = Some Eq
+  | Some r -> Real.cmp r v = Eq
   | _ -> false
 
-let is_zero     = is_lit "0.0"
-let is_one      = is_lit "1.0"
-let is_nbe_zero = is_nbe_lit "0.0"
-let is_nbe_one  = is_nbe_lit "1.0"
+let is_zero     = is_lit (Real.of_int 0)
+let is_one      = is_lit (Real.of_int 1)
+let is_nbe_zero = is_nbe_lit (Real.of_int 0)
+let is_nbe_one  = is_nbe_lit (Real.of_int 1)
 
 let add_op : psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> ML (option term)
 = fun psc _norm_cb _us args ->
@@ -124,21 +126,23 @@ let mul_op_nbe : nbe_interp_t =
       else None
     | _ -> None
 
-let of_int (i:int) : Real.real =
-  Real.Real (string_of_int i ^ ".0")
+let of_int (i:int) : Real.real = Real.of_int i
 
 let as_primitive_step is_strong l arity u_arity (f:interp_t) (f_nbe : nbe_interp_t) =
   as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe)
 
 let ops : list primitive_step =
-  let s1 = mk1 0 PC.real_of_int of_int in
+  let s1 = mk1 0 PC.real_of_int #e_int #NBETerm.e_int #e_real #NBETerm.e_real of_int in
   let s2 = as_primitive_step true PC.real_op_Plus 2 0 add_op add_op_nbe in
   let s3 = as_primitive_step true PC.real_op_Star 2 0 mul_op mul_op_nbe in
   [s1; s2; s3]
 
-let simplify_ops = [
-  mk2' 0 PC.real_op_LT  lt lt;
-  mk2' 0 PC.real_op_LTE le le;
-  mk2' 0 PC.real_op_GT  gt gt;
-  mk2' 0 PC.real_op_GTE ge ge;
+let simplify_ops =
+  let mk2_real name f g =
+    mk2' 0 name #e_real #NBETerm.e_real #e_real #NBETerm.e_real #e_tf #nbe_e_tf f g
+  in [
+  mk2_real PC.real_op_LT  lt lt;
+  mk2_real PC.real_op_LTE le le;
+  mk2_real PC.real_op_GT  gt gt;
+  mk2_real PC.real_op_GTE ge ge;
 ]

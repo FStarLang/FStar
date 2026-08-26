@@ -269,8 +269,8 @@ let e_vconst =
             S.mk_Tm_app ref_C_Reflect.t [S.as_arg (embed rng ns)]
                         Range.dummyRange
 
-        | C_Real s ->
-            S.mk_Tm_app ref_C_Real.t [S.as_arg (embed rng s)]
+        | C_Real r ->
+            S.mk_Tm_app ref_C_Real.t [S.as_arg (embed #_ #e_real_literal rng r)]
                         Range.dummyRange
 
         | C_Char s ->
@@ -292,7 +292,7 @@ let e_vconst =
       | _ when S.fv_eq_lid fv ref_C_Range.lid -> run args (C_Range <$$> e_range)
       | _ when S.fv_eq_lid fv ref_C_Reify.lid -> run args (pure C_Reify)
       | _ when S.fv_eq_lid fv ref_C_Reflect.lid -> run args (C_Reflect <$$> e_string_list)
-      | _ when S.fv_eq_lid fv ref_C_Real.lid -> run args (C_Real <$$> e_string)
+      | _ when S.fv_eq_lid fv ref_C_Real.lid -> run args (C_Real <$$> e_real_literal)
       | _ when S.fv_eq_lid fv ref_C_Char.lid -> run args (C_Char <$$> e_char)
       | _ -> None
     in
