@@ -66,7 +66,7 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Range r1, C_Range r2 -> Eq
     | C_Reify, C_Reify -> Eq
     | C_Reflect l1, C_Reflect l2 -> compare_name l1 l2
-    | C_Real r1, C_Real r2 -> order_from_int (compare_string r1 r2)
+    | C_Real r1, C_Real r2 -> order_from_int (FStar.RealLiteral.compare r1 r2)
     | C_Char c1, C_Char c2 -> order_from_int (Char.int_of_char c1 - Char.int_of_char c2)
     (* Different constructors *)
     | C_Unit,  _ -> Lt       | _, C_Unit  -> Gt

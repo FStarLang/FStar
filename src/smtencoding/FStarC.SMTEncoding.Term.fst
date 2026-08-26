@@ -286,7 +286,7 @@ let rec hash_of_term' t : ML string =
   match t with
   | Integer i ->  i
   | String s -> s
-  | Real r -> r
+  | Real r -> FStarC.Real.to_string r
   | BoundV i  -> "@"^show i
   | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
   | App op tms _ -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
@@ -327,7 +327,7 @@ let mkFalse         = App FalseOp [] Range.dummyRange
 let mkUnreachable   = App (Var "Unreachable") [] Range.dummyRange
 let mkInteger i     = Integer (BU.ensure_decimal i)
 let mkInteger' i    = mkInteger (show i)
-let mkReal i        = Real i
+let mkReal r        = Real r
 let mkBoundV i      = BoundV i
 let mkFreeV x       = FreeV x
 let mkApp' (op, args) = App op args Range.dummyRange
@@ -517,7 +517,7 @@ let check_pattern_ok (t:term) : option term =
   match t with
   | Integer n               -> Format.fmt1 "(Integer %s)" n
   | String s                -> Format.fmt1 "(String %s)" s
-  | Real r                  -> Format.fmt1 "(Real %s)" r
+  | Real r                  -> Format.fmt1 "(Real %s)" (FStarC.Real.to_string r)
   | BoundV  n               -> Format.fmt1 "(BoundV %s)" (show n)
   | FreeV  fv               -> Format.fmt1 "(FreeV %s)" (fv_name fv)
   | App op l _             -> Format.fmt2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
@@ -822,7 +822,7 @@ let termToSmt
         let aux = aux (depth + 1) in
         match t with
         | Integer i -> doc_of_string i
-        | Real r -> doc_of_string r
+        | Real r -> doc_of_string (FStarC.Real.to_smt_string r)
         | String s ->
           let id_opt = SMap.try_find string_cache s in
           doc_of_string (match id_opt with

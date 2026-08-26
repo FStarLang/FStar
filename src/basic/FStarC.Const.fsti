@@ -44,7 +44,7 @@ type sconst =
   | Const_bool        of bool
   | Const_int         of string & option (signedness & width) (* When None, means "mathematical integer", i.e. Prims.int. *)
   | Const_char        of char (* unicode code point: char in F#, int in OCaml *)
-  | Const_real        of string
+  | Const_real        of FStarC.Real.real
   | Const_string      of string & range                      (* UTF-8 encoded *)
   | Const_range_of                                           (* `range_of` primitive *)
   | Const_set_range_of                                       (* `set_range_of` primitive *)

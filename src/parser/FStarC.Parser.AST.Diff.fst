@@ -51,7 +51,7 @@ let eq_sconst (c1 c2: sconst) : ML bool =
     | Const_int (s1, sw1), Const_int (s2, sw2) -> s1=s2 && sw1=sw2
     | Const_char c1, Const_char c2 -> c1 = c2
     | Const_string (s1, _), Const_string (s2, _) -> s1 = s2
-    | Const_real s1, Const_real s2 -> s1 = s2
+    | Const_real r1, Const_real r2 -> Real.cmp r1 r2 = Order.Eq
     | Const_range r1, Const_range r2 -> r1 = r2
     | Const_reify _, Const_reify _ -> true
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2

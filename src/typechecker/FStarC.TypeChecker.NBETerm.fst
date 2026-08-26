@@ -205,7 +205,7 @@ let constant_to_string (c: constant) : ML string =
   | String (s, _) -> Format.fmt1 "\"%s\"" s
   | Range r -> Format.fmt1 "Range %s" (Range.string_of_range r)
   | SConst s -> show s
-  | Real s -> Format.fmt1 "Real %s" s
+  | Real r -> Format.fmt1 "Real %s" (Real.to_string r)
 
 let rec t_to_string (x:t) : ML string =
   match x.nbe_t with
@@ -400,13 +400,13 @@ let e_int : embedding int =
     mk_emb' em un (fun () -> lid_as_typ PC.int_lid [] [])  (SE.emb_typ_of int)
 
 let e_real : embedding Real.real =
-    let em _cb (Real.Real c) = Constant (Real c) in
+    let em _cb (r:Real.real) = Constant (Real r) in
     let un _cb c =
         match c with
-        | Constant (Real a) -> Some (Real.Real a)
+        | Constant (Real r) -> Some r
         | _ -> None
     in
-    mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Real.real)
+    mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Real.real #SE.e_real)
 
 // Embedding at option type
 let e_option (ea : embedding 'a) : Prims.Tot _ =

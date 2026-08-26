@@ -275,6 +275,30 @@ Guidelines for the changelog:
     This is a breaking change for reflection clients that match exhaustively on
     `vconst`; such code should add a `C_MachineInt` case.
 
+  * Real literals are now parsed into an exact mantissa/exponent
+    representation as soon as they enter the syntax, instead of being kept as
+    raw strings. Two soundness bugs are fixed by this: the payload of
+    `C_Real` used to be an unvalidated string that the SMT encoder printed
+    verbatim into the query, so a crafted string could inject arbitrary
+    SMT-LIB (including `(assert false)`) into it
+    (https://github.com/FStarLang/FStar/issues/4481); and the normalizer's
+    comparison of real literals was wrong for negative reals, disagreeing with
+    the SMT solver and proving `False`
+    (https://github.com/FStarLang/FStar/issues/4486).
+
+    The payload of `FStar.Stubs.Reflection.V2.Data.C_Real` is no longer a
+    string, but a value of the new type `FStar.RealLiteral.real_literal`,
+    which is the very same type the compiler uses for real constants in
+    terms. It is a record of a `mantissa` and an `exponent`, denoting
+    `mantissa * 10^exponent`, refined to be in canonical form (see
+    `FStar.RealLiteral.canonical`), so that two literals are equal exactly
+    when they denote the same number. Use `FStar.RealLiteral.mk`,
+    `of_int` or `of_string` to build one (all of them canonicalize), and
+    `to_string` or `compare` to consume one. For example, `01.0R` and
+    `1.000R` are both inspected as `C_Real (mk 1 0)`.
+
+    This is a breaking change for reflection clients using `C_Real`.
+
 ## Effects
 
   * A pre- or postcondition can no longer determine an implicit argument. A

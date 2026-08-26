@@ -59,7 +59,7 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.t
   | SConst of FStarC.Const.sconst
-  | Real of string
+  | Real of Real.real
 
 // Atoms represent the head of an irreducible application
 // They can either be variables
@@ -283,7 +283,11 @@ instance val e_bool   : embedding bool
 instance val e_char   : embedding char
 instance val e_string : embedding string
 instance val e_int    : embedding int
-instance val e_real   : embedding Real.real
+
+(* Not an instance: see the note on e_real in FStarC.Syntax.Embeddings.fsti.
+The compiler-side type Real.real represents both FStar.Real.real (here) and
+FStar.RealLiteral.real_literal, so this must be passed explicitly. *)
+val e_real   : embedding Real.real
 instance val e_option : embedding 'a -> Prims.Tot (embedding (option 'a))
 instance val e_tuple2 : embedding 'a -> embedding 'b -> Prims.Tot (embedding ('a & 'b))
 instance val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> Prims.Tot (embedding ('a & 'b & 'c))

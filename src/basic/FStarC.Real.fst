@@ -17,44 +17,30 @@ module FStarC.Real
 
 open FStarC.Effect
 open FStarC.Order
-module BU = FStarC.Util
 
-let rec dropWhile f xs =
-  match xs with
-  | [] -> []
-  | x::xs ->
-    if f x
-    then dropWhile f xs
-    else x::xs
+module RL = FStar.RealLiteral
+module RLP = FStar.RealLiteral.Parse
 
-let int_frac (r : real): option (string & string) =
-  match String.split ['.'] r._0 with
-  | [i; f] ->
-    let i = String.list_of_string i in
-    let f = String.list_of_string f in
-    let i = i |> dropWhile (fun c -> c = '0') in
-    let f = f |> List.rev |> dropWhile (fun c -> c = '0') |> List.rev in
-    Some (String.string_of_list i, String.string_of_list f)
-  | _ -> None
+(* The representation of real literals lives in ulib (FStar.RealLiteral) so
+that the reflection API can expose the very same type. This module is just a
+thin wrapper over it, adding the compiler-specific bits. *)
 
-let max x y =
-  if x > y then x else y
+let mantissa (r : real) : int = r.RL.mantissa
+let exponent (r : real) : int = r.RL.exponent
 
-let zeropad_match (f1 : string) (f2 : string) =
-  let len = max (String.length f1) (String.length f2) in
-  let f1 = f1 ^ String.make (len - String.length f1) '0' in
-  let f2 = f2 ^ String.make (len - String.length f2) '0' in
-  f1, f2
+let mk = RL.mk
 
-let cmp (r1 r2 : real) =
-  match int_frac r1, int_frac r2 with
-  | Some (i1, f1), Some (i2, f2) ->
-    let f1, f2 = zeropad_match f1 f2 in
-    let i1 = BU.int_of_string i1 in
-    let i2 = BU.int_of_string i2 in
-    let f1 = BU.int_of_string f1 in
-    let f2 = BU.int_of_string f2 in
-    Some <| FStarC.Class.Ord.cmp (i1, f1) (i2, f2) // lex order
+let try_mk (m e : int) : option real =
+  let r = mk m e in
+  if mantissa r = m && exponent r = e then Some r else None
+let of_int = RL.of_int
+let of_string = RLP.of_string
+let to_string = RL.to_string
 
-  | _ ->
-    None
+let to_smt_string (r : real) : string =
+  if mantissa r < 0
+  then "(- " ^ to_string (mk (- (mantissa r)) (exponent r)) ^ ")"
+  else to_string r
+
+let cmp (r1 r2 : real) : order =
+  compare_int (RL.compare r1 r2) 0

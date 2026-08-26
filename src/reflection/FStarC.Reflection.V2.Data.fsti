@@ -64,7 +64,9 @@ type vconst =
     | C_Range of Range.t
     | C_Reify
     | C_Reflect of name
-    | C_Real of string (* Real literals are represented as a string e.g. "1.2" *)
+    | C_Real of FStarC.Real.real
+    (* Real literals are represented exactly, by their (canonical)
+     mantissa and exponent: see FStar.RealLiteral. *)
     | C_Char of FStar.Char.char
 
 type universes = list universe

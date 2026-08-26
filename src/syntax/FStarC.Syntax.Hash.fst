@@ -273,7 +273,7 @@ and hash_constant c
                              (mix (of_string s)
                                     (hash_option hash_sw o))
   | Const_char c -> mix (of_int 317) (of_int (FStar.Char.int_of_char c))
-  | Const_real s -> mix (of_int 337) (of_string s)
+  | Const_real r -> mix (of_int 337) (of_string (Real.to_string r))
   | Const_string (s, _) -> mix (of_int 349) (of_string s)
   | Const_range_of -> of_int 353
   | Const_set_range_of -> of_int 359
@@ -568,7 +568,7 @@ and equal_constant c1 c2
   | Const_bool b1, Const_bool b2 -> b1 = b2
   | Const_int (s1, o1), Const_int(s2, o2) -> s1=s2 && o1=o2
   | Const_char c1, Const_char c2 -> c1=c2
-  | Const_real s1, Const_real s2 -> s1=s2
+  | Const_real r1, Const_real r2 -> Real.cmp r1 r2 = Order.Eq
   | Const_string (s1, _), Const_string (s2, _) -> s1=s2
   | Const_range_of, Const_range_of
   | Const_set_range_of, Const_set_range_of -> true
