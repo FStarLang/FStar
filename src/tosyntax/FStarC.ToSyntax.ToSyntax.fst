@@ -501,12 +501,10 @@ let rec desugar_maybe_non_constant_universe t
   | Wild -> Inr U_unknown
   | Uvar u -> Inr (U_name u)
 
-  | Const (Const_int (repr, _)) ->
-      (* TODO : That might be a little dangerous... *)
-      let n = int_of_string repr in
+  | Const (Const_int (n, _)) ->
       if n < 0
       then raise_error t Errors.Fatal_NegativeUniverseConstNotSupported
-             ("Negative universe constant  are not supported : " ^ repr);
+             ("Negative universe constant  are not supported : " ^ show n);
       Inl n
   | Op (_op_plus, [t1 ; t2]) ->
       assert (Ident.string_of_id _op_plus = "+") ;
@@ -927,7 +925,7 @@ and desugar_typ env e : ML S.term =
     check_no_aq aq;
     t
 
-and desugar_machine_integer env repr (_sw_:(FStarC.Const.signedness & FStarC.Const.width)) range : ML _ = let (signedness, width) = _sw_ in
+and desugar_machine_integer env (repr:int) (base:int_base) (_sw_:(FStarC.Const.signedness & FStarC.Const.width)) range : ML _ = let (signedness, width) = _sw_ in
   let tnm = if width = Sizet then "FStar.SizeT" else
     "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
@@ -937,9 +935,12 @@ and desugar_machine_integer env repr (_sw_:(FStarC.Const.signedness & FStarC.Con
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
+  (* Note: the authoritative check is in FStarC.TypeChecker.TcTerm.tc_constant;
+     this one only exists to give a good error message on the source syntax. *)
   if not (within_bounds repr signedness width)
   then FStarC.Errors.log_issue range Errors.Error_OutOfRange
-         (Format.fmt2 "%s is not in the expected range for %s" repr tnm);
+         (Format.fmt2 "%s is not in the expected range for %s"
+            (string_of_int_literal repr base) tnm);
   let private_intro_nm = tnm ^
     ".__" ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
   in
@@ -961,7 +962,7 @@ and desugar_machine_integer env repr (_sw_:(FStarC.Const.signedness & FStarC.Con
     | None ->
       raise_error range Errors.Fatal_UnexpectedNumericLiteral
         (Format.fmt1 "Unexpected numeric literal.  Restart F* to load %s." tnm) in
-  let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
+  let repr' = S.mk (Tm_constant (Const_int (repr, base))) range in
   let app = S.mk_Tm_app lid [repr', S.as_aqual_implicit false] range in
   S.mk (Tm_meta {tm=app;
                  meta=Meta_desugared (Machine_integer (signedness, width))}) range
@@ -1006,8 +1007,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         failwith "Attributes should not be desugared by desugar_term_maybe_top"
         // desugar_attributes env ts
 
-    | Const (Const_int (i, Some size)) ->
-        desugar_machine_integer env i size top.range, noaqs
+    | Const (Const_machine_int (i, b, sw, w)) ->
+        desugar_machine_integer env i b (sw, w) top.range, noaqs
 
     | Const c ->
         mk (Tm_constant c), noaqs

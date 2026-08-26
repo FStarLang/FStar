@@ -299,6 +299,38 @@ Guidelines for the changelog:
 
     This is a breaking change for reflection clients using `C_Real`.
 
+  * Integer literals are likewise now parsed into their (mathematical)
+    integer value as soon as they enter the syntax, instead of being kept as
+    raw strings. The base the literal was written in (decimal, `0x`, `0o` or
+    `0b`) is retained separately, as a value of the new type
+    `FStar.IntegerLiteral.int_base`, and is used only for pretty-printing and
+    extraction.
+
+    Accordingly, `FStar.Stubs.Reflection.V2.Data.vconst` now reads
+
+    ```
+    | C_Int        : int -> sealed int_base -> vconst
+    | C_MachineInt : int -> sealed int_base -> int_signedness -> int_width -> vconst
+    ```
+
+    The base is **sealed**: it is presentational metadata, and exposing it in
+    the logical fragment would be unsound, since `0x10` and `16` are the same
+    constant as far as the normalizer, the SMT solver and
+    `FStar.Reflection.TermEq.term_eq` are concerned. Metaprograms can still
+    read it with `FStar.Tactics.unseal`. Use `FStar.Sealed.seal Dec` when
+    building a literal.
+
+    Relatedly, the range check on machine integer literals is now performed by
+    the typechecker (`tc_constant`) rather than only during desugaring, so
+    out-of-range constants built through `pack_const` are rejected as well.
+
+    This is a breaking change for reflection clients using `C_Int` or
+    `C_MachineInt`.
+
+    Note that, since only the base is retained, the pretty-printer no longer
+    reproduces the exact spelling of a literal: leading zeros are dropped and
+    hexadecimal digits are printed in lower case (`0X1F` is printed as `0x1f`).
+
 ## Effects
 
   * A pre- or postcondition can no longer determine an implicit argument. A

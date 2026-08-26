@@ -54,8 +54,8 @@ val const_eq : comparator_for vconst
 let const_eq c1 c2 =
   match c1, c2 with
   | C_Unit, C_Unit -> true
-  | C_Int i1, C_Int i2 -> i1 = i2
-  | C_MachineInt i1 s1 w1, C_MachineInt i2 s2 w2 ->
+  | C_Int i1 _, C_Int i2 _ -> i1 = i2
+  | C_MachineInt i1 _ s1 w1, C_MachineInt i2 _ s2 w2 ->
     i1 = i2 && s1 = s2 && w1 = w2
   | C_True, C_True -> true
   | C_False, C_False -> true

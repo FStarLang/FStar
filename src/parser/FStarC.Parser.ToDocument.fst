@@ -2218,7 +2218,8 @@ and p_constant : _ -> ML _ = function
   | Const_real r -> str (Real.to_string r ^ "R")
   | Const_char x -> p_char_literal x
   | Const_string(s, _) -> p_string_literal s
-  | Const_int (repr, sign_width_opt) ->
+  | Const_int (v, b) -> str (string_of_int_literal v b)
+  | Const_machine_int (v, b, sw, w) ->
       let signedness = function
           | Unsigned -> str "u"
           | Signed -> empty
@@ -2236,8 +2237,8 @@ and p_constant : _ -> ML _ = function
         | _, Sizet -> str "sz"
         | _ -> signedness s ^^ width w
       in
-      let ending = default_or_map empty suffix sign_width_opt in
-      str repr ^^ ending
+      let ending = suffix (sw, w) in
+      str (string_of_int_literal v b) ^^ ending
   | Const_range_of -> str "range_of"
   | Const_set_range_of -> str "set_range_of"
   | Const_range r -> str (Range.string_of_range r)
@@ -2263,7 +2264,7 @@ and p_universeFrom u : ML _ = match u.tm with
 
 and p_atomicUniverse u : ML _ = match u.tm with
   | Wild -> underscore
-  | Const (Const_int (r, sw)) -> p_constant (Const_int (r, sw))
+  | Const (Const_int (v, b)) -> p_constant (Const_int (v, b))
   | Uvar id -> str (string_of_id id)
   | Paren u -> soft_parens_with_nesting (p_universeFrom u)
   | App _ -> soft_parens_with_nesting (p_universeFrom u)

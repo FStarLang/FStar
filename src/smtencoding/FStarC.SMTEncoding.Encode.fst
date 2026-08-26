@@ -461,7 +461,7 @@ let smt_arity_attribute env (lid:lident) : ML (option int) =
     match U.get_attribute Const.smt_arity_attr attrs with
     | Some ((a, _) :: _) ->
       (match (SS.compress a).n with
-       | Tm_constant (Const_int (s, None)) -> Some (BU.int_of_string s)
+       | Tm_constant (Const_int (i, _)) -> Some i
        | _ -> failwith (Format.fmt2 "Expected an integer literal in [@@smt_arity] on %s, got %s"
                           (show lid) (show a)))
     | _ -> None

@@ -156,10 +156,11 @@ let inspect_int_width (w:C.width) : RD.int_width =
 let inspect_const (c:sconst) : ML vconst =
     match c with
     | FStarC.Const.Const_unit -> C_Unit
-    | FStarC.Const.Const_int (s, None) -> C_Int (BU.int_of_string s)
-    | FStarC.Const.Const_int (s, Some (signedness, width)) ->
+    | FStarC.Const.Const_int (i, base) -> C_Int (i, Sealed.seal base)
+    | FStarC.Const.Const_machine_int (i, base, signedness, width) ->
       C_MachineInt (
-        BU.int_of_string s,
+        i,
+        Sealed.seal base,
         inspect_int_signedness signedness,
         inspect_int_width width)
     | FStarC.Const.Const_bool true  -> C_True
@@ -350,8 +351,8 @@ let pack_comp (cv : comp_view) : ML comp =
 let pack_const (c:vconst) : ML sconst =
     match c with
     | C_Unit         -> C.Const_unit
-    | C_Int i        -> C.Const_int (show i, None)
-    | C_MachineInt (i, signedness, width) ->
+    | C_Int (i, base) -> C.Const_int (i, Sealed.unseal base)
+    | C_MachineInt (i, base, signedness, width) ->
       let signedness =
         match signedness with
         | RD.Signed -> C.Signed
@@ -365,7 +366,7 @@ let pack_const (c:vconst) : ML sconst =
         | RD.Int64 -> C.Int64
         | RD.Sizet -> C.Sizet
       in
-      C.Const_int (show i, Some (signedness, width))
+      C.Const_machine_int (i, Sealed.unseal base, signedness, width)
     | C_True         -> C.Const_bool true
     | C_False        -> C.Const_bool false
     | C_String s     -> C.Const_string (s, Range.dummyRange)

@@ -1002,7 +1002,7 @@ let exp_true_bool : term = exp_bool true
 let exp_false_bool : term = exp_bool false
 let exp_unit : term = mk (Tm_constant (Const_unit)) dummyRange
 (* Makes an (unbounded) integer from its string repr. *)
-let exp_int s : ML term = mk (Tm_constant (Const_int (s,None))) dummyRange
+let exp_int i : ML term = mk (Tm_constant (Const_int (i, Dec))) dummyRange
 let exp_char c : ML term = mk (Tm_constant (Const_char c)) dummyRange
 let exp_string s : ML term = mk (Tm_constant (Const_string (s, dummyRange))) dummyRange
 

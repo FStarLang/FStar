@@ -13,7 +13,7 @@ instance embeddable_bool : embeddable bool = {
 }
 
 instance embeddable_int : embeddable int = {
-  embed = (fun i -> pack_ln (Tv_Const (C_Int i)));
+  embed = (fun i -> pack_ln (Tv_Const (C_Int i (FStar.Sealed.seal Dec))));
   typ = (`int);
 }
 

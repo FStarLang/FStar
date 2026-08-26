@@ -254,7 +254,7 @@ let e_int =
             rng
             (fun () -> ty)
             i
-            (fun () -> U.exp_int (show i))
+            (fun () -> U.exp_int i)
     in
     let un (t:term) _norm : ML (option int) =
         lazy_unembed
@@ -264,7 +264,7 @@ let e_int =
             (fun () -> ty)
             (fun t ->
                 match t.n with
-                | Tm_constant(FStarC.Const.Const_int (s, _)) -> Some (BU.int_of_string s)
+                | Tm_constant(FStarC.Const.Const_int (i, _)) -> Some i
                 | _ -> None)
     in
     mk_emb_full

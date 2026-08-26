@@ -144,7 +144,7 @@ let term_as_formula' (t:term) : Tac formula =
             App h0 (fst t)
         end
 
-    | Tv_Const (C_Int i) ->
+    | Tv_Const (C_Int i _) ->
         IntLit i
 
     (* Not formulas. *)
@@ -210,7 +210,7 @@ let formula_as_term_view (f:formula) : Tot term_view =
         Tv_FVar fv
 
     | IntLit i ->
-        Tv_Const (C_Int i)
+        Tv_Const (C_Int i (FStar.Sealed.seal Dec))
 
     | F_Unknown ->
         Tv_Unknown

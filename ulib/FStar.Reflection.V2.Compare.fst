@@ -53,8 +53,8 @@ let compare_int_width (w1 w2:int_width) : order =
 let compare_const (c1 c2 : vconst) : order =
     match c1, c2 with
     | C_Unit, C_Unit -> Eq
-    | C_Int i, C_Int j -> order_from_int (i - j)
-    | C_MachineInt i1 s1 w1, C_MachineInt i2 s2 w2 ->
+    | C_Int i _, C_Int j _ -> order_from_int (i - j)
+    | C_MachineInt i1 _ s1 w1, C_MachineInt i2 _ s2 w2 ->
       let c = order_from_int (i1 - i2) in
       if c <> Eq then c
       else
@@ -70,8 +70,8 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Char c1, C_Char c2 -> order_from_int (Char.int_of_char c1 - Char.int_of_char c2)
     (* Different constructors *)
     | C_Unit,  _ -> Lt       | _, C_Unit  -> Gt
-    | C_Int _, _ -> Lt       | _, C_Int _ -> Gt
-    | C_MachineInt _ _ _, _ -> Lt | _, C_MachineInt _ _ _ -> Gt
+    | C_Int _ _, _ -> Lt       | _, C_Int _ _ -> Gt
+    | C_MachineInt _ _ _ _, _ -> Lt | _, C_MachineInt _ _ _ _ -> Gt
     | C_True,  _ -> Lt       | _, C_True  -> Gt
     | C_False, _ -> Lt       | _, C_False -> Gt
     | C_String _, _ -> Lt    | _, C_String _ -> Gt

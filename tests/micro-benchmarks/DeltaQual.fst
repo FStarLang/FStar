@@ -16,6 +16,6 @@ let test () =
         match T.term_as_formula g with
         | Comp (Eq _) tv _ ->
           (match T.inspect tv with
-           | Tv_Const (C_Int 0) -> T.trefl()
+           | Tv_Const (C_Int 0 _) -> T.trefl()
            | _ -> T.fail "unreduced")
         | _ -> T.fail "unreduced")

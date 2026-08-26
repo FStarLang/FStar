@@ -2044,18 +2044,31 @@ and tc_constant (env:env_t) r (c:sconst) : ML typ =
      match c with
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
-      | Const_int (_, None) -> t_int
-      | Const_int (_, Some msize) ->
-        tconst (match msize with
+      | Const_int _ -> t_int
+      | Const_machine_int (v, base, sw, w) ->
+        let lid =
+          match sw, w with
           | Signed, Int8 -> Const.int8_lid
           | Signed, Int16 -> Const.int16_lid
           | Signed, Int32 -> Const.int32_lid
           | Signed, Int64 -> Const.int64_lid
+          | Signed, Sizet ->
+            raise_error r Errors.Fatal_UnsupportedConstant
+              "Ill-typed machine integer constant: there are no signed size_t literals"
           | Unsigned, Int8 -> Const.uint8_lid
           | Unsigned, Int16 -> Const.uint16_lid
           | Unsigned, Int32 -> Const.uint32_lid
           | Unsigned, Int64 -> Const.uint64_lid
-          | Unsigned, Sizet -> Const.sizet_lid)
+          | Unsigned, Sizet -> Const.sizet_lid
+        in
+        (* This is the authoritative range check for machine integer
+           literals: the syntax type does not enforce it, so constants built
+           by reflection (pack_const) are checked here too. *)
+        if not (within_bounds v sw w)
+        then raise_error r Errors.Error_OutOfRange
+               (Format.fmt2 "%s is not in the expected range for %s"
+                  (string_of_int_literal v base) (show lid));
+        tconst lid
       | Const_string _ -> t_string
       | Const_real _ -> t_real
       | Const_char _ ->
@@ -3527,7 +3540,8 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
            *     we now have scrutinee = c, so we need decidable equality on c
            *)
           (match c with
-           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_string _ -> ()
+           | Const_unit | Const_bool _ | Const_int _ | Const_machine_int _
+            | Const_char _ | Const_string _ -> ()
            | _ ->
              fail (Format.fmt1
                      "Pattern matching a constant that does not have decidable equality: %s"
@@ -3902,7 +3916,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
 
               [U.mk_decidable_eq (tc_constant env pat_exp.pos c) (force_scrutinee ()) pat_exp]
 
-            | Pat_constant (FStarC.Const.Const_int(_, Some _)), _ ->
+            | Pat_constant (FStarC.Const.Const_machine_int _), _ ->
               //machine integer pattern, cf. #1572
               let _, t, _ =
                 let env, _ = Env.clear_expected_typ env in

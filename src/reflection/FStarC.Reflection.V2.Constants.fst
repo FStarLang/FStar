@@ -36,12 +36,21 @@ let fstar_syntax_syntax_lid s = Ident.lid_of_path (["FStar"; "Stubs"; "Syntax"; 
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Stubs"; "Reflection"]@s) Range.dummyRange
 
+let fstar_integer_literal_lid s = Ident.lid_of_path ["FStar"; "IntegerLiteral"; s] Range.dummyRange
+
 let fstar_refl_types_lid     s = fstar_refl_lid ["Types";     s]
 let fstar_refl_builtins_lid  s = fstar_refl_lid ["V2"; "Builtins";  s]
 let fstar_refl_data_lid      s = fstar_refl_lid ["V2"; "Data";      s]
 
 let fstar_syntax_syntax_const s =
     let lid = fstar_syntax_syntax_lid s in
+    { lid = lid
+    ; fv  = lid_as_fv lid (Some Data_ctor)
+    ; t   = tdataconstr lid
+    }
+
+let fstar_integer_literal_const s =
+    let lid = fstar_integer_literal_lid s in
     { lid = lid
     ; fv  = lid_as_fv lid (Some Data_ctor)
     ; t   = tdataconstr lid
@@ -133,6 +142,7 @@ let fstar_refl_bv_view          = mk_refl_data_lid_as_term "bv_view"
 let fstar_refl_bv_view_fv       = mk_refl_data_lid_as_fv   "bv_view"
 let fstar_refl_binder_view      = mk_refl_data_lid_as_term "binder_view"
 let fstar_refl_binder_view_fv   = mk_refl_data_lid_as_fv   "binder_view"
+let fstar_refl_int_base_fv      = fvconst (fstar_integer_literal_lid "int_base")
 let fstar_refl_int_signedness_fv = mk_refl_data_lid_as_fv  "int_signedness"
 let fstar_refl_int_width_fv     = mk_refl_data_lid_as_fv   "int_width"
 let fstar_refl_vconst           = mk_refl_data_lid_as_term "vconst"
@@ -234,6 +244,10 @@ let ref_UN          = fstar_syntax_syntax_const ["UN"]
 let ref_UD          = fstar_syntax_syntax_const ["UD"]
 
 (* const *)
+let ref_Dec         = fstar_integer_literal_const "Dec"
+let ref_Hex         = fstar_integer_literal_const "Hex"
+let ref_Oct         = fstar_integer_literal_const "Oct"
+let ref_Bin         = fstar_integer_literal_const "Bin"
 let ref_Signed      = fstar_refl_data_const "Signed"
 let ref_Unsigned    = fstar_refl_data_const "Unsigned"
 let ref_Int8        = fstar_refl_data_const "Int8"

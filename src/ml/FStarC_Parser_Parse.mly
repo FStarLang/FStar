@@ -47,6 +47,17 @@ let real_of_lexeme (s:string) : FStarC_Real.real =
   | Some r -> r
   | None -> failwith ("Invalid real literal: " ^ s)
 
+(* Integer literals: the lexeme may be written in any of the bases accepted by
+the lexer (decimal, 0x, 0o, 0b); we store the value together with the base it
+was written in, which is only used for pretty-printing and extraction. *)
+let int_of_lexeme (s:string) : FStarC_Const.sconst =
+  let (v, b) = FStarC_Const.parse_int_literal s in
+  Const_int (v, b)
+
+let machine_int_of_lexeme (s:string) sw w : FStarC_Const.sconst =
+  let (v, b) = FStarC_Const.parse_int_literal s in
+  Const_machine_int (v, b, sw, w)
+
 let none_to_empty_list x =
   match x with
   | None -> []
@@ -747,10 +758,10 @@ atomicPattern:
       { let r = rr2 $loc(tok) $loc(c) in
         let c =
           match c with
-          | Const_int (s, swopt) ->
-            (match swopt with
-             | None
-             | Some (Signed, _) -> Const_int ("-" ^ s, swopt)
+          | Const_int (v, b) -> Const_int (Z.neg v, b)
+          | Const_machine_int (v, b, sw, w) ->
+            (match sw with
+             | Signed -> Const_machine_int (Z.neg v, b, sw, w)
              | _ -> raise_error_text r Fatal_SyntaxError "Syntax_error: negative integer constant with unsigned width")
           | _ -> raise_error_text r Fatal_SyntaxError "Syntax_error: negative constant that is not an integer"
         in
@@ -1637,22 +1648,22 @@ constant:
   | LPAREN_RPAREN { Const_unit }
   | n=INT
      {
-        Const_int (n, None)
+        int_of_lexeme n
      }
   | c=CHAR { Const_char c }
   | s=STRING { Const_string (s, rr $loc) }
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
   | r=REAL { Const_real (real_of_lexeme r) }
-  | n=UINT8  { Const_int (n, Some (Unsigned, Int8)) }
-  | n=INT8   { Const_int (n, Some (Signed,   Int8)) }
-  | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
-  | n=INT16  { Const_int (n, Some (Signed,   Int16)) }
-  | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
-  | n=INT32  { Const_int (n, Some (Signed,   Int32)) }
-  | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
-  | n=INT64  { Const_int (n, Some (Signed,   Int64)) }
-  | n=SIZET  { Const_int (n, Some (Unsigned, Sizet)) }
+  | n=UINT8 { machine_int_of_lexeme n Unsigned Int8 }
+  | n=INT8 { machine_int_of_lexeme n Signed Int8 }
+  | n=UINT16 { machine_int_of_lexeme n Unsigned Int16 }
+  | n=INT16 { machine_int_of_lexeme n Signed Int16 }
+  | n=UINT32 { machine_int_of_lexeme n Unsigned Int32 }
+  | n=INT32 { machine_int_of_lexeme n Signed Int32 }
+  | n=UINT64 { machine_int_of_lexeme n Unsigned Int64 }
+  | n=INT64 { machine_int_of_lexeme n Signed Int64 }
+  | n=SIZET { machine_int_of_lexeme n Unsigned Sizet }
   (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify None }
   | RANGE_OF     { Const_range_of }
@@ -1686,7 +1697,7 @@ atomicUniverse:
       { mk_term Wild (rr $loc) Expr }
   | n=INT
       {
-        mk_term (Const (Const_int (n, None))) (rr $loc(n)) Expr
+        mk_term (Const (int_of_lexeme n)) (rr $loc(n)) Expr
       }
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
   | LPAREN u=universeFrom RPAREN

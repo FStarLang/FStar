@@ -70,7 +70,7 @@ let craft_f' use_f_type: Tac decls =
     mk_abs [m;n] (
       pack (
         Tv_Match n' None
-        [ (Pat_Constant {c=C_Int 0}, (`(*`*)0))
+        [ (Pat_Constant {c=C_Int 0 (FStar.Sealed.seal Dec)}, (`(*`*)0))
         ; (Pat_Var {v=fresh_namedv (); sort=Sealed.seal (`int)},
                     call2 (pack (Tv_FVar name))
                       (call2 (`(*`*)(+)) m' (`(*`*)  1 ))

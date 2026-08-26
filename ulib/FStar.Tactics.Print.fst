@@ -107,8 +107,8 @@ and comp_to_ast_string (c:comp) : Tac string =
 and const_to_ast_string (c:vconst) : Tac string =
   match c with
   | C_Unit -> "C_Unit"
-  | C_Int i -> "C_Int " ^ string_of_int i
-  | C_MachineInt i signedness width ->
+  | C_Int i _ -> "C_Int " ^ string_of_int i
+  | C_MachineInt i _ signedness width ->
     "C_MachineInt " ^ string_of_int i ^ " " ^
     (match signedness with | Signed -> "Signed" | Unsigned -> "Unsigned") ^ " " ^
     (match width with
