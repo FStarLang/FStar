@@ -44,6 +44,12 @@ val exponent (r : real) : int
 (* The real [mantissa * 10^exponent], canonicalized. *)
 val mk (mantissa exponent : int) : real
 
+(* Like [mk], but returns None if the given pair is not already the canonical
+representation of that real. Use this instead of [mk] when reading a real out
+of a term (see [e_real_literal] in FStarC.Syntax.Embeddings): silently
+canonicalizing there would make unembedding non-injective. *)
+val try_mk (mantissa exponent : int) : option real
+
 (* The real number [i], exactly. *)
 val of_int (i : int) : real
 

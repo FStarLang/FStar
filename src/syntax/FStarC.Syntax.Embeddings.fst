@@ -336,9 +336,11 @@ let e_real_literal =
         let open FStarC.Class.Monad in
         let! mantissa = try_unembed mantissa norm in
         let! exponent = try_unembed exponent norm in
-        (* NB: mk canonicalizes, so an ill-formed (non-canonical) literal
-        unembeds to the literal denoting the same number. *)
-        Some (Real.mk mantissa exponent)
+        (* NB: we reject non-canonical literals rather than canonicalizing
+        them, so that unembedding is injective: [em (un t) = t] for every [t]
+        this succeeds on. A non-canonical literal is not well-typed at
+        FStar.RealLiteral.real_literal anyway. *)
+        Real.try_mk mantissa exponent
       | _ -> None
     in
     mk_emb_full

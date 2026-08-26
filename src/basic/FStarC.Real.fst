@@ -29,6 +29,10 @@ let mantissa (r : real) : int = r.RL.mantissa
 let exponent (r : real) : int = r.RL.exponent
 
 let mk = RL.mk
+
+let try_mk (m e : int) : option real =
+  let r = mk m e in
+  if mantissa r = m && exponent r = e then Some r else None
 let of_int = RL.of_int
 let of_string = RLP.of_string
 let to_string = RL.to_string

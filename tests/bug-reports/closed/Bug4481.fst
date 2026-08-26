@@ -25,6 +25,16 @@ packed constant gives back the very same view (see inspect_pack_inv). *)
 [@@expect_failure]
 let noncanon = D.C_Real ({ RL.mantissa = 10; RL.exponent = -1 })
 
+(* Even a forged (ill-typed) non-canonical literal is rejected when reading
+the view back, rather than being silently canonicalized: unembedding a real
+literal is injective. *)
+let forged : RL.real_literal =
+  FStar.Pervasives.coerce_eq #RL.real_literal_repr #RL.real_literal (magic ())
+    ({ RL.mantissa = 10; RL.exponent = -1 })
+
+[@@expect_failure]
+let rbad : real = _ by (exact (R.pack_ln (D.Tv_Const (D.C_Real forged))))
+
 (* Well-formed literals work. *)
 let r5 : real = _ by (exact (R.pack_ln (D.Tv_Const (D.C_Real (RL.mk 15 (-1))))))
 let r6 : real = _ by (exact (R.pack_ln (D.Tv_Const (D.C_Real (RL.mk (-25) (-2))))))
