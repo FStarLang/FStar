@@ -7536,6 +7536,36 @@ column that section 20 exists for, and the `Box` regression test of section
 directory's own `Makefile` already gates its krml and Rust columns on those
 tools being present.
 
+### 23.4 A green result that is not evidence
+
+Section 24 gave the direct-to-C backend a header, and the generated source
+opens with `#include "<Module>.h"`.  `cbor-corpus/mutants.py` writes each
+mutant into `_output/mutants/` and compiled it there, where that include does
+not resolve.  Every mutant became uncompilable and both adequacy figures
+collapsed to
+
+```
+family=ops     killed 0 / 0  (uncompilable 46)
+family=consts  killed 0 / 0  (uncompilable 46)
+```
+
+Adding the `.dc`'s own directory to the include path restores 46/46, 46/46,
+48/49 and 46/59 exactly (#4484).
+
+The include path is the trivial half.  The half worth recording is the
+**failure mode**: the script did not error out.  `killed 0 / 0` is a pass
+under any "did it fail?" reading, so the adequacy study would have gone on
+reporting success while measuring nothing -- which is section 23's own thesis
+turned around and pointed at section 23's own tooling.  A green result is not
+evidence unless something would have gone red.
+
+So the count is now fatal rather than reported.  An uncompilable mutant is not
+a weak test but an absent one, and it is always a defect in the script or in
+the backend, never a property of the corpus: there is no reading of "this
+mutant does not build" that the study should tolerate.  A zero-mutant run is
+fatal for the same reason, since an empty `PARSER` list would otherwise report
+`killed 0 / 0` too.
+
 ## 24. The unit is a header and a source
 
 Until now `--custard_backend C` wrote one file.  Everything in it had external
@@ -7844,3 +7874,4 @@ structure.
 | M10ψ | **"It compiles" is not an acceptance criterion** (§23) | Done, from #4482.  Every backend test until now asserted a golden file or a clean compile, and section 19.15 is the proof that neither is a specification: karamel compiled a borrowed slice as an owning `Box`, writes through it were discarded, and nothing failed because nothing ran anything.  Two reduced deterministic-CBOR checkers now do -- `tests/custard/CborBoundary.fst` over a `ref`-linked list, which needs no Pulse and so runs under stage1 and stage2 too, and `tests/custard/pulse/CborBoundarySlice.fst` over a `Pulse.Lib.Slice.slice byte`, which is what EverParse's parsers take and the only one that drives the Rust column.  One corpus of 48 boundary vectors, one independent Python oracle, one adequacy script, all in `cbor-corpus/`; the two copies the PR arrived with were byte-identical and free to drift.  The result worth keeping is the measurement, not the test: greedy set cover over *line coverage* shrinks a 12,110-input corpus 400x with **identical coverage and 13% fewer mutants killed**, while reducing against mutants reproduces the full corpus on a held-out family it was never fitted to (152/152 against 57/152 at the same size).  Coverage is not the signal to minimise against.  Sanitizers are on by default, since one mutant was otherwise detected only when binary layout made its memory unsafety observable.  Also `_test_pulse` now runs `tests/custard/pulse/`, which `make ci` reaches through `test-3` -- until this change the entire Rust column, section 20.6's `Box` regression included, guarded nothing (§23.3). |
 | M10ω | **The unit is a header and a source** (§24) | Done.  The direct-to-C backend wrote one file, everything in it had external linkage, and there was no declaration of anything for a caller to include -- so calling an extracted function meant writing its prototype out by hand, and linking two units risked a duplicate symbol for every shared name.  `print_program` now returns a header and a source, and the driver writes `<stem>.h` beside the source.  The flag that decides storage is not a new one: the IR has carried `Private` since M2 and `PrintC` read it, but **nothing ever produced it**, which is why nothing was ever `static`.  Storage now comes from `Root`, which already means what we need -- a declaration is a root because `--custard_entry` named it, and naming a root is exactly the claim that a caller Custard cannot see will call it.  The `Entrypoint` is excluded because `--custard_main` makes its target a root only to keep it alive through DCE, and the generated `main` calls it from the same file.  The header carries the unit's whole type language rather than a reachability-trimmed subset -- `struct` and `typedef` have no linkage, so emitting all of them collides with nothing, while trimming buys "field has incomplete type" at the first include -- and only the public prototypes, since a prototype *is* the linkage claim.  The source includes its own header, which is what makes the header checked rather than merely shipped.  On DICE 144 declarations become `static` and the six `--custard_entry` names are the six that do not; `tests/custard`'s greps now cover both files, and `pulse/test` gained ten `*.h.expected` goldens. |
 | M10αα | **An argument goes missing between two definitions** (§25) | Done.  Round 19 of the EverParse report reduced everything still blocking CDDL to one eleven-line module.  `let g : bool -> bool -> bool = f` is parameterless in the source and arity two in its type; `g` itself was eta-expanded correctly, but its *callers* were not, and `let call_g a b = g a b` came out one parameter short, calling `Wrap_g(a)` -- "too few arguments" against a prototype the same run had emitted.  The sharp part is that `call_g` and `call_g_partial` produced **byte-identical C** although one is a full application and the other partial: an argument went missing, and the IR was wrong before the backend saw it.  Two correct passes: `eta_reduce` shortens `fun a b -> g a b` to `fun a -> g a`, and `eta_expand` exists to undo that for C -- but it bounded expansion by a table of arities computed once, from the program as it found it, so it read `g` as arity 0 while the same sweep was giving `g` its two binders.  The table was stale by exactly one link, which is why the control `call_f` was clean.  `eta_expand_decls` now runs to a fixpoint; each round can only add binders and never more than `arrow_arity dl_ret`, so it terminates.  Separately, `PrintC` printed `EApp` without ever asking the callee's arity, which is why this reached a C compiler instead of a diagnostic: it now records every arity and refuses a mismatch -- under-application as 368 with the `[@@@monomorphize]` remedy named, over-application as the malformed-IR refusal.  `CEtaChain.fst` (four links, so one round cannot pass it) and `CLamField.fst`.  Not fixed, deliberately: a definition whose body is a call returning a function stays a global variable, because expanding it would re-evaluate the call at every use (§25.3). |
+| M10ββ | **A green result that is not evidence** (§23.4) | Done, from #4484.  Section 24's `#include "<Module>.h"` meant the generated source no longer compiles from a directory other than the one extraction wrote it to, and `mutants.py` builds each mutant in `_output/mutants/`.  Every mutant became uncompilable and both adequacy figures collapsed to `killed 0 / 0 (uncompilable 46)`.  The include path is the trivial half; the half worth recording is that **the script did not error out** -- `killed 0 / 0` is a pass under any "did it fail?" reading, so the study would have gone on reporting success while measuring nothing, which is section 23's own thesis pointed at section 23's own tooling.  The uncompilable count is now fatal rather than reported, as is a zero-mutant run: an uncompilable mutant is an absent test, not a weak one, and it is always a defect in the script or the backend, never a property of the corpus.  Verified both ways -- the guard exits 1 on the broken include path and 0 once fixed, and the four figures return to 46/46, 46/46, 48/49, 46/59. |

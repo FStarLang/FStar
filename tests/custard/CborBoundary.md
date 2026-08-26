@@ -63,6 +63,12 @@ constructors above all -- corrupts the test data rather than the parser and
 inflates the kill count, which is a mistake that was actually made and
 caught here.
 
+The `.dc` is compiled from its own directory, because since section 24 the
+generated source opens with `#include "<Module>.h"`.  An uncompilable mutant
+is a hard error rather than a line in the report: `killed 0 / 0` reads as a
+pass, and that is exactly how a broken include path once went unnoticed
+(section 23.4).
+
 `cbor-corpus/model.py` is an independent Python model of the reduced
 grammar. It is what decides whether each vector is expected to be accepted,
 so the expected values in the generated module do not come from the parser

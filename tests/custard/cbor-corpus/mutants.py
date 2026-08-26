@@ -113,3 +113,15 @@ bad = sum(1 for _, _, s in res if s == 'uncompilable')
 print('family=%s  killed %d / %d  (uncompilable %d)' % (FAMILY, killed, len(C) - bad, bad))
 for s in surv[:12]:
     print('  SURVIVED', s[2], '|', s[0][:80])
+
+# An uncompilable mutant is not a weak test, it is an absent one, and
+# "killed 0 / 0" reads as a pass under any "did it fail?" rule -- which is
+# how a broken include path went unnoticed (section 23.4).  A mutant that
+# does not build is a defect in this script or in the backend, never a
+# property of the corpus, so it is fatal rather than reported.
+if bad:
+    sys.exit('ERROR: %d of %d mutants did not compile; the adequacy figure '
+             'above measures nothing.  Re-run one by hand with the -w '
+             'dropped from CC to see why.' % (bad, len(C)))
+if not C:
+    sys.exit('ERROR: no mutants were generated; check PARSER and SRC.')
