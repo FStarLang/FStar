@@ -298,6 +298,12 @@ KRML_TESTS += KrmlBasic
 # monomorphization (section 5.0.1).
 C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet CFunPtr
 C_TESTS += RefStrip
+# Section 25: the eta-expansion chain.  The greps pin the two shapes the
+# fix is about -- a source-parameterless arrow-typed definition becomes a
+# real C function, and its callers keep all their arguments.
+C_TESTS += CEtaChain
+CGREP_CEtaChain = "CEtaChain_g(bool" "CEtaChain_call_g(bool" "CEtaChain_h(bool"
+CNOGREP_CEtaChain = "(*CEtaChain_g)" "(*CEtaChain_call_g("
 # A reduced deterministic-CBOR checker.  Unlike the tests above it is not
 # aimed at one backend feature: it is a differential regression test, run
 # over a curated corpus of inputs whose expected results are computed by an
@@ -410,10 +416,13 @@ REJECT_TESTS += WarnAny
 # Prims.int, and none for a closure.  Both must be diagnosed, not mistranslated.
 REJECT_TESTS += CNoInt
 REJECT_TESTS += CNoClosure
+REJECT_TESTS += CLamField
 FLAGS_CNoInt     = --custard_backend C --custard_monomorphize_types true
 FLAGS_CNoClosure = --custard_backend C --custard_monomorphize_types true
+FLAGS_CLamField  = --custard_backend C --custard_monomorphize_types true
 CODE_CNoInt      = 368
 CODE_CNoClosure  = 368
+CODE_CLamField   = 368
 CODE_MonoPoly    = 364
 CODE_MonoPartial = 364
 CODE_MonoFuel    = 365

@@ -146,6 +146,13 @@ let keeps : ref (SMap.t (list bool)) = mk_ref (SMap.create 0)
    an operand. *)
 let void_fns : ref (SMap.t bool) = mk_ref (SMap.create 0)
 
+(* How many arguments each named definition takes, after the dropped
+   parameters of [keeps] are removed.  Only used to refuse a call that does
+   not match: C has neither partial application nor a way to apply a call's
+   result without saying so, and both come out as a plain call with the wrong
+   number of operands -- valid IR, and C that does not compile (section 25). *)
+let arities : ref (SMap.t int) = mk_ref (SMap.create 0)
+
 (* Whether the definition currently being printed returns [void]. *)
 let void_ret : ref bool = mk_ref false
 
@@ -723,6 +730,26 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
          | Some flags -> filter_by flags args
          | None -> args)
       | _ -> args in
+    (* Before printing, because a mismatch here is not something the C
+       compiler will describe in terms the reader can act on: it reports "too
+       few arguments" against a generated prototype. *)
+    (match hd.e with
+     | EQual (n, _) ->
+       (match SMap.try_find !arities (string_of_name n) with
+        | Some a when a <> List.length args ->
+          let got = string_of_int (List.length args) in
+          let want = string_of_int a in
+          if List.length args < a
+          then reject ("the partial application of " ^ string_of_name n)
+                 ["It is applied to " ^ got ^ " of its " ^ want ^ " arguments.";
+                  "C has no closures, so a call must supply all of them.";
+                  "Marking the function's own function-typed parameters with \
+                   [@@@monomorphize] often removes the partial application."]
+          else reject_ir ("an over-application of " ^ string_of_name n)
+                 ["It takes " ^ want ^ " arguments and is applied to " ^ got ^ ".";
+                  "Applying a call's result is a separate application node."]
+        | _ -> ())
+     | _ -> ());
     let call = c_expr out ind hd ^ "(" ^
                String.concat ", " (args |> List.map (c_expr out ind)) ^ ")" in
     (* A [void] call is a statement, not an operand.  It runs here and stands
@@ -1649,6 +1676,7 @@ let print_program (base:string) (p:program) : ML (string & string) =
   let xt = SMap.create 20 in
   let kt = SMap.create 50 in
   let vt = SMap.create 50 in
+  let at = SMap.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DType t ->
@@ -1676,6 +1704,11 @@ let print_program (base:string) (p:program) : ML (string & string) =
          definition it will be linked against. *)
       if Cons? flags && TUnit? (ret_cty x.dx_ty) then
         SMap.add vt (string_of_name x.dx_name) true
+      ;
+      (* An external's arity is the one its declared type states; a
+         parameterless one is a variable and is not called at all. *)
+      let n = List.length (List.filter (fun b -> b) flags) in
+      if n > 0 then SMap.add at (string_of_name x.dx_name) n
     | DLet l ->
       let used = vars_of l.dl_body in
       let flags = l.dl_binders |> List.map (fun b ->
@@ -1686,8 +1719,14 @@ let print_program (base:string) (p:program) : ML (string & string) =
          two must not be confused. *)
       if List.existsb (fun b -> not b) flags then SMap.add kt (string_of_name l.dl_name) flags;
       if TUnit? l.dl_ret && Cons? l.dl_binders then SMap.add vt (string_of_name l.dl_name) true
+      ;
+      (* A definition with no binders is a variable, and the rejection above
+         is about calling one, not about its arity. *)
+      let n = List.length (List.filter (fun b -> b) flags) in
+      if Cons? l.dl_binders then SMap.add at (string_of_name l.dl_name) n
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
+  arities := at;
 
   (* Only the standard library, and only the parts that are used unavoidably:
      fixed-width integers, malloc/free/abort, memmove, and bool. *)

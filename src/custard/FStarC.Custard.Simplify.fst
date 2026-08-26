@@ -780,12 +780,28 @@ let eta_expand_decl (tbl : SMap.t int) (l:dlet) : ML dlet =
   let bs, body, ret, ef = go missing l.dl_binders l.dl_body l.dl_ret l.dl_eff in
   { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
 
+(* To a fixpoint, because expanding a definition changes *its* arity and so
+   what its callers are owed.  [let g : bool -> bool -> bool = f] is
+   source-parameterless, so one pass reads its arity as 0 and refuses to give
+   [let call_g a b = g a b] -- which [eta_reduce] has already shortened to
+   [fun a -> g a] -- its second argument back; the caller is then emitted as a
+   partial application, which C cannot express and rejects as "too few
+   arguments" (section 25).  Each round can only add binders, and never more
+   than [arrow_arity dl_ret] of them, so the total is bounded and the loop
+   terminates; the fuel is the chain length, one link consumed per round. *)
 let eta_expand_decls (prog:program) : ML program =
-  let tbl = decl_arity prog in
-  prog |> List.map (fun d ->
-    match d with
-    | DLet l -> DLet (eta_expand_decl tbl l)
-    | d -> d)
+  let width (p:program) : ML int =
+    List.fold_left (fun n d -> match d with
+                               | DLet l -> n + List.length l.dl_binders
+                               | _ -> n) 0 p in
+  let rec go (fuel:int) (p:program) : ML program =
+    let tbl = decl_arity p in
+    let p' = p |> List.map (fun d ->
+      match d with
+      | DLet l -> DLet (eta_expand_decl tbl l)
+      | d -> d) in
+    if fuel <= 0 || width p' = width p then p' else go (fuel - 1) p' in
+  go (List.length prog) prog
 
 let eta_reduce_decls (prog:program) : ML program =
   prog |> List.map (fun d ->

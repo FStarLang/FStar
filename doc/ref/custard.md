@@ -7632,6 +7632,133 @@ exported but `main`.
 stays in the IR; it is simply not what the direct backend consults.
 
 
+## 25. An argument goes missing between two definitions
+
+Round 19 of the EverParse report reduced everything still blocking CDDL to
+one defect, with an eleven-line module that carries its own control:
+
+```fstar
+let f (x: bool) (y: bool) : bool = x && y   (* arity 2 in the source *)
+let g : bool -> bool -> bool = f            (* arity 0 in the source *)
+
+let call_f (a: bool) (b: bool) : bool = f a b
+let call_g (a: bool) (b: bool) : bool = g a b
+let call_g_partial (a: bool) : (bool -> bool) = g a
+```
+
+`g` came out right -- a real two-argument C function -- and `call_g` came out
+as `bool (*Wrap_call_g(bool a))(bool)`, one parameter short, returning a
+function pointer, and calling `Wrap_g(a)`.  Four `cc -std=c11` errors before
+`-Wall`, two of them "too few arguments to function `Wrap_g`" against a
+prototype the same run had just emitted.
+
+The sharpest part of the report is that **`call_g` and `call_g_partial`
+produced byte-identical C**, although one is a full application in the source
+and the other a partial one.  The second argument of the former was simply
+dropped.  So this is not only "the IR pretends C has partial application":
+an argument goes missing on the way, and the IR is wrong before the backend
+sees it.  C refuses the result, so it could not have misbehaved silently
+here -- but that is C's doing, not ours.
+
+### 25.1 Why the argument goes missing
+
+Two passes, each correct alone.
+
+`eta_reduce_decls` (section 7.3) shortens `fun a b -> g a b` to `fun a -> g a`
+-- one step, because the rule strips one trailing binder at a time and the
+result is no longer of the form `fun bs -> h bs`.  That is a legitimate
+rewrite and OCaml is happy with it.  `eta_expand_decls` exists precisely to
+undo it for C, since a definition whose result type is still an arrow is a
+partial application C cannot express.
+
+But `eta_expand_decls` bounded the expansion by a table of arities computed
+**once, from the program as it found it**.  `g` is parameterless in the
+source, so the table recorded arity 0 for it, so `call_g`'s body `g a` looked
+like an *over*-application already and was owed nothing.  Meanwhile the same
+pass, in the same sweep, gave `g` its two binders.  The table was stale the
+moment the pass began, and the staleness is exactly one link long -- which is
+why the control `call_f` is correct (`f` has its binders in the source) and
+why every variant the reporter tried was clean except this one.
+
+The fix is to run the pass **to a fixpoint**: each round recomputes the
+arities and so learns what the previous round established, and the chain
+`f` → `g` → `call_g` → `h` resolves one link per round.  Termination is
+not a question of taste: a round can only *add* binders, and never more than
+`arrow_arity dl_ret` of them, so the total binder count is monotone and
+bounded; the fuel is the chain length.
+
+This also fixes `call_g_partial`, which *is* a partial application in the
+source.  Top-level eta-expansion is free -- the new binders become C
+parameters, not captures -- so there was never a reason to reject it; the only
+reason it was rejected is that the same stale table denied it the same
+argument.
+
+### 25.2 The backend now refuses a call it cannot spell
+
+The bug reached a C compiler rather than a diagnostic because `PrintC` prints
+`EApp (h, args)` as `h(args)` without ever asking how many arguments `h`
+takes.  An under-applied call is then a call with too few operands, and an
+over-applied one -- applying a call's *result*, which is a separate
+application node -- is a call with too many.  Both are valid IR and neither is
+C.
+
+`PrintC` now records the arity of every definition and external, after the
+dropped parameters of `keeps` are removed, and refuses a call that does not
+match.  Under-application is error 368, "no C representation", because it is a
+fact about the source, and the message names the `[@@@monomorphize]` remedy;
+over-application is the "malformed IR" refusal, because it is a fact about the
+compiler.  The point is not that these should happen -- after 25.1 none of
+them do, across five suites -- but that the next one should be reported here,
+in Custard's vocabulary, rather than as "too few arguments" against a
+generated prototype three tools downstream.
+
+### 25.3 What is not fixed, and deliberately
+
+A definition whose body is a *call that returns a function* stays a global
+variable:
+
+```fstar
+let ap (phi: (bool -> bool -> bool)) : (bool -> bool -> bool) = phi
+let e : bool -> bool -> bool = ap band
+```
+
+becomes `static bool (*GlobalVar_e)(bool, bool);` initialized in
+`custard_init_globals`.  This compiles and runs correctly, and the reporter
+raised it as a quality matter rather than a bug.  Expanding it to
+`e x y = ap band x y` would re-evaluate `ap band` on every call, which is the
+hazard `cheap_expr` exists to prevent and section 13.5 records: `ap` happens
+to be the identity here, but the pass cannot tell that from the shape, and a
+body that computes before returning a function must not be duplicated into
+every call site.  The cost of the current shape is a mandatory
+`custard_init_globals()` before first use -- which section 24 now makes a
+caller's documented obligation -- and one indirect call per use.  If the
+combinator is inlinable, `inline` and `reduce` fold `ap band` to `band` and
+the definition becomes a plain name, which *is* expanded.
+
+Likewise, a lambda that captures a local and is stored in a record field --
+which is what every EverParse bundle is -- remains an honest error 368.  The
+remedy is the one the diagnostic names and round 19 confirmed on the real
+code: `[@@@monomorphize]` on the *function-typed parameters* of the
+combinator, not on the definition that calls it.  Marking `f12`, `f21` and
+`eq'` in `CDDL.Pulse.Bundle.Base.mk_eq_test_bij` lifts the lambda and the
+module reverifies unchanged.  Auto-marking function-typed parameters would
+remove the need for the annotation and is the strongest argument yet for the
+M7 defunctionalization work; it is not a prerequisite for it.
+
+### 25.4 Tests
+
+`tests/custard/CEtaChain.fst` is the reporter's module with a fourth link
+added -- `let h : bool -> bool -> bool = call_g` -- so that a single round of
+expansion cannot pass it, and with `main` checking its own answers so that the
+suite runs the binary rather than merely compiling it (the M8b criterion).  It
+greps for `CEtaChain_g(bool` and against `(*CEtaChain_g)`, which is the
+difference between the fixed and the broken output.
+`tests/custard/CLamField.fst` is the record-of-function-fields rejection,
+expecting 368; it is separate from `CNoClosure` because that one captures a
+let-bound local and this one captures a parameter and stores the result in a
+structure.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -7716,3 +7843,4 @@ stays in the IR; it is simply not what the direct backend consults.
 | M10χ | **Custard's error codes moved up by one** (§22.1) | Done.  Master assigned 362 to `Error_AmbiguousName` while this branch already held 362-369, and 362 is not free to move: `tests/overloading/strict/StrictDuplicate.fst` demotes it with `--warn_error +362` and the book names it by number.  A published number outranks a branch-local one, so Custard's codes are now **363-370**.  The numbers in `FStarC.Errors.Codes.fst` are explicit rather than positional, so this is a relabelling; what it touches is every place a number is spelled out by hand -- the `CODE_*` variables the suite greps for, the `--warn_error @367` of the `--custard_warn_any` tests, two comments in `PrintC` and `Extract`, and the prose of sections 18 through 21.  Numbers cited in older bug reports are one lower than the ones the compiler now prints. |
 | M10ψ | **"It compiles" is not an acceptance criterion** (§23) | Done, from #4482.  Every backend test until now asserted a golden file or a clean compile, and section 19.15 is the proof that neither is a specification: karamel compiled a borrowed slice as an owning `Box`, writes through it were discarded, and nothing failed because nothing ran anything.  Two reduced deterministic-CBOR checkers now do -- `tests/custard/CborBoundary.fst` over a `ref`-linked list, which needs no Pulse and so runs under stage1 and stage2 too, and `tests/custard/pulse/CborBoundarySlice.fst` over a `Pulse.Lib.Slice.slice byte`, which is what EverParse's parsers take and the only one that drives the Rust column.  One corpus of 48 boundary vectors, one independent Python oracle, one adequacy script, all in `cbor-corpus/`; the two copies the PR arrived with were byte-identical and free to drift.  The result worth keeping is the measurement, not the test: greedy set cover over *line coverage* shrinks a 12,110-input corpus 400x with **identical coverage and 13% fewer mutants killed**, while reducing against mutants reproduces the full corpus on a held-out family it was never fitted to (152/152 against 57/152 at the same size).  Coverage is not the signal to minimise against.  Sanitizers are on by default, since one mutant was otherwise detected only when binary layout made its memory unsafety observable.  Also `_test_pulse` now runs `tests/custard/pulse/`, which `make ci` reaches through `test-3` -- until this change the entire Rust column, section 20.6's `Box` regression included, guarded nothing (§23.3). |
 | M10ω | **The unit is a header and a source** (§24) | Done.  The direct-to-C backend wrote one file, everything in it had external linkage, and there was no declaration of anything for a caller to include -- so calling an extracted function meant writing its prototype out by hand, and linking two units risked a duplicate symbol for every shared name.  `print_program` now returns a header and a source, and the driver writes `<stem>.h` beside the source.  The flag that decides storage is not a new one: the IR has carried `Private` since M2 and `PrintC` read it, but **nothing ever produced it**, which is why nothing was ever `static`.  Storage now comes from `Root`, which already means what we need -- a declaration is a root because `--custard_entry` named it, and naming a root is exactly the claim that a caller Custard cannot see will call it.  The `Entrypoint` is excluded because `--custard_main` makes its target a root only to keep it alive through DCE, and the generated `main` calls it from the same file.  The header carries the unit's whole type language rather than a reachability-trimmed subset -- `struct` and `typedef` have no linkage, so emitting all of them collides with nothing, while trimming buys "field has incomplete type" at the first include -- and only the public prototypes, since a prototype *is* the linkage claim.  The source includes its own header, which is what makes the header checked rather than merely shipped.  On DICE 144 declarations become `static` and the six `--custard_entry` names are the six that do not; `tests/custard`'s greps now cover both files, and `pulse/test` gained ten `*.h.expected` goldens. |
+| M10αα | **An argument goes missing between two definitions** (§25) | Done.  Round 19 of the EverParse report reduced everything still blocking CDDL to one eleven-line module.  `let g : bool -> bool -> bool = f` is parameterless in the source and arity two in its type; `g` itself was eta-expanded correctly, but its *callers* were not, and `let call_g a b = g a b` came out one parameter short, calling `Wrap_g(a)` -- "too few arguments" against a prototype the same run had emitted.  The sharp part is that `call_g` and `call_g_partial` produced **byte-identical C** although one is a full application and the other partial: an argument went missing, and the IR was wrong before the backend saw it.  Two correct passes: `eta_reduce` shortens `fun a b -> g a b` to `fun a -> g a`, and `eta_expand` exists to undo that for C -- but it bounded expansion by a table of arities computed once, from the program as it found it, so it read `g` as arity 0 while the same sweep was giving `g` its two binders.  The table was stale by exactly one link, which is why the control `call_f` was clean.  `eta_expand_decls` now runs to a fixpoint; each round can only add binders and never more than `arrow_arity dl_ret`, so it terminates.  Separately, `PrintC` printed `EApp` without ever asking the callee's arity, which is why this reached a C compiler instead of a diagnostic: it now records every arity and refuses a mismatch -- under-application as 368 with the `[@@@monomorphize]` remedy named, over-application as the malformed-IR refusal.  `CEtaChain.fst` (four links, so one round cannot pass it) and `CLamField.fst`.  Not fixed, deliberately: a definition whose body is a call returning a function stays a global variable, because expanding it would re-evaluate the call at every use (§25.3). |
