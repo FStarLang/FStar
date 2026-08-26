@@ -83,8 +83,12 @@ for c in cands:
 print('mutants:', len(C))
 
 os.makedirs(WORK, exist_ok=True)
+# The mutant is written into WORK/, but the generated .c includes its own
+# header by "" relative to where the extraction put it, so WORK/ is not
+# enough: the header's directory has to be on the include path.
 CC = ['cc', '-std=c11', '-w', '-fsanitize=address,undefined',
-      '-fno-sanitize-recover=all', '-x', 'c']
+      '-fno-sanitize-recover=all',
+      '-I' + (os.path.dirname(os.path.abspath(SRC)) or '.'), '-x', 'c']
 
 def run(k):
     old, new, name = C[k]
