@@ -742,9 +742,13 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
           if List.length args < a
           then reject ("the partial application of " ^ string_of_name n)
                  ["It is applied to " ^ got ^ " of its " ^ want ^ " arguments.";
-                  "C has no closures, so a call must supply all of them.";
-                  "Marking the function's own function-typed parameters with \
-                   [@@@monomorphize] often removes the partial application."]
+                  "The result is a closure over the arguments it did get, and \
+                   C has no closures.";
+                  "A top-level definition is eta-expanded to full arity \
+                   automatically (section 25), so this is either a local \
+                   partial application -- name it as a top-level function \
+                   taking every argument -- or a definition whose body is too \
+                   costly to re-evaluate at each call (section 25.3)."]
           else reject_ir ("an over-application of " ^ string_of_name n)
                  ["It takes " ^ want ^ " arguments and is applied to " ^ got ^ ".";
                   "Applying a call's result is a separate application node."]
@@ -1720,10 +1724,15 @@ let print_program (base:string) (p:program) : ML (string & string) =
       if List.existsb (fun b -> not b) flags then SMap.add kt (string_of_name l.dl_name) flags;
       if TUnit? l.dl_ret && Cons? l.dl_binders then SMap.add vt (string_of_name l.dl_name) true
       ;
-      (* A definition with no binders is a variable, and the rejection above
-         is about calling one, not about its arity. *)
+      (* A parameterless definition of arrow type is lowered to a *variable*
+         of function-pointer type (section 25.3), and a call through it
+         supplies every argument at once -- so its arity is the arity of its
+         type, not zero.  Leaving it out of the table is what let section 26's
+         [call_e] reach a C compiler: both the expansion and this check record
+         definitions, and a variable of arrow type was neither. *)
       let n = List.length (List.filter (fun b -> b) flags) in
-      if Cons? l.dl_binders then SMap.add at (string_of_name l.dl_name) n
+      SMap.add at (string_of_name l.dl_name)
+        (if Cons? l.dl_binders then n else List.length (arg_ctys l.dl_ret))
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
   arities := at;

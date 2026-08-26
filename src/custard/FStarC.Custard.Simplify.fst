@@ -735,12 +735,23 @@ let rec arrow_arity (c:cty) : ML int =
    rather than by the result type is what makes the pass safe: a definition
    whose declared result type carries more arrows than its body has room for
    -- which [eta_reduce] and the abbreviation peeling of section 7.3 can both
-   produce -- would otherwise be expanded into an over-application. *)
+   produce -- would otherwise be expanded into an over-application.
+
+   How many arguments the emitted object accepts.  For a definition with
+   binders that is its binder count; for a *parameterless* one of arrow type
+   it is the arity of that type, because such a definition is lowered to a
+   variable of function-pointer type and a call through it supplies every
+   argument at once.  Getting the second case wrong is what let section 26's
+   [let e : bool -> bool -> bool = ap band] escape: read as arity 0, its
+   callers were owed nothing and stayed eta-short. *)
 let decl_arity (prog:program) : ML (SMap.t int) =
   let tbl : SMap.t int = SMap.create 100 in
   prog |> List.iter (fun d ->
     match d with
-    | DLet l -> SMap.add tbl (string_of_name l.dl_name) (List.length l.dl_binders)
+    | DLet l ->
+      SMap.add tbl (string_of_name l.dl_name)
+        (if Cons? l.dl_binders then List.length l.dl_binders
+         else arrow_arity l.dl_ret)
     | DExternal x -> SMap.add tbl (string_of_name x.dx_name) (arrow_arity x.dx_ty)
     | _ -> ());
   tbl

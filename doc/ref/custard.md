@@ -7789,6 +7789,131 @@ let-bound local and this one captures a parameter and stores the result in a
 structure.
 
 
+## 26. Two more ways to lose an argument
+
+Section 25 fixed the arity chain and added a check meant to catch the next
+one.  Round 20 of the EverParse report found two the check did not catch, one
+of which it *had* caught in a different program -- which is how the report
+found it.  Both are ten to fifteen lines, and together they were the whole of
+what still stood between CDDL and a clean build.
+
+### 26.1 A variable is not a definition
+
+```fstar
+let ap (phi: (bool -> bool -> bool)) : (bool -> bool -> bool) = phi
+let band (a: bool) (b: bool) : bool = a && b
+let e : bool -> bool -> bool = ap band
+let call_e (a: bool) (b: bool) : bool = e a b
+```
+
+`call_e` came out with one parameter, calling `e(a)` against a two-parameter
+function pointer -- the section 25 symptom exactly, unfixed by the section 25
+fix.
+
+The reason is section 25.3, the thing we had just agreed was a quality matter
+rather than a bug.  `e`'s body is a *call* that returns a function, so
+`cheap_expr` declines to expand it and it is lowered to a **variable** of
+function-pointer type.  Both the arity table that drives eta-expansion and the
+backend's new call-arity check recorded *definitions*, keyed on binder count.
+A parameterless definition has no binders, so both read `e` as arity 0: the
+expansion concluded `call_e` was owed nothing, and the check concluded there
+was nothing to check.
+
+So the variable/function lowering turned out to be load-bearing for
+correctness, in a way nothing intended.  Becoming a variable is what made the
+callee invisible to the arity machinery, and the reporter is right that this
+changes 25.3's status: the guard itself is still correct -- re-evaluating `ap
+band` at every call site is a real cost -- but "it is only a quality matter"
+was wrong.
+
+Both tables now read a parameterless arrow-typed definition's arity off its
+**type** rather than its binder list, because that is what the emitted object
+accepts: `static bool (*e)(bool, bool)` takes two arguments in one call.  This
+also makes the two tables agree with each other and with the printer, and it
+happens to make the fixpoint of section 25 converge one round sooner, since a
+definition about to be expanded already advertises the arity it will have.
+
+The shape worth keeping is the reporter's second module, which is the first
+with `main` deleted and `call_e` as the root.  Nothing then over-applies
+`call_e`, so there is no downstream symptom at all: extraction exits 0 and the
+only complaint is the C compiler's.  `tests/custard/CVarArity.fst` covers both
+by making `call_e` a root *and* calling it from `main`.
+
+### 26.2 An arrow behind two abbreviations
+
+```fstar
+let eq_test_for (#t: Type) (x1: t) : Type = FE.restricted_t t (fun _ -> bool)
+let eq_test (t: Type) : Type = FE.restricted_t t (fun x1 -> eq_test_for x1)
+
+let mk_eq_test (#t: Type) ([@@@monomorphize]phi: (t -> t -> bool)) : eq_test t =
+  FE.on_dom t (fun x1 -> FE.on_dom t (fun x2 -> phi x1 x2))
+```
+
+`mk_eq_test`'s specialization was emitted with two parameters, a body of type
+`bool`, and a declared return type of `bool -> bool`:
+
+```c
+static bool (*RestrictArity_mk_eq_test__bool(bool x, bool x1))(bool) {
+  return (x && x1);
+}
+```
+
+This is `Extract`'s `peel`, and the comment directly above it describes the
+bug it had.  `peel` consumes one arrow per extra lambda binder the body
+opened, and the arrows can be hidden behind an abbreviation -- which is why
+the term-level `peel_typ` re-normalizes at every step.  Its `cty`-level
+fallback did not: it called `head_ty` **once, on the way in**, and then
+matched `TArrow` structurally.  `eq_test bool` unfolds to one arrow whose
+codomain is `eq_test_for`, which is *another* abbreviation hiding the second
+arrow.  So peeling two binders consumed the first arrow, landed on a name,
+and stopped -- while both binders were emitted anyway.  The declared arity
+exceeded the real one by exactly the number of abbreviation layers below the
+first.
+
+`peel` now unfolds at every step, like its term-level twin.  When it stops
+early it returns the type as it was written rather than as it unfolds, since
+the abbreviation is the better name.
+
+This one deserves its own note on severity, because it is the kind that gets
+through.  gcc 13 accepts the definition with `-Wint-conversion` and the
+program prints the *correct* answer, because a `bool` round-trips through a
+pointer on that ABI.  That is luck, not a property: it is a constraint
+violation either way, and on gcc 14 `-Wincompatible-pointer-types` is an error
+by default, so the same output is a hard failure on a newer toolchain.  A
+backend that is right only on the compiler it was tested against is section
+23's thesis again -- and note that our own `-Wall -Wextra -Werror` corpus
+would have caught this had any test in it produced the shape.
+
+### 26.3 The check does fire
+
+The reporter observed that nothing covered the section 25 call-arity check
+actually firing -- it caught 26.1's symptom in one program, and after the fix
+that program compiles.  It is still reachable, and the case it exists for is a
+partial application that eta-expansion cannot reach because there is no
+declaration to give binders to:
+
+```fstar
+let use (a: bool) : bool = let k : bool -> bool = band a in k true
+```
+
+`tests/custard/CPartialCall.fst` pins it.  The message now says what is true
+of both routes to it: a top-level partial application is expanded
+automatically, so reaching this point means either a local one -- name it as a
+top-level function taking every argument -- or a body too costly to
+re-evaluate per call, which is 25.3.
+
+### 26.4 What the two have in common
+
+Both are the same mistake at different scales: **a fact about arity read off
+the wrong representation**.  26.1 reads it off a binder list when the object
+is a variable; 26.2 reads it off a structural `TArrow` match when the type is
+a name.  Section 25 was a third instance -- reading it off a table that was
+one rewrite out of date.  The general shape is that Custard has several
+notions of "how many arguments", and they are only accidentally in agreement
+unless something forces them to be; the call-arity check is that forcing
+function, and it is worth more than the individual fixes.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -7875,3 +8000,4 @@ structure.
 | M10ω | **The unit is a header and a source** (§24) | Done.  The direct-to-C backend wrote one file, everything in it had external linkage, and there was no declaration of anything for a caller to include -- so calling an extracted function meant writing its prototype out by hand, and linking two units risked a duplicate symbol for every shared name.  `print_program` now returns a header and a source, and the driver writes `<stem>.h` beside the source.  The flag that decides storage is not a new one: the IR has carried `Private` since M2 and `PrintC` read it, but **nothing ever produced it**, which is why nothing was ever `static`.  Storage now comes from `Root`, which already means what we need -- a declaration is a root because `--custard_entry` named it, and naming a root is exactly the claim that a caller Custard cannot see will call it.  The `Entrypoint` is excluded because `--custard_main` makes its target a root only to keep it alive through DCE, and the generated `main` calls it from the same file.  The header carries the unit's whole type language rather than a reachability-trimmed subset -- `struct` and `typedef` have no linkage, so emitting all of them collides with nothing, while trimming buys "field has incomplete type" at the first include -- and only the public prototypes, since a prototype *is* the linkage claim.  The source includes its own header, which is what makes the header checked rather than merely shipped.  On DICE 144 declarations become `static` and the six `--custard_entry` names are the six that do not; `tests/custard`'s greps now cover both files, and `pulse/test` gained ten `*.h.expected` goldens. |
 | M10αα | **An argument goes missing between two definitions** (§25) | Done.  Round 19 of the EverParse report reduced everything still blocking CDDL to one eleven-line module.  `let g : bool -> bool -> bool = f` is parameterless in the source and arity two in its type; `g` itself was eta-expanded correctly, but its *callers* were not, and `let call_g a b = g a b` came out one parameter short, calling `Wrap_g(a)` -- "too few arguments" against a prototype the same run had emitted.  The sharp part is that `call_g` and `call_g_partial` produced **byte-identical C** although one is a full application and the other partial: an argument went missing, and the IR was wrong before the backend saw it.  Two correct passes: `eta_reduce` shortens `fun a b -> g a b` to `fun a -> g a`, and `eta_expand` exists to undo that for C -- but it bounded expansion by a table of arities computed once, from the program as it found it, so it read `g` as arity 0 while the same sweep was giving `g` its two binders.  The table was stale by exactly one link, which is why the control `call_f` was clean.  `eta_expand_decls` now runs to a fixpoint; each round can only add binders and never more than `arrow_arity dl_ret`, so it terminates.  Separately, `PrintC` printed `EApp` without ever asking the callee's arity, which is why this reached a C compiler instead of a diagnostic: it now records every arity and refuses a mismatch -- under-application as 368 with the `[@@@monomorphize]` remedy named, over-application as the malformed-IR refusal.  `CEtaChain.fst` (four links, so one round cannot pass it) and `CLamField.fst`.  Not fixed, deliberately: a definition whose body is a call returning a function stays a global variable, because expanding it would re-evaluate the call at every use (§25.3). |
 | M10ββ | **A green result that is not evidence** (§23.4) | Done, from #4484.  Section 24's `#include "<Module>.h"` meant the generated source no longer compiles from a directory other than the one extraction wrote it to, and `mutants.py` builds each mutant in `_output/mutants/`.  Every mutant became uncompilable and both adequacy figures collapsed to `killed 0 / 0 (uncompilable 46)`.  The include path is the trivial half; the half worth recording is that **the script did not error out** -- `killed 0 / 0` is a pass under any "did it fail?" reading, so the study would have gone on reporting success while measuring nothing, which is section 23's own thesis pointed at section 23's own tooling.  The uncompilable count is now fatal rather than reported, as is a zero-mutant run: an uncompilable mutant is an absent test, not a weak one, and it is always a defect in the script or the backend, never a property of the corpus.  Verified both ways -- the guard exits 1 on the broken include path and 0 once fixed, and the four figures return to 46/46, 46/46, 48/49, 46/59. |
+| M10γγ | **Two more ways to lose an argument** (§26) | Done.  Round 20 found two arity defects section 25's check did not catch, one of which it *had* caught in a different program.  (1) `let e : bool -> bool -> bool = ap band` is lowered to a **variable** of function-pointer type, because §25.3's `cheap_expr` guard declines to expand a body that computes before returning a function -- and both the arity table and the new check recorded *definitions*, keyed on binder count, so both read `e` as arity 0 and `call_e` stayed eta-short.  The variable/function lowering turned out to be load-bearing for correctness: becoming a variable is what made the callee invisible.  Both tables now read a parameterless arrow-typed definition's arity off its **type**, which is what the emitted object accepts.  (2) `Extract`'s `peel` consumes one arrow per extra lambda binder and called `head_ty` **once, on the way in**; `eq_test` unfolds to one arrow whose codomain is another abbreviation hiding the second, so peeling two binders consumed one arrow, landed on a name and stopped, while both binders were emitted -- a definition declared to return `bool -> bool` over a body of type `bool`.  It now unfolds at every step, like its term-level twin `peel_typ`.  Worth noting on severity: gcc 13 accepts that with `-Wint-conversion` and prints the right answer because a `bool` round-trips through a pointer on that ABI, while gcc 14 rejects it -- right only on the compiler it was tested against.  `CVarArity.fst`, `CAbbrevArity.fst` (which is `CDDL.Spec.EqTest.eq_test` verbatim), and `CPartialCall.fst` for the check firing on a *local* partial application, which eta-expansion cannot reach.  Both defects are the same mistake at different scales: an arity read off the wrong representation (§26.4). |

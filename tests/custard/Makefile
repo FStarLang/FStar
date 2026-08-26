@@ -304,6 +304,22 @@ C_TESTS += RefStrip
 C_TESTS += CEtaChain
 CGREP_CEtaChain = "CEtaChain_g(bool" "CEtaChain_call_g(bool" "CEtaChain_h(bool"
 CNOGREP_CEtaChain = "(*CEtaChain_g)" "(*CEtaChain_call_g("
+# Section 26.  CVarArity's callee is an arrow-typed global *variable* -- the
+# lowering section 25.3 keeps deliberately -- so the grep asserts that the
+# variable is still a variable and that its caller nonetheless takes both
+# arguments.  call_e is also a root, which is the shape that has no
+# over-application downstream to catch it.
+C_TESTS += CVarArity
+FLAGS_CVarArity = --custard_entry CVarArity.call_e
+CGREP_CVarArity = "(*CVarArity_e)(bool, bool);" "CVarArity_call_e(bool a, bool eta)" \
+                  "return CVarArity_e(a, eta);"
+CNOGREP_CVarArity = "CVarArity_e(a);"
+# CAbbrevArity's return type sits behind two abbreviations; the whole bug is
+# the leftover arrow in the declared result, so the greps are on the
+# signature.
+C_TESTS += CAbbrevArity
+CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool(bool x, bool x1)"
+CNOGREP_CAbbrevArity = "(*CAbbrevArity_mk_eq_test__bool"
 # A reduced deterministic-CBOR checker.  Unlike the tests above it is not
 # aimed at one backend feature: it is a differential regression test, run
 # over a curated corpus of inputs whose expected results are computed by an
@@ -417,12 +433,15 @@ REJECT_TESTS += WarnAny
 REJECT_TESTS += CNoInt
 REJECT_TESTS += CNoClosure
 REJECT_TESTS += CLamField
+REJECT_TESTS += CPartialCall
 FLAGS_CNoInt     = --custard_backend C --custard_monomorphize_types true
 FLAGS_CNoClosure = --custard_backend C --custard_monomorphize_types true
 FLAGS_CLamField  = --custard_backend C --custard_monomorphize_types true
+FLAGS_CPartialCall = --custard_backend C --custard_monomorphize_types true
 CODE_CNoInt      = 368
 CODE_CNoClosure  = 368
 CODE_CLamField   = 368
+CODE_CPartialCall = 368
 CODE_MonoPoly    = 364
 CODE_MonoPartial = 364
 CODE_MonoFuel    = 365

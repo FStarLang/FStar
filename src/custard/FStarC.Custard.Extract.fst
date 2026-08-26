@@ -3068,11 +3068,25 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
       b_ty = if is_type_binder (tcenv st) b then TUnit
              else ty_of_typ st b.binder_bv.sort }) in
   (* The effect is the one of the *codomain*: [lbeff] is the effect of
-     evaluating the lambda, which is always Tot. *)
+     evaluating the lambda, which is always Tot.
+
+     [head_ty] at *every* step, not only on the way in.  One arrow can hide
+     behind an abbreviation whose codomain is another abbreviation, and then a
+     peel that unfolds once consumes the first arrow, lands on the second name,
+     and stops with binders still to account for -- leaving exactly the
+     over-stated result type this whole comment block is about.
+     [CDDL.Spec.EqTest.eq_test] is the case: it unfolds to [restricted_t t (fun
+     x1 -> eq_test_for x1)], one arrow whose codomain is [eq_test_for], which
+     unfolds to a second arrow.  Peeling two binders left one of them standing,
+     and the definition was emitted with two parameters and a return type of
+     [bool -> bool] over a body of type [bool] (section 26). *)
   let rec peel (n:int) (e:eff) (t:cty) : ML (eff & cty) =
     if n <= 0 then (e, t)
-    else match t with
+    else match head_ty st t 10 with
          | TArrow (_, e', r) -> peel (n - 1) e' r
+         (* Not an arrow even unfolded, so [n] is over-stated by the caller
+            and the type is returned as it was written rather than as it
+            unfolds -- the abbreviation is the better name for it. *)
          | _ -> (e, t) in
   (* The arrows the extra binders consume can be hidden behind an
      abbreviation: [let st a = ctxt -> ML (a & ctxt)] makes [let get : st ctxt
