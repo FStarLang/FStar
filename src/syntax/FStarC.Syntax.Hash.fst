@@ -572,7 +572,11 @@ and equal_constant c1 c2
   | Const_string (s1, _), Const_string (s2, _) -> s1=s2
   | Const_range_of, Const_range_of
   | Const_set_range_of, Const_set_range_of -> true
-  | Const_range r1, Const_range r2 -> Range.compare r1 r2 = 0
+  (* NB: full structural equality, as in FStarC.Const.eq_const and in the
+  reflection API (where [range] is an eqtype, and observable via [explode]).
+  Comparing with Range.compare would be coarser -- it ignores the end
+  position and the use range -- and hence unsound here. *)
+  | Const_range r1, Const_range r2 -> r1 = r2
   | Const_reify _, Const_reify _ -> true
   | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
   | _ -> false
