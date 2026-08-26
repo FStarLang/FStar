@@ -723,9 +723,15 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
 
         match body with
         | None      -> doc
-        | Some body ->
-            let body = forbody body in
-            combine (if Util.codegen_fsharp() then empty else hardline) [reduce1 [doc; text "="]; body]
+        | Some body_val ->
+            let body = forbody body_val in
+            let sep =
+                if Util.codegen_fsharp()
+                then match body_val with
+                    | MLTD_DType _ -> hardline
+                    | _ -> break1
+                else hardline in
+            combine sep [reduce1 [doc; text "="]; body]
 
     in
 
