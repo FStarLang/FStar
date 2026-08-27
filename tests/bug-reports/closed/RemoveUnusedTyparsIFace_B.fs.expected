@@ -1,7 +1,6 @@
-#light "off"
 module RemoveUnusedTyparsIFace_B
 
-let f = (fun ( x  :  'a RemoveUnusedTyparsIFace_A.t ) -> x)
+let f = (fun ( x  :  RemoveUnusedTyparsIFace_A.t<'a> ) -> x)
 
 
 
