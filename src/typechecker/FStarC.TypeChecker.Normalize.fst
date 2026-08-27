@@ -3567,6 +3567,22 @@ let maybe_unfold_head_fv (env:Env.env) (head:term)
         let subst = mk_univ_subst us_formals us in
         SS.subst subst defn |> Some
 
+(* If [head] is a projector or discriminator applied to at least [n_args]
+   arguments, the position of its scrutinee among them.  Projectors and
+   discriminators are declaration-only (see
+   TcInductive.mk_discriminator_and_indexed_projectors), so there is no
+   definition of the head to unfold: the only way to make progress on a stuck
+   projection is to unfold inside its scrutinee, just like the Tm_match case
+   below --- which is precisely what the projector's definition used to expand
+   to. *)
+let disc_proj_scrutinee_index (env:Env.env) (head:term) (n_args:int) : ML (option int) =
+  match (U.un_uinst head).n with
+  | Tm_fvar fv -> (
+    match Env.disc_proj_info env fv.fv_name with
+    | Some (_, n_indexed, _) when n_args > n_indexed -> Some n_indexed
+    | _ -> None)
+  | _ -> None
+
 let rec maybe_unfold_aux (env:Env.env) (t:term) : ML (option term) =
   match (SS.compress t).n with
   | Tm_match {scrutinee=t0; ret_opt; brs; rc_opt} ->
@@ -3581,8 +3597,17 @@ let rec maybe_unfold_aux (env:Env.env) (t:term) : ML (option term) =
     then maybe_unfold_head_fv env head
     else
       match maybe_unfold_aux env head with
-      | None -> None
       | Some head -> S.mk_Tm_app head args t.pos |> Some
+      | None ->
+        match disc_proj_scrutinee_index env head (List.length args) with
+        | None -> None
+        | Some i ->
+          let scrutinee, aq = List.nth args i in
+          match maybe_unfold_aux env scrutinee with
+          | None -> None
+          | Some scrutinee ->
+            let args = args |> List.mapi (fun j a -> if j = i then (scrutinee, aq) else a) in
+            S.mk_Tm_app head args t.pos |> Some
 
 let maybe_unfold_head (env:Env.env) (t:term) : ML (option term) =
   Option.map

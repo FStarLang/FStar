@@ -2215,7 +2215,7 @@ and p_constant : _ -> ML _ = function
   | Const_effect -> str "Effect"
   | Const_unit -> str "()"
   | Const_bool b -> doc_of_bool b
-  | Const_real r -> str (r ^"R")
+  | Const_real r -> str (Real.to_string r ^ "R")
   | Const_char x -> p_char_literal x
   | Const_string(s, _) -> p_string_literal s
   | Const_int (repr, sign_width_opt) ->
