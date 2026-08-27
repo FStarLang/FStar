@@ -516,6 +516,11 @@ let rec tree_max (#a: Type)  (x: tree a {Node? x}) : a =
   | Node d _ Leaf -> d
   | Node _ _ r -> tree_max r
 
+let rec tree_min (#a: Type)  (x: tree a {Node? x}) : a =
+  match x with
+  | Node d Leaf _ -> d
+  | Node _ l _ -> tree_min l
+
 
 (** Deletion **)
 let rec delete_avl (#a: Type) (cmp:cmp a) (x: tree a) (key: a) : tree a =
@@ -535,14 +540,14 @@ let rec delete_avl (#a: Type) (cmp:cmp a) (x: tree a) (key: a) : tree a =
     )
     else
     (
-      if delta < 0 then (
-        assert (delta < 0);
+      if delta > 0 then (
+        assert (delta > 0);
         let new_left = delete_avl cmp left key in
         let tmp = Node data new_left right in
         rebalance_avl tmp
       )
       else (
-        assert (delta > 0);
+        assert (delta < 0);
         let new_right = delete_avl cmp right key in
         let tmp = Node data left new_right in
         rebalance_avl tmp
