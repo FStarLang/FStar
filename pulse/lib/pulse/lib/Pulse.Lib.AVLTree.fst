@@ -798,6 +798,39 @@ fn rec tree_max_c (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t){T.Node? l})
   }
 }
 
+fn rec tree_min_c (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t){T.Node? l})
+  preserves is_tree tree l
+  returns y:t
+  ensures pure (y == T.tree_min l)
+  decreases (T.height l)
+{
+  match tree {
+    None -> {
+      is_tree_case_none None;
+      unreachable ()
+    }
+    Some vl -> {
+      is_tree_case_some (Some vl) vl;
+      let n = !vl;
+      match n.left {
+        None -> {
+          let d = n.data;
+          is_tree_case_none n.left;
+          intro_is_tree_node tree vl;
+          d
+        }
+        Some vll -> {
+          is_tree_case_some1 n.left vll;
+          let min = tree_min_c n.left;
+          intro_is_tree_node tree vl;
+          min
+        }
+      }
+
+    }
+  }
+}
+
 fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
   requires is_tree tree 'l
   returns  y : tree_t t
@@ -820,7 +853,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
         let right = n.right;
         rewrite each node.left as left;
         rewrite each node.right as right;
-        //explicit ltree and rtree is needed, to find a proof for the existence of func ltree and rtree
+        // Explicit ghost ltree and rtree witnesses are needed for the subsequent tree-shape proof.
         with ltree. assert is_tree left ltree;
         with rtree. assert is_tree right rtree;
         match left {
@@ -893,8 +926,8 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
           }
         }
       } else {
-        if (delta < 0) {
-          assert (pure (delta < 0));
+        if (delta > 0) {
+          assert (pure (delta > 0));
           let new_left = delete_avl cmp n.left key;
           let vl' = {data = n.data; left = new_left; right = n.right};
           vl := vl';
@@ -906,6 +939,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
           let new_tree = rebalance_avl (Some vl);
           new_tree
         } else {
+          assert (pure (delta < 0));
           let new_right = delete_avl cmp n.right key;
           let vl' = {data = n.data; left = n.left; right = new_right};
           vl := vl';
@@ -923,4 +957,15 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
       }
     }
   }
+}
+
+fn pop_min (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (#l:G.erased(T.tree t){T.Node? l})
+  requires is_tree tree l
+  returns r : (t & tree_t t)
+  ensures is_tree (snd r) (T.delete_avl cmp l (fst r))
+  ensures pure (fst r == T.tree_min l)
+{
+  let k = tree_min_c tree;
+  let y = delete_avl cmp tree k;
+  (k, y)
 }

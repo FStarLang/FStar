@@ -62,3 +62,11 @@ fn delete_avl
   requires is_tree tree l
   returns  y : tree_t t
   ensures  is_tree y (T.delete_avl cmp l key)
+
+fn pop_min
+  (#t:Type0) (cmp: T.cmp t) (tree:tree_t t)
+  (#l: G.erased(T.tree t){T.Node? l})
+  requires is_tree tree l
+  returns r : (t & tree_t t)
+  ensures is_tree (snd r) (T.delete_avl cmp l (fst r))
+  ensures pure (fst r == T.tree_min l)
