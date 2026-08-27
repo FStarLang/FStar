@@ -8035,6 +8035,128 @@ with no workaround, and is the shape a CDDL `bundle` uses.  The three
 `[@@@monomorphize]` attributes CDDL needs would be inferred by M7.
 
 
+## 28. A divergence the budget was for
+
+[#4494] reports that the legacy extraction pipelines can be made to allocate
+without bound and be OOM-killed, with no message naming anything.  The
+question it raises for Custard is whether §3.6's step budget is the "broader
+fix" that report says is still missing.  It is, and this section records the
+measurement rather than the argument.
+
+[#4494]: https://github.com/FStarLang/FStar/pull/4494
+
+### 28.1 The shape
+
+`FStar.Pervasives.false_elim` is defined as
+
+```fstar
+let rec false_elim #_ _ = false_elim ()
+```
+
+Since 1cb59d14cc, `FStar.Pervasives` is in `Dep.interfaces_with_inlining`, so
+with `--cmi` -- the default -- that body is delta-unfoldable in every client.
+Extraction normalizes *types* with delta, so a type computed by it
+
+```fstar
+let t (sq: squash False) : Type0 = false_elim ()
+let f (sq: squash False) (x: t sq) : nat = 0
+```
+
+unfolds `false_elim () -> false_elim () -> ...` forever.  Nothing about this
+is specific to `false_elim`: any recursive definition whose unfolding makes no
+progress has it, and cross-module inlining exposes many more of them than it
+used to.
+
+### 28.2 What Custard does
+
+Measured on this tree, on the report's own single-module reduction:
+
+| pipeline | result |
+| --- | --- |
+| `--codegen OCaml` | `Fatal error: allocation failure during minor GC`, core dumped |
+| `--codegen Custard`, `f` reachable | error 365 in well under a second |
+
+The error names the term and the chain that asked for it:
+
+```
+* Error 365:
+  - Custard exceeded --custard_norm_budget (10000000 reduction steps) while
+    normalizing a binder's sort.
+  - The term being normalized, before reduction, was: t sq
+  - Reached through:
+  -   TypeDiverge.f
+```
+
+Two things are doing the work, and they are worth keeping apart.
+
+The budget is the one that matters, and it is not a lucky escape: §3.6 put it
+there for exactly this failure mode, in the same words -- "not a wrong answer
+or a rejection, but a compiler that never finishes and never says why".  What
+is new is only that it now has an independent witness.  Note in particular
+that `norm_bounded` covers *type* normalization and not just specialization
+keys, which is where §3.6's original motivation lay; the report's case is a
+binder's sort, and it is caught because the wrapper was applied uniformly
+rather than at the one call site that motivated it.
+
+The second is weaker but real: extraction is demand-driven from an entry point
+(§3.2), so a definition nothing reaches is never normalized at all.  In the
+report's reduction `f` is dead, and Custard extracts the module in 0.2 s
+without noticing.  This is why `tests/custard/TypeDiverge.fst` has to name `f`
+with `--custard_entry` to test anything -- and it is a real difference in
+exposure, since the legacy pipeline extracts every definition in the module
+whether or not the program uses it.  It is not a *fix*, and it should not be
+offered as one: a program that genuinely calls into this territory gets there.
+
+`TypeDiverge.fst` spells the recursive definition out rather than importing
+`false_elim`, so that it goes on testing the hazard after #4494 marks
+`false_elim` `irreducible`.  The shape is the hazard; the one name is not.
+
+### 28.3 `false_elim` should have been an abort
+
+The second half of the report's question is what `false_elim` becomes, and the
+answer was: worse than it should be.
+
+`Prims.magic` and `Prims.admit` have had a builtin rule since M2 mapping them
+to `EAbort` at `TAny` -- they typecheck only because the caller has proved the
+point unreachable, there is no value of the result type to produce, and `TAny`
+lets the abort stand where a value of any type is wanted.  `false_elim` is the
+same construct in a third spelling and had no rule, so Custard extracted its
+*definition*:
+
+```ocaml
+let rec fStar_Pervasives_false_elim (u : unit) : 'a =
+  (fStar_Pervasives_false_elim ())
+```
+
+That is bad in two different ways.  On OCaml it is an infinite loop where a
+`failwith` belongs, so a program that reaches provably-unreachable code hangs
+instead of saying so -- the same failure mode as §28.1, moved from compile
+time to run time.  On C it was not emitted at all: the result type is a type
+variable, so a hard 368, and with `--custard_monomorphize_types true` it
+became a 368 about `Prims.int` -- an unrepresentable *return* type for a
+function that never returns.
+
+`Builtins.pervasives_rule` now gives it the same `EAbort`/`TAny` treatment as
+`magic` and `admit`, so OCaml gets `failwith "FStar.Pervasives.false_elim"`
+and C gets
+
+```c
+static uint32_t CFalseElim_g(void) {
+  /* FStar.Pervasives.false_elim */
+  abort();
+}
+```
+
+where before there was no C output at all.  `tests/custard/CFalseElim.fst`.
+
+One wrinkle worth recording, because it broke a test on the way in:
+`FStar.Pervasives` is also a *realized* module, so the new branch in the rule
+dispatcher has to fall through rather than shadow.  Claiming the namespace and
+returning `None` for everything else silently cut `Mkdtuple3` and the rest of
+the module off from `is_realized_module`, which `tests/custard/Realized.fst`
+caught immediately.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -8123,3 +8245,4 @@ with no workaround, and is the shape a CDDL `bundle` uses.  The three
 | M10ββ | **A green result that is not evidence** (§23.4) | Done, from #4484.  Section 24's `#include "<Module>.h"` meant the generated source no longer compiles from a directory other than the one extraction wrote it to, and `mutants.py` builds each mutant in `_output/mutants/`.  Every mutant became uncompilable and both adequacy figures collapsed to `killed 0 / 0 (uncompilable 46)`.  The include path is the trivial half; the half worth recording is that **the script did not error out** -- `killed 0 / 0` is a pass under any "did it fail?" reading, so the study would have gone on reporting success while measuring nothing, which is section 23's own thesis pointed at section 23's own tooling.  The uncompilable count is now fatal rather than reported, as is a zero-mutant run: an uncompilable mutant is an absent test, not a weak one, and it is always a defect in the script or the backend, never a property of the corpus.  Verified both ways -- the guard exits 1 on the broken include path and 0 once fixed, and the four figures return to 46/46, 46/46, 48/49, 46/59. |
 | M10γγ | **Two more ways to lose an argument** (§26) | Done.  Round 20 found two arity defects section 25's check did not catch, one of which it *had* caught in a different program.  (1) `let e : bool -> bool -> bool = ap band` is lowered to a **variable** of function-pointer type, because §25.3's `cheap_expr` guard declines to expand a body that computes before returning a function -- and both the arity table and the new check recorded *definitions*, keyed on binder count, so both read `e` as arity 0 and `call_e` stayed eta-short.  The variable/function lowering turned out to be load-bearing for correctness: becoming a variable is what made the callee invisible.  Both tables now read a parameterless arrow-typed definition's arity off its **type**, which is what the emitted object accepts.  (2) `Extract`'s `peel` consumes one arrow per extra lambda binder and called `head_ty` **once, on the way in**; `eq_test` unfolds to one arrow whose codomain is another abbreviation hiding the second, so peeling two binders consumed one arrow, landed on a name and stopped, while both binders were emitted -- a definition declared to return `bool -> bool` over a body of type `bool`.  It now unfolds at every step, like its term-level twin `peel_typ`.  Worth noting on severity: gcc 13 accepts that with `-Wint-conversion` and prints the right answer because a `bool` round-trips through a pointer on that ABI, while gcc 14 rejects it -- right only on the compiler it was tested against.  `CVarArity.fst`, `CAbbrevArity.fst` (which is `CDDL.Spec.EqTest.eq_test` verbatim), and `CPartialCall.fst` for the check firing on a *local* partial application, which eta-expansion cannot reach.  Both defects are the same mistake at different scales: an arity read off the wrong representation (§26.4). |
 | M10δδ | **A constant function compiled to mutable state** (§27) | Done.  Round 21 confirmed both §26 fixes and got the real CDDL combinator library extracting and running, and left one finding: a pure, total, compile-time-constant function was being lowered to a `static` function pointer assigned in `custard_init_globals`, which makes skipping the initializer a null-pointer call from a *public* entry point rather than a wrong answer, and puts an indirect call on the hot path.  The blocker was not §25.3's `cheap_expr`, which already admits the body, but the arity bound in `eta_expand_decl`, which only fires on an under-applied head.  Relaxing that bound as proposed would be unsound as a performance matter -- `build_table 1000000` is a known top-level function with cheap arguments, so `let table : int -> int = build_table 1000000` would be re-evaluated per call -- so `Simplify.reduce` instead gains a rule that *removes* a call: a **forwarder**, a pure non-recursive definition whose body is exactly one of its own binders, applied to all its arguments reduces to that argument.  `id_fn band` becomes `band`, which the existing `EQual` case of `eta_expand_decl` expands into a real `static` function; `id_fn` dies in DCE and `custard_init_globals` is not emitted.  `tests/custard/CInitTrap.fst`, whose second forwarder returns its *second* binder.  Four existing tests contained an incidental forwarder and were rewritten to use their arguments rather than return one (§27.5); all five suites, the DICE example, and all four CBOR mutation-adequacy figures are unchanged |
+| M10εε | **A divergence the budget was for** (§28) | Done.  #4494 reports the legacy pipelines allocating without bound and being OOM-killed on a type computed by a recursive definition that makes no progress when unfolded, and asks for a step bound as the broader fix.  §3.6's budget is that bound, and this measures it: the same reduction is `Fatal error: allocation failure during minor GC` under `--codegen OCaml` and error 365 -- naming the term and the request chain -- under Custard, because `norm_bounded` was applied to *type* normalization and not just to specialization keys.  Demand-driven extraction (§3.2) is a second and weaker guard, since the report's own reduction has the offending definition dead; `tests/custard/TypeDiverge.fst` therefore names it with `--custard_entry`, and spells the recursion out rather than importing `false_elim` so that it survives #4494 marking that `irreducible`.  Separately, `false_elim` had no builtin rule, so Custard extracted its non-terminating *definition*: an infinite loop where OCaml wants a `failwith`, and on C a hard 368 about the return type of a function that never returns.  `Builtins.pervasives_rule` gives it the `EAbort`/`TAny` treatment `magic` and `admit` have had since M2; `tests/custard/CFalseElim.fst`.  The dispatcher branch has to *fall through*, since `FStar.Pervasives` is also a realized module -- shadowing it cut `Mkdtuple3` off from `is_realized_module`, which `Realized.fst` caught |

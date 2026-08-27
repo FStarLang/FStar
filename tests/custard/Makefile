@@ -329,6 +329,11 @@ FLAGS_CInitTrap = --custard_entry CInitTrap.use --custard_entry CInitTrap.direct
 CGREP_CInitTrap = "CInitTrap_wrapped(bool eta, bool eta1)" \
                   "return CInitTrap_band(eta, eta1);" \
                   "CInitTrap_picked(bool"
+# `FStar.Pervasives.false_elim` becomes EAbort, like magic and admit: an
+# abort() rather than the loop it is defined as, which on C was a hard 368.
+C_TESTS += CFalseElim
+CGREP_CFalseElim = "FStar.Pervasives.false_elim" "abort();"
+CNOGREP_CFalseElim = "FStar_Pervasives_false_elim"
 CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
                     "custard_init_globals" "CInitTrap_id_fn" "CInitTrap_snd_fn"
 # A reduced deterministic-CBOR checker.  Unlike the tests above it is not
@@ -435,6 +440,13 @@ CODE_MonoEffect = 364
 REJECT_TESTS += MonoPartial
 REJECT_TESTS += MonoFuel
 REJECT_TESTS += NormBudget
+# PR #4494: the legacy backends OOM on a type computed by a recursive
+# definition that makes no progress when unfolded.  Section 3.6's budget is
+# the broader fix that report asks for, so this must be error 365 and not a
+# hang.
+REJECT_TESTS += TypeDiverge
+CODE_TypeDiverge = 365
+FLAGS_TypeDiverge = --custard_entry TypeDiverge.f
 # WarnAny is higher-kinded (#f:Type0 -> Type0), which has no counterpart in the
 # target type language: it lands on TAny, which --custard_warn_any reports and
 # WARN_ANY escalates.  This is the positive test for section 5.6.

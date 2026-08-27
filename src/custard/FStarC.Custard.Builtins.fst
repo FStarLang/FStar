@@ -201,6 +201,33 @@ let int_cast_rule (id:string) : ML (option rule) =
    arithmetic operators of [Prims] are deliberately *not* here: they act on
    unbounded integers, which no C backend can represent, so leaving them as
    ordinary calls keeps the failure at link time and legible. *)
+(* [FStar.Pervasives.false_elim] is [Prims.magic] and [Prims.admit] in a third
+   spelling: it typechecks only because the caller has [False] in scope, there
+   is no value of the result type to produce, and its own definition is
+   [let rec false_elim #_ _ = false_elim ()] -- a non-terminating loop standing
+   in for a value that cannot exist.
+
+   Extracting that definition literally is what #4494 is about at the other
+   end of the pipeline.  Custard is not vulnerable the way the legacy backend
+   is -- an unfolding that does not terminate hits --custard_norm_budget and
+   becomes error 365 -- but it did emit the loop, which is worse than useless
+   in two different ways.  On OCaml the residue is an infinite loop where a
+   [failwith] belongs, so a program that reaches provably-unreachable code
+   hangs instead of saying so.  On C it is not emitted at all: the result type
+   is a type variable, so it is a hard 368, and with type monomorphization on
+   it becomes a 368 about [Prims.int] instead -- an unrepresentable *return*
+   type for a function that never returns.
+
+   [EAbort] at [TAny] is what [magic] and [admit] already get, and it is right
+   here for the same reason: [TAny] stands where a value of any type is
+   wanted, so the C backend stops caring what the result type was. *)
+let pervasives_rule (id:string) : ML (option rule) =
+  match id with
+  | "false_elim" ->
+    Some (Rule_prim (1, fun _ _ ->
+            mk (EAbort "FStar.Pervasives.false_elim") TAny E_Impure))
+  | _ -> None
+
 let prims_rule (id:string) : ML (option rule) =
   let bool_op (o:op) (arity:int) : ML (option rule) =
     let po = { po_op = o; po_int = None } in
@@ -884,6 +911,12 @@ let builtin_rule (l:Ident.lident) : ML rule =
          | Some sw -> machine_int_rule sw id
          | None ->
            if ns = ["Prims"] then prims_rule id
+           (* [FStar.Pervasives] is also a *realized* module, so this has to
+              fall through rather than shadow: [pervasives_rule] claims one
+              name, and everything else in the module -- [Mkdtuple3] and
+              friends -- still has to reach [is_realized_module] below. *)
+           else if ns = ["FStar"; "Pervasives"] && Some? (pervasives_rule id)
+           then pervasives_rule id
            else if ns = ["FStar"; "Int"; "Cast"] then int_cast_rule id
            else if ns = ["FStar"; "All"] || ns = ["FStarC"; "Effect"]
            then (match ref_rule id with
