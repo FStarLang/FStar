@@ -59,7 +59,7 @@ type glb_entry = {
 (* Would be nice to define an unembedding class here.. but it's circular. *)
 let unembed_int (t:term) : Tac (option int) =
   match inspect_ln t with
-  | R.Tv_Const (C_Int i) -> Some i
+  | R.Tv_Const (C_Int i _) -> Some i
   | _ -> None
 
 let rec unembed_list (#a:Type) (u : term -> Tac (option a)) (t:term) : Tac (option (list a)) =
@@ -620,7 +620,7 @@ let mk_class (nm:string) : Tac decls =
          spine of its type; see FStar.Attributes.smt_arity. The class parameters
          are the right choice: methods are habitually used partially applied,
          and this is the arity the encoding used before arrows became unary. *)
-      let arity = pack (Tv_Const (C_Int (L.length params))) in
+      let arity = pack (Tv_Const (C_Int (L.length params) (FStar.Sealed.seal Dec))) in
       let se = set_sigelt_attrs ((`(FStar.Attributes.smt_arity (`#arity)))
                                 :: (`tcmethod) :: proj_attrs @ b.attrs) se in
       // debug' (fun () -> "trying to return : " ^ term_to_string (quote se));

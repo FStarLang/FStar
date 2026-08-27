@@ -56,8 +56,11 @@ type int_width =
 
 type vconst =
     | C_Unit
-    | C_Int of int
-    | C_MachineInt of int & int_signedness & int_width
+    (* The int_base is sealed: it records the base the literal was written
+       in, which is presentational only and must not be observable in the
+       logical fragment. See FStar.IntegerLiteral. *)
+    | C_Int of int & sealed FStar.IntegerLiteral.int_base
+    | C_MachineInt of int & sealed FStar.IntegerLiteral.int_base & int_signedness & int_width
     | C_True
     | C_False
     | C_String of string

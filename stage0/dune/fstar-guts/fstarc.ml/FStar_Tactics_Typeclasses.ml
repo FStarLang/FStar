@@ -31,8 +31,8 @@ let unembed_int (t : FStar_Tactics_NamedView.term)
   (uu___ : FStarC_Tactics_Types.ref_proofstate) :
   Prims.int FStar_Pervasives_Native.option=
   match FStarC_Reflection_V2_Builtins.inspect_ln t with
-  | FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_Int i) ->
-      FStar_Pervasives_Native.Some i
+  | FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_Int
+      (i, uu___1)) -> FStar_Pervasives_Native.Some i
   | uu___1 -> FStar_Pervasives_Native.None
 let rec unembed_list :
   'a .
@@ -1096,8 +1096,10 @@ let mk_class (nm : Prims.string) (ps : FStarC_Tactics_Types.ref_proofstate) :
                                                                  (FStar_Tactics_NamedView.Tv_Const
                                                                     (
                                                                     FStarC_Reflection_V2_Data.C_Int
-                                                                    (FStar_List_Tot_Base.length
-                                                                    params)))),
+                                                                    ((FStar_List_Tot_Base.length
+                                                                    params),
+                                                                    (FStar_Sealed.seal
+                                                                    FStar_IntegerLiteral.Dec))))),
                                                                FStarC_Reflection_V2_Data.Q_Explicit))))
                                                     ::
                                                     (FStarC_Reflection_V2_Builtins.pack_ln

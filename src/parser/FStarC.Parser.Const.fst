@@ -408,7 +408,8 @@ let const_to_string x = match x with
   | Const_bool b -> if b then "true" else "false"
   | Const_real r -> Real.to_string r ^ "R"
   | Const_string(s, _) -> Format.fmt1 "\"%s\"" s
-  | Const_int (x, _) -> x
+  | Const_int (v, b) -> string_of_int_literal v b
+  | Const_machine_int (v, b, _, _) -> string_of_int_literal v b
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStarC.Range.string_of_range r
   | Const_range_of -> "range_of"

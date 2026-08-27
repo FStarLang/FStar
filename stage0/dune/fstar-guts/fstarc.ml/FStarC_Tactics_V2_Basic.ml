@@ -10340,7 +10340,7 @@ let refl_check_match_complete (g : env) (sc : FStarC_Syntax_Syntax.term)
     FStarC_Reflection_V2_Data.binding Prims.list Prims.list) refl_tac=
   refl_typing_builtin_wrapper "refl_check_match_complete"
     (fun uu___ ->
-       let one = FStarC_Syntax_Util.exp_int "1" in
+       let one = FStarC_Syntax_Util.exp_int Prims.int_one in
        let brs =
          FStarC_List.map
            (fun p ->

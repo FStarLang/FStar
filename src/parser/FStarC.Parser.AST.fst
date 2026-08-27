@@ -146,8 +146,8 @@ let mk_term t r l = {tm=t; range=r; level=l}
 let mk_uminus t rminus r l =
   let t =
     match t.tm with
-    | Const (Const_int (s, Some (Signed, width))) ->
-        Const (Const_int ("-" ^ s, Some (Signed, width)))
+    | Const (Const_machine_int (v, b, Signed, width)) ->
+        Const (Const_machine_int (-v, b, Signed, width))
     | _ ->
         (* Prefix (unary) minus is the operator ( ~- ), as in OCaml and
            F#. Writing it this way keeps it distinct from the binary

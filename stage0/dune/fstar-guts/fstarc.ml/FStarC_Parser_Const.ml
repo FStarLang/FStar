@@ -133,6 +133,10 @@ let bool_of_string_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Parse"; "bool_of_string"]
 let string_compare : FStarC_Ident.lident= p2l ["FStar"; "String"; "compare"]
 let order_lid : FStarC_Ident.lident= p2l ["FStar"; "Order"; "order"]
+let real_literal_lid : FStarC_Ident.lident=
+  p2l ["FStar"; "RealLiteral"; "real_literal"]
+let mkreal_literal_lid : FStarC_Ident.lident=
+  p2l ["FStar"; "RealLiteral"; "Mkreal_literal_repr"]
 let vconfig_lid : FStarC_Ident.lident= p2l ["FStar"; "VConfig"; "vconfig"]
 let mkvconfig_lid : FStarC_Ident.lident=
   p2l ["FStar"; "VConfig"; "Mkvconfig"]
@@ -342,9 +346,11 @@ let const_to_string (x : FStarC_Const.sconst) : Prims.string=
   | FStarC_Const.Const_effect -> "Effect"
   | FStarC_Const.Const_unit -> "()"
   | FStarC_Const.Const_bool b -> if b then "true" else "false"
-  | FStarC_Const.Const_real r -> Prims.strcat r "R"
+  | FStarC_Const.Const_real r -> Prims.strcat (FStarC_Real.to_string r) "R"
   | FStarC_Const.Const_string (s, uu___) -> FStarC_Format.fmt1 "\"%s\"" s
-  | FStarC_Const.Const_int (x1, uu___) -> x1
+  | FStarC_Const.Const_int (v, b) -> FStarC_Const.string_of_int_literal v b
+  | FStarC_Const.Const_machine_int (v, b, uu___, uu___1) ->
+      FStarC_Const.string_of_int_literal v b
   | FStarC_Const.Const_char c ->
       Prims.strcat "'" (Prims.strcat (FStarC_Util.string_of_char c) "'")
   | FStarC_Const.Const_range r -> FStarC_Range_Ops.string_of_range r
@@ -467,7 +473,7 @@ let implies_elim_lid : FStarC_Ident.lid= classical_sugar_lid "implies_elim"
 let or_elim_lid : FStarC_Ident.lid= classical_sugar_lid "or_elim"
 let and_elim_lid : FStarC_Ident.lid= classical_sugar_lid "and_elim"
 let or_decide_lid : FStarC_Ident.lid= classical_sugar_lid "or_decide"
-let max_indefinite_description_arity : Prims.int= Prims.of_int 5
+let max_indefinite_description_arity : Prims.int= Prims.of_int 8
 let indefinite_description_lid (n : Prims.int) : FStarC_Ident.lid=
   classical_sugar_lid
     (Prims.strcat "indefinite_description" (Prims.string_of_int n))

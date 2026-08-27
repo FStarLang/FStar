@@ -19,22 +19,22 @@ open FStarC.Effect
 open FStarC.Range.Type
 open FStar.Char
 
+(* [int_base] is shared with the reflection API (FStar.Stubs.Reflection.V2.Data
+also includes FStar.IntegerLiteral), so that the compiler's constants and their
+reflected views agree on it. The [include] keeps its constructors accessible as
+FStarC.Const.Dec, FStarC.Const.Hex, etc. *)
+include FStar.IntegerLiteral
+
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type signedness = | Unsigned | Signed
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type width = | Int8 | Int16 | Int32 | Int64 | Sizet
 
 (* NB:
-    Const_int (_, None) is not a canonical representation for a mathematical integer
-    e.g., you can have both
-    Const_int("0x3ffffff", None)
-    and
-    Const_int("67108863", None)
-    which represent the same number
-    You should do an "FStarC.Util.ensure_decimal" on the
-    string representation before comparing integer constants.
-
-    eq_const below does that for you
+    Integer literals are stored as their (mathematical) integer value,
+    together with the base they were written in. The base is only kept for
+    pretty-printing and extraction: it is *not* part of the meaning of the
+    literal, and eq_const below ignores it.
 *)
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -42,7 +42,8 @@ type sconst =
   | Const_effect
   | Const_unit
   | Const_bool        of bool
-  | Const_int         of string & option (signedness & width) (* When None, means "mathematical integer", i.e. Prims.int. *)
+  | Const_int         of int & int_base                      (* a mathematical integer, i.e. Prims.int *)
+  | Const_machine_int of int & int_base & signedness & width  (* a machine integer, e.g. FStar.UInt8.t *)
   | Const_char        of char (* unicode code point: char in F#, int in OCaml *)
   | Const_real        of FStarC.Real.real
   | Const_string      of string & range                      (* UTF-8 encoded *)
@@ -57,4 +58,12 @@ val eq_const (c1 c2 : sconst) : bool
 
 val bounds : signedness -> width -> int & int
 
-val within_bounds : string -> signedness -> width -> ML bool
+val within_bounds : int -> signedness -> width -> bool
+
+(** Render an integer literal in the given base, as it would be written in
+source syntax (e.g. [string_of_int_literal 16 Hex = "0x10"]). *)
+val string_of_int_literal : int -> int_base -> string
+
+(** Parse an integer literal as produced by the lexer (which may carry a
+[0x]/[0o]/[0b] prefix), returning its value and the base it was written in. *)
+val parse_int_literal : string -> ML (int & int_base)

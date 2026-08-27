@@ -17,7 +17,7 @@ instance concrete_1 : concrete 1 = { c = 1ul; pf = (); }
 
 exception Skip
 
-let mk_u32 (n:int) : term = `(U32.uint_to_t (`#(Tv_Const (C_Int n))))
+let mk_u32 (n:int) : term = `(U32.uint_to_t (`#(Tv_Const (C_Int n (FStar.Sealed.seal Dec)))))
 
 (* But we can construct these instances on the fly via a tactic *)
 let mk_concrete () : Tac unit =
@@ -27,7 +27,7 @@ let mk_concrete () : Tac unit =
       match args with
       | [(t, Q_Explicit)] -> (
         match t with
-        | Tv_Const (C_Int n) ->
+        | Tv_Const (C_Int n _) ->
           (* Ideally this just be
                exact (`Mkconcrete (`#mi) ())
              but that fails since we disable subtyping in the

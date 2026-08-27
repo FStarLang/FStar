@@ -231,7 +231,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : ML (option (t
                 match c.nbe_t with
                 | Constant (Unit) -> s = C.Const_unit
                 | Constant (Bool b) -> (match s with | C.Const_bool p -> b = p | _ -> false)
-                | Constant (Int i) -> (match s with | C.Const_int (p, None) -> i = BU.int_of_string p | _ -> false)
+                | Constant (Int i) -> (match s with | C.Const_int (p, _) -> i = p | _ -> false)
                 | Constant (String (st, _)) -> (match s with | C.Const_string(p, _) -> st = p | _ -> false)
                 | Constant (Char c) -> (match s with | C.Const_char p -> c = p | _ -> false)
                 | _ -> false
@@ -1040,7 +1040,7 @@ and translate_constant (c : sconst) : ML constant =
     match c with
     | C.Const_unit -> Unit
     | C.Const_bool b -> Bool b
-    | C.Const_int (s, None) -> Int (BU.int_of_string s)
+    | C.Const_int (i, _) -> Int i
     | C.Const_string (s, r) -> String (s,r)
     | C.Const_char c -> Char c
     | C.Const_range r -> Range r
@@ -1150,7 +1150,7 @@ and readback (cfg:config) (x:t) : ML term =
     | Constant Unit -> with_range S.unit_const
     | Constant (Bool true) -> with_range U.exp_true_bool
     | Constant (Bool false) -> with_range U.exp_false_bool
-    | Constant (Int i) -> with_range (U.exp_int (show i))
+    | Constant (Int i) -> with_range (U.exp_int i)
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
     | Constant (Range r) -> PO.embed_simple #_ #EMB.e_range x.nbe_r r

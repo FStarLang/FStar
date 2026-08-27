@@ -37,7 +37,7 @@ val rest_pat_for_lid (env : env) (l : lid) : ML (list pattern)
 (* Only called from tactics *)
 val desugar_term:            env -> term -> ML S.term
 
-val desugar_machine_integer: env -> repr:string
+val desugar_machine_integer: env -> repr:int -> base:FStarC.Const.int_base
                            -> (FStarC.Const.signedness & FStarC.Const.width)
                            -> Range.t -> ML Syntax.term
 

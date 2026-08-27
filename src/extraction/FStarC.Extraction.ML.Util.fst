@@ -54,7 +54,8 @@ let mlconst_of_const' (sctt : sconst) : ML mlconstant =
   | Const_range _
   | Const_unit          -> MLC_Unit
   | Const_char   c      -> MLC_Char  c
-  | Const_int    (s, i) -> MLC_Int   (s, i)
+  | Const_int    (v, b) -> MLC_Int (string_of_int_literal v b, None)
+  | Const_machine_int (v, b, s, w) -> MLC_Int (string_of_int_literal v b, Some (s, w))
   | Const_bool   b      -> MLC_Bool  b
   | Const_string (s, _) -> MLC_String (s)
 

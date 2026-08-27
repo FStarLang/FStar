@@ -5008,29 +5008,47 @@ and tc_constant (env : FStarC_TypeChecker_Env.env_t)
     match c with
     | FStarC_Const.Const_unit -> FStarC_Syntax_Syntax.t_unit
     | FStarC_Const.Const_bool uu___ -> FStarC_Syntax_Util.t_bool
-    | FStarC_Const.Const_int (uu___, FStar_Pervasives_Native.None) ->
-        FStarC_Syntax_Syntax.t_int
-    | FStarC_Const.Const_int (uu___, FStar_Pervasives_Native.Some msize) ->
-        FStarC_Syntax_Syntax.tconst
-          (match msize with
-           | (FStarC_Const.Signed, FStarC_Const.Int8) ->
-               FStarC_Parser_Const.int8_lid
-           | (FStarC_Const.Signed, FStarC_Const.Int16) ->
-               FStarC_Parser_Const.int16_lid
-           | (FStarC_Const.Signed, FStarC_Const.Int32) ->
-               FStarC_Parser_Const.int32_lid
-           | (FStarC_Const.Signed, FStarC_Const.Int64) ->
-               FStarC_Parser_Const.int64_lid
-           | (FStarC_Const.Unsigned, FStarC_Const.Int8) ->
-               FStarC_Parser_Const.uint8_lid
-           | (FStarC_Const.Unsigned, FStarC_Const.Int16) ->
-               FStarC_Parser_Const.uint16_lid
-           | (FStarC_Const.Unsigned, FStarC_Const.Int32) ->
-               FStarC_Parser_Const.uint32_lid
-           | (FStarC_Const.Unsigned, FStarC_Const.Int64) ->
-               FStarC_Parser_Const.uint64_lid
-           | (FStarC_Const.Unsigned, FStarC_Const.Sizet) ->
-               FStarC_Parser_Const.sizet_lid)
+    | FStarC_Const.Const_int uu___ -> FStarC_Syntax_Syntax.t_int
+    | FStarC_Const.Const_machine_int (v, base, sw, w) ->
+        let lid =
+          match (sw, w) with
+          | (FStarC_Const.Signed, FStarC_Const.Int8) ->
+              FStarC_Parser_Const.int8_lid
+          | (FStarC_Const.Signed, FStarC_Const.Int16) ->
+              FStarC_Parser_Const.int16_lid
+          | (FStarC_Const.Signed, FStarC_Const.Int32) ->
+              FStarC_Parser_Const.int32_lid
+          | (FStarC_Const.Signed, FStarC_Const.Int64) ->
+              FStarC_Parser_Const.int64_lid
+          | (FStarC_Const.Signed, FStarC_Const.Sizet) ->
+              FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
+                r FStarC_Errors_Codes.Fatal_UnsupportedConstant ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                (Obj.magic
+                   "Ill-typed machine integer constant: there are no signed size_t literals")
+          | (FStarC_Const.Unsigned, FStarC_Const.Int8) ->
+              FStarC_Parser_Const.uint8_lid
+          | (FStarC_Const.Unsigned, FStarC_Const.Int16) ->
+              FStarC_Parser_Const.uint16_lid
+          | (FStarC_Const.Unsigned, FStarC_Const.Int32) ->
+              FStarC_Parser_Const.uint32_lid
+          | (FStarC_Const.Unsigned, FStarC_Const.Int64) ->
+              FStarC_Parser_Const.uint64_lid
+          | (FStarC_Const.Unsigned, FStarC_Const.Sizet) ->
+              FStarC_Parser_Const.sizet_lid in
+        (if Prims.not (FStarC_Const.within_bounds v sw w)
+         then
+           (let uu___1 =
+              let uu___2 =
+                FStarC_Class_Show.show FStarC_Ident.showable_lident lid in
+              FStarC_Format.fmt2 "%s is not in the expected range for %s"
+                (FStarC_Const.string_of_int_literal v base) uu___2 in
+            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
+              FStarC_Errors_Codes.Error_OutOfRange ()
+              (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___1))
+         else ();
+         FStarC_Syntax_Syntax.tconst lid)
     | FStarC_Const.Const_string uu___ -> FStarC_Syntax_Syntax.t_string
     | FStarC_Const.Const_real uu___ -> FStarC_Syntax_Syntax.t_real
     | FStarC_Const.Const_char uu___ ->
@@ -8734,6 +8752,7 @@ and tc_pat (env : FStarC_TypeChecker_Env.env)
            | FStarC_Const.Const_unit -> ()
            | FStarC_Const.Const_bool uu___2 -> ()
            | FStarC_Const.Const_int uu___2 -> ()
+           | FStarC_Const.Const_machine_int uu___2 -> ()
            | FStarC_Const.Const_char uu___2 -> ()
            | FStarC_Const.Const_string uu___2 -> ()
            | uu___2 ->
@@ -9441,27 +9460,24 @@ and tc_eqn (scrutinee : FStarC_Syntax_Syntax.bv)
                                                  uu___12 uu___13 pat_exp2 in
                                              [uu___11]
                                          | (FStarC_Syntax_Syntax.Pat_constant
-                                            (FStarC_Const.Const_int
-                                            (uu___11,
-                                             FStar_Pervasives_Native.Some
-                                             uu___12)),
-                                            uu___13) ->
-                                             let uu___14 =
-                                               let uu___15 =
+                                            (FStarC_Const.Const_machine_int
+                                            uu___11), uu___12) ->
+                                             let uu___13 =
+                                               let uu___14 =
                                                  FStarC_TypeChecker_Env.clear_expected_typ
                                                    env in
-                                               match uu___15 with
-                                               | (env1, uu___16) ->
+                                               match uu___14 with
+                                               | (env1, uu___15) ->
                                                    env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term
                                                      env1 pat_exp2 true in
-                                             (match uu___14 with
-                                              | (uu___15, t, uu___16) ->
-                                                  let uu___17 =
-                                                    let uu___18 =
+                                             (match uu___13 with
+                                              | (uu___14, t, uu___15) ->
+                                                  let uu___16 =
+                                                    let uu___17 =
                                                       force_scrutinee () in
                                                     FStarC_Syntax_Util.mk_decidable_eq
-                                                      t uu___18 pat_exp2 in
-                                                  [uu___17])
+                                                      t uu___17 pat_exp2 in
+                                                  [uu___16])
                                          | (FStarC_Syntax_Syntax.Pat_cons
                                             (uu___11, uu___12, []),
                                             FStarC_Syntax_Syntax.Tm_uinst

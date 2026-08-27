@@ -7697,9 +7697,9 @@ and check_pat (g : env) (p : FStarC_Syntax_Syntax.pat)
   | FStarC_Syntax_Syntax.Pat_constant c ->
       let e =
         match c with
-        | FStarC_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
+        | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
             FStarC_ToSyntax_ToSyntax.desugar_machine_integer
-              (g.tcenv).FStarC_TypeChecker_Env.dsenv repr sw
+              (g.tcenv).FStarC_TypeChecker_Env.dsenv repr base (sw, w)
               p.FStarC_Syntax_Syntax.p
         | uu___ ->
             FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)

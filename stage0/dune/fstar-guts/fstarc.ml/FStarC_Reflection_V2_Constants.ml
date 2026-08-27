@@ -21,6 +21,9 @@ let fstar_refl_lid (s : Prims.string Prims.list) : FStarC_Ident.lident=
   FStarC_Ident.lid_of_path
     (FStar_List_Tot_Base.op_At ["FStar"; "Stubs"; "Reflection"] s)
     FStarC_Range_Type.dummyRange
+let fstar_integer_literal_lid (s : Prims.string) : FStarC_Ident.lident=
+  FStarC_Ident.lid_of_path ["FStar"; "IntegerLiteral"; s]
+    FStarC_Range_Type.dummyRange
 let fstar_refl_types_lid (s : Prims.string) : FStarC_Ident.lident=
   fstar_refl_lid ["Types"; s]
 let fstar_refl_builtins_lid (s : Prims.string) : FStarC_Ident.lident=
@@ -29,6 +32,16 @@ let fstar_refl_data_lid (s : Prims.string) : FStarC_Ident.lident=
   fstar_refl_lid ["V2"; "Data"; s]
 let fstar_syntax_syntax_const (s : Prims.string Prims.list) : refl_constant=
   let lid = fstar_syntax_syntax_lid s in
+  let uu___ = FStarC_Syntax_Syntax.tdataconstr lid in
+  {
+    lid;
+    fv =
+      (FStarC_Syntax_Syntax.lid_as_fv lid
+         (FStar_Pervasives_Native.Some FStarC_Syntax_Syntax.Data_ctor));
+    t = uu___
+  }
+let fstar_integer_literal_const (s : Prims.string) : refl_constant=
+  let lid = fstar_integer_literal_lid s in
   let uu___ = FStarC_Syntax_Syntax.tdataconstr lid in
   {
     lid;
@@ -242,6 +255,9 @@ let fstar_refl_binder_view : FStarC_Syntax_Syntax.term=
   mk_refl_data_lid_as_term "binder_view"
 let fstar_refl_binder_view_fv : FStarC_Syntax_Syntax.fv=
   mk_refl_data_lid_as_fv "binder_view"
+let fstar_refl_int_base_fv : FStarC_Syntax_Syntax.fv=
+  let uu___ = fstar_integer_literal_lid "int_base" in
+  FStarC_Syntax_Syntax.fvconst uu___
 let fstar_refl_int_signedness_fv : FStarC_Syntax_Syntax.fv=
   mk_refl_data_lid_as_fv "int_signedness"
 let fstar_refl_int_width_fv : FStarC_Syntax_Syntax.fv=
@@ -349,6 +365,10 @@ let ref_NM : refl_constant= fstar_syntax_syntax_const ["NM"]
 let ref_NT : refl_constant= fstar_syntax_syntax_const ["NT"]
 let ref_UN : refl_constant= fstar_syntax_syntax_const ["UN"]
 let ref_UD : refl_constant= fstar_syntax_syntax_const ["UD"]
+let ref_Dec : refl_constant= fstar_integer_literal_const "Dec"
+let ref_Hex : refl_constant= fstar_integer_literal_const "Hex"
+let ref_Oct : refl_constant= fstar_integer_literal_const "Oct"
+let ref_Bin : refl_constant= fstar_integer_literal_const "Bin"
 let ref_Signed : refl_constant= fstar_refl_data_const "Signed"
 let ref_Unsigned : refl_constant= fstar_refl_data_const "Unsigned"
 let ref_Int8 : refl_constant= fstar_refl_data_const "Int8"

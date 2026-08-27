@@ -21,7 +21,7 @@ let mkInteger : Prims.string -> FStarC_SMTEncoding_Term.term=
   FStarC_SMTEncoding_Term.mkInteger
 let mkInteger' : Prims.int -> FStarC_SMTEncoding_Term.term=
   FStarC_SMTEncoding_Term.mkInteger'
-let mkReal : Prims.string -> FStarC_SMTEncoding_Term.term=
+let mkReal : FStarC_Real.real -> FStarC_SMTEncoding_Term.term=
   FStarC_SMTEncoding_Term.mkReal
 let mkBoundV : Prims.int -> FStarC_SMTEncoding_Term.term=
   FStarC_SMTEncoding_Term.mkBoundV

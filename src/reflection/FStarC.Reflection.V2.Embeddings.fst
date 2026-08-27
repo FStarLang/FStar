@@ -18,6 +18,7 @@ open FStarC.TypeChecker.Env
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
+open FStar.IntegerLiteral
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStar.Order
@@ -200,6 +201,26 @@ let e_universe_view =
 
   mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view_fv
 
+let e_int_base =
+  let embed_int_base (rng:Range.t) (b:FStar.IntegerLiteral.int_base) : ML term =
+    let t = match b with
+      | Dec -> ref_Dec.t
+      | Hex -> ref_Hex.t
+      | Oct -> ref_Oct.t
+      | Bin -> ref_Bin.t
+    in
+    { t with pos = rng }
+  in
+  let unembed_int_base (t:term) : ML (option FStar.IntegerLiteral.int_base) =
+    let? fv, args = head_fv_and_args t in
+    if S.fv_eq_lid fv ref_Dec.lid then run args (pure Dec)
+    else if S.fv_eq_lid fv ref_Hex.lid then run args (pure Hex)
+    else if S.fv_eq_lid fv ref_Oct.lid then run args (pure Oct)
+    else if S.fv_eq_lid fv ref_Bin.lid then run args (pure Bin)
+    else None
+  in
+  mk_emb embed_int_base unembed_int_base fstar_refl_int_base_fv
+
 let e_int_signedness =
   let embed_int_signedness (rng:Range.t) (s:int_signedness) : ML term =
     let t = match s with
@@ -246,12 +267,15 @@ let e_vconst =
         | C_True    -> ref_C_True.t
         | C_False   -> ref_C_False.t
 
-        | C_Int i ->
-            S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (show i))]
-                        Range.dummyRange
-        | C_MachineInt (i, signedness, width) ->
+        | C_Int (i, base) ->
+            S.mk_Tm_app ref_C_Int.t
+              [S.as_arg (U.exp_int i);
+               S.as_arg (embed #_ #(e_sealed e_int_base) rng base)]
+              Range.dummyRange
+        | C_MachineInt (i, base, signedness, width) ->
             S.mk_Tm_app ref_C_MachineInt.t
-              [S.as_arg (U.exp_int (show i));
+              [S.as_arg (U.exp_int i);
+               S.as_arg (embed #_ #(e_sealed e_int_base) rng base);
                S.as_arg (embed #_ #e_int_signedness rng signedness);
                S.as_arg (embed #_ #e_int_width rng width)]
               Range.dummyRange
@@ -285,9 +309,10 @@ let e_vconst =
       | _ when S.fv_eq_lid fv ref_C_Unit.lid -> run args (pure C_Unit)
       | _ when S.fv_eq_lid fv ref_C_True.lid -> run args (pure C_True)
       | _ when S.fv_eq_lid fv ref_C_False.lid -> run args (pure C_False)
-      | _ when S.fv_eq_lid fv ref_C_Int.lid -> run args (C_Int <$$> e_int)
+      | _ when S.fv_eq_lid fv ref_C_Int.lid ->
+        run args (curry C_Int <$$> e_int <**> e_sealed e_int_base)
       | _ when S.fv_eq_lid fv ref_C_MachineInt.lid ->
-        run args (curry3 C_MachineInt <$$> e_int <**> e_int_signedness <**> e_int_width)
+        run args (curry4 C_MachineInt <$$> e_int <**> e_sealed e_int_base <**> e_int_signedness <**> e_int_width)
       | _ when S.fv_eq_lid fv ref_C_String.lid -> run args (C_String <$$> e_string)
       | _ when S.fv_eq_lid fv ref_C_Range.lid -> run args (C_Range <$$> e_range)
       | _ when S.fv_eq_lid fv ref_C_Reify.lid -> run args (pure C_Reify)

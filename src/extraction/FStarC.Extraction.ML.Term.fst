@@ -940,18 +940,19 @@ let rec extract_one_pat (imp : bool)
         ok
     in
     match p.v with
-    | Pat_constant (Const_int (c, swopt))
+    | Pat_constant (Const_int _)
+    | Pat_constant (Const_machine_int _)
       when Options.codegen() <> Some Options.Krml ->
       //Karamel supports native integer constants in patterns
       //Don't convert them into `when` clauses
         let mlc, ml_ty =
-            match swopt with
-            | None ->
-              with_ty ml_int_ty <| (MLE_Const (mlconst_of_const p.p (Const_int (c, None)))),
+            match p.v with
+            | Pat_constant (Const_int (c, b)) ->
+              with_ty ml_int_ty <| (MLE_Const (mlconst_of_const p.p (Const_int (c, b)))),
               ml_int_ty
-            | Some sw ->
+            | Pat_constant (Const_machine_int (c, b, sw, w)) ->
               let source_term =
-                  FStarC.ToSyntax.ToSyntax.desugar_machine_integer (tcenv_of_uenv g).dsenv c sw Range.dummyRange in
+                  FStarC.ToSyntax.ToSyntax.desugar_machine_integer (tcenv_of_uenv g).dsenv c b (sw, w) Range.dummyRange in
               let mlterm, _, mlty = term_as_mlexpr g source_term in
               mlterm, mlty
         in
@@ -1535,11 +1536,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                  let x = SS.compress x in
                  let x = U.unascribe x in
                  (match x.n with
-                  | Tm_constant (Const_int (repr, _)) ->
+                  | Tm_constant (Const_int (repr, base)) ->
                     (let _, ty, _ =
                       TcTerm.typeof_tot_or_gtot_term (tcenv_of_uenv g) t true in
                     let ml_ty = term_as_mlty g ty in
-                    let ml_const = Const_int (repr, Some (signedness, width)) in
+                    let ml_const = Const_machine_int (repr, base, signedness, width) in
                     with_ty ml_ty (mlexpr_of_const t.pos ml_const), E_PURE, ml_ty)
                   |_ -> term_as_mlexpr g t)
                | _ -> term_as_mlexpr g t)

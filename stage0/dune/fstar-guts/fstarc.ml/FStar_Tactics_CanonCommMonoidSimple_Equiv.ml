@@ -240,7 +240,8 @@ let rec convert_map (m : (atom * FStar_Tactics_NamedView.term) Prims.list) :
       let a1 =
         FStar_Tactics_NamedView.pack
           (FStar_Tactics_NamedView.Tv_Const
-             (FStarC_Reflection_V2_Data.C_Int a)) in
+             (FStarC_Reflection_V2_Data.C_Int
+                (a, (FStar_Sealed.seal FStar_IntegerLiteral.Dec)))) in
       let uu___ = convert_map ps in
       let uu___1 = t in
       let uu___2 = a1 in
@@ -313,7 +314,8 @@ let rec quote_exp (e : exp) : FStar_Tactics_NamedView.term=
       let nt =
         FStar_Tactics_NamedView.pack
           (FStar_Tactics_NamedView.Tv_Const
-             (FStarC_Reflection_V2_Data.C_Int n)) in
+             (FStarC_Reflection_V2_Data.C_Int
+                (n, (FStar_Sealed.seal FStar_IntegerLiteral.Dec)))) in
       FStarC_Reflection_V2_Builtins.pack_ln
         (FStarC_Reflection_V2_Data.Tv_App
            ((FStarC_Reflection_V2_Builtins.pack_ln

@@ -73,5 +73,3 @@ let __proj__Mkdtuple5__item___5 (projectee : ('a, 'b, 'c, 'd, 'e) dtuple5) :
 let rec false_elim : 'uuuuu . unit -> 'uuuuu = fun uu___ -> false_elim ()
 let singleton (x : 'uuuuu) : 'uuuuu= x
 type 'a eqtype_as_type = 'a
-let coerce_eq (uu___1 : unit) (uu___ : 'a) : 'b=
-  (fun uu___ x -> Obj.magic x) uu___1 uu___

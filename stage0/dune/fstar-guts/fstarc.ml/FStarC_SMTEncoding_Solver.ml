@@ -553,6 +553,13 @@ let query_info (settings : query_settings)
                let uu___2 = convert_rlimit Prims.int_one in
                div_with_decimals decimals used uu___2) ()
       with | uu___1 -> "unknown" in
+    let time_str =
+      let uu___1 =
+        FStarC_SMap.try_find
+          z3result.FStarC_SMTEncoding_Z3.z3result_statistics "time" in
+      match uu___1 with
+      | FStar_Pervasives_Native.Some t -> t
+      | FStar_Pervasives_Native.None -> "0.00" in
     ((let uu___2 = FStarC_Options_Ext.enabled "query_stats_trace" in
       if uu___2
       then
@@ -579,26 +586,29 @@ let query_info (settings : query_settings)
               let uu___8 =
                 let uu___9 =
                   let uu___10 =
-                    FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                      settings.query_fuel in
-                  let uu___11 =
-                    let uu___12 =
+                    let uu___11 =
                       FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                        settings.query_ifuel in
-                    let uu___13 =
-                      let uu___14 =
+                        settings.query_fuel in
+                    let uu___12 =
+                      let uu___13 =
                         FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                          settings.query_rlimit in
-                      [uu___14; used_rlimit_str] in
-                    uu___12 :: uu___13 in
-                  uu___10 :: uu___11 in
+                          settings.query_ifuel in
+                      let uu___14 =
+                        let uu___15 =
+                          FStarC_Class_Show.show
+                            FStarC_Class_Show.showable_int
+                            settings.query_rlimit in
+                        [uu___15; used_rlimit_str] in
+                      uu___13 :: uu___14 in
+                    uu___11 :: uu___12 in
+                  time_str :: uu___10 in
                 tag :: uu___9 in
               uu___7 :: uu___8 in
             uu___5 :: uu___6 in
           (settings.query_name) :: uu___4 in
         range :: uu___3 in
       FStarC_Format.print
-        "%s\tQuery-stats (%s, %s)\tgoal %s %s with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
+        "%s\tQuery-stats (%s, %s)\tgoal %s %s in %s seconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
         uu___2))
   else ()
 type answer =

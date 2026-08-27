@@ -1464,7 +1464,17 @@ let krml_compat_name (n : (Prims.string Prims.list * Prims.string)) :
         | "op_Greater_Equals" -> "op_GreaterThanOrEqual"
         | op3 -> op3 in
       (["Prims"], op2)
+  | ("Pulse"::"Lib"::"Slice"::[], op1) ->
+      let op2 =
+        match op1 with
+        | "op_Dot_Lparen_Rparen" -> "op_Array_Access"
+        | "op_Dot_Lparen_Rparen_Less_Minus" -> "op_Array_Assignment"
+        | op3 -> op3 in
+      (["Pulse"; "Lib"; "Slice"], op2)
   | n1 -> n1
+let krml_decl_name (module_name : Prims.string Prims.list) (n : Prims.string)
+  : (Prims.string Prims.list * Prims.string)=
+  krml_compat_name (module_name, n)
 let mk_op (uu___ : Prims.string) : op FStar_Pervasives_Native.option=
   match uu___ with
   | "add" -> FStar_Pervasives_Native.Some Add
@@ -3474,7 +3484,7 @@ let translate_type_decl' (env1 : env)
       FStarC_Extraction_ML_Syntax.tydecl_defn = FStar_Pervasives_Native.Some
         (FStarC_Extraction_ML_Syntax.MLTD_Abbrev t);_}
       ->
-      let name2 = ((env1.module_name), name1) in
+      let name2 = krml_decl_name env1.module_name name1 in
       let env2 =
         FStarC_List.fold_left
           (fun env3 uu___1 ->
@@ -3515,7 +3525,7 @@ let translate_type_decl' (env1 : env)
       FStarC_Extraction_ML_Syntax.tydecl_defn = FStar_Pervasives_Native.Some
         (FStarC_Extraction_ML_Syntax.MLTD_Record fields);_}
       ->
-      let name2 = ((env1.module_name), name1) in
+      let name2 = krml_decl_name env1.module_name name1 in
       let env2 =
         FStarC_List.fold_left
           (fun env3 uu___2 ->
@@ -3546,7 +3556,7 @@ let translate_type_decl' (env1 : env)
       FStarC_Extraction_ML_Syntax.tydecl_defn = FStar_Pervasives_Native.Some
         (FStarC_Extraction_ML_Syntax.MLTD_DType branches1);_}
       ->
-      let name2 = ((env1.module_name), name1) in
+      let name2 = krml_decl_name env1.module_name name1 in
       let flags1 = translate_flags flags in
       let env2 =
         let uu___2 = FStarC_Extraction_ML_Syntax.ty_param_names args in
@@ -3605,7 +3615,7 @@ let translate_let' (env1 : env)
            | FStarC_Extraction_ML_Syntax.Assumed -> true
            | uu___4 -> false) meta
       ->
-      let name2 = ((env1.module_name), name1) in
+      let name2 = krml_decl_name env1.module_name name1 in
       let arg_names =
         match e.FStarC_Extraction_ML_Syntax.expr with
         | FStarC_Extraction_ML_Syntax.MLE_Fun (bs, uu___3) ->
@@ -3669,7 +3679,7 @@ let translate_let' (env1 : env)
                i > Prims.int_zero ->
                find_return_type eff1 (i - Prims.int_one) t
            | t -> (i, eff, t) in
-         let name2 = ((env3.module_name), name1) in
+         let name2 = krml_decl_name env3.module_name name1 in
          let uu___5 =
            find_return_type FStarC_Extraction_ML_Syntax.E_PURE
              (FStarC_List.length args) t0 in
@@ -3792,7 +3802,7 @@ let translate_let' (env1 : env)
            FStarC_List.fold_left (fun env3 name2 -> extend_t env3 name2) env1
              uu___3 in
          let t1 = translate_type env2 t in
-         let name2 = ((env2.module_name), name1) in
+         let name2 = krml_decl_name env2.module_name name1 in
          try
            (fun uu___3 ->
               match () with

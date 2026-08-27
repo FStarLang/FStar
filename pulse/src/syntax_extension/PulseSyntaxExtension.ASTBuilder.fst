@@ -46,7 +46,7 @@ let parse_decl_name
       AU.range = r;
     }
 
-let i s r = tm (Const (Const_int(string_of_int s, None))) r
+let i s r = tm (Const (Const_int(s, Dec))) r
 let str s r = tm (Const (Const_string (s, r))) r
 let lid_as_term ns r : ML _ = str (Ident.string_of_lid ns) r
 
@@ -85,7 +85,7 @@ let parse_decl
   = fun ctx contents r ->
       let tm t = tm t r in
       let str s = str s r in
-      let i s = tm (Const (Const_int(string_of_int s, None))) in
+      let i s = tm (Const (Const_int(s, Dec))) in
       match Parser.parse_peek_id contents r with
       | Inr (err, r) ->
         Inl { message = err; range = r }

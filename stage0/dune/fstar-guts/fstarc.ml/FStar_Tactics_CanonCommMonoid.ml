@@ -298,7 +298,8 @@ let quote_vm (ta : FStar_Tactics_NamedView.term)
           ((FStar_Tactics_NamedView.pack
               (FStar_Tactics_NamedView.Tv_Const
                  (FStarC_Reflection_V2_Data.C_Int
-                    (FStar_Pervasives_Native.fst p)))),
+                    ((FStar_Pervasives_Native.fst p),
+                      (FStar_Sealed.seal FStar_IntegerLiteral.Dec))))),
             FStarC_Reflection_V2_Data.Q_Explicit) :: x6 in
         (x1, FStarC_Reflection_V2_Data.Q_Implicit) :: x5 in
       ((FStarC_Reflection_V2_Builtins.pack_ln
@@ -353,7 +354,8 @@ let rec quote_exp (e : exp) :
                     ["FStar"; "Tactics"; "CanonCommMonoid"; "Var"])))
            [FStar_Tactics_NamedView.pack
               (FStar_Tactics_NamedView.Tv_Const
-                 (FStarC_Reflection_V2_Data.C_Int x))])
+                 (FStarC_Reflection_V2_Data.C_Int
+                    (x, (FStar_Sealed.seal FStar_IntegerLiteral.Dec))))])
   | Mult (e1, e2) ->
       (fun ps ->
          let x =

@@ -83,16 +83,12 @@ let inspect_const (c : FStarC_Syntax_Syntax.sconst) :
   FStarC_Reflection_V2_Data.vconst=
   match c with
   | FStarC_Const.Const_unit -> FStarC_Reflection_V2_Data.C_Unit
-  | FStarC_Const.Const_int (s, FStar_Pervasives_Native.None) ->
-      let uu___ = FStarC_Util.int_of_string s in
-      FStarC_Reflection_V2_Data.C_Int uu___
-  | FStarC_Const.Const_int
-      (s, FStar_Pervasives_Native.Some (signedness, width)) ->
-      let uu___ =
-        let uu___1 = FStarC_Util.int_of_string s in
-        (uu___1, (inspect_int_signedness signedness),
-          (inspect_int_width width)) in
-      FStarC_Reflection_V2_Data.C_MachineInt uu___
+  | FStarC_Const.Const_int (i, base) ->
+      FStarC_Reflection_V2_Data.C_Int (i, (FStarC_Sealed.seal base))
+  | FStarC_Const.Const_machine_int (i, base, signedness, width) ->
+      FStarC_Reflection_V2_Data.C_MachineInt
+        (i, (FStarC_Sealed.seal base), (inspect_int_signedness signedness),
+          (inspect_int_width width))
   | FStarC_Const.Const_bool true -> FStarC_Reflection_V2_Data.C_True
   | FStarC_Const.Const_bool false -> FStarC_Reflection_V2_Data.C_False
   | FStarC_Const.Const_string (s, uu___) ->
@@ -102,7 +98,7 @@ let inspect_const (c : FStarC_Syntax_Syntax.sconst) :
   | FStarC_Const.Const_reflect l ->
       let uu___ = FStarC_Ident.path_of_lid l in
       FStarC_Reflection_V2_Data.C_Reflect uu___
-  | FStarC_Const.Const_real s -> FStarC_Reflection_V2_Data.C_Real s
+  | FStarC_Const.Const_real r -> FStarC_Reflection_V2_Data.C_Real r
   | FStarC_Const.Const_char c1 -> FStarC_Reflection_V2_Data.C_Char c1
   | uu___ ->
       let uu___1 =
@@ -358,12 +354,9 @@ let pack_const (c : FStarC_Reflection_V2_Data.vconst) :
   FStarC_Syntax_Syntax.sconst=
   match c with
   | FStarC_Reflection_V2_Data.C_Unit -> FStarC_Const.Const_unit
-  | FStarC_Reflection_V2_Data.C_Int i ->
-      let uu___ =
-        let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-        (uu___1, FStar_Pervasives_Native.None) in
-      FStarC_Const.Const_int uu___
-  | FStarC_Reflection_V2_Data.C_MachineInt (i, signedness, width) ->
+  | FStarC_Reflection_V2_Data.C_Int (i, base) ->
+      FStarC_Const.Const_int (i, (FStarC_Sealed.unseal base))
+  | FStarC_Reflection_V2_Data.C_MachineInt (i, base, signedness, width) ->
       let signedness1 =
         match signedness with
         | FStarC_Reflection_V2_Data.Signed -> FStarC_Const.Signed
@@ -375,10 +368,8 @@ let pack_const (c : FStarC_Reflection_V2_Data.vconst) :
         | FStarC_Reflection_V2_Data.Int32 -> FStarC_Const.Int32
         | FStarC_Reflection_V2_Data.Int64 -> FStarC_Const.Int64
         | FStarC_Reflection_V2_Data.Sizet -> FStarC_Const.Sizet in
-      let uu___ =
-        let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-        (uu___1, (FStar_Pervasives_Native.Some (signedness1, width1))) in
-      FStarC_Const.Const_int uu___
+      FStarC_Const.Const_machine_int
+        (i, (FStarC_Sealed.unseal base), signedness1, width1)
   | FStarC_Reflection_V2_Data.C_True -> FStarC_Const.Const_bool true
   | FStarC_Reflection_V2_Data.C_False -> FStarC_Const.Const_bool false
   | FStarC_Reflection_V2_Data.C_String s ->

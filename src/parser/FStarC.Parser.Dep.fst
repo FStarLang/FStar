@@ -1049,9 +1049,9 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
     collect_term' t.tm
 
   and collect_constant (c: sconst) : ML unit = match c with
-    | Const_int (_, Some (Unsigned, Sizet)) ->
+    | Const_machine_int (_, _, Unsigned, Sizet) ->
         add_to_parsing_data (P_dep (false, ("fstar.sizeT" |> Ident.lid_of_str)))
-    | Const_int (_, Some (signedness, width)) ->
+    | Const_machine_int (_, _, signedness, width) ->
         let u = match signedness with | Unsigned -> "u" | Signed -> "" in
         let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
         add_to_parsing_data (P_dep (false, (Format.fmt2 "fstar.%sint%s" u w |> Ident.lid_of_str)))

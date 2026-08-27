@@ -825,46 +825,78 @@ let is_exported_id_termtype (uu___ : exported_id_kind) : Prims.bool=
   match uu___ with | Exported_id_term_type -> true | uu___2 -> false
 let is_exported_id_field (uu___ : exported_id_kind) : Prims.bool=
   match uu___ with | Exported_id_field -> true | uu___2 -> false
+let find_in_module_with_includes_gen (collect : Prims.bool)
+  (eikind : exported_id_kind)
+  (find_in_module : FStarC_Ident.lident -> 'a cont_t)
+  (find_in_module_default : 'a cont_t) (env1 : env)
+  (ns : FStarC_Ident.lident) (id : FStarC_Ident.ident) :
+  ('a cont_t * 'a Prims.list)=
+  let rec aux seen found acc x =
+    let finish uu___ =
+      match found with
+      | FStar_Pervasives_Native.None -> (find_in_module_default, [])
+      | FStar_Pervasives_Native.Some k -> (k, (FStarC_List.rev acc)) in
+    match x with
+    | [] -> finish ()
+    | (modul, id1)::q ->
+        let mname = FStarC_Ident.string_of_lid modul in
+        let key = (mname, (FStarC_Ident.string_of_id id1)) in
+        if FStarC_List.mem key seen
+        then aux seen found acc q
+        else
+          (let seen1 = key :: seen in
+           let not_shadowed =
+             let uu___ = get_exported_id_set env1 mname in
+             match uu___ with
+             | FStar_Pervasives_Native.None -> true
+             | FStar_Pervasives_Native.Some mex ->
+                 let mexports = FStarC_Effect.op_Bang (mex eikind) in
+                 FStarC_Class_Setlike.mem
+                   (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)
+                   (FStarC_Ident.string_of_id id1) mexports in
+           let mincludes =
+             let uu___ = FStarC_SMap.try_find env1.includes mname in
+             match uu___ with
+             | FStar_Pervasives_Native.None -> []
+             | FStar_Pervasives_Native.Some minc ->
+                 let uu___2 = FStarC_Effect.op_Bang minc in
+                 FStarC_List.filter_map
+                   (fun uu___3 ->
+                      match uu___3 with
+                      | (ns1, restriction) ->
+                          let opt =
+                            FStarC_Syntax_Syntax.is_ident_allowed_by_restriction
+                              id1 restriction in
+                          FStarC_Option.map (fun id2 -> (ns1, id2)) opt)
+                   uu___2 in
+           let look_into =
+             if not_shadowed
+             then let uu___ = qual modul id1 in find_in_module uu___
+             else Cont_ignore in
+           match look_into with
+           | Cont_ignore ->
+               aux seen1 found acc (FStarC_List.op_At mincludes q)
+           | Cont_fail -> finish ()
+           | Cont_ok v ->
+               (match found with
+                | FStar_Pervasives_Native.None ->
+                    if Prims.not collect
+                    then ((Cont_ok v), [])
+                    else
+                      aux seen1 (FStar_Pervasives_Native.Some (Cont_ok v))
+                        acc (FStarC_List.op_At mincludes q)
+                | FStar_Pervasives_Native.Some uu___ ->
+                    aux seen1 found (v :: acc)
+                      (FStarC_List.op_At mincludes q))) in
+  aux [] FStar_Pervasives_Native.None [] [(ns, id)]
 let find_in_module_with_includes (eikind : exported_id_kind)
   (find_in_module : FStarC_Ident.lident -> 'a cont_t)
   (find_in_module_default : 'a cont_t) (env1 : env)
   (ns : FStarC_Ident.lident) (id : FStarC_Ident.ident) : 'a cont_t=
-  let rec aux x =
-    match x with
-    | [] -> find_in_module_default
-    | (modul, id1)::q ->
-        let mname = FStarC_Ident.string_of_lid modul in
-        let not_shadowed =
-          let uu___ = get_exported_id_set env1 mname in
-          match uu___ with
-          | FStar_Pervasives_Native.None -> true
-          | FStar_Pervasives_Native.Some mex ->
-              let mexports = FStarC_Effect.op_Bang (mex eikind) in
-              FStarC_Class_Setlike.mem
-                (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)
-                (FStarC_Ident.string_of_id id1) mexports in
-        let mincludes =
-          let uu___ = FStarC_SMap.try_find env1.includes mname in
-          match uu___ with
-          | FStar_Pervasives_Native.None -> []
-          | FStar_Pervasives_Native.Some minc ->
-              let uu___2 = FStarC_Effect.op_Bang minc in
-              FStarC_List.filter_map
-                (fun uu___3 ->
-                   match uu___3 with
-                   | (ns1, restriction) ->
-                       let opt =
-                         FStarC_Syntax_Syntax.is_ident_allowed_by_restriction
-                           id1 restriction in
-                       FStarC_Option.map (fun id2 -> (ns1, id2)) opt) uu___2 in
-        let look_into =
-          if not_shadowed
-          then let uu___ = qual modul id1 in find_in_module uu___
-          else Cont_ignore in
-        (match look_into with
-         | Cont_ignore -> aux (FStarC_List.op_At mincludes q)
-         | uu___ -> look_into) in
-  aux [(ns, id)]
+  let uu___ =
+    find_in_module_with_includes_gen false eikind find_in_module
+      find_in_module_default env1 ns id in
+  FStar_Pervasives_Native.fst uu___
 let try_lookup_id''_gen (collect : Prims.bool) (env1 : env)
   (id : FStarC_Ident.ident) (eikind : exported_id_kind)
   (k_local_binding : local_binding -> 'a cont_t)
@@ -934,21 +966,41 @@ let try_lookup_id''_gen (collect : Prims.bool) (env1 : env)
     | Local_bindings uu___2 -> true
     | Rec_binding uu___2 -> true
     | uu___2 -> false in
+  let step a1 =
+    match a1 with
+    | Open_module_or_namespace
+        ((ns, FStarC_Syntax_Syntax.Open_module, restriction), uu___) when
+        collect ->
+        let uu___2 =
+          FStarC_Syntax_Syntax.is_ident_allowed_by_restriction id restriction in
+        (match uu___2 with
+         | FStar_Pervasives_Native.None -> (Cont_ignore, [])
+         | FStar_Pervasives_Native.Some id1 ->
+             find_in_module_with_includes_gen true eikind find_in_module
+               Cont_ignore env1 ns id1)
+    | uu___ -> let uu___2 = proc a1 in (uu___2, []) in
   let rec aux acc l =
     match l with
     | a1::q ->
-        let uu___ = proc a1 in
+        let uu___ = step a1 in
         (match uu___ with
-         | Cont_ok v ->
-             if Prims.not collect
-             then [v]
-             else
-               if is_local_scope_mod a1
-               then
-                 (match acc with | [] -> [v] | uu___2 -> FStarC_List.rev acc)
-               else aux (v :: acc) q
-         | Cont_fail -> FStarC_List.rev acc
-         | Cont_ignore -> aux acc q)
+         | (k, alts) ->
+             (match k with
+              | Cont_ok v ->
+                  if Prims.not collect
+                  then [v]
+                  else
+                    if is_local_scope_mod a1
+                    then
+                      (match acc with
+                       | [] -> [v]
+                       | uu___2 -> FStarC_List.rev acc)
+                    else
+                      aux
+                        (FStarC_List.op_At (FStarC_List.rev alts) (v :: acc))
+                        q
+              | Cont_fail -> FStarC_List.rev acc
+              | Cont_ignore -> aux acc q))
     | [] ->
         let uu___ = lookup_default_id Cont_fail id in
         (match uu___ with

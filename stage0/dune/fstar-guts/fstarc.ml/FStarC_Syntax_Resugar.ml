@@ -106,35 +106,24 @@ let rec resugar_universe (u : FStarC_Syntax_Syntax.universe)
   | FStarC_Syntax_Syntax.U_zero ->
       mk
         (FStarC_Parser_AST.Const
-           (FStarC_Const.Const_int ("0", FStar_Pervasives_Native.None))) r
+           (FStarC_Const.Const_int (Prims.int_zero, FStar_IntegerLiteral.Dec)))
+        r
   | FStarC_Syntax_Syntax.U_succ uu___ ->
       let uu___1 = universe_to_int Prims.int_zero u1 in
       (match uu___1 with
        | (n, u2) ->
            (match u2 with
             | FStarC_Syntax_Syntax.U_zero ->
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                          n in
-                      (uu___5, FStar_Pervasives_Native.None) in
-                    FStarC_Const.Const_int uu___4 in
-                  FStarC_Parser_AST.Const uu___3 in
-                mk uu___2 r
+                mk
+                  (FStarC_Parser_AST.Const
+                     (FStarC_Const.Const_int (n, FStar_IntegerLiteral.Dec)))
+                  r
             | uu___2 ->
                 let e1 =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          FStarC_Class_Show.show
-                            FStarC_Class_Show.showable_int n in
-                        (uu___6, FStar_Pervasives_Native.None) in
-                      FStarC_Const.Const_int uu___5 in
-                    FStarC_Parser_AST.Const uu___4 in
-                  mk uu___3 r in
+                  mk
+                    (FStarC_Parser_AST.Const
+                       (FStarC_Const.Const_int (n, FStar_IntegerLiteral.Dec)))
+                    r in
                 let e2 = resugar_universe u2 r in
                 mk
                   (FStarC_Parser_AST.Op
@@ -364,18 +353,19 @@ let can_resugar_machine_integer_fv (fv : FStarC_Syntax_Syntax.fv) :
   Prims.bool=
   let uu___ = parse_machine_integer_desc fv in
   match uu___ with | FStar_Pervasives_Native.Some v -> true | uu___1 -> false
-let resugar_machine_integer (fv : FStarC_Syntax_Syntax.fv) (i : Prims.string)
-  (pos : FStarC_Range_Type.range) : FStarC_Parser_AST.term=
+let resugar_machine_integer (fv : FStarC_Syntax_Syntax.fv) (i : Prims.int)
+  (b : FStar_IntegerLiteral.int_base) (pos : FStarC_Range_Type.range) :
+  FStarC_Parser_AST.term=
   let uu___ = parse_machine_integer_desc fv in
   match uu___ with
   | FStar_Pervasives_Native.None ->
       FStarC_Effect.failwith
         "Impossible: should be guarded by can_resugar_machine_integer"
-  | FStar_Pervasives_Native.Some (sw, uu___1) ->
+  | FStar_Pervasives_Native.Some ((sw, w), uu___1) ->
       FStarC_Parser_AST.mk_term
         (FStarC_Parser_AST.Const
-           (FStarC_Const.Const_int (i, (FStar_Pervasives_Native.Some sw))))
-        pos FStarC_Parser_AST.Un
+           (FStarC_Const.Const_machine_int (i, b, sw, w))) pos
+        FStarC_Parser_AST.Un
 let rec __is_list_literal (uu___2 : FStarC_Ident.lident)
   (uu___1 : FStarC_Ident.lident) (uu___ : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.term Prims.list FStar_Pervasives_Native.option=
@@ -425,7 +415,8 @@ let is_seq_literal :
     FStarC_Parser_Const.seq_empty_lid
 let can_resugar_machine_integer (hd : FStarC_Syntax_Syntax.term)
   (args : FStarC_Syntax_Syntax.args) :
-  (FStarC_Syntax_Syntax.fv * Prims.string) FStar_Pervasives_Native.option=
+  (FStarC_Syntax_Syntax.fv * Prims.int * FStar_IntegerLiteral.int_base)
+    FStar_Pervasives_Native.option=
   let uu___ =
     let uu___1 = FStarC_Syntax_Subst.compress hd in
     uu___1.FStarC_Syntax_Syntax.n in
@@ -438,8 +429,7 @@ let can_resugar_machine_integer (hd : FStarC_Syntax_Syntax.term)
              uu___2.FStarC_Syntax_Syntax.n in
            (match uu___1 with
             | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int
-                (i, FStar_Pervasives_Native.None)) ->
-                FStar_Pervasives_Native.Some (fv, i)
+                (i, b)) -> FStar_Pervasives_Native.Some (fv, i, b)
             | uu___2 -> FStar_Pervasives_Native.None)
        | uu___1 -> FStar_Pervasives_Native.None)
   | uu___1 -> FStar_Pervasives_Native.None
@@ -701,8 +691,8 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
        | (hd, args) ->
            let uu___3 = can_resugar_machine_integer hd args in
            (match uu___3 with
-            | FStar_Pervasives_Native.Some (fv, i) ->
-                resugar_machine_integer fv i t.FStarC_Syntax_Syntax.pos))
+            | FStar_Pervasives_Native.Some (fv, i, b) ->
+                resugar_machine_integer fv i b t.FStarC_Syntax_Syntax.pos))
   | FStarC_Syntax_Syntax.Tm_app uu___1 ->
       let t1 = FStarC_Syntax_Util.canon_app t in
       let uu___2 = FStarC_Syntax_Util.head_and_args_full t1 in

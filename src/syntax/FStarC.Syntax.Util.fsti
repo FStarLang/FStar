@@ -370,7 +370,7 @@ val exp_true_bool : term
 val exp_false_bool : term
 val exp_unit : term
 (* Makes an (unbounded) integer from its string repr. *)
-val exp_int (s:string) : ML term
+val exp_int (i:int) : ML term
 val exp_char (c:FStar.Char.char) : ML term
 val exp_string (s:string) : ML term
 

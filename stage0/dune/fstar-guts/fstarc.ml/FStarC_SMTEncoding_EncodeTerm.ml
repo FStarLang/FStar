@@ -481,13 +481,11 @@ let is_arithmetic_primitive
   | uu___ -> false
 let isInteger (tm : FStarC_Syntax_Syntax.term') : Prims.bool=
   match tm with
-  | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int
-      (n, FStar_Pervasives_Native.None)) -> true
+  | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int uu___) -> true
   | uu___ -> false
 let getInteger (tm : FStarC_Syntax_Syntax.term') : Prims.int=
   match tm with
-  | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int
-      (n, FStar_Pervasives_Native.None)) -> FStarC_Util.int_of_string n
+  | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int (n, uu___)) -> n
   | uu___ -> FStarC_Effect.failwith "Expected an Integer term"
 let is_BitVector_primitive
   (head : FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax)
@@ -624,16 +622,16 @@ let rec encode_const (c : FStarC_Const.sconst)
                ("FStar.Char.__char_of_int", uu___3) in
              FStarC_SMTEncoding_Util.mkApp uu___2 in
            (uu___1, [])
-       | FStarC_Const.Const_int (i, FStar_Pervasives_Native.None) ->
-           let uu___1 =
-             let uu___2 = FStarC_SMTEncoding_Util.mkInteger i in
-             FStarC_SMTEncoding_Term.boxInt uu___2 in
-           (uu___1, [])
-       | FStarC_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
+       | FStarC_Const.Const_int (i, uu___1) ->
+           let uu___2 =
+             let uu___3 = FStarC_SMTEncoding_Util.mkInteger' i in
+             FStarC_SMTEncoding_Term.boxInt uu___3 in
+           (uu___2, [])
+       | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
            let syntax_term =
              FStarC_ToSyntax_ToSyntax.desugar_machine_integer
                (env.FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.dsenv
-               repr sw FStarC_Range_Type.dummyRange in
+               repr base (sw, w) FStarC_Range_Type.dummyRange in
            encode_term syntax_term env
        | FStarC_Const.Const_string (s, uu___1) ->
            let uu___2 =
@@ -846,16 +844,9 @@ and encode_BitVector_term (env : FStarC_SMTEncoding_Env.env_t)
                   FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.bv_t_lid
                     FStar_Pervasives_Native.None in
                 let n_tm =
-                  let uu___6 =
-                    let uu___7 =
-                      let uu___8 =
-                        let uu___9 =
-                          FStarC_Class_Show.show
-                            FStarC_Class_Show.showable_int n in
-                        (uu___9, FStar_Pervasives_Native.None) in
-                      FStarC_Const.Const_int uu___8 in
-                    FStarC_Syntax_Syntax.Tm_constant uu___7 in
-                  FStarC_Syntax_Syntax.mk uu___6
+                  FStarC_Syntax_Syntax.mk
+                    (FStarC_Syntax_Syntax.Tm_constant
+                       (FStarC_Const.Const_int (n, FStar_IntegerLiteral.Dec)))
                     tm_sz.FStarC_Syntax_Syntax.pos in
                 let t =
                   let uu___6 = FStarC_Syntax_Syntax.fv_to_tm head1 in

@@ -312,7 +312,7 @@ let quote_vm (#a #b:Type) (ta tb: term)
   let t_a_star_b = mk_e_app (`tuple2) [ta;tb] in
   let quote_map_entry (p:(nat&(a&b))) : Tac term =
     mk_app (`Mktuple2) [(`nat, Q_Implicit); (t_a_star_b, Q_Implicit);
-      (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
+      (pack (Tv_Const (C_Int (fst p) (FStar.Sealed.seal Dec))), Q_Explicit);
       (quote_pair (snd p), Q_Explicit)] in
   let tyentry = mk_e_app (`tuple2) [(`nat); t_a_star_b] in
   let tlist = quote_list tyentry quote_map_entry (fst vm) in
@@ -327,7 +327,7 @@ let quote_vm (#a #b:Type) (ta tb: term)
 let rec quote_exp (e:exp) : Tac term =
   match e with
   | Unit -> `Unit
-  | Var x -> mk_e_app (`Var) [pack (Tv_Const (C_Int x))]
+  | Var x -> mk_e_app (`Var) [pack (Tv_Const (C_Int x (FStar.Sealed.seal Dec)))]
   | Mult e1 e2 -> mk_e_app (`Mult) [quote_exp e1; quote_exp e2]
 
 (* [@@plugin] *)

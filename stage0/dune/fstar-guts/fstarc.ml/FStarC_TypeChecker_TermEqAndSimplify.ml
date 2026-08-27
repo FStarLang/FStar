@@ -146,12 +146,10 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
       Unknown
   | (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real r1),
      FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real r2)) ->
-      let uu___ = FStarC_Real.cmp (FStarC_Real.Real r1) (FStarC_Real.Real r2) in
-      (match uu___ with
-       | FStar_Pervasives_Native.Some (FStarC_Order.Eq) -> Equal
-       | FStar_Pervasives_Native.Some (FStarC_Order.Lt) -> NotEqual
-       | FStar_Pervasives_Native.Some (FStarC_Order.Gt) -> NotEqual
-       | FStar_Pervasives_Native.None -> Unknown)
+      (match FStarC_Real.cmp r1 r2 with
+       | FStarC_Order.Eq -> Equal
+       | FStarC_Order.Lt -> NotEqual
+       | FStarC_Order.Gt -> NotEqual)
   | (FStarC_Syntax_Syntax.Tm_constant c, FStarC_Syntax_Syntax.Tm_constant d)
       -> equal_iff (FStarC_Const.eq_const c d)
   | (FStarC_Syntax_Syntax.Tm_uvar (u1, ([], uu___)),
