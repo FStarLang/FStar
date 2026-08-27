@@ -1,7 +1,6 @@
-#nowarn 58
 module RemoveUnusedTypars_A
 
-type t<'a> =Prims.list<'a>
+type t<'a> = Prims.list<'a>
 
 
 
