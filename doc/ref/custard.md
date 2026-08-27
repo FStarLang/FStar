@@ -8157,6 +8157,70 @@ the module off from `is_realized_module`, which `tests/custard/Realized.fst`
 caught immediately.
 
 
+## 29. Integer literals change representation underneath us
+
+A master merge replaced `Const_int of string & option (signedness & width)`
+with a *value* and the base it was written in, and split machine integers into
+their own `Const_machine_int`.  Custard's own IR is unaffected -- `CInt` still
+carries a string and an optional width -- so the whole change lands at the
+boundary, in three places, and each one wants a different answer.
+
+`constant_of_sconst` keeps the **source spelling**, via
+`string_of_int_literal v b`: a literal written `0xFF` should come out `0xFF`
+in the generated C.  This is exactly what the legacy ML extraction does with
+the same two cases, so the two pipelines agree by construction.
+
+`key_of_const` must do the opposite and use the **value**.  The base is not
+part of what a literal means -- `FStarC.Const.eq_const` ignores it -- so a key
+that kept it would let `f 16` and `f 0x10` specialize twice, producing two
+identical definitions under two names.  This was not a live bug before, since
+the old representation had no base to leak, but the new one hands us a way to
+get it wrong and the fix is to spend the base on the way in.
+
+`hint_of_term` is cosmetic and uses the value too, on the grounds that `0x10`
+is a worse fragment of a generated name than `16`.
+
+### 29.1 A measurement that quietly got weaker
+
+`string_of_int_literal` canonicalizes hex to **lowercase with no leading
+zeros**, so a source `0x1A` is now `0x1a` in the C and `0x00` is `0x0`.  That
+is upstream's spelling and not Custard's to argue with; it is also invisible,
+because nothing in any suite pins the case of a hex literal.
+
+What it did break was `cbor-corpus/mutants.py`, whose `byte+1` family matched
+`0x([0-9A-F]{2})`.  Ten literals stopped matching, so the harness generated
+ten fewer mutants and reported
+
+| | before | after the merge | after the fix |
+| --- | --- | --- | --- |
+| `CborBoundary` consts | 46 / 46 | 36 / 36 | 46 / 46 |
+| `CborBoundarySlice` consts | 46 / 59 | 36 / 49 | 46 / 59 |
+
+Every mutant that was killed before was still killed; the *denominator* moved.
+A mutation score is a claim about a corpus, and a pattern that silently
+matches less makes the claim weaker while leaving the number looking healthy
+-- 36/36 reads better than 46/46 does.  This is §23.4's lesson in a second
+form: there, a green run that compiled nothing; here, a ratio computed over a
+shrinking population.  Both are answers to a question that stopped being
+asked.
+
+The pattern now accepts one or two digits in either case, and all four figures
+are back to 46/46, 46/46, 48/49, 46/59.
+
+### 29.2 Two unrelated bits of merge fallout
+
+`no_auto_projectors` is now a deprecated no-op: F* declares projectors without
+defining them unconditionally.  `AssumedProj.fsti` used the attribute to
+*arrange* the shape it tests, so it now simply drops it -- the shape is the
+default rather than something to ask for, which makes the test more general
+and not less.
+
+`false_elim` is `irreducible` as of #4494, and both §28 tests survive it
+unchanged, which is what they were written for: `TypeDiverge` spells its own
+recursion out rather than importing the name, and `CFalseElim` goes through a
+builtin rule keyed on the lident, which no reducibility qualifier affects.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -8246,3 +8310,4 @@ caught immediately.
 | M10γγ | **Two more ways to lose an argument** (§26) | Done.  Round 20 found two arity defects section 25's check did not catch, one of which it *had* caught in a different program.  (1) `let e : bool -> bool -> bool = ap band` is lowered to a **variable** of function-pointer type, because §25.3's `cheap_expr` guard declines to expand a body that computes before returning a function -- and both the arity table and the new check recorded *definitions*, keyed on binder count, so both read `e` as arity 0 and `call_e` stayed eta-short.  The variable/function lowering turned out to be load-bearing for correctness: becoming a variable is what made the callee invisible.  Both tables now read a parameterless arrow-typed definition's arity off its **type**, which is what the emitted object accepts.  (2) `Extract`'s `peel` consumes one arrow per extra lambda binder and called `head_ty` **once, on the way in**; `eq_test` unfolds to one arrow whose codomain is another abbreviation hiding the second, so peeling two binders consumed one arrow, landed on a name and stopped, while both binders were emitted -- a definition declared to return `bool -> bool` over a body of type `bool`.  It now unfolds at every step, like its term-level twin `peel_typ`.  Worth noting on severity: gcc 13 accepts that with `-Wint-conversion` and prints the right answer because a `bool` round-trips through a pointer on that ABI, while gcc 14 rejects it -- right only on the compiler it was tested against.  `CVarArity.fst`, `CAbbrevArity.fst` (which is `CDDL.Spec.EqTest.eq_test` verbatim), and `CPartialCall.fst` for the check firing on a *local* partial application, which eta-expansion cannot reach.  Both defects are the same mistake at different scales: an arity read off the wrong representation (§26.4). |
 | M10δδ | **A constant function compiled to mutable state** (§27) | Done.  Round 21 confirmed both §26 fixes and got the real CDDL combinator library extracting and running, and left one finding: a pure, total, compile-time-constant function was being lowered to a `static` function pointer assigned in `custard_init_globals`, which makes skipping the initializer a null-pointer call from a *public* entry point rather than a wrong answer, and puts an indirect call on the hot path.  The blocker was not §25.3's `cheap_expr`, which already admits the body, but the arity bound in `eta_expand_decl`, which only fires on an under-applied head.  Relaxing that bound as proposed would be unsound as a performance matter -- `build_table 1000000` is a known top-level function with cheap arguments, so `let table : int -> int = build_table 1000000` would be re-evaluated per call -- so `Simplify.reduce` instead gains a rule that *removes* a call: a **forwarder**, a pure non-recursive definition whose body is exactly one of its own binders, applied to all its arguments reduces to that argument.  `id_fn band` becomes `band`, which the existing `EQual` case of `eta_expand_decl` expands into a real `static` function; `id_fn` dies in DCE and `custard_init_globals` is not emitted.  `tests/custard/CInitTrap.fst`, whose second forwarder returns its *second* binder.  Four existing tests contained an incidental forwarder and were rewritten to use their arguments rather than return one (§27.5); all five suites, the DICE example, and all four CBOR mutation-adequacy figures are unchanged |
 | M10εε | **A divergence the budget was for** (§28) | Done.  #4494 reports the legacy pipelines allocating without bound and being OOM-killed on a type computed by a recursive definition that makes no progress when unfolded, and asks for a step bound as the broader fix.  §3.6's budget is that bound, and this measures it: the same reduction is `Fatal error: allocation failure during minor GC` under `--codegen OCaml` and error 365 -- naming the term and the request chain -- under Custard, because `norm_bounded` was applied to *type* normalization and not just to specialization keys.  Demand-driven extraction (§3.2) is a second and weaker guard, since the report's own reduction has the offending definition dead; `tests/custard/TypeDiverge.fst` therefore names it with `--custard_entry`, and spells the recursion out rather than importing `false_elim` so that it survives #4494 marking that `irreducible`.  Separately, `false_elim` had no builtin rule, so Custard extracted its non-terminating *definition*: an infinite loop where OCaml wants a `failwith`, and on C a hard 368 about the return type of a function that never returns.  `Builtins.pervasives_rule` gives it the `EAbort`/`TAny` treatment `magic` and `admit` have had since M2; `tests/custard/CFalseElim.fst`.  The dispatcher branch has to *fall through*, since `FStar.Pervasives` is also a realized module -- shadowing it cut `Mkdtuple3` off from `is_realized_module`, which `Realized.fst` caught |
+| M10ζζ | **Integer literals change representation underneath us** (§29) | Done.  A master merge replaced `Const_int of string & option (signedness & width)` with a value plus the base it was written in, and split machine integers into `Const_machine_int`.  Custard's IR is unchanged, so the work is three boundary cases that want different answers: `constant_of_sconst` keeps the source spelling via `string_of_int_literal`, matching the legacy ML extraction; `key_of_const` must use the *value*, since `eq_const` ignores the base and a key that kept it would specialize `f 16` and `f 0x10` twice; `hint_of_term` is cosmetic.  The merge also canonicalized hex to lowercase without leading zeros, which nothing pins -- except `cbor-corpus/mutants.py`, whose `byte+1` family required `[0-9A-F]{2}` and so silently generated ten fewer mutants, reporting 36/36 where it had reported 46/46.  Every mutant killed before was still killed; the denominator moved, which is §23.4's lesson in a second form.  Pattern widened; all four figures back to 46/46, 46/46, 48/49, 46/59.  Also: `no_auto_projectors` is a deprecated no-op, so `AssumedProj.fsti` drops it, and both §28 tests survive #4494 marking `false_elim` `irreducible`, which is what they were written for |

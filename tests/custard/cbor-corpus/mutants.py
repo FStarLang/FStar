@@ -54,7 +54,11 @@ if FAMILY == 'ops':
             (r'\breturn true;', 'return false;', 'true->false'),
             (r'\breturn false;', 'return true;', 'false->true')]
 else:  # held-out: perturb the boundary constants themselves
-    subs = [(r'\(\(uint8_t\)0x([0-9A-F]{2})U\)', None, 'byte+1'),
+    # F*'s string_of_int_literal canonicalizes hex to lowercase and strips
+    # leading zeros, so 0x1A in the source is 0x1a in the C and 0x00 is 0x0.
+    # Requiring two uppercase digits here silently generated ten fewer
+    # mutants and made the adequacy figure look better than it was.
+    subs = [(r'\(\(uint8_t\)0x([0-9A-Fa-f]{1,2})U\)', None, 'byte+1'),
             (r'\b([0-9]+)ULL\b', None, 'ull+1'),
             (r'\b([0-9]+)UL\b', None, 'ul+1')]
 
@@ -66,7 +70,7 @@ for l in uniq:
             if not m:
                 continue
             if name == 'byte+1':
-                new = l[:m.start(1)] + '%02X' % ((int(m.group(1), 16) + 1) & 0xFF) + l[m.end(1):]
+                new = l[:m.start(1)] + '%x' % ((int(m.group(1), 16) + 1) & 0xFF) + l[m.end(1):]
             else:
                 new = l[:m.start(1)] + str(int(m.group(1)) + 1) + l[m.end(1):]
         else:

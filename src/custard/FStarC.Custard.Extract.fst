@@ -36,6 +36,7 @@ module Free   = FStarC.Syntax.Free
 module Ident  = FStarC.Ident
 module Loader = FStarC.Custard.Loader
 module Prof   = FStarC.Custard.Prof
+module Real   = FStarC.Real
 module Mono   = FStarC.Custard.Mono
 module Builtins = FStarC.Custard.Builtins
 module GenSym = FStarC.GenSym
@@ -177,19 +178,24 @@ let key_of_const (c:sconst) : ML string =
   | Const_effect        -> "Effect"
   | Const_unit          -> "()"
   | Const_bool b        -> if b then "true" else "false"
-  | Const_real r        -> r ^ "R"
+  | Const_real r        -> Real.to_string r ^ "R"
   | Const_char c        -> "'" ^ show (FStarC.Util.int_of_char c) ^ "'"
   | Const_string (s, _) -> "\"" ^ s ^ "\""
-  (* The width and signedness are part of the constant: [0uy] and [0ul] are
-     different values of different types, and [const_to_string] prints both as
+  (* The *base* an integer was written in is not part of its meaning --
+     [FStarC.Const.eq_const] ignores it -- so it must not reach a key, or
+     [f 16] and [f 0x10] would specialize twice and produce two identical
+     definitions under two names.  [show] on the value is the canonical
+     spelling.
+
+     The width and signedness, by contrast, *are* part of the constant: [0uy]
+     and [0ul] are different values of different types, and both print as
      "0". *)
-  | Const_int (s, sw)   ->
-    s ^ (match sw with
-         | None -> ""
-         | Some (s, w) ->
-           (match s with Unsigned -> "u" | Signed -> "s") ^
-           (match w with Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
-                       | Int64 -> "64" | Sizet -> "sz"))
+  | Const_int (v, _)    -> show v
+  | Const_machine_int (v, _, sg, w) ->
+    show v ^
+    (match sg with Unsigned -> "u" | Signed -> "s") ^
+    (match w with Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
+                | Int64 -> "64" | Sizet -> "sz")
   (* A range is a position, so it cannot appear in a key: two identical calls
      on different lines would specialize twice, and the key would change
      whenever anything above it moved. *)
@@ -688,7 +694,8 @@ let rec hint_of_term (st:state) (fuel:int) (t:term) : ML (option string) =
       Some (String.concat "_" (h :: sub (args |> List.map fst)))
     | Tm_constant c ->
       (match c with
-       | Const_int (s, _) -> Some s
+       | Const_int (v, _) -> Some (show v)
+       | Const_machine_int (v, _, _, _) -> Some (show v)
        | Const_bool b     -> Some (if b then "true" else "false")
        | Const_string (s, _) -> Some s
        | Const_unit       -> Some "unit"
@@ -1269,7 +1276,12 @@ and constant_of_sconst (c:sconst) : ML (option constant) =
   match c with
   | Const_unit -> Some CUnit
   | Const_bool b -> Some (CBool b)
-  | Const_int (s, w) -> Some (CInt (s, w))
+  (* The source spelling is kept here, unlike in a key: a literal written
+     [0xFF] should come out [0xFF] in the generated C.  This is exactly what
+     the legacy ML extraction does with the same pair of cases. *)
+  | Const_int (v, b) -> Some (CInt (string_of_int_literal v b, None))
+  | Const_machine_int (v, b, sg, w) ->
+    Some (CInt (string_of_int_literal v b, Some (sg, w)))
   | Const_char c -> Some (CChar c)
   | Const_string (s, _) -> Some (CString s)
   | _ -> None
