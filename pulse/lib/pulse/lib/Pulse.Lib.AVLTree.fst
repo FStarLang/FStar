@@ -802,6 +802,7 @@ fn rec tree_min_c (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t){T.Node? l})
   preserves is_tree tree l
   returns y:t
   ensures pure (y == T.tree_min l)
+  decreases (T.height l)
 {
   match tree {
     None -> {
