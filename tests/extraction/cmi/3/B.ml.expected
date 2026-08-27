@@ -1,0 +1,5 @@
+open Prims
+type 'sq t = Obj.t
+let f (sq : unit) (x : Obj.t) : Prims.nat= Prims.int_zero
+type 'sq t' = Obj.t
+let f' (sq : unit) (x : Obj.t) : Prims.nat= Prims.int_one
