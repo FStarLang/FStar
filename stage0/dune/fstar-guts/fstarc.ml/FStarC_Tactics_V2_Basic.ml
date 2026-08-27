@@ -53,7 +53,7 @@ let core_check (env : FStarC_TypeChecker_Env.env)
     FStarC_TypeChecker_Core.error) FStar_Pervasives.either=
   let uu___ =
     let uu___1 = FStarC_Options.compat_pre_core_should_check () in
-    Prims.op_Negation uu___1 in
+    Prims.not uu___1 in
   if uu___
   then FStar_Pervasives.Inl FStar_Pervasives_Native.None
   else
@@ -118,8 +118,7 @@ let tacprint3 (s : Prims.string) (x : Prims.string) (y : Prims.string)
   FStarC_Format.print1 "TAC>> %s\n" (FStarC_Format.fmt3 s x y z)
 let print (msg : Prims.string) : unit FStarC_Tactics_Monad.tac=
   (let uu___1 =
-     let uu___2 =
-       let uu___3 = FStarC_Options.silent () in Prims.op_Negation uu___3 in
+     let uu___2 = let uu___3 = FStarC_Options.silent () in Prims.not uu___3 in
      if uu___2 then true else FStarC_Options.interactive () in
    if uu___1 then tacprint msg else ());
   FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac () (Obj.repr ())
@@ -178,7 +177,7 @@ let dump_all (print_resolved : Prims.bool) (msg : Prims.string) :
            FStarC_List.filter
              (fun g ->
                 let uu___ = FStarC_Tactics_Types.check_goal_solved g in
-                Prims.op_Negation uu___) gs in
+                Prims.not uu___) gs in
        let ps' =
          {
            FStarC_Tactics_Types.main_context =
@@ -225,7 +224,7 @@ let dump_uvars_of (g : FStarC_Tactics_Types.goal) (msg : Prims.string) :
          FStarC_List.filter
            (fun g1 ->
               let uu___ = FStarC_Tactics_Types.check_goal_solved g1 in
-              Prims.op_Negation uu___) gs in
+              Prims.not uu___) gs in
        let ps' =
          {
            FStarC_Tactics_Types.main_context =
@@ -582,7 +581,7 @@ let proc_guard_formula (reason : Prims.string) (e : env)
                                               e g in
                                           FStarC_TypeChecker_Env.is_trivial
                                             uu___5 in
-                                        Prims.op_Negation uu___4 in
+                                        Prims.not uu___4 in
                                       if uu___3
                                       then
                                         fail1 "Forcing the guard failed (%s)"
@@ -653,7 +652,7 @@ let proc_guard_formula (reason : Prims.string) (e : env)
                                               e g in
                                           FStarC_TypeChecker_Env.is_trivial
                                             uu___5 in
-                                        Prims.op_Negation uu___4 in
+                                        Prims.not uu___4 in
                                       if uu___3
                                       then
                                         fail1 "Forcing the guard failed (%s)"
@@ -884,9 +883,11 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                } in
              let must_tot1 =
                must_tot &&
-                 (Prims.op_Negation
-                    (FStarC_Syntax_Syntax.uu___is_Allow_ghost
-                       dec.FStarC_Syntax_Syntax.uvar_decoration_should_check)) in
+                 (Prims.not
+                    (match dec.FStarC_Syntax_Syntax.uvar_decoration_should_check
+                     with
+                     | FStarC_Syntax_Syntax.Allow_ghost _0 -> true
+                     | uu___2 -> false)) in
              let uu___2 =
                let uu___3 = FStarC_Syntax_Util.ctx_uvar_typ u in
                core_check env2 sol uu___3 must_tot1 in
@@ -916,13 +917,12 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                     let uu___4 =
                       let uu___5 =
                         FStarC_Options.disallow_unification_guards () in
-                      if uu___5
-                      then Prims.op_Negation allow_guards
-                      else false in
+                      if uu___5 then Prims.not allow_guards else false in
                     if uu___4
                     then
-                      FStarC_TypeChecker_Common.uu___is_NonTrivial
-                        guard1.FStarC_TypeChecker_Common.guard_f
+                      match guard1.FStarC_TypeChecker_Common.guard_f with
+                      | FStarC_TypeChecker_Common.NonTrivial _0 -> true
+                      | uu___5 -> false
                     else false in
                   if uu___3
                   then
@@ -1251,7 +1251,7 @@ let do_unify_aux (uu___4 : Prims.bool)
                 | FStar_Pervasives_Native.Some g ->
                     let uu___2 =
                       if
-                        Prims.op_Negation
+                        Prims.not
                           (FStarC_TypeChecker_Env.is_trivial_guard_formula g)
                       then
                         FStarC_Effect.failwith
@@ -1385,7 +1385,7 @@ let do_match_on_lhs (uu___3 : Prims.bool)
                                           (FStarC_FlatSet.setlike_flat_set
                                              FStarC_Syntax_Free.ord_ctx_uvar)
                                           uvs1 uvs2 in
-                                      Prims.op_Negation uu___4 in
+                                      Prims.not uu___4 in
                                     (if uu___3
                                      then
                                        (FStarC_Syntax_Unionfind.rollback tx;
@@ -2254,7 +2254,7 @@ let intro (uu___ : unit) :
                match uu___2 with
                | FStar_Pervasives_Native.Some (uu___3, uu___4, c) when
                    let uu___5 = FStarC_Syntax_Util.is_total_comp c in
-                   Prims.op_Negation uu___5 ->
+                   Prims.not uu___5 ->
                    Obj.magic
                      (Obj.repr
                         (FStarC_Tactics_Monad.fail "Codomain is effectful"))
@@ -2364,7 +2364,7 @@ let intros (max : Prims.int) :
                                let uu___5 =
                                  let uu___6 =
                                    FStarC_Syntax_Util.is_pure_comp c2 in
-                                 Prims.op_Negation uu___6 in
+                                 Prims.not uu___6 in
                                if uu___5
                                then
                                  let uu___6 =
@@ -2495,7 +2495,7 @@ let intro_rec (uu___ : unit) :
                        (Obj.repr
                           (let uu___4 =
                              let uu___5 = FStarC_Syntax_Util.is_total_comp c in
-                             Prims.op_Negation uu___5 in
+                             Prims.not uu___5 in
                            if uu___4
                            then
                              Obj.repr
@@ -3139,8 +3139,7 @@ let t_exact (try_refine : Prims.bool) (set_expected_typ : Prims.bool)
                              (FStarC_Class_Monad.return
                                 FStarC_Tactics_Monad.monad_tac ()
                                 (Obj.repr ()))
-                       | FStar_Pervasives.Inl e when
-                           Prims.op_Negation try_refine ->
+                       | FStar_Pervasives.Inl e when Prims.not try_refine ->
                            Obj.magic (FStarC_Tactics_Monad.traise e)
                        | FStar_Pervasives.Inl e ->
                            Obj.magic
@@ -3288,7 +3287,7 @@ let try_unify_by_application
                                 (let uu___2 =
                                    let uu___3 =
                                      FStarC_Syntax_Util.is_total_comp c in
-                                   Prims.op_Negation uu___3 in
+                                   Prims.not uu___3 in
                                  if uu___2
                                  then
                                    Obj.repr
@@ -3500,7 +3499,7 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                     (FStarC_FlatSet.setlike_flat_set
                                                                     FStarC_Syntax_Free.ord_ctx_uvar)
                                                                     uu___9 in
-                                                                   Prims.op_Negation
+                                                                   Prims.not
                                                                     uu___8
                                                                  else false in
                                                                if uu___7
@@ -3712,7 +3711,7 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                     g.FStarC_Tactics_Types.goal_ctx_uvar
                                                                     else
                                                                     false in
-                                                                    Prims.op_Negation
+                                                                    Prims.not
                                                                     uu___15)
                                                                     (FStarC_List.flatten
                                                                     sub_goals) in
@@ -4278,7 +4277,7 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     Obj.magic
                                                                     b in
                                                                     if
-                                                                    Prims.op_Negation
+                                                                    Prims.not
                                                                     b
                                                                     then
                                                                     let uu___12
@@ -4488,7 +4487,7 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     checkone
                                                                     uu___16
                                                                     goals in
-                                                                    Prims.op_Negation
+                                                                    Prims.not
                                                                     uu___15)
                                                                     sub_goals1 in
                                                                     let uu___15
@@ -5448,7 +5447,7 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
     let skip_register = false in
     let uu___ =
       let uu___1 = FStarC_Options.compat_pre_core_should_register () in
-      Prims.op_Negation uu___1 in
+      Prims.not uu___1 in
     if uu___
     then skip_register
     else
@@ -7434,7 +7433,7 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     =
                                                                     FStarC_Tactics_Monad.is_irrelevant
                                                                     g in
-                                                                    Prims.op_Negation
+                                                                    Prims.not
                                                                     uu___14
                                                                     else
                                                                     false in
@@ -7756,7 +7755,7 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     =
                                                                     FStarC_Syntax_Util.is_total_comp
                                                                     comp1 in
-                                                                    Prims.op_Negation
+                                                                    Prims.not
                                                                     uu___31 in
                                                                     failwhen
                                                                     uu___30
@@ -9123,7 +9122,10 @@ let __refl_typing_builtin_wrapper
      match uu___ with
      | (errs, r) ->
          let gs =
-           if FStar_Pervasives_Native.uu___is_Some r
+           if
+             match r with
+             | FStar_Pervasives_Native.Some v -> true
+             | uu___1 -> false
            then
              let allow_uvars = false in
              let allow_names = true in
@@ -9138,7 +9140,7 @@ let __refl_typing_builtin_wrapper
                         (uu___3, tok) in
                       (e, uu___2))
                (FStar_Pervasives_Native.snd
-                  (FStar_Pervasives_Native.__proj__Some__item__v r))
+                  (match r with | FStar_Pervasives_Native.Some v -> v))
            else [] in
          let r1 = FStarC_Option.map FStar_Pervasives_Native.fst r in
          Obj.magic
@@ -9152,7 +9154,7 @@ let __refl_typing_builtin_wrapper
                       (FStarC_TypeChecker_Tc.compress_and_norm
                          ps.FStarC_Tactics_Types.main_context);
                     FStarC_Syntax_Unionfind.rollback tx;
-                    if Prims.uu___is_Cons errs
+                    if (match errs with | hd::tl -> true | uu___3 -> false)
                     then
                       Obj.magic
                         (FStarC_Class_Monad.return
@@ -10130,7 +10132,7 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                         | () ->
                             let uu___5 =
                               let uu___6 = no_uvars_in_term e1 in
-                              Prims.op_Negation uu___6 in
+                              Prims.not uu___6 in
                             if uu___5
                             then
                               let uu___6 =
@@ -10338,7 +10340,7 @@ let refl_check_match_complete (g : env) (sc : FStarC_Syntax_Syntax.term)
     FStarC_Reflection_V2_Data.binding Prims.list Prims.list) refl_tac=
   refl_typing_builtin_wrapper "refl_check_match_complete"
     (fun uu___ ->
-       let one = FStarC_Syntax_Util.exp_int "1" in
+       let one = FStarC_Syntax_Util.exp_int Prims.int_one in
        let brs =
          FStarC_List.map
            (fun p ->
@@ -10619,7 +10621,7 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                         FStarC_Errors.stop_if_err ();
                         (let uu___8 =
                            let uu___9 = no_univ_uvars_in_term e1 in
-                           Prims.op_Negation uu___9 in
+                           Prims.not uu___9 in
                          if uu___8
                          then
                            let uu___9 =
@@ -10639,7 +10641,7 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                          else ());
                         (let uu___9 =
                            let uu___10 = no_univ_uvars_in_term t in
-                           Prims.op_Negation uu___10 in
+                           Prims.not uu___10 in
                          if uu___9
                          then
                            let uu___10 =
@@ -10663,7 +10665,7 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                              | (x, t1) ->
                                  let uu___11 =
                                    let uu___12 = no_univ_uvars_in_term t1 in
-                                   Prims.op_Negation uu___12 in
+                                   Prims.not uu___12 in
                                  if uu___11
                                  then
                                    let uu___12 =
@@ -11151,7 +11153,7 @@ let refl_maybe_unfold_head (uu___1 : FStarC_TypeChecker_Env.env)
                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                         (Obj.magic uu___4))
                    else
-                     ((FStar_Pervasives_Native.__proj__Some__item__v eopt),
+                     (((match eopt with | FStar_Pervasives_Native.Some v -> v)),
                        [])))))
      else
        Obj.magic

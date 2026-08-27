@@ -1,4 +1,3 @@
-#light "off"
 module Prims
 open System.Numerics
 
@@ -51,24 +50,24 @@ type 'a list   = 'a Microsoft.FSharp.Collections.list
 
 type nat       = int
 type pos       = int
-type 'd b2t    = B2t of unit
+type b2t<'d>    = B2t of unit
 
-type 'a squash = Squash of unit
+type squash<'a> = Squash of unit
 
-type (' p, ' q) sum =
-  | Left of ' p
-  | Right of ' q
+type sum<'p, 'q> =
+  | Left of 'p
+  | Right of 'q
 
-type (' p, ' q) l_or = ('p, 'q) sum squash
+type l_or<'p, 'q> = squash<sum<'p, 'q>>
 
-let uu___is_Left = function Left _ -> true | Right _ -> false
+let uu___is_Left x = match x with | Left _ -> true | Right _ -> false
 
-let uu___is_Right = function Left _ -> false | Right _ -> true
+let uu___is_Right x = match x with | Left _ -> false | Right _ -> true
 
-type (' p, ' q) pair =
-| Pair of ' p * ' q
+type pair<'p, 'q> =
+| Pair of 'p * 'q
 
-type (' p, ' q) l_and = ('p, 'q) pair squash
+type l_and<'p, 'q> = squash<pair<'p, 'q>>
 
 let uu___is_Pair _ = true
 
@@ -87,9 +86,9 @@ type l_False = empty squash
 
 type (' p, ' q) l_imp = ('p -> 'q) squash
 
-type (' p, ' q) l_iff = ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
+type l_iff<'p, 'q> = l_and<l_imp<'p, 'q>, l_imp<'q, 'p>>
 
-type ' p l_not = (' p, l_False) l_imp
+type ' p l_not = l_imp<'p, l_False>
 
 type (' a, ' p) l_Forall = L_forall of unit
 
@@ -107,12 +106,12 @@ let _assume () = ()
 let _assert x = ()
 let magic () = failwith "no magic"
 let unsafe_coerce x = unbox (box x)
-let op_Negation x = not x
+let not x = not x
 
-let op_Equality x y = x = y
-let op_disEquality x y = x<>y
-let op_AmpAmp x y = x && y
-let op_BarBar x y  = x || y
+let op_Equals x y = x = y
+let op_Less_Greater x y = x<>y
+let op_Amp_Amp x y = x && y
+let op_Bar_Bar x y  = x || y
 let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
 let uu___is_Cons l = not (uu___is_Nil l)
 let strcat x y = x ^ y
@@ -128,12 +127,13 @@ let __proj__Mkdtuple2__item___1 x = match x with
 let __proj__Mkdtuple2__item___2 x = match x with
   | Mkdtuple2 (_, x) -> x
 
-let rec pow2 (n:int) = if n = bigint 0 then
-                      bigint 1
-                   else
-                      (bigint 2) * pow2 (n - (bigint 1))
+let rec pow2 (n:int) = 
+  if n = bigint 0 then
+    bigint 1
+  else
+    (bigint 2) * pow2 (n - (bigint 1))
 
-let __proj__Cons__item__tl = function
+let __proj__Cons__item__tl x = match x with
   | _::tl -> tl
   | _     -> failwith "Impossible"
 

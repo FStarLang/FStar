@@ -46,12 +46,12 @@ instance addable_base {| d : addable_bounded_unsigned_int 'a |}
 class subtractable_bounded_unsigned_int (a:Type) = {
    [@@@no_method]
    base   : bounded_unsigned_int a;
-   sub    : (x:a -> y:a { fits op_Subtraction x y } -> a);
+   sub    : (x:a -> y:a { fits op_Minus x y } -> a);
 
    [@@@no_method]
    properties : squash (
-     related_ops op_Subtraction sub /\
-     (forall (x:a). fits op_Subtraction bound x)
+     related_ops op_Minus sub /\
+     (forall (x:a). fits op_Minus bound x)
    )
 }
 
@@ -121,7 +121,7 @@ instance u32_instance_cmp : comparable_bounded_unsigned_int FStar.UInt32.t =
   let open FStar.UInt32 in
   {
     base = u32_instance_base;
-    comp = (fun x y -> x <^ y);
+    comp = (fun x y -> x < y);
     properties = ()
   }
 
@@ -155,7 +155,7 @@ instance u64_instance_cmp : comparable_bounded_unsigned_int FStar.UInt64.t =
   let open FStar.UInt64 in
   {
     base = u64_instance_base;
-    comp = (fun x y -> x <^ y);
+    comp = (fun x y -> x < y);
     properties = ()
   }
 
@@ -166,21 +166,21 @@ module U64 = FStar.UInt64
 //            (y:U32.t)
 //   = if x <= 0xffffffful &&
 //        y <= 0xffffffful
-//     then Some (x +^ y)
+//     then Some (x + y)
 //     else None
 
 // let test64 (x y:U64.t)
 //   = if x <= 0xfffffffuL &&
 //        y <= 0xfffffffuL
-//     then Some (x +^ y)
+//     then Some (x + y)
 //     else None
 
 // module L = FStar.List.Tot
 
 // let try_add (x:U32.t)
 //             (y:U32.t)
-//   = if x <= (bound -^ y)
-//     then x +^ y
+//   = if x <= (bound - y)
+//     then x + y
 //     else y
 
 #push-options "--query_stats --fuel 0 --ifuel 1"

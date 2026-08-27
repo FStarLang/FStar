@@ -26,7 +26,7 @@ let rec fib (n : int) : Tac unit =
     then
         exact (`1)
     else (
-        apply (`op_Addition);
+        apply (`op_Plus);
         iseq [ (fun () -> fib (n - 1)) ;
                (fun () -> fib (n - 2)) ]
     )
@@ -40,7 +40,7 @@ let rec fib_norm (n : int) : Tac unit =
         exact (`1)
     else (
         dup ();
-        apply (`op_Addition);
+        apply (`op_Plus);
         iseq [ (fun () -> fib_norm (n - 1)) ;
                (fun () -> fib_norm (n - 2)) ];
         norm [primops];
@@ -58,8 +58,8 @@ let iszero (x : int) : int =
         let _f = fresh_namedv () in
         let tun = pack Tv_Unknown in
         let t = Tv_Match x None
-                    [(Pat_Constant {c=C_Int 0}, pack (Tv_Const (C_Int 1)));
-                     (Pat_Var {v=_f; sort=seal tun}, pack (Tv_Const (C_Int 0)))] in
+                    [(Pat_Constant {c=C_Int 0 (FStar.Sealed.seal Dec)}, pack (Tv_Const (C_Int 1 (FStar.Sealed.seal Dec))));
+                     (Pat_Var {v=_f; sort=seal tun}, pack (Tv_Const (C_Int 0 (FStar.Sealed.seal Dec))))] in
         exact (pack t))
 
 let _ = assert (iszero 0 = 1)

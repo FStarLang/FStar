@@ -142,8 +142,8 @@
       NegativeTests.Termination.S n' << n \/
       NegativeTests.Termination.S n' === n /\ m' << m
   - In context:
-      ~(O? (n, m)._1) /\ ~(S? (n, m)._1) ==> Prims.l_False
-      ~(O? (n, m)._1)
+      ~(O? n) /\ ~(S? n) ==> Prims.l_False
+      ~(O? n)
       n': NegativeTests.Termination.snat
       m': NegativeTests.Termination.snat
       (n, m) == (NegativeTests.Termination.S n', m')
@@ -155,9 +155,8 @@
   - The SMT solver could not prove the query.
   - Failed to prove: NegativeTests.Termination.S n' << n
   - In context:
-      ~(O? (n, 42)._1 && (n, 42)._2 = 42) /\ ~(S? (n, 42)._1 && (n, 42)._2 = 42) ==>
-      Prims.l_False
-      ~(O? (n, 42)._1 && (n, 42)._2 = 42)
+      ~(O? n && true) /\ ~(S? n && true) ==> Prims.l_False
+      ~(O? n && true)
       n': NegativeTests.Termination.snat
       (n, 42) == (NegativeTests.Termination.S n', 42)
   - See also NegativeTests.Termination.fst(94,2-96,26)

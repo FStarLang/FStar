@@ -21,7 +21,8 @@ let mem (uu___ : 'a FStarC_Class_Ord.ord) (x : 'a) (s : 'a flat_set) :
        FStarC_Class_Deq.op_Equals_Question (FStarC_Class_Ord.ord_eq uu___) x
          y) s
 let singleton (uu___ : 'a FStarC_Class_Ord.ord) (x : 'a) : 'a flat_set= [x]
-let is_empty (s : 'a flat_set) : Prims.bool= Prims.uu___is_Nil s
+let is_empty (s : 'a flat_set) : Prims.bool=
+  match s with | [] -> true | uu___ -> false
 let addn (uu___ : 'a FStarC_Class_Ord.ord) (xs : 'a Prims.list)
   (ys : 'a flat_set) : 'a flat_set= FStarC_List.fold_right (add uu___) xs ys
 let rec remove :
@@ -58,8 +59,7 @@ let inter (uu___ : 'a FStarC_Class_Ord.ord) (s1 : 'a flat_set)
   FStarC_List.filter (fun y -> mem uu___ y s2) s1
 let diff (uu___ : 'a FStarC_Class_Ord.ord) (s1 : 'a flat_set)
   (s2 : 'a flat_set) : 'a flat_set=
-  FStarC_List.filter (fun y -> let r = mem uu___ y s2 in Prims.op_Negation r)
-    s1
+  FStarC_List.filter (fun y -> let r = mem uu___ y s2 in Prims.not r) s1
 let collect (uu___ : 'b FStarC_Class_Ord.ord) (f : 'a -> 'b flat_set)
   (l : 'a Prims.list) : 'b flat_set=
   FStarC_List.fold_right

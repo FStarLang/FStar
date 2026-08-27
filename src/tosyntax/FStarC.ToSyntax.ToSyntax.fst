@@ -212,6 +212,59 @@ let unit_ty rng = mk_term (Name C.unit_lid) rng Type_level
 type env_t = Env.env
 type lenv_t = list bv
 
+(* --- Type-based overloading: attaching candidate lists ---------------
+
+   See FStarC.TypeChecker.Overload. When a name resolves to several
+   top-level definitions we resolve it by scope order as usual (the
+   innermost one wins) but record the shadowed alternatives on the fv,
+   as [Unresolved_name alts]. The typechecker may later pick a different
+   candidate, but only when the scope-order one is definitely
+   type-incorrect, so a program that typechecks under scope-order
+   resolution keeps its meaning.
+
+   The qualifier is only ever attached to an fv that has no qualifier of
+   its own; data constructors and record projectors keep their existing
+   Data_ctor / Record_ctor / Record_projector qualifiers and are handled
+   by the pre-existing Unresolved_constructor / Unresolved_projector
+   machinery. *)
+
+(* Only qualifier-less fvs (and fvs that already carry alternatives) take
+   part in overloading. Data constructors and record projectors keep
+   their own qualifiers and go through the pre-existing
+   Unresolved_constructor / Unresolved_projector machinery. *)
+let overloadable_qual (q:option fv_qual) : bool =
+  match q with
+  | None -> true
+  | Some (Unresolved_name _) -> true
+  | _ -> false
+
+(* Record [alts] as the overloading candidates of [t]. Anything that is
+   not an overloadable fvar is returned untouched. *)
+let set_alternatives (t:S.term) (alts:list fv) : ML S.term =
+  match alts with
+  | [] -> t
+  | _ ->
+    match (SS.compress t).n with
+    | Tm_fvar fv when overloadable_qual fv.fv_qual ->
+      S.mk (Tm_fvar ({fv with fv_qual = Some (Unresolved_name alts)})) t.pos
+    | _ -> t
+
+(* Attach the alternatives that [l] resolves to, if [t] is indeed the
+   primary candidate. If it is not (e.g. because the primary is a data
+   constructor, which we filter out) we attach nothing: it is always
+   sound to have fewer candidates. *)
+let maybe_add_alternatives (env:env_t) (l:lid) (t:S.term) : ML S.term =
+  match (SS.compress t).n with
+  | Tm_fvar fv when None? fv.fv_qual ->
+    begin match Env.try_lookup_lid_alternatives env l with
+    | fv0 :: alts ->
+      if Cons? alts && S.fv_eq fv fv0
+      then set_alternatives t alts
+      else t
+    | _ -> t
+    end
+  | _ -> t
+
 let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : ML (option S.term) =
     let tm_attrs_opt =
         if resolve
@@ -221,30 +274,22 @@ let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : ML (option S.te
     match tm_attrs_opt with
     | None -> None
     | Some (tm, attrs) ->
+        let tm = if resolve then maybe_add_alternatives env l tm else tm in
         let tm = setpos tm in
         Some tm
 
 let desugar_name mk setpos env resolve l : ML _ =
     fail_or env (desugar_name' setpos env resolve) l
 
-let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
+let compile_op_lid s r = [mk_ident(compile_op s r, r)] |> lid_of_ids
 
-let op_as_term env arity op : ML (option S.term) =
+(* Some operators are notations for entities that have ordinary names,
+   rather than operators defined under their mangled name. They are
+   resolved here, if the mangled name is not in scope. *)
+let op_as_term env op : ML (option S.term) =
   let r l = Some (S.lid_and_dd_as_fv (set_lid_range l (range_of_id op)) None |> S.fv_to_tm) in
   let fallback () =
     match Ident.string_of_id op with
-    | "=" -> r C.op_Eq
-    | "<" -> r C.op_LT
-    | "<=" -> r C.op_LTE
-    | ">" -> r C.op_GT
-    | ">=" -> r C.op_GTE
-    | "&&" -> r C.op_And
-    | "||" -> r C.op_Or
-    | "+" -> r C.op_Addition
-    | "-" when (arity=1) -> r C.op_Minus
-    | "-" -> r C.op_Subtraction
-    | "/" -> r C.op_Division
-    | "%" -> r C.op_Modulus
     | "@" ->
       FStarC.Errors.log_issue op FStarC.Errors.Warning_DeprecatedGeneric [
           Errors.Msg.text "The operator '@' has been resolved to FStar.List.Tot.append even though \
@@ -252,7 +297,6 @@ let op_as_term env arity op : ML (option S.term) =
                            stop relying on this deprecated, special treatment of '@'."];
       r C.list_tot_append_lid
 
-    | "<>" -> r C.op_notEq
     | "~"   -> r C.not_lid
     | "=="  -> r C.eq2_lid
     | "<<" -> r C.precedes_lid
@@ -262,10 +306,10 @@ let op_as_term env arity op : ML (option S.term) =
     | "<==>" -> r C.iff_lid
     | _ -> None
   in
-  match desugar_name' (fun t -> {t with pos=(range_of_id op)})
-        env true (compile_op_lid arity (string_of_id op) (range_of_id op)) with
+  let setpos t = {t with pos=(range_of_id op)} in
+  match desugar_name' setpos env true (compile_op_lid (string_of_id op) (range_of_id op)) with
   | Some t -> Some t
-  | _ -> fallback()
+  | None -> fallback()
 
 let head_and_args_full t =
     let rec aux args t : ML _ = match (unparen t).tm with
@@ -457,12 +501,10 @@ let rec desugar_maybe_non_constant_universe t
   | Wild -> Inr U_unknown
   | Uvar u -> Inr (U_name u)
 
-  | Const (Const_int (repr, _)) ->
-      (* TODO : That might be a little dangerous... *)
-      let n = int_of_string repr in
+  | Const (Const_int (n, _)) ->
       if n < 0
       then raise_error t Errors.Fatal_NegativeUniverseConstNotSupported
-             ("Negative universe constant  are not supported : " ^ repr);
+             ("Negative universe constant  are not supported : " ^ show n);
       Inl n
   | Op (_op_plus, [t1 ; t2]) ->
       assert (Ident.string_of_id _op_plus = "+") ;
@@ -650,7 +692,7 @@ let rec desugar_data_pat
 
       | PatOp op ->
         (* Turn into a PatVar and recurse *)
-        let id_op = mk_ident (compile_op 0 (string_of_id op) (range_of_id op), (range_of_id op)) in
+        let id_op = mk_ident (compile_op (string_of_id op) (range_of_id op), (range_of_id op)) in
         let p = { p with pat = PatVar (id_op, None, []) } in
         aux loc aqs env p
 
@@ -834,7 +876,7 @@ and desugar_binding_pat_maybe_top top env p
     let mklet x ty (tacopt : option S.term) : ML (env_t & bnd & list annotated_pat) =
         env, LetBinder(qualify env x, (ty, tacopt)), []
     in
-    let op_to_ident x = mk_ident (compile_op 0 (string_of_id x) (range_of_id x), (range_of_id x)) in
+    let op_to_ident x = mk_ident (compile_op (string_of_id x) (range_of_id x), (range_of_id x)) in
     match p.pat with
     | PatOp x ->
         mklet (op_to_ident x) (tun_r (range_of_id x)) None, []
@@ -883,7 +925,7 @@ and desugar_typ env e : ML S.term =
     check_no_aq aq;
     t
 
-and desugar_machine_integer env repr (_sw_:(FStarC.Const.signedness & FStarC.Const.width)) range : ML _ = let (signedness, width) = _sw_ in
+and desugar_machine_integer env (repr:int) (base:int_base) (_sw_:(FStarC.Const.signedness & FStarC.Const.width)) range : ML _ = let (signedness, width) = _sw_ in
   let tnm = if width = Sizet then "FStar.SizeT" else
     "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
@@ -893,9 +935,12 @@ and desugar_machine_integer env repr (_sw_:(FStarC.Const.signedness & FStarC.Con
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
+  (* Note: the authoritative check is in FStarC.TypeChecker.TcTerm.tc_constant;
+     this one only exists to give a good error message on the source syntax. *)
   if not (within_bounds repr signedness width)
   then FStarC.Errors.log_issue range Errors.Error_OutOfRange
-         (Format.fmt2 "%s is not in the expected range for %s" repr tnm);
+         (Format.fmt2 "%s is not in the expected range for %s"
+            (string_of_int_literal repr base) tnm);
   let private_intro_nm = tnm ^
     ".__" ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
   in
@@ -917,7 +962,7 @@ and desugar_machine_integer env repr (_sw_:(FStarC.Const.signedness & FStarC.Con
     | None ->
       raise_error range Errors.Fatal_UnexpectedNumericLiteral
         (Format.fmt1 "Unexpected numeric literal.  Restart F* to load %s." tnm) in
-  let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
+  let repr' = S.mk (Tm_constant (Const_int (repr, base))) range in
   let app = S.mk_Tm_app lid [repr', S.as_aqual_implicit false] range in
   S.mk (Tm_meta {tm=app;
                  meta=Meta_desugared (Machine_integer (signedness, width))}) range
@@ -962,8 +1007,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         failwith "Attributes should not be desugared by desugar_term_maybe_top"
         // desugar_attributes env ts
 
-    | Const (Const_int (i, Some size)) ->
-        desugar_machine_integer env i size top.range, noaqs
+    | Const (Const_machine_int (i, b, sw, w)) ->
+        desugar_machine_integer env i b (sw, w) top.range, noaqs
 
     | Const c ->
         mk (Tm_constant c), noaqs
@@ -987,7 +1032,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
 
     | Op(s, args) ->
       begin
-      match op_as_term env (List.length args) s with
+      match op_as_term env s with
       | None ->
         raise_error s Errors.Fatal_UnexpectedOrUnboundOperator
                     ("Unexpected or unbound operator: " ^
@@ -1741,7 +1786,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         in
         match (unparen rel).tm with
         | Op (id, _) ->
-            begin match op_as_term env 2 id with
+            begin match op_as_term env id with
             | Some t -> is_impl_t t
             | None -> false
             end
@@ -1963,9 +2008,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
          eliminate exists x1 ... xn. p
          with e
          desugars to
-         let (| x1, ..., xk |) = indefinite_descriptionk (fun x1 ... xk -> exists xk+1 ... xn. p) in
-         ... continuing with the remaining binders, at most
-         max_indefinite_description_arity at a time ...
+         let (| x1, (| ..., xn |) |) = indefinite_descriptionn (fun x1 ... xn -> p) in e
+         using a single call whenever n <= max_indefinite_description_arity.
       *)
       let pat_of_binder (b:binder) : ML pattern =
         let v aq attrs x = mk_pattern (PatVar (x, aq, attrs)) b.brange in
@@ -1977,14 +2021,38 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
           raise_error b Fatal_UnexpectedTerm
             "Unexpected unnamed binder in 'eliminate exists'"
       in
+      (* `indefinite_descriptionk` returns a right-nested chain of dependent
+         pairs, so the binding pattern is nested to match. *)
+      let rec nested_pat (pats:list pattern) (r:Range.range) : ML pattern =
+        match pats with
+        | [pat] -> pat
+        | pat::pats -> mk_pattern (PatTuple ([pat; nested_pat pats r], true)) r
+        | [] -> raise_error top Fatal_UnexpectedTerm "Empty binders in 'eliminate exists'"
+      in
       let rec aux (bs:list binder) : ML term =
         match bs with
         | [] -> e
         | _ ->
           let n = List.length bs in
-          let k = if n < C.max_indefinite_description_arity
+          (* Taking all the binders in one step is important. Chaining several
+             calls is bad in two independent ways. First, the obligation of a
+             non-final call is `exists x1 ... xk. (exists xk+1 ... xn. p)`, and
+             the solver has no trigger for the outer existential that mentions
+             the inner binders, so it falls back to a multi-pattern of the
+             typing hypotheses of x1 ... xk and enumerates every k-tuple of
+             terms of the right type (issue #4405). Second, each step restates
+             the remaining existential as its own postcondition, and
+             normalizing the resulting VC costs about 2x per extra step, so the
+             elaboration time grows exponentially in the number of steps
+             (issue #4444).
+
+             Beyond max_indefinite_description_arity we have no combinator of
+             the right arity, so we peel off one binder at a time: that at
+             least keeps the trigger enumeration linear rather than
+             exponential in k. *)
+          let k = if n <= C.max_indefinite_description_arity
                   then n
-                  else C.max_indefinite_description_arity
+                  else 1
           in
           let hd, tl = List.splitAt k bs in
           let r = List.fold_right (fun (b:binder) r -> Range.union_ranges b.brange r) hd p.range in
@@ -1995,12 +2063,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
           let pred = mk_term (Abs (List.map pat_of_binder hd, body)) r Expr in
           let head = mk_term (Var (C.indefinite_description_lid k)) r Expr in
           let rhs = mkExplicitApp head [pred] r in
-          let pats = List.map pat_of_binder hd in
-          let pat =
-            match pats with
-            | [pat] -> pat
-            | _ -> mk_pattern (PatTuple (pats, true)) r
-          in
+          let pat = nested_pat (List.map pat_of_binder hd) r in
           mk_term (Let (LocalNoLetQualifier, [(None, (pat, rhs))], aux tl)) top.range Expr
       in
       if Nil? bs
@@ -2429,7 +2492,7 @@ and desugar_formula env (f:term) : ML S.term =
     
     | QuantOp(i, [b], pats, body) ->
       let q_head =
-        match op_as_term env 0 i with
+        match op_as_term env i with
         | None -> 
           raise_error i Errors.Fatal_VariableNotFound
                       (Format.fmt1 "quantifier operator %s not found" (Ident.string_of_id i))
@@ -3261,13 +3324,6 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
     let mkclass lid =
       let r = range_of_lid lid in
       let body =
-      if U.has_attribute d_attrs C.meta_projectors_attr then
-        (* new meta projectors *)
-        U.mk_app (S.tabbrev C.mk_projs_lid)
-                 [S.as_arg (U.exp_bool true);
-                  S.as_arg (U.exp_string (string_of_lid lid))]
-      else
-        (* old mk_class *)
         U.mk_app (S.tabbrev C.mk_class_lid)
                  [S.as_arg (U.exp_string (string_of_lid lid))]
       in

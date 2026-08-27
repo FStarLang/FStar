@@ -175,10 +175,7 @@ let rec elaborate_pat (env : FStarC_TypeChecker_Env.env)
   | uu___ -> p
 exception Raw_pat_cannot_be_translated 
 let uu___is_Raw_pat_cannot_be_translated (projectee : Prims.exn) :
-  Prims.bool=
-  match projectee with
-  | Raw_pat_cannot_be_translated -> true
-  | uu___ -> false
+  Prims.bool= true
 let raw_pat_as_exp (env : FStarC_TypeChecker_Env.env)
   (p : FStarC_Syntax_Syntax.pat) :
   (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.bv Prims.list)
@@ -188,9 +185,9 @@ let raw_pat_as_exp (env : FStarC_TypeChecker_Env.env)
     | FStarC_Syntax_Syntax.Pat_constant c ->
         let e =
           match c with
-          | FStarC_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
+          | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
               FStarC_ToSyntax_ToSyntax.desugar_machine_integer
-                env.FStarC_TypeChecker_Env.dsenv repr sw
+                env.FStarC_TypeChecker_Env.dsenv repr base (sw, w)
                 p1.FStarC_Syntax_Syntax.p
           | uu___ ->
               FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)
@@ -242,7 +239,7 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
   (FStarC_Syntax_Syntax.bv Prims.list * FStarC_Syntax_Syntax.term *
     FStarC_TypeChecker_Common.guard_t * FStarC_Syntax_Syntax.pat)=
   let intro_bv env1 x =
-    if Prims.op_Negation introduce_bv_uvars
+    if Prims.not introduce_bv_uvars
     then
       ({
          FStarC_Syntax_Syntax.ppname = (x.FStarC_Syntax_Syntax.ppname);
@@ -274,9 +271,9 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
     | FStarC_Syntax_Syntax.Pat_constant c ->
         let e =
           match c with
-          | FStarC_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
+          | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
               FStarC_ToSyntax_ToSyntax.desugar_machine_integer
-                env1.FStarC_TypeChecker_Env.dsenv repr sw
+                env1.FStarC_TypeChecker_Env.dsenv repr base (sw, w)
                 p1.FStarC_Syntax_Syntax.p
           | uu___ ->
               FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)
@@ -288,7 +285,7 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
              ((let uu___1 = FStarC_Effect.op_Bang dbg_Patterns in
                if uu___1
                then
-                 (if Prims.op_Negation env1.FStarC_TypeChecker_Env.phase1
+                 (if Prims.not env1.FStarC_TypeChecker_Env.phase1
                   then
                     let uu___2 =
                       FStarC_Class_Show.show FStarC_Syntax_Print.showable_pat
@@ -365,8 +362,10 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
              let uu___1 =
                let hd = FStarC_Syntax_Syntax.fv_to_tm fv in
                if
-                 (Prims.op_Negation inst_pat_cons_univs) ||
-                   (FStar_Pervasives_Native.uu___is_Some us_opt)
+                 (Prims.not inst_pat_cons_univs) ||
+                   (match us_opt with
+                    | FStar_Pervasives_Native.Some v -> true
+                    | uu___2 -> false)
                then let uu___2 = inst_head hd us_opt in (uu___2, us_opt)
                else
                  (let uu___2 =
@@ -374,7 +373,7 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
                       (FStarC_Syntax_Syntax.lid_of_fv fv) in
                   match uu___2 with
                   | (us, uu___3) ->
-                      if Prims.uu___is_Nil us
+                      if (match us with | [] -> true | uu___4 -> false)
                       then (hd, (FStar_Pervasives_Native.Some []))
                       else
                         (let uu___4 = FStarC_Syntax_Syntax.mk_Tm_uinst hd us in

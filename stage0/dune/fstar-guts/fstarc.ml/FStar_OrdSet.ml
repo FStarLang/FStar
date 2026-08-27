@@ -9,9 +9,9 @@ let rec sorted : 'a . 'a cmp -> 'a Prims.list -> Prims.bool =
 type ('a, 'f) ordset = 'a Prims.list
 let empty (uu___ : 'uuuuu cmp) : ('uuuuu, Obj.t) ordset= []
 let tail (f : 'a cmp) (s : ('a, Obj.t) ordset) : ('a, Obj.t) ordset=
-  Prims.__proj__Cons__item__tl s
+  match s with | hd::tl -> tl
 let head (uu___ : 'uuuuu cmp) (s : ('uuuuu, Obj.t) ordset) : 'uuuuu=
-  Prims.__proj__Cons__item__hd s
+  match s with | hd::tl -> hd
 let mem (uu___ : 'uuuuu cmp) (x : 'uuuuu) (s : ('uuuuu, Obj.t) ordset) :
   Prims.bool= FStar_List_Tot_Base.mem x s
 let mem_of (f : 'a cmp) (s : ('a, Obj.t) ordset) (x : 'a) : Prims.bool=
@@ -74,7 +74,7 @@ let rec subset' :
         if (f hd hd') && (hd = hd')
         then subset' f tl tl'
         else
-          if (f hd hd') && (Prims.op_Negation (hd = hd'))
+          if (f hd hd') && (Prims.not (hd = hd'))
           then false
           else subset' f s1 tl'
     | (uu___, uu___1) -> false
@@ -176,14 +176,14 @@ let rec map_internal :
         let y = g x in
         let ys = map_internal fa fb g xs in
         if
-          (Prims.op_Negation (Prims.uu___is_Cons ys)) ||
-            ((Prims.__proj__Cons__item__hd ys) <> y)
+          (Prims.not (match ys with | hd::tl -> true | uu___ -> false)) ||
+            ((match ys with | hd::tl -> hd) <> y)
         then y :: ys
         else ys
 let map (fa : 'a cmp) (fb : 'b cmp) (g : 'a -> 'b) (sa : ('a, Obj.t) ordset)
   : ('b, Obj.t) ordset= map_internal fa fb g sa
 type 'a condition = 'a -> Prims.bool
-let inv (c : 'a condition) : 'a condition= fun x -> Prims.op_Negation (c x)
+let inv (c : 'a condition) : 'a condition= fun x -> Prims.not (c x)
 let rec count :
   'a . 'a cmp -> ('a, Obj.t) ordset -> 'a condition -> Prims.nat =
   fun f s c ->

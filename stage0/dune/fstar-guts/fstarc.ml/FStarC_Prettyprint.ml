@@ -46,7 +46,7 @@ let generate (m : printing_mode) (filenames : Prims.string Prims.list) :
                       doc FStarC_Util.stdout);
                comments2) in
         let left_over_doc =
-          if Prims.op_Negation (FStarC_List.isEmpty leftover_comments)
+          if Prims.not (FStarC_List.isEmpty leftover_comments)
           then
             let uu___1 =
               let uu___2 =

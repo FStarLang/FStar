@@ -32,7 +32,7 @@ let print_discrepancy (f : 'a -> 'b) (x : 'a) (y : 'a) : ('b * 'b)=
   let rec blist_leq l1 l2 =
     match (l1, l2) with
     | (h1::t1, h2::t2) ->
-        if (Prims.op_Negation h1) || h2 then blist_leq t1 t2 else false
+        if (Prims.not h1) || h2 then blist_leq t1 t2 else false
     | ([], []) -> true
     | uu___ -> FStarC_Effect.failwith "print_discrepancy: bad lists" in
   let rec succ l =
@@ -67,7 +67,7 @@ let print_discrepancy (f : 'a -> 'b) (x : 'a) (y : 'a) : ('b * 'b)=
     then
       let uu___ = print () in match uu___ with | (xs, ys, uu___1) -> (xs, ys)
     else
-      if (let uu___ = blist_leq bas cur in Prims.op_Negation uu___)
+      if (let uu___ = blist_leq bas cur in Prims.not uu___)
       then (let uu___ = succ cur in go uu___)
       else
         (set cur;

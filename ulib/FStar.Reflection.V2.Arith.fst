@@ -168,7 +168,7 @@ let rec as_arith_expr (t:term) =
         let aa = as_arith_expr a in
         if qn = neg_qn then liftM Neg aa
         else atom t
-    | Tv_Const (C_Int i), _ ->
+    | Tv_Const (C_Int i _), _ ->
         return (Lit i)
     | _ ->
         atom t

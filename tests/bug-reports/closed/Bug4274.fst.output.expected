@@ -3,8 +3,8 @@
   - Current context:
       foo_pred x (Mkfoo_spec 10 10 vx.z' vx.z'')
   - In typing environment:
-      __#716 : squash (rewrites_to_p __anf0 10)
-      __anf0#715 : int
+      __#652 : squash (rewrites_to_p __anf0 10)
+      __anf0#651 : int
       vx#453 : erased foo_spec
       x#449 : foo
 

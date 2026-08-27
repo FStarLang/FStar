@@ -46,10 +46,11 @@ module SZ = FStar.SizeT
 module V = Pulse.Lib.Vec
 module U64 = FStar.UInt64
 module Cast = FStar.Int.Cast
-open Pulse.Lib.BoundedIntegers
+open FStar.UInt32 { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 module B = Pulse.Lib.Box
 open Pulse.Lib.Box { box, (:=), (!) }
-open Pulse.Lib.Vec { op_Array_Access, op_Array_Assignment }
+open Pulse.Lib.Vec { op_Dot_Lparen_Rparen, op_Dot_Lparen_Rparen_Less_Minus }
 
 #push-options "--fuel 0 --ifuel 0 --warn_error @288"
 
@@ -341,7 +342,7 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
             pts_to i wi **
             V.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             V.pts_to b2 s2
-    decreases (Prims.op_Subtraction 32 (v (!i)))
+    decreases (32 - v (!i))
     {
       let x1 = b1.(!i);
       let x2 = b2.(!i);
@@ -360,6 +361,14 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
 // and auxiliary definitions, e.g., using an `if` in the ensures works
 // fine here but not in Steel
 
+// A saturating addition on U32.t: [None] rather than an overflow.  This used to
+// come from Pulse.Lib.BoundedIntegers, where it was generic in a
+// [bounded_unsigned] typeclass; overloading resolves operators by type but does
+// not give parametric polymorphism, so a concrete definition takes its place.
+let safe_add_u32 (x y : U32.t)
+  : o:option U32.t { Some? o ==> U32.v (Some?.v o) == U32.v x + U32.v y }
+  = if y <= 0xfffffffful - x then Some (x + y) else None
+
 fn aggregate (b1 b2: ha_core)
   requires
     ha_val_core b1 'h1 **
@@ -373,7 +382,7 @@ fn aggregate (b1 b2: ha_core)
   unfold (ha_val_core b2 'h2);
   let ctr1 = !b1.ctr;
   let ctr2 = !b2.ctr;
-  match (safe_add ctr1 ctr2) {
+  match (safe_add_u32 ctr1 ctr2) {
     Some ctr -> {
       aggregate_raw_hashes b1.acc b2.acc;
       b1.ctr := ctr;

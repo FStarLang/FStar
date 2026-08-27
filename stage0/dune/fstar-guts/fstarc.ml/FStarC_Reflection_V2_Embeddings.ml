@@ -24,6 +24,10 @@ let curry4 (f : ('uuuuu * 'uuuuu1 * 'uuuuu2 * 'uuuuu3) -> 'uuuuu4)
 let curry5 (f : ('uuuuu * 'uuuuu1 * 'uuuuu2 * 'uuuuu3 * 'uuuuu4) -> 'uuuuu5)
   (x : 'uuuuu) (y : 'uuuuu1) (z : 'uuuuu2) (w : 'uuuuu3) (v : 'uuuuu4) :
   'uuuuu5= f (x, y, z, w, v)
+let curry6
+  (f : ('uuuuu * 'uuuuu1 * 'uuuuu2 * 'uuuuu3 * 'uuuuu4 * 'uuuuu5) -> 'uuuuu6)
+  (x : 'uuuuu) (y : 'uuuuu1) (z : 'uuuuu2) (w : 'uuuuu3) (v : 'uuuuu4)
+  (u : 'uuuuu5) : 'uuuuu6= f (x, y, z, w, v, u)
 let head_fv_and_args (t : FStarC_Syntax_Syntax.term) :
   (FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.args)
     FStar_Pervasives_Native.option=
@@ -352,6 +356,64 @@ let e_universe_view :
                          else FStar_Pervasives_Native.None) in
   mk_emb embed_universe_view unembed_universe_view
     FStarC_Reflection_V2_Constants.fstar_refl_universe_view_fv
+let e_int_base :
+  FStar_IntegerLiteral.int_base FStarC_Syntax_Embeddings_Base.embedding=
+  let embed_int_base rng b =
+    let t =
+      match b with
+      | FStar_IntegerLiteral.Dec ->
+          FStarC_Reflection_V2_Constants.ref_Dec.FStarC_Reflection_V2_Constants.t
+      | FStar_IntegerLiteral.Hex ->
+          FStarC_Reflection_V2_Constants.ref_Hex.FStarC_Reflection_V2_Constants.t
+      | FStar_IntegerLiteral.Oct ->
+          FStarC_Reflection_V2_Constants.ref_Oct.FStarC_Reflection_V2_Constants.t
+      | FStar_IntegerLiteral.Bin ->
+          FStarC_Reflection_V2_Constants.ref_Bin.FStarC_Reflection_V2_Constants.t in
+    {
+      FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
+      FStarC_Syntax_Syntax.pos = rng;
+      FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
+    } in
+  let unembed_int_base t =
+    let uu___ = head_fv_and_args t in
+    FStarC_Syntax_Embeddings_AppEmb.op_let_Question uu___
+      (fun uu___1 ->
+         match uu___1 with
+         | (fv, args) ->
+             if
+               FStarC_Syntax_Syntax.fv_eq_lid fv
+                 FStarC_Reflection_V2_Constants.ref_Dec.FStarC_Reflection_V2_Constants.lid
+             then
+               FStarC_Syntax_Embeddings_AppEmb.run args
+                 (FStarC_Syntax_Embeddings_AppEmb.pure
+                    FStar_IntegerLiteral.Dec)
+             else
+               if
+                 FStarC_Syntax_Syntax.fv_eq_lid fv
+                   FStarC_Reflection_V2_Constants.ref_Hex.FStarC_Reflection_V2_Constants.lid
+               then
+                 FStarC_Syntax_Embeddings_AppEmb.run args
+                   (FStarC_Syntax_Embeddings_AppEmb.pure
+                      FStar_IntegerLiteral.Hex)
+               else
+                 if
+                   FStarC_Syntax_Syntax.fv_eq_lid fv
+                     FStarC_Reflection_V2_Constants.ref_Oct.FStarC_Reflection_V2_Constants.lid
+                 then
+                   FStarC_Syntax_Embeddings_AppEmb.run args
+                     (FStarC_Syntax_Embeddings_AppEmb.pure
+                        FStar_IntegerLiteral.Oct)
+                 else
+                   if
+                     FStarC_Syntax_Syntax.fv_eq_lid fv
+                       FStarC_Reflection_V2_Constants.ref_Bin.FStarC_Reflection_V2_Constants.lid
+                   then
+                     FStarC_Syntax_Embeddings_AppEmb.run args
+                       (FStarC_Syntax_Embeddings_AppEmb.pure
+                          FStar_IntegerLiteral.Bin)
+                   else FStar_Pervasives_Native.None) in
+  mk_emb embed_int_base unembed_int_base
+    FStarC_Reflection_V2_Constants.fstar_refl_int_base_fv
 let e_int_signedness :
   FStarC_Reflection_V2_Data.int_signedness
     FStarC_Syntax_Embeddings_Base.embedding=
@@ -470,35 +532,44 @@ let e_vconst :
           FStarC_Reflection_V2_Constants.ref_C_True.FStarC_Reflection_V2_Constants.t
       | FStarC_Reflection_V2_Data.C_False ->
           FStarC_Reflection_V2_Constants.ref_C_False.FStarC_Reflection_V2_Constants.t
-      | FStarC_Reflection_V2_Data.C_Int i ->
+      | FStarC_Reflection_V2_Data.C_Int (i, base) ->
           let uu___ =
             let uu___1 =
-              let uu___2 =
-                let uu___3 =
-                  FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-                FStarC_Syntax_Util.exp_int uu___3 in
-              FStarC_Syntax_Syntax.as_arg uu___2 in
-            [uu___1] in
-          FStarC_Syntax_Syntax.mk_Tm_app
-            FStarC_Reflection_V2_Constants.ref_C_Int.FStarC_Reflection_V2_Constants.t
-            uu___ FStarC_Range_Type.dummyRange
-      | FStarC_Reflection_V2_Data.C_MachineInt (i, signedness, width) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 =
-                let uu___3 =
-                  FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-                FStarC_Syntax_Util.exp_int uu___3 in
+              let uu___2 = FStarC_Syntax_Util.exp_int i in
               FStarC_Syntax_Syntax.as_arg uu___2 in
             let uu___2 =
               let uu___3 =
-                let uu___4 = embed e_int_signedness rng signedness in
+                let uu___4 =
+                  embed (FStarC_Syntax_Embeddings.e_sealed e_int_base) rng
+                    base in
+                FStarC_Syntax_Syntax.as_arg uu___4 in
+              [uu___3] in
+            uu___1 :: uu___2 in
+          FStarC_Syntax_Syntax.mk_Tm_app
+            FStarC_Reflection_V2_Constants.ref_C_Int.FStarC_Reflection_V2_Constants.t
+            uu___ FStarC_Range_Type.dummyRange
+      | FStarC_Reflection_V2_Data.C_MachineInt (i, base, signedness, width)
+          ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStarC_Syntax_Util.exp_int i in
+              FStarC_Syntax_Syntax.as_arg uu___2 in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
+                  embed (FStarC_Syntax_Embeddings.e_sealed e_int_base) rng
+                    base in
                 FStarC_Syntax_Syntax.as_arg uu___4 in
               let uu___4 =
                 let uu___5 =
-                  let uu___6 = embed e_int_width rng width in
+                  let uu___6 = embed e_int_signedness rng signedness in
                   FStarC_Syntax_Syntax.as_arg uu___6 in
-                [uu___5] in
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 = embed e_int_width rng width in
+                    FStarC_Syntax_Syntax.as_arg uu___8 in
+                  [uu___7] in
+                uu___5 :: uu___6 in
               uu___3 :: uu___4 in
             uu___1 :: uu___2 in
           FStarC_Syntax_Syntax.mk_Tm_app
@@ -534,10 +605,11 @@ let e_vconst :
           FStarC_Syntax_Syntax.mk_Tm_app
             FStarC_Reflection_V2_Constants.ref_C_Reflect.FStarC_Reflection_V2_Constants.t
             uu___ FStarC_Range_Type.dummyRange
-      | FStarC_Reflection_V2_Data.C_Real s ->
+      | FStarC_Reflection_V2_Data.C_Real r1 ->
           let uu___ =
             let uu___1 =
-              let uu___2 = embed FStarC_Syntax_Embeddings.e_string rng s in
+              let uu___2 =
+                embed FStarC_Syntax_Embeddings.e_real_literal rng r1 in
               FStarC_Syntax_Syntax.as_arg uu___2 in
             [uu___1] in
           FStarC_Syntax_Syntax.mk_Tm_app
@@ -592,10 +664,13 @@ let e_vconst :
                        FStarC_Reflection_V2_Constants.ref_C_Int.FStarC_Reflection_V2_Constants.lid
                    then
                      FStarC_Syntax_Embeddings_AppEmb.run args
-                       (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                          (fun uu___2 ->
-                             FStarC_Reflection_V2_Data.C_Int uu___2)
-                          FStarC_Syntax_Embeddings.e_int)
+                       (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
+                          (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                             (curry
+                                (fun uu___2 ->
+                                   FStarC_Reflection_V2_Data.C_Int uu___2))
+                             FStarC_Syntax_Embeddings.e_int)
+                          (FStarC_Syntax_Embeddings.e_sealed e_int_base))
                    else
                      if
                        FStarC_Syntax_Syntax.fv_eq_lid fv
@@ -604,13 +679,16 @@ let e_vconst :
                        FStarC_Syntax_Embeddings_AppEmb.run args
                          (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
                             (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
-                               (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                                  (curry3
-                                     (fun uu___2 ->
-                                        FStarC_Reflection_V2_Data.C_MachineInt
-                                          uu___2))
-                                  FStarC_Syntax_Embeddings.e_int)
-                               e_int_signedness) e_int_width)
+                               (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
+                                  (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                                     (curry4
+                                        (fun uu___2 ->
+                                           FStarC_Reflection_V2_Data.C_MachineInt
+                                             uu___2))
+                                     FStarC_Syntax_Embeddings.e_int)
+                                  (FStarC_Syntax_Embeddings.e_sealed
+                                     e_int_base)) e_int_signedness)
+                            e_int_width)
                      else
                        if
                          FStarC_Syntax_Syntax.fv_eq_lid fv
@@ -660,7 +738,7 @@ let e_vconst :
                                       (fun uu___2 ->
                                          FStarC_Reflection_V2_Data.C_Real
                                            uu___2)
-                                      FStarC_Syntax_Embeddings.e_string)
+                                      FStarC_Syntax_Embeddings.e_real_literal)
                                else
                                  if
                                    FStarC_Syntax_Syntax.fv_eq_lid fv
@@ -1591,7 +1669,7 @@ let e_comp_view :
         FStarC_Syntax_Syntax.mk_Tm_app
           FStarC_Reflection_V2_Constants.ref_C_Lemma.FStarC_Reflection_V2_Constants.t
           uu___ rng
-    | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, args, decrs) ->
+    | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, pre, post, decrs) ->
         let uu___ =
           let uu___1 =
             let uu___2 =
@@ -1608,16 +1686,20 @@ let e_comp_view :
                 FStarC_Syntax_Syntax.as_arg uu___6 in
               let uu___6 =
                 let uu___7 =
-                  let uu___8 =
-                    embed (FStarC_Syntax_Embeddings.e_list e_argv) rng args in
+                  let uu___8 = embed e_term rng pre in
                   FStarC_Syntax_Syntax.as_arg uu___8 in
                 let uu___8 =
                   let uu___9 =
-                    let uu___10 =
-                      embed (FStarC_Syntax_Embeddings.e_list e_term) rng
-                        decrs in
+                    let uu___10 = embed e_term rng post in
                     FStarC_Syntax_Syntax.as_arg uu___10 in
-                  [uu___9] in
+                  let uu___10 =
+                    let uu___11 =
+                      let uu___12 =
+                        embed (FStarC_Syntax_Embeddings.e_list e_term) rng
+                          decrs in
+                      FStarC_Syntax_Syntax.as_arg uu___12 in
+                    [uu___11] in
+                  uu___9 :: uu___10 in
                 uu___7 :: uu___8 in
               uu___5 :: uu___6 in
             uu___3 :: uu___4 in
@@ -1671,16 +1753,16 @@ let e_comp_view :
                           (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
                              (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
                                 (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
-                                   (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                                      (curry5
-                                         (fun uu___2 ->
-                                            FStarC_Reflection_V2_Data.C_Eff
-                                              uu___2))
-                                      (FStarC_Syntax_Embeddings.e_list
-                                         e_universe))
-                                   FStarC_Syntax_Embeddings.e_string_list)
-                                e_term)
-                             (FStarC_Syntax_Embeddings.e_list e_argv))
+                                   (FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Star_Greater
+                                      (FStarC_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                                         (curry6
+                                            (fun uu___2 ->
+                                               FStarC_Reflection_V2_Data.C_Eff
+                                                 uu___2))
+                                         (FStarC_Syntax_Embeddings.e_list
+                                            e_universe))
+                                      FStarC_Syntax_Embeddings.e_string_list)
+                                   e_term) e_term) e_term)
                           (FStarC_Syntax_Embeddings.e_list e_term))
                    else FStar_Pervasives_Native.None) in
   mk_emb embed_comp_view unembed_comp_view

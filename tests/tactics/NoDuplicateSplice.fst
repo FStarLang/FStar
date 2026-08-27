@@ -6,7 +6,7 @@ let mk (nm:string) (i:int) : Tac decls =
   let lb = { lb_fv = pack_fv (cur_module() @ [nm])
            ; lb_us = []
            ; lb_typ = `int
-           ; lb_def = pack (Tv_Const (C_Int i)) } in
+           ; lb_def = pack (Tv_Const (C_Int i (FStar.Sealed.seal Dec))) } in
   [pack_sigelt (Sg_Let {isrec=false; lbs=[lb]})]
 
 %splice[] (mk "x" 1)

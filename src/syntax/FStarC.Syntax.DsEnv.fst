@@ -324,15 +324,6 @@ let set_bv_range bv r =
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 
-let unmangleMap = [("op_ColonColon", "Cons", Some Data_ctor);
-                   ("not", "op_Negation", None)]
-
-let unmangleOpName (id:ident) : ML (option term) =
-  FStarC.Util.find_map unmangleMap (fun (x,y,dq) ->
-    if string_of_id id = x
-    then Some (S.fvar_with_dd (lid_of_path ["Prims"; y] (range_of_id id)) dq)
-    else None)
-
 type cont_t 'a =
     | Cont_ok of 'a  (* found *)
     | Cont_fail      (* not found, do not retry *)
@@ -389,6 +380,85 @@ let is_exported_id_field = function
   | _ -> false
 
 
+(* [find_in_module_with_includes_gen collect ...] walks the include graph of
+   [ns] as a worklist: [ns] itself, then the modules it includes in order,
+   then theirs.
+
+   The first answer found is returned as a [cont_t] -- that is the one plain
+   name resolution wants, the innermost definition. With [collect] the walk
+   keeps going past it and also returns the definitions it shadowed, in the
+   same order, for type-based overloading to choose among (see
+   FStarC.TypeChecker.Overload). With [collect=false] it stops at the first
+   hit exactly as it always has, so ordinary resolution pays nothing.
+
+   The [cont_t] is not folded into the list because it carries a distinction
+   the list cannot: [Cont_fail] means "not found, do not retry" and
+   [Cont_ignore] means "not found, retry", and [try_lookup_id''_gen] ends the
+   whole scope walk on the former. An empty list conflates the two.
+
+   [seen] keeps the walk finite, keyed by module *and* identifier since a
+   restriction may rename, so one module can legitimately be visited for two
+   names. Collecting would otherwise follow an include cycle forever, where
+   returning on the first hit merely made it unobservable. *)
+let find_in_module_with_includes_gen
+    (collect: bool)
+    (eikind: exported_id_kind)
+    (find_in_module: lident -> ML (cont_t 'a))
+    (find_in_module_default: cont_t 'a)
+    env
+    (ns: lident)
+    (id: ident)
+    : ML (cont_t 'a & list 'a) =
+  let rec aux (seen: list (string & string))
+              (found: option (cont_t 'a))
+              (acc: list 'a)
+              (x: list (lident & ident))
+    : ML (cont_t 'a & list 'a) =
+    let finish () = match found with
+      | None -> (find_in_module_default, [])
+      | Some k -> (k, List.rev acc)
+    in
+    match x with
+    | [] -> finish ()
+    | (modul, id) :: q ->
+      let mname = string_of_lid modul in
+      let key = (mname, string_of_id id) in
+      if List.mem key seen then aux seen found acc q
+      else
+        let seen = key :: seen in
+        let not_shadowed = match get_exported_id_set env mname with
+        | None -> true
+        | Some mex ->
+          let mexports = !(mex eikind) in
+          mem (string_of_id id) mexports
+        in
+        let mincludes = match SMap.try_find env.includes mname with
+        | None -> []
+        | Some minc ->
+          !minc |> filter_map (fun (ns, restriction) ->
+            let opt = is_ident_allowed_by_restriction id restriction in
+            Option.map (fun id -> (ns, id)) opt)
+        in
+        let look_into =
+         if not_shadowed
+         then find_in_module (qual modul id)
+         else Cont_ignore
+        in
+        begin match look_into with
+        | Cont_ignore -> aux seen found acc (mincludes @ q)
+        | Cont_fail ->
+          (* "do not retry" ends the walk; an answer already in hand stands. *)
+          finish ()
+        | Cont_ok v ->
+          match found with
+          | None ->
+            if not collect
+            then (Cont_ok v, [])
+            else aux seen (Some (Cont_ok v)) acc (mincludes @ q)
+          | Some _ -> aux seen found (v :: acc) (mincludes @ q)
+        end
+  in aux [] None [] [ (ns, id) ]
+
 let find_in_module_with_includes
     (eikind: exported_id_kind)
     (find_in_module: lident -> ML (cont_t 'a))
@@ -397,38 +467,27 @@ let find_in_module_with_includes
     (ns: lident)
     (id: ident)
     : ML (cont_t 'a) =
-  let rec aux (x: list (lident & ident)) : ML (cont_t 'a) = match x with
-  | [] ->
-    find_in_module_default
-  | (modul, id) :: q ->
-    let mname = string_of_lid modul in
-    let not_shadowed = match get_exported_id_set env mname with
-    | None -> true
-    | Some mex ->
-      let mexports = !(mex eikind) in
-      mem (string_of_id id) mexports
-    in
-    let mincludes = match SMap.try_find env.includes mname with
-    | None -> []
-    | Some minc ->
-      !minc |> filter_map (fun (ns, restriction) ->
-        let opt = is_ident_allowed_by_restriction id restriction in
-        Option.map (fun id -> (ns, id)) opt)
-    in
-    let look_into =
-     if not_shadowed
-     then find_in_module (qual modul id)
-     else Cont_ignore
-    in
-    begin match look_into with
-    | Cont_ignore ->
-      aux (mincludes @ q)
-    | _ ->
-      look_into
-    end
-  in aux [ (ns, id) ]
+  fst (find_in_module_with_includes_gen false eikind find_in_module find_in_module_default env ns id)
 
-let try_lookup_id''
+(* [try_lookup_id''_gen collect ...] walks the scope, innermost first.
+
+   With [collect=false] it stops at the first hit and returns a
+   singleton (or the empty list), exactly reproducing the historical
+   first-match-wins behaviour.
+
+   With [collect=true] it keeps walking and returns *all* the hits, in
+   scope order, so the head of the list is the same singleton answer
+   [collect=false] would have given. This is what feeds type-based
+   overloading (see FStarC.TypeChecker.Overload): later candidates are only
+   ever used to recover from a resolution that would otherwise have failed
+   or been type-incorrect.
+
+   Local binders and recursive bindings are never overloaded: if the
+   scope walk reaches one, it is the answer, full stop. This is sound
+   because the alternatives we can act on are all top-level [fv]s, and
+   a local binder shadows them all. *)
+let try_lookup_id''_gen
+  (collect: bool)
   env
   (id: ident)
   (eikind: exported_id_kind)
@@ -436,7 +495,7 @@ let try_lookup_id''
   (k_rec_binding:   rec_binding   -> ML (cont_t 'a))
   (k_record: (record_or_dc) -> ML (cont_t 'a))
   (find_in_module: lident -> ML (cont_t 'a))
-  (lookup_default_id: cont_t 'a -> ident -> ML (cont_t 'a)) : ML (option 'a)
+  (lookup_default_id: cont_t 'a -> ident -> ML (cont_t 'a)) : ML (list 'a)
   =
     let check_local_binding_id : local_binding -> bool = function
       (id', _, _) -> string_of_id id' = string_of_id id
@@ -490,13 +549,59 @@ let try_lookup_id''
       | _ ->
         Cont_ignore
     in
-    let rec aux (l:list scope_mod) : ML (option 'a) = match l with
+    let is_local_scope_mod = function
+      | Local_bindings _
+      | Rec_binding _ -> true
+      | _ -> false
+    in
+    (* One [open] can reach several definitions of [id], when the module it
+       names [include]s others. [proc] answers with the first, which is the
+       right answer for plain resolution; when collecting we ask for the rest
+       as well. [k] is unchanged either way, so the head of the result is
+       still exactly what scope order alone would have picked. *)
+    let step (a:scope_mod) : ML (cont_t 'a & list 'a) =
+      match a with
+      | Open_module_or_namespace ((ns, Open_module, restriction),_) when collect ->
+        ( match is_ident_allowed_by_restriction id restriction with
+        | None -> (Cont_ignore, [])
+        | Some id -> find_in_module_with_includes_gen true eikind find_in_module Cont_ignore env ns id)
+      | _ -> (proc a, [])
+    in
+    let rec aux (acc:list 'a) (l:list scope_mod) : ML (list 'a) = match l with
       | a :: q ->
-        option_of_cont (fun _ -> aux q) (proc a)
+        let k, alts = step a in
+        begin match k with
+        | Cont_ok v ->
+          if not collect then [v]
+          else if is_local_scope_mod a
+          then (match acc with
+                | [] -> [v]
+                | _ -> List.rev acc)  // unreachable in practice: locals are innermost
+          else aux (List.rev alts @ (v::acc)) q
+        | Cont_fail -> List.rev acc
+        | Cont_ignore -> aux acc q
+        end
       | [] ->
-        option_of_cont (fun _ -> None) (lookup_default_id Cont_fail id)
+        begin match lookup_default_id Cont_fail id with
+        | Cont_ok v -> List.rev (v::acc)
+        | _ -> List.rev acc
+        end
+    in aux [] env.scope_mods
 
-    in aux env.scope_mods
+let try_lookup_id''
+  env
+  (id: ident)
+  (eikind: exported_id_kind)
+  (k_local_binding: local_binding -> ML (cont_t 'a))
+  (k_rec_binding:   rec_binding   -> ML (cont_t 'a))
+  (k_record: (record_or_dc) -> ML (cont_t 'a))
+  (find_in_module: lident -> ML (cont_t 'a))
+  (lookup_default_id: cont_t 'a -> ident -> ML (cont_t 'a)) : ML (option 'a)
+  =
+    match try_lookup_id''_gen false env id eikind
+            k_local_binding k_rec_binding k_record find_in_module lookup_default_id with
+    | [] -> None
+    | v :: _ -> Some v
 
 let found_local_binding r (lb:local_binding) : ML _ =
     let (id', x, _) = lb in
@@ -509,10 +614,7 @@ let find_in_module env lid (k_global_def: _ -> _ -> ML _) k_not_found : ML _ =
     end
 
 let try_lookup_id env (id:ident) : ML (option term) =
-  match unmangleOpName id with
-  | Some f -> Some f
-  | _ ->
-    try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding (range_of_id id) r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
+  try_lookup_id'' env id Exported_id_term_type (fun r -> Cont_ok (found_local_binding (range_of_id id) r)) (fun _ -> Cont_fail) (fun _ -> Cont_ignore) (fun i -> find_in_module env i (fun _ _ -> Cont_fail) Cont_ignore) (fun _ _ -> Cont_fail)
 
 (* Unqualified identifier lookup, if lookup in all open namespaces failed. *)
 
@@ -615,6 +717,31 @@ let shorten_module_path env ids is_full_path : ML _ =
 
 (* Generic name resolution. *)
 
+let resolve_in_open_namespaces''_gen
+  (collect: bool)
+  env
+  lid
+  (eikind: exported_id_kind)
+  (k_local_binding: local_binding -> ML (cont_t 'a))
+  (k_rec_binding:   rec_binding   -> ML (cont_t 'a))
+  (k_record: (record_or_dc) -> ML (cont_t 'a))
+  (f_module: lident -> ML (cont_t 'a))
+  (l_default: cont_t 'a -> ident -> ML (cont_t 'a))
+  : ML (list 'a) =
+  match ns_of_lid lid with
+  | _ :: _ ->
+    (* A qualified name is never overloaded: it names exactly one thing. *)
+    begin match resolve_module_name env (set_lid_range (lid_of_ids (ns_of_lid lid)) (range_of_lid lid)) true with
+    | None -> []
+    | Some modul ->
+        begin match find_in_module_with_includes eikind f_module Cont_fail env modul (ident_of_lid lid) with
+        | Cont_ok v -> [v]
+        | _ -> []
+        end
+    end
+  | [] ->
+    try_lookup_id''_gen collect env (ident_of_lid lid) eikind k_local_binding k_rec_binding k_record f_module l_default
+
 let resolve_in_open_namespaces''
   env
   lid
@@ -625,19 +752,32 @@ let resolve_in_open_namespaces''
   (f_module: lident -> ML (cont_t 'a))
   (l_default: cont_t 'a -> ident -> ML (cont_t 'a))
   : ML (option 'a) =
-  match ns_of_lid lid with
-  | _ :: _ ->
-    begin match resolve_module_name env (set_lid_range (lid_of_ids (ns_of_lid lid)) (range_of_lid lid)) true with
-    | None -> None
-    | Some modul ->
-        option_of_cont (fun _ -> None) (find_in_module_with_includes eikind f_module Cont_fail env modul (ident_of_lid lid))
-    end
-  | [] ->
-    try_lookup_id'' env (ident_of_lid lid) eikind k_local_binding k_rec_binding k_record f_module l_default
+  match resolve_in_open_namespaces''_gen false env lid eikind
+          k_local_binding k_rec_binding k_record f_module l_default with
+  | [] -> None
+  | v :: _ -> Some v
 
 let cont_of_option (k_none: cont_t 'a) = function
     | Some v -> Cont_ok v
     | None -> k_none
+
+let resolve_in_open_namespaces'_gen
+  (collect: bool)
+  env
+  lid
+  (k_local_binding: local_binding -> ML (option 'a))
+  (k_rec_binding:   rec_binding   -> ML (option 'a))
+  (k_global_def: lident -> (sigelt & bool) -> ML (option 'a))
+  : ML (list 'a) =
+  let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
+  let f_module lid' = let k = Cont_ignore in find_in_module env lid' (k_global_def' k) k in
+  let l_default k i = lookup_default_id env i (k_global_def' k) k in
+  resolve_in_open_namespaces''_gen collect env lid Exported_id_term_type
+    (fun l -> cont_of_option Cont_fail (k_local_binding l))
+    (fun r -> cont_of_option Cont_fail (k_rec_binding r))
+    (fun _ -> Cont_ignore)
+    f_module
+    l_default
 
 let resolve_in_open_namespaces'
   env
@@ -646,15 +786,9 @@ let resolve_in_open_namespaces'
   (k_rec_binding:   rec_binding   -> ML (option 'a))
   (k_global_def: lident -> (sigelt & bool) -> ML (option 'a))
   : ML (option 'a) =
-  let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
-  let f_module lid' = let k = Cont_ignore in find_in_module env lid' (k_global_def' k) k in
-  let l_default k i = lookup_default_id env i (k_global_def' k) k in
-  resolve_in_open_namespaces'' env lid Exported_id_term_type
-    (fun l -> cont_of_option Cont_fail (k_local_binding l))
-    (fun r -> cont_of_option Cont_fail (k_rec_binding r))
-    (fun _ -> Cont_ignore)
-    f_module
-    l_default
+  match resolve_in_open_namespaces'_gen false env lid k_local_binding k_rec_binding k_global_def with
+  | [] -> None
+  | v :: _ -> Some v
 
 let fv_qual_of_se : sigelt -> ML (option fv_qual) = fun se -> match se.sigel with
     | Sig_datacon {ty_lid=l} ->
@@ -678,7 +812,7 @@ let ns_of_lid_equals (lid: lident) (ns: lident) =
     List.length (ns_of_lid lid) = List.length (ids_of_lid ns) &&
     lid_equals (lid_of_ids (ns_of_lid lid)) ns
 
-let try_lookup_name any_val exclude_interf env (lid:lident) : ML (option foundname) =
+let try_lookup_name_gen (collect:bool) any_val exclude_interf env (lid:lident) : ML (list foundname) =
   let occurrence_range = Ident.range_of_lid lid in
 
   let k_global_def source_lid = function
@@ -719,18 +853,12 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : ML (option foundna
     Some (Term_name(S.fvar_with_dd (set_lid_range l (range_of_lid lid)) None, []))
   in
 
-  let found_unmangled = match ns_of_lid lid with
-  | [] ->
-    begin match unmangleOpName (ident_of_lid lid) with
-    | Some t -> Some (Term_name (t, []))
-    | _ -> None
-    end
-  | _ -> None
-  in
+  resolve_in_open_namespaces'_gen collect env lid k_local_binding k_rec_binding k_global_def
 
-  match found_unmangled with
-  | None -> resolve_in_open_namespaces'  env lid k_local_binding k_rec_binding k_global_def
-  | x -> x
+let try_lookup_name any_val exclude_interf env (lid:lident) : ML (option foundname) =
+  match try_lookup_name_gen false any_val exclude_interf env lid with
+  | [] -> None
+  | v :: _ -> Some v
 
 let try_lookup_effect_name' exclude_interf env (lid:lident) : ML (option (sigelt&lident)) =
   match try_lookup_name true exclude_interf env lid with
@@ -825,6 +953,61 @@ let drop_attributes (x:option (term & list attribute)) :option (term) =
 
 let try_lookup_lid_with_attributes (env:env) (l:lident) : ML (option (term & list attribute)) = try_lookup_lid' env.iface false env l
 let try_lookup_lid (env:env) l : ML _ = try_lookup_lid_with_attributes env l |> drop_attributes
+
+(* [try_lookup_lid_alternatives env lid] returns *all* the top-level names
+   [lid] could denote, in scope order: the head is exactly what
+   [try_lookup_lid] returns, and the tail holds the shadowed alternatives
+   that type-based overloading may fall back on.
+
+   It returns [] (meaning "not overloaded, nothing to do") whenever:
+     - the `fstar:overload` extension is off;
+     - [lid] is qualified (a qualified name denotes exactly one thing);
+     - the primary resolution is not a plain [fv] (a local binder, a data
+       constructor, a record projector, an [M?.reflect] constant, ...);
+     - after deduplication by fully-qualified name, fewer than two
+       candidates remain.
+
+   Deduplication matters: [FStar.Seq.seq] and [FStar.Seq.Base.seq] are the
+   *same* definition reached by two paths, not two alternatives.
+
+   Candidates that are not plain [fv]s are dropped from the tail. Handling
+   data constructors and projectors uniformly is deferred: they keep
+   their own qualifiers and go through the pre-existing
+   Unresolved_constructor / Unresolved_projector machinery. *)
+let try_lookup_lid_alternatives (env:env) (lid:lident) : ML (list fv) =
+  if Options.Overload_off? (Options.overload_mode ()) then []
+  else if Cons? (ns_of_lid lid) then []
+  else
+    let as_fv (f:foundname) : ML (option fv) =
+      match f with
+      | Term_name (e, _) ->
+        begin match (Subst.compress e).n with
+        | Tm_fvar fv when None? fv.fv_qual -> Some fv
+        | _ -> None
+        end
+      | _ -> None
+    in
+    match try_lookup_name_gen true env.iface false env lid with
+    | []
+    | [_] -> []
+    | c0 :: rest ->
+      match as_fv c0 with
+      | None -> []
+      | Some fv0 ->
+        let rec dedup (seen:list lident) (l:list foundname) : ML (list fv) =
+          match l with
+          | [] -> []
+          | c :: tl ->
+            match as_fv c with
+            | None -> dedup seen tl
+            | Some fv ->
+              if seen |> List.existsb (fun l -> lid_equals l fv.fv_name)
+              then dedup seen tl
+              else fv :: dedup (fv.fv_name :: seen) tl
+        in
+        match dedup [fv0.fv_name] rest with
+        | [] -> []
+        | alts -> fv0 :: alts
 
 let resolve_to_fully_qualified_name (env:env) (l:lident) : ML (option lident) =
   let r =

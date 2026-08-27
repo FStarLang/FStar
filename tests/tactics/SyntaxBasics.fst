@@ -98,7 +98,7 @@ let _ = assert True
             by (let t = quote ((fun (x:int) -> x) 5) in
                 match inspect t with
                 | Tv_App _ _ -> ()
-                | Tv_Const (C_Int 5) -> fail "Quoted term got reduced!"
+                | Tv_Const (C_Int 5 _) -> fail "Quoted term got reduced!"
                 | _ -> fail "What?")
 
 open FStar.Tactics.V2

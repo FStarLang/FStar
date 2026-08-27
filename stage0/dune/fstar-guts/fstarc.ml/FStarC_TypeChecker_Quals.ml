@@ -9,14 +9,17 @@ let pairwise_compat (compat : 'a -> 'a -> Prims.bool) (xs : 'a Prims.list) :
           match ys with
           | [] -> k ()
           | y::ys1 ->
-              if Prims.op_Negation (compat x y)
+              if Prims.not (compat x y)
               then FStar_Pervasives_Native.Some (x, y)
               else go2 ys1 k in
         go2 prev (fun uu___ -> go2 xs1 (fun uu___1 -> go (x :: prev) xs1)) in
   go [] xs
 let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
   (se : FStarC_Syntax_Syntax.sigelt) : unit=
-  if FStarC_Syntax_Syntax.uu___is_Sig_splice se.FStarC_Syntax_Syntax.sigel
+  if
+    match se.FStarC_Syntax_Syntax.sigel with
+    | FStarC_Syntax_Syntax.Sig_splice _0 -> true
+    | uu___ -> false
   then ()
   else
     (let visibility uu___ =
@@ -55,6 +58,19 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
        | FStarC_Syntax_Syntax.Noeq -> true
        | FStarC_Syntax_Syntax.Unopteq -> true
        | uu___1 -> false in
+     let is_disc_proj_decl =
+       if
+         match se.FStarC_Syntax_Syntax.sigel with
+         | FStarC_Syntax_Syntax.Sig_declare_typ _0 -> true
+         | uu___ -> false
+       then
+         FStarC_Util.for_some
+           (fun uu___ ->
+              match uu___ with
+              | FStarC_Syntax_Syntax.Discriminator uu___1 -> true
+              | FStarC_Syntax_Syntax.Projector uu___1 -> true
+              | uu___1 -> false) se.FStarC_Syntax_Syntax.sigquals
+       else false in
      let qual_compat q1 q2 =
        match q1 with
        | FStarC_Syntax_Syntax.Assumption ->
@@ -63,7 +79,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                 || (assumption q2))
                || (q2 = FStarC_Syntax_Syntax.TotalEffect))
               ||
-              (env.FStarC_TypeChecker_Env.is_iface &&
+              ((env.FStarC_TypeChecker_Env.is_iface || is_disc_proj_decl) &&
                  (q2 = FStarC_Syntax_Syntax.Inline_for_extraction)))
              || (q2 = FStarC_Syntax_Syntax.NoExtract)
        | FStarC_Syntax_Syntax.New ->
@@ -77,7 +93,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                  || (inferred q2))
                 || (has_eq q2))
                ||
-               (env.FStarC_TypeChecker_Env.is_iface &&
+               ((env.FStarC_TypeChecker_Env.is_iface || is_disc_proj_decl) &&
                   (q2 = FStarC_Syntax_Syntax.Assumption)))
               || (q2 = FStarC_Syntax_Syntax.NoExtract))
              || (q2 = FStarC_Syntax_Syntax.New)
@@ -161,7 +177,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
      check_no_subtyping_attribute se;
      (let quals =
         FStarC_List.filter
-          (fun x -> Prims.op_Negation (x = FStarC_Syntax_Syntax.Logic))
+          (fun x -> Prims.not (x = FStarC_Syntax_Syntax.Logic))
           (FStarC_Syntax_Util.quals_of_sigelt se) in
       let uu___1 =
         let uu___2 =
@@ -170,7 +186,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                match uu___3 with
                | FStarC_Syntax_Syntax.OnlyName -> true
                | uu___4 -> false) quals in
-        Prims.op_Negation uu___2 in
+        Prims.not uu___2 in
       if uu___1
       then
         let r = FStarC_Syntax_Util.range_of_sigelt se in
@@ -264,7 +280,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                              || (inferred x))
                             || (visibility x))
                            || (has_eq x)) quals in
-                  Prims.op_Negation uu___7 in
+                  Prims.not uu___7 in
                 if uu___6 then err [] else ());
                (let uu___6 =
                   let uu___7 =
@@ -297,7 +313,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                           (x = FStarC_Syntax_Syntax.Assumption))
                          || (x = FStarC_Syntax_Syntax.InternalAssumption))
                     quals in
-                Prims.op_Negation uu___6 in
+                Prims.not uu___6 in
               if uu___5 then err [] else ()
           | FStarC_Syntax_Syntax.Sig_new_effect ed ->
               ((let uu___5 =
@@ -309,13 +325,13 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                              || (inferred x))
                             || (visibility x))
                            || (reification x)) quals in
-                  Prims.op_Negation uu___6 in
+                  Prims.not uu___6 in
                 if uu___5 then err [] else ());
                (let assumed =
                   FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals in
                 match ed.FStarC_Syntax_Syntax.combinators with
                 | FStar_Pervasives_Native.None ->
-                    if Prims.op_Negation assumed
+                    if Prims.not assumed
                     then
                       err
                         [FStarC_Errors_Msg.text
@@ -336,13 +352,13 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                          ((x = FStarC_Syntax_Syntax.Assumption) ||
                             (inferred x))
                            || (visibility x)) quals in
-                  Prims.op_Negation uu___6 in
+                  Prims.not uu___6 in
                 if uu___5 then err [] else ());
                (let assumed =
                   FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals in
                 match sub.FStarC_Syntax_Syntax.lift with
                 | FStar_Pervasives_Native.None ->
-                    if Prims.op_Negation assumed
+                    if Prims.not assumed
                     then
                       err
                         [FStarC_Errors_Msg.text
@@ -360,7 +376,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                 let uu___6 =
                   FStarC_Util.for_all
                     (fun x -> (inferred x) || (visibility x)) quals in
-                Prims.op_Negation uu___6 in
+                Prims.not uu___6 in
               if uu___5 then err [] else ()
           | uu___4 -> ()))
       else ()))
@@ -387,12 +403,17 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
     FStarC_Util.for_some
       (fun l ->
          let uu___ = FStarC_TypeChecker_Env.try_lookup_val_decl env l in
-         FStar_Pervasives_Native.uu___is_Some uu___) lids in
+         match uu___ with
+         | FStar_Pervasives_Native.Some v -> true
+         | uu___1 -> false) lids in
   let val_has_erasable_attr =
     FStarC_Util.for_some
       (fun l ->
          let attrs_opt = FStarC_TypeChecker_Env.lookup_attrs_of_lid env l in
-         if FStar_Pervasives_Native.uu___is_Some attrs_opt
+         if
+           match attrs_opt with
+           | FStar_Pervasives_Native.Some v -> true
+           | uu___ -> false
          then
            let uu___ = FStarC_Option.must attrs_opt in
            FStarC_Syntax_Util.has_attribute uu___
@@ -402,8 +423,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
     FStarC_Syntax_Util.has_attribute se.FStarC_Syntax_Syntax.sigattrs
       FStarC_Parser_Const.erasable_attr in
   if
-    (val_exists && val_has_erasable_attr) &&
-      (Prims.op_Negation se_has_erasable_attr)
+    (val_exists && val_has_erasable_attr) && (Prims.not se_has_erasable_attr)
   then
     FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
       FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ()
@@ -415,8 +435,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
            "Declaration is marked `erasable` but the definition is not."])
   else ();
   if
-    (val_exists && (Prims.op_Negation val_has_erasable_attr)) &&
-      se_has_erasable_attr
+    (val_exists && (Prims.not val_has_erasable_attr)) && se_has_erasable_attr
   then
     FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
       FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ()
@@ -428,8 +447,8 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
            "Definition is marked `erasable` but the declaration is not."])
   else ();
   (let uu___3 =
-     if Prims.op_Negation se_has_erasable_attr
-     then let uu___4 = FStarC_Options.ide () in Prims.op_Negation uu___4
+     if Prims.not se_has_erasable_attr
+     then let uu___4 = FStarC_Options.ide () in Prims.not uu___4
      else false in
    if uu___3
    then
@@ -449,7 +468,9 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
                   lbname.FStarC_Syntax_Syntax.fv_name in
               if
                 has_iface_val &&
-                  (FStar_Pervasives_Native.uu___is_Some val_decl)
+                  ((match val_decl with
+                    | FStar_Pervasives_Native.Some v -> true
+                    | uu___6 -> false))
               then
                 let uu___6 =
                   FStarC_Syntax_Util.abs_formals
@@ -506,7 +527,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
                   match uu___6 with
                   | FStarC_Syntax_Syntax.Noeq -> true
                   | uu___7 -> false) quals in
-           Prims.op_Negation uu___5 in
+           Prims.not uu___5 in
          if uu___4
          then
            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
@@ -529,7 +550,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
               let uu___7 =
                 let uu___8 =
                   FStarC_TypeChecker_Normalize.non_info_norm env body in
-                Prims.op_Negation uu___8 in
+                Prims.not uu___8 in
               if uu___7
               then
                 let uu___8 =
@@ -564,7 +585,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
            FStarC_Syntax_Syntax.extraction_mode = uu___8;_}
          ->
          if
-           Prims.op_Negation
+           Prims.not
              (FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect quals)
          then
            let uu___9 =
@@ -604,8 +625,8 @@ let check_must_erase_attribute (env : FStarC_TypeChecker_Env.env)
          FStarC_List.iter
            (fun lb ->
               let lbname =
-                FStar_Pervasives.__proj__Inr__item__v
-                  lb.FStarC_Syntax_Syntax.lbname in
+                match lb.FStarC_Syntax_Syntax.lbname with
+                | FStar_Pervasives.Inr v -> v in
               let has_iface_val =
                 FStarC_TypeChecker_Env.has_iface_val env
                   lbname.FStarC_Syntax_Syntax.fv_name in
@@ -617,7 +638,7 @@ let check_must_erase_attribute (env : FStarC_TypeChecker_Env.env)
                 let has_attr =
                   FStarC_TypeChecker_Env.fv_has_attr env lbname
                     FStarC_Parser_Const.must_erase_for_extraction_attr in
-                (if must_erase && (Prims.op_Negation has_attr)
+                (if must_erase && (Prims.not has_attr)
                  then
                    let uu___1 =
                      let uu___2 =
@@ -646,7 +667,7 @@ let check_must_erase_attribute (env : FStarC_TypeChecker_Env.env)
                      (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                      (Obj.magic uu___1)
                  else
-                   if has_attr && (Prims.op_Negation must_erase)
+                   if has_attr && (Prims.not must_erase)
                    then
                      (let uu___1 =
                         let uu___2 =
@@ -685,7 +706,7 @@ let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env)
     | (uu___1, res) ->
         ((let uu___3 =
             let uu___4 = FStarC_Syntax_Util.is_total_comp res in
-            Prims.op_Negation uu___4 in
+            Prims.not uu___4 in
           if uu___3
           then
             let uu___4 =
@@ -738,7 +759,7 @@ let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env)
                      let uu___7 =
                        FStarC_TypeChecker_Env.fv_has_attr env fv
                          FStarC_Parser_Const.tcclass_lid in
-                     Prims.op_Negation uu___7 in
+                     Prims.not uu___7 in
                    if uu___6 then err () else ()
                | uu___6 -> err ()))) in
   if is_tc_instance

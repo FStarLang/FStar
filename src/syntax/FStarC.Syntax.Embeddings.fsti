@@ -37,7 +37,28 @@ instance val e_bool        : embedding bool
 instance val e_char        : embedding char
 instance val e_int         : embedding int
 instance val e_string      : embedding string
-instance val e_real        : embedding Real.real
+
+(* NOTE: the compiler-side type Real.real (= FStar.RealLiteral.real_literal)
+is the runtime representation of *two different* F* types:
+
+  - FStar.Real.real, of which it represents the subset denotable by a literal,
+    i.e. the values of Const_real. This is e_real below.
+  - FStar.RealLiteral.real_literal, the record of a mantissa and an exponent
+    that the reflection API uses as the payload of C_Real. This is
+    e_real_literal below.
+
+Neither embedding is an instance: they would overlap, and instance resolution
+would silently pick one where the other was meant. Both must be passed
+explicitly. *)
+
+(* Embeds a real into a real constant (Const_real) of type FStar.Real.real.
+Note that unembedding is partial: it only succeeds on literals, since no other
+value of FStar.Real.real (an axiomatized type) has a runtime representation. *)
+val e_real         : embedding Real.real
+
+(* Embeds a real literal as a value of type FStar.RealLiteral.real_literal,
+i.e. as an application of its record constructor. *)
+val e_real_literal : embedding Real.real
 
 instance val e_option      : embedding 'a -> Tot (embedding (option 'a))
 instance val e_tuple2      : embedding 'a -> embedding 'b -> Tot (embedding ('a & 'b))

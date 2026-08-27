@@ -1,5 +1,14 @@
 open Prims
 type 'dummyV0 ast0_wf_typ =
   | WfTRewrite of Prims.int * Prims.int * Obj.t ast0_wf_typ [@@deriving show]
-let uu___is_WfTRewrite uu___ uu___1 =
-  match uu___1 with | WfTRewrite _ -> true | _ -> false
+let uu___is_WfTRewrite (uu___ : Prims.int) (projectee : Obj.t ast0_wf_typ) :
+  Prims.bool= true
+let __proj__WfTRewrite__item__x1 (uu___ : Prims.int)
+  (projectee : Obj.t ast0_wf_typ) : Prims.int=
+  match projectee with | WfTRewrite (x1, x2, _2) -> x1
+let __proj__WfTRewrite__item__x2 (uu___ : Prims.int)
+  (projectee : Obj.t ast0_wf_typ) : Prims.int=
+  match projectee with | WfTRewrite (x1, x2, _2) -> x2
+let __proj__WfTRewrite__item___2 (uu___ : Prims.int)
+  (projectee : Obj.t ast0_wf_typ) : Obj.t ast0_wf_typ=
+  match projectee with | WfTRewrite (x1, x2, _2) -> _2

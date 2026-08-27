@@ -5,7 +5,7 @@ let min_int (n : Prims.pos) : Prims.int= - (Prims.pow2 (n - Prims.int_one))
 let fits (x : Prims.int) (n : Prims.pos) : Prims.bool=
   ((min_int n) <= x) && (x <= (max_int n))
 type 'n int_t = Prims.int
-let op_Slash_Subtraction (a : Prims.int) (b : Prims.int) : Prims.int=
+let op_Slash_Minus (a : Prims.int) (b : Prims.int) : Prims.int=
   if
     ((a >= Prims.int_zero) && (b < Prims.int_zero)) ||
       ((a < Prims.int_zero) && (b >= Prims.int_zero))
@@ -38,11 +38,11 @@ let mul (n : Prims.pos) (a : Obj.t int_t) (b : Obj.t int_t) : Obj.t int_t=
 let mul_mod (n : Prims.pos) (a : Obj.t int_t) (b : Obj.t int_t) :
   Obj.t int_t= op_At_Percent (a * b) (Prims.pow2 n)
 let div (n : Prims.pos) (a : Obj.t int_t) (b : Obj.t int_t) : Obj.t int_t=
-  op_Slash_Subtraction a b
+  op_Slash_Minus a b
 let udiv (n : Prims.pos) (a : Obj.t int_t) (b : Obj.t int_t) : Obj.t int_t=
-  op_Slash_Subtraction a b
+  op_Slash_Minus a b
 let mod1 (n : Prims.pos) (a : Obj.t int_t) (b : Obj.t int_t) : Obj.t int_t=
-  a - ((op_Slash_Subtraction a b) * b)
+  a - ((op_Slash_Minus a b) * b)
 let eq (n : Prims.pos) (a : Obj.t int_t) (b : Obj.t int_t) : Prims.bool=
   a = b
 let ne (n : Prims.pos) (a : Obj.t int_t) (b : Obj.t int_t) : Prims.bool=

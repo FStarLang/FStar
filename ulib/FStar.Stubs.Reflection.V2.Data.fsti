@@ -16,6 +16,7 @@
 module FStar.Stubs.Reflection.V2.Data
 
 include FStar.Stubs.Syntax.Syntax
+include FStar.IntegerLiteral
 open FStar.Stubs.Reflection.Types
 
 (* The type of a string observable only with a tactic.
@@ -37,15 +38,22 @@ type int_width =
 noeq
 type vconst =
   | C_Unit      : vconst
-  | C_Int       : int -> vconst // Not exposing the full details of our integer repr.
-  | C_MachineInt : int -> int_signedness -> int_width -> vconst
+  | C_Int       : int -> FStar.Sealed.sealed int_base -> vconst
+  | C_MachineInt : int -> FStar.Sealed.sealed int_base -> int_signedness -> int_width -> vconst
+  (* The [sealed int_base] records the base the literal was written in (see
+     FStar.IntegerLiteral). It is presentational metadata only, and is sealed
+     precisely so that it cannot be observed in the logical fragment: 0x10 and
+     16 are the same constant, and F* proves them equal. Metaprograms can still
+     read it with FStar.Tactics.unseal. *)
   | C_True      : vconst
   | C_False     : vconst
   | C_String    : string -> vconst
   | C_Range     : range -> vconst
   | C_Reify     : vconst
   | C_Reflect   : name -> vconst
-  | C_Real      : string -> vconst (* Real literals are represented as a string e.g. "1.2" *)
+  | C_Real      : FStar.RealLiteral.real_literal -> vconst
+  (* Real literals are represented exactly, by their (canonical)
+     mantissa and exponent: see FStar.RealLiteral. *)
   | C_Char      : Char.char -> vconst
   (* TODO: complete *)
 

@@ -270,7 +270,6 @@ let mk_squash (t:term) : term =
 //   where Tm_FStar is the catch all case
 // See also the is_view_of predicate below
 //
-[@@ no_auto_projectors]
 noeq
 type term_view =
   | Tm_Emp        : term_view
@@ -369,7 +368,7 @@ let tm_add_inv (is iname:R.term) : R.term =
 let tm_later (p:term) : term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv later_lid)) in
   R.mk_app h [ex p]
-let tm_full_perm = tm_constant (R.C_Real "1.0")
+let tm_full_perm = tm_constant (R.C_Real (FStar.RealLiteral.of_int 1))
 
 
 let is_view_of (tv:term_view) (t:term) : prop =

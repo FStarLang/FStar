@@ -7,7 +7,7 @@ open FStar.All
    dividend and divisor vary. There is a similar test in karamel where
    the backend is C. *)
 
-(* First a lemma to make sure %^ is actually remainder instead of modulo. *)
+(* First a lemma to make sure % is actually remainder instead of modulo. *)
 let sign (x : int) : int =
   if x < 0 then -1
   else if x > 0 then 1

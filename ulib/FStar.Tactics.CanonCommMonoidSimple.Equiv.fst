@@ -318,7 +318,7 @@ let rec convert_map (m : list (atom & term)) : term =
   match m with
   | [] -> `[]
   | (a, t)::ps ->
-      let a = pack (Tv_Const (C_Int a)) in
+      let a = pack (Tv_Const (C_Int a (FStar.Sealed.seal Dec))) in
       (* let t = norm_term [delta] t in *)
       `((`#a, (`#t)) :: (`#(convert_map ps)))
 
@@ -334,7 +334,7 @@ let rec quote_exp (e:exp) : term =
     match e with
     | Unit -> (`Unit)
     | Mult e1 e2 -> (`Mult (`#(quote_exp e1)) (`#(quote_exp e2)))
-    | Atom n -> let nt = pack (Tv_Const (C_Int n)) in
+    | Atom n -> let nt = pack (Tv_Const (C_Int n (FStar.Sealed.seal Dec))) in
                 (`Atom (`#nt))
 
 let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =

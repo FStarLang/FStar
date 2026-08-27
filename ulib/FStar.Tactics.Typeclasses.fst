@@ -59,7 +59,7 @@ type glb_entry = {
 (* Would be nice to define an unembedding class here.. but it's circular. *)
 let unembed_int (t:term) : Tac (option int) =
   match inspect_ln t with
-  | R.Tv_Const (C_Int i) -> Some i
+  | R.Tv_Const (C_Int i _) -> Some i
   | _ -> None
 
 let rec unembed_list (#a:Type) (u : term -> Tac (option a)) (t:term) : Tac (option (list a)) =
@@ -564,16 +564,19 @@ let mk_class (nm:string) : Tac decls =
         | Some se -> se
       in
       let proj_attrs = sigelt_attrs proj_se in
-      let proj_lb =
+      let proj_us, proj_typ, proj_fv =
         match inspect_sigelt proj_se with
         | Sg_Let {lbs} ->
-          lookup_lb lbs proj_name
-        | _ -> fail "mk_class: proj not Sg_Let?"
+          let lb = lookup_lb lbs proj_name in
+          lb.lb_us, lb.lb_typ, lb.lb_fv
+        | Sg_Val {univs; typ} ->
+          univs, typ, pack_fv proj_name
+        | _ -> fail "mk_class: proj not Sg_Let or Sg_Val?"
       in
-      debug' (fun () -> "proj_ty = " ^ term_to_string proj_lb.lb_typ);
+      debug' (fun () -> "proj_ty = " ^ term_to_string proj_typ);
 
       let ty =
-        let bs, cod = collect_arr_bs proj_lb.lb_typ in
+        let bs, cod = collect_arr_bs proj_typ in
         let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
         match bs with
         | [] -> fail "mk_class: impossible, no binders"
@@ -583,7 +586,7 @@ let mk_class (nm:string) : Tac decls =
       in
       let def =
         if false then
-          let bs, body = collect_abs proj_lb.lb_def in
+          let bs, body = collect_abs proj_typ in
           let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
           match bs with
           | [] -> fail "mk_class: impossible, no binders"
@@ -591,14 +594,14 @@ let mk_class (nm:string) : Tac decls =
               let b1 = binder_set_meta b1 tcr in
               mk_abs (ps@(b1::bs')) body
         else
-          let bs, _cod = collect_arr_bs proj_lb.lb_typ in
+          let bs, _cod = collect_arr_bs proj_typ in
           let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
           match bs with
           | [] -> fail "mk_class: impossible, no binders"
           | b1::bs' ->
             let b1 = binder_set_meta b1 tcr in
             mk_abs (ps@[b1]) <|
-              mk_app (Tv_FVar proj_lb.lb_fv)
+              mk_app (Tv_FVar proj_fv)
                 (L.map (fun p -> (binder_to_term p, Q_Implicit)) ps
                 @ [binder_to_term b1, Q_Explicit])
       in
@@ -609,7 +612,7 @@ let mk_class (nm:string) : Tac decls =
       let def : term = def in
       let sfv : fv = sfv in
 
-      let lb = { lb_fv=sfv; lb_us=proj_lb.lb_us; lb_typ=ty; lb_def=def } in
+      let lb = { lb_fv=sfv; lb_us=proj_us; lb_typ=ty; lb_def=def } in
       let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
       let se = set_sigelt_quals to_propagate se in
       (* A method's result type is typically a function, so its SMT arity has to
@@ -617,7 +620,7 @@ let mk_class (nm:string) : Tac decls =
          spine of its type; see FStar.Attributes.smt_arity. The class parameters
          are the right choice: methods are habitually used partially applied,
          and this is the arity the encoding used before arrows became unary. *)
-      let arity = pack (Tv_Const (C_Int (L.length params))) in
+      let arity = pack (Tv_Const (C_Int (L.length params) (FStar.Sealed.seal Dec))) in
       let se = set_sigelt_attrs ((`(FStar.Attributes.smt_arity (`#arity)))
                                 :: (`tcmethod) :: proj_attrs @ b.attrs) se in
       // debug' (fun () -> "trying to return : " ^ term_to_string (quote se));

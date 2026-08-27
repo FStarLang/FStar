@@ -92,7 +92,7 @@ class bounded_unsigned_int (a:Type) = {
    from_nat   : (x:nat { x <= as_nat bound }) -> a;
    fits       : (op: (int -> int -> int) -> a -> a -> prop);
    add        : (x:a -> y:a { fits ( + ) x y } -> a);
-   sub        : (x:a -> y:a { fits ( op_Subtraction ) x y } -> a);
+   sub        : (x:a -> y:a { fits ( op_Minus ) x y } -> a);
    lt         : (a -> a -> bool);
 
    [@@@TC.no_method]
@@ -101,8 +101,8 @@ class bounded_unsigned_int (a:Type) = {
                 0 <= op (as_nat x) (as_nat y) /\
                 op (as_nat x) (as_nat y) <= as_nat bound) /\
      (forall (x y:a). fits ( + ) x y ==> as_nat (add x y) = as_nat x + as_nat y) /\
-     (forall (x y:a). fits ( op_Subtraction ) x y ==> as_nat (sub x y) = as_nat x - as_nat y) /\
-     (forall (x:a). fits ( op_Subtraction ) bound x) /\
+     (forall (x y:a). fits ( op_Minus ) x y ==> as_nat (sub x y) = as_nat x - as_nat y) /\
+     (forall (x:a). fits ( op_Minus ) bound x) /\
      (forall (x:a). as_nat x <= as_nat bound) /\
      (forall (x:a). from_nat (as_nat x) == x) /\
      (forall (x:nat{ x <= as_nat bound}). as_nat (from_nat x) == x) /\
@@ -119,7 +119,7 @@ let ( +^ ) {| bounded_unsigned_int 'a |}
 
 let ( -^ ) {| bounded_unsigned_int 'a |}
            (x : 'a)
-           (y : 'a { fits ( op_Subtraction ) x y })
+           (y : 'a { fits ( op_Minus ) x y })
   : 'a
   = sub x y
 
@@ -139,7 +139,7 @@ instance u32_instance : bounded_unsigned_int FStar.UInt32.t =
                            0 <= res /\ res <= FStar.UInt.max_int 32);
     add      = (fun x y -> add x y);
     sub      = (fun x y -> sub x y);
-    lt       = ( <^ );
+    lt       = ( < );
     properties = ()
 }
 
@@ -154,7 +154,7 @@ instance u64_instance : bounded_unsigned_int FStar.UInt64.t =
                            0 <= res /\ res <= FStar.UInt.max_int 64);
     add      = (fun x y -> add x y);
     sub      = (fun x y -> sub x y);
-    lt       = ( <^ );
+    lt       = ( < );
     properties = ()
 }
 

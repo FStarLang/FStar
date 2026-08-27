@@ -1,8 +1,8 @@
 open Prims
 let rec map :
   'a 'b .
-    ('a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a Prims.list -> ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> FStarC_Tactics_Types.ref_proofstate -> 'b) ->
+      'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> 'b Prims.list
   =
   fun f x ->
     match x with
@@ -11,8 +11,8 @@ let rec map :
         (fun ps -> let x1 = f a1 ps in let x2 = map f tl ps in x1 :: x2)
 let rec concatMap :
   'a 'b .
-    ('a -> ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a Prims.list -> ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> FStarC_Tactics_Types.ref_proofstate -> 'b Prims.list) ->
+      'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> 'b Prims.list
   =
   fun f l ->
     match l with
@@ -24,8 +24,8 @@ let rec concatMap :
 let rec __mapi :
   'a 'b .
     Prims.nat ->
-      (Prims.nat -> 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-        'a Prims.list -> ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr
+      (Prims.nat -> 'a -> FStarC_Tactics_Types.ref_proofstate -> 'b) ->
+        'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> 'b Prims.list
   =
   fun i f x ->
     match x with
@@ -34,13 +34,13 @@ let rec __mapi :
         (fun ps ->
            let x1 = f i a1 ps in
            let x2 = __mapi (i + Prims.int_one) f tl ps in x1 :: x2)
-let mapi (f : Prims.nat -> 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr)
-  (l : 'a Prims.list) : ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr=
+let mapi (f : Prims.nat -> 'a -> FStarC_Tactics_Types.ref_proofstate -> 'b)
+  (l : 'a Prims.list) : FStarC_Tactics_Types.ref_proofstate -> 'b Prims.list=
   __mapi Prims.int_zero f l
 let rec iter :
   'a .
-    ('a -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a Prims.list -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> FStarC_Tactics_Types.ref_proofstate -> unit) ->
+      'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> unit
   =
   fun f x ->
     match x with
@@ -49,21 +49,21 @@ let rec iter :
 let rec iteri_aux :
   'a .
     Prims.int ->
-      (Prims.int -> 'a -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-        'a Prims.list -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr
+      (Prims.int -> 'a -> FStarC_Tactics_Types.ref_proofstate -> unit) ->
+        'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> unit
   =
   fun i f x ->
     match x with
     | [] -> (fun uu___ -> ())
     | a1::tl -> (fun ps -> f i a1 ps; iteri_aux (i + Prims.int_one) f tl ps)
 let iteri
-  (f : Prims.int -> 'a -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr)
-  (x : 'a Prims.list) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+  (f : Prims.int -> 'a -> FStarC_Tactics_Types.ref_proofstate -> unit)
+  (x : 'a Prims.list) : FStarC_Tactics_Types.ref_proofstate -> unit=
   iteri_aux Prims.int_zero f x
 let rec fold_left :
   'a 'b .
-    ('a -> 'b -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a -> 'b Prims.list -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> 'b -> FStarC_Tactics_Types.ref_proofstate -> 'a) ->
+      'a -> 'b Prims.list -> FStarC_Tactics_Types.ref_proofstate -> 'a
   =
   fun f x l ->
     match l with
@@ -71,8 +71,8 @@ let rec fold_left :
     | hd::tl -> (fun ps -> let x1 = f x hd ps in fold_left f x1 tl ps)
 let rec fold_right :
   'a 'b .
-    ('a -> 'b -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a Prims.list -> 'b -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> 'b -> FStarC_Tactics_Types.ref_proofstate -> 'b) ->
+      'a Prims.list -> 'b -> FStarC_Tactics_Types.ref_proofstate -> 'b
   =
   fun f l x ->
     match l with
@@ -82,7 +82,7 @@ let rec zip :
   'a 'b .
     'a Prims.list ->
       'b Prims.list ->
-        (('a * 'b) Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr
+        FStarC_Tactics_Types.ref_proofstate -> ('a * 'b) Prims.list
   =
   fun l1 l2 ->
     match (l1, l2) with
@@ -90,8 +90,8 @@ let rec zip :
     | uu___ -> (fun uu___1 -> [])
 let rec filter :
   'a .
-    ('a -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a Prims.list -> ('a Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> FStarC_Tactics_Types.ref_proofstate -> Prims.bool) ->
+      'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> 'a Prims.list
   =
   fun f uu___ ->
     match uu___ with
@@ -103,11 +103,11 @@ let rec filter :
 let rec filter_map_acc :
   'a 'b .
     ('a ->
-       ('b FStar_Pervasives_Native.option, Obj.t)
-         FStar_Tactics_Effect.tac_repr)
+       FStarC_Tactics_Types.ref_proofstate ->
+         'b FStar_Pervasives_Native.option)
       ->
       'b Prims.list ->
-        'a Prims.list -> ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr
+        'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> 'b Prims.list
   =
   fun f acc l ->
     match l with
@@ -122,19 +122,19 @@ let rec filter_map_acc :
 let filter_map
   (f :
     'a ->
-      ('b FStar_Pervasives_Native.option, Obj.t)
-        FStar_Tactics_Effect.tac_repr)
-  (l : 'a Prims.list) : ('b Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr=
+      FStarC_Tactics_Types.ref_proofstate ->
+        'b FStar_Pervasives_Native.option)
+  (l : 'a Prims.list) : FStarC_Tactics_Types.ref_proofstate -> 'b Prims.list=
   filter_map_acc f [] l
 let rec tryPick :
   'a 'b .
     ('a ->
-       ('b FStar_Pervasives_Native.option, Obj.t)
-         FStar_Tactics_Effect.tac_repr)
+       FStarC_Tactics_Types.ref_proofstate ->
+         'b FStar_Pervasives_Native.option)
       ->
       'a Prims.list ->
-        ('b FStar_Pervasives_Native.option, Obj.t)
-          FStar_Tactics_Effect.tac_repr
+        FStarC_Tactics_Types.ref_proofstate ->
+          'b FStar_Pervasives_Native.option
   =
   fun f l ->
     match l with
@@ -146,9 +146,9 @@ let rec tryPick :
            | FStar_Pervasives_Native.Some x1 ->
                FStar_Pervasives_Native.Some x1
            | FStar_Pervasives_Native.None -> tryPick f tl ps)
-let map_opt (f : 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr)
+let map_opt (f : 'a -> FStarC_Tactics_Types.ref_proofstate -> 'b)
   (x : 'a FStar_Pervasives_Native.option) :
-  ('b FStar_Pervasives_Native.option, Obj.t) FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate -> 'b FStar_Pervasives_Native.option=
   match x with
   | FStar_Pervasives_Native.None ->
       (fun uu___ -> FStar_Pervasives_Native.None)
@@ -157,8 +157,8 @@ let map_opt (f : 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr)
 let rec repeatn :
   'a .
     Prims.int ->
-      (unit -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-        ('a Prims.list, Obj.t) FStar_Tactics_Effect.tac_repr
+      (unit -> FStarC_Tactics_Types.ref_proofstate -> 'a) ->
+        FStarC_Tactics_Types.ref_proofstate -> 'a Prims.list
   =
   fun n t ->
     if n <= Prims.int_zero
@@ -169,8 +169,8 @@ let rec repeatn :
          let x1 = repeatn (n - Prims.int_one) t ps in x :: x1)
 let rec tryFind :
   'a .
-    ('a -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a Prims.list -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> FStarC_Tactics_Types.ref_proofstate -> Prims.bool) ->
+      'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> Prims.bool
   =
   fun f l ->
     match l with
@@ -179,10 +179,10 @@ let rec tryFind :
         (fun ps -> let x = f hd ps in if x then true else tryFind f tl ps)
 let rec fold_left2 :
   'a 'b 'c .
-    ('a -> 'b -> 'c -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr) ->
+    ('a -> 'b -> 'c -> FStarC_Tactics_Types.ref_proofstate -> 'a) ->
       'a ->
         'b Prims.list ->
-          'c Prims.list -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr
+          'c Prims.list -> FStarC_Tactics_Types.ref_proofstate -> 'a
   =
   fun f x l1 l2 ->
     match (l1, l2) with
@@ -191,8 +191,8 @@ let rec fold_left2 :
         (fun ps -> let x1 = f x hd1 hd2 ps in fold_left2 f x1 tl1 tl2 ps)
 let rec string_of_list :
   'a .
-    ('a -> (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a Prims.list -> (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> FStarC_Tactics_Types.ref_proofstate -> Prims.string) ->
+      'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> Prims.string
   =
   fun f l ->
     match l with
@@ -203,17 +203,17 @@ let rec string_of_list :
            let x2 = let x3 = string_of_list f xs ps in Prims.strcat ";" x3 in
            Prims.strcat x1 x2)
 let string_of_option
-  (f : 'a -> (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr)
+  (f : 'a -> FStarC_Tactics_Types.ref_proofstate -> Prims.string)
   (o : 'a FStar_Pervasives_Native.option) :
-  (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate -> Prims.string=
   match o with
   | FStar_Pervasives_Native.Some x ->
       (fun ps -> let x1 = f x ps in Prims.strcat "Some " x1)
   | FStar_Pervasives_Native.None -> (fun uu___ -> "None")
 let rec existsb :
   'a .
-    ('a -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr) ->
-      'a Prims.list -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr
+    ('a -> FStarC_Tactics_Types.ref_proofstate -> Prims.bool) ->
+      'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> Prims.bool
   =
   fun f l ->
     match l with

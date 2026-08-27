@@ -652,7 +652,7 @@ let new_mlpath_of_lident (g : uenv) (x : FStarC_Ident.lident) :
       (mlp1, g2)
 let extend_ty (g : uenv) (a : FStarC_Syntax_Syntax.bv)
   (map_to_top : Prims.bool) : uenv=
-  let is_local_type_variable = Prims.op_Negation map_to_top in
+  let is_local_type_variable = Prims.not map_to_top in
   let uu___ =
     let uu___1 = root_name_of_bv a in
     find_uniq g.env_mlident_map uu___1 is_local_type_variable in

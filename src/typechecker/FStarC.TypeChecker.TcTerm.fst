@@ -49,6 +49,7 @@ module U  = FStarC.Syntax.Util
 module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
+module Overload = FStarC.TypeChecker.Overload
 module Print = FStarC.Syntax.Print
 module CList = FStarC.CList
 module Free = FStarC.Syntax.Free
@@ -1277,23 +1278,21 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
             let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
             tc_term env term
         in
-        //We have e.f, use the type of e to disambiguate
+        //We have e.f, use the type of e to disambiguate.
+        //This is a speculative check: its guard is dropped on purpose, since
+        //[e] is checked again as part of the application we ultimately build.
         let _, lc, _ =
           let env, _ = Env.clear_expected_typ env in
           tc_term env e
         in
         Inl (begin
-        let t0 = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env lc.res_typ in
-        let thead, _ = U.head_and_args_full t0 in
         if !dbg_RFD
-        then (
-          Format.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
-            (show lc.res_typ)
-            (show t0)
-            (show thead)
-        );
-        match (SS.compress (U.un_uinst thead)).n with
-        | Tm_fvar type_name -> (
+        then Format.print1 "Got lc.res_typ=%s\n" (show lc.res_typ);
+        (* The discriminating signal here is the rigid head symbol of the type
+           of the *first* argument, and nothing else.
+           See FStarC.TypeChecker.Overload. *)
+        match Overload.base_head_fv env lc.res_typ with
+        | Some type_name -> (
           match TcUtil.try_lookup_record_type env type_name.fv_name with
           | None -> proceed_with candidate
           | Some rdc ->
@@ -1315,8 +1314,14 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
               in
               proceed_with (Some choice)
           )
-        | _ -> proceed_with candidate
+        | None -> proceed_with candidate
         end)
+
+      | Tm_fvar {fv_qual=Some (Unresolved_name _)}, _
+      | Tm_uinst({n=Tm_fvar {fv_qual=Some (Unresolved_name _)}}, _), _ ->
+        (* ToSyntax left an overloaded name; use type information to pick
+           among the candidates. See FStarC.TypeChecker.Overload. *)
+        Inr (resolve_overloaded_head env lhead largs, largs)
 
       | _ ->
         if U.is_synth_by_tactic lhead && not env.phase1
@@ -1736,6 +1741,84 @@ and tc_tactic (a:typ) (b:typ) (env:Env.env) (tau:term) : ML (term & lcomp & guar
     let env = { env with failhard = true } in
     tc_check_tot_or_gtot_term env tau (t_tac_of a b) None
 
+and speculate_base env (e:term) : ML Overload.base_typ =
+  (* Typecheck [e] just far enough to learn the head symbol of its type,
+     then undo everything: the unifier state is rolled back and any errors
+     are swallowed. A [base_typ] only ever holds fvs, so the answer survives
+     the rollback.
+
+     [admit] is set so that the speculative pass is uniformly lax. That is
+     what makes overload resolution insensitive to whether we are lax
+     checking or not: a name must resolve the same way in an interactive
+     lax pass and in the full check, or the two would disagree about what
+     the program means. *)
+  let tx = UF.new_transaction () in
+  let res =
+    BU.finally (fun () -> UF.rollback tx) (fun () ->
+      let _, res =
+        Errors.catch_errors_and_ignore_rest (fun () ->
+          let env, _ = Env.clear_expected_typ env in
+          let _, lc, _ = tc_term ({env with admit=true}) e in
+          Overload.base_of_typ env lc.res_typ)
+      in
+      res)
+  in
+  match res with
+  | Some b -> b
+  | None -> Overload.Base_unknown
+
+and resolve_overloaded_head env (lhead:term) (largs:args) : ML term =
+  let fv, us =
+    match (SS.compress lhead).n with
+    | Tm_fvar fv -> fv, []
+    | Tm_uinst({n=Tm_fvar fv}, us) -> fv, us
+    | _ -> failwith "resolve_overloaded_head: not an fvar"
+  in
+  let alts =
+    match fv.fv_qual with
+    | Some (Unresolved_name alts) -> alts
+    | _ -> []
+  in
+  (* While checking an implementation against an interface, the declarations of
+     the interface that the implementation has not yet reached are hidden
+     ([Env.is_iface_hidden]). Such a candidate cannot be the meaning of this
+     occurrence -- looking it up raises "declared further down the interface" --
+     so drop it before resolving and promote the first visible candidate to
+     primary. If every candidate is hidden nothing is dropped, and the usual
+     error is reported. *)
+  let primary, alts =
+    match List.filter (fun fv -> not (Env.is_iface_hidden env (lid_of_fv fv)))
+                      (fv :: alts) with
+    | p :: rest -> p, rest
+    | [] -> fv, alts
+  in
+  let primary = {primary with fv_qual = None} in
+  let explicit_args =
+    largs |> List.collect (fun (a, aq) ->
+      match aq with
+      | Some {aqual_implicit=true} -> []
+      | _ -> [a])
+  in
+  let expected =
+    match Env.expected_typ env with
+    | Some (t, _) -> Some t
+    | None -> None
+  in
+  (* [Overload.resolve] is authoritative: whatever it answers is the name this
+     occurrence denotes, and the term is then checked like any other. In
+     particular the answer is not second-guessed by re-checking the candidate
+     it passed over. That keeps resolution a function of the candidates' types
+     and the application site alone, rather than of whether some other
+     candidate happens to typecheck. The cost is that a candidate wrongly
+     eliminated by [Overload.compatible] is really gone, which is why that
+     relation must over-approximate compatibility. *)
+  let choice = Overload.resolve env (speculate_base env) primary alts explicit_args expected in
+  let choice = {choice with fv_qual = None} in
+  let h = S.mk (Tm_fvar choice) lhead.pos in
+  match us with
+  | [] -> h
+  | _ -> S.mk_Tm_uinst h us
+
 and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option S.fv_qual) (e:term) (t0:typ)
   : ML (term & lcomp & guard_t)
   =
@@ -1824,6 +1907,12 @@ and tc_value env (e:term) : ML (term
   | Tm_uinst({n=Tm_fvar fv}, _)
   | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid && not env.phase1 ->
     raise_error env Errors.Fatal_BadlyInstantiatedSynthByTactic "Badly instantiated synth_by_tactic"
+
+  | Tm_uinst({n=Tm_fvar {fv_qual=Some (Unresolved_name _)}}, _)
+  | Tm_fvar {fv_qual=Some (Unresolved_name _)} ->
+    (* An overloaded name used without arguments; only the expected type
+       can discriminate here. See FStarC.TypeChecker.Overload. *)
+    tc_term env (resolve_overloaded_head env top [])
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
@@ -1955,18 +2044,31 @@ and tc_constant (env:env_t) r (c:sconst) : ML typ =
      match c with
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
-      | Const_int (_, None) -> t_int
-      | Const_int (_, Some msize) ->
-        tconst (match msize with
+      | Const_int _ -> t_int
+      | Const_machine_int (v, base, sw, w) ->
+        let lid =
+          match sw, w with
           | Signed, Int8 -> Const.int8_lid
           | Signed, Int16 -> Const.int16_lid
           | Signed, Int32 -> Const.int32_lid
           | Signed, Int64 -> Const.int64_lid
+          | Signed, Sizet ->
+            raise_error r Errors.Fatal_UnsupportedConstant
+              "Ill-typed machine integer constant: there are no signed size_t literals"
           | Unsigned, Int8 -> Const.uint8_lid
           | Unsigned, Int16 -> Const.uint16_lid
           | Unsigned, Int32 -> Const.uint32_lid
           | Unsigned, Int64 -> Const.uint64_lid
-          | Unsigned, Sizet -> Const.sizet_lid)
+          | Unsigned, Sizet -> Const.sizet_lid
+        in
+        (* This is the authoritative range check for machine integer
+           literals: the syntax type does not enforce it, so constants built
+           by reflection (pack_const) are checked here too. *)
+        if not (within_bounds v sw w)
+        then raise_error r Errors.Error_OutOfRange
+               (Format.fmt2 "%s is not in the expected range for %s"
+                  (string_of_int_literal v base) (show lid));
+        tconst lid
       | Const_string _ -> t_string
       | Const_real _ -> t_real
       | Const_char _ ->
@@ -3169,7 +3271,15 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
             if Env.is_type_constructor env f.fv_name
             then t
             else match Env.lookup_definition [Env.Unfold delta_constant] env f.fv_name with
-                 | None -> t
+                 | None ->
+                   (* Projectors and discriminators have no definition; they are
+                      reduced primitively by Normalize.reduce_disc_proj, which
+                      needs the scrutinee in weak head normal form. *)
+                   if None? (Env.disc_proj_qual env f.fv_name) then t
+                   else
+                     let t' = N.normalize [Env.Beta; Env.Iota; Env.Weak;
+                                           Env.UnfoldUntil delta_constant] env t in
+                     if U.term_eq t' t then t else aux false t'
                  | Some head_def_ts ->
                    let _, head_def = Env.inst_tscheme_with head_def_ts us in
                    let t' = S.mk_Tm_app head_def args t.pos in
@@ -3430,7 +3540,8 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
            *     we now have scrutinee = c, so we need decidable equality on c
            *)
           (match c with
-           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_string _ -> ()
+           | Const_unit | Const_bool _ | Const_int _ | Const_machine_int _
+            | Const_char _ | Const_string _ -> ()
            | _ ->
              fail (Format.fmt1
                      "Pattern matching a constant that does not have decidable equality: %s"
@@ -3805,7 +3916,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
 
               [U.mk_decidable_eq (tc_constant env pat_exp.pos c) (force_scrutinee ()) pat_exp]
 
-            | Pat_constant (FStarC.Const.Const_int(_, Some _)), _ ->
+            | Pat_constant (FStarC.Const.Const_machine_int _), _ ->
               //machine integer pattern, cf. #1572
               let _, t, _ =
                 let env, _ = Env.clear_expected_typ env in

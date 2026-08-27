@@ -91,7 +91,7 @@ fn majority
   assert (pure (count_until votes_0 s 1 == 1));
   // while loop for phase 1
   while (
-    (!i <^ len)
+    (!i < len)
   )
   invariant (
     pts_to votes #p s **
@@ -120,13 +120,13 @@ fn majority
     if (vk = 0sz) {
       cand := votes_i;
       k := 1sz;
-      i := vi +^ 1sz
+      i := vi + 1sz
     } else if (votes_i = vcand) {
-      k := vk +^ 1sz;
-      i := vi +^ 1sz
+      k := vk + 1sz;
+      i := vi + 1sz
     } else {
-      k := vk -^ 1sz;
-      i := vi +^ 1sz
+      k := vk - 1sz;
+      i := vi + 1sz
     }
   };
   let vk = !k;
@@ -134,14 +134,14 @@ fn majority
   // a couple of optimizations
   if (vk = 0sz) {
     None
-  } else if (len <^ 2sz *^ vk) {
+  } else if (len < 2sz * vk) {
     Some vcand
   } else {
     i := 0sz;
     k := 0sz;
     // while loop for phase 2
     while (
-      (!i <^ len)
+      (!i < len)
     )
     invariant (
       pts_to votes #p s **
@@ -158,15 +158,15 @@ fn majority
       let votes_i = votes.(vi);
       count_until_next vcand s (SZ.v vi);
       if (votes_i = vcand) {
-        k := vk +^ 1sz;
-        i := vi +^ 1sz
+        k := vk + 1sz;
+        i := vi + 1sz
       } else {
-        i := vi +^ 1sz
+        i := vi + 1sz
       }
     };
 
     let vk = !k;
-    if (len <^ 2sz *^ vk) {
+    if (len < 2sz * vk) {
       Some vcand
     } else {
       None

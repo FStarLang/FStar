@@ -102,9 +102,9 @@ type ('Ap, 'Apost) pure_assert_wp = unit
 type ('Aa,'Awp,'Auu____878) purewp_id = 'Awp
 
 
-let op_AmpAmp x y = x && y
-let op_BarBar x y  = x || y
-let op_Negation x = not x
+let op_Amp_Amp x y = x && y
+let op_Bar_Bar x y  = x || y
+let not x = not x
 
 let ( + )     = Z.add
 let ( - )     = Z.sub
@@ -119,15 +119,15 @@ let ( ~- )    = Z.neg
 let abs       = Z.abs
 
 let op_Star x y = x * y
-let op_Subtraction x y = x - y
-let op_Addition x y = x + y
-let op_Minus x = -x
-let op_LessThan x y = x < y
-let op_LessThanOrEqual x y = x <= y
-let op_GreaterThan x y = x > y
-let op_GreaterThanOrEqual x y = x >= y
-let op_Equality x y = x = y
-let op_disEquality x y = x<>y
+let op_Minus x y = x - y
+let op_Plus x y = x + y
+let op_Tilde_Minus x = -x
+let op_Less x y = x < y
+let op_Less_Equals x y = x <= y
+let op_Greater x y = x > y
+let op_Greater_Equals x y = x >= y
+let op_Equals x y = x = y
+let op_Less_Greater x y = x<>y
 
 type nonrec exn = exn
 type 'a array' = 'a array[@@deriving yojson,show]
@@ -166,8 +166,8 @@ type 'Ap spinoff = 'Ap
 type nat = int
 type pos = int
 type nonzero = int
-let op_Modulus x y = x mod y
-let op_Division x y = x / y
+let op_Percent x y = x mod y
+let op_Slash x y = x / y
 let rec (pow2 : nat -> pos) =
   fun x  ->
     Z.shift_left Z.one (Z.to_int x)
@@ -175,6 +175,6 @@ let rec (pow2 : nat -> pos) =
 let (min : int -> int -> int) =
   fun x  -> fun y  -> if x <= y then x else y
 let (abs : int -> int) =
-  fun x  -> if x >= (parse_int "0") then x else op_Minus x
+  fun x  -> if x >= (parse_int "0") then x else op_Tilde_Minus x
 let string_of_bool = string_of_bool
 let string_of_int = to_string

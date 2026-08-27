@@ -25,12 +25,16 @@ let eq_sconst (c1 : FStarC_Const.sconst) (c2 : FStarC_Const.sconst) :
   | (FStarC_Const.Const_effect, FStarC_Const.Const_effect) -> true
   | (FStarC_Const.Const_unit, FStarC_Const.Const_unit) -> true
   | (FStarC_Const.Const_bool b1, FStarC_Const.Const_bool b2) -> b1 = b2
-  | (FStarC_Const.Const_int (s1, sw1), FStarC_Const.Const_int (s2, sw2)) ->
-      (s1 = s2) && (sw1 = sw2)
+  | (FStarC_Const.Const_int (v1, uu___), FStarC_Const.Const_int (v2, uu___1))
+      -> v1 = v2
+  | (FStarC_Const.Const_machine_int (v1, uu___, s1, w1),
+     FStarC_Const.Const_machine_int (v2, uu___1, s2, w2)) ->
+      ((v1 = v2) && (s1 = s2)) && (w1 = w2)
   | (FStarC_Const.Const_char c11, FStarC_Const.Const_char c21) -> c11 = c21
   | (FStarC_Const.Const_string (s1, uu___), FStarC_Const.Const_string
      (s2, uu___1)) -> s1 = s2
-  | (FStarC_Const.Const_real s1, FStarC_Const.Const_real s2) -> s1 = s2
+  | (FStarC_Const.Const_real r1, FStarC_Const.Const_real r2) ->
+      (FStarC_Real.cmp r1 r2) = FStarC_Order.Eq
   | (FStarC_Const.Const_range r1, FStarC_Const.Const_range r2) -> r1 = r2
   | (FStarC_Const.Const_reify uu___, FStarC_Const.Const_reify uu___1) -> true
   | (FStarC_Const.Const_reflect l1, FStarC_Const.Const_reflect l2) ->

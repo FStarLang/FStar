@@ -135,10 +135,10 @@ in scope. A ``show_proof_state`` after the first line prints:
   - Current context:
       pts_to x (reveal wx) ** 
       pts_to y (reveal wy) ** 
-      pure (eq2 (op_Modulus (reveal wx) 2) (op_Modulus (reveal wy) 2)) ** 
+      pure (eq2 (op_Percent (reveal wx) 2) (op_Percent (reveal wy) 2)) ** 
       emp
   - In typing environment:
-      [_#5 : squash (eq2 (op_Modulus (reveal wx) 2) (op_Modulus (reveal wy) 2)),
+      [_#5 : squash (eq2 (op_Percent (reveal wx) 2) (op_Percent (reveal wy) 2)),
       wy#4 : erased int,
       wx#3 : erased int,
       y#2 : ref int,

@@ -25,3 +25,11 @@ $(OUTPUT_DIR)/Harness.%.ideout: Harness.%.in $(CACHE_DIR)/Harness.fst.checked
 	$(call msg, "OUT_IDE", $<)
 	$(Q)$(eval FST := $(firstword $(subst ., ,$<)))
 	$(Q)$(FSTAR) --ide "$(realpath ${FST}.fst)" < "$<" | $(JSON_CLEANUP) "$@"
+
+# The OvlIde.* tests look a name up in a module that opens two others which
+# both define it. The fixtures must already be checked when the session
+# starts, or the output would depend on whether $(CACHE_DIR) happens to be
+# populated: an unchecked dependency adds a warning to the first response.
+$(OUTPUT_DIR)/OvlIde.%.ideout: OvlIde.%.in $(CACHE_DIR)/OvlIdeInt.fst.checked $(CACHE_DIR)/OvlIdeBool.fst.checked
+	$(call msg, "OUT_IDE", $<)
+	$(FSTAR) --ide --silent "$(realpath OvlIde.fst)" < "$<" | $(JSON_CLEANUP) "$@"

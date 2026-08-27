@@ -170,35 +170,38 @@ let int_of_string_lid = p2l ["FStar"; "Parse"; "int_of_string"]
 let bool_of_string_lid = p2l ["FStar"; "Parse"; "bool_of_string"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
 let order_lid       = p2l ["FStar"; "Order"; "order"]
+let real_literal_lid   = p2l ["FStar"; "RealLiteral"; "real_literal"]
+let mkreal_literal_lid = p2l ["FStar"; "RealLiteral"; "Mkreal_literal_repr"]
+
 let vconfig_lid     = p2l ["FStar"; "VConfig"; "vconfig"]
 let mkvconfig_lid   = p2l ["FStar"; "VConfig"; "Mkvconfig"]
 
 (* Primitive operators *)
-let op_Eq              = pconst "op_Equality"
-let op_notEq           = pconst "op_disEquality"
-let op_LT              = pconst "op_LessThan"
-let op_LTE             = pconst "op_LessThanOrEqual"
-let op_GT              = pconst "op_GreaterThan"
-let op_GTE             = pconst "op_GreaterThanOrEqual"
-let op_Subtraction     = pconst "op_Subtraction"
+let op_Eq              = pconst "op_Equals"
+let op_notEq           = pconst "op_Less_Greater"
+let op_LT              = pconst "op_Less"
+let op_LTE             = pconst "op_Less_Equals"
+let op_GT              = pconst "op_Greater"
+let op_GTE             = pconst "op_Greater_Equals"
 let op_Minus           = pconst "op_Minus"
-let op_Addition        = pconst "op_Addition"
+let op_Tilde_Minus     = pconst "op_Tilde_Minus"
+let op_Plus            = pconst "op_Plus"
 let op_Star            = pconst "op_Star"
-let op_Division        = pconst "op_Division"
-let op_Modulus         = pconst "op_Modulus"
-let op_And             = pconst "op_AmpAmp"
-let op_Or              = pconst "op_BarBar"
-let op_Negation        = pconst "op_Negation"
+let op_Slash           = pconst "op_Slash"
+let op_Percent         = pconst "op_Percent"
+let op_And             = pconst "op_Amp_Amp"
+let op_Or              = pconst "op_Bar_Bar"
+let op_Not             = pconst "not"
 
 let real_const  s        = p2l ["FStar";"Real";s]
 let real_op_LT           = real_const "op_Less_Dot"
 let real_op_LTE          = real_const "op_Less_Equals_Dot"
 let real_op_GT           = real_const "op_Greater_Dot"
 let real_op_GTE          = real_const "op_Greater_Equals_Dot"
-let real_op_Subtraction  = real_const "op_Subtraction_Dot"
-let real_op_Addition     = real_const "op_Plus_Dot"
-let real_op_Multiply     = real_const "op_Star_Dot"
-let real_op_Division     = real_const "op_Slash_Dot"
+let real_op_Minus        = real_const "op_Minus_Dot"
+let real_op_Plus         = real_const "op_Plus_Dot"
+let real_op_Star         = real_const "op_Star_Dot"
+let real_op_Slash        = real_const "op_Slash_Dot"
 let real_of_int          = real_const "of_int"
 
 
@@ -370,8 +373,6 @@ let bind_has_range_args_attr = attr "bind_has_range_args"
 let primitive_extraction_attr = attr "primitive_extraction"
 let binder_strictly_positive_attr = pconst "strictly_positive"
 let binder_unused_attr = attr "unused"
-let no_auto_projectors_decls_attr = attr "no_auto_projectors_decls"
-let no_auto_projectors_attr = attr "no_auto_projectors"
 let no_subtping_attr_lid = attr "no_subtyping"
 let admit_termination_lid = attr "admit_termination"
 let admitted_lid = attr "admitted"
@@ -405,9 +406,10 @@ let const_to_string x = match x with
   | Const_effect -> "Effect"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
-  | Const_real r -> r^"R"
+  | Const_real r -> Real.to_string r ^ "R"
   | Const_string(s, _) -> Format.fmt1 "\"%s\"" s
-  | Const_int (x, _) -> x
+  | Const_int (v, b) -> string_of_int_literal v b
+  | Const_machine_int (v, b, _, _) -> string_of_int_literal v b
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStarC.Range.string_of_range r
   | Const_range_of -> "range_of"
@@ -436,8 +438,6 @@ let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let tac_opaque_attr = pconst "tac_opaque"
 
-let meta_projectors_attr = fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
-let mk_projs_lid   = fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
@@ -496,7 +496,11 @@ let implies_elim_lid = classical_sugar_lid "implies_elim"
 let or_elim_lid = classical_sugar_lid "or_elim"
 let and_elim_lid = classical_sugar_lid "and_elim"
 let or_decide_lid = classical_sugar_lid "or_decide"
-let max_indefinite_description_arity = 5
+(* The largest N for which FStar.Classical.Sugar provides
+   `indefinite_descriptionN`. `eliminate exists` uses a single call whenever it
+   can, since chaining several of them is exponentially more expensive to
+   elaborate; see the comment on `ElimExists` in FStarC.ToSyntax.ToSyntax. *)
+let max_indefinite_description_arity = 8
 let indefinite_description_lid (n:int) : ML lid =
   classical_sugar_lid ("indefinite_description" ^ string_of_int n)
 

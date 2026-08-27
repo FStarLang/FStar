@@ -126,8 +126,9 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
   | (FStarC_Syntax_Syntax.Tm_name a, FStarC_Syntax_Syntax.Tm_name b) ->
       equal_if (FStarC_Syntax_Syntax.bv_eq a b)
   | uu___ when
-      FStar_Pervasives_Native.uu___is_Some heads_and_args_in_case_both_data
-      ->
+      match heads_and_args_in_case_both_data with
+      | FStar_Pervasives_Native.Some v -> true
+      | uu___1 -> false ->
       let uu___1 = FStarC_Option.must heads_and_args_in_case_both_data in
       (match uu___1 with
        | (f, args1, g, args2, n) -> equal_data f args1 g args2 n)
@@ -145,12 +146,10 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
       Unknown
   | (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real r1),
      FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real r2)) ->
-      let uu___ = FStarC_Real.cmp (FStarC_Real.Real r1) (FStarC_Real.Real r2) in
-      (match uu___ with
-       | FStar_Pervasives_Native.Some (FStarC_Order.Eq) -> Equal
-       | FStar_Pervasives_Native.Some (FStarC_Order.Lt) -> NotEqual
-       | FStar_Pervasives_Native.Some (FStarC_Order.Gt) -> NotEqual
-       | FStar_Pervasives_Native.None -> Unknown)
+      (match FStarC_Real.cmp r1 r2 with
+       | FStarC_Order.Eq -> Equal
+       | FStarC_Order.Lt -> NotEqual
+       | FStarC_Order.Gt -> NotEqual)
   | (FStarC_Syntax_Syntax.Tm_constant c, FStarC_Syntax_Syntax.Tm_constant d)
       -> equal_iff (FStarC_Const.eq_const c d)
   | (FStarC_Syntax_Syntax.Tm_uvar (u1, ([], uu___)),

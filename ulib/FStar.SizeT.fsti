@@ -175,17 +175,29 @@ val lte (x y: t) : Pure bool
 
 (** Infix notations *)
 
-inline_for_extraction unfold let ( +^ )  = add
-inline_for_extraction unfold let ( -^ )  = sub
-inline_for_extraction unfold let ( *^ )  = mul
-inline_for_extraction unfold let ( /^ )  = div
-inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( + )  = add
+inline_for_extraction unfold let ( - )  = sub
+inline_for_extraction unfold let ( * )  = mul
+inline_for_extraction unfold let ( / )  = div
+inline_for_extraction unfold let ( % )  = rem
 inline_for_extraction unfold let ( =^ )  = eq
 inline_for_extraction unfold let ( <>^ ) = ne
-inline_for_extraction unfold let ( >^ )  = gt
-inline_for_extraction unfold let ( >=^ ) = gte
-inline_for_extraction unfold let ( <^ )  = lt
-inline_for_extraction unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( > )  = gt
+inline_for_extraction unfold let ( >= ) = gte
+inline_for_extraction unfold let ( < )  = lt
+inline_for_extraction unfold let ( <= ) = lte
+
+(** Deprecated infix notations: the spellings the nine operators above had
+    before type-based overloading made the [^] suffix unnecessary. *)
+[@@deprecated "use ( + )"]  inline_for_extraction unfold let ( +^ )  = add
+[@@deprecated "use ( - )"]  inline_for_extraction unfold let ( -^ )  = sub
+[@@deprecated "use ( * )"]  inline_for_extraction unfold let ( *^ )  = mul
+[@@deprecated "use ( / )"]  inline_for_extraction unfold let ( /^ )  = div
+[@@deprecated "use ( % )"]  inline_for_extraction unfold let ( %^ )  = rem
+[@@deprecated "use ( > )"]  inline_for_extraction unfold let ( >^ )  = gt
+[@@deprecated "use ( >= )"] inline_for_extraction unfold let ( >=^ ) = gte
+[@@deprecated "use ( < )"]  inline_for_extraction unfold let ( <^ )  = lt
+[@@deprecated "use ( <= )"] inline_for_extraction unfold let ( <=^ ) = lte
 
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants

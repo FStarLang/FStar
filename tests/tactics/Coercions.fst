@@ -5,7 +5,7 @@ open FStar.Tactics.V2
 // Disabling this whole file until we get user-level coercions.
 // Then, we can just set pack/inspect to be coercions.
 
-let tm () : Tac term = Tv_App (Tv_App (`op_Addition) (`1, Q_Explicit)) (`2, Q_Explicit)
+let tm () : Tac term = Tv_App (Tv_App (`op_Plus) (`1, Q_Explicit)) (`2, Q_Explicit)
 
 let basic () : Tac int =
   match tm () with

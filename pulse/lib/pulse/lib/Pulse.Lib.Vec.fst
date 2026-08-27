@@ -41,8 +41,8 @@ we disable the warning about using Array.alloc. *)
 #push-options "--warn_error -288"
 let alloc x n = A.alloc x n
 #pop-options
-let op_Array_Access v i #p #s = A.op_Array_Access v i #p #s
-let op_Array_Assignment v i x #s = A.op_Array_Assignment v i x #s
+let ( .() ) v i #p #s = A.op_Dot_Lparen_Rparen v i #p #s
+let ( .()<- ) v i x #s = A.op_Dot_Lparen_Rparen_Less_Minus v i x #s
 (* Same comment as above *)
 #push-options "--warn_error -288"
 let free v #s = A.free v #s
@@ -82,7 +82,7 @@ fn read_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
   let vc = !r;
   rewrite (pts_to (reveal v) s)
        as (pts_to vc s);
-  let x = op_Array_Access vc i;
+  let x = op_Dot_Lparen_Rparen vc i;
   rewrite (pts_to vc s)
        as (pts_to (reveal v) s);
   x
@@ -100,7 +100,7 @@ fn write_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   let vc = !r;
   rewrite (pts_to (reveal v) s)
        as (pts_to vc s);
-  op_Array_Assignment vc i x;
+  op_Dot_Lparen_Rparen_Less_Minus vc i x;
   with s. assert (pts_to vc s);
   rewrite (pts_to vc s)
        as (pts_to (reveal v) s)
@@ -115,8 +115,8 @@ fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
   ensures pts_to v (Seq.upd s (SZ.v i) x)
   ensures pure (res == Seq.index s (SZ.v i))
 {
-  let y = op_Array_Access v i;
-  op_Array_Assignment v i x;
+  let y = op_Dot_Lparen_Rparen v i;
+  op_Dot_Lparen_Rparen_Less_Minus v i x;
   y
 }
 
@@ -134,8 +134,8 @@ fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   let vc = !r;
   rewrite (pts_to v s)
        as (pts_to vc s);
-  let y = op_Array_Access vc i;
-  op_Array_Assignment vc i x;
+  let y = op_Dot_Lparen_Rparen vc i;
+  op_Dot_Lparen_Rparen_Less_Minus vc i x;
   with #s. assert (pts_to vc s);
   rewrite (pts_to vc s)
        as (pts_to v s);

@@ -393,26 +393,26 @@ arguments and boxing the result. For example, here's the encoding of
                
 .. code-block:: smt2
 
-    (declare-fun Prims.op_Addition (Term Term) Term)
+    (declare-fun Prims.op_Plus (Term Term) Term)
     (assert (! (forall ((@x0 Term) (@x1 Term))
-                       (! (= (Prims.op_Addition @x0
+                       (! (= (Prims.op_Plus @x0
                                                 @x1)
                              (BoxInt (+ (BoxInt_proj_0 @x0)
                                         (BoxInt_proj_0 @x1))))
-                          :pattern ((Prims.op_Addition @x0
+                          :pattern ((Prims.op_Plus @x0
                                                        @x1))
-                          :qid primitive_Prims.op_Addition))
-             :named primitive_Prims.op_Addition))
+                          :qid primitive_Prims.op_Plus))
+             :named primitive_Prims.op_Plus))
 
-This declares an uninterpreted function ``Prims.op_Addition``, a
+This declares an uninterpreted function ``Prims.op_Plus``, a
 binary function on ``Term``, and an assumption relating it to the SMT
 primitive operator from the integer arithmetic theory ``(+)``. The
 pattern allows the SMT solver to instantiate this quantifier for every
-active application of the ``Prims.op_Addition``.
+active application of the ``Prims.op_Plus``.
 
 The additional boxing introduces some overhead, e.g., proving ``x + y
-== y + x`` in F* amounts to proving ``Prims.op_Addition x y ==
-Prims.op_Addition y x`` in SMT2. This in turn involves instantiation
+== y + x`` in F* amounts to proving ``Prims.op_Plus x y ==
+Prims.op_Plus y x`` in SMT2. This in turn involves instantiation
 quantifiers, then reasoning in the theory of linear arithmetic, and
 finally using the injectivity of the ``BoxInt`` function to
 conclude. However, this overhead is usually not perceptible, and the
@@ -453,7 +453,7 @@ definition.
                       (! (= (SMTEncoding.add3 @x0
                                               @x1
                                               @x2)
-                            (Prims.op_Addition (Prims.op_Addition @x0
+                            (Prims.op_Plus (Prims.op_Plus @x0
                                                                   @x1)
                                                @x2))
                        :pattern ((SMTEncoding.add3 @x0
@@ -557,14 +557,14 @@ that the quantifier cannot be repeatedly instantiated infinitely.
     (assert (! (forall ((@u0 Fuel) (@x1 Term))
                        (! (implies (HasType @x1 Prims.nat)
                                    (= (SMTEncoding.factorial.fuel_instrumented (SFuel @u0) @x1)
-                                      (let ((@lb2 (Prims.op_Equality Prims.int @x1 (BoxInt 0))))
+                                      (let ((@lb2 (Prims.op_Equals Prims.int @x1 (BoxInt 0))))
                                            (ite (= @lb2 (BoxBool true))
                                                 (BoxInt 1)
                                                 (Prims.op_Star
                                                        @x1
                                                        (SMTEncoding.factorial.fuel_instrumented
                                                             @u0
-                                                            (Prims.op_Subtraction @x1 (BoxInt 1))))))))
+                                                            (Prims.op_Minus @x1 (BoxInt 1))))))))
                          :weight 0
                          :pattern ((SMTEncoding.factorial.fuel_instrumented (SFuel @u0) @x1))
                          :qid equation_with_fuel_SMTEncoding.factorial.fuel_instrumented))
@@ -968,8 +968,8 @@ example above, the encoding of ``x + 1 + 2`` becomes:
 This option controls the representation of non-linear arithmetic
 functions (``*, /, mod``) in the SMT encoding. The default is
 ``boxwrap`` which uses the encoding of ``Prims.op_Star,
-Prims.op_Division, Prims.op_Modulus`` analogous to
-``Prims.op_Addition``.
+Prims.op_Slash, Prims.op_Percent`` analogous to
+``Prims.op_Plus``.
 
 The ``native`` setting is similar to the ``smtencoding.l_arith_repr
 native``. When used in conjuction with ``smtencoding.elim_box true``,
@@ -1495,7 +1495,7 @@ let's see how to pin down which quantifier is to blame.
           [quantifier_instances] bool_typing :    720 :  10 : 11
           [quantifier_instances] constructor_distinct_BoxBool :    720 :  10 : 11
           [quantifier_instances] projection_inverse_BoxBool_proj_0 :   1772 :  10 : 11
-          [quantifier_instances] primitive_Prims.op_Equality :   2873 :  10 : 11
+          [quantifier_instances] primitive_Prims.op_Equals :   2873 :  10 : 11
           [quantifier_instances] int_typing :   3168 :  10 : 11
           [quantifier_instances] constructor_distinct_BoxInt :   3812 :  10 : 11
           [quantifier_instances] typing_SMTEncoding.factorial :   5490 :  10 : 11
@@ -1504,7 +1504,7 @@ let's see how to pin down which quantifier is to blame.
           [quantifier_instances] Prims_pretyping_ae567c2fb75be05905677af440075565 :   5835 :  11 : 12
           [quantifier_instances] projection_inverse_BoxInt_proj_0 :   6337 :  10 : 11
           [quantifier_instances] primitive_Prims.op_Star :   6394 :  10 : 11
-          [quantifier_instances] primitive_Prims.op_Subtraction :   6394 :  10 : 11
+          [quantifier_instances] primitive_Prims.op_Minus :   6394 :  10 : 11
           [quantifier_instances] token_correspondence_SMTEncoding.factorial.fuel_instrumented :   7629 :  10 : 11
           [quantifier_instances] @fuel_irrelevance_SMTEncoding.factorial.fuel_instrumented :   9249 :  10 : 11
           [quantifier_instances] equation_with_fuel_SMTEncoding.factorial.fuel_instrumented :  13185 :  10 : 10

@@ -2657,7 +2657,7 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
   refl_typing_builtin_wrapper "refl_check_match_complete" fun _ ->
   (* We just craft a match with the sc and patterns, using `1` in every
   branch, and check it against type int. *)
-  let one = U.exp_int "1" in
+  let one = U.exp_int 1 in
   let brs = List.map (fun p -> let p = pack_pat p in (p, None, one)) pats in
   let mm = mk (Tm_match {scrutinee=sc; ret_opt=None; brs=brs; rc_opt=None}) sc.pos in
   let env = g in

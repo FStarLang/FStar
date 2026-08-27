@@ -1,0 +1,6 @@
+{"query-id": "1", "query": "push", "args": {"kind": "lax", "code": "module OvlIde\nopen OvlIdeInt\nopen OvlIdeBool\n", "line": 1, "column": 0}}
+{"query-id": "2", "query": "push", "args": {"kind": "lax", "code": "\n(* OvlIdeBool is opened last, so scope order alone answers OvlIdeBool.f;\n   the argument type is what makes this OvlIdeInt.f. `f` is at column 14. *)\nlet a : int = f 0\n", "line": 4, "column": 0}}
+{"query-id": "3", "query": "lookup", "args": {"context": "code", "symbol": "f", "requested-info": ["type", "defined-at", "documentation"], "location": {"filename": "OvlIde.fst", "line": 7, "column": 14}}}
+{"query-id": "4", "query": "lookup", "args": {"context": "code", "symbol": "f", "requested-info": ["type", "defined-at", "documentation"], "location": {"filename": "/an/absolute/path/OvlIde.fst", "line": 7, "column": 14}}}
+{"query-id": "5", "query": "lookup", "args": {"context": "code", "symbol": "f", "requested-info": ["type", "defined-at", "documentation"], "location": {"filename": "file:///an/absolute/path/OvlIde.fst", "line": 7, "column": 14}}}
+{"query-id": "6", "query": "lookup", "args": {"context": "code", "symbol": "f", "requested-info": ["type", "defined-at", "documentation"], "location": {"filename": "OvlIde.fst", "line": 7, "column": 16}}}

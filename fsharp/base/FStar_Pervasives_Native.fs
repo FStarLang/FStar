@@ -1,4 +1,3 @@
-#light "off"
 module FStar_Pervasives_Native
 open Prims
 type 'Aa option =

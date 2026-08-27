@@ -1313,7 +1313,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     EnumStr ["native"; "wrapped"; "boxwrap"],
     text "Control the representation of non-linear arithmetic functions in the SMT encoding:" ^^
     bulleted [
-      text "if 'boxwrap' use 'Prims.op_Star, Prims.op_Division, Prims.op_Modulus'";
+      text "if 'boxwrap' use 'Prims.op_Star, Prims.op_Slash, Prims.op_Percent'";
       text "if 'native' use '*, div, mod'";
       text "if 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'";
     ] ^^
@@ -1324,7 +1324,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     EnumStr ["native"; "boxwrap"],
     text "Toggle the representation of linear arithmetic functions in the SMT encoding:" ^^
     bulleted [
-      text "if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'";
+      text "if 'boxwrap', use 'Prims.op_Plus, Prims.op_Minus, Prims.op_Minus'";
       text "if 'native', use '+, -, -'";
     ] ^^
     text "(default 'boxwrap')");
@@ -2040,6 +2040,21 @@ let output_to                    () = get_output_to                   ()
 let krmloutput                   () = get_krmloutput                  () ||| output_to ()
 let output_deps_to               () = get_output_deps_to              () ||| output_to ()
 let output_ext                   () = get_output_ext                  ()
+
+let overload_mode                () =
+  match String.lowercase (Ext.get "fstar:overload") with
+  (* The empty string is what Ext.get returns for an unset key, so the
+     default is `compat`: among the candidates for a name, discard those
+     whose types cannot fit the use site, then apply ordinary scope order
+     to what is left. `off` skips the discarding, recovering scope order
+     alone, and `strict` reports the leftover ambiguities instead of
+     resolving them. *)
+  | "" | "compat" | "on" | "true" | "1" -> Overload_compat
+  | "off" | "false" | "0" -> Overload_off
+  | "strict" -> Overload_strict
+  | illegal ->
+    failwith ("Option `--ext fstar:overload` expects one of `off`, `compat` or \
+               `strict`, but got `" ^ illegal ^ "`")
 
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()

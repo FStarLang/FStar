@@ -21,7 +21,7 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade.Util
 open FStar.List.Tot
 module U32 = FStar.UInt32
-open Pulse.Lib.BoundedIntegers
+open FStar.UInt32 { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 val llist (t:Type0) : Type0
 

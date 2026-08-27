@@ -27,14 +27,12 @@ module R = Pulse.Lib.Reference
 inline_for_extraction noextract
 let cbor_serialized_payload_t = A.array U8.t
 
-[@@no_auto_projectors]
 noeq
 type cbor_serialized = {
   cbor_serialized_size: SZ.t;
   cbor_serialized_payload: cbor_serialized_payload_t;
 }
 
-[@@no_auto_projectors]
 noeq
 type cbor_tagged0 = {
   cbor_tagged0_tag: U64.t;
@@ -79,7 +77,6 @@ and cbor =
   v: cbor_serialized ->
   cbor
 
-[@@no_auto_projectors]
 noeq
 type cbor_array_iterator_payload_t =
 | CBOR_Array_Iterator_Payload_Array:
@@ -89,14 +86,12 @@ type cbor_array_iterator_payload_t =
     payload: cbor_serialized_payload_t ->
     cbor_array_iterator_payload_t
 
-[@@no_auto_projectors]
 noeq
 type cbor_array_iterator_t = {
   cbor_array_iterator_length: U64.t;
   cbor_array_iterator_payload: cbor_array_iterator_payload_t;
 }
 
-[@@no_auto_projectors]
 noeq
 type cbor_map_iterator_payload_t =
 | CBOR_Map_Iterator_Payload_Map:
@@ -109,7 +104,6 @@ type cbor_map_iterator_payload_t =
 // NOTE: this type could be made abstract (with val and
 // CAbstractStruct, and then hiding cbor_array_iterator_payload_t
 // altogether), but then, users couldn't allocate on stack
-[@@no_auto_projectors]
 noeq
 type cbor_map_iterator_t = {
   cbor_map_iterator_length: U64.t;

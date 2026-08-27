@@ -416,7 +416,15 @@ let cache_file_name =
          but for a hierarchical source such as [A/B/C.fst] it yields
          [A.B.C.fst.checked] instead of [C.fst.checked], so that modules living
          in different namespaces do not collide in the cache directory. We keep
-         [fn]'s own extension (e.g. .fst / .fsti) rather than assuming one. *)
+         [fn]'s own extension (e.g. .fst / .fsti) rather than assuming one.
+
+         Only the *basename* is renamed: the checked file keeps living in the
+         same directory as its source, so [src/lowparse/LowParse.CLens.fst]
+         still yields [src/lowparse/LowParse.CLens.fst.checked] when no
+         --cache_dir is given (see [Find.prepend_cache_dir], which is the
+         identity in that case). When --cache_dir *is* given,
+         [prepend_cache_dir] drops the directory anyway, which is exactly where
+         the flattened hierarchical name matters. *)
       let cache_fn =
         let bn = Filepath.basename fn in
         let ext = match check_and_strip_suffix bn with
@@ -426,7 +434,11 @@ let cache_file_name =
                     // already have raised Fatal_NotValidFStarFile if [bn]
                     // had no valid F* extension.
                     failwith (Format.fmt1 "Impossible: cache_file_name: file without a valid F* extension: %s" fn) in
-        mname ^ ext ^ ".checked"
+        let cache_bn = mname ^ ext ^ ".checked" in
+        (* NB: guard on [bn = fn] instead of blindly joining, to avoid turning a
+           bare [B.fst] into [./B.fst.checked], which would leak into make
+           targets. *)
+        if bn = fn then cache_bn else Filepath.join_paths (Filepath.dirname fn) cache_bn
       in
       match Find.find_file (cache_fn |> Filepath.basename) with
       | Some path ->
@@ -1037,9 +1049,9 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
     collect_term' t.tm
 
   and collect_constant (c: sconst) : ML unit = match c with
-    | Const_int (_, Some (Unsigned, Sizet)) ->
+    | Const_machine_int (_, _, Unsigned, Sizet) ->
         add_to_parsing_data (P_dep (false, ("fstar.sizeT" |> Ident.lid_of_str)))
-    | Const_int (_, Some (signedness, width)) ->
+    | Const_machine_int (_, _, signedness, width) ->
         let u = match signedness with | Unsigned -> "u" | Signed -> "" in
         let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
         add_to_parsing_data (P_dep (false, (Format.fmt2 "fstar.%sint%s" u w |> Ident.lid_of_str)))

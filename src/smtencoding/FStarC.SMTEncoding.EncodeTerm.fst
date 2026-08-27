@@ -299,33 +299,33 @@ let rec curried_arrow_formals_comp k =
 let is_arithmetic_primitive head args =
     match head.n, args with
     | Tm_fvar fv, [_;_]->
-      S.fv_eq_lid fv Const.op_Addition
-      || S.fv_eq_lid fv Const.op_Subtraction
+      S.fv_eq_lid fv Const.op_Plus
+      || S.fv_eq_lid fv Const.op_Minus
       || S.fv_eq_lid fv Const.op_Star
-      || S.fv_eq_lid fv Const.op_Division
-      || S.fv_eq_lid fv Const.op_Modulus
+      || S.fv_eq_lid fv Const.op_Slash
+      || S.fv_eq_lid fv Const.op_Percent
       || S.fv_eq_lid fv Const.real_op_LT
       || S.fv_eq_lid fv Const.real_op_LTE
       || S.fv_eq_lid fv Const.real_op_GT
       || S.fv_eq_lid fv Const.real_op_GTE
-      || S.fv_eq_lid fv Const.real_op_Addition
-      || S.fv_eq_lid fv Const.real_op_Subtraction
-      || S.fv_eq_lid fv Const.real_op_Multiply
-      || S.fv_eq_lid fv Const.real_op_Division
+      || S.fv_eq_lid fv Const.real_op_Plus
+      || S.fv_eq_lid fv Const.real_op_Minus
+      || S.fv_eq_lid fv Const.real_op_Star
+      || S.fv_eq_lid fv Const.real_op_Slash
 
     | Tm_fvar fv, [_] ->
-      S.fv_eq_lid fv Const.op_Minus
+      S.fv_eq_lid fv Const.op_Tilde_Minus
 
     | _ -> false
 
 let isInteger (tm: Syntax.term') : bool =
     match tm with
-    | Tm_constant (Const_int (n,None)) -> true
+    | Tm_constant (Const_int _) -> true
     | _ -> false
 
 let getInteger (tm : Syntax.term') =
     match tm with
-    | Tm_constant (Const_int (n,None)) -> FStarC.Util.int_of_string n
+    | Tm_constant (Const_int (n, _)) -> n
     | _ -> failwith "Expected an Integer term"
 
 (* We only want to encode a term as a bitvector term (not an uninterpreted function)
@@ -392,9 +392,9 @@ let rec encode_const c env : ML _ =
     | Const_bool true -> boxBool mkTrue, []
     | Const_bool false -> boxBool mkFalse, []
     | Const_char c -> mkApp("FStar.Char.__char_of_int", [boxInt (mkInteger' (BU.int_of_char c))]), []
-    | Const_int (i, None)  -> boxInt (mkInteger i), []
-    | Const_int (repr, Some sw) ->
-      let syntax_term = FStarC.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
+    | Const_int (i, _)  -> boxInt (mkInteger' i), []
+    | Const_machine_int (repr, base, sw, w) ->
+      let syntax_term = FStarC.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr base (sw, w) Range.dummyRange in
       encode_term syntax_term env
     | Const_string(s, _) -> Term.boxString <| mk_String_const s, []
     | Const_range _ -> mk_Range_const (), []
@@ -479,16 +479,16 @@ and encode_arith_term env head args_e : ML _ =
     let div (box: _ -> ML _) (unbox: _ -> ML _) nm = mk_nl box unbox nm Util.mkDiv in
     let modulus (box: _ -> ML _) (unbox: _ -> ML _) = mk_nl box unbox "_mod" Util.mkMod in
     let ops : list (Ident.lident & (list term -> ML term)) =
-        [(Const.op_Addition,    add Term.boxInt Term.unboxInt);
-         (Const.op_Subtraction, sub Term.boxInt Term.unboxInt);
+        [(Const.op_Plus,    add Term.boxInt Term.unboxInt);
+         (Const.op_Minus, sub Term.boxInt Term.unboxInt);
          (Const.op_Star,        mul Term.boxInt Term.unboxInt "_mul");
-         (Const.op_Division,    div Term.boxInt Term.unboxInt "_div");
-         (Const.op_Modulus,     modulus Term.boxInt Term.unboxInt);
-         (Const.op_Minus,       minus Term.boxInt Term.unboxInt);
-         (Const.real_op_Addition,    add Term.boxReal Term.unboxReal);
-         (Const.real_op_Subtraction, sub Term.boxReal Term.unboxReal);
-         (Const.real_op_Multiply,    mul Term.boxReal Term.unboxReal "_rmul");
-         (Const.real_op_Division,    mk_nl Term.boxReal Term.unboxReal "_rdiv" Util.mkRealDiv);
+         (Const.op_Slash,    div Term.boxInt Term.unboxInt "_div");
+         (Const.op_Percent,     modulus Term.boxInt Term.unboxInt);
+         (Const.op_Tilde_Minus,       minus Term.boxInt Term.unboxInt);
+         (Const.real_op_Plus,    add Term.boxReal Term.unboxReal);
+         (Const.real_op_Minus, sub Term.boxReal Term.unboxReal);
+         (Const.real_op_Star,    mul Term.boxReal Term.unboxReal "_rmul");
+         (Const.real_op_Slash,    mk_nl Term.boxReal Term.unboxReal "_rdiv" Util.mkRealDiv);
          (Const.real_op_LT,          mk_l Term.boxBool Util.mkLT  (binary Term.unboxReal));
          (Const.real_op_LTE,         mk_l Term.boxBool Util.mkLTE (binary Term.unboxReal));
          (Const.real_op_GT,          mk_l Term.boxBool Util.mkGT  (binary Term.unboxReal));
@@ -514,7 +514,7 @@ and encode_arith_term env head args_e : ML _ =
         (* forall (x:Term). HasType x (bv_t n) ==> is-BoxVec#n x *)
         let bv_t_n, decls =
           let head = S.lid_as_fv FStarC.Parser.Const.bv_t_lid None in
-          let n_tm = S.mk (Tm_constant (FStarC.Const.Const_int (show n, None))) tm_sz.pos in
+          let n_tm = S.mk (Tm_constant (FStarC.Const.Const_int (n, Dec))) tm_sz.pos in
           let t = U.mk_app (S.fv_to_tm head) [n_tm, None] in
           encode_term t env
         in

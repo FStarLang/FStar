@@ -1,6 +1,6 @@
 open Prims
 let rec arith_expr_to_bv (e : FStar_Reflection_V2_Arith.expr) :
-  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate -> unit=
   match e with
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.MulMod
       (e1, uu___)) ->
@@ -284,7 +284,7 @@ let rec arith_expr_to_bv (e : FStar_Reflection_V2_Arith.expr) :
          arith_expr_to_bv e2 ps)
   | uu___ -> FStar_Tactics_V2_Derived.trefl ()
 let arith_to_bv_tac (uu___ : unit) :
-  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+  FStarC_Tactics_Types.ref_proofstate -> unit=
   FStar_Tactics_V2_Derived.focus
     (fun uu___1 ps ->
        FStarC_Tactics_V2_Builtins.norm
@@ -322,7 +322,7 @@ let _ =
                (FStarC_Tactics_Native.from_tactic_1 arith_to_bv_tac)
                FStarC_Syntax_Embeddings.e_unit
                FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let bv_tac (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+let bv_tac (uu___ : unit) : FStarC_Tactics_Types.ref_proofstate -> unit=
   FStar_Tactics_V2_Derived.focus
     (fun uu___1 ps ->
        FStar_Tactics_MApply0.mapply0
@@ -353,13 +353,14 @@ let _ =
                (FStarC_Tactics_Native.from_tactic_1 bv_tac)
                FStarC_Syntax_Embeddings.e_unit
                FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let bv_tac_lt (n : Prims.int) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+let bv_tac_lt (n : Prims.int) : FStarC_Tactics_Types.ref_proofstate -> unit=
   FStar_Tactics_V2_Derived.focus
     (fun uu___ ps ->
        let x =
          FStar_Tactics_NamedView.pack
            (FStar_Tactics_NamedView.Tv_Const
-              (FStarC_Reflection_V2_Data.C_Int n)) in
+              (FStarC_Reflection_V2_Data.C_Int
+                 (n, (FStar_Sealed.seal FStar_IntegerLiteral.Dec)))) in
        let x1 =
          FStar_Reflection_V2_Derived.mk_app
            (FStarC_Reflection_V2_Builtins.pack_ln
@@ -385,7 +386,7 @@ let _ =
                (FStarC_Tactics_Native.from_tactic_1 bv_tac_lt)
                FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit
                psc ncb us args)
-let to_bv_tac (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+let to_bv_tac (uu___ : unit) : FStarC_Tactics_Types.ref_proofstate -> unit=
   FStar_Tactics_V2_Derived.focus
     (fun uu___1 ps ->
        FStar_Tactics_V2_Derived.apply_lemma

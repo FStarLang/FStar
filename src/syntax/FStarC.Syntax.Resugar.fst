@@ -112,16 +112,16 @@ let rec resugar_universe (u:S.universe) r: ML A.term =
   let u = Subst.compress_univ u in
   begin match u with
     | U_zero ->
-      mk (A.Const(Const_int ("0", None))) r
+      mk (A.Const(Const_int (0, Dec))) r
 
     | U_succ _ ->
       let (n, u) = universe_to_int 0 u in
       begin match u with
       | U_zero ->
-        mk (A.Const(Const_int(show n, None))) r
+        mk (A.Const(Const_int(n, Dec))) r
 
       | _ ->
-        let e1 = mk (A.Const(Const_int(show n, None))) r in
+        let e1 = mk (A.Const(Const_int(n, Dec))) r in
         let e2 = resugar_universe u r in
         mk (A.Op(Ident.id_of_text "+", [e1; e2])) r
       end
@@ -151,15 +151,15 @@ let resugar_universe' (env: DsEnv.env) (u:S.universe) r: ML A.term =
 type expected_arity = option int
 
 (* GM: This almost never actually returns an expected arity. It does so
-only for subtraction, I think. *)
+only for tuples and dependent tuples. *)
 let rec resugar_term_as_op (t:S.term) : ML (option (string&expected_arity)) =
   let infix_prim_ops = [
-    (C.op_Addition    , "+" );
-    (C.op_Subtraction , "-" );
+    (C.op_Plus        , "+" );
     (C.op_Minus       , "-" );
+    (C.op_Tilde_Minus , "~-");
     (C.op_Star        , "*" );
-    (C.op_Division    , "/" );
-    (C.op_Modulus     , "%" );
+    (C.op_Slash       , "/" );
+    (C.op_Percent     , "%" );
     (C.read_lid       , "!" );
     (C.list_append_lid, "@" );
     (C.list_tot_append_lid,"@");
@@ -173,7 +173,7 @@ let rec resugar_term_as_op (t:S.term) : ML (option (string&expected_arity)) =
     (C.op_GTE         , ">=");
     (C.op_LT          , "<" );
     (C.op_GT          , ">" );
-    (C.op_Modulus     , "mod");
+    (C.op_Percent     , "mod");
     (C.and_lid     , "/\\");
     (C.or_lid      , "\\/");
     (C.imp_lid     , "==>");
@@ -208,7 +208,7 @@ let rec resugar_term_as_op (t:S.term) : ML (option (string&expected_arity)) =
       let s = if length=0 then string_of_lid fv.fv_name
               else BU.substring_from (string_of_lid fv.fv_name) (length+1) in
       begin match string_to_op s with
-        | Some t -> Some t
+        | Some t -> Some (t, None)
         | _ -> fallback fv
       end
     | Tm_uinst(e, us) ->
@@ -268,10 +268,10 @@ let parse_machine_integer_desc =
 let can_resugar_machine_integer_fv fv =
   Some? (parse_machine_integer_desc fv)
 
-let resugar_machine_integer fv (i:string) pos =
+let resugar_machine_integer fv (i:int) (b:int_base) pos =
   match parse_machine_integer_desc fv with
   | None -> failwith "Impossible: should be guarded by can_resugar_machine_integer"
-  | Some (sw, _) -> A.mk_term (A.Const (Const_int(i, Some sw))) pos A.Un
+  | Some ((sw, w), _) -> A.mk_term (A.Const (Const_machine_int(i, b, sw, w))) pos A.Un
 
 let rec __is_list_literal cons_lid nil_lid (t:S.term) : ML (option (list S.term)) =
   let open FStarC.Class.Monad in
@@ -290,14 +290,14 @@ let rec __is_list_literal cons_lid nil_lid (t:S.term) : ML (option (list S.term)
 let is_list_literal = __is_list_literal C.cons_lid C.nil_lid
 let is_seq_literal  = __is_list_literal C.seq_cons_lid C.seq_empty_lid
 
-let can_resugar_machine_integer (hd : S.term) (args : S.args) : ML (option (fv & string)) =
+let can_resugar_machine_integer (hd : S.term) (args : S.args) : ML (option (fv & int & int_base)) =
   match (SS.compress hd).n with
   | Tm_fvar fv when can_resugar_machine_integer_fv fv -> (
     match args with
     | [(a, None)] -> (
       match (SS.compress a).n with
-      | Tm_constant (Const_int (i, None)) ->
-        Some (fv, i)
+      | Tm_constant (Const_int (i, b)) ->
+        Some (fv, i, b)
       | _ -> None
     )
     | _ -> None
@@ -463,8 +463,8 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       when (let hd, args = U.head_and_args_full t in
             Some? (can_resugar_machine_integer hd args)) ->
       let hd, args = U.head_and_args_full t in
-      let Some (fv, i) = can_resugar_machine_integer hd args in
-      resugar_machine_integer fv i t.pos
+      let Some (fv, i, b) = can_resugar_machine_integer hd args in
+      resugar_machine_integer fv i b t.pos
 
     | Tm_app _ ->
       let t = U.canon_app t in
@@ -746,7 +746,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                 let decompile_op op =
                    match FStarC.Parser.AST.string_to_op op with
                    | None -> op
-                  | Some (op, _) -> op
+                   | Some op -> op
                 in
                 let flavor_matches t =
                   match t.tm, op with
@@ -1360,7 +1360,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : ML A.pattern =
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
       begin match string_to_op (string_of_id v.ppname) with
-       | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, (range_of_id v.ppname))))
+       | Some op -> mk (A.PatOp (Ident.mk_ident (op, (range_of_id v.ppname))))
        | None -> resugar_bv_as_pat' env v (to_arg_qual imp_opt) branch_bv None
       end
 

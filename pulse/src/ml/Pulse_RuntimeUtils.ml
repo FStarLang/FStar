@@ -161,7 +161,8 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
           no_uvars_in_term e
         then (
           match e.n with
-          | S.Tm_fvar { fv_qual = Some _ } ->
+          | S.Tm_fvar { fv_qual = Some q }
+              when not (S.uu___is_Unresolved_name q) ->
             (* record projectors etc. are pure *)
             None 
           | _ ->

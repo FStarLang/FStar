@@ -231,7 +231,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : ML (option (t
                 match c.nbe_t with
                 | Constant (Unit) -> s = C.Const_unit
                 | Constant (Bool b) -> (match s with | C.Const_bool p -> b = p | _ -> false)
-                | Constant (Int i) -> (match s with | C.Const_int (p, None) -> i = BU.int_of_string p | _ -> false)
+                | Constant (Int i) -> (match s with | C.Const_int (p, _) -> i = p | _ -> false)
                 | Constant (String (st, _)) -> (match s with | C.Const_string(p, _) -> st = p | _ -> false)
                 | Constant (Char c) -> (match s with | C.Const_char p -> c = p | _ -> false)
                 | _ -> false
@@ -733,6 +733,37 @@ and translate_comp cfg bs (c:S.comp) : ML comp =
   | S.Comp   ctyp -> Comp (translate_comp_typ cfg bs ctyp)
 
 (* uncurried application *)
+and reduce_disc_proj (cfg : config) (h:fv) (args:args) : ML (option t) =
+  let tcenv = Cfg.cfg_env cfg.core_cfg in
+  if not cfg.core_cfg.steps.iota then None else
+  match Env.disc_proj_info tcenv (S.lid_of_fv h) with
+  | None -> None
+  | Some (q, n_indexed, idx) ->
+    let d = match q with
+            | Projector (d, _) -> d
+            | Discriminator d -> d
+            | _ -> failwith "reduce_disc_proj: impossible" in
+    if List.length args <= n_indexed then None else
+    let scrutinee = fst (List.nth args n_indexed) in
+    (* A projector can be over-applied; re-apply the extra arguments. *)
+    let _, rest = List.splitAt (n_indexed + 1) args in
+    let reapply (x:t) : ML t = if Nil? rest then x else iapp cfg x rest in
+    (match (unlazy_unmeta scrutinee).nbe_t with
+     | Construct (c, _, cargs_rev) ->
+       let same = Ident.lid_equals (S.lid_of_fv c) d in
+       (match q with
+        | Discriminator _ ->
+          Some (reapply (mk_t <| Constant (Bool same)))
+        | _ ->
+          if not same then None else
+          match idx with
+          | None -> None
+          | Some i ->
+            let cargs = List.rev cargs_rev in
+            if List.length cargs <= i then None
+            else Some (reapply (fst (List.nth cargs i))))
+     | _ -> None)
+
 and iapp (cfg : config) (f:t) (args:args) : ML t =
   // meta and lazy nodes shouldn't block reduction
   let mk t = mk_rt f.nbe_r t in
@@ -788,7 +819,11 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
       | [] -> (us, ts)
     in
     let (us', ts') = aux args us ts in
-    mk <| FV (i, us', ts')
+    (* Projectors and discriminators have no definition to unfold; this is the
+       NBE counterpart of Normalize.reduce_disc_proj. *)
+    (match reduce_disc_proj cfg i (List.rev ts') with
+     | Some t -> t
+     | None -> mk <| FV (i, us', ts'))
 
   | TopLevelLet(lb, arity, args_rev) ->
     let args_rev = List.rev_append args args_rev in
@@ -1005,7 +1040,7 @@ and translate_constant (c : sconst) : ML constant =
     match c with
     | C.Const_unit -> Unit
     | C.Const_bool b -> Bool b
-    | C.Const_int (s, None) -> Int (BU.int_of_string s)
+    | C.Const_int (i, _) -> Int i
     | C.Const_string (s, r) -> String (s,r)
     | C.Const_char c -> Char c
     | C.Const_range r -> Range r
@@ -1115,11 +1150,11 @@ and readback (cfg:config) (x:t) : ML term =
     | Constant Unit -> with_range S.unit_const
     | Constant (Bool true) -> with_range U.exp_true_bool
     | Constant (Bool false) -> with_range U.exp_false_bool
-    | Constant (Int i) -> with_range (U.exp_int (show i))
+    | Constant (Int i) -> with_range (U.exp_int i)
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
     | Constant (Range r) -> PO.embed_simple #_ #EMB.e_range x.nbe_r r
-    | Constant (Real r) ->  PO.embed_simple x.nbe_r (Real.Real r)
+    | Constant (Real r) ->  PO.embed_simple #_ #EMB.e_real x.nbe_r r
     | Constant (SConst c) -> mk (S.Tm_constant c)
 
     | Meta(t, m) ->

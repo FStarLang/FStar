@@ -106,10 +106,11 @@ let compare_const (c1 : FStarC_Reflection_V2_Data.vconst)
   match (c1, c2) with
   | (FStarC_Reflection_V2_Data.C_Unit, FStarC_Reflection_V2_Data.C_Unit) ->
       FStar_Order.Eq
-  | (FStarC_Reflection_V2_Data.C_Int i, FStarC_Reflection_V2_Data.C_Int j) ->
+  | (FStarC_Reflection_V2_Data.C_Int (i, uu___),
+     FStarC_Reflection_V2_Data.C_Int (j, uu___1)) ->
       FStar_Order.order_from_int (i - j)
-  | (FStarC_Reflection_V2_Data.C_MachineInt (i1, s1, w1),
-     FStarC_Reflection_V2_Data.C_MachineInt (i2, s2, w2)) ->
+  | (FStarC_Reflection_V2_Data.C_MachineInt (i1, uu___, s1, w1),
+     FStarC_Reflection_V2_Data.C_MachineInt (i2, uu___1, s2, w2)) ->
       let c = FStar_Order.order_from_int (i1 - i2) in
       if c <> FStar_Order.Eq
       then c
@@ -131,21 +132,21 @@ let compare_const (c1 : FStarC_Reflection_V2_Data.vconst)
   | (FStarC_Reflection_V2_Data.C_Reflect l1,
      FStarC_Reflection_V2_Data.C_Reflect l2) -> compare_name l1 l2
   | (FStarC_Reflection_V2_Data.C_Real r1, FStarC_Reflection_V2_Data.C_Real
-     r2) ->
-      FStar_Order.order_from_int
-        (FStarC_Reflection_V2_Builtins.compare_string r1 r2)
+     r2) -> FStar_Order.order_from_int (FStar_RealLiteral.compare r1 r2)
   | (FStarC_Reflection_V2_Data.C_Char c11, FStarC_Reflection_V2_Data.C_Char
      c21) ->
       FStar_Order.order_from_int
         ((FStar_Char.int_of_char c11) - (FStar_Char.int_of_char c21))
   | (FStarC_Reflection_V2_Data.C_Unit, uu___) -> FStar_Order.Lt
   | (uu___, FStarC_Reflection_V2_Data.C_Unit) -> FStar_Order.Gt
-  | (FStarC_Reflection_V2_Data.C_Int uu___, uu___1) -> FStar_Order.Lt
-  | (uu___, FStarC_Reflection_V2_Data.C_Int uu___1) -> FStar_Order.Gt
-  | (FStarC_Reflection_V2_Data.C_MachineInt (uu___, uu___1, uu___2), uu___3)
-      -> FStar_Order.Lt
-  | (uu___, FStarC_Reflection_V2_Data.C_MachineInt (uu___1, uu___2, uu___3))
-      -> FStar_Order.Gt
+  | (FStarC_Reflection_V2_Data.C_Int (uu___, uu___1), uu___2) ->
+      FStar_Order.Lt
+  | (uu___, FStarC_Reflection_V2_Data.C_Int (uu___1, uu___2)) ->
+      FStar_Order.Gt
+  | (FStarC_Reflection_V2_Data.C_MachineInt (uu___, uu___1, uu___2, uu___3),
+     uu___4) -> FStar_Order.Lt
+  | (uu___, FStarC_Reflection_V2_Data.C_MachineInt
+     (uu___1, uu___2, uu___3, uu___4)) -> FStar_Order.Gt
   | (FStarC_Reflection_V2_Data.C_True, uu___) -> FStar_Order.Lt
   | (uu___, FStarC_Reflection_V2_Data.C_True) -> FStar_Order.Gt
   | (FStarC_Reflection_V2_Data.C_False, uu___) -> FStar_Order.Lt
@@ -520,8 +521,10 @@ and __compare_comp (c1 : FStarC_Reflection_Types.comp)
         (fun uu___ ->
            FStar_Order.lex (__compare_term q1 q2)
              (fun uu___1 -> __compare_term s1 s2))
-  | (FStarC_Reflection_V2_Data.C_Eff (us1, eff1, res1, args1, _decrs1),
-     FStarC_Reflection_V2_Data.C_Eff (us2, eff2, res2, args2, _decrs2)) ->
+  | (FStarC_Reflection_V2_Data.C_Eff
+     (us1, eff1, res1, _pre1, _post1, _decrs1),
+     FStarC_Reflection_V2_Data.C_Eff
+     (us2, eff2, res2, _pre2, _post2, _decrs2)) ->
       FStar_Order.lex (compare_universes us1 us2)
         (fun uu___ ->
            FStar_Order.lex (compare_name eff1 eff2)
@@ -534,10 +537,11 @@ and __compare_comp (c1 : FStarC_Reflection_Types.comp)
       FStar_Order.Lt
   | (uu___, FStarC_Reflection_V2_Data.C_Lemma (uu___1, uu___2, uu___3)) ->
       FStar_Order.Gt
-  | (FStarC_Reflection_V2_Data.C_Eff (uu___, uu___1, uu___2, uu___3, uu___4),
-     uu___5) -> FStar_Order.Lt
+  | (FStarC_Reflection_V2_Data.C_Eff
+     (uu___, uu___1, uu___2, uu___3, uu___4, uu___5), uu___6) ->
+      FStar_Order.Lt
   | (uu___, FStarC_Reflection_V2_Data.C_Eff
-     (uu___1, uu___2, uu___3, uu___4, uu___5)) -> FStar_Order.Gt
+     (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6)) -> FStar_Order.Gt
 and __compare_binder (b1 : FStarC_Reflection_Types.binder)
   (b2 : FStarC_Reflection_Types.binder) : FStar_Order.order=
   let bview1 = FStarC_Reflection_V2_Builtins.inspect_binder b1 in

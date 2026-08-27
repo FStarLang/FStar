@@ -1,25 +1,30 @@
 module ExtProjectorOfCtor
 
-/// A projector applied directly to a constructor application. **Known krml
-/// crash, XFAIL_C.**
+/// A projector applied directly to a constructor application. This used to be
+/// a **krml crash** (FINDINGS.md #11), fixed by making projectors and
+/// discriminators declaration-only: the normalizer now reduces
+/// `Circle?.radius (Circle seven)` to `seven` before extraction, so no
+/// anonymous struct literal reaches the C printer. Kept as a regression test.
 ///
-/// `Circle?.radius (Circle seven)` makes the C backend die with an uncaught
-/// OCaml exception:
+/// The original failure was:
 ///
 ///     Fatal error: exception Failure("Expected a type annotation for:
 ///       (CStar.Struct (None, [((Some "tag"), ...); (None, (CStar.Struct
 ///       (None, [((Some "case_Circle"), ...)])))]))")
 ///
-/// i.e. the anonymous struct literal for `Circle seven` reaches the C printer
-/// with no type to give the compound literal. `let c = Circle seven in
+/// i.e. the anonymous struct literal for `Circle seven` reached the C printer
+/// with no type to give the compound literal. The Rust backend emitted
+/// `match shape::Circle { radius: seven } { ... }`, which rustc rejected
+/// ("struct literals are not allowed here"). `let c = Circle seven in
 /// Circle?.radius c` and `match Circle seven with | Circle r -> r | _ -> 0ul`
-/// both work, so the workaround is to bind the constructor application first
-/// -- which is why every other module in this directory does exactly that.
+/// both worked, so the workaround was to bind the constructor application
+/// first -- which is why every other module in this directory does exactly
+/// that.
 ///
-/// This is severity 4: krml aborts with an unhandled exception rather than a
-/// diagnostic, so there is no usable output and the message says nothing
-/// about the user's source. Note that krml still *exits 0*, so a build system
-/// that only checks the exit status will happily carry on with no output
+/// This was severity 4: krml aborted with an unhandled exception rather than a
+/// diagnostic, so there was no usable output and the message said nothing
+/// about the user's source. Note that krml still *exited 0*, so a build system
+/// that only checks the exit status would happily carry on with no output
 /// file.
 
 module I32 = FStar.Int32

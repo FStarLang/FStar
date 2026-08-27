@@ -23,8 +23,14 @@ let mlconst_of_const' (sctt : FStarC_Const.sconst) :
   | FStarC_Const.Const_range uu___ -> FStarC_Extraction_ML_Syntax.MLC_Unit
   | FStarC_Const.Const_unit -> FStarC_Extraction_ML_Syntax.MLC_Unit
   | FStarC_Const.Const_char c -> FStarC_Extraction_ML_Syntax.MLC_Char c
-  | FStarC_Const.Const_int (s, i) ->
-      FStarC_Extraction_ML_Syntax.MLC_Int (s, i)
+  | FStarC_Const.Const_int (v, b) ->
+      FStarC_Extraction_ML_Syntax.MLC_Int
+        ((FStarC_Const.string_of_int_literal v b),
+          FStar_Pervasives_Native.None)
+  | FStarC_Const.Const_machine_int (v, b, s, w) ->
+      FStarC_Extraction_ML_Syntax.MLC_Int
+        ((FStarC_Const.string_of_int_literal v b),
+          (FStar_Pervasives_Native.Some (s, w)))
   | FStarC_Const.Const_bool b -> FStarC_Extraction_ML_Syntax.MLC_Bool b
   | FStarC_Const.Const_string (s, uu___) ->
       FStarC_Extraction_ML_Syntax.MLC_String s
@@ -494,7 +500,7 @@ let rec eraseTypeDeep (unfold_ty : unfold_t)
   | uu___ -> t
 let prims_op_equality : FStarC_Extraction_ML_Syntax.mlexpr=
   FStarC_Extraction_ML_Syntax.with_ty FStarC_Extraction_ML_Syntax.MLTY_Top
-    (FStarC_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_Equality"))
+    (FStarC_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_Equals"))
 let prims_op_amp_amp : FStarC_Extraction_ML_Syntax.mlexpr=
   let uu___ =
     mk_ty_fun
@@ -511,7 +517,7 @@ let prims_op_amp_amp : FStarC_Extraction_ML_Syntax.mlexpr=
         FStarC_Extraction_ML_Syntax.mlbinder_attrs = []
       }] FStarC_Extraction_ML_Syntax.ml_bool_ty in
   FStarC_Extraction_ML_Syntax.with_ty uu___
-    (FStarC_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_AmpAmp"))
+    (FStarC_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_Amp_Amp"))
 let conjoin (e1 : FStarC_Extraction_ML_Syntax.mlexpr)
   (e2 : FStarC_Extraction_ML_Syntax.mlexpr) :
   FStarC_Extraction_ML_Syntax.mlexpr=

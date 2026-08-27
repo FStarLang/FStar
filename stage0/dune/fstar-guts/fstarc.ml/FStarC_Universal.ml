@@ -184,8 +184,7 @@ let pop_iface_solver_frame (env : uenv) (name : Prims.string) : unit=
         (tcenv.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.rollback
           name (FStar_Pervasives_Native.Some depth);
         (let uu___4 =
-           let uu___5 = FStarC_Options.interactive () in
-           Prims.op_Negation uu___5 in
+           let uu___5 = FStarC_Options.interactive () in Prims.not uu___5 in
          if uu___4
          then
            FStarC_SMTEncoding_Env.varops.FStarC_SMTEncoding_Env.reset_scope
@@ -196,7 +195,7 @@ let pop_iface_solver_frame (env : uenv) (name : Prims.string) : unit=
              match uu___4 with
              | (tcmod, smt_decls) ->
                  (if
-                    Prims.op_Negation
+                    Prims.not
                       (FStarC_SMTEncoding_Env.is_empty_encoding smt_decls)
                   then
                     FStarC_SMTEncoding_Encode.encode_modul_from_cache tcenv
@@ -244,7 +243,7 @@ let core_check : FStarC_TypeChecker_Env.core_check_t=
   fun env tm t must_tot ->
     let uu___ =
       let uu___1 = FStarC_Options.compat_pre_core_should_check () in
-      Prims.op_Negation uu___1 in
+      Prims.not uu___1 in
     if uu___
     then FStar_Pervasives.Inl FStar_Pervasives_Native.None
     else
@@ -268,8 +267,10 @@ let parse_frag (frag : FStarC_Parser_ParseIt.input_frag)
   (lang_decls : lang_decls_t) : FStarC_Parser_Driver.fragment=
   let use_lang_decl ds =
     FStarC_List.tryFind
-      (fun d -> FStarC_Parser_AST.uu___is_UseLangDecls d.FStarC_Parser_AST.d)
-      ds in
+      (fun d ->
+         match d.FStarC_Parser_AST.d with
+         | FStarC_Parser_AST.UseLangDecls _0 -> true
+         | uu___ -> false) ds in
   let uu___ = use_lang_decl lang_decls in
   match uu___ with
   | FStar_Pervasives_Native.None ->
@@ -320,7 +321,7 @@ let tc_one_fragment (is_interface : Prims.bool)
     | uu___ -> false in
   let check_module_name_declaration ast_modul =
     (let uu___1 =
-       let uu___2 = acceptable_mod_name ast_modul in Prims.op_Negation uu___2 in
+       let uu___2 = acceptable_mod_name ast_modul in Prims.not uu___2 in
      if uu___1
      then
        let msg =
@@ -489,7 +490,9 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
         ((let uu___1 =
             let uu___2 =
               let uu___3 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___3 in
+              match uu___3 with
+              | FStar_Pervasives_Native.Some v -> true
+              | uu___4 -> false in
             if uu___2
             then (FStarC_List.length mllib) > Prims.int_one
             else false in
@@ -526,7 +529,9 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
         ((let uu___1 =
             let uu___2 =
               let uu___3 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___3 in
+              match uu___3 with
+              | FStar_Pervasives_Native.Some v -> true
+              | uu___4 -> false in
             if uu___2
             then (FStarC_List.length mllib) > Prims.int_one
             else false in
@@ -563,7 +568,9 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
         ((let uu___1 =
             let uu___2 =
               let uu___3 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___3 in
+              match uu___3 with
+              | FStar_Pervasives_Native.Some v -> true
+              | uu___4 -> false in
             if uu___2
             then (FStarC_List.length mllib) > Prims.int_one
             else false in
@@ -596,7 +603,9 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
         ((let uu___1 =
             let uu___2 =
               let uu___3 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___3 in
+              match uu___3 with
+              | FStar_Pervasives_Native.Some v -> true
+              | uu___4 -> false in
             if uu___2
             then (FStarC_List.length mllib) > Prims.int_one
             else false in
@@ -704,7 +713,7 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                   FStarC_Options.should_extract
                     (FStarC_Ident.string_of_lid
                        tcmod.FStarC_Syntax_Syntax.name) tgt in
-                Prims.op_Negation uu___4 in
+                Prims.not uu___4 in
               if uu___3
               then (FStar_Pervasives_Native.None, Prims.int_zero)
               else
@@ -769,7 +778,7 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                              FStarC_SMTEncoding_Encode.encode_modul
                                (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env3)
                                modul in
-                         if Prims.op_Negation skip_solver
+                         if Prims.not skip_solver
                          then record_encoded_modul modul smt_decls
                          else ();
                          ((modul, smt_decls), env3)))) in
@@ -818,11 +827,9 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                                   FStarC_CheckedFiles.extraction_time =
                                     (extract_time + iface_extraction_time)
                                 }, extracted_defs, env3))) in
-              let uu___4 = FStarC_Parser_ParseIt.find_file fn in
-              FStarC_SMTEncoding_Solver.with_hints_db uu___4 check_mod in
+              check_mod () in
         let uu___2 =
-          let uu___3 = FStarC_Options.cache_off () in
-          Prims.op_Negation uu___3 in
+          let uu___3 = FStarC_Options.cache_off () in Prims.not uu___3 in
         if uu___2
         then
           let r =
@@ -844,11 +851,15 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                  else
                    (let uu___6 =
                       let uu___7 = FStarC_Options.output_to () in
-                      FStar_Pervasives_Native.uu___is_Some uu___7 in
+                      match uu___7 with
+                      | FStar_Pervasives_Native.Some v -> true
+                      | uu___8 -> false in
                     if uu___6
                     then
                       let uu___7 = FStarC_Options.codegen () in
-                      FStar_Pervasives_Native.uu___is_None uu___7
+                      match uu___7 with
+                      | FStar_Pervasives_Native.None -> true
+                      | uu___8 -> false
                     else false))
               else false in
             if uu___3 then FStar_Pervasives_Native.None else r in
@@ -860,8 +871,7 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                     FStarC_Options.should_be_already_cached uu___6 in
                   if uu___5
                   then
-                    let uu___6 = FStarC_Options.force () in
-                    Prims.op_Negation uu___6
+                    let uu___6 = FStarC_Options.force () in Prims.not uu___6
                   else false in
                 if uu___4
                 then
@@ -878,12 +888,13 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                   let uu___6 =
                     let uu___7 =
                       let uu___8 = FStarC_Options.codegen () in
-                      FStar_Pervasives_Native.uu___is_Some uu___8 in
+                      match uu___8 with
+                      | FStar_Pervasives_Native.Some v -> true
+                      | uu___9 -> false in
                     if uu___7 then FStarC_Options.cmi () else false in
                   if uu___6
                   then
-                    let uu___7 = FStarC_Options.force () in
-                    Prims.op_Negation uu___7
+                    let uu___7 = FStarC_Options.force () in Prims.not uu___7
                   else false in
                 if uu___5
                 then
@@ -905,10 +916,7 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                           let uu___9 = FStarC_Errors.get_err_count () in
                           uu___9 = Prims.int_zero in
                         if uu___8
-                        then
-                          FStarC_Options.should_check
-                            (FStarC_Ident.string_of_lid
-                               (tc_result.FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name)
+                        then FStarC_Options.should_write_checked_file fn
                         else false in
                       if uu___7
                       then
@@ -944,14 +952,14 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                         FStarC_TypeChecker_Tc.load_checked_module tcenv1
                           tcmod1 in
                       (restore_opts ();
-                       if Prims.op_Negation skip_solver
+                       if Prims.not skip_solver
                        then
                          FStarC_SMTEncoding_Encode.defer_encoding
                            (fun uu___8 ->
                               let smt_decls =
                                 tc_result.FStarC_CheckedFiles.smt_encoding in
                               if
-                                Prims.op_Negation
+                                Prims.not
                                   (FStarC_SMTEncoding_Env.is_empty_encoding
                                      smt_decls)
                               then
@@ -982,8 +990,7 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                                tcmod.FStarC_Syntax_Syntax.name) tgt in
                         if uu___6
                         then
-                          (Prims.op_Negation
-                             tcmod.FStarC_Syntax_Syntax.is_interface)
+                          (Prims.not tcmod.FStarC_Syntax_Syntax.is_interface)
                             || (tgt = FStarC_Options.Krml)
                         else false in
                       if uu___5
@@ -1065,7 +1072,10 @@ and fly_deps_check (filename : Prims.string) (env : uenv)
        (FStar_Pervasives_Native.None, env1) decls in
    match uu___2 with
    | (mod1, env2) ->
-       (if FStar_Pervasives_Native.uu___is_None mod1
+       (if
+          (match mod1 with
+           | FStar_Pervasives_Native.None -> true
+           | uu___4 -> false)
         then FStarC_Effect.failwith "Impossible"
         else ();
         (let uu___4 = mod1 in
@@ -1394,9 +1404,8 @@ and scan_and_load_fly_deps_internal (filename : Prims.string) (env : uenv)
                     let uu___4 =
                       FStarC_List.existsb
                         (fun m ->
-                           Prims.op_Negation
-                             m.FStarC_Syntax_Syntax.is_interface) ms in
-                    Prims.op_Negation uu___4
+                           Prims.not m.FStarC_Syntax_Syntax.is_interface) ms in
+                    Prims.not uu___4
                   else false in
                 if uu___2
                 then
@@ -1450,7 +1459,7 @@ and tc_one_file_from_remaining (fly_deps : Prims.bool)
                | next::uu___3 ->
                    let uu___4 =
                      let uu___5 = FStarC_Parser_Dep.is_interface next in
-                     Prims.op_Negation uu___5 in
+                     Prims.not uu___5 in
                    (if uu___4
                     then
                       let uu___5 = FStarC_Parser_Dep.module_name_of_file next in
@@ -1488,7 +1497,7 @@ and tc_fold_interleave (fly_deps : Prims.bool)
             | (remaining1, nmod, mllib, env) ->
                 ((let uu___4 =
                     let uu___5 = FStarC_Options.profile_group_by_decl () in
-                    Prims.op_Negation uu___5 in
+                    Prims.not uu___5 in
                   if uu___4
                   then
                     FStarC_Profiling.report_and_clear
@@ -1580,9 +1589,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.encode_sig =
         (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.encode_sig);
       FStarC_TypeChecker_Env.preprocess = FStarC_Tactics_Hooks.preprocess;
-      FStarC_TypeChecker_Env.spinoff_strictly_positive_goals =
-        (FStar_Pervasives_Native.Some
-           FStarC_Tactics_Hooks.spinoff_strictly_positive_goals);
       FStarC_TypeChecker_Env.handle_smt_goal =
         FStarC_Tactics_Hooks.handle_smt_goal;
       FStarC_TypeChecker_Env.solve =

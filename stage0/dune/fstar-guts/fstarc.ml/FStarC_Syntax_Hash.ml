@@ -395,14 +395,15 @@ and hash_constant (c : FStarC_Syntax_Syntax.sconst) :
   | FStarC_Const.Const_effect -> of_int (Prims.of_int 283)
   | FStarC_Const.Const_unit -> of_int (Prims.of_int 293)
   | FStarC_Const.Const_bool b -> hash_bool b
-  | FStarC_Const.Const_int (s, o) ->
-      let uu___ =
-        let uu___1 = hash_option hash_sw o in mix (of_string s) uu___1 in
-      mix (of_int (Prims.of_int 313)) uu___
+  | FStarC_Const.Const_int (v, uu___) ->
+      mix (of_int (Prims.of_int 313)) (of_int v)
+  | FStarC_Const.Const_machine_int (v, uu___, s, w) ->
+      let uu___1 = let uu___2 = hash_sw (s, w) in mix (of_int v) uu___2 in
+      mix (of_int (Prims.of_int 383)) uu___1
   | FStarC_Const.Const_char c1 ->
       mix (of_int (Prims.of_int 317)) (of_int (FStar_Char.int_of_char c1))
-  | FStarC_Const.Const_real s ->
-      mix (of_int (Prims.of_int 337)) (of_string s)
+  | FStarC_Const.Const_real r ->
+      mix (of_int (Prims.of_int 337)) (of_string (FStarC_Real.to_string r))
   | FStarC_Const.Const_string (s, uu___) ->
       mix (of_int (Prims.of_int 349)) (of_string s)
   | FStarC_Const.Const_range_of -> of_int (Prims.of_int 353)
@@ -946,18 +947,21 @@ and equal_constant (c1 : FStarC_Syntax_Syntax.sconst)
      | (FStarC_Const.Const_effect, FStarC_Const.Const_effect) -> true
      | (FStarC_Const.Const_unit, FStarC_Const.Const_unit) -> true
      | (FStarC_Const.Const_bool b1, FStarC_Const.Const_bool b2) -> b1 = b2
-     | (FStarC_Const.Const_int (s1, o1), FStarC_Const.Const_int (s2, o2)) ->
-         (s1 = s2) && (o1 = o2)
+     | (FStarC_Const.Const_int (v1, uu___), FStarC_Const.Const_int
+        (v2, uu___1)) -> v1 = v2
+     | (FStarC_Const.Const_machine_int (v1, uu___, s1, w1),
+        FStarC_Const.Const_machine_int (v2, uu___1, s2, w2)) ->
+         ((v1 = v2) && (s1 = s2)) && (w1 = w2)
      | (FStarC_Const.Const_char c11, FStarC_Const.Const_char c21) ->
          c11 = c21
-     | (FStarC_Const.Const_real s1, FStarC_Const.Const_real s2) -> s1 = s2
+     | (FStarC_Const.Const_real r1, FStarC_Const.Const_real r2) ->
+         (FStarC_Real.cmp r1 r2) = FStarC_Order.Eq
      | (FStarC_Const.Const_string (s1, uu___), FStarC_Const.Const_string
         (s2, uu___1)) -> s1 = s2
      | (FStarC_Const.Const_range_of, FStarC_Const.Const_range_of) -> true
      | (FStarC_Const.Const_set_range_of, FStarC_Const.Const_set_range_of) ->
          true
-     | (FStarC_Const.Const_range r1, FStarC_Const.Const_range r2) ->
-         (FStarC_Range_Ops.compare r1 r2) = Prims.int_zero
+     | (FStarC_Const.Const_range r1, FStarC_Const.Const_range r2) -> r1 = r2
      | (FStarC_Const.Const_reify uu___, FStarC_Const.Const_reify uu___1) ->
          true
      | (FStarC_Const.Const_reflect l1, FStarC_Const.Const_reflect l2) ->

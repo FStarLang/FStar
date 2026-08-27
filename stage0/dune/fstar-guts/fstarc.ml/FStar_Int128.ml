@@ -5,7 +5,7 @@ type t =
 let uu___is_Mk (projectee : t) : Prims.bool= true
 let __proj__Mk__item__v (projectee : t) : Obj.t FStar_Int.int_t=
   match projectee with | Mk v -> v
-let v (x : t) : Obj.t FStar_Int.int_t= __proj__Mk__item__v x
+let v (x : t) : Obj.t FStar_Int.int_t= match x with | Mk v1 -> v1
 let int_to_t (x : Obj.t FStar_Int.int_t) : t= Mk x
 let zero : t= int_to_t Prims.int_zero
 let one : t= int_to_t Prims.int_one
@@ -50,11 +50,15 @@ let lt (a : t) (b : t) : Prims.bool=
   FStar_Int.lt (Prims.of_int 128) (v a) (v b)
 let lte (a : t) (b : t) : Prims.bool=
   FStar_Int.lte (Prims.of_int 128) (v a) (v b)
-let op_Plus_Hat : t -> t -> t= add
-let op_Subtraction_Hat : t -> t -> t= sub
-let op_Star_Hat : t -> t -> t= mul
-let op_Slash_Hat : t -> t -> t= div
-let op_Percent_Hat : t -> t -> t= rem
+let ct_abs (a : t) : t=
+  let mask =
+    shift_arithmetic_right a (FStar_UInt32.uint_to_t (Prims.of_int 127)) in
+  sub (logxor a mask) mask
+let op_Plus : t -> t -> t= add
+let op_Minus : t -> t -> t= sub
+let op_Star : t -> t -> t= mul
+let op_Slash : t -> t -> t= div
+let op_Percent : t -> t -> t= rem
 let op_Hat_Hat : t -> t -> t= logxor
 let op_Amp_Hat : t -> t -> t= logand
 let op_Bar_Hat : t -> t -> t= logor
@@ -64,14 +68,19 @@ let op_Greater_Greater_Greater_Hat : t -> FStar_UInt32.t -> t=
   shift_arithmetic_right
 let op_Equals_Hat : t -> t -> Prims.bool= eq
 let op_Less_Greater_Hat : t -> t -> Prims.bool= ne
+let op_Greater : t -> t -> Prims.bool= gt
+let op_Greater_Equals : t -> t -> Prims.bool= gte
+let op_Less : t -> t -> Prims.bool= lt
+let op_Less_Equals : t -> t -> Prims.bool= lte
+let op_Plus_Hat : t -> t -> t= add
+let op_Minus_Hat : t -> t -> t= sub
+let op_Star_Hat : t -> t -> t= mul
+let op_Slash_Hat : t -> t -> t= div
+let op_Percent_Hat : t -> t -> t= rem
 let op_Greater_Hat : t -> t -> Prims.bool= gt
 let op_Greater_Equals_Hat : t -> t -> Prims.bool= gte
 let op_Less_Hat : t -> t -> Prims.bool= lt
 let op_Less_Equals_Hat : t -> t -> Prims.bool= lte
-let ct_abs (a : t) : t=
-  let mask =
-    shift_arithmetic_right a (FStar_UInt32.uint_to_t (Prims.of_int 127)) in
-  sub (logxor a mask) mask
 let to_string (uu___ : t) : Prims.string= Prims.admit ()
 let of_string (uu___ : Prims.string) : t= Prims.admit ()
 let __int_to_t (x : Prims.int) : t= int_to_t x

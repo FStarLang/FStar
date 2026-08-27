@@ -127,7 +127,7 @@ let mlpath_of_mlpath (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
   match FStarC_Extraction_ML_Syntax.string_of_mlpath x with
   | "Prims.Some" -> ([], "Some")
   | "Prims.None" -> ([], "None")
-  | "Prims.op_Modulus" -> (["Prims"], "mod_f")
+  | "Prims.op_Percent" -> (["Prims"], "mod_f")
   | uu___ ->
       let uu___1 = x in
       (match uu___1 with
@@ -143,7 +143,7 @@ let ptsym_of_symbol (s : FStarC_Extraction_ML_Syntax.mlsymbol) :
 let ptsym (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
   (mlp : FStarC_Extraction_ML_Syntax.mlpath) :
   FStarC_Extraction_ML_Syntax.mlsymbol=
-  if Prims.uu___is_Nil (FStar_Pervasives_Native.fst mlp)
+  if match FStar_Pervasives_Native.fst mlp with | [] -> true | uu___ -> false
   then ptsym_of_symbol (FStar_Pervasives_Native.snd mlp)
   else
     (let uu___ = mlpath_of_mlpath currentModule mlp in
@@ -169,25 +169,25 @@ let ptctor (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
       FStarC_String.concat "." (FStarC_List.op_At p [s1])
 let infix_prim_ops :
   (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list=
-  [("op_Addition", e_bin_prio_op1, "+");
-  ("op_Subtraction", e_bin_prio_op1, "-");
+  [("op_Plus", e_bin_prio_op1, "+");
+  ("op_Minus", e_bin_prio_op1, "-");
   ("op_Star", e_bin_prio_op1, "*");
-  ("op_Division", e_bin_prio_op1, "/");
-  ("op_Equality", e_bin_prio_eq, "=");
+  ("op_Slash", e_bin_prio_op1, "/");
+  ("op_Equals", e_bin_prio_eq, "=");
   ("op_Colon_Equals", e_bin_prio_eq, ":=");
-  ("op_disEquality", e_bin_prio_eq, "<>");
-  ("op_AmpAmp", e_bin_prio_and, "&&");
-  ("op_BarBar", e_bin_prio_or, "||");
-  ("op_LessThanOrEqual", e_bin_prio_order, "<=");
-  ("op_GreaterThanOrEqual", e_bin_prio_order, ">=");
-  ("op_LessThan", e_bin_prio_order, "<");
-  ("op_GreaterThan", e_bin_prio_order, ">")]
+  ("op_Less_Greater", e_bin_prio_eq, "<>");
+  ("op_Amp_Amp", e_bin_prio_and, "&&");
+  ("op_Bar_Bar", e_bin_prio_or, "||");
+  ("op_Less_Equals", e_bin_prio_order, "<=");
+  ("op_Greater_Equals", e_bin_prio_order, ">=");
+  ("op_Less", e_bin_prio_order, "<");
+  ("op_Greater", e_bin_prio_order, ">")]
 let prim_uni_ops (uu___ : unit) : (Prims.string * Prims.string) Prims.list=
   let op_minus =
     let uu___1 = FStarC_Extraction_ML_Util.codegen_fsharp () in
     if uu___1 then "-" else "~-" in
-  [("op_Negation", "not");
-  ("op_Minus", op_minus);
+  [("not", "not");
+  ("op_Tilde_Minus", op_minus);
   ("op_Bang", "Support.ST.read")]
 let prim_types (uu___ : unit) : 'uuuuu Prims.list= []
 let prim_constructors : (Prims.string * Prims.string) Prims.list=
@@ -902,7 +902,7 @@ and doc_of_lets (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
             let e1 = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
             let ids = [] in
             let ty_annot =
-              if Prims.op_Negation pt
+              if Prims.not pt
               then text ""
               else
                 (let uu___5 =
@@ -1061,7 +1061,7 @@ let doc_of_mltydecl (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
              combine hardline uu___3) in
   let doc1 = FStarC_List.map for1 decls in
   let doc2 =
-    if Prims.uu___is_Cons doc1
+    if match doc1 with | hd::tl -> true | uu___ -> false
     then
       let uu___ =
         let uu___1 = let uu___2 = combine (text " \n and ") doc1 in [uu___2] in
@@ -1153,7 +1153,7 @@ let doc_of_mlmodule_r (fsharp : Prims.bool)
             (if fsharp
              then [text "module"; text target_mod_name]
              else
-               if Prims.op_Negation istop
+               if Prims.not istop
                then
                  [text "module";
                  text target_mod_name;
@@ -1161,9 +1161,7 @@ let doc_of_mlmodule_r (fsharp : Prims.bool)
                  text "struct"]
                else []) in
         let tail =
-          if Prims.op_Negation istop
-          then reduce1 [text "end"]
-          else reduce1 [] in
+          if Prims.not istop then reduce1 [text "end"] else reduce1 [] in
         let doc1 =
           FStarC_Option.map
             (fun uu___1 ->

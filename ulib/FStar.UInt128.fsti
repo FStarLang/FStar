@@ -48,7 +48,7 @@ val add_mod: a:t -> b:t -> Pure t
   (requires True)
   (ensures (fun c -> (v a + v b) % pow2 n = v c))
 
-(* Subtraction primitives *)
+(* Minus primitives *)
 val sub: a:t -> b:t -> Pure t
   (requires (size (v a - v b) n))
   (ensures (fun c -> v a - v b = v c))
@@ -137,24 +137,6 @@ val uint128_to_uint64: a:t -> b:U64.t{U64.v b == v a % pow2 64}
 //val to_string: t -> Tot string
 //val of_string: string -> Tot t
 
-(* Infix notations *)
-inline_for_extraction noextract let op_Plus_Hat = add
-inline_for_extraction noextract let op_Plus_Question_Hat = add_underspec
-inline_for_extraction noextract let op_Plus_Percent_Hat = add_mod
-inline_for_extraction noextract let op_Subtraction_Hat = sub
-inline_for_extraction noextract let op_Subtraction_Question_Hat = sub_underspec
-inline_for_extraction noextract let op_Subtraction_Percent_Hat = sub_mod
-inline_for_extraction noextract let op_Amp_Hat = logand
-inline_for_extraction noextract let op_Hat_Hat = logxor
-inline_for_extraction noextract let op_Bar_Hat = logor
-inline_for_extraction noextract let op_Less_Less_Hat = shift_left
-inline_for_extraction noextract let op_Greater_Greater_Hat = shift_right
-inline_for_extraction noextract let op_Equals_Hat = eq
-inline_for_extraction noextract let op_Greater_Hat = gt
-inline_for_extraction noextract let op_Less_Hat = lt
-inline_for_extraction noextract let op_Greater_Equals_Hat = gte
-inline_for_extraction noextract let op_Less_Equals_Hat = lte
-
 (* Multiplication primitives *)
 (* Note that unlike UIntN, we do not provide uint128 * uint128 primitives (mul,
   mul_underspec, mul_mod, and mul_div) *)
@@ -165,3 +147,34 @@ val mul32: x:U64.t -> y:U32.t -> Pure t
 val mul_wide: x:U64.t -> y:U64.t -> Pure t
   (requires True)
   (ensures (fun r -> v r == U64.v x * U64.v y))
+
+(* Infix notations. Deliberately the last declarations in this interface: a
+   declaration of the interface is hidden from the implementation until the
+   implementation has discharged everything that precedes it, so keeping these
+   at the end means FStar.UInt128.fst never resolves [+] or [-] to this
+   module's operators and always gets Prims' integer arithmetic. *)
+inline_for_extraction noextract let ( + ) = add
+inline_for_extraction noextract let ( +?^ ) = add_underspec
+inline_for_extraction noextract let ( +%^ ) = add_mod
+inline_for_extraction noextract let ( - ) = sub
+inline_for_extraction noextract let ( -?^ ) = sub_underspec
+inline_for_extraction noextract let ( -%^ ) = sub_mod
+inline_for_extraction noextract let ( &^ ) = logand
+inline_for_extraction noextract let ( ^^ ) = logxor
+inline_for_extraction noextract let ( |^ ) = logor
+inline_for_extraction noextract let ( <<^ ) = shift_left
+inline_for_extraction noextract let ( >>^ ) = shift_right
+inline_for_extraction noextract let ( =^ ) = eq
+inline_for_extraction noextract let ( > ) = gt
+inline_for_extraction noextract let ( < ) = lt
+inline_for_extraction noextract let ( >= ) = gte
+inline_for_extraction noextract let ( <= ) = lte
+
+(* Deprecated infix notations: the spellings the six operators above had before
+   type-based overloading made the [^] suffix unnecessary. *)
+[@@deprecated "use ( + )"]  inline_for_extraction noextract let ( +^ )  = add
+[@@deprecated "use ( - )"]  inline_for_extraction noextract let ( -^ )  = sub
+[@@deprecated "use ( > )"]  inline_for_extraction noextract let ( >^ )  = gt
+[@@deprecated "use ( < )"]  inline_for_extraction noextract let ( <^ )  = lt
+[@@deprecated "use ( >= )"] inline_for_extraction noextract let ( >=^ ) = gte
+[@@deprecated "use ( <= )"] inline_for_extraction noextract let ( <=^ ) = lte

@@ -41,6 +41,21 @@ type codegen_t =
 
 type message_format_t = | Json | Human | Github
 
+(* Mode of the `--ext fstar:overload` extension option, which controls
+   type-based overloading resolution for ordinary names.
+
+   - [Overload_off]: no candidate collection at all; names resolve exactly as
+     they always have, first-match-wins in scope order.
+   - [Overload_compat]: the default. Collect candidates and eliminate the
+     definitely type-incompatible ones, but if several remain, silently pick the
+     first in scope order, i.e. today's answer. A conservative extension: no
+     program that checks today can change meaning.
+   - [Overload_strict]: as above, but report an ambiguity error (error 362,
+     demotable with `--warn_error +362`) when several candidates remain. Used to
+     measure how often overloading is genuinely ambiguous; not intended as a
+     default. *)
+type overload_mode_t = | Overload_off | Overload_compat | Overload_strict
+
 type option_val =
   | Bool of bool
   | String of string
@@ -294,6 +309,10 @@ val krmloutput                  : unit    -> ML (option string)
 val output_deps_to              : unit    -> ML (option string)
 
 val output_ext                  : unit    -> ML (option string)
+
+(* The mode of the `--ext fstar:overload` option. Fails hard on an
+   unrecognized value, so typos are not silently ignored. *)
+val overload_mode               : unit    -> ML overload_mode_t
 
 val ugly                        : unit    -> ML bool
 

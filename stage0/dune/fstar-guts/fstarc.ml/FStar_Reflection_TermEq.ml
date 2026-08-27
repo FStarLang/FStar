@@ -171,10 +171,11 @@ let const_cmp : FStarC_Reflection_V2_Data.vconst comparator_for=
     match (c1, c2) with
     | (FStarC_Reflection_V2_Data.C_Unit, FStarC_Reflection_V2_Data.C_Unit) ->
         Obj.magic (Obj.repr Eq)
-    | (FStarC_Reflection_V2_Data.C_Int i1, FStarC_Reflection_V2_Data.C_Int
-       i2) -> Obj.magic (Obj.repr (eq_cmp i1 i2))
-    | (FStarC_Reflection_V2_Data.C_MachineInt (i1, s1, w1),
-       FStarC_Reflection_V2_Data.C_MachineInt (i2, s2, w2)) ->
+    | (FStarC_Reflection_V2_Data.C_Int (i1, b1),
+       FStarC_Reflection_V2_Data.C_Int (i2, b2)) ->
+        Obj.magic (Obj.repr (eq_cmp i1 i2))
+    | (FStarC_Reflection_V2_Data.C_MachineInt (i1, b1, s1, w1),
+       FStarC_Reflection_V2_Data.C_MachineInt (i2, b2, s2, w2)) ->
         Obj.magic
           (Obj.repr
              (if ((i1 = i2) && (s1 = s2)) && (w1 = w2) then Eq else Neq))
@@ -393,19 +394,21 @@ and comp_cmp : (FStarC_Reflection_Types.comp, Obj.t) comparator_for'=
           (op_Amp_Amp_Amp () () (pre1, post1) (pre2, post2) pat1 pat2
              (op_Amp_Amp_Amp () () pre1 pre2 post1 post2 (term_cmp pre1 pre2)
                 (term_cmp post1 post2)) (term_cmp pat1 pat2)) ()
-    | (FStarC_Reflection_V2_Data.C_Eff (us1, ef1, t1, args1, dec1),
-       FStarC_Reflection_V2_Data.C_Eff (us2, ef2, t2, args2, dec2)) ->
-        co () () ((((us1, ef1), t1), args1), dec1)
-          ((((us2, ef2), t2), args2), dec2) c1 c2
-          (op_Amp_Amp_Amp () () (((us1, ef1), t1), args1)
-             (((us2, ef2), t2), args2) dec1 dec2
-             (op_Amp_Amp_Amp () () ((us1, ef1), t1) ((us2, ef2), t2) args1
-                args2
-                (op_Amp_Amp_Amp () () (us1, ef1) (us2, ef2) t1 t2
-                   (op_Amp_Amp_Amp () () us1 us2 ef1 ef2
-                      (list_dec_cmp' () c1 c2 univ_cmp us1 us2)
-                      (eq_cmp ef1 ef2)) (term_cmp t1 t2))
-                (list_dec_cmp' () c1 c2 arg_cmp args1 args2))
+    | (FStarC_Reflection_V2_Data.C_Eff (us1, ef1, t1, pre1, post1, dec1),
+       FStarC_Reflection_V2_Data.C_Eff (us2, ef2, t2, pre2, post2, dec2)) ->
+        co () () (((((us1, ef1), t1), pre1), post1), dec1)
+          (((((us2, ef2), t2), pre2), post2), dec2) c1 c2
+          (op_Amp_Amp_Amp () () ((((us1, ef1), t1), pre1), post1)
+             ((((us2, ef2), t2), pre2), post2) dec1 dec2
+             (op_Amp_Amp_Amp () () (((us1, ef1), t1), pre1)
+                (((us2, ef2), t2), pre2) post1 post2
+                (op_Amp_Amp_Amp () () ((us1, ef1), t1) ((us2, ef2), t2) pre1
+                   pre2
+                   (op_Amp_Amp_Amp () () (us1, ef1) (us2, ef2) t1 t2
+                      (op_Amp_Amp_Amp () () us1 us2 ef1 ef2
+                         (list_dec_cmp' () c1 c2 univ_cmp us1 us2)
+                         (eq_cmp ef1 ef2)) (term_cmp t1 t2))
+                   (term_cmp pre1 pre2)) (term_cmp post1 post2))
              (list_dec_cmp' () c1 c2 term_cmp dec1 dec2)) ()
     | uu___ -> Neq
 and br_cmp : (FStarC_Reflection_V2_Data.branch, Obj.t) comparator_for'=
@@ -451,7 +454,7 @@ and pat_arg_cmp :
           ()
 let term_eq (t1 : FStarC_Reflection_Types.term)
   (t2 : FStarC_Reflection_Types.term) : Prims.bool=
-  uu___is_Eq (term_cmp t1 t2)
+  match term_cmp t1 t2 with | Eq -> true | uu___ -> false
 let _ =
   FStarC_Tactics_Native.register_plugin "FStar.Reflection.TermEq.term_eq"
     (Prims.of_int 2)
@@ -481,7 +484,7 @@ let _ =
                   (FStarC_Ident.lid_of_str "FStar.Reflection.TermEq.term_eq")
                   cb us args))
 let term_eq_dec (t1 : faithful_term) (t2 : faithful_term) : Prims.bool=
-  uu___is_Eq (term_cmp t1 t2)
+  match term_cmp t1 t2 with | Eq -> true | uu___ -> false
 let _ =
   FStarC_Tactics_Native.register_plugin "FStar.Reflection.TermEq.term_eq_dec"
     (Prims.of_int 2)
@@ -512,7 +515,7 @@ let _ =
                      "FStar.Reflection.TermEq.term_eq_dec") cb us args))
 let univ_eq (u1 : FStarC_Reflection_Types.universe)
   (u2 : FStarC_Reflection_Types.universe) : Prims.bool=
-  uu___is_Eq (univ_cmp u1 u2)
+  match univ_cmp u1 u2 with | Eq -> true | uu___ -> false
 let _ =
   FStarC_Tactics_Native.register_plugin "FStar.Reflection.TermEq.univ_eq"
     (Prims.of_int 2)
@@ -542,7 +545,7 @@ let _ =
                   (FStarC_Ident.lid_of_str "FStar.Reflection.TermEq.univ_eq")
                   cb us args))
 let univ_eq_dec (u1 : faithful_universe) (u2 : faithful_universe) :
-  Prims.bool= uu___is_Eq (univ_cmp u1 u2)
+  Prims.bool= match univ_cmp u1 u2 with | Eq -> true | uu___ -> false
 let _ =
   FStarC_Tactics_Native.register_plugin "FStar.Reflection.TermEq.univ_eq_dec"
     (Prims.of_int 2)

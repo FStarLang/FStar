@@ -54,7 +54,8 @@ let mlconst_of_const' (sctt : sconst) : ML mlconstant =
   | Const_range _
   | Const_unit          -> MLC_Unit
   | Const_char   c      -> MLC_Char  c
-  | Const_int    (s, i) -> MLC_Int   (s, i)
+  | Const_int    (v, b) -> MLC_Int (string_of_int_literal v b, None)
+  | Const_machine_int (v, b, s, w) -> MLC_Int (string_of_int_literal v b, Some (s, w))
   | Const_bool   b      -> MLC_Bool  b
   | Const_string (s, _) -> MLC_String (s)
 
@@ -348,9 +349,9 @@ let rec eraseTypeDeep unfold_ty (t:mlty) : ML mlty =
     | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep unfold_ty) lty)
     | _ ->  t
 
-let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
+let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equals")
 let prims_op_amp_amp  = with_ty (mk_ty_fun [{mlbinder_name="x";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]};
-                                            {mlbinder_name="y";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]}] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
+                                            {mlbinder_name="y";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]}] ml_bool_ty) <| MLE_Name (["Prims"], "op_Amp_Amp")
 let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with
     | None, None -> None

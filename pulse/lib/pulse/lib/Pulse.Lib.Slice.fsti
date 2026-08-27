@@ -100,7 +100,7 @@ ensures
 (* END C only *)
 
 (* Written x.(i) *)
-val op_Array_Access
+val ( .() )
         (#t: Type)
         (a: slice t)
         (i: SZ.t)
@@ -115,7 +115,7 @@ val op_Array_Access
 
 
 (* Written a.(i) <- v *)
-val op_Array_Assignment
+val ( .()<- )
         (#t: Type)
         (a: slice t)
         (i: SZ.t)

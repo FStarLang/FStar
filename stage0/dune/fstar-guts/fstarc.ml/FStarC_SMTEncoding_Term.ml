@@ -176,7 +176,7 @@ let uu___is_Exists (projectee : qop) : Prims.bool=
 type term =
   | Integer of Prims.string 
   | String of Prims.string 
-  | Real of Prims.string 
+  | Real of FStarC_Real.real 
   | BoundV of Prims.int 
   | FreeV of fv 
   | App of op * term Prims.list * FStarC_Range_Type.t 
@@ -197,7 +197,7 @@ let __proj__String__item___0 (projectee : term) : Prims.string=
   match projectee with | String _0 -> _0
 let uu___is_Real (projectee : term) : Prims.bool=
   match projectee with | Real _0 -> true | uu___ -> false
-let __proj__Real__item___0 (projectee : term) : Prims.string=
+let __proj__Real__item___0 (projectee : term) : FStarC_Real.real=
   match projectee with | Real _0 -> _0
 let uu___is_BoundV (projectee : term) : Prims.bool=
   match projectee with | BoundV _0 -> true | uu___ -> false
@@ -363,7 +363,6 @@ type decl =
   | Push of Prims.int 
   | Pop of Prims.int 
   | CheckSat 
-  | GetUnsatCore 
   | SetOption of Prims.string * Prims.string 
   | GetStatistics 
   | GetReasonUnknown 
@@ -430,8 +429,6 @@ let __proj__Pop__item___0 (projectee : decl) : Prims.int=
   match projectee with | Pop _0 -> _0
 let uu___is_CheckSat (projectee : decl) : Prims.bool=
   match projectee with | CheckSat -> true | uu___ -> false
-let uu___is_GetUnsatCore (projectee : decl) : Prims.bool=
-  match projectee with | GetUnsatCore -> true | uu___ -> false
 let uu___is_SetOption (projectee : decl) : Prims.bool=
   match projectee with | SetOption (_0, _1) -> true | uu___ -> false
 let __proj__SetOption__item___0 (projectee : decl) : Prims.string=
@@ -465,9 +462,6 @@ let __proj__Mkdecls_elt__item__a_names (projectee : decls_elt) :
 type decls_t = decls_elt Prims.list
 let escape (s : Prims.string) : Prims.string=
   FStarC_Util.replace_char s 39 95
-type error_label =
-  (fv * FStarC_Errors_Msg.error_message * FStarC_Range_Type.t)
-type error_labels = error_label Prims.list
 let render : FStar_Pprint.document -> Prims.string=
   FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0")
     (Prims.of_int 100)
@@ -763,7 +757,7 @@ let rec hash_of_term' (t : term) : Prims.string=
   match t with
   | Integer i -> i
   | String s -> s
-  | Real r -> r
+  | Real r -> FStarC_Real.to_string r
   | BoundV i ->
       let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
       Prims.strcat "@" uu___
@@ -848,7 +842,7 @@ let isInjective (s : Prims.string) : Prims.bool=
        let uu___1 =
          FStarC_List.existsML (fun c -> c = 46)
            (FStar_String.list_of_string s) in
-       Prims.op_Negation uu___1
+       Prims.not uu___1
      else false)
   else false
 let mkTrue : term= App (TrueOp, [], FStarC_Range_Type.dummyRange)
@@ -860,7 +854,7 @@ let mkInteger (i : Prims.string) : term=
 let mkInteger' (i : Prims.int) : term=
   let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
   mkInteger uu___
-let mkReal (i : Prims.string) : term= Real i
+let mkReal (r : FStarC_Real.real) : term= Real r
 let mkBoundV (i : Prims.int) : term= BoundV i
 let mkFreeV (x : fv) : term= FreeV x
 let mkApp' (uu___ : (op * term Prims.list)) : term=
@@ -1137,7 +1131,7 @@ let check_pattern_ok (t : term) : term FStar_Pervasives_Native.option=
           | NatToBv uu___1 -> false
           | BvToNat -> false
           | ITE -> false in
-        if Prims.op_Negation head_ok
+        if Prims.not head_ok
         then FStar_Pervasives_Native.Some t1
         else aux_l terms
     | Labeled (t2, uu___, uu___1) -> aux t2
@@ -1155,7 +1149,7 @@ let rec print_smt_term (t : term) : Prims.string=
   match t with
   | Integer n -> FStarC_Format.fmt1 "(Integer %s)" n
   | String s -> FStarC_Format.fmt1 "(String %s)" s
-  | Real r -> FStarC_Format.fmt1 "(Real %s)" r
+  | Real r -> FStarC_Format.fmt1 "(Real %s)" (FStarC_Real.to_string r)
   | BoundV n ->
       let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
       FStarC_Format.fmt1 "(BoundV %s)" uu___
@@ -1195,7 +1189,7 @@ let mkQuant (r : FStarC_Range_Type.t) (check_pats : Prims.bool)
   match uu___ with
   | (qop1, pats, wopt, vars, body) ->
       let all_pats_ok pats1 =
-        if Prims.op_Negation check_pats
+        if Prims.not check_pats
         then pats1
         else
           (let uu___1 =
@@ -1214,7 +1208,7 @@ let mkQuant (r : FStarC_Range_Type.t) (check_pats : Prims.bool)
                    (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                    (Obj.magic uu___3));
                 [])) in
-      if Prims.uu___is_Nil vars
+      if (match vars with | [] -> true | uu___1 -> false)
       then body
       else
         (match body with
@@ -1224,7 +1218,10 @@ let mkQuant (r : FStarC_Range_Type.t) (check_pats : Prims.bool)
              Quant (qop1, uu___2, wopt, vars, body, r))
 let mkLet (uu___ : (term Prims.list * term)) : term=
   match uu___ with
-  | (es, body) -> if Prims.uu___is_Nil es then body else Let (es, body)
+  | (es, body) ->
+      if (match es with | [] -> true | uu___1 -> false)
+      then body
+      else Let (es, body)
 let abstr (fvs1 : fv Prims.list) (t : term) : term=
   let nvars = FStarC_List.length fvs1 in
   let index_of fv1 =
@@ -1604,7 +1601,7 @@ let constructor_to_decl (rng : FStarC_Range_Type.t) (constr : constructor_t)
     injective_constructor rng
       ((constr.constr_name), (constr.constr_fields), sort1) in
   let base =
-    if Prims.op_Negation constr.constr_base
+    if Prims.not constr.constr_base
     then []
     else
       (let arg_sorts =
@@ -1739,7 +1736,8 @@ let termToSmt : Prims.bool -> Prims.string -> term -> FStar_Pprint.document=
           let aux1 = aux (depth + Prims.int_one) in
           match t1 with
           | Integer i -> FStar_Pprint.doc_of_string i
-          | Real r -> FStar_Pprint.doc_of_string r
+          | Real r ->
+              FStar_Pprint.doc_of_string (FStarC_Real.to_smt_string r)
           | String s ->
               let id_opt = FStarC_SMap.try_find string_cache s in
               let uu___ =
@@ -1963,9 +1961,6 @@ let rec declToSmt' (print_captions : Prims.bool) (z3options : Prims.string)
   | CheckSat ->
       FStar_Pprint.doc_of_string
         "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
-  | GetUnsatCore ->
-      FStar_Pprint.doc_of_string
-        "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
   | EmptyLine -> FStar_Pprint.empty
   | Push n ->
       let uu___ =
@@ -2189,17 +2184,17 @@ let mk_Valid (t : term) : term=
   match t with
   | App
       (Var "Prims.b2t", (App
-       (Var "Prims.op_Equality", uu___::t1::t2::[], uu___1))::[], uu___2)
+       (Var "Prims.op_Equals", uu___::t1::t2::[], uu___1))::[], uu___2)
       -> let uu___3 = mkEq (t1, t2) in rng_of t uu___3
   | App
       (Var "Prims.b2t", (App
-       (Var "Prims.op_disEquality", uu___::t1::t2::[], uu___1))::[], uu___2)
+       (Var "Prims.op_Less_Greater", uu___::t1::t2::[], uu___1))::[], uu___2)
       ->
       let uu___3 = let uu___4 = mkEq (t1, t2) in mkNot uu___4 in
       rng_of t uu___3
   | App
       (Var "Prims.b2t", (App
-       (Var "Prims.op_LessThanOrEqual", t1::t2::[], uu___))::[], uu___1)
+       (Var "Prims.op_Less_Equals", t1::t2::[], uu___))::[], uu___1)
       ->
       let uu___2 =
         let uu___3 =
@@ -2208,8 +2203,8 @@ let mk_Valid (t : term) : term=
         mkLTE uu___3 in
       rng_of t uu___2
   | App
-      (Var "Prims.b2t", (App
-       (Var "Prims.op_LessThan", t1::t2::[], uu___))::[], uu___1)
+      (Var "Prims.b2t", (App (Var "Prims.op_Less", t1::t2::[], uu___))::[],
+       uu___1)
       ->
       let uu___2 =
         let uu___3 =
@@ -2219,7 +2214,7 @@ let mk_Valid (t : term) : term=
       rng_of t uu___2
   | App
       (Var "Prims.b2t", (App
-       (Var "Prims.op_GreaterThanOrEqual", t1::t2::[], uu___))::[], uu___1)
+       (Var "Prims.op_Greater_Equals", t1::t2::[], uu___))::[], uu___1)
       ->
       let uu___2 =
         let uu___3 =
@@ -2229,7 +2224,7 @@ let mk_Valid (t : term) : term=
       rng_of t uu___2
   | App
       (Var "Prims.b2t", (App
-       (Var "Prims.op_GreaterThan", t1::t2::[], uu___))::[], uu___1)
+       (Var "Prims.op_Greater", t1::t2::[], uu___))::[], uu___1)
       ->
       let uu___2 =
         let uu___3 =
@@ -2238,8 +2233,8 @@ let mk_Valid (t : term) : term=
         mkGT uu___3 in
       rng_of t uu___2
   | App
-      (Var "Prims.b2t", (App (Var "Prims.op_AmpAmp", t1::t2::[], uu___))::[],
-       uu___1)
+      (Var "Prims.b2t", (App
+       (Var "Prims.op_Amp_Amp", t1::t2::[], uu___))::[], uu___1)
       ->
       let uu___2 =
         let uu___3 =
@@ -2248,8 +2243,8 @@ let mk_Valid (t : term) : term=
         mkAnd uu___3 in
       rng_of t uu___2
   | App
-      (Var "Prims.b2t", (App (Var "Prims.op_BarBar", t1::t2::[], uu___))::[],
-       uu___1)
+      (Var "Prims.b2t", (App
+       (Var "Prims.op_Bar_Bar", t1::t2::[], uu___))::[], uu___1)
       ->
       let uu___2 =
         let uu___3 =
@@ -2257,9 +2252,7 @@ let mk_Valid (t : term) : term=
           let uu___5 = unboxBool t2 in (uu___4, uu___5) in
         mkOr uu___3 in
       rng_of t uu___2
-  | App
-      (Var "Prims.b2t", (App (Var "Prims.op_Negation", t1::[], uu___))::[],
-       uu___1)
+  | App (Var "Prims.b2t", (App (Var "Prims.not", t1::[], uu___))::[], uu___1)
       ->
       let uu___2 = let uu___3 = unboxBool t1 in mkNot uu___3 in
       rng_of t1 uu___2
@@ -2268,7 +2261,9 @@ let mk_Valid (t : term) : term=
        (Var "FStar.BV.bvult", t0::t1::t2::[], uu___))::[], uu___1)
       when
       let uu___2 = getBoxedInteger t0 in
-      FStar_Pervasives_Native.uu___is_Some uu___2 ->
+      match uu___2 with
+      | FStar_Pervasives_Native.Some v -> true
+      | uu___3 -> false ->
       let sz =
         let uu___2 = getBoxedInteger t0 in
         match uu___2 with
@@ -2285,7 +2280,9 @@ let mk_Valid (t : term) : term=
        (Var "FStar.BV.bvult", t0::t1::t2::[], uu___1))::uu___2::[], uu___3)
       when
       let uu___4 = getBoxedInteger t0 in
-      FStar_Pervasives_Native.uu___is_Some uu___4 ->
+      match uu___4 with
+      | FStar_Pervasives_Native.Some v -> true
+      | uu___5 -> false ->
       let sz =
         let uu___4 = getBoxedInteger t0 in
         match uu___4 with
@@ -2403,7 +2400,6 @@ let decl_to_string_short (d : decl) : Prims.string=
       let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
       FStarC_Format.fmt1 "pop %s" uu___
   | CheckSat -> "check-sat"
-  | GetUnsatCore -> "get-unsat-core"
   | EmptyLine -> "; empty line"
   | SetOption (s, v) ->
       Prims.strcat "SetOption " (Prims.strcat s (Prims.strcat " " v))

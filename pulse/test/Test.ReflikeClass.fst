@@ -13,7 +13,7 @@ class reflike (vt:Type) (rt:Type) = {
   (:=) : r:rt -> v:vt -> #v0:erased vt -> stt unit (r |-> v0) (fun _ -> r |-> v);
 }
 
-(* // Disabling test because the typeclass feature mixes up Mkreflike?.op_Bar_Subtraction_Greater and op_Bar_Subtraction_Greater
+(* // Disabling test because the typeclass feature mixes up Mkreflike?.op_Bar_Minus_Greater and op_Bar_Minus_Greater
 
 #push-options "--warn_error -288"
 fn weakened_ref_alloc u#a (#a:Type u#a) {| small_type u#a |} (x: a)

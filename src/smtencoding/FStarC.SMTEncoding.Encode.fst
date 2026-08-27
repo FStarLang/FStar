@@ -148,27 +148,27 @@ let prims =
         //boolean ops
         (Const.op_And,         (quant Eq xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
         (Const.op_Or,          (quant Eq xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
-        (Const.op_Negation,    (quant Eq qx  (boxBool <| mkNot(unboxBool x))));
+        (Const.op_Not,    (quant Eq qx  (boxBool <| mkNot(unboxBool x))));
         //integer ops
         (Const.op_LT,          (quant Eq xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
         (Const.op_LTE,         (quant Eq xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
         (Const.op_GT,          (quant Eq xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
         (Const.op_GTE,         (quant Eq xy  (boxBool <| mkGTE(unboxInt x, unboxInt y))));
-        (Const.op_Subtraction, (quant Eq xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
-        (Const.op_Minus,       (quant Eq qx  (boxInt  <| mkMinus(unboxInt x))));
-        (Const.op_Addition,    (quant Eq xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
+        (Const.op_Minus, (quant Eq xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
+        (Const.op_Tilde_Minus,       (quant Eq qx  (boxInt  <| mkMinus(unboxInt x))));
+        (Const.op_Plus,    (quant Eq xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
         (Const.op_Star,        (quant Eq xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
-        (Const.op_Division,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkInteger "0")))) (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
-        (Const.op_Modulus,     (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkInteger "0")))) (boxInt  <| mkMod(unboxInt x, unboxInt y))));
+        (Const.op_Slash,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkInteger "0")))) (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
+        (Const.op_Percent,     (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkInteger "0")))) (boxInt  <| mkMod(unboxInt x, unboxInt y))));
         //real ops
         (Const.real_op_LT,          (quant ValidIff xy  (mkLT(unboxReal x, unboxReal y))));
         (Const.real_op_LTE,         (quant ValidIff xy  (mkLTE(unboxReal x, unboxReal y))));
         (Const.real_op_GT,          (quant ValidIff xy  (mkGT(unboxReal x, unboxReal y))));
         (Const.real_op_GTE,         (quant ValidIff xy  (mkGTE(unboxReal x, unboxReal y))));
-        (Const.real_op_Subtraction, (quant Eq xy  (boxReal <| mkSub(unboxReal x, unboxReal y))));
-        (Const.real_op_Addition,    (quant Eq xy  (boxReal <| mkAdd(unboxReal x, unboxReal y))));
-        (Const.real_op_Multiply,    (quant Eq xy  (boxReal <| mkMul(unboxReal x, unboxReal y))));
-        (Const.real_op_Division,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxReal y, mkReal "0")))) (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
+        (Const.real_op_Minus, (quant Eq xy  (boxReal <| mkSub(unboxReal x, unboxReal y))));
+        (Const.real_op_Plus,    (quant Eq xy  (boxReal <| mkAdd(unboxReal x, unboxReal y))));
+        (Const.real_op_Star,    (quant Eq xy  (boxReal <| mkMul(unboxReal x, unboxReal y))));
+        (Const.real_op_Slash,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxReal y, mkReal (FStarC.Real.of_int 0))))) (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
         (Const.real_of_int,         (quant Eq qx  (boxReal <| mkRealOfInt (unboxInt x))))
         ]
     in
@@ -461,7 +461,7 @@ let smt_arity_attribute env (lid:lident) : ML (option int) =
     match U.get_attribute Const.smt_arity_attr attrs with
     | Some ((a, _) :: _) ->
       (match (SS.compress a).n with
-       | Tm_constant (Const_int (s, None)) -> Some (BU.int_of_string s)
+       | Tm_constant (Const_int (i, _)) -> Some i
        | _ -> failwith (Format.fmt2 "Expected an integer literal in [@@smt_arity] on %s, got %s"
                           (show lid) (show a)))
     | _ -> None

@@ -1,0 +1,3 @@
+{"query-id": "1", "query": "push", "args": {"kind": "lax", "code": "module OvlIde\nopen OvlIdeInt\nopen OvlIdeBool\n", "line": 1, "column": 0}}
+{"query-id": "2", "query": "lookup", "args": {"context": "code", "symbol": "f", "requested-info": ["type", "defined-at", "documentation"], "location": {"filename": "OvlIde.fst", "line": 7, "column": 14}}}
+{"query-id": "3", "query": "lookup", "args": {"context": "code", "symbol": "f", "requested-info": ["type", "defined-at", "documentation"]}}

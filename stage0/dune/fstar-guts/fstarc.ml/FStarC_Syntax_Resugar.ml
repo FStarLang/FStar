@@ -1,7 +1,6 @@
 open Prims
 exception SkipResugar 
-let uu___is_SkipResugar (projectee : Prims.exn) : Prims.bool=
-  match projectee with | SkipResugar -> true | uu___ -> false
+let uu___is_SkipResugar (projectee : Prims.exn) : Prims.bool= true
 type resugar_pass_t =
   FStarC_Syntax_DsEnv.env ->
     FStarC_Syntax_Syntax.term -> FStarC_Parser_AST.term
@@ -55,13 +54,11 @@ let no_imp_args (args : FStarC_Syntax_Syntax.args) :
        match uu___ with
        | (uu___1, FStar_Pervasives_Native.None) -> true
        | (uu___1, FStar_Pervasives_Native.Some arg) ->
-           Prims.op_Negation arg.FStarC_Syntax_Syntax.aqual_implicit) args
+           Prims.not arg.FStarC_Syntax_Syntax.aqual_implicit) args
 let no_imp_bs (bs : FStarC_Syntax_Syntax.binder Prims.list) :
   FStarC_Syntax_Syntax.binder Prims.list=
   FStarC_List.filter
-    (fun b ->
-       Prims.op_Negation (is_imp_bqual b.FStarC_Syntax_Syntax.binder_qual))
-    bs
+    (fun b -> Prims.not (is_imp_bqual b.FStarC_Syntax_Syntax.binder_qual)) bs
 let filter_imp_args (args : FStarC_Syntax_Syntax.args) :
   FStarC_Syntax_Syntax.args=
   let uu___ = FStarC_Options.print_implicits () in
@@ -78,8 +75,8 @@ let filter_pattern_imp (xs : ('uuuuu * Prims.bool) Prims.list) :
   else
     FStarC_List.filter
       (fun uu___1 ->
-         match uu___1 with
-         | (uu___2, is_implicit) -> Prims.op_Negation is_implicit) xs
+         match uu___1 with | (uu___2, is_implicit) -> Prims.not is_implicit)
+      xs
 let label (s : Prims.string) (t : FStarC_Parser_AST.term) :
   FStarC_Parser_AST.term=
   if s = ""
@@ -109,35 +106,24 @@ let rec resugar_universe (u : FStarC_Syntax_Syntax.universe)
   | FStarC_Syntax_Syntax.U_zero ->
       mk
         (FStarC_Parser_AST.Const
-           (FStarC_Const.Const_int ("0", FStar_Pervasives_Native.None))) r
+           (FStarC_Const.Const_int (Prims.int_zero, FStar_IntegerLiteral.Dec)))
+        r
   | FStarC_Syntax_Syntax.U_succ uu___ ->
       let uu___1 = universe_to_int Prims.int_zero u1 in
       (match uu___1 with
        | (n, u2) ->
            (match u2 with
             | FStarC_Syntax_Syntax.U_zero ->
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                          n in
-                      (uu___5, FStar_Pervasives_Native.None) in
-                    FStarC_Const.Const_int uu___4 in
-                  FStarC_Parser_AST.Const uu___3 in
-                mk uu___2 r
+                mk
+                  (FStarC_Parser_AST.Const
+                     (FStarC_Const.Const_int (n, FStar_IntegerLiteral.Dec)))
+                  r
             | uu___2 ->
                 let e1 =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          FStarC_Class_Show.show
-                            FStarC_Class_Show.showable_int n in
-                        (uu___6, FStar_Pervasives_Native.None) in
-                      FStarC_Const.Const_int uu___5 in
-                    FStarC_Parser_AST.Const uu___4 in
-                  mk uu___3 r in
+                  mk
+                    (FStarC_Parser_AST.Const
+                       (FStarC_Const.Const_int (n, FStar_IntegerLiteral.Dec)))
+                    r in
                 let e2 = resugar_universe u2 r in
                 mk
                   (FStarC_Parser_AST.Op
@@ -179,12 +165,12 @@ type expected_arity = Prims.int FStar_Pervasives_Native.option
 let rec resugar_term_as_op (t : FStarC_Syntax_Syntax.term) :
   (Prims.string * expected_arity) FStar_Pervasives_Native.option=
   let infix_prim_ops =
-    [(FStarC_Parser_Const.op_Addition, "+");
-    (FStarC_Parser_Const.op_Subtraction, "-");
+    [(FStarC_Parser_Const.op_Plus, "+");
     (FStarC_Parser_Const.op_Minus, "-");
+    (FStarC_Parser_Const.op_Tilde_Minus, "~-");
     (FStarC_Parser_Const.op_Star, "*");
-    (FStarC_Parser_Const.op_Division, "/");
-    (FStarC_Parser_Const.op_Modulus, "%");
+    (FStarC_Parser_Const.op_Slash, "/");
+    (FStarC_Parser_Const.op_Percent, "%");
     (FStarC_Parser_Const.read_lid, "!");
     (FStarC_Parser_Const.list_append_lid, "@");
     (FStarC_Parser_Const.list_tot_append_lid, "@");
@@ -198,7 +184,7 @@ let rec resugar_term_as_op (t : FStarC_Syntax_Syntax.term) :
     (FStarC_Parser_Const.op_GTE, ">=");
     (FStarC_Parser_Const.op_LT, "<");
     (FStarC_Parser_Const.op_GT, ">");
-    (FStarC_Parser_Const.op_Modulus, "mod");
+    (FStarC_Parser_Const.op_Percent, "mod");
     (FStarC_Parser_Const.and_lid, "/\\");
     (FStarC_Parser_Const.or_lid, "\\/");
     (FStarC_Parser_Const.imp_lid, "==>");
@@ -270,7 +256,8 @@ let rec resugar_term_as_op (t : FStarC_Syntax_Syntax.term) :
             (length + Prims.int_one) in
       let uu___1 = FStarC_Parser_AST.string_to_op s in
       (match uu___1 with
-       | FStar_Pervasives_Native.Some t1 -> FStar_Pervasives_Native.Some t1
+       | FStar_Pervasives_Native.Some t1 ->
+           FStar_Pervasives_Native.Some (t1, FStar_Pervasives_Native.None)
        | uu___2 -> fallback fv)
   | FStarC_Syntax_Syntax.Tm_uinst (e, us) -> resugar_term_as_op e
   | uu___1 -> FStar_Pervasives_Native.None
@@ -289,7 +276,7 @@ let may_shorten (lid : FStarC_Ident.lident) : Prims.bool=
     (match FStarC_Ident.string_of_lid lid with
      | "Prims.Nil" -> false
      | "Prims.Cons" -> false
-     | uu___1 -> Prims.op_Negation (is_tuple_constructor_lid lid))
+     | uu___1 -> Prims.not (is_tuple_constructor_lid lid))
 let maybe_shorten_lid (env : FStarC_Syntax_DsEnv.env)
   (lid : FStarC_Ident.lident) : FStarC_Ident.lident=
   let uu___ = may_shorten lid in
@@ -365,19 +352,20 @@ let parse_machine_integer_desc :
 let can_resugar_machine_integer_fv (fv : FStarC_Syntax_Syntax.fv) :
   Prims.bool=
   let uu___ = parse_machine_integer_desc fv in
-  FStar_Pervasives_Native.uu___is_Some uu___
-let resugar_machine_integer (fv : FStarC_Syntax_Syntax.fv) (i : Prims.string)
-  (pos : FStarC_Range_Type.range) : FStarC_Parser_AST.term=
+  match uu___ with | FStar_Pervasives_Native.Some v -> true | uu___1 -> false
+let resugar_machine_integer (fv : FStarC_Syntax_Syntax.fv) (i : Prims.int)
+  (b : FStar_IntegerLiteral.int_base) (pos : FStarC_Range_Type.range) :
+  FStarC_Parser_AST.term=
   let uu___ = parse_machine_integer_desc fv in
   match uu___ with
   | FStar_Pervasives_Native.None ->
       FStarC_Effect.failwith
         "Impossible: should be guarded by can_resugar_machine_integer"
-  | FStar_Pervasives_Native.Some (sw, uu___1) ->
+  | FStar_Pervasives_Native.Some ((sw, w), uu___1) ->
       FStarC_Parser_AST.mk_term
         (FStarC_Parser_AST.Const
-           (FStarC_Const.Const_int (i, (FStar_Pervasives_Native.Some sw))))
-        pos FStarC_Parser_AST.Un
+           (FStarC_Const.Const_machine_int (i, b, sw, w))) pos
+        FStarC_Parser_AST.Un
 let rec __is_list_literal (uu___2 : FStarC_Ident.lident)
   (uu___1 : FStarC_Ident.lident) (uu___ : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.term Prims.list FStar_Pervasives_Native.option=
@@ -427,7 +415,8 @@ let is_seq_literal :
     FStarC_Parser_Const.seq_empty_lid
 let can_resugar_machine_integer (hd : FStarC_Syntax_Syntax.term)
   (args : FStarC_Syntax_Syntax.args) :
-  (FStarC_Syntax_Syntax.fv * Prims.string) FStar_Pervasives_Native.option=
+  (FStarC_Syntax_Syntax.fv * Prims.int * FStar_IntegerLiteral.int_base)
+    FStar_Pervasives_Native.option=
   let uu___ =
     let uu___1 = FStarC_Syntax_Subst.compress hd in
     uu___1.FStarC_Syntax_Syntax.n in
@@ -440,8 +429,7 @@ let can_resugar_machine_integer (hd : FStarC_Syntax_Syntax.term)
              uu___2.FStarC_Syntax_Syntax.n in
            (match uu___1 with
             | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int
-                (i, FStar_Pervasives_Native.None)) ->
-                FStar_Pervasives_Native.Some (fv, i)
+                (i, b)) -> FStar_Pervasives_Native.Some (fv, i, b)
             | uu___2 -> FStar_Pervasives_Native.None)
        | uu___1 -> FStar_Pervasives_Native.None)
   | uu___1 -> FStar_Pervasives_Native.None
@@ -635,7 +623,7 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
                   resugar_bv_as_pat env x.FStarC_Syntax_Syntax.binder_bv
                     x.FStarC_Syntax_Syntax.binder_qual body_bv) xs1 in
            let body1 = resugar_term' env body in
-           if Prims.uu___is_Nil patterns
+           if (match patterns with | [] -> true | uu___4 -> false)
            then body1
            else mk (FStarC_Parser_AST.Abs (patterns, body1)))
   | FStarC_Syntax_Syntax.Tm_arrow uu___1 ->
@@ -677,31 +665,34 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
            mk uu___2)
   | FStarC_Syntax_Syntax.Tm_app uu___1 when
       let uu___2 =
-        let uu___3 = FStarC_Options.print_implicits () in
-        Prims.op_Negation uu___3 in
+        let uu___3 = FStarC_Options.print_implicits () in Prims.not uu___3 in
       if uu___2
       then
         let uu___3 = FStarC_Syntax_Util.unb2t t in
-        FStar_Pervasives_Native.uu___is_Some uu___3
+        match uu___3 with
+        | FStar_Pervasives_Native.Some v -> true
+        | uu___4 -> false
       else false ->
       let uu___2 =
         let uu___3 = FStarC_Syntax_Util.unb2t t in
-        FStar_Pervasives_Native.__proj__Some__item__v uu___3 in
+        match uu___3 with | FStar_Pervasives_Native.Some v -> v in
       resugar_term' env uu___2
   | FStarC_Syntax_Syntax.Tm_app uu___1 when
       let uu___2 = FStarC_Syntax_Util.head_and_args_full t in
       match uu___2 with
       | (hd, args) ->
           let uu___3 = can_resugar_machine_integer hd args in
-          FStar_Pervasives_Native.uu___is_Some uu___3
+          (match uu___3 with
+           | FStar_Pervasives_Native.Some v -> true
+           | uu___4 -> false)
       ->
       let uu___2 = FStarC_Syntax_Util.head_and_args_full t in
       (match uu___2 with
        | (hd, args) ->
            let uu___3 = can_resugar_machine_integer hd args in
            (match uu___3 with
-            | FStar_Pervasives_Native.Some (fv, i) ->
-                resugar_machine_integer fv i t.FStarC_Syntax_Syntax.pos))
+            | FStar_Pervasives_Native.Some (fv, i, b) ->
+                resugar_machine_integer fv i b t.FStarC_Syntax_Syntax.pos))
   | FStarC_Syntax_Syntax.Tm_app uu___1 ->
       let t1 = FStarC_Syntax_Util.canon_app t in
       let uu___2 = FStarC_Syntax_Util.head_and_args_full t1 in
@@ -809,12 +800,17 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
              let uu___4 =
                let uu___5 =
                  let uu___6 = is_projector e in
-                 FStar_Pervasives_Native.uu___is_Some uu___6 in
-               if uu___5 then Prims.uu___is_Cons args1 else false in
+                 match uu___6 with
+                 | FStar_Pervasives_Native.Some v -> true
+                 | uu___7 -> false in
+               if uu___5
+               then match args1 with | hd::tl -> true | uu___6 -> false
+               else false in
              if uu___4
              then
-               FStar_Pervasives_Native.uu___is_None
-                 (FStar_Pervasives_Native.snd (FStarC_List.hd args1))
+               match FStar_Pervasives_Native.snd (FStarC_List.hd args1) with
+               | FStar_Pervasives_Native.None -> true
+               | uu___5 -> false
              else false in
            if uu___3
            then
@@ -823,7 +819,7 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
               | arg1::rest_args ->
                   let uu___5 =
                     let uu___6 = is_projector e in
-                    FStar_Pervasives_Native.__proj__Some__item__v uu___6 in
+                    match uu___6 with | FStar_Pervasives_Native.Some v -> v in
                   (match uu___5 with
                    | (uu___6, fi) ->
                        let arg =
@@ -849,12 +845,12 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
                   let uu___6 =
                     let uu___7 =
                       let uu___8 = FStarC_Options.print_implicits () in
-                      Prims.op_Negation uu___8 in
+                      Prims.not uu___8 in
                     if uu___7
                     then
                       let uu___8 =
                         FStarC_Options_Ext.enabled "show_hide_reveal" in
-                      Prims.op_Negation uu___8
+                      Prims.not uu___8
                     else false in
                   if uu___6 then is_hide_or_reveal e else false in
                 if uu___5
@@ -1365,8 +1361,7 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
                                                       | FStar_Pervasives_Native.None
                                                           -> op1
                                                       | FStar_Pervasives_Native.Some
-                                                          (op2, uu___16) ->
-                                                          op2 in
+                                                          op2 -> op2 in
                                                     let flavor_matches t2 =
                                                       match ((t2.FStarC_Parser_AST.tm),
                                                               op)
@@ -1437,7 +1432,10 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
                                             ([], ([], []), uu___13) in
                                           FStarC_Parser_AST.QExists uu___12 in
                                         mk uu___11) in
-                               if Prims.uu___is_Cons args1
+                               if
+                                 (match args1 with
+                                  | hd::tl -> true
+                                  | uu___9 -> false)
                                then
                                  let args2 = last args1 in
                                  (match args2 with
@@ -1487,7 +1485,7 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
                                                         q =
                                                           FStarC_Parser_AST.Nothing)
                                                  op_args in
-                                             Prims.op_Negation uu___10 in
+                                             Prims.not uu___10 in
                                            if uu___9
                                            then resugar_as_app e args1
                                            else
@@ -1696,7 +1694,7 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
              | (attrs, (pb, univs)) ->
                  let uu___3 =
                    let uu___4 = FStarC_Options.print_universes () in
-                   Prims.op_Negation uu___4 in
+                   Prims.not uu___4 in
                  if uu___3
                  then (attrs, pb)
                  else
@@ -1706,7 +1704,7 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
            let uu___2 =
              match r with
              | (FStar_Pervasives_Native.Some attrs, (pb, univs))::[] when
-                 Prims.op_Negation is_rec ->
+                 Prims.not is_rec ->
                  let uu___3 =
                    let is_inline_let_attr a =
                      match a.FStarC_Parser_AST.tm with
@@ -2172,7 +2170,7 @@ and resugar_comp' (env : FStarC_Syntax_DsEnv.env)
           if uu___2
           then
             let uu___3 = FStarC_Options.print_implicits () in
-            Prims.op_Negation uu___3
+            Prims.not uu___3
           else false in
         if uu___1
         then
@@ -2183,7 +2181,7 @@ and resugar_comp' (env : FStarC_Syntax_DsEnv.env)
                  | FStarC_Syntax_Syntax.DECREASES uu___4 -> true
                  | FStarC_Syntax_Syntax.SMTPAT uu___4 -> true
                  | uu___4 -> false) c1.FStarC_Syntax_Syntax.flags in
-          Prims.op_Negation uu___2
+          Prims.not uu___2
         else false in
       if uu___
       then
@@ -2245,32 +2243,42 @@ and resugar_comp' (env : FStarC_Syntax_DsEnv.env)
             let uu___1 =
               let uu___2 = FStarC_Syntax_Util.head_of pats in
               FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.nil_lid uu___2 in
-            Prims.op_Negation uu___1 -> [pats]
+            Prims.not uu___1 -> [pats]
         | uu___1 -> [] in
+      let triv_pre =
+        FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.true_lid
+          c1.FStarC_Syntax_Syntax.comp_pre in
       if
         FStarC_Ident.lid_equals c1.FStarC_Syntax_Syntax.effect_name
           FStarC_Parser_Const.effect_Lemma_lid
       then
-        let pre =
-          let uu___ =
-            FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.true_lid
-              c1.FStarC_Syntax_Syntax.comp_pre in
-          if uu___ then [] else [c1.FStarC_Syntax_Syntax.comp_pre] in
         let post =
           FStarC_Syntax_Util.unthunk_lemma_post
             c1.FStarC_Syntax_Syntax.comp_post in
-        let pre1 =
-          FStarC_List.map
-            (fun t ->
-               let uu___ =
-                 let uu___1 = resugar_term' env t in
-                 FStarC_Parser_AST.Requires uu___1 in
-               mk uu___) pre in
+        let triv_post =
+          let uu___ = FStarC_Syntax_Util.is_t_true post in
+          if uu___ then Prims.not triv_pre else false in
+        let pre =
+          if triv_pre
+          then []
+          else
+            (let uu___ =
+               let uu___1 =
+                 let uu___2 =
+                   resugar_term' env c1.FStarC_Syntax_Syntax.comp_pre in
+                 FStarC_Parser_AST.Requires uu___2 in
+               mk uu___1 in
+             [uu___]) in
         let post1 =
-          let uu___ =
-            let uu___1 = resugar_term' env post in
-            FStarC_Parser_AST.Ensures uu___1 in
-          mk uu___ in
+          if triv_post
+          then []
+          else
+            (let uu___ =
+               let uu___1 =
+                 let uu___2 = resugar_term' env post in
+                 FStarC_Parser_AST.Ensures uu___2 in
+               mk uu___1 in
+             [uu___]) in
         let pats = FStarC_List.map (resugar_term' env) smt_pats in
         let decrease = mk_decreases c1.FStarC_Syntax_Syntax.flags in
         let uu___ =
@@ -2279,8 +2287,8 @@ and resugar_comp' (env : FStarC_Syntax_DsEnv.env)
               maybe_shorten_lid env c1.FStarC_Syntax_Syntax.effect_name in
             let uu___3 =
               FStarC_List.map (fun t -> (t, FStarC_Parser_AST.Nothing))
-                (FStarC_List.op_At pre1
-                   (FStarC_List.op_At (post1 :: decrease) pats)) in
+                (FStarC_List.op_At pre
+                   (FStarC_List.op_At post1 (FStarC_List.op_At decrease pats))) in
             (uu___2, uu___3) in
           FStarC_Parser_AST.Construct uu___1 in
         mk uu___
@@ -2289,17 +2297,34 @@ and resugar_comp' (env : FStarC_Syntax_DsEnv.env)
          if uu___
          then
            let pre =
-             let uu___1 =
-               let uu___2 =
-                 resugar_term' env c1.FStarC_Syntax_Syntax.comp_pre in
-               FStarC_Parser_AST.Requires uu___2 in
-             mk uu___1 in
+             if triv_pre
+             then []
+             else
+               (let uu___1 =
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        resugar_term' env c1.FStarC_Syntax_Syntax.comp_pre in
+                      FStarC_Parser_AST.Requires uu___4 in
+                    mk uu___3 in
+                  (uu___2, FStarC_Parser_AST.Nothing) in
+                [uu___1]) in
            let post =
              let uu___1 =
-               let uu___2 =
-                 resugar_term' env c1.FStarC_Syntax_Syntax.comp_post in
-               FStarC_Parser_AST.Ensures uu___2 in
-             mk uu___1 in
+               FStarC_Syntax_Util.is_trivial_post
+                 c1.FStarC_Syntax_Syntax.comp_post in
+             if uu___1
+             then []
+             else
+               (let uu___2 =
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 =
+                        resugar_term' env c1.FStarC_Syntax_Syntax.comp_post in
+                      FStarC_Parser_AST.Ensures uu___5 in
+                    mk uu___4 in
+                  (uu___3, FStarC_Parser_AST.Nothing) in
+                [uu___2]) in
            let decrease =
              let uu___1 = mk_decreases c1.FStarC_Syntax_Syntax.flags in
              FStarC_List.map (fun t -> (t, FStarC_Parser_AST.Nothing)) uu___1 in
@@ -2309,8 +2334,7 @@ and resugar_comp' (env : FStarC_Syntax_DsEnv.env)
                  maybe_shorten_lid env c1.FStarC_Syntax_Syntax.effect_name in
                (uu___3,
                  (FStarC_List.op_At (result :: decrease)
-                    [(pre, FStarC_Parser_AST.Nothing);
-                    (post, FStarC_Parser_AST.Nothing)])) in
+                    (FStarC_List.op_At pre post))) in
              FStarC_Parser_AST.Construct uu___2 in
            mk uu___1
          else
@@ -2429,7 +2453,7 @@ and resugar_pat' (env : FStarC_Syntax_DsEnv.env)
            args)) in
   let rec resugar_plain_pat_cons fv args =
     let args1 =
-      let uu___ = let uu___1 = must_print args in Prims.op_Negation uu___1 in
+      let uu___ = let uu___1 = must_print args in Prims.not uu___1 in
       if uu___ then filter_pattern_imp args else args in
     let args2 =
       FStarC_List.map
@@ -2469,7 +2493,7 @@ and resugar_pat' (env : FStarC_Syntax_DsEnv.env)
         mk (FStarC_Parser_AST.PatName (fv.FStarC_Syntax_Syntax.fv_name))
     | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) when
         if is_tuple_constructor_lid fv.FStarC_Syntax_Syntax.fv_name
-        then let uu___1 = must_print args in Prims.op_Negation uu___1
+        then let uu___1 = must_print args in Prims.not uu___1
         else false ->
         let args1 =
           FStarC_List.filter_map
@@ -2523,7 +2547,7 @@ and resugar_pat' (env : FStarC_Syntax_DsEnv.env)
           FStarC_Parser_AST.string_to_op
             (FStarC_Ident.string_of_id v.FStarC_Syntax_Syntax.ppname) in
         (match uu___ with
-         | FStar_Pervasives_Native.Some (op, uu___1) ->
+         | FStar_Pervasives_Native.Some op ->
              mk
                (FStarC_Parser_AST.PatOp
                   (FStarC_Ident.mk_ident
@@ -2941,8 +2965,8 @@ let resugar_sigelt' (env : FStarC_Syntax_DsEnv.env)
                     let uu___2 =
                       let uu___3 =
                         nopath
-                          (FStar_Pervasives.__proj__Inr__item__v
-                             lb.FStarC_Syntax_Syntax.lbname) in
+                          (match lb.FStarC_Syntax_Syntax.lbname with
+                           | FStar_Pervasives.Inr v -> v) in
                       FStar_Pervasives.Inr uu___3 in
                     {
                       FStarC_Syntax_Syntax.lbname = uu___2;
@@ -3076,7 +3100,7 @@ let resugar_sigelt' (env : FStarC_Syntax_DsEnv.env)
              let uu___1 =
                let uu___2 =
                  let uu___3 = FStarC_Options.print_universes () in
-                 Prims.op_Negation uu___3 in
+                 Prims.not uu___3 in
                if uu___2 then true else FStarC_List.isEmpty uvs in
              if uu___1
              then resugar_term' env t

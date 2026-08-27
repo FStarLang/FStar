@@ -294,7 +294,8 @@ let rec is_type_aux (env : FStarC_Extraction_ML_UEnv.uenv)
         FStarC_Syntax_Syntax.body1 = body;_}
       ->
       let x =
-        FStar_Pervasives.__proj__Inl__item__v lb.FStarC_Syntax_Syntax.lbname in
+        match lb.FStarC_Syntax_Syntax.lbname with
+        | FStar_Pervasives.Inl v -> v in
       let uu___ =
         FStarC_Syntax_Subst.open_term [FStarC_Syntax_Syntax.mk_binder x] body in
       (match uu___ with
@@ -312,8 +313,8 @@ let rec is_type_aux (env : FStarC_Extraction_ML_UEnv.uenv)
                FStarC_List.map
                  (fun lb ->
                     FStarC_Syntax_Syntax.mk_binder
-                      (FStar_Pervasives.__proj__Inl__item__v
-                         lb.FStarC_Syntax_Syntax.lbname)) lbs1 in
+                      (match lb.FStarC_Syntax_Syntax.lbname with
+                       | FStar_Pervasives.Inl v -> v)) lbs1 in
              push_tcenv_binders env uu___2 in
            is_type_aux env1 body1)
   | FStarC_Syntax_Syntax.Tm_match
@@ -446,7 +447,7 @@ let normalize_abs (t0 : FStarC_Syntax_Syntax.term) :
   aux [] t0 FStar_Pervasives_Native.None
 exception NotSupportedByExtension 
 let uu___is_NotSupportedByExtension (projectee : Prims.exn) : Prims.bool=
-  match projectee with | NotSupportedByExtension -> true | uu___ -> false
+  true
 type translate_typ_t =
   FStarC_Extraction_ML_UEnv.uenv ->
     FStarC_Syntax_Syntax.term -> FStarC_Extraction_ML_Syntax.mlty
@@ -951,7 +952,7 @@ let rec translate_term_to_mlty' (g : FStarC_Extraction_ML_UEnv.uenv)
   let fv_app_as_mlty g1 fv args =
     let uu___ =
       let uu___1 = FStarC_Extraction_ML_UEnv.is_fv_type g1 fv in
-      Prims.op_Negation uu___1 in
+      Prims.not uu___1 in
     if uu___
     then FStarC_Extraction_ML_Syntax.MLTY_Top
     else
@@ -1190,8 +1191,7 @@ let mk_MLE_Let (top_level : Prims.bool)
   (body : FStarC_Extraction_ML_Syntax.mlexpr) :
   FStarC_Extraction_ML_Syntax.mlexpr'=
   match lbs with
-  | (FStarC_Extraction_ML_Syntax.NonRec, lb::[]) when
-      Prims.op_Negation top_level ->
+  | (FStarC_Extraction_ML_Syntax.NonRec, lb::[]) when Prims.not top_level ->
       (match lb.FStarC_Extraction_ML_Syntax.mllb_tysc with
        | FStar_Pervasives_Native.Some ([], t) when
            t = FStarC_Extraction_ML_Syntax.ml_unit_ty ->
@@ -1263,7 +1263,7 @@ let rec extract_one_pat (imp : Prims.bool)
     | FStarC_Extraction_ML_Syntax.MLTY_Top -> false
     | uu___ ->
         let ok1 = type_leq g t expected_ty in
-        (if Prims.op_Negation ok1
+        (if Prims.not ok1
          then
            FStarC_Extraction_ML_UEnv.debug g
              (fun uu___2 ->
@@ -1280,34 +1280,34 @@ let rec extract_one_pat (imp : Prims.bool)
          else ();
          ok1) in
   match p.FStarC_Syntax_Syntax.v with
-  | FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_int (c, swopt))
-      when
-      let uu___ = FStarC_Options.codegen () in
-      uu___ <> (FStar_Pervasives_Native.Some FStarC_Options.Krml) ->
-      let uu___ =
-        match swopt with
-        | FStar_Pervasives_Native.None ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 =
+  | FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_int uu___) when
+      let uu___1 = FStarC_Options.codegen () in
+      uu___1 <> (FStar_Pervasives_Native.Some FStarC_Options.Krml) ->
+      let uu___1 =
+        match p.FStarC_Syntax_Syntax.v with
+        | FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_int (c, b))
+            ->
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
                   FStarC_Extraction_ML_Util.mlconst_of_const
-                    p.FStarC_Syntax_Syntax.p
-                    (FStarC_Const.Const_int (c, FStar_Pervasives_Native.None)) in
-                FStarC_Extraction_ML_Syntax.MLE_Const uu___3 in
+                    p.FStarC_Syntax_Syntax.p (FStarC_Const.Const_int (c, b)) in
+                FStarC_Extraction_ML_Syntax.MLE_Const uu___4 in
               FStarC_Extraction_ML_Syntax.with_ty
-                FStarC_Extraction_ML_Syntax.ml_int_ty uu___2 in
-            (uu___1, FStarC_Extraction_ML_Syntax.ml_int_ty)
-        | FStar_Pervasives_Native.Some sw ->
+                FStarC_Extraction_ML_Syntax.ml_int_ty uu___3 in
+            (uu___2, FStarC_Extraction_ML_Syntax.ml_int_ty)
+        | FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_machine_int
+            (c, b, sw, w)) ->
             let source_term =
               FStarC_ToSyntax_ToSyntax.desugar_machine_integer
                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g).FStarC_TypeChecker_Env.dsenv
-                c sw FStarC_Range_Type.dummyRange in
-            let uu___1 = term_as_mlexpr g source_term in
-            (match uu___1 with | (mlterm, uu___2, mlty) -> (mlterm, mlty)) in
-      (match uu___ with
+                c b (sw, w) FStarC_Range_Type.dummyRange in
+            let uu___2 = term_as_mlexpr g source_term in
+            (match uu___2 with | (mlterm, uu___3, mlty) -> (mlterm, mlty)) in
+      (match uu___1 with
        | (mlc, ml_ty) ->
-           let uu___1 = FStarC_Extraction_ML_UEnv.new_mlident g in
-           (match uu___1 with
+           let uu___2 = FStarC_Extraction_ML_UEnv.new_mlident g in
+           (match uu___2 with
             | (g1, x) ->
                 let x_exp =
                   let x_exp1 =
@@ -1319,20 +1319,74 @@ let rec extract_one_pat (imp : Prims.bool)
                          (x1, ml_ty, expected_ty)) in
                   match expected_ty with
                   | FStarC_Extraction_ML_Syntax.MLTY_Top -> coerce x_exp1
-                  | uu___2 ->
-                      let uu___3 = ok ml_ty in
-                      if uu___3 then x_exp1 else coerce x_exp1 in
+                  | uu___3 ->
+                      let uu___4 = ok ml_ty in
+                      if uu___4 then x_exp1 else coerce x_exp1 in
                 let when_clause =
                   FStarC_Extraction_ML_Syntax.with_ty
                     FStarC_Extraction_ML_Syntax.ml_bool_ty
                     (FStarC_Extraction_ML_Syntax.MLE_App
                        (FStarC_Extraction_ML_Util.prims_op_equality,
                          [x_exp; mlc])) in
-                let uu___2 = ok ml_ty in
+                let uu___3 = ok ml_ty in
                 (g1,
                   (FStar_Pervasives_Native.Some
                      ((FStarC_Extraction_ML_Syntax.MLP_Var x), [when_clause])),
-                  uu___2)))
+                  uu___3)))
+  | FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_machine_int uu___)
+      when
+      let uu___1 = FStarC_Options.codegen () in
+      uu___1 <> (FStar_Pervasives_Native.Some FStarC_Options.Krml) ->
+      let uu___1 =
+        match p.FStarC_Syntax_Syntax.v with
+        | FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_int (c, b))
+            ->
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
+                  FStarC_Extraction_ML_Util.mlconst_of_const
+                    p.FStarC_Syntax_Syntax.p (FStarC_Const.Const_int (c, b)) in
+                FStarC_Extraction_ML_Syntax.MLE_Const uu___4 in
+              FStarC_Extraction_ML_Syntax.with_ty
+                FStarC_Extraction_ML_Syntax.ml_int_ty uu___3 in
+            (uu___2, FStarC_Extraction_ML_Syntax.ml_int_ty)
+        | FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_machine_int
+            (c, b, sw, w)) ->
+            let source_term =
+              FStarC_ToSyntax_ToSyntax.desugar_machine_integer
+                (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g).FStarC_TypeChecker_Env.dsenv
+                c b (sw, w) FStarC_Range_Type.dummyRange in
+            let uu___2 = term_as_mlexpr g source_term in
+            (match uu___2 with | (mlterm, uu___3, mlty) -> (mlterm, mlty)) in
+      (match uu___1 with
+       | (mlc, ml_ty) ->
+           let uu___2 = FStarC_Extraction_ML_UEnv.new_mlident g in
+           (match uu___2 with
+            | (g1, x) ->
+                let x_exp =
+                  let x_exp1 =
+                    FStarC_Extraction_ML_Syntax.with_ty expected_ty
+                      (FStarC_Extraction_ML_Syntax.MLE_Var x) in
+                  let coerce x1 =
+                    FStarC_Extraction_ML_Syntax.with_ty ml_ty
+                      (FStarC_Extraction_ML_Syntax.MLE_Coerce
+                         (x1, ml_ty, expected_ty)) in
+                  match expected_ty with
+                  | FStarC_Extraction_ML_Syntax.MLTY_Top -> coerce x_exp1
+                  | uu___3 ->
+                      let uu___4 = ok ml_ty in
+                      if uu___4 then x_exp1 else coerce x_exp1 in
+                let when_clause =
+                  FStarC_Extraction_ML_Syntax.with_ty
+                    FStarC_Extraction_ML_Syntax.ml_bool_ty
+                    (FStarC_Extraction_ML_Syntax.MLE_App
+                       (FStarC_Extraction_ML_Util.prims_op_equality,
+                         [x_exp; mlc])) in
+                let uu___3 = ok ml_ty in
+                (g1,
+                  (FStar_Pervasives_Native.Some
+                     ((FStarC_Extraction_ML_Syntax.MLP_Var x), [when_clause])),
+                  uu___3)))
   | FStarC_Syntax_Syntax.Pat_constant s ->
       let t =
         FStarC_TypeChecker_TcTerm.tc_constant
@@ -1859,7 +1913,7 @@ let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
                         FStarC_Util.prefix_until
                           (fun x ->
                              let uu___8 = is_type_binder g x in
-                             Prims.op_Negation uu___8) bs in
+                             Prims.not uu___8) bs in
                       match uu___7 with
                       | FStar_Pervasives_Native.None ->
                           let uu___8 = etag_of_comp c in
@@ -1993,16 +2047,14 @@ let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
                                                          let uu___13 =
                                                            is_fstar_value
                                                              body1 in
-                                                         Prims.op_Negation
-                                                           uu___13 in
+                                                         Prims.not uu___13 in
                                                        if uu___12
                                                        then true
                                                        else
                                                          (let uu___13 =
                                                             FStarC_Syntax_Util.is_pure_comp
                                                               c in
-                                                          Prims.op_Negation
-                                                            uu___13)
+                                                          Prims.not uu___13)
                                                    | uu___12 -> false in
                                                  match orig_lbdef with
                                                  | FStar_Pervasives_Native.Some
@@ -2060,7 +2112,7 @@ let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
                                                                     =
                                                                     is_fstar_value
                                                                     orig_body1 in
-                                                                    Prims.op_Negation
+                                                                    Prims.not
                                                                     uu___18 in
                                                                     if
                                                                     uu___17
@@ -2070,7 +2122,7 @@ let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
                                                                     =
                                                                     FStarC_Syntax_Util.is_pure_comp
                                                                     c in
-                                                                    Prims.op_Negation
+                                                                    Prims.not
                                                                     uu___18)
                                                                     | 
                                                                     uu___17
@@ -2246,8 +2298,7 @@ and extract_lb_iface (g : FStarC_Extraction_ML_UEnv.uenv)
     FStarC_Extraction_ML_UEnv.exp_binding) Prims.list)=
   let is_top =
     FStarC_Syntax_Syntax.is_top_level (FStar_Pervasives_Native.snd lbs) in
-  let is_rec =
-    (Prims.op_Negation is_top) && (FStar_Pervasives_Native.fst lbs) in
+  let is_rec = (Prims.not is_top) && (FStar_Pervasives_Native.fst lbs) in
   let lbs1 = extract_lb_sig g lbs [] in
   FStarC_Util.fold_map
     (fun env uu___ ->
@@ -2260,7 +2311,7 @@ and extract_lb_iface (g : FStarC_Extraction_ML_UEnv.uenv)
            (match uu___1 with
             | (env1, uu___2, exp_binding) ->
                 (env1,
-                  ((FStar_Pervasives.__proj__Inr__item__v lbname),
+                  (((match lbname with | FStar_Pervasives.Inr v -> v)),
                     exp_binding)))) g lbs1
 and check_term_as_mlexpr (g : FStarC_Extraction_ML_UEnv.uenv)
   (e : FStarC_Syntax_Syntax.term) (f : FStarC_Extraction_ML_Syntax.e_tag)
@@ -2523,8 +2574,10 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
         | FStarC_Syntax_Syntax.Tm_let
             { FStarC_Syntax_Syntax.lbs = (false, lb::[]);
               FStarC_Syntax_Syntax.body1 = body;_}
-            when FStar_Pervasives.uu___is_Inl lb.FStarC_Syntax_Syntax.lbname
-            ->
+            when
+            match lb.FStarC_Syntax_Syntax.lbname with
+            | FStar_Pervasives.Inl v -> true
+            | uu___2 -> false ->
             let tcenv = FStarC_Extraction_ML_UEnv.tcenv_of_uenv g in
             let m1 = FStarC_TypeChecker_Env.norm_eff_name tcenv m in
             let uu___2 =
@@ -2572,25 +2625,22 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                  let x2 = FStarC_Syntax_Util.unascribe x1 in
                  (match x2.FStarC_Syntax_Syntax.n with
                   | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int
-                      (repr, uu___5)) ->
-                      let uu___6 =
+                      (repr, base)) ->
+                      let uu___5 =
                         FStarC_TypeChecker_TcTerm.typeof_tot_or_gtot_term
                           (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g) t3 true in
-                      (match uu___6 with
-                       | (uu___7, ty, uu___8) ->
+                      (match uu___5 with
+                       | (uu___6, ty, uu___7) ->
                            let ml_ty = term_as_mlty g ty in
                            let ml_const =
-                             FStarC_Const.Const_int
-                               (repr,
-                                 (FStar_Pervasives_Native.Some
-                                    (signedness, width))) in
-                           let uu___9 =
-                             let uu___10 =
+                             FStarC_Const.Const_machine_int
+                               (repr, base, signedness, width) in
+                           let uu___8 =
+                             let uu___9 =
                                FStarC_Extraction_ML_Util.mlexpr_of_const
                                  t3.FStarC_Syntax_Syntax.pos ml_const in
-                             FStarC_Extraction_ML_Syntax.with_ty ml_ty
-                               uu___10 in
-                           (uu___9, FStarC_Extraction_ML_Syntax.E_PURE,
+                             FStarC_Extraction_ML_Syntax.with_ty ml_ty uu___9 in
+                           (uu___8, FStarC_Extraction_ML_Syntax.E_PURE,
                              ml_ty))
                   | uu___5 -> term_as_mlexpr g t3)
              | uu___3 -> term_as_mlexpr g t3)
@@ -3462,18 +3512,20 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
        { FStarC_Syntax_Syntax.lbs = (false, lb::[]);
          FStarC_Syntax_Syntax.body1 = e';_}
        when
-       if Prims.op_Negation (FStarC_Syntax_Syntax.is_top_level [lb])
+       if Prims.not (FStarC_Syntax_Syntax.is_top_level [lb])
        then
          let uu___1 =
            FStarC_Syntax_Util.get_attribute
              FStarC_Parser_Const.rename_let_attr
              lb.FStarC_Syntax_Syntax.lbattrs in
-         FStar_Pervasives_Native.uu___is_Some uu___1
+         match uu___1 with
+         | FStar_Pervasives_Native.Some v -> true
+         | uu___2 -> false
        else false ->
        let b =
          FStarC_Syntax_Syntax.mk_binder
-           (FStar_Pervasives.__proj__Inl__item__v
-              lb.FStarC_Syntax_Syntax.lbname) in
+           (match lb.FStarC_Syntax_Syntax.lbname with
+            | FStar_Pervasives.Inl v -> v) in
        let uu___1 = FStarC_Syntax_Subst.open_term_1 b e' in
        (match uu___1 with
         | ({ FStarC_Syntax_Syntax.binder_bv = x;
@@ -3533,8 +3585,9 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                      let uu___6 =
                        FStarC_Syntax_Util.get_attribute
                          FStarC_Parser_Const.rename_let_attr [attr] in
-                     FStar_Pervasives_Native.uu___is_Some uu___6)
-                  lb.FStarC_Syntax_Syntax.lbattrs in
+                     match uu___6 with
+                     | FStar_Pervasives_Native.Some v -> true
+                     | uu___7 -> false) lb.FStarC_Syntax_Syntax.lbattrs in
               match uu___5 with | (uu___6, other_attrs) -> other_attrs in
             let maybe_rewritten_let =
               match suggested_name with
@@ -3619,8 +3672,8 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
              (let lb = FStarC_List.hd lbs in
               let x =
                 FStarC_Syntax_Syntax.freshen_bv
-                  (FStar_Pervasives.__proj__Inl__item__v
-                     lb.FStarC_Syntax_Syntax.lbname) in
+                  (match lb.FStarC_Syntax_Syntax.lbname with
+                   | FStar_Pervasives.Inl v -> v) in
               let lb1 =
                 {
                   FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inl x);

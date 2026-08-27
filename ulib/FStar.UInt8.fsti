@@ -105,7 +105,7 @@ val add_mod (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c -> FStar.UInt.add_mod (v a) (v b) = v c))
 
-(**** Subtraction primitives *)
+(**** Minus primitives *)
 
 
 (** Bounds-respecting subtraction
@@ -125,7 +125,7 @@ val sub_underspec (a:t) (b:t) : Pure t
   (ensures (fun c ->
     size (v a - v b) n ==> v a - v b = v c))
 
-(** Subtraction modulo [2^n]
+(** Minus modulo [2^n]
 
     Machine integers can always be subtractd, but the postcondition is
     now in terms of subtraction modulo [2^n] on mathematical integers *)
@@ -326,17 +326,17 @@ let gte_mask (a:t) (b:t)
 #pop-options
 
 (*** Infix notations *)
-inline_for_extraction unfold let ( +^ )  = add
+inline_for_extraction unfold let ( + )  = add
 inline_for_extraction unfold let ( +?^ ) = add_underspec
 inline_for_extraction unfold let ( +%^ ) = add_mod
-inline_for_extraction unfold let ( -^ )  = sub
+inline_for_extraction unfold let ( - )  = sub
 inline_for_extraction unfold let ( -?^ ) = sub_underspec
 inline_for_extraction unfold let ( -%^ ) = sub_mod
-inline_for_extraction unfold let ( *^ ) = mul
+inline_for_extraction unfold let ( * ) = mul
 inline_for_extraction unfold let ( *?^ )= mul_underspec
 inline_for_extraction unfold let ( *%^ )= mul_mod
-inline_for_extraction unfold let ( /^ )  = div
-inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( / )  = div
+inline_for_extraction unfold let ( % )  = rem
 inline_for_extraction unfold let ( ^^ )  = logxor
 inline_for_extraction unfold let ( &^ )  = logand
 inline_for_extraction unfold let ( |^ )  = logor
@@ -346,10 +346,27 @@ inline_for_extraction unfold let ( <<<^ ) = rotate_left
 inline_for_extraction unfold let ( >>>^ ) = rotate_right
 inline_for_extraction unfold let ( =^ )  = eq
 inline_for_extraction unfold let ( <>^ ) = ne
-inline_for_extraction unfold let ( >^ )  = gt
-inline_for_extraction unfold let ( >=^ ) = gte
-inline_for_extraction unfold let ( <^ )  = lt
-inline_for_extraction unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( > )  = gt
+inline_for_extraction unfold let ( >= ) = gte
+inline_for_extraction unfold let ( < )  = lt
+inline_for_extraction unfold let ( <= ) = lte
+
+(*** Deprecated infix notations
+
+The nine operators above used to carry a [^] suffix, to keep them apart from
+the ones on [int] and from those of the other widths. Type-based overloading
+now tells them apart, so they are spelled without the suffix. The old spellings
+remain, deprecated, so that code written against the earlier library keeps
+checking. *)
+[@@deprecated "use ( + )"]  inline_for_extraction unfold let ( +^ )  = add
+[@@deprecated "use ( - )"]  inline_for_extraction unfold let ( -^ )  = sub
+[@@deprecated "use ( * )"]  inline_for_extraction unfold let ( *^ )  = mul
+[@@deprecated "use ( / )"]  inline_for_extraction unfold let ( /^ )  = div
+[@@deprecated "use ( % )"]  inline_for_extraction unfold let ( %^ )  = rem
+[@@deprecated "use ( > )"]  inline_for_extraction unfold let ( >^ )  = gt
+[@@deprecated "use ( >= )"] inline_for_extraction unfold let ( >=^ ) = gte
+[@@deprecated "use ( < )"]  inline_for_extraction unfold let ( <^ )  = lt
+[@@deprecated "use ( <= )"] inline_for_extraction unfold let ( <=^ ) = lte
 
 (**** To input / output constants *)
 (** In decimal representation *)

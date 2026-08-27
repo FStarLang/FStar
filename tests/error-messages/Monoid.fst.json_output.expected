@@ -17,7 +17,7 @@ let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Mon
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
   Monoid.intro_monoid Prims.nat 0 add
-let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
+let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Plus
 let conjunction_monoid =
   let u14 = FStar.Pervasives.singleton Prims.l_True in
   let mult p q = p /\ q <: Prims.prop in
@@ -81,7 +81,7 @@ let bool_or_monoid =
   let or_ b1 b2 = b1 || b2 in
   Monoid.intro_monoid Prims.bool false or_
 let bool_xor_monoid =
-  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
+  let xor b1 b2 = (b1 || b2) && Prims.not (b1 && b2) in
   Monoid.intro_monoid Prims.bool false xor
 let lift_monoid_option m =
   (let mult x y =
@@ -166,7 +166,7 @@ let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Mon
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
   Monoid.intro_monoid Prims.nat 0 add
-let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
+let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Plus
 let conjunction_monoid =
   let u14 = FStar.Pervasives.singleton Prims.l_True in
   let mult p q = p /\ q <: Prims.prop in
@@ -230,7 +230,7 @@ let bool_or_monoid =
   let or_ b1 b2 = b1 || b2 in
   Monoid.intro_monoid Prims.bool false or_
 let bool_xor_monoid =
-  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
+  let xor b1 b2 = (b1 || b2) && Prims.not (b1 && b2) in
   Monoid.intro_monoid Prims.bool false xor
 let lift_monoid_option m =
   (let mult x y =
@@ -330,17 +330,11 @@ val monoid__uu___haseq: Prims.l_True /\
 
 
 
-
-
-
-
-
-
 let intro_monoid m u898 mult = Monoid.Monoid u898 mult () () () <: Prims.Pure (Monoid.monoid m)
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
   Monoid.intro_monoid Prims.nat 0 add
-let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
+let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Plus
 let conjunction_monoid =
   let u896 = FStar.Pervasives.singleton Prims.l_True in
   let mult p q = p /\ q <: Prims.prop in
@@ -404,7 +398,7 @@ let bool_or_monoid =
   let or_ b1 b2 = b1 || b2 in
   Monoid.intro_monoid Prims.bool false or_
 let bool_xor_monoid =
-  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
+  let xor b1 b2 = (b1 || b2) && Prims.not (b1 && b2) in
   Monoid.intro_monoid Prims.bool false xor
 let lift_monoid_option m =
   (let mult x y =
@@ -435,9 +429,6 @@ val monoid_morphism__uu___haseq: forall (a: Type)
   (mb: Monoid.monoid b).
   {:pattern Prims.hasEq (Monoid.monoid_morphism f ma mb)}
   Prims.l_True /\ Prims.hasEq a /\ Prims.hasEq b ==> Prims.hasEq (Monoid.monoid_morphism f ma mb)
-
-
-
 
 
 
@@ -492,10 +483,6 @@ val left_action__uu___haseq: Prims.l_True /\
         Prims.hasEq (Prims.squash (Monoid.mult_act_lemma m a mm.mult act)) /\
         Prims.hasEq (Prims.squash (Monoid.unit_act_lemma m a mm.unit act))) ==>
     Prims.hasEq (Monoid.left_action mm a))
-
-
-
-
 
 
 

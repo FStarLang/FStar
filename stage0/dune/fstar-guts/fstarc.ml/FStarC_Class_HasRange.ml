@@ -10,8 +10,8 @@ let __proj__MkhasRange__item__setPos (projectee : 'a hasRange) :
   FStarC_Range_Type.range -> 'a -> 'a=
   match projectee with | { pos; setPos;_} -> setPos
 let pos (projectee : 'a hasRange) : 'a -> FStarC_Range_Type.range=
-  __proj__MkhasRange__item__pos projectee
+  match projectee with | { pos = pos1; setPos;_} -> pos1
 let setPos (projectee : 'a hasRange) : FStarC_Range_Type.range -> 'a -> 'a=
-  __proj__MkhasRange__item__setPos projectee
+  match projectee with | { pos = pos1; setPos = setPos1;_} -> setPos1
 let hasRange_range : FStarC_Range_Type.range hasRange=
   { pos = (fun x -> x); setPos = (fun r uu___ -> r) }

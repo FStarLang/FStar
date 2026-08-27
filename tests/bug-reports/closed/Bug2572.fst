@@ -39,7 +39,7 @@ instance ( + ) (#t:Type) {|a: has_add t|} = a.add
 let ( + ) (#t:Type) {|a: has_add t|} = a.add
 
 instance int_equatable : equatable int = {
-  eq = op_Equality;
+  eq = Prims.op_Equals; (* ( = ) is shadowed above *)
   reflexivity = (fun _ -> ());
   symmetry = (fun _ _ -> ());
   transitivity = (fun _ _ _ -> ())

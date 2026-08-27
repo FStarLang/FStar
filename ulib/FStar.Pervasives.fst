@@ -61,6 +61,7 @@ let allow_inversion _ = ()
 
 let invertOption _ = ()
 
+irreducible
 let rec false_elim #_ _ = false_elim ()
 
 let singleton #_ x = x

@@ -327,79 +327,79 @@ type int : eqtype
 
 [@@ smt_theory_symbol]
 assume
-val op_AmpAmp: bool -> bool -> Tot bool
+val ( && ) : bool -> bool -> Tot bool
 
 (** [||] boolean disjunction *)
 
 [@@ smt_theory_symbol]
 assume
-val op_BarBar: bool -> bool -> Tot bool
+val ( || ) : bool -> bool -> Tot bool
 
 (** [not] boolean negation *)
 
 [@@ smt_theory_symbol]
 assume
-val op_Negation: bool -> Tot bool
+val not: bool -> Tot bool
 
 (** [*] integer multiplication *)
 
 [@@ smt_theory_symbol]
 assume
-val op_Star: int -> int -> Tot int
+val ( * ) : int -> int -> Tot int
 
 (** [-] integer subtraction *)
 
 [@@ smt_theory_symbol]
 assume
-val op_Subtraction: int -> int -> Tot int
+val ( - ) : int -> int -> Tot int
 
 (** [+] integer addition *)
 
 [@@ smt_theory_symbol]
 assume
-val op_Addition: int -> int -> Tot int
+val ( + ) : int -> int -> Tot int
 
-(** [-] prefix unary integer negation *)
+(** [~-] prefix unary integer negation; [-x] is notation for [~-x] *)
 
 [@@ smt_theory_symbol]
 assume
-val op_Minus: int -> Tot int
+val ( ~- ) : int -> Tot int
 
 (** [<=] integer comparison *)
 
 [@@ smt_theory_symbol]
 assume
-val op_LessThanOrEqual: int -> int -> Tot bool
+val ( <= ) : int -> int -> Tot bool
 
 (** [>] integer comparison *)
 
 [@@ smt_theory_symbol]
 assume
-val op_GreaterThan: int -> int -> Tot bool
+val ( > ) : int -> int -> Tot bool
 
 (** [>=] integer comparison *)
 
 [@@ smt_theory_symbol]
 assume
-val op_GreaterThanOrEqual: int -> int -> Tot bool
+val ( >= ) : int -> int -> Tot bool
 
 (** [<] integer comparison *)
 
 [@@ smt_theory_symbol]
 assume
-val op_LessThan: int -> int -> Tot bool
+val ( < ) : int -> int -> Tot bool
 
 (** [=] decidable equality on [eqtype] *)
 
 [@@ smt_theory_symbol]
 assume
-val op_Equality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
+val ( = ) : #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 
 (** [<>] decidable dis-equality on [eqtype] *)
 
 [@@ smt_theory_symbol]
 assume
-val op_disEquality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
+val ( <> ) : #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 
 (** The extensible open inductive type of exceptions *)
 assume new
@@ -410,7 +410,7 @@ type exn : Type0
 assume
 val strcat: string -> string -> Tot string
 inline_for_extraction unfold
-let op_Hat s1 s2 = strcat s1 s2
+let ( ^ ) s1 s2 = strcat s1 s2
 
 (** The inductive type of polymorphic lists *)
 type list (a: Type) =
@@ -492,13 +492,13 @@ type nonzero = i: int{i <> 0}
 
 [@@ smt_theory_symbol]
 assume
-val op_Modulus: int -> nonzero -> Tot int
+val ( % ) : int -> nonzero -> Tot int
 
 (** Euclidean division, written [/] *)
 
 [@@ smt_theory_symbol]
 assume
-val op_Division: int -> nonzero -> Tot int
+val ( / ) : int -> nonzero -> Tot int
 
 (** [pow2 x] is [2^x]:
 

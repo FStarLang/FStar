@@ -5,7 +5,7 @@ module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open Pulse.Lib.TotalOrder
-open Pulse.Lib.BoundedIntegers
+open FStar.SizeT { v, fits, (+), (-), ( * ), (/), (%), (<), (<=), (>), (>=) }
 
 fn binary_search u#a
       (#t:Type u#a)
@@ -47,7 +47,7 @@ ensures
           j < len ==>
           Seq.index s (SZ.v i) <=? Seq.index s (SZ.v j)))
   )
-  decreases (Prims.op_Subtraction (SZ.v (!i2)) (SZ.v (!i1)))
+  decreases (SZ.v (!i2) - SZ.v (!i1))
   { 
     let v1 = !i1;
     let v2 = !i2;
