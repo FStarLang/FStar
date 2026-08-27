@@ -359,7 +359,8 @@ let bv_tac_lt (n : Prims.int) : FStarC_Tactics_Types.ref_proofstate -> unit=
        let x =
          FStar_Tactics_NamedView.pack
            (FStar_Tactics_NamedView.Tv_Const
-              (FStarC_Reflection_V2_Data.C_Int n)) in
+              (FStarC_Reflection_V2_Data.C_Int
+                 (n, (FStar_Sealed.seal FStar_IntegerLiteral.Dec)))) in
        let x1 =
          FStar_Reflection_V2_Derived.mk_app
            (FStarC_Reflection_V2_Builtins.pack_ln

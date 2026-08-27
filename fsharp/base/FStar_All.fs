@@ -1,4 +1,3 @@
-#light "off"
 module FStar_All
   let failwith x = failwith x
   let exit i = exit i

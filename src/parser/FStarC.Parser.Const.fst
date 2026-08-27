@@ -170,6 +170,9 @@ let int_of_string_lid = p2l ["FStar"; "Parse"; "int_of_string"]
 let bool_of_string_lid = p2l ["FStar"; "Parse"; "bool_of_string"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
 let order_lid       = p2l ["FStar"; "Order"; "order"]
+let real_literal_lid   = p2l ["FStar"; "RealLiteral"; "real_literal"]
+let mkreal_literal_lid = p2l ["FStar"; "RealLiteral"; "Mkreal_literal_repr"]
+
 let vconfig_lid     = p2l ["FStar"; "VConfig"; "vconfig"]
 let mkvconfig_lid   = p2l ["FStar"; "VConfig"; "Mkvconfig"]
 
@@ -409,9 +412,10 @@ let const_to_string x = match x with
   | Const_effect -> "Effect"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
-  | Const_real r -> r^"R"
+  | Const_real r -> Real.to_string r ^ "R"
   | Const_string(s, _) -> Format.fmt1 "\"%s\"" s
-  | Const_int (x, _) -> x
+  | Const_int (v, b) -> string_of_int_literal v b
+  | Const_machine_int (v, b, _, _) -> string_of_int_literal v b
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStarC.Range.string_of_range r
   | Const_range_of -> "range_of"

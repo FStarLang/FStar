@@ -86,16 +86,16 @@ let _ = assert True
             by (let t = quote ((fun (x:int) -> x) 5) in
                             match inspect t with
                             | Tv_App _ _ -> ()
-                            | Tv_Const (C_Int 5) -> fail "Quoted term got reduced!"
+                            | Tv_Const (C_Int 5 _) -> fail "Quoted term got reduced!"
                             | _ -> fail "What?")
 
 (* inspect_const is used both for term constants and for pattern
 constants: machine integer constants must not be mangled into a plain
 C_Int in either case. *)
 let _ = assert True
-            by (let t = pack (Tv_Const (C_MachineInt 1 Unsigned Int32)) in
+            by (let t = pack (Tv_Const (C_MachineInt 1 (FStar.Sealed.seal Dec) Unsigned Int32)) in
                 match inspect t with
-                | Tv_Const (C_MachineInt 1 Unsigned Int32) -> ()
+                | Tv_Const (C_MachineInt 1 _ Unsigned Int32) -> ()
                 | Tv_Const c -> fail ("machine integer constant was mangled: " ^ const_to_ast_string c)
                 | _ -> fail "expected a constant")
 

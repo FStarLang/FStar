@@ -275,6 +275,62 @@ Guidelines for the changelog:
     This is a breaking change for reflection clients that match exhaustively on
     `vconst`; such code should add a `C_MachineInt` case.
 
+  * Real literals are now parsed into an exact mantissa/exponent
+    representation as soon as they enter the syntax, instead of being kept as
+    raw strings. Two soundness bugs are fixed by this: the payload of
+    `C_Real` used to be an unvalidated string that the SMT encoder printed
+    verbatim into the query, so a crafted string could inject arbitrary
+    SMT-LIB (including `(assert false)`) into it
+    (https://github.com/FStarLang/FStar/issues/4481); and the normalizer's
+    comparison of real literals was wrong for negative reals, disagreeing with
+    the SMT solver and proving `False`
+    (https://github.com/FStarLang/FStar/issues/4486).
+
+    The payload of `FStar.Stubs.Reflection.V2.Data.C_Real` is no longer a
+    string, but a value of the new type `FStar.RealLiteral.real_literal`,
+    which is the very same type the compiler uses for real constants in
+    terms. It is a record of a `mantissa` and an `exponent`, denoting
+    `mantissa * 10^exponent`, refined to be in canonical form (see
+    `FStar.RealLiteral.canonical`), so that two literals are equal exactly
+    when they denote the same number. Use `FStar.RealLiteral.mk`,
+    `of_int` or `of_string` to build one (all of them canonicalize), and
+    `to_string` or `compare` to consume one. For example, `01.0R` and
+    `1.000R` are both inspected as `C_Real (mk 1 0)`.
+
+    This is a breaking change for reflection clients using `C_Real`.
+
+  * Integer literals are likewise now parsed into their (mathematical)
+    integer value as soon as they enter the syntax, instead of being kept as
+    raw strings. The base the literal was written in (decimal, `0x`, `0o` or
+    `0b`) is retained separately, as a value of the new type
+    `FStar.IntegerLiteral.int_base`, and is used only for pretty-printing and
+    extraction.
+
+    Accordingly, `FStar.Stubs.Reflection.V2.Data.vconst` now reads
+
+    ```
+    | C_Int        : int -> sealed int_base -> vconst
+    | C_MachineInt : int -> sealed int_base -> int_signedness -> int_width -> vconst
+    ```
+
+    The base is **sealed**: it is presentational metadata, and exposing it in
+    the logical fragment would be unsound, since `0x10` and `16` are the same
+    constant as far as the normalizer, the SMT solver and
+    `FStar.Reflection.TermEq.term_eq` are concerned. Metaprograms can still
+    read it with `FStar.Tactics.unseal`. Use `FStar.Sealed.seal Dec` when
+    building a literal.
+
+    Relatedly, the range check on machine integer literals is now performed by
+    the typechecker (`tc_constant`) rather than only during desugaring, so
+    out-of-range constants built through `pack_const` are rejected as well.
+
+    This is a breaking change for reflection clients using `C_Int` or
+    `C_MachineInt`.
+
+    Note that, since only the base is retained, the pretty-printer no longer
+    reproduces the exact spelling of a literal: leading zeros are dropped and
+    hexadecimal digits are printed in lower case (`0X1F` is printed as `0x1f`).
+
 ## Effects
 
   * A pre- or postcondition can no longer determine an implicit argument. A

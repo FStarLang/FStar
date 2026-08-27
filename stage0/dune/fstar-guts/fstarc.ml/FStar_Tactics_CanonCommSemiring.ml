@@ -362,7 +362,8 @@ let quote_vm (ta : FStar_Tactics_NamedView.term)
           ((FStar_Tactics_NamedView.pack
               (FStar_Tactics_NamedView.Tv_Const
                  (FStarC_Reflection_V2_Data.C_Int
-                    (FStar_Pervasives_Native.fst p)))),
+                    ((FStar_Pervasives_Native.fst p),
+                      (FStar_Sealed.seal FStar_IntegerLiteral.Dec))))),
             FStarC_Reflection_V2_Data.Q_Explicit) :: x4 in
         (ta, FStarC_Reflection_V2_Data.Q_Implicit) :: x3 in
       ((FStarC_Reflection_V2_Builtins.pack_ln
@@ -772,7 +773,8 @@ let rec quote_polynomial :
                       ["FStar"; "Tactics"; "CanonCommSemiring"; "Pvar"])))
              [FStar_Tactics_NamedView.pack
                 (FStar_Tactics_NamedView.Tv_Const
-                   (FStarC_Reflection_V2_Data.C_Int x))])
+                   (FStarC_Reflection_V2_Data.C_Int
+                      (x, (FStar_Sealed.seal FStar_IntegerLiteral.Dec))))])
     | Pplus (e1, e2) ->
         (fun ps ->
            let x =

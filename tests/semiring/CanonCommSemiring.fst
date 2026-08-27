@@ -384,7 +384,7 @@ let rec quote_list (#a:Type) (ta:term) (quotea:a -> Tac term) (xs:list a) :
 let quote_vm (#a:Type) (ta: term) (quotea:a -> Tac term) (vm:vmap a) : Tac term =
   let quote_map_entry (p:(nat & a)) : Tac term =
     mk_app (`Mktuple2) [(`nat, Q_Implicit); (ta, Q_Implicit);
-      (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
+      (pack (Tv_Const (C_Int (fst p) (FStar.Sealed.seal Dec))), Q_Explicit);
       (quotea (snd p), Q_Explicit)] in
   let tyentry = mk_e_app (`tuple2) [(`nat); ta] in
   let tlist = quote_list tyentry quote_map_entry (fst vm) in
@@ -1595,7 +1595,7 @@ let reification (#a:Type)
 let rec quote_polynomial (#a:Type) (ta:term) (quotea:a -> Tac term) (e:polynomial a) : Tac term =
   match e with
   | Pconst c -> mk_app (`Pconst) [(ta, Q_Implicit); (quotea c, Q_Explicit)]
-  | Pvar x -> mk_e_app (`Pvar) [pack (Tv_Const (C_Int x))]
+  | Pvar x -> mk_e_app (`Pvar) [pack (Tv_Const (C_Int x (FStar.Sealed.seal Dec)))]
   | Pplus e1 e2 ->
     mk_e_app (`Pplus) [quote_polynomial ta quotea e1; quote_polynomial ta quotea e2]
   | Pmult e1 e2 ->

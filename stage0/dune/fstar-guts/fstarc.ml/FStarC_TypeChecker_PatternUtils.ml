@@ -185,9 +185,9 @@ let raw_pat_as_exp (env : FStarC_TypeChecker_Env.env)
     | FStarC_Syntax_Syntax.Pat_constant c ->
         let e =
           match c with
-          | FStarC_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
+          | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
               FStarC_ToSyntax_ToSyntax.desugar_machine_integer
-                env.FStarC_TypeChecker_Env.dsenv repr sw
+                env.FStarC_TypeChecker_Env.dsenv repr base (sw, w)
                 p1.FStarC_Syntax_Syntax.p
           | uu___ ->
               FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)
@@ -271,9 +271,9 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
     | FStarC_Syntax_Syntax.Pat_constant c ->
         let e =
           match c with
-          | FStarC_Const.Const_int (repr, FStar_Pervasives_Native.Some sw) ->
+          | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
               FStarC_ToSyntax_ToSyntax.desugar_machine_integer
-                env1.FStarC_TypeChecker_Env.dsenv repr sw
+                env1.FStarC_TypeChecker_Env.dsenv repr base (sw, w)
                 p1.FStarC_Syntax_Syntax.p
           | uu___ ->
               FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)

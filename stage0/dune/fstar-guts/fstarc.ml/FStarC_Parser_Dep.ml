@@ -610,7 +610,10 @@ let cache_file_name : Prims.string -> Prims.string=
               (FStarC_Format.fmt1
                  "Impossible: cache_file_name: file without a valid F* extension: %s"
                  fn) in
-      Prims.strcat mname (Prims.strcat ext ".checked") in
+      let cache_bn = Prims.strcat mname (Prims.strcat ext ".checked") in
+      if bn = fn
+      then cache_bn
+      else FStarC_Filepath.join_paths (FStarC_Filepath.dirname fn) cache_bn in
     let uu___ = FStarC_Find.find_file (FStarC_Filepath.basename cache_fn) in
     match uu___ with
     | FStar_Pervasives_Native.Some path ->
@@ -1457,18 +1460,15 @@ let collect_module_or_decls (filename : Prims.string)
   and collect_term t = collect_term' t.FStarC_Parser_AST.tm
   and collect_constant c =
     match c with
-    | FStarC_Const.Const_int
-        (uu___, FStar_Pervasives_Native.Some
-         (FStarC_Const.Unsigned, FStarC_Const.Sizet))
-        ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStarC_Ident.lid_of_str "fstar.sizeT" in
-            (false, uu___3) in
-          P_dep uu___2 in
-        add_to_parsing_data uu___1
-    | FStarC_Const.Const_int
-        (uu___, FStar_Pervasives_Native.Some (signedness, width)) ->
+    | FStarC_Const.Const_machine_int
+        (uu___, uu___1, FStarC_Const.Unsigned, FStarC_Const.Sizet) ->
+        let uu___2 =
+          let uu___3 =
+            let uu___4 = FStarC_Ident.lid_of_str "fstar.sizeT" in
+            (false, uu___4) in
+          P_dep uu___3 in
+        add_to_parsing_data uu___2
+    | FStarC_Const.Const_machine_int (uu___, uu___1, signedness, width) ->
         let u =
           match signedness with
           | FStarC_Const.Unsigned -> "u"
@@ -1479,14 +1479,14 @@ let collect_module_or_decls (filename : Prims.string)
           | FStarC_Const.Int16 -> "16"
           | FStarC_Const.Int32 -> "32"
           | FStarC_Const.Int64 -> "64" in
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
+        let uu___2 =
+          let uu___3 =
+            let uu___4 =
               FStarC_Ident.lid_of_str
                 (FStarC_Format.fmt2 "fstar.%sint%s" u w) in
-            (false, uu___3) in
-          P_dep uu___2 in
-        add_to_parsing_data uu___1
+            (false, uu___4) in
+          P_dep uu___3 in
+        add_to_parsing_data uu___2
     | FStarC_Const.Const_char uu___ ->
         let uu___1 =
           let uu___2 =

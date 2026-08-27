@@ -689,8 +689,8 @@ let term_as_formula' (uu___1 : FStar_Tactics_NamedView.term)
                                  App (h0, (FStar_Pervasives_Native.fst t1)))
                           else App (h0, (FStar_Pervasives_Native.fst t1))
                     | uu___ -> App (h0, (FStar_Pervasives_Native.fst t1)))))
-     | FStar_Tactics_NamedView.Tv_Const (FStarC_Reflection_V2_Data.C_Int i)
-         -> Obj.magic (Obj.repr (IntLit i))
+     | FStar_Tactics_NamedView.Tv_Const (FStarC_Reflection_V2_Data.C_Int
+         (i, uu___)) -> Obj.magic (Obj.repr (IntLit i))
      | FStar_Tactics_NamedView.Tv_Let (uu___, uu___1, uu___2, uu___3, uu___4)
          -> Obj.magic (Obj.repr F_Unknown)
      | FStar_Tactics_NamedView.Tv_Match (uu___, uu___1, uu___2) ->
@@ -828,7 +828,9 @@ let formula_as_term_view (f : formula) : FStar_Tactics_NamedView.term_view=
   | Name b -> FStar_Tactics_NamedView.Tv_Var b
   | FV fv -> FStar_Tactics_NamedView.Tv_FVar fv
   | IntLit i1 ->
-      FStar_Tactics_NamedView.Tv_Const (FStarC_Reflection_V2_Data.C_Int i1)
+      FStar_Tactics_NamedView.Tv_Const
+        (FStarC_Reflection_V2_Data.C_Int
+           (i1, (FStar_Sealed.seal FStar_IntegerLiteral.Dec)))
   | F_Unknown -> FStar_Tactics_NamedView.Tv_Unknown
 let formula_as_term (f : formula) : FStar_Tactics_NamedView.term=
   FStar_Tactics_NamedView.pack (formula_as_term_view f)

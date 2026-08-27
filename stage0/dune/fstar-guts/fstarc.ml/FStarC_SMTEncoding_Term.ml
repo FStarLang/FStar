@@ -176,7 +176,7 @@ let uu___is_Exists (projectee : qop) : Prims.bool=
 type term =
   | Integer of Prims.string 
   | String of Prims.string 
-  | Real of Prims.string 
+  | Real of FStarC_Real.real 
   | BoundV of Prims.int 
   | FreeV of fv 
   | App of op * term Prims.list * FStarC_Range_Type.t 
@@ -197,7 +197,7 @@ let __proj__String__item___0 (projectee : term) : Prims.string=
   match projectee with | String _0 -> _0
 let uu___is_Real (projectee : term) : Prims.bool=
   match projectee with | Real _0 -> true | uu___ -> false
-let __proj__Real__item___0 (projectee : term) : Prims.string=
+let __proj__Real__item___0 (projectee : term) : FStarC_Real.real=
   match projectee with | Real _0 -> _0
 let uu___is_BoundV (projectee : term) : Prims.bool=
   match projectee with | BoundV _0 -> true | uu___ -> false
@@ -757,7 +757,7 @@ let rec hash_of_term' (t : term) : Prims.string=
   match t with
   | Integer i -> i
   | String s -> s
-  | Real r -> r
+  | Real r -> FStarC_Real.to_string r
   | BoundV i ->
       let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
       Prims.strcat "@" uu___
@@ -854,7 +854,7 @@ let mkInteger (i : Prims.string) : term=
 let mkInteger' (i : Prims.int) : term=
   let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
   mkInteger uu___
-let mkReal (i : Prims.string) : term= Real i
+let mkReal (r : FStarC_Real.real) : term= Real r
 let mkBoundV (i : Prims.int) : term= BoundV i
 let mkFreeV (x : fv) : term= FreeV x
 let mkApp' (uu___ : (op * term Prims.list)) : term=
@@ -1149,7 +1149,7 @@ let rec print_smt_term (t : term) : Prims.string=
   match t with
   | Integer n -> FStarC_Format.fmt1 "(Integer %s)" n
   | String s -> FStarC_Format.fmt1 "(String %s)" s
-  | Real r -> FStarC_Format.fmt1 "(Real %s)" r
+  | Real r -> FStarC_Format.fmt1 "(Real %s)" (FStarC_Real.to_string r)
   | BoundV n ->
       let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
       FStarC_Format.fmt1 "(BoundV %s)" uu___
@@ -1736,7 +1736,8 @@ let termToSmt : Prims.bool -> Prims.string -> term -> FStar_Pprint.document=
           let aux1 = aux (depth + Prims.int_one) in
           match t1 with
           | Integer i -> FStar_Pprint.doc_of_string i
-          | Real r -> FStar_Pprint.doc_of_string r
+          | Real r ->
+              FStar_Pprint.doc_of_string (FStarC_Real.to_smt_string r)
           | String s ->
               let id_opt = FStarC_SMap.try_find string_cache s in
               let uu___ =

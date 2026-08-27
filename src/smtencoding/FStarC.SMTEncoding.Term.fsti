@@ -88,7 +88,7 @@ type qop =
 type term =
   | Integer    : string -> term
   | String     : string -> term
-  | Real       : string -> term
+  | Real       : FStarC.Real.real -> term
   | BoundV     : int -> term
   | FreeV      : fv -> term
   (* App and Quant carry a range: it is the only source of position
@@ -221,7 +221,7 @@ val mkFalse : term
 val mkUnreachable : term
 val mkInteger : string -> ML term
 val mkInteger': int -> ML term
-val mkReal: string -> ML term
+val mkReal: FStarC.Real.real -> ML term
 val mkBoundV : int -> ML term
 val mkFreeV  : fv -> ML term
 val mkApp' : (op & list term) -> ML term

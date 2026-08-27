@@ -10,7 +10,7 @@ type constant =
   | Char of FStar_Char.char 
   | Range of FStarC_Range_Type.t 
   | SConst of FStarC_Const.sconst 
-  | Real of Prims.string 
+  | Real of FStarC_Real.real 
 let uu___is_Unit (projectee : constant) : Prims.bool=
   match projectee with | Unit -> true | uu___ -> false
 let uu___is_Bool (projectee : constant) : Prims.bool=
@@ -40,7 +40,7 @@ let __proj__SConst__item___0 (projectee : constant) : FStarC_Const.sconst=
   match projectee with | SConst _0 -> _0
 let uu___is_Real (projectee : constant) : Prims.bool=
   match projectee with | Real _0 -> true | uu___ -> false
-let __proj__Real__item___0 (projectee : constant) : Prims.string=
+let __proj__Real__item___0 (projectee : constant) : FStarC_Real.real=
   match projectee with | Real _0 -> _0
 type atom =
   | Var of var 
@@ -583,7 +583,7 @@ let constant_to_string (c : constant) : Prims.string=
       let uu___ = FStarC_Range_Ops.string_of_range r in
       FStarC_Format.fmt1 "Range %s" uu___
   | SConst s -> FStarC_Class_Show.show FStarC_Syntax_Print.showable_const s
-  | Real s -> FStarC_Format.fmt1 "Real %s" s
+  | Real r -> FStarC_Format.fmt1 "Real %s" (FStarC_Real.to_string r)
 let rec t_to_string (x : t) : Prims.string=
   match x.nbe_t with
   | Lam { interp = b; shape = uu___; arity;_} ->
@@ -942,11 +942,10 @@ let e_int : Prims.int embedding=
   mk_emb' em1 un1 (fun uu___ -> lid_as_typ FStarC_Parser_Const.int_lid [] [])
     (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_int)
 let e_real : FStarC_Real.real embedding=
-  let em1 _cb uu___ =
-    match uu___ with | FStarC_Real.Real c -> Constant (Real c) in
+  let em1 _cb r = Constant (Real r) in
   let un1 _cb c =
     match c with
-    | Constant (Real a) -> FStar_Pervasives_Native.Some (FStarC_Real.Real a)
+    | Constant (Real r) -> FStar_Pervasives_Native.Some r
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1
     (fun uu___ -> lid_as_typ FStarC_Parser_Const.real_lid [] [])

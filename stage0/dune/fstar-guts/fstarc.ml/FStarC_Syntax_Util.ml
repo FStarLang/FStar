@@ -1597,10 +1597,10 @@ let exp_unit : FStarC_Syntax_Syntax.term=
   FStarC_Syntax_Syntax.mk
     (FStarC_Syntax_Syntax.Tm_constant FStarC_Const.Const_unit)
     FStarC_Range_Type.dummyRange
-let exp_int (s : Prims.string) : FStarC_Syntax_Syntax.term=
+let exp_int (i : Prims.int) : FStarC_Syntax_Syntax.term=
   FStarC_Syntax_Syntax.mk
     (FStarC_Syntax_Syntax.Tm_constant
-       (FStarC_Const.Const_int (s, FStar_Pervasives_Native.None)))
+       (FStarC_Const.Const_int (i, FStar_IntegerLiteral.Dec)))
     FStarC_Range_Type.dummyRange
 let exp_char (c : FStar_Char.char) : FStarC_Syntax_Syntax.term=
   FStarC_Syntax_Syntax.mk

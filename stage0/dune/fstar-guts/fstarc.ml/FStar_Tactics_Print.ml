@@ -279,9 +279,9 @@ and const_to_ast_string (c : FStarC_Reflection_V2_Data.vconst)
   (uu___ : FStarC_Tactics_Types.ref_proofstate) : Prims.string=
   match c with
   | FStarC_Reflection_V2_Data.C_Unit -> "C_Unit"
-  | FStarC_Reflection_V2_Data.C_Int i ->
+  | FStarC_Reflection_V2_Data.C_Int (i, uu___1) ->
       Prims.strcat "C_Int " (Prims.string_of_int i)
-  | FStarC_Reflection_V2_Data.C_MachineInt (i, signedness, width) ->
+  | FStarC_Reflection_V2_Data.C_MachineInt (i, uu___1, signedness, width) ->
       Prims.strcat "C_MachineInt "
         (Prims.strcat (Prims.string_of_int i)
            (Prims.strcat " "
@@ -305,7 +305,8 @@ and const_to_ast_string (c : FStarC_Reflection_V2_Data.vconst)
       Prims.strcat "C_Reflect "
         (FStarC_Reflection_V2_Builtins.implode_qn name)
   | FStarC_Reflection_V2_Data.C_Real r ->
-      Prims.strcat "C_Real \"" (Prims.strcat r "\"")
+      Prims.strcat "C_Real \""
+        (Prims.strcat (FStar_RealLiteral.to_string r) "\"")
   | FStarC_Reflection_V2_Data.C_Char c1 ->
       Prims.strcat "C_Char '"
         (Prims.strcat (FStar_String.make Prims.int_one c1) "'")

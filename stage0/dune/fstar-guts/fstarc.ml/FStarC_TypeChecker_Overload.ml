@@ -2,6 +2,7 @@ open Prims
 type base_typ =
   | Base_rigid of FStarC_Syntax_Syntax.fv 
   | Base_type 
+  | Base_erased of (FStarC_Syntax_Syntax.fv * base_typ) 
   | Base_unknown 
 let uu___is_Base_rigid (projectee : base_typ) : Prims.bool=
   match projectee with | Base_rigid _0 -> true | uu___ -> false
@@ -9,49 +10,61 @@ let __proj__Base_rigid__item___0 (projectee : base_typ) :
   FStarC_Syntax_Syntax.fv= match projectee with | Base_rigid _0 -> _0
 let uu___is_Base_type (projectee : base_typ) : Prims.bool=
   match projectee with | Base_type -> true | uu___ -> false
+let uu___is_Base_erased (projectee : base_typ) : Prims.bool=
+  match projectee with | Base_erased _0 -> true | uu___ -> false
+let __proj__Base_erased__item___0 (projectee : base_typ) :
+  (FStarC_Syntax_Syntax.fv * base_typ)=
+  match projectee with | Base_erased _0 -> _0
 let uu___is_Base_unknown (projectee : base_typ) : Prims.bool=
   match projectee with | Base_unknown -> true | uu___ -> false
 let dbg : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "Overload"
+let rec show_base_typ (b : base_typ) : Prims.string=
+  match b with
+  | Base_rigid fv ->
+      let uu___ = FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv fv in
+      Prims.strcat "Base_rigid " uu___
+  | Base_type -> "Base_type"
+  | Base_erased (uu___, b1) ->
+      let uu___1 = let uu___2 = show_base_typ b1 in Prims.strcat uu___2 ")" in
+      Prims.strcat "Base_erased (" uu___1
+  | Base_unknown -> "Base_unknown"
 let showable_base_typ : base_typ FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | Base_rigid fv ->
-             let uu___1 =
-               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv fv in
-             Prims.strcat "Base_rigid " uu___1
-         | Base_type -> "Base_type"
-         | Base_unknown -> "Base_unknown")
-  }
+  { FStarC_Class_Show.show = show_base_typ }
 let base_steps : FStarC_TypeChecker_Env.step Prims.list=
   [FStarC_TypeChecker_Env.Unascribe;
   FStarC_TypeChecker_Env.Unmeta;
   FStarC_TypeChecker_Env.Unrefine]
-let base_of_typ (env : FStarC_TypeChecker_Env.env)
+let rec base_of_typ (env : FStarC_TypeChecker_Env.env)
   (t : FStarC_Syntax_Syntax.typ) : base_typ=
   let t1 = FStarC_TypeChecker_Normalize.unfold_whnf' base_steps env t in
   let uu___ = FStarC_Syntax_Util.head_and_args_full t1 in
   match uu___ with
-  | (hd, uu___1) ->
+  | (hd, args) ->
       let r =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Util.un_uinst hd in
-            FStarC_Syntax_Subst.compress uu___4 in
-          uu___3.FStarC_Syntax_Syntax.n in
-        match uu___2 with
-        | FStarC_Syntax_Syntax.Tm_fvar fv -> Base_rigid fv
-        | FStarC_Syntax_Syntax.Tm_type uu___3 -> Base_type
-        | uu___3 -> Base_unknown in
-      ((let uu___3 = FStarC_Effect.op_Bang dbg in
-        if uu___3
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = FStarC_Syntax_Util.un_uinst hd in
+              FStarC_Syntax_Subst.compress uu___4 in
+            uu___3.FStarC_Syntax_Syntax.n in
+          (uu___2, args) in
+        match uu___1 with
+        | (FStarC_Syntax_Syntax.Tm_fvar fv, (a, uu___2)::[]) when
+            FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.erased_lid
+            ->
+            let uu___3 = let uu___4 = base_of_typ env a in (fv, uu___4) in
+            Base_erased uu___3
+        | (FStarC_Syntax_Syntax.Tm_fvar fv, uu___2) -> Base_rigid fv
+        | (FStarC_Syntax_Syntax.Tm_type uu___2, uu___3) -> Base_type
+        | uu___2 -> Base_unknown in
+      ((let uu___2 = FStarC_Effect.op_Bang dbg in
+        if uu___2
         then
-          let uu___4 =
+          let uu___3 =
             FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
-          let uu___5 = FStarC_Class_Show.show showable_base_typ r in
-          FStarC_Format.print2 "(Overload) base_of_typ %s = %s\n" uu___4
-            uu___5
+          let uu___4 = FStarC_Class_Show.show showable_base_typ r in
+          FStarC_Format.print2 "(Overload) base_of_typ %s = %s\n" uu___3
+            uu___4
         else ());
        r)
 let base_head_fv (env : FStarC_TypeChecker_Env.env)
@@ -60,10 +73,12 @@ let base_head_fv (env : FStarC_TypeChecker_Env.env)
   let uu___ = base_of_typ env t in
   match uu___ with
   | Base_rigid fv -> FStar_Pervasives_Native.Some fv
+  | Base_erased (fv, uu___1) -> FStar_Pervasives_Native.Some fv
   | uu___1 -> FStar_Pervasives_Native.None
 let is_base_lid (l : FStarC_Ident.lident) (b : base_typ) : Prims.bool=
   match b with
   | Base_rigid fv -> FStarC_Syntax_Syntax.fv_eq_lid fv l
+  | Base_erased (fv, uu___) -> FStarC_Syntax_Syntax.fv_eq_lid fv l
   | uu___ -> false
 let coercion_source_and_target (env : FStarC_TypeChecker_Env.env)
   (f_typ : FStarC_Syntax_Syntax.typ) :
@@ -126,31 +141,37 @@ let builtin_coercion (b1 : base_typ) (b2 : base_typ) : Prims.bool=
      ||
      ((is_bool b1) && (match b2 with | Base_type -> true | uu___ -> false)))
     || ((is_prop b1) && (is_bool b2))
-let compatible (env : FStarC_TypeChecker_Env.env) (b1 : base_typ)
-  (b2 : base_typ) : Prims.bool=
-  let is_erased = is_base_lid FStarC_Parser_Const.erased_lid in
-  match (b1, b2) with
+let rec strip_erased (b : base_typ) : base_typ=
+  match b with | Base_erased (uu___, b1) -> strip_erased b1 | uu___ -> b
+let coercible (env : FStarC_TypeChecker_Env.env) (src : base_typ)
+  (tgt : base_typ) : Prims.bool=
+  let src' = strip_erased src in
+  let tgt' = strip_erased tgt in
+  match (src', tgt') with
   | (Base_unknown, uu___) -> true
   | (uu___, Base_unknown) -> true
   | (Base_type, Base_type) -> true
   | (Base_rigid fv1, Base_rigid fv2) when FStarC_Syntax_Syntax.fv_eq fv1 fv2
       -> true
   | uu___ ->
-      if
-        (((is_erased b1) || (is_erased b2)) || (builtin_coercion b1 b2)) ||
-          (builtin_coercion b2 b1)
+      if builtin_coercion src' tgt'
       then true
       else
-        (let related uu___1 =
-           match uu___1 with
-           | (src, tgt) ->
-               ((is_base_lid (FStarC_Syntax_Syntax.lid_of_fv src) b1) &&
-                  (is_base_lid (FStarC_Syntax_Syntax.lid_of_fv tgt) b2))
-                 ||
-                 ((is_base_lid (FStarC_Syntax_Syntax.lid_of_fv src) b2) &&
-                    (is_base_lid (FStarC_Syntax_Syntax.lid_of_fv tgt) b1)) in
-         let uu___1 = user_coercions env in
-         FStarC_List.existsb related uu___1)
+        (let cs = user_coercions env in
+         let related src1 tgt1 =
+           FStarC_List.existsb
+             (fun uu___1 ->
+                match uu___1 with
+                | (s, t) ->
+                    (is_base_lid (FStarC_Syntax_Syntax.lid_of_fv s) src1) &&
+                      (is_base_lid (FStarC_Syntax_Syntax.lid_of_fv t) tgt1))
+             cs in
+         let uu___1 = related src' tgt' in
+         if uu___1 then true else related src tgt)
+let compatible (env : FStarC_TypeChecker_Env.env) (b1 : base_typ)
+  (b2 : base_typ) : Prims.bool=
+  let uu___ = coercible env b1 b2 in
+  if uu___ then true else coercible env b2 b1
 let formals_of_typ (env : FStarC_TypeChecker_Env.env)
   (t : FStarC_Syntax_Syntax.typ) :
   (FStarC_Syntax_Syntax.binder Prims.list * FStarC_Syntax_Syntax.comp)=
@@ -191,6 +212,7 @@ let arity_compatible (env : FStarC_TypeChecker_Env.env)
         (let uu___1 = base_of_typ env (FStarC_Syntax_Util.comp_result c) in
          match uu___1 with
          | Base_rigid uu___2 -> false
+         | Base_erased uu___2 -> false
          | Base_type -> false
          | Base_unknown -> true)
 let candidates_doc (env : FStarC_TypeChecker_Env.env)
@@ -270,7 +292,7 @@ let expected_compatible (env : FStarC_TypeChecker_Env.env)
              | ([], []) ->
                  let uu___2 = base_of_typ_safe env rt in
                  let uu___3 = base_of_typ_safe env re in
-                 compatible env uu___2 uu___3
+                 coercible env uu___2 uu___3
              | uu___2 -> true in
            cmp ts es)
 let narrow_at (stage : Prims.string)
@@ -408,7 +430,7 @@ let resolve (env : FStarC_TypeChecker_Env.env)
                 (keep_if
                    (fun t ->
                       let uu___3 = nth_explicit_formal_base env t i in
-                      compatible env b_arg uu___3)) cands2 in
+                      coercible env b_arg uu___3)) cands2 in
         by_args (i + Prims.int_one) cands3) in
    let cands2 = by_args Prims.int_zero cands1 in
    let cands3 =
@@ -453,11 +475,18 @@ let resolve (env : FStarC_TypeChecker_Env.env)
                  let uu___8 =
                    let uu___9 =
                      let uu___10 =
-                       FStarC_Class_Show.show FStarC_Ident.showable_lident
-                         (FStarC_Syntax_Syntax.lid_of_fv primary) in
-                     FStarC_Format.fmt1
-                       "The name %s is ambiguous; candidates are:" uu___10 in
-                   FStarC_Errors_Msg.text uu___9 in
+                       let uu___11 =
+                         let uu___12 =
+                           FStarC_Class_PP.pp FStarC_Ident.pretty_ident
+                             (FStarC_Ident.ident_of_lid
+                                (FStarC_Syntax_Syntax.lid_of_fv primary)) in
+                         FStarC_Errors_Msg.fquotes uu___12 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___11
+                         (FStarC_Errors_Msg.text
+                            "is ambiguous; candidates are:") in
+                     FStar_Pprint.op_Hat_Slash_Hat
+                       (FStarC_Errors_Msg.text "The name") uu___10 in
+                   FStar_Pprint.group uu___9 in
                  [uu___8] in
                let uu___8 =
                  let uu___9 =

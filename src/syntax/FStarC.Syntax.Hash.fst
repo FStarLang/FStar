@@ -269,11 +269,12 @@ and hash_constant c
   | Const_effect -> of_int 283
   | Const_unit -> of_int 293
   | Const_bool b -> hash_bool b
-  | Const_int (s, o) -> mix (of_int 313)
-                             (mix (of_string s)
-                                    (hash_option hash_sw o))
+  (* NB: the base a literal was written in is deliberately not hashed:
+     0x10 and 16 are the same constant (see FStarC.Const.eq_const). *)
+  | Const_int (v, _) -> mix (of_int 313) (of_int v)
+  | Const_machine_int (v, _, s, w) -> mix (of_int 383) (mix (of_int v) (hash_sw (s, w)))
   | Const_char c -> mix (of_int 317) (of_int (FStar.Char.int_of_char c))
-  | Const_real s -> mix (of_int 337) (of_string s)
+  | Const_real r -> mix (of_int 337) (of_string (Real.to_string r))
   | Const_string (s, _) -> mix (of_int 349) (of_string s)
   | Const_range_of -> of_int 353
   | Const_set_range_of -> of_int 359
@@ -566,13 +567,19 @@ and equal_constant c1 c2
   | Const_effect, Const_effect
   | Const_unit, Const_unit -> true
   | Const_bool b1, Const_bool b2 -> b1 = b2
-  | Const_int (s1, o1), Const_int(s2, o2) -> s1=s2 && o1=o2
+  | Const_int (v1, _), Const_int (v2, _) -> v1 = v2
+  | Const_machine_int (v1, _, s1, w1), Const_machine_int (v2, _, s2, w2) ->
+    v1 = v2 && s1 = s2 && w1 = w2
   | Const_char c1, Const_char c2 -> c1=c2
-  | Const_real s1, Const_real s2 -> s1=s2
+  | Const_real r1, Const_real r2 -> Real.cmp r1 r2 = Order.Eq
   | Const_string (s1, _), Const_string (s2, _) -> s1=s2
   | Const_range_of, Const_range_of
   | Const_set_range_of, Const_set_range_of -> true
-  | Const_range r1, Const_range r2 -> Range.compare r1 r2 = 0
+  (* NB: full structural equality, as in FStarC.Const.eq_const and in the
+  reflection API (where [range] is an eqtype, and observable via [explode]).
+  Comparing with Range.compare would be coarser -- it ignores the end
+  position and the use range -- and hence unsound here. *)
+  | Const_range r1, Const_range r2 -> r1 = r2
   | Const_reify _, Const_reify _ -> true
   | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
   | _ -> false

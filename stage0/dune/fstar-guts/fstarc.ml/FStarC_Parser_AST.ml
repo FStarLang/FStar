@@ -1089,12 +1089,11 @@ let mk_uminus (t : term) (rminus : FStarC_Range_Type.range)
   (r : FStarC_Range_Type.range) (l : level) : term=
   let t1 =
     match t.tm with
-    | Const (FStarC_Const.Const_int
-        (s, FStar_Pervasives_Native.Some (FStarC_Const.Signed, width))) ->
+    | Const (FStarC_Const.Const_machine_int
+        (v, b, FStarC_Const.Signed, width)) ->
         Const
-          (FStarC_Const.Const_int
-             ((Prims.strcat "-" s),
-               (FStar_Pervasives_Native.Some (FStarC_Const.Signed, width))))
+          (FStarC_Const.Const_machine_int
+             ((- v), b, FStarC_Const.Signed, width))
     | uu___ -> Op ((FStarC_Ident.mk_ident ("~-", rminus)), [t]) in
   mk_term t1 r l
 let mk_pattern (p : pattern') (r : FStarC_Range_Type.range) : pattern=

@@ -222,19 +222,14 @@ let e_int : Prims.int FStarC_Syntax_Embeddings_Base.embedding=
       ((FStarC_Ident.string_of_lid FStarC_Parser_Const.int_lid), []) in
   let em i rng _shadow _norm =
     lazy_embed Prims.string_of_int (fun uu___ -> emb_t_int) rng
-      (fun uu___ -> ty) i
-      (fun uu___ ->
-         let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-         FStarC_Syntax_Util.exp_int uu___1) in
+      (fun uu___ -> ty) i (fun uu___ -> FStarC_Syntax_Util.exp_int i) in
   let un t _norm =
     lazy_unembed Prims.string_of_int (fun uu___ -> emb_t_int) t
       (fun uu___ -> ty)
       (fun t1 ->
          match t1.FStarC_Syntax_Syntax.n with
          | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int
-             (s, uu___)) ->
-             let uu___1 = FStarC_Util.int_of_string s in
-             FStar_Pervasives_Native.Some uu___1
+             (i, uu___)) -> FStar_Pervasives_Native.Some i
          | uu___ -> FStar_Pervasives_Native.None) in
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___ -> ty)
     (FStarC_Class_Show.show FStarC_Class_Show.showable_int)
@@ -265,21 +260,87 @@ let e_real : FStarC_Real.real FStarC_Syntax_Embeddings_Base.embedding=
     FStarC_Syntax_Syntax.ET_app
       ((FStarC_Ident.string_of_lid FStarC_Parser_Const.real_lid), []) in
   let em r rng _shadow _norm =
-    let uu___ = r in
-    match uu___ with
-    | FStarC_Real.Real s ->
-        FStarC_Syntax_Syntax.mk
-          (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real s)) rng in
+    FStarC_Syntax_Syntax.mk
+      (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real r)) rng in
   let un t _norm =
     let uu___ =
       let uu___1 = FStarC_Syntax_Embeddings_Base.unmeta_div_results t in
       uu___1.FStarC_Syntax_Syntax.n in
     match uu___ with
-    | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real s) ->
-        FStar_Pervasives_Native.Some (FStarC_Real.Real s)
+    | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real r) ->
+        FStar_Pervasives_Native.Some r
     | uu___1 -> FStar_Pervasives_Native.None in
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___ -> ty)
     (fun uu___ -> "<real>") (fun uu___ -> emb_t_real)
+let e_real_literal :
+  FStarC_Real.real FStarC_Syntax_Embeddings_Base.embedding=
+  let emb_t =
+    FStarC_Syntax_Syntax.ET_app
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.real_literal_lid), []) in
+  let em r rng _shadow norm =
+    let uu___ =
+      FStarC_Syntax_Syntax.tdataconstr FStarC_Parser_Const.mkreal_literal_lid in
+    let uu___1 =
+      let uu___2 =
+        let uu___3 =
+          FStarC_Syntax_Embeddings_Base.embed e_int (FStarC_Real.mantissa r)
+            rng FStar_Pervasives_Native.None norm in
+        FStarC_Syntax_Syntax.as_arg uu___3 in
+      let uu___3 =
+        let uu___4 =
+          let uu___5 =
+            FStarC_Syntax_Embeddings_Base.embed e_int
+              (FStarC_Real.exponent r) rng FStar_Pervasives_Native.None norm in
+          FStarC_Syntax_Syntax.as_arg uu___5 in
+        [uu___4] in
+      uu___2 :: uu___3 in
+    FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng in
+  let un uu___1 uu___ =
+    (fun t norm ->
+       let uu___ = FStarC_Syntax_Util.head_and_args_full t in
+       match uu___ with
+       | (hd, args) ->
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = FStarC_Syntax_Util.un_uinst hd in
+               uu___3.FStarC_Syntax_Syntax.n in
+             (uu___2, args) in
+           (match uu___1 with
+            | (FStarC_Syntax_Syntax.Tm_fvar fv,
+               (mantissa, uu___2)::(exponent, uu___3)::[]) when
+                FStarC_Syntax_Syntax.fv_eq_lid fv
+                  FStarC_Parser_Const.mkreal_literal_lid
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___4 =
+                        FStarC_Syntax_Embeddings_Base.try_unembed e_int
+                          mantissa norm in
+                      FStarC_Class_Monad.op_let_Bang
+                        FStarC_Class_Monad.monad_option () ()
+                        (Obj.magic uu___4)
+                        (fun uu___5 ->
+                           (fun mantissa1 ->
+                              let mantissa1 = Obj.magic mantissa1 in
+                              let uu___5 =
+                                FStarC_Syntax_Embeddings_Base.try_unembed
+                                  e_int exponent norm in
+                              Obj.magic
+                                (FStarC_Class_Monad.op_let_Bang
+                                   FStarC_Class_Monad.monad_option () ()
+                                   (Obj.magic uu___5)
+                                   (fun uu___6 ->
+                                      (fun exponent1 ->
+                                         let exponent1 = Obj.magic exponent1 in
+                                         Obj.magic
+                                           (FStarC_Real.try_mk mantissa1
+                                              exponent1)) uu___6))) uu___5)))
+            | uu___2 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
+      uu___1 uu___ in
+  FStarC_Syntax_Embeddings_Base.mk_emb_full em un
+    (fun uu___ ->
+       FStarC_Syntax_Syntax.tconst FStarC_Parser_Const.real_literal_lid)
+    FStarC_Real.to_string (fun uu___ -> emb_t)
 let e_option (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
   'a FStar_Pervasives_Native.option FStarC_Syntax_Embeddings_Base.embedding=
   let typ uu___ =
@@ -2695,8 +2756,7 @@ let e_arrow (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
             | FStar_Pervasives_Native.None ->
                 FStarC_Effect.raise Unembedding_failure
             | FStar_Pervasives_Native.Some b1 -> b1) in
-         FStar_Pervasives_Native.Some
-           (FStar_Pervasives.coerce_eq () f_wrapped)) in
+         FStar_Pervasives_Native.Some f_wrapped) in
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un typ printer1 emb_t_arr_a_b
 let e_sealed (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
   'a FStarC_Sealed.sealed FStarC_Syntax_Embeddings_Base.embedding=

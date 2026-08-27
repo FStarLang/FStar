@@ -32,26 +32,30 @@ let uu___is_Sizet (projectee : int_width) : Prims.bool=
   match projectee with | Sizet -> true | uu___ -> false
 type vconst =
   | C_Unit 
-  | C_Int of Prims.int 
-  | C_MachineInt of (Prims.int * int_signedness * int_width) 
+  | C_Int of (Prims.int * FStar_IntegerLiteral.int_base FStarC_Sealed.sealed)
+  
+  | C_MachineInt of (Prims.int * FStar_IntegerLiteral.int_base
+  FStarC_Sealed.sealed * int_signedness * int_width) 
   | C_True 
   | C_False 
   | C_String of Prims.string 
   | C_Range of FStarC_Range_Type.t 
   | C_Reify 
   | C_Reflect of name 
-  | C_Real of Prims.string 
+  | C_Real of FStarC_Real.real 
   | C_Char of FStar_Char.char 
 let uu___is_C_Unit (projectee : vconst) : Prims.bool=
   match projectee with | C_Unit -> true | uu___ -> false
 let uu___is_C_Int (projectee : vconst) : Prims.bool=
   match projectee with | C_Int _0 -> true | uu___ -> false
-let __proj__C_Int__item___0 (projectee : vconst) : Prims.int=
+let __proj__C_Int__item___0 (projectee : vconst) :
+  (Prims.int * FStar_IntegerLiteral.int_base FStarC_Sealed.sealed)=
   match projectee with | C_Int _0 -> _0
 let uu___is_C_MachineInt (projectee : vconst) : Prims.bool=
   match projectee with | C_MachineInt _0 -> true | uu___ -> false
 let __proj__C_MachineInt__item___0 (projectee : vconst) :
-  (Prims.int * int_signedness * int_width)=
+  (Prims.int * FStar_IntegerLiteral.int_base FStarC_Sealed.sealed *
+    int_signedness * int_width)=
   match projectee with | C_MachineInt _0 -> _0
 let uu___is_C_True (projectee : vconst) : Prims.bool=
   match projectee with | C_True -> true | uu___ -> false
@@ -73,7 +77,7 @@ let __proj__C_Reflect__item___0 (projectee : vconst) : name=
   match projectee with | C_Reflect _0 -> _0
 let uu___is_C_Real (projectee : vconst) : Prims.bool=
   match projectee with | C_Real _0 -> true | uu___ -> false
-let __proj__C_Real__item___0 (projectee : vconst) : Prims.string=
+let __proj__C_Real__item___0 (projectee : vconst) : FStarC_Real.real=
   match projectee with | C_Real _0 -> _0
 let uu___is_C_Char (projectee : vconst) : Prims.bool=
   match projectee with | C_Char _0 -> true | uu___ -> false

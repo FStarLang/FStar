@@ -76,6 +76,7 @@ let enclose (Doc l) (Doc r) (Doc x) =
 
 let cbrackets (Doc d) = enclose (text "{") (text "}") (Doc d)
 let parens   (Doc d ) = enclose (text "(") (text ")") (Doc d)
+let tparens   (Doc d ) = enclose (text "<") (text ">") (Doc d)
 
 let cat (Doc d1) (Doc d2) = Doc (d1 ^ d2)
 
@@ -336,16 +337,21 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) : 
         let args =
             match args with
             | []    -> empty
-            | [arg] -> doc_of_mltype currentModule (t_prio_name, Left) arg
+            | [arg] -> if Util.codegen_fsharp() 
+                then tparens (doc_of_mltype currentModule (t_prio_name, Left) arg)
+                else doc_of_mltype currentModule (t_prio_name, Left) arg
             | _     ->
                 let args = List.map (doc_of_mltype currentModule (min_op_prec, NonAssoc)) args in
-                parens (hbox (combine (text ", ") args))
+                if Util.codegen_fsharp() 
+                then tparens (hbox (combine (text ", ") args))
+                else parens (hbox (combine (text ", ") args))
 
         in
 
         let name = ptsym currentModule name in
-
-        hbox (reduce1 [args; text name])
+        if Util.codegen_fsharp()
+        then hbox (reduce [text name; args])
+        else hbox (reduce1 [args; text name])
     end
 
     | MLTY_Fun (t1, et, t2) ->
@@ -499,14 +505,15 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : ML
 
     | MLE_If (cond, e1, Some e2) ->
         let cond = doc_of_expr currentModule  (min_op_prec, NonAssoc) cond in
+        let line_prefix = if Util.codegen_fsharp() then [text "    "] else [] in
         let doc  =
-            combine hardline [
+            combine hardline ((if Util.codegen_fsharp() then [break1] else []) @ [
                 reduce1 [text "if"; cond; text "then"; text "begin"];
-                doc_of_expr currentModule  (min_op_prec, NonAssoc) e1;
-                reduce1 [text "end"; text "else"; text "begin"];
-                doc_of_expr currentModule  (min_op_prec, NonAssoc) e2;
-                text "end"
-            ]
+                reduce1 (line_prefix @ [doc_of_expr currentModule  (min_op_prec, NonAssoc) e1 ]);
+                reduce1 (line_prefix @ [reduce1 [text "end"; text "else"; text "begin"] ]);
+                reduce1 (line_prefix @ [doc_of_expr currentModule  (min_op_prec, NonAssoc) e2 ]);
+                reduce1 (line_prefix @ [text "end" ])
+            ])
 
         in maybe_paren outer e_bin_prio_if doc
 
@@ -602,8 +609,8 @@ and doc_of_branch (currentModule : mlsymbol) (br : mlbranch) : ML doc =
 
     combine hardline [
         reduce1 [case; text "->"; text "begin"];
-        doc_of_expr currentModule  (min_op_prec, NonAssoc) e;
-        text "end";
+        reduce1 [if Util.codegen_fsharp() then text "    " else empty; doc_of_expr currentModule  (min_op_prec, NonAssoc) e];
+        reduce1 [if Util.codegen_fsharp() then text "    " else empty; text "end"]
     ]
 
 (* -------------------------------------------------------------------- *)
@@ -670,10 +677,14 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
             let tparams = ty_param_names tparams in
             match tparams with
             | []  -> empty
-            | [x] -> text x
+            | [x] -> if Util.codegen_fsharp()
+                        then tparens (text x)
+                        else text x
             | _   ->
                 let doc = List.map (fun x -> (text x)) tparams in
-                parens (combine (text ", ") doc) in
+                if Util.codegen_fsharp()
+                then tparens (combine (text ", ") doc)
+                else parens (combine (text ", ") doc) in
 
         let forbody (body : mltybody) =
             match body with
@@ -706,13 +717,22 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
 
         in
 
-        let doc = reduce1 [tparams; text (ptsym currentModule  ([], x))] in
+        let doc = 
+            if Util.codegen_fsharp()
+            then reduce [text (ptsym currentModule  ([], x)); tparams] 
+            else reduce1 [tparams; text (ptsym currentModule  ([], x))] in
 
         match body with
         | None      -> doc
-        | Some body ->
-            let body = forbody body in
-            combine hardline [reduce1 [doc; text "="]; body]
+        | Some body_val ->
+            let body = forbody body_val in
+            let sep =
+                if Util.codegen_fsharp()
+                then match body_val with
+                    | MLTD_DType _ -> hardline
+                    | _ -> break1
+                else hardline in
+            combine sep [reduce1 [doc; text "="]; body]
 
     in
 
@@ -798,15 +818,14 @@ let doc_of_mlmodule_r (fsharp : bool) (mod : mlmodule) : ML doc =
                    then reduce1 [text "end"]
                    else reduce1 [] in
         let doc  = Option.map (fun (_, m) -> doc_of_modbody target_mod_name m) sigmod in
-        let prefix = if fsharp then [cat (text "#light \"off\"") hardline] else [] in
-        reduce <| (prefix @ [
+        reduce <| [
             head;
             hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
             cat tail hardline;
-        ])
+        ]
     in
     p_mod true mod
 

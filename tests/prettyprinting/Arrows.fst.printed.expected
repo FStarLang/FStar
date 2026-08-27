@@ -83,9 +83,9 @@ type signatureScheme =
   | SIG_UNKNOWN of (codepoint:
     lbytes 2
       { let v = int_of_bytes codepoint in
-        v <> 0x0401 /\ v <> 0x0501 /\ v <> 0x0601 /\ v <> 0x0403 /\ v <> 0x0503 /\ v <> 0x0603 /\
-        v <> 0x0804 /\ v <> 0x0805 /\ v <> 0x0806 /\ v <> 0x0201 /\ v <> 0x0203 /\ v <> 0x0202 /\
-        v <> 0x0402 /\ v <> 0x0502 /\ v <> 0x0602 /\ v <> 0xFFFF })
+        v <> 0x401 /\ v <> 0x501 /\ v <> 0x601 /\ v <> 0x403 /\ v <> 0x503 /\ v <> 0x603 /\
+        v <> 0x804 /\ v <> 0x805 /\ v <> 0x806 /\ v <> 0x201 /\ v <> 0x203 /\ v <> 0x202 /\
+        v <> 0x402 /\ v <> 0x502 /\ v <> 0x602 /\ v <> 0xffff })
 
 [@@ "substitute"]
 val hmac_part2

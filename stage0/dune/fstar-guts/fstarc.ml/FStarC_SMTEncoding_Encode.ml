@@ -678,7 +678,8 @@ let prims : prims_t=
                                                                     let uu___54
                                                                     =
                                                                     FStarC_SMTEncoding_Util.mkReal
-                                                                    "0" in
+                                                                    (FStarC_Real.of_int
+                                                                    Prims.int_zero) in
                                                                     (uu___53,
                                                                     uu___54) in
                                                                     FStarC_SMTEncoding_Util.mkEq
@@ -1523,9 +1524,7 @@ let smt_arity_attribute (env : FStarC_SMTEncoding_Env.env_t)
              uu___5.FStarC_Syntax_Syntax.n in
            (match uu___4 with
             | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_int
-                (s, FStar_Pervasives_Native.None)) ->
-                let uu___5 = FStarC_Util.int_of_string s in
-                FStar_Pervasives_Native.Some uu___5
+                (i, uu___5)) -> FStar_Pervasives_Native.Some i
             | uu___5 ->
                 let uu___6 =
                   let uu___7 =

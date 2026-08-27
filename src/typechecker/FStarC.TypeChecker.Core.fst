@@ -1933,8 +1933,8 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : ML (result (binders & universes)) =
   | Pat_constant c ->
     let e =
       match c with
-      | FStarC.Const.Const_int(repr, Some sw) ->
-        FStarC.ToSyntax.ToSyntax.desugar_machine_integer g.tcenv.dsenv repr sw p.p
+      | FStarC.Const.Const_machine_int(repr, base, sw, w) ->
+        FStarC.ToSyntax.ToSyntax.desugar_machine_integer g.tcenv.dsenv repr base (sw, w) p.p
       | _ ->
         mk (Tm_constant c) p.p in
     let! _, t_const = check "pat_const" g e in

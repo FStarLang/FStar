@@ -39,7 +39,7 @@ let parse_let (contents: string) (r: FStarC_Range.t): (FPAU.error_message, FPA.d
   | [id_str; expr_str] ->
     let id = mk_ident id_str r in
     let tm = match int_of_string_opt expr_str with
-      | Some int_lit -> FPA.mk_term (FPA.Const (FStarC_Const.Const_int (string_of_int int_lit, None))) r FPA.Expr
+      | Some int_lit -> FPA.mk_term (FPA.Const (FStarC_Const.Const_int (Z.of_int int_lit, FStar_IntegerLiteral.Dec))) r FPA.Expr
       | None -> FPA.mk_term (FPA.Var (mk_lident expr_str r)) r FPA.Expr
     in
     let q = FPA.NoLetQualifier in

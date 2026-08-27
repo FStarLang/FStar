@@ -46,21 +46,21 @@ let is_List_Tot_tl (t:thua_t) : T.Tac (option term) =
     None
   | _ -> None
 
-let simpl_list (t:thua_t) : T.Tac thua_t =
+let _simpl_list (t:thua_t) : T.Tac (option term) =
   match is_List_Tot_hd t with
   | Some x ->
     begin match is_Cons (thua x) with
-    | Some (h, t) -> thua h
-    | None -> t
+    | Some (h, _) -> Some h
+    | None -> None
     end
   | None ->
     match is_List_Tot_tl t with
     | Some x ->
       begin match is_Cons (thua x) with
-      | Some (_, t) -> thua t
-      | None -> t
+      | Some (_, tl) -> Some tl
+      | None -> None
       end
-    | None -> t
+    | None -> None
 
 let is_Some (t:thua_t) : T.Tac (option term) =
   match hua t with
@@ -86,13 +86,13 @@ let is_Some_v (t:thua_t) : T.Tac (option term) =
     None
   | _ -> None
 
-let simpl_option (t:thua_t) : T.Tac thua_t =
+let _simpl_option (t:thua_t) : T.Tac (option term) =
   match is_Some_v t with
   | Some o ->
     (match is_Some (thua o) with
-    | Some x -> thua x
-    | None -> t)
-  | None -> t
+    | Some x -> Some x
+    | None -> None)
+  | None -> None
 
 let is_tuple2__1 (t:thua_t) : T.Tac (option term) =
   match hua t with
@@ -150,11 +150,6 @@ let _simpl_proj (t:thua_t) : T.Tac (option term) =
     | Some t -> omap snd (is_tuple2 (thua t))
     | None -> None
 
-let simpl_proj (t:thua_t) : T.Tac thua_t =
-  match _simpl_proj t with
-  | Some t -> thua t
-  | None -> t
-
 let is_reveal (t:thua_t) : T.Tac (option (typ & term)) =
   match hua t with
   | Some (h, us, args) ->
@@ -179,40 +174,74 @@ let is_hide (t:thua_t) : T.Tac (option (typ & term)) =
     None
   | _ -> None
 
-let simpl_reveal_hide (t:thua_t) : T.Tac thua_t =
+let _simpl_reveal_hide (t:thua_t) : T.Tac (option term) =
   match is_reveal t with
   | Some (_, x) ->
     begin match is_hide (thua x) with
-    | Some (_, x) -> thua x
-    | None -> t
+    | Some (_, x) -> Some x
+    | None -> None
     end
-  | None -> t
+  | None -> None
 
-let simpl_hide_reveal (t:thua_t) : T.Tac thua_t =
+let _simpl_hide_reveal (t:thua_t) : T.Tac (option term) =
   match is_hide t with
   | Some (t1, x) ->
     begin match is_reveal (thua x) with
     | Some (t2, x) ->
       (* hide #nat (reveal #int x) is == to x *)
       if FStar.Reflection.TermEq.term_eq t1 t2
-      then thua x
-      else t
-    | None -> t
+      then Some x
+      else None
+    | None -> None
     end
+  | None -> None
+
+(* Try each rule in turn, returning the rewritten term if one of them fires.
+Note that we cannot detect "did anything change?" by comparing terms:
+`FStar.Reflection.TermEq.term_eq` is conservative and returns false for equal
+terms that are not faithful, e.g. any term containing a uvar. *)
+let try_rules (t:thua_t) : T.Tac (option thua_t) =
+  match _simpl_proj t with
+  | Some t -> Some (thua t)
+  | None ->
+  match _simpl_option t with
+  | Some t -> Some (thua t)
+  | None ->
+  match _simpl_list t with
+  | Some t -> Some (thua t)
+  | None ->
+  match _simpl_hide_reveal t with
+  | Some t -> Some (thua t)
+  | None ->
+  match _simpl_reveal_hide t with
+  | Some t -> Some (thua t)
+  | None -> None
+
+(* Apply the rules at the root until none of them fires. Every rule replaces the
+term by one of its own subterms, so this terminates. *)
+let rec apply_rules_fix (t:thua_t) : T.Tac thua_t =
+  match try_rules t with
+  | Some t' -> apply_rules_fix t'
   | None -> t
 
+(* The rules are applied at a node both before and after its arguments are
+simplified.
+
+Applying them before is what keeps this cheap: a rule discards whole branches
+(`fst (a, b)` becomes `a`), and those branches are then never traversed.
+
+Applying them again afterwards is what makes the pass complete: simplifying an
+argument can expose a redex at a node that has already been visited, e.g. the
+outer projection of `fst (fst ((c, ()), ()))` only becomes reducible once its
+argument has been rewritten to `(c, ())`. A rule firing at that point returns a
+subterm of an already-simplified argument, so no further traversal is needed. *)
 let rec simplify (t0:term) : T.Tac term =
-  let t = thua t0  in
-  let t = simpl_proj t in
-  let t = simpl_option t in
-  let t = simpl_list t in
-  let t = simpl_hide_reveal t in
-  let t = simpl_reveal_hide t in
+  let t = apply_rules_fix (thua t0) in
   let t =
     match hua t with
     | Some (h, us, args) ->
       let args = T.map (fun (t, q) -> simplify t, q) args in
-      T.mk_app (T.Tv_UInst h us) args
+      fst (apply_rules_fix (thua (T.mk_app (T.Tv_UInst h us) args)))
     | _ -> fst t
   in
   // T.print <| "simplified " ^ show t0 ^ " to " ^ show t;

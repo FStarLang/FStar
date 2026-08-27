@@ -847,16 +847,18 @@ let rec desugar_maybe_non_constant_universe (t : FStarC_Parser_AST.term) :
       FStar_Pervasives.Inr FStarC_Syntax_Syntax.U_unknown
   | FStarC_Parser_AST.Uvar u ->
       FStar_Pervasives.Inr (FStarC_Syntax_Syntax.U_name u)
-  | FStarC_Parser_AST.Const (FStarC_Const.Const_int (repr, uu___)) ->
-      let n = FStarC_Util.int_of_string repr in
+  | FStarC_Parser_AST.Const (FStarC_Const.Const_int (n, uu___)) ->
       (if n < Prims.int_zero
        then
-         FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_term t
-           FStarC_Errors_Codes.Fatal_NegativeUniverseConstNotSupported ()
-           (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-           (Obj.magic
-              (Prims.strcat
-                 "Negative universe constant  are not supported : " repr))
+         (let uu___2 =
+            let uu___3 =
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
+            Prims.strcat "Negative universe constant  are not supported : "
+              uu___3 in
+          FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_term t
+            FStarC_Errors_Codes.Fatal_NegativeUniverseConstNotSupported ()
+            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+            (Obj.magic uu___2))
        else ();
        FStar_Pervasives.Inl n)
   | FStarC_Parser_AST.Op (_op_plus, t1::t2::[]) ->
@@ -1683,7 +1685,7 @@ and desugar_typ (env : FStarC_Syntax_DsEnv.env) (e : FStarC_Parser_AST.term)
   let uu___ = desugar_typ_aq env e in
   match uu___ with | (t, aq) -> (check_no_aq aq; t)
 and desugar_machine_integer (env : FStarC_Syntax_DsEnv.env)
-  (repr : Prims.string)
+  (repr : Prims.int) (base : FStar_IntegerLiteral.int_base)
   (_sw_ : (FStarC_Const.signedness * FStarC_Const.width))
   (range : FStarC_Range_Type.t) : FStarC_Syntax_Syntax.term=
   let uu___ = _sw_ in
@@ -1704,18 +1706,15 @@ and desugar_machine_integer (env : FStarC_Syntax_DsEnv.env)
                    | FStarC_Const.Int16 -> "16"
                    | FStarC_Const.Int32 -> "32"
                    | FStarC_Const.Int64 -> "64"))) in
-      ((let uu___2 =
-          let uu___3 = FStarC_Const.within_bounds repr signedness width in
-          Prims.not uu___3 in
-        if uu___2
-        then
-          FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range range
-            FStarC_Errors_Codes.Error_OutOfRange ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic
-               (FStarC_Format.fmt2 "%s is not in the expected range for %s"
-                  repr tnm))
-        else ());
+      (if Prims.not (FStarC_Const.within_bounds repr signedness width)
+       then
+         FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range range
+           FStarC_Errors_Codes.Error_OutOfRange ()
+           (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+           (Obj.magic
+              (FStarC_Format.fmt2 "%s is not in the expected range for %s"
+                 (FStarC_Const.string_of_int_literal repr base) tnm))
+       else ();
        (let private_intro_nm =
           Prims.strcat tnm
             (Prims.strcat ".__"
@@ -1766,8 +1765,7 @@ and desugar_machine_integer (env : FStarC_Syntax_DsEnv.env)
         let repr' =
           FStarC_Syntax_Syntax.mk
             (FStarC_Syntax_Syntax.Tm_constant
-               (FStarC_Const.Const_int (repr, FStar_Pervasives_Native.None)))
-            range in
+               (FStarC_Const.Const_int (repr, base))) range in
         let app =
           FStarC_Syntax_Syntax.mk_Tm_app lid1
             [(repr', (FStarC_Syntax_Syntax.as_aqual_implicit false))] range in
@@ -1830,10 +1828,10 @@ and desugar_term_maybe_top (top_level : Prims.bool) (env : env_t)
    | FStarC_Parser_AST.Attributes ts ->
        FStarC_Effect.failwith
          "Attributes should not be desugared by desugar_term_maybe_top"
-   | FStarC_Parser_AST.Const (FStarC_Const.Const_int
-       (i, FStar_Pervasives_Native.Some size)) ->
+   | FStarC_Parser_AST.Const (FStarC_Const.Const_machine_int (i, b, sw, w))
+       ->
        let uu___1 =
-         desugar_machine_integer env i size top.FStarC_Parser_AST.range in
+         desugar_machine_integer env i b (sw, w) top.FStarC_Parser_AST.range in
        (uu___1, noaqs)
    | FStarC_Parser_AST.Const c ->
        let uu___1 = mk (FStarC_Syntax_Syntax.Tm_constant c) in
@@ -3975,15 +3973,32 @@ and desugar_term_maybe_top (top_level : Prims.bool) (env : env_t)
                FStarC_Errors_Codes.Fatal_UnexpectedTerm ()
                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                (Obj.magic "Unexpected unnamed binder in 'eliminate exists'") in
+       let rec nested_pat pats r =
+         match pats with
+         | pat::[] -> pat
+         | pat::pats1 ->
+             let uu___1 =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = let uu___5 = nested_pat pats1 r in [uu___5] in
+                   pat :: uu___4 in
+                 (uu___3, true) in
+               FStarC_Parser_AST.PatTuple uu___2 in
+             FStarC_Parser_AST.mk_pattern uu___1 r
+         | [] ->
+             FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_term top
+               FStarC_Errors_Codes.Fatal_UnexpectedTerm ()
+               (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+               (Obj.magic "Empty binders in 'eliminate exists'") in
        let rec aux bs1 =
          match bs1 with
          | [] -> e
          | uu___1 ->
              let n = FStarC_List.length bs1 in
              let k =
-               if n < FStarC_Parser_Const.max_indefinite_description_arity
+               if n <= FStarC_Parser_Const.max_indefinite_description_arity
                then n
-               else FStarC_Parser_Const.max_indefinite_description_arity in
+               else Prims.int_one in
              let uu___2 = FStarC_List.splitAt k bs1 in
              (match uu___2 with
               | (hd, tl) ->
@@ -4014,13 +4029,9 @@ and desugar_term_maybe_top (top_level : Prims.bool) (env : env_t)
                       FStarC_Parser_AST.Var uu___4 in
                     FStarC_Parser_AST.mk_term uu___3 r FStarC_Parser_AST.Expr in
                   let rhs = FStarC_Parser_AST.mkExplicitApp head [pred] r in
-                  let pats = FStarC_List.map pat_of_binder hd in
                   let pat =
-                    match pats with
-                    | pat1::[] -> pat1
-                    | uu___3 ->
-                        FStarC_Parser_AST.mk_pattern
-                          (FStarC_Parser_AST.PatTuple (pats, true)) r in
+                    let uu___3 = FStarC_List.map pat_of_binder hd in
+                    nested_pat uu___3 r in
                   let uu___3 =
                     let uu___4 =
                       let uu___5 = aux tl in

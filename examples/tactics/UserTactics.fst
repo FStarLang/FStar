@@ -124,7 +124,7 @@ let test_inspect =
           | Tv_FVar _ -> debug "fvar"
           | Tv_Refine _ _ -> debug "refinement"
           | Tv_Const C_Unit -> debug "unit"
-          | Tv_Const (C_Int i) -> debug ("int: " ^ string_of_int i)
+          | Tv_Const (C_Int i _) -> debug ("int: " ^ string_of_int i)
           | _ -> fail "unknown")
 
 let test_simpl =

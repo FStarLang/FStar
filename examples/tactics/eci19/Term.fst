@@ -61,7 +61,7 @@ Let us build some terms and display them with `term_to_string`.
 *)
 
 let _ =
-  run_tactic (fun () -> let t = pack (Tv_Const (C_Int 99)) in
+  run_tactic (fun () -> let t = pack (Tv_Const (C_Int 99 (FStar.Sealed.seal Dec))) in
                      print ("t1 = " ^ term_to_string t))
 
 let _ =
@@ -77,7 +77,7 @@ let oneplusone1 : int = _ by (exact (`(1 + 1)))
 let oneplusone2 : int = _ by (exact (pack (Tv_App (`((+) 1)) ((`1), Q_Explicit))))
 
 
-let one_t () : Tac term = pack (Tv_Const (C_Int 1))
+let one_t () : Tac term = pack (Tv_Const (C_Int 1 (FStar.Sealed.seal Dec)))
 
 let oneplusone3 : int = _ by (exact (pack (Tv_App (pack (Tv_App (`(+)) (one_t (), Q_Explicit))) (one_t (), Q_Explicit))))
 

@@ -4,7 +4,7 @@ open FStar.Tactics.V2
 
 let incr_lits_by_1 (t:term) : Tac term =
     match inspect t with
-    | Tv_Const (C_Int x) -> pack (Tv_Const (C_Int (x+1)))
+    | Tv_Const (C_Int x b) -> pack (Tv_Const (C_Int (x+1) b))
     | _ -> t
 
 let test_add_1 (x:int) : int =

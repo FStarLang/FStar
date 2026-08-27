@@ -45,13 +45,22 @@ let lt (x : t) (y : t) : Prims.bool=
   FStar_UInt64.lt (match x with | Sz x1 -> x1) (match y with | Sz x1 -> x1)
 let lte (x : t) (y : t) : Prims.bool=
   FStar_UInt64.lte (match x with | Sz x1 -> x1) (match y with | Sz x1 -> x1)
+let op_Plus : t -> t -> t= add
+let op_Minus : t -> t -> t= sub
+let op_Star : t -> t -> t= mul
+let op_Slash : t -> t -> t= div
+let op_Percent : t -> t -> t= rem
+let op_Equals_Hat : t -> t -> Prims.bool= eq
+let op_Less_Greater_Hat : t -> t -> Prims.bool= ne
+let op_Greater : t -> t -> Prims.bool= gt
+let op_Greater_Equals : t -> t -> Prims.bool= gte
+let op_Less : t -> t -> Prims.bool= lt
+let op_Less_Equals : t -> t -> Prims.bool= lte
 let op_Plus_Hat : t -> t -> t= add
 let op_Minus_Hat : t -> t -> t= sub
 let op_Star_Hat : t -> t -> t= mul
 let op_Slash_Hat : t -> t -> t= div
 let op_Percent_Hat : t -> t -> t= rem
-let op_Equals_Hat : t -> t -> Prims.bool= eq
-let op_Less_Greater_Hat : t -> t -> Prims.bool= ne
 let op_Greater_Hat : t -> t -> Prims.bool= gt
 let op_Greater_Equals_Hat : t -> t -> Prims.bool= gte
 let op_Less_Hat : t -> t -> Prims.bool= lt

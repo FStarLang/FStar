@@ -59,7 +59,9 @@ let inhabit (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
         FStar_Tactics_V2_Derived.exact
           (FStarC_Reflection_V2_Builtins.pack_ln
              (FStarC_Reflection_V2_Data.Tv_Const
-                (FStarC_Reflection_V2_Data.C_Int (Prims.of_int 42)))) ps
+                (FStarC_Reflection_V2_Data.C_Int
+                   ((Prims.of_int 42),
+                     (FStar_Sealed.seal FStar_IntegerLiteral.Dec))))) ps
       else
         if x2 = FStar_Reflection_Const.bool_lid
         then
