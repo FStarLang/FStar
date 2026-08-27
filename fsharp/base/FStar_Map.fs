@@ -1,4 +1,3 @@
-#nowarn 58
 module FStar_Map
 open Prims
 open FStar_Pervasives

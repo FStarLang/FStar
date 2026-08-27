@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <OtherFlags>--nowarn:0086 --strict-indentation- --nologo</OtherFlags>
+    <OtherFlags>--nowarn:0086 --nowarn:58 --strict-indentation- --nologo</OtherFlags>
     <OutputType>Library</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDocumentation>True</GenerateDocumentation>

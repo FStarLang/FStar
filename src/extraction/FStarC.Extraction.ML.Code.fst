@@ -818,15 +818,14 @@ let doc_of_mlmodule_r (fsharp : bool) (mod : mlmodule) : ML doc =
                    then reduce1 [text "end"]
                    else reduce1 [] in
         let doc  = Option.map (fun (_, m) -> doc_of_modbody target_mod_name m) sigmod in
-        let prefix = if fsharp then [cat (text "#nowarn 58") hardline] else [] in
-        reduce <| (prefix @ [
+        reduce <| [
             head;
             hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
             cat tail hardline;
-        ])
+        ]
     in
     p_mod true mod
 

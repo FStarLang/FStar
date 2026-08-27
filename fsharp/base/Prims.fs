@@ -1,4 +1,3 @@
-#nowarn 58
 module Prims
 open System.Numerics
 
