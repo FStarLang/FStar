@@ -1269,6 +1269,15 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
     if Options.ide_id_info_off() then Env.toggle_id_info env false;
     if !dbg_IdInfoOn then Env.toggle_id_info env true;
 
+    (* `--ext freshen` restarts the solver before every top-level declaration,
+       as if there was a `#restart-solver` pragma in front of each of them.
+       This makes each declaration's proof independent of the solver state
+       left behind by the previous ones, which is useful to diagnose
+       proof instability and cross-declaration interference. It is of course
+       much slower. *)
+    if Options.Ext.enabled "freshen" then
+      env.solver.refresh (Some env.proof_ns);
+
     (* Tick off the entries of the interface's to-do list that this declaration
        discharges. Copied interface sigelts and the declarations being
        implemented are added to the environment and emitted before [se]. *)
