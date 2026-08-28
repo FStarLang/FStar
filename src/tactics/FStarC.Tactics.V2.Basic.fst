@@ -979,13 +979,24 @@ let try_unify_by_application (should_check:option should_check_uvar)
           | false ->
             (* Not a match, try instantiating the first type by application *)
             match U.arrow_one ty1 with
-            | None ->
-              fail_doc [
-                prefix 2 1 (text "Could not instantiate")
-                  (ttd e ty1) ^/^
-                prefix 2 1 (text "to")
-                  (ttd e ty2)
-              ]
+            | None -> (
+              (* Not an arrow either. If ty1 is a refinement x:t{p}, any term of
+                 type ty1 also has type t, so drop the refinement and retry:
+                 this allows applying a function returning a refined type to
+                 solve an unrefined goal. *)
+              match (SS.compress ty1).n with
+              | Tm_refine _
+              | Tm_ascribed _ ->
+                aux acc typedness_deps (U.unrefine ty1)
+
+              | _ ->
+                fail_doc [
+                  prefix 2 1 (text "Could not instantiate")
+                    (ttd e ty1) ^/^
+                  prefix 2 1 (text "to")
+                    (ttd e ty2)
+                ]
+            )
 
             | Some (b, c) ->
               if not (U.is_total_comp c) then fail "Codomain is effectful" else
