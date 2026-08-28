@@ -1408,8 +1408,11 @@ and term_as_mlexpr (g:uenv) (e:term) : ML (mlexpr & e_tag & mlty) =
     let e, f = maybe_promote_effect e f t in
     e, f, t
 
-
-and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
+and term_as_mlexpr'
+    (normalize_top_level_lets:bool)
+    (g:uenv)
+    (top:term)
+  : ML (mlexpr & e_tag & mlty) =
     let top = SS.compress top in
     (debug g (fun u -> Format.print_string (Format.fmt3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
@@ -1968,7 +1971,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
           // extract_lb_sig can compute add_unit from the un-inlined body.
           let orig_lbs = lbs in
           let lbs =
-            if top_level
+            if top_level && normalize_top_level_lets
             then
             let tcenv = TcEnv.set_current_module (tcenv_of_uenv g)
                                 (Ident.lid_of_path ((fst (current_module_of_uenv g)) @ [snd (current_module_of_uenv g)]) Range.dummyRange) in
@@ -2129,6 +2132,17 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                    with_ty t_match <| MLE_Match(e, mlbranches), f_match, t_match
             end
 
+let term_as_mlexpr_without_top_level_normalization
+    (g:uenv)
+    (e:term)
+  : ML (mlexpr & e_tag & mlty) =
+    (* [Modul] uses this only for the synthetic top-level [Tm_let] that
+       packages a [NoExtract] declaration. Recursive translation of the
+       let bindings still goes through [term_as_mlexpr], including hooks. *)
+    let e, f, t = term_as_mlexpr' false g e in
+    let e, f = maybe_promote_effect e f t in
+    e, f, t
+
 let ind_discriminator_body env (discName:lident) (constrName:lident) : ML mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.
     let _, fstar_disc_type = fst <| TypeChecker.Env.lookup_lid (tcenv_of_uenv env) discName in
@@ -2183,5 +2197,5 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : ML mlmodu
                mllb_def=discrBody;
                print_typ=false}] ) |> mk_mlmodule1
 
-let _ = register_pre_translate term_as_mlexpr'
+let _ = register_pre_translate (term_as_mlexpr' true)
 let _ = register_pre_translate_typ translate_term_to_mlty'

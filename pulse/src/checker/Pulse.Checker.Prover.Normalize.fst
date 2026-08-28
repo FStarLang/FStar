@@ -47,6 +47,16 @@ let __normalize_slprop
   (* Reduce applied projections like {x=1; ..}.x *)
   let steps = steps @ [reduce_projections] in
 
+  (* Simplify logical connectives (e.g. `True /\ p` into `p`), which show up
+  in pure slprops after the unfoldings above. Gated: it makes error messages
+  about failing pure slprops less precise, since the simplified term carries
+  no range. *)
+  let steps =
+    if Pulse.Simplify.extra_simplify_enabled ()
+    then steps @ [simplify]
+    else steps
+  in
+
   let v' = PCP.norm_well_typed_term (elab_env g) steps v in
   let v' = Pulse.Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
   v'

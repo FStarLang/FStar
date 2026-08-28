@@ -8,6 +8,9 @@ SUBDIRS += cmi
 # message) if its toolchain is missing, so this is safe to run everywhere.
 SUBDIRS += backends
 
+# Test for --ext no_krml_private.
+SUBDIRS += krml-private
+
 RUN += Eta_expand.fst
 
 # The Div test is based on testing a non-terminating program and
@@ -26,6 +29,22 @@ include $(FSTAR_ROOT)/mk/test.mk
 
 all: $(OUTPUT_DIR)/FloatLiteralExtraction.krml
 all: $(OUTPUT_DIR)/FloatLiteralInjection.rejected
+all: $(OUTPUT_DIR)/NoExtractNorm.test
+all: $(OUTPUT_DIR)/NoExtractNormPerf.test
+
+$(OUTPUT_DIR)/NoExtractNorm.test: $(CACHE_DIR)/NoExtractNorm.fst.checked $(FSTAR_EXE)
+	@mkdir -p $(OUTPUT_DIR)
+	@$(FSTAR) $< --codegen krml --extract_module NoExtractNorm --debug ExtractionNorm >$(OUTPUT_DIR)/NoExtractNorm.out 2>&1
+	@grep -q "Starting to normalize top-level let Inr kept" $(OUTPUT_DIR)/NoExtractNorm.out
+	@if grep -q "Starting to normalize top-level let Inr dropped" $(OUTPUT_DIR)/NoExtractNorm.out; then \
+	  echo "ERROR: normalized a noextract definition"; false; \
+	fi
+	@touch $@
+
+$(OUTPUT_DIR)/NoExtractNormPerf.test: $(CACHE_DIR)/NoExtractNormPerf.fst.checked $(FSTAR_EXE)
+	@mkdir -p $(OUTPUT_DIR)
+	@$(FSTAR) $< --codegen krml --extract_module NoExtractNormPerf
+	@touch $@
 
 $(OUTPUT_DIR)/FloatLiteralInjection.rejected: $(CACHE_DIR)/FloatLiteralInjection.fst.checked $(FSTAR_EXE)
 	@mkdir -p $(OUTPUT_DIR)
