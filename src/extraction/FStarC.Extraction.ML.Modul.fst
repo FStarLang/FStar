@@ -1074,9 +1074,10 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
     let attrs = se.sigattrs in
     let quals = se.sigquals in
     let se = TypeChecker.Tc.run_postprocess true (tcenv_of_uenv g) se in
+    let is_noextract = List.contains S.NoExtract se.sigquals in
     let Sig_let { lbs } = se.sigel in
-    let maybe_normalize_for_extraction lbs = 
-      let norm_steps =
+    let maybe_normalize_for_extraction lbs =
+      let norm_steps : option (list norm_step) =
         match U.extract_attr' PC.normalize_for_extraction_lid attrs with
         | None -> None
         | Some (_, (steps, None)::_) ->
@@ -1108,7 +1109,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
       let norm_one_lb steps lb =
         let env = tcenv_of_uenv g in
         let env = {env with erase_erasable_args=true} in
-        let lbd = 
+        let lbd =
           Profiling.profile
                 (fun () -> N.normalize steps env lb.lbdef)
                 (Some (Ident.string_of_lid (Env.current_module env)))
@@ -1132,9 +1133,10 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
     in
     let ml_let, _, _ =
       let lbs = maybe_normalize_for_extraction lbs in
-      Term.term_as_mlexpr
-              g
-              (mk (Tm_let {lbs; body=U.exp_false_bool}) se.sigrng)
+      let tm = mk (Tm_let {lbs; body=U.exp_false_bool}) se.sigrng in
+      if is_noextract
+      then Term.term_as_mlexpr_without_top_level_normalization g tm
+      else Term.term_as_mlexpr g tm
     in
     let mlattrs = extract_attrs g se.sigattrs in
     begin
