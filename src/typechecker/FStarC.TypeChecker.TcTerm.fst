@@ -1596,6 +1596,11 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
 
         //Clear the expected type in the environment for the branches
         //  we will check the expected type for the whole match at the end
+        //Note: this drops the expected postcondition too, so with a returns
+        //  annotation the postcondition is proved once for the match rather than
+        //  in each branch, and a failure blames the whole match. That is the
+        //  same choice as for the expected type, which the annotation is there
+        //  to override.
         let env, _ = Env.clear_expected_typ env in
         let b, asc =
           let bs, asc = SS.open_ascription [b] asc in
@@ -1680,26 +1685,40 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
           //when the returns annotation is absent, env_branches contains the expected type
           // (which may either be coming from top, or a new uvar)
           let res_t = Env.expected_typ env_branches |> Option.must |> fst in
-          (* When there is an expected postcondition, each branch is checked
-             against the expected type refined by it (see expected_typ_with_post),
-             and so already has that refined type as its result type -- unless the
-             branch dropped the refinement, which it may do. If no branch dropped
-             it, then the refined type is a result type for the match as a whole,
-             and giving it here spares us re-proving the postcondition, and
-             reporting a second, less precise error when a branch fails to
-             establish it. We only ever read the branches' result types; nothing
-             is claimed of a branch that it did not already establish. *)
+          (* A match is the one term whose result type is *chosen* here rather
+             than propagated from a subterm: there is no single branch to take it
+             from, so bind_cases is handed one. Taking it from the context, as we
+             would by using res_t as it stands, discards whatever the branches
+             turn out to have in common, and makes the match prove again what
+             each of them has already proved.
+
+             That is not hypothetical. With an expected postcondition, every
+             branch is checked against the expected type refined by it (see
+             expected_typ_with_post) and so carries the refined type; using the
+             unrefined res_t here would re-raise the postcondition as an
+             obligation on the match as a whole, and, when a branch fails to
+             establish it, report that whole-match failure *before* the precise
+             per-branch one -- which was the localization problem this feature
+             set out to fix.
+
+             So: when the branches agree on a result type, and it is scoped
+             outside the match, it is a result type for the match, and we take
+             theirs. The rule is about matches, not about postconditions, and
+             preserves anything the branches happen to share. Their result types
+             are only read, never set: nothing is claimed of a branch that it did
+             not already establish. (Assuming the refined type instead would be
+             unsound, since a branch may legitimately have dropped it.) *)
           let res_t =
-            match Env.expected_post env_branches with
-            | Some post when not (U.is_trivial_post post) ->
-              let refined = refine_by_post post res_t in
-              let branch_res_typ (x : (formula & lident & list cflag & (bool -> ML lcomp))) : ML typ =
-                let (_, _, _, c) = x in (c false).res_typ in
-              if cases |> List.for_all (fun x ->
-                   TEQ.eq_tm env_branches (branch_res_typ x) refined = TEQ.Equal)
-              then refined
+            let branch_res_typ (x : (formula & lident & list cflag & (bool -> ML lcomp))) : ML typ =
+              let (_, _, _, c) = x in (c false).res_typ in
+            match cases with
+            | c0 :: rest ->
+              let t = branch_res_typ c0 in
+              if rest |> List.for_all (fun c -> TEQ.eq_tm env (branch_res_typ c) t = TEQ.Equal)
+              && Env.closed env t
+              then t
               else res_t
-            | _ -> res_t in
+            | [] -> res_t in
           TcUtil.bind_cases env res_t cases guard_x, g, erasable
 
         | Some (b, (Inl t, _, _)) ->  //a returns annotation, with type
