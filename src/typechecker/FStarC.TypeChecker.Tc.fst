@@ -1238,10 +1238,16 @@ let finish_iface_todo (env:Env.env)
 declare are private to the module. Extraction (in particular to C, via Karamel)
 needs to know this, so tag them with the internal `KrmlPrivate` attribute; see
 [FStarC.Extraction.ML.Modul.extract_meta]. This reproduces what the old
-syntactic interleaving used to do. *)
+syntactic interleaving used to do.
+
+Passing `--ext no_krml_private` disables this tagging entirely, so that no
+declaration is made C-private by virtue of being absent from the interface.
+This is useful when the generated C is meant to be consumed by other C code,
+or when debugging Karamel bundling/inlining issues. *)
 let mark_karamel_private (env:Env.env) (se:sigelt) : ML sigelt =
   let lids = U.lids_of_sigelt se in
-  if not (Env.has_iface env)
+  if Options.Ext.enabled "no_krml_private"
+  || not (Env.has_iface env)
   || Nil? lids
   || lids |> BU.for_some (Env.declared_in_iface env)
   then se
