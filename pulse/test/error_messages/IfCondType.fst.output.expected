@@ -1,4 +1,5 @@
 * Info at IfCondType.fst(11,5-11,6):
   - Expected failure:
+  - Could not instantiate implicits in term: x
   - Expected expression of type Prims.bool got expression x of type Prims.int
 
