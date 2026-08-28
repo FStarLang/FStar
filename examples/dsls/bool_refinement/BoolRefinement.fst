@@ -687,7 +687,11 @@ let src_refinements_are_closed (e:src_exp {ln e && closed e})
     src_refinements_are_closed_core 0 e elt
  
 
-#push-options "--fuel 8 --ifuel 2"
+(* The expected postcondition of this lemma is checked at the tail of each
+   branch of the match below, so the reflection-heavy equality is discharged
+   once per branch rather than once for the whole body; the EIf branch needs
+   the extra rlimit. *)
+#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 8"
 let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var) 
   : Lemma (ensures
               subst_term_spec (denote_term (elab_exp e)) (open_with_var_spec x n) ==

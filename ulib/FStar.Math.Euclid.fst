@@ -216,6 +216,9 @@ let is_gcd_prime p a =
   Classical.forall_intro (Classical.move_requires (is_gcd_prime_aux p a));
   assert (forall x. x `divides` p /\ x `divides` a ==> x = 1 \/ x = -1 /\ x `divides` 1)
 
+(* Pushing the expected postcondition into the body raises the obligation earlier,
+   in a context that this proof needs more solver resources to discharge. *)
+#push-options "--z3rlimit_factor 2"
 let bezout_prime p a =
   let r, s, d = euclid_gcd p a in
   assert (r * p + s * a = d);
@@ -225,6 +228,7 @@ let bezout_prime p a =
   assert (d = 1 \/ d = -1);
   assert ((-r) * p + (-s) * a == -(r * p + s * a)) by (FStar.Tactics.Canon.canon());
   if d = 1 then r, s else -r, -s
+#pop-options
 
 let euclid n a b r s =
   let open FStar.Math.Lemmas in
