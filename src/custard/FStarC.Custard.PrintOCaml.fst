@@ -237,7 +237,7 @@ let ocaml_var (x:string) : ML string =
   let s = lowercase_first (sanitize x) in
   if List.existsb (fun k -> k = s) ocaml_keywords then s ^ "_" else s
 
-(* Section 12.15.  The names of the top-level values this run will emit, filled
+(* Section 30.13.  The names of the top-level values this run will emit, filled
    in by [build_tables] before anything is printed.
 
    A reference to a top-level value in the same file is printed unqualified,
