@@ -55,6 +55,7 @@ NOGREP_PulseHashTable += "Array.make 1"
 # that a grep test alone would miss most of what can go wrong in a signature.
 OCAML_TESTS += PulseBasic
 OCAML_TESTS += PulseHashTable
+OCAML_TESTS += PulseFnPtrRet
 
 # Same modules, through the karamel backend: krml must accept the output and
 # the C compiler must build it.
@@ -95,6 +96,9 @@ RUST_TESTS += CborBoundarySlice
 C_TESTS += PulseBasic
 C_TESTS += PulseHashTable
 C_TESTS += CborBoundarySlice
+# Section 30: a maker that returns a one-field record collapses to a function
+# returning a function pointer, and its callers must stay saturated.
+C_TESTS += PulseFnPtrRet
 
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose

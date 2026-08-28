@@ -8221,6 +8221,138 @@ recursion out rather than importing the name, and `CFalseElim` goes through a
 builtin rule keyed on the lident, which no reducibility qualifier affects.
 
 
+## 30. A function that returns a function pointer
+
+Round 22 of the EverParse retest withdrew the framing of round 21.  A function
+pointer stored in a record is not the problem, and never was: `ok_inline`
+below, which builds a one-field record inline and calls through its field,
+compiles and runs.  What blocks CDDL is two narrower things, and
+`--custard_warn_any` is what separated them.
+
+```fstar
+noeq type fixedb = { fmeasure: U8.t -> SZ.t }
+let mk_arg (x: U8.t) : fixedb = { fmeasure = measure_u8 }
+
+fn use_arg (x: U8.t) returns n: SZ.t
+{ let b = mk_arg x; b.fmeasure x }
+```
+
+`mk_arg` takes one argument.  Custard reported it as taking two, and so
+diagnosed the saturated call in `use_arg` as a partial application:
+
+```
+Error 368: the partial application of BundleMWE.mk_arg has no C
+representation.  It is applied to 1 of its 2 arguments.
+```
+
+The arity was not misread.  It was *created*, by Custard, one pass earlier.
+
+### 30.1 Where the second argument came from
+
+`fixedb` has a single field, so §5.2 collapses it to that field's type.  After
+the collapse `mk_arg` has type `u8 -> (u8 -> usize)`, and §25's eta expansion
+saw a definition whose result type is still an arrow -- exactly its trigger --
+and gave it the trailing argument:
+
+```
+let BundleMWE.mk_arg (x: u8) (eta: u8) : usize = BundleMWE.measure_u8 eta
+```
+
+The rewrite is well typed and locally reasonable.  It is also wrong, for a
+reason §25 did not consider: expansion changes the arity of a definition and
+rewrites *only that definition*.  Every call site is left as it was.  That is
+harmless when the callers were already asking for more than the definition
+accepted -- which is the shape §25 exists for, and where the extra arguments
+are already at the call sites waiting -- and a miscompilation when they were
+not.  Here they were not.  `mk_arg x` was correct, complete, and had nothing
+left to give.
+
+There was never anything to fix.  A function returning a function pointer is
+ordinary C, and with the expansion suppressed it is what comes out:
+
+```c
+static size_t (*PulseFnPtrRet_mk_arg(uint8_t x))(uint8_t) {
+  return PulseFnPtrRet_measure_wide;
+}
+```
+
+This is the fourth defect in the family §25 and §26 opened, and the first in
+which the pass is not reading an arity off the wrong representation but
+*imposing* one.  The bound that §26.1 added -- read a parameterless
+definition's arity off its type -- is still right; what was missing is that
+raising an arity is only sound if the callers can follow.
+
+### 30.2 Only a use that cannot grow may pin a name
+
+The fix is a second table, computed per round alongside `decl_arity`: the
+fewest arguments any use of a name supplies.  A name used at `n` arguments may
+not be expanded past `n`.  A bare `EQual` counts as a use at zero, so taking a
+function's address pins it completely, and a name with no uses at all is
+unconstrained.
+
+The subtlety is which uses count, and getting it wrong fails `CEtaChain`
+immediately.  That test contains
+
+```fstar
+let call_g_partial (a: bool) : (bool -> bool) = g a
+```
+
+which uses `g` at one argument -- but only for now.  `call_g_partial` is
+itself about to be expanded, and when it is, that call becomes `g a eta`.
+Counting it would pin `g` at one, `g` would then not be expanded, and the
+chain §25 was written to resolve would stop one link in.
+
+So a use pins a name only if this pass has no way to grow it.  Exactly one
+kind can grow: the head call of an expandable definition's body, which is
+where `eta_expand_decl` appends.  Every other use -- under a `let`, in an
+argument position, as a bare address -- is final.  `mk_arg`'s single use sits
+under a `let`, which is why it pins and `g`'s does not.
+
+`tests/custard/pulse/PulseFnPtrRet.fst` holds all three shapes: a nullary
+maker, a maker with an argument, and `pick`, a genuine §25 chain that must
+still be expanded.  It checks its own answers and is run, so a function
+pointer that goes to the wrong place is a nonzero exit rather than something
+to be read out of the generated C.
+
+### 30.3 The other half: a `Type0` field is an existential
+
+The second bug in round 22 is not an arity defect and is not fixed.
+
+```fstar
+noeq type pbundle = {
+  pimpl_type: Type0;
+  pmeasure: pimpl_type -> SZ.t;
+}
+```
+
+`pimpl_type` is a *field* of kind `Type0`, and `pmeasure`'s type depends on
+it.  Erasure drops the type field, the record collapses to `pmeasure`, and the
+sibling field's type is translated with `pimpl_type` still a bound variable
+that has no representation -- so it becomes `any -> usize`, and 368 follows.
+The *value* is recovered correctly; only its type is lost:
+
+```
+let b: any -> usize = BundleMWE.measure_u8 in b x
+```
+
+This is not the same problem wearing a different hat.  §6's type
+monomorphization keys on the arguments of a type *constructor*; here the
+argument arrives as a field value at each construction site, and `pbundle` is
+an existential package rather than an instance of a parameterized type.
+Compiling it means promoting the `Type0` field to a type parameter and
+propagating the instantiation through every signature that mentions the
+record -- which is inference, and which has no answer at all when one function
+takes a `pbundle` at two different instantiations.  It is a feature at the
+scale of §6, not a repair, and it is recorded here as the open item it is.
+
+The narrow inline case above could be papered over -- the bound expression's
+own type is precise, and preferring it over a `TAny`-infected ascription would
+make `bug_a_inline` compile.  That is not worth doing.  It would fix the
+reduced test and none of the real ones, since CDDL's bundles are returned
+from functions and stored, and it would replace a clear 368 with a silent
+reinterpretation in exactly the place §5.9 asks for a loud one.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -8311,3 +8443,4 @@ builtin rule keyed on the lident, which no reducibility qualifier affects.
 | M10δδ | **A constant function compiled to mutable state** (§27) | Done.  Round 21 confirmed both §26 fixes and got the real CDDL combinator library extracting and running, and left one finding: a pure, total, compile-time-constant function was being lowered to a `static` function pointer assigned in `custard_init_globals`, which makes skipping the initializer a null-pointer call from a *public* entry point rather than a wrong answer, and puts an indirect call on the hot path.  The blocker was not §25.3's `cheap_expr`, which already admits the body, but the arity bound in `eta_expand_decl`, which only fires on an under-applied head.  Relaxing that bound as proposed would be unsound as a performance matter -- `build_table 1000000` is a known top-level function with cheap arguments, so `let table : int -> int = build_table 1000000` would be re-evaluated per call -- so `Simplify.reduce` instead gains a rule that *removes* a call: a **forwarder**, a pure non-recursive definition whose body is exactly one of its own binders, applied to all its arguments reduces to that argument.  `id_fn band` becomes `band`, which the existing `EQual` case of `eta_expand_decl` expands into a real `static` function; `id_fn` dies in DCE and `custard_init_globals` is not emitted.  `tests/custard/CInitTrap.fst`, whose second forwarder returns its *second* binder.  Four existing tests contained an incidental forwarder and were rewritten to use their arguments rather than return one (§27.5); all five suites, the DICE example, and all four CBOR mutation-adequacy figures are unchanged |
 | M10εε | **A divergence the budget was for** (§28) | Done.  #4494 reports the legacy pipelines allocating without bound and being OOM-killed on a type computed by a recursive definition that makes no progress when unfolded, and asks for a step bound as the broader fix.  §3.6's budget is that bound, and this measures it: the same reduction is `Fatal error: allocation failure during minor GC` under `--codegen OCaml` and error 365 -- naming the term and the request chain -- under Custard, because `norm_bounded` was applied to *type* normalization and not just to specialization keys.  Demand-driven extraction (§3.2) is a second and weaker guard, since the report's own reduction has the offending definition dead; `tests/custard/TypeDiverge.fst` therefore names it with `--custard_entry`, and spells the recursion out rather than importing `false_elim` so that it survives #4494 marking that `irreducible`.  Separately, `false_elim` had no builtin rule, so Custard extracted its non-terminating *definition*: an infinite loop where OCaml wants a `failwith`, and on C a hard 368 about the return type of a function that never returns.  `Builtins.pervasives_rule` gives it the `EAbort`/`TAny` treatment `magic` and `admit` have had since M2; `tests/custard/CFalseElim.fst`.  The dispatcher branch has to *fall through*, since `FStar.Pervasives` is also a realized module -- shadowing it cut `Mkdtuple3` off from `is_realized_module`, which `Realized.fst` caught |
 | M10ζζ | **Integer literals change representation underneath us** (§29) | Done.  A master merge replaced `Const_int of string & option (signedness & width)` with a value plus the base it was written in, and split machine integers into `Const_machine_int`.  Custard's IR is unchanged, so the work is three boundary cases that want different answers: `constant_of_sconst` keeps the source spelling via `string_of_int_literal`, matching the legacy ML extraction; `key_of_const` must use the *value*, since `eq_const` ignores the base and a key that kept it would specialize `f 16` and `f 0x10` twice; `hint_of_term` is cosmetic.  The merge also canonicalized hex to lowercase without leading zeros, which nothing pins -- except `cbor-corpus/mutants.py`, whose `byte+1` family required `[0-9A-F]{2}` and so silently generated ten fewer mutants, reporting 36/36 where it had reported 46/46.  Every mutant killed before was still killed; the denominator moved, which is §23.4's lesson in a second form.  Pattern widened; all four figures back to 46/46, 46/46, 48/49, 46/59.  Also: `no_auto_projectors` is a deprecated no-op, so `AssumedProj.fsti` drops it, and both §28 tests survive #4494 marking `false_elim` `irreducible`, which is what they were written for |
+| M10ηη | **A function that returns a function pointer** (§30) | Done.  Round 22 withdrew round 21's framing -- a function pointer in a record is fine -- and reduced the CDDL blocker to two narrower bugs.  The first is the fourth of the §25/§26 arity family and the first the pass *causes* rather than misreads: a one-field record collapses (§5.2), so `mk_arg (x: U8.t) : fixedb` has type `u8 -> (u8 -> usize)`, §25 sees a result type that is still an arrow and gives it a second binder -- rewriting the definition and none of its call sites, which were already saturated at one.  A function returning a function pointer is ordinary C and needed nothing.  Expansion is now capped by a per-round table of the fewest arguments any use supplies, counting only uses this pass cannot itself grow: the head call of an expandable body can, so `call_g_partial` does not pin `g` and `CEtaChain`'s chain still resolves, while `mk_arg`'s use under a `let` does.  `tests/custard/pulse/PulseFnPtrRet.fst`, run.  The second bug is not fixed and is not an arity defect: a `Type0` *field* whose siblings' types depend on it is an existential package, not an instance of a parameterized type, so §6 does not reach it and the sibling degrades to `any -> usize`.  Promoting the field to a parameter is a feature at §6's scale, and §30.3 records why the inline case must not be papered over |

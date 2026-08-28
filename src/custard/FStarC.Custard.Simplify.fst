@@ -808,7 +808,65 @@ let decl_arity (prog:program) : ML (SMap.t int) =
     | _ -> ());
   tbl
 
-let eta_expand_decl (tbl : SMap.t int) (l:dlet) : ML dlet =
+(* The fewest arguments any use of a name supplies.  Expansion raises a
+   definition's arity, but it rewrites only the definition; every call site is
+   left as it was.  That is fine when the callers were already asking for more
+   than the definition accepted -- which is the whole point of section 25 --
+   and a miscompilation when they were not.
+
+   Section 30's [mk_arg (x: u8) : fixedb], where the one-field [fixedb]
+   collapses to [u8 -> usize], is the second case: the definition returns a
+   function pointer, which C is perfectly happy to do, and [fixedb]'s arrow
+   made the pass read it as owing a second argument.  Expanded to arity two,
+   its callers -- correct at arity one, and with nothing left to expand -- were
+   rejected as partial applications.
+
+   Only a use this pass cannot itself grow may pin a name.  The head call of
+   an expandable definition's body is exactly the one that can: [go] appends
+   to it, which is how the chain of section 25 resolves, so
+   [let call_g_partial a : bool -> bool = g a] must not be read as pinning [g]
+   to one argument -- it is about to be given its second.  Every other use --
+   under a [let], in an argument, as a bare address -- is final, and that is
+   the only kind [mk_arg] has. *)
+let rec expr_uses (acc : SMap.t int) (x:expr) : ML unit =
+  let note (n:name) (k:int) : ML unit =
+    let s = string_of_name n in
+    match SMap.try_find acc s with
+    | Some m when m <= k -> ()
+    | _ -> SMap.add acc s k in
+  let sub (es:list expr) : ML unit = List.iter (expr_uses acc) es in
+  match x.e with
+  | EApp ({ e = EQual (n, _) }, es) -> note n (List.length es); sub es
+  | EQual (n, _) -> note n 0
+  | EConst _ | EVar _ | EAny | EAbort _ -> ()
+  | ERaise e1 | EDiscrim (e1, _) | EProj (e1, _, _)
+  | ECast (e1, _) | ECoerce (e1, _) -> expr_uses acc e1
+  | ECtor (_, es) | ETuple es | EOp (_, es) -> sub es
+  | ERecord (_, fs) -> sub (List.map snd fs)
+  | ELet (_, _, e1, e2) | ESeq (e1, e2) | EWhile (e1, e2) -> sub [e1; e2]
+  | EApp (h, es) -> sub (h :: es)
+  | EFun (_, b) -> expr_uses acc b
+  | EIf (c, a, b) -> sub [c; a; b]
+  | EMatch (sc, brs) | ETry (sc, brs) ->
+    expr_uses acc sc;
+    brs |> List.iter (fun (_, g, b) ->
+      (match g with Some g -> expr_uses acc g | None -> ()); expr_uses acc b)
+
+let use_arity (prog:program) : ML (SMap.t int) =
+  let tbl : SMap.t int = SMap.create 100 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet l ->
+      let growable =
+        is_pure l.dl_eff && cheap_expr l.dl_body && arrow_arity l.dl_ret > 0 in
+      (match l.dl_body.e with
+       | EQual _ when growable -> ()
+       | EApp ({ e = EQual _ }, es) when growable -> List.iter (expr_uses tbl) es
+       | _ -> expr_uses tbl l.dl_body)
+    | _ -> ());
+  tbl
+
+let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
   (* Only a head this program declares, and only a *pure* body: expansion
      re-evaluates the body on every call, and an under-applied call allocates a
      closure and runs nothing, which is why it qualifies. *)
@@ -826,7 +884,14 @@ let eta_expand_decl (tbl : SMap.t int) (l:dlet) : ML dlet =
          | Some a when a > nargs ->
            let want = a - nargs in
            let have = arrow_arity l.dl_ret in
-           if want < have then want else have
+           let room =
+             (* Never past what the callers ask for. *)
+             match SMap.try_find uses (string_of_name l.dl_name) with
+             | Some k -> if k - List.length l.dl_binders < 0
+                         then 0 else k - List.length l.dl_binders
+             | None -> have in
+           let m = if want < have then want else have in
+           if room < m then room else m
          | _ -> 0) in
   let rec go (n:int) (bs:list binder) (body:expr) (ret:cty) (ef:eff)
     : ML (list binder & expr & cty & eff) =
@@ -859,9 +924,10 @@ let eta_expand_decls (prog:program) : ML program =
                                | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
     let tbl = decl_arity p in
+    let uses = use_arity p in
     let p' = p |> List.map (fun d ->
       match d with
-      | DLet l -> DLet (eta_expand_decl tbl l)
+      | DLet l -> DLet (eta_expand_decl tbl uses l)
       | d -> d) in
     if fuel <= 0 || width p' = width p then p' else go (fuel - 1) p' in
   go (List.length prog) prog
