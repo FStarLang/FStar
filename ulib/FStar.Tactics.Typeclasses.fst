@@ -113,6 +113,7 @@ let rec head_of (t:term) : Tac (option fv) =
   | Tv_FVar fv
   | Tv_UInst fv _ -> Some fv
   | Tv_App h _ -> head_of h
+  | Tv_Refine b _ -> head_of b.sort
   | v ->
     None
 
@@ -506,7 +507,7 @@ let binder_set_meta (b : binder) (t : term) : binder =
 let debug' (f : unit -> Tac string) : Tac unit =
   if debugging () then
     print (f ())
-    
+
 [@@plugin]
 let mk_class (nm:string) : Tac decls =
     let ns = explode_qn nm in
