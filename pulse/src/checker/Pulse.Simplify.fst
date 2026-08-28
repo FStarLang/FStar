@@ -4,6 +4,12 @@ open Pulse.Show
 open FStar.Reflection.V2
 module T = FStar.Tactics.V2
 
+(* Additional simplifications, gated behind `--ext pulse:extra_simplify`
+since they change which slprops the prover can match syntactically, and
+hence which programs verify. *)
+let extra_simplify_enabled () : T.Tac bool =
+  T.ext_enabled "pulse:extra_simplify"
+
 let thua_t = term & option (fv & universes & list argv)
 let thua x = x, T.hua x
 let hua (x:thua_t) = snd x
@@ -196,11 +202,89 @@ let _simpl_hide_reveal (t:thua_t) : T.Tac (option term) =
     end
   | None -> None
 
+let is_size_t_v (t:thua_t) : T.Tac (option term) =
+  match hua t with
+  | Some (h, us, args) ->
+    if implode_qn (T.inspect_fv h) = `%FStar.SizeT.v
+    then
+      match args with
+      | [(t, Q_Explicit)] -> Some t
+      | _ -> None
+    else
+    None
+  | _ -> None
+
+let _simpl_sizet_literal (t:thua_t) : T.Tac (option term) =
+  match is_size_t_v t with
+  | Some e -> (
+    match hua (thua e) with
+    | Some (h, us, args) ->
+      if implode_qn (T.inspect_fv h) = `%FStar.SizeT.uint_to_t
+      then
+        match args with
+        | [(t, Q_Explicit)] -> Some t
+        | _ -> None
+      else
+      None
+    | None -> None
+    )
+  | None -> None
+
+type op =
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | Rem
+
+let is_size_t_op (fv : fv) : option op =
+  match implode_qn (T.inspect_fv fv) with
+  | `%FStar.SizeT.add -> Some Add
+  | `%FStar.SizeT.sub -> Some Sub
+  | `%FStar.SizeT.mul -> Some Mul
+  | `%FStar.SizeT.div -> Some Div
+  | `%FStar.SizeT.rem -> Some Rem
+  | _ -> None
+
+let math_opfv (o : op) : string =
+  match o with
+  | Add -> `%(+)
+  | Sub -> `%(-)
+  | Mul -> `%( * )
+  | Div -> `%(/)
+  | Rem -> `%(%)
+
+let is_size_t_applied_op (t:thua_t) : T.Tac (option (op & term & term)) =
+  match hua t with
+  | Some (h, us, args) -> (
+    match is_size_t_op h, args with
+    | Some op, [(l, Q_Explicit); (r, Q_Explicit)] ->
+      Some (op, l, r)
+    | _ -> None
+  )
+  | _ -> None
+
+// Rewrites SZ.v (SZ.mul x y) to SZ.v x * SZ.v y, and similar
+let _simpl_sizet_op (t:thua_t) : T.Tac (option term) =
+  match is_size_t_v t with
+  | Some e -> (
+    match is_size_t_applied_op (thua e) with
+    | Some (h, l, r) ->
+      let f : fv = pack_fv <| explode_qn (math_opfv h) in
+      let l' = `(FStar.SizeT.v (`#l)) in
+      let r' = `(FStar.SizeT.v (`#r)) in
+      Some (T.mk_app (T.Tv_UInst f []) [(l', Q_Explicit); (r', Q_Explicit)])
+    | None -> None
+    )
+  | None -> None
+
 (* Try each rule in turn, returning the rewritten term if one of them fires.
+The rules guarded by `extra` are only tried when `--ext pulse:extra_simplify`
+is set.
 Note that we cannot detect "did anything change?" by comparing terms:
 `FStar.Reflection.TermEq.term_eq` is conservative and returns false for equal
 terms that are not faithful, e.g. any term containing a uvar. *)
-let try_rules (t:thua_t) : T.Tac (option thua_t) =
+let try_rules (extra:bool) (t:thua_t) : T.Tac (option thua_t) =
   match _simpl_proj t with
   | Some t -> Some (thua t)
   | None ->
@@ -215,13 +299,21 @@ let try_rules (t:thua_t) : T.Tac (option thua_t) =
   | None ->
   match _simpl_reveal_hide t with
   | Some t -> Some (thua t)
-  | None -> None
+  | None ->
+  if not extra then None else
+  match _simpl_sizet_op t with
+  | Some t -> Some (thua t)
+  | None ->
+  match _simpl_sizet_literal t with
+  | Some t -> Some (thua t)
+  | None ->
+  None
 
 (* Apply the rules at the root until none of them fires. Every rule replaces the
 term by one of its own subterms, so this terminates. *)
-let rec apply_rules_fix (t:thua_t) : T.Tac thua_t =
-  match try_rules t with
-  | Some t' -> apply_rules_fix t'
+let rec apply_rules_fix (extra:bool) (t:thua_t) : T.Tac thua_t =
+  match try_rules extra t with
+  | Some t' -> apply_rules_fix extra t'
   | None -> t
 
 (* The rules are applied at a node both before and after its arguments are
@@ -235,14 +327,17 @@ argument can expose a redex at a node that has already been visited, e.g. the
 outer projection of `fst (fst ((c, ()), ()))` only becomes reducible once its
 argument has been rewritten to `(c, ())`. A rule firing at that point returns a
 subterm of an already-simplified argument, so no further traversal is needed. *)
-let rec simplify (t0:term) : T.Tac term =
-  let t = apply_rules_fix (thua t0) in
+let rec simplify' (extra:bool) (t0:term) : T.Tac term =
+  let t = apply_rules_fix extra (thua t0) in
   let t =
     match hua t with
     | Some (h, us, args) ->
-      let args = T.map (fun (t, q) -> simplify t, q) args in
-      fst (apply_rules_fix (thua (T.mk_app (T.Tv_UInst h us) args)))
+      let args = T.map (fun (t, q) -> simplify' extra t, q) args in
+      fst (apply_rules_fix extra (thua (T.mk_app (T.Tv_UInst h us) args)))
     | _ -> fst t
   in
   // T.print <| "simplified " ^ show t0 ^ " to " ^ show t;
   t
+
+let simplify (t0:term) : T.Tac term =
+  simplify' (extra_simplify_enabled ()) t0
