@@ -8590,6 +8590,68 @@ away.
 `tests/custard/RecTyAcc.fst` carries all three spellings over two
 instantiations, checks its own answer, and is compiled and run.
 
+### 30.10 Opt-in compile-time evaluation
+
+Custard does not evaluate closed terms.  A program that computes something at
+run time is meant to compute it at run time, and an extractor that reduced
+whenever it could would make every definition's body part of every caller --
+in C as much as in OCaml, and for the same reason: the output would stop
+resembling the input.  §3.5's normalization exists to make *types* ground, not
+to run the program.
+
+But some definitions exist only to produce a constant, and compiling them is
+the wrong answer rather than a slower one.  EverParse has the example.
+`CDDL.Pulse.AST.Literal.string_length` is
+
+```
+let string_length (x: string) : nat =
+  List.Tot.length (String.list_of_string x)
+```
+
+and every call in the corpus applies it to a literal.  Compiling it asks C for
+a `list char`, which C does not have -- error 368, reporting a list the author
+never wrote in a definition they did not know was involved.
+
+So the decision is handed to the author, one definition at a time:
+`[@@custard_compile_time]` on a definition means *every application of this is
+evaluated during extraction*.  `expr_of_term` checks the head of each
+application it meets against the attribute, and, when it matches, normalizes
+the whole application with everything on -- delta to `delta_constant`, `Zeta`
+so a recursive definition over a literal runs, `SafePrimops` so the primitives
+underneath it fold -- and continues with the result.
+
+**The promise is checked, and checked before it is used.**  The natural test
+is on the reduct: if the head is still the marked name, nothing was computed.
+That test does not work.  Unfolding removes the head whether or not anything
+was computed -- `string_length s` for an unknown `s` reduces to the `match` in
+its body, which is headed by nothing at all -- so the check would pass exactly
+the case it exists to catch, and the caller would be told about a `list char`
+after all.
+
+What decides the question is whether the arguments are known, and that is
+visible before reducing: the application's free names.  An application with
+any is error 372, naming the definition and the variables that made it
+impossible.  An application that is closed and *still* stuck -- because a
+definition it needs is abstract in the interface it was loaded through -- is
+the same error with the other explanation.  Neither falls back to compiling
+the definition, which is the whole point: falling back would be the worse
+behaviour precisely where the attribute is useful.
+
+A definition marked this way is free to have a type C could not compile, since
+none of it is compiled.  That also says where to put the attribute: on the
+outermost definition whose result *is* representable.
+`tests/custard/CompileTime.fst` marks a wrapper returning a `UInt32.t` rather
+than `string_length` itself, because an unbounded `nat` has no C
+representation either; the `list char` and the `nat` both disappear, and the C
+reads `uint32_t len = 5U`.  Its companion `CompileTimeBad.fst` pins the 372.
+
+This is deliberately not an inference.  Custard could notice that an
+application happens to be closed and evaluate it, but "happens to be closed"
+is not a property an author controls, and a definition that silently stops
+existing when its last non-literal caller is deleted is worse than one that
+never existed.  The attribute is a statement of intent, and the error is what
+makes it one.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -8684,3 +8746,4 @@ instantiations, checks its own answer, and is compiled and run.
 | M10θθ | **A field projection is not a type constructor** (§30.4, §30.5) | Done.  Round 22's second bug, reduced with an MWE carrying CDDL's actual shape -- a bundle built by structural recursion over a grammar derivation.  Specialization already does its half: with the derivation and the bundle arguments `[@@monomorphize]`, the recursion unrolls and every combinator is specialized per bundle *value*, so at each construction site the record is concrete.  The type was still `any` for an unrelated reason -- a projector is not a type constructor, so `ty_of_typ` fell through to `ty_of_fv` -- and reducing it is a third case of the kind that file already has two of, with the scrutinee unfolded by delta since the record is as often a top-level name as a literal.  Every specialization's interior is now ground; `tests/custard/CTypeField.fst`, run.  What is left is exactly §30.3 and no longer more than that: the record's own declaration collapses to `any -> usize`, and fixing it means §6 keyed on a `Type0` *field* rather than on a type argument -- bounded work now, because the value to key on is what this made available.  Also §30.4: `[@@monomorphize]` on a constructor field is read by nothing, which is now warning 371 rather than silence, and 364 no longer advises writing it somewhere that does not exist |
 | M10ιι | **A recursive builder, and a declaration that lost its type** (§30.6, §30.7) | Done.  Round 23 reduced §30.3 to one line of difference: an `unfold` bundle builder works, a `let rec` one does not, because only the latter survives extraction as a value.  Two fixes.  §30.5's reduction now needs `Zeta` to see through the recursion, and `Zeta` can exhaust the budget -- so `norm_optional` lets *this* reduction give up and fall back to `TAny`, on the principle that a normalization the program's meaning depends on must fail loudly and one that only sharpens a fallback must not.  That grounds the uses.  The builder itself was the rest: a record collapsing to a field of its own erased `Type0` field is declared `any` however concrete each specialization is.  `Simplify.narrow_rets` reads the result type back off the body, after `records` and as a fixpoint over the call chain, rewriting only signatures -- `coerce_prog` re-derives each use from the signature, so the coercions between them vanish.  This is §30.3 closed, and without §6 keyed on a field, which turned out not to be needed.  `tests/custard/RecTyField.fst`, run, no `any` emitted |
 | M10κκ | **The same field, spelled three ways** (§30.8, §30.9) | Done.  Round 24: §30.5 and §30.7 had fixed the one spelling EverParse does not use.  CDDL reaches a bundle's `Type0` field through a `match` (Error 364, the field becomes a variable) or through an accessor (Error 368, the bundle becomes a runtime binder), never through a projection.  Three fixes, all narrow.  `specialize` resolves a match on a *type-storing* constructor by unfolding just those scrutinee heads, with `Zeta` on for them alone and permitted to give up (§30.6) -- the first trigger was too loose and fired on every `option`, which is why the check is "a type the constructor stores", past the inductive's parameters.  `ty_of_typ` runs the same reduction as a fallback once `ty_of_fv` has given up, so an accessor and a projection behave alike.  And rule 4b: a binder of a type-carrying inductive is `Mono` unasked, because the alternative is not a slower program but no program.  `FieldAttr` accordingly loses its 368 and pins warning 371 under `--warn_error`; `coerce_prog` writes the recovered type back into local `let` annotations.  `tests/custard/RecTyAcc.fst`, run |
+| M10λλ | **Opt-in compile-time evaluation** (§30.10) | Done.  Round 25's blocker and the first feature in this stretch that is a design decision rather than a repair.  `CDDL.Pulse.AST.Literal.string_length` is `length (list_of_string x)` applied only ever to literals; compiling it asks C for a `list char`.  Custard will not evaluate closed terms on its own initiative -- that is a licence to unfold anything, and the output stops resembling the input -- so the decision is the author's, one definition at a time: `[@@custard_compile_time]` means every application is evaluated during extraction, with delta, `Zeta` and `SafePrimops` all on.  The promise is checked, and the obvious check is wrong: testing the *reduct's* head passes exactly the failing case, because unfolding removes the head whether or not anything was computed.  The test is on the application as written -- free names -- so error 372 names the definition and the variable that made it impossible, rather than falling back to compiling a `list char` into C.  The attribute belongs on the outermost definition whose result is representable, since a marked definition's own type is never compiled.  `tests/custard/CompileTime.fst` (run, C reads `uint32_t len = 5U`) and `CompileTimeBad.fst` (pins the 372) |

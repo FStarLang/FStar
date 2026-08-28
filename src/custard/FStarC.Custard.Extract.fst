@@ -33,6 +33,7 @@ module Dep    = FStarC.Parser.Dep
 module E      = FStarC.Errors
 module Effects = FStarC.Custard.Effects
 module Free   = FStarC.Syntax.Free
+module FlatSet = FStarC.FlatSet
 module Ident  = FStarC.Ident
 module Loader = FStarC.Custard.Loader
 module Prof   = FStarC.Custard.Prof
@@ -929,6 +930,27 @@ let note_abbrev (st:state) (d:decl) : ML unit =
   | _ -> ()
 
 (* Section 3.3, step 3: this is where the demand-driven loop lives. *)
+(* Everything, because the point is to finish: delta and [Zeta] so a recursive
+   definition over a literal runs, [Primops] so the primitives underneath it
+   fold.  [SafePrimops] rather than [Primops] for {!custard_norm_steps}'s
+   reason -- a step whose result has no term representation has nothing to
+   emit -- which is also why the answer still has to be checked afterwards
+   rather than assumed. *)
+let compile_time_steps : list TcEnv.step = [
+  TcEnv.AllowUnboundUniverses;
+  TcEnv.EraseUniverses;
+  TcEnv.Beta;
+  TcEnv.Iota;
+  TcEnv.Zeta;
+  TcEnv.SafePrimops;
+  TcEnv.Eager_unfolding;
+  TcEnv.Inlining;
+  TcEnv.Unascribe;
+  TcEnv.Unmeta;
+  TcEnv.UnfoldUntil S.delta_constant;
+]
+
+
 let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
   let k = { k with sk_lid = unstub_lid st k.sk_lid } in
@@ -1417,6 +1439,18 @@ and is_data_ctor (fv:fv) : ML bool =
   | Some (Record_ctor _) -> true
   | _ -> false
 
+(* Section 30.10.  The head of an application, when it is a name that has
+   asked for its applications to be evaluated rather than compiled. *)
+and compile_time_head (st:state) (t:term) : ML (option Ident.lident) =
+  let hd, _ = U.head_and_args_full t in
+  match (U.un_uinst (SS.compress hd)).n with
+  | Tm_fvar fv ->
+    let l = S.lid_of_fv fv in
+    ensure_lid_available st l;
+    if TcEnv.fv_has_attr (tcenv st) fv PC.custard_compile_time_attr
+    then Some l else None
+  | _ -> None
+
 and expr_of_term (st:state) (t:term) : ML expr =
   Prof.timed "expr" (fun () ->
   (* [unlazy_emb] before anything else: reducing a closed arithmetic
@@ -1424,6 +1458,47 @@ and expr_of_term (st:state) (t:term) : ML expr =
      constant, so [-1] arrives as a [Tm_lazy] and would otherwise fall
      through to the erasure catch-all below and become [()]. *)
   let t = SS.compress (U.unlazy_emb t) in
+  (* Section 30.10.  Custard does not evaluate closed terms on its own
+     initiative: a program that computes something at run time means to.  But a
+     definition may say that it exists only to produce a constant, and then
+     evaluating it is the whole of its compilation.
+
+     The promise is checked, not assumed.  If the head survives reduction the
+     argument was not known after all, and saying so names the definition and
+     the chain that reached it -- far better than quietly compiling a
+     [list char] into a C program, which is what happens without the
+     attribute. *)
+  let t =
+    match compile_time_head st t with
+    | None -> t
+    | Some l ->
+      (* The promise is checked before it is used, and the check is on the
+         term as written rather than on the reduct.  Unfolding removes the
+         head whether or not anything was computed -- [string_length s] for an
+         unknown [s] reduces to the [match] in its body, which is headed by
+         nothing at all -- so a head test after the fact would pass exactly
+         the case it exists to catch.  What decides the question is whether
+         the arguments are known, and that is visible up front. *)
+      let free = Free.names t in
+      if not (FlatSet.is_empty free) then
+        custard_error st E.Error_CustardNotCompileTime [
+          text (Ident.string_of_lid l ^ " is marked [@@custard_compile_time], but this application of it depends on a runtime value.");
+          text ("The attribute is a promise that every application is known at extraction time; this one is not, because it mentions " ^
+                String.concat ", " (List.map (fun (b:bv) -> show b.ppname) (FlatSet.elems free)) ^ ".");
+          text "Either the definition should be compiled rather than evaluated, in which case remove the attribute, or the caller should be applying it to a constant."
+        ]
+      else
+      let t' = norm_bounded st ("an application of " ^ Ident.string_of_lid l)
+                            compile_time_steps t in
+      (match compile_time_head st t' with
+       | Some _ ->
+         (* Closed and still stuck: a definition it needs was hidden behind an
+            interface, so delta had nothing to unfold. *)
+         custard_error st E.Error_CustardNotCompileTime [
+           text (Ident.string_of_lid l ^ " is marked [@@custard_compile_time], but this application of it does not reduce, although its arguments are all known.");
+           text "Some definition it needs is abstract in the interface it was loaded through."
+         ]
+       | None -> SS.compress (U.unlazy_emb t')) in
   match t.n with
   | Tm_constant c ->
     (match constant_of_sconst c with

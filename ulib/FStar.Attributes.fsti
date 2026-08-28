@@ -454,6 +454,24 @@ val custard_c_header (header: string) : unit
     that takes one -- [unembed], say -- reject its own callers. *)
 val custard_no_monomorphize : unit
 
+(** Custard: evaluate every application of this definition during extraction,
+    rather than compiling it (see doc/ref/custard.md, section 30.10).
+
+    Custard does not evaluate closed terms in general -- a program that
+    computes something at run time is meant to compute it at run time, and
+    reducing on the extractor's own initiative would be a licence to unfold
+    anything.  But some definitions exist only to compute a specification-time
+    constant.  [CDDL.Pulse.AST.Literal.string_length] is one: it is
+    [List.Tot.length (String.list_of_string x)] applied to string literals, so
+    every call has an answer, and compiling it instead drags [list char] into
+    a C program that has no representation for it.
+
+    So this is opt-in and is a promise: the definition's applications must
+    reduce to values.  One that does not -- because an argument is only known
+    at run time -- is an error naming this definition, not a silent fallback
+    to compiling it. *)
+val custard_compile_time : unit
+
 (** Custard: compile this type from its F* definition, but treat its
     representation as fixed elsewhere, so that the layout analysis neither
     erases it nor collapses it as a newtype (see doc/ref/custard.md, 5.2). *)

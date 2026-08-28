@@ -342,6 +342,13 @@ CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
 # come back `any`; the two specializations must instead be over the ground
 # types the record was built with.  The NOGREPs are the point: no void*, and
 # no reinterpretation at the call sites.
+# Section 30.10.  The [list char] must not reach C at all: the attribute's
+# whole effect is that the string length is a constant by the time the backend
+# sees it.
+C_TESTS += CompileTime
+CGREP_CompileTime  = "uint32_t CompileTime_main(void)"
+CNOGREP_CompileTime = "list" "char *"
+
 C_TESTS += RecTyAcc
 CGREP_RecTyAcc = "uint8_t RecTyAcc_by_match__ANode(uint8_t x)" \
                  "uint32_t RecTyAcc_by_match__ANode_1(uint8_t x)"
@@ -494,6 +501,14 @@ CODE_WarnAny     = 367
 # Section 30.4: [@@monomorphize] on a constructor field is read by nothing, and
 # saying so is the whole point -- error 364's advice sends readers here.  The
 # 368 is section 30.3's existential record, which is what makes anyone try it.
+# Section 30.10.  An unkept [@@custard_compile_time] promise names the
+# definition and the offending argument, rather than falling back to compiling
+# a [list char] into C.
+REJECT_TESTS += CompileTimeBad
+FLAGS_CompileTimeBad = --custard_backend C --custard_entry CompileTimeBad.use
+CODE_CompileTimeBad  = 372
+EGREP_CompileTimeBad = "depends on a runtime value"
+
 REJECT_TESTS += FieldAttr
 # The program itself extracts (rule 4b of section 30.9 makes the bundle binder
 # Mono, so nothing is left over); the warning is the whole test, so it is
