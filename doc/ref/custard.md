@@ -421,6 +421,12 @@ The classification is a function of the *definition*, computed once and cached.
    any layout, so it has no runtime content.  This has to be applied *after*
    the fixpoint, so that rule 5 still gets the chance to promote it to `Mono`.
 7. Otherwise `Poly`.
+8. A **`Mono` binder nothing observable depends on** ⟹ `Dropped` (§30.14).
+   Applied last, and only to `Mono`: a binder absent from the definition's
+   body and from the *observable* part of the rest of its type -- refinements
+   and computation pre-/postconditions removed -- cannot influence the output,
+   and dropping it removes a specialization without changing a signature,
+   since a `Mono` argument was never passed at run time.
 
 **Opting a class out.**  Rule 2 says that a dictionary is known statically, and
 for a type class that is what a type class is for.  But `tcclass` is also used
@@ -8706,6 +8712,15 @@ chain.  That last part is what keeps this from being one annotation per level.
 `tests/custard/LitStr.fst` carries the shape with no annotation anywhere, over
 two string instantiations and one that takes the other branch.
 
+The demand has to be *rooted* somewhere.  Rule 4c makes `impl_lit`'s binder
+`Mono`; what makes that binder a literal is that some caller passed one, and
+§3.1 rule 5 carries the requirement up from there.  Extract `impl_lit` itself
+as an entry point -- `--custard_entry_module`, or a `--custard_entry` naming
+it -- and there is no caller: its parameter is then a genuine runtime
+parameter of the program being compiled, and error 372 is the right answer,
+not a regression.  Entry points are the boundary at which a value stops being
+a compile-time constant, which is the same reason §4.4 asks for them.
+
 ### 30.12 Three per-term-size costs
 
 Round 31 profiled the extraction of a CDDL entry point by sampling stacks
@@ -8787,6 +8802,86 @@ mentioned only there, which is unfolded rather than emitted unless it is
 named.  All three join `entrypoints.txt`.  This is the documented failure mode
 of a whole-program extractor with hand-written edges, and the only defence is
 that the build catches it.
+
+### 30.14 A parameter nothing observable depends on
+
+Round 32 turned the §30.12 hang into an error, and the error named a term.
+Extracting one CDDL entry point failed at 60 s on a type signature that was
+9,012,230 bytes *before* reduction, reached through the simplest type CDDL
+has: `bool`.  What it is made of is the point.  6995 occurrences of
+`FStar.Ghost.reveal`, 4668 of the refinement on `cbor`, 2505 of
+`FStar.Ghost.E`, 990 of `serializable` -- and in the signature it belongs to,
+`impl_serialize`'s specification argument `s` occurs exactly once, inside a
+`pure (...)` in a postcondition.  The compiled signature is three names:
+`impl_tgt`, `S.slice U8.t`, `SZ.t`.  Not one byte of the 9 MB can reach the
+output.
+
+So the answer is not to reduce it faster.  It is not to ask for it.
+
+`s` is `Mono`, and what `Mono` costs is not a parameter -- a `Mono` argument
+is never passed at run time -- but a *specialization*: the argument is
+normalized, rendered into a key (§12.3), compared against every other key, and
+the definition is copied once per distinct one.  Rule 8 says a `Mono` binder
+that nothing observable depends on is `Dropped` instead.
+
+"Observable" is `Mono.observable`, a view of a type that keeps only what can
+reach the emitted code: refinements replaced by the type they refine, and a
+computation replaced by its result.  Those are the two places a specification
+hides in a signature.  A refinement is a proposition and Custard compiles
+`x:t{p}` as `t`.  A computation's pre- and postconditions are slprops, and
+Pulse writes the interesting half of a signature there -- which is where the
+9 MB was.  The view descends through arrows and refinements and leaves
+everything else whole, so a name occurring somewhere it does not understand is
+reported as occurring: it over-approximates towards keeping the binder.
+
+Three things had to be got right, and each was got wrong first.
+
+The **body** test is what makes the rule sound.  A parameter absent from a
+signature can still be read at run time -- `if n = 0 then ...` mentions `n`
+nowhere in the type -- and deleting one of those is §18.1's miscompilation
+reached by a new path.  So a binder is dead only if it is absent from the body
+*and* from the observable view of the rest of the signature.
+
+The body has to be the body that is **compiled**.  `[@@extract_as]` replaces
+one with the other, and the two need not mention the same parameters:
+`tests/custard/Anf.fst`'s `tick` has the specification `fun s n -> n` and an
+implementation that prints `s`.  Reading liveness off the specification
+deleted the string, and the first run of the suite printed nothing.  The
+classification site now applies `fixup_extract_as` before it looks.
+
+The type can have **more binders than the lambda**.  A projector for `class
+monad` is written as four abstractions over an arrow of six; the remaining two
+are consumed inside the `match`.  Positions past the lambda's arity have no
+binder in the body to ask about, and reading that as "absent" deleted
+`mbind`'s first argument, which the OCaml compiler then caught.  Those
+positions are live by construction.
+
+And the rule is confined to `Mono` binders, which is what makes it free.
+Turning a `Mono` binder into `Dropped` removes a compile-time key and changes
+no signature, because a `Mono` argument was never passed.  The same move on a
+`Poly` binder deletes a parameter callers still pass:
+`tests/custard/RetArity.fst`'s `f` takes a `frame` and a `post` that are
+unread and unmentioned, and they are part of its ABI regardless.
+
+`tests/custard/DeadMono.fst` is the shape, reduced from round 32's own
+measurement.  Its `Mono` argument is a computed list nobody looks at, and it
+extracts under `--custard_norm_budget 100000` -- four orders of magnitude
+below what normalizing the argument would take.  On the unreduced measurement
+the cost was linear in the argument and split three ways, all of it
+specialization: 517 ms in `norm`, 355 ms in `split_mono_args`, 302 ms in
+`key`, for an argument of 25600 elements whose contribution to the output was
+`return u;`.  With rule 8 the whole extraction is flat at 0.55 s.
+
+§30.12's change of accounting also changed what a budget *is*: a step is now a
+node of work rather than a reduction, so the same program needs a larger
+number, and CDDL needs `--custard_norm_budget 100000000`.  The default stays
+at 10^7 all the same, and the reason is worth recording, because the obvious
+move is to raise it.  Raising it to 10^8 makes `tests/custard/TypeDiverge.fst`
+overflow the stack instead of reporting error 365.  The budget is not a
+performance knob -- it is what turns a nonterminating reduction into a
+diagnosable error, and it only does that if it fires before the normalizer's
+own recursion runs out of stack.  A project that needs more can ask for more,
+in the one place that knows it does.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -8885,3 +8980,4 @@ that the build catches it.
 | M10λλ | **Opt-in compile-time evaluation** (§30.10) | Done.  Round 25's blocker and the first feature in this stretch that is a design decision rather than a repair.  `CDDL.Pulse.AST.Literal.string_length` is `length (list_of_string x)` applied only ever to literals; compiling it asks C for a `list char`.  Custard will not evaluate closed terms on its own initiative -- that is a licence to unfold anything, and the output stops resembling the input -- so the decision is the author's, one definition at a time: `[@@custard_compile_time]` means every application is evaluated during extraction, with delta, `Zeta` and `SafePrimops` all on.  The promise is checked, and the obvious check is wrong: testing the *reduct's* head passes exactly the failing case, because unfolding removes the head whether or not anything was computed.  The test is on the application as written -- free names -- so error 372 names the definition and the variable that made it impossible, rather than falling back to compiling a `list char` into C.  The attribute belongs on the outermost definition whose result is representable, since a marked definition's own type is never compiled.  `tests/custard/CompileTime.fst` (run, C reads `uint32_t len = 5U`) and `CompileTimeBad.fst` (pins the 372) |
 | M10μμ | **A compile-time demand, and three per-term-size costs** (§30.11, §30.12) | Done.  Round 31.  §30.10's attribute did not reach CDDL: `impl_literal` destructures a literal and hands the *string* it finds to the marked function, so the argument is a pattern variable and 372 fires; annotating the binder just moves the error one level up, which is the treadmill rule 4b exists to end.  Rule 4b cannot help, and the reason matters -- it is keyed on a constructor storing a *type*, justified by there being no runtime representation at all, and a `string` has a perfectly good one.  So rule 4c is a demand read off the *body*: a binder an application of a `custard_compile_time` definition depends on, directly or through the match that binds what it is applied to, is `Mono`.  Reported as binder *positions*, because `classify` opens the arrow and the body opens the lambda and the first attempt matched `bv` identity and silently never fired.  `tests/custard/LitStr.fst`, no annotations, run.  Separately, round 31 sampled the blow-up under `gdb` and found three per-term-size costs, none of them a specialization count (643 total, max 8 per definition): `closure_as_term`'s universe erasure is a full deep copy charged as *one* budget step, which is why no budget ever bounded the hang -- it now charges per node; `Env.disc_proj_info` is four uncached `lookup_qname`s on every projector reduction, now memoized; and `key_of_term` built megabyte keys with left-nested `^`, now linear.  Also `Driver.run` reports its profile on the error path, since a failing run is the one worth profiling and `Universal` reports only after a file type-checks |
 | M10νν | **A local that captures a top-level name** (§30.13) | Done.  Not from a report: `make custard` broke on master's real-literal rewrite, whose `try_mk (mantissa exponent : int)` shadows the projections it calls.  F* is untroubled; the emitted OCaml refers to a same-file top-level *unqualified*, because inside `Foo` there is no way to write `Foo.bar`, so the local captures it and the result either does not compile or compiles against the wrong binding.  Locals are renamed rather than references qualified -- a local's name means nothing outside its definition, and a top-level name is what a realization may be written against.  `reserve_top` runs with `current_module` already set, since whether a declaration is spelled with a qualifier is the whole question, and the first attempt collected mangled names for that reason.  Record fields and type variables deliberately keep the old spelling: a field has to match a declaration this run may not own.  The same run found two roots of §4.4's other kind, both called only from the hand-written menhir grammars in `src/ml` -- `FStarC.Real.of_string`, `FStarC.Const.parse_int_literal`, plus the abbreviation `FStarC.Real.real`, which is unfolded unless named |
+| M10ξξ | **A parameter nothing observable depends on** (§30.14) | Done.  Round 32.  §30.12 turned the hang into an error and the error named the term: a CDDL type signature of 9,012,230 bytes *before* reduction, reached through `bool`, made of 6995 `Ghost.reveal`, 4668 refinements on `cbor` and 990 `serializable` -- in which `impl_serialize`'s specification argument occurs exactly once, inside a `pure (...)` in a postcondition, while the compiled signature is three names.  So the fix is not to reduce it faster.  Rule 8: a `Mono` binder absent from the body *and* from the observable part of the rest of the type -- refinements replaced by what they refine, computations by their result, which are the two places a specification hides -- is `Dropped`, removing a specialization and changing no signature, because a `Mono` argument was never passed at run time.  The body test is what makes it sound (`if n = 0` mentions `n` nowhere in the type), the body has to be the one `extract_as` supplies (`Anf.tick` specifies `fun s n -> n` and prints `s`), and a type may have more binders than its lambda (a `class monad` projector is four abstractions over an arrow of six -- reading those as absent deleted `mbind`'s first argument).  Confining it to `Mono` is what makes it free: `RetArity.f`'s unread `frame` and `post` are `Poly` and are part of its ABI regardless.  On round 32's measurement the cost removed was linear in the argument and entirely specialization -- 517 ms `norm`, 355 ms `split_mono_args`, 302 ms `key` for a 25600-element list contributing `return u;` -- and extraction is now flat at 0.55 s.  `tests/custard/DeadMono.fst` extracts under a budget four orders of magnitude too small to normalize its argument.  §30.12's accounting also changed what a budget *is*, and CDDL now needs `--custard_norm_budget 100000000`; the default stays at 10^7 anyway, because raising it to 10^8 makes `TypeDiverge` overflow the stack instead of reporting error 365, and a budget that fires after the normalizer runs out of stack is not a budget |

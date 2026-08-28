@@ -567,10 +567,93 @@ let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
 let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
   classify_demand env attrs t []
 
+(* Section 30.14.  A view of a type keeping only what can reach the emitted
+   code: refinements gone, and a computation reduced to its result.  It is used
+   to answer "does this binder still occur?" and for nothing else -- it is not
+   a type, and nothing is compiled from it.
+
+   The two omissions are the two ways a specification hides inside a signature.
+   A refinement is a proposition.  A computation's pre- and postconditions are
+   slprops, and Pulse writes the interesting half of a signature there: the
+   [s] of [impl_serialize] occurs exactly once, inside a [pure (...)] in a
+   postcondition, and it is 9 MB.
+
+   Descending through arrows and refinements only is deliberate.  Anything else
+   is left whole, so a name that occurs somewhere this does not understand is
+   reported as occurring, which is the safe direction. *)
+let rec observable (t:typ) : ML typ =
+  match (SS.compress t).n with
+  | Tm_refine {b} -> observable b.sort
+  | Tm_ascribed {tm} -> observable tm
+  | Tm_arrow {b; comp} ->
+    let b = { b with binder_bv = { b.binder_bv with sort = observable b.binder_bv.sort } } in
+    U.arrow [b] (S.mk_Total (observable (U.comp_result comp)))
+  | _ -> t
+
+(* Section 30.14.  A parameter that nothing observable depends on.
+
+   [is_dropped_binder] asks whether a binder's *type* carries information.
+   This asks the other question: whether anything left in the program still
+   mentions it.  A parameter that occurs neither in the body nor in
+   {!observable} of the rest of the signature cannot influence a single byte of
+   the output, and the cost of keeping it is not the parameter -- it is that a
+   [Mono] one is specialized on, so its argument is normalized, rendered into a
+   key and compared.  Round 32 measured 1.2 s of that for an argument that
+   provably could not matter.
+
+   The body test is what makes it sound.  A parameter absent from the type can
+   still be read at run time, and deleting one of those is section 18.1's
+   miscompilation; the type test alone would do exactly that. *)
+let dead_binders (env:TcEnv.env) (t:typ) (d:term) : ML (list int) =
+  let bs_t, comp = arrow_formals_unfold env t in
+  let bs_d, body, _ = U.abs_formals d in
+  let live_in_body = Free.names body in
+  let n = List.length bs_t in
+  let rec tail (i:int) (bs:binders) : binders =
+    if i <= 0 then bs else match bs with [] -> [] | _ :: bs -> tail (i - 1) bs in
+  let res_names = elems (Free.names (observable (U.comp_result comp))) in
+  (* Section 18.1's thunk again.  The last binder of a definition is the one
+     that decides whether it is a function at all, and a unit-shaped last
+     binder in front of an impure codomain is a thunk whose whole purpose is to
+     be absent from both the body and the rest of the type.  Deleting one turns
+     a suspended computation into a run-once value.  So the last binder is
+     never dead, and asking costs nothing. *)
+  let rec go (i:int) : ML (list int) =
+    if i >= n - 1 then []
+    else
+      let bt = List.nth bs_t i in
+      let later = tail (i + 1) bs_t |> List.collect (fun (b:binder) ->
+                    elems (Free.names (observable b.binder_bv.sort))) in
+      let in_type = (later @ res_names) |> List.existsb (fun v -> bv_eq v bt.binder_bv) in
+      (* The type can have more binders than the lambda: a projector for
+         [class monad] is written as four abstractions over an arrow of six,
+         and a record field's own arguments are inside the [match].  Those
+         positions have no binder in the body to ask about, so they are live.
+         Reading [in_body] as [false] there deleted [mbind]'s first argument. *)
+      let in_body =
+        List.length bs_d <= i ||
+        mem (List.nth bs_d i).binder_bv live_in_body in
+      (if in_type || in_body then [] else [i]) @ go (i + 1)
+  in
+  go 0
+
 let classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term)
                  (demanded:list int)
   : ML (list bclass) =
   let cs = classify_demand env attrs t demanded in
+  let cs =
+    match def with
+    | None -> cs
+    | Some d ->
+      let dead = dead_binders env t d in
+      cs |> List.mapi (fun i c ->
+        (* Only a [Mono] binder.  A [Mono] argument is not passed at run time
+           already -- it is a key -- so turning one into [Dropped] removes the
+           specialization and nothing else, and the emitted signature is
+           unchanged.  Doing the same to a [Poly] binder would delete a
+           parameter callers still pass: [RetArity.f]'s [frame] and [post] are
+           unread and unmentioned, and are part of its ABI all the same. *)
+        if c = Mono && List.mem i dead then Dropped else c) in
   match def with
   | None -> cs
   | Some d ->

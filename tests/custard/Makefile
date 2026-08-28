@@ -352,6 +352,13 @@ C_TESTS += LitStr
 CGREP_LitStr  = "((uint32_t)3U)" "((uint32_t)5U)"
 CNOGREP_LitStr = "list" "char *"
 
+# Section 30.14.  [impl] must appear once, not once per distinct dead argument,
+# and no [list] may reach C.
+C_TESTS += DeadMono
+FLAGS_DeadMono  = --custard_norm_budget 100000
+CGREP_DeadMono  = "uint32_t DeadMono_main(void)"
+CNOGREP_DeadMono = "list"
+
 C_TESTS += CompileTime
 CGREP_CompileTime  = "uint32_t CompileTime_main(void)"
 CNOGREP_CompileTime = "list" "char *"

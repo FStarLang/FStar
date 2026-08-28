@@ -57,6 +57,7 @@ val norm_bounded (env:TcEnv.env) (what:string) (steps:list TcEnv.step) (t:typ)
     Section 19.7. *)
 val strip (t:typ) : ML typ
 
+
 val bclass_to_string : bclass -> string
 
 instance val showable_bclass : Class.Show.showable bclass

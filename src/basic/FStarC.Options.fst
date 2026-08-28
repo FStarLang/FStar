@@ -960,7 +960,9 @@ definition before giving up (default 1000)");
 term -- a specialization key, a substituted argument, or a definition's body \
 -- before giving up (default 10000000).  Normalization need not terminate, so \
 without this a definition that diverges under reduction would hang the \
-compiler rather than report an error");
+compiler rather than report an error.  A step is a node of work, not a \
+reduction: building a closure's term is charged for every node it copies \
+(section 30.12), so this number is much larger than a count of beta steps");
 
   ( noshort,
     "custard_monomorphize_types",

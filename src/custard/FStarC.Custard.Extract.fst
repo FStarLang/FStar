@@ -1198,7 +1198,13 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
                 | Some se -> se.sigattrs
                 | None -> [] in
     let cs =
-      match TcEnv.lookup_sigelt (tcenv st) l with
+      (* Section 30.14.  Classify the body that is *compiled*, not the body
+         that was written.  [extract_as] replaces one with the other, and the
+         two need not mention the same parameters: [Anf.tick]'s specification
+         is [fun s n -> n] and its implementation prints [s].  Reading
+         liveness off the specification deletes the argument the
+         implementation needs. *)
+      match TcEnv.lookup_sigelt (tcenv st) l |> Option.map fixup_extract_as with
       | Some se ->
         (match se.sigel with
          | Sig_let {lbs=(_, lbs)} ->
