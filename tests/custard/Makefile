@@ -336,6 +336,17 @@ CGREP_CFalseElim = "FStar.Pervasives.false_elim" "abort();"
 CNOGREP_CFalseElim = "FStar_Pervasives_false_elim"
 CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
                     "custard_init_globals" "CInitTrap_id_fn" "CInitTrap_snd_fn"
+# Section 30.5.  A Type0 *field* projected in a type position, inside a
+# function specialized on the record that holds it.  The projection is stuck
+# -- a projector is not a type constructor -- and used to reach `ty_of_fv` and
+# come back `any`; the two specializations must instead be over the ground
+# types the record was built with.  The NOGREPs are the point: no void*, and
+# no reinterpretation at the call sites.
+C_TESTS += CTypeField
+CGREP_CTypeField = "CTypeField_pick__Mkspec(bool c, uint8_t x, uint8_t y)" \
+                   "CTypeField_pick__Mkspec_1(bool c, uint32_t x, uint32_t y)"
+CNOGREP_CTypeField = "void *" "__proj__"
+
 # A reduced deterministic-CBOR checker.  Unlike the tests above it is not
 # aimed at one backend feature: it is a differential regression test, run
 # over a curated corpus of inputs whose expected results are computed by an
@@ -470,6 +481,13 @@ CODE_MonoPartial = 364
 CODE_MonoFuel    = 365
 CODE_NormBudget  = 365
 CODE_WarnAny     = 367
+# Section 30.4: [@@monomorphize] on a constructor field is read by nothing, and
+# saying so is the whole point -- error 364's advice sends readers here.  The
+# 368 is section 30.3's existential record, which is what makes anyone try it.
+REJECT_TESTS += FieldAttr
+FLAGS_FieldAttr = --custard_backend C --custard_monomorphize_types true
+CODE_FieldAttr  = 368
+EGREP_FieldAttr = "Warning 371" "on the field pimpl_type"
 
 include $(FSTAR_ROOT)/mk/test.mk
 
@@ -497,6 +515,11 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	  --custard_main $*.main $< >$(OUTPUT_DIR)/$*.err 2>&1 || true
 	$(Q)grep -q "Error $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
 	  || { echo "ERROR: expected error $(CODE_$*) from $*"; cat $(OUTPUT_DIR)/$*.err; false; }
+	@# A diagnostic is the product here, so a test may also pin what it says.
+	$(Q)for p in $(EGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
+	    || { echo "ERROR: $* diagnostic is missing $$p"; \
+	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done
 	$(Q)touch $@
 
 $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked

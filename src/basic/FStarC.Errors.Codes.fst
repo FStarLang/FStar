@@ -385,5 +385,6 @@ let default_settings : list error_setting =
     Error_CustardNoCRepresentation                    , CAlwaysError, 368;
     Error_CustardBadUnitInterface                     , CAlwaysError, 369;
     Error_CustardUnrepresentableValue                 , CAlwaysError, 370;
+    Warning_CustardIneffectiveAttribute                , CWarning, 371;
     Error_AmbiguousName                               , CError, 362;
     ]

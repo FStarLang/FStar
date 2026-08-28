@@ -340,6 +340,14 @@ type state = {
      can tell a runtime parameter apart from a computation's result: the two
      need entirely different advice. *)
   effletdefs: SMap.t unit;
+  (* The binders of the definition currently being extracted.  Section 3.2's
+     advice is to write [@@monomorphize] on the offending name "in the
+     enclosing definition", which is only possible if the name *is* one of
+     those binders.  Section 30.4: in the CDDL bundles it is a record field
+     instead, and the reader who follows the advice writes an attribute that
+     nothing reads.  Indices are unique after opening, so entries accumulate
+     harmlessly and are never removed. *)
+  defbinders: SMap.t unit;
   (* The type a local [let] was given, keyed by its bound variable's index.
      In a [--lax] run the typechecker leaves the sort of a binder it invented
      itself (the [uu__] of an ANF-style [let]) unknown, so the *occurrence* of
@@ -389,6 +397,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
   letdefs = SMap.create 100;
   effletdefs = SMap.create 100;
+  defbinders = SMap.create 100;
   lettys  = SMap.create 100;
   abbrevs = SMap.create 100;
   links   = Unit.load_links (Options.custard_links ());
@@ -1068,6 +1077,16 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
 (* Types                                                                *)
 (* -------------------------------------------------------------------- *)
 
+(* The constructor a name projects a field out of, if it is a projector at
+   all.  Section 30.5 uses it to decide whether a stuck type application is a
+   field selection worth reducing. *)
+and projector_of (st:state) (l:Ident.lident) : ML (option Ident.lident) =
+  match TcEnv.lookup_sigelt (tcenv st) l with
+  | Some se -> se.sigquals |> List.tryPick (function
+                 | S.Projector (c, _) -> Some c
+                 | _ -> None)
+  | None -> None
+
 and ty_of_typ (st:state) (t:typ) : ML cty =
   Prof.timed "ty" (fun () ->
   let t = SS.compress t in
@@ -1169,6 +1188,28 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
           let t' = norm_bounded st "a type-level beta-redex"
                      [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                       TcEnv.Beta] t in
+          if U.term_eq t' t then TAny else ty_of_typ st t'
+        (* Section 30.5.  A [Type0] *field* projected out of a record whose
+           construction is known: [b1.impl_type] where [b1] has been
+           substituted by {!specialize} into [Mkbundle U8.t f].  Nothing else
+           here reduces it -- a projector is not a type constructor, so the
+           [Tm_fvar] case below hands it to {!ty_of_fv} and gets [any] -- and
+           the CDDL bundles reach it through every one of their combinators.
+
+           Unfolding the projector and letting [Iota] meet the constructor
+           gives the ground type.  The *scrutinee* has to unfold too, and by
+           delta rather than by name: the record is as often a top-level
+           definition -- [leaf_bundle] -- as a literal constructor
+           application, and a name is something [Iota] cannot see through.  As with the two cases above, this only
+           fires when the redex is really there: if the scrutinee is still a
+           variable the term comes back unchanged and the fallthrough to [any]
+           stands, which is the honest answer.  Each step removes one
+           projector, so this terminates. *)
+        | Tm_fvar fv when Some? (projector_of st (S.lid_of_fv fv)) ->
+          let t' = norm_bounded st "a projected type field"
+                     [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                      TcEnv.Beta; TcEnv.Iota; TcEnv.Weak;
+                      TcEnv.HNF; TcEnv.UnfoldUntil S.delta_constant] t in
           if U.term_eq t' t then TAny else ty_of_typ st t'
         (* Section 18.2: a value-indexed arity is a type parameter, so an
            application of one is the parameter itself.  The arguments are
@@ -2295,11 +2336,22 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
             " of " ^ Ident.string_of_lid l ^ " is not known at specialization \
             time: it mentions the runtime type parameter " ^
             Ident.string_of_id v.ppname ^ ".");
-      text ("Mark " ^ Ident.string_of_id v.ppname ^ " with [@@monomorphize] in \
-            the enclosing definition so that it, too, is known at \
-            specialization time.  (A runtime *value* would be passed at \
-            runtime instead -- see section 3.2c -- but a type is erased, so \
-            there would be nothing to pass.)")
+      (if Some? (SMap.try_find st.defbinders (show v.index))
+       then text ("Mark " ^ Ident.string_of_id v.ppname ^ " with \
+                  [@@monomorphize] in the enclosing definition so that it, \
+                  too, is known at specialization time.  (A runtime *value* \
+                  would be passed at runtime instead -- see section 3.2c -- \
+                  but a type is erased, so there would be nothing to pass.)")
+       (* Section 30.4.  Advice that cannot be followed is worse than none:
+          the reader writes the attribute somewhere it is never read and gets
+          the same error back with nothing to distinguish the two attempts. *)
+       else text (Ident.string_of_id v.ppname ^ " is not a parameter of the \
+                  enclosing definition, so there is nowhere to write \
+                  [@@monomorphize]: the attribute classifies the arguments of \
+                  a function (section 3.2), and writing it on a constructor \
+                  field is read by nothing.  A type that arrives as a field \
+                  rather than as a parameter makes its record an existential \
+                  package, which section 30.3 records as unsupported."))
     ]
 
 (* The effect of a call: we know it exactly, because the callee has already
@@ -3024,6 +3076,8 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let def, c, polycs, poly = Prof.timed "specialize"
     (fun () -> specialize st lb.lbtyp lb.lbdef cs margs n_holes) in
   let bs, body, rc = U.abs_formals def in
+  bs |> List.iter (fun (b:S.binder) ->
+          SMap.add st.defbinders (show b.binder_bv.index) ());
   (* [abs_formals] opens the binders under fresh names, but [c] still speaks of
      the ones [specialize] abstracted over.  Left unrelated, the two sets of
      names produce a signature whose result type mentions type variables no
@@ -3246,6 +3300,27 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
                                 NT (pb.binder_bv, S.bv_to_name b.binder_bv)) pre params in
                   SS.subst_binders subst bs
              else bs in
+    (* Section 30.4.  [@@@monomorphize] classifies the binders of a *function*
+       (section 3.2); a constructor field never reaches [Mono.classify], so
+       the attribute on one is read by nothing at all.  It is worth saying so,
+       because the advice attached to error 364 sends a reader here: told to
+       mark the offending name, and finding that name is a [Type0] field, the
+       obvious thing to try is to write it on the field -- and silence is
+       indistinguishable from having fixed it. *)
+    bs |> List.iter (fun (b:S.binder) ->
+      if U.has_attribute b.binder_attrs PC.monomorphize_attr
+      then E.log_issue0 E.Warning_CustardIneffectiveAttribute [
+        text ("[@@monomorphize] on the field " ^
+              Ident.string_of_id b.binder_bv.ppname ^ " of " ^
+              Ident.string_of_lid c ^ " has no effect.");
+        text "The attribute selects which *arguments of a function* are known \
+              at specialization time (section 3.2).  A constructor field is \
+              not an argument of anything, so there is no call site at which \
+              a value for it could be known, and nothing reads the attribute.";
+        text "A field of kind Type0 whose siblings' types mention it makes the \
+              type an existential package rather than an instance of a \
+              parameterized type, which section 30.3 records as unsupported. \
+              There is no annotation that changes that." ]);
     (* The remaining binders are the constructor's fields; those without
        runtime content are deleted here, matching what [app_of_fv] does to a
        constructor application. *)

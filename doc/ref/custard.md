@@ -8316,7 +8316,10 @@ to be read out of the generated C.
 
 ### 30.3 The other half: a `Type0` field is an existential
 
-The second bug in round 22 is not an arity defect and is not fixed.
+The second bug in round 22 is not an arity defect and is not fixed.  §30.5
+narrows it considerably -- most of what this section calls unsupported turned
+out to be a stuck projection rather than an existential -- but the residue
+below is real and is what remains.
 
 ```fstar
 noeq type pbundle = {
@@ -8351,6 +8354,76 @@ make `bug_a_inline` compile.  That is not worth doing.  It would fix the
 reduced test and none of the real ones, since CDDL's bundles are returned
 from functions and stored, and it would replace a clear 368 with a silent
 reinterpretation in exactly the place §5.9 asks for a loud one.
+
+
+### 30.4 Advice that cannot be followed
+
+Error 364 tells the reader to mark the offending name `[@@monomorphize]` "in
+the enclosing definition".  In the CDDL bundles that name is `ab_impl_type`,
+which is a *field*, and the reporter did the obvious thing and wrote the
+attribute on it.  It is a no-op: `Mono.classify` runs over the binders of a
+function type, a constructor field never reaches it, and nothing else reads
+the attribute either.  Same warning, same error, no acknowledgement -- which
+is indistinguishable from having fixed nothing.
+
+Two changes.  The attribute on a constructor field is now warning 371, which
+says that it is read by nothing and why.  And 364 no longer gives advice it
+cannot support: `st.defbinders` records the binders of the definition being
+extracted, and when the name is not among them the message says there is
+nowhere to write the attribute instead of naming a place that does not exist.
+
+This is the same trap as rule 4's no-op on type binders, and §19.13's advice
+that recommended a flag the reader had already set.  Advice that names an
+action is read as an assertion that the action exists.
+
+### 30.5 A field projection is not a type constructor
+
+The `Type0` field of §30.3 is worse than it needs to be, and separating the
+two halves took an MWE with CDDL's actual shape: a derivation over a grammar,
+a bundle built by structural recursion over it, and combinators that build the
+impl type with `&`, `option` and `either`.
+
+The first finding is that specialization already does its half.  With the
+derivation `[@@monomorphize]` the recursion unrolls -- the IR holds
+`impl@Leaf`, `impl@Concat` -- and with the bundle arguments marked too, every
+combinator is specialized per bundle *value*.  So at each construction site
+the record really is concrete, and `b1.impl_type` is a projection out of a
+known constructor application.
+
+It was still `any`, for a reason that has nothing to do with existentials: a
+projector is not a type constructor, so `ty_of_typ` fell through to
+`ty_of_fv`, which has no answer for one.  `ty_of_typ` already has two cases
+that reduce a stuck type -- a beta-redex in type position (§19.x) and an
+abbreviation with an unrepresentable parameter (§18) -- and this is a third of
+exactly the same kind.  Unfolding the projector and letting iota meet the
+constructor gives the ground type.  The scrutinee has to unfold too, and by
+delta rather than by name, because the record is as often a top-level
+definition as a literal constructor application and iota cannot see through a
+name.
+
+The effect on the MWE is most of the way:
+
+```
+let concat_bundle__lam@Mkbundle
+  (x: tuple2@tuple2_uint8_uint8_option_uint8) : usize
+```
+
+where before the same binder was `tuple2@any_any_option_any`, and before that
+plain `any`.  The interior of every specialization is now ground.
+
+What remains is one thing, and it is §30.3 in its exact form: the record's own
+*declaration*.  `bundle` collapses to its surviving field, whose type is
+`impl_type -> SZ.t` with `impl_type` still the type field, so the declaration
+is `any -> usize` however concrete each use is.  Fixing that means emitting a
+copy of the record type per ground value of its `Type0` fields -- §6 keyed on
+a field rather than on a type argument.  That is a bounded amount of work now
+rather than an open question, because the value it would key on is exactly
+what §30.5 just made available.
+
+`tests/custard/CTypeField.fst` is the part that works, isolated: a `Type0`
+field projected in a type position, where the record's surviving fields do
+*not* mention it, so no existential arises and the two specializations come
+out over `uint8_t` and `uint32_t`.  It is compiled and run.
 
 
 | M | Deliverable | Notes |
@@ -8444,3 +8517,4 @@ reinterpretation in exactly the place §5.9 asks for a loud one.
 | M10εε | **A divergence the budget was for** (§28) | Done.  #4494 reports the legacy pipelines allocating without bound and being OOM-killed on a type computed by a recursive definition that makes no progress when unfolded, and asks for a step bound as the broader fix.  §3.6's budget is that bound, and this measures it: the same reduction is `Fatal error: allocation failure during minor GC` under `--codegen OCaml` and error 365 -- naming the term and the request chain -- under Custard, because `norm_bounded` was applied to *type* normalization and not just to specialization keys.  Demand-driven extraction (§3.2) is a second and weaker guard, since the report's own reduction has the offending definition dead; `tests/custard/TypeDiverge.fst` therefore names it with `--custard_entry`, and spells the recursion out rather than importing `false_elim` so that it survives #4494 marking that `irreducible`.  Separately, `false_elim` had no builtin rule, so Custard extracted its non-terminating *definition*: an infinite loop where OCaml wants a `failwith`, and on C a hard 368 about the return type of a function that never returns.  `Builtins.pervasives_rule` gives it the `EAbort`/`TAny` treatment `magic` and `admit` have had since M2; `tests/custard/CFalseElim.fst`.  The dispatcher branch has to *fall through*, since `FStar.Pervasives` is also a realized module -- shadowing it cut `Mkdtuple3` off from `is_realized_module`, which `Realized.fst` caught |
 | M10ζζ | **Integer literals change representation underneath us** (§29) | Done.  A master merge replaced `Const_int of string & option (signedness & width)` with a value plus the base it was written in, and split machine integers into `Const_machine_int`.  Custard's IR is unchanged, so the work is three boundary cases that want different answers: `constant_of_sconst` keeps the source spelling via `string_of_int_literal`, matching the legacy ML extraction; `key_of_const` must use the *value*, since `eq_const` ignores the base and a key that kept it would specialize `f 16` and `f 0x10` twice; `hint_of_term` is cosmetic.  The merge also canonicalized hex to lowercase without leading zeros, which nothing pins -- except `cbor-corpus/mutants.py`, whose `byte+1` family required `[0-9A-F]{2}` and so silently generated ten fewer mutants, reporting 36/36 where it had reported 46/46.  Every mutant killed before was still killed; the denominator moved, which is §23.4's lesson in a second form.  Pattern widened; all four figures back to 46/46, 46/46, 48/49, 46/59.  Also: `no_auto_projectors` is a deprecated no-op, so `AssumedProj.fsti` drops it, and both §28 tests survive #4494 marking `false_elim` `irreducible`, which is what they were written for |
 | M10ηη | **A function that returns a function pointer** (§30) | Done.  Round 22 withdrew round 21's framing -- a function pointer in a record is fine -- and reduced the CDDL blocker to two narrower bugs.  The first is the fourth of the §25/§26 arity family and the first the pass *causes* rather than misreads: a one-field record collapses (§5.2), so `mk_arg (x: U8.t) : fixedb` has type `u8 -> (u8 -> usize)`, §25 sees a result type that is still an arrow and gives it a second binder -- rewriting the definition and none of its call sites, which were already saturated at one.  A function returning a function pointer is ordinary C and needed nothing.  Expansion is now capped by a per-round table of the fewest arguments any use supplies, counting only uses this pass cannot itself grow: the head call of an expandable body can, so `call_g_partial` does not pin `g` and `CEtaChain`'s chain still resolves, while `mk_arg`'s use under a `let` does.  `tests/custard/pulse/PulseFnPtrRet.fst`, run.  The second bug is not fixed and is not an arity defect: a `Type0` *field* whose siblings' types depend on it is an existential package, not an instance of a parameterized type, so §6 does not reach it and the sibling degrades to `any -> usize`.  Promoting the field to a parameter is a feature at §6's scale, and §30.3 records why the inline case must not be papered over |
+| M10θθ | **A field projection is not a type constructor** (§30.4, §30.5) | Done.  Round 22's second bug, reduced with an MWE carrying CDDL's actual shape -- a bundle built by structural recursion over a grammar derivation.  Specialization already does its half: with the derivation and the bundle arguments `[@@monomorphize]`, the recursion unrolls and every combinator is specialized per bundle *value*, so at each construction site the record is concrete.  The type was still `any` for an unrelated reason -- a projector is not a type constructor, so `ty_of_typ` fell through to `ty_of_fv` -- and reducing it is a third case of the kind that file already has two of, with the scrutinee unfolded by delta since the record is as often a top-level name as a literal.  Every specialization's interior is now ground; `tests/custard/CTypeField.fst`, run.  What is left is exactly §30.3 and no longer more than that: the record's own declaration collapses to `any -> usize`, and fixing it means §6 keyed on a `Type0` *field* rather than on a type argument -- bounded work now, because the value to key on is what this made available.  Also §30.4: `[@@monomorphize]` on a constructor field is read by nothing, which is now warning 371 rather than silence, and 364 no longer advises writing it somewhere that does not exist |
