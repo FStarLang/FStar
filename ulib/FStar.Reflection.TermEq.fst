@@ -671,9 +671,7 @@ val pat_arg_cmp      : comparator_for' pareq
 val br_cmp           : comparator_for' breq
 val match_returns_ascription_cmp : comparator_for' maeq
 
-(* z3rlimit_factor: pushing the expected postcondition into the body raises the
-   obligations earlier, in contexts these proofs need more solver resources for. *)
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 2"
 
 let rec term_cmp t1 t2 =
   let tv1 = inspect_ln t1 in

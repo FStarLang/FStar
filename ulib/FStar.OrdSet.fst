@@ -661,9 +661,6 @@ let union_of_tails_size (#a:eqtype) #f (s1 s2: ordset a f)
 let union_is_symmetric #a #f (s1 s2: ordset a f) : Lemma (union s1 s2 = union s2 s1) = 
   same_members_means_eq (union s1 s2) (union s2 s1)
  
-(* Pushing the expected postcondition into the body raises the obligation earlier,
-   in a context that this proof needs more solver resources to discharge. *)
-#push-options "--z3rlimit_factor 2"
 let size_of_union_aux_1 #a #f (s1 s2: (z:ordset a f{z<>empty}))
   : Lemma (requires (head s1) <> (head s2) 
                  && (f (head s1) (head s2)) 
@@ -671,7 +668,6 @@ let size_of_union_aux_1 #a #f (s1 s2: (z:ordset a f{z<>empty}))
           (ensures size (union s1 s2) = (size s1 + size s2 - size (intersect s1 s2))) =  
     union_of_tails_size s1 s2;
     same_members_means_eq (intersect (tail s1) s2) (intersect s1 s2)
-#pop-options
 
 
 let size_of_union_aux_2 #a #f (s1 s2: (z:ordset a f{z<>empty}))
