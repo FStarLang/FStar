@@ -425,6 +425,41 @@ let type_params (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = U.arrow_formals_comp t in
   bs |> List.map (is_type_param env)
 
+(* Rule 4b (section 30.9).  A binder whose type is an inductive one of whose
+   constructors takes a *type* -- [Mkbundle : (b_impl_type: Type0) -> (b_dflt:
+   b_impl_type) -> bundle] -- cannot be a runtime parameter, because there is
+   no runtime representation for it to have: its own contents decide the
+   representation, and taking it apart binds a type to a variable, which is
+   exactly what error 364 reports.  Such a binder is [Mono] whether or not
+   anyone wrote the attribute, because the alternative is not a slower
+   program but no program.
+
+   The inductive's own *parameters* do not count.  [Cons : (a:Type) -> a ->
+   list a -> list a] takes a type and [list int] is an ordinary runtime value;
+   what matters is a type that a constructor stores, which is the arguments
+   past the first [num_ty_params]. *)
+let ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool =
+  match TcEnv.lookup_sigelt env l with
+  | Some ({ sigel = Sig_datacon { t; num_ty_params } }) ->
+    let bs, _ = U.arrow_formals t in
+    if List.length bs <= num_ty_params then false
+    else List.splitAt num_ty_params bs |> snd
+         |> List.existsb (fun (b:binder) ->
+              match (SS.compress b.binder_bv.sort).n with
+              | Tm_type _ -> true
+              | _ -> false)
+  | _ -> false
+
+let is_type_carrying_binder (env:TcEnv.env) (b:binder) : ML bool =
+  let hd, _ = U.head_and_args_full (U.unrefine (SS.compress b.binder_bv.sort)) in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv ->
+    (match TcEnv.lookup_sigelt env (S.lid_of_fv fv) with
+     | Some ({ sigel = Sig_inductive_typ { ds } }) ->
+       ds |> List.existsb (ctor_stores_type env)
+     | _ -> false)
+  | _ -> false
+
 let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
   let bs, comp = arrow_formals_unfold env t in
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
@@ -444,6 +479,7 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
     || is_tcresolve_binder b                                      (* rule 2 *)
     || is_tcclass_binder env b                                    (* rule 2 *)
     || (mono_types && is_type_binder env b)                           (* rule 4 *)
+    || is_type_carrying_binder env b                             (* rule 4b *)
     then Mono
     else Poly
   in

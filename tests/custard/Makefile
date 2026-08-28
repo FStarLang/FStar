@@ -342,6 +342,11 @@ CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
 # come back `any`; the two specializations must instead be over the ground
 # types the record was built with.  The NOGREPs are the point: no void*, and
 # no reinterpretation at the call sites.
+C_TESTS += RecTyAcc
+CGREP_RecTyAcc = "uint8_t RecTyAcc_by_match__ANode(uint8_t x)" \
+                 "uint32_t RecTyAcc_by_match__ANode_1(uint8_t x)"
+CNOGREP_RecTyAcc = "void *" "__proj__"
+
 C_TESTS += RecTyField
 CGREP_RecTyField = "uint8_t RecTyField_use_rec__ANode(uint8_t x)" \
                    "uint32_t RecTyField_use_rec__ANode_1(uint8_t x)"
@@ -490,9 +495,13 @@ CODE_WarnAny     = 367
 # saying so is the whole point -- error 364's advice sends readers here.  The
 # 368 is section 30.3's existential record, which is what makes anyone try it.
 REJECT_TESTS += FieldAttr
-FLAGS_FieldAttr = --custard_backend C --custard_monomorphize_types true
-CODE_FieldAttr  = 368
-EGREP_FieldAttr = "Warning 371" "on the field pimpl_type"
+# The program itself extracts (rule 4b of section 30.9 makes the bundle binder
+# Mono, so nothing is left over); the warning is the whole test, so it is
+# promoted to an error rather than looked for in passing output.
+FLAGS_FieldAttr = --custard_backend C --custard_monomorphize_types true \
+                  --warn_error @371
+CODE_FieldAttr  = 371
+EGREP_FieldAttr = "on the field pimpl_type"
 
 include $(FSTAR_ROOT)/mk/test.mk
 

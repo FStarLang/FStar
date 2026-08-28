@@ -8,9 +8,12 @@ module FieldAttr
    field to write exactly this, and getting the same error back with no
    acknowledgement is indistinguishable from having fixed nothing.
 
-   The 368 that follows is section 30.3: a record whose surviving field's type
-   mentions its Type0 field is an existential package, and no annotation
-   changes that.  The test is the warning; the error is the backdrop. *)
+   The program itself extracts: rule 4b of section 30.9 makes a binder of a
+   type-carrying record [Mono] whether or not anyone asked, so the [Type0]
+   field is decided at specialization time.  That is what makes the attribute
+   pointless rather than merely ignored, and it is why the warning is the
+   whole test -- it is promoted to an error, since there is no longer any
+   failure for it to accompany. *)
 
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8

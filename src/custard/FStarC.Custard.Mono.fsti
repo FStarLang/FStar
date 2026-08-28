@@ -136,6 +136,14 @@ val type_binders (env:TcEnv.env) (t:typ) : ML (list bool)
     accepts: the parameters the emitted type declaration actually binds. *)
 val type_params (env:TcEnv.env) (t:typ) : ML (list bool)
 
+(** [ctor_stores_type env l] is true when the data constructor [l] takes a
+    [Type] argument that is not one of its inductive's parameters -- the
+    [b_impl_type] of [Mkbundle], not the [a] of [Cons].  Matching on such a
+    constructor binds a type to a variable, which monomorphization has no
+    answer for, so the match has to be resolved at specialization time
+    (section 30.8), and a binder of such a type has to be [Mono] (rule 4b). *)
+val ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool
+
 (** [classify env attrs t] classifies the binders of a definition of type [t]
     carrying the top-level attributes [attrs].  The returned list has one
     entry per binder of [t]'s outermost arrow, in order. *)

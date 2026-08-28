@@ -2355,7 +2355,17 @@ let coerce_prog (prog:program) : ML program =
     | ESeq (a, b) -> same (ESeq (go env None a, check env exp b))
     | ELet (v, t, e1, e2) ->
       let e1 = check env (trust t) e1 in
-      same (ELet (v, t, e1, check (extend env v (binding env t e1)) exp e2))
+      let b = binding env t e1 in
+      (* Section 30.7, for a local binding.  The annotation is a copy of the
+         callee's declared result type, taken when the body was extracted and
+         so from before `narrow_rets' recovered it; the inference here has the
+         later answer.  Left alone it is the annotation that reaches the
+         backend, and a `void *' local is the one place the recovered type
+         would still be thrown away. *)
+      let t = (match b with
+               | Some bt when has_any t && not (has_any bt) -> bt
+               | _ -> t) in
+      same (ELet (v, t, e1, check (extend env v b) exp e2))
     | EIf (c, a, b) ->
       (* One expectation for both branches, so that a coercion goes on the one
          that needs it rather than on the [if]. *)

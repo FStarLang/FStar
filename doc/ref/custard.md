@@ -404,6 +404,14 @@ The classification is a function of the *definition*, computed once and cached.
    `[@@monomorphize]`, meaning "all non-erased binders are `Mono`".
 4. `b_i` is a **type binder** and `--custard_monomorphize_types` is on
    (default: on for the direct-C backend, off for ML/Krml) ⟹ `Mono`.
+4b. `b_i`'s type is an **inductive one of whose constructors stores a type**
+   ⟹ `Mono` (§30.9).  `Mkbundle : (b_impl_type: Type0) -> (b_dflt:
+   b_impl_type) -> bundle` is the shape: a value of such a type has no runtime
+   representation, because its own contents decide what the representation is.
+   Unlike rules 2 and 4 this is not a policy about what is worth specializing;
+   the alternative is not a slower program but no program.  The inductive's own
+   *parameters* do not count — `Cons : (a:Type) -> a -> list a -> list a`
+   stores no type, and `list int` is an ordinary value.
 5. **Dependency closure**: if `b_j` is `Mono` and `b_i` is free in the type of
    `b_j`, then `b_i` becomes `Mono`.  Iterate to a fixpoint (it terminates: the
    set only grows and is bounded by `n`).  This is the rule that makes `#a` in
@@ -8500,6 +8508,88 @@ and the body's type is just as `any` as the declaration's.
 the recursive case, over two instantiations each; it is compiled and run, and
 generates no `any` at all.
 
+### 30.8 The same field, spelled three ways
+
+Round 24 found that §30.5 and §30.7 fixed the *spelling* CDDL does not use.
+CDDL never writes `b.b_impl_type`.  It destructures with a `match`
+(`CDDL.Pulse.Bundle.MapGroup`), and where it does not, it goes through an
+accessor with a `Pure ... ensures fun t -> t == b.b_impl_type` guard
+(`CDDL.Pulse.Bundle.Base`).  Both hide the projection, and the three forms
+failed in three different ways:
+
+| how the field is written | before | why |
+| --- | --- | --- |
+| `(mk_bundle a).b_impl_type` | works | §30.5 reduces the projector |
+| `match mk_bundle a with Mkbundle it d -> ...` | Error 364 | the field is now a *variable* |
+| `get_impl_type (mk_bundle a)` | Error 368 | the bundle reaches a runtime binder |
+
+Nothing about the program differs between the three.  The same value is
+available at the same moment with the same annotations; only the syntax
+differs, and syntax is not a reason to support one and reject the others.
+
+**The `match`.**  A constructor that stores a type -- `Mkbundle : (b_impl_type:
+Type0) -> (b_dflt: b_impl_type) -> bundle` -- binds that type to a variable
+when it is matched, and a variable standing for a type is precisely what error
+364 reports.  Such a match has to fire at specialization time or never, so
+`specialize` now reduces it: it scans the body for a match on a type-storing
+constructor, collects the head names of those scrutinees, and normalizes with
+`Zeta` and delta *for those names only*.
+
+Every part of that narrowness is load-bearing.  §6 excludes `Zeta` for reasons
+that have not stopped being true, and unfolding every reachable recursive
+definition would be a different compiler.  Here it is on for a handful of
+named builders, and only when the shape that needs it is present.  The
+reduction is also allowed to fail: on a budget overrun the ordinary
+normalization runs instead, and the program gets whatever diagnostic it would
+have got before rather than a fresh error 365 -- the §30.6 rule again.
+
+The first version of the trigger was wrong in an instructive way.  It asked
+whether the matched constructor binds a type *anywhere*, which is true of
+`Some : (a:Type) -> a -> option a`, so every `match` on an `option` fired it
+and `tests/custard/Magic.fst` lost its dictionary specialization.  What matters
+is a type a constructor **stores**, which is its arguments past the inductive's
+own parameters.  `Mono.ctor_stores_type` is that check, and both this and rule
+4b below use it.
+
+**The accessor.**  `get_impl_type (mk_bundle a)` in type position is an
+ordinary function applied to arguments, not a type constructor, so `ty_of_fv`
+had no answer.  §30.5's reduction now runs as a *fallback* there -- only once
+`ty_of_fv` has returned `TAny`, so a type that does have a name is unaffected
+-- which makes the accessor and the projection behave alike, as they should.
+
+### 30.9 Rule 4b: a type-carrying value has no runtime representation
+
+The accessor's other half is its argument.  `get_dflt (b: bundle)` takes the
+bundle as a runtime parameter, and a bundle has no runtime representation to
+take: its own contents decide what it is.  The declared type collapses to
+`any`, and 368 follows.
+
+This is not a case for `any`; it is a case that cannot exist.  So rule 4b joins
+§3.1: **a binder whose type is an inductive one of whose constructors stores a
+type is `Mono`**, whether or not anyone wrote the attribute.  The alternative
+is not a slower program but no program, which is what separates this from the
+inference rules §3.1 leaves opt-in.
+
+The inductive's own parameters are again excluded, and again for `Cons : (a:
+Type) -> a -> list a -> list a`: `list int` is an ordinary runtime value.
+
+Rule 4b changes one existing test's verdict.  `tests/custard/FieldAttr.fst`
+pinned warning 371 with a 368 behind it; the 368 is gone, because the binder
+is now `Mono`, so the warning is promoted with `--warn_error @371` and stands
+on its own.  That is the right outcome for it: the attribute is still read by
+nothing, which is all it ever claimed.
+
+**And the local binding.**  With all three forms extracting, one leak was
+left: `let a = by_acc ... in` still carried `any`, because the annotation is a
+copy of the callee's declared result type taken *before* `narrow_rets`
+recovered it.  `coerce_prog` already infers the better type in order to bind
+the variable; it now writes it back into the annotation as well.  Without
+that, a `void *` local was the one place the recovered type was still thrown
+away.
+
+`tests/custard/RecTyAcc.fst` carries all three spellings over two
+instantiations, checks its own answer, and is compiled and run.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -8593,3 +8683,4 @@ generates no `any` at all.
 | M10ηη | **A function that returns a function pointer** (§30) | Done.  Round 22 withdrew round 21's framing -- a function pointer in a record is fine -- and reduced the CDDL blocker to two narrower bugs.  The first is the fourth of the §25/§26 arity family and the first the pass *causes* rather than misreads: a one-field record collapses (§5.2), so `mk_arg (x: U8.t) : fixedb` has type `u8 -> (u8 -> usize)`, §25 sees a result type that is still an arrow and gives it a second binder -- rewriting the definition and none of its call sites, which were already saturated at one.  A function returning a function pointer is ordinary C and needed nothing.  Expansion is now capped by a per-round table of the fewest arguments any use supplies, counting only uses this pass cannot itself grow: the head call of an expandable body can, so `call_g_partial` does not pin `g` and `CEtaChain`'s chain still resolves, while `mk_arg`'s use under a `let` does.  `tests/custard/pulse/PulseFnPtrRet.fst`, run.  The second bug is not fixed and is not an arity defect: a `Type0` *field* whose siblings' types depend on it is an existential package, not an instance of a parameterized type, so §6 does not reach it and the sibling degrades to `any -> usize`.  Promoting the field to a parameter is a feature at §6's scale, and §30.3 records why the inline case must not be papered over |
 | M10θθ | **A field projection is not a type constructor** (§30.4, §30.5) | Done.  Round 22's second bug, reduced with an MWE carrying CDDL's actual shape -- a bundle built by structural recursion over a grammar derivation.  Specialization already does its half: with the derivation and the bundle arguments `[@@monomorphize]`, the recursion unrolls and every combinator is specialized per bundle *value*, so at each construction site the record is concrete.  The type was still `any` for an unrelated reason -- a projector is not a type constructor, so `ty_of_typ` fell through to `ty_of_fv` -- and reducing it is a third case of the kind that file already has two of, with the scrutinee unfolded by delta since the record is as often a top-level name as a literal.  Every specialization's interior is now ground; `tests/custard/CTypeField.fst`, run.  What is left is exactly §30.3 and no longer more than that: the record's own declaration collapses to `any -> usize`, and fixing it means §6 keyed on a `Type0` *field* rather than on a type argument -- bounded work now, because the value to key on is what this made available.  Also §30.4: `[@@monomorphize]` on a constructor field is read by nothing, which is now warning 371 rather than silence, and 364 no longer advises writing it somewhere that does not exist |
 | M10ιι | **A recursive builder, and a declaration that lost its type** (§30.6, §30.7) | Done.  Round 23 reduced §30.3 to one line of difference: an `unfold` bundle builder works, a `let rec` one does not, because only the latter survives extraction as a value.  Two fixes.  §30.5's reduction now needs `Zeta` to see through the recursion, and `Zeta` can exhaust the budget -- so `norm_optional` lets *this* reduction give up and fall back to `TAny`, on the principle that a normalization the program's meaning depends on must fail loudly and one that only sharpens a fallback must not.  That grounds the uses.  The builder itself was the rest: a record collapsing to a field of its own erased `Type0` field is declared `any` however concrete each specialization is.  `Simplify.narrow_rets` reads the result type back off the body, after `records` and as a fixpoint over the call chain, rewriting only signatures -- `coerce_prog` re-derives each use from the signature, so the coercions between them vanish.  This is §30.3 closed, and without §6 keyed on a field, which turned out not to be needed.  `tests/custard/RecTyField.fst`, run, no `any` emitted |
+| M10κκ | **The same field, spelled three ways** (§30.8, §30.9) | Done.  Round 24: §30.5 and §30.7 had fixed the one spelling EverParse does not use.  CDDL reaches a bundle's `Type0` field through a `match` (Error 364, the field becomes a variable) or through an accessor (Error 368, the bundle becomes a runtime binder), never through a projection.  Three fixes, all narrow.  `specialize` resolves a match on a *type-storing* constructor by unfolding just those scrutinee heads, with `Zeta` on for them alone and permitted to give up (§30.6) -- the first trigger was too loose and fired on every `option`, which is why the check is "a type the constructor stores", past the inductive's parameters.  `ty_of_typ` runs the same reduction as a fallback once `ty_of_fv` has given up, so an accessor and a projection behave alike.  And rule 4b: a binder of a type-carrying inductive is `Mono` unasked, because the alternative is not a slower program but no program.  `FieldAttr` accordingly loses its 368 and pins warning 371 under `--warn_error`; `coerce_prog` writes the recovered type back into local `let` annotations.  `tests/custard/RecTyAcc.fst`, run |

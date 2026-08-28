@@ -47,6 +47,7 @@ module ExtractAs = FStarC.Parser.Const.ExtractAs
 module S      = FStarC.Syntax.Syntax
 module SMap   = FStarC.SMap
 module Unit   = FStarC.Custard.Unit
+module Visit  = FStarC.Syntax.Visit
 module SS     = FStarC.Syntax.Subst
 module TcEnv  = FStarC.TypeChecker.Env
 module U      = FStarC.Syntax.Util
@@ -572,12 +573,46 @@ let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML 
    and [Zeta] is exactly what makes a budget overrun possible; without this,
    turning it on would convert programs that compile today -- with an [any] in
    a place they never used -- into a hard error 365. *)
-let norm_optional (st:state) (steps:list TcEnv.step) (t:term) : ML (option term) =
+let norm_optional_in (env:TcEnv.env) (steps:list TcEnv.step) (t:term)
+  : ML (option term) =
   try Some (Prof.timed "norm" (fun () ->
               N.with_budget (Options.custard_norm_budget ())
-                            (fun () -> N.normalize steps (env_for_term (tcenv st) t) t)))
+                            (fun () -> N.normalize steps (env_for_term env t) t)))
   with
   | N.Budget_exceeded -> None
+
+let norm_optional (st:state) (steps:list TcEnv.step) (t:term) : ML (option term) =
+  norm_optional_in (tcenv st) steps t
+
+(* Section 30.8.  A match that takes apart a constructor storing a type --
+   [Mkbundle : (b_impl_type: Type0) -> (b_dflt: b_impl_type) -> bundle] -- has
+   to fire at specialization time, because afterwards the field is a variable
+   and a variable standing for a type is what error 364 reports.
+
+   These are the names whose unfolding would let such a match fire: the head of
+   every scrutinee that is taken apart by one.  Collected rather than assumed,
+   because the alternative -- unfolding everything, or turning [Zeta] on
+   globally -- is what {!custard_norm_steps} spends a paragraph explaining
+   Custard must not do.  Here the set is small, known, and derived from the
+   very shape that needs it. *)
+let type_matched_heads (env:TcEnv.env) (t:term) : ML (list Ident.lident) =
+  let acc : ref (list Ident.lident) = mk_ref [] in
+  let _ = Visit.visit_term false (fun t ->
+    (match (SS.compress t).n with
+     | Tm_match {scrutinee; brs} ->
+       let binds_type =
+         brs |> List.existsb (fun (p, _, _) ->
+                  match p.v with
+                  | Pat_cons (fv, _, _) -> Mono.ctor_stores_type env (S.lid_of_fv fv)
+                  | _ -> false) in
+       if binds_type
+       then (let h, _ = U.head_and_args_full scrutinee in
+             match (U.un_uinst (SS.compress h)).n with
+             | Tm_fvar fv -> acc := S.lid_of_fv fv :: !acc
+             | _ -> ())
+     | _ -> ());
+    t) t in
+  !acc
 
 (* -------------------------------------------------------------------- *)
 (* Loading                                                              *)
@@ -1249,7 +1284,26 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
                        fst (U.arrow_formals k)
                        |> List.map (fun b -> not (keeps_param st l b))
                      | None -> [] in
-          ty_of_fv st fv (drop_flagged keep args |> List.map fst)
+          let r = ty_of_fv st fv (drop_flagged keep args |> List.map fst) in
+          (* Section 30.8.  Only once [ty_of_fv] has given up: the head is a
+             name applied to arguments and there is no type constructor behind
+             it, so it is an ordinary *function returning a type* --
+             [get_bundle_impl_type b], the accessor EverParse uses in place of
+             the projection section 30.5 handles.  There is no reason for the
+             two spellings to differ, and reducing is the same move, with the
+             same discipline: it fires only when it changes something, and it
+             is allowed to run out of budget, since what it recovers is
+             precision over the [any] that would otherwise stand.
+
+             The reduct is fully normal, so a second pass through here cannot
+             reduce further and the recursion is one level deep. *)
+          if not (TAny? r) then r
+          else (match norm_optional st
+                        [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                         TcEnv.Beta; TcEnv.Iota; TcEnv.Zeta; TcEnv.Weak;
+                         TcEnv.HNF; TcEnv.UnfoldUntil S.delta_constant] t with
+                | None -> TAny
+                | Some t' -> if U.term_eq t' t then TAny else ty_of_typ st t')
         | _ -> TAny))
 
   (* Section 18.2: the argument supplied for a value-indexed arity, which the
@@ -3082,9 +3136,39 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
   let poly = hbs @ poly in
   let polycs = List.map (fun _ -> Poly) hbs @ polycs in
   let applied = match spine with [] -> def | _ -> U.mk_app def spine in
+  let benv = TcEnv.push_binders (tcenv st) poly in
+  (* Section 30.8.  A match that takes apart a constructor binding a type has
+     to fire here or never: after this, the field is a variable, and a variable
+     standing for a type is what error 364 reports.  A syntactic projection is
+     already handled -- section 30.5 reduces it in {!ty_of_typ} -- and the only
+     difference between the two is how the source happens to spell the field,
+     so they should not differ in what they support.
+
+     The extra steps are as narrow as the trigger: [Zeta] and delta for the
+     scrutinee heads *this body actually matches on*, and nothing else.  That
+     is deliberate -- {!custard_norm_steps} excludes [Zeta] for reasons that
+     have not stopped being true, and turning it on wholesale would unfold
+     every recursive definition in reach.  Here it is on for a handful of
+     named builders, and only when the shape that needs it is present.
+
+     It may also fail, so it is allowed to: on a budget overrun the ordinary
+     normalization runs instead, and the program gets whatever diagnostic it
+     would have got before rather than a fresh error 365 from a reduction that
+     was only ever an attempt to do better. *)
+  let extra =
+    match type_matched_heads benv applied with
+    | [] -> None
+    | lids ->
+      let steps = custard_norm_steps |> List.filter (fun s ->
+                    match s with TcEnv.Exclude TcEnv.Zeta -> false | _ -> true) in
+      norm_optional_in benv (steps @ [TcEnv.Zeta;
+                                      TcEnv.UnfoldUntil S.delta_constant;
+                                      TcEnv.UnfoldOnly lids]) applied in
   (* The chain in the error names the definition, so "a body" is enough. *)
-  let body = norm_bounded_in st (TcEnv.push_binders (tcenv st) poly)
-                             "a definition body" custard_norm_steps applied in
+  let body =
+    match extra with
+    | Some b -> b
+    | None -> norm_bounded_in st benv "a definition body" custard_norm_steps applied in
   (U.abs poly body None, c, polycs, poly)
 
 and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
