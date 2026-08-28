@@ -391,11 +391,11 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
           text "This instance has effect" ^/^ pp (U.comp_effect_name res);
       ];
 
-    let t = U.comp_result res in
+    let t = U.comp_result res |> U.unrefine in
     let head, _ = U.head_and_args_full t in
     let err () =
       FStarC.Errors.log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
-          text "Instances must define instances of `class` types.";
+          text "Instances must define instances of ‘class’ types.";
           text "Type" ^/^ pp t ^/^ text "is not a class.";
         ]
     in
@@ -421,7 +421,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
 
     | _ ->
       FStarC.Errors.log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
-          text "The ‘instance’ attribute is only allowed on ‘let’ and ‘val’ declarations.";	
+          text "The ‘instance’ attribute is only allowed on ‘let’ and ‘val’ declarations.";
           text "It is not allowed for" ^/^ fquotes (arbitrary_string <| Print.sigelt_to_string_short se);
         ]
 

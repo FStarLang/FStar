@@ -63,8 +63,13 @@ let _ : box (dummy 4 string) = foo
 let _ : box (dummy 4 bool) = foo
 
 
-(* F* rejects this instance, claiming the resultl type is not a class. *)
-// instance inst_4_unit () : Tot (inst : cc (dummy 4 unit) { inst.meta == 45}) = { foo = C; meta = 45; }
+(* An instance whose result type is a refinement of a class type: F* used to
+   reject this, claiming the result type is not a class. *)
+instance inst_4_unit () : Tot (inst : cc (dummy 4 unit) { inst.meta == 45}) = { foo = C; meta = 45; }
+
+let _ : dummy 4 unit = foo
+
+let _ : squash ((solve <: cc (dummy 4 unit)).meta == 45) = ()
 
 
 

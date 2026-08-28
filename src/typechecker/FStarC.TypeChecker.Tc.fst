@@ -1238,10 +1238,16 @@ let finish_iface_todo (env:Env.env)
 declare are private to the module. Extraction (in particular to C, via Karamel)
 needs to know this, so tag them with the internal `KrmlPrivate` attribute; see
 [FStarC.Extraction.ML.Modul.extract_meta]. This reproduces what the old
-syntactic interleaving used to do. *)
+syntactic interleaving used to do.
+
+Passing `--ext no_krml_private` disables this tagging entirely, so that no
+declaration is made C-private by virtue of being absent from the interface.
+This is useful when the generated C is meant to be consumed by other C code,
+or when debugging Karamel bundling/inlining issues. *)
 let mark_karamel_private (env:Env.env) (se:sigelt) : ML sigelt =
   let lids = U.lids_of_sigelt se in
-  if not (Env.has_iface env)
+  if Options.Ext.enabled "no_krml_private"
+  || not (Env.has_iface env)
   || Nil? lids
   || lids |> BU.for_some (Env.declared_in_iface env)
   then se
@@ -1268,6 +1274,15 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
 
     if Options.ide_id_info_off() then Env.toggle_id_info env false;
     if !dbg_IdInfoOn then Env.toggle_id_info env true;
+
+    (* `--ext freshen` restarts the solver before every top-level declaration,
+       as if there was a `#restart-solver` pragma in front of each of them.
+       This makes each declaration's proof independent of the solver state
+       left behind by the previous ones, which is useful to diagnose
+       proof instability and cross-declaration interference. It is of course
+       much slower. *)
+    if Options.Ext.enabled "freshen" then
+      env.solver.refresh (Some env.proof_ns);
 
     (* Tick off the entries of the interface's to-do list that this declaration
        discharges. Copied interface sigelts and the declarations being

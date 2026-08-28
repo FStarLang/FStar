@@ -3550,6 +3550,21 @@ let get_n_binders env n t = get_n_binders' env [] n t
 let () =
   __get_n_binders := get_n_binders'
 
+(* [let f (x:t) : Tot ty = body] elaborates to [fun x -> (body <: Tot ty)].
+   That [Tot] is a claim about [body] for a *total* [x]: substituting a ghost
+   argument for [x] can make the body ghost, and the ascription then no longer
+   holds, so the beta-reduct of the unfolded definition does not typecheck
+   (issue #4498) even though the application we unfolded does.  Keep the type,
+   which is the useful part of the ascription, and let the effect be inferred:
+   the callers of [maybe_unfold_head] typecheck the term we return. *)
+let rec weaken_total_ascriptions (t:term) : ML term =
+  match (SS.compress t).n with
+  | Tm_abs {b; body; rc_opt} ->
+    S.mk (Tm_abs {b; body=weaken_total_ascriptions body; rc_opt}) t.pos
+  | Tm_ascribed {tm; asc=(Inr c, tacopt, use_eq); eff_opt} when U.is_total_comp c ->
+    S.mk (Tm_ascribed {tm; asc=(Inl (U.comp_result c), tacopt, use_eq); eff_opt}) t.pos
+  | _ -> t
+
 let maybe_unfold_head_fv (env:Env.env) (head:term)
   : ML (option term)
   = let fv_us_opt =
@@ -3565,7 +3580,7 @@ let maybe_unfold_head_fv (env:Env.env) (head:term)
       | None -> None
       | Some (us_formals, defn) ->
         let subst = mk_univ_subst us_formals us in
-        SS.subst subst defn |> Some
+        SS.subst subst defn |> weaken_total_ascriptions |> Some
 
 (* If [head] is a projector or discriminator applied to at least [n_args]
    arguments, the position of its scrutinee among them.  Projectors and

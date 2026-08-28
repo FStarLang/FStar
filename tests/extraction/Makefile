@@ -8,6 +8,9 @@ SUBDIRS += cmi
 # message) if its toolchain is missing, so this is safe to run everywhere.
 SUBDIRS += backends
 
+# Test for --ext no_krml_private.
+SUBDIRS += krml-private
+
 RUN += Eta_expand.fst
 
 # The Div test is based on testing a non-terminating program and
