@@ -33,4 +33,6 @@ val register_pre_translate (f : translate_t) : ML unit
 
 val extract_lb_iface : uenv -> letbindings -> ML (uenv & list (fv & exp_binding))
 val term_as_mlexpr: uenv -> term -> ML (mlexpr & e_tag & mlty)
+val term_as_mlexpr_without_top_level_normalization:
+  uenv -> term -> ML (mlexpr & e_tag & mlty)
 val ind_discriminator_body : env:uenv -> discName:lident -> constrName:lident -> ML mlmodule1
