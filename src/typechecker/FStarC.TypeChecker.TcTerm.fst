@@ -275,6 +275,11 @@ let maybe_warn_on_use env fv : ML unit =
 (*          subject to the guard g                                                                          *)
 (* This function compares tlc to the expected type from the context, augmenting the guard if needed         *)
 (************************************************************************************************************)
+(* [t] refined by the expected postcondition [post]. *)
+let refine_by_post (post:typ) (t:typ) : ML typ =
+  let bv = S.new_bv (Some t.pos) t in
+  U.refine bv (U.apply_post post (S.bv_to_name bv))
+
 (* The type to check a term against, given that the context expects type [t] and,
    possibly, a postcondition (see Env.set_expected_typ_and_post).
 
@@ -303,8 +308,7 @@ let expected_typ_with_post (env:Env.env) (use_eq:bool) (lc:lcomp) (t:typ) : ML t
                 && not env.use_eq_strict
                 && not (U.is_trivial_post post)
                 && is_empty (Free.uvars lc.res_typ) ->
-    let bv = S.new_bv (Some t.pos) t in
-    U.refine bv (U.apply_post post (S.bv_to_name bv))
+    refine_by_post post t
   | _ -> t
 
 let value_check_expected_typ env (e:term) (tlc:either term lcomp) (guard:guard_t)
@@ -800,11 +804,17 @@ let set_expected_typ_of_comp (env:Env.env) (c:comp) (use_eq:bool) : ML Env.env =
    This matters for terms that are checked twice: tc_match ascribes its own
    output with the result type of the match, so on the second phase the body of
    a definition whose type comes from a val declaration is an ascription, and
-   without this the postcondition would not reach the branches. *)
+   without this the postcondition would not reach the branches. That result type
+   is itself sometimes already refined by the postcondition (see tc_match), which
+   is why both forms are accepted here; the expected type is set to the
+   unrefined one in either case, since the refinement is put back at the check
+   sites. *)
 let set_expected_typ_of_ascription (env:Env.env) (t:typ) (use_eq:bool) : ML Env.env =
   match Env.expected_typ env, Env.expected_post env with
-  | Some (t', _), Some post when TEQ.eq_tm env t t' = TEQ.Equal ->
-    Env.set_expected_typ_and_post env t use_eq post
+  | Some (t', _), Some post
+      when TEQ.eq_tm env t t' = TEQ.Equal
+        || TEQ.eq_tm env t (refine_by_post post t') = TEQ.Equal ->
+    Env.set_expected_typ_and_post env t' use_eq post
   | _ -> Env.set_expected_typ_maybe_eq env t use_eq
 
 (************************************************************************************************************)
@@ -1670,6 +1680,26 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
           //when the returns annotation is absent, env_branches contains the expected type
           // (which may either be coming from top, or a new uvar)
           let res_t = Env.expected_typ env_branches |> Option.must |> fst in
+          (* When there is an expected postcondition, each branch is checked
+             against the expected type refined by it (see expected_typ_with_post),
+             and so already has that refined type as its result type -- unless the
+             branch dropped the refinement, which it may do. If no branch dropped
+             it, then the refined type is a result type for the match as a whole,
+             and giving it here spares us re-proving the postcondition, and
+             reporting a second, less precise error when a branch fails to
+             establish it. We only ever read the branches' result types; nothing
+             is claimed of a branch that it did not already establish. *)
+          let res_t =
+            match Env.expected_post env_branches with
+            | Some post when not (U.is_trivial_post post) ->
+              let refined = refine_by_post post res_t in
+              let branch_res_typ (x : (formula & lident & list cflag & (bool -> ML lcomp))) : ML typ =
+                let (_, _, _, c) = x in (c false).res_typ in
+              if cases |> List.for_all (fun x ->
+                   TEQ.eq_tm env_branches (branch_res_typ x) refined = TEQ.Equal)
+              then refined
+              else res_t
+            | _ -> res_t in
           TcUtil.bind_cases env res_t cases guard_x, g, erasable
 
         | Some (b, (Inl t, _, _)) ->  //a returns annotation, with type

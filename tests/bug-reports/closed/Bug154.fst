@@ -23,7 +23,7 @@ let rec search x l =
   | n :: l' ->  x = n || (if false then search x l' else false)
 
 val search2 : x:int -> l:(list int) -> Pure bool (requires True) (ensures (fun r -> r = List.mem x l))
-[@@expect_failure [19; 19]]
+[@@expect_failure [19]]
 let rec search2 x l =
   match l with
   | [] -> false

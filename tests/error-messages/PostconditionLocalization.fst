@@ -2,13 +2,12 @@ module PostconditionLocalization
 
 (* The expected postcondition of a definition is checked at the tail of each
    branch, in that branch's own context and at that branch's own range, and not
-   only once for the body as a whole.
+   once for the body as a whole.
 
    The three shapes below all reach the tail of a match: a definition with an
    annotation, a definition whose type comes from a val declaration, and a
    lambda checked against an expected arrow type. Each reports the offending
-   branch on its own. The obligation for the body as a whole is still raised
-   and is reported as well; it follows from the branches when they hold. *)
+   branch, and reports it only once. *)
 
 assume val p : int -> prop
 assume val lem (x:int) : Lemma (p x)

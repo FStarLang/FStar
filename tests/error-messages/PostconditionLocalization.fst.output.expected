@@ -1,19 +1,4 @@
-* Info at PostconditionLocalization.fst(18,2-18,29):
-  - Expected failure:
-  - Assertion failed
-  - The SMT solver could not prove the query.
-  - Failed to prove: PostconditionLocalization.p _
-  - In context:
-      b: Prims.bool
-      uu___: Prims.int
-      (b = true ==> b == true /\ PostconditionLocalization.p 1) /\
-      _ ==
-      (match b with
-        | true -> 1
-        | _ -> 2)
-  - See also PostconditionLocalization.fst(17,68-17,71)
-
-* Info at PostconditionLocalization.fst(18,28-18,29):
+* Info at PostconditionLocalization.fst(17,28-17,29):
   - Expected failure:
   - Subtyping check failed
   - Expected type _: Prims.int{p _} got type Prims.int
@@ -24,28 +9,9 @@
       ~(b = true)
       uu___: Prims.bool
       b == _
-  - See also PostconditionLocalization.fst(17,68-17,71)
+  - See also PostconditionLocalization.fst(16,68-16,71)
 
-* Info at PostconditionLocalization.fst(23,2-23,29):
-  - Expected failure:
-  - Subtyping check failed
-  - Expected type _: Prims.int{p _} got type Prims.int
-  - The SMT solver could not prove the query.
-  - Failed to prove:
-      PostconditionLocalization.p (match b with
-          | true -> 1
-          | _ -> 2)
-  - In context:
-      b: Prims.bool
-      uu___: Prims.int
-      b = true ==> b == true /\ PostconditionLocalization.p 1
-      (match b with
-        | true -> 1
-        | _ -> 2) ==
-      _
-  - See also PostconditionLocalization.fst(20,68-20,71)
-
-* Info at PostconditionLocalization.fst(23,28-23,29):
+* Info at PostconditionLocalization.fst(22,28-22,29):
   - Expected failure:
   - Subtyping check failed
   - Expected type _: Prims.int{p _} got type Prims.int
@@ -56,29 +22,9 @@
       ~(b = true)
       uu___: Prims.bool
       b == _
-  - See also PostconditionLocalization.fst(20,68-20,71)
+  - See also PostconditionLocalization.fst(19,68-19,71)
 
-* Info at PostconditionLocalization.fst(29,21-29,52):
-  - Expected failure:
-  - Subtyping check failed
-  - Expected type _: Prims.int{p _} got type Prims.int
-  - The SMT solver could not prove the query.
-  - Failed to prove:
-      PostconditionLocalization.p (match x > 0 with
-          | true -> x
-          | _ -> 0)
-  - In context:
-      uu___: Prims.unit
-      x: Prims.int
-      uu___: Prims.int
-      x > 0 = true ==> x > 0 == true /\ PostconditionLocalization.p x
-      (match x > 0 with
-        | true -> x
-        | _ -> 0) ==
-      _
-  - See also PostconditionLocalization.fst(25,77-25,80)
-
-* Info at PostconditionLocalization.fst(29,51-29,52):
+* Info at PostconditionLocalization.fst(28,51-28,52):
   - Expected failure:
   - Subtyping check failed
   - Expected type _: Prims.int{p _} got type Prims.int
@@ -90,12 +36,12 @@
       ~(x > 0 = true)
       uu___: Prims.bool
       x > 0 == _
-  - See also PostconditionLocalization.fst(25,77-25,80)
+  - See also PostconditionLocalization.fst(24,77-24,80)
 
-* Warning 240 at PostconditionLocalization.fst(20,4-20,12):
+* Warning 240 at PostconditionLocalization.fst(19,4-19,12):
   - PostconditionLocalization.declared is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at PostconditionLocalization.fst(28,0-29,53):
+* Warning 240 at PostconditionLocalization.fst(27,0-28,53):
   - Missing definitions in module PostconditionLocalization: declared
 
