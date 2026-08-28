@@ -153,8 +153,13 @@ val classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass)
     [def]'s own lambda that [t]'s arrow spine stops short of -- which is what
     an abbreviation in the codomain does.  Those are filtered by
     {!is_erased_binder}, which is the rule the emitted definition applies to
-    them, so a call site and the definition agree.  Section 19.4. *)
+    them, so a call site and the definition agree.  Section 19.4.
+
+    [demanded] is section 30.11's rule 4c: the binders that an application of
+    a [@@custard_compile_time] definition needs to be known.  Only the body
+    shows those, so the caller computes them. *)
 val classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term)
+                 (demanded:list int)
   : ML (list bclass)
 
 (** True if any binder is [Mono], i.e. uses of this definition have to be

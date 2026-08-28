@@ -47,6 +47,7 @@ module U  = FStarC.Syntax.Util
 module EMB = FStarC.Syntax.Embeddings
 module TcComm = FStarC.TypeChecker.Common
 module Free = FStarC.Syntax.Free
+module SMap = FStarC.SMap
 module PO = FStarC.TypeChecker.Primops
 module Print = FStarC.Syntax.Print //bring into scope for show instances
 open FStarC.TypeChecker.Normalize.Unfolding
@@ -155,6 +156,30 @@ let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bo
    a constructor.  In particular the delta level does not apply: there is no
    longer a definition whose visibility it could control. *)
 
+(* [Env.disc_proj_info] does four uncached [lookup_qname]s, and this is called
+   on every attempted projector or discriminator reduction.  A program that is
+   nothing but nested matches on projected fields -- EverParse's CDDL is
+   exactly that -- spends a measurable fraction of extraction in it; round 31
+   sampled it as one of three hot spots.
+
+   The answer depends only on the name.  A projector's arity and field index
+   come from the constructor's declaration, which does not change once the
+   module defining it is loaded, and a name is never bound to two different
+   declarations in one run.  So the cache is global and never invalidated,
+   like the other name-keyed caches in this file. *)
+let disc_proj_info_cache : SMap.t (option (qualifier & int & option int)) =
+  SMap.create 100
+
+let disc_proj_info_cached env (l:Ident.lident)
+  : ML (option (qualifier & int & option int)) =
+  let k = Ident.string_of_lid l in
+  match SMap.try_find disc_proj_info_cache k with
+  | Some r -> r
+  | None ->
+    let r = Env.disc_proj_info env l in
+    SMap.add disc_proj_info_cache k r;
+    r
+
 (* Is [head] a projector or discriminator whose reduction is currently enabled?
    If so, return the data constructor it belongs to, whether it is a
    discriminator, the number of arguments preceding the scrutinee, and (for a
@@ -163,7 +188,7 @@ let disc_proj_head (cfg : Cfg.cfg) (head : term) : ML (option (Ident.lident & bo
   if not cfg.steps.iota then None else
   match (U.un_uinst head).n with
   | Tm_fvar h -> (
-    match Env.disc_proj_info cfg.tcenv h.fv_name with
+    match disc_proj_info_cached cfg.tcenv h.fv_name with
     | None -> None
     | Some (q, n_indexed, idx) ->
       match q with
@@ -681,8 +706,32 @@ let default_univ_uvars_to_zero (t:term) : ML term =
     | U_unif _ -> U_zero
     | _ -> u) t
 
+(* See the interface.  [budget] is the number of reduction steps still
+   allowed; negative means unbounded, which is the default. *)
+let budget : ref int = mk_ref (-1)
+
+
+
+(* Charged once per call to [norm], the reduction machine's single entry
+   point, and once per node of the terms that are copied wholesale rather than
+   reduced (see [_erase_universes]).  Both are needed for the count to be
+   proportional to the work actually done: a step that rebuilds a closure
+   traverses and copies the entire term, so charging it as one would let an
+   arbitrarily large amount of work through an arbitrarily small budget. *)
+let charge_step () : ML unit =
+  let b = !budget in
+  if b >= 0 then
+    if b = 0 then raise Budget_exceeded
+    else budget := b - 1
+
+(* Charged per node.  [closure_as_term] calls this on every rebuild of an
+   irreducible term, and it is a full deep copy of that term, so under a
+   budget it is the dominant cost and has to be visible to it.  Round 31
+   profiled a CDDL extraction that ran for ten minutes and 200 GB inside a
+   *single* charged step, entirely in this traversal; no budget bounded it,
+   because from the budget's point of view nothing was happening. *)
 let _erase_universes (t:term) : ML term =
-  Visit.visit_term_univs false (fun t -> t) (fun u -> U_unknown) t
+  Visit.visit_term_univs false (fun t -> charge_step (); t) (fun u -> U_unknown) t
 
 let closure_as_term cfg (env:env) (t:term) : ML term =
   log cfg (fun () -> Format.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (tag_of t) (show env) (show t));
@@ -1262,25 +1311,12 @@ let is_norm_request_head (fv : S.fv) : ML (option norm_request_kind) =
  * information when --debug NormTop is given, which makes it a
  * whole lot easier to find normalization calls that are taking a long
  * time. *)
-(* See the interface.  [budget] is the number of reduction steps still
-   allowed; negative means unbounded, which is the default. *)
-let budget : ref int = mk_ref (-1)
-
-
 let with_budget (n:int) (f: unit -> ML 'a) : ML 'a =
   let saved = !budget in
   budget := n;
   let r = try f () with e -> (budget := saved; raise e) in
   budget := saved;
   r
-
-(* Charged once per call to [norm], which is the reduction machine's single
-   entry point, so the count is proportional to the work actually done. *)
-let charge_step () : ML unit =
-  let b = !budget in
-  if b >= 0 then
-    if b = 0 then raise Budget_exceeded
-    else budget := b - 1
 
 let rec norm : cfg -> env -> stack -> term -> ML term =
     fun cfg env stack t ->

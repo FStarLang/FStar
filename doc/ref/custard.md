@@ -8652,6 +8652,142 @@ existing when its last non-literal caller is deleted is worse than one that
 never existed.  The attribute is a statement of intent, and the error is what
 makes it one.
 
+### 30.11 Rule 4c: a binder a compile-time application needs
+
+§30.10 makes the evaluation opt-in but says nothing about how the argument
+comes to be a constant, and in EverParse it does not, by itself.
+`CDDL.Pulse.AST.Literal.impl_literal` destructures a literal and hands the
+string it finds to the marked function:
+
+```
+let impl_literal (l: literal { wf l }) =
+  match l with
+  | LTextString s -> string_len64 s
+  | ...
+```
+
+`s` is a pattern variable, so the application depends on a runtime name and
+error 372 fires.  Writing `[@@@monomorphize]` on `l` fixes it -- and then the
+same error reappears at `impl_literal`'s caller, and at its caller.  That is
+the annotation treadmill rule 4b exists to end.
+
+Rule 4b does not reach this, and the reason is worth stating rather than
+patching around.  It is keyed on a constructor that stores a *type*, and its
+justification is that such a value has no runtime representation at all --
+"the alternative is not a slower program but no program".  `LTextString`
+stores a `string`, which has a perfectly good runtime representation.  What
+makes it compile-time here is not the value's nature but the use it is put
+to.
+
+So rule 4c is a *demand*, read off the body rather than off the type: **a
+binder that an application of a `custard_compile_time` definition depends on
+is `Mono`**.  Two sources, both over-approximations, and deliberately in that
+direction -- a demand met by a binder that did not need it costs one
+specialization, one that is missed costs the extraction:
+
+- the free names of a marked application, since they are exactly what stops
+  it from reducing;
+- if a marked application occurs inside a *branch*, the scrutinee's names,
+  because knowing the argument means first knowing which branch is taken.
+
+The second is also why the branch is not opened: a pattern variable is a de
+Bruijn index there and has no name to collect, and the scrutinee is what can
+be specialized on anyway.
+
+**The demand is a list of positions, not of names.**  `classify` opens the
+declaration's arrow and the body opens the lambda, so the same parameter is
+two different `bv`s and matching on identity silently never fires -- which is
+exactly what the first attempt did.  `compile_time_demanded` therefore opens
+the lambda itself and reports indices, and `classify_demand` seeds them
+*before* rule 5's fixpoint, so the demand propagates to whatever the demanded
+binder's type mentions, and §3.1 rule 5 at the call sites carries it up the
+chain.  That last part is what keeps this from being one annotation per level.
+
+`tests/custard/LitStr.fst` carries the shape with no annotation anywhere, over
+two string instantiations and one that takes the other branch.
+
+### 30.12 Three per-term-size costs
+
+Round 31 profiled the extraction of a CDDL entry point by sampling stacks
+under `gdb`, and the result was three distinct hot spots rather than one.  The
+reconciling fact is that none of them is about *how many* specializations
+there are -- 643 in total, at most 8 per definition -- and all three are per
+*size* of the terms involved.
+
+**A budget that did not bound anything.**  Two samples ten minutes apart
+landed in the same place: 249 consecutive `Syntax.VisitM` frames under a
+single `closure_as_term`.  `closure_as_term` erases universes by
+`Visit.visit_term_univs`, which is a full deep traversal and fresh copy of the
+whole term, and Custard sets `EraseUniverses`, so every rebuild of an
+irreducible term pays it.  `charge_step`'s comment claimed the count was
+"proportional to the work actually done" because it is charged once per `norm`
+call.  That is false exactly here: one step costs one unit of budget and does
+O(size-of-term) work, allocating a copy.  It explains every negative control
+in rounds 30 and 31 -- budget 10 M, budget 1 G, `--custard_fuel 3000`, none of
+which bounded the run, because from the budget's point of view nothing was
+happening.  `_erase_universes` now charges per node.  A budget that does not
+account for the dominant cost is not a smaller budget, it is not a budget.
+
+**An uncached lookup on the hot path.**  `Env.disc_proj_info` does four
+`lookup_qname`s and is called on every attempted projector or discriminator
+reduction.  A program that is nothing but nested matches on projected fields
+-- CDDL is exactly that -- spends a measurable fraction of extraction there.
+The answer depends only on the name, and a name is never bound to two
+declarations in one run, so `Normalize` memoizes it.
+
+**Quadratic key rendering.**  `key_of_term` built a key with left-nested `^`,
+which copies the prefix again at every node; keys for a deep grammar
+derivation are megabytes long, and one is built per `request`.  The renderer
+now appends into an accumulator that is concatenated once.  Nothing about
+*what* is rendered changed, and it must not: §12.3's keys are compared as
+strings, so a key that rendered differently would silently split or merge
+specializations.
+
+**And the profile has to survive the failure.**  `Universal` reports profiling
+counters only after a file type-checks, so an extraction that raises reported
+nothing -- and a run that fails is precisely the one worth profiling.  Round
+31 could not get a breakdown out of any CDDL entry for that reason, and had to
+use `gdb`.  `Driver.run` now reports on the way out whichever way it leaves.
+
+### 30.13 A local that captures a top-level name
+
+Found by running `make custard` rather than by a report, and worth recording
+because the source that triggers it reads perfectly:
+
+```
+val mantissa (r : real) : int
+val try_mk (mantissa exponent : int) : option real
+```
+
+`try_mk`'s parameters shadow the projections it then calls.  F* has no
+difficulty with that -- the two live in different namespaces as far as the
+type-checker is concerned -- but the emitted OCaml refers to a top-level value
+of the same file *unqualified*, because inside `Foo` there is no way to write
+`Foo.bar`.  So the local captures it, and the generated code either fails to
+compile or, worse, compiles against the wrong binding.
+
+The locals are renamed rather than the references qualified: a local's name
+carries no meaning outside its definition, and a top-level name is what a
+hand-written realization may be written against.  `reserve_top` collects the
+file's top-level value names before it is printed -- *with `current_module`
+already set*, since whether a declaration is spelled with a qualifier is
+exactly the question -- and `ocaml_local` appends an underscore on a
+collision.
+
+Only value locals go through `ocaml_local`.  Record fields and type variables
+keep `ocaml_var`, because a field's spelling has to match its type's
+declaration, and that declaration may be a hand-written realization this run
+does not get to rename.
+
+The same run turned up two missing roots of §4.4's other kind.  `src/ml`'s
+menhir grammars are hand-written OCaml, so nothing Custard can see reaches
+what they call: `FStarC.Real.of_string` and `FStarC.Const.parse_int_literal`
+are called from semantic actions, and `FStarC.Real.real` is an abbreviation
+mentioned only there, which is unfolded rather than emitted unless it is
+named.  All three join `entrypoints.txt`.  This is the documented failure mode
+of a whole-program extractor with hand-written edges, and the only defence is
+that the build catches it.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -8747,3 +8883,5 @@ makes it one.
 | M10ιι | **A recursive builder, and a declaration that lost its type** (§30.6, §30.7) | Done.  Round 23 reduced §30.3 to one line of difference: an `unfold` bundle builder works, a `let rec` one does not, because only the latter survives extraction as a value.  Two fixes.  §30.5's reduction now needs `Zeta` to see through the recursion, and `Zeta` can exhaust the budget -- so `norm_optional` lets *this* reduction give up and fall back to `TAny`, on the principle that a normalization the program's meaning depends on must fail loudly and one that only sharpens a fallback must not.  That grounds the uses.  The builder itself was the rest: a record collapsing to a field of its own erased `Type0` field is declared `any` however concrete each specialization is.  `Simplify.narrow_rets` reads the result type back off the body, after `records` and as a fixpoint over the call chain, rewriting only signatures -- `coerce_prog` re-derives each use from the signature, so the coercions between them vanish.  This is §30.3 closed, and without §6 keyed on a field, which turned out not to be needed.  `tests/custard/RecTyField.fst`, run, no `any` emitted |
 | M10κκ | **The same field, spelled three ways** (§30.8, §30.9) | Done.  Round 24: §30.5 and §30.7 had fixed the one spelling EverParse does not use.  CDDL reaches a bundle's `Type0` field through a `match` (Error 364, the field becomes a variable) or through an accessor (Error 368, the bundle becomes a runtime binder), never through a projection.  Three fixes, all narrow.  `specialize` resolves a match on a *type-storing* constructor by unfolding just those scrutinee heads, with `Zeta` on for them alone and permitted to give up (§30.6) -- the first trigger was too loose and fired on every `option`, which is why the check is "a type the constructor stores", past the inductive's parameters.  `ty_of_typ` runs the same reduction as a fallback once `ty_of_fv` has given up, so an accessor and a projection behave alike.  And rule 4b: a binder of a type-carrying inductive is `Mono` unasked, because the alternative is not a slower program but no program.  `FieldAttr` accordingly loses its 368 and pins warning 371 under `--warn_error`; `coerce_prog` writes the recovered type back into local `let` annotations.  `tests/custard/RecTyAcc.fst`, run |
 | M10λλ | **Opt-in compile-time evaluation** (§30.10) | Done.  Round 25's blocker and the first feature in this stretch that is a design decision rather than a repair.  `CDDL.Pulse.AST.Literal.string_length` is `length (list_of_string x)` applied only ever to literals; compiling it asks C for a `list char`.  Custard will not evaluate closed terms on its own initiative -- that is a licence to unfold anything, and the output stops resembling the input -- so the decision is the author's, one definition at a time: `[@@custard_compile_time]` means every application is evaluated during extraction, with delta, `Zeta` and `SafePrimops` all on.  The promise is checked, and the obvious check is wrong: testing the *reduct's* head passes exactly the failing case, because unfolding removes the head whether or not anything was computed.  The test is on the application as written -- free names -- so error 372 names the definition and the variable that made it impossible, rather than falling back to compiling a `list char` into C.  The attribute belongs on the outermost definition whose result is representable, since a marked definition's own type is never compiled.  `tests/custard/CompileTime.fst` (run, C reads `uint32_t len = 5U`) and `CompileTimeBad.fst` (pins the 372) |
+| M10μμ | **A compile-time demand, and three per-term-size costs** (§30.11, §30.12) | Done.  Round 31.  §30.10's attribute did not reach CDDL: `impl_literal` destructures a literal and hands the *string* it finds to the marked function, so the argument is a pattern variable and 372 fires; annotating the binder just moves the error one level up, which is the treadmill rule 4b exists to end.  Rule 4b cannot help, and the reason matters -- it is keyed on a constructor storing a *type*, justified by there being no runtime representation at all, and a `string` has a perfectly good one.  So rule 4c is a demand read off the *body*: a binder an application of a `custard_compile_time` definition depends on, directly or through the match that binds what it is applied to, is `Mono`.  Reported as binder *positions*, because `classify` opens the arrow and the body opens the lambda and the first attempt matched `bv` identity and silently never fired.  `tests/custard/LitStr.fst`, no annotations, run.  Separately, round 31 sampled the blow-up under `gdb` and found three per-term-size costs, none of them a specialization count (643 total, max 8 per definition): `closure_as_term`'s universe erasure is a full deep copy charged as *one* budget step, which is why no budget ever bounded the hang -- it now charges per node; `Env.disc_proj_info` is four uncached `lookup_qname`s on every projector reduction, now memoized; and `key_of_term` built megabyte keys with left-nested `^`, now linear.  Also `Driver.run` reports its profile on the error path, since a failing run is the one worth profiling and `Universal` reports only after a file type-checks |
+| M10νν | **A local that captures a top-level name** (§30.13) | Done.  Not from a report: `make custard` broke on master's real-literal rewrite, whose `try_mk (mantissa exponent : int)` shadows the projections it calls.  F* is untroubled; the emitted OCaml refers to a same-file top-level *unqualified*, because inside `Foo` there is no way to write `Foo.bar`, so the local captures it and the result either does not compile or compiles against the wrong binding.  Locals are renamed rather than references qualified -- a local's name means nothing outside its definition, and a top-level name is what a realization may be written against.  `reserve_top` runs with `current_module` already set, since whether a declaration is spelled with a qualifier is the whole question, and the first attempt collected mangled names for that reason.  Record fields and type variables deliberately keep the old spelling: a field has to match a declaration this run may not own.  The same run found two roots of §4.4's other kind, both called only from the hand-written menhir grammars in `src/ml` -- `FStarC.Real.of_string`, `FStarC.Const.parse_int_literal`, plus the abbreviation `FStarC.Real.real`, which is unfolded unless named |

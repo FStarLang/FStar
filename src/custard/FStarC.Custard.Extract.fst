@@ -208,87 +208,120 @@ let key_of_const (c:sconst) : ML string =
     "reify" ^ (match lopt with None -> "" | Some l -> "<" ^ Ident.string_of_lid l ^ ">")
   | Const_reflect l     -> "reflect<" ^ Ident.string_of_lid l ^ ">"
 
-let rec key_of_term (t:S.term) : ML string =
+(* Round 31 measured this as the third of three per-term-size costs, and the
+   only one in Custard's own code: a key is built once per [request] and a key
+   for a deep grammar derivation is megabytes long, so left-nested [^] copies
+   the prefix again at every node -- quadratic in the rendered size, in
+   [memcpy].
+
+   So the renderer appends into an accumulator instead of returning strings.
+   The pieces are pushed in reverse and concatenated once, which makes the
+   whole rendering linear.  Nothing about *what* is rendered has changed, and
+   it must not: §12.3's keys are compared as strings, and a key that rendered
+   differently would silently split or merge specializations. *)
+private let rec key_into (acc:ref (list string)) (t:S.term) : ML unit =
+  let emit (s:string) : ML unit = acc := s :: !acc in
   match (SS.compress t).n with
-  | Tm_bvar bv          -> "@" ^ show bv.index
+  | Tm_bvar bv          -> emit ("@" ^ show bv.index)
   (* A [Tm_name] is bound outside the term, so its identity is the gensym
      index and there is nothing canonical to print.  A key containing one is
      not portable across runs; see section 12.3. *)
-  | Tm_name bv          -> "%" ^ Ident.string_of_id bv.ppname ^ "#" ^ show bv.index
-  | Tm_fvar fv          -> Ident.string_of_lid (S.lid_of_fv fv)
-  | Tm_uinst (t, _)     -> key_of_term t
-  | Tm_constant c       -> key_of_const c
-  | Tm_type _           -> "Type"
-  | Tm_abs {b; body}    -> "(fun " ^ key_of_binder b ^ " -> " ^ key_of_term body ^ ")"
-  | Tm_arrow {b; comp}  -> "(" ^ key_of_binder b ^ " -> " ^ key_of_comp comp ^ ")"
-  | Tm_refine {b; phi}  -> "({" ^ key_of_term b.sort ^ "|" ^ key_of_term phi ^ "})"
-  | Tm_app {hd; arg}    -> "(" ^ key_of_term hd ^ " " ^ key_of_arg arg ^ ")"
+  | Tm_name bv          -> emit ("%" ^ Ident.string_of_id bv.ppname ^ "#" ^ show bv.index)
+  | Tm_fvar fv          -> emit (Ident.string_of_lid (S.lid_of_fv fv))
+  | Tm_uinst (t, _)     -> key_into acc t
+  | Tm_constant c       -> emit (key_of_const c)
+  | Tm_type _           -> emit "Type"
+  | Tm_abs {b; body}    ->
+    emit "(fun "; key_of_binder acc b; emit " -> "; key_into acc body; emit ")"
+  | Tm_arrow {b; comp}  ->
+    emit "("; key_of_binder acc b; emit " -> "; key_of_comp acc comp; emit ")"
+  | Tm_refine {b; phi}  ->
+    emit "({"; key_into acc b.sort; emit "|"; key_into acc phi; emit "})"
+  | Tm_app {hd; arg}    ->
+    emit "("; key_into acc hd; emit " "; key_of_arg acc arg; emit ")"
   | Tm_match {scrutinee; brs} ->
-    "(match " ^ key_of_term scrutinee ^ " with" ^
-    (brs |> List.map key_of_branch |> String.concat "") ^ ")"
+    emit "(match "; key_into acc scrutinee; emit " with";
+    brs |> List.iter (key_of_branch acc); emit ")"
   (* [Unascribe] and [Unmeta] are in [key_norm_steps], so these are only
      reached on a term the normalizer declined to touch; either way neither
      node changes what the term means. *)
-  | Tm_ascribed {tm}    -> key_of_term tm
-  | Tm_meta {tm}        -> key_of_term tm
+  | Tm_ascribed {tm}    -> key_into acc tm
+  | Tm_meta {tm}        -> key_into acc tm
   | Tm_let {lbs = (r, lbs); body} ->
-    "(let" ^ (if r then " rec" else "") ^
-    (lbs |> List.map key_of_lb |> String.concat " and ") ^
-    " in " ^ key_of_term body ^ ")"
-  | Tm_uvar (u, _)      -> "?" ^ show (UF.uvar_id u.ctx_uvar_head)
-  | Tm_quoted (t, _)    -> "(quote " ^ key_of_term t ^ ")"
+    emit ("(let" ^ (if r then " rec" else ""));
+    lbs |> List.iteri (fun i lb ->
+      if i > 0 then emit " and ";
+      key_of_lb acc lb);
+    emit " in "; key_into acc body; emit ")"
+  | Tm_uvar (u, _)      -> emit ("?" ^ show (UF.uvar_id u.ctx_uvar_head))
+  | Tm_quoted (t, _)    -> emit "(quote "; key_into acc t; emit ")"
   | Tm_lazy _ ->
     (* One step only: [unlazy] on something that does not unfold gives back
        what it was handed, and we must not loop. *)
     (match (SS.compress (U.unlazy t)).n with
-     | Tm_lazy _ -> "<lazy>"
-     | _ -> key_of_term (U.unlazy t))
-  | Tm_unknown          -> "_"
-  | Tm_delayed _        -> "<delayed>"  (* unreachable: compressed above *)
+     | Tm_lazy _ -> emit "<lazy>"
+     | _ -> key_into acc (U.unlazy t))
+  | Tm_unknown          -> emit "_"
+  | Tm_delayed _        -> emit "<delayed>"  (* unreachable: compressed above *)
 
 (* The qualifier is dropped: whether an argument was written [#a] or [a] does
    not change the value, and the two must not key differently.  Attributes are
    dropped for the same reason. *)
-and key_of_binder (b:S.binder) : ML string = key_of_term b.binder_bv.sort
+and key_of_binder (acc:ref (list string)) (b:S.binder) : ML unit =
+  key_into acc b.binder_bv.sort
 
-and key_of_arg (a:S.arg) : ML string = key_of_term (fst a)
+and key_of_arg (acc:ref (list string)) (a:S.arg) : ML unit = key_into acc (fst a)
 
-and key_of_comp (c:S.comp) : ML string =
+and key_of_comp (acc:ref (list string)) (c:S.comp) : ML unit =
   match c.n with
-  | Total t  -> key_of_term t
-  | GTotal t -> "GTot " ^ key_of_term t
+  | Total t  -> key_into acc t
+  | GTotal t -> acc := "GTot " :: !acc; key_into acc t
   | Comp ct  ->
-    Ident.string_of_lid ct.effect_name ^ " " ^ key_of_term ct.result_typ ^
-    " " ^ key_of_term ct.comp_pre ^ " " ^ key_of_term ct.comp_post
+    acc := (Ident.string_of_lid ct.effect_name ^ " ") :: !acc;
+    key_into acc ct.result_typ;
+    acc := " " :: !acc; key_into acc ct.comp_pre;
+    acc := " " :: !acc; key_into acc ct.comp_post
 
-and key_of_branch (br:S.branch) : ML string =
+and key_of_branch (acc:ref (list string)) (br:S.branch) : ML unit =
   let (p, w, e) = br in
-  " | " ^ key_of_pat p ^
-  (match w with None -> "" | Some w -> " when " ^ key_of_term w) ^
-  " -> " ^ key_of_term e
+  acc := " | " :: !acc;
+  key_of_pat acc p;
+  (match w with None -> () | Some w -> (acc := " when " :: !acc; key_into acc w));
+  acc := " -> " :: !acc;
+  key_into acc e
 
-and key_of_pat (p:S.pat) : ML string =
+and key_of_pat (acc:ref (list string)) (p:S.pat) : ML unit =
   match p.v with
-  | Pat_constant c   -> key_of_const c
+  | Pat_constant c   -> acc := key_of_const c :: !acc
   (* Pattern variables are positional, so their names carry no information. *)
-  | Pat_var _        -> "_"
-  | Pat_dot_term _   -> "."
+  | Pat_var _        -> acc := "_" :: !acc
+  | Pat_dot_term _   -> acc := "." :: !acc
   | Pat_cons (fv, _, ps) ->
-    "(" ^ Ident.string_of_lid (S.lid_of_fv fv) ^
-    (ps |> List.map (fun (p, _) -> " " ^ key_of_pat p) |> String.concat "") ^ ")"
+    acc := ("(" ^ Ident.string_of_lid (S.lid_of_fv fv)) :: !acc;
+    ps |> List.iter (fun (p, _) -> (acc := " " :: !acc; key_of_pat acc p));
+    acc := ")" :: !acc
 
-and key_of_lb (lb:S.letbinding) : ML string =
-  (match lb.lbname with
-   | Inl _ -> "@"                        (* recursive group binders are positional *)
-   | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)) ^
-  " : " ^ key_of_term lb.lbtyp ^ " = " ^ key_of_term lb.lbdef
+and key_of_lb (acc:ref (list string)) (lb:S.letbinding) : ML unit =
+  acc := (match lb.lbname with
+          | Inl _ -> "@"                 (* recursive group binders are positional *)
+          | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)) :: !acc;
+  acc := " : " :: !acc; key_into acc lb.lbtyp;
+  acc := " = " :: !acc; key_into acc lb.lbdef
+
+let key_of_term (t:S.term) : ML string =
+  let acc : ref (list string) = mk_ref [] in
+  key_into acc t;
+  String.concat "" (List.rev !acc)
 
 let string_of_key (k:spec_key) : ML string =
   Prof.timed "key" (fun () ->
-  Ident.string_of_lid k.sk_lid ^
-  (if k.sk_holes = 0 then "" else "/" ^ show k.sk_holes) ^
-  (k.sk_args |> List.map (fun (i, t) -> "#" ^ show i ^ "=" ^ key_of_term t)
-             |> String.concat ""))
+  let acc : ref (list string) = mk_ref [] in
+  acc := Ident.string_of_lid k.sk_lid :: !acc;
+  if k.sk_holes <> 0 then acc := ("/" ^ show k.sk_holes) :: !acc;
+  k.sk_args |> List.iter (fun (i, t) ->
+    acc := ("#" ^ show i ^ "=") :: !acc;
+    key_into acc t);
+  String.concat "" (List.rev !acc))
 
 (* -------------------------------------------------------------------- *)
 (* State                                                                *)
@@ -625,6 +658,68 @@ let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
   let m = Ident.nsstr l in
   if m <> "" && not (Loader.module_is_loaded st.deps (tcenv st) m) then
     st.env := Prof.timed "load" (fun () -> Loader.ensure_loaded st.deps (tcenv st) m)
+
+(* Section 30.11.  Which of a definition's names have to be known at extraction
+   time because something marked [@@custard_compile_time] is applied to them.
+
+   §30.10 makes the evaluation opt-in but says nothing about how the argument
+   comes to be a constant, and in EverParse it does not, by itself.
+   [CDDL.Pulse.AST.Literal.impl_literal] destructures a literal and hands the
+   string it finds to the marked function; the string is a pattern variable,
+   so the application depends on a runtime name and error 372 fires.  The
+   binder it came from has to be [Mono], and asking the author to write that
+   is the annotation treadmill rule 4b exists to end.
+
+   Two sources, both over-approximations, and deliberately so -- a demand that
+   is met by a binder which did not need it costs a specialization, while one
+   that is missed costs the extraction:
+
+   - the free names of a marked application are needed, since they are exactly
+     what stops it from reducing;
+   - if a marked application occurs inside a *branch*, the scrutinee's names
+     are needed too, because knowing the argument means first knowing which
+     branch is taken.  This is also why the branch is not opened: a pattern
+     variable is a de Bruijn index there, so it has no name to collect, and the
+     scrutinee is the thing that can be specialized on anyway.
+
+   Rule 5's fixpoint in [Mono.classify] then carries the demand to any binder
+   these depend on, and §3.1 rule 5 at the call sites carries it up the chain,
+   which is what keeps this from being one annotation per level. *)
+let compile_time_demanded (st:state) (t:term) : ML (list int) =
+  let is_marked_app (t:term) : ML bool =
+    let hd, _ = U.head_and_args_full t in
+    match (U.un_uinst (SS.compress hd)).n with
+    | Tm_fvar fv ->
+      let l = S.lid_of_fv fv in
+      ensure_lid_available st l;
+      TcEnv.fv_has_attr (tcenv st) fv PC.custard_compile_time_attr
+    | _ -> false in
+  let contains_marked (t:term) : ML bool =
+    let found = mk_ref false in
+    let _ = Visit.visit_term false (fun t ->
+      (if not !found && is_marked_app t then found := true); t) t in
+    !found in
+  (* The answer is a list of binder *positions*, not of names: the caller
+     classifies the binders of the declaration's arrow, which are opened
+     separately from the lambda's and so are different [bv]s for the same
+     parameter.  Opening the lambda here is also what turns its binders into
+     [Tm_name]s that [Free.names] can see at all. *)
+  let bs, body, _ = U.abs_formals t in
+  let acc : ref (list bv) = mk_ref [] in
+  let add (t:term) : ML unit = acc := FlatSet.elems (Free.names t) @ !acc in
+  let _ = Visit.visit_term false (fun t ->
+    (match (SS.compress t).n with
+     | Tm_app _ -> if is_marked_app t then add t
+     | Tm_match {scrutinee; brs} ->
+       if brs |> List.existsb (fun (_, _, e) -> contains_marked e)
+       then add scrutinee
+     | _ -> ());
+    t) body in
+  let names = !acc in
+  bs |> List.mapi (fun i (b:S.binder) ->
+          if names |> List.existsb (fun v -> bv_eq v b.binder_bv)
+          then [i] else [])
+     |> List.flatten
 
 (* Every consultation of a declaration's type goes through here.  Looking a
    lid up in an environment that has not loaded its module yet does not fail
@@ -1117,6 +1212,7 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
                  abbreviation in the codomain; the lambda does not. *)
               Mono.classify_def (tcenv st) (se.sigattrs @ lb.lbattrs)
                                 lb.lbtyp (Some lb.lbdef)
+                                (compile_time_demanded st lb.lbdef)
             | None -> [])
          | Sig_declare_typ {t} -> classify (tcenv st) se.sigattrs t
          | _ -> [])

@@ -345,6 +345,13 @@ CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
 # Section 30.10.  The [list char] must not reach C at all: the attribute's
 # whole effect is that the string length is a constant by the time the backend
 # sees it.
+# Section 30.11.  No annotation anywhere in the file: rule 4c has to find the
+# demand itself, and both string instantiations have to survive as distinct
+# constants.
+C_TESTS += LitStr
+CGREP_LitStr  = "((uint32_t)3U)" "((uint32_t)5U)"
+CNOGREP_LitStr = "list" "char *"
+
 C_TESTS += CompileTime
 CGREP_CompileTime  = "uint32_t CompileTime_main(void)"
 CNOGREP_CompileTime = "list" "char *"

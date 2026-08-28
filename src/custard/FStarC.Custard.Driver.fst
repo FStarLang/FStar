@@ -441,6 +441,13 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
 (* [--profile_component FStarC.Custard] prints the phase breakdown.  Custard
    runs after the last module is checked, so nothing else would report these
    counters; the report is here rather than in [Universal] for that reason. *)
+(* Reported on the way out whichever way we leave.  [Universal] calls
+   [Profiling.report_and_clear] only after a file type-checks, so an
+   extraction that raises would report nothing -- and a run that fails, or one
+   that has to be interrupted, is precisely the one worth profiling.  Round 31
+   could not get a breakdown out of any CDDL entry for this reason. *)
 let run (deps:Dep.deps) (env:TcEnv.env) : ML unit =
-  phase "driver" (fun () -> run_phases deps env);
-  Prof.report ()
+  try
+    phase "driver" (fun () -> run_phases deps env);
+    Prof.report ()
+  with e -> (Prof.report (); raise e)

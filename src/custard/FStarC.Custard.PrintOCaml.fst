@@ -237,6 +237,28 @@ let ocaml_var (x:string) : ML string =
   let s = lowercase_first (sanitize x) in
   if List.existsb (fun k -> k = s) ocaml_keywords then s ^ "_" else s
 
+(* Section 12.15.  The names of the top-level values this run will emit, filled
+   in by [build_tables] before anything is printed.
+
+   A reference to a top-level value in the same file is printed unqualified,
+   because inside [Foo] there is no way to say [Foo.bar].  So a *local* of the
+   same name captures it, silently, and the generated OCaml either does not
+   compile or -- worse -- compiles against the wrong binding.  F* has no such
+   problem, which is why the collision arrives from a source that reads
+   perfectly: [FStarC.Real.try_mk (mantissa exponent : int)] shadows the
+   projections [mantissa] and [exponent] it then calls.
+
+   Locals are renamed rather than references qualified, because the local is
+   the one whose name carries no meaning outside the definition. *)
+let reserved_top : ref (list string) = mk_ref []
+
+(* Only value locals go through here, not record fields or type variables: a
+   field's spelling has to match the type's declaration, which may be a
+   hand-written realization this run does not get to rename. *)
+let ocaml_local (x:string) : ML string =
+  let s = ocaml_var x in
+  if List.existsb (fun k -> k = s) !reserved_top then s ^ "_" else s
+
 (* The path of the existing F* OCaml support module realizing a symbol that has
    no F* definition: FStar.IO.print_string is FStar_IO.print_string. *)
 let realization_of (n:name) : ML string =
@@ -455,7 +477,7 @@ and defer_ints_list (n:int) (ps:list pat) : (int & list pat & list (string & FSt
 let rec pattern (p:pat) : ML string =
   match p with
   | PWild -> "_"
-  | PVar x -> ocaml_var x
+  | PVar x -> ocaml_local x
   | PConst c -> constant c
   | PCtor (n, []) -> ctor_ref n
   (* [::] is infix in OCaml, and it is the only builtin constructor that takes
@@ -538,7 +560,7 @@ let value_preserving (a b : signedness & width) : bool =
 let rec term (ind:string) (e:expr) : ML string =
   match e.e with
   | EConst c -> constant c
-  | EVar x -> ocaml_var x
+  | EVar x -> ocaml_local x
   | EQual (n, _) ->
     (match external_target n with
      | Some t -> t
@@ -554,7 +576,7 @@ let rec term (ind:string) (e:expr) : ML string =
   | EApp (hd, args) ->
     "(" ^ term ind hd ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"
   | EFun (bs, body) ->
-    "(fun " ^ String.concat " " (List.map (fun b -> ocaml_var b.b_name) bs) ^
+    "(fun " ^ String.concat " " (List.map (fun b -> ocaml_local b.b_name) bs) ^
     " -> " ^ term ind body ^ ")"
   (* A binding and a statement both open a *sequence*, which {!stmts} prints
      as one: at one column and inside one pair of parentheses, rather than
@@ -738,7 +760,7 @@ and index (ind:string) (e:expr) : ML string =
 and stmts (ind:string) (e:expr) : ML string =
   match e.e with
   | ELet (x, _, e1, e2) ->
-    "let " ^ ocaml_var x ^ " = " ^ term (ind ^ "  ") e1 ^ " in\n" ^ ind ^ stmts ind e2
+    "let " ^ ocaml_local x ^ " = " ^ term (ind ^ "  ") e1 ^ " in\n" ^ ind ^ stmts ind e2
   | ESeq (e1, e2) ->
     (* The discarded expression need not have type unit, and OCaml warns about
        that, so one that is not goes through [ignore]. *)
@@ -750,7 +772,7 @@ and stmts (ind:string) (e:expr) : ML string =
 and case (ind:string) (br:branch) : ML string =
   let p, g, b = br in
   let _, p, eqs = defer_ints 0 p in
-  let conds = eqs |> List.map (fun (x, c) -> ocaml_var x ^ " = " ^ constant c) in
+  let conds = eqs |> List.map (fun (x, c) -> ocaml_local x ^ " = " ^ constant c) in
   let conds = match g with None -> conds | Some g -> conds @ [term ind g] in
   let guard = if conds = [] then "" else " when " ^ String.concat " && " conds in
   ind ^ "| " ^ pattern p ^ guard ^ " -> " ^ term (ind ^ "  ") b ^ "\n"
@@ -802,7 +824,7 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
        them exactly, and writing them down turns a mistake in the extraction
        into an OCaml type error here rather than a puzzle at the use site. *)
     let bs = String.concat "" (List.map (fun b ->
-               " (" ^ ocaml_var b.b_name ^ " : " ^ ty b.b_ty ^ ")") l.dl_binders) in
+               " (" ^ ocaml_local b.b_name ^ " : " ^ ty b.b_ty ^ ")") l.dl_binders) in
     let rc = if l.dl_flags |> List.existsb Rec? then "rec " else "" in
     let kw = if first then "let " ^ rc else "and " in
     Some (kw ^ ocaml_value_name l.dl_name ^ bs ^ " : " ^ ty l.dl_ret ^
@@ -1014,9 +1036,21 @@ let entry_calls (p:program) : ML (list string) =
 let assemble (ds : list string) : ML string =
   header ^ "\n" ^ String.concat "\n\n" ds ^ "\n"
 
+(* Fills {!reserved_top} for the file about to be printed.  It has to run with
+   [current_module] already set: [ocaml_value_name] spells a declaration by its
+   plain identifier only when it is at home, and the whole question here is
+   which names are spelled without a qualifier in *this* file. *)
+let reserve_top (p:program) : ML unit =
+  reserved_top := p |> List.collect (fun d ->
+    match d with
+    | DLet l -> [ocaml_value_name l.dl_name]
+    | DExternal e -> [ocaml_value_name e.dx_name]
+    | _ -> [])
+
 let print_program (p:program) : ML string =
   build_tables (SMap.create 0) p;
   current_module := None;
+  reserve_top p;
   assemble (print_decls p @ entry_calls p)
 
 let print_split (files : list (string & program)) : ML (list (string & string)) =
@@ -1029,6 +1063,7 @@ let print_split (files : list (string & program)) : ML (list (string & string)) 
   let rendered = files |> List.map (fun (m, ds) ->
     let m = module_name_of_unit m in
     current_module := Some m;
+    reserve_top ds;
     let r = (m, Prof.timed "p.decls" (fun () -> print_decls ds)) in
     current_module := None;
     r) in

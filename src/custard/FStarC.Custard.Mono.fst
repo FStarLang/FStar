@@ -460,11 +460,18 @@ let is_type_carrying_binder (env:TcEnv.env) (b:binder) : ML bool =
      | _ -> false)
   | _ -> false
 
-let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
+(* [demanded] is section 30.11's rule 4c: names that something marked
+   [@@custard_compile_time] is applied to, computed from the *body* and so
+   supplied by the caller, since a classification otherwise only sees a type.
+   They are seeded as [Mono] before rule 5's fixpoint, which is the point --
+   the demand has to propagate to whatever the demanded binder's type mentions
+   exactly as a written annotation would. *)
+let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
+                    (demanded:list int) : ML (list bclass) =
   let bs, comp = arrow_formals_unfold env t in
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
-  let init (b:binder) : ML bclass =
+  let init (i:int) (b:binder) : ML bclass =
     if is_dropped_binder env b || is_unit_binder b                (* rule 1 *)
     then Dropped
     else if U.has_attribute b.binder_attrs PC.monomorphize_attr   (* rule 3 *)
@@ -480,10 +487,11 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
     || is_tcclass_binder env b                                    (* rule 2 *)
     || (mono_types && is_type_binder env b)                           (* rule 4 *)
     || is_type_carrying_binder env b                             (* rule 4b *)
+    || List.mem i demanded                                       (* rule 4c *)
     then Mono
     else Poly
   in
-  let cs = List.map init bs in
+  let cs = List.mapi init bs in
   (* Rule 5: if [b_j] is Mono and [b_i] is free in [b_j]'s type, [b_i] becomes
      Mono too.  Iterate to a fixpoint; the set only grows and is bounded by the
      number of binders, so at most [n] passes are needed. *)
@@ -556,9 +564,13 @@ let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
    Only [is_erased_binder] and not [is_unit_binder], deliberately: the
    definition keeps a unit-shaped binder past its classification, so a call
    site must keep passing one. *)
+let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
+  classify_demand env attrs t []
+
 let classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term)
+                 (demanded:list int)
   : ML (list bclass) =
-  let cs = classify env attrs t in
+  let cs = classify_demand env attrs t demanded in
   match def with
   | None -> cs
   | Some d ->

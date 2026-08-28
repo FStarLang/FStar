@@ -323,3 +323,12 @@ FStarC.Tactics.V2.Basic.var_retype
 FStarC.Tactics.V2.Basic.with_compat_pre_core
 FStarC.Tactics.V2.Basic.with_error_context
 FStarC.Tactics.V2.Basic.write
+
+# Named by the menhir grammars in src/ml, which are hand-written OCaml and so
+# outside the extracted program: a real literal and an integer literal are both
+# built in a semantic action.  A type mentioned only there is unfolded rather
+# than emitted unless it is a root, and a function called only there is not
+# compiled at all.
+FStarC.Const.parse_int_literal
+FStarC.Real.of_string
+FStarC.Real.real
