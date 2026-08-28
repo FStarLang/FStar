@@ -2337,7 +2337,23 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
         let envbody, bs, g_env, c, body = check_actuals_against_formals envbody bs bs_expected body in
         let envbody = { envbody with letrecs = env.letrecs } in
         let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
-        let envbody = Env.set_expected_typ_maybe_eq envbody (U.comp_result c) use_eq in
+        let refined_result_typ = 
+          let post = U.comp_post c in
+          if U.is_trivial_post post
+          then U.comp_result c 
+          else (
+            let bv = S.new_bv None (U.comp_result c) in
+            let post = S.mk_Tm_app post [S.bv_to_name bv, None] post.pos in
+            U.refine bv post
+          )
+        in
+        let envbody = Env.set_expected_typ_maybe_eq envbody 
+          (if Options.Ext.enabled "push_post" 
+          then (
+            Format.print1 "Pushing expected type: %s\n" (show refined_result_typ);
+            refined_result_typ
+          )
+          else U.comp_result c) use_eq in
         Some t, bs, letrecs, Some c, envbody, body, g_env ++ g_annots
 
       | _ -> (* expected type is not a function;
