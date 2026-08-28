@@ -1047,6 +1047,9 @@ let rename_elab_commute (e:s_exp) (x y:var)
 // is NOT provable. But subtyping_token only depends on the DENOTATION of the env's binding
 // sorts, so we prove the denotational commute here and transport the token below with
 // RT.subtyping_token_denote_equiv.
+(* The expected postcondition is checked at the tail of each branch of the match
+   below; the Inr branch, which is reflection-heavy, needs the extra rlimit. *)
+#push-options "--z3rlimit_factor 4"
 let rename_elab_binding_denote (b:binding) (x y:var)
   : Lemma (denote_term (RT.rename (elab_binding b) x y) ==
            denote_term (elab_binding (rename_binding b x y)))
@@ -1070,6 +1073,7 @@ let rename_elab_binding_denote (b:binding) (x y:var)
       denote_pack_app h1' (elab_exp (rename e2 x y), R.Q_Explicit);
       rename_elab_commute e1 x y;
       rename_elab_commute e2 x y
+#pop-options
 
 // list-level congruence helpers for RT.bindings_denote_equiv (pure induction, no tokens)
 let rec bindings_denote_equiv_refl (bs:RT.bindings)

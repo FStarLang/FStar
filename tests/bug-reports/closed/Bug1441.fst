@@ -16,7 +16,7 @@
 module Bug1441
 
 val fail: n:int -> Lemma (n == 0)
-[@@expect_failure [19]]
+[@@expect_failure [19; 19]]
 let fail = function
   | 0 -> ()
   | _ -> ()

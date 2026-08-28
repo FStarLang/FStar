@@ -791,6 +791,22 @@ let set_expected_typ_of_comp (env:Env.env) (c:comp) (use_eq:bool) : ML Env.env =
   then Env.set_expected_typ_maybe_eq env res_typ use_eq
   else Env.set_expected_typ_and_post env res_typ use_eq post
 
+(* Set the expected type for the subject of an [e <: t] ascription.
+
+   The ascription denotes the same value as [e], so a postcondition expected of
+   the ascription is also expected of [e]; when [t] is the type the context
+   already expects, the postcondition is carried over to [e].
+
+   This matters for terms that are checked twice: tc_match ascribes its own
+   output with the result type of the match, so on the second phase the body of
+   a definition whose type comes from a val declaration is an ascription, and
+   without this the postcondition would not reach the branches. *)
+let set_expected_typ_of_ascription (env:Env.env) (t:typ) (use_eq:bool) : ML Env.env =
+  match Env.expected_typ env, Env.expected_post env with
+  | Some (t', _), Some post when TEQ.eq_tm env t t' = TEQ.Equal ->
+    Env.set_expected_typ_and_post env t use_eq post
+  | _ -> Env.set_expected_typ_maybe_eq env t use_eq
+
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
@@ -1088,7 +1104,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
   | Tm_ascribed {tm=e; asc=(Inl t, None, use_eq)} ->
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k None in
-    let e, c, g = tc_term (Env.set_expected_typ_maybe_eq env t use_eq) e in
+    let e, c, g = tc_term (set_expected_typ_of_ascription env t use_eq) e in
     //NS: Maybe redundant strengthen
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed {tm=e;
