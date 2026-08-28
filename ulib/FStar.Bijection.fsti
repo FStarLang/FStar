@@ -1,5 +1,13 @@
 module FStar.Bijection
 
+open FStar.Ghost
+open FStar.Fin { fin }
+open FStar.Injection
+open FStar.Mul
+
+(* total function composition *)
+let o #a #b #c (g : b -> Tot c) (f : a -> Tot b) : a -> Tot c = fun x -> g (f x)
+
 noeq
 type bijection (a b : Type) = {
   (* Functions between the types, the name indicates
@@ -14,7 +22,16 @@ type bijection (a b : Type) = {
   right_left : y:b -> squash (right (left y) == y);
 }
 
+(* A symbol *)
 let ( =~ ) a b = bijection a b
+
+val bij_inv_fwd (#a #b : _) (d : a =~ b) (x:a)
+  : Lemma (x == d.left (d.right x))
+          [SMTPat (d.right x)]
+
+val bij_inv_bk (#a #b : _) (d : a =~ b) (y:b)
+  : Lemma (y == d.right (d.left y))
+          [SMTPat (d.left y)]
 
 (* Sometimes useful to specify implicits. See #3804. *)
 let mk_bijection
@@ -50,9 +67,6 @@ let bij_sym (#a #b : Type) (d : a =~ b) : (b =~ a) =
   left_right = d.right_left;
 }
 
-private
-let o f g = fun x -> f (g x)
-
 let bij_comp (#a #b #c : Type) (ab : a =~ b) (bc : b =~ c) : (a =~ c) =
 {
   right = bc.right `o` ab.right;
@@ -60,6 +74,15 @@ let bij_comp (#a #b #c : Type) (ab : a =~ b) (bc : b =~ c) : (a =~ c) =
   right_left = (fun x -> ab.right_left (bc.left x); bc.right_left x);
   left_right = (fun x -> bc.left_right (ab.right x); ab.left_right x);
 }
+
+let bij_erase (#a #b : Type) (bij : a =~ b) : (erased a =~ erased b) =
+{
+  right = (fun (x : erased a) -> bij.right x <: erased b);
+  left = (fun (x : erased b) -> bij.left x <: erased a);
+  right_left = (fun _ -> ());
+  left_right = (fun _ -> ());
+}
+
 
 let bij_flip_prod (#a #b : Type) : (a & b =~ b & a) =
 {
@@ -101,3 +124,68 @@ let bij_flip_sum (#a #b : Type) : (either a b =~ either b a) =
   right_left = (fun _ -> ());
   left_right = (fun _ -> ());
 }
+
+let bij_unit_fin1 : bijection unit (fin 1) = {
+  right = (fun _ -> 0 <: fin 1);
+  left = (fun _ -> ());
+  right_left = (fun _ -> ());
+  left_right = (fun _ -> ());
+}
+
+(* weird typing errors without hoisting. *)
+unfold
+inline_for_extraction noextract
+let prod_right (n1 n2 : nat) : fin n1 & fin n2 -> fin (n1 * n2) =
+  // fun (x, y) -> (x * n2 + y)
+  fun xy -> (xy._1 * n2 + xy._2)
+
+unfold
+inline_for_extraction noextract
+let prod_left (n1 n2 : nat) : fin (n1 * n2) -> fin n1 & fin n2 =
+  fun i -> (i / n2, i % n2)
+
+unfold
+let bij_nat_prod (#n1 #n2 : nat) : (fin n1 & fin n2 =~ fin (n1 * n2)) =
+{
+  right = prod_right n1 n2;
+  left = prod_left n1 n2;
+  right_left = (fun _ -> ());
+  left_right = (fun _ -> ());
+}
+
+val __bij_cardinal (n1 n2 : nat) (bij : fin n1 =~ fin n2)
+  : Lemma (n1 == n2)
+
+val bij_cardinal (n1 n2 : nat)
+  : Lemma (requires exists (b : fin n1 =~ fin n2). True)
+          (ensures n1 == n2)
+
+let bij_nat_sum (n1 n2 : nat)
+  : (either (fin n1) (fin n2) =~ fin (n1 + n2)) =
+{
+  right = (fun (x : either (fin n1) (fin n2)) ->
+    (match x with
+     | Inl i -> i
+     | Inr j -> n1 + j) <: fin (n1 + n2));
+  left = (fun (i : fin (n1 + n2)) ->
+    if i < n1
+    then Inl i
+    else Inr (i - n1));
+  right_left = (fun _ -> ());
+  left_right = (fun _ -> ());
+}
+
+
+(***** Injections from bijections *****)
+
+let inj_bij (#a #b : Type) (bij : a =~ b) : (a @~> b) =
+  {
+    f = bij.right;
+    is_inj = (fun _ _ _ -> ());
+  }
+
+let inj_bij' (#a #b : Type) (bij : a =~ b) : (b @~> a) =
+  {
+    f = bij.left;
+    is_inj = (fun _ _ _ -> ());
+  }
