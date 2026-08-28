@@ -2337,7 +2337,26 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
         let envbody, bs, g_env, c, body = check_actuals_against_formals envbody bs bs_expected body in
         let envbody = { envbody with letrecs = env.letrecs } in
         let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
-        let envbody = Env.set_expected_typ_maybe_eq envbody (U.comp_result c) use_eq in
+        (* When the expected computation type has a non-trivial postcondition,
+           push it into the expected type of the body, as a refinement. This
+           gives the body's own typechecking a chance to discharge (or at least
+           localize) the postcondition, yielding better error messages and
+           finer-grained verification conditions.
+
+           This is only done when the result type is checked by subtyping. When
+           [use_eq] is set the result type must match the expected type exactly,
+           and a refinement would make that check fail. *)
+        let refined_result_typ =
+          let res_typ = U.comp_result c in
+          let post = U.comp_post c in
+          if use_eq || U.is_trivial_post post
+          then res_typ
+          else (
+            let bv = S.new_bv None res_typ in
+            U.refine bv (U.apply_post post (S.bv_to_name bv))
+          )
+        in
+        let envbody = Env.set_expected_typ_maybe_eq envbody refined_result_typ use_eq in
         Some t, bs, letrecs, Some c, envbody, body, g_env ++ g_annots
 
       | _ -> (* expected type is not a function;
