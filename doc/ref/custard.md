@@ -8420,11 +8420,85 @@ a field rather than on a type argument.  That is a bounded amount of work now
 rather than an open question, because the value it would key on is exactly
 what §30.5 just made available.
 
+This turned out not to be needed; §30.7 closes it another way.
+
 `tests/custard/CTypeField.fst` is the part that works, isolated: a `Type0`
 field projected in a type position, where the record's surviving fields do
 *not* mention it, so no existential arises and the two specializations come
 out over `uint8_t` and `uint32_t`.  It is compiled and run.
 
+
+### 30.6 A reduction that may give up
+
+Round 23 reduced the remaining half to a single line of difference.  A bundle
+built by an `unfold` function extracts cleanly; the same bundle built by a
+`let rec` does not.  An `unfold` builder is gone by extraction time, so it
+never depended on any of this; a recursive one cannot be `unfold`, so
+monomorphization emits specialized *definitions*, the bundle survives as a
+value, and its `Type0` field has to be reached where it stands.
+
+Reaching it needs `Zeta` in §30.5's step list, and `Zeta` is exactly what
+makes a budget overrun possible: unfolding a recursive definition inside a
+type need not terminate.  Adding it naively would convert programs that
+compile today -- with an `any` in a place they never used -- into a hard error
+365, which is a bad trade for a reduction whose whole purpose is to *recover*
+precision.
+
+So the reduction is allowed to give up.  `norm_optional` runs the normalizer
+under the same budget as `norm_bounded` but returns `None` on
+`Budget_exceeded` instead of raising, and the projector case reads `None` as
+`TAny` -- the answer it would have produced had the case not existed.  The
+distinction is worth stating generally: a normalization the *program's meaning*
+depends on must fail loudly when it runs out of budget, and a normalization
+that only sharpens a fallback must not.  §30.5's is the second kind, and it is
+the first of that kind in the file.
+
+### 30.7 Reading a declaration's type off its body
+
+`Zeta` fixes the *uses*.  `use_rec`'s signature becomes `uint8_t
+use_rec(uint8_t)`, its interior is ground, and the projection is gone.  It
+does not fix the builder, and the error was always in the builder:
+
+```
+let RecTyField.mk_bundle_rec@AU8 : any = (0uy <: any)
+```
+
+The body knows the answer.  The declaration cannot: `bundle = { b_impl_type:
+Type0; b_dflt: b_impl_type }` erases its type field and collapses to `b_dflt`
+(§5.2), whose declared type is the field that just erased, so *every*
+specialization of the builder is declared `any` however concrete it is.  This
+is the §30.3 residue, and it turns out not to need §6 keyed on a field at all.
+
+A declared `TAny` is not a claim that a value has no representation; it is
+`Extract` reporting that it could not work one out.  Nothing is relying on it,
+and anything else is an improvement.  So `Simplify.narrow_rets` reads the
+result type back off the body: where a declaration's result type mentions
+`TAny` anywhere and the body's does not, the body's wins.
+
+Three things make it work rather than merely sound.
+
+It runs after `records`.  That is the pass that turns the collapsed record
+into its field's own type, so before it the body is no more ground than the
+declaration.
+
+It iterates.  A definition often returns nothing but a call to another one
+whose type is being recovered in the same pass -- in `RecTyField` the chain is
+`mk_bundle_rec@AU8`, then `@ANode`, then the lambda that returns it, then
+`use_rec`; in the CDDL bundles it is as deep as the grammar derivation.  Each
+round can only replace a `TAny` by a ground type, so it converges; the bound
+of 20 is there so that a malformed program cannot hang.
+
+It rewrites only the declarations.  `coerce_prog` re-derives an `EQual`'s type
+from the signature rather than from the node it sits in, so narrowing a
+signature is enough for every use to follow, and the coercions that stood
+between them disappear on their own because the two sides now agree.  This is
+why the fix belongs here and not in `Extract`, where an earlier attempt failed
+for the opposite reason: at extraction time the collapse has not happened yet
+and the body's type is just as `any` as the declaration's.
+
+`tests/custard/RecTyField.fst` carries both halves, the `unfold` control and
+the recursive case, over two instantiations each; it is compiled and run, and
+generates no `any` at all.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -8518,3 +8592,4 @@ out over `uint8_t` and `uint32_t`.  It is compiled and run.
 | M10ζζ | **Integer literals change representation underneath us** (§29) | Done.  A master merge replaced `Const_int of string & option (signedness & width)` with a value plus the base it was written in, and split machine integers into `Const_machine_int`.  Custard's IR is unchanged, so the work is three boundary cases that want different answers: `constant_of_sconst` keeps the source spelling via `string_of_int_literal`, matching the legacy ML extraction; `key_of_const` must use the *value*, since `eq_const` ignores the base and a key that kept it would specialize `f 16` and `f 0x10` twice; `hint_of_term` is cosmetic.  The merge also canonicalized hex to lowercase without leading zeros, which nothing pins -- except `cbor-corpus/mutants.py`, whose `byte+1` family required `[0-9A-F]{2}` and so silently generated ten fewer mutants, reporting 36/36 where it had reported 46/46.  Every mutant killed before was still killed; the denominator moved, which is §23.4's lesson in a second form.  Pattern widened; all four figures back to 46/46, 46/46, 48/49, 46/59.  Also: `no_auto_projectors` is a deprecated no-op, so `AssumedProj.fsti` drops it, and both §28 tests survive #4494 marking `false_elim` `irreducible`, which is what they were written for |
 | M10ηη | **A function that returns a function pointer** (§30) | Done.  Round 22 withdrew round 21's framing -- a function pointer in a record is fine -- and reduced the CDDL blocker to two narrower bugs.  The first is the fourth of the §25/§26 arity family and the first the pass *causes* rather than misreads: a one-field record collapses (§5.2), so `mk_arg (x: U8.t) : fixedb` has type `u8 -> (u8 -> usize)`, §25 sees a result type that is still an arrow and gives it a second binder -- rewriting the definition and none of its call sites, which were already saturated at one.  A function returning a function pointer is ordinary C and needed nothing.  Expansion is now capped by a per-round table of the fewest arguments any use supplies, counting only uses this pass cannot itself grow: the head call of an expandable body can, so `call_g_partial` does not pin `g` and `CEtaChain`'s chain still resolves, while `mk_arg`'s use under a `let` does.  `tests/custard/pulse/PulseFnPtrRet.fst`, run.  The second bug is not fixed and is not an arity defect: a `Type0` *field* whose siblings' types depend on it is an existential package, not an instance of a parameterized type, so §6 does not reach it and the sibling degrades to `any -> usize`.  Promoting the field to a parameter is a feature at §6's scale, and §30.3 records why the inline case must not be papered over |
 | M10θθ | **A field projection is not a type constructor** (§30.4, §30.5) | Done.  Round 22's second bug, reduced with an MWE carrying CDDL's actual shape -- a bundle built by structural recursion over a grammar derivation.  Specialization already does its half: with the derivation and the bundle arguments `[@@monomorphize]`, the recursion unrolls and every combinator is specialized per bundle *value*, so at each construction site the record is concrete.  The type was still `any` for an unrelated reason -- a projector is not a type constructor, so `ty_of_typ` fell through to `ty_of_fv` -- and reducing it is a third case of the kind that file already has two of, with the scrutinee unfolded by delta since the record is as often a top-level name as a literal.  Every specialization's interior is now ground; `tests/custard/CTypeField.fst`, run.  What is left is exactly §30.3 and no longer more than that: the record's own declaration collapses to `any -> usize`, and fixing it means §6 keyed on a `Type0` *field* rather than on a type argument -- bounded work now, because the value to key on is what this made available.  Also §30.4: `[@@monomorphize]` on a constructor field is read by nothing, which is now warning 371 rather than silence, and 364 no longer advises writing it somewhere that does not exist |
+| M10ιι | **A recursive builder, and a declaration that lost its type** (§30.6, §30.7) | Done.  Round 23 reduced §30.3 to one line of difference: an `unfold` bundle builder works, a `let rec` one does not, because only the latter survives extraction as a value.  Two fixes.  §30.5's reduction now needs `Zeta` to see through the recursion, and `Zeta` can exhaust the budget -- so `norm_optional` lets *this* reduction give up and fall back to `TAny`, on the principle that a normalization the program's meaning depends on must fail loudly and one that only sharpens a fallback must not.  That grounds the uses.  The builder itself was the rest: a record collapsing to a field of its own erased `Type0` field is declared `any` however concrete each specialization is.  `Simplify.narrow_rets` reads the result type back off the body, after `records` and as a fixpoint over the call chain, rewriting only signatures -- `coerce_prog` re-derives each use from the signature, so the coercions between them vanish.  This is §30.3 closed, and without §6 keyed on a field, which turned out not to be needed.  `tests/custard/RecTyField.fst`, run, no `any` emitted |

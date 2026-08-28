@@ -342,6 +342,11 @@ CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
 # come back `any`; the two specializations must instead be over the ground
 # types the record was built with.  The NOGREPs are the point: no void*, and
 # no reinterpretation at the call sites.
+C_TESTS += RecTyField
+CGREP_RecTyField = "uint8_t RecTyField_use_rec__ANode(uint8_t x)" \
+                   "uint32_t RecTyField_use_rec__ANode_1(uint8_t x)"
+CNOGREP_RecTyField = "void *" "__proj__"
+
 C_TESTS += CTypeField
 CGREP_CTypeField = "CTypeField_pick__Mkspec(bool c, uint8_t x, uint8_t y)" \
                    "CTypeField_pick__Mkspec_1(bool c, uint32_t x, uint32_t y)"

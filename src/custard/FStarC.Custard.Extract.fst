@@ -565,6 +565,20 @@ let norm_bounded_in (st:state) (env:TcEnv.env) (what:string)
 let norm_bounded (st:state) (what:string) (steps:list TcEnv.step) (t:term) : ML term =
   norm_bounded_in st (tcenv st) what steps t
 
+(* Section 30.6.  The same, for a reduction that is an *optimization*: it
+   recovers precision a fallback would otherwise lose, so exhausting the
+   budget must degrade to that fallback rather than fail the compile.  The
+   projection of section 30.5 needs [Zeta] to see through a recursive builder,
+   and [Zeta] is exactly what makes a budget overrun possible; without this,
+   turning it on would convert programs that compile today -- with an [any] in
+   a place they never used -- into a hard error 365. *)
+let norm_optional (st:state) (steps:list TcEnv.step) (t:term) : ML (option term) =
+  try Some (Prof.timed "norm" (fun () ->
+              N.with_budget (Options.custard_norm_budget ())
+                            (fun () -> N.normalize steps (env_for_term (tcenv st) t) t)))
+  with
+  | N.Budget_exceeded -> None
+
 (* -------------------------------------------------------------------- *)
 (* Loading                                                              *)
 (* -------------------------------------------------------------------- *)
@@ -1200,17 +1214,23 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
            gives the ground type.  The *scrutinee* has to unfold too, and by
            delta rather than by name: the record is as often a top-level
            definition -- [leaf_bundle] -- as a literal constructor
-           application, and a name is something [Iota] cannot see through.  As with the two cases above, this only
+           application, and a name is something [Iota] cannot see through.
+           [Zeta] as well, because the builder is as often *recursive* -- the
+           CDDL bundles are built by structural recursion over a grammar
+           derivation -- and that is what {!norm_optional} is for: a recursive
+           unfolding need not terminate, and giving up has to mean the [any]
+           this would have produced anyway, not error 365.  As with the two cases above, this only
            fires when the redex is really there: if the scrutinee is still a
            variable the term comes back unchanged and the fallthrough to [any]
            stands, which is the honest answer.  Each step removes one
            projector, so this terminates. *)
         | Tm_fvar fv when Some? (projector_of st (S.lid_of_fv fv)) ->
-          let t' = norm_bounded st "a projected type field"
-                     [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                      TcEnv.Beta; TcEnv.Iota; TcEnv.Weak;
-                      TcEnv.HNF; TcEnv.UnfoldUntil S.delta_constant] t in
-          if U.term_eq t' t then TAny else ty_of_typ st t'
+          (match norm_optional st
+                   [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                    TcEnv.Beta; TcEnv.Iota; TcEnv.Zeta; TcEnv.Weak;
+                    TcEnv.HNF; TcEnv.UnfoldUntil S.delta_constant] t with
+           | None -> TAny
+           | Some t' -> if U.term_eq t' t then TAny else ty_of_typ st t')
         (* Section 18.2: a value-indexed arity is a type parameter, so an
            application of one is the parameter itself.  The arguments are
            values and values are erased from types, so [b h] and [b h'] are

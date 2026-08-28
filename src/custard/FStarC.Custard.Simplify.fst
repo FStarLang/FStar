@@ -2606,6 +2606,99 @@ let lift_lambdas (prog:program) : ML program =
       List.rev !lifted @ [DLet dl]
     | d -> [d])
 
+(* Section 30.7.  A declared result type of [TAny] is not a claim that the
+   value has no representation; it is [Extract] reporting that it could not
+   work one out.  The commonest cause is a record with a [Type0] field: the
+   field erases, and a record that collapses to a sibling field *of* that type
+   (section 5.2) collapses to something with no name left.  A specialized
+   definition's *body*, though, is a concrete value, and by the time [records]
+   has run its type is ground -- so where the declaration lost the answer and
+   the body has it, the body wins.
+
+   This has to run late, after [records], because that is the pass that turns
+   the collapsed record into the field's own type; and it has to iterate,
+   because a definition may return nothing more than a call to another one
+   whose type is being recovered in the same fixpoint.  In the CDDL bundles
+   this chain is as deep as the grammar derivation.
+
+   Only the *declarations* are rewritten.  [coerce_prog] re-derives every
+   [EQual]'s type from the signature rather than the node it sits in, so
+   narrowing a signature is enough for the uses to follow, and the coercions
+   that stood between them disappear on their own because the two sides now
+   agree. *)
+let narrow_rets (prog:program) : ML program =
+  let rec has_any (c:cty) : ML bool =
+    match c with
+    | TAny -> true
+    | TArrow (a, _, b) -> has_any a || has_any b
+    | TApp (_, args) -> args |> List.existsb has_any
+    | TTuple cs -> cs |> List.existsb has_any
+    | TBuf c | TRef c | TInline c -> has_any c
+    | TVar _ | TInt _ | TUnit | TExn -> false in
+  (* Name -> the whole type, arguments included, so that a use of a name in
+     head position can be peeled the same way [coerce_prog] peels it. *)
+  let tbl : SMap.t cty = SMap.create 100 in
+  let full (dl:dlet) (r:cty) : ML cty =
+    arrows (dl.dl_binders |> List.map (fun (b:binder) -> b.b_ty)) r in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet dl when Nil? dl.dl_typars ->
+      SMap.add tbl (string_of_name dl.dl_name) (full dl dl.dl_ret)
+    | _ -> ());
+  (* What the body says it returns.  A bare name and a saturated call are the
+     two shapes that carry the answer forward from another definition; a
+     coercion to [TAny] is exactly the artefact this pass exists to undo, so it
+     is looked through rather than believed. *)
+  let rec body_ty (x:expr) : ML cty =
+    match x.e with
+    | ECoerce (e1, TAny) -> body_ty e1
+    | EQual (n, []) ->
+      (match SMap.try_find tbl (string_of_name n) with
+       | Some t when not (has_any t) -> t
+       | _ -> x.ty)
+    | EApp ({ e = EQual (n, []) }, es) ->
+      (match SMap.try_find tbl (string_of_name n) with
+       | Some t ->
+         (match peel_arrows (List.length es) t with
+          | Some (_, res) when not (has_any res) -> res
+          | _ -> x.ty)
+       | None -> x.ty)
+    | _ -> x.ty in
+  let changed = mk_ref false in
+  let round () : ML unit =
+    prog |> List.iter (fun d ->
+      match d with
+      | DLet dl when Nil? dl.dl_typars && has_any dl.dl_ret ->
+        let key = string_of_name dl.dl_name in
+        let cur = (match SMap.try_find tbl key with
+                   | Some t -> (match peel_arrows (List.length dl.dl_binders) t with
+                                | Some (_, r) -> r
+                                | None -> dl.dl_ret)
+                   | None -> dl.dl_ret) in
+        if has_any cur
+        then (let r = body_ty dl.dl_body in
+              if not (has_any r)
+              then (SMap.add tbl key (full dl r); changed := true))
+      | _ -> ()) in
+  (* Bounded rather than run to exhaustion: each round can only replace a
+     [TAny] by a ground type, so it converges, but a bound costs nothing and
+     keeps a malformed program from turning into a hang. *)
+  let rec loop (n:int) : ML unit =
+    if n <= 0 then ()
+    else (changed := false; round ();
+          if !changed then loop (n - 1)) in
+  loop 20;
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl when Nil? dl.dl_typars && has_any dl.dl_ret ->
+      (match SMap.try_find tbl (string_of_name dl.dl_name) with
+       | Some t ->
+         (match peel_arrows (List.length dl.dl_binders) t with
+          | Some (_, r) when not (has_any r) -> DLet { dl with dl_ret = r }
+          | _ -> d)
+       | None -> d)
+    | d -> d)
+
 let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   let pass (n:string) (f : program -> ML program) (p:program) : ML program =
     Prof.timed ("s." ^ n) (fun () -> f p) in
@@ -2648,5 +2741,9 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   let prog = pass "dce" dce prog in
   let prog = pass "scc" scc prog in
   let prog = pass "records" (records vd) prog in
+  (* After [records], which is what gives a collapsed record's body a ground
+     type in the first place, and before [coerce], which reads the signatures
+     this rewrites. *)
+  let prog = pass "narrow_rets" narrow_rets prog in
   let prog = pass "split_any" split_any_decls prog in
   pass "coerce" coerce_prog prog
