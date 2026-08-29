@@ -878,7 +878,20 @@ let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
                         | EQual (n, _) -> (Some n, 0)
                         | _ -> (None, 0) in
       match head with
-      | None -> 0
+      (* Section 30.16.  A body with no top-level head at all -- a bare
+         parameter of function type, which is what [eta_reduce] leaves behind
+         for [let consume i u = i u] -- has no callee arity to read.  What it
+         does have is call sites, and the only reason to expand here is that
+         one of them supplies more arguments than this definition accepts:
+         that is precisely the over-application the C backend rejects.  So the
+         demand is read off the callers, and is zero when there is none. *)
+      | None ->
+        (match SMap.try_find uses (string_of_name l.dl_name) with
+         | Some k ->
+           let room = k - List.length l.dl_binders in
+           let have = arrow_arity l.dl_ret in
+           if room <= 0 then 0 else if room < have then room else have
+         | None -> 0)
       | Some n ->
         (match SMap.try_find tbl (string_of_name n) with
          | Some a when a > nargs ->

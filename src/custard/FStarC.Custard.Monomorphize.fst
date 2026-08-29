@@ -65,7 +65,24 @@ let key_of (n:name) (args:list cty) : ML string =
 (* The readable half of an instantiation's name.  [list__int] beats [list__7],
    and the whole point of Custard's naming is that the output can be read; the
    numeric fallback in [request] is only for shapes with no short spelling. *)
-let rec hint_of_cty (c:cty) : ML string =
+(* Section 30.15.  Bounded, in depth and in width, and both bounds are load
+   bearing.  Unbounded, this is a *structural* rendering of a type, and an
+   instantiation's name feeds the next one's hint through [n.spec] -- so a
+   type that nests doubles the name at every level.  A twelve-deep
+   accumulating environment produced a C identifier of 57,361 characters,
+   which C99 does not promise to distinguish past 63 and which is quadratic to
+   print besides.  It is also quadratic to *build*: the hint is recomputed per
+   request over a type whose size is the thing that is growing.
+
+   Truncating can only make two hints collide, and [request]'s [pick] already
+   resolves a collision by numbering, so nothing is lost but spelling. *)
+let hint_width : int = 48
+let hint_depth : int = 4
+
+let rec hint_of_cty (fuel:int) (c:cty) : ML string =
+  if fuel <= 0 then "x"
+  else
+  let sub (c:cty) : ML string = hint_of_cty (fuel - 1) c in
   match c with
   | TVar v -> v
   | TInt (s, w) ->
@@ -74,15 +91,19 @@ let rec hint_of_cty (c:cty) : ML string =
      | Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
      | Int64 -> "64" | Sizet -> "size")
   | TApp (n, []) -> (match n.spec with Some s -> n.id ^ "_" ^ s | None -> n.id)
-  | TApp (n, args) -> n.id ^ "_" ^ String.concat "_" (args |> List.map hint_of_cty)
-  | TBuf c -> hint_of_cty c ^ "_ptr"
-  | TRef c -> hint_of_cty c ^ "_ref"
-  | TInline c -> hint_of_cty c
-  | TTuple cs -> "tup" ^ String.concat "_" (cs |> List.map hint_of_cty)
+  | TApp (n, args) -> n.id ^ "_" ^ String.concat "_" (args |> List.map sub)
+  | TBuf c -> sub c ^ "_ptr"
+  | TRef c -> sub c ^ "_ref"
+  | TInline c -> hint_of_cty fuel c
+  | TTuple cs -> "tup" ^ String.concat "_" (cs |> List.map sub)
   | TUnit -> "unit"
   | TExn -> "exn"
   | TArrow _ -> "fn"
   | TAny -> "any"
+
+let clip (s:string) : ML string =
+  if String.length s <= hint_width then s
+  else String.substring s 0 hint_width
 
 (* -------------------------------------------------------------------- *)
 (* State                                                                *)
@@ -161,8 +182,8 @@ let request (st:state) (n:name) (args:list cty) : ML name =
   match SMap.try_find st.names key with
   | Some nm -> nm
   | None ->
-    let hint = String.concat "_" (args |> List.map hint_of_cty) in
-    let base = (match n.spec with Some s -> s ^ "_" | None -> "") ^ hint in
+    let hint = String.concat "_" (args |> List.map (hint_of_cty hint_depth)) in
+    let base = clip ((match n.spec with Some s -> s ^ "_" | None -> "") ^ hint) in
     let rec pick (i:int) : ML string =
       let cand = if i = 0 then base else base ^ "_" ^ show i in
       let k = string_of_name ({ n with spec = None }) ^ "__" ^ cand in

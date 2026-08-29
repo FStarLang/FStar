@@ -904,13 +904,29 @@ let rec dedup (seen:list string) (hs:list string) : ML (list string) =
    to the sequence number. *)
 let hint_width : int = 48
 
+(* Section 30.15.  "Whatever its length" was not a figure of speech: one
+   component is one [Mono] argument rendered, and an argument can be a data
+   structure that accumulates.  EverParse's CDDL layer builds an environment
+   by extending the previous one, so the n-th extension's argument contains
+   all n-1 before it, and the emitted C identifier reached 57,361 characters.
+   C99 promises 63 significant characters for an internal identifier and 31
+   for an external one, so that is well outside what any standard covers, and
+   it was quadratic to print besides.  The first component is truncated rather
+   than dropped -- a hint of nothing is still worse than a bad one -- and
+   truncation can only make two hints collide, which is what {!spec_suffix}'s
+   [claim] falls back to the sequence number for. *)
+let truncate_hint (h:string) : ML string =
+  if String.length h <= hint_width then h
+  else String.substring h 0 hint_width
+
 let rec fit (budget:int) (hs:list string) : ML (list string) =
   match hs with
   | [] -> []
   | h :: hs ->
+    let h = if budget < 0 then truncate_hint h else h in
     let n = String.length h in
     (* [budget < 0] is the marker for "nothing has been kept yet", so that the
-       first component goes in whatever its length. *)
+       first component goes in whatever its length -- up to [hint_width]. *)
     if budget >= 0 && n > budget then []
     else h :: fit ((if budget < 0 then hint_width else budget) - n - 1) hs
 

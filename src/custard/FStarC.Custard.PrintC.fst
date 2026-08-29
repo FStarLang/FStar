@@ -96,19 +96,24 @@ let c_keywords = [
 
 let is_alpha (i:int) : bool = (i >= 97 && i <= 122) || (i >= 65 && i <= 90)
 
+(* Section 30.15.  One pass.  This used to call [list_of_string] three times,
+   twice only to look at the first character, and [list_of_string] was itself
+   quadratic; [sanitize] is on the path of every name Custard prints, so the
+   product showed up as 96% of a run once names got long. *)
 let sanitize (s:string) : ML string =
-  let ok (c:char) : ML bool =
-    let i = BU.int_of_char c in
-    is_alpha i || (i >= 48 && i <= 57) || i = 95
-  in
-  let s = String.concat ""
-            (List.map (fun c -> if ok c then BU.string_of_char c else "_")
-                      (String.list_of_string s)) in
-  (* A C identifier may not start with a digit. *)
-  if s = "" then "x"
-  else if is_alpha (BU.int_of_char (List.hd (String.list_of_string s))) || 
-          BU.int_of_char (List.hd (String.list_of_string s)) = 95
-  then s else "x" ^ s
+  let ok (i:int) : bool = is_alpha i || (i >= 48 && i <= 57) || i = 95 in
+  match String.list_of_string s with
+  | [] -> "x"
+  | c0 :: cs ->
+    let s = String.concat ""
+              (List.map (fun c -> if ok (BU.int_of_char c)
+                                  then BU.string_of_char c else "_")
+                        (c0 :: cs)) in
+    (* A C identifier may not start with a digit.  The test is on the mapped
+       first character, as it was when it read the mapped string back. *)
+    let i0 = BU.int_of_char c0 in
+    let i0 = if ok i0 then i0 else 95 in
+    if is_alpha i0 || i0 = 95 then s else "x" ^ s
 
 let escape_kw (s:string) : ML string =
   if List.existsb (fun k -> k = s) c_keywords then s ^ "_" else s

@@ -8883,6 +8883,95 @@ diagnosable error, and it only does that if it fires before the normalizer's
 own recursion runs out of stack.  A project that needs more can ask for more,
 in the one place that knows it does.
 
+### 30.15 A name that doubles at every level
+
+Round 33 retracted round 32's central number -- the term Custard choked on is
+270 bytes, not 9 MB; the 9 MB was the "reached through" chain, and the ghost
+counts were counts over that chain.  Which relocates the problem: the chain's
+frames are specialization *instantiations*, so what is 8 MB is a **name**.
+The frame in question spells out 421 nested `Mkbundle_env`, because CDDL
+builds its environment by extending the previous one and the n-th extension's
+argument contains all n-1 before it.
+
+Reduced, that is 25 lines: a record whose type embeds the previous one, so
+that each instantiation's name must spell out the accumulation.
+`tests/custard/NameWidth.fst` is that file.  It does not fail -- it extracts
+correctly at every depth -- it just costs, and what it cost was worth reading:
+
+| depth | 4 | 6 | 8 | 10 | 12 |
+| --- | --- | --- | --- | --- | --- |
+| before | 0.33 s | 0.43 s | 1.26 s | 11.4 s | 159 s |
+| after | 0.61 s | 0.77 s | 1.42 s | 4.09 s | 14.9 s |
+| C bytes before | 8,785 | 25,686 | 85,595 | 317,540 | 1,237,635 |
+| C bytes after | 6,976 | 11,032 | 15,088 | 19,188 | 23,318 |
+
+The emitted C shrinks by 53× at depth 12 and stops doubling, because what was
+doubling was the identifiers.  The longest one goes from **57,361 characters
+to 82**.
+
+Three separate faults, and the interesting part is that none of them is the
+specialization machinery.  A profile put 96% of the run in `driver` exclusive
+-- outside every counter -- at 57 specializations.
+
+**`Monomorphize.hint_of_cty` was unbounded.**  It renders a type
+structurally, with no depth limit and no width limit, and `TApp (n, [])`
+renders through `n.spec` -- so an instantiation's name is built from the names
+of the instantiations it is made of, and a type that nests doubles the name
+per level.  It is now bounded in depth (4) and the assembled hint is clipped
+to `hint_width` (48).  Truncating can only make two hints collide, and
+`request`'s `pick` already resolves a collision by numbering, so nothing is
+lost but spelling.  `Extract.fit`, the corresponding renderer for *terms*, had
+the same hole for a different reason -- it kept the first component "whatever
+its length", to avoid a hint of nothing -- and now truncates it instead.
+
+**`FStarC_String.list_of_string` was quadratic.**  It was
+`BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))`,
+and `BatUTF8.get` walks from the start of the string, so indexing in a loop is
+O(n²).  It folds now.  `string_of_list` had the mirror image of the same bug
+and uses a buffer.  This is not Custard-specific -- it is on the path of
+anything in the compiler that takes a string apart -- but Custard is what made
+strings long enough for it to matter.
+
+**`PrintC.sanitize` called it three times**, twice only to look at the first
+character.  One pass now, and the first character is the one it already has.
+`sanitize` runs on every name Custard prints, so 57,361² × 3 × 48 was the
+153 seconds.
+
+The width bound is the fix that matters, and the reason to prefer it over
+making long names cheap is C99: an internal identifier is guaranteed
+distinguishable only to 63 characters and an external one to 31.  A 57 KB
+identifier is outside what any standard promises, whatever `gcc -Wall -Wextra`
+accepts in silence.
+
+What is left at depth 12 is 14.9 s in `ty` and `must_erase`, 283,807 calls
+each, and that is the reproducer's own exponential: the F\* type at depth 12
+is a 4096-leaf tuple tree.  Nothing is being recomputed that should not be.
+
+### 30.16 An eta-reduction with nowhere to put the argument back
+
+Also round 33, reported in passing.  `let consume (i: sig_t s) (u: U32.t) =
+i u` -- where `sig_t` is an abbreviation that unfolds to an arrow -- reached
+the C backend as Error 368, an over-application: `consume` takes 1 argument
+and is applied to 2.
+
+Eta-reduction (§25) shortened it to `fun i -> i`, correctly: the arrow it
+dropped moves into the result type, and OCaml is perfectly happy to be handed
+a function.  Eta-*expansion* is the pass that puts the argument back for C,
+and it did not fire, because it reads how many arguments are still owed off
+the **head of the body** -- and this body has no head.  It is a bare
+parameter.  `head = None` meant `missing = 0`.
+
+There is no callee arity to read here, but there are call sites, and the only
+reason to expand a headless body at all is that one of them supplies more
+arguments than the definition accepts -- which is exactly the condition the C
+backend rejects.  So the demand is read off `use_arity` instead, bounded by
+`arrow_arity` of the result type as every other case is, and it is zero when
+no caller asks.  That keeps the pass from growing definitions nobody
+over-applies.
+
+`tests/custard/EtaVar.fst`, which emits
+`EtaVar_consume(uint32_t (*i)(uint32_t), uint32_t eta)` and runs.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -8981,3 +9070,5 @@ in the one place that knows it does.
 | M10μμ | **A compile-time demand, and three per-term-size costs** (§30.11, §30.12) | Done.  Round 31.  §30.10's attribute did not reach CDDL: `impl_literal` destructures a literal and hands the *string* it finds to the marked function, so the argument is a pattern variable and 372 fires; annotating the binder just moves the error one level up, which is the treadmill rule 4b exists to end.  Rule 4b cannot help, and the reason matters -- it is keyed on a constructor storing a *type*, justified by there being no runtime representation at all, and a `string` has a perfectly good one.  So rule 4c is a demand read off the *body*: a binder an application of a `custard_compile_time` definition depends on, directly or through the match that binds what it is applied to, is `Mono`.  Reported as binder *positions*, because `classify` opens the arrow and the body opens the lambda and the first attempt matched `bv` identity and silently never fired.  `tests/custard/LitStr.fst`, no annotations, run.  Separately, round 31 sampled the blow-up under `gdb` and found three per-term-size costs, none of them a specialization count (643 total, max 8 per definition): `closure_as_term`'s universe erasure is a full deep copy charged as *one* budget step, which is why no budget ever bounded the hang -- it now charges per node; `Env.disc_proj_info` is four uncached `lookup_qname`s on every projector reduction, now memoized; and `key_of_term` built megabyte keys with left-nested `^`, now linear.  Also `Driver.run` reports its profile on the error path, since a failing run is the one worth profiling and `Universal` reports only after a file type-checks |
 | M10νν | **A local that captures a top-level name** (§30.13) | Done.  Not from a report: `make custard` broke on master's real-literal rewrite, whose `try_mk (mantissa exponent : int)` shadows the projections it calls.  F* is untroubled; the emitted OCaml refers to a same-file top-level *unqualified*, because inside `Foo` there is no way to write `Foo.bar`, so the local captures it and the result either does not compile or compiles against the wrong binding.  Locals are renamed rather than references qualified -- a local's name means nothing outside its definition, and a top-level name is what a realization may be written against.  `reserve_top` runs with `current_module` already set, since whether a declaration is spelled with a qualifier is the whole question, and the first attempt collected mangled names for that reason.  Record fields and type variables deliberately keep the old spelling: a field has to match a declaration this run may not own.  The same run found two roots of §4.4's other kind, both called only from the hand-written menhir grammars in `src/ml` -- `FStarC.Real.of_string`, `FStarC.Const.parse_int_literal`, plus the abbreviation `FStarC.Real.real`, which is unfolded unless named |
 | M10ξξ | **A parameter nothing observable depends on** (§30.14) | Done.  Round 32.  §30.12 turned the hang into an error and the error named the term: a CDDL type signature of 9,012,230 bytes *before* reduction, reached through `bool`, made of 6995 `Ghost.reveal`, 4668 refinements on `cbor` and 990 `serializable` -- in which `impl_serialize`'s specification argument occurs exactly once, inside a `pure (...)` in a postcondition, while the compiled signature is three names.  So the fix is not to reduce it faster.  Rule 8: a `Mono` binder absent from the body *and* from the observable part of the rest of the type -- refinements replaced by what they refine, computations by their result, which are the two places a specification hides -- is `Dropped`, removing a specialization and changing no signature, because a `Mono` argument was never passed at run time.  The body test is what makes it sound (`if n = 0` mentions `n` nowhere in the type), the body has to be the one `extract_as` supplies (`Anf.tick` specifies `fun s n -> n` and prints `s`), and a type may have more binders than its lambda (a `class monad` projector is four abstractions over an arrow of six -- reading those as absent deleted `mbind`'s first argument).  Confining it to `Mono` is what makes it free: `RetArity.f`'s unread `frame` and `post` are `Poly` and are part of its ABI regardless.  On round 32's measurement the cost removed was linear in the argument and entirely specialization -- 517 ms `norm`, 355 ms `split_mono_args`, 302 ms `key` for a 25600-element list contributing `return u;` -- and extraction is now flat at 0.55 s.  `tests/custard/DeadMono.fst` extracts under a budget four orders of magnitude too small to normalize its argument.  §30.12's accounting also changed what a budget *is*, and CDDL now needs `--custard_norm_budget 100000000`; the default stays at 10^7 anyway, because raising it to 10^8 makes `TypeDiverge` overflow the stack instead of reporting error 365, and a budget that fires after the normalizer runs out of stack is not a budget |
+| M10οο | **A name that doubles at every level** (§30.15) | Done.  Round 33, which also retracted round 32's central number: the term is 270 bytes, not 9 MB -- the 9 MB was the *chain*, whose frames are specialization instantiations, so what was 8 MB is a **name**.  `Monomorphize.hint_of_cty` rendered a type structurally with no bound, and `TApp (n, [])` renders through `n.spec`, so an instantiation's name is built from the names of the instantiations it is made of and a type that nests doubles the name per level.  Bounded now in depth (4) and clipped to 48; truncation can only collide, and `request`'s `pick` already numbers a collision.  `Extract.fit` had the same hole from the other end -- it kept the first component "whatever its length" -- and truncates it too.  Two quadratic costs underneath: `FStarC_String.list_of_string` indexed with `BatUTF8.get`, which walks from the start, and `PrintC.sanitize` called it three times, twice to read one character.  Both are on the path of every name Custard prints.  On the 25-line reproducer at depth 12: 159 s to 14.9 s, C output 1,237,635 to 23,318 bytes, longest identifier **57,361 characters to 82** -- the width bound is the one that matters, since C99 promises 63 significant characters for an internal identifier and 31 for an external one.  `tests/custard/NameWidth.fst` |
+| M10ππ | **An eta-reduction with nowhere to put the argument back** (§30.16) | Done.  Round 33, reported in passing.  `let consume (i: sig_t s) (u: U32.t) = i u`, where `sig_t` unfolds to an arrow, reached C as Error 368: it takes 1 argument and is applied to 2.  Eta-reduction shortened it to `fun i -> i` correctly, and eta-expansion -- the pass whose whole job is putting that argument back for C -- did not fire, because it reads what is still owed off the *head of the body*, and this body has no head.  It is a bare parameter, so `head = None` meant `missing = 0`.  There is no callee arity to read, but there are call sites, and the only reason to expand a headless body is that one of them supplies more arguments than the definition accepts -- exactly the condition C rejects.  The demand is read off `use_arity`, bounded by the result type's arity as every other case is, and zero when no caller asks.  `tests/custard/EtaVar.fst` |

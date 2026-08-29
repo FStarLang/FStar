@@ -352,6 +352,17 @@ C_TESTS += LitStr
 CGREP_LitStr  = "((uint32_t)3U)" "((uint32_t)5U)"
 CNOGREP_LitStr = "list" "char *"
 
+# Section 30.15.  Nine nested tuple2s spelled out in one identifier is what an
+# unbounded instantiation hint produces at this depth.
+C_TESTS += NameWidth
+CGREP_NameWidth  = "uint32_t NameWidth_main(void)"
+CNOGREP_NameWidth = "tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tuple2"
+
+# Section 30.16.  The parameter must come back: [consume] takes two arguments,
+# not one, and calls its first through a function pointer.
+C_TESTS += EtaVar
+CGREP_EtaVar = "EtaVar_consume(uint32_t (*i)(uint32_t), uint32_t eta)"
+
 # Section 30.14.  [impl] must appear once, not once per distinct dead argument,
 # and no [list] may reach C.
 C_TESTS += DeadMono
