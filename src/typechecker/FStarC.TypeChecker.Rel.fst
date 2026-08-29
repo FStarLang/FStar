@@ -3655,27 +3655,32 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
               in
               let is_reveal = U.is_fvar PC.reveal head1 || U.is_fvar PC.reveal head2 in
               (* [squash] is not injective, so solving [squash p <: squash q] by
-                 unifying [p] and [q] is only an approximation of [p ==> q]. That is
-                 usually harmless, but when [q] is still a metavariable the
-                 approximation *commits* it to whatever [p] happens to be, purely on
-                 the strength of the left-hand side, and the constraint that really
-                 determines [q] then fails.  Unfold and do refinement subtyping
-                 instead, leaving [q] to be determined by its own constraints and
-                 [p ==> q] to the SMT solver.  A [q] that has no other constraint
-                 must then be written out at the source level. *)
+                 unifying [p] and [q] is only an approximation of [p ==> q].
+                 That is usually harmless, but when [q] is still a metavariable
+                 the approximation *commits* it to whatever [p] happens to be,
+                 purely on the strength of the left-hand side.  [q] is typically
+                 determined instead by a later constraint -- e.g. the expected
+                 type of the enclosing application, which is how the elaboration
+                 of [FStar.Classical.Sugar]'s [introduce] fixes the metavariables
+                 of [implies_intro] and friends.  So defer the problem and let
+                 that constraint run first.  If nothing else determines [q] we
+                 come back here with [defer_ok = NoDefer] and solve it as
+                 before. *)
               let is_squash_sub_flex_rhs =
                 problem.relation = SUB &&
                 not need_unif &&
                 U.is_fvar PC.squash_lid head1 &&
                 U.is_fvar PC.squash_lid head2 &&
                 (match args2 with
-                 (* beta-reduce: the elaborations that produce these goals
-                    (e.g. [FStar.Classical.Sugar]) leave redexes like
-                    [(fun _ -> ?u) ()] in argument position *)
+                 (* beta-reduce: the elaborations that produce these goals leave
+                    redexes like [(fun _ -> ?u) ()] in argument position *)
                  | [(q, _)] -> is_flex (norm_with_steps "FStarC.TypeChecker.Rel.squash_arg" [Env.Beta] env q)
                  | _ -> false)
               in
-              if is_squash_sub_flex_rhs && Some? d then unfold_and_retry (Some?.v d) wl env
+              if is_squash_sub_flex_rhs && wl.defer_ok <> NoDefer then
+                solve (defer Deferred_flex
+                             (mklstr (fun () -> "squash of a flex term on the right-hand side"))
+                             orig wl)
               else if Some? d && wl.smt_ok && not treat_as_injective || is_reveal then
                 try_solve_without_smt_or_else wl
                     solve_sub_probs_no_smt
@@ -5222,6 +5227,21 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : ML (Env.
         r |> S.unit_const_with_range |> Some
       | Tm_refine {b} when U.is_unit b.sort ->
         r |> S.unit_const_with_range |> Some
+      | Tm_arrow _ ->
+        (* An implicit created under local binders -- e.g. the [squash]
+           precondition of a call that occurs inside a branch -- is abstracted
+           over them, so its type is [bs -> squash phi] rather than
+           [squash phi].  Eta-expand the unit solution. *)
+        let bs, c = U.arrow_formals_comp t_norm in
+        let is_unit_like t =
+          match (SS.compress (N.normalize N.whnf_steps env t)).n with
+          | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
+          | Tm_refine {b} -> U.is_unit b.sort
+          | _ -> false
+        in
+        if Cons? bs && U.is_total_comp c && is_unit_like (U.comp_result c)
+        then Some (U.abs bs (S.unit_const_with_range r) None)
+        else None
       | _ -> None in
 
     let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
