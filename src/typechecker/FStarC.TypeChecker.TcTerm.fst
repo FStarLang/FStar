@@ -4756,13 +4756,24 @@ and check_inner_let env e : ML _ =
                 this time outside the scope of the hypotheses that the binds
                 below accumulated -- and fail.
 
-                The exception is a [unit] expected type, which says nothing and
-                so cannot be the point of the annotation -- it is how [e1; e2]
-                is elaborated.  There, dropping [e2]'s unit refinement discards
-                the only record of what the statement established.  Only do it
-                when the refinement is in scope without [x]. *)
+                There are two exceptions, both cases where [tt] says nothing at
+                all and so cannot be the point of an annotation.
+
+                A [unit] expected type is how [e1; e2] is elaborated; dropping
+                [e2]'s unit refinement there discards the only record of what
+                the statement established.
+
+                A bare unification variable is what a [match] branch (or any
+                other position with no expected type) is checked against.  The
+                subtyping constraint has already been registered, so [tt] will
+                be solved to something at least as coarse; overwriting
+                [cres.res_typ] with it only throws the branch's result type
+                away -- and with it everything the branch established.
+
+                In both cases, only keep the refinement when it is in scope
+                without [x]. *)
              let cres =
-               if U.is_exactly_unit tt
+               if (U.is_exactly_unit tt || TcUtil.is_bare_flex tt)
                && TcUtil.keep_res_typ env tt cres.res_typ
                && Env.closed env cres.res_typ
                then cres

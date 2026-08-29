@@ -99,6 +99,9 @@ val fvar_env: env -> lident -> ML term
 val get_neg_branch_conds: list formula -> ML (list formula & formula)
 
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
+(* Is [t]'s head an unsolved unification variable?  Such a type says nothing
+   at all, so it must never be used to coarsen a more precise one. *)
+val is_bare_flex: typ -> ML bool
 val combine_branch_res_typs: env -> bv -> typ -> list (formula & typ) -> ML typ
 val bind_cases: env -> typ -> list (typ & lident & list cflag & (bool -> ML lcomp)) -> bv -> ML lcomp
 

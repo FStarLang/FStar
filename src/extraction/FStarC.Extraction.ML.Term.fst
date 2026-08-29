@@ -335,6 +335,18 @@ let drop_spec_args (env:UEnv.uenv) (head:term) (args0:args) : ML args =
     | None -> args0
     | Some t ->
       let formals, _ = U.arrow_formals t in
+      (* The head's type may be a type abbreviation -- Pulse's [bind_t], say --
+         in which case it has no visible binders at all.  Unfold only when the
+         binders we can see do not already account for every argument, so the
+         common case stays cheap. *)
+      let formals =
+        if List.length formals >= List.length args0
+        then formals
+        (* [AllowUnboundUniverses]: the looked-up type is not universe-instantiated,
+           so unfolding a universe-polymorphic abbreviation in it would otherwise
+           fail on the missing instantiation. *)
+        else fst (U.arrow_formals
+                    (N.unfold_whnf' [Env.AllowUnboundUniverses] (tcenv_of_uenv env) t)) in
       if not (formals |> List.existsb is_spec_binder) then args0
       else
         let rec aux formals (acc:args) : ML args =
