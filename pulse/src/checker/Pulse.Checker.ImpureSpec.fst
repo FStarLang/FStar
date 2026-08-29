@@ -19,6 +19,7 @@ open Pulse.Typing
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
+module RT = FStar.Reflection.Typing
 open FStar.List.Tot
 open Pulse.Syntax.Base
 open Pulse.Syntax.Pure
@@ -34,6 +35,189 @@ open Pulse.PP
 open Pulse.Show
 
 let old_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "old"
+
+(* ------------------------------------------------------------------------ *)
+(* Opening the branches of a `match` occurring in a spec.
+
+   A spec-level pattern-`let` (`let (a, b) = e in ...`) desugars to a
+   single-branch `match`, and specs emitted by transpilers routinely put their
+   whole `requires` under one to destructure an `erased` witness. The
+   pattern-`let` is not replaceable by `fst`/`snd` there: the caller has to
+   solve the witness by unification, and `pts_to x (fst ?w)` is inert because
+   F* does not reduce projectors.
+
+   Unlike the `Tv_Let` case below, we cannot inline by substitution (that
+   would reintroduce exactly those projectors), so we open the pattern's
+   binders as fresh bindings, recurse, and close back up — as the `Tv_Abs`
+   and `Tv_Refine` cases do.
+
+   We deliberately do not reuse `FStar.Tactics.NamedView.open_branch`: it
+   allocates binders with the global `fresh ()` counter, which can collide
+   with the env-derived variables Pulse allocates with `fresh g`. *)
+
+(* The opening substitution for a list of terms given left to right: de Bruijn
+   index 0 refers to the *last* one, as in `FStar.Tactics.NamedView.open_pat`
+   (which pushes `DB 0 nv` and shifts the rest) and in `open_st_term_bs` in
+   Pulse.Checker.Match. *)
+let db_opening (ts: list term) : subst =
+  let rec aux (ts: list term) (i:nat) : Tot subst (decreases ts) =
+    match ts with
+    | [] -> []
+    | t::ts -> RT.DT i t :: aux ts (i+1)
+  in
+  aux (List.Tot.rev ts) 0
+
+let pat_opening (bs: list (nvar & typ)) : subst =
+  db_opening (List.Tot.map (fun (nv, _) -> term_of_nvar nv) bs)
+
+(* The head fv of a (possibly universe-instantiated) term. *)
+let un_uinst_fv (t: R.term) : option R.fv =
+  match R.inspect_ln t with
+  | R.Tv_FVar fv
+  | R.Tv_UInst fv _ -> Some fv
+  | _ -> None
+
+(* The inductive a type belongs to: its parameter binders and its
+   constructors, looked up from the head of the type. *)
+let inductive_of_ty (g: env) (ty: typ) : T.Tac (option (list R.binder & list (R.name & typ))) =
+  let hd, _ = T.collect_app_ln ty in
+  match un_uinst_fv hd with
+  | None -> None
+  | Some ind -> (
+    match R.lookup_typ (fstar_env g) (R.inspect_fv ind) with
+    | None -> None
+    | Some se -> (
+      match R.inspect_sigelt se with
+      | R.Sg_Inductive _ _ params _ cts -> Some (params, cts)
+      | _ -> None
+    )
+  )
+
+(* Collect the variables bound by a pattern, left to right, pushing each into
+   the environment. Also returns the term the pattern elaborates to (which is
+   what its siblings' types are stated in terms of), and whether the pattern
+   is irrefutable, i.e. guaranteed to match: a constructor pattern is when its
+   inductive has a single constructor (tuples and records, which is what a
+   pattern-`let` produces) and all its sub-patterns are.
+
+   The type of each binder is computed here rather than taken from the
+   `Pat_Var`'s own sealed sort, or from the parameters recorded in the
+   `Pat_Dot_Term`s: purification runs *before* the spec is typechecked, so
+   both are typically still `Tv_Unknown` at this point, and pushing that into
+   the environment blows up later in the unifier. Instead the constructor's
+   declared type is instantiated with the arguments of the scrutinee's *type*
+   for the inductive's parameters, and with the terms elaborated from the
+   preceding sub-patterns for the rest. Mirrors
+   `FStar.Reflection.Typing.elaborate_pat`, but produces the bindings rather
+   than consuming them.
+
+   Fails (via `T.fail`) if the shapes do not line up, e.g. for an inductive
+   with indices; callers treat that as "do not descend into this match". *)
+let rec pat_bindings_ty (g: env) (p: R.pattern) (ty: typ) (bs: list (nvar & typ))
+  : T.Tac (env & list (nvar & typ) & term & bool)
+= match p with
+  | R.Pat_Constant c -> g, bs, R.pack_ln (R.Tv_Const c), false
+  | R.Pat_Dot_Term (Some t) -> g, bs, subst_term t (pat_opening bs), true
+  | R.Pat_Dot_Term None -> T.fail "pat_bindings_ty: dot pattern with no term"
+  | R.Pat_Var _ ppname ->
+    let x = fresh g in
+    let n = mk_ppname_no_range (T.unseal ppname) in
+    let g = push_binding g x n ty in
+    let bs = bs @ [((n, x), ty)] in
+    g, bs, term_of_nvar (n, x), true
+
+  | R.Pat_Cons fv us subpats ->
+    let params, cts =
+      match inductive_of_ty g ty with
+      | Some r -> r
+      | None -> T.fail "pat_bindings_ty: scrutinee is not of inductive type"
+    in
+    let cty =
+      match List.Tot.find (fun (nm, _) -> nm = R.inspect_fv fv) cts with
+      | Some (_, cty) -> cty
+      | None -> T.fail "pat_bindings_ty: constructor not found in its inductive"
+    in
+    let np = List.Tot.length params in
+    let _, ty_args = T.collect_app_ln ty in
+    if List.Tot.length ty_args < np then
+      T.fail "pat_bindings_ty: scrutinee type has too few arguments";
+    let param_args = List.Tot.map fst (fst (List.Tot.splitAt np ty_args)) in
+    let cbs, _ = R.collect_arr_ln_bs cty in
+    let nsub = List.Tot.length subpats in
+    (* Line the constructor's binders up with the sub-patterns. The
+       constructor's declared type may or may not repeat the inductive's
+       parameters, and the sub-patterns may or may not carry a dot pattern per
+       parameter (they do not yet, at the point purification runs). Whichever
+       way, the parameters' values are read off the scrutinee's *type*, and
+       `args` is primed with them because that is the de Bruijn context the
+       remaining binders' sorts live in. *)
+    let ncb = List.Tot.length cbs in
+    let params_of_ty = List.Tot.map (fun a -> (a, R.Q_Implicit)) param_args in
+    let cbs, params_todo, args0 =
+      if ncb = nsub + np then
+        (* parameters are binders of `cty`, but not sub-patterns *)
+        snd (List.Tot.splitAt np cbs), [], params_of_ty
+      else if ncb = nsub then
+        (* parameters are neither *)
+        cbs, [], params_of_ty
+      else if ncb + np = nsub then
+        (* parameters are sub-patterns (dot patterns), but not binders *)
+        params @ cbs, param_args, []
+      else
+        T.fail "pat_bindings_ty: constructor arity mismatch"
+    in
+    let ctor = R.pack_ln (match us with
+                          | Some us -> R.Tv_UInst fv us
+                          | None -> R.Tv_FVar fv) in
+    let g, bs, _, _, args, irref =
+      T.fold_left
+        (fun (g, bs, cbs, params, args, irref) (sp, _) ->
+          match cbs with
+          | [] -> g, bs, [], params, args, irref
+          | cb::cbs ->
+            let cb = R.inspect_binder cb in
+            let q = match cb.qual with
+                    | R.Q_Meta _ -> R.Q_Implicit
+                    | q -> q in
+            match params with
+            | par::params ->
+              (* An inductive parameter: its value is fixed by the scrutinee's
+                 type, and the corresponding sub-pattern is a dot pattern. *)
+              g, bs, cbs, params, args @ [(par, q)], irref
+            | [] ->
+              (* `cb`'s sort lives in the context of the preceding constructor
+                 arguments, so instantiate it with the arguments seen so far. *)
+              let cb_ty = subst_term cb.sort (db_opening (List.Tot.map fst args)) in
+              let g, bs, a, irref' = pat_bindings_ty g sp cb_ty bs in
+              g, bs, cbs, [], args @ [(a, q)], irref && irref')
+        (g, bs, cbs, params_todo, args0, List.Tot.length cts = 1) subpats
+    in
+    g, bs, RU.mk_app_flat ctor args FStar.Range.range_0, irref
+
+(* Returns `None` if the scrutinee or the pattern cannot be handled here, in
+   which case the caller leaves the match alone rather than descending. The
+   boolean says whether the pattern is irrefutable. *)
+let pat_bindings (g: env) (sc: term) (p: R.pattern)
+  : T.Tac (option (env & list (nvar & typ) & bool))
+= let go () : T.Tac (env & list (nvar & typ) & bool) =
+    (* `tc_term_phase1`, not `T.tc`: purification runs before the spec is
+       elaborated, so the scrutinee may still carry unresolved implicits. *)
+    let _, sc_ty, _ = tc_term_phase1 g sc in
+    let g, bs, _, irref = pat_bindings_ty g p sc_ty [] in
+    g, bs, irref
+  in
+  match T.catch go with
+  | FStar.Pervasives.Inl _ -> None
+  | FStar.Pervasives.Inr r -> Some r
+
+let open_branch_body (bs: list (nvar & typ)) (body: term) : term =
+  subst_term body (pat_opening bs)
+
+let close_branch_body (bs: list (nvar & typ)) (body: term) : term =
+  close_term_n body (List.Tot.map (fun ((_, x), _) -> x) bs)
+
+(* ------------------------------------------------------------------------ *)
+
 
 let debug g (s: unit -> T.Tac (list Pprint.document)) : T.Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.impure_spec"
@@ -167,9 +351,33 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
       false, t
 
   | R.Tv_Match sc ret brs ->
+    (* A `match` occurring in a spec, in practice a desugared pattern-`let`
+       such as `let (a, b) = reveal w in ...`; a follow-up to the `let` case
+       of #4421, which this generalizes. Previously only the
+       scrutinee was traversed and the branches were passed through untouched,
+       so a stateful read or a `rewrites_to` ghost call under a pattern-`let`
+       was never elaborated away.
+
+       All branches are traversed, whatever the shape of the match: this is an
+       alpha-safe traversal, and each stateful application elaborated here has
+       its precondition discharged against the ambient `ctxt`, which holds
+       independently of which branch is taken. *)
+    debug g (fun _ -> [text "symb eval subterms match 0"; pp t]);
     let changed_sc, sc = symb_eval_subterms g ctxt sc in
-    // TODO: branches
-    if changed_sc then
+    let changed_brs, brs =
+      T.fold_left
+        (fun (changed, brs) (p, body) ->
+          match pat_bindings g sc p with
+          | None -> changed, (p, body) :: brs
+          | Some (g', bs, _) ->
+            let body = open_branch_body bs body in
+            let changed', body = symb_eval_subterms g' ctxt body in
+            changed || changed', (p, close_branch_body bs body) :: brs)
+        (false, []) brs
+    in
+    let brs = List.Tot.rev brs in
+    debug g (fun _ -> [text "symb eval subterms match 1"; pp (changed_sc || changed_brs)]);
+    if changed_sc || changed_brs then
       true, R.pack_ln (R.Tv_Match sc ret brs)
     else
       false, t
@@ -420,7 +628,47 @@ let rec purify_spec_core (g: env) (ctxt: ctxt') (ts: list slprop) : T.Tac (optio
       let body = open_term' body def 0 in
       purify_spec_core g ctxt (body :: ts)
 
-    | _ ->
+    | R.Tv_Match sc ret [(p, body)] ->
+      (
+      (* A spec that *is* a pattern-`let`, i.e. a single-branch match on an
+         irrefutable pattern; the slprop-level counterpart of the `Tv_Match`
+         case in `symb_eval_subterms`, and a follow-up to the `let` case of
+         #4421 just above. Without this case the whole match
+         was treated as one opaque atom, so its conjuncts were never split
+         and the resources inside it were never extruded into the context —
+         which is what makes a `!r` or a `rewrites_to` ghost call under a
+         pattern-`let` fail to elaborate.
+
+         Unlike the `let` case above we cannot inline by substitution: that
+         would replace the pattern binders by `fst`/`snd` projections, which
+         F* does not reduce and which therefore cannot be solved by
+         unification at the call site. So we open the pattern's binders and
+         recurse under them, pushing the remaining conjuncts `ts` inside the
+         branch exactly as the `exists*` and `with_pure` cases below do.
+
+         This is sound because a single irrefutable branch always matches:
+         `match e with | p -> A` is `A[e/p]`, hence
+         `(match e with | p -> A) ** B == match e with | p -> (A ** B)`.
+         Anything extruded into `ctxt` inside the branch stays inside the
+         recursive call, since `ctxt` is passed by value.
+
+         Multi-branch and refutable matches are deliberately *not* split
+         here: each branch's conjuncts would have to be justified under that
+         branch's hypothesis, which this pass has no access to. They fall
+         through to the opaque-atom path below, as before. *)
+      let _, sc = symb_eval_subterms g ctxt sc in
+      match pat_bindings g sc p with
+      | Some (g', bs, true) ->
+        let body = open_branch_body bs body in
+        let body = purify_spec_core g' ctxt (body :: ts) |> or_emp in
+        let body = close_branch_body bs body in
+        Some (R.pack_ln (R.Tv_Match sc ret [(p, body)]))
+      | _ -> purify_spec_default g ctxt t ts
+      )
+
+    | _ -> purify_spec_default g ctxt t ts
+
+and purify_spec_default (g: env) (ctxt: ctxt') (t: slprop) (ts: list slprop) : T.Tac (option slprop) =
     match inspect_ast_term t with
     | Tm_Star t s ->
       purify_spec_core g ctxt (t::s::ts)
