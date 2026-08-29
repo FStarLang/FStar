@@ -1236,6 +1236,17 @@ let refine_with_post (t:typ) (p:term) : ML typ =
     then mk_squash body
     else refine x body
 
+(* The partial inverse of [refine_with_post]. *)
+let post_of_result_typ (t:typ) : ML term =
+  match is_squash t with
+  | Some phi -> abs [null_binder t_unit] phi None
+  | None ->
+    match (Subst.compress t).n with
+    | Tm_refine {b=x; phi} ->
+      let bs, phi = Subst.open_term [mk_binder x] phi in
+      abs bs phi None
+    | _ -> trivial_post t
+
 
 let mk_b2t t = mk_app (fvar_with_dd PC.b2t_lid None) [as_arg t]
 let mk_t2b t = mk_app (fvar_with_dd PC.t2b_lid None) [as_arg t]

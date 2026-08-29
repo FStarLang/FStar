@@ -967,12 +967,12 @@ let try_unify_by_application (should_check:option should_check_uvar)
                              (ty1 : term)
                              (ty2 : term)
                              (rng:Range.t)
-   : ML (tac (list (term & aqual & ctx_uvar)))
+   : ML (tac (list (term & aqual & option ctx_uvar)))
    = let must_tot = true in
-     let rec aux (acc : list (term & aqual & ctx_uvar))
+     let rec aux (acc : list (term & aqual & option ctx_uvar))
                  (typedness_deps : list ctx_uvar) //map proj_3 acc
                  (ty1:term)
-        : ML (tac (list (term & aqual & ctx_uvar)))
+        : ML (tac (list (term & aqual & option ctx_uvar)))
         = let r = if only_match then do_match must_tot e ty2 ty1 else do_unify must_tot e ty2 ty1 in
           match! r with
           | true -> return acc (* Done! *)
@@ -1000,11 +1000,22 @@ let try_unify_by_application (should_check:option should_check_uvar)
 
             | Some (b, c) ->
               if not (U.is_total_comp c) then fail "Codomain is effectful" else
+              (* [unit] has a single inhabitant, so asking the user for it is
+                 pure noise.  [t_apply_lemma] has always done this; since a
+                 [Lemma] is now an ordinary total function, plain [apply] meets
+                 the [_:unit ->] argument of a lemma too. *)
+              if U.is_unit b.binder_bv.sort
+              then (
+                let typ = U.comp_result c in
+                let typ' = SS.subst [S.NT (b.binder_bv, U.exp_unit)] typ in
+                aux ((U.exp_unit, U.aqual_of_binder b, None)::acc) typedness_deps typ'
+              )
+              else
               let! uvt, uv = new_uvar "apply arg" e b.binder_bv.sort should_check typedness_deps rng in
               if_verbose (fun () -> Format.print1 "t_apply: generated uvar %s\n" (show uv)) ;!
               let typ = U.comp_result c in
               let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
-              aux ((uvt, U.aqual_of_binder b, uv)::acc) (uv::typedness_deps) typ'
+              aux ((uvt, U.aqual_of_binder b, Some uv)::acc) (uv::typedness_deps) typ'
      in
      aux [] [] ty1
 
@@ -1083,7 +1094,10 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : M
     let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
     let uvset =
       List.fold_right
-        (fun (_, _, uv) s -> union s (SF.uvars (U.ctx_uvar_typ uv)))
+        (fun (_, _, uv) s ->
+          match uv with
+          | None -> s
+          | Some uv -> union s (SF.uvars (U.ctx_uvar_typ uv)))
         uvs
         (empty ())
     in
@@ -1096,7 +1110,10 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : M
     //then, if uopt is on, filter out those that appear in other goals
     //add the rest as goals
     //
-    let uvt_uv_l = uvs |> List.map (fun (uvt, _q, uv) -> (uvt, uv)) in
+    let uvt_uv_l = uvs |> List.collect (fun (uvt, _q, uv) ->
+                                          match uv with
+                                          | None -> []
+                                          | Some uv -> [(uvt, uv)]) in
     let! sub_goals =
       apply_implicits_as_goals e (Some goal) uvt_uv_l in
     let sub_goals = List.flatten sub_goals

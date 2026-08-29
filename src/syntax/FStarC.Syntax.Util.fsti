@@ -469,6 +469,11 @@ val is_squash (t:term) : ML (option term)
    [ensures] clause is represented from desugaring onwards. *)
 val refine_with_post (t:typ) (p:term) : ML typ
 
+(* [post_of_result_typ t] is the partial inverse of [refine_with_post]: it
+   recovers the postcondition [fun x -> Q x] from a result type [x:t{Q x}] or
+   [squash Q], and returns the trivial postcondition otherwise. *)
+val post_of_result_typ (t:typ) : ML term
+
 val mk_b2t (t: term) : ML term
 val mk_t2b (t: term) : ML term
 

@@ -304,17 +304,17 @@ let inspect_comp (c : comp) : ML comp_view =
               match U.comp_smt_pats (S.mk_Comp ct) with
               | Some p -> p
               | None -> U.mk_list (S.fvar_with_dd PC.pattern_lid None) Range.dummyRange [] in
-            (* A computation type carries no specification any more: a
-               precondition is an implicit [squash] binder on the arrow, and a
-               postcondition is a refinement of the result type.  The view is
-               kept for compatibility, but it is degenerate. *)
-            C_Lemma (S.trivial_pre, S.trivial_post ct.result_typ, pats)
+            (* A computation type carries no *precondition* any more: that is
+               an implicit [squash] binder on the arrow, out of reach here, so
+               the view reports [True].  The postcondition, on the other hand,
+               is a refinement of the result type and can be recovered. *)
+            C_Lemma (S.trivial_pre, U.post_of_result_typ ct.result_typ, pats)
         else
             C_Eff (ct.comp_univs,
                    Ident.path_of_lid ct.effect_name,
                    ct.result_typ,
                    S.trivial_pre,
-                   S.trivial_post ct.result_typ,
+                   U.post_of_result_typ ct.result_typ,
                    get_dec ct.flags)
       end
 
@@ -330,12 +330,12 @@ let pack_comp (cv : comp_view) : ML comp =
     match cv with
     | C_Total t -> mk_Total t
     | C_GTotal t -> mk_GTotal t
-    (* The specification carried by the view is ignored: a computation type has
-       no room for it any more. *)
-    | C_Lemma (_pre, _post, pats) ->
+    (* A computation type has no room for a precondition, so [pre] is dropped;
+       the postcondition becomes a refinement of the result type. *)
+    | C_Lemma (_pre, post, pats) ->
         let ct = { comp_univs  = []
                  ; effect_name = PC.effect_Lemma_lid
-                 ; result_typ  = S.t_unit
+                 ; result_typ  = U.refine_with_post S.t_unit post
                  ; flags       = [LEMMA; SMTPAT pats] } in
         S.mk_Comp ct
 
