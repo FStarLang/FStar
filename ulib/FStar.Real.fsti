@@ -31,8 +31,7 @@ module FStar.Real
   [FStar.Real.fst] *implements* everything declared here in terms of
   [FStar.Real.Dedekind], the reals built from scratch as Dedekind cuts of
   [FStar.Rational]. So [real] is a concrete type, the field operations are
-  concrete definitions, and facts such as [sqrt_2] below are theorems rather
-  than axioms.
+  concrete definitions.
 
   This is exactly the arrangement [FStar.BV] has with [FStar.BitVector]: the
   symbols below are still given Z3's native interpretation by the SMT
@@ -44,9 +43,8 @@ module FStar.Real
   Having a construction underneath also lets this interface state things Z3
   cannot prove. Z3's reals form an ordered *field*; what makes the reals *the*
   reals is completeness, and [lub] below exposes it as a theorem of the
-  Dedekind construction. [FStar.Real.Sqrt] uses nothing but [lub] to define an
-  axiom-free square root, which is what discharges the square-root axiom
-  [FStar.Math.Sqrt] used to assume.
+  Dedekind construction. [FStar.Math.Sqrt] uses nothing but [lub] to define an
+  axiom-free square root, discharging the axiom it used to assume.
 
   Note that the [FStar.Real.Dedekind] hierarchy is deliberately *not* visible
   in this interface: [FStar.Real] is a dependency of the reflection stubs, and
@@ -82,7 +80,7 @@ let two  : real = of_int 2
 /// cuts of [FStar.Rational] and the least upper bound is a construction.
 ///
 /// This is what makes [real] the reals rather than some arbitrary ordered
-/// field, and it is what [FStar.Real.Sqrt] uses to define a square root
+/// field, and it is what [FStar.Math.Sqrt] uses to define a square root
 /// without assuming one.
 
 /// Sets of reals, as predicates.
@@ -102,8 +100,3 @@ val lub (s:rset)
 
 /// Every real is dominated by a natural number.
 val archimedean (x:real) : Lemma (exists (n:nat). x <. of_int n)
-
-(**** A theorem, not an axiom *)
-
-/// Proved in [FStar.Real.fst] from [FStar.Real.Dedekind.Sqrt].
-val sqrt_2 : r:real{r >=. 0.0R /\ r *. r == two}

@@ -25,7 +25,6 @@ module FStar.Real
 /// encoded interface backed by a construction.
 
 module R = FStar.Real.Dedekind
-module S = FStar.Real.Dedekind.Sqrt
 
 #set-options "--fuel 0 --ifuel 0 --z3rlimit 20"
 
@@ -49,10 +48,6 @@ let ( <=. ) (x y:real) : prop = R.le x y
 /// instantiating the result at a literal then recovers the literal fact.
 let of_int_eq (n:int) : Lemma (of_int n == R.of_int n) = ()
 
-let lit_zero () : Lemma (0.0R == R.zero) = of_int_eq 0
-
-let two_eq () : Lemma (two == R.two) = of_int_eq 2
-
 (**** Completeness, transferred from the construction *)
 
 /// [real] is *defined* to be [R.real], so the two notions of set-of-reals,
@@ -72,12 +67,3 @@ let archimedean (x:real) : Lemma (exists (n:nat). x <. of_int n)
       of_int_eq n;
       introduce exists (m:nat). x <. of_int m with n and ()
     end
-
-(**** [sqrt_2], proved *)
-
-let sqrt_2 : r:real{r >=. 0.0R /\ r *. r == two} =
-  lit_zero ();
-  two_eq ();
-  S.sqrt_nonneg R.two;
-  S.sqrt_two_sq ();
-  S.sqrt R.two

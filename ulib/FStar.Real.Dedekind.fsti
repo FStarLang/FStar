@@ -27,7 +27,7 @@ module FStar.Real.Dedekind
 ///
 /// The representation is sealed by this interface: a real is *characterized* by
 /// the ordered-field laws plus completeness ([lub]) below, which is exactly what
-/// a client such as [FStar.Real.Dedekind.Sqrt] needs.
+/// a client needs.
 
 module Q = FStar.Rational
 
@@ -106,8 +106,8 @@ val of_rat_inj (p q:Q.rat) : Lemma (of_rat p == of_rat q <==> p == q)
 
 (**** Archimedes *)
 
-/// Every real is dominated by a natural number. Equivalently (see
-/// [FStar.Real.Ordered.small_rat]), the rationals are dense in the reals.
+/// Every real is dominated by a natural number. Equivalently, the rationals
+/// are dense in the reals.
 val archimedean (x:real) : Lemma (exists (n:nat). lt x (of_int n))
 
 (**** Completeness: the whole point of the construction *)
