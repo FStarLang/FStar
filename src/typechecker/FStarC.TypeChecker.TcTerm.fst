@@ -5186,12 +5186,19 @@ and tc_tot_or_gtot_term_maybe_solve_deferred (env:env) (e:term) (msg:option stri
 = let e, c, g = tc_maybe_toplevel_term env e in
   if TcComm.is_tot_or_gtot_lcomp c
   then (
+    (* Force the [lcomp]: now that a computation type carries no
+       specification, an obligation that used to be part of the comp -- the
+       exhaustiveness check that [bind_cases] adds, say -- is returned by the
+       thunk as a *guard*.  A caller that reads only [res_typ] (see
+       [typeof_tot_or_gtot_term]) would drop it on the floor. *)
+    let c', g_c = TcComm.lcomp_comp c in
+    let g = g ++ g_c in
     let g =
       if solve_deferred
       then Rel.solve_deferred_constraints env g
       else g
     in
-    e, c, g
+    e, TcComm.lcomp_of_comp c', g
   )
   else let g =
          if solve_deferred
