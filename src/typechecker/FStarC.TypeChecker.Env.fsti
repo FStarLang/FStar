@@ -140,6 +140,8 @@ and env = {
   modules        :list modul;                  (* already fully type checked modules *)
   expected_typ   :option (typ & bool);         (* type expected by the context *)
                                                 (* a true bool will check for type equality (else subtyping) *)
+  expected_post  :option typ;                   (* postcondition expected by the context, an abstraction over
+                                                   the expected type. See set_expected_typ_and_post. *)
   sigtab         :SMap.t sigelt;              (* a dictionary of long-names to sigelts *)
   attrtab        :SMap.t (list sigelt);        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
@@ -615,9 +617,26 @@ val set_expected_typ      : env -> typ -> env
 val set_expected_typ_maybe_eq
                           : env -> typ -> bool -> env  //boolean true will check for type equality
 
+(* [set_expected_typ_and_post env t use_eq post] sets the expected type to [t] and
+   additionally records [post] (an abstraction over [t]) as a postcondition that the
+   context expects the term to satisfy.
+
+   Note: the postcondition is deliberately *not* folded into [t] as a refinement.
+   Doing so would let it be picked up as the solution of a unification variable
+   standing for an inferred type (e.g. the result type of an unannotated inner
+   let-binding), which relocates the proof obligation to the definition site,
+   before the facts that discharge it are in scope. Keeping the two separate means
+   the postcondition only ever produces a proof obligation, never a type. *)
+val set_expected_typ_and_post
+                          : env -> typ -> bool -> typ -> env
+
 //the returns boolean true means check for type equality
 
 val expected_typ          : env -> option (typ & bool)
+
+(* The postcondition expected by the context, if any; an abstraction over the
+   expected type. Only ever set by set_expected_typ_and_post. *)
+val expected_post         : env -> option typ
 
 val clear_expected_typ    : env -> env&option (typ & bool)
 

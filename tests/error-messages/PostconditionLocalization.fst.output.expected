@@ -1,0 +1,94 @@
+* Info at PostconditionLocalization.fst(23,28-23,29):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type _: Prims.int{p _} got type Prims.int
+  - The SMT solver could not prove the query.
+  - Failed to prove: PostconditionLocalization.p 2
+  - In context:
+      b: Prims.bool
+      ~(b = true)
+      uu___: Prims.bool
+      b == _
+  - See also PostconditionLocalization.fst(22,68-22,71)
+
+* Info at PostconditionLocalization.fst(28,28-28,29):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type _: Prims.int{p _} got type Prims.int
+  - The SMT solver could not prove the query.
+  - Failed to prove: PostconditionLocalization.p 2
+  - In context:
+      b: Prims.bool
+      ~(b = true)
+      uu___: Prims.bool
+      b == _
+  - See also PostconditionLocalization.fst(25,68-25,71)
+
+* Info at PostconditionLocalization.fst(34,51-34,52):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type _: Prims.int{p _} got type Prims.int
+  - The SMT solver could not prove the query.
+  - Failed to prove: PostconditionLocalization.p 0
+  - In context:
+      uu___: Prims.unit
+      x: Prims.int
+      ~(x > 0 = true)
+      uu___: Prims.bool
+      x > 0 == _
+  - See also PostconditionLocalization.fst(30,77-30,80)
+
+* Info at PostconditionLocalization.fst(44,9-44,10):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type _: Prims.int{p _} got type Prims.int
+  - The SMT solver could not prove the query.
+  - Failed to prove: PostconditionLocalization.p 3
+  - In context:
+      x: PostconditionLocalization.three
+      ~(A? x) /\ ~(B? x) /\ ~(C? x) ==> Prims.l_False
+      ~(A? x)
+      ~(B? x)
+      x == PostconditionLocalization.C
+  - See also PostconditionLocalization.fst(38,69-38,72)
+
+* Info at PostconditionLocalization.fst(49,2-51,14):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type _: Prims.int{p _} got type Prims.int
+  - The SMT solver could not prove the query.
+  - Failed to prove:
+      PostconditionLocalization.p (match b  returns Prims.int with
+          | true -> 1
+          | false -> 4)
+  - In context:
+      b: Prims.bool
+      ~(b = true) /\ ~(b = false) ==> Prims.l_False
+      uu___: Prims.int
+      (b = true ==> b == true /\ PostconditionLocalization.p 1) /\
+      (~(b = true) ==> b == false)
+      (match b  returns Prims.int with
+        | true -> 1
+        | false -> 4) ==
+      _
+  - See also PostconditionLocalization.fst(46,78-46,81)
+
+* Warning 240 at PostconditionLocalization.fst(46,4-46,22):
+  - PostconditionLocalization.returns_annotation
+    is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at PostconditionLocalization.fst(38,4-38,12):
+  - PostconditionLocalization.datatype is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at PostconditionLocalization.fst(25,4-25,12):
+  - PostconditionLocalization.declared is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at PostconditionLocalization.fst(48,0-51,14):
+  - Missing definitions in module PostconditionLocalization:
+      datatype
+      declared
+      returns_annotation
+
