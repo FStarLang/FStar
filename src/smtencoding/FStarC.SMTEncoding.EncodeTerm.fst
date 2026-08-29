@@ -97,6 +97,9 @@ let head_normal env t =
 let head_redex env t =
     match (U.un_uinst t).n with
     | Tm_abs {rc_opt=Some rc} ->
+      (* A [residual_comp] carries no specification, so these must test the
+         spec-free spellings [Tot]/[GTot] rather than the whole pure/ghost
+         class; those two names are stable across the primitive-effect flip. *)
       Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
       || Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
       || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags

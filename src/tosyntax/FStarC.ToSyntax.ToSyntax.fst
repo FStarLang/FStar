@@ -2326,23 +2326,13 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
         is_empty cattributes &&
         is_empty universes
     in
-    if lid_equals eff C.effect_Tot_lid || lid_equals eff C.effect_GTot_lid
-    then (
-      (* Tot/GTot admit no pre- or postcondition, only a decreases clause. *)
-      if not (Nil? rest) then
-        fail Errors.Fatal_NotEnoughArgsToEffect
-          (Format.fmt1 "Effect %s does not take a requires or ensures clause" (show eff));
-      if no_additional_args
-      then (if lid_equals eff C.effect_Tot_lid then mk_Total result_typ else mk_GTotal result_typ)
-      else
-        mk_Comp ({comp_univs=universes;
-                  effect_name=eff;
-                  result_typ=result_typ;
-                  comp_pre=trivial_pre;
-                  comp_post=trivial_post result_typ;
-                  flags=(if lid_equals eff C.effect_Tot_lid then [TOTAL] else [])
-                        @ cattributes @ decreases_clause})
-    )
+    (* [Tot t] and [GTot t] with nothing else at all are the dedicated
+       [Total]/[GTotal] comps.  Anything more -- a decreases clause, a
+       specification, universes -- goes through the general path below, exactly
+       like any other effect. *)
+    if no_additional_args
+       && (lid_equals eff C.effect_Tot_lid || lid_equals eff C.effect_GTot_lid)
+    then (if lid_equals eff C.effect_Tot_lid then mk_Total result_typ else mk_GTotal result_typ)
     else
       let flags =
         if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
@@ -2403,6 +2393,19 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
       let flags = flags @ decreases_clause @ (match smtpat with
                                               | None -> []
                                               | Some p -> [SMTPAT p]) in
+      (* [TOTAL] asserts that this computation has no specification to
+         discharge.  Whether that holds is a property of *this occurrence* --
+         not of the effect, and not of any abbreviation the occurrence came
+         through -- so recompute it rather than inherit it.  Without this, an
+         abbreviation whose definition is a [Tot] (and hence carries [TOTAL])
+         passes that flag on to every use, including uses that add a
+         precondition or postcondition, and the specification is then silently
+         discarded downstream. *)
+      let flags =
+        if U.is_t_true pre && U.is_trivial_post post
+        then flags
+        else flags |> List.filter (function TOTAL -> false | _ -> true)
+      in
       mk_Comp ({comp_univs=universes;
                 effect_name=eff;
                 result_typ=result_typ;

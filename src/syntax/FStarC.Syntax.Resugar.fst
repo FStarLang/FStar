@@ -1183,10 +1183,10 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
              && not (c.flags |> BU.for_some (function
                      | DECREASES _ | SMTPAT _ -> true
                      | _ -> false))
-             && (lid_equals c.effect_name C.effect_PURE_lid ||
-                 lid_equals c.effect_name C.effect_GHOST_lid) ->
+             && (U.is_pure_effect c.effect_name ||
+                 U.is_ghost_effect c.effect_name) ->
     resugar_comp' env
-      (if lid_equals c.effect_name C.effect_PURE_lid
+      (if U.is_pure_effect c.effect_name
        then S.mk_Total c.result_typ
        else S.mk_GTotal c.result_typ)
 

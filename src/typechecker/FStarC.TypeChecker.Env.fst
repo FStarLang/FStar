@@ -1272,7 +1272,11 @@ let norm_eff_name =
 let is_erasable_effect env l : ML _ =
   l
   |> norm_eff_name env
-  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
+  (* Test the whole ghost class, not just [GHOST]: which spelling
+     [norm_eff_name] lands on depends on which of them Prims declares as
+     primitive, so pinning one here silently disables erasure if that
+     changes. *)
+  |> (fun l -> U.is_ghost_effect l ||
            S.lid_as_fv l None
            |> fv_has_erasable_attr env)
 
@@ -1538,6 +1542,24 @@ let comp_to_comp_typ (env:env) c : ML comp_typ =
      comp_post = S.trivial_post result_typ;
      flags = U.comp_flags c}
 
+(* Like [comp_to_comp_typ], but uses the given universes rather than inferring
+   them with [env.universe_of]. Use this when [c]'s free variables need not be
+   in scope in [env], e.g. when converting the body of an effect abbreviation. *)
+let comp_to_comp_typ_with_univs univs c : ML comp_typ =
+  match c.n with
+  | Comp ct -> ct
+  | _ ->
+    let effect_name, result_typ =
+      match c.n with
+      | Total t -> Const.effect_Tot_lid, t
+      | GTotal t -> Const.effect_GTot_lid, t in
+    {comp_univs = univs;
+     effect_name;
+     result_typ;
+     comp_pre = S.trivial_pre;
+     comp_post = S.trivial_post result_typ;
+     flags = U.comp_flags c}
+
 let comp_set_flags env c f : ML _ =
     def_check_scoped c.pos "comp_set_flags.IN" env c;
     let r = {c with n=Comp ({comp_to_comp_typ env c with flags=f})} in
@@ -1559,11 +1581,21 @@ let rec unfold_effect_abbrev env comp : ML _ =
                          (show (S.mk_Comp c)));
       let inst = [NT((List.hd binders).binder_bv, c.result_typ)] in
       let c1 = Subst.subst_comp inst cdef in
-      let ct1 = comp_to_comp_typ env c1 in
-      let c =
-        {ct1 with comp_pre = U.mk_conj_simp ct1.comp_pre c.comp_pre;
-                  comp_post = U.mk_conj_post ct1.result_typ ct1.comp_post c.comp_post;
-                  flags = c.flags} |> mk_Comp in
+      (* [cdef] is the abbreviation's body; its free variables need not be in
+         scope in [env], so do not infer universes for it -- the abbreviation is
+         instantiated at [c]'s universes by [lookup_effect_abbrev] above. *)
+      let ct1 = comp_to_comp_typ_with_univs c.comp_univs c1 in
+      let comp_pre = U.mk_conj_simp ct1.comp_pre c.comp_pre in
+      let comp_post = U.mk_conj_post ct1.result_typ ct1.comp_post c.comp_post in
+      (* Unfolding may have conjoined a non-trivial specification onto a
+         computation that was flagged [TOTAL]; that flag is no longer true of
+         it, so drop it rather than carry it along. *)
+      let flags =
+        if U.is_t_true comp_pre && U.is_trivial_post comp_post
+        then c.flags
+        else c.flags |> List.filter (function TOTAL -> false | _ -> true)
+      in
+      let c = {ct1 with comp_pre; comp_post; flags} |> mk_Comp in
       unfold_effect_abbrev env c
 
 (* The monadic representation of a computation type, if the effect has one.
@@ -1784,7 +1816,7 @@ let update_effect_lattice env src tgt : ML _ =
   let order = new_edges@env.effects.order in
 
   order |> List.iter (fun edge ->
-    if Ident.lid_equals edge.msource Const.effect_DIV_lid
+    if Const.is_div_effect_lid edge.msource
     && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
     then
       raise_error env Errors.Fatal_DivergentComputationCannotBeIncludedInTotal

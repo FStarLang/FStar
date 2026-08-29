@@ -1387,11 +1387,11 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               match stack with
               | [] -> None
               | Meta (_, Meta_monadic (m, _), _)::tl
-                when lid_equals m PC.effect_DIV_lid ->
+                when PC.is_div_effect_lid m ->
                 maybe_strip_meta_divs tl
               | Meta (_, Meta_monadic_lift (src, tgt, _), _)::tl
-                when lid_equals src PC.effect_PURE_lid &&
-                     lid_equals tgt PC.effect_DIV_lid ->
+                when PC.is_pure_effect_lid src &&
+                     PC.is_div_effect_lid tgt ->
                 maybe_strip_meta_divs tl
               | Arg _::_ -> Some stack  //due to the precondition, this case doesn't arise in the top-level call
               | _ -> None
@@ -2096,7 +2096,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
           (* We are in the case where [top] = [bind (return e) (fun x -> body)] *)
           (* which can be optimised to a non-monadic let-binding [let x = e in body] *)
           | Some e ->
-            let lb = {lb with lbeff=PC.effect_PURE_lid; lbdef=e} in
+            let lb = {lb with lbeff=PC.primitive_pure_lid; lbdef=e} in
             norm cfg env (List.tl stack) (S.mk (Tm_let {lbs=(false, [lb]); body=U.mk_reify body (Some m)}) top.pos)
           | None ->
             if (match is_return body with Some ({n=Tm_bvar y}) -> S.bv_eq x y | _ -> false)
@@ -3220,8 +3220,8 @@ let ghost_to_pure_aux env non_informative_only c =
                    let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
                    {ct with effect_name=pure_eff; flags=flags}
                  | None ->
-                    let ct = unfold_effect_abbrev env c in //must be GHOST
-                    {ct with effect_name=PC.effect_PURE_lid} in
+                    let ct = unfold_effect_abbrev env c in //must be ghost
+                    {ct with effect_name=PC.primitive_pure_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c
@@ -3262,9 +3262,9 @@ let ghost_to_pure2 env (c1, c2) =
   else let c1_erasable = Env.is_erasable_effect env c1_eff in
        let c2_erasable = Env.is_erasable_effect env c2_eff in
 
-       if c1_erasable && Ident.lid_equals c2_eff PC.effect_GHOST_lid
+       if c1_erasable && PC.is_ghost_effect_lid c2_eff
        then c1, ghost_to_pure env c2
-       else if c2_erasable && Ident.lid_equals c1_eff PC.effect_GHOST_lid
+       else if c2_erasable && PC.is_ghost_effect_lid c1_eff
        then ghost_to_pure env c1, c2
        else c1, c2
 
@@ -3278,9 +3278,9 @@ let ghost_to_pure_lcomp2 env (lc1, lc2) =
   else let lc1_erasable = Env.is_erasable_effect env lc1_eff in
        let lc2_erasable = Env.is_erasable_effect env lc2_eff in
 
-       if lc1_erasable && Ident.lid_equals lc2_eff PC.effect_GHOST_lid
+       if lc1_erasable && PC.is_ghost_effect_lid lc2_eff
        then lc1, ghost_to_pure_lcomp env lc2
-       else if lc2_erasable && Ident.lid_equals lc1_eff PC.effect_GHOST_lid
+       else if lc2_erasable && PC.is_ghost_effect_lid lc1_eff
        then ghost_to_pure_lcomp env lc1, lc2
        else lc1, lc2
 

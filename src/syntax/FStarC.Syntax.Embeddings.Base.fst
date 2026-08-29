@@ -169,13 +169,13 @@ let rec unmeta_div_results t =
   let open FStarC.Ident in
   match (SS.compress t).n with
   | Tm_meta {tm=t'; meta=Meta_monadic_lift (src, dst, _)} ->
-    if lid_equals src PC.effect_PURE_lid &&
-       lid_equals dst PC.effect_DIV_lid
+    if PC.is_pure_effect_lid src &&
+       PC.is_div_effect_lid dst
     then unmeta_div_results t'
     else t
 
   | Tm_meta {tm=t'; meta=Meta_monadic (m, _)} ->
-    if lid_equals m PC.effect_DIV_lid
+    if PC.is_div_effect_lid m
     then unmeta_div_results t'
     else t
 

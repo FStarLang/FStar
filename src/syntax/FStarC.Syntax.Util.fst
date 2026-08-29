@@ -273,12 +273,6 @@ let comp_post (c:comp) : ML term = match c.n with
     | Comp ct -> ct.comp_post
 
 
-let is_named_tot c =
-    match c.n with
-        | Comp c -> lid_equals c.effect_name PC.effect_Tot_lid
-        | Total _ -> true
-        | GTotal _ -> false
-
 let un_uinst t =
     let t = Subst.compress t in
     match t.n with
@@ -310,21 +304,24 @@ let has_trivial_spec (c:comp) : ML bool =
   | Total _ | GTotal _ -> true
   | Comp ct -> is_t_true ct.comp_pre && is_trivial_post ct.comp_post
 
+(* Is [c] literally a [Tot]?  [Tot] names the pure computations with nothing to
+   discharge, in either direction of the primitive-effect flip, so compare
+   against it by name.  The [has_trivial_spec] conjunct is needed because
+   [Tot t (requires p)] is now expressible and is *not* spec-free; use
+   [is_total_comp] for the weaker "is this total?" question. *)
+let is_named_tot c =
+    lid_equals (comp_effect_name c) PC.effect_Tot_lid && has_trivial_spec c
+
 let is_total_comp c =
-    lid_equals (comp_effect_name c) PC.effect_Tot_lid
-    (* [PURE t (requires True) (ensures True)] is just [Tot t] *)
-    || (lid_equals (comp_effect_name c) PC.effect_PURE_lid && has_trivial_spec c)
+    (* Any spelling of the pure effect with a trivial specification is a [Tot]. *)
+    (PC.is_pure_effect_lid (comp_effect_name c) && has_trivial_spec c)
     || comp_flags c |> U.for_some (function TOTAL -> true | _ -> false)
 
 let is_tot_or_gtot_comp c =
     is_total_comp c
-    || lid_equals PC.effect_GTot_lid (comp_effect_name c)
-    || (lid_equals PC.effect_GHOST_lid (comp_effect_name c) && has_trivial_spec c)
+    || (PC.is_ghost_effect_lid (comp_effect_name c) && has_trivial_spec c)
 
-let is_pure_effect l =
-     lid_equals l PC.effect_Tot_lid
-     || lid_equals l PC.effect_PURE_lid
-     || lid_equals l PC.effect_Pure_lid
+let is_pure_effect l = PC.is_pure_effect_lid l
 
 let is_pure_comp c = match c.n with
     | Total _ -> true
@@ -333,15 +330,9 @@ let is_pure_comp c = match c.n with
                  || is_pure_effect ct.effect_name
                  || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
 
-let is_ghost_effect l =
-       lid_equals PC.effect_GTot_lid l
-    || lid_equals PC.effect_GHOST_lid l
-    || lid_equals PC.effect_Ghost_lid l
+let is_ghost_effect l = PC.is_ghost_effect_lid l
 
-let is_div_effect l =
-     lid_equals l PC.effect_DIV_lid
-     || lid_equals l PC.effect_Div_lid
-     || lid_equals l PC.effect_Dv_lid
+let is_div_effect l = PC.is_div_effect_lid l
 
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 

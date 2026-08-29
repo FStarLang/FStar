@@ -528,10 +528,10 @@ let rec is_arrow (g:env) (t:term)
           else (
             let Comp ct = c.n in
             let e_tag =
-              if Ident.lid_equals ct.effect_name PC.effect_Pure_lid  ||
+              if U.is_pure_effect ct.effect_name ||
                  Ident.lid_equals ct.effect_name PC.effect_Lemma_lid
               then Some E_Total
-              else if Ident.lid_equals ct.effect_name PC.effect_Ghost_lid
+              else if U.is_ghost_effect ct.effect_name
               then Some E_Ghost
               else None
             in

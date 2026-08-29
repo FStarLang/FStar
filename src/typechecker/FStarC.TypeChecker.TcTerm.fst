@@ -930,7 +930,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
 
         let t, lc, g = value_check_expected_typ env t (Inr (TcComm.lcomp_of_comp c)) mzero in
         let t = mk (Tm_meta {tm=t;
-                             meta=Meta_monadic_lift (Const.effect_PURE_lid, Const.effect_TAC_lid, S.t_term)})
+                             meta=Meta_monadic_lift (Const.primitive_pure_lid, Const.effect_TAC_lid, S.t_term)})
                    t.pos in
         t, lc, g ++ g0
     end
@@ -1193,7 +1193,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
             else
               (* Reifying a non-total effect yields a possibly divergent term. *)
               let ct = { comp_univs = [u_c]
-                       ; effect_name = Const.effect_DIV_lid
+                       ; effect_name = Const.primitive_div_lid
                        ; result_typ = repr
                        ; comp_pre = S.trivial_pre
                        ; comp_post = S.trivial_post repr
@@ -5244,6 +5244,11 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_abs _ ->
     (match U.abs_formals_ln t with
      | bs, body, Some ({residual_effect=eff; residual_typ=tbody}) ->  //AR: maybe keep residual univ too?
+    (* A [residual_comp] records no specification, so this must test for the
+       spec-free spellings [Tot]/[GTot] specifically: [PURE]/[Pure] and
+       [GHOST]/[Ghost] may carry a precondition that would be discarded here.
+       Those two names mean "no specification" in either direction of the
+       primitive-effect flip. *)
     let is_tot = Ident.lid_equals eff Const.effect_Tot_lid in
     let is_gtot = Ident.lid_equals eff Const.effect_GTot_lid in
     if not (is_tot || is_gtot) then None
@@ -5301,7 +5306,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_ascribed {asc=(Inr c, _, _)} ->
     let k = U.comp_result c in
     if (not must_tot) ||
-       (c |> U.comp_effect_name |> Env.norm_eff_name env |> lid_equals Const.effect_PURE_lid) ||
+       (c |> U.comp_effect_name |> Env.norm_eff_name env |> U.is_pure_effect) ||
        (N.non_info_norm env k)
     then Some k
     else None
@@ -5360,25 +5365,25 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : ML (option liden
   match (SS.compress t).n with
   | Tm_delayed _ | Tm_bvar _ -> failwith "Impossible!"
 
-  | Tm_name _ -> Const.effect_PURE_lid |> Some
-  | Tm_lazy _ -> Const.effect_PURE_lid |> Some
-  | Tm_fvar _ -> Const.effect_PURE_lid |> Some
-  | Tm_uinst _ -> Const.effect_PURE_lid |> Some
-  | Tm_constant _ -> Const.effect_PURE_lid |> Some
-  | Tm_type _ -> Const.effect_PURE_lid |> Some
-  | Tm_abs _ -> Const.effect_PURE_lid |> Some
-  | Tm_arrow _ -> Const.effect_PURE_lid |> Some
-  | Tm_refine _ -> Const.effect_PURE_lid |> Some
+  | Tm_name _ -> Const.primitive_pure_lid |> Some
+  | Tm_lazy _ -> Const.primitive_pure_lid |> Some
+  | Tm_fvar _ -> Const.primitive_pure_lid |> Some
+  | Tm_uinst _ -> Const.primitive_pure_lid |> Some
+  | Tm_constant _ -> Const.primitive_pure_lid |> Some
+  | Tm_type _ -> Const.primitive_pure_lid |> Some
+  | Tm_abs _ -> Const.primitive_pure_lid |> Some
+  | Tm_arrow _ -> Const.primitive_pure_lid |> Some
+  | Tm_refine _ -> Const.primitive_pure_lid |> Some
 
   | Tm_app _ ->
     let hd, args = U.head_and_args_full t in
     let join_effects eff1 eff2 =
       let eff1, eff2 = Env.norm_eff_name env eff1, Env.norm_eff_name env eff2 in
-      let pure, ghost = Const.effect_PURE_lid, Const.effect_GHOST_lid in
+      let pure, ghost = Const.primitive_pure_lid, Const.primitive_ghost_lid in
 
-      if lid_equals eff1 pure && lid_equals eff2 pure then Some pure
-      else if (lid_equals eff1 ghost || lid_equals eff1 pure)
-           && (lid_equals eff2 ghost || lid_equals eff2 pure)
+      if U.is_pure_effect eff1 && U.is_pure_effect eff2 then Some pure
+      else if U.is_pure_or_ghost_effect eff1
+           && U.is_pure_or_ghost_effect eff2
       then Some ghost
       else None in
 
@@ -5401,16 +5406,15 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : ML (option liden
             let bs, c = U.arrow_formals_comp_ln_strict ta in
             let eff_app =
               if List.length args < List.length bs
-              then Const.effect_PURE_lid
+              then Const.primitive_pure_lid
               else U.comp_effect_name c in
             join_effects eff_hd_and_args eff_app
           | _ -> None)))
   | Tm_ascribed {tm=t; asc=(Inl _, _, _)} -> effectof_tot_or_gtot_term_fastpath env t
   | Tm_ascribed {asc=(Inr c, _, _)} ->
     let c_eff = c |> U.comp_effect_name |> Env.norm_eff_name env in
-    if lid_equals c_eff Const.effect_PURE_lid ||
-       lid_equals c_eff Const.effect_GHOST_lid
-    then Some c_eff
+    if U.is_pure_effect c_eff then Some Const.primitive_pure_lid
+    else if U.is_ghost_effect c_eff then Some Const.primitive_ghost_lid
     else None
   | Tm_uvar _ -> None
   | Tm_quoted _ -> None

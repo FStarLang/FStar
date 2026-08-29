@@ -124,7 +124,7 @@ let effect_as_etag =
                 res in
     fun g l ->
     let l = delta_norm_eff g l in
-    if lid_equals l PC.effect_PURE_lid
+    if U.is_pure_effect l
     then E_PURE
     else if TcEnv.is_erasable_effect (tcenv_of_uenv g) l
     then E_ERASABLE
@@ -1634,6 +1634,8 @@ and term_as_mlexpr'
         | Tm_app _ ->
           let head, args = U.head_and_args_full t in
           let is_total rc =
+              (* A [residual_comp] carries no specification, so this must test
+                 [Tot] specifically rather than the whole pure class. *)
               Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
               || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in

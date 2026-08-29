@@ -614,17 +614,13 @@ let lift_comps env c1 c2 (b:option bv) (for_bind:bool)
   l, c1, c2, Env.conj_guard g1 g2
 
 let is_pure_effect env l : ML _ =
-  let l = norm_eff_name env l in
-  lid_equals l C.effect_PURE_lid
+  norm_eff_name env l |> U.is_pure_effect
 
 let is_ghost_effect env l : ML _ =
-  let l = norm_eff_name env l in
-  lid_equals l C.effect_GHOST_lid
+  norm_eff_name env l |> U.is_ghost_effect
 
 let is_pure_or_ghost_effect env l : ML _ =
-  let l = norm_eff_name env l in
-  lid_equals l C.effect_PURE_lid
-  || (lid_equals l C.effect_GHOST_lid)
+  norm_eff_name env l |> U.is_pure_or_ghost_effect
 
 (* Closing a computation over the pattern variables [bvs]: universally quantify
    its precondition and postcondition. *)
@@ -812,7 +808,7 @@ let strengthen_comp env (reason:option (unit -> ML (list Pprint.document))) (c:c
       let r = Env.get_range env in
       let f = label_opt env reason r f in
       let assert_c =
-        mk_comp_l C.effect_PURE_lid S.U_zero S.t_unit f (S.trivial_post S.t_unit) [] in
+        mk_comp_l C.primitive_pure_lid S.U_zero S.t_unit f (S.trivial_post S.t_unit) [] in
       mk_bind env assert_c None c flags r
 
 (*
@@ -840,7 +836,7 @@ let weaken_comp env (c:comp) (formula:term) : ML (comp & guard_t) =
   else
     let r = Env.get_range env in
     let assume_c =
-      mk_comp_l C.effect_PURE_lid S.U_zero S.t_unit
+      mk_comp_l C.primitive_pure_lid S.U_zero S.t_unit
                 S.trivial_pre
                 (U.abs [S.null_binder S.t_unit] formula (Some S.post_rc))
                 [] in
@@ -1220,7 +1216,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
    *)
   let m =
     if m_opt |> None? || is_ghost_effect env lc.eff_name
-    then C.effect_PURE_lid
+    then C.primitive_pure_lid
     else m_opt |> Option.must in
 
   let flags = lc.cflags in
@@ -1238,7 +1234,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
            let g_c = Env.conj_guard g_c g_retc in
            if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
            then let retc = Env.comp_to_comp_typ env retc in
-                let retc = {retc with effect_name=C.effect_GHOST_lid; flags=flags} in
+                let retc = {retc with effect_name=C.primitive_ghost_lid; flags=flags} in
                 S.mk_Comp retc, g_c
            else Env.comp_set_flags env retc flags, g_c
        else //AR: augment c's post-condition with a M.return
@@ -1302,7 +1298,7 @@ let maybe_return_e2_and_bind
          * AR: If eff1 and eff2 cannot be composed, and eff2 is PURE,
          *     we must return eff2 into eff1,
          *)
-        if lid_equals eff2 C.effect_PURE_lid &&
+        if U.is_pure_effect eff2 &&
            Env.join_opt env eff1 eff2 |> None?
         then assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else if (not (is_pure_or_ghost_effect env eff1)
@@ -1318,7 +1314,7 @@ let fvar_env env lid : ML _ =  S.fvar (Ident.set_lid_range lid (Env.get_range en
  * The comp type for a match with no cases: PURE t (requires False)
  *)
 let comp_false env (u:universe) (t:typ) : ML comp =
-  mk_comp_l C.effect_PURE_lid u t (fvar_env env C.false_lid) (S.trivial_post t) []
+  mk_comp_l C.primitive_pure_lid u t (fvar_env env C.false_lid) (S.trivial_post t) []
 
 (*
  * Conjunction of two branch computations under the branch condition [p]:
@@ -1387,7 +1383,7 @@ let bind_cases env0 (res_t:typ)
   (scrutinee:bv) : ML lcomp =
     let env = Env.push_binders env0 [scrutinee |> S.mk_binder] in
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
-                             C.effect_PURE_lid
+                             C.primitive_pure_lid
                              lcases
     in
     let bind_cases_flags = [] in
@@ -1538,12 +1534,12 @@ let check_trivial_precondition_wp env c : ML _ =
 
 //Decorating terms with monadic operators
 let maybe_lift env e c1 c2 t : ML _ =
-    // Tot/GTot are abbreviations of PURE/GHOST, but they may be used in Prims
-    // before those abbreviations are declared; normalize them by hand.
+    // The several spellings of the pure and ghost effects may be used in Prims
+    // before the abbreviations relating them are declared; normalize by hand.
     let norm_eff l =
       let l = Env.norm_eff_name env l in
-      if Ident.lid_equals l C.effect_Tot_lid then C.effect_PURE_lid
-      else if Ident.lid_equals l C.effect_GTot_lid then C.effect_GHOST_lid
+      if U.is_pure_effect l then C.primitive_pure_lid
+      else if U.is_ghost_effect l then C.primitive_ghost_lid
       else l
     in
     let m1 = norm_eff c1 in
@@ -1556,9 +1552,10 @@ let maybe_lift env e c1 c2 t : ML _ =
 
 let maybe_monadic env e c t : ML _ =
     let m = Env.norm_eff_name env c in
+    (* [is_pure_or_ghost_effect] recognizes every spelling of the pure and
+       ghost effects, including the ones used in Prims before the
+       abbreviations relating them are declared. *)
     if is_pure_or_ghost_effect env m
-    || Ident.lid_equals m C.effect_Tot_lid
-    || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
     else mk (Tm_meta {tm=e; meta=Meta_monadic (m, t)}) e.pos
 

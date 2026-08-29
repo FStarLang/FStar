@@ -278,6 +278,51 @@ let effect_DIV_lid   = psconst "DIV"
 let effect_Div_lid   = psconst "Div"
 let effect_Dv_lid    = psconst "Dv"
 
+(* Canonical classification of the primitive effects.
+
+   Each of the three primitive effects has several spellings: the
+   effect itself, and abbreviations of it.  Which one of them is the
+   *primitive* one is a property of Prims, not of the compiler, so every
+   place that needs to ask "is this the pure effect?" must go through
+   these predicates rather than comparing against one chosen spelling.
+   See [FStarC.Syntax.Util.is_pure_effect] and friends, which are the
+   usual entry points.
+
+   BEWARE: these say nothing about *specifications*.  [PURE]/[Pure] and
+   [GHOST]/[Ghost] name computations that may carry a precondition or a
+   postcondition, whereas [Tot]/[GTot] mean "no specification at all".  So a
+   test that really means "is this spec-free?" must either conjoin
+   [Syntax.Util.has_trivial_spec] (when it has a [comp] to look at) or keep
+   comparing against [effect_Tot_lid]/[effect_GTot_lid] (when it does not --
+   e.g. an [lcomp] or a [residual_comp], neither of which records a
+   specification).  Widening such a test to the whole class silently discards
+   the specification.  Those two names denote the spec-free computations in
+   either direction of the primitive-effect flip, so hardwiring them is safe. *)
+let is_pure_effect_lid (l:lident) : bool =
+     lid_equals l effect_Tot_lid
+  || lid_equals l effect_PURE_lid
+  || lid_equals l effect_Pure_lid
+
+let is_ghost_effect_lid (l:lident) : bool =
+     lid_equals l effect_GTot_lid
+  || lid_equals l effect_GHOST_lid
+  || lid_equals l effect_Ghost_lid
+
+let is_div_effect_lid (l:lident) : bool =
+     lid_equals l effect_DIV_lid
+  || lid_equals l effect_Div_lid
+  || lid_equals l effect_Dv_lid
+
+(* The *primitive* spelling of each of the three built-in effects, i.e. the
+   one Prims actually declares (the others being abbreviations of it).
+
+   Code that *constructs* a computation type must use these rather than
+   naming a spelling directly, so that changing which spelling is primitive
+   is a change to these three definitions alone. *)
+let primitive_pure_lid  = effect_PURE_lid
+let primitive_ghost_lid = effect_GHOST_lid
+let primitive_div_lid   = effect_DIV_lid
+
 (* The "All" monad and its associated symbols. *)
 
 let ef_base () =

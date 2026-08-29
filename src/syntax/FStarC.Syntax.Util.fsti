@@ -108,14 +108,15 @@ val comp_pre (c:comp) : term
 val comp_post (c:comp) : ML term
 
 
-val is_named_tot (c:comp) : bool
-
 val un_uinst (t:term) : ML term
 val is_t_true (t:term) : ML bool
 val is_trivial_post (p:term) : ML bool
 (* A computation type has a trivial specification when both its pre- and
    postcondition are [True]. *)
 val has_trivial_spec (c:comp) : ML bool
+
+(* Is [c] a [Tot], i.e. a pure computation with nothing to discharge? *)
+val is_named_tot (c:comp) : ML bool
 
 val is_total_comp (c:comp) : ML bool
 
