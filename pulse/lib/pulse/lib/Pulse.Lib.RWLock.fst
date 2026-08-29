@@ -178,7 +178,7 @@ let rec total_frac_extensional (tab1 tab2:table_spec) (entries:index_set)
 
 /// Helper lemma: new_spec agrees with spec on positions < table_size
 let new_spec_agrees_below (spec:table_spec) (table_size:nat) (half_f:frac)
-: Lemma (let new_spec = (fun i -> if i = table_size then half_f else spec i) in
+: Lemma (let new_spec : table_spec = (fun i -> if i = table_size then half_f else spec i) in
          forall (k:nat). k < table_size ==> new_spec k == spec k)
 = ()
 
@@ -192,13 +192,13 @@ let table_spec_well_formed_extend (spec:table_spec) (table_size:nat) (entries:in
     half_f >. 0.0R /\
     spec table_size == 0.0R)
   (ensures
-    (let new_spec = (fun i -> if i = table_size then half_f else spec i) in
+    (let new_spec : table_spec = (fun i -> if i = table_size then half_f else spec i) in
      let new_entries = Set.insert table_size entries in
      let new_table_size = table_size + 1 in
      table_spec_well_formed new_spec new_table_size new_entries /\
      total_frac new_spec new_entries +. half_f == 1.0R))
 = Set.all_finite_set_facts_lemma ();
-  let new_spec = (fun i -> if i = table_size then half_f else spec i) in
+  let new_spec : table_spec = (fun i -> if i = table_size then half_f else spec i) in
   let new_entries = Set.insert table_size entries in
   let new_table_size = table_size + 1 in
   

@@ -60,6 +60,13 @@ val seq_list_match_nil_elim
       Nil? v
     ))
 
+let list_cons_precedes_aux
+  (#t: Type)
+  (l: list t { Cons? l })
+: Lemma
+  (List.Tot.hd l << l /\ List.Tot.tl l << l)
+= ()
+
 let list_cons_precedes
   (#t: Type)
   (a: t)
@@ -67,8 +74,7 @@ let list_cons_precedes
 : Lemma
   ((a << a :: q) /\ (q << a :: q))
   [SMTPat (a :: q)]
-= assert (List.Tot.hd (a :: q) << (a :: q));
-  assert (List.Tot.tl (a :: q) << (a :: q))
+= list_cons_precedes_aux (a :: q)
 
 val seq_list_match_cons_intro
   (#t #t': Type0)

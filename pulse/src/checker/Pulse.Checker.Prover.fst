@@ -719,7 +719,7 @@ exception AbortUFTransaction of bool
 let with_uf_transaction (k: unit -> T.Tac bool) : T.Tac bool =
   let open FStar.Tactics.V2 in
   try
-    T.raise <| AbortUFTransaction <| k ()
+    (T.raise <| AbortUFTransaction <| k ()) <: bool
   with
     | AbortUFTransaction res -> res
     | ex -> T.raise ex

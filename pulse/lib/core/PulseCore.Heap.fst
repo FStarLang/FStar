@@ -1008,7 +1008,7 @@ let upd_gen_fp0 #a #p r x frame (h: full_hheap (pts_to #a #p r x `star` frame)) 
   (| h1', h2', y' |)
 
 let upd_gen_fp2 #a p r (x: a) (y: a { composable p x y /\ p.refine (op p x y) }) (v: a) (f: frame_preserving_upd p x v) :
-    Lemma (compatible p x (op p x y) /\ f (op p x y) == op p v y /\ composable p v y) =
+    Lemma (composable p v y /\ compatible p x (op p x y) /\ f (op p x y) == op p v y) =
   p.comm x y; assert compatible p x (op p x y);
   let _ = f (op p x y) in ()
 
@@ -1152,7 +1152,7 @@ let extend_full_heap_with (h: full_heap) (c: cell {full_cell c}) :
     } =
   let h' = Seq.snoc h (Some c) in
   introduce forall a. contains_addr h' a ==> full_cell (select_addr h' a) with
-    introduce _ ==> _ with
+    introduce contains_addr h' a ==> full_cell (select_addr h' a) with
       if a = ctr h then () else
         assert select_addr h' a == select_addr h a;
   h'

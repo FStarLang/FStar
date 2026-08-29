@@ -155,7 +155,8 @@ let check
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c_st = {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
-          let c = if C_STDiv? c_body then C_STDiv c_st else C_ST c_st in
+          let c : (c:comp_st { st_comp_of_comp c == c_st }) =
+            if C_STDiv? c_body then C_STDiv c_st else C_ST c_st in
           let c_typing =
             intro_comp_typing g c
               x

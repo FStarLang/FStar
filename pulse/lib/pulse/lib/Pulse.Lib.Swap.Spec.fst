@@ -213,8 +213,9 @@ let jump_mod_d
   assert (n_alt == n);
   let unfold x'_alt = x + l_alt + - x'q * n_alt in
   assert (x'_alt == x');
-  let unfold qx = b.q_l + - x'q * b.q_n in
-  assert (eq2 #int x'_alt (x + qx * b.d)) by (int_semiring ());
+  let qx = b.q_l + - x'q * b.q_n in
+  assert (eq2 #int (x + b.d * b.q_l + - x'q * (b.d * b.q_n))
+                   (x + (b.q_l + - x'q * b.q_n) * b.d)) by (int_semiring ());
   lemma_mod_plus x qx b.d
 
 let rec jump_iter_mod_d
@@ -280,9 +281,10 @@ let jump_coverage
   let i = x % b.d in
   let qx = x / b.d in
   euclidean_division_definition x b.d;
-  let unfold k1 = qx * b.u_l in
-  let unfold m = qx * b.u_n in
-  assert (eq2 #int (qx * (n * b.u_n + l * b.u_l) + i) (i + k1 * l + m * n)) by (int_semiring ());
+  let k1 = qx * b.u_l in
+  let m = qx * b.u_n in
+  assert (eq2 #int (qx * (n * b.u_n + l * b.u_l) + i)
+                   (i + (qx * b.u_l) * l + (qx * b.u_n) * n)) by (int_semiring ());
   assert (x == i + k1 * l + m * n);
   small_mod x n;
   lemma_mod_plus (i + k1 * l) m n;

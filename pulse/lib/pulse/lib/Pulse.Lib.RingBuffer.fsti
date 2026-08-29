@@ -47,7 +47,7 @@ fn capacity (#t:Type0) (rb:ringbuffer t)
   (#cap:erased nat{cap > 0})
   preserves is_ringbuffer rb s cap
   returns n : SZ.t
-  ensures pure (SZ.v n == cap)
+  ensures pure ((SZ.v n <: nat) == cap)
 
 /// Get the current size (number of elements) in the ring buffer
 fn size (#t:Type0) (rb:ringbuffer t)

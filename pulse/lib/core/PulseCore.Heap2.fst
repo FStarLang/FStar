@@ -315,10 +315,14 @@ let lift_action
         let h11 = { concrete = c1; ghost = h1'.ghost } in
         assert (interp (lift (fp' x)) h10);
         assert (interp frame h11);
-        assert (disjoint h10 h11)
+        assert (disjoint h10 h11);
+        intro_star (lift (fp' x)) frame h10 h11;
+        assert (h1 == join h10 h11);
+        assert (interp (lift (fp' x) `star` frame) h1)
       );
       // heap_evolves_iff h0 h1;
-      assert (action_related_heaps #mut h0 h1)
+      assert (interp (lift (fp' x) `star` frame) h1 /\
+              action_related_heaps #mut h0 h1)
     )
   );
   p
@@ -433,7 +437,12 @@ let is_frame_preserving_only_ghost
     (h:full_hheap fp)
 : Lemma 
   (requires is_frame_preserving ONLY_GHOST f)
-  (ensures (dsnd (f h)).concrete == h.concrete)
+  (ensures (
+    let (| x, hh' |) = f h in
+    hh'.concrete == h.concrete /\
+    hh' == { h with ghost = hh'.ghost } /\
+    interp (fp' x) ({ h with ghost = hh'.ghost }) /\
+    full_heap_pred ({ h with ghost = hh'.ghost })))
 = emp_unit fp;
   let h : full_hheap (fp `star` emp) = h in
   eliminate forall frame (h0:full_hheap (fp `star` frame)). (
@@ -451,15 +460,21 @@ let lift_erased
 : action #mut pre a post
 = let g : refined_pre_action #mut pre a post =
     fun h ->
-      let gg : erased (a & H.heap) =
+      (* Keep the result's two components as separate [erased] bindings: an
+         [erased] *pair* would need the tuple projector axioms (and hence
+         [--ifuel]) to relate [fst gg] back to [dfst (reveal f h)], which is
+         where the facts below are stated. *)
+      let gx : erased a =
         let ff : action #mut pre a post = reveal f in
-        let (| x, hh' |) = ff h in
-        is_frame_preserving_only_ghost ff h;
-        Ghost.hide (x, Ghost.reveal hh'.ghost)
+        Ghost.hide (dfst (ff h))
       in
-      let x = ni_a (Ghost.hide (fst gg)) in
-      let gg = Ghost.hide (snd gg) in
-      (| x, { h with ghost = gg } |)
+      let gh : erased H.heap =
+        let ff : action #mut pre a post = reveal f in
+        (dsnd (ff h)).ghost
+      in
+      is_frame_preserving_only_ghost #a #pre #post (reveal f) h;
+      let x = ni_a gx in
+      (| x, { h with ghost = gh } |)
   in
   refined_pre_action_as_action g
 
@@ -477,12 +492,13 @@ let lift_heap_pre_action_ghost
               a
               (fun x -> llift GHOST (fp' x))
 = fun (h0:full_hheap (llift GHOST fp)) ->
-    let xg : erased (a & H.heap) = 
-      let (| x, g |) = act (reveal h0.ghost) in
-      hide (x, g)
-    in
-    let h1 = { h0 with ghost=hide (snd (reveal xg)) } in
-    let x = ni_a (hide (fst (reveal xg))) in
+    (* As in [lift_erased]: separate [erased] components, so that relating them
+       back to [act (reveal h0.ghost)] does not go through the tuple
+       projectors. *)
+    let xg : erased a = hide (dfst (act (reveal h0.ghost))) in
+    let hg : erased H.heap = hide (dsnd (act (reveal h0.ghost))) in
+    let h1 = { h0 with ghost=hg } in
+    let x = ni_a xg in
     (| x, h1 |)
 
 #restart-solver
@@ -548,10 +564,14 @@ let lift_action_ghost
         let h11 = { concrete = h1'.concrete; ghost=c1 } in
         assert (interp (llift GHOST (fp' x)) h10);
         assert (interp frame h11);
-        assert (disjoint h10 h11)
+        assert (disjoint h10 h11);
+        intro_star (llift GHOST (fp' x)) frame h10 h11;
+        assert (h1 == join h10 h11);
+        assert (interp (llift GHOST (fp' x) `star` frame) h1)
       );
       // heap_evolves_iff h0 h1;
-      assert (action_related_heaps #mut h0 h1)
+      assert (interp (llift GHOST (fp' x) `star` frame) h1 /\
+              action_related_heaps #mut h0 h1)
     )
   );
   p

@@ -133,7 +133,7 @@ let age1 (w: mem) : mem =
 let eq_at (n:nat) (t0 t1:mem_pred) =
   approx n t0 == approx n t1
 
-let eq_at_mono (p q: mem_pred) m n :
+let eq_at_mono (p q: mem_pred) (m n: nat) :
     Lemma (requires n <= m /\ eq_at m p q) (ensures eq_at n p q)
       [SMTPat (eq_at m p q); SMTPat (eq_at n p q)] =
   assert approx n p == approx n (approx m p);
@@ -626,7 +626,10 @@ let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_
   join_premem_commutative m1' m2';
   let m2'' = rejuvenate1 m m2' in
   assert disjoint_mem m1'' m2'';
-  mem_ext m (join_premem m1'' m2'') (fun a -> ());
+  mem_ext m (join_premem m1'' m2'') (fun a ->
+    reveal_mem_le ();
+    read_join_premem m1'' m2'' a;
+    read_join_premem m1' m2' a);
   (m1'', m2'')
 #pop-options
 

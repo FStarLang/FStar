@@ -272,9 +272,9 @@ let raise_action
       pre = a.pre;
       post = F.on_dom _ (fun (x:U.raise_t u#a u#(max a b) t) -> a.post (U.downgrade_val x));
       step = (fun frame ->
-               ST.weaken <|
-               ST.bind (a.step frame) <|
-               (fun x -> ST.return <| U.raise_val u#a u#(max a b) #_ #U.raisable_inst x))
+               ST.weaken
+                 (ST.bind (a.step frame)
+                          (fun x -> ST.return (U.raise_val u#a u#(max a b) #_ #U.raisable_inst x))))
    }
 
 let act

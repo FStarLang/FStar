@@ -2314,7 +2314,7 @@ ensures is_ht h empty_pmap FS.emptyset
   rewrite (V.pts_to buckets final_ptrs) as (V.pts_to h.buckets final_ptrs);
   rewrite (B.pts_to count 0sz) as (B.pts_to h.count 0sz);
   
-  range_rebound (bucket_at final_ptrs final_contents) 0 (SZ.v initial_capacity) 0 (SZ.v h.capacity);
+  range_rebound (bucket_at final_ptrs final_contents) (SZ.v 0sz) (SZ.v initial_capacity) 0 (SZ.v h.capacity);
   fold (is_ht h empty_pmap FS.emptyset);
   h
 }
@@ -2835,6 +2835,7 @@ requires is_ht h m keys
   with bucket_ptrs bucket_contents cnt. _;
   
   // Free all buckets
+  range_rebound (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v h.capacity) (SZ.v 0sz) (SZ.v h.capacity);
   free_all_buckets h.buckets h.capacity 0sz;
   
   // Free the vector

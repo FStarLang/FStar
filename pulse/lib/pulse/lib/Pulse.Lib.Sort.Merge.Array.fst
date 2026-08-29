@@ -377,8 +377,8 @@ fn sort
       as (pts_to_range a (SZ.v 0sz) (SZ.v len) c);
     let res = sort_aux a 0sz len;
     unfold (sort_aux_post vmatch compare a 0sz len c l res);
-    with c' . assert (pts_to_range a (SZ.v 0sz) (SZ.v len) c');
-    rewrite (pts_to_range a (SZ.v 0sz) (SZ.v len) c')
+    with c' . assert (pts_to_range a 0 (SZ.v len) c');
+    rewrite (pts_to_range a 0 (SZ.v len) c')
         as (pts_to_range a 0 (length a) c');
     pts_to_range_elim a 1.0R c';
     res

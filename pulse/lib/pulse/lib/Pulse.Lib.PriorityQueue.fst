@@ -619,7 +619,7 @@ let sift_up_swap_lemma #t {| total_order t |}
     let aux1 (i:nat{i < Seq.length s' /\ i <> p}) : Lemma (heap_up_at s' i)
       = sift_up_swap_heap_up_at s child i
     in
-    FStar.Classical.forall_intro (FStar.Classical.move_requires aux1);
+    FStar.Classical.forall_intro aux1;
     
     // Part 2: parent-child ordering except at p
     let aux2 (i:nat{i < Seq.length s'})
@@ -732,7 +732,7 @@ fn size (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
 fn get_capacity (#t:Type0) {| total_order t |} (pq:pqueue t) (#s0:erased (Seq.seq t)) (#cap:erased nat)
   preserves is_pqueue pq s0 cap
   returns n:SZ.t
-  ensures pure (SZ.v n == cap)
+  ensures pure ((SZ.v n <: nat) == cap)
 {
   unfold (is_pqueue pq s0 cap);
   let n = RV.get_capacity pq;
@@ -1065,14 +1065,14 @@ let sift_down_swap_lemma #t {| total_order t |}
       : Lemma (heap_up_at s' i)
       = sift_down_swap_heap_up_at s parent child i
     in
-    FStar.Classical.forall_intro (FStar.Classical.move_requires aux1);
+    FStar.Classical.forall_intro aux1;
     
     // Prove part 2: heap_down_at for all i where i <> child
     let aux2 (i:nat{i < Seq.length s' /\ i <> child})
       : Lemma (heap_down_at s' i)
       = sift_down_swap_heap_down_at s parent child i
     in
-    FStar.Classical.forall_intro (FStar.Classical.move_requires aux2)
+    FStar.Classical.forall_intro aux2
 
 // Helper: grandparent property after swap
 // After swapping parent with child, the value at new grandparent (=parent) is s[child].

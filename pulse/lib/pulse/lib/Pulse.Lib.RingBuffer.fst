@@ -160,7 +160,7 @@ fn capacity (#t:Type0) (rb:ringbuffer t)
   (#cap:erased nat{cap > 0})
   preserves is_ringbuffer rb s cap
   returns n : SZ.t
-  ensures pure (SZ.v n == cap)
+  ensures pure ((SZ.v n <: nat) == cap)
 {
   unfold (is_ringbuffer rb s cap);
   with _buf _h _tl _cnt. _;
@@ -243,6 +243,7 @@ let rec lemma_push_contents
     else (
       // Inductive case
       let next_head = (head + 1) % cap in
+      FStar.Math.Lemmas.lemma_mod_plus_distr_l (head + 1) (count - 1) cap;
       lemma_push_contents buf next_head tail (count - 1) cap x
     )
 

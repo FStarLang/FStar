@@ -165,7 +165,7 @@ let push_as_map (ss1 ss2:ss_t)
     | [] -> ()
     | x::tl -> aux (push ss1 x (Map.sel ss2.m x)) (tail ss2)
   in
-  ()
+  aux ss1 ss2
 #pop-options
 
 let rec remove_l (l:ss_dom) (x:var { L.memP x l })

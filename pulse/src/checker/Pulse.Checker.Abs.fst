@@ -552,7 +552,7 @@ let rec check_abs_core
 
       let ppname_ret = mk_ppname_no_range "_fret" in
       let r  = check g' pre_opened post ppname_ret body_opened  in
-      let (| post, r |) : (ph:post_hint_opt g' & checker_result_t g' pre_opened ph) =
+      let (| post, r |) : (ph:post_hint_opt g' { PostHint? ph } & checker_result_t g' pre_opened ph) =
         match post with
         | PostHint _ -> (| post, r |)
         | _ ->

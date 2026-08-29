@@ -64,7 +64,7 @@ fn size (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
 fn get_capacity (#t:Type0) {| total_order t |} (pq:pqueue t) (#s0:erased (Seq.seq t)) (#cap:erased nat)
   preserves is_pqueue pq s0 cap
   returns n:SZ.t
-  ensures pure (SZ.v n == cap)
+  ensures pure ((SZ.v n <: nat) == cap)
 
 /// Insert element into priority queue
 /// Requires: queue has room (length < capacity)

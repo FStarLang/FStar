@@ -129,14 +129,15 @@ let check
         let post : post_hint_for_env g = post in
         assume not (x `Set.mem` freevars post.post);
           let open Pulse.Typing.Combinators in
-          let body_post : post_hint_for_env g_extended = extend_post_hint_for_local g post init_t x binder.binder_ppname in
+          let body_post = extend_post_hint_for_local g post init_t x binder.binder_ppname in
           let r = check g_extended body_pre (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
           let r: checker_result_t g_extended body_pre (PostHint body_post) = r in
           let (| opened_body, c_body |) = apply_checker_result_k_nohint #g_extended #body_pre #body_post r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c_st = {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
-          let c = if C_STDiv? c_body then C_STDiv c_st else C_ST c_st in
+          let c : (c:comp_st { st_comp_of_comp c == c_st }) =
+            if C_STDiv? c_body then C_STDiv c_st else C_ST c_st in
           let c_typing =
             intro_comp_typing g c
               x

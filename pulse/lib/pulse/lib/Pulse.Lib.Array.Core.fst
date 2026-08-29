@@ -242,7 +242,7 @@ fn mask_alloc_with_vis u#a (elt: Type u#a) {| small_type u#a |}
   let arr: array elt = { base_ref = b; base_len = SZ.v n; length = SZ.v n; offset = 0; alloc_loc = l; vis };
   rewrite each b as lptr_of arr;
   assert pure (v `Map.equal` mk_carrier' arr 1.0R (Seq.create (SZ.v n) None) (fun _ -> l_True) (vis l));
-  rewrite each hide (SZ.v n) as arr.base_len;
+  rewrite each (hide (SZ.v n) <: (x:Ghost.erased nat { SZ.fits x })) as arr.base_len;
   fold pts_to_mask arr (Seq.create (SZ.v n) None) (fun _ -> l_True);
   arr
 }
@@ -329,9 +329,10 @@ ghost fn pcm_share u#a (#t: Type u#a) #l
   let i2 = get_mask_idx m2 (length a2);
   assert pure (mask_nonempty m1 (length a1) ==>
     Some? (Map.sel (mk_carrier' a p s m (a.vis l)) (i1 + a1.offset)));
-  fold pts_to_mask a1 #p1 s1 m1;
   assert pure (mask_nonempty m2 (length a2) ==>
     Some? (Map.sel (mk_carrier' a p s m (a.vis l)) (i2 + a2.offset)));
+  assert pure (mask_nonempty m2 (length a2) ==> p2 <=. 1.0R);
+  fold pts_to_mask a1 #p1 s1 m1;
   fold pts_to_mask a2 #p2 s2 m2;
 }
 
