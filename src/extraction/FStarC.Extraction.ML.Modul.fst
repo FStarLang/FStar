@@ -600,13 +600,15 @@ let extract_let_rec_types se (env:uenv) (lbs:list letbinding) : ML (uenv & iface
       let env, iface_opt, impls =
           List.fold_left
             (fun (env, iface_opt, impls) lb ->
-              let env, iface, impl =
+              let env, ifc, impl =
                 extract_let_rec_type env se.sigquals se.sigattrs lb
               in
               let iface_opt =
                 match iface_opt with
-                | None -> Some iface
-                | Some iface' -> Some (iface_union iface' iface)
+                | None -> Some ifc
+                (* Annotated: the fold's accumulator type is inferred, and the
+                   [==] fact for the union mentions the fold's own binders. *)
+                | Some iface' -> let u : iface = iface_union iface' ifc in Some u
               in
               (env, iface_opt, impl::impls))
             (env, None, [])

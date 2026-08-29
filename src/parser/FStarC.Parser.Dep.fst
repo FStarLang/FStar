@@ -2122,8 +2122,10 @@ let collect (all_cmd_line_files: list file_name)
   in
   if !dbg
   then Format.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
-  all_files,
-  mk_deps dep_graph file_system_map valid_namespaces all_cmd_line_files (RBSet.from_list all_files) inlining_ifaces parse_results
+  (* Annotated: this function's type is inferred, and the [==] fact for the
+     [deps] record mentions the local [dep_graph] and friends. *)
+  let d : deps = mk_deps dep_graph file_system_map valid_namespaces all_cmd_line_files (RBSet.from_list all_files) inlining_ifaces parse_results in
+  all_files, d
 
 (* In public interface *)
 let parsing_data_of_modul deps filename modul_opt =

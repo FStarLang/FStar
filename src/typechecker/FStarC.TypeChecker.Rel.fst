@@ -2305,10 +2305,31 @@ let solve_rigid_flex_or_flex_rigid_subtyping
             def_check_prob "meet_or_join" (TProb p);
             TProb p, wl
         in
+        (* A bound may be a refinement whose *base* is still a unification
+           variable: [fail]'s result type, for one, is [_:?a{False}].  Its head
+           then matches nothing, and the [MisMatch] fallback below would keep
+           [t1] and force [t1 = t2] -- conflating two refinements that should
+           have been combined.  Treat it as a head match instead: [combine]
+           equates the bases (a flex-rigid problem, which is exactly the
+           commitment we want) and then meets or joins the refinements. *)
+        let refinement_of_flex t =
+            match (SS.compress t).n with
+            | Tm_refine {b=x} ->
+              (match (SS.compress (fst (U.head_and_args_full x.sort))).n with
+               | Tm_uvar _ -> true
+               | _ -> false)
+            | _ -> false
+        in
         let pairwise t1 t2 wl =
             if !dbg_Rel
             then Format.print2 "[meet/join]: pairwise: %s and %s\n" (show t1) (show t2);
             let mr, ts = head_matches_delta (p_env wl (TProb tp)) tp.logical wl.smt_ok t1 t2 in
+            let mr =
+              match mr with
+              | MisMatch _ when refinement_of_flex t1 || refinement_of_flex t2 ->
+                HeadMatch false
+              | _ -> mr
+            in
             match mr with
             | HeadMatch true
             | MisMatch _ ->
@@ -2526,11 +2547,29 @@ let solve_rigid_flex_or_flex_rigid_subtyping
           then true, None
           else false, Some (if flip then U.mk_conj_simp else U.mk_disj_simp)
         in
+        (* [meet_or_join] below creates sub-problems, each with a fresh
+           logical-guard uvar registered in [wl_implicits].  When the meet/join
+           fails and we fall back to the widening heuristic, those sub-problems
+           are abandoned: [UF.rollback] undoes their *solutions* but not their
+           creation, so their guards would be reported as unresolved implicits.
+           Keep the pre-meet implicits so we can restore them there. *)
+        let implicits_before_meet = wl.wl_implicits in
         let (bound, sub_probs, wl) =
           match bounds_typs with
           | [t] ->
             if widen
-            then fst (base_and_refinement_maybe_delta false env t), [], wl
+            then
+              (* Widen from the *unnormalized* bound where possible.  [whnf]
+                 delta-unfolds a type abbreviation (e.g. [tac unit] into its
+                 underlying arrow), and the resulting head cannot be re-folded
+                 when the equation is later solved against a flex application
+                 [?m ?a].  Peeling refinements without delta preserves the
+                 abbreviation. *)
+              let t' = fst (base_and_refinement_maybe_delta false env this_rigid) in
+              let t' = if Tm_refine? (SS.compress t').n
+                       then fst (base_and_refinement_maybe_delta false env t)
+                       else t' in
+              t', [], wl
             else (t, [], wl)
           | _ -> 
             meet_or_join meet_or_join_op
@@ -2588,6 +2627,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                 //We failed to solve (x:t_base{p} <: ?u) while computing a precise join of all the lower bounds
                 //Rather than giving up, try again with a widening heuristic
                 //i.e., try to solve ?u = t and proceed
+              let wl = {wl with wl_implicits = implicits_before_meet} in
               let eq_prob, wl =
                   new_problem wl (p_env wl (TProb tp)) t_base EQ this_flex None tp.loc "widened subtyping" in
               def_check_prob "meet_or_join3" (TProb eq_prob);
@@ -2602,6 +2642,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                 //i.e., solve ?u = t_base, with the guard formula phi
               let x = freshen_bv x in
               let _, phi = SS.open_term [S.mk_binder x] phi in
+              let wl = {wl with wl_implicits = implicits_before_meet} in
               let eq_prob, wl =
                   new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
               def_check_prob "meet_or_join4" (TProb eq_prob);
@@ -3154,6 +3195,7 @@ let rec solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
       && (not (is_flex_pat lhs)|| not (is_flex_pat rhs))
       then giveup_or_defer_flex_flex orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex non-pattern")
 
+
       else if should_run_meta_arg_tac lhs
       then run_meta_arg_tac_and_try_again lhs
 
@@ -3166,6 +3208,87 @@ let rec solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
             | [] -> false
             | b::bs -> snd (occurs u b.binder_bv.sort) || occurs_bs u bs
           in
+          (* Two syntactically equal flex terms are trivially related, even
+             when they are not patterns. Without this the quasi-pattern rule
+             below invents *different* fresh binder names for the two sides,
+             concludes that they differ, and "solves" the head uvar to a
+             constant function. *)
+          let (Flex (t_lhs, _, args_lhs0)) = lhs in
+          let (Flex (t_rhs, _, args_rhs0)) = rhs in
+          if TEQ.eq_tm env t_lhs t_rhs = TEQ.Equal
+          then solve (solve_prob orig None [] wl)
+          else
+
+          (* When the two flex terms apply their head uvars to the *same number*
+             of arguments, try a first-order decomposition: relate the heads,
+             and relate the arguments pairwise. This is a guess -- a flex-flex
+             problem has many solutions -- so it is attempted under a
+             transaction and we fall back to the quasi-pattern rule below on
+             failure. It matters because the quasi-pattern rule commits both
+             heads to *constant* functions, which is fatal for a head uvar that
+             is still awaiting typeclass resolution. *)
+          let try_first_order_flex_flex () : ML (option worklist) =
+            if not (Cons? args_lhs0)
+            || List.length args_lhs0 <> List.length args_rhs0
+            then None
+            else
+              let hd_lhs, _ = U.head_and_args_full t_lhs in
+              let hd_rhs, _ = U.head_and_args_full t_rhs in
+              let tx = UF.new_transaction () in
+              let wl0 = solve_prob orig None [] wl in
+              let hd_prob, wl0 =
+                mk_t_problem wl0 [] orig hd_lhs EQ hd_rhs None "flex-flex first-order head" in
+              let sub_probs, wl0 =
+                List.fold_left2
+                  (fun (ps, wl0) (a, _) (b, _) ->
+                    let p, wl0 = mk_t_problem wl0 [] orig a EQ b None "flex-flex first-order arg" in
+                    p::ps, wl0)
+                  ([hd_prob], wl0)
+                  args_lhs0 args_rhs0
+              in
+              let wl' = { wl0 with defer_ok = NoDefer;
+                                   smt_ok = false;
+                                   attempting = sub_probs;
+                                   wl_deferred = empty;
+                                   wl_implicits = Listlike.empty } in
+              match solve wl' with
+              | Success (_, defer_to_tac, imps) ->
+                UF.commit tx;
+                Some (extend_wl wl0 empty defer_to_tac imps)
+              | Failed _ ->
+                UF.rollback tx;
+                None
+          in
+          match try_first_order_flex_flex () with
+          | Some wl -> solve wl
+          | None ->
+
+          (* When exactly one side is a *bare* flex (a uvar applied to no
+             arguments), solving it to the other side is strictly more precise
+             than the flex-flex quasi-pattern rule below, which would pick a
+             *constant* function for the applied side's head uvar. That matters
+             in particular for a uvar that is still awaiting typeclass
+             resolution: committing it to [fun _ -> t] makes the class
+             constraint unsolvable. *)
+          let try_solve_bare (bare:flex_t) (other:flex_t) : ML (option (list uvi & worklist)) =
+            let (Flex (_, u_b, args_b)) = bare in
+            let (Flex (t_o, _, _)) = other in
+            if Cons? args_b then None
+            else
+              let uvars_o, occurs_ok, _ = occurs_check u_b t_o in
+              if not occurs_ok then None
+              else if not (Free.names t_o `subset` binders_as_bv_set u_b.ctx_uvar_binders)
+              then None
+              else Some ([TERM(u_b, t_o)], restrict_all_uvars env u_b [] uvars_o wl)
+          in
+          let bare_solution =
+            if is_flex_pat lhs && not (is_flex_pat rhs) then try_solve_bare lhs rhs
+            else if is_flex_pat rhs && not (is_flex_pat lhs) then try_solve_bare rhs lhs
+            else None
+          in
+          match bare_solution with
+          | Some (sol, wl) -> solve (solve_prob orig None sol wl)
+          | None ->
           match quasi_pattern env lhs, quasi_pattern env rhs with
           | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
             let (Flex ({pos=range}, u_lhs, _)) = lhs in
@@ -3400,6 +3523,34 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             //Otherwise, we reason extensionally about T and try to prove the arguments equal, i.e, ti = si, for all i
             let base1, refinement1 = base_and_refinement env t1 in
             let base2, refinement2 = base_and_refinement env t2 in
+            (* [Prims.squash p] is a transparent unit refinement, but
+               [base_and_refinement] does not delta-unfold, so without help the
+               extensional rule below would relate [squash p <: squash q] by
+               demanding [p == q]. That is both unsound-ly strong (subtyping of
+               squashed props only needs [p ==> q]) and, since the [==] fallback
+               normalizes both sides to compare them, it diverges whenever [p]
+               mentions a recursive predicate. Unfold squash so that the
+               refinement rule below applies and yields the implication. We only
+               do this when neither side has free uvars: the extensional rule is
+               what solves implicits (e.g. calc's [rs]), so it must stay in
+               charge whenever there is anything to solve. *)
+            let base1, refinement1, base2, refinement2 =
+              let is_squash h =
+                match (U.un_uinst h).n with
+                | Tm_fvar fv -> S.fv_eq_lid fv PC.squash_lid
+                | _ -> false
+              in
+              match refinement1, refinement2 with
+              | None, None when torig.relation = SUB
+                             && is_squash head1
+                             && is_squash head2
+                             && no_free_uvars t1
+                             && no_free_uvars t2 ->
+                let base1, refinement1 = base_and_refinement_maybe_delta true env t1 in
+                let base2, refinement2 = base_and_refinement_maybe_delta true env t2 in
+                base1, refinement1, base2, refinement2
+              | _ -> base1, refinement1, base2, refinement2
+            in
             begin
             match refinement1, refinement2 with
             | None, None ->  //neither side is a refinement; reason extensionally
@@ -3503,7 +3654,29 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                 | _ -> false
               in
               let is_reveal = U.is_fvar PC.reveal head1 || U.is_fvar PC.reveal head2 in
-              if Some? d && wl.smt_ok && not treat_as_injective || is_reveal then
+              (* [squash] is not injective, so solving [squash p <: squash q] by
+                 unifying [p] and [q] is only an approximation of [p ==> q]. That is
+                 usually harmless, but when [q] is still a metavariable the
+                 approximation *commits* it to whatever [p] happens to be, purely on
+                 the strength of the left-hand side, and the constraint that really
+                 determines [q] then fails.  Unfold and do refinement subtyping
+                 instead, leaving [q] to be determined by its own constraints and
+                 [p ==> q] to the SMT solver.  A [q] that has no other constraint
+                 must then be written out at the source level. *)
+              let is_squash_sub_flex_rhs =
+                problem.relation = SUB &&
+                not need_unif &&
+                U.is_fvar PC.squash_lid head1 &&
+                U.is_fvar PC.squash_lid head2 &&
+                (match args2 with
+                 (* beta-reduce: the elaborations that produce these goals
+                    (e.g. [FStar.Classical.Sugar]) leave redexes like
+                    [(fun _ -> ?u) ()] in argument position *)
+                 | [(q, _)] -> is_flex (norm_with_steps "FStarC.TypeChecker.Rel.squash_arg" [Env.Beta] env q)
+                 | _ -> false)
+              in
+              if is_squash_sub_flex_rhs && Some? d then unfold_and_retry (Some?.v d) wl env
+              else if Some? d && wl.smt_ok && not treat_as_injective || is_reveal then
                 try_solve_without_smt_or_else wl
                     solve_sub_probs_no_smt
                     (try_reveal_reveal_or_retry d)
@@ -4268,31 +4441,12 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
     let sub_prob : worklist -> term -> rel -> term -> string -> ML (prob & worklist) =
         fun wl t1 rel t2 reason -> mk_t_problem wl [] orig t1 rel t2 None reason in
 
-    (* The logical content of  M res1 (requires pre1) (ensures post1)  <:
-       M res2 (requires pre2) (ensures post2),  namely
-         pre2 ==> pre1   /\   pre2 ==> (forall x. post1 x ==> post2 x).
-       The witness comes from the left-hand computation, so it is quantified at
-       [res1] and the logical content of that type is available too -- this is
-       what makes [Tot (squash phi)] a subtype of [Lemma (ensures phi)]. *)
-    let spec_subsumption_guard (res1:typ) pre1 post1 pre2 post2 : ML term =
-        (* A uvar occurring in the *expected* postcondition is only ever
-           constrained by this obligation, which is a proof obligation and not
-           a constraint on the term.  Record it so that, if it is still
-           unsolved when implicits are resolved, the error can say why. *)
-        Free.uvars post2 |> elems
-        |> List.iter (fun u ->
-             unsolvable_spec_uvars := UF.uvar_id u.ctx_uvar_head :: !unsolvable_spec_uvars);
-        let g_post =
-          if U.is_trivial_post post2
-          then U.t_true
-          else
-            let x = S.new_bv None res1 in
-            post_obligation x
-              (U.mk_conj_simp (Env.type_hypothesis env res1 (S.bv_to_name x))
-                              (U.apply_post post1 (S.bv_to_name x)))
-              (U.apply_post post2 (S.bv_to_name x)) in
-        U.mk_conj_simp (U.mk_imp pre2 pre1) (U.mk_imp pre2 g_post)
-    in
+    (* A computation type carries no specification any more: subsumption is
+       just the effect lattice plus the result type.  Any logical content that
+       used to be compared here now lives either in the binders of the
+       surrounding arrow (a precondition became an implicit [squash] binder) or
+       in the result type itself (a postcondition became a refinement), and both
+       are related by ordinary term subtyping. *)
 
     let solve_eq c1_comp c2_comp g_lift =
         let _ = if !dbg_EQ
@@ -4319,61 +4473,7 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                    "effect universes" in
                  (univ_sub_probs ++ cons p empty), wl) (empty, wl) c1_comp.comp_univs c2_comp.comp_univs in
              let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
-             (* EQ is what F* uses for invariant positions -- the arguments of a
-                type application, for instance -- so the specifications have to
-                be related by *unification*, not by a logical guard.  Relating
-                them logically would make every type constructor covariant in
-                the specifications it mentions, and would let a computation type
-                occurring negatively be silently widened (proving False).  It
-                would also be less complete than it looks: a failed unification
-                problem lets [solve_t] fall back to unfolding the head and
-                relating the two types contravariantly, whereas an SMT guard
-                commits to the invariant reading.  Subsumption -- which is what
-                should accept a merely more precise specification -- is
-                [solve_sub] below. *)
-             let has_uvars (t:term) : ML bool = not (no_free_uvars t) in
-             (* ... but only when the specification we would unify it against
-                carries information.  Where specifications are discarded (phase
-                1, [--admit_smt_queries]) a computed postcondition is the
-                placeholder [fun _ -> True], and unifying it would silently
-                solve the uvar to [True] -- i.e. the verification condition of
-                the term would determine an implicit argument.  Refuse; the
-                uvar is then reported as unresolved. *)
-             let post_is_placeholder =
-               Env.discard_specs env
-               && U.is_trivial_post c1_comp.comp_post
-               && has_uvars c2_comp.comp_post
-             in
-             if post_is_placeholder then
-               Free.uvars c2_comp.comp_post |> elems
-               |> List.iter (fun u ->
-                    unsolvable_spec_uvars := UF.uvar_id u.ctx_uvar_head :: !unsolvable_spec_uvars);
-             let spec_probs, spec_guard, wl =
-               if post_is_placeholder
-               then
-                 let probs, wl =
-                   if has_uvars c1_comp.comp_pre || has_uvars c2_comp.comp_pre
-                   then let p1, wl = sub_prob wl c1_comp.comp_pre EQ c2_comp.comp_pre "effect precondition" in
-                        cons p1 empty, wl
-                   else empty, wl
-                 in
-                 probs |> CList.map (fun p -> [], p),
-                 U.mk_imp c2_comp.comp_pre c1_comp.comp_pre, wl
-               else
-                 let p1, wl = sub_prob wl c1_comp.comp_pre EQ c2_comp.comp_pre "effect precondition" in
-                 (* Relate the postconditions applied to a fresh witness rather
-                    than as terms: the two abstractions may well disagree on the
-                    *type* of their binder ([tc_comp] refines it by the
-                    precondition, a computed postcondition does not), and that
-                    difference is irrelevant to the specification they denote. *)
-                 let x = S.new_bv None c1_comp.result_typ in
-                 let p2, wl =
-                   mk_t_problem wl [S.mk_binder x] orig
-                     (U.apply_post c1_comp.comp_post (S.bv_to_name x)) EQ
-                     (U.apply_post c2_comp.comp_post (S.bv_to_name x))
-                     None "effect postcondition" in
-                 cons ([], p1) (cons ([S.mk_binder x], p2) empty), U.t_true, wl
-             in
+             let spec_probs, spec_guard, wl = empty, U.t_true, wl in
              let scoped_sub_probs : clist (binders & prob) =
                (univ_sub_probs |> CList.map (fun p -> [], p)) ++
                (cons ([], ret_sub_prob) <|
@@ -4398,12 +4498,8 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
     in
 
     (*
-     * Subsumption for the simplified effect system:
-     *
-     *   M t1 (requires pre1) (ensures post1)  <:  N t2 (requires pre2) (ensures post2)
-     *
-     * holds when M <= N in the effect lattice, t1 <: t2,
-     * pre2 ==> pre1, and pre2 ==> (forall x. post1 x ==> post2 x).
+     * Subsumption for the simplified effect system: [M t1 <: N t2] holds when
+     * [M <= N] in the effect lattice and [t1 <: t2].
      *)
     let solve_sub c1 (edge:edge) c2 =
         if problem.relation <> SUB then
@@ -4421,11 +4517,7 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                  (show c1.effect_name) (show c2.effect_name) (show c1.result_typ))) orig
         else
         let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
-        let g = spec_subsumption_guard c1.result_typ
-                  c1.comp_pre c1.comp_post c2.comp_pre c2.comp_post in
-        if !dbg_Rel then
-          Format.print1 "Computation subtyping guard is (%s)\n" (show g);
-        let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
+        let wl = solve_prob orig (Some <| p_guard base_prob) [] wl in
         solve (attempt [base_prob] wl)
     in
 
@@ -5235,7 +5327,7 @@ let check_implicit_solution_and_discharge_guard env
             end
        else begin
          match env.core_check env imp_tm uvar_ty must_tot with
-         | Inl None -> trivial_guard, (fun _ -> ())
+         | Inl None -> trivial_guard, empty_cb
          | Inl (Some (g, cb)) -> { trivial_guard with guard_f = NonTrivial g }, cb
          | Inr print_err ->
            raise_error imp_range Errors.Fatal_FailToResolveImplicitArgument

@@ -512,6 +512,14 @@ let rec is_uvar t =
   | Tm_ascribed {tm=t} -> is_uvar t
   | _ -> false
 
+(* [t] is literally [Prims.unit].  Unlike [is_unit] below, this rejects
+   refinements of [unit] and [squash _]: it is the test for "this type says
+   nothing", so it must not accept a type that does. *)
+let is_exactly_unit t =
+    match (compress t).n with
+    | Tm_fvar fv -> fv_eq_lid fv PC.unit_lid
+    | _ -> false
+
 let rec is_unit t =
     match (unrefine t).n with
     | Tm_fvar fv ->
@@ -712,8 +720,14 @@ let rec arrow_formals_comp_ln (k:term) =
     match k.n with
         | Tm_arrow {b; comp=c} ->
             if is_total_comp c && not (has_decreases c)
-            then let bs', k = arrow_formals_comp_ln (comp_result c) in
-                 b::bs', k
+            then let bs', k' = arrow_formals_comp_ln (comp_result c) in
+                 (* Only flatten if there was in fact something to flatten:
+                    otherwise keep [c] rather than rebuilding a bare [Total]
+                    around its result, which would discard its flags (the
+                    [LEMMA]/[SMTPAT] of a lemma, in particular). *)
+                 (match bs' with
+                  | [] -> [b], c
+                  | _ -> b::bs', k')
             else [b], c
         | Tm_refine {b={ sort = s }} ->
           (*
@@ -1057,10 +1071,16 @@ let mk_disj_simp t1 t2 =
 
 (* A postcondition is an abstraction [fun (x:t) -> phi].  It is trivial when
    [phi] is [True]. *)
-let mk_has_type t x t' =
-    let t_has_type = fvar_const PC.has_type_lid in //TODO: Fix the U_zeroes below!
-    let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
+let mk_has_type_us us t x t' =
+    let t_has_type = fvar_const PC.has_type_lid in
+    let t_has_type = mk (Tm_uinst(t_has_type, us)) dummyRange in
     mk_Tm_app t_has_type [iarg t; as_arg x; as_arg t'] dummyRange
+
+(* [has_type] is universe-polymorphic in both the type of [x] and in [t'].
+   Callers that only build a formula for the SMT encoder, which erases
+   universes, may use these [u#0]s; a caller that builds a term to be
+   re-typechecked must use [mk_has_type_us] with the real universes. *)
+let mk_has_type t x t' = mk_has_type_us [U_zero; U_zero] t x t'
 
 let refinement_hypothesis (t:typ) (v:term) : ML term =
   match (compress t).n with
@@ -1229,6 +1249,26 @@ let is_squash t =
         when Syntax.fv_eq_lid fv PC.squash_lid ->
         Some t
     | _ -> None
+
+(* Represent a postcondition as a property of the result type: [t] together
+   with [fun x -> Q x] becomes [x:t{Q x}].  In the very common case where the
+   result is [unit] and [Q] does not mention it -- every [Lemma], in
+   particular -- we emit [squash Q] instead, which is the same type
+   (Prims.squash p = _:unit{p}) but reads and encodes better.  [un_squash]
+   recognises both forms. *)
+let refine_with_post (t:typ) (p:term) : ML typ =
+  if is_trivial_post p then t
+  else
+    let x = new_bv (Some t.pos) t in
+    let body = apply_post p (bv_to_name x) in
+    let t_is_unit =
+      match (Subst.compress t).n with
+      | Tm_fvar fv -> fv_eq_lid fv PC.unit_lid
+      | _ -> false
+    in
+    if t_is_unit && not (mem x (Free.names body))
+    then mk_squash body
+    else refine x body
 
 
 let mk_b2t t = mk_app (fvar_with_dd PC.b2t_lid None) [as_arg t]
@@ -1786,6 +1826,19 @@ let rec list_elements (e:term) : ML (option (list term)) =
   | _ ->
       None
 
+(* [split_squash_binders bs] splits [bs] into its real binders and the
+   precondition carried by a trailing implicit binder of squash type, if any.
+   This is the inverse of the desugaring of an arrow codomain's [requires]
+   clause (see [ToSyntax.desugar_comp]).  The squash binder is nameless and
+   nothing may refer to it, so dropping it needs no substitution. *)
+let split_squash_binders (bs:binders) : ML (binders & term) =
+  match List.rev bs with
+  | b :: rev_rest when (match b.binder_qual with Some (Implicit _) -> true | _ -> false) ->
+    (match un_squash b.binder_bv.sort with
+     | Some p -> List.rev rev_rest, p
+     | None -> bs, t_true)
+  | _ -> bs, t_true
+
 let destruct_lemma_with_smt_patterns (t:term)
 : ML (option (binders & term & term & list (list arg)))
 //binders, pre, post, patterns
@@ -1838,7 +1891,19 @@ let destruct_lemma_with_smt_patterns (t:term)
   match c.n with
   | Comp ct ->
     (match comp_smt_pats c with
-     | Some pats -> Some (bs, ct.comp_pre, ct.comp_post, lemma_pats pats)
+     | Some pats ->
+       (* A lemma's specification is no longer on its [comp]: the
+          precondition is a trailing implicit [squash] binder and the
+          postcondition is the argument of the [squash] in the result type.
+          The [SMTPAT] flag is what identifies this arrow as the image of a
+          source lemma, and it carries the patterns. *)
+       let bs, pre = split_squash_binders bs in
+       let post =
+         match un_squash ct.result_typ with
+         | Some q -> q
+         | None -> t_true
+       in
+       Some (bs, pre, post, lemma_pats pats)
      | None -> None)
   | _ ->
     None
@@ -1877,8 +1942,9 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list unive
     | None -> failwith "impos"
     | Some res -> res
   in
-  (* Postcondition is thunked, c.f. #57 *)
-  let post = unthunk_lemma_post post in
+  (* The postcondition is no longer thunked: the [#(squash pre)] binder is to
+     the left of the codomain, so [pre] is in scope while the postcondition's
+     well-formedness is checked, which is all the thunking of #57 bought. *)
   let body = mk (Tm_meta {tm=mk_imp pre post;
                           meta=Meta_pattern (binders_to_names binders, patterns)}) t.pos in
   let quant =

@@ -175,7 +175,7 @@ let length_zero_lemma ()
     with assert (feq s emptyset);
     introduce s == emptyset ==> cardinality s = 0
     with assert (set_as_list s == []);
-    introduce cardinality s <> 0 ==> _
+    introduce cardinality s <> 0 ==> (exists x. mem x s)
     with introduce exists x. mem x s
             with (Cons?.hd (set_as_list s))
             and  ())
@@ -297,6 +297,7 @@ let intersection_idempotent_left_lemma ()
   introduce forall (a: eqtype) (s1: set a) (s2: set a). intersection s1 (intersection s1 s2) == intersection s1 s2
   with assert (feq (intersection s1 (intersection s1 s2)) (intersection s1 s2))
 
+#push-options "--z3rlimit_factor 4"
 let rec union_of_disjoint_nonrepeating_lists_length_lemma (#a: eqtype) (xs1: list a) (xs2: list a) (xs3: list a)
 : Lemma (requires   list_nonrepeating xs1
                   /\ list_nonrepeating xs2
@@ -307,6 +308,7 @@ let rec union_of_disjoint_nonrepeating_lists_length_lemma (#a: eqtype) (xs1: lis
   match xs1 with
   | [] -> nonrepeating_lists_with_same_elements_have_same_length xs2 xs3
   | hd :: tl -> union_of_disjoint_nonrepeating_lists_length_lemma tl xs2 (remove_from_nonrepeating_list hd xs3)
+#pop-options
 
 let union_of_disjoint_sets_cardinality_lemma (#a: eqtype) (s1: set a) (s2: set a)
 : Lemma (requires disjoint s1 s2)

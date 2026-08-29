@@ -279,6 +279,7 @@ let split_guard g =
  {trivial_guard with guard_f = g.guard_f}
 
 let weaken_guard_formula g fml : ML guard_t =
+  if U.is_t_true fml then g else
   match g.guard_f with
   | Trivial -> g
   | NonTrivial f ->

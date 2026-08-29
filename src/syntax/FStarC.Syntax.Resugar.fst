@@ -1220,7 +1220,18 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
     (* Both clauses are optional, so we only print the non-trivial ones. *)
     let triv_pre = U.is_fvar C.true_lid c.comp_pre in
     if lid_equals c.effect_name C.effect_Lemma_lid then
-      let post = U.unthunk_lemma_post c.comp_post in
+      let post =
+        let stored = U.unthunk_lemma_post c.comp_post in
+        (* Outside an effect abbreviation's own definition the postcondition is
+           no longer stored on the computation type: it is a [squash] in the
+           result type.  Recover it, so error messages and hovers still read
+           [Lemma (ensures q)] rather than [Lemma (ensures True)]. *)
+        if U.is_t_true stored
+        then (match U.un_squash c.result_typ with
+              | Some q -> q
+              | None -> stored)
+        else stored
+      in
       (* [Lemma] with no arguments at all is not valid syntax, so we keep the
          postcondition when there is nothing else to print. *)
       let triv_post = U.is_t_true post && not triv_pre in
@@ -1533,7 +1544,10 @@ let resugar_sigelt' env se : ML (option A.decl) =
     begin match leftover_datacons with
       | [] -> //true
         (* TODO : documentation should be retrieved from the desugaring environment at some point *)
-        Some (decl'_to_decl se (Tycon (false, false, tycons)))
+        (* Annotated: the inferred type would otherwise have to absorb the
+           [==] fact for the declaration, which mentions [tycons]. *)
+        let d : A.decl = decl'_to_decl se (Tycon (false, false, tycons)) in
+        Some d
       | [se] ->
         //assert (se.sigquals |> BU.for_some (function | ExceptionConstructor -> true | _ -> false));
         (* Exception constructor declaration case *)

@@ -145,6 +145,10 @@ let denote_universes (us:list universe) : GTot (list universe_spec) =
 (* -------------------------------------------------------------------- *)
 (* The main denotation: a total, structural map from terms to specs. *)
 
+(* [denote_ret] matches on [option (binder & (either term comp & option term &
+   bool))]; showing that a variable bound four constructors deep precedes the
+   scrutinee needs that many inversions. *)
+#push-options "--ifuel 4"
 let rec denote_term (t:term) : Tot term_spec (decreases t) =
   match inspect_ln t with
   | Tv_Var v      -> Ts_Var (inspect_namedv v).uniq
@@ -238,6 +242,7 @@ and denote_subpats (ps:list (pattern & bool)) : GTot (list (pattern_spec & bool)
   match ps with
   | [] -> []
   | (p,b)::ps -> (denote_pattern p, b) :: denote_subpats ps
+#pop-options
 
 (* -------------------------------------------------------------------- *)
 (* Computation lemmas: the denotation of a packed view. These are the
@@ -376,6 +381,8 @@ and binder_offset_pattern_spec (p:pattern_spec)
     | Ps_Var -> 1
     | Ps_Cons _ _ subpats -> binder_offset_patterns_spec subpats
 
+(* [subst_ret_spec] matches four constructors deep; see [denote_ret] above. *)
+#push-options "--ifuel 4"
 let rec subst_term_spec (t:term_spec) (ss:subst_spec)
   : GTot term_spec (decreases t)
   = match t with
@@ -517,3 +524,4 @@ and subst_patterns_spec (ps:list (pattern_spec & bool)) (ss:subst_spec)
       let p = subst_pattern_spec p ss in
       let ps = subst_patterns_spec ps (shift_subst_spec_n n ss) in
       (p,b)::ps
+#pop-options

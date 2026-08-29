@@ -55,7 +55,7 @@ let inspect_pack_fv = R.inspect_pack_fv
 let pack_inspect_fv = R.pack_inspect_fv
 
 let inspect_pack_universe = R.inspect_pack_universe
-let pack_inspect_universe = R.pack_inspect_universe
+let pack_inspect_universe u = R.pack_inspect_universe u
 
 let inspect_pack_lb = R.inspect_pack_lb
 let pack_inspect_lb = R.pack_inspect_lb

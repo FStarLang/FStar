@@ -153,6 +153,25 @@ let check_no_escape (head_opt : option term)
         if not try_norm
         then aux true (norm env t)
         else
+          (* A postcondition is a refinement of the result type now, so a
+             result type routinely mentions the binders of its arrow (e.g.
+             [assume_result_eq_pure_term_in_m] states [_ == f x y]).  That is
+             fine for the arrow itself, but at an application whose arguments
+             had to be let-bound the binders go out of scope.  Weakening the
+             type by dropping the offending refinement is always sound -- we
+             simply claim less about the result -- and is far better than
+             failing. *)
+          let rec weaken (t:term) : ML term =
+            let t0 = N.normalize_refinement N.whnf_steps env t in
+            match t0.n with
+            | Tm_refine {b=x; phi} when fvs |> List.existsb (fun y -> mem y (Free.names phi)) ->
+              weaken x.sort
+            | _ -> t
+          in
+          let tw = weaken t in
+          if None? (List.tryFind (fun x -> mem x (Free.names tw)) fvs)
+          then tw, mzero
+          else
           (* if it still appears, try using the unifier to equate 't' to a uvar
           created in the "short" env, which cannot mention any of the fvs. If any exception
           is raised, we just report that 'x' escapes. Since we're calling try_teq with
@@ -229,6 +248,15 @@ let set_lcomp_result lc t =
     (fun c -> U.set_result_typ c t) (fun g -> g) ({ lc with res_typ = t })
 
 let memo_tk (e:term) (t:typ) = e
+
+(* A machine-generated occurrence carries no source range; warning on it would
+   report a use the programmer did not write (the typechecker itself builds
+   [Prims.has_type] nodes, for instance).  This must be consulted *before*
+   [set_range_of_fv] would replace the dummy range with the declaration's -- and
+   that replacement has to be skipped too, or the marker is lost and a later pass
+   over the same term (a re-checked annotation, say) warns after all. *)
+let fv_is_machine_generated (fv:fv) : bool =
+    Range.file_of_range (Ident.range_of_lid fv.fv_name) = "dummy"
 
 let maybe_warn_on_use env fv : ML unit =
     match Env.lookup_attrs_of_lid env fv.fv_name with
@@ -539,6 +567,11 @@ let check_smt_pat env t : ML unit =
     // Check patterns cover the bound vars
     if U.is_smt_lemma t then
       let bs, c = U.arrow_formals_comp t in
+      (* A lemma's precondition is a trailing implicit binder of [squash] type
+         (see [ToSyntax.desugar_comp]); it is proof-irrelevant, nothing may
+         refer to it, and the encoding drops it, so a pattern need not -- and
+         cannot -- mention it. *)
+      let bs, _pre = U.split_squash_binders bs in
       match U.comp_smt_pats c with
       | Some pats ->
           check_pat_fvs t.pos env pats bs;
@@ -556,6 +589,15 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
       let r = Env.get_range env in
       let env = {env with letrecs=[]} in
 
+      (* An implicit binder of squash type is the image of a precondition
+         (see [ToSyntax.desugar_comp]): it is proof-irrelevant, so it can
+         neither carry the termination measure nor be part of one. *)
+      let is_precondition_binder env (b:binder) : ML bool =
+        Some? b.binder_qual
+        && Implicit? (Some?.v b.binder_qual)
+        && Some? (U.un_squash (N.unfold_whnf env b.binder_bv.sort))
+      in
+
       let decreases_clause bs c =
           if Debug.low ()
           then Format.print2 "Building a decreases clause over (%s) and %s\n"
@@ -569,8 +611,11 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
                 (fun (out, env) binder ->
                   let b = binder.binder_bv in
                   let t = N.unfold_whnf env (U.unrefine b.sort) in
+                  let skip = is_precondition_binder env binder in
                   let env = Env.push_binders env [binder] in
                   match t.n with
+                  | _ when skip ->
+                    (out, env)
                   | Tm_type _
                   | Tm_arrow _ -> 
                     (out, env)
@@ -587,7 +632,21 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
             in
             List.rev out_rev
           in
-          let cflags = U.comp_flags c in
+          (* The [decreases] flag sits on the *innermost* comp.  A source
+             precondition is now a trailing implicit binder, so the comp we are
+             handed may still be a total arrow over those binders; look through
+             them for the flag. *)
+          let rec spec_flags env (c:comp) : ML (list cflag) =
+            let fl = U.comp_flags c in
+            if fl |> List.existsML (function DECREASES _ -> true | _ -> false)
+            || not (U.is_total_comp c)
+            then fl
+            else match (SS.compress (U.comp_result c)).n with
+                 | Tm_arrow {b=b'; comp=c'} when is_precondition_binder env b' ->
+                   let bs', c' = SS.open_comp [b'] c' in
+                   spec_flags (Env.push_binders env bs') c'
+                 | _ -> fl in
+          let cflags = spec_flags (Env.push_binders env bs) c in
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
                 | Some (DECREASES d) -> d
                 | _ -> bs |> filter_types_and_functions |> Decreases_lex
@@ -730,9 +789,29 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
           let env = Env.push_binders env formals in
           mk_precedes env dec previous_dec in
         let precedes = TcUtil.label (Errors.mkmsg "Could not prove termination of this recursive call") r precedes in
-        let bs, ({binder_bv=last; binder_positivity=pqual; binder_attrs=attrs; binder_qual=imp}) = BU.prefix formals in
-        let last = {last with sort=U.refine last precedes} in
-        let refined_formals = bs@[S.mk_binder_with_attrs last imp pqual attrs] in
+        (* The termination refinement must go on the last binder the caller
+           actually supplies, so skip any trailing precondition binders. *)
+        let env_formals = Env.push_binders env formals in
+        let rec split_trailing_pre (bs:binders) : ML (binders & binders) =
+          match bs with
+          | [] -> [], []
+          | b::tl ->
+            match split_trailing_pre tl with
+            | [], pre when is_precondition_binder env_formals b -> [], b::pre
+            | real, pre -> b::real, pre
+        in
+        let real_formals, pre_formals = split_trailing_pre formals in
+        let refined_formals =
+          match real_formals with
+          | [] -> (* nothing but preconditions; refine the last binder anyway *)
+            let bs, ({binder_bv=last; binder_positivity=pqual; binder_attrs=attrs; binder_qual=imp}) = BU.prefix formals in
+            let last = {last with sort=U.refine last precedes} in
+            bs@[S.mk_binder_with_attrs last imp pqual attrs]
+          | _ ->
+            let bs, ({binder_bv=last; binder_positivity=pqual; binder_attrs=attrs; binder_qual=imp}) = BU.prefix real_formals in
+            let last = {last with sort=U.refine last precedes} in
+            bs@[S.mk_binder_with_attrs last imp pqual attrs]@pre_formals
+        in
         let t' = U.arrow refined_formals c in
         if Debug.medium ()
         then Format.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
@@ -1117,6 +1196,23 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let e, c, g = tc_term (set_expected_typ_of_ascription env t use_eq) e in
     //NS: Maybe redundant strengthen
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
+    (* An ascription is a request to *view* the term at the ascribed type, so
+       take it literally: [e <: t] has type [t], even when [e]'s own type is
+       more precise.  Downstream inference reads the ascription as the user's
+       choice of shape (e.g. [count x <: int] must be [int], not [nat]).
+       [tc_term] above only applies that when it goes through [weaken_result_typ];
+       a [Tm_match] with no [returns] clause, for one, does not.
+
+       The exception is an ascription to [unit] (or to [squash _]): there is no
+       coarser type to view the term at, so such an ascription cannot be a view
+       request -- it is a *check*, and is in fact how [e1; e2] is elaborated
+       ([let _ = (e1 <: Tot unit) in e2]).  Coarsening there would throw away
+       [e1]'s unit refinement, which is now the only place its postcondition
+       lives.  See [TcUtil.keep_res_typ]. *)
+    let c =
+      if U.is_exactly_unit t && TcUtil.keep_res_typ env t c.res_typ
+      then c
+      else TcComm.set_result_typ_lc c t in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed {tm=e;
                                                                  asc=(Inl t, None, use_eq);
                                                                  eff_opt=Some c.eff_name}) top.pos) c in
@@ -1635,6 +1731,21 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
     let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches ret_opt) in
 
+    (* Discharge the branches' obligations under [guard_x == e1] and eliminate
+       [guard_x].  A computation type has no precondition to carry the branch
+       conditions any more, so they are stated on the guard, and closing it
+       really does introduce a quantifier where it used to be a no-op.  The
+       one-point rule puts [e1] back in [guard_x]'s place, which is both the
+       shape the solver used to see and the one that keeps the branch conditions
+       stated on the scrutinee itself rather than on a skolem. *)
+    let close_guard_x (g:guard_t) : ML guard_t =
+      match g.guard_f with
+      | TcComm.Trivial -> g
+      | TcComm.NonTrivial f ->
+        let eq = U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ
+                          (S.bv_to_name guard_x) e1 in
+        { g with guard_f = TcComm.NonTrivial (TcComm.post_obligation guard_x eq f) } in
+
     let c_branches, g_branches, erasable =
       match ret_opt with
       | Some (b, (Inr c, _, _)) ->  //a return annotation, with computation type
@@ -1663,22 +1774,29 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
           |> NonTrivial
           |> Env.guard_of_guard_formula in
         let g = g ++ g_exhaustiveness in
-        //weaken with guard_x == scrutinee
-        let g = TcComm.weaken_guard_formula g
-          (U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name guard_x) e1) in
-        //close guard_x
-        let g = Env.close_guard env [S.mk_binder guard_x] g in
+        let g = close_guard_x g in
         TcComm.lcomp_of_comp c,
         g,
         erasables |> List.fold_left (fun acc b -> acc || b) false
 
       | _ ->
-        let cases, g, erasable =
+        let cases, gs, erasable =
           List.fold_right
             (fun (branch, f, eff_label, cflags, c, g, erasable_branch) (caccum, gaccum, erasable) ->
                (f, eff_label, cflags |> Option.must, c |> Option.must)::caccum,
-               g ++ gaccum,
-               erasable || erasable_branch) t_eqns ([], mzero, false) in
+               g::gaccum,
+               erasable || erasable_branch) t_eqns ([], [], false) in
+        (* A branch's obligations may be discharged under the knowledge that it
+           is the branch taken: every pattern before it failed to match, and the
+           scrutinee is [e1].  (A computation type has no precondition to carry
+           this, so it has to be stated on the guards here; compare the
+           [returns]-annotated case above, which does the same.) *)
+        let g =
+          let conds = cases |> List.map (fun (f, _, _, _) -> f) in
+          let neg_conds, _ = TcUtil.get_neg_branch_conds conds in
+          let hyps = List.map2 (fun cond neg -> U.mk_conj neg (U.b2t cond)) conds neg_conds in
+          List.map2 TcComm.weaken_guard_formula gs hyps |> msum in
+        let g = close_guard_x g in
         match ret_opt with
         | None ->
           //no returns annotation, just bind_cases
@@ -1709,15 +1827,29 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
              not already establish. (Assuming the refined type instead would be
              unsound, since a branch may legitimately have dropped it.) *)
           let res_t =
+            (* [bind_cases] forces each branch's lcomp with [should_return] set
+               exactly when the match as a whole is impure -- that is when a pure
+               branch's own result is worth restating as an equation
+               ([assume_result_eq_pure_term]).  Read the branches' result types
+               the same way, or the type we build here is missing precisely the
+               facts the branches will go on to claim. *)
+            let should_return =
+              let eff =
+                List.fold_left (fun eff (_, eff_label, _, _) -> TcUtil.join_effects env eff eff_label)
+                               Const.primitive_pure_lid cases in
+              not (TcUtil.is_pure_or_ghost_effect env eff) in
             let branch_res_typ (x : (formula & lident & list cflag & (bool -> ML lcomp))) : ML typ =
-              let (_, _, _, c) = x in (c false).res_typ in
+              let (_, _, _, c) = x in (c should_return).res_typ in
             match cases with
             | c0 :: rest ->
               let t = branch_res_typ c0 in
               if rest |> List.for_all (fun c -> TEQ.eq_tm env (branch_res_typ c) t = TEQ.Equal)
               && Env.closed env t
               then t
-              else res_t
+              else
+                let branch (x : (formula & lident & list cflag & (bool -> ML lcomp))) : ML (formula & typ) =
+                  let (f, _, _, c) = x in f, (c should_return).res_typ in
+                TcUtil.combine_branch_res_typs env guard_x res_t (cases |> List.map branch)
             | [] -> res_t in
           TcUtil.bind_cases env res_t cases guard_x, g, erasable
 
@@ -1772,8 +1904,15 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         //AR: revisit, for now doing only if return annotation is not provided
+        (* Not in phase 1: phase 1 discards specifications, so the result type it
+           computes here is strictly coarser than phase 2's, and phase 2 re-checks
+           this very term -- where the ascription is *explicit* and therefore
+           authoritative.  Recording it would make phase 2 coarsen a match's type
+           down to whatever phase 1 could see.  Phase 2 adds the ascription
+           itself, so nothing downstream loses it. *)
         match ret_opt with
-        | None -> mk (Tm_ascribed {tm=e; asc=(Inl cres.res_typ, None, false); eff_opt=Some cres.eff_name}) e.pos
+        | None when not env.phase1 ->
+          mk (Tm_ascribed {tm=e; asc=(Inl cres.res_typ, None, false); eff_opt=Some cres.eff_name}) e.pos
         | _ -> e
       in
 
@@ -2033,8 +2172,9 @@ and tc_value env (e:term) : ML (term
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
     let (us', t), range = Env.lookup_lid env fv.fv_name in
-    let fv = S.set_range_of_fv fv range in
-    maybe_warn_on_use env fv;
+    let generated = fv_is_machine_generated fv in
+    let fv = if generated then fv else S.set_range_of_fv fv range in
+    if not generated then maybe_warn_on_use env fv;
     if List.length us <> List.length us' then
       raise_error fv Errors.Fatal_UnexpectedNumberOfUniverse
                   (Format.fmt3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
@@ -2078,9 +2218,10 @@ and tc_value env (e:term) : ML (term
       else fv
     in
     let (us, t), range = Env.lookup_lid env fv.fv_name in
-    let fv = S.set_range_of_fv fv range in
+    let generated = fv_is_machine_generated fv in
+    let fv = if generated then fv else S.set_range_of_fv fv range in
     let fv = maybe_set_fv_qual env fv in
-    maybe_warn_on_use env fv;
+    if not generated then maybe_warn_on_use env fv;
     if !dbg_Range
     then Format.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
             (show (lid_of_fv fv))
@@ -2254,6 +2395,16 @@ and tc_comp env c : ML (comp                                      (* checked ver
          a chance to constrain them, and an unannotated binder would end up
          with a less precise type than it should. *)
       let pre, post, g_spec =
+        (* A trivial specification is not worth checking -- and checking it is
+           not free of consequence: the check below re-typechecks the result
+           type in binder position underneath a refinement, which is a strictly
+           more demanding position than the one it was just checked in.  Since
+           the specification of a computation type is now materialized in its
+           result type, essentially every comp reaches here trivially
+           specified, so this is also the common case. *)
+        if U.is_t_true c.comp_pre && U.is_trivial_post c.comp_post
+        then c.comp_pre, S.trivial_post res, Env.trivial_guard
+        else
         let b_pre = S.mk_binder (S.new_bv (Some c.comp_pre.pos) S.t_prop) in
         let post_t =
           U.arrow [S.null_binder (U.refine (S.new_bv (Some res.pos) res)
@@ -2490,6 +2641,18 @@ and tc_abs_check_binders env bs bs_expected use_eq
     let (env, subst) = env_subst in
     match bs, bs_expected with
     | [], [] -> env, [], None, mzero, subst
+
+    | [], ({binder_bv=hd_e;binder_qual=q;binder_positivity=pqual;binder_attrs=attrs})::_
+      when Some? q && Implicit? (Some?.v q)
+        && Some? (U.un_squash (N.unfold_whnf env (SS.subst subst hd_e.sort))) ->
+      (* The abstraction has run out of binders while the expected type still
+         asks for a proof-irrelevant implicit one -- which is what a
+         precondition desugars to (see [ToSyntax.desugar_comp]).  Eta-expand
+         with a nameless binder rather than demanding that the body itself be
+         a function; a [squash] argument is never something a definition means
+         to return. *)
+      let bv = S.new_bv (Some (Ident.range_of_id hd_e.ppname)) (SS.subst subst hd_e.sort) in
+      aux (env, subst) [S.mk_binder_with_attrs bv q pqual attrs] bs_expected
 
     | ({binder_qual=None})::_, ({binder_bv=hd_e;binder_qual=q;binder_positivity=pqual;binder_attrs=attrs})::_
       when S.is_bqual_implicit_or_meta q ->
@@ -2930,6 +3093,10 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
       //
 
       let comp =
+        let head_is_data_constructor =
+          match (U.un_uinst (fst (U.head_and_args_full head))).n with
+          | Tm_fvar fv -> Env.is_datacon env (S.lid_of_fv fv)
+          | _ -> false in
         let arg_rets_names_opt =
           arg_rets_rev |> List.rev
                        |> List.map (fun (t, _) ->
@@ -2964,9 +3131,34 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                       (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
                        |> fst)
                 else env in
-              if TcComm.is_pure_or_ghost_lcomp c
-              then i+1,TcUtil.bind e.pos false env (Some e) c (x, out_c)
-              else i+1,TcUtil.bind e.pos false env None c (x, out_c))
+              (* An implicit argument of [squash] type is the image of a
+                 precondition (see [ToSyntax.desugar_comp]).  Its proposition is
+                 an obligation discharged right here, not a fact about a value,
+                 so restating it in the application's result type would drag it
+                 -- and everything the callee's [decreases] clause needs --
+                 into the type of every term that contains this call.
+
+                 More generally, an argument's type tells us nothing that the
+                 callee's own type does not already say -- [n-1 : pos] passed to
+                 [#n:pos] merely restates the obligation [n-1 > 0] we have just
+                 discharged, and the solver recovers a result refinement from
+                 the callee's typing axiom anyway.  A data constructor is the
+                 exception: it has no computational content of its own, so the
+                 only place a refinement on one of its arguments can be recorded
+                 is the type of the constructed value ([x :: list_refb tl] must
+                 remember what [list_refb] promised about its result).  Even
+                 then, an argument whose type still mentions a unification
+                 variable is left alone: refining the constructed value's type
+                 would feed that uvar into the enclosing unification problem and
+                 keep it from being solved. *)
+              let no_capture =
+                not head_is_data_constructor
+                || S.is_aqual_implicit q
+                || not (is_empty (Free.uvars c.res_typ)) in
+              let e_opt = if TcComm.is_pure_or_ghost_lcomp c then Some e else None in
+              if no_capture
+              then i+1, TcUtil.bind_no_capture e.pos false env e_opt c (x, out_c)
+              else i+1, TcUtil.bind e.pos false env e_opt c (x, out_c))
           (1, cres)
           arg_comps_rev in
 
@@ -3091,6 +3283,17 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
         in
 
         match bs, args with
+        (* No more actual arguments, but the expected type still asks for an
+           implicit binder of proof-irrelevant (squash) type: that is what a
+           precondition desugars to (see [ToSyntax.desugar_comp]).  Fill it in
+           here rather than leaving a partial application for
+           [TcUtil.maybe_instantiate] to finish, which it cannot do when the
+           callee's computation type is effectful -- it returns only a type,
+           and so would drop the effect. *)
+        | ({binder_bv=x;binder_qual=Some (Implicit _)})::rest, []
+          when Some? (U.un_squash (N.unfold_whnf env (SS.subst subst x.sort))) ->
+          instantiate_one_and_go head.pos (List.hd bs) rest []
+
         (* Expect an implicit but user provided a concrete argument, instantiate the implicit. *)
         | ({binder_bv=x;binder_qual=Some (Implicit _)})::rest, (_, None)::_
         | ({binder_bv=x;binder_qual=Some (Meta _)})::rest, (_, None)::_
@@ -4118,6 +4321,16 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
   (*        For layered effects, we substitute the pattern variables with their projector expressions applied  *)
   (*          to the scrutinee                                                                                 *)
 
+  (* Force the branch's lcomp now and take its guard into [g_branch].  The
+     obligations it holds mention the pattern variables, so they must be
+     weakened and closed below, with the rest of the branch's guard; if they
+     were left in the thunk, whoever forces it (bind_cases, outside this scope)
+     would get them stripped of their hypotheses. *)
+  let c, g_branch =
+    let c', g_c = TcComm.lcomp_comp c in
+    TcComm.lcomp_of_comp c', g_branch ++ g_c
+  in
+
   let effect_label, cflags, maybe_return_c, g_when, g_branch =
     (* (a) eqs are equalities between the scrutinee and the pattern *)
     let eqs =
@@ -4139,8 +4352,6 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
     | _ ->
      let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
 
-     //g_branch is trivial, its logical content is now incorporated within c
-
      //
      // Working towards closing the branches comp with the pattern variables
      // For effects with close combinator defined, we will use that
@@ -4149,47 +4360,87 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
      //
      let close_branch_with_substitutions = false in
 
-     (* (b) *)
-     let c_weak, g_when_weak =
+     (* (b) The branch is only reached when the pattern matched (and the [when]
+        clause held), so both are hypotheses for the branch's obligations.  A
+        computation type has no precondition to weaken any more, so they go onto
+        [g_branch] directly. *)
+     let c_weak, g_when_weak, g_branch =
        if close_branch_with_substitutions
        then
          //branch_guard is a boolean, so b2t it
-         let c = TcUtil.weaken_precondition pat_env c (NonTrivial (U.b2t branch_guard)) in
-         c, mzero  //use branch guard for weakening
+         c, mzero, TcComm.weaken_guard_formula g_branch (U.b2t branch_guard)
        else
          match eqs, when_condition with
          | _ when not (Env.should_verify pat_env) ->
-           c, g_when
+           c, g_when, g_branch
 
          | None, None ->
-           c, g_when
+           c, g_when, g_branch
 
          | Some f, None ->
-           let gf = NonTrivial f in
-           let g = Env.guard_of_guard_formula gf in
-           TcUtil.weaken_precondition pat_env c gf,
-           Env.imp_guard g g_when
+           let g = Env.guard_of_guard_formula (NonTrivial f) in
+           c,
+           Env.imp_guard g g_when,
+           TcComm.weaken_guard_formula g_branch f
 
          | Some f, Some w ->
            let g_f = NonTrivial f in
-           let g_fw = NonTrivial (U.mk_conj f w) in
-           TcUtil.weaken_precondition pat_env c g_fw,
-           Env.imp_guard (Env.guard_of_guard_formula g_f) g_when
+           c,
+           Env.imp_guard (Env.guard_of_guard_formula g_f) g_when,
+           TcComm.weaken_guard_formula g_branch (U.mk_conj f w)
 
          | None, Some w ->
-           let g_w = NonTrivial w in
-           let g = Env.guard_of_guard_formula g_w in
-           TcUtil.weaken_precondition pat_env c g_w,
-           g_when in
+           c,
+           g_when,
+           TcComm.weaken_guard_formula g_branch w in
 
      (* (c) *)
      let binders = List.map S.mk_binder pat_bvs in
+     (* [g_branch] mentions the pattern variables; close it, as the [ret_opt]
+        case above does.  Unlike that case we pass [solve_deferred=false]: forcing
+        deferred subtyping constraints here would commit a flex to a branch's
+        result type before the match's expected type is known, turning a precise
+        per-leaf obligation into an unprovable whole-type equality. *)
+     let g_branch =
+       g_branch
+       |> Env.close_guard env binders
+       |> TcUtil.close_guard_implicits env false binders in
+     (* A branch's result type now carries its postcondition as a refinement, and
+        that refinement may mention the pattern variables -- which go out of scope
+        at the branch.  Rather than lose the fact (see combine_branch_res_typs),
+        rewrite each pattern variable as the corresponding projector applied to
+        the scrutinee.  The match's type places the branch's contribution under
+        the branch condition, so the projectors are guarded by their
+        discriminators.  This is exactly what the layered path below does to the
+        whole computation type; here we only need it for the result type, and
+        only when the result type is not already scoped outside the branch. *)
+     let subst_pat_bvs_in_res_typ (c_weak:lcomp) : ML lcomp =
+       let env_s = Env.push_bv env scrutinee in
+       if List.isEmpty pat_bvs || Env.closed env_s c_weak.res_typ
+       then c_weak
+       else
+         let env_s = { env_s with admit = true } in
+         let substs =
+           List.fold_left2 (fun substs pat_bv_tm bv ->
+             let expected_t = SS.subst substs bv.sort in
+             let pat_bv_tm =
+               mk_Tm_app pat_bv_tm [scrutinee_tm |> S.as_arg] Range.dummyRange
+               |> SS.subst substs
+               |> tc_trivial_guard (Env.set_expected_typ env_s expected_t)
+               |> fst
+               |> N.normalize [Env.Beta] env_s in
+             substs @ [NT (bv, pat_bv_tm)]) [] pat_bv_tms pat_bvs in
+         let res_typ = SS.subst substs c_weak.res_typ in
+         if Env.closed (Env.push_bv env scrutinee) res_typ
+         then TcComm.set_result_typ_lc c_weak res_typ
+         else c_weak in
      let maybe_return_c_weak (should_return:bool) : ML lcomp =
        let c_weak =
          if should_return &&
             TcComm.is_pure_or_ghost_lcomp c_weak
          then TcUtil.maybe_assume_result_eq_pure_term (Env.push_bvs scrutinee_env pat_bvs) branch_exp c_weak
          else c_weak in
+       let c_weak = if close_branch_with_substitutions then c_weak else subst_pat_bvs_in_res_typ c_weak in
        if close_branch_with_substitutions
        then
          let _ =
@@ -4383,7 +4634,11 @@ and maybe_intro_smt_lemma env lem_typ c2 : ML _ =
              List.rev us
          in
          let quant = U.smt_lemma_as_forall lem_typ universe_of_binders in
-         TcUtil.weaken_precondition env c2 (NonTrivial quant)
+         (* The lemma's conclusion is a hypothesis for everything the
+            continuation has to prove; those obligations live in [c2]'s
+            guard. *)
+         c2 |> TcComm.apply_lcomp (fun c -> c)
+                                  (fun g -> TcComm.weaken_guard_formula g quant)
     else c2
 
 (******************************************************************************)
@@ -4431,7 +4686,15 @@ and check_inner_let env e : ML _ =
               e2
               c2
               g2 in
-            e2, c2, g2) in
+            (* Move g2's logical payload into c2's guard.  It mentions [x], and
+               it is [bind] that knows what [x] is: it puts the guard under
+               [x == e1] and under [x]'s type.  Leaving it here would discharge
+               it without either. *)
+            let g2_logical = { Env.trivial_guard with guard_f = g2.guard_f } in
+            let c2 =
+              c2 |> TcComm.apply_lcomp (fun c -> c)
+                                       (fun g -> Env.conj_guard g g2_logical) in
+            e2, c2, { g2 with guard_f = Trivial }) in
        //g2 now has no logical payload after this, it may have unresolved implicits
        let c2 = maybe_intro_smt_lemma env_x c1.res_typ c2 in
        let cres =
@@ -4458,7 +4721,18 @@ and check_inner_let env e : ML _ =
            if add_inline_let
            then U.inline_let_attr::lb.lbattrs
            else lb.lbattrs in
-         U.mk_letbinding (Inl x) [] c1.res_typ cres.eff_name e1 attrs lb.lbpos in
+         (* Phase 1 discards specifications, so the type it infers here is
+            strictly coarser than the one phase 2 would infer -- and phase 2
+            reads this field back as if it were a source annotation.  Recording
+            it would silently throw away the postcondition (now a refinement of
+            the result type) of every *unannotated* let.  Leave those as [tun]
+            so that phase 2 infers them again.  An annotated let keeps the
+            checked annotation, which phase 1 may have coerced (a [prop] used as
+            a type becomes a [squash], say) and which phase 2 cannot recover. *)
+         let lbtyp =
+           if env.phase1 && Tm_unknown? (SS.compress lb.lbtyp).n
+           then lb.lbtyp else c1.res_typ in
+         U.mk_letbinding (Inl x) [] lbtyp cres.eff_name e1 attrs lb.lbpos in
        let e = mk (Tm_let {lbs=(false, [lb]); body=SS.close xb e2}) e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
 
@@ -4473,6 +4747,26 @@ and check_inner_let env e : ML _ =
              then Format.print2 "Got expected type from env %s\ncres.res_typ=%s\n"
                         (show tt)
                         (show cres.res_typ);
+             (* [e2] was checked against [tt], so [tt] is the type of this let.
+                Keeping the more precise type [e2] happened to have is not just
+                unnecessary, it is harmful: a result type is now a refinement
+                that carries a postcondition, so it may mention [x], which is
+                out of scope outside the let; and even when it does not, an
+                enclosing check would compare it against [tt] a second time,
+                this time outside the scope of the hypotheses that the binds
+                below accumulated -- and fail.
+
+                The exception is a [unit] expected type, which says nothing and
+                so cannot be the point of the annotation -- it is how [e1; e2]
+                is elaborated.  There, dropping [e2]'s unit refinement discards
+                the only record of what the statement established.  Only do it
+                when the refinement is in scope without [x]. *)
+             let cres =
+               if U.is_exactly_unit tt
+               && TcUtil.keep_res_typ env tt cres.res_typ
+               && Env.closed env cres.res_typ
+               then cres
+               else TcComm.set_result_typ_lc cres tt in
              e, cres, guard)
        else (* no expected type; check that x doesn't escape it's scope *)
             (let t, g_ex = check_no_escape None env [x] cres.res_typ in
@@ -4480,7 +4774,11 @@ and check_inner_let env e : ML _ =
              then Format.print2 "Checked %s has no escaping types; normalized to %s\n"
                         (show cres.res_typ)
                         (show t);
-             e, ({cres with res_typ=t}), g_ex ++ guard)
+             (* [set_result_typ_lc] rather than [{cres with res_typ=t}]: the
+                latter updates only the cached result type, leaving the comp
+                produced by the thunk -- and hence the type that reaches
+                generalization -- still mentioning the escaping variable. *)
+             e, TcComm.set_result_typ_lc cres t, g_ex ++ guard)
 
     | _ -> failwith "Impossible (inner let with more than one lb)"
 
@@ -4592,7 +4890,7 @@ and check_inner_let_rec env top : ML _ =
           //
           let cres = TcUtil.close_wp_lcomp env bvs cres in
           let tres = norm env cres.res_typ in
-          let cres = {cres with res_typ=tres} in
+          let cres = TcComm.set_result_typ_lc cres tres in
 
           let guard =
             let bs = lbs |> List.map (fun lb -> S.mk_binder (Inl?.v lb.lbname)) in
@@ -4602,11 +4900,13 @@ and check_inner_let_rec env top : ML _ =
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
           let e = mk (Tm_let {lbs=(true, lbs); body=e2}) top.pos in
 
-          begin match topt with
-              | Some _ -> e, cres, guard //we have an annotation
-              | None ->
+          begin
+                (* Even with an annotation the result type can mention the
+                   recursively bound names: a postcondition is a refinement of
+                   the result type now, and [e2] may well be an application of
+                   one of them.  Those names go out of scope here. *)
                 let tres, g_ex = check_no_escape None env bvs tres in
-                let cres = {cres with res_typ=tres} in
+                let cres = TcComm.set_result_typ_lc cres tres in
                 e, cres, g_ex ++ guard
           end
 

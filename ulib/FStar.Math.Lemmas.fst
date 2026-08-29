@@ -224,6 +224,8 @@ let lemma_mod_plus (a:int) (k:int) (n:pos) =
     == { distributivity_add_right n k (a/n);
          distributivity_sub_right n (k + a/n) ((a + k*n)/n) }
     n * (k + a/n - (a+k*n)/n);
+    == { swap_mul n (k + a/n - (a+k*n)/n) }
+    (k + a/n - (a+k*n)/n) * n;
   };
   lt_multiple_is_equal ((a+k*n)%n) (a%n) (k + a/n - (a+k*n)/n) n;
   ()
@@ -537,6 +539,8 @@ let division_multiplication_lemma (a:int) (b:pos) (c:pos) =
     ((b * c) * (a / (b * c)) + a % (b * c)) / b / c;
     == { paren_mul_right b c (a / (b * c)) }
     (b * (c * (a / (b * c))) + a % (b * c)) / b / c;
+    == { swap_mul b (c * (a / (b * c))) }
+    (a % (b * c) + (c * (a / (b * c))) * b) / b / c;
     == { lemma_div_plus (a % (b * c)) (c * (a / (b * c))) b }
     (c * (a / (b * c)) + ((a % (b * c)) / b)) / c;
     == { lemma_div_plus ((a % (b * c)) / b) (a / (b * c)) c }

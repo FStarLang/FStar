@@ -172,6 +172,7 @@ val unrefine : term -> ML term
 
 val is_uvar : term -> ML bool
 
+val is_exactly_unit : term -> ML bool
 val is_unit : term -> ML bool
 
 val is_eqtype_no_unrefine : term -> ML bool
@@ -412,10 +413,12 @@ val unb2t (e:term) : ML (option term)
 val mk_conj_simp (t1 t2 : term) : ML term
 val mk_imp_simp (t1 t2 : term) : ML term
 val mk_disj_simp (t1 t2 : term) : ML term
+val mk_has_type_us (us:universes) (t x t' : term) : ML term
+val mk_has_type (t x t' : term) : ML term
+
 (* The logical content of the typing hypothesis [v : t]: the refinement formula
    when [t] is a refinement (or a [squash]), and [True] otherwise.  Used to keep
    that information around when a binder of type [t] is eliminated. *)
-val mk_has_type (t x t' : term) : ML term
 val refinement_hypothesis (t:typ) (v:term) : ML term
 val apply_post (p:term) (e:term) : ML term
 val mk_conj_post (t:typ) (p1:term) (p2:term) : ML term
@@ -471,6 +474,12 @@ val mk_nonempty (u:universe) (t:term) : ML term
 val un_squash (t:term) : ML (option term)
 
 val is_squash (t:term) : ML (option term)
+
+(* [refine_with_post t p] represents the postcondition [p] as a property of
+   the result type [t]: it returns [x:t{p x}], or [squash (p ())] when [t] is
+   [unit] and [p] does not mention its argument.  This is how a source-level
+   [ensures] clause is represented from desugaring onwards. *)
+val refine_with_post (t:typ) (p:term) : ML typ
 
 val mk_b2t (t: term) : ML term
 val mk_t2b (t: term) : ML term
@@ -555,6 +564,10 @@ val is_lemma (t:typ) : ML bool
 val is_smt_lemma (t:term) : ML bool
 
 val list_elements (e:term) : ML (option (list term))
+
+(* [split_squash_binders bs] splits [bs] into its real binders and the
+   precondition carried by a trailing implicit binder of squash type, if any. *)
+val split_squash_binders (bs:binders) : ML (binders & term)
 
 val destruct_lemma_with_smt_patterns (t:term)
 : ML (option (binders & term & term & list (list arg)))

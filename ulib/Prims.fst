@@ -154,20 +154,20 @@ assume val l_False : prop
     computation type is [M t (requires pre) (ensures post)], where
     [pre] is a proposition and [post] is a predicate on the result. *)
 
-total assume effect PURE
-total assume effect GHOST
+total assume effect Tot
+total assume effect GTot
 
-(** [PURE] computations can be lifted to [GHOST] (but not vice versa),
+(** [Tot] computations can be lifted to [GTot] (but not vice versa),
     *)
-assume sub_effect PURE ~> GHOST
+assume sub_effect Tot ~> GTot
 
 (** Hoare-style abbreviations.  Effect abbreviations are parameterized
     by the result type only; any pre/postcondition written at the use
     site is conjoined with the one in the abbreviation. *)
-effect Pure  (a: Type) = PURE a
-effect Tot   (a: Type) = PURE a
-effect Ghost (a: Type) = GHOST a
-effect GTot  (a: Type) = GHOST a
+effect Pure  (a: Type) = Tot a
+effect PURE  (a: Type) = Tot a
+effect Ghost (a: Type) = GTot a
+effect GHOST (a: Type) = GTot a
 
 
 (** The type of provable equalities, defined as the usual inductive
@@ -295,7 +295,7 @@ let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
 (**** Escape hatches *)
 
 (** [Admit] discards the verification condition of its continuation *)
-effect Admit (a: Type) = PURE a (ensures (fun _ -> l_False))
+effect Admit (a: Type) = Tot a (ensures (fun _ -> l_False))
 
 (***** End trusted primitives *****)
 

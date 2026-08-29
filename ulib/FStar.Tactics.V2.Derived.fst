@@ -616,7 +616,7 @@ let rewrite' (x:binding) : Tac unit =
      <|> (fun () -> var_retype x;
                     apply_lemma (`__eq_sym);
                     rewrite x)
-     <|> (fun () -> fail "rewrite' failed"))
+     <|> (fun () -> fail "rewrite' failed" <: Tac unit))
     ()
 
 let rec try_rewrite_equality (x:term) (bs:list binding) : Tac unit =
@@ -743,7 +743,7 @@ let change_sq (t1 : term) : Tac unit =
 
 let finish_by (t : unit -> Tac 'a) : Tac 'a =
     let x = t () in
-    or_else qed (fun () -> fail "finish_by: not finished");
+    or_else qed (fun () -> fail "finish_by: not finished" <: Tac unit);
     x
 
 let solve_then #a #b (t1 : unit -> Tac a) (t2 : a -> Tac b) : Tac b =
@@ -780,13 +780,13 @@ let add_elem (t : unit -> Tac 'a) : Tac 'a = focus (fun () ->
 let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
   = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])
 
-let tlabel (l:string) =
+let tlabel (l:string) : Tac unit =
     match goals () with
     | [] -> fail "tlabel: no goals"
     | h::t ->
         set_goals (set_label l h :: t)
 
-let tlabel' (l:string) =
+let tlabel' (l:string) : Tac unit =
     match goals () with
     | [] -> fail "tlabel': no goals"
     | h::t ->

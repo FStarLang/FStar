@@ -48,6 +48,7 @@ val lcomp_univ_opt: lcomp -> ML (option universe & guard_t)
 val label: list Pprint.document -> Range.t -> typ -> ML typ
 val label_guard: Range.t -> list Pprint.document -> guard_t -> ML guard_t
 
+val join_effects: env -> lident -> lident -> ML lident
 val is_pure_effect: env -> lident -> ML bool
 val is_pure_or_ghost_effect: env -> lident -> ML bool
 
@@ -62,6 +63,11 @@ val weaken_precondition: env -> lcomp -> guard_formula -> ML lcomp
 val strengthen_precondition: option (unit -> ML (list Pprint.document)) -> env -> term -> lcomp -> guard_t -> ML (lcomp & guard_t)
 
 val bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> lcomp_with_binder -> ML lcomp
+(* [bind_no_capture] is [bind] for a term whose result type must not be
+   restated in the composite's result type: an implicit argument of [squash]
+   type, above all, which is the image of a precondition and carries an
+   obligation discharged at the call rather than a fact about a result. *)
+val bind_no_capture: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> lcomp_with_binder -> ML lcomp
 
 val weaken_guard: guard_formula -> guard_formula -> ML guard_formula
 
@@ -93,6 +99,7 @@ val fvar_env: env -> lident -> ML term
 val get_neg_branch_conds: list formula -> ML (list formula & formula)
 
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
+val combine_branch_res_typs: env -> bv -> typ -> list (formula & typ) -> ML typ
 val bind_cases: env -> typ -> list (typ & lident & list cflag & (bool -> ML lcomp)) -> bv -> ML lcomp
 
 //
@@ -127,6 +134,7 @@ val maybe_coerce_lc : env -> term -> lcomp -> typ -> ML (term & lcomp & guard_t)
  *               (c) env.use_eq_strict is true, then checking that lc.result_typ = t
  *
  *)
+val keep_res_typ : env -> typ -> typ -> ML bool
 val weaken_result_typ: env -> term -> lcomp -> typ -> bool -> ML (term & lcomp & guard_t)
 
 val pure_or_ghost_pre_and_post: env -> comp -> ML (option typ & typ)

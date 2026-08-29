@@ -881,6 +881,34 @@ let is_effect_name env lid : ML _ =
     match try_lookup_effect_name env lid with
         | None -> false
         | Some _ -> true
+
+(* The specification contributed by *using* an effect abbreviation, e.g. the
+   [False] of [effect TacF (a:Type) = TAC a (requires False)] or the
+   [ensures False] of [Prims.Admit].  An abbreviation cannot bind anything and
+   does not know the result type it will be applied to, so -- unlike a use site
+   -- it keeps its specification on its [comp], to be reattached here.  It may
+   not mention the abbreviation's parameters (see [ToSyntax.desugar_decl]), so
+   the terms need no instantiation and may be used as they stand.  Returns the
+   conjoined precondition and the list of postconditions along the abbreviation
+   chain. *)
+let try_lookup_effect_abbrev_spec env l : ML (term & list term) =
+    let rec aux (fuel:int) (se:sigelt) : ML (term & list term) =
+      if fuel <= 0 then U.t_true, []
+      else match se.sigel with
+      | Sig_effect_abbrev {comp=cmp} ->
+        let pre, posts =
+          match SMap.try_find (sigmap env) (string_of_lid (U.comp_effect_name cmp)) with
+          | Some (se', _) -> aux (fuel - 1) se'
+          | None -> U.t_true, []
+        in
+        let post = U.comp_post cmp in
+        U.mk_conj_simp (U.comp_pre cmp) pre,
+        (if U.is_trivial_post post then posts else post :: posts)
+      | _ -> U.t_true, []
+    in
+    match try_lookup_effect_name' (not env.iface) env l with
+    | Some (se, _) -> aux 100 se
+    | _ -> U.t_true, []
 (* Same as [try_lookup_effect_name], but also traverses effect
 abbrevs. TODO: once indexed effects are in, also track how indices and
 other arguments are instantiated. *)

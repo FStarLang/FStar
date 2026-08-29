@@ -1167,6 +1167,17 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
           encode_term t env
 
+        | Tm_fvar fv, [(_r, _); (_msg, _); (phi, _)]
+        | Tm_uinst({n=Tm_fvar fv}, _), [(_r, _); (_msg, _); (phi, _)]
+            when S.fv_eq_lid fv Const.labeled_lid ->
+          (* [labeled r msg phi] is definitionally [phi]; the label only means
+             anything in goal position, where encode_formula turns it into a
+             Labeled node. Encode it transparently here, so that a hypothesis of
+             type [squash (labeled r msg phi)] -- which is what a [requires]
+             carrying a label desugars to -- is still usable: [labeled] is
+             irreducible, so the solver has no equation for it. *)
+          encode_term phi env
+
         | Tm_fvar fv, _
         | Tm_uinst({n=Tm_fvar fv}, _), _
             when (not env.encoding_quantifier)

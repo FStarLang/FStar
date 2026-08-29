@@ -442,14 +442,14 @@ let rec solve_mp_for_single_hyp #a
   | h :: hs ->
     or_else // Must be in ``Tac`` here to run `body`
       (fun () ->
-         match interp_pattern_aux pat part_sol.ms_vars (type_of_binding h) with
-         | Failure ex ->
-           fail ("Failed to match hyp: " ^ (string_of_match_exception ex))
-         | Success bindings ->
-           let ms_hyps = (name, h) :: part_sol.ms_hyps in
-           body ({ part_sol with ms_vars = bindings; ms_hyps = ms_hyps }))
+         (match interp_pattern_aux pat part_sol.ms_vars (type_of_binding h) with
+          | Failure ex ->
+            fail ("Failed to match hyp: " ^ (string_of_match_exception ex))
+          | Success bindings ->
+            let ms_hyps = (name, h) :: part_sol.ms_hyps in
+            body ({ part_sol with ms_vars = bindings; ms_hyps = ms_hyps })) <: Tac a)
       (fun () ->
-         solve_mp_for_single_hyp name pat hs body part_sol)
+         solve_mp_for_single_hyp name pat hs body part_sol <: Tac a)
 
 (** Scan ``hypotheses`` for matches for ``mp_hyps`` that lets ``body``
 succeed. **)
@@ -713,7 +713,7 @@ let rec hoist_and_apply (head:term) (arg_terms:list term) (hoisted_args:list arg
   | arg_term::rest ->
     let n = List.Tot.length hoisted_args in
     //let bv = fresh_bv_named ("x" ^ (string_of_int n)) in
-    let nb : binder = {
+    let nb : simple_binder = {
       ppname = seal ("x" ^ string_of_int n);
       sort = pack Tv_Unknown;
       uniq = fresh ();

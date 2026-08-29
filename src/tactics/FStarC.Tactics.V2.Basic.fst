@@ -1113,13 +1113,13 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : M
 // returns pre and post
 let lemma_or_sq (c : comp)  : ML (option (term & term)) =
     let eff_name, res = U.comp_eff_name_and_res c in
-    if lid_equals eff_name PC.effect_Lemma_lid then
-        let pre, post = U.comp_pre c, U.comp_post c in
-        // Lemma post is thunked
-        let post = U.mk_app post [S.as_arg U.exp_unit] in
-        Some (pre, post)
-    else if U.is_pure_effect eff_name
-         || U.is_ghost_effect eff_name then
+    (* A [Lemma] is now just a pure computation returning [squash post]; its
+       precondition, if any, is a trailing implicit binder of the arrow and is
+       handled with the other binders by the caller.  So there is a single
+       case: recover the postcondition from the [squash] in the result type. *)
+    if lid_equals eff_name PC.effect_Lemma_lid
+     || U.is_pure_effect eff_name
+     || U.is_ghost_effect eff_name then
         Option.map (fun post -> (U.t_true, post)) (U.un_squash res)
     else
         None

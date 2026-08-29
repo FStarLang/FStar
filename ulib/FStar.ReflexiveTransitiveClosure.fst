@@ -53,7 +53,8 @@ val closure_transitive: #a:Type u#a -> r:binrel u#a a -> Lemma (transitive (_clo
 let closure_transitive #a r =
   introduce forall x y z. _closure0 r x y /\ _closure0 r y z ==> _closure0 r x z with
   introduce _ ==> _ with
-  nonempty_intro (Closure x y z (nonempty_elim _) (nonempty_elim _))
+  nonempty_intro (Closure #a #r x y z (nonempty_elim (_closure r x y))
+                                      (nonempty_elim (_closure r y z)))
 
 let closure #a r =
   closure_reflexive r;

@@ -319,9 +319,9 @@ let is_div_effect_lid (l:lident) : bool =
    Code that *constructs* a computation type must use these rather than
    naming a spelling directly, so that changing which spelling is primitive
    is a change to these three definitions alone. *)
-let primitive_pure_lid  = effect_PURE_lid
-let primitive_ghost_lid = effect_GHOST_lid
-let primitive_div_lid   = effect_DIV_lid
+let primitive_pure_lid  = effect_Tot_lid
+let primitive_ghost_lid = effect_GTot_lid
+let primitive_div_lid   = effect_Div_lid
 
 (* The "All" monad and its associated symbols. *)
 

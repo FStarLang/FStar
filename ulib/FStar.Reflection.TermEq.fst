@@ -827,7 +827,10 @@ and pat_cmp p1 p2 =
     co (const_cmp x1 x2) ()
 
   | Pat_Dot_Term x1, Pat_Dot_Term x2 ->
-    co (opt_dec_cmp' p1 p2 term_cmp x1 x2) (bridge_opt_term x1 x2)
+    (* [co]'s [#xb #yb] must be pinned to [p1] and [p2].  Left to inference they
+       are solved from the second argument's type instead, which mentions the
+       ghost [denote_opt_term], and that makes the whole application [GTot]. *)
+    co #_ #_ #_ #peq #_ #_ #p1 #p2 (opt_dec_cmp' p1 p2 term_cmp x1 x2) (bridge_opt_term x1 x2)
 
   | Pat_Cons head1 us1 subpats1, Pat_Cons head2 us2 subpats2 ->
     co (fv_cmp head1 head2
@@ -1035,16 +1038,24 @@ let rec faithful_lemma (t1 t2 : term) =
     (***)term_eq_Tv_Match t1 t2 sc1 sc2 o1 o2 brs1 brs2;
     ()
 
-  | Tv_AscribedT e1 t1 tacopt1 eq1, Tv_AscribedT e2 t2 tacopt2 eq2 ->
+  | Tv_AscribedT e1 ta1 tacopt1 eq1, Tv_AscribedT e2 ta2 tacopt2 eq2 ->
     faithful_lemma e1 e2;
-    faithful_lemma t1 t2;
-    (match tacopt1, tacopt2 with | Some t1, Some t2 -> faithful_lemma t1 t2 | _ -> ());
+    faithful_lemma ta1 ta2;
+    let aux : squash (defined (opt_dec_cmp' t1 t2 term_cmp tacopt1 tacopt2)) =
+      match tacopt1, tacopt2 with
+      | Some x1, Some x2 -> faithful_lemma x1 x2
+      | _ -> ()
+    in
     ()
 
   | Tv_AscribedC e1 c1 tacopt1 eq1, Tv_AscribedC e2 c2 tacopt2 eq2 ->
     faithful_lemma e1 e2;
     faithful_lemma_comp c1 c2;
-    (match tacopt1, tacopt2 with | Some t1, Some t2 -> faithful_lemma t1 t2 | _ -> ());
+    let aux : squash (defined (opt_dec_cmp' t1 t2 term_cmp tacopt1 tacopt2)) =
+      match tacopt1, tacopt2 with
+      | Some x1, Some x2 -> faithful_lemma x1 x2
+      | _ -> ()
+    in
     ()
 
   | Tv_Unknown, Tv_Unknown -> ()

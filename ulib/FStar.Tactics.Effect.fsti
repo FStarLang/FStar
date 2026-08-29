@@ -69,7 +69,7 @@ let lift_div_tac (a:Type) (f:unit -> Dv a) : tac_repr a
 #pop-options
 val lift_div_tac_interleave_end : unit
 
-sub_effect DIV ~> TAC = lift_div_tac
+sub_effect Div ~> TAC = lift_div_tac
 
 /// assert p by t
 

@@ -657,6 +657,54 @@ let hoist_pat_ascription (pat: pattern): ML pattern
   | Some typ -> { pat with pat = PatAscribed (pat, (typ, None)) }
   | None     -> pat
 
+(* [comp_requires t] is the [requires] clause of the AST computation type [t],
+   if it has one and it is not trivially [True].  The triviality test must
+   agree with [Syntax.Util.is_t_true] as applied in [desugar_comp], or a
+   definition would acquire a binder that its [val] does not have. *)
+let comp_requires (t:AST.term) : ML (option AST.term) =
+  let is_true (t:AST.term) =
+    match (unparen t).tm with
+    | Name l | Var l ->
+      let s = string_of_id (ident_of_lid l) in
+      s = "True" || s = "l_True"
+    | _ -> false
+  in
+  let _, args = head_and_args_full t in
+  let is_req (a, _) = match (unparen a).tm with Requires _ -> true | _ -> false in
+  match args |> BU.try_find is_req with
+  | Some (a, _) ->
+    (match (unparen a).tm with
+     | Requires p when not (is_true p) -> Some p
+     | _ -> None)
+  | None -> None
+
+(* [comp_drop_requires t] is the AST computation type [t] with its [requires]
+   clause weakened to [True].  Used once the clause has been turned into a
+   binder, so that it is not also re-checked as an assertion. *)
+let comp_drop_requires (t:AST.term) : ML AST.term =
+  let head, args = head_and_args_full t in
+  let args = args |> List.map (fun (a, imp) ->
+    match (unparen a).tm with
+    | Requires _ ->
+      let tru = mk_term (Name C.true_lid) a.range Formula in
+      mk_term (Requires tru) a.range Type_level, imp
+    | _ -> a, imp)
+  in
+  mkApp head args t.range
+
+(* [mk_assert_before p e] is [let _ = _assert p in e]: it discharges [p] as a
+   proof obligation at this point, and makes it available while checking [e].
+   Used for the precondition of an ascription, which -- unlike that of an
+   arrow -- cannot become a binder. *)
+let mk_assert_before (p:S.term) (e:S.term) : ML S.term =
+  let assertion =
+    S.mk_Tm_app (S.fvar_with_dd (Ident.set_lid_range C.assert_lid p.pos) None)
+                [S.as_arg p] p.pos
+  in
+  let x = S.new_bv (Some p.pos) S.t_unit in
+  let lb = U.mk_letbinding (Inl x) [] S.t_unit C.effect_Tot_lid assertion [] p.pos in
+  S.mk (Tm_let {lbs=(false, [lb]); body=Subst.close [S.mk_binder x] e}) e.pos
+
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat
@@ -1111,9 +1159,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
               | _ ->
                 let universes, args = BU.take (fun (_, imp) -> imp = UnivApp) args in
                 let universes = List.map (fun x -> desugar_universe (fst x)) universes in
-                let args, aqs = List.map (fun (t, imp) ->
-                  let te, aq = desugar_term_aq env t in
-                  arg_withimp_t imp te, aq) args |> List.unzip in
+                (* The element type is given explicitly: inferring it makes
+                   the result type of the lambda -- which carries the [==] fact
+                   for the pair, mentioning [te] -- the solution of a unification
+                   variable bound outside the lambda. *)
+                let args, aqs =
+                  List.map #_ #(S.arg & antiquotations_temp)
+                    (fun (t, imp) ->
+                      let te, aq = desugar_term_aq env t in
+                      arg_withimp_t imp te, aq)
+                    args
+                  |> List.unzip in
                 let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
                 let tm =
                   if Nil? args
@@ -1169,7 +1225,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       let bs, t = uncurry binders t in
       let rec aux env aqs bs (_x_:list AST.binder) : ML _ = match _x_ with
         | [] ->
-          let cod = desugar_comp top.range true env t in
+          let cod, pre = desugar_comp top.range true false env t in
+          (* A precondition on the codomain becomes a trailing implicit
+             [squash] binder.  It goes last so that it may mention the
+             explicit binders, and so that it is in scope as a hypothesis
+             while the codomain's own well-formedness is checked. *)
+          let bs =
+            if U.is_t_true pre then bs
+            else
+              let x = S.new_bv (Some pre.pos) (U.mk_squash pre) in
+              S.mk_binder_with_attrs x (Some S.imp_tag) None [] :: bs
+          in
           setpos <| U.arrow (List.rev bs) cod, aqs
 
         | hd::tl ->
@@ -1478,6 +1544,26 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
             let (attrs_opt, (_, args, result_t), def) = _x_one_def_ in
             let args = args |> List.map replace_unit_pattern in
             let pos = def.range in
+            (* A [requires] on a definition's result computation type is the
+               caller's obligation, exactly as in a [val]: it must become a
+               trailing implicit binder of the function, not an assertion in
+               its body.  Add the binder here; the ascription below then
+               discharges its own (now redundant) assertion from it. *)
+            let args, result_t =
+              match result_t with
+              | Some (t, tacopt) when Cons? args && is_comp_type env t ->
+                (match comp_requires t with
+                 | Some p ->
+                   let r = p.range in
+                   let sq = mkApp (mk_term (Var C.squash_lid) r Expr) [(p, Nothing)] r in
+                   args @ [mk_pattern (PatAscribed (mk_pattern (PatWild (Some Implicit, [])) r,
+                                                    (sq, None))) r],
+                   (* the precondition is the binder's now, so drop it from the
+                      ascription: re-asserting it would only obscure the type *)
+                   Some (comp_drop_requires t, tacopt)
+                 | None -> args, result_t)
+              | _ -> args, result_t
+            in
             let def =
               match result_t with
               | None -> def
@@ -1643,9 +1729,16 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       mk <| Tm_match {scrutinee=e;ret_opt=asc_opt;brs;rc_opt=None}, join_aqs (aq::aq0::aqs)
 
     | Ascribed(e, t, tac_opt, use_eq) ->
-      let asc, aq0 = desugar_ascription env t tac_opt use_eq in
+      let asc, pre, aq0 = desugar_ascription env t tac_opt use_eq in
       let e, aq = desugar_term_aq env e in
-      mk <| Tm_ascribed {tm=e; asc; eff_opt=None}, aq0@aq
+      (* An ascription cannot bind anything, so its precondition is an
+         obligation right here rather than a caller's duty -- which is what F*
+         has always made of it.  Discharge it with an [assert], inside the
+         ascription so that the ascription stays the outermost node: several
+         passes (e.g. [TcUtil.extract_let_rec_annotation]) look for it there. *)
+      let e = if U.is_t_true pre then e else mk_assert_before pre e in
+      let tm = mk <| Tm_ascribed {tm=e; asc; eff_opt=None} in
+      tm, aq0@aq
 
     | Record(_, []) ->
       raise_error top Errors.Fatal_UnexpectedEmptyRecord "Unexpected empty record"
@@ -2129,7 +2222,10 @@ and desugar_match_returns env scrutinee asc_opt : ML _ =
       | Some b ->
         let env, bv = Env.push_bv env b in
         env, S.mk_binder bv in
-    let asc, aq = desugar_ascription env_asc asc_tc None asc_use_eq in
+    let asc, pre, aq = desugar_ascription env_asc asc_tc None asc_use_eq in
+    if not (U.is_t_true pre) then
+      raise_error asc_tc Errors.Fatal_NotSupported
+        "A 'requires' clause is not supported in a match returns annotation";
     //if scrutinee is a name, it may appear in the ascription
     //  substitute it with the (new or annotated) binder
     let asc =
@@ -2140,21 +2236,21 @@ and desugar_match_returns env scrutinee asc_opt : ML _ =
     let b = List.hd (SS.close_binders [b]) in
     Some (b, asc), aq
 
-and desugar_ascription env t tac_opt use_eq : ML (S.ascription & antiquotations_temp) =
-  let annot, aq0 =
+and desugar_ascription env t tac_opt use_eq : ML (S.ascription & S.term & antiquotations_temp) =
+  let annot, pre, aq0 =
     if is_comp_type env t
     then if use_eq
          then raise_error t Errors.Fatal_NotSupported "Equality ascription with computation types is not supported yet"
-         else let comp = desugar_comp t.range true env t in
-              (Inr comp, [])
+         else let comp, pre = desugar_comp t.range true false env t in
+              (Inr comp, pre, [])
     else let tm, aq = desugar_term_aq env t in
-         (Inl tm, aq) in
-  (annot, Option.map (desugar_term env) tac_opt, use_eq), aq0
+         (Inl tm, S.trivial_pre, aq) in
+  (annot, Option.map (desugar_term env) tac_opt, use_eq), pre, aq0
 
 and desugar_args env args : ML _ =
     args |> List.map (fun (a, imp) -> arg_withimp_t imp (desugar_term env a))
 
-and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
+and desugar_comp r (allow_type_promotion:bool) (keep_spec:bool) env t : ML _ =
     let fail #a code msg : ML a = raise_error r code msg in
     let is_requires (t, _) = match (unparen t).tm with
       | Requires _ -> true
@@ -2332,13 +2428,28 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
        like any other effect. *)
     if no_additional_args
        && (lid_equals eff C.effect_Tot_lid || lid_equals eff C.effect_GTot_lid)
-    then (if lid_equals eff C.effect_Tot_lid then mk_Total result_typ else mk_GTotal result_typ)
+    then (if lid_equals eff C.effect_Tot_lid then mk_Total result_typ else mk_GTotal result_typ),
+         S.trivial_pre
     else
       let flags =
         if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
         else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
         else if lid_equals eff (C.effect_ML_lid()) then [MLEFFECT]
         else []
+      in
+      (* An effect abbreviation of [Tot] denotes a total computation just as
+         much as [Tot] itself does, so give it the [TOTAL] flag: downstream
+         tests such as [Syntax.Util.is_total_comp] see only the flags, and an
+         abbreviation is not unfolded until the typechecker.  [Lemma] is the
+         motivating case -- without this, a partially-applied lemma is not
+         recognised as pure and its trailing implicit is never instantiated.
+         The flag is dropped again below if this occurrence carries a
+         specification. *)
+      let flags =
+        if List.existsb (function TOTAL -> true | _ -> false) flags then flags
+        else match Env.try_lookup_root_effect_name env eff with
+             | Some root when lid_equals root C.effect_Tot_lid -> TOTAL :: flags
+             | _ -> flags
       in
       let flags = flags @ cattributes in
       (* Extract the precondition, the postcondition, and (for Lemma) the SMT patterns
@@ -2393,25 +2504,44 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
       let flags = flags @ decreases_clause @ (match smtpat with
                                               | None -> []
                                               | Some p -> [SMTPAT p]) in
+      (* Using an effect abbreviation contributes the abbreviation's own
+         specification to the use site.  Unlike a use site, an abbreviation
+         cannot bind anything and does not know the result type it will be
+         applied to, so it is the only place a [comp] still records a
+         specification; see [DsEnv.try_lookup_effect_abbrev_spec]. *)
+      let pre, post =
+        if keep_spec then pre, post
+        else
+          let abb_pre, abb_posts = Env.try_lookup_effect_abbrev_spec env eff in
+          U.mk_conj_simp abb_pre pre,
+          List.fold_left (fun acc p -> U.mk_conj_post result_typ acc p) post abb_posts
+      in
       (* [TOTAL] asserts that this computation has no specification to
-         discharge.  Whether that holds is a property of *this occurrence* --
-         not of the effect, and not of any abbreviation the occurrence came
-         through -- so recompute it rather than inherit it.  Without this, an
-         abbreviation whose definition is a [Tot] (and hence carries [TOTAL])
-         passes that flag on to every use, including uses that add a
-         precondition or postcondition, and the specification is then silently
-         discarded downstream. *)
+         discharge.  That is a property of *this occurrence* -- not of the
+         effect, and not of any abbreviation the occurrence came through -- so
+         recompute it rather than inherit it.  Outside an abbreviation's own
+         definition the specification is not kept on the computation type at
+         all, so the flag survives; at an abbreviation's definition site it is
+         kept, and the flag must go, or a use of the abbreviation would look
+         spec-free and its specification would be silently discarded. *)
       let flags =
-        if U.is_t_true pre && U.is_trivial_post post
+        if not keep_spec || (U.is_t_true pre && U.is_trivial_post post)
         then flags
         else flags |> List.filter (function TOTAL -> false | _ -> true)
       in
+      (* Outside an abbreviation's own definition, the specification is not
+         part of the computation type: the postcondition becomes a property of
+         the result type, and the precondition is handed back to the caller,
+         which turns it into an implicit [squash] binder (arrow codomain) or an
+         assertion (ascription).  See [Syntax.Util.refine_with_post]. *)
+      let result_typ = if keep_spec then result_typ else U.refine_with_post result_typ post in
       mk_Comp ({comp_univs=universes;
                 effect_name=eff;
                 result_typ=result_typ;
-                comp_pre=pre;
-                comp_post=post;
-                flags=flags})
+                comp_pre=(if keep_spec then pre else S.trivial_pre);
+                comp_post=(if keep_spec then post else S.trivial_post result_typ);
+                flags=flags}),
+      (if keep_spec then S.trivial_pre else pre)
 
 and desugar_formula env (f:term) : ML S.term =
   let mk t = S.mk t f.range in
@@ -2775,7 +2905,24 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                             desugar_attributes env cattributes
                          | _ -> t, []
                  in
-                 let c = desugar_comp t.range false env' t in
+                 let c, _ = desugar_comp t.range false true env' t in
+                 (* An abbreviation cannot bind anything, and does not know the
+                    result type it will be applied to, so its specification is
+                    reattached at each use site (see
+                    [DsEnv.try_lookup_effect_abbrev_spec]) rather than folded
+                    into the type here.  This is the one place a [comp] still
+                    records a specification.  It must therefore not mention the
+                    abbreviation's parameters. *)
+                 let () =
+                   let x = S.new_bv (Some t.range) S.tun in
+                   let spec_names =
+                     union (FStarC.Syntax.Free.names (U.comp_pre c))
+                           (FStarC.Syntax.Free.names (U.apply_post (U.comp_post c) (S.bv_to_name x)))
+                   in
+                   if typars |> BU.for_some (fun b -> mem b.binder_bv spec_names)
+                   then raise_error t Errors.Fatal_UnexpectedComputationTypeForLetRec
+                          "The specification of an effect abbreviation may not mention its parameters"
+                 in
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in
                  let quals = quals |> List.filter (function S.Effect -> false | _ -> true) in
@@ -3009,6 +3156,21 @@ let lookup_effect_lid env (l:lident) (r:Range.t) : ML S.eff_decl =
     raise_error r Errors.Fatal_EffectNotFound
       ("Effect name " ^ show l ^ " not found")
   | Some l -> l
+
+(* As [lookup_effect_lid], but resolves an effect abbreviation to the effect it
+   abbreviates.  A lift is always declared between two actual effects, but the
+   source may well be written with an abbreviation: [PURE] and [DIV] are
+   abbreviations of [Tot] and [Div], and a great deal of existing code says
+   [sub_effect PURE ~> M]. *)
+let lookup_effect_lid_unfold env (l:lident) (r:Range.t) : ML S.eff_decl =
+  match Env.try_lookup_effect_defn env l with
+  | Some ed -> ed
+  | None ->
+    match Env.try_lookup_root_effect_name env l with
+    | Some l' -> lookup_effect_lid env l' r
+    | None ->
+      raise_error r Errors.Fatal_EffectNotFound
+        ("Effect name " ^ show l ^ " not found")
 
 let trans_pragma env (_x_:AST.pragma) : ML _ = match _x_ with
   | AST.ShowOptions -> S.ShowOptions
@@ -3666,8 +3828,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
     desugar_define_effect env d d_attrs quals eff_name eff_binders eff_decls
 
   | SubEffect l ->
-    let src_ed = lookup_effect_lid env l.msource d.drange in
-    let dst_ed = lookup_effect_lid env l.mdest d.drange in
+    let src_ed = lookup_effect_lid_unfold env l.msource d.drange in
+    let dst_ed = lookup_effect_lid_unfold env l.mdest d.drange in
     let lift =
       match l.lift_op with
       | None -> None

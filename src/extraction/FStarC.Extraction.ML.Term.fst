@@ -302,6 +302,52 @@ let is_type env t =
 
 let is_type_binder env x = is_arity env x.binder_bv.sort
 
+(* A precondition is desugared into a trailing implicit binder of type
+   [squash P] (see ToSyntax.desugar_term, the [Product] case).  Such a binder
+   is pure specification: it carries no computational content, and keeping it
+   would change the ABI of every function with a [requires] clause.  So we
+   drop it entirely -- both the binder (in [binders_as_ml_binders]) and the
+   corresponding argument (in the [Tm_app] case of [term_as_mlexpr']).  The
+   two must stay in agreement. *)
+let is_spec_binder (b:binder) : ML bool =
+    S.is_bqual_implicit b.binder_qual &&
+    (let hd, _ = U.head_and_args_full (U.unmeta b.binder_bv.sort) in
+     match (SS.compress (U.un_uinst hd)).n with
+     | Tm_fvar fv -> S.fv_eq_lid fv PC.squash_lid
+     | _ -> false)
+
+(* Drop the arguments of [args] that correspond to a spec binder in the type
+   of [head]. If we cannot determine the type of the head, we leave the
+   arguments alone; a head with a spec binder whose type we cannot see is
+   only reachable through a local higher-order binding, which extraction
+   would already have had to type. *)
+let drop_spec_args (env:UEnv.uenv) (head:term) (args0:args) : ML args =
+    let head_typ =
+      match (SS.compress (U.un_uinst head)).n with
+      | Tm_fvar fv ->
+        (match TypeChecker.Env.try_lookup_lid (tcenv_of_uenv env) (S.lid_of_fv fv) with
+         | Some ((_, t), _) -> Some t
+         | None -> None)
+      | Tm_name bv -> Some bv.sort
+      | _ -> None
+    in
+    match head_typ with
+    | None -> args0
+    | Some t ->
+      let formals, _ = U.arrow_formals t in
+      if not (formals |> List.existsb is_spec_binder) then args0
+      else
+        let rec aux formals (acc:args) : ML args =
+          match formals, acc with
+          | [], _ -> acc
+          | _, [] -> []
+          | f::formals, a::rest ->
+            if is_spec_binder f
+            then aux formals rest
+            else a :: aux formals rest
+        in
+        aux formals args0
+
 let is_constructor t = match (SS.compress t).n with
     | Tm_fvar ({fv_qual=Some Data_ctor})
     | Tm_fvar ({fv_qual=Some (Record_ctor _)}) -> true
@@ -826,7 +872,12 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : ML mlty =
 
 and binders_as_ml_binders (g:uenv) (bs:binders) : ML (list (mlident & mlty) & uenv) =
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->
-            if is_type_binder g b
+            if is_spec_binder b
+            then //a precondition proof: no computational content, drop it
+                 let b = b.binder_bv in
+                 let env, _, _ = extend_bv env b ([], ml_unit_ty) false true in
+                 ml_bs, env
+            else if is_type_binder g b
             then //no first-class polymorphism; so type-binders get wiped out
                  let b = b.binder_bv in
                  let env = extend_ty env b true in
@@ -1613,6 +1664,9 @@ and term_as_mlexpr'
         | Tm_abs {b;body;rc_opt=rcopt} (* the annotated computation type of the body *) ->
           let bs, body = SS.open_term [b] body in
           let ml_bs, env = binders_as_ml_binders g bs in
+          (* a spec binder is dropped by [binders_as_ml_binders]; keep [bs] in
+             step with [ml_bs] before zipping them *)
+          let bs = bs |> List.filter (fun b -> not (is_spec_binder b)) in
           let ml_bs = List.map2 (fun (x,t) b -> {
             mlbinder_name=x;
             mlbinder_ty=t;
@@ -1624,6 +1678,9 @@ and term_as_mlexpr'
               maybe_reify_term (tcenv_of_uenv env) body rc.residual_effect
             | None -> debug g (fun () -> Format.print1 "No computation type for: %s\n" (show body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
+          if Nil? ml_bs
+          then ml_body, f, t //all binders were dropped; the abstraction disappears
+          else
           let f, tfun = List.fold_right
             (fun {mlbinder_ty=targ} (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
             ml_bs (f, t) in
@@ -1633,6 +1690,8 @@ and term_as_mlexpr'
            dispatch on the whole application instead of a single Tm_app node. *)
         | Tm_app _ ->
           let head, args = U.head_and_args_full t in
+          let args = drop_spec_args g head args in
+          if Nil? args then term_as_mlexpr g head else
           let is_total rc =
               (* A [residual_comp] carries no specification, so this must test
                  [Tot] specifically rather than the whole pure class. *)

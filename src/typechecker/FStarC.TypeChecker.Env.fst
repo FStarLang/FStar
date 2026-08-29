@@ -897,7 +897,10 @@ let type_hypothesis env (t:typ) (v:term) : ML term =
   let hd, _ = U.head_and_args_full base in
   match (U.un_uinst hd).n with
   | Tm_fvar fv when fst (datacons_of_typ env fv.fv_name) ->
-    U.mk_conj_simp (U.mk_has_type base v base) phi
+    (* [has_type] is universe-polymorphic; the result may end up in a type that
+       is re-typechecked, so the universes have to be the real ones. *)
+    let u = env.universe_of env base in
+    U.mk_conj_simp (U.mk_has_type_us [u; u] base v base) phi
   | _ -> phi
 
 let typ_of_datacon env lid : ML _ =
@@ -1585,8 +1588,11 @@ let rec unfold_effect_abbrev env comp : ML _ =
          scope in [env], so do not infer universes for it -- the abbreviation is
          instantiated at [c]'s universes by [lookup_effect_abbrev] above. *)
       let ct1 = comp_to_comp_typ_with_univs c.comp_univs c1 in
-      let comp_pre = U.mk_conj_simp ct1.comp_pre c.comp_pre in
-      let comp_post = U.mk_conj_post ct1.result_typ ct1.comp_post c.comp_post in
+      (* [ct1]'s own specification has already been reattached at the use site
+         by the front end, which is the only place it can become a binder (see
+         [DsEnv.try_lookup_effect_abbrev_spec]); do not add it again here. *)
+      let comp_pre = c.comp_pre in
+      let comp_post = c.comp_post in
       (* Unfolding may have conjoined a non-trivial specification onto a
          computation that was flagged [TOTAL]; that flag is no longer true of
          it, so drop it rather than carry it along. *)
