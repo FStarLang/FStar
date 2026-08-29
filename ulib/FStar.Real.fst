@@ -61,7 +61,7 @@ let two_eq () : Lemma (two == R.two) = of_int_eq 2
 
 let lub (s:rset)
   : Ghost real
-      (requires nonempty s /\ bounded_above s)
+      (requires is_nonempty s /\ is_bounded_above s)
       (ensures  fun b -> is_lub s b)
   = R.lub s
 

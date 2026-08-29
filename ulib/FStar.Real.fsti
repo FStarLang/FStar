@@ -88,16 +88,16 @@ let two  : real = of_int 2
 /// Sets of reals, as predicates.
 let rset = real -> prop
 
-let upper_bound (s:rset) (b:real) : prop = forall (x:real). s x ==> x <=. b
-let bounded_above (s:rset) : prop = exists (b:real). upper_bound s b
-let nonempty (s:rset) : prop = exists (x:real). s x
+let is_upper_bound (s:rset) (b:real) : prop = forall (x:real). s x ==> x <=. b
+let is_bounded_above (s:rset) : prop = exists (b:real). is_upper_bound s b
+let is_nonempty (s:rset) : prop = exists (x:real). s x
 let is_lub (s:rset) (b:real) : prop =
-  upper_bound s b /\ (forall (c:real). upper_bound s c ==> b <=. c)
+  is_upper_bound s b /\ (forall (c:real). is_upper_bound s c ==> b <=. c)
 
 /// The least upper bound of a nonempty, bounded-above set of reals.
 val lub (s:rset)
   : Ghost real
-      (requires nonempty s /\ bounded_above s)
+      (requires is_nonempty s /\ is_bounded_above s)
       (ensures  fun b -> is_lub s b)
 
 /// Every real is dominated by a natural number.

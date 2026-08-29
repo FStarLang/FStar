@@ -149,20 +149,20 @@ let archimedean (x:real) : Lemma (exists (n:nat). lt x (of_int n))
 let cset_of (s:rset) : S.cset = fun (c:B.cut) -> s (G.hide c)
 
 let cset_nonempty (s:rset)
-  : Lemma (requires nonempty s) (ensures S.cnonempty (cset_of s))
+  : Lemma (requires is_nonempty s) (ensures S.cnonempty (cset_of s))
   = eliminate exists (x:real). s x
     with introduce exists (c:B.cut). cset_of s c with (G.reveal x) and ()
 
 let cset_upper (s:rset) (b:real)
-  : Lemma (requires upper_bound s b)
+  : Lemma (requires is_upper_bound s b)
           (ensures  S.cupper (cset_of s) (G.reveal b))
   = introduce forall (c:B.cut). cset_of s c ==> B.cle c (G.reveal b)
     with introduce cset_of s c ==> B.cle c (G.reveal b)
     with le_cle (G.hide c) b
 
 let cset_bounded (s:rset)
-  : Lemma (requires bounded_above s) (ensures S.cbounded (cset_of s))
-  = eliminate exists (b:real). upper_bound s b
+  : Lemma (requires is_bounded_above s) (ensures S.cbounded (cset_of s))
+  = eliminate exists (b:real). is_upper_bound s b
     with begin
       cset_upper s b;
       introduce exists (c:B.cut). S.cupper (cset_of s) c
@@ -171,7 +171,7 @@ let cset_bounded (s:rset)
 
 let lub (s:rset)
   : Ghost real
-      (requires nonempty s /\ bounded_above s)
+      (requires is_nonempty s /\ is_bounded_above s)
       (ensures  fun b -> is_lub s b)
   = cset_nonempty s;
     cset_bounded s;
@@ -181,8 +181,8 @@ let lub (s:rset)
     introduce forall (x:real). s x ==> le x b
     with introduce s x ==> le x b
     with (le_cle x b; assert (cset_of s (G.reveal x)));
-    introduce forall (d:real). upper_bound s d ==> le b d
-    with introduce upper_bound s d ==> le b d
+    introduce forall (d:real). is_upper_bound s d ==> le b d
+    with introduce is_upper_bound s d ==> le b d
     with begin
       cset_upper s d;
       S.csup_least (cset_of s) (G.reveal d);

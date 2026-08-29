@@ -115,16 +115,16 @@ val archimedean (x:real) : Lemma (exists (n:nat). lt x (of_int n))
 /// Sets of reals, as predicates.
 let rset = real -> prop
 
-let upper_bound (s:rset) (b:real) : prop = forall (x:real). s x ==> le x b
-let bounded_above (s:rset) : prop = exists (b:real). upper_bound s b
-let nonempty (s:rset) : prop = exists (x:real). s x
+let is_upper_bound (s:rset) (b:real) : prop = forall (x:real). s x ==> le x b
+let is_bounded_above (s:rset) : prop = exists (b:real). is_upper_bound s b
+let is_nonempty (s:rset) : prop = exists (x:real). s x
 let is_lub (s:rset) (b:real) : prop =
-  upper_bound s b /\ (forall (c:real). upper_bound s c ==> le b c)
+  is_upper_bound s b /\ (forall (c:real). is_upper_bound s c ==> le b c)
 
 /// The least upper bound of a nonempty, bounded-above set of reals.
 /// This is the property that distinguishes the reals from the rationals, and
 /// it is the one that makes an axiom-free square root possible.
 val lub (s:rset)
   : Ghost real
-      (requires nonempty s /\ bounded_above s)
+      (requires is_nonempty s /\ is_bounded_above s)
       (ensures  fun b -> is_lub s b)

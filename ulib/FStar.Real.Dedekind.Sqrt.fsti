@@ -47,10 +47,10 @@ val sqrt_set_mem (x y:real)
   : Lemma (sqrt_set x y <==> (le zero y /\ le (mul y y) x))
 
 val sqrt_set_nonempty (x:real)
-  : Lemma (requires le zero x) (ensures nonempty (sqrt_set x))
+  : Lemma (requires le zero x) (ensures is_nonempty (sqrt_set x))
 
 val sqrt_set_bounded (x:real)
-  : Lemma (requires le zero x) (ensures bounded_above (sqrt_set x))
+  : Lemma (requires le zero x) (ensures is_bounded_above (sqrt_set x))
 
 (**** The square root *)
 

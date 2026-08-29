@@ -56,7 +56,7 @@ let sqrt_set_mem (x y:real)
   = ()
 
 let sqrt_set_nonempty (x:real)
-  : Lemma (requires le zero x) (ensures nonempty (sqrt_set x))
+  : Lemma (requires le zero x) (ensures is_nonempty (sqrt_set x))
   = O.le_refl zero;
     mul_zero zero;
     introduce exists (y:real). sqrt_set x y with zero and ()
@@ -84,10 +84,10 @@ let sqrt_bound_aux (x y:real)
     end
 
 let sqrt_set_bounded (x:real)
-  : Lemma (requires le zero x) (ensures bounded_above (sqrt_set x))
+  : Lemma (requires le zero x) (ensures is_bounded_above (sqrt_set x))
   = introduce forall (y:real). sqrt_set x y ==> le y (add one x)
     with introduce _ ==> _ with sqrt_bound_aux x y;
-    introduce exists (b:real). upper_bound (sqrt_set x) b
+    introduce exists (b:real). is_upper_bound (sqrt_set x) b
     with (add one x) and ()
 
 (**** The square root *)

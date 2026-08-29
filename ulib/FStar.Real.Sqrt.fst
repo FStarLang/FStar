@@ -36,7 +36,7 @@ let sqrt_setp (x y:real) : prop = y >=. 0.0R /\ y *. y <=. x
 let sqrt_set (x:real) : rset = sqrt_setp x
 
 let sqrt_set_nonempty (x:real)
-  : Lemma (requires x >=. 0.0R) (ensures nonempty (sqrt_set x))
+  : Lemma (requires x >=. 0.0R) (ensures is_nonempty (sqrt_set x))
   = introduce exists (y:real). sqrt_set x y with 0.0R and ()
 
 /// Anything in [sqrt_set x] is at most [1 + x]: if [y] exceeded [1 + x] it
@@ -50,10 +50,10 @@ let sqrt_bound_aux (x y:real)
     end
 
 let sqrt_set_bounded (x:real)
-  : Lemma (requires x >=. 0.0R) (ensures bounded_above (sqrt_set x))
+  : Lemma (requires x >=. 0.0R) (ensures is_bounded_above (sqrt_set x))
   = introduce forall (y:real). sqrt_set x y ==> y <=. 1.0R +. x
     with introduce _ ==> _ with sqrt_bound_aux x y;
-    introduce exists (b:real). upper_bound (sqrt_set x) b with (1.0R +. x) and ()
+    introduce exists (b:real). is_upper_bound (sqrt_set x) b with (1.0R +. x) and ()
 
 (**** The square root *)
 
@@ -181,7 +181,7 @@ let sqrt_not_gt (x:real)
       with begin
         introduce forall (y:real). sqrt_set x y ==> y <=. b
         with introduce sqrt_set x y ==> y <=. b with assert (sqrt_setp x y);
-        assert (upper_bound (sqrt_set x) b)
+        assert (is_upper_bound (sqrt_set x) b)
       end
     end
 
