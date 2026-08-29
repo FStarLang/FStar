@@ -2879,28 +2879,20 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                          | _ -> t, []
                  in
                  let c, pre = desugar_comp t.range false env' t in
-                 (* An effect abbreviation is a macro over an effect and a
-                    result type; it cannot carry a specification of its own.  A
-                    [requires] would have to become an implicit binder on the
-                    *arrow* whose codomain the abbreviation is used at, and an
-                    abbreviation has no arrow of its own; an [ensures] would
-                    have to refine the result type, and the abbreviation is not
-                    unfolded at its use sites, so the refinement would silently
-                    be lost there.  Reject both. *)
+                 (* An [ensures] clause on an abbreviation is fine: it refines
+                    the result type of the computation stored here, and the
+                    refinement is carried along when the typechecker unfolds
+                    the abbreviation at a use site.
+
+                    A [requires] is not: it would have to become an implicit
+                    binder on the *arrow* whose codomain the abbreviation is
+                    used at, and an abbreviation has no arrow of its own.  It
+                    would therefore be silently dropped, so reject it. *)
                  let () =
                    if not (U.is_t_true pre)
                    then raise_error t Errors.Fatal_UnexpectedComputationTypeForLetRec
                           "An effect abbreviation may not have a 'requires' clause; \
                            state the precondition at each use site instead"
-                 in
-                 let () =
-                   match (Subst.compress (U.comp_result c)).n with
-                   | Tm_refine _ ->
-                     raise_error t Errors.Fatal_UnexpectedComputationTypeForLetRec
-                       "An effect abbreviation may not have an 'ensures' clause, \
-                        nor a refined result type; state the postcondition at each \
-                        use site instead"
-                   | _ -> ()
                  in
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in

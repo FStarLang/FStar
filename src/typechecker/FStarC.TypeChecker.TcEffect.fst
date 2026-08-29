@@ -255,7 +255,9 @@ let tc_effect_abbrev env (lid_uvs_tps_c: lident & univ_names & binders & comp) r
       | _ -> raise_error r Errors.Fatal_NotEnoughArgumentsForEffect
                          "Effect abbreviations must bind at least the result type"
     in
-    let def_result_typ = FStarC.Syntax.Util.comp_result c in
+    (* An [ensures] clause on the abbreviation refines the result type, so
+       compare the underlying type rather than the refined one. *)
+    let def_result_typ = FStarC.Syntax.Util.comp_result c |> FStarC.Syntax.Util.unrefine in
     if not (Rel.teq_nosmt_force env expected_result_typ def_result_typ)
     then raise_error r Errors.Fatal_EffectAbbreviationResultTypeMismatch
                       (Format.fmt2 "Result type of effect abbreviation ‘%s’ \

@@ -23,6 +23,13 @@ effect Ouch2 (x:int) (a:Type) = Tot a
 
 effect Good3 (a:Type) (x:int) = Tot a
 
-effect Good4 (a:Type) (x:int) = PURE a (requires x > 0) (ensures fun _ -> True)
+(* An abbreviation's specification may mention its later parameters.  It may
+   not have a 'requires' clause, though: a precondition is an implicit binder
+   on the arrow the computation type is the codomain of, and an abbreviation
+   has no arrow of its own. *)
+effect Good4 (a:Type) (x:int) = PURE a (ensures fun _ -> x > 0)
 
-effect Good5 (a:Type) (p:prop) = PURE a (requires p) (ensures fun _ -> True)
+effect Good5 (a:Type) (p:prop) = PURE a (ensures fun _ -> p)
+
+[@@(expect_failure [184])]
+effect Ouch3 (a:Type) (x:int) = PURE a (requires x > 0)
