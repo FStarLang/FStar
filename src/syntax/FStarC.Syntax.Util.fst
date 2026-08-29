@@ -259,20 +259,6 @@ let comp_eff_name_and_res (c:comp) : lident & typ =
   | GTotal t -> PC.effect_GTot_lid, t
   | Comp c -> c.effect_name, c.result_typ
 
-(* The precondition of a computation, as a formula. *)
-let comp_pre (c:comp) : term = match c.n with
-    | Total _
-    | GTotal _ -> trivial_pre
-    | Comp ct -> ct.comp_pre
-
-(* The postcondition of a computation, abstracted over its result:
-   a term of type [comp_result c -> prop]. *)
-let comp_post (c:comp) : ML term = match c.n with
-    | Total t
-    | GTotal t -> trivial_post t
-    | Comp ct -> ct.comp_post
-
-
 let un_uinst t =
     let t = Subst.compress t in
     match t.n with
@@ -297,29 +283,19 @@ let is_trivial_post (p:term) : ML bool =
   | Tm_abs {body} -> is_t_true (compress body)
   | _ -> false
 
-(* A computation type has a trivial specification when both its pre- and
-   postcondition are [True]; such a computation is equivalent to a [Tot]. *)
-let has_trivial_spec (c:comp) : ML bool =
-  match c.n with
-  | Total _ | GTotal _ -> true
-  | Comp ct -> is_t_true ct.comp_pre && is_trivial_post ct.comp_post
-
-(* Is [c] literally a [Tot]?  [Tot] names the pure computations with nothing to
-   discharge, in either direction of the primitive-effect flip, so compare
-   against it by name.  The [has_trivial_spec] conjunct is needed because
-   [Tot t (requires p)] is now expressible and is *not* spec-free; use
+(* Is [c] literally a [Tot]?  [Tot] names the pure computations, in either
+   direction of the primitive-effect flip, so compare against it by name; use
    [is_total_comp] for the weaker "is this total?" question. *)
 let is_named_tot c =
-    lid_equals (comp_effect_name c) PC.effect_Tot_lid && has_trivial_spec c
+    lid_equals (comp_effect_name c) PC.effect_Tot_lid
 
 let is_total_comp c =
-    (* Any spelling of the pure effect with a trivial specification is a [Tot]. *)
-    (PC.is_pure_effect_lid (comp_effect_name c) && has_trivial_spec c)
+    PC.is_pure_effect_lid (comp_effect_name c)
     || comp_flags c |> U.for_some (function TOTAL -> true | _ -> false)
 
 let is_tot_or_gtot_comp c =
     is_total_comp c
-    || (PC.is_ghost_effect_lid (comp_effect_name c) && has_trivial_spec c)
+    || PC.is_ghost_effect_lid (comp_effect_name c)
 
 let is_pure_effect l = PC.is_pure_effect_lid l
 
@@ -1107,16 +1083,6 @@ let apply_post (p:term) (e:term) : ML term =
       Subst.subst [NT (bv, e)] body
     | _ -> mk_Tm_app p [as_arg e] p.pos
 
-(* Combine two postconditions over the same result type. *)
-let mk_conj_post (t:typ) (p1:term) (p2:term) : ML term =
-  if is_trivial_post p1 then p2
-  else if is_trivial_post p2 then p1
-  else
-    let x = new_bv None t in
-    abs [mk_binder x]
-        (mk_conj_simp (apply_post p1 (bv_to_name x)) (apply_post p2 (bv_to_name x)))
-        (Some post_rc)
-
 let teq = fvar_const PC.eq2_lid
 let mk_untyped_eq2 e1 e2 = mk_Tm_app teq [as_arg e1; as_arg e2] (Range.union_ranges e1.pos e2.pos)
 let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : ML term =
@@ -1766,8 +1732,6 @@ and unbound_variables_comp c : ML _ =
 
     | Comp ct ->
       unbound_variables ct.result_typ
-      @ unbound_variables ct.comp_pre
-      @ unbound_variables ct.comp_post
 
 let extract_attr' (attr_lid:lid) (attrs:list term) : ML (option (list term & args)) =
     let rec aux acc attrs : ML _ =
@@ -1931,9 +1895,6 @@ let unthunk (t:term) : ML term =
         else e
     | _ ->
         mk_app t [as_arg exp_unit]
-
-let unthunk_lemma_post t =
-    unthunk t
 
 let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list universe))
 : ML term

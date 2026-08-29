@@ -58,8 +58,13 @@ effect TacS (a:Type) = TAC a
 (* Always succeed, no effect *)
 effect TacRO (a:Type) = TAC a
 
-(* A variant that doesn't prove totality (nor type safety!) *)
-effect TacF (a:Type) = TAC a (requires False)
+(* A variant that doesn't prove totality (nor type safety!).
+
+   A precondition is an obligation on the *caller* now, and an effect
+   abbreviation has no arrow of its own to hang one on, so this is simply
+   [TAC]; [assume_safe] below is the only consumer and discharges everything
+   with [admit ()] anyway. *)
+effect TacF (a:Type) = TAC a
 
 val lift_div_tac_interleave_begin : unit
 #push-options "--admit_smt_queries true"

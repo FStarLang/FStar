@@ -1177,9 +1177,8 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
     let t = resugar_term' env typ in
     mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
 
-  (* [PURE t (requires True) (ensures True)] is just [Tot t]; print it as such. *)
-  | Comp c when U.has_trivial_spec (S.mk (S.Comp c) Range.dummyRange)
-             && not (Options.print_implicits ())
+  (* A pure or ghost computation is just a [Tot]/[GTot]; print it as such. *)
+  | Comp c when not (Options.print_implicits ())
              && not (c.flags |> BU.for_some (function
                      | DECREASES _ | SMTPAT _ -> true
                      | _ -> false))
@@ -1217,40 +1216,25 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
       | Some pats when not (U.is_fvar C.nil_lid (U.head_of pats)) -> [pats]
       | _ -> []
     in
-    (* Both clauses are optional, so we only print the non-trivial ones. *)
-    let triv_pre = U.is_fvar C.true_lid c.comp_pre in
     if lid_equals c.effect_name C.effect_Lemma_lid then
+      (* A computation type stores no specification any more: a [Lemma]'s
+         postcondition is a [squash] in its result type.  Recover it, so error
+         messages and hovers still read [Lemma (ensures q)] rather than the bare
+         [Lemma], which is not even valid syntax. *)
       let post =
-        let stored = U.unthunk_lemma_post c.comp_post in
-        (* Outside an effect abbreviation's own definition the postcondition is
-           no longer stored on the computation type: it is a [squash] in the
-           result type.  Recover it, so error messages and hovers still read
-           [Lemma (ensures q)] rather than [Lemma (ensures True)]. *)
-        if U.is_t_true stored
-        then (match U.un_squash c.result_typ with
-              | Some q -> q
-              | None -> stored)
-        else stored
+        match U.un_squash c.result_typ with
+        | Some q -> [mk (Ensures (resugar_term' env q))]
+        | None -> []
       in
-      (* [Lemma] with no arguments at all is not valid syntax, so we keep the
-         postcondition when there is nothing else to print. *)
-      let triv_post = U.is_t_true post && not triv_pre in
-      let pre = if triv_pre then [] else [mk (Requires (resugar_term' env c.comp_pre))] in
-      let post = if triv_post then [] else [mk (Ensures (resugar_term' env post))] in
       let pats = List.map (resugar_term' env) smt_pats in
       let decrease = mk_decreases c.flags in
 
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post@decrease@pats)))
+      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (post@decrease@pats)))
 
     else if (Options.print_effect_args()) then
-      let pre = if triv_pre then [] else [mk (Requires (resugar_term' env c.comp_pre)), A.Nothing] in
-      let post =
-        if U.is_trivial_post c.comp_post then []
-        else [mk (Ensures (resugar_term' env c.comp_post)), A.Nothing]
-      in
       let decrease = List.map (fun t -> (t, A.Nothing)) (mk_decreases c.flags) in
       mk (A.Construct(maybe_shorten_lid env c.effect_name,
-                      result::decrease@pre@post))
+                      result::decrease))
     else
       mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))
 

@@ -286,8 +286,7 @@ and eq_comp env (c1 c2:comp) : ML eq_result =
                     (fun _ ->
                       eq_and (eq_tm env ct1.result_typ ct2.result_typ)
                              (fun _ ->
-                               eq_and (eq_tm env ct1.comp_pre ct2.comp_pre)
-                                      (fun _ -> eq_tm env ct1.comp_post ct2.comp_post))))
+                               Equal)))
                              //ignoring cflags
   | _ -> NotEqual
 

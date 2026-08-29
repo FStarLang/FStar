@@ -17,8 +17,7 @@ instance hasNames_comp : hasNames comp = {
   freeNames = (fun c -> match c.n with
                | Total t
                | GTotal t -> F.names t
-               | Comp ct -> List.fold_left union (empty ())
-                             [F.names ct.result_typ; F.names ct.comp_pre; F.names ct.comp_post])
+               | Comp ct -> F.names ct.result_typ)
 }
 
 instance hasBinders_list_bv = {

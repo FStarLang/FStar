@@ -1059,22 +1059,16 @@ and translate_comp_typ cfg bs (c:S.comp_typ) : ML comp_typ =
   let { S.comp_univs  = comp_univs
       ; S.effect_name = effect_name
       ; S.result_typ  = result_typ
-      ; S.comp_pre    = comp_pre
-      ; S.comp_post   = comp_post
       ; S.flags       = flags } = c in
   { comp_univs = List.map (translate_univ cfg bs) comp_univs;
     effect_name = effect_name;
     result_typ = translate cfg bs result_typ;
-    comp_pre = translate cfg bs comp_pre;
-    comp_post = translate cfg bs comp_post;
     flags = List.map (translate_flag cfg bs) flags }
 
 and readback_comp_typ cfg (c:comp_typ) : ML S.comp_typ =
   { S.comp_univs = c.comp_univs;
     S.effect_name = c.effect_name;
     S.result_typ = readback cfg c.result_typ;
-    S.comp_pre = readback cfg c.comp_pre;
-    S.comp_post = readback cfg c.comp_post;
     S.flags = List.map (readback_flag cfg) c.flags }
 
 and translate_residual_comp cfg bs (c:S.residual_comp) : ML residual_comp =

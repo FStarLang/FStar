@@ -288,16 +288,13 @@ let effect_Dv_lid    = psconst "Dv"
    See [FStarC.Syntax.Util.is_pure_effect] and friends, which are the
    usual entry points.
 
-   BEWARE: these say nothing about *specifications*.  [PURE]/[Pure] and
-   [GHOST]/[Ghost] name computations that may carry a precondition or a
-   postcondition, whereas [Tot]/[GTot] mean "no specification at all".  So a
-   test that really means "is this spec-free?" must either conjoin
-   [Syntax.Util.has_trivial_spec] (when it has a [comp] to look at) or keep
-   comparing against [effect_Tot_lid]/[effect_GTot_lid] (when it does not --
-   e.g. an [lcomp] or a [residual_comp], neither of which records a
-   specification).  Widening such a test to the whole class silently discards
-   the specification.  Those two names denote the spec-free computations in
-   either direction of the primitive-effect flip, so hardwiring them is safe. *)
+   A computation type carries no specification any more, so these classes are
+   purely about the effect: [Pure]/[Ghost]/[Dv] are front-end abbreviations that
+   ToSyntax unfolds to [Tot]/[GTot]/[Div].  A test that really means "is this
+   literally a [Tot]?" should still compare against
+   [effect_Tot_lid]/[effect_GTot_lid]: those two names denote the pure and ghost
+   computations in either direction of the primitive-effect flip, so hardwiring
+   them is safe. *)
 let is_pure_effect_lid (l:lident) : bool =
      lid_equals l effect_Tot_lid
   || lid_equals l effect_PURE_lid

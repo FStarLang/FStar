@@ -294,9 +294,6 @@ let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
 
 (**** Escape hatches *)
 
-(** [Admit] discards the verification condition of its continuation *)
-effect Admit (a: Type) = Tot a (ensures (fun _ -> l_False))
-
 (***** End trusted primitives *****)
 
 
@@ -425,10 +422,12 @@ assume
 val _assume (p: prop) : Pure unit (requires (True)) (ensures (fun x -> p))
 
 (** [admit] is another escape hatch: It discards the continuation and
-    returns a value of any type *)
+    returns a value of any type.  Discarding the continuation is what the
+    [l_False] in its result type does: everything after a call to [admit] is
+    checked under a false hypothesis. *)
 [@@ warn_on_use "Uses an axiom"]
 assume
-val admit: #a: Type -> unit -> Admit a
+val admit: #a: Type -> unit -> Tot (_: a{l_False})
 
 (** [magic] is another escape hatch: It retains the continuation but
     returns a value of any type *)

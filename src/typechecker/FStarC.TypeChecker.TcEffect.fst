@@ -206,8 +206,6 @@ let tc_lift env (sub:S.sub_eff) (r:Range.t) : ML S.sub_eff =
           let c = S.mk_Comp ({ comp_univs = [U_name u_a];
                                effect_name = sub.source;
                                result_typ = a;
-                               comp_pre = S.trivial_pre;
-                               comp_post = S.trivial_post a;
                                flags = [] }) in
           U.arrow [S.null_binder S.t_unit] c in
       let expected =

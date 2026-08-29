@@ -151,8 +151,6 @@ and hash_comp' (c:comp)
          hash_list hash_universe ct.comp_univs;
          hash_lid ct.effect_name;
          hash_term ct.result_typ;
-         hash_term ct.comp_pre;
-         hash_term ct.comp_post;
          hash_list hash_flag ct.flags]
 
 and hash_lb lb
@@ -479,8 +477,6 @@ and equal_comp c1 c2
     Ident.lid_equals ct1.effect_name ct2.effect_name &&
     equal_list equal_universe ct1.comp_univs ct2.comp_univs &&
     equal_term ct1.result_typ ct2.result_typ &&
-    equal_term ct1.comp_pre ct2.comp_pre &&
-    equal_term ct1.comp_post ct2.comp_post &&
     equal_list equal_flag ct1.flags ct2.flags
   | _ -> false
 

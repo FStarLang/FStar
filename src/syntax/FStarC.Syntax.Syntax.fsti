@@ -277,20 +277,15 @@ and quoteinfo = {
 
 *************************************************************************)
 }
-(* A computation type is nothing more than an effect name together with a
-   precondition and a postcondition. There are no weakest-precondition
-   transformers, and no effect indices.
-
-   [comp_pre] is a [prop].
-   [comp_post] is abstracted over the result: it has type [result_typ -> prop],
-   i.e. it is a [Tm_abs] with a single binder. Use [U.comp_post_as_formula] to
-   apply it to a concrete result. *)
+(* A computation type is nothing more than an effect name, a result type and
+   some flags.  It carries no logical content: a precondition is an implicit
+   [squash] binder on the arrow, and a postcondition is a refinement of the
+   result type.  There are no weakest-precondition transformers, and no effect
+   indices. *)
 and comp_typ = {
   comp_univs:universes;
   effect_name:lident;
   result_typ:typ;
-  comp_pre:typ;
-  comp_post:typ;
   flags:list cflag
 }
 and comp' =

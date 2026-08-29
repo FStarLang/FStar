@@ -535,14 +535,10 @@ let rec is_arrow (g:env) (t:term)
               then Some E_Ghost
               else None
             in
-            (* Turn   x:t -> Pure/Ghost t' pre post
-               into   x:t{pre} -> Tot/GTot (y:t'{post})
-
-               This is ok for pre.
-               But, it loses precision for post.
-               In effect form, the post is in scope for the entire continuation.
-               Whereas the refinement on the result is not.
-             *)
+            (* A [Pure]/[Ghost] arrow carries no specification any more -- its
+               precondition is an implicit binder and its postcondition is part
+               of the result type -- so it is already in the [Tot]/[GTot] shape
+               this wants. *)
             match e_tag with
             | None ->
               fail [
@@ -556,16 +552,7 @@ let rec is_arrow (g:env) (t:term)
                   (show x)
                   (show x.binder_bv.sort)
                   (show c));
-              let pre, post = U.comp_pre c, U.comp_post c in
-              let arg_typ = U.refine x.binder_bv pre in
-              let res_typ =
-                let g, r = new_binder g (U.comp_result c) (U.comp_result c).pos in
-                let post = S.mk_Tm_app post [(S.bv_to_name r.binder_bv, None)] post.pos in
-                U.refine r.binder_bv post
-              in
-              let xbv = { x.binder_bv with sort = arg_typ } in
-              let x = { x with binder_bv = xbv } in
-              return (x, e_tag, res_typ)
+              return (x, e_tag, U.comp_result c)
           )
 
         | Tm_refine {b=x} ->
@@ -1439,17 +1426,14 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
           check_relation_args g EQUALITY args0 args1
         in
         let eff0, res0 = U.comp_eff_name_and_res c0 in
-        let args0 = [U.comp_pre c0 |> as_arg; U.comp_post c0 |> as_arg] in
         let eff1, res1 = U.comp_eff_name_and_res c1 in
-        let args1 = [U.comp_pre c1 |> as_arg; U.comp_post c1 |> as_arg] in
         if I.lid_equals eff0 eff1
-        then ct_eq res0 args0 res1 args1
+        then ct_eq res0 [] res1 []
         else (
           let ct0 = Env.unfold_effect_abbrev g.tcenv c0 in
           let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in
           if I.lid_equals ct0.effect_name ct1.effect_name
-          then ct_eq ct0.result_typ [ct0.comp_pre |> as_arg; ct0.comp_post |> as_arg]
-                     ct1.result_typ [ct1.comp_pre |> as_arg; ct1.comp_post |> as_arg]
+          then ct_eq ct0.result_typ [] ct1.result_typ []
           else
             fail [
               text "Subcomp failed: Unequal computation types"

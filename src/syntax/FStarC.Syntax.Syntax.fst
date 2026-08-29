@@ -429,8 +429,6 @@ let mk_triv_comp (univs:universes) (eff:lident) (t:typ) (flags:list cflag) : ML 
   mk_Comp ({ comp_univs = univs;
              effect_name = eff;
              result_typ = t;
-             comp_pre = trivial_pre;
-             comp_post = trivial_post t;
              flags = flags })
 
 let mk_Tac t : ML comp = mk_triv_comp [U_zero] PC.effect_Tac_lid t []

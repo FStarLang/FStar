@@ -866,8 +866,6 @@ let rec maybe_weakly_reduced tm :  ML bool =
 
         | Comp ct ->
           maybe_weakly_reduced ct.result_typ
-          || maybe_weakly_reduced ct.comp_pre
-          || maybe_weakly_reduced ct.comp_post
     in
     let t = Subst.compress tm in
     match t.n with
@@ -2280,14 +2278,6 @@ and norm_comp : cfg -> env -> comp -> ML comp =
               { mk_GTotal t with pos = comp.pos }
 
             | Comp ct ->
-              //
-              // if cfg.for_extraction and the effect extraction is not by reification,
-              // then drop the effect arguments
-              //
-              let comp_pre, comp_post =
-                if cfg.steps.for_extraction
-                then S.trivial_pre, S.trivial_post ct.result_typ
-                else norm cfg env [] ct.comp_pre, norm cfg env [] ct.comp_post in
               let flags = ct.flags |> List.map (function
                 | DECREASES (Decreases_lex l) ->
                   DECREASES (l |> List.map (norm cfg env []) |> Decreases_lex)
@@ -2298,8 +2288,6 @@ and norm_comp : cfg -> env -> comp -> ML comp =
               let result_typ = norm cfg env [] ct.result_typ in
               { mk_Comp ({ct with comp_univs  = comp_univs;
                                                 result_typ  = result_typ;
-                                                comp_pre    = comp_pre;
-                                                comp_post   = comp_post;
                                                 flags       = flags}) with pos = comp.pos }
 
 and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : ML binder =

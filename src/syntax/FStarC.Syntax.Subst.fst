@@ -247,9 +247,7 @@ let subst_comp_typ' s t : ML _ =
     {t with effect_name=tag_lid_with_range t.effect_name s;
             comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             result_typ=subst' s t.result_typ;
-            flags=subst_flags' s t.flags;
-            comp_pre=subst' s t.comp_pre;
-            comp_post=subst' s t.comp_post}
+            flags=subst_flags' s t.flags}
 
 let subst_comp' s t : ML _ =
   match s with

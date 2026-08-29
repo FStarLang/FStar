@@ -91,8 +91,6 @@ and is_ln'_comp (n:int) (c:comp) : ML bool =
 
 and is_ln'_comp_typ (n:nat) (ct:comp_typ) : ML bool =
   is_ln' n ct.result_typ &&
-  is_ln' n ct.comp_pre &&
-  is_ln' n ct.comp_post &&
 //   L.for_all (is_ln' n) ct.flags
   true
 

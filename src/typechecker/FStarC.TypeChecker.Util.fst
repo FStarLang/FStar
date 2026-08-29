@@ -503,31 +503,13 @@ let comp_univ_opt c : ML _ =
 
 let lcomp_univ_opt lc : ML _ = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt c, g)
 
-let mk_comp_l mname u_result result pre post flags : ML _ =
+let mk_comp_l mname u_result result flags : ML _ =
   mk_Comp ({ comp_univs=[u_result];
              effect_name=mname;
              result_typ=result;
-             comp_pre=pre;
-             comp_post=post;
              flags=flags})
 
 let mk_comp md : ML _ = mk_comp_l md.mname
-
-(* [forall x1 ... xn. phi]; used to close specifications over pattern variables *)
-let close_formula env (bvs:list bv) (phi:term) : ML term =
-  List.fold_right (fun x phi -> U.mk_forall (env.universe_of env x.sort) x phi) bvs phi
-
-(* Close a postcondition over [bvs].  A postcondition is a *strongest*
-   postcondition, so the pattern variables are closed existentially. *)
-let close_post env (bvs:list bv) (t:typ) (post:term) : ML term =
-  if U.is_trivial_post post then post
-  else let x = S.new_bv None t in
-       U.abs [S.mk_binder x]
-             (List.fold_right
-                (fun (y:bv) phi -> U.mk_exists (env.universe_of env y.sort) y phi)
-                bvs
-                (U.apply_post post (S.bv_to_name x)))
-             (Some S.post_rc)
 
 let label reason r f : ML term =
     mk (Tm_meta {tm=f; meta=Meta_labeled(reason, r, false)}) f.pos
@@ -622,21 +604,19 @@ let is_ghost_effect env l : ML _ =
 let is_pure_or_ghost_effect env l : ML _ =
   norm_eff_name env l |> U.is_pure_or_ghost_effect
 
-(* Closing a computation over the pattern variables [bvs]: universally quantify
-   its precondition and postcondition. *)
+(* Closing a computation over the pattern variables [bvs].  A computation type
+   carries no logical content any more, so there is nothing to quantify: only
+   the flags, which describe *this* occurrence, have to be dropped. *)
 let close_wp_comp env bvs (c:comp) : ML _ =
     def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c
     else
-      let env_bvs = Env.push_bvs env bvs in
       match c.n with
       | Total _
       | GTotal _ -> c
       | Comp ct ->
         S.mk_Comp ({ ct with
-          comp_pre  = close_formula env_bvs bvs ct.comp_pre;
-          comp_post = close_post env_bvs bvs ct.result_typ ct.comp_post;
-          flags     = ct.flags |> List.filter (function MLEFFECT -> true | _ -> false) })
+          flags = ct.flags |> List.filter (function MLEFFECT -> true | _ -> false) })
 
 let close_wp_lcomp env bvs (lc:lcomp) : ML lcomp =
   let bs = bvs |> List.map S.mk_binder in
@@ -722,7 +702,10 @@ let mk_bind env
     | u::_ -> u
     | [] -> env.universe_of env2 ct2.result_typ in
   let res = S.mk_triv_comp [u2] m ct2.result_typ flags in
-  def_check_scoped r1 "mk_bind.out" env res;
+  (* [res] takes its result type from [c2], so it is scoped in [env2]: it may
+     still mention [b].  Getting [b] out of it is the caller's job -- see
+     [close_x] in [bind_maybe_capture]. *)
+  def_check_scoped r1 "mk_bind.out" env2 res;
   res, g_lift
 
 (* [strengthen_comp env r c f] asserts [f] before running [c].  A computation
@@ -1692,10 +1675,11 @@ let universe_of_comp env u_res c : ML _ =
   then u_res
   else S.U_zero
 
+(* A computation type carries no precondition any more -- there is nothing left
+   to discharge here. *)
 let check_trivial_precondition_wp env c : ML _ =
   let ct = c |> Env.unfold_effect_abbrev env in
-  let vc = ct.comp_pre in
-  ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
+  ct, U.t_true, Env.trivial_guard
 
 //Decorating terms with monadic operators
 let maybe_lift env e c1 c2 t : ML _ =
@@ -2243,17 +2227,11 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term &
           let g = {g with guard_f=Trivial} in
           (e, lc, g)
 
+(* A computation carries no specification any more: its precondition is an
+   implicit binder on the arrow it came from, and its postcondition is part of
+   its result type. *)
 let pure_or_ghost_pre_and_post env comp : ML _ =
-    let mk_post_type res_t ens =
-        let x = S.new_bv None res_t in
-        U.refine x (U.apply_post ens (S.bv_to_name x)) in
-    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding] env t in
-    if U.is_tot_or_gtot_comp comp
-    then None, U.comp_result comp
-    else
-      let ct = Env.unfold_effect_abbrev env comp in
-      let req = ct.comp_pre in
-      Some (norm req), (norm <| mk_post_type ct.result_typ ct.comp_post)
+    None, U.comp_result comp
 
 (* [norm_reify env t] assumes that [t] has the shape reify t0 *)
 (* where env |- t0 : M t' for some effect M and type t' where M is reifiable *)

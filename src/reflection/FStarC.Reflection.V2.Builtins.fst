@@ -304,13 +304,17 @@ let inspect_comp (c : comp) : ML comp_view =
               match U.comp_smt_pats (S.mk_Comp ct) with
               | Some p -> p
               | None -> U.mk_list (S.fvar_with_dd PC.pattern_lid None) Range.dummyRange [] in
-            C_Lemma (ct.comp_pre, ct.comp_post, pats)
+            (* A computation type carries no specification any more: a
+               precondition is an implicit [squash] binder on the arrow, and a
+               postcondition is a refinement of the result type.  The view is
+               kept for compatibility, but it is degenerate. *)
+            C_Lemma (S.trivial_pre, S.trivial_post ct.result_typ, pats)
         else
             C_Eff (ct.comp_univs,
                    Ident.path_of_lid ct.effect_name,
                    ct.result_typ,
-                   ct.comp_pre,
-                   ct.comp_post,
+                   S.trivial_pre,
+                   S.trivial_post ct.result_typ,
                    get_dec ct.flags)
       end
 
@@ -326,16 +330,16 @@ let pack_comp (cv : comp_view) : ML comp =
     match cv with
     | C_Total t -> mk_Total t
     | C_GTotal t -> mk_GTotal t
-    | C_Lemma (pre, post, pats) ->
+    (* The specification carried by the view is ignored: a computation type has
+       no room for it any more. *)
+    | C_Lemma (_pre, _post, pats) ->
         let ct = { comp_univs  = []
                  ; effect_name = PC.effect_Lemma_lid
                  ; result_typ  = S.t_unit
-                 ; comp_pre    = pre
-                 ; comp_post   = post
                  ; flags       = [LEMMA; SMTPAT pats] } in
         S.mk_Comp ct
 
-    | C_Eff (us, ef, res, pre, post, decrs) ->
+    | C_Eff (us, ef, res, _pre, _post, decrs) ->
         let flags =
           if Nil? decrs
           then []
@@ -343,8 +347,6 @@ let pack_comp (cv : comp_view) : ML comp =
         let ct = { comp_univs  = us
                  ; effect_name = Ident.lid_of_path ef Range.dummyRange
                  ; result_typ  = res
-                 ; comp_pre    = pre
-                 ; comp_post   = post
                  ; flags       = flags } in
         S.mk_Comp ct
 

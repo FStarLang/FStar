@@ -967,9 +967,8 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
                let c = Env.unfold_effect_abbrev (Env.push_binders env.tcenv binders) res |> S.mk_Comp in
                let ct, _ = encode_term (c |> U.comp_result) env_bs in
-               let effect_args, _ = encode_args [c |> U.comp_pre |> S.as_arg; c |> U.comp_post |> S.as_arg] env_bs in
                let tkey = mkForall t.pos
-                 ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
+                 ([], vars, mk_and_l (guards_l@[ct])) in
                let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
                  (c |> U.comp_effect_name |> string_of_lid) in
                BU.digest_of_string tkey_hash

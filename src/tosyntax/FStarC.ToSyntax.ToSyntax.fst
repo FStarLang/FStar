@@ -1225,7 +1225,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       let bs, t = uncurry binders t in
       let rec aux env aqs bs (_x_:list AST.binder) : ML _ = match _x_ with
         | [] ->
-          let cod, pre = desugar_comp top.range true false env t in
+          let cod, pre = desugar_comp top.range true env t in
           (* A precondition on the codomain becomes a trailing implicit
              [squash] binder.  It goes last so that it may mention the
              explicit binders, and so that it is in scope as a hypothesis
@@ -2241,7 +2241,7 @@ and desugar_ascription env t tac_opt use_eq : ML (S.ascription & S.term & antiqu
     if is_comp_type env t
     then if use_eq
          then raise_error t Errors.Fatal_NotSupported "Equality ascription with computation types is not supported yet"
-         else let comp, pre = desugar_comp t.range true false env t in
+         else let comp, pre = desugar_comp t.range true env t in
               (Inr comp, pre, [])
     else let tm, aq = desugar_term_aq env t in
          (Inl tm, S.trivial_pre, aq) in
@@ -2250,7 +2250,7 @@ and desugar_ascription env t tac_opt use_eq : ML (S.ascription & S.term & antiqu
 and desugar_args env args : ML _ =
     args |> List.map (fun (a, imp) -> arg_withimp_t imp (desugar_term env a))
 
-and desugar_comp r (allow_type_promotion:bool) (keep_spec:bool) env t : ML _ =
+and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
     let fail #a code msg : ML a = raise_error r code msg in
     let is_requires (t, _) = match (unparen t).tm with
       | Requires _ -> true
@@ -2504,44 +2504,17 @@ and desugar_comp r (allow_type_promotion:bool) (keep_spec:bool) env t : ML _ =
       let flags = flags @ decreases_clause @ (match smtpat with
                                               | None -> []
                                               | Some p -> [SMTPAT p]) in
-      (* Using an effect abbreviation contributes the abbreviation's own
-         specification to the use site.  Unlike a use site, an abbreviation
-         cannot bind anything and does not know the result type it will be
-         applied to, so it is the only place a [comp] still records a
-         specification; see [DsEnv.try_lookup_effect_abbrev_spec]. *)
-      let pre, post =
-        if keep_spec then pre, post
-        else
-          let abb_pre, abb_posts = Env.try_lookup_effect_abbrev_spec env eff in
-          U.mk_conj_simp abb_pre pre,
-          List.fold_left (fun acc p -> U.mk_conj_post result_typ acc p) post abb_posts
-      in
-      (* [TOTAL] asserts that this computation has no specification to
-         discharge.  That is a property of *this occurrence* -- not of the
-         effect, and not of any abbreviation the occurrence came through -- so
-         recompute it rather than inherit it.  Outside an abbreviation's own
-         definition the specification is not kept on the computation type at
-         all, so the flag survives; at an abbreviation's definition site it is
-         kept, and the flag must go, or a use of the abbreviation would look
-         spec-free and its specification would be silently discarded. *)
-      let flags =
-        if not keep_spec || (U.is_t_true pre && U.is_trivial_post post)
-        then flags
-        else flags |> List.filter (function TOTAL -> false | _ -> true)
-      in
-      (* Outside an abbreviation's own definition, the specification is not
-         part of the computation type: the postcondition becomes a property of
-         the result type, and the precondition is handed back to the caller,
-         which turns it into an implicit [squash] binder (arrow codomain) or an
-         assertion (ascription).  See [Syntax.Util.refine_with_post]. *)
-      let result_typ = if keep_spec then result_typ else U.refine_with_post result_typ post in
+      (* A computation type carries no specification: the postcondition becomes
+         a property of the result type, and the precondition is handed back to
+         the caller, which turns it into an implicit [squash] binder (arrow
+         codomain) or an assertion (ascription).  See
+         [Syntax.Util.refine_with_post]. *)
+      let result_typ = U.refine_with_post result_typ post in
       mk_Comp ({comp_univs=universes;
                 effect_name=eff;
                 result_typ=result_typ;
-                comp_pre=(if keep_spec then pre else S.trivial_pre);
-                comp_post=(if keep_spec then post else S.trivial_post result_typ);
                 flags=flags}),
-      (if keep_spec then S.trivial_pre else pre)
+      pre
 
 and desugar_formula env (f:term) : ML S.term =
   let mk t = S.mk t f.range in
@@ -2905,23 +2878,29 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                             desugar_attributes env cattributes
                          | _ -> t, []
                  in
-                 let c, _ = desugar_comp t.range false true env' t in
-                 (* An abbreviation cannot bind anything, and does not know the
-                    result type it will be applied to, so its specification is
-                    reattached at each use site (see
-                    [DsEnv.try_lookup_effect_abbrev_spec]) rather than folded
-                    into the type here.  This is the one place a [comp] still
-                    records a specification.  It must therefore not mention the
-                    abbreviation's parameters. *)
+                 let c, pre = desugar_comp t.range false env' t in
+                 (* An effect abbreviation is a macro over an effect and a
+                    result type; it cannot carry a specification of its own.  A
+                    [requires] would have to become an implicit binder on the
+                    *arrow* whose codomain the abbreviation is used at, and an
+                    abbreviation has no arrow of its own; an [ensures] would
+                    have to refine the result type, and the abbreviation is not
+                    unfolded at its use sites, so the refinement would silently
+                    be lost there.  Reject both. *)
                  let () =
-                   let x = S.new_bv (Some t.range) S.tun in
-                   let spec_names =
-                     union (FStarC.Syntax.Free.names (U.comp_pre c))
-                           (FStarC.Syntax.Free.names (U.apply_post (U.comp_post c) (S.bv_to_name x)))
-                   in
-                   if typars |> BU.for_some (fun b -> mem b.binder_bv spec_names)
+                   if not (U.is_t_true pre)
                    then raise_error t Errors.Fatal_UnexpectedComputationTypeForLetRec
-                          "The specification of an effect abbreviation may not mention its parameters"
+                          "An effect abbreviation may not have a 'requires' clause; \
+                           state the precondition at each use site instead"
+                 in
+                 let () =
+                   match (Subst.compress (U.comp_result c)).n with
+                   | Tm_refine _ ->
+                     raise_error t Errors.Fatal_UnexpectedComputationTypeForLetRec
+                       "An effect abbreviation may not have an 'ensures' clause, \
+                        nor a refined result type; state the postcondition at each \
+                        use site instead"
+                   | _ -> ()
                  in
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in

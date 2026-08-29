@@ -100,20 +100,9 @@ val comp_flags (c:comp) : list cflag
 
 val comp_eff_name_and_res (c:comp) : lident & typ
 
-(* The precondition of a computation, as a formula. *)
-val comp_pre (c:comp) : term
-
-(* The postcondition of a computation, abstracted over its result:
-   a term of type [comp_result c -> prop]. *)
-val comp_post (c:comp) : ML term
-
-
 val un_uinst (t:term) : ML term
 val is_t_true (t:term) : ML bool
 val is_trivial_post (p:term) : ML bool
-(* A computation type has a trivial specification when both its pre- and
-   postcondition are [True]. *)
-val has_trivial_spec (c:comp) : ML bool
 
 (* Is [c] a [Tot], i.e. a pure computation with nothing to discharge? *)
 val is_named_tot (c:comp) : ML bool
@@ -421,7 +410,6 @@ val mk_has_type (t x t' : term) : ML term
    that information around when a binder of type [t] is eliminated. *)
 val refinement_hypothesis (t:typ) (v:term) : ML term
 val apply_post (p:term) (e:term) : ML term
-val mk_conj_post (t:typ) (p1:term) (p2:term) : ML term
 
 val teq : term
 val mk_untyped_eq2 (e1 e2 : term) : ML term
@@ -583,7 +571,6 @@ val triggers_of_smt_lemma (t:term)
 has some other shape just apply it to `()`. *)
 val unthunk (t:term) : ML term
 
-val unthunk_lemma_post (t:term) : ML term
 
 val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list universe))
 : ML term

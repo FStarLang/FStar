@@ -64,8 +64,7 @@ let rec term_eq' t1 t2 : ML bool =
             | S.Comp ct1, S.Comp ct2 ->
               I.lid_equals ct1.effect_name ct2.effect_name
               && term_eq' ct1.result_typ ct2.result_typ
-              && term_eq' ct1.comp_pre ct2.comp_pre
-              && term_eq' ct1.comp_post ct2.comp_post
+
             | _ -> false in
     match t1.n, t2.n with
       | Tm_lazy l, _ -> term_eq' (Option.must !lazy_chooser l.lkind l) t2

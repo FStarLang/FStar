@@ -1541,8 +1541,6 @@ let comp_to_comp_typ (env:env) c : ML comp_typ =
     {comp_univs = [env.universe_of env result_typ];
      effect_name;
      result_typ;
-     comp_pre = S.trivial_pre;
-     comp_post = S.trivial_post result_typ;
      flags = U.comp_flags c}
 
 (* Like [comp_to_comp_typ], but uses the given universes rather than inferring
@@ -1559,8 +1557,6 @@ let comp_to_comp_typ_with_univs univs c : ML comp_typ =
     {comp_univs = univs;
      effect_name;
      result_typ;
-     comp_pre = S.trivial_pre;
-     comp_post = S.trivial_post result_typ;
      flags = U.comp_flags c}
 
 let comp_set_flags env c f : ML _ =
@@ -1588,20 +1584,7 @@ let rec unfold_effect_abbrev env comp : ML _ =
          scope in [env], so do not infer universes for it -- the abbreviation is
          instantiated at [c]'s universes by [lookup_effect_abbrev] above. *)
       let ct1 = comp_to_comp_typ_with_univs c.comp_univs c1 in
-      (* [ct1]'s own specification has already been reattached at the use site
-         by the front end, which is the only place it can become a binder (see
-         [DsEnv.try_lookup_effect_abbrev_spec]); do not add it again here. *)
-      let comp_pre = c.comp_pre in
-      let comp_post = c.comp_post in
-      (* Unfolding may have conjoined a non-trivial specification onto a
-         computation that was flagged [TOTAL]; that flag is no longer true of
-         it, so drop it rather than carry it along. *)
-      let flags =
-        if U.is_t_true comp_pre && U.is_trivial_post comp_post
-        then c.flags
-        else c.flags |> List.filter (function TOTAL -> false | _ -> true)
-      in
-      let c = {ct1 with comp_pre; comp_post; flags} |> mk_Comp in
+      let c = {ct1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
 
 (* The monadic representation of a computation type, if the effect has one.

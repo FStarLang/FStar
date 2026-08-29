@@ -719,7 +719,7 @@ let admit_dump_t () : Tac unit =
   dump "Admitting";
   apply (`admit)
 
-val admit_dump : #a:Type -> (#[admit_dump_t ()] x : (unit -> Admit a)) -> unit -> Admit a
+val admit_dump : #a:Type -> (#[admit_dump_t ()] x : (unit -> Tot (_:a{False}))) -> unit -> Tot (_:a{False})
 let admit_dump #a #x () = x ()
 
 private

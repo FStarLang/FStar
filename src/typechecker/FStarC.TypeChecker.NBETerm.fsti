@@ -182,8 +182,6 @@ and comp_typ = {
   comp_univs:universes;
   effect_name:lident;
   result_typ:t;
-  comp_pre:t;
-  comp_post:t;
   flags:list cflag
 }
 

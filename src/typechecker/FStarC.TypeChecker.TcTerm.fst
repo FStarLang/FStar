@@ -428,7 +428,15 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
          | Some _ -> failwith "Impossible! check_expected_effect, gopt should have been None"
        in
 
-       let c = TcUtil.maybe_assume_result_eq_pure_term env e (TcComm.lcomp_of_comp c) in
+       (* The equation [y == e] is now a refinement of the result type, not a
+          postcondition, so it changes the *type* being compared.  Under [use_eq]
+          -- an equationally-checked ($-)binder, say -- the expected type has to
+          match exactly, and a refinement the caller did not ask for can only
+          turn a successful check into an unprovable obligation. *)
+       let c =
+         if use_eq
+         then TcComm.lcomp_of_comp c
+         else TcUtil.maybe_assume_result_eq_pure_term env e (TcComm.lcomp_of_comp c) in
        let c, g_c = TcComm.lcomp_comp c in
        def_check_scoped c.pos "check_expected_effect.c.after_assume" env c;
        if Debug.medium () then
@@ -857,22 +865,11 @@ let effect_has_primitive_extraction (env:Env.env) (eff: lident) : ML bool =
   let ed = Env.get_effect_decl env eff in
   U.has_attribute ed.eff_attrs Const.primitive_extraction_attr
 
-(* Set the expected type for a term whose computation type is expected to be [c]:
-   the expected type is [comp_result c], and, when [c]'s postcondition is
-   non-trivial, that postcondition is additionally recorded in the environment
-   (see Env.set_expected_typ_and_post).
-
-   Recording the postcondition gives the term's own typechecking a chance to
-   discharge it, in the term's own context and at the term's own range, rather
-   than deferring the entire obligation to check_expected_effect once the whole
-   term has been checked. This yields better error messages and finer-grained
-   verification conditions. *)
+(* Set the expected type for a term whose computation type is expected to be
+   [c].  A computation type carries no postcondition any more -- it is part of
+   its result type -- so this is just [comp_result c]. *)
 let set_expected_typ_of_comp (env:Env.env) (c:comp) (use_eq:bool) : ML Env.env =
-  let res_typ = U.comp_result c in
-  let post = U.comp_post c in
-  if U.is_trivial_post post
-  then Env.set_expected_typ_maybe_eq env res_typ use_eq
-  else Env.set_expected_typ_and_post env res_typ use_eq post
+  Env.set_expected_typ_maybe_eq env (U.comp_result c) use_eq
 
 (* Set the expected type for the subject of an [e <: t] ascription.
 
@@ -1152,8 +1149,6 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
         S.mk_Comp ({ comp_univs  = [u_c]
                    ; effect_name = expected_ct.effect_name
                    ; result_typ  = expected_ct.result_typ
-                   ; comp_pre    = S.trivial_pre
-                   ; comp_post   = S.trivial_post expected_ct.result_typ
                    ; flags       = [] }) in
       match Rel.sub_comp env0 c_reflect expected_c with
       | Some g -> g
@@ -1271,10 +1266,9 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
                        (Format.fmt1 "Effect %s cannot be reified" (string_of_lid c.effect_name));
         let u_c = List.hd c.comp_univs in
 
-        (* The precondition of the reified computation becomes a proof obligation
-           right here; the postcondition is simply dropped, since the reified term
-           is an ordinary (pure or divergent) value of the representation type. *)
-        let g_pre = Env.guard_of_guard_formula (NonTrivial c.comp_pre) in
+        (* A computation type carries no specification any more, so reifying
+           one raises no obligation of its own. *)
+        let g_pre = Env.trivial_guard in
 
         let e = U.mk_reify e (Some c.effect_name) in
         let repr = Env.reify_comp env (S.mk_Comp c) u_c in
@@ -1291,8 +1285,6 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
               let ct = { comp_univs = [u_c]
                        ; effect_name = Const.primitive_div_lid
                        ; result_typ = repr
-                       ; comp_pre = S.trivial_pre
-                       ; comp_post = S.trivial_post repr
                        ; flags = []
                        }
               in
@@ -1341,8 +1333,6 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
             comp_univs=[u_a];
             effect_name = ed.mname;
             result_typ=a;
-            comp_pre = S.trivial_pre;
-            comp_post = S.trivial_post a;
             flags=[]
           }) |> TcComm.lcomp_of_comp in
 
@@ -2394,30 +2384,9 @@ and tc_comp env c : ML (comp                                      (* checked ver
          unification variables created by the first one before the second gets
          a chance to constrain them, and an unannotated binder would end up
          with a less precise type than it should. *)
-      let pre, post, g_spec =
-        (* A trivial specification is not worth checking -- and checking it is
-           not free of consequence: the check below re-typechecks the result
-           type in binder position underneath a refinement, which is a strictly
-           more demanding position than the one it was just checked in.  Since
-           the specification of a computation type is now materialized in its
-           result type, essentially every comp reaches here trivially
-           specified, so this is also the common case. *)
-        if U.is_t_true c.comp_pre && U.is_trivial_post c.comp_post
-        then c.comp_pre, S.trivial_post res, Env.trivial_guard
-        else
-        let b_pre = S.mk_binder (S.new_bv (Some c.comp_pre.pos) S.t_prop) in
-        let post_t =
-          U.arrow [S.null_binder (U.refine (S.new_bv (Some res.pos) res)
-                                           (S.bv_to_name b_pre.binder_bv))]
-                  (S.mk_Total S.t_prop) in
-        let f = U.abs [b_pre; S.null_binder post_t] S.unit_const
-                      (Some (U.residual_tot S.t_unit)) in
-        let tm = mk_Tm_app f [S.as_arg c.comp_pre; S.as_arg c.comp_post] c0.pos in
-        let tm, _, g = tc_check_tot_or_gtot_term env0 tm S.t_unit None in
-        match U.head_and_args_full tm with
-        | _, [(pre, _); (post, _)] -> pre, post, g
-        | _ -> failwith "tc_comp: unexpected shape of checked specification" in
-      let g_pre = g_spec in
+      (* A computation type carries no specification any more: there is nothing
+         to check beyond its result type and its flags. *)
+      let g_pre = Env.trivial_guard in
       let g_post = Env.trivial_guard in
       let flags, guards = c.flags |> List.map (function
         | DECREASES (Decreases_lex l) ->
@@ -2465,8 +2434,6 @@ and tc_comp env c : ML (comp                                      (* checked ver
       let c = mk_Comp ({c with
           comp_univs=[u];
           result_typ=res;
-          comp_pre=pre;
-          comp_post=post;
           flags = flags}) in
       let u_c = c |> TcUtil.universe_of_comp env u in
       c, u_c, f ++ g_pre ++ g_post ++ msum guards
