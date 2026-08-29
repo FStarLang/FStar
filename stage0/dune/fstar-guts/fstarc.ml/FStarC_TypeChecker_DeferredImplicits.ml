@@ -256,6 +256,8 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
              (env.FStarC_TypeChecker_Env.modules);
            FStarC_TypeChecker_Env.expected_typ =
              (env.FStarC_TypeChecker_Env.expected_typ);
+           FStarC_TypeChecker_Env.expected_post =
+             (env.FStarC_TypeChecker_Env.expected_post);
            FStarC_TypeChecker_Env.sigtab =
              (env.FStarC_TypeChecker_Env.sigtab);
            FStarC_TypeChecker_Env.attrtab =
@@ -390,6 +392,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env1.FStarC_TypeChecker_Env.modules);
                          FStarC_TypeChecker_Env.expected_typ =
                            (env1.FStarC_TypeChecker_Env.expected_typ);
+                         FStarC_TypeChecker_Env.expected_post =
+                           (env1.FStarC_TypeChecker_Env.expected_post);
                          FStarC_TypeChecker_Env.sigtab =
                            (env1.FStarC_TypeChecker_Env.sigtab);
                          FStarC_TypeChecker_Env.attrtab =
@@ -504,6 +508,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env2.FStarC_TypeChecker_Env.modules);
                          FStarC_TypeChecker_Env.expected_typ =
                            (env2.FStarC_TypeChecker_Env.expected_typ);
+                         FStarC_TypeChecker_Env.expected_post =
+                           (env2.FStarC_TypeChecker_Env.expected_post);
                          FStarC_TypeChecker_Env.sigtab =
                            (env2.FStarC_TypeChecker_Env.sigtab);
                          FStarC_TypeChecker_Env.attrtab =

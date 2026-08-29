@@ -758,9 +758,8 @@ let rec is_arrow (g : env) (t : FStarC_Syntax_Syntax.term) :
            | FStarC_Syntax_Syntax.Comp ct ->
                let e_tag =
                  if
-                   (FStarC_Ident.lid_equals
-                      ct.FStarC_Syntax_Syntax.effect_name
-                      FStarC_Parser_Const.effect_Pure_lid)
+                   (FStarC_Syntax_Util.is_pure_effect
+                      ct.FStarC_Syntax_Syntax.effect_name)
                      ||
                      (FStarC_Ident.lid_equals
                         ct.FStarC_Syntax_Syntax.effect_name
@@ -768,9 +767,8 @@ let rec is_arrow (g : env) (t : FStarC_Syntax_Syntax.term) :
                  then FStar_Pervasives_Native.Some E_Total
                  else
                    if
-                     FStarC_Ident.lid_equals
+                     FStarC_Syntax_Util.is_ghost_effect
                        ct.FStarC_Syntax_Syntax.effect_name
-                       FStarC_Parser_Const.effect_Ghost_lid
                    then FStar_Pervasives_Native.Some E_Ghost
                    else FStar_Pervasives_Native.None in
                (match e_tag with

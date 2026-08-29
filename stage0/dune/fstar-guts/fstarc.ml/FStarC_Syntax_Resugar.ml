@@ -2185,16 +2185,16 @@ and resugar_comp' (env : FStarC_Syntax_DsEnv.env)
         else false in
       if uu___
       then
-        (FStarC_Ident.lid_equals c1.FStarC_Syntax_Syntax.effect_name
-           FStarC_Parser_Const.effect_PURE_lid)
+        (FStarC_Syntax_Util.is_pure_effect
+           c1.FStarC_Syntax_Syntax.effect_name)
           ||
-          (FStarC_Ident.lid_equals c1.FStarC_Syntax_Syntax.effect_name
-             FStarC_Parser_Const.effect_GHOST_lid)
+          (FStarC_Syntax_Util.is_ghost_effect
+             c1.FStarC_Syntax_Syntax.effect_name)
       else false ->
       let uu___ =
         if
-          FStarC_Ident.lid_equals c1.FStarC_Syntax_Syntax.effect_name
-            FStarC_Parser_Const.effect_PURE_lid
+          FStarC_Syntax_Util.is_pure_effect
+            c1.FStarC_Syntax_Syntax.effect_name
         then FStarC_Syntax_Syntax.mk_Total c1.FStarC_Syntax_Syntax.result_typ
         else
           FStarC_Syntax_Syntax.mk_GTotal c1.FStarC_Syntax_Syntax.result_typ in
