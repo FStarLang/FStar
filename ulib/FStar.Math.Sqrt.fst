@@ -2,11 +2,25 @@ module FStar.Math.Sqrt
 
 open FStar.Real
 
-(* This is the sole mathematical axiom: every nonnegative real has a
-   nonnegative square root.  The refinement records both defining properties,
-   so the remaining laws in this module can be proved from real arithmetic. *)
-assume val sqrt0 (x : rnonneg)
-  : y:rnonneg{y *. y == x}
+module RS = FStar.Real.Sqrt
+
+(* This used to be the sole mathematical axiom of the module:
+
+     assume val sqrt0 (x : rnonneg) : y:rnonneg{y *. y == x}
+
+   It is now a definition. [FStar.Real] is implemented by the Dedekind-cut
+   construction of [FStar.Real.Dedekind], and [FStar.Real.Sqrt] uses the
+   completeness of that construction to *prove* the existence of square
+   roots -- something Z3's theory of reals, which is a theory of ordered
+   fields only, cannot do.
+
+   This module is kept for backwards compatibility; new code should use
+   [FStar.Real.Sqrt] directly, whose [sqrt] is total (it returns [0.0R] on
+   negative inputs) and which offers a few more lemmas. *)
+let sqrt0 (x : rnonneg) : y:rnonneg{y *. y == x} =
+  RS.sqrt_nonneg x;
+  RS.sqrt_square x;
+  RS.sqrt x
 
 let sqrt = sqrt0
 
