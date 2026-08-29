@@ -387,5 +387,6 @@ let default_settings : list error_setting =
     Error_CustardUnrepresentableValue                 , CAlwaysError, 370;
     Warning_CustardIneffectiveAttribute                , CWarning, 371;
     Error_CustardNotCompileTime                        , CAlwaysError, 372;
+    Warning_CustardKeyNotReduced                       , CWarning, 373;
     Error_AmbiguousName                               , CError, 362;
     ]

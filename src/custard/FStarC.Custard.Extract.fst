@@ -523,6 +523,12 @@ let request_chain (st:state) : ML (list Pprint.document) =
 let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.document) : ML a =
   E.raise_error0 code (msg @ request_chain st)
 
+(* The same, for a diagnostic the compile survives.  The request chain is what
+   makes either of them usable: a name on its own says nothing about which
+   call site asked for it. *)
+let custard_warning (st:state) (code:E.error_code) (msg:list Pprint.document) : ML unit =
+  E.log_issue0 code (msg @ request_chain st)
+
 (* Every normalization Custard performs runs under a step budget.
 
    Custard reduces terms nobody wrote for it: a specialization key has to be a
@@ -2384,9 +2390,55 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
         let a0 = unfold_lets st 100 (fst a) in
         let what = "the argument to binder " ^ show i ^ " of " ^
                    Ident.string_of_lid l in
-        let t = norm_bounded st ("a specialization key -- " ^ what) key_norm_steps a0 in
+        (* Section 30.17.  Both reductions are optional.  When neither fits
+           in the budget the argument is used as written, which is the only
+           form of it guaranteed to be small, being the one the programmer
+           typed. *)
+        let w_opt = norm_optional st subst_norm_steps a0 in
+        let w = match w_opt with Some w -> w | None -> a0 in
+        (* Section 30.17.  A key is a full normal form, and computing one
+           destroys sharing: a value built by binding its predecessor once and
+           reading several of its fields is linear as written and exponential
+           once the binding is substituted away.  EverParse's CDDL bundles are
+           exactly that, and no budget can help -- ten times the budget buys
+           ten times the copying and the same answer.
+
+           But a key only has to *identify*.  Two arguments that key
+           differently are compiled twice, which costs code; two that key the
+           same are compiled once, which is what must not happen unless they
+           really are the same.  So when the full reduction runs out of
+           budget, the weak head normal form takes its place: it is already
+           computed, it is what will be substituted into the body, and
+           identifying a specialization by what goes into it is sound by
+           construction.  The cost is that a value written two ways may be
+           specialized twice.  A warning says so, because the alternative
+           reading -- that Custard silently stopped canonicalizing -- would be
+           worth knowing about.
+
+           When even the weak head normal form is out of reach -- the value
+           shares subterms all the way down, so unfolding it once already
+           doubles it -- what is left is the argument as written.  A name is a
+           perfectly good key, and substituting a name preserves exactly the
+           sharing that reducing it would have destroyed. *)
+        let t =
+          match norm_optional st key_norm_steps a0 with
+          | Some t -> t
+          | None ->
+            custard_warning st E.Warning_CustardKeyNotReduced [
+              text ("Custard could not reduce " ^ what ^
+                    " to a normal form within --custard_norm_budget (" ^
+                    show (Options.custard_norm_budget ()) ^ " steps).");
+              text ("This specialization is identified by " ^
+                    (if Some? w_opt
+                     then "the weak head normal form of its argument"
+                     else "the argument as written") ^
+                    " instead, which is correct but may compile the same code more than once. Raising --custard_norm_budget will not help if the argument is a value that shares subterms: reducing it is what destroys the sharing.");
+              text ("The argument, before reduction, was: " ^
+                    truncate_msg (FStarC.Syntax.Print.term_to_string'
+                                    (TcEnv.dsenv (tcenv st)) a0))
+            ];
+            w in
         check_mono_arg st l i t;
-        let w = norm_bounded st what subst_norm_steps a0 in
         (* Full reduction can eliminate a free variable that weak reduction
            leaves behind ([fst (x, 1)]); if that happens the two disagree
            about what is a hole, so use the reduced one for both. *)

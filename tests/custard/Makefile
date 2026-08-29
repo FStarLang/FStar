@@ -53,6 +53,13 @@ NOGREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) :"
 CUSTARD_TESTS += Mymon
 CUSTARD_TESTS += Reify
 CUSTARD_TESTS += AssumedProj
+# Section 30.17.  The budget is set low enough that neither the full nor the
+# weak reduction of [b12] fits, so the argument is keyed as written.  Running
+# it is the point: the answer must be the one the exponential normal form
+# would have given.  The GREP is what says the sharing survived -- a chain of
+# 12 [ext] calls, not a term that doubles at every level.
+FLAGS_LetShare = --custard_norm_budget 100000
+GREP_LetShare = "(letShare_ext letShare_b11)"
 # Section 5.0: [let mymon = writer (list int)] is an abbreviation of kind
 # [Type -> Type] that binds *no* binders.  The IR has no partial application
 # of a type constructor, so the abbreviation is eta-expanded from the binders
@@ -492,7 +499,13 @@ REJECT_TESTS += MonoEffect
 CODE_MonoEffect = 364
 REJECT_TESTS += MonoPartial
 REJECT_TESTS += MonoFuel
+# Section 30.17: no longer an error.  Custard cannot decide whether reducing
+# an argument terminates, and the budget was always a guess about that; what
+# it can do is decline to reduce.  [spin 0] is keyed and substituted as
+# written, warning 373 says so, and the extracted program diverges at run
+# time -- which is what the F* program says.
 REJECT_TESTS += NormBudget
+EGREP_NormBudget = "the argument as written"
 # PR #4494: the legacy backends OOM on a type computed by a recursive
 # definition that makes no progress when unfolded.  Section 3.6's budget is
 # the broader fix that report asks for, so this must be error 365 and not a
@@ -521,7 +534,7 @@ CODE_CPartialCall = 368
 CODE_MonoPoly    = 364
 CODE_MonoPartial = 364
 CODE_MonoFuel    = 365
-CODE_NormBudget  = 365
+CODE_NormBudget  = 373
 CODE_WarnAny     = 367
 # Section 30.4: [@@monomorphize] on a constructor field is read by nothing, and
 # saying so is the whole point -- error 364's advice sends readers here.  The
@@ -567,8 +580,11 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	@mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
 	  --custard_main $*.main $< >$(OUTPUT_DIR)/$*.err 2>&1 || true
-	$(Q)grep -q "Error $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
-	  || { echo "ERROR: expected error $(CODE_$*) from $*"; cat $(OUTPUT_DIR)/$*.err; false; }
+	@# Section 30.17: a few of these are warnings rather than errors -- the
+	@# product is the diagnostic either way, and which one it is is exactly
+	@# what the test is pinning.
+	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
+	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $*"; cat $(OUTPUT_DIR)/$*.err; false; }
 	@# A diagnostic is the product here, so a test may also pin what it says.
 	$(Q)for p in $(EGREP_$*); do \
 	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \

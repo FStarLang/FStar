@@ -397,6 +397,7 @@ type error_code =
   | Error_CustardUnrepresentableValue
   | Warning_CustardIneffectiveAttribute
   | Error_CustardNotCompileTime
+  | Warning_CustardKeyNotReduced
   | Error_AmbiguousName
 
 type error_setting = error_code & error_flag & int

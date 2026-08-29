@@ -4085,6 +4085,12 @@ So keys have their own printer, `Extract.key_of_term` (§3.7): fully qualified
 lids, α-canonical, universes erased, no resugaring, independent of every
 printing option.  That is also exactly the string the interface stores.
 
+A key is a normal form, which means producing one substitutes away whatever
+sharing the source had.  §30.17 is what that costs: a value that is small
+only because it is shared cannot be specialized by value, and Custard falls
+back to keying on the weak head normal form, or on the argument as written,
+rather than failing.
+
 ### 12.4 What changes in the pipeline
 
 1. **`Extract.request`** consults the linked interfaces before allocating a
@@ -8972,6 +8978,132 @@ over-applies.
 `tests/custard/EtaVar.fst`, which emits
 `EtaVar_consume(uint32_t (*i)(uint32_t), uint32_t eta)` and runs.
 
+### 30.17 A value that is small only because it is shared
+
+Round 34.  `CDDLTest.Test.bundle_signoutputargs` still fails, and the
+measurements finally say what it is failing at.  It is not divergence.  Given
+ten times the budget it runs ten times as long, allocates linearly up to 59
+GB, and reports a byte-identical error with every profile counter unchanged.
+The extra 900 million steps went into a single `norm` call that was making no
+progress -- it was copying.
+
+The shape is a record built from its predecessor:
+
+```
+let { b_typ = _; ...; b_parser = b_parser; b_serializer = b_serializer } =
+  bundle_signoutputargs' in
+Mkbundle ... (fun c -> ... b_parser c ...) (fun c out -> b_serializer ...)
+```
+
+one binding, five uses.  As written it is linear in the depth of the chain.
+Its normal form is not: the `let` is a single-branch match, iota fires by
+substituting the scrutinee's fields into the body, and the body mentions them
+five times.  Every level multiplies.
+
+That is a fact about the term, not about the reduction strategy, and it is
+the answer to the question §12.3 leaves open.  A specialization key is a
+normal form.  Producing one substitutes the sharing away.  So **a value that
+is only small when shared cannot be specialized by value** -- not because
+reducing it fails to terminate, but because the thing it reduces *to* is the
+size the sharing was hiding.  No budget helps, because the budget is not the
+problem.
+
+The reduced form of this is 25 lines, `tests/custard/LetShare.fst`: a
+three-field record of functions, an `ext` that takes it apart and uses each
+field twice, and a chain of twelve.  At the default budget its normal form is
+587 KB of OCaml and grows by a factor of two per link.
+
+#### What a key is for
+
+A key exists to *tell specializations apart*.  Two arguments that key
+differently are compiled twice, which costs code and nothing else.  Two that
+key the same are compiled once -- and that is the only direction that can be
+wrong.  Canonicalizing further only ever merges; it never makes an answer
+correct that was not.
+
+So exhausting the budget while computing a key does not have to be an error.
+It can fall back, as long as the fallback still distinguishes.  Two fallbacks
+are already available and each is a form the argument really has:
+
+1. the weak head normal form -- which §3.7 already computes, because it is
+   what gets substituted into the specialized body;
+2. the argument as written.
+
+Both are keyed by the same `key_of_term`, which renders every node kind, so
+neither needs the term to be in any particular form.  The second is sound for
+the reason that matters here: *substituting a name preserves exactly the
+sharing that reducing it would have destroyed*.  A name is a perfectly good
+key, and a specialization identified by a name is compiled once per name.
+
+`split_mono_args` now tries all three in order.  Both reductions run under
+`norm_optional` rather than `norm_bounded`, so neither can fail the compile;
+when the full one runs out, warning 373 says so, names the definition and the
+binder, and says which form took its place.  The warning is worth having
+because the alternative reading -- that Custard silently stopped
+canonicalizing -- would be a surprise.
+
+The cost is real and stated: a value written two ways may now be specialized
+twice, where full reduction would have found them equal.  That is code size,
+not a wrong answer.
+
+#### What this gives up
+
+Error 365 at a `Mono` argument is gone, and `tests/custard/NormBudget.fst`
+now records a warning instead.  That test's argument is `spin 0`, where `spin`
+is admitted total and unfolds forever; it used to be the demonstration that
+§3.6's budget turns a hang into a diagnostic.
+
+Giving it up is the right trade, because the two cases are not
+distinguishable and the error was claiming they were.  Termination is
+undecidable, and the obvious proxy -- "is a recursive definition reachable
+from this argument?" -- was tried and is useless: `FStar.UInt32.add_mod`
+reaches `Prims.pow2`, so `LetShare`'s twelve-link chain answers yes just as
+`spin 0` does.  Nothing cheap separates a reduction that will not stop from
+one that will not fit.
+
+What Custard can do instead of guessing is *decline to reduce*, and that
+turns out to be well defined for both.  `spin 0` is keyed and substituted as
+written, `spin` is extracted as the recursive function it is, and the program
+diverges when it is run -- which is what the F* program says.  The compiler
+does not hang, which was the whole point of §3.6, and warning 373 still names
+the definition and the term.
+
+The budget itself is untouched everywhere else, and the case that really
+cannot fall back still errors: a *type* computed by a divergent definition
+has no as-written form a backend can use, so `tests/custard/TypeDiverge.fst`
+-- the reproduction of PR #4494 -- is still error 365, from the type
+normalization site.  So is `MonoFuel`, from §3.6's fuel.
+
+#### What it buys
+
+`LetShare` at a chain of 40 goes from Error 365 to 3.5 KB of OCaml, flat in
+time, and what it emits is the source structure back:
+
+```
+let letShare_b40 : letShare_bnd = (letShare_ext letShare_b39)
+let letShare_use__b40 (x : FStar_UInt32.t) : FStar_UInt32.t =
+  ((letShare_b40).p x)
+```
+
+The specialization is keyed on the name `b40` and projects out of the shared
+value -- which is the compilation an ML backend would have produced anyway,
+and the one the sharing was there to make possible.
+
+The test pins the part that could go wrong.  It runs, and the number it
+prints is the number the 587 KB exponential form prints.  A fallback key that
+distinguished too little would not merely be slower; it would print
+something else.
+
+#### What it does not fix
+
+C is a separate matter.  `b40` is a record of closures, and the C backend has
+no closures (§8.5), so `LetShare` is an OCaml test.  The CDDL bundles are
+closures too, which is why the four CDDL entry points still report Error 368
+on `b_parser`/`b_serializer` residuals: that is the `any` problem of §30.9,
+untouched by this, and it is what §12.3's "specialize by value" was trying to
+avoid in the first place.  This round says the avoidance has a hard limit,
+and now says so with a diagnostic instead of a hang.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -9072,3 +9204,4 @@ over-applies.
 | M10ξξ | **A parameter nothing observable depends on** (§30.14) | Done.  Round 32.  §30.12 turned the hang into an error and the error named the term: a CDDL type signature of 9,012,230 bytes *before* reduction, reached through `bool`, made of 6995 `Ghost.reveal`, 4668 refinements on `cbor` and 990 `serializable` -- in which `impl_serialize`'s specification argument occurs exactly once, inside a `pure (...)` in a postcondition, while the compiled signature is three names.  So the fix is not to reduce it faster.  Rule 8: a `Mono` binder absent from the body *and* from the observable part of the rest of the type -- refinements replaced by what they refine, computations by their result, which are the two places a specification hides -- is `Dropped`, removing a specialization and changing no signature, because a `Mono` argument was never passed at run time.  The body test is what makes it sound (`if n = 0` mentions `n` nowhere in the type), the body has to be the one `extract_as` supplies (`Anf.tick` specifies `fun s n -> n` and prints `s`), and a type may have more binders than its lambda (a `class monad` projector is four abstractions over an arrow of six -- reading those as absent deleted `mbind`'s first argument).  Confining it to `Mono` is what makes it free: `RetArity.f`'s unread `frame` and `post` are `Poly` and are part of its ABI regardless.  On round 32's measurement the cost removed was linear in the argument and entirely specialization -- 517 ms `norm`, 355 ms `split_mono_args`, 302 ms `key` for a 25600-element list contributing `return u;` -- and extraction is now flat at 0.55 s.  `tests/custard/DeadMono.fst` extracts under a budget four orders of magnitude too small to normalize its argument.  §30.12's accounting also changed what a budget *is*, and CDDL now needs `--custard_norm_budget 100000000`; the default stays at 10^7 anyway, because raising it to 10^8 makes `TypeDiverge` overflow the stack instead of reporting error 365, and a budget that fires after the normalizer runs out of stack is not a budget |
 | M10οο | **A name that doubles at every level** (§30.15) | Done.  Round 33, which also retracted round 32's central number: the term is 270 bytes, not 9 MB -- the 9 MB was the *chain*, whose frames are specialization instantiations, so what was 8 MB is a **name**.  `Monomorphize.hint_of_cty` rendered a type structurally with no bound, and `TApp (n, [])` renders through `n.spec`, so an instantiation's name is built from the names of the instantiations it is made of and a type that nests doubles the name per level.  Bounded now in depth (4) and clipped to 48; truncation can only collide, and `request`'s `pick` already numbers a collision.  `Extract.fit` had the same hole from the other end -- it kept the first component "whatever its length" -- and truncates it too.  Two quadratic costs underneath: `FStarC_String.list_of_string` indexed with `BatUTF8.get`, which walks from the start, and `PrintC.sanitize` called it three times, twice to read one character.  Both are on the path of every name Custard prints.  On the 25-line reproducer at depth 12: 159 s to 14.9 s, C output 1,237,635 to 23,318 bytes, longest identifier **57,361 characters to 82** -- the width bound is the one that matters, since C99 promises 63 significant characters for an internal identifier and 31 for an external one.  `tests/custard/NameWidth.fst` |
 | M10ππ | **An eta-reduction with nowhere to put the argument back** (§30.16) | Done.  Round 33, reported in passing.  `let consume (i: sig_t s) (u: U32.t) = i u`, where `sig_t` unfolds to an arrow, reached C as Error 368: it takes 1 argument and is applied to 2.  Eta-reduction shortened it to `fun i -> i` correctly, and eta-expansion -- the pass whose whole job is putting that argument back for C -- did not fire, because it reads what is still owed off the *head of the body*, and this body has no head.  It is a bare parameter, so `head = None` meant `missing = 0`.  There is no callee arity to read, but there are call sites, and the only reason to expand a headless body is that one of them supplies more arguments than the definition accepts -- exactly the condition C rejects.  The demand is read off `use_arity`, bounded by the result type's arity as every other case is, and zero when no caller asks.  `tests/custard/EtaVar.fst` |
+| M10ρρ | **A value that is small only because it is shared** (§30.17) | Done.  Round 34.  `bundle_signoutputargs` is not diverging: at ten times the budget it runs ten times as long, allocates linearly to 59 GB, and reports a byte-identical error.  It is copying.  The term binds its predecessor once and reads five fields off it, so it is linear as written and doubles at every level once iota substitutes the binding away -- and producing a specialization key is exactly that substitution.  A key only has to *distinguish*, though, and merging is the only direction that can be wrong; so `split_mono_args` now falls back from the full normal form to the weak head normal form to the argument as written, warning 373 saying which.  Keying on a name preserves the sharing that reducing it destroys.  Error 365 at a `Mono` argument goes with it: termination is undecidable, the proxy for it is useless (`add_mod` reaches `pow2`, so `LetShare` answers the same as `spin 0`), and declining to reduce is well defined for both -- `NormBudget` now records warning 373 and extracts a program that diverges when run, which is what it says.  The divergent *type* of `TypeDiverge` has no as-written form and is still error 365.  `tests/custard/LetShare.fst` goes from Error 365 to 3.5 KB of OCaml at a chain of 40, and prints the same number the 587 KB exponential form prints |
