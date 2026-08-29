@@ -2501,22 +2501,32 @@ let solve_rigid_flex_or_flex_rigid_subtyping
 
            | _ -> false)
       in
-      (* A flex variable that is going to be solved by typeclass resolution is
-         widened (its refinements dropped) only when we solve it from its lower
-         bounds; from a *refined* upper bound we would pick the refinement
-         itself, which no instance matches.  With the unary application
-         representation tc_app no longer solves the deferred constraints between
-         two arguments, so such a variable can reach here with both a lower
-         bound (from an earlier argument) and a refined upper bound (from the
-         expected type), and Flex_rigid outranks Rigid_flex.  Defer in that
-         case, so the lower bounds win and get widened.  We deliberately do not
-         defer for unrefined upper bounds: they carry no more information than
-         the lower bounds do, and preferring the lower bounds there loses the
-         expected type. *)
+      let bounds_typs =
+          whnf env this_rigid
+          :: List.collect (function
+                           | TProb p -> [(if flip
+                                         then whnf env (maybe_invert p).rhs
+                                         else whnf env (maybe_invert p).lhs)]
+                           | _ -> [])
+                          bounds_probs
+      in
+      (* A flex variable with both a lower bound and a *refined* upper bound
+         must be solved from its lower bounds.  Solving it from the upper bound
+         would make the refinement part of the variable's definition, and then
+         every lower bound has to establish it -- at the lower bound's own
+         source position, which is not where the refinement was asked for.  A
+         postcondition is a refinement of a result type now, so this is the
+         common shape [let x = match ... in ...; x] where the match's result
+         type is a variable, the branches are its lower bounds and the
+         function's result type is a refined upper bound: the branches would
+         each be asked to prove the postcondition.  Defer instead, so the lower
+         bounds win, and let the refinement remain an obligation of the
+         Flex_rigid problem.  We deliberately do not defer for unrefined upper
+         bounds: they carry no more information than the lower bounds do, and
+         preferring the lower bounds there loses the expected type. *)
       let prefer_lower_bounds () : ML bool =
           flip
-       && has_typeclass_constraint ctx_uvar wl
-       && Tm_refine? (SS.compress (whnf env this_rigid)).n
+       && bounds_typs |> BU.for_some (fun t -> Tm_refine? (SS.compress t).n)
        && wl.attempting |> BU.for_some
             (function
              | TProb tp ->
@@ -2528,18 +2538,9 @@ let solve_rigid_flex_or_flex_rigid_subtyping
       in
       if prefer_lower_bounds ()
       then solve (defer_lit Deferred_flex
-                    "solving a typeclass variable from its lower bounds first"
+                    "solving a flex variable from its lower bounds first"
                     (TProb tp) wl)
       else
-      let bounds_typs =
-          whnf env this_rigid
-          :: List.collect (function
-                           | TProb p -> [(if flip
-                                         then whnf env (maybe_invert p).rhs
-                                         else whnf env (maybe_invert p).lhs)]
-                           | _ -> [])
-                          bounds_probs
-      in
       begin
         let widen, (meet_or_join_op : option (term -> term -> ML term)) = 
           if has_typeclass_constraint ctx_uvar wl
