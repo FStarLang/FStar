@@ -287,7 +287,6 @@ let initial_env deps
     gamma_cache=new_gamma_cache();
     modules= [];
     expected_typ=None;
-    expected_post=None;
     sigtab=new_sigtab();
     attrtab=new_sigtab();
     instantiate_imp=true;
@@ -1888,22 +1887,17 @@ let open_universes_in env uvs terms : ML _ =
 
 let set_expected_typ env t =
   //false bit says that use subtyping
-  {env with expected_typ = Some (t, false); expected_post = None}
+  {env with expected_typ = Some (t, false)}
 
 let set_expected_typ_maybe_eq env t use_eq =
-  {env with expected_typ = Some (t, use_eq); expected_post = None}
-
-let set_expected_typ_and_post env t use_eq post =
-  {env with expected_typ = Some (t, use_eq); expected_post = Some post}
+  {env with expected_typ = Some (t, use_eq)}
 
 let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
-let expected_post env = env.expected_post
-
 let clear_expected_typ (env_: env): env & option (typ & bool) =
-    {env_ with expected_typ=None; expected_post=None}, expected_typ env_
+    {env_ with expected_typ=None}, expected_typ env_
 
 let finish_module =
     let empty_lid = lid_of_ids [id_of_text ""] in
