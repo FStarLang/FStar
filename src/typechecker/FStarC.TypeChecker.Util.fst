@@ -979,7 +979,15 @@ let bind_maybe_capture
         (* only a refinement carries information that the binder's elimination
            would lose *)
         let is_refinement = Tm_refine? t1.n in
-        if is_let_binding || has_evident_type || uninformative || not is_refinement
+        (* ... and only if the result type mentions [x] at all, i.e. [e1] is a
+           subterm of it.  Otherwise the restated fact is about a value that has
+           nothing to do with the result, and all it does is pollute the type:
+           an argument's own refinement would end up on the result type of every
+           application that has it, so [SemiLattice true (fun x y -> x || y)]
+           would have type [_:semilattice{commutative (fun x y -> x || y) /\ ...}]. *)
+        let mentioned = Cons? subst_x in
+        if is_let_binding || has_evident_type || uninformative
+        || not is_refinement || not mentioned
         then U.t_true
         else Env.type_hypothesis env t1 e1
       end
