@@ -83,7 +83,7 @@ let pin_frame (p:pm_slprop) (frame:slprop)
   : Lemma (B.is_affine_mem_prop fr)
   = introduce forall s0 s1.
       fr s0 /\ B.disjoint_mem s0 s1 ==> fr (B.join_mem s0 s1)
-    with introduce fr s0 /\ B.disjoint_mem s0 s1 ==> fr (B.join_mem s0 s1)
+    with introduce _ ==> _
     with
       update_timeless_mem_join m1 s0 s1
   in

@@ -1152,7 +1152,7 @@ let extend_full_heap_with (h: full_heap) (c: cell {full_cell c}) :
     } =
   let h' = Seq.snoc h (Some c) in
   introduce forall a. contains_addr h' a ==> full_cell (select_addr h' a) with
-    introduce contains_addr h' a ==> full_cell (select_addr h' a) with
+    introduce _ ==> _ with
       if a = ctr h then () else
         assert select_addr h' a == select_addr h a;
   h'

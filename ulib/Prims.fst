@@ -161,9 +161,9 @@ total assume effect GTot
     *)
 assume sub_effect Tot ~> GTot
 
-(** Hoare-style abbreviations.  Effect abbreviations are parameterized
-    by the result type only; any pre/postcondition written at the use
-    site is conjoined with the one in the abbreviation. *)
+(** Hoare-style abbreviations.  [requires]/[ensures] are syntax of a computation
+    type, not of an effect: the desugarer partitions them out (post becomes a result
+    refinement, pre an implicit [squash] binder) before applying the abbreviation. *)
 effect Pure  (a: Type) = Tot a
 effect PURE  (a: Type) = Tot a
 effect Ghost (a: Type) = GTot a
@@ -427,7 +427,7 @@ val _assume (p: prop) : Pure unit (requires (True)) (ensures (fun x -> p))
     checked under a false hypothesis. *)
 [@@ warn_on_use "Uses an axiom"]
 assume
-val admit: #a: Type -> unit -> Tot (_: a{l_False})
+val admit: #a: Type -> unit -> Tot (_: a{False})
 
 (** [magic] is another escape hatch: It retains the continuation but
     returns a value of any type *)

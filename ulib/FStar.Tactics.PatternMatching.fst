@@ -442,14 +442,14 @@ let rec solve_mp_for_single_hyp #a
   | h :: hs ->
     or_else // Must be in ``Tac`` here to run `body`
       (fun () ->
-         (match interp_pattern_aux pat part_sol.ms_vars (type_of_binding h) with
-          | Failure ex ->
-            fail ("Failed to match hyp: " ^ (string_of_match_exception ex))
-          | Success bindings ->
-            let ms_hyps = (name, h) :: part_sol.ms_hyps in
-            body ({ part_sol with ms_vars = bindings; ms_hyps = ms_hyps })) <: Tac a)
+         match interp_pattern_aux pat part_sol.ms_vars (type_of_binding h) with
+         | Failure ex ->
+           fail ("Failed to match hyp: " ^ (string_of_match_exception ex))
+         | Success bindings ->
+           let ms_hyps = (name, h) :: part_sol.ms_hyps in
+           body ({ part_sol with ms_vars = bindings; ms_hyps = ms_hyps }))
       (fun () ->
-         solve_mp_for_single_hyp name pat hs body part_sol <: Tac a)
+         solve_mp_for_single_hyp name pat hs body part_sol)
 
 (** Scan ``hypotheses`` for matches for ``mp_hyps`` that lets ``body``
 succeed. **)

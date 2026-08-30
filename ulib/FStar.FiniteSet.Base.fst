@@ -175,7 +175,7 @@ let length_zero_lemma ()
     with assert (feq s emptyset);
     introduce s == emptyset ==> cardinality s = 0
     with assert (set_as_list s == []);
-    introduce cardinality s <> 0 ==> (exists x. mem x s)
+    introduce cardinality s <> 0 ==> _
     with introduce exists x. mem x s
             with (Cons?.hd (set_as_list s))
             and  ())

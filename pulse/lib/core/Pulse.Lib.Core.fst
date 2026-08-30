@@ -48,10 +48,7 @@ let pure = pure
 let timeless_pure p = Sep.timeless_pure p
 let ( ** ) = op_Star_Star
 let timeless_star p q = Sep.timeless_star p q
-(* Eta-expanded so that the SMT encoding relates [Pulse.Lib.Core.op_exists_Star]
-   to [Sep.op_exists_Star] *applied*; the point-free definition only related the
-   two function values, which SMT cannot use. *)
-let op_exists_Star #a p = Sep.op_exists_Star #a p
+let op_exists_Star = op_exists_Star
 let exists_extensional (#a:Type u#a) (p q: a -> slprop)
   (_:squash (forall x. p x == q x))
   : Lemma (op_exists_Star p == op_exists_Star q)

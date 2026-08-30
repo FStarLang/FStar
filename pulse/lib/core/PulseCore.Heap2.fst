@@ -437,12 +437,7 @@ let is_frame_preserving_only_ghost
     (h:full_hheap fp)
 : Lemma 
   (requires is_frame_preserving ONLY_GHOST f)
-  (ensures (
-    let (| x, hh' |) = f h in
-    hh'.concrete == h.concrete /\
-    hh' == { h with ghost = hh'.ghost } /\
-    interp (fp' x) ({ h with ghost = hh'.ghost }) /\
-    full_heap_pred ({ h with ghost = hh'.ghost })))
+  (ensures (dsnd (f h)).concrete == h.concrete)
 = emp_unit fp;
   let h : full_hheap (fp `star` emp) = h in
   eliminate forall frame (h0:full_hheap (fp `star` frame)). (
@@ -460,10 +455,6 @@ let lift_erased
 : action #mut pre a post
 = let g : refined_pre_action #mut pre a post =
     fun h ->
-      (* Keep the result's two components as separate [erased] bindings: an
-         [erased] *pair* would need the tuple projector axioms (and hence
-         [--ifuel]) to relate [fst gg] back to [dfst (reveal f h)], which is
-         where the facts below are stated. *)
       let gx : erased a =
         let ff : action #mut pre a post = reveal f in
         Ghost.hide (dfst (ff h))

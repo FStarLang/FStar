@@ -178,8 +178,26 @@ today.
   `Lemma (requires P) (ensures Q)`, so error messages and IDE hovers read as
   before. Squash binders print as hypotheses rather than as arguments.
 - Effect abbreviations may now carry an `ensures`.
+- `introduce` and `eliminate` no longer bind a name for the hypothesis: write
+  `with e`, not `with h. e`. The hypothesis is an implicit `squash` binder that
+  F* puts in the proof context of `e` itself, so there is nothing to name.
+  `with h. e` is rejected with a message saying so.
+- `Classical.move_requires*` no longer applies to a lemma that has *no*
+  `requires` clause — such a lemma simply has no `squash` binder to move.
+  Nor is it wanted: `Lemma (ensures Q)` is now literally `Tot (squash Q)`, which
+  is what `Classical.forall_intro*` expects, so the lemma can be passed
+  directly. Several vacuous `move_requires` wrappers in ulib were deleted.
 - **Accepted regression:** for a call through a let-bound alias, a precondition
   failure is localized to the alias rather than to the call.
+- **Accepted regression:** a `Pure`/`Ghost` with an `ensures` now returns a
+  *refined* type, so an implicit solved from such a result picks up the
+  refinement — most visibly for polymorphic equality, where `SZ.v n == cap`
+  needs `(SZ.v n <: nat) == cap`. `Prims.eq2` already carries the
+  `[@@@unrefine]` binder attribute that fixes this; promoting it from
+  `--ext __unrefine` to the default is proposed as a follow-up. Likewise, a
+  lemma's statement is now part of its *type* and so participates in
+  unification, which can pin an implicit that used to be left to the expected
+  result type. See `regression_questions.md` for both, worked out in detail.
 
 ## Costs
 

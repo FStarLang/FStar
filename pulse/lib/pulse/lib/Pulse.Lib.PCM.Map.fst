@@ -265,11 +265,9 @@ let lift_frame_preservation #a (#k:eqtype) (p:pcm a)
          (op p' m0 frame == full_m0 ==>
           op p' m1 frame == full_m1)
       with (
-        introduce composable p' m1 frame
-              /\ (op p' m0 frame == full_m0 ==> op p' m1 frame == full_m1)
+        introduce _ /\ _
         with ()
-        and ( introduce (op p' m0 frame == full_m0)
-                    ==> (op p' m1 frame == full_m1)
+        and ( introduce _ ==> _
               with (
                   assert (compose_maps p m1 frame `Map.equal` full_m1)
               )
