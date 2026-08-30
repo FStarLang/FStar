@@ -2571,18 +2571,28 @@ let solve_rigid_flex_or_flex_rigid_subtyping
          bounds win, and let the refinement remain an obligation of the
          Flex_rigid problem.  We deliberately do not defer for unrefined upper
          bounds: they carry no more information than the lower bounds do, and
-         preferring the lower bounds there loses the expected type. *)
-      let prefer_lower_bounds () : ML bool =
-          flip
-       && bounds_typs |> BU.for_some (fun t -> Tm_refine? (SS.compress t).n)
-       && wl.attempting |> BU.for_some
+         preferring the lower bounds there loses the expected type.  We also
+         require a *refined* lower bound: if the lower bounds are all bare
+         types then they cannot establish the upper bound's refinement, and
+         preferring them just turns a solvable problem into an unsolvable one
+         (e.g. [ap evenb3 1] with [ap : ('a -> bool) -> 'a -> bool] and
+         [evenb3 : i:int{i>0} -> bool], where the literal's lower bound is
+         [int] and the only workable solution is the upper bound). *)
+      let lower_bound_typs () : ML (list term) =
+          wl.attempting |> List.collect
             (function
              | TProb tp ->
                let tp = maybe_invert tp in
                (match tp.rank with
-                | Some Rigid_flex -> equiv tp.rhs
-                | _ -> false)
-             | _ -> false)
+                | Some Rigid_flex when equiv tp.rhs -> [whnf env tp.lhs]
+                | _ -> [])
+             | _ -> [])
+      in
+      let is_refined t = Tm_refine? (SS.compress t).n in
+      let prefer_lower_bounds () : ML bool =
+          flip
+       && bounds_typs |> BU.for_some is_refined
+       && lower_bound_typs () |> BU.for_some is_refined
       in
       if prefer_lower_bounds ()
       then solve (defer_lit Deferred_flex
