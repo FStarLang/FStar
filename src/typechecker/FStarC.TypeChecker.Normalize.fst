@@ -2370,6 +2370,24 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
             || (Ident.lid_equals l PC.bool_lid)
             || (Ident.lid_equals l PC.string_lid)
             || (Ident.lid_equals l PC.exn_lid)
+        (* [x:t{x == e}] is inhabited by [e] whenever [t] is.  That singleton
+           shape is what [assume_result_eq_pure_term] gives the result type of a
+           pure term now that a computation has no postcondition to record it
+           in, so it turns up on the result type of any definition ending in a
+           literal. *)
+        | Tm_refine {b; phi} when clearly_inhabited b.sort ->
+            let bv, phi = SS.open_term_bv b phi in
+            let is_name (t:term) : ML bool =
+              match (SS.compress t).n with
+              | Tm_name bv' -> S.bv_eq bv bv'
+              | _ -> false in
+            let hd, args = U.head_and_args_full phi in
+            (match (U.un_uinst hd).n, args with
+             | Tm_fvar fv, [_; (lhs, _); (rhs, _)]
+                 when S.fv_eq_lid fv PC.eq2_lid ->
+               (is_name lhs && not (FStarC.Class.Setlike.mem bv (Free.names rhs))) ||
+               (is_name rhs && not (FStarC.Class.Setlike.mem bv (Free.names lhs)))
+             | _ -> false)
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
