@@ -15,8 +15,12 @@ assume val qr_s : unit -> Lemma (q ==> r ==> s)
 let test () : Lemma (requires p) (ensures s) =
   assert s by (
     mapply (`qr_s);
-    mapply (`p_q);
-    mapply (`p_r);
+    focus (fun () ->
+      mapply (`p_q);
+      smt());
+    focus (fun () ->
+      mapply (`p_r);
+      smt());
     ()
   )
 //SNIPPET_END: mapply
