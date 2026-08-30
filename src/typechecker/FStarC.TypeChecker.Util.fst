@@ -972,9 +972,15 @@ let bind_maybe_capture
          the continuation and to nothing else.  That is what makes
          [(l1 (); l2 ()); l3 ()] lose [l1]'s postcondition -- the left composite
          would have type [squash p2], with [p1] buried in a guard hypothesis
-         that dies with the continuation. *)
+         that dies with the continuation.
+
+         [has_evident_type] still rules the term out, though: a constant's
+         refined type is imposed by the context, not computed by it.  A [squash]
+         *argument* is exactly that -- [Mkmonoid op one ()] would otherwise give
+         the record the type [_:monoid a{<the properties field>}], and an
+         explicit annotation would no longer be its type. *)
       begin match unit_refinement with
-      | Some phi when not uninformative -> phi
+      | Some phi when not uninformative && not has_evident_type -> phi
       | _ ->
         (* only a refinement carries information that the binder's elimination
            would lose *)
@@ -1194,10 +1200,16 @@ let bind_maybe_capture
                         //Except if the let-bound terms binds a unit refinement,
                         //then we close with the unit refinement, so that the
                         //the refinement is captured.
-                        let c2, phi, _ = maybe_close_with_unit_refinement x c2 in
+                        let c2, phi, closed = maybe_close_with_unit_refinement x c2 in
+                        let g2 = TcComm.weaken_guard_formula g_c2 phi in
                         let g2 =
-                          TcComm.weaken_guard_formula
-                            (Env.close_guard env [S.mk_binder x] g_c2) phi in
+                          if closed
+                          then (* [x : unit{phi}] was substituted away in [c2];
+                                  quantifying over it in [g2] as well would add a
+                                  binder that says exactly what [phi] already
+                                  does, once per statement in a sequence. *)
+                               Env.map_guard g2 (SS.subst [NT (x, S.unit_const)])
+                          else Env.close_guard env [S.mk_binder x] g2 in
                         Inl (c2, Env.conj_guard g_c1 g2,  "both Tot/GTot")
                       )
                       else default_with_eqn ()
