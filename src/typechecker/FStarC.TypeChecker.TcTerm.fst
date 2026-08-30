@@ -4656,11 +4656,18 @@ and check_inner_let env e : ML _ =
             (* Move g2's logical payload into c2's guard.  It mentions [x], and
                it is [bind] that knows what [x] is: it puts the guard under
                [x == e1] and under [x]'s type.  Leaving it here would discharge
-               it without either. *)
+               it without either.
+
+               [g2_logical] comes first: it holds the obligations [e2] raised
+               directly, whereas [c2]'s own guard holds the ones its nested
+               binds deferred, i.e. the ones that come later in program order.
+               The solver proves a conjunction of obligations left to right,
+               assuming each conjunct while proving the ones after it, so
+               getting this order wrong loses every such hypothesis. *)
             let g2_logical = { Env.trivial_guard with guard_f = g2.guard_f } in
             let c2 =
               c2 |> TcComm.apply_lcomp (fun c -> c)
-                                       (fun g -> Env.conj_guard g g2_logical) in
+                                       (fun g -> Env.conj_guard g2_logical g) in
             e2, c2, { g2 with guard_f = Trivial }) in
        //g2 now has no logical payload after this, it may have unresolved implicits
        let c2 = maybe_intro_smt_lemma env_x c1.res_typ c2 in

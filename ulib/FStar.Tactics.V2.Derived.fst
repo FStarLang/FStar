@@ -743,9 +743,8 @@ let admit_dump #a #x () = x ()
 private
 let magic_dump_t () : Tac unit =
   dump "Admitting";
-  apply (`magic);
-  exact (`());
-  ()
+  (* [apply] fills in [magic]'s anonymous [unit] argument itself *)
+  apply (`magic)
 
 val magic_dump : #a:Type -> (#[magic_dump_t ()] x : a) -> unit -> Tot a
 let magic_dump #a #x () = x
