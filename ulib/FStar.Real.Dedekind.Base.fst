@@ -65,12 +65,40 @@ let qset_ext (x y:qset)
 
 (**** Cuts *)
 
+/// The "no greatest element" clause, packaged as an opaque predicate.
+///
+/// Kept opaque for the reason described at the top of the file, and *also*
+/// because the expected postcondition of a definition is pushed into its body:
+/// were this clause the transparent conclusion of a lemma, that lemma would be
+/// proved with the clause itself in scope, and every witness the existential
+/// produces would re-trigger the quantifier. The only way to establish it is
+/// [no_greatest_intro], which introduces the [forall] by [Classical.forall_intro]
+/// -- so the body's type *is* the postcondition and no SMT goal is raised --
+/// and does so with [p] abstract, where the quantifier has nothing to chain on.
+[@@"opaque_to_smt"]
+let no_greatest (p:Q.rat -> prop) : prop =
+  forall (a:Q.rat). p a ==> (exists (b:Q.rat). p b /\ Q.lt a b)
+
+let no_greatest_intro (p:Q.rat -> prop)
+    (f: (a:Q.rat -> Lemma (requires p a)
+                         (ensures exists (b:Q.rat). p b /\ Q.lt a b)))
+  : Lemma (no_greatest p)
+  = reveal_opaque (`%no_greatest) no_greatest;
+    FStar.Classical.forall_intro
+      #Q.rat
+      #(fun (a:Q.rat) -> p a ==> (exists (b:Q.rat). p b /\ Q.lt a b))
+      (FStar.Classical.move_requires
+         #Q.rat
+         #(fun (a:Q.rat) -> p a)
+         #(fun (a:Q.rat) -> exists (b:Q.rat). p b /\ Q.lt a b)
+         f)
+
 [@@"opaque_to_smt"]
 let is_cut (c:qset) : prop =
   (exists (q:Q.rat). c q) /\
   (exists (q:Q.rat). ~(c q)) /\
   (forall (a b:Q.rat). (c b /\ Q.lt a b) ==> c a) /\
-  (forall (a:Q.rat). c a ==> (exists (b:Q.rat). c b /\ Q.lt a b))
+  no_greatest c
 
 let cut = c:qset{is_cut c}
 
@@ -84,9 +112,10 @@ let mk_cut (p:Q.rat -> prop)
       (requires (exists (q:Q.rat). p q) /\
                 (exists (q:Q.rat). ~(p q)) /\
                 (forall (a b:Q.rat). (p b /\ Q.lt a b) ==> p a) /\
-                (forall (a:Q.rat). p a ==> (exists (b:Q.rat). p b /\ Q.lt a b)))
+                no_greatest p)
       (ensures fun c -> forall (q:Q.rat). c q <==> p q)
   = reveal_opaque (`%is_cut) is_cut;
+    reveal_opaque (`%no_greatest) no_greatest;
     mk p
 
 (**** The four accessors *)
@@ -110,6 +139,7 @@ let cut_down (c:cut) (a b:Q.rat)
 let cut_above (c:cut) (a:Q.rat)
   : Ghost Q.rat (requires c a) (ensures fun b -> c b /\ Q.lt a b)
   = reveal_opaque (`%is_cut) is_cut;
+    reveal_opaque (`%no_greatest) no_greatest;
     ID.indefinite_description_ghost Q.rat (fun b -> c b /\ Q.lt a b)
 
 (**** Elementary consequences *)
@@ -201,14 +231,15 @@ let rat_dc (r:Q.rat)
   = introduce forall (a b:Q.rat). (Q.lt b r /\ Q.lt a b) ==> Q.lt a r
     with introduce _ ==> _ with Q.lt_trans a b r
 
-let rat_op (r:Q.rat)
-  : Lemma (forall (a:Q.rat). Q.lt a r ==>
-                        (exists (b:Q.rat). Q.lt b r /\ Q.lt a b))
-  = introduce forall (a:Q.rat). Q.lt a r ==>
-                           (exists (b:Q.rat). Q.lt b r /\ Q.lt a b)
-    with introduce _ ==> _
-    with (introduce exists (b:Q.rat). Q.lt b r /\ Q.lt a b
-          with (Q.mid a r) and (Q.mid_spec a r))
+/// The "no greatest element" clause, for one [a].
+let rat_op_aux (a r:Q.rat)
+  : Lemma (requires Q.lt a r)
+          (ensures exists (b:Q.rat). Q.lt b r /\ Q.lt a b)
+  = introduce exists (b:Q.rat). Q.lt b r /\ Q.lt a b
+    with (Q.mid a r) and (Q.mid_spec a r)
+
+let rat_op (r:Q.rat) : Lemma (no_greatest (fun q -> b2t (Q.lt q r)))
+  = no_greatest_intro (fun q -> b2t (Q.lt q r)) (fun a -> rat_op_aux a r)
 
 let rat_cut (r:Q.rat) : cut =
   rat_ne r; rat_nf r; rat_dc r; rat_op r;

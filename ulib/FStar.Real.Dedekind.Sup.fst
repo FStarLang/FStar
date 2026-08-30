@@ -64,20 +64,20 @@ let union_dc (s:cset)
         introduce exists (x2:B.cut). s x2 /\ x2 u with x and ()
       end
 
-let union_op (s:cset)
-  : Lemma (forall (u:Q.rat). unionp s u ==>
-                        (exists (v:Q.rat). unionp s v /\ Q.lt u v))
-  = introduce forall (u:Q.rat). unionp s u ==>
-                           (exists (v:Q.rat). unionp s v /\ Q.lt u v)
-    with introduce _ ==> _ with
-      eliminate exists (x:B.cut). s x /\ x u
-      with begin
-        let v = B.cut_above x u in
-        introduce exists (x2:B.cut). s x2 /\ x2 v with x and ();
-        introduce exists (v2:Q.rat). unionp s v2 /\ Q.lt u v2 with v and ()
-      end
+let union_op_aux (s:cset) (u:Q.rat)
+  : Lemma (requires unionp s u)
+          (ensures exists (v:Q.rat). unionp s v /\ Q.lt u v)
+  = eliminate exists (x:B.cut). s x /\ x u
+    with begin
+      let v = B.cut_above x u in
+      introduce exists (x2:B.cut). s x2 /\ x2 v with x and ();
+      introduce exists (v2:Q.rat). unionp s v2 /\ Q.lt u v2 with v and ()
+    end
 
-#push-options "--z3rlimit 200"
+let union_op (s:cset) : Lemma (B.no_greatest (unionp s))
+  = B.no_greatest_intro (unionp s) (union_op_aux s)
+
+#push-options "--z3rlimit 50"
 let csup (s:cset)
   : Pure B.cut
       (requires cnonempty s /\ cbounded s)

@@ -150,35 +150,39 @@ let mul_dc (x y:B.cut)
       end
     end
 
-let mul_op (x y:B.cut)
-  : Lemma (forall (u:Q.rat). mulp x y u ==>
-                        (exists (v:Q.rat). mulp x y v /\ Q.lt u v))
-  = introduce forall (u:Q.rat). mulp x y u ==>
-                           (exists (v:Q.rat). mulp x y v /\ Q.lt u v)
-    with introduce mulp x y u ==> (exists (v:Q.rat). mulp x y v /\ Q.lt u v)
+/// The "no greatest element" clause, for one [u]. Deliberately *not* stated as
+/// a [Lemma (forall u. ...)]: a definition's expected postcondition is pushed
+/// into its body, so that shape proves the clause with the clause itself in
+/// scope, and every witness the existential produces re-triggers the
+/// quantifier. The [forall] is introduced at the point of use instead.
+let mul_op_aux (x y:B.cut) (u:Q.rat)
+  : Lemma (requires mulp x y u)
+          (ensures exists (v:Q.rat). mulp x y v /\ Q.lt u v)
+  =
+    introduce Q.lt u Q.zero ==> (exists (v:Q.rat). mulp x y v /\ Q.lt u v)
     with begin
-      introduce Q.lt u Q.zero ==> (exists (v:Q.rat). mulp x y v /\ Q.lt u v)
-      with begin
-        Q.mid_spec u Q.zero;
-        introduce exists (v:Q.rat). mulp x y v /\ Q.lt u v
-        with (Q.mid u Q.zero) and ()
-      end;
-      introduce (exists (a b:Q.rat).
-                   x a /\ y b /\ Q.lt Q.zero a /\ Q.lt Q.zero b /\
-                   Q.lt u (Q.mul a b)) ==>
-                (exists (v:Q.rat). mulp x y v /\ Q.lt u v)
-      with eliminate exists (a b:Q.rat).
-             x a /\ y b /\ Q.lt Q.zero a /\ Q.lt Q.zero b /\ Q.lt u (Q.mul a b)
-      with begin
-        Q.mid_spec u (Q.mul a b);
-        introduce exists (a2 b2:Q.rat).
-            x a2 /\ y b2 /\ Q.lt Q.zero a2 /\ Q.lt Q.zero b2 /\
-            Q.lt (Q.mid u (Q.mul a b)) (Q.mul a2 b2)
-        with a b and ();
-        introduce exists (v:Q.rat). mulp x y v /\ Q.lt u v
-        with (Q.mid u (Q.mul a b)) and ()
-      end
+      Q.mid_spec u Q.zero;
+      introduce exists (v:Q.rat). mulp x y v /\ Q.lt u v
+      with (Q.mid u Q.zero) and ()
+    end;
+    introduce (exists (a b:Q.rat).
+                 x a /\ y b /\ Q.lt Q.zero a /\ Q.lt Q.zero b /\
+                 Q.lt u (Q.mul a b)) ==>
+              (exists (v:Q.rat). mulp x y v /\ Q.lt u v)
+    with eliminate exists (a b:Q.rat).
+           x a /\ y b /\ Q.lt Q.zero a /\ Q.lt Q.zero b /\ Q.lt u (Q.mul a b)
+    with begin
+      Q.mid_spec u (Q.mul a b);
+      introduce exists (a2 b2:Q.rat).
+          x a2 /\ y b2 /\ Q.lt Q.zero a2 /\ Q.lt Q.zero b2 /\
+          Q.lt (Q.mid u (Q.mul a b)) (Q.mul a2 b2)
+      with a b and ();
+      introduce exists (v:Q.rat). mulp x y v /\ Q.lt u v
+      with (Q.mid u (Q.mul a b)) and ()
     end
+
+let mul_op (x y:B.cut) : Lemma (B.no_greatest (mulp x y))
+  = B.no_greatest_intro (mulp x y) (mul_op_aux x y)
 
 let cpmul (x y:B.cut) : c:B.cut{forall (q:Q.rat). c q <==> mulp x y q} =
   mul_ne x y; mul_nf x y; mul_dc x y; mul_op x y;
@@ -1378,31 +1382,31 @@ let inv_dc (x:B.cut)
       end
     end
 
-let inv_op (x:B.cut)
-  : Lemma (forall (u:Q.rat). invp x u ==> (exists (v:Q.rat). invp x v /\ Q.lt u v))
-  = introduce forall (u:Q.rat).
-        invp x u ==> (exists (v:Q.rat). invp x v /\ Q.lt u v)
-    with introduce invp x u ==> (exists (v:Q.rat). invp x v /\ Q.lt u v)
+let inv_op_aux (x:B.cut) (u:Q.rat)
+  : Lemma (requires invp x u)
+          (ensures exists (v:Q.rat). invp x v /\ Q.lt u v)
+  =
+    introduce Q.lt u Q.zero ==> (exists (v:Q.rat). invp x v /\ Q.lt u v)
     with begin
-      introduce Q.lt u Q.zero ==> (exists (v:Q.rat). invp x v /\ Q.lt u v)
-      with begin
-        Q.mid_spec u Q.zero;
-        introduce exists (v:Q.rat). invp x v /\ Q.lt u v
-        with (Q.mid u Q.zero) and ()
-      end;
-      introduce (exists (r:Q.rat). Q.lt Q.zero r /\ ~(x r) /\ Q.lt u (Q.inv r))
-                ==> (exists (v:Q.rat). invp x v /\ Q.lt u v)
-      with eliminate exists (r:Q.rat).
-             Q.lt Q.zero r /\ ~(x r) /\ Q.lt u (Q.inv r)
-      with begin
-        Q.mid_spec u (Q.inv r);
-        introduce exists (r2:Q.rat).
-            Q.lt Q.zero r2 /\ ~(x r2) /\ Q.lt (Q.mid u (Q.inv r)) (Q.inv r2)
-        with r and ();
-        introduce exists (v:Q.rat). invp x v /\ Q.lt u v
-        with (Q.mid u (Q.inv r)) and ()
-      end
+      Q.mid_spec u Q.zero;
+      introduce exists (v:Q.rat). invp x v /\ Q.lt u v
+      with (Q.mid u Q.zero) and ()
+    end;
+    introduce (exists (r:Q.rat). Q.lt Q.zero r /\ ~(x r) /\ Q.lt u (Q.inv r))
+              ==> (exists (v:Q.rat). invp x v /\ Q.lt u v)
+    with eliminate exists (r:Q.rat).
+           Q.lt Q.zero r /\ ~(x r) /\ Q.lt u (Q.inv r)
+    with begin
+      Q.mid_spec u (Q.inv r);
+      introduce exists (r2:Q.rat).
+          Q.lt Q.zero r2 /\ ~(x r2) /\ Q.lt (Q.mid u (Q.inv r)) (Q.inv r2)
+      with r and ();
+      introduce exists (v:Q.rat). invp x v /\ Q.lt u v
+      with (Q.mid u (Q.inv r)) and ()
     end
+
+let inv_op (x:B.cut) : Lemma (B.no_greatest (invp x))
+  = B.no_greatest_intro (invp x) (inv_op_aux x)
 
 let cinv (x:B.cut{B.clt A.czero x})
   : c:B.cut{forall (q:Q.rat). c q <==> invp x q}

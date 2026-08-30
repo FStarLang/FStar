@@ -121,19 +121,19 @@ let add_dc (x y:B.cut)
         with (Q.sub u b) b and ()
       end
 
-let add_op (x y:B.cut)
-  : Lemma (forall (u:Q.rat). addp x y u ==>
-                        (exists (v:Q.rat). addp x y v /\ Q.lt u v))
-  = introduce forall (u:Q.rat). addp x y u ==>
-                           (exists (v:Q.rat). addp x y v /\ Q.lt u v)
-    with introduce _ ==> _ with
-      eliminate exists (a b:Q.rat). x a /\ y b /\ u == Q.add a b
-      with begin
-        let a2 = B.cut_above x a in
-        Q.lt_add_r a a2 b;
-        introduce exists (v:Q.rat). addp x y v /\ Q.lt u v
-        with (Q.add a2 b) and ()
-      end
+let add_op_aux (x y:B.cut) (u:Q.rat)
+  : Lemma (requires addp x y u)
+          (ensures exists (v:Q.rat). addp x y v /\ Q.lt u v)
+  = eliminate exists (a b:Q.rat). x a /\ y b /\ u == Q.add a b
+    with begin
+      let a2 = B.cut_above x a in
+      Q.lt_add_r a a2 b;
+      introduce exists (v:Q.rat). addp x y v /\ Q.lt u v
+      with (Q.add a2 b) and ()
+    end
+
+let add_op (x y:B.cut) : Lemma (B.no_greatest (addp x y))
+  = B.no_greatest_intro (addp x y) (add_op_aux x y)
 
 let cadd (x y:B.cut) : c:B.cut{forall (q:Q.rat). c q <==> addp x y q} =
   add_ne x y; add_nf x y; add_dc x y; add_op x y;
@@ -197,33 +197,31 @@ let opp_dc (x:B.cut)
         with s and ()
       end
 
-let opp_op (x:B.cut)
-  : Lemma (forall (u:Q.rat). oppp x u ==>
-                        (exists (v:Q.rat). oppp x v /\ Q.lt u v))
-  = introduce forall (u:Q.rat). oppp x u ==>
-                           (exists (v:Q.rat). oppp x v /\ Q.lt u v)
-    with introduce _ ==> _ with
-      eliminate exists (r:Q.rat). Q.lt Q.zero r /\ ~(x (Q.neg (Q.add u r)))
-      with begin
-        let s = Q.mid Q.zero r in
-        Q.mid_spec Q.zero r;
-        let v = Q.add u (Q.sub r s) in
-        qsub_lt r s s;
-        Q.add_neg s;
-        qlt_add_l Q.zero (Q.sub r s) u;
-        Q.add_zero u;
-        Q.add_assoc u (Q.sub r s) s;
-        qsub_add r s;
-        introduce exists (r:Q.rat). Q.lt Q.zero r /\ ~(x (Q.neg (Q.add v r)))
-        with s and ();
-        introduce exists (v:Q.rat). oppp x v /\ Q.lt u v with v and ()
-      end
+let opp_op_aux (x:B.cut) (u:Q.rat)
+  : Lemma (requires oppp x u)
+          (ensures exists (v:Q.rat). oppp x v /\ Q.lt u v)
+  = eliminate exists (r:Q.rat). Q.lt Q.zero r /\ ~(x (Q.neg (Q.add u r)))
+    with begin
+      let s = Q.mid Q.zero r in
+      Q.mid_spec Q.zero r;
+      let v = Q.add u (Q.sub r s) in
+      qsub_lt r s s;
+      Q.add_neg s;
+      qlt_add_l Q.zero (Q.sub r s) u;
+      Q.add_zero u;
+      Q.add_assoc u (Q.sub r s) s;
+      qsub_add r s;
+      introduce exists (r:Q.rat). Q.lt Q.zero r /\ ~(x (Q.neg (Q.add v r)))
+      with s and ();
+      introduce exists (v:Q.rat). oppp x v /\ Q.lt u v with v and ()
+    end
 
-#push-options "--z3rlimit 200"
+let opp_op (x:B.cut) : Lemma (B.no_greatest (oppp x))
+  = B.no_greatest_intro (oppp x) (opp_op_aux x)
+
 let copp (x:B.cut) : c:B.cut{forall (q:Q.rat). c q <==> oppp x q} =
   opp_ne x; opp_nf x; opp_dc x; opp_op x;
   B.mk_cut (oppp x)
-#pop-options
 
 (**** More rational rearrangements *)
 

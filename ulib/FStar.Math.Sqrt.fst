@@ -182,9 +182,17 @@ let sqrt_not_gt (x:real)
 
 (**** The defining property *)
 
+/// Hoisted: concluding [a == b] from the two negations is trivial, but doing
+/// it in the ambient context of this module is not.
+let trichotomy (a b:real)
+  : Lemma (requires ~(a <. b) /\ ~(b <. a)) (ensures a == b)
+  = ()
+
 let sqrt_tot_square (x:real)
   : Lemma (requires x >=. 0.0R) (ensures sqrt_tot x *. sqrt_tot x == x)
-  = sqrt_not_lt x; sqrt_not_gt x
+  = sqrt_not_lt x;
+    sqrt_not_gt x;
+    trichotomy (sqrt_tot x *. sqrt_tot x) x
 
 (**** The interface *)
 
