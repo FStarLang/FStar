@@ -114,7 +114,8 @@ let rec name_function_binders_from (i:int) (t:term) : ML term = match t.n with
       in
       let comp =
         match comp.n with
-        | Total res -> { comp with n = Total (name_function_binders_from (i+1) res) }
+        | Comp ct when lid_equals ct.effect_name PC.effect_Tot_lid ->
+          { comp with n = Comp {ct with result_typ = name_function_binders_from (i+1) ct.result_typ} }
         | _ -> comp
       in
       mk (Tm_arrow {b; comp}) t.pos
@@ -245,18 +246,12 @@ let ml_comp t r =
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
-    | Total _ -> PC.effect_Tot_lid
-    | GTotal _ -> PC.effect_GTot_lid
 
 let comp_flags c = match c.n with
-    | Total _ -> [TOTAL]
-    | GTotal _ -> []
     | Comp ct -> ct.flags
 
 let comp_eff_name_and_res (c:comp) : lident & typ =
   match c.n with
-  | Total t -> PC.effect_Tot_lid, t
-  | GTotal t -> PC.effect_GTot_lid, t
   | Comp c -> c.effect_name, c.result_typ
 
 let un_uinst t =
@@ -307,11 +302,19 @@ let is_tot_or_gtot_comp c =
     is_total_comp c
     || PC.is_ghost_effect_lid (comp_effect_name c)
 
+(* Exactly what [mk_Total]/[mk_GTotal] build: a [Tot] or [GTot] with nothing
+   else to say.  Before [Total]/[GTotal] were folded into [Comp] this was a
+   distinct syntactic form, and a few places still want to single it out. *)
+let is_bare_tot_or_gtot_comp c =
+  match c.n with
+  | Comp ct ->
+    (lid_equals ct.effect_name PC.effect_Tot_lid ||
+     lid_equals ct.effect_name PC.effect_GTot_lid)
+    && ct.flags |> U.for_all (function TOTAL -> true | _ -> false)
+
 let is_pure_effect l = PC.is_pure_effect_lid l
 
 let is_pure_comp c = match c.n with
-    | Total _ -> true
-    | GTotal _ -> false
     | Comp ct -> is_total_comp c
                  || is_pure_effect ct.effect_name
                  || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
@@ -331,7 +334,9 @@ let rec is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow {comp=c} ->
       (* [comp_result] is not in scope yet. *)
       (match c.n with
-       | Total res when Tm_arrow? (compress res).n -> is_pure_or_ghost_function res
+       | Comp ct when lid_equals ct.effect_name PC.effect_Tot_lid
+                    && Tm_arrow? (compress ct.result_typ).n ->
+         is_pure_or_ghost_function ct.result_typ
        | _ -> is_pure_or_ghost_comp c)
     | _ -> true
 
@@ -391,13 +396,9 @@ let is_ml_comp c = match c.n with
   | _ -> false
 
 let comp_result c = match c.n with
-  | Total t
-  | GTotal t -> t
   | Comp ct -> ct.result_typ
 
 let set_result_typ c t = match c.n with
-  | Total _ -> mk_Total t
-  | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
 (* The SMT patterns attached to a Lemma, if any. *)
@@ -1747,10 +1748,6 @@ and unbound_variables_ascription asc : ML _ =
 
 and unbound_variables_comp c : ML _ =
     match c.n with
-    | Total t
-    | GTotal t ->
-      unbound_variables t
-
     | Comp ct ->
       unbound_variables ct.result_typ
 

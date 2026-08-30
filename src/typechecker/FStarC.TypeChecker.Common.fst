@@ -321,8 +321,8 @@ let lcomp_set_flags lc fs
   : ML lcomp =
     let comp_typ_set_flags (c:comp) =
         match c.n with
-        | Total _
-        | GTotal _ -> c
+        (* A plain [Tot]/[GTot] says all there is to say; leave it alone. *)
+        | Comp ct when U.is_bare_tot_or_gtot_comp c -> c
         | Comp ct ->
           let ct = {ct with flags=fs} in
           {c with n=Comp ct}
@@ -367,8 +367,6 @@ let residual_comp_of_lcomp lc = {
 let lcomp_of_comp_guard c0 g : ML lcomp =
     let eff_name, flags =
         match c0.n with
-        | Total _ -> PC.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> PC.effect_GTot_lid, []
         | Comp c -> c.effect_name, c.flags in
     mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, g)
 

@@ -412,17 +412,13 @@ and args_to_string args : ML string =
 and comp_to_string c : ML string =
     Errors.with_ctx "While ugly-printing a computation" (fun () ->
     match c.n with
-    | Total t ->
-      begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ -> Format.fmt1 "Tot %s" (term_to_string t)
-      end
-    | GTotal t ->
-      begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ -> Format.fmt1 "GTot %s" (term_to_string t)
-      end
     | Comp c ->
+        (* [Tot t] and [GTot t] where [t] is a type are printed bare, as [t]. *)
+        let is_bare_type () =
+          Tm_type? (compress c.result_typ).n
+          && not (Options.print_implicits() || Options.print_universes())
+          && not (c.flags |> U.for_some (function TOTAL -> false | _ -> true))
+        in
         let basic =
           if (Options.print_effect_args())
           then Format.fmt "%s<%s> (%s) (attributes %s)"
@@ -430,9 +426,12 @@ and comp_to_string c : ML string =
                              c.comp_univs |> List.map univ_to_string |> String.concat ", ";
                              term_to_string c.result_typ;
                              cflags_to_string c.flags]
+          else if lid_equals c.effect_name C.effect_GTot_lid
+          then (if is_bare_type () then term_to_string c.result_typ
+                else Format.fmt1 "GTot %s" (term_to_string c.result_typ))
           else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
-          && not (Options.print_effect_args())
-          then Format.fmt1 "Tot %s" (term_to_string c.result_typ)
+          then (if is_bare_type () then term_to_string c.result_typ
+                else Format.fmt1 "Tot %s" (term_to_string c.result_typ))
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
                   && lid_equals c.effect_name (C.effect_ML_lid())

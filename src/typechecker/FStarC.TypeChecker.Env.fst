@@ -1531,32 +1531,21 @@ instance pretty_guard : pretty guard_t = {
 let comp_to_comp_typ (env:env) c : ML comp_typ =
   def_check_scoped c.pos "comp_to_comp_typ" env c;
   match c.n with
+  (* [mk_Total]/[mk_GTotal] leave the universe list empty; fill it in.  Any
+     other comp is taken as it comes, exactly as before [Total]/[GTotal] were
+     folded into [Comp]. *)
+  | Comp ct when Nil? ct.comp_univs && U.is_bare_tot_or_gtot_comp c ->
+    {ct with comp_univs = [env.universe_of env ct.result_typ]}
   | Comp ct -> ct
-  | _ ->
-    let effect_name, result_typ =
-      match c.n with
-      | Total t -> Const.effect_Tot_lid, t
-      | GTotal t -> Const.effect_GTot_lid, t in
-    {comp_univs = [env.universe_of env result_typ];
-     effect_name;
-     result_typ;
-     flags = U.comp_flags c}
 
 (* Like [comp_to_comp_typ], but uses the given universes rather than inferring
    them with [env.universe_of]. Use this when [c]'s free variables need not be
    in scope in [env], e.g. when converting the body of an effect abbreviation. *)
 let comp_to_comp_typ_with_univs univs c : ML comp_typ =
   match c.n with
+  | Comp ct when Nil? ct.comp_univs && U.is_bare_tot_or_gtot_comp c ->
+    {ct with comp_univs = univs}
   | Comp ct -> ct
-  | _ ->
-    let effect_name, result_typ =
-      match c.n with
-      | Total t -> Const.effect_Tot_lid, t
-      | GTotal t -> Const.effect_GTot_lid, t in
-    {comp_univs = univs;
-     effect_name;
-     result_typ;
-     flags = U.comp_flags c}
 
 let comp_set_flags env c f : ML _ =
     def_check_scoped c.pos "comp_set_flags.IN" env c;

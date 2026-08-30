@@ -44,7 +44,7 @@ let matrix_seq #c #m #r (generator: matrix_generator c m r) =
 *)
 (* The two [fold_offset_elimination_lemma] calls below are at the edge of the
    default rlimit. *)
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4"
 let double_fold_transpose_lemma #c #eq 
                                 (#m0: int) (#mk: not_less_than m0)
                                 (#n0: int) (#nk: not_less_than n0)

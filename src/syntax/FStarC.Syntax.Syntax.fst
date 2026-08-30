@@ -234,13 +234,13 @@ let rec mk_Tm_arrow (bs:binders) (c:comp) p =
     match bs with
     | [] ->
       begin match c.n with
-      | Total t -> t
+      | Comp ct when lid_equals ct.effect_name PC.effect_Tot_lid -> ct.result_typ
       | _ -> failwith "mk_Tm_arrow: no binders, and the computation is not Tot"
       end
     | [b] -> mk (Tm_arrow {b; comp=c}) p
     | b::bs ->
       let tail = mk_Tm_arrow bs c p in
-      mk (Tm_arrow {b; comp=mk (Total tail) tail.pos}) p
+      mk (Tm_arrow {b; comp=mk (Comp {comp_univs=[]; effect_name=PC.effect_Tot_lid; result_typ=tail; flags=[TOTAL]}) tail.pos}) p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
@@ -254,10 +254,14 @@ let mk_Tm_uinst (t:term) (us:universes) =
 let extend_app_n t args' r = mk_Tm_app t args' r
 let extend_app t arg r = extend_app_n t [arg] r
 let mk_Tm_delayed lr pos : ML term = mk (Tm_delayed {tm=fst lr; substs=snd lr}) pos
-let mk_Total t : ML comp = mk (Total t) t.pos
-let mk_GTotal t : ML comp = mk (GTotal t) t.pos
-
 let mk_Comp (ct:comp_typ) : ML comp = mk (Comp ct) ct.result_typ.pos
+
+(* [Tot] and [GTot] are ordinary effect names now; the universe list is left
+   empty and filled in on demand (see [Env.comp_to_comp_typ]). *)
+let mk_Total t : ML comp =
+  mk_Comp ({comp_univs=[]; effect_name=PC.effect_Tot_lid; result_typ=t; flags=[TOTAL]})
+let mk_GTotal t : ML comp =
+  mk_Comp ({comp_univs=[]; effect_name=PC.effect_GTot_lid; result_typ=t; flags=[]})
 
 
 let order_bv (x y : bv) : int  = x.index - y.index

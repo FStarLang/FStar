@@ -292,8 +292,12 @@ let inspect_comp (c : comp) : ML comp_view =
         | _ -> failwith "Impossible!"
     in
     match c.n with
-    | Total t -> C_Total t
-    | GTotal t -> C_GTotal t
+    | Comp ct when Ident.lid_equals ct.effect_name PC.effect_Tot_lid
+                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
+      C_Total ct.result_typ
+    | Comp ct when Ident.lid_equals ct.effect_name PC.effect_GTot_lid
+                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
+      C_GTotal ct.result_typ
     | Comp ct -> begin
         let uopt =
           if List.length ct.comp_univs = 0

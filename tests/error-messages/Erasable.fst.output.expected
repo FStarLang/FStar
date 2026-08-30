@@ -13,7 +13,7 @@
 * Info at Erasable.fst(28,42-28,52):
   - Expected failure:
   - Computed type Prims.int
-    and effect Prims.GTot
+    and effect GTot
     is not compatible with the annotated type Prims.int
     and effect Tot
 

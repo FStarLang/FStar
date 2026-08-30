@@ -1186,28 +1186,19 @@ and resugar_comp_with_pre (env: DsEnv.env) (pre: option S.term) (c:S.comp) : ML 
         A.mk_term a c.pos A.Un
   in
   match (c.n) with
-  | Total typ ->
-    let t = resugar_term' env typ in
-    (* If --print_implicits, we print the Tot *)
-    if Options.print_implicits()
-    then mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
-    else t
-
-  | GTotal typ ->
-    let t = resugar_term' env typ in
-    mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
-
-  (* A pure or ghost computation is just a [Tot]/[GTot]; print it as such. *)
-  | Comp c when not (Options.print_implicits ())
-             && not (c.flags |> BU.for_some (function
+  (* A pure or ghost computation is just a [Tot]/[GTot]; print it as such,
+     and elide a [Tot] altogether unless --print_implicits. *)
+  | Comp c when not (c.flags |> BU.for_some (function
                      | DECREASES _ | SMTPAT _ -> true
                      | _ -> false))
              && (U.is_pure_effect c.effect_name ||
                  U.is_ghost_effect c.effect_name) ->
-    resugar_comp' env
-      (if U.is_pure_effect c.effect_name
-       then S.mk_Total c.result_typ
-       else S.mk_GTotal c.result_typ)
+    let t = resugar_term' env c.result_typ in
+    if U.is_ghost_effect c.effect_name
+    then mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
+    else if Options.print_implicits()
+    then mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
+    else t
 
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in

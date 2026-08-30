@@ -255,8 +255,6 @@ let subst_comp' s t : ML _ =
   | [[]], NoUseRange -> t
   | _ ->
     match t.n with
-      | Total t -> mk_Total (subst' s t)
-      | GTotal t -> mk_GTotal (subst' s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 let subst_ascription' s (asc:ascription) : ML _ =

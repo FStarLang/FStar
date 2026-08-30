@@ -495,7 +495,6 @@ let extract_let_rec_annotation env (lb:letbinding) :
 
 let comp_univ_opt c : ML _ =
     match c.n with
-    | Total _ | GTotal _ -> None
     | Comp c ->
       match c.comp_univs with
       | [] -> None
@@ -612,11 +611,9 @@ let close_wp_comp env bvs (c:comp) : ML _ =
     if U.is_ml_comp c then c
     else
       match c.n with
-      | Total _
-      | GTotal _ -> c
       | Comp ct ->
         S.mk_Comp ({ ct with
-          flags = ct.flags |> List.filter (function MLEFFECT -> true | _ -> false) })
+          flags = ct.flags |> List.filter (function MLEFFECT | TOTAL -> true | _ -> false) })
 
 let close_wp_lcomp env bvs (lc:lcomp) : ML lcomp =
   let bs = bvs |> List.map S.mk_binder in
@@ -985,15 +982,24 @@ let bind_maybe_capture
         (* only a refinement carries information that the binder's elimination
            would lose *)
         let is_refinement = Tm_refine? t1.n in
-        (* ... and only if the result type mentions [x] at all, i.e. [e1] is a
-           subterm of it.  Otherwise the restated fact is about a value that has
-           nothing to do with the result, and all it does is pollute the type:
-           an argument's own refinement would end up on the result type of every
-           application that has it, so [SemiLattice true (fun x y -> x || y)]
-           would have type [_:semilattice{commutative (fun x y -> x || y) /\ ...}]. *)
-        let mentioned = Cons? subst_x in
+        (* [x] need not occur in [lc2]'s result type for the fact to be worth
+           keeping: it is about [e1], which is a closed term here, and it is the
+           only trace the intermediate computation leaves.  [hd :: f tl] is the
+           motivating case -- the cons cell's type says nothing about [f tl], so
+           without this the callee's specification is simply gone by the time
+           the enclosing definition is checked against its declared type.
+           In that position only a *call* is worth restating, though: any other
+           term gets its refined type from the parameter it is being passed to,
+           not from anything it computes, so restating it merely republishes the
+           callee's own signature.  [SemiLattice true (fun x y -> x || y)] is
+           the case that matters -- capturing the lambda's field refinement
+           would give the constructor application the type
+           [_:semilattice{commutative (fun x y -> x || y) /\ ...}], and an
+           annotation on it would no longer be its type. *)
+        let computed = Tm_app? (SS.compress e1).n in
         if is_let_binding || has_evident_type || uninformative
-        || not is_refinement || not mentioned
+        || not is_refinement
+        || (not (Cons? subst_x) && not computed)
         then U.t_true
         else Env.type_hypothesis env t1 e1
       end

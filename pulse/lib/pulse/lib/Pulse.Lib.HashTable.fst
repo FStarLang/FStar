@@ -230,7 +230,7 @@ fn replace
 }
 
 
-#push-options "--fuel 1 --ifuel 2 --z3rlimit_factor 6"
+#push-options "--fuel 1 --ifuel 2 --z3rlimit_factor 20"
 fn insert
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)

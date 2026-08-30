@@ -1544,7 +1544,9 @@ let compress_cprob wl p : ML _
   =
   let whnf_c env c =
     match c.n with
-    | Total ty -> S.mk_Total (whnf env ty)
+    | Comp ct when U.is_bare_tot_or_gtot_comp c
+                && Ident.lid_equals ct.effect_name PC.effect_Tot_lid ->
+      S.mk_Total (whnf env ct.result_typ)
     | _ -> c
   in
   let env = p_env wl (CProb p) in
@@ -2216,10 +2218,10 @@ let imitate_arrow (orig:prob) (wl:worklist)
         f u, wl
       in
       match c.n with
-      | Total t ->
-        imitate_tot_or_gtot t S.mk_Total wl
-      | GTotal t ->
-        imitate_tot_or_gtot t S.mk_GTotal wl
+      | Comp ct when U.is_bare_tot_or_gtot_comp c ->
+        imitate_tot_or_gtot ct.result_typ
+          (if Ident.lid_equals ct.effect_name PC.effect_Tot_lid
+           then S.mk_Total else S.mk_GTotal) wl
       | Comp ct ->
         let out_args, wl =
           List.fold_right
@@ -2584,12 +2586,25 @@ let solve_rigid_flex_or_flex_rigid_subtyping
          Flex_rigid problem.  We deliberately do not defer for unrefined upper
          bounds: they carry no more information than the lower bounds do, and
          preferring the lower bounds there loses the expected type.  We also
-         require a *refined* lower bound: if the lower bounds are all bare
-         types then they cannot establish the upper bound's refinement, and
-         preferring them just turns a solvable problem into an unsolvable one
-         (e.g. [ap evenb3 1] with [ap : ('a -> bool) -> 'a -> bool] and
-         [evenb3 : i:int{i>0} -> bool], where the literal's lower bound is
-         [int] and the only workable solution is the upper bound). *)
+         require one of two things of the other bounds:
+
+         - a *refined* lower bound, which is strong enough to establish the
+           upper bound's refinement on its own; or
+
+         - an *unrefined* upper bound, i.e. some other use of the variable that
+           asks only for the base type.  Meeting it with the refined one
+           over-commits: it makes the refinement part of the variable's
+           definition even though that bound did not ask for it.  This is the
+           [let y = match ... in lem y; y] shape, where [lem y] bounds the
+           match's result type by [int] and returning [y] bounds it by the
+           function's refined result type.
+
+         If neither holds we must *not* defer: with all-bare lower bounds and a
+         single refined upper bound, the upper bound is the only workable
+         solution and preferring the lower bounds turns a solvable problem into
+         an unsolvable one (e.g. [tests/bug-reports/closed/Bug026.fst]'s
+         [filter evenb3 [1;2;3;4]] with [evenb3 : i:int{i>0} -> bool], where
+         the literals' lower bound is just [int]). *)
       let lower_bound_typs () : ML (list term) =
           wl.attempting |> List.collect
             (function
@@ -2600,11 +2615,31 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                 | _ -> [])
              | _ -> [])
       in
+      (* [bounds_typs] only sees the upper bounds still in [wl.attempting].
+         Deferring a problem moves it to [wl.wl_deferred], so a decision taken
+         here must look at both -- otherwise the first deferral hides the very
+         bound that motivated it. *)
+      let deferred_upper_bound_typs () : ML (list term) =
+          wl.wl_deferred
+          |> CList.map (fun (_, _, _, p) -> p)
+          |> to_list
+          |> List.collect
+            (function
+             | TProb tp ->
+               let tp = maybe_invert tp in
+               (match tp.rank with
+                | Some Flex_rigid when equiv tp.lhs -> [whnf env tp.rhs]
+                | _ -> [])
+             | _ -> [])
+      in
       let is_refined t = Tm_refine? (SS.compress t).n in
       let prefer_lower_bounds () : ML bool =
           flip
        && bounds_typs |> BU.for_some is_refined
-       && lower_bound_typs () |> BU.for_some is_refined
+       && (lower_bound_typs () |> BU.for_some is_refined
+           || (Cons? (lower_bound_typs ())
+               && bounds_typs @ deferred_upper_bound_typs ()
+                  |> BU.for_some (fun t -> not (is_refined t))))
       in
       if prefer_lower_bounds ()
       then solve (defer_lit Deferred_flex
@@ -4629,30 +4664,27 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
            then c1, c2
            else N.ghost_to_pure2 env (c1, c2) in
 
+         (* [Tot] and [GTot] are handled by name; everything else goes to the
+            effect lattice below. *)
+         let is_tot c = Ident.lid_equals (U.comp_effect_name c) PC.effect_Tot_lid in
+         let is_gtot c = Ident.lid_equals (U.comp_effect_name c) PC.effect_GTot_lid in
+         let result_types_only () =
+           solve_t (problem_using_guard orig (U.comp_result c1) problem.relation
+                                             (U.comp_result c2) None "result type") wl
+         in
          match c1.n, c2.n with
-         | GTotal t1, Total t2 when (Env.non_informative env t2) ->
-           solve_t (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+         | _, _ when is_gtot c1 && is_tot c2 ->
+           if Env.non_informative env (U.comp_result c2)
+           then result_types_only ()
+           else giveup wl (Thunk.mkv "incompatible monad ordering: GTot </: Tot") orig
 
-         | GTotal _, Total _ ->
-           giveup wl (Thunk.mkv "incompatible monad ordering: GTot </: Tot")  orig
+         | _, _ when (is_tot c1 && is_tot c2) || (is_gtot c1 && is_gtot c2) -> //rigid-rigid 1
+           result_types_only ()
 
-         | Total  t1, Total  t2
-         | GTotal t1, GTotal t2 -> //rigid-rigid 1
-           solve_t (problem_using_guard orig t1 problem.relation t2 None "result type") wl
-
-         | Total  t1, GTotal t2 when problem.relation = SUB ->
-           solve_t (problem_using_guard orig t1 problem.relation t2 None "result type") wl
-
-         | Total  t1, GTotal t2 ->
-           giveup wl (Thunk.mkv "GTot =/= Tot") orig
-
-         | GTotal _, Comp _
-         | Total _,  Comp _ ->
-           solve_c ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl
-
-         | Comp _, GTotal _
-         | Comp _, Total _ ->
-           solve_c ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
+         | _, _ when is_tot c1 && is_gtot c2 ->
+           if problem.relation = SUB
+           then result_types_only ()
+           else giveup wl (Thunk.mkv "GTot =/= Tot") orig
 
          | Comp _, Comp _ ->
             if (U.is_ml_comp c1 && U.is_ml_comp c2)

@@ -663,8 +663,6 @@ let mutuals_unused_in_type (mutuals:list lident) t : ML _ =
     L.for_all (fun b -> ok b.binder_bv.sort) bs
   and ok_comp c : ML bool =
     match c.n with
-    | Total t -> ok t
-    | GTotal t -> ok t
     | Comp c ->
       ok c.result_typ
   in

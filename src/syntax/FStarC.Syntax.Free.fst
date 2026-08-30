@@ -246,10 +246,6 @@ and free_names_and_uvars_args args (acc : free_vars_and_fvars) use_cache : ML _ 
 
 and free_names_and_uvars_comp c use_cache : ML _ =
          match c.n with
-            | GTotal t
-            | Total t ->
-              free_names_and_uvars t use_cache
-
             | Comp ct ->
               //collect from the decreases clause
               let decreases_vars =

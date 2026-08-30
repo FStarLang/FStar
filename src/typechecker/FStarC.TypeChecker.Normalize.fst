@@ -875,10 +875,6 @@ let should_reify cfg stack =
 let rec maybe_weakly_reduced tm :  ML bool =
     let aux_comp c =
         match c.n with
-        | GTotal t
-        | Total t ->
-          maybe_weakly_reduced t
-
         | Comp ct ->
           maybe_weakly_reduced ct.result_typ
     in
@@ -2284,14 +2280,6 @@ and norm_comp : cfg -> env -> comp -> ML comp =
                                         (show comp)
                                         (show (List.length env)));
         match comp.n with
-            | Total t ->
-              let t = norm cfg env [] t in
-              { mk_Total t with pos = comp.pos }
-
-            | GTotal t ->
-              let t = norm cfg env [] t in
-              { mk_GTotal t with pos = comp.pos }
-
             | Comp ct ->
               let flags = ct.flags |> List.map (function
                 | DECREASES (Decreases_lex l) ->
@@ -3228,9 +3216,6 @@ let maybe_promote_t env non_informative_only t =
 
 let ghost_to_pure_aux env non_informative_only c =
     match c.n with
-    | Total _ -> c
-    | GTotal t ->
-      if maybe_promote_t env non_informative_only t then {c with n = Total t} else c
     | Comp ct ->
         let l = Env.norm_eff_name env ct.effect_name in
         if U.is_ghost_effect l

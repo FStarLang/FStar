@@ -15,8 +15,6 @@ instance hasNames_term : hasNames term = {
 
 instance hasNames_comp : hasNames comp = {
   freeNames = (fun c -> match c.n with
-               | Total t
-               | GTotal t -> F.names t
                | Comp ct -> F.names ct.result_typ)
 }
 

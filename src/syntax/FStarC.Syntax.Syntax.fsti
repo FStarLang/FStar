@@ -289,9 +289,7 @@ and comp_typ = {
   flags:list cflag
 }
 and comp' =
-  | Total  of typ
-  | GTotal of typ
-  | Comp   of comp_typ
+  | Comp of comp_typ
 and term = syntax term'
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
 and pat = withinfo_t pat'
@@ -726,9 +724,9 @@ val mk_Tm_uinst:    term -> universes -> ML term
 val extend_app_n:   term -> args -> range -> ML term
 val extend_app:     term -> arg -> range -> ML term
 val mk_Tm_delayed:  (term & subst_ts) -> range -> ML term
+val mk_Comp:        comp_typ -> ML comp
 val mk_Total:       typ -> ML comp
 val mk_GTotal:      typ -> ML comp
-val mk_Comp:        comp_typ -> ML comp
 
 val order_bv:        bv -> bv -> int
 val bv_eq:           bv -> bv -> bool

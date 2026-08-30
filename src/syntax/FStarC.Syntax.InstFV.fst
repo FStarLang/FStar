@@ -106,8 +106,6 @@ and inst_binders s bs : ML binders = bs |> List.map (inst_binder s)
 and inst_args s args0 : ML (list (term & aqual)) = args0 |> List.map (fun (a, imp) -> inst s a, imp)
 
 and inst_comp s c : ML comp = match c.n with
-    | Total t -> S.mk_Total (inst s t)
-    | GTotal t -> S.mk_GTotal (inst s t)
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
                                    flags=ct.flags |> List.map (function
                                         | DECREASES dec_order ->

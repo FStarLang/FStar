@@ -344,14 +344,11 @@ and on_subterms
       | Tm_arrow { b; comp } ->
         let bs = [b] in
         (match comp.n with
-        | Total t ->
-          let bs_orig, t = SS.open_term bs t in
+        | Comp ct when U.is_bare_tot_or_gtot_comp comp ->
+          let bs_orig, t = SS.open_term bs ct.result_typ in
           descend_binders tm [] [] Continue env bs_orig t None
-                          (fun bs t _ -> (U.arrow_ln bs {comp with n = Total t}).n)
-        | GTotal t ->
-          let bs_orig, t = SS.open_term bs t in
-          descend_binders tm [] [] Continue env bs_orig t None
-                          (fun bs t _ -> (U.arrow_ln bs {comp with n = GTotal t}).n)
+                          (fun bs t _ ->
+                            (U.arrow_ln bs {comp with n = Comp {ct with result_typ=t}}).n)
         | _ ->
           (* Do nothing (FIXME).
             What should we do for effectful computations? *)

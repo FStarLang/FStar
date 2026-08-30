@@ -728,8 +728,10 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
 
 and translate_comp cfg bs (c:S.comp) : ML comp =
   match c.n with
-  | S.Total  typ -> Tot (translate cfg bs typ)
-  | S.GTotal typ -> GTot (translate cfg bs typ)
+  | S.Comp ctyp when U.is_bare_tot_or_gtot_comp c ->
+    if Ident.lid_equals ctyp.S.effect_name PC.effect_Tot_lid
+    then Tot (translate cfg bs ctyp.S.result_typ)
+    else GTot (translate cfg bs ctyp.S.result_typ)
   | S.Comp   ctyp -> Comp (translate_comp_typ cfg bs ctyp)
 
 (* uncurried application *)
@@ -1050,8 +1052,8 @@ and translate_constant (c : sconst) : ML constant =
 and readback_comp cfg (c: comp) : ML S.comp =
   let c' =
     match c with
-    | Tot  typ -> S.Total (readback cfg typ)
-    | GTot typ -> S.GTotal (readback cfg typ)
+    | Tot  typ -> (S.mk_Total (readback cfg typ)).S.n
+    | GTot typ -> (S.mk_GTotal (readback cfg typ)).S.n
     | Comp ctyp     -> S.Comp (readback_comp_typ cfg ctyp)
    in S.mk c' Range.dummyRange
 

@@ -112,6 +112,10 @@ val is_total_comp (c:comp) : ML bool
 
 val is_tot_or_gtot_comp (c:comp) : ML bool
 
+(* Exactly what [mk_Total]/[mk_GTotal] build: a [Tot] or [GTot] with nothing
+   else to say. *)
+val is_bare_tot_or_gtot_comp (c:comp) : ML bool
+
 val is_pure_effect (l:lident) : bool
 
 val is_pure_comp (c:comp) : ML bool

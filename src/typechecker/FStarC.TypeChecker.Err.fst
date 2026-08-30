@@ -25,6 +25,7 @@ open FStarC.Ident
 open FStarC.Pprint
 
 module N = FStarC.TypeChecker.Normalize
+module PC = FStarC.Parser.Const
 
 open FStarC.Errors.Msg
 open FStarC.Class.Show
@@ -284,8 +285,8 @@ let disjunctive_pattern_vars (v1 v2 : list bv) : ML _ =
     (vars v1) (vars v2)))
 
 let name_and_result c : ML _ = match c.n with
-  | Total t -> "Tot", t
-  | GTotal t -> "GTot", t
+  | Comp ct when Ident.lid_equals ct.effect_name PC.effect_Tot_lid -> "Tot", ct.result_typ
+  | Comp ct when Ident.lid_equals ct.effect_name PC.effect_GTot_lid -> "GTot", ct.result_typ
   | Comp ct -> show ct.effect_name, ct.result_typ
   // TODO: ^ Use the resugaring environment to possibly shorten the effect name
 

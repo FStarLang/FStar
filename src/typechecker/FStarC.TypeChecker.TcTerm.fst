@@ -2324,15 +2324,11 @@ and tc_comp env c : ML (comp                                      (* checked ver
                   & guard_t) =                                (* logical guard for the well-formedness of c *)
   let c0 = c in
   match c.n with
-    | Total t ->
+    (* [Tot]/[GTot] are primitive: there is no effect signature to apply. *)
+    | Comp ct when U.is_bare_tot_or_gtot_comp c ->
       let k, u = U.type_u () in
-      let t, _, g = tc_check_tot_or_gtot_term env t k None in
-      mk_Total t, u, g
-
-    | GTotal t ->
-      let k, u = U.type_u () in
-      let t, _, g = tc_check_tot_or_gtot_term env t k None in
-      mk_GTotal t, u, g
+      let t, _, g = tc_check_tot_or_gtot_term env ct.result_typ k None in
+      (if Ident.lid_equals ct.effect_name Const.effect_Tot_lid then mk_Total t else mk_GTotal t), u, g
 
     | Comp c ->
       (* Effects are never universe-polymorphic: their signature is
@@ -3761,10 +3757,18 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
         if !dbg_Patterns
         then Format.print2 "Checking nested pattern %s at type %s\n" (show p) (show t);
 
-        let id t = mk_Tm_app
-          (S.fvar Const.id_lid None)
-          [S.iarg t]
-          t.pos
+        (* The identity, as a *lambda* rather than [FStar.Pervasives.id].  These
+           terms are composed into [fun x -> proj_n (... (proj_1 x))] and then
+           applied to the scrutinee, and the result is substituted into the
+           branch's result type.  Only beta-reduction is run there, so an [id]
+           fvar survives and blocks the solver: the branch of
+           [match g with Some t -> (t -> bool) | None -> unit] would have to
+           prove [(t -> bool) == (FStar.Pervasives.id (Some?.v g) -> bool)],
+           which needs [id] unfolded before the projector equation applies.  A
+           lambda simply beta-reduces away. *)
+        let id t =
+          let y = S.gen_bv "y" None t in
+          U.abs [S.mk_binder y] (S.bv_to_name y) None
         in
 
         (*
@@ -4513,9 +4517,13 @@ and check_top_level_let env e : ML _ =
 (*open*) let e1, univ_vars, c1, g1, topt = check_let_bound_def true env lb in
          let annotated = Some? topt in
          (* Maybe generalize its type *)
-         let g1, e1, univ_vars, c1 =
+         (* [annot_usable]: whether [topt]'s type still describes [c1]'s result.
+            Generalization rewrites [c1] over fresh universe names and may
+            abstract it over extra binders, and [topt] was checked before that,
+            so there it no longer does. *)
+         let g1, e1, univ_vars, c1, annot_usable =
             if annotated && not env.generalize
-            then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
+            then g1, N.reduce_uvar_solutions env e1, univ_vars, c1, true
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits env in
                  let comp1, g_comp1 = lcomp_comp c1 in
                  let g1 = g1 ++ g_comp1 in
@@ -4523,7 +4531,7 @@ and check_top_level_let env e : ML _ =
                  let g1 = Rel.resolve_generalization_implicits env g1 in
                  let g1 = map_guard g1 <| N.normalize [Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars; Env.NoFullNorm; Env.Exclude Env.Zeta] env in
                  let g1 = abstract_guard_n gvs g1 in
-                 g1, e1, univs, TcComm.lcomp_of_comp c1
+                 g1, e1, univs, TcComm.lcomp_of_comp c1, Nil? univs && Nil? gvs
          in
 
          (* Check that it doesn't have a top-level effect; warn if it does.
@@ -4596,7 +4604,21 @@ and check_top_level_let env e : ML _ =
           *)
          let cres = S.mk_Total S.t_unit in
 
-(*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
+         (* The declared type is the definition's interface: record it, not the
+            sharper one the body happened to have.  A postcondition is a
+            refinement of a result type now, so [weaken_result_typ] deliberately
+            keeps the more precise type -- right inside a definition, wrong at
+            its boundary, where it would publish an implementation detail as the
+            signature.  [let my_int : Type = int] must be recorded at [Type],
+            not at [eqtype]; the latter is a type no client asked for and, for
+            one, defeats [FStar.Tactics.Parametricity], which translates a
+            definition by cases on its recorded type. *)
+         let lbtyp =
+           match topt with
+           | Some t when annot_usable -> t
+           | _ -> U.comp_result c1
+         in
+(*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars lbtyp (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
          mk (Tm_let {lbs=(false, [lb]); body=e2})
             e.pos,
          TcComm.lcomp_of_comp cres,

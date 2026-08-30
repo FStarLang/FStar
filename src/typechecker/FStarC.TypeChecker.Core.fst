@@ -1861,8 +1861,10 @@ and check_binders (g_initial:env) (xs:binders)
 and check_comp (g:env) (c:comp)
   : ML (result universe)
   = match c.n with
-    | Total t
-    | GTotal t ->
+    (* [Tot] and [GTot] are primitive: they have no signature to apply and no
+       representation, so all there is to check is that the result is a type. *)
+    | Comp ct when Ident.lid_equals ct.effect_name PC.effect_Tot_lid
+                || Ident.lid_equals ct.effect_name PC.effect_GTot_lid ->
       let! _, t = check "(G)Tot comp result" g (U.comp_result c) in
       is_type g t
     | Comp ct ->

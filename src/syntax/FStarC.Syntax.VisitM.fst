@@ -262,8 +262,6 @@ let on_sub_comp_typ #m {|d : lvm m |} ct : ML (m _) =
 let on_sub_comp #m {|d : lvm m |} c : ML (m comp) =
   let! cn =
     match c.n with
-    | Total typ  -> Total <$> f_term typ
-    | GTotal typ -> GTotal <$> f_term typ
     | Comp ct -> Comp <$> on_sub_comp_typ ct
   in
   return <| Syntax.mk cn c.pos

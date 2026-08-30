@@ -1,14 +1,14 @@
 * Info at Coercions.fst(6,38-6,39):
   - Expected failure:
   - Computed type Prims.int
-    and effect Prims.GTot
+    and effect GTot
     is not compatible with the annotated type Prims.int
     and effect Tot
 
 * Info at Coercions.fst(19,37-19,38):
   - Expected failure:
   - Computed type 'a
-    and effect Prims.GTot
+    and effect GTot
     is not compatible with the annotated type 'a
     and effect Tot
 
