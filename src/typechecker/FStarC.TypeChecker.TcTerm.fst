@@ -158,14 +158,29 @@ let check_no_escape (head_opt : option term)
              [assume_result_eq_pure_term_in_m] states [_ == f x y]).  That is
              fine for the arrow itself, but at an application whose arguments
              had to be let-bound the binders go out of scope.  Weakening the
-             type by dropping the offending refinement is always sound -- we
+             type by dropping the offending conjuncts is always sound -- we
              simply claim less about the result -- and is far better than
-             failing. *)
+             failing.  Only the conjuncts that actually mention an escaping
+             variable are dropped: [normalize_refinement] flattens nested
+             refinements into a single conjunction, so dropping the whole
+             refinement would also throw away the user's own annotation. *)
+          let escapes t = fvs |> List.existsb (fun y -> mem y (Free.names t)) in
+          let rec conjuncts (phi:term) : ML (list term) =
+            let hd, args = U.head_and_args_full phi in
+            match (U.un_uinst hd).n, args with
+            | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv Const.and_lid ->
+              conjuncts a @ conjuncts b
+            | _ -> [phi]
+          in
           let rec weaken (t:term) : ML term =
             let t0 = N.normalize_refinement N.whnf_steps env t in
             match t0.n with
-            | Tm_refine {b=x; phi} when fvs |> List.existsb (fun y -> mem y (Free.names phi)) ->
-              weaken x.sort
+            | Tm_refine {b=x; phi} when escapes phi ->
+              let sort = weaken x.sort in
+              let y, phi = SS.open_term_bv x phi in
+              let kept = conjuncts phi |> List.filter (fun c -> not (escapes c)) in
+              if Nil? kept then sort
+              else U.refine {y with sort} (U.mk_conj_l kept)
             | _ -> t
           in
           let tw = weaken t in
@@ -361,7 +376,14 @@ let value_check_expected_typ env (e:term) (tlc:either term lcomp) (guard:guard_t
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
      let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
-     memo_tk e t', set_lcomp_result lc t', g
+     (* Coarsening to [t'] loses whatever [lc.res_typ] knows, and a result type
+        is now the only place a computation's precision lives.  [weaken_result_typ]
+        already declines to coarsen in exactly these cases (see [keep_res_typ]);
+        overwriting the type here would undo that.  It matters most for a match
+        branch, which is checked against a bare unification variable: a branch
+        that kept its type is one [tc_match] can read a result type from. *)
+     let lc = if TcUtil.keep_res_typ env t' lc.res_typ then lc else set_lcomp_result lc t' in
+     memo_tk e t', lc, g
   in
   e, lc, g
 
@@ -1837,8 +1859,18 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
               && Env.closed env t
               then t
               else
+                (* The branches do not share a type, so each one's own type is
+                   all this match will ever record of it -- and for a pure
+                   branch that includes the equation with its result
+                   ([assume_result_eq_pure_term]), which is what a WP-based
+                   [bind_cases] used to contribute under the branch's guard.
+                   Ask for it here even when the match as a whole is pure: the
+                   enclosing [x == <the whole match>] equation is opaque to the
+                   solver as soon as the scrutinee is symbolic. Reading a
+                   branch's [should_return] typing claims nothing new of it --
+                   it is a typing the branch already has. *)
                 let branch (x : (formula & lident & list cflag & (bool -> ML lcomp))) : ML (formula & typ) =
-                  let (f, _, _, c) = x in f, (c should_return).res_typ in
+                  let (f, _, _, c) = x in f, (c true).res_typ in
                 TcUtil.combine_branch_res_typs env guard_x res_t (cases |> List.map branch)
             | [] -> res_t in
           TcUtil.bind_cases env res_t cases guard_x, g, erasable
@@ -1901,7 +1933,13 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
            down to whatever phase 1 could see.  Phase 2 adds the ascription
            itself, so nothing downstream loses it. *)
         match ret_opt with
-        | None when not env.phase1 ->
+        (* An empty match constrains nothing, so [cres.res_typ] is an unsolved
+           metavariable.  Ascribe it in *both* phases: phase 1 generalizes it to
+           a universe-polymorphic name, and the ascription is what carries that
+           choice into phase 2 -- without it phase 2 invents a second, differently
+           scoped metavariable and generalization then sees both an explicit
+           universe name and a fresh one (Bug1097). *)
+        | None when not env.phase1 || Nil? t_eqns ->
           mk (Tm_ascribed {tm=e; asc=(Inl cres.res_typ, None, false); eff_opt=Some cres.eff_name}) e.pos
         | _ -> e
       in
@@ -4533,7 +4571,8 @@ and check_top_level_let env e : ML _ =
    let env = instantiate_both env in
    match e.n with
       | Tm_let {lbs=(false, [lb]); body=e2} ->
-(*open*) let e1, univ_vars, c1, g1, annotated = check_let_bound_def true env lb in
+(*open*) let e1, univ_vars, c1, g1, topt = check_let_bound_def true env lb in
+         let annotated = Some? topt in
          (* Maybe generalize its type *)
          let g1, e1, univ_vars, c1 =
             if annotated && not env.generalize
@@ -4563,8 +4602,13 @@ and check_top_level_let env e : ML _ =
                 Drop it, unless the user wrote the type down, in which case it
                 is their claim to make (and to justify below). *)
              let c1 =
-               if annotated then c1
-               else U.set_result_typ c1 (U.unrefine (U.comp_result c1)) in
+               match topt with
+               | Some t when not env.generalize ->
+                 (* The [val] is the interface: expose the declared type, not the
+                    sharper one the body happened to have.  It is also the type
+                    the inhabitation check below must be about. *)
+                 U.set_result_typ c1 t
+               | _ -> U.set_result_typ c1 (U.unrefine (U.comp_result c1)) in
              if not env.phase1 then (
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
                (* The effect of e1 is about to be masked, i.e., we are turning a
@@ -4648,7 +4692,8 @@ and check_inner_let env e : ML _ =
    match e.n with
      | Tm_let {lbs=(false, [lb]); body=e2} ->
        let env = {env with top_level=false} in
-       let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
+       let e1, _, c1, g1, topt = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
+       let annotated = Some? topt in
        let pure_or_ghost = TcComm.is_pure_or_ghost_lcomp c1 in
        let is_inline_let = BU.for_some (U.is_fvar FStarC.Parser.Const.inline_let_attr) lb.lbattrs in
        let is_inline_let_vc = BU.for_some (U.is_fvar FStarC.Parser.Const.inline_let_vc_attr) lb.lbattrs in
@@ -5099,7 +5144,7 @@ and check_let_bound_def top_level env lb
                                & univ_names (* univ_vars, if any               *)
                                & lcomp      (* type of lbdef                   *)
                                & guard_t    (* well-formedness of lbtyp        *)
-                               & bool)      (* true iff lbtyp was annotated    *)
+                               & option typ)(* the lbtyp annotation, if any    *)
                                =
     let env1, _ = Env.clear_expected_typ env in
     let e1 = lb.lbdef in
@@ -5130,7 +5175,7 @@ and check_let_bound_def top_level env lb
             (TcComm.lcomp_to_string c1)
             (Rel.guard_to_string env g1);
 
-    e1, univ_vars, c1, g1, Some? topt
+    e1, univ_vars, c1, g1, topt
 
 
 (* Extracting the type of non-recursive let binding *)
