@@ -4614,7 +4614,14 @@ and check_top_level_let env e : ML _ =
                     sharper one the body happened to have.  It is also the type
                     the inhabitation check below must be about. *)
                  U.set_result_typ c1 t
-               | _ -> U.set_result_typ c1 (U.unrefine (U.comp_result c1)) in
+               | Some _ ->
+                 (* Annotated, but generalized: [c1] has been generalized while
+                    [t] has not, so we cannot substitute [t] here.  The user's
+                    annotation is already [c1]'s result type, and it is their
+                    claim to make -- keep it, so the inhabitation check below
+                    is about the type they wrote. *)
+                 c1
+               | None -> U.set_result_typ c1 (U.unrefine (U.comp_result c1)) in
              if not env.phase1 then (
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
                (* The effect of e1 is about to be masked, i.e., we are turning a
@@ -4727,7 +4734,8 @@ and check_inner_let env e : ML _ =
          tc_term env_x e2
          |> (fun (e2, c2, g2) ->
             let c2, g2 = TcUtil.strengthen_precondition
-              ((fun _ -> Errors.mkmsg "folding guard g2 of e2 in the lcomp") |> Some)
+              None (* no label: the obligations in [g2] carry their own, and an
+                      internal description of this fold is not a useful message *)
               env_x
               e2
               c2
