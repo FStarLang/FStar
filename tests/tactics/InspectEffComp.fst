@@ -9,8 +9,11 @@ let test () : Type0 =
      | Tv_Arrow bv c ->
        let c' =
          begin match inspect_comp c with
-         | C_Eff us eff res _pre _post decrs ->
-                 pack_comp (C_Eff us eff res (`(True))
+         (* A computation's postcondition is now a refinement of its result
+            type, so it is [res] that must be rebuilt; [pack_comp] ignores the
+            [pre] and [post] fields of the (degenerate) effectful view. *)
+         | C_Eff us eff _res _pre _post decrs ->
+                 pack_comp (C_Eff us eff (`(r:int{r == 17})) (`(True))
                                   (`(fun (r:int) -> r == 17)) decrs)
          | _ -> fail "no"
          end
