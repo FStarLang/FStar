@@ -297,11 +297,6 @@ let eq_sub_seq #a (x:seq a) (i j:nat) (y:seq a) (i' j':nat)
   j' <= Seq.length y /\
   (forall (k:nat). k < j - i ==> Seq.index x (i + k) == Seq.index y (i' + k))
 
-(* The recursive call's postcondition, the [decreases] obligation and the
-   [eq_sub_seq] hypothesis all now reach the solver as refinements of the
-   result type, which makes this (single, small) query slower than it used to
-   be.  Nothing here is hard; it just needs more room. *)
-#push-options "--z3rlimit_factor 6"
 let rec hash_slice_lemma
       (x y:str nat) 
       (base:nat)
@@ -316,7 +311,6 @@ let rec hash_slice_lemma
   (decreases j - i)
 = if i = j then ()
   else hash_slice_lemma x y base prime i (j - 1) i' (j' - 1)
-#pop-options
 
 // A helper predicate to state our main correctness property
 let maybe_found #t (xs pat:str t) (o:option nat) =

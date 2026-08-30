@@ -297,7 +297,6 @@ let intersection_idempotent_left_lemma ()
   introduce forall (a: eqtype) (s1: set a) (s2: set a). intersection s1 (intersection s1 s2) == intersection s1 s2
   with assert (feq (intersection s1 (intersection s1 s2)) (intersection s1 s2))
 
-#push-options "--z3rlimit_factor 4"
 let rec union_of_disjoint_nonrepeating_lists_length_lemma (#a: eqtype) (xs1: list a) (xs2: list a) (xs3: list a)
 : Lemma (requires   list_nonrepeating xs1
                   /\ list_nonrepeating xs2
@@ -308,7 +307,6 @@ let rec union_of_disjoint_nonrepeating_lists_length_lemma (#a: eqtype) (xs1: lis
   match xs1 with
   | [] -> nonrepeating_lists_with_same_elements_have_same_length xs2 xs3
   | hd :: tl -> union_of_disjoint_nonrepeating_lists_length_lemma tl xs2 (remove_from_nonrepeating_list hd xs3)
-#pop-options
 
 let union_of_disjoint_sets_cardinality_lemma (#a: eqtype) (s1: set a) (s2: set a)
 : Lemma (requires disjoint s1 s2)
@@ -357,16 +355,12 @@ let difference_doesnt_include_lemma ()
   ()
 
 #restart-solver
-(* Pushing the expected postcondition into the body raises the obligation earlier,
-   in a context that this proof needs more solver resources to discharge. *)
-#push-options "--z3rlimit_factor 2"
 let difference_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
 : Lemma (  cardinality (difference s1 s2) + cardinality (difference s2 s1) + cardinality (intersection s1 s2) = cardinality (union s1 s2)
          /\ cardinality (difference s1 s2) = cardinality s1 - cardinality (intersection s1 s2)) =
   union_is_differences_and_intersection s1 s2;
   union_of_three_disjoint_sets_cardinality_lemma (difference s1 s2) (intersection s1 s2) (difference s2 s1);
   cardinality_matches_difference_plus_intersection_lemma s1 s2
-#pop-options
 
 let difference_cardinality_lemma ()
 : Lemma (difference_cardinality_fact) =

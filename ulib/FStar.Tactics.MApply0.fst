@@ -18,17 +18,6 @@ let push1' #p #q f u = ()
  * Some easier applying, which should prevent frustration
  * (or cause more when it doesn't do what you wanted to)
  *)
-(* [collect_arr] does not push the arrow's binders into the environment, so
-   the codomain it returns is an open term: normalizing it may fail with
-   "Variable n not found" for a dependent signature such as
-   [#n:pos -> #x:uint_t n -> ... -> Lemma (x == y)].  Normalization is only
-   ever an attempt to expose an implication here, so fall back on the
-   un-normalized term rather than failing with an error that points into the
-   lemma being applied. *)
-private
-let norm_term_or_id (t:term) : Tac term =
-  try norm_term [] t with | _ -> t
-
 val apply_squash_or_lem : d:nat -> term -> Tac unit
 let rec apply_squash_or_lem d t =
     (* Before anything, try a vanilla apply and apply_lemma *)
@@ -45,7 +34,7 @@ let rec apply_squash_or_lem d t =
     | C_Lemma pre post _ ->
        begin
        let post = `((`#post) ()) in (* unthunk *)
-       let post = norm_term_or_id post in
+       let post = norm_term [] post in
        (* Is the lemma an implication? We can try to intro *)
        match term_as_formula' post with
        | Implies p q ->
@@ -61,7 +50,7 @@ let rec apply_squash_or_lem d t =
        | Some rt ->
         // DUPLICATED, refactor!
          begin
-         let rt = norm_term_or_id rt in
+         let rt = norm_term [] rt in
          (* Is the lemma an implication? We can try to intro *)
          match term_as_formula' rt with
          | Implies p q ->
@@ -76,7 +65,7 @@ let rec apply_squash_or_lem d t =
        | None ->
         // DUPLICATED, refactor!
          begin
-         let rt = norm_term_or_id rt in
+         let rt = norm_term [] rt in
          (* Is the lemma an implication? We can try to intro *)
          match term_as_formula' rt with
          | Implies p q ->

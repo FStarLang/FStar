@@ -953,12 +953,11 @@ ensures exists* c' l' .
     A.pts_to_len a;
     SM.seq_list_match_length (raw_data_item_map_entry_match 1.0R) c l;
     A.pts_to_range_intro a 1.0R c;
-    let zero = 0sz;
     rewrite (A.pts_to_range a 0 (A.length a) c)
-      as (A.pts_to_range a (SZ.v zero) (SZ.v len) c);
-    let res = cbor_map_sort_aux a zero len;
-    with c' . assert (A.pts_to_range a (SZ.v zero) (SZ.v len) c');
-    rewrite (A.pts_to_range a (SZ.v zero) (SZ.v len) c')
+      as (A.pts_to_range a (SZ.v 0sz) (SZ.v len) c);
+    let res = cbor_map_sort_aux a 0sz len;
+    with c' . assert (A.pts_to_range a (SZ.v 0sz) (SZ.v len) c');
+    rewrite (A.pts_to_range a (SZ.v 0sz) (SZ.v len) c')
         as (A.pts_to_range a 0 (A.length a) c');
     A.pts_to_range_elim a 1.0R c';
     res

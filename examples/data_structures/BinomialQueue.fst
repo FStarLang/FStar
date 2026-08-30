@@ -467,13 +467,7 @@ let find_max_emp_repr_l (l:priq)
       (ensures find_max None l == None) =
   match l with
   | [] -> ()
-  | _ ->
-    (* The postcondition is vacuous here: l is non-empty and compact, so its
-       last tree is Internal and contributes a key to (keys l), which
-       contradicts (keys l) being a permutation of the empty multiset. *)
-    last_key_in_keys l;
-    assert (Internal? (L.last l));
-    assert False
+  | _ -> last_key_in_keys l
 
 let rec find_max_emp_repr_r (l:forest)
   : Lemma

@@ -165,6 +165,8 @@ let push_as_map (ss1 ss2:ss_t)
     | [] -> ()
     | x::tl -> aux (push ss1 x (Map.sel ss2.m x)) (tail ss2)
   in
+  (* [aux] must actually be called: the enclosing lemma's statement is its
+     result type now, so a trailing [()] no longer stands for it. *)
   aux ss1 ss2
 #pop-options
 

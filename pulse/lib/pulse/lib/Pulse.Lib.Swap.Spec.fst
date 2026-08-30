@@ -213,6 +213,8 @@ let jump_mod_d
   assert (n_alt == n);
   let unfold x'_alt = x + l_alt + - x'q * n_alt in
   assert (x'_alt == x');
+  (* Plain [let], and the identity written out: with [let unfold] the semiring
+     tactic no longer sees through [qx]. *)
   let qx = b.q_l + - x'q * b.q_n in
   assert (eq2 #int (x + b.d * b.q_l + - x'q * (b.d * b.q_n))
                    (x + (b.q_l + - x'q * b.q_n) * b.d)) by (int_semiring ());

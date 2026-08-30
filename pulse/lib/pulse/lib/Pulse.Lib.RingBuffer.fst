@@ -243,7 +243,6 @@ let rec lemma_push_contents
     else (
       // Inductive case
       let next_head = (head + 1) % cap in
-      FStar.Math.Lemmas.lemma_mod_plus_distr_l (head + 1) (count - 1) cap;
       lemma_push_contents buf next_head tail (count - 1) cap x
     )
 

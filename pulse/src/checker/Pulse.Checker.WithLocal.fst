@@ -129,6 +129,8 @@ let check
         let post : post_hint_for_env g = post in
         assume not (x `Set.mem` freevars post.post);
           let open Pulse.Typing.Combinators in
+          (* The [: post_hint_for_env g_extended] annotation that used to be here
+             would now discard the refinement on the result type. *)
           let body_post = extend_post_hint_for_local g post init_t x binder.binder_ppname in
           let r = check g_extended body_pre (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
           let r: checker_result_t g_extended body_pre (PostHint body_post) = r in
@@ -136,6 +138,8 @@ let check
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c_st = {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
+          (* Conversely, this one has to be *added*: the join of the two branches
+             does not record that both share [c_st]. *)
           let c : (c:comp_st { st_comp_of_comp c == c_st }) =
             if C_STDiv? c_body then C_STDiv c_st else C_ST c_st in
           let c_typing =

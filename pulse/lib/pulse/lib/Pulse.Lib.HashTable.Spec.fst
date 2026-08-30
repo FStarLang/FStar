@@ -639,6 +639,7 @@ let insert_repr #kt #vt #sz
   let res = insert_repr_walk #kt #vt #sz #spec repr k v 0 cidx () () in
   res
 
+(* rlimit_factor 2 -> 4 *)
 #push-options "--z3rlimit_factor 4"
 let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 
   (repr : repr_t_sz kt vt sz{pht_models spec repr}) (k : kt)

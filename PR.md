@@ -198,6 +198,26 @@ today.
   lemma's statement is now part of its *type* and so participates in
   unification, which can pin an implicit that used to be left to the expected
   result type. See `regression_questions.md` for both, worked out in detail.
+- **Accepted regression:** a precondition is a *trailing implicit binder*, so an
+  arrow that has one has one binder more than an otherwise identical arrow that
+  does not. F* instantiates trailing implicits at an application but does not
+  eta-expand during a *subtyping* check, so a point-free definition whose
+  implementation is *more general* than its interface -- no `requires` where the
+  interface declares one -- must now be eta-expanded. The same shows up when
+  passing a function with a `requires` where a plain arrow is expected: write
+  `(fun a b -> a + b)` rather than `( + )`. Teaching subtyping to eta-expand is a
+  proposed follow-up.
+- A top-level `let x = assert p` now has type `squash p`, so `p` becomes a fact
+  for the rest of the module. Ascribe `: unit` where that is not wanted --
+  in particular `let _ : unit = assert False`, which otherwise poisons
+  everything after it.
+- `assert`s that used to be discharged inside a `squash (...)` argument no
+  longer contribute to the enclosing definition's own refinement; hoist the
+  lemma call out of the `squash`.
+- `apply (`magic)` fills in `magic`'s anonymous `unit` argument itself; a
+  following `exact (`())` now fails with "no more goals".
+- `fail` returns a refined `unit`, so an unannotated tactic whose body ends in a
+  `match ... | [] -> fail ...` infers a refined result type. Annotate `: Tac unit`.
 
 ## Costs
 

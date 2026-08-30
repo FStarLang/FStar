@@ -60,6 +60,9 @@ val seq_list_match_nil_elim
       Nil? v
     ))
 
+(* The two [<<] facts have to be established over an opaque [l]: asserting them
+   about the concrete [a :: q] inside [list_cons_precedes] no longer works, now
+   that the lemma's statement is its result type. *)
 let list_cons_precedes_aux
   (#t: Type)
   (l: list t { Cons? l })

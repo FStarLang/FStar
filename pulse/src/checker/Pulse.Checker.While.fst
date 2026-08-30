@@ -180,6 +180,9 @@ let check_while
   let inv =
     if loop_requires `eq_tm` tm_l_true then inv else
     (inv `tm_star` tm_pure (mk_loop_requires_marker loop_requires)) in
+  (* No [: nvar] here, and no [: post_hint_for_env g2] on [body_ph] below: an
+     [ensures] is a refinement on the result type now, so those annotations
+     would discard facts the rest of this function needs. *)
   let x_meas = mk_ppname_no_range "meas", fresh g in
   let u_meas, ty_meas, meas_val, is_tot, mk_dec =
     match meas with

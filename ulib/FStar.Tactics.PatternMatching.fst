@@ -713,6 +713,8 @@ let rec hoist_and_apply (head:term) (arg_terms:list term) (hoisted_args:list arg
   | arg_term::rest ->
     let n = List.Tot.length hoisted_args in
     //let bv = fresh_bv_named ("x" ^ (string_of_int n)) in
+    (* A [binder] no longer coerces to a [simple_binder] here: this is a record
+       literal, so there is no application to drive the coercion. *)
     let nb : simple_binder = {
       ppname = seal ("x" ^ string_of_int n);
       sort = pack Tv_Unknown;

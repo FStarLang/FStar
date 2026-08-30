@@ -362,6 +362,198 @@ ascriptions stay for now and this note records the intended fix.
 
 ---
 
+# Second pass: a sweep over every remaining non-compiler change
+
+The fourteen questions above were the ones that had been *asked*.  This pass
+applies the same method to the whole of the rest of the diff: every hunk in
+`ulib/`, `examples/`, `doc/`, `pulse/` and `tests/` that is not itself a
+consequence of the design (`Prims.fst`, `FStar.Pervasives.fsti`,
+`FStar.All.fsti`, `FStar.Tactics.Effect.fsti`, the reflection `comp_view`
+users, and the tests that pin down the new semantics) was classified as either
+*design-necessary*, *verified-genuine*, or *candidate for reverting*.  The 43
+candidates were then reverted in a single batch and the tree rebuilt.
+
+**Twenty of the 43 were unnecessary and are now gone.  Twenty-three were
+genuine and have been restored, each with a comment saying why.**
+
+## Reverted -- the workaround was never needed
+
+Almost all of these are proof-effort knobs that were turned up while the series
+was in flight and never turned back down.
+
+| File | What was removed |
+|---|---|
+| `ulib/FStar.Algebra.CommMonoid.Fold.Nested.fst` | `--z3rlimit_factor 4` |
+| `ulib/FStar.FiniteSet.Base.fst` | two `#push-options` rlimit bumps |
+| `ulib/FStar.Math.Lemmas.fst` | two extra `swap_mul` steps in a `calc` |
+| `ulib/FStar.Reflection.TermSpec.fst` | two `--ifuel 4` |
+| `ulib/FStar.Seq.Permutation.fst` | `--z3rlimit 60` |
+| `ulib/FStar.UInt.fst`, `ulib/FStar.UInt128.fst` | `--z3rlimit 40` |
+| `ulib/FStar.UInt64.fsti` | `--z3rlimit_factor 4` |
+| `ulib/FStar.Tactics.MApply0.fst` | the `norm_term_or_id` fallback |
+| `ulib/FStar.Tactics.V2.Derived.fst` | both `<: Tac unit` ascriptions (`rewrite'`, `finish_by`) |
+| `examples/algorithms/StringMatching.fst` | `--z3rlimit_factor 6` |
+| `examples/data_structures/BinomialQueue.fst` | added `assert`s |
+| `pulse/lib/pulse/lib/Pulse.Lib.RWLock.fst` | annotation |
+| `pulse/lib/pulse/lib/Pulse.Lib.Sort.Merge.Array.fst` | annotation |
+| `pulse/lib/pulse/lib/Pulse.Lib.RingBuffer.fst` | an added `lemma_mod_plus_distr_l` call |
+| `pulse/share/pulse/examples/dice/cbor/CBOR.Pulse.fst` | annotation |
+| `pulse/src/checker/Pulse.Checker.Prover.fst` | `<: bool` |
+| `pulse/src/checker/Pulse.Checker.WithLocalArray.fst` | annotation |
+
+and, separately, `examples/typeclasses/Pulse.Class.BoundedIntegers.fst`, where
+the workaround was not removed but **replaced by one that keeps the notation** --
+see F1 below.
+
+## Kept -- genuine, and why
+
+| File | Why |
+|---|---|
+| `ulib/FStar.OrdSet.fst` | `liat_direct`'s result type must state `l <> empty` for `head l` to be well-formed |
+| `ulib/FStar.Tactics.PatternMatching.fst`, `examples/tactics/Printers.fst`, `examples/typeclasses/Deriving.fst` | `binder` -> `simple_binder` (Q6's sibling sites: unlike Q6 these are *record literals*, where there is no application to drive the coercion) |
+| `ulib/FStar.Tactics.CanonMonoid.fst` | `--z3rlimit_factor 4`; times out otherwise |
+| `ulib/FStar.Tactics.Easy.fst` | F2 below |
+| `ulib/experimental/FStar.Reflection.Typing.fst` | F1 below |
+| `ulib/FStar.Tactics.V2.Derived.fst` | `magic_dump_t` (F3) and the `tlabel`/`tlabel'` signatures (F4) |
+| `pulse/src/checker/Pulse.Checker.{Abs,While,WithLocal}.fst` | F5 -- an unannotated `let` now loses a refinement the caller needs |
+| `pulse/src/checker/Pulse.Checker.Prover.Substs.fst` | the trailing `()` must become a real call `aux ss1 ss2` |
+| `pulse/lib/common/Pulse.Lib.Raise.fst` | F6 below |
+| `pulse/lib/core/Pulse.Lib.Core.fst` | the `conv_squash`/`bridge_exists` transports |
+| `pulse/lib/core/PulseCore.Heap2.fst` | Q10, plus the `intro_star` steps in `lift_action`/`lift_action_ghost` |
+| `pulse/lib/core/PulseCore.IndirectionTheorySep.fst` | an `(m n: nat)` annotation, and `rejuvenate1_sep`'s `fun a -> ()` must become a real proof |
+| `pulse/lib/core/PulseCore.IndirectionTheoryActions.fst` | F7 below |
+| `pulse/lib/pulse/lib/Pulse.Lib.Array.Core.fst` | an ascription on a `rewrite each` pattern, and an added `assert pure` |
+| `pulse/lib/pulse/lib/Pulse.Lib.SeqMatch.fsti` | the two `<<` `assert`s must be hoisted into a lemma over an opaque list |
+| `pulse/lib/pulse/lib/Pulse.Lib.Swap.Spec.fst` | F8 below |
+| `pulse/lib/pulse/lib/Pulse.Lib.HashTable.Spec.fst` | `--z3rlimit_factor 2` -> `4` |
+| `pulse/lib/pulse/lib/Pulse.Lib.HashTable.fst` | `--z3rlimit_factor 6` -> `20` -- the largest single proof-effort regression in the tree |
+| `doc/book/code/Alex.fst` | `smt.qi.eager_threshold` 2 -> 3 |
+| `doc/book/code/Part3.DataTypesALaCarte.fst` | `--z3rlimit_factor 8` |
+| `examples/dsls/bool_refinement/BoolRefinement.fst` | two rlimit bumps (F9) |
+| `tests/hacl/Lib.Sequence.Lemmas.fsti` | `--using_facts_from` must be extended with `+Lib.LoopCombinators` (F9) |
+
+## New findings
+
+### F1. An arrow with fewer binders is no longer a subtype of one with a precondition
+
+A precondition is a *trailing implicit binder* now, so
+
+```
+x:t -> y:t -> Pure t (requires P) (ensures Q)
+```
+
+has three binders, not two.  F* instantiates trailing implicits at an
+*application*, but does not eta-expand a term to instantiate them during a
+*subtyping* check.  Two consequences, both of which the user flagged:
+
+* `ulib/experimental/FStar.Reflection.Typing.fst`: the interface declares
+  `pack_inspect_universe` with a `requires` that the underlying `R` lemma does
+  not have, so the point-free `let pack_inspect_universe = R.pack_inspect_universe`
+  no longer typechecks and must be eta-expanded.  (Note the direction: the
+  implementation is *more* general than the interface, which is exactly the case
+  that used to be free.)
+* `examples/typeclasses/Pulse.Class.BoundedIntegers.fst`: `ok ( + )`, where
+  `ok` expects an `int -> int -> int`, fails because `bounded_int.( + )` has a
+  `requires`.  The first workaround named `Prims.op_Plus` instead, losing the
+  notation the example exists to demonstrate.  It has been replaced by
+  `ok (fun a b -> a + b)`, which keeps `+` and merely supplies the eta.
+
+Teaching subtyping to eta-expand for trailing implicits would recover all of
+these; it is a candidate follow-up, not part of this PR.
+
+### F2. `lemma_from_squash` now matches every squashed goal
+
+`FStar.Tactics.Easy.easy_fill` used to try `apply (\`lemma_from_squash); intro ()`
+as a fallback for an `a -> Lemma b` goal, on which plain `intro` failed.
+`Lemma b` is `Tot (squash b)` now, so `intro` handles that goal directly -- and
+the fallback, which is stated over an arbitrary squash, fires on goals it was
+never meant for and leaves its `pre`/`post` uninstantiated.  Reverting it turns
+`ulib/FStar.Injection.fsti` into an *Error 217, tactic left uninstantiated
+unification variable*.  Removing the fallback is the fix, not a workaround.
+
+### F3. `apply (\`magic)` now fills in `magic`'s unit argument
+
+`magic_dump_t` used to be `apply (\`magic); exact (\`())`.  Restoring the
+`exact` makes `tests/tactics/Admit.fst` fail with *"exact failed: no more
+goals"*: `apply` now discharges the anonymous `unit` argument itself.
+
+### F4. `fail`'s result type leaks into inferred tactic types
+
+`fail` returns a refined `unit` now.  Dropping the `: Tac unit` signature from
+`FStar.Tactics.V2.Derived.tlabel` therefore does not merely lose an annotation:
+the inferred result type becomes
+
+```
+uu___:unit{exists uu___. Nil? uu___ ==> False}
+```
+
+-- the `goals ()` match's postcondition, verbatim -- which then shows up in
+`tests/tactics/Postprocess.fst.output.expected`.  These annotations are load-bearing
+and stay.  (Contrast the two `<: Tac unit` *ascriptions* in the same file, which
+were pure noise and are gone.)
+
+### F5. `let`-annotation churn, in both directions
+
+Four Pulse checker sites need a *different* annotation than before, and they do
+not all move the same way:
+
+* **Annotations that had to be added.** `Pulse.Checker.Abs`'s `(| post, r |)`
+  needs `{ PostHint? ph }`, and `Pulse.Checker.WithLocal`'s `c` needs
+  `{ st_comp_of_comp c == c_st }`.  Both right-hand sides are a `match`/`if`
+  whose branches now differ in their refinements, so the join is weaker than the
+  continuation needs.
+* **Annotations that had to be removed.** `Pulse.Checker.While`'s `x_meas: nvar`
+  and `body_ph: post_hint_for_env g2`, and `Pulse.Checker.WithLocal`'s
+  `body_post: post_hint_for_env g_extended`, all had to *go*: an `ensures` is a
+  refinement on the result type now, so an annotation naming the unrefined type
+  throws away facts that used to live in the computation type and were therefore
+  immune to it.
+
+This is the "inference at scale" risk in the plan, materialising exactly where
+it was expected to.  Note that the second bullet is a change in what an
+annotation *means*, not merely in what inference produces: `let x : t = e` is
+now genuinely lossy where it used to be free.
+
+### F6. A lemma call inside `squash (...)` does not discharge the definition's own refinement
+
+`Pulse.Lib.Raise.raisable : p:Type0 { nonempty (Type u#(max a b)) }` was defined
+as `squash (nonempty_intro ...; subtype_of ...)`.  The `nonempty_intro` call is
+inside the `squash`, so its postcondition is in scope for the squashed term, not
+for the refinement on the definition's own type.  Hoisting it out is the fix.
+
+### F7. The expected type of a `dtuple2` argument is not propagated into it
+
+`PulseCore.IndirectionTheoryActions.pin_frame` fails with *"unit is not a
+subtype of the expected type `Lemma (requires ...) (ensures ...)`"*: the
+expected type of a `dtuple2` component is not pushed into an unannotated lambda,
+so the lambda is inferred without the implicit binder the `requires` desugars
+to.  This is a genuine inference gap and a candidate follow-up.
+
+### F8. `let unfold` inside a Pulse-adjacent proof no longer unfolds for `int_semiring`
+
+`Pulse.Lib.Swap.Spec` used `let unfold qx = ...` and then asserted a semiring
+identity mentioning `qx`; `t_trefl` now fails to unify because `qx` is not
+unfolded.  The workaround writes the identity out.  Worth a closer look, but it
+is a local, well-understood failure.
+
+### F9. Two SMT-context regressions worth naming
+
+* `examples/dsls/bool_refinement/BoolRefinement.fst`: the expected postcondition
+  is now checked at the tail of *each branch* of a match rather than once for the
+  whole body, so a reflection-heavy branch is proved on its own and needs more
+  rlimit.
+* `tests/hacl/Lib.Sequence.Lemmas.fsti`: a lemma relating two `repeat_right`s at
+  different accumulator types now needs `repeat_right`'s typing axiom, which the
+  module's `--using_facts_from` had pruned.
+
+## Proof-effort summary
+
+The reverts remove eleven `#push-options` bumps that were never needed.  What is
+left is a small number of genuine increases, of which only
+`Pulse.Lib.HashTable.insert` (`--z3rlimit_factor` 6 -> 20) is large.
+
+---
+
 ## Appendix: the questions as originally asked
 
 Why do we have to now annotate here?

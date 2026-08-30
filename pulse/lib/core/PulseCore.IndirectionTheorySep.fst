@@ -133,6 +133,8 @@ let age1 (w: mem) : mem =
 let eq_at (n:nat) (t0 t1:mem_pred) =
   approx n t0 == approx n t1
 
+(* [m] and [n] must be annotated: they are no longer determined by the
+   (now refined) result type of the lemma below. *)
 let eq_at_mono (p q: mem_pred) (m n: nat) :
     Lemma (requires n <= m /\ eq_at m p q) (ensures eq_at n p q)
       [SMTPat (eq_at m p q); SMTPat (eq_at n p q)] =

@@ -42,9 +42,6 @@ let matrix_seq #c #m #r (generator: matrix_generator c m r) =
 
    I keep the argument types explicit in order to make the proof easier to read.
 *)
-(* The two [fold_offset_elimination_lemma] calls below are at the edge of the
-   default rlimit. *)
-#push-options "--z3rlimit_factor 4"
 let double_fold_transpose_lemma #c #eq 
                                 (#m0: int) (#mk: not_less_than m0)
                                 (#n0: int) (#nk: not_less_than n0)
@@ -93,4 +90,3 @@ let double_fold_transpose_lemma #c #eq
   matrix_fold_equals_func_double_fold cm (transposed_matrix_gen gen); 
   assert_norm (double_fold cm (transpose_generator offset_gen) == rhs);
   eq.transitivity (FStar.Seq.Permutation.foldm_snoc cm matrix_mn) lhs rhs
-#pop-options

@@ -230,6 +230,9 @@ fn replace
 }
 
 
+(* rlimit_factor 6 -> 20.  This is the largest proof-effort regression in the
+   tree; the [insert] loop invariant is proved against a result type that now
+   carries the [ensures] of every call in the body. *)
 #push-options "--fuel 1 --ifuel 2 --z3rlimit_factor 20"
 fn insert
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
