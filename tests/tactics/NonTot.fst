@@ -20,6 +20,19 @@ open FStar.Tactics.V2
 val h : unit -> Pure (squash False) (requires False) (ensures (fun _ -> True))
 let h x = ()
 
-[@@(expect_failure [228])]
+(* [h]'s precondition is a trailing implicit [squash False] binder now, so
+   [apply] succeeds and leaves both [h]'s named [unit] argument and the
+   precondition behind as goals.  The script discharges neither, so the proof
+   still fails -- just with a different error than the historical "codomain is
+   effectful". *)
+[@@(expect_failure [217])]
 let _ =
     assert False by (apply (quote h))
+
+(* A genuinely effectful codomain is still rejected outright. *)
+val hdv : unit -> Dv (squash False)
+let rec hdv x = hdv x
+
+[@@(expect_failure [228])]
+let _ =
+    assert False by (apply (quote hdv))

@@ -564,6 +564,24 @@ let pose (t:term) : Tac binding =
     exact t;
     intro ()
 
+(** As [pose], but [t] is *applied* rather than used exactly.  The difference
+matters for a term with leftover implicit arguments -- a lemma's precondition is
+one, now that it is a trailing implicit binder rather than part of a computation
+type: [apply] turns such an argument into a goal, where [exact] would leave it as
+an unsolved unification variable.  Any goal so introduced is moved behind the
+main one. *)
+let pose_apply (t:term) : Tac binding =
+    apply (`__cut);
+    flip ();
+    let n_before = ngoals () in
+    apply t;
+    let gs = goals () in
+    let n_introduced = ngoals () - (n_before - 1) in
+    let n_introduced = if n_introduced < 0 then 0 else n_introduced in
+    let introduced, rest = List.Tot.Base.splitAt n_introduced gs in
+    set_goals (rest @ introduced);
+    intro ()
+
 let intro_as (s:string) : Tac binding =
     let b = intro () in
     rename_to b s
