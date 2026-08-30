@@ -86,16 +86,21 @@ let safe_mod (#t:eqtype) {| c: bounded_unsigned t |} (x : t) (y : t)
       else None
     )
 
+(* [op] is applied to [v x] and [v y], so it is an operation on [int]s.  It
+   used to be possible to pass the class's own [( + )] here, but a precondition
+   is a trailing implicit binder now, so the class method has one argument more
+   than this expects; name the [Prims] operation instead. *)
 let ok (#t:eqtype) {| c:bounded_int t |} (op: int -> int -> int) (x y:t) =
     c.fits (op (v x) (v y))
 
-let add (#t:eqtype) {| bounded_int t |} (x:t) (y:t { ok (+) x y }) = x + y
+let add (#t:eqtype) {| bounded_int t |} (x:t) (y:t { ok Prims.op_Plus x y }) = x + y
 
-let add3 (#t:eqtype) {| bounded_int t |} (x:t) (y:t) (z:t { ok (+) x y /\ ok (+) z (x + y)}) = x + y + z
+let add3 (#t:eqtype) {| bounded_int t |} (x:t) (y:t) (z:t { ok Prims.op_Plus x y /\ ok Prims.op_Plus z (x + y)}) = x + y + z
 
-//Writing the signature of bounded_int.(+) using Pure
-//allows this to work, since the type of (x+y) is not refined
-let add3_alt (#t:eqtype) {| bounded_int t |} (x:t) (y:t) (z:t { ok (+) x y /\ ok (+) (x + y) z}) = x + y + z
+//This used to differ from [add3] above: writing the signature of
+//bounded_int.(+) using Pure left the type of (x+y) unrefined.  It is refined
+//now -- that is what an [ensures] means -- so the two are the same.
+let add3_alt (#t:eqtype) {| bounded_int t |} (x:t) (y:t) (z:t { ok Prims.op_Plus x y /\ ok Prims.op_Plus (x + y) z}) = x + y + z
 
 instance bounded_int_u32 : bounded_int FStar.UInt32.t = {
     fits = (fun x -> 0 <= x /\ x < 4294967296);
@@ -137,10 +142,10 @@ instance bounded_unsigned_u64 : bounded_unsigned FStar.UInt64.t = {
 
 let test (t:eqtype) {| _ : bounded_unsigned t |} (x:t) = v x
 
-let add_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok (+) x y }) = x + y
+let add_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok Prims.op_Plus x y }) = x + y
 
 //Again, parser doesn't allow using (-)
-let sub_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok ( - ) x y}) = x - y
+let sub_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok Prims.op_Minus x y}) = x - y
 
 //this work and resolved to int, because of the 1
 let add_nat_1 (x:nat) = x + 1
