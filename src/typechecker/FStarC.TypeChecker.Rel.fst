@@ -2531,6 +2531,33 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                            | _ -> [])
                           bounds_probs
       in
+      (* A bound may mention names that are not in the flex variable's scope.
+         A postcondition is a refinement of a result type now, so this arises
+         for something as ordinary as [match x with C y -> assert (p y)],
+         whose branch has type [squash (p y)] while the match's result type is
+         a variable created before [y] was bound.  Such a bound can never be
+         assigned to the variable.  When we are joining *lower* bounds we may
+         widen it by dropping the offending refinement: the widened type is
+         still above the bound, so the problem is still solved, and we merely
+         claim less about the result.  Upper bounds must be left alone --
+         dropping a refinement there would be unsound -- and the usual error
+         is reported. *)
+      let bounds_typs =
+          if flip then bounds_typs
+          else
+            let allowed = ctx_uvar.ctx_uvar_binders |> List.map (fun b -> b.binder_bv) in
+            let out_of_scope t =
+                Free.names t |> elems |> BU.for_some (fun y ->
+                  not (allowed |> BU.for_some (fun z -> S.bv_eq y z)))
+            in
+            let rec weaken t : ML term =
+                if not (out_of_scope t) then t
+                else match base_and_refinement_maybe_delta true env t with
+                     | base, Some _ -> weaken base
+                     | _ -> t
+            in
+            List.map weaken bounds_typs
+      in
       (* A flex variable with both a lower bound and a *refined* upper bound
          must be solved from its lower bounds.  Solving it from the upper bound
          would make the refinement part of the variable's definition, and then
