@@ -190,7 +190,11 @@ today.
   were already refined. Teaching extraction to erase squash-typed implicit
   binders would recover the ABI, and is left as a follow-up.
 - **Solver time.** 15 rlimit adjustments across ulib, Pulse, `examples` and
-  `doc`.
+  `doc`. In aggregate there is no regression: a from-scratch verification of
+  ulib's 319 modules takes 1m35s wall at `-j16`, or 13.2 CPU-minutes, against
+  the 14m58 recorded for the previous design. The baseline's measurement
+  conditions are not documented, so read this as "no regression" rather than as
+  a precise speedup.
 - **Reflection.** `comp_view` keeps its constructors; `C_Lemma`/`C_Eff` report
   `pre = True`, since a precondition is now a binder on the arrow and out of the
   view's reach. The postcondition *is* recovered from the result-type
