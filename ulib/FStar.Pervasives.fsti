@@ -106,10 +106,12 @@ type eqtype_u = a:Type{hasEq a}
 
      Lemma post    (== Lemma (ensures post))
 
-   the squash argument on the postcondition allows to assume the
-   precondition for the *well-formedness* of the postcondition.
+   [Lemma (requires pre) (ensures post)] desugars to an arrow taking a
+   trailing implicit [squash pre] argument -- which is what lets [pre] be
+   assumed for the *well-formedness* of [post] -- and returning
+   [Tot (squash post)].
 *)
-effect Lemma (a: eqtype_u) = Tot a
+effect Lemma (a: Type) = Tot a
 
 (** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
