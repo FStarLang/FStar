@@ -225,7 +225,7 @@ let is_app = function
     | Var "ApplyTF" -> true
     | _ -> false
 
-let check_pattern_vars env vars pats =
+let check_pattern_vars env vars body pats =
     let pats =
         pats |> List.map (fun (x, _) ->
         norm_with_steps [Env.Beta] env.tcenv x)
@@ -234,7 +234,15 @@ let check_pattern_vars env vars pats =
     | [] -> ()
     | hd::tl ->
         let pat_vars = List.fold_left (fun out x -> union out (Free.names x)) (Free.names hd) tl in
-        match vars |> Option.find (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
+        (* A binder that occurs neither in the body nor in the sort of another
+           binder is inert: no instantiation of it can matter, so a pattern that
+           does not mention it is not ill-formed. Such binders arise from
+           closing a guard over an irrelevant binder. *)
+        let relevant =
+          List.fold_left (fun out ({binder_bv=b}) -> union out (Free.names b.sort))
+                         (Free.names body) vars
+        in
+        match vars |> Option.find (fun ({binder_bv=b}) -> not (mem b pat_vars) && mem b relevant) with
         | None -> ()
         | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
@@ -1861,13 +1869,13 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
              | Some (_, f) -> f phi.pos arms)
 
         | Some (QAll(vars, pats, body)) ->
-          pats |> List.iter (check_pattern_vars env vars);
+          pats |> List.iter (check_pattern_vars env vars body);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           let tm = mkForall phi.pos (pats, vars, mkImp(guard, body)) in
           tm, decls
 
         | Some (QEx(vars, pats, body)) ->
-          pats |> List.iter (check_pattern_vars env vars);
+          pats |> List.iter (check_pattern_vars env vars body);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           mkExists phi.pos (pats, vars, mkAnd(guard, body)), decls
 
