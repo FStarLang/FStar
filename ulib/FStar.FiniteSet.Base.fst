@@ -355,12 +355,16 @@ let difference_doesnt_include_lemma ()
   ()
 
 #restart-solver
+(* Pushing the expected postcondition into the body raises the obligation earlier,
+   in a context that this proof needs more solver resources to discharge. *)
+#push-options "--z3rlimit_factor 2"
 let difference_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
 : Lemma (  cardinality (difference s1 s2) + cardinality (difference s2 s1) + cardinality (intersection s1 s2) = cardinality (union s1 s2)
          /\ cardinality (difference s1 s2) = cardinality s1 - cardinality (intersection s1 s2)) =
   union_is_differences_and_intersection s1 s2;
   union_of_three_disjoint_sets_cardinality_lemma (difference s1 s2) (intersection s1 s2) (difference s2 s1);
   cardinality_matches_difference_plus_intersection_lemma s1 s2
+#pop-options
 
 let difference_cardinality_lemma ()
 : Lemma (difference_cardinality_fact) =

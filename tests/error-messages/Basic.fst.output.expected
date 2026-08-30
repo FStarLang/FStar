@@ -56,31 +56,28 @@
 
 * Info at Basic.fst(17,29-17,31):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.unit{false} got type Prims.unit
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
   - See also Basic.fst(17,21-17,26)
 
 * Info at Basic.fst(20,29-20,31):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.unit{Prims.l_False} got type Prims.unit
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
   - See also Basic.fst(20,21-20,26)
 
 * Info at Basic.fst(23,46-23,48):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.unit{Prims.l_False} got type Prims.unit
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
   - See also Basic.fst(23,37-23,42)
 

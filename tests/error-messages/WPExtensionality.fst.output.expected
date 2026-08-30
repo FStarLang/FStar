@@ -1,10 +1,9 @@
-* Info at WPExtensionality.fst(61,3-61,34):
+* Info at WPExtensionality.fst(61,31-61,33):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.unit{Prims.l_False} got type Prims.unit
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
   - See also WPExtensionality.fst(60,19-60,24)
 
