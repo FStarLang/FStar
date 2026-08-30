@@ -37,6 +37,6 @@
           -> ghost fn
                requires Pulse.Lib.Core.emp
                ensures Pulse.Lib.Core.emp
-      _if_hyp: Prims.squash ((z <> 0 && y <> 0) == true)
+      (z <> 0 && y <> 0) == true
       y - 1 >= 0
 

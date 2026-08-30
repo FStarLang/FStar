@@ -2,7 +2,7 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove:
-      Pulse.Lib.Reference.pts_to r (*?u178*)_
+      Pulse.Lib.Reference.pts_to r (*?u166*)_
   - In the context:
       Pulse.Lib.Reference.pts_to r v
 

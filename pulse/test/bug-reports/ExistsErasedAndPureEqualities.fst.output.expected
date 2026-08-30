@@ -3,13 +3,13 @@
   - Current context:
       some_pred x v
   - In typing environment:
-      __#790 : squash (_v_5 == v)
-      _v_5#789 : erased int
-      __#595 : squash (v == v)
-      v#371 : erased int
-      x#365 : R.ref int
+      __#660 : squash (_v_5 == v)
+      _v_5#659 : erased int
+      __#498 : squash (v == v)
+      v#318 : erased int
+      x#310 : R.ref int
 
-      goto _return#440 requires emp
+      goto _return#375 requires emp
 
 * Info at ExistsErasedAndPureEqualities.fst(66,32-68,5):
   - Expected failure:
