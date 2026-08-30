@@ -1504,8 +1504,14 @@ let combine_branch_res_typs env (guard_x:bv) (res_t:typ) (lcases:list (formula &
     let base =
       (* A branch whose base type is still a unification variable agrees with
          whatever the others settle on -- it will be solved to it -- so it does
-         not veto a common base; its refinement is still worth keeping. *)
-      match lcases |> List.map (fun (_, t) -> unref t) |> List.filter (fun b -> not (is_bare_flex b)) with
+         not veto a common base; its refinement is still worth keeping.  But if
+         *every* branch's base is that same unification variable -- which is what
+         a match in statement position looks like, since each branch is checked
+         against the same fresh expected type -- then it is the common base, and
+         refusing it here would throw away every branch's refinement. *)
+      let bases = lcases |> List.map (fun (_, t) -> unref t) in
+      let concrete = bases |> List.filter (fun b -> not (is_bare_flex b)) in
+      match (if Cons? concrete then concrete else bases) with
       | b0 :: rest when rest |> List.for_all (fun b -> TEQ.eq_tm env b b0 = TEQ.Equal)
                      && Env.closed env b0 -> Some b0
       | _ -> None in
