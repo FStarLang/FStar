@@ -3293,9 +3293,18 @@ let ghost_to_pure_lcomp2 env (lc1, lc2) =
 let warn_norm_failure (r:Range.t) (e:exn) : ML unit =
   Errors.log_issue r Errors.Warning_NormalizationFailure (Format.fmt1 "Normalization failed with error %s\n" (BU.message_of_exn e))
 
+(* Steps used to tidy a term up before showing it to the user.
+
+   Fixpoint reduction is deliberately excluded.  A term that is being reported
+   in an error message has no reason to be terminating -- [let rec f x : Dv a =
+   f x in f] is a perfectly good subterm of a proposition -- and unfolding it
+   here loops until the process runs out of memory, which no [try ... with]
+   can catch.  A recursive definition also reads better left folded. *)
+let for_printing_steps = [AllowUnboundUniverses; Exclude Zeta]
+
 let term_to_doc env t =
   let t =
-    try normalize [AllowUnboundUniverses] env t
+    try normalize for_printing_steps env t
     with e ->
       warn_norm_failure t.pos e;
       t
@@ -3307,7 +3316,7 @@ let term_to_doc env t =
 
 let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =
-    try normalize [AllowUnboundUniverses] env t
+    try normalize for_printing_steps env t
     with e ->
       warn_norm_failure t.pos e;
       t
@@ -3316,7 +3325,7 @@ let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
 
 let comp_to_string env c = GenSym.with_frozen_gensym (fun () ->
   let c =
-    try norm_comp (config [AllowUnboundUniverses] env) [] c
+    try norm_comp (config for_printing_steps env) [] c
     with e ->
       warn_norm_failure c.pos e;
       c
@@ -3325,7 +3334,7 @@ let comp_to_string env c = GenSym.with_frozen_gensym (fun () ->
 
 let comp_to_doc env c = GenSym.with_frozen_gensym (fun () ->
   let c =
-    try norm_comp (config [AllowUnboundUniverses] env) [] c
+    try norm_comp (config for_printing_steps env) [] c
     with e ->
       warn_norm_failure c.pos e;
       c
