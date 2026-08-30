@@ -57,6 +57,21 @@ let plugin_unfold_warn_ctr : ref int = mk_ref 0
 let dbg_univ_norm = Debug.get_toggle "univ_norm"
 let dbg_NormRebuild = Debug.get_toggle "NormRebuild"
 
+(* Computing the universe of a type encountered *during* normalization.
+
+   The normalizer does not extend [cfg.tcenv] as it descends under binders: it
+   tracks the local scope in its own closure environment instead.  So a type
+   read off a residual comp or a monadic-lift annotation may mention variables
+   that [cfg.tcenv] has never heard of.  That is harmless for the universe
+   itself -- a universe is determined by sorts, not by any logical content --
+   but [Env.universe_of] checks its argument is well-scoped.  Reintroduce the
+   free variables from the sorts they carry, so the check sees what the
+   normalizer already knows. *)
+let universe_of_ln (env:Env.env) (t:typ) : ML universe =
+  let bvs = Free.names t |> FStarC.Class.Setlike.elems in
+  let env = if Nil? bvs then env else Env.push_bvs env bvs in
+  env.universe_of env t
+
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
  * reduction and strong reduction (under binders), as described in:
@@ -2119,8 +2134,8 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
               let close = closure_as_term cfg env in
               let bind_inst = match (SS.compress bind_repr).n with
                 | Tm_uinst (bind, [_ ; _]) ->
-                    S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
-                                          ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
+                    S.mk (Tm_uinst (bind, [ universe_of_ln cfg.tcenv (close lb.lbtyp)
+                                          ; universe_of_ln cfg.tcenv (close t)]))
                     rng
                 | _ ->
                   raise_error rng Errors.Fatal_UnexpectedEffect
@@ -2210,7 +2225,7 @@ and reify_lift cfg e msrc mtgt t : ML term =
     (* An explicit lift was given. Feed it the reified source computation if the
        source effect is itself reifiable, and a thunk otherwise. *)
     let lift = match (SS.compress lift).n with
-      | Tm_uinst (lift_tm, [_]) -> S.mk (Tm_uinst (lift_tm, [env.universe_of env t])) e.pos
+      | Tm_uinst (lift_tm, [_]) -> S.mk (Tm_uinst (lift_tm, [universe_of_ln env t])) e.pos
       | _ -> lift in
     let e =
       if Env.is_reifiable_effect env msrc
@@ -2233,7 +2248,7 @@ and reify_lift cfg e msrc mtgt t : ML term =
     let _, return_repr = ed |> U.get_return_repr |> Option.must in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
-            S.mk (Tm_uinst (return_tm, [env.universe_of env t])) e.pos
+            S.mk (Tm_uinst (return_tm, [universe_of_ln env t])) e.pos
         | _ ->
           raise_error e.pos Errors.Fatal_UnexpectedEffect
             (Format.fmt2 "The return combinator of effect %s must be polymorphic in exactly one universe (%s)"
