@@ -1,285 +1,220 @@
-# Push the expected postcondition without putting it in the expected type
+# Make `Tot`/`GTot`/`Div` primitive, and move specifications out of computation types
 
-Follow-on to #4508. That PR made the postcondition push the default by folding
-the expected postcondition into the expected type of a lambda's body, as a
-refinement. This PR keeps the behaviour it was after — an obligation raised in
-the failing sub-term's own context, at its own range — and changes how it is
-carried, because a refinement in the expected type is visible to unification and
-was reaching places it should not.
+This replaces the design in #4508 / #4510 (pushing an *expected postcondition*
+through the typechecker). That approach kept the Hoare specification inside a
+`comp_typ` and worked around the consequences; this one removes it from
+`comp_typ` altogether, so the consequences do not arise.
 
-It also extends the push to where it actually matters (ascriptions), fixes the
-two-phase path that was silently dropping it, and removes a redundant
-whole-match obligation that was reporting a second, less precise error *before*
-the precise one.
+56 commits, 268 files, `+4196 / −2021`.
 
-5 commits, 18 files, `+417 / −56`.
+## The two representations that went away
 
-| | Before this PR | After |
-|---|---|---|
-| Where the post lives | refinement in `expected_typ` | `Env.expected_post`, a separate field |
-| Visible to unification | **yes** — could solve a uvar | no — materialized only at check sites |
-| Pushed at | lambdas | lambdas **and** ascriptions (`Inr` comp and `Inl` type) |
-| Survives two-phase | no (phase 2 lost it via `tc_match`'s self-ascription) | yes |
-| Whole-match re-proof | yes — second, less precise error first | no |
-| ulib rlimit increases | 5 | 1 |
+F* had `PURE`/`GHOST`/`DIV` as primitive effects, with `Tot`/`GTot`/`Div` as
+*abbreviations* of them — and, separately, dedicated `Total`/`GTotal`
+constructors in `comp'` carrying `Prims.Tot`/`Prims.GTot`. One concept, three
+representations, each with its own hardwired lident comparisons (~140 of them).
 
----
+Independently, a `comp_typ` carried `comp_pre` and `comp_post`, so an arrow's
+meaning was split between its binders and a specification buried in its
+codomain. That split is the source of the "arrows compared without their
+pre/post" bug class, and it is what forced the expected-postcondition machinery.
 
-## 1. The postcondition should not be a type
-
-Folding the postcondition into the expected type is observable by unification.
-Concretely, this was rejected:
+After this PR:
 
 ```fstar
-assume val p : int -> prop
-assume val lem (x:int) : Lemma (p x)
-
-let no_inference_leak (b:bool) : Pure int (requires True) (ensures fun r -> p r) =
-  let y = if b then 1 else 2 in
-  lem y;
-  y
+(* ulib/Prims.fst, at the very beginning *)
+total assume effect Tot
+total assume effect GTot
+assume sub_effect Tot ~> GTot
 ```
 
-The unannotated inner `let` is checked with the expected type cleared, so the
-result type of its `if` is a fresh unification variable. The refined expected
-type of the `let` *body* then solves that variable to `_:int{p _}`, so the second
-phase re-checks the two branches of the `if` against the refinement — i.e. before
-`lem y` has established it.
-
-So the postcondition is now kept out of the type. `Env.env` gains
+`Pure`, `Ghost` and `Dv` become ordinary front-end abbreviations that are
+unfolded and desugared away before the typechecker ever sees them, and
 
 ```fstar
-expected_post : option typ
+and comp_typ = {
+  comp_univs  : universes;
+  effect_name : lident;
+  result_typ  : typ;
+  flags       : list cflag;
+}
+and comp' = | Comp of comp_typ
 ```
 
-set only by the new `Env.set_expected_typ_and_post`, and reset by every other
-setter of `expected_typ` (in particular `clear_expected_typ`), so it survives
-exactly along the positions that inherit the ambient expected type: match and
-`if` branches, `let` bodies, and ascriptions. The refinement is materialized
-only at the point of the check, in `value_check_expected_typ` and
-`comp_check_expected_typ`, and never becomes a candidate solution for a uvar.
+A computation type is now a label and a result type. Obligations live in
+`guard_t`, where they were always meant to live.
 
-`expected_typ_with_post` drops the refinement when the context checks the result
-type by equality (`use_eq` / `use_eq_strict` — a refinement of `t` is not `t`, and
-`weaken_result_typ` would call `Rel.try_teq` and fail), or when the computed
-result type still mentions uvars, which is the direct guard against the case
-above.
+## Where the specification went
 
-Dropping it is always sound: `check_expected_effect` raises the obligation in
-full regardless. Pushing only makes it arise **earlier**, in the sub-term's own
-context and at its own range.
+In the only two positions where a computation type may appear:
 
-`tests/micro-benchmarks/PushPostcondition.fst` pins both halves — that the
-obligation lands in tail position, and that recording it does not perturb
-inference. Besides `no_inference_leak` above it covers the same shape through an
-ascription, a lambda passed as an argument, an inferred implicit, and a
-`$`-binder (which forces an equality check, so no refinement may appear there).
+| Position | `E t (requires P) (ensures Q)` becomes |
+|---|---|
+| **Arrow codomain** | `... -> #(_ : squash P) -> E (x:t{Q x})` — the implicit binder goes **last**, so `P` may mention the explicit binders |
+| **Ascription** | assert `P` here, and ascribe `E (x:t{Q x})` |
 
-## 2. Ascriptions are where the push actually matters
+The precondition becomes a *proof argument*: the caller must supply it, F*
+instantiates it by unification, and the obligation is raised at the call site
+with the caller's hypotheses in scope. The postcondition becomes a refinement of
+the result type, which is exactly what a caller learns.
 
-The push was only performed for lambdas. But the desugarer turns
+Both are suppressed when trivial, so the overwhelming majority of code is
+untouched.
+
+### Lemma
+
+`Lemma` is the unit-result instance of the same rule, and is no longer special:
 
 ```fstar
-let f x : C = body
+effect Lemma (a: Type) = Tot a
 ```
 
-into `fun x -> (body <: C)`, so for an *ordinary annotated definition* the
-postcondition never reached the body at all. `Tm_ascribed` nodes with a
-computation-type ascription now go through the same `set_expected_typ_of_comp`.
+```
+val f (bs) : Lemma (requires P) (ensures Q) [SMTPat pats]
+  ==>  bs -> #(_ : squash P) -> Tot (squash Q)     flags = [LEMMA; SMTPAT pats]
+```
 
-Type ascriptions (`Inl`) matter too, for a subtler reason. `tc_match` ascribes
-its own output with `Tm_ascribed (match, Inl cres.res_typ)`. So for a definition
-whose type comes from a `val` declaration, the **second phase** sees a type
-ascription where the first saw a bare match — and the old code called
-`set_expected_typ_maybe_eq`, which resets `expected_post`. The postcondition was
-therefore dropped on every second phase, which is why `val`-declared definitions
-showed no improvement at all. `set_expected_typ_of_ascription` carries it
-through when the ascribed type is the one the context already expects.
+Since `squash Q` *is* `_:unit{Q}`, this is the general rule at `t = unit`. Two
+things fall out:
 
-## 3. A match should take the result type its branches established
+- **The post-thunking hack is gone.** `Lemma`'s postcondition was thunked
+  precisely so the precondition could be assumed while checking the post's
+  well-formedness (#57). With `#(_:squash P)` bound to the left of the codomain,
+  `P` is in scope for free. `thunk_ens`, `unthunk` and `unthunk_lemma_post` are
+  deleted.
+- **`Tot (squash phi)` and `Lemma (ensures phi)` are now the same type**, so the
+  bespoke subtyping rule for that pair is deleted too.
 
-`bind_cases` is the one place in the checker where a result type is **chosen**
-rather than propagated: a match has no single subterm to take its type from, so
-it is handed one. Every other combinator threads through the type of what it is
-built from. (I grepped for other sites that form a result type from the expected
-type; there are none — so this is the only place that needed attention.)
+### The SMT encoding is unchanged
 
-Handing it the plain expected type discards whatever the branches have in
-common, and makes the match prove again what each branch already proved. With a
-postcondition that meant the obligation was raised twice: once per branch, and
-once for the whole match — and since errors come out in the order they are
-raised, the imprecise whole-match error was printed **first**. That was the
-remaining half of the localization problem.
+This was the main risk: ~5300 `Lemma` occurrences, ~1080 with `requires`. If
+trigger selection or the quantified-binder set shifted, proofs would fail
+diffusely and far from the cause.
 
-The rule is now stated without reference to postconditions:
-
-> When the branches agree on a result type, and it is scoped outside the match,
-> it is a result type for the match, and we take theirs.
-
-A postcondition-refined type is preserved because all the branches carry it, not
-because it is looked for. Their result types are only *read*, never set, so
-nothing is claimed of a branch it did not establish. (Assuming the refined type
-would be unsound — a branch may legitimately have dropped it.) An `Env.closed`
-check makes it safe to take a branch's type directly.
-
----
-
-## Considered and rejected: carrying the obligation in the postcondition
-
-The obvious systematic alternative is to record the discharged fact in the
-computation type's **postcondition** rather than as a refinement of the result
-type. That is the compositional channel — `bind` quantifies over posts,
-`mk_conjunction` conjoins them — so the fact reaches the enclosing computation
-with no help from `bind_cases`, and the whole of §3 becomes unnecessary. It also
-removes the `use_eq` guard, the uvar-groundness heuristic, and the ascription
-refinement-matching.
-
-I implemented it (`return_value_with_post` + `strengthen_with_post` in
-`TypeChecker.Util`) and measured it. **It does not work**, for a reason worth
-recording:
-
-> The postcondition composes but cannot be *discharged*. The enclosing check has
-> no way to see the obligation was already met, so the fact must be carried in
-> the post at every tail position *and* the obligation re-raised in the pre at
-> each level.
-
-The accumulated context grew enough to lose two ulib proofs outright —
-`FStar.UInt.index_to_vec_ones` and `FStar.Seq.Sorted.intro_sorted_pred`. I dumped
-the failing context for the first and confirmed every needed hypothesis was
-present; Z3 simply could not find it among the vacuous `cond ==> P` copies.
-
-A refinement of the result type, by contrast, is absorbed **syntactically** by
-`weaken_result_typ`'s equality short-circuit, so the enclosing obligation costs
-zero SMT. *Absorbability*, not compositionality, is the property that decides
-this — which is why the type is the right channel here even though the post is
-the compositional one.
-
----
-
-## Diagnostics
-
-The flagship case:
+It does not shift. The `LEMMA`/`SMTPAT` flags are kept on the innermost `Tot`
+and the post is written with the `squash` fvar, so the encoder recovers
+everything structurally: `pre` from the trailing squash-typed implicit binder,
+`post` from the argument of `squash`, and the quantifier ranges over the **real**
+binders only. For
 
 ```fstar
-val declared : b:bool -> Pure int (requires True) (ensures fun r -> p r)
-let declared b = if b then (lem 1; 1) else 2
+val lem (x:int) : Lemma (requires p x) (ensures q (f x)) [SMTPat (f x)]
 ```
 
-Before the feature (nightly-2026-08-17), the whole body is blamed, the goal is a
-metavariable, and the match itself is dragged into the context:
+the emitted axiom is
 
-```
-* Error 19 at D.fst(6,17-6,44):                <- the entire `if ... else 2`
-  - Assertion failed
-  - Failed to prove: D.p _
-  - In context:
-      b: Prims.bool
-      uu___: Prims.int
-      (b = true ==> b == true /\ D.p 1) /\
-      _ == (match b with | true -> 1 | _ -> 2)
+```smt2
+(assert (! (forall ((@x0 Term))
+  (! (implies (and (HasType @x0 Prims.int) (Valid (L.p @x0))) (Valid (L.q (L.f @x0))))
+   :pattern ((L.f @x0)) :qid lemma_L.lem)) :named lemma_L.lem))
 ```
 
-Now:
+— byte-for-byte the shape emitted before. Verified across no-`requires`
+lemmas, multi-binder lemmas with `SMTPatOr`, universe-polymorphic lemmas with
+fuel instrumentation, and lemmas with a quantified `ensures`.
 
-```
-* Error 19 at PostconditionLocalization.fst(23,28-23,29):     <- just the `2`
-  - Subtyping check failed
-  - Expected type _: Prims.int{p _} got type Prims.int
-  - Failed to prove: PostconditionLocalization.p 2
-  - In context:
-      b: Prims.bool
-      ~(b = true)
-```
+## Two generations, and a stage0 bump
 
-Note this particular shape — a `val`-declared definition — was *not* fixed by
-PR #4508 alone. That PR pushes at the lambda, but `tc_match` ascribes its own
-output with the match's result type, so the second phase saw an `Inl` ascription
-and `set_expected_typ_maybe_eq` reset the postcondition. §2 is what makes it
-work.
+`src/` is only ever lax-checked, so the sole hard bootstrap question is whether
+the **fixed stage0 binary** can desugar a flipped `Prims`. It cannot: the
+compiler hardwires `Prims.GHOST` in `Env.is_erasable_effect`, which relies on
+`GTot → GHOST` unfolding, so making `GTot` primitive silently stops erasure from
+firing.
 
-Existing goldens move the same way — the range narrows to the offending
-sub-term, and the context loses the spurious extra `uu___: Prims.unit` that came
-from stating the obligation over the whole body:
+So the flip could not land in one generation:
 
-```
- * Info at WPExtensionality.fst(61,3-61,34):      ->   (61,31-61,33)
--  - Assertion failed
--  - In context:
--      uu___: Prims.unit
--      uu___: Prims.unit
-+  - Subtyping check failed
-+  - Expected type _: Prims.unit{Prims.l_False} got type Prims.unit
-+  - In context: uu___: Prims.unit
-```
+1. **Generation 1** (`0444fb29c6`) makes the compiler name-agnostic about which
+   spelling `Prims` declares — one canonical classification of the pure, ghost
+   and divergent effect classes, with every hardwired comparison routed through
+   it. No behaviour change. Then `make bump-stage0` (`0cdb18b5a5`).
+2. **Generation 2** flips `Prims` and removes specifications from `comp_typ`.
 
-`tests/error-messages/PostconditionLocalization.fst` pins one precise error per
-shape across five shapes: annotated definition, `val`-declared definition,
-lambda against an expected arrow, and a three-way datatype match — plus the
-`returns` case below.
+## A caching discovery worth reading
 
-## Known boundary: `match ... returns`
+`CheckedFiles` validates a `.checked` file against its source digest and
+`cache_version_number` — and **nothing ties it to the compiler that produced
+it**. Every ulib, Pulse and test file whose source text had not changed kept
+reusing its pre-refactor artifact, so every green run during this work was
+partly vacuous.
 
-A match with a `returns` annotation calls `Env.clear_expected_typ` for its
-branches on purpose — the annotation is there to override the expected type —
-and that takes the expected postcondition with it. Such a match proves its
-postcondition once, as a whole, and a failure blames the whole match.
+Collapsing `Total`/`GTotal` forced the issue: `.checked` payloads are OCaml
+`Marshal`ed, so removing a constructor shifts every later tag, and a stale
+artifact *segfaults* the compiler rather than failing to load. Bumping
+`cache_version_number` 93 → 94 is mandatory — and it bought the first honest
+re-verification of the whole tree, which immediately surfaced four real bugs
+that had been masked for the entire refactor:
 
-I left this as-is rather than special-casing it: it is the same choice already
-made for the expected type, and the annotation is the user saying what the type
-should be. It is pinned in the golden file so the behaviour is explicit rather
-than accidental, and commented at the `clear_expected_typ` site.
+- **A postcondition stopped reaching its continuation** when the bound variable
+  did not occur in the continuation's result type, as in `hd :: f tl`.
+- **A flex variable with a refined *and* an unrefined upper bound** was solved to
+  their meet, making the refinement part of the variable's definition and then
+  asking every *lower* bound to prove it at its own source position.
+  `let y = match ... in lem y; y` is enough to hit it. Deferring is right — with
+  the wrinkle that deferring a problem removes it from `wl.attempting`, hiding
+  the very bound that motivated the deferral, so deferred problems must be
+  counted as bounds too.
+- **A top-level definition recorded its body's type, not its declared type**:
+  `let my_int : Type = int` was recorded at `eqtype`. Keeping the sharper type is
+  right *inside* a definition and wrong at its boundary, where it publishes an
+  implementation detail as the signature — and defeats
+  `FStar.Tactics.Parametricity`.
+- **`tc_pat` emitted `FStar.Pervasives.id (proj x)`** for a pattern variable. Only
+  beta-reduction runs before that term reaches the branch's result type, so the
+  `id` survived and blocked the projector equation. An identity lambda
+  beta-reduces away.
 
-## Proof adjustments
+If you review one thing, review these four. They are ordinary typechecker bugs
+that this refactor exposed rather than caused, and three of them are latent
+today.
 
-Raising obligations earlier and per-branch changes query shape, so a few proofs
-needed attention.
+## User-visible changes
 
-**`BinomialQueue.find_max_emp_repr_l`** — an explicit contradiction. The
-non-empty branch is vacuous, but the only fact at the branch tail is
-`last_key_in_keys`'s postcondition, a pattern-matching let
-(`let Internal _ k _ = L.last l in ...`) that is *stuck* until
-`Internal? (L.last l)` is known. That is derivable from `priq`'s refinement plus
-`~(Nil? l)`, but nothing in the goal prompts unfolding `is_compact`. The added
-assert is a **trigger, not information**.
+- `assume_safe`'s argument is now `squash False -> Tac a`, not `unit -> Tac a`.
+  Write `assume_safe (fun _ -> ...)`, not `assume_safe (fun () -> ...)`.
+- `apply` now works on lemmas; `pose_lemma` is joined by `pose_apply`.
+- A failed `()`-against-`squash` check reports **"Assertion failed"** rather than
+  "Subtyping check failed" — the obligation really is an assertion now.
+- The resugarer folds `#(squash P) -> Tot (x:t{Q x})` back into
+  `Lemma (requires P) (ensures Q)`, so error messages and IDE hovers read as
+  before. Squash binders print as hypotheses rather than as arguments.
+- Effect abbreviations may now carry an `ensures`.
+- **Accepted regression:** for a call through a let-bound alias, a precondition
+  failure is localized to the alias rather than to the call.
 
-Worth stating plainly: this is not an expressiveness regression. On master,
-writing `assert (find_max None l == None)` at that same tail position *also*
-fails. The proof was never robust there; it only worked because the obligation
-was discharged elsewhere.
+## Costs
 
-**rlimit increases** — 5 were needed when the feature first landed; after §2 and
-§3 reshaped the obligations I rechecked each individually and **4 are no longer
-needed** (`FStar.Math.Euclid`, `FStar.Matrix`, `FStar.OrdSet`,
-`FStar.Reflection.TermEq`). Only `FStar.FiniteSet.Base` still needs one.
+- **Extraction ABI.** A `#(squash P)` binder on a *runtime* function extracts to
+  an extra `unit` argument (`let f (sq : unit) (x : Obj.t) = ...`). This is
+  accepted, and the blast radius turned out to be one golden file — most
+  `requires` clauses are on lemmas, which are erased entirely, or on binders that
+  were already refined. Teaching extraction to erase squash-typed implicit
+  binders would recover the ABI, and is left as a follow-up.
+- **Solver time.** 15 rlimit adjustments across ulib, Pulse, `examples` and
+  `doc`.
+- **Reflection.** `comp_view` keeps its constructors; `C_Lemma`/`C_Eff` report
+  `pre = True`, since a precondition is now a binder on the arrow and out of the
+  view's reach. The postcondition *is* recovered from the result-type
+  refinement, and `inspect_comp`/`pack_comp` round-trip. Giving the view an
+  honest precondition means changing the view type, which needs its own stage0
+  bump and is deliberately left to a follow-up.
 
-The two in `BoolRefinement` were rechecked the same way and both are still
-required — `elab_open_commute'` fails at 717 without it, `rename_elab_binding_denote`
-at 1072 — so they pay for the pushed per-branch obligation, not a whole-match
-artifact.
+## A documented limitation
 
-## Cost
-
-ulib solver time is unchanged: **14m59** against a 14m58 baseline. The
-whole-match obligation removed in §3 roughly pays for the per-branch ones added.
+`tests/micro-benchmarks/Positivity.fst`'s `neg_match` now also raises a spurious
+Error 19 on a definition that is rejected anyway. When a *closed* scrutinee makes
+`subst_pat_bvs_in_res_typ` fire and a branch builds an arrow, the branch must
+transport its result type across `t == Some?.v g` — and F*'s SMT encoding gives
+arrow types no congruence, since each arrow is encoded as its own constant. This
+is unprovable on the pre-refactor compiler too. Every parameterized form of the
+same type-level match verifies.
 
 ## Validation
 
-`make 1` / `clean-2 && make 2` / `clean-3 && make 3`, then all caches wiped and
-`make test`, `boot-diff`, `test-2-bare`, `stage2-unit-tests`, `fsharp-all`.
+`make 1`, `make 2`, `make 3`, then `make test` (which covers `tests`,
+`examples` and `doc`, at stage 3, with Pulse), plus `boot-diff`, `test-2-bare`,
+`stage2-unit-tests` and `fsharp-all` — all green, with caches wiped so the run
+is honest. Note that test `.checked` files live in `_cache` as well as
+`_output`; wiping only the latter is what let several failures hide.
 
-Run twice: once on the branch tip, and again after merging current master —
-worth doing because that merge brings in `FStar.Math.Sqrt`, a new ulib module
-this feature had never seen, and an extraction change. Both runs green, zero
-errors. Branch is up to date with `origin/master` (`40861db838`), so the merge
-base is master itself.
-
-## Files
-
-- `src/typechecker/FStarC.TypeChecker.Env.{fst,fsti}` — the `expected_post` field,
-  `set_expected_typ_and_post`, `expected_post`.
-- `src/typechecker/FStarC.TypeChecker.TcTerm.fst` — `refine_by_post`,
-  `expected_typ_with_post`, `set_expected_typ_of_comp`,
-  `set_expected_typ_of_ascription`, and the `bind_cases` result-type rule.
-- `tests/micro-benchmarks/PushPostcondition.fst` — tail position + no inference leak.
-- `tests/error-messages/PostconditionLocalization.fst` — one error per shape,
-  including the `returns` boundary.
+`ci` already runs stage 3, `examples` and `doc` via `_test`, so it needed no
+change.
