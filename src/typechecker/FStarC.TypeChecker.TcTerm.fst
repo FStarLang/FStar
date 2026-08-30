@@ -374,7 +374,13 @@ let value_check_expected_typ env (e:term) (tlc:either term lcomp) (guard:guard_t
      let t = lc.res_typ in
      let g = g ++ guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
-     let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
+     (* A precondition is an implicit binder of squash type, solved with [()].
+        Reporting that as "expected squash phi, got unit" buries the real
+        obligation, which is just [phi]; leave it unlabelled and let the error
+        reporter phrase it. *)
+     let msg = if Env.is_trivial_guard_formula g then None
+               else if U.is_unit t && Some? (U.un_squash t') then None
+               else Some <| Err.subtyping_failed env t t' in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      (* Coarsening to [t'] loses whatever [lc.res_typ] knows, and a result type
         is now the only place a computation's precision lives.  [weaken_result_typ]
