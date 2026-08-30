@@ -10,7 +10,7 @@
       FStar.FunctionalExtensionality.is_restricted Prims.int f
   - See also FStar.FunctionalExtensionality.fsti(106,60-106,77)
 
-* Info at Test.FunctionalExtensionality.fst(80,9-80,43):
+* Info at Test.FunctionalExtensionality.fst(80,2-80,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -23,31 +23,7 @@
         Test.FunctionalExtensionality.f1 ==
       FStar.FunctionalExtensionality.on_domain Prims.nat
         Test.FunctionalExtensionality.g1
-
-* Info at Test.FunctionalExtensionality.fst(92,9-92,52):
-  - Expected failure:
-  - Assertion failed
-  - The SMT solver could not prove the query.
-  - Failed to prove:
-      FStar.FunctionalExtensionality.on_domain Prims.int
-        (FStar.FunctionalExtensionality.on_domain Prims.nat
-            Test.FunctionalExtensionality.f1) ==
-      Test.FunctionalExtensionality.g1
-  - In context:
-      FStar.FunctionalExtensionality.on_domain Prims.nat
-        Test.FunctionalExtensionality.f1 ==
-      FStar.FunctionalExtensionality.on_domain Prims.nat
-        Test.FunctionalExtensionality.g1
-      p: Prims.prop
-      FStar.FunctionalExtensionality.is_restricted Prims.int
-        (FStar.FunctionalExtensionality.on_domain Prims.int
-            (FStar.FunctionalExtensionality.on_domain Prims.nat
-                Test.FunctionalExtensionality.f1))
-      FStar.FunctionalExtensionality.on_domain Prims.int
-        (FStar.FunctionalExtensionality.on_domain Prims.nat
-            Test.FunctionalExtensionality.f1) ==
-      Test.FunctionalExtensionality.g1 ==
-      p
+  - See also Test.FunctionalExtensionality.fst(80,9-80,43)
 
 * Info at Test.FunctionalExtensionality.fst(92,36-92,47):
   - Expected failure:
@@ -60,8 +36,37 @@
         Test.FunctionalExtensionality.f1 ==
       FStar.FunctionalExtensionality.on_domain Prims.nat
         Test.FunctionalExtensionality.g1
+      FStar.FunctionalExtensionality.on_domain Prims.int
+        (FStar.FunctionalExtensionality.on_domain Prims.nat
+            Test.FunctionalExtensionality.f1) ==
+      Test.FunctionalExtensionality.g1
+      a: Type0
+      Prims.int == a
+      b: Type0
+      Prims.int == b
+      uu___:
+      FStar.FunctionalExtensionality.restricted_t Prims.nat (fun _ -> Prims.int)
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.f1 ==
+      _
       uu___: Prims.int
-  - See also Prims.fst(478,18-478,24)
+  - See also Prims.fst(477,18-477,24)
+
+* Info at Test.FunctionalExtensionality.fst(92,2-92,8):
+  - Expected failure:
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Failed to prove:
+      FStar.FunctionalExtensionality.on_domain Prims.int
+        (FStar.FunctionalExtensionality.on_domain Prims.nat
+            Test.FunctionalExtensionality.f1) ==
+      Test.FunctionalExtensionality.g1
+  - In context:
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.f1 ==
+      FStar.FunctionalExtensionality.on_domain Prims.nat
+        Test.FunctionalExtensionality.g1
+  - See also Test.FunctionalExtensionality.fst(92,9-92,52)
 
 * Info at Test.FunctionalExtensionality.fst(142,57-142,58):
   - Expected failure:

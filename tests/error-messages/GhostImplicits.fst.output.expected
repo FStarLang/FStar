@@ -1,7 +1,7 @@
 * Info at GhostImplicits.fst(25,54-25,57):
   - Expected failure:
-  - Computed type Prims.nat
-    and effect Prims.GHOST
+  - Computed type _: Prims.nat{_ == g y}
+    and effect Prims.GTot
     is not compatible with the annotated type Prims.nat
     and effect Tot
 

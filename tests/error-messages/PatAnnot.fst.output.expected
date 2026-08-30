@@ -1,7 +1,6 @@
 * Info at PatAnnot.fst(25,8-25,9):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash Prims.l_False got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
@@ -12,8 +11,7 @@
 
 * Info at PatAnnot.fst(29,10-29,11):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type x: Prims.unit{Prims.l_False} got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
@@ -24,11 +22,9 @@
       _ == (_, x)
   - See also PatAnnot.fst(29,17-29,22)
 
-* Info at PatAnnot.fst(34,10-34,11):
+* Info at PatAnnot.fst(33,0-35,14):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type l: Prims.list Prims.int {Prims.l_False}
-    got type Prims.list Prims.int
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
@@ -37,12 +33,10 @@
       uu___: Prims.list Prims.int
       l: Prims.list Prims.int
       _ == (_, l)
-  - See also PatAnnot.fst(34,21-34,26)
 
 * Info at PatAnnot.fst(39,10-39,12):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash Prims.l_False got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - See also PatAnnot.fst(40,26-40,31)
@@ -54,7 +48,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: i >= 0
   - In context: i: Prims.int
-  - See also Prims.fst(478,18-478,24)
+  - See also Prims.fst(477,18-477,24)
 
 * Info at PatAnnot.fst(55,36-55,39):
   - Expected failure:
@@ -62,5 +56,5 @@
   - The SMT solver could not prove the query.
   - Failed to prove: _ >= 0
   - In context: uu___: Prims.int
-  - See also Prims.fst(478,18-478,24)
+  - See also Prims.fst(477,18-477,24)
 

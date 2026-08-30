@@ -32,9 +32,6 @@
       uu___: Prims.bool
       n = 0 == _
       m << m \/ n - 1 << n
-      uu___: Prims.int
-      m << m \/ n - 1 << n
-      NegativeTests.Termination.ackermann_bad m (n - 1) == _
   - See also NegativeTests.Termination.fst(31,19-36,54)
 
 * Info at NegativeTests.Termination.fst(36,46-36,53):
@@ -71,8 +68,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: l << l
   - In context:
-      ~(Nil? l) /\ ~(Cons? l) ==> Prims.l_False
-      ~(Nil? l)
+      ~(Nil? l) /\ Cons? l
       uu___: 'a
       tl: Prims.list 'a
       l == _ :: tl
@@ -87,9 +83,6 @@
       ~(v = 0 = true)
       uu___: Prims.bool
       v = 0 == _
-      i: Prims.nat
-      i >= 0
-      v == i
       x: Prims.nat
       x <= v
   - See also NegativeTests.Termination.fst(53,2-55,29)
@@ -101,9 +94,7 @@
   - Failed to prove:
       NegativeTests.Termination.S (NegativeTests.Termination.S n') << n
   - In context:
-      ~(O? n) /\ ~(S? n && O? n._0) /\ ~(S? n && S? n._0) ==> Prims.l_False
-      ~(O? n)
-      ~(S? n && O? n._0)
+      ~(O? n) /\ ~(S? n && O? n._0) /\ S? n && S? n._0
       n': NegativeTests.Termination.snat
       n == NegativeTests.Termination.S (NegativeTests.Termination.S n')
   - See also NegativeTests.Termination.fst(64,2-67,29)
@@ -117,9 +108,7 @@
       NegativeTests.Termination.S (NegativeTests.Termination.S n') === n /\
       m << m
   - In context:
-      ~(O? n) /\ ~(S? n && O? n._0) /\ ~(S? n && S? n._0) ==> Prims.l_False
-      ~(O? n)
-      ~(S? n && O? n._0)
+      ~(O? n) /\ ~(S? n && O? n._0) /\ S? n && S? n._0
       n': NegativeTests.Termination.snat
       n == NegativeTests.Termination.S (NegativeTests.Termination.S n')
   - See also NegativeTests.Termination.fst(71,13-75,35)
@@ -142,8 +131,7 @@
       NegativeTests.Termination.S n' << n \/
       NegativeTests.Termination.S n' === n /\ m' << m
   - In context:
-      ~(O? n) /\ ~(S? n) ==> Prims.l_False
-      ~(O? n)
+      ~(O? n) /\ S? n
       n': NegativeTests.Termination.snat
       m': NegativeTests.Termination.snat
       (n, m) == (NegativeTests.Termination.S n', m')
@@ -155,8 +143,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: NegativeTests.Termination.S n' << n
   - In context:
-      ~(O? n && true) /\ ~(S? n && true) ==> Prims.l_False
-      ~(O? n && true)
+      ~(O? n && true) /\ S? n && true
       n': NegativeTests.Termination.snat
       (n, 42) == (NegativeTests.Termination.S n', 42)
   - See also NegativeTests.Termination.fst(94,2-96,26)
