@@ -1598,7 +1598,9 @@ and term_as_mlexpr'
              (* Should we check if hd here is [__][u]int_to_t? *)
             | Tm_app _ ->
               (match U.head_and_args_full t with
-               | _, [x, _] ->
+               (* Trailing implicit arguments may be present: [FStar.SizeT.uint_to_t]
+                  has a [fits] precondition, hence a proof argument. *)
+               | _, (x, _) :: _ ->
                  let x = SS.compress x in
                  let x = U.unascribe x in
                  (match x.n with

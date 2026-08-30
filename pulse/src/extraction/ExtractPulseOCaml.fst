@@ -75,8 +75,10 @@ let tr_expr (g:uenv) (t:term) : ML (mlexpr & e_tag & mlty) =
   let Some (fv, us, args) = hua in
   // if !dbg then Format.print1 "GGG checking expr %s\n" (show hua);
   match fv, us, args with
-  | _, _, [(x, _)]
+  | _, _, (x, _) :: _
       when S.fv_eq_lid fv (Ident.lid_of_str "FStar.SizeT.uint_to_t") ->
+    (* [uint_to_t] has a [fits] precondition, hence a trailing implicit
+       proof argument that carries no computational content. *)
     cb g x
 
   | _, _, [(t, _)]
