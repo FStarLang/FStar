@@ -3223,8 +3223,7 @@ let ghost_to_pure_aux env non_informative_only c =
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
-                   let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
-                   {ct with effect_name=pure_eff; flags=flags}
+                   {ct with effect_name=pure_eff}
                  | None ->
                     let ct = unfold_effect_abbrev env c in //must be ghost
                     {ct with effect_name=PC.primitive_pure_lid} in

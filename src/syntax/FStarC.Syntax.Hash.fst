@@ -308,7 +308,6 @@ and hash_flag f
   =
   match f with
   | TOTAL -> of_int 947
-  | MLEFFECT -> of_int 953
   | LEMMA -> of_int 967
   | SMTPAT p -> mix (of_int 971) (hash_term p)
   | DECREASES (Decreases_lex ts) -> mix (of_int 1013) (hash_list hash_term ts)

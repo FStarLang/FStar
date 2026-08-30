@@ -44,6 +44,23 @@ and comp' = | Comp of comp_typ
 A computation type is now a label and a result type. Obligations live in
 `guard_t`, where they were always meant to live.
 
+The `cflag` list shrank too. `MLEFFECT` is gone: every site that set it did so
+exactly when `effect_name` was already `FStar.All.ML`, and every site that read
+it already tested the name first. `TOTAL` survives, but with one narrow job
+instead of four. It used to be sprinkled on every `Tot`-named comp, residual
+comp and `bind` result, where it merely restated the effect name; now it is set
+in exactly one place, `ToSyntax.desugar_comp`, and records the one fact the name
+does *not* carry — that this comp's effect is an *abbreviation* whose root is
+`Tot`, such as `Lemma`. Abbreviations are not unfolded until the typechecker,
+and `Syntax.Util.is_total_comp` has no env, so the flag is the env-free record
+of that fact. Dropping it entirely breaks `Bug1953.fst` (`type t = | A : int ->
+X t` for `effect X a = Tot a` is rejected as "constructors cannot have effects")
+and leaves partially-applied lemmas unrecognised as pure, so their trailing
+implicit is never instantiated. With `TOTAL` no longer redundant,
+`TypeChecker.Util.weaken_flags` became dead and `mk_bind` lost its `flags`
+parameter, along with the standing `TODO` about `bind`'s flags being
+inconsistent with the comp it returns.
+
 ## Where the specification went
 
 In the only two positions where a computation type may appear:
@@ -140,7 +157,8 @@ partly vacuous.
 Collapsing `Total`/`GTotal` forced the issue: `.checked` payloads are OCaml
 `Marshal`ed, so removing a constructor shifts every later tag, and a stale
 artifact *segfaults* the compiler rather than failing to load. Bumping
-`cache_version_number` 93 → 94 is mandatory — and it bought the first honest
+`cache_version_number` 93 → 94 is mandatory (and 94 → 95 later, for dropping
+`MLEFFECT` from `cflag`) — and it bought the first honest
 re-verification of the whole tree, which immediately surfaced four real bugs
 that had been masked for the entire refactor:
 

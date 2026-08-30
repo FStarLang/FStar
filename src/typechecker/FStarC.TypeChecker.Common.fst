@@ -338,8 +338,11 @@ let lcomp_set_flags lc fs
    ghost class: [PURE]/[Pure]/[GHOST]/[Ghost] name computations that may carry a
    precondition or postcondition, and treating those as total silently discards
    it.  The names [Tot] and [GTot] mean "no specification" in either direction of
-   the primitive-effect flip, so hardwiring them here is stable. *)
-let is_total_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL -> true | _ -> false)
+   the primitive-effect flip, so hardwiring them here is stable.  The [TOTAL]
+   flag is admitted alongside, since that is exactly how a not-yet-unfolded
+   abbreviation of [Tot] spells itself. *)
+let is_total_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid
+                             || c.cflags |> BU.for_some (function TOTAL -> true | _ -> false)
 
 let is_tot_or_gtot_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid
                              || lid_equals c.eff_name PC.effect_GTot_lid

@@ -458,7 +458,6 @@ instance showable_decreases_order = {
 let cflag_to_string (c:cflag) : ML string =
   match c with
   | TOTAL -> "total"
-  | MLEFFECT -> "ml"
   | LEMMA -> "lemma"
   | SMTPAT p -> "smtpat " ^ term_to_string p
   | DECREASES do -> "decreases " ^ show do

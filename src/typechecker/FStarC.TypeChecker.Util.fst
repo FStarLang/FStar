@@ -605,7 +605,9 @@ let is_pure_or_ghost_effect env l : ML _ =
 
 (* Closing a computation over the pattern variables [bvs].  A computation type
    carries no logical content any more, so there is nothing to quantify: only
-   the flags, which describe *this* occurrence, have to be dropped. *)
+   the flags, which describe *this* occurrence, have to be dropped.  [TOTAL] is
+   the exception -- it records that the effect *name* is an abbreviation of
+   [Tot], which closing does not change. *)
 let close_wp_comp env bvs (c:comp) : ML _ =
     def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c
@@ -613,7 +615,7 @@ let close_wp_comp env bvs (c:comp) : ML _ =
       match c.n with
       | Comp ct ->
         S.mk_Comp ({ ct with
-          flags = ct.flags |> List.filter (function MLEFFECT | TOTAL -> true | _ -> false) })
+          flags = ct.flags |> List.filter (function TOTAL -> true | _ -> false) })
 
 let close_wp_lcomp env bvs (lc:lcomp) : ML lcomp =
   let bs = bvs |> List.map S.mk_binder in
@@ -686,7 +688,6 @@ let mk_bind env
   (c1:comp)
   (b:option bv)
   (c2:comp)
-  (flags:list cflag)
   (r1:Range.t) : ML (comp & guard_t) =
 
   let env2 = maybe_push env b in
@@ -698,7 +699,7 @@ let mk_bind env
     match ct2.comp_univs with
     | u::_ -> u
     | [] -> env.universe_of env2 ct2.result_typ in
-  let res = S.mk_triv_comp [u2] m ct2.result_typ flags in
+  let res = S.mk_triv_comp [u2] m ct2.result_typ [] in
   (* [res] takes its result type from [c2], so it is scoped in [env2]: it may
      still mention [b].  Getting [b] out of it is the caller's job -- see
      [close_x] in [bind_maybe_capture]. *)
@@ -729,9 +730,6 @@ let return_value env eff_lid u_t_opt t v : ML (comp & guard_t) =
     | Some u -> u in
   S.mk_triv_comp [u] (Env.norm_eff_name env eff_lid) t [],
   Env.trivial_guard
-
-let weaken_flags flags : ML _ =
-    flags |> List.filter (function MLEFFECT -> true | _ -> false)
 
 (* [weaken_comp env c f] used to assume [f] before running [c].  A computation
    type carries no specification any more, so there is nothing to weaken: the
@@ -846,11 +844,6 @@ let bind_maybe_capture
   in
   let lc1, lc2 = N.ghost_to_pure_lcomp2 env (lc1, lc2) in  //downgrade from ghost to pure, if possible
   let joined_eff = join_lcomp env lc1 lc2 in
-  let bind_flags =
-      if TcComm.is_total_lcomp lc1 && TcComm.is_total_lcomp lc2
-      then [TOTAL]
-      else []
-  in
   (* [c2]'s result type may mention [x] -- a postcondition is a refinement of
      the result type now, so [let x = e1 in f x] has type [_:t{p x}].  That type
      has to make sense outside the let, so [x] is replaced by [e1] there.  (Only
@@ -1272,7 +1265,7 @@ let bind_maybe_capture
                 Format.print1 "(2) bind: Not simplified because %s\n" reason);
 
             let mk_bind c1 b c2 g =  (* AR: end code for inlining pure and ghost terms *)
-              let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
+              let c, g_bind = mk_bind env c1 b c2 r1 in
               c, Env.conj_guard g g_bind in
 
             (* AR: we have let the previously applied bind optimizations take effect,
@@ -1351,8 +1344,7 @@ let bind_maybe_capture
   in
   TcComm.mk_lcomp joined_eff
                      res_typ
-      (* TODO : these cflags might be inconsistent with the one returned by bind_it  !!! *)
-                     bind_flags
+                     []
                      bind_it
 
 let bind r1 is_let_binding env e1opt lc1 binder_lc2 : ML lcomp =

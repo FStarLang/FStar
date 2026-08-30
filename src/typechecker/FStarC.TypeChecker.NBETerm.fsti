@@ -193,7 +193,6 @@ and residual_comp = {
 
 and cflag =
   | TOTAL
-  | MLEFFECT
   | LEMMA
   | SMTPAT of t
   | DECREASES_lex of list t

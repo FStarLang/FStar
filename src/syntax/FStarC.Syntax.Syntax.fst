@@ -240,7 +240,7 @@ let rec mk_Tm_arrow (bs:binders) (c:comp) p =
     | [b] -> mk (Tm_arrow {b; comp=c}) p
     | b::bs ->
       let tail = mk_Tm_arrow bs c p in
-      mk (Tm_arrow {b; comp=mk (Comp {comp_univs=[]; effect_name=PC.effect_Tot_lid; result_typ=tail; flags=[TOTAL]}) tail.pos}) p
+      mk (Tm_arrow {b; comp=mk (Comp {comp_univs=[]; effect_name=PC.effect_Tot_lid; result_typ=tail; flags=[]}) tail.pos}) p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
@@ -259,7 +259,7 @@ let mk_Comp (ct:comp_typ) : ML comp = mk (Comp ct) ct.result_typ.pos
 (* [Tot] and [GTot] are ordinary effect names now; the universe list is left
    empty and filled in on demand (see [Env.comp_to_comp_typ]). *)
 let mk_Total t : ML comp =
-  mk_Comp ({comp_univs=[]; effect_name=PC.effect_Tot_lid; result_typ=t; flags=[TOTAL]})
+  mk_Comp ({comp_univs=[]; effect_name=PC.effect_Tot_lid; result_typ=t; flags=[]})
 let mk_GTotal t : ML comp =
   mk_Comp ({comp_univs=[]; effect_name=PC.effect_GTot_lid; result_typ=t; flags=[]})
 
@@ -420,7 +420,7 @@ let trivial_pre = fvar PC.true_lid None
 let post_rc : residual_comp = {
   residual_effect = PC.effect_Tot_lid;
   residual_typ = Some (mk (Tm_type U_zero) Range.dummyRange);
-  residual_flags = [TOTAL]
+  residual_flags = []
 }
 
 (* [fun (_:t) -> True], the trivial postcondition for a computation returning [t].

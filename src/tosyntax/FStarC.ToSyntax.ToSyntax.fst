@@ -2471,21 +2471,20 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
          S.trivial_pre
     else
       let flags =
-        if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
-        else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
-        else if lid_equals eff (C.effect_ML_lid()) then [MLEFFECT]
+        if lid_equals eff C.effect_Lemma_lid then [LEMMA]
         else []
       in
-      (* An effect abbreviation of [Tot] denotes a total computation just as
-         much as [Tot] itself does, so give it the [TOTAL] flag: downstream
-         tests such as [Syntax.Util.is_total_comp] see only the flags, and an
-         abbreviation is not unfolded until the typechecker.  [Lemma] is the
-         motivating case -- without this, a partially-applied lemma is not
-         recognised as pure and its trailing implicit is never instantiated.
-         The flag is dropped again below if this occurrence carries a
-         specification. *)
+      (* An effect abbreviation whose root is [Tot] denotes a total computation
+         just as much as [Tot] itself does, so record that with the [TOTAL]
+         flag: an abbreviation is not unfolded until the typechecker, and the
+         env-free tests downstream ([Syntax.Util.is_total_comp] and friends) see
+         only the name and the flags.  [Lemma] is the motivating case -- without
+         this, a partially-applied lemma is not recognised as pure and its
+         trailing implicit is never instantiated; [tests/bug-reports/closed/
+         Bug1953.fst] pins down the constructor-effect check as well.  A comp
+         named [Tot] outright needs no flag: there the name says it. *)
       let flags =
-        if List.existsb (function TOTAL -> true | _ -> false) flags then flags
+        if lid_equals eff C.effect_Tot_lid then flags
         else match Env.try_lookup_root_effect_name env eff with
              | Some root when lid_equals root C.effect_Tot_lid -> TOTAL :: flags
              | _ -> flags

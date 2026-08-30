@@ -242,7 +242,7 @@ let eq_univs_list (us:universes) (vs:universes) : ML bool =
 (********************************************************************************)
 
 let ml_comp t r =
-  mk_triv_comp [U_zero] (set_lid_range (PC.effect_ML_lid()) r) t [MLEFFECT]
+  mk_triv_comp [U_zero] (set_lid_range (PC.effect_ML_lid()) r) t []
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
@@ -391,7 +391,6 @@ let leftmost_head_and_args t =
 
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name (PC.effect_ML_lid())
-              || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
 
   | _ -> false
 
@@ -1134,12 +1133,12 @@ let mk_residual_comp l t f = {
 let residual_tot t = {
     residual_effect=PC.effect_Tot_lid;
     residual_typ=Some t;
-    residual_flags=[TOTAL]
+    residual_flags=[]
   }
 let residual_gtot t = {
     residual_effect=PC.effect_GTot_lid;
     residual_typ=Some t;
-    residual_flags=[TOTAL]
+    residual_flags=[]
   }
 let residual_comp_of_comp (c:comp) = {
     residual_effect=comp_effect_name c;

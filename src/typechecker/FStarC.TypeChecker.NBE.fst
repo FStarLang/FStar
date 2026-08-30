@@ -1092,7 +1092,6 @@ and readback_residual_comp cfg (c:residual_comp) : ML S.residual_comp =
 and translate_flag cfg bs (f : S.cflag) : ML cflag =
     match f with
     | S.TOTAL -> TOTAL
-    | S.MLEFFECT -> MLEFFECT
     | S.LEMMA -> LEMMA
     | S.SMTPAT p -> SMTPAT (translate cfg bs p)
     | S.DECREASES (S.Decreases_lex l) -> DECREASES_lex (l |> List.map (translate cfg bs))
@@ -1102,7 +1101,6 @@ and translate_flag cfg bs (f : S.cflag) : ML cflag =
 and readback_flag cfg (f : cflag) : ML S.cflag =
     match f with
     | TOTAL -> S.TOTAL
-    | MLEFFECT -> S.MLEFFECT
     | LEMMA -> S.LEMMA
     | SMTPAT p -> S.SMTPAT (readback cfg p)
     | DECREASES_lex l -> S.DECREASES (S.Decreases_lex (l |> List.map (readback cfg)))

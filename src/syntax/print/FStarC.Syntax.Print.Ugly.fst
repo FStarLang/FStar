@@ -417,7 +417,7 @@ and comp_to_string c : ML string =
         let is_bare_type () =
           Tm_type? (compress c.result_typ).n
           && not (Options.print_implicits() || Options.print_universes())
-          && not (c.flags |> U.for_some (function TOTAL -> false | _ -> true))
+          && c.flags |> U.for_all (function TOTAL -> true | _ -> false)
         in
         let basic =
           if (Options.print_effect_args())
@@ -429,16 +429,14 @@ and comp_to_string c : ML string =
           else if lid_equals c.effect_name C.effect_GTot_lid
           then (if is_bare_type () then term_to_string c.result_typ
                 else Format.fmt1 "GTot %s" (term_to_string c.result_typ))
-          else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
+          else if lid_equals c.effect_name C.effect_Tot_lid
+               || c.flags |> U.for_some (function TOTAL -> true | _ -> false)
           then (if is_bare_type () then term_to_string c.result_typ
                 else Format.fmt1 "Tot %s" (term_to_string c.result_typ))
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
                   && lid_equals c.effect_name (C.effect_ML_lid())
           then term_to_string c.result_typ
-          else if not (Options.print_effect_args())
-               && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
-          then Format.fmt1 "ALL %s" (term_to_string c.result_typ)
           else Format.fmt2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags
         |> List.collect (function DECREASES dec_order ->
@@ -462,7 +460,6 @@ and comp_to_string c : ML string =
 and cflag_to_string c : ML string =
     match c with
         | TOTAL -> "total"
-        | MLEFFECT -> "ml"
         | SMTPAT p -> "smtpat " ^ term_to_string p
         | LEMMA -> "lemma"
         | DECREASES _ -> "" (* TODO : already printed for now *)

@@ -1708,8 +1708,11 @@ and term_as_mlexpr'
           if Nil? args then term_as_mlexpr g head else
           let is_total rc =
               (* A [residual_comp] carries no specification, so this must test
-                 [Tot] specifically rather than the whole pure class. *)
+                 the spec-free spellings [Tot]/[GTot] rather than the whole
+                 pure/ghost class; [TOTAL] catches a not-yet-unfolded
+                 abbreviation of [Tot]. *)
               Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
+              || Ident.lid_equals rc.residual_effect PC.effect_GTot_lid
               || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
           begin match head.n, args with

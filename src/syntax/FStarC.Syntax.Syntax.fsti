@@ -307,8 +307,12 @@ and decreases_order =
   | Decreases_lex of list term  (* a decreases clause may either specify a lexicographic ordered list of terms, *)
   | Decreases_wf of term & term  (* or a well-founded relation and a term *)
 and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
-  | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
-  | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
+  | TOTAL                                                          (* this comp's effect name is an *abbreviation* whose root is
+                                                                      [Tot] (e.g. [Lemma]).  Abbreviations are not unfolded until
+                                                                      the typechecker, and [Syntax.Util.is_total_comp] has no env,
+                                                                      so the flag is the env-free record of that fact.  A comp
+                                                                      named [Tot] outright does not carry it: there the name says
+                                                                      it.  Set only in [ToSyntax.desugar_comp]. *)
   | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
   | SMTPAT of term                                                 (* the SMT patterns of a Lemma, as a list literal. Used
                                                                       to be the third effect argument of the Lemma comp. *)
