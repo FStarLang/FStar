@@ -2400,7 +2400,28 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                         let phi1 = SS.subst subst phi1 in
                         let phi2 = SS.subst subst phi2 in
                         let env_x = Env.push_bv env x in
-                        refine x (op phi1 phi2)
+                        let phi =
+                          if U.term_eq phi1 phi2 then phi1
+                          (* [False] is the unit of a join. *)
+                          else if not flip && U.is_t_false phi1 then phi2
+                          else if not flip && U.is_t_false phi2 then phi1
+                          else op phi1 phi2
+                        in
+                        (* Joining two *genuinely different* refinements of a
+                           common base yields a disjunction that nothing
+                           downstream can use: it is not the type either side
+                           was written at, and it defeats the syntactic
+                           unification that [apply] and friends perform.  A
+                           postcondition is a refinement of a result type now,
+                           so this arises for something as ordinary as
+                           [f x == g y], whose [eq2] would otherwise be indexed
+                           by such a disjunction.  Widen to the base instead;
+                           that is sound here because we are joining *lower*
+                           bounds.  Meeting upper bounds must keep both
+                           refinements. *)
+                        if not flip && not (U.term_eq phi phi1) && not (U.term_eq phi phi2)
+                        then t_base
+                        else refine x phi
 
                       | None, Some (x, phi)
                       | Some(x, phi), None ->
@@ -2588,6 +2609,20 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                 when tp.relation=SUB
                   && snd (occurs flex_u x.sort) ->
                 x.sort
+
+              (* A *lower* bound of the form [_:t{False}] says nothing about
+                 the shape of this variable, but committing to it would force
+                 every other lower bound to establish [False].  [raise e] is the
+                 motivating case: a postcondition is a refinement of the result
+                 type now, so a computation that never returns has a
+                 [False]-refined result type.  Dropping the refinement from a
+                 lower bound is always sound, since it only weakens it. *)
+              | Tm_refine {b=x; phi}
+                when tp.relation=SUB
+                  && not flip
+                  && U.is_t_false phi ->
+                x.sort
+
               | _ ->
                 bound
             in

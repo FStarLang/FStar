@@ -102,6 +102,7 @@ val comp_eff_name_and_res (c:comp) : lident & typ
 
 val un_uinst (t:term) : ML term
 val is_t_true (t:term) : ML bool
+val is_t_false (t:term) : ML bool
 val is_trivial_post (p:term) : ML bool
 
 (* Is [c] a [Tot], i.e. a pure computation with nothing to discharge? *)

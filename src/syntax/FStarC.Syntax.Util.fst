@@ -276,6 +276,16 @@ let rec is_t_true t =
           | _ -> false) -> is_t_true a
      | _ -> false
 
+(* The dual of [is_t_true]. *)
+let rec is_t_false t =
+     match (unmeta t).n with
+     | Tm_fvar fv -> fv_eq_lid fv PC.false_lid
+     | Tm_app {hd; arg=(a, _)} when
+         (match (un_uinst hd).n with
+          | Tm_fvar fv -> fv_eq_lid fv PC.squash_lid
+          | _ -> false) -> is_t_false a
+     | _ -> false
+
 (* A postcondition is an abstraction [fun (x:t) -> phi].  It is trivial when
    [phi] is [True]. *)
 let is_trivial_post (p:term) : ML bool =
