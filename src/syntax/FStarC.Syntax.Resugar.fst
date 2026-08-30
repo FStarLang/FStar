@@ -293,7 +293,9 @@ let is_seq_literal  = __is_list_literal C.seq_cons_lid C.seq_empty_lid
 let can_resugar_machine_integer (hd : S.term) (args : S.args) : ML (option (fv & int & int_base)) =
   match (SS.compress hd).n with
   | Tm_fvar fv when can_resugar_machine_integer_fv fv -> (
-    match args with
+    (* [FStar.SizeT.uint_to_t] has a precondition, hence a trailing implicit
+       proof argument; match on the explicit arguments only. *)
+    match no_imp_args args with
     | [(a, None)] -> (
       match (SS.compress a).n with
       | Tm_constant (Const_int (i, b)) ->
@@ -437,8 +439,21 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       (* Flatten the arrow *)
       let xs, body = U.arrow_formals_comp_ln_strict t in
       let xs, body = SS.open_comp xs body in
+      (* A precondition is desugared into a trailing implicit [squash] binder.
+         Recover it, so that a [Lemma] still reads [Lemma (requires p) (ensures q)]
+         rather than losing its precondition to [filter_imp_bs] below. *)
+      let xs, pre =
+        match List.rev xs with
+        | b :: rest when is_imp_bqual b.binder_qual
+                      && U.is_lemma_comp body
+                      && not (mem b.binder_bv (FStarC.Syntax.Free.names_comp body)) ->
+          (match U.un_squash b.binder_bv.sort with
+           | Some p -> List.rev rest, Some p
+           | None -> xs, None)
+        | _ -> xs, None
+      in
       let xs = filter_imp_bs xs in
-      let body = resugar_comp' env body in
+      let body = resugar_comp_with_pre env pre body in
       let xs = xs |> map (fun b -> resugar_binder' env b t.pos) |> List.rev in
       let rec aux body = function
         | [] -> body
@@ -1017,12 +1032,14 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
   let resugar_calc_finish (t:S.term) : ML (option (S.term & S.term)) =
     let hd, args = U.head_and_args_full t in
     match (SS.compress (U.un_uinst hd)).n, args with
-    | Tm_fvar fv, [(_, Some { aqual_implicit = true }); // type
-                   (rel, None);                         // top relation
-                   (_, Some { aqual_implicit = true }); // x
-                   (_, Some { aqual_implicit = true }); // y
-                   (_, Some { aqual_implicit = true }); // rs
-                   (pf, None)]                          // pf : unit -> Tot (calc_pack rs x y)
+    | Tm_fvar fv, (_, Some { aqual_implicit = true }) :: // type
+                  (rel, None) ::                         // top relation
+                  (_, Some { aqual_implicit = true }) :: // x
+                  (_, Some { aqual_implicit = true }) :: // y
+                  (_, Some { aqual_implicit = true }) :: // rs
+                  (pf, None) ::                          // pf : unit -> Tot (calc_pack rs x y)
+                  _ (* [calc_finish] is a [Lemma] with a precondition, so it also
+                       takes a trailing implicit proof argument. *)
         when S.fv_eq_lid fv C.calc_finish_lid ->
         let pf = U.unthunk pf in
         Some (rel, pf)
@@ -1160,6 +1177,9 @@ and resugar_match_returns env scrutinee r asc_opt : ML _ =
 
 
 and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
+  resugar_comp_with_pre env None c
+
+and resugar_comp_with_pre (env: DsEnv.env) (pre: option S.term) (c:S.comp) : ML A.term =
   let mk (a:A.term') : A.term =
         //augment `a` with its source position
         //and an Unknown level (the level is unimportant ... we should maybe remove it altogether)
@@ -1226,10 +1246,15 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
         | Some q -> [mk (Ensures (resugar_term' env q))]
         | None -> []
       in
+      let pre =
+        match pre with
+        | Some p -> [mk (Requires (resugar_term' env p))]
+        | None -> []
+      in
       let pats = List.map (resugar_term' env) smt_pats in
       let decrease = mk_decreases c.flags in
 
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (post@decrease@pats)))
+      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post@decrease@pats)))
 
     else if (Options.print_effect_args()) then
       let decrease = List.map (fun t -> (t, A.Nothing)) (mk_decreases c.flags) in
