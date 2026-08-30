@@ -2092,6 +2092,26 @@ let keep_res_typ env (t:typ) (res_typ:typ) : ML bool =
   is_refinement res_typ &&
   not (is_refinement t)
 
+(* An effectful computation has nowhere else to record what it promises:
+   [assume_result_eq_pure_term] cannot restate the result of a [Dv] call, and a
+   computation type has no postcondition any more.  Coarsening its result type
+   to an unrefined expected type therefore loses the fact for good -- including
+   for the binder [bind] introduces for an effectful argument, which is where
+   [let x = ppname_default, fresh g in ...] gets its freshness from.  Unlike
+   [keep_res_typ] this applies in phase 1 too: phase 1 records this type on the
+   let-binding it elaborates, and phase 2 reads it back as an authoritative
+   annotation. *)
+let keep_effectful_res_typ env (lc:lcomp) (t:typ) : ML bool =
+  let is_refinement (t:typ) : ML bool =
+    match (N.normalize_refinement N.whnf_steps env t).n with
+    | Tm_refine _ -> true
+    | _ -> false in
+  not (TcComm.is_pure_or_ghost_lcomp lc) &&
+  TEQ.eq_tm env t lc.res_typ <> TEQ.Equal &&
+  is_empty (Free.uvars lc.res_typ) &&
+  is_refinement lc.res_typ &&
+  not (is_refinement t)
+
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term & lcomp & guard_t) =
   if Debug.high () then
     Format.print4 "weaken_result_typ use_eq=%s e=(%s) lc=(%s) t=(%s)\n"
@@ -2118,26 +2138,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term &
             e, {lc with res_typ=t}, Env.trivial_guard //and keep going to type-check the result of the program
         )
     | Some g, apply_guard ->
-      (* An effectful computation has nowhere else to record what it promises:
-         [assume_result_eq_pure_term] cannot restate the result of a [Dv] call,
-         and a computation type has no postcondition any more.  Coarsening its
-         result type to an unrefined expected type therefore loses the fact for
-         good -- including for the binder [bind] introduces for an effectful
-         argument, which is where [let x = ppname_default, fresh g in ...] gets
-         its freshness from.  Unlike [keep_res_typ] this applies in phase 1 too:
-         phase 1 records this type on the let-binding it elaborates, and phase 2
-         reads it back as an authoritative annotation. *)
-      let keep_effectful_res_typ () : ML bool =
-        let is_refinement (t:typ) : ML bool =
-          match (N.normalize_refinement N.whnf_steps env t).n with
-          | Tm_refine _ -> true
-          | _ -> false in
-        not (TcComm.is_pure_or_ghost_lcomp lc) &&
-        TEQ.eq_tm env t lc.res_typ <> TEQ.Equal &&
-        is_empty (Free.uvars lc.res_typ) &&
-        is_refinement lc.res_typ &&
-        not (is_refinement t) in
-      let keep () : ML bool = keep_res_typ env t lc.res_typ || keep_effectful_res_typ () in
+      let keep () : ML bool = keep_res_typ env t lc.res_typ || keep_effectful_res_typ env lc t in
       match guard_form g with
         (* [t] is a bare unification variable and the "subtyping predicate" is
            only the placeholder guard of a problem [Rel] deferred -- its body is

@@ -4818,7 +4818,17 @@ and check_inner_let env e : ML _ =
                 away -- and with it everything the branch established.
 
                 In both cases, only keep the refinement when it is in scope
-                without [x]. *)
+                without [x].
+
+                Note that an effectful [cres] is *not* a third case, tempting
+                though it is: [bind] restates what an effectful [e1] established
+                as an existential refinement of the result type (see [close_x]),
+                so keeping it here would let a chain of effectful lets grow a
+                result type proportional to the whole chain.  That is a real
+                blow-up -- it makes lax-checking [FStarC.SMTEncoding.Encode]
+                diverge -- and the price is that
+                [let b : t = <effectful> in ...] sees [b] at exactly its
+                annotation.  Annotate with the sharper type when that matters. *)
              let cres =
                if (U.is_exactly_unit tt || TcUtil.is_bare_flex tt)
                && TcUtil.keep_res_typ env tt cres.res_typ
