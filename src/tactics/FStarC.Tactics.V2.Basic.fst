@@ -305,6 +305,32 @@ let proc_guard_formula
       log (fun () -> Format.print1 "guard = %s\n" (show f));!
       fail2 "Forcing the guard failed (%s)\n%s\n" reason (BU.message_of_exn e)
 
+(* An implicit argument whose type is [squash phi] -- possibly abstracted over
+   the binders it was created under, hence the [arrow_formals_comp] -- is a
+   proof obligation rather than a value to be inferred.  A precondition is such
+   an argument now, so elaborating a term inside a tactic routinely strands one.
+   Outside tactics these are solved with [()] and their [phi] discharged as part
+   of the guard; [Rel.try_solve_single_valued_implicits] deliberately does
+   nothing in tactic mode, since in tactic-land the analogue is to hand the
+   obligation to the user as a goal -- exactly what [apply] does with the
+   implicits it creates itself.  Without this, a tactic that so much as
+   elaborates a lemma application with an unmet precondition reports an
+   uninstantiated unification variable instead of the obligation. *)
+let proof_obligation_implicits_as_goals (e : env) (imps : list Env.implicit) : ML (tac unit) =
+  let is_proof_obligation (imp:Env.implicit) =
+    None? (UF.find imp.imp_uvar.ctx_uvar_head)
+    && (let _, c = U.arrow_formals_comp (U.ctx_uvar_typ imp.imp_uvar) in
+        match (SS.compress (N.unfold_whnf e (U.comp_result c))).n with
+        | Tm_refine {b} -> U.is_unit b.sort
+        | _ -> false)
+  in
+  match List.filter is_proof_obligation imps with
+  | [] -> return ()
+  | imps ->
+    add_goals (imps |> List.map (fun imp ->
+      bnorm_goal (mk_goal e imp.imp_uvar (FStarC.Options.peek ()) true
+                          "goal for an unsolved proof obligation")))
+
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (tok:option Core.guard_commit_token_cb) (sc_opt:option should_check_uvar) (rng:Range.t)  : ML (tac unit) =
     log (fun () -> Format.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g));!
     let imps = Listlike.to_list g.implicits in
@@ -317,6 +343,7 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (tok:opt
       | _ -> ()
     in
     add_implicits imps ;!
+    proof_obligation_implicits_as_goals e imps ;!
     let guard_f =
       if simplify
       then (Rel.simplify_guard e g).guard_f
@@ -489,6 +516,34 @@ let do_unify_maybe_guards (allow_guards:bool) (must_tot:bool)
   (env:env) (t1:term) (t2:term)
   : ML (tac (option guard_t)) =
   __do_unify allow_guards must_tot Check_both env t1 t2
+
+(* SMT-free subtyping.  A term of type [t1] does solve a goal of type [t2]
+   whenever [t1 <: t2]; this matters now that a computation's postcondition is
+   a refinement of its result type, so an ordinary term routinely has a type
+   that is a refinement of what the goal asks for. *)
+let do_subtype (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : ML (tac bool) =
+  let! tx = mk_tac (fun ps -> let tx = UF.new_transaction () in
+                              Success (tx, ps)) in
+  let all_uvars = union (Free.uvars t1) (Free.uvars t2) |> elems in
+  let! r =
+    match!
+      catch (
+        try
+          match Rel.subtype_nosmt env t1 t2 with
+          | Some g when Env.is_trivial_guard_formula g ->
+            tc_unifier_solved_implicits env must_tot false all_uvars ;!
+            add_implicits (Listlike.to_list g.implicits) ;!
+            return true
+          | _ -> return false
+        with | Errors.Error _ -> return false
+      )
+    with
+    | Inl exn -> traise exn
+    | Inr v -> return v
+  in
+  if r
+  then (UF.commit tx; return true)
+  else (UF.rollback tx; return false)
 
 (* Does t1 match t2? That is, do they unify without instantiating/changing t1? *)
 let do_match (must_tot:bool) (env:Env.env) (t1:term) (t2:term)  : ML (tac bool) =
@@ -931,6 +986,24 @@ let __exact_now set_expected_typ (t:term)  : ML (tac unit) =
     if_verbose (fun () -> Format.print2 "__exact_now: unifying %s and %s\n" (show typ)
                                                                   (show (goal_type goal))) ;!
     let! b = do_unify true (goal_env goal) typ (goal_type goal) in
+    (* A term of a refined type also has the unrefined type.  A result type
+       carries its computation's postcondition now, so a term built by applying
+       a function with an [ensures] clause has a refined type even when the goal
+       does not, and unifying the two would fail for no good reason.  Try
+       stripping a top-level refinement first, then fall back on SMT-free
+       subtyping, which also sees through refinements under a binder. *)
+    let! b =
+      if b then return true
+      else
+        let typ' = U.unrefine (N.normalize_refinement N.whnf_steps (goal_env goal) typ) in
+        if U.term_eq typ' typ
+        then return false
+        else do_unify true (goal_env goal) typ' (goal_type goal)
+    in
+    let! b =
+      if b then return true
+      else do_subtype true (goal_env goal) typ (goal_type goal)
+    in
     if b
     then ( // do unify succeeded with a trivial guard; so the goal is solved and we don't have to check it again
       mark_goal_implicit_already_checked goal;
@@ -1000,11 +1073,21 @@ let try_unify_by_application (should_check:option should_check_uvar)
 
             | Some (b, c) ->
               if not (U.is_total_comp c) then fail "Codomain is effectful" else
-              (* [unit] has a single inhabitant, so asking the user for it is
-                 pure noise.  [t_apply_lemma] has always done this; since a
-                 [Lemma] is now an ordinary total function, plain [apply] meets
-                 the [_:unit ->] argument of a lemma too. *)
-              if U.is_unit b.binder_bv.sort
+              (* An *anonymous* [unit] binder has a single inhabitant and no
+                 name to refer to it by, so asking the user for it is pure
+                 noise.  [t_apply_lemma] has always done this; since a [Lemma]
+                 is now an ordinary total function, plain [apply] meets the
+                 [_:unit ->] argument of a lemma too.  Two restrictions: the
+                 sort must be [unit] on the nose, since a [squash p] argument is
+                 a proof obligation that must still become a goal; and the
+                 binder must be anonymous in the source, since a named
+                 [(u:unit)] is part of the caller's interface and has always
+                 been asked for. *)
+              if (S.is_null_binder b
+                  || BU.starts_with (string_of_id b.binder_bv.ppname) Ident.reserved_prefix)
+              && (match (SS.compress b.binder_bv.sort).n with
+                  | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
+                  | _ -> false)
               then (
                 let typ = U.comp_result c in
                 let typ' = SS.subst [S.NT (b.binder_bv, U.exp_unit)] typ in
@@ -1158,6 +1241,20 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
       __tc env tm
     in
     let bs, comp = U.arrow_formals_comp t in
+    (* A lemma's precondition is now a trailing implicit binder of type
+       [squash P] rather than part of the computation type.  Peel it off here so
+       that it becomes an explicit goal, as it always has, rather than a
+       unification variable that the implicit solver would discharge by SMT. *)
+    let bs, pre_binder =
+      match List.rev bs with
+      | b::rev_rest when (match b.binder_qual with
+                          | Some (Implicit _) -> true
+                          | _ -> false) ->
+        (match U.un_squash b.binder_bv.sort with
+         | Some p -> List.rev rev_rest, Some p
+         | None -> bs, None)
+      | _ -> bs, None
+    in
     match lemma_or_sq comp with
     | None ->
       fail_doc [
@@ -1194,7 +1291,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
       in
       let implicits = List.rev implicits in
       let uvs = List.rev uvs in
-      let pre  = SS.subst subst pre in
+      let pre  = SS.subst subst (match pre_binder with | Some p -> p | None -> pre) in
       let post = SS.subst subst post in
       let! b =
         let must_tot = false in
