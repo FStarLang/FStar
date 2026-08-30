@@ -23,13 +23,17 @@ let bounded_arith_ops_for (k : machint_kind) : ML (mymon unit) =
   let mod_name = module_name_for k in
   let nm s = (PC.p2l ["FStar"; module_name_for k; s]) in
   (* Operators common to all *)
+  (* [add], [sub] and [mul] have a precondition (no overflow) in every
+     FStar.[U]IntN, and so take a proof argument that the step must account
+     for; see [with_extra_args].  The modular and underspecified variants,
+     the bitwise operators and the comparisons do not. *)
   emit [
     mk1 0 (nm "v") (v #k);
 
     (* basic ops supported by all *)
-    mk2 0 (nm "add") (fun (x y : machint k) -> make_as x (v x + v y));
-    mk2 0 (nm "sub") (fun (x y : machint k) -> make_as x (v x - v y));
-    mk2 0 (nm "mul") (fun (x y : machint k) -> make_as x (v x * v y));
+    with_extra_args 1 <| mk2 0 (nm "add") (fun (x y : machint k) -> make_as x (v x + v y));
+    with_extra_args 1 <| mk2 0 (nm "sub") (fun (x y : machint k) -> make_as x (v x - v y));
+    with_extra_args 1 <| mk2 0 (nm "mul") (fun (x y : machint k) -> make_as x (v x * v y));
 
     mk2 0 (nm "gt")  (fun (x y : machint k) -> v x >  v y);
     mk2 0 (nm "gte") (fun (x y : machint k) -> v x >= v y);
@@ -56,9 +60,12 @@ let bounded_arith_ops_for (k : machint_kind) : ML (mymon unit) =
       mk1 0 (nm "lognot") (fun (x : machint k) ->   make_as x (E.logand (E.lognot (v x)) (mask k)));
 
       (* NB: shift_{left,right} always take a UInt32 on the right, hence the annotations
-      to choose the right instances. *)
+      to choose the right instances.  They also have a precondition (the shift
+      is smaller than the width), hence the extra argument. *)
+      with_extra_args 1 <|
       mk2 0 (nm "shift_left")  (fun (x : machint k) (y : machint UInt32) ->
                                  make_as x (E.logand (E.shift_left (v x) (v y)) (mask k)));
+      with_extra_args 1 <|
       mk2 0 (nm "shift_right")  (fun (x : machint k) (y : machint UInt32) ->
                                  make_as x (E.logand (E.shift_right (v x) (v y)) (mask k)));
     ]

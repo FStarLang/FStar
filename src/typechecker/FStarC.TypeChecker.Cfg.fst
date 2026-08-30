@@ -284,6 +284,9 @@ let find_prim_step cfg fv : ML (option primitive_step) =
 let is_prim_step cfg fv : ML bool =
     Some? (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name))
 
+let is_built_in_primop fv : ML bool =
+    Some? (PSMap.try_find built_in_primitive_steps (I.string_of_lid fv.fv_name))
+
 let log cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.gen then f () else ()
 

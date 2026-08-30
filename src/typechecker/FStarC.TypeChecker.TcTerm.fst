@@ -3117,9 +3117,27 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                  then, an argument whose type still mentions a unification
                  variable is left alone: refining the constructed value's type
                  would feed that uvar into the enclosing unification problem and
-                 keep it from being solved. *)
+                 keep it from being solved.
+
+                 A primitive operator is the other exception, for the opposite
+                 reason: the normalizer replaces a closed application of one by
+                 its value before the solver ever sees it, so the callee's
+                 typing axiom never fires and the refinement is simply gone.
+                 [FStar.UInt32.lognot 0xff00ul] reduces to [0xffff00fful], and
+                 with it the only statement that the two are related. *)
+              let arg_head_is_reducible_primop () =
+                let hd, _ = U.head_and_args_full e in
+                match (U.un_uinst hd).n with
+                | Tm_fvar fv ->
+                  Cfg.is_built_in_primop fv
+                  (* only a closed application actually reduces *)
+                  && is_empty (Free.names e)
+                  && is_empty (Free.uvars e)
+                | _ -> false
+              in
               let no_capture =
-                not head_is_data_constructor
+                (not head_is_data_constructor
+                 && not (arg_head_is_reducible_primop ()))
                 || S.is_aqual_implicit q
                 || not (is_empty (Free.uvars c.res_typ)) in
               let e_opt = if TcComm.is_pure_or_ghost_lcomp c then Some e else None in
@@ -4537,6 +4555,16 @@ and check_top_level_let env e : ML _ =
            if ok
            then e2, c1
            else (
+             (* The effect is about to be masked: a possibly-divergent
+                computation of type [t] becomes a value of type [t].  A
+                refinement inferred for [t] is the computation's postcondition,
+                and under partial correctness that only holds if the
+                computation returned -- so it cannot be claimed of a value.
+                Drop it, unless the user wrote the type down, in which case it
+                is their claim to make (and to justify below). *)
+             let c1 =
+               if annotated then c1
+               else U.set_result_typ c1 (U.unrefine (U.comp_result c1)) in
              if not env.phase1 then (
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
                (* The effect of e1 is about to be masked, i.e., we are turning a
