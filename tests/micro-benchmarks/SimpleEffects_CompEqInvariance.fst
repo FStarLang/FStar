@@ -1,27 +1,27 @@
 (*
    Computation types must be INVARIANT under an EQ constraint.
 
-   On the `gebner_simple_effects` branch, `solve_eq` in
-   src/typechecker/FStarC.TypeChecker.Rel.fst discharges an EQ problem between
+   Before specifications were moved out of `comp_typ`, `solve_eq` in
+   src/typechecker/FStarC.TypeChecker.Rel.fst discharged an EQ problem between
    two computation types with the *one-directional* subsumption guard
 
        (pre2 ==> pre1) /\ (pre2 ==> forall x. post1 x ==> post2 x)
 
-   The in-source comment says this is deliberate ("even under an equality
-   constraint we relate the specifications logically, exactly as subsumption
-   does").  But EQ is exactly what F* uses for INVARIANT positions: the
-   arguments of a type application are related with EQ because all type
-   constructors are invariant.  Relating specifications by mere implication
-   there makes every type constructor covariant in the specifications it
-   mentions, so a computation type occurring negatively can be silently
-   widened -- which proves False and produces runtime type errors.
+   But EQ is exactly what F* uses for INVARIANT positions: the arguments of a
+   type application are related with EQ because all type constructors are
+   invariant.  Relating specifications by mere implication there made every type
+   constructor covariant in the specifications it mentions, so a computation
+   type occurring negatively could be silently widened -- which proves False and
+   produces runtime type errors.
 
-   `solve_sub` is fine; the motivating "more precise spec" case arrives under
-   SUB.  Note that tests/micro-benchmarks/Subsumption.fst exercises only the
-   SUB direction -- this file is the missing EQ coverage.
+   A computation type no longer carries a specification: a precondition is a
+   trailing implicit `squash` binder and a postcondition is a refinement on the
+   result type, so both are part of the *type* and are related structurally.
+   Every `expect_failure` below is therefore rejected for the ordinary reason
+   that two different types are not equal.
 
-   Every `expect_failure` below MUST be rejected.  This file verifies as-is on
-   master; when the bug is fixed it should move to tests/micro-benchmarks/.
+   tests/micro-benchmarks/Subsumption.fst exercises the SUB direction; this file
+   is the EQ coverage.
 *)
 module SimpleEffects_CompEqInvariance
 
@@ -82,10 +82,11 @@ assume val nref : neg (x:int{x > 0})
 let widen_refinement : neg int = nref
 
 /// Control: plain computation *subsumption* (relation SUB, not EQ) is sound and
-/// must keep working -- `permissive` has the weaker precondition.
-let bare_arrow_subsumption (p:permissive) : restrictive = p
+/// must keep working -- `permissive` has the weaker precondition.  It has to be
+/// eta-expanded: `restrictive` takes a trailing implicit `squash` binder for its
+/// precondition and `permissive` does not, so the two arrows differ in arity and
+/// are not related by subtyping in their bare form.
+[@@ expect_failure [189]]
+let bare_arrow_subsumption_direct (p:permissive) : restrictive = p
 
-(* NOTE: F* stops checking a module at the first error, so only the first
-   `expect_failure` above is reported as Error 303 on the branch.  Comment out
-   the earlier cases to see each of `widen_lemma`, `widen_post`,
-   `widen_inductive` and `widen_runtime` succeed unsoundly as well. *)
+let bare_arrow_subsumption (p:permissive) : restrictive = fun x -> p x
