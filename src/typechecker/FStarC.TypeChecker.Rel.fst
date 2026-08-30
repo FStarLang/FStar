@@ -5376,6 +5376,11 @@ let check_implicit_solution_and_discharge_guard env
     {env with gamma=imp_uvar.ctx_uvar_gamma}
     |> Env.clear_expected_typ
     |> fst in
+  (* Report any obligation arising from this implicit at the place the implicit
+     was introduced, rather than at whatever term happens to be in the
+     environment's range when the implicit is finally resolved.  This matters
+     for the [squash] implicits that preconditions desugar to. *)
+  let env = Env.set_range env imp_range in
 
   let empty_cb () : ML unit = () in
   let g, cb =
