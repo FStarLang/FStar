@@ -658,10 +658,18 @@ let hoist_pat_ascription (pat: pattern): ML pattern
   | None     -> pat
 
 (* [comp_requires t] is the [requires] clause of the AST computation type [t],
-   if it has one and it is not trivially [True].  The triviality test must
-   agree with [Syntax.Util.is_t_true] as applied in [desugar_comp], or a
-   definition would acquire a binder that its [val] does not have. *)
-let comp_requires (t:AST.term) : ML (option AST.term) =
+   if it has one and it is not trivially [True], paired with [t] with that
+   clause weakened to [True].  The latter is used once the clause has become a
+   binder, so that it is not also re-checked as an assertion.
+
+   The clause may be tagged -- [requires p] -- or given positionally, so the
+   classification of arguments here must agree with [desugar_comp]'s, and the
+   triviality test with [Syntax.Util.is_t_true] as applied there; otherwise a
+   definition would acquire a binder that its [val] does not have.  A
+   positional clause is weakened to a tagged [requires True] rather than
+   dropped, so that the remaining positional arguments still mean what they
+   did. *)
+let comp_requires (t:AST.term) : ML (option (AST.term & AST.term)) =
   let is_true (t:AST.term) =
     match (unparen t).tm with
     | Name l | Var l ->
@@ -669,28 +677,59 @@ let comp_requires (t:AST.term) : ML (option AST.term) =
       s = "True" || s = "l_True"
     | _ -> false
   in
-  let _, args = head_and_args_full t in
-  let is_req (a, _) = match (unparen a).tm with Requires _ -> true | _ -> false in
-  match args |> BU.try_find is_req with
-  | Some (a, _) ->
-    (match (unparen a).tm with
-     | Requires p when not (is_true p) -> Some p
-     | _ -> None)
-  | None -> None
-
-(* [comp_drop_requires t] is the AST computation type [t] with its [requires]
-   clause weakened to [True].  Used once the clause has been turned into a
-   binder, so that it is not also re-checked as an assertion. *)
-let comp_drop_requires (t:AST.term) : ML AST.term =
   let head, args = head_and_args_full t in
-  let args = args |> List.map (fun (a, imp) ->
-    match (unparen a).tm with
-    | Requires _ ->
-      let tru = mk_term (Name C.true_lid) a.range Formula in
-      mk_term (Requires tru) a.range Type_level, imp
-    | _ -> a, imp)
+  let is_lemma =
+    match head.tm with
+    | Name l | Var l -> string_of_id (ident_of_lid l) = "Lemma"
+    | _ -> false
   in
-  mkApp head args t.range
+  let is_req (a, _) = match (unparen a).tm with Requires _ -> true | _ -> false in
+  let is_tagged (a, imp) =
+    imp = UnivApp ||
+    (match (unparen a).tm with
+     | Requires _ | Ensures _ | Decreases _ -> true
+     | _ -> false)
+  in
+  (* The index in [args] of the argument holding the precondition, if any. *)
+  let pre_index =
+    let rec tagged i l = match l with
+      | [] -> None
+      | a :: tl -> if is_req a then Some i else tagged (i+1) tl
+    in
+    match tagged 0 args with
+    | Some i -> Some i
+    | None ->
+      (* [Lemma]'s sole positional argument is its postcondition; for every
+         other effect the first untagged argument after the result type is the
+         precondition. *)
+      if is_lemma then None
+      else
+        let rec untagged i seen_result l = match l with
+          | [] -> None
+          | a :: tl ->
+            if is_tagged a then untagged (i+1) seen_result tl
+            else if seen_result then Some i
+            else untagged (i+1) true tl
+        in
+        untagged 0 false args
+  in
+  match pre_index with
+  | None -> None
+  | Some i ->
+    let p =
+      match (unparen (fst (List.nth args i))).tm with
+      | Requires p -> p
+      | _ -> fst (List.nth args i)
+    in
+    if is_true p then None
+    else
+      let args = args |> List.mapi (fun j (a, imp) ->
+        if j = i
+        then let r = a.range in
+             mk_term (Requires (mk_term (Name C.true_lid) r Formula)) r Type_level, imp
+        else a, imp)
+      in
+      Some (p, mkApp head args t.range)
 
 (* [mk_assert_before p e] is [let _ = _assert p in e]: it discharges [p] as a
    proof obligation at this point, and makes it available while checking [e].
@@ -1553,14 +1592,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
               match result_t with
               | Some (t, tacopt) when Cons? args && is_comp_type env t ->
                 (match comp_requires t with
-                 | Some p ->
+                 | Some (p, t') ->
                    let r = p.range in
                    let sq = mkApp (mk_term (Var C.squash_lid) r Expr) [(p, Nothing)] r in
                    args @ [mk_pattern (PatAscribed (mk_pattern (PatWild (Some Implicit, [])) r,
                                                     (sq, None))) r],
                    (* the precondition is the binder's now, so drop it from the
                       ascription: re-asserting it would only obscure the type *)
-                   Some (comp_drop_requires t, tacopt)
+                   Some (t', tacopt)
                  | None -> args, result_t)
               | _ -> args, result_t
             in
