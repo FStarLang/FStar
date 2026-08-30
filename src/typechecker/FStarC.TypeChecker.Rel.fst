@@ -2541,11 +2541,23 @@ let solve_rigid_flex_or_flex_rigid_subtyping
          still above the bound, so the problem is still solved, and we merely
          claim less about the result.  Upper bounds must be left alone --
          dropping a refinement there would be unsound -- and the usual error
-         is reported. *)
+         is reported.
+
+         A name the flex variable is *applied* to -- or that its delayed
+         substitution maps one of its [ctx_uvar_binders] to -- is in scope of
+         its solution even though it is not itself a [ctx_uvar_binder].
+         [imitate_arrow] relies on exactly that: the uvar it makes for the [i]th
+         domain is scoped by the binders it made for the earlier ones, which the
+         arrow sub-problem then renames.  Weakening there would turn
+         [len:nat -> lseq a len -> c] into [nat -> seq a -> c]. *)
       let bounds_typs =
           if flip then bounds_typs
           else
-            let allowed = ctx_uvar.ctx_uvar_binders |> List.map (fun b -> b.binder_bv) in
+            let allowed =
+              (ctx_uvar.ctx_uvar_binders
+               |> List.collect (fun b ->
+                    Free.names (SS.subst' _subst (S.bv_to_name b.binder_bv)) |> elems))
+              @ (_args |> List.collect (fun (a, _) -> Free.names a |> elems)) in
             let out_of_scope t =
                 Free.names t |> elems |> BU.for_some (fun y ->
                   not (allowed |> BU.for_some (fun z -> S.bv_eq y z)))
