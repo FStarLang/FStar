@@ -36,6 +36,18 @@ module C = FStar.Classical
 let rec gcd_nat (a b:nat) : Tot nat (decreases b) =
   if b = 0 then a else gcd_nat b (a % b)
 
+(* Elementary, but it has to be proved away from [gcd_nat_is_gcd]: the
+   recursive call there puts an [is_gcd] fact in scope, and that predicate
+   unfolds to [divides], which unfolds to an existential over a product --
+   exactly the matching loop the module header warns about.  In isolation the
+   goal is linear in the atoms [b * (a / b)] and [(a / b) * b] and closes
+   immediately. *)
+private
+let div_mod_swap (a:nat) (b:nat{b <> 0})
+  : Lemma (ensures a % b + (a / b) * b == a)
+  = L.lemma_div_mod a b;
+    L.swap_mul b (a / b)
+
 #push-options "--fuel 1"
 let rec gcd_nat_pos (a b:nat)
   : Lemma (requires a > 0 \/ b > 0)
@@ -49,8 +61,7 @@ let rec gcd_nat_is_gcd (a b:nat)
     else begin
       gcd_nat_is_gcd b (a % b);
       let g = gcd_nat b (a % b) in
-      L.lemma_div_mod a b;
-      L.swap_mul b (a / b);
+      div_mod_swap a b;
       assert (a % b + (a / b) * b == a);
       is_gcd_plus b (a % b) (a / b) g;
       is_gcd_symmetric b a g
