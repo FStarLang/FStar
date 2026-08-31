@@ -5,7 +5,13 @@ open FStar.Real
 type rnonneg = x:real{x >=. 0.0R}
 type rpos = x:real{x >. 0.0R}
 
-(* The nonnegative square root. *)
+(* The nonnegative square root.
+
+   This is a definition, not an axiom: [sqrt x] is the least upper bound of
+   [{ y | 0 <= y /\ y * y <= x }], which exists because [FStar.Real] is
+   implemented by the Dedekind-cut construction of [FStar.Real.Dedekind] and
+   is therefore complete (see [FStar.Real.lub]). Z3's theory of reals is a
+   theory of ordered fields only, and proves no such thing. *)
 val sqrt (x : rnonneg) : rnonneg
 
 val sqrt_square (x : rnonneg)
@@ -28,6 +34,9 @@ val sqrt_sq (x : rnonneg)
 val sqrt_positive (x : rpos)
   : Lemma (ensures sqrt x >. 0.0R)
           [SMTPat (sqrt x)]
+
+val sqrt_mono (x y : rnonneg)
+  : Lemma (requires x <. y) (ensures sqrt x <. sqrt y)
 
 val sqrt_mul (x y : rnonneg)
   : Lemma (ensures sqrt (x *. y) == sqrt x *. sqrt y)
