@@ -746,6 +746,16 @@ let mk_psc_subst cfg (env:env) =
             | _ -> subst)
         env []
 
+(* See the use site in [reduce_primops]: is [reduced] the degenerate
+   application that a plugin builds when it fails to unembed its arguments? *)
+let is_shadow_app (fv:fv) (prim_step:PO.primitive_step) (reduced:term) : ML bool =
+  let head, args = U.head_and_args_full reduced in
+  List.length args < prim_step.arity &&
+  (match (SS.compress (U.unmeta head)).n with
+   | Tm_fvar fv'
+   | Tm_uinst ({n=Tm_fvar fv'}, _) -> S.fv_eq fv fv'
+   | _ -> false)
+
 (* Boolean indicates whether further normalization of the result is
 required. It is usually false, unless we call into a 'renorm' primitive
 step. *)
@@ -795,6 +805,20 @@ let reduce_primops norm_cb cfg (env:env) tm : ML (term & bool) =
                   match r with
                   | None ->
                       log_primops cfg (fun () -> Format.print1 "primop: <%s> did not reduce\n" (show tm));
+                      tm, false
+                  | Some reduced when is_shadow_app fv prim_step reduced ->
+                      (* A plugin that cannot unembed its arguments falls back to
+                         a "shadow" application which it rebuilds from just the
+                         arguments its generated wrapper handed it -- without the
+                         universes, and without the leading type arguments the
+                         wrapper stripped off (see [arrow_as_prim_step_N] in
+                         [Syntax.Embeddings]).  That term is a strictly partial
+                         application of the same head, so it can never reach this
+                         primitive step again: taking it would silently disable
+                         the plugin for every later occurrence, even once the
+                         arguments have become concrete.  Report it as a failure
+                         to reduce and keep the original term instead. *)
+                      log_primops cfg (fun () -> Format.print1 "primop: <%s> did not reduce (shadow app)\n" (show tm));
                       tm, false
                   | Some reduced ->
                       log_primops cfg (fun () -> Format.print2 "primop: <%s> reduced to  %s\n"

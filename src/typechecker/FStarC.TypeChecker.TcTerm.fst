@@ -69,6 +69,17 @@ let dbg_UniverseOf     = Debug.get_toggle "UniverseOf"
 let instantiate_both env = {env with Env.instantiate_imp=true}
 let no_inst env = {env with Env.instantiate_imp=false}
 
+(* Is [t] the type of a precondition, i.e. a [squash]?
+
+   Asked of a binder's sort on every application, so answer it syntactically
+   where possible: [ToSyntax.desugar_comp] emits a literal [Prims.squash], and
+   running [unfold_whnf] over the proposition just to learn that is wasted work.
+   The normalizing fallback is only for a precondition stated through an
+   abbreviation. *)
+let is_squash_typ env (t:typ) : ML bool =
+  Some? (U.un_squash t) ||
+  Some? (U.un_squash (N.unfold_whnf env t))
+
 let is_eq = function
     | Some Equality -> true
     | _ -> false
@@ -590,7 +601,7 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
       let is_precondition_binder env (b:binder) : ML bool =
         Some? b.binder_qual
         && Implicit? (Some?.v b.binder_qual)
-        && Some? (U.un_squash (N.unfold_whnf env b.binder_bv.sort))
+        && is_squash_typ env b.binder_bv.sort
       in
 
       let decreases_clause bs c =
@@ -2579,7 +2590,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
 
     | [], ({binder_bv=hd_e;binder_qual=q;binder_positivity=pqual;binder_attrs=attrs})::_
       when Some? q && Implicit? (Some?.v q)
-        && Some? (U.un_squash (N.unfold_whnf env (SS.subst subst hd_e.sort))) ->
+        && is_squash_typ env (SS.subst subst hd_e.sort) ->
       (* The abstraction has run out of binders while the expected type still
          asks for a proof-irrelevant implicit one -- which is what a
          precondition desugars to (see [ToSyntax.desugar_comp]).  Eta-expand
@@ -3245,7 +3256,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
            callee's computation type is effectful -- it returns only a type,
            and so would drop the effect. *)
         | ({binder_bv=x;binder_qual=Some (Implicit _)})::rest, []
-          when Some? (U.un_squash (N.unfold_whnf env (SS.subst subst x.sort))) ->
+          when is_squash_typ env (SS.subst subst x.sort) ->
           instantiate_one_and_go head.pos (List.hd bs) rest []
 
         (* Expect an implicit but user provided a concrete argument, instantiate the implicit. *)

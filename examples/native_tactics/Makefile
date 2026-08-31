@@ -52,21 +52,27 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 .PRECIOUS: %.ml
 
-%.test: %.fst %.ml
+# Every stamp and cache below must depend on the compiler: a .checked file is
+# keyed only on its source, so without this a stamp left by an older binary
+# satisfies make and the test silently never runs again.  (An OOM regression in
+# Registers.List.Test hid this way through a full local `make test`.)
+
+%.test: %.fst %.ml $(FSTAR_EXE)
 	$(FSTAR) $*.fst --load $*
 	touch $@
 
-%.sep.test: %.fst %.ml
+# Note the dependency on the .Test.fst: that, not %.fst, is what is checked here.
+%.sep.test: %.fst %.Test.fst %.ml $(FSTAR_EXE)
 	$(FSTAR) $*.Test.fst --load $*
 	touch $@
 
-%.fst.checked: %.fst
+%.fst.checked: %.fst $(FSTAR_EXE)
 	$(FSTAR) $< --cache_checked_modules
 	touch -c $@
 
 # Extract step must not use fly_deps: it skips cache for CLI files,
 # which conflicts with CMI requiring modules to be pre-checked.
-%.ml: %.fst.checked
+%.ml: %.fst.checked $(FSTAR_EXE)
 	$(FSTAR_EXE) --ext optimize_let_vc $*.fst --cache_checked_modules --codegen Plugin --extract $*
 	touch -c $@
 
