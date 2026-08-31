@@ -389,7 +389,7 @@ let rec slice_map
     Seq.slice (map_seq as_digit t_xs) i j `Seq.equal` map_seq as_digit (Seq.slice t_xs i j)
   ) 
    
-#push-options "--fuel 0 --ifuel 0"
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
 // The main matcher, same as the one on nats, but not with a strings of t
 let rabin_karp_matcher
     (#t:eqtype)

@@ -159,7 +159,7 @@ and env = {
   intactics      :bool;                         (* we are currently running a tactic *)
   nocoerce       :bool;                         (* do not apply any coercions *)
 
-  tc_term :env -> term -> ML (term & lcomp & guard_t); (* typechecker callback; G |- e : C <== g *)
+  tc_term :env -> term -> ML (term & comp & guard_t); (* typechecker callback; G |- e : C <== g *)
   typeof_tot_or_gtot_term :env -> term -> must_tot -> ML (term & typ & guard_t); (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> ML universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> ML (typ & guard_t); (* typechecker callback, uses fast path, with a fallback on the slow path *)
@@ -318,7 +318,7 @@ type qninfo = option ((either (universes & typ) (sigelt & option universes)) & R
 val should_verify   : env -> ML (bool)
 
 val initial_env : FStarC.Parser.Dep.deps ->
-                  (env -> term -> ML (term & lcomp & guard_t)) ->
+                  (env -> term -> ML (term & comp & guard_t)) ->
                   (env -> term -> must_tot -> ML (term & typ & guard_t)) ->
                   (env -> term -> must_tot -> ML (option typ)) ->
                   (env -> term -> ML universe) ->
@@ -538,10 +538,6 @@ val all_binders  : env -> ML (binders)
 val bound_vars   : env -> ML (list bv)
 
 instance val hasBinders_env   : hasBinders env
-
-instance val hasNames_lcomp   : hasNames lcomp
-
-instance val pretty_lcomp     : FStarC.Class.PP.pretty lcomp
 
 instance val hasNames_guard   : hasNames guard_t
 

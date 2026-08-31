@@ -25,7 +25,7 @@ open FStarC.Syntax.Syntax
 open FStarC.Ident
 open FStarC.TypeChecker.Common
 
-type lcomp_with_binder = option bv & lcomp
+type comp_with_binder = option bv & comp & guard_t
 
 //unification variables
 val new_implicit_var : string -> Range.t -> env -> typ -> unrefine:bool -> ML (term & (ctx_uvar & Range.t) & guard_t)
@@ -51,28 +51,24 @@ val join_effects: env -> lident -> lident -> ML lident
 val is_pure_effect: env -> lident -> ML bool
 val is_pure_or_ghost_effect: env -> lident -> ML bool
 
-val close_wp_lcomp: env -> list bv -> lcomp -> ML lcomp
-val close_layered_lcomp_with_combinator: env -> list bv -> lcomp -> ML lcomp
-val close_layered_lcomp_with_substitutions: env -> list bv -> list term -> lcomp -> ML lcomp
+val close_comp_and_guard: env -> list bv -> comp -> guard_t -> ML (comp & guard_t)
+val close_layered_comp_with_combinator: env -> list bv -> comp -> guard_t -> ML (comp & guard_t)
+val close_layered_comp_with_substitutions: env -> list bv -> list term -> comp -> guard_t -> ML (comp & guard_t)
 
-val should_not_inline_lc: lcomp -> ML bool
+val strengthen_precondition: option (unit -> ML (list Pprint.document)) -> env -> term -> comp -> guard_t -> ML (comp & guard_t)
 
-val weaken_precondition: env -> lcomp -> guard_formula -> ML lcomp
-
-val strengthen_precondition: option (unit -> ML (list Pprint.document)) -> env -> term -> lcomp -> guard_t -> ML (lcomp & guard_t)
-
-val bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> lcomp_with_binder -> ML lcomp
+val bind: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
 (* [bind_no_capture] is [bind] for a term whose result type must not be
    restated in the composite's result type: an implicit argument of [squash]
    type, above all, which is the image of a precondition and carries an
    obligation discharged at the call rather than a fact about a result. *)
-val bind_no_capture: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> lcomp_with_binder -> ML lcomp
+val bind_no_capture: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
 
 val weaken_guard: guard_formula -> guard_formula -> ML guard_formula
 
-val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> ML lcomp
+val maybe_assume_result_eq_pure_term: env -> term -> comp -> ML comp
 
-val maybe_return_e2_and_bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> e2:term -> lcomp_with_binder -> ML lcomp
+val maybe_return_e2_and_bind: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> e2:term -> comp_with_binder -> ML (comp & guard_t)
 
 val fvar_env: env -> lident -> ML term
 
@@ -102,7 +98,7 @@ val get_neg_branch_conds: list formula -> ML (list formula & formula)
    at all, so it must never be used to coarsen a more precise one. *)
 val is_bare_flex: typ -> ML bool
 val combine_branch_res_typs: env -> bv -> typ -> list (formula & typ) -> ML typ
-val bind_cases: env -> typ -> list (typ & lident & list cflag & (bool -> ML lcomp)) -> bv -> ML lcomp
+val bind_cases: env -> typ -> list (typ & lident & list cflag & (bool -> ML (comp & guard_t))) -> bv -> ML (comp & guard_t)
 
 //
 // Setting the boolean flag to true, clients may say if they want to use equality
@@ -121,7 +117,7 @@ val check_trivial_precondition_wp : env -> comp -> ML (comp_typ & formula & guar
 val maybe_lift: env -> term -> lident -> lident -> typ -> ML term
 val maybe_monadic: env -> term -> lident -> typ -> ML term
 
-val maybe_coerce_lc : env -> term -> lcomp -> typ -> ML (term & lcomp & guard_t)
+val maybe_coerce_lc : env -> term -> comp -> typ -> ML (term & comp & guard_t)
 
 (*
  * weaken_result_type env e lc t use_eq
@@ -137,7 +133,7 @@ val maybe_coerce_lc : env -> term -> lcomp -> typ -> ML (term & lcomp & guard_t)
  *
  *)
 val keep_res_typ : env -> typ -> typ -> ML bool
-val weaken_result_typ: env -> term -> lcomp -> typ -> bool -> ML (term & lcomp & guard_t)
+val weaken_result_typ: env -> term -> (comp & guard_t) -> typ -> bool -> ML (term & comp & guard_t)
 
 val pure_or_ghost_pre_and_post: env -> comp -> ML (option typ & typ)
 
@@ -156,9 +152,9 @@ val maybe_instantiate : env -> term -> typ -> ML (term & typ & guard_t)
 //set the boolan flag to true if you want to check for type equality
 //
 val check_has_type : env -> term -> t:typ -> t':typ -> use_eq:bool -> ML guard_t
-val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> bool -> ML (term & lcomp & guard_t)
+val check_has_type_maybe_coerce : env -> term -> comp -> typ -> bool -> ML (term & comp & guard_t)
 
-val check_top_level: env -> guard_t -> lcomp -> ML (bool & comp)
+val check_top_level: env -> guard_t -> comp -> ML (bool & comp)
 
 val short_circuit: term -> args -> ML guard_formula
 val short_circuit_head: term -> ML bool

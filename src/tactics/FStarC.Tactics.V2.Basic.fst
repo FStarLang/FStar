@@ -715,9 +715,9 @@ let __tc_ghost (e : env) (t : term)  : ML (tac (term & typ & guard_t)) =
     log (fun () -> Format.print1 "Tac> __tc_ghost(%s)\n" (show t));!
     let e = {e with letrecs=[]} in
     let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
-    return (t, lc.res_typ, g)
+    return (t, (U.comp_result lc), g)
 
-let __tc_lax (e : env) (t : term)  : ML (tac (term & lcomp & guard_t)) =
+let __tc_lax (e : env) (t : term)  : ML (tac (term & comp & guard_t)) =
     let! ps = get in
     log (fun () -> Format.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
                            (show t)
@@ -732,7 +732,7 @@ let tcc (e : env) (t : term) : ML (tac comp) = wrap_err "tcc" <| (
    * a way for metaprograms to query the typechecker, but
    * the result has no effect on the proofstate and nor is it
    * taken for a fact that the typing is correct. *)
-  return (TcComm.lcomp_comp lc |> fst)  //dropping the guard from lcomp_comp too!
+  return lc
 )
 
 let tc (e : env) (t : term) : ML (tac typ) = wrap_err "tc" <| (

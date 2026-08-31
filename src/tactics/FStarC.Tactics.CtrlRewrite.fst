@@ -94,13 +94,13 @@ let __do_rewrite
     in
     match res with
     | None -> return tm
-    | Some (_, lcomp, g) ->
+    | Some (_, comp, g) ->
 
-    if not (TcComm.is_pure_or_ghost_lcomp lcomp) then 
+    if not (U.is_pure_or_ghost_comp comp) then 
       return tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let g = FStarC.TypeChecker.Rel.solve_deferred_constraints env g in
-    let typ = lcomp.res_typ in
+    let typ = (U.comp_result comp) in
 
     (* unrefine typ as is done for the type arg of eq2 *)
     let typ =
@@ -117,7 +117,7 @@ let __do_rewrite
     in
 
     let should_check =
-      if FStarC.TypeChecker.Common.is_total_lcomp lcomp 
+      if U.is_total_comp comp 
       then None
       else Some (Allow_ghost "do_rewrite.lhs")
     in

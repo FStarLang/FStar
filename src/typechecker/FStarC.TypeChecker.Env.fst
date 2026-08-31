@@ -1505,14 +1505,6 @@ instance hasBinders_env : hasBinders env = {
   boundNames = (fun e -> FlatSet.from_list (bound_vars e) );
 }
 
-instance hasNames_lcomp : hasNames lcomp = {
-  freeNames = (fun lc -> freeNames (fst (lcomp_comp lc)));
-}
-
-instance pretty_lcomp : pretty lcomp = {
-  pp = (fun lc -> let open FStarC.Pprint in empty);
-}
-
 instance hasNames_guard : hasNames guard_t = {
   freeNames = (fun g -> match g.guard_f with
                         | Trivial -> FlatSet.empty ()

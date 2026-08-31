@@ -378,9 +378,9 @@ visible let  xx  : t1 = (C1 (fun uu___0 -> (match uu___0@0:(Tm_unknown) with
 [@ ]
 visible let  q_as_lem  : (p:(squash (l_Forall (fun x -> (b@1:(Tm_unknown) x@0:(Tm_unknown))))) -> x:a@2:(Tm_unknown) -> Tot (squash (b@2:(Tm_unknown) x@0:(Tm_unknown)))) = (fun p x -> ())
 [@ ]
-visible let  congruence_fun  : (f:(x:a@1:(Tm_unknown) -> Tot (b@1:(Tm_unknown) x@0:(Tm_unknown))) -> g:(x:a@2:(Tm_unknown) -> Tot (b@2:(Tm_unknown) x@0:(Tm_unknown))) -> x:(squash (l_Forall (fun x -> (eq2 (f@2:(Tm_unknown) x@0:(Tm_unknown)) (g@1:(Tm_unknown) x@0:(Tm_unknown)))))) -> Tot (squash (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))))) = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  [@ (inline_let)]uu___#3109  : unit = ()
+visible let  congruence_fun  : (f:(x:a@1:(Tm_unknown) -> Tot (b@1:(Tm_unknown) x@0:(Tm_unknown))) -> g:(x:a@2:(Tm_unknown) -> Tot (b@2:(Tm_unknown) x@0:(Tm_unknown))) -> x:(squash (l_Forall (fun x -> (eq2 (f@2:(Tm_unknown) x@0:(Tm_unknown)) (g@1:(Tm_unknown) x@0:(Tm_unknown)))))) -> Tot (squash (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))))) = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  [@ (inline_let)]uu___#3148  : unit = ()
 in
-let  uu___#3110  : unit = let  uu___#3111  : (list term) = let  uu___#3114  : term = quote ((q_as_lem x@2:(Tm_unknown)))
+let  uu___#3149  : unit = let  uu___#3150  : (list term) = let  uu___#3153  : term = quote ((q_as_lem x@2:(Tm_unknown)))
 in
 (Cons uu___@0:(Tm_unknown) (Nil ))
 in
@@ -390,11 +390,11 @@ in
 [@ ]
 visible let  apply_feq_lem  : ($f:(uu___:a@1:(Tm_unknown) -> Tot b@1:(Tm_unknown)) -> $g:(uu___:a@2:(Tm_unknown) -> Tot b@2:(Tm_unknown)) -> Tot (squash (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))))) = (fun $f $g -> (congruence_fun f@2:(Tm_unknown) g@1:(Tm_unknown) ()))
 [@ ]
-visible let  fext  : (uu___:unit -> TAC (unit)) = (fun uu___ -> let  uu___#134  : unit = (apply_lemma `(apply_feq_lem)[])
+visible let  fext  : (uu___:unit -> TAC (unit)) = (fun uu___ -> let  uu___#133  : unit = (apply_lemma `(apply_feq_lem)[])
 in
-let  uu___#135  : unit = (dismiss ())
+let  uu___#134  : unit = (dismiss ())
 in
-let  uu___#136  : (list binding) = (forall_intros ())
+let  uu___#135  : (list binding) = (forall_intros ())
 in
 (ignore uu___@0:(Tm_unknown)))
 [@ ]
@@ -402,56 +402,56 @@ visible let  _onL  : (a:uu___@0:(Tm_unknown) -> b:uu___@1:(Tm_unknown) -> c:uu__
 [@ ]
 visible let  onL  : (uu___:unit -> TAC (unit)) = (fun uu___ -> (apply_lemma `(_onL)[]))
 [@ ]
-visible let rec push_lifts'  : (u:unit -> Tac (unit)) = (fun u -> let  uu___#1748  : formula = let  uu___#1749  : term = (cur_goal ())
+visible let rec push_lifts'  : (u:unit -> Tac (unit)) = (fun u -> let  uu___#1718  : formula = let  uu___#1719  : term = (cur_goal ())
 in
 (term_as_formula uu___@0:(Tm_unknown))
 in
 (match uu___@0:(Tm_unknown) with
-	| (Comp (Eq uu___#1753) lhs#1754 rhs#1755)  -> let  uu___#1759  : named_term_view = (inspect lhs@1:(Tm_unknown))
+	| (Comp (Eq uu___#1723) lhs#1724 rhs#1725)  -> let  uu___#1729  : named_term_view = (inspect lhs@1:(Tm_unknown))
 in
 (match uu___@0:(Tm_unknown) with
-	| (Tv_App h#1762 t#1763)  -> let  uu___#1766  : named_term_view = (inspect h@1:(Tm_unknown))
+	| (Tv_App h#1732 t#1733)  -> let  uu___#1736  : named_term_view = (inspect h@1:(Tm_unknown))
 in
 (match uu___@0:(Tm_unknown) with
-	| (Tv_FVar fv#1768)  -> (match (op_Equals (fv_to_string fv@0:(Tm_unknown)) "Postprocess.lift") with
+	| (Tv_FVar fv#1738)  -> (match (op_Equals (fv_to_string fv@0:(Tm_unknown)) "Postprocess.lift") with
 	| true  -> (case_analyze (fst t@2:(Tm_unknown)))
-	|uu___#1770  -> (fail "not a lift (1)"))
-	|uu___#1773  -> (fail "not a lift (2)"))
-	|(Tv_Abs uu___#1776 uu___#1777)  -> let  uu___#1778  : unit = (fext ())
+	|uu___#1740  -> (fail "not a lift (1)"))
+	|uu___#1743  -> (fail "not a lift (2)"))
+	|(Tv_Abs uu___#1746 uu___#1747)  -> let  uu___#1748  : unit = (fext ())
 in
 (push_lifts' ())
-	|uu___#1779  -> (fail "not a lift (3)"))
-	|uu___#1783  -> (fail "not an equality")))
- and case_analyze  : (lhs:term -> Tac (unit)) = (fun lhs -> let  ap#1790  : (l:term -> TAC (unit)) = (fun l -> let  uu___#1794  : unit = (onL ())
+	|uu___#1749  -> (fail "not a lift (3)"))
+	|uu___#1753  -> (fail "not an equality")))
+ and case_analyze  : (lhs:term -> Tac (unit)) = (fun lhs -> let  ap#1760  : (l:term -> TAC (unit)) = (fun l -> let  uu___#1764  : unit = (onL ())
 in
 (apply_lemma l@1:(Tm_unknown)))
 in
-let  lhs#1795  : term = (norm_term (Cons weak (Cons hnf (Cons primops (Cons delta (Nil ))))) lhs@1:(Tm_unknown))
+let  lhs#1765  : term = (norm_term (Cons weak (Cons hnf (Cons primops (Cons delta (Nil ))))) lhs@1:(Tm_unknown))
 in
-let  uu___#1796  : (tuple2 term (list argv)) = (collect_app lhs@0:(Tm_unknown))
-in
-(match uu___@0:(Tm_unknown) with
-	| (Mktuple2 #._ #._ head#1797 args#1798)  -> let  uu___#1799  : named_term_view = (inspect head@1:(Tm_unknown))
+let  uu___#1766  : (tuple2 term (list argv)) = (collect_app lhs@0:(Tm_unknown))
 in
 (match uu___@0:(Tm_unknown) with
-	| (Tv_FVar fv#1800)  -> (match (op_Equals (fv_to_string fv@0:(Tm_unknown)) "Postprocess.A1") with
+	| (Mktuple2 #._ #._ head#1767 args#1768)  -> let  uu___#1769  : named_term_view = (inspect head@1:(Tm_unknown))
+in
+(match uu___@0:(Tm_unknown) with
+	| (Tv_FVar fv#1770)  -> (match (op_Equals (fv_to_string fv@0:(Tm_unknown)) "Postprocess.A1") with
 	| true  -> (apply_lemma `(lemA)[])
-	|uu___#1801  -> (match (op_Equals (fv_to_string fv@1:(Tm_unknown)) "Postprocess.B1") with
-	| true  -> let  uu___#1802  : unit = (ap@7:(Tm_unknown) `(lemB)[])
+	|uu___#1771  -> (match (op_Equals (fv_to_string fv@1:(Tm_unknown)) "Postprocess.B1") with
+	| true  -> let  uu___#1772  : unit = (ap@7:(Tm_unknown) `(lemB)[])
 in
-let  uu___#1803  : unit = (apply_lemma `(congB)[])
-in
-(push_lifts' ())
-	|uu___#1804  -> (match (op_Equals (fv_to_string fv@2:(Tm_unknown)) "Postprocess.C1") with
-	| true  -> let  uu___#1805  : unit = (ap@8:(Tm_unknown) `(lemC)[])
-in
-let  uu___#1806  : unit = (apply_lemma `(congC)[])
+let  uu___#1773  : unit = (apply_lemma `(congB)[])
 in
 (push_lifts' ())
-	|uu___#1807  -> let  uu___#1808  : unit = (tlabel "unknown fv")
+	|uu___#1774  -> (match (op_Equals (fv_to_string fv@2:(Tm_unknown)) "Postprocess.C1") with
+	| true  -> let  uu___#1775  : unit = (ap@8:(Tm_unknown) `(lemC)[])
+in
+let  uu___#1776  : unit = (apply_lemma `(congC)[])
+in
+(push_lifts' ())
+	|uu___#1777  -> let  uu___#1778  : unit = (tlabel "unknown fv")
 in
 (trefl ()))))
-	|uu___#1809  -> let  uu___#1810  : unit = (tlabel "head unk")
+	|uu___#1779  -> let  uu___#1780  : unit = (tlabel "head unk")
 in
 (trefl ()))))
 [@ ]
@@ -462,7 +462,7 @@ in
 visible let  yy  : t2 = (C2 (fun x -> (lift (match x@0:(Tm_unknown) with
 	| 0  -> A1
 	|5  -> (B1 42)
-	|x#224  -> (B1 24)))))
+	|x#225  -> (B1 24)))))
 [@ ]
 visible let  zz1  : t2 = (C2 (fun x -> (C2 (fun x -> A2))))
 [@ ((postprocess_for_extraction_with push_lifts))]

@@ -436,7 +436,7 @@ type stack_elt =
  | UnivArgs of list universe & Range.t // NB: universes must be values already, no bvars allowed
  | MemoLazy of cfg_memo (env & term)
  | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.t
- | Abs      of env & binders & env & option residual_comp & Range.t //the second env is the first one extended with the binders, for reducing the option lcomp
+ | Abs      of env & binders & env & option residual_comp & Range.t //the second env is the first one extended with the binders, for reducing the option comp
  | App      of env & term & aqual & Range.t
  | CBVApp   of env & term & aqual & Range.t
  | Meta     of env & S.metadata & Range.t
@@ -686,7 +686,7 @@ let rec env_subst (env:env) : ML subst_t =
       s
 
 let filter_out_lcomp_cflags flags =
-    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
+    (* TODO : lc.comp might have more cflags than (U.comp_flags comp) *)
     flags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 let default_univ_uvars_to_zero (t:term) : ML term =
@@ -3229,24 +3229,11 @@ let ghost_to_pure_aux env non_informative_only c =
         else c
     | _ -> c
 
-let ghost_to_pure_lcomp_aux env non_informative_only (lc:lcomp) =
-    if U.is_ghost_effect lc.eff_name
-    && maybe_promote_t env non_informative_only lc.res_typ
-    then match downgrade_ghost_effect_name lc.eff_name with
-         | Some pure_eff ->
-           { TcComm.apply_lcomp (ghost_to_pure_aux env non_informative_only) (fun g -> g) lc
-             with eff_name = pure_eff }
-         | None -> //can't downgrade, don't know the particular incarnation of PURE to use
-           lc
-    else lc
-
 (* only promote non-informative types *)
 let maybe_ghost_to_pure env c = ghost_to_pure_aux env true c
-let maybe_ghost_to_pure_lcomp env lc = ghost_to_pure_lcomp_aux env true lc
 
 (* promote unconditionally *)
 let ghost_to_pure env c = ghost_to_pure_aux env false c
-let ghost_to_pure_lcomp env lc = ghost_to_pure_lcomp_aux env false lc
 
 (*
  * The following functions implement GHOST to PURE promotion
@@ -3270,22 +3257,6 @@ let ghost_to_pure2 env (c1, c2) =
        else if c2_erasable && PC.is_ghost_effect_lid c1_eff
        then ghost_to_pure env c1, c2
        else c1, c2
-
-let ghost_to_pure_lcomp2 env (lc1, lc2) =
-  let lc1, lc2 = maybe_ghost_to_pure_lcomp env lc1, maybe_ghost_to_pure_lcomp env lc2 in
-
-  let lc1_eff = Env.norm_eff_name env lc1.eff_name in
-  let lc2_eff = Env.norm_eff_name env lc2.eff_name in
-
-  if Ident.lid_equals lc1_eff lc2_eff then lc1, lc2
-  else let lc1_erasable = Env.is_erasable_effect env lc1_eff in
-       let lc2_erasable = Env.is_erasable_effect env lc2_eff in
-
-       if lc1_erasable && PC.is_ghost_effect_lid lc2_eff
-       then lc1, ghost_to_pure_lcomp env lc2
-       else if lc2_erasable && PC.is_ghost_effect_lid lc1_eff
-       then ghost_to_pure_lcomp env lc1, lc2
-       else lc1, lc2
 
 let warn_norm_failure (r:Range.t) (e:exn) : ML unit =
   Errors.log_issue r Errors.Warning_NormalizationFailure (Format.fmt1 "Normalization failed with error %s\n" (BU.message_of_exn e))

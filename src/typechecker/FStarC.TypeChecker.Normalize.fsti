@@ -49,7 +49,6 @@ val non_info_norm: Env.env -> term -> ML bool
  * else the input comp is returned as is
  *)
 val maybe_ghost_to_pure:        Env.env -> comp -> ML comp
-val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> ML lcomp
 
 (*
  * The two input computations are to be composed or related by subcomp
@@ -58,7 +57,6 @@ val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> ML lcomp
  *   the GHOST one is promoted to PURE, see their implementation for more details
  *)
 val ghost_to_pure2 : Env.env -> (comp & comp) -> ML (comp & comp)
-val ghost_to_pure_lcomp2 : Env.env -> (lcomp & lcomp) -> ML (lcomp & lcomp)
 
 val term_to_doc:     Env.env -> term -> ML Pprint.document
 val term_to_string:  Env.env -> term -> ML string

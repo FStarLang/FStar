@@ -33,7 +33,6 @@ unfolded and desugared away before the typechecker ever sees them, and
 
 ```fstar
 and comp_typ = {
-  comp_univs  : universes;
   effect_name : lident;
   result_typ  : typ;
   flags       : list cflag;
@@ -43,6 +42,74 @@ and comp' = | Comp of comp_typ
 
 A computation type is now a label and a result type. Obligations live in
 `guard_t`, where they were always meant to live.
+
+`comp_univs` went with them. It was there to carry the universe instance of a
+*polymonadic* effect's `wp`, and a computation type has no `wp` any more: every
+one of its ~50 read sites either passed the list straight back to a `mk_Comp`
+that reconstructed the same comp, or fed it to a `wp` combinator that no longer
+exists. The universe of a comp is now recovered where it is needed, from
+`result_typ`, which is the one place it was ever really recorded.
+
+Removing it is what made the next simplification possible.
+
+## `lcomp` is gone
+
+`TypeChecker.Common.lcomp` was a computation type whose `comp` was behind a
+thunk:
+
+```fstar
+type lcomp = {
+  eff_name    : lident;
+  res_typ     : typ;
+  cflags      : list cflag;
+  comp_thunk  : ref (either (unit -> ML (comp & guard_t)) comp);
+}
+```
+
+It existed because building a `comp` used to be expensive — it meant composing
+`wp`s — while the three fields callers usually wanted (the effect, the result
+type, the flags) were cheap. So the expensive part was deferred, and forced only
+if someone actually needed it.
+
+After the flip those three fields *are* the whole of a `comp`. What is left of
+an `lcomp` over a `comp` is one thing: a deferred `guard_t`. So the type is
+replaced throughout the typechecker by the pair it had become —
+
+| was | is |
+|---|---|
+| `lcomp` | `comp` |
+| a function returning an `lcomp` with a deferred guard | a function returning `comp & guard_t` |
+| `TcComm.lcomp_comp lc` | `lc, Env.trivial_guard` |
+| `lcomp_with_binder` | `comp_with_binder = option bv & comp & guard_t` |
+
+and 12 API functions (`mk_lcomp`, `apply_lcomp`, `lcomp_set_flags`,
+`is_total_lcomp`, `residual_comp_of_lcomp`, …) collapse onto their `Syntax.Util`
+counterparts on `comp`. Three more retire outright, having become the identity
+after the flip: `TypeChecker.Util.weaken_precondition`, `should_not_inline_lc`
+and `lcomp_has_trivial_postcondition`, together with `Normalize`'s four
+`ghost_to_pure_*_lcomp` variants.
+
+The one thing that needs care is that a thunk was forced *inside* the scope of
+the binders its guard mentions. `TcUtil.bind` closes a continuation's guard over
+the bound variable and weakens it with `x == e`; that used to happen to whatever
+the continuation's thunk produced when `bind` forced it. So an eager rewrite has
+to hand those obligations to `bind` explicitly rather than conjoin them into the
+ambient guard — `tc_match` passes `bind_cases`' guard as `bind`'s continuation
+guard, and `tc_eqn` weakens and closes each branch's obligations over the
+pattern variables itself.
+
+The resulting verification conditions are, if anything, cleaner: a chain of
+forced thunks used to leave behind vacuous quantifiers like
+`forall (base: nat). base == base ==> P`, which are simply absent now. ulib
+verifies in 1m21s wall / 12.6 CPU-minutes at `-j16`, against 1m35s / 13.2 before.
+
+Two `expect_failure` annotations change, both because error *recovery* got more
+honest. `weaken_result_typ` used to record the expected type on the `lcomp`'s
+`res_typ` field alone, leaving the `comp` inside the thunk with the type that had
+just been rejected; the inconsistency then produced a second, spurious error.
+`Bug655.fst` no longer reports a bogus "`GTot` and `STATE` cannot be composed"
+after a subtyping failure, and `Bug3213.fst` reports both of its offending
+arguments instead of one plus a cascade.
 
 The `cflag` list shrank too. `MLEFFECT` is gone: every site that set it did so
 exactly when `effect_name` was already `FStar.All.ML`, and every site that read

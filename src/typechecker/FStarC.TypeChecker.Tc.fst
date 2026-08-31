@@ -607,8 +607,7 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
     let tx = UF.new_transaction () in
     BU.finally (fun () -> ignore (pop_context env' "#check"); UF.rollback tx) (fun () ->
       let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
-      let c, g' = lcomp_comp lc in
-      let g = Class.Monoid.mplus g g' in
+      let c = lc in
       let open FStarC.Pprint in
       Options.with_saved_options (fun () ->
         ignore (Options.set_options "--print_effect_args");
