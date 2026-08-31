@@ -319,6 +319,10 @@ let is_bare_tot_or_gtot_comp c =
      lid_equals ct.effect_name PC.effect_GTot_lid)
     && ct.flags |> U.for_all (function TOTAL -> true | _ -> false)
 
+(* Exactly what [mk_Total] builds: a [Tot] with nothing else to say. *)
+let is_bare_total_comp c =
+  is_bare_tot_or_gtot_comp c && is_named_tot c
+
 let is_pure_effect l = PC.is_pure_effect_lid l
 
 let is_pure_comp c = match c.n with

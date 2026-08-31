@@ -118,6 +118,9 @@ val is_tot_or_gtot_comp (c:comp) : ML bool
    else to say. *)
 val is_bare_tot_or_gtot_comp (c:comp) : ML bool
 
+(* Exactly what [mk_Total] builds. *)
+val is_bare_total_comp (c:comp) : ML bool
+
 val is_pure_effect (l:lident) : bool
 
 val is_pure_comp (c:comp) : ML bool

@@ -1544,8 +1544,7 @@ let compress_cprob wl p : ML _
   =
   let whnf_c env c =
     match c.n with
-    | Comp ct when U.is_bare_tot_or_gtot_comp c
-                && Ident.lid_equals ct.effect_name PC.effect_Tot_lid ->
+    | Comp ct when U.is_bare_total_comp c ->
       S.mk_Total (whnf env ct.result_typ)
     | _ -> c
   in

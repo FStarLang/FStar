@@ -546,13 +546,12 @@ let lookup_bvar (env : env) x =
     try (List.nth env x.index)._2
     with _ -> failwith (Format.fmt2 "Failed to find %s\nEnv is %s\n" (show x) (show env))
 
+(* The pure counterpart of one of the built-in spellings of the ghost effect.
+   [None] for anything else -- in particular for a user-defined abbreviation of
+   [GTot], whose caller must unfold it first. *)
 let downgrade_ghost_effect_name l =
-    if Ident.lid_equals l PC.effect_Ghost_lid
-    then Some PC.effect_Pure_lid
-    else if Ident.lid_equals l PC.effect_GTot_lid
-    then Some PC.effect_Tot_lid
-    else if Ident.lid_equals l PC.effect_GHOST_lid
-    then Some PC.effect_PURE_lid
+    if PC.is_ghost_effect_lid l
+    then Some PC.primitive_pure_lid
     else None
 
 (********************************************************************************************************************)
