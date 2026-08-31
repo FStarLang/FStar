@@ -1084,7 +1084,7 @@ let u_abs (k : typ) (ys : binders) (t : term) : ML term =
     (* TODO : not putting any cflags here on the annotation... *)
     then //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.;
          //causing a loss in precision for the SMT encoding
-         U.abs ys t (Some (U.mk_residual_comp PC.effect_Tot_lid None []))
+         U.abs ys t (Some (U.mk_residual_comp PC.primitive_pure_lid None []))
     else let c = Subst.subst_comp (U.rename_binders xs ys) c in
          U.abs ys t (Some (U.residual_comp_of_comp c))
 
@@ -2219,7 +2219,7 @@ let imitate_arrow (orig:prob) (wl:worklist)
       match c.n with
       | Comp ct when U.is_bare_tot_or_gtot_comp c ->
         imitate_tot_or_gtot ct.result_typ
-          (if Ident.lid_equals ct.effect_name PC.effect_Tot_lid
+          (if PC.is_tot_lid ct.effect_name
            then S.mk_Total else S.mk_GTotal) wl
       | Comp ct ->
         let out_args, wl =
@@ -4649,8 +4649,8 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
 
          (* [Tot] and [GTot] are handled by name; everything else goes to the
             effect lattice below. *)
-         let is_tot c = Ident.lid_equals (U.comp_effect_name c) PC.effect_Tot_lid in
-         let is_gtot c = Ident.lid_equals (U.comp_effect_name c) PC.effect_GTot_lid in
+         let is_tot = U.is_named_tot in
+         let is_gtot = U.is_named_gtot in
          let result_types_only () =
            solve_t (problem_using_guard orig (U.comp_result c1) problem.relation
                                              (U.comp_result c2) None "result type") wl

@@ -101,8 +101,7 @@ let head_redex env t =
          spec-free spellings [Tot]/[GTot] rather than the whole pure/ghost
          class; those two names are stable across the primitive-effect flip.
          [TOTAL] catches a not-yet-unfolded abbreviation of [Tot]. *)
-      Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
-      || Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
+      Const.is_tot_or_gtot_lid rc.residual_effect
       || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
 
     | Tm_uinst({n=Tm_fvar fv}, _)
@@ -1449,9 +1448,9 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                   t
                 | Some t -> t
               in
-              if Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
+              if Const.is_tot_lid rc.residual_effect
               then Some (S.mk_Total res_typ)
-              else if Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
+              else if Const.is_gtot_lid rc.residual_effect
               then Some (S.mk_GTotal res_typ)
               (* TODO (KM) : shouldn't we do something when flags contains TOTAL ? *)
               else None

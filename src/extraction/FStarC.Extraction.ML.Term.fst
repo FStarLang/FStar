@@ -1711,8 +1711,7 @@ and term_as_mlexpr'
                  the spec-free spellings [Tot]/[GTot] rather than the whole
                  pure/ghost class; [TOTAL] catches a not-yet-unfolded
                  abbreviation of [Tot]. *)
-              Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
-              || Ident.lid_equals rc.residual_effect PC.effect_GTot_lid
+              PC.is_tot_or_gtot_lid rc.residual_effect
               || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
           begin match head.n, args with

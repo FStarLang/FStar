@@ -234,13 +234,13 @@ let rec mk_Tm_arrow (bs:binders) (c:comp) p =
     match bs with
     | [] ->
       begin match c.n with
-      | Comp ct when lid_equals ct.effect_name PC.effect_Tot_lid -> ct.result_typ
+      | Comp ct when PC.is_tot_lid ct.effect_name -> ct.result_typ
       | _ -> failwith "mk_Tm_arrow: no binders, and the computation is not Tot"
       end
     | [b] -> mk (Tm_arrow {b; comp=c}) p
     | b::bs ->
       let tail = mk_Tm_arrow bs c p in
-      mk (Tm_arrow {b; comp=mk (Comp {effect_name=PC.effect_Tot_lid; result_typ=tail; flags=[]}) tail.pos}) p
+      mk (Tm_arrow {b; comp=mk (Comp {effect_name=PC.primitive_pure_lid; result_typ=tail; flags=[]}) tail.pos}) p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
@@ -258,9 +258,9 @@ let mk_Comp (ct:comp_typ) : ML comp = mk (Comp ct) ct.result_typ.pos
 
 (* [Tot] and [GTot] are ordinary effect names now. *)
 let mk_Total t : ML comp =
-  mk_Comp ({effect_name=PC.effect_Tot_lid; result_typ=t; flags=[]})
+  mk_Comp ({effect_name=PC.primitive_pure_lid; result_typ=t; flags=[]})
 let mk_GTotal t : ML comp =
-  mk_Comp ({effect_name=PC.effect_GTot_lid; result_typ=t; flags=[]})
+  mk_Comp ({effect_name=PC.primitive_ghost_lid; result_typ=t; flags=[]})
 
 
 let order_bv (x y : bv) : int  = x.index - y.index
@@ -417,7 +417,7 @@ let trivial_pre = fvar PC.true_lid None
    the abstraction matters: the SMT encoder falls back to an imprecise encoding
    of any function literal whose effect it cannot determine. *)
 let post_rc : residual_comp = {
-  residual_effect = PC.effect_Tot_lid;
+  residual_effect = PC.primitive_pure_lid;
   residual_typ = Some (mk (Tm_type U_zero) Range.dummyRange);
   residual_flags = []
 }

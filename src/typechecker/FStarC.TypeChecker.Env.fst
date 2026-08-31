@@ -1471,9 +1471,9 @@ let get_top_level_effect env lid : ML _ =
 let join_opt env (l1:lident) (l2:lident) : ML (option lident) =
   if lid_equals l1 l2
   then Some l1
-  else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
-       || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Some Const.effect_GTot_lid
+  else if Const.is_gtot_lid l1 && Const.is_tot_lid l2
+       || Const.is_gtot_lid l2 && Const.is_tot_lid l1
+  then Some Const.primitive_ghost_lid
   else match env.effects.joins |> Option.find (fun (m1, m2, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> None
         | Some (_, _, m3) -> Some m3
@@ -1487,7 +1487,7 @@ let join env l1 l2 : ML lident =
 
 let monad_leq env l1 l2 : ML (option edge) =
   if lid_equals l1 l2
-  || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
+  || (Const.is_tot_lid l1 && Const.is_gtot_lid l2)
   then Some ({msource=l1; mtarget=l2; mpath=[]})
   else env.effects.order |> Option.find (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 

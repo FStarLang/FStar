@@ -2335,7 +2335,7 @@ and tc_comp env c : ML (comp                                      (* checked ver
     | Comp ct when U.is_bare_tot_or_gtot_comp c ->
       let k, u = U.type_u () in
       let t, _, g = tc_check_tot_or_gtot_term env ct.result_typ k None in
-      (if Ident.lid_equals ct.effect_name Const.effect_Tot_lid then mk_Total t else mk_GTotal t), u, g
+      (if Const.is_tot_lid ct.effect_name then mk_Total t else mk_GTotal t), u, g
 
     | Comp c ->
       (* Effects are never universe-polymorphic: their signature is
@@ -5090,7 +5090,7 @@ and check_let_recs env lbts : ML _ =
                     Tot, so this marker is truthful; without it the spine would be
                     indistinguishable from a single [arity + |bs1|]-binder node and
                     tc_abs would compute the wrong decreases clause. *)
-                 let node_rc = { residual_effect = Const.effect_Tot_lid;
+                 let node_rc = { residual_effect = Const.primitive_pure_lid;
                                  residual_typ = None;
                                  residual_flags = [] } in
                  S.mk_Tm_abs bs0 inner (Some node_rc) inner.pos
@@ -5581,8 +5581,8 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
        [GHOST]/[Ghost] may carry a precondition that would be discarded here.
        Those two names mean "no specification" in either direction of the
        primitive-effect flip. *)
-    let is_tot = Ident.lid_equals eff Const.effect_Tot_lid in
-    let is_gtot = Ident.lid_equals eff Const.effect_GTot_lid in
+    let is_tot = Const.is_tot_lid eff in
+    let is_gtot = Const.is_gtot_lid eff in
     if not (is_tot || is_gtot) then None
     else
       let tbody =

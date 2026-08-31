@@ -294,7 +294,7 @@ let as_arg (a:t) : arg = (a, None)
 
 //  Non-dependent total arrow
 let make_arrow1 t1 (a:arg) : t =
-  mk_t <| Arrow (Inr ([a], Comp { effect_name = PC.effect_Tot_lid
+  mk_t <| Arrow (Inr ([a], Comp { effect_name = PC.primitive_pure_lid
                                 ; result_typ = t1
                                 ; flags = [] }))
 

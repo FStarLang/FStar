@@ -114,7 +114,7 @@ let rec name_function_binders_from (i:int) (t:term) : ML term = match t.n with
       in
       let comp =
         match comp.n with
-        | Comp ct when lid_equals ct.effect_name PC.effect_Tot_lid ->
+        | Comp ct when PC.is_tot_lid ct.effect_name ->
           { comp with n = Comp {ct with result_typ = name_function_binders_from (i+1) ct.result_typ} }
         | _ -> comp
       in
@@ -295,11 +295,17 @@ let is_trivial_post (p:term) : ML bool =
   | Tm_abs {body} -> is_t_true (compress body)
   | _ -> false
 
-(* Is [c] literally a [Tot]?  [Tot] names the pure computations, in either
-   direction of the primitive-effect flip, so compare against it by name; use
-   [is_total_comp] for the weaker "is this total?" question. *)
+(* Is [c] literally a [Tot] (resp. [GTot])?  This is the narrow, syntactic
+   question -- the one a match on the old [Total]/[GTotal] constructors asked.
+   Use [is_total_comp]/[is_tot_or_gtot_comp] for the weaker "is this total?". *)
 let is_named_tot c =
-    lid_equals (comp_effect_name c) PC.effect_Tot_lid
+    PC.is_tot_lid (comp_effect_name c)
+
+let is_named_gtot c =
+    PC.is_gtot_lid (comp_effect_name c)
+
+let is_named_tot_or_gtot c =
+    PC.is_tot_or_gtot_lid (comp_effect_name c)
 
 let is_total_comp c =
     PC.is_pure_effect_lid (comp_effect_name c)
@@ -315,8 +321,7 @@ let is_tot_or_gtot_comp c =
 let is_bare_tot_or_gtot_comp c =
   match c.n with
   | Comp ct ->
-    (lid_equals ct.effect_name PC.effect_Tot_lid ||
-     lid_equals ct.effect_name PC.effect_GTot_lid)
+    PC.is_tot_or_gtot_lid ct.effect_name
     && ct.flags |> U.for_all (function TOTAL -> true | _ -> false)
 
 (* Exactly what [mk_Total] builds: a [Tot] with nothing else to say. *)
@@ -345,7 +350,7 @@ let rec is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow {comp=c} ->
       (* [comp_result] is not in scope yet. *)
       (match c.n with
-       | Comp ct when lid_equals ct.effect_name PC.effect_Tot_lid
+       | Comp ct when PC.is_tot_lid ct.effect_name
                     && Tm_arrow? (compress ct.result_typ).n ->
          is_pure_or_ghost_function ct.result_typ
        | _ -> is_pure_or_ghost_comp c)
@@ -1142,12 +1147,12 @@ let mk_residual_comp l t f = {
     residual_flags=f
   }
 let residual_tot t = {
-    residual_effect=PC.effect_Tot_lid;
+    residual_effect=PC.primitive_pure_lid;
     residual_typ=Some t;
     residual_flags=[]
   }
 let residual_gtot t = {
-    residual_effect=PC.effect_GTot_lid;
+    residual_effect=PC.primitive_ghost_lid;
     residual_typ=Some t;
     residual_flags=[]
   }

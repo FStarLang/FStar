@@ -2399,25 +2399,25 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
       | Name l when (lid_equals (Env.current_module env) C.prims_lid
                           && (string_of_id (ident_of_lid l)) = "Tot") ->
         (* we have an explicit effect annotation ... no need to add anything *)
-        (Ident.set_lid_range Const.effect_Tot_lid head.range,  []), args
+        (Ident.set_lid_range Const.primitive_pure_lid head.range,  []), args
 
       (* we're right at the beginning of Prims, when GTot isn't yet fully defined *)
       | Name l when (lid_equals (Env.current_module env) C.prims_lid
                           && (string_of_id (ident_of_lid l)) = "GTot") ->
         (* we have an explicit effect annotation ... no need to add anything *)
-        (Ident.set_lid_range Const.effect_GTot_lid head.range, []), args
+        (Ident.set_lid_range Const.primitive_ghost_lid head.range, []), args
 
       | Name l when ((string_of_id (ident_of_lid l))="Type"
                       || (string_of_id (ident_of_lid l))="Type0"
                       || (string_of_id (ident_of_lid l))="Effect") ->
         (* the default effect for Type is always Tot *)
-        (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
+        (Ident.set_lid_range Const.primitive_pure_lid head.range, []), [t, Nothing]
 
       | _ when allow_type_promotion ->
         let default_effect =
           (if Options.warn_default_effects()
            then FStarC.Errors.log_issue head Errors.Warning_UseDefaultEffect "Using default effect Tot";
-           Const.effect_Tot_lid) in
+           Const.primitive_pure_lid) in
         (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
 
       | _ ->
@@ -2468,9 +2468,8 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
        more -- a decreases clause, a specification -- goes through the general
        path below, exactly like any other effect; for [Tot] and [GTot] the two
        agree, so this really is only a short cut. *)
-    if no_additional_args
-       && (lid_equals eff C.effect_Tot_lid || lid_equals eff C.effect_GTot_lid)
-    then (if lid_equals eff C.effect_Tot_lid then mk_Total result_typ else mk_GTotal result_typ),
+    if no_additional_args && C.is_tot_or_gtot_lid eff
+    then (if C.is_tot_lid eff then mk_Total result_typ else mk_GTotal result_typ),
          S.trivial_pre
     else
       let flags =
@@ -2487,9 +2486,9 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
          Bug1953.fst] pins down the constructor-effect check as well.  A comp
          named [Tot] outright needs no flag: there the name says it. *)
       let flags =
-        if lid_equals eff C.effect_Tot_lid then flags
+        if C.is_tot_lid eff then flags
         else match Env.try_lookup_root_effect_name env eff with
-             | Some root when lid_equals root C.effect_Tot_lid -> TOTAL :: flags
+             | Some root when C.is_tot_lid root -> TOTAL :: flags
              | _ -> flags
       in
       let flags = flags @ cattributes in

@@ -292,10 +292,10 @@ let inspect_comp (c : comp) : ML comp_view =
         | _ -> failwith "Impossible!"
     in
     match c.n with
-    | Comp ct when Ident.lid_equals ct.effect_name PC.effect_Tot_lid
+    | Comp ct when PC.is_tot_lid ct.effect_name
                 && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
       C_Total ct.result_typ
-    | Comp ct when Ident.lid_equals ct.effect_name PC.effect_GTot_lid
+    | Comp ct when PC.is_gtot_lid ct.effect_name
                 && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
       C_GTotal ct.result_typ
     | Comp ct -> begin

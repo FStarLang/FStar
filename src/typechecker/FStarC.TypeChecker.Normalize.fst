@@ -2183,8 +2183,8 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
                         { lbname = Inl bv;
                           lbunivs = [];
                           lbtyp = U.mk_app repr [S.as_arg x.sort];
-                          lbeff = if is_total_effect then PC.effect_Tot_lid
-                                                     else PC.effect_Dv_lid;
+                          lbeff = if is_total_effect then PC.primitive_pure_lid
+                                                     else PC.primitive_div_lid;
                           lbdef = head;
                           lbattrs = [];
                           lbpos = head.pos;

@@ -425,10 +425,10 @@ and comp_to_string c : ML string =
                             [sli c.effect_name;
                              term_to_string c.result_typ;
                              cflags_to_string c.flags]
-          else if lid_equals c.effect_name C.effect_GTot_lid
+          else if C.is_gtot_lid c.effect_name
           then (if is_bare_type () then term_to_string c.result_typ
                 else Format.fmt1 "GTot %s" (term_to_string c.result_typ))
-          else if lid_equals c.effect_name C.effect_Tot_lid
+          else if C.is_tot_lid c.effect_name
                || c.flags |> U.for_some (function TOTAL -> true | _ -> false)
           then (if is_bare_type () then term_to_string c.result_typ
                 else Format.fmt1 "Tot %s" (term_to_string c.result_typ))

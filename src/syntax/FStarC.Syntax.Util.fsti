@@ -107,8 +107,14 @@ val is_t_true (t:term) : ML bool
 val is_t_false (t:term) : ML bool
 val is_trivial_post (p:term) : ML bool
 
-(* Is [c] a [Tot], i.e. a pure computation with nothing to discharge? *)
+(* Is [c] literally a [Tot] (resp. [GTot])?  The narrow, syntactic question the
+   old [Total]/[GTotal] comp constructors used to answer by pattern matching.
+   For the weaker "is this total?", use [is_total_comp]/[is_tot_or_gtot_comp]. *)
 val is_named_tot (c:comp) : ML bool
+
+val is_named_gtot (c:comp) : ML bool
+
+val is_named_tot_or_gtot (c:comp) : ML bool
 
 val is_total_comp (c:comp) : ML bool
 

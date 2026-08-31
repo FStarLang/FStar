@@ -541,7 +541,7 @@ let join_effects env l1_in l2_in : ML _ =
 let join_comp env c1 c2 : ML _ =
   if U.is_total_comp c1
   && U.is_total_comp c2
-  then C.effect_Tot_lid
+  then C.primitive_pure_lid
   else join_effects env (U.comp_effect_name c1) (U.comp_effect_name c2)
 
 // GM, 2023/01/30: This is here to make c2 well-scoped in lift_comps_sep_guards
