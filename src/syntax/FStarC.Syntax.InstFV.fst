@@ -48,7 +48,7 @@ let rec inst (s:term -> fv -> ML term) t : ML term =
       | Tm_abs {b; body; rc_opt=lopt} ->
         let b = List.hd (inst_binders s [b]) in
         let body = inst s body in
-        mk (Tm_abs {b; body; rc_opt=inst_lcomp_opt s lopt})
+        mk (Tm_abs {b; body; rc_opt=inst_rc_opt s lopt})
 
       | Tm_arrow {b; comp=c} ->
         let b = List.hd (inst_binders s [b]) in
@@ -78,7 +78,7 @@ let rec inst (s:term -> fv -> ML term) t : ML term =
         mk (Tm_match {scrutinee=inst s t;
                       ret_opt=asc_opt;
                       brs=pats;
-                      rc_opt=inst_lcomp_opt s lopt})
+                      rc_opt=inst_rc_opt s lopt})
 
       | Tm_ascribed {tm=t1; asc; eff_opt=f} ->
         mk (Tm_ascribed {tm=inst s t1; asc=inst_ascription s asc; eff_opt=f})
@@ -118,7 +118,7 @@ and inst_decreases_order s : _ -> ML _ = function
     | Decreases_lex l -> Decreases_lex (l |> List.map (inst s))
     | Decreases_wf (rel, e) -> Decreases_wf (inst s rel, inst s e)
 
-and inst_lcomp_opt s l : ML _ = match l with
+and inst_rc_opt s l : ML _ = match l with
     | None -> None
     | Some rc -> Some ({rc with residual_typ = Option.map (inst s) rc.residual_typ })
 

@@ -1419,20 +1419,6 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
             TypeChecker.Util.is_pure_or_ghost_effect env.tcenv rc.residual_effect |> not
           in
 
-//          let reify_comp_and_body env body =
-//            let reified_body = TcUtil.reify_body env.tcenv body in
-//            let c = match c with
-//              | Inl lc ->
-//                let typ = reify_comp ({env.tcenv with admit=true}) (lc.comp ()) U_unknown in
-//                Inl (U.lcomp_of_comp (S.mk_Total typ))
-//
-//              (* In this case we don't have enough information to reconstruct the *)
-//              (* whole computation type and reify it *)
-//              | Inr (eff_name, _) -> c
-//            in
-//            c, reified_body
-//          in
-
           let codomain_eff rc =
               let res_typ =
                 match rc.residual_typ with

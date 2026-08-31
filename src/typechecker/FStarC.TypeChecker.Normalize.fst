@@ -684,10 +684,6 @@ let rec env_subst (env:env) : ML subst_t =
       memo := Some s;
       s
 
-let filter_out_lcomp_cflags flags =
-    (* TODO : lc.comp might have more cflags than (U.comp_flags comp) *)
-    flags |> List.filter (function DECREASES _ -> false | _ -> true)
-
 let default_univ_uvars_to_zero (t:term) : ML term =
   Visit.visit_term_univs false (fun t -> t) (fun u ->
     match u with

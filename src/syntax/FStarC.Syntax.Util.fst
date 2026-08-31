@@ -824,12 +824,12 @@ let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun b -> mem b.binder_bv d_bvs)))
 
-let rec __abs_formals_ln t abs_body_lcomp : ML _ =
+let rec __abs_formals_ln t abs_body_rc : ML _ =
     match (unmeta_safe t).n with
     | Tm_abs {b; body=t; rc_opt=what} ->
       let bs', t, what = __abs_formals_ln t what in
       b::bs', t, what
-    | _ -> [], t, abs_body_lcomp
+    | _ -> [], t, abs_body_rc
 
 (* Collects all nested Tm_abs nodes without opening the binders. *)
 let abs_formals_ln (t:term) : ML (binders & term & option residual_comp) =
@@ -848,7 +848,7 @@ let rec abs_one_group_ln (t:term) : ML (binders & term & option residual_comp) =
     | _ -> [], t, None
 
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
-    let subst_lcomp_opt s l = match l with
+    let subst_rc_opt s l = match l with
         | Some rc ->
           Some ({rc with residual_typ = Option.map (Subst.subst s) rc.residual_typ})
         | _ -> l
@@ -856,14 +856,14 @@ let abs_formals_maybe_unascribe_body maybe_unascribe t =
     (* A single n-ary Tm_abs node is a maximal contiguous spine of unary nodes,
        so [maybe_unascribe=false] still walks the spine; it just does not look
        through Tm_meta between the levels. *)
-    let rec spine t abs_body_lcomp : ML _ =
+    let rec spine t abs_body_rc : ML _ =
         match (Subst.compress t).n with
         | Tm_abs {b; body=t; rc_opt=what} ->
           let bs', t, what = spine t what in
           b::bs', t, what
-        | _ -> [], t, abs_body_lcomp
+        | _ -> [], t, abs_body_rc
     in
-    let rec aux t abs_body_lcomp : ML _ =
+    let rec aux t abs_body_rc : ML _ =
         match (unmeta_safe t).n with
         | Tm_abs {b; body=t; rc_opt=what} ->
           if maybe_unascribe
@@ -871,12 +871,12 @@ let abs_formals_maybe_unascribe_body maybe_unascribe t =
                b::bs', t, what
           else let bs', t, what = spine t what in
                b::bs', t, what
-        | _ -> [], t, abs_body_lcomp
+        | _ -> [], t, abs_body_rc
     in
-    let bs, t, abs_body_lcomp = aux t None in
+    let bs, t, abs_body_rc = aux t None in
     let bs, t, opening = Subst.open_term' bs t in
-    let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
-    bs, t, abs_body_lcomp
+    let abs_body_rc = subst_rc_opt opening abs_body_rc in
+    bs, t, abs_body_rc
 
 let abs_formals t = abs_formals_maybe_unascribe_body true t
 
@@ -1397,7 +1397,6 @@ let rec term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool =
   | Tm_abs {b=b1;body=t1;rc_opt=k1}, Tm_abs {b=b2;body=t2;rc_opt=k2} ->
     (check "abs binders"  (binder_eq_dbg dbg b1 b2)) &&
     (check "abs bodies"   (term_eq_dbg dbg t1 t2))
-    //&& eqopt (eqsum lcomp_eq_dbg dbg residual_eq) k1 k2
 
   | Tm_arrow {b=b1;comp=c1}, Tm_arrow {b=b2;comp=c2} ->
     (check "arrow binders" (binder_eq_dbg dbg b1 b2)) &&
