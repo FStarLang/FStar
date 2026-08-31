@@ -728,11 +728,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
 
 and translate_comp cfg bs (c:S.comp) : ML comp =
   match c.n with
-  | S.Comp ctyp when U.is_bare_tot_or_gtot_comp c ->
-    if Ident.lid_equals ctyp.S.effect_name PC.effect_Tot_lid
-    then Tot (translate cfg bs ctyp.S.result_typ)
-    else GTot (translate cfg bs ctyp.S.result_typ)
-  | S.Comp   ctyp -> Comp (translate_comp_typ cfg bs ctyp)
+  | S.Comp ctyp -> Comp (translate_comp_typ cfg bs ctyp)
 
 (* uncurried application *)
 and reduce_disc_proj (cfg : config) (h:fv) (args:args) : ML (option t) =
@@ -1052,24 +1048,19 @@ and translate_constant (c : sconst) : ML constant =
 and readback_comp cfg (c: comp) : ML S.comp =
   let c' =
     match c with
-    | Tot  typ -> (S.mk_Total (readback cfg typ)).S.n
-    | GTot typ -> (S.mk_GTotal (readback cfg typ)).S.n
-    | Comp ctyp     -> S.Comp (readback_comp_typ cfg ctyp)
+    | Comp ctyp -> S.Comp (readback_comp_typ cfg ctyp)
    in S.mk c' Range.dummyRange
 
 and translate_comp_typ cfg bs (c:S.comp_typ) : ML comp_typ =
-  let { S.comp_univs  = comp_univs
-      ; S.effect_name = effect_name
+  let { S.effect_name = effect_name
       ; S.result_typ  = result_typ
       ; S.flags       = flags } = c in
-  { comp_univs = List.map (translate_univ cfg bs) comp_univs;
-    effect_name = effect_name;
+  { effect_name = effect_name;
     result_typ = translate cfg bs result_typ;
     flags = List.map (translate_flag cfg bs) flags }
 
 and readback_comp_typ cfg (c:comp_typ) : ML S.comp_typ =
-  { S.comp_univs = c.comp_univs;
-    S.effect_name = c.effect_name;
+  { S.effect_name = c.effect_name;
     S.result_typ = readback cfg c.result_typ;
     S.flags = List.map (readback_flag cfg) c.flags }
 

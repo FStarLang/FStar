@@ -240,7 +240,7 @@ let rec mk_Tm_arrow (bs:binders) (c:comp) p =
     | [b] -> mk (Tm_arrow {b; comp=c}) p
     | b::bs ->
       let tail = mk_Tm_arrow bs c p in
-      mk (Tm_arrow {b; comp=mk (Comp {comp_univs=[]; effect_name=PC.effect_Tot_lid; result_typ=tail; flags=[]}) tail.pos}) p
+      mk (Tm_arrow {b; comp=mk (Comp {effect_name=PC.effect_Tot_lid; result_typ=tail; flags=[]}) tail.pos}) p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
@@ -256,12 +256,11 @@ let extend_app t arg r = extend_app_n t [arg] r
 let mk_Tm_delayed lr pos : ML term = mk (Tm_delayed {tm=fst lr; substs=snd lr}) pos
 let mk_Comp (ct:comp_typ) : ML comp = mk (Comp ct) ct.result_typ.pos
 
-(* [Tot] and [GTot] are ordinary effect names now; the universe list is left
-   empty and filled in on demand (see [Env.comp_to_comp_typ]). *)
+(* [Tot] and [GTot] are ordinary effect names now. *)
 let mk_Total t : ML comp =
-  mk_Comp ({comp_univs=[]; effect_name=PC.effect_Tot_lid; result_typ=t; flags=[]})
+  mk_Comp ({effect_name=PC.effect_Tot_lid; result_typ=t; flags=[]})
 let mk_GTotal t : ML comp =
-  mk_Comp ({comp_univs=[]; effect_name=PC.effect_GTot_lid; result_typ=t; flags=[]})
+  mk_Comp ({effect_name=PC.effect_GTot_lid; result_typ=t; flags=[]})
 
 
 let order_bv (x y : bv) : int  = x.index - y.index
@@ -429,13 +428,12 @@ let trivial_post (t:typ) : ML term =
   mk (Tm_abs {b=null_binder t; body=trivial_pre; rc_opt=Some post_rc}) t.pos
 
 (* A computation type with no interesting specification. *)
-let mk_triv_comp (univs:universes) (eff:lident) (t:typ) (flags:list cflag) : ML comp =
-  mk_Comp ({ comp_univs = univs;
-             effect_name = eff;
+let mk_triv_comp (eff:lident) (t:typ) (flags:list cflag) : ML comp =
+  mk_Comp ({ effect_name = eff;
              result_typ = t;
              flags = flags })
 
-let mk_Tac t : ML comp = mk_triv_comp [U_zero] PC.effect_Tac_lid t []
+let mk_Tac t : ML comp = mk_triv_comp PC.effect_Tac_lid t []
 
 let fv_eq fv1 fv2 = lid_equals fv1.fv_name fv2.fv_name
 let fv_eq_lid fv lid = lid_equals fv.fv_name lid

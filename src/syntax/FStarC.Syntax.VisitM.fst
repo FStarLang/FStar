@@ -248,12 +248,10 @@ let __on_decreases #m {|d : lvm m |} (f : term -> ML (m term)) (cf : cflag) : ML
   | f -> return f
 
 let on_sub_comp_typ #m {|d : lvm m |} ct : ML (m _) =
-  let! comp_univs = ct.comp_univs |> mapM f_univ in
   let  effect_name = ct.effect_name in
   let! result_typ = ct.result_typ |> f_term in
   let! flags = ct.flags |> mapM (__on_decreases #m #d f_term) in
   return <| {
-    comp_univs;
     effect_name;
     result_typ;
     flags;

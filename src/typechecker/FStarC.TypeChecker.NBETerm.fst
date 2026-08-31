@@ -293,7 +293,10 @@ let as_iarg (a:t) : arg = (a, S.as_aqual_implicit true)
 let as_arg (a:t) : arg = (a, None)
 
 //  Non-dependent total arrow
-let make_arrow1 t1 (a:arg) : t = mk_t <| Arrow (Inr ([a], Tot t1))
+let make_arrow1 t1 (a:arg) : t =
+  mk_t <| Arrow (Inr ([a], Comp { effect_name = PC.effect_Tot_lid
+                                ; result_typ = t1
+                                ; flags = [] }))
 
 let lazy_embed (et:unit -> ML emb_typ) (x:'a) (f:unit -> ML t) : ML t =
     if !Options.debug_embedding

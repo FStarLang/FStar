@@ -299,10 +299,6 @@ let inspect_comp (c : comp) : ML comp_view =
                 && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
       C_GTotal ct.result_typ
     | Comp ct -> begin
-        let uopt =
-          if List.length ct.comp_univs = 0
-          then U_unknown
-          else ct.comp_univs |> List.hd in
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             let pats =
               match U.comp_smt_pats (S.mk_Comp ct) with
@@ -314,7 +310,11 @@ let inspect_comp (c : comp) : ML comp_view =
                is a refinement of the result type and can be recovered. *)
             C_Lemma (S.trivial_pre, U.post_of_result_typ ct.result_typ, pats)
         else
-            C_Eff (ct.comp_univs,
+            (* A [comp_typ] no longer caches the effect's universe -- it is
+               just that of the result type -- and [inspect_comp] has no
+               environment to recover it with, so the view reports [].  This is
+               why [inspect_pack_comp_inv] requires [Nil? us]. *)
+            C_Eff ([],
                    Ident.path_of_lid ct.effect_name,
                    ct.result_typ,
                    S.trivial_pre,
@@ -337,19 +337,18 @@ let pack_comp (cv : comp_view) : ML comp =
     (* A computation type has no room for a precondition, so [pre] is dropped;
        the postcondition becomes a refinement of the result type. *)
     | C_Lemma (_pre, post, pats) ->
-        let ct = { comp_univs  = []
-                 ; effect_name = PC.effect_Lemma_lid
+        let ct = { effect_name = PC.effect_Lemma_lid
                  ; result_typ  = U.refine_with_post S.t_unit post
                  ; flags       = [LEMMA; SMTPAT pats] } in
         S.mk_Comp ct
 
-    | C_Eff (us, ef, res, _pre, _post, decrs) ->
+    (* [us] is dropped: a [comp_typ] has no universe list. *)
+    | C_Eff (_us, ef, res, _pre, _post, decrs) ->
         let flags =
           if Nil? decrs
           then []
           else [DECREASES (Decreases_lex decrs)] in
-        let ct = { comp_univs  = us
-                 ; effect_name = Ident.lid_of_path ef Range.dummyRange
+        let ct = { effect_name = Ident.lid_of_path ef Range.dummyRange
                  ; result_typ  = res
                  ; flags       = flags } in
         S.mk_Comp ct

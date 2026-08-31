@@ -4583,35 +4583,19 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                                         (show c1_comp.effect_name)
                                         (show c2_comp.effect_name))) orig
         else
-             let univ_sub_probs, wl =
-               (* The universe list may be missing on comps that were not
-                  elaborated (e.g. built directly from a Total/GTotal);
-                  only relate them when both sides have them. *)
-               if List.length c1_comp.comp_univs <> List.length c2_comp.comp_univs
-               then empty, wl
-               else
-               List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
-                 let p, wl = sub_prob wl
-                   (S.mk (S.Tm_type u1) Range.dummyRange)
-                   EQ
-                   (S.mk (S.Tm_type u2) Range.dummyRange)
-                   "effect universes" in
-                 (univ_sub_probs ++ cons p empty), wl) (empty, wl) c1_comp.comp_univs c2_comp.comp_univs in
+             (* The effects agree, and a comp is an effect name applied to its
+                result type -- no effect indices, no specification, and no
+                universe list, the effect's universe being the result type's --
+                so relating the result types is all there is left to do. *)
              let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
-             let spec_probs, spec_guard, wl = empty, U.t_true, wl in
              let scoped_sub_probs : clist (binders & prob) =
-               (univ_sub_probs |> CList.map (fun p -> [], p)) ++
-               (cons ([], ret_sub_prob) <|
-                spec_probs ++
-                (g_lift.deferred |> CList.map (fun (_, _, p) -> [], p)))
+               cons ([], ret_sub_prob) (g_lift.deferred |> CList.map (fun (_, _, p) -> [], p))
              in
              let scoped_sub_probs : list (binders & prob) = to_list scoped_sub_probs in
              let sub_probs : list prob = List.map snd scoped_sub_probs in
              let guard =
-               (* The postcondition problem lives under the witness binder, so
-                  its guard has to be closed before it can be conjoined here. *)
                let guard =
-                 U.mk_conj_l (spec_guard ::
+                 U.mk_conj_l (
                    List.map (fun (scope, p) -> close_forall (p_env wl orig) scope (p_guard p))
                             scoped_sub_probs) in
                match g_lift.guard_f with
@@ -4691,8 +4675,8 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
             || (U.is_total_comp c1 && U.is_total_comp c2)
             || (U.is_total_comp c1 && U.is_ml_comp c2 && problem.relation=SUB)
             then solve_t (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
-            else let c1_comp = Env.comp_to_comp_typ env c1 in
-                 let c2_comp = Env.comp_to_comp_typ env c2 in
+            else let c1_comp = U.comp_to_comp_typ c1 in
+                 let c2_comp = U.comp_to_comp_typ c2 in
                  if problem.relation=EQ
                  then let c1_comp, c2_comp =
                             if lid_equals c1_comp.effect_name c2_comp.effect_name

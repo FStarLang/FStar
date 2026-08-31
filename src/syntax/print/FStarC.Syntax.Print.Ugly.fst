@@ -421,9 +421,8 @@ and comp_to_string c : ML string =
         in
         let basic =
           if (Options.print_effect_args())
-          then Format.fmt "%s<%s> (%s) (attributes %s)"
+          then Format.fmt "%s (%s) (attributes %s)"
                             [sli c.effect_name;
-                             c.comp_univs |> List.map univ_to_string |> String.concat ", ";
                              term_to_string c.result_typ;
                              cflags_to_string c.flags]
           else if lid_equals c.effect_name C.effect_GTot_lid

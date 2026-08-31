@@ -174,12 +174,9 @@ and t = {
 }
 
 and comp =
-  | Tot of t
-  | GTot of t
   | Comp of comp_typ
 
 and comp_typ = {
-  comp_univs:universes;
   effect_name:lident;
   result_typ:t;
   flags:list cflag

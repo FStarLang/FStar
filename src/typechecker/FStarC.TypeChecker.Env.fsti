@@ -476,7 +476,7 @@ val try_lookup_effect_lid  : env -> lident -> ML (option term)
 
 val lookup_effect_lid      : env -> lident -> ML (term)
 
-val lookup_effect_abbrev   : env -> universes -> lident -> ML (option (binders & comp))
+val lookup_effect_abbrev   : env -> (unit -> ML universe) -> lident -> ML (option (binders & comp))
 
 val norm_eff_name          : (env -> lident -> ML (lident))
 
@@ -547,7 +547,6 @@ instance val hasNames_guard   : hasNames guard_t
 
 instance val pretty_guard     : FStarC.Class.PP.pretty guard_t
 
-val comp_to_comp_typ       : env -> comp -> ML (comp_typ)
 
 val comp_set_flags         : env -> comp -> list S.cflag -> ML (comp)
 

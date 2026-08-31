@@ -493,18 +493,8 @@ let extract_let_rec_annotation env (lb:letbinding) :
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
 
-let comp_univ_opt c : ML _ =
-    match c.n with
-    | Comp c ->
-      match c.comp_univs with
-      | [] -> None
-      | hd::_ -> Some hd
-
-let lcomp_univ_opt lc : ML _ = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt c, g)
-
-let mk_comp_l mname u_result result flags : ML _ =
-  mk_Comp ({ comp_univs=[u_result];
-             effect_name=mname;
+let mk_comp_l mname result flags : ML _ =
+  mk_Comp ({ effect_name=mname;
              result_typ=result;
              flags=flags})
 
@@ -694,12 +684,8 @@ let mk_bind env
   def_check_scoped r1 "mk_bind.in.c1" env c1;
   def_check_scoped r1 "mk_bind.in.c2" env2 c2;
   let m, _c1, c2, g_lift = lift_comps env c1 c2 b true in
-  let ct2 = Env.comp_to_comp_typ env2 c2 in
-  let u2 =
-    match ct2.comp_univs with
-    | u::_ -> u
-    | [] -> env.universe_of env2 ct2.result_typ in
-  let res = S.mk_triv_comp [u2] m ct2.result_typ [] in
+  let ct2 = U.comp_to_comp_typ c2 in
+  let res = S.mk_triv_comp m ct2.result_typ [] in
   (* [res] takes its result type from [c2], so it is scoped in [env2]: it may
      still mention [b].  Getting [b] out of it is the caller's job -- see
      [close_x] in [bind_maybe_capture]. *)
@@ -723,12 +709,8 @@ let strengthen_comp env (reason:option (unit -> ML (list Pprint.document))) (c:c
  * the [x_eq_e] equation there), and everything else about the result is carried
  * by its type.
  *)
-let return_value env eff_lid u_t_opt t v : ML (comp & guard_t) =
-  let u =
-    match u_t_opt with
-    | None -> env.universe_of env t
-    | Some u -> u in
-  S.mk_triv_comp [u] (Env.norm_eff_name env eff_lid) t [],
+let return_value env eff_lid t v : ML (comp & guard_t) =
+  S.mk_triv_comp (Env.norm_eff_name env eff_lid) t [],
   Env.trivial_guard
 
 (* [weaken_comp env c f] used to assume [f] before running [c].  A computation
@@ -1235,10 +1217,7 @@ let bind_maybe_capture
               (match b, e1opt with
                | Some x, Some e when not (S.is_null_binder (S.mk_binder x)) ->
                  let res_t1 = U.comp_result c1 in
-                 let u_res_t1 =
-                   match comp_univ_opt c1 with
-                   | None -> env.universe_of env res_t1
-                   | Some u -> u in
+                 let u_res_t1 = env.universe_of env res_t1 in
                  let g_c2 =
                    if is_unit_like res_t1 then g_c2
                    else
@@ -1270,11 +1249,8 @@ let bind_maybe_capture
 
             (* AR: we have let the previously applied bind optimizations take effect,
                 below is the code to do more inlining for pure and ghost terms *)
-            let u_res_t1, res_t1 =
-              let t = U.comp_result c1 in
-              match comp_univ_opt c1 with
-              | None -> env.universe_of env t, t
-              | Some u -> u, t in
+            let res_t1 = U.comp_result c1 in
+            let u_res_t1 = env.universe_of env res_t1 in
             //c1 and c2 are bound to the input comps
             if Some? b
             && should_return env e1opt lc1
@@ -1433,8 +1409,8 @@ let fvar_env env lid : ML _ =  S.fvar (Ident.set_lid_range lid (Env.get_range en
  * precondition is now discharged by the exhaustiveness check that [bind_cases]
  * emits for the (vacuous) fall-through branch.
  *)
-let comp_false env (u:universe) (t:typ) : ML comp =
-  S.mk_triv_comp [u] C.primitive_pure_lid t []
+let comp_false env (t:typ) : ML comp =
+  S.mk_triv_comp C.primitive_pure_lid t []
 
 (*
  * Conjunction of two branch computations under the branch condition [p].
@@ -1442,9 +1418,9 @@ let comp_false env (u:universe) (t:typ) : ML comp =
  * label and the common result type; the branch conditions are pushed onto the
  * branches' *guards* by [bind_cases].
  *)
-let mk_conjunction env (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.t)
+let mk_conjunction env (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.t)
 : ML (comp & guard_t) =
-  S.mk_triv_comp [u_a] ct1.effect_name a [], Env.trivial_guard
+  S.mk_triv_comp ct1.effect_name a [], Env.trivial_guard
 
 (*
  * When typechecking a match term, typechecking each branch returns
@@ -1577,7 +1553,6 @@ let bind_cases env0 (res_t:typ)
     in
     let bind_cases_flags = [] in
     let bind_cases () =
-        let u_res_t = env.universe_of env res_t in
         let maybe_return eff_label_then (cthen: bool -> ML lcomp) : ML lcomp =
            if not (is_pure_or_ghost_effect env eff)
            then cthen true //inline each branch, if eligible
@@ -1589,7 +1564,7 @@ let bind_cases env0 (res_t:typ)
 
         let comp, g_comp =
           match lcases with
-          | [] -> comp_false env u_res_t res_t, Env.trivial_guard
+          | [] -> comp_false env res_t, Env.trivial_guard
           | _ ->
             let lcases, neg_branch_conds, comp, g_comp =
               let neg_branch_conds, neg_last =
@@ -1613,11 +1588,11 @@ let bind_cases env0 (res_t:typ)
               let cthen, g_then = TcComm.lcomp_comp (maybe_return eff_label cthen) in
               let m, cthen, celse, g_lift_then, g_lift_else =
                 lift_comps_sep_guards env cthen celse None false in
-              let ct_then = cthen |> Env.comp_to_comp_typ env in
-              let ct_else = celse |> Env.comp_to_comp_typ env in
+              let ct_then = cthen |> U.comp_to_comp_typ in
+              let ct_else = celse |> U.comp_to_comp_typ in
 
               let c, g_conjunction =
-                mk_conjunction env u_res_t res_t (U.b2t g) ct_then ct_else (Env.get_range env) in
+                mk_conjunction env res_t (U.b2t g) ct_then ct_else (Env.get_range env) in
 
               //weaken the then and else guards
               //neg_cond is the negated branch condition upto this branch
@@ -2216,13 +2191,12 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term &
                                   (N.comp_to_string env c)
                                   (N.term_to_string env f);
 
-                          let u_t_opt = comp_univ_opt c in
                           let x = S.new_bv (Some t.pos) t in
                           let xexp = S.bv_to_name x in
                           //AR: M.return
                           let cret, gret = return_value env
                             (c |> U.comp_effect_name |> Env.norm_eff_name env)
-                            u_t_opt t xexp in
+                            t xexp in
                           let guard = if apply_guard
                                       then mk_Tm_app f [S.as_arg xexp] f.pos
                                       else f
@@ -2483,7 +2457,6 @@ let check_top_level env g lc : ML (bool & comp) =
   if TcComm.is_total_lcomp lc
   then discharge (Env.conj_guard g g_c), c
   else let c = Env.unfold_effect_abbrev env c in
-       let us = c.comp_univs in
        let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
        let c = c
          |> S.mk_Comp

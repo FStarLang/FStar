@@ -42,7 +42,6 @@ val extract_let_rec_annotation: env -> letbinding -> ML (univ_names & typ & term
 val decorated_pattern_as_term: pat -> ML (list bv & term)
 
 //operations on computation types
-val lcomp_univ_opt: lcomp -> ML (option universe & guard_t)
 
 //misc.
 val label: list Pprint.document -> Range.t -> typ -> ML typ

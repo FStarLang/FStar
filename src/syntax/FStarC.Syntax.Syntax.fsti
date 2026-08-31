@@ -283,7 +283,6 @@ and quoteinfo = {
    result type.  There are no weakest-precondition transformers, and no effect
    indices. *)
 and comp_typ = {
-  comp_univs:universes;
   effect_name:lident;
   result_typ:typ;
   flags:list cflag
@@ -800,8 +799,8 @@ val trivial_pre :   term
 val post_rc :       residual_comp
 (* [fun (_:t) -> True], the trivial postcondition at result type [t] *)
 val trivial_post :  typ -> ML term
-(* A computation with a trivial specification: [mk_triv_comp us eff t flags] *)
-val mk_triv_comp :  universes -> lident -> typ -> list cflag -> ML comp
+(* A computation with a trivial specification: [mk_triv_comp eff t flags] *)
+val mk_triv_comp :  lident -> typ -> list cflag -> ML comp
 val mk_Tac :        typ -> ML comp
 val fv_eq            : fv -> fv -> bool
 val fv_eq_lid        : fv -> lident -> bool

@@ -401,7 +401,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
                   unreadable (and does not match what phase 1 inferred). *)
                let ct, _, g = TcUtil.check_trivial_precondition_wp env c in
                None,
-               S.mk_triv_comp ct.comp_univs ct.effect_name ct.result_typ ct.flags,
+               S.mk_triv_comp ct.effect_name ct.result_typ ct.flags,
                Some g
              else None, c, None
   in
@@ -1075,10 +1075,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     then raise_error top Errors.Fatal_EffectCannotBeReified
            (Format.fmt1 "Effect %s cannot be reflected" (show effect_lid));
 
-    let u_c =
-      match expected_ct.comp_univs with
-      | u::_ -> u
-      | [] -> env0.universe_of env0 expected_ct.result_typ in
+    let u_c = env0.universe_of env0 expected_ct.result_typ in
     let repr = Env.effect_repr env0 (expected_ct |> S.mk_Comp) u_c |> Option.must in
 
     // e <: Tot repr
@@ -1109,8 +1106,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
        could claim any specification at all, including a false one. *)
     let g_spec =
       let c_reflect =
-        S.mk_Comp ({ comp_univs  = [u_c]
-                   ; effect_name = expected_ct.effect_name
+        S.mk_Comp ({ effect_name = expected_ct.effect_name
                    ; result_typ  = expected_ct.result_typ
                    ; flags       = [] }) in
       match Rel.sub_comp env0 c_reflect expected_c with
@@ -1227,7 +1223,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
         if not (is_user_reifiable_effect env c.effect_name) then
           raise_error e Errors.Fatal_EffectCannotBeReified
                        (Format.fmt1 "Effect %s cannot be reified" (string_of_lid c.effect_name));
-        let u_c = List.hd c.comp_univs in
+        let u_c = env.universe_of env c.result_typ in
 
         (* A computation type carries no specification any more, so reifying
            one raises no obligation of its own. *)
@@ -1245,8 +1241,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
               S.mk_Total repr |> TcComm.lcomp_of_comp
             else
               (* Reifying a non-total effect yields a possibly divergent term. *)
-              let ct = { comp_univs = [u_c]
-                       ; effect_name = Const.primitive_div_lid
+              let ct = { effect_name = Const.primitive_div_lid
                        ; result_typ = repr
                        ; flags = []
                        }
@@ -1293,7 +1288,6 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
           (* Reflection gives back a computation with a trivial specification:
              effect definitions play no role in typechecking. *)
           let c = S.mk_Comp ({
-            comp_univs=[u_a];
             effect_name = ed.mname;
             result_typ=a;
             flags=[]
@@ -2403,12 +2397,11 @@ and tc_comp env c : ML (comp                                      (* checked ver
           let p, _, g_p = tc_tot_or_gtot_term env p in
           SMTPAT p, g_p
         | f -> f, mzero) |> List.unzip in
-      let u = env.universe_of env res in
       let c = mk_Comp ({c with
-          comp_univs=[u];
           result_typ=res;
           flags = flags}) in
-      let u_c = c |> TcUtil.universe_of_comp env u in
+      let u_res = env.universe_of env res in
+      let u_c = c |> TcUtil.universe_of_comp env u_res in
       c, u_c, f ++ g_pre ++ g_post ++ msum guards
 
 and tc_universe env u : ML universe =

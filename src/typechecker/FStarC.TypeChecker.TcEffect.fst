@@ -203,8 +203,7 @@ let tc_lift env (sub:S.sub_eff) (r:Range.t) : ML S.sub_eff =
         | Some (ed_src, _) when Some? ed_src.combinators ->
           repr_app (ed_src |> U.get_eff_repr |> Option.must) u_a a r
         | _ ->
-          let c = S.mk_Comp ({ comp_univs = [U_name u_a];
-                               effect_name = sub.source;
+          let c = S.mk_Comp ({ effect_name = sub.source;
                                result_typ = a;
                                flags = [] }) in
           U.arrow [S.null_binder S.t_unit] c in

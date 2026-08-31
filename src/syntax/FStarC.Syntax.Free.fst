@@ -260,9 +260,7 @@ and free_names_and_uvars_comp c use_cache : ML _ =
                 | _ -> no_free_vars
               in
               //decreases clause + return type
-              let us = free_names_and_uvars ct.result_typ use_cache ++ decreases_vars ++ pat_vars in
-              //decreases clause + return type + comp_univs
-              List.fold_left (fun us u -> us ++ free_univs u) us ct.comp_univs
+              free_names_and_uvars ct.result_typ use_cache ++ decreases_vars ++ pat_vars
 
 and free_names_and_uvars_dec_order dec_order use_cache : ML _ =
   match dec_order with

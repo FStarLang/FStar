@@ -2426,9 +2426,13 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
     let (eff, cattributes), args = pre_process_comp_typ t in
     if Nil? args then
       fail Errors.Fatal_NotEnoughArgsToEffect (Format.fmt1 "Not enough args to effect %s" (show eff));
+    (* An explicit universe application on an effect, as in [Tot u#0 int], is
+       accepted and discarded: a computation is an effect name applied to its
+       result type alone, so its universe is that of the result type and there
+       is nowhere left to record an annotation -- nor anything it could say
+       that the result type does not already. *)
     let is_universe (_, imp) = imp = UnivApp in
-    let universes, args = BU.take is_universe args in
-    let universes = List.map (fun (u, imp) -> desugar_universe u) universes in
+    let _universes, args = BU.take is_universe args in
     let result_arg, rest = List.hd args, List.tl args in
     let result_typ = desugar_typ env (fst result_arg) in
     let dec, rest =
@@ -2458,13 +2462,12 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
         let is_empty (l:list 'a) = match l with | [] -> true | _ -> false in
         is_empty decreases_clause &&
         is_empty rest &&
-        is_empty cattributes &&
-        is_empty universes
+        is_empty cattributes
     in
-    (* [Tot t] and [GTot t] with nothing else at all are the dedicated
-       [Total]/[GTotal] comps.  Anything more -- a decreases clause, a
-       specification, universes -- goes through the general path below, exactly
-       like any other effect. *)
+    (* [Tot t] and [GTot t] with nothing else at all take a short cut.  Anything
+       more -- a decreases clause, a specification -- goes through the general
+       path below, exactly like any other effect; for [Tot] and [GTot] the two
+       agree, so this really is only a short cut. *)
     if no_additional_args
        && (lid_equals eff C.effect_Tot_lid || lid_equals eff C.effect_GTot_lid)
     then (if lid_equals eff C.effect_Tot_lid then mk_Total result_typ else mk_GTotal result_typ),
@@ -2548,8 +2551,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
          codomain) or an assertion (ascription).  See
          [Syntax.Util.refine_with_post]. *)
       let result_typ = U.refine_with_post result_typ post in
-      mk_Comp ({comp_univs=universes;
-                effect_name=eff;
+      mk_Comp ({effect_name=eff;
                 result_typ=result_typ;
                 flags=flags}),
       pre

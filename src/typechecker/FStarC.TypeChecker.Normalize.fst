@@ -2287,11 +2287,9 @@ and norm_comp : cfg -> env -> comp -> ML comp =
                 | DECREASES (Decreases_wf (rel, e)) ->
                   DECREASES (Decreases_wf (norm cfg env [] rel, norm cfg env [] e))
                 | f -> f) in
-              let comp_univs = List.map (norm_universe cfg env) ct.comp_univs in
               let result_typ = norm cfg env [] ct.result_typ in
-              { mk_Comp ({ct with comp_univs  = comp_univs;
-                                                result_typ  = result_typ;
-                                                flags       = flags}) with pos = comp.pos }
+              { mk_Comp ({ct with result_typ  = result_typ;
+                                  flags       = flags}) with pos = comp.pos }
 
 and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : ML binder =
     let x = { b.binder_bv with sort = norm cfg env [] b.binder_bv.sort } in

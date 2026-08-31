@@ -1868,34 +1868,34 @@ and check_comp (g:env) (c:comp)
       let! _, t = check "(G)Tot comp result" g (U.comp_result c) in
       is_type g t
     | Comp ct ->
-      if List.length ct.comp_univs <> 1
-      then fail_str "Unexpected/missing universe instantitation in comp"
-      else let u = List.hd ct.comp_univs in
-           let effect_app_tm =
-             let head = S.mk_Tm_uinst (S.fvar ct.effect_name None) [u] in
-             S.mk_Tm_app head [as_arg ct.result_typ] ct.result_typ.pos in
-           let! _, t = check "effectful comp" g effect_app_tm in
-           with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!
-           let c_lid = Env.norm_eff_name g.tcenv ct.effect_name in
-           let is_total = Env.lookup_effect_quals g.tcenv c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
-           if not is_total
-           then return S.U_zero  //if it is a non-total effect then u0
-           else if U.is_pure_or_ghost_effect c_lid
-           then return u
-           else (
-              match Env.effect_repr g.tcenv c u with
-              | None ->
-                 fail [
-                  flow (break_ 1) [
-                    text "Total effect";
-                    fquotes (pp (U.comp_effect_name c));
-                    text "(normalized to";
-                    fquotes (pp c_lid) ^^ doc_of_string ")";
-                    text "does not have a representation.";
-                  ]
-                 ]
-              | Some tm -> universe_of g tm
-           )
+      (* A comp is its effect name applied to the result type; the effect's
+         universe is that of the result type. *)
+      let u = g.tcenv.universe_of g.tcenv ct.result_typ in
+      let effect_app_tm =
+        let head = S.mk_Tm_uinst (S.fvar ct.effect_name None) [u] in
+        S.mk_Tm_app head [as_arg ct.result_typ] ct.result_typ.pos in
+      let! _, t = check "effectful comp" g effect_app_tm in
+      with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!
+      let c_lid = Env.norm_eff_name g.tcenv ct.effect_name in
+      let is_total = Env.lookup_effect_quals g.tcenv c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
+      if not is_total
+      then return S.U_zero  //if it is a non-total effect then u0
+      else if U.is_pure_or_ghost_effect c_lid
+      then return u
+      else (
+        match Env.effect_repr g.tcenv c u with
+        | None ->
+          fail [
+            flow (break_ 1) [
+              text "Total effect";
+              fquotes (pp (U.comp_effect_name c));
+              text "(normalized to";
+              fquotes (pp c_lid) ^^ doc_of_string ")";
+              text "does not have a representation.";
+            ]
+          ]
+        | Some tm -> universe_of g tm
+      )
 
 and universe_of (g:env) (t:typ)
   : ML (result universe)

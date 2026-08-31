@@ -140,7 +140,6 @@ and hash_comp' (c:comp)
     | Comp ct ->
       mix_list_lit
         [of_int 823;
-         hash_list hash_universe ct.comp_univs;
          hash_lid ct.effect_name;
          hash_term ct.result_typ;
          hash_list hash_flag ct.flags]
@@ -463,7 +462,6 @@ and equal_comp c1 c2
   match c1.n, c2.n with
   | Comp ct1, Comp ct2 ->
     Ident.lid_equals ct1.effect_name ct2.effect_name &&
-    equal_list equal_universe ct1.comp_univs ct2.comp_univs &&
     equal_term ct1.result_typ ct2.result_typ &&
     equal_list equal_flag ct1.flags ct2.flags
 

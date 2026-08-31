@@ -1225,24 +1225,22 @@ let lookup_effect_lid env (ftv:lident) : ML (typ) =
     | None -> name_not_found env ftv
     | Some k -> k
 
-let lookup_effect_abbrev env (univ_insts:universes) lid0 : ML _ =
+(* [univ_inst] is a thunk: an effect abbreviation is polymorphic in at most one
+   universe, and a caller that has to *compute* one (see [unfold_effect_abbrev])
+   should not pay for it when the abbreviation has none to fill. *)
+let lookup_effect_abbrev env (univ_inst: unit -> ML universe) lid0 : ML _ =
   match lookup_qname env lid0 with
     | Some (Inr ({ sigel = Sig_effect_abbrev {lid; us=univs; bs=binders; comp=c}; sigquals = quals }, None), _) ->
       let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Range.use_range (Ident.range_of_lid lid0))) in
       if quals |> BU.for_some (function Irreducible -> true | _ -> false)
       then None
-      else let insts = if List.length univ_insts = List.length univs
-                       then univ_insts
-                       else failwith (Format.fmt3 "(%s) Unexpected instantiation of effect %s with %s universes"
-                                            (Range.string_of_range (get_range env))
-                                            (show lid)
-                                            (List.length univ_insts |> show)) in
-           begin match binders, univs with
+      else begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
              | _, _::_::_ ->
                 failwith (Format.fmt2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (show lid) (show <| List.length univs))
-             | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
+             | _ -> let insts = if Nil? univs then [] else [univ_inst ()] in
+                    let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     let binders, c = U.arrow_formals_comp_ln_strict t in
                     if Nil? binders
@@ -1254,7 +1252,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 : ML _ =
 let norm_eff_name =
    fun env (l:lident) ->
        let rec find l : ML _ =
-           match lookup_effect_abbrev env [U_unknown] l with //universe doesn't matter here; we're just normalizing the name
+           match lookup_effect_abbrev env (fun () -> U_unknown) l with //universe doesn't matter here; we're just normalizing the name
             | None -> None
             | Some (_, c) ->
                 let l = U.comp_effect_name c in
@@ -1528,52 +1526,40 @@ instance pretty_guard : pretty guard_t = {
                  | NonTrivial f -> doc_of_string "NonTrivial" ^/^ pp f);
 }
 
-let comp_to_comp_typ (env:env) c : ML comp_typ =
-  def_check_scoped c.pos "comp_to_comp_typ" env c;
-  match c.n with
-  (* [mk_Total]/[mk_GTotal] leave the universe list empty; fill it in.  Any
-     other comp is taken as it comes, exactly as before [Total]/[GTotal] were
-     folded into [Comp]. *)
-  | Comp ct when Nil? ct.comp_univs && U.is_bare_tot_or_gtot_comp c ->
-    {ct with comp_univs = [env.universe_of env ct.result_typ]}
-  | Comp ct -> ct
-
-(* Like [comp_to_comp_typ], but uses the given universes rather than inferring
-   them with [env.universe_of]. Use this when [c]'s free variables need not be
-   in scope in [env], e.g. when converting the body of an effect abbreviation. *)
-let comp_to_comp_typ_with_univs univs c : ML comp_typ =
-  match c.n with
-  | Comp ct when Nil? ct.comp_univs && U.is_bare_tot_or_gtot_comp c ->
-    {ct with comp_univs = univs}
-  | Comp ct -> ct
-
 let comp_set_flags env c f : ML _ =
     def_check_scoped c.pos "comp_set_flags.IN" env c;
-    let r = {c with n=Comp ({comp_to_comp_typ env c with flags=f})} in
+    let r = {c with n=Comp ({U.comp_to_comp_typ c with flags=f})} in
     def_check_scoped c.pos "comp_set_flags.OUT" env r;
     r
 
-let rec unfold_effect_abbrev env comp : ML _ =
-  def_check_scoped comp.pos "unfold_effect_abbrev" env comp;
-  let c = comp_to_comp_typ env comp in
-  match lookup_effect_abbrev env c.comp_univs c.effect_name with
+(* An effect abbreviation is polymorphic in at most one universe -- that of its
+   single result-type argument (see [lookup_effect_abbrev]) -- and its body may
+   mention that universe, as in [effect Foo (a:Type) = Tot (list a)].  A
+   [comp_typ] no longer caches it, so it has to be supplied; [u_res] is a thunk
+   because most abbreviations have no universe binder to fill. *)
+let rec unfold_effect_abbrev_with_univ env (u_res: unit -> ML universe) (comp0:comp) : ML _ =
+  def_check_scoped comp0.pos "unfold_effect_abbrev" env comp0;
+  let c = U.comp_to_comp_typ comp0 in
+  match lookup_effect_abbrev env u_res c.effect_name with
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
       (* An effect abbreviation is now parameterized by the result type only. *)
       if List.length binders <> 1 then
-        raise_error comp Errors.Fatal_ConstructorArgLengthMismatch
+        raise_error comp0 Errors.Fatal_ConstructorArgLengthMismatch
           (Format.fmt2 "Effect abbreviation should take exactly one (result type) argument, got %s, i.e., %s"
                          (show (List.length binders))
                          (show (S.mk_Comp c)));
       let inst = [NT((List.hd binders).binder_bv, c.result_typ)] in
       let c1 = Subst.subst_comp inst cdef in
-      (* [cdef] is the abbreviation's body; its free variables need not be in
-         scope in [env], so do not infer universes for it -- the abbreviation is
-         instantiated at [c]'s universes by [lookup_effect_abbrev] above. *)
-      let ct1 = comp_to_comp_typ_with_univs c.comp_univs c1 in
+      let ct1 = U.comp_to_comp_typ c1 in
       let c = {ct1 with flags=c.flags} |> mk_Comp in
-      unfold_effect_abbrev env c
+      (* Unfolding does not change the result type, so [u_res] still applies. *)
+      unfold_effect_abbrev_with_univ env u_res c
+
+let unfold_effect_abbrev env (comp0:comp) : ML _ =
+  unfold_effect_abbrev_with_univ env
+    (fun () -> env.universe_of env (U.comp_result comp0)) comp0
 
 (* The monadic representation of a computation type, if the effect has one.
    Effect representations play no role in typechecking: they only give the
@@ -1586,7 +1572,11 @@ let effect_repr_aux only_reifiable env c u_res : ML (option term) =
     match ed |> U.get_eff_repr with
     | None -> None
     | Some ts ->
-      let c = unfold_effect_abbrev env c in
+      (* Reification is the one caller that already knows the result type's
+         universe -- and extraction and the SMT encoder deliberately pass
+         [U_unknown] here, in an environment where [universe_of] would not even
+         be callable -- so hand it down rather than recomputing it. *)
+      let c = unfold_effect_abbrev_with_univ env (fun () -> u_res) c in
       let repr = inst_effect_fun_with [u_res] env ed ts in
       Some (S.mk_Tm_app repr [c.result_typ |> S.as_arg] (get_range env))
 

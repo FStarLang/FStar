@@ -242,7 +242,7 @@ let eq_univs_list (us:universes) (vs:universes) : ML bool =
 (********************************************************************************)
 
 let ml_comp t r =
-  mk_triv_comp [U_zero] (set_lid_range (PC.effect_ML_lid()) r) t []
+  mk_triv_comp (set_lid_range (PC.effect_ML_lid()) r) t []
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
@@ -253,6 +253,13 @@ let comp_flags c = match c.n with
 let comp_eff_name_and_res (c:comp) : lident & typ =
   match c.n with
   | Comp c -> c.effect_name, c.result_typ
+
+(* [comp'] has a single constructor, so this is a projection.  It used to live
+   in [Env] and need an environment, because it also filled in the universe
+   list that a [comp_typ] carried. *)
+let comp_to_comp_typ (c:comp) : comp_typ =
+  match c.n with
+  | Comp ct -> ct
 
 let un_uinst t =
     let t = Subst.compress t in
@@ -1476,7 +1483,6 @@ and comp_eq_dbg (dbg : bool) (c1 c2 : comp) : ML bool =
     let eff1, res1 = comp_eff_name_and_res c1 in
     let eff2, res2 = comp_eff_name_and_res c2 in
     (check_term_eq dbg "comp eff"  (lid_equals eff1 eff2)) &&
-    //(check "comp univs"  (c1.comp_univs = c2.comp_univs)) &&
     (check_term_eq dbg "comp result typ"  (term_eq_dbg dbg res1 res2)) &&
     true //eq_flags c1.flags c2.flags
 and branch_eq_dbg (dbg : bool) (br1 : pat & option term & term) (br2 : pat & option term & term) : ML bool =

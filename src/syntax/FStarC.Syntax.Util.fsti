@@ -100,6 +100,8 @@ val comp_flags (c:comp) : list cflag
 
 val comp_eff_name_and_res (c:comp) : lident & typ
 
+val comp_to_comp_typ (c:comp) : comp_typ
+
 val un_uinst (t:term) : ML term
 val is_t_true (t:term) : ML bool
 val is_t_false (t:term) : ML bool
