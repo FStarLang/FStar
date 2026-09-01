@@ -1,0 +1,3 @@
+* Error 213 at Bug2001.fst(11,29-11,30):
+  - Unexpected universe application on effect Prims.Tot
+

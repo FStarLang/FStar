@@ -657,18 +657,119 @@ let hoist_pat_ascription (pat: pattern): ML pattern
   | Some typ -> { pat with pat = PatAscribed (pat, (typ, None)) }
   | None     -> pat
 
+(* The arguments of a computation type in the surface syntax, sorted.
+
+   A [requires], [ensures] or [decreases] clause may be written tagged, or --
+   for the pre- and the postcondition -- positionally, after the result type.
+   [Lemma] is the odd one out: it has no result type (it is always [unit]), its
+   sole positional argument is its postcondition, and it alone may carry a list
+   of SMT patterns.
+
+   This is the single place where that classification is decided.  Both
+   [comp_requires], which lifts a precondition out into a binder, and
+   [desugar_comp], which builds the computation itself, read it from here, so
+   the two cannot disagree -- if they did, a definition would acquire a binder
+   that its [val] does not have. *)
+type comp_args = {
+  ca_result    : option (AST.term & AST.imp);   (* absent exactly for [Lemma] *)
+  ca_requires  : option (AST.term & AST.imp);
+  ca_ensures   : option (AST.term & AST.imp);
+  ca_decreases : list (AST.term & AST.imp);
+  ca_smtpat    : list (AST.term & AST.imp);     (* [Lemma] only; at most one *)
+  ca_universes : list (AST.term & AST.imp);
+}
+
+let is_requires (t, _) = match (unparen t).tm with
+  | Requires _ -> true
+  | _ -> false
+
+let is_ensures (t, _) = match (unparen t).tm with
+  | Ensures _ -> true
+  | _ -> false
+
+let is_decreases (t, _) = match (unparen t).tm with
+  | Decreases _ -> true
+  | _ -> false
+
+let is_smt_pat (t, _) =
+  let is_smt_pat1 (t:AST.term) : bool =
+    match (unparen t).tm with
+    // TODO: remove this first match once we fully migrate
+    | Construct (smtpat, _) ->
+      let s = string_of_lid smtpat in
+      s = "SMTPat" || s = "SMTPatT" || s = "SMTPatOr"
+
+    | Var smtpat ->
+      let s = string_of_lid smtpat in
+      s = "smt_pat" || s = "smt_pat_or"
+
+    | _ -> false
+  in
+  match (unparen t).tm with
+  | ListLiteral ts -> BU.for_all is_smt_pat1 ts
+  | _ -> false
+
+(* [sort_comp_args is_lemma args] sorts the arguments of a computation type
+   whose head is an effect name.  It is [None] if they do not fit any of the
+   accepted shapes; the caller reports that, since it knows which effect is
+   being applied. *)
+let sort_comp_args (is_lemma:bool) (args:list (AST.term & AST.imp))
+  : ML (option comp_args)
+  = let universes, args = List.partition (fun (_, imp) -> imp = UnivApp) args in
+    let req,       args = List.partition is_requires args in
+    let ens,       args = List.partition is_ensures args in
+    let dec,       args = List.partition is_decreases args in
+    let pats,      args = if is_lemma
+                          then List.partition is_smt_pat args
+                          else [], args
+    in
+    let at_most_one l = match l with
+      | [] -> Some None
+      | [x] -> Some (Some x)
+      | _ -> None
+    in
+    match at_most_one req, at_most_one ens, at_most_one dec, at_most_one pats with
+    | Some req, Some ens, Some _, Some _ ->
+      (* Whatever is left over is positional. *)
+      let sorted =
+        if is_lemma
+        then match args, ens with
+             | [], _ -> Some (None, req, ens)
+             | [q], None -> Some (None, req, Some q)
+             | _ -> None
+        else match args with
+             | [r] -> Some (Some r, req, ens)
+             | [r; x] ->
+               (* One positional argument fills whichever of the two slots the
+                  tagged clauses left open, the precondition first. *)
+               if None? req then Some (Some r, Some x, ens)
+               else if None? ens then Some (Some r, req, Some x)
+               else None
+             | [r; p; q] ->
+               if None? req && None? ens then Some (Some r, Some p, Some q) else None
+             | _ -> None
+      in
+      (match sorted with
+       | None -> None
+       (* A bare [Lemma] says nothing at all; it is much more likely to be a
+          mistake than a deliberate [Lemma (ensures True)]. *)
+       | Some (_, None, None) when is_lemma -> None
+       | Some (result, req, ens) ->
+         Some { ca_result = result;
+                ca_requires = req;
+                ca_ensures = ens;
+                ca_decreases = dec;
+                ca_smtpat = pats;
+                ca_universes = universes })
+    | _ -> None
+
 (* [comp_requires t] is the [requires] clause of the AST computation type [t],
    if it has one and it is not trivially [True], paired with [t] with that
    clause weakened to [True].  The latter is used once the clause has become a
    binder, so that it is not also re-checked as an assertion.
 
-   The clause may be tagged -- [requires p] -- or given positionally, so the
-   classification of arguments here must agree with [desugar_comp]'s, and the
-   triviality test with [Syntax.Util.is_t_true] as applied there; otherwise a
-   definition would acquire a binder that its [val] does not have.  A
-   positional clause is weakened to a tagged [requires True] rather than
-   dropped, so that the remaining positional arguments still mean what they
-   did. *)
+   [t] is rebuilt with its arguments in sorted order and the precondition
+   tagged, which is a form [desugar_comp] classifies identically. *)
 let comp_requires (t:AST.term) : ML (option (AST.term & AST.term)) =
   let is_true (t:AST.term) =
     match (unparen t).tm with
@@ -683,53 +784,33 @@ let comp_requires (t:AST.term) : ML (option (AST.term & AST.term)) =
     | Name l | Var l -> string_of_id (ident_of_lid l) = "Lemma"
     | _ -> false
   in
-  let is_req (a, _) = match (unparen a).tm with Requires _ -> true | _ -> false in
-  let is_tagged (a, imp) =
-    imp = UnivApp ||
-    (match (unparen a).tm with
-     | Requires _ | Ensures _ | Decreases _ -> true
-     | _ -> false)
-  in
-  (* The index in [args] of the argument holding the precondition, if any. *)
-  let pre_index =
-    let rec tagged i l = match l with
-      | [] -> None
-      | a :: tl -> if is_req a then Some i else tagged (i+1) tl
-    in
-    match tagged 0 args with
-    | Some i -> Some i
-    | None ->
-      (* [Lemma]'s sole positional argument is its postcondition; for every
-         other effect the first untagged argument after the result type is the
-         precondition. *)
-      if is_lemma then None
-      else
-        let rec untagged i seen_result l = match l with
-          | [] -> None
-          | a :: tl ->
-            if is_tagged a then untagged (i+1) seen_result tl
-            else if seen_result then Some i
-            else untagged (i+1) true tl
-        in
-        untagged 0 false args
-  in
-  match pre_index with
+  match sort_comp_args is_lemma args with
+  (* Not a shape we recognise: leave it alone and let [desugar_comp] report it. *)
   | None -> None
-  | Some i ->
-    let p =
-      match (unparen (fst (List.nth args i))).tm with
-      | Requires p -> p
-      | _ -> fst (List.nth args i)
-    in
-    if is_true p then None
-    else
-      let args = args |> List.mapi (fun j (a, imp) ->
-        if j = i
-        then let r = a.range in
-             mk_term (Requires (mk_term (Name C.true_lid) r Formula)) r Type_level, imp
-        else a, imp)
+  | Some ca ->
+    match ca.ca_requires with
+    | None -> None
+    | Some (req, imp) ->
+      let p = match (unparen req).tm with
+              | Requires p -> p
+              | _ -> req
       in
-      Some (p, mkApp head args t.range)
+      if is_true p then None
+      else
+        let r = req.range in
+        let req_true =
+          mk_term (Requires (mk_term (Name C.true_lid) r Formula)) r Type_level, imp
+        in
+        let opt_list o = match o with None -> [] | Some x -> [x] in
+        let args =
+          opt_list ca.ca_result
+          @ [req_true]
+          @ opt_list ca.ca_ensures
+          @ ca.ca_decreases
+          @ ca.ca_smtpat
+          @ ca.ca_universes
+        in
+        Some (p, mkApp head args t.range)
 
 (* [mk_assert_before p e] is [let _ = _assert p in e]: it discharges [p] as a
    proof obligation at this point, and makes it available while checking [e].
@@ -2279,104 +2360,14 @@ and desugar_args env args : ML _ =
 
 and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
     let fail #a code msg : ML a = raise_error r code msg in
-    let is_requires (t, _) = match (unparen t).tm with
-      | Requires _ -> true
-      | _ -> false
-    in
-    let is_ensures (t, _) = match (unparen t).tm with
-      | Ensures _ -> true
-      | _ -> false
-    in
-    let is_decreases (t, _) = match (unparen t).tm with
-      | Decreases _ -> true
-      | _ -> false
-    in
-    let is_smt_pat1 (t:term) : bool =
-      match (unparen t).tm with
-      // TODO: remove this first match once we fully migrate
-      | Construct (smtpat, _) ->
-        let s = string_of_lid smtpat in
-        s = "SMTPat" || s = "SMTPatT" || s = "SMTPatOr"
-
-      | Var smtpat ->
-        let s = string_of_lid smtpat in
-        s = "smt_pat" || s = "smt_pat_or"
-
-      | _ -> false
-    in
-    let is_smt_pat (t,_) =
-      match (unparen t).tm with
-      | ListLiteral ts -> BU.for_all is_smt_pat1 ts
-      | _ -> false
-    in
     let pre_process_comp_typ (t:AST.term) =
       let head, args = head_and_args_full t in
       match head.tm with
       | Name lemma when ((string_of_id (ident_of_lid lemma)) = "Lemma") ->
-        (* need to add the unit result type and the empty smt_pat list, if n *)
-        let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
-        let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
-        let req_true =
-          let req = Requires (mk_term (Name C.true_lid) t.range Formula) in
-          mk_term req t.range Type_level, Nothing
-        in
-        let ens_true =
-          let ens = Ensures (mk_term (Name C.true_lid) t.range Formula) in
-          mk_term ens t.range Type_level, Nothing
-        in
-        (* The postcondition for Lemma is thunked, to allow to assume the precondition
-         * (c.f. #57), so add the thunking here *)
-        let thunk_ens (e, i) = (thunk e, i) in
-        let fail_lemma #a () : ML a =
-             let open FStarC.Pprint in
-             let expected_one_of = ["Lemma post";
-                                    "Lemma (requires pre)";
-                                    "Lemma (ensures post)";
-                                    "Lemma (requires pre) (ensures post)"] in
-             raise_error t Errors.Fatal_InvalidLemmaArgument [
-                text "Invalid arguments to 'Lemma'; expected one of the following"
-                  ^^ sublist empty (List.map doc_of_string expected_one_of);
-                text "each of which may additionally be followed by a (decreases d) clause and/or an [SMTPat ...] list."
-             ]
-        in
-        (* The precondition and the postcondition are both optional (a missing
-           one defaults to [True]), but at least one of them must be given.
-           The postcondition may be written positionally, i.e. [Lemma post].
-           A (decreases d) clause and an [SMTPat ...] list may be added to any
-           of these forms, in any order. *)
-        let args =
-          let tagged_req, args = List.partition is_requires args in
-          let tagged_ens, args = List.partition is_ensures args in
-          let dec,        args = List.partition is_decreases args in
-          let smtpat,     args = List.partition is_smt_pat args in
-          (* Whatever is left over is the untagged postcondition, if any. *)
-          let ens =
-            match tagged_ens, args with
-            | [ens], [] -> Some ens
-            | [], [ens] -> Some ens
-            | [], [] -> None
-            | _ -> fail_lemma ()
-          in
-          let req =
-            match tagged_req with
-            | [] -> None
-            | [req] -> Some req
-            | _ -> fail_lemma ()
-          in
-          if None? req && None? ens then fail_lemma ();
-          if List.length dec > 1 then fail_lemma ();
-          let smtpat =
-            match smtpat with
-            | [] -> nil_pat
-            | [p] -> p
-            | _ -> fail_lemma ()
-          in
-          [unit_tm; Option.dflt req_true req; thunk_ens (Option.dflt ens_true ens); smtpat] @ dec
-        in
-        let head_and_attributes = fail_or env
-          (Env.try_lookup_effect_name_and_attributes env)
-          lemma in
-        head_and_attributes, args
+        (* [Lemma]'s result type is always [unit] and is left implicit in the
+           source; [sort_comp_args] therefore expects it to be absent, and
+           [desugar_comp] supplies it below. *)
+        fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma, args
 
       | Name l when Env.is_effect_name env l ->
         (* we have an explicit effect annotation ... no need to add anything *)
@@ -2412,27 +2403,46 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
         raise_error t Errors.Fatal_EffectNotFound "Expected an effect constructor"
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
-    if Nil? args then
-      fail Errors.Fatal_NotEnoughArgsToEffect (Format.fmt1 "Not enough args to effect %s" (show eff));
-    (* An explicit universe application on an effect, as in [Tot u#0 int], is
-       accepted and discarded: a computation is an effect name applied to its
-       result type alone, so its universe is that of the result type and there
-       is nowhere left to record an annotation -- nor anything it could say
-       that the result type does not already. *)
-    let is_universe (_, imp) = imp = UnivApp in
-    let _universes, args = BU.take is_universe args in
-    let result_arg, rest = List.hd args, List.tl args in
-    let result_typ = desugar_typ env (fst result_arg) in
-    let dec, rest =
-      let is_decrease t = match (unparen (fst t)).tm with
-        | Decreases _ -> true
-        | _ -> false
-      in
-      rest |> List.partition is_decrease
+    let is_lemma = lid_equals eff C.effect_Lemma_lid in
+    let ca =
+      match sort_comp_args is_lemma args with
+      | Some ca -> ca
+      | None ->
+        if is_lemma
+        then
+          let open FStarC.Pprint in
+          let expected_one_of = ["Lemma post";
+                                 "Lemma (requires pre)";
+                                 "Lemma (ensures post)";
+                                 "Lemma (requires pre) (ensures post)"] in
+          raise_error t Errors.Fatal_InvalidLemmaArgument [
+            text "Invalid arguments to 'Lemma'; expected one of the following"
+              ^^ sublist empty (List.map doc_of_string expected_one_of);
+            text "each of which may additionally be followed by a (decreases d) clause and/or an [SMTPat ...] list."
+          ]
+        else
+          fail Errors.Fatal_NotEnoughArgsToEffect
+            (Format.fmt1 "Unexpected arguments to effect %s" (show eff))
     in
-    let rest0 = rest in
-    let rest = desugar_args env rest in
-    let decreases_clause = dec |>
+    (* A computation is an effect name applied to its result type, so its
+       universe is that of the result type: an explicit universe application,
+       as in [Tot u#0 int], has nothing left to say and nowhere to be recorded.
+       It used to be accepted and silently discarded. *)
+    (match ca.ca_universes with
+     | [] -> ()
+     | (u, _) :: _ ->
+       raise_error u Errors.Fatal_UnexpectedUniverseVariable
+         (Format.fmt1 "Unexpected universe application on effect %s" (show eff)));
+    let result_typ =
+      match ca.ca_result with
+      | Some (r, _) -> desugar_typ env r
+      (* [Lemma]'s result type is always [unit] and is not written. *)
+      | None when is_lemma -> S.t_unit
+      | None ->
+        fail Errors.Fatal_NotEnoughArgsToEffect
+          (Format.fmt1 "Not enough args to effect %s" (show eff))
+    in
+    let decreases_clause = ca.ca_decreases |>
       List.map (fun t -> match (unparen (fst t)).tm with
                       | Decreases t ->
                         let dec_order =
@@ -2449,8 +2459,9 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
         (* F# complains about not being able to use = on some types.. *)
         let is_empty (l:list 'a) = match l with | [] -> true | _ -> false in
         is_empty decreases_clause &&
-        is_empty rest &&
-        is_empty cattributes
+        is_empty cattributes &&
+        None? ca.ca_requires &&
+        None? ca.ca_ensures
     in
     (* [Tot t] and [GTot t] with nothing else at all take a short cut.  Anything
        more -- a decreases clause, a specification -- goes through the general
@@ -2460,10 +2471,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
     then (if C.is_tot_lid eff then mk_Total result_typ else mk_GTotal result_typ),
          S.trivial_pre
     else
-      let flags =
-        if lid_equals eff C.effect_Lemma_lid then [LEMMA]
-        else []
-      in
+      let flags = if is_lemma then [LEMMA] else [] in
       (* An effect abbreviation whose root is [Tot] denotes a total computation
          just as much as [Tot] itself does, so record that with the [TOTAL]
          flag: an abbreviation is not unfolded until the typechecker, and the
@@ -2472,7 +2480,17 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
          this, a partially-applied lemma is not recognised as pure and its
          trailing implicit is never instantiated; [tests/bug-reports/closed/
          Bug1953.fst] pins down the constructor-effect check as well.  A comp
-         named [Tot] outright needs no flag: there the name says it. *)
+         named [Tot] outright needs no flag: there the name says it.
+
+         The flag, rather than unfolding the abbreviation here, because an
+         abbreviation is not in general a renaming: it may supply arguments to
+         the effect it abbreviates, and unfolding it means instantiating its
+         binders and substituting into a stored computation -- which is
+         [Env.unfold_effect_abbrev]'s job, in the typechecker, where
+         [Env.norm_eff_name] hands out the root effect on demand.  Keeping the
+         name written by the user is also what lets error messages, IDE hovers
+         and [Syntax.Resugar] say [Lemma], [Tac] and [St] rather than [Tot],
+         [TAC] and [STATE]. *)
       let flags =
         if C.is_tot_lid eff then flags
         else match Env.try_lookup_root_effect_name env eff with
@@ -2480,58 +2498,47 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
              | _ -> flags
       in
       let flags = flags @ cattributes in
-      (* Extract the precondition, the postcondition, and (for Lemma) the SMT patterns
-         from the remaining arguments of the computation type. *)
-      let pre, post, smtpat =
-        if lid_equals eff C.effect_Lemma_lid
-        then
-          (* pre_process_comp_typ has normalized Lemma's arguments to [pre; post; pat] *)
-          match rest with
-          | [(pre, _); (post, _); (pat, _)] ->
-            let pat =
-              match pat.n with
-              (* we really want the empty pattern to be in universe 0 rather than generalizing it *)
-              | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
-                let nil = S.mk_Tm_uinst pat [U_zero] in
-                let pattern =
-                  S.fvar_with_dd (Ident.set_lid_range Const.pattern_lid pat.pos) None
-                in
-                S.mk_Tm_app nil [(pattern, S.as_aqual_implicit true)] pat.pos
-              | _ -> pat
-            in
-            pre, post, Some (S.mk (Tm_meta {tm=pat;meta=Meta_desugared Meta_smt_pat}) pat.pos)
-          | _ -> fail Errors.Fatal_InvalidLemmaArgument "Invalid arguments to 'Lemma'"
-        else
-          (* Otherwise the arguments are (requires pre) and (ensures post), either
-             explicitly tagged or given positionally, and both are optional. *)
-          let tagged_req, rest' = List.partition is_requires rest0 in
-          let tagged_ens, rest' = List.partition is_ensures rest' in
-          let rest' = desugar_args env rest' in
-          let get l = match l with
-            | [] -> None
-            | [x] -> Some (fst (List.hd (desugar_args env [x])))
-            | _ -> fail Errors.Fatal_NotEnoughArgsToEffect
-                     "Too many requires/ensures clauses in a computation type"
-          in
-          let pre, post =
-            match get tagged_req, get tagged_ens, rest' with
-            | Some p, Some q, [] -> p, q
-            | Some p, None, [] -> p, trivial_post result_typ
-            | None, Some q, [] -> trivial_pre, q
-            | None, None, [] -> trivial_pre, trivial_post result_typ
-            | None, None, [(p, _)] -> p, trivial_post result_typ
-            | None, None, [(p, _); (q, _)] -> p, q
-            | Some p, None, [(q, _)] -> p, q
-            | None, Some q, [(p, _)] -> p, q
-            | _ ->
-              fail Errors.Fatal_NotEnoughArgsToEffect
-                (Format.fmt1 "Unexpected arguments to effect %s" (show eff))
-          in
-          pre, post, None
+      let desugar_clause (x:AST.term & AST.imp) : ML S.term =
+        fst (List.hd (desugar_args env [x]))
       in
-      let flags = flags @ decreases_clause @ (match smtpat with
-                                              | None -> []
-                                              | Some p -> [SMTPAT p]) in
+      let pre =
+        match ca.ca_requires with
+        | None -> trivial_pre
+        | Some req -> desugar_clause req
+      in
+      let post =
+        match ca.ca_ensures with
+        | None -> trivial_post result_typ
+        (* A postcondition is an abstraction over the result of the
+           computation.  For every effect but [Lemma] the user writes that
+           abstraction, [ensures fun r -> ...]; [Lemma]'s result is [unit] and
+           is not named, so the user writes a bare formula and the abstraction
+           is added here. *)
+        | Some (e, i) -> desugar_clause ((if is_lemma then thunk e else e), i)
+      in
+      let smtpat =
+        match ca.ca_smtpat with
+        | [] when not is_lemma -> []
+        | pats ->
+          let pat =
+            match pats with
+            | [p] -> desugar_clause p
+            | _ -> S.fvar_with_dd (Ident.set_lid_range Const.nil_lid t.range) None
+          in
+          let pat =
+            match pat.n with
+            (* we really want the empty pattern to be in universe 0 rather than generalizing it *)
+            | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
+              let nil = S.mk_Tm_uinst pat [U_zero] in
+              let pattern =
+                S.fvar_with_dd (Ident.set_lid_range Const.pattern_lid pat.pos) None
+              in
+              S.mk_Tm_app nil [(pattern, S.as_aqual_implicit true)] pat.pos
+            | _ -> pat
+          in
+          [SMTPAT (S.mk (Tm_meta {tm=pat;meta=Meta_desugared Meta_smt_pat}) pat.pos)]
+      in
+      let flags = flags @ decreases_clause @ smtpat in
       (* A computation type carries no specification: the postcondition becomes
          a property of the result type, and the precondition is handed back to
          the caller, which turns it into an implicit [squash] binder (arrow

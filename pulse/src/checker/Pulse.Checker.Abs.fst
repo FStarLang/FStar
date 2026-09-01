@@ -235,7 +235,7 @@ let qualifier_compat g r (q:option qualifier) (q':T.aqualv) : T.Tac unit =
 let check_qual g (q:qualifier) : T.Tac qualifier =
   match q with
   | Meta t ->
-    let ty = (`(unit -> T.Tac u#0 unit)) in
+    let ty = (`(unit -> T.Tac unit)) in
     // let t = T.pack (T.Tv_AscribedT t ty None false) in
     let t =
       (* This makes sure to elaborate the meta qualifier so it
