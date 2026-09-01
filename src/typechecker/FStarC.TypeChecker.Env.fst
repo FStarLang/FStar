@@ -896,10 +896,8 @@ let type_hypothesis env (t:typ) (v:term) : ML term =
   let hd, _ = U.head_and_args_full base in
   match (U.un_uinst hd).n with
   | Tm_fvar fv when fst (datacons_of_typ env fv.fv_name) ->
-    (* [has_type] is universe-polymorphic; the result may end up in a type that
-       is re-typechecked, so the universes have to be the real ones. *)
     let u = env.universe_of env base in
-    U.mk_conj_simp (U.mk_has_type_us [u; u] base v base) phi
+    U.mk_conj_simp (U.mk_has_type [u; u] base v base) phi
   | _ -> phi
 
 let typ_of_datacon env lid : ML _ =

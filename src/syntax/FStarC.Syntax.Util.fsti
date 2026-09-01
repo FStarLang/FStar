@@ -418,8 +418,9 @@ val unb2t (e:term) : ML (option term)
 val mk_conj_simp (t1 t2 : term) : ML term
 val mk_imp_simp (t1 t2 : term) : ML term
 val mk_disj_simp (t1 t2 : term) : ML term
-val mk_has_type_us (us:universes) (t x t' : term) : ML term
-val mk_has_type (t x t' : term) : ML term
+(* [mk_has_type us t x t'] is [x <: t'], for [x : t].  [us] are the universes of
+   [t] and of [t'], in that order. *)
+val mk_has_type (us:universes) (t x t' : term) : ML term
 
 (* The logical content of the typing hypothesis [v : t]: the refinement formula
    when [t] is a refinement (or a [squash]), and [True] otherwise.  Used to keep

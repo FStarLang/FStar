@@ -1075,16 +1075,12 @@ let mk_disj_simp t1 t2 =
 
 (* A postcondition is an abstraction [fun (x:t) -> phi].  It is trivial when
    [phi] is [True]. *)
-let mk_has_type_us us t x t' =
+(* [has_type] is universe-polymorphic in the type of [x] and in [t']: [us] are
+   the universes of [t] and of [t'], in that order. *)
+let mk_has_type us t x t' =
     let t_has_type = fvar_const PC.has_type_lid in
     let t_has_type = mk (Tm_uinst(t_has_type, us)) dummyRange in
     mk_Tm_app t_has_type [iarg t; as_arg x; as_arg t'] dummyRange
-
-(* [has_type] is universe-polymorphic in both the type of [x] and in [t'].
-   Callers that only build a formula for the SMT encoder, which erases
-   universes, may use these [u#0]s; a caller that builds a term to be
-   re-typechecked must use [mk_has_type_us] with the real universes. *)
-let mk_has_type t x t' = mk_has_type_us [U_zero; U_zero] t x t'
 
 let refinement_hypothesis (t:typ) (v:term) : ML term =
   match (compress t).n with

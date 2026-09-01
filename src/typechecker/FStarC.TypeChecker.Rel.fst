@@ -1819,14 +1819,19 @@ let guard_of_prob (wl:worklist) (problem:tprob) (t1 : term) (t2 : term) : ML (te
    def_check_prob "guard_of_prob" (TProb problem);
    let env = p_env wl (TProb problem) in
     let has_type_guard t1 t2 =
+        (* [has_type] is universe-polymorphic in the type of the subject and in
+           the type it is claimed to have, and the SMT encoder does not erase
+           universes, so both have to be the real ones. *)
+        def_check_scoped t1.pos "guard_of_prob.universe_of" env t1;
+        def_check_scoped t2.pos "guard_of_prob.universe_of" env t2;
+        let u1 = env.universe_of env t1 in
+        let u2 = env.universe_of env t2 in
         match problem.element with
         | Some t ->
-            U.mk_has_type t1 (S.bv_to_name t) t2
+            U.mk_has_type [u1; u2] t1 (S.bv_to_name t) t2
         | None ->
             let x = S.new_bv None t1 in
-            def_check_scoped t1.pos "guard_of_prob.universe_of" env t1;
-            let u_x = env.universe_of env t1 in
-            U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2)
+            U.mk_forall u1 x (U.mk_has_type [u1; u2] t1 (S.bv_to_name x) t2)
     in
     match problem.relation with
     | EQ     -> mk_eq2 wl (TProb problem) t1 t2
