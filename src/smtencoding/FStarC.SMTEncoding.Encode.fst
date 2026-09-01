@@ -1039,9 +1039,10 @@ let encode_top_level_let :
                                          (univ_terms @ List.map mkFreeV vars)
                 in
                 let is_logical =
-                  // A prop-valued definition additionally gets a formula
-                  // equation `Valid (f x) <==> body`, where the body is
-                  // encoded as a formula rather than as a term.
+                  // A prop-valued definition is encoded as a formula equation
+                  // `Valid (f x) <==> body`, rather than a term equation
+                  // `f x == body`. The latter follows from the former, since
+                  // the SMT encoding of prop is extensional (see mk_prop).
                   match (SS.compress t_body).n with
                   | Tm_fvar fv when S.fv_eq_lid fv FStarC.Parser.Const.prop_lid -> true
                   | _ -> false
@@ -1063,22 +1064,25 @@ let encode_top_level_let :
                                   (name ^ "_" ^ fvb.smt_id))
                 in
                 let eqns,decls2 =
-                  let basic_eqn_name =
-                    if should_encode_logical
-                    then "defn_equation"
-                    else "equation"
-                  in
-                  let basic_eqn, decls =
+                  let mk_basic_eqn name =
                     let body, decls = encode_term body env' in
-                    make_eqn basic_eqn_name app app body, decls
+                    make_eqn name app app body, decls
                   in
                   if should_encode_logical
-                  then let pat, app, (body, decls2) =
-                           app, mk_Valid app, encode_formula body env'
-                       in
-                       let logical_eqn = make_eqn "equation" pat app body in
-                       [logical_eqn; basic_eqn], decls@decls2
-                  else [basic_eqn], decls
+                  then
+                    let logical_eqn, decls2 =
+                      let bodyf, decls2 = encode_formula body env' in
+                      make_eqn "equation" app (mk_Valid app) bodyf, decls2
+                    in
+                    if is_logical
+                    then //A prop-valued definition only gets the formula equation:
+                         //the term equation follows from it, since prop is
+                         //encoded extensionally (see mk_prop above).
+                         [logical_eqn], decls2
+                    else let basic_eqn, decls = mk_basic_eqn "defn_equation" in
+                         [logical_eqn; basic_eqn], decls@decls2
+                  else let basic_eqn, decls = mk_basic_eqn "equation" in
+                       [basic_eqn], decls
                 in
                 decls@binder_decls@decls2@((eqns@primitive_type_axioms env.tcenv flid fvb.smt_id app)
                                                  |> mk_decls_trivial),

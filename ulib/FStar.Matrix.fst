@@ -1126,7 +1126,7 @@ let matrix_mul_is_left_distributive #c #eq #m #n #p (add: CE.cm c eq)
   in matrix_equiv_from_proof eq lhs rhs aux 
 #pop-options
 
-#push-options "--z3rlimit_factor 8"
+#push-options "--z3rlimit_factor 4"
 #restart-solver
 let matrix_mul_is_right_distributive #c #eq #m #n #p (add: CE.cm c eq)
                                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
