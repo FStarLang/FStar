@@ -168,43 +168,27 @@ let rec path_is_at_or_below (root:string) (path:string) : ML bool =
     let parent = Filepath.dirname path in
     parent <> path && path_is_at_or_below root parent
 
+let module_include_covers (inc: module_include_path) (path: string): ML bool =
+  let incnorm = Filepath.normalize_file_path inc.dir in
+  let pathnorm = Filepath.normalize_file_path path in
+  match inc.kind with
+  | Flat -> incnorm = pathnorm
+  | Recursive _ -> path_is_at_or_below incnorm pathnorm
+
 (* Add command-line file parents not already owned by an explicit root as flat
   roots. Roots declared by their [fstar.include] are flat too. For example, when running:
   > fstar.exe test/Test01.fst
   we add `test` as an include path under the assumption that the file defines the Test01 module. *)
 let command_line_include_roots () : ML (list string) =
-  match !_file_list with
-  | [] -> []
-  | files ->
-    let explicit_paths = !_include |> expand_module_include_paths (Recursive []) in
-    let explicit_roots =
-      explicit_paths |> include_dirs |> List.map Filepath.normalize_file_path
-    in
-    let recursive_explicit_roots =
-      explicit_paths
-      |> List.collect (fun path ->
-           match path.kind with
-           | Flat -> []
-           | Recursive _ -> [path.dir])
-      |> List.map Filepath.normalize_file_path
-    in
-    let cwd = Filepath.normalize_file_path (Filepath.getcwd ()) in
-    let file_roots =
-      List.fold_left (fun roots file ->
-        let root = Filepath.normalize_file_path (Filepath.dirname file) in
-        let is_file = Filepath.file_exists file && not (Filepath.is_directory file) in
-        (* Nonexistent entries may be unsaved files supplied through the IDE VFS,
-          but synthetic paths outside cwd must not introduce broad include roots. *)
-        if is_file || (not (Filepath.file_exists file) && path_is_at_or_below cwd root) then
-          if List.contains root roots then roots else roots @ [root]
-        else roots)
-        [] files
-    in
-    file_roots
-    |> List.filter (fun root ->
-        not (List.contains root explicit_roots
-          || List.existsb (fun explicit_root ->
-            path_is_at_or_below explicit_root root) recursive_explicit_roots))
+  let files = !_file_list in
+  let explicit_includes = !_include |> expand_module_include_paths (Recursive []) in
+  let file_roots = List.collect (fun file ->
+    let root = Filepath.normalize_file_path (Filepath.dirname file) in
+    let is_dir = Filepath.is_directory file in
+    if is_dir then [] else [root]
+  ) files in
+  file_roots |> List.filter (fun root ->
+      not (List.existsb (fun inc -> (module_include_covers inc root)) explicit_includes))
 
 let command_line_include_paths () : ML (list module_include_path) =
   command_line_include_roots () |> expand_module_include_paths Flat
