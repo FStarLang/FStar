@@ -478,7 +478,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
                   unreadable (and does not match what phase 1 inferred). *)
                let ct, _, g = TcUtil.check_trivial_precondition_wp env c in
                None,
-               S.mk_triv_comp ct.effect_name ct.result_typ ct.flags,
+               S.mk_Comp ct,
                Some g
              else None, c, None
   in

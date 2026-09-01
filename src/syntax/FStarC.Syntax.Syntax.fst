@@ -423,17 +423,13 @@ let post_rc : residual_comp = {
 }
 
 (* [fun (_:t) -> True], the trivial postcondition for a computation returning [t].
-   Postconditions in a [comp_typ] are always abstracted over the result. *)
+   A postcondition is a refinement of the result type now; this is its shape in
+   the reflection view, which still presents one as an abstraction. *)
 let trivial_post (t:typ) : ML term =
   mk (Tm_abs {b=null_binder t; body=trivial_pre; rc_opt=Some post_rc}) t.pos
 
-(* A computation type with no interesting specification. *)
-let mk_triv_comp (eff:lident) (t:typ) (flags:list cflag) : ML comp =
-  mk_Comp ({ effect_name = eff;
-             result_typ = t;
-             flags = flags })
-
-let mk_Tac t : ML comp = mk_triv_comp PC.effect_Tac_lid t []
+let mk_Tac t : ML comp =
+  mk_Comp ({ effect_name = PC.effect_Tac_lid; result_typ = t; flags = [] })
 
 let fv_eq fv1 fv2 = lid_equals fv1.fv_name fv2.fv_name
 let fv_eq_lid fv lid = lid_equals fv.fv_name lid

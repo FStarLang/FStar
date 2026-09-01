@@ -242,7 +242,9 @@ let eq_univs_list (us:universes) (vs:universes) : ML bool =
 (********************************************************************************)
 
 let ml_comp t r =
-  mk_triv_comp (set_lid_range (PC.effect_ML_lid()) r) t []
+  mk_Comp ({ effect_name = set_lid_range (PC.effect_ML_lid()) r;
+             result_typ = t;
+             flags = [] })
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name

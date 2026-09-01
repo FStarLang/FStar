@@ -676,7 +676,7 @@ let mk_bind env
   def_check_scoped r1 "mk_bind.in.c2" env2 c2;
   let m, _c1, c2, g_lift = lift_comps env c1 c2 b true in
   let ct2 = U.comp_to_comp_typ c2 in
-  let res = S.mk_triv_comp m ct2.result_typ [] in
+  let res = S.mk_Comp ({ effect_name = m; result_typ = ct2.result_typ; flags = [] }) in
   (* [res] takes its result type from [c2], so it is scoped in [env2]: it may
      still mention [b].  Getting [b] out of it is the caller's job -- see
      [close_x] in [bind_maybe_capture]. *)
@@ -701,7 +701,7 @@ let strengthen_comp env (reason:option (unit -> ML (list Pprint.document))) (c:c
  * by its type.
  *)
 let return_value env eff_lid t v : ML (comp & guard_t) =
-  S.mk_triv_comp (Env.norm_eff_name env eff_lid) t [],
+  S.mk_Comp ({ effect_name = Env.norm_eff_name env eff_lid; result_typ = t; flags = [] }),
   Env.trivial_guard
 
 (* [weaken_comp env c f] used to assume [f] before running [c].  A computation
@@ -1387,7 +1387,7 @@ let fvar_env env lid : ML _ =  S.fvar (Ident.set_lid_range lid (Env.get_range en
  * emits for the (vacuous) fall-through branch.
  *)
 let comp_false env (t:typ) : ML comp =
-  S.mk_triv_comp C.primitive_pure_lid t []
+  S.mk_Comp ({ effect_name = C.primitive_pure_lid; result_typ = t; flags = [] })
 
 (*
  * Conjunction of two branch computations under the branch condition [p].
@@ -1397,7 +1397,7 @@ let comp_false env (t:typ) : ML comp =
  *)
 let mk_conjunction env (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.t)
 : ML (comp & guard_t) =
-  S.mk_triv_comp ct1.effect_name a [], Env.trivial_guard
+  S.mk_Comp ({ effect_name = ct1.effect_name; result_typ = a; flags = [] }), Env.trivial_guard
 
 (*
  * When typechecking a match term, typechecking each branch returns
