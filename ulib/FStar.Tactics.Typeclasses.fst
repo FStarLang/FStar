@@ -514,7 +514,11 @@ let mk_class (nm:string) : Tac decls =
     let r = lookup_typ (top_env ()) ns in
     guard (Some? r);
     let Some se = r in
-    let to_propagate = L.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
+    (* Qualifiers carried over from the class to each generated method.
+       `unfold` on a class means its methods always reduce to the underlying
+       projector application; this is what makes the qualifier meaningful on
+       an inductive, which has no definition of its own to unfold. *)
+    let to_propagate = L.filter (function Inline_for_extraction | NoExtract | Unfold_for_unification_and_vcgen -> true | _ -> false) (sigelt_quals se) in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive {nm=name;univs=us;params;typ=ity;ctors} = sv in
