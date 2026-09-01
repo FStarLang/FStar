@@ -43,6 +43,9 @@ module Builtins = FStarC.Custard.Builtins
 module GenSym = FStarC.GenSym
 module N      = FStarC.TypeChecker.Normalize
 module Options = FStarC.Options
+module Cfg    = FStarC.TypeChecker.Cfg
+module NormSteps = FStarC.NormSteps
+module PO     = FStarC.TypeChecker.Primops.Base
 module PC     = FStarC.Parser.Const
 module ExtractAs = FStarC.Parser.Const.ExtractAs
 module S      = FStarC.Syntax.Syntax
@@ -414,6 +417,13 @@ type state = {
      the extracted program calls it, and that caller has nothing to inline
      into.  See [pulse/src/custard-entrypoints.txt]. *)
   roots:   SMap.t bool;
+  (* Section 31.1.  Definitions whose [normalize_for_extraction] has already
+     been honoured, by lid.  The normalization is the expensive one -- it is
+     the whole point of the attribute that it does work the extractor would
+     not do on its own -- and [extract_lid] is called once per
+     specialization, so without this a definition with twenty specializations
+     would pay for it twenty times. *)
+  nfe:     SMap.t sigelt;
 }
 
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
@@ -438,6 +448,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
   links   = Unit.load_links (Options.custard_links ());
   imports = mk_ref [];
   roots   = SMap.create 20;
+  nfe     = SMap.create 20;
 }
 
 (* Just enough to fire the redexes that substituting a local function creates,
@@ -623,6 +634,67 @@ let norm_optional_in (env:TcEnv.env) (steps:list TcEnv.step) (t:term)
 
 let norm_optional (st:state) (steps:list TcEnv.step) (t:term) : ML (option term) =
   norm_optional_in (tcenv st) steps t
+
+(* Section 31.  [@@normalize_for_extraction steps] says: reduce this
+   definition with exactly these steps before compiling it.  The ML pipeline
+   honours it in {!FStarC.Extraction.ML.Modul.extract_sig_let}, and EverParse
+   puts it on every definition its CDDL tool generates -- which is why the
+   krml backend never meets [validate_typ'] at all, and Custard did.
+
+   Custard has its own front end, so it has to honour it itself, and there is
+   no reason not to: the attribute is a *statement by the programmer* about
+   which definitions must unfold, and rules 4b/4c exist to guess at that in
+   its absence.  Where it is written, guessing is not needed.
+
+   The steps are normalized first, exactly as the ML pipeline does, so that a
+   program may write [normalize_for_extraction (nbe :: my_steps)] instead of
+   a literal list at every use. *)
+let nfe_steps (st:state) (se:sigelt) : ML (option (list TcEnv.step)) =
+  match U.extract_attr' PC.normalize_for_extraction_lid se.sigattrs with
+  | None -> None
+  | Some (_, (steps, None) :: _) ->
+    let steps = N.normalize [TcEnv.UnfoldUntil delta_constant; TcEnv.Zeta;
+                             TcEnv.Iota; TcEnv.Primops]
+                            (tcenv st) steps in
+    (match PO.try_unembed_simple #(list NormSteps.norm_step) steps with
+     | Some steps -> Some (Cfg.translate_norm_steps steps)
+     | None ->
+       E.log_issue se E.Warning_UnrecognizedAttribute
+         (BU.fmt1 "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted" (show steps));
+       None)
+  | Some _ ->
+    E.log_issue se E.Warning_UnrecognizedAttribute
+      "Ill-formed application of 'normalize_for_extraction'";
+    None
+
+let fixup_normalize_for_extraction (st:state) (se:sigelt) : ML sigelt =
+  match se.sigel with
+  | Sig_let {lids; lbs=(is_rec, lbs)} when Some? (U.extract_attr' PC.normalize_for_extraction_lid se.sigattrs) ->
+    let key = show lids in
+    (match SMap.try_find st.nfe key with
+     | Some se -> se
+     | None ->
+       let se =
+         match nfe_steps st se with
+         | None -> se
+         | Some steps ->
+           (* [erase_erasable_args] is what the ML pipeline sets, and it is
+              what makes the reduction affordable: a proof argument is not
+              reduced, only dropped. *)
+           let env = { tcenv st with TcEnv.erase_erasable_args = true } in
+           let norm_type = U.has_attribute se.sigattrs PC.normalize_for_extraction_type_lid in
+           let one lb =
+             let what = "the definition of " ^ show lb.lbname ^
+                        ", as [@@normalize_for_extraction] asks" in
+             let lbdef = norm_bounded_in st env what steps lb.lbdef in
+             let lbtyp = if norm_type
+                         then norm_bounded_in st env (what ^ " (its type)") steps lb.lbtyp
+                         else lb.lbtyp in
+             { lb with lbdef; lbtyp } in
+           { se with sigel = Sig_let {lids; lbs=(is_rec, List.map one lbs)} } in
+       SMap.add st.nfe key se;
+       se)
+  | _ -> se
 
 (* Section 30.8.  A match that takes apart a constructor storing a type --
    [Mkbundle : (b_impl_type: Type0) -> (b_dflt: b_impl_type) -> bundle] -- has
@@ -1226,7 +1298,8 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
          is [fun s n -> n] and its implementation prints [s].  Reading
          liveness off the specification deletes the argument the
          implementation needs. *)
-      match TcEnv.lookup_sigelt (tcenv st) l |> Option.map fixup_extract_as with
+      match TcEnv.lookup_sigelt (tcenv st) l
+            |> Option.map (fun se -> fixup_extract_as (fixup_normalize_for_extraction st se)) with
       | Some se ->
         (match se.sigel with
          | Sig_let {lbs=(_, lbs)} ->
@@ -2742,7 +2815,9 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
 and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                 (n_holes:int) : ML decl =
   let se = Prof.timed "sigelt"
-             (fun () -> TcEnv.lookup_sigelt (tcenv st) l |> Option.map fixup_extract_as) in
+             (fun () -> TcEnv.lookup_sigelt (tcenv st) l
+                        |> Option.map (fun se ->
+                             fixup_extract_as (fixup_normalize_for_extraction st se))) in
   (* A rule declared by the definition's own attributes wins over the built-in
      table, so that a program can override a rule it does not like. *)
   let rule = match se with

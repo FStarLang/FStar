@@ -50,9 +50,20 @@ GREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) (x : Prims.int) (y : Pr
 # Naming [add4] is what makes it specific -- a plain arrow is a perfectly
 # good type for a parameter, and [twice] takes one.
 NOGREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) :"
+# Section 31.  [@@normalize_for_extraction] must be honoured, and must be
+# honoured *exactly*: [eval]/[eval_list]/[prog] are in the whitelist and have
+# to vanish, and [step] is not and has to survive as a call.  Extracting the
+# interpreter as written would emit the [ast] datatype, so the NOGREPs are
+# what say the reduction happened at all.
+CUSTARD_TESTS += NormForExtraction
+GREP_NormForExtraction += "normForExtraction_step"
+NOGREP_NormForExtraction += "normForExtraction_eval"
+NOGREP_NormForExtraction += "normForExtraction_prog"
+NOGREP_NormForExtraction += "type normForExtraction_ast"
 CUSTARD_TESTS += Mymon
 CUSTARD_TESTS += Reify
 CUSTARD_TESTS += AssumedProj
+CUSTARD_TESTS += LetShare
 # Section 30.17.  The budget is set low enough that neither the full nor the
 # weak reduction of [b12] fits, so the argument is keyed as written.  Running
 # it is the point: the answer must be the one the exponential normal form
@@ -519,6 +530,18 @@ FLAGS_TypeDiverge = --custard_entry TypeDiverge.f
 REJECT_TESTS += WarnAny
 # Section 6: the direct-to-C backend has no representation for an unbounded
 # Prims.int, and none for a closure.  Both must be diagnosed, not mistranslated.
+# Sections 31.2 and 31.3.  Round 35 twice reported error 368 as unactionable:
+# it named a declaration and nothing else.  [Prims.list] here is left
+# polymorphic because [FStar.List.Tot.Base] is realized by hand in OCaml, so
+# rule 4 of section 5.0.1 froze it -- which is a decision with a culprit, not
+# the bug the old message claimed.  The chain is what says which use of it
+# survived; on a 100 s CDDL run that is the whole difference.
+REJECT_TESTS += ListC
+CODE_ListC = 368
+FLAGS_ListC = --custard_backend C --custard_monomorphize_types true
+EGREP_ListC += "is realized outside this program"
+EGREP_ListC += "Reached through:"
+EGREP_ListC += "ListC.f"
 REJECT_TESTS += CNoInt
 REJECT_TESTS += CNoClosure
 REJECT_TESTS += CLamField

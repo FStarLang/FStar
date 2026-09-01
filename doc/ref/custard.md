@@ -1524,6 +1524,11 @@ Four things make it work.
    flag delivers a completely monomorphic program there and only a mostly
    monomorphic one under the OCaml backend.
 
+   Not quite empty, as §31.3 records: a module realized by hand *in OCaml* is
+   realized in C too as far as this pass is concerned, so `Prims.list` is
+   frozen under the C backend by `FStar.List.Tot.Base`.  Error 368 now names
+   the external that froze the type rather than claiming the pass missed it.
+
    A `Realized` or `Imported` *type declaration* is frozen for the same
    reason, and more directly.  Its representation is fixed outside this
    program — by the hand-written OCaml of §8.2, or by the unit that already
@@ -9104,6 +9109,132 @@ untouched by this, and it is what §12.3's "specialize by value" was trying to
 avoid in the first place.  This round says the avoidance has a hard limit,
 and now says so with a diagnostic instead of a hang.
 
+## 31 Honouring what the program already says
+
+Round 35 is three reports with one shape between them.  EverParse has already
+written down, by hand, which definitions must unfold and which must not --
+`normalize_for_extraction` on every generated definition, `sem_attr`/
+`base_attr` on the AST interpreter, a `delta_only` whitelist naming
+`List.Tot.length` and `FStar.String.strlen` outright -- and Custard was
+ignoring all of it and trying to rediscover the same set from §3.1's rules 4b
+and 4c.
+
+It should not.  Where the program says what it wants, that is the answer;
+inference exists for where it does not.
+
+### 31.1 `normalize_for_extraction`
+
+`[@@normalize_for_extraction steps]` means: reduce this definition with
+exactly these steps before compiling it.  The ML pipeline honours it in
+`FStarC.Extraction.ML.Modul.extract_sig_let`, and that is why the krml
+backend never meets EverParse's `validate_typ'` at all -- F\* has already
+unfolded it against the concrete AST by the time extraction starts.  The
+prebuilt `CDDLExtractionTest.c` contains no `validate_typ`, no `list` and no
+`char`; karamel is not inlining an interpreter, it never sees one.
+
+Custard has its own front end, so it met `validate_typ'` as written and,
+correctly, reported that a `list char` has no C representation.  The 368 was
+downstream of a missing pre-pass.
+
+`Extract.fixup_normalize_for_extraction` is that pre-pass, applied wherever a
+definition's sigelt is fetched, next to `fixup_extract_as`:
+
+- the steps are themselves normalized first, exactly as the ML pipeline does,
+  so a program may write `normalize_for_extraction (nbe :: T.steps)` rather
+  than a literal list at every use;
+- `Cfg.translate_norm_steps` turns them into normalizer steps, and an
+  ill-formed attribute is a warning and a no-op, not a failure;
+- the environment sets `erase_erasable_args`, which is what makes the
+  reduction affordable -- a proof argument is dropped rather than reduced;
+- `normalize_for_extraction_type` additionally normalizes the type;
+- the reduction runs under `norm_bounded`, so §3.6's budget still applies.  A
+  definition the programmer has explicitly asked to unfold is the one place
+  where exhausting the budget really is an error and not a size problem: the
+  request was specific, and the answer is to narrow the steps or raise the
+  budget.
+
+It is cached by lid.  `extract_lid` runs once per specialization, and the
+attribute exists precisely because the reduction is expensive; without the
+cache a definition with twenty specializations would pay for it twenty times.
+
+`tests/custard/NormForExtraction.fst` is the CDDL shape in miniature: a
+recursive interpreter over an AST applied to a closed constant, with a
+whitelist that names the interpreter and the constant but deliberately *not*
+`step`.  The test asserts both halves -- the `ast` datatype and both
+`eval` functions are gone, and `step` survives as a call -- because a pass
+that reduced too much would pass a test that only checked the first.
+
+#### Why not infer it
+
+The reporter tried the alternative, thoroughly: 34 `[@@@monomorphize]`
+annotations across three EverParse files, which got two of the four CDDL
+entry points to clean C with *no* pre-pass, and faster -- `uint` went from
+141 s and an error to 13 s and 70 KB.  Specializing turns out to be cheaper
+than normalizing, because the stock failures were spending their time
+building giant normal forms for keys that specialization never needs.
+
+That is a real result and it says the two routes are close to
+interchangeable.  Both are honoured now, and neither is inferred.  The
+argument for reading the attribute as well is that the delta set is
+*per-use*, not per-definition: EverParse's own `steps` unfolds
+`Mkbundle_env?.b_e_v`, `bundle_steps` excludes `Mkbundle?.b_parser`, and
+`bundle_get_rel_steps` includes it.  No single global rule is right for all
+three, and nothing Custard could infer would arrive at a set that
+deliberately disagrees with itself.  The attribute is where that disagreement
+is already written down.
+
+### 31.2 Error 368 gets a chain
+
+Errors 364, 365 and 373 print "Reached through", because extraction is
+demand-driven and the chain is the demand.  Error 368 printed nothing but a
+declaration name, and twice in a row that is what stopped the reporter:
+
+```
+* Error 368:
+  - Custard: the abstract type Prims.int has no C representation, in
+    Prims.op_Less.
+```
+
+`Prims.op_Less` is used everywhere in the CDDL sources, appears nowhere in
+the output, and is absent from `--custard_dump_specializations`.  There is
+nothing to act on.
+
+The C backend has no request chain -- it runs after extraction, over the
+whole program -- but it has the call graph, and reachability from a root is
+the same information from the other end.  `PrintC.record_parents` walks
+breadth-first from the roots recording who first reached each declaration, so
+walking back up gives a shortest chain; a constructor resolves to its own
+type, as `Simplify.dce` already does.  Both `reject` and `reject_ir` append
+it.
+
+### 31.3 What "did not reach" actually meant
+
+The other half of the same complaint.  For `FStar.List.Tot.Base.isEmpty@char`
+the old message read:
+
+> `--custard_monomorphize_types` is already set, so this type is one the
+> monomorphization pass did not reach.  That is a Custard bug, please report
+> it.
+
+It is not a bug and the pass did reach it.  `FStar.List.Tot.Base` is realized
+by hand in OCaml (`ulib/ml/FStar_List_Tot_Base.ml`), so `isEmpty` is an
+external, so rule 4 of §5.0.1 froze every type its signature mentions --
+including `Prims.list`.  A monomorphic clone would name a declaration the
+hand-written realization does not define.  That is a decision, and it has a
+culprit worth printing.
+
+`record_parents` also records, for each type, an external whose signature
+mentions it, and the message names it.  `tests/custard/ListC.fst` pins the
+result.
+
+What it does *not* do is change the decision.  A module realized in OCaml has
+no C counterpart, and honouring `realized_modules` under the C backend is
+arguably wrong for that reason -- `isEmpty` could simply be compiled there,
+and would then be rejected for the honest reason, that a cons list is a
+recursive datatype and a C struct cannot contain itself.  That is a larger
+change than a diagnostic, it touches every C and krml test, and it is not
+what round 35 asked for; it is written down here as the next thing.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -9205,3 +9336,7 @@ and now says so with a diagnostic instead of a hang.
 | M10οο | **A name that doubles at every level** (§30.15) | Done.  Round 33, which also retracted round 32's central number: the term is 270 bytes, not 9 MB -- the 9 MB was the *chain*, whose frames are specialization instantiations, so what was 8 MB is a **name**.  `Monomorphize.hint_of_cty` rendered a type structurally with no bound, and `TApp (n, [])` renders through `n.spec`, so an instantiation's name is built from the names of the instantiations it is made of and a type that nests doubles the name per level.  Bounded now in depth (4) and clipped to 48; truncation can only collide, and `request`'s `pick` already numbers a collision.  `Extract.fit` had the same hole from the other end -- it kept the first component "whatever its length" -- and truncates it too.  Two quadratic costs underneath: `FStarC_String.list_of_string` indexed with `BatUTF8.get`, which walks from the start, and `PrintC.sanitize` called it three times, twice to read one character.  Both are on the path of every name Custard prints.  On the 25-line reproducer at depth 12: 159 s to 14.9 s, C output 1,237,635 to 23,318 bytes, longest identifier **57,361 characters to 82** -- the width bound is the one that matters, since C99 promises 63 significant characters for an internal identifier and 31 for an external one.  `tests/custard/NameWidth.fst` |
 | M10ππ | **An eta-reduction with nowhere to put the argument back** (§30.16) | Done.  Round 33, reported in passing.  `let consume (i: sig_t s) (u: U32.t) = i u`, where `sig_t` unfolds to an arrow, reached C as Error 368: it takes 1 argument and is applied to 2.  Eta-reduction shortened it to `fun i -> i` correctly, and eta-expansion -- the pass whose whole job is putting that argument back for C -- did not fire, because it reads what is still owed off the *head of the body*, and this body has no head.  It is a bare parameter, so `head = None` meant `missing = 0`.  There is no callee arity to read, but there are call sites, and the only reason to expand a headless body is that one of them supplies more arguments than the definition accepts -- exactly the condition C rejects.  The demand is read off `use_arity`, bounded by the result type's arity as every other case is, and zero when no caller asks.  `tests/custard/EtaVar.fst` |
 | M10ρρ | **A value that is small only because it is shared** (§30.17) | Done.  Round 34.  `bundle_signoutputargs` is not diverging: at ten times the budget it runs ten times as long, allocates linearly to 59 GB, and reports a byte-identical error.  It is copying.  The term binds its predecessor once and reads five fields off it, so it is linear as written and doubles at every level once iota substitutes the binding away -- and producing a specialization key is exactly that substitution.  A key only has to *distinguish*, though, and merging is the only direction that can be wrong; so `split_mono_args` now falls back from the full normal form to the weak head normal form to the argument as written, warning 373 saying which.  Keying on a name preserves the sharing that reducing it destroys.  Error 365 at a `Mono` argument goes with it: termination is undecidable, the proxy for it is useless (`add_mod` reaches `pow2`, so `LetShare` answers the same as `spin 0`), and declining to reduce is well defined for both -- `NormBudget` now records warning 373 and extracts a program that diverges when run, which is what it says.  The divergent *type* of `TypeDiverge` has no as-written form and is still error 365.  `tests/custard/LetShare.fst` goes from Error 365 to 3.5 KB of OCaml at a chain of 40, and prints the same number the 587 KB exponential form prints |
+| M10σσ | **`normalize_for_extraction`** (§31.1) | Done.  Round 35.  EverParse puts `[@@normalize_for_extraction (nbe :: T.steps)]` on every definition its CDDL tool generates, which is why the krml backend never meets `validate_typ'`: F\* has unfolded it against the concrete AST before extraction starts.  Custard has its own front end and was ignoring the attribute, so it met the interpreter as written and reported, correctly, that a `list char` has no C representation -- a 368 downstream of a missing pre-pass.  `Extract.fixup_normalize_for_extraction` honours it next to `fixup_extract_as`: steps normalized first so `nbe :: T.steps` need not be a literal, `erase_erasable_args` set as the ML pipeline sets it, `normalize_for_extraction_type` for the type, §3.6's budget still applied, and cached by lid since `extract_lid` runs once per specialization.  `tests/custard/NormForExtraction.fst` asserts both halves: the interpreter and its AST vanish, and the one function outside the whitelist survives as a call |
+| M10ττ | **A chain for error 368** (§31.2) | Done.  Round 35, reported twice as the thing that stopped the reader.  364, 365 and 373 print "Reached through" because extraction is demand-driven and the chain is the demand; 368 printed a declaration name and nothing else, and `Prims.op_Less` -- used everywhere, appearing nowhere in the output, absent from `--custard_dump_specializations` -- is unactionable on its own.  The backend has no request chain, but it has the call graph, and reachability from a root is the same information from the other end: `PrintC.record_parents` walks breadth-first from the roots so the chain is a shortest one, resolving a constructor to its type as `Simplify.dce` does.  `tests/custard/ListC.fst` |
+| M10υυ | **"the pass did not reach it" was a guess** (§31.3) | Done.  Round 35.  The 368 for `FStar.List.Tot.Base.isEmpty@char` claimed monomorphization had not reached `Prims.list` and asked for a bug report.  It had.  `FStar.List.Tot.Base` is realized by hand in OCaml, so `isEmpty` is an external, so §5.0.1's rule 4 froze every type in its signature -- a clone would name something the realization does not define.  The message now names the external that froze the type and says why.  It does not change the decision: honouring `realized_modules` under a backend with no hand-written realizations is arguably wrong, but that touches every C and krml test and is recorded as the next thing |
+| M10φφ | **`LetShare` was registered but never run** (§30.17) | Done.  Round 35.  `FLAGS_LetShare` and `GREP_LetShare` were set, but the `CUSTARD_TESTS += LetShare` line was missing, so nothing expanded to a target and `make` skipped it silently.  Caught by the reporter, not by the suite, which is the uncomfortable part: a test that is not registered passes |

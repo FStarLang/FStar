@@ -54,6 +54,7 @@ module SMap   = FStarC.SMap
 module E      = FStarC.Errors
 module String = FStarC.String
 module Options = FStarC.Options
+module Simplify = FStarC.Custard.Simplify
 
 (* -------------------------------------------------------------------- *)
 (* Rejections                                                           *)
@@ -65,10 +66,46 @@ module Options = FStarC.Options
    construction, a good one. *)
 let current : ref string = mk_ref "<toplevel>"
 
+(* Section 31.2.  A declaration name on its own is not enough to act on.
+   Errors 364, 365 and 373 all print a "Reached through" chain, because
+   extraction is demand-driven and the chain is the demand; error 368 printed
+   none, and twice in a row that was the thing that stopped a reader.
+   [Prims.op_Less] is the extreme case: it is used everywhere, it appears
+   nowhere in the output, and being told only its name says nothing about
+   which use of it survived.
+
+   The backend has no request chain -- it runs after extraction, on the
+   program -- but it has the call graph, and reachability from a root is the
+   same information seen from the other end.  [parents] maps a declaration to
+   the one that pulled it in, filled by a breadth-first walk from the roots
+   so that the chain it yields is a shortest one. *)
+let parents : SMap.t string = SMap.create 50
+
+(* Section 31.3.  For a type declaration that was left polymorphic, the
+   external whose signature mentions it -- which is *why* it was left
+   polymorphic, by §5.0.1 rule 4.  Naming it is the difference between "the
+   pass did not reach this, please report a bug" and "this declaration is
+   realized outside the program, so the pass was not allowed to clone it". *)
+let frozen_by : SMap.t string = SMap.create 20
+
+let reached_through (n:string) : ML (list string) =
+  let rec up (n:string) (fuel:int) (acc:list string) : ML (list string) =
+    if fuel <= 0 then List.rev acc
+    else match SMap.try_find parents n with
+         | None -> List.rev acc
+         | Some p -> up p (fuel - 1) (p :: acc) in
+  up n 12 []
+
+let chain_msg () : ML (list Pprint.document) =
+  match reached_through !current with
+  | [] -> []
+  | ns -> text "Reached through:" ::
+          (ns |> List.map (fun n -> text ("  " ^ n)))
+
 let reject (#a:Type) (what:string) (why:list string) : ML a =
   E.raise_error0 E.Error_CustardNoCRepresentation
     ([text ("Custard: " ^ what ^ " has no C representation, in " ^ !current ^ ".")]
-     @ List.map text why)
+     @ List.map text why @ chain_msg ())
 
 (* The other kind of refusal: not "C cannot express this", which is a fact
    about the source, but "the IR is malformed", which is a fact about the
@@ -77,7 +114,7 @@ let reject (#a:Type) (what:string) (why:list string) : ML a =
 let reject_ir (#a:Type) (what:string) (why:list string) : ML a =
   E.raise_error0 E.Error_CustardNoCRepresentation
     ([text ("Custard: " ^ what ^ " reached the C backend, in " ^ !current ^ ".")]
-     @ List.map text why)
+     @ List.map text why @ chain_msg ())
 
 (* -------------------------------------------------------------------- *)
 (* Names                                                                *)
@@ -207,14 +244,37 @@ let int_type (sw : signedness & width) : string =
    have set sends them looking in the wrong place.  When it is on, the pass
    ran and this type is one it did not reach, which is a bug report rather
    than a configuration change. *)
-let mono_advice () : ML (list string) =
-  if Options.custard_monomorphize_types ()
-  then ["--custard_monomorphize_types is already set, so this type is one the \
-         monomorphization pass did not reach (section 5.0.1).";
-        "That is a Custard bug, not a configuration problem: please report it, \
-         with the definition named above."]
-  else ["The direct-to-C backend requires --custard_monomorphize_types true \
+(* Section 31.3.  With the flag on, "the pass did not reach it" was a guess,
+   and usually the wrong one: the common cause is §5.0.1 rule 4, which freezes
+   every type an externally realized declaration mentions, because a clone of
+   it would name something the hand-written realization does not define.  That
+   is not a bug, it is a decision, and it has a culprit worth printing. *)
+let mono_advice_for (n:option name) : ML (list string) =
+  if not (Options.custard_monomorphize_types ())
+  then ["The direct-to-C backend requires --custard_monomorphize_types true \
          (section 5.0.1)."]
+  else
+    match (match n with
+           | None -> None
+           | Some n -> SMap.try_find frozen_by (string_of_name n)) with
+    | Some ext ->
+      ["--custard_monomorphize_types is set, and the pass deliberately left \
+        this type alone: it is mentioned in the signature of " ^ ext ^ ", \
+        which is realized outside this program, so a monomorphic clone of it \
+        would name a declaration the realization does not define (section \
+        5.0.1, rule 4).";
+       "The type is frozen because " ^ ext ^ " is external, not because it \
+        could not be sized.  Give " ^ ext ^ " a definition Custard can \
+        compile -- it is a hand-written realization for the OCaml backend, \
+        and there is no C counterpart -- or keep this type out of its \
+        signature."]
+    | None ->
+      ["--custard_monomorphize_types is already set, so this type is one the \
+        monomorphization pass did not reach (section 5.0.1).";
+       "That is a Custard bug, not a configuration problem: please report it, \
+        with the definition named above."]
+
+let mono_advice () : ML (list string) = mono_advice_for None
 
 let builtin_type (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
@@ -278,7 +338,7 @@ and base_ty (t:cty) : ML string =
      type, which is a different problem with a different cause and deserves to
      be told apart. *)
   | TApp (n, _) ->
-    reject ("the polymorphic type " ^ string_of_name n) (mono_advice ())
+    reject ("the polymorphic type " ^ string_of_name n) (mono_advice_for (Some n))
   | TVar x ->
     reject ("the type variable '" ^ x) (mono_advice ())
   | TTuple _ ->
@@ -1679,7 +1739,62 @@ let storage (l:dlet) : ML string =
 (* [base] is the stem of the output file: the source includes [base.h], and
    the include guard is derived from it.  Returns the header and the source,
    in that order. *)
+(* Section 31.2.  Breadth-first from the roots, recording who first reached
+   each declaration, so that walking back up gives a shortest chain.  A
+   constructor is reached as its own type, which is how {!Simplify.dce}
+   resolves it too. *)
+let record_parents (p:program) : ML unit =
+  let defs : SMap.t decl = SMap.create 50 in
+  let own : SMap.t string = SMap.create 50 in
+  let _ = p |> List.iter (fun d ->
+    SMap.add defs (string_of_name (name_of_decl d)) d;
+    match d with
+    | DType t ->
+      (match t.dt_body with
+       | TVariant cs ->
+         cs |> List.iter (fun (cn, _) ->
+                 SMap.add own (string_of_name cn) (string_of_name t.dt_name))
+       | _ -> ())
+    | _ -> ()) in
+  let resolve (n:string) : ML string =
+    match SMap.try_find own n with Some o -> o | None -> n in
+  let seen : SMap.t bool = SMap.create 50 in
+  let rec bfs (front:list string) : ML unit =
+    match front with
+    | [] -> ()
+    | _ ->
+      let next = front |> List.collect (fun n ->
+        match SMap.try_find defs n with
+        | None -> []
+        | Some d ->
+          Simplify.decl_deps d |> List.collect (fun c ->
+            let c = resolve c in
+            if c = n || Some? (SMap.try_find seen c) then []
+            else (SMap.add seen c true; SMap.add parents c n; [c]))) in
+      bfs next in
+  let rec ty_names (t:cty) (acc:list string) : ML (list string) =
+    match t with
+    | TApp (n, args) ->
+      List.fold_right ty_names args (string_of_name n :: acc)
+    | TArrow (a, _, b) -> ty_names a (ty_names b acc)
+    | TBuf e | TRef e | TInline e -> ty_names e acc
+    | TTuple ts -> List.fold_right ty_names ts acc
+    | _ -> acc in
+  let _ = p |> List.iter (fun d ->
+    match d with
+    | DExternal x ->
+      ty_names x.dx_ty [] |> List.iter (fun tn ->
+        if None? (SMap.try_find frozen_by tn)
+        then SMap.add frozen_by tn (string_of_name x.dx_name))
+    | _ -> ()) in
+  let roots = p |> List.collect (fun d ->
+    if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)
+    then (let n = string_of_name (name_of_decl d) in SMap.add seen n true; [n])
+    else []) in
+  bfs roots
+
 let print_program (base:string) (p:program) : ML (string & string) =
+  record_parents p;
   let tt = SMap.create 50 in
   let ct = SMap.create 50 in
   let xt = SMap.create 20 in
