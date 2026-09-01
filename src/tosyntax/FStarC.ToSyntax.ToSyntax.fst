@@ -3139,17 +3139,21 @@ let lookup_effect_lid env (l:lident) (r:Range.t) : ML S.eff_decl =
       ("Effect name " ^ show l ^ " not found")
   | Some l -> l
 
-(* As [lookup_effect_lid], but resolves an effect abbreviation to the effect it
-   abbreviates.  A lift is always declared between two actual effects, but the
-   source may well be written with an abbreviation: [PURE] and [DIV] are
-   abbreviations of [Tot] and [Div], and a great deal of existing code says
-   [sub_effect PURE ~> M]. *)
-let lookup_effect_lid_unfold env (l:lident) (r:Range.t) : ML S.eff_decl =
+(* As [lookup_effect_lid], but for the two ends of a lift, which must be actual
+   effects rather than abbreviations of them: a lift is an edge of the effect
+   lattice, and an abbreviation is not a node of it.  [PURE], [GHOST] and [DIV]
+   are abbreviations of [Tot], [GTot] and [Div], so say which one is meant
+   rather than merely reporting the name as not found. *)
+let lookup_effect_lid_for_lift env (l:lident) (r:Range.t) : ML S.eff_decl =
   match Env.try_lookup_effect_defn env l with
   | Some ed -> ed
   | None ->
     match Env.try_lookup_root_effect_name env l with
-    | Some l' -> lookup_effect_lid env l' r
+    | Some l' ->
+      raise_error r Errors.Fatal_EffectNotFound
+        (Format.fmt2 "%s is an effect abbreviation, and a lift is declared \
+                      between effects; write %s instead"
+           (show l) (show l'))
     | None ->
       raise_error r Errors.Fatal_EffectNotFound
         ("Effect name " ^ show l ^ " not found")
@@ -3801,8 +3805,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
     desugar_define_effect env d d_attrs quals eff_name eff_binders eff_decls
 
   | SubEffect l ->
-    let src_ed = lookup_effect_lid_unfold env l.msource d.drange in
-    let dst_ed = lookup_effect_lid_unfold env l.mdest d.drange in
+    let src_ed = lookup_effect_lid_for_lift env l.msource d.drange in
+    let dst_ed = lookup_effect_lid_for_lift env l.mdest d.drange in
     let lift =
       match l.lift_op with
       | None -> None
