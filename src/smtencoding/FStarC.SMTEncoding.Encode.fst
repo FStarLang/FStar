@@ -220,6 +220,22 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
                                 ([[Term.boxBool b]], [bb], mk_HasType (Term.boxBool b) tt), Some "bool typing", "bool_typing");
          Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
+    let mk_prop : env -> string -> term -> ML (list decl) = fun env nm tt ->
+        // prop is encoded like bool: every prop is a boxed SMT boolean,
+        // where the boxed boolean records the validity of the prop.
+        let typing_pred = mk_HasType x tt in
+        let bb = mk_fv ("b", Bool_sort) in
+        let b = mkFreeV bb in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[Term.boxProp b]], [bb], mk_HasType (Term.boxProp b) tt),
+                       Some "prop typing", "prop_typing");
+         Util.mkAssume(mkForall (Env.get_range env)
+                                ([[mkApp("Valid", [Term.boxProp b])]], [bb],
+                                 mkIff(mkApp("Valid", [Term.boxProp b]), b)),
+                       Some "prop validity", "prop_validity");
+         Util.mkAssume(mkForall_fuel env (Env.get_range env)
+                                     ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxPropFun) x)),
+                       Some "prop inversion", "prop_inversion")] in
     let mk_int : env -> string -> term -> ML (list decl) = fun env nm tt ->
         let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
@@ -405,6 +421,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
    in
    let prims : list (lident & (env -> string -> term -> ML (list decl))) =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
+                 (Const.prop_lid,   mk_prop);
                  (Const.int_lid,    mk_int);
                  (Const.real_lid,   mk_real);
                  (Const.string_lid, mk_str);
