@@ -1654,7 +1654,30 @@ let check_trivial_precondition_wp env c : ML _ =
   ct, U.t_true, Env.trivial_guard
 
 //Decorating terms with monadic operators
+(*
+ * The result type recorded in a [Meta_monadic]/[Meta_monadic_lift] annotation is
+ * a hint, not a claim: [tc_term] drops it when it re-checks such a term,
+ * extraction ignores it, and the normalizer uses it only to build the effect's
+ * representation type when reifying.  Record the bare type, with no
+ * specification attached.
+ *
+ * This matters now that a postcondition is a refinement of the result type.  An
+ * inferred postcondition embeds the very terms it describes -- the definiens of
+ * a pure [let] ([assume_result_eq_pure_term]), the result of every branch of a
+ * match ([combine_branch_res_typs]) -- so an annotation that carried it would
+ * hold a second copy of the computation it annotates.  Effectful code binds at
+ * every step, so the copies nest, and the elaborated term grows multiplicatively
+ * with the nesting depth.  A [Tac] function that traverses terms feels this
+ * sharply: reducing [FStar.Tactics.Visit.visit_tm] over a term of size n took
+ * time exponential in n, which is what made tests/bug-reports/closed/Bug3210.fst
+ * take twenty minutes.  Before specifications moved into the result type this
+ * information lived in the WP, which was never part of the term; dropping it
+ * here keeps annotated terms the size they were then.
+ *)
+let monadic_annot_typ (t:typ) : ML typ = U.unrefine t
+
 let maybe_lift env e c1 c2 t : ML _ =
+    let t = monadic_annot_typ t in
     // The several spellings of the pure and ghost effects may be used in Prims
     // before the abbreviations relating them are declared; normalize by hand.
     let norm_eff l =
@@ -1672,6 +1695,7 @@ let maybe_lift env e c1 c2 t : ML _ =
     else mk (Tm_meta {tm=e; meta=Meta_monadic_lift(m1, m2, t)}) e.pos
 
 let maybe_monadic env e c t : ML _ =
+    let t = monadic_annot_typ t in
     let m = Env.norm_eff_name env c in
     (* [is_pure_or_ghost_effect] recognizes every spelling of the pure and
        ghost effects, including the ones used in Prims before the

@@ -114,6 +114,12 @@ val universe_of_comp: env -> universe -> comp -> ML universe
 val check_trivial_precondition_wp : env -> comp -> ML (comp_typ & formula & guard_t)
 
 //decorating terms with monadic operators
+
+(* The bare result type to record in a [Meta_monadic]/[Meta_monadic_lift]
+   annotation: such an annotation is a hint for reification and extraction, and
+   must not carry a specification.  See the definition for why. *)
+val monadic_annot_typ: typ -> ML typ
+
 val maybe_lift: env -> term -> lident -> lident -> typ -> ML term
 val maybe_monadic: env -> term -> lident -> typ -> ML term
 
