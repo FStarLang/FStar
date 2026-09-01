@@ -82,7 +82,6 @@ instance tagged_term : tagged term = {
   | Decreases      _ -> "Decreases"
   | Labeled        _ -> "Labeled"
   | Discrim        _ -> "Discrim"
-  | Attributes     _ -> "Attributes"
   | Antiquote      _ -> "Antiquote"
   | Quote          _ -> "Quote"
   | VQuote         _ -> "VQuote"
@@ -661,9 +660,6 @@ let rec term_to_string (x:term) : ML string = match x.tm with
   | Discrim lid ->
     Format.fmt1 "%s?" (string_of_lid lid)
 
-  | Attributes ts ->
-    Format.fmt1 "(attributes %s)" (String.concat " " <| List.map term_to_string ts)
-
   | Antiquote t ->
     Format.fmt1 "(`#%s)" (term_to_string t)
 
@@ -1124,8 +1120,6 @@ let rec pp_term (t:term) : ML document =
       ctor "Labeled" [pp_term t; doc_of_string s; doc_of_string (show b)]
   | Discrim l ->
       ctor "Discrim" [pp l]
-  | Attributes ts ->
-      ctor "Attributes" [pp_list' pp_term ts]
   | Antiquote t ->
       ctor "Antiquote" [pp_term t]
   | Quote (t, qk) ->

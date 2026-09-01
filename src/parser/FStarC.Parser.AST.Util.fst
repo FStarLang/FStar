@@ -72,7 +72,6 @@ and lidents_of_term' (t:term')
   | Decreases t -> lidents_of_term t
   | Labeled (t, _, _) -> lidents_of_term t
   | Discrim lid -> [lid]
-  | Attributes ts -> concat_map lidents_of_term ts
   | Antiquote t -> lidents_of_term t
   | Quote (t, _) -> lidents_of_term t
   | VQuote t -> lidents_of_term t

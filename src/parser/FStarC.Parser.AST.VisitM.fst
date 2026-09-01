@@ -171,9 +171,6 @@ let on_sub_term'
     return <| Labeled (t, lbl, b)
   | Discrim l ->
     return <| Discrim l
-  | Attributes ts ->
-    let! ts = mapM d.f_term ts in
-    return <| Attributes ts
   | Antiquote t ->
     let! t = d.f_term t in
     return <| Antiquote t

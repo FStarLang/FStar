@@ -291,8 +291,6 @@ and eq_term' (t1 t2:term')
       b1 = b2
     | Discrim l1, Discrim l2 ->
       Ident.lid_equals l1 l2
-    | Attributes ts1, Attributes ts2 ->
-      eq_list eq_term ts1 ts2
     | Antiquote t1, Antiquote t2 ->
       eq_term t1 t2
     | Quote (t1, k1), Quote (t2, k2) ->

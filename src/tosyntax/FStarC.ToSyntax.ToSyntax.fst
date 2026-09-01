@@ -1090,10 +1090,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
     | Ensures t ->
       desugar_formula env t, noaqs
 
-    | Attributes ts ->
-        failwith "Attributes should not be desugared by desugar_term_maybe_top"
-        // desugar_attributes env ts
-
     | Const (Const_machine_int (i, b, sw, w)) ->
         desugar_machine_integer env i b (sw, w) top.range, noaqs
 
@@ -2712,12 +2708,6 @@ let typars_of_binders env bs : ML (_ & binders) =
     env, List.rev tpars
 
 
-let desugar_attributes (env:env_t) (cattributes:list term) : ML (list cflag) =
-    let desugar_attribute t =
-        match (unparen t).tm with
-            | _ -> raise_error t Errors.Fatal_UnknownAttribute ("Unknown attribute " ^ term_to_string t)
-    in List.map desugar_attribute cattributes
-
 let binder_ident (b:binder) : option ident =
   match b.b with
   | Annotated (x, _)
@@ -2900,23 +2890,6 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
         let se =
             if quals |> List.contains S.Effect
             then
-                let t, cattributes =
-                    match (unparen t).tm with
-                        (* TODO : we are only handling the case Effect args (attributes ...) *)
-                        | Construct (head, args) ->
-                            let cattributes, args =
-                                match List.rev args with
-                                    | (last_arg, _) :: args_rev ->
-                                        begin match (unparen last_arg).tm with
-                                            | Attributes ts -> ts, List.rev (args_rev)
-                                            | _ -> [], args
-                                        end
-                                    | _ -> [], args
-                            in
-                            mk_term (Construct (head, args)) t.range t.level,
-                            desugar_attributes env cattributes
-                         | _ -> t, []
-                 in
                  let c, pre = desugar_comp t.range false env' t in
                  (* An [ensures] clause on an abbreviation is fine: it refines
                     the result type of the computation stored here, and the
@@ -2937,7 +2910,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                  let c = Subst.close_comp typars c in
                  let quals = quals |> List.filter (function S.Effect -> false | _ -> true) in
                  { sigel = Sig_effect_abbrev {lid=qlid; us=[]; bs=typars; comp=c;
-                                              cflags=cattributes @ comp_flags c};
+                                              cflags=comp_flags c};
                    sigquals = quals;
                    sigrng = range_of_id id;
                    sigmeta = default_sigmeta  ;
@@ -3301,29 +3274,20 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
     let env0 = env in
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
-    let ed_lid, ed, args, cattributes =
+    let ed_lid, ed, args =
         let head, args = head_and_args_full defn in
         let lid = match head.tm with
           | Name l -> l
           | _ -> raise_error d Errors.Fatal_EffectNotFound ("Effect " ^AST.term_to_string head^ " not found")
         in
         let ed = fail_or env (Env.try_lookup_effect_defn env) lid in
-        let cattributes, args =
-            match List.rev args with
-            | (last_arg, _) :: args_rev ->
-                begin match (unparen last_arg).tm with
-                    | Attributes ts -> ts, List.rev (args_rev)
-                    | _ -> [], args
-                end
-            | _ -> [], args
-        in
-        lid, ed, desugar_args env args, desugar_attributes env cattributes in
+        lid, ed, desugar_args env args in
     let binders = Subst.close_binders binders in
     if List.length args <> List.length ed.binders
     then raise_error defn Errors.Fatal_ArgumentLengthMismatch "Unexpected number of arguments to effect constructor";
     let mname = qualify env0 eff_name in
     let ed = {
-            cattributes   = cattributes;
+            cattributes   = [];
             mname         = mname;
             univs         = ed.univs;
             binders       = binders;

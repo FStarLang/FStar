@@ -89,7 +89,6 @@ type term' =
   | Decreases of term
   | Labeled   of term & string & bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
-  | Attributes of list term   (* attributes decorating a term *)
   | Antiquote of term  (* Antiquotation within a quoted term *)
   | Quote     of term & quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)

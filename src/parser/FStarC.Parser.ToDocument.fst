@@ -1358,8 +1358,6 @@ and p_noSeqTerm' ps pb e : ML _ = match e.tm with
       group (str "%" ^^ p_term_list ps pb l)
   | Decreases e ->
       group (str "decreases" ^/^ p_typ ps pb e)
-  | Attributes es ->
-      group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
   | If (e1, op_opt, ret_opt, e2, e3) ->
       (* No need to wrap with parentheses here, since if e1 then e2; e3 really
        * does parse as (if e1 then e2); e3 -- the IF does not swallow
@@ -2198,7 +2196,6 @@ and p_projectionLHS e : ML _ = match e.tm with
   | Requires _  (* p_noSeqTerm *)
   | Ensures _   (* p_noSeqTerm *)
   | Decreases _ (* p_noSeqTerm *)
-  | Attributes _(* p_noSeqTerm *)
   | Quote _     (* p_noSeqTerm *)
   | VQuote _    (* p_noSeqTerm *)
   | Antiquote _ (* p_noSeqTerm *)

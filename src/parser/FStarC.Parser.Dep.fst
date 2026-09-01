@@ -1189,8 +1189,6 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
     | Antiquote t
     | VQuote t ->
         collect_term t
-    | Attributes cattributes  ->
-        List.iter collect_term cattributes
     | CalcProof (rel, init, steps) ->
         add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Calc")));
         begin
