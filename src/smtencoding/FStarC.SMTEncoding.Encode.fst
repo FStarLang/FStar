@@ -1039,13 +1039,12 @@ let encode_top_level_let :
                                          (univ_terms @ List.map mkFreeV vars)
                 in
                 let is_logical =
-                  // match (SS.compress t_body).n with
-                  // | Tm_fvar fv when S.fv_eq_lid fv FStarC.Parser.Const.prop_lid -> true
-                  // | _ -> false
-
-                  // GE: this is a cute idea, but the formula axiom shouldn't
-                  // replace the default equation axiom, so disabling this for now
-                  false
+                  // A prop-valued definition additionally gets a formula
+                  // equation `Valid (f x) <==> body`, where the body is
+                  // encoded as a formula rather than as a term.
+                  match (SS.compress t_body).n with
+                  | Tm_fvar fv when S.fv_eq_lid fv FStarC.Parser.Const.prop_lid -> true
+                  | _ -> false
                 in
                 let is_smt_theory_symbol =
                     let fv = Inr?.v lbn in
