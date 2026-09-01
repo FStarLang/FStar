@@ -115,10 +115,17 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
 
       | Unfold_for_unification_and_vcgen
       | Visible_default
-      | Irreducible
+      | Irreducible ->
+        q2=Logic || q2=Inline_for_extraction || q2=NoExtract || has_eq q2 || inferred q2 || visibility q2 || reification q2
+
       | Noeq
       | Unopteq ->
         q2=Logic || q2=Inline_for_extraction || q2=NoExtract || has_eq q2 || inferred q2 || visibility q2 || reification q2
+        (* `unfold` is allowed on a class or record, where it applies to the
+           generated typeclass methods. The equality qualifiers are often
+           inferred rather than written, so refusing the combination would make
+           `unfold class` fail for reasons the user did not choose. *)
+        || q2=Unfold_for_unification_and_vcgen
 
       | TotalEffect ->
         inferred q2 || visibility q2 || reification q2 || q2=Assumption
@@ -189,7 +196,8 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
               || x=NoExtract
               || inferred x
               || visibility x
-              || has_eq x))
+              || has_eq x
+              || x=Unfold_for_unification_and_vcgen))
         then err [];
         if quals |> List.existsb (function Unopteq -> true | _ -> false) &&
            U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr
