@@ -608,22 +608,9 @@ let check_arg_qual (a:aqual) (b:bqual)
 
 let check_bqual (b0 b1:bqual)
   : ML (result unit)
-  = match b0, b1 with
-    | None, None -> return ()
-    | Some (Implicit b0), Some (Implicit b1) ->
-      //we don't care about the inaccessibility qualifier
-      //when comparing bquals
-      return ()
-    | Some Equality, None
-    | None, Some Equality // The equality qualifier is metadata, ignore it
-    | Some Equality, Some Equality ->
-      return ()
-    | Some (Meta t1), Some (Meta t2) ->
-      if equal_term t1 t2
-      then return ()
-      else fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
-    | _ ->
-      fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
+  = if U.bqual_compat b0 b1
+    then return ()
+    else fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
 
 let check_aqual (a0 a1:aqual)
   : ML (result unit)

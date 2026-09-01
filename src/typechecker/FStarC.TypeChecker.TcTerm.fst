@@ -2500,14 +2500,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
 
     | ({binder_bv=hd;binder_qual=imp;binder_positivity=pqual_actual; binder_attrs=attrs})::bs,
       ({binder_bv=hd_expected;binder_qual=imp';binder_positivity=pqual_expected;binder_attrs=attrs'})::bs_expected -> begin
-        (* These are the discrepancies in qualifiers that we allow *)
-        let special q1 q2 = match q1, q2 with
-        | Some (Meta _), Some (Meta _) -> true (* don't compare the metaprograms *)
-        | None, Some Equality -> true
-        | Some (Implicit _), Some (Meta _) -> true
-        | _ -> false in
-
-        if not (special imp imp') && not (U.eq_bqual imp imp') then
+        if not (U.bqual_compat imp imp') then
           let open FStarC.Errors.Msg in
           let open FStarC.Pprint in
           let open FStarC.Class.PP in
