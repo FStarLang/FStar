@@ -1194,17 +1194,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
               | _ ->
                 let universes, args = BU.take (fun (_, imp) -> imp = UnivApp) args in
                 let universes = List.map (fun x -> desugar_universe (fst x)) universes in
-                (* The element type is given explicitly: inferring it makes
-                   the result type of the lambda -- which carries the [==] fact
-                   for the pair, mentioning [te] -- the solution of a unification
-                   variable bound outside the lambda. *)
-                let args, aqs =
-                  List.map #_ #(S.arg & antiquotations_temp)
-                    (fun (t, imp) ->
-                      let te, aq = desugar_term_aq env t in
-                      arg_withimp_t imp te, aq)
-                    args
-                  |> List.unzip in
+                let args, aqs = List.map (fun (t, imp) ->
+                  let te, aq = desugar_term_aq env t in
+                  arg_withimp_t imp te, aq) args |> List.unzip in
                 let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
                 let tm =
                   if Nil? args
