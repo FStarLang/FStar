@@ -120,29 +120,21 @@ let read_fstar_include (fn : string) : ML (option (list string)) =
     failwith ("Could not read " ^ fn);
     None
 
-let has_fstar_include (dirname:string) : ML bool =
+let has_fstar_include (dirname : string) : ML bool =
   Filepath.file_exists (dirname ^ "/fstar.include")
 
-let rec expand_module_include_path
-  (root_kind:module_include_path_kind)
-  (dirname:string)
-  : ML (list module_include_path)
-=
+let rec expand_module_include_path (root_kind : module_include_path_kind)
+  (dirname : string) : ML (list module_include_path) =
   if has_fstar_include dirname then (
     let dot_inc_path = dirname ^ "/fstar.include" in
     let subdirs = Some?.v <| read_fstar_include dot_inc_path in
-    { dir=dirname; kind=Flat }
-    :: List.collect
-         (fun subd -> expand_module_include_path (Recursive []) (dirname ^ "/" ^ subd))
-         subdirs
+    let go subd = expand_module_include_path Recursive (dirname ^ "/" ^ subd) in
+    { dir=dirname; kind=Flat } :: List.collect go subdirs
   ) else
     [{ dir=dirname; kind=root_kind }]
 
-let expand_module_include_paths
-  (root_kind:module_include_path_kind)
-  (dirnames:list string)
-  : ML (list module_include_path)
-=
+let expand_module_include_paths (root_kind:module_include_path_kind)
+  (dirnames:list string) : ML (list module_include_path) =
   List.collect (expand_module_include_path root_kind) dirnames
 
 let include_dirs (paths:list module_include_path) : ML (list string) =
@@ -168,12 +160,12 @@ let rec path_is_at_or_below (root:string) (path:string) : ML bool =
     let parent = Filepath.dirname path in
     parent <> path && path_is_at_or_below root parent
 
-let module_include_covers (inc: module_include_path) (path: string): ML bool =
+let module_include_covers_path (inc: module_include_path) (path: string): ML bool =
   let incnorm = Filepath.normalize_file_path inc.dir in
   let pathnorm = Filepath.normalize_file_path path in
   match inc.kind with
   | Flat -> incnorm = pathnorm
-  | Recursive _ -> path_is_at_or_below incnorm pathnorm
+  | Recursive -> path_is_at_or_below incnorm pathnorm
 
 (* Add command-line file parents not already owned by an explicit root as flat
   roots. Roots declared by their [fstar.include] are flat too. For example, when running:
@@ -181,14 +173,14 @@ let module_include_covers (inc: module_include_path) (path: string): ML bool =
   we add `test` as an include path under the assumption that the file defines the Test01 module. *)
 let command_line_include_roots () : ML (list string) =
   let files = !_file_list in
-  let explicit_includes = !_include |> expand_module_include_paths (Recursive []) in
+  let explicit_includes = !_include |> expand_module_include_paths Recursive in
   let file_roots = List.collect (fun file ->
     let root = Filepath.normalize_file_path (Filepath.dirname file) in
     let is_dir = Filepath.is_directory file in
     if is_dir then [] else [root]
   ) files in
   file_roots |> List.filter (fun root ->
-      not (List.existsb (fun inc -> (module_include_covers inc root)) explicit_includes))
+      not (List.existsb (fun inc -> (module_include_covers_path inc root)) explicit_includes))
 
 let command_line_include_paths () : ML (list module_include_path) =
   command_line_include_roots () |> expand_module_include_paths Flat
@@ -201,7 +193,7 @@ let module_include_paths () : ML (list module_include_path) =
   in
   cache_dir
   @ lib_paths ()
-  @ expand_module_include_paths (Recursive []) !_include
+  @ expand_module_include_paths Recursive !_include
   @ command_line_include_paths ()
   @ expand_module_include_path Flat "."
 
@@ -220,10 +212,9 @@ let module_include_paths_normalized () : ML (list module_include_path) =
   match !_module_include_paths_normalized with
   | Some paths -> paths
   | None ->
-    let paths =
-      module_include_paths ()
+    let paths = module_include_paths ()
       |> List.map (fun path ->
-        { path with dir=Filepath.normalize_file_path path.dir })
+        { path with dir = Filepath.normalize_file_path path.dir })
     in
     _module_include_paths_normalized := Some paths;
     paths

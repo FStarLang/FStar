@@ -196,28 +196,27 @@ let list_of_pair (intf, impl) =
 let module_name_from_include_path (f:string) : ML (option string) =
   let f = Filepath.normalize_file_path f in
   let include_paths = Find.module_include_paths_normalized () in
+  let chk acc (path: Find.module_include_path) =
+    if Util.starts_with f (path.dir ^ "/")
+    && (match path.kind with
+      | Find.Flat -> Filepath.dirname f = path.dir
+      | Find.Recursive -> true)
+    && (match acc with Some prev -> String.length path.dir > String.length prev | None -> true)
+    then Some path.dir
+    else acc
+  in
   let best =
-    List.fold_left (fun (acc:option Find.module_include_path) (path:Find.module_include_path) ->
-      if Util.starts_with f (path.dir ^ "/")
-      && (match path.kind with
-          | Find.Flat -> Filepath.dirname f = path.dir
-          | Find.Recursive _ -> true)
-      && (match acc with Some prev -> String.length path.dir > String.length prev.dir | None -> true)
-      then Some path
-      else acc)
-      None include_paths
+    List.fold_left chk None include_paths
   in
   match best with
   | None -> None
   | Some path ->
-    let rel = Util.substring_from f (String.length path.dir + 1) in
+    let rel = Util.substring_from f (String.length path + 1) in
     match check_and_strip_suffix rel with
     | None -> None
     | Some stem ->
       let stem = Util.replace_char (Util.replace_char stem '\\' '.') '/' '.' in
-      match path.kind with
-      | Find.Flat -> Some stem
-      | Find.Recursive prefix -> Some (String.concat "." (prefix @ [stem]))
+      Some stem
 
 (* [maybe_module_name_of_file] is called once per dependency edge in the
 dependency graph, and is a pure function of the file name and the include
@@ -637,7 +636,7 @@ let can_be_namespace_component (s:string) : ML bool =
   its own traversal. [cwd] is the normalized current directory: files under it
   are reported by their bare path relative to [cwd]. *)
 let hierarchical_modules_for_dir (cwd:string) (include_roots:list string)
-                                 (root:string) (prefix:list string)
+                                 (root:string)
   : ML (list (string & string)) =
   (* [ns_prefix] is the list of namespace components corresponding to the
      subdirectories walked so far (in order); [rel] is the path, relative to
@@ -666,7 +665,7 @@ let hierarchical_modules_for_dir (cwd:string) (include_roots:list string)
         else walk (ns_prefix @ [entry]) rel'
       else module_candidate_of_file ns_prefix (if root = cwd then rel' else entry_path) entry)
   in
-  walk prefix ""
+  walk [] ""
 
 (* Build a map from module long name (and interface/implementation role) to the
   file providing it within a single include directory, and check that this map
@@ -708,7 +707,7 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
   include_paths |> List.concatMap (fun (path:Find.module_include_path) ->
     let candidates =
       match path.kind with
-      | Find.Recursive prefix -> hierarchical_modules_for_dir cwd include_directories path.dir prefix
+      | Find.Recursive -> hierarchical_modules_for_dir cwd include_directories path.dir
       | Find.Flat ->
         safe_readdir_for_include path.dir |> List.concatMap (fun entry ->
           let entry = Filepath.basename entry in

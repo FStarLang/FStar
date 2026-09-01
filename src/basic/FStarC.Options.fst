@@ -1848,7 +1848,6 @@ let should_check m =
 let should_verify m =
   not (get_admit_smt_queries ()) && not (get_lax ()) && should_check m
 
-(* TODO:RM *)
 (* Whether a checked file should be written for [fn].
   This is about the *file*, not the module: running
    [fstar.exe A.fst] verifies A.fsti too, but it must not write A.fsti.checked.

@@ -19,11 +19,11 @@ operations. *)
 
 open FStarC.Effect
 
-(* [Flat] provides only immediate files. [Recursive prefix] also provides files
-in subdirectories, extending [prefix] with their relative path. *)
+(* [Flat] provides only immediate files. [Recursive] also provides files in
+subdirectories. *)
 type module_include_path_kind =
     | Flat
-    | Recursive of list string
+    | Recursive
 
 type module_include_path = {
     dir: string;
