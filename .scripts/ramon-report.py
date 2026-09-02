@@ -204,7 +204,7 @@ def compute_stats(matches):
 
 # ── Markdown Report ──────────────────────────────────────────────────────────
 
-def generate_markdown(matches, stats, lhs_label, rhs_label):
+def generate_markdown(matches, stats, lhs_label, rhs_label, full_table=True):
     s = stats
     mp = s["mem_pct"]
     tp = s["time_pct"]
@@ -306,12 +306,16 @@ def generate_markdown(matches, stats, lhs_label, rhs_label):
     L.append("\n</details>\n")
 
     # ── Full comparison ──
-    L.append(f"<details><summary>📋 Full Comparison ({s['n_matches']} tests)</summary>\n")
-    L.append(md_table(sorted(matches, key=lambda m: m["fn"]), n=len(matches)))
-    L.append("\n</details>\n")
+    if full_table:
+        L.append(f"<details><summary>📋 Full Comparison ({s['n_matches']} tests)</summary>\n")
+        L.append(md_table(sorted(matches, key=lambda m: m["fn"]), n=len(matches)))
+        L.append("\n</details>\n")
 
     # ── Notes ──
     L.append("---\n")
+    if not full_table:
+        L.append(f"> ℹ️ The full comparison table ({s['n_matches']} tests) was omitted to keep this "
+                 "report within GitHub's comment size limit. See the attached HTML report for all tests.\n")
     L.append("> **Note:** Memory values report the peak OCaml heap of the F\\* process (excluding Z3 subprocesses). "
              "Time measurements are from single runs and may be noisy, especially for fast tests. "
              "Tests with baseline time < 0.1s are excluded from time statistics. "
@@ -624,6 +628,9 @@ def main():
                         help="Output format (default: auto-detect from filename)")
     parser.add_argument("--lhs-label", default=None, help="Label for baseline")
     parser.add_argument("--rhs-label", default=None, help="Label for patched")
+    parser.add_argument("--max-bytes", type=int, default=0,
+                        help="If > 0, keep the (markdown) report under this many bytes, "
+                             "dropping the full comparison table if needed")
     args = parser.parse_args()
 
     # Auto-detect format from filename
@@ -659,6 +666,14 @@ def main():
 
     if fmt == "md":
         output = generate_markdown(matches, st, lhs_label, rhs_label)
+        if args.max_bytes > 0 and len(output.encode("utf-8")) > args.max_bytes:
+            print(f"Report exceeds {args.max_bytes} bytes; dropping full comparison table")
+            output = generate_markdown(matches, st, lhs_label, rhs_label, full_table=False)
+        if args.max_bytes > 0 and len(output.encode("utf-8")) > args.max_bytes:
+            print(f"Report still exceeds {args.max_bytes} bytes; truncating")
+            suffix = "\n\n_(report truncated: exceeded size limit)_\n"
+            budget = args.max_bytes - len(suffix.encode("utf-8"))
+            output = output.encode("utf-8")[:budget].decode("utf-8", "ignore") + suffix
     else:
         output = generate_html(matches, st, lhs_label, rhs_label)
 
