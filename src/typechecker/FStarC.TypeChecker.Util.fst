@@ -593,23 +593,21 @@ let is_ghost_effect env l : ML _ =
 let is_pure_or_ghost_effect env l : ML _ =
   norm_eff_name env l |> U.is_pure_or_ghost_effect
 
-(* Closing a computation over the pattern variables [bvs].  A computation type
+(* A computation type
    carries no logical content any more, so there is nothing to quantify: only
    the flags, which describe *this* occurrence, have to be dropped.  [TOTAL] is
    the exception -- it records that the effect *name* is an abbreviation of
    [Tot], which closing does not change. *)
-let close_wp_comp env bvs (c:comp) : ML _ =
-    def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
-    if U.is_ml_comp c then c
-    else
-      match c.n with
-      | Comp ct ->
-        S.mk_Comp ({ ct with
-          flags = ct.flags |> List.filter (function TOTAL -> true | _ -> false) })
+let drop_comp_flags env bvs (c:comp) : ML _ =
+    def_check_scoped c.pos "drop_comp_flags" (Env.push_bvs env bvs) c;
+    match c.n with
+    | Comp ct ->
+      S.mk_Comp ({ ct with
+        flags = ct.flags |> List.filter (function TOTAL -> true | _ -> false) })
 
 let close_comp_and_guard env bvs (c:comp) (g:guard_t) : ML (comp & guard_t) =
   let bs = bvs |> List.map S.mk_binder in
-  close_wp_comp env bvs c,
+  drop_comp_flags env bvs c,
   g |> Env.close_guard env bs |> close_guard_implicits env false bs
 
 let close_layered_comp_with_combinator env bvs c g : ML _ = close_comp_and_guard env bvs c g
@@ -1113,7 +1111,7 @@ let close_with_type_of_x (env:Env.env) (c1:comp) (x:bv) (c:comp) (g2:guard_t)
 : ML (comp & guard_t)
 = let x = binder_for_result c1 x in
   let c, g2, closed = close_over_unit_binder env x c g2 in
-  if closed then c, g2 else close_wp_comp env [x] c, g2
+  if closed then c, g2 else drop_comp_flags env [x] c, g2
 
 
 (* [optimize_let_vc] keeps a let-bound variable opaque in the verification
