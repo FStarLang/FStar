@@ -55,7 +55,10 @@ val close_comp_and_guard: env -> list bv -> comp -> guard_t -> ML (comp & guard_
 val close_layered_comp_with_combinator: env -> list bv -> comp -> guard_t -> ML (comp & guard_t)
 val close_layered_comp_with_substitutions: env -> list bv -> list term -> comp -> guard_t -> ML (comp & guard_t)
 
-val strengthen_precondition: option (unit -> ML (list Pprint.document)) -> env -> term -> comp -> guard_t -> ML (comp & guard_t)
+val simplify_and_label_guard
+      (reason:option (unit -> ML (list Pprint.document)))
+      (_:env) (g0:guard_t)
+: ML guard_t 
 
 val bind: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
 (* [bind_no_capture] is [bind] for a term whose result type must not be

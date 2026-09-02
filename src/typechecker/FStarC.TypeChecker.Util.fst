@@ -2183,12 +2183,11 @@ let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool)
                                       then mk_Tm_app f [S.as_arg xexp] f.pos
                                       else f
                           in
-                          let eq_ret, g_eq =
-                              strengthen_precondition (Some <| Err.subtyping_failed env (U.comp_result lc) t)
-                                                      (Env.set_range (Env.push_bvs env [x]) e.pos)
-                                                      e  //use e for debugging only
-                                                      cret
-                                                      (guard_of_guard_formula <| NonTrivial guard)
+                          let eq_ret = cret in
+                          let g_eq =
+                              simplify_and_label_guard (Some <| Err.subtyping_failed env (U.comp_result lc) t)
+                                                       (Env.set_range (Env.push_bvs env [x]) e.pos)
+                                                       (guard_of_guard_formula <| NonTrivial guard)
                           in
                           (* [g_eq] is the subtyping obligation and mentions [x];
                              hand it to [bind] alongside the continuation's comp,
