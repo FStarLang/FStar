@@ -126,6 +126,22 @@ SELF_TEST = [
     ('if ((a) && (b)) { }', 0),
     ('int r = (size_t)(x);', 0),
     ('char *s = "((x))"; /* ((y)) */', 0),
+    # Section 41.2, round 42.  Every case above has the redundant group behind
+    # `!`, `=`, `(` or a cast, so CHECKED_KEYWORDS was the one table nothing
+    # here exercised -- emptying it hid all three of these and the self-test
+    # still passed.  Which is to say: this file was a faithful regression test
+    # for the bug it was written for and had no opinion about the bug the
+    # matcher was written for.
+    ('if ((a == b)) { }', 1),
+    ('while ((a)) { }', 1),
+    ('return ((a));', 1),
+    # A call through an array of function pointers: `]` ends a group whose
+    # contents are not a type, so the `(` after it is a call and not grouping.
+    ('int r = fp[i]((0));', 0),
+    # The two literal skips, each of which hides a `((` that is not code, and
+    # the escape that decides where a string literal ends.
+    ('int q = (x); // ((y))', 0),
+    ('char *s = "\\"((x))\\"";', 0),
 ]
 
 def self_test():

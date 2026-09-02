@@ -10662,6 +10662,146 @@ worth having, once there is a `ulib` module and an agreement about what
 The stub header exists so the test runs under `gcc`. Nothing on the F\* side
 would differ under `nvcc`.
 
+# 41 Round 42's two reports
+
+Both reports were largely confirmations -- CUDA compiled by `nvcc`, EverParse
+byte-identical -- so this section is about the four things that were not
+already true.
+
+## 41.1 The blit
+
+Section 35.2 routed every parenthesized operand of the C printer through
+`group`, which parenthesizes only what is not already a group. One site did
+not get routed: the `BufBlit` case's length,
+
+```
+    ", (" ^ lenv ^ ") * sizeof(" ^ elt ^ "));\n"
+```
+
+which is the hand-written pair `group` exists to replace, and which the two
+neighbouring length positions in the same case do not have. It is the last
+`"(" ^ <a printed expression> ^ ")"` in the file; the three other hits of
+that shape are argument lists, where the parentheses are syntax.
+
+The reason the sweep missed it is that nothing had ever printed it.
+`Pulse.Lib.ArrayPtr.memcpy` is the only rule that produces a `BufBlit`, and
+no test in either directory called it. `tests/custard/pulse/PulseBlit.fst`
+does, and section 32.10's gate reported the bug on the first run rather than
+anyone having to look for it -- which is the second time the gate has found
+something the sweep that installed it did not.
+
+It bites when the length is *already* a group: a literal, a cast, an
+arithmetic expression. EverParse's one real `memmove` passes `src.len`,
+which is not, so `group` produces the same `(src.len)` the hand-written pair
+did and every EverParse output is byte-identical with the fix in. One
+unreached printer site, zero live instances -- reported that way, and checked
+before it was reported that way.
+
+## 41.2 A self-test that tested the wrong bug
+
+Section 37's `--self-test` was mutation-tested: fourteen decision branches of
+`checkgroup.py` flipped one at a time, six survived. The one that matters:
+
+```python
+CHECKED_KEYWORDS = frozenset()      # was {'if','while','switch','return','do'}
+```
+
+survives, so the gate goes blind to `if ((cond))`, `while ((cond))` and
+`return ((x))` -- which is **section 32.10's bug, the one the matcher was
+written for** -- and the self-test says nothing.
+
+The reason is structural rather than an oversight about one case. Every
+positive case in `SELF_TEST` had its redundant group behind `!`, `=`, `(` or
+a cast, because every one of them was a round-41 finding and round 41 was
+about casts. `CHECKED_KEYWORDS` was therefore never read on a path that
+decided an expected outcome. A faithful regression test for the bug it was
+written for, with no opinion about the bug the file exists for: the same
+failure one level down from the one section 37 fixed.
+
+Six cases close four of the six gaps -- the three keyword shapes, a call
+through an array of function pointers (`]` is syntax too), and the two
+literal skips, one of which needs the backslash escape to find the end of the
+string. The remaining two mutants are *equivalent*, which was checked and not
+assumed: `inner.endswith(')')` is subsumed by the emptiness test that
+follows it, and the unmatched-open fallback is reachable only from a file
+with unbalanced parentheses. Over 659 KB of real output both produce
+byte-identical findings.
+
+## 41.3 The keyword set is complete, and the argument is about the printer
+
+Round 41 left three shapes the matcher does not check -- `sizeof((5))`,
+`case ((1)):`, `else ((p));` -- each behind an identifier not in
+`CHECKED_KEYWORDS`. Grepping the output would only say they do not occur
+today. The printer says they cannot:
+
+- `sizeof(` is emitted at two sites, both `sizeof(" ^ elt ^ ")`, always a
+  *type*, where the parentheses are mandatory and reading them as a call is
+  correct;
+- `else` is emitted at three sites, always followed by `if (` or a brace,
+  never by a parenthesized expression;
+- `switch` and `case` are not emitted at all -- they appear only in the
+  reserved-word list.
+
+So the keyword set is complete with respect to what this printer can produce,
+and would need extending exactly when `switch` starts being emitted. That is
+the right form of the argument for a gate on generated code: not "the corpus
+has none of these" but "the generator cannot write one".
+
+## 41.4 What nvcc said
+
+Section 36 was built and argued for without an `nvcc`. There is one now, and
+three of its answers are worth keeping.
+
+**`Prologue "__global__"` on the prototype as well as the definition was
+load-bearing, not defensive.** The argument for putting a flag on both was
+that a qualifier on one and not the other "is a redeclaration error, which is
+a much better failure than a silently host-side kernel". It is precisely
+that:
+
+```
+proto_only.cu(4): error: a __host__ function("kern") redeclared with __global__
+```
+
+Had the flag gone on the definition only, *every* generated kernel would have
+failed to compile. The choice was between a hard stop and a working program,
+not between a hard stop and a subtle bug.
+
+**The output is a kernel, not C that looks like one.** `nvcc -ptx` gives
+`.entry _Z6kernelj`, and `cuobjdump -symbols` gives `STO_ENTRY`, which is the
+linker saying the symbol is launchable. `nvcc -std=c++14 -c` and
+`nvcc -Xcompiler "-Wall,-Wextra,-Werror"` both exit 0.
+
+**`lift_named`'s guarantee is about the C source, and `nvcc` compiles as
+C++.** So `kernel` is `_Z6kernelj` in the object file. Profilers demangle, so
+`nsys` shows `kernel(unsigned int)` and the guarantee holds where a human
+reads it; what it does not survive is a lookup *by string* --
+`cudaGetSymbolAddress`, or a launcher taking a name rather than a symbol. A
+program doing either needs `extern "C"`, which is a `Prologue` away and is
+not something Custard should decide.
+
+For the record, the name is the point of the exercise: the same kernel
+through the existing Krml plugin is `__hoisted_reduce_u32_0`.
+
+## 41.5 Gap 1, checked
+
+Round 33's gap 1 has been reported five times as "float widths dropped from
+`KrmlAst.width`", most recently as the thing that stops an existing karamel
+plugin building against upstream at all. It is worth writing down that this
+is not what upstream looks like, because it changes what the fix is.
+
+`FStarC.Extraction.KrmlAst.width` has `Float32 | Float64` and has for some
+time. So does karamel's `Constant.width`. So does
+karamel's `InputConstant.width`, which is the one that matters, since it is
+the wire type of the `.krml` file and the two ends are marshalled
+positionally -- and it carries the `Bool` width that the internal type does
+not, for exactly that reason, with a comment saying so. Section 38's krml
+backend went through all of this end to end (`tests/custard/FloatsKrml.fst`)
+before this was checked, which is the evidence that the ABI is intact.
+
+What is genuinely absent everywhere is `Float16` and `BFloat16`, in F\*, in
+`KrmlAst`, in `InputConstant` and in `Constant`. Section 40 is what a program
+that needs them can do today; section 38.5 is what adding them would take.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -10798,3 +10938,8 @@ would differ under `nvcc`.
 | M10βγ | **Literals are values, not text** (§39) | Done, user report.  `CInt of string & option (signedness & width)` carried the source spelling through the whole pipeline, which is the shape the ML extraction has and the shape karamel has, and which the F\* compiler itself abandoned -- `Const_int` is `int & int_base`.  `CInt of int & int_base & option (signedness & width)` now, with the base kept because someone wrote `0xff` and should not be shown `255`, and `const_eq` ignoring it because it is not part of the number.  Nobody reported a bug, and there were three: `PrintC.is_one`, which decides whether a `BufCreate` can be a plain local rather than an allocation, tested `CInt (\"1\", _)` and gave a one written `0x1` an allocation; `int_literal`'s `INT64_MIN` case, which exists because C has no negative literals, compared against 20 decimal characters and wrote an undiagnosable literal for any other spelling; and every construction site rendered a number to build one, including a `BU.int_of_string` in the rule plugin reading back what `show` had just written |
 | M10βδ | **A float is a real and a sign** (§39.2) | Done, with §39.  `CFloat of float_lit & fwidth`, where `float_lit` is a `bool` and an `FStarC.Real.real` -- the exact rational, canonical, so two literals are equal exactly when they denote the same number.  The sign is separate because IEEE 754 is sign-and-magnitude and a canonical rational is not: `-0.0` and `0.0` are the same real and different floats, `bit_eq` tells them apart, `1.0 / -0.0` is negative infinity, and `Real.mk 0 e` is `0` whichever sign it was given.  Nothing else was lost -- `real` is exact and unbounded, so rounding is still the target compiler's job done once, and `1.5e-3`, `0.0015` and `+15e-4` are one literal.  `float_lit_of_string` replaces `valid_float_literal`: a predicate that text is well-formed and a function that turns text into a value are the same walk, and having only the second means a literal cannot be accepted without knowing what it is.  `tests/custard/LitBase.fst` |
 | M10βε | **Half and bfloat16 without a compiler change** (§40) | Done, user question, and the answer is that the facility is already there.  §38.5 left `Float16` out because the missing half is a `ulib` module to extract from and a C spelling to extract to, both facts about a target; that is an argument for not guessing in the compiler and not an argument for waiting.  `tests/custard/Half.fst` declares `__half` and `__nv_bfloat16` with §14.5's `[@@custard_extern]` and gets exactly what nvcc wants: no typedef emitted, the header included, `__hadd`/`__hmul`/`__hlt` by name -- which is the *faithful* translation and not a workaround, since CUDA's half arithmetic is functions in C and the operator overloads are C++.  And they are ordinary F\* types, so `twice hadd` monomorphizes to `Half_twice__half` and a record of one of each lays out as a struct.  What it does not get is a literal or an `EOp`, which is what a `TFloat Float16` would still be for |
+| M10βζ | **The blit's hand-written parentheses** (§41.1) | Done.  Round 42, EverParse, and a live printer bug: §35.2 routed every parenthesized operand through `group` and missed the `BufBlit` length, which kept the hand-written `"(" ^ lenv ^ ")"` that `group` exists to replace -- the last one in the file, the two neighbouring length positions in the same case having been converted.  Unreached rather than unnoticed: `Pulse.Lib.ArrayPtr.memcpy` is the only rule that produces a `BufBlit` and no test called it, so §32.10's gate had nothing to look at.  `tests/custard/pulse/PulseBlit.fst` calls it and the gate reported the bug on the first run, which is the second time it has found something the sweep that installed it did not.  Latent for the reporter: their one real `memmove` passes a struct field, which is not already a group, so every output is byte-identical with the fix in |
+| M10βη | **A self-test that tested the wrong bug** (§41.2) | Done.  Round 42, and the round's better finding: §37's `--self-test` was mutation-tested, fourteen branches, six survivors, and the one that matters is emptying `CHECKED_KEYWORDS` -- after which the gate is blind to `if ((cond))`, `while ((cond))` and `return ((x))`, which is §32.10's bug, the one the matcher was written for, and the self-test still passes.  Structural rather than an oversight: every positive case was a round-41 finding and round 41 was about casts, so all five had the redundant group behind `!`, `=`, `(` or a cast and nothing ever read the keyword table on a path that decided an outcome.  Six new cases close four of the six gaps; the other two mutants are equivalent, checked over 659 KB of real output rather than assumed |
+| M10βθ | **The keyword set is complete with respect to the printer** (§41.3) | Closed, no change.  Round 41's three unchecked shapes -- `sizeof((5))`, `case ((1)):`, `else ((p));` -- cannot be produced: `sizeof(` is emitted at two sites and always around a *type*, where the parentheses are mandatory; `else` at three, always before `if (` or a brace; `switch` and `case` not at all.  Recorded because the form of the argument is the point.  A gate on generated code should be justified by what the generator can write, not by what a corpus happens to contain, and the second is what grepping the output would have given |
+| M10βι | **What nvcc said** (§41.4) | Closed, no change.  §36 was designed without an `nvcc` and three of its answers are now checked against one.  `Prologue` on the prototype as well as the definition was load-bearing rather than defensive: `nvcc` rejects a `__host__` function redeclared with `__global__`, so the flag on the definition alone would have made *every* generated kernel fail to compile.  The output is a kernel and not C that resembles one -- `nvcc -ptx` gives `.entry`, `cuobjdump -symbols` gives `STO_ENTRY`, and `-Xcompiler "-Wall,-Wextra,-Werror"` is clean.  And `lift_named`'s guarantee is about the C source, which `nvcc` compiles as C++: `kernel` is `_Z6kernelj` in the object file, which profilers demangle and a lookup by string does not, and a program doing the latter wants an `extern "C"` that is a `Prologue` away.  The name is the point: the same kernel through the existing plugin is `__hoisted_reduce_u32_0` |
+| M10βκ | **Gap 1, checked** (§41.5) | Closed, no change, and a correction.  Reported five times as "float widths dropped from `KrmlAst.width`", most recently as what stops an existing karamel plugin building against upstream.  `FStarC.Extraction.KrmlAst.width` has `Float32 | Float64`; so does karamel's `Constant.width`; so does its `InputConstant.width`, which is the one that matters, being the wire type of the `.krml` file, marshalled positionally, and carrying the `Bool` width the internal type lacks for exactly that reason with a comment saying so.  §38's krml backend went end to end through all of it before this was checked, which is the evidence.  What is genuinely absent everywhere is `Float16` and `BFloat16` -- §40 is what a program needing them can do today, §38.5 is what adding them would take |

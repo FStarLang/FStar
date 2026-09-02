@@ -123,6 +123,15 @@ CGREP_PulseForCapture += "while (true)"
 CNOGREP_PulseForCapture += "slprop"
 CNOGREP_PulseForCapture += "(*body)"
 
+# Section 41.1.  Pulse.Lib.ArrayPtr.memcpy is the only rule that produces a
+# BufBlit, and until this file no test reached it, so the printer case had
+# never printed anything.  The length position is where a redundant pair
+# appears, and only when the length is already a group, which a literal is.
+C_TESTS += PulseBlit
+CGREP_PulseBlit += "memmove("
+CGREP_PulseBlit += "((size_t)2ULL) * sizeof(uint8_t)"
+CNOGREP_PulseBlit += "(((size_t)2ULL))"
+
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose
 # the representation of a value.

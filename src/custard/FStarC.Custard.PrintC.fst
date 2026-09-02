@@ -1294,8 +1294,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let dstv = c_expr out ind dst in
     let div = c_expr out ind di in
     let lenv = c_expr out ind len in
+    (* [group] and not a hand-written pair: section 41.1.  The length is
+       almost always already parenthesized -- a literal, a cast, a field of a
+       struct -- and a second pair around it is what section 32.10's gate
+       rejects. *)
     !out ^ ind ^ "memmove(" ^ dstv ^ " + " ^ div ^ ", " ^ srcv ^ " + " ^ siv ^
-    ", (" ^ lenv ^ ") * sizeof(" ^ elt ^ "));\n" ^ unit_result ind d
+    ", " ^ group lenv ^ " * sizeof(" ^ elt ^ "));\n" ^ unit_result ind d
 
   | _ ->
     let out = mk_ref "" in
