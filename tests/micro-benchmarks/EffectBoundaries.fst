@@ -87,3 +87,32 @@ assume val loop : int -> Dv int
 let div_leak (x: int) : Tot int = loop x
 
 let div_ok (x: int) : Dv int = loop x
+
+(* An impure binder must never be substituted into a type.  When a `let`'s
+   binder goes out of scope, `TypeChecker.Util.eliminate_binder_from_typ` may
+   substitute the bound term into the continuation's result type -- but only if
+   that term is pure or ghost.  Here `y` is `Div`-bound and occurs inside the
+   `squash` of the result type `_:squash (gv y == y){l_False}`, where
+   `U.unrefine` cannot reach it (`squash` is an fvar application, not a
+   `Tm_refine`).  Substituting anyway manufactured `squash (gv (loop x) == loop x)`,
+   a type mentioning a `Div` application, which no source program could have
+   written.  The leak is latent -- the definition itself still checks -- and
+   only surfaces when the type is re-typechecked, as `tc` does below, so the
+   test has to look at the type rather than merely define the function. *)
+let impure_binder_stays_out_of_types (x: int) =
+  let y = loop x in
+  let z = gv y in
+  admit ();
+  assert (z == y)
+
+(* Re-typechecking the inferred type fails with "Effects FStar.Pervasives.Div
+   and Prims.GTot cannot be composed" if the substitution above is performed. *)
+let _ =
+  assert True by (
+    let _ =
+      FStar.Tactics.V2.tc
+        (FStar.Tactics.V2.top_env ())
+        (`impure_binder_stays_out_of_types)
+    in
+    FStar.Tactics.V2.trivial ()
+  )

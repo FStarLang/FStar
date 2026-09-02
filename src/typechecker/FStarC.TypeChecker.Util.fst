@@ -876,19 +876,30 @@ let eliminate_binder_from_typ (env:Env.env) (x:bv) (e1opt:option term) (lc1:comp
   | _ ->
     (* [x] occurs in the type itself, not only in a refinement of it, so
        there is nothing to existentially close. *)
-    let t_unref = U.unrefine tn in
-    if not (mem x (Free.names t_unref))
-    && not (U.is_pure_or_ghost_comp lc1)
-    (* An effectful [e1] must not be put in a type: two occurrences need not
-       produce the same value.  Since [x] only occurs in refinements here,
-       dropping them loses information but stays sound. *)
-    then t_unref
-    else
-      (* Substituting is what happens for a pure [e1] too; it is the best
-         available. *)
-      (match e1opt with
-       | Some e1 -> SS.subst [NT (x, e1)] t
-       | None -> t)
+    match e1opt with
+    | Some e1 when U.is_pure_or_ghost_comp lc1 ->
+      (* Substitution is exact for a pure or ghost [e1], and is what
+         [bind_result_subst] would already have done had [x] been reachable
+         without normalizing. *)
+      SS.subst [NT (x, e1)] t
+    | _ ->
+      (* [e1] is effectful (or absent), so it must not be put in a type: it may
+         diverge, and two occurrences need not produce the same value.  This is
+         the one place that could be tempted to substitute it anyway, and doing
+         so would silently manufacture a type mentioning an impure application
+         rather than let [TcTerm.check_no_escape] object to it. *)
+      let t_unref = U.unrefine tn in
+      if not (mem x (Free.names t_unref))
+      && not (U.is_pure_or_ghost_comp lc1)
+      (* [x] occurs only in refinements, so dropping them loses information but
+         stays sound. *)
+      then t_unref
+      (* Nothing sound is available here: [x] is in the type proper.  Leave it
+         free and let [TcTerm.check_no_escape] deal with it -- it normalizes
+         first, so it can see through [squash] and other abbreviations that
+         [U.unrefine] cannot, and it salvages the refinement conjunct by
+         conjunct instead of dropping it wholesale. *)
+      else t
 
 (* An intermediate value -- an application argument, say -- has no binder left
    in the verification condition, so a refinement on its type is simply lost.
