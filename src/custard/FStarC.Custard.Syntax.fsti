@@ -100,12 +100,23 @@ val is_pure : eff -> bool
 
 (** {1 Types} *)
 
+(** The floating-point formats, section 38.  Named after the source modules
+    [FStar.Float32] and [FStar.Float64], and matching karamel's [width] so
+    that the krml backend can hand them straight over. *)
+type fwidth =
+  | Float32
+  | Float64
+
 type cty =
   | TVar   of string
   | TInt   of signedness & width
   (** A machine integer.  Installed by a builtin rule (section 8): the source
       [FStar.UInt32.t] is a record wrapping a refined [nat], which Custard must
       not look inside. *)
+  | TFloat of fwidth
+  (** An IEEE 754 binary float, [float] or [double] in C (section 38).  As
+      with [TInt] the source type is opaque -- [FStar.Float64.t] is a [new
+      val t : Type0] -- and a builtin rule installs this in its place. *)
   | TArrow of cty & eff & cty
   | TApp   of name & list cty
   | TBuf   of cty
@@ -143,6 +154,12 @@ type constant =
   | CUnit
   | CBool   of bool
   | CInt    of string & option (signedness & width)
+  | CFloat  of string & fwidth
+  (** A float literal, section 38.  The string is the decimal text
+      [FStar.Float64.of_literal] was given, checked against a conservative
+      grammar before it gets here, and printed as it stands: rounding a
+      literal is the C or OCaml compiler's job and doing it twice loses
+      digits. *)
   | CChar   of char
   | CString of string
 
@@ -192,13 +209,29 @@ type op =
   | BufIsNull              (** [buf] *)
   | BufBlit                (** [src; srcidx; dst; dstidx; len] *)
 
+(** The machine type a primitive operation works at. *)
+type prim_ty =
+  | PInt   of signedness & width
+  | PFloat of fwidth
+
 (** A primitive operation, together with the machine type it operates at.
-    [po_int = None] means the operands are booleans or mathematical integers,
-    i.e. the operation is not width-directed. *)
+    [po_ty = None] means the operands are booleans or mathematical integers,
+    i.e. the operation is not width-directed.
+
+    Section 38: this used to be [po_int : option (signedness & width)].  The
+    distinction that matters at most sites is still "is there a width here",
+    but a few of them -- [And] and [Or] are bitwise at a width, narrow
+    integer results need truncating -- mean *integer* specifically, and a
+    float must not be swept in with them. *)
 type prim_op = {
   po_op:  op;
-  po_int: option (signedness & width);
+  po_ty:  option prim_ty;
 }
+
+(** Does this operation work at an *integer* width?  [And], [Or] and [Not] are
+    the bitwise operators there and the connectives otherwise, and a narrow
+    integer result may need truncating; neither question is about floats. *)
+val at_int_width : prim_op -> bool
 
 (** Every expression node carries its type and effect: monomorphization means
     both are always known, and the simplification passes need the effect at
@@ -233,10 +266,11 @@ and expr' =
       It computes nothing, so nested coercions fuse and a coercion to the type
       the operand already has is dropped. *)
   | ECast    of expr & cty
-  (** A machine-integer conversion: [FStar.Int.Cast.uint32_to_uint8] and
-      friends (section 5.5).  It is *not* a no-op -- narrowing loses bits and a
-      sign change reinterprets them -- so it never fuses with anything.  The
-      target is always a [TInt]. *)
+  (** A numeric conversion: [FStar.Int.Cast.uint32_to_uint8] and friends
+      (section 5.5), and [FStar.Float64.of_int] (section 38).  It is *not* a
+      no-op -- narrowing loses bits, a sign change reinterprets them, and an
+      integer-to-float conversion rounds -- so it never fuses with anything.
+      The target is always a [TInt] or a [TFloat]. *)
   | EAny
   (** An arbitrary value of the node's type: what an uninitialized stack
       allocation is filled with.  Only a rule may introduce it. *)

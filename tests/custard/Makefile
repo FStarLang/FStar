@@ -940,6 +940,42 @@ all: $(OUTPUT_DIR)/SplitHi.out.diff
 
 # These have hand-written targets with their own [all:] lines rather than a
 # list entry, and each consults its own settings in its own recipe.
+# Section 38.  Floating point.  The C test checks its own answers and returns
+# a nonzero exit status if any is wrong; what the greps add is that the
+# arithmetic is C arithmetic at the right *width* -- a Float32 literal without
+# the suffix would be a double, computed at double precision and rounded once.
+C_TESTS += Floats
+CGREP_Floats += "static double Floats_area(double r)"
+CGREP_Floats += "3.14159"
+CGREP_Floats += "-1.5e-3"
+CGREP_Floats += "1.5f"
+CGREP_Floats += "static float Floats_sum32(float a, float b)"
+CNOGREP_Floats += "FStar_Float64"
+CNOGREP_Floats += "FStar_Float32"
+
+# Section 38.6.  Not Floats: karamel's constant folder reads a float constant
+# with Z.of_string.  Every operand in FloatsKrml is a variable.
+KRML_TESTS += FloatsKrml
+
+# The same arithmetic on the OCaml backend, where a Float64 is OCaml's float.
+CUSTARD_TESTS += FloatsML
+GREP_FloatsML += "( +\. )"
+NOGREP_FloatsML += "FStar_Float64"
+
+# Section 38.  OCaml's float is binary64 and there is no binary32 to round to,
+# so a single-precision program is refused rather than computed at the wrong
+# precision.
+REJECT_TESTS += FloatSingle
+CODE_FloatSingle = 368
+EGREP_FloatSingle += "no OCaml representation"
+EGREP_FloatSingle += "binary32"
+
+# of_literal's argument becomes a constant in the generated code, so it is
+# checked against a grammar rather than pasted through.
+REJECT_TESTS += FloatLit
+CODE_FloatLit = 380
+EGREP_FloatLit += "is not a floating-point literal"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(KRML_TESTS) \
                   SepApp SplitHi SplitLo

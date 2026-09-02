@@ -90,6 +90,8 @@ let rec hint_of_cty (fuel:int) (c:cty) : ML string =
     (match w with
      | Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
      | Int64 -> "64" | Sizet -> "size")
+  | TFloat Float32 -> "float32"
+  | TFloat Float64 -> "float64"
   | TApp (n, []) -> (match n.spec with Some s -> n.id ^ "_" ^ s | None -> n.id)
   | TApp (n, args) -> n.id ^ "_" ^ String.concat "_" (args |> List.map sub)
   | TBuf c -> sub c ^ "_ptr"
@@ -253,7 +255,7 @@ let rec mono_cty (st:state) (c:cty) : ML cty =
   | TRef c -> TRef (mono_cty st c)
   | TInline c -> TInline (mono_cty st c)
   | TTuple cs -> TTuple (cs |> List.map (mono_cty st))
-  | TVar _ | TInt _ | TUnit | TExn | TAny -> c
+  | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny -> c
 
 (* The instantiation a use site is building or matching.  [None] means the
    type was not polymorphic, so its constructors keep their names. *)
@@ -509,7 +511,7 @@ let run (prog:program) : ML program =
     | TArrow (a, _, b) -> freeze (fuel - 1) a; freeze (fuel - 1) b
     | TBuf c | TRef c | TInline c -> freeze (fuel - 1) c
     | TTuple cs -> cs |> List.iter (freeze (fuel - 1))
-    | TVar _ | TInt _ | TUnit | TExn | TAny -> () in
+    | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny -> () in
   prog |> List.iter (fun d ->
     match d with
     | DExternal x -> freeze 100 x.dx_ty

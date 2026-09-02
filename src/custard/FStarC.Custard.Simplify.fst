@@ -100,13 +100,13 @@ and occurs_branches (v:string) (brs:list branch) : ML bool =
    is re-evaluated per iteration), and -- because the backends short-circuit
    them -- every operand but the first of [And] and [Or].
 
-   The [po_int] guard is the whole point of taking a [prim_op] rather than an
+   The [po_ty] guard is the whole point of taking a [prim_op] rather than an
    [op]: *at a width* [And] and [Or] are the bitwise operators, which are
    strict.  Treating those as delayed would leave an impure second operand in
    an operand position, and OCaml would then evaluate [logand a b] right to
    left -- exactly the reordering this pass exists to prevent. *)
 let delayed_operands (o:prim_op) : bool =
-  match o.po_int, o.po_op with
+  match o.po_ty, o.po_op with
   | None, And
   | None, Or -> true
   | _ -> false
@@ -2336,7 +2336,7 @@ let coerce_prog (prog:program) : ML program =
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
     | TBuf c | TRef c | TInline c -> has_any c
-    | TVar _ | TInt _ | TUnit | TExn -> false in
+    | TVar _ | TInt _ | TFloat _ | TUnit | TExn -> false in
   let trust (c:cty) : ML (option cty) = if has_any c then None else Some c in
   (* Does this term obviously have *some* representation, whatever it is?  When
      a value of unknown type reaches a position declared [TAny], that is the
@@ -2787,7 +2787,7 @@ let narrow_rets (prog:program) : ML program =
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
     | TBuf c | TRef c | TInline c -> has_any c
-    | TVar _ | TInt _ | TUnit | TExn -> false in
+    | TVar _ | TInt _ | TFloat _ | TUnit | TExn -> false in
   (* Name -> the whole type, arguments included, so that a use of a name in
      head position can be peeled the same way [coerce_prog] peels it. *)
   let tbl : SMap.t cty = SMap.create 100 in

@@ -30,6 +30,7 @@ module U     = FStarC.Syntax.Util
 module PC    = FStarC.Parser.Const
 module Options = FStarC.Options
 module String = FStarC.String
+module BU     = FStarC.Util
 
 (* -------------------------------------------------------------------- *)
 (* The registry                                                         *)
@@ -118,7 +119,7 @@ let int_lit (sw : signedness & width) (s:string) : expr =
 let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
   match int_op id with
   | Some (o, arity) ->
-    let po = { po_op = o; po_int = Some sw } in
+    let po = { po_op = o; po_ty = Some (PInt sw) } in
     (* A comparison returns a bool, everything else stays at the width. *)
     let ret = match o with
               | Eq | Neq | Lt | Lte | Gt | Gte -> TApp (bool_name, [])
@@ -161,6 +162,118 @@ let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
         match args with
         | [a] -> mk (ECast (a, TInt target)) (TInt target) a.eff
         | _ -> failwith "Custard: SizeT conversion applied to the wrong arity"))
+
+    | _ -> None
+
+(* -------------------------------------------------------------------- *)
+(* Floating point                                                       *)
+(* -------------------------------------------------------------------- *)
+
+(* Section 38.  [FStar.Float32] and [FStar.Float64] are the source spelling,
+   and they look exactly like the machine-integer modules: an opaque [t], an
+   arithmetic and comparison vocabulary, and two ways to make a value.  The
+   names follow [FStarC.Extraction.Krml] for the same reason the integer ones
+   do -- karamel is a backend that has to give these a C meaning, and a
+   discrepancy would be a miscompilation rather than an error. *)
+let float_of_module (ns : list string) : option fwidth =
+  match ns with
+  | ["FStar"; "Float32"] -> Some Float32
+  | ["FStar"; "Float64"] -> Some Float64
+  | _ -> None
+
+let float_op (id:string) : option (op & int) =
+  match id with
+  | "add" -> Some (Add, 2)
+  | "sub" -> Some (Sub, 2)
+  | "mul" -> Some (Mult, 2)
+  | "div" -> Some (Div, 2)
+  | "lt"  -> Some (Lt, 2)
+  | "lte" -> Some (Lte, 2)
+  (* IEEE equality is [==], which is what [Eq] means at a width.  [bit_eq] is
+     deliberately absent: it distinguishes the two zeros and makes a NaN equal
+     to itself, which no comparison operator does, so it stays a call into the
+     support library -- the same choice karamel's [mk_op] makes. *)
+  | "ieee_eq" -> Some (Eq, 2)
+  | _ -> None
+
+(* A float literal is decimal text, and it is emitted as it stands: rounding
+   it here and letting the target compiler round the result again is how a
+   digit goes missing.  So the text is checked instead, against the same
+   conservative grammar [FStarC.Extraction.Krml.valid_float_literal] uses --
+   an optional sign, a mantissa with at least one digit, an optional exponent
+   -- and anything else is error 380 rather than a token pasted into C. *)
+let valid_float_literal (s:string) : bool =
+  let is_digit (c:FStar.Char.char) : bool =
+    let i = BU.int_of_char c in i >= 48 && i <= 57 in
+  let rec digits (cs : list FStar.Char.char) : list FStar.Char.char =
+    match cs with
+    | c :: cs' when is_digit c -> digits cs'
+    | _ -> cs in
+  let cs = match String.list_of_string s with
+           | '+' :: cs | '-' :: cs -> cs
+           | cs -> cs in
+  let before_dot = digits cs in
+  let after_mantissa, saw_digit =
+    match before_dot with
+    | '.' :: cs' ->
+      let after_dot = digits cs' in
+      after_dot, (before_dot <> cs || after_dot <> cs')
+    | _ -> before_dot, before_dot <> cs in
+  if not saw_digit then false
+  else
+    match after_mantissa with
+    | [] -> true
+    | 'e' :: e | 'E' :: e ->
+      let e = match e with
+              | '+' :: e | '-' :: e -> e
+              | e -> e in
+      let rest = digits e in
+      rest <> e && rest = []
+    | _ -> false
+
+let float_rule (fw:fwidth) (id:string) : ML (option rule) =
+  match float_op id with
+  | Some (o, arity) ->
+    let po = { po_op = o; po_ty = Some (PFloat fw) } in
+    let ret = match o with
+              | Eq | Neq | Lt | Lte | Gt | Gte -> TApp (bool_name, [])
+              | _ -> TFloat fw in
+    Some (Rule_prim (arity, fun _ args -> mk (EOp (po, args)) ret E_Pure))
+  | None ->
+    match id with
+    | "t" -> Some (Rule_type (fun _ -> TFloat fw))
+
+    (* [of_int : Int64.t -> t] is a conversion and not a coercion: it rounds
+       above 2^53 at [Float64] and above 2^24 at [Float32].  [ECast] is the
+       node for exactly that. *)
+    | "of_int" ->
+      Some (Rule_prim (1, fun _ args ->
+        match args with
+        | [a] -> mk (ECast (a, TFloat fw)) (TFloat fw) a.eff
+        | _ -> failwith "Custard: FStar.Float.of_int applied to the wrong arity"))
+
+    | "of_literal" ->
+      Some (Rule_prim (1, fun _ args ->
+        match args with
+        | [{ e = EConst (CString v) }] ->
+          if not (valid_float_literal v) then
+            FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadFloatLiteral [
+              FStarC.Errors.Msg.text
+                ("Custard: " ^ v ^ " is not a floating-point literal.");
+              FStarC.Errors.Msg.text
+                "of_literal's argument is pasted into the generated code, so it                  is accepted only as an optional sign, a mantissa with at least                  one digit, and an optional decimal exponent (section 38)." ];
+          mk (EConst (CFloat (v, fw))) (TFloat fw) E_Pure
+        | [_] ->
+          FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadFloatLiteral [
+            FStarC.Errors.Msg.text
+              "Custard: FStar.Float.of_literal was applied to something that is                not a string literal.";
+            FStarC.Errors.Msg.text
+              "Its argument has to be concrete: it becomes a constant in the                generated code, and there is nothing else it could become." ]
+        | _ -> failwith "Custard: FStar.Float.of_literal applied to the wrong arity"))
+
+    (* Realized outside F*, as the machine integers' are. *)
+    | "bit_eq" | "to_string" | "of_string" ->
+      Some (Rule_extern { x_name = None; x_header = None })
 
     | _ -> None
 
@@ -230,7 +343,7 @@ let pervasives_rule (id:string) : ML (option rule) =
 
 let prims_rule (id:string) : ML (option rule) =
   let bool_op (o:op) (arity:int) : ML (option rule) =
-    let po = { po_op = o; po_int = None } in
+    let po = { po_op = o; po_ty = None } in
     Some (Rule_prim (arity, fun _ args ->
             mk (EOp (po, args)) (TApp (bool_name, [])) E_Pure)) in
   match id with
@@ -288,7 +401,7 @@ let buf_prim (n:int) (o:op) (ef:eff)
              (ret : list cty -> list expr -> ML cty)
              (mk_args : list expr -> ML (list expr)) : rule =
   Rule_prim (n, fun tys args ->
-    mk (EOp ({ po_op = o; po_int = None }, mk_args args)) (ret tys args) ef)
+    mk (EOp ({ po_op = o; po_ty = None }, mk_args args)) (ret tys args) ef)
 
 let unit_rule (n:int) : rule =
   Rule_prim (n, fun _ _ -> unit_expr)
@@ -346,7 +459,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   | ["Pulse"; "Lib"; "Reference"], "alloc_uninit" ->
     Some (Rule_prim (1, fun tys _ ->
       let t = elt_of tys in
-      mk (EOp ({ po_op = BufCreate LStack; po_int = None },
+      mk (EOp ({ po_op = BufCreate LStack; po_ty = None },
                [mk EAny t E_Pure; size_lit "1"]))
          (TRef t) E_Impure))
   | ["Pulse"; "Lib"; "Reference"], "free" -> Some (unit_rule 1)
@@ -401,7 +514,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     Some (Rule_prim (1, fun tys args ->
       let t = elt_of tys in
       let n = match args with a :: _ -> a | [] -> size_lit "0" in
-      mk (EOp ({ po_op = BufCreate LStack; po_int = None }, [mk EAny t E_Pure; n]))
+      mk (EOp ({ po_op = BufCreate LStack; po_ty = None }, [mk EAny t E_Pure; n]))
          (TBuf t) E_Impure))
   | ["Pulse"; "Lib"; "Array"; "Core"], "mask_free" -> Some (unit_rule 1)
   | ["Pulse"; "Lib"; "Array"; "Core"], "mask_read" ->
@@ -429,11 +542,11 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   | ["Pulse"; "Lib"; "Reference"], "null"
   | ["Pulse"; "Lib"; "Box"], "null" ->
     Some (Rule_prim (0, fun tys _ ->
-      mk (EOp ({ po_op = BufNull; po_int = None }, [])) (TRef (elt_of tys)) E_Pure))
+      mk (EOp ({ po_op = BufNull; po_ty = None }, [])) (TRef (elt_of tys)) E_Pure))
   | ["Pulse"; "Lib"; "Array"; "Core"], "null"
   | ["Pulse"; "Lib"; "ArrayPtr"], "null" ->
     Some (Rule_prim (0, fun tys _ ->
-      mk (EOp ({ po_op = BufNull; po_int = None }, [])) (TBuf (elt_of tys)) E_Pure))
+      mk (EOp ({ po_op = BufNull; po_ty = None }, [])) (TBuf (elt_of tys)) E_Pure))
   | ["Pulse"; "Lib"; "Reference"], "is_null"
   | ["Pulse"; "Lib"; "Box"], "is_null"
   | ["Pulse"; "Lib"; "Array"; "Core"], "is_null"
@@ -910,6 +1023,9 @@ let builtin_rule (l:Ident.lident) : ML rule =
         (match machine_int_of_module ns with
          | Some sw -> machine_int_rule sw id
          | None ->
+           match float_of_module ns with
+           | Some fw -> float_rule fw id
+           | None ->
            if ns = ["Prims"] then prims_rule id
            (* [FStar.Pervasives] is also a *realized* module, so this has to
               fall through rather than shadow: [pervasives_rule] claims one

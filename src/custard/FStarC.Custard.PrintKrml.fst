@@ -114,6 +114,13 @@ let is_tuple_ctor_name (n:name) : ML bool =
   FStarC.Util.starts_with n.id "Mktuple" &&
   Options.custard_backend () = "KrmlRust"
 
+(* Section 38.  karamel's [width] carries the two float formats itself, so
+   this is a rename and nothing more. *)
+let krml_fwidth (fw:fwidth) : K.width =
+  match fw with
+  | Float32 -> K.Float32
+  | Float64 -> K.Float64
+
 let krml_width (sw : signedness & width) : K.width =
   match sw with
   | (Signed, Int8) -> K.Int8
@@ -187,6 +194,7 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
      so the type only has to be something it can carry. *)
   | TExn -> K.TAny
   | TInt sw -> K.TInt (krml_width sw)
+  | TFloat fw -> K.TInt (krml_fwidth fw)
   | TVar x -> if env.tvars_any then K.TAny else K.TBound (find_t env x)
   | TArrow (a, _, b) -> K.TArrow (krml_typ env a, krml_typ env b)
   | TTuple ts -> K.TTuple (ts |> List.map (krml_typ env))
@@ -223,6 +231,7 @@ let krml_const (c:constant) : ML K.expr =
   | CString s -> K.EString s
   | CInt (s, None) -> K.EConstant (K.CInt, s)
   | CInt (s, Some sw) -> K.EConstant (krml_width sw, s)
+  | CFloat (v, fw) -> K.EConstant (krml_fwidth fw, v)
   (* karamel has no character type; a program that reaches this is not a C
      program, and saying so here is better than emitting something that means
      something else. *)
@@ -382,7 +391,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   (* Decidable equality at no particular width is *polymorphic*: karamel types
      it only through an explicit type application naming the operand type
      ([Checker.infer], the [ETApp (EOp (Eq|Neq), _)] case). *)
-  | EOp ({ po_op = o; po_int = None }, args)
+  | EOp ({ po_op = o; po_ty = None }, args)
       when (Eq? o || Neq? o) && Cons? args ->
     let t = match args with a :: _ -> krml_typ env a.ty | [] -> K.TAny in
     K.EApp (K.ETypApp (K.EOp (krml_op o, K.Bool), [t]),
@@ -390,8 +399,9 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
 
   (* An operator is a value in karamel, so it is always applied. *)
   | EOp (o, args) ->
-    let w = match o.po_int with
-            | Some sw -> krml_width sw
+    let w = match o.po_ty with
+            | Some (PInt sw) -> krml_width sw
+            | Some (PFloat fw) -> krml_fwidth fw
             | None -> (match o.po_op with
                        (* [Eq]/[Neq] at no particular width is F*'s decidable
                           equality; karamel's convention for it is [Bool]. *)

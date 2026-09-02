@@ -78,6 +78,11 @@ let is_pure (e:eff) : bool =
 (* Helpers                                                              *)
 (* -------------------------------------------------------------------- *)
 
+let at_int_width (o:prim_op) : bool =
+  match o.po_ty with
+  | Some (PInt _) -> true
+  | _ -> false
+
 let rec subst_cty (s:list (string & cty)) (c:cty) : ML cty =
   match c with
   | TVar v -> (match s |> List.tryFind (fun (p, _) -> p = v) with
@@ -167,6 +172,11 @@ let eff_to_string (e:eff) : string =
 
 let eff_to_doc (e:eff) : ML document = text (eff_to_string e)
 
+let fwidth_to_string (fw:fwidth) : string =
+  match fw with
+  | Float32 -> "f32"
+  | Float64 -> "f64"
+
 let width_to_string (sw:signedness & width) : string =
   let s, w = sw in
   (match s with Unsigned -> "u" | Signed -> "i") ^
@@ -186,7 +196,10 @@ let op_to_string (o:prim_op) : string =
    | BufRead -> "read" | BufWrite -> "write" | BufSub -> "sub"
    | BufFree -> "free" | BufNull -> "null" | BufIsNull -> "is_null"
    | BufBlit -> "blit") ^
-  (match o.po_int with None -> "" | Some sw -> width_to_string sw)
+  (match o.po_ty with
+   | None -> ""
+   | Some (PInt sw) -> width_to_string sw
+   | Some (PFloat fw) -> fwidth_to_string fw)
 
 (* [prec] is the precedence of the enclosing context: 0 at the top, 1 under an
    arrow's domain, 2 as the argument of a type application. *)
@@ -194,6 +207,7 @@ let rec cty_to_doc' (prec:int) (t:cty) : ML document =
   match t with
   | TVar x -> text ("'" ^ x)
   | TInt sw -> text (width_to_string sw)
+  | TFloat fw -> text (fwidth_to_string fw)
   | TUnit -> text "unit"
   | TExn -> text "exn"
   | TAny -> text "any"
@@ -247,6 +261,7 @@ let constant_to_doc (c:constant) : ML document =
           (match w with
            | Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
            | Int64 -> "64" | Sizet -> "size") ^ ">")
+  | CFloat (v, fw) -> text (v ^ "<" ^ fwidth_to_string fw ^ ">")
   | CChar c -> text ("'" ^ escape_char c ^ "'")
   | CString s -> dquotes (text (escape_string s))
 

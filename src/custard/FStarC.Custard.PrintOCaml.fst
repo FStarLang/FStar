@@ -331,6 +331,21 @@ let rec ty (t:cty) : ML string =
   | TAny -> "Obj.t"
   | TVar x -> "'" ^ ocaml_var x
   | TInt sw -> int_module sw ^ ".t"
+  (* Section 38.  OCaml has one floating-point type and it is [double], so
+     [Float64] is faithful and [Float32] is not; the C backend is where a
+     single-precision program belongs, and the backend that cannot round
+     right says so rather than rounding wrong. *)
+  | TFloat Float64 -> "float"
+  | TFloat Float32 ->
+    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardNoCRepresentation [
+      FStarC.Errors.Msg.text
+        "Custard: FStar.Float32 has no OCaml representation.";
+      FStarC.Errors.Msg.text
+        "OCaml's float is IEEE 754 binary64 and there is no binary32 type to \
+         round to, so a single-precision program would silently compute at \
+         double precision (section 38).";
+      FStarC.Errors.Msg.text
+        "Use FStar.Float64, or extract with --custard_backend C." ]
   | TArrow (t1, _, t2) -> "(" ^ ty t1 ^ " -> " ^ ty t2 ^ ")"
   | TTuple ts -> "(" ^ String.concat " * " (List.map ty ts) ^ ")"
   (* Section 8.4: a buffer is an OCaml array.  This is faithful for everything
@@ -390,6 +405,9 @@ let constant (c:constant) : ML string =
   match c with
   | CUnit -> "()"
   | CBool b -> if b then "true" else "false"
+  (* Section 38.  The decimal text as written; OCaml's lexer accepts the same
+     grammar [valid_float_literal] does, so no suffix and no reformatting. *)
+  | CFloat (v, _) -> "(" ^ v ^ ")"
   (* Prims.int is arbitrary precision in the OCaml runtime, exactly as in the
      ML extraction. *)
   | CInt (s, None) -> "(Prims.parse_int \"" ^ s ^ "\")"
@@ -412,8 +430,17 @@ let constant (c:constant) : ML string =
 (* Machine operators are the functions of the [FStar.UIntN] support module;
    the non-width-directed ones are OCaml's own. *)
 let op_name (o:prim_op) : ML string =
-  match o.po_int with
-  | Some sw ->
+  match o.po_ty with
+  (* Section 38.  OCaml's own float operators, since [float] is a real OCaml
+     type and going through a support module would only rename them. *)
+  | Some (PFloat _) ->
+    (match o.po_op with
+     | Add | AddW -> "( +. )" | Sub | SubW -> "( -. )"
+     | Mult | MultW -> "( *. )" | Div | DivW -> "( /. )"
+     | Eq -> "( = )" | Neq -> "( <> )"
+     | Lt -> "( < )" | Lte -> "( <= )" | Gt -> "( > )" | Gte -> "( >= )"
+     | _ -> failwith "Custard: no OCaml float operator for this operation")
+  | Some (PInt sw) ->
     int_module sw ^ "." ^
     (match o.po_op with
      | Add -> "add" | AddW -> "add_mod" | Sub -> "sub" | SubW -> "sub_mod"
@@ -654,6 +681,11 @@ let rec term (ind:string) (e:expr) : ML string =
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt sw1, TInt sw2 when sw1 = sw2 -> term ind e1
+     (* Section 38.  [FStar.Float64.of_int] takes an [Int64.t], which the
+        realization represents as a [Z.t]. *)
+     | TInt sw1, TFloat _ ->
+       "(Z.to_float (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
+     | TFloat _, TFloat _ -> term ind e1
      | TInt sw1, TInt sw2 when snd sw1 <> Sizet && snd sw2 <> Sizet ->
        "(FStar_Int_Cast." ^ int_cast_stem sw1 ^ "_to_" ^ int_cast_stem sw2 ^
        " " ^ term ind e1 ^ ")"
@@ -702,10 +734,10 @@ let rec term (ind:string) (e:expr) : ML string =
      file says so, and §6 pass 1 has already arranged the operands on the
      assumption that they are delayed.  Printing them infix makes the
      generated code mean what it is meant to mean on inspection.  The guard on
-     [po_int] matters: at a width, [And]/[Or] are *bitwise*. *)
-  | EOp ({ po_op = And; po_int = None }, [a; b]) ->
+     [po_ty] matters: at a width, [And]/[Or] are *bitwise*. *)
+  | EOp ({ po_op = And; po_ty = None }, [a; b]) ->
     "(" ^ term ind a ^ " && " ^ term ind b ^ ")"
-  | EOp ({ po_op = Or; po_int = None }, [a; b]) ->
+  | EOp ({ po_op = Or; po_ty = None }, [a; b]) ->
     "(" ^ term ind a ^ " || " ^ term ind b ^ ")"
   | EOp (op, args) ->
     "(" ^ op_name op ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"

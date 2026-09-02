@@ -112,7 +112,7 @@ let warn_any (prog:program) : ML unit =
     | TApp (_, args) -> args |> List.existsb any_cty
     | TTuple cs -> cs |> List.existsb any_cty
     | TBuf c | TRef c | TInline c -> any_cty c
-    | TVar _ | TInt _ | TUnit | TExn -> false in
+    | TVar _ | TInt _ | TFloat _ | TUnit | TExn -> false in
   let at (where:string) (c:cty) : ML unit =
     if any_cty c then note ("the " ^ where ^ " has type " ^ show c) in
   let rec go (x:expr) : ML unit =

@@ -189,7 +189,7 @@ let launch (tys : list cty) (args : list expr) : ML expr =
     let cap_args = List.map (fun (v, t) -> mk (EVar v) t E_Pure) caps in
     let lit = mk (EConst (CInt (show n_bytes, Some (Unsigned, Int32))))
                  n.ty E_Pure in
-    let shmem = mk (EOp ({ po_op = Add; po_int = Some (Unsigned, Int32) },
+    let shmem = mk (EOp ({ po_op = Add; po_ty = Some (PInt (Unsigned, Int32)) },
                          [n; lit])) n.ty E_Pure in
     let kty = TArrow (closed_ty, E_Impure,
                 TArrow (n.ty, E_Impure, TArrow (n.ty, E_Impure, n.ty))) in

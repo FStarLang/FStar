@@ -10394,6 +10394,137 @@ and verifies with `--custard_c_no_prefix` output substituted in.
 Section 12.11's `Lemma13` is unchanged, and still passes at
 `--z3rlimit_factor 4`.
 
+# 38 Floating point
+
+The largest of round 33's gaps, and the one whose answer was least in doubt.
+`TInt of signedness & width` had no float, so a float add went through a
+`custard_extern` and stayed an opaque call where `u32` got `+`. There was no
+design question here: F* already has the source types, karamel already has
+the widths, and C has had them since 1972.
+
+## 38.1 The source types
+
+`FStar.Float32` and `FStar.Float64` are shaped exactly like the
+machine-integer modules: an opaque `new val t : Type0`, an assumed
+arithmetic and comparison vocabulary, and two ways to make a value. The
+builtin rules follow `FStarC.Extraction.Krml`'s naming for the same reason
+the integer ones do -- karamel is a backend that has to give these a C
+meaning, and a discrepancy would be a miscompilation rather than an error.
+
+| source | IR |
+| --- | --- |
+| `t` | `TFloat Float32`, `TFloat Float64` |
+| `add`, `sub`, `mul`, `div` | `EOp` at `PFloat` |
+| `lt`, `lte` | `EOp`, result `bool` |
+| `ieee_eq` | `Eq` |
+| `of_int` | `ECast` to the float type |
+| `of_literal "3.14"` | `CFloat ("3.14", Float64)` |
+| `bit_eq`, `to_string`, `of_string` | external |
+
+`bit_eq` is deliberately not an operator. It distinguishes the two zeros and
+makes a NaN equal to itself, which no C comparison does, so it stays a call
+into the support library -- the same choice karamel's `mk_op` makes.
+`zero` and `one` need no rule at all: they are `inline_for_extraction let
+zero = of_int 0L` and unfold to something that does.
+
+## 38.2 A width that is not an integer width
+
+`prim_op`'s width field was `po_int : option (signedness & width)`, and most
+of its readers only ask "is there a width here". A few do not, and those are
+the ones a float must not be swept into: `And`, `Or` and `Not` are the
+*bitwise* operators at a width and the connectives without one, and a
+modular operation at a narrow integer width needs its result truncating,
+because C promotes `uint8_t` to `int` before it operates on it.
+
+So the field is now `po_ty : option prim_ty` with `prim_ty = PInt … |
+PFloat …`, and the sites that mean "integer" say so through `at_int_width`.
+This is a breaking change to the plugin surface, which is why it is a rename
+and not a second optional field: a rule that builds a `prim_op` has to be
+edited either way, and one that has two optional fields where at most one may
+be set is an invitation.
+
+## 38.3 A literal is text
+
+`of_literal` takes a string, and that string is emitted as it stands. The
+alternative -- parse it to a float here and print the float again -- rounds
+twice, and the second rounding is not the one the author wrote.
+
+Emitting text means checking it, and the grammar is the conservative one
+`FStarC.Extraction.Krml.valid_float_literal` uses: an optional sign, a
+mantissa with at least one digit on one side of an optional point, and an
+optional decimal exponent. Anything else is **error 380**, which is the
+difference between a diagnostic and `1.0); abort(); (` appearing in
+somebody's C. `tests/custard/FloatLit.fst` is that literal.
+
+In C the text carries the suffix its width needs. An unsuffixed float literal
+is a `double`, so `1.5f + 2.25f` written without suffixes would be computed
+at double precision and rounded once at the end -- a different answer, and
+the sort that shows up only at the edges. No cast, because a cast cannot give
+a literal its own type and the suffix already has.
+
+## 38.4 What each backend does with it
+
+**C.** `float` and `double`; the operators are C's own at that type, and
+`truncate` does nothing, since C does not promote a `float` to a `double` to
+add it. `of_int` is a cast, and it is a real one: it rounds above 2^53 at
+`Float64` and above 2^24 at `Float32`, which is why it is `ECast` and not
+`ECoerce`.
+
+**krml.** karamel's `width` already had `Float32` and `Float64`, so
+`krml_fwidth` is a rename and the operators go through the same path the
+integer ones do.
+
+**OCaml.** `Float64` is OCaml's `float` and the operators are OCaml's own
+(`+.`, `<`, `=`), which is both faithful and better than routing them through
+a support module that would only rename them. `Float32` is **refused**, with
+error 368: OCaml's `float` is IEEE 754 binary64, there is no binary32 to
+round to, and a single-precision program compiled that way would silently
+compute at double precision. A backend that cannot round right should say so
+rather than round wrong. `tests/custard/FloatSingle.fst` pins the message.
+
+## 38.5 Not fixed
+
+`Float16` and `BFloat16`, which round 33 asked for alongside these two, are
+not here and are not one line more work than these were. There is no
+`FStar.Float16` to extract *from*, karamel's `width` has no constructor for
+them, and C has no standard spelling for either -- `_Float16` is a C23
+extension that clang and recent gcc implement on some targets, and `__half`
+in CUDA is a library type with no operators of its own. Each of those is a
+decision, and none of them is Custard's alone to take.
+
+The shape of the answer is clear enough to write down: a `ulib` module in the
+shape of `FStar.Float32`, a `TFloat Float16` beside the two that exist, and a
+backend spelling per target. What is missing is the source module and the
+agreement about the C spelling, not the IR.
+
+## 38.6 A karamel bug, found on the way
+
+`tests/custard/FloatsKrml.fst` computes with variables where
+`tests/custard/Floats.fst` computes with literals, and that is not a matter
+of taste. karamel's constant folder reads the operands of a `Mult`, `Div` or
+`Mod` at `TInt w` with `Z.of_string` before it checks that `w` is an integer
+width -- `Add` has that guard and the other three do not -- so
+`F64.div (F64.of_literal "1.0") (F64.of_literal "4.0")` ends the run with
+`Invalid_argument("Z.of_substring_base: invalid digit")`.
+
+The neighbouring rewrites are wrong in the same place rather than loud:
+`0 * x` becomes `0` and `0 + x` becomes `x` whatever the width, and neither
+holds of a float, where `0.0 * nan` is `nan` and `0.0 + (-0.0)` is `0.0`.
+`of_literal "0"` satisfies the grammar of section 38.3, so those are
+reachable and not just latent.
+
+This is karamel's to fix and the fix is the `is_int` guard that `Add`
+already has, plus restricting the identity rewrites to integer widths.
+Until then the krml test avoids the shapes that reach it, which is why every
+operand in it is a variable. Custard's own C backend folds nothing and is
+not affected.
+
+Two smaller ones, not worked around because they are not wrong: karamel
+emits a float constant as `(double)3.14159` rather than with a suffix, which
+for `Float32` means the decimal is rounded to binary64 and then to binary32,
+and a double rounding is not always the same as the single one it stands in
+for.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -10523,3 +10654,7 @@ Section 12.11's `Lemma13` is unchanged, and still passes at
 | M10αυ | **`Rule_prim` reproduces `hoist`** (§36) | Closed, no change.  Round 42 answered §34's open question by measurement rather than argument: the reporter gave the rule test's descriptor a `kbody` written at the launch site over a local, saw it arrive as an `EFun` open in that local -- exactly `hoist`'s input -- closed it over its free variables and let §19.12's `lift_lambdas` push it out.  `Rule_prim_st` is not needed and is not being added.  Their clang measurement is the round's other closed item: clang 14 on the whole `tests/custard` suite is exit 0 with no warnings, and all 25 `_output/*.dc` files rebuilt under `-Weverything` minus style checks produced a diagnostic in 0 of 25 -- which is the coverage this tree cannot produce, since clang is not installed here |
 | M10αφ | **A cast ends in a closing parenthesis too** (§37.1) | Done.  Round 41 of the EverParse trial, and the reporter checked M10αξ's checker the way M10αξ says to check things -- by building the case it should catch rather than watching it pass.  `is_syntactic` skipped a `(` preceded by `)`, which is right for a call through an expression, but a *cast* ends in `)` as well and what follows a cast is its operand, where a parenthesis is grouping: `(int)((5))` was silent while `((5))` was reported.  Not hypothetical -- it is the shape of the third of the three findings M10αξ was written after, the fill loop's `(size_t)(((size_t)1ULL))`, so the gate would not have caught a recurrence of one of the bugs it exists to prevent.  The matcher now looks inside the preceding group and calls it a cast when the content is type-ish.  Calibrated: zero live instances of the shape in ~600 KB of real output, and the two matchers agree everywhere there, so this was a hole in the gate and not a bug in the output.  `--self-test` carries the three real findings and the distinguishing pair, and runs with the suite |
 | M10αχ | **What round 41 confirmed** (§37.2) | Closed, no change.  M10αζ's three parenthesis fixes were live bugs downstream and not just in this suite -- the `if (!((...)))` shape was in every CDDL unit, six per unit and eight in `signoutputargs`, for two rounds, with no compiler saying anything, since `!` and `&&` are not the `==` `-Wparentheses-equality` looks at.  Warning 377 fires twice on the CBOR unit and names exactly the two shim typedefs of round 40's four that had no source-level spelling, and on the CDDL units names the slice and option the behavioural driver has hardcoded since round 36 -- the count and the identities both match, so it found the real consumer without being told.  M10αο's guards were broken rather than observed, both failing as intended.  And the first full CDDL behavioural re-run since round 36, because the parenthesis fix touched loop exit tests: 12,110 vectors per entry point, three entry points, all identical to golden, CBOR-to-Rust byte-identical, COSE interop intact |
+| M10αψ | **Floating point** (§38) | Done.  Round 33's gap 1, the largest of Kuiper's asks and the one whose answer was least in doubt: a float add went through a `custard_extern` and stayed an opaque call where `u32` got `+`.  `FStar.Float32` and `FStar.Float64` are shaped exactly like the machine-integer modules, so the rules are too, and follow `FStarC.Extraction.Krml`'s naming for the same reason the integer ones do.  `TFloat of fwidth`, `CFloat of string & fwidth`, and `ECast` for `of_int`, which rounds above 2^53 and is therefore not a coercion.  `bit_eq` stays a call, as it does in karamel: it distinguishes the two zeros and makes a NaN equal to itself, which no comparison operator does.  C gets `float`/`double` and its own operators, karamel gets the widths it already had, OCaml gets its own `float` and `+.`  `tests/custard/Floats.fst` checks its own answers and exits nonzero on any that is wrong; `tests/custard/FloatsKrml.fst` does the same through karamel and `tests/custard/FloatsML.fst` through OCaml |
+| M10αω | **A width that is not an integer width** (§38.2) | Done, with §38.  `prim_op`'s `po_int : option (signedness & width)` became `po_ty : option prim_ty`, because most of its readers ask only \"is there a width here\" and a few mean *integer*: `And`, `Or` and `Not` are bitwise at a width and connectives without one, and a modular operation at `uint8_t` or `uint16_t` needs truncating because C promotes to `int` before operating.  Those sites say so through `at_int_width` now.  A breaking change to the plugin surface, and deliberately a rename rather than a second optional field -- a rule that builds a `prim_op` has to be edited either way, and a record with two optional fields of which at most one may be set is an invitation |
+| M10βα | **A float literal is text** (§38.3) | Done, with §38.  `of_literal`'s string is emitted as written, because parsing it to a float here and printing the float again rounds twice and the second rounding is not the author's.  Emitting text means checking it, against the conservative grammar `FStarC.Extraction.Krml.valid_float_literal` uses, and error 380 is the difference between a diagnostic and `1.0); abort(); (` in somebody's C -- which is `tests/custard/FloatLit.fst`.  In C the text carries its width's suffix, since an unsuffixed literal is a `double` and `1.5f + 2.25f` written without one would be computed at double precision and rounded once at the end.  On OCaml `Float32` is refused with 368 rather than computed at binary64: a backend that cannot round right should say so |
+| M10ββ | **A karamel bug, found on the way** (§38.6) | Open, upstream.  karamel's constant folder reads the operands of a `Mult`, `Div` or `Mod` at `TInt w` with `Z.of_string` before checking that `w` is an *integer* width -- `Add` has that guard and the other three do not -- so `F64.div (F64.of_literal \"1.0\") (F64.of_literal \"4.0\")` ends the run with `Invalid_argument(\"Z.of_substring_base: invalid digit\")`.  The neighbouring rewrites are wrong rather than loud: `0 * x -> 0` and `0 + x -> x` hold at no float width, since `0.0 * nan` is `nan` and `0.0 + (-0.0)` is `0.0`, and `of_literal \"0\"` satisfies §38.3's grammar so both are reachable.  The fix is the guard `Add` already has; until then `tests/custard/FloatsKrml.fst` computes with variables where `tests/custard/Floats.fst` computes with literals, which is the whole reason there are two.  Custard's own C backend folds nothing |

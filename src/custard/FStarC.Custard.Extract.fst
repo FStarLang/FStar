@@ -1783,6 +1783,7 @@ and ty_of_constant (st:state) (c:constant) : ML cty =
   | CBool _ -> prim PC.bool_lid
   | CInt (_, None) -> prim PC.int_lid
   | CInt (_, Some sw) -> TInt sw
+  | CFloat (_, fw) -> TFloat fw
   | CChar _ -> prim PC.char_lid
   | CString _ -> prim PC.string_lid
 

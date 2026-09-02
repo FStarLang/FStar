@@ -440,6 +440,8 @@ and base_ty (t:cty) : ML string =
   match t with
   | TUnit -> "custard_unit"
   | TInt sw -> int_type sw
+  | TFloat Float32 -> "float"
+  | TFloat Float64 -> "double"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -549,6 +551,13 @@ let constant (c:constant) : ML string =
   | CInt (s, None) ->
     reject ("the unbounded integer literal " ^ s)
       ["Prims.int has no C representation; use a machine integer type."]
+  (* Section 38.  The decimal text as written, with the suffix that gives it
+     the width it is meant to have: an unsuffixed C float literal is a
+     [double], so [Float32] arithmetic would be done at double precision and
+     rounded once at the end.  No cast, because a cast cannot supply the
+     literal's own type and the suffix already does. *)
+  | CFloat (v, Float32) -> v ^ "f"
+  | CFloat (v, Float64) -> v
   | CChar c -> "((uint32_t)" ^ show (BU.int_of_char c) ^ ")"
   | CString s -> "\"" ^ escape s ^ "\""
 
@@ -575,13 +584,13 @@ let infix_op (o:prim_op) : ML (option string) =
   | Lt -> Some "<" | Lte -> Some "<=" | Gt -> Some ">" | Gte -> Some ">="
   (* At a width these are the *bitwise* operators and are strict; without one
      they are the short-circuiting connectives (section 6, pass 1). *)
-  | And -> Some (if Some? o.po_int then "&" else "&&")
-  | Or -> Some (if Some? o.po_int then "|" else "||")
+  | And -> Some (if at_int_width o then "&" else "&&")
+  | Or -> Some (if at_int_width o then "|" else "||")
   | _ -> None
 
 let prefix_op (o:prim_op) : ML (option string) =
   match o.po_op with
-  | Not -> Some (if Some? o.po_int then "~" else "!")
+  | Not -> Some (if at_int_width o then "~" else "!")
   | BNot -> Some "~"
   | _ -> None
 
@@ -600,15 +609,15 @@ let prefix_op (o:prim_op) : ML (option string) =
 let truncate (o:prim_op) (s:string) : ML string =
   let modular =
     match o.po_op with
-    | Not -> Some? o.po_int   (* [~] at a width; [!] on a bool is not this *)
+    | Not -> at_int_width o   (* [~] at a width; [!] on a bool is not this *)
     | BNot | BShiftL | AddW | SubW | MultW -> true
     | _ -> false in
-  match o.po_int with
-  | Some sw ->
+  match o.po_ty with
+  | Some (PInt sw) ->
     let _, w = sw in
     let narrow = (match w with Int8 -> true | Int16 -> true | _ -> false) in
     if modular && narrow then "((" ^ int_type sw ^ ")" ^ s ^ ")" else s
-  | None -> s
+  | Some (PFloat _) | None -> s
 
 (* -------------------------------------------------------------------- *)
 (* Expressions                                                          *)
