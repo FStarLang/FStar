@@ -965,6 +965,15 @@ check-settings:
 
 all: check-settings
 
+# Section 37.1: the gate has its own gate.  A matcher that silently stops
+# recognizing one of the three shapes it was written for reads like coverage
+# that is not there, so the distinguishing cases run with the suite.
+.PHONY: check-checkgroup
+check-checkgroup:
+	$(Q)python3 $(CHECKGROUP) --self-test
+
+all: check-checkgroup
+
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))

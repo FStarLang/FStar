@@ -20,8 +20,15 @@ generates.
 
 Comments and string and character literals are skipped, since a paren inside
 one is not a paren.
+
+Section 37.1.  A cast's closing parenthesis looks exactly like a call's, and
+the group after a cast is grouping rather than syntax, so telling them apart
+needs the *content* of the preceding group and not just its last character.
+`--self-test` runs the distinguishing cases; it is part of the suite, because
+a gate with a hole in it reads like coverage that is not there.
 """
 
+import re
 import sys
 
 # A parenthesis that is part of C's *syntax* rather than a grouping: an
@@ -32,14 +39,32 @@ CHECKED_KEYWORDS = frozenset(['if', 'while', 'switch', 'return', 'do'])
 IDENT = frozenset('abcdefghijklmnopqrstuvwxyz'
                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$')
 
-def is_syntactic(text, at):
+# The content of a cast's parentheses: optional type keywords, a name, and
+# any number of stars.  Anything else before a `(` that itself ends in `)` is
+# a call through an expression -- `(*fp)(x)`, `(a ? f : g)(x)` -- whose
+# argument list is syntax.
+TYPEISH = re.compile(r"""\A(?:(?:const|volatile|unsigned|signed|struct|union
+                             |enum|long|short|static|_Bool)\s+)*
+                          [A-Za-z_$][A-Za-z0-9_$]*
+                          (?:\s*\*)*\s*\Z""", re.X)
+
+def is_syntactic(text, at, opens=None):
+    """Is the `(` at `at` part of C's syntax rather than a grouping?"""
     j = at - 1
     while j >= 0 and text[j] in ' \t\n':
         j -= 1
     if j < 0:
         return False
-    if text[j] in ')]':
+    if text[j] == ']':
         return True
+    if text[j] == ')':
+        # Section 37.1: a cast ends in `)` too, and what follows a cast is
+        # its operand.  `(size_t)((x))` has a redundant pair; `(*fp)((x))`
+        # has one grouped argument.  The difference is inside the group.
+        open_at = (opens or {}).get(j)
+        if open_at is None:
+            return True
+        return not TYPEISH.match(text[open_at + 1:j])
     if text[j] not in IDENT:
         return False
     k = j
@@ -74,8 +99,9 @@ def scan(text):
             if stack:
                 pairs[stack.pop()] = i
         i += 1
+    opens = dict((close, open_at) for open_at, close in pairs.items())
     for open_at, close_at in pairs.items():
-        if is_syntactic(text, open_at):
+        if is_syntactic(text, open_at, opens):
             continue
         inner = text[open_at + 1:close_at].strip()
         if not inner.startswith('(') or not inner.endswith(')'):
@@ -86,7 +112,35 @@ def scan(text):
         if pairs.get(first) is not None and text[pairs[first] + 1:close_at].strip() == '':
             yield open_at, close_at
 
+# Section 37.1.  The cases that distinguish a cast from a call, including the
+# three real bugs round 40's fix removed -- the third of which this matcher
+# used to miss, and it is the shape a recurrence would take.
+SELF_TEST = [
+    ('if (!((i < n))) { }', 1),
+    ('void *p = malloc((((size_t)1ULL)) * n);', 1),
+    ('for (size_t i = 0; i < (size_t)(((size_t)1ULL)); i++) { }', 1),
+    ('int m = (int)((5));', 1),
+    ('int q = ((5));', 1),
+    ('int r = (*fp)((0));', 0),
+    ('int r = foo((x));', 0),
+    ('if ((a) && (b)) { }', 0),
+    ('int r = (size_t)(x);', 0),
+    ('char *s = "((x))"; /* ((y)) */', 0),
+]
+
+def self_test():
+    bad = 0
+    for text, want in SELF_TEST:
+        got = len(list(scan(text)))
+        if got != want:
+            print('ERROR: checkgroup self-test: expected %d finding(s), got %d,'
+                  ' in: %s' % (want, got, text))
+            bad += 1
+    return 1 if bad else 0
+
 def main(argv):
+    if '--self-test' in argv[1:]:
+        return self_test()
     bad = 0
     for path in argv[1:]:
         try:

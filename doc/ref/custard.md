@@ -10305,6 +10305,95 @@ which are addresses, and what the runtime entry point expects of them are
 all decisions about a calling convention Custard does not define. Guessing
 them would produce a kernel that compiles and is wrong.
 
+# 37 The gate's own blind spot
+
+Round 41 of the EverParse trial is the reporter checking section 35.2's
+checker the way section 35.2 asks things to be checked: not by watching it
+pass, but by constructing the case it should catch.
+
+## 37.1 A cast ends in a closing parenthesis too
+
+`checkgroup.py` skips a `(` whose preceding character is `)`, because that is
+a call through an expression and its argument list is C's syntax rather than
+a grouping: `(*fp)((x))` is one grouped argument, not two pairs.
+
+A **cast** also ends in `)`, and what follows a cast is its operand, where a
+parenthesis *is* grouping. So the rule skipped it:
+
+```c
+void p(void){ int q = ((5));       }   /* reported            */
+void k(void){ int m = (int)((5));  }   /* silent              */
+```
+
+The same pair, one character of context apart. And it is not a hypothetical
+shape: it is the third of the three real findings the checker was written
+after, the fill loop's bound.
+
+```c
+for (size_t i = 0; i < (size_t)(((size_t)1ULL)); i++)
+```
+
+Put verbatim into a file with the other two, the checker reported the
+`if (!((...)))` and the `malloc((((size_t)1ULL)) * ...)` and said nothing
+about the `for`. **It would not have caught a recurrence of one of the three
+bugs it exists to prevent** -- which is M10αο's failure one level up, a check
+that reads like it covers the class and covers two thirds of it.
+
+The fix is to look *inside* the preceding group rather than only at its last
+character. If the content is type-ish -- optional `const`, `unsigned`,
+`struct` and the rest, a name, any number of stars -- the group is a cast and
+the parenthesis after it is grouping. Anything else is a call through an
+expression and its argument list is syntax.
+
+Calibration, so this is not oversold: the reporter searched the real output
+for the shape and found **zero** live instances -- no `)((` at all in
+`CBORDet.c` or the four CDDL units -- and the cast-aware matcher finds
+nothing the old one did not over 8 files and ~600 KB. This was a hole in the
+gate and not a bug in the output. It matters because catching the next one is
+the gate's whole job.
+
+`checkgroup.py --self-test` is the gate's own gate, and runs with the suite.
+It carries the three real findings, the two synthetic shapes above, and the
+cases the `)` rule exists for -- a call through a pointer, a call, `(a) &&
+(b)`, a cast with a non-redundant operand, and parentheses inside a comment
+and a string literal. A matcher that quietly stops recognizing one of its
+shapes is exactly the thing this round found.
+
+## 37.2 What the round confirmed
+
+Four measurements, all from the reporter, none needing a change here.
+
+**M10αζ's three were live bugs downstream**, not just in this suite. The
+`if (!((...)))` shape was in every CDDL unit and had been for two rounds --
+six occurrences per unit, eight in `signoutputargs`. No compiler said
+anything about any of them: they are `!` and `&&`, not the `==` that
+`-Wparentheses-equality` looks at, so clang was as silent as gcc, which is
+M10αξ's point demonstrated on real output. The fix is provably syntax-only
+against round 40: every changed line is a parenthesis.
+
+**Warning 377 lands on exactly the types the trial had to spell.** On the
+CBOR unit it fires twice, naming the two of the reporter's four shim
+typedefs that had no source-level name -- the count and the identities both
+match. On the CDDL units it names `Pulse_Lib_Slice_slice__uint8` and the
+result option, and their behavioural driver has hardcoded both since round
+36. It is not describing a hypothetical consumer; it found the one that has
+been in the trial the whole time, without being told.
+
+**M10αο's two new guards were broken rather than observed.**
+`make check-settings FLAGS_NoSuchTest=x` fails as it should, and a `CGREP_`
+set to an absent string fails once the stamp is removed -- which is the right
+way to check an assertion, since one that does not run is worse than none.
+
+**The first full CDDL behavioural re-run since round 36.** Because the
+parenthesis fix touched loop exit tests a diff was not enough, so the three
+typed drivers were rebuilt and the whole corpus re-run: 12,110 vectors per
+entry point, all three identical to the round-36 golden. CBOR direct-to-C
+identical, CBOR through karamel to Rust byte-identical, COSE interop signs
+and verifies with `--custard_c_no_prefix` output substituted in.
+
+Section 12.11's `Lemma13` is unchanged, and still passes at
+`--z3rlimit_factor 4`.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -10432,3 +10521,5 @@ them would produce a kernel that compiles and is wrong.
 | M10ασ | **Lifting a named, decorated function** (§36.3) | Done.  Round 42.  `lift_lambdas` named what it lifted after the definition it came from, `CustardRuleTest_main__lam`; for a device backend that is the kernel's symbol and it appears in profiler timelines, in disassembly and in user-facing errors, and the descriptor already carries the name its author chose.  `lift_named : string -> list flag -> expr -> ML expr` makes a lambda a top-level declaration under that name used verbatim -- no namespace, no mangling -- and returns the `EQual`; a repeat is error 378, not a silent overwrite.  Closing the lambda stays the rule's job (§36.5).  The flags close round 33's gap 3: `Prologue`, `Epilogue`, `CInline` join `Comment`, all four reach karamel, and the C backend emits `Prologue` before the prototype as well as the definition, since CUDA wants `__global__` on both and a qualifier on one alone is a redeclaration error rather than a silently host-side kernel.  `Root` meant public, which is wrong for a lifted function, so `Private` overrides it |
 | M10ατ | **A name is not a computation** (§36.4) | Done.  Round 42, a nit with a one-line cause.  A rule building `EApp (EQual kcall, args)` labels the node that *names* the function with the function's effect, which is the effect the application has, and `anf_expr` hoists every operand that is not pure -- so the call went through a temporary function pointer while a source-level call to the same function was direct.  `EQual`, `EVar`, `EConst` and `EAny` denote without evaluating and there is nothing for a binding to sequence, whatever the node's effect says.  Cosmetic for a C compiler, not cosmetic for generated device code a human reads |
 | M10αυ | **`Rule_prim` reproduces `hoist`** (§36) | Closed, no change.  Round 42 answered §34's open question by measurement rather than argument: the reporter gave the rule test's descriptor a `kbody` written at the launch site over a local, saw it arrive as an `EFun` open in that local -- exactly `hoist`'s input -- closed it over its free variables and let §19.12's `lift_lambdas` push it out.  `Rule_prim_st` is not needed and is not being added.  Their clang measurement is the round's other closed item: clang 14 on the whole `tests/custard` suite is exit 0 with no warnings, and all 25 `_output/*.dc` files rebuilt under `-Weverything` minus style checks produced a diagnostic in 0 of 25 -- which is the coverage this tree cannot produce, since clang is not installed here |
+| M10αφ | **A cast ends in a closing parenthesis too** (§37.1) | Done.  Round 41 of the EverParse trial, and the reporter checked M10αξ's checker the way M10αξ says to check things -- by building the case it should catch rather than watching it pass.  `is_syntactic` skipped a `(` preceded by `)`, which is right for a call through an expression, but a *cast* ends in `)` as well and what follows a cast is its operand, where a parenthesis is grouping: `(int)((5))` was silent while `((5))` was reported.  Not hypothetical -- it is the shape of the third of the three findings M10αξ was written after, the fill loop's `(size_t)(((size_t)1ULL))`, so the gate would not have caught a recurrence of one of the bugs it exists to prevent.  The matcher now looks inside the preceding group and calls it a cast when the content is type-ish.  Calibrated: zero live instances of the shape in ~600 KB of real output, and the two matchers agree everywhere there, so this was a hole in the gate and not a bug in the output.  `--self-test` carries the three real findings and the distinguishing pair, and runs with the suite |
+| M10αχ | **What round 41 confirmed** (§37.2) | Closed, no change.  M10αζ's three parenthesis fixes were live bugs downstream and not just in this suite -- the `if (!((...)))` shape was in every CDDL unit, six per unit and eight in `signoutputargs`, for two rounds, with no compiler saying anything, since `!` and `&&` are not the `==` `-Wparentheses-equality` looks at.  Warning 377 fires twice on the CBOR unit and names exactly the two shim typedefs of round 40's four that had no source-level spelling, and on the CDDL units names the slice and option the behavioural driver has hardcoded since round 36 -- the count and the identities both match, so it found the real consumer without being told.  M10αο's guards were broken rather than observed, both failing as intended.  And the first full CDDL behavioural re-run since round 36, because the parenthesis fix touched loop exit tests: 12,110 vectors per entry point, three entry points, all identical to golden, CBOR-to-Rust byte-identical, COSE interop intact |
