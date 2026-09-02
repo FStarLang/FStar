@@ -339,8 +339,6 @@ let maybe_extend_subst s b v : subst_t =
     else NT(b.binder_bv, v)::s
 
 
-let memo_tk (e:term) (t:typ) = e
-
 (* A machine-generated occurrence carries no source range; warning on it would
    report a use the programmer did not write (the typechecker itself builds
    [Prims.has_type] nodes, for instance).  This must be consulted *before*
@@ -404,7 +402,7 @@ let value_check_expected_typ env (e:term) (tlc:either term comp) (guard:guard_t)
   let t = (U.comp_result lc) in
   let e, lc, g =
    match Env.expected_typ env with
-   | None -> memo_tk e t, lc, guard
+   | None -> e, lc, guard
    | Some (t', use_eq) ->
      let e, lc, g = TcUtil.check_has_type_maybe_coerce env e lc t' use_eq in
      if Debug.medium ()
@@ -421,7 +419,7 @@ let value_check_expected_typ env (e:term) (tlc:either term comp) (guard:guard_t)
      let msg = if Env.is_trivial_guard_formula g then None
                else if U.is_unit t && Some? (U.un_squash t') then None
                else Some <| Err.subtyping_failed env t t' in
-     let lc, g = TcUtil.strengthen_precondition msg env e lc g in
+     let g = TcUtil.simplify_and_label_guard msg env g in
      (* Coarsening to [t'] loses whatever [(U.comp_result lc)] knows, and a result type
         is now the only place a computation's precision lives.  [weaken_result_typ]
         already declines to coarsen in exactly these cases (see [keep_res_typ]);
@@ -429,7 +427,7 @@ let value_check_expected_typ env (e:term) (tlc:either term comp) (guard:guard_t)
         branch, which is checked against a bare unification variable: a branch
         that kept its type is one [tc_match] can read a result type from. *)
      let lc = if TcUtil.keep_res_typ env t' (U.comp_result lc) then lc else U.set_result_typ lc t' in
-     memo_tk e t', lc, g
+     e, lc, g
   in
   e, lc, g
 
@@ -1226,7 +1224,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let t, _, f = tc_check_tot_or_gtot_term env t k None in
     let e, c, g = tc_term (Env.set_expected_typ_maybe_eq env t use_eq) e in
     //NS: Maybe redundant strengthen
-    let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
+    let f = TcUtil.simplify_and_label_guard (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) f in
     (* An ascription is a request to *view* the term at the ascribed type, so
        take it literally: [e <: t] has type [t], even when [e]'s own type is
        more precise.  Downstream inference reads the ascription as the user's
@@ -2963,7 +2961,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : ML (term & comp & guard_t) 
         | None -> e, tfun_computed, guard in
 
     let c = mk_Total tfun in
-    let c, g = TcUtil.strengthen_precondition None env e (c) guard in
+    let g = TcUtil.simplify_and_label_guard None env guard in
 
     e, c, g
 
@@ -3288,7 +3286,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
       (* Each conjunct in g is already labeled *)
       //NS: Maybe redundant strengthen
       // let comp, g = comp, guard in
-      let comp, g = TcUtil.strengthen_precondition None env app comp (guard ++ g_bind) in
+      let g = TcUtil.simplify_and_label_guard None env (guard ++ g_bind) in
       if Debug.extreme () then Format.print2 "(d) Monadic app: type of app\n\t(%s)\n\t: %s\n"
         (show app)
         (show comp);
@@ -3584,7 +3582,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : ML (term
           let c = if ghost then S.mk_GTotal res_t else c in
           //NS: maybe redundant strengthen
           // let c, g = c, guard in
-          let c, g = TcUtil.strengthen_precondition None env e c guard in
+          let g = TcUtil.simplify_and_label_guard None env guard in
           e, c, g
 
         | _ -> //fallback
@@ -4382,7 +4380,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
         |> TcUtil.close_guard_implicits env true pat_bs in
       U.comp_effect_name c, None, None, g_when, g_branch
     | _ ->
-     let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
+     let g_branch = TcUtil.simplify_and_label_guard None env g_branch in
 
      //
      // Working towards closing the branches comp with the pattern variables
@@ -4752,12 +4750,10 @@ and check_inner_let env e : ML _ =
           *)
          tc_term env_x e2
          |> (fun (e2, c2, g2) ->
-            let c2, g2 = TcUtil.strengthen_precondition
+            let g2 = TcUtil.simplify_and_label_guard
               None (* no label: the obligations in [g2] carry their own, and an
                       internal description of this fold is not a useful message *)
               env_x
-              e2
-              c2
               g2 in
             (* Move g2's logical payload into c2's guard.  It mentions [x], and
                it is [bind] that knows what [x] is: it puts the guard under
@@ -5206,9 +5202,9 @@ and check_let_bound_def top_level env lb
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
     //NS: Maybe redundant strengthen
     // let c1, guard_f = c1, wf_annot in
-    let c1, guard_f = TcUtil.strengthen_precondition
+    let guard_f = TcUtil.simplify_and_label_guard
                         (Some (fun () -> Err.ill_kinded_type))
-                        (Env.set_range env1 e1.pos) e1 c1 wf_annot in
+                        (Env.set_range env1 e1.pos) wf_annot in
     let g1 = g1 ++ guard_f in
 
     if Debug.extreme ()

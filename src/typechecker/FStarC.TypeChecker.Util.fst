@@ -711,31 +711,21 @@ let return_value env eff_lid t v : ML (comp & guard_t) =
 let weaken_comp env (c:comp) (formula:term) : ML (comp & guard_t) =
   c, Env.trivial_guard
 
-let strengthen_precondition
-            (reason:option (unit -> ML (list Pprint.document)))
-            env
-            (e_for_debugging_only:term)
-            (lc:comp)
-            (g0:guard_t)
-    : ML (comp & guard_t) =
-    (* A computation type carries no specification: there is nowhere to put an
-       obligation but the guard, so leave it there.  All this function does is
-       attach [reason] as an error label, so that when the guard is eventually
-       discharged the message points at this term. *)
-    if Env.is_trivial_guard_formula g0
-    then lc, g0
-    else if env.phase1 || Options.admit_smt_queries ()
-    then lc, {g0 with guard_f=Trivial}
-    else
+let simplify_and_label_guard
+      (reason:option (unit -> ML (list Pprint.document)))
+      env (g0:guard_t)
+: ML guard_t 
+= if Env.is_trivial_guard_formula g0
+  then g0
+  else if env.phase1 || Options.admit_smt_queries ()
+  then {g0 with guard_f=Trivial}
+  else (
       let g0 = Rel.simplify_guard env g0 in
       match guard_form g0 with
-      | Trivial -> lc, g0
+      | Trivial -> g0
       | NonTrivial f ->
-        if Debug.extreme ()
-        then Format.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
-               (N.term_to_string env e_for_debugging_only)
-               (N.term_to_string env f);
-        lc, {g0 with guard_f=NonTrivial (label_opt env reason (Env.get_range env) f)}
+        {g0 with guard_f=NonTrivial (label_opt env reason (Env.get_range env) f)}
+  )
 
 
 (*
