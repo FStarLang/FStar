@@ -44,7 +44,12 @@ assume Certified:
             certified (format [k]) <==> verified k == certified )
 
 val validate: vkey certified -> list data -> unit
-let rec validate vk0 chain =
+(* The `decreases` used to be inferred, but only because the context of the
+   recursive call was inconsistent: `verified vk == certified` is refutable when
+   prop-valued type constructors are given distinct SMT constructor ids. They no
+   longer are, since the encoding of prop is extensional. The point of this test
+   is the subtyping check on the recursive call, which still goes through. *)
+let rec validate vk0 chain : Tot unit (decreases chain) =
     (match chain with
     | cert:: chain_tl ->
         (match parse cert with

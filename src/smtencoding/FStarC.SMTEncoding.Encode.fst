@@ -765,7 +765,12 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                                        Some "free var typing",
                                        ("typing_"^vname)) in
          let freshness =
+           // A `new` type whose result type is prop cannot be given a distinct
+           // constructor id: the encoding of prop is extensional (see mk_prop),
+           // so every prop is equal to True or False, and hence a prop-valued
+           // type constructor cannot be distinct from every other term.
            if quals |> List.contains New
+           && not (U.is_fvar Const.prop_lid (SS.compress res_t))
            then [Term.fresh_constructor (S.range_of_fv fv) (vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, varops.next_id());
                  pretype_axiom false (S.range_of_fv fv) env vapp (univ_fvs@vars)]
            else [] in
