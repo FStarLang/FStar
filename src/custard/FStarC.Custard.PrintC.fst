@@ -167,6 +167,40 @@ let sanitize (s:string) : ML string =
     let i0 = if ok i0 then i0 else 95 in
     if is_alpha i0 || i0 = 95 then s else "x" ^ s
 
+(* Section 32.10.  [c_expr] parenthesizes every operator application, so a
+   condition arrives already wrapped and [if (...)] adds a second pair.  clang
+   calls that -Wparentheses-equality and emitted it 78 times on one generated
+   file; a consumer building with -Werror cannot use the output.
+
+   One pair, and only when the string *is* one group -- the leading paren must
+   be the one the trailing paren closes, or [(a) && (b)] would lose its
+   meaning. *)
+let is_group (s:string) : ML bool =
+  let n = String.length s in
+  if n < 2 || String.substring s 0 1 <> "(" || String.substring s (n - 1) 1 <> ")"
+  then false
+  else
+    let cs = String.list_of_string s in
+    let rec scan (cs:list FStarC.BaseTypes.char) (i:int) (depth:int) : ML bool =
+      match cs with
+      | [] -> true
+      | c :: rest ->
+        let d = if BU.int_of_char c = 40 then depth + 1
+                else if BU.int_of_char c = 41 then depth - 1
+                else depth in
+        (* Reaching zero before the last character means the opening paren
+           closed early, so it is not the outermost group. *)
+        if d = 0 && i < n - 1 then false else scan rest (i + 1) d in
+    scan cs 0 0
+
+let unparen (s:string) : ML string =
+  if is_group s then String.substring s 1 (String.length s - 2) else s
+
+(* [!e] binds tighter than any operator, so the operand has to be a group;
+   one that already is keeps its own parens rather than gaining a second. *)
+let negate (s:string) : ML string =
+  "!" ^ (if is_group s then s else "(" ^ s ^ ")")
+
 let escape_kw (s:string) : ML string =
   if List.existsb (fun k -> k = s) c_keywords then s ^ "_" else s
 
@@ -185,7 +219,15 @@ let c_var (x:string) : ML string = escape_kw (sanitize x)
 
 (* An enum tag.  Uppercased so that it cannot collide with a value or a type
    name derived from the same lid. *)
-let c_tag (n:name) : ML string = String.uppercase (sanitize (mangled_name n))
+(* Through {!renames}, so that a constructor of a --custard_c_no_prefix module
+   gets the unqualified tag its type and its functions got.  Uppercasing is
+   what keeps it from colliding with a value or type name of the same lid, and
+   {!build_renames} checks the un-uppercased form, so a rename that is legal
+   there is legal here. *)
+let c_tag (n:name) : ML string =
+  String.uppercase (match SMap.try_find !renames (string_of_name n) with
+                    | Some s -> s
+                    | None -> sanitize (mangled_name n))
 
 (* -------------------------------------------------------------------- *)
 (* The declaration tables                                               *)
@@ -1137,8 +1179,8 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        exactly this behind. *)
     !out ^
     (if tt = "" && ft = "" then ""
-     else if tt = "" then ind ^ "if (!(" ^ cs ^ "))" ^ brace ind ft
-     else ind ^ "if (" ^ cs ^ ")" ^ brace ind tt ^
+     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind ft
+     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind tt ^
           (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
 
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
@@ -1804,14 +1846,37 @@ let build_renames (p:program) : ML unit =
                      (string_of_name n));
     let claimed : SMap.t string = SMap.create 20 in
     let used_mod : SMap.t bool = SMap.create 5 in
-    p |> List.iter (fun d ->
+    (* Section 32.9.  A declaration is renamed when it is part of the unit's
+       interface.  For a definition that is external linkage, which is
+       {!is_public}.  A *type* has no linkage at all, so there is nothing for
+       that test to mean -- but the header carries the unit's whole type
+       language (see the note above [hdr]), and a consumer that includes the
+       header and cannot spell the type of what it just called does not have
+       an API.  So a type of a named module is renamed too, and so are its
+       constructors, whose enum tags are equally part of what the header
+       exports.  [struct_tag] derives from [c_name], so the struct tags
+       follow.  A specialization is excluded here as everywhere. *)
+    let renamable (d:decl) : ML (option name) =
       match d with
-      | DLet l when is_public l && None? l.dl_name.spec ->
-        let m = String.concat "." l.dl_name.ns in
+      | DLet l -> if is_public l then Some l.dl_name else None
+      | DType t -> Some t.dt_name
+      | _ -> None in
+    let ctors_of (d:decl) : ML (list name) =
+      match d with
+      | DType ({ dt_body = TVariant cs }) -> cs |> List.map fst
+      | _ -> [] in
+    p |> List.collect (fun d ->
+      match renamable d with
+      | Some n -> (n, d) :: (ctors_of d |> List.map (fun c -> (c, d)))
+      | None -> [])
+    |> List.iter (fun (dn, _) ->
+      match () with
+      | _ when None? dn.spec ->
+        let m = String.concat "." dn.ns in
         if List.existsb (fun x -> x = m) mods then begin
           SMap.add used_mod m true;
-          let tgt = escape_kw (sanitize l.dl_name.id) in
-          let src = string_of_name l.dl_name in
+          let tgt = escape_kw (sanitize dn.id) in
+          let src = string_of_name dn in
           (match SMap.try_find claimed tgt with
            | Some other ->
              E.raise_error0 E.Error_CustardExportCollision [

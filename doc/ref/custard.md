@@ -9541,6 +9541,96 @@ Recorded because the answers are design decisions, not omissions.
 - **Observing type declarations**, for a rule that projects fields out of a
   record argument. May be recoverable from `ERecord`/`EProj`, which do survive.
 
+## 32.9 The header is the API
+
+Round 39 linked §32.4's output against the real COSE consumer. Not a
+reproduction — `src/cose/interop` builds `signtest`/`verifytest` from the
+checked-in, EverParse-generated `COSE_Format.c` plus OpenSSL, and cross-checks
+against the independent `pycose`; Custard's `CBORDet.o` was substituted for
+karamel's and nothing else changed. It signs, `pycose` verifies it, it verifies
+`pycose`'s signature, and rebuilt under ASan/UBSan the three results are the
+same with no findings.
+
+Three things worth recording from that.
+
+**A strip is sufficient; no rename map is needed.** All 35 `cbor_det_*` symbols
+COSE leaves undefined resolve against the 44 the unqualified output exports.
+The question §32.4 left open is closed.
+
+**The generated types are ABI-identical to the hand-written header.** COSE
+never includes Custard's header — it includes `CBORDetType.h` and links across
+the boundary — so the link is only meaningful if the layouts agree.
+`cbor_det_t` is 40/8 both ways, map entry 80, both iterators 32.
+
+**The renaming is purely nominal.** Re-applying the module prefixes
+mechanically to the renamed output and diffing against the ordinary output
+leaves one difference: a definition that became a root moved to the top of the
+file, because it is no longer `static`. No other line differs.
+
+### What the flag did not rename
+
+Types. The header declared
+
+```c
+CBOR_Pulse_Raw_Type_cbor_raw cbor_det_parse(uint8_t *input, size_t len);
+```
+
+so a consumer could call the function but could not spell what it returned.
+For COSE that costs nothing, since COSE brings its own header and needs only
+link-level compatibility — but it means the generated header could not be used
+*by itself* as the public API, which is what §32.4 claims it is. The function
+names were the API's and the type names were still internal spellings.
+
+A type has no linkage, so `is_public` has nothing to say about one; that is why
+the first cut skipped them. But the header already carries the unit's whole
+type language on purpose, and a consumer that cannot name the type of what it
+just called does not have an API. So a named module's types are renamed too,
+and so are its constructors — a variant's enum tags are equally part of what
+the header exports, and `c_tag` now goes through the same map. `struct_tag`
+derives from `c_name`, so struct tags follow for free.
+
+`tests/custard/ExportUser.cpp` now writes `widget w = widget_make(4, 9);` and
+compares against `WLARGE`, in C++, across the boundary.
+
+### `--custard_c_no_prefix` needs `--custard_entry_module`
+
+Worth stating plainly, because the reporter hit it: the flag only bites on
+declarations that are *already* part of the interface. Naming a module without
+also making its definitions roots leaves them `static` under their qualified
+names. That is warning 375. The COSE invocation needs both flags for two
+modules — `CBOR.Pulse.API.Det.C` and `CBOR.Pulse.API.Det.Dummy`, which is what
+the karamel baseline passes `-no-prefix` for — and repeating the flag composes.
+
+## 32.10 One pair of parentheses
+
+`c_expr` parenthesizes every operator application, so a condition arrives
+already wrapped and `if (...)` added a second pair. clang calls that
+`-Wparentheses-equality` and emitted it 78 times on one generated file; gcc
+`-Wall -Wextra` never mentioned it, which is why it survived this long. A
+consumer building with `-Werror` under clang could not use the output, so it is
+not cosmetic.
+
+`is_group` decides whether a string is one parenthesized group — the leading
+paren must be the one the trailing paren closes, or `(a) && (b)` would lose its
+meaning when stripped. `unparen` drops that pair for a condition; `negate`
+uses it in the other direction, adding parens for `!` only when the operand is
+not already a group.
+
+## 32.11 Not ours
+
+Two items from round 39 recorded because they will be met again.
+
+An EverParse proof — `...ZeroOrMore.Aux2.Lemma13` — broke on the `master`
+merge, deterministically, at the trailing `()`, and passes at
+`--z3rlimit_factor 4`. The goal shape matches `e4e983c9fa` "Push the expected
+postcondition into the body's expected type by default", whose own series
+carried `de044176e8` "Drop four of the rlimit increases the postcondition push
+needed". Proof fragility from an upstream change, not from Custard, and it
+belongs to EverParse.
+
+The COSE baseline fails with `TypeError: Bytes cannot be decoded as COSE
+message` under `cbor2` 6.x. The repo's Makefile pins `'cbor2<6'`.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -9652,3 +9742,5 @@ Recorded because the answers are design decisions, not omissions.
 | M10αβ | **An external has no body** (§32.5) | Done.  Kuiper report.  `[@@@monomorphize]` on a binder of a `custard_extern` substituted the argument into nothing: the signature lost the binder, the argument was discarded, and the fixed C symbol never learned what it was.  The reported form did not compile; the form nobody reported — a *closed* argument, so no capture and no arity mismatch — compiled and silently never called anything.  Error 376 rejects a `Mono` *value* binder on an external.  A `Mono` *type* binder stays allowed: it is substituted into the signature, which is all a type argument is.  `tests/custard/MonoExtern.fst` |
 | M10αγ | **Storing a type is not an existential** (§32.6) | Done.  Kuiper report.  Rule 4b's `ctor_stores_type` asked only whether a constructor stores a `Type0`, so `\| D : (ty:Type0) -> len:UInt32.t -> desc` — where nothing mentions `ty`, the field is erased, and what remains is one uniform `UInt32.t` — was rejected with error 364 for no reason.  The condition is dependence, which is what §30.4's prose already said: a *later* field must mention the stored type.  And where rule 4b is right, error 364 said only its consequence and gave two unavailable remedies; `Mono.existential_field` now names the constructor and field, states that no annotation changes it, and gives the remedy that exists.  `tests/custard/StoredType.fst`, `tests/custard/ExistAdvice.fst` |
 | M10αδ | **A misattributed realization** (§32.7) | Done.  Kuiper report.  Error 368's advice for a type frozen by §5.0.1 rule 4 asserted the external was "a hand-written realization for the OCaml backend"; for a `custard_extern` it is a C symbol the program named, and the reader was sent after an `.ml` file that does not exist.  `frozen_by_target` records the symbol and the sentence names it |
+| M10αε | **The header is the API** (§32.9) | Done.  Round 39.  §32.4's output was linked against the real COSE consumer — checked-in EverParse-generated `COSE_Format.c` plus OpenSSL, cross-checked against `pycose` — and signs, verifies, and verifies `pycose`'s signature, clean under ASan/UBSan.  A strip is sufficient; no rename map is needed.  The generated types are ABI-identical to the hand-written header (40/8, 80, 32, 32) and the renaming is purely nominal.  The gap it found: types were not renamed, so a consumer could call a function but not spell what it returned, which contradicts §32.4's own claim that the header is the public surface.  A named module's types and their constructors are now renamed too — `c_tag` goes through the same map, `struct_tag` follows from `c_name` — and `ExportUser.cpp` uses the type, a field and an enum tag across the boundary in C++ |
+| M10αζ | **One pair of parentheses** (§32.10) | Done.  Round 39.  `c_expr` parenthesizes every operator application, so `if (...)` added a second pair; clang emitted `-Wparentheses-equality` 78 times on one generated file, and gcc `-Wall -Wextra` never mentioned it.  Not cosmetic — a consumer building with `-Werror` under clang could not use the output.  `is_group` checks that the leading paren is the one the trailing paren closes, so `(a) && (b)` is not stripped; `unparen` drops the pair and `negate` adds one only when the operand is not already a group |

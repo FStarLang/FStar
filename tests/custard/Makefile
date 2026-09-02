@@ -492,7 +492,7 @@ CNOGREP_CFunPtr = "(*)("
 # of an exhaustive match is not guarded.
 CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
                     "if (s.tag == KRMLBASIC_SQUARE) return (s.val.KrmlBasic_Square._0" \
-                    "if ((n == ((uint32_t)0U))) return acc;"
+                    "if (n == ((uint32_t)0U)) return acc;"
 CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
 
 # Each of these is extracted with --custard_entry and *no* --custard_main, as a
@@ -540,6 +540,8 @@ C_TESTS += Export
 FLAGS_Export += --custard_entry Export.widget_add
 FLAGS_Export += --custard_entry Export.widget_double
 FLAGS_Export += --custard_entry Export.widget_id
+FLAGS_Export += --custard_entry Export.widget_kind
+FLAGS_Export += --custard_entry Export.widget_make
 FLAGS_Export += --custard_c_no_prefix Export
 # The three roots are emitted unqualified, and declared in the header.
 CGREP_Export += "uint32_t widget_add("
@@ -549,7 +551,10 @@ CGREP_Export += "extern \"C\" {"
 # The qualified spellings are gone, the unnamed helper keeps its own and
 # stays static, and the specialization keeps its section 30.15 hint: the
 # option renames the public surface and nothing else.
+CGREP_Export += "typedef struct widget_s"
+CGREP_Export += "WLARGE"
 CNOGREP_Export += "Export_widget_add"
+CNOGREP_Export += "Export_wkind"
 CGREP_Export += "static uint32_t Export_helper("
 CGREP_Export += "static uint32_t Export_countdown__"
 

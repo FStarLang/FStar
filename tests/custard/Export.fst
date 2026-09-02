@@ -12,6 +12,18 @@ module Export
 
 module U32 = FStar.UInt32
 
+(* Section 32.9.  A consumer that includes the header and cannot spell the
+   type of what it just called does not have an API, so a named module's types
+   -- and their constructors, whose enum tags the header equally exports --
+   are renamed alongside its definitions. *)
+noeq type widget = { w_lo : U32.t; w_hi : U32.t }
+
+type wkind = | WSmall | WLarge
+
+let widget_kind (w: widget) : wkind = if U32.gt w.w_hi 0ul then WLarge else WSmall
+
+let widget_make (lo: U32.t) (hi: U32.t) : widget = { w_lo = lo; w_hi = hi }
+
 (* Not a root: it must not appear in the header, and it must be static in the
    source, even though the exported functions below both call it. *)
 let helper (x: U32.t) : U32.t = U32.add_mod x 1ul
@@ -30,5 +42,5 @@ let widget_id (x: U32.t) : U32.t = countdown x 3ul
 
 let main () : U32.t =
   if U32.eq (widget_add 2ul 3ul) 6ul && U32.eq (widget_double 5ul) 12ul
-     && U32.eq (widget_id 7ul) 7ul
+     && U32.eq (widget_id 7ul) 7ul && WLarge? (widget_kind (widget_make 1ul 2ul))
   then 0ul else 1ul

@@ -15,7 +15,11 @@ int main(void) {
   uint32_t a = widget_add(2, 3);
   uint32_t d = widget_double(5);
   uint32_t i = widget_id(7);
-  if (a != 6 || d != 12 || i != 7) {
+  // The type and its constructor are spelled the way the F* module wrote
+  // them, not with the module prefix: the header is the API.
+  widget w = widget_make(4, 9);
+  wkind k = widget_kind(w);
+  if (a != 6 || d != 12 || i != 7 || w.w_lo != 4 || k != WLARGE) {
     std::printf("FAIL %u %u %u\n", a, d, i);
     return 1;
   }
