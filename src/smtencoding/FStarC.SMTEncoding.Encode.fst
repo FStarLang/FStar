@@ -1029,7 +1029,7 @@ let encode_top_level_let :
                                 (show binders)
                                 (show body);
                 (* Encode binders *)
-                let vars, binder_guards, env', binder_decls, _ = encode_binders None binders env' in
+                let vars, _binder_guards, env', binder_decls, _ = encode_binders None binders env' in
                 let vars, app =
                     if fvb.fvb_thunked
                     && vars = []
@@ -1043,54 +1043,35 @@ let encode_top_level_let :
                                          ({fvb with smt_arity = List.length univ_terms + fvb.smt_arity})
                                          (univ_terms @ List.map mkFreeV vars)
                 in
-                let is_logical =
-                  // A prop-valued definition is encoded as a formula equation
-                  // `Valid (f x) <==> body`, rather than a term equation
-                  // `f x == body`. The latter follows from the former, since
-                  // the SMT encoding of prop is extensional (see mk_prop).
+                let is_prop_valued =
                   match (SS.compress t_body).n with
-                  | Tm_fvar fv when S.fv_eq_lid fv FStarC.Parser.Const.prop_lid -> true
+                  | Tm_fvar fv -> S.fv_eq_lid fv FStarC.Parser.Const.prop_lid
                   | _ -> false
                 in
-                let is_smt_theory_symbol =
-                    let fv = Inr?.v lbn in
-                    Env.fv_has_attr env.tcenv fv FStarC.Parser.Const.smt_theory_symbol_attr_lid
-                in
-                let should_encode_logical =
-                    not is_smt_theory_symbol
-                    && (quals |> List.contains Logic || is_logical)
-                in
-                let make_eqn name pat app body =
+                let make_eqn pat app body =
                     //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
                     //But the guard is unnecessary given the pattern
                     Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                            ([[pat]], vars, mkEq(app,body)),
                                   Some (Format.fmt1 "Equation for %s" (string_of_lid flid)),
-                                  (name ^ "_" ^ fvb.smt_id))
+                                  ("equation_" ^ fvb.smt_id))
                 in
-                let eqns,decls2 =
-                  let mk_basic_eqn name =
-                    let body, decls = encode_term body env' in
-                    make_eqn name app app body, decls
-                  in
-                  if should_encode_logical
+                let eqn, decls2 =
+                  if is_prop_valued
                   then
-                    let logical_eqn, decls2 =
-                      let bodyf, decls2 = encode_formula body env' in
-                      make_eqn "equation" app (mk_Valid app) bodyf, decls2
-                    in
-                    if is_logical
-                    then //A prop-valued definition only gets the formula equation:
-                         //the term equation follows from it, since prop is
-                         //encoded extensionally (see mk_prop above).
-                         [logical_eqn], decls2
-                    else let basic_eqn, decls = mk_basic_eqn "defn_equation" in
-                         [logical_eqn; basic_eqn], decls@decls2
-                  else let basic_eqn, decls = mk_basic_eqn "equation" in
-                       [basic_eqn], decls
+                    // A prop-valued definition gets a formula equation
+                    // `Valid (f x) <==> body`. The term equation `f x == body`
+                    // follows from it, since the SMT encoding of prop is
+                    // extensional (see mk_prop above).
+                    let bodyf, decls2 = encode_formula body env' in
+                    make_eqn app (mk_Valid app) bodyf, decls2
+                  else
+                    let body, decls2 = encode_term body env' in
+                    make_eqn app app body, decls2
                 in
-                decls@binder_decls@decls2@((eqns@primitive_type_axioms env.tcenv flid fvb.smt_id app)
-                                                 |> mk_decls_trivial),
+                decls@binder_decls@decls2@
+                  ((eqn :: primitive_type_axioms env.tcenv flid fvb.smt_id app)
+                   |> mk_decls_trivial),
                 env
             | _ -> failwith "Impossible"
         in
