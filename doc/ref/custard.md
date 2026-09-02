@@ -10445,11 +10445,10 @@ be set is an invitation.
 
 ## 38.3 A literal is text
 
-`of_literal` takes a string, and that string is emitted as it stands. The
-alternative -- parse it to a float here and print the float again -- rounds
-twice, and the second rounding is not the one the author wrote.
-
-Emitting text means checking it, and the grammar is the conservative one
+`of_literal` takes a string, and nothing here rounds it: the rounding is the
+target compiler's and it happens once. Section 39.2 is how the value is
+carried between the two -- exactly, as the rational the decimal denotes --
+and the grammar it is read with is the conservative one
 `FStarC.Extraction.Krml.valid_float_literal` uses: an optional sign, a
 mantissa with at least one digit on one side of an optional point, and an
 optional decimal exponent. Anything else is **error 380**, which is the
@@ -10524,6 +10523,144 @@ emits a float constant as `(double)3.14159` rather than with a suffix, which
 for `Float32` means the decimal is rounded to binary64 and then to binary32,
 and a double rounding is not always the same as the single one it stands in
 for.
+
+# 39 Literals are values, not text
+
+`CInt of string & option (signedness & width)`. The string was the source
+spelling, carried through the whole pipeline and printed back out, which is
+the shape the ML extraction has and the shape karamel has, and which the F*
+compiler itself abandoned: `Const_int` is `int & int_base` and `Const_real`
+is an `FStarC.Real.real`. Custard now agrees with the compiler rather than
+with the backends.
+
+## 39.1 An integer is a number and a base
+
+`CInt of int & int_base & option (signedness & width)`: the mathematical
+integer it denotes, and the base it was written in. The base is not part of
+the value -- it is there because someone wrote `0xff` and should not be shown
+`255` in the generated C -- and that is exactly why it must not be part of
+equality either. `const_eq` compares the value and the width and ignores the
+base, and `Simplify`'s match-against-a-known-constant uses it.
+
+What the text representation cost, in order of how quietly:
+
+- `PrintC.is_one`, which decides whether a `BufCreate` is Pulse's `let mut`
+  and can therefore be a plain local rather than a heap allocation, was
+  `EConst (CInt ("1", _))`. A one written `0x1` is a one, and got an
+  allocation.
+- `int_literal`'s `INT64_MIN` special case, which exists because C has no
+  negative literals and `-9223372036854775808` overflows before the minus
+  applies, was a comparison against the 20 characters of that number in
+  decimal. Any other spelling of it wrote a literal a conforming compiler
+  must diagnose.
+- Every construction site had to render a number to build one. `size_lit
+  "1"`, `CInt (show arity, None)`, and in the rule plugin a `BU.int_of_string`
+  reading back what `show` had just written.
+- A `CInt` could hold a string that is not a number at all, and nothing in
+  the type said otherwise.
+
+None of these is a bug anyone reported. All of them are the same bug, which
+is that a literal was being compared and pattern-matched in a representation
+chosen for printing.
+
+## 39.2 A float is a real and a sign
+
+`CFloat of float_lit & fwidth`, where `float_lit` is a `bool` and an
+`FStarC.Real.real` -- the exact rational `mantissa * 10^exponent`, canonical,
+so that two literals are equal exactly when they denote the same number.
+
+The sign is separate, and it has to be. IEEE 754 is sign-and-magnitude:
+`-0.0` and `0.0` are different floats, `FStar.Float64.bit_eq` can tell them
+apart, and `1.0 / -0.0` is negative infinity where `1.0 / 0.0` is positive.
+They are the *same real number*, though, and `Real.mk 0 e` is `0` whichever
+sign it was given, so a sign folded into the magnitude is a sign lost. This
+is the one place where a canonical rational is not enough to say what a float
+literal is, and the cost of saying it is a bool.
+
+Nothing else was lost. `real` is exact and unbounded, so no digit is dropped
+and nothing is rounded here -- rounding is still the target compiler's job,
+done once. `1.5e-3`, `0.0015` and `+15e-4` are one `float_lit` and come out
+as `0.0015`, which is what canonical means. What `real` cannot represent --
+an infinity, a NaN -- is what `of_literal`'s grammar does not accept either,
+so the parser and the representation refuse exactly the same things.
+
+`float_lit_of_string` is that grammar, and it replaces
+`valid_float_literal`: a predicate that says text is well-formed and a
+function that turns text into a value are the same walk, and having only the
+second means there is no way to accept a literal without also knowing what it
+is. Error 380 is now "the parse failed" rather than a second opinion.
+
+Printing back is `float_lit_to_string`. `Real.to_string` writes the number
+out in full, which is right for `0.0015` and 301 characters for `1e300`,
+because `Real.mk` normalizes a non-negative exponent away by multiplying it
+into the mantissa. Dividing the zeros back out costs a loop and buys `1e300`
+back, and both spellings denote the same rational exactly; the length at
+which it switches is a matter of taste and no real literal is near it.
+
+## 39.3 What this does not change
+
+The generated code, except where it was wrong. An integer literal still comes
+out in the base it was written in, still with the width's suffix and the
+narrowing cast that section 14 put there. A float literal still comes out
+with `f` after it at `Float32`. `tests/custard/LitBase.fst` pins all of
+that, and pins `-0.0` staying negative, and pins the three spellings of
+`0.0015` becoming one.
+
+The krml backend is the exception, and only in one direction: karamel's
+`EConstant` carries text, so a value has to be spelled again on the way out,
+and it goes out in decimal because a base is not something karamel's reader
+of these expects. A hex literal reaching C through karamel was already
+decimal before this change, for the same reason.
+
+# 40 Half and bfloat16 without a compiler change
+
+Section 38.5 left `Float16` and `BFloat16` out, on the grounds that the
+missing half is not the IR: it is a `ulib` module to extract *from* and a C
+spelling to extract *to*, and both of those are facts about a target rather
+than about F\*. That is an argument for not guessing in the compiler. It is
+not an argument for waiting, because a program that *has* a target can supply
+both itself, today, with nothing added to Custard.
+
+`tests/custard/Half.fst` is that program, written against the shape of
+nvcc's `<cuda_fp16.h>` and `<cuda_bf16.h>`:
+
+```
+[@@custard_extern "__half"; custard_c_header "Half_stubs.h"]
+assume val half : Type0
+
+[@@custard_extern "__hadd"; custard_c_header "Half_stubs.h"]
+assume val hadd (x y : half) : half
+```
+
+The external-type facility of section 14.5 already does the whole of it. No
+typedef is emitted for `__half` or `__nv_bfloat16`, the header is included,
+and the C names in the attributes are the ones that appear. `__float2half`
+and `__half2float` sit next to `FStar.Float32`, which is a real `float` now,
+so the conversions are the ones CUDA declares rather than a rounding Custard
+invented.
+
+Two things make this more than a spelling. Arithmetic on CUDA's half types is
+*functions* in C -- `__hadd`, `__hmul`, `__hlt`; the operator overloads are
+C++ only -- so an external declaration is not a workaround here, it is the
+faithful translation, and it is what section 38.1 chose for `bit_eq` for the
+same reason. And the types are ordinary F\* types, so the rest of the
+pipeline treats them as such: `Half.fst` passes `hadd` to a polymorphic
+`twice`, which monomorphization specializes into `Half_twice__half` and
+`Half_twice__bfloat16`, and stores both in a record, which the layout
+analysis lays out as a struct of a `__half` and a `__nv_bfloat16`.
+
+What a program written this way does *not* get is what section 38 gave
+`Float32`: a literal, and `+` instead of a call. A half literal has to be
+`__float2half` of a `float` one, which is a conversion at runtime unless the
+C compiler folds it, and there is no `EOp` at a half width, so nothing in
+`Simplify` knows that `__hadd` is associative or that adding zero does
+nothing. For a kernel whose arithmetic is intrinsics anyway that is no loss;
+for one that wanted `a + b` it is the reason `TFloat Float16` would still be
+worth having, once there is a `ulib` module and an agreement about what
+`__half` is called on a target that is not NVIDIA's.
+
+The stub header exists so the test runs under `gcc`. Nothing on the F\* side
+would differ under `nvcc`.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -10658,3 +10795,6 @@ for.
 | M10αω | **A width that is not an integer width** (§38.2) | Done, with §38.  `prim_op`'s `po_int : option (signedness & width)` became `po_ty : option prim_ty`, because most of its readers ask only \"is there a width here\" and a few mean *integer*: `And`, `Or` and `Not` are bitwise at a width and connectives without one, and a modular operation at `uint8_t` or `uint16_t` needs truncating because C promotes to `int` before operating.  Those sites say so through `at_int_width` now.  A breaking change to the plugin surface, and deliberately a rename rather than a second optional field -- a rule that builds a `prim_op` has to be edited either way, and a record with two optional fields of which at most one may be set is an invitation |
 | M10βα | **A float literal is text** (§38.3) | Done, with §38.  `of_literal`'s string is emitted as written, because parsing it to a float here and printing the float again rounds twice and the second rounding is not the author's.  Emitting text means checking it, against the conservative grammar `FStarC.Extraction.Krml.valid_float_literal` uses, and error 380 is the difference between a diagnostic and `1.0); abort(); (` in somebody's C -- which is `tests/custard/FloatLit.fst`.  In C the text carries its width's suffix, since an unsuffixed literal is a `double` and `1.5f + 2.25f` written without one would be computed at double precision and rounded once at the end.  On OCaml `Float32` is refused with 368 rather than computed at binary64: a backend that cannot round right should say so |
 | M10ββ | **A karamel bug, found on the way** (§38.6) | Open, upstream.  karamel's constant folder reads the operands of a `Mult`, `Div` or `Mod` at `TInt w` with `Z.of_string` before checking that `w` is an *integer* width -- `Add` has that guard and the other three do not -- so `F64.div (F64.of_literal \"1.0\") (F64.of_literal \"4.0\")` ends the run with `Invalid_argument(\"Z.of_substring_base: invalid digit\")`.  The neighbouring rewrites are wrong rather than loud: `0 * x -> 0` and `0 + x -> x` hold at no float width, since `0.0 * nan` is `nan` and `0.0 + (-0.0)` is `0.0`, and `of_literal \"0\"` satisfies §38.3's grammar so both are reachable.  The fix is the guard `Add` already has; until then `tests/custard/FloatsKrml.fst` computes with variables where `tests/custard/Floats.fst` computes with literals, which is the whole reason there are two.  Custard's own C backend folds nothing |
+| M10βγ | **Literals are values, not text** (§39) | Done, user report.  `CInt of string & option (signedness & width)` carried the source spelling through the whole pipeline, which is the shape the ML extraction has and the shape karamel has, and which the F\* compiler itself abandoned -- `Const_int` is `int & int_base`.  `CInt of int & int_base & option (signedness & width)` now, with the base kept because someone wrote `0xff` and should not be shown `255`, and `const_eq` ignoring it because it is not part of the number.  Nobody reported a bug, and there were three: `PrintC.is_one`, which decides whether a `BufCreate` can be a plain local rather than an allocation, tested `CInt (\"1\", _)` and gave a one written `0x1` an allocation; `int_literal`'s `INT64_MIN` case, which exists because C has no negative literals, compared against 20 decimal characters and wrote an undiagnosable literal for any other spelling; and every construction site rendered a number to build one, including a `BU.int_of_string` in the rule plugin reading back what `show` had just written |
+| M10βδ | **A float is a real and a sign** (§39.2) | Done, with §39.  `CFloat of float_lit & fwidth`, where `float_lit` is a `bool` and an `FStarC.Real.real` -- the exact rational, canonical, so two literals are equal exactly when they denote the same number.  The sign is separate because IEEE 754 is sign-and-magnitude and a canonical rational is not: `-0.0` and `0.0` are the same real and different floats, `bit_eq` tells them apart, `1.0 / -0.0` is negative infinity, and `Real.mk 0 e` is `0` whichever sign it was given.  Nothing else was lost -- `real` is exact and unbounded, so rounding is still the target compiler's job done once, and `1.5e-3`, `0.0015` and `+15e-4` are one literal.  `float_lit_of_string` replaces `valid_float_literal`: a predicate that text is well-formed and a function that turns text into a value are the same walk, and having only the second means a literal cannot be accepted without knowing what it is.  `tests/custard/LitBase.fst` |
+| M10βε | **Half and bfloat16 without a compiler change** (§40) | Done, user question, and the answer is that the facility is already there.  §38.5 left `Float16` out because the missing half is a `ulib` module to extract from and a C spelling to extract to, both facts about a target; that is an argument for not guessing in the compiler and not an argument for waiting.  `tests/custard/Half.fst` declares `__half` and `__nv_bfloat16` with §14.5's `[@@custard_extern]` and gets exactly what nvcc wants: no typedef emitted, the header included, `__hadd`/`__hmul`/`__hlt` by name -- which is the *faithful* translation and not a workaround, since CUDA's half arithmetic is functions in C and the operator overloads are C++.  And they are ordinary F\* types, so `twice hadd` monomorphizes to `Half_twice__half` and a record of one of each lays out as a struct.  What it does not get is a literal or an `EOp`, which is what a `TFloat Float16` would still be for |

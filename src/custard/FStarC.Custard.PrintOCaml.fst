@@ -405,16 +405,16 @@ let constant (c:constant) : ML string =
   match c with
   | CUnit -> "()"
   | CBool b -> if b then "true" else "false"
-  (* Section 38.  The decimal text as written; OCaml's lexer accepts the same
-     grammar [valid_float_literal] does, so no suffix and no reformatting. *)
-  | CFloat (v, _) -> "(" ^ v ^ ")"
+  (* Section 39.  OCaml's lexer accepts the same grammar section 39.2 does,
+     so no suffix and no reformatting. *)
+  | CFloat (v, _) -> "(" ^ float_lit_to_string v ^ ")"
   (* Prims.int is arbitrary precision in the OCaml runtime, exactly as in the
      ML extraction. *)
-  | CInt (s, None) -> "(Prims.parse_int \"" ^ s ^ "\")"
+  | CInt (v, b, None) -> "(Prims.parse_int \"" ^ int_lit_to_string v b ^ "\")"
   (* The realization's injection is [uint_to_t] for unsigned widths and
      [int_to_t] for signed ones. *)
-  | CInt (s, Some sw) ->
-    "(" ^ int_inj sw ^ " (Prims.parse_int \"" ^ s ^ "\"))"
+  | CInt (v, b, Some sw) ->
+    "(" ^ int_inj sw ^ " (Prims.parse_int \"" ^ int_lit_to_string v b ^ "\"))"
   (* [FStar.Char.char] is realized as a plain OCaml [int] -- a code point, not
      OCaml's byte-sized [char] -- so the literal is the code point itself.
      That is what the ML extraction emits too, and it is what makes a char
@@ -772,7 +772,7 @@ and index (ind:string) (e:expr) : ML string =
   match e.e with
   (* A literal index is the common case, and going through [Z.t] to say [0]
      would drown the output. *)
-  | EConst (CInt (s, _)) -> s
+  | EConst (CInt (v, b, _)) -> int_lit_to_string v b
   (* A coercion does not change the value, and neither does a conversion to a
      width that can hold every value of the one it came from -- which is what
      [uint32_to_sizet] on a length is.  A *narrowing* one does, so it has to be

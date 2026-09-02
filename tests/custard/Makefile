@@ -947,7 +947,7 @@ all: $(OUTPUT_DIR)/SplitHi.out.diff
 C_TESTS += Floats
 CGREP_Floats += "static double Floats_area(double r)"
 CGREP_Floats += "3.14159"
-CGREP_Floats += "-1.5e-3"
+CGREP_Floats += "-0.0015"
 CGREP_Floats += "1.5f"
 CGREP_Floats += "static float Floats_sum32(float a, float b)"
 CNOGREP_Floats += "FStar_Float64"
@@ -955,6 +955,33 @@ CNOGREP_Floats += "FStar_Float32"
 
 # Section 38.6.  Not Floats: karamel's constant folder reads a float constant
 # with Z.of_string.  Every operand in FloatsKrml is a variable.
+# Section 40.  Half and bfloat16 with no compiler change: an extern type
+# and extern functions, in the shape of nvcc's <cuda_fp16.h>.  What is pinned
+# is that no definition is emitted for either type, that the C names in the
+# attributes are the ones used, and that the types survive monomorphization
+# and the layout analysis like any other.
+C_TESTS += Half
+CGREP_Half += "include \"Half_stubs.h"
+CGREP_Half += "__half p_h;"
+CGREP_Half += "__nv_bfloat16 p_b;"
+CGREP_Half += "Half_twice__half(__hadd, p.p_h)"
+CGREP_Half += "Half_twice__bfloat16(__hadd_bf, p.p_b)"
+CGREP_Half += "static __half Half_twice__half(__half"
+CNOGREP_Half += "Half_half"
+CNOGREP_Half += "Half_bfloat16"
+
+# Section 39.  A literal is a value and the base it was written in, and the
+# generated code shows the reader the base he wrote.  0xff and 255 are the
+# same number, so a pattern in one base matches a scrutinee in the other, and
+# -0.0 keeps its sign because a float has one.
+C_TESTS += LitBase
+CGREP_LitBase += "0xffU"
+CGREP_LitBase += "255U"
+CGREP_LitBase += "0xffffffffffffffffULL"
+CGREP_LitBase += "= -0.0;"
+CGREP_LitBase += "0.0015"
+CNOGREP_LitBase += "1.5e-3"
+
 KRML_TESTS += FloatsKrml
 
 # The same arithmetic on the OCaml backend, where a Float64 is OCaml's float.

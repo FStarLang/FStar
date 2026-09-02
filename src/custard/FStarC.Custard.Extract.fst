@@ -1766,12 +1766,11 @@ and constant_of_sconst (c:sconst) : ML (option constant) =
   match c with
   | Const_unit -> Some CUnit
   | Const_bool b -> Some (CBool b)
-  (* The source spelling is kept here, unlike in a key: a literal written
-     [0xFF] should come out [0xFF] in the generated C.  This is exactly what
-     the legacy ML extraction does with the same pair of cases. *)
-  | Const_int (v, b) -> Some (CInt (string_of_int_literal v b, None))
-  | Const_machine_int (v, b, sg, w) ->
-    Some (CInt (string_of_int_literal v b, Some (sg, w)))
+  (* The base is kept here, unlike in a key: a literal written [0xFF] should
+     come out [0xFF] in the generated C.  It is not part of the value, which
+     is why [Const_int] and [CInt] both carry the two separately. *)
+  | Const_int (v, b) -> Some (CInt (v, b, None))
+  | Const_machine_int (v, b, sg, w) -> Some (CInt (v, b, Some (sg, w)))
   | Const_char c -> Some (CChar c)
   | Const_string (s, _) -> Some (CString s)
   | _ -> None
@@ -1781,8 +1780,8 @@ and ty_of_constant (st:state) (c:constant) : ML cty =
   match c with
   | CUnit -> TUnit
   | CBool _ -> prim PC.bool_lid
-  | CInt (_, None) -> prim PC.int_lid
-  | CInt (_, Some sw) -> TInt sw
+  | CInt (_, _, None) -> prim PC.int_lid
+  | CInt (_, _, Some sw) -> TInt sw
   | CFloat (_, fw) -> TFloat fw
   | CChar _ -> prim PC.char_lid
   | CString _ -> prim PC.string_lid

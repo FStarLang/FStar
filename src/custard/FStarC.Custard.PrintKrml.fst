@@ -229,9 +229,13 @@ let krml_const (c:constant) : ML K.expr =
   | CUnit -> K.EUnit
   | CBool b -> K.EBool b
   | CString s -> K.EString s
-  | CInt (s, None) -> K.EConstant (K.CInt, s)
-  | CInt (s, Some sw) -> K.EConstant (krml_width sw, s)
-  | CFloat (v, fw) -> K.EConstant (krml_fwidth fw, v)
+  (* karamel's [EConstant] carries the literal as text, so this is where the
+     value is spelled again.  A base is not something karamel's own reader of
+     these understands, so an integer goes out in decimal here (section
+     39.1). *)
+  | CInt (v, _, None) -> K.EConstant (K.CInt, show v)
+  | CInt (v, _, Some sw) -> K.EConstant (krml_width sw, show v)
+  | CFloat (v, fw) -> K.EConstant (krml_fwidth fw, float_lit_to_string v)
   (* karamel has no character type; a program that reaches this is not a C
      program, and saying so here is better than emitting something that means
      something else. *)
@@ -249,8 +253,8 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
   | PVar x -> (extend env x, K.PVar (dummy_binder x))
   | PConst CUnit -> (env, K.PUnit)
   | PConst (CBool b) -> (env, K.PBool b)
-  | PConst (CInt (s, None)) -> (env, K.PConstant (K.CInt, s))
-  | PConst (CInt (s, Some sw)) -> (env, K.PConstant (krml_width sw, s))
+  | PConst (CInt (v, _, None)) -> (env, K.PConstant (K.CInt, show v))
+  | PConst (CInt (v, _, Some sw)) -> (env, K.PConstant (krml_width sw, show v))
   | PConst _ -> (extend env "_", K.PVar (dummy_binder "_"))
   | PCtor (n, ps) when is_tuple_ctor_name n ->
     let env, ps = krml_pats env ps in

@@ -510,12 +510,12 @@ let int_suffix (sw : signedness & width) : string =
    [9223372036854775808LL], whose magnitude is one past [LLONG_MAX].  Every
    signed width has this one value, and only at 64 bits is there no wider type
    to fall back on -- so it is written the way [<stdint.h>] writes [INT64_MIN]. *)
-let int_literal (sw : signedness & width) (s:string) : ML string =
+let int_literal (sw : signedness & width) (v:int) (b:int_base) : ML string =
   let sg, w = sw in
   let wide = (match w with Int64 -> true | Sizet -> true | _ -> false) in
-  if Signed? sg && wide && s = "-9223372036854775808"
+  if Signed? sg && wide && v = -9223372036854775808
   then "(-9223372036854775807LL - 1)"
-  else s ^ int_suffix sw
+  else int_lit_to_string v b ^ int_suffix sw
 
 let escape (s:string) : ML string =
   let esc (c:char) : ML string =
@@ -539,7 +539,7 @@ let constant (c:constant) : ML string =
   match c with
   | CUnit -> unit_value
   | CBool b -> if b then "true" else "false"
-  | CInt (s, Some sw) ->
+  | CInt (v, b, Some sw) ->
     (* The cast pins the type: an unsuffixed literal is [int], which would make
        [x + 1] promote and then wrap at the wrong width.  The *suffix* is a
        separate question, and a cast cannot answer it: C gives a decimal
@@ -547,17 +547,17 @@ let constant (c:constant) : ML string =
        [18446744073709551615] has no type at all and a conforming compiler
        must diagnose it.  So a literal that needs more than an [int] carries
        the suffix of the width it is meant to have, and the cast only narrows. *)
-    "((" ^ int_type sw ^ ")" ^ int_literal sw s ^ ")"
-  | CInt (s, None) ->
-    reject ("the unbounded integer literal " ^ s)
+    "((" ^ int_type sw ^ ")" ^ int_literal sw v b ^ ")"
+  | CInt (v, b, None) ->
+    reject ("the unbounded integer literal " ^ int_lit_to_string v b)
       ["Prims.int has no C representation; use a machine integer type."]
-  (* Section 38.  The decimal text as written, with the suffix that gives it
-     the width it is meant to have: an unsuffixed C float literal is a
-     [double], so [Float32] arithmetic would be done at double precision and
-     rounded once at the end.  No cast, because a cast cannot supply the
-     literal's own type and the suffix already does. *)
-  | CFloat (v, Float32) -> v ^ "f"
-  | CFloat (v, Float64) -> v
+  (* Section 39.  The literal, with the suffix that gives it the width it is
+     meant to have: an unsuffixed C float literal is a [double], so [Float32]
+     arithmetic would be done at double precision and rounded once at the end.
+     No cast, because a cast cannot supply the literal's own type and the
+     suffix already does. *)
+  | CFloat (v, Float32) -> float_lit_to_string v ^ "f"
+  | CFloat (v, Float64) -> float_lit_to_string v
   | CChar c -> "((uint32_t)" ^ show (BU.int_of_char c) ^ ")"
   | CString s -> "\"" ^ escape s ^ "\""
 
@@ -897,7 +897,7 @@ let rec drop_writes (x:string) (e:expr) : ML expr =
 
 (* A [BufCreate] of exactly one cell: what Pulse emits for [let mut]. *)
 let is_one (e:expr) : bool =
-  match e.e with EConst (CInt ("1", _)) -> true | _ -> false
+  match e.e with EConst (CInt (1, _, _)) -> true | _ -> false
 
 (* A constructor's field names, paired with the printed arguments.  A length
    mismatch would be an extractor bug; keeping the prefix produces a C error
@@ -1742,7 +1742,7 @@ let rec static_init (x:expr) : ML (option string) =
   match x.e with
   | EConst c ->
     (match c with
-     | CInt (_, None) -> None
+     | CInt (_, _, None) -> None
      | _ -> Some (constant c))
   | ECast (e1, t) ->
     (match e1.ty, t, static_init e1 with

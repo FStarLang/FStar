@@ -101,9 +101,9 @@ let rec elements (e:expr) : ML (list expr) =
     else die "Prims.Nil or Prims.Cons" e
   | _ -> die "a list literal" e
 
-let int_of_const (e:expr) : ML string =
+let int_of_const (e:expr) : ML int =
   match e.e with
-  | EConst (CInt (s, _)) -> s
+  | EConst (CInt (v, _, _)) -> v
   | _ -> die "an integer literal" e
 
 (* The rule proper.
@@ -121,7 +121,7 @@ let int_of_const (e:expr) : ML string =
    type argument is erased on the way in, so [s] is at index 0, and [sz] is
    the first of [sized]'s two fields. *)
 let size_of_desc (d:expr) : ML int =
-  BU.int_of_string (int_of_const (field_at 0 "sz" (field_at 0 "s" d)))
+  int_of_const (field_at 0 "sz" (field_at 0 "s" d))
 
 let rec total_size (ds : list expr) : ML int =
   match ds with
@@ -187,7 +187,7 @@ let launch (tys : list cty) (args : list expr) : ML expr =
                    [Comment ("kernel " ^ kname ^ ", " ^ show n_bytes ^ " bytes shared");
                     Prologue "__attribute__((noinline))"; Private] closed in
     let cap_args = List.map (fun (v, t) -> mk (EVar v) t E_Pure) caps in
-    let lit = mk (EConst (CInt (show n_bytes, Some (Unsigned, Int32))))
+    let lit = mk (EConst (CInt (n_bytes, Dec, Some (Unsigned, Int32))))
                  n.ty E_Pure in
     let shmem = mk (EOp ({ po_op = Add; po_ty = Some (PInt (Unsigned, Int32)) },
                          [n; lit])) n.ty E_Pure in

@@ -150,18 +150,52 @@ type cty =
 
 (** {1 Constants} *)
 
+(** A floating-point literal, section 39.  IEEE 754 is sign-and-magnitude and
+    so is this: [-0.0] and [0.0] are different floats, and
+    [FStar.Float64.bit_eq] can tell them apart, but they are the same *real
+    number* and [FStarC.Real.real] is canonical, so a sign folded into the
+    magnitude would be a sign lost.
+
+    [fl_mag] denotes the exact rational [mantissa * 10^exponent] and is never
+    negative.  What it cannot denote -- an infinity, a NaN -- is what
+    [of_literal]'s grammar does not accept either. *)
+type float_lit = {
+  fl_neg : bool;
+  fl_mag : Real.real;
+}
+
 type constant =
   | CUnit
   | CBool   of bool
-  | CInt    of string & option (signedness & width)
-  | CFloat  of string & fwidth
-  (** A float literal, section 38.  The string is the decimal text
-      [FStar.Float64.of_literal] was given, checked against a conservative
-      grammar before it gets here, and printed as it stands: rounding a
-      literal is the C or OCaml compiler's job and doing it twice loses
-      digits. *)
+  | CInt    of int & int_base & option (signedness & width)
+  (** An integer literal, section 39: the mathematical integer it denotes,
+      and the base it was written in.  The base has no bearing on the value
+      and is carried for the reader of the generated code, who wrote [0xff]
+      and should not be shown 255. *)
+  | CFloat  of float_lit & fwidth
   | CChar   of char
   | CString of string
+
+(** The literal as it is spelled in generated code, e.g. ["-1.5"], ["314e-7"].
+    Always parseable back by [float_lit_of_string], and always denoting the
+    same number: section 39.2. *)
+val float_lit_to_string : float_lit -> string
+
+(** Parse the argument of [FStar.Float64.of_literal].  [None] if it is not a
+    decimal floating-point literal -- an optional sign, a mantissa with at
+    least one digit and at most one point, and an optional decimal exponent.
+    Section 39.2. *)
+val float_lit_of_string : string -> option float_lit
+
+(** The literal as it is spelled in generated code, in the base it was
+    written in.  Never carries a suffix or a cast: those are a backend's. *)
+val int_lit_to_string : int -> int_base -> string
+
+(** Equality of the *values* two constants denote.  Structural equality is not
+    that: an integer literal also carries the base it was written in, which is
+    for the reader and not part of the number, so [1] and [0x1] are equal here
+    and distinct to [=].  Section 39.1. *)
+val const_eq : constant -> constant -> bool
 
 (** {1 Patterns and terms} *)
 

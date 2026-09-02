@@ -78,6 +78,82 @@ let is_pure (e:eff) : bool =
 (* Helpers                                                              *)
 (* -------------------------------------------------------------------- *)
 
+(* Section 39.2.  [Real.to_string] writes a literal out in full, which is the
+   right answer for "0.5" and 301 characters of it for 1e300: [Real.mk]
+   normalizes a non-negative exponent away by multiplying it into the
+   mantissa, so the zeros are all there.  Dividing them back out costs a loop
+   and buys an exponent, and both spellings denote the same rational exactly.
+   The threshold is a matter of taste and this one is nobody's literal. *)
+let rec strip_zeros (m:int) (e:int) : int & int =
+  if m <> 0 && m % 10 = 0 then strip_zeros (m / 10) (e + 1) else (m, e)
+
+let float_lit_to_string (f:float_lit) : string =
+  let sign = if f.fl_neg then "-" else "" in
+  let m = Real.mantissa f.fl_mag in
+  let e = Real.exponent f.fl_mag in
+  let plain = Real.to_string f.fl_mag in
+  if e = 0 && String.length plain > 24
+  then
+    let (m, e) = strip_zeros m e in
+    sign ^ string_of_int m ^ (if e = 0 then ".0" else "e" ^ string_of_int e)
+  else sign ^ plain
+
+(* Section 39.2.  The grammar is FStarC.Extraction.Krml.valid_float_literal's,
+   which is deliberately narrower than C's: no hex float, no infinity, no NaN,
+   because those are what an [of_literal] argument that reached C by accident
+   would look like. *)
+let float_lit_of_string (s:string) : option float_lit =
+  let cs = String.list_of_string s in
+  let is_digit (c : FStar.Char.char) : bool =
+    let n = BU.int_of_char c in n >= 48 && n <= 57 in
+  let rec digits (cs : list FStar.Char.char)
+    : Tot (list FStar.Char.char & list FStar.Char.char) (decreases cs) =
+    match cs with
+    | c :: cs' when is_digit c -> let (ds, rest) = digits cs' in (c :: ds, rest)
+    | _ -> ([], cs) in
+  let rec value (acc:int) (ds : list FStar.Char.char) : Tot int (decreases ds) =
+    match ds with
+    | [] -> acc
+    | c :: ds -> value (acc * 10 + (BU.int_of_char c - 48)) ds in
+  let value (ds : list FStar.Char.char) : int = value 0 ds in
+  let (neg, cs) =
+    match cs with
+    | '-' :: cs -> (true, cs)
+    | '+' :: cs -> (false, cs)
+    | _ -> (false, cs) in
+  let (ipart, cs) = digits cs in
+  let (fpart, cs) =
+    match cs with
+    | '.' :: cs -> let (fs, cs) = digits cs in (fs, cs)
+    | _ -> ([], cs) in
+  (* At least one digit, on one side or the other: ".5" and "5." are both
+     literals, "." and "e3" are not. *)
+  if Nil? ipart && Nil? fpart then None else
+  let (expo, cs) =
+    match cs with
+    | c :: cs when c = 'e' || c = 'E' ->
+      let (eneg, cs) =
+        match cs with
+        | '-' :: cs -> (true, cs)
+        | '+' :: cs -> (false, cs)
+        | _ -> (false, cs) in
+      let (ds, cs) = digits cs in
+      if Nil? ds then (None, cs)
+      else (Some (if eneg then - (value ds) else value ds), cs)
+    | _ -> (Some 0, cs) in
+  match expo, cs with
+  | Some expo, [] ->
+    let m = value (ipart @ fpart) in
+    Some { fl_neg = neg; fl_mag = Real.mk m (expo - List.length fpart) }
+  | _ -> None
+
+let int_lit_to_string (v:int) (b:int_base) : string = string_of_int_literal v b
+
+let const_eq (c1 c2 : constant) : bool =
+  match c1, c2 with
+  | CInt (v1, _, sw1), CInt (v2, _, sw2) -> v1 = v2 && sw1 = sw2
+  | _ -> c1 = c2
+
 let at_int_width (o:prim_op) : bool =
   match o.po_ty with
   | Some (PInt _) -> true
@@ -255,13 +331,15 @@ let constant_to_doc (c:constant) : ML document =
   match c with
   | CUnit -> text "()"
   | CBool b -> text (if b then "true" else "false")
-  | CInt (s, None) -> text s
-  | CInt (s, Some (sg, w)) ->
-    text (s ^ "<" ^ (match sg with Unsigned -> "u" | Signed -> "i") ^
+  | CInt (v, b, None) -> text (int_lit_to_string v b)
+  | CInt (v, b, Some (sg, w)) ->
+    text (int_lit_to_string v b ^ "<" ^
+          (match sg with Unsigned -> "u" | Signed -> "i") ^
           (match w with
            | Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
            | Int64 -> "64" | Sizet -> "size") ^ ">")
-  | CFloat (v, fw) -> text (v ^ "<" ^ fwidth_to_string fw ^ ">")
+  | CFloat (v, fw) ->
+    text (float_lit_to_string v ^ "<" ^ fwidth_to_string fw ^ ">")
   | CChar c -> text ("'" ^ escape_char c ^ "'")
   | CString s -> dquotes (text (escape_string s))
 

@@ -113,8 +113,8 @@ let int_op (id:string) : option (op & int) =
    always is; the backends recognize [Prims.bool] by name. *)
 let bool_name : name = { ns = ["Prims"]; id = "bool"; spec = None }
 
-let int_lit (sw : signedness & width) (s:string) : expr =
-  mk (EConst (CInt (s, Some sw))) (TInt sw) E_Pure
+let int_lit (sw : signedness & width) (v:int) : expr =
+  mk (EConst (CInt (v, Dec, Some sw))) (TInt sw) E_Pure
 
 let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
   match int_op id with
@@ -129,15 +129,16 @@ let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
     match id with
     | "t" -> Some (Rule_type (fun _ -> TInt sw))
 
-    | "zero" -> Some (Rule_prim (0, fun _ _ -> int_lit sw "0"))
-    | "one"  -> Some (Rule_prim (0, fun _ _ -> int_lit sw "1"))
+    | "zero" -> Some (Rule_prim (0, fun _ _ -> int_lit sw 0))
+    | "one"  -> Some (Rule_prim (0, fun _ _ -> int_lit sw 1))
 
     (* [3ul] elaborates to [FStar.UInt32.__uint_to_t 3]; recognising the
        literal here is what keeps a machine constant a constant. *)
     | "uint_to_t" | "int_to_t" | "__uint_to_t" | "__int_to_t" ->
       Some (Rule_prim (1, fun _ args ->
         match args with
-        | [{ e = EConst (CInt (s, _)) }] -> int_lit sw s
+        | [{ e = EConst (CInt (v, b, _)) }] ->
+          mk (EConst (CInt (v, b, Some sw))) (TInt sw) E_Pure
         | [a] -> mk (ECast (a, TInt sw)) (TInt sw) a.eff
         | _ -> failwith "Custard: machine integer literal rule applied to the wrong arity"))
 
@@ -196,41 +197,12 @@ let float_op (id:string) : option (op & int) =
   | "ieee_eq" -> Some (Eq, 2)
   | _ -> None
 
-(* A float literal is decimal text, and it is emitted as it stands: rounding
-   it here and letting the target compiler round the result again is how a
-   digit goes missing.  So the text is checked instead, against the same
-   conservative grammar [FStarC.Extraction.Krml.valid_float_literal] uses --
-   an optional sign, a mantissa with at least one digit, an optional exponent
-   -- and anything else is error 380 rather than a token pasted into C. *)
-let valid_float_literal (s:string) : bool =
-  let is_digit (c:FStar.Char.char) : bool =
-    let i = BU.int_of_char c in i >= 48 && i <= 57 in
-  let rec digits (cs : list FStar.Char.char) : list FStar.Char.char =
-    match cs with
-    | c :: cs' when is_digit c -> digits cs'
-    | _ -> cs in
-  let cs = match String.list_of_string s with
-           | '+' :: cs | '-' :: cs -> cs
-           | cs -> cs in
-  let before_dot = digits cs in
-  let after_mantissa, saw_digit =
-    match before_dot with
-    | '.' :: cs' ->
-      let after_dot = digits cs' in
-      after_dot, (before_dot <> cs || after_dot <> cs')
-    | _ -> before_dot, before_dot <> cs in
-  if not saw_digit then false
-  else
-    match after_mantissa with
-    | [] -> true
-    | 'e' :: e | 'E' :: e ->
-      let e = match e with
-              | '+' :: e | '-' :: e -> e
-              | e -> e in
-      let rest = digits e in
-      rest <> e && rest = []
-    | _ -> false
-
+(* A float literal is parsed to the exact rational it denotes and printed back
+   out, never rounded here: rounding it here and letting the target compiler
+   round the result again is how a digit goes missing.  [float_lit_of_string]
+   is section 39.2's grammar, the same conservative one
+   [FStarC.Extraction.Krml.valid_float_literal] uses, and anything else is
+   error 380 rather than a token pasted into C. *)
 let float_rule (fw:fwidth) (id:string) : ML (option rule) =
   match float_op id with
   | Some (o, arity) ->
@@ -256,13 +228,14 @@ let float_rule (fw:fwidth) (id:string) : ML (option rule) =
       Some (Rule_prim (1, fun _ args ->
         match args with
         | [{ e = EConst (CString v) }] ->
-          if not (valid_float_literal v) then
-            FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadFloatLiteral [
-              FStarC.Errors.Msg.text
-                ("Custard: " ^ v ^ " is not a floating-point literal.");
-              FStarC.Errors.Msg.text
-                "of_literal's argument is pasted into the generated code, so it                  is accepted only as an optional sign, a mantissa with at least                  one digit, and an optional decimal exponent (section 38)." ];
-          mk (EConst (CFloat (v, fw))) (TFloat fw) E_Pure
+          (match float_lit_of_string v with
+           | Some f -> mk (EConst (CFloat (f, fw))) (TFloat fw) E_Pure
+           | None ->
+             FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadFloatLiteral [
+               FStarC.Errors.Msg.text
+                 ("Custard: " ^ v ^ " is not a floating-point literal.");
+               FStarC.Errors.Msg.text
+                 "of_literal's argument becomes a constant in the generated code, so it                  is accepted only as an optional sign, a mantissa with at least                  one digit, and an optional decimal exponent (section 39.2)." ])
         | [_] ->
           FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadFloatLiteral [
             FStarC.Errors.Msg.text
@@ -387,8 +360,8 @@ let prims_rule (id:string) : ML (option rule) =
    the erased arguments (the permissions, the ghost sequences, the [small_type]
    dictionaries) are already gone.  *)
 
-let size_lit (n:string) : expr =
-  mk (EConst (CInt (n, Some (Unsigned, Sizet)))) (TInt (Unsigned, Sizet)) E_Pure
+let size_lit (n:int) : expr =
+  mk (EConst (CInt (n, Dec, Some (Unsigned, Sizet)))) (TInt (Unsigned, Sizet)) E_Pure
 
 let elt_of (tys : list cty) : cty =
   match tys with
@@ -455,26 +428,26 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   (* A reference is a one-element stack allocation. *)
   | ["Pulse"; "Lib"; "Reference"], "alloc" ->
     Some (buf_prim 1 (BufCreate LStack) E_Impure rf
-            (fun args -> args @ [size_lit "1"]))
+            (fun args -> args @ [size_lit 1]))
   | ["Pulse"; "Lib"; "Reference"], "alloc_uninit" ->
     Some (Rule_prim (1, fun tys _ ->
       let t = elt_of tys in
       mk (EOp ({ po_op = BufCreate LStack; po_ty = None },
-               [mk EAny t E_Pure; size_lit "1"]))
+               [mk EAny t E_Pure; size_lit 1]))
          (TRef t) E_Impure))
   | ["Pulse"; "Lib"; "Reference"], "free" -> Some (unit_rule 1)
   | ["Pulse"; "Lib"; "Reference"], "read"
   | ["Pulse"; "Lib"; "Reference"], "op_Bang" ->
     Some (buf_prim 1 BufRead E_Impure elt_of_arg
-            (fun args -> args @ [size_lit "0"]))
+            (fun args -> args @ [size_lit 0]))
   | ["Pulse"; "Lib"; "Reference"], "write"
   | ["Pulse"; "Lib"; "Reference"], "op_Colon_Equals" ->
     Some (buf_prim 2 BufWrite E_Impure unit_ty
             (fun args -> match args with
-                         | [r; v] -> [r; size_lit "0"; v]
+                         | [r; v] -> [r; size_lit 0; v]
                          | args -> args))
   | ["Pulse"; "Lib"; "Reference"], "to_array_mask" ->
-    Some (buf_prim 1 BufSub E_Pure as_buf (fun args -> args @ [size_lit "0"]))
+    Some (buf_prim 1 BufSub E_Pure as_buf (fun args -> args @ [size_lit 0]))
   | ["Pulse"; "Lib"; "Reference"], "array_at"
   | ["Pulse"; "Lib"; "Reference"], "array_at_uninit" ->
     Some (buf_prim 2 BufSub E_Pure as_buf (fun args -> args))
@@ -482,16 +455,16 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   (* A box is a one-element heap allocation. *)
   | ["Pulse"; "Lib"; "Box"], "alloc" ->
     Some (buf_prim 1 (BufCreate LHeap) E_Impure rf
-            (fun args -> args @ [size_lit "1"]))
+            (fun args -> args @ [size_lit 1]))
   | ["Pulse"; "Lib"; "Box"], "free" ->
     Some (buf_prim 1 BufFree E_Impure unit_ty (fun args -> args))
   | ["Pulse"; "Lib"; "Box"], "op_Bang" ->
     Some (buf_prim 1 BufRead E_Impure elt_of_arg
-            (fun args -> args @ [size_lit "0"]))
+            (fun args -> args @ [size_lit 0]))
   | ["Pulse"; "Lib"; "Box"], "op_Colon_Equals" ->
     Some (buf_prim 2 BufWrite E_Impure unit_ty
             (fun args -> match args with
-                         | [r; v] -> [r; size_lit "0"; v]
+                         | [r; v] -> [r; size_lit 0; v]
                          | args -> args))
   | ["Pulse"; "Lib"; "Box"], "box_to_ref" -> Some (identity_rule 1)
 
@@ -513,7 +486,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   | ["Pulse"; "Lib"; "Array"; "Core"], "mask_alloc_with_vis" ->
     Some (Rule_prim (1, fun tys args ->
       let t = elt_of tys in
-      let n = match args with a :: _ -> a | [] -> size_lit "0" in
+      let n = match args with a :: _ -> a | [] -> size_lit 0 in
       mk (EOp ({ po_op = BufCreate LStack; po_ty = None }, [mk EAny t E_Pure; n]))
          (TBuf t) E_Impure))
   | ["Pulse"; "Lib"; "Array"; "Core"], "mask_free" -> Some (unit_rule 1)
@@ -660,14 +633,14 @@ let ref_rule (id:string) : ML (option rule) =
   | "ref" -> Some (Rule_type (fun tys -> TRef (elt_of tys)))
   | "alloc" | "mk_ref" ->
     Some (buf_prim 1 (BufCreate LHeap) E_Impure rf
-            (fun args -> args @ [size_lit "1"]))
+            (fun args -> args @ [size_lit 1]))
   | "read" | "op_Bang" ->
     Some (buf_prim 1 BufRead E_Impure elt_of_arg
-            (fun args -> args @ [size_lit "0"]))
+            (fun args -> args @ [size_lit 0]))
   | "write" | "op_Colon_Equals" ->
     Some (buf_prim 2 BufWrite E_Impure unit_ty
             (fun args -> match args with
-                         | [r; v] -> [r; size_lit "0"; v]
+                         | [r; v] -> [r; size_lit 0; v]
                          | args -> args))
   | _ -> None
 

@@ -482,7 +482,7 @@ let rec match_pat (p:pat) (e:expr) : ML (option (list (string & expr))) =
         (match match_pat q e1 with Some bs' -> Some (bs @ bs') | None -> None)
       | _ -> None) (Some [])
   | PTuple ps, ETuple es -> match_pats ps es
-  | PConst c1, EConst c2 -> if c1 = c2 then Some [] else None
+  | PConst c1, EConst c2 -> if const_eq c1 c2 then Some [] else None
   | _, _ -> None
 
 and match_pats (ps:list pat) (es:list expr) : ML (option (list (string & expr))) =

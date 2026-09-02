@@ -751,7 +751,7 @@ let registration (st:Extract.state) (arity_opt:option int) (r:Range.t)
   let reg = register_fn st which fty in
   let body = ir_call reg fty
                ([CSyn.mk (EConst (CString name_str)) string_ty E_Pure;
-                 CSyn.mk (EConst (CInt (show arity, None))) int_ty E_Pure] @ args) in
+                 CSyn.mk (EConst (CInt (arity, Dec, None))) int_ty E_Pure] @ args) in
   let nm = Extract.name_of_lid fv_lid in
   Extract.emit st key
     (DLet { dl_name = { nm with id = "__plugin_" ^ nm.id };
