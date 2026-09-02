@@ -3270,15 +3270,7 @@ let solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
                        (rel_to_string (p_rel orig))
                        (show bs2);
 
-   let eq_bqual a1 a2 =
-       match a1, a2 with
-       | Some (Implicit b1), Some (Implicit b2) ->
-         true //we don't care about comparing the dot qualifier in this context
-       | Some Equality, None | None, Some Equality ->
-         true // also don't care about the equality qualifier
-       | _ ->
-         U.eq_bqual a1 a2
-   in
+   let eq_bqual a1 a2 = U.bqual_compat a1 a2 in
 
    let compat_positivity_qualifiers (p1 p2:option positivity_qualifier) : bool =
       match p_rel orig with
