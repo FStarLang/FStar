@@ -814,8 +814,6 @@ let mk_binder_eqn (env:env) (t:typ) (x:bv) (e:term) : ML term =
   if is_unit_like t then U.t_true
   else U.mk_eq2 (env.universe_of env t) t e (bv_to_name x)
 
-let optimize_bind_vc () : ML _ = Options.Ext.enabled "optimize_let_vc"
-
 (* ---------------------------------------------------------------------------
    The result type of a bind.
 
@@ -1114,11 +1112,11 @@ let close_with_type_of_x (env:Env.env) (c1:comp) (x:bv) (c:comp) (g2:guard_t)
   if closed then c, g2 else drop_comp_flags env [x] c, g2
 
 
-(* [optimize_let_vc] keeps a let-bound variable opaque in the verification
-   condition, turning [phi[e/x]] into [forall x. x == e ==> phi], which the SMT
-   encoding emits as a [declare-fun]/[assert] pair.  Substituting instead would
-   make VCs blow up exponentially (see issue #3800), so it only happens for
-   non-let bindings (intermediate values) and for [let unfold]. *)
+(* A let-bound variable is kept opaque in the verification condition: [phi[e/x]]
+   becomes [forall x. x == e ==> phi], which the SMT encoding emits as a
+   [declare-fun]/[assert] pair.  Substituting instead would make VCs blow up
+   exponentially (see issue #3800), so it only happens for non-let bindings
+   (intermediate values) and for [let unfold]. *)
 (* [capture]: see [captured_typing] above. *)
 (* How much of a bind can be discharged here, rather than by [mk_bind]?
    [Inl (c, g, why)] is the answer; [Inr why] declines, and [bind_general]
@@ -1179,12 +1177,9 @@ let simplify_bind (bi:bind_input) : ML (either (comp & guard_t & string) string)
   then Inr "binder is unused but its type carries information"
   else if U.is_total_comp c1
   then
-      let is_layered = false in
       match e1opt, b with
       | Some e, Some x when (
-          not (optimize_bind_vc()) || // optimization is disabled
-          not is_let_binding || //non-let bindings, e.g., in applications, are inlined
-          is_layered // layered effects do not always support closing with universal quantification
+          not is_let_binding //non-let bindings, e.g., in applications, are inlined
         ) ->
         (* Closing with [c1]'s result type: when it is [_:t{phi}] it is useful
            to know that [t{phi}] is inhabited, even though [e] was inlined. *)
@@ -1205,37 +1200,26 @@ let simplify_bind (bi:bind_input) : ML (either (comp & guard_t & string) string)
           Inl (c2, Env.conj_guard g_c1 g2, "c1 Tot with eq")
         in
         if U.is_tot_or_gtot_comp c2
+        && not (used_in_continuation x)
         then (
-          if is_let_binding
-          then (
-            if not (used_in_continuation x)
-            then (
-              //x is not free in c2; but if it is a unit refinement, the
-              //binder may legitimately be unused in the continuation,
-              //with only its type relevant---so close with unit refinement
-              //See, e.g., Unit1.Basic.bind_test2
-              //Note, closing with the type of x unconditionally causes
-              //other examples to blow up, e.g., in Registers.List.fst in native_tactics
-              //closing with the type of every let binding even with a tot continuation
-              //moves the continuation out of Tot to pure, and then
-              //we fall into the default case with equations.
-              //So, this is trying to strike a balance:
-              //Compact VCs for let bound Tot terms with Tot/GTot continuations
-              //remaining in Tot/GTot;
-              //Except if the let-bound terms binds a unit refinement,
-              //then we close with the unit refinement, so that the
-              //the refinement is captured.
-              let c2, g2, _ =
-                close_over_unit_binder env (binder_for_result c1 x) c2 g_c2 in
-              Inl (c2, Env.conj_guard g_c1 g2,  "both Tot/GTot")
-            )
-            else default_with_eqn ()
-          )
-          else
-            let sub = [NT (x, e)] in
-            Inl (SS.subst_comp sub c2,
-                 Env.conj_guard g_c1 (Env.map_guard g_c2 (SS.subst sub)),
-                 "both Tot/GTot")
+          //x is not free in c2; but if it is a unit refinement, the
+          //binder may legitimately be unused in the continuation,
+          //with only its type relevant---so close with unit refinement
+          //See, e.g., Unit1.Basic.bind_test2
+          //Note, closing with the type of x unconditionally causes
+          //other examples to blow up, e.g., in Registers.List.fst in native_tactics
+          //closing with the type of every let binding even with a tot continuation
+          //moves the continuation out of Tot to pure, and then
+          //we fall into the default case with equations.
+          //So, this is trying to strike a balance:
+          //Compact VCs for let bound Tot terms with Tot/GTot continuations
+          //remaining in Tot/GTot;
+          //Except if the let-bound terms binds a unit refinement,
+          //then we close with the unit refinement, so that the
+          //the refinement is captured.
+          let c2, g2, _ =
+            close_over_unit_binder env (binder_for_result c1 x) c2 g_c2 in
+          Inl (c2, Env.conj_guard g_c1 g2,  "both Tot/GTot")
         )
         else default_with_eqn ()
       )
@@ -1330,7 +1314,7 @@ let bind_general (bi:bind_input) : ML (comp & guard_t) =
             let _ = debug (fun () ->
               Format.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
             let c2 = 
-              if not (optimize_bind_vc()) || not is_let_binding
+              if not is_let_binding
               then SS.subst_comp [NT(x,e1)] c2
               else c2
             in
