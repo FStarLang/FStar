@@ -1077,7 +1077,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
     let is_noextract = List.contains S.NoExtract se.sigquals in
     let Sig_let { lbs } = se.sigel in
     let maybe_normalize_for_extraction lbs =
-      let norm_steps : option (list norm_step) =
+      let norm_steps : option (list Env.step) =
         match U.extract_attr' PC.normalize_for_extraction_lid attrs with
         | None -> None
         | Some (_, (steps, None)::_) ->

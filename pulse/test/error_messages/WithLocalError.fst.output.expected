@@ -1,7 +1,6 @@
-* Info at WithLocalError.fst(13,21-13,22):
+* Info at WithLocalError.fst(13,16-13,17):
   - Expected failure:
   - Ill-typed term
-  - Expected expression of type Pulse.Lib.Reference.ref Prims.int
-    got expression 0
-    of type Prims.int
+  - ref int is not equal to the expected type int
+  - See also WithLocalError.fst(13,2-13,24)
 

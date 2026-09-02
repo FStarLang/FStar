@@ -397,9 +397,11 @@ let shift_right_value_aux_1 #n a s =
 
 let shift_right_value_aux_2 #n a = assert_norm (pow2 0 == 1)
 
+#push-options "--z3rlimit_factor 4"
 let shift_right_value_aux_3 #n a s =
   append_lemma #s #(n - s) (zero_vec #s) (slice (to_vec a) 0 (n - s));
   slice_left_lemma #n (to_vec a) (n - s)
+#pop-options
 
 let shift_right_value_lemma #n a s =
   if s >= n then shift_right_value_aux_1 #n a s
