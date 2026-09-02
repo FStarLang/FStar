@@ -3833,11 +3833,19 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     match TcEnv.lookup_sigelt (tcenv st) l with
     | Some se -> se.sigquals |> List.existsb (fun q -> RecordType? q)
     | None -> false in
+  (* Section 33.4.  Recorded, not acted on: the type is rejected anyway, by
+     whichever of its fields lost its representation.  The flag is what lets
+     the rejection name the reason rather than guess at one. *)
+  let existential =
+    match Mono.existential_of_lid (tcenv st) l with
+    | Some (c, f) -> [Existential (Ident.string_of_lid c,
+                                   Ident.string_of_id (Ident.ident_of_lid f))]
+    | None -> [] in
   DType {
     dt_name   = nm;
     dt_params = ty_params;
     dt_body   = TVariant (ctors |> List.map ctor);
-    dt_flags  = (if is_record then [SourceRecord] else []);
+    dt_flags  = (if is_record then [SourceRecord] else []) @ existential;
   }
 
 (* -------------------------------------------------------------------- *)

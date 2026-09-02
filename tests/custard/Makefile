@@ -130,18 +130,24 @@ FLAGS_MonoTypes = --custard_monomorphize_types true
 # own arguments builds a closure and runs nothing.  [twice] is not reachable
 # from [main], so it is named as an entry point of its own.
 FLAGS_Reify = --custard_entry Reify.twice --custard_entry Reify.after_letrec
-GREP_Reify += "let reify_add (x : Prims.int) : (fStarC_Tactics_Types_ref_proofstate -> Prims.int) ="
+# Section 33.1: the representation type's arrow is a *parameter*, not a
+# returned closure.  Reification produces [let reify_add x = fun ps -> ...],
+# and a definition whose body is a lambda is the same function as one that
+# names the lambda's binder itself -- so the proofstate is the second
+# parameter and no closure is built to hold it.
+GREP_Reify += "let reify_add (x : Prims.int) (tmp : fStarC_Tactics_Types_ref_proofstate) : Prims.int ="
+NOGREP_Reify += ": (fStarC_Tactics_Types_ref_proofstate -> Prims.int) ="
 # The bind is fully reduced: what is left is the proofstate threaded through
 # two calls in sequence, which is what the representation type means.
-GREP_Reify += "(fun ps -> (let x1 = (reify_add x ps) in"
-GREP_Reify += "(reify_add x1 ps)))"
+GREP_Reify += "(let x1 = (reify_add x ps) in"
+GREP_Reify += "(reify_add x1 ps))"
 # Section 8.3: ulib's [FStar.Stubs.Tactics.Types] is a stub for the compiler's
 # own [FStarC.Tactics.Types], and the two have to be one name.
 NOGREP_Reify += "FStar_Stubs"
 # Section 7.5: the [let] after the local [let rec] has to be reified too; left
 # unreified it compiles as if [add] returned an integer -- and, since a call
 # that returns a value looks pure, is deleted outright.
-GREP_Reify += "(fun ps -> (let x = (reify_add (reify_after_letrec__sum l) ps) in"
+GREP_Reify += "(let x = (reify_add (reify_after_letrec__sum l) ps) in"
 # Section 12.3: --ugly is what made the old key printer collapse the two
 # 'tweak's into one key, so the test runs with it on.  A specialization key
 # must not depend on a printing option at all.
@@ -580,6 +586,27 @@ C_TESTS += StoredType
 CGREP_StoredType += "static uint32_t StoredType_dlen(uint32_t d)"
 CNOGREP_StoredType += "StoredType_desc"
 
+# Section 33.1.  A definition whose body is a lambda is the same function as
+# one that names the lambda's binder itself, so it compiles rather than being
+# rejected as a captured closure -- and its callers stay saturated.
+C_TESTS += CLamDef
+CGREP_CLamDef += "static uint32_t CLamDef_go(uint32_t k, uint32_t x)"
+CGREP_CLamDef += "static uint32_t CLamDef_go2(uint32_t k, uint32_t eta"
+CNOGREP_CLamDef += "CLamDef_go(uint32_t k)"
+
+# Section 33.4.  The existential reached through a field rather than through
+# a monomorphized binder: error 368, and it now names the cause instead of
+# asking for a bug report about a correct rejection.
+REJECT_TESTS += ExistChain
+CODE_ExistChain = 368
+FLAGS_ExistChain += --custard_backend C --custard_monomorphize_types true
+EGREP_ExistChain += "is an existential package, not an instance of a"
+EGREP_ExistChain += "stores the type ty"
+EGREP_ExistChain += "it is not a Custard"
+# The advice this replaces: a correctly rejected type must not be reported as
+# a compiler bug.
+NOEGREP_ExistChain += "please report it"
+
 REJECT_TESTS += ColB
 CODE_ColB = 374
 FLAGS_ColB += --custard_backend C --custard_monomorphize_types true
@@ -671,6 +698,15 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
 	    || { echo "ERROR: $* diagnostic is missing $$p"; \
 	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done
+	@# Section 33.4.  And what it must *not* say.  A wrong explanation is
+	@# worse than none -- "please report a Custard bug" about a correct
+	@# rejection sends a reader to write an issue instead of a fix -- so a
+	@# replaced sentence has to be pinned as absent, or nothing notices it
+	@# coming back.
+	$(Q)for p in $(NOEGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
+	    && { echo "ERROR: $* diagnostic should not contain $$p"; \
+	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done; true
 	@# Section 32.1.  No diagnostic has a reason to be large.  A chain entry
 	@# is a specialization key and a key is a term, so an unbounded one is
 	@# always one term away; round 37 met a 6,426,280-byte error block.

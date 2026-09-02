@@ -325,6 +325,20 @@ type flag =
       the hand-written one, and a realization mirrors what the F* source said
       -- [FStarC.Parser.ParseIt.code_fragment] is an OCaml record and
       [FStar.Pervasives.dtuple4] an OCaml variant. *)
+  | Existential of string & string
+  (** Section 33.4.  The source inductive is an existential package: the
+      constructor named first stores a [Type0] field, named second, that a
+      later field's type mentions, so the representation depends on the
+      contents and there is no C layout for it (section 30.3).
+
+      Nothing reads this flag to make a decision -- the type is rejected
+      either way, by whichever of its fields lost its representation first.
+      It exists so that the rejection can say *why*.  Error 364 could
+      already, because a monomorphized binder has the source type in hand;
+      368 could not, because it fires in the backend on an [IR] type from
+      which the [Type0] field has already been erased, and so guessed --
+      "that is a Custard bug, please report it" -- at the one shape that is
+      not one. *)
   | Imported of string & option string
   (** This declaration was compiled by an already-built unit (section 12), the
       one named first.  It is present so that this unit's passes can see its

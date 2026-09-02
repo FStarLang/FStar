@@ -150,6 +150,13 @@ val type_params (env:TcEnv.env) (t:typ) : ML (list bool)
     erased like any other (section 32.6). *)
 val ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool
 
+(** [existential_of_lid env l] is the constructor and the [Type0] field that
+    make the inductive [l] an existential, if any.  See {!existential_field},
+    which is this asked of a binder's type rather than of a type name; the
+    backend has the name and not the binder (section 33.4). *)
+val existential_of_lid (env:TcEnv.env) (l:Ident.lident)
+  : ML (option (Ident.lident & Ident.lident))
+
 (** [existential_field env b] is the constructor and the [Type0] field that
     make [b]'s type an existential, if any: the reason rule 4b classified [b]
     as [Mono].  Error 364 reports the consequence -- "there is nothing to

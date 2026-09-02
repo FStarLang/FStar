@@ -391,6 +391,7 @@ let flag_to_doc (f:flag) : ML document =
     text ("extern" ^ (match n with Some n -> " " ^ n | None -> "") ^
                      (match h with Some h -> " <" ^ h ^ ">" | None -> ""))
   | SourceRecord -> text "source-record"
+  | Existential (c, f) -> text ("existential[" ^ c ^ "." ^ f ^ "]")
   | Modelled -> text "modelled"
   | Imported (u, h) ->
     text ("imported[" ^ u ^ (match h with Some m -> "@" ^ m | None -> "") ^ "]")

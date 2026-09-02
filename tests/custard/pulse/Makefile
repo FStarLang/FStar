@@ -100,6 +100,17 @@ C_TESTS += CborBoundarySlice
 # returning a function pointer, and its callers must stay saturated.
 C_TESTS += PulseFnPtrRet
 
+# Sections 33.1-33.3.  [@@@monomorphize] on the binder of a Pulse [fn]: the
+# annotation is on the lambda and not on the elaborated arrow type, and the
+# [fn] itself arrives eta-contracted.  Both had to be fixed for the
+# specialization to happen at all, so the assertion is that it did -- there is
+# a specialized name, no function pointer, and the program checks its own
+# answer when it runs.
+C_TESTS += PulseMono
+CGREP_PulseMono += "PulseMono_apply_twice__add_mod"
+CGREP_PulseMono += "static void PulseMono_add_k(uint32_t k, uint32_t *eta)"
+CNOGREP_PulseMono += "(*f)"
+
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose
 # the representation of a value.

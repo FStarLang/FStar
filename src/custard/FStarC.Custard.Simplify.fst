@@ -776,6 +776,25 @@ let rec cheap_expr (x:expr) : ML bool =
    | EConst _ | EVar _ | EQual _ -> true
    | EApp (f, args) -> cheap_expr f && List.for_all cheap_expr args
    | ECast (e, _) | ECoerce (e, _) | EProj (e, _, _) -> cheap_expr e
+   (* Section 33.2.  A lambda's *body* is not evaluated when the lambda is,
+      so the cost of re-evaluating one is the closure and nothing else --
+      which is the same cost the under-applied call this pass replaces was
+      already paying, and none at all once [lift_lambdas] has run.  Asking
+      whether the body is cheap would be asking the wrong question: it is a
+      bound on work that does not happen here.
+
+      This is not a widening for its own sake.  Pulse writes
+      [f (fun x -> ...) r] and [eta_reduce] removes the [r], so a lambda
+      argument is exactly what stands between the pass and every partially
+      applied Pulse [fn] (section 33.2). *)
+   | EFun _ -> true
+   (* An operator application is the same class of work as the [ECast] beside
+      it: bounded, allocating nothing, and no more expensive to repeat than
+      the argument it is applied to.  A memory operation is an [EOp] too --
+      Pulse writes [BufRead] and [BufWrite] as one -- and is excluded by the
+      effect test above rather than by the shape, which is where that
+      distinction belongs. *)
+   | EOp (_, es) -> List.for_all cheap_expr es
    | _ -> false)
 
 let rec arrow_arity (c:cty) : ML int =
@@ -867,6 +886,43 @@ let use_arity (prog:program) : ML (SMap.t int) =
   tbl
 
 let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
+  (* Section 33.1.  A body that *is* a lambda is not the section 25.3
+     re-evaluation hazard, and it is not eta-expansion either: there is
+     nothing in front of the lambda to re-evaluate, so moving its binders
+     into the parameter list is a syntactic identity in every target
+     language.  [let f x = fun y -> e] and [let f x y = e] denote the same
+     function and compile to the same code.
+
+     It has to be done here all the same, because until it is, the
+     definition's result type is an arrow and its body is a closure over its
+     own parameters -- which the C backend rejects as a captured lambda
+     rather than compiling as the second parameter it is.  Nothing else in
+     the pipeline does it: [eta_reduce] runs in the other direction, and the
+     expansion below cannot, because it works by *applying* the body and a
+     lambda applied to a fresh variable is a redex, not a parameter. *)
+  let rec absorb (bs:list binder) (body:expr) (ret:cty) (ef:eff)
+    : ML (list binder & expr & cty & eff) =
+    match body.e with
+    | EFun (lbs, lbody) when Cons? lbs ->
+      (* The declared codomain, peeled, and not [lbody.ty].  The two can
+         disagree -- a reified [Tac] body is a match whose arms have the
+         concrete type and whose declaration has [TAny] -- and that
+         disagreement is exactly what the coercion pass is for.  Taking the
+         body's own type here would silently agree with it instead, and the
+         [Obj.magic] that made the arms typecheck would never be inserted. *)
+      let rec peel (n:int) (t:cty) (e:eff) : ML (option (cty & eff)) =
+        if n <= 0 then Some (t, e)
+        else match t with
+             | TArrow (_, e', b) -> peel (n - 1) b e'
+             | _ -> None in
+      (match peel (List.length lbs) ret ef with
+       | Some (ret', ef') -> absorb (bs @ lbs) lbody ret' ef'
+       | None -> (bs, body, ret, ef))
+    | _ -> (bs, body, ret, ef) in
+  let abs_bs, abs_body, abs_ret, abs_ef =
+    absorb l.dl_binders l.dl_body l.dl_ret l.dl_eff in
+  let l = { l with dl_binders = abs_bs; dl_body = abs_body;
+                   dl_ret = abs_ret; dl_eff = abs_ef } in
   (* Only a head this program declares, and only a *pure* body: expansion
      re-evaluates the body on every call, and an under-applied call allocates a
      closure and runs nothing, which is why it qualifies. *)

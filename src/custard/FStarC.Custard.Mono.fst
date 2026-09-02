@@ -474,12 +474,9 @@ let ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool =
    *consequence* -- "there is nothing to specialize on" -- and sends the
    reader to look for an annotation, when the cause is a property of the type
    that no annotation changes. *)
-let existential_field (env:TcEnv.env) (b:binder)
+let existential_of_lid (env:TcEnv.env) (l:Ident.lident)
   : ML (option (Ident.lident & Ident.lident)) =
-  let hd, _ = U.head_and_args_full (U.unrefine (SS.compress b.binder_bv.sort)) in
-  match (U.un_uinst hd).n with
-  | Tm_fvar fv ->
-    (match TcEnv.lookup_sigelt env (S.lid_of_fv fv) with
+    (match TcEnv.lookup_sigelt env l with
      | Some ({ sigel = Sig_inductive_typ { ds } }) ->
        let rec first (ds:list Ident.lident) : ML (option (Ident.lident & Ident.lident)) =
          match ds with
@@ -509,6 +506,12 @@ let existential_field (env:TcEnv.env) (b:binder)
               | _ -> first ds')
        in first ds
      | _ -> None)
+
+let existential_field (env:TcEnv.env) (b:binder)
+  : ML (option (Ident.lident & Ident.lident)) =
+  let hd, _ = U.head_and_args_full (U.unrefine (SS.compress b.binder_bv.sort)) in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv -> existential_of_lid env (S.lid_of_fv fv)
   | _ -> None
 
 let is_type_carrying_binder (env:TcEnv.env) (b:binder) : ML bool =
@@ -528,8 +531,35 @@ let is_type_carrying_binder (env:TcEnv.env) (b:binder) : ML bool =
    the demand has to propagate to whatever the demanded binder's type mentions
    exactly as a written annotation would. *)
 let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
-                    (demanded:list int) : ML (list bclass) =
+                    (def:option term) (demanded:list int) : ML (list bclass) =
   let bs, comp = arrow_formals_unfold env t in
+  (* Section 33.3.  An attribute written on a binder can reach a
+     classification by two routes, and only one of them is always open.  The
+     source writes it on the *lambda*, and the elaborated arrow type keeps it
+     only if whoever built that arrow chose to carry it across: Pulse's
+     [tm_arrow] does not, so [@@@monomorphize] on the binder of a Pulse [fn]
+     is on the definition and absent from its type, and reading the type
+     alone silently ignores it.
+
+     So the two are unioned, positionally.  Section 19.4 already argues that
+     the lambda is the more faithful of the two -- it is what makes the
+     classification as long as the definition really is -- and this is the
+     same argument about a binder's attributes rather than about how many
+     binders there are.  The union rather than a preference, because a type
+     can have binders the lambda does not (a projector is written with fewer
+     abstractions than its arrow has) and each route is authoritative where
+     the other says nothing. *)
+  let bs =
+    match def with
+    | None -> bs
+    | Some d ->
+      let bs_d, _, _ = U.abs_formals d in
+      bs |> List.mapi (fun i (b:binder) ->
+        if i < List.length bs_d
+        then (let bd = List.nth bs_d i in
+              if Nil? bd.binder_attrs then b
+              else { b with binder_attrs = b.binder_attrs @ bd.binder_attrs })
+        else b) in
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
   let init (i:int) (b:binder) : ML bclass =
@@ -626,7 +656,7 @@ let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
    definition keeps a unit-shaped binder past its classification, so a call
    site must keep passing one. *)
 let classify (env:TcEnv.env) (attrs:list attribute) (t:typ) : ML (list bclass) =
-  classify_demand env attrs t []
+  classify_demand env attrs t None []
 
 (* Section 30.14.  A view of a type keeping only what can reach the emitted
    code: refinements gone, and a computation reduced to its result.  It is used
@@ -701,7 +731,7 @@ let dead_binders (env:TcEnv.env) (t:typ) (d:term) : ML (list int) =
 let classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term)
                  (demanded:list int)
   : ML (list bclass) =
-  let cs = classify_demand env attrs t demanded in
+  let cs = classify_demand env attrs t def demanded in
   let cs =
     match def with
     | None -> cs

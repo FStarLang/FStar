@@ -9631,6 +9631,159 @@ belongs to EverParse.
 The COSE baseline fails with `TypeError: Bytes cannot be decoded as COSE
 message` under `cbor2` 6.x. The repo's Makefile pins `'cbor2<6'`.
 
+# 33. Pulse reaches C
+
+Round 40 is the second reviewer's, and it is the first report from a program
+that is Pulse the whole way down. Kuiper is a Pulse DSL for verified CUDA
+kernels, extracted today through `--codegen krml` and a ~1200-line karamel
+plugin, and its 396 modules verify against this branch unchanged.
+
+Three of the four things it found are the same thing seen three times: the
+attribute that selects a specialization, the definition it is written on, and
+the diagnostic that fires when neither worked, each of which handles a Pulse
+`fn` worse than it handles the F\* function it desugars to. What follows is
+in the order they have to be fixed, which is the reverse of the order they
+are met.
+
+## 33.1 A body that is a lambda is not a closure
+
+```fstar
+let ap (f : U32.t -> U32.t) (r : U32.t) : U32.t = f r
+let go (k : U32.t) : U32.t -> U32.t = ap (fun x -> U32.add_mod x k)
+```
+
+```
+let CMwe9.go (k: u32) : u32 -> u32 [Pure] = fun (x: u32) -> `+.u32`(x, k)
+```
+```
+* Error 368: a lambda that captures a local variable has no C
+  representation, in CMwe9.go.
+```
+
+The lambda captures `k`, and `k` is `go`'s own parameter — so the thing it
+captures is a thing `go` already has, and the "capture" is an artifact of
+where the binder was written. `let f x = fun y -> e` and `let f x y = e`
+denote the same function and compile to the same code in every target
+language Custard emits.
+
+§25's expansion did not do it, and could not have. It works by *applying* the
+body to a fresh variable, and a lambda applied to a fresh variable is a
+redex, not a parameter. It also refused to consider the case at all, because
+§25.3 admits only a *cheap* body and a lambda is not on the list — which is
+the right list read the wrong way round: the list exists to bound how much
+work is repeated per call, and evaluating a lambda performs none. The body is
+not run. That is what a lambda is.
+
+So the absorption is separate from the expansion and unconditional, and takes
+the *declared* codomain rather than the body's own type. Those can disagree —
+a reified `Tac` body is a match whose arms have the concrete type and whose
+declaration has `TAny` — and that disagreement is what the coercion pass is
+for. Taking the body's type would silently agree with it instead, and the
+`Obj.magic` that made the arms typecheck would never be inserted. `make
+custard` is what says so: with the body's type the extracted compiler does
+not build, in `FStar.Tactics.V2.Logic.cur_goal` and
+`FStar.Tactics.Typeclasses`.
+
+## 33.2 A lambda argument is cheap too
+
+That is one of the two shapes Pulse produces. The other is what `eta_reduce`
+leaves of an `fn` with more than one binder:
+
+```
+let PMwe.use (k: u32) : ref u32 -[I]-> unit [Pure] =
+  PMwe.apply_twice (fun (x: u32) -> `+.u32`(x, k))
+```
+```
+* Error 368: the partial application of PMwe.apply_twice has no C
+  representation, in PMwe.use.  It is applied to 1 of its 2 arguments.
+```
+
+`r` moved from the binder list into the result arrow, and the call became
+partial. This *is* §25's case, and every guard on it passes — the callee's
+arity is known, the demand is one argument, the callers supply it — except
+that `cheap_expr` rejects the lambda in argument position, for the reason
+above and just as wrongly.
+
+`EOp` joins it, for the same reason `ECast` was already there: an operator
+application is bounded work that allocates nothing. A memory operation is an
+`EOp` too, since Pulse writes `BufRead` and `BufWrite` as one, and it is
+excluded by the effect test rather than by the shape — which is where that
+distinction belongs, and it is worth checking that it really is excluded
+there, because nothing else would catch it.
+
+## 33.3 An attribute is written on the lambda
+
+With both of those fixed the specialization still did not happen, and
+deleting the attribute produced a byte-identical dump — the failure mode with
+no evidence at all.
+
+`[@@@monomorphize]` is written on a binder, and a classification reads
+binders off the definition's *type*. Those are two different lists that
+usually agree. Pulse's `tm_arrow` builds the elaborated arrow through
+`mk_arrow_with_name`, which builds its binder with `attrs = []`, so for a
+Pulse `fn` they do not: the attribute is on the definition and absent from
+its type, and rule 3 never fires.
+
+That could be fixed in Pulse, and arguably should be. It is fixed here
+anyway, because the narrower fix is also the more correct one. §19.4 already
+argues that the lambda is the more faithful of the two lists — it is what
+makes the classification as long as the definition really is — and this is
+the same argument about a binder's attributes rather than about how many
+binders there are. So the two are unioned, positionally, rather than one
+preferred: a type can have binders the lambda does not, a projector being
+written with fewer abstractions than its arrow has, and each list is
+authoritative exactly where the other says nothing.
+
+`tests/custard/pulse/PulseMono.fst` needs all three of these to compile, and
+checks its own answer when it runs, so a specialization that closed over the
+wrong value is a nonzero exit rather than something to be read out of the C.
+
+## 33.4 A correct rejection is not a bug report
+
+§32.6 gave error 364 an explanation for an existential type: which
+constructor stores the `Type0`, and which later field's type mentions it.
+Kuiper takes neither path 364 is on. It meets the same type as a field of
+runtime data, and gets 368:
+
+```
+* Error 368: the type variable 't has no C representation, in
+  Kuiper.Sized.sized.
+  --custard_monomorphize_types is already set, so this type is one the
+  monomorphization pass did not reach (section 5.0.1).
+  That is a Custard bug, not a configuration problem: please report it.
+```
+
+It is not a Custard bug. It is the existential of §30.3, correctly rejected —
+and the message asks the reader to file an issue about it. That is worse than
+saying nothing: a wrong explanation is acted on.
+
+The reason 368 could not say what 364 says is that by the time the backend
+sees the type, the `Type0` field is erased and what is left is a `TAny` or a
+type variable with no visible cause. So the cause is carried rather than
+inferred: `Existential` is a type flag the extractor sets from
+`Mono.existential_of_lid`, and nothing reads it to make a decision — the type
+is rejected either way, by whichever of its fields lost its representation
+first. It exists so that the rejection can say why.
+
+It is looked up along the whole `Reached through` chain and not only at the
+head, because the type that lost its representation is usually a *field's*
+type and the existential is the record above it — which the chain already
+names. And the branch it replaces stands down rather than print both: "please
+report a bug" and "this is not a bug" in one message is worse than either.
+
+`ExistChain.fst` pins the new sentences and, through a new `NOEGREP_` hook on
+the reject rule, the absence of the old one. A replaced sentence has to be
+pinned as absent or nothing notices it coming back.
+
+## 33.5 Not fixed
+
+`--custard_unit` and `--custard_link` are implemented for the OCaml backend
+only (error 155), so the separate compilation §12 describes is not available
+to a C consumer yet. Kuiper ships 62 generated `.cu` files and cannot treat
+whole-program-per-kernel as a workaround. Recorded here because the build
+model was agreed and the implementation was not; it is the largest thing this
+report leaves open.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -9744,3 +9897,6 @@ message` under `cbor2` 6.x. The repo's Makefile pins `'cbor2<6'`.
 | M10αδ | **A misattributed realization** (§32.7) | Done.  Kuiper report.  Error 368's advice for a type frozen by §5.0.1 rule 4 asserted the external was "a hand-written realization for the OCaml backend"; for a `custard_extern` it is a C symbol the program named, and the reader was sent after an `.ml` file that does not exist.  `frozen_by_target` records the symbol and the sentence names it |
 | M10αε | **The header is the API** (§32.9) | Done.  Round 39.  §32.4's output was linked against the real COSE consumer — checked-in EverParse-generated `COSE_Format.c` plus OpenSSL, cross-checked against `pycose` — and signs, verifies, and verifies `pycose`'s signature, clean under ASan/UBSan.  A strip is sufficient; no rename map is needed.  The generated types are ABI-identical to the hand-written header (40/8, 80, 32, 32) and the renaming is purely nominal.  The gap it found: types were not renamed, so a consumer could call a function but not spell what it returned, which contradicts §32.4's own claim that the header is the public surface.  A named module's types and their constructors are now renamed too — `c_tag` goes through the same map, `struct_tag` follows from `c_name` — and `ExportUser.cpp` uses the type, a field and an enum tag across the boundary in C++ |
 | M10αζ | **One pair of parentheses** (§32.10) | Done.  Round 39.  `c_expr` parenthesizes every operator application, so `if (...)` added a second pair; clang emitted `-Wparentheses-equality` 78 times on one generated file, and gcc `-Wall -Wextra` never mentioned it.  Not cosmetic — a consumer building with `-Werror` under clang could not use the output.  `is_group` checks that the leading paren is the one the trailing paren closes, so `(a) && (b)` is not stripped; `unparen` drops the pair and `negate` adds one only when the operand is not already a group |
+| M10αη | **A body that is a lambda is not a closure** (§33.1, §33.2) | Done.  Round 40, from a second reviewer porting Kuiper -- a Pulse DSL for verified CUDA kernels, 396 modules, extracted today through karamel and a ~1200-line plugin.  `let go (k: U32.t) : U32.t -> U32.t = ap (fun x -> add_mod x k)` was rejected as a lambda capturing a local variable, when the variable it captures is `go`'s own parameter and `let f x = fun y -> e` is `let f x y = e`.  §25's expansion could not have done it -- it works by *applying* the body, and a lambda applied to a fresh variable is a redex rather than a parameter -- and refused to consider it at all, because §25.3 admits only a *cheap* body.  That list bounds work repeated per call, and evaluating a lambda performs none: the body is not run.  So absorption is separate and unconditional, and takes the *declared* codomain rather than the body's own type, which `make custard` is what says: with the body's type the extracted compiler does not build, because the coercion a reified `Tac` match needs is never inserted.  `cheap_expr` additionally admits `EFun` and `EOp`, which is what unblocks the other Pulse shape -- `eta_reduce` moves an `fn`'s trailing `r` into the result arrow and the call becomes partial.  `CLamDef.fst` |
+| M10αθ | **An attribute is written on the lambda** (§33.3) | Done.  Round 40.  With both of the above fixed the specialization still did not happen, and deleting the attribute produced a byte-identical dump -- the failure mode with no evidence at all.  A classification reads binders off a definition's *type*; `[@@@monomorphize]` is written on the *lambda*; Pulse's `tm_arrow` goes through `mk_arrow_with_name`, which builds its binder with `attrs = []`, so for a Pulse `fn` the two disagree and rule 3 never fires.  Fixable in Pulse, and fixed here instead because the narrower fix is the more correct one: §19.4 already argues the lambda is the more faithful of the two lists, and this is that argument about a binder's attributes rather than about how many binders there are.  Unioned positionally rather than preferred, since a type can have binders the lambda does not.  `tests/custard/pulse/PulseMono.fst` needs all three fixes to compile and checks its own answer when it runs |
+| M10αι | **A correct rejection is not a bug report** (§33.4) | Done.  Round 40.  §32.6 explained an existential type to error 364; Kuiper meets the same type as a field of runtime data and gets 368, which said "that is a Custard bug, please report it" about the existential of §30.3, correctly rejected.  A wrong explanation is worse than none, because it is acted on.  368 could not say what 364 says because by the time the backend sees the type the `Type0` field is erased and what is left is a `TAny` with no visible cause -- so the cause is carried rather than inferred, as an `Existential` type flag the extractor sets from `Mono.existential_of_lid`.  Nothing reads it to make a decision: the type is rejected either way, and the flag exists so the rejection can say why.  Looked up along the whole `Reached through` chain, since the type that lost its representation is usually a *field's* type and the existential is the record above it.  `ExistChain.fst`, and a new `NOEGREP_` hook so that the sentence this replaces is pinned as *absent* -- otherwise nothing notices it coming back |

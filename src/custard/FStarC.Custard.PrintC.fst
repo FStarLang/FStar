@@ -93,6 +93,13 @@ let frozen_by : SMap.t string = SMap.create 20
    an .ml file that does not exist. *)
 let frozen_by_target : SMap.t string = SMap.create 20
 
+(* Section 33.4.  Type name -> the constructor and [Type0] field that make it
+   an existential, from the {!Existential} flag the extractor sets.  Kept as
+   its own table rather than read off {!types} for the ordinary reason: a
+   rejection has to be able to explain itself before the printer's tables
+   exist, and this one is filled from the program at the same time they are. *)
+let existentials : SMap.t (string & string) = SMap.create 20
+
 let reached_through (n:string) : ML (list string) =
   let rec up (n:string) (fuel:int) (acc:list string) : ML (list string) =
     if fuel <= 0 then List.rev acc
@@ -117,10 +124,42 @@ let chain_msg () : ML (list Pprint.document) =
   | ns -> text "Reached through:" ::
           (ns |> List.map (fun n -> text ("  " ^ clip n)))
 
+(* Section 33.4.  Rule 4b rejects an existential type twice over: error 364
+   when a monomorphized binder has one for its type, and error 368 when the
+   backend meets a field of it whose representation is gone.  Only the first
+   could say so, because only the first still has the source type in hand --
+   by the time the backend sees the type, the [Type0] field is erased and
+   what is left is a [TAny] or a type variable with no visible cause.
+
+   The reporter's two Kuiper paths are both the second, which is why the
+   advice they were given was "please report a Custard bug" about a type that
+   is correctly rejected.  So the answer is looked up rather than inferred,
+   and along the whole chain and not only at the head: the type that lost its
+   representation is often a *field's* type, and the existential is then the
+   record above it that the chain already names. *)
+let existential_msg () : ML (list Pprint.document) =
+  let rec first (ns:list string) : ML (list Pprint.document) =
+    match ns with
+    | [] -> []
+    | n :: ns ->
+      (match SMap.try_find existentials n with
+       | Some (c, f) ->
+         [text (n ^ " is an existential package, not an instance of a \
+                parameterized type: its constructor " ^ c ^ " stores the \
+                type " ^ f ^ ", and a later field's type mentions it, so its \
+                representation depends on its contents (section 30.3).");
+          text "That is why the representation above is unknown, and it is \
+                not a Custard bug: no C layout exists for it, and no \
+                annotation changes that.  Replace the stored type by an \
+                index the program can case on, or make it a parameter of the \
+                type rather than a field of the constructor."]
+       | None -> first ns) in
+  first (!current :: reached_through !current)
+
 let reject (#a:Type) (what:string) (why:list string) : ML a =
   E.raise_error0 E.Error_CustardNoCRepresentation
     ([text ("Custard: " ^ what ^ " has no C representation, in " ^ !current ^ ".")]
-     @ List.map text why @ chain_msg ())
+     @ List.map text why @ existential_msg () @ chain_msg ())
 
 (* The other kind of refusal: not "C cannot express this", which is a fact
    about the source, but "the IR is malformed", which is a fact about the
@@ -344,6 +383,14 @@ let mono_advice_for (n:option name) : ML (list string) =
         could not be sized.  Give " ^ ext ^ " a definition Custard can \
         compile -- " ^ where ^ " -- or keep this type out of its signature."]
     | None ->
+      (* Section 33.4.  "Please report a bug" is the wrong thing to say when
+         the cause is known and is not a bug.  {!existential_msg} is about to
+         say what it is, so this branch stands down rather than contradict
+         it. *)
+      if Cons? (existential_msg ())
+      then ["--custard_monomorphize_types is already set, so nothing was left \
+             polymorphic by choice; the reason is below."]
+      else
       ["--custard_monomorphize_types is already set, so this type is one the \
         monomorphization pass did not reach (section 5.0.1).";
        "That is a Custard bug, not a configuration problem: please report it, \
@@ -1981,6 +2028,12 @@ let print_program (base:string) (p:program) : ML (string & string) =
     match d with
     | DType t ->
       SMap.add tt (string_of_name t.dt_name) t;
+      (* Section 33.4. *)
+      t.dt_flags |> List.iter (fun f ->
+        match f with
+        | Existential (c, fld) ->
+          SMap.add existentials (string_of_name t.dt_name) (c, fld)
+        | _ -> ());
       (match t.dt_body with
        | TVariant cs ->
          cs |> List.iter (fun (c, fs) -> SMap.add ct (string_of_name c) (t, fs))
