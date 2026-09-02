@@ -235,10 +235,16 @@ let is_group (s:string) : ML bool =
 let unparen (s:string) : ML string =
   if is_group s then String.substring s 1 (String.length s - 2) else s
 
+(* Section 35.2.  Wrap in one pair, unless the string is already one group.
+   Every position that needs its operand parenthesized goes through here, so
+   that none of them can be the one that adds the second pair. *)
+let group (s:string) : ML string =
+  if is_group s then s else "(" ^ s ^ ")"
+
 (* [!e] binds tighter than any operator, so the operand has to be a group;
    one that already is keeps its own parens rather than gaining a second. *)
 let negate (s:string) : ML string =
-  "!" ^ (if is_group s then s else "(" ^ s ^ ")")
+  "!" ^ group s
 
 let escape_kw (s:string) : ML string =
   if List.existsb (fun k -> k = s) c_keywords then s ^ "_" else s
@@ -1238,7 +1244,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let out = mk_ref "" in
     let cs = c_expr out ind' c in
     ind ^ "while (true) {\n" ^ !out ^
-    ind' ^ "if (!(" ^ cs ^ ")) { break; }\n" ^
+    ind' ^ "if (" ^ negate cs ^ ") { break; }\n" ^
     emit ind' D_Ignore body ^
     ind ^ "}\n" ^
     (match d with D_Ignore -> "" | _ -> finish ind d unit_value)
@@ -1316,11 +1322,11 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
     match lt with
     | LStack -> ind ^ decl_of elt_of (arr ^ "[" ^ lv ^ "]") ^ ";\n"
     | LHeap ->
-      ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc((" ^ lv ^
-      ") * sizeof(" ^ elt ^ "));\n" ^
+      ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc(" ^ group lv ^
+      " * sizeof(" ^ elt ^ "));\n" ^
       ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n" in
   !out ^ alloc ^
-  ind ^ "for (size_t " ^ i ^ " = 0; " ^ i ^ " < (size_t)(" ^ lv ^ "); " ^ i ^ "++) {\n" ^
+  ind ^ "for (size_t " ^ i ^ " = 0; " ^ i ^ " < (size_t)" ^ group lv ^ "; " ^ i ^ "++) {\n" ^
   ind ^ "  " ^ arr ^ "[" ^ i ^ "] = " ^ iv ^ ";\n" ^
   ind ^ "}\n" ^
   finish ind d arr
@@ -1956,6 +1962,69 @@ Name the module with --custard_entry_module, or its definitions with \
 --custard_entry, so that they are part of this unit's interface."; ])
   end
 
+(* Section 35.1.  A public definition whose signature mentions a
+   specialization.
+
+   Round 40's reporter drove the real CBOR API off the generated header from
+   C++ with no help but three typedefs, and two of the three name types that
+   {!build_renames} renamed for them.  The third could not be written that
+   way:
+
+     typedef CBOR_Pulse_Raw_Iterator_cbor_raw_iterator__cbor_raw
+             cbor_det_array_iterator_t;
+
+   [--custard_c_no_prefix CBOR.Pulse.Raw.Iterator] does not help, and
+   correctly says so with warning 375 -- the type on the interface is not
+   that module's declaration but a monomorphized instance of it, and
+   {!build_renames} excludes specializations deliberately.  The exclusion is
+   right: section 30.15's hints are depth-bounded, clipped to 48 characters
+   and collision-suffixed, so they are exactly the names that may change when
+   the monomorphizer's input does.
+
+   What was wrong is that nothing said so.  A consumer reads the header, sees
+   a name, writes it down, and finds out later.  The condition is decidable
+   here -- a public prototype is in the header, and a [TApp] in it whose name
+   has a [spec] is a generated name the consumer has to spell -- so it is a
+   diagnostic rather than a rename.  Renaming was considered and declined on
+   the same report's advice: the name a consumer wants is an abbreviation
+   *they* chose, and Custard cannot know it.
+
+   Reported once per type rather than once per definition that exposes it,
+   naming one such definition, because the consumer's problem is the type.
+   Only types the unit actually declares are reported: an abbreviation that
+   was unfolded leaves no name in the header to depend on. *)
+let check_interface_names (p:program) : ML unit =
+  let rec spec_names (c:cty) : ML (list name) =
+    match c with
+    | TArrow (a, _, b) -> spec_names a @ spec_names b
+    | TTuple cs -> cs |> List.collect spec_names
+    | TBuf c | TRef c | TInline c -> spec_names c
+    | TApp (n, args) ->
+      (if Some? n.spec then [n] else []) @ (args |> List.collect spec_names)
+    | _ -> [] in
+  let declared : SMap.t bool = SMap.create 50 in
+  p |> List.iter (function
+    | DType t -> SMap.add declared (string_of_name t.dt_name) true
+    | _ -> ());
+  let seen : SMap.t bool = SMap.create 10 in
+  p |> List.iter (function
+    | DLet l when is_public l ->
+      let sig_ctys = (l.dl_binders |> List.map (fun b -> b.b_ty)) @ [l.dl_ret] in
+      sig_ctys |> List.collect spec_names |> List.iter (fun n ->
+        let s = string_of_name n in
+        if Some? (SMap.try_find declared s) && None? (SMap.try_find seen s)
+        then begin
+          SMap.add seen s true;
+          E.log_issue0 E.Warning_CustardGeneratedNameInInterface [
+            text ("Custard: the type `" ^ c_name n ^
+                  "' is part of this unit's interface -- " ^
+                  string_of_name l.dl_name ^
+                  " has it in its signature -- but its name is generated.");
+            text "It is a specialization, so the name carries a hint built from the monomorphizer's input and may change when that input does. --custard_c_no_prefix does not rename specializations.";
+            text "A consumer that must spell it should typedef it once, in its own header, rather than depend on this name throughout."; ]
+        end)
+    | _ -> ())
+
 (* [base] is the stem of the output file: the source includes [base.h], and
    the include guard is derived from it.  Returns the header and the source,
    in that order. *)
@@ -2085,6 +2154,7 @@ let print_program (base:string) (p:program) : ML (string & string) =
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
   build_renames p;
+  check_interface_names p;
   arities := at;
 
   (* Only the standard library, and only the parts that are used unavoidably:

@@ -444,6 +444,8 @@ $(OUTPUT_DIR)/custard/%.c: $(CACHE_DIR)/%.fst.checked
 	         /^[ \t]*\}/ && open == NR - 1 { print NR; found = 1 } \
 	         { open = 0 } END { exit found }' $@ \
 	  || { echo "FAIL [custard-c] $*: empty block, at the lines above"; exit 1; }
+	$(Q)python3 $(FSTAR_ROOT)/tests/custard/checkgroup.py $@ $(basename $@).h \
+	  || { echo "FAIL [custard-c] $*: redundant parentheses"; exit 1; }
 
 # Two rules, not one, because KrmlC and KrmlRust are two backends: karamel
 # models Pulse.Lib.Slice on the Rust path only, so a .krml built for one

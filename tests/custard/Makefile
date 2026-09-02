@@ -621,6 +621,20 @@ EGREP_AttrPos += "custard_c_header\] on the declaration AttrPos.height"
 EGREP_AttrPos += "never off a binder, so"
 EGREP_AttrPos += "has no .@@custard_extern"
 
+# Section 35.1: a public definition whose signature names a specialization.
+# The extraction succeeds and the C is correct; what is wrong without the
+# report is that the consumer cannot tell which of the names in the header
+# they may depend on.
+REJECT_TESTS += ExportGen
+CODE_ExportGen = 377
+FLAGS_ExportGen += --custard_backend C --custard_monomorphize_types true
+FLAGS_ExportGen += --custard_entry ExportGen.mk --custard_entry ExportGen.get
+FLAGS_ExportGen += --custard_c_no_prefix ExportGen
+EGREP_ExportGen += "ExportGen_cell__uint32. is part of this unit's interface"
+EGREP_ExportGen += "ExportGen.get has it in its signature"
+EGREP_ExportGen += "custard_c_no_prefix does not rename specializations"
+EGREP_ExportGen += "typedef it once, in"
+
 REJECT_TESTS += ColB
 CODE_ColB = 374
 FLAGS_ColB += --custard_backend C --custard_monomorphize_types true
@@ -759,6 +773,8 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
 # The direct-to-C backend (section 6): no krmllib, no krml, just a C11
 # compiler.  -Werror is part of the test -- an unused variable or a missing
 # cast is a bug in the backend, not a style question.
+CHECKGROUP := $(CURDIR)/checkgroup.py
+
 $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
@@ -778,6 +794,10 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	         { open = 0 } END { exit found }' $@ \
 	  || { echo "ERROR: $* C output has an empty block, at the lines above"; \
 	       exit 1; }
+	@# Section 35.2.  A redundant parenthesis group is a property of the
+	@# text and does not need a compiler to see it; clang's own warning is
+	@# shape sensitive and misses the ones around a call-comparison.
+	$(Q)python3 $(CHECKGROUP) $@ $(basename $@).h
 
 $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
 	$(call msg, "CC", $(basename $(notdir $@)))
@@ -917,6 +937,33 @@ $(OUTPUT_DIR)/SplitHi.exe: $(OUTPUT_DIR)/SplitHi.ml SplitMid.ml
 	  $(OUTPUT_DIR)/SplitLo.ml SplitMid.ml $(OUTPUT_DIR)/SplitHi.ml -o $@
 
 all: $(OUTPUT_DIR)/SplitHi.out.diff
+
+# These have hand-written targets with their own [all:] lines rather than a
+# list entry, and each consults its own settings in its own recipe.
+ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
+                  $(C_TESTS) $(KRML_TESTS) \
+                  SepApp SplitHi SplitLo
+
+# Section 35.3.  A setting whose name matches no registered test.
+#
+# [CGREP_PulseForCapture] was set in pulse/Makefile for two rounds and read by
+# no recipe, and M10-phi-phi was the same bug from the other side: a test with
+# settings but no registration.  Both are silent, and both read like coverage
+# that does not exist.  Any name here that is not in a test list is one or the
+# other.  Recursively expanded, so that [.VARIABLES] is complete by the time a
+# recipe asks.
+SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CODE
+ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
+  $(foreach v,$(filter $(p)_%,$(.VARIABLES)),\
+    $(if $(filter $(patsubst $(p)_%,%,$(v)),$(ALL_TEST_NAMES) TESTS),,$(v)))))
+
+.PHONY: check-settings
+check-settings:
+	$(Q)test -z "$(ORPHAN_SETTINGS)" || { \
+	  echo "ERROR: setting(s) for no registered test: $(ORPHAN_SETTINGS)"; \
+	  echo "Either register the test, or delete the setting."; exit 1; }
+
+all: check-settings
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))

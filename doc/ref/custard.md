@@ -10001,6 +10001,134 @@ attribute is read, and a report where no pass set it -- is not implemented.
 It is the right answer to the failure mode §33.3 had, and it is a change to
 every reading site rather than a check that can be added in one place.
 
+# 35 The public surface, and checks that do not need a compiler
+
+Round 40's verification, from the EverParse reporter. Everything §32.9 and
+§32.10 claimed holds at scale: the COSE interop signs, verifies and verifies
+`pycose`'s signature with the type and constructor renames active, all 35
+undefined `cbor_det_*` still resolve against the 44 exported, CBOR direct-to-C
+is behaviourally identical to golden on 1,717 valid and 10,392 malformed
+inputs, the krml-to-Rust path is byte-identical, and the four CDDL entry
+points differ from their round-38 goldens in parentheses and nothing else --
+0 non-parenthesis differences over 201 changed lines, 70,002 to 69,840 bytes
+and 125,467 to 125,251, entirely in removed characters.
+
+Two things came out of it, and neither is a bug in what was measured.
+
+## 35.1 A public API whose types are generic
+
+The report drove the real CBOR API from C++ off nothing but the generated
+header and three typedefs, and made the case that the type rename map §32.9
+left open should not be built: two of the three typedefs name types
+`--custard_c_no_prefix` already renames, and the fourth group of names --
+the `cbor_det_*` abbreviations -- are *the consumer's* names, which is why
+the source writes them as abbreviations in the first place. Custard cannot
+know an abbreviation the consumer chose. That question is closed: not built,
+on the report's advice, and §32.9's open item is withdrawn rather than
+deferred.
+
+The third typedef is the finding:
+
+```c
+typedef CBOR_Pulse_Raw_Iterator_cbor_raw_iterator__cbor_raw
+        cbor_det_array_iterator_t;
+```
+
+It cannot be written with a source-level name at all, because the type on
+the interface is not a module's declaration but a *monomorphized instance*
+of one. `--custard_c_no_prefix CBOR.Pulse.Raw.Iterator` does not help and
+correctly says so with warning 375. The exclusion is deliberate and stays:
+§30.15's hints are depth-bounded, clipped to 48 characters and
+collision-suffixed, so they are precisely the names that may change when the
+monomorphizer's input does, and nothing outside the translation unit may
+depend on one.
+
+What was wrong is that nothing said so. A consumer reads the header, sees a
+name, writes it down, and finds out later. The condition is decidable at the
+point of printing -- a public prototype goes in the header, and a `TApp` in
+it whose name has a `spec` is a generated name the consumer has to spell --
+so `PrintC.check_interface_names` reports it. Warning 377, once per type
+rather than once per definition that exposes it, naming one definition that
+does:
+
+```
+* Warning 377:
+  - Custard: the type `ExportGen_cell__uint32' is part of this unit's
+    interface -- ExportGen.get has it in its signature -- but its name is
+    generated.
+  - It is a specialization, so the name carries a hint built from the
+    monomorphizer's input and may change when that input does.
+    --custard_c_no_prefix does not rename specializations.
+  - A consumer that must spell it should typedef it once, in its own header,
+    rather than depend on this name throughout.
+```
+
+Only types the unit actually declares are reported: an abbreviation that was
+unfolded leaves no name in the header for anyone to depend on.
+`tests/custard/ExportGen.fst`.
+
+## 35.2 A property, not a warning
+
+§32.10's fix was checked by the disappearance of clang's
+`-Wparentheses-equality`, 78 to 0. The report shows that check is weaker
+than it looks, because clang's warning is *shape* sensitive:
+
+```c
+int t1(int a,int b){ if ((a==b)) return 1; return 0; }    /* warns  */
+int t2(void)       { if ((g()==1)) return 1; return 0; }  /* silent */
+```
+
+With a call on the left, clang says nothing. So a surviving redundant pair
+around a call-comparison would have passed a `-Werror` build, and `-Werror`
+was the whole check. The report then checked the property directly instead,
+with a paren matcher over the real 198 KB `CBORDet.c`: of 36 conditions
+beginning with `(`, zero were a single redundant group. That is the right
+check and it does not need a compiler.
+
+`tests/custard/checkgroup.py` is that matcher, generalized from `if` to every
+position and run on every C file all three suites generate. It reports any
+group whose entire content is another group, skipping comments and string and
+character literals, and skipping a parenthesis that is part of C's syntax
+rather than a grouping -- `f((x))` is one argument that happens to be a
+group, not two pairs, so the parentheses of a call, a parameter list or a
+cast are not candidates. The keywords whose own parentheses do enclose an
+expression are.
+
+Run over output that `-Wall -Wextra -Werror` had accepted, it found three
+sites, all of the class the report predicted would hide:
+
+- the exit test of a Pulse `while`, `if (!((i < n)))`, which built its
+  negation by hand instead of going through `negate`;
+- `malloc((((size_t)1ULL)) * sizeof(T))`, where the allocation wrapped a
+  length that `c_expr` had already parenthesized;
+- `(size_t)(((size_t)1ULL))` in the loop that fills a fresh run, the same
+  length in the same statement.
+
+Every position that needs a parenthesized operand now goes through one
+`group` helper, so no site can be the one that adds the second pair, and
+`negate` is defined in terms of it. Neither gcc nor clang would have
+complained about any of the three: `<` is not a comparison
+`-Wparentheses-equality` looks at, and a cast is not one either.
+
+## 35.3 A setting for no test
+
+Wiring `checkgroup.py` into `tests/custard/pulse/Makefile` turned up that the
+`CGREP_` and `CNOGREP_` variables that directory had been accumulating were
+read by no recipe at all. §34.3's assertions about the specialized loop's
+parameters, and round 40's about `PulseMono`, were set and never run.
+
+That is M10φφ from the other side. There, a test had settings and no
+registration; here, settings had a registration and no consumer. Both are
+silent, and both read like coverage that does not exist. The recipe now
+applies them, over the header as well as the source as `tests/custard` does.
+
+`check-settings` is the general form, in both directories and part of `all`:
+every variable whose name is a known setting prefix must name a registered
+test. It is four lines of `make` over `.VARIABLES`, and it reported four
+names on the first run -- all of them hand-written targets with their own
+`all:` line, which are listed explicitly rather than made to look like list
+entries they are not.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -10120,3 +10248,6 @@ every reading site rather than a check that can be added in one place.
 | M10ακ | **A rule sees its arguments reduced** (§34.1) | Done.  Round 41.  Kuiper's host side hands a kernel descriptor whose constructor stores a `Type0` a later field's type mentions, so §33.4 rejects it with 368 -- correctly, and neither remedy applies: the stored type is not held, it is *used to build a type*, and the list of descriptors is heterogeneous on purpose.  But the descriptor is not runtime data either, it is `inline_for_extraction noextract` and a literal at every call site, so the place for it is a rule.  The blocking question was whether a `Rule_prim` sees a structure or an opaque reference, and whether the descriptor's type must have a C layout before a rule is consulted.  Neither: §8.2's table is consulted before the definition is looked up, arguments arrive *reduced* -- the whole record, `Prims.Cons` chain and all, with `0<u32>` and `false` in the same list -- and *pre-layout*, an `ECtor` rather than §6's `ERecord`, with type arguments already erased.  The 368 cannot fire because `Simplify.dce` removes the types the rule consumed before the backend runs.  So there is no ordering gap and Kuiper's host side needs no compiler change.  The other half of the answer is that `register_rule` was exported, documented and never demonstrated: `tests/custard/plugin/CustardRulePlugin.fst` is the worked example, wired into `make custard`'s existing `plugin` target as a third root, asserting the descriptor's three types are absent from the C and then compiling and running it |
 | M10αλ | **A recognized attribute in an unrecognized position** (§34.2) | Done.  Round 41.  §33.3's bug had no evidence at all, and asked what would have caught it the reporter's answer is that "did it have an effect" is unanswerable but "was it read" is a bit.  That is still a change to every reading site; the cheap half is that Custard's attribute set is closed and each is read in exactly one kind of position, so `[@@custard_extern]` on a binder or `[@@custard_inline_field]` on a declaration can never do anything and that is decidable now.  Warning 371 gains four shapes, including `[@@custard_c_header]` with no `custard_extern` beside it, and each says where the attribute does belong.  `check_decl_attrs` runs from the cached `binder_classes`, so once per definition rather than once per call site, and the two binder lists are merged positionally -- concatenating them reports the ordinary case twice.  `tests/custard/AttrPos.fst` |
 | M10αμ | **A block argument's captures** (§34.3) | Done.  Round 41, offered by the reporter as a regression test.  Round 40's `[@@@monomorphize]`-on-a-`fn`-binder fix was measured on a real separation-logic loop combinator downstream, in a tree this suite does not build; `tests/custard/pulse/PulseForCapture.fst` reduces it to Pulse's own library.  A `fn` block captures a `ref` and a value from the caller's frame, neither a loop parameter, and the specialized loop takes both as parameters with the ghost apparatus gone -- and `main` checks its own answer, so a capture from the wrong frame is a nonzero exit rather than something to read out of the C.  Writing it found the non-obvious constraint Kuiper's `for_loop'` already satisfies: the invariant must be an explicit `slprop` parameter, because a body type that mentions a `ref` parameter carries §3.1 rule 5's demand onto that parameter and error 364 fires.  A ghost binder is what stops it, since rule 1 drops it before rule 5 can reach through |
+| M10αν | **A public API whose types are generic** (§35.1) | Done.  Round 40's verification.  §32.9's open question -- a rename map for types -- is closed as *not built*, on the reporter's own evidence: they drove the real CBOR API from C++ off the generated header and three typedefs, two of which name types `--custard_c_no_prefix` already renames, and the rest of what a consumer wants are the `cbor_det_*` abbreviations, which are names *they* chose and Custard cannot know.  The finding is the third typedef, `CBOR_Pulse_Raw_Iterator_cbor_raw_iterator__cbor_raw`, which has no source-level spelling at all: the type on the interface is a monomorphized instance, not a module's declaration, so `--custard_c_no_prefix` leaves it alone -- correctly, since §30.15's hints are depth-bounded, clipped and collision-suffixed and are exactly the names free to change.  What was missing is that nothing said so, and a consumer finds out by reading the header and writing the name down.  Decidable at print time -- a public prototype is in the header, a `TApp` in it with a `spec` is generated -- so `check_interface_names` reports warning 377, once per type and naming one definition that exposes it.  `tests/custard/ExportGen.fst` |
+| M10αξ | **A property, not a warning** (§35.2) | Done.  Round 40's verification, and a correction to how M10αζ was checked.  That fix was confirmed by clang's `-Wparentheses-equality` going 78 to 0; the reporter showed the warning is *shape* sensitive -- `if ((a==b))` warns, `if ((g()==1))` is silent -- so a leftover pair around a call-comparison would have passed `-Werror`, which was the entire check.  They checked the property directly instead, over the real 198 KB `CBORDet.c`: 36 conditions beginning with `(`, zero a single redundant group.  `tests/custard/checkgroup.py` is that matcher generalized to every position and run on every C file all three suites emit, skipping comments, literals, and the parentheses that are C *syntax* rather than grouping -- `f((x))` is one grouped argument, not two pairs.  On output `-Wall -Wextra -Werror` had accepted it found three: a Pulse `while`'s exit test built its negation by hand rather than through `negate`, and `malloc` and the fill loop each wrapped a length `c_expr` had already parenthesized.  No compiler would have reported any of them -- `<` is not a comparison the warning looks at and a cast is not one either.  One `group` helper now, and `negate` defined in terms of it |
+| M10αο | **A setting for no test** (§35.3) | Done.  Round 40's verification, found while wiring the above in.  `tests/custard/pulse/Makefile` had been accumulating `CGREP_`/`CNOGREP_` variables that no recipe read, so §34.3's assertions about the specialized loop's parameters and round 40's about `PulseMono` were set and never run.  M10φφ from the other side: there a test had settings and no registration, here settings had a registration and no consumer, and both read like coverage that does not exist.  The recipe applies them now, over the header as well as the source.  `check-settings` is the general form, in both directories and part of `all` -- every variable whose name is a known setting prefix must name a registered test -- four lines of `make` over `.VARIABLES`, and it reported four on its first run, all hand-written targets with their own `all:` line, now listed explicitly rather than made to look like list entries |

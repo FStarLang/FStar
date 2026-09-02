@@ -203,6 +203,17 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
 	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+	@# Section 35.3.  These were set here for two rounds and consulted by
+	@# nothing, which is M10-phi-phi's bug in a second directory: an
+	@# assertion nobody runs is worse than no assertion, because it reads
+	@# like one.  Over the header as well as the source, as in tests/custard.
+	$(Q)for p in $(CGREP_$*); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    || { echo "ERROR: $* C output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(CNOGREP_$*); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
+	$(Q)python3 $(CURDIR)/../checkgroup.py $@ $(basename $@).h
 
 $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
 	$(call msg, "CC", $(basename $(notdir $@)))
@@ -248,6 +259,30 @@ $(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked
 	    || { echo "ERROR: --custard_entry PulseSpecRoot.'$$e' did not report a \
 specification:"; cat $(OUTPUT_DIR)/$$e.out; exit 1; }; done
 	$(Q)touch $@
+
+ALL_TEST_NAMES := $(GREP_TESTS) $(OCAML_TESTS) $(C_TESTS) \
+                  $(KRML_TESTS) $(RUST_TESTS)
+
+# Section 35.3.  A setting whose name matches no registered test.
+#
+# [CGREP_PulseForCapture] was set in pulse/Makefile for two rounds and read by
+# no recipe, and M10-phi-phi was the same bug from the other side: a test with
+# settings but no registration.  Both are silent, and both read like coverage
+# that does not exist.  Any name here that is not in a test list is one or the
+# other.  Recursively expanded, so that [.VARIABLES] is complete by the time a
+# recipe asks.
+SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CODE
+ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
+  $(foreach v,$(filter $(p)_%,$(.VARIABLES)),\
+    $(if $(filter $(patsubst $(p)_%,%,$(v)),$(ALL_TEST_NAMES) TESTS),,$(v)))))
+
+.PHONY: check-settings
+check-settings:
+	$(Q)test -z "$(ORPHAN_SETTINGS)" || { \
+	  echo "ERROR: setting(s) for no registered test: $(ORPHAN_SETTINGS)"; \
+	  echo "Either register the test, or delete the setting."; exit 1; }
+
+all: check-settings
 
 all: $(OUTPUT_DIR)/PulseSpecRoot.specroot
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .grepped, $(GREP_TESTS)))

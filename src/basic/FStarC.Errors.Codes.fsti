@@ -401,6 +401,7 @@ type error_code =
   | Error_CustardExportCollision
   | Warning_CustardNoPublicDefinitions
   | Error_CustardMonoExternal
+  | Warning_CustardGeneratedNameInInterface
   | Error_AmbiguousName
 
 type error_setting = error_code & error_flag & int
