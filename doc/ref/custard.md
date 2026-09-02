@@ -9235,6 +9235,120 @@ recursive datatype and a C struct cannot contain itself.  That is a larger
 change than a diagnostic, it touches every C and krml test, and it is not
 what round 35 asked for; it is written down here as the next thing.
 
+## 32 After the attribute
+
+Rounds 36 and 37, and between them they close the question §12.3 opened.
+
+With `normalize_for_extraction` honoured, all four EverParse CDDL entry
+points extract to clean C from a completely unpatched tree, in 11-19 s, with
+no `validate_typ`, no `list`, no `char *`, no warning of any kind, and
+`gcc -Wall -Wextra` silent.  Round 36 also discharged the caveat that had
+been carried since round 11: the generated C was executed, over the same
+12,109 CBOR vectors, against an independent pure-Python decoder, with **0
+mismatches** for `bool`, `uint` and `bytes`, and then rebuilt under
+`-fsanitize=address,undefined -fno-sanitize-recover=all` and re-run over all
+10,392 malformed inputs with **0 errors**.
+
+### 32.1 The specializer does no work at all
+
+The number that matters is not the 11 s.  It is this:
+
+| entry point | specializations |
+| --- | --- |
+| `bool` | 0 |
+| `uint` | 0 |
+| `bytes` | 0 |
+| `signoutputargs` | 7 |
+
+Round 31, same program, was **643**.  `Mono.norm` is 152 ms of the 19 s
+`signoutputargs` run; `Monomorphize` itself is 9 ms.
+
+That is §12.3 resolving itself rather than being solved.  Producing
+specialization keys was expensive because the keys were normal forms of terms
+that are only small when shared — but those terms only ever reached the
+specializer because the interpreter had not been reduced away first.  Reduce
+it first, as the program asked, and there is no polymorphism left to
+specialize.  The time `signoutputargs` does spend is `norm`, which is the
+reduction the programmer requested, not overhead.
+
+So the three rounds spent on §30.15's names, §30.17's fallback and §30.14's
+dead binders were all fixing the symptoms of one missing pre-pass.  They are
+not wasted — every one of them is still load-bearing on some other program,
+and §30.17's fallback is what got `signoutputargs` off error 365 in the first
+place — but the ordering was wrong, and the right lesson is §31's: read what
+the program says before inferring it.
+
+#### The controlled comparison
+
+Round 36 reported that re-applying the reviewer's 34 `[@@@monomorphize]`
+annotations produced byte-identical C, and read that as the two routes being
+equivalent.  It was a confounded control: with the attribute honoured the
+interpreter is reduced away before monomorphization can trigger, so the
+result showed only that the annotations had become a no-op.
+
+Round 37 removed the confound by stripping all 76 `normalize_for_extraction`
+occurrences and measuring four configurations.  Neither mechanism reproduces
+round 35 exactly (45/131/95/167 s, all four on error 368).  Annotations alone
+get **2 of 4**, reproducing round 35's byte counts exactly.  The attribute
+alone gets **4 of 4**.
+
+And blanket-translating the delta whitelist into annotations makes things
+*worse*: `custard_compile_time` at all 98 `sem_attr` sites breaks `bool` and
+`uint`, which the annotations alone had fixed, by dragging the CBOR spec AST
+into the program — and `signoutputargs` then gives error 372 naming
+`validate_map_group`, which carries `sem_attr` and is also a genuine runtime
+Pulse function.
+
+That is the sharpest statement of §31's argument, and it came from the person
+who had proposed the alternative.  **`sem_attr` and `custard_compile_time`
+are not the same predicate.**  `sem_attr` says "unfold this when computing
+the semantics"; `custard_compile_time` says "every application of this is
+known at extraction time".  A per-use delta instruction does not translate
+into a per-definition promise, and 64 annotations across library, spec and
+generated code still get 2 of 4 where one attribute the program already
+emitted gets 4 of 4.
+
+### 32.2 A chain entry is a term
+
+The chain of §31.2 paid for itself in the round after it landed: the
+`Prims.op_Less` that had cost the reviewer a round and been given up on was
+located from one error block on the first try, at `CDDL.Spec.AST.Base.fst:799`.
+
+It also had a bug of exactly the shape §30.15 had.  A chain entry is a
+specialization **key**, and a key is a term rendered by `string_of_key`, so
+it is as big as the term is.  §30.15 bounded the name Custard *emits* —
+`hint_of_cty` feeds the C identifier — but not the key it *reports*, and
+those are different strings.  With §30.17's fallback keying on the argument
+as written, an unreduced `Mkbundle?.b_parser` reached a diagnostic and
+printed **6,425,658 characters on one line** of a 6,426,280-byte error block.
+
+`Extract.clip_chain_entry` bounds each entry to 200 characters and says how
+much it dropped.  A prefix is the right part to keep: the lid comes first in
+a key, so the prefix says which definition, and the instantiation that
+follows is what the rest of the chain is already saying.  `PrintC`'s chain is
+bounded the same way, on principle rather than on evidence — a chain is not a
+place where an unbounded string may appear on the strength of it usually
+being short.
+
+`tests/custard/WideChain.fst` is §30.17's doubling record with a `Mono`
+binder that keys on it and a body that fails: a 16,372-character key, and a
+727-byte diagnostic.  And every reject test now asserts that its whole
+diagnostic is under 100 KB, which is the check that would have caught this
+without anyone reading the output.
+
+### 32.3 What is not done
+
+- **`realized_modules` under the C backend** (§31.3).  Still the next thing,
+  still deliberately separate.
+- **`extern "C"` and headers** for consuming Custard's C from other
+  translation units.  Offered three times by the reviewer, not blocking
+  anything, and genuinely low priority until someone wants to link against
+  the output rather than compile it whole.
+- **Stacked attribute sets.**  `[@@a] [@@b]` is Error 131 in F\* itself, not
+  in Custard; anyone inserting an attribute mechanically has to merge into
+  the existing set.  Noted because it will bite the next person who scripts
+  such an edit.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -9340,3 +9454,5 @@ what round 35 asked for; it is written down here as the next thing.
 | M10ττ | **A chain for error 368** (§31.2) | Done.  Round 35, reported twice as the thing that stopped the reader.  364, 365 and 373 print "Reached through" because extraction is demand-driven and the chain is the demand; 368 printed a declaration name and nothing else, and `Prims.op_Less` -- used everywhere, appearing nowhere in the output, absent from `--custard_dump_specializations` -- is unactionable on its own.  The backend has no request chain, but it has the call graph, and reachability from a root is the same information from the other end: `PrintC.record_parents` walks breadth-first from the roots so the chain is a shortest one, resolving a constructor to its type as `Simplify.dce` does.  `tests/custard/ListC.fst` |
 | M10υυ | **"the pass did not reach it" was a guess** (§31.3) | Done.  Round 35.  The 368 for `FStar.List.Tot.Base.isEmpty@char` claimed monomorphization had not reached `Prims.list` and asked for a bug report.  It had.  `FStar.List.Tot.Base` is realized by hand in OCaml, so `isEmpty` is an external, so §5.0.1's rule 4 froze every type in its signature -- a clone would name something the realization does not define.  The message now names the external that froze the type and says why.  It does not change the decision: honouring `realized_modules` under a backend with no hand-written realizations is arguably wrong, but that touches every C and krml test and is recorded as the next thing |
 | M10φφ | **`LetShare` was registered but never run** (§30.17) | Done.  Round 35.  `FLAGS_LetShare` and `GREP_LetShare` were set, but the `CUSTARD_TESTS += LetShare` line was missing, so nothing expanded to a target and `make` skipped it silently.  Caught by the reporter, not by the suite, which is the uncomfortable part: a test that is not registered passes |
+| M10χχ | **A chain entry is a term** (§32.2) | Done.  Round 37.  §31.2's chain found the `Prims.op_Less` that had cost a whole round, on the first try — and then printed a 6,426,280-byte error block, of which 6,425,658 bytes were one "Reached through" line.  A chain entry is a specialization *key*, rendered by `string_of_key`, so it is as big as the term is; §30.15 bounded the name Custard *emits*, which is a different string.  `Extract.clip_chain_entry` bounds each entry to 200 characters and says how much it dropped, keeping the prefix because the lid comes first in a key.  `PrintC`'s chain is bounded the same way on principle.  `tests/custard/WideChain.fst` — a 16,372-character key and a 727-byte diagnostic — and every reject test now asserts its diagnostic is under 100 KB |
+| M10ψψ | **The specializer does no work at all** (§32.1) | Done, as a measurement.  Rounds 36 and 37.  All four CDDL entry points extract from a stock EverParse tree in 11–19 s, and the generated C was executed against an independent decoder over 12,109 vectors with 0 mismatches, then re-run under ASan/UBSan over 10,392 malformed inputs with 0 errors.  The number that matters is 0/0/0/7 specializations against round 31's 643: §12.3's cost was never intrinsic, it was the interpreter arriving unreduced.  A controlled comparison — 76 `normalize_for_extraction` occurrences stripped, four configurations — puts annotations alone at 2 of 4 and the attribute at 4 of 4, and shows blanket `custard_compile_time` at all 98 `sem_attr` sites making things worse, because `sem_attr` and `custard_compile_time` are different predicates |

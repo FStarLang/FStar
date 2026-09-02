@@ -536,6 +536,12 @@ REJECT_TESTS += WarnAny
 # rule 4 of section 5.0.1 froze it -- which is a decision with a culprit, not
 # the bug the old message claimed.  The chain is what says which use of it
 # survived; on a 100 s CDDL run that is the whole difference.
+REJECT_TESTS += WideChain
+CODE_WideChain = 364
+# The clip marker: the chain printed a bounded prefix and said how much it
+# dropped, rather than the whole key.  The blanket size cap below is the
+# other half, and is what would have caught round 37's 6 MB block.
+EGREP_WideChain += "chars)"
 REJECT_TESTS += ListC
 CODE_ListC = 368
 FLAGS_ListC = --custard_backend C --custard_monomorphize_types true
@@ -613,6 +619,11 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
 	    || { echo "ERROR: $* diagnostic is missing $$p"; \
 	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done
+	@# Section 32.1.  No diagnostic has a reason to be large.  A chain entry
+	@# is a specialization key and a key is a term, so an unbounded one is
+	@# always one term away; round 37 met a 6,426,280-byte error block.
+	$(Q)test `wc -c < $(OUTPUT_DIR)/$*.err` -lt 100000 \
+	  || { echo "ERROR: $* diagnostic is `wc -c < $(OUTPUT_DIR)/$*.err` bytes"; exit 1; }
 	$(Q)touch $@
 
 $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked

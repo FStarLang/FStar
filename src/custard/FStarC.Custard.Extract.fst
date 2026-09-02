@@ -516,6 +516,24 @@ let tcenv (st:state) : ML TcEnv.env = !st.env
    function is impossible to act on. *)
 let chain_display_limit : int = 10
 
+(* Section 32.1.  A chain entry is a specialization *key*, and a key is a term
+   -- so it is as big as the term is.  Section 30.15 bounded the name Custard
+   *emits* for a specialization, but not the key it reports, and the two are
+   different strings: `hint_of_cty` feeds the identifier, `string_of_key`
+   feeds this.  With section 30.17's fallback keying on the argument as
+   written, an unreduced [Mkbundle?.b_parser] reached a diagnostic and printed
+   6,425,658 characters on one line of one error block.
+
+   The lid comes first in a key, so a prefix is the part worth keeping: it
+   says which definition, and the instantiation that follows is what the rest
+   of the chain is already saying. *)
+let chain_entry_width : int = 200
+
+let clip_chain_entry (s:string) : ML string =
+  if String.length s <= chain_entry_width then s
+  else String.substring s 0 chain_entry_width ^
+       " ... (" ^ show (String.length s) ^ " chars)"
+
 let request_chain (st:state) : ML (list Pprint.document) =
   match !st.chain with
   | [] -> []
@@ -528,7 +546,7 @@ let request_chain (st:state) : ML (list Pprint.document) =
            [text ("... and " ^ show (n - chain_display_limit) ^ " more.")]
     in
     [text "Reached through:"] @
-    (shown |> List.map (fun s -> Pprint.doc_of_string ("  " ^ s))) @
+    (shown |> List.map (fun s -> Pprint.doc_of_string ("  " ^ clip_chain_entry s))) @
     elided
 
 let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.document) : ML a =
@@ -1180,7 +1198,7 @@ let rec request (st:state) (k:spec_key) : ML name =
       (* The chain in [st] is what Custard's own errors report; [with_ctx] is
          what an *internal* failure -- a [failwith] from the normalizer, say --
          reports, and without it such a failure names no definition at all. *)
-      let d = E.with_ctx ("While extracting " ^ key) (fun () ->
+      let d = E.with_ctx ("While extracting " ^ clip_chain_entry key) (fun () ->
                 Prof.timed "extract_lid"
                   (fun () -> extract_lid st l nm k.sk_subst k.sk_holes)) in
       st.chain := saved;

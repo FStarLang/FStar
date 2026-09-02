@@ -96,11 +96,21 @@ let reached_through (n:string) : ML (list string) =
          | Some p -> up p (fuel - 1) (p :: acc) in
   up n 12 []
 
+(* Section 32.1.  Bounded for the same reason {!Extract.clip_chain_entry} is:
+   a declaration name carries a specialization suffix, and although section
+   30.15 bounds the one Custard emits, a chain is not a place where an
+   unbounded string may appear on the strength of "it should be short". *)
+let chain_entry_width : int = 200
+
 let chain_msg () : ML (list Pprint.document) =
+  let clip (s:string) : ML string =
+    if String.length s <= chain_entry_width then s
+    else String.substring s 0 chain_entry_width ^
+         " ... (" ^ show (String.length s) ^ " chars)" in
   match reached_through !current with
   | [] -> []
   | ns -> text "Reached through:" ::
-          (ns |> List.map (fun n -> text ("  " ^ n)))
+          (ns |> List.map (fun n -> text ("  " ^ clip n)))
 
 let reject (#a:Type) (what:string) (why:list string) : ML a =
   E.raise_error0 E.Error_CustardNoCRepresentation
