@@ -687,12 +687,12 @@ let mk_bind env
    type carries no specification, so the assertion becomes an obligation on the
    returned guard; [label_opt] attaches [reason] so the eventual error message
    points here. *)
-let strengthen_comp env (reason:option (unit -> ML (list Pprint.document))) (c:comp) (f:formula) flags : ML (comp & guard_t) =
+let formula_as_labeled_guard env (reason:option (unit -> ML (list Pprint.document))) (f:formula) : ML guard_t =
     if env.phase1 || U.is_t_true f
-    then c, Env.trivial_guard
+    then Env.trivial_guard
     else
       let r = Env.get_range env in
-      c, Env.guard_of_guard_formula (NonTrivial (label_opt env reason r f))
+      Env.guard_of_guard_formula (NonTrivial (label_opt env reason r f))
 
 (*
  * Return a value in eff_lid.  There is no specification to record the returned
@@ -1585,14 +1585,6 @@ let maybe_return_e2_and_bind
 let fvar_env env lid : ML _ =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
 
 (*
- * The comp type for a match with no cases.  The [False] that used to be its
- * precondition is now discharged by the exhaustiveness check that [bind_cases]
- * emits for the (vacuous) fall-through branch.
- *)
-let comp_false env (t:typ) : ML comp =
-  S.mk_Comp ({ effect_name = C.primitive_pure_lid; result_typ = t; flags = [] })
-
-(*
  * Conjunction of two branch computations under the branch condition [p].
  * Neither carries a specification any more, so all that is left is the effect
  * label and the common result type; the branch conditions are pushed onto the
@@ -1743,7 +1735,7 @@ let bind_cases env0 (res_t:typ)
 
         let comp, g_comp =
           match lcases with
-          | [] -> comp_false env res_t, Env.trivial_guard
+          | [] -> mk_Total res_t, Env.trivial_guard
           | _ ->
             let lcases, neg_branch_conds, comp, g_comp =
               let neg_branch_conds, neg_last =
@@ -1788,14 +1780,12 @@ let bind_cases env0 (res_t:typ)
             ) lcases neg_branch_conds (comp, g_comp) in
 
         //strengthen comp with the exhaustiveness check
-        let comp, g_comp =
-          let c, g =
+        let g =
             let check = U.mk_imp exhaustiveness_branch_cond U.t_false in
             let check = label Err.exhaustiveness_check (Env.get_range env) check   in
-            strengthen_comp env None comp check bind_cases_flags in
-          c, Env.conj_guard g_comp g in
-
-        comp, g_comp
+            formula_as_labeled_guard env None check
+        in
+        comp, g_comp ++ g
 
 let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp & guard_t) =
   def_check_scoped c.pos "check_comp.c" env c;
