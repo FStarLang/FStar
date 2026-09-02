@@ -60,6 +60,21 @@ val simplify_and_label_guard
       (_:env) (g0:guard_t)
 : ML guard_t 
 
+(* Why the variables handed to [check_no_escape] are going out of scope. *)
+type escape_cause =
+  (* the head of an application whose arguments had to be let-bound *)
+  | Escapes_application of term
+  (* a variable bound by a [let] or a [let rec] *)
+  | Escapes_let
+
+(* Get [fvs] out of [t].  This is the authority on the question: a variable
+   that is about to go out of scope may not appear in a type that outlives it.
+   Facts mentioning one are closed existentially where that says something and
+   dropped conjunct by conjunct where it does not, so the result never mentions
+   [fvs]; if nothing sound is available, this raises.  [env] must not contain
+   [fvs] in its gamma. *)
+val check_no_escape : escape_cause -> env -> list bv -> term -> ML (term & guard_t)
+
 val bind: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
 (* [bind_no_capture] is [bind] for a term whose result type must not be
    restated in the composite's result type: an implicit argument of [squash]

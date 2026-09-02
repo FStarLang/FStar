@@ -850,13 +850,158 @@ let bind_result_subst (env:Env.env) (e1opt:option term) (lc1:comp) (b:option bv)
                       && not (Env.mentions_rec_name env e1) -> [NT (x, e1)]
   | _ -> []
 
+(* [check_no_escape] normalizes with the same steps [TcTerm] uses to
+   expose the head of a type. *)
+let norm_escape env t : ML term =
+  N.normalize [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm; Env.Exclude Env.Zeta] env t
+
+let check_no_escape (cause : escape_cause)
+    (env : Env.env)
+    (fvs:list bv)
+    (kt : term)
+: ML (term & guard_t)
+=
+  Errors.with_ctx "While checking for escaped variables" (fun () ->
+    let fail (x:bv) =
+      let open FStarC.Pprint in
+      let msg =
+        match cause with
+        | Escapes_application head -> [
+            text "Bound variable" ^/^ fquotes (pp x)
+              ^/^ text "escapes because of impure applications in the type of"
+              ^/^ fquotes (N.term_to_doc env head);
+            text "Add explicit let-bindings to avoid this";
+          ]
+        | _ -> [
+           text "Bound variable" ^/^ fquotes (pp x)
+             ^/^ text "would escape in the type of this letbinding";
+           text "Add a type annotation that does not mention it";
+        ]
+      in
+      raise_error env Errors.Fatal_EscapedBoundVar msg
+    in
+    match fvs with
+    | [] -> kt, mzero
+    | _ ->
+    let rec aux try_norm t : ML _ =
+      let t = if try_norm then norm_escape env t else t in
+      let fvs' = Free.names t in
+      match List.tryFind (fun x -> mem x fvs') fvs with
+      | None -> t, mzero
+      | Some x ->
+        (* some variable x seems to escape, try normalizing if we haven't *)
+        if not try_norm
+        then aux true (norm_escape env t)
+        else
+          (* A postcondition is a refinement of the result type now, so a
+             result type routinely mentions the binders of its arrow (e.g.
+             [assume_result_eq_pure_term_in_m] states [_ == f x y]).  That is
+             fine for the arrow itself, but at an application whose arguments
+             had to be let-bound the binders go out of scope.  Weakening the
+             type is always sound -- we simply claim less about the result --
+             and is far better than failing.  Whatever cannot be salvaged is
+             discarded conjunct by conjunct: [normalize_refinement] flattens
+             nested refinements into a single conjunction, so discarding the
+             whole refinement would also throw away the user's own
+             annotation. *)
+          (* The escaping variables of [t], in scope order.  [fvs] is
+             accumulated innermost-first, so it has to be reversed for the
+             binders of a quantifier to be well-scoped: a later binder's sort
+             may mention an earlier one. *)
+          let escaping_vars (t:term) : ML (list bv) =
+            let ns = Free.names t in
+            fvs |> List.rev |> List.filter (fun x -> mem x ns)
+          in
+          let escapes t = Cons? (escaping_vars t) in
+          let rec conjuncts (phi:term) : ML (list term) =
+            let hd, args = U.head_and_args_full phi in
+            match (U.un_uinst hd).n, args with
+            | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv C.and_lid ->
+              conjuncts a @ conjuncts b
+            | _ -> [phi]
+          in
+          (* Rather than drop what mentions a variable going out of scope,
+             quantify that variable existentially.  The variable itself
+             witnesses the existential, so this is still a weakening, but the
+             fact gets a chance to survive: simplifying applies the one-point
+             rule, which eliminates the quantifier when the formula pins the
+             variable down.  So [_ == x] with [x : nat] is not lost but
+             recovered as [_ >= 0], and [_ == f x /\ x == 3] as [_ == f 3].
+
+             The whole formula is closed at once, not one conjunct at a time:
+             with [y] going out of scope, [x == y /\ y == z] is recovered as
+             [x == z], which quantifying the conjuncts separately would reduce
+             to nothing.
+
+             The binders' sorts are normalized because the one-point rule
+             restates the eliminated binder's typing hypothesis, which it
+             cannot see through a type abbreviation -- that is what turns
+             [x : nat] into [_ >= 0].  Closing is iterated because a sort may
+             itself mention an escaping variable, which then has to be bound
+             further out. *)
+          let close_escaping (phi:term) : ML term =
+            match escaping_vars phi with
+            | [] -> phi
+            | _ ->
+              let binder_of (x:bv) : ML binder =
+                S.mk_binder { x with sort = N.normalize_refinement N.whnf_steps env x.sort }
+              in
+              let rec close (fuel:nat) (phi:term) : ML term =
+                match escaping_vars phi with
+                | [] -> phi
+                | xs ->
+                  if fuel = 0 then phi
+                  else close (fuel - 1)
+                             (U.close_exists_no_univs (List.map binder_of xs) phi)
+              in
+              N.normalize [Env.Beta; Env.Simplify; Env.Primops] env
+                          (close (List.length fvs) phi)
+          in
+          let rec weaken (t:term) : ML term =
+            let t0 = N.normalize_refinement N.whnf_steps env t in
+            match t0.n with
+            | Tm_refine {b=x; phi} when escapes phi ->
+              let sort = weaken x.sort in
+              let y, phi = SS.open_term_bv x phi in
+              let cs = conjuncts (close_escaping phi) in
+              (* Closing does not always reach every variable -- the fuel above
+                 is a bound, not a guarantee -- so drop whatever is still free. *)
+              let cs = cs |> List.filter (fun c -> not (U.is_t_true c) && not (escapes c)) in
+              if Nil? cs then sort
+              else U.refine {y with sort} (U.mk_conj_l cs)
+            | _ -> t
+          in
+          let tw = weaken t in
+          if None? (List.tryFind (fun x -> mem x (Free.names tw)) fvs)
+          then tw, mzero
+          else
+          (* if it still appears, try using the unifier to equate 't' to a uvar
+          created in the "short" env, which cannot mention any of the fvs. If any exception
+          is raised, we just report that 'x' escapes. Since we're calling try_teq with
+          SMT disabled it should not log an error. *)
+          try
+            let env_extended = Env.push_bvs env fvs in
+            let s, _, g0 = new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) false in
+            match Rel.try_teq false env_extended t s with
+            | Some g ->
+              let g = Rel.solve_deferred_constraints env_extended (g ++ g0) in
+              s, g
+            | _ -> fail x
+          with
+            | _ -> fail x
+    in
+    aux false kt
+  )
+
 (* Get [x] out of a type when it cannot be substituted away.  The fact that [x]
    records is still worth keeping -- it is what relates the result to the
    computation that produced it -- so bind [x] existentially, which is exactly
-   what a postcondition of the composite says. *)
+   what a postcondition of the composite says.  The result never mentions [x]:
+   if no sound weakening can eliminate it, this raises rather than return a
+   type that is ill-scoped at the point it is about to be used. *)
 let eliminate_binder_from_typ (env:Env.env) (x:bv) (e1opt:option term) (lc1:comp) (t:typ)
-: ML typ
-= if not (mem x (Free.names t)) then t
+: ML (typ & guard_t)
+= if not (mem x (Free.names t)) then t, mzero
   else
   (* Only normalize when [t] is not already a refinement: [normalize_refinement]
      also whnf's the *base* type, which delta-unfolds type abbreviations (e.g.
@@ -876,7 +1021,7 @@ let eliminate_binder_from_typ (env:Env.env) (x:bv) (e1opt:option term) (lc1:comp
   | Tm_refine {b=z; phi} when not (mem x (Free.names z.sort)) ->
     let z, phi = SS.open_term_bv z phi in
     let u_x = env.universe_of env x.sort in
-    U.refine z (U.mk_exists u_x x phi)
+    U.refine z (U.mk_exists u_x x phi), mzero
   | _ ->
     (* [x] occurs in the type itself, not only in a refinement of it, so
        there is nothing to existentially close. *)
@@ -886,25 +1031,19 @@ let eliminate_binder_from_typ (env:Env.env) (x:bv) (e1opt:option term) (lc1:comp
       (* Substitution is exact for a pure or ghost [e1], and is what
          [bind_result_subst] would already have done had [x] been reachable
          without normalizing. *)
-      SS.subst [NT (x, e1)] t
+      SS.subst [NT (x, e1)] t, mzero
     | _ ->
       (* [e1] is effectful (or absent), so it must not be put in a type: it may
          diverge, and two occurrences need not produce the same value.  This is
          the one place that could be tempted to substitute it anyway, and doing
-         so would silently manufacture a type mentioning an impure application
-         rather than let [TcTerm.check_no_escape] object to it. *)
-      let t_unref = U.unrefine tn in
-      if not (mem x (Free.names t_unref))
-      && not (U.is_pure_or_ghost_comp lc1)
-      (* [x] occurs only in refinements, so dropping them loses information but
-         stays sound. *)
-      then t_unref
-      (* Nothing sound is available here: [x] is in the type proper.  Leave it
-         free and let [TcTerm.check_no_escape] deal with it -- it normalizes
-         first, so it can see through [squash] and other abbreviations that
-         [U.unrefine] cannot, and it salvages the refinement conjunct by
-         conjunct instead of dropping it wholesale. *)
-      else t
+         so would silently manufacture a type mentioning an impure application.
+         [check_no_escape] is the authority on getting a variable out of a type,
+         so defer to it: it normalizes first, seeing through [squash] and other
+         abbreviations that [U.unrefine] cannot, closes what it can
+         existentially, drops the rest conjunct by conjunct, and reports an
+         error if [x] is irreducibly in the type proper.  Whatever it returns
+         does not mention [x]. *)
+      check_no_escape Escapes_let env [x] t
 
 (* An intermediate value -- an application argument, say -- has no binder left
    in the verification condition, so a refinement on its type is simply lost.
@@ -1039,18 +1178,21 @@ let drop_redundant_conjuncts (env:Env.env) (already_says:typ) (phi:term) : ML te
 let composite_result_typ
       (capture:bool) (is_let_binding:bool)
       (env:Env.env) (e1opt:option term) (lc1:comp) (b:option bv) (lc2:comp)
-: ML typ
+: ML (typ & guard_t)
 = let subst_x = bind_result_subst env e1opt lc1 b lc2 in
   let phi = captured_typing env capture is_let_binding (Cons? subst_x) lc1 e1opt b in
-  let res_typ_base =
+  (* [g_esc] is [mzero] except on [eliminate_binder_from_typ]'s last resort,
+     where [check_no_escape] may equate the type to a fresh uvar. *)
+  let res_typ_base, g_esc =
     let t = SS.subst subst_x (U.comp_result lc2) in
     match b with
     | Some x when Nil? subst_x -> eliminate_binder_from_typ env x e1opt lc1 t
-    | _ -> t
+    | _ -> t, mzero
   in
   let phi = drop_redundant_conjuncts env res_typ_base phi in
-  if U.is_t_true phi then res_typ_base
-  else U.refine (S.new_bv (Some res_typ_base.pos) res_typ_base) phi
+  (if U.is_t_true phi then res_typ_base
+   else U.refine (S.new_bv (Some res_typ_base.pos) res_typ_base) phi),
+  g_esc
 
 
 (* Everything a bind's comp-and-guard construction works from, after the
@@ -1348,7 +1490,7 @@ let bind_maybe_capture
   (* The result type is computed here and nowhere else: the comps returned below
      are derived from [lc2] and may still mention [b], which is out of scope for
      the caller. *)
-  let res_typ = composite_result_typ capture is_let_binding env e1opt lc1 b lc2 in
+  let res_typ, g_esc = composite_result_typ capture is_let_binding env e1opt lc1 b lc2 in
   let c, g =
     match simplify_bind bi with
     | Inl (c, g, reason) ->
@@ -1360,7 +1502,7 @@ let bind_maybe_capture
         Format.print1 "(2) bind: Not simplified because %s\n" reason);
       bind_general bi
   in
-  U.set_result_typ c res_typ, g
+  U.set_result_typ c res_typ, Env.conj_guard g g_esc
 
 let bind r1 is_let_binding env e1opt lc1 binder_lc2 : ML (comp & guard_t) =
   bind_maybe_capture true r1 is_let_binding env e1opt lc1 binder_lc2

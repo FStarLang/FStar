@@ -126,150 +126,6 @@ let bound_of_flex (require_ground:bool) (ds : TcComm.deferred) (t : term) : ML (
     in
     List.tryPick bound (FStarC.Class.Listlike.to_list ds)
 
-(* Why the variables handed to [check_no_escape] are going out of scope. *)
-type escape_cause =
-  (* the head of an application whose arguments had to be let-bound *)
-  | Escapes_application of term
-  (* a variable bound by a [let] or a [let rec] *)
-  | Escapes_let
-
-let check_no_escape (cause : escape_cause)
-    (env : Env.env)
-    (fvs:list bv)
-    (kt : term)
-: ML (term & guard_t)
-=
-  Errors.with_ctx "While checking for escaped variables" (fun () ->
-    let fail (x:bv) =
-      let open FStarC.Pprint in
-      let msg =
-        match cause with
-        | Escapes_application head -> [
-            text "Bound variable" ^/^ fquotes (pp x)
-              ^/^ text "escapes because of impure applications in the type of"
-              ^/^ fquotes (N.term_to_doc env head);
-            text "Add explicit let-bindings to avoid this";
-          ]
-        | _ -> [
-           text "Bound variable" ^/^ fquotes (pp x)
-             ^/^ text "would escape in the type of this letbinding";
-           text "Add a type annotation that does not mention it";
-        ]
-      in
-      raise_error env Errors.Fatal_EscapedBoundVar msg
-    in
-    match fvs with
-    | [] -> kt, mzero
-    | _ ->
-    let rec aux try_norm t : ML _ =
-      let t = if try_norm then norm env t else t in
-      let fvs' = Free.names t in
-      match List.tryFind (fun x -> mem x fvs') fvs with
-      | None -> t, mzero
-      | Some x ->
-        (* some variable x seems to escape, try normalizing if we haven't *)
-        if not try_norm
-        then aux true (norm env t)
-        else
-          (* A postcondition is a refinement of the result type now, so a
-             result type routinely mentions the binders of its arrow (e.g.
-             [assume_result_eq_pure_term_in_m] states [_ == f x y]).  That is
-             fine for the arrow itself, but at an application whose arguments
-             had to be let-bound the binders go out of scope.  Weakening the
-             type is always sound -- we simply claim less about the result --
-             and is far better than failing.  Whatever cannot be salvaged is
-             discarded conjunct by conjunct: [normalize_refinement] flattens
-             nested refinements into a single conjunction, so discarding the
-             whole refinement would also throw away the user's own
-             annotation. *)
-          (* The escaping variables of [t], in scope order.  [fvs] is
-             accumulated innermost-first, so it has to be reversed for the
-             binders of a quantifier to be well-scoped: a later binder's sort
-             may mention an earlier one. *)
-          let escaping_vars (t:term) : ML (list bv) =
-            let ns = Free.names t in
-            fvs |> List.rev |> List.filter (fun x -> mem x ns)
-          in
-          let escapes t = Cons? (escaping_vars t) in
-          let rec conjuncts (phi:term) : ML (list term) =
-            let hd, args = U.head_and_args_full phi in
-            match (U.un_uinst hd).n, args with
-            | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv Const.and_lid ->
-              conjuncts a @ conjuncts b
-            | _ -> [phi]
-          in
-          (* Rather than drop what mentions a variable going out of scope,
-             quantify that variable existentially.  The variable itself
-             witnesses the existential, so this is still a weakening, but the
-             fact gets a chance to survive: simplifying applies the one-point
-             rule, which eliminates the quantifier when the formula pins the
-             variable down.  So [_ == x] with [x : nat] is not lost but
-             recovered as [_ >= 0], and [_ == f x /\ x == 3] as [_ == f 3].
-
-             The whole formula is closed at once, not one conjunct at a time:
-             with [y] going out of scope, [x == y /\ y == z] is recovered as
-             [x == z], which quantifying the conjuncts separately would reduce
-             to nothing.
-
-             The binders' sorts are normalized because the one-point rule
-             restates the eliminated binder's typing hypothesis, which it
-             cannot see through a type abbreviation -- that is what turns
-             [x : nat] into [_ >= 0].  Closing is iterated because a sort may
-             itself mention an escaping variable, which then has to be bound
-             further out. *)
-          let close_escaping (phi:term) : ML term =
-            match escaping_vars phi with
-            | [] -> phi
-            | _ ->
-              let binder_of (x:bv) : ML binder =
-                S.mk_binder { x with sort = N.normalize_refinement N.whnf_steps env x.sort }
-              in
-              let rec close (fuel:nat) (phi:term) : ML term =
-                match escaping_vars phi with
-                | [] -> phi
-                | xs ->
-                  if fuel = 0 then phi
-                  else close (fuel - 1)
-                             (U.close_exists_no_univs (List.map binder_of xs) phi)
-              in
-              N.normalize [Env.Beta; Env.Simplify; Env.Primops] env
-                          (close (List.length fvs) phi)
-          in
-          let rec weaken (t:term) : ML term =
-            let t0 = N.normalize_refinement N.whnf_steps env t in
-            match t0.n with
-            | Tm_refine {b=x; phi} when escapes phi ->
-              let sort = weaken x.sort in
-              let y, phi = SS.open_term_bv x phi in
-              let cs = conjuncts (close_escaping phi) in
-              (* Closing does not always reach every variable -- the fuel above
-                 is a bound, not a guarantee -- so drop whatever is still free. *)
-              let cs = cs |> List.filter (fun c -> not (U.is_t_true c) && not (escapes c)) in
-              if Nil? cs then sort
-              else U.refine {y with sort} (U.mk_conj_l cs)
-            | _ -> t
-          in
-          let tw = weaken t in
-          if None? (List.tryFind (fun x -> mem x (Free.names tw)) fvs)
-          then tw, mzero
-          else
-          (* if it still appears, try using the unifier to equate 't' to a uvar
-          created in the "short" env, which cannot mention any of the fvs. If any exception
-          is raised, we just report that 'x' escapes. Since we're calling try_teq with
-          SMT disabled it should not log an error. *)
-          try
-            let env_extended = Env.push_bvs env fvs in
-            let s, _, g0 = TcUtil.new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) false in
-            match Rel.try_teq false env_extended t s with
-            | Some g ->
-              let g = Rel.solve_deferred_constraints env_extended (g ++ g0) in
-              s, g
-            | _ -> fail x
-          with
-            | _ -> fail x
-    in
-    aux false kt
-  )
 
 (*
    check_expected_aqual_for_binder:
@@ -3007,7 +2863,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
       //    added the bs to the cres result type, to ensure that fvs
       //    don't escape in the bs
       //
-      let rt, g0 = check_no_escape (Escapes_application head) env fvs (U.comp_result cres) in
+      let rt, g0 = TcUtil.check_no_escape (TcUtil.Escapes_application head) env fvs (U.comp_result cres) in
       let cres, guard =
         U.set_result_typ cres rt,
         g0 ++ guard in
@@ -3293,7 +3149,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
         let instantiate_one_and_go rng b rest_bs args =
           let b = SS.subst_binder subst b in
           let tm, ty, aq, g' = TcUtil.instantiate_one_binder env rng b in
-          let ty, g_ex = check_no_escape (Escapes_application head) env fvs ty in
+          let ty, g_ex = TcUtil.check_no_escape (TcUtil.Escapes_application head) env fvs ty in
           let guard = g ++ g' ++ g_ex in
           let arg = tm, aq in
           let subst = NT(b.binder_bv, tm)::subst in
@@ -3341,7 +3197,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             if Debug.extreme ()
             then Format.print5 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
                              (show x) (show x.sort) (show e) (show subst) (show targ);
-            let targ, g_ex = check_no_escape (Escapes_application head) env fvs targ in
+            let targ, g_ex = TcUtil.check_no_escape (TcUtil.Escapes_application head) env fvs targ in
             (* If the formal's type is still flex, we may have a fully-determined bound
                for it from a constraint deferred while checking an earlier argument (see
                bound_of_flex).  Coercion insertion needs a concrete expected type,
@@ -4849,7 +4705,7 @@ and check_inner_let env e : ML _ =
                else U.set_result_typ cres tt in
              e, cres, guard)
        else (* no expected type; check that x doesn't escape it's scope *)
-            (let t, g_ex = check_no_escape Escapes_let env [x] (U.comp_result cres) in
+            (let t, g_ex = TcUtil.check_no_escape TcUtil.Escapes_let env [x] (U.comp_result cres) in
              if !dbg_Exports
              then Format.print2 "Checked %s has no escaping types; normalized to %s\n"
                         (show (U.comp_result cres))
@@ -4993,7 +4849,7 @@ and check_inner_let_rec env top : ML _ =
                    recursively bound names: a postcondition is a refinement of
                    the result type now, and [e2] may well be an application of
                    one of them.  Those names go out of scope here. *)
-                let tres, g_ex = check_no_escape Escapes_let env bvs tres in
+                let tres, g_ex = TcUtil.check_no_escape TcUtil.Escapes_let env bvs tres in
                 let cres = U.set_result_typ cres tres in
                 e, cres, g_ex ++ guard
           end
