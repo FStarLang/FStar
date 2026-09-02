@@ -87,6 +87,11 @@ let parents : SMap.t string = SMap.create 50
    pass did not reach this, please report a bug" and "this declaration is
    realized outside the program, so the pass was not allowed to clone it". *)
 let frozen_by : SMap.t string = SMap.create 20
+(* Section 32.5.  Whether the external that froze a type is a [custard_extern]
+   -- a C symbol the program named -- or a hand-written OCaml realization.
+   The advice differs, and asserting the wrong one sends a reader to look for
+   an .ml file that does not exist. *)
+let frozen_by_target : SMap.t string = SMap.create 20
 
 let reached_through (n:string) : ML (list string) =
   let rec up (n:string) (fuel:int) (acc:list string) : ML (list string) =
@@ -278,6 +283,16 @@ let mono_advice_for (n:option name) : ML (list string) =
            | None -> None
            | Some n -> SMap.try_find frozen_by (string_of_name n)) with
     | Some ext ->
+      let where =
+        match (match n with
+               | None -> None
+               | Some n -> SMap.try_find frozen_by_target (string_of_name n)) with
+        | Some sym ->
+          "it is the C symbol `" ^ sym ^ "', named by a custard_extern \
+           attribute, and that symbol's own declaration decides the layout"
+        | None ->
+          "it is a hand-written realization for the OCaml backend, and there \
+           is no C counterpart" in
       ["--custard_monomorphize_types is set, and the pass deliberately left \
         this type alone: it is mentioned in the signature of " ^ ext ^ ", \
         which is realized outside this program, so a monomorphic clone of it \
@@ -285,9 +300,7 @@ let mono_advice_for (n:option name) : ML (list string) =
         5.0.1, rule 4).";
        "The type is frozen because " ^ ext ^ " is external, not because it \
         could not be sized.  Give " ^ ext ^ " a definition Custard can \
-        compile -- it is a hand-written realization for the OCaml backend, \
-        and there is no C counterpart -- or keep this type out of its \
-        signature."]
+        compile -- " ^ where ^ " -- or keep this type out of its signature."]
     | None ->
       ["--custard_monomorphize_types is already set, so this type is one the \
         monomorphization pass did not reach (section 5.0.1).";
@@ -1880,7 +1893,10 @@ let record_parents (p:program) : ML unit =
     | DExternal x ->
       ty_names x.dx_ty [] |> List.iter (fun tn ->
         if None? (SMap.try_find frozen_by tn)
-        then SMap.add frozen_by tn (string_of_name x.dx_name))
+        then (SMap.add frozen_by tn (string_of_name x.dx_name);
+              match x.dx_target with
+              | Some t -> SMap.add frozen_by_target tn t
+              | None -> ()))
     | _ -> ()) in
   let roots = p |> List.collect (fun d ->
     if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)

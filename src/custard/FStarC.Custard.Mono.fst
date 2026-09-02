@@ -443,12 +443,73 @@ let ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool =
   | Some ({ sigel = Sig_datacon { t; num_ty_params } }) ->
     let bs, _ = U.arrow_formals t in
     if List.length bs <= num_ty_params then false
-    else List.splitAt num_ty_params bs |> snd
-         |> List.existsb (fun (b:binder) ->
-              match (SS.compress b.binder_bv.sort).n with
-              | Tm_type _ -> true
-              | _ -> false)
+    else
+      (* Section 32.6.  A stored [Type0] is only an existential when some
+         *later* field's type mentions it.  Storing one that nothing depends
+         on is not: the field is erased like any other type (section 5.1) and
+         what remains has a perfectly uniform representation.  Rule 4b used to
+         ask only whether a type was stored, and so made [| D : (ty:Type0) ->
+         len:UInt32.t -> desc] unusable as a runtime value for no reason.
+
+         The condition is the one section 30.4's warning already states in
+         prose -- "a field of kind Type0 whose siblings' types mention it" --
+         which is what makes the representation depend on the contents. *)
+      let fields = List.splitAt num_ty_params bs |> snd in
+      let rec scan (bs:list binder) : ML bool =
+        match bs with
+        | [] -> false
+        | b :: rest ->
+          (match (SS.compress b.binder_bv.sort).n with
+           | Tm_type _ ->
+             rest |> List.existsb (fun (b2:binder) ->
+               elems (Free.names b2.binder_bv.sort)
+               |> List.existsb (fun v -> bv_eq v b.binder_bv))
+             || scan rest
+           | _ -> scan rest) in
+      scan fields
   | _ -> false
+
+(* Section 32.6.  Which constructor and which field made a type an
+   existential, for the diagnostic: error 364 otherwise reports rule 4b's
+   *consequence* -- "there is nothing to specialize on" -- and sends the
+   reader to look for an annotation, when the cause is a property of the type
+   that no annotation changes. *)
+let existential_field (env:TcEnv.env) (b:binder)
+  : ML (option (Ident.lident & Ident.lident)) =
+  let hd, _ = U.head_and_args_full (U.unrefine (SS.compress b.binder_bv.sort)) in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv ->
+    (match TcEnv.lookup_sigelt env (S.lid_of_fv fv) with
+     | Some ({ sigel = Sig_inductive_typ { ds } }) ->
+       let rec first (ds:list Ident.lident) : ML (option (Ident.lident & Ident.lident)) =
+         match ds with
+         | [] -> None
+         | c :: ds' ->
+           if not (ctor_stores_type env c) then first ds'
+           else
+             (match TcEnv.lookup_sigelt env c with
+              | Some ({ sigel = Sig_datacon { t; num_ty_params } }) ->
+                let bs, _ = U.arrow_formals t in
+                let fields = if List.length bs <= num_ty_params then []
+                             else List.splitAt num_ty_params bs |> snd in
+                let rec pick (bs:list binder) : ML (option Ident.lident) =
+                  match bs with
+                  | [] -> None
+                  | b :: rest ->
+                    (match (SS.compress b.binder_bv.sort).n with
+                     | Tm_type _ when
+                         rest |> List.existsb (fun (b2:binder) ->
+                           elems (Free.names b2.binder_bv.sort)
+                           |> List.existsb (fun v -> bv_eq v b.binder_bv)) ->
+                       Some (Ident.lid_of_ids [b.binder_bv.ppname])
+                     | _ -> pick rest) in
+                (match pick fields with
+                 | Some f -> Some (c, f)
+                 | None -> first ds')
+              | _ -> first ds')
+       in first ds
+     | _ -> None)
+  | _ -> None
 
 let is_type_carrying_binder (env:TcEnv.env) (b:binder) : ML bool =
   let hd, _ = U.head_and_args_full (U.unrefine (SS.compress b.binder_bv.sort)) in

@@ -400,6 +400,7 @@ type error_code =
   | Warning_CustardKeyNotReduced
   | Error_CustardExportCollision
   | Warning_CustardNoPublicDefinitions
+  | Error_CustardMonoExternal
   | Error_AmbiguousName
 
 type error_setting = error_code & error_flag & int

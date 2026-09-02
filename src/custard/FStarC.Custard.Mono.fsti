@@ -139,11 +139,25 @@ val type_params (env:TcEnv.env) (t:typ) : ML (list bool)
 
 (** [ctor_stores_type env l] is true when the data constructor [l] takes a
     [Type] argument that is not one of its inductive's parameters -- the
-    [b_impl_type] of [Mkbundle], not the [a] of [Cons].  Matching on such a
-    constructor binds a type to a variable, which monomorphization has no
-    answer for, so the match has to be resolved at specialization time
-    (section 30.8), and a binder of such a type has to be [Mono] (rule 4b). *)
+    [b_impl_type] of [Mkbundle], not the [a] of [Cons] -- *and* some later
+    field's type mentions it.  Matching on such a constructor binds a type to
+    a variable, which monomorphization has no answer for, so the match has to
+    be resolved at specialization time (section 30.8), and a binder of such a
+    type has to be [Mono] (rule 4b).
+
+    The dependence is what makes it an existential, and so what makes the
+    representation depend on the contents.  A stored type nothing mentions is
+    erased like any other (section 32.6). *)
 val ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool
+
+(** [existential_field env b] is the constructor and the [Type0] field that
+    make [b]'s type an existential, if any: the reason rule 4b classified [b]
+    as [Mono].  Error 364 reports the consequence -- "there is nothing to
+    specialize on" -- and its advice is to write an annotation; when this is
+    the cause, no annotation helps, and saying which field is responsible is
+    the only useful thing to say (section 32.6). *)
+val existential_field (env:TcEnv.env) (b:binder)
+  : ML (option (Ident.lident & Ident.lident))
 
 (** [classify env attrs t] classifies the binders of a definition of type [t]
     carrying the top-level attributes [attrs].  The returned list has one

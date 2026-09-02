@@ -553,6 +553,28 @@ CNOGREP_Export += "Export_widget_add"
 CGREP_Export += "static uint32_t Export_helper("
 CGREP_Export += "static uint32_t Export_countdown__"
 
+REJECT_TESTS += MonoExtern
+CODE_MonoExtern = 376
+FLAGS_MonoExtern += --custard_backend C --custard_monomorphize_types true
+FLAGS_MonoExtern += --custard_entry MonoExtern.go
+EGREP_MonoExtern += "is monomorphized, but"
+EGREP_MonoExtern += "external has no body, so the argument would be discarded"
+
+REJECT_TESTS += ExistAdvice
+CODE_ExistAdvice = 364
+FLAGS_ExistAdvice += --custard_backend C --custard_monomorphize_types true
+FLAGS_ExistAdvice += --custard_entry ExistAdvice.go
+# The advice names the field and says no annotation helps -- it does not tell
+# the reader to write one, which is what it used to do.
+EGREP_ExistAdvice += "There is no annotation on binder 0 to drop"
+EGREP_ExistAdvice += "type stores a Type0 in the field ty of"
+EGREP_ExistAdvice += "no annotation changes that"
+
+C_TESTS += StoredType
+# The stored Type0 is erased and the record collapses to its one field.
+CGREP_StoredType += "static uint32_t StoredType_dlen(uint32_t d)"
+CNOGREP_StoredType += "StoredType_desc"
+
 REJECT_TESTS += ColB
 CODE_ColB = 374
 FLAGS_ColB += --custard_backend C --custard_monomorphize_types true

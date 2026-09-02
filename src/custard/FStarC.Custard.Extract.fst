@@ -2724,13 +2724,37 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
        else
          [ text ("The argument passed to " ^ where ^ " is the runtime \
                  parameter " ^ nm ^ ", so there is nothing to specialize \
-                 on.");
-           text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
-                 definition so that it, too, is known at specialization time, \
-                 or drop the annotation on binder " ^ show i ^ " and pass it \
-                 at runtime.") ]
-         @ dyn_hint "To pass it at runtime at this call site only, without \
-                     changing either signature, "
+                 on.") ]
+         (* Section 32.6.  Binder [i] may be [Mono] because someone asked, or
+            because rule 4b had no choice: its type is an existential, and the
+            representation of a value of it depends on what is inside.  The
+            two want opposite advice, and the second is the one where the
+            obvious remedies -- annotate, or drop the annotation -- are both
+            unavailable, so saying which field is responsible is the only
+            thing worth saying. *)
+         @ (match Mono.existential_field (tcenv st) (S.mk_binder v) with
+            | Some (c, f) ->
+              [ text ("There is no annotation on binder " ^ show i ^ " to \
+                      drop: it is monomorphized because its type stores a \
+                      Type0 in the field " ^ Ident.string_of_id (Ident.ident_of_lid f) ^
+                      " of " ^ Ident.string_of_lid c ^ ", and a later field's \
+                      type mentions it (rule 4b, section 30.9).");
+                text "That makes the type an existential package: what a \
+                      value of it looks like at runtime depends on the type \
+                      it carries, so there is no one C representation to pass \
+                      it in, and no annotation changes that (section 30.3).";
+                text ("What does work is to make the type a *parameter* -- \
+                      move it off " ^ Ident.string_of_lid c ^ " and onto the \
+                      inductive, so that the type is fixed by the type rather \
+                      than by the value -- or to keep the existential out of \
+                      runtime data by specializing every use of it.") ]
+            | None ->
+              [ text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
+                      definition so that it, too, is known at specialization \
+                      time, or drop the annotation on binder " ^ show i ^
+                      " and pass it at runtime.") ]
+              @ dyn_hint "To pass it at runtime at this call site only, \
+                          without changing either signature, ")
      in
      custard_error st E.Error_CustardCannotMonomorphize msg
    | _ -> ());
@@ -3191,6 +3215,37 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
         let sort = SS.subst subst b.binder_bv.sort in
         let b' = { b with binder_bv = { b.binder_bv with sort = sort } } in
         (match cls, margs |> List.tryFind (fun (j, _) -> j = i) with
+         | Mono, Some (_, a) when not (is_type_binder (tcenv st) b) ->
+           (* Section 32.5.  Specialization works by substituting the argument
+              into a *body*.  An external has none, so a [Mono] value argument
+              is substituted into nothing: the signature loses the binder, the
+              argument is discarded, and the realization -- a single fixed C
+              symbol -- never learns what it was.
+
+              What comes out compiles.  [launch ({nblk = 1ul; f = ...})]
+              becomes [extern uint32_t kpr_launch;] and [return kpr_launch;],
+              which is a silent miscompilation of exactly the kind section 6
+              refuses elsewhere; with a capture it becomes [kpr_launch(k)]
+              against an object declaration, which at least does not compile.
+
+              A [Mono] *type* argument is a different thing and stays allowed:
+              it is substituted into the signature, which is the whole content
+              of a type argument, and nothing is lost. *)
+           custard_error st E.Error_CustardMonoExternal [
+             text ("Custard: binder " ^ show i ^ " (" ^
+                   Ident.string_of_id b.binder_bv.ppname ^ ") of " ^
+                   Ident.string_of_lid l ^
+                   " is monomorphized, but " ^ Ident.string_of_lid l ^
+                   " is external.");
+             text "Specialization substitutes the argument into the \
+                   definition's body, and an external has no body, so the \
+                   argument would be discarded and the realization would \
+                   never see it.";
+             text "Drop the [@@@monomorphize] annotation and pass it at \
+                   runtime, or give the definition a body Custard can \
+                   compile.  A monomorphized *type* argument is fine: it is \
+                   substituted into the signature, which is all a type \
+                   argument is." ]
          | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys
          | Mono, None when is_type_binder (tcenv st) b ->
            go (i + 1) bs' cs' subst (b' :: keep) (name_of_bv b.binder_bv :: anys)

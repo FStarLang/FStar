@@ -9407,6 +9407,140 @@ What this does **not** do, and should not: make a specialization exportable.
   the existing set.  Noted because it will bite the next person who scripts
   such an edit.
 
+## 32.5 An external has no body
+
+A second reviewer ported [Kuiper](https://github.com/fstarlang/kuiper) — a
+Pulse DSL for verified CUDA kernels, currently extracted through
+`--codegen krml` plus a ~1200-line, ~250-rule Krml plugin — onto Custard and
+reported three bugs. This one is the serious one.
+
+`[@@@monomorphize]` on a binder of an *external*:
+
+```fstar
+[@@custard_extern "kpr_launch"]
+assume val launch ([@@@monomorphize] d : desc) : UInt32.t
+let go (k : UInt32.t) : UInt32.t =
+  launch ({ nblk = 1ul; f = (fun tid -> UInt32.add_mod tid k) })
+```
+
+produced
+
+```c
+extern uint32_t kpr_launch;      /* an object */
+uint32_t CMwe3_go(uint32_t k) { return kpr_launch(k); }
+```
+
+Specialization works by substituting the argument into a **body**. An external
+has none, so the argument is substituted into nothing: the signature loses the
+binder, the descriptor is discarded, and `kpr_launch` — one fixed C symbol —
+never learns what it was. `external_ty` did the substitution faithfully and
+there was nothing left to do it to.
+
+The reported form does not compile, which is how it was found. The form that
+matters is the one nobody reported. With a *closed* argument there is no
+capture, so there is no arity mismatch either:
+
+```c
+uint32_t CMwe3b_go(uint32_t k) { (void)k; return kpr_launch; }
+```
+
+That compiles, and the launch never happens. A silent miscompilation, which is
+the class §6 refuses everywhere else, and it had no test.
+
+**Error 376.** A `Mono` value binder on an external is rejected. A `Mono`
+*type* binder stays allowed and is unaffected: a type argument is substituted
+into the signature, and the signature is the whole content of a type argument,
+so nothing is lost. That distinction is the fix — the check is `Mono`, an
+argument supplied, and `not (is_type_binder ...)`.
+
+`tests/custard/MonoExtern.fst`.
+
+## 32.6 Storing a type is not an existential
+
+The second bug, reduced by the reporter to:
+
+```fstar
+class sized (t:Type0) = { sz : SZ.t; dflt : t }
+noeq type desc = | D : (ty:Type0) -> {| sized ty |} -> len:UInt32.t -> desc
+let dlen (d:desc) : UInt32.t = match d with | D _ len -> len
+let go (d:desc) : UInt32.t = dlen d
+```
+
+Error 364, advising an annotation. Their diagnosis was that §30.14 was not
+firing through a constructor field, and that "nothing observable depends on the
+existential" since `dlen` reads only `len`.
+
+That diagnosis is wrong, and the report is right anyway. `desc` genuinely has
+no C representation: the `sized ty` field's layout depends on `ty`, so no
+single `struct desc` exists, whatever `dlen` happens to read. Rule 4b is
+correct here and there is nothing to fix in the classification.
+
+What is wrong is that **the error says none of that.** It reports rule 4b's
+consequence — "there is nothing to specialize on" — and then gives two pieces
+of advice, both unavailable: annotate the enclosing binder, which only moves
+the problem to that function's caller and does so forever; or drop the
+annotation on binder 0, which nobody wrote. §30.4 already has the right words
+("a field of kind `Type0` whose siblings' types mention it makes the type an
+existential package") but they appear only in a warning that fires when you
+write the attribute on a *field* — that is, only after you have followed the
+bad advice.
+
+`Mono.existential_field` now finds the constructor and the field responsible,
+and error 364 says so, states that no annotation changes it, and gives the
+remedy that does exist: make the type a parameter of the inductive rather than
+a field of the constructor.
+
+### Rule 4b was too wide
+
+Writing that down exposed the real defect. `ctor_stores_type` asked only
+whether a constructor stores a `Type0`. But
+
+```fstar
+noeq type desc = | D : (ty:Type0) -> len:UInt32.t -> desc
+```
+
+is not an existential. Nothing mentions `ty`, so the field is erased like any
+other type (§5.1), and what remains is one `UInt32.t` with a perfectly uniform
+representation. Rule 4b made every binder of this type `Mono` for no reason —
+error 364 on a program that compiles fine.
+
+The condition is dependence, not storage, and it is the condition §30.4's
+prose already stated. `ctor_stores_type` now requires that a *later* field's
+type mention the stored one. `StoredType.fst` is the case this admits: `desc`
+newtype-collapses to `uint32_t` and `dlen` is the identity.
+
+## 32.7 A misattributed realization
+
+The third: error 368's advice for a type frozen by §5.0.1 rule 4 asserted that
+the external freezing it "is a hand-written realization for the OCaml backend,
+and there is no C counterpart". For a `custard_extern` that is false — it is a
+C symbol the program named, and the reader is sent looking for an `.ml` file
+that does not exist. `frozen_by_target` records the target symbol when there is
+one, and the sentence now names it.
+
+## 32.8 What Kuiper asked for and has not got
+
+Recorded because the answers are design decisions, not omissions.
+
+- **Float widths.** `TInt of signedness & width` has no float; `Kuiper` needs
+  `Float32`/`Float64` and also `Float16`/`BFloat16`. This is the largest of the
+  asks and the most clearly right: a float add currently has to go through a
+  `custard_extern` and stays an opaque call where `u32` gets `+`.
+- **A rule that can emit a declaration.** The reporter withdrew half of this
+  themselves on finding that `[@@@monomorphize]` already performs
+  capture-to-parameter lifting — which it does, and that *is* the kernel-lifting
+  transformation. What is left is naming the specialization and attaching flags
+  to it, which is a smaller thing than closure conversion.
+- **Karamel declaration flags.** `CPrologue`/`CEpilogue`/`Comment`/`CInline`
+  through to `K.Prologue` etc. Small, and blocking: without `__device__` the
+  generated `.cu` does not compile.
+- **`ESizeof`.** Small.
+- **Indexed external types** — `wmma::fragment<half,16,16,16,...>`, whose C
+  spelling is a function of the type's indices. `custard_extern` takes a fixed
+  string.
+- **Observing type declarations**, for a rule that projects fields out of a
+  record argument. May be recoverable from `ERecord`/`EProj`, which do survive.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -9515,3 +9649,6 @@ What this does **not** do, and should not: make a specialization exportable.
 | M10χχ | **A chain entry is a term** (§32.2) | Done.  Round 37.  §31.2's chain found the `Prims.op_Less` that had cost a whole round, on the first try — and then printed a 6,426,280-byte error block, of which 6,425,658 bytes were one "Reached through" line.  A chain entry is a specialization *key*, rendered by `string_of_key`, so it is as big as the term is; §30.15 bounded the name Custard *emits*, which is a different string.  `Extract.clip_chain_entry` bounds each entry to 200 characters and says how much it dropped, keeping the prefix because the lid comes first in a key.  `PrintC`'s chain is bounded the same way on principle.  `tests/custard/WideChain.fst` — a 16,372-character key and a 727-byte diagnostic — and every reject test now asserts its diagnostic is under 100 KB |
 | M10ψψ | **The specializer does no work at all** (§32.1) | Done, as a measurement.  Rounds 36 and 37.  All four CDDL entry points extract from a stock EverParse tree in 11–19 s, and the generated C was executed against an independent decoder over 12,109 vectors with 0 mismatches, then re-run under ASan/UBSan over 10,392 malformed inputs with 0 errors.  The number that matters is 0/0/0/7 specializations against round 31's 643: §12.3's cost was never intrinsic, it was the interpreter arriving unreduced.  A controlled comparison — 76 `normalize_for_extraction` occurrences stripped, four configurations — puts annotations alone at 2 of 4 and the attribute at 4 of 4, and shows blanket `custard_compile_time` at all 98 `sem_attr` sites making things worse, because `sem_attr` and `custard_compile_time` are different predicates |
 | M10ωω | **A public surface** (§32.4) | Done.  Round 38.  The objection to exporting names was that §30.15's specialization hints are hints; the answer is that a consumer does not want a specialization.  EverParse's COSE calls 44 `cbor_det_*` symbols across a translation-unit boundary, and Custard's whole-program output of `CBOR.Pulse.API.Det.C` already exports 43 of them with no hint and no collision suffix, because that boundary is monomorphic.  `--custard_c_no_prefix M` emits the public definitions of `M` — exactly `is_public`, and additionally checked to have `n.spec = None` — under their unqualified names, as krml's `-no-prefix` does.  Collision is error 374 rather than a silent suffix; a module that renames nothing is warning 375.  `extern "C"` guards are unconditional and go after the includes, never around them.  `tests/custard/Export.fst` is extracted twice, once standalone and once as a library, and `ExportUser.cpp` is compiled as **C++** and linked against it — strip the guard and the link fails, which is the assertion.  `tests/custard/ColB.fst` is the collision |
+| M10αβ | **An external has no body** (§32.5) | Done.  Kuiper report.  `[@@@monomorphize]` on a binder of a `custard_extern` substituted the argument into nothing: the signature lost the binder, the argument was discarded, and the fixed C symbol never learned what it was.  The reported form did not compile; the form nobody reported — a *closed* argument, so no capture and no arity mismatch — compiled and silently never called anything.  Error 376 rejects a `Mono` *value* binder on an external.  A `Mono` *type* binder stays allowed: it is substituted into the signature, which is all a type argument is.  `tests/custard/MonoExtern.fst` |
+| M10αγ | **Storing a type is not an existential** (§32.6) | Done.  Kuiper report.  Rule 4b's `ctor_stores_type` asked only whether a constructor stores a `Type0`, so `\| D : (ty:Type0) -> len:UInt32.t -> desc` — where nothing mentions `ty`, the field is erased, and what remains is one uniform `UInt32.t` — was rejected with error 364 for no reason.  The condition is dependence, which is what §30.4's prose already said: a *later* field must mention the stored type.  And where rule 4b is right, error 364 said only its consequence and gave two unavailable remedies; `Mono.existential_field` now names the constructor and field, states that no annotation changes it, and gives the remedy that exists.  `tests/custard/StoredType.fst`, `tests/custard/ExistAdvice.fst` |
+| M10αδ | **A misattributed realization** (§32.7) | Done.  Kuiper report.  Error 368's advice for a type frozen by §5.0.1 rule 4 asserted the external was "a hand-written realization for the OCaml backend"; for a `custard_extern` it is a C symbol the program named, and the reader was sent after an `.ml` file that does not exist.  `frozen_by_target` records the symbol and the sentence names it |

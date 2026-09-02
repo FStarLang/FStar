@@ -390,5 +390,6 @@ let default_settings : list error_setting =
     Warning_CustardKeyNotReduced                       , CWarning, 373;
     Error_CustardExportCollision                       , CAlwaysError, 374;
     Warning_CustardNoPublicDefinitions                 , CWarning, 375;
+    Error_CustardMonoExternal                          , CAlwaysError, 376;
     Error_AmbiguousName                               , CError, 362;
     ]
