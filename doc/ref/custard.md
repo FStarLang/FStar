@@ -10129,6 +10129,182 @@ names on the first run -- all of them hand-written targets with their own
 `all:` line, which are listed explicitly rather than made to look like list
 entries they are not.
 
+# 36 What a rule may add to the program
+
+Round 42 is the reporter reading section 34 back and reporting what they
+found when they used it. Two of the three findings are about the same thing
+from opposite sides: a rule can now *add* a call and a function to the
+program, and neither the program's bookkeeping nor its output was ready for
+declarations that no F* source mentions.
+
+The round also closed the question section 34 opened. `Rule_prim` can
+reproduce `hoist`. The reporter extended the rule test's descriptor with a
+`kbody : U32.t -> U32.t` written at the launch site over a local, saw it
+arrive at the rule as `fun (tid: u32) -> +.u32(tid, c)` -- an `EFun` open in
+that local, exactly `hoist`'s input -- computed its free variables, closed
+the lambda over them and let section 19.12's `lift_lambdas` push it out. So
+`Rule_prim_st` is not needed, and is not being added.
+
+## 36.1 A reference to a declaration that is not there
+
+A launcher rule's whole job is to emit a call to a runtime entry point.
+Nothing in the *source* calls that entry point -- that is what makes it a
+launcher -- so nothing makes its declaration reachable, so `dce` deleted it.
+The output was written with no error and no warning.
+
+It did not compile, which is the good case. The bad case is what the name in
+it was: `CustardRuleTest_kcall`, the *mangled* one, and not the `kpr_kcall`
+that `[@@custard_extern]` gave it. The declaration was never processed, so
+its attributes were never read, so neither its target name nor its header
+reached the output. A plugin author's reward for a typo in a name was
+invalid C with no diagnostic at all, and a symbol that looks like Custard
+ignored an attribute it in fact never saw.
+
+`check_resolved` is error 379. It runs immediately after `dce` -- which is
+the pass that can remove the declaration a reference needs -- and before the
+passes that rewrite bodies, so the name it reports is the one the rule wrote
+rather than a coerced, record-collapsed descendant of it. Every `DLet`'s
+body is walked for `EQual` names and each is looked up in the program.
+
+Values only, and value references only. A missing *type* is already rejected
+by the backends with a message about the type, and a constructor or a field
+resolves to the type that owns it, which is a different question from
+whether there is a symbol to link against.
+
+Whole programs only. Under `--custard_unit` and `--custard_link` a unit is
+compiled against the units below it and a reference that leaves the unit is
+not in this program by design; the C compiler and the linker resolve those.
+The check is the whole-program assumption written down, so it holds exactly
+where that assumption does.
+
+This is the more valuable of the round's two fixes, and the reporter said so
+before it was written: `register_root` stops one cause, and the check stops
+every reference to a name that is not there, whatever put it there.
+
+## 36.2 A rule's roots
+
+`FStarC.Custard.Builtins.register_root` takes a `lident` and adds it to the
+roots of the extraction, next to the ones `--custard_entry` names. A rule
+registers it once, beside `register_rule`:
+
+```
+let _ =
+  B.register_rule (Ident.lid_of_str "CustardRuleTest.launch")
+                  (B.Rule_prim (2, launch));
+  B.register_root (Ident.lid_of_str "CustardRuleTest.kcall")
+```
+
+Roots are collected before the extraction loop runs, and a plugin is loaded
+before that, so the ordering works out with nothing to arrange. A registered
+root that is erased is dropped, exactly as `--custard_entry`'s are.
+
+Until this existed the rule test kept `kcall` alive with a dead branch that
+existed only to mention it. That is gone.
+
+## 36.3 Lifting a named, decorated function
+
+`lift_lambdas` names what it lifts after the definition it came out of:
+`CustardRuleTest_main__lam`. For a device backend that name is not cosmetic.
+It is the kernel's symbol, and it appears in profiler timelines, in
+disassembly and in the messages a user of the generated code reads. The
+descriptor already carries the name the author chose.
+
+```
+val lift_named : string -> list flag -> expr -> ML expr
+```
+
+The expression must be a lambda. `lift_named` makes it a top-level
+declaration under that name, used verbatim -- no namespace, no mangling,
+because a kernel symbol read in a profiler is the one thing that must be
+predictable -- and returns the `EQual` that names it, which the rule puts
+wherever it was going to put the lambda. A second use of the same name is
+error 378 rather than a silent overwrite.
+
+The lambda must be closed. Custard cannot close it: only the rule knows what
+call it is building, so only the rule can add the captures as parameters and
+pass them at the call site. That is what the reporter's own code already
+does, and section 36.5 is why it stays that way.
+
+The flags are the second half of the finding, and close a gap open since
+round 34. Custard's `flag` type gains `Prologue of string`, `Epilogue of
+string` and `CInline`; `Comment of string` was already there and reached
+neither backend. All four now reach karamel, and `Prologue`, `Epilogue`,
+`CInline` and `Comment` are emitted by the C backend directly:
+
+- `Comment c` is `/* c */` on its own line before the definition.
+- `Prologue s` is `s` on its own line before the definition *and* before the
+  prototype. CUDA wants `__global__` on both, and a qualifier on one and not
+  the other is a redeclaration error, which is a better failure than a
+  silently host-side kernel.
+- `Epilogue s` follows the definition.
+- `CInline` is `inline`. Custard's own `Inline` is a different thing: that
+  one substitutes the body and emits nothing.
+
+Custard reads none of the strings.
+
+`lift_named` sets `Root` on what it lifts, because the declaration exists
+only because a rule made it and nothing else can keep it alive. `Root` also
+meant "public" in the C backend, which is wrong for a lifted function --
+usually it is an implementation detail of the call the rule emitted -- so
+`Private` now overrides that, and a rule that wants `static` asks for it.
+
+The rule test is the whole mechanism end to end. The descriptor names the
+kernel; the rule closes the body over its capture, lifts it under that name
+with a `Prologue` and a `Comment`, and calls `kcall` with the kernel, the
+block count and the capture. What comes out is:
+
+```
+extern uint32_t kpr_kcall(uint32_t (*)(uint32_t, uint32_t), uint32_t,
+                          uint32_t);
+
+/* kernel kernel, 42 bytes shared */
+__attribute__((noinline))
+static uint32_t kernel(uint32_t c, uint32_t tid) {
+  return (tid + c);
+}
+```
+
+`__attribute__((noinline))` rather than `__global__` because the suite's C
+compiler has to accept the file; it occupies the same position and is
+checked in the same way. The generated program links against a
+hand-written `kpr_kcall` and checks its own answer, so the capture reaching
+the kernel from the right frame is an exit status rather than something to
+read out of the C.
+
+## 36.4 A name is not a computation
+
+A rule that built its call as `EApp (EQual kcall, args)` got a call through a
+function pointer:
+
+```
+uint32_t (*tmp1)(...) = kpr_kcall;
+r = tmp1(kernel, 45U, c);
+```
+
+while a source-level call to the same function is direct. `anf_expr` hoists
+any operand that is not pure, and the rule had labelled the node that
+*names* the function with the function's own effect -- reasonably, since
+that is the effect the application has.
+
+`EQual`, `EVar`, `EConst` and `EAny` denote without evaluating. There is
+nothing for a binding to sequence, whatever the effect on the node says, so
+they are no longer hoisted. Cosmetic for a C compiler; not cosmetic for
+generated device code a human is expected to read.
+
+## 36.5 Not fixed
+
+`__global__` on a kernel is now expressible, and the reporter's remaining
+blockers are unchanged: the float widths dropped from `KrmlAst.width`
+(round 33's gap 1, which also stops their existing plugin building),
+`ESizeof`, `TExtern of string & list cty`, and `--custard_unit` and
+`--custard_link` being OCaml-only.
+
+Closing a lambda stays the rule's job. Custard could compute free variables
+and prepend them, but the parameter order, which captures are values and
+which are addresses, and what the runtime entry point expects of them are
+all decisions about a calling convention Custard does not define. Guessing
+them would produce a kernel that compiles and is wrong.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -10251,3 +10427,8 @@ entries they are not.
 | M10αν | **A public API whose types are generic** (§35.1) | Done.  Round 40's verification.  §32.9's open question -- a rename map for types -- is closed as *not built*, on the reporter's own evidence: they drove the real CBOR API from C++ off the generated header and three typedefs, two of which name types `--custard_c_no_prefix` already renames, and the rest of what a consumer wants are the `cbor_det_*` abbreviations, which are names *they* chose and Custard cannot know.  The finding is the third typedef, `CBOR_Pulse_Raw_Iterator_cbor_raw_iterator__cbor_raw`, which has no source-level spelling at all: the type on the interface is a monomorphized instance, not a module's declaration, so `--custard_c_no_prefix` leaves it alone -- correctly, since §30.15's hints are depth-bounded, clipped and collision-suffixed and are exactly the names free to change.  What was missing is that nothing said so, and a consumer finds out by reading the header and writing the name down.  Decidable at print time -- a public prototype is in the header, a `TApp` in it with a `spec` is generated -- so `check_interface_names` reports warning 377, once per type and naming one definition that exposes it.  `tests/custard/ExportGen.fst` |
 | M10αξ | **A property, not a warning** (§35.2) | Done.  Round 40's verification, and a correction to how M10αζ was checked.  That fix was confirmed by clang's `-Wparentheses-equality` going 78 to 0; the reporter showed the warning is *shape* sensitive -- `if ((a==b))` warns, `if ((g()==1))` is silent -- so a leftover pair around a call-comparison would have passed `-Werror`, which was the entire check.  They checked the property directly instead, over the real 198 KB `CBORDet.c`: 36 conditions beginning with `(`, zero a single redundant group.  `tests/custard/checkgroup.py` is that matcher generalized to every position and run on every C file all three suites emit, skipping comments, literals, and the parentheses that are C *syntax* rather than grouping -- `f((x))` is one grouped argument, not two pairs.  On output `-Wall -Wextra -Werror` had accepted it found three: a Pulse `while`'s exit test built its negation by hand rather than through `negate`, and `malloc` and the fill loop each wrapped a length `c_expr` had already parenthesized.  No compiler would have reported any of them -- `<` is not a comparison the warning looks at and a cast is not one either.  One `group` helper now, and `negate` defined in terms of it |
 | M10αο | **A setting for no test** (§35.3) | Done.  Round 40's verification, found while wiring the above in.  `tests/custard/pulse/Makefile` had been accumulating `CGREP_`/`CNOGREP_` variables that no recipe read, so §34.3's assertions about the specialized loop's parameters and round 40's about `PulseMono` were set and never run.  M10φφ from the other side: there a test had settings and no registration, here settings had a registration and no consumer, and both read like coverage that does not exist.  The recipe applies them now, over the header as well as the source.  `check-settings` is the general form, in both directories and part of `all` -- every variable whose name is a known setting prefix must name a registered test -- four lines of `make` over `.VARIABLES`, and it reported four on its first run, all hand-written targets with their own `all:` line, now listed explicitly rather than made to look like list entries |
+| M10απ | **A reference to a declaration that is not there** (§36.1) | Done.  Round 42, and the round's real finding: a rule may name a symbol that dead-code elimination has already deleted, and the output was written with no error and no warning.  Worse than not compiling, the name in it was the mangled `CustardRuleTest_kcall` rather than the `kpr_kcall` `[@@custard_extern]` gave it -- the declaration was never processed, so its target and header were never read, and the output looks like Custard ignored an attribute it never saw.  `check_resolved` is error 379, run immediately after `dce`, which is the pass that can remove what a reference needs, and before the passes that rewrite bodies so the name reported is the one the rule wrote.  Values and value references only; a missing type is already the backends' message.  Whole programs only: under `--custard_unit` a reference that leaves the unit is not in this program by design, and that exclusion is the whole-program assumption written down |
+| M10αρ | **A rule's roots** (§36.2) | Done.  Round 42, the other half.  A launcher rule emits a call to a runtime entry point that nothing in the source calls, which is what makes it a launcher and also what makes it unreachable; `register_root` adds a `lident` to the roots next to `--custard_entry`'s, registered once beside `register_rule`.  Roots are collected before the extraction loop and a plugin is loaded before that, so there is no ordering to arrange, and an erased root is dropped exactly as `--custard_entry`'s is.  The rule test had been keeping `kcall` alive with a dead branch whose only purpose was to mention it; that is gone.  The reporter judged §36.1 the more valuable of the two before either was written, and they are right -- this stops one cause, that stops every reference to a name that is not there |
+| M10ασ | **Lifting a named, decorated function** (§36.3) | Done.  Round 42.  `lift_lambdas` named what it lifted after the definition it came from, `CustardRuleTest_main__lam`; for a device backend that is the kernel's symbol and it appears in profiler timelines, in disassembly and in user-facing errors, and the descriptor already carries the name its author chose.  `lift_named : string -> list flag -> expr -> ML expr` makes a lambda a top-level declaration under that name used verbatim -- no namespace, no mangling -- and returns the `EQual`; a repeat is error 378, not a silent overwrite.  Closing the lambda stays the rule's job (§36.5).  The flags close round 33's gap 3: `Prologue`, `Epilogue`, `CInline` join `Comment`, all four reach karamel, and the C backend emits `Prologue` before the prototype as well as the definition, since CUDA wants `__global__` on both and a qualifier on one alone is a redeclaration error rather than a silently host-side kernel.  `Root` meant public, which is wrong for a lifted function, so `Private` overrides it |
+| M10ατ | **A name is not a computation** (§36.4) | Done.  Round 42, a nit with a one-line cause.  A rule building `EApp (EQual kcall, args)` labels the node that *names* the function with the function's effect, which is the effect the application has, and `anf_expr` hoists every operand that is not pure -- so the call went through a temporary function pointer while a source-level call to the same function was direct.  `EQual`, `EVar`, `EConst` and `EAny` denote without evaluating and there is nothing for a binding to sequence, whatever the node's effect says.  Cosmetic for a C compiler, not cosmetic for generated device code a human reads |
+| M10αυ | **`Rule_prim` reproduces `hoist`** (§36) | Closed, no change.  Round 42 answered §34's open question by measurement rather than argument: the reporter gave the rule test's descriptor a `kbody` written at the launch site over a local, saw it arrive as an `EFun` open in that local -- exactly `hoist`'s input -- closed it over its free variables and let §19.12's `lift_lambdas` push it out.  `Rule_prim_st` is not needed and is not being added.  Their clang measurement is the round's other closed item: clang 14 on the whole `tests/custard` suite is exit 0 with no warnings, and all 25 `_output/*.dc` files rebuilt under `-Weverything` minus style checks produced a diagnostic in 0 of 25 -- which is the coverage this tree cannot produce, since clang is not installed here |

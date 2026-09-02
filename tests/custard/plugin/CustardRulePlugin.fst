@@ -128,15 +128,76 @@ let rec total_size (ds : list expr) : ML int =
   | []      -> 0
   | d :: ds -> size_of_desc d + total_size ds
 
+let string_of_lit (e:expr) : ML string =
+  match e.e with
+  | EConst (CString s) -> s
+  | _ -> die "a string literal" e
+
+(* Section 36.3.  The free variables of a term, with their types.  A rule that
+   lifts a body written at the launch site has to close it, because the body
+   is open in the launch site's locals and a top-level function has no access
+   to them.  Closing it means adding the captures as leading parameters and
+   passing them at the call -- which is what a closure conversion is, done
+   here because only the rule knows which call it is building. *)
+let rec fvs (bound : list string) (e : expr) : ML (list (string & cty)) =
+  match e.e with
+  | EVar x -> if List.mem x bound then [] else [(x, e.ty)]
+  | EApp (h, args) -> fvs bound h @ List.collect (fvs bound) args
+  | EOp (_, args) | ECtor (_, args) | ETuple args ->
+    List.collect (fvs bound) args
+  | EFun (bs, b) -> fvs (List.map (fun (b:binder) -> b.b_name) bs @ bound) b
+  | ELet (x, _, d, b) -> fvs bound d @ fvs (x :: bound) b
+  | EIf (c, a, b) -> fvs bound c @ fvs bound a @ fvs bound b
+  | ESeq (a, b) | EWhile (a, b) -> fvs bound a @ fvs bound b
+  | ECoerce (x, _) | ECast (x, _) | EProj (x, _, _)
+  | EDiscrim (x, _) | ERaise x -> fvs bound x
+  | ERecord (_, fs) -> List.collect (fun (_, v) -> fvs bound v) fs
+  | _ -> []
+
+(* The runtime entry point the emitted call names.  It is an [assume val] with
+   [@@custard_extern "kpr_kcall"], and nothing in the source calls it, so
+   without the [register_root] at the bottom of this file dead code
+   elimination would delete it -- and before section 36.1 that was silent. *)
+let kcall_lid = "CustardRuleTest.kcall"
+
 let launch (tys : list cty) (args : list expr) : ML expr =
   match args with
   | [d; n] ->
     let n_bytes = total_size (elements (field_at 1 "shmems" d)) in
+    (* The name the lifted kernel gets is the descriptor's own [kname].  For a
+       real device backend this is not cosmetic: it is what appears in
+       profiler output, in disassembly and in error messages. *)
+    let kname = string_of_lit (field_at 0 "kname" d) in
+    let body = field_at 2 "kbody" d in
+    let bs, inner =
+      match body.e with
+      | EFun (bs, inner) -> bs, inner
+      | _ -> die "the kernel body as a lambda" body in
+    let bound = List.map (fun (b:binder) -> b.b_name) bs in
+    let caps = BU.remove_dups (fun (a, _) (b, _) -> a = b) (fvs bound inner) in
+    let cap_bs = List.map (fun (v, t) -> { b_name = v; b_ty = t }) caps in
+    let closed_ty =
+      List.fold_right (fun (_, t) acc -> TArrow (t, E_Pure, acc)) caps body.ty in
+    let closed = mk (EFun (cap_bs @ bs, inner)) closed_ty E_Pure in
+    (* [Prologue] is what a CUDA backend would set to [__global__]; here it is
+       an attribute the suite's C compiler accepts, so that the mechanism is
+       tested rather than described.  [Comment] carries the descriptor's name
+       into the output for a human reading it. *)
+    let kernel = B.lift_named kname
+                   [Comment ("kernel " ^ kname ^ ", " ^ show n_bytes ^ " bytes shared");
+                    Prologue "__attribute__((noinline))"; Private] closed in
+    let cap_args = List.map (fun (v, t) -> mk (EVar v) t E_Pure) caps in
     let lit = mk (EConst (CInt (show n_bytes, Some (Unsigned, Int32))))
                  n.ty E_Pure in
-    mk (EOp ({ po_op = Add; po_int = Some (Unsigned, Int32) }, [n; lit]))
-       n.ty E_Pure
+    let shmem = mk (EOp ({ po_op = Add; po_int = Some (Unsigned, Int32) },
+                         [n; lit])) n.ty E_Pure in
+    let kty = TArrow (closed_ty, E_Impure,
+                TArrow (n.ty, E_Impure, TArrow (n.ty, E_Impure, n.ty))) in
+    let kc = mk (EQual ({ ns = ["CustardRuleTest"]; id = "kcall"; spec = None }, []))
+                kty E_Impure in
+    mk (EApp (kc, [kernel; shmem] @ cap_args)) n.ty E_Impure
   | _ -> failwith "CustardRulePlugin: launch applied to the wrong number of arguments"
 
 let _ =
-  B.register_rule (Ident.lid_of_str "CustardRuleTest.launch") (B.Rule_prim (2, launch))
+  B.register_rule (Ident.lid_of_str "CustardRuleTest.launch") (B.Rule_prim (2, launch));
+  B.register_root (Ident.lid_of_str kcall_lid)

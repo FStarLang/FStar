@@ -279,6 +279,19 @@ type flag =
       extractor for types F* considers non-informative; the layout analysis
       propagates it structurally. *)
   | Comment of string
+  | Prologue of string
+  (** Section 36.3.  Text to emit immediately before this declaration's
+      definition in the generated C, and nothing at all in OCaml.  A CUDA
+      kernel is an ordinary function with [__global__] in front of it, so for
+      a plugin generating device code this flag is the difference between a
+      kernel and a host function.  Custard does not read the string. *)
+  | Epilogue of string
+  (** Text to emit immediately after the definition; the counterpart of
+      {!Prologue}. *)
+  | CInline
+  (** Ask the C compiler to inline this definition.  [inline] in the generated
+      C, nothing in OCaml.  Custard's own inlining decisions are {!Inline},
+      which is a different thing: that one substitutes and emits nothing. *)
   | Realized
   (** The declaration is realized by hand-written OCaml, in the support module
       named by its own namespace (section 8.2): [FStarC.Platform.Base.sys] is

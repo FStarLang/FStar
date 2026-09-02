@@ -136,9 +136,21 @@ let anf_expr (x0:expr) : ML expr =
     (* Everything else has operand positions, so it needs an accumulator. *)
     | _ ->
       let acc : ref (list (string & cty & expr)) = mk_ref [] in
+      (* Section 36.4.  A name is not a computation.  [EQual], [EVar] and a
+         constant denote without evaluating, so there is nothing for a
+         binding to sequence and naming one only obscures the output: a
+         hoisted [EQual] turns a direct call into a call through a function
+         pointer.  Ordinarily the effect on such a node is pure and this never
+         arises; a rule (section 8) builds its own nodes, and labelling the
+         *function's* effect on the node that names it is an easy slip to
+         make and not one worth punishing with worse C. *)
+      let atomic (e:expr) : ML bool =
+        match e.e with
+        | EQual _ | EVar _ | EConst _ | EAny -> true
+        | _ -> false in
       let operand (e:expr) : ML expr =
         let e = norm e in
-        if is_pure e.eff then e
+        if is_pure e.eff || atomic e then e
         else begin
           let v = uniq "tmp" (GenSym.next_id ()) in
           acc := (v, e.ty, e) :: !acc;
@@ -1135,6 +1147,68 @@ let dce (prog:program) : ML program =
     then visit (string_of_name (name_of_decl d)));
   prog |> List.filter (fun d ->
     Some? (SMap.try_find live (string_of_name (name_of_decl d))))
+
+(* Section 36.1.  A reference to a declaration that is not in the program.
+
+   Kuiper's reporter wrote a launcher rule that synthesizes a call to a
+   runtime entry point, which is what a launcher rule is for: nothing in the
+   *source* calls it, so nothing makes it reachable, so {!dce} deleted it.
+   The output was emitted with no error and no warning and did not compile --
+   and worse than not compiling, the name in it was the mangled one, because
+   the declaration was never processed and its [@@custard_extern] target was
+   never read.  A plugin author's reward for a typo in a [name] was invalid C
+   with no diagnostic.
+
+   Section 36.2's [register_root] is the mechanism that stops it happening.
+   This is the check that stops it being silent, and it is the more valuable
+   of the two: it catches every reference to a name that is not there,
+   whatever put it there, and a rule is not the only thing that can.
+
+   Values only, and value references only.  A missing *type* is already
+   rejected by the backends with a message about the type, and a constructor
+   or a field resolves to the type that owns it, which is a different
+   question from whether a symbol exists to link against.
+
+   Whole programs only.  Under [--custard_unit] and [--custard_link] a unit is
+   compiled against the *signatures* of the units below it, so a reference
+   that leaves this unit is not in this program by design and the C compiler
+   and linker are what resolve it.  The check is exactly the whole-program
+   assumption written down, so it holds where that assumption does. *)
+let check_resolved (prog:program) : ML program =
+  if Some? (Options.custard_unit ()) || Cons? (Options.custard_links ()) then prog else
+  let defs : SMap.t bool = SMap.create 50 in
+  prog |> List.iter (fun d ->
+    SMap.add defs (string_of_name (name_of_decl d)) true);
+  let rec quals (x:expr) : ML (list name) =
+    let sub (es:list expr) : ML (list name) = List.collect quals es in
+    match x.e with
+    | EQual (n, _) -> [n]
+    | EConst _ | EVar _ | EAny | EAbort _ -> []
+    | ECtor (_, es) | ETuple es | EOp (_, es) -> sub es
+    | ERecord (_, fs) -> sub (List.map snd fs)
+    | ERaise e1 | EDiscrim (e1, _) | EProj (e1, _, _)
+    | ECast (e1, _) | ECoerce (e1, _) -> quals e1
+    | ELet (_, _, e1, e2) -> sub [e1; e2]
+    | EApp (h, es) -> sub (h :: es)
+    | EFun (_, b) -> quals b
+    | EMatch (sc, brs) -> quals sc @ List.collect (fun (_, g, b) ->
+        (match g with Some g -> quals g | None -> []) @ quals b) brs
+    | ETry (a, brs) -> quals a @ List.collect (fun (_, g, b) ->
+        (match g with Some g -> quals g | None -> []) @ quals b) brs
+    | EIf (c, a, b) -> sub [c; a; b]
+    | ESeq (a, b) | EWhile (a, b) -> sub [a; b] in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet l ->
+      quals l.dl_body |> List.iter (fun n ->
+        if None? (SMap.try_find defs (string_of_name n)) then
+          E.raise_error0 E.Error_CustardDanglingReference [
+            text ("Custard: " ^ string_of_name l.dl_name ^ " refers to " ^
+                  string_of_name n ^ ", which is not in the program.");
+            text "Nothing declares it, so the generated code would not compile, and if it is an external its target name and header were never read either.";
+            text "A rule that synthesizes a call to a runtime entry point has to keep it alive: register it with FStarC.Custard.Builtins.register_root, next to the rule itself (section 36.2).  Otherwise this is a misspelled name." ])
+    | _ -> ());
+  prog
 
 (* Section 6, pass 7: strongly connected components.
 
@@ -2818,6 +2892,11 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   (* Last: a coercion is inserted where two types disagree, so every pass that
      can change a type has to have run.  Nothing below it may rewrite a term. *)
   let prog = pass "dce" dce prog in
+  (* Immediately after [dce], which is what can remove the declaration a
+     reference needs, and before the passes that rewrite bodies -- a dangling
+     name reported against the term the user's rule built is more use than one
+     reported against a coerced, record-collapsed descendant of it. *)
+  let prog = pass "check_resolved" check_resolved prog in
   let prog = pass "scc" scc prog in
   let prog = pass "records" (records vd) prog in
   (* After [records], which is what gives a collapsed record's body a ground

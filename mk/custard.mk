@@ -285,8 +285,30 @@ plugin: $(BIN)
 	# 40 + 2, added up by the plugin while the extraction was running.
 	$(Q)grep -qF '(uint32_t)42U' $(PLUGIN_DIR)/CustardRuleTest.c \
 	  || { echo "ERROR: the rule did not fold the descriptor"; exit 1; }
+	# Section 36.3: the kernel body was lifted under the name the *descriptor*
+	# gave it, not a generated one, and carries the flags the rule asked for.
+	$(Q)grep -q 'static uint32_t kernel(uint32_t c, uint32_t tid) {' $(PLUGIN_DIR)/CustardRuleTest.c \
+	  || { echo "ERROR: the kernel was not lifted under its own name"; exit 1; }
+	$(Q)grep -qF '__attribute__((noinline))' $(PLUGIN_DIR)/CustardRuleTest.c \
+	  || { echo "ERROR: the rule's Prologue flag did not reach the C"; exit 1; }
+	$(Q)grep -qF '/* kernel kernel, 42 bytes shared */' \
+	  $(PLUGIN_DIR)/CustardRuleTest.c \
+	  || { echo "ERROR: the rule's Comment flag did not reach the C"; exit 1; }
+	# Section 36.2: the runtime entry point nothing in the source calls
+	# survived, under the name [@@custard_extern] gave it rather than the
+	# mangled one -- which is what a deleted declaration used to produce.
+	$(Q)grep -qF 'kpr_kcall' $(PLUGIN_DIR)/CustardRuleTest.c \
+	  || { echo "ERROR: the rule's registered root was dropped"; exit 1; }
+	$(Q)grep -q 'CustardRuleTest_kcall' $(PLUGIN_DIR)/CustardRuleTest.c \
+	  && { echo "ERROR: the extern's target name was not read"; exit 1; } || true
+	# Section 36.4: a rule's call is direct, not through a temporary holding
+	# the function.  A name is not a computation and ANF must not hoist one.
+	$(Q)grep -q '= kpr_kcall;' $(PLUGIN_DIR)/CustardRuleTest.c \
+	  && { echo "ERROR: the rule's call went through a function pointer"; \
+	       exit 1; } || true
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror \
 	  -I$(abspath $(PLUGIN_DIR)) -x c $(PLUGIN_DIR)/CustardRuleTest.c \
+	  $(PLUGIN_SRC)/CustardRuleMain.c \
 	  -o $(PLUGIN_DIR)/CustardRuleTest.exe
 	$(Q)$(PLUGIN_DIR)/CustardRuleTest.exe
 

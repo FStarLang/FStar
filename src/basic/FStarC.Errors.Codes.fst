@@ -392,5 +392,7 @@ let default_settings : list error_setting =
     Warning_CustardNoPublicDefinitions                 , CWarning, 375;
     Error_CustardMonoExternal                          , CAlwaysError, 376;
     Warning_CustardGeneratedNameInInterface            , CWarning, 377;
+    Error_CustardBadLift                               , CAlwaysError, 378;
+    Error_CustardDanglingReference                     , CAlwaysError, 379;
     Error_AmbiguousName                               , CError, 362;
     ]

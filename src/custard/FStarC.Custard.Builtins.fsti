@@ -174,3 +174,52 @@ val register_post_rule : rule_lookup_t -> ML unit
     (machine integers, the [Prims] connectives), which are matched by the shape
     of the name rather than enumerated. *)
 val lookup_rule : Ident.lident -> ML (option rule)
+
+
+(* -------------------------------------------------------------------- *)
+(* Section 36.  What a rule can add to the program                      *)
+(* -------------------------------------------------------------------- *)
+
+(** Section 36.2.  Keep [l] and everything it needs, as [--custard_entry]
+    does.
+
+    A rule runs in step 1 of the extraction loop and reachability is computed
+    from the roots afterwards, so a rule that synthesizes a call to a runtime
+    entry point the *source* never mentions is asking for a name that dead
+    code elimination has every reason to delete.  That is a real pattern and
+    not a mistake -- a launcher rule's whole job is to emit a call to
+    something no F* code calls -- so a rule pins the symbols it will name.
+
+    Call it from the plugin's initializer, next to {!register_rule}: the roots
+    are collected once, before the loop starts. *)
+val register_root : Ident.lident -> ML unit
+
+(** The roots registered by plugins, in registration order. *)
+val registered_roots : unit -> ML (list Ident.lident)
+
+(** Section 36.3.  [lift_named id fs e] makes [e] -- which must be a *closed*
+    lambda -- a top-level function called [id] carrying the flags [fs], and
+    returns a reference to it.
+
+    This is the operation a plugin generating device code needs and cannot
+    write itself.  Section 19.12's [lift_lambdas] already lifts a lambda a
+    rule leaves in place, but it chooses the name and it attaches no flags,
+    and for a CUDA kernel both are the point: the name appears in profiler
+    output and in disassembly, and [Prologue "__global__"] is the difference
+    between a kernel and an ordinary host function.
+
+    [id] is used verbatim, with no namespace and no mangling, because a
+    generated symbol that a human is going to read in [nsys] should be the
+    name the generator chose.  That also makes collision possible, so it is
+    checked: two lifts under one name are an error rather than a silent
+    overwrite.
+
+    The lambda must be closed.  A rule that wants to lift a body capturing
+    locals closes it first, by adding the captures as leading parameters and
+    passing them at the call -- there is nothing Custard can do about a
+    capture that it could not do wrongly. *)
+val lift_named : string -> list flag -> expr -> ML expr
+
+(** The declarations {!lift_named} has created, oldest first.  Drained by the
+    extraction loop when it collects the program. *)
+val take_lifted : unit -> ML (list decl)

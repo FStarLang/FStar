@@ -4150,7 +4150,15 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
               | _ -> ())
           | _ -> ())));
   Prof.timed "run.roots" (fun () ->
-    roots |> List.iter (fun l -> if not (root_is_erased st l) then mark Root l));
+    roots |> List.iter (fun l -> if not (root_is_erased st l) then mark Root l);
+    (* Section 36.2.  A plugin's roots, which are the runtime entry points its
+       rules will synthesize calls to.  Marked exactly as [--custard_entry]'s
+       are, and after them, so that a plugin cannot quietly change what a
+       user asked for.  Not [mark'], because a plugin naming something that
+       extracts to nothing has made the same mistake [--custard_entry] would
+       report. *)
+    Builtins.registered_roots () |> List.iter (fun l ->
+      if not (root_is_erased st l) then mark Root l));
   Prof.timed "run.main" (fun () ->
     match main with Some l -> mark Entrypoint l | None -> ());
   (* A top-level [let] whose definiens is *effectful* is a module initializer:
@@ -4197,11 +4205,15 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
     end in
   Prof.timed "run.inits" (fun () -> inits 100);
   if Options.custard_dump_specializations () then dump_specializations st;
+  (* Section 36.3.  A rule's lifted functions are not the translation of any
+     F* definition and so are in no request's order; they go in front, where
+     [scc] will place them properly and where nothing depends on them being. *)
   Prof.timed "run.collect" (fun () ->
-    List.rev !st.order |> List.collect (fun key ->
+    Builtins.take_lifted () @
+    (List.rev !st.order |> List.collect (fun key ->
       match SMap.try_find st.emitted key with
       | Some d -> [d]
-      | None -> []))
+      | None -> [])))
 
 let request_lid (st:state) (l:Ident.lident) : ML name =
   request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }

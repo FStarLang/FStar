@@ -951,3 +951,61 @@ let register_post_rule (f : rule_lookup_t) : ML unit =
 
 let lookup_rule (l:Ident.lident) : ML (option rule) =
   try Some (!ref_lookup_rule l) with No_custard_rule -> None
+
+(* -------------------------------------------------------------------- *)
+(* Section 36.  What a rule can add to the program                      *)
+(* -------------------------------------------------------------------- *)
+
+let plugin_roots : ref (list Ident.lident) = mk_ref []
+
+let register_root (l:Ident.lident) : ML unit =
+  plugin_roots := !plugin_roots @ [l]
+
+let registered_roots () : ML (list Ident.lident) = !plugin_roots
+
+let lifted : ref (list decl) = mk_ref []
+
+let lift_named (id:string) (fs:list flag) (e:expr) : ML expr =
+  let n = { ns = []; id = id; spec = None } in
+  let bs, body =
+    match e.e with
+    | EFun (bs, body) -> bs, body
+    | _ ->
+      FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadLift [
+        FStarC.Errors.Msg.text
+          ("Custard: lift_named was given something other than a lambda for `"
+           ^ id ^ "'.");
+        FStarC.Errors.Msg.text
+          "Only a lambda has parameters and a body to lift; anything else is \
+already a value and can be referred to where it stands." ] in
+  let ret = match e.ty with
+            | TArrow _ -> List.fold_left (fun t (_:binder) ->
+                            match t with TArrow (_, _, r) -> r | _ -> t)
+                            e.ty bs
+            | t -> t in
+  if !lifted |> List.existsb (fun d -> (name_of_decl d).id = id) then
+    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadLift [
+      FStarC.Errors.Msg.text
+        ("Custard: lift_named was asked for the name `" ^ id ^ "' twice.");
+      FStarC.Errors.Msg.text
+        "A lifted name is emitted verbatim, so two of them are one symbol. \
+Derive a distinct name from whatever distinguishes the two lifts." ];
+  lifted := !lifted @
+    [DLet { dl_name    = n;
+            dl_typars  = [];
+            dl_binders = bs;
+            dl_ret     = ret;
+            dl_eff     = body.eff;
+            dl_body    = body;
+            (* [Root], because the reference this returns is the only one and
+               it lives in a term the caller has not finished building.  The
+               rule's own declaration reaches it once that term is emitted,
+               but the extraction loop collects roots before it can know
+               that. *)
+            dl_flags   = Root :: fs }];
+  mk (EQual (n, [])) e.ty e.eff
+
+let take_lifted () : ML (list decl) =
+  let ds = !lifted in
+  lifted := [];
+  ds

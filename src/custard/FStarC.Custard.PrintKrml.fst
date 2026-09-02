@@ -428,6 +428,15 @@ let krml_flags (fs : list flag) : ML (list K.flag) =
     (* An erased declaration has no runtime content; telling karamel so lets it
        complain if one ever survives into C. *)
     | Erased -> [K.MustDisappear]
+    (* Section 36.3.  These say nothing to Custard and everything to the C
+       karamel emits, which is why they exist: a CUDA kernel *is* the
+       [__global__] qualifier on its definition, and a plugin that lifts one
+       has no other way to say so.  Carried through rather than interpreted --
+       Custard does not know what the string means and does not need to. *)
+    | Comment c -> [K.Comment c]
+    | Prologue s -> [K.Prologue s]
+    | Epilogue s -> [K.Epilogue s]
+    | CInline -> [K.CInline]
     | _ -> [])
 
 let with_typars (env:kenv) (ps : list string) : ML kenv =

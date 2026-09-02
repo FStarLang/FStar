@@ -1856,13 +1856,44 @@ let rec dedup (xs : list string) : ML (list string) =
 
    Every declaration that survives dead-code elimination is reachable from a
    root or from the entry point, so a [static] one is always called from
-   within the file and [-Wunused-function] has nothing to report. *)
+   within the file and [-Wunused-function] has nothing to report.
+
+   [Private] overrides the whole rule.  Section 36.3's [lift_named] has to set
+   [Root] on what it lifts -- the declaration exists only because a rule made
+   it, so nothing else can keep it alive -- but a lifted function is usually
+   an implementation detail of the call the rule emitted, not an export.  A
+   rule that wants it [static] passes [Private] and gets it. *)
 let is_public (l:dlet) : ML bool =
   l.dl_flags |> List.existsb Root? &&
-  not (l.dl_flags |> List.existsb Entrypoint?)
+  not (l.dl_flags |> List.existsb Entrypoint?) &&
+  not (l.dl_flags |> List.existsb Private?)
 
 let storage (l:dlet) : ML string =
   if is_public l then "" else "static "
+
+(* Section 36.3.  Decoration a plugin asked for and Custard does not read.
+   [Prologue] goes on the *declaration* as well as the definition: CUDA wants
+   [__global__] on both, and a qualifier that appears on one and not the other
+   is a redeclaration error rather than a missing qualifier, which is the
+   better failure of the two.  [Epilogue] follows the definition only, since
+   there is nothing after a prototype for it to attach to. *)
+let prologue_of (l:dlet) : ML string =
+  String.concat "" (l.dl_flags |> List.collect
+    (function Prologue s -> [s ^ "\n"] | _ -> []))
+
+let epilogue_of (l:dlet) : ML string =
+  String.concat "" (l.dl_flags |> List.collect
+    (function Epilogue s -> [s ^ "\n"] | _ -> []))
+
+(* Custard's own [Inline] means "substitute this and emit nothing", which is a
+   decision; this one is a request to the C compiler and leaves the definition
+   where it is. *)
+let inline_of (l:dlet) : ML string =
+  if l.dl_flags |> List.existsb CInline? then "inline " else ""
+
+let comment_of (l:dlet) : ML string =
+  String.concat "" (l.dl_flags |> List.collect
+    (function Comment c -> ["/* " ^ c ^ " */\n"] | _ -> []))
 
 (* Section 32.4.  Build the [--custard_c_no_prefix] map.
 
@@ -2233,7 +2264,8 @@ let print_program (base:string) (p:program) : ML (string & string) =
     match d with
     | DLet l when Nil? l.dl_binders -> [storage l ^ global_decl l]
     | DLet l when Cons? l.dl_binders ->
-      if is_public l then [] else [storage l ^ proto_of l]
+      if is_public l then []
+      else [prologue_of l ^ storage l ^ inline_of l ^ proto_of l]
     | _ -> []) in
 
   let pub_decls = p |> List.collect (fun d ->
@@ -2241,13 +2273,14 @@ let print_program (base:string) (p:program) : ML (string & string) =
     | DLet l when is_public l && Nil? l.dl_binders ->
       current := string_of_name l.dl_name;
       ["extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"]
-    | DLet l when is_public l -> [proto_of l]
+    | DLet l when is_public l -> [prologue_of l ^ inline_of l ^ proto_of l]
     | _ -> []) in
 
   let defs = p |> List.collect (fun d ->
     match d with
     | DLet l when Nil? l.dl_binders -> []
-    | DLet l -> [storage l ^ let_decl l]
+    | DLet l -> [comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
+                 let_decl l ^ epilogue_of l]
     | _ -> []) in
 
   (* In declaration order, which the SCC pass has already made a topological
