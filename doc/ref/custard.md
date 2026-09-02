@@ -9784,6 +9784,223 @@ whole-program-per-kernel as a workaround. Recorded here because the build
 model was agreed and the implementation was not; it is the largest thing this
 report leaves open.
 
+# 34 Rules, attributes and captures
+
+Round 41, from the Kuiper reviewer. `Kuiper.For.for_loop` works with
+`[@@@monomorphize]` now, and the loop bodies compile with their captures
+lifted to parameters; §33's three fixes were what it needed. What that left
+was one question about the *ordering* of the extraction, and it is the
+question this section answers.
+
+## 34.1 A rule sees its arguments reduced
+
+Kuiper's host side hands `launch_kernel_full` a `kernel_desc` whose
+`shmems_desc` field is a `list shmem_desc`, and `shmem_desc`'s constructor
+stores a `Type0` that a later field's type mentions. That is §30.3's
+existential package, and §33.4 now correctly says so: error 368, no C layout,
+no annotation that changes it.
+
+The remedies §33.4 offers do not apply, and the reason is worth recording.
+The stored type is not used to hold a value; it is used to *build* a type.
+`c_shmem (SHArray ty len) = larray ty len`, and `c_shmems` folds a list of
+descriptors into the tuple type of the arrays a kernel receives. An index
+cannot replace the type because the program does not case on it, it computes
+with it, and the type cannot move onto the inductive because the list is
+heterogeneous, which is the point of it.
+
+But the descriptor is never runtime data either. It is compile-time input to
+code generation: `inline_for_extraction noextract`, a literal at every call
+site, and today's krml plugin destructures the whole thing during extraction
+and emits a launch macro. The reason it reaches the backend at all is that
+Custard had nowhere else to put it.
+
+The place to put it is a rule (§8). §8.2's table is consulted in step 1 of
+the extraction loop, before the definition is looked up, so a name with a
+rule is never requested and never emitted; the rule builds an IR term from
+the call's arguments instead. The reviewer's question was whether that is
+usable here -- whether a `Rule_prim` sees the descriptor as a structure it
+can walk, or as an opaque reference to the `let` that bound it, and whether
+the descriptor's type has to have a C representation before a rule is
+consulted at all.
+
+It sees a structure, and it does not. `tests/custard/plugin/CustardRulePlugin.fst`
+is the worked example, which is the other half of the answer: `register_rule`
+was exported, documented and never demonstrated, and the reviewer could not
+find out from the tree what a rule receives.
+
+Two properties, both now pinned by that test.
+
+*Reduced.* A `let`-bound descriptor is unfolded before the rule sees it,
+provided the definition is one the extractor may unfold. The test's
+
+```fstar
+inline_for_extraction noextract
+let kd : kdesc = { kname = "kernel";
+                   shmems = [ DArr U32.t ({ sz = 40ul; dflt = 0ul }) 10;
+                              DArr bool  ({ sz = 2ul;  dflt = false }) 2 ] }
+```
+
+arrives at the rule as
+
+```
+CustardRuleTest.Mkkdesc("kernel",
+  Prims.Cons(CustardRuleTest.DArr(CustardRuleTest.Mksized(40<u32>, 0<u32>), 10),
+  Prims.Cons(CustardRuleTest.DArr(CustardRuleTest.Mksized(2<u32>, false), 2),
+  Prims.Nil)))
+```
+
+-- a record literal and a chain of `Prims.Cons`, with the heterogeneity
+intact: `0<u32>` and `false` sit in the same list, at the same field of the
+same constructor, and nothing has had to give them a common representation.
+
+*Pre-layout.* Rules run during extraction, before §6's passes, so a
+single-constructor type is still an `ECtor` and not yet the `ERecord` the
+final dump shows. A rule matches on the constructor, not on the
+representation. Type arguments are already gone, though -- `DArr` is
+declared with three parameters and arrives with two -- so a field is at its
+position among the *retained* arguments.
+
+The 368 does not fire because it cannot: it is raised by the backend, and by
+the time the backend runs, `Simplify.dce` has removed the descriptor's types
+as unreachable. Nothing in the program mentions them any more, because the
+rule consumed the only mention. The test asserts exactly that -- neither
+`CustardRuleTest_desc` nor `_sized` nor `_kdesc` appears in the generated C
+or its header -- and then compiles and runs the result, which returns 0
+because the plugin added 40 and 2 together while the extraction was running:
+
+```c
+static uint32_t CustardRuleTest_main(void) {
+  uint32_t r = (((uint32_t)3U) + ((uint32_t)42U));
+  if (r == ((uint32_t)45U)) return ((uint32_t)0U);
+  else return ((uint32_t)1U);
+}
+```
+
+So the answer to the ordering question is that there is no ordering problem:
+a rule is consulted before the definition, its arguments are reduced, and
+what it does not use does not survive. Kuiper's host side is a plugin rule
+and needs nothing further from Custard.
+
+The example is wired into `make custard`'s `plugin` target, which already
+compiles a plugin *with* Custard and loads it into a Custard-built compiler.
+`CustardRulePlugin` is a third root there, and a root for the same reason the
+other two are: a module that exists for its initializer has to be named or
+nothing reaches it (§4.4). `FStarC.Custard.Builtins.register_rule` and its
+two chaining forms are now in `src/custard/entrypoints.txt`, since a plugin
+calls them through no request the extraction can see.
+
+`mk/custard-rule.mk` is a separate makefile only because the dependency graph
+of the test program has to be generated by the Custard-built compiler and
+then included, and a recipe cannot include a file it has just written. The
+closure is rechecked rather than reused: §12.10's limitation is that a
+Custard-built compiler cannot read a dune-built one's `.checked` files.
+`--lax` is enough, and makes the 37 modules take about fifteen seconds.
+
+The rule itself fails loudly on a shape it does not expect, and says which
+shape it got. A rule that silently accepts the wrong one is worse than one
+that stops: the wrong shape means the descriptor did not reduce, and the
+program that comes out is then wrong rather than absent.
+
+## 34.2 A recognized attribute in an unrecognized position
+
+§33.3's bug had no evidence: two binder lists existed, one carried the
+attribute, the other was consulted, and nothing compared them, so deleting
+the attribute produced a byte-identical dump. Asked what would have caught
+it, the reviewer's answer is that the general question -- "did this attribute
+have an effect?" -- is not the one to ask, and "was it read?" is, being a bit
+that can be set at the point of reading.
+
+That is still invasive. The cheaper half is not: the set of attributes
+Custard reads is closed and small, and each is read in exactly one kind of
+position. Written anywhere else it can never do anything, and *that* is
+decidable here and now. `[@@custard_extern]` on a binder, `[@@custard_opaque]`
+on a field, `[@@custard_inline_field]` on a declaration: none of them can ever
+have an effect, and each one is a reader who thinks they have configured
+something.
+
+`Extract.check_decl_attrs` runs once per definition, from `binder_classes` --
+which is cached per lid, so the report is not repeated once per call site --
+and `check_binder_attrs` additionally runs over constructor fields from
+`extract_inductive`, where §30.4's `[@@monomorphize]`-on-a-field warning
+already lived. Warning 371 gains four more shapes:
+
+- a declaration-only attribute on a binder (`custard_extern`,
+  `custard_c_header`, `custard_opaque`, `custard_no_monomorphize`,
+  `custard_compile_time`);
+- a field-only attribute on a declaration (`custard_inline_field`);
+- `[@@custard_c_header]` with no `[@@custard_extern]` beside it, which is a
+  position error of a third kind: the header is read only while building the
+  rule the extern attribute asks for.
+
+Each report says where the attribute does belong, since a reader who wrote it
+in the wrong place knows what they wanted and not where to write it.
+
+The binders it checks come from both the arrow and the lambda, for §19.4's
+reason and §33.3's -- an attribute written on either should be seen -- and
+are merged *positionally* rather than concatenated. Concatenating reports the
+ordinary case twice, since the two lists usually describe the same parameters
+and carry the same attributes.
+
+`tests/custard/AttrPos.fst` has one of each of the four.
+
+## 34.3 A block argument's captures
+
+Round 40's reporter checked `[@@@monomorphize]` on a `fn` binder against a
+real separation-logic loop combinator and a `fn` block that captures a `ref`
+and a value from the caller's frame, neither of them a loop parameter, and
+got a C `while` loop with both captures lifted to parameters and the ghost
+apparatus gone. That was measured downstream, in a tree Custard's own suite
+does not build. `tests/custard/pulse/PulseForCapture.fst` reduces it to
+Pulse's own library so that it is tested here:
+
+```c
+static void PulseForCapture_for_upto__0(uint32_t *tmp, uint32_t tmp1, uint32_t n) {
+  uint32_t i = ((uint32_t)0U);
+  while (true) {
+    if (!((i < n))) { break; }
+    uint32_t vi = i;
+    uint32_t v = tmp[((size_t)0ULL)];
+    tmp[((size_t)0ULL)] = (v + tmp1);
+    i = (vi + ((uint32_t)1U));
+  }
+}
+
+static void PulseForCapture_accum(uint32_t *r, uint32_t k) {
+  PulseForCapture_for_upto__0(r, k, ((uint32_t)10U));
+}
+```
+
+The loop is compiled once per *body* rather than once per call, and the
+body's free variables can only reach it as arguments. `main` checks its own
+answer, so a capture taken from the wrong frame is a nonzero exit rather than
+something to read out of the generated C.
+
+Writing it turned up one thing that is not obvious and that Kuiper's
+`for_loop'` already gets right. The invariant has to be an explicit `slprop`
+parameter. Written the other way --
+
+```fstar
+fn for_upto (r : ref U32.t) (n : U32.t)
+            ([@@@monomorphize] body : x:U32.t -> stt unit (exists* v. r |-> v) ...)
+```
+
+-- the body's type mentions `r`, so §3.1 rule 5 carries the demand from
+`body` to `r`; `r` is a runtime parameter of the caller, and the result is
+error 364, "there is nothing to specialize on". Naming the invariant instead
+puts a ghost binder in the demand's way, which rule 1 drops before rule 5 can
+reach through it.
+
+## 34.4 Not fixed
+
+§33.5 stands: `--custard_unit` and `--custard_link` are OCaml-only (error
+155), and separate compilation for a C consumer is the largest thing these
+reports leave open.
+
+The general form of §34.2 -- a bit per recognized attribute, set where the
+attribute is read, and a report where no pass set it -- is not implemented.
+It is the right answer to the failure mode §33.3 had, and it is a change to
+every reading site rather than a check that can be added in one place.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -9900,3 +10117,6 @@ report leaves open.
 | M10αη | **A body that is a lambda is not a closure** (§33.1, §33.2) | Done.  Round 40, from a second reviewer porting Kuiper -- a Pulse DSL for verified CUDA kernels, 396 modules, extracted today through karamel and a ~1200-line plugin.  `let go (k: U32.t) : U32.t -> U32.t = ap (fun x -> add_mod x k)` was rejected as a lambda capturing a local variable, when the variable it captures is `go`'s own parameter and `let f x = fun y -> e` is `let f x y = e`.  §25's expansion could not have done it -- it works by *applying* the body, and a lambda applied to a fresh variable is a redex rather than a parameter -- and refused to consider it at all, because §25.3 admits only a *cheap* body.  That list bounds work repeated per call, and evaluating a lambda performs none: the body is not run.  So absorption is separate and unconditional, and takes the *declared* codomain rather than the body's own type, which `make custard` is what says: with the body's type the extracted compiler does not build, because the coercion a reified `Tac` match needs is never inserted.  `cheap_expr` additionally admits `EFun` and `EOp`, which is what unblocks the other Pulse shape -- `eta_reduce` moves an `fn`'s trailing `r` into the result arrow and the call becomes partial.  `CLamDef.fst` |
 | M10αθ | **An attribute is written on the lambda** (§33.3) | Done.  Round 40.  With both of the above fixed the specialization still did not happen, and deleting the attribute produced a byte-identical dump -- the failure mode with no evidence at all.  A classification reads binders off a definition's *type*; `[@@@monomorphize]` is written on the *lambda*; Pulse's `tm_arrow` goes through `mk_arrow_with_name`, which builds its binder with `attrs = []`, so for a Pulse `fn` the two disagree and rule 3 never fires.  Fixable in Pulse, and fixed here instead because the narrower fix is the more correct one: §19.4 already argues the lambda is the more faithful of the two lists, and this is that argument about a binder's attributes rather than about how many binders there are.  Unioned positionally rather than preferred, since a type can have binders the lambda does not.  `tests/custard/pulse/PulseMono.fst` needs all three fixes to compile and checks its own answer when it runs |
 | M10αι | **A correct rejection is not a bug report** (§33.4) | Done.  Round 40.  §32.6 explained an existential type to error 364; Kuiper meets the same type as a field of runtime data and gets 368, which said "that is a Custard bug, please report it" about the existential of §30.3, correctly rejected.  A wrong explanation is worse than none, because it is acted on.  368 could not say what 364 says because by the time the backend sees the type the `Type0` field is erased and what is left is a `TAny` with no visible cause -- so the cause is carried rather than inferred, as an `Existential` type flag the extractor sets from `Mono.existential_of_lid`.  Nothing reads it to make a decision: the type is rejected either way, and the flag exists so the rejection can say why.  Looked up along the whole `Reached through` chain, since the type that lost its representation is usually a *field's* type and the existential is the record above it.  `ExistChain.fst`, and a new `NOEGREP_` hook so that the sentence this replaces is pinned as *absent* -- otherwise nothing notices it coming back |
+| M10ακ | **A rule sees its arguments reduced** (§34.1) | Done.  Round 41.  Kuiper's host side hands a kernel descriptor whose constructor stores a `Type0` a later field's type mentions, so §33.4 rejects it with 368 -- correctly, and neither remedy applies: the stored type is not held, it is *used to build a type*, and the list of descriptors is heterogeneous on purpose.  But the descriptor is not runtime data either, it is `inline_for_extraction noextract` and a literal at every call site, so the place for it is a rule.  The blocking question was whether a `Rule_prim` sees a structure or an opaque reference, and whether the descriptor's type must have a C layout before a rule is consulted.  Neither: §8.2's table is consulted before the definition is looked up, arguments arrive *reduced* -- the whole record, `Prims.Cons` chain and all, with `0<u32>` and `false` in the same list -- and *pre-layout*, an `ECtor` rather than §6's `ERecord`, with type arguments already erased.  The 368 cannot fire because `Simplify.dce` removes the types the rule consumed before the backend runs.  So there is no ordering gap and Kuiper's host side needs no compiler change.  The other half of the answer is that `register_rule` was exported, documented and never demonstrated: `tests/custard/plugin/CustardRulePlugin.fst` is the worked example, wired into `make custard`'s existing `plugin` target as a third root, asserting the descriptor's three types are absent from the C and then compiling and running it |
+| M10αλ | **A recognized attribute in an unrecognized position** (§34.2) | Done.  Round 41.  §33.3's bug had no evidence at all, and asked what would have caught it the reporter's answer is that "did it have an effect" is unanswerable but "was it read" is a bit.  That is still a change to every reading site; the cheap half is that Custard's attribute set is closed and each is read in exactly one kind of position, so `[@@custard_extern]` on a binder or `[@@custard_inline_field]` on a declaration can never do anything and that is decidable now.  Warning 371 gains four shapes, including `[@@custard_c_header]` with no `custard_extern` beside it, and each says where the attribute does belong.  `check_decl_attrs` runs from the cached `binder_classes`, so once per definition rather than once per call site, and the two binder lists are merged positionally -- concatenating them reports the ordinary case twice.  `tests/custard/AttrPos.fst` |
+| M10αμ | **A block argument's captures** (§34.3) | Done.  Round 41, offered by the reporter as a regression test.  Round 40's `[@@@monomorphize]`-on-a-`fn`-binder fix was measured on a real separation-logic loop combinator downstream, in a tree this suite does not build; `tests/custard/pulse/PulseForCapture.fst` reduces it to Pulse's own library.  A `fn` block captures a `ref` and a value from the caller's frame, neither a loop parameter, and the specialized loop takes both as parameters with the ghost apparatus gone -- and `main` checks its own answer, so a capture from the wrong frame is a nonzero exit rather than something to read out of the C.  Writing it found the non-obvious constraint Kuiper's `for_loop'` already satisfies: the invariant must be an explicit `slprop` parameter, because a body type that mentions a `ref` parameter carries §3.1 rule 5's demand onto that parameter and error 364 fires.  A ghost binder is what stops it, since rule 1 drops it before rule 5 can reach through |

@@ -111,6 +111,18 @@ CGREP_PulseMono += "PulseMono_apply_twice__add_mod"
 CGREP_PulseMono += "static void PulseMono_add_k(uint32_t k, uint32_t *eta)"
 CNOGREP_PulseMono += "(*f)"
 
+# Section 34.3.  A Pulse [fn] block argument that captures a [ref] and a value
+# from the caller's frame, driven by a loop combinator.  The specialized loop
+# must take both captures as parameters -- there is no closure in the output --
+# and the [slprop] invariant must not survive at all.  The program checks its
+# own answer, so a capture from the wrong frame is a nonzero exit.
+C_TESTS += PulseForCapture
+CGREP_PulseForCapture += "PulseForCapture_for_upto__0(uint32_t *"
+CGREP_PulseForCapture += "PulseForCapture_for_upto__0(r, k,"
+CGREP_PulseForCapture += "while (true)"
+CNOGREP_PulseForCapture += "slprop"
+CNOGREP_PulseForCapture += "(*body)"
+
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose
 # the representation of a value.

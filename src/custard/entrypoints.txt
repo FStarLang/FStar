@@ -332,3 +332,11 @@ FStarC.Tactics.V2.Basic.write
 FStarC.Const.parse_int_literal
 FStarC.Real.of_string
 FStarC.Real.real
+
+# Section 34: Custard's own extension point.  A plugin registers a rule by
+# calling this, through no request the extraction can see, so the symbol has
+# to be a root or it is not in the binary the plugin is loaded into.  The two
+# chaining forms are here for the same reason.
+FStarC.Custard.Builtins.register_post_rule
+FStarC.Custard.Builtins.register_pre_rule
+FStarC.Custard.Builtins.register_rule

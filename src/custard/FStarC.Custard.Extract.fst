@@ -817,6 +817,138 @@ let compile_time_demanded (st:state) (t:term) : ML (list int) =
           then [i] else [])
      |> List.flatten
 
+(* -------------------------------------------------------------------- *)
+(* Section 34.2: recognized attributes in unrecognized positions         *)
+(* -------------------------------------------------------------------- *)
+
+(* The set of attributes Custard reads is closed and small, and each one is
+   read in exactly one kind of position.  Written anywhere else it can never
+   do anything -- but silence is indistinguishable from having configured
+   something, which is how [@@@monomorphize] on a Pulse [fn] binder went
+   unnoticed for a round (section 33.3).  That case was a bug and is fixed;
+   this is the class of case that is not a bug and is still worth reporting.
+
+   The general form of the question -- "was this attribute read?" -- is a bit
+   that would have to be set at every point of reading, which is more
+   invasive.  The position is decidable here and now, and covers the mistakes
+   a reader actually makes: the attribute is on the declaration when it
+   belongs on a binder, or on a binder when it belongs on the declaration. *)
+
+(* Attributes that name a *definition*.  A binder is not one. *)
+let decl_only_attrs : list (Ident.lident & string) = [
+  PC.custard_extern_attr,          "custard_extern";
+  PC.custard_c_header_attr,        "custard_c_header";
+  PC.custard_opaque_attr,          "custard_opaque";
+  PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
+  PC.custard_compile_time_attr,    "custard_compile_time";
+]
+
+(* Attributes that describe one *field* of a constructor. *)
+let field_only_attrs : list (Ident.lident & string) = [
+  PC.custard_inline_field_attr, "custard_inline_field";
+]
+
+let has_attr (a:Ident.lident) (attrs:list term) : ML bool =
+  Some? (U.get_attribute a attrs)
+
+(* Where each attribute does belong, for the second sentence of the message. *)
+let attr_home (nm:string) : string =
+  match nm with
+  | "custard_extern" ->
+    "It replaces a definition by a reference to a hand-written one, so it \
+     goes on the [assume val] or [let] whose name the target realizes."
+  | "custard_c_header" ->
+    "It names the C header that declares an external symbol, so it goes \
+     beside the [@@custard_extern] it configures."
+  | "custard_opaque" ->
+    "It fixes a *type's* representation elsewhere, so it goes on the type."
+  | "custard_no_monomorphize" ->
+    "It says that a type class is not a compile-time dictionary, so it goes \
+     on the class."
+  | "custard_compile_time" ->
+    "It says that applications of a *definition* are to be evaluated during \
+     extraction, so it goes on that definition."
+  | "custard_inline_field" ->
+    "It asks for one field of a constructor to be stored by value, so it \
+     goes on that field."
+  | _ -> ""
+
+let report_attr (nm:string) (site:string) (why:string) : ML unit =
+  E.log_issue0 E.Warning_CustardIneffectiveAttribute [
+    text ("[@@" ^ nm ^ "] on " ^ site ^ " has no effect.");
+    text why;
+    text (attr_home nm) ]
+
+(* The binders of a declaration, from both routes: section 19.4's argument
+   that the lambda and the arrow each know something the other does not
+   applies here too, and an attribute written on either should be seen.  The
+   two are merged *positionally* rather than concatenated, or an attribute
+   present in both -- which is the ordinary case, since the two lists describe
+   the same parameters -- would be reported twice. *)
+let attributed_binders (se:sigelt) (l:Ident.lident) : ML (list S.binder) =
+  let merge (bs_t : list S.binder) (bs_d : list S.binder) : ML (list S.binder) =
+    let at (bs : list S.binder) (i:int) : ML (option S.binder) =
+      if i < List.length bs then Some (List.nth bs i) else None in
+    let n = if List.length bs_t > List.length bs_d
+            then List.length bs_t else List.length bs_d in
+    let rec go (i:int) : ML (list S.binder) =
+      if i >= n then []
+      else
+        let b =
+          match at bs_t i, at bs_d i with
+          | Some b, None
+          | None, Some b -> b
+          | Some b, Some c ->
+            { b with binder_attrs =
+                b.binder_attrs
+                @ (c.binder_attrs |> List.filter (fun a ->
+                     not (b.binder_attrs |> List.existsb (U.term_eq a)))) }
+          | None, None -> failwith "unreachable" in
+        b :: go (i + 1) in
+    go 0 in
+  match se.sigel with
+  | Sig_let {lbs=(_, lbs)} ->
+    (match lbs |> List.tryFind (fun lb ->
+             match lb.lbname with
+             | Inr fv -> Ident.lid_equals (S.lid_of_fv fv) l
+             | Inl _ -> false) with
+     | Some lb ->
+       let bs_t, _ = U.arrow_formals lb.lbtyp in
+       let bs_d, _, _ = U.abs_formals lb.lbdef in
+       merge bs_t bs_d
+     | None -> [])
+  | Sig_declare_typ {t} -> fst (U.arrow_formals t)
+  | _ -> []
+
+(* [name] describes the binder for the message; [kind] the sort of thing it
+   binds ("a parameter", "a field"). *)
+let check_binder_attrs (kind:string) (owner:string) (b:S.binder) : ML unit =
+  decl_only_attrs |> List.iter (fun (a, nm) ->
+    if has_attr a b.binder_attrs
+    then report_attr nm (kind ^ " " ^ Ident.string_of_id b.binder_bv.ppname
+                         ^ " of " ^ owner)
+           "Custard reads this attribute off a declaration, never off a \
+            binder, so nothing consults it here.")
+
+let check_decl_attrs (l:Ident.lident) (se:sigelt) : ML unit =
+  let owner = Ident.string_of_lid l in
+  let attrs = se.sigattrs in
+  field_only_attrs |> List.iter (fun (a, nm) ->
+    if has_attr a attrs
+    then report_attr nm ("the declaration " ^ owner)
+           "Custard reads this attribute off a constructor field, never off \
+            a declaration, so nothing consults it here.");
+  (* [@@custard_c_header] configures [@@custard_extern] and means nothing on
+     its own: the rule that reads the header is built only when the extern
+     rule fires. *)
+  if has_attr PC.custard_c_header_attr attrs
+     && not (has_attr PC.custard_extern_attr attrs)
+  then report_attr "custard_c_header" ("the declaration " ^ owner)
+         "The header is read only while building the rule that \
+          [@@custard_extern] asks for, and this declaration has no \
+          [@@custard_extern].";
+  attributed_binders se l |> List.iter (check_binder_attrs "the parameter" owner)
+
 (* Every consultation of a declaration's type goes through here.  Looking a
    lid up in an environment that has not loaded its module yet does not fail
    loudly: it returns [None], and every caller's fallback -- do not erase, do
@@ -1309,6 +1441,12 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
     let attrs = match TcEnv.lookup_sigelt (tcenv st) l with
                 | Some se -> se.sigattrs
                 | None -> [] in
+    (* Section 34.2.  Here rather than at the use sites because this is
+       computed once per definition and cached, so the report is not
+       repeated once per call. *)
+    (match TcEnv.lookup_sigelt (tcenv st) l with
+     | Some se -> check_decl_attrs l se
+     | None -> ());
     let cs =
       (* Section 30.14.  Classify the body that is *compiled*, not the body
          that was written.  [extract_as] replaces one with the other, and the
@@ -3805,6 +3943,7 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
        obvious thing to try is to write it on the field -- and silence is
        indistinguishable from having fixed it. *)
     bs |> List.iter (fun (b:S.binder) ->
+      check_binder_attrs "the field" (Ident.string_of_lid c) b;
       if U.has_attribute b.binder_attrs PC.monomorphize_attr
       then E.log_issue0 E.Warning_CustardIneffectiveAttribute [
         text ("[@@monomorphize] on the field " ^

@@ -607,6 +607,20 @@ EGREP_ExistChain += "it is not a Custard"
 # a compiler bug.
 NOEGREP_ExistChain += "please report it"
 
+# Section 34.2: a recognized attribute in an unrecognized position.  Each of
+# these four is an attribute Custard does read -- just never where it is
+# written -- so without the report the author has configured nothing and has
+# no way to tell.  The test is the diagnostic; the program itself is fine.
+REJECT_TESTS += AttrPos
+CODE_AttrPos = 371
+FLAGS_AttrPos += --custard_backend C --custard_monomorphize_types true
+EGREP_AttrPos += "custard_opaque\] on the field contents of AttrPos.Box"
+EGREP_AttrPos += "custard_compile_time\] on the parameter k of AttrPos.scale"
+EGREP_AttrPos += "custard_inline_field\] on the declaration AttrPos.width"
+EGREP_AttrPos += "custard_c_header\] on the declaration AttrPos.height"
+EGREP_AttrPos += "never off a binder, so"
+EGREP_AttrPos += "has no .@@custard_extern"
+
 REJECT_TESTS += ColB
 CODE_ColB = 374
 FLAGS_ColB += --custard_backend C --custard_monomorphize_types true

@@ -219,6 +219,10 @@ PLUGIN_MOD  := CustardPlugin
 # --custard_entry, so every module of a plugin that carries [@@plugin] has to
 # be a root.  CustardPluginAux is a second one, reached from nothing.
 PLUGIN_AUX  := CustardPluginAux
+# Section 34: a third root, which registers a Custard *rule* rather than a
+# normalization step.  It is a root for the same reason -- a module that
+# exists for its initializer has to be named, or nothing reaches it.
+PLUGIN_RULE := CustardRulePlugin
 
 plugin: $(BIN)
 	$(call bold_msg, "CUSTARD", "PLUGIN")
@@ -228,17 +232,20 @@ plugin: $(BIN)
 	  --include src/ --include $(PLUGIN_SRC) --already_cached ',*' \
 	  --ext fly_deps=false \
 	  --warn_error -321-274-272-241 \
-	  $(PLUGIN_SRC)/$(PLUGIN_MOD).fst $(PLUGIN_SRC)/$(PLUGIN_AUX).fst
+	  $(PLUGIN_SRC)/$(PLUGIN_MOD).fst $(PLUGIN_SRC)/$(PLUGIN_AUX).fst \
+	  $(PLUGIN_SRC)/$(PLUGIN_RULE).fst
 	# --ext fly_deps=false: fly_deps allows only one file on the command
 	# line, and a plugin with two roots has two.
 	$(Q)env FSTAR_LIB=$(abspath ulib) $(FSTAR_EXE) \
 	  --lax --codegen Custard --custard_unit $(PLUGIN_MOD) \
 	  --custard_link $(SPLIT)/fstarc.cui \
 	  --custard_entry $(PLUGIN_MOD) --custard_entry $(PLUGIN_AUX) \
+	  --custard_entry $(PLUGIN_RULE) \
 	  --ext fly_deps=false \
 	  --cache_dir $(CACHE) --include src/ --include $(PLUGIN_SRC) \
 	  --already_cached ',*' --warn_error -321-274-272-241 \
 	  $(PLUGIN_SRC)/$(PLUGIN_MOD).fst $(PLUGIN_SRC)/$(PLUGIN_AUX).fst \
+	  $(PLUGIN_SRC)/$(PLUGIN_RULE).fst \
 	  --odir $(PLUGIN_DIR)
 	$(Q)cd $(PLUGIN_DIR) && $(OCAMLOPT) -shared \
 	  $(INCS) -o $(PLUGIN_MOD).cmxs \
@@ -249,6 +256,39 @@ plugin: $(BIN)
 	  --load_cmxs $(abspath $(PLUGIN_DIR))/$(PLUGIN_MOD) \
 	  --cache_dir $(PLUGIN_DIR)/cache \
 	  --include $(PLUGIN_SRC) $(PLUGIN_SRC)/$(PLUGIN_MOD)Test.fst
+	# Section 34: the rule.  CustardRuleTest is checked and then extracted to
+	# C by the compiler the plugin is loaded into.  Without the rule the
+	# extraction fails with error 368 -- the descriptor stores a type -- so
+	# reaching the C at all is the test; running it checks that the rule read
+	# the descriptor correctly rather than merely being consulted.
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) --dep full \
+	  --cache_dir $(abspath $(PLUGIN_DIR))/cache --include $(PLUGIN_SRC) \
+	  $(PLUGIN_SRC)/CustardRuleTest.fst -o $(PLUGIN_DIR)/rule.depend
+	+$(Q)$(MAKE) -f mk/custard-rule.mk all \
+	  RULE_DEPEND=$(abspath $(PLUGIN_DIR))/rule.depend \
+	  RULE_FSTAR="env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) --lax \
+	    --cache_checked_modules --cache_dir $(abspath $(PLUGIN_DIR))/cache \
+	    --include $(PLUGIN_SRC)"
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) \
+	  --load_cmxs $(abspath $(PLUGIN_DIR))/$(PLUGIN_MOD) \
+	  --codegen Custard --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_main CustardRuleTest.main \
+	  --cache_dir $(PLUGIN_DIR)/cache --include $(PLUGIN_SRC) \
+	  $(PLUGIN_SRC)/CustardRuleTest.fst -o $(PLUGIN_DIR)/CustardRuleTest.c
+	# The descriptor is compile-time input to code generation and must not
+	# survive into the output in any form: the rule consumed it, and
+	# dead-code elimination then removed the types it mentioned.
+	$(Q)grep -q 'CustardRuleTest_desc\|CustardRuleTest_sized\|CustardRuleTest_kdesc' \
+	  $(PLUGIN_DIR)/CustardRuleTest.c $(PLUGIN_DIR)/CustardRuleTest.h \
+	  && { echo "ERROR: the descriptor reached the C output"; exit 1; } || true
+	# 40 + 2, added up by the plugin while the extraction was running.
+	$(Q)grep -qF '(uint32_t)42U' $(PLUGIN_DIR)/CustardRuleTest.c \
+	  || { echo "ERROR: the rule did not fold the descriptor"; exit 1; }
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror \
+	  -I$(abspath $(PLUGIN_DIR)) -x c $(PLUGIN_DIR)/CustardRuleTest.c \
+	  -o $(PLUGIN_DIR)/CustardRuleTest.exe
+	$(Q)$(PLUGIN_DIR)/CustardRuleTest.exe
 
 # -------------------------------------------------------------- pulse plugin
 
