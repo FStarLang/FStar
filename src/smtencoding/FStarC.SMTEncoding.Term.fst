@@ -193,7 +193,11 @@ let rec freevars t : ML (list fv) = match t with
   | FreeV fv when fv_force fv -> [] //this is actually a top-level constant
   | FreeV fv -> [fv]
   | App _ tms _ -> List.collect freevars tms
-  | Quant _ _ _ _ t _
+  (* NB: the patterns are traversed too. A variable may occur only in a
+     pattern (e.g. when the quantifier comes from a source-level
+     {:pattern ...} annotation), and callers rely on [freevars] to compute
+     the variables an abbreviation must be abstracted over. *)
+  | Quant _ pats _ _ t _ -> List.collect freevars (t :: List.flatten pats)
   | Labeled t _ _ -> freevars t
   | Let es body -> List.collect freevars (body::es)
 

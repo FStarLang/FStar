@@ -8,12 +8,11 @@
 
 * Info at NegativeTests.ShortCircuiting.fst(25,11-25,36):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.unit{Prims.l_False} got type Prims.unit
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      u: Prims.unit
-      uu___: Prims.unit
+  - In context: u: Prims.unit
   - See also NegativeTests.ShortCircuiting.fst(23,32-23,37)
 
 * Warning 240 at NegativeTests.ShortCircuiting.fst(23,4-23,6):

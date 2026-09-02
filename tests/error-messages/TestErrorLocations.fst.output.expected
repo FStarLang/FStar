@@ -41,7 +41,8 @@
 
 * Info at TestErrorLocations.fst(48,14-48,19):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.int{0 >= 0 /\ _ >= 0} got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: x + 1 >= 0
   - In context:
@@ -51,22 +52,20 @@
 
 * Info at TestErrorLocations.fst(58,15-58,17):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.unit{0 == 1} got type Prims.unit
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
   - See also TestErrorLocations.fst(56,27-56,29)
 
 * Info at TestErrorLocations.fst(62,15-62,17):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.unit{Prims.l_False} got type Prims.unit
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
   - See also TestErrorLocations.fst(60,25-60,30)
 
 * Info at TestErrorLocations.fst(66,27-66,28):

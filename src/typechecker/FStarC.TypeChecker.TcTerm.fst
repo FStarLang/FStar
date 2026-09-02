@@ -275,6 +275,42 @@ let maybe_warn_on_use env fv : ML unit =
 (*          subject to the guard g                                                                          *)
 (* This function compares tlc to the expected type from the context, augmenting the guard if needed         *)
 (************************************************************************************************************)
+(* [t] refined by the expected postcondition [post]. *)
+let refine_by_post (post:typ) (t:typ) : ML typ =
+  let bv = S.new_bv (Some t.pos) t in
+  U.refine bv (U.apply_post post (S.bv_to_name bv))
+
+(* The type to check a term against, given that the context expects type [t] and,
+   possibly, a postcondition (see Env.set_expected_typ_and_post).
+
+   When there is a non-trivial expected postcondition, [t] is refined by it. This
+   raises the postcondition as an obligation here, in the term's own context and
+   at the term's own range, rather than only once the whole enclosing term has
+   been checked.
+
+   The refinement is dropped in two cases:
+
+   - [use_eq]: the context demands the result type to be exactly [t], and a
+     refinement of [t] is not.
+
+   - [lc.res_typ] is not ground: the refinement could then be picked up as the
+     solution of a unification variable standing for an inferred type, e.g. the
+     result type of an unannotated inner let-binding. That relocates the
+     obligation to the definition site of that binding, where the facts needed
+     to discharge it are not yet in scope.
+
+   Dropping the refinement is always sound: refining here only makes the
+   obligation arise sooner and more precisely, and check_expected_effect raises
+   it in full in any case. *)
+let expected_typ_with_post (env:Env.env) (use_eq:bool) (lc:lcomp) (t:typ) : ML typ =
+  match Env.expected_post env with
+  | Some post when not use_eq
+                && not env.use_eq_strict
+                && not (U.is_trivial_post post)
+                && is_empty (Free.uvars lc.res_typ) ->
+    refine_by_post post t
+  | _ -> t
+
 let value_check_expected_typ env (e:term) (tlc:either term lcomp) (guard:guard_t)
     : ML (term & lcomp & guard_t) =
   def_check_scoped e.pos "value_check_expected_typ" env guard;
@@ -286,6 +322,7 @@ let value_check_expected_typ env (e:term) (tlc:either term lcomp) (guard:guard_t
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
    | Some (t', use_eq) ->
+     let t' = expected_typ_with_post env use_eq lc t' in
      let e, lc, g = TcUtil.check_has_type_maybe_coerce env e lc t' use_eq in
      if Debug.medium ()
      then Format.print4 "value_check_expected_typ: type is %s<:%s \tguard is %s, %s\n"
@@ -309,6 +346,7 @@ let comp_check_expected_typ env e lc : ML (term & lcomp & guard_t) =
    | None -> e, lc, mzero
    | Some (t, use_eq) ->
      let e, lc, g_c = TcUtil.maybe_coerce_lc env e lc t in
+     let t = expected_typ_with_post env use_eq lc t in
      let e, lc, g = TcUtil.weaken_result_typ env e lc t use_eq in
      e, lc, g ++ g_c
 
@@ -740,6 +778,45 @@ let effect_has_primitive_extraction (env:Env.env) (eff: lident) : ML bool =
   let ed = Env.get_effect_decl env eff in
   U.has_attribute ed.eff_attrs Const.primitive_extraction_attr
 
+(* Set the expected type for a term whose computation type is expected to be [c]:
+   the expected type is [comp_result c], and, when [c]'s postcondition is
+   non-trivial, that postcondition is additionally recorded in the environment
+   (see Env.set_expected_typ_and_post).
+
+   Recording the postcondition gives the term's own typechecking a chance to
+   discharge it, in the term's own context and at the term's own range, rather
+   than deferring the entire obligation to check_expected_effect once the whole
+   term has been checked. This yields better error messages and finer-grained
+   verification conditions. *)
+let set_expected_typ_of_comp (env:Env.env) (c:comp) (use_eq:bool) : ML Env.env =
+  let res_typ = U.comp_result c in
+  let post = U.comp_post c in
+  if U.is_trivial_post post
+  then Env.set_expected_typ_maybe_eq env res_typ use_eq
+  else Env.set_expected_typ_and_post env res_typ use_eq post
+
+(* Set the expected type for the subject of an [e <: t] ascription.
+
+   The ascription denotes the same value as [e], so a postcondition expected of
+   the ascription is also expected of [e]; when [t] is the type the context
+   already expects, the postcondition is carried over to [e].
+
+   This matters for terms that are checked twice: tc_match ascribes its own
+   output with the result type of the match, so on the second phase the body of
+   a definition whose type comes from a val declaration is an ascription, and
+   without this the postcondition would not reach the branches. That result type
+   is itself sometimes already refined by the postcondition (see tc_match), which
+   is why both forms are accepted here; the expected type is set to the
+   unrefined one in either case, since the refinement is put back at the check
+   sites. *)
+let set_expected_typ_of_ascription (env:Env.env) (t:typ) (use_eq:bool) : ML Env.env =
+  match Env.expected_typ env, Env.expected_post env with
+  | Some (t', _), Some post
+      when TEQ.eq_tm env t t' = TEQ.Equal
+        || TEQ.eq_tm env t (refine_by_post post t') = TEQ.Equal ->
+    Env.set_expected_typ_and_post env t' use_eq post
+  | _ -> Env.set_expected_typ_maybe_eq env t use_eq
+
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
@@ -1018,7 +1095,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let env0, _ = Env.clear_expected_typ env in
     let expected_c, _, g = tc_comp env0 expected_c in
     let e, c', g' = tc_term
-      (U.comp_result expected_c |> (fun t -> Env.set_expected_typ_maybe_eq env0 t use_eq))
+      (set_expected_typ_of_comp env0 expected_c use_eq)
       e in
     let e, expected_c, g'' =
       let c', g_c' = TcComm.lcomp_comp c' in
@@ -1037,7 +1114,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
   | Tm_ascribed {tm=e; asc=(Inl t, None, use_eq)} ->
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k None in
-    let e, c, g = tc_term (Env.set_expected_typ_maybe_eq env t use_eq) e in
+    let e, c, g = tc_term (set_expected_typ_of_ascription env t use_eq) e in
     //NS: Maybe redundant strengthen
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed {tm=e;
@@ -1519,6 +1596,11 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
 
         //Clear the expected type in the environment for the branches
         //  we will check the expected type for the whole match at the end
+        //Note: this drops the expected postcondition too, so with a returns
+        //  annotation the postcondition is proved once for the match rather than
+        //  in each branch, and a failure blames the whole match. That is the
+        //  same choice as for the expected type, which the annotation is there
+        //  to override.
         let env, _ = Env.clear_expected_typ env in
         let b, asc =
           let bs, asc = SS.open_ascription [b] asc in
@@ -1603,6 +1685,40 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
           //when the returns annotation is absent, env_branches contains the expected type
           // (which may either be coming from top, or a new uvar)
           let res_t = Env.expected_typ env_branches |> Option.must |> fst in
+          (* A match is the one term whose result type is *chosen* here rather
+             than propagated from a subterm: there is no single branch to take it
+             from, so bind_cases is handed one. Taking it from the context, as we
+             would by using res_t as it stands, discards whatever the branches
+             turn out to have in common, and makes the match prove again what
+             each of them has already proved.
+
+             That is not hypothetical. With an expected postcondition, every
+             branch is checked against the expected type refined by it (see
+             expected_typ_with_post) and so carries the refined type; using the
+             unrefined res_t here would re-raise the postcondition as an
+             obligation on the match as a whole, and, when a branch fails to
+             establish it, report that whole-match failure *before* the precise
+             per-branch one -- which was the localization problem this feature
+             set out to fix.
+
+             So: when the branches agree on a result type, and it is scoped
+             outside the match, it is a result type for the match, and we take
+             theirs. The rule is about matches, not about postconditions, and
+             preserves anything the branches happen to share. Their result types
+             are only read, never set: nothing is claimed of a branch that it did
+             not already establish. (Assuming the refined type instead would be
+             unsound, since a branch may legitimately have dropped it.) *)
+          let res_t =
+            let branch_res_typ (x : (formula & lident & list cflag & (bool -> ML lcomp))) : ML typ =
+              let (_, _, _, c) = x in (c false).res_typ in
+            match cases with
+            | c0 :: rest ->
+              let t = branch_res_typ c0 in
+              if rest |> List.for_all (fun c -> TEQ.eq_tm env (branch_res_typ c) t = TEQ.Equal)
+              && Env.closed env t
+              then t
+              else res_t
+            | [] -> res_t in
           TcUtil.bind_cases env res_t cases guard_x, g, erasable
 
         | Some (b, (Inl t, _, _)) ->  //a returns annotation, with type
@@ -2337,7 +2453,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
         let envbody, bs, g_env, c, body = check_actuals_against_formals envbody bs bs_expected body in
         let envbody = { envbody with letrecs = env.letrecs } in
         let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
-        let envbody = Env.set_expected_typ_maybe_eq envbody (U.comp_result c) use_eq in
+        let envbody = set_expected_typ_of_comp envbody c use_eq in
         Some t, bs, letrecs, Some c, envbody, body, g_env ++ g_annots
 
       | _ -> (* expected type is not a function;

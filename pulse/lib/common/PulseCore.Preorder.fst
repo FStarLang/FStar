@@ -389,7 +389,9 @@ let pcm_history_preorder #a #p : preorder (history a p) =
     | Current vh0 _, Current vh1 _ ->
       vh1 `extends` vh0
 
-#push-options "--ifuel 1 --fuel 0 --warn_error -271"
+(* The postcondition of [aux] below needs about 5 rlimit units to discharge,
+   which is the default budget; raise it so the proof has headroom. *)
+#push-options "--ifuel 1 --fuel 0 --z3rlimit 20 --warn_error -271"
 let pcm_history_induces_preorder #a #p
   : Lemma (induces_preorder (pcm_history #a #p)
                               (pcm_history_preorder #a #p))

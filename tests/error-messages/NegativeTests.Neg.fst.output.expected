@@ -41,7 +41,8 @@
 
 * Info at NegativeTests.Neg.fst(42,33-42,34):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type _: Prims.int{_ > 0} got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: x > 0
   - In context: x: Prims.int
