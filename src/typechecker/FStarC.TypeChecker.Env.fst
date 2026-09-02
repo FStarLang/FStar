@@ -293,6 +293,7 @@ let initial_env deps
     effects={decls=[]; order=[]; joins=[]; lifts=[]};
     generalize=true;
     letrecs=[];
+    rec_names=[];
     top_level=false;
     check_uvars=false;
     use_eq_strict=false;
@@ -2206,6 +2207,13 @@ let get_letrec_arity (env:env) (lbname:lbname) : ML (option int) =
                     env.letrecs with
   | Some (_, arity, _, _) -> Some arity
   | None -> None
+
+let mentions_rec_name env t =
+  match env.rec_names with
+  | [] -> false
+  | rec_names ->
+    let ns = freeNames t in
+    rec_names |> BU.for_some (fun x -> mem x ns)
 
 let fvar_of_nonqual_lid env lid : ML _ =
     let qn = lookup_qname env lid in

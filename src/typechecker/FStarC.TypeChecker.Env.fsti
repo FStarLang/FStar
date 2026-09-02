@@ -146,6 +146,7 @@ and env = {
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
   letrecs        :list (lbname & int & typ & univ_names);  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
+  rec_names      :list bv;                      (* names bound by a [let rec] whose body is being checked; they go out of scope with the [let rec], so no type may mention one *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
@@ -739,6 +740,14 @@ for either not a recursive let, or one that does not need the totality
 check. *)
 
 val get_letrec_arity : env -> lbname -> ML (option int)
+
+(* Does [t] mention a name bound by the [let rec] currently being checked?
+   Such a name disappears with the [let rec], so a type that mentions one
+   cannot outlive it -- and quantifying over one to get it back in scope says
+   nothing, since [exists (f: a -> b). _ == f x] is witnessed by any constant
+   function.  The only useful thing to do with such a fact is to never state
+   it, so this guards every point that would put a term in a type. *)
+val mentions_rec_name : env -> term -> ML bool
 
 (* Construct a Tm_fvar with the delta_depth metadata populated
    -- Note, the delta_qual is not populated, so don't use this with

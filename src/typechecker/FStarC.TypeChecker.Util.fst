@@ -631,6 +631,7 @@ let close_layered_comp_with_substitutions env bvs tms (c:comp) (g:guard_t) : ML 
  * (b) Its return type, (U.comp_result lc), is not a sub-singleton (unit, squash, etc), if (U.comp_result lc) is an arrow, then we check the comp type of the arrow
  *     An exception is made for reifiable effects -- they are useful even if they return unit -- except when it is an layered effect, we never return layered effects
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
+ * (d) It does not mention a name bound by the [let rec] being checked, since such a name cannot appear in a type that outlives it
  *)
 let should_return env eopt lc : ML _ =
   let lc_is_unit_or_effectful =
@@ -649,7 +650,8 @@ let should_return env eopt lc : ML _ =
     (let head, _ = U.head_and_args_full e in
      match (U.un_uinst head).n with
      | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv))  //condition (c)
-     | _ -> true)
+     | _ -> true)                                                  &&
+    not (Env.mentions_rec_name env e)      //condition (d), see [Env.mentions_rec_name]
 
 (*
  * Sequential composition in the simplified effect system.
@@ -838,12 +840,18 @@ let optimize_bind_vc () : ML _ = Options.Ext.enabled "optimize_let_vc"
 
 (* Should [e1] be substituted for [x] in [c2]'s result type?  Only if [x] is
    actually there, and only if [e1] is a term that may appear in a type at all:
-   an effectful computation need not produce the same value twice. *)
-let bind_result_subst (e1opt:option term) (lc1:comp) (b:option bv) (lc2:comp)
+   an effectful computation need not produce the same value twice, and a term
+   mentioning a [let rec]-bound name would not survive the [let rec].  When the
+   substitution is refused, [eliminate_binder_from_typ] closes [x]
+   existentially instead, which for [_ == x] yields [exists x. _ == x] and so
+   simplifies away -- the fact is dropped, but no unusable name was ever put in
+   a type to have to drop it later. *)
+let bind_result_subst (env:Env.env) (e1opt:option term) (lc1:comp) (b:option bv) (lc2:comp)
 : ML (list subst_elt)
 = match b, e1opt with
   | Some x, Some e1 when mem x (Free.names (U.comp_result lc2))
-                      && U.is_pure_or_ghost_comp lc1 -> [NT (x, e1)]
+                      && U.is_pure_or_ghost_comp lc1
+                      && not (Env.mentions_rec_name env e1) -> [NT (x, e1)]
   | _ -> []
 
 (* Get [x] out of a type when it cannot be substituted away.  The fact that [x]
@@ -877,7 +885,8 @@ let eliminate_binder_from_typ (env:Env.env) (x:bv) (e1opt:option term) (lc1:comp
     (* [x] occurs in the type itself, not only in a refinement of it, so
        there is nothing to existentially close. *)
     match e1opt with
-    | Some e1 when U.is_pure_or_ghost_comp lc1 ->
+    | Some e1 when U.is_pure_or_ghost_comp lc1
+                && not (Env.mentions_rec_name env e1) ->
       (* Substitution is exact for a pure or ghost [e1], and is what
          [bind_result_subst] would already have done had [x] been reachable
          without normalizing. *)
@@ -931,7 +940,8 @@ let captured_typing
      [(U.comp_result lc1)], so what [e1] established about its result travels
      with the binder that [eliminate_binder_from_typ] quantifies. *)
   | Some _, Some e1 when capture && not (discard_specs env)
-                      && U.is_pure_or_ghost_comp lc1 ->
+                      && U.is_pure_or_ghost_comp lc1
+                      && not (Env.mentions_rec_name env e1) ->
     let has_evident_type = has_evident_type env e1 in
     (* Restating the type of a term that is not itself a computation buys
        nothing and costs a great deal.  A variable already has its type in the
@@ -1034,7 +1044,7 @@ let composite_result_typ
       (capture:bool) (is_let_binding:bool)
       (env:Env.env) (e1opt:option term) (lc1:comp) (b:option bv) (lc2:comp)
 : ML typ
-= let subst_x = bind_result_subst e1opt lc1 b lc2 in
+= let subst_x = bind_result_subst env e1opt lc1 b lc2 in
   let phi = captured_typing env capture is_let_binding (Cons? subst_x) lc1 e1opt b in
   let res_typ_base =
     let t = SS.subst subst_x (U.comp_result lc2) in

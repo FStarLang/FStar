@@ -126,16 +126,12 @@ let bound_of_flex (require_ground:bool) (ds : TcComm.deferred) (t : term) : ML (
     in
     List.tryPick bound (FStarC.Class.Listlike.to_list ds)
 
-(* Why the variables handed to [check_no_escape] are going out of scope.  The
-   [let rec] case is set apart because those names stand for the functions being
-   defined, which makes a fact mentioning one unsalvageable -- see [weaken]. *)
+(* Why the variables handed to [check_no_escape] are going out of scope. *)
 type escape_cause =
   (* the head of an application whose arguments had to be let-bound *)
   | Escapes_application of term
-  (* the variable bound by a [let] *)
+  (* a variable bound by a [let] or a [let rec] *)
   | Escapes_let
-  (* the names bound by a [let rec], at the end of their scope *)
-  | Escapes_let_rec
 
 let check_no_escape (cause : escape_cause)
     (env : Env.env)
@@ -245,17 +241,7 @@ let check_no_escape (cause : escape_cause)
             | Tm_refine {b=x; phi} when escapes phi ->
               let sort = weaken x.sort in
               let y, phi = SS.open_term_bv x phi in
-              (* The names of a [let rec] are the exception: quantifying over
-                 one yields [exists (f: a -> b). _ == f x], which any constant
-                 function witnesses.  It says nothing, and it would put a
-                 higher-order quantifier in every type derived from this one,
-                 so the conjuncts that mention one are dropped. *)
-              let cs =
-                if Escapes_let_rec? cause
-                then conjuncts phi |> List.filter (fun c -> not (escapes c))
-                else conjuncts phi
-              in
-              let cs = conjuncts (close_escaping (U.mk_conj_l cs)) in
+              let cs = conjuncts (close_escaping phi) in
               (* Closing does not always reach every variable -- the fuel above
                  is a bound, not a guarantee -- so drop whatever is still free. *)
               let cs = cs |> List.filter (fun c -> not (U.is_t_true c) && not (escapes c)) in
@@ -4965,6 +4951,12 @@ and check_inner_let_rec env top : ML _ =
 
           let bvs = lbs |> List.map (fun lb -> Inl?.v (lb.lbname)) in
 
+          (* [bvs] disappear at the end of this [let rec], so nothing that
+             mentions one may end up in a type.  Rather than build such a type
+             and take it apart again below, record the names and let the places
+             that would put a term in a type decline to do so; see
+             [Env.mentions_rec_name]. *)
+          let env = {env with rec_names = bvs @ env.rec_names} in
           let e2, cres, g2 = tc_term env e2 in
           (* The let-rec-bound lemmas' conclusions are hypotheses for
              everything the body has to prove. *)
@@ -5001,7 +4993,7 @@ and check_inner_let_rec env top : ML _ =
                    recursively bound names: a postcondition is a refinement of
                    the result type now, and [e2] may well be an application of
                    one of them.  Those names go out of scope here. *)
-                let tres, g_ex = check_no_escape Escapes_let_rec env bvs tres in
+                let tres, g_ex = check_no_escape Escapes_let env bvs tres in
                 let cres = U.set_result_typ cres tres in
                 e, cres, g_ex ++ guard
           end
