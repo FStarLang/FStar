@@ -9336,14 +9336,72 @@ binder that keys on it and a body that fails: a 16,372-character key, and a
 diagnostic is under 100 KB, which is the check that would have caught this
 without anyone reading the output.
 
+### 32.4 A public surface
+
+Round 38 answered the objection §32.3 raised against `extern "C"` and headers,
+by removing it rather than arguing with it.
+
+The objection was that exporting a name means committing to it, and §30.15's
+specialization hints are explicitly *hints* — bounded, collision-suffixed, and
+free to change when the monomorphizer's input changes. That objection stands
+and nothing below relaxes it.
+
+What removes it is the observation that the consumer does not want a
+specialization. EverParse's COSE, at `src/cose/c/`, is a production consumer
+already in tree: `COSE_Format.c` includes `CBORDetAPI.h` and calls 44 distinct
+`cbor_det_*` symbols across a translation-unit boundary. Compile Custard's
+whole-program output of `CBOR.Pulse.API.Det.C` and it already exports 43
+globally-visible `cbor_det_*` symbols, **none carrying a hint and none
+carrying a collision suffix**. That is not luck: `CBOR.Pulse.API.Det.C` is the
+API boundary and is monomorphic there, so nothing at that boundary is a
+specialization.
+
+So the set the option may touch is not "any definition" but exactly the set
+`is_public` already computes — a `Root`, named by `--custard_entry` or
+`--custard_entry_module`, emitted with external linkage and declared in the
+generated header. Naming a definition that way is already the only route a
+caller Custard cannot see has, so the public surface is a decision the user
+has made and not one inferred here. `build_renames` additionally checks
+`n.spec = None`, on the name rather than on the flag, because the guarantee
+wanted is about the name.
+
+`--custard_c_no_prefix M` emits the public definitions of module `M` under
+their unqualified identifiers, as krml's `-no-prefix` does. The map is keyed
+by `string_of_name` and consulted in `c_name`, so a rename reaches the
+definition, its prototype and every call site alike: this is one C name for
+one IR name, not a second name for the same thing.
+
+Two definitions wanting one name, or a name already some other declaration's,
+is **error 374**. Not a silent suffix — the point of the option is that the
+caller writes the name, so producing a name the caller did not ask for is
+worse than refusing. A module named but contributing nothing is **warning
+375**, because that is a typo or a forgotten `--custard_entry_module` and
+silence there costs a round.
+
+The `extern "C"` guard is unconditional, and goes *after* the includes. Never
+around them: a system or an external header brings its own linkage decisions,
+and wrapping one is how a C++ consumer acquires an unresolvable `std::`
+symbol.
+
+`tests/custard/Export.fst` is the COSE shape in miniature. Three roots
+exported unqualified, one unnamed `helper` that stays `static` and is absent
+from the symbol table, and one polymorphic `countdown` that reaches the unit
+only as a specialization and keeps its hint. It is extracted twice — once with
+a `main` and run standalone, once without, as a library — and
+`ExportUser.cpp`, a hand-written consumer, is compiled **as C++** and linked
+against it. The C++ half is the assertion: strip the guard and the three calls
+fail to link as `widget_add(unsigned int, unsigned int)`, which is the check
+being made. `nm` confirms the exported and the hidden halves.
+
+`tests/custard/ColB.fst` is the collision.
+
+What this does **not** do, and should not: make a specialization exportable.
+
 ### 32.3 What is not done
 
 - **`realized_modules` under the C backend** (§31.3).  Still the next thing,
   still deliberately separate.
-- **`extern "C"` and headers** for consuming Custard's C from other
-  translation units.  Offered three times by the reviewer, not blocking
-  anything, and genuinely low priority until someone wants to link against
-  the output rather than compile it whole.
+- ~~**`extern "C"` and headers**~~ — done in §32.4.
 - **Stacked attribute sets.**  `[@@a] [@@b]` is Error 131 in F\* itself, not
   in Custard; anyone inserting an attribute mechanically has to merge into
   the existing set.  Noted because it will bite the next person who scripts
@@ -9456,3 +9514,4 @@ without anyone reading the output.
 | M10φφ | **`LetShare` was registered but never run** (§30.17) | Done.  Round 35.  `FLAGS_LetShare` and `GREP_LetShare` were set, but the `CUSTARD_TESTS += LetShare` line was missing, so nothing expanded to a target and `make` skipped it silently.  Caught by the reporter, not by the suite, which is the uncomfortable part: a test that is not registered passes |
 | M10χχ | **A chain entry is a term** (§32.2) | Done.  Round 37.  §31.2's chain found the `Prims.op_Less` that had cost a whole round, on the first try — and then printed a 6,426,280-byte error block, of which 6,425,658 bytes were one "Reached through" line.  A chain entry is a specialization *key*, rendered by `string_of_key`, so it is as big as the term is; §30.15 bounded the name Custard *emits*, which is a different string.  `Extract.clip_chain_entry` bounds each entry to 200 characters and says how much it dropped, keeping the prefix because the lid comes first in a key.  `PrintC`'s chain is bounded the same way on principle.  `tests/custard/WideChain.fst` — a 16,372-character key and a 727-byte diagnostic — and every reject test now asserts its diagnostic is under 100 KB |
 | M10ψψ | **The specializer does no work at all** (§32.1) | Done, as a measurement.  Rounds 36 and 37.  All four CDDL entry points extract from a stock EverParse tree in 11–19 s, and the generated C was executed against an independent decoder over 12,109 vectors with 0 mismatches, then re-run under ASan/UBSan over 10,392 malformed inputs with 0 errors.  The number that matters is 0/0/0/7 specializations against round 31's 643: §12.3's cost was never intrinsic, it was the interpreter arriving unreduced.  A controlled comparison — 76 `normalize_for_extraction` occurrences stripped, four configurations — puts annotations alone at 2 of 4 and the attribute at 4 of 4, and shows blanket `custard_compile_time` at all 98 `sem_attr` sites making things worse, because `sem_attr` and `custard_compile_time` are different predicates |
+| M10ωω | **A public surface** (§32.4) | Done.  Round 38.  The objection to exporting names was that §30.15's specialization hints are hints; the answer is that a consumer does not want a specialization.  EverParse's COSE calls 44 `cbor_det_*` symbols across a translation-unit boundary, and Custard's whole-program output of `CBOR.Pulse.API.Det.C` already exports 43 of them with no hint and no collision suffix, because that boundary is monomorphic.  `--custard_c_no_prefix M` emits the public definitions of `M` — exactly `is_public`, and additionally checked to have `n.spec = None` — under their unqualified names, as krml's `-no-prefix` does.  Collision is error 374 rather than a silent suffix; a module that renames nothing is warning 375.  `extern "C"` guards are unconditional and go after the includes, never around them.  `tests/custard/Export.fst` is extracted twice, once standalone and once as a library, and `ExportUser.cpp` is compiled as **C++** and linked against it — strip the guard and the link fails, which is the assertion.  `tests/custard/ColB.fst` is the collision |

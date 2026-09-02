@@ -224,6 +224,7 @@ val codegen_libs                : unit    -> ML (list (list string))
 val custard_entries             : unit    -> ML (list string)
 val custard_entrypoint_files    : unit    -> ML (list string)
 val custard_entry_modules       : unit    -> ML (list string)
+val custard_c_no_prefix         : unit    -> ML (list string)
 val custard_main                : unit    -> ML (option string)
 val custard_dump_ir             : unit    -> ML bool
 val custard_dump_specializations: unit    -> ML bool

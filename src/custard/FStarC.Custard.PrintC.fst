@@ -165,7 +165,17 @@ let sanitize (s:string) : ML string =
 let escape_kw (s:string) : ML string =
   if List.existsb (fun k -> k = s) c_keywords then s ^ "_" else s
 
-let c_name (n:name) : ML string = escape_kw (sanitize (mangled_name n))
+(* Section 32.4.  [--custard_c_no_prefix] renames a public definition to its
+   unqualified identifier.  The map is keyed by {!string_of_name} and is
+   consulted by every printer, because a rename has to reach the definition,
+   the prototype and every call site in the file alike: this is one C name
+   for one IR name, not a second name for the same thing. *)
+let renames : ref (SMap.t string) = mk_ref (SMap.create 0)
+
+let c_name (n:name) : ML string =
+  match SMap.try_find !renames (string_of_name n) with
+  | Some s -> s
+  | None -> escape_kw (sanitize (mangled_name n))
 let c_var (x:string) : ML string = escape_kw (sanitize x)
 
 (* An enum tag.  Uppercased so that it cannot collide with a value or a type
@@ -1746,6 +1756,81 @@ let is_public (l:dlet) : ML bool =
 let storage (l:dlet) : ML string =
   if is_public l then "" else "static "
 
+(* Section 32.4.  Build the [--custard_c_no_prefix] map.
+
+   The set this may touch is exactly {!is_public}: a definition with external
+   linkage, declared in the header, named by [--custard_entry] or
+   [--custard_entry_module].  Naming a definition that way is already the only
+   way a caller Custard cannot see gets in, so the public surface is a
+   decision the user has made rather than one inferred here.
+
+   It is also, and not by coincidence, the set with no specialization hint.  A
+   root is named by lid, so its key has no [Mono] arguments, so [n.spec] is
+   [None].  The check below is on [n.spec] and not on the flag, because the
+   guarantee wanted is about the *name* -- section 30.15's hints are bounded,
+   collision-suffixed and free to change when the monomorphizer's input
+   changes, and nothing outside the translation unit may depend on one.
+
+   A rename collides when two definitions want one name, or when the name
+   wanted is already some other definition's.  Both are error 374 rather than
+   a silent suffix: the whole point of the option is that the caller writes
+   the name, so producing a name the caller did not ask for is worse than
+   refusing. *)
+let build_renames (p:program) : ML unit =
+  let mods = Options.custard_c_no_prefix () in
+  renames := SMap.create 0;
+  if Nil? mods then () else begin
+    (* Every C name in the unit as it stands, so that a rename cannot land on
+       one.  Types and constructors included: they have no linkage, but a
+       [struct] tag and a function sharing a name in one header is at best
+       confusing and at worst -- for a typedef -- a redeclaration error. *)
+    let taken : SMap.t string = SMap.create 50 in
+    p |> List.iter (fun d ->
+      let n = name_of_decl d in
+      SMap.add taken (escape_kw (sanitize (mangled_name n)))
+                     (string_of_name n));
+    let claimed : SMap.t string = SMap.create 20 in
+    let used_mod : SMap.t bool = SMap.create 5 in
+    p |> List.iter (fun d ->
+      match d with
+      | DLet l when is_public l && None? l.dl_name.spec ->
+        let m = String.concat "." l.dl_name.ns in
+        if List.existsb (fun x -> x = m) mods then begin
+          SMap.add used_mod m true;
+          let tgt = escape_kw (sanitize l.dl_name.id) in
+          let src = string_of_name l.dl_name in
+          (match SMap.try_find claimed tgt with
+           | Some other ->
+             E.raise_error0 E.Error_CustardExportCollision [
+               text ("Custard: --custard_c_no_prefix would name both " ^
+                     other ^ " and " ^ src ^ " `" ^ tgt ^
+                     "' in the generated C.");
+               text "Two definitions cannot share one external name."; ]
+           | None -> ());
+          (match SMap.try_find taken tgt with
+           | Some other when other <> src ->
+             E.raise_error0 E.Error_CustardExportCollision [
+               text ("Custard: --custard_c_no_prefix would name " ^ src ^
+                     " `" ^ tgt ^ "', which is already the name of " ^
+                     other ^ ".");
+               text "Rename one of them, or drop the option for this \
+module."; ]
+           | _ -> ());
+          SMap.add claimed tgt src;
+          SMap.add !renames src tgt
+        end
+      | _ -> ());
+    (* A module named but contributing nothing is almost always a typo or a
+       forgotten --custard_entry_module, and silence there costs a round. *)
+    mods |> List.iter (fun m ->
+      if None? (SMap.try_find used_mod m) then
+        E.log_issue0 E.Warning_CustardNoPublicDefinitions [
+          text ("Custard: --custard_c_no_prefix " ^ m ^ " renamed nothing.");
+          text "The option applies to definitions with external linkage. \
+Name the module with --custard_entry_module, or its definitions with \
+--custard_entry, so that they are part of this unit's interface."; ])
+  end
+
 (* [base] is the stem of the output file: the source includes [base.h], and
    the include guard is derived from it.  Returns the header and the source,
    in that order. *)
@@ -1865,6 +1950,7 @@ let print_program (base:string) (p:program) : ML (string & string) =
         (if Cons? l.dl_binders then n else List.length (arg_ctys l.dl_ret))
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
+  build_renames p;
   arities := at;
 
   (* Only the standard library, and only the parts that are used unavoidably:
@@ -2003,13 +2089,24 @@ let print_program (base:string) (p:program) : ML (string & string) =
      linker, and the reachability analysis that would trim it buys an
      incomplete header and a class of "field has incomplete type" errors --
      a bad trade for a file whose entire purpose is to be usable. *)
+  (* Section 32.4.  After the includes, never around them: a system or an
+     external header brings its own linkage decisions, and wrapping one is how
+     a C++ consumer gets an unresolvable [std::] symbol.  Unconditional, since
+     the guard is a no-op for the C compiler that reads the same file. *)
+  let cpp_open =
+    "#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n" in
+  let cpp_close =
+    "\n#ifdef __cplusplus\n}\n#endif\n" in
+
   let hdr =
     header ^ "\n" ^
   (match includes with [] -> "" | _ -> String.concat "\n" includes ^ "\n\n") ^
+  cpp_open ^
   String.concat "" fwds ^ (match fwds with [] -> "" | _ -> "\n") ^
   String.concat "" tys ^ (match tys with [] -> "" | _ -> "\n") ^
   String.concat "" pub_decls ^ (match pub_decls with [] -> "" | _ -> "\n") ^
   init_proto ^ (match inits with [] -> "" | _ -> "\n") ^
+  cpp_close ^
   "#endif\n" in
 
   (* The source includes its own header, so the header is *checked* against

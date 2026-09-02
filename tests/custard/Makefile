@@ -536,6 +536,31 @@ REJECT_TESTS += WarnAny
 # rule 4 of section 5.0.1 froze it -- which is a decision with a culprit, not
 # the bug the old message claimed.  The chain is what says which use of it
 # survived; on a 100 s CDDL run that is the whole difference.
+C_TESTS += Export
+FLAGS_Export += --custard_entry Export.widget_add
+FLAGS_Export += --custard_entry Export.widget_double
+FLAGS_Export += --custard_entry Export.widget_id
+FLAGS_Export += --custard_c_no_prefix Export
+# The three roots are emitted unqualified, and declared in the header.
+CGREP_Export += "uint32_t widget_add("
+CGREP_Export += "uint32_t widget_double("
+CGREP_Export += "uint32_t widget_id("
+CGREP_Export += "extern \"C\" {"
+# The qualified spellings are gone, the unnamed helper keeps its own and
+# stays static, and the specialization keeps its section 30.15 hint: the
+# option renames the public surface and nothing else.
+CNOGREP_Export += "Export_widget_add"
+CGREP_Export += "static uint32_t Export_helper("
+CGREP_Export += "static uint32_t Export_countdown__"
+
+REJECT_TESTS += ColB
+CODE_ColB = 374
+FLAGS_ColB += --custard_backend C --custard_monomorphize_types true
+FLAGS_ColB += --custard_entry ColA.f --custard_entry ColB.f
+FLAGS_ColB += --custard_c_no_prefix ColA --custard_c_no_prefix ColB
+EGREP_ColB += "would name both"
+EGREP_ColB += "cannot share one external name"
+
 REJECT_TESTS += WideChain
 CODE_WideChain = 364
 # The clip marker: the chain printed a bounded prefix and said how much it
@@ -697,6 +722,39 @@ $(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
 # that SepApp *did not compile any of SepLib again*: the NOGREPs below are the
 # actual assertion, and the run only confirms that the references it emitted
 # instead denote what they should.
+# Section 32.4.  --custard_c_no_prefix and the extern "C" guard.  The unit is
+# built with a main so that it can also be run on its own, and separately
+# linked against a hand-written C++ consumer: the C++ half is the assertion,
+# because those calls only resolve if the header guards its declarations.
+# Extracted a second time without --custard_main: the consumer supplies main,
+# which is what a library unit is.  The .dc above keeps its own main so that
+# the same code is also run standalone.
+$(OUTPUT_DIR)/ExportLib.c: $(CACHE_DIR)/Export.fst.checked
+	$(call msg, "CUSTARD-C", ExportLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true $(FLAGS_Export) Export.fst -o $@
+
+$(OUTPUT_DIR)/Export.dcpp: $(OUTPUT_DIR)/ExportLib.c ExportUser.cpp
+	$(call msg, "CXX", ExportUser)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -c -x c $< \
+	  -o $(OUTPUT_DIR)/Export.o
+	$(Q)g++ -std=c++11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -I$(CURDIR) \
+	  -c ExportUser.cpp -o $(OUTPUT_DIR)/ExportUser.o
+	$(Q)g++ $(OUTPUT_DIR)/ExportUser.o $(OUTPUT_DIR)/Export.o \
+	  -o $(OUTPUT_DIR)/ExportUser.exe
+	$(Q)$(OUTPUT_DIR)/ExportUser.exe | grep -qx ok \
+	  || { echo "ERROR: ExportUser did not print ok"; exit 1; }
+	@# The renamed definitions carry external linkage under the bare name,
+	@# and the unnamed helper does not appear in the symbol table at all.
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/Export.o | grep -qw widget_add \
+	  || { echo "ERROR: widget_add is not an exported symbol"; exit 1; }
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/Export.o | grep -q helper \
+	  && { echo "ERROR: helper escaped into the symbol table"; exit 1; }; true
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/Export.dcpp
+
 $(OUTPUT_DIR)/SepLib.cui: $(CACHE_DIR)/SepLib.fst.checked
 	$(call msg, "CUSTARD-UNIT", SepLib)
 	@mkdir -p $(OUTPUT_DIR)

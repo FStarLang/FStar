@@ -198,6 +198,7 @@ let defaults = [
   ("custard_entry"                             , List []);
   ("custard_entrypoints"                       , List []);
   ("custard_entry_module"                      , List []);
+  ("custard_c_no_prefix"                       , List []);
   ("custard_main"                              , Unset);
   ("custard_dump_ir"                           , Bool false);
   ("custard_dump_specializations"              , Bool false);
@@ -475,6 +476,7 @@ let get_codegen_lib             ()      = lookup_opt "codegen-lib"              
 let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
 let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      (as_list as_string)
 let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
+let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      (as_list as_string)
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
@@ -891,6 +893,20 @@ lines whose first non-blank character is # are ignored. May be repeated. A \
 plugin's hand-written realizations call the compiler by OCaml name, through \
 no request Custard can see, so the plugin ships such a file and the compiler \
 build reads it alongside its own.");
+
+  ( noshort,
+    "custard_c_no_prefix",
+    Accumulated (SimpleStr "module_name"),
+    text "With --custard_backend C, emit the public definitions of the named \
+module under their unqualified names, as krml's -no-prefix does. May be \
+repeated. This applies only to definitions that are already part of the \
+translation unit's interface -- those named by --custard_entry or \
+--custard_entry_module, which are exactly the ones emitted with external \
+linkage and declared in the generated header. It does not apply to a \
+specialization: a specialized name carries a hint (section 30.15) that is \
+free to change when the monomorphizer's input changes, and is not something \
+another translation unit may depend on. Two public definitions that would \
+share an unqualified name is an error.");
 
   ( noshort,
     "custard_entry_module",
@@ -2157,6 +2173,7 @@ let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> U
 let custard_entries              () = get_custard_entry ()
 let custard_entrypoint_files     () = get_custard_entrypoints ()
 let custard_entry_modules        () = get_custard_entry_module ()
+let custard_c_no_prefix          () = get_custard_c_no_prefix ()
 let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()
