@@ -532,19 +532,29 @@ instance val tagged_eff_extraction_mode : tagged eff_extraction_mode
 (*
  * The monadic representation of an effect.
  *
- * These combinators play *no role in typechecking*: the meaning of a
- * computation type is fixed by the generic pre/postcondition rules.  They
- * only give the effect an executable meaning, which is what reification
- * (and hence extraction and the tactic engine) needs.
+ * The combinators give the effect an executable meaning, which is what
+ * reification (and hence extraction and the tactic engine) needs.  They do
+ * not otherwise enter typechecking: the meaning of a computation type is
+ * fixed by the generic pre/postcondition rules.
  *
  *   repr   : a:Type u#a -> Type u#b
  *   return : a:Type u#a -> x:a -> repr a
  *   bind   : a:Type u#a -> b:Type u#b -> repr a -> (a -> repr b) -> repr b
+ *
+ * The one exception is [repr_universe]: for a *total* effect, [M t] is
+ * inhabited by [repr t], so it is [repr] that decides which universe [M t]
+ * lives in.  See [FStarC.TypeChecker.Env.effect_universe].
  *)
 type eff_combinators = {
   repr        : tscheme;
   return_repr : tscheme;
   bind_repr   : tscheme;
+
+  (* [u_a]. Type u#r  where  [repr u#u_a a : Type u#r] --- i.e. the universe
+     of the representation as a function of the universe of the result type,
+     packaged as a universe-polymorphic type so that [inst_tscheme_with] can
+     apply it.  Filled in by [TcEffect.tc_eff_decl]; [Tm_unknown] until then. *)
+  repr_universe : tscheme;
 }
 
 (*

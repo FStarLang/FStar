@@ -1823,24 +1823,10 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp &
     | Some g -> e, c', g
 
 (*
- * The universe of a computation type [M t (requires pre) (ensures post)].
- *
- * Since an effect is now just a name plus a specification, a computation
- * type is inhabited by (a description of) a value of type [t]: its universe
- * is the universe of [t], whatever the effect.
- *)
-(*
- * The universe of [M t]: the universe of [t] if [M] is pure/ghost or marked
- * [total], and u#0 otherwise.  A computation in a partial effect need not
- * return, so an arrow into it is proof-irrelevant and lives in Type0; this
- * is what makes e.g. [unit -> Dv t : Type0] for any [t : Type u#a].
+ * The universe of a computation type [M t], where [t : Type u#u_res].
  *)
 let universe_of_comp env u_res c : ML _ =
-  let c_lid = c |> U.comp_effect_name in
-  if U.is_pure_or_ghost_effect c_lid then u_res
-  else if Env.lookup_effect_quals env c_lid |> List.existsb (fun q -> q = S.TotalEffect)
-  then u_res
-  else S.U_zero
+  Env.effect_universe env (U.comp_effect_name c) u_res
 
 (* A computation type carries no precondition any more -- there is nothing left
    to discharge here. *)

@@ -332,7 +332,8 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
         let! repr        = c.repr        |> f_tscheme in
         let! return_repr = c.return_repr |> f_tscheme in
         let! bind_repr   = c.bind_repr   |> f_tscheme in
-        return (Some { repr; return_repr; bind_repr })
+        let! repr_universe = c.repr_universe |> f_tscheme in
+        return (Some { repr; return_repr; bind_repr; repr_universe })
     in
     let! eff_attrs       = ed.eff_attrs |> mapM f_term in
     let  extraction_mode = ed.extraction_mode in

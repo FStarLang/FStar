@@ -1492,6 +1492,42 @@ let is_total_effect (env:env) (effect_lid:lident) : ML (bool) =
     let quals = lookup_effect_quals env effect_lid in
     List.contains TotalEffect quals
 
+(*
+ * The universe of the computation type [M t], given the universe [u_res] of
+ * its result type [t].
+ *
+ *  - [M] partial: a computation in [M] need not return, so [t1 -> M t] is
+ *    not a type of values and is placed in [Type u#0]; this is what makes
+ *    e.g. [unit -> Dv t : Type0] for any [t].
+ *
+ *  - [M] total with a representation: [M t] is inhabited by [repr t], so it
+ *    lives wherever [repr t] does.  This is *not* [u_res] in general: for
+ *    [repr (a:Type u#a) : Type u#(max a 1) = (b:Type u#0 & a)], [M t] is one
+ *    universe above [t].  Reporting [u_res] here would let [unit -> M bool]
+ *    pass as [Type u#0] while really containing a [Type u#1] value.
+ *
+ *  - [M] total without a representation: [Tot], [GTot], and anything else
+ *    introduced by [total assume effect M].  There is no representation to
+ *    consult, so we take the assumption at its word and answer [u_res].
+ *)
+let effect_universe (env:env) (eff:lident) (u_res:universe) : ML universe =
+  if U.is_pure_or_ghost_effect eff then u_res
+  else if not (is_total_effect env eff) then U_zero
+  else match effect_decl_opt env eff with
+       | None -> u_res
+       | Some (ed, _) ->
+         match ed |> U.get_repr_universe with
+         | None -> u_res
+         | Some ts ->
+           let _, t = inst_tscheme_with ts [u_res] in
+           match (SS.compress t).n with
+           | Tm_type u -> u
+           | _ ->
+             failwith (Format.fmt2
+               "Effect %s has no computed representation universe (got %s); \
+                its declaration was not typechecked"
+               (string_of_lid eff) (show t))
+
 (* An effect is reifiable exactly when it was given a representation with an
    [effect { M with { repr = ...; return = ...; bind = ... } }] block. *)
 let is_reifiable_effect (env:env) (effect_lid:lident) : ML (bool) =

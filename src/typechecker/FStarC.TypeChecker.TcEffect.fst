@@ -104,6 +104,21 @@ let check_total_repr env (mname:lident) (repr_ts:S.tscheme) (r:Range.t) : ML uni
                       function into %s" (string_of_lid mname) (show (U.comp_effect_name c)))
   | _ -> ()
 
+(* The universe of the representation, as a function of the universe of the
+   result type: [[u_a]. Type u#r] where [repr u#u_a a : Type u#r].
+
+   For a total effect this is the universe of the computation type itself,
+   since [M t] is then inhabited by [repr t] -- see [Env.effect_universe].
+   Reading it off [repr] once, here, saves re-deriving it at every arrow. *)
+let repr_universe env (repr_ts:S.tscheme) (r:Range.t) : ML S.tscheme =
+  let us, _ = repr_ts in
+  let u_a = List.hd us in
+  let env = Env.push_univ_vars env us in
+  let bv_a = S.new_bv (Some r) (u_type r u_a) in
+  let env = Env.push_bv env bv_a in
+  let u = universe_of env (repr_app repr_ts u_a (S.bv_to_name bv_a) r) in
+  [u_a], SS.close_univ_vars [u_a] (S.mk (Tm_type u) r)
+
 let tc_eff_decl env (ed:S.eff_decl) (quals:list S.qualifier) (_attrs:list S.attribute) : ML S.eff_decl =
   match ed.combinators with
   | None -> ed
@@ -153,7 +168,8 @@ let tc_eff_decl env (ed:S.eff_decl) (quals:list S.qualifier) (_attrs:list S.attr
 
     { ed with combinators = Some { repr = repr_ts;
                                    return_repr = return_ts;
-                                   bind_repr = bind_ts } }
+                                   bind_repr = bind_ts;
+                                   repr_universe = repr_universe env0 repr_ts r } }
 
 (*
  * A sub-effect declaration is an edge in the effect lattice, optionally

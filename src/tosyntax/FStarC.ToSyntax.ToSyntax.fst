@@ -3268,6 +3268,8 @@ and desugar_define_effect env d (d_attrs:list S.term) (quals: qualifiers) eff_na
       repr        = lookup_comb "repr";
       return_repr = lookup_comb "return";
       bind_repr   = lookup_comb "bind";
+      (* Computed by [TcEffect.tc_eff_decl], once [repr] has a type. *)
+      repr_universe = [], S.tun;
     } in
     let sigel = Sig_new_effect ({
       mname = mname;

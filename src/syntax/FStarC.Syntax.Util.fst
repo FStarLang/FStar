@@ -1981,11 +1981,13 @@ let eff_decl_of_new_effect (se:sigelt) : ML eff_decl =
 let get_eff_repr ed    = match ed.combinators with None -> None | Some c -> Some c.repr
 let get_return_repr ed = match ed.combinators with None -> None | Some c -> Some c.return_repr
 let get_bind_repr ed   = match ed.combinators with None -> None | Some c -> Some c.bind_repr
+let get_repr_universe ed = match ed.combinators with None -> None | Some c -> Some c.repr_universe
 
 let apply_eff_combinators f combs = {
-  repr        = f combs.repr;
-  return_repr = f combs.return_repr;
-  bind_repr   = f combs.bind_repr;
+  repr          = f combs.repr;
+  return_repr   = f combs.return_repr;
+  bind_repr     = f combs.bind_repr;
+  repr_universe = f combs.repr_universe;
 }
 
 let aqual_is_erasable (aq:aqual) =

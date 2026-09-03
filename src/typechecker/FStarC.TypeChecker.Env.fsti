@@ -550,6 +550,9 @@ val is_user_reflectable_effect : env -> lident -> ML (bool)
 
 val is_total_effect : env -> lident -> ML (bool)
 
+(* The universe of [M t], given the universe of [t]. *)
+val effect_universe : env -> lident -> universe -> ML universe
+
 (* A coercion *)
 
 val is_reifiable_effect      : env -> lident -> ML (bool)

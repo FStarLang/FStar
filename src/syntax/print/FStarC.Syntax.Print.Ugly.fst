@@ -515,9 +515,10 @@ let eff_decl_to_string ed : ML string =
       Format.fmt1 "assume effect %s\n"
         (lid_to_string ed.mname)
     | Some c ->
-      Format.fmt4 "effect { %s with { repr = %s; return = %s; bind = %s } }\n"
+      Format.fmt5 "effect { %s with { repr = %s (* : %s *); return = %s; bind = %s } }\n"
         (lid_to_string ed.mname)
         (tscheme_to_string c.repr)
+        (tscheme_to_string c.repr_universe)
         (tscheme_to_string c.return_repr)
         (tscheme_to_string c.bind_repr)
 

@@ -616,6 +616,9 @@ val eff_decl_of_new_effect (se:sigelt) : ML eff_decl
 val get_eff_repr    (ed:eff_decl) : option tscheme
 val get_return_repr (ed:eff_decl) : option tscheme
 val get_bind_repr   (ed:eff_decl) : option tscheme
+
+(* [u_a]. Type u#r, where [repr u#u_a a : Type u#r]. *)
+val get_repr_universe (ed:eff_decl) : option tscheme
 val apply_eff_combinators (f:tscheme -> ML tscheme) (combs:eff_combinators) : ML eff_combinators
 
 val aqual_is_erasable (aq:aqual) : ML bool
