@@ -290,7 +290,7 @@ let rec to_vec_lt_pow2 #n a m i =
       end
 
 (** Used in the next two lemmas *)
-#push-options "--initial_fuel 0 --max_fuel 1"
+#push-options "--initial_fuel 0 --max_fuel 1 --z3rlimit_factor 4"
 let rec index_to_vec_ones #n m i =
    let a = pow2 m - 1 in
    pow2_le_compat n m;

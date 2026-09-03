@@ -139,6 +139,7 @@ let init_macro_freenames =
     ("is-BoxInt", ["BoxInt"]);
     ("is-BoxString", ["BoxString"]);
     ("is-BoxReal", ["BoxReal"]);
+    ("is-BoxProp", ["BoxProp"]);
   ]
 
 (* Initial state: everything is empty *)

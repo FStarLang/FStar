@@ -220,6 +220,22 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
                                 ([[Term.boxBool b]], [bb], mk_HasType (Term.boxBool b) tt), Some "bool typing", "bool_typing");
          Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
+    let mk_prop : env -> string -> term -> ML (list decl) = fun env nm tt ->
+        // prop is encoded like bool: every prop is a boxed SMT boolean,
+        // where the boxed boolean records the validity of the prop.
+        let typing_pred = mk_HasType x tt in
+        let bb = mk_fv ("b", Bool_sort) in
+        let b = mkFreeV bb in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[Term.boxProp b]], [bb], mk_HasType (Term.boxProp b) tt),
+                       Some "prop typing", "prop_typing");
+         Util.mkAssume(mkForall (Env.get_range env)
+                                ([[mkApp("Valid", [Term.boxProp b])]], [bb],
+                                 mkIff(mkApp("Valid", [Term.boxProp b]), b)),
+                       Some "prop validity", "prop_validity");
+         Util.mkAssume(mkForall_fuel env (Env.get_range env)
+                                     ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxPropFun) x)),
+                       Some "prop inversion", "prop_inversion")] in
     let mk_int : env -> string -> term -> ML (list decl) = fun env nm tt ->
         let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
@@ -405,6 +421,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
    in
    let prims : list (lident & (env -> string -> term -> ML (list decl))) =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
+                 (Const.prop_lid,   mk_prop);
                  (Const.int_lid,    mk_int);
                  (Const.real_lid,   mk_real);
                  (Const.string_lid, mk_str);
@@ -748,7 +765,12 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                                        Some "free var typing",
                                        ("typing_"^vname)) in
          let freshness =
+           // A `new` type whose result type is prop cannot be given a distinct
+           // constructor id: the encoding of prop is extensional (see mk_prop),
+           // so every prop is equal to True or False, and hence a prop-valued
+           // type constructor cannot be distinct from every other term.
            if quals |> List.contains New
+           && not (U.is_fvar Const.prop_lid (SS.compress res_t))
            then [Term.fresh_constructor (S.range_of_fv fv) (vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, varops.next_id());
                  pretype_axiom false (S.range_of_fv fv) env vapp (univ_fvs@vars)]
            else [] in
@@ -1007,7 +1029,7 @@ let encode_top_level_let :
                                 (show binders)
                                 (show body);
                 (* Encode binders *)
-                let vars, binder_guards, env', binder_decls, _ = encode_binders None binders env' in
+                let vars, _binder_guards, env', binder_decls, _ = encode_binders None binders env' in
                 let vars, app =
                     if fvb.fvb_thunked
                     && vars = []
@@ -1021,51 +1043,35 @@ let encode_top_level_let :
                                          ({fvb with smt_arity = List.length univ_terms + fvb.smt_arity})
                                          (univ_terms @ List.map mkFreeV vars)
                 in
-                let is_logical =
-                  // match (SS.compress t_body).n with
-                  // | Tm_fvar fv when S.fv_eq_lid fv FStarC.Parser.Const.prop_lid -> true
-                  // | _ -> false
-
-                  // GE: this is a cute idea, but the formula axiom shouldn't
-                  // replace the default equation axiom, so disabling this for now
-                  false
+                let is_prop_valued =
+                  match (SS.compress t_body).n with
+                  | Tm_fvar fv -> S.fv_eq_lid fv FStarC.Parser.Const.prop_lid
+                  | _ -> false
                 in
-                let is_smt_theory_symbol =
-                    let fv = Inr?.v lbn in
-                    Env.fv_has_attr env.tcenv fv FStarC.Parser.Const.smt_theory_symbol_attr_lid
-                in
-                let should_encode_logical =
-                    not is_smt_theory_symbol
-                    && (quals |> List.contains Logic || is_logical)
-                in
-                let make_eqn name pat app body =
+                let make_eqn pat app body =
                     //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
                     //But the guard is unnecessary given the pattern
                     Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                            ([[pat]], vars, mkEq(app,body)),
                                   Some (Format.fmt1 "Equation for %s" (string_of_lid flid)),
-                                  (name ^ "_" ^ fvb.smt_id))
+                                  ("equation_" ^ fvb.smt_id))
                 in
-                let eqns,decls2 =
-                  let basic_eqn_name =
-                    if should_encode_logical
-                    then "defn_equation"
-                    else "equation"
-                  in
-                  let basic_eqn, decls =
-                    let body, decls = encode_term body env' in
-                    make_eqn basic_eqn_name app app body, decls
-                  in
-                  if should_encode_logical
-                  then let pat, app, (body, decls2) =
-                           app, mk_Valid app, encode_formula body env'
-                       in
-                       let logical_eqn = make_eqn "equation" pat app body in
-                       [logical_eqn; basic_eqn], decls@decls2
-                  else [basic_eqn], decls
+                let eqn, decls2 =
+                  if is_prop_valued
+                  then
+                    // A prop-valued definition gets a formula equation
+                    // `Valid (f x) <==> body`. The term equation `f x == body`
+                    // follows from it, since the SMT encoding of prop is
+                    // extensional (see mk_prop above).
+                    let bodyf, decls2 = encode_formula body env' in
+                    make_eqn app (mk_Valid app) bodyf, decls2
+                  else
+                    let body, decls2 = encode_term body env' in
+                    make_eqn app app body, decls2
                 in
-                decls@binder_decls@decls2@((eqns@primitive_type_axioms env.tcenv flid fvb.smt_id app)
-                                                 |> mk_decls_trivial),
+                decls@binder_decls@decls2@
+                  ((eqn :: primitive_type_axioms env.tcenv flid fvb.smt_id app)
+                   |> mk_decls_trivial),
                 env
             | _ -> failwith "Impossible"
         in
