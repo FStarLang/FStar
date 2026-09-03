@@ -169,7 +169,7 @@ things fall out:
 - **`Tot (squash phi)` and `Lemma (ensures phi)` are now the same type**, so the
   bespoke subtyping rule for that pair is deleted too.
 
-### The SMT encoding is unchanged
+### The SMT encoding of a `Lemma` is unchanged
 
 This was the main risk: ~5300 `Lemma` occurrences, ~1080 with `requires`. If
 trigger selection or the quantified-binder set shifted, proofs would fail
@@ -252,6 +252,176 @@ If you review one thing, review these four. They are ordinary typechecker bugs
 that this refactor exposed rather than caused, and three of them are latent
 today.
 
+The same trap has a second mouth, worth knowing about before touching the SMT
+encoding: a `.checked` file caches not only a module's typechecked declarations
+but also **its SMT encoding** (`encode_modul_from_cache`). Since `.checked` files
+are not tied to the compiler that produced them, a change to
+`FStarC.SMTEncoding.*` has no effect at all on any module whose artifact is
+already on disk — including all of ulib. Measuring such a change means deleting
+`stage{1,2,3}/ulib.checked` (and `fstarc.checked`, or the rebuild fails with
+Error 317), not just rebuilding the compiler.
+
+A fifth bug surfaced the same way, in the driver rather than the typechecker.
+`fstar.exe -c M.fst -o M.fst.checked` — how every `.checked` file in the tree is
+built — consulted the cache to decide whether to load dependences *on the fly*,
+even though `-o` makes `tc_one_file` recheck `M` from source no matter what the
+cache holds. So a stale-but-valid `M.fst.checked` silently switched `M` to the
+non-incremental path, which typechecks the module only after its whole
+desugaring is finished — and finishing pops the module's `open`s off the scope
+that tactics read out of the environment. `tests/tactics/BQual.fst` then printed
+`Prims.int` for `int`, and `tests/tactics/Parsing.fst` could not resolve `+`.
+Both passed from a clean tree and failed on the second build. The decision now
+mirrors the one in `tc_one_file`, so a build no longer depends on what was
+lying around before it started; `tests/tactics/Makefile` checks both files a
+second time to pin the two paths together.
+
+## Testing against EverParse
+
+`ci` is not a big enough sample for a change this broad, so the branch was also
+run against [EverParse](https://github.com/project-everest/everparse)'s `fstar2`
+branch — two clean clones built side by side, one with EverParse's pinned
+toolchain to establish that the tree is green to begin with, one with this
+branch's `stage3` compiler. The pinned build reported zero errors, so every
+failure in the other build is a genuine difference attributable to this PR.
+
+The experiment ran to a green build over several rounds (`-k` only ever exposes
+one layer of failures at a time, since dependents of a failing module are
+skipped). It found four more typechecker bugs, all fixed here:
+
+- **Subtyping could not eta-expand across an arity mismatch.** A precondition is
+  a trailing implicit binder, so `Pure t (requires p)` has one binder more than
+  `Tot t`. `tc_abs` inserts a missing implicit for a *lambda*, but a point-free
+  term had no way to bridge the gap. `try_eta_expand_to_expected_typ` in
+  `TypeChecker.Util` now handles **both** directions — the term's type having
+  fewer binders than expected and having *more*, all of them implicit (which is
+  where an *application* lands). `e` is applied to the shorter of the two
+  arities' worth of arguments, taken from the term's own type — whose sorts are
+  concrete, where the expected type's may still be uvars — while the
+  abstraction binds *all* of the expected type's binders, since `tc_abs` only
+  ever inserts *leading* implicits and the ones at issue are trailing.
+  It has to run **before** the subtyping check, not only in its failure branch:
+  relating `x:a -> Tot b` to `x:a -> #_:squash p -> Tot b` does not fail, it
+  succeeds with an unprovable `has_type b (#_:squash p -> Tot b)` obligation. So
+  `weaken_result_typ` tries it up front, on types that are already syntactically
+  arrows (so the common case costs nothing), and again after subtyping has
+  failed, that time normalizing first. Eta-expanding an effectful term would
+  delay, duplicate or drop its effect, so both hooks are guarded by
+  `is_pure_or_ghost_comp`. This closes the follow-up that the "point-free
+  definition" regression below asked for.
+- **A refinement was dropped when joining two lower bounds under unsolved
+  universes.** Two structurally identical refinements can differ only in the
+  universe uvar of an `eq2`; `U.term_eq` compares universe uvars by identity, so
+  `combine_refinements` concluded the two bounds were genuinely different and
+  widened to the base type, silently losing the refinement. It now falls back to
+  `try_eq` **on the two refinement formulas** when `term_eq` says no. `try_eq`
+  runs with `smt_ok=false`, so it can only unify structurally-equal formulas
+  modulo universe solving — applying it to the whole types instead would wrongly
+  identify `t` with `t{phi}`.
+- **`TypeChecker.Core` rejected an unelaborated `let` inside a type.** Core's
+  `Tm_let` case typechecked `lb.lbtyp` unconditionally, but a `let` that occurs
+  inside a *type* — e.g. the binder sort `(x:nat) -> squash (let y = x + 1 in y > 0)`
+  of a Pulse `fn` argument — can still carry the `Tm_unknown` the desugarer left
+  there, because not every producer of a term runs it through the elaborator
+  first. Core then failed with `Unexpected term: Tm_unknown`. It now falls back to
+  the definition's inferred type when the annotation is absent, which is sound:
+  an unannotated `let`'s type *is* its definition's type, and the subtyping check
+  it would otherwise perform is then reflexive. Only reachable through Core, so
+  in practice only through Pulse.
+- **A `let rec` whose result is a function lost its `ensures`.** An `ensures` is
+  now a refinement on the result type, so a definition returning a function is
+  annotated with a *refinement of an arrow*. `Syntax.Util.arrow_formals_comp`
+  deliberately looks *through* such a refinement to find the binders underneath,
+  and throws the predicate away — harmless for a caller that only counts
+  binders, fatal for one that rebuilds a type from what it got back. Two did:
+  `TcUtil.extract_let_rec_annotation`, which moves the annotation onto the body
+  and so was checking the body against the *unrefined* arrow, and
+  `TcTerm.guard_letrecs`, which gives the recursive occurrence its type and so
+  was hiding the definition's own postcondition from its recursive calls. The
+  postcondition was then left to a single subtyping check on the whole
+  definition, discharged with none of the body's facts in scope, and typically
+  unprovable. `Normalize.get_n_binders_no_unrefine` splits with the strict
+  splitter, falling back to the old one only when that finds too few binders, so
+  it can never see less than before; the four sites in
+  `extract_let_rec_annotation` and the one in `guard_letrecs` use it.
+  Regression test: `tests/micro-benchmarks/LetRecRefinedFunctionResult.fst`.
+(A sixth problem, in the SMT encoding rather than the typechecker, was
+root-caused but deliberately **not** fixed; see below.)
+
+One bug was root-caused but deliberately **not** fixed; see below.
+
+## An open bug: obligations escaping a `let`
+
+`Rel.try_solve_single_valued_implicits` solves any `unit`- or `squash`-typed
+implicit with `()` unconditionally and defers the proof to
+`check_implicit_solution_and_discharge_guard`, which re-typechecks the solution
+under `{env with gamma = imp_uvar.ctx_uvar_gamma}` and discharges the guard
+*there*. `gamma` carries binder sorts and nothing else — no let-equations, no
+branch hypotheses. So an obligation that a precondition raises can be discharged
+in a context that has lost the very equation that proves it:
+
+```fstar
+assume val h (x: nat { x > 129 }) : nat
+assume val lemA (y1: nat) (q1: squash (y1 == y1)) : Lemma (ensures True)
+let a1 (n: nat) : Tot unit = let m : nat = n + 130 in lemA (h m) (_ by (trefl ()))
+```
+
+fails with `Failed to prove: m > 129`, in a context that binds `m` but not
+`m == n + 130`. An *annotated* inner let is what loses it: `check_inner_let`
+takes `x.sort` from `U.comp_result c1`, and the annotation has already forced
+that through `weaken_result_typ`, discarding the refinement that
+`maybe_assume_result_eq_pure_term` would otherwise have attached. Dropping the
+annotation, or writing `let m : (q:nat{q == n + 130}) = n + 130`, or asserting
+the equation (`assert` is a `let _ : squash p`, which puts `p` in a binder sort)
+all make it go through.
+
+This is pre-existing, but this PR makes it far easier to hit, because *every*
+precondition is now a `squash` implicit and so takes this path. It is left open
+on purpose: enriching an annotated let's binder sort would change the SMT
+encoding of every annotated inner let in every F* program, which is not a change
+to make blind at the end of a refactor. The workarounds are local and cheap.
+
+## A second open bug: a `squash p` binder is a weak SMT hypothesis
+
+`Prims.squash p` *is* `_:unit{p}`, but the encoder treats the two spellings
+differently. A refinement type gets a `refinement_interpretation` axiom, so a
+hypothesis `HasTypeFuel f x _:unit{p}` yields `Valid p` in one E-matching step.
+`Prims.squash p` is an application of an uninterpreted symbol, so reaching
+`Valid p` obliges the solver to first rewrite with `equation_Prims.squash` and
+then match the refinement axiom *up to congruence*. On small goals it manages;
+on large ones it sometimes does not, and the hypothesis is then silently useless.
+Side by side, at the same call site:
+
+```fstar
+val f (x1 x2: t) (_: squash (s x1 == s x2)) : ...   // p not available
+val f (x1 x2: t) (_: (u:unit{s x1 == s x2})) : ...  // p available
+```
+
+This is not new — upstream F* fails identically on a hand-written `squash`
+binder — but it was rare, because upstream rarely *produces* one. This PR makes
+every precondition such a binder, so the weakness is now reachable from ordinary
+code. One EverParse definition (`LowParse.PulseParse.Sum.accessor_dsum_tag`) hits
+it; the fix there is the general workaround, which is to state the precondition
+as a refinement on an argument's own type instead:
+
+```fstar
+val g (l: list a { pre l }) : ...        // instead of  (l: list a) : Pure _ (requires pre l) _
+```
+
+Three ways to close it in the encoder were tried and all three were **rejected**,
+because each traded this rare failure for a different one:
+
+| Attempt | Effect |
+| --- | --- |
+| Rewrite `squash p` to the refinement it denotes, before encoding | Mints a fresh `Tm_refine_<hash>` symbol and three axioms per *distinct precondition shape*; timed out `CBOR.Spec.API.Format` |
+| Emit `HasType e unit /\ p` for a squash binder guard | Makes the equation available *eagerly*, merging E-graph classes before the relevant patterns fire; broke `LowParse.Spec.Base.serializer_injective` |
+| A global axiom `HasTypeFuel f x (Prims.squash p) ==> Valid p` | Fires on *every* squash-typed hypothesis, including record fields holding pattern-less quantified laws; broke `FStar.Tactics.CanonMonoid` and `FStar.Algebra.CommMonoid.Fold.Nested` in ulib |
+
+Every variant is a net-neutral trade of one rare instability for another, so the
+encoding is left alone. Closing this properly means making the hypothesis
+available *lazily*, in a way that does not also strengthen unrelated
+squash-typed hypotheses — a change to make on its own, with its own measurement,
+not at the end of a refactor.
+
 ## User-visible changes
 
 - `assume_safe`'s argument is now `squash False -> Tac a`, not `unit -> Tac a`.
@@ -285,13 +455,50 @@ today.
   result type. See `regression_questions.md` for both, worked out in detail.
 - **Accepted regression:** a precondition is a *trailing implicit binder*, so an
   arrow that has one has one binder more than an otherwise identical arrow that
-  does not. F* instantiates trailing implicits at an application but does not
-  eta-expand during a *subtyping* check, so a point-free definition whose
-  implementation is *more general* than its interface -- no `requires` where the
-  interface declares one -- must now be eta-expanded. The same shows up when
-  passing a function with a `requires` where a plain arrow is expected: write
-  `(fun a b -> a + b)` rather than `( + )`. Teaching subtyping to eta-expand is a
-  proposed follow-up.
+  does not. Subtyping now eta-expands to bridge that gap (see "Testing against
+  EverParse"), so a point-free definition whose implementation is *more general*
+  than its interface still typechecks. The eta-expansion is only attempted for
+  pure and ghost computations and only when the surplus binders are implicit, so
+  a few point-free idioms still need to be written out: passing `( + )` where a
+  two-argument arrow is expected may need `(fun a b -> a + b)`.
+- **Accepted regression:** an implicit can be pinned by a *later* argument before
+  the constraint from an earlier one is processed. If argument `n` gives `?u` the
+  rigid lower bound `t{phi}` while argument 1 only wants `t <: ?u`,
+  `solve_flex_rigid_meet` fires with a single bound in hand, sets `?u := t{phi}`,
+  and turns the earlier constraint into an SMT obligation that cannot be proved.
+  This PR makes it more reachable because a lemma's statement is now part of its
+  type. Instantiate the implicit explicitly at the call site.
+- **Accepted regression:** a `match`/`if` scrutinee's refinement is not always
+  available in the branches, so `if strong_excluded_middle p then ...` may no
+  longer see `b = true <==> p`. Bind the scrutinee with an explicit refined
+  annotation.
+- **Accepted regression:** in a chain of *nested* calls whose results are refined
+  (``x `logand` lognot ((lognot 0uL `shift_right` a) `shift_left` b)``),
+  only the outermost result's refinement is now attached; the intermediate ones
+  are lost. Let-bind each intermediate operand — the idiom EverParse already used
+  for its `UInt8` instances of the same code — and the refinements come back.
+- **Accepted regression:** an `assert` elaborates `==` at the *refined* type of
+  its operands, which can add a side condition that did not exist before
+  (`assert (a *. (b /. a) == b)` for `a b : perm` now carries `>. 0.0R`).
+- **Accepted regression:** a module-local alias of an imported definition is not
+  necessarily SMT-unfoldable to it when the module's interface has a `val` for
+  the alias. `assert_norm` of the equation restores it.
+- **Accepted regression:** Pulse's typeclass-driven
+  `intro (Trade.trade A B) #emp fn _ {...}` no longer resolves its `introducable`
+  constraint; call `Trade.intro_trade A B emp fn _ {...}` directly.
+- **Accepted regression:** `coerce_eq () x` infers its source type from `x`, so
+  when `x` is the result of a function with an `ensures` it is the *refined*
+  type, and the `()` is then asked to prove that a refinement equals its own
+  underlying type. Ascribe the argument at the type intended
+  (`coerce_eq () (parse_nlist n p <: parser _ (nlist n t))`) --- the same
+  ascription EverParse already wrote for the neighbouring serializer.
+- **Accepted regression:** a lemma stated point-free over a function that has a
+  `requires` (`ensures (inj (f x))`, where `f x` is a partial application
+  awaiting the squash binder) is eta-expanded at each use, and two eta-expansions
+  of the same term are two distinct closures to the solver, so the lemma's
+  conclusion no longer matches the goal. Removing the `requires` in favour of a
+  refinement on the argument's own type removes the eta-expansion and the
+  problem: this is what `ASN1.Spec.Sequence` and `ASN1.Spec.Any` do.
 - A top-level `let x = assert p` now has type `squash p`, so `p` becomes a fact
   for the rest of the module. Ascribe `: unit` where that is not wanted --
   in particular `let _ : unit = assert False`, which otherwise poisons
@@ -345,3 +552,10 @@ is honest. Note that test `.checked` files live in `_cache` as well as
 
 `ci` already runs stage 3, `examples` and `doc` via `_test`, so it needed no
 change.
+
+Beyond `ci`, EverParse's `fstar2` branch verifies end to end against this
+compiler, after the downstream edits catalogued above (one `move_requires`
+removal, a handful of ascriptions and explicit implicit arguments, and four
+rlimit bumps). The A/B baseline build with EverParse's pinned toolchain reported
+zero errors, so that catalogue is the complete list of differences this PR makes
+to a large external codebase.
