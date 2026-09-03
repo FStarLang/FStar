@@ -827,6 +827,19 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(Q)for p in $(CNOGREP_$*); do \
 	  grep -qF -- "$$p" $@ $(basename $@).h \
 	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
+	@# Section 51.3.  A prologue is emitted on the line before the thing it
+	@# decorates, so an assertion about *which* declaration carries one is
+	@# an assertion about a pair of adjacent lines.
+	$(Q)for p in $(CPAIR_$*); do \
+	  a=$${p%%@*}; b=$${p#*@}; \
+	  grep -F -A1 -- "$$a" $@ $(basename $@).h | grep -qF -- "$$b" \
+	    || { echo "ERROR: $* has no '$$a' immediately before '$$b'"; \
+	         exit 1; }; done
+	$(Q)for p in $(CNOPAIR_$*); do \
+	  a=$${p%%@*}; b=$${p#*@}; \
+	  grep -F -A1 -- "$$a" $@ $(basename $@).h | grep -qF -- "$$b" \
+	    && { echo "ERROR: $* has a '$$a' immediately before '$$b'"; \
+	         exit 1; }; done; true
 	$(Q)awk '/\{$$/ { open = NR; next } \
 	         /^[ \t]*\}/ && open == NR - 1 { print NR; found = 1 } \
 	         { open = 0 } END { exit found }' $@ \
@@ -1255,6 +1268,26 @@ NOEGREP_ExternErase += "ExternErase.run_g"
 C_TESTS    += FragCfg
 CGREP_FragCfg += "fc_mma("
 CNOGREP_FragCfg += "FragCfg_frag"
+
+# Section 51.3.  A prologue that follows the call graph.  Three callees, one
+# per reachability class: [only] is kernel-only and gets the exclusive
+# string, [both] is reached from the kernel and from host code and gets the
+# shared one, [host_only] is reached from neither and must be untouched.  The
+# strings are not CUDA's on purpose -- Custard does not read them, and a test
+# spelling __device__ would be checking a spelling.
+C_TESTS += DevClosure
+CGREP_DevClosure += "/*ENTRY*/" "/*EXCL*/" "/*SHARED*/"
+# Which function got which prologue is the whole test, and a prologue sits on
+# the line before the definition it decorates, so the assertions are on pairs
+# of lines rather than on lines.  CPAIR_<t> is `A@B', asserting that some A is
+# immediately followed by a B; CNOPAIR_<t> asserts that none is.
+CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only" \
+                      "/*SHARED*/@DevClosure_both" \
+                      "/*ENTRY*/@DevClosure_kernel"
+CNOPAIR_DevClosure += "/*SHARED*/@DevClosure_only" \
+                      "/*EXCL*/@DevClosure_both" \
+                      "/*EXCL*/@DevClosure_host_only" \
+                      "/*SHARED*/@DevClosure_host_only"
 
 # Section 50.1.  A source variable named [scrut], which is the name section
 # 48.3's desugaring invented for its scrutinee binder without freshening it.

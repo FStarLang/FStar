@@ -439,6 +439,24 @@ val custard_extern (target: string) : unit
 (** Custard: the C header that declares a [custard_extern] symbol. *)
 val custard_c_header (header: string) : unit
 
+(** Custard: a prologue for everything this definition *reaches*, rather than
+    for this definition (see doc/ref/custard.md, section 51.3).
+
+    [CPrologue] decorates one declaration, and for CUDA that is not enough: a
+    [__global__] function may only call [__device__] functions, so marking a
+    kernel says nothing about the ordinary C functions its body calls and
+    [nvcc] rejects every one of them.  The set that needs marking is the
+    transitive callees, which is a reachability question about the whole
+    program.
+
+    So Custard computes it.  Every definition reachable from this one -- not
+    this one, and not one carrying a [CPrologue] of its own -- receives a
+    prologue: [exclusive] when the only route to it is through a definition
+    marked this way, and [shared] when the rest of the program reaches it as
+    well.  For CUDA those are ["__device__"] and ["__device__ __host__"], and
+    a helper called from both a kernel and host code needs the second. *)
+val custard_c_closure_prologue (exclusive: string) (shared: string) : unit
+
 (** Custard: written on a [tcclass], this says that its instances are ordinary
     runtime values rather than compile-time dictionaries, so an argument of
     this class type is passed at run time instead of being specialized on (see

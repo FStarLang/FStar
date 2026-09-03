@@ -887,6 +887,16 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
        | "FStar.Attributes.CPrologue" -> [Prologue str]
        | "FStar.Attributes.CEpilogue" -> [Epilogue str]
        | _ -> [])
+    (* Section 51.3.  Two strings, so it does not fit the one-argument shape
+       above: the exclusive prologue and the one for a callee the rest of the
+       program reaches too. *)
+    | Tm_fvar fv, [({ n = Tm_constant (Const_string (a, _)) }, _);
+                   ({ n = Tm_constant (Const_string (b, _)) }, _)] ->
+      let nm = Ident.string_of_lid (S.lid_of_fv fv) in
+      if not (fresh (nm ^ "\u0000" ^ a ^ "\u0000" ^ b)) then [] else
+      (match nm with
+       | "FStar.Attributes.custard_c_closure_prologue" -> [ClosurePrologue (a, b)]
+       | _ -> [])
     | Tm_fvar fv, [] ->
       let nm = Ident.string_of_lid (S.lid_of_fv fv) in
       if not (fresh nm) then [] else

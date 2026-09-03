@@ -161,6 +161,29 @@ let warn_any (prog:program) : ML unit =
         | TAbstract -> ())
      | DExternal x -> at "declaration" x.dx_ty
      | DExn e -> e.de_args |> List.iter (at "exception argument"));
+    (* Section 51.2.  An external with a type parameter is a particular and
+       recognizable case of this, and the generic message did not say so: the
+       reader is told the declaration's type has an [any] in it and left to
+       work out that the reason is polymorphism.  It is worth naming because
+       the answer is unusual -- monomorphization does not reach an external,
+       and cannot, since one C symbol has one prototype -- and because the
+       workaround is not obvious from the generic text. *)
+    let extra =
+      match d with
+      | DExternal x when Cons? x.dx_typars ->
+        [text ("'" ^ string_of_name x.dx_name ^ "' is external and \
+                polymorphic, in " ^ show (List.length x.dx_typars) ^
+               " type parameter(s): " ^ String.concat ", " x.dx_typars ^ ".");
+         text "An external is never specialized.  Specialization works by \
+               substituting into a body and an external has none, and its C \
+               declaration is a single fixed symbol with a single prototype, \
+               so there is nothing for a per-instantiation copy to be named. \
+               Each type parameter therefore becomes [any].";
+         text "Give the parameter a concrete type.  If the C target really \
+               does accept several types -- a variadic macro, say -- declare \
+               one external per type vector, all with the same \
+               [@@custard_extern] target name."]
+      | _ -> [] in
     match List.rev !sites with
     | [] -> ()
     | ss ->
@@ -169,6 +192,7 @@ let warn_any (prog:program) : ML unit =
                show (List.length ss) ^ " value(s) in '" ^
                string_of_name (name_of_decl d) ^ "':")
          :: (ss |> List.map (fun s -> text ("- " ^ s)))
+         @ extra
          @ [text "A whole, monomorphic program mostly should not need these: \
                   each one is a place where the code generated to cross into \
                   and out of it is unchecked -- an Obj.magic in OCaml, a \

@@ -1148,6 +1148,95 @@ let dce (prog:program) : ML program =
   prog |> List.filter (fun d ->
     Some? (SMap.try_find live (string_of_name (name_of_decl d))))
 
+(* Section 51.3.  A prologue that follows the call graph.
+
+   [Prologue] decorates one declaration.  CUDA needs more than that: a
+   [__global__] function may only call [__device__] functions, so a plugin
+   that lifts a kernel marks the kernel and every ordinary C function the
+   kernel's body calls is still implicitly [__host__], which [nvcc] refuses.
+   The set that needs marking is the transitive callees of a term the plugin
+   has just built, which the plugin cannot enumerate and Custard can.
+
+   Three sets, over the *live* program:
+
+   - [seeds], the declarations carrying [ClosurePrologue];
+   - [device], what those reach, seeds excluded;
+   - [host], what the ordinary roots reach *without descending through* a
+     declaration that is itself an entry -- one carrying a [Prologue] or a
+     [ClosurePrologue].  A kernel's body is device code however the kernel is
+     named, so walking into it would put the whole device closure in [host]
+     and every helper would come out shared.
+
+   A declaration in [device] and not in [host] gets the exclusive string; one
+   in both gets the shared string.  In CUDA that is [__device__] and
+   [__device__ __host__], and a helper called from a kernel and from host
+   code is miscompiled by the first -- which is the case a plugin has no way
+   to express today, and the reason the flag carries two strings rather than
+   one.
+
+   A declaration that already carries a [Prologue] is left alone: it is
+   another entry with its own regime, and overwriting a plugin's explicit
+   choice with an inferred one is the wrong way round.  Only [DLet]s are
+   marked; a type or an external has no body to compile for a device. *)
+let propagate_prologues (prog:program) : ML program =
+  let own = ctor_owners prog in
+  let resolve (n:string) : ML string =
+    match SMap.try_find own n with Some o -> o | None -> n in
+  let defs : SMap.t decl = SMap.create 50 in
+  prog |> List.iter (fun d -> SMap.add defs (string_of_name (name_of_decl d)) d);
+  let is_entry (d:decl) : ML bool =
+    decl_flags d |> List.existsb (fun f -> Prologue? f || ClosurePrologue? f) in
+  let reach (stop_at_entry:bool) (seeds:list string) : ML (SMap.t bool) =
+    let seen : SMap.t bool = SMap.create 50 in
+    let rec visit (n:string) : ML unit =
+      let n = resolve n in
+      if None? (SMap.try_find seen n) then begin
+        SMap.add seen n true;
+        match SMap.try_find defs n with
+        | Some d ->
+          if stop_at_entry && is_entry d then ()
+          else decl_deps d |> List.iter visit
+        | None -> ()
+      end in
+    seeds |> List.iter visit;
+    seen in
+  let seeds = prog |> List.collect (fun d ->
+    if decl_flags d |> List.existsb ClosurePrologue?
+    then [string_of_name (name_of_decl d)] else []) in
+  if Nil? seeds then prog else begin
+    (* The seeds' own callees, which is the closure minus the seeds. *)
+    let device = reach false (seeds |> List.collect (fun n ->
+      match SMap.try_find defs n with
+      | Some d -> decl_deps d
+      | None -> [])) in
+    let host = reach true (prog |> List.collect (fun d ->
+      if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)
+         && not (is_entry d)
+      then [string_of_name (name_of_decl d)] else [])) in
+    (* One seed's strings are as good as another's: two seeds disagreeing
+       about what their shared callees should say is a plugin bug, and
+       picking the first is at least deterministic in program order. *)
+    let strings =
+      match prog |> List.collect (fun d ->
+              decl_flags d |> List.collect (fun f ->
+                match f with ClosurePrologue (a, b) -> [(a, b)] | _ -> [])) with
+      | (a, b) :: _ -> (a, b)
+      | [] -> ("", "") in
+    let excl, shared = strings in
+    prog |> List.map (fun d ->
+      match d with
+      | DLet l ->
+        let n = string_of_name l.dl_name in
+        if List.mem n seeds then d
+        else if Some? (SMap.try_find device n)
+                && not (l.dl_flags |> List.existsb Prologue?)
+        then
+          let s = if Some? (SMap.try_find host n) then shared else excl in
+          DLet { l with dl_flags = Prologue s :: l.dl_flags }
+        else d
+      | d -> d)
+  end
+
 (* Section 36.1.  A reference to a declaration that is not in the program.
 
    Kuiper's reporter wrote a launcher rule that synthesizes a call to a
@@ -2904,6 +2993,10 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      name reported against the term the user's rule built is more use than one
      reported against a coerced, record-collapsed descendant of it. *)
   let prog = pass "check_resolved" check_resolved prog in
+  (* After [dce], because a prologue on a declaration nothing reaches is
+     noise, and because the call graph this reads is the one [dce] just
+     computed.  Before nothing in particular: it changes flags and no term. *)
+  let prog = pass "propagate_prologues" propagate_prologues prog in
   let prog = pass "scc" scc prog in
   let prog = pass "records" (records vd) prog in
   (* After [records], which is what gives a collapsed record's body a ground

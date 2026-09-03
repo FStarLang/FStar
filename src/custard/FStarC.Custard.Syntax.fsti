@@ -368,6 +368,33 @@ type flag =
   | Epilogue of string
   (** Text to emit immediately after the definition; the counterpart of
       {!Prologue}. *)
+  | ClosurePrologue of string & string
+  (** Section 51.3.  A prologue for everything this declaration *reaches*,
+      rather than for the declaration itself.
+
+      {!Prologue} decorates one declaration, and for CUDA that is not enough:
+      a [__global__] function may only call [__device__] functions, so
+      marking a kernel says nothing about the ordinary C functions its body
+      calls, and [nvcc] rejects every one of them.  There is no number of
+      per-declaration flags a plugin can set, because the set is the
+      transitive callees of a term the plugin has just built.
+
+      So this flag is propagated instead.  Every declaration reachable from
+      this one -- not this one, and not one that carries a {!Prologue} of its
+      own, which is another entry with its own regime -- receives a
+      {!Prologue}: the *first* string if the only way to reach it is through
+      a declaration marked this way, and the *second* if the ordinary program
+      reaches it as well.
+
+      The two strings are the point.  In CUDA they are ["__device__"] and
+      ["__device__ __host__"], and a helper called from both a kernel and
+      host code needs the second and is miscompiled by the first.  Custard
+      does not read either string; it only decides which declaration gets
+      which, and that decision is a reachability question Custard can answer
+      and a plugin cannot.
+
+      Consumed by {!FStarC.Custard.Simplify}, which rewrites it into
+      {!Prologue}s.  No backend sees one. *)
   | CInline
   (** Ask the C compiler to inline this definition.  [inline] in the generated
       C, nothing in OCaml.  Custard's own inlining decisions are {!Inline},

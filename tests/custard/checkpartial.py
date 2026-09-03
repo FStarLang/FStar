@@ -38,9 +38,32 @@ import tempfile
 PKGS = ("batteries,zarith,stdint,yojson,ppxlib,menhirLib,pprint,process,"
         "sedlex,mtime.clock")
 
+# Section 51.1.  OCaml prints the unmatched example two ways, and the check
+# has to read both.  Long or annotated sets go on their own line:
+#
+#     ... is not matched:
+#     (Prologue _|Epilogue _)
+#
+# but a short one is printed inline, after a space:
+#
+#     Here is an example of a case that is not matched: Prologue _
+#
+# The first version split on "not matched:\n", so the inline form did not
+# match at all and `missing` silently became the *whole warning block* --
+# which then contained whatever the source excerpt contained.
+NOT_MATCHED = re.compile(r"not matched:[ \n]+(.*)", re.S)
+
 # A one-constructor match on option or either: `Some?.v`, `Inl?.v` and their
 # siblings.  Partial in OCaml, guarded in the F* source.
-ELIM = re.compile(r"FStar_Pervasives(_Native)?\.(Some|None|Inl|Inr)\b")
+#
+# Section 51.1.  Applied to the *unmatched constructors* and not to the source
+# excerpt.  Against the excerpt it discarded any function whose body happened
+# to eliminate an option anywhere -- which is how `flag_to_doc`, the function
+# this whole check was written after, passed: its `Extern` case matches on a
+# `FStar_Pervasives_Native.Some`, forty lines from the branch that was
+# missing.  The module qualifier is optional because the inline form prints a
+# bare `None` or `Inl {...}`.
+ELIM = re.compile(r"(FStar_Pervasives(_Native)?\.)?(Some|None|Inl|Inr)\b")
 
 
 def find_tree(root):
@@ -90,24 +113,37 @@ def main():
         return len(failed)
 
     bad = []
+    unparsed = []
     for block in "".join(out).split('File "')[1:]:
         if "Warning 8" not in block:
             continue
+        # This one *is* about the source excerpt: a projector is recognized
+        # by the shape of the match, not by what it fails to cover.
         if "match projectee with" in block:
             continue
-        if ELIM.search(block.split("Here is an example")[0]):
+        m = NOT_MATCHED.search(block)
+        # No unmatched example means the warning was not parsed, which is a
+        # bug in this script rather than a clean module; say so rather than
+        # dropping it.
+        if not m:
+            unparsed.append(block.split("\n")[0].rstrip(":"))
+            continue
+        missing = " ".join(m.group(1).split())
+        if ELIM.match(missing):
             continue
         where = block.split("\n")[0].rstrip(":")
-        missing = block.split("not matched:\n")[-1].strip().replace("\n", " ")
         bad.append((where, missing))
 
+    for where in unparsed:
+        print(f"checkpartial: could not parse the warning at {where}; "
+              "the unmatched-example format has changed.")
     for where, missing in bad:
         print(f"partial match at {where}\n    missing: {missing}")
     if bad:
         print(f"\n{len(bad)} inexhaustive match(es) over an IR datatype.")
         print("Add the missing cases, or a case that fails with a message "
               "naming the broken invariant.")
-    return len(bad)
+    return len(bad) + len(unparsed)
 
 
 if __name__ == "__main__":

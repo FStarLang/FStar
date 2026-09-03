@@ -12192,6 +12192,171 @@ parameters are named `scrut` *and* `scrut1`, so the freshener has to count
 rather than merely append. Broken rather than watched: reverting the one
 word makes the test fail.
 
+# 51 A prologue that follows the call graph
+
+Round 50 verified §49 against the real thing: warning 381 fires on the
+reporter's actual arity mistake with the right count and the right reach
+path, warning 382 names the pure `unit -> unit` parameter and the
+over-application it caused is a hard error rather than something a variadic
+macro absorbs, and `lift_named` refuses a zero-binder lambda. An `nvcc`
+sweep over all 35 direct-C outputs passes.
+
+It also found that the check written to close §49's class does not catch
+§49's own bug, and -- with the port now on a kernel that has a body -- the
+first item in several rounds that is a missing *feature* rather than a
+missing diagnostic.
+
+## 51.1 `check-partial` did not catch `flag_to_doc`
+
+The reporter seeded round 49's bug back in -- deleted the `Prologue` case
+from the extracted `FStarC_Custard_Syntax.ml` -- and `checkpartial.py`
+returned 0. `ocamlc -w +8` reports it; the script dropped it, for two
+compounding reasons.
+
+**OCaml prints the unmatched example two ways.** A long or annotated set goes
+on its own line after `not matched:`; a short one is printed *inline*, after
+a space:
+
+```
+Here is an example of a case that is not matched: Prologue _
+```
+
+The script split on `"not matched:\n"`, so on the inline form the split did
+not fire and `missing` silently became the entire warning block.
+
+**And the filter was applied to the source excerpt.** `flag_to_doc`'s own
+body eliminates an option in its `Extern` case, forty lines from the branch
+that was missing, so `ELIM` matched `FStar_Pervasives_Native.Some` in the
+excerpt and the block was discarded as an option elimination.
+
+Either defect alone is enough, and because of the first, fixing the second
+alone would not have helped: `missing` *was* the block, and the block
+contains `Some`.
+
+Why it passed review: the negative control used to check it was
+`Unit.entry_to_string`, whose missing set is `DExn _` **plus** the note
+`(However, some guarded clause may match this value.)` -- and that note
+forces OCaml into the multi-line form. So the check caught sites whose
+missing set is long or annotated and missed sites whose missing set is one
+short constructor, which is what `flag_to_doc`'s is. *It passed on the hard
+case and failed on the one that motivated it.*
+
+The fix reads both forms and applies the filter to the parsed constructors
+rather than to the excerpt; the module qualifier in `ELIM` had to become
+optional, because the inline form prints a bare `None`. A third change is
+not the reporter's: a `Warning 8` block whose unmatched example cannot be
+parsed at all is now *reported*, not dropped. The original bug was a parse
+that silently produced garbage, and the general form of that is a parse that
+silently produces nothing.
+
+Measured over all 18 modules: clean is 0 before and after, so nothing was
+being masked in-tree; the `flag_to_doc` seed is 0 before and 1 after. The
+hole was a regression hole, which is the only kind a check of this sort can
+have.
+
+The lesson is §50.3's, one turn further round. That said a file with two
+targets needs a test per target. This says: **a check needs a negative
+control per input shape it parses**, and "the parser has two branches" is
+such a shape. One seed exercised one branch.
+
+## 51.2 An external is never specialized
+
+A `custard_extern` with a type parameter -- the reporter's attempt at
+declaring the variadic `KPR_KCALL` once -- produced a `Warning 367` naming
+the whole declaration type with `any` in it, and nothing said why.
+
+Monomorphization does not reach an external, and cannot: specialization
+substitutes into a body, an external has none, and its C declaration is one
+fixed symbol with one prototype, so there is nothing for a per-instantiation
+copy to be named. Each type parameter becomes `any`. That is the right
+behaviour and it was undocumented, which made a correct diagnostic
+unreadable.
+
+`Warning 367` now says so when the declaration is a polymorphic external:
+names the type parameters, says an external is never specialized and why,
+and gives the workaround -- one external per type vector, all carrying the
+same `[@@custard_extern]` target name. That workaround is real but does not
+scale: it is one declaration per *type vector*, not per arity, which is
+worth knowing before building on it.
+
+## 51.3 `Prologue` is per-declaration; `__device__` is not
+
+The round's real finding, and the first ask in many rounds that is not a
+diagnostic.
+
+`Prologue` decorates one declaration. In CUDA a `__global__` function may
+only call `__device__` functions, so a plugin that lifts a kernel marks the
+kernel, and every ordinary C function the kernel's body calls is still
+implicitly `__host__`. `nvcc` rejects each one:
+
+```
+error: calling a __host__ function ("Kuiper_Array_Core_slice_read__t(...)")
+       from a __global__ function("kuiper_kernel") is not allowed
+```
+
+There is no number of per-declaration flags that fixes this, because the set
+that needs marking is *the transitive callees of a term the plugin has just
+built*. The plugin cannot enumerate it. Custard can: it is a reachability
+question over the final call graph, which `dce` has just computed.
+
+Note that neither `clang` nor `g++` sees this, which is why it took getting
+to a kernel with a body. §41.4 recorded three of §36's answers checked
+against a real `nvcc`; this is the one §36 got wrong.
+
+**`ClosurePrologue (exclusive, shared)`**, from a plugin's flag list or from
+`[@@custard_c_closure_prologue "..." "..."]` in source. Every declaration
+reachable from the carrier -- not the carrier, and not one carrying a
+`Prologue` of its own, which is another entry with its own regime --
+receives a `Prologue`.
+
+Which one is the design. Three sets, over the live program:
+
+- `seeds`, the declarations carrying `ClosurePrologue`;
+- `device`, what the seeds reach, seeds excluded;
+- `host`, what the ordinary roots reach *without descending through* any
+  declaration that is itself an entry. A kernel's body is device code
+  however the kernel is named, so walking into it would put the whole device
+  closure into `host` and every helper would come out shared.
+
+A declaration in `device` and not `host` gets `exclusive`; one in both gets
+`shared`. For CUDA those are `__device__` and `__device__ __host__`.
+
+**The second string is the part that could not be worked around.** A helper
+called from both a kernel and host code needs `__device__ __host__` and is
+miscompiled by `__device__`, and which helpers those are is a property of
+the whole program rather than of any declaration -- so it is not something
+a plugin could have set by hand even with unlimited patience. Kuiper has
+such helpers (`Kuiper.Math`), and they survive today only because everything
+there is `inline_for_extraction noextract` and is inlined before extraction
+ever sees it, which is a property of how that library happens to be written.
+
+Custard reads neither string. It decides which declaration gets which, and
+that is the part a plugin cannot do.
+
+The pass runs immediately after `dce`, for two reasons: a prologue on a
+declaration nothing reaches is noise, and the call graph it walks is the one
+`dce` just built out of `decl_deps`. It changes flags and no term, so it
+sits before everything that rewrites bodies without interacting with any of
+it.
+
+`tests/custard/DevClosure.fst` has one callee of each class -- kernel-only,
+shared, and reached from neither -- and asserts which prologue each got. The
+assertions are new machinery: a prologue is emitted on the line *before* the
+declaration it decorates, so `CPAIR_`/`CNOPAIR_` assert over adjacent line
+pairs rather than over lines, which is what makes "`only` got the exclusive
+string and `both` did not" expressible at all. The strings in the test are
+not CUDA's, deliberately: Custard does not read them, and a test spelling
+`__device__` would be pinning a spelling instead of a reachability
+computation.
+
+## 51.4 What remains
+
+The reporter's next step is shared memory -- a non-empty `shmems` list,
+`smem_bytesz` from the `sized` instances, `KPR_SHMEM_AT` offsets -- and he
+expects §49.5's answer (rewrite the binder's type from inside the rule) to
+run out there. §49.5 already says that is the wrong long-term tool; this is
+the round that dates it.
+
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -12384,3 +12549,6 @@ word makes the test fail.
 | M10γΗ | **The name the desugaring invented** (§50.1) | Done, EverParse round 47, and a live miscompilation of my own from one round earlier.  §48's `string_match` binds the scrutinee once and named that binder `"scrut"` by writing it down, so a source variable of that name was captured: `pick (scrut:string) (s:string)` tested the *scrutinee* in its guard, returned 9 where 1 was right, and karamel marked the parameter unused -- `KRML_MAYBE_UNUSED_VAR`, the identical tell as round 44's `PConst` bug and still the thing nothing greps for.  `fresh_local`'s own doc comment states the rule, and the `ESeq` case ninety lines up obeys it with four sentences of explanation.  Fix is `fresh_local env "scrut"`.  All three invented binders audited: this one, `discarded` (already right), and `"_"` for `PWild` (safe, F\* has no variable of that name).  `tests/custard/ScrutCap.fst` checks its own answers and carries a second function with `scrut` *and* `scrut1` bound so the freshener has to count; reverting the one word makes it fail.  The enforceable version -- a binder constructor with no way to spell an unfreshened name -- is not built, and is written down as the real answer |
 | M10γΘ | **A refusal became a crash on the Rust path** (§50.2) | Done, EverParse round 47.  `is_string_match` was not gated on the backend, and the chain it builds compares with `__eq__Prims_string`, a krmllib *C* primitive with no Rust counterpart: on KrmlRust karamel does not refuse it, it crashes mid-translation and writes no `.rs`.  Half a regression, calibrated before being called one -- plain `let eq (a b:string) = a = b` crashed KrmlRust identically and had since Custard had strings, so §48 widened the reach from `=` to `match` rather than opening the hole, and **the older half is the worse one**, silent for every round of this document.  Both refused now: the desugaring is gated on KrmlC, and a polymorphic `Eq`/`Neq` at string type is refused in `krml_expr` on KrmlRust.  Needed a third refusal scope §46.3's two could not express: karamel *has* string equality and what is missing is one of karamel's own *targets*, so "no karamel representation" would send a reader looking for a node that is there.  `krml_reject_rust` names the Rust backend, says why, and names both C routes.  The string-*pattern* refusal became backend-dependent for the same reason |
 | M10γΙ | **A test leg per target, not per bug** (§50.3) | Done, EverParse round 47, and the reason 50.2 was invisible: `tests/custard` had **no KrmlRust leg** at all -- `KRML_TESTS` is KrmlC only, and `KrmlRust` lived in `tests/custard/pulse` and `tests/extraction/backends` and nowhere else.  So every string test exercised exactly one of the two targets the code under test is shared by.  Third distinct shape of one failure: §44's fixed-in-one-backend, §49's claim-checked-by-reading, and now tested-on-one-leg -- §48.5's "two tables that must agree with nothing enforcing it", moved from tables to test legs.  `RUSTREJECT_TESTS` and `%.rustrejected` pin a diagnostic rather than an artifact, since what a missing Rust construct produces today is a crash, and check that no `.rs` was written -- noting that a crash writes none either, so absence is not on its own the property.  `PatStrR` (branches out of source order, for `ChrLit`'s reason) and `StrEqK` (the older half).  The rule worth keeping: a file with one implementation and two targets needs a test per target, and the count is a property of the file, not of what has broken so far |
+| M10γΚ | **The check did not catch the bug it was written for** (§51.1) | Done, round 50, and a correction to M10γΑ.  The reporter seeded §49's `flag_to_doc` bug back into the extracted OCaml and `checkpartial.py` returned 0.  Two compounding defects: OCaml prints the unmatched example inline when it is short (`... is not matched: Prologue _`) and on its own line when it is long, and the script split on `"not matched:\n"` only, so on the inline form `missing` silently became the *whole warning block*; and the option-elimination filter was applied to the source *excerpt*, so `flag_to_doc` -- whose `Extern` case eliminates a `FStar_Pervasives_Native.Some` forty lines from the missing branch -- was discarded as an option elimination.  Either alone suffices.  It passed review because the negative control was `entry_to_string`, whose missing set carries the "However, some guarded clause" note, and the note forces the multi-line form: **the check passed on the hard case and failed on the one that motivated it.**  Fixed to read both forms and to filter on the parsed constructors; the module qualifier had to become optional, since the inline form prints a bare `None`.  Plus one not asked for: an unparseable Warning 8 block is now reported rather than dropped, the original bug being a parse that silently produced garbage.  Clean is 0 before and after, so nothing was masked in-tree.  §50.3 one turn on: a check needs a negative control per input shape it parses |
+| M10γΛ | **An external is never specialized** (§51.2) | Done, round 50, user ask.  A `custard_extern` with a type parameter -- the reporter's attempt to declare the variadic `KPR_KCALL` once -- got a generic `Warning 367` naming the whole declaration type with `any` in it, and nothing said why.  The behaviour is right and was undocumented, which made a correct diagnostic unreadable: specialization substitutes into a body, an external has none, and its C declaration is one fixed symbol with one prototype, so there is nothing for a per-instantiation copy to be named.  367 now names the type parameters, says an external is never specialized and why, and gives the workaround -- one external per type vector, all with the same `[@@custard_extern]` target name -- along with the fact that it is per *type vector* and not per arity, which is what stops it scaling |
+| M10γΜ | **A prologue that follows the call graph** (§51.3) | Done, round 50, and the first ask in many rounds that is a missing feature rather than a missing diagnostic.  `Prologue` decorates one declaration; CUDA's `__global__` may only call `__device__`, so marking a kernel leaves every function its body calls implicitly `__host__` and `nvcc` refuses each one.  No number of per-declaration flags fixes it: the set is the transitive callees of a term the plugin has just built, which the plugin cannot enumerate and Custard can, `dce` having just computed that graph.  `ClosurePrologue (exclusive, shared)`, from a plugin or from `[@@custard_c_closure_prologue]`, marks everything the carrier reaches -- exclusive when the only route is through a marked declaration, shared when the ordinary program reaches it too, which for CUDA is `__device__` and `__device__ __host__`.  **The second string is the part that could not be worked around**: which helpers are called from both a kernel and host code is a property of the whole program, not of any declaration, so no amount of hand-marking expresses it; Kuiper's `Kuiper.Math` helpers survive today only because that library happens to be written `inline_for_extraction noextract` throughout.  `host` is computed without descending through an entry, or a kernel's own body would make its whole closure shared.  Custard reads neither string.  §36 got this one wrong and neither `clang` nor `g++` could have shown it -- §41.4's `nvcc` check found the three that were right.  `tests/custard/DevClosure.fst`, one callee per class, with new `CPAIR_`/`CNOPAIR_` assertions over adjacent line pairs, since a prologue sits on the line before what it decorates and "which declaration got which" is not otherwise expressible |
