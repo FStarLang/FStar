@@ -158,7 +158,7 @@ type state = {
    [TApp] inside it. *)
 let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
 
-(* Section 48.2.  An external type's C spelling is a fixed string -- the
+(* Section 47.2.  An external type's C spelling is a fixed string -- the
    [custard_extern] target, taken verbatim since §45.1 -- and it does not
    depend on the type's arguments, because there is nowhere in a target string
    for an argument to go.  ([TExtern] indexed by its arguments was proposed in
@@ -557,7 +557,7 @@ let run (prog:program) : ML program =
      topologically at the end of phase 4, which is after this runs. *)
   let rest = prog |> List.collect (fun d ->
     match d with
-    (* Section 48.2.  Kept, and with its parameters dropped so that the
+    (* Section 47.2.  Kept, and with its parameters dropped so that the
        declaration agrees with the [TApp (n, [])] every use site is now
        rewritten to.  It has to be kept: the declaration is what carries the
        [Extern] flag, and [PrintC.decl_of] reads the target off it. *)

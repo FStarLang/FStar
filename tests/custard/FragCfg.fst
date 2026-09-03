@@ -3,7 +3,7 @@ module FragCfg
 module G = FStar.Ghost
 module U32 = FStar.UInt32
 
-/// Section 48.2.  A configuration selected by a typeclass whose indices are
+/// Section 47.2.  A configuration selected by a typeclass whose indices are
 /// all erased, which is how the TensorCore fragment API is written.
 ///
 /// The type is [custard_extern], and it is *indexed*.  Its C spelling is a

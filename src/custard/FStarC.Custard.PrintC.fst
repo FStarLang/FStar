@@ -1604,7 +1604,7 @@ let check_finite (d:dtype) : ML unit =
    already fine, because the forward declarations precede it. *)
 let struct_tag (n:string) : string = n ^ "_s"
 
-(* Section 48.1.  The tag enum of a tagged union is declared *beside* the
+(* Section 47.1.  The tag enum of a tagged union is declared *beside* the
    struct, not inside it.
 
    In C the enumerators of an enum nested in a struct have file scope and leak

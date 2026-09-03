@@ -193,6 +193,12 @@ let krml_op (o:op) : K.op =
 
 (* The primitive types karamel knows natively.  Everything else is a
    [TQualified], which karamel resolves against the declarations we emit. *)
+let is_string_cty (t:cty) : bool =
+  match t with
+  | TApp (n, []) ->
+    None? n.spec && String.concat "." (n.ns @ [n.id]) = "Prims.string"
+  | _ -> false
+
 let prim_type (n:name) : option K.typ =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
   | "Prims.unit" -> Some K.TUnit
@@ -354,13 +360,17 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
      either krml backend.  A pattern the backend cannot translate has to stop
      the extraction, as [POr] above already does: the alternative is not a
      worse translation, it is a different program. *)
-  | PConst c ->
-    let what =
-      match c with
-      | CString _ -> "a string pattern"
-      | CFloat _ -> "a floating-point pattern"
-      | _ -> "this constant pattern" in
-    krml_reject_c_ok what
+  | PConst (CString _) -> krml_reject_c_ok "a string pattern"
+  (* Unreachable from F* source: the parser refuses a float literal in pattern
+     position (Error 168) for both [1.0] and [1.0f].  Kept because the IR
+     admits one and a rule could build it, and [c_ok] because [PrintC.pat_tests]
+     would compare it with [==]. *)
+  | PConst (CFloat _) -> krml_reject_c_ok "a floating-point pattern"
+  (* Section 48.1.  Dead today -- all six constants are covered above -- and
+     deliberately the *strict* refusal, because the day a seventh constructor
+     makes this reachable is the day someone reads it, and there is no reason
+     to think the direct C backend will have grown a case for it either. *)
+  | PConst _ -> krml_reject "this constant pattern"
   | PCtor (n, ps) when is_tuple_ctor_name n ->
     let env, ps = krml_pats env ps in
     (env, K.PTuple ps)
@@ -409,6 +419,22 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EFun (bs, body) ->
     let env' = bs |> List.fold_left (fun env (b:binder) -> extend env b.b_name) env in
     K.EFun (bs |> List.map (binder_of env), krml_expr env' body, krml_typ env body.ty)
+
+  (* Section 48.3.  karamel's [pattern] cannot hold a string constant, but that
+     is a fact about its *patterns*, not about strings: karamel compares two of
+     them properly, through [__eq__Prims_string], which krmllib realizes as
+     [strcmp (...) == 0].  So a match on a string becomes the same if-chain
+     [PrintC.pat_tests] already builds for the direct C backend, and the
+     refusal that used to stand here goes away.
+
+     Deliberately narrow.  Only a match whose *scrutinee* is a string and whose
+     every pattern is a string constant, a variable or a wildcard is rewritten;
+     a string constant nested inside a constructor pattern is still refused,
+     because getting that right means compiling patterns in general and the
+     refusal is honest in the meantime.  The subset is what F* source produces
+     for a string match. *)
+  | EMatch (scrut, brs) when is_string_match scrut brs ->
+    string_match env scrut brs
 
   | EMatch (scrut, brs) ->
     K.EMatch (krml_expr env scrut, brs |> List.map (krml_branch env))
@@ -539,6 +565,47 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
      [TExn -> TAny] honest -- the value is never inspected. *)
   | ETry _ -> krml_reject "an exception handler"
   | ERaise _ -> K.EAbortS "Custard: an uncaught exception was raised"
+
+and is_string_match (scrut:expr) (brs:list branch) : ML bool =
+  is_string_cty scrut.ty &&
+  Cons? brs &&
+  brs |> List.for_all (fun (p, g, _) ->
+    None? g && (match p with
+                | PConst (CString _) | PVar _ | PWild -> true
+                | _ -> false)) &&
+  (* F* exhaustiveness gives a string match a catch-all, and without one there
+     is no expression to end the chain with.  Refusing beats inventing an
+     abort: an abort here would be a translation again (section 46.1). *)
+  (match List.last brs with
+   | (PVar _, _, _) | (PWild, _, _) -> true
+   | _ -> false)
+
+and string_match (env:kenv) (scrut:expr) (brs:list branch) : ML K.expr =
+  (* The scrutinee is bound once: it may be a call, and the chain mentions it
+     once per branch. *)
+  let x = "scrut" in
+  let st = krml_typ env scrut.ty in
+  let b = { K.name = x; K.typ = st; K.mut = false; K.meta = [] } in
+  let env' = extend env x in
+  let rec chain (brs:list branch) : ML K.expr =
+    match brs with
+    | [] -> krml_reject "a string match with no catch-all"
+    | (PWild, _, body) :: _ -> krml_expr env' body
+    | (PVar y, _, body) :: _ ->
+      (* The bound name is the scrutinee, which is already in scope here. *)
+      let yb = { K.name = y; K.typ = st; K.mut = false; K.meta = [] } in
+      K.ELet (yb, K.EBound (find env' x), krml_expr (extend env' y) body)
+    | (PConst (CString v), _, body) :: rest ->
+      (* Polymorphic equality, so the type application is required: left as a
+         bare [EOp (Eq, Bool)] karamel's checker reads the width as the operand
+         type and drops the declaration as not Low*, exactly as the null-pointer
+         case above notes. *)
+      K.EIfThenElse (K.EApp (K.ETypApp (K.EOp (K.Eq, K.Bool), [st]),
+                             [K.EBound (find env' x); K.EString v]),
+                     krml_expr env' body,
+                     chain rest)
+    | _ -> krml_reject "a string pattern" in
+  K.ELet (b, krml_expr env scrut, chain brs)
 
 and krml_branch (env:kenv) (br:branch) : ML K.branch =
   let p, g, body = br in

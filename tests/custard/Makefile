@@ -806,7 +806,7 @@ $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -x c $< -o $@
 
-# Section 48.1.  Every generated unit is also compiled as C++.
+# Section 47.1.  Every generated unit is also compiled as C++.
 #
 # Not because Custard targets C++, but because CUDA is C++ and a generated
 # header is meant to be included by a consumer.  The two languages disagree
@@ -1113,11 +1113,23 @@ CNOGREP_PatStr += "s == \"a\""
 
 # Section 44.1.  The same match through karamel, which has no pattern node for
 # a string constant and used to substitute one that matches everything.
-REJECT_TESTS += PatStrKrml
-FLAGS_PatStrKrml = --custard_backend KrmlC
-CODE_PatStrKrml = 368
-EGREP_PatStrKrml += "string pattern has no karamel representation"
-NOEGREP_PatStrKrml += "not supported by the C backend"
+# Section 48.3.  The negative control for the desugaring above: a string
+# constant nested inside another pattern is not a flat string match, so it
+# still reaches krml_pat and is still refused.  The NOEGREP pins the other
+# half: krml_pat's message must keep pointing at the direct C backend, which
+# does accept a nested string pattern.
+REJECT_TESTS += PatStrNest
+FLAGS_PatStrNest += --custard_backend KrmlC
+CODE_PatStrNest := 368
+EGREP_PatStrNest += "a string pattern has no karamel representation"
+NOEGREP_PatStrNest += "if-chain"
+
+# Section 48.3.  Was a reject test for two rounds; the krml backend now
+# desugars a string match into an if-chain over __eq__Prims_string, so it
+# runs.  It gets its strings from a malloc-ing extern for the same reason
+# PatStr does: a program whose strings are all literals cannot see a
+# comparison that is wrong (section 44.2).
+KRML_TESTS += PatStrKrml
 
 # Section 45.1-45.2.  A TensorCore-shaped program: nothing but externals, whose
 # C names are not F* identifiers, plus the source-level decorations a CUDA
@@ -1190,7 +1202,7 @@ CODE_TryOk := 368
 EGREP_TryOk += "an exception handler has no karamel representation"
 NOEGREP_TryOk += "does accept it"
 
-# Section 48.2.  An indexed custard_extern type, with the configuration
+# Section 47.2.  An indexed custard_extern type, with the configuration
 # chosen by a typeclass whose indices are all erased -- the shape the
 # TensorCore fragment API has.  Checks its own answer: 0 + 2*3 = 6.
 C_TESTS    += FragCfg
@@ -1222,7 +1234,11 @@ ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
 # supported by the C backend" that a passing NOEGREP had said nothing about,
 # one of which put the sentence in a Rust binary.  A grep over the sources is
 # the check that would have caught them, and it costs a second.
-CUSTARD_SRC := $(wildcard $(CURDIR)/../../src/custard/*.fst)
+# The interfaces too.  No .fsti carries diagnostic text today, so this is
+# latent rather than live -- which is the argument for widening it now, while
+# it costs four characters and cannot break.
+CUSTARD_SRC := $(wildcard $(CURDIR)/../../src/custard/*.fst) \
+               $(wildcard $(CURDIR)/../../src/custard/*.fsti)
 
 .PHONY: check-sources
 check-sources:

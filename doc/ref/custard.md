@@ -11662,6 +11662,194 @@ direct-C-backend feature**, and nobody spends an afternoon on the krml
 route.
 
 
+# 48 Where the two backends disagreed about strings
+
+Round 48 found no bug. It reported one refusal that cannot be reached, one
+gate four characters too narrow, and -- as an offer rather than a defect --
+that the krml backend's refusal of string patterns was never forced. This
+section records all three, plus a cross-reference slip of our own and three
+things that turned out to be already right.
+
+## 48.1 A refusal that could not be reached
+
+`krml_pat`'s fallback for an unclassified constant pattern
+
+```fstar
+| _ -> krml_reject_c_ok "this constant pattern"
+```
+
+became unreachable at §46.1, when `FStar.Char.char` was added to `prim_type`
+and `CChar` joined `CUnit`, `CBool` and the two `CInt`s above it. All six
+constructors of `const` are now covered by a named case.
+
+Dead code is not itself worth a section. What is worth one is *which*
+refusal it was. `krml_reject_c_ok` appends a sentence telling the reader
+that the direct C backend does accept the construct, and that is true of
+exactly two of the six things `krml_reject*` is called for -- string and
+float patterns. It was false for a disjunction, a guard and a handler, which
+is what §46.4 split the function to fix. The fallback kept the generous
+message, so it was *also* wrong, silently, and would have started lying on
+the day a seventh constant constructor was added -- which is precisely the
+day someone reads it.
+
+The fix is to say what is true of each:
+
+- `PConst (CString _)` -> `krml_reject_c_ok`, and after §48.3 it is only
+  reachable for a *nested* string pattern, which `PrintC` still accepts.
+- `PConst (CFloat _)` -> `krml_reject_c_ok`, with a comment recording that
+  it is unreachable from source: **F\* rejects a float literal in pattern
+  position at parse time**, Error 168, *"This is not a valid numeric
+  literal"*, for both `1.0` and `1.0f`. Kept because the IR can hold one
+  even though the parser will not build one.
+- `PConst _` -> the strict `krml_reject`. If a seventh constructor appears,
+  the default claim is the safe one.
+
+The general rule: **a fallback should carry the weakest claim, not the
+claim that happened to be true of the cases it was written for.**
+
+## 48.2 An interface file is a source file
+
+`make check-sources` (§46.4) greps the Custard sources for a diagnostic
+phrase that no longer has a right to exist. Its target was
+
+```make
+CUSTARD_SRC := $(wildcard $(CUSTARD_DIR)/*.fst)
+```
+
+which is 18 files, and misses the 18 `.fsti` beside them. No interface
+currently carries any diagnostic text, so the gap was latent rather than
+live -- but a check whose reach is smaller than its subject is a check that
+will pass for the wrong reason exactly once.
+
+`$(wildcard $(CUSTARD_DIR)/*.fsti)` closes it. The negative control put the
+phrase into an `.fsti` and confirmed the check fires.
+
+## 48.3 A string match becomes an if-chain
+
+§44.1 refused a string pattern on the krml backend, because karamel's
+`pattern` has no constructor for a string constant and the one Custard was
+substituting matched everything. The refusal is correct as a statement about
+karamel's AST. It is not, however, forced -- and the observation that makes
+it unforced is that **karamel handles string *equality* perfectly well**:
+
+```c
+bool __eq__Prims_string(Prims_string s1, Prims_string s2)
+{ return (strcmp(s1, s2) == 0); }
+```
+
+which is `krmllib/c/prims.c:24`, and is exactly the comparison `pat_tests`
+already builds by hand for the direct C backend (§44.2).
+
+So the pattern is redundant. `PrintKrml` now desugars a string match into
+the same if-chain:
+
+```c
+uint32_t classify(Prims_string s)
+{
+  Prims_string scrut = s;
+  if (__eq__Prims_string(scrut, "a")) return 1U;
+  else if (__eq__Prims_string(scrut, "b")) return 2U;
+  else return 3U;
+}
+```
+
+Three things about the shape:
+
+- **The scrutinee is bound once.** It may be a call, and the chain mentions
+  it once per branch.
+- **The guard fires only on a flat match** (`is_string_match`): the
+  scrutinee's type is a string and every pattern is a bare string constant,
+  a variable or a wildcard. Anything else -- a string inside a constructor
+  pattern, a `when` clause -- falls through to the general path and is still
+  refused. `PatStrNest` is the negative control.
+- **A catch-all is required.** F\*'s exhaustiveness check supplies one for a
+  string match, so the requirement costs nothing; without one there would be
+  no expression to end the chain with, and inventing an abort there would be
+  a translation rather than a refusal, which is what §46.3 was about.
+
+### The encoding that made it fail first
+
+The first version emitted the equality as a bare `K.EApp (K.EOp (K.Eq,
+K.Bool), args)` and karamel dropped both definitions with
+
+```
+Malformed input: subtype mismatch: Prims_string vs: bool
+```
+
+then generated calls to functions it had not declared. **Decidable equality
+is polymorphic in karamel and is typed only through an explicit type
+application** -- `ETypApp (EOp (Eq, _), [t])`, `Checker.ml:592`. Left bare,
+the checker reads the operator's *width* as the operand type, concludes the
+arguments should be booleans, and rejects.
+
+Custard already knew this: the null-pointer comparison a few lines above in
+`krml_expr` carries a comment saying so, and the general `EOp` case handles
+`Eq`/`Neq` at `po_ty = None` the same way. The new code simply had to do
+what the code beside it was already doing. Worth recording because the
+failure mode is quiet in the usual invocation: with `-silent`, karamel drops
+the definition without a word and the first symptom is a C compiler
+complaining about an implicit declaration.
+
+### What the test needs, and what it does not
+
+`PatStrKrml` was a reject test for two rounds and now runs. It gets its
+strings from a malloc-ing external for the same reason `PatStr` does: a
+program whose strings are all literals exits 0 either way, because the C
+compiler pools literals and the addresses then agree by accident (§44.2).
+
+It also supplies `__eq__Prims_string` from its own stub header. That is not
+a Custard dependency: the suite links against krmllib's *minimal*
+distribution, which does not carry `prims.c`, and any F\* program that
+compares two strings through the krml backend needs the symbol whether or
+not it ever writes a pattern. A real build links `prims.c`.
+
+## 48.4 A cross-reference that pointed at the wrong section
+
+Round 47's commit put `Section 48.1` and `Section 48.2` into six source
+comments and three test files. Those numbers are the *reviewer's*; this
+document's are one lower, and have been since §46. The comments therefore
+pointed a reader at a section that did not exist yet.
+
+Corrected, and recorded because the cause will recur: **the reviewers number
+their rounds independently of this document's sections**, and a round
+report's own headings must be renumbered on the way in, not copied. The
+divergence was already stated in a PR reply; it needed to be stated in the
+sources too, where a reader of a comment actually is.
+
+## 48.5 Three things that were already right
+
+Round 48 spent most of its effort on negative results, which are recorded
+here so they are not re-derived.
+
+**`builtin_type` and `prim_type` agree, with one deliberate exception.**
+They are a pair of tables that have to be kept in step and nothing enforces
+it -- which is what §46.1 was, in both directions at once. After that fix
+`builtin_type` is a subset of `prim_type`, and the single remaining
+divergence is correct: **`Prims.int` is in `prim_type` and deliberately
+absent from `builtin_type`**. Unbounded arithmetic has no C11 representation
+and the direct backend refuses it with a real message; the krml path maps it
+to `K.CInt` and lets karamel reach for `krml_checked_int_t`. A genuine
+difference in what the two backends can do, not a gap.
+
+**`krml_op` is total.** Twenty-two operators, no catch-all, one-to-one. The
+`| _ -> K.CInt` width fallback at the `EOp` site is reached only when
+`po_ty = None` and the operator is arithmetic, which is exactly `Prims.int`,
+which is exactly `CInt`.
+
+**Round 44's fix has no surviving sibling in C.** Every site in `PrintC`
+that can emit `==` was audited: two are enum tags, two are `NULL`, and two
+are the string pair itself. `infix_op` has exactly one caller and the string
+case sits before it.
+
+To which round 48 added one of its own, and it is the one worth keeping:
+string `==` was fixed in the direct C backend in round 44 and *the krml
+backend was never asked the same question*. It happened to be right --
+`EOp Eq` at string type goes through the polymorphic path to
+`__eq__Prims_string`. But "fixed in one backend, never checked in the other"
+is the shape of §46.1 and of §44 and of this section's own §48.3, and the
+cheapest place to catch it is at the moment of the first fix.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -11836,3 +12024,11 @@ route.
 | M10γρ | **§45.4's open question, answered** (§47.2) | Resolved, round 47, with no code.  Whether a rule could *generate* per-configuration C names from erased indices turned out to be the wrong question: F\* already has the mechanism, in a typeclass whose indices are erased and whose instances name the targets.  A body polymorphic in the configuration extracts to the same C as a hand-written one, and the dispatch disappears.  Two prerequisites, both consequences of existing rules: erase every index the C side does not take (a concrete enum index goes out as a spurious leading argument, *silently*), and put `inline_for_extraction noextract` on the class, not only the instances |
 | M10γσ | **`FragCfg`** (§47.2) | Done.  Round 47.  The TensorCore fragment API at C11 scale: an indexed `custard_extern` type, three externals selected by a typeclass whose indices are all erased, and a body that never names a configuration.  Checks its own answer rather than a spelling, and pins the absence of any emitted declaration for the external type |
 | M10γτ | **A C++ target is direct-C only** (§47.3) | Recorded, round 47, not fixed and not a Custard bug.  §45.3 made a C++-qualified program nearly work through karamel; karamel then sanitizes names of its own downstream of Custard (`wmma::fill_fragment` to `wmma__fill_fragment`, `auto&` to `auto_` -- §45.1 again, in the other repository) and emits a prototype for an external that already has a declaring header, which `PrintC` suppresses and karamel has no rule for.  Documented so nobody spends an afternoon on the krml route |
+| M10γυ | **A fallback that claimed too much** (§48.1) | Done.  Round 48.  `krml_pat`'s unclassified-constant case routed through `krml_reject_c_ok`, which tells the reader the direct C backend accepts the construct -- true of two of the six things `krml_reject*` is called for, and §46.4 had just split the function for exactly that reason.  Unreachable since §46.1 gave `CChar` a case, so it was dead *and* wrong, and would have started lying on the day a seventh constant constructor was added.  Now `CString` and `CFloat` are named (`c_ok`, correctly) and `_` takes the strict refusal.  The rule: a fallback carries the weakest claim, not the claim that was true of the cases it was written for |
+| M10γφ | **Float patterns are unreachable from source** (§48.1) | Resolved, round 48, with no code.  Carried as an uncertainty for three rounds and answerable in one command: F\* rejects a float literal in pattern position at *parse* time, Error 168 "This is not a valid numeric literal", for both `1.0` and `1.0f`.  The `CFloat` case is kept because the IR can hold one, with a comment saying the parser will not build one |
+| M10γχ | **`check-sources` reaches the interfaces** (§48.2) | Done.  Round 48.  `CUSTARD_SRC` was `*.fst`, 18 files, and missed the 18 `.fsti` beside them.  Latent rather than live -- no interface carries diagnostic text today -- but a check whose reach is smaller than its subject passes for the wrong reason exactly once.  Negative control put the phrase into an `.fsti` and confirmed it fires |
+| M10γψ | **A string match on the krml backend** (§48.3) | Done.  Round 48.  §44.1 refused string patterns because karamel's `pattern` cannot hold a string constant; correct about the AST, but not forced, because karamel handles string *equality* fine -- `krmllib/c/prims.c:24` realizes `__eq__Prims_string` as `strcmp(s1, s2) == 0`, which is the same comparison `pat_tests` builds by hand for direct C.  `PrintKrml` now desugars a flat string match into that if-chain, binding the scrutinee once.  The guard is narrow on purpose: a string constant nested in another pattern, or a `when` clause, still falls through and is still refused |
+| M10γω | **Polymorphic equality needs its type application** (§48.3) | Done.  Round 48, and the reason the above failed first.  Emitted as a bare `EApp (EOp (Eq, Bool), args)`, karamel's checker reads the operator's *width* as the operand type, decides the arguments should be booleans, and drops both definitions with `subtype mismatch: Prims_string vs: bool`; the first symptom is a C compiler complaining about an implicit declaration, because with `-silent` karamel drops the definition without a word.  Decidable equality is typed only through `ETypApp (EOp (Eq, _), [t])` (`Checker.ml:592`).  Custard already knew this -- the null-pointer comparison and the general `EOp` case both do it, a few lines above.  The new code had to do what the code beside it was doing |
+| M10γϊ | **`PatStrKrml` runs, `PatStrNest` refuses** (§48.3) | Done.  Round 48.  `PatStrKrml` was a reject test for two rounds and now checks its own answers; it takes its strings from a malloc-ing external for the same reason `PatStr` does (§44.2), and supplies `__eq__Prims_string` from its stub header because the suite links krmllib's *minimal* distribution -- a krmllib dependency, not a Custard one, and one any program comparing two strings through krml already has.  `PatStrNest` is the negative control: `Some "a"` is not a flat string match, so it still reaches `krml_pat` and is still refused, with a `NOEGREP` pinning that the message does not mention the if-chain |
+| M10γϋ | **Source comments cited the wrong section** (§48.4) | Fixed, round 48.  Round 47's commit copied the reviewer's round numbers into six source comments and three test files as `Section 48.1`/`Section 48.2`; this document is one lower and has been since §46, so the comments pointed at a section that did not exist.  The divergence had been stated in a PR reply and needed stating in the sources, where a reader of a comment actually is.  A round report's headings get renumbered on the way in, not copied |
+| M10γΐ | **Three negative results, recorded** (§48.5) | Recorded, round 48, no code.  `builtin_type` is a subset of `prim_type` after §46.1, with one *correct* divergence -- `Prims.int` is deliberately absent from `builtin_type`, since unbounded arithmetic has no C11 representation while karamel has `krml_checked_int_t`.  `krml_op` is total and 1:1 over 22 operators, and the `\| _ -> K.CInt` width fallback beside it is reachable only for `Prims.int`.  Every `==` site in `PrintC` audited: two enum tags, two `NULL`, two the string pair.  Plus the one the reviewer found on himself, which is the one worth keeping: string `==` was fixed in direct C in round 44 and the krml backend was never asked the same question.  It was right -- but "fixed in one backend, never checked in the other" is §44 and §46.1 and §48.3, and the cheapest place to catch it is the first fix |
