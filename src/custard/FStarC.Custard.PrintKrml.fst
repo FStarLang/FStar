@@ -347,6 +347,21 @@ let krml_reject (#a:Type) (what:string) : ML a =
     "The direct C backend (--custard_backend C) has no representation for \
      it either."
 
+(* Section 50.2.  A third scope, which the two above cannot express.  karamel
+   *does* have the construct -- its own AST holds it and its C backend emits
+   it -- and what is missing is one of karamel's *targets*.  Saying "no
+   karamel representation" here would send a reader to look for a node that
+   is there.  Refusing per backend is §46.3 at one more level of resolution:
+   which backend accepts a construct is a fact about the site, and so is
+   which of karamel's own targets does. *)
+let krml_reject_rust (#a:Type) (what:string) (why:string) : ML a =
+  E.raise_error0 E.Error_CustardNoCRepresentation
+    [text ("Custard: " ^ what ^ " has no representation in karamel's Rust \
+            backend.");
+     text why;
+     text "Both C routes accept it: --custard_backend KrmlC and \
+           --custard_backend C."]
+
 (* -------------------------------------------------------------------- *)
 (* Patterns                                                             *)
 (* -------------------------------------------------------------------- *)
@@ -373,8 +388,22 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
      scrutinee and every branch after it was dead code, with no diagnostic on
      either krml backend.  A pattern the backend cannot translate has to stop
      the extraction, as [POr] above already does: the alternative is not a
-     worse translation, it is a different program. *)
-  | PConst (CString _) -> krml_reject_c_ok "a string pattern"
+     worse translation, it is a different program.
+
+     Section 50.2.  Which backends accept it now depends on which one is
+     running.  On KrmlC a *flat* string match is desugared before reaching
+     here (section 48.3), so anything that does reach here is a nested one,
+     which the direct C backend refuses too.  On KrmlRust the desugaring is
+     switched off wholesale, so this fires on shapes both C routes handle,
+     and sending the reader to the direct C backend alone would omit the
+     nearer answer. *)
+  | PConst (CString _) ->
+    if Options.custard_backend () = "KrmlRust"
+    then krml_reject_rust "a string pattern"
+           "A flat string match is compiled to a comparison chain using \
+            krmllib's __eq__Prims_string, which is C and has no Rust \
+            counterpart."
+    else krml_reject_c_ok "a string pattern"
   (* Unreachable from F* source: the parser refuses a float literal in pattern
      position (Error 168) for both [1.0] and [1.0f].  Kept because the IR
      admits one and a rule could build it, and [c_ok] because [PrintC.pat_tests]
@@ -542,6 +571,21 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   (* Decidable equality at no particular width is *polymorphic*: karamel types
      it only through an explicit type application naming the operand type
      ([Checker.infer], the [ETApp (EOp (Eq|Neq), _)] case). *)
+  (* Section 50.2.  At *string* type that equality is realized by krmllib's
+     [__eq__Prims_string], which is C (krmllib/c/prims.c) and has no Rust
+     counterpart.  Handed to karamel's Rust backend it does not fail, it
+     crashes -- "ERROR translating type of __eq__Prims_string" and then a
+     [Not_found] with no output file -- so the refusal has to be here.  This
+     is the older half of the bug the string-match desugaring widened: plain
+     [s = t] on strings has crashed the Rust path since strings did. *)
+  | EOp ({ po_op = o; po_ty = None }, args)
+      when (Eq? o || Neq? o) && Cons? args &&
+           Options.custard_backend () = "KrmlRust" &&
+           (match args with a :: _ -> is_string_cty a.ty | [] -> false) ->
+    krml_reject_rust "string equality"
+      "It is realized by krmllib's __eq__Prims_string, a C function with no \
+       Rust counterpart, so karamel's Rust backend fails to translate it."
+
   | EOp ({ po_op = o; po_ty = None }, args)
       when (Eq? o || Neq? o) && Cons? args ->
     let t = match args with a :: _ -> krml_typ env a.ty | [] -> K.TAny in
@@ -581,6 +625,11 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | ERaise _ -> K.EAbortS "Custard: an uncaught exception was raised"
 
 and is_string_match (scrut:expr) (brs:list branch) : ML bool =
+  (* Section 50.2.  The chain compares with [__eq__Prims_string], which is a
+     krmllib *C* primitive with no Rust counterpart, so the desugaring is
+     C-only.  Ungated it turned a clean refusal into a karamel crash on the
+     Rust path. *)
+  Options.custard_backend () = "KrmlC" &&
   is_string_cty scrut.ty &&
   Cons? brs &&
   brs |> List.for_all (fun (p, g, _) ->
@@ -597,7 +646,11 @@ and is_string_match (scrut:expr) (brs:list branch) : ML bool =
 and string_match (env:kenv) (scrut:expr) (brs:list branch) : ML K.expr =
   (* The scrutinee is bound once: it may be a call, and the chain mentions it
      once per branch. *)
-  let x = "scrut" in
+  (* Section 50.1.  Freshened, like every other binder Custard invents: [find]
+     takes the first match, so a plain "scrut" captures every reference to a
+     source variable of that name -- silently, and with the guard reading the
+     scrutinee instead of the parameter. *)
+  let x = fresh_local env "scrut" in
   let st = krml_typ env scrut.ty in
   let b = { K.name = x; K.typ = st; K.mut = false; K.meta = [] } in
   let env' = extend env x in

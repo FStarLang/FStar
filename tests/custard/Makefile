@@ -768,6 +768,34 @@ $(OUTPUT_DIR)/%.krml:
 	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend KrmlC \
 	  --custard_main $*.main $< -o $@
 
+# Section 50.2.  A construct that karamel holds but karamel's *Rust* backend
+# cannot emit has to be refused by Custard, because karamel does not refuse
+# it -- it crashes, mid-translation, with no output file and a message naming
+# a krmllib symbol.  So this leg pins a diagnostic and not an artifact.
+$(OUTPUT_DIR)/%.rustrejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "REJECT-RUST", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	  $(FLAGS_$*) --custard_backend KrmlRust --custard_main $*.main $< \
+	  -o $(OUTPUT_DIR)/$*.rs >$(OUTPUT_DIR)/$*.rerr 2>&1 || true
+	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.rerr \
+	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $* on KrmlRust"; \
+	       cat $(OUTPUT_DIR)/$*.rerr; false; }
+	$(Q)for p in $(EGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.rerr \
+	    || { echo "ERROR: $* diagnostic is missing $$p"; \
+	         cat $(OUTPUT_DIR)/$*.rerr; exit 1; }; done
+	$(Q)for p in $(NOEGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.rerr \
+	    && { echo "ERROR: $* diagnostic should not contain $$p"; \
+	         cat $(OUTPUT_DIR)/$*.rerr; exit 1; }; done; true
+	@# Custard refused, so karamel was never handed the module and no .rs
+	@# may exist.  A crash produced none either, which is why the file's
+	@# absence is not on its own the property being checked.
+	$(Q)test ! -e $(OUTPUT_DIR)/$*.rs \
+	  || { echo "ERROR: $* wrote a .rs despite being refused"; exit 1; }
+	$(Q)touch $@
+
 # karamel emits its own compile_flags.txt, which is the only portable way to
 # learn where krmllib's headers live.
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
@@ -1228,9 +1256,31 @@ C_TESTS    += FragCfg
 CGREP_FragCfg += "fc_mma("
 CNOGREP_FragCfg += "FragCfg_frag"
 
+# Section 50.1.  A source variable named [scrut], which is the name section
+# 48.3's desugaring invented for its scrutinee binder without freshening it.
+# Checks its own answers, so the capture is a nonzero exit and not a grep.
+KRML_TESTS += ScrutCap
+
+# Section 50.2.  The KrmlRust leg, which this directory did not have: every
+# string test above runs on exactly one of the two backends the code under
+# test is shared by.  [PatStrR] is section 48.3's desugaring, which is C-only
+# because [__eq__Prims_string] is; [StrEqK] is the older half, a plain [=] on
+# strings, which crashed karamel's Rust backend before there was a
+# desugaring to blame.  Both must now refuse rather than crash.
+RUSTREJECT_TESTS += PatStrR
+CODE_PatStrR := 368
+EGREP_PatStrR += "a string pattern has no representation in karamel's Rust"
+EGREP_PatStrR += "--custard_backend KrmlC"
+NOEGREP_PatStrR += "has no karamel representation"
+
+RUSTREJECT_TESTS += StrEqK
+CODE_StrEqK := 368
+EGREP_StrEqK += "__eq__Prims_string"
+EGREP_StrEqK += "--custard_backend KrmlC"
+
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
-                  $(C_TESTS) $(KRML_TESTS) \
+                  $(C_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) \
                   SepApp SepAppC SplitHi SplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
@@ -1307,6 +1357,7 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rustrejected, $(RUSTREJECT_TESTS)))
 
 # Only when karamel is on the PATH: the OCaml backend is always testable, the
 # C one needs a toolchain.

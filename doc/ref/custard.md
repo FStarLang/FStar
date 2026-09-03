@@ -12068,6 +12068,130 @@ and make chooses `mk/test.mk`'s -- whose recipe is a plain
 fine. Those two get the binary as an explicit prerequisite of each concrete
 target instead, which is outside the pattern.
 
+# 50 The name the desugaring invented
+
+Round 47 of the EverParse trial, against §48's string-match desugaring. It
+found a live miscompilation, and the miscompilation is one I wrote *beside*
+the code that says not to write it.
+
+Everything else in §48 held: source order preserved, scrutinee evaluated
+once, `PatStrNest` still refused, all EverParse output byte-identical
+through C, four CDDL units and `custard.rs`.
+
+## 50.1 `string_match` captured a variable called `scrut`
+
+The desugaring binds the scrutinee once, because it may be a call and the
+chain mentions it once per branch. It named that binder by writing the name
+down:
+
+```fstar
+let x = "scrut" in
+```
+
+`fresh_local`'s doc comment, ninety lines above in the same file, is:
+
+> A name for a binder Custard invents, that no reference in scope can
+> resolve to. `find` takes the first match, so reusing a name already bound
+> would capture every outer use of it.
+
+and the `ESeq` case, in the same function's neighbourhood, calls
+`fresh_local env "discarded"` with four sentences explaining the hazard. So
+the rule was stated, the mechanism was available, and the code beside it
+used both.
+
+```fstar
+let pick (scrut : string) (s : string) : U32.t =
+  match s with
+  | "a" -> if scrut = "yes" then 1ul else 9ul
+  | _   -> 3ul
+```
+
+`pick "yes" "a"` is 1 and returned 9: the invented binder shadowed the
+parameter, so the guard tested the *scrutinee*. The parameter became dead
+and karamel said so, with a `KRML_MAYBE_UNUSED_VAR` -- the identical tell as
+round 44's `PConst` bug, and still the thing nothing greps for.
+
+`fresh_local env "scrut"` is the whole fix. The reporter enumerated the
+other invented binders while he was there: `discarded`, already freshened,
+and `"_"` for `PWild`, which is safe because F\* has no variable of that
+name. Three in total.
+
+The self-description this deserves is the one §49 was written around, one
+level in: *I wrote new code beside code that was already doing the right
+thing and did not read it.* §49's nine inexhaustive matches were the same
+failure against a rule the compiler could have enforced and did not.
+`fresh_local` is a rule stated in prose next to the code that breaks it,
+which is weaker. What would actually enforce it is a `kenv`-carrying binder
+constructor that has no way to spell an unfreshened name; that is not built,
+and is recorded here as the real answer.
+
+## 50.2 On the Rust path the desugaring turned a refusal into a crash
+
+`is_string_match` was not gated on the backend, and the chain it builds
+compares with `__eq__Prims_string` -- a krmllib **C** primitive
+(`krmllib/c/prims.c`), with no Rust counterpart. On `--custard_backend
+KrmlRust`, karamel does not refuse it; it crashes mid-translation, prints
+`ERROR translating type of __eq__Prims_string`, then `Not_found`, and writes
+no `.rs` at all. Before §48 the same module got a clean Error 368.
+
+Calibrated before being called a regression, and it is half of one. Plain
+`let eq (a b : string) = a = b` on KrmlRust *already* crashed karamel
+identically, and had since Custard had strings. The desugaring did not open
+the hole; it widened its reach from `=` to `match`, and converted a
+diagnostic into a crash for the pattern case. **The older half is the worse
+one**, having been silent for every round of this document.
+
+Both halves are now refused by Custard:
+
+- `is_string_match` is gated on `KrmlC`, so the desugaring is C-only and a
+  string match on the Rust path falls back to the ordinary pattern refusal;
+- a polymorphic `Eq`/`Neq` whose first operand is a string is refused in
+  `krml_expr` on `KrmlRust`, before the type application is built.
+
+The wording needed a third scope, which §46.3's two could not express.
+`krml_reject_c_ok` says karamel lacks the construct and the direct C backend
+has it; `krml_reject` says nobody has it. Neither is true here: **karamel
+has string equality, and what is missing is one of karamel's own targets.**
+Saying "no karamel representation" sends a reader looking for a node that is
+there. `krml_reject_rust` says the Rust backend lacks it, says why, and
+names both C routes -- which is §46.3 applied one level down, from "which
+backend" to "which of karamel's backends".
+
+The string *pattern* refusal became backend-dependent for the same reason.
+On `KrmlC` anything reaching it is a nested string pattern, which the direct
+C backend refuses too; on `KrmlRust` it fires on flat matches that both C
+routes handle, and naming only `--custard_backend C` would omit the nearer
+answer.
+
+## 50.3 The suite reached one of the two backends the code is shared by
+
+Why this was invisible: **`tests/custard` had no KrmlRust leg.** `KRML_TESTS`
+is KrmlC only, and `KrmlRust` appeared in `tests/custard/pulse` and
+`tests/extraction/backends` and nowhere else. So `PatStr`, `PatStrKrml` and
+`PatStrNest` each exercised exactly one of the two targets the code under
+test is shared by.
+
+That is §48.5's "two tables that must agree, with nothing enforcing it",
+moved from tables to test legs, and it is the third distinct shape of the
+same failure -- the first being §44's fix-in-one-backend, the second §49's
+claim-checked-by-reading. **A file with one implementation and two targets
+needs a test per target, and the count is a property of the file, not of
+what has broken so far.**
+
+`RUSTREJECT_TESTS` and the `%.rustrejected` rule are the leg. They pin a
+diagnostic rather than an artifact, because what a missing Rust construct
+produces today is a karamel crash, and they check that no `.rs` was written
+-- with the note that a crash writes none either, so the file's absence is
+not on its own the property being tested. `PatStrR` is §48's desugaring on
+the Rust path, with branches out of source order for the reason `ChrLit`'s
+are; `StrEqK` is the older half.
+
+`ScrutCap.fst` is 50.1, and it checks its own answers rather than grepping,
+so the capture is a nonzero exit. It carries a second function whose
+parameters are named `scrut` *and* `scrut1`, so the freshener has to count
+rather than merely append. Broken rather than watched: reverting the one
+word makes the test fail.
+
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -12257,3 +12381,6 @@ target instead, which is outside the pattern.
 | M10γΔ | **A lambda with no binders is not a function** (§49.4) | Done, round 49.  `lift_named` matched `EFun (bs, body)` without looking at `bs`, so `EFun ([], body)` -- its own body written the long way -- lifted to a `DLet` with no binders, which is a top-level *variable*, wearing the caller's flags.  `Prologue "__global__"` on a global variable is not a kernel.  Refused now, with the message it already had for a non-lambda argument, which is what it is; the `.fsti` says the lambda must be closed *and* have at least one binder.  The fourth instance of the round's one theme: Custard knew enough to say something and said nothing |
 | M10γΕ | **Rewriting a binder's type from inside a rule** (§49.5) | Answered, no change.  Giving an existential with no F\* runtime content a C representation by rewriting the kernel binder's type inside the rule works, and is unchecked -- §5.9's warning applied to a case §5.9 did not have in mind.  It is the right tool today because there is no other, and the wrong one eventually for the reason 49.2 and 49.3 are in the same section: it moves a *declaration* into a *rule*, where nothing can see it.  The end state is a source-level way to say "this existential's runtime witness is `uint8_t*`" -- `custard_extern` on a type, except the type is not opaque in F\*, it is empty.  Written down so it is not rediscovered |
 | M10γΖ | **The suite could pass against a compiler that no longer exists** (§49.6) | Done, round 49, and the most alarming item in it: the reporter "reproduced" a bug against a compiler that had already fixed it, because `tests/custard` declared no dependency on `fstar.exe` and `make` re-used yesterday's `_output/`.  Every measurement in every round of this document is a `make` in that directory.  `$(FSTAR_EXE)` is a prerequisite of every compiler-running rule in `tests/custard` and `tests/custard/pulse` now.  Two of them could not get it that way: `$(OUTPUT_DIR)/%.ml` and `%.krml` are *overrides* of identically-named pattern rules in `mk/test.mk`, and make treats a pattern rule as replacing an earlier one only when the patterns match -- adding a prerequisite makes it a second rule, both survive, and make picks `test.mk`'s plain `--codegen OCaml`.  Symptom: `Error 76` from a file that extracts fine.  Those two get an explicit prerequisite per concrete target, outside the pattern |
+| M10γΗ | **The name the desugaring invented** (§50.1) | Done, EverParse round 47, and a live miscompilation of my own from one round earlier.  §48's `string_match` binds the scrutinee once and named that binder `"scrut"` by writing it down, so a source variable of that name was captured: `pick (scrut:string) (s:string)` tested the *scrutinee* in its guard, returned 9 where 1 was right, and karamel marked the parameter unused -- `KRML_MAYBE_UNUSED_VAR`, the identical tell as round 44's `PConst` bug and still the thing nothing greps for.  `fresh_local`'s own doc comment states the rule, and the `ESeq` case ninety lines up obeys it with four sentences of explanation.  Fix is `fresh_local env "scrut"`.  All three invented binders audited: this one, `discarded` (already right), and `"_"` for `PWild` (safe, F\* has no variable of that name).  `tests/custard/ScrutCap.fst` checks its own answers and carries a second function with `scrut` *and* `scrut1` bound so the freshener has to count; reverting the one word makes it fail.  The enforceable version -- a binder constructor with no way to spell an unfreshened name -- is not built, and is written down as the real answer |
+| M10γΘ | **A refusal became a crash on the Rust path** (§50.2) | Done, EverParse round 47.  `is_string_match` was not gated on the backend, and the chain it builds compares with `__eq__Prims_string`, a krmllib *C* primitive with no Rust counterpart: on KrmlRust karamel does not refuse it, it crashes mid-translation and writes no `.rs`.  Half a regression, calibrated before being called one -- plain `let eq (a b:string) = a = b` crashed KrmlRust identically and had since Custard had strings, so §48 widened the reach from `=` to `match` rather than opening the hole, and **the older half is the worse one**, silent for every round of this document.  Both refused now: the desugaring is gated on KrmlC, and a polymorphic `Eq`/`Neq` at string type is refused in `krml_expr` on KrmlRust.  Needed a third refusal scope §46.3's two could not express: karamel *has* string equality and what is missing is one of karamel's own *targets*, so "no karamel representation" would send a reader looking for a node that is there.  `krml_reject_rust` names the Rust backend, says why, and names both C routes.  The string-*pattern* refusal became backend-dependent for the same reason |
+| M10γΙ | **A test leg per target, not per bug** (§50.3) | Done, EverParse round 47, and the reason 50.2 was invisible: `tests/custard` had **no KrmlRust leg** at all -- `KRML_TESTS` is KrmlC only, and `KrmlRust` lived in `tests/custard/pulse` and `tests/extraction/backends` and nowhere else.  So every string test exercised exactly one of the two targets the code under test is shared by.  Third distinct shape of one failure: §44's fixed-in-one-backend, §49's claim-checked-by-reading, and now tested-on-one-leg -- §48.5's "two tables that must agree with nothing enforcing it", moved from tables to test legs.  `RUSTREJECT_TESTS` and `%.rustrejected` pin a diagnostic rather than an artifact, since what a missing Rust construct produces today is a crash, and check that no `.rs` was written -- noting that a crash writes none either, so absence is not on its own the property.  `PatStrR` (branches out of source order, for `ChrLit`'s reason) and `StrEqK` (the older half).  The rule worth keeping: a file with one implementation and two targets needs a test per target, and the count is a property of the file, not of what has broken so far |
