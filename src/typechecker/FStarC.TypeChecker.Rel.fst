@@ -2392,9 +2392,29 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                   let env = p_env wl (TProb tp) in
                   let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
                   let t2_base, p2_opt = base_and_refinement_maybe_delta false env t2 in
-                  let combine_refinements t_base p1_opt p2_opt : ML _ =
+                  (* Are two refinement formulas the *same* formula?
+                     [U.term_eq] answers this syntactically, and so compares
+                     universes by unification-variable identity.  One source
+                     type elaborated twice gives two copies that differ only in
+                     unsolved universe variables -- [eq2<?u17>] and
+                     [eq2<?u23>], say -- and reading those as *different*
+                     refinements makes the join below widen to the base type,
+                     silently dropping the refinement.  A postcondition is a
+                     refinement of a result type now, so a variable with two
+                     lower bounds of the same refined type is an everyday
+                     occurrence.  Fall back to unifying the two formulas, which
+                     equates the universes rather than comparing them; this
+                     runs with [smt_ok=false], so it cannot succeed for two
+                     formulas that are merely provably equivalent. *)
+                  let same_formula phi1 phi2 wl : ML (bool & worklist) =
+                    if U.term_eq phi1 phi2 then true, wl
+                    else match try_eq phi1 phi2 wl with
+                         | Some wl -> true, wl
+                         | None -> false, wl
+                  in
+                  let combine_refinements t_base p1_opt p2_opt wl : ML _ =
                     match op with
-                    | None -> t_base
+                    | None -> t_base, wl
                     | Some op ->
                       let refine x t =
                           if U.is_t_true t then x.sort
@@ -2407,8 +2427,9 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                         let phi1 = SS.subst subst phi1 in
                         let phi2 = SS.subst subst phi2 in
                         let env_x = Env.push_bv env x in
+                        let eq12, wl = same_formula phi1 phi2 wl in
                         let phi =
-                          if U.term_eq phi1 phi2 then phi1
+                          if eq12 then phi1
                           (* [False] is the unit of a join. *)
                           else if not flip && U.is_t_false phi1 then phi2
                           else if not flip && U.is_t_false phi2 then phi1
@@ -2427,8 +2448,8 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                            bounds.  Meeting upper bounds must keep both
                            refinements. *)
                         if not flip && not (U.term_eq phi phi1) && not (U.term_eq phi phi2)
-                        then t_base
-                        else refine x phi
+                        then t_base, wl
+                        else refine x phi, wl
 
                       | None, Some (x, phi)
                       | Some(x, phi), None ->
@@ -2436,22 +2457,21 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                         let subst = [DB(0, x)] in
                         let phi = SS.subst subst phi in
                         let env_x = Env.push_bv env x in
-                        refine x (op U.t_true phi)
+                        refine x (op U.t_true phi), wl
 
                       | _ ->
-                        t_base
+                        t_base, wl
                   in
                   match try_eq t1_base t2_base wl with
                   | Some wl ->
-                    combine_refinements t1_base p1_opt p2_opt,
-                    [],
-                    wl
+                    let t, wl = combine_refinements t1_base p1_opt p2_opt wl in
+                    t, [], wl
 
                   | None ->
                     let t1_base, p1_opt = base_and_refinement_maybe_delta true env t1 in
                     let t2_base, p2_opt = base_and_refinement_maybe_delta true env t2 in
                     let p, wl = eq_prob t1_base t2_base wl in
-                    let t = combine_refinements t1_base p1_opt p2_opt in
+                    let t, wl = combine_refinements t1_base p1_opt p2_opt wl in
                     (t, [p], wl)
               in
               let t1, ps, wl = combine t1 t2 wl in
