@@ -25,7 +25,9 @@ Everything else is a function over an IR datatype, and a missing case there
 is a latent crash.  Exit status is the number of such sites.
 
 Needs a dune build tree for the cmi files; skips (exit 0) if there is none,
-so that it is safe to run from `make all` in a source checkout.
+so that it is safe to run from `make all` in a source checkout.  Fails, rather
+than reporting on the previous build, if that tree is older than src/custard/
+(section 52.1).
 """
 
 import glob
@@ -88,6 +90,53 @@ def main():
     if objs is None:
         print("checkpartial: no dune build tree; skipping")
         return 0
+
+    # Section 52.1.  The sweep reads the *extracted* compiler, so it answers
+    # about the last build and not about src/custard/.  A module that does not
+    # compile is guarded below, but that is only one of the two ways a stale
+    # tree lies: a tree that is merely *old* compiles perfectly and reports on
+    # the previous sources.  Both directions are wrong and both are silent --
+    # making a match inexhaustive and running the gate passes, and fixing it
+    # again keeps failing.
+    #
+    # The general shape, which is what makes this worth a comment: a gate about
+    # the compiler that reads a *derived* artifact inherits that artifact's
+    # staleness.  `check-sources' next to it greps CUSTARD_SRC and is always
+    # current.  Unlike a test of generated output -- where the artifact is the
+    # thing under test, so its being stale is the bug -- here the artifact is a
+    # proxy, and nothing about it says which source it came from.
+    #
+    # This belongs in the script and not in the makefile: `check-partial:
+    # $(FSTAR_EXE)' is an existence check, since tests/custard has no rule that
+    # builds the compiler, so it would rebuild nothing.
+    stale = []
+    unmapped = []
+    for ml in mls:
+        base = os.path.basename(ml)[:-3].replace("_", ".")
+        srcs = [os.path.join(root, "src", "custard", base + ext)
+                for ext in (".fst", ".fsti")]
+        srcs = [s for s in srcs if os.path.exists(s)]
+        if not srcs:
+            unmapped.append(os.path.basename(ml))
+            continue
+        mt = os.path.getmtime(ml)
+        stale += [os.path.relpath(s, root) for s in srcs
+                  if os.path.getmtime(s) > mt]
+    # A module the sweep reads but cannot map to a source is unguarded, and
+    # silently so, which is the failure this whole check is about.
+    if unmapped:
+        print("checkpartial: no source found for:")
+        for m in sorted(unmapped):
+            print(f"    {m}")
+        print("Those modules cannot be checked for staleness.")
+        return len(unmapped)
+    if stale:
+        print("checkpartial: the extracted compiler is older than its source:")
+        for s in sorted(set(stale)):
+            print(f"    {s}")
+        print("The sweep would report on the previous build.  Rebuild first "
+              "(make -j), then re-run.")
+        return 1
 
     out = []
     failed = []

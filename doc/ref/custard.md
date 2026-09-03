@@ -12358,6 +12358,150 @@ run out there. §49.5 already says that is the wrong long-term tool; this is
 the round that dates it.
 
 
+# 52 A gate that reads a stale artifact
+
+Round 49 from the CBOR/CDDL reporter, and the shortest useful round in a
+while: no new feature, one real hole in the test infrastructure, and three
+corrections -- two of them to the reporter's own earlier claims and one to
+mine. Sections 52.0 to 52.2 are corrections; §52.3 is the hole.
+
+
+## 52.0 An audit that reads a match gets two answers wrong
+
+§49.1 already recorded that round 48's claim about `PrintKrml.krml_op` --
+"the buffer-operation `failwith` is unreachable, the match above it is
+total" -- was wrong: it is reachable, and the `failwith` stays. This round
+the reporter checks his own arithmetic and finds the *other* half wrong
+too. He had counted 22 non-buffer constructors; there are 24.
+
+Both errors came from one reading of one match. That is the point worth
+recording, and it is an argument for `check-partial` rather than against
+the reporter: a human who reads a match to decide whether it is total is
+doing, by eye, exactly what the compiler does by construction, and gets
+both the totality and the arity wrong in a single glance. The reason
+nothing in the build catches an inexhaustive match here is §51.1's: the
+compiler sources are checked `--lax` and the extracted OCaml is built with
+`-w -A`, so `check-partial` re-derives the one warning that matters from
+the extracted tree. An audit is not a substitute for it, and this round is
+the demonstration.
+
+The comment at the `failwith` now carries the corrected count.
+
+
+## 52.1 The pointer aimed at the wrong corpus
+
+§49.3 suggested the reporter check Warning 382 -- Custard's erasure
+changing the arity of a `custard_extern` -- against his corpus. He reports
+that he cannot: EverParse has **zero** `custard_extern` declarations.
+
+That is not a gap in his corpus, it is a property of it, and I had the
+wrong model. `DExternal` arises only from the `custard_extern` attribute
+(`Extract.fst:901`). EverParse's entire C surface is *extracted*: the
+parsers and validators are F\* definitions that Custard compiles, and
+nothing is declared-external and realized by hand. Warning 382 is about a
+declaration whose implementation Custard never sees, so it is not merely
+unfired there -- it is inapplicable.
+
+This also explains, retroactively, why round 40's question from this
+reporter was about `--custard_c_no_prefix`: for a corpus whose C surface is
+generated, the interesting question is what that surface is *named*, not
+how a hand-written one is declared. The two reporters sit on opposite sides
+of the same boundary, and a diagnostic about one side has one calibration
+corpus, not two. Warning 382's is Kuiper's.
+
+
+## 52.2 Warning 382 is backend-independent
+
+The reporter did check something in the neighbourhood, and reports a
+negative result: he ran §49's `ExternErase` shape on all three backends --
+`C`, `KrmlC` and `KrmlRust` -- and got the same diagnostic each time, so
+the single test leg the suite has is adequate.
+
+Reproduced here, and the three diagnostics are byte-identical:
+
+```
+C        : Custard erased 1 parameter(s) of the external ExternErase.run: cb.
+KrmlC    : Custard erased 1 parameter(s) of the external ExternErase.run: cb.
+KrmlRust : Custard erased 1 parameter(s) of the external ExternErase.run: cb.
+```
+
+Worth recording for two reasons. First, it is a *checked* negative result
+rather than an assumed one, and it was reached by applying §50.3's rule --
+that a suite covering only one backend is a coverage claim and has to be
+argued -- rather than by ignoring it. Second, it sharpens that rule, which
+§50.3 stated too broadly. The leg count a test needs is a property of where
+the code under test sits relative to the backend split: `PrintKrml` is
+below it and has two targets that disagree, which is why §50.2's string
+equality needed a second leg. Warning 382 is raised in `Extract`, above the
+split, where there is one implementation by construction. A one-leg suite
+is right there, and the reporter's sweep is what turns "should be" into
+"is".
+
+
+## 52.3 A gate about the compiler inherits its artifact's staleness
+
+The hole. `make check-partial` passes on a tree that is merely *old*.
+
+§46 added the gate and a guard for it: if the extracted tree cannot be
+found, or is empty, or fails to compile, the script fails rather than
+sweeping nothing and reporting success. The sibling shape was not covered.
+A tree that is out of date compiles perfectly well, produces exactly the
+warnings the *previous* sources produced, and reports on them. Nothing in
+the output says which sources it read.
+
+The reporter demonstrates it in both directions on `krml_op`: delete a
+constructor from the match, do not rebuild, `check-partial` is green; and
+the converse, fix an inexhaustive match, do not rebuild, `check-partial`
+still reports it. The gate is not wrong about the tree it reads, it is
+reading a tree nobody asked about.
+
+The generalization, which is the part worth keeping:
+
+> A gate about the compiler that reads a *derived* artifact inherits that
+> artifact's staleness.
+
+`check-sources` greps `CUSTARD_SRC` and so is always current -- the sources
+are the thing it reads. `check-partial` reads
+`stage3/out/lib/fstar/compiler/fstarc.ml/`, and is current only as of the
+last build. The distinction from an ordinary test of generated output is
+that there the artifact *is* the thing under test, so its staleness is the
+bug and shows up as a failure; here the artifact is a proxy for the
+sources, and its staleness is invisible.
+
+His makefile-level fix -- `check-partial: $(FSTAR_EXE)` -- does not work.
+`tests/custard` has no rule that builds the compiler, so that is an
+existence check on a file that already exists, and rebuilds nothing. The
+fix belongs in the script, which is the only place that knows which
+extracted modules it is about to read.
+
+`checkpartial.py` now maps each swept `FStarC_Custard_X.ml` back to
+`src/custard/FStarC.Custard.X.{fst,fsti}` and refuses to run if any source
+is newer than its extracted form, naming the files and saying to rebuild.
+Two additions to his patch:
+
+- **`.fsti` mtimes count.** An interface change with no implementation
+  change is exactly the shape that alters a match's obligations -- adding a
+  constructor to `Syntax.fsti`'s `flag` is §51.1's own bug -- so leaving
+  interfaces out would have left the motivating case unguarded.
+- **A module that maps to no source is reported**, as `unmapped`, rather
+  than silently sweeping unguarded. A staleness check that quietly exempts
+  whatever it fails to resolve is §46's original failure mode wearing a new
+  hat.
+
+The guard fired on its first run, correctly, naming the `PrintKrml.fst`
+edited minutes earlier for §52.0. Both directions verified: green on a
+fresh tree, red after `touch src/custard/FStarC.Custard.Unit.fsti`, green
+again after a rebuild. All eighteen modules map to a source.
+
+
+## 52.4 What remains
+
+The reporter re-ran his corpus on `6771466de3` and every artifact is
+byte-identical to the previous round's, which is the predicted result: §50
+touched a desugaring he does not reach and two refusals for constructs he
+does not use.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -12552,3 +12696,5 @@ the round that dates it.
 | M10γΚ | **The check did not catch the bug it was written for** (§51.1) | Done, round 50, and a correction to M10γΑ.  The reporter seeded §49's `flag_to_doc` bug back into the extracted OCaml and `checkpartial.py` returned 0.  Two compounding defects: OCaml prints the unmatched example inline when it is short (`... is not matched: Prologue _`) and on its own line when it is long, and the script split on `"not matched:\n"` only, so on the inline form `missing` silently became the *whole warning block*; and the option-elimination filter was applied to the source *excerpt*, so `flag_to_doc` -- whose `Extern` case eliminates a `FStar_Pervasives_Native.Some` forty lines from the missing branch -- was discarded as an option elimination.  Either alone suffices.  It passed review because the negative control was `entry_to_string`, whose missing set carries the "However, some guarded clause" note, and the note forces the multi-line form: **the check passed on the hard case and failed on the one that motivated it.**  Fixed to read both forms and to filter on the parsed constructors; the module qualifier had to become optional, since the inline form prints a bare `None`.  Plus one not asked for: an unparseable Warning 8 block is now reported rather than dropped, the original bug being a parse that silently produced garbage.  Clean is 0 before and after, so nothing was masked in-tree.  §50.3 one turn on: a check needs a negative control per input shape it parses |
 | M10γΛ | **An external is never specialized** (§51.2) | Done, round 50, user ask.  A `custard_extern` with a type parameter -- the reporter's attempt to declare the variadic `KPR_KCALL` once -- got a generic `Warning 367` naming the whole declaration type with `any` in it, and nothing said why.  The behaviour is right and was undocumented, which made a correct diagnostic unreadable: specialization substitutes into a body, an external has none, and its C declaration is one fixed symbol with one prototype, so there is nothing for a per-instantiation copy to be named.  367 now names the type parameters, says an external is never specialized and why, and gives the workaround -- one external per type vector, all with the same `[@@custard_extern]` target name -- along with the fact that it is per *type vector* and not per arity, which is what stops it scaling |
 | M10γΜ | **A prologue that follows the call graph** (§51.3) | Done, round 50, and the first ask in many rounds that is a missing feature rather than a missing diagnostic.  `Prologue` decorates one declaration; CUDA's `__global__` may only call `__device__`, so marking a kernel leaves every function its body calls implicitly `__host__` and `nvcc` refuses each one.  No number of per-declaration flags fixes it: the set is the transitive callees of a term the plugin has just built, which the plugin cannot enumerate and Custard can, `dce` having just computed that graph.  `ClosurePrologue (exclusive, shared)`, from a plugin or from `[@@custard_c_closure_prologue]`, marks everything the carrier reaches -- exclusive when the only route is through a marked declaration, shared when the ordinary program reaches it too, which for CUDA is `__device__` and `__device__ __host__`.  **The second string is the part that could not be worked around**: which helpers are called from both a kernel and host code is a property of the whole program, not of any declaration, so no amount of hand-marking expresses it; Kuiper's `Kuiper.Math` helpers survive today only because that library happens to be written `inline_for_extraction noextract` throughout.  `host` is computed without descending through an entry, or a kernel's own body would make its whole closure shared.  Custard reads neither string.  §36 got this one wrong and neither `clang` nor `g++` could have shown it -- §41.4's `nvcc` check found the three that were right.  `tests/custard/DevClosure.fst`, one callee per class, with new `CPAIR_`/`CNOPAIR_` assertions over adjacent line pairs, since a prologue sits on the line before what it decorates and "which declaration got which" is not otherwise expressible |
+| M10γΝ | **`check-partial` refuses to run on a stale tree** (§52.3) | Done, round 49 from the CBOR/CDDL reporter, and a hole in the gate rather than in the compiler.  §46 guarded the tree that cannot be found, is empty, or fails to compile; the sibling shape is a tree that is merely *old*, which compiles fine and reports on the previous sources with nothing in the output saying so.  Demonstrated both ways on `krml_op`: seed an inexhaustive match without rebuilding and the gate is green; fix one without rebuilding and it still reports.  The generalization: **a gate about the compiler that reads a derived artifact inherits that artifact's staleness** -- `check-sources` greps `CUSTARD_SRC` and is always current, `check-partial` reads `stage3/out/lib/fstar/compiler/fstarc.ml/` and is only as current as the last build.  Unlike a test of generated output, where the artifact is the thing under test and staleness *is* the failure, here it is a proxy and staleness is invisible.  `check-partial: $(FSTAR_EXE)` does not fix it -- `tests/custard` has no rule that builds the compiler, so it is an existence check that rebuilds nothing -- so the fix is in `checkpartial.py`, which maps each swept `FStarC_Custard_X.ml` back to its `src/custard` sources and compares mtimes.  Two additions to the reporter's patch: `.fsti` files count, since an interface-only change is exactly what alters a match's obligations (§51.1's own bug was a new `flag` constructor), and a module mapping to *no* source is reported as `unmapped` rather than swept unguarded, that being §46's failure mode again.  Fired correctly on its first run |
+| M10γΞ | **Warning 382's calibration corpus is Kuiper's, not both** (§52.1, §52.2) | Done, as two corrections and a checked negative result.  §49.3 pointed the CBOR/CDDL reporter at Warning 382; he has **zero** `custard_extern` declarations, and `DExternal` arises only from that attribute (`Extract.fst:901`), so the warning is not unfired there but inapplicable -- his entire C surface is *extracted*, not declared-external, which is retroactively why round 40's question from him was `--custard_c_no_prefix`, about what a generated surface is *named*.  The two reporters sit on opposite sides of one boundary and a diagnostic about one side has one calibration corpus.  He did check what he could: `ExternErase` on `C`, `KrmlC` and `KrmlRust` gives byte-identical diagnostics, so the single leg is adequate.  That sharpens §50.3, which was stated too broadly: the leg count a test needs is a property of where the code under test sits relative to the backend split.  `PrintKrml` is below it with two targets that disagree, which is why §50.2 needed a second leg; Warning 382 is raised in `Extract`, above the split, where one implementation exists by construction.  Also §52.0: round 48's `krml_op` count was wrong as well as its totality claim -- 24 non-buffer constructors, not 22, both errors from one reading of one match, which is the argument for `check-partial` over reading more carefully |

@@ -192,7 +192,11 @@ let krml_op (o:op) : ML K.op =
      rather than left to fall off the end: the reviewer's round-48 audit read
      this function as total over 22 operators, which it is only because the
      other eight are intercepted upstream, and that is worth saying where
-     someone counting them will read it. *)
+     someone counting them will read it.  (Section 52.0: the count was wrong
+     too.  There are 24 above, not 22.  An audit that reads a match and
+     counts gets both the totality and the arity wrong in the same glance,
+     which is the argument for [make check-partial] rather than for reading
+     more carefully.) *)
   | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
   | BufBlit | BufCreate _ ->
     failwith "Custard: a buffer operation is not a karamel operator"
