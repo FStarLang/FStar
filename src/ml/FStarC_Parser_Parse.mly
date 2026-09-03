@@ -517,7 +517,7 @@ rawDecl:
       { Splice (true, ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
-  | NEW_EFFECT ne=newEffect
+  | NEW_EFFECT ne=effectDefinition
       { NewEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
@@ -614,15 +614,6 @@ letbinding:
 /******************************************************************************/
 /*                                Effects                                     */
 /******************************************************************************/
-
-newEffect:
-  | ed=effectRedefinition
-  | ed=effectDefinition
-    { ed }
-
-effectRedefinition:
-  | lid=uident EQUALS t=simpleTerm
-    { RedefineEffect(lid, [], t) }
 
 /* An effect with a monadic representation, used for reification only:
      effect { Tac with { repr = tac_repr; return = tac_return; bind = tac_bind } }

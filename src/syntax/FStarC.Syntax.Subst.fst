@@ -245,6 +245,7 @@ let subst_comp_typ' s t : ML _ =
   | [[]], NoUseRange -> t
   | _ ->
     {t with effect_name=tag_lid_with_range t.effect_name s;
+            source_effect_name=tag_lid_with_range t.source_effect_name s;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags}
 

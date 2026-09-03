@@ -1009,8 +1009,6 @@ and p_term_list ps pb l : ML _ =
 (* ****************************************************************************)
 
 and p_newEffect : _ -> ML _ = function
-  | RedefineEffect (lid, bs, t) ->
-    str "effect" ^^ space ^^ p_effectRedefinition lid bs t
   | DeclareEffect (lid, bs) ->
     (* The required `assume` qualifier is printed by [p_decl]. *)
     str "effect" ^^ space ^^
@@ -1029,9 +1027,6 @@ and p_effectDecl ps d : ML _ =
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
       failwith "Not a declaration of an effect combinator."
-
-and p_effectRedefinition uid bs t : ML _ =
-    surround_maybe_empty 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm false false t))
 
 and p_subEffect lift : ML _ =
   let base = prefix2 (p_quident lift.msource ^^ space ^^ str "~>") (p_quident lift.mdest) in

@@ -768,7 +768,6 @@ let is_comp_ascribed_reflect (e:term) : ML (option (lident & term & aqual)) =
    | _ -> None
 
 let effect_has_primitive_extraction (env:Env.env) (eff: lident) : ML bool =
-  let eff = Env.norm_eff_name env eff in
   let ed = Env.get_effect_decl env eff in
   U.has_attribute ed.eff_attrs Const.primitive_extraction_attr
 
@@ -981,7 +980,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let env0, _ = Env.clear_expected_typ env in
 
     let expected_c, _, g_c = tc_comp env0 expected_c in
-    let expected_ct = Env.unfold_effect_abbrev env0 expected_c in
+    let expected_ct = U.comp_to_comp_typ expected_c in
 
     if not (lid_equals effect_lid expected_ct.effect_name)
     then raise_error top Errors.Fatal_UnexpectedEffect
@@ -1025,7 +1024,8 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       let c_reflect =
         S.mk_Comp ({ effect_name = expected_ct.effect_name
                    ; result_typ  = expected_ct.result_typ
-                   ; flags       = [] }) in
+                   ; flags       = []
+                   ; source_effect_name = expected_ct.source_effect_name }) in
       match Rel.sub_comp env0 c_reflect expected_c with
       | Some g -> g
       | None ->
@@ -1135,7 +1135,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
         let e, c, g = tc_term env0 e in
         let c, g_c =
           let c, g_c = (c, Env.trivial_guard) in
-          Env.unfold_effect_abbrev env c, g_c in
+          U.comp_to_comp_typ c, g_c in
 
         if not (is_user_reifiable_effect env c.effect_name) then
           raise_error e Errors.Fatal_EffectCannotBeReified
@@ -1161,6 +1161,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
               let ct = { effect_name = Const.primitive_div_lid
                        ; result_typ = repr
                        ; flags = []
+                       ; source_effect_name = Const.primitive_div_lid
                        }
               in
               S.mk_Comp ct
@@ -1207,7 +1208,8 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
           let c = S.mk_Comp ({
             effect_name = ed.mname;
             result_typ=a;
-            flags=[]
+            flags=[];
+            source_effect_name = ed.mname
           }) in
 
           let e = S.mk_Tm_app reflect_op [(e, aqual)] top.pos in
@@ -1545,7 +1547,7 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
         //We could do an optimization here:
         //  if b does not occur free in asc, then we don't need to do this check
         //Is it worth doing?
-        if not (TcUtil.is_pure_or_ghost_effect env (U.comp_effect_name c1))
+        if not (U.is_pure_or_ghost_effect (U.comp_effect_name c1))
         then raise_error e1 Errors.Fatal_UnexpectedEffect
                (Format.fmt2
                  "For a match with returns annotation, the scrutinee should be pure/ghost, \
@@ -1702,7 +1704,7 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
               let eff =
                 List.fold_left (fun eff (_, eff_label, _, _) -> TcUtil.join_effects env eff eff_label)
                                Const.primitive_pure_lid cases in
-              not (TcUtil.is_pure_or_ghost_effect env eff) in
+              not (U.is_pure_or_ghost_effect eff) in
             let branch_res_typ (x : (formula & lident & list cflag & (bool -> ML (comp & guard_t)))) : ML typ =
               let (_, _, _, c) = x in U.comp_result (fst (c should_return)) in
             match cases with
@@ -1802,12 +1804,12 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
       //see issue #594:
       //if the scrutinee is impure, then explicitly sequence it with an impure let binding
       //to protect it from the normalizer optimizing it away
-      if TcUtil.is_pure_or_ghost_effect env (U.comp_effect_name c1)
+      if U.is_pure_or_ghost_effect (U.comp_effect_name c1)
       then mk_match e1
       else
         (* generate a let binding for e1 *)
         let e_match = mk_match (S.bv_to_name guard_x) in
-        let lb = U.mk_letbinding (Inl guard_x) [] (U.comp_result c1) (Env.norm_eff_name env (U.comp_effect_name c1)) e1 [] e1.pos in
+        let lb = U.mk_letbinding (Inl guard_x) [] (U.comp_result c1) (U.comp_effect_name c1) e1 [] e1.pos in
         let e = mk (Tm_let {lbs=(false, [lb]);
                             body=SS.close [S.mk_binder guard_x] e_match}) top.pos in
         TcUtil.maybe_monadic env e (U.comp_effect_name cres) (U.comp_result cres)
@@ -2244,7 +2246,8 @@ and tc_comp env c : ML (comp                                      (* checked ver
     | Comp ct when U.is_bare_tot_or_gtot_comp c ->
       let k, u = U.type_u () in
       let t, _, g = tc_check_tot_or_gtot_term env ct.result_typ k None in
-      (if Const.is_tot_lid ct.effect_name then mk_Total t else mk_GTotal t), u, g
+      (* rebuild in place so that [source_effect_name] survives *)
+      S.mk_Comp {ct with result_typ = t}, u, g
 
     | Comp c ->
       (* Effects are never universe-polymorphic: their signature is
@@ -3240,7 +3243,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             let arg = e, aq in
             let xterm = S.bv_to_name x, aq in  //AR: fix for #1123, we were dropping the qualifiers
             if U.is_tot_or_gtot_comp c //Tot and GTot are primitive comps
-            || TcUtil.is_pure_or_ghost_effect env (U.comp_effect_name c)
+            || U.is_pure_or_ghost_effect (U.comp_effect_name c)
             then let subst = maybe_extend_subst subst (List.hd bs) e in
                  tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, fvs) rest rest'
             else tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, x::fvs) rest rest'
@@ -3414,7 +3417,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : ML (term
                 let g = Env.imp_guard (Env.guard_of_guard_formula short) g in
                 let ghost = ghost
                           || (not (U.is_total_comp c)
-                              && not (TcUtil.is_pure_effect env (U.comp_effect_name c))) in
+                              && not (U.is_pure_effect (U.comp_effect_name c))) in
                 seen@[e,aq], guard ++ g, ghost)
               ([], g_head, false)
               args
@@ -5166,7 +5169,7 @@ and tc_tot_or_gtot_term_maybe_solve_deferred (env:env) (e:term) (msg:option stri
        let c, g_c = (c, Env.trivial_guard) in
        let c = norm_c env c in
        let target_comp, allow_ghost =
-            if TcUtil.is_pure_effect env (U.comp_effect_name c)
+            if U.is_pure_effect (U.comp_effect_name c)
             then S.mk_Total (U.comp_result c), false
             else S.mk_GTotal (U.comp_result c), true in
        match Rel.sub_comp env c target_comp with
@@ -5551,7 +5554,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_ascribed {asc=(Inr c, _, _)} ->
     let k = U.comp_result c in
     if (not must_tot) ||
-       (c |> U.comp_effect_name |> Env.norm_eff_name env |> U.is_pure_effect) ||
+       (c |> U.comp_effect_name |> U.is_pure_effect) ||
        (N.non_info_norm env k)
     then Some k
     else None
@@ -5623,7 +5626,7 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : ML (option liden
   | Tm_app _ ->
     let hd, args = U.head_and_args_full t in
     let join_effects eff1 eff2 =
-      let eff1, eff2 = Env.norm_eff_name env eff1, Env.norm_eff_name env eff2 in
+      let eff1, eff2 = eff1, eff2 in
       let pure, ghost = Const.primitive_pure_lid, Const.primitive_ghost_lid in
 
       if U.is_pure_effect eff1 && U.is_pure_effect eff2 then Some pure
@@ -5657,7 +5660,7 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : ML (option liden
           | _ -> None)))
   | Tm_ascribed {tm=t; asc=(Inl _, _, _)} -> effectof_tot_or_gtot_term_fastpath env t
   | Tm_ascribed {asc=(Inr c, _, _)} ->
-    let c_eff = c |> U.comp_effect_name |> Env.norm_eff_name env in
+    let c_eff = c |> U.comp_effect_name in
     if U.is_pure_effect c_eff then Some Const.primitive_pure_lid
     else if U.is_ghost_effect c_eff then Some Const.primitive_ghost_lid
     else None

@@ -169,7 +169,6 @@ and env = {
   qtbl_name_and_index: option (lident & typ & int) & SMap.t int;
      (* ^ the top-level term we're currently processing, its type, and the query counter for it,
        in addition we maintain a counter for query index per lid *)
-  normalized_eff_names:SMap.t lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:SMap.t delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> Range.t -> ML term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
@@ -477,10 +476,6 @@ val try_lookup_effect_lid  : env -> lident -> ML (option term)
 
 val lookup_effect_lid      : env -> lident -> ML (term)
 
-val lookup_effect_abbrev   : env -> (unit -> ML universe) -> lident -> ML (option (binders & comp))
-
-val norm_eff_name          : (env -> lident -> ML (lident))
-
 val is_erasable_effect     : env -> lident -> ML (bool)
 
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
@@ -520,8 +515,6 @@ val effect_decl_opt        : env -> lident -> ML (option (eff_decl & list qualif
 
 val get_effect_decl        : env -> lident -> ML (eff_decl)
 
-val get_default_effect     : env -> lident -> ML (option lident)
-
 val get_top_level_effect   : env -> lident -> ML (option lident)
 
 val join_opt               : env -> lident -> lident -> ML (option lident)
@@ -546,8 +539,6 @@ instance val pretty_guard     : FStarC.Class.PP.pretty guard_t
 
 
 val comp_set_flags         : env -> comp -> list S.cflag -> ML (comp)
-
-val unfold_effect_abbrev   : env -> comp -> ML (comp_typ)
 
 val effect_repr            : env -> comp -> universe -> ML (option term)
 

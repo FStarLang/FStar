@@ -285,7 +285,19 @@ and quoteinfo = {
 and comp_typ = {
   effect_name:lident;
   result_typ:typ;
-  flags:list cflag
+  flags:list cflag;
+  (* The effect name as it was *written*.  An effect abbreviation is a bare
+     alias of one effect name for another ([effect Lemma = Tot]), and the
+     desugarer resolves it away: [effect_name] is always the *root* effect, so
+     the typechecker never has to unfold anything.  The name the user wrote is
+     kept here so that error messages, IDE hovers, [Syntax.Resugar] and
+     [Reflection.V2.Builtins.inspect_comp] can still say [Lemma], [Tac] or [St]
+     rather than [Tot], [TAC] and [STATE].
+
+     It is presentation only -- no typing rule may consult it -- except that
+     [inspect_comp] reports [C_Lemma] exactly when it is [Lemma].  It equals
+     [effect_name] whenever no abbreviation was used. *)
+  source_effect_name:lident
 }
 and comp' =
   | Comp of comp_typ
@@ -306,13 +318,6 @@ and decreases_order =
   | Decreases_lex of list term  (* a decreases clause may either specify a lexicographic ordered list of terms, *)
   | Decreases_wf of term & term  (* or a well-founded relation and a term *)
 and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
-  | TOTAL                                                          (* this comp's effect name is an *abbreviation* whose root is
-                                                                      [Tot] (e.g. [Lemma]).  Abbreviations are not unfolded until
-                                                                      the typechecker, and [Syntax.Util.is_total_comp] has no env,
-                                                                      so the flag is the env-free record of that fact.  A comp
-                                                                      named [Tot] outright does not carry it: there the name says
-                                                                      it.  Set only in [ToSyntax.desugar_comp]. *)
-  | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
   | SMTPAT of term                                                 (* the SMT patterns of a Lemma, as a list literal. Used
                                                                       to be the third effect argument of the Lemma comp. *)
   | DECREASES of decreases_order
@@ -558,9 +563,6 @@ type eff_decl = {
 
   cattributes     : list cflag;
 
-  univs           : univ_names;
-  binders         : binders;
-
   combinators     : option eff_combinators;
 
   eff_attrs       : list attribute;
@@ -647,12 +649,15 @@ type sigelt' =
     }
   | Sig_new_effect      of eff_decl
   | Sig_sub_effect      of sub_eff
+  (* [effect M = N]: an effect abbreviation is a bare alias of one effect name
+     for another, and nothing more.  The desugarer resolves it away, so the
+     typechecker does nothing with this node; it exists only so that a module
+     reading this one from a [.checked] file can rebuild its [DsEnv] and know
+     that [lid] names an effect.  [root] is already fully resolved: a chain of
+     abbreviations is flattened when the node is built. *)
   | Sig_effect_abbrev   {
       lid:lident;
-      us:univ_names;
-      bs:binders;
-      comp:comp;
-      cflags:list cflag;
+      root:lident;
     }
   | Sig_pragma          of pragma
   | Sig_splice          {

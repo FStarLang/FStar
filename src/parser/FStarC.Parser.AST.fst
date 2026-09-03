@@ -881,7 +881,6 @@ let decl'_to_string (d:decl') : ML string = match d with
   | Exception(i, _) -> "exception " ^ (string_of_id i)
   | NewEffect(DeclareEffect(i, _)) -> "effect " ^ (string_of_id i)
   | NewEffect(DefineEffect(i, _, _)) -> "effect " ^ (string_of_id i)
-  | NewEffect(RedefineEffect(i, _, _)) -> "effect " ^ (string_of_id i)
   | Splice (is_typed, ids, t) ->
     "splice" ^ (if is_typed then "_t" else "")
              ^ "["

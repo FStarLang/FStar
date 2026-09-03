@@ -450,7 +450,7 @@ let should_reduce_local_let cfg lb : ML bool =
   else if U.has_attribute lb.lbattrs PC.no_inline_let_attr
   then false //Or, 2. do not unfold as it's explicitly marked as @no_inline_let
   else
-    let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
+    let n = lb.lbeff in
     if U.is_pure_effect n &&
        (cfg.normalize_pure_lets
         || U.has_attribute lb.lbattrs PC.inline_let_attr)

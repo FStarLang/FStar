@@ -105,25 +105,15 @@ let err_cannot_extract_effect (l:lident) (r:Range.t) (reason:string) (ctxt:strin
   ]
 
 let get_extraction_mode env (m:Ident.lident) =
-  let norm_m = Env.norm_eff_name env m in
-  (Env.get_effect_decl env norm_m).extraction_mode
+  (Env.get_effect_decl env m).extraction_mode
 
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
 (***********************************************************************)
+(* [l] is always a root effect name: effect abbreviations are resolved away by
+   the desugarer, so there is nothing to normalize here. *)
 let effect_as_etag =
-    let cache = SMap.create 20 in
-    let rec delta_norm_eff g (l:lident) : ML lident =
-        match SMap.try_find cache (string_of_lid l) with
-            | Some l -> l
-            | None ->
-                let res = match TypeChecker.Env.lookup_effect_abbrev (tcenv_of_uenv g) (fun () -> S.U_zero) l with
-                | None -> l
-                | Some (_, c) -> delta_norm_eff g (U.comp_effect_name c) in
-                SMap.add cache (string_of_lid l) res;
-                res in
     fun g l ->
-    let l = delta_norm_eff g l in
     if U.is_pure_effect l
     then E_PURE
     else if TcEnv.is_erasable_effect (tcenv_of_uenv g) l
@@ -1566,8 +1556,19 @@ and term_as_mlexpr'
           begin match t.n with
             | Tm_let {lbs=(false, [lb]); body} when Inl? lb.lbname ->
               let tcenv = tcenv_of_uenv g in
-              let m = TypeChecker.Env.norm_eff_name tcenv m in
-              let ed, qualifiers = Option.must (TypeChecker.Env.effect_decl_opt tcenv m) in
+              (* [m] is a root effect name -- abbreviations are resolved by the
+                 desugarer -- so it must be declared.  Syntax built by hand
+                 rather than desugared can get this wrong, hence the message. *)
+              let ed, qualifiers =
+                match TypeChecker.Env.effect_decl_opt tcenv m with
+                | Some ed_quals -> ed_quals
+                | None ->
+                  failwith
+                    (Format.fmt1
+                       "Extraction: no declaration found for effect %s \
+                        (is it an abbreviation?)"
+                       (string_of_lid m))
+              in
               if TcUtil.effect_extraction_mode tcenv ed.mname = S.Extract_primitive
               then term_as_mlexpr g t
               else
@@ -1709,10 +1710,8 @@ and term_as_mlexpr'
           let is_total rc =
               (* A [residual_comp] carries no specification, so this must test
                  the spec-free spellings [Tot]/[GTot] rather than the whole
-                 pure/ghost class; [TOTAL] catches a not-yet-unfolded
-                 abbreviation of [Tot]. *)
+                 pure/ghost class. *)
               PC.is_tot_or_gtot_lid rc.residual_effect
-              || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
           begin match head.n, args with
           (* Extract `range_of x` to a literal range. *)

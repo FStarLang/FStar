@@ -285,8 +285,6 @@ and effect_decl =
      with a monadic representation, used for reification/extraction only.
      The [list decl] holds the combinator definitions. *)
   | DefineEffect   of ident & list binder & list decl
-  (* [effect M a p q = N a p' q']: an effect abbreviation. *)
-  | RedefineEffect of ident & list binder & term
 
 instance val hasRange_decl : hasRange decl
 

@@ -240,7 +240,8 @@ let rec mk_Tm_arrow (bs:binders) (c:comp) p =
     | [b] -> mk (Tm_arrow {b; comp=c}) p
     | b::bs ->
       let tail = mk_Tm_arrow bs c p in
-      mk (Tm_arrow {b; comp=mk (Comp {effect_name=PC.primitive_pure_lid; result_typ=tail; flags=[]}) tail.pos}) p
+      mk (Tm_arrow {b; comp=mk (Comp {effect_name=PC.primitive_pure_lid; result_typ=tail; flags=[];
+                                      source_effect_name=PC.primitive_pure_lid}) tail.pos}) p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
@@ -258,9 +259,11 @@ let mk_Comp (ct:comp_typ) : ML comp = mk (Comp ct) ct.result_typ.pos
 
 (* [Tot] and [GTot] are ordinary effect names now. *)
 let mk_Total t : ML comp =
-  mk_Comp ({effect_name=PC.primitive_pure_lid; result_typ=t; flags=[]})
+  mk_Comp ({effect_name=PC.primitive_pure_lid; result_typ=t; flags=[];
+            source_effect_name=PC.primitive_pure_lid})
 let mk_GTotal t : ML comp =
-  mk_Comp ({effect_name=PC.primitive_ghost_lid; result_typ=t; flags=[]})
+  mk_Comp ({effect_name=PC.primitive_ghost_lid; result_typ=t; flags=[];
+            source_effect_name=PC.primitive_ghost_lid})
 
 
 let order_bv (x y : bv) : int  = x.index - y.index
@@ -428,8 +431,10 @@ let post_rc : residual_comp = {
 let trivial_post (t:typ) : ML term =
   mk (Tm_abs {b=null_binder t; body=trivial_pre; rc_opt=Some post_rc}) t.pos
 
+(* [Tac] is an abbreviation of [TAC], and a [comp_typ] records the root. *)
 let mk_Tac t : ML comp =
-  mk_Comp ({ effect_name = PC.effect_Tac_lid; result_typ = t; flags = [] })
+  mk_Comp ({ effect_name = PC.effect_TAC_lid; result_typ = t; flags = [];
+             source_effect_name = PC.effect_Tac_lid })
 
 let fv_eq fv1 fv2 = lid_equals fv1.fv_name fv2.fv_name
 let fv_eq_lid fv lid = lid_equals fv.fv_name lid

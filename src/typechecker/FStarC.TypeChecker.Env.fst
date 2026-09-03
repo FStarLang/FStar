@@ -24,6 +24,7 @@ open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
 open FStarC.Syntax.Hash {}
+open FStarC.Syntax.Print {}
 open FStarC.SMap
 open FStarC.Ident
 open FStarC.Range
@@ -319,7 +320,6 @@ let initial_env deps
     teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
     qtbl_name_and_index=None, SMap.create 10;
-    normalized_eff_names=SMap.create 20;  //20?
     fv_delta_depths = SMap.create 50;
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau rng -> failwith "no synthesizer available");
@@ -379,7 +379,6 @@ let push_stack env : ML _ =
               gamma_cache=SMap.copy (gamma_cache env);
               identifier_info=mk_ref !env.identifier_info;
               qtbl_name_and_index=env.qtbl_name_and_index |> fst, SMap.copy (env.qtbl_name_and_index |> snd);
-              normalized_eff_names=SMap.copy env.normalized_eff_names;
               fv_delta_depths=SMap.copy env.fv_delta_depths;
               strict_args_tab=SMap.copy env.strict_args_tab;
               erasable_types_tab=SMap.copy env.erasable_types_tab }
@@ -499,18 +498,8 @@ let inst_tscheme_with_range (r:range) (t:tscheme) : ML _ =
     let us, t = inst_tscheme t in
     us, Subst.set_use_range r t
 
-let check_effect_is_not_a_template (ed:eff_decl) (rng:Range.t) : ML unit =
-  if List.length ed.univs <> 0 || List.length ed.binders <> 0
-  then
-    let msg = Format.fmt2
-      "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
-      (show ed.mname)
-      (String.concat "," <| List.map Print.binder_to_string_with_type ed.binders) in
-    raise_error rng Errors.Fatal_NotEnoughArgumentsForEffect msg
-
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (p:tscheme) : ML _ =
   let (us, t) = p in
-  check_effect_is_not_a_template ed env.range;
   if List.length insts <> List.length us
   then failwith (Format.fmt4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                    (show <| List.length us) (show <| List.length insts)
@@ -697,14 +686,12 @@ let effect_signature (us_opt:option universes) (se:sigelt) rng : ML (option ((un
     | Some us -> inst_tscheme_with ts us
   in
   match se.sigel with
-  | Sig_new_effect ne ->
-    check_effect_is_not_a_template ne rng;
-    (* An effect is now just a name; its signature is uniformly [a:Type -> Effect]. *)
+  (* An effect, and hence an abbreviation of one, is now just a name; its
+     signature is uniformly [a:Type -> Effect]. *)
+  | Sig_new_effect _
+  | Sig_effect_abbrev _ ->
     let a = S.new_bv None (fst (U.type_u ())) in
-    Some (inst_ts us_opt (ne.univs, U.arrow [S.mk_binder a] (mk_Total teff)), se.sigrng)
-
-  | Sig_effect_abbrev {lid; us; bs=binders} ->
-    Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
+    Some (inst_ts us_opt ([], U.arrow [S.mk_binder a] (mk_Total teff)), se.sigrng)
 
   | _ -> None
 
@@ -771,8 +758,6 @@ let try_lookup_lid_aux us_opt env lid : ML _ =
 //        val lookup_attrs_of_lid    : env -> lid -> option list attribute
 //        val try_lookup_effect_lid  : env -> lident -> option term
 //        val lookup_effect_lid      : env -> lident -> term
-//        val lookup_effect_abbrev   : env -> universes -> lident -> option (binders * comp)
-//        val norm_eff_name          : (env -> lident -> lident)
 //        val lookup_effect_quals    : env -> lident -> list qualifier
 //        val lookup_projector       : env -> lident -> int -> lident
 //        val current_module         : env -> lident
@@ -1224,60 +1209,12 @@ let lookup_effect_lid env (ftv:lident) : ML (typ) =
     | None -> name_not_found env ftv
     | Some k -> k
 
-(* [univ_inst] is a thunk: an effect abbreviation is polymorphic in at most one
-   universe, and a caller that has to *compute* one (see [unfold_effect_abbrev])
-   should not pay for it when the abbreviation has none to fill. *)
-let lookup_effect_abbrev env (univ_inst: unit -> ML universe) lid0 : ML _ =
-  match lookup_qname env lid0 with
-    | Some (Inr ({ sigel = Sig_effect_abbrev {lid; us=univs; bs=binders; comp=c}; sigquals = quals }, None), _) ->
-      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Range.use_range (Ident.range_of_lid lid0))) in
-      if quals |> BU.for_some (function Irreducible -> true | _ -> false)
-      then None
-      else begin match binders, univs with
-             | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
-             | _, _::_::_ ->
-                failwith (Format.fmt2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                           (show lid) (show <| List.length univs))
-             | _ -> let insts = if Nil? univs then [] else [univ_inst ()] in
-                    let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
-                    let t = Subst.set_use_range (range_of_lid lid) t in
-                    let binders, c = U.arrow_formals_comp_ln_strict t in
-                    if Nil? binders
-                    then failwith "Impossible"
-                    else Some (binders, c)
-          end
-    | _ -> None
-
-let norm_eff_name =
-   fun env (l:lident) ->
-       let rec find l : ML _ =
-           match lookup_effect_abbrev env (fun () -> U_unknown) l with //universe doesn't matter here; we're just normalizing the name
-            | None -> None
-            | Some (_, c) ->
-                let l = U.comp_effect_name c in
-                match find l with
-                    | None -> Some l
-                    | Some l' -> Some l' in
-       let res = match SMap.try_find env.normalized_eff_names (string_of_lid l) with
-            | Some l -> l
-            | None ->
-              begin match find l with
-                        | None -> l
-                        | Some m -> SMap.add env.normalized_eff_names (string_of_lid l) m;
-                                    m
-              end in
-       Ident.set_lid_range res (range_of_lid l)
-
 let is_erasable_effect env l : ML _ =
-  l
-  |> norm_eff_name env
-  (* Test the whole ghost class, not just [GHOST]: which spelling
-     [norm_eff_name] lands on depends on which of them Prims declares as
-     primitive, so pinning one here silently disables erasure if that
-     changes. *)
-  |> (fun l -> U.is_ghost_effect l ||
-           S.lid_as_fv l None
-           |> fv_has_erasable_attr env)
+  (* Test the whole ghost class, not just [GHOST]: which spelling a computation
+     type lands on depends on which of them Prims declares as primitive, so
+     pinning one here silently disables erasure if that changes. *)
+  U.is_ghost_effect l ||
+  (S.lid_as_fv l None |> fv_has_erasable_attr env)
 
 let rec non_informative env t : ML _ =
     match (U.unrefine t).n with
@@ -1312,7 +1249,6 @@ let num_effect_indices env name r =
       (Format.fmt2 "Signature for %s not an arrow (%s)" (show name) (show sig_t))
 
 let lookup_effect_quals env l : ML _ =
-    let l = norm_eff_name env l in
     match lookup_qname env l with
     | Some (Inr ({ sigel = Sig_new_effect _; sigquals=q}, _), _) ->
       q
@@ -1441,7 +1377,7 @@ let get_lid_valued_effect_attr env
   (default_if_attr_has_no_arg:option lident)
   : ML (option lident)
   = let attr_args =
-      eff_lid |> norm_eff_name env
+      eff_lid
               |> lookup_attrs_of_lid env
               |> Option.dflt []
               |> U.get_attribute attr_name_lid in
@@ -1460,9 +1396,6 @@ let get_lid_valued_effect_attr env
                    (Format.fmt2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
                      (show eff_lid)
                      (show t)))
-
-let get_default_effect env lid : ML _ =
-  get_lid_valued_effect_attr env lid Const.default_effect_attr None
 
 let get_top_level_effect env lid : ML _ =
   get_lid_valued_effect_attr env lid Const.top_level_effect_attr (Some lid)
@@ -1523,51 +1456,18 @@ let comp_set_flags env c f : ML _ =
     def_check_scoped c.pos "comp_set_flags.OUT" env r;
     r
 
-(* An effect abbreviation is polymorphic in at most one universe -- that of its
-   single result-type argument (see [lookup_effect_abbrev]) -- and its body may
-   mention that universe, as in [effect Foo (a:Type) = Tot (list a)].  A
-   [comp_typ] no longer caches it, so it has to be supplied; [u_res] is a thunk
-   because most abbreviations have no universe binder to fill. *)
-let rec unfold_effect_abbrev_with_univ env (u_res: unit -> ML universe) (comp0:comp) : ML _ =
-  def_check_scoped comp0.pos "unfold_effect_abbrev" env comp0;
-  let c = U.comp_to_comp_typ comp0 in
-  match lookup_effect_abbrev env u_res c.effect_name with
-    | None -> c
-    | Some (binders, cdef) ->
-      let binders, cdef = Subst.open_comp binders cdef in
-      (* An effect abbreviation is now parameterized by the result type only. *)
-      if List.length binders <> 1 then
-        raise_error comp0 Errors.Fatal_ConstructorArgLengthMismatch
-          (Format.fmt2 "Effect abbreviation should take exactly one (result type) argument, got %s, i.e., %s"
-                         (show (List.length binders))
-                         (show (S.mk_Comp c)));
-      let inst = [NT((List.hd binders).binder_bv, c.result_typ)] in
-      let c1 = Subst.subst_comp inst cdef in
-      let ct1 = U.comp_to_comp_typ c1 in
-      let c = {ct1 with flags=c.flags} |> mk_Comp in
-      (* Unfolding does not change the result type, so [u_res] still applies. *)
-      unfold_effect_abbrev_with_univ env u_res c
-
-let unfold_effect_abbrev env (comp0:comp) : ML _ =
-  unfold_effect_abbrev_with_univ env
-    (fun () -> env.universe_of env (U.comp_result comp0)) comp0
-
 (* The monadic representation of a computation type, if the effect has one.
    Effect representations play no role in typechecking: they only give the
    effect an executable meaning, used by reification (extraction, tactics). *)
 let effect_repr_aux only_reifiable env c u_res : ML (option term) =
-  let effect_name = norm_eff_name env (U.comp_effect_name c) in
+  let effect_name = U.comp_effect_name c in
   match effect_decl_opt env effect_name with
   | None -> None
   | Some (ed, _) ->
     match ed |> U.get_eff_repr with
     | None -> None
     | Some ts ->
-      (* Reification is the one caller that already knows the result type's
-         universe -- and extraction and the SMT encoder deliberately pass
-         [U_unknown] here, in an environment where [universe_of] would not even
-         be callable -- so hand it down rather than recomputing it. *)
-      let c = unfold_effect_abbrev_with_univ env (fun () -> u_res) c in
+      let c = U.comp_to_comp_typ c in
       let repr = inst_effect_fun_with [u_res] env ed ts in
       Some (S.mk_Tm_app repr [c.result_typ |> S.as_arg] (get_range env))
 
@@ -1581,24 +1481,20 @@ let effect_repr env c u_res : ML (option term) = effect_repr_aux false env c u_r
 (* is reifiable but not user-reifiable.) *)
 
 let is_user_reifiable_effect (env:env) (effect_lid:lident) : ML (bool) =
-    let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in
     List.contains Reifiable quals
 
 let is_user_reflectable_effect (env:env) (effect_lid:lident) : ML (bool) =
-    let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in
     quals |> List.existsb (function Reflectable _ -> true | _ -> false)
 
 let is_total_effect (env:env) (effect_lid:lident) : ML (bool) =
-    let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in
     List.contains TotalEffect quals
 
 (* An effect is reifiable exactly when it was given a representation with an
    [effect { M with { repr = ...; return = ...; bind = ... } }] block. *)
 let is_reifiable_effect (env:env) (effect_lid:lident) : ML (bool) =
-    let effect_lid = norm_eff_name env effect_lid in
     match effect_decl_opt env effect_lid with
     | None -> false
     | Some (ed, _) -> Some? ed.combinators

@@ -279,43 +279,30 @@ val noextract_to (backend:string) : Tot unit
   *)
 val ite_soundness_by (attribute: unit): Tot unit
 
-(** By-default functions that have a layered effect, need to have a type
-    annotation for their bodies
-    However, a layered effect definition may contain the default_effect
-    attribute to indicate to the typechecker that for missing annotations,
-    use the default effect.
-    The default effect attribute takes as argument a string, that is the name
-    of the default effect, two caveats:
-      - The argument must be a string constant (not a name, for example)
-      - The argument should be the fully qualified name
-    For example, the TAC effect in FStar.Tactics.Effect.fsti specifies
-    its default effect as FStar.Tactics.Tac
-    F* will typecheck that the default effect only takes one argument,
-      the result type of the computation
+(** A layered effect definition may carry this attribute to name a *default
+    effect*: the effect to assume for a function body that has a layered effect
+    and no type annotation.
+
+    The argument must be a string constant (not a name), and it must be the
+    fully qualified name of the effect.  For example, the TAC effect in
+    FStar.Tactics.Effect.fsti names FStar.Tactics.Effect.Tac.
+
+    An effect abbreviation is now a bare alias -- [effect M = N] -- so a default
+    effect can no longer constrain anything about a computation, and F* does not
+    consult this attribute any more.  It is retained so that existing libraries
+    still parse.
   *)
 val default_effect (s:string) : Tot unit
 
-(** A layered effect may optionally be annotated with the
-    top_level_effect attribute so indicate that this effect may
-    appear at the top-level
-    (e.g., a top-level let x = e, where e has a layered effect type)
+(** A layered effect may be annotated with the top_level_effect attribute to
+    indicate that it may appear at the top level (e.g. a top-level [let x = e]
+    where [e] has that effect type).  Without it, a top-level effectful
+    definition draws a warning and has its effect masked.
 
-    The top_level_effect attribute takes (optional) string argument, that is the
-    name of the effect abbreviation that may constrain effect arguments
-    for the top-level effect
-
-    As with default effect, the string argument must be a string constant,
-    and fully qualified
-
-    E.g. a Hoare-style effect `M a pre post`, may have the attribute
-    `@@ top_level_effect "N"`, where the effect abbreviation `N` may be:
-
-    effect N a post = M a True post
-
-    i.e., enforcing a trivial precondition if `M` appears at the top-level
-
-    If the argument to `top_level_effect` is absent, then the effect itself
-    is allowed at the top-level with any effect arguments
+    The attribute takes an optional string argument, which used to name an
+    effect abbreviation constraining the effect's arguments.  A computation type
+    no longer carries effect arguments and an abbreviation is a bare alias, so
+    only the presence of the attribute matters now; any argument is ignored.
 
     See tests/micro-benchmarks/TopLevelIndexedEffects.fst for examples
 

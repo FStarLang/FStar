@@ -103,7 +103,9 @@ let always_fail lid t =
         lbname=Inr (S.lid_as_fv lid None);
         lbunivs=[];
         lbtyp=t;
-        lbeff=PC.effect_ML_lid();
+        (* [ML] is an abbreviation of [ALL]; a letbinding built here bypasses
+           the desugarer, so it must name the root effect. *)
+        lbeff=PC.effect_ALL_lid();
         lbdef=imp;
         lbattrs=[];
         lbpos=imp.pos;
@@ -917,7 +919,7 @@ let lb_is_irrelevant (g:env_t) (lb:letbinding) : ML bool =
 let lb_is_tactic (g:env_t) (lb:letbinding) : ML bool =
   if U.is_pure_effect lb.lbeff then // not top-level effectful
     let bs, c = U.arrow_formals_comp_ln lb.lbtyp in
-    let c_eff_name = c |> U.comp_effect_name |> Env.norm_eff_name (tcenv_of_uenv g) in
+    let c_eff_name = c |> U.comp_effect_name in
     lid_equals c_eff_name PC.effect_TAC_lid
   else
     false

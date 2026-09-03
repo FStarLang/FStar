@@ -855,7 +855,6 @@ let rec ty_strictly_positive_in_type (env:env)
      let check_comp =
        U.is_pure_or_ghost_comp c ||
        (c |> U.comp_effect_name
-          |> Env.norm_eff_name env
           |> Env.lookup_effect_quals env
           |> List.contains S.TotalEffect) in
      if not check_comp

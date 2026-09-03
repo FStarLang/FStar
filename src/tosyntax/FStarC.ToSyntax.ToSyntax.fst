@@ -470,19 +470,12 @@ let rec generalize_annotated_univs (s:sigelt) : ML sigelt =
                               lids} }
   | Sig_assume {lid;phi=fml} ->
     { s with sigel = Sig_assume {lid; us=unames; phi=Subst.close_univ_vars unames fml} }
-  | Sig_effect_abbrev {lid;bs;comp=c;cflags=flags} ->
-    let usubst = Subst.univ_var_closing unames in
-    { s with sigel = Sig_effect_abbrev {lid;
-                                        us=unames;
-                                        bs=Subst.subst_binders usubst bs;
-                                        comp=Subst.subst_comp usubst c;
-                                        cflags=flags} }
-
   | Sig_fail {errs; rng; fail_in_lax=lax; ses} ->
     { s with sigel = Sig_fail {errs; rng;
                                fail_in_lax=lax;
                                ses=List.map generalize_annotated_univs ses} }
 
+  | Sig_effect_abbrev _
   | Sig_new_effect _
   | Sig_sub_effect _
   | Sig_splice _
@@ -2471,33 +2464,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
     then (if C.is_tot_lid eff then mk_Total result_typ else mk_GTotal result_typ),
          S.trivial_pre
     else
-      let flags = if is_lemma then [LEMMA] else [] in
-      (* An effect abbreviation whose root is [Tot] denotes a total computation
-         just as much as [Tot] itself does, so record that with the [TOTAL]
-         flag: an abbreviation is not unfolded until the typechecker, and the
-         env-free tests downstream ([Syntax.Util.is_total_comp] and friends) see
-         only the name and the flags.  [Lemma] is the motivating case -- without
-         this, a partially-applied lemma is not recognised as pure and its
-         trailing implicit is never instantiated; [tests/bug-reports/closed/
-         Bug1953.fst] pins down the constructor-effect check as well.  A comp
-         named [Tot] outright needs no flag: there the name says it.
-
-         The flag, rather than unfolding the abbreviation here, because an
-         abbreviation is not in general a renaming: it may supply arguments to
-         the effect it abbreviates, and unfolding it means instantiating its
-         binders and substituting into a stored computation -- which is
-         [Env.unfold_effect_abbrev]'s job, in the typechecker, where
-         [Env.norm_eff_name] hands out the root effect on demand.  Keeping the
-         name written by the user is also what lets error messages, IDE hovers
-         and [Syntax.Resugar] say [Lemma], [Tac] and [St] rather than [Tot],
-         [TAC] and [STATE]. *)
-      let flags =
-        if C.is_tot_lid eff then flags
-        else match Env.try_lookup_root_effect_name env eff with
-             | Some root when C.is_tot_lid root -> TOTAL :: flags
-             | _ -> flags
-      in
-      let flags = flags @ cattributes in
+      let flags = cattributes in
       let desugar_clause (x:AST.term & AST.imp) : ML S.term =
         fst (List.hd (desugar_args env [x]))
       in
@@ -2545,9 +2512,26 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
          codomain) or an assertion (ascription).  See
          [Syntax.Util.refine_with_post]. *)
       let result_typ = U.refine_with_post result_typ post in
-      mk_Comp ({effect_name=eff;
+      (* An effect abbreviation is a bare alias of one effect name for another,
+         so resolve it away here: a [comp_typ]'s [effect_name] is always a root
+         effect, and the typechecker never has to unfold anything.  The name the
+         user wrote is kept alongside it, purely so that error messages, IDE
+         hovers and [Syntax.Resugar] can still say [Lemma], [Tac] or [St].
+
+         This has to happen here, at the very end, and not in
+         [pre_process_comp_typ]: [is_lemma] above is what selects [Lemma]'s
+         argument shape (no result type, a bare formula for the postcondition,
+         SMT patterns), and resolving [Lemma] to [Tot] any earlier would
+         silently switch all of that off. *)
+      let root =
+        match Env.try_lookup_root_effect_name env eff with
+        | Some root -> Ident.set_lid_range root (range_of_lid eff)
+        | None -> eff
+      in
+      mk_Comp ({effect_name=root;
                 result_typ=result_typ;
-                flags=flags}),
+                flags=flags;
+                source_effect_name=eff}),
       pre
 
 and desugar_formula env (f:term) : ML S.term =
@@ -2889,27 +2873,58 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
         let se =
             if quals |> List.contains S.Effect
             then
-                 let c, pre = desugar_comp t.range false env' t in
-                 (* An [ensures] clause on an abbreviation is fine: it refines
-                    the result type of the computation stored here, and the
-                    refinement is carried along when the typechecker unfolds
-                    the abbreviation at a use site.
-
-                    A [requires] is not: it would have to become an implicit
-                    binder on the *arrow* whose codomain the abbreviation is
-                    used at, and an abbreviation has no arrow of its own.  It
-                    would therefore be silently dropped, so reject it. *)
-                 let () =
-                   if not (U.is_t_true pre)
-                   then raise_error t Errors.Fatal_UnexpectedComputationTypeForLetRec
-                          "An effect abbreviation may not have a 'requires' clause; \
-                           state the precondition at each use site instead"
+                 (* [effect M = N] introduces another name for the effect [N],
+                    and nothing else.  Resolving to the root here is what lets
+                    the typechecker treat [Lemma] and [Tot] as the same effect
+                    without ever unfolding anything: see [desugar_comp]. *)
+                 let bad_rhs #a () : ML a =
+                   raise_error t Errors.Fatal_EffectAbbreviationResultTypeMismatch
+                     "An effect abbreviation is another name for an effect: \
+                      its right-hand side must be an effect name, with no \
+                      parameters and no specification.  Write 'effect M = N'"
                  in
-                 let typars = Subst.close_binders typars in
-                 let c = Subst.close_comp typars c in
+                 (* [effect M = N] is the only form that means anything.  The
+                    eta-expanded spelling [effect M (a:Type) = N a] -- which is
+                    all an abbreviation could ever have expressed, since the
+                    only argument a computation type supplies is its result
+                    type -- is still accepted, because the library has to stay
+                    parseable by the bootstrap compiler in [stage0].
+
+                    Everything else is rejected.  Binders beyond the result type
+                    were already dead, since a computation type supplies no
+                    other argument; and a specification on the right-hand side
+                    was silently lost, since an [ensures] would have to refine
+                    the result type at every use site and a [requires] would
+                    have to become an implicit binder on the *arrow* the
+                    computation type is the codomain of -- and an abbreviation
+                    has no arrow of its own. *)
+                 let head, args = head_and_args_full (unparen t) in
+                 let () =
+                   let is_eta_arg b arg : ML bool =
+                     let a = fst arg in
+                     match (unparen a).tm with
+                     | Var l
+                     | Name l ->
+                       ident_equals (ident_of_lid l) (ident_of_binder (range_of_id id) b)
+                     | _ -> false
+                   in
+                   if List.length args <> List.length binders
+                   || not (List.forall2 is_eta_arg binders args)
+                   then bad_rhs ()
+                 in
+                 let root =
+                   match head.tm with
+                   | Var l
+                   | Name l ->
+                     (match Env.try_lookup_root_effect_name env l with
+                      | Some root -> root
+                      | None ->
+                        raise_error t Errors.Fatal_EffectNotFound
+                          (Format.fmt1 "Effect %s not found" (show l)))
+                   | _ -> bad_rhs ()
+                 in
                  let quals = quals |> List.filter (function S.Effect -> false | _ -> true) in
-                 { sigel = Sig_effect_abbrev {lid=qlid; us=[]; bs=typars; comp=c;
-                                              cflags=comp_flags c};
+                 { sigel = Sig_effect_abbrev {lid=qlid; root};
                    sigquals = quals;
                    sigrng = range_of_id id;
                    sigmeta = default_sigmeta  ;
@@ -3175,20 +3190,28 @@ let trans_pragma env (_x_:AST.pragma) : ML _ = match _x_ with
     check_no_aq aq;
     S.Eval t
 
-(* An effect declaration is now just a name (and possibly some binders).
-   There are no combinators, no signature and no actions. *)
+(* An effect is just a name: its signature is uniformly [a:Type -> Effect], so
+   there is nothing for a binder to stand for.  Effect templates -- an effect
+   parameterized by, say, a state type -- used to be accepted here and then
+   rejected at every use site; reject them where they are written instead. *)
+let check_no_effect_binders (eff_binders:list AST.binder) : ML unit =
+  match eff_binders with
+  | [] -> ()
+  | b :: _ ->
+    raise_error b Errors.Fatal_NotEnoughArgumentsForEffect
+      "An effect is just a name and takes no parameters"
+
+(* An effect declaration is now just a name: there are no binders, no
+   combinators, no signature and no actions.  Its signature is uniformly
+   [a:Type -> Effect]. *)
 let rec desugar_declare_effect env d (d_attrs:list S.term) (quals: qualifiers) eff_name eff_binders : ML _ =
     let env0 = env in
-    let monad_env = Env.enter_monad_scope env eff_name in
-    let env, binders = desugar_binders monad_env eff_binders in
-    let binders = Subst.close_binders binders in
+    check_no_effect_binders eff_binders;
     let mname = qualify env0 eff_name in
     let qualifiers = List.map (trans_qual d.drange (Some mname)) quals in
     let sigel = Sig_new_effect ({
       mname = mname;
       cattributes = [];
-      univs = [];
-      binders = binders;
       combinators = None;
       eff_attrs = d_attrs;
       extraction_mode = S.Extract_primitive
@@ -3211,9 +3234,8 @@ let rec desugar_declare_effect env d (d_attrs:list S.term) (quals: qualifiers) e
    the pre/postconditions written at each computation type. *)
 and desugar_define_effect env d (d_attrs:list S.term) (quals: qualifiers) eff_name eff_binders (eff_decls:list decl) : ML _ =
     let env0 = env in
-    let monad_env = Env.enter_monad_scope env eff_name in
-    let env, binders = desugar_binders monad_env eff_binders in
-    let binders = Subst.close_binders binders in
+    check_no_effect_binders eff_binders;
+    let env = Env.enter_monad_scope env eff_name in
     let mname = qualify env0 eff_name in
     let qualifiers = List.map (trans_qual d.drange (Some mname)) quals in
     (* Each combinator is given as [name = term]. *)
@@ -3226,7 +3248,7 @@ and desugar_define_effect env d (d_attrs:list S.term) (quals: qualifiers) eff_na
       in
       match decl_of_name with
       | Some ({ d = Tycon (_, _, [TyconAbbrev (_, _, _, defn)]) }) ->
-        [], Subst.close binders (desugar_term env defn)
+        [], desugar_term env defn
       | _ ->
         raise_error d Errors.Fatal_UnexpectedEffect
           (Format.fmt2 "Effect %s is missing the '%s' combinator; \
@@ -3250,8 +3272,6 @@ and desugar_define_effect env d (d_attrs:list S.term) (quals: qualifiers) eff_na
     let sigel = Sig_new_effect ({
       mname = mname;
       cattributes = [];
-      univs = [];
-      binders = binders;
       combinators = Some combinators;
       eff_attrs = d_attrs;
       extraction_mode =
@@ -3272,43 +3292,6 @@ and desugar_define_effect env d (d_attrs:list S.term) (quals: qualifiers) eff_na
     (* [reflectable] introduces [M?.reflect] *)
     let env = push_reflect_effect env qualifiers mname d.drange in
     env, [se]
-
-and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders defn : ML _ =
-    let env0 = env in
-    let env = Env.enter_monad_scope env eff_name in
-    let env, binders = desugar_binders env eff_binders in
-    let ed_lid, ed, args =
-        let head, args = head_and_args_full defn in
-        let lid = match head.tm with
-          | Name l -> l
-          | _ -> raise_error d Errors.Fatal_EffectNotFound ("Effect " ^AST.term_to_string head^ " not found")
-        in
-        let ed = fail_or env (Env.try_lookup_effect_defn env) lid in
-        lid, ed, desugar_args env args in
-    let binders = Subst.close_binders binders in
-    if List.length args <> List.length ed.binders
-    then raise_error defn Errors.Fatal_ArgumentLengthMismatch "Unexpected number of arguments to effect constructor";
-    let mname = qualify env0 eff_name in
-    let ed = {
-            cattributes   = [];
-            mname         = mname;
-            univs         = ed.univs;
-            binders       = binders;
-            combinators   = ed.combinators;
-            eff_attrs     = ed.eff_attrs;
-            extraction_mode = ed.extraction_mode;
-    } in
-    let se =
-      { sigel = Sig_new_effect ed;
-        sigquals = List.map (trans_qual (Some mname)) quals;
-        sigrng = d.drange;
-        sigmeta = default_sigmeta;
-        sigattrs = d_attrs;
-        sigopts = None;
-        sigopens_and_abbrevs = opens_and_abbrevs env
-      }
-    in
-    push_sigelt env0 se, [se]
 
 and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : ML (env_t & sigelts) =
   let no_fail_attrs (ats : list S.term) : ML (list S.term) =
@@ -3792,10 +3775,6 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
     let env = push_sigelt env se' in
     env, [se']
 
-  | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
-    let quals = d.quals in
-    desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders defn
-
   | NewEffect (DeclareEffect(eff_name, eff_binders)) ->
     let quals = d.quals in
     desugar_declare_effect env d d_attrs quals eff_name eff_binders
@@ -3971,33 +3950,14 @@ let partial_ast_modul_to_modul modul a_modul : ML (withenv S.modul) =
         modul, env)
 
 let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
-                     (mii:module_inclusion_info)
-                     (erase_univs:S.term -> ML S.term) : ML (withenv unit) =
+                     (mii:module_inclusion_info) : ML (withenv unit) =
   fun en ->
-      let erase_univs_ed ed =
-          let erase_binders bs =
-              match bs with
-              | [] -> []
-              | _ ->
-                let t = erase_univs (S.mk_Tm_abs bs S.t_unit None Range.dummyRange) in
-                let bs, _, _ = U.abs_formals_ln t in
-                if Nil? bs then failwith "Impossible" else bs
-          in
-          let binders, _, binders_opening =
-              Subst.open_term' (erase_binders ed.binders) S.t_unit in
-          let erase_term t =
-              Subst.close binders (erase_univs (Subst.subst binders_opening t))
-          in
-            { ed with
-              univs         = [];
-              binders       = Subst.close_binders binders;
-          }
-      in
+      (* An effect is just a name -- no universes, no binders -- so there is
+         nothing here to erase universes from. *)
       let push_sigelt env se =
           match se.sigel with
           | Sig_new_effect ed ->
-            let se' = {se with sigel=Sig_new_effect (erase_univs_ed ed)} in
-            let env = Env.push_sigelt_force env se' in
+            let env = Env.push_sigelt_force env se in
             push_reflect_effect env se.sigquals ed.mname se.sigrng
           | _ -> Env.push_sigelt_force env se
       in

@@ -1054,15 +1054,18 @@ and readback_comp cfg (c: comp) : ML S.comp =
 and translate_comp_typ cfg bs (c:S.comp_typ) : ML comp_typ =
   let { S.effect_name = effect_name
       ; S.result_typ  = result_typ
-      ; S.flags       = flags } = c in
+      ; S.flags       = flags
+      ; S.source_effect_name = source_effect_name } = c in
   { effect_name = effect_name;
     result_typ = translate cfg bs result_typ;
-    flags = List.map (translate_flag cfg bs) flags }
+    flags = List.map (translate_flag cfg bs) flags;
+    source_effect_name = source_effect_name }
 
 and readback_comp_typ cfg (c:comp_typ) : ML S.comp_typ =
   { S.effect_name = c.effect_name;
     S.result_typ = readback cfg c.result_typ;
-    S.flags = List.map (readback_flag cfg) c.flags }
+    S.flags = List.map (readback_flag cfg) c.flags;
+    S.source_effect_name = c.source_effect_name }
 
 and translate_residual_comp cfg bs (c:S.residual_comp) : ML residual_comp =
     let { S.residual_effect  = residual_effect
@@ -1082,8 +1085,6 @@ and readback_residual_comp cfg (c:residual_comp) : ML S.residual_comp =
 
 and translate_flag cfg bs (f : S.cflag) : ML cflag =
     match f with
-    | S.TOTAL -> TOTAL
-    | S.LEMMA -> LEMMA
     | S.SMTPAT p -> SMTPAT (translate cfg bs p)
     | S.DECREASES (S.Decreases_lex l) -> DECREASES_lex (l |> List.map (translate cfg bs))
     | S.DECREASES (S.Decreases_wf (rel, e)) ->
@@ -1091,8 +1092,6 @@ and translate_flag cfg bs (f : S.cflag) : ML cflag =
 
 and readback_flag cfg (f : cflag) : ML S.cflag =
     match f with
-    | TOTAL -> S.TOTAL
-    | LEMMA -> S.LEMMA
     | SMTPAT p -> S.SMTPAT (readback cfg p)
     | DECREASES_lex l -> S.DECREASES (S.Decreases_lex (l |> List.map (readback cfg)))
     | DECREASES_wf (rel, e) ->

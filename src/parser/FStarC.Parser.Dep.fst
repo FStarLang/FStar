@@ -1025,9 +1025,6 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
     | DefineEffect (_, binders, decls) ->
         collect_binders binders;
         List.iter (fun d -> collect_decl d.d) decls
-    | RedefineEffect (_, binders, t) ->
-        collect_binders binders;
-        collect_term t
 
   and collect_binders (binders: list binder) : ML unit =
     List.iter collect_binder binders

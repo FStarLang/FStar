@@ -96,6 +96,13 @@ val ml_comp (t:term) (r:range) : ML comp
 
 val comp_effect_name (c:comp) : lident
 
+(* The effect name as the user wrote it; see [comp_typ.source_effect_name]. *)
+val comp_source_effect_name (c:comp) : lident
+
+(* How a computation that merges two others -- [bind], a lift -- decides which
+   written effect name the result inherits.  See the definition. *)
+val combine_source_effect_name (eff:lident) (s1:lident) (s2:lident) : lident
+
 val comp_flags (c:comp) : list cflag
 
 val comp_eff_name_and_res (c:comp) : lident & typ

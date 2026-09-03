@@ -417,10 +417,8 @@ let rec sigelt_to_string_short (x: sigelt) : ML string = match x.sigel with
       (if List.contains Assumption x.sigquals then "assume " else "")
       (show sub.source) (show sub.target)
 
-  | Sig_effect_abbrev {lid=l; bs=tps; comp=c} ->
-    Format.fmt3 "effect %s %s = %s" (show l)
-       (String.concat " " <| List.map show tps)
-       (show c)
+  | Sig_effect_abbrev {lid=l; root} ->
+    Format.fmt2 "effect %s = %s" (show l) (show root)
 
   | Sig_splice {is_typed; lids} ->
     Format.fmt3 "%splice%s[%s] (...)"
@@ -457,8 +455,6 @@ instance showable_decreases_order = {
 
 let cflag_to_string (c:cflag) : ML string =
   match c with
-  | TOTAL -> "total"
-  | LEMMA -> "lemma"
   | SMTPAT p -> "smtpat " ^ term_to_string p
   | DECREASES do -> "decreases " ^ show do
 

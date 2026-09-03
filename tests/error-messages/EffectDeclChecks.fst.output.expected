@@ -28,5 +28,5 @@
 
 * Info at EffectDeclChecks.fst(45,9-45,13):
   - Expected failure:
-  - Effect EffectDeclChecks.FOO5 is marked total, but its representation is a function into FStar.Pervasives.Dv
+  - Effect EffectDeclChecks.FOO5 is marked total, but its representation is a function into FStar.Pervasives.Div
 

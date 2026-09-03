@@ -1430,8 +1430,8 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
         if I.lid_equals eff0 eff1
         then ct_eq res0 [] res1 []
         else (
-          let ct0 = Env.unfold_effect_abbrev g.tcenv c0 in
-          let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in
+          let ct0 = U.comp_to_comp_typ c0 in
+          let ct1 = U.comp_to_comp_typ c1 in
           if I.lid_equals ct0.effect_name ct1.effect_name
           then ct_eq ct0.result_typ [] ct1.result_typ []
           else
@@ -1875,7 +1875,7 @@ and check_comp (g:env) (c:comp)
         S.mk_Tm_app head [as_arg ct.result_typ] ct.result_typ.pos in
       let! _, t = check "effectful comp" g effect_app_tm in
       with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!
-      let c_lid = Env.norm_eff_name g.tcenv ct.effect_name in
+      let c_lid = ct.effect_name in
       let is_total = Env.lookup_effect_quals g.tcenv c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
       if not is_total
       then return S.U_zero  //if it is a non-total effect then u0

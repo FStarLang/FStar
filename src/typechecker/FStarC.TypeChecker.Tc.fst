@@ -776,28 +776,12 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     let se = { se with sigel = Sig_sub_effect sub } in
     [se], [], env
 
-  | Sig_effect_abbrev {lid; us=uvs; bs=tps; comp=c; cflags=flags} ->
-    let lid, uvs, tps, c =
-      if do_two_phases env
-      then run_phase1 (fun _ ->
-        TcEff.tc_effect_abbrev ({ env with phase1 = true; admit = true }) (lid, uvs, tps, c) r
-        |> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev {lid;
-                                                                           us=uvs;
-                                                                           bs=tps;
-                                                                           comp=c;
-                                                                           cflags=flags} })
-        |> N.elim_uvars env |>
-        (fun se -> match se.sigel with
-                | Sig_effect_abbrev {lid; us=uvs; bs=tps; comp=c} -> lid, uvs, tps, c
-                | _ -> failwith "Did not expect Sig_effect_abbrev to not be one after phase 1"))
-      else lid, uvs, tps, c in
-
-    let lid, uvs, tps, c = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
-    let se = { se with sigel = Sig_effect_abbrev {lid;
-                                                  us=uvs;
-                                                  bs=tps;
-                                                  comp=c;
-                                                  cflags=flags} } in
+  (* An effect abbreviation is a pair of names, resolved by the desugarer;
+     there is nothing left to check.  The sigelt is passed through so that it
+     reaches [m.declarations] and hence the [.checked] file, which is what lets
+     a module reading this one rebuild its [DsEnv] and know that [lid] names an
+     effect. *)
+  | Sig_effect_abbrev _ ->
     [se], [], env0
 
   | Sig_declare_typ _

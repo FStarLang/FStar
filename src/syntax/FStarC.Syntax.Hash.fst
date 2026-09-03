@@ -141,6 +141,7 @@ and hash_comp' (c:comp)
       mix_list_lit
         [of_int 823;
          hash_lid ct.effect_name;
+         hash_lid ct.source_effect_name;
          hash_term ct.result_typ;
          hash_list hash_flag ct.flags]
 
@@ -306,8 +307,6 @@ and hash_flag f
   : ML (mm H.hash_code)
   =
   match f with
-  | TOTAL -> of_int 947
-  | LEMMA -> of_int 967
   | SMTPAT p -> mix (of_int 971) (hash_term p)
   | DECREASES (Decreases_lex ts) -> mix (of_int 1013) (hash_list hash_term ts)
   | DECREASES (Decreases_wf (t0, t1)) -> mix (of_int 2341) (hash_list hash_term [t0;t1])

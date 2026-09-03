@@ -179,7 +179,8 @@ and comp =
 and comp_typ = {
   effect_name:lident;
   result_typ:t;
-  flags:list cflag
+  flags:list cflag;
+  source_effect_name:lident
 }
 
 and residual_comp = {
@@ -189,8 +190,6 @@ and residual_comp = {
 }
 
 and cflag =
-  | TOTAL
-  | LEMMA
   | SMTPAT of t
   | DECREASES_lex of list t
   | DECREASES_wf of (t & t)

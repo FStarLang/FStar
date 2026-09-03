@@ -292,14 +292,10 @@ let inspect_comp (c : comp) : ML comp_view =
         | _ -> failwith "Impossible!"
     in
     match c.n with
-    | Comp ct when PC.is_tot_lid ct.effect_name
-                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
-      C_Total ct.result_typ
-    | Comp ct when PC.is_gtot_lid ct.effect_name
-                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
-      C_GTotal ct.result_typ
-    | Comp ct -> begin
-        if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
+    (* [Lemma] is an abbreviation of [Tot], so [effect_name] is [Tot] here; the
+       view is keyed off the name the user *wrote*, and this case must come
+       before the [Tot] case below. *)
+    | Comp ct when Ident.lid_equals ct.source_effect_name PC.effect_Lemma_lid ->
             let pats =
               match U.comp_smt_pats (S.mk_Comp ct) with
               | Some p -> p
@@ -309,18 +305,23 @@ let inspect_comp (c : comp) : ML comp_view =
                the view reports [True].  The postcondition, on the other hand,
                is a refinement of the result type and can be recovered. *)
             C_Lemma (S.trivial_pre, U.post_of_result_typ ct.result_typ, pats)
-        else
-            (* A [comp_typ] no longer caches the effect's universe -- it is
-               just that of the result type -- and [inspect_comp] has no
-               environment to recover it with, so the view reports [].  This is
-               why [inspect_pack_comp_inv] requires [Nil? us]. *)
-            C_Eff ([],
-                   Ident.path_of_lid ct.effect_name,
-                   ct.result_typ,
-                   S.trivial_pre,
-                   U.post_of_result_typ ct.result_typ,
-                   get_dec ct.flags)
-      end
+    | Comp ct when PC.is_tot_lid ct.effect_name
+                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
+      C_Total ct.result_typ
+    | Comp ct when PC.is_gtot_lid ct.effect_name
+                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
+      C_GTotal ct.result_typ
+    | Comp ct ->
+      (* A [comp_typ] no longer caches the effect's universe -- it is just that
+         of the result type -- and [inspect_comp] has no environment to recover
+         it with, so the view reports [].  This is why [inspect_pack_comp_inv]
+         requires [Nil? us]. *)
+      C_Eff ([],
+             Ident.path_of_lid ct.effect_name,
+             ct.result_typ,
+             S.trivial_pre,
+             U.post_of_result_typ ct.result_typ,
+             get_dec ct.flags)
 
 let pack_comp (cv : comp_view) : ML comp =
     let urefl_to_univs u =
@@ -337,9 +338,10 @@ let pack_comp (cv : comp_view) : ML comp =
     (* A computation type has no room for a precondition, so [pre] is dropped;
        the postcondition becomes a refinement of the result type. *)
     | C_Lemma (_pre, post, pats) ->
-        let ct = { effect_name = PC.effect_Lemma_lid
+        let ct = { effect_name = PC.primitive_pure_lid
                  ; result_typ  = U.refine_with_post S.t_unit post
-                 ; flags       = [LEMMA; SMTPAT pats] } in
+                 ; flags       = [SMTPAT pats]
+                 ; source_effect_name = PC.effect_Lemma_lid } in
         S.mk_Comp ct
 
     (* [us] is dropped: a [comp_typ] has no universe list. *)
@@ -348,9 +350,11 @@ let pack_comp (cv : comp_view) : ML comp =
           if Nil? decrs
           then []
           else [DECREASES (Decreases_lex decrs)] in
-        let ct = { effect_name = Ident.lid_of_path ef Range.dummyRange
+        let eff = Ident.lid_of_path ef Range.dummyRange in
+        let ct = { effect_name = eff
                  ; result_typ  = res
-                 ; flags       = flags } in
+                 ; flags       = flags
+                 ; source_effect_name = eff } in
         S.mk_Comp ct
 
 let pack_const (c:vconst) : ML sconst =

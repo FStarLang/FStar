@@ -1187,14 +1187,19 @@ and resugar_comp_with_pre (env: DsEnv.env) (pre: option S.term) (c:S.comp) : ML 
   in
   match (c.n) with
   (* A pure or ghost computation is just a [Tot]/[GTot]; print it as such,
-     and elide a [Tot] altogether unless --print_implicits. *)
+     and elide a [Tot] altogether unless --print_implicits.
+
+     Everything here is presentation, so it is [source_effect_name] -- the name
+     the user wrote -- that decides, not the root [effect_name] the desugarer
+     resolved it to.  Otherwise every [Lemma] would print as its [squash]ed
+     result type, since [Lemma] abbreviates [Tot]. *)
   | Comp c when not (c.flags |> BU.for_some (function
                      | DECREASES _ | SMTPAT _ -> true
                      | _ -> false))
-             && (U.is_pure_effect c.effect_name ||
-                 U.is_ghost_effect c.effect_name) ->
+             && (U.is_pure_effect c.source_effect_name ||
+                 U.is_ghost_effect c.source_effect_name) ->
     let t = resugar_term' env c.result_typ in
-    if U.is_ghost_effect c.effect_name
+    if U.is_ghost_effect c.source_effect_name
     then mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
     else if Options.print_implicits()
     then mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
@@ -1227,7 +1232,7 @@ and resugar_comp_with_pre (env: DsEnv.env) (pre: option S.term) (c:S.comp) : ML 
       | Some pats when not (U.is_fvar C.nil_lid (U.head_of pats)) -> [pats]
       | _ -> []
     in
-    if lid_equals c.effect_name C.effect_Lemma_lid then
+    if lid_equals c.source_effect_name C.effect_Lemma_lid then
       (* A computation type stores no specification any more: a [Lemma]'s
          postcondition is a [squash] in its result type.  Recover it, so error
          messages and hovers still read [Lemma (ensures q)] rather than the bare
@@ -1245,14 +1250,14 @@ and resugar_comp_with_pre (env: DsEnv.env) (pre: option S.term) (c:S.comp) : ML 
       let pats = List.map (resugar_term' env) smt_pats in
       let decrease = mk_decreases c.flags in
 
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post@decrease@pats)))
+      mk (A.Construct(maybe_shorten_lid env c.source_effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post@decrease@pats)))
 
     else if (Options.print_effect_args()) then
       let decrease = List.map (fun t -> (t, A.Nothing)) (mk_decreases c.flags) in
-      mk (A.Construct(maybe_shorten_lid env c.effect_name,
+      mk (A.Construct(maybe_shorten_lid env c.source_effect_name,
                       result::decrease))
     else
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))
+      mk (A.Construct(maybe_shorten_lid env c.source_effect_name, [result]))
 
 and resugar_binder' env (b:S.binder) r : ML A.binder =
   let imp = resugar_bqual env b.binder_qual in
@@ -1510,8 +1515,8 @@ let resugar_eff_decl' env ed =
   let r = Range.dummyRange in
   let q = [] in
   let eff_name = ident_of_lid ed.mname in
-  let eff_binders = filter_imp_bs ed.binders in
-  let eff_binders = eff_binders |> map (fun b -> resugar_binder' env b r) |> List.rev in
+  (* An effect is just a name: it has no binders. *)
+  let eff_binders = [] in
   match ed.combinators with
   | None ->
     (* An effect without a representation is always an assumption. *)
@@ -1604,11 +1609,10 @@ let resugar_sigelt' env se : ML (option A.decl) =
     Some (decl'_to_decl se (A.SubEffect({msource=e.source; mdest=e.target;
                                          lift_op=e.lift |> Option.map (fun ts -> resugar_term' env (snd ts))})))
 
-  | Sig_effect_abbrev {lid; us=vs; bs; comp=c; cflags=flags} ->
-    let bs, c = SS.open_comp bs c in
-    let bs = filter_imp_bs bs in
-    let bs = bs |> map (fun b -> resugar_binder' env b se.sigrng) in
-    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, bs, None, resugar_comp' env c)])))
+  (* [effect M = N] *)
+  | Sig_effect_abbrev {lid; root} ->
+    let rhs = A.mk_term (A.Name root) se.sigrng A.Un in
+    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, [], None, rhs)])))
 
   | Sig_pragma p ->
     Some (decl'_to_decl se (A.Pragma (resugar_pragma env p)))

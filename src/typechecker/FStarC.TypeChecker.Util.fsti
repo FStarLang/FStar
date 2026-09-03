@@ -48,8 +48,6 @@ val label: list Pprint.document -> Range.t -> typ -> ML typ
 val label_guard: Range.t -> list Pprint.document -> guard_t -> ML guard_t
 
 val join_effects: env -> lident -> lident -> ML lident
-val is_pure_effect: env -> lident -> ML bool
-val is_pure_or_ghost_effect: env -> lident -> ML bool
 
 val close_comp_and_guard: env -> list bv -> comp -> guard_t -> ML (comp & guard_t)
 val close_layered_comp_with_combinator: env -> list bv -> comp -> guard_t -> ML (comp & guard_t)

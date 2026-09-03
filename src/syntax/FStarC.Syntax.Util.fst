@@ -241,13 +241,27 @@ let eq_univs_list (us:universes) (vs:universes) : ML bool =
 (*********************** Utilities for computation types ************************)
 (********************************************************************************)
 
+(* [ML] is an abbreviation of [ALL], and a [comp_typ] records the root. *)
 let ml_comp t r =
-  mk_Comp ({ effect_name = set_lid_range (PC.effect_ML_lid()) r;
+  mk_Comp ({ effect_name = set_lid_range (PC.effect_ALL_lid()) r;
              result_typ = t;
-             flags = [] })
+             flags = [];
+             source_effect_name = set_lid_range (PC.effect_ML_lid()) r })
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
+
+(* The effect name as the user wrote it; see [comp_typ.source_effect_name]. *)
+let comp_source_effect_name c = match c.n with
+    | Comp c  -> c.source_effect_name
+
+(* Merging two computations -- [bind], a lift, a normalization step -- has to
+   say which written name, if any, the result inherits.  An abbreviation is
+   presentation only, so the rule is: keep the written name when both sides
+   wrote the same one, and otherwise fall back to [eff], the root name of the
+   result.  Every caller goes through here so that they cannot drift apart. *)
+let combine_source_effect_name (eff:lident) (s1:lident) (s2:lident) : lident =
+  if lid_equals s1 s2 then s1 else eff
 
 let comp_flags c = match c.n with
     | Comp ct -> ct.flags
@@ -311,7 +325,6 @@ let is_named_tot_or_gtot c =
 
 let is_total_comp c =
     PC.is_pure_effect_lid (comp_effect_name c)
-    || comp_flags c |> U.for_some (function TOTAL -> true | _ -> false)
 
 let is_tot_or_gtot_comp c =
     is_total_comp c
@@ -319,12 +332,14 @@ let is_tot_or_gtot_comp c =
 
 (* Exactly what [mk_Total]/[mk_GTotal] build: a [Tot] or [GTot] with nothing
    else to say.  Before [Total]/[GTotal] were folded into [Comp] this was a
-   distinct syntactic form, and a few places still want to single it out. *)
+   distinct syntactic form, and a few places still want to single it out.
+   The *written* name is deliberately not consulted: [Lemma (ensures p)] is
+   [Tot (squash p)], and only differs in how it is displayed. *)
 let is_bare_tot_or_gtot_comp c =
   match c.n with
   | Comp ct ->
     PC.is_tot_or_gtot_lid ct.effect_name
-    && ct.flags |> U.for_all (function TOTAL -> true | _ -> false)
+    && Nil? ct.flags
 
 (* Exactly what [mk_Total] builds: a [Tot] with nothing else to say. *)
 let is_bare_total_comp c =
@@ -335,7 +350,6 @@ let is_pure_effect l = PC.is_pure_effect_lid l
 let is_pure_comp c = match c.n with
     | Comp ct -> is_total_comp c
                  || is_pure_effect ct.effect_name
-                 || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
 
 let is_ghost_effect l = PC.is_ghost_effect_lid l
 
@@ -407,8 +421,10 @@ let leftmost_head_and_args t =
     aux t []
 
 
+(* [ML] is an abbreviation of [ALL] and the desugarer resolves it away, so an
+   [ML t] computation carries [ALL] as its effect name; see [ml_comp]. *)
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.effect_name (PC.effect_ML_lid())
+  | Comp c -> lid_equals c.effect_name (PC.effect_ALL_lid())
 
   | _ -> false
 
@@ -728,7 +744,8 @@ let rec arrow_formals_comp_ln (k:term) =
                  (* Only flatten if there was in fact something to flatten:
                     otherwise keep [c] rather than rebuilding a bare [Total]
                     around its result, which would discard its flags (the
-                    [LEMMA]/[SMTPAT] of a lemma, in particular). *)
+                    [SMTPAT] of a lemma, in particular) and the name the user
+                    wrote. *)
                  (match bs' with
                   | [] -> [b], c
                   | _ -> b::bs', k')
@@ -1783,9 +1800,14 @@ let extract_attr (attr_lid:lid) (se:sigelt) : ML (option (sigelt & args)) =
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
 
+(* [Lemma] is an abbreviation of [Tot], so [effect_name] says nothing about it:
+   being a lemma is a property of how the computation type was *written*.  It
+   is what tells the SMT encoding to turn a [val] into an axiom (see
+   [is_smt_lemma] and [SMTEncoding.Encode]) and what lets [Rel] and [Resugar]
+   recognize one, so [source_effect_name] is consulted here. *)
 let is_lemma_comp c =
     match c.n with
-    | Comp ct -> lid_equals ct.effect_name PC.effect_Lemma_lid
+    | Comp ct -> lid_equals ct.source_effect_name PC.effect_Lemma_lid
     | _ -> false
 
 let is_lemma t =
@@ -1796,7 +1818,7 @@ let is_lemma t =
 let is_smt_lemma t =
   let _, c = arrow_formals_comp t in
   match c.n with
-  | Comp ct when lid_equals ct.effect_name PC.effect_Lemma_lid ->
+  | Comp ct when lid_equals ct.source_effect_name PC.effect_Lemma_lid ->
     begin match comp_smt_pats c with
     | Some pats ->
       let pats' = unmeta pats in

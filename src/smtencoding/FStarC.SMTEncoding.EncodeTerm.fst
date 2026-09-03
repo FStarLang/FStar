@@ -97,12 +97,10 @@ let head_normal env t =
 let head_redex env t =
     match (U.un_uinst t).n with
     | Tm_abs {rc_opt=Some rc} ->
-      (* A [residual_comp] carries no specification, so these must test the
+      (* A [residual_comp] carries no specification, so this must test the
          spec-free spellings [Tot]/[GTot] rather than the whole pure/ghost
-         class; those two names are stable across the primitive-effect flip.
-         [TOTAL] catches a not-yet-unfolded abbreviation of [Tot]. *)
+         class; those two names are stable across the primitive-effect flip. *)
       Const.is_tot_or_gtot_lid rc.residual_effect
-      || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
 
     | Tm_uinst({n=Tm_fvar fv}, _)
     | Tm_fvar fv ->
@@ -973,7 +971,7 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                 *     we encode terms in this let-scope just to compute a hash
                 *)
                let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
-               let c = Env.unfold_effect_abbrev (Env.push_binders env.tcenv binders) res |> S.mk_Comp in
+               let c = res in
                let ct, _ = encode_term (c |> U.comp_result) env_bs in
                let tkey = mkForall t.pos
                  ([], vars, mk_and_l (guards_l@[ct])) in
@@ -1416,7 +1414,7 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
           in
 
           let is_impure (rc:S.residual_comp) =
-            TypeChecker.Util.is_pure_or_ghost_effect env.tcenv rc.residual_effect |> not
+            U.is_pure_or_ghost_effect rc.residual_effect |> not
           in
 
           let codomain_eff rc =
@@ -1438,7 +1436,6 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
               then Some (S.mk_Total res_typ)
               else if Const.is_gtot_lid rc.residual_effect
               then Some (S.mk_GTotal res_typ)
-              (* TODO (KM) : shouldn't we do something when flags contains TOTAL ? *)
               else None
           in
 

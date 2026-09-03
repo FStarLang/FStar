@@ -1545,7 +1545,8 @@ let compress_cprob wl p : ML _
   let whnf_c env c =
     match c.n with
     | Comp ct when U.is_bare_total_comp c ->
-      S.mk_Total (whnf env ct.result_typ)
+      (* rebuild in place so that [source_effect_name] survives *)
+      S.mk_Comp {ct with result_typ = whnf env ct.result_typ}
     | _ -> c
   in
   let env = p_env wl (CProb p) in
@@ -2223,9 +2224,9 @@ let imitate_arrow (orig:prob) (wl:worklist)
       in
       match c.n with
       | Comp ct when U.is_bare_tot_or_gtot_comp c ->
+        (* rebuild in place so that [source_effect_name] survives *)
         imitate_tot_or_gtot ct.result_typ
-          (if PC.is_tot_lid ct.effect_name
-           then S.mk_Total else S.mk_GTotal) wl
+          (fun t -> S.mk_Comp {ct with result_typ = t}) wl
       | Comp ct ->
         let out_args, wl =
           List.fold_right
@@ -4646,8 +4647,8 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
 
          let c1, c2 =
            let eff1, eff2 =
-             c1 |> U.comp_effect_name |> Env.norm_eff_name env,
-             c2 |> U.comp_effect_name |> Env.norm_eff_name env in
+             c1 |> U.comp_effect_name,
+             c2 |> U.comp_effect_name in
            if Ident.lid_equals eff1 eff2
            then c1, c2
            else N.ghost_to_pure2 env (c1, c2) in
@@ -4682,15 +4683,10 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
             else let c1_comp = U.comp_to_comp_typ c1 in
                  let c2_comp = U.comp_to_comp_typ c2 in
                  if problem.relation=EQ
-                 then let c1_comp, c2_comp =
-                            if lid_equals c1_comp.effect_name c2_comp.effect_name
-                            then c1_comp, c2_comp
-                            else Env.unfold_effect_abbrev env c1,
-                                 Env.unfold_effect_abbrev env c2 in
-                      solve_eq c1_comp c2_comp Env.trivial_guard
+                 then solve_eq c1_comp c2_comp Env.trivial_guard
                  else begin
-                    let c1 = Env.unfold_effect_abbrev env c1 in
-                    let c2 = Env.unfold_effect_abbrev env c2 in
+                    let c1 = c1_comp in
+                    let c2 = c2_comp in
                     if !dbg_Rel then Format.print2 "solve_c for %s and %s\n" (string_of_lid c1.effect_name) (string_of_lid c2.effect_name);
                     (match Env.monad_leq env c1.effect_name c2.effect_name with
                       | None ->

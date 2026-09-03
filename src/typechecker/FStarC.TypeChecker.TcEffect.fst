@@ -109,7 +109,7 @@ let tc_eff_decl env (ed:S.eff_decl) (quals:list S.qualifier) (_attrs:list S.attr
   | None -> ed
   | Some combs ->
     let r = range_of_lid ed.mname in
-    let env0 = Env.push_binders env ed.binders in
+    let env0 = env in
 
     (* repr : a:Type u#a -> Type u#r, for some universe u#r inferred from
        the definition (typically u#a, or u#0 for a partial effect). *)
@@ -205,90 +205,11 @@ let tc_lift env (sub:S.sub_eff) (r:Range.t) : ML S.sub_eff =
         | _ ->
           let c = S.mk_Comp ({ effect_name = sub.source;
                                result_typ = a;
-                               flags = [] }) in
+                               flags = [];
+                               source_effect_name = sub.source }) in
           U.arrow [S.null_binder S.t_unit] c in
       let expected =
         U.arrow [S.mk_binder bv_a; S.null_binder src_arg]
                 (S.mk_Total (repr_app repr_ts u_a a r)) in
       Some (check_comb env us expected t) in
   { sub with lift }
-
-let tc_effect_abbrev env (lid_uvs_tps_c: lident & univ_names & binders & comp) r : ML _ =
-  let (lid, uvs, tps, c) = lid_uvs_tps_c in
-  let env0 = env in
-  //assert (uvs = []); AR: not necessarily, two phases
-
-  //AR: open universes in tps and c if needed
-  let env, uvs, tps, c =
-    if Nil? uvs then env, uvs, tps, c
-    else
-      let usubst, uvs = SS.univ_var_opening uvs in
-      let tps = SS.subst_binders usubst tps in
-      let c = SS.subst_comp (SS.shift_subst (List.length tps) usubst) c in
-      Env.push_univ_vars env uvs, uvs, tps, c
-  in
-  let env = Env.set_range env r in
-  let tps, c = SS.open_comp tps c in
-  let tps, env, us = tc_tparams env tps in
-  let c, u, g = tc_comp env c in
-  //
-  //Check if this effect is marked as a default effect in the effect decl.
-  //  of its unfolded effect
-  //If so, we need to check that it has only a type argument
-  //
-  let is_default_effect =
-    match c |> U.comp_effect_name |> Env.get_default_effect env with
-    | None -> false
-    | Some l -> lid_equals l lid in
-  Rel.force_trivial_guard env g;
-  let _ =
-    let expected_result_typ =
-      match tps with
-      | ({binder_bv=x})::tl ->
-        if is_default_effect && not (tl = [])
-        then raise_error r Errors.Fatal_UnexpectedEffect
-                          (Format.fmt2 "Effect %s is marked as a default effect for %s, but it has more than one arguments"
-                            (string_of_lid lid)
-                            (c |> U.comp_effect_name |> string_of_lid));
-        S.bv_to_name x
-      | _ -> raise_error r Errors.Fatal_NotEnoughArgumentsForEffect
-                         "Effect abbreviations must bind at least the result type"
-    in
-    (* An [ensures] clause on the abbreviation refines the result type, so
-       compare the underlying type rather than the refined one. *)
-    let def_result_typ = FStarC.Syntax.Util.comp_result c |> FStarC.Syntax.Util.unrefine in
-    if not (Rel.teq_nosmt_force env expected_result_typ def_result_typ)
-    then raise_error r Errors.Fatal_EffectAbbreviationResultTypeMismatch
-                      (Format.fmt2 "Result type of effect abbreviation ‘%s’ \
-                                  does not match the result type of its definition ‘%s’"
-                                  (show expected_result_typ)
-                                  (show def_result_typ))
-  in
-  let tps = SS.close_binders tps in
-  let c = SS.close_comp tps c in
-  (* The unary representation has no zero-binder arrow, so when [tps] is empty
-     we generalize under a synthetic unit binder and drop it afterwards.  We
-     then peel back exactly as many arrow nodes as we added, rather than
-     flattening, which would grow [tps] whenever [c] is a Tot arrow. *)
-  let gen_tps = if Nil? tps then [S.null_binder S.t_unit] else tps in
-  let uvs, t = Gen.generalize_universes env0 (S.mk_Tm_arrow gen_tps c r) in
-  let rec peel (n:int) (t:term) : ML (list binder & comp) =
-    match (SS.compress t).n with
-    | Tm_arrow {b; comp=c} ->
-      if n <= 1 then [b], c
-      else let bs, c = peel (n-1) (U.comp_result c) in b::bs, c
-    | _ -> failwith "Impossible (t is an arrow)" in
-  let tps', c = peel (List.length gen_tps) t in
-  let tps, c = if Nil? tps then [], c else tps', c in
-  if List.length uvs <> 1
-  then begin
-    let _, t = Subst.open_univ_vars uvs t in
-    raise_error r Errors.Fatal_TooManyUniverse
-                 (Format.fmt3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
-                                  (show lid)
-                                  (show (List.length uvs))
-                                  (show t))
-  end;
-  (lid, uvs, tps, c)
-
-

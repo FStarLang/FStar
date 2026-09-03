@@ -1036,7 +1036,7 @@ let maybe_drop_rc_typ cfg (rc:residual_comp) : ML residual_comp =
   else rc
 
 let get_extraction_mode env (m:Ident.lident) =
-  let norm_m = Env.norm_eff_name env m in
+  let norm_m = m in
   (Env.get_effect_decl env norm_m).extraction_mode
 
 let can_reify_for_extraction env (m:Ident.lident) = false
@@ -1696,7 +1696,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             (* If we are reifying, we reduce Div lets faithfully, i.e. in CBV *)
             (* This is important for tactics, see issue #1594 *)
             else if cfg.steps.tactics
-                    && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
+                    && U.is_div_effect (lb.lbeff)
             then let ffun = S.mk_Tm_abs [S.mk_binder (lb.lbname |> Inl?.v)] body None t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
                  log cfg (fun () -> Format.print_string "+++ Evaluating DIV Tm_let\n");
@@ -2100,7 +2100,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
       (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
       (*                                                                            *)
       (* ****************************************************************************)
-      let eff_name = Env.norm_eff_name cfg.tcenv m in
+      let eff_name = m in
       let ed = Env.get_effect_decl cfg.tcenv eff_name in
       let _, repr = ed |> U.get_eff_repr |> Option.must in
       let _, bind_repr = ed |> U.get_bind_repr |> Option.must in
@@ -2235,7 +2235,7 @@ and reify_lift cfg e msrc mtgt t : ML term =
   let env = cfg.tcenv in
   log cfg (fun () -> Format.print3 "Reifying lift %s -> %s: %s\n"
         (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt) (show e));
-  match Env.lookup_lift env (Env.norm_eff_name env msrc) (Env.norm_eff_name env mtgt) with
+  match Env.lookup_lift env (msrc) (mtgt) with
   | Some (_, lift) ->
     (* An explicit lift was given. Feed it the reified source computation if the
        source effect is itself reifiable, and a thunk otherwise. *)
@@ -2258,7 +2258,7 @@ and reify_lift cfg e msrc mtgt t : ML term =
     if not (U.is_pure_effect msrc || U.is_div_effect msrc || U.is_ghost_effect msrc)
     then failwith (Format.fmt2 "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
                      (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt));
-    let ed = Env.get_effect_decl env (Env.norm_eff_name env mtgt) in
+    let ed = Env.get_effect_decl env (mtgt) in
     let _, repr = ed |> U.get_eff_repr |> Option.must in
     let _, return_repr = ed |> U.get_return_repr |> Option.must in
     let return_inst = match (SS.compress return_repr).n with
@@ -3234,16 +3234,17 @@ let maybe_promote_t env non_informative_only t =
 let ghost_to_pure_aux env non_informative_only c =
     match c.n with
     | Comp ct ->
-        let l = Env.norm_eff_name env ct.effect_name in
+        let l = ct.effect_name in
         if U.is_ghost_effect l
         && maybe_promote_t env non_informative_only ct.result_typ
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
-                   {ct with effect_name=pure_eff}
+                   {ct with effect_name=pure_eff; source_effect_name=pure_eff}
                  | None ->
-                    let ct = unfold_effect_abbrev env c in //must be ghost
-                    {ct with effect_name=PC.primitive_pure_lid} in
+                    let ct = U.comp_to_comp_typ c in //must be ghost
+                    {ct with effect_name=PC.primitive_pure_lid;
+                             source_effect_name=PC.primitive_pure_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c
@@ -3264,8 +3265,8 @@ let ghost_to_pure env c = ghost_to_pure_aux env false c
 let ghost_to_pure2 env (c1, c2) =
   let c1, c2 = maybe_ghost_to_pure env c1, maybe_ghost_to_pure env c2 in
 
-  let c1_eff = c1 |> U.comp_effect_name |> Env.norm_eff_name env in
-  let c2_eff = c2 |> U.comp_effect_name |> Env.norm_eff_name env in
+  let c1_eff = c1 |> U.comp_effect_name in
+  let c2_eff = c2 |> U.comp_effect_name in
 
   if Ident.lid_equals c1_eff c2_eff then c1, c2
   else let c1_erasable = Env.is_erasable_effect env c1_eff in
@@ -3482,9 +3483,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) : ML sigelt =
 
     | Sig_sub_effect sub_eff -> s
 
-    | Sig_effect_abbrev {lid; us=univ_names; bs=binders; comp; cflags=flags} ->
-      let univ_names, binders, comp = elim_uvars_aux_c env univ_names binders comp in
-      {s with sigel = Sig_effect_abbrev {lid; us=univ_names; bs=binders; comp; cflags=flags}}
+    | Sig_effect_abbrev _ -> s
 
     | Sig_pragma _ ->
       s

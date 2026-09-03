@@ -496,7 +496,8 @@ let extract_let_rec_annotation env (lb:letbinding) :
 let mk_comp_l mname result flags : ML _ =
   mk_Comp ({ effect_name=mname;
              result_typ=result;
-             flags=flags})
+             flags=flags;
+             source_effect_name=mname})
 
 let mk_comp md : ML _ = mk_comp_l md.mname
 
@@ -527,15 +528,19 @@ let lift_comp env (c:comp_typ) (m:lident) : ML (comp & guard_t) =
            ^/^ text "~>" ^/^ pp m ^/^ text "since its type" ^/^ pp c.result_typ
            ^/^ text "is informative"
        ];
-  S.mk_Comp ({ c with effect_name = m; flags = [] }), Env.trivial_guard
+  (* [source_effect_name] describes how the computation was *written*; once the
+     effect label changes it no longer does. *)
+  S.mk_Comp ({ c with effect_name = m; flags = [];
+                      source_effect_name =
+                        if lid_equals c.effect_name m then c.source_effect_name else m }),
+  Env.trivial_guard
 
-let join_effects env l1_in l2_in : ML _ =
-  let l1, l2 = Env.norm_eff_name env l1_in, Env.norm_eff_name env l2_in in
+let join_effects env l1 l2 : ML _ =
   match Env.join_opt env l1 l2 with
   | Some m -> m
   | None ->
     raise_error env Errors.Fatal_EffectsCannotBeComposed [
-        text "Effects" ^/^ pp l1_in ^/^ text "and" ^/^ pp l2_in ^/^ text "cannot be composed"
+        text "Effects" ^/^ pp l1 ^/^ text "and" ^/^ pp l2 ^/^ text "cannot be composed"
     ]
 
 let join_comp env c1 c2 : ML _ =
@@ -561,9 +566,9 @@ let maybe_push (env : Env.env) (b : option bv) : ML Env.env =
  *)
 let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
 : ML (lident & comp & comp & guard_t & guard_t) =
-  let c1 = Env.unfold_effect_abbrev env c1 in
+  let c1 = U.comp_to_comp_typ c1 in
   let env2 = maybe_push env b in
-  let c2 = Env.unfold_effect_abbrev env2 c2 in
+  let c2 = U.comp_to_comp_typ c2 in
   match Env.join_opt env c1.effect_name c2.effect_name with
   | Some m ->
     let c1, g1 = lift_comp env c1 m in
@@ -584,26 +589,14 @@ let lift_comps env c1 c2 (b:option bv) (for_bind:bool)
     for_bind in
   l, c1, c2, Env.conj_guard g1 g2
 
-let is_pure_effect env l : ML _ =
-  norm_eff_name env l |> U.is_pure_effect
-
-let is_ghost_effect env l : ML _ =
-  norm_eff_name env l |> U.is_ghost_effect
-
-let is_pure_or_ghost_effect env l : ML _ =
-  norm_eff_name env l |> U.is_pure_or_ghost_effect
-
-(* A computation type
-   carries no logical content any more, so there is nothing to quantify: only
-   the flags, which describe *this* occurrence, have to be dropped.  [TOTAL] is
-   the exception -- it records that the effect *name* is an abbreviation of
-   [Tot], which closing does not change. *)
+(* A computation type carries no logical content any more, so there is nothing
+   to quantify: only the flags, which describe *this* occurrence, have to be
+   dropped. *)
 let drop_comp_flags env bvs (c:comp) : ML _ =
     def_check_scoped c.pos "drop_comp_flags" (Env.push_bvs env bvs) c;
     match c.n with
     | Comp ct ->
-      S.mk_Comp ({ ct with
-        flags = ct.flags |> List.filter (function TOTAL -> true | _ -> false) })
+      S.mk_Comp ({ ct with flags = [] })
 
 let close_comp_and_guard env bvs (c:comp) (g:guard_t) : ML (comp & guard_t) =
   let bs = bvs |> List.map S.mk_binder in
@@ -676,7 +669,11 @@ let mk_bind env
   def_check_scoped r1 "mk_bind.in.c2" env2 c2;
   let m, _c1, c2, g_lift = lift_comps env c1 c2 b true in
   let ct2 = U.comp_to_comp_typ c2 in
-  let res = S.mk_Comp ({ effect_name = m; result_typ = ct2.result_typ; flags = [] }) in
+  let res = S.mk_Comp ({ effect_name = m; result_typ = ct2.result_typ; flags = [];
+                         source_effect_name =
+                           U.combine_source_effect_name m
+                             (U.comp_source_effect_name c1)
+                             (U.comp_source_effect_name c2) }) in
   (* [res] takes its result type from [c2], so it is scoped in [env2]: it may
      still mention [b].  Getting [b] out of it is the caller's job -- see
      [close_x] in [bind_maybe_capture]. *)
@@ -701,7 +698,8 @@ let formula_as_labeled_guard env (reason:option (unit -> ML (list Pprint.documen
  * by its type.
  *)
 let return_value env eff_lid t v : ML (comp & guard_t) =
-  S.mk_Comp ({ effect_name = Env.norm_eff_name env eff_lid; result_typ = t; flags = [] }),
+  S.mk_Comp ({ effect_name = eff_lid; result_typ = t; flags = [];
+               source_effect_name = eff_lid }),
   Env.trivial_guard
 
 (* [weaken_comp env c f] used to assume [f] before running [c].  A computation
@@ -1566,8 +1564,8 @@ let maybe_return_e2_and_bind
 
    //AR: use c1's effect to return c2 into
    let lc2 =
-        let eff1 = Env.norm_eff_name env (U.comp_effect_name lc1) in
-        let eff2 = Env.norm_eff_name env (U.comp_effect_name lc2) in
+        let eff1 = U.comp_effect_name lc1 in
+        let eff2 = U.comp_effect_name lc2 in
 
         (*
          * AR: If eff1 and eff2 cannot be composed, and eff2 is PURE,
@@ -1576,8 +1574,8 @@ let maybe_return_e2_and_bind
         if U.is_pure_effect eff2 &&
            Env.join_opt env eff1 eff2 |> None?
         then assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
-        else if not (is_pure_or_ghost_effect env eff1)
-             && is_pure_or_ghost_effect env eff2
+        else if not (U.is_pure_or_ghost_effect eff1)
+             && U.is_pure_or_ghost_effect eff2
         then maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r is_let_binding env e1opt (lc1, g_c1) (x, lc2, g_c2)
@@ -1592,7 +1590,11 @@ let fvar_env env lid : ML _ =  S.fvar (Ident.set_lid_range lid (Env.get_range en
  *)
 let mk_conjunction env (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.t)
 : ML (comp & guard_t) =
-  S.mk_Comp ({ effect_name = ct1.effect_name; result_typ = a; flags = [] }), Env.trivial_guard
+  S.mk_Comp ({ effect_name = ct1.effect_name; result_typ = a; flags = [];
+               source_effect_name =
+                 U.combine_source_effect_name ct1.effect_name
+                   ct1.source_effect_name ct2.source_effect_name }),
+  Env.trivial_guard
 
 (*
  * When typechecking a match term, typechecking each branch returns
@@ -1725,7 +1727,7 @@ let bind_cases env0 (res_t:typ)
     in
     let bind_cases_flags : list cflag = [] in
         let maybe_return eff_label_then (cthen: bool -> ML (comp & guard_t)) : ML (comp & guard_t) =
-           if not (is_pure_or_ghost_effect env eff)
+           if not (U.is_pure_or_ghost_effect eff)
            then cthen true //inline each branch, if eligible
            else cthen false //the entire match is pure and inlineable
         in
@@ -1834,7 +1836,7 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp &
  * is what makes e.g. [unit -> Dv t : Type0] for any [t : Type u#a].
  *)
 let universe_of_comp env u_res c : ML _ =
-  let c_lid = c |> U.comp_effect_name |> Env.norm_eff_name env in
+  let c_lid = c |> U.comp_effect_name in
   if U.is_pure_or_ghost_effect c_lid then u_res
   else if Env.lookup_effect_quals env c_lid |> List.existsb (fun q -> q = S.TotalEffect)
   then u_res
@@ -1843,7 +1845,7 @@ let universe_of_comp env u_res c : ML _ =
 (* A computation type carries no precondition any more -- there is nothing left
    to discharge here. *)
 let check_trivial_precondition_wp env c : ML _ =
-  let ct = c |> Env.unfold_effect_abbrev env in
+  let ct = c |> U.comp_to_comp_typ in
   ct, U.t_true, Env.trivial_guard
 
 //Decorating terms with monadic operators
@@ -1874,7 +1876,6 @@ let maybe_lift env e c1 c2 t : ML _ =
     // The several spellings of the pure and ghost effects may be used in Prims
     // before the abbreviations relating them are declared; normalize by hand.
     let norm_eff l =
-      let l = Env.norm_eff_name env l in
       if U.is_pure_effect l then C.primitive_pure_lid
       else if U.is_ghost_effect l then C.primitive_ghost_lid
       else l
@@ -1889,11 +1890,11 @@ let maybe_lift env e c1 c2 t : ML _ =
 
 let maybe_monadic env e c t : ML _ =
     let t = monadic_annot_typ t in
-    let m = Env.norm_eff_name env c in
+    let m = c in
     (* [is_pure_or_ghost_effect] recognizes every spelling of the pure and
        ghost effects, including the ones used in Prims before the
        abbreviations relating them are declared. *)
-    if is_pure_or_ghost_effect env m
+    if U.is_pure_or_ghost_effect m
     then e
     else mk (Tm_meta {tm=e; meta=Meta_monadic (m, t)}) e.pos
 
@@ -2383,7 +2384,7 @@ let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool)
                       let xexp = S.bv_to_name x in
                       //AR: M.return
                       let eq_ret, gret = return_value env
-                        (c |> U.comp_effect_name |> Env.norm_eff_name env)
+                        (c |> U.comp_effect_name)
                         t xexp in
                       let guard = if apply_guard
                                   then mk_Tm_app f [S.as_arg xexp] f.pos
@@ -2641,7 +2642,7 @@ let check_top_level env g lc : ML (bool & comp) =
   let c, g_c = lc, Env.trivial_guard in
   if U.is_total_comp lc
   then discharge (Env.conj_guard g g_c), c
-  else let c = Env.unfold_effect_abbrev env c in
+  else let c = U.comp_to_comp_typ c in
        let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
        let c = c
          |> S.mk_Comp
@@ -2755,7 +2756,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
   res
 
 let effect_extraction_mode env l : ML _ =
-  l |> Env.norm_eff_name env
+  l
     |> Env.get_effect_decl env
     |> (fun ed -> ed.extraction_mode)
 
@@ -2763,7 +2764,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm : ML _ =
   raise_error r Errors.Fatal_UnexpectedEffect "Effects no longer have representations"
 
 let fresh_effect_repr_en env r eff_name u a_tm : ML _ =
-  let ed = Env.get_effect_decl env (Env.norm_eff_name env eff_name) in
+  let ed = Env.get_effect_decl env (eff_name) in
   match U.get_eff_repr ed with
   | None ->
     raise_error r Errors.Fatal_UnexpectedEffect
