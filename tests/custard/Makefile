@@ -765,10 +765,13 @@ $(OUTPUT_DIR)/%.krml:
 # learn where krmllib's headers live.
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
-	$(Q)krml -silent -skip-linking -no-prefix $* -tmpdir $(OUTPUT_DIR)/$*_c $<
+	@# Section 45.3.  The test directory is on the include path because a
+	@# [@@custard_c_header] now reaches karamel's output as an #include.
+	$(Q)krml -silent -skip-linking -no-prefix $* -ccopts "-I$(CURDIR)" \
+	  -tmpdir $(OUTPUT_DIR)/$*_c $<
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
-	  $(OUTPUT_DIR)/$*_c/Custard.c -o $@
+	  -I$(CURDIR) $(OUTPUT_DIR)/$*_c/Custard.c -o $@
 
 # The direct-to-C backend (section 6): no krmllib, no krml, just a C11
 # compiler.  -Werror is part of the test -- an unused variable or a missing
@@ -1097,6 +1100,31 @@ FLAGS_PatStrKrml = --custard_backend KrmlC
 CODE_PatStrKrml = 368
 EGREP_PatStrKrml += "string pattern has no karamel representation"
 NOEGREP_PatStrKrml += "not supported by the C backend"
+
+# Section 45.1-45.2.  A TensorCore-shaped program: nothing but externals, whose
+# C names are not F* identifiers, plus the source-level decorations a CUDA
+# kernel is made of.
+#
+# A value target used to be run through [sanitize], which turns Kuiper's
+# wmma::mma_sync into wmma__mma_sync -- a name that does not exist.  The type
+# path had always been verbatim, which is why the type beside the call worked.
+C_TESTS += TensorC
+CGREP_TensorC += "tc_auto_ref a = TC_NS(mk_a)()"
+CGREP_TensorC += "return TC_NS(sum)(a, c);"
+CNOGREP_TensorC += "TC_NS_"
+CNOGREP_TensorC += "tc_auto_ref_"
+# The decoration goes on the definition *and* on the prototype, and exactly
+# once on each: F* records an attribute on the sigelt and on the letbinding,
+# and two __global__s is a syntax error rather than a redeclaration.
+CGREP_TensorC += "/* __global__ */"
+CGREP_TensorC += "/* end kernel */"
+CGREP_TensorC += "/* A kernel, decorated from source. */"
+
+# Section 45.3.  An external through karamel.  The declaration used to carry
+# the custard_extern target and the call site the F* name, so the TU declared
+# one symbol and called another, and the custard_c_header include was absent
+# besides.  Linking is the assertion.
+KRML_TESTS += KrmlExt
 
 KRML_TESTS += FloatsKrml
 

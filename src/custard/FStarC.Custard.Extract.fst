@@ -851,6 +851,50 @@ let field_only_attrs : list (Ident.lident & string) = [
 let has_attr (a:Ident.lident) (attrs:list term) : ML bool =
   Some? (U.get_attribute a attrs)
 
+(* Section 45.2.  [FStar.Attributes]'s C decorations, forwarded to the flags
+   both printers already honour.
+
+   These are attributes F* has had for as long as karamel has, and the ML
+   extractor reads them (FStarC.Extraction.ML.Modul.extract_meta) and karamel
+   forwards them.  Custard had the flags and the printing and no way at all to
+   ask for either from source: the only route was [B.lift_named] from a rule
+   plugin, which for a program with 654 [__global__] kernels means a rule per
+   kernel rather than one line per definition.
+
+   Custard does not read the strings.  They are text for the C compiler, and
+   what they mean is a question about the target, not about F*. *)
+let c_decoration_flags (attrs:list term) : ML (list flag) =
+  (* F* records a definition's attributes on the sigelt *and* on the
+     letbinding, and both have to be read, because which of the two a
+     particular attribute lands on is not stable.  So the same decoration
+     arrives twice and would be emitted twice -- two [__global__]s is not a
+     redeclaration error, it is a syntax error.  Order is preserved, since
+     multiple prologues accumulate and the author's order is the only one
+     that means anything. *)
+  let seen : SMap.t bool = SMap.create 8 in
+  let fresh (k:string) : ML bool =
+    if Some? (SMap.try_find seen k) then false
+    else (SMap.add seen k true; true) in
+  attrs |> List.collect (fun a ->
+    let a = SS.compress a in
+    let head, args = U.head_and_args_full a in
+    match (SS.compress head).n, args with
+    | Tm_fvar fv, [({ n = Tm_constant (Const_string (str, _)) }, _)] ->
+      let nm = Ident.string_of_lid (S.lid_of_fv fv) in
+      if not (fresh (nm ^ "\u0000" ^ str)) then [] else
+      (match nm with
+       | "FStar.Attributes.Comment" -> [Comment str]
+       | "FStar.Attributes.CPrologue" -> [Prologue str]
+       | "FStar.Attributes.CEpilogue" -> [Epilogue str]
+       | _ -> [])
+    | Tm_fvar fv, [] ->
+      let nm = Ident.string_of_lid (S.lid_of_fv fv) in
+      if not (fresh nm) then [] else
+      (match nm with
+       | "FStar.Attributes.CInline" -> [CInline]
+       | _ -> [])
+    | _ -> [])
+
 (* Where each attribute does belong, for the second sentence of the message. *)
 let attr_home (nm:string) : string =
   match nm with
@@ -3705,6 +3749,11 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
 and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                        (is_rec:bool) (margs:list (int & term)) (n_holes:int) : ML decl =
   let cs = binder_classes st l in
+  (* Section 45.2.  Where a source-level C decoration is written. *)
+  let src_attrs =
+    lb.lbattrs @ (match TcEnv.lookup_sigelt (tcenv st) l with
+                  | Some se -> se.sigattrs
+                  | None -> []) in
   (* Lifted local functions are named after whatever encloses them. *)
   let saved_cur = !st.cur in
   st.cur := nm;
@@ -3886,8 +3935,19 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     (* Provisional: [Simplify.scc] recomputes this from the final call graph,
        which is the only place the answer is knowable -- specialization and
        inlining change it in both directions.  Setting it here at all is just
-       so that a self-recursive body is well-formed before then. *)
-    dl_flags   = (if is_rec then [Rec [nm]] else []);
+       so that a self-recursive body is well-formed before then.
+
+       Section 45.2.  The C decorations come from the source.  Both the
+       sigelt's attributes and the letbinding's, because a [let] in a
+       [let rec] group carries its own: which of the two a reader wrote it on
+       is not a distinction the decoration cares about, and it is the one the
+       ML extractor makes too.
+
+       Every specialization of a decorated definition gets the decoration,
+       which is right for [__global__] -- each specialization is its own
+       kernel -- and is the only answer available anyway, since the attribute
+       is on the source and the source is what was specialized. *)
+    dl_flags   = (if is_rec then [Rec [nm]] else []) @ c_decoration_flags src_attrs;
   }
 
 (* A field whose contents belong in the constructor rather than behind a

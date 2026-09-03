@@ -101,6 +101,19 @@ let type_lident_of_name (n:name) : ML K.lident =
   | Some t -> ([], t)
   | None -> lid
 
+(* Section 45.3.  The same table for external *values*, which did not have
+   one.  The [DExternal] was emitted under the [@@custard_extern] target and
+   every call site was emitted under the F* name, so the translation unit
+   declared one symbol and called another: nothing defined the name that was
+   called, nothing called the name that was declared, and karamel had no
+   reason to complain about either.  A link error at best. *)
+let extern_values : ref (SMap.t string) = mk_ref (SMap.create 0)
+
+let value_lident_of_name (n:name) : ML K.lident =
+  match SMap.try_find !extern_values (string_of_name n) with
+  | Some t -> ([], t)
+  | None -> lident_of_name n
+
 (* [FStar.Pervasives.Native.tupleN] and its constructor, recognized by name
    because that is all a printer has.  Only ever true on the Rust path: on
    every other the declaration is compiled and these are ordinary names. *)
@@ -345,9 +358,10 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   match e.e with
   | EConst c -> krml_const c
   | EVar x -> K.EBound (find env x)
-  | EQual (n, []) -> K.EQualified (lident_of_name n)
+  | EQual (n, []) -> K.EQualified (value_lident_of_name n)
   | EQual (n, tys) ->
-    K.ETypApp (K.EQualified (lident_of_name n), tys |> List.map (krml_typ env))
+    K.ETypApp (K.EQualified (value_lident_of_name n),
+               tys |> List.map (krml_typ env))
 
   | ELet (x, t, e1, e2) ->
     let b = { K.name = x; K.typ = krml_typ env t; K.mut = false; K.meta = [] } in
@@ -594,8 +608,17 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
            module; use the F* definition through --custard_backend KrmlC, or \
            extend the model in karamel."
     ];
-    Some (K.DExternal (None, krml_flags x.dx_flags, lid,
-                       krml_typ env x.dx_ty, []))
+    (* Section 45.3.  And the header that declares it.  The C backend emits
+       the [@@custard_c_header] include itself; this path emitted nothing, so
+       the header karamel produced declared the symbol under its own
+       signature instead of using the real one, and the source that needed
+       the real declaration never saw it.  karamel's [Prologue] is verbatim
+       text before the declaration, which is what an include is. *)
+    let flags = krml_flags x.dx_flags @
+                (match x.dx_header with
+                 | Some h -> [K.Prologue ("#include \"" ^ h ^ "\"")]
+                 | None -> []) in
+    Some (K.DExternal (None, flags, lid, krml_typ env x.dx_ty, []))
 
   | DExn e ->
     E.log_issue0 E.Warning_DefinitionNotTranslated [
@@ -629,8 +652,21 @@ let extern_type_table (p:program) : ML (SMap.t string) =
     | _ -> ());
   t
 
+let extern_value_table (p:program) : ML (SMap.t string) =
+  let t = SMap.create 20 in
+  p |> List.iter (fun d ->
+    match d with
+    | DExternal x ->
+      (match x.dx_target with
+       | Some target when target <> "" ->
+         SMap.add t (string_of_name x.dx_name) target
+       | _ -> ())
+    | _ -> ());
+  t
+
 let print_program (p:program) : ML (list Krml.file) =
   extern_types := extern_type_table p;
+  extern_values := extern_value_table p;
   let env = { names = []; names_t = []; ctor_arity = ctor_table p; tvars_any = false } in
   let ds = p |> List.collect (fun d ->
              match krml_decl env d with

@@ -11236,6 +11236,126 @@ only its own header, with helpers `static` and duplicated (one file alone has
 144 `static` definitions). One unit per `.cu` maps onto §42 with no
 impedance mismatch, so the round offered on grouping is not needed.
 
+# 45 Naming what is already named
+
+Round 45 arrived as a *withdrawal*. Round 44 had ended with an offer to build
+indexed `TExtern` -- `wmma::fragment<matrix_a, 16, 16, 16, __half,
+row_major>` -- if the TensorCore GEMM was the last thing blocking a Kuiper
+build. It was not. Kuiper never emits that type: its own extraction plugin
+declines to, because the indices are erased to unit before it sees them, and
+the shipped `dist/` says so plainly -- the fragment type is never *named* in
+the generated code. It is `auto&`, inferred from a macro call.
+
+So the feature was not needed. What was needed turned out to be three much
+smaller things, all of which are about a name that already exists somewhere
+else and Custard's various opinions about it.
+
+## 45.1 A `custard_extern` target is not an F\* name
+
+`PrintC` printed an external's target through `escape_kw (sanitize t)`.
+`sanitize` maps every byte outside `[A-Za-z0-9_]` to `_`, which is the right
+thing to do to an F\* name that has to become a C identifier -- and exactly
+the wrong thing to do here. `wmma::mma_sync` became `wmma__mma_sync`:
+sanitizing does not make an illegal identifier legal, it makes an existing
+symbol absent.
+
+The external *type* path had been verbatim since §14.5, which is why a
+program could get `auto&` in type position and a mangled call on the next
+line. The value path now matches it. `escape_kw` stays, because a target
+that is a C keyword really is a mistake.
+
+This is not a corner: `wmma::`-qualified names are the *entire* TensorCore
+surface, 2,530 references across 9 names in Kuiper's shipped output, and all
+of them on the callee side.
+
+The negative control is worth stating, because it is the whole argument for
+the fix: substituting the sanitized spelling back into the generated
+`TensorC.dc` by hand gives `implicit declaration of function
+'TC_NS_mk_a'` and then `invalid initializer`. There is no header in which
+that name exists, so nothing downstream can rescue it.
+
+Verbatim raises one question the old spelling hid. Custard emits a prototype
+for an external that has no `[@@custard_c_header]`, and a prototype needs a
+declarator -- `extern void wmma::mma_sync(...)` is not one. So a target that
+is not a C identifier and has no header is now refused, and the message says
+which of the two to add. Sanitizing had turned that into a link error a long
+way from its cause.
+
+## 45.2 A C decoration written in F\* source reaches the C
+
+`Prologue`, `Epilogue`, `Comment` and `CInline` existed as flags, and both
+printers honoured them (§36.3), and nothing in `Extract` ever constructed
+one. The only way to attach a decoration was `B.lift_named` from a rule
+plugin. For a program with 654 `__global__` kernels that means either a rule
+per kernel or a rule that pattern-matches all of them -- to say a thing that
+F\* has had an attribute for since karamel did.
+
+`c_decoration_flags` reads `FStar.Attributes`'s `CPrologue`, `CEpilogue`,
+`Comment` and `CInline` off the definition. The ML extractor has read them
+all along (`FStarC.Extraction.ML.Modul.extract_meta`) and karamel forwards
+them, so it was only Custard's side of the join that was missing.
+
+Two details:
+
+- **Both the sigelt's attributes and the letbinding's are read, and the
+  result is deduplicated.** F\* records a definition's attributes in both
+  places and which one a given attribute lands on is not stable, so reading
+  one is unreliable and reading both emits everything twice. Two `__global__`s
+  is not a redeclaration error, it is a syntax error.
+- **Every specialization of a decorated definition carries the decoration.**
+  That is right for `__global__` -- each specialization is its own kernel --
+  and it is the only answer available, since the attribute is on the source
+  and the source is what was specialized.
+
+Custard does not read the strings. What they mean is a question about the
+target.
+
+## 45.3 An external through karamel was declared and never called
+
+`PrintKrml` emitted the `DExternal` under the `[@@custard_extern]` target,
+via `x.dx_target`, and every *call site* under the F\* name, via
+`lident_of_name`. The result declared one symbol and called another. Nothing
+defined the name that was called; nothing called the name that was declared.
+Neither karamel nor the C compiler had reason to object, because each half
+was well formed on its own -- it is a link error, at best, and it is silent
+up to that point.
+
+The type path had had the right mechanism all along: an `extern_types` table
+and a `type_lident_of_name` that consults it. `extern_values` and
+`value_lident_of_name` are its counterpart, which is the whole fix.
+
+The same path also dropped the `[@@custard_c_header]` include, so even the
+right name would have been undeclared. karamel's `Prologue` flag is verbatim
+text before a declaration, and an `#include` is verbatim text, so the header
+now rides on the `DExternal` and karamel emits it into the generated header
+where the prototype is.
+
+The direct C backend was right about all three. This is the second round in
+which the three backends disagreed about one construct (§44), and the
+pattern is the same both times: the C backend is where the attention has
+been, and the krml path silently inherits whatever nobody looked at.
+
+## 45.4 What the withdrawal was worth
+
+The report that withdrew the feature also built the TensorCore kernel with
+today's IR and nothing else -- an opaque `custard_extern "auto&"` per
+fragment role, a `custard_extern` macro per configuration, and the `wmma::`
+entry points as ordinary externs -- and got Kuiper's shape line for line,
+compiled it under `nvcc -arch=sm_70`, and found a real
+`wmma.mma.sync.aligned.row.row.m16n16k16.f16.f16` in the PTX. The only two
+hand-patches it needed were §45.1 and §45.2.
+
+That is a better outcome than the feature would have been, and it is worth
+recording why the feature looked necessary: the request was made from
+reading a plugin's *intent* rather than its *output*.
+`tests/custard/TensorC.fst` is that shape, reduced to what a C11 compiler can
+host -- a type whose spelling is not an identifier, and calls whose names are
+not identifiers either.
+
+What remains genuinely unknown is whether the per-configuration macro names
+can be *generated* from the erased F\* indices. §34.1 gives a rule reduced
+arguments, so it may be recoverable there; nobody has tried it yet.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -11392,3 +11512,9 @@ impedance mismatch, so the round offered on grouping is not needed.
 | M10βψ | **String equality is `strcmp`** (§44.2) | Done.  Round 44.  `Prims.string` is `const char *`, and both `pat_tests`'s `PConst` case and the `Eq`/`Neq` infix case emitted `==` on one -- a comparison of addresses, which gcc diagnoses as `-Waddress`.  `is_string_ty` plus `strcmp` at both sites, using the `<string.h>` every generated header already includes.  Zero live instances: EverParse's output has no `Prims_string` in it, and no test matched on a string, which is why all three sites survived |
 | M10βω | **`PatStr` and `PatStrKrml`** (§44.1, §44.2) | Done.  Round 44.  The C test gets its strings from a `custard_extern` that `malloc`s a copy, because **the buggy program exits 0 when every string is a literal**: the C compiler pools literals, so comparing them by address agrees by accident, and a test written the obvious way tests the pool.  Confirmed to fail when the `strcmp`s are edited back to `==` by hand.  `PatStrKrml` pins the 368, and pins that the message no longer names the wrong backend |
 | M10γα | **Five Kuiper units under `nvcc`** (§44.3) | Done, round 44, no change required.  Five real kernels extracted as five C units, each compiled under `nvcc` as C++ and `clang -Wall -Wextra -Werror` as C, linked and run; no duplicate global symbol, and all five headers coexist in one TU.  It also sharpens §42.1 from tidiness to soundness: two units hold `Kuiper_Array_Core_slice_read__t` at `u64` and at `u32`, the same generated name at incompatible types, harmless only because both are `static` -- had the `.cui` exported everything a request created, that would have been the common case across 62 units, not a corner one |
+| M10γβ | **A `custard_extern` target is used verbatim** (§45.1) | Done.  Round 45.  `PrintC` printed a value target through `escape_kw (sanitize t)`, which turns `wmma::mma_sync` into `wmma__mma_sync` -- sanitizing does not make an illegal identifier legal, it makes an existing symbol absent.  The external *type* path had been verbatim since §14.5, which is why a program could get `auto&` in type position and a mangled call on the next line.  2,530 `wmma::`-qualified references across 9 names in Kuiper's shipped output, all on the callee side |
+| M10γγ | **A target that cannot be declared** (§45.1) | Done.  Round 45.  Verbatim raises what sanitizing hid: Custard emits a prototype for an external with no `[@@custard_c_header]`, and `extern void wmma::mma_sync(...)` is not a declarator.  Now refused, with a message saying which of the two to add.  The old spelling turned this into a link error a long way from its cause |
+| M10γδ | **Source-level C decorations** (§45.2) | Done.  Round 45.  `Prologue`, `Epilogue`, `Comment` and `CInline` existed as flags, both printers honoured them, and `Extract` never constructed one -- the only route was `B.lift_named` from a rule plugin, which for 654 `__global__` kernels means a rule per kernel to say a thing F\* has had an attribute for since karamel did.  `c_decoration_flags` reads them off the definition, from the sigelt's attributes *and* the letbinding's, deduplicated: F\* records them in both places, which one they land on is not stable, and two `__global__`s is a syntax error rather than a redeclaration |
+| M10γε | **An external karamel declared and never called** (§45.3) | Done.  Round 45.  `PrintKrml` emitted the `DExternal` under the `custard_extern` target and every call site under the F\* name, so the TU declared one symbol and called another and neither half was ill-formed on its own.  `extern_values`/`value_lident_of_name`, the counterpart of the `extern_types` table the type path already had.  The `custard_c_header` include was missing too, so even the right name would have been undeclared; it now rides on the `DExternal` as a karamel `Prologue`.  Second round running in which the three backends disagree about one construct, the same way round: C is where the attention has been |
+| M10γζ | **`TensorC` and `KrmlExt`** (§45.1-§45.3) | Done.  Round 45.  `TensorC.fst` is the TensorCore shape reduced to what a C11 compiler can host: a type whose C spelling is not an identifier, calls whose names are not identifiers, and the three decorations a CUDA kernel is made of, pinned as appearing on the definition and the prototype and **exactly once on each**.  `KrmlExt` asserts by *linking*, which is the only assertion that sees a declaration and a call that name different symbols |
+| M10γη | **Indexed `TExtern` withdrawn** (§45.4) | Withdrawn by the requester, round 45, and worth recording as a method note rather than a feature.  Kuiper never emits `wmma::fragment<...>`: its plugin declines to, because the indices are erased before it sees them, and the shipped `dist/` never names the type at all -- it is `auto&`, inferred from a macro call.  The request had been made from reading the plugin's intent rather than its output.  With §45.1 and §45.2 in, the TensorCore kernel is expressible with today's IR, and was compiled under `nvcc -arch=sm_70` to a real `wmma.mma.sync.aligned.row.row.m16n16k16.f16.f16`.  Still unknown: whether the per-configuration macro names can be *generated* from the erased indices, which §34.1's reduced arguments may make possible |

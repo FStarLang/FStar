@@ -1835,8 +1835,27 @@ let rec ret_cty (t:cty) : ML cty =
   | TArrow (_, _, b) -> ret_cty b
   | _ -> t
 
+(* Section 45.1.  A target that is not a C identifier can be *used* -- it goes
+   into the output verbatim and the header that declares it is included -- but
+   it cannot be *declared* by Custard, because a declaration needs a
+   declarator and [wmma::mma_sync] is not one.  The header is what says where
+   the symbol comes from, so the absence of one is the real mistake here. *)
+let is_c_identifier (s:string) : ML bool =
+  s <> "" &&
+  (String.list_of_string s |> List.for_all (fun c ->
+     let n = FStar.Char.int_of_char c in
+     (n >= 0x41 && n <= 0x5a) || (n >= 0x61 && n <= 0x7a) ||
+     (n >= 0x30 && n <= 0x39) || n = 0x5f))
+
 let extern_decl (x:dexternal) : ML (option string) =
   if Some? x.dx_header then None else
+  let () = match x.dx_target with
+           | Some t when not (is_c_identifier t) ->
+             current := string_of_name x.dx_name;
+             reject ("the external name `" ^ t ^ "'")
+               ["It is not a C identifier, so Custard cannot declare it, and                  no [@@custard_c_header] says which header does.";
+                "Add [@@custard_c_header \"...\"] beside the                  [@@custard_extern] naming the header that declares it."]
+           | _ -> () in
   let nm = match SMap.try_find !externs (string_of_name x.dx_name) with
            | Some t -> t
            | None -> c_name x.dx_name in
@@ -2209,7 +2228,15 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
       SMap.add xt (string_of_name x.dx_name)
         (match x.dx_target with
          | Some "" | None -> c_name x.dx_name
-         | Some t -> escape_kw (sanitize t));
+         (* Section 45.1.  Verbatim, like the external *type* path a few
+            hundred lines up already is.  [sanitize] exists to turn an F*
+            name into a legal C identifier, and this is not an F* name: it is
+            a symbol that already exists on the other side, spelled the way
+            its own language spells it.  Sanitizing [wmma::mma_sync] into
+            [wmma__mma_sync] does not make it legal, it makes it absent.
+            [escape_kw] stays, because a C keyword really would be a
+            mistake. *)
+         | Some t -> escape_kw t);
       (* A unit parameter of an *external* goes too, and unconditionally: the
          function on the other side is C, C has no unit value, and whatever it
          was declared as it was not declared to take one.  There is no body to
