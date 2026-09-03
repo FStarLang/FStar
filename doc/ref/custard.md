@@ -10802,6 +10802,171 @@ What is genuinely absent everywhere is `Float16` and `BFloat16`, in F\*, in
 `KrmlAst`, in `InputConstant` and in `Constant`. Section 40 is what a program
 that needs them can do today; section 38.5 is what adding them would take.
 
+# 42 Separate compilation for C
+
+§33.5 and §34.4 both recorded the same thing: `--custard_unit` and
+`--custard_link` were implemented for the OCaml backend only, and that was the
+largest thing the reports left open. Kuiper ships 62 generated `.cu` files and
+cannot treat whole-program-per-kernel as a workaround.
+
+None of §12.1–12.6 changes. The `.cui` format, the specialization key,
+`Extract.request`'s third answer, the acyclicity argument and the reason
+freezing the layouts is sound are all statements about the IR, and the IR does
+not know which backend will print it. What was missing was entirely a *C*
+question, and it is four questions, not one.
+
+## 42.1 What a C unit offers: the linking interface, and nothing else
+
+The decision that makes the rest fall out: **a C unit's `.cui` describes its
+linking interface**, so it exports what the header file declares and nothing
+that the header file does not.
+
+That is a real narrowing against OCaml, which exports every declaration a
+request created (`Extract.exported_keys` is `st.names`, the whole table). It
+has to be. `PrintC.is_public` marks a declaration `static` unless it is a
+`Root`, and the comment there defends that hard: without it a whole-program C
+file exports every definition it happens to contain, so linking two of them
+together is a symbol collision, and nothing can be inlined across a call by a
+compiler that must assume some other unit might call it. Offering a `static`
+definition in an interface would be offering a downstream unit a symbol it
+cannot name. OCaml has no such problem because every definition in a module is
+nameable from outside it, so there the two sets coincide by accident of the
+module system rather than by design.
+
+So `Driver.unit_entries` gains one filter under `--custard_backend C`: a
+`DLet` that is not `is_public` is dropped. `DType` is kept — every one of
+them, not merely those a public signature mentions, because that is exactly
+what the header already contains and for the reason already written there: a
+`struct` or a `typedef` has no linkage, so there is nothing to hide from the
+linker, and trimming buys an incomplete header and a class of "field has
+incomplete type" errors. `DExternal` was already excluded, for the reason in
+§12.2: an external is a hole a unit *leaves*, not a symbol it provides.
+
+**This removes the need for §12.7's per-unit symbol prefix**, which was the
+one design note §12 left as a sentence. Statics cannot clash, whatever they
+are called. What is left with external linkage is the roots, and a root exists
+because `--custard_entry` named it. Two units can still collide, by both being
+told to export the same definition and then being linked together without one
+linking the other — but that is a user telling two units to own one symbol,
+the linker's message says so, and a prefix would paper over it rather than fix
+it. The prefix can come back the day something needs it; §12.3 says the names
+need not be deterministic, so it was never going to be free.
+
+The cost is that a downstream unit re-specializes anything the upstream kept
+private, and compiles its own `static` copy. Duplication, not a clash — and
+§12.6 already says separate compilation deduplicates nothing it was not told
+about.
+
+## 42.2 Headers include headers
+
+The upstream unit's header *is* the downstream unit's view of it, so the
+downstream unit `#include`s it and does not re-declare anything. Re-declaring
+is not a stylistic alternative: §14.10 is the record of what happens when the
+direct backend writes a prototype of its own making, `extern custard_unit
+EverCrypt_AutoConfig2_init(custard_unit)`, against a definition that was
+declared otherwise. It compiles, and it is wrong.
+
+So an imported declaration is skipped at every emission site — no forward
+declaration, no `typedef`, no `struct` body, no prototype, no definition, no
+global initializer — while still being handed to the printer exactly as it is
+today, because the tables it builds (the type table, the constructor table,
+the arity table, the unit-parameter and `void`-result tables, and
+`build_renames`) all have to see an import or a later pass will make a
+decision about it that its home unit already made differently. That is the
+same split §12.4 rule 2 describes for the middle of the pipeline: present so
+that this unit's passes can see its shape, absent from what is emitted.
+
+The header file to include is recorded in the `.cui` rather than derived from
+the unit's name, because `-o` decides the name and the interface is written
+before that is a settled question in only one place.
+
+**Types therefore stop being a problem, and this is the reason to export all
+of them.** A header carries the whole type language, so if two units both
+reached `(uint32_t & uint32_t)` and both defined its tuple `struct`, a
+translation unit including both headers would see the same `struct` defined
+twice, which is an error in C and in C++ alike. Because every `DType` is in
+the `.cui`, the downstream unit's request for that tuple resolves through the
+link and it emits nothing. The alternative — wrapping each generated type in
+an `#ifndef` guard on its own name — would have been wrong, and instructively
+so: §12.3 says names are *not* deterministic, so two units can give one name
+to two different types, and a name-keyed guard would silently keep the first
+and misinterpret every value of the second.
+
+One thing does stay duplicated, and gets a guard for exactly the reason the
+generated types could not:
+
+```c
+#ifndef CUSTARD_UNIT_DEFINED
+#define CUSTARD_UNIT_DEFINED
+typedef uint8_t custard_unit;
+#endif
+```
+
+`custard_unit` is a fixed name for a fixed type that this compiler chose once
+(§5.1). Two spellings of it are the same spelling, so the guard cannot hide a
+conflict. It is emitted unconditionally, not only under `--custard_unit`, so
+that a hand-written file may include two independently generated headers.
+
+## 42.3 The initializer is namespaced, and someone has to call it
+
+A unit with globals emits `custard_init_globals`, one fixed name per unit, and
+two of those in one link is a duplicate symbol. Under `--custard_unit U` it
+becomes `U_init_globals`; with no unit name the old spelling is kept, so every
+existing whole-program output is unchanged.
+
+Renaming it raises the question the whole-program case never had to answer:
+who calls it. The unit holding the `Entrypoint` emits `main`, and `main` calls
+each linked unit's initializer, in `--custard_link` order, before its own. The
+`.cui` records the initializer's name, and absence of a name is how a
+consumer knows a unit has no globals and there is nothing to call — the same
+convention the whole-program header already uses, where the prototype is
+emitted when there is anything to do and omitted otherwise.
+
+`--custard_link` order is the user's order and need not be a topological one,
+so the initializer body gets a re-entry guard under `--custard_unit`:
+
+```c
+void U_init_globals(void) {
+  static bool custard_initialized = false;
+  if (custard_initialized) return;
+  custard_initialized = true;
+  ...
+```
+
+which makes calling it twice harmless and makes a unit free to call its own
+dependencies' initializers later, if it ever needs to. The guard is not
+emitted in whole-program mode: there is exactly one caller there and the
+branch would be noise in output meant to be read.
+
+## 42.4 Two fields, and a version bump
+
+`Unit.header` grows `uh_header` and `uh_init`, both `option string` and both
+`None` for an OCaml unit, and `Unit.current_version` is bumped. A `.cui` is
+read with `Util.load_value_from_file`, which is positional, so this is not a
+compatible change and is not meant to be one — the version check exists so
+that a stale interface is an error rather than a miscompilation.
+
+## 42.5 What the MVP does not do
+
+- **No re-export.** A unit's `.cui` lists what that unit emitted, so if `C`
+  uses something `A` compiled and `B` merely passed through, `C` links both
+  `A.cui` and `B.cui`. This is the ordinary C situation — you pass the linker
+  all the objects — and it is what §12.6's "a unit is whatever was reachable
+  and not already in a linked interface" already implied.
+- **No symbol prefix**, per §42.1.
+- **No output splitting.** §12.9 is an OCaml problem: it exists because
+  hand-written OCaml realizations reference modules Custard compiles, and C
+  has no realizations and no DAG requirement on translation units.
+- **The karamel backend still refuses.** karamel does its own bundling and
+  has its own opinion about what a compilation unit is; wiring `.cui` into it
+  would be answering a question that has not been asked.
+
+`tests/custard/SepLibC.fst` and `SepAppC.fst` are the test, and they check
+with `nm` what the compiler cannot: that the exported root has external
+linkage under its own name, that the private helper does not appear in the
+symbol table of either object, and that the library's definitions appear in
+exactly one of the two.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -10943,3 +11108,8 @@ that needs them can do today; section 38.5 is what adding them would take.
 | M10βθ | **The keyword set is complete with respect to the printer** (§41.3) | Closed, no change.  Round 41's three unchecked shapes -- `sizeof((5))`, `case ((1)):`, `else ((p));` -- cannot be produced: `sizeof(` is emitted at two sites and always around a *type*, where the parentheses are mandatory; `else` at three, always before `if (` or a brace; `switch` and `case` not at all.  Recorded because the form of the argument is the point.  A gate on generated code should be justified by what the generator can write, not by what a corpus happens to contain, and the second is what grepping the output would have given |
 | M10βι | **What nvcc said** (§41.4) | Closed, no change.  §36 was designed without an `nvcc` and three of its answers are now checked against one.  `Prologue` on the prototype as well as the definition was load-bearing rather than defensive: `nvcc` rejects a `__host__` function redeclared with `__global__`, so the flag on the definition alone would have made *every* generated kernel fail to compile.  The output is a kernel and not C that resembles one -- `nvcc -ptx` gives `.entry`, `cuobjdump -symbols` gives `STO_ENTRY`, and `-Xcompiler "-Wall,-Wextra,-Werror"` is clean.  And `lift_named`'s guarantee is about the C source, which `nvcc` compiles as C++: `kernel` is `_Z6kernelj` in the object file, which profilers demangle and a lookup by string does not, and a program doing the latter wants an `extern "C"` that is a `Prologue` away.  The name is the point: the same kernel through the existing plugin is `__hoisted_reduce_u32_0` |
 | M10βκ | **Gap 1, checked** (§41.5) | Closed, no change, and a correction.  Reported five times as "float widths dropped from `KrmlAst.width`", most recently as what stops an existing karamel plugin building against upstream.  `FStarC.Extraction.KrmlAst.width` has `Float32 | Float64`; so does karamel's `Constant.width`; so does its `InputConstant.width`, which is the one that matters, being the wire type of the `.krml` file, marshalled positionally, and carrying the `Bool` width the internal type lacks for exactly that reason with a comment saying so.  §38's krml backend went end to end through all of it before this was checked, which is the evidence.  What is genuinely absent everywhere is `Float16` and `BFloat16` -- §40 is what a program needing them can do today, §38.5 is what adding them would take |
+| M10βλ | **A C unit offers its linking interface** (§42.1) | Done.  The decision that made the rest of §42 fall out, and the one that had to be made first: a `.cui` for the C backend exports what the header declares, so `Driver.unit_entries` drops a `DLet` that `PrintC.is_public` refuses.  Asymmetric with OCaml, which exports every declaration a request created, and necessarily so -- `static` is what makes two whole-program C files linkable at all, and a `static` definition offered in an interface is a symbol the consumer cannot name.  It also stands §12.7's per-unit symbol prefix down: statics cannot clash whatever they are called, and what is left with external linkage is what `--custard_entry` asked for |
+| M10βμ | **Headers include headers** (§42.2) | Done.  An imported declaration is skipped at every emission site and still handed to the printer, so the type, constructor, arity, unit-parameter and rename tables see it -- the same split §12.4 rule 2 makes in the middle of the pipeline.  The header file to include is recorded in the `.cui`, since `-o` names it.  Exporting every `DType` is what keeps two headers from defining one `struct` twice; the alternative of an `#ifndef` guard per generated type would have been unsound, because §12.3 says names are not deterministic and two units may give one name to two types.  `custard_unit` does get a guard, for the reason the generated types could not have one: it is a fixed name for a fixed type, so two spellings of it are the same spelling |
+| M10βν | **A namespaced global initializer** (§42.3) | Done.  `custard_init_globals` is one fixed name per unit and two in a link is a duplicate symbol, so under `--custard_unit U` it is `U_init_globals`; the unqualified spelling is kept with no unit name, leaving every existing whole-program output unchanged.  Renaming it raised the question whole-program mode never had: `main` calls each linked unit's initializer in `--custard_link` order before its own, and since that order is the user's and need not be topological, the body gets a `static bool` re-entry guard -- under `--custard_unit` only, since in whole-program mode there is exactly one caller and the branch would be noise |
+| M10βξ | **`uh_header`, `uh_init`, and a version bump** (§42.4) | Done.  A `.cui` is loaded positionally by `Util.load_value_from_file`, so growing the header is deliberately not a compatible change; the version check is there so that a stale interface is an error rather than a miscompilation |
+| M10βο | **A two-unit C test** (§42.5) | Done.  `tests/custard/SepLibC.fst` and `SepAppC.fst`, compiled separately, linked, and run.  `nm` checks the three things a C compiler cannot: the exported root has external linkage under its own name, the private helper is in neither object's symbol table, and the library's definitions are in exactly one of the two -- which is the only direct evidence that the downstream unit reused rather than recompiled |

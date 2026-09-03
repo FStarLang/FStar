@@ -132,6 +132,14 @@ val imports : state -> ML (list (decl & option type_info))
 (** Every file the linked units emitted into; see {!Unit.link_homes}. *)
 val link_homes : state -> ML (list string)
 
+(** The header file of each linked unit, in link order; see
+    {!Unit.link_headers}. *)
+val link_headers : state -> ML (list string)
+
+(** The global initializer of each linked unit, in link order; see
+    {!Unit.link_inits}. *)
+val link_inits : state -> ML (list string)
+
 (** The specialization key each emitted declaration was created for, by the
     declaration's name.  This is what a `.cui` exports as the identity of an
     entry: a downstream unit recognizes an already-compiled definition by the

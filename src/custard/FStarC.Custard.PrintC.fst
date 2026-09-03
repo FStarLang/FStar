@@ -1876,6 +1876,34 @@ let rec dedup (xs : list string) : ML (list string) =
    it, so nothing else can keep it alive -- but a lifted function is usually
    an implementation detail of the call the rule emitted, not an export.  A
    rule that wants it [static] passes [Private] and gets it. *)
+let no_unit : unit_info = { cu_name = None; cu_headers = []; cu_inits = [] }
+
+(* Section 42.3.  One fixed name per unit is a duplicate symbol the moment two
+   units are linked, so [--custard_unit] namespaces it.  With no unit name the
+   old spelling is kept, so a whole-program output is unchanged. *)
+let init_name (cu:unit_info) : ML string =
+  match cu.cu_name with
+  | Some u -> sanitize u ^ "_init_globals"
+  | None   -> "custard_init_globals"
+
+(* A declaration a linked unit compiled is present so that the printer's tables
+   see its shape, and is emitted by nobody: the header it came from is included
+   instead (section 42.2). *)
+let local (d:decl) : ML bool = None? (imported_unit d)
+
+(* The globals this unit has to set up at startup.  Shared by the printer and
+   by {!init_globals_name}, so that what the interface promises and what the
+   source defines cannot drift apart. *)
+let global_inits_of (p:program) : ML (list dlet) =
+  p |> List.collect (fun d ->
+    if not (local d) then [] else
+    match d with
+    | DLet l when Nil? l.dl_binders && not (has_static_init l) -> [l]
+    | _ -> [])
+
+let init_globals_name (cu:unit_info) (p:program) : ML (option string) =
+  if Cons? (global_inits_of p) then Some (init_name cu) else None
+
 let is_public (l:dlet) : ML bool =
   l.dl_flags |> List.existsb Root? &&
   not (l.dl_flags |> List.existsb Entrypoint?) &&
@@ -2129,7 +2157,12 @@ let record_parents (p:program) : ML unit =
     else []) in
   bfs roots
 
-let print_program (base:string) (p:program) : ML (string & string) =
+let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string) =
+  (* Section 42.2.  An imported declaration is in [p] so that the tables below
+     see its shape, and out of every list that is emitted: the unit that
+     compiled it has a header, and that header is included instead.  Writing a
+     declaration of our own for it is what section 14.10 is the record of. *)
+  let init_name = init_name cu in
   record_parents p;
   let tt = SMap.create 50 in
   let ct = SMap.create 50 in
@@ -2219,11 +2252,20 @@ let print_program (base:string) (p:program) : ML (string & string) =
      rather\n\
         than void, so that it can be stored in a variable and returned like \
      any\n\
-        other value. */\n\
-     typedef uint8_t custard_unit;\n" in
+        other value.  Guarded because two generated headers may meet in one\n\
+        translation unit (section 42.2): this is a fixed name for a fixed \
+     type,\n\
+        so two spellings of it are the same spelling. */\n\
+     #ifndef CUSTARD_UNIT_DEFINED\n\
+     #define CUSTARD_UNIT_DEFINED\n\
+     typedef uint8_t custard_unit;\n\
+     #endif\n" in
 
   let includes =
-    p |> List.collect (fun d ->
+    (* Section 42.2: the linked units' headers, first, since this unit's
+       declarations may mention their types. *)
+    (cu.cu_headers |> List.map (fun h -> "#include \"" ^ h ^ "\"")) @
+    (p |> List.collect (fun d ->
       match d with
       | DExternal ({ dx_header = Some h }) -> ["#include \"" ^ h ^ "\""]
       | DType ty ->
@@ -2231,10 +2273,11 @@ let print_program (base:string) (p:program) : ML (string & string) =
           match f with
           | Extern (_, Some h) -> ["#include \"" ^ h ^ "\""]
           | _ -> [])
-      | _ -> []) in
+      | _ -> []) ) in
   let includes = dedup includes in
 
   let exts = p |> List.collect (fun d ->
+    if not (local d) then [] else
     match d with
     | DExternal x -> (match extern_decl x with Some s -> [s] | None -> [])
     | DExn _ ->
@@ -2249,6 +2292,7 @@ let print_program (base:string) (p:program) : ML (string & string) =
      group made cyclic by pointers is one SCC and the order inside it is
      arbitrary. *)
   let fwds = p |> List.collect (fun d ->
+    if not (local d) then [] else
     match d with
     | DType t ->
       current := string_of_name t.dt_name;
@@ -2256,7 +2300,8 @@ let print_program (base:string) (p:program) : ML (string & string) =
     | _ -> []) in
 
   let tys = sort_types (p |> List.collect (fun d ->
-                          match d with DType t -> [t] | _ -> []))
+                          match d with
+                          | DType t when local d -> [t] | _ -> []))
             |> List.collect (fun t ->
     current := string_of_name t.dt_name;
     (match type_decl t with Some s -> [s] | None -> [])) in
@@ -2274,6 +2319,7 @@ let print_program (base:string) (p:program) : ML (string & string) =
      the source either way; the header declares it [extern], which is the one
      spelling that does not also define it in every unit that includes it. *)
   let protos = p |> List.collect (fun d ->
+    if not (local d) then [] else
     match d with
     | DLet l when Nil? l.dl_binders -> [storage l ^ global_decl l]
     | DLet l when Cons? l.dl_binders ->
@@ -2282,6 +2328,7 @@ let print_program (base:string) (p:program) : ML (string & string) =
     | _ -> []) in
 
   let pub_decls = p |> List.collect (fun d ->
+    if not (local d) then [] else
     match d with
     | DLet l when is_public l && Nil? l.dl_binders ->
       current := string_of_name l.dl_name;
@@ -2290,6 +2337,7 @@ let print_program (base:string) (p:program) : ML (string & string) =
     | _ -> []) in
 
   let defs = p |> List.collect (fun d ->
+    if not (local d) then [] else
     match d with
     | DLet l when Nil? l.dl_binders -> []
     | DLet l -> [comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
@@ -2298,35 +2346,48 @@ let print_program (base:string) (p:program) : ML (string & string) =
 
   (* In declaration order, which the SCC pass has already made a topological
      one: a global whose initializer reads another global sees it set. *)
-  let inits = p |> List.collect (fun d ->
-    match d with
-    | DLet l when Nil? l.dl_binders && not (has_static_init l) -> [global_init l]
-    | _ -> []) in
+  let inits = global_inits_of p |> List.map global_init in
   (* A program with no globals has nothing to initialize, and an empty
      function that [main] calls anyway is two lines of noise plus a block
      that says nothing.  It is also part of this file's interface, so it is
      emitted whenever there is anything to do and omitted otherwise -- a
      caller that has to know which is a caller that can read the header. *)
+  (* The re-entry guard is emitted only under [--custard_unit].  There it is
+     load-bearing: [--custard_link] order is the user's and need not be a
+     topological one, so an initializer may be reached twice.  In whole-program
+     mode there is exactly one caller and the branch would be noise in output
+     meant to be read. *)
+  let init_guard =
+    match cu.cu_name with
+    | None   -> ""
+    | Some _ -> "  static bool custard_initialized = false;\n" ^
+                "  if (custard_initialized) return;\n" ^
+                "  custard_initialized = true;\n" in
   let init_fn = match inits with
                 | [] -> ""
-                | _ -> "void custard_init_globals(void) {\n" ^
+                | _ -> "void " ^ init_name ^ "(void) {\n" ^ init_guard ^
                        String.concat "" inits ^ "}\n" in
   let init_proto = match inits with
                    | [] -> ""
-                   | _ -> "void custard_init_globals(void);\n" in
+                   | _ -> "void " ^ init_name ^ "(void);\n" in
 
   (* Custard compiles standalone programs (section 4.4).  An entry point
      returning a machine integer is the process exit status, which is what a C
      [main] returns; anything else is run for its effect. *)
   let mains = p |> List.collect (fun d ->
+    if not (local d) then [] else
     match d with
     | DLet l when l.dl_flags |> List.existsb Entrypoint? ->
       current := string_of_name l.dl_name;
       let args = String.concat ", "
                    (kept_binders l |> List.map (fun _ -> unit_value)) in
       let call = c_name l.dl_name ^ "(" ^ args ^ ")" in
-      let pre = "int main(void) {\n" ^
-                (match inits with [] -> "" | _ -> "  custard_init_globals();\n") in
+      (* Section 42.3.  Every linked unit's globals are set up before this
+         one's, in [--custard_link] order; their prototypes come from the
+         headers included above. *)
+      let calls = (cu.cu_inits |> List.map (fun i -> "  " ^ i ^ "();\n")) @
+                  (match inits with [] -> [] | _ -> ["  " ^ init_name ^ "();\n"]) in
+      let pre = "int main(void) {\n" ^ String.concat "" calls in
       (match l.dl_ret with
        | TInt _ -> [pre ^ "  return (int)" ^ call ^ ";\n}\n"]
        | TUnit -> [pre ^ "  " ^ call ^ ";\n  return 0;\n}\n"]

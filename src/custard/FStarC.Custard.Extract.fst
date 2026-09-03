@@ -4236,6 +4236,10 @@ let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.impo
 
 let link_homes (st:state) : ML (list string) = Unit.link_homes st.links
 
+let link_headers (st:state) : ML (list string) = Unit.link_headers st.links
+
+let link_inits (st:state) : ML (list string) = Unit.link_inits st.links
+
 let exported_keys (st:state) : ML (list (string & string)) =
   SMap.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
 

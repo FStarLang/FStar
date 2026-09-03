@@ -62,6 +62,14 @@ type header = {
   uh_backend: string;
   uh_options: list (string & string);
   uh_digests: list (string & string);
+  (** The header file this unit emitted, for a downstream unit to `#include`
+      (section 42.2).  Recorded rather than derived from [uh_name] because
+      [-o] is what names it.  [None] for a backend with no header file. *)
+  uh_header:  option string;
+  (** The name of this unit's global initializer, absent when the unit has no
+      globals and so there is nothing for a downstream [main] to call
+      (section 42.3). *)
+  uh_init:    option string;
 }
 
 type iface = {
@@ -107,3 +115,13 @@ val is_empty : links -> ML bool
     taken: this run may not emit a file of the same name, or the target linker
     would see two compilation units with one name. *)
 val link_homes : links -> ML (list string)
+
+(** The header file of each linked unit that has one, in `--custard_link`
+    order.  The C backend `#include`s these rather than re-declaring what they
+    contain (section 42.2). *)
+val link_headers : links -> ML (list string)
+
+(** The global initializer of each linked unit that has one, in
+    `--custard_link` order.  The unit holding the entry point calls these
+    before its own (section 42.3). *)
+val link_inits : links -> ML (list string)

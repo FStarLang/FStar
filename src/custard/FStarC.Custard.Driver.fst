@@ -267,6 +267,14 @@ let unit_entries (keys:list (string & string)) (homes:SMap.t string)
        an external's signature from the source anyway, exactly as this one
        did, so nothing is lost by leaving it out. *)
     if DExternal? d then [] else
+    (* Section 42.1.  A C unit's interface is its linking interface: what the
+       header declares and nothing else.  A [static] definition offered here
+       would be a symbol the consumer cannot name.  Types are all kept, since
+       the header carries the whole type language -- and because that is what
+       keeps two headers from defining one [struct] twice (section 42.2). *)
+    if Options.custard_backend () = "C"
+       && (match d with DLet dl -> not (C.is_public dl) | _ -> false)
+    then [] else
     let d, ti =
       match d with
       | DLet dl -> DLet { dl with dl_body = unit_expr }, None
@@ -282,6 +290,7 @@ let unit_entries (keys:list (string & string)) (homes:SMap.t string)
                      SMap.try_find homes (string_of_name (name_of_decl d)) }])
 
 let write_unit_iface (st:Extract.state) (homes:SMap.t string)
+                     (hdr_file:option string) (init:option string)
                      (prog:program) (infos:list (name & type_info))
   : ML unit =
   match Options.custard_unit () with
@@ -294,6 +303,8 @@ let write_unit_iface (st:Extract.state) (homes:SMap.t string)
         Unit.uh_backend = Options.custard_backend ();
         Unit.uh_options = Unit.layout_options ();
         Unit.uh_digests = Extract.loaded_digests st;
+        Unit.uh_header  = hdr_file;
+        Unit.uh_init    = init;
       };
       Unit.ui_entries = unit_entries (Extract.exported_keys st) homes prog infos;
     } in
@@ -319,16 +330,17 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                    definitions reachable from the entry points."
     ];
   phase "entrypoints" (fun () -> check_entrypoints deps env roots);
-  (* Section 12 is specified for the OCaml backend.  The C and karamel
-     backends need a header and a linker story of their own, which they do not
-     have yet; failing here is better than emitting a file that refers to
-     symbols nothing declares. *)
+  (* Section 42.5.  The C backend links now; karamel does its own bundling and
+     has its own opinion about what a compilation unit is, so wiring a `.cui`
+     into it would be answering a question nobody has asked.  Failing here is
+     better than emitting a file that refers to symbols nothing declares. *)
   if (Some? (Options.custard_unit ()) || Cons? (Options.custard_links ()))
-     && Options.custard_backend () <> "OCaml" then
+     && Options.custard_backend_krml () then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text "Separate compilation (--custard_unit, --custard_link) is \
-            implemented for --custard_backend OCaml only.";
-      text "The C and karamel backends still compile a whole program at once."
+      text "Separate compilation (--custard_unit, --custard_link) is not \
+            implemented for the karamel backends.";
+      text "Use --custard_backend OCaml or --custard_backend C, or compile \
+            the whole program at once."
     ];
   (* Looking definitions up in the environment instantiates their universes,
      which needs the union-find; by the time a backend runs it has been put in
@@ -383,23 +395,23 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
           | Some fs -> fs |> List.iter (fun (m, ds) ->
                          ds |> List.iter (fun d ->
                            SMap.add homes (string_of_name (name_of_decl d)) m)) in
-  (* After [Rename], because the names a `.cui` exports are the names the
-     generated source actually spells. *)
-  phase "iface" (fun () -> write_unit_iface st homes prog infos);
-  if Options.custard_dump_ir () then
-    Format.print_string (program_to_string prog ^ "\n");
-  if Options.custard_warn_any () then warn_any prog;
   (* Custard emits one file for the whole program, so -o is unambiguous here,
-     unlike in the per-module backends. *)
+     unlike in the per-module backends.  Settled before the interface is
+     written, because a C unit's interface has to record the *name* of the
+     header a downstream unit includes, and [-o] is what decides it
+     (section 42.2). *)
   let backend = Options.custard_backend () in
   let ofile =
     match Options.output_to () with
     | Some fn -> fn
     | None ->
       (* A named unit's file has to be named after the unit: that is what makes
-         its OCaml module name the one downstream units qualify with. *)
+         its OCaml module name the one downstream units qualify with.  In C
+         the unit name is used as written, since nothing capitalizes a C file
+         and the header is what a human types into an [#include]. *)
       let base = match Options.custard_unit () with
-                 | Some u -> OCaml.module_name_of_unit u
+                 | Some u -> if backend = "C" then u
+                             else OCaml.module_name_of_unit u
                  | None -> "Custard" in
       Find.prepend_output_dir
         (if Options.custard_backend_krml () then base ^ ".krml"
@@ -407,6 +419,34 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
          | "C" -> base ^ ".c"
          | _ -> base ^ ".ml")
   in
+  (* The header is named after the source, and the source includes it by that
+     name, so the two travel together and a caller has something to include
+     (section 24). *)
+  let stem =
+    let b = FStarC.Filepath.basename ofile in
+    (* The suite writes [-o Foo.dc], the default is [Foo.c]: drop whatever the
+       extension is rather than matching on one of them. *)
+    let parts = FStarC.String.split ['.'] b in
+    if List.length parts <= 1 then b
+    else FStarC.String.concat "." (List.rev (List.tl (List.rev parts))) in
+  (* Section 42.  Empty unless this run was told it is a unit or given one to
+     link against; [no_unit] is then exactly the whole-program behaviour. *)
+  let cu : C.unit_info =
+    if backend <> "C" then C.no_unit
+    else { C.cu_name    = Options.custard_unit ();
+           C.cu_headers = Extract.link_headers st;
+           C.cu_inits   = Extract.link_inits st } in
+  (* After [Rename], because the names a `.cui` exports are the names the
+     generated source actually spells. *)
+  phase "iface" (fun () ->
+    let hdr_file, init =
+      if backend = "C"
+      then Some (stem ^ ".h"), C.init_globals_name cu (List.map fst imports @ prog)
+      else None, None in
+    write_unit_iface st homes hdr_file init prog infos);
+  if Options.custard_dump_ir () then
+    Format.print_string (program_to_string prog ^ "\n");
+  if Options.custard_warn_any () then warn_any prog;
   match backend with
   | "OCaml" when Some? files ->
     (* Section 12.9.  One whole-program run, one file per F* source module:
@@ -417,17 +457,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
         BU.write_file (Find.prepend_output_dir (m ^ ".ml")) src))
   | "KrmlC" | "KrmlRust" -> Krml.write_program ofile prog
   | "C" ->
-    (* The header is named after the source, and the source includes it by
-       that name, so the two travel together and a caller has something to
-       include (section 24). *)
-    let stem =
-      let b = FStarC.Filepath.basename ofile in
-      (* The suite writes [-o Foo.dc], the default is [Foo.c]: drop whatever
-         the extension is rather than matching on one of them. *)
-      let parts = FStarC.String.split ['.'] b in
-      if List.length parts <= 1 then b
-      else FStarC.String.concat "." (List.rev (List.tl (List.rev parts))) in
-    let hdr, src = C.print_program stem (List.map fst imports @ prog) in
+    let hdr, src = C.print_program stem cu (List.map fst imports @ prog) in
     BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)
                      (stem ^ ".h")) hdr;
     BU.write_file ofile src

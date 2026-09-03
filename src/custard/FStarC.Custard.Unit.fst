@@ -29,7 +29,7 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 module SMap = FStarC.SMap
 
-let current_version = 10
+let current_version = 11
 
 (* The IR is plain first-order data -- no references, no closures, no
    hashconsing -- so the same mechanism that stores checked files stores a
@@ -116,24 +116,41 @@ let entry_to_string (e:entry) : ML string =
 
 let iface_to_string (i:iface) : ML string =
   let h = i.ui_header in
-  BU.fmt4 "unit %s (format %s, backend %s)\n%s"
+  let opt (label:string) (v:option string) : string =
+    match v with Some f -> "\n  " ^ label ^ ": " ^ f | None -> "" in
+  BU.fmt4 "unit %s (format %s, backend %s)%s"
     h.uh_name (show h.uh_version) h.uh_backend
-    (BU.fmt3 "  options: %s\n  %s checked files\n\n%s"
+    (opt "header" h.uh_header ^ opt "init" h.uh_init ^ "\n" ^
+     BU.fmt3 "  options: %s\n  %s checked files\n\n%s"
        (String.concat ", " (h.uh_options |> List.map (fun (k, v) -> k ^ "=" ^ v)))
        (show (List.length h.uh_digests))
        (String.concat "" (i.ui_entries |> List.map entry_to_string)))
 
 (** {1 The index} *)
 
+(* What a linked unit is, beyond the entries it contributed.  Kept in
+   [--custard_link] order because section 42.3's [main] calls the
+   initializers in that order, and a hash table has no order to offer. *)
+type unit_ref = {
+  ur_name:   string;
+  ur_header: option string;
+  ur_init:   option string;
+}
+
 (* [string & entry]: the unit an entry came from, kept alongside it so a
    backend can qualify the name without a second lookup. *)
-type links = SMap.t (string & entry)
+type links = {
+  lk_tbl:   SMap.t (string & entry);
+  lk_units: list unit_ref;   (* in --custard_link order *)
+}
 
-let empty_links : links = SMap.create 1
+let empty_links : links = { lk_tbl = SMap.create 1; lk_units = [] }
 
 let load_links (fns:list string) : ML links =
-  let tbl : links = SMap.create 1000 in
-  fns |> List.iter (fun fn ->
+  let tbl : SMap.t (string & entry) = SMap.create 1000 in
+  (* [List.map] rather than a reference, so that [lk_units] comes out in
+     --custard_link order without a reversal to get wrong. *)
+  let units = fns |> List.map (fun fn ->
     let i = read_iface fn in
     let u = i.ui_header.uh_name in
     i.ui_entries |> List.iter (fun e ->
@@ -150,18 +167,32 @@ let load_links (fns:list string) : ML links =
           text (BU.fmt1 "The key is: %s" e.ue_key);
           text "Link only one of them, or merge the two units."
         ]
-      | _ -> SMap.add tbl e.ue_key (u, e)));
+      | _ -> SMap.add tbl e.ue_key (u, e));
+    { ur_name   = u;
+      ur_header = i.ui_header.uh_header;
+      ur_init   = i.ui_header.uh_init }) in
   if O.custard_dump_cui () && fns <> [] then
     BU.print1 "Custard: linked %s specializations.\n" (show (List.length (SMap.keys tbl)));
-  tbl
+  { lk_tbl = tbl; lk_units = units }
 
 let lookup (l:links) (k:string) : ML (option (string & entry)) =
-  SMap.try_find l k
+  SMap.try_find l.lk_tbl k
 
-let is_empty (l:links) : ML bool = SMap.keys l = []
+let is_empty (l:links) : ML bool = SMap.keys l.lk_tbl = [] && Nil? l.lk_units
 
 let link_homes (l:links) : ML (list string) =
-  SMap.fold l (fun _ (_, e) acc ->
+  SMap.fold l.lk_tbl (fun _ (_, e) acc ->
     match e.ue_home with
     | Some h -> if List.mem h acc then acc else h :: acc
     | None -> acc) []
+
+(* A unit contributing no entry still contributes a header and an
+   initializer: it may have exported nothing this run happened to request and
+   still have globals that have to be set up. *)
+let link_headers (l:links) : ML (list string) =
+  l.lk_units |> List.collect (fun u ->
+    match u.ur_header with Some h -> [h] | None -> [])
+
+let link_inits (l:links) : ML (list string) =
+  l.lk_units |> List.collect (fun u ->
+    match u.ur_init with Some i -> [i] | None -> [])

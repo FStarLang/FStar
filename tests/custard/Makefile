@@ -887,6 +887,78 @@ NOGREP_SepApp += "type sepLib_named"
 GREP_SepApp  += "SepLib.sepLib_describe"
 GREP_SepApp  += "SepLib.SepLib_Rect"
 
+# Section 42: separate compilation for C.  The same shape as SepLib/SepApp
+# above and a different set of assertions, because C is where the questions
+# were: what a unit offers (42.1), what a downstream unit may not define twice
+# (42.2), and who initializes the globals (42.3).
+$(OUTPUT_DIR)/SepLibC.cui: $(CACHE_DIR)/SepLibC.fst.checked
+	$(call msg, "CUSTARD-UNIT-C", SepLibC)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_unit SepLibC \
+	  --custard_entry SepLibC.scale --custard_entry SepLibC.manhattan \
+	  --custard_entry SepLibC.origin --odir $(OUTPUT_DIR) SepLibC.fst
+
+$(OUTPUT_DIR)/SepLibC.c: $(OUTPUT_DIR)/SepLibC.cui
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/SepAppC.c: $(CACHE_DIR)/SepAppC.fst.checked $(OUTPUT_DIR)/SepLibC.cui
+	$(call msg, "CUSTARD-LINK-C", SepAppC)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/SepLibC.cui \
+	  --custard_main SepAppC.main SepAppC.fst -o $@
+	$(Q)for p in $(CGREP_SepAppC); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    || { echo "ERROR: SepAppC output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(CNOGREP_SepAppC); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    && { echo "ERROR: SepAppC output should not contain $$p"; exit 1; }; done; true
+
+# It reaches the library through the library's header, and defines nothing the
+# library defined -- not the struct, not either exported function, not the
+# global.  The one thing it *does* compile again is the static helper, which
+# was not on offer: that is what section 42.1 costs, and it is asserted rather
+# than tolerated so that a change of mind about it shows up here.
+CGREP_SepAppC   += "include \"SepLibC.h\""
+CGREP_SepAppC   += "SepLibC_init_globals();"
+CGREP_SepAppC   += "SepLibC_scale("
+CGREP_SepAppC   += "static uint32_t SepLibC_double_it"
+CNOGREP_SepAppC += "struct SepLibC_point_s {"
+CNOGREP_SepAppC += "SepLibC_point SepLibC_scale(SepLibC_point p) {"
+CNOGREP_SepAppC += "uint32_t SepLibC_manhattan(SepLibC_point p) {"
+CNOGREP_SepAppC += "SepLibC_point SepLibC_origin;"
+# This unit has no globals of its own, so it has no initializer to declare.
+CNOGREP_SepAppC += "SepAppC_init_globals"
+
+$(OUTPUT_DIR)/SepAppC.ran: $(OUTPUT_DIR)/SepLibC.c $(OUTPUT_DIR)/SepAppC.c
+	$(call msg, "CC", SepAppC)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -c -x c \
+	  $(OUTPUT_DIR)/SepLibC.c -o $(OUTPUT_DIR)/SepLibC.o
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -c -x c \
+	  $(OUTPUT_DIR)/SepAppC.c -o $(OUTPUT_DIR)/SepAppC.o
+	$(Q)$(CC) $(OUTPUT_DIR)/SepLibC.o $(OUTPUT_DIR)/SepAppC.o \
+	  -o $(OUTPUT_DIR)/SepAppC.exe
+	$(call msg, "RUN-C", SepAppC)
+	$(Q)$(OUTPUT_DIR)/SepAppC.exe
+	@# What the C compiler cannot check, and what the greps above can only
+	@# check textually: the linkage each definition actually came out with.
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/SepLibC.o | grep -qw SepLibC_scale \
+	  || { echo "ERROR: SepLibC_scale is not an exported symbol"; exit 1; }
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/SepLibC.o | grep -q double_it \
+	  && { echo "ERROR: SepLibC_double_it escaped into the symbol table"; \
+	       exit 1; }; true
+	@# The downstream unit defines none of the library, which is the only
+	@# direct evidence that it reused rather than recompiled.
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/SepAppC.o | grep -q SepLibC_ \
+	  && { echo "ERROR: SepAppC defines part of SepLibC"; exit 1; }; true
+	@# ... except the static helper, which it does have, privately.
+	$(Q)nm --defined-only $(OUTPUT_DIR)/SepAppC.o | grep -q SepLibC_double_it \
+	  || { echo "ERROR: SepAppC has no copy of SepLibC_double_it"; exit 1; }
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/SepAppC.ran
+
 $(OUTPUT_DIR)/SepApp.exe: $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml
 	$(call msg, "OCAMLOPT", SepApp)
 	$(FSTAR_EXE) --ocamlopt -I $(OUTPUT_DIR) $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml -o $@
@@ -1005,7 +1077,7 @@ EGREP_FloatLit += "is not a floating-point literal"
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(KRML_TESTS) \
-                  SepApp SplitHi SplitLo
+                  SepApp SepAppC SplitHi SplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
 #
