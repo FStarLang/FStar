@@ -1147,6 +1147,32 @@ REJECT_TESTS += FloatLit
 CODE_FloatLit = 380
 EGREP_FloatLit += "is not a floating-point literal"
 
+# Section 46.1/46.2.  FStar.Char.char is uint32_t on both C paths.  Both tests
+# check their own answer rather than grepping for a spelling (section 43.2):
+# ChrLit computes 97 from the constant 'a', ChrTy from a char parameter.
+C_TESTS    += ChrLit
+KRML_TESTS += ChrLit
+CGREP_ChrLit += "((uint32_t)97)"
+
+# Section 46.2.  No character constant anywhere -- a char in argument position
+# alone used to produce a header that would not compile.  The absent typedef
+# is pinned because its presence was the bug.
+C_TESTS    += ChrTy
+KRML_TESTS += ChrTy
+CNOGREP_ChrTy += "FStar_Char_char_s"
+
+# Section 46.3.  A [try] whose body never raises.  The krml backend used to
+# translate it to a bare abort, discarding the protected call; it is now
+# refused, so this is a reject test on that backend.  The NOEGREP pins the
+# other half of 46.3: the direct C backend refuses an exception handler too,
+# so the diagnostic must not send the reader there.
+REJECT_TESTS += TryOk
+FLAGS_TryOk += --custard_backend KrmlC
+CODE_TryOk := 368
+EGREP_TryOk += "an exception handler has no karamel representation"
+NOEGREP_TryOk += "does accept it"
+
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(KRML_TESTS) \
                   SepApp SepAppC SplitHi SplitLo
@@ -1164,13 +1190,26 @@ ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
   $(foreach v,$(filter $(p)_%,$(.VARIABLES)),\
     $(if $(filter $(patsubst $(p)_%,%,$(v)),$(ALL_TEST_NAMES) TESTS),,$(v)))))
 
+# Section 46.4.  A NOEGREP says a phrase is absent from *one test's* output.
+# That is not the question worth asking about a phrase that names the wrong
+# component: what matters is whether the compiler can still emit it, from any
+# site, reached by any program.  Round 46 found two live sites of "not
+# supported by the C backend" that a passing NOEGREP had said nothing about,
+# one of which put the sentence in a Rust binary.  A grep over the sources is
+# the check that would have caught them, and it costs a second.
+CUSTARD_SRC := $(wildcard $(CURDIR)/../../src/custard/*.fst)
+
+.PHONY: check-sources
+check-sources:
+	$(Q)! grep -n "supported by the C backend" $(CUSTARD_SRC) 	  || { echo "ERROR: a diagnostic names 'the C backend' from the sources"; 	       echo "Custard has more than one C backend; name the one that is"; 	       echo "refusing, and say what the other one does (section 46.3)."; 	       exit 1; }
+
 .PHONY: check-settings
 check-settings:
 	$(Q)test -z "$(ORPHAN_SETTINGS)" || { \
 	  echo "ERROR: setting(s) for no registered test: $(ORPHAN_SETTINGS)"; \
 	  echo "Either register the test, or delete the setting."; exit 1; }
 
-all: check-settings
+all: check-settings check-sources
 
 # Section 37.1: the gate has its own gate.  A matcher that silently stops
 # recognizing one of the three shapes it was written for reads like coverage
@@ -1209,3 +1248,4 @@ GREP_Realized     = "FStar_Pervasives.Mkdtuple3" \
 # No record recovery, no projection, and the erased GTot call is gone.
 # No record recovery, no projection, no erased GTot call -- and no [Obj.t].
 NOGREP_Realized   = "u__1" "gmagic" "Obj.t"
+

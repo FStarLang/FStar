@@ -194,11 +194,25 @@ let krml_op (o:op) : K.op =
 (* The primitive types karamel knows natively.  Everything else is a
    [TQualified], which karamel resolves against the declarations we emit. *)
 let prim_type (n:name) : option K.typ =
-  match String.concat "." (n.ns @ [n.id]) with
+  match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
   | "Prims.unit" -> Some K.TUnit
   | "Prims.bool" -> Some K.TBool
   | "Prims.int" -> Some (K.TInt K.CInt)
   | "Prims.string" -> Some (K.TQualified (["Prims"], "string"))
+  (* Section 46.2.  [FStar.Char] is a realized module (section 8.2), so its
+     [char] arrived here as an opaque [TQualified] and got an opaque
+     [typedef struct FStar_Char_char_s FStar_Char_char;] -- against krmllib's
+     own [typedef uint32_t FStar_Char_char;] in
+     [include/krml/internal/types.h], which is included unconditionally.  The
+     unit did not compile, and needed no character *constant* to not compile:
+     a char in argument position was enough.
+
+     The representation was never in doubt.  krmllib says [uint32_t] and
+     [PrintC.builtin_type] has said [uint32_t] since section 6; the krml path
+     was the one place that had not been told.  Saying it here also retires
+     the declaration, because [krml_decl] drops a [DType] whose name has a
+     [prim_type] -- the type is the target's, so it is not ours to declare. *)
+  | "FStar.Char.char" -> Some (K.TInt K.UInt32)
   | _ -> None
 
 (* The definitions karamel supplies itself.  It prepends a [Prims] file of its
@@ -277,22 +291,41 @@ let krml_const (c:constant) : ML K.expr =
   | CInt (v, b, None) -> K.EConstant (K.CInt, krml_int_lit v b)
   | CInt (v, b, Some sw) -> K.EConstant (krml_width sw, krml_int_lit v b)
   | CFloat (v, fw) -> K.EConstant (krml_fwidth fw, krml_float_lit fw v)
-  (* karamel has no character type; a program that reaches this is not a C
-     program, and saying so here is better than emitting something that means
-     something else. *)
-  | CChar _ -> K.EAbortS "Custard: character constants are not supported by the C backend"
+  (* Section 46.1.  A character constant is the [uint32_t] code point that
+     [prim_type] and [PrintC.constant] both already say the type is.  This was
+     an [EAbortS] naming "the C backend", which was wrong twice over: it
+     compiled a *Rust* program that panicked at run time, and the direct C
+     backend it named is precisely the one that has always handled this. *)
+  | CChar c -> K.EConstant (K.UInt32, show (FStar.Char.int_of_char c))
 
 (* Section 44.1.  A construct karamel's AST cannot hold has to stop the
    extraction, and it has to say so the way the C backend says it: a numbered
    diagnostic naming the construct, not a [failwith].  The three sites that
    used one also said "the C backend" from a file that is not it, which sends
-   a reader looking in the wrong printer. *)
-let krml_reject (#a:Type) (what:string) : ML a =
+   a reader looking in the wrong printer.
+
+   Section 46.3.  Whether the *other* backend accepts the construct is a fact
+   about each site, not about the karamel backend, so each site says it.  The
+   shared sentence used to hedge with "may", and the hedge was wrong at four
+   of the six sites: only a string and a float pattern survive the crossing.
+   Sending a reader to a backend that will refuse them too is a worse answer
+   than saying there is nowhere to go. *)
+let krml_reject_with (#a:Type) (what:string) (where:string) : ML a =
   E.raise_error0 E.Error_CustardNoCRepresentation
     [text ("Custard: " ^ what ^ " has no karamel representation.");
-     text "The karamel backend's AST has no node for it, so there is no \
-           translation to give.  The direct C backend (--custard_backend C) \
-           may accept it."]
+     text ("The karamel backend's AST has no node for it, so there is no \
+            translation to give.  " ^ where)]
+
+(* The construct is karamel's limitation alone. *)
+let krml_reject_c_ok (#a:Type) (what:string) : ML a =
+  krml_reject_with what
+    "The direct C backend (--custard_backend C) does accept it."
+
+(* No backend has it; the program has to change. *)
+let krml_reject (#a:Type) (what:string) : ML a =
+  krml_reject_with what
+    "The direct C backend (--custard_backend C) has no representation for \
+     it either."
 
 (* -------------------------------------------------------------------- *)
 (* Patterns                                                             *)
@@ -309,6 +342,11 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
   | PConst (CInt (v, b, None)) -> (env, K.PConstant (K.CInt, krml_int_lit v b))
   | PConst (CInt (v, b, Some sw)) ->
     (env, K.PConstant (krml_width sw, krml_int_lit v b))
+  (* Section 46.1.  Once the type is [uint32_t] a character pattern is an
+     integer pattern, and refusing it here while the direct C backend matches
+     on it would be the same disagreement in a new place. *)
+  | PConst (CChar c) ->
+    (env, K.PConstant (K.UInt32, show (FStar.Char.int_of_char c)))
   (* Section 44.1.  karamel's [pattern] has no case for a string, float or
      character constant.  This used to fall to a fresh variable pattern -- and
      a variable pattern matches *everything*, so the branch swallowed the
@@ -321,9 +359,8 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
       match c with
       | CString _ -> "a string pattern"
       | CFloat _ -> "a floating-point pattern"
-      | CChar _ -> "a character pattern"
       | _ -> "this constant pattern" in
-    krml_reject what
+    krml_reject_c_ok what
   | PCtor (n, ps) when is_tuple_ctor_name n ->
     let env, ps = krml_pats env ps in
     (env, K.PTuple ps)
@@ -488,8 +525,20 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EAny -> K.EAny
   | EAbort s -> K.EAbortS s
 
-  | ERaise _ | ETry _ ->
-    K.EAbortS "Custard: exceptions are not supported by the C backend"
+  (* Section 46.3.  These were one [EAbortS], which is a *translation*, not a
+     refusal -- and for [ETry] a translation that discards the expression it
+     was protecting.  A [try safe 7ul with _ -> 99ul] whose body never raises
+     became a bare abort: not the wrong answer, no answer, and karamel said
+     only "the exception has no counterpart and was dropped", at Warning
+     level, exit 0.
+
+     [ETry] is refused, as the direct C backend already refuses it.  [ERaise]
+     may stay an abort *because* [ETry] is refused: with no handler anywhere
+     in an accepted program, every raise is uncaught, and an uncaught raise is
+     abnormal termination.  That is also what keeps [krml_typ]'s
+     [TExn -> TAny] honest -- the value is never inspected. *)
+  | ETry _ -> krml_reject "an exception handler"
+  | ERaise _ -> K.EAbortS "Custard: an uncaught exception was raised"
 
 and krml_branch (env:kenv) (br:branch) : ML K.branch =
   let p, g, body = br in

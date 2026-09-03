@@ -11356,6 +11356,153 @@ What remains genuinely unknown is whether the per-configuration macro names
 can be *generated* from the erased F\* indices. §34.1 gives a rule reduced
 arguments, so it may be recoverable there; nobody has tried it yet.
 
+# 46 Two constants and a handler
+
+Round 46 stayed inside the two functions round 45 had edited and asked what
+*else* was in them. Both answers were the same shape as round 44's: a
+construct the karamel path could not hold, translated into something that
+was not a refusal and not the program either.
+
+The recurring finding is worth naming before the cases. Custard has two C
+backends, and every bug in this round and the last three is a place where
+they disagree about one construct. That is not a coincidence: the direct C
+backend is where the attention has been, so it is usually the one that is
+right, and the krml path is where a construct quietly means something else.
+
+## 46.1 A character constant is a `uint32_t`
+
+`krml_const`'s `CChar` case was
+
+```fstar
+| CChar _ -> K.EAbortS "Custard: character constants are not supported by the C backend"
+```
+
+which is wrong in three separate ways, and the third is the one that
+matters.
+
+It is not a refusal. `EAbortS` is a *translation*: the program extracts
+with no diagnostic, compiles, links, and then aborts when control reaches
+the constant. On the Rust backend that is a `panic!` in a Rust binary,
+quoting a message about the C backend.
+
+The message names the wrong component. `PrintKrml` is not the C backend.
+
+And the claim is false. The direct C backend has handled character
+constants since §6 -- `PrintC.constant` gives `((uint32_t)97)` and
+`builtin_type` maps `FStar.Char.char` to `uint32_t`. The sentence told a
+reader that the one backend which does support this is the one that does
+not.
+
+The representation was never in question. It is `uint32_t` in `PrintC`, it
+is `uint32_t` in krmllib's `include/krml/internal/types.h`, and the krml
+path was the only place that had not been told. So `prim_type` now says it,
+`krml_const` emits `EConstant (UInt32, "97")`, and a character *pattern* --
+refused separately, as "a character pattern" -- is now an integer pattern
+like any other, because that is what it is once the type is settled.
+
+`ChrLit.fst` checks its own answer rather than grepping for a spelling
+(§43.2), and its match is deliberately out of source order:
+
+```fstar
+match letter () with
+| 'b' -> 1l
+| 'a' -> 0l
+| _ -> 2l
+```
+
+If a character pattern were ever to fall back to a variable pattern -- the
+§44.1 failure -- the first branch would swallow the scrutinee and the answer
+would be 1.
+
+## 46.2 The type alone did not compile
+
+Found while trying to run §46.1's KrmlC output, and separate from it.
+
+`FStar.Char` is a realized module (§8.2), so `FStar.Char.char` reached
+`krml_typ` as an opaque `TQualified` and got an opaque forward declaration:
+
+```c
+typedef struct FStar_Char_char_s FStar_Char_char;
+```
+
+against krmllib's own `typedef uint32_t FStar_Char_char;`, which every
+generated header includes. `error: conflicting types for 'FStar_Char_char'`.
+
+This needs **no character constant**. A function whose only char is a
+*parameter* extracts with rc=0 and no diagnostic, and produces a header that
+cannot be compiled. `ChrTy.fst` is that program, and it gets its char from a
+`custard_extern` precisely so that it contains no literal.
+
+The fix is the same line as §46.1's, which is the point: `krml_decl` already
+drops a `DType` whose name has a `prim_type`, because a type the target
+defines is not ours to declare. Teaching `prim_type` the representation
+retires the declaration for free. No widening of the `KrmlRust`-only
+`is_krml_model` gate was needed -- that had looked like the mechanism, and
+it was the wrong one.
+
+## 46.3 `ETry` deleted the expression it protected
+
+```fstar
+| ERaise _ | ETry _ ->
+  K.EAbortS "Custard: exceptions are not supported by the C backend"
+```
+
+For `ERaise` an abort is defensible. For `ETry` it is not conservative --
+it **discards the protected expression**. A `try safe 7ul with _ -> 99ul`
+whose body never raises became
+
+```c
+uint32_t TryOk_attempt(void)
+{
+  KRML_HOST_EPRINTF(...);
+  KRML_HOST_EXIT(255U);
+}
+```
+
+The call to `safe` is gone. Not the wrong answer -- no answer. And karamel
+reported only `Warning 242: the exception TryOk.Boom has no karamel
+counterpart and was dropped`, and exited 0.
+
+`ETry` is now refused, as the direct C backend has always refused it
+(`PrintC.fst:1036`). `ERaise` may stay an abort **because** `ETry` is
+refused: with no handler anywhere in an accepted program every raise is
+uncaught, and abnormal termination is what an uncaught raise means. That is
+also what keeps `krml_typ`'s `TExn -> TAny` honest, since the value is never
+inspected.
+
+One thing round 46 raised about §44.1's own fix. `krml_reject`'s shared
+second line said the direct C backend *may* accept the construct, and the
+hedge was wrong at four of its six sites: a string and a float pattern
+survive the crossing; a pattern disjunction, a pattern guard, a constant
+pattern of no known kind and an exception handler do not. Sending a reader
+to a backend that will refuse them too is worse than saying there is nowhere
+to go. The sentence is now per-site, `krml_reject_c_ok` against
+`krml_reject`, and `TryOk` pins the absence of the wrong one.
+
+## 46.4 What a `NOEGREP` does not check
+
+Round 44 added `NOEGREP_PatStrKrml += "not supported by the C backend"`,
+which pins the phrase as absent from *that test's* output. It was absent,
+and the test passed, and the phrase was still emitted by two other sites in
+the same file -- one of which put it in a Rust binary.
+
+The check worth having was never about one test's output. It was whether
+the compiler can still emit the sentence, from any site, reached by any
+program, and
+
+```
+grep -n "supported by the C backend" src/custard/*.fst
+```
+
+answers that in a second. It is now `make check-sources`, and it runs as
+part of `all`.
+
+This generalizes past the one phrase. A test pins what a program produced;
+some properties are about what the compiler *contains*, and those want a
+check over the sources, not over an output. The two are not substitutes,
+and the cheap one had been left out.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -11518,3 +11665,9 @@ arguments, so it may be recoverable there; nobody has tried it yet.
 | M10γε | **An external karamel declared and never called** (§45.3) | Done.  Round 45.  `PrintKrml` emitted the `DExternal` under the `custard_extern` target and every call site under the F\* name, so the TU declared one symbol and called another and neither half was ill-formed on its own.  `extern_values`/`value_lident_of_name`, the counterpart of the `extern_types` table the type path already had.  The `custard_c_header` include was missing too, so even the right name would have been undeclared; it now rides on the `DExternal` as a karamel `Prologue`.  Second round running in which the three backends disagree about one construct, the same way round: C is where the attention has been |
 | M10γζ | **`TensorC` and `KrmlExt`** (§45.1-§45.3) | Done.  Round 45.  `TensorC.fst` is the TensorCore shape reduced to what a C11 compiler can host: a type whose C spelling is not an identifier, calls whose names are not identifiers, and the three decorations a CUDA kernel is made of, pinned as appearing on the definition and the prototype and **exactly once on each**.  `KrmlExt` asserts by *linking*, which is the only assertion that sees a declaration and a call that name different symbols |
 | M10γη | **Indexed `TExtern` withdrawn** (§45.4) | Withdrawn by the requester, round 45, and worth recording as a method note rather than a feature.  Kuiper never emits `wmma::fragment<...>`: its plugin declines to, because the indices are erased before it sees them, and the shipped `dist/` never names the type at all -- it is `auto&`, inferred from a macro call.  The request had been made from reading the plugin's intent rather than its output.  With §45.1 and §45.2 in, the TensorCore kernel is expressible with today's IR, and was compiled under `nvcc -arch=sm_70` to a real `wmma.mma.sync.aligned.row.row.m16n16k16.f16.f16`.  Still unknown: whether the per-configuration macro names can be *generated* from the erased indices, which §34.1's reduced arguments may make possible |
+| M10γθ | **A character constant is a `uint32_t`** (§46.1) | Done.  Round 46.  `krml_const`'s `CChar` was an `EAbortS`, which is a translation and not a refusal: the program extracted with no diagnostic, compiled, linked, and aborted at run time -- on the Rust path, a `panic!` in a Rust binary quoting a message about the C backend.  The message also named the wrong component, and its claim was false in the other direction: the direct C backend has emitted `((uint32_t)97)` since §6.  `prim_type` now carries the representation krmllib and `PrintC` had both always agreed on, and a character *pattern* follows from it |
+| M10γι | **An opaque `FStar_Char_char`** (§46.2) | Done.  Round 46.  `FStar.Char` is realized, so its `char` reached `krml_typ` as an opaque `TQualified` and got `typedef struct FStar_Char_char_s FStar_Char_char;` against krmllib's `typedef uint32_t FStar_Char_char;` -- a header that would not compile, from a program with **no character constant in it**, extracted at rc=0 with no diagnostic.  Fixed by the same line as §46.1, because `krml_decl` already drops a `DType` that has a `prim_type`.  The `KrmlRust`-only `is_krml_model` gate had looked like the mechanism and was not |
+| M10γκ | **`ETry` discarded its own body** (§46.3) | Done.  Round 46.  `ERaise` and `ETry` shared one `EAbortS`.  For `ERaise` that is defensible; for `ETry` it deletes the protected expression, so a `try` whose body never raises returned no answer rather than the wrong one, and karamel said only "the exception was dropped", at warning level, exit 0.  `ETry` is refused as `PrintC` already refused it; `ERaise` may stay an abort *because* `ETry` is refused, which is also what keeps `TExn -> TAny` honest |
+| M10γλ | **`krml_reject` says where to go** (§46.3) | Done.  Round 46.  §44.1's shared second line hedged that the direct C backend *may* accept the construct, and the hedge was wrong at four of six sites -- only a string and a float pattern survive the crossing.  Split into `krml_reject_c_ok` and `krml_reject`; `TryOk` pins the absence of the wrong sentence |
+| M10γμ | **`make check-sources`** (§46.4) | Done.  Round 46.  A `NOEGREP` pins a phrase as absent from one test's output; round 44's passed while two other sites in the same file still emitted the phrase, one of them into a Rust binary.  Whether the *compiler* can still emit a sentence is a question about the sources, and a grep answers it in a second.  Runs as part of `all`.  The general point is that a test pins what a program produced, and some properties are about what the compiler contains |
+| M10γν | **`ChrLit`, `ChrTy` and `TryOk`** (§46.1-§46.3) | Done.  Round 46.  All three check their own answer rather than grepping for a spelling (§43.2).  `ChrLit`'s match is deliberately out of source order, so a character pattern that fell back to a variable pattern would return 1 instead of 0.  `ChrTy` takes its char from a `custard_extern` so that it contains no literal, which is what makes it a test of §46.2 rather than of §46.1.  `TryOk` is a reject test on the krml backend; its negative control put the old `EAbortS` back and confirmed that `attempt()` compiles to a bare abort with the call to `safe` gone |
