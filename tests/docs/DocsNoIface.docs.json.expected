@@ -1,0 +1,1 @@
+{"schema":"fstar-module-docs","version":1,"module":"DocsNoIface","interface":false,"declarations":[{"name":"DocsNoIface.double","kind":"let","signature":"x: Prims.int -> Prims.int","range":{"file":"DocsNoIface.fst","start_line":10,"start_col":0,"end_line":10,"end_col":32},"doc":"Doubles 'x'. Documentation may also be attached to a definition in a module with no interface."}]}

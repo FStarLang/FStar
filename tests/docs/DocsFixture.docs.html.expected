@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>DocsFixture</title>
+<style>body { font-family: sans-serif; margin: 2em auto; max-width: 50em; }
+h1 { font-size: 1.4em; }
+.decl { border-top: 1px solid #ddd; padding: 0.6em 0; }
+.name { font-family: monospace; font-weight: bold; }
+.kind { color: #666; font-size: 0.85em; margin-left: 0.5em; }
+.sig { font-family: monospace; white-space: pre-wrap; color: #333; }
+.where { color: #888; font-size: 0.8em; }
+.doc { margin-top: 0.4em; white-space: pre-wrap; }
+.empty { color: #888; font-style: italic; }
+</style>
+</head><body>
+<h1>DocsFixture</h1>
+<p class="where">interface, schema fstar-module-docs version 1</p>
+<div class="decl"><div><span class="name">DocsFixture.incr</span><span class="kind">val</span></div><div class="sig">x: Prims.int -&gt; Prims.int</div><div class="where">DocsFixture.fsti(16,0-16,22)</div><div class="doc">Increments &#x27;x&#x27;. This text is written in the interface, which is what clients of this module see. Opaque text is escaped by the HTML renderer: &lt;unsafe&gt; &amp; &quot;quoted&quot;.</div></div>
+<div class="decl"><div><span class="name">DocsFixture.colour</span><span class="kind">type</span></div><div class="sig">Type0</div><div class="where">DocsFixture.fsti(24,5-24,11)</div><div class="doc">A tiny colour. The typechecker copies the attributes of a type definition onto each of its data constructors, so this text must be reported for &#x27;colour&#x27; and for neither &#x27;Red&#x27; nor &#x27;Blue&#x27;.</div></div>
+</body></html>

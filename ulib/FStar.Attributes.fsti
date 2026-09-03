@@ -422,3 +422,37 @@ val desugar_of_variant_record (type_name: string): unit
 
 (** Tag for implicits that are to be solved by a tactic. *)
 val defer_to (#a:Type) (tag : a) : unit
+
+(** [doc "..."] attaches documentation to a top-level declaration.
+
+    This is *explicit* authoring only: there is no comment sugar that
+    fills this attribute in, it must be written as an ordinary
+    attribute on an ordinary top-level declaration, e.g.
+
+     {[
+        [@@doc "Adds one to [x]."]
+        val incr (x:int) : int
+     ]}
+
+    The payload is an opaque string: F* attaches no meaning to its
+    contents and does not parse it. Ordinary attribute typechecking
+    still enforces that [doc] receives exactly one string argument.
+    Consumers (the IDE [lookup] request with ["documentation"] in
+    [requested-info], and the [--export_docs] JSON export) only ever see
+    the string.
+
+    Note that the payload must be a *string literal*. Attributes are
+    typechecked but not normalized before being recorded in a checked
+    module, so [doc (msg ^ "!")] is well-typed but records an
+    unevaluated term. [--export_docs] reports that as an unrecognized
+    attribute payload and skips the declaration; the IDE protocol has
+    no per-field diagnostic channel, so its [documentation] field is
+    [null].
+
+    This attribute is only read off top-level declarations. In
+    particular, an attribute on an inductive type definition is copied
+    by the typechecker onto each of its data constructors; the
+    documentation readers deliberately ignore data constructors so that
+    such inherited text is never reported as the constructor's own
+    documentation. *)
+val doc (text: string) : Tot unit

@@ -1,0 +1,4 @@
+* Warning 278 at DocsNoIface.fst(26,0-26,27):
+  - Ignoring a 'doc' attribute whose payload is not a string literal.
+  - Payload: DocsNoIface.greeting ^ ", world"
+

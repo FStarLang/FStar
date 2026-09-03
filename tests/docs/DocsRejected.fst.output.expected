@@ -1,0 +1,10 @@
+* Info at DocsRejected.fst(11,29-11,30):
+  - Expected failure:
+  - Expected expression of type Prims.string got expression 5 of type Prims.int
+
+* Info at DocsRejected.fst(14,35-14,40):
+  - Expected failure:
+  - Too many arguments to function of type text: Prims.string -> Prims.unit
+  - Got 2 arguments
+  - Remaining type is Prims.unit
+

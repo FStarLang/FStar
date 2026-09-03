@@ -189,6 +189,45 @@ Guidelines for the changelog:
     concrete definition instead; overloading resolves a name by type but is not
     parametric polymorphism.
 
+## Documentation attributes (experimental)
+
+  * **A top-level declaration may now carry documentation, written
+    explicitly as an ordinary attribute.** `FStar.Attributes.doc` takes a
+    string, which F* stores verbatim and never interprets: there is no
+    comment syntax, no markdown, and no rendering in the compiler.
+
+    ```fstar
+    [@@doc "Increments 'x'."]
+    val incr (x:int) : int
+    ```
+
+    The text is preserved in the checked module, and is reported in two
+    places. The interactive `lookup` request returns it in the
+    `documentation` field when `"documentation"` is in `requested-info`; a
+    name with no documentation still answers `null`, as before.
+
+    `fstar.exe --export_docs Mod.fst.checked` emits, on standard output, a
+    versioned JSON index of the documentation of that module's public
+    top-level declarations, with a schema name and version, fully qualified
+    names, declaration kinds, printed signatures, and source ranges. When the
+    interface's checked file is available next to the implementation's, the
+    interface is used. This JSON is the supported way to consume F*
+    documentation: the checked file format remains private.
+
+    `.scripts/fstardoc/docs_json_to_html.py` is a tiny experimental renderer
+    that turns that JSON, and nothing else, into a static HTML page. See
+    `tests/docs` for the end-to-end fixture.
+
+    Known limitations: documentation is read only off top-level `val`, `let`,
+    `type` and `assume` declarations. Data constructors, projectors,
+    discriminators, record fields, binders and effect declarations are out of
+    scope; in particular, a type's attributes are copied by the typechecker
+    onto its constructors and generated projectors, and that inherited text is
+    deliberately not reported. Attributes are typechecked but not normalized
+    before being recorded, so the payload must be a string *literal*:
+    `[@@doc (a ^ b)]` is well-typed but records an unevaluated term, which
+    `--export_docs` reports with warning 278 and skips.
+
 ## Pulse
 
   * A Pulse conditional whose postcondition is annotated may now also carry a

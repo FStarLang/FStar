@@ -1,0 +1,5 @@
+{"query-id": "1", "query": "push", "args": {"kind": "lax", "code": "module DocsFixture\n", "line": 1, "column": 0}}
+{"query-id": "2", "query": "push", "args": {"kind": "lax", "code": "[@@doc \"Implementation-side text, which clients of this module never see.\"]\nlet incr (x:int) : int = x + 1\n", "line": 2, "column": 0}}
+{"query-id": "3", "query": "push", "args": {"kind": "lax", "code": "[@@doc \"Implementation-side documentation cannot fill an intentional gap in the interface.\"]\nlet decr (x:int) : int = x - 1\n", "line": 4, "column": 0}}
+{"query-id": "4", "query": "lookup", "args": {"context": "code", "symbol": "DocsFixture.incr", "requested-info": ["documentation"]}}
+{"query-id": "5", "query": "lookup", "args": {"context": "code", "symbol": "DocsFixture.decr", "requested-info": ["documentation"]}}

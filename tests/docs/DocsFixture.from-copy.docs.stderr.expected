@@ -1,0 +1,4 @@
+* Error 129:
+  - The implementation was checked against an interface, but its authoritative
+    checked interface could not be loaded from:
+  - _output/DocsFixture.impl-copy.checked
