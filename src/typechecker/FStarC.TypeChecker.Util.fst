@@ -225,7 +225,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
           U.comp_flags c |> BU.prefix_until (function DECREASES _ -> true | _ -> false)
       in
       let fallback () =
-        let bs, c = U.arrow_formals_comp tarr in
+        let bs, c = U.arrow_formals_comp_strict tarr in
         match get_decreases c with
         | Some (pfx, DECREASES d, sfx) ->
            let c = Env.comp_set_flags env c (pfx @ sfx) in
@@ -239,11 +239,11 @@ let extract_let_rec_annotation env (lb:letbinding) :
       | Some annot ->
         let bs, c =
           match n_opt with
-          | Some n -> N.get_n_binders env n tarr
+          | Some n -> N.get_n_binders_no_unrefine env n tarr
           | None -> un_arrow tarr
         in
         let n_bs = List.length bs in
-        let bs', c' = N.get_n_binders env n_bs annot in
+        let bs', c' = N.get_n_binders_no_unrefine env n_bs annot in
         if List.length bs' <> n_bs
         then raise_error rng Errors.Fatal_LetRecArgumentMismatch [
                  text "Arity mismatch on let rec annotation";
@@ -341,7 +341,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
                 let n_bs = List.length bs in
                 let tarr, lbtyp, recheck =
                   reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt (Some n_bs) in
-                let bs', c = N.get_n_binders env n_bs tarr in
+                let bs', c = N.get_n_binders_no_unrefine env n_bs tarr in
                 if List.length bs' <> n_bs
                 then failwith "Impossible"
                 else let subst = U.rename_binders bs' bs in

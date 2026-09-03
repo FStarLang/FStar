@@ -82,5 +82,12 @@ computation type. Only grabs up to [n] binders, and normalizes only as
 needed to discover the shape of the arrow. The binders are opened. *)
 val get_n_binders : Env.env -> int -> term -> ML (list binder & comp)
 
+(* Same, but it does not look for binders underneath a refinement of an arrow
+   type: [get_n_binders] does, and in doing so it silently drops the
+   refinement's predicate. Callers that intend to rebuild the type from the
+   result must use this one. If [n] binders cannot be found this way, it falls
+   back to [get_n_binders], so it never reports fewer binders than that does. *)
+val get_n_binders_no_unrefine : Env.env -> int -> term -> ML (list binder & comp)
+
 val maybe_unfold_head : Env.env -> term -> ML (option term)
 

@@ -686,7 +686,7 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
       let previous_dec = decreases_clause actuals expected_c in
 
       let guard_one_letrec (l, arity, t, u_names) =
-        let formals, c = N.get_n_binders env arity t in
+        let formals, c = N.get_n_binders_no_unrefine env arity t in
 
         (* This should never happen since `termination_check_enabled`
          * takes care to not return an arity bigger than the one in
@@ -4884,7 +4884,7 @@ and build_let_rec_env _top_level env lbs : ML (list letbinding & env_t & guard_t
 
      (* Grab binders from the type. At most as many as we have in
       * the abstraction. *)
-     let formals, c = N.get_n_binders env nactuals lbtyp in
+     let formals, c = N.get_n_binders_no_unrefine env nactuals lbtyp in
 
      // TODO: There's a similar error in check_let_recs, would be nice
      // to remove this one.

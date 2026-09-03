@@ -3513,9 +3513,12 @@ let unfold_head_once env t =
   | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
   | _ -> None
 
-let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : ML (list binder & comp) =
+let get_n_binders_gen (split : term -> ML (list binder & comp))
+                      (env:Env.env) (steps : list step) (n:int) (t:term)
+  : ML (list binder & comp)
+  =
   let rec aux (retry:bool) (n:int) (t:term) : ML (list binder & comp) =
-    let bs, c = U.arrow_formals_comp t in
+    let bs, c = split t in
     let len = List.length bs in
     match bs, c with
     (* Got no binders, maybe retry after normalizing *)
@@ -3546,7 +3549,25 @@ let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : ML (list
   in
   aux true n t
 
+let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : ML (list binder & comp) =
+  get_n_binders_gen U.arrow_formals_comp env steps n t
+
 let get_n_binders env n t = get_n_binders' env [] n t
+
+(* [arrow_formals_comp] descends into a refinement whose underlying type is an
+   arrow, and throws the refinement away. That is fine for a caller that only
+   wants to count binders, but not for one that rebuilds a type from the
+   binders it got back: for a [let rec] annotated
+   [x:t -> Pure (f:(y:s -> u){phi})], the refinement [phi] *is* the definition's
+   [ensures], and losing it means the definition is never checked against it.
+   So look for binders with the strict splitter, and only fall back to the
+   unrefining one when that finds too few (which cannot lose anything the old
+   behaviour kept). *)
+let get_n_binders_no_unrefine env n t =
+  let bs, c = get_n_binders_gen U.arrow_formals_comp_strict env [] n t in
+  if List.length bs = n
+  then bs, c
+  else get_n_binders env n t
 
 let () =
   __get_n_binders := get_n_binders'
