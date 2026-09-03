@@ -2288,6 +2288,84 @@ let keep_effectful_res_typ env (lc:comp) (t:typ) : ML bool =
   is_refinement (U.comp_result lc) &&
   not (is_refinement t)
 
+(* A precondition is a *trailing implicit* binder of squash type, so an arrow
+   that has one has exactly one binder more than an otherwise identical arrow
+   that does not.  Subtyping on its own cannot bridge that: it would have to
+   relate the term's *result* type to an arrow, which it never is.  What is
+   needed is an eta-expansion of the term, after which the two arrows line up
+   binder for binder and [tc_abs] supplies the missing implicit binders itself
+   -- exactly as it already does for a term written as a lambda.
+
+   This is what lets a function that has no precondition be used, point-free,
+   where one that has a precondition is expected: [fst] against
+   [x: (a & b) -> Ghost a (requires p x) (ensures q)], say.
+
+   We only try this when the two arities genuinely differ, when the extra
+   binders on whichever side has more are all implicit, and when [e] is not
+   already an abstraction of the arity we would give it.  In that case the
+   direct check is bound to fail, so nothing is lost by trying.  The last
+   condition also rules out a loop: the term we hand back to [tc_term] is an
+   abstraction of exactly [n] binders, so it cannot come back here.
+
+   The mismatch runs in both directions.  A term whose type has *fewer*
+   binders than expected is the [fst] case above.  A term whose type has
+   *more* is its mirror: a function that itself has a precondition, used where
+   one without a precondition is expected, as in
+   [f: (x: t -> Pure u (requires p) (ensures q))] passed where [t -> u] is
+   wanted.  Either way [e] is applied to the smaller of the two arities' worth
+   of arguments, taken from the term's own binders (whose sorts are known)
+   rather than the expected type's (which may still be unification variables).
+
+   The abstraction, however, binds *all* of the expected type's binders: the
+   extra implicits are trailing, so binding them here is what makes the result
+   have the expected arity.  [tc_abs] would not insert them --- it only adds
+   *leading* implicits --- and leaving them to the body would push the same
+   mismatch one level down, where there is no arrow left to eta-expand. *)
+let try_eta_expand_to_expected_typ env (cheap:bool) (e:term) (t1:typ) (t2:typ) (use_eq:bool)
+  : ML (option (term & comp & guard_t)) =
+  (* [cheap] callers run on every result-type weakening, so they must not pay
+     for a normalization on each one: they only look at types that are already
+     syntactically arrows, and leave the rest to the caller that runs after
+     ordinary subtyping has failed. *)
+  if cheap && not (Tm_arrow? (SS.compress t1).n && Tm_arrow? (SS.compress t2).n)
+  then None
+  else
+  let whnf t = if cheap then t else N.unfold_whnf env t in
+  let bs1, _ = U.arrow_formals (whnf t1) in
+  let bs2, _ = U.arrow_formals_comp (whnf t2) in
+  let n1 = List.length bs1 in
+  let n2 = List.length bs2 in
+  let n = if n1 < n2 then n1 else n2 in
+  let actuals, _, _ = U.abs_formals e in
+  let extra = if n1 < n2 then bs2 else bs1 in
+  if n = 0 || n1 = n2 || List.length actuals = n
+  then None
+  else if not (extra |> List.splitAt n |> snd
+                     |> List.for_all (fun b -> S.is_bqual_implicit b.binder_qual))
+  then None
+  else
+    let applied = bs1 |> List.splitAt n |> fst in
+    let bs, args = U.args_of_binders applied in
+    (* When the expected type is the longer one, its trailing implicits are
+       part of the abstraction we must build. Their sorts may mention the
+       binders it shares with [bs1], so rename those to the ones we just
+       bound. *)
+    let bs =
+      if n1 < n2
+      then let pfx, sfx = List.splitAt n bs2 in
+           bs @ (sfx |> SS.subst_binders (U.rename_binders pfx bs))
+      else bs
+    in
+    let eta = U.abs bs (S.mk_Tm_app e args e.pos) None in
+    let tx = UF.new_transaction () in
+    let _, res =
+      Errors.catch_errors_and_ignore_rest (fun () ->
+        env.tc_term (Env.set_expected_typ_maybe_eq env t2 use_eq) eta)
+    in
+    match res with
+    | Some r -> UF.commit tx; Some r
+    | None -> UF.rollback tx; None
+
 let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool) : ML (term & comp & guard_t) =
   let (lc, g_lc) = lc_g in
   if Debug.high () then
@@ -2301,12 +2379,34 @@ let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool)
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
      | _ -> false)
   in
+  (* The expected type may have more (implicit) binders than the term's own
+     type -- a [requires] is a trailing implicit [squash] binder now -- in
+     which case only an eta-expansion can bridge the two.  See
+     [try_eta_expand_to_expected_typ], which rejects at once unless the two
+     arities really do differ with all the extra binders implicit.
+
+     This has to run *before* the subtyping check rather than in its failure
+     branch: relating [x:a -> Tot b] to [x:a -> #_:squash p -> Tot b] does not
+     fail, it succeeds with a [has_type b (#_:squash p -> Tot b)] obligation
+     that no solver can discharge. It is restricted to pure and ghost
+     computations: eta-expanding an effectful [e] would delay, duplicate or
+     drop its effect. *)
+  match (if U.is_pure_or_ghost_comp lc
+         then try_eta_expand_to_expected_typ env true e (U.comp_result lc) t use_eq
+         else None) with
+  | Some (e, lc, g) -> e, lc, Env.conj_guard g_lc g
+  | None ->
   let gopt = if use_eq
              then Rel.try_teq true env (U.comp_result lc) t, false
              else Rel.get_subtyping_predicate env (U.comp_result lc) t, true
   in
   match gopt with
   | None, _ ->
+    (match (if U.is_pure_or_ghost_comp lc
+            then try_eta_expand_to_expected_typ env false e (U.comp_result lc) t use_eq
+            else None) with
+     | Some (e, lc, g) -> e, lc, Env.conj_guard g_lc g
+     | None ->
     (*
       * AR: 11/18: should this always fail hard?
       *)
@@ -2315,7 +2415,7 @@ let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool)
     else (
         subtype_fail env e (U.comp_result lc) t; //log a sub-typing error
         e, U.set_result_typ lc t, g_lc //and keep going to type-check the result of the program
-    )
+    ))
   
   | Some g, apply_guard ->
     let keep () : ML bool = keep_res_typ env t (U.comp_result lc) || keep_effectful_res_typ env lc t in
@@ -2601,6 +2701,9 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : ML guard_t =
 let check_has_type_maybe_coerce env (e:term) (lc:comp) (t2:typ) use_eq : ML (term & comp & guard_t) =
   let env = Env.set_range env e.pos in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
+  match try_eta_expand_to_expected_typ env false e (U.comp_result lc) t2 use_eq with
+  | Some (e, lc, g) -> e, lc, (Env.conj_guard g g_c)
+  | None ->
   let g = check_has_type env e (U.comp_result lc) t2 use_eq in
   if !dbg_Rel then
     Format.print1 "Applied guard is %s\n" <| guard_to_string env g;

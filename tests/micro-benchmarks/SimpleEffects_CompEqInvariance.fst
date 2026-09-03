@@ -82,11 +82,12 @@ assume val nref : neg (x:int{x > 0})
 let widen_refinement : neg int = nref
 
 /// Control: plain computation *subsumption* (relation SUB, not EQ) is sound and
-/// must keep working -- `permissive` has the weaker precondition.  It has to be
-/// eta-expanded: `restrictive` takes a trailing implicit `squash` binder for its
-/// precondition and `permissive` does not, so the two arrows differ in arity and
-/// are not related by subtyping in their bare form.
-[@@ expect_failure [189]]
+/// must keep working -- `permissive` has the weaker precondition.  The two
+/// arrows differ in arity, because `restrictive` takes a trailing implicit
+/// `squash` binder for its precondition and `permissive` does not, so relating
+/// them takes an eta-expansion; subtyping performs it (see
+/// [try_eta_expand_to_expected_typ] in src/typechecker/FStarC.TypeChecker.Util.fst),
+/// so writing it by hand is not required.
 let bare_arrow_subsumption_direct (p:permissive) : restrictive = p
 
 let bare_arrow_subsumption (p:permissive) : restrictive = fun x -> p x
