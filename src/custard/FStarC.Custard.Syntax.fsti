@@ -188,8 +188,20 @@ val float_lit_to_string : float_lit -> string
 val float_lit_of_string : string -> option float_lit
 
 (** The literal as it is spelled in generated code, in the base it was
-    written in.  Never carries a suffix or a cast: those are a backend's. *)
+    written in.  Never carries a suffix or a cast: those are a backend's.
+
+    This is F*'s spelling, which is also OCaml's and Rust's.  It is *not*
+    C's: see {!c_int_lit_to_string}. *)
 val int_lit_to_string : int -> int_base -> string
+
+(** The same, in a base C can write.  C spells octal with a leading zero
+    rather than with [0o], and has no binary literal before C23, so octal is
+    respelled and binary falls back to decimal.  Section 43.1.
+
+    Dropping a base costs the reader something the value may not pay for: an
+    F* [0o17] emitted as C [0o17] is rejected by every C compiler, and emitted
+    as C [17] would be seventeen. *)
+val c_int_lit_to_string : int -> int_base -> string
 
 (** Equality of the *values* two constants denote.  Structural equality is not
     that: an integer literal also carries the base it was written in, which is

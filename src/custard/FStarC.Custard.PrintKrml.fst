@@ -121,6 +121,35 @@ let krml_fwidth (fw:fwidth) : K.width =
   | Float32 -> K.Float32
   | Float64 -> K.Float64
 
+(* Section 43.2.  karamel's [EConstant] carries the literal as text, and what
+   may go in that text depends on who reads it back.
+
+   The Rust backend prints it very nearly verbatim, and Rust spells every base
+   exactly as F* does, so Rust keeps all four.  karamel's C path does not print
+   it verbatim -- something on the way renormalizes -- and an octal [017] comes
+   back out as decimal *seventeen*.  So the C path is given only the base that
+   survives the trip, and decimal for the rest.  A base is for the reader; the
+   value is not negotiable. *)
+let krml_int_lit (v:int) (b:int_base) : ML string =
+  if Options.custard_backend () = "KrmlRust" then int_lit_to_string v b
+  else match b with
+       | Hex -> int_lit_to_string v Hex
+       | _   -> int_lit_to_string v Dec
+
+(* Section 43.3.  karamel's C printer has no suffix for [Float32]
+   (karamel/lib/PrintC.ml:245 falls through to [empty]), so a binary32 constant
+   goes out bare -- which is a [double] -- and the [(float)] karamel then
+   inserts fixes the type and not the value.  Decimal to binary64 to binary32
+   is a double rounding, and for some decimals the two land on different
+   floats.  Writing the suffix here makes the literal a [float] before the cast
+   sees it, and the cast becomes the no-op it was meant to be.
+
+   Not on the Rust path, where the suffix is [f32] and karamel writes it, and
+   not at [Float64], where bare is already [double]. *)
+let krml_float_lit (fw:fwidth) (v:float_lit) : ML string =
+  let s = float_lit_to_string v in
+  if Float32? fw && Options.custard_backend () = "KrmlC" then s ^ "f" else s
+
 let krml_width (sw : signedness & width) : K.width =
   match sw with
   | (Signed, Int8) -> K.Int8
@@ -230,12 +259,11 @@ let krml_const (c:constant) : ML K.expr =
   | CBool b -> K.EBool b
   | CString s -> K.EString s
   (* karamel's [EConstant] carries the literal as text, so this is where the
-     value is spelled again.  A base is not something karamel's own reader of
-     these understands, so an integer goes out in decimal here (section
-     39.1). *)
-  | CInt (v, _, None) -> K.EConstant (K.CInt, show v)
-  | CInt (v, _, Some sw) -> K.EConstant (krml_width sw, show v)
-  | CFloat (v, fw) -> K.EConstant (krml_fwidth fw, float_lit_to_string v)
+     value is spelled again -- in whichever base the target reads back
+     unchanged (section 43.2). *)
+  | CInt (v, b, None) -> K.EConstant (K.CInt, krml_int_lit v b)
+  | CInt (v, b, Some sw) -> K.EConstant (krml_width sw, krml_int_lit v b)
+  | CFloat (v, fw) -> K.EConstant (krml_fwidth fw, krml_float_lit fw v)
   (* karamel has no character type; a program that reaches this is not a C
      program, and saying so here is better than emitting something that means
      something else. *)
@@ -253,8 +281,9 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
   | PVar x -> (extend env x, K.PVar (dummy_binder x))
   | PConst CUnit -> (env, K.PUnit)
   | PConst (CBool b) -> (env, K.PBool b)
-  | PConst (CInt (v, _, None)) -> (env, K.PConstant (K.CInt, show v))
-  | PConst (CInt (v, _, Some sw)) -> (env, K.PConstant (krml_width sw, show v))
+  | PConst (CInt (v, b, None)) -> (env, K.PConstant (K.CInt, krml_int_lit v b))
+  | PConst (CInt (v, b, Some sw)) ->
+    (env, K.PConstant (krml_width sw, krml_int_lit v b))
   | PConst _ -> (extend env "_", K.PVar (dummy_binder "_"))
   | PCtor (n, ps) when is_tuple_ctor_name n ->
     let env, ps = krml_pats env ps in

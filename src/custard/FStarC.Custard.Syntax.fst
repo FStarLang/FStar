@@ -149,6 +149,23 @@ let float_lit_of_string (s:string) : option float_lit =
 
 let int_lit_to_string (v:int) (b:int_base) : string = string_of_int_literal v b
 
+let rec oct_digits (n:int) (acc:string) : Tot string (decreases n) =
+  if n <= 0 then acc
+  else oct_digits (n / 8) (Prims.string_of_int (n % 8) ^ acc)
+
+let c_int_lit_to_string (v:int) (b:int_base) : string =
+  match b with
+  (* C writes octal with a leading zero, not with F*'s [0o]. *)
+  | Oct ->
+    if v = 0 then "0"
+    else if v < 0 then "-0" ^ oct_digits (-v) ""
+    else "0" ^ oct_digits v ""
+  (* C has no binary literal before C23.  A base is a way of writing a number,
+     so a base the target cannot write is dropped rather than approximated:
+     the number is what may not change. *)
+  | Bin -> string_of_int_literal v Dec
+  | _ -> string_of_int_literal v b
+
 let const_eq (c1 c2 : constant) : bool =
   match c1, c2 with
   | CInt (v1, _, sw1), CInt (v2, _, sw2) -> v1 = v2 && sw1 = sw2

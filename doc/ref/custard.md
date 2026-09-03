@@ -10606,11 +10606,11 @@ with `f` after it at `Float32`. `tests/custard/LitBase.fst` pins all of
 that, and pins `-0.0` staying negative, and pins the three spellings of
 `0.0015` becoming one.
 
-The krml backend is the exception, and only in one direction: karamel's
-`EConstant` carries text, so a value has to be spelled again on the way out,
-and it goes out in decimal because a base is not something karamel's reader
-of these expects. A hex literal reaching C through karamel was already
-decimal before this change, for the same reason.
+The krml backend spells the value again, because karamel's `EConstant`
+carries text. This section originally said it went out in decimal always, on
+the grounds that a base is not something karamel's reader of these expects.
+That was wrong, and section 43.2 replaces it: karamel does pass the text
+through, so the base is kept wherever the far end reads it back unchanged.
 
 # 40 Half and bfloat16 without a compiler change
 
@@ -10658,6 +10658,14 @@ nothing. For a kernel whose arithmetic is intrinsics anyway that is no loss;
 for one that wanted `a + b` it is the reason `TFloat Float16` would still be
 worth having, once there is a `ulib` module and an agreement about what
 `__half` is called on a target that is not NVIDIA's.
+
+Round 43 compiled this against the real `<cuda_fp16.h>` and `<cuda_bf16.h>`
+under `nvcc`, linked it and ran it. One correction came back: `__hadd_bf`
+above is not a CUDA name. Those headers are C++ and overload `__hadd` on the
+operand type, so the two additions name *one* C symbol -- which needs nothing
+from Custard, since monomorphization gives each `val` its own specialization
+and overload resolution picks from there. The test keeps the invented name;
+see section 43.4 for why C11 cannot host the real one.
 
 The stub header exists so the test runs under `gcc`. Nothing on the F\* side
 would differ under `nvcc`.
@@ -10967,6 +10975,135 @@ linkage under its own name, that the private helper does not appear in the
 symbol table of either object, and that the library's definitions appear in
 exactly one of the two.
 
+# 43 Writing a number down
+
+Round 43 found three ways to spell a number that the target reads back as a
+different number, or as nothing at all.  All three had the same shape: the IR
+carries the literal as *text*, and text is only as portable as the reader on
+the far end.
+
+## 43.1 C does not spell octal the way F* does
+
+`Syntax.int_lit_to_string` was `FStarC.Const.string_of_int_literal`, which
+spells a literal the way F* source does: `0x`, `0o`, `0b`, or bare.  Two of
+those four are F*-specific.  No C compiler accepts `0o17` -- gcc reports
+`invalid suffix "o17U" on integer constant` -- and `0b1010` is a GNU extension
+that C did not standardize until C23, so it warns under `-pedantic`.
+
+`Syntax.c_int_lit_to_string` is the C spelling: octal is respelled with C's
+leading zero, binary falls back to decimal, hex and decimal are unchanged
+because F* and C agree on those two.  `PrintC.int_literal` uses it; nothing
+else does.  In particular the diagnostic at the unbounded-literal rejection
+still uses `int_lit_to_string`, because that message quotes the *source*, and
+the source is F*.
+
+A base is a courtesy to the reader.  The value is not negotiable.  When the
+target cannot write a base, the base is what gives way -- `0b1010` becomes
+`10` and nothing is lost but the hint.  Octal is the one case where the base
+can be preserved, because C has a spelling for it; it is just not F*'s.
+
+`LitBase` had covered exactly the two bases whose F* and C spellings coincide,
+which is why it could not see this.  A test that only exercises the cases
+where two languages agree is testing the agreement, not the translation.
+
+## 43.2 The karamel path had dropped the base entirely
+
+All four sites in `PrintKrml` that spell an integer -- the two `CInt` cases in
+`krml_const` and the two in `krml_pat` -- did `show v`, i.e. decimal, always.
+§39.1 had recorded this as deliberate.  It was wrong: for a Rust consumer this
+regressed the one place where a base carries meaning, a UTF-8 validator whose
+byte ranges read `0x7fu8` before and `127u8` after.
+
+`PrintKrml.krml_int_lit` restores it, but not uniformly, and the asymmetry is
+the interesting part:
+
+- **`KrmlRust` gets every base.** Rust spells `0x`, `0o` and `0b` exactly as
+  F* does, and karamel's Rust backend puts the text through very nearly
+  verbatim.
+- **`KrmlC` gets hexadecimal, or decimal.** Not octal, even though C has a
+  spelling for it and §43.1 just used it.
+
+The reason for the second is a trap worth recording.  karamel does *not* treat
+the constant text as opaque everywhere; some path on the way to C parses it,
+and parses it as decimal.  A leading-zero octal `017` therefore comes back out
+as **seventeen**, silently: valid C, wrong number.  Hexadecimal survives the
+same trip unchanged, which is what makes the failure so easy to miss -- the
+one base a C author would think to test is the one that works.
+
+This is also a lesson about what to assert.  A `CGREP` on the spelling would
+have passed: `017U` is exactly what one would grep for, and `017U` is exactly
+what came out.  Only a test that computes with the constant and checks its own
+answer can see a number that changed.  Every assertion in `LitOct` is of that
+kind: `main` compares each value against its decimal and returns *which one*
+was wrong.
+
+## 43.3 A binary32 literal needs its suffix
+
+karamel's C printer attaches a suffix per width (`karamel/lib/PrintC.ml:245`),
+and the table has no float case, so a `Float32` constant goes out bare.  A
+bare decimal in C is a `double`.  karamel then inserts the `(float)` cast that
+makes the *type* right, and the cast is exactly what makes the *value* wrong:
+decimal to binary64 to binary32 is a double rounding, and for some decimals
+the two roundings disagree by one ulp.
+
+`7.038531e-26` is such a decimal.  Correctly rounded to binary32 it is
+`0x15ae43fd`; routed through binary64 first it is `0x15ae43fe`.
+
+`PrintKrml.krml_float_lit` writes the `f` into the constant text at `Float32`,
+so the literal is a `float` before the cast ever sees it and the cast becomes
+the no-op it was meant to be.  Confirmed end to end: karamel emits
+`(float)0.000...07038531f` and the program agrees with the exact value.  Not
+on the Rust path, where the suffix is `f32` and karamel writes it itself, and
+not at `Float64`, where bare is already right.
+
+This is a workaround for something upstream: a one-line `| Float32 -> string
+"f"` in karamel's suffix table would fix it at the source.  Should that
+land, this must be removed on the same day, or the output becomes `1.5ff`.
+The direct C backend has always written the suffix, and `LitF32` now runs on
+both backends so that the two cannot drift apart again.
+
+## 43.4 Round 43's other findings
+
+Kuiper **withdrew gap 1**.  The build failure was `Identifier not found:
+Float16`, not a missing `Float32`/`Float64`: §41.5's statement was already the
+correct one, and `Float16`/`BFloat16` exist nowhere, upstream included.  His
+words: no `Float16` in the IR, please.  §40's route -- an opaque extern type
+plus `custard_extern` intrinsics -- stands, and it was validated against the
+real `<cuda_fp16.h>` and `<cuda_bf16.h>` under `nvcc`, compiled, linked, and
+run.  Two things came out of that:
+
+- **Two `val`s may carry the same `custard_extern` target.** CUDA overloads
+  `__hadd` on operand type rather than offering `__hadd_bf`, so the half and
+  bfloat16 additions name one C++ symbol.  Monomorphization gives each F*
+  `val` its own specialization and C++ overload resolution then picks by
+  argument type, so this works without Custard knowing anything about it.
+  §40's `__hadd_bf` was an invention; the mechanism was right anyway.
+  `Half.fst` keeps the invented name, because its stub header is compiled by
+  a C11 compiler, C has no overloading, and `twice hadd` passes the extern as
+  a *function pointer*, which a `_Generic` macro cannot be.  Against the real
+  headers, which are C++, both `val`s would say `__hadd`.
+- **`EOp (Lt, Float16)` is a latent bug in the consumer, not a gap here.**
+  `operator<` on `__half` is guarded by `#if !defined(__CUDA_NO_HALF_-`
+  `OPERATORS__)` and is C++-only; it does not exist in CUDA C.  `__hlt` is
+  unconditional and is what an extern should name.  A comparison is not more
+  primitive than an addition just because it has an infix spelling.
+
+Of the ten remaining `EConstant (Float16, ...)` uses, every one holds a
+snippet of C (`__float2half_rn(0.0f)`) rather than a number -- `EConstant`
+used as an escape hatch because there is no half literal.  §40 covers these
+as nullary externs, which is what they are.
+
+Still open for him: `ESizeof`; `TExtern of string & list cty`, which he now
+narrows to genuinely *indexed* externals like `wmma::fragment<...>` (the
+`__half`-shaped cases are already covered by §40's opaque extern types); and
+§34.4's "was this attribute read" bit.  `--custard_unit`/`--custard_link` for
+C shipped in §42, which he had not seen when he wrote.
+
+`Simplify.ml:462` (`M10ββ`) reproduced in eight lines: karamel's constant
+folder guards `Add` with `is_int w` and does not guard `Mult`, `Div` or `Mod`,
+so a float multiply reaches an integer path and asserts.  Still upstream's,
+still avoided here by not folding at float widths.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -11113,3 +11250,8 @@ exactly one of the two.
 | M10βν | **A namespaced global initializer** (§42.3) | Done.  `custard_init_globals` is one fixed name per unit and two in a link is a duplicate symbol, so under `--custard_unit U` it is `U_init_globals`; the unqualified spelling is kept with no unit name, leaving every existing whole-program output unchanged.  Renaming it raised the question whole-program mode never had: `main` calls each linked unit's initializer in `--custard_link` order before its own, and since that order is the user's and need not be topological, the body gets a `static bool` re-entry guard -- under `--custard_unit` only, since in whole-program mode there is exactly one caller and the branch would be noise |
 | M10βξ | **`uh_header`, `uh_init`, and a version bump** (§42.4) | Done.  A `.cui` is loaded positionally by `Util.load_value_from_file`, so growing the header is deliberately not a compatible change; the version check is there so that a stale interface is an error rather than a miscompilation |
 | M10βο | **A two-unit C test** (§42.5) | Done.  `tests/custard/SepLibC.fst` and `SepAppC.fst`, compiled separately, linked, and run.  `nm` checks the three things a C compiler cannot: the exported root has external linkage under its own name, the private helper is in neither object's symbol table, and the library's definitions are in exactly one of the two -- which is the only direct evidence that the downstream unit reused rather than recompiled |
+| M10βπ | **C octal and binary literals** (§43.1) | Done.  Round 43.  `Syntax.c_int_lit_to_string`, used only by `PrintC.int_literal`: F*'s `0o17` becomes C's `017`, and `0b1010` becomes `10` because C has no binary literal before C23.  The C backend had been emitting `0o17U`, which no C compiler accepts.  `LitBase` covered only hex and decimal -- the two bases whose F* and C spellings coincide -- so it was testing the agreement rather than the translation |
+| M10βρ | **The base on the karamel path** (§43.2) | Done.  Round 43.  `PrintKrml.krml_int_lit` at all four integer-spelling sites, replacing the unconditional `show v` §39.1 had recorded as deliberate.  Rust gets every base; **KrmlC gets hexadecimal or decimal and never octal**, because karamel parses the constant text back as decimal somewhere on the way to C and `017` returns as seventeen -- silently, and with a spelling a `CGREP` would have accepted.  Hex survives the same trip, which is what makes it easy to miss |
+| M10βσ | **The binary32 literal suffix** (§43.3) | Done.  Round 43.  `PrintKrml.krml_float_lit` writes `f` into the constant text at `Float32` on the KrmlC path.  karamel's suffix table (`karamel/lib/PrintC.ml:245`) has no float case, so the constant went out bare -- a `double` -- and the `(float)` karamel inserts fixed the type and not the value: decimal to binary64 to binary32 is a double rounding, and `7.038531e-26` lands on `0x15ae43fe` instead of `0x15ae43fd`.  A workaround for an upstream one-liner; if that lands this must go the same day or the output reads `1.5ff` |
+| M10βτ | **`LitOct` and `LitF32`** (§43.2, §43.3) | Done.  Round 43.  Both run on the direct C backend *and* through karamel, and both check their own arithmetic rather than their own spelling: `main` compares each value against its decimal and returns which one was wrong.  That is the only assertion that can see the karamel octal bug, whose output greps clean.  `LitF32` was confirmed to fail when the suffix is stripped from the generated C by hand |
+| M10βυ | **Gap 1 withdrawn; §40 validated on real CUDA** (§43.4) | Done.  Round 43.  The reported missing `Float32`/`Float64` was a missing `Float16`, which §41.5 had already said does not exist anywhere; Kuiper withdrew the request.  §40 was then compiled, linked and run against the real `<cuda_fp16.h>`/`<cuda_bf16.h>` under `nvcc`.  Two notes recorded: two F* `val`s may share one `custard_extern` target, because CUDA overloads `__hadd` rather than offering `__hadd_bf`, and monomorphization plus C++ overload resolution handle that unaided -- `Half.fst` keeps the invented `__hadd_bf` only because its stub is compiled as C11, where there is no overloading and where a `_Generic` macro cannot be the function pointer `twice` wants; and `EOp (Lt, Float16)` is a latent consumer bug, since `operator<` on `__half` is C++-only and `#if`-guarded while `__hlt` is not |

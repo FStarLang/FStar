@@ -1054,6 +1054,29 @@ CGREP_LitBase += "= -0.0;"
 CGREP_LitBase += "0.0015"
 CNOGREP_LitBase += "1.5e-3"
 
+# Section 43.1-43.2.  Every base F* can write, on two backends that cannot
+# necessarily write it back.  LitBase covered only hex and decimal -- the two
+# bases whose F* and C spellings coincide -- so it could not see either bug.
+#
+# The assertions that matter are inside the program: main checks each value and
+# returns which one was wrong.  Both bugs were silent, and one of them (karamel
+# reading a leading-zero octal back as decimal) produces a spelling a grep
+# would have accepted.
+C_TESTS += LitOct
+KRML_TESTS += LitOct
+CGREP_LitOct += "017U"
+CGREP_LitOct += "0xfU"
+CNOGREP_LitOct += "0o17"
+CNOGREP_LitOct += "0b1010"
+
+# Section 43.3.  A binary32 literal that reaches the C compiler without its
+# suffix is a binary64 literal with a cast in front of it, and the two do not
+# always name the same float.  Run on both backends: the direct one has always
+# written the suffix, and this pins that it keeps doing so.
+C_TESTS += LitF32
+KRML_TESTS += LitF32
+CGREP_LitF32 += "7038531f"
+
 KRML_TESTS += FloatsKrml
 
 # The same arithmetic on the OCaml backend, where a Float64 is OCaml's float.

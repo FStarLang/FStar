@@ -515,7 +515,7 @@ let int_literal (sw : signedness & width) (v:int) (b:int_base) : ML string =
   let wide = (match w with Int64 -> true | Sizet -> true | _ -> false) in
   if Signed? sg && wide && v = -9223372036854775808
   then "(-9223372036854775807LL - 1)"
-  else int_lit_to_string v b ^ int_suffix sw
+  else c_int_lit_to_string v b ^ int_suffix sw
 
 let escape (s:string) : ML string =
   let esc (c:char) : ML string =
