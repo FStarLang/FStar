@@ -11104,6 +11104,138 @@ folder guards `Add` with `is_int w` and does not guard `Mult`, `Div` or `Mod`,
 so a float multiply reaches an integer path and asserts.  Still upstream's,
 still avoided here by not folding at float widths.
 
+# 44 Two ways to not compare
+
+Round 43 was about writing a number down. Round 44 is the same shape one
+level up: a *constant* that one backend can express and another cannot, and
+what each of them did about it. The three backends disagreed three ways on
+one construct -- a `match` on a string. `PrintOCaml` was right, because OCaml
+has string patterns. `PrintC` emitted something wrong. `PrintKrml` emitted
+something that was not a test at all.
+
+## 44.1 A pattern the backend cannot hold must stop the extraction
+
+karamel's `pattern` has no node for a string, float or character constant.
+`krml_pat`'s last case was:
+
+```
+| PConst _ -> (extend env "_", K.PVar (dummy_binder "_"))
+```
+
+A variable pattern matches *everything*. So the first such branch swallowed
+the scrutinee and every branch after it was dead code. A three-way `classify`
+on strings became the constant `1`, and karamel then reported the argument
+unused, which is the only trace it left:
+
+```
+uint32_t PatStr_classify(Prims_string s)
+{
+  KRML_MAYBE_UNUSED_VAR(s);
+  return 1U;
+}
+```
+
+The Rust backend shows the mechanism without the constant folding on top:
+`match s { __ => 1u32, __ => 2u32, _tmp => 3u32, ... }` -- three catch-alls
+where there should have been two tests and a default.
+
+The fix is not a better translation, because there is no translation: a
+construct the target AST cannot hold has to stop the extraction. `POr` next
+door already did that, and `PConst` now does too.
+
+But it does it differently, and the difference is the second half of this
+change. The three refusals in `PrintKrml` were `failwith`s, and all three
+said **"not supported by the C backend"** -- from the file that is not the C
+backend. §33.4's rule about wrong explanations applies to wrong *addresses*
+as well: a reader who is told the C backend refused this goes and reads
+`PrintC`, where nothing refuses it. `krml_reject` replaces all three with an
+`Error_CustardNoCRepresentation` that names karamel, says why (its AST has no
+node for this), and says what else to try (`--custard_backend C`, which
+accepts all three).
+
+This is the counterpart of §43.2's lesson about assertions.
+`KRML_MAYBE_UNUSED_VAR(s)` is a hint that an argument went dead, and nothing
+greps for that either. `LitOct` passes through karamel precisely because its
+`match` is on integer patterns, which `krml_pat` does handle -- the test that
+was written to catch a silent constant did not catch a silent pattern,
+because it was made of the one kind of constant that works.
+
+## 44.2 C compares strings by address
+
+`Prims.string` is `const char *`. Two sites emitted `==` on one:
+`pat_tests`'s `PConst` case, and the infix-operator case for `Eq`/`Neq`.
+Both are comparisons of addresses. F\*'s equality on strings is equality of
+contents, and whether two equal strings share an address is a decision the C
+compiler makes about its literal pool -- not a fact about the program.
+
+gcc says so unprompted:
+
+```
+warning: comparison with string literal results in unspecified behavior [-Waddress]
+```
+
+`is_string_ty` decides when a `const char *` is a `Prims.string`, and both
+sites now emit `strcmp`, which `<string.h>` -- already unconditionally
+included by every generated header -- declares.
+
+The reason this survived is worth more than the fix. **The generated program
+exits 0 with the bug in it**, as long as every string it compares is a
+literal, because the C compiler pools literals and the two addresses then
+agree by accident. A test written the obvious way tests the pool. So
+`PatStr.fst` obtains its strings through a `custard_extern` that `malloc`s a
+copy: same contents, different address. With the bug restored by hand,
+`classify` of a heap `"a"` returns 3 and the test fails; that was checked,
+not assumed.
+
+`pat_tests` receives the type of the path it is testing, so it can tell a
+string pattern from any other constant pattern without inspecting the
+constant -- which is the right way round, since it is the *type* that decides
+whether `==` means what F\* meant.
+
+There were zero live instances: EverParse's output contains no
+`Prims_string` at all, and no test in either directory matched on a string
+constant, which is exactly why all three sites survived this long.
+
+## 44.3 Kuiper builds, and §42.1's asymmetry is why
+
+Round 44 built five real Kuiper kernels as five separate C units, compiled
+each under `nvcc` as C++ *and* under `clang -std=c11 -Wall -Wextra -Werror`
+as C, linked them into one binary and ran it. No duplicate global symbol
+across any of the five, and all five headers coexist in one translation unit
+under both compilers.
+
+§42.1 justified restricting a C unit's `.cui` to its linking interface on the
+grounds that a `static` is a symbol the consumer cannot name. Kuiper supplies
+a sharper reason, and it is worth recording because it changes the argument
+from tidiness to soundness. Two of the five units contain:
+
+```
+/* KMul.c  */
+static uint64_t Kuiper_Array_Core_slice_read__t(uint64_t *r, size_t i);
+/* KArr1.c */
+static uint32_t Kuiper_Array_Core_slice_read__t(uint32_t *r, size_t i);
+```
+
+The same generated name at incompatible types -- one `slice_read`
+monomorphized at `u64` in one unit and at `u32` in the other -- and §12.3's
+non-determinism means neither unit can know the other exists. Because both
+are `static`, C++ mangles them apart and C never sees them together. Had the
+`.cui` exported everything a request created, which is what the OCaml backend
+does, both headers would declare that name and a consumer of both would not
+compile. Kuiper's shared code is almost entirely polymorphic and
+`inline_for_extraction`, so across its 62 units this would have been the
+common case rather than a corner one.
+
+Two smaller confirmations. The mangling worry from round 42 does not apply at
+unit boundaries: the generated header wraps its declarations in `extern "C"`,
+so an exported root keeps its C name under `nvcc` and only unit-local statics
+are mangled. And §42.1's cost -- a downstream unit compiling its own private
+copy of anything upstream kept `static` -- is not a new cost for this
+consumer: Kuiper's shipped `dist/` is already 62 `.cu` files, each including
+only its own header, with helpers `static` and duplicated (one file alone has
+144 `static` definitions). One unit per `.cu` maps onto §42 with no
+impedance mismatch, so the round offered on grouping is not needed.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -11255,3 +11387,8 @@ still avoided here by not folding at float widths.
 | M10βσ | **The binary32 literal suffix** (§43.3) | Done.  Round 43.  `PrintKrml.krml_float_lit` writes `f` into the constant text at `Float32` on the KrmlC path.  karamel's suffix table (`karamel/lib/PrintC.ml:245`) has no float case, so the constant went out bare -- a `double` -- and the `(float)` karamel inserts fixed the type and not the value: decimal to binary64 to binary32 is a double rounding, and `7.038531e-26` lands on `0x15ae43fe` instead of `0x15ae43fd`.  A workaround for an upstream one-liner; if that lands this must go the same day or the output reads `1.5ff` |
 | M10βτ | **`LitOct` and `LitF32`** (§43.2, §43.3) | Done.  Round 43.  Both run on the direct C backend *and* through karamel, and both check their own arithmetic rather than their own spelling: `main` compares each value against its decimal and returns which one was wrong.  That is the only assertion that can see the karamel octal bug, whose output greps clean.  `LitF32` was confirmed to fail when the suffix is stripped from the generated C by hand |
 | M10βυ | **Gap 1 withdrawn; §40 validated on real CUDA** (§43.4) | Done.  Round 43.  The reported missing `Float32`/`Float64` was a missing `Float16`, which §41.5 had already said does not exist anywhere; Kuiper withdrew the request.  §40 was then compiled, linked and run against the real `<cuda_fp16.h>`/`<cuda_bf16.h>` under `nvcc`.  Two notes recorded: two F* `val`s may share one `custard_extern` target, because CUDA overloads `__hadd` rather than offering `__hadd_bf`, and monomorphization plus C++ overload resolution handle that unaided -- `Half.fst` keeps the invented `__hadd_bf` only because its stub is compiled as C11, where there is no overloading and where a `_Generic` macro cannot be the function pointer `twice` wants; and `EOp (Lt, Float16)` is a latent consumer bug, since `operator<` on `__half` is C++-only and `#if`-guarded while `__hlt` is not |
+| M10βφ | **A constant pattern karamel cannot hold** (§44.1) | Done.  Round 44.  `krml_pat`'s `PConst _` fell through to a fresh *variable* pattern, which matches everything, so the first string, float or character pattern swallowed the scrutinee and every branch after it was dead -- a three-way `classify` became the constant `1`, with no diagnostic on either krml backend.  The only trace was karamel's own `KRML_MAYBE_UNUSED_VAR`, which nothing greps for.  `LitOct` goes through karamel clean because its `match` is on integer patterns, the one kind that works |
+| M10βχ | **`krml_reject`** (§44.1) | Done.  Round 44.  The three refusals in `PrintKrml` were `failwith`s that said "not supported by **the C backend**" -- from the file that is not the C backend, sending a reader to a printer where nothing refuses it.  Now an `Error_CustardNoCRepresentation` that names karamel, says its AST has no node for the construct, and says that `--custard_backend C` may accept it, which for all three it does.  §33.4's rule about wrong explanations covers wrong addresses too |
+| M10βψ | **String equality is `strcmp`** (§44.2) | Done.  Round 44.  `Prims.string` is `const char *`, and both `pat_tests`'s `PConst` case and the `Eq`/`Neq` infix case emitted `==` on one -- a comparison of addresses, which gcc diagnoses as `-Waddress`.  `is_string_ty` plus `strcmp` at both sites, using the `<string.h>` every generated header already includes.  Zero live instances: EverParse's output has no `Prims_string` in it, and no test matched on a string, which is why all three sites survived |
+| M10βω | **`PatStr` and `PatStrKrml`** (§44.1, §44.2) | Done.  Round 44.  The C test gets its strings from a `custard_extern` that `malloc`s a copy, because **the buggy program exits 0 when every string is a literal**: the C compiler pools literals, so comparing them by address agrees by accident, and a test written the obvious way tests the pool.  Confirmed to fail when the `strcmp`s are edited back to `==` by hand.  `PatStrKrml` pins the 368, and pins that the message no longer names the wrong backend |
+| M10γα | **Five Kuiper units under `nvcc`** (§44.3) | Done, round 44, no change required.  Five real kernels extracted as five C units, each compiled under `nvcc` as C++ and `clang -Wall -Wextra -Werror` as C, linked and run; no duplicate global symbol, and all five headers coexist in one TU.  It also sharpens §42.1 from tidiness to soundness: two units hold `Kuiper_Array_Core_slice_read__t` at `u64` and at `u32`, the same generated name at incompatible types, harmless only because both are `static` -- had the `.cui` exported everything a request created, that would have been the common case across 62 units, not a corner one |

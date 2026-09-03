@@ -1077,6 +1077,27 @@ C_TESTS += LitF32
 KRML_TESTS += LitF32
 CGREP_LitF32 += "7038531f"
 
+# Section 44.2.  F*'s equality on strings is equality of contents; C's [==] on
+# a [const char *] is equality of addresses.  Both the match and the operator
+# emitted the latter.
+#
+# main compares strings that came off the heap, and that is the whole test: a
+# program whose strings are all literals exits 0 either way, because the C
+# compiler pools literals and the two addresses then agree by accident.
+C_TESTS += PatStr
+CGREP_PatStr += "strcmp(s, \"a\") == 0"
+CGREP_PatStr += "strcmp(a, b) == 0"
+CGREP_PatStr += "strcmp(a, b) != 0"
+CNOGREP_PatStr += "s == \"a\""
+
+# Section 44.1.  The same match through karamel, which has no pattern node for
+# a string constant and used to substitute one that matches everything.
+REJECT_TESTS += PatStrKrml
+FLAGS_PatStrKrml = --custard_backend KrmlC
+CODE_PatStrKrml = 368
+EGREP_PatStrKrml += "string pattern has no karamel representation"
+NOEGREP_PatStrKrml += "not supported by the C backend"
+
 KRML_TESTS += FloatsKrml
 
 # The same arithmetic on the OCaml backend, where a Float64 is OCaml's float.

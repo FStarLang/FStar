@@ -412,6 +412,17 @@ let builtin_type (n:name) : ML (option string) =
   | "FStar.Char.char" -> Some "uint32_t"
   | _ -> None
 
+(* Section 44.2.  [Prims.string] is [const char *], so C's [==] on two of them
+   is a comparison of addresses.  That is right for no F* program: F*'s
+   equality on strings is equality of contents, and whether two equal strings
+   share an address is a decision the C compiler makes about its literal pool.
+   Every site that would emit [==] has to know when it is looking at one. *)
+let is_string_ty (t:cty) : ML bool =
+  match t with
+  | TApp (n, []) ->
+    None? n.spec && String.concat "." (n.ns @ [n.id]) = "Prims.string"
+  | _ -> false
+
 (* C declarations are not "type, then name": the [*] of a pointer and the
    [(...)] of a function bind to the *declarator*, so the name has to be built
    from the inside out.  [decl_of t x] is the declaration of [x] at type [t],
@@ -994,6 +1005,11 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     "(" ^ c_expr out ind b ^ " + " ^ c_expr out ind i ^ ")"
   | EOp ({ po_op = BufNull }, []) -> "(" ^ ty e.ty ^ ")NULL"
   | EOp ({ po_op = BufIsNull }, [b]) -> "(" ^ c_expr out ind b ^ " == NULL)"
+  (* Section 44.2.  The same comparison in expression position.  [strcmp] is
+     declared by the <string.h> the header already includes. *)
+  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && is_string_ty a.ty ->
+    "(strcmp(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ ") " ^
+    (if Eq? o.po_op then "==" else "!=") ^ " 0)"
   | EOp (o, [a; b]) when Some? (infix_op o) ->
     truncate o ("(" ^ c_expr out ind a ^ " " ^ Some?.v (infix_op o) ^ " " ^
                 c_expr out ind b ^ ")")
@@ -1358,6 +1374,11 @@ and pat_tests (path:string) (t:cty) (p:pat)
   match p with
   | PWild -> ([], [])
   | PVar x -> ([], [(x, path)])
+  (* Section 44.2.  A string pattern is a test on contents, not on address:
+     [pat_tests] is handed the type of the path, so it can see the difference
+     without looking at the constant. *)
+  | PConst (CString v) when is_string_ty t ->
+    (["strcmp(" ^ path ^ ", " ^ constant (CString v) ^ ") == 0"], [])
   | PConst c -> ([path ^ " == " ^ constant c], [])
   | PTuple _ ->
     reject "an anonymous tuple pattern"

@@ -269,6 +269,18 @@ let krml_const (c:constant) : ML K.expr =
      something else. *)
   | CChar _ -> K.EAbortS "Custard: character constants are not supported by the C backend"
 
+(* Section 44.1.  A construct karamel's AST cannot hold has to stop the
+   extraction, and it has to say so the way the C backend says it: a numbered
+   diagnostic naming the construct, not a [failwith].  The three sites that
+   used one also said "the C backend" from a file that is not it, which sends
+   a reader looking in the wrong printer. *)
+let krml_reject (#a:Type) (what:string) : ML a =
+  E.raise_error0 E.Error_CustardNoCRepresentation
+    [text ("Custard: " ^ what ^ " has no karamel representation.");
+     text "The karamel backend's AST has no node for it, so there is no \
+           translation to give.  The direct C backend (--custard_backend C) \
+           may accept it."]
+
 (* -------------------------------------------------------------------- *)
 (* Patterns                                                             *)
 (* -------------------------------------------------------------------- *)
@@ -284,7 +296,21 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
   | PConst (CInt (v, b, None)) -> (env, K.PConstant (K.CInt, krml_int_lit v b))
   | PConst (CInt (v, b, Some sw)) ->
     (env, K.PConstant (krml_width sw, krml_int_lit v b))
-  | PConst _ -> (extend env "_", K.PVar (dummy_binder "_"))
+  (* Section 44.1.  karamel's [pattern] has no case for a string, float or
+     character constant.  This used to fall to a fresh variable pattern -- and
+     a variable pattern matches *everything*, so the branch swallowed the
+     scrutinee and every branch after it was dead code, with no diagnostic on
+     either krml backend.  A pattern the backend cannot translate has to stop
+     the extraction, as [POr] above already does: the alternative is not a
+     worse translation, it is a different program. *)
+  | PConst c ->
+    let what =
+      match c with
+      | CString _ -> "a string pattern"
+      | CFloat _ -> "a floating-point pattern"
+      | CChar _ -> "a character pattern"
+      | _ -> "this constant pattern" in
+    krml_reject what
   | PCtor (n, ps) when is_tuple_ctor_name n ->
     let env, ps = krml_pats env ps in
     (env, K.PTuple ps)
@@ -300,7 +326,8 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
     (env, K.PTuple ps)
   (* karamel has no or-pattern; the first alternative is not a sound choice, so
      refuse rather than miscompile. *)
-  | POr _ -> failwith "Custard: or-patterns are not supported by the C backend"
+  | POr _ ->
+    krml_reject "a pattern disjunction"
 
 and krml_pats (env:kenv) (ps:list pat) : ML (kenv & list K.pattern) =
   match ps with
@@ -455,7 +482,7 @@ and krml_branch (env:kenv) (br:branch) : ML K.branch =
   let env', p = krml_pat env p in
   match g with
   | None -> (p, krml_expr env' body)
-  | Some _ -> failwith "Custard: pattern guards are not supported by the C backend"
+  | Some _ -> krml_reject "a pattern guard"
 
 and repeat_unit (n:int) : ML (list unit) =
   if n <= 0 then [] else () :: repeat_unit (n - 1)
