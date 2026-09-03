@@ -2689,6 +2689,13 @@ let lift_lambdas (prog:program) : ML program =
     | PWild | PConst _ -> []
     | PVar v -> [v]
     | PCtor (_, ps) -> List.collect pat_vars ps
+    | PTuple ps -> List.collect pat_vars ps
+    (* Every disjunct binds the same names, so the first would do; collecting
+       all of them costs nothing and does not depend on that being true.
+       Reachable before [PrintC] gets to refuse the disjunction (section 49.1):
+       this pass runs first, so leaving the case out turned a named error 368
+       into an OCaml [Match_failure]. *)
+    | POr ps -> List.collect pat_vars ps
     | PRecord (_, fs) -> List.collect pat_vars (List.map snd fs) in
   let taken : SMap.t bool = SMap.create 100 in
   prog |> List.iter (fun d ->

@@ -699,6 +699,13 @@ include $(FSTAR_ROOT)/mk/test.mk
 # surviving ECast, no surviving TAny" measurement of section 5.4 true.
 WARN_ANY = --custard_warn_any --warn_error @367
 
+# Section 49.6.  Every rule below that runs $(FSTAR) also depends on the
+# binary.  Without it, `make` here after rebuilding the compiler re-uses
+# yesterday's _output/ and reports on a compiler that no longer exists -- a
+# reviewer "reproduced" a bug this way against a build that had already fixed
+# it.  A checked file is protected by F*'s own cache versioning; a generated
+# .c or .krml is not protected by anything.
+
 # Override the default OCaml extraction rule from test.mk: we drive the Custard
 # pipeline instead, which is whole-program and hence keyed on an entry point.
 $(OUTPUT_DIR)/%.ml:
@@ -711,7 +718,7 @@ $(OUTPUT_DIR)/%.ml:
 	  grep -q -- "$$p" $@ \
 	    && { echo "ERROR: $* output should not contain $$p"; exit 1; }; done; true
 
-$(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
+$(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "REJECT", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
@@ -742,7 +749,7 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked
 	  || { echo "ERROR: $* diagnostic is `wc -c < $(OUTPUT_DIR)/$*.err` bytes"; exit 1; }
 	$(Q)touch $@
 
-$(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked
+$(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "ROOTS", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
@@ -778,7 +785,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
 # cast is a bug in the backend, not a style question.
 CHECKGROUP := $(CURDIR)/checkgroup.py
 
-$(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
+$(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend C \
@@ -847,7 +854,7 @@ $(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
 # Extracted a second time without --custard_main: the consumer supplies main,
 # which is what a library unit is.  The .dc above keeps its own main so that
 # the same code is also run standalone.
-$(OUTPUT_DIR)/ExportLib.c: $(CACHE_DIR)/Export.fst.checked
+$(OUTPUT_DIR)/ExportLib.c: $(CACHE_DIR)/Export.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", ExportLib)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
@@ -873,7 +880,7 @@ $(OUTPUT_DIR)/Export.dcpp: $(OUTPUT_DIR)/ExportLib.c ExportUser.cpp
 
 all: $(OUTPUT_DIR)/Export.dcpp
 
-$(OUTPUT_DIR)/SepLib.cui: $(CACHE_DIR)/SepLib.fst.checked
+$(OUTPUT_DIR)/SepLib.cui: $(CACHE_DIR)/SepLib.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT", SepLib)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_unit SepLib \
@@ -884,7 +891,7 @@ $(OUTPUT_DIR)/SepLib.cui: $(CACHE_DIR)/SepLib.fst.checked
 $(OUTPUT_DIR)/SepLib.ml: $(OUTPUT_DIR)/SepLib.cui
 	$(Q)test -f $@
 
-$(OUTPUT_DIR)/SepApp.ml: $(CACHE_DIR)/SepApp.fst.checked $(OUTPUT_DIR)/SepLib.cui
+$(OUTPUT_DIR)/SepApp.ml: $(CACHE_DIR)/SepApp.fst.checked $(OUTPUT_DIR)/SepLib.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK", SepApp)
 	$(FSTAR) --codegen Custard $(WARN_ANY) \
 	  --custard_link $(OUTPUT_DIR)/SepLib.cui \
@@ -912,7 +919,7 @@ GREP_SepApp  += "SepLib.SepLib_Rect"
 # above and a different set of assertions, because C is where the questions
 # were: what a unit offers (42.1), what a downstream unit may not define twice
 # (42.2), and who initializes the globals (42.3).
-$(OUTPUT_DIR)/SepLibC.cui: $(CACHE_DIR)/SepLibC.fst.checked
+$(OUTPUT_DIR)/SepLibC.cui: $(CACHE_DIR)/SepLibC.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", SepLibC)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
@@ -920,10 +927,10 @@ $(OUTPUT_DIR)/SepLibC.cui: $(CACHE_DIR)/SepLibC.fst.checked
 	  --custard_entry SepLibC.scale --custard_entry SepLibC.manhattan \
 	  --custard_entry SepLibC.origin --odir $(OUTPUT_DIR) SepLibC.fst
 
-$(OUTPUT_DIR)/SepLibC.c: $(OUTPUT_DIR)/SepLibC.cui
+$(OUTPUT_DIR)/SepLibC.c: $(OUTPUT_DIR)/SepLibC.cui $(FSTAR_EXE)
 	$(Q)test -f $@
 
-$(OUTPUT_DIR)/SepAppC.c: $(CACHE_DIR)/SepAppC.fst.checked $(OUTPUT_DIR)/SepLibC.cui
+$(OUTPUT_DIR)/SepAppC.c: $(CACHE_DIR)/SepAppC.fst.checked $(OUTPUT_DIR)/SepLibC.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", SepAppC)
 	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
 	  --custard_monomorphize_types true \
@@ -998,7 +1005,7 @@ all: $(OUTPUT_DIR)/SepApp.out.diff
 # dead-code elimination cannot see that.  That is the general rule for a
 # realization's callees, and the same --custard_entry idiom section 4.4 asks
 # of a library.
-$(OUTPUT_DIR)/SplitHi.ml: $(CACHE_DIR)/SplitHi.fst.checked
+$(OUTPUT_DIR)/SplitHi.ml: $(CACHE_DIR)/SplitHi.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-SPLIT", SplitHi)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_split \
@@ -1202,6 +1209,18 @@ CODE_TryOk := 368
 EGREP_TryOk += "an exception handler has no karamel representation"
 NOEGREP_TryOk += "does accept it"
 
+# Section 49.3.  Erasure silently changes an external's arity.  A *pure*
+# [unit -> unit] parameter computes nothing, so Custard drops it, and the
+# emitted call no longer matches the C prototype that Custard cannot see.
+# Warning 382 is the only place that can be noticed.  The same test pins the
+# carve-out: the [erased] parameter of [run_g] is erasure the author asked
+# for, and naming it here would make section 47.2's idiom unusable, so the
+# NOEGREP requires the diagnostic to name [cb] and not [w].
+REJECT_TESTS += ExternErase
+CODE_ExternErase := 382
+EGREP_ExternErase += "external ExternErase.run: cb"
+NOEGREP_ExternErase += "ExternErase.run_g"
+
 # Section 47.2.  An indexed custard_extern type, with the configuration
 # chosen by a typeclass whose indices are all erased -- the shape the
 # TensorCore fragment API has.  Checks its own answer: 0 + 2*3 = 6.
@@ -1250,7 +1269,30 @@ check-settings:
 	  echo "ERROR: setting(s) for no registered test: $(ORPHAN_SETTINGS)"; \
 	  echo "Either register the test, or delete the setting."; exit 1; }
 
+# Section 49.6.  The two pattern rules above that *override* a rule of the same
+# name in mk/test.mk ($(OUTPUT_DIR)/%.ml and %.krml) must keep the overridden
+# rule's exact prerequisite list, or make stops treating them as replacements
+# and silently runs test.mk's plain --codegen OCaml recipe instead.  So those
+# two get the binary as an explicit prerequisite of each concrete target
+# rather than as part of the pattern.
+$(addprefix $(OUTPUT_DIR)/, $(addsuffix .ml,   $(CUSTARD_TESTS))): $(FSTAR_EXE)
+$(addprefix $(OUTPUT_DIR)/, $(addsuffix .krml, $(KRML_TESTS))):    $(FSTAR_EXE)
+
 all: check-settings check-sources
+
+# Section 49.1.  Nothing in the build catches an inexhaustive match in
+# Custard's own sources: the compiler is checked with --lax, so F* does not
+# prove exhaustiveness, and the extracted OCaml is compiled with -w -A, so
+# OCaml does not report it.  A missing case therefore reaches a user as an
+# OCaml Match_failure naming a line in generated code.  Round 49 reported one
+# (flag_to_doc, missing Prologue); the sweep found nine.  ocamlfind is not
+# guaranteed present and neither is a dune build tree, so the script skips
+# rather than failing when it cannot run.
+.PHONY: check-partial
+check-partial:
+	$(Q)python3 $(CURDIR)/checkpartial.py
+
+all: check-partial
 
 # Section 37.1: the gate has its own gate.  A matcher that silently stops
 # recognizing one of the three shapes it was written for reads like coverage

@@ -2440,6 +2440,36 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   (* Section 8's rules dispatch on the shape of an argument's type, so an
      abbreviation has to be seen through first; see {!head_ty}. *)
   let args = args |> List.map (fun (e:expr) -> { e with ty = head_ty st e.ty 10 }) in
+  (* Section 49.2.  A rule declaring an arity larger than the declaration's
+     retained one can never be applied: every use site is eta-expanded, the
+     rule's return value becomes a lambda nothing applies, and the simplifier
+     deletes it as a dead pure binding -- while any *side effect* the rule
+     performed on the way (registering a root, lifting a kernel) has already
+     happened.  The output then contains a plausible-looking definition and no
+     call to it, with exit code 0.
+     The mistake is easy to make because a rule sees the erased implicits in
+     the term it is handed while a use site supplies only the retained
+     binders, so counting the wrong ones is the natural error.
+     A warning rather than an error: [erased_binders_unfold] declines to peel
+     an effectful codomain, so a rule for something returning a function
+     through an [ML] abbreviation may legitimately exceed the visible count. *)
+  (match decl_ty with
+   | Some ty ->
+     let retained = Mono.erased_binders_unfold (tcenv st) ty
+                    |> List.filter (fun b -> not b) |> List.length in
+     if n > retained then
+       custard_warning st E.Warning_CustardRuleArity [
+         Pprint.doc_of_string
+           ("The rule for " ^ Ident.string_of_lid l ^ " declares arity " ^
+            show n ^ ", but the declaration retains only " ^ show retained ^
+            " binder(s) after erasure.");
+         Pprint.doc_of_string
+           "No use site can supply that many arguments, so every use is \
+            eta-expanded and the rule's result is a lambda that nothing \
+            applies.  Any effect the rule performs still happens, so the \
+            output may contain the definitions it produced and no call to \
+            them."]
+   | None -> ());
   let given, extra =
     if List.length args <= n then args, []
     else List.splitAt n args in
@@ -3446,6 +3476,63 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
     let res = ty_of_typ st (Effects.result_typ (tcenv st) c) in
     let e = eff_of_comp st c in
     let vs = drop_flagged (Mono.erased_binders (tcenv st) (U.arrow keep c)) keep in
+    (* Section 49.3.  Erasure is Custard's own business everywhere except here.
+       An external's prototype is fixed outside F*, in a header Custard cannot
+       see, so dropping a binder changes the emitted call's arity against a
+       declaration that did not change with it.  A *pure* [unit -> unit]
+       parameter really is a specification and really should be erased -- and
+       it is also the shape a CUDA kernel has, since every kernel returns
+       void, so it is what a user reaches for first.  Against a variadic
+       macro like [KPR_KCALL] the wrong arity even compiles.
+
+       Two exclusions, and both are the author having already said so:
+       a type binder leaves the value spine by design and becomes a
+       [dx_typars] entry, and a binder whose sort's head carries F*'s own
+       [erasable] attribute is a declaration that it carries nothing.  The
+       latter is the whole of section 47.2's idiom -- an external type indexed
+       by [G.erased nat] -- which would otherwise warn on every correct use.
+       What is left is erasure Custard *inferred*, which is the case the
+       author has no way to see. *)
+    (* Erasure the author *declared* -- [erased t], [squash p], a type
+       carrying the [erasable] attribute -- is not news: it is the point of
+       writing it that way, and Section 47.2's indexed-external idiom depends
+       on it.  Only erasure Custard *inferred* is worth a warning.  Note
+       [non_informative] unfolds abbreviations, which a direct check of the
+       head fvar's attributes does not: Section 47.2's index type is an
+       [unfold] abbreviation whose own name carries no attribute, so the
+       sort has to be unfolded first.
+
+       The arrow case must be excluded by hand.  [non_informative] descends
+       into an arrow's codomain, so it calls [unit -> unit] non-informative
+       -- which is true of its *result* and is exactly the parameter this
+       warning exists to report.  A function-typed parameter is never
+       "declared erased": what makes it vanish is that it is pure, which is
+       an inference, not a declaration. *)
+    let declared_erased (b:S.binder) : ML bool =
+      let t = N.unfold_whnf (tcenv st) b.binder_bv.sort in
+      match (SS.compress t).n with
+      | Tm_arrow _ -> false
+      | _ -> TcEnv.non_informative (tcenv st) t in
+    let dropped = List.zip keep (Mono.erased_binders (tcenv st) (U.arrow keep c))
+                  |> List.collect (fun (b, e) ->
+                       if e && not (is_type_binder (tcenv st) b)
+                          && not (declared_erased b)
+                       then [Ident.string_of_id b.binder_bv.ppname] else []) in
+    if Cons? dropped then
+      custard_warning st E.Warning_CustardExternErasure [
+        text ("Custard erased " ^ show (List.length dropped) ^
+              " parameter(s) of the external " ^ Ident.string_of_lid l ^
+              ": " ^ String.concat ", " dropped ^ ".");
+        text "An external's prototype is fixed outside F*, so the generated \
+              call now has fewer arguments than the C declaration it is \
+              checked against.";
+        text "A pure function-typed parameter is the usual cause: \
+              [unit -> unit] is a specification and is erased, while \
+              [unit -> FStar.All.ML unit] is a computation and is kept.";
+        text "If the parameter really carries nothing, write its type as \
+              [erased t], which says so and silences this."];
+
+
     let rec build (bs:binders) : ML cty =
       match bs with
       | [] -> res

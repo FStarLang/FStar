@@ -137,7 +137,11 @@ CNOGREP_PulseBlit += "(((size_t)2ULL))"
 # the representation of a value.
 WARN_ANY = --custard_warn_any --warn_error @367
 
-$(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked
+# Section 49.6.  As in ../Makefile: every rule that runs $(FSTAR) depends on
+# the binary, so that a rebuilt compiler invalidates the generated output
+# rather than leaving yesterday's beside a today's binary.
+
+$(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_main $*.main $*.fst -o $@
@@ -159,7 +163,7 @@ $(OUTPUT_DIR)/%.mlchecked: $(OUTPUT_DIR)/%.custard.ml
 	$(Q)cd $(OUTPUT_DIR)/$*_ml && $(abspath $(FSTAR_EXE)) --ocamlopt $*.ml -o $*.exe
 	$(Q)touch $@
 
-$(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked
+$(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC $(KRML_FLAGS_$*) \
@@ -168,7 +172,7 @@ $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked
 # Section 20.  KrmlRust is a different backend and not a flag on this one: it
 # models Pulse.Lib.Slice away, so this .krml does not hold the program the C
 # column needs and the C column's does not hold the one Rust needs.
-$(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked
+$(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-KRML-RUST", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlRust --custard_main $*.main \
@@ -207,7 +211,7 @@ $(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/%.rs
 	$(Q)$(OUTPUT_DIR)/$*.rsexe
 	$(Q)touch $@
 
-$(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
+$(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
@@ -248,7 +252,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 # slprop-valued 'val' must say that it is a specification, not reject the
 # recursive datatype that only ever indexes it.  This is the suite's one
 # negative test, so it is a rule of its own rather than a GREP_TESTS entry.
-$(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked
+$(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", PulseSpecRoot)
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard --custard_backend C \

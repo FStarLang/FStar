@@ -395,5 +395,7 @@ let default_settings : list error_setting =
     Error_CustardBadLift                               , CAlwaysError, 378;
     Error_CustardDanglingReference                     , CAlwaysError, 379;
     Error_CustardBadFloatLiteral                       , CAlwaysError, 380;
+    Warning_CustardRuleArity                           , CWarning, 381;
+    Warning_CustardExternErasure                       , CWarning, 382;
     Error_AmbiguousName                               , CError, 362;
     ]

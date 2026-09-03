@@ -449,6 +449,12 @@ let rec decl_of (t:cty) (x:string) : ML string =
 
 and base_ty (t:cty) : ML string =
   match t with
+  (* Section 49.1.  [Simplify.inline_fields] removes every [TInline] and no
+     backend ever sees one, so reaching here is a broken invariant rather than
+     a program Custard cannot express -- hence a [failwith] and not an error
+     368, which would blame the user for a bug of ours. *)
+  | TInline _ ->
+    failwith "Custard: an inline-field marker reached the C backend"
   | TUnit -> "custard_unit"
   | TInt sw -> int_type sw
   | TFloat Float32 -> "float"

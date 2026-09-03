@@ -11849,6 +11849,225 @@ backend was never asked the same question*. It happened to be right --
 is the shape of §46.1 and of §44 and of this section's own §48.3, and the
 cheapest place to catch it is at the moment of the first fix.
 
+# 49 A rule plugin, ported, and what it walked into
+
+Round 49 is the first report written from *inside* a rule plugin. Kuiper's
+kernel launcher -- until now a hand-maintained karamel plugin -- was ported
+to §36's `Rule_prim`/`lift_named` surface, run on a real kernel, and
+compiled with `nvcc`. It works: the output is the output that ships.
+
+Getting there cost the reporter an afternoon, and the afternoon is the
+report. Four of the five items are the same defect in four places: **an
+error in a rule is not reported to the rule's author.** A missing case
+crashes with an OCaml `Match_failure` and a filename that means nothing to
+him; an over-large arity produces plausible C with the point of the program
+deleted from it and exit 0; an erased parameter changes an `extern`'s arity
+against a header nobody can see; a zero-binder lambda lifts to a global
+variable wearing `__global__`. In each case Custard knew enough to say
+something and said nothing.
+
+## 49.1 One inexhaustive match, and then nine
+
+The reported bug is three lines long. `Syntax.flag_to_doc` had no case for
+`Prologue`, `Epilogue` or `CInline`, so `--custard_dump_ir` -- the first
+thing anyone reaches for when a rule does not do what they expected --
+crashed on any declaration carrying one. Those three flags are exactly what
+a device-backend plugin sets, so the crash was reserved for the population
+least able to read it.
+
+What is worth recording is the second question: **why did nothing catch
+it?** `flag_to_doc` is a total function over a closed datatype in a language
+with exhaustiveness checking, compiled by a second language with
+exhaustiveness checking, and neither said a word. Both are switched off, for
+good reasons that are nobody's decision to revisit here:
+
+- the compiler's own sources are checked with `--lax` (`mk/fstar-01.mk`,
+  `mk/fstar-12.mk`), so F\* proves nothing about them, exhaustiveness
+  included;
+- the extracted OCaml is compiled by dune with `(flags (:standard -w -A))`
+  (`stage2/dune/dune`), which turns off warning 8 along with everything
+  else.
+
+So a missing case in `src/custard/` is not a compile error, not a warning,
+and not a test failure. It is a crash in the field, reported as
+`Unexpected error: File "FStarC_Custard_Syntax.ml", line 1132: Pattern
+matching failed`.
+
+A single sweep with warning 8 on found **nine**, of which the reported one
+is the smallest:
+
+| site | missing |
+| --- | --- |
+| `Syntax.flag_to_doc` | `Prologue`, `Epilogue`, `CInline` |
+| `Unit.entry_to_string` | `DExn` |
+| `Simplify.lift_lambdas`'s `pat_vars` | `PTuple`, `POr` |
+| `PrintC.base_ty` | `TInline` |
+| `PrintKrml.krml_typ` | `TInline` |
+| `PrintKrml.krml_op` | the eight buffer operations |
+| `PrintOCaml.ty` | `TInline` |
+| `PrintOCaml`'s two operator printers | the eight buffer operations, twice |
+
+The `pat_vars` one is reachable from source today, and was a *regression of
+a diagnostic*: `lift_lambdas` runs before `PrintC` gets to refuse a
+disjunctive pattern, so a `POr` under a lambda that needed lifting turned
+what should have been a named error 368 into a `Match_failure`.
+
+Two of them contradict something this document said. §48.5 recorded, as a
+checked negative result, that `krml_op` "is total and 1:1 over 22
+operators, with no catch-all". It is not: the eight buffer operations were
+missing. Nothing crashed because they are intercepted at the `EOp` site in
+`krml_expr`, which turns them into karamel *expressions* (`EBufRead` and
+friends) and never reaches `krml_op` -- but that is a property of the
+caller, and the claim was about the callee. The right lesson is §41.3's:
+**a totality claim about generated code should be justified by a check, not
+by a reading.**
+
+The three `TInline` cases and the buffer-operation cases get a `failwith`
+rather than an error 368, following `PrintKrml`'s existing convention: a
+numbered diagnostic blames the user's program and a `failwith` blames
+Custard. `TInline` reaching a printer is a broken invariant
+(`Syntax.fsti`: "no later pass and no backend ever sees one"), so the
+message names the invariant. `krml_op` had to be retyped `ML K.op` to
+contain a `failwith` at all.
+
+`tests/custard/checkpartial.py` and the `check-partial` make target keep the
+class closed: they run `ocamlfind ocamlc -w +8 -stop-after typing` over the
+extracted `FStarC_Custard_*.ml`, filter the two shapes F\* generates on
+purpose (projectors, and `Some?.v`-style one-constructor eliminations), and
+report the rest. It runs with the suite. Two properties it was given after
+the first draft failed to have them: it fails, rather than passing
+vacuously, when a module does not compile; and deleting a case from the
+extracted source makes it name exactly that site, which is how it was
+checked.
+
+## 49.2 A rule whose result nobody uses
+
+The reporter's own "most valuable finding", and he is right. A
+`Rule_prim (n, f)` declaring an arity larger than any call site can supply
+does not fail. It fires, its `lift_named` side effect lands -- so the
+generated C contains a well-formed `__global__` kernel -- and its *return
+value* is wrapped in an unapplied closure, which the simplifier then deletes
+as a dead binding. The output is a kernel that is never launched, the
+compiler exits 0, and nothing is printed.
+
+The mechanism is `Extract.prim_app`: when `missing = n - length given` is
+positive it eta-expands, calling `f tyargs (given @ vs)` for fresh `vs` and
+wrapping the result in an `EFun`. That is correct for a rule that is
+genuinely partially applied. It is silently wrong for a rule whose declared
+arity is a mistake, because the two are indistinguishable at one call site.
+
+They are distinguishable at the declaration. **An arity larger than the
+declaration's retained binder count cannot be satisfied by any call site**,
+so it is a static error in the rule, not a property of a use. Warning 381
+(`Warning_CustardRuleArity`) says so, from `prim_app`, comparing `n` against
+`Mono.erased_binders_unfold`'s count. It is a warning rather than an error
+because that count is conservative: `erased_binders_unfold` declines to peel
+an effectful codomain, so a rule could in principle be right and be warned
+about. Measured: zero firings across `tests/custard`,
+`tests/custard/pulse`, and `make custard`, which is thirty-odd rules and the
+whole compiler.
+
+The alternative -- making `Rule_prim` carry its arity in a checked way --
+was rejected as costing ~30 in-tree call sites to catch a mistake that a
+three-line static check catches. The reporter's own diagnosis is worth
+repeating, because it is the trap: he counted the term arguments his rule
+*received*, which include the eta variables Custard invented, rather than
+the ones a source site *supplies*.
+
+## 49.3 Erasure changes an external's arity
+
+A `custard_extern`'s prototype lives in a header Custard cannot see, so
+Custard's usual freedom -- drop a parameter that computes nothing -- is not
+free there. A *pure* `unit -> unit` parameter is a specification: it is
+erased, and the emitted call has one argument where the header has two. The
+C compiler catches that, unless the target is a variadic macro, which
+`KPR_KCALL` is, in which case it compiles.
+
+Warning 382 (`Warning_CustardExternErasure`) reports it from
+`Extract.external_ty`, naming the parameters that went away and the two ways
+out: make the parameter a computation (`unit -> FStar.All.ML unit`) if it is
+one, or write its type as `erased t` if it is not.
+
+The carve-out is the interesting half, and it is an interaction the reporter
+could not have seen, because it is with **his own §47.2 idiom**. An external
+type indexed by `G.erased nat` -- the TensorCore fragment API's shape, and
+the subject of round 47 -- has three parameters that are erased on purpose,
+and the first version of this warning reported all three. Erasure the author
+*declared* is not news; erasure Custard *inferred* is. So the test is
+whether the parameter's type is non-informative:
+
+- checking the head fvar's `erasable` attribute directly does not work.
+  §47.2 writes `unfold let en = G.erased nat`, and the binder's sort is
+  `FragCfg.en`, whose own name carries no attribute. The sort has to be
+  unfolded first.
+- `TcEnv.non_informative` after unfolding does work, but it descends into an
+  arrow's codomain, so it calls `unit -> unit` non-informative -- which is
+  true of the *result* and is precisely the parameter this warning exists to
+  report. The arrow case is excluded by hand. A function-typed parameter is
+  never "declared erased": what makes it vanish is that it is pure, and that
+  is an inference.
+
+`tests/custard/ExternErase.fst` pins both halves in one file: the diagnostic
+must name `cb`, the pure `unit -> unit`, and must not name the external
+whose parameter is written `erased`. Measured: zero firings across the
+suite once the carve-out was in.
+
+## 49.4 A lambda with no binders is not a function
+
+`lift_named` matched `EFun (bs, body)` without looking at `bs`. Given
+`EFun ([], body)` -- which is its own body written the long way -- it
+produced a `DLet` with no binders, that is, a top-level *variable*, and
+attached the caller's flags to it. `Prologue "__global__"` on a global
+variable is not a kernel; it is a C compiler error at best and something
+stranger at worst. The function-ness was lost silently, which is the same
+defect as the other three in this section.
+
+It is now refused with the message `lift_named` already had for a non-lambda
+argument, because that is what it is, plus a sentence saying so and
+suggesting a `unit` parameter. The `.fsti` says it too: the lambda must be
+closed *and* must have at least one binder.
+
+## 49.5 Rewriting a binder's type from inside a rule
+
+Not a defect; a question. The reporter gives
+`Kuiper.SHMem.c_shmems` -- an existential with no runtime content in F\* and
+a `uint8_t*` in C -- a representation by rewriting the kernel binder's type
+from inside his rule, and asks whether that is the intended mechanism.
+
+For v1: **it works and it is unchecked**, which is §5.9's warning applied to
+a case §5.9 did not have in mind. A rule may build any IR it likes and
+Custard type-checks none of it; a binder whose printed type disagrees with
+what the caller passes is exactly the class of mistake §5.9 says the rule
+author owns. It is the right tool today because there is no other one.
+
+It is the wrong tool eventually, for the reason 49.2 and 49.3 are in this
+section: a rule that rewrites a type has moved a *declaration* into a
+*rule*, where nothing can see it. The end state is a source-level way to say
+"this existential's runtime witness is `uint8_t*`" -- which is
+`custard_extern` on a type, except that the type in question is not opaque
+in F\*, it is empty. That is a v2 design and it is written down here so that
+it is not rediscovered.
+
+## 49.6 The suite could pass against a compiler that no longer exists
+
+Reported as an aside and it is the most alarming item in the round: the
+reporter "reproduced" a bug against a compiler that had already fixed it.
+`tests/custard` declared no dependency on `fstar.exe`, so a `make` after
+rebuilding F\* happily re-used yesterday's `_output/`. Every measurement in
+every round of this document is a `make` in that directory.
+
+`$(FSTAR_EXE)` is now a prerequisite of every rule in `tests/custard` and
+`tests/custard/pulse` that runs the compiler. Two of them could not get it
+that way, and the reason is worth recording:
+`$(OUTPUT_DIR)/%.ml` and `$(OUTPUT_DIR)/%.krml` are *overrides* of
+identically-named pattern rules in `mk/test.mk`. Make treats a pattern rule
+as replacing an earlier one only when the target and prerequisite patterns
+match; adding a prerequisite makes it a *second* rule instead, both survive,
+and make chooses `mk/test.mk`'s -- whose recipe is a plain
+`--codegen OCaml`. The symptom is an `Error 76` from a file that extracts
+fine. Those two get the binary as an explicit prerequisite of each concrete
+target instead, which is outside the pattern.
+
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -12032,3 +12251,9 @@ cheapest place to catch it is at the moment of the first fix.
 | M10γϊ | **`PatStrKrml` runs, `PatStrNest` refuses** (§48.3) | Done.  Round 48.  `PatStrKrml` was a reject test for two rounds and now checks its own answers; it takes its strings from a malloc-ing external for the same reason `PatStr` does (§44.2), and supplies `__eq__Prims_string` from its stub header because the suite links krmllib's *minimal* distribution -- a krmllib dependency, not a Custard one, and one any program comparing two strings through krml already has.  `PatStrNest` is the negative control: `Some "a"` is not a flat string match, so it still reaches `krml_pat` and is still refused, with a `NOEGREP` pinning that the message does not mention the if-chain |
 | M10γϋ | **Source comments cited the wrong section** (§48.4) | Fixed, round 48.  Round 47's commit copied the reviewer's round numbers into six source comments and three test files as `Section 48.1`/`Section 48.2`; this document is one lower and has been since §46, so the comments pointed at a section that did not exist.  The divergence had been stated in a PR reply and needed stating in the sources, where a reader of a comment actually is.  A round report's headings get renumbered on the way in, not copied |
 | M10γΐ | **Three negative results, recorded** (§48.5) | Recorded, round 48, no code.  `builtin_type` is a subset of `prim_type` after §46.1, with one *correct* divergence -- `Prims.int` is deliberately absent from `builtin_type`, since unbounded arithmetic has no C11 representation while karamel has `krml_checked_int_t`.  `krml_op` is total and 1:1 over 22 operators, and the `\| _ -> K.CInt` width fallback beside it is reachable only for `Prims.int`.  Every `==` site in `PrintC` audited: two enum tags, two `NULL`, two the string pair.  Plus the one the reviewer found on himself, which is the one worth keeping: string `==` was fixed in direct C in round 44 and the krml backend was never asked the same question.  It was right -- but "fixed in one backend, never checked in the other" is §44 and §46.1 and §48.3, and the cheapest place to catch it is the first fix |
+| M10γΑ | **Nine inexhaustive matches, and a check that keeps them out** (§49.1) | Done, round 49.  The report is `flag_to_doc` crashing `--custard_dump_ir` on `Prologue`/`Epilogue`/`CInline` -- the three flags a device-backend plugin sets, so the crash was reserved for the population least able to read `Pattern matching failed` and a filename in `stage2`.  The finding is that *nothing in the build could have caught it*: the compiler's sources are checked `--lax` (`mk/fstar-01.mk`) so F\* proves no exhaustiveness, and the extracted OCaml is compiled `-w -A` (`stage2/dune/dune`) so warning 8 is off.  A sweep with it on found nine, not one, and one of them is reachable from source today -- `lift_lambdas`' `pat_vars` missing `POr`, which turned §33's named error 368 for a disjunctive pattern into a `Match_failure`, a *regression of a diagnostic*.  Two more contradict M10γΐ: `krml_op` was not total, being short the eight buffer operations, which never crashed only because `krml_expr` intercepts them upstream -- a property of the caller standing in for a claim about the callee.  `TInline` and the buffer ops get `failwith` and not 368, per `PrintKrml`'s convention that a numbered diagnostic blames the program and a `failwith` blames Custard.  `tests/custard/checkpartial.py` and `make check-partial` run `ocamlfind ocamlc -w +8` over the extracted Custard modules with the two intentional shapes filtered, and were themselves checked twice: by deleting a case, and by making a module fail to compile |
+| M10γΒ | **A rule whose result nobody uses** (§49.2) | Done, round 49, and the reporter's own best finding.  A `Rule_prim (n, f)` whose declared arity exceeds what any call site can supply does not fail: `prim_app` eta-expands, the rule fires, its `lift_named` side effect lands, and the *returned* closure is unapplied and deleted as dead.  The C then contains a well-formed `__global__` kernel and no launch of it, exit 0, silence.  Warning 381 compares `n` against `Mono.erased_binders_unfold`'s retained-binder count at the declaration, where the mistake is visible without a use site -- rather than changing `Rule_prim`'s signature, which is ~30 in-tree edits to catch what three lines catch.  A warning and not an error because that count is conservative: `erased_binders_unfold` declines to peel an effectful codomain.  Zero firings across `tests/custard`, `tests/custard/pulse` and `make custard`.  The trap, worth repeating: he counted the term arguments his rule *received*, which include Custard's own eta variables, not the ones a source site supplies |
+| M10γΓ | **Erasure changes an external's arity** (§49.3) | Done, round 49.  A `custard_extern`'s prototype is fixed in a header Custard cannot see, so dropping a parameter that computes nothing is not free there: a *pure* `unit -> unit` parameter is a specification, is erased, and the call goes out one argument short -- which `cc` catches unless the target is a variadic macro, and `KPR_KCALL` is one.  Warning 382 names the parameters and the two ways out.  The carve-out is the half the reporter could not have seen, because it is with **his own §47.2 idiom**: an external indexed by `G.erased nat` has three parameters erased *on purpose*, and the first version reported all three.  Erasure the author declared is not news; erasure Custard inferred is.  Two attempts failed first -- the head fvar's `erasable` attribute misses it, since §47.2 writes `unfold let en = G.erased nat` and the sort's head is `FragCfg.en`, which carries no attribute; and `non_informative` after unfolding calls `unit -> unit` non-informative, descending into the codomain and swallowing exactly the case the warning is for.  Unfold, then exclude arrows by hand.  `tests/custard/ExternErase.fst` pins both halves in one file: name `cb`, do not name the `erased` one |
+| M10γΔ | **A lambda with no binders is not a function** (§49.4) | Done, round 49.  `lift_named` matched `EFun (bs, body)` without looking at `bs`, so `EFun ([], body)` -- its own body written the long way -- lifted to a `DLet` with no binders, which is a top-level *variable*, wearing the caller's flags.  `Prologue "__global__"` on a global variable is not a kernel.  Refused now, with the message it already had for a non-lambda argument, which is what it is; the `.fsti` says the lambda must be closed *and* have at least one binder.  The fourth instance of the round's one theme: Custard knew enough to say something and said nothing |
+| M10γΕ | **Rewriting a binder's type from inside a rule** (§49.5) | Answered, no change.  Giving an existential with no F\* runtime content a C representation by rewriting the kernel binder's type inside the rule works, and is unchecked -- §5.9's warning applied to a case §5.9 did not have in mind.  It is the right tool today because there is no other, and the wrong one eventually for the reason 49.2 and 49.3 are in the same section: it moves a *declaration* into a *rule*, where nothing can see it.  The end state is a source-level way to say "this existential's runtime witness is `uint8_t*`" -- `custard_extern` on a type, except the type is not opaque in F\*, it is empty.  Written down so it is not rediscovered |
+| M10γΖ | **The suite could pass against a compiler that no longer exists** (§49.6) | Done, round 49, and the most alarming item in it: the reporter "reproduced" a bug against a compiler that had already fixed it, because `tests/custard` declared no dependency on `fstar.exe` and `make` re-used yesterday's `_output/`.  Every measurement in every round of this document is a `make` in that directory.  `$(FSTAR_EXE)` is a prerequisite of every compiler-running rule in `tests/custard` and `tests/custard/pulse` now.  Two of them could not get it that way: `$(OUTPUT_DIR)/%.ml` and `%.krml` are *overrides* of identically-named pattern rules in `mk/test.mk`, and make treats a pattern rule as replacing an earlier one only when the patterns match -- adding a prerequisite makes it a second rule, both survive, and make picks `test.mk`'s plain `--codegen OCaml`.  Symptom: `Error 76` from a file that extracts fine.  Those two get an explicit prerequisite per concrete target, outside the pattern |

@@ -1058,7 +1058,14 @@ let lift_named (id:string) (fs:list flag) (e:expr) : ML expr =
   let n = { ns = []; id = id; spec = None } in
   let bs, body =
     match e.e with
-    | EFun (bs, body) -> bs, body
+    (* Section 49.4.  A zero-binder [EFun] is not a function -- it is a
+       roundabout way of writing its own body -- and lifting one produces a
+       [DLet] with no binders, which is a top-level *variable*.  That loses
+       the function-ness silently, and with it the point of the flags: a
+       [Prologue "__global__"] on a global variable is not a kernel, it is a
+       C compiler error at best.  So it is refused with the same message as
+       any other non-lambda, which is what it is. *)
+    | EFun (b :: bs, body) -> b :: bs, body
     | _ ->
       FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadLift [
         FStarC.Errors.Msg.text
@@ -1066,7 +1073,11 @@ let lift_named (id:string) (fs:list flag) (e:expr) : ML expr =
            ^ id ^ "'.");
         FStarC.Errors.Msg.text
           "Only a lambda has parameters and a body to lift; anything else is \
-already a value and can be referred to where it stands." ] in
+already a value and can be referred to where it stands.";
+        FStarC.Errors.Msg.text
+          "A lambda with an empty binder list counts as `anything else': it \
+is its own body, and lifting it would make a top-level variable rather than \
+a function.  Give it a parameter -- a unit one if it needs none." ] in
   let ret = match e.ty with
             | TArrow _ -> List.fold_left (fun t (_:binder) ->
                             match t with TArrow (_, _, r) -> r | _ -> t)

@@ -214,6 +214,11 @@ val registered_roots : unit -> ML (list Ident.lident)
     checked: two lifts under one name are an error rather than a silent
     overwrite.
 
+    The lambda must have at least one binder.  A zero-binder lambda is its
+    own body, so lifting one would produce a top-level variable rather than a
+    function, and the flags -- whose whole point is that they decorate a
+    *function* -- would go somewhere they mean nothing.  That is refused.
+
     The lambda must be closed.  A rule that wants to lift a body capturing
     locals closes it first, by adding the captures as leading parameters and
     passing them at the call -- there is nothing Custard can do about a

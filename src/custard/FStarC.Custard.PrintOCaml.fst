@@ -356,6 +356,10 @@ let rec ty (t:cty) : ML string =
      one-element array.  The buffer operations are shared with [TBuf], so the
      spelling of each one is chosen from the type of its pointer argument. *)
   | TRef t -> "(" ^ ty t ^ " ref)"
+  (* Section 49.1.  Removed by [Simplify.inline_fields]; see the same case in
+     [PrintC.decl_of]. *)
+  | TInline _ ->
+    failwith "Custard: an inline-field marker reached the OCaml backend"
   (* [FStar.Pervasives.Native.tupleN] is OCaml's own N-tuple.  The realization
      says so -- [type ('a,'b) tuple2 = 'a * 'b] is an alias, not a definition
      -- so writing the tuple type directly is not a translation of it but the
@@ -450,7 +454,12 @@ let op_name (o:prim_op) : ML string =
      | BShiftL -> "shift_left" | BShiftR -> "shift_right"
      | Eq -> "eq" | Neq -> "ne" | Lt -> "lt" | Lte -> "lte"
      | Gt -> "gt" | Gte -> "gte"
-     | And -> "logand" | Or -> "logor" | Not -> "lognot")
+     | And -> "logand" | Or -> "logor" | Not -> "lognot"
+     (* Section 49.1.  Handled at the [EOp] site as OCaml array and [ref]
+        expressions, so none of them reaches an operator name. *)
+     | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
+     | BufBlit | BufCreate _ ->
+       failwith "Custard: a buffer operation is not an OCaml operator")
   | None ->
     (match o.po_op with
      | Add -> "Prims.op_Plus" | AddW -> "Prims.op_Plus"
@@ -462,7 +471,11 @@ let op_name (o:prim_op) : ML string =
      | Gt -> "(>)" | Gte -> "(>=)"
      | And -> "(&&)" | Or -> "(||)" | Not -> "not"
      | BOr -> "(lor)" | BAnd -> "(land)" | BXor -> "(lxor)" | BNot -> "lnot"
-     | BShiftL -> "(lsl)" | BShiftR -> "(lsr)")
+     | BShiftL -> "(lsl)" | BShiftR -> "(lsr)"
+     (* Section 49.1.  See the [PInt] case above. *)
+     | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
+     | BufBlit | BufCreate _ ->
+       failwith "Custard: a buffer operation is not an OCaml operator")
 
 (* OCaml has no integer pattern that means what the IR's [PConst (CInt _)]
    means: [Prims.int] is a [Z.t], whose literals are calls to

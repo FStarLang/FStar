@@ -496,6 +496,9 @@ let flag_to_doc (f:flag) : ML document =
   | Inline -> text "inline"
   | Erased -> text "erased"
   | Comment s -> text ("(* " ^ s ^ " *)")
+  | Prologue s -> text ("prologue " ^ s)
+  | Epilogue s -> text ("epilogue " ^ s)
+  | CInline -> text "c_inline"
   | Realized -> text "realized"
   | Extern (n, h) ->
     text ("extern" ^ (match n with Some n -> " " ^ n | None -> "") ^

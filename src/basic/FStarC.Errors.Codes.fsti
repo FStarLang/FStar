@@ -405,6 +405,8 @@ type error_code =
   | Error_CustardBadLift
   | Error_CustardDanglingReference
   | Error_CustardBadFloatLiteral
+  | Warning_CustardRuleArity
+  | Warning_CustardExternErasure
   | Error_AmbiguousName
 
 type error_setting = error_code & error_flag & int

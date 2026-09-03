@@ -110,6 +110,7 @@ let entry_to_string (e:entry) : ML string =
          | None    -> "?")
     | DLet d      -> BU.fmt1 "let %s"      (show d.dl_name)
     | DExternal d -> BU.fmt1 "external %s" (show d.dx_name)
+    | DExn d      -> BU.fmt1 "exception %s" (show d.de_name)
   in
   BU.fmt3 "  %s\n    key: %s%s\n" what e.ue_key
     (match e.ue_home with Some m -> "\n    home: " ^ m | None -> "")

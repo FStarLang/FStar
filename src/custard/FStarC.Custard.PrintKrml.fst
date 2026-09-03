@@ -176,7 +176,7 @@ let krml_width (sw : signedness & width) : K.width =
   | (Unsigned, Int64) -> K.UInt64
   | (Unsigned, Sizet) -> K.SizeT
 
-let krml_op (o:op) : K.op =
+let krml_op (o:op) : ML K.op =
   match o with
   | Add -> K.Add | AddW -> K.AddW | Sub -> K.Sub | SubW -> K.SubW
   | Mult -> K.Mult | MultW -> K.MultW | Div -> K.Div | DivW -> K.DivW
@@ -186,6 +186,16 @@ let krml_op (o:op) : K.op =
   | Eq -> K.Eq | Neq -> K.Neq | Lt -> K.Lt | Lte -> K.Lte
   | Gt -> K.Gt | Gte -> K.Gte
   | And -> K.And | Or -> K.Or | Not -> K.Not
+  (* Section 49.1.  The buffer operations are karamel *expressions*
+     ([EBufRead] and its siblings), not operators, so every one of them is
+     handled at the [EOp] site in [krml_expr] and none reaches here.  Named
+     rather than left to fall off the end: the reviewer's round-48 audit read
+     this function as total over 22 operators, which it is only because the
+     other eight are intercepted upstream, and that is worth saying where
+     someone counting them will read it. *)
+  | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
+  | BufBlit | BufCreate _ ->
+    failwith "Custard: a buffer operation is not a karamel operator"
 
 (* -------------------------------------------------------------------- *)
 (* Types                                                                *)
@@ -263,6 +273,10 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   (* karamel has no separate reference type: a [ref] is a one-element buffer,
      which is exactly what the operations on it already say. *)
   | TBuf t | TRef t -> K.TBuf (krml_typ env t)
+  (* Section 49.1.  Removed by [Simplify.inline_fields]; see the same case in
+     [PrintC.decl_of]. *)
+  | TInline _ ->
+    failwith "Custard: an inline-field marker reached the karamel backend"
   | TApp (n, []) ->
     (match prim_type n with
      | Some t -> t
