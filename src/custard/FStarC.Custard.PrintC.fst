@@ -1604,6 +1604,20 @@ let check_finite (d:dtype) : ML unit =
    already fine, because the forward declarations precede it. *)
 let struct_tag (n:string) : string = n ^ "_s"
 
+(* Section 48.1.  The tag enum of a tagged union is declared *beside* the
+   struct, not inside it.
+
+   In C the enumerators of an enum nested in a struct have file scope and leak
+   out, so `CEXTERN_BUMP' resolves at a use site.  In C++ an unnamed enum
+   nested in a class has *class* scope: the name is `CExtern_cmd::CEXTERN_BUMP'
+   and the bare form does not exist.  Every tagged union Custard emitted was
+   therefore unusable from C++ or CUDA -- and invisibly so, because the C tests
+   are compiled as C11, where the nested form is correct.
+
+   Hoisting is valid C11 and changes nothing about the C output's meaning or
+   its layout.  [extern "C"] does not help: linkage is not scope. *)
+let enum_tag (n:string) : string = n ^ "_tags"
+
 let is_struct (d:dtype) : ML bool =
   match d.dt_body with
   | TRecord _ -> true
@@ -1711,10 +1725,11 @@ let type_decl (d:dtype) : ML (option string) =
          field knowing only the constructor -- which after monomorphization it
          always does. *)
       let nonempty = cs |> List.filter (fun (_, fs) -> Cons? fs) in
-      Some (open_struct () ^
-            "  enum {\n" ^
-            String.concat ",\n" (cs |> List.map (fun (c, _) -> "    " ^ c_tag c)) ^
-            "\n  } tag;\n" ^
+      Some ("enum " ^ enum_tag n ^ " {\n" ^
+            String.concat ",\n" (cs |> List.map (fun (c, _) -> "  " ^ c_tag c)) ^
+            "\n};\n" ^
+            open_struct () ^
+            "  enum " ^ enum_tag n ^ " tag;\n" ^
             (match nonempty with
              | [] -> ""
              | _ ->

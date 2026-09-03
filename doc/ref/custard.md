@@ -11503,6 +11503,165 @@ check over the sources, not over an output. The two are not substitutes,
 and the cheap one had been left out.
 
 
+# 47 What C and C++ disagree about
+
+Round 47 came from a reviewer who compiled the generated code with a
+*different compiler for the same text*, and found a construct on which the
+two disagree silently. It also closed §45.4's open question, in the
+direction nobody had proposed.
+
+## 47.1 A nested enum is invisible from C++
+
+Every tagged union Custard emitted looked like this:
+
+```c
+struct CExtern_cmd_s {
+  enum {
+    CEXTERN_NOP,
+    CEXTERN_SKIP,
+    CEXTERN_BUMP
+  } tag;
+  union { ... } val;
+};
+```
+
+In C, the enumerators of an enum declared inside a struct have **file**
+scope: they leak out of the struct, and `CEXTERN_BUMP` at a use site
+resolves. In C++, an unnamed enum nested in a class has **class** scope: the
+name is `CExtern_cmd::CEXTERN_BUMP`, and the bare form does not exist.
+
+```cpp
+struct S { enum { A, B } tag; };
+int main() { S s; s.tag = A; }   /* C: fine.  C++: 'A' was not declared */
+```
+
+So every discriminated union Custard produced was unusable from C++ or from
+CUDA, which is C++. Seven of the suite's units failed under `nvcc`, all with
+the same message, while all 34 compiled clean as C11 under `gcc` *and* under
+`clang -Weverything`, which reported nothing -- correctly, because as C the
+code is right.
+
+The fix is to declare the enum beside the struct rather than inside it,
+which is still valid C11 and changes neither the meaning nor the layout:
+
+```c
+enum CExtern_cmd_tags { CEXTERN_NOP, CEXTERN_SKIP, CEXTERN_BUMP };
+struct CExtern_cmd_s {
+  enum CExtern_cmd_tags tag;
+  union { ... } val;
+};
+```
+
+`enum_tag` derives from `c_name` exactly as `struct_tag` does, so §32.9's
+header renaming follows without further work.
+
+The `extern "C"` wrapper the header already carried does not help, and it is
+worth being clear why: **linkage is not scope.** `extern "C"` changes how a
+name is mangled for the linker. It does not change where C++ looks the name
+up, and this bug is entirely about lookup.
+
+### The test leg this needed
+
+`tests/custard` now compiles every generated unit a second time, as C++17,
+with `-fsyntax-only`. Custard does not target C++ -- the object file is
+still the C compiler's job -- but a generated header is *meant to be
+included by a consumer*, and CUDA is the consumer Kuiper has. The second
+front end is the whole point: it is the only thing in the suite that could
+have seen this, because everything the C leg checks was already right.
+
+All 34 units pass it, with `-Wall -Werror`, which is the other half of the
+finding: this was one construct, not a class of them.
+
+The negative control is the cleanest one this document has. Put the nested
+enum back by hand and the same file compiles with `gcc -std=c11 -Wall
+-Werror` at rc=0 and fails with `g++ -std=c++17` on the first use of a tag.
+Two compilers, one text, opposite answers, no diagnostic on the side that
+was being tested.
+
+## 47.2 An external type may be indexed after all
+
+§45.4 recorded an open question: whether a rule could *generate*
+per-configuration C names from erased F\* indices, using §34.1's reduced
+rule arguments. The answer is that no rule is needed, because F\* already
+has the mechanism -- a typeclass whose indices are erased, resolved by
+instance selection, which Custard monomorphizes correctly today.
+
+```fstar
+class frag_cfg (knd : kind) (m n k : en) = {
+  alloc : unit -> ML (frag knd m n k)
+}
+instance cfg_a : frag_cfg FragA e16 e16 e16 = { alloc = mk_a }
+```
+
+A body polymorphic in the configuration extracts to the same C as a
+hand-written one; the dispatch disappears and the instances pick the target
+names. `tests/custard/FragCfg.fst` is that shape at C11 scale, and checks
+its own answer.
+
+What did *not* work was writing the external type with its indices:
+
+```fstar
+[@@custard_extern "fc_frag_t"; custard_c_header "FragCfg_stubs.h"]
+assume val frag (knd : kind) (m n k : en) : Type0
+```
+
+which gave `Error 368: the polymorphic type FragCfg.frag has no C
+representation`. `decl_of` resolves an external only at `TApp (n, [])`, and
+§30.11 rule 4 froze the type -- a type in an external's signature must not
+be cloned, because a clone would name a declaration the realization does not
+define.
+
+That reasoning is right in general and **vacuous when the frozen type
+carries its own C name.** An external type's spelling is a fixed string
+taken verbatim (§45.1), with nowhere in it for an argument to go -- indexed
+`TExtern` was proposed and withdrawn in round 45 -- so `frag FragA 16 16 16`
+and `frag FragAcc 16 16 16` are both `fc_frag_t`, and there is nothing for a
+realization to fail to define.
+
+So `mono_cty` now drops an external type's arguments outright. No clone is
+requested, so there is nothing to freeze; the declaration is kept (with its
+parameters dropped) because it is what carries the `Extern` flag that
+`decl_of` reads. The workaround -- an unindexed external plus an abbreviation
+carrying the indices -- still works and is arguably better style, but it is
+no longer forced.
+
+### Two things the configuration idiom requires
+
+Both are consequences of existing rules rather than new ones, and both are
+easy to get wrong:
+
+- **Erase every index the C side does not take.** An index left concrete is
+  passed to the external as an ordinary argument. As a `nat` that is `Error
+  368: the unbounded integer literal 16 has no C representation`, which is
+  correct but indirect -- the index was only ever there to select an
+  instance. As an *enum* it is worse: the call goes out as
+  `wmma::mma_sync(CFG_RM, CFG_RM, c, a, b, c)`, silently wrong, because
+  nothing can tell Custard that an external's leading arguments are
+  spurious.
+- **`inline_for_extraction noextract` belongs on the class, not only on the
+  instances.** On the instances alone the projectors survive as real
+  wrappers -- and under CUDA a `static` wrapper is `__host__`, so `nvcc`
+  rejects a `__global__` caller.
+
+## 47.3 The krml path cannot carry a C++ name
+
+For completeness, since §45.3 made the same program *nearly* work through
+karamel. It does not, and will not without changes to karamel:
+
+- karamel sanitizes names of its own, downstream of Custard, so
+  `wmma::fill_fragment` becomes `wmma__fill_fragment` and `auto&` becomes
+  `auto_` -- the §45.1 bug again, in the other repository.
+- karamel emits a prototype for an external that already has a declaring
+  header. `PrintC` suppresses that (`extern_decl` returns `None` when a
+  header is present, §45.1); karamel has no such rule, so a function-like
+  macro target collides with its own prototype.
+
+None of this is a Custard bug and none of it blocks the consumer, since C is
+the destination. It is recorded so that **a C++-qualified target is a
+direct-C-backend feature**, and nobody spends an afternoon on the krml
+route.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -11671,3 +11830,9 @@ and the cheap one had been left out.
 | M10γλ | **`krml_reject` says where to go** (§46.3) | Done.  Round 46.  §44.1's shared second line hedged that the direct C backend *may* accept the construct, and the hedge was wrong at four of six sites -- only a string and a float pattern survive the crossing.  Split into `krml_reject_c_ok` and `krml_reject`; `TryOk` pins the absence of the wrong sentence |
 | M10γμ | **`make check-sources`** (§46.4) | Done.  Round 46.  A `NOEGREP` pins a phrase as absent from one test's output; round 44's passed while two other sites in the same file still emitted the phrase, one of them into a Rust binary.  Whether the *compiler* can still emit a sentence is a question about the sources, and a grep answers it in a second.  Runs as part of `all`.  The general point is that a test pins what a program produced, and some properties are about what the compiler contains |
 | M10γν | **`ChrLit`, `ChrTy` and `TryOk`** (§46.1-§46.3) | Done.  Round 46.  All three check their own answer rather than grepping for a spelling (§43.2).  `ChrLit`'s match is deliberately out of source order, so a character pattern that fell back to a variable pattern would return 1 instead of 0.  `ChrTy` takes its char from a `custard_extern` so that it contains no literal, which is what makes it a test of §46.2 rather than of §46.1.  `TryOk` is a reject test on the krml backend; its negative control put the old `EAbortS` back and confirmed that `attempt()` compiles to a bare abort with the call to `safe` gone |
+| M10γξ | **A tag enum C++ cannot see** (§47.1) | Done.  Round 47.  Enumerators of an enum nested in a struct have file scope in C and *class* scope in C++, so every tagged union Custard emitted compiled clean as C11 and was unusable from nvcc -- seven of the suite's units, with `clang -Weverything` reporting nothing, correctly, because as C the code is right.  The enum is now declared beside the struct, which is still C11 and changes neither meaning nor layout.  `extern "C"` does not help and it is worth knowing why: linkage is not scope |
+| M10γο | **A C++ leg in the test suite** (§47.1) | Done.  Round 47.  Every generated unit is compiled a second time as C++17 with `-fsyntax-only`, `-Wall -Werror`.  Custard does not target C++; a generated header is meant to be *included* by a consumer, and CUDA is a consumer.  A second front end is the only thing in the suite that could have found §47.1, because everything the C leg checks was already right.  All 34 units pass, which is the other half of the finding: one construct, not a class of them |
+| M10γπ | **An indexed external type** (§47.2) | Done.  Round 47.  §30.11 rule 4 froze a type mentioned in an external's signature, because a clone would name a declaration the realization does not define -- right in general, vacuous when the type carries its own C name, since an external's spelling is a fixed string with nowhere for an argument to go.  `mono_cty` now drops an external type's arguments; no clone is requested, so nothing needs freezing.  The unindexed-external-plus-abbreviation workaround still works and is no longer forced |
+| M10γρ | **§45.4's open question, answered** (§47.2) | Resolved, round 47, with no code.  Whether a rule could *generate* per-configuration C names from erased indices turned out to be the wrong question: F\* already has the mechanism, in a typeclass whose indices are erased and whose instances name the targets.  A body polymorphic in the configuration extracts to the same C as a hand-written one, and the dispatch disappears.  Two prerequisites, both consequences of existing rules: erase every index the C side does not take (a concrete enum index goes out as a spurious leading argument, *silently*), and put `inline_for_extraction noextract` on the class, not only the instances |
+| M10γσ | **`FragCfg`** (§47.2) | Done.  Round 47.  The TensorCore fragment API at C11 scale: an indexed `custard_extern` type, three externals selected by a typeclass whose indices are all erased, and a body that never names a configuration.  Checks its own answer rather than a spelling, and pins the absence of any emitted declaration for the external type |
+| M10γτ | **A C++ target is direct-C only** (§47.3) | Recorded, round 47, not fixed and not a Custard bug.  §45.3 made a C++-qualified program nearly work through karamel; karamel then sanitizes names of its own downstream of Custard (`wmma::fill_fragment` to `wmma__fill_fragment`, `auto&` to `auto_` -- §45.1 again, in the other repository) and emits a prototype for an external that already has a declaring header, which `PrintC` suppresses and karamel has no rule for.  Documented so nobody spends an afternoon on the krml route |

@@ -157,6 +157,32 @@ type state = {
    per-instantiation either, or karamel's lifetime fixpoint would not find the
    [TApp] inside it. *)
 let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
+
+(* Section 48.2.  An external type's C spelling is a fixed string -- the
+   [custard_extern] target, taken verbatim since §45.1 -- and it does not
+   depend on the type's arguments, because there is nowhere in a target string
+   for an argument to go.  ([TExtern] indexed by its arguments was proposed in
+   round 45 and withdrawn in the same round.)
+
+   So [frag half FragA 16 16 16 RM] and [frag half FragAcc 16 16 16 LAcc] are
+   both `auto&', and the arguments are F*-side indices that C never sees.
+   Dropping them here is what makes the type printable at all: [decl_of]
+   resolves an external only at [TApp (n, [])], and any application at all was
+   "the polymorphic type ... has no C representation".
+
+   This also retires a freeze that was over-broad.  A type mentioned in an
+   external's signature is frozen (below) on the reasoning that a clone of it
+   would name a declaration the realization does not define -- true in general,
+   and vacuous when the type carries its own C name, since every clone would
+   spell the same target.  Now no clone is requested, so there is nothing to
+   freeze.  The workaround was an unindexed external plus an abbreviation
+   carrying the indices; that still works and is arguably better style, but it
+   is no longer forced. *)
+let is_extern_type (st:state) (n:name) : ML bool =
+  match SMap.try_find st.types (string_of_name n) with
+  | Some d -> d.dt_flags |> List.existsb Extern?
+  | None -> false
+
 let is_poly (st:state) (n:name) : ML bool =
   if Some? (SMap.try_find st.frozen (string_of_name n)) then false
   else match SMap.try_find st.types (string_of_name n) with
@@ -248,6 +274,7 @@ let rec mono_cty (st:state) (c:cty) : ML cty =
   let c = unfold_cty st 100 c in
   match c with
   | TApp (n, args) ->
+    if is_extern_type st n then TApp (n, []) else
     let args = args |> List.map (mono_cty st) in
     if is_poly st n then TApp (request st n args, []) else TApp (n, args)
   | TArrow (a, e, b) -> TArrow (mono_cty st a, e, mono_cty st b)
@@ -530,6 +557,11 @@ let run (prog:program) : ML program =
      topologically at the end of phase 4, which is after this runs. *)
   let rest = prog |> List.collect (fun d ->
     match d with
+    (* Section 48.2.  Kept, and with its parameters dropped so that the
+       declaration agrees with the [TApp (n, [])] every use site is now
+       rewritten to.  It has to be kept: the declaration is what carries the
+       [Extern] flag, and [PrintC.decl_of] reads the target off it. *)
+    | DType t when is_extern_type st t.dt_name -> [DType { t with dt_params = [] }]
     | DType t when Cons? t.dt_params && is_poly st t.dt_name -> []
     | DType t when Cons? t.dt_params ->
       (* Frozen: kept as it is, and its parameters with it. *)

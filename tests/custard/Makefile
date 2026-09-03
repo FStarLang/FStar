@@ -802,9 +802,27 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked
 	@# shape sensitive and misses the ones around a call-comparison.
 	$(Q)python3 $(CHECKGROUP) $@ $(basename $@).h
 
-$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
+$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -x c $< -o $@
+
+# Section 48.1.  Every generated unit is also compiled as C++.
+#
+# Not because Custard targets C++, but because CUDA is C++ and a generated
+# header is meant to be included by a consumer.  The two languages disagree
+# about a construct Custard emitted everywhere: enumerators of an enum nested
+# in a struct have *file* scope in C and *class* scope in C++, so every tagged
+# union compiled clean as C11 and was unusable from nvcc.  Nothing in a C-only
+# test suite could see that, and clang's `-Weverything' over the same files
+# reported nothing, because as C the code was correct.
+#
+# -fsyntax-only: the object file is the C compiler's job above.  What this leg
+# is for is the front end -- scope, name lookup, and the implicit conversions
+# C++ does not have.
+$(OUTPUT_DIR)/%.dcxx: $(OUTPUT_DIR)/%.dc
+	$(call msg, "CXX", $(basename $(notdir $@)))
+	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -fsyntax-only -x c++ $<
+	$(Q)touch $@
 
 $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 	$(call msg, "RUN-C", $(basename $(notdir $@)))
@@ -1171,6 +1189,13 @@ FLAGS_TryOk += --custard_backend KrmlC
 CODE_TryOk := 368
 EGREP_TryOk += "an exception handler has no karamel representation"
 NOEGREP_TryOk += "does accept it"
+
+# Section 48.2.  An indexed custard_extern type, with the configuration
+# chosen by a typeclass whose indices are all erased -- the shape the
+# TensorCore fragment API has.  Checks its own answer: 0 + 2*3 = 6.
+C_TESTS    += FragCfg
+CGREP_FragCfg += "fc_mma("
+CNOGREP_FragCfg += "FragCfg_frag"
 
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
