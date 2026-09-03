@@ -1672,14 +1672,21 @@ and do_check (g:env) (e:term)
     else fail_str (Format.fmt1 "Effect ascriptions are not fully handled yet: %s" (show c))
 
   | Tm_let {lbs=(false, [lb]); body} ->
-    let Inl x = lb.lbname in
-    let g', x, body = open_term g (S.mk_binder x) body in
+    let Inl x0 = lb.lbname in
     if U.is_pure_or_ghost_effect lb.lbeff
     then (
       let! eff_def, tdef = check "let definition" g lb.lbdef in
-      let! _, ttyp = check "let type" g lb.lbtyp in
+      (* A [let] appearing inside a *type* may still carry the annotation the
+         desugarer left, i.e. none at all: not every producer of a term runs it
+         through the elaborator first. The definition's own type is then the
+         only annotation there is, and it needs no separate check. *)
+      let unannotated = Tm_unknown? (Subst.compress lb.lbtyp).n in
+      let lbtyp = if unannotated then tdef else lb.lbtyp in
+      let x0 = if unannotated then { x0 with sort = tdef } else x0 in
+      let g', x, body = open_term g (S.mk_binder x0) body in
+      let! _, ttyp = check "let type" g lbtyp in
       let! u = is_type g ttyp in
-      with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef lb.lbtyp) ;!
+      with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef lbtyp) ;!
       with_definition g x u lb.lbdef (
         let! eff_body, t = check "let body" g' body in
         check_no_escape [x] t;!
