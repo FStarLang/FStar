@@ -2318,12 +2318,25 @@ let solve_rigid_flex_or_flex_rigid_subtyping
            [t1] and force [t1 = t2] -- conflating two refinements that should
            have been combined.  Treat it as a head match instead: [combine]
            equates the bases (a flex-rigid problem, which is exactly the
-           commitment we want) and then meets or joins the refinements. *)
+           commitment we want) and then meets or joins the refinements.
+
+           Not, however, when that variable is the very one we are solving.
+           A recursive function whose implicit argument's type is inferred
+           bounds it by [x:?u (n-1) {decreases ...}] -- a bound mentioning
+           [?u] -- and combining it produces an equation that fails the
+           occurs check, whereupon meet/join gives up and the caller widens
+           the bound all the way to its base type, losing the refinement the
+           other bound asked for.  Leaving it a [MisMatch] keeps the other
+           bound intact, which is what solves the variable. *)
         let refinement_of_flex t =
             match (SS.compress t).n with
             | Tm_refine {b=x} ->
               (match (SS.compress (fst (U.head_and_args_full x.sort))).n with
-               | Tm_uvar _ -> true
+               | Tm_uvar (u, _) ->
+                 let this_flex = if flip then tp.lhs else tp.rhs in
+                 (match (SS.compress (fst (U.head_and_args_full this_flex))).n with
+                  | Tm_uvar (u', _) -> not (UF.equiv u.ctx_uvar_head u'.ctx_uvar_head)
+                  | _ -> true)
                | _ -> false)
             | _ -> false
         in
@@ -2611,7 +2624,14 @@ let solve_rigid_flex_or_flex_rigid_subtyping
          Flex_rigid problem.  We deliberately do not defer for unrefined upper
          bounds: they carry no more information than the lower bounds do, and
          preferring the lower bounds there loses the expected type.  We also
-         require one of two things of the other bounds:
+         require one of three things:
+
+         - the variable is going to be solved by *typeclass resolution*.  A
+           refinement is never part of an instance head, so committing the
+           variable to one makes the constraint unsolvable no matter what the
+           lower bounds say; solved from a lower bound it is widened to the
+           base type (see [widen] below) and an instance is found.  This is
+           the case the rule was originally written for.
 
          - a *refined* lower bound, which is strong enough to establish the
            upper bound's refinement on its own; or
@@ -2624,7 +2644,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
            match's result type by [int] and returning [y] bounds it by the
            function's refined result type.
 
-         If neither holds we must *not* defer: with all-bare lower bounds and a
+         If none holds we must *not* defer: with all-bare lower bounds and a
          single refined upper bound, the upper bound is the only workable
          solution and preferring the lower bounds turns a solvable problem into
          an unsolvable one (e.g. [tests/bug-reports/closed/Bug026.fst]'s
@@ -2661,10 +2681,11 @@ let solve_rigid_flex_or_flex_rigid_subtyping
       let prefer_lower_bounds () : ML bool =
           flip
        && bounds_typs |> BU.for_some is_refined
-       && (lower_bound_typs () |> BU.for_some is_refined
-           || (Cons? (lower_bound_typs ())
-               && bounds_typs @ deferred_upper_bound_typs ()
-                  |> BU.for_some (fun t -> not (is_refined t))))
+       && Cons? (lower_bound_typs ())
+       && (has_typeclass_constraint ctx_uvar wl
+           || lower_bound_typs () |> BU.for_some is_refined
+           || bounds_typs @ deferred_upper_bound_typs ()
+              |> BU.for_some (fun t -> not (is_refined t)))
       in
       if prefer_lower_bounds ()
       then solve (defer_lit Deferred_flex
