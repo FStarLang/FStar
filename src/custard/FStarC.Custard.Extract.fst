@@ -1703,6 +1703,42 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
            [b] only under an application and so came out [any]. *)
         | Tm_name bv when Mono.is_value_indexed_arity (tcenv st) bv.sort ->
           TVar (name_of_bv bv)
+        (* Section 56.  A type-level *function*: a [let] whose kind takes a
+           *value* binder, applied to a value.  [carrier (ds:list req) : Type0]
+           matching on [ds] is the shape, and Kuiper's [c_shmems] is the case
+           that showed it up.
+
+           The [Tm_fvar] case below treats every named head as a type
+           constructor, and uniform compilation (section 5.0) drops a value
+           index from the target type: [vec n] is one [vec] whatever [n] is.
+           For an *inductive* that is right.  Here it is fatal, because the
+           dropped argument is not an index at all -- it is the thing that
+           computes the type.  Dropping it leaves [TApp (carrier, [])], a
+           request for a declaration whose body is a [match] on a scrutinee
+           that is no longer there, and so [any].
+
+           So a type-level function is *reduced* rather than requested.  Two
+           details matter.  [UnfoldOnly [l]] rather than delta, so that names
+           the result is entitled to keep -- an abbreviation the target
+           declares -- are still named; a chain through a *different* type
+           function reduces when the recursion below reaches it and this case
+           fires again for that name.  And the reduction is **full**, not
+           [Weak]/[HNF] as the case below uses: head normal form is exactly
+           the bug, since it computes the head of [U32.t & carrier ds] and
+           leaves the [carrier ds] inside it stuck, which is the reported
+           symptom -- one level unfolded, everything under it [any].
+
+           Budgeted, because a type-level function need not terminate, and
+           giving up has to mean the [any] that would have stood anyway rather
+           than error 365. *)
+        | Tm_fvar fv when computes_type_from_values st (S.lid_of_fv fv) args ->
+          let l = S.lid_of_fv fv in
+          (match norm_optional st
+                   [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                    TcEnv.Beta; TcEnv.Iota; TcEnv.Zeta;
+                    TcEnv.UnfoldOnly [l]] t with
+           | None -> TAny
+           | Some t' -> if U.term_eq t' t then TAny else ty_of_typ st t')
         | Tm_fvar fv ->
           (* A type constructor's arguments survive into the [cty] exactly when
              they are types: an index like the [n] of [vec n] has no
@@ -1775,6 +1811,30 @@ and has_unrepresentable_param (st:state) (l:Ident.lident) : ML bool =
          bs |> List.existsb (fun b ->
            is_type_binder (tcenv st) b && not (Mono.is_type_param (tcenv st) b))))
   | _ -> false
+
+(* Section 56.  Is [l] a type-level *function* -- a [let] returning a type
+   whose kind takes value binders -- rather than a type constructor?  The test
+   is on the binders actually applied: a value argument is one the target type
+   language cannot hold, so {!ty_of_fv} would drop it, and for a [let] that
+   means dropping the scrutinee its body matches on.  An inductive is excluded
+   by construction, being a [Sig_inductive_typ]; so is an unapplied name,
+   which is a type constructor's job and reduces to nothing anyway. *)
+and computes_type_from_values (st:state) (l:Ident.lident) (args:S.args) : ML bool =
+  match args with
+  | [] -> false
+  | _ ->
+    match TcEnv.lookup_sigelt (tcenv st) l with
+    | Some { sigel = Sig_let _ } ->
+      (match lookup_lid_typ st l with
+       | None -> false
+       | Some ((_, k), _) ->
+         let bs, _ = U.arrow_formals k in
+         let n = List.length args in
+         Prof.timed "is_type_param" (fun () ->
+           bs |> List.mapi (fun i b -> (i, b))
+              |> List.existsb (fun (i, b) ->
+                   i < n && not (is_type_binder (tcenv st) b))))
+    | _ -> false
 
 (* Which of a type constructor's binders become parameters of the target type.
    Normally only the *type parameters*: a value index like the [n] of [vec n],

@@ -413,6 +413,20 @@ CGREP_CTypeField = "CTypeField_pick__Mkspec(bool c, uint8_t x, uint8_t y)" \
                    "CTypeField_pick__Mkspec_1(bool c, uint32_t x, uint32_t y)"
 CNOGREP_CTypeField = "void *" "__proj__"
 
+# Section 56.  A type-level function applied to a value.  The three
+# assertions are one per shape, and the middle one is the load-bearing one:
+# the bug reduced such an application exactly once, so a three-level
+# descriptor list is what distinguishes a fix from a deeper version of the
+# same mistake -- the name has to nest all the way to the [int32] base case.
+# [chain] has no recursion anywhere in it and goes through a *second* name.
+# WARN_ANY makes the whole file an assertion too: before the fix these
+# binders were [any], which is warning 367 and an error here.
+C_TESTS += TyFun
+CGREP_TyFun = "uint32_t TyFun_one(FStar_Pervasives_Native_tuple2__uint32_int32 c)" \
+              "uint32_t TyFun_three(FStar_Pervasives_Native_tuple2__uint32_tuple2_uint32_tuple2_uint32_int32 c)" \
+              "uint32_t TyFun_chain(FStar_Pervasives_Native_tuple2__uint32_uint32 c)"
+CNOGREP_TyFun = "void *"
+
 # A reduced deterministic-CBOR checker.  Unlike the tests above it is not
 # aimed at one backend feature: it is a differential regression test, run
 # over a curated corpus of inputs whose expected results are computed by an

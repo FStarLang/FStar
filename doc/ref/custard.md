@@ -12934,6 +12934,155 @@ stage 3's two symlinks alone, drop the stale `.depend` files, rebuild. Also
 `tests/custard/_cache` and `pulse/build/*.checked`, which hold `.checked`
 files of their own.
 
+# 56 A type-level function, unfolded once
+
+Kuiper's round 52 carried the shared-memory case as far as it goes and
+landed on something one level below where either of us was looking: a
+type-level function applied to a value was reduced **exactly once**, and any
+application appearing in the result was left as `any`. He reduced it to
+twelve lines with no plugin, no rule and no Kuiper, which is what made it
+findable.
+
+## 56.1 The shape, and why it is not about recursion
+
+```fstar
+let rec carrier (ds : list req) : Type0 =
+  match ds with
+  | []      -> FStar.Int32.t
+  | _ :: ds -> U32.t & carrier ds
+
+let use (c : carrier [R 4ul]) : U32.t = let (a, _) = c in a
+```
+
+gave `tuple2@uint32_any` -- the head computed, the tail lost. His three
+variants place the boundary, and the one that matters is the last: a
+**non-recursive** two-level chain fails too. So this is not a fixpoint that
+might not terminate and not `let rec`; it is one step of unfolding where the
+answer needs as many as the value has elements.
+
+The cause is in `ty_of_typ`'s `Tm_fvar` case, and it is a *category error*
+rather than a missing normalization step. That case treats every named head
+as a type constructor, and uniform compilation (§5.0) drops a value index
+from the target type -- `vec n` is one `vec` whatever `n` is. For an
+inductive that is exactly right and has to stay. Here the dropped argument
+is not an index at all: it is the thing that *computes* the type. Dropping
+it leaves `TApp (carrier, [])`, a request for a declaration whose body
+matches on a scrutinee that is no longer there, and the only answer to that
+is `any`. Kuiper saw this directly in the IR -- the binder was
+`TApp (c_shmems, [])` with the list argument gone -- and read it correctly
+before I did.
+
+The single unfolding he observed comes from the fallback below it, which
+fires only when the request already yielded `TAny` and which normalizes with
+`Weak`/`HNF`. Head normal form *is* the symptom: it computes the head of
+`U32.t & carrier ds` and leaves the `carrier ds` under it stuck. A comment
+there claimed "the reduct is fully normal, so a second pass cannot reduce
+further"; with `HNF` and `Weak` in the step list that was never true.
+
+## 56.2 A type-level function is reduced, not requested
+
+The new case fires when the head is a `Sig_let` whose kind takes a *value*
+binder among those actually applied -- `computes_type_from_values` -- which
+is precisely "a type-level function applied to a value" and excludes both
+inductives (a `Sig_inductive_typ`) and unapplied names.
+
+Two details carry the fix:
+
+- **`UnfoldOnly [l]`, not delta.** Reducing this application must not unfold
+  every other name in the result; an abbreviation the target is entitled to
+  declare stays declared. A chain through a *different* type function --
+  Kuiper's fourth variant -- reduces because `ty_of_typ` recurses into the
+  arguments and this case fires again for that name.
+- **Full reduction, not `Weak`/`HNF`.** This is the actual bug. Nested
+  applications of the same name are reduced in the one call, so a
+  three-element descriptor list resolves to the bottom rather than to a
+  prefix.
+
+Budgeted through `norm_optional`, because a type-level function need not
+terminate, and giving up means the `any` that would have stood anyway rather
+than error 365.
+
+`tests/custard/TyFun.fst` pins all four shapes. The three-level case is the
+load-bearing one: it is what distinguishes a fix from a deeper version of
+the same mistake, and the generated type name has to nest all the way down,
+`tuple2__uint32_tuple2_uint32_tuple2_uint32_int32`. It runs, because a type
+that is merely *declared* right is not yet one whose fields land where the
+body reads them. And it is checked negatively -- with the guard forced to
+`false` the test reproduces `tuple2@uint32_any` exactly.
+
+## 56.3 What this does to the shared-memory ask
+
+Kuiper's conclusion is the interesting part, and he reached it from a
+failing run rather than from the design: **a rule should not be able to
+declare the witness, and now none needs to.** With the application reduced,
+`c_shmems [SHArray u32 nth]` is an ordinary tuple, monomorphization emits
+the instance as it would for any other, and the shared-memory handle stops
+being special -- the *type* is declared by the normal path and the rule
+supplies only a *value* of it, which his forty lines already build
+correctly. The offsets, the coercions, the total byte size, the element
+types read off the `sized` dictionary and the tuple's shape all matched the
+kernel body's own `match`, `(buf u32 * i32)` on both sides. The only thing
+missing was a declaration, and the only reason it was missing was this bug.
+
+So §49.5's "rewrite the binder type inside the rule" did run out, as
+expected -- but the answer was not a bigger rule API. It was that the pass
+before it was wrong.
+
+Worth recording separately: the descriptor carries more than either of us
+expected. `SHArray`'s `Type0` field is erased, and the Krml plugin says so
+in as many words (`ExtractKuiper.fst:321`, "we cannot use sizeof of the type
+here, since it has already been erased into unit") -- but Custard keeps the
+dictionary, and the element type is recoverable from the `sized` instance's
+zero value, `0<u32>`. Keeping dictionaries as values is what makes that
+work, and it is the first time that choice has paid for itself in a rule.
+
+## 56.4 The other side: a harness that was tested by breaking it
+
+EverParse's round 51 is verification, and three of its four parts are worth
+keeping.
+
+**The `RUN` step earns its place.** He planted a printer regression built
+specifically to satisfy every grep -- a fix applied to one arm with its
+sibling left open, confined to values ≥ 256 so that only `oct_big`, which no
+`RSGREP` pins, would carry it. It passed `KRML-RUST`, every `RSGREP` and
+`RSNOGREP`, and `rustc`, and died at `RUN` with `Error 5`. The sharp part is
+why no grep could have caught it: **karamel renormalizes the literal**, so
+Custard's `07654321` reaches the Rust source as `7654321u32` -- an entirely
+ordinary-looking constant that is simply the wrong number. §43.1's shape
+with its one visible tell removed. Grepping was not insufficient here, it
+was impossible. And both C legs stayed green on the same build, which turns
+§52.2's three-region rule into a measurement rather than an argument.
+
+**§55's `cddl-spec` failure was not mine and not upstream-undated.** It was
+EverParse's own and had been fixed there four days earlier
+(`dc247ad6f`). More useful: that same commit raises `Lemma13`'s rlimit from
+128 to 512 -- the round 39 workaround he has been hand-carrying, which I
+attributed to an F\* hash advance rather than to Custard. That call is now
+confirmed from the other side by someone who did not know it had been made,
+and the local patch is dropped. Also worth recording: stock F\* is *not* a
+usable control on that corpus, since `2026.08.09~dev` cannot build it at
+all, which is part of why §55 took the shape it did.
+
+**`-fkeep-tuples`, both directions.** §54.2's refinement is confirmed on one
+`.krml`: with the flag, `1 total errors`, the global omitted, `rustc` cannot
+find it; without, karamel monomorphizes to a struct and it compiles and runs
+correctly. Latent rather than live for Custard, and the comment in
+`RustTup.fst` documenting the hole is the resolution rather than a refusal.
+
+One sharp edge he hit and I should have warned about: `-o out` writes a file
+literally named `out`, and krml then refuses it with `Unknown file extension
+for out`. Not a bug; the same `-o`-names-a-file-not-a-directory trap as
+before.
+
+## 56.5 What remains
+
+The shared-memory rule itself is Kuiper's next step, and it should now be a
+value-only rule. `fr-karamel-prs` still has three. `ESizeof`, §34.4's "was
+this attribute read" bit, `Poly`-into-`Mono` infer-and-promote,
+defunctionalization of function-valued `Mono` arguments, boxed dictionaries,
+a middle layout regime, `EWithLocal` recovery and interning a canonical form
+are all unchanged.
+
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -13141,3 +13290,7 @@ files of their own.
 | M10Χ | **Master merged; a number claimed twice** (§55) | Done.  `origin/master` at `52f17ab8fd`, twenty-three commits -- the `prop` SMT encoding, the `new` qualifier fix, binder qualifiers in `TypeChecker.Core`, the include-path rework in `FStarC.Find`/`Parser.Dep`.  Git reported **no conflicts in `FStarC.Errors.Codes.fst`, and was wrong**: master appends its codes at one end of the list and this branch appends Custard's at the other, so the two edits never overlap textually -- but `Warning_IgnoredNewQualifier` and `Error_CustardEntryNotFound` both came out **363**.  Nothing else catches it: the list is data, a repeated number is well-typed, and the second entry shadows the first in whichever direction the lookup runs.  §52.3 and §54.4 in a third place -- a green check whose subject is not the question asked; git's subject is *text* and this invariant is not textual.  The rule: **after merging a file whose correctness is a whole-file invariant, check the invariant, not the diff** -- here, extract every `(name, number)` pair and ask for duplicates |
 | M10Ψ | Custard's codes are now **364-385** (§55.2) | Done, and deliberately *one* number moved rather than the block.  §22.1's policy decides who keeps 363 -- a published number outranks a branch-local one, so master keeps it -- but shifting the rest is no longer the cheap fix it was at eight codes: twenty-two numbers are spelled out by hand in the suite's `CODE_*` variables, in `--warn_error` arguments, in two comments, throughout §18-§54, and in two external reviewers' rounds written against the branch as it stands.  The same principle cuts both ways: those numbers are published too.  So only the collision moves -- `Error_CustardEntryNotFound` 363 → **385** -- and since it was the *first* of Custard's codes the block stays contiguous at 364-385 with twenty-one numbers unchanged.  Nothing in `tests/custard` greps 363, so no test changed.  Master's two constructors were also put back in master's position in the list, purely to give the next merge less to reconcile |
 | M10Ω | The rebuild after a cache-version bump (§55.3) | Recorded, because the obvious recovery is wrong.  The merge took `cache_version_number` 93 → 97, invalidating every `.checked` file in the tree; clearing the stale caches under the stages is right for 1 and 2, where they are real directories, and **wrong for stage 3, where `fstarc.checked` and `ulib.checked` are symlinks into stage 2** -- `stage3/.gitignore` says `# Symlink, must persist` and `clean-3` pointedly does not touch them.  Removing them leaves nothing in their place, `make` rebuilds happily because no stamp file mentions them, and the failure surfaces much later and somewhere else: `tests/custard` dying with `Error 5: No file provided`, which is `mk/test.mk`'s `%.fsti.checked` rule firing with an empty `$<` for a ulib module the install no longer has.  Nothing in the message says "symlink".  Recovery: `git checkout --` the two links, `rm -f .install-stage3.touch`, and drop every stale `tests/*/.depend`, which otherwise keeps failing after the cause is fixed.  `tests/custard/_cache` and `pulse/build/*.checked` hold `.checked` files too |
+| M10δΑ | **A type-level function is reduced, not requested** (§56.1, §56.2) | Done, Kuiper's round 52, and the bug is a *category error* rather than a missing normalization step.  `ty_of_typ`'s `Tm_fvar` case treats every named head as a type constructor, and uniform compilation (§5.0) drops a value index from the target type -- `vec n` is one `vec` whatever `n` is, which for an inductive is exactly right.  For a `let` returning a type the dropped argument is not an index at all: **it is the thing that computes the type**, and dropping it leaves `TApp (carrier, [])`, a request for a declaration whose body matches on a scrutinee that is no longer there.  The single unfolding he observed came from the fallback below, which fires only once the request has already yielded `TAny` and which normalizes with `Weak`/`HNF` -- head normal form *is* the symptom, computing the head of `U32.t & carrier ds` and leaving the `carrier ds` under it stuck.  A comment there claimed the reduct was fully normal; with `HNF` and `Weak` in the step list it never was.  New case, guarded by `computes_type_from_values` (a `Sig_let` with a *value* binder among those applied, so inductives and unapplied names are excluded), reducing with **`UnfoldOnly [l]`** so that names the result may keep stay named, and **fully** rather than `Weak`/`HNF` so nested applications of the same name resolve in one call.  Budgeted, so a non-terminating type function gives the `any` that would have stood rather than error 365 |
+| M10δΒ | `tests/custard/TyFun.fst` (§56.2) | Done, four shapes: the base case, one level, **three** levels, and a *non-recursive* two-level chain through a second name.  The three-level case is load-bearing --- it is what distinguishes a fix from a deeper version of the same mistake, and the generated name has to nest to the bottom, `tuple2__uint32_tuple2_uint32_tuple2_uint32_int32`.  The chain case is what shows this is not about `let rec`: it has no recursion anywhere and still failed.  Run under `WARN_ANY`, so the file is itself an assertion (these binders were warning 367 before), and *executed*, since a type merely declared right is not yet one whose fields land where the body reads them.  Checked negatively: with the guard forced to `false` it reproduces `tuple2@uint32_any` exactly.  Blast radius measured --- every `.out.diff` golden regenerated byte-identical from a deleted `_output`, all four suites green, and `make custard` + `custard-smoke` still build and run a Custard-extracted compiler |
+| M10δΓ | The shared-memory ask, answered by deleting it (§56.3) | Kuiper's conclusion, reached from a failing run rather than from the design: **a rule should not be able to declare the witness, and now none needs to.**  With the application reduced, `c_shmems [SHArray u32 nth]` is an ordinary tuple, monomorphization emits the instance as for any other, and the handle stops being special --- the *type* is declared by the normal path and the rule supplies only a *value*, which his forty lines already build correctly (offsets, coercions, total byte size, element types and tuple shape all matched the kernel body's own `match`, `(buf u32 * i32)` on both sides).  §49.5's "rewrite the binder type inside the rule" did run out as predicted, but the answer was not a bigger rule API; it was that the pass before it was wrong.  Separately worth keeping: `SHArray`'s `Type0` field is erased and the Krml plugin says so (`ExtractKuiper.fst:321`), but Custard keeps the dictionary and the element type is recoverable from the `sized` instance's zero value --- the first time keeping dictionaries as values has paid for itself inside a rule |
+| M10δΔ | The `RUN` step caught what no grep could (§56.4) | EverParse's round 51, and the strongest evidence yet for M10γΤ.  He planted a printer regression built specifically to satisfy every grep --- a fix applied to one arm with its sibling left open, confined to values ≥ 256 so only `oct_big`, which no `RSGREP` pins, would carry it.  It passed `KRML-RUST`, every `RSGREP` and `RSNOGREP`, and `rustc`, and died at `RUN`.  Why no grep could have worked: **karamel renormalizes the literal**, so Custard's `07654321` reaches the Rust source as `7654321u32` --- an ordinary-looking constant that is simply the wrong number.  §43.1's shape with its one visible tell removed; grepping was not insufficient but impossible.  Both C legs stayed green on the same build, turning §52.2's three-region rule from an argument into a measurement.  Also: §55's `cddl-spec` failure was EverParse's own, fixed there four days earlier in `dc247ad6f` --- **which also raises `Lemma13`'s rlimit 128 → 512**, the round 39 workaround attributed to an F\* hash advance rather than to Custard, now confirmed from the other side by someone who did not know the call had been made, and the local patch dropped.  `-fkeep-tuples` confirmed in both directions.  `-o out` writes a *file* named `out` and krml then refuses it |
