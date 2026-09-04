@@ -94,7 +94,16 @@ RUST_TESTS += CborBoundarySlice
 # demanding one -- arrays, a struct-valued cell, and a hash function stored in
 # a record, which becomes a C function pointer.
 C_TESTS += PulseBasic
+# Section 58: the pure condition is spelled in the loop header.
+CGREP_PulseBasic += "while (i < n)"
+CNOGREP_PulseBasic += "while (true)"
 C_TESTS += PulseHashTable
+# Section 58, the other half of that pair, and the reason it is worth a grep:
+# these two conditions genuinely need statements (a [_break] flag is tested
+# to produce the condition value), so they must *keep* [while (true)] with
+# the leading break.  Asserting only the rewritten form would leave a
+# rewrite that fired too eagerly undetected.
+CGREP_PulseHashTable += "while (true)"
 C_TESTS += CborBoundarySlice
 # Section 30: a maker that returns a one-field record collapses to a function
 # returning a function pointer, and its callers must stay saturated.
@@ -119,7 +128,12 @@ CNOGREP_PulseMono += "(*f)"
 C_TESTS += PulseForCapture
 CGREP_PulseForCapture += "PulseForCapture_for_upto__0(uint32_t *"
 CGREP_PulseForCapture += "PulseForCapture_for_upto__0(r, k,"
-CGREP_PulseForCapture += "while (true)"
+# Section 58: the loop is here, and its condition is pure, so it is spelled
+# as a C programmer would spell it rather than as [while (true)] with a
+# leading [break].  A stronger assertion than the old "while (true)": that
+# one held whatever the condition did.
+CGREP_PulseForCapture += "while (i < n)"
+CNOGREP_PulseForCapture += "while (true)"
 CNOGREP_PulseForCapture += "slprop"
 CNOGREP_PulseForCapture += "(*body)"
 

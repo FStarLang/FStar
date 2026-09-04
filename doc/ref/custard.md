@@ -13316,6 +13316,113 @@ consumer of the type structure, not a producer of it.
   has at 522) and `lib/PrintC.ml:245` (`p_constant` has no
   `Float32 -> "f"`).
 
+# 58 A loop that says what it tests
+
+A readability report rather than a bug: every `while` the direct-C backend
+emitted opened with a `break`.
+
+```c
+while (true) {
+  if (!(i < n)) { break; }
+  size_t vi = i;
+  i = (vi + ((size_t)1ULL));
+}
+```
+
+which any C programmer would have written
+
+```c
+while (i < n) {
+  size_t vi = i;
+  i = (vi + ((size_t)1ULL));
+}
+```
+
+## 58.1 Why the break was there in the first place
+
+The general form is not a mistake, and it is worth saying why before
+removing it. **A Pulse loop's condition is a computation, not an
+expression** (section 7.4). It can allocate, read a reference, call a
+function, or branch -- and C's loop header holds one expression, so
+anything the condition needs to *do* has nowhere to go. Putting the
+condition inside the body, where statements are allowed, and turning the
+exit into a `break` is the form that always works. It was emitted
+unconditionally because it is the form that is always correct, not
+because the simpler one was overlooked.
+
+## 58.2 The discriminator is already computed
+
+The rewrite needs to know whether the condition is a pure C expression,
+and the printer does not have to analyse anything to find out: it already
+knows. `c_expr` takes an `out` buffer and pushes into it every statement
+that evaluating the subterm requires. So
+
+> **`!out = ""` after printing the condition** *is* the statement "this
+> condition is a C expression".
+
+That is the whole test. It is not an approximation of purity and does not
+need to be: the question is not whether the condition is side-effect free
+-- it may well call a function -- but whether it *fits in a header*, and
+an empty statement buffer answers exactly that. When it is empty, the
+condition text goes into the `while (...)` and the `break` is not emitted;
+otherwise nothing changes.
+
+## 58.3 Why the two forms agree
+
+Three things have to line up, and all three are structural rather than
+lucky:
+
+- **The test happens in the same place.** `while (c)` evaluates `c` before
+  each iteration including the first, which is exactly where the `if
+  (!c) break;` stood.
+- **The condition is still re-evaluated every iteration.** It was inside
+  the body before and is in the header now; a header is not an
+  initializer.
+- **A `continue` would behave the same.** In the old form it jumps to the
+  top of `while (true)` and re-runs the condition and the break test; in
+  the new form it jumps to the condition test.
+
+Nothing downstream reads the emitted text, so this is a printing choice
+and only a printing choice. The IR is unchanged, and so is the C
+compiler's view of the program.
+
+## 58.4 What the tests pin, and the half that matters more
+
+Both halves are asserted, and the second is the one that would catch a
+rewrite that fired too eagerly:
+
+- `PulseBasic` and `PulseForCapture` have pure conditions and must now
+  produce `while (i < n)`, with `while (true)` a `CNOGREP`.
+- `PulseHashTable` has two loops whose conditions genuinely need
+  statements -- a `_break` flag is tested to produce the condition value,
+  which takes a declaration and an `if` -- and those must **keep** `while
+  (true)`. It carries `while (true)` as a `CGREP`.
+
+`PulseForCapture` previously asserted `while (true)`, which was a weak
+assertion: it held whatever the condition did. `while (i < n)` says more.
+
+## 58.5 Not done
+
+`PulseHashTable`'s second loop is
+
+```c
+while (true) {
+  bool _ct1;
+  if (_break) _ct1 = false;
+  else _ct1 = true;
+  ...
+```
+
+which is `while (!_break)`. Recovering that is a different job from this
+one: the condition really does arrive as a branch, so no printing
+decision can see through it, and collapsing `if (p) x = false; else x =
+true;` to `x = !p` is a simplification of the IR. Worth doing, and worth
+doing *there*, where it would also improve the loops whose conditions stay
+in the body. The same applies to the `_break` flag itself, which is how
+Pulse compiles `return` (section 7.4) and which section 33 already notes
+as a source of tests that constant-fold away.
+
+
 
 
 | M | Deliverable | Notes |
@@ -13536,3 +13643,7 @@ consumer of the type structure, not a producer of it.
 | M10δΚ | The shared-memory kernel is through, and a workaround can go (§57.3) | Kuiper's result on the far side of §56.3: the binder that was `TApp (c_shmems, [])` is now `tuple2<buf u32, unit>`, real PTX with `.extern .shared`, `bar.sync 0` and `st.shared.u32`, `nvcc -arch=sm_70 -std=c++17` at 0/38 failures.  Two consequences he found rather than predicted: his `c_shmems [] = int`, whose source comment says it "should be `unit` but karamel gets confused", **can now be `unit`** because Custard erases it -- a place where Custard is strictly better than the tool it replaces and a consumer gets to delete a workaround -- and that erasure shifts binder positions, so a rule must key off the descriptor rather than a fixed slot.  A workaround removed is not always free |
 | M10δΛ | A missing Rust toolchain skips rather than fails (§57.4) | Done, Kuiper's 53.1(b).  The krml tests have been behind `command -v krml` for some rounds and the Rust ones were not, so a consumer without `rustc` met a failure where a skip was meant.  The probe goes through `RUSTC ?= rustc` rather than being written inline for a reason worth keeping: with `rustc` installed the skip branch is otherwise **unreachable and so untestable**, and `make -n all RUSTC=` is what verified it -- it also lets a consumer name a differently-installed toolchain.  The reject tests go under the guard with the run tests even though several never reach `rustc`: splitting a list by whether a test happens to shell out is a rule nobody could maintain, and a half-run suite is worse than one that reports a skip |
 | M10δΜ | §36 says what a rule may not add (§57.5) | Done, Kuiper's 53.3.  **A rule may not introduce a type instance the source program does not already contain.**  Monomorphization has already run when a rule fires, so the set of instances is closed and a freshly built witness -- his was a `TTuple` assembled on the spot -- names one that was never monomorphized, which the backend refuses with error 368.  The shape a rule wants is almost always reachable from a binder it is already holding, so reuse that binder's `b_ty`: a rule is a consumer of the type structure, not a producer of it |
+| M10δΝ | **A `while` that says what it tests** (§58.1, §58.2) | Done, a readability report rather than a bug: every loop the direct-C backend emitted opened with `while (true) { if (!c) { break; } ... }`.  The general form is not a mistake and the section says why before removing it --- **a Pulse loop's condition is a computation, not an expression** (§7.4), so it may allocate, read a reference or branch, and C's header holds one expression with nowhere to put any of that.  The `break` form is the one that is always correct, which is why it was emitted unconditionally.  What makes the rewrite cheap is that **the discriminator is already computed**: `c_expr` pushes into `out` every statement evaluating a subterm requires, so `!out = ""` after printing the condition *is* the statement "this condition is a C expression".  Not an approximation of purity and it does not need to be --- the question is not whether the condition is side-effect free (it may call a function) but whether it *fits in a header*, and an empty statement buffer answers exactly that |
+| M10δΞ | The two forms agree, structurally (§58.3) | Recorded, because "it looks the same" is not the argument.  `while (c)` tests before each iteration **including the first**, which is where the `if (!c) break;` stood; the condition is still re-evaluated every iteration, since a header is not an initializer; and a `continue` lands in the same place either way (the top of `while (true)`, re-running condition and break test, versus the condition test).  Nothing downstream reads the emitted text, so the IR is unchanged and so is the C compiler's view of the program --- this is a printing choice and only a printing choice |
+| M10δΟ | Both halves of the split are asserted (§58.4) | Done, and **the second half is the one that matters**: `PulseBasic` and `PulseForCapture` have pure conditions and must now produce `while (i < n)` (with `while (true)` a `CNOGREP`), while `PulseHashTable`'s two loops genuinely need statements --- a `_break` flag is tested to produce the condition value, taking a declaration and an `if` --- and must **keep** `while (true)`, which it now carries as a `CGREP`.  Asserting only the rewritten form would leave a rewrite that fired too eagerly undetected.  `PulseForCapture` previously asserted `while (true)`, which held whatever the condition did; `while (i < n)` says strictly more, so the change strengthens the test it had to touch |
+| M10δΠ | `while (!_break)` not recovered (§58.5) | Not done, and deliberately not done *here*.  `PulseHashTable`'s second loop is `bool _ct1; if (_break) _ct1 = false; else _ct1 = true;`, which is `while (!_break)` --- but the condition really does arrive as a branch, so no printing decision can see through it.  Collapsing `if (p) x = false; else x = true;` to `x = !p` is a simplification of the *IR*, and doing it there would also improve the loops whose conditions must stay in the body, which a printer-level hack could not.  Same for the `_break` flag itself, which is how Pulse compiles `return` (§7.4) and which §33 already lists as a source of tests that constant-fold away |

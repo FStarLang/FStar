@@ -1307,12 +1307,24 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
 
   (* Pulse's loop (section 7.4).  The condition is a computation, not an
-     expression, so it goes inside the loop and the exit is a [break]. *)
+     expression, so in general it goes inside the loop and the exit is a
+     [break].
+
+     Section 58: when evaluating the condition needs no statements -- [out]
+     comes back empty -- what is left is a pure C expression, and the loop
+     can be spelled the way it would have been written by hand.  The two
+     forms are equivalent: [while (c)] tests before each iteration
+     including the first, which is where the [break] already stood, and a
+     condition inside the header is re-evaluated every iteration just as
+     one inside the body was.  This is a printing choice and nothing
+     downstream depends on it. *)
   | EWhile (c, body) ->
     let out = mk_ref "" in
     let cs = c_expr out ind' c in
-    ind ^ "while (true) {\n" ^ !out ^
-    ind' ^ "if (" ^ negate cs ^ ") { break; }\n" ^
+    (if !out = ""
+     then ind ^ "while (" ^ unparen cs ^ ") {\n"
+     else ind ^ "while (true) {\n" ^ !out ^
+          ind' ^ "if (" ^ negate cs ^ ") { break; }\n") ^
     emit ind' D_Ignore body ^
     ind ^ "}\n" ^
     (match d with D_Ignore -> "" | _ -> finish ind d unit_value)
