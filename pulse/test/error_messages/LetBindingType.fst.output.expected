@@ -1,4 +1,5 @@
 * Info at LetBindingType.fst(11,17-11,19):
   - Expected failure:
+  - Could not instantiate implicits in term: 42
   - Expected expression of type Prims.bool got expression 42 of type Prims.int
 
