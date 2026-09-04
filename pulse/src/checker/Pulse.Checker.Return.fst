@@ -107,31 +107,78 @@ let rec free_named_vars (t:term) : T.Tac (list var) =
 let refinement_constrains_result (bx:var) (ref:term) : T.Tac bool =
   List.Tot.mem bx (free_named_vars ref)
 
+// Does `t` mention a variable introduced by ANF-hoisting a stateful
+// sub-expression (`Pulse.Checker.Base.fresh_anf_name`, which names them
+// `__anf<N>`)? Such variables are bound by a `Tm_Bind` local to the branch, so
+// anything mentioning them cannot be stated outside it. We read the pretty-name
+// off the `namedv` itself rather than looking the variable up in the
+// environment, since `push_binding` keeps the ppname but drops the binder
+// attribute that `bind_st_term` attaches.
+let rec mentions_anf_temp (t:term) : T.Tac bool =
+  let any (l:list term) : T.Tac bool = TU.fold_left (fun acc e -> acc || mentions_anf_temp e) false l in
+  match R.inspect_ln t with
+  | R.Tv_Var nv ->
+    let nm = T.unseal (R.inspect_namedv nv).ppname in
+    FStar.String.length nm >= 5 && FStar.String.sub nm 0 5 = "__anf"
+  | R.Tv_App hd (a, _) -> any [hd; a]
+  | R.Tv_Abs _ body -> mentions_anf_temp body
+  | R.Tv_Refine b ref -> any [(R.inspect_binder b).sort; ref]
+  | R.Tv_Arrow b c ->
+    any ((R.inspect_binder b).sort ::
+         (match R.inspect_comp c with
+          | R.C_Total ret | R.C_GTotal ret -> [ret]
+          | R.C_Lemma pre post pats -> [pre; post; pats]
+          | R.C_Eff _ _ ret _ _ _ -> [ret]))
+  | R.Tv_Let _ _ _ def body -> any [def; body]
+  | R.Tv_Match sc _ brs -> any (sc :: T.map snd brs)
+  | R.Tv_AscribedT e ty _ _ -> any [e; ty]
+  | R.Tv_AscribedC e _ _ _ -> mentions_anf_temp e
+  | _ -> false
+
 // When inferring a return type (no post-condition hint), the Core typechecker
 // turns a `Pure`-effect `ensures` into a refinement on the returned value's
-// type, e.g. `SZ.lt : Pure bool (ensures z == (v x < v y))` gives a return type
-// `z:bool{z == (SZ.v x < SZ.v y)}`. When the operand is a branch-local hoisted
-// ANF temporary `__anf0` (introduced by hoisting a stateful read such as `!j`),
-// that temporary leaks into the refinement, e.g. `z:bool{z == (SZ.v __anf0 < ...)}`.
-// Closing the branch closes the *term* over `__anf0` but not the *type*, so when
-// the type is later used in the outer scope where `__anf0` no longer exists it
-// fails with Error 76 ("universe_of failed ... Variable not found"); the refined
-// result type also blocks joining two `if`/`match` branches whose boolean results
-// are refined differently.
+// type, e.g. `SZ.lt : Pure bool (ensures fun z -> z == (v x < v y))` applied to
+// `x` gives the return type `z:bool{z == (SZ.v x < SZ.v y)}`.
 //
-// We weaken the inferred type by dropping refinements that constrain the result
-// value itself, i.e. whose formula mentions the refinement binder -- of *any*
-// shape (`z == e`, `z > 0`, ...), not just equalities. Such refinements are
-// redundant: in the inference path `comp_return` re-establishes the value via the
-// equality `result == term` (`use_eq` below, which holds for any non-`unit`
-// result), and any `Pure` postcondition of the operand is in scope at its call.
-// Refinements that do *not* mention the result are payload facts with no other
-// carrier -- e.g. a lemma application's conclusion (`some_lemma x : Lemma (p x)`
-// flows through this same path as `_:unit{ p x }`) -- and are kept.
+// If the operand is an ANF temporary `__anf0` -- introduced by hoisting a
+// stateful read such as `!j` out of an `if`/`match` condition or a `while`
+// guard -- then that temporary leaks into the refinement, e.g.
+// `z:bool{z == (SZ.v __anf0 < SZ.v l2)}`. Joining/closing the branch closes the
+// *term* over `__anf0` but not the *type*, so the type is later used in the
+// outer scope where `__anf0` no longer exists and fails with Error 76
+// ("universe_of failed ... Variable not found"). Such a refinement also blocks
+// joining two `if`/`match` branches whose results are refined differently.
+//
+// We therefore drop a refinement when it *both*
+//
+//   (a) constrains the result value (its formula mentions the refinement
+//       binder), and
+//   (b) mentions an ANF temporary.
+//
+// Both conditions are needed:
+//
+//  * (a) alone is too coarse. It also discards refinements phrased purely in
+//    terms of variables that stay in scope, e.g. the `z == (SZ.v ii < SZ.v n)`
+//    of a `while` guard `(let ii = !i; SZ.lt ii n)` where `ii` is user-written.
+//    Those are recoverable in principle -- `comp_return` adds `result == term`
+//    -- but only at a large cost to the solver: dropping them unconditionally
+//    caused a ~9x rlimit regression on the loop invariants of issue #4488.
+//
+//  * (b) alone is too coarse in the other direction. A refinement that mentions
+//    an ANF temporary but *not* the result is a payload fact with no other
+//    carrier -- typically a lemma's conclusion, since `some_lemma x : Lemma (p x)`
+//    flows through this same path as `_:unit{ p x }`. Dropping those loses the
+//    lemma (e.g. `Seq.mem_index v (value_of x)` in
+//    `pulse/test/Example.BreakReturnContinue.fst`).
+//
+// Dropping a refinement satisfying both is sound: the value relation is
+// re-established by the `result == term` equality that `comp_return` adds
+// (`use_eq` below, which holds for any non-`unit` result), and any `Pure`
+// postcondition of the operand is already in scope at its call.
 let rec unrefine_result (t:term) : T.Tac term =
   match T.inspect t with
   | T.Tv_Refine b ref ->
-    if refinement_constrains_result b.uniq ref
+    if refinement_constrains_result b.uniq ref && mentions_anf_temp ref
     then unrefine_result b.sort
     else t
   | T.Tv_AscribedT e _ _ _ -> unrefine_result e
