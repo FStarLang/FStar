@@ -4259,6 +4259,33 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                                        problem.relation
                                        (Subst.subst subst tbody2) None "lambda co-domain")
 
+      (* [squash p] is by definition [_:unit{p}], so relating two squashed
+         propositions by subtyping is an implication between them.  Falling
+         through to the [Tm_app] congruence rule below would instead decompose
+         [squash p <: squash q] into [p == q] and then delta-unfold both
+         propositions looking for a syntactic match; on terms such as
+         [FStar.UInt.nth (logand (shift_right u i) 1) 31] that unfolding does
+         not terminate.
+
+         Unfolding the definition here is a semantics-preserving rewrite that
+         simply makes [squash] transparent to subtyping: the [Tm_refine,
+         Tm_refine] rule right below then relates [p] and [q] by implication.
+
+         We do this only when neither proposition contains a term uvar, since
+         congruence is what solves those: [squash ?b <: squash q] must commit
+         [?b := q], and turning it into a guard would leave [?b] unresolved
+         (this breaks [FStar.Classical] and a dozen other ulib modules).
+         Universe uvars are deliberately not counted -- the [eq2] on the right
+         of a typical [ensures] carries an unresolved universe, and they are
+         solved by universe unification rather than by this congruence. *)
+      | _, _ when problem.relation <> EQ
+               && Some? (U.is_squash t1)
+               && Some? (U.is_squash t2)
+               && Setlike.is_empty (Free.uvars t1)
+               && Setlike.is_empty (Free.uvars t2) ->
+        let unsquash t = U.refine (new_bv None t_unit) (Some?.v (U.is_squash t)) in
+        solve_t' ({problem with lhs=unsquash t1; rhs=unsquash t2}) wl
+
       | Tm_refine {b=x1; phi=phi1}, Tm_refine {b=x2; phi=phi2} ->
         (* If the heads of their bases can match, make it so, and continue *)
         (* The unfolding is very much needed since we might have
