@@ -277,7 +277,7 @@ let split_goals use_env_msg  //when present, provides an alternate error message
               | None ->
                 let fv = mk_fv (fresh_name "@sk_", Term_sort) in
                 let env' = push_term_var env x (mkFreeV fv) in
-                let g, decls' = encode_term_pred None t env (mkFreeV fv) in
+                let g, decls' = encode_term_pred_inline_refinements None t env (mkFreeV fv) in
                 fv::vars, g::guards, env', decls@decls', x::names)
               ([], [], env, [], [])
           in

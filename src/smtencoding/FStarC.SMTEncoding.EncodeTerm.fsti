@@ -67,6 +67,18 @@ val encode_term_pred: fuel_opt:option term
                     -> e:term
                     -> ML (term & decls_t)
 
+(* As [encode_term_pred], but inlines a refinement type [x:b{phi}] as
+   [HasTypeFuel fuel e b /\ phi[e/x]] rather than introducing a [Tm_refine_...]
+   type constructor and relying on its interpretation axiom. Only appropriate
+   where the resulting predicate is used as a guard/hypothesis or goal, not
+   where the type itself is needed as a first-class term. *)
+val encode_term_pred_inline_refinements
+                    : fuel_opt:option term
+                    -> t:typ
+                    -> env:env_t
+                    -> e:term
+                    -> ML (term & decls_t)
+
 val encode_term : t:typ       (* expects t to be in normal form already *)
                -> env:env_t
                -> ML (term & decls_t)

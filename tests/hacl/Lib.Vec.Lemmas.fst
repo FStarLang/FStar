@@ -466,6 +466,9 @@ let lemma_map_blocks_multi_vec_equiv_pre_k #a w blocksize n hi_f f f_v i b_v pre
   //assert (lp == Seq.append acc_v (f_v i b_v));
 
   Math.Lemmas.lemma_mult_le_right w (i + 1) n;
+  // length acc_v == i * (w * blocksize); the calc below needs it as w * i * blocksize
+  Math.Lemmas.swap_mul w i;
+  Math.Lemmas.paren_mul_right i w blocksize;
   let f_sh = f_shift blocksize (w * i) hi_f w f in
 
   let aux (k:nat{k < w * blocksize}) : Lemma (Seq.index (f_v i b_v) k == Seq.index (map_blocks_multi blocksize w w b_v f_sh) k) =
