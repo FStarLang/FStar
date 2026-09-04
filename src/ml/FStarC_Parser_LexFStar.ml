@@ -254,6 +254,87 @@ let maybe_trim_lines start_column comment =
 let comment_buffer = Buffer.create 128
 let blob_buffer = Buffer.create 128
 let use_lang_buffer = Buffer.create 128
+let doc_buffer = Buffer.create 256
+
+(* A documentation comment -- opened by a paren, star, bar and closed
+   like any comment -- is lexed into a DOC token carrying one string per
+   line, which the grammar turns into a `doc` attribute. See FStarC.Docs
+   and ulib/FStar.Attributes.fsti. (The delimiters cannot be written
+   literally here: comments nest.)
+
+   The payload is opaque to F*: nothing below interprets the text. In
+   particular a leading star on a continuation line is part of that
+   line, not a decoration to be removed -- the rule is "what you wrote
+   between the delimiters, dedented, is what you get". Only layout that
+   is an artifact of where the delimiters sit is undone:
+
+     - continuation lines are dedented by their common indentation; the
+       first line is whatever followed the opener, so it has no
+       indentation of its own and is left alone;
+     - trailing whitespace goes, since it is invisible;
+     - wholly blank lines at either end go, since they come from writing
+       a delimiter on a line by itself. *)
+
+let rstrip s =
+  let n = ref (String.length s) in
+  while !n > 0 && (match s.[!n - 1] with ' ' | '\t' | '\r' -> true | _ -> false) do
+    decr n
+  done;
+  String.sub s 0 !n
+
+let dedent_continuations = function
+  | [] -> []
+  | first :: rest ->
+    let indent_of s =
+      let n = String.length s in
+      let rec aux i =
+        if i >= n then None                       (* blank: no constraint *)
+        else match s.[i] with
+             | ' ' | '\t' -> aux (i + 1)
+             | _ -> Some i
+      in
+      aux 0
+    in
+    let common =
+      List.fold_left
+        (fun acc s ->
+           match indent_of s, acc with
+           | None, _ -> acc
+           | Some i, None -> Some i
+           | Some i, Some j -> Some (min i j))
+        None rest
+    in
+    let strip s =
+      match common with
+      | None | Some 0 -> s
+      | Some k -> if String.length s <= k then "" else String.sub s k (String.length s - k)
+    in
+    first :: List.map strip rest
+
+let lstrip s =
+  let n = String.length s in
+  let rec aux i =
+    if i >= n then n
+    else match s.[i] with ' ' | '\t' -> aux (i + 1) | _ -> i
+  in
+  let k = aux 0 in
+  if k = 0 then s else String.sub s k (n - k)
+
+let doc_lines_of_text text =
+  (* [text] still carries its three-character opener and two-character
+     closer. *)
+  let body = string_trim_both text 3 2 in
+  let lines = List.map rstrip (String.split_on_char '\n' body) in
+  (* The first line sits immediately after the opener, so whatever
+     separates the two is a separator and not indentation. *)
+  let lines =
+    match lines with
+    | [] -> []
+    | first :: rest -> lstrip first :: rest
+  in
+  let lines = dedent_continuations lines in
+  let rec drop_blank = function "" :: tl -> drop_blank tl | l -> l in
+  List.rev (drop_blank (List.rev (drop_blank lines)))
 
 let start_comment lexbuf =
   Buffer.add_string comment_buffer "(*" ;
@@ -266,6 +347,15 @@ let terminate_comment buffer startpos lexbuf =
   let comment = maybe_trim_lines (startpos.Lexing.pos_cnum - startpos.Lexing.pos_bol) comment in
   Buffer.clear buffer;
   add_comment (comment, FStarC_Parser_Util.mksyn_range startpos endpos)
+
+let terminate_doc_comment buffer startpos lexbuf =
+  let endpos = snd (L.range lexbuf) in
+  Buffer.add_string buffer "*)" ;
+  let text = Buffer.contents buffer in
+  Buffer.clear buffer;
+  (* The token fires on the closing delimiter, so its own lexeme range
+     covers only that; the whole comment's range is carried explicitly. *)
+  DOC (doc_lines_of_text text, FStarC_Parser_Util.mksyn_range startpos endpos)
 
 let push_one_line_comment pre lexbuf =
   let startpos, endpos = L.range lexbuf in
@@ -567,6 +657,16 @@ match%sedlex lexbuf with
  | (integer | xinteger | ieee64 | xieee64), Plus ident_char ->
    fail lexbuf (Codes.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
+ (* Longest match puts the three-character doc opener ahead of the
+    two-character comment opener, so every ordinary comment -- including
+    a three-star banner and the empty-comment idiom -- lexes exactly as
+    it always did. The doc opener occurs nowhere in the tree today, so
+    no existing lexeme changes meaning. *)
+ | "(*|" ->
+   Buffer.clear doc_buffer;
+   Buffer.add_string doc_buffer "(*|";
+   doc_comment 0 doc_buffer (fst (L.range lexbuf)) lexbuf
+
  | "(*" ->
    let inner, buffer, startpos = start_comment lexbuf in
    comment inner buffer startpos lexbuf
@@ -672,6 +772,35 @@ match%sedlex lexbuf with
  | any ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    comment inner buffer startpos lexbuf
+ | _ -> assert false
+
+(* Unlike [comment], this tracks nesting with a depth counter rather than
+   by recursion over a shared buffer, so that a nested comment stays part
+   of the documentation text instead of terminating it. *)
+and doc_comment depth buffer startpos lexbuf =
+match%sedlex lexbuf with
+ | "(*" ->
+   Buffer.add_string buffer "(*";
+   doc_comment (depth + 1) buffer startpos lexbuf
+ | "*)" ->
+   if depth = 0
+   then terminate_doc_comment buffer startpos lexbuf
+   else (Buffer.add_string buffer "*)"; doc_comment (depth - 1) buffer startpos lexbuf)
+ | newline ->
+   L.new_line lexbuf;
+   Buffer.add_string buffer (L.lexeme lexbuf);
+   doc_comment depth buffer startpos lexbuf
+ | eof ->
+   (* An ordinary comment may run to the end of the file; a documentation
+      comment is a token, and one that swallowed the rest of the file
+      should say so rather than silently produce a declaration's worth of
+      documentation out of the remaining program. *)
+   E.raise_error_text (FStarC_Parser_Util.mksyn_range startpos (snd (L.range lexbuf)))
+     Codes.Fatal_SyntaxError
+     "Syntax error: unterminated documentation comment"
+ | any ->
+   Buffer.add_string buffer (L.lexeme lexbuf);
+   doc_comment depth buffer startpos lexbuf
  | _ -> assert false
 
 and uninterpreted_blob snap name pos buffer lexbuf =

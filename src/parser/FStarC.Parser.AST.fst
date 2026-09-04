@@ -965,17 +965,24 @@ instance showable_imp     : showable imp     = { show = imp_to_string; }
 let add_decorations d decorations : ML decl =
   let decorations = 
     let attrs, quals = List.partition DeclAttributes? decorations in
+    (* Attribute sets are concatenated rather than limited to one.
+       A documentation comment desugars to a decoration of its own, so a
+       declaration that is both documented and attributed
+       -- and `ulib` has around a hundred of those -- would otherwise be
+       rejected for carrying "more than one attribute set". Order is
+       preserved, so an attribute keeps the position it was written in,
+       and a doc comment written before `[@@ ... ]` stays before it.
+
+       As a side effect `[@@ a] [@@ b] val f : ...` is now accepted and
+       means `[@@ a; b]`, where it used to be an error. That is a
+       generalization, not a change in meaning: the two forms already
+       produced the same attribute list whenever only one of them was
+       written. *)
+    let attrs = List.collect (function DeclAttributes a -> a | _ -> []) attrs in
     let attrs =
-      match attrs, d.attrs with
-      | attrs, [] -> attrs
-      | [DeclAttributes a], attrs -> [DeclAttributes (a @ attrs)]
-      | [], attrs -> [DeclAttributes attrs]
-      | _ ->
-        raise_error d Fatal_MoreThanOneDeclaration
-          (Format.fmt2
-            "At most one attribute set is allowed on declarations\n got %s;\n and %s"
-            (String.concat ", " (List.map (function DeclAttributes a -> show a | _ -> "") attrs))
-            (String.concat ", " (List.map show d.attrs)))
+      match attrs @ d.attrs with
+      | [] -> []
+      | a -> [DeclAttributes a]
     in
     List.map Qualifier d.quals @
     quals @

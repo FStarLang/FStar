@@ -425,14 +425,19 @@ val defer_to (#a:Type) (tag : a) : unit
 
 (** [doc [...]] attaches documentation to a top-level declaration.
 
-    This is *explicit* authoring only: there is no comment sugar that
-    fills this attribute in, it must be written as an ordinary
-    attribute on an ordinary top-level declaration, e.g.
+    It may be written out as an ordinary attribute on an ordinary
+    top-level declaration:
 
      {[
         [@@doc ["Adds one to [x]."]]
         val incr (x:int) : int
      ]}
+
+    or, equivalently, as a documentation comment -- a comment opened with
+    a paren, star and bar -- which desugars to exactly the above, one
+    list element per line. (The delimiters cannot be shown here: comments
+    nest, so writing one inside this comment would end it.) Neither form
+    is privileged; the compiler sees the same attribute either way.
 
     The payload is a list of opaque strings, one per line of
     documentation. F* attaches no meaning to their contents, does not
