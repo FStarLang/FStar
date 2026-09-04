@@ -12502,6 +12502,194 @@ touched a desugaring he does not reach and two refusals for constructs he
 does not use.
 
 
+# 53 Where the signature and the type were computed twice
+
+Round 50 from Kuiper's reporter, who did the one thing I could not: put
+§51.3's `ClosurePrologue` under a real `nvcc`, end to end and unedited. It
+holds. All three reachability classes are right, `static __global__` is
+accepted, and three further shapes he invented -- two entries sharing a
+helper, self-recursion inside the closure, and a callee reached only as a
+*value* -- all come out correctly, the last of them because `dce` follows
+value references rather than call sites.
+
+What broke is one node type over from what was tested, twice, and in the
+same shape both times: **a decision about a declaration that a second piece
+of code has to make again, and makes differently.**
+
+
+## 53.1 A function passed as a value
+
+The direct-C backend computes a definition's C signature in `signature` and
+the C spelling of a type in `decl_of`, and the two disagreed:
+
+- `signature` prints a `unit` result as `void`; `decl_of` printed
+  `custard_unit`.
+- `signature` drops a `unit` parameter; `decl_of` kept it.
+
+Neither shows while a function is only ever *called*, because a call site
+looks the definition up in `keeps` and `void_fns` and so makes the same
+decision the definition made. Pass one as a value and there is no
+definition at the use site -- only its type -- and the type was spelled by
+the other piece of code:
+
+```c
+static void UnitPtr_apply(custard_unit (*f)(uint32_t), uint32_t eta);
+static void UnitPtr_k(uint32_t a);
+...
+  UnitPtr_apply(UnitPtr_k, ((uint32_t)1U));   /* incompatible */
+```
+
+`clang`, `g++` and `nvcc` all reject it. No externs, no polymorphism, no
+rule plugin, and no Custard diagnostic. The `KrmlC` backend is correct
+here, so it is the direct-C type printer alone.
+
+The reporter found the return half. The parameter half is the same bug and
+was still there after fixing it, with the arity wrong as well as the type.
+
+**The fix is not to teach `decl_of` about `keeps`**, which it cannot see:
+`keeps` was a function of the *body* -- a `unit` parameter was dropped only
+when the body did not mention it -- and a function at pointer type has no
+body at the use site. So the fix is the one M10f already made for type
+representations, applied to signatures: make the decision a function of the
+type.
+
+- `keeps` for a `DLet` now drops every `unit` parameter unconditionally,
+  which is what the `DExternal` case beside it already did, with the comment
+  that already said why: a unit argument carries no information.
+- A body that mentions a dropped binder binds the name to the unit constant
+  in `let_decl`, which is exactly what `ELet` at unit type has always done
+  for a local.
+- `decl_of`'s `TArrow` case applies both transformations, so an empty
+  argument list comes out `void` rather than `()`.
+- A call *through a variable* of function-pointer type has no name to look
+  up, and needs none: the parameter is dropped exactly when its type is
+  `unit`, so the argument is dropped exactly when its type is, and both ends
+  read the same arrow.
+
+`tests/custard/UnitPtr.fst` covers both shapes. The suite compiles with
+`-Werror`, so it needed no new assertion mechanism -- it needed a test that
+passes a `unit`-returning function as a value, which nothing did. That is
+the missing shape, and it is the shape every kernel launcher has.
+
+
+## 53.2 Globals in the device closure
+
+`propagate_prologues` marks `DLet`s, and a global *is* a `DLet` with no
+binders, so the pass had been marking them all along. The C printer's two
+parameterless branches -- the one that emits a global's definition and the
+one that emits its `extern` declaration in the header -- did not print
+`prologue_of`. A flag computed correctly and then dropped on the way out.
+
+`nvcc` is not forgiving about the result:
+
+```
+warning #20094-D: a host variable "DevG_g" cannot be directly read in a
+                  device function
+error: identifier "DevG_g" is undefined in device code
+```
+
+Both branches now print it, and `DevClosure.fst` grows a device-exclusive
+global and a host-only one, the second being the negative: a global the
+kernel never reaches must be left alone exactly as `host_only` is.
+
+**The shared case cannot be fixed the same way, and that is the part worth
+deciding rather than implementing.** The exclusive string is fine on a
+variable -- CUDA's `__device__` applies to one. The shared string is not:
+
+```
+$ cat gtest.cu
+__device__ __host__ static uint32_t b = 2U;
+warning #1835-D: attribute "__host__" does not apply here
+warning #20091-D: a __device__ variable "b" cannot be directly read in a
+                  host function
+```
+
+`__host__` on a variable is *dropped*, so `b` silently becomes device-only
+and every host read of it is then wrong. A qualifier meaning "reachable
+from both" is a statement about a function; CUDA's answer for a genuinely
+shared variable is `__managed__`, which is unified memory and a runtime
+cost, not a decoration.
+
+So a global in `device ∩ host` is **error 383**, not a decorated
+declaration. Custard reads neither string and so cannot tell a target that
+has an answer here from one that does not, and of the three available
+outcomes -- refuse, emit the shared string, emit the exclusive string --
+only refusing fails loudly. Emitting either string produces something that
+compiles with a warning and is wrong at runtime, which is the worst outcome
+on offer. `tests/custard/DevGShare.fst`.
+
+Not a blocker for Kuiper today: `grep` over its generated `.cu` finds zero
+file-scope variables, for the same `inline_for_extraction noextract` reason
+the helpers were not a blocker, and with the same fragility.
+
+
+## 53.3 One C symbol has two prototypes
+
+Two corrections to Warning 367, one to what it claims and one to what it
+advises.
+
+**The claim.** The text said "an external is never specialized". That is
+false: under `--custard_monomorphize_types` the type parameters *are*
+substituted, and
+
+```fstar
+[@@custard_extern "MK"] assume val mk : #a:Type -> unit -> ML a
+```
+
+comes out as `extern uint32_t MK(void);` with no warning at all. What does
+not happen is a per-instantiation *symbol*, which is the thing worth
+saying, because that is where the failure lands:
+
+```c
+extern void KCALL2(custard_unit (*)(uint32_t), uint32_t);
+extern void KCALL2(custard_unit (*)(uint64_t), uint64_t);
+error: conflicting types for 'KCALL2'
+```
+
+**The advice.** Warning 367 recommended declaring one external per type
+vector, all with the same `[@@custard_extern]` target name. Followed alone,
+that produces the identical pair by hand and the identical error. It works
+only with `[@@custard_c_header]`, which makes Custard emit no prototype at
+all and include the real declaration instead -- the same mechanism that
+makes a variadic macro work, and the same one that answers a `__device__`
+extern reached from a kernel (§53.4). One mechanism, three problems, and
+the advice named none of them.
+
+Both halves of the text are corrected. More usefully, the failure is now
+caught rather than described: **error 384** fires when two externals reach
+the same target name with different types and no header, quoting both
+generated prototypes. The C compiler does report this, but in terms of
+generated names rather than of the declarations that produced them, and
+under `--custard_monomorphize_types` the second declaration is one nobody
+wrote. `tests/custard/ExtDup.fst`.
+
+
+## 53.4 The gap that was not one
+
+The reporter nearly reported that an extern reached from a kernel gets no
+prologue -- it does not -- and then checked it against the mechanism first
+and found `custard_c_header` already answers it: with a header attached
+Custard emits no prototype of its own, includes the real one, and `nvcc` is
+happy. That matters for Kuiper specifically, whose device-side externs are
+not macros but `__device__ static inline` functions in
+`include/kuiper/atomics.h`; a generated `extern` for one would collide with
+the real definition whatever prologue it carried, so *not emitting one* is
+the only thing that works.
+
+`CPrologue` on an extern is therefore silently ignored, and that is right.
+
+This is the third suspected gap this reporter has checked against the
+mechanism before reporting it and found already covered. Recording it for
+the same reason he does: the ones that get checked are the ones he stopped
+believing.
+
+
+## 53.5 What remains
+
+Shared memory, with the descriptor rather than a description of it, and
+agreement that it wants a declared rather than a rewritten binder type.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -12698,3 +12886,7 @@ does not use.
 | M10γΜ | **A prologue that follows the call graph** (§51.3) | Done, round 50, and the first ask in many rounds that is a missing feature rather than a missing diagnostic.  `Prologue` decorates one declaration; CUDA's `__global__` may only call `__device__`, so marking a kernel leaves every function its body calls implicitly `__host__` and `nvcc` refuses each one.  No number of per-declaration flags fixes it: the set is the transitive callees of a term the plugin has just built, which the plugin cannot enumerate and Custard can, `dce` having just computed that graph.  `ClosurePrologue (exclusive, shared)`, from a plugin or from `[@@custard_c_closure_prologue]`, marks everything the carrier reaches -- exclusive when the only route is through a marked declaration, shared when the ordinary program reaches it too, which for CUDA is `__device__` and `__device__ __host__`.  **The second string is the part that could not be worked around**: which helpers are called from both a kernel and host code is a property of the whole program, not of any declaration, so no amount of hand-marking expresses it; Kuiper's `Kuiper.Math` helpers survive today only because that library happens to be written `inline_for_extraction noextract` throughout.  `host` is computed without descending through an entry, or a kernel's own body would make its whole closure shared.  Custard reads neither string.  §36 got this one wrong and neither `clang` nor `g++` could have shown it -- §41.4's `nvcc` check found the three that were right.  `tests/custard/DevClosure.fst`, one callee per class, with new `CPAIR_`/`CNOPAIR_` assertions over adjacent line pairs, since a prologue sits on the line before what it decorates and "which declaration got which" is not otherwise expressible |
 | M10γΝ | **`check-partial` refuses to run on a stale tree** (§52.3) | Done, round 49 from the CBOR/CDDL reporter, and a hole in the gate rather than in the compiler.  §46 guarded the tree that cannot be found, is empty, or fails to compile; the sibling shape is a tree that is merely *old*, which compiles fine and reports on the previous sources with nothing in the output saying so.  Demonstrated both ways on `krml_op`: seed an inexhaustive match without rebuilding and the gate is green; fix one without rebuilding and it still reports.  The generalization: **a gate about the compiler that reads a derived artifact inherits that artifact's staleness** -- `check-sources` greps `CUSTARD_SRC` and is always current, `check-partial` reads `stage3/out/lib/fstar/compiler/fstarc.ml/` and is only as current as the last build.  Unlike a test of generated output, where the artifact is the thing under test and staleness *is* the failure, here it is a proxy and staleness is invisible.  `check-partial: $(FSTAR_EXE)` does not fix it -- `tests/custard` has no rule that builds the compiler, so it is an existence check that rebuilds nothing -- so the fix is in `checkpartial.py`, which maps each swept `FStarC_Custard_X.ml` back to its `src/custard` sources and compares mtimes.  Two additions to the reporter's patch: `.fsti` files count, since an interface-only change is exactly what alters a match's obligations (§51.1's own bug was a new `flag` constructor), and a module mapping to *no* source is reported as `unmapped` rather than swept unguarded, that being §46's failure mode again.  Fired correctly on its first run |
 | M10γΞ | **Warning 382's calibration corpus is Kuiper's, not both** (§52.1, §52.2) | Done, as two corrections and a checked negative result.  §49.3 pointed the CBOR/CDDL reporter at Warning 382; he has **zero** `custard_extern` declarations, and `DExternal` arises only from that attribute (`Extract.fst:901`), so the warning is not unfired there but inapplicable -- his entire C surface is *extracted*, not declared-external, which is retroactively why round 40's question from him was `--custard_c_no_prefix`, about what a generated surface is *named*.  The two reporters sit on opposite sides of one boundary and a diagnostic about one side has one calibration corpus.  He did check what he could: `ExternErase` on `C`, `KrmlC` and `KrmlRust` gives byte-identical diagnostics, so the single leg is adequate.  That sharpens §50.3, which was stated too broadly: the leg count a test needs is a property of where the code under test sits relative to the backend split.  `PrintKrml` is below it with two targets that disagree, which is why §50.2 needed a second leg; Warning 382 is raised in `Extract`, above the split, where one implementation exists by construction.  Also §52.0: round 48's `krml_op` count was wrong as well as its totality claim -- 24 non-buffer constructors, not 22, both errors from one reading of one match, which is the argument for `check-partial` over reading more carefully |
+| M10γΟ | **A function passed as a value compiles** (§53.1) | Done, round 50 from Kuiper's reporter, and the first direct-C bug in several rounds that needs no externs, no polymorphism and no rule plugin.  The backend computed a definition's C signature in `signature` and the C spelling of a type in `decl_of`, and they disagreed twice: a `unit` result is `void` in one and was `custard_unit` in the other, and a `unit` parameter is dropped by one and was kept by the other.  Invisible while a function is only *called*, because a call site looks the definition up in `keeps` and so repeats its decision; a function passed as a **value** has no definition at the use site, only a type, and the type was spelled by the other piece of code.  `clang`, `g++` and `nvcc` all reject the result and Custard said nothing; `KrmlC` was right throughout, so it was the direct-C type printer alone.  The fix is M10f's principle applied to signatures rather than to type representations: **make the decision a function of the type**.  `keeps` for a `DLet` now drops every `unit` parameter unconditionally -- which the `DExternal` case beside it already did, with a comment already saying why -- and a body that mentions a dropped binder binds it to the unit constant, exactly as `ELet` at unit type always has for a local.  A call through a *variable* of function-pointer type needs no lookup at all: the parameter is dropped exactly when its type is `unit`, so the argument is too, and both ends read the same arrow.  The reporter found the return half; the parameter half was still there afterwards, with the arity wrong as well as the type.  `tests/custard/UnitPtr.fst`; the suite already compiles with `-Werror`, so what was missing was not a mechanism but a test that passes a `unit`-returning function as a value -- the shape every kernel launcher has |
+| M10γΠ | **Globals in the device closure, and the one that cannot be marked** (§53.2) | Done, and one node type over from §51.3, which is where it broke: `propagate_prologues` had been marking globals all along -- a global is a `DLet` with no binders -- and the C printer's two parameterless branches dropped `prologue_of` on the way out.  A flag computed correctly and then discarded, which `nvcc` reports as *"a host variable cannot be directly read in a device function"*.  Both branches print it now, and `DevClosure.fst` grows a device-exclusive global plus a host-only one as the negative.  **The shared case is refused rather than fixed**, which is the part that needed deciding: the exclusive string is fine on a variable (`__device__` applies to one) but the shared string is not, because `__host__` on a variable is *dropped silently*, leaving a device-only variable that compiles with a warning and reads the wrong memory at runtime.  A qualifier meaning "reachable from both" describes a function; CUDA's answer for a shared variable is `__managed__`, unified memory with a runtime cost, not a decoration Custard may add on its own.  Of refuse, emit-shared and emit-exclusive, only refusing fails loudly, so a global in `device ∩ host` is **error 383**.  `tests/custard/DevGShare.fst`.  Zero file-scope variables in Kuiper's generated `.cu` today, for the same `inline_for_extraction noextract` reason the helpers were not a blocker and with the same fragility |
+| M10γΡ | **One C symbol has two prototypes** (§53.3) | Done, as a correction to Warning 367 and a new check.  The text claimed an external is never specialized; under `--custard_monomorphize_types` the parameters *are* substituted, and a polymorphic external comes out fully concrete with no warning at all.  What does not happen is a per-instantiation *symbol*, which is where the failure actually lands -- two instantiations give two `extern` lines under one name and `conflicting types`.  Worse, 367's own advice (*"declare one external per type vector, all with the same target name"*) reproduces exactly that pair by hand: following it gives a file that does not compile.  It works only with `[@@custard_c_header]`, which makes Custard emit no prototype at all -- the same mechanism that makes a variadic macro work and the same one that answers a `__device__` extern reached from a kernel (§53.4), so one mechanism covers three problems and the advice named none of them.  Both halves of the text corrected, and the failure is now **caught** rather than described: error 384 fires on two externals reaching one target name with different types and no header, quoting both generated prototypes -- which matters because the C compiler reports it in terms of generated names, and under monomorphization the second declaration is one nobody wrote.  `tests/custard/ExtDup.fst` |
+| M10γΣ | `ClosurePrologue` confirmed under `nvcc` (§51.3, §53.4) | Done by the reporter, and the check I could not run locally.  `DevClosure` with CUDA's real strings, extracted and handed to `nvcc` unedited: all three reachability classes right, `static __global__` accepted, `cuobjdump -ptx` showing the kernel as a `.entry`, and the prologue on the *prototype* load-bearing exactly as §41.4 said.  Three shapes he added past the tested ones all hold: two entries sharing a helper give `__device__` and not the shared string (shared is about the host, not about the arity of the seed set); self-recursion inside the closure is accepted; and a callee reached only *as a value*, never called, is still marked, because `dce` follows value references rather than call sites -- which is the version this needs.  Also §53.4: an extern reached from a kernel gets no prologue and needs none, `custard_c_header` being the answer, which matters for Kuiper because its device-side externs are `__device__ static inline` definitions rather than macros and a generated `extern` would collide with the real one whatever decorated it.  Third suspected gap this reporter has checked against the mechanism before reporting it and found already covered |

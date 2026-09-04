@@ -443,8 +443,19 @@ let rec decl_of (t:cty) (x:string) : ML string =
       | TArrow (a, _, b) -> spine b (a :: acc)
       | _ -> (List.rev acc, t) in
     let args, ret = spine t [] in
-    decl_of ret ("(*" ^ x ^ ")(" ^
-                 String.concat ", " (args |> List.map (fun a -> decl_of a "")) ^ ")")
+    (* Section 53.1.  This type has to spell what [signature] emits, and
+       [signature] makes two changes an arrow does not: a [unit] result is
+       [void], and a [unit] parameter is dropped.  Making the same two changes
+       here is what lets a function be *passed* as well as called; leaving
+       them out gave a pointer-to-function type returning [custard_unit]
+       against a [void]-returning definition, in one translation unit, with
+       no diagnostic. *)
+    let args = args |> List.filter (fun a -> not (TUnit? a)) in
+    let inner = "(*" ^ x ^ ")(" ^
+                (match args with
+                 | [] -> "void"
+                 | _ -> String.concat ", " (args |> List.map (fun a -> decl_of a ""))) ^ ")" in
+    if TUnit? ret then "void " ^ inner else decl_of ret inner
   | _ -> base_ty t ^ (if x = "" then "" else " " ^ x)
 
 and base_ty (t:cty) : ML string =
@@ -942,13 +953,17 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EApp (hd, args) ->
     (* Drop the arguments that correspond to dropped parameters.  ANF has made
        every operand pure, so nothing is lost by not evaluating them. *)
+    (* Section 53.1.  Through a *variable* of function-pointer type there is
+       no name to look up, but there is no need for one: the parameter is
+       dropped exactly when its type is [unit], so the argument is dropped
+       exactly when its type is, and both ends read the same arrow. *)
     let args =
       match hd.e with
       | EQual (n, _) ->
         (match SMap.try_find !keeps (string_of_name n) with
          | Some flags -> filter_by flags args
          | None -> args)
-      | _ -> args in
+      | _ -> args |> List.filter (fun (a:expr) -> not (TUnit? a.ty)) in
     (* Before printing, because a mismatch here is not something the C
        compiler will describe in terms the reader can act on: it reports "too
        few arguments" against a generated prototype. *)
@@ -1828,6 +1843,11 @@ let let_decl (l:dlet) : ML string =
   void_ret := TUnit? l.dl_ret;
   reset_scope ();
   kept_binders l |> List.iter (fun b -> let _ = bind_var b.b_name in ());
+  (* Section 53.1.  A dropped parameter is a unit one, so a body that mentions
+     it wants the only value of that type; binding the name to the constant
+     lets the body stand unchanged while the signature loses the parameter. *)
+  l.dl_binders |> List.iter (fun b ->
+    if TUnit? b.b_ty then bind_alias b.b_name unit_value);
   if Nil? l.dl_binders then
     reject ("the top-level value " ^ string_of_name l.dl_name)
       ["C has no way to initialize a global from a computation.";
@@ -1907,6 +1927,13 @@ let rec dedup (xs : list string) : ML (list string) =
   match xs with
   | [] -> []
   | x :: rest -> x :: dedup (rest |> List.filter (fun y -> y <> x))
+
+(* A generated declaration ends in a newline; quoting one inside a diagnostic
+   wants the text and not the line break. *)
+let trim_nl (s:string) : ML string =
+  let n = String.length s in
+  if n > 0 && String.substring s (n - 1) 1 = "\n"
+  then String.substring s 0 (n - 1) else s
 
 (* A declaration is part of this translation unit's *interface* exactly when
    something outside the unit can name it: that is, when it is a [Root].  A
@@ -2278,9 +2305,15 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
       let n = List.length (List.filter (fun b -> b) flags) in
       if n > 0 then SMap.add at (string_of_name x.dx_name) n
     | DLet l ->
-      let used = vars_of l.dl_body in
-      let flags = l.dl_binders |> List.map (fun b ->
-        not (TUnit? b.b_ty) || List.existsb (fun y -> y = b.b_name) used) in
+      (* Section 53.1.  Unconditionally, exactly as the external above, and
+         for the same reason: a unit argument carries no information.  It used
+         to depend on whether the body mentioned the binder, which made a
+         definition's C arity a function of its *body* -- and a function
+         passed as a value has no body at the use site, so the pointer type
+         and the definition disagreed.  A mentioned binder is bound to the
+         unit constant in [let_decl] instead, which is what [ELet] at unit
+         type has always done for a local. *)
+      let flags = l.dl_binders |> List.map (fun b -> not (TUnit? b.b_ty)) in
       (* Only worth recording when it changes something, and never for a
          definition whose every parameter would go: [f()] is fine, but the
          rejection of a parameterless definition below is about the IR, so the
@@ -2345,14 +2378,49 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
       | _ -> []) ) in
   let includes = dedup includes in
 
-  let exts = p |> List.collect (fun d ->
+  let exts_named = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
-    | DExternal x -> (match extern_decl x with Some s -> [s] | None -> [])
+    | DExternal x ->
+      (match extern_decl x with
+       | Some s ->
+         let nm = match SMap.try_find !externs (string_of_name x.dx_name) with
+                  | Some t -> t
+                  | None -> c_name x.dx_name in
+         [(nm, string_of_name x.dx_name, s)]
+       | None -> [])
     | DExn _ ->
       current := "an exception declaration";
       reject "an exception declaration" ["C has no exceptions."]
     | _ -> []) in
+
+  (* Section 53.3.  One C symbol has one prototype.  Two externals reaching
+     the same target name with different types produce two [extern] lines that
+     C rejects as conflicting, and there are two ways to get there: several
+     hand-written declarations sharing a [@@custard_extern] target -- which is
+     what Warning 367's own advice used to recommend, unqualified -- and, under
+     [--custard_monomorphize_types], one polymorphic external specialized at
+     several type vectors.  Both give a file that does not compile, and the C
+     compiler describes it in terms of generated prototypes rather than of the
+     declarations that produced them.  The answer either way is the same one
+     that makes a variadic macro work: with [@@custard_c_header] no prototype
+     is emitted at all, and the header's own declaration is the only one. *)
+  let () =
+    let seen : SMap.t (string & string) = SMap.create 20 in
+    exts_named |> List.iter (fun (nm, src, s) ->
+      match SMap.try_find seen nm with
+      | Some (src', s') when s' <> s ->
+        E.raise_error0 E.Error_CustardExternConflict
+          ([text ("Custard: the external target `" ^ nm ^
+                  "' is declared twice, with different types.");
+            text ("'" ^ src' ^ "' declares it as: " ^ trim_nl s');
+            text ("'" ^ src ^ "' declares it as: " ^ trim_nl s);
+            text "One C symbol has one prototype, so these cannot both be emitted.";
+            text "If the target really does accept both -- a variadic macro, or an overload set -- add [@@custard_c_header \"...\"] naming the header that declares it.  Custard then emits no prototype of its own and includes the header instead, which is the only arrangement in which several type vectors can share one symbol.";
+            text "Otherwise give each type vector its own [@@custard_extern] target name."])
+      | _ -> SMap.add seen nm (src, s)) in
+
+  let exts = dedup (exts_named |> List.map (fun (_, _, s) -> s)) in
 
   (* Every struct's name exists before any type is defined, so that a type
      that reaches itself, or another one later in the file, through a pointer
@@ -2390,7 +2458,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let protos = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
-    | DLet l when Nil? l.dl_binders -> [storage l ^ global_decl l]
+    | DLet l when Nil? l.dl_binders -> [prologue_of l ^ storage l ^ global_decl l]
     | DLet l when Cons? l.dl_binders ->
       if is_public l then []
       else [prologue_of l ^ storage l ^ inline_of l ^ proto_of l]
@@ -2401,7 +2469,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     match d with
     | DLet l when is_public l && Nil? l.dl_binders ->
       current := string_of_name l.dl_name;
-      ["extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"]
+      [prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"]
     | DLet l when is_public l -> [prologue_of l ^ inline_of l ^ proto_of l]
     | _ -> []) in
 

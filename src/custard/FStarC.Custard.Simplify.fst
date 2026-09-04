@@ -1223,6 +1223,24 @@ let propagate_prologues (prog:program) : ML program =
       | (a, b) :: _ -> (a, b)
       | [] -> ("", "") in
     let excl, shared = strings in
+    (* Section 53.2.  A global is a [DLet] with no binders, and the two-string
+       API does not extend to one.  The exclusive string is fine -- CUDA's
+       [__device__] applies to a variable -- but the shared string is not: a
+       qualifier meaning "reachable from both" is a statement about a
+       *function*, and CUDA's answer for a shared variable is [__managed__],
+       which is unified memory and a runtime cost rather than a decoration.
+       [__host__] on a variable is dropped silently, so emitting the shared
+       string there would give a device-only variable that compiles with a
+       warning and reads the wrong memory at runtime -- the worst of the
+       outcomes available.  Custard reads neither string and so cannot tell;
+       it refuses rather than guessing. *)
+    let shared_global (l:dlet) : ML unit =
+      E.raise_error0 E.Error_CustardSharedGlobal [
+        text ("Custard: the global " ^ string_of_name l.dl_name ^
+              " is reached from device code and from host code.");
+        text "It is a variable and not a function, so the second string of custard_c_closure_prologue cannot be applied to it: a qualifier meaning \"reachable from both\" describes a function, and a target that has an answer for variables (CUDA's __managed__) spells it as a storage class with a runtime cost, which is not a decoration Custard may add on its own.";
+        text "Applying it anyway would be worse than refusing: on CUDA the host qualifier on a variable is dropped silently, so the result compiles with a warning and is wrong at runtime.";
+        text "Either make it a function of unit, so that the closure can decorate it like any other callee, or keep it out of the device closure." ] in
     prog |> List.map (fun d ->
       match d with
       | DLet l ->
@@ -1230,9 +1248,16 @@ let propagate_prologues (prog:program) : ML program =
         if List.mem n seeds then d
         else if Some? (SMap.try_find device n)
                 && not (l.dl_flags |> List.existsb Prologue?)
-        then
-          let s = if Some? (SMap.try_find host n) then shared else excl in
+        then begin
+          let s =
+            if Some? (SMap.try_find host n)
+            then begin
+              if Nil? l.dl_binders then shared_global l;
+              shared
+            end
+            else excl in
           DLet { l with dl_flags = Prologue s :: l.dl_flags }
+        end
         else d
       | d -> d)
   end

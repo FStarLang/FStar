@@ -161,28 +161,37 @@ let warn_any (prog:program) : ML unit =
         | TAbstract -> ())
      | DExternal x -> at "declaration" x.dx_ty
      | DExn e -> e.de_args |> List.iter (at "exception argument"));
-    (* Section 51.2.  An external with a type parameter is a particular and
-       recognizable case of this, and the generic message did not say so: the
-       reader is told the declaration's type has an [any] in it and left to
-       work out that the reason is polymorphism.  It is worth naming because
-       the answer is unusual -- monomorphization does not reach an external,
-       and cannot, since one C symbol has one prototype -- and because the
-       workaround is not obvious from the generic text. *)
+    (* Section 51.2, corrected in 53.3.  An external with a type parameter is
+       a particular and recognizable case of this, and the generic message did
+       not say so: the reader is told the declaration's type has an [any] in
+       it and left to work out that the reason is polymorphism.  The first
+       version of this text said an external is never specialized, which is
+       false -- under [--custard_monomorphize_types] the parameters are
+       substituted.  What does not happen is a per-instantiation *symbol*, so
+       what the reader needs to know is that the collision is at the C name,
+       and that the workaround needs [@@custard_c_header] to be a workaround
+       at all. *)
     let extra =
       match d with
       | DExternal x when Cons? x.dx_typars ->
         [text ("'" ^ string_of_name x.dx_name ^ "' is external and \
                 polymorphic, in " ^ show (List.length x.dx_typars) ^
                " type parameter(s): " ^ String.concat ", " x.dx_typars ^ ".");
-         text "An external is never specialized.  Specialization works by \
-               substituting into a body and an external has none, and its C \
+         text "Specialization does not rescue this.  Even where the type \
+               parameters are substituted -- under \
+               --custard_monomorphize_types they are -- an external's C \
                declaration is a single fixed symbol with a single prototype, \
-               so there is nothing for a per-instantiation copy to be named. \
-               Each type parameter therefore becomes [any].";
+               so several instantiations collide rather than becoming \
+               separate copies (error 384).  Without that flag each type \
+               parameter simply becomes [any], which is this warning.";
          text "Give the parameter a concrete type.  If the C target really \
                does accept several types -- a variadic macro, say -- declare \
                one external per type vector, all with the same \
-               [@@custard_extern] target name."]
+               [@@custard_extern] target name, and give each one \
+               [@@custard_c_header \"...\"] as well.  The header is not \
+               optional: it is what makes Custard emit no prototype of its \
+               own, and without it the several declarations of one symbol are \
+               what error 384 refuses."]
       | _ -> [] in
     match List.rev !sites with
     | [] -> ()

@@ -1287,7 +1287,42 @@ CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only" \
 CNOPAIR_DevClosure += "/*SHARED*/@DevClosure_only" \
                       "/*EXCL*/@DevClosure_both" \
                       "/*EXCL*/@DevClosure_host_only" \
-                      "/*SHARED*/@DevClosure_host_only"
+                      "/*SHARED*/@DevClosure_host_only" \
+                      "/*EXCL*/@static uint32_t DevClosure_host_g"
+# Section 53.2.  The fourth node type: a *global* in the device closure.  The
+# closure covers functions, and a global reached from device code used to get
+# nothing -- one node type over from the case that was tested.
+CPAIR_DevClosure   += "/*EXCL*/@static uint32_t DevClosure_gk"
+
+# Section 53.2.  The other half, which cannot be marked at all: a global that
+# device *and* host code read.  The shared string describes a function, and
+# applying it to a variable on CUDA compiles with a warning and is wrong at
+# runtime, so Custard refuses instead of guessing.
+REJECT_TESTS += DevGShare
+CODE_DevGShare := 383
+FLAGS_DevGShare := --custard_backend C --custard_monomorphize_types true
+EGREP_DevGShare += "the global DevGShare.g is reached from device code"
+EGREP_DevGShare += "__managed__"
+NOEGREP_DevGShare += "please report"
+
+# Section 53.3.  One C symbol, two prototypes.  Warning 367's own advice used
+# to end here, and following it alone gives a file that does not compile; the
+# fix is [@@custard_c_header], which is also the answer for a variadic macro.
+REJECT_TESTS += ExtDup
+CODE_ExtDup := 384
+FLAGS_ExtDup := --custard_backend C --custard_monomorphize_types true
+EGREP_ExtDup += "the external target \`KCALL2' is declared twice"
+EGREP_ExtDup += "custard_c_header"
+NOEGREP_ExtDup += "has no C representation"
+
+# Section 53.1.  A unit-returning function passed as a value.  The suite
+# compiles with -Werror, so the mismatch between the pointer type and the
+# definition is a build failure and needs no grep -- but one is pinned anyway,
+# because "compiles" would also be satisfied by dropping the parameter from
+# both ends for the wrong reason.
+C_TESTS += UnitPtr
+CGREP_UnitPtr += "void (*f)(uint32_t)"
+CNOGREP_UnitPtr += "custard_unit (*"
 
 # Section 50.1.  A source variable named [scrut], which is the name section
 # 48.3's desugaring invented for its scrutinee binder without freshening it.
