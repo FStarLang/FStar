@@ -400,4 +400,5 @@ let default_settings : list error_setting =
     Error_CustardSharedGlobal                          , CAlwaysError, 383;
     Error_CustardExternConflict                        , CAlwaysError, 384;
     Error_AmbiguousName                               , CError, 362;
+    Warning_IgnoredNewQualifier                    , CWarning, 363;
     ]

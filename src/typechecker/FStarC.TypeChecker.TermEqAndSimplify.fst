@@ -225,6 +225,12 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
              (fun () -> eq_tm env body1 body2)
 
     | Tm_arrow {b=b1; comp=c1}, Tm_arrow {b=b2; comp=c2} ->
+      // NB: binder qualifiers are compared (leniently, see [bqual_compat]);
+      // ignoring them entirely would make e.g. [#x:a -> b] and [x:a -> b]
+      // compare Equal.
+      if not (U.bqual_compat b1.binder_qual b2.binder_qual)
+      then Unknown
+      else
       eq_and (eq_tm env b1.binder_bv.sort b2.binder_bv.sort)
              (fun () -> eq_comp env c1 c2)
 

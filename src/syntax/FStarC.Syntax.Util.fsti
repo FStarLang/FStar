@@ -520,6 +520,25 @@ val eq_aqual (a1 a2 : aqual) : ML bool
 val eq_bqual (b1 b2 : bqual) : ML bool
 val term_eq (t1 t2 : term) : ML bool
 
+(* Are these two binder qualifiers compatible, i.e., can two arrows that
+   differ only by these qualifiers denote the same type?
+
+   Binder qualifiers are elaboration metadata: an [Implicit] and a [Meta]
+   binder both elaborate to an argument with [aqual_implicit = true], and
+   the metaprogram in a [Meta] binder only affects how an argument is
+   *solved*, never what the arrow means. So type equality must not
+   distinguish them. Ditto for the [Equality] qualifier, which only
+   affects unification of applications.
+
+   This is the relation used by every path that decides equality of
+   arrow types: [Rel.solve_binders], [Core.check_bqual],
+   [TcTerm.check_binders_for_definition] and
+   [TermEqAndSimplify.eq_tm]. Keep them in sync.
+
+   Note this is deliberately *not* [eq_bqual], which is structural
+   equality of the qualifiers themselves. *)
+val bqual_compat (b1 b2 : bqual) : bool
+
 // An estimation of the size of a term, only for debugging
 val sizeof (t:term) : ML int
 

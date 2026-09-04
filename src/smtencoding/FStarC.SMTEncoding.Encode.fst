@@ -220,6 +220,22 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
                                 ([[Term.boxBool b]], [bb], mk_HasType (Term.boxBool b) tt), Some "bool typing", "bool_typing");
          Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
+    let mk_prop : env -> string -> term -> ML (list decl) = fun env nm tt ->
+        // prop is encoded like bool: every prop is a boxed SMT boolean,
+        // where the boxed boolean records the validity of the prop.
+        let typing_pred = mk_HasType x tt in
+        let bb = mk_fv ("b", Bool_sort) in
+        let b = mkFreeV bb in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[Term.boxProp b]], [bb], mk_HasType (Term.boxProp b) tt),
+                       Some "prop typing", "prop_typing");
+         Util.mkAssume(mkForall (Env.get_range env)
+                                ([[mkApp("Valid", [Term.boxProp b])]], [bb],
+                                 mkIff(mkApp("Valid", [Term.boxProp b]), b)),
+                       Some "prop validity", "prop_validity");
+         Util.mkAssume(mkForall_fuel env (Env.get_range env)
+                                     ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxPropFun) x)),
+                       Some "prop inversion", "prop_inversion")] in
     let mk_int : env -> string -> term -> ML (list decl) = fun env nm tt ->
         let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
@@ -405,6 +421,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
    in
    let prims : list (lident & (env -> string -> term -> ML (list decl))) =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
+                 (Const.prop_lid,   mk_prop);
                  (Const.int_lid,    mk_int);
                  (Const.real_lid,   mk_real);
                  (Const.string_lid, mk_str);
@@ -466,7 +483,7 @@ let smt_arity_attribute env (lid:lident) : ML (option int) =
                           (show lid) (show a)))
     | _ -> None
 
-let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_t) =
+let encode_free_var uninterpreted env fv us tt t_norm quals is_type_ctor : ML (decls_t & env_t) =
     let lid = fv.fv_name in
     let arity_hint = smt_arity_attribute env lid in
     let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
@@ -747,10 +764,52 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                                        ([[vapp]], univ_fvs@vars, mkImp(guard, ty_pred)),
                                        Some "free var typing",
                                        ("typing_"^vname)) in
+         (* `constructor_distinct` fixes a fresh `Term_constr_id` for the
+            declared symbol, i.e. it asserts that this type is distinct from
+            every other type.  That is a genuine assumption about the world, so
+            it is only emitted when the user asked for it by writing `new`.
+            Inference would be unsound: an abstract type in an interface,
+
+              val foo : Type0
+              val foo_eq_int : unit -> Lemma (foo == int)
+
+            looks exactly like an assumed type to a client, but the
+            implementation is free to define `let foo = int`.  Writing `new`
+            here is rejected ("definitions cannot be marked `assume`"), which
+            is precisely the side condition that makes the axiom sound.
+
+            `New` alone is not enough either: it could be written on *any*
+            `assume val`, including one whose result type is not a sort:
+
+              assume new type b : int -> bool
+
+            Since the primitive types have inversion axioms phrased over
+            `Term_constr_id`, fixing a fresh id for `b x : bool` contradicts
+            `bool_inversion`, so the above proved `False`.  See issue #4521.
+            So we also require that the declaration really does introduce a
+            type constructor, i.e. that its result type is a sort -- see
+            `Tc.declares_type_constructor`, which computes
+            `sigmeta_type_constructor` and warns when `new` is redundant.
+
+            One instance of this worth calling out, since `prop` now has an
+            extensional SMT encoding (see `mk_prop`): every `prop` is equal to
+            `True` or `False`, so a `prop`-valued declaration could never have
+            been distinct from every other term either.  `prop` is an assumed
+            symbol rather than a sort, so it is already excluded here.
+
+            The matching `pretype_axiom` is gone entirely.  It says that the
+            type of a term determines `PreType` of that term, i.e. `x : t a /\
+            x : t b` implies `t a == t b` (`PreType` is an uninterpreted
+            function of the value, so this is *not* injectivity of `t`).
+            Nothing about an assumed type justifies that, and nothing relies on
+            it.
+
+            Inductives keep their own freshness and pretyping axioms; there the
+            constructor ids are real datatype ids. *)
          let freshness =
-           if quals |> List.contains New
-           then [Term.fresh_constructor (S.range_of_fv fv) (vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, varops.next_id());
-                 pretype_axiom false (S.range_of_fv fv) env vapp (univ_fvs@vars)]
+           if is_type_ctor && quals |> List.contains New
+           then [Term.fresh_constructor (S.range_of_fv fv)
+                   (vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, varops.next_id())]
            else [] in
 
          (* If this is a primitive symbol, add an axiom for its interpretation. *)
@@ -772,7 +831,7 @@ let declare_top_level_let env x us t t_norm : ML (fvar_binding & decls_t & env_t
   match lookup_fvar_binding env x.fv_name with
   (* Need to introduce a new name decl *)
   | None ->
-      let decls, env = encode_free_var false env x us t t_norm [] in
+      let decls, env = encode_free_var false env x us t t_norm [] false in
       let fvb = lookup_lid env x.fv_name in
       fvb, decls, env
 
@@ -781,7 +840,7 @@ let declare_top_level_let env x us t t_norm : ML (fvar_binding & decls_t & env_t
       fvb, [], env
 
 
-let encode_top_level_val uninterpreted env us fv t quals =
+let encode_top_level_val uninterpreted env us fv t quals is_type_ctor =
     let tt =
       if FStarC.Ident.nsstr (lid_of_fv fv) = "FStar.Ghost"
       then norm_with_steps //no primops nor Simplify for FStar.Ghost, otherwise things like reveal/hide get simplified away too early
@@ -797,7 +856,7 @@ let encode_top_level_val uninterpreted env us fv t quals =
            (show us)
            (show t)
            (show tt);
-    let decls, env = encode_free_var uninterpreted env fv us t tt quals in
+    let decls, env = encode_free_var uninterpreted env fv us t tt quals is_type_ctor in
     if U.is_smt_lemma t
     then decls@encode_smt_lemma env fv tt, env
     else decls, env
@@ -807,7 +866,7 @@ let encode_top_level_vals env bindings quals =
     bindings |> List.fold_left (fun (decls, env) lb ->
         let env', us, [t] = Env.open_universes_in env.tcenv lb.lbunivs [lb.lbtyp] in
         let env' = { env with tcenv = env' } in
-        let decls', env' = encode_top_level_val false env' us (Inr?.v lb.lbname) t quals in
+        let decls', env' = encode_top_level_val false env' us (Inr?.v lb.lbname) t quals false in
         List.rev_append decls' decls, env') ([], env)
   in
   List.rev decls, env
@@ -1007,7 +1066,7 @@ let encode_top_level_let :
                                 (show binders)
                                 (show body);
                 (* Encode binders *)
-                let vars, binder_guards, env', binder_decls, _ = encode_binders None binders env' in
+                let vars, _binder_guards, env', binder_decls, _ = encode_binders None binders env' in
                 let vars, app =
                     if fvb.fvb_thunked
                     && vars = []
@@ -1021,51 +1080,35 @@ let encode_top_level_let :
                                          ({fvb with smt_arity = List.length univ_terms + fvb.smt_arity})
                                          (univ_terms @ List.map mkFreeV vars)
                 in
-                let is_logical =
-                  // match (SS.compress t_body).n with
-                  // | Tm_fvar fv when S.fv_eq_lid fv FStarC.Parser.Const.prop_lid -> true
-                  // | _ -> false
-
-                  // GE: this is a cute idea, but the formula axiom shouldn't
-                  // replace the default equation axiom, so disabling this for now
-                  false
+                let is_prop_valued =
+                  match (SS.compress t_body).n with
+                  | Tm_fvar fv -> S.fv_eq_lid fv FStarC.Parser.Const.prop_lid
+                  | _ -> false
                 in
-                let is_smt_theory_symbol =
-                    let fv = Inr?.v lbn in
-                    Env.fv_has_attr env.tcenv fv FStarC.Parser.Const.smt_theory_symbol_attr_lid
-                in
-                let should_encode_logical =
-                    not is_smt_theory_symbol
-                    && (quals |> List.contains Logic || is_logical)
-                in
-                let make_eqn name pat app body =
+                let make_eqn pat app body =
                     //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
                     //But the guard is unnecessary given the pattern
                     Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                            ([[pat]], vars, mkEq(app,body)),
                                   Some (Format.fmt1 "Equation for %s" (string_of_lid flid)),
-                                  (name ^ "_" ^ fvb.smt_id))
+                                  ("equation_" ^ fvb.smt_id))
                 in
-                let eqns,decls2 =
-                  let basic_eqn_name =
-                    if should_encode_logical
-                    then "defn_equation"
-                    else "equation"
-                  in
-                  let basic_eqn, decls =
-                    let body, decls = encode_term body env' in
-                    make_eqn basic_eqn_name app app body, decls
-                  in
-                  if should_encode_logical
-                  then let pat, app, (body, decls2) =
-                           app, mk_Valid app, encode_formula body env'
-                       in
-                       let logical_eqn = make_eqn "equation" pat app body in
-                       [logical_eqn; basic_eqn], decls@decls2
-                  else [basic_eqn], decls
+                let eqn, decls2 =
+                  if is_prop_valued
+                  then
+                    // A prop-valued definition gets a formula equation
+                    // `Valid (f x) <==> body`. The term equation `f x == body`
+                    // follows from it, since the SMT encoding of prop is
+                    // extensional (see mk_prop above).
+                    let bodyf, decls2 = encode_formula body env' in
+                    make_eqn app (mk_Valid app) bodyf, decls2
+                  else
+                    let body, decls2 = encode_term body env' in
+                    make_eqn app app body, decls2
                 in
-                decls@binder_decls@decls2@((eqns@primitive_type_axioms env.tcenv flid fvb.smt_id app)
-                                                 |> mk_decls_trivial),
+                decls@binder_decls@decls2@
+                  ((eqn :: primitive_type_axioms env.tcenv flid fvb.smt_id app)
+                   |> mk_decls_trivial),
                 env
             | _ -> failwith "Impossible"
         in
@@ -1803,7 +1846,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
              let decls, env =
                encode_top_level_val
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
-                 env us fv t quals in
+                 env us fv t quals se.sigmeta.sigmeta_type_constructor in
              let tname = (string_of_lid lid) in
              let tsym = Option.must (try_lookup_free_var env lid) in
              decls
@@ -2027,7 +2070,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
             let t_norm = norm_before_encoding env t in
             let fv = S.lid_as_fv x None in
 //            Printf.printf "Encoding %s at type %s\n" (show x) (show t);
-            let g, env' = encode_free_var false env fv us t t_norm [] in
+            let g, env' = encode_free_var false env fv us t t_norm [] false in
             i+1, decls@g, env'
     in
     let _, decls, env = List.fold_right encode_binding bindings (0, [], env) in

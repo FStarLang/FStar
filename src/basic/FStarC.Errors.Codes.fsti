@@ -410,6 +410,7 @@ type error_code =
   | Error_CustardSharedGlobal
   | Error_CustardExternConflict
   | Error_AmbiguousName
+  | Warning_IgnoredNewQualifier
 
 type error_setting = error_code & error_flag & int
 

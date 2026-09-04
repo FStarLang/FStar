@@ -181,10 +181,6 @@ val should_check                : string  -> ML bool (* Should check this module
 
 val should_verify               : string  -> ML bool (* Should check this module with verification enabled. *)
 
-val should_check_file           : string  -> ML bool (* Should check this file, lax or not. *)
-
-val should_verify_file          : string  -> ML bool (* Should check this file with verification enabled. *)
-
 (* Should a checked file be written for this file? True only for the files
    given on the command line; note this is per *file*, not per module, so
    `fstar.exe A.fst` does not write A.fsti.checked. *)

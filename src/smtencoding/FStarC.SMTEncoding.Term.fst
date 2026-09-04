@@ -318,6 +318,7 @@ let boxBoolFun       = mkBoxFunctions "BoxBool"
 let boxStringFun     = mkBoxFunctions "BoxString"
 let boxBitVecFun (sz:int) = mkBoxFunctions ("BoxBitVec" ^ show sz)
 let boxRealFun       = mkBoxFunctions "BoxReal"
+let boxPropFun       = mkBoxFunctions "BoxProp"
 
 // Assume the Box/Unbox functions to be injective
 let isInjective s =
@@ -1057,6 +1058,7 @@ and mkPrelude z3options : ML string =
         (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
         (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true);
         ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true);
+        (fst boxPropFun,    [snd boxPropFun, Bool_sort, true],  Term_sort, 12, true);
       ] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
@@ -1148,6 +1150,11 @@ let boxString t   = maybe_elim_box (fst boxStringFun) (snd boxStringFun) t
 let unboxString t = maybe_elim_box (snd boxStringFun) (fst boxStringFun) t
 let boxReal t     = maybe_elim_box (fst boxRealFun) (snd boxRealFun) t
 let unboxReal t   = maybe_elim_box (snd boxRealFun) (fst boxRealFun) t
+(* Note: props are always boxed, regardless of --smtencoding.elim_box, since
+   there is no native SMT sort for them. We only cancel a directly nested
+   box/unbox pair. *)
+let boxProp t     = elim_box true (fst boxPropFun) (snd boxPropFun) t
+let unboxProp t   = elim_box true (snd boxPropFun) (fst boxPropFun) t
 let boxBitVec (sz:int) t =
     elim_box true (fst (boxBitVecFun sz)) (snd (boxBitVecFun sz)) t
 let unboxBitVec (sz:int) t =
