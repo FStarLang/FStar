@@ -2,5 +2,5 @@
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
 {"kind": "response", "query-id": "2", "response": [], "status": "success"}
 {"kind": "response", "query-id": "3", "response": [], "status": "success"}
-{"kind": "response", "query-id": "4", "response": {"defined-at": null, "definition": null, "documentation": "Increments 'x'. This text is written in the interface, which is what clients of this module see. Opaque text is escaped by the HTML renderer: <unsafe> & \"quoted\".", "kind": "symbol", "name": "DocsFixture.incr", "type": null}, "status": "success"}
+{"kind": "response", "query-id": "4", "response": {"defined-at": null, "definition": null, "documentation": "Increments 'x'.\n\nThis text is written in the interface, which is what clients of\nthis module see. Opaque text is escaped by the HTML renderer:\n<unsafe> & \"quoted\".", "kind": "symbol", "name": "DocsFixture.incr", "type": null}, "status": "success"}
 {"kind": "response", "query-id": "5", "response": {"defined-at": null, "definition": null, "documentation": null, "kind": "symbol", "name": "DocsFixture.decr", "type": null}, "status": "success"}

@@ -193,11 +193,15 @@ Guidelines for the changelog:
 
   * **A top-level declaration may now carry documentation, written
     explicitly as an ordinary attribute.** `FStar.Attributes.doc` takes a
-    string, which F* stores verbatim and never interprets: there is no
-    comment syntax, no markdown, and no rendering in the compiler.
+    list of strings, one per line, which F* stores verbatim and never
+    interprets: it does not parse them, does not join them, and does not
+    render them. There is no comment syntax and no markdown in the
+    compiler; keeping the payload uninterpreted is what lets the surface
+    format be chosen elsewhere, and changed later.
 
     ```fstar
-    [@@doc "Increments 'x'."]
+    [@@doc ["Increments 'x'.";
+            "Allocates nothing."]]
     val incr (x:int) : int
     ```
 
@@ -224,9 +228,11 @@ Guidelines for the changelog:
     scope; in particular, a type's attributes are copied by the typechecker
     onto its constructors and generated projectors, and that inherited text is
     deliberately not reported. Attributes are typechecked but not normalized
-    before being recorded, so the payload must be a string *literal*:
-    `[@@doc (a ^ b)]` is well-typed but records an unevaluated term, which
-    `--export_docs` reports with warning 278 and skips.
+    before being recorded, so the payload must be a *literal* list of
+    *literal* strings: `[@@doc [a ^ b]]` and `[@@doc some_list]` are
+    well-typed but record unevaluated terms, which `--export_docs` reports
+    with warning 278 and skips. `[@@doc []]` is documentation that says
+    nothing, and is reported as such rather than treated as absent.
 
 ## Pulse
 

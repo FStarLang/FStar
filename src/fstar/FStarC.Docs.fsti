@@ -17,9 +17,13 @@
 (** Reading the [FStar.Attributes.doc] attribute off top-level
     declarations, and exporting it as a versioned JSON document.
 
-    This is deliberately small: documentation is an *opaque string*
-    written explicitly as an ordinary attribute. F* does not parse it,
-    does not render it, and does not know about comment syntax. The two
+    This is deliberately small: documentation is an *opaque list of
+    strings*, one per line, written explicitly as an ordinary attribute.
+    F* does not parse the lines, does not render them, does not join
+    them, and does not know about comment syntax. Keeping the payload
+    uninterpreted is what lets the surface format -- Markdown or
+    otherwise -- be decided outside the compiler, and changed later
+    without touching it. The two
     consumers are the interactive [lookup] request (see
     [FStarC.Interactive.QueryHelper.docs_of_lid]) and the
     [--export_docs] command, whose JSON is the only externally
@@ -35,13 +39,17 @@ module S = FStarC.Syntax.Syntax
 type doc_status =
   (** No [doc] attribute on this declaration. *)
   | Doc_absent
-  (** A [doc] attribute whose payload is a string literal. *)
-  | Doc_text of string
-  (** A [doc] attribute whose payload is *not* a string literal, e.g.
-      [doc (a ^ b)] or [doc some_string_constant]. Such an attribute is
-      well-typed, but attributes are recorded unnormalized in checked
-      modules, so there is no literal to report. The payload carries a
-      rendering of the offending term, for diagnostics only. *)
+  (** A [doc] attribute whose payload is a literal list of string
+      literals, given here one line per element. The list may be empty:
+      that is documentation which says nothing, and is still distinct
+      from [Doc_absent]. *)
+  | Doc_text of list string
+  (** A [doc] attribute whose payload is *not* a literal list of string
+      literals, e.g. [doc [a ^ b]], [doc (l1 @ l2)] or
+      [doc some_list_constant]. Such an attribute is well-typed, but
+      attributes are recorded unnormalized in checked modules, so there
+      is nothing literal to report. The payload carries a rendering of
+      the offending term, for diagnostics only. *)
   | Doc_unsupported of string
 
 (** Read the [doc] attribute out of an attribute list. If several are

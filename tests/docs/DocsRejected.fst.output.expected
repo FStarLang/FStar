@@ -1,10 +1,23 @@
 * Info at DocsRejected.fst(11,29-11,30):
   - Expected failure:
-  - Expected expression of type Prims.string got expression 5 of type Prims.int
+  - Expected expression of type Prims.list Prims.string
+    got expression 5
+    of type Prims.int
 
-* Info at DocsRejected.fst(14,35-14,40):
+* Info at DocsRejected.fst(15,29-15,41):
   - Expected failure:
-  - Too many arguments to function of type text: Prims.string -> Prims.unit
+  - Expected expression of type Prims.list Prims.string
+    got expression "not a list"
+    of type Prims.string
+
+* Info at DocsRejected.fst(20,29-20,30):
+  - Expected failure:
+  - int is not a subtype of the expected type string
+
+* Info at DocsRejected.fst(23,37-23,44):
+  - Expected failure:
+  - Too many arguments to function of type
+        text: Prims.list Prims.string -> Prims.unit
   - Got 2 arguments
   - Remaining type is Prims.unit
 

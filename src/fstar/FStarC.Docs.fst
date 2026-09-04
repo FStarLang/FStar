@@ -35,20 +35,43 @@ module CF = FStarC.CheckedFiles
 open FStarC.Syntax.Print
 
 (* Attributes are typechecked, but they are *not* normalized before the
-   sigelt is serialized into a checked module: `[@@doc (a ^ b)]` is
-   recorded as the unevaluated application. So the only payload we can
-   read back is a literal, and anything else has to be reported rather
-   than silently guessed at. Metadata wrappers (and ascriptions, which
-   elaboration can introduce) are not part of the payload, so they are
-   peeled first. *)
+   sigelt is serialized into a checked module: `[@@doc [a ^ b]]` is
+   recorded with the unevaluated application still inside the list. So
+   the only payload we can read back is a literal list of literal
+   strings, and anything else has to be reported rather than silently
+   guessed at. Metadata wrappers (and ascriptions, which elaboration can
+   introduce) are not part of the payload, so they are peeled first.
+
+   The list is a `Prims.Cons`/`Prims.Nil` spine. Its type argument is
+   implicit, and because an attribute is not required to be a
+   type-correct term it may or may not have been elaborated, so both
+   shapes are accepted. FStarC.TypeChecker.DeferredImplicits reads a
+   list of strings out of an attribute the same way, for the same
+   reason. *)
+let rec doc_lines (e : S.term) : ML (option (list string)) =
+  let head, args = U.head_and_args_full (U.unascribe (U.unmeta e)) in
+  match (U.un_uinst head).n, args with
+  | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid -> Some []
+  | Tm_fvar fv, [_; (hd, _); (tl, _)]
+  | Tm_fvar fv, [(hd, _); (tl, _)]
+    when fv_eq_lid fv PC.cons_lid -> (
+    match (SS.compress (U.unascribe (U.unmeta hd))).n with
+    | Tm_constant (FStarC.Const.Const_string (s, _)) -> (
+      match doc_lines tl with
+      | None -> None
+      | Some tl -> Some (s :: tl)
+    )
+    | _ -> None
+  )
+  | _ -> None
+
 let doc_of_attrs (attrs : list S.attribute) : ML doc_status =
   match U.get_attribute PC.doc_attr attrs with
   | None -> Doc_absent
   | Some [(payload, _)] -> (
-    let payload' = SS.compress (U.unascribe (U.unmeta payload)) in
-    match payload'.n with
-    | Tm_constant (FStarC.Const.Const_string (s, _)) -> Doc_text s
-    | _ -> Doc_unsupported (show payload)
+    match doc_lines payload with
+    | Some lines -> Doc_text lines
+    | None -> Doc_unsupported (show payload)
   )
   | Some args ->
     Doc_unsupported (Format.fmt1 "doc applied to %s arguments" (show (List.length args)))
@@ -76,7 +99,7 @@ let doc_of_sigelt (se : S.sigelt) : ML doc_status =
   | _ -> doc_of_attrs se.sigattrs
 
 let docs_schema_name = "fstar-module-docs"
-let docs_schema_version = 1
+let docs_schema_version = 2
 
 (* The name, kind and printed signature of a top-level declaration, when
    it is one we export. Returns None for everything else: pragmas,
@@ -147,18 +170,18 @@ let rec json_of_sigelt (se : S.sigelt) : ML (list json) =
       | Doc_absent, _ -> []
       | Doc_unsupported payload, _ ->
         Errors.log_issue se.sigrng Errors.Warning_UnrecognizedAttribute [
-          Errors.Msg.text "Ignoring a 'doc' attribute whose payload is not a string literal.";
+          Errors.Msg.text "Ignoring a 'doc' attribute whose payload is not a literal list of string literals.";
           Errors.Msg.text (Format.fmt1 "Payload: %s" payload);
         ];
         []
       | Doc_text _, None -> []
-      | Doc_text text, Some (kind, lid, sigstr) ->
+      | Doc_text lines, Some (kind, lid, sigstr) ->
         [JsonAssoc [
           ("name",      JsonStr (Ident.string_of_lid lid));
           ("kind",      JsonStr kind);
           ("signature", JsonStr sigstr);
           ("range",     json_of_range se.sigrng);
-          ("doc",       JsonStr text);
+          ("doc",       JsonList (List.map JsonStr lines));
         ]]
 
 let json_of_modul (m : S.modul) : ML json =

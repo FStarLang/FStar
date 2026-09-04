@@ -77,7 +77,10 @@ let docs_of_lid (tcenv:TcEnv.env) (lid:Ident.lident) : ML (option string) =
   match se with
   | Some se -> (
     match Docs.doc_of_sigelt se with
-    | Docs.Doc_text s -> Some s
+    (* The protocol's [documentation] field is a single string, so the
+       lines are joined here, at the edge, rather than anywhere the
+       compiler stores them. *)
+    | Docs.Doc_text lines -> Some (String.concat "\n" lines)
     (* See the interface: an unusable payload is reported as "no
        documentation" rather than as an error, since the request has
        nowhere to say more. *)

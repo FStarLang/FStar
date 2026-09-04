@@ -423,31 +423,36 @@ val desugar_of_variant_record (type_name: string): unit
 (** Tag for implicits that are to be solved by a tactic. *)
 val defer_to (#a:Type) (tag : a) : unit
 
-(** [doc "..."] attaches documentation to a top-level declaration.
+(** [doc [...]] attaches documentation to a top-level declaration.
 
     This is *explicit* authoring only: there is no comment sugar that
     fills this attribute in, it must be written as an ordinary
     attribute on an ordinary top-level declaration, e.g.
 
      {[
-        [@@doc "Adds one to [x]."]
+        [@@doc ["Adds one to [x]."]]
         val incr (x:int) : int
      ]}
 
-    The payload is an opaque string: F* attaches no meaning to its
-    contents and does not parse it. Ordinary attribute typechecking
-    still enforces that [doc] receives exactly one string argument.
-    Consumers (the IDE [lookup] request with ["documentation"] in
-    [requested-info], and the [--export_docs] JSON export) only ever see
-    the string.
+    The payload is a list of opaque strings, one per line of
+    documentation. F* attaches no meaning to their contents, does not
+    parse them, and does not join them: it stores the lines as written
+    and hands them back unchanged. Whether they are Markdown, or
+    anything else, is a question for whatever renders them, and is
+    deliberately not a question for the compiler. Ordinary attribute
+    typechecking still enforces that [doc] receives exactly one
+    argument, of type [list string].
 
-    Note that the payload must be a *string literal*. Attributes are
-    typechecked but not normalized before being recorded in a checked
-    module, so [doc (msg ^ "!")] is well-typed but records an
-    unevaluated term. [--export_docs] reports that as an unrecognized
-    attribute payload and skips the declaration; the IDE protocol has
-    no per-field diagnostic channel, so its [documentation] field is
-    [null].
+    Note that the payload must be a *literal list of string literals*.
+    Attributes are typechecked but not normalized before being recorded
+    in a checked module, so [doc [msg ^ "!"]] and [doc (l1 @ l2)] are
+    well-typed but record unevaluated terms. [--export_docs] reports
+    such a payload as an unrecognized attribute payload and skips the
+    declaration; the IDE protocol has no per-field diagnostic channel,
+    so its [documentation] field is [null].
+
+    An empty list is documentation that says nothing, and is reported as
+    such; it is not the same as having no [doc] attribute at all.
 
     This attribute is only read off top-level declarations. In
     particular, an attribute on an inductive type definition is copied
@@ -455,4 +460,4 @@ val defer_to (#a:Type) (tag : a) : unit
     documentation readers deliberately ignore data constructors so that
     such inherited text is never reported as the constructor's own
     documentation. *)
-val doc (text: string) : Tot unit
+val doc (text: list string) : Tot unit

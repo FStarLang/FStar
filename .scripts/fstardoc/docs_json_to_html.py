@@ -13,9 +13,10 @@ should have changed too.
 Everything the JSON carries -- names, kinds, signatures, ranges and
 documentation text -- originates in a source file, and is therefore
 untrusted as far as this renderer is concerned. All of it is HTML
-escaped; in particular the documentation payload is an opaque string
-that is emitted as text, never as markup. There is intentionally no
-markdown, no linking and no search.
+escaped; in particular the documentation payload is a list of opaque
+strings -- one per line, joined here and nowhere else -- emitted as
+text, never as markup. There is intentionally no markdown, no linking
+and no search.
 """
 
 import html
@@ -23,7 +24,7 @@ import json
 import sys
 
 SCHEMA = "fstar-module-docs"
-VERSION = 1
+VERSION = 2
 
 STYLE = """\
 body { font-family: sans-serif; margin: 2em auto; max-width: 50em; }
@@ -59,7 +60,7 @@ def render_decl(decl):
         '<span class="kind">%s</span></div>' % esc(decl["kind"]),
         '<div class="sig">%s</div>' % esc(decl["signature"]),
         render_range(decl.get("range")),
-        '<div class="doc">%s</div>' % esc(decl["doc"]),
+        '<div class="doc">%s</div>' % esc("\n".join(decl["doc"])),
         "</div>",
     ])
 

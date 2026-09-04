@@ -37,11 +37,14 @@ type sl_reponse = { slr_name: string;
 val term_to_string : TcEnv.env -> Syntax.Syntax.term -> ML string
 
 (** The documentation attached to [lid] with the [FStar.Attributes.doc]
-    attribute, if any.
+    attribute, if any, with its lines joined by newlines.
 
     [None] means "this name has no documentation": either it carries no
-    [doc] attribute, or it carries one whose payload is not a string
-    literal and hence cannot be reported. The [lookup] request has no
+    [doc] attribute, or it carries one whose payload is not a literal
+    list of string literals and hence cannot be reported. A [doc] whose
+    payload is the empty list is documentation that says nothing, and is
+    reported as the empty string rather than as [None]. The [lookup]
+    request has no
     per-field error channel -- [documentation] is a string or null -- so
     both answer null, and neither is an error: a name without
     documentation is entirely ordinary. The [--export_docs] command,

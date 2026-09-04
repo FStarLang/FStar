@@ -17,5 +17,5 @@ let make_type () : Tac (list sigelt) =
   in
   [se]
 
-[@@doc "Documentation on a splice must not be inherited by its generated type."]
+[@@doc ["Documentation on a splice must not be inherited by its generated type."]]
 %splice[generated; Generated] (make_type ())
