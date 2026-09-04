@@ -324,19 +324,28 @@ let drop_spec_args (env:UEnv.uenv) (head:term) (args0:args) : ML args =
     match head_typ with
     | None -> args0
     | Some t ->
-      let formals, _ = U.arrow_formals t in
-      (* The head's type may be a type abbreviation -- Pulse's [bind_t], say --
-         in which case it has no visible binders at all.  Unfold only when the
-         binders we can see do not already account for every argument, so the
-         common case stays cheap. *)
-      let formals =
-        if List.length formals >= List.length args0
-        then formals
-        (* [AllowUnboundUniverses]: the looked-up type is not universe-instantiated,
-           so unfolding a universe-polymorphic abbreviation in it would otherwise
-           fail on the missing instantiation. *)
-        else fst (U.arrow_formals
-                    (N.unfold_whnf' [Env.AllowUnboundUniverses] (tcenv_of_uenv env) t)) in
+      (* The head's type may be a type abbreviation -- Pulse's [bind_t], say,
+         or a named arrow type whose *result* is another abbreviation -- in
+         which case not all of the binders that the arguments correspond to
+         are visible at once. Unfold as far as needed, but only as far as
+         needed, so the common case stays cheap.
+         [AllowUnboundUniverses] and [EraseUniverses]: the looked-up type may
+         not be universe-instantiated, and we are only counting binders, so
+         unfolding a universe-polymorphic abbreviation in it must not depend on
+         the missing instantiation. *)
+      let unfold_steps = [Env.AllowUnboundUniverses; Env.EraseUniverses] in
+      let n_args = List.length args0 in
+      let rec formals_of (fuel:int) (t:typ) : ML binders =
+        let formals, c = U.arrow_formals_comp t in
+        let n = List.length formals in
+        if n >= n_args || fuel <= 0 || not (U.is_total_comp c) then formals
+        else
+          let res = U.comp_result c in
+          let res' = N.unfold_whnf' unfold_steps (tcenv_of_uenv env) res in
+          if U.term_eq res res' then formals
+          else formals @ formals_of (fuel - 1) res'
+      in
+      let formals = formals_of 10 t in
       if not (formals |> List.existsb is_spec_binder) then args0
       else
         let rec aux formals (acc:args) : ML args =

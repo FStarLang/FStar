@@ -1,0 +1,17 @@
+open Prims
+type 'a result =
+  | RSuccess of 'a 
+  | RFail 
+let uu___is_RSuccess (projectee : 'a result) : Prims.bool=
+  match projectee with | RSuccess _0 -> true | uu___ -> false
+let __proj__RSuccess__item___0 (projectee : 'a result) : 'a=
+  match projectee with | RSuccess _0 -> _0
+let uu___is_RFail (projectee : 'a result) : Prims.bool=
+  match projectee with | RFail -> true | uu___ -> false
+type t_t = Prims.int -> Prims.int -> unit result
+let callee (f : t_t) : t_t= fun x y -> f x y
+let rec caller (fuel : Prims.nat) : t_t=
+  fun x y ->
+    if fuel = Prims.int_zero
+    then RFail
+    else (let fuel' = fuel - Prims.int_one in callee (caller fuel') x y)
