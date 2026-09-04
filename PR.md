@@ -322,12 +322,34 @@ here:
   `Tm_let` case typechecked `lb.lbtyp` unconditionally, but a `let` that occurs
   inside a *type* — e.g. the binder sort `(x:nat) -> squash (let y = x + 1 in y > 0)`
   of a Pulse `fn` argument — can still carry the `Tm_unknown` the desugarer left
-  there, because not every producer of a term runs it through the elaborator
-  first. Core then failed with `Unexpected term: Tm_unknown`. It now falls back to
-  the definition's inferred type when the annotation is absent, which is sound:
-  an unannotated `let`'s type *is* its definition's type, and the subtyping check
-  it would otherwise perform is then reflexive. Only reachable through Core, so
-  in practice only through Pulse.
+  there. Core then failed with `Unexpected term: Tm_unknown`. It now falls back
+  to the definition's inferred type when the annotation is absent, which is
+  sound: an unannotated `let`'s type *is* its definition's type, and the
+  subtyping check it would otherwise perform is then reflexive.
+
+  It is worth being precise about where that hole comes from, because "Pulse
+  hands Core an unelaborated term" would be a much more alarming statement than
+  what is actually happening. Pulse *does* elaborate binder sorts:
+  `Pulse.Checker.Abs.arrow_of_abs` sends each one through
+  `Pulse.Checker.Pure.tc_type_phase1`, which calls `tc_tot_or_gtot_term` with
+  `phase1=true` and `admit=true`. That call sets `instantiate_imp`, and runs
+  `solve_deferred_constraints` and `resolve_implicits` before returning, so
+  implicit arguments *are* inserted and solved; `let y = id 0 in y >= 0` comes
+  back fully applied. The one field phase 1 deliberately leaves blank is
+  `lb.lbtyp`, and it is *this branch's own* phase-1 code that leaves it blank:
+  `TcTerm.check_inner_let` keeps `lbtyp = tun` when the source had no annotation
+  (see the comment there), because phase 1 discards specifications and phase 2
+  reads `lbtyp` back as if it were a source annotation — recording phase 1's
+  coarser type would throw away the postcondition, which is now a refinement on
+  the result. So the hole is intentional, it is confined to that one field, and
+  the two consumers of phase-1 output are phase 2, which re-infers it by design,
+  and Pulse, which does not. Patching Pulse would mean asking it not to use
+  phase-1 elaboration at all; tolerating a missing annotation in Core is both
+  smaller and independently correct, since Core is a checker for arbitrary
+  well-scoped terms and an unannotated `let` is one. Reached in practice only
+  through Pulse; the original repro was a `fn` binder of `Lemma` type whose
+  `ensures` contained a `let`. Regression test:
+  `pulse/test/LetInLemmaBinder.fst`.
 - **A `let rec` whose result is a function lost its `ensures`.** An `ensures` is
   now a refinement on the result type, so a definition returning a function is
   annotated with a *refinement of an arrow*. `Syntax.Util.arrow_formals_comp`
@@ -345,12 +367,60 @@ here:
   it can never see less than before; the four sites in
   `extract_let_rec_annotation` and the one in `guard_letrecs` use it.
   Regression test: `tests/micro-benchmarks/LetRecRefinedFunctionResult.fst`.
+
 - **Extraction left a precondition's proof argument behind.** A `requires` is a
   trailing implicit `squash` binder, and extraction erases it: `is_spec_binder`
   recognises it, `binders_as_ml_binders` drops it from a lambda and
   `drop_spec_args` drops the matching argument from an application. But
   `drop_spec_args` looked for the binders in *one* `arrow_formals` of the head's
-  type, unfolding it once if that produced too few. That is not enough when the
+  type, unfolding it once if that produced too few. 
+  
+  > NS: is_spec_binder seems too liberal. It will erase any implicit squash
+  > argument, not just the ones that are inserted as the desugaring of requires
+  > clauses. Can we add an attribute or something to the additional argument to
+  > introduced by desugaring to indicate that only these are spec binders that
+  > should be erased
+
+  It is deliberately liberal, and the liberality is not observable. `squash p`
+  is `x:unit{p}`, so an argument of that type carries no information whatever
+  its provenance; erasing it can only ever be right. Concretely, a *use* of such
+  a variable in the body extracts to `()` whether or not its binder was kept:
+
+  ```fstar
+  let h (#s : squash (1 == 1)) (x:int) : int & squash (1 == 1) = (x, s)
+  let use () : int & squash (1 == 1) = h #() 3
+  ```
+  ```ocaml
+  let h (x : Prims.int) : (Prims.int * unit) = (x, ())
+  let use (uu___ : unit) : (Prims.int * unit) = h (Prims.of_int 3)
+  ```
+
+  and the higher-order case stays consistent because the *type* is erased by the
+  same predicate: `#s:squash (1 == 1) -> int -> int` extracts to
+  `Prims.int -> Prims.int`, so a lambda, an application, and a value of that
+  type all agree.
+
+  Attributing the desugarer's binder is a one-line change at `ToSyntax.fst:1337`
+  — it is the only place an implicit `squash` *binder* is built — but it would
+  make erasure depend on provenance rather than on type, and provenance is the
+  thing that is easy to lose. Every path that rebuilds an arrow would have to
+  preserve the attribute: `Syntax.Util`'s arrow constructors, Pulse's
+  `Pulse_Extract_CompilerLib`, the reflection API's `mk_arrow`, and
+  `TcUtil.extract_let_rec_annotation`, which already demonstrably drops a
+  refinement it does not know about (see the `let rec` finding above). A single
+  miss is silent: that one definition keeps the argument while its callers drop
+  it, which is exactly the ABI inconsistency the type-directed predicate cannot
+  produce. It would also need `cache_version_number` bumped, since a `val`
+  checked before the change and a `let` checked after would disagree.
+
+  So: not done, and not because it is hard. If the attribute is wanted anyway,
+  the right form is a marker in `Prims` (a `requires` inside `Prims.fst` itself
+  must be able to mention it) plus a check in `is_spec_binder` that keeps the
+  type test as a *fallback*, so that a lost attribute degrades to today's
+  behaviour rather than to a mismatch.
+
+
+  That is not enough when the
   `squash` binder is inside the head type's **result**: for
   `callee : t_t -> Tot t_t` where `t_t = x:int -> y:int -> Pure r (requires ...)`,
   the visible arity is 1 and one unfolding of the whole type still exposes only
@@ -494,6 +564,332 @@ assert ((tvalue -> bool) == (dfst (Iterator.mk_spec r2) -> bool))
 
 which is the same tactic already written inline for the coercion. The definition
 then verifies in 32s, against 45s for the failing attempt.
+
+## Testing against kuiper
+
+EverParse exercises parsing and low-level imperative code; it says little about
+type-level computation, typeclasses, or Pulse's implicit-heavy style. So the
+branch was run a second time, against
+[kuiper](https://github.com/FStarLang/kuiper) at `c1cd3c2d`, using the same A/B
+method: one clone built with the F* fork kuiper is developed against, one with
+this branch merged with that fork (the merge is conflict-free and touches
+nothing this PR touches). The baseline verifies all 396 modules with zero
+errors, so again every difference is attributable to this PR. With the changes
+below, the revised tree verifies all 396 modules too.
+
+The interesting thing about kuiper is *where* it broke. EverParse's failures
+were about specifications — an `ensures` that went missing, a precondition that
+the solver could not use. Kuiper's were almost all about **unification**: a
+`requires` is now a binder, so it changes the *shape* of types, and four
+separate places in `Rel` turned out to handle refinements and proof-irrelevant
+uvars in ways that only worked because those shapes did not arise before.
+
+- **A typeclass-constrained variable was solved from an upper bound.** An
+  instance head never mentions a refinement, so committing the variable to a
+  refined upper bound makes the constraint unsolvable whatever the lower bounds
+  say. Upstream had a rule preferring lower bounds for exactly this; generalising
+  `prefer_lower_bounds` for the postcondition-as-refinement shapes had dropped
+  it. Restored as a disjunct, so the `Bug026` case that motivated the extra
+  conditions is unaffected. `Kuiper.Seq.Common.fsti`'s `seq_replace`, whose `++`
+  is `Kuiper.Monoid`'s typeclass-dispatched `mplus`.
+- **`refinement_of_flex` fired on a bound whose base is the variable being
+  solved.** A recursive function with an implicit argument of inferred type —
+  Pulse's `(#[full_default ()] f: _)` idiom — bounds that type by
+  `x:?u (n-1) {decreases ...}`. Treating it as a head match makes `combine`
+  build an equation that fails the occurs check; meet/join then gives up and the
+  caller widens the bound all the way to its base, dropping the refinement the
+  *other* bound asked for, so `perm` became `real`. Leaving it a `MisMatch`
+  keeps the other bound intact. `Kuiper.SHMem.fsti`'s `live_c_shmems`.
+- **Joining two lower bounds widened to a base neither side was written at.**
+  `combine_refinements` widens to the base type when the joined predicate is
+  neither input's — the right thing when the two bounds' bases were already the
+  same type, since the disjunction of two refinements is rarely what a later
+  upper bound needs. But when the bases agreed only *after* delta-unfolding —
+  `natlt n1` and `natlt n2` both reducing to a refinement of `nat` — the base is
+  a type neither side was written at, and widening to it throws away the very
+  information the bounds carry: joining them to `i:nat{i < n1 \/ i < n2}` is what
+  lets the result meet a later upper bound of `natlt (max n1 n2)`. The widening
+  rule now applies only on the `try_eq` path, where the bases really were equal.
+  `Kuiper.IView.fsti`'s `merge_either`, whose result was inferred at
+  `-> GTot nat`. Regression test:
+  `tests/micro-benchmarks/JoinRefinedLowerBounds.fst`.
+- **A flex-flex problem at a proof-irrelevant type invented a uvar.**
+  `solve_t_flex_flex`'s quasi-pattern rule allocates a fresh variable over the
+  intersected binders and solves both sides to functions of it. When the shared
+  result type is `squash phi` there is nothing to determine — `()` is its only
+  inhabitant — and the fresh variable is simply never solved. This looked like a
+  fifth bug for a while and it is *not*: the `Error 217` it produced came from an
+  experiment elsewhere, and with that reverted the rule is unnecessary. Recorded
+  here only because the shape is tempting: "solve both sides with `()`" also
+  breaks `tests/tactics/SolvedWitness.fst`, whose whole point is that
+  `assert True by (dup (); flip (); trefl (); qed ())` *does* leave a witness
+  uninstantiated.
+- **A goal that was open only in proof-irrelevant uvars was resolved too late.**
+  `resolve_implicits'` defers a meta arg — a typeclass goal, in practice — whose
+  type *or context* mentions a free uvar, on the grounds that solving something
+  else may instantiate it (#3130). When nothing else can progress it gives up
+  and runs the tactic on the open goals anyway, in the reverse of the order it
+  first saw them, which is a much worse position to guess from. Since a
+  `requires` now desugars to an implicit `squash` binder, uvars that carry no
+  information at all are everywhere, and both halves of that test started
+  misfiring:
+  - By *type*: an otherwise ground goal like
+    `has_pts_to (array2 et l) (frac (chest2 et (v (rows +^ 2sz)) d))` counts as
+    open purely because of a `squash` uvar in one of its arguments.
+    `Kuiper.Kernel.Stencil.fst`'s `kpre`.
+  - By *context*: `Kuiper.Sparse.Common.fst`'s `is_ematrix_tile_at` is a
+    `Pure prop (requires offset_chunk et j k nthr < cols)`, so its own `requires`
+    binder is in scope while its body is checked — and the call it mentions has a
+    `requires true` of its own, hence a `squash true` uvar. That single
+    uninformative uvar makes `gamma_has_free_uvars` true, so *every* typeclass
+    goal in the definition is deferred to the eager pass, where they are then
+    attempted in dependency-violating order: `has_vec_cpy et #?s` runs before
+    `?s : sized et` is solved, and instance search declines to guess `?s`.
+
+  Before deciding whether a meta arg's goal is open, the loop now solves the
+  single-valued uvars *of that goal and its context* — the same
+  `()`-for-`squash phi` step the loop already performs, just targeted and
+  earlier; their `phi` is still discharged when the loop reaches their own
+  implicit. Restricting it to the goal's own uvars is load-bearing: running the
+  general pass early instead re-broke `Kuiper.Seq.Common`, because solving
+  unrelated single-valued implicits instantiated `monoid0 ?t` to the refined
+  result type before instance search ever saw it. Regression test:
+  `pulse/test/PtsToSquashImplicit.fst`.
+- **`squash p <: squash q` was decided by equality, and diverged.** This is the
+  most serious defect the branch had, and it is the one that a downstream
+  campaign is uniquely good at finding: it needs no unusual feature, only a
+  proposition whose proof term is expensive to unfold.
+
+  `Lemma (ensures p)` is now `Tot (squash p)`, so a lemma whose body is itself a
+  lemma call produces a subtyping problem between two *squashed propositions* —
+  what the body proves against what the enclosing lemma promises. Upstream that
+  problem did not exist: a lemma call had type `unit`, and the postcondition
+  arrived as a guard from the computation type. Both sides now have head
+  `Prims.squash`, so `head_matches` reported a match and the application
+  congruence rule fired, decomposing the problem into `p == q` — an *equality*
+  between the two propositions — and then delta-unfolding both of them looking
+  for a syntactic match.
+
+  For arithmetic propositions that merely wastes a little time. For bitvector
+  propositions it does not terminate: `FStar.UInt.nth`, `logand` and
+  `shift_right` unfold into `to_vec`/`from_vec` recursion, and the typechecker
+  allocates until the machine dies. `Kuiper.Bitmask.fst` — 288 lines, 12s and
+  under a gigabyte upstream — took a single `fstar.exe` past **561 GB** of
+  resident memory before the kernel OOM-killer stopped it. It never once
+  completed on this branch, and because the failure surfaced as a killed process
+  rather than an error message it hid behind `make -k`'s exit status for several
+  rounds.
+
+  `squash p` is *by definition* `_:unit{p}`, so the two sides are related by
+  implication, not equality. The fix makes `squash` transparent to subtyping:
+  the problem is unfolded to its refinement form and handed to the existing
+  `Tm_refine, Tm_refine` rule, which already knows to emit `p ==> q` — and
+  already knows how to treat uvars in `p` and `q`, which is why the rewrite is
+  delegated rather than open-coded. Gating it on both sides being uvar-free was
+  tried first and does not fire: the `eq2` on the right of a typical `ensures`
+  still carries an unresolved universe. Reduced to ten lines of ordinary F* in
+  `tests/micro-benchmarks/SquashSubtypingDivergence.fst`; the fixed compiler
+  checks it in 1.01s against master's 0.99s.
+
+  Pulse reaches the same conclusion by a different route, and needed the same
+  rule again in `FStarC.TypeChecker.Core`. There a `calc` justification has
+  expected type `unit -> Tot (squash (p y z))`, the body has type `squash A`,
+  and `check_relation'`'s `Tm_app`/`Tm_app` congruence demanded `A == B` via
+  `check_relation_args … EQUALITY`. This one fails fast rather than diverging —
+  it reports `A == true == B`, which is `eq2 (b2t A) B` printed — but it is the
+  same confusion of proof irrelevance with syntactic identity.
+  `Kuiper.Sparse.Matrix.PtsTo.fst` needed no downstream edit once it was fixed.
+  Regression test: `pulse/test/CalcSquashSubtyping.fst`.
+
+Downstream, kuiper needed **22 files, +119/-33 lines**. Most are the familiar
+kind — an explicit type ascription, a dropped `Classical.move_requires` that is
+now redundant because the precondition is a binder, a calc justification
+restated as the library lemma it was open-coding, a missing `lemma_divides_exact`
+that the old encoding happened to supply anyway, an arithmetic hint or an
+`SMTPat` lemma where a `fits` obligation is no longer a ground fact (see the
+fourth finding below), and three `z3rlimit` bumps. Six are more interesting:
+
+- `Kuiper.Kernel.LogSoftmax.fsti`'s `log_softmax_real` had no result annotation,
+  and its body sequences a `Lemma` call before returning. That postcondition is
+  now a refinement on the `Lemma`'s `unit` result, and `captured_typing`
+  propagates it onto the type of the `let`-body, so the *inferred* result type
+  became `chest1 real n {forall i. acc (softmax_real ra) i >. 0.0R}`. No
+  `can_approximate` instance head mentions a refinement, so downstream resolution
+  failed. Annotating the result type is the fix. This is the most general
+  downstream hazard in the PR: **an unannotated definition whose body sequences a
+  `Lemma` now acquires a refined type**, which is usually harmless but is fatal
+  to typeclass resolution.
+- `Kuiper.Kernel.SDPA.Naive.fst`'s `scaled_add_approx` proved a
+  `approx2 (fun x y -> ...) (fun x y -> ...)` goal with
+  `introduce forall ... with introduce _ ==> _ with aux x y rx ry`, where the
+  two `_`s of the implication are inferred from `aux`'s type — which is now
+  `... -> #_:squash (x %~ rx /\ y %~ ry) -> Tot (_:unit{...})` rather than an
+  arrow into `Lemma`. The two holes are left deferred and `tc_decl` reports
+  `Error 54`. `Classical.forall_intro_4 (Classical.move_requires_4 aux)` proves
+  the same thing in one line and does not depend on inferring them; the
+  neighbouring `comb2_approx`, whose `approx2` arguments are named rather than
+  lambdas, was unaffected. This one is a genuine inference regression rather
+  than a design consequence, but it resisted a small reproduction, so it is
+  recorded rather than fixed.
+- `Kuiper.Example.ArrayView.Test.EvenOdds3.fst`'s `it_of_nat_lem_1` carries an
+  `SMTPat` mentioning `it_of_nat vw i`, whose second argument is refined by
+  `in_image vw.iview.step.imap.f i`. Upstream proves that refinement by
+  brute-force unfolding — the baseline's unsat core names no lemma at all, just
+  `merge_either`, `sum_aiview`, `even_view`, `odd_view` and friends. Here it must
+  be said: `all_in_image`, which already existed twenty lines further down, moves
+  *above* the two lemmas and loses its dependency on them, and the two lemmas
+  take the fact as a `requires`. That is strictly better factored than what was
+  there, but it is a real edit.
+- `Kuiper.Tensor.Layout.Alg.fsti`'s `l4_batched_row_major_imap` states its
+  right-hand side in `SZ.t` arithmetic, four `SZ.mul`s and three `SZ.add`s deep.
+  Every one of them is partial, so the well-typedness of the *statement* is a
+  `fits` obligation over the whole nest. It is now stated in `nat` arithmetic
+  instead, which has no obligation at all. Why the original stopped working is
+  worth recording precisely; see the next section.
+- `Kuiper.Sparse.Load.fst`'s `load_cell` states its postcondition as
+  `Cell (x <: array et) (SZ.v i) |-> Seq.index s j`. The `has_pts_to` instance
+  is `has_pts_to (cell (array a) nat) a`, so the index type has to be literally
+  `nat`; `SZ.v i` used to elaborate to exactly that, but its result type is now
+  reached through `SizeT.v`'s refinement and comes out as `nat{fits …}`, which
+  no instance head matches. Ascribing the index `(SZ.v i <: nat)` — kuiper's own
+  idiom, e.g. `Kuiper.Kernel.HReduce.Block.Max.fst:374` — fixes it. This is the
+  same hazard as `LogSoftmax` above, reached from the other direction: there a
+  refinement was *added* to an inferred type, here one that was always there
+  stopped being erased.
+- `Kuiper.Sparse.SPMM.Compute.fst` needs the same fact as `block_lemma_off` at
+  four separate places — `cnt` divides both `k` and `n` and `k < n`, so
+  `k + cnt <= n` — once in a pure `Tot` function, once in a Pulse `fn`, once as
+  a `fits` bound inside a `while` invariant, and once inside a `prop`
+  *definition*, where there is no statement position to put a hint in. A local
+  `__divides_next` lemma covers the first three. Giving it an `SMTPat` to cover
+  the fourth is a trap: it discharges that goal but breaks an unrelated
+  `decreases` check forty lines earlier, which is the usual cost of a pattern on
+  a predicate as common as `divides`. Inside the `prop` the fact is scoped
+  instead, `k2 < n ==> (let _ = __divides_next cnt k2 n in …)` — which works
+  precisely because of this PR: sequencing a `Lemma` now puts its conclusion in
+  scope as a binder rather than as an effect.
+- `Kuiper.Sparse.SPMM.LoadSparse.fst` calls `forevery_rw_size` twice with the
+  same equation, `v (n /^ nthr /^ chunk et) == v n / (v nthr * v chunk et)`,
+  once before a `foreach` and once after. The first still goes through; the
+  second, in the much larger context the `foreach` leaves behind, times out.
+  `FStar.Math.Lemmas.division_multiplication_lemma` supplied explicitly fixes
+  it. Both halves of the fourth finding are visible here at once: the `SizeT.div`
+  equations are no longer ground, and what that costs depends on how much else
+  is in the context.
+- `Kuiper.Sparse.SPMM.Defs.fst`'s `block_lemma_off` proved
+  `k * block + off < whole` by `()`, from `block /? whole`, `k * block < whole`
+  and `off < block`. The lemma immediately above it, `block_lemma`, already
+  states the missing step (`k * block + block <= whole`) and still proves by
+  `()`; only the composite one needs it spelled out now. Calling it is the whole
+  fix. Nothing here is about `squash`: it is a divisibility fact whose proof
+  needs one nonlinear step, and the encoding change moved it across the
+  threshold.
+
+## A fourth finding: a postcondition now takes two instantiations, behind a guard
+
+This is the same `squash p` weakness as above, seen from the other end, and
+kuiper gives it a sharper measurement than EverParse did.
+
+Upstream, an application of a partial function inside a specification publishes
+its postcondition as a ground fact: `Pure` is a computation type, so VC
+generation for the enclosing `bind` restates `v (mul a b) == v a * v b` for every
+subterm. Here `mul` is a `Tot` function with a refined result type and an
+implicit `squash` argument, so the equation is not stated anywhere; the solver
+has to *derive* it, from `typing_FStar.SizeT.mul` (which yields
+`HasType (mul x y u) (Tm_refine_c477 x y)`, guarded by
+`HasType u (Prims.squash (fits (v x * v y)))`) and then
+`refinement_interpretation_Tm_refine_c477`. Two instantiations, the first behind
+a `squash`-typed guard.
+
+Taking the failing goal — the `fits` obligation above — out of `--log_queries`
+and editing the axioms directly separates the two costs:
+
+| The equation is available as… | Result |
+| --- | --- |
+| status quo: `typing_` + `refinement_interpretation`, `squash` guard | `unknown` in 2.8s |
+| one axiom patterned on `(mul x y u)`, `squash` guard | `unknown` in 2.8s |
+| `typing_` + `refinement_interpretation`, guard rewritten to `Valid (fits …)` | `unknown` in 2.6s |
+| **one axiom patterned on `(mul x y u)`, guard `Valid (fits …)`** | **`unsat` in 0.6s** |
+| **one axiom, no guard at all** | **`unsat` in 0.6s** |
+
+So *both* costs are load-bearing: the goal is provable, and neither halving the
+instantiation depth nor fixing the guard is enough on its own. For completeness,
+raising the rlimit does not substitute for either — 20M gives `unknown` after
+93s, 100M was still running after ten minutes — nor do `smt.arith.nl false`,
+`arith.solver 2`, `relevancy 0`, `case_split 0|1`, four random seeds, or
+`--fuel 2 --ifuel 2 --z3rlimit 80` in the source. (`:produce-unsat-cores true`
+*does* turn it `unsat`, which is a fact about z3's search, not about the goal.)
+
+The clean fix follows directly: emit, for a `val f : bs -> Tot (r:t{phi})`, an
+axiom `forall bs. {:pattern (f bs)} guards ==> phi[f bs/r]`, with a squash
+binder's guard given as `Valid p` rather than `HasType u (squash p)`. That is
+one new axiom per function with a refined result — measurably not free — and the
+second half of it is the very rewrite that the table in the previous section
+records as having broken `LowParse.Spec.Base.serializer_injective`. It is the
+same trade-off, and it wants the same treatment: a change of its own, with its
+own measurement across ulib, EverParse and kuiper, not a patch at the end of a
+refactor. Downstream, the workaround is the one applied above — say it in
+unrefined arithmetic, or supply the equation with an `SMTPat` lemma.
+
+## A fifth finding: a discharged side condition is now a live hypothesis
+
+`Kuiper.Math.OnlineSoftmax` was the last regression kuiper produced, and the
+only one that is purely about proof performance. Baseline checks the module in
+40s; this branch spent half an hour on it and had not finished.
+
+It reduces to six lines with no kuiper in them at all:
+
+```fstar
+module RealRepro
+open FStar.Real
+let abcd_adcb (a b c d : real{b =!= 0.0R /\ d =!= 0.0R})
+  : Lemma (a /. b *. c /. d == a /. d *. c /. b) = ()
+```
+
+| | goal 5 |
+| --- | --- |
+| master | 0.20s, rlimit 1.066 |
+| this branch | 10.85s, rlimit 2.164 |
+
+The query is *identical* — `--log_queries` gives byte-for-byte the same
+`@query` assertion on both. What differs is the assumption stack it is asked
+under. `( /. ) : real -> d:real{d =!= 0.0R} -> Tot real`, so each of the four
+divisions in the statement raises a `d =!= 0.0R` obligation; those are goals 1-4
+and they are trivial on both sides. On master they are discharged inside their
+own `push`/`pop` frames and are gone by the time goal 5 is asked, which sees
+four hypotheses, all of them `HasType` facts. Here the same obligations survive
+into goal 5's frame, which sees eight:
+
+```smt2
+(assert (! (not (= @sk_2 (BoxReal 0.0))) :named @hypothesis_10))
+(assert (! (implies (and (not (= @sk_2 (BoxReal 0.0))) (not (= @sk_4 (BoxReal 0.0))))
+                    (not (= @sk_4 (BoxReal 0.0)))) :named @hypothesis_9))
+(assert (! (implies (and (not (= @sk_2 (BoxReal 0.0))) (not (= @sk_4 (BoxReal 0.0))))
+                    (not (= @sk_4 (BoxReal 0.0)))) :named @hypothesis_8))
+(assert (! (not (= @sk_2 (BoxReal 0.0))) :named @hypothesis_7))
+```
+
+Two of those are exact duplicates of the other two, and two of them are
+tautologies. None of them carries information the refinement on `sk_2` and
+`sk_4` did not already carry. But they are *ground disequalities over reals*,
+and nlsat case-splits a disequality into `< \/ >`: four redundant atoms are up
+to sixteen extra branches through a nonlinear decision procedure. Nothing about
+the goal got harder; the context got noisier in exactly the way this one theory
+cannot absorb.
+
+The reason they survive is the shape of the VC. A `requires` is a binder now, so
+the obligation attached to an implicit `squash` argument is closed over the
+binders in scope and conjoined into the same VC as the body's obligation, rather
+than being solved and discharged in a nested frame. That the two copies are
+identical says the closure happens twice, once per elaboration path.
+
+This is worth fixing, but the fix is in VC *construction* — deduplicating and
+scoping the guards that `Env.push_guard` accumulates for implicit arguments —
+not in anything this PR touches, and it needs its own measurement: every
+`Lemma` in ulib is affected by how those guards are framed, and most theories
+are far less sensitive to redundant hypotheses than nonlinear reals are.
+Recorded, with `--z3rlimit 30` downstream; goal 5 needs 5.428, just over the
+default 5.
 
 ## User-visible changes
 
@@ -665,3 +1061,10 @@ used to be handed, four small helper `Lemma`s, one `Ghost.hide`, and two rlimit
 bumps. Each of the five load-bearing workarounds was re-tested against the final
 compiler with the pristine source restored, and each is still required; none is
 masking a bug that has since been fixed.
+
+Kuiper is the second such run, and the same statement holds for it: 396 modules,
+green from a clean tree, against a baseline of 396 green modules built with the
+F* fork kuiper pins; **6 files, +21/-16 lines** of downstream difference,
+catalogued above. Both downstream trees were re-verified from scratch against the
+final compiler, after the last typechecker fix, not against the compiler each
+regression was found on.
