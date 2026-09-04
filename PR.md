@@ -399,12 +399,23 @@ val f (x1 x2: t) (_: (u:unit{s x1 == s x2})) : ...  // p available
 This is not new — upstream F* fails identically on a hand-written `squash`
 binder — but it was rare, because upstream rarely *produces* one. This PR makes
 every precondition such a binder, so the weakness is now reachable from ordinary
-code. One EverParse definition (`LowParse.PulseParse.Sum.accessor_dsum_tag`) hits
-it; the fix there is the general workaround, which is to state the precondition
-as a refinement on an argument's own type instead:
+code. Its sharpest form is not a precondition at all but a *typing* hypothesis.
+Checking `serialize (serialize_dsum_cases t f sr g sg tg) yh`, where `yh` is
+declared at `dsum_type t`, leaves `squash (has_type yh (dsum_cases t tg))` in
+scope; the solver then cannot see that `serialize ... yh` is a `Seq.seq`, and so
+cannot prove `Seq.length (serialize ... yh) >= 0` --- a goal that is true by the
+result type of `Seq.length`. That is
+`LowParse.PulseParse.Sum.l2r_safe_writer_dsum_noroom_lemma`, the one EverParse
+definition that hits this.
+
+The workarounds all amount to putting the fact back into a *binder's type*,
+where the refinement interpretation reaches it:
 
 ```fstar
 val g (l: list a { pre l }) : ...        // instead of  (l: list a) : Pure _ (requires pre l) _
+
+let seq_length_nonneg (#a: Type) (s: Seq.seq a) : Lemma (Seq.length s >= 0) = ()
+                                         // [s]'s own binder carries what the caller lost
 ```
 
 Three ways to close it in the encoder were tried and all three were **rejected**,
@@ -453,6 +464,11 @@ not at the end of a refactor.
   lemma's statement is now part of its *type* and so participates in
   unification, which can pin an implicit that used to be left to the expected
   result type. See `regression_questions.md` for both, worked out in detail.
+  The same thing bites a container: `Ghost.hide (cbor_map_sub m s)` infers
+  `Ghost.hide`'s implicit at `cbor_map_sub`'s *refined* result, giving a
+  `Ghost.erased (m:cbor_map{...})` where a `Ghost.erased cbor_map` was meant, and
+  the mismatch surfaces later as an unprovable `l_True == <the ensures>`. Give
+  the implicit explicitly: `Ghost.hide #cbor_map (...)`.
 - **Accepted regression:** a precondition is a *trailing implicit binder*, so an
   arrow that has one has one binder more than an otherwise identical arrow that
   does not. Subtyping now eta-expands to bridge that gap (see "Testing against
@@ -492,6 +508,15 @@ not at the end of a refactor.
   underlying type. Ascribe the argument at the type intended
   (`coerce_eq () (parse_nlist n p <: parser _ (nlist n t))`) --- the same
   ascription EverParse already wrote for the neighbouring serializer.
+- **Accepted regression:** a proof that was already near the solver's limit can
+  tip over it, because every lemma called in a Pulse block leaves its
+  postcondition — now a *refinement*, and so a hypothesis — in scope, and the
+  goal is buried among them. Two EverParse proofs needed the same remedy: state
+  the obligation as a small standalone lemma, whose context contains only what
+  the proof needs (`LowParse.PulseParse.Sum.dsum_tag_is_strong_prefix`,
+  `CDDL.Pulse.Parse.ArrayGroup.half_plus_half_eq`). Both then verify *faster*
+  than before, and two `--z3rlimit` bumps that had looked necessary turned out
+  not to be.
 - **Accepted regression:** a lemma stated point-free over a function that has a
   `requires` (`ensures (inj (f x))`, where `f x` is a partial application
   awaiting the squash binder) is eta-expanded at each use, and two eta-expansions
