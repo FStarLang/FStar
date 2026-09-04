@@ -483,7 +483,7 @@ let smt_arity_attribute env (lid:lident) : ML (option int) =
                           (show lid) (show a)))
     | _ -> None
 
-let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_t) =
+let encode_free_var uninterpreted env fv us tt t_norm quals is_type_ctor : ML (decls_t & env_t) =
     let lid = fv.fv_name in
     let arity_hint = smt_arity_attribute env lid in
     let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
@@ -764,15 +764,52 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                                        ([[vapp]], univ_fvs@vars, mkImp(guard, ty_pred)),
                                        Some "free var typing",
                                        ("typing_"^vname)) in
+         (* `constructor_distinct` fixes a fresh `Term_constr_id` for the
+            declared symbol, i.e. it asserts that this type is distinct from
+            every other type.  That is a genuine assumption about the world, so
+            it is only emitted when the user asked for it by writing `new`.
+            Inference would be unsound: an abstract type in an interface,
+
+              val foo : Type0
+              val foo_eq_int : unit -> Lemma (foo == int)
+
+            looks exactly like an assumed type to a client, but the
+            implementation is free to define `let foo = int`.  Writing `new`
+            here is rejected ("definitions cannot be marked `assume`"), which
+            is precisely the side condition that makes the axiom sound.
+
+            `New` alone is not enough either: it could be written on *any*
+            `assume val`, including one whose result type is not a sort:
+
+              assume new type b : int -> bool
+
+            Since the primitive types have inversion axioms phrased over
+            `Term_constr_id`, fixing a fresh id for `b x : bool` contradicts
+            `bool_inversion`, so the above proved `False`.  See issue #4521.
+            So we also require that the declaration really does introduce a
+            type constructor, i.e. that its result type is a sort -- see
+            `Tc.declares_type_constructor`, which computes
+            `sigmeta_type_constructor` and warns when `new` is redundant.
+
+            One instance of this worth calling out, since `prop` now has an
+            extensional SMT encoding (see `mk_prop`): every `prop` is equal to
+            `True` or `False`, so a `prop`-valued declaration could never have
+            been distinct from every other term either.  `prop` is an assumed
+            symbol rather than a sort, so it is already excluded here.
+
+            The matching `pretype_axiom` is gone entirely.  It says that the
+            type of a term determines `PreType` of that term, i.e. `x : t a /\
+            x : t b` implies `t a == t b` (`PreType` is an uninterpreted
+            function of the value, so this is *not* injectivity of `t`).
+            Nothing about an assumed type justifies that, and nothing relies on
+            it.
+
+            Inductives keep their own freshness and pretyping axioms; there the
+            constructor ids are real datatype ids. *)
          let freshness =
-           // A `new` type whose result type is prop cannot be given a distinct
-           // constructor id: the encoding of prop is extensional (see mk_prop),
-           // so every prop is equal to True or False, and hence a prop-valued
-           // type constructor cannot be distinct from every other term.
-           if quals |> List.contains New
-           && not (U.is_fvar Const.prop_lid (SS.compress res_t))
-           then [Term.fresh_constructor (S.range_of_fv fv) (vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, varops.next_id());
-                 pretype_axiom false (S.range_of_fv fv) env vapp (univ_fvs@vars)]
+           if is_type_ctor && quals |> List.contains New
+           then [Term.fresh_constructor (S.range_of_fv fv)
+                   (vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, varops.next_id())]
            else [] in
 
          (* If this is a primitive symbol, add an axiom for its interpretation. *)
@@ -794,7 +831,7 @@ let declare_top_level_let env x us t t_norm : ML (fvar_binding & decls_t & env_t
   match lookup_fvar_binding env x.fv_name with
   (* Need to introduce a new name decl *)
   | None ->
-      let decls, env = encode_free_var false env x us t t_norm [] in
+      let decls, env = encode_free_var false env x us t t_norm [] false in
       let fvb = lookup_lid env x.fv_name in
       fvb, decls, env
 
@@ -803,7 +840,7 @@ let declare_top_level_let env x us t t_norm : ML (fvar_binding & decls_t & env_t
       fvb, [], env
 
 
-let encode_top_level_val uninterpreted env us fv t quals =
+let encode_top_level_val uninterpreted env us fv t quals is_type_ctor =
     let tt =
       if FStarC.Ident.nsstr (lid_of_fv fv) = "FStar.Ghost"
       then norm_with_steps //no primops nor Simplify for FStar.Ghost, otherwise things like reveal/hide get simplified away too early
@@ -819,7 +856,7 @@ let encode_top_level_val uninterpreted env us fv t quals =
            (show us)
            (show t)
            (show tt);
-    let decls, env = encode_free_var uninterpreted env fv us t tt quals in
+    let decls, env = encode_free_var uninterpreted env fv us t tt quals is_type_ctor in
     if U.is_smt_lemma t
     then decls@encode_smt_lemma env fv tt, env
     else decls, env
@@ -829,7 +866,7 @@ let encode_top_level_vals env bindings quals =
     bindings |> List.fold_left (fun (decls, env) lb ->
         let env', us, [t] = Env.open_universes_in env.tcenv lb.lbunivs [lb.lbtyp] in
         let env' = { env with tcenv = env' } in
-        let decls', env' = encode_top_level_val false env' us (Inr?.v lb.lbname) t quals in
+        let decls', env' = encode_top_level_val false env' us (Inr?.v lb.lbname) t quals false in
         List.rev_append decls' decls, env') ([], env)
   in
   List.rev decls, env
@@ -1809,7 +1846,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
              let decls, env =
                encode_top_level_val
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
-                 env us fv t quals in
+                 env us fv t quals se.sigmeta.sigmeta_type_constructor in
              let tname = (string_of_lid lid) in
              let tsym = Option.must (try_lookup_free_var env lid) in
              decls
@@ -2033,7 +2070,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
             let t_norm = norm_before_encoding env t in
             let fv = S.lid_as_fv x None in
 //            Printf.printf "Encoding %s at type %s\n" (show x) (show t);
-            let g, env' = encode_free_var false env fv us t t_norm [] in
+            let g, env' = encode_free_var false env fv us t t_norm [] false in
             i+1, decls@g, env'
     in
     let _, decls, env = List.fold_right encode_binding bindings (0, [], env) in
