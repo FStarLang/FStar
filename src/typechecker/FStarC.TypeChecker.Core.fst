@@ -1165,6 +1165,22 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         maybe_unfold_and_retry t0 t1
 
 
+      (* [squash p] is definitionally [_:unit{p}], so relating two squashed
+         propositions by subtyping is an implication between them. Without this
+         rule, the congruence rule for applications below would instead demand
+         that the two propositions be *equal*, which is much too strong: it is
+         what a caller runs into whenever the postcondition of a lemma is not
+         syntactically the goal it is used to justify. *)
+      | _, _ when SUBTYPING? rel
+               && guard_ok
+               && Some? (U.is_squash t0)
+               && Some? (U.is_squash t1) ->
+        let p0 = Some?.v (U.is_squash t0) in
+        let p1 = Some?.v (U.is_squash t1) in
+        if equal_term p0 p1
+        then return ()
+        else guard g (U.mk_imp p0 p1)
+
       | Tm_refine {b=x0; phi=f0}, Tm_refine {b=x1; phi=f1} ->
         if head_matches x0.sort x1.sort
         then (
