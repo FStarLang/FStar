@@ -375,9 +375,10 @@ let default_settings : list error_setting =
     Warning_ProofRecovery                             , CWarning, 359;
     Error_CannotResolveRecord                         , CAlwaysError, 360;
     Error_MissingPopOptions                           , CWarning, 361;
-    (* Custard's codes start at 363: 362 is Error_AmbiguousName, which master
-       assigned and which the book documents by number. *)
-    Error_CustardEntryNotFound                        , CAlwaysError, 363;
+    Error_AmbiguousName                               , CError, 362;
+    Warning_IgnoredNewQualifier                       , CWarning, 363;
+    (* Custard's codes start at 364: 362 and 363 are master's, and a published
+       number outranks a branch-local one (see the book, 22.1 and 55.1). *)
     Error_CustardCannotMonomorphize                   , CAlwaysError, 364;
     Error_CustardFuelExhausted                        , CAlwaysError, 365;
     Error_CustardUnextractableEffect                  , CAlwaysError, 366;
@@ -399,6 +400,5 @@ let default_settings : list error_setting =
     Warning_CustardExternErasure                       , CWarning, 382;
     Error_CustardSharedGlobal                          , CAlwaysError, 383;
     Error_CustardExternConflict                        , CAlwaysError, 384;
-    Error_AmbiguousName                               , CError, 362;
-    Warning_IgnoredNewQualifier                    , CWarning, 363;
+    Error_CustardEntryNotFound                         , CAlwaysError, 385;
     ]

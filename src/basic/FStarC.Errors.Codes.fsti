@@ -387,7 +387,8 @@ type error_code =
   | Warning_ProofRecovery
   | Error_CannotResolveRecord
   | Error_MissingPopOptions
-  | Error_CustardEntryNotFound
+  | Error_AmbiguousName
+  | Warning_IgnoredNewQualifier
   | Error_CustardCannotMonomorphize
   | Error_CustardFuelExhausted
   | Error_CustardUnextractableEffect
@@ -409,8 +410,7 @@ type error_code =
   | Warning_CustardExternErasure
   | Error_CustardSharedGlobal
   | Error_CustardExternConflict
-  | Error_AmbiguousName
-  | Warning_IgnoredNewQualifier
+  | Error_CustardEntryNotFound
 
 type error_setting = error_code & error_flag & int
 

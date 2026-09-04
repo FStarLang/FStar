@@ -12843,6 +12843,97 @@ suite would want the analogous thing, and that is upstream's to build.
 `-fkeep-tuples` condition attached. The `cddl-spec` failure is upstream and
 undated, and is the second EverParse proof in this trial to go that way.
 
+# 55 Merging master, and a number claimed twice
+
+`origin/master` merged into the branch at `52f17ab8fd`, twenty-three commits:
+the `prop` SMT encoding, the `new` qualifier fix, binder qualifiers in
+`TypeChecker.Core`, and the include-path rework in `FStarC.Find` and
+`Parser.Dep`. Git reported no conflicts.
+
+## 55.1 A clean merge that was not a correct one
+
+Git merged `FStarC.Errors.Codes.fst` without complaint, because master added
+its two new codes at one end of the list and this branch has been adding
+Custard's at the other. The two edits do not overlap textually, so there is
+nothing for git to report -- but they collide in the only way that matters:
+master's `Warning_IgnoredNewQualifier` and Custard's
+`Error_CustardEntryNotFound` were both numbered **363**.
+
+This is the failure mode §52.3 and §54.4 describe once more, in a third
+place. A green check reporting on the wrong question: git's subject is
+*text*, and the invariant here is not textual. Two lines far apart in a file
+can be in conflict while every line-based merge tool in existence calls the
+merge clean. Nothing in the build catches it either -- the list is data, a
+repeated number is well-typed, and the second entry simply shadows the first
+in whichever direction the lookup happens to run.
+
+So the merge is not done when git says it is done. What found it was
+extracting every `(name, number)` pair from the merged file and asking for
+duplicates, which is worth stating as the rule: **after merging a file whose
+correctness is an invariant across the whole file rather than line by line,
+check the invariant, not the diff.**
+
+## 55.2 One number moved, not twenty-two
+
+§22.1 settled the policy the last time this happened, when master took 362:
+*a published number outranks a branch-local one*. Master keeps 363, and
+Custard yields. The question is what yielding costs.
+
+Last time the whole block shifted up by one and stayed contiguous, which was
+cheap at eight codes. It is not cheap now: the block is twenty-two codes,
+the numbers are spelled out by hand in the suite's `CODE_*` variables, in
+`--warn_error` arguments, in comments in `PrintC` and `Extract`, and
+throughout sections 18 to 54 -- and two external reviewers are pinning them
+by number in reports written against the branch as it stands.
+
+The same principle that decides who keeps 363 also argues against shifting
+the rest: Custard's other numbers are published too, in the PR, in this
+document, and in the reviewers' rounds. Only the actual collision has to
+move. `Error_CustardEntryNotFound` goes from 363 to **385**, the next free
+number, and because it was the *first* of Custard's codes the block is still
+contiguous afterwards -- **364-385** -- with twenty-one numbers unchanged.
+No test needed editing: nothing in `tests/custard` greps 363, which is why
+this was a two-line change and not an afternoon.
+
+Master's two constructors were also moved into the position master gives
+them, immediately after `Error_MissingPopOptions`, rather than left at the
+end of the list where the merge appended them. The list's order does not
+affect the numbering, which is explicit; keeping it in master's order is
+purely so the next merge has less to reconcile.
+
+Numbers cited in reports before this merge are unchanged except 363, which
+was never cited.
+
+## 55.3 The rebuild, and two things not to `rm -rf`
+
+The merge also bumped `cache_version_number` from 93 to 97
+(`FStarC.CheckedFiles.fst`), which invalidates **every** `.checked` file in
+the tree. That is not a Custard matter, but the recovery is worth recording
+because the obvious recovery is wrong in a way that costs an hour.
+
+Clearing the stale caches means removing `fstarc.checked` and `ulib.checked`
+under the stages. For stages 1 and 2 those are real directories and removing
+them is exactly what `clean-1`/`clean-2` do. For **stage 3 they are
+symlinks** into stage 2 --- `stage3/.gitignore` says so in as many words,
+`# Symlink, must persist` --- and `clean-3` pointedly does not touch them.
+Removing them replaces a link with nothing, `make` then rebuilds happily
+because no stamp file mentions them, and the failure surfaces much later and
+somewhere else: `tests/custard` fails with `Error 5: No file provided`, from
+the `%.fsti.checked` pattern rule in `mk/test.mk` firing with an empty `$<`
+for a ulib module the install no longer has. Nothing anywhere says
+"symlink".
+
+`git checkout -- stage3/ulib.checked stage3/fstarc.checked` restores them.
+Then `rm -f .install-stage3.touch` to make the install re-run, and
+`rm -f tests/*/.depend`, since a `.depend` generated while those files were
+missing records the wrong prerequisites and keeps failing after the cause is
+fixed.
+
+So, for a cache-version bump: clear stage 1 and stage 2's caches, leave
+stage 3's two symlinks alone, drop the stale `.depend` files, rebuild. Also
+`tests/custard/_cache` and `pulse/build/*.checked`, which hold `.checked`
+files of their own.
+
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -13047,3 +13138,6 @@ undated, and is the second EverParse proof in this trial to go that way.
 | M10γΤ | **A Rust output leg** (§54.1) | Done, round 50 from the CBOR/CDDL reporter, and a coverage region §52.2 did not name.  `KrmlRust` appeared in exactly one rule -- `%.rustrejected`, which asserts a diagnostic code and then asserts that no `.rs` exists -- so **nothing in the directory produced or checked Rust output**, and the leg could observe only refusals.  §52.2's rule had two regions, above the split (one implementation, one leg right by construction) and below it (two targets that can disagree); the third is a second leg that covers only what Custard *rejects* and says nothing about what it emits, which is most of it.  Three `PrintKrml` behaviours sat there with a KrmlC test and nothing opposite: octal integer literals (`15U` against `0o17u32`), the binary32 suffix (`1.5f` against a bare `1.5` that karamel's Rust printer types itself), and tuples (monomorphized struct against native `(u32, u32)`).  All three correct, and established by *running* both backends rather than by reading the branch -- §52.0's lesson applied.  The leg goes to a `.krml`, through `krml -backend rust`, through `rustc`, and **runs**, which is the point: §43.1's octal bug was karamel reading `017` back as seventeen, a value error no grep for a spelling catches.  Two things the C rule does not need: `krml -backend rust` **exits 0** after printing `N total errors` and writes a `.rs` anyway, so the log is grepped and not the status; and `C._zero_for_deref` is a karamel-internal name its Rust backend cannot translate at all, appearing whatever the input, so `-drop C` is needed despite being deprecated.  `LitOct` and `LitF32` cost one line each to add, which is the argument for the rule; `tests/custard/RustTup.fst` is new |
 | M10γΥ | The global-tuple `EAny` (§54.2) | Not Custard's, and recorded rather than fixed.  A global of tuple type makes karamel's Rust backend fail with `Unexpected EAny`, omit the global from the crate, emit a `krmlinit` that assigns it and a `main` that reads it, and **exit 0**; `rustc` then cannot find the value.  A global *record* is fine.  The reporter attributed it before reporting it -- stock `--codegen krml` does the same, and the KrmlC and direct-C legs both compile it correctly -- so it joins `fr-karamel-prs`.  One refinement found here: it is conditional on **`-fkeep-tuples`**, without which karamel monomorphizes the tuple to a struct before the Rust printer sees it and the global comes out right, which narrows where the fix goes.  **No Custard refusal**, and that is a decision: §50.2's `krml_reject_rust` is for a construct karamel's Rust target cannot emit, and this one it can -- under a karamel flag Custard does not set and cannot see, so refusing would break the default pipeline where it works.  Used as a negative control for M10γΤ, which failed on it correctly; not pinned as a test, because a test asserting a karamel bug breaks when karamel is fixed |
 | M10γΦ | The mirror of `unmapped`, and a stale check from the other side (§54.3, §54.4) | Done.  §52.3's `unmapped` reports a swept `.ml` with no source; a source with no swept `.ml` is equally silent and loses more -- a new `src/custard` module the sweep never reaches has its matches unchecked while the gate stays green covering less than it did.  The reporter verified that direction was empty *by hand*, and checking by hand is what does not survive a round; `checkpartial.py` checks it now, verified both ways by adding a module and removing it.  §54.4 is the same shape from his side and is the one worth keeping: his `make cddl-spec` had been finishing in minutes printing `touch -c` lines for several rounds, because only `src/custard/` had moved and EverParse's `.checked` files stayed valid -- so *"EverParse verifies"* in those reports **re-verified nothing** and was a cache hit presented as evidence.  §51.3's `ulib` edit invalidated them and a genuine (upstream, undated) failure appeared.  Stated once for both: **a check whose input is a cached or derived artifact reports on that artifact and not on the question asked -- and when it is fast and green, nothing prompts a second look.**  §52.3 was a gate reading a stale compiler, this is a gate reading stale proofs; the remedy in both is to make the check say what it read |
+| M10Χ | **Master merged; a number claimed twice** (§55) | Done.  `origin/master` at `52f17ab8fd`, twenty-three commits -- the `prop` SMT encoding, the `new` qualifier fix, binder qualifiers in `TypeChecker.Core`, the include-path rework in `FStarC.Find`/`Parser.Dep`.  Git reported **no conflicts in `FStarC.Errors.Codes.fst`, and was wrong**: master appends its codes at one end of the list and this branch appends Custard's at the other, so the two edits never overlap textually -- but `Warning_IgnoredNewQualifier` and `Error_CustardEntryNotFound` both came out **363**.  Nothing else catches it: the list is data, a repeated number is well-typed, and the second entry shadows the first in whichever direction the lookup runs.  §52.3 and §54.4 in a third place -- a green check whose subject is not the question asked; git's subject is *text* and this invariant is not textual.  The rule: **after merging a file whose correctness is a whole-file invariant, check the invariant, not the diff** -- here, extract every `(name, number)` pair and ask for duplicates |
+| M10Ψ | Custard's codes are now **364-385** (§55.2) | Done, and deliberately *one* number moved rather than the block.  §22.1's policy decides who keeps 363 -- a published number outranks a branch-local one, so master keeps it -- but shifting the rest is no longer the cheap fix it was at eight codes: twenty-two numbers are spelled out by hand in the suite's `CODE_*` variables, in `--warn_error` arguments, in two comments, throughout §18-§54, and in two external reviewers' rounds written against the branch as it stands.  The same principle cuts both ways: those numbers are published too.  So only the collision moves -- `Error_CustardEntryNotFound` 363 → **385** -- and since it was the *first* of Custard's codes the block stays contiguous at 364-385 with twenty-one numbers unchanged.  Nothing in `tests/custard` greps 363, so no test changed.  Master's two constructors were also put back in master's position in the list, purely to give the next merge less to reconcile |
+| M10Ω | The rebuild after a cache-version bump (§55.3) | Recorded, because the obvious recovery is wrong.  The merge took `cache_version_number` 93 → 97, invalidating every `.checked` file in the tree; clearing the stale caches under the stages is right for 1 and 2, where they are real directories, and **wrong for stage 3, where `fstarc.checked` and `ulib.checked` are symlinks into stage 2** -- `stage3/.gitignore` says `# Symlink, must persist` and `clean-3` pointedly does not touch them.  Removing them leaves nothing in their place, `make` rebuilds happily because no stamp file mentions them, and the failure surfaces much later and somewhere else: `tests/custard` dying with `Error 5: No file provided`, which is `mk/test.mk`'s `%.fsti.checked` rule firing with an empty `$<` for a ulib module the install no longer has.  Nothing in the message says "symlink".  Recovery: `git checkout --` the two links, `rm -f .install-stage3.touch`, and drop every stale `tests/*/.depend`, which otherwise keeps failing after the cause is fixed.  `tests/custard/_cache` and `pulse/build/*.checked` hold `.checked` files too |
