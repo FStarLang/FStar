@@ -5680,6 +5680,45 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
       | _ when unresolved ctx_u && flex_uvar_has_meta_tac ctx_u ->
         let Some (Ctx_uvar_meta_tac tac) = ctx_u.ctx_uvar_meta in
         let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
+        (* A [requires] clause desugars to an implicit [squash] binder, so the
+           type of a meta arg -- a typeclass goal, typically -- now routinely
+           mentions uvars that have exactly one inhabitant, [()], and hence
+           carry no information at all.  Deferring the tactic until they are
+           solved is pointless: no solution to them can change the goal, and the
+           loop would only give up later and run the tactic on the same goal
+           anyway, in the eager pass, where it is more likely to guess wrong.
+           So solve just those uvars -- the ones occurring in *this* goal or in
+           its context, and only if they are single-valued -- before deciding
+           whether the goal is open.  Their [phi] is still emitted as a proof
+           obligation when the loop reaches their own implicit; this only fills
+           in the UF graph.  Restricting it to the uvars of this goal matters:
+           solving unrelated single-valued implicits early can instantiate a
+           genuinely informative uvar elsewhere, which is why the loop's general
+           fallback still runs them last.
+
+           The context has to be included, and not just the goal type: a
+           [requires] binder in scope is enough to make [gamma_has_free_uvars]
+           true, which defers *every* meta arg of the enclosing definition to
+           the eager pass, where they are attempted in an order that no longer
+           respects their dependencies (e.g. [has_vec_cpy et #?s] before
+           [?s : sized et]) and instance resolution then fails. *)
+        let _ =
+          if not is_tac then (
+            let uvs =
+              (Free.uvars_uncached (U.ctx_uvar_typ ctx_u) |> Setlike.elems) @
+              (ctx_u.ctx_uvar_gamma |> List.collect (function
+               | Binding_var bv -> Free.uvars_uncached bv.sort |> Setlike.elems
+               | _ -> []))
+            in
+            let is_goal_uvar i =
+              uvs |> List.existsb (fun uv ->
+                UF.equiv uv.ctx_uvar_head i.imp_uvar.ctx_uvar_head)
+            in
+            match List.filter is_goal_uvar (tl @ List.map fst out) with
+            | [] -> ()
+            | pi -> try_solve_single_valued_implicits env is_tac pi |> ignore
+          )
+        in
         let typ = U.ctx_uvar_typ ctx_u in
         let is_open = has_free_uvars typ || gamma_has_free_uvars ctx_u.ctx_uvar_gamma in
         if defer_open_metas && is_open then (
