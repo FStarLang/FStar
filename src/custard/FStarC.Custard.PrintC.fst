@@ -990,6 +990,28 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      | _ -> ());
     let call = c_expr out ind hd ^ "(" ^
                String.concat ", " (args |> List.map (c_expr out ind)) ^ ")" in
+    (* Section 57.1.  An extern returning a pointer is cast to its declared
+       type at the call site.  In C the cast is a no-op -- a [void *] converts
+       to any object pointer implicitly, which is why this was invisible --
+       but **CUDA is C++**, where that conversion is a hard error, and
+       Kuiper's shared-memory primitive is exactly the shape: a macro
+       expanding to a [void] pointer, assigned to a [uint8_t] pointer.
+       Custard cannot know a macro's own C type and has to trust the
+       declaration -- but it *knows* the declared type, so it can spell it,
+       and karamel already does.  The generated header emits
+       [extern "C"] guards, so a C++ consumer is an intended use.
+
+       Only a pointer result and only an extern: a cast on an ordinary call
+       is noise, and Custard's own definitions are already spelled with the
+       type the call site expects.  Both pointer spellings -- [TBuf] and
+       [TRef], which print alike -- since covering one and not the other is
+       the mistake these rounds keep turning up. *)
+    let call =
+      match hd.e with
+      | EQual (n, _) when Some? (SMap.try_find !externs (string_of_name n))
+                          && (TBuf? e.ty || TRef? e.ty) ->
+        "(" ^ ty e.ty ^ ")" ^ call
+      | _ -> call in
     (* A [void] call is a statement, not an operand.  It runs here and stands
        for the unit value, which is what the caller was going to do with it. *)
     (match hd.e with

@@ -328,6 +328,13 @@ C_TESTS += RefStrip
 C_TESTS += CEtaChain
 CGREP_CEtaChain = "CEtaChain_g(bool" "CEtaChain_call_g(bool" "CEtaChain_h(bool"
 CNOGREP_CEtaChain = "(*CEtaChain_g)" "(*CEtaChain_call_g("
+
+# Section 57.1: an extern returning a pointer.  A C macro over untyped memory
+# hands back [void *], which C converts silently and C++ rejects, so the
+# call site has to carry the cast.  The load-bearing check is the CXX step
+# of the [%.dc] rule below, not the grep; the grep just pins the shape.
+C_TESTS += ExtPtr
+CGREP_ExtPtr = "(uint8_t *)extptr_base"
 # Section 26.  CVarArity's callee is an arrow-typed global *variable* -- the
 # lowering section 25.3 keeps deliberately -- so the grep asserts that the
 # variable is still a variable and that its caller nonetheless takes both
@@ -544,6 +551,18 @@ EGREP_NormBudget = "the argument as written"
 REJECT_TESTS += TypeDiverge
 CODE_TypeDiverge = 365
 FLAGS_TypeDiverge = --custard_entry TypeDiverge.f
+# Section 57.2: the sibling of TypeDiverge, and the pair is the point.  This
+# one has a head after one step, so the arity question is cheap and only the
+# full reduction runs away -- which is the graceful path section 56 promised
+# and 58.1 found unreachable.  The NOEGREP is the whole test: 365 here would
+# mean the fatal wrapper is running first again.  The code is 367 rather
+# than the 368 of section 57.2 because WARN_ANY escalates the warning, so
+# the suite stops one diagnostic earlier than a plain run does.
+REJECT_TESTS += TyFun4
+CODE_TyFun4 = 367
+FLAGS_TyFun4 = --custard_entry TyFun4.f --admit_smt_queries true
+EGREP_TyFun4 = "the binder 'c' has type any"
+NOEGREP_TyFun4 = "Error 365"
 # WarnAny is higher-kinded (#f:Type0 -> Type0), which has no counterpart in the
 # target type language: it lands on TAny, which --custard_warn_any reports and
 # WARN_ANY escalates.  This is the positive test for section 5.6.
@@ -1535,10 +1554,27 @@ all: check-checkgroup
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
-all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
+
+# Section 57.4.  Same treatment as krml just below: extraction to Rust is
+# always testable, but *compiling* the result needs a toolchain, and a
+# consumer who has not got one should see these skip rather than fail.  The
+# reject tests go under the guard too even though several of them never
+# reach rustc -- splitting the list by whether it happens to shell out
+# would be a rule nobody could keep, and a half-run suite is worse than a
+# skipped one.
+#
+# The probe is a variable so that the skip branch is reachable in a test
+# (RUSTC=) on a machine that has rustc, and so that a consumer whose
+# toolchain is installed under another name can say so.
+RUSTC ?= rustc
+ifneq ($(shell command -v $(RUSTC) 2>/dev/null),)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rustrejected, $(RUSTREJECT_TESTS)))
+else
+$(warning rustc not found: skipping the Rust tests)
+endif
 
 # Only when karamel is on the PATH: the OCaml backend is always testable, the
 # C one needs a toolchain.

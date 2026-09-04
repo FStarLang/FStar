@@ -172,13 +172,23 @@ let rec is_arity_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
     is_arity_aux false (TcEnv.push_binders env bs) (U.comp_result c)
   (* Only a name can still be hiding one, and only normalization can tell.
      Paying for it once, at the end, rather than at every step: this runs on
-     every binder of every definition the extraction visits. *)
+     every binder of every definition the extraction visits.
+
+     Section 57.2: to *head* normal form, because the question is a head
+     question -- an arity is a [Tm_type] or a [Tm_arrow], and neither is
+     discovered by reducing under it.  Normalizing all the way was both
+     wasteful and reachable: a binder whose sort is a non-terminating
+     type-level function ([loop 0] for [let rec loop n : Type0 = U32.t &
+     loop n]) unfolded without bound and raised error 365 here, before
+     {!Extract.ty_of_typ} -- whose budget degrades to [any] -- was ever
+     asked.  In head normal form it answers [false] in three steps, which is
+     the truth: [loop 0] classifies values, not types. *)
   | Tm_fvar _ | Tm_app _ | Tm_uinst _ ->
     not normed &&
     is_arity_aux true env
       (norm_bounded env "a binder's sort"
                     [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                     TcEnv.Beta; TcEnv.Iota;
+                     TcEnv.Beta; TcEnv.Iota; TcEnv.Weak; TcEnv.HNF;
                      TcEnv.UnfoldUntil delta_constant]
                     t)
   | _ -> false
@@ -208,7 +218,7 @@ let rec is_star_aux (normed:bool) (env:TcEnv.env) (t:typ) : ML bool =
     is_star_aux true env
       (norm_bounded env "a binder's kind"
                     [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                     TcEnv.Beta; TcEnv.Iota;
+                     TcEnv.Beta; TcEnv.Iota; TcEnv.Weak; TcEnv.HNF;
                      TcEnv.UnfoldUntil delta_constant]
                     t)
   | _ -> false

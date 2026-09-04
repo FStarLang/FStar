@@ -10145,6 +10145,21 @@ that local, exactly `hoist`'s input -- computed its free variables, closed
 the lambda over them and let section 19.12's `lift_lambdas` push it out. So
 `Rule_prim_st` is not needed, and is not being added.
 
+There is a companion restriction on the type side, and it is the one that
+bites first in practice: **a rule may not introduce a type instance the
+source program does not already contain.** Monomorphization has already
+run by the time a rule fires (section 5.0), so the set of type instances
+is closed; a rule that builds a fresh witness -- a `TTuple` assembled on
+the spot, say -- names an instance that was never monomorphized, and the
+backend refuses it with error 368.
+
+The rule is not doing anything exotic when it does this, which is why the
+restriction is worth stating rather than leaving to be discovered. The
+shape a rule wants usually *is* in the program already, reachable from a
+binder the rule is holding. Reuse that binder's `b_ty` instead of
+rebuilding the type: a rule is a consumer of the type structure, not a
+producer of it.
+
 ## 36.1 A reference to a declaration that is not there
 
 A launcher rule's whole job is to emit a call to a runtime entry point.
@@ -13083,6 +13098,225 @@ defunctionalization of function-valued `Mono` arguments, boxed dictionaries,
 a middle layout regime, `EWithLocal` recovery and interning a canonical form
 are all unchanged.
 
+# 57 Two wrappers, and the fatal one ran first
+
+Round 53 from both reporters. Kuiper's is mostly a result: the
+shared-memory kernel section 56 unblocked is through end to end, with real
+PTX -- `.extern .shared`, `bar.sync 0`, `st.shared.u32` -- and `nvcc` at
+0 failures out of 38. EverParse's is mostly a correction, and a sharp one:
+section 56 made a promise in a comment that a different piece of the
+pipeline made unreachable.
+
+## 57.1 A pointer an extern returns
+
+Kuiper's smaller finding, and the one with the widest reach: **the
+direct-C backend's output is not valid C++, and CUDA is C++.**
+
+An extern declared to return a pointer is called and assigned:
+
+```c
+uint8_t *p = extptr_base(0);
+```
+
+If `extptr_base` is a macro over untyped memory -- which is what a shared
+memory base, an mmap window, or any allocator-shaped primitive naturally
+is -- it expands to something of type `void *`. C converts a `void *` to
+any object pointer implicitly, so this compiles silently, and that is
+precisely why nobody noticed. C++ makes the same conversion a hard error:
+
+```
+error: invalid conversion from 'void*' to 'uint8_t*' [-fpermissive]
+```
+
+Custard cannot know what C type a macro expands to, and should not try;
+it has to trust the declaration. But it *knows* the declaration, so it
+can spell it, and that is the fix: at a call to an extern whose result
+type is a pointer, the call is wrapped in a cast to that type. In C the
+cast is a no-op, so no existing output changes meaning; in C++ it is what
+makes the line legal. karamel already does this, which is a good sign the
+answer is not exotic.
+
+Both pointer spellings are covered, `TBuf` and `TRef`. That is worth
+recording rather than passing over, because the first version of the fix
+covered only `TBuf` and the test I wrote to check it -- an extern
+returning a `ref` -- silently did not exercise the fix at all. It was not
+subtle to find, but it is exactly the shape of bug these rounds keep
+turning up: a guard written for one constructor with its sibling left
+open.
+
+Why this went unnoticed for so long is worth a sentence, because it is
+not that C++ is untested. The `%.dc` rule has had a `CXX` step for
+several rounds -- `g++ -std=c++17 -Wall -Werror -fsyntax-only -x c++` over
+every direct-C test. The step was fine; the corpus had a hole. **No
+existing test had an extern returning a pointer**, so there was nothing
+for the step to reject. `tests/custard/ExtPtr.fst` closes it, and needs no
+new harness: the `CXX` step is the assertion, and the grep for the cast
+only pins the shape.
+
+The negative control is unusually clean here, because the same file can
+be handed to both compilers. With the cast removed, `gcc -std=c11 -Wall
+-Werror` accepts the output and `g++` rejects it with the error above.
+That is the bug and its invisibility in one measurement.
+
+## 57.2 Two wrappers over the same term
+
+EverParse's finding, and the more interesting one. Section 56 ended with
+a claim about graceful degradation:
+
+> Budgeted, so a non-terminating type function gives the `any` that would
+> have stood rather than error 365.
+
+The claim was true of the code it described and false of the program.
+There are **two normalization wrappers over the same terms, with opposite
+failure policies**:
+
+| Wrapper | On `Budget_exceeded` | Effect |
+| --- | --- | --- |
+| `Extract.norm_optional` | `None` | the type becomes `any`; warning 367 |
+| `Mono.norm_bounded` | `raise_error0` | error 365, fatal |
+
+Section 56's new case uses the first. But `Mono.is_arity` -- which asks of
+**every binder of every definition the extraction visits** whether its
+sort is an arity -- used the second, with a full `UnfoldUntil
+delta_constant`. So for a binder whose sort is an expensive or
+non-terminating type-level function, the fatal wrapper ran first, and
+error 365 was raised before `ty_of_typ` was ever consulted. The graceful
+path existed and was unreachable.
+
+His witness:
+
+```fstar
+let rec loop (n : nat) : Type0 = U32.t & loop n
+let f (c : loop 0) : I32.t = 0l
+```
+
+The fix is not to change the policy of either wrapper. It is that
+`is_arity` was asking its question in the wrong form. **An arity is a
+`Tm_type` or a `Tm_arrow` -- both head shapes.** Neither is discovered by
+reducing under a head that is already known, so head normal form is
+sufficient, and `Weak` and `HNF` now join the step list (in `is_star_aux`
+too, which had the same signature for the same reason). Full normalization
+there was doing work that could not affect the answer.
+
+With that, `loop 0` answers in three steps. The answer is `false`, and it
+is the truth: `loop 0` classifies values, not types. Only the full
+reduction inside `ty_of_typ` then runs away, hits its budget, and returns
+the `any` section 56 promised -- warning 367, then error 368 from the
+backend refusing it.
+
+Note the shape of this fix against the shape of section 56's. There, head
+normal form was the *bug* -- it computed a head and left the type under it
+stuck. Here, head normal form is the *fix*. That is not a contradiction:
+the two sites ask different questions. `ty_of_typ` needs the whole type;
+`is_arity` needs only its head. Reducing further than the question
+requires is not conservative, it is a cost -- and here a reachable
+failure.
+
+### The test, and why it is not `TypeDiverge`
+
+`tests/custard/TyFun4.fst` joins the existing `TypeDiverge`, and the pair
+is the point. Both are non-terminating type-level definitions; they
+differ in whether they have a head.
+
+- `TypeDiverge`'s unfolds to `my_false_elim () -> my_false_elim () -> ...`
+  and never produces one. The arity question genuinely cannot be answered
+  cheaply, error 365 is the right diagnosis, and it must stay 365.
+- `TyFun4`'s produces one immediately: `loop 0` steps to `tuple2 U32.t
+  (loop 0)`. The arity question is cheap. Only the full reduction diverges.
+
+So `TyFun4` carries `NOEGREP = "Error 365"`, and that is the whole test:
+365 there would mean the fatal wrapper had gone back to running first.
+`TypeDiverge` still reaching 365 on the same build is the other half --
+head normal form did not blunt the divergence detection.
+
+One harness detail, recorded so the expected code does not look wrong:
+the suite runs with `WARN_ANY`, which escalates warning 367 to an error,
+so the test stops one diagnostic short of the 368 a plain run reaches.
+
+### A methodological note from the reporter
+
+Two of his own remarks are worth keeping. First, his calibration: he
+forced `computes_type_from_values` to `false`, rebuilt, and confirmed both
+that error 365 was byte-identical (so the raising site predates section
+56) *and* that `TyFun` regressed to `any` (so the control was really off
+rather than merely recompiled). The second check is the one usually
+skipped, and without it the first proves nothing.
+
+Second, his warning about the flag: `--custard_norm_budget` is **one flag
+over several callers**, so lowering it and observing a failure says
+nothing about which caller failed. Only the `while normalizing ...` phrase
+in the diagnostic distinguishes them. This also means the bug reproduces
+on a *terminating* type function at a low enough budget -- it is about
+cost, not about non-termination, and describing it as "the divergence
+case" would have been too narrow.
+
+His section 58.2 correction is accepted without reservation: the "names
+the result may keep stay named" half of section 56's `UnfoldOnly`
+rationale is **unfalsifiable by output**. A `let`-bound abbreviation of a
+builtin emits nothing to observe, and a record abbreviation is a
+`Sig_inductive_typ`, which `UnfoldOnly [carrier]` would not touch. The
+right response is to stop claiming a test could show it, not to write one.
+
+## 57.3 What the shared-memory kernel confirms
+
+Kuiper's round is the far side of section 56.3. The binder that was
+`TApp (c_shmems, [])` is now `tuple2<buf u32, unit>`, the rule supplies
+only a value, and the generated PTX has real shared-memory traffic.
+
+Two consequences of the fix that he found rather than predicted:
+
+- His `c_shmems [] = int`, carrying a source comment that it "should be
+  `unit` but karamel gets confused", **can now be `unit`** -- Custard
+  erases it. A case where Custard is strictly better than the tool it is
+  replacing, and where a consumer gets to delete a workaround.
+- That erasure shifts binder positions, so a rule must key off the
+  descriptor rather than a fixed argument slot. A workaround removed is
+  not always free.
+
+## 57.4 A missing toolchain should skip, not fail
+
+The krml tests have been behind a `command -v krml` guard for some
+rounds; the Rust tests were not, so a consumer without `rustc` saw a
+failure where they should have seen a skip. Now symmetric.
+
+The probe goes through a `RUSTC ?= rustc` variable rather than being
+written inline. That is not generality for its own sake: with `rustc`
+installed, the skip branch is otherwise unreachable and therefore
+untestable, and `make -n all RUSTC=` is what let me check that the branch
+does what it says. It also lets a consumer name a toolchain installed
+under another name.
+
+The reject tests go under the guard along with the run tests, even though
+several of them never reach `rustc`. Splitting the list by whether a test
+happens to shell out is a rule nobody could maintain, and a suite that
+half-runs is worse than one that says it skipped.
+
+## 57.5 What a rule may not add
+
+Section 36 gains the sentence Kuiper asked for: **a rule may not
+introduce a type instance the source program does not already contain.**
+He rebuilt a witness as a fresh `TTuple` and got error 368. Since
+monomorphization has already run when a rule fires, the set of instances
+is closed, and the shape a rule wants is almost always reachable from a
+binder it is already holding -- so reuse that binder's `b_ty`. A rule is a
+consumer of the type structure, not a producer of it.
+
+## 57.6 Not done
+
+- **A stack allocation that escapes through the return value** (his 53.6).
+  An unannotated `assume val` was given a synthesized body returning a
+  local array; gcc and nvcc warn, Custard says nothing. He is explicitly
+  not asking for a feature, and a `BufCreate LStack` whose pointer reaches
+  a `return` is always undefined behaviour, so a warning is cheap and
+  sound. Not in this round.
+- **Multi-request shared memory.** Nonzero offsets are still untested, as
+  is the `KPR_SHMEM_FITS` / `cudaFuncSetAttribute` guard above 48 KiB.
+- The two karamel bugs are still live at pin `da964ef`:
+  `lib/Simplify.ml:550` (`Mult` missing the `K.is_int w` guard that `Add`
+  has at 522) and `lib/PrintC.ml:245` (`p_constant` has no
+  `Float32 -> "f"`).
+
+
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -13294,3 +13528,11 @@ are all unchanged.
 | M10δΒ | `tests/custard/TyFun.fst` (§56.2) | Done, four shapes: the base case, one level, **three** levels, and a *non-recursive* two-level chain through a second name.  The three-level case is load-bearing --- it is what distinguishes a fix from a deeper version of the same mistake, and the generated name has to nest to the bottom, `tuple2__uint32_tuple2_uint32_tuple2_uint32_int32`.  The chain case is what shows this is not about `let rec`: it has no recursion anywhere and still failed.  Run under `WARN_ANY`, so the file is itself an assertion (these binders were warning 367 before), and *executed*, since a type merely declared right is not yet one whose fields land where the body reads them.  Checked negatively: with the guard forced to `false` it reproduces `tuple2@uint32_any` exactly.  Blast radius measured --- every `.out.diff` golden regenerated byte-identical from a deleted `_output`, all four suites green, and `make custard` + `custard-smoke` still build and run a Custard-extracted compiler |
 | M10δΓ | The shared-memory ask, answered by deleting it (§56.3) | Kuiper's conclusion, reached from a failing run rather than from the design: **a rule should not be able to declare the witness, and now none needs to.**  With the application reduced, `c_shmems [SHArray u32 nth]` is an ordinary tuple, monomorphization emits the instance as for any other, and the handle stops being special --- the *type* is declared by the normal path and the rule supplies only a *value*, which his forty lines already build correctly (offsets, coercions, total byte size, element types and tuple shape all matched the kernel body's own `match`, `(buf u32 * i32)` on both sides).  §49.5's "rewrite the binder type inside the rule" did run out as predicted, but the answer was not a bigger rule API; it was that the pass before it was wrong.  Separately worth keeping: `SHArray`'s `Type0` field is erased and the Krml plugin says so (`ExtractKuiper.fst:321`), but Custard keeps the dictionary and the element type is recoverable from the `sized` instance's zero value --- the first time keeping dictionaries as values has paid for itself inside a rule |
 | M10δΔ | The `RUN` step caught what no grep could (§56.4) | EverParse's round 51, and the strongest evidence yet for M10γΤ.  He planted a printer regression built specifically to satisfy every grep --- a fix applied to one arm with its sibling left open, confined to values ≥ 256 so only `oct_big`, which no `RSGREP` pins, would carry it.  It passed `KRML-RUST`, every `RSGREP` and `RSNOGREP`, and `rustc`, and died at `RUN`.  Why no grep could have worked: **karamel renormalizes the literal**, so Custard's `07654321` reaches the Rust source as `7654321u32` --- an ordinary-looking constant that is simply the wrong number.  §43.1's shape with its one visible tell removed; grepping was not insufficient but impossible.  Both C legs stayed green on the same build, turning §52.2's three-region rule from an argument into a measurement.  Also: §55's `cddl-spec` failure was EverParse's own, fixed there four days earlier in `dc247ad6f` --- **which also raises `Lemma13`'s rlimit 128 → 512**, the round 39 workaround attributed to an F\* hash advance rather than to Custard, now confirmed from the other side by someone who did not know the call had been made, and the local patch dropped.  `-fkeep-tuples` confirmed in both directions.  `-o out` writes a *file* named `out` and krml then refuses it |
+| M10δΕ | **Two normalization wrappers, and the fatal one ran first** (§57.2) | Done, EverParse's round 52, and the finding is that §56's own closing comment made a promise the program could not keep.  `Extract.norm_optional` turns `Budget_exceeded` into `None` and hence `any`; `Mono.norm_bounded` raises error 365.  `Mono.is_arity` runs on **every binder of every definition the extraction visits** and used the raising one with a full `UnfoldUntil delta_constant`, so a binder whose sort is an expensive type-level function was fatal *before* `ty_of_typ` -- the graceful path -- was ever consulted.  The fix changes neither policy: it observes that **an arity is a `Tm_type` or a `Tm_arrow`, both head shapes**, so the question is a head question and `Weak; HNF` join the step list (`is_star_aux` too, same signature, same reason).  Reducing under a known head could not change the answer; it was pure cost, and reachable cost.  Note the fix is the *mirror* of §56's, where head normal form was the bug -- not a contradiction but the point: `ty_of_typ` needs the whole type, `is_arity` needs only the head, and normalizing past the question is not conservatism |
+| M10δΖ | `tests/custard/TyFun4.fst`, and the pair with `TypeDiverge` (§57.2) | Done, and the pair is what carries the meaning.  Both are non-terminating type-level definitions; they differ in whether they have a *head*.  `TypeDiverge` unfolds to `my_false_elim () -> my_false_elim () -> ...` and never yields one, so 365 is the correct diagnosis and must stay; `TyFun4`'s `loop 0` steps to `tuple2 U32.t (loop 0)` at once, so the arity question is cheap and only the full reduction runs away.  Hence `NOEGREP_TyFun4 = "Error 365"`, which is the whole test -- a 365 there means the fatal wrapper is running first again -- while `TypeDiverge` still reaching 365 on the same build is the other half, showing head normal form did not blunt the divergence detection.  Expected code is 367 rather than 368 because `WARN_ANY` escalates, stopping the suite one diagnostic short of a plain run.  Two reporter notes kept: his calibration checked *both* that 365 was byte-identical with `computes_type_from_values` forced `false` **and** that `TyFun` regressed to `any` (the second check is the one usually skipped, and without it the first proves nothing); and `--custard_norm_budget` is **one flag over several callers**, so it reproduces on a *terminating* function at a low budget -- the bug is about cost, not non-termination |
+| M10δΗ | §56's `UnfoldOnly` rationale is unfalsifiable by output (§57.2) | Accepted, EverParse's 58.2, and recorded rather than acted on.  The "names the result may keep stay named" half of that rationale cannot be shown by any test: a `let`-bound abbreviation of a builtin emits nothing to observe, and a record abbreviation is a `Sig_inductive_typ`, which `UnfoldOnly [carrier]` would not touch in the first place.  The right response is to stop claiming a test could demonstrate it, not to write one that appears to |
+| M10δΘ | **The direct-C output was not valid C++** (§57.1) | Done, Kuiper's 53.5.  An extern declared to return a pointer is typically a macro over untyped memory, so it expands to `void *`; C converts that implicitly, **which is exactly why this was invisible**, and C++ -- which CUDA is -- makes it a hard error.  Custard cannot know a macro's C type and should not try, but it *knows the declaration*, so it can spell it: the call is now wrapped in a cast to the declared result type, a no-op in C so no existing output changes meaning.  karamel already does the same.  Covers **both** pointer spellings, `TBuf` and `TRef` -- the first version covered only `TBuf`, and the test written to check it (an extern returning a `ref`) silently exercised nothing, which is the same guard-with-its-sibling-left-open shape these rounds keep producing |
+| M10δΙ | `tests/custard/ExtPtr.fst`, and the hole it closes (§57.1) | Done.  Worth recording *why* this escaped: the `%.dc` rule has run `g++ -std=c++17 -Wall -Werror -fsyntax-only -x c++` over every direct-C test for several rounds, so C++ was not untested -- **no test had an extern returning a pointer**, so the step had nothing to reject.  The corpus had the hole, not the harness, and the new test therefore needs no new machinery: the `CXX` step is the assertion and the grep only pins the shape.  The negative control is unusually clean because one file answers both compilers -- with the cast removed, `gcc -std=c11 -Wall -Werror` accepts it and `g++` rejects it with `invalid conversion from 'void*' to 'uint8_t*'`, which is the bug and its invisibility in a single measurement |
+| M10δΚ | The shared-memory kernel is through, and a workaround can go (§57.3) | Kuiper's result on the far side of §56.3: the binder that was `TApp (c_shmems, [])` is now `tuple2<buf u32, unit>`, real PTX with `.extern .shared`, `bar.sync 0` and `st.shared.u32`, `nvcc -arch=sm_70 -std=c++17` at 0/38 failures.  Two consequences he found rather than predicted: his `c_shmems [] = int`, whose source comment says it "should be `unit` but karamel gets confused", **can now be `unit`** because Custard erases it -- a place where Custard is strictly better than the tool it replaces and a consumer gets to delete a workaround -- and that erasure shifts binder positions, so a rule must key off the descriptor rather than a fixed slot.  A workaround removed is not always free |
+| M10δΛ | A missing Rust toolchain skips rather than fails (§57.4) | Done, Kuiper's 53.1(b).  The krml tests have been behind `command -v krml` for some rounds and the Rust ones were not, so a consumer without `rustc` met a failure where a skip was meant.  The probe goes through `RUSTC ?= rustc` rather than being written inline for a reason worth keeping: with `rustc` installed the skip branch is otherwise **unreachable and so untestable**, and `make -n all RUSTC=` is what verified it -- it also lets a consumer name a differently-installed toolchain.  The reject tests go under the guard with the run tests even though several never reach `rustc`: splitting a list by whether a test happens to shell out is a rule nobody could maintain, and a half-run suite is worse than one that reports a skip |
+| M10δΜ | §36 says what a rule may not add (§57.5) | Done, Kuiper's 53.3.  **A rule may not introduce a type instance the source program does not already contain.**  Monomorphization has already run when a rule fires, so the set of instances is closed and a freshly built witness -- his was a `TTuple` assembled on the spot -- names one that was never monomorphized, which the backend refuses with error 368.  The shape a rule wants is almost always reachable from a binder it is already holding, so reuse that binder's `b_ty`: a rule is a consumer of the type structure, not a producer of it |
