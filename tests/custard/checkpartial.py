@@ -111,8 +111,10 @@ def main():
     # builds the compiler, so it would rebuild nothing.
     stale = []
     unmapped = []
+    swept = set()
     for ml in mls:
         base = os.path.basename(ml)[:-3].replace("_", ".")
+        swept.add(base)
         srcs = [os.path.join(root, "src", "custard", base + ext)
                 for ext in (".fst", ".fsti")]
         srcs = [s for s in srcs if os.path.exists(s)]
@@ -122,6 +124,20 @@ def main():
         mt = os.path.getmtime(ml)
         stale += [os.path.relpath(s, root) for s in srcs
                   if os.path.getmtime(s) > mt]
+
+    # Section 54.3, the mirror.  `unmapped' guards a swept .ml with no source;
+    # a source with no swept .ml is exactly as silent and loses more -- a new
+    # module in src/custard/ that the sweep never reaches is a module whose
+    # matches are never checked, and the gate stays green while covering less
+    # than it did.  The reporter checked this direction was empty by hand and
+    # it was; checking it by hand is the thing that does not survive a round.
+    srcdir = os.path.join(root, "src", "custard")
+    sources = set()
+    if os.path.isdir(srcdir):
+        for f in os.listdir(srcdir):
+            if f.endswith(".fst") or f.endswith(".fsti"):
+                sources.add(f[:-5] if f.endswith(".fsti") else f[:-4])
+    missed = sorted(sources - swept)
     # A module the sweep reads but cannot map to a source is unguarded, and
     # silently so, which is the failure this whole check is about.
     if unmapped:
@@ -130,6 +146,14 @@ def main():
             print(f"    {m}")
         print("Those modules cannot be checked for staleness.")
         return len(unmapped)
+    if missed:
+        print("checkpartial: src/custard module(s) the sweep never reads:")
+        for m in missed:
+            print(f"    {m}")
+        print("Their matches are unchecked and this gate says nothing about "
+              "them.  Either the module is not extracted, or the build tree "
+              "predates it -- rebuild first (make -j), then re-run.")
+        return len(missed)
     if stale:
         print("checkpartial: the extracted compiler is older than its source:")
         for s in sorted(set(stale)):

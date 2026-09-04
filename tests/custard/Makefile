@@ -796,6 +796,71 @@ $(OUTPUT_DIR)/%.rustrejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	  || { echo "ERROR: $* wrote a .rs despite being refused"; exit 1; }
 	$(Q)touch $@
 
+# Section 54.1.  The Rust *output* leg, which this directory did not have.
+#
+# Before this, [KrmlRust] occurred in exactly one rule -- [%.rustrejected] --
+# which asserts a diagnostic code.  Nothing produced or checked Rust output,
+# so the KrmlRust leg could observe only refusals: a coverage region section
+# 52.2 did not name, below the backend split with two targets and one of them
+# write-only.  Three [PrintKrml] behaviours sat there, each with a KrmlC test
+# and nothing on the other side.
+#
+# Two things this rule has to do that the C one does not.
+#
+#  * [krml -backend rust] exits 0 after printing "N total errors" and still
+#    writes a .rs, so the exit status says nothing.  A declaration can fail to
+#    translate, be omitted from the crate, and still be *used* by code that
+#    did translate.  The log is grepped, and that is what makes the leg
+#    trustworthy rather than decorative.
+#  * [C._zero_for_deref] is a karamel-internal name its Rust backend cannot
+#    translate, and it appears whatever the input, so every run would report
+#    one error without [-drop C].  The flag is deprecated and the replacement
+#    ([-bundle] plus reachability) does not eliminate it, so the warning is
+#    filtered rather than avoided.
+#
+# Rust's [main] may not return [i32], so the crate is compiled as a module
+# under a two-line driver.  Running it is the point: section 43.1's octal bug
+# was karamel reading [017] back as seventeen, which no grep for a spelling
+# would have caught, and the same is true here.
+# karamel dispatches on the file extension, so the Rust intermediate has to
+# be a .krml too; it goes in its own directory rather than being spelled
+# differently, since two pattern rules for one suffix in one directory is
+# the collision section 49.6 spent a round on.
+$(OUTPUT_DIR)/rust/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-RUST", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)/rust
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
+	  --custard_backend KrmlRust --custard_main $*.main $< -o $@
+
+$(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/rust/%.krml
+	$(call msg, "KRML-RUST", $(basename $(notdir $@)))
+	$(Q)rm -rf $(OUTPUT_DIR)/$*_rs && mkdir -p $(OUTPUT_DIR)/$*_rs
+	$(Q)krml -silent -backend rust -skip-linking -no-prefix $* -drop C \
+	  $(KRMLRS_$*) -tmpdir $(OUTPUT_DIR)/$*_rs $< \
+	  > $(OUTPUT_DIR)/$*.rslog 2>&1 || true
+	@# The exit status is 0 either way, so this is the only report there is.
+	$(Q)grep -q "total errors" $(OUTPUT_DIR)/$*.rslog \
+	  && { echo "ERROR: krml reported a translation error for $* on Rust"; \
+	       cat $(OUTPUT_DIR)/$*.rslog; exit 1; }; true
+	$(Q)test -e $(OUTPUT_DIR)/$*_rs/custard.rs \
+	  || { echo "ERROR: krml wrote no Rust for $*"; \
+	       cat $(OUTPUT_DIR)/$*.rslog; exit 1; }
+	$(Q)for p in $(RSGREP_$*); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/$*_rs/*.rs \
+	    || { echo "ERROR: $* Rust output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(RSNOGREP_$*); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/$*_rs/*.rs \
+	    && { echo "ERROR: $* Rust output should not contain $$p"; exit 1; }; done; true
+	$(call msg, "RUSTC", $(basename $(notdir $@)))
+	$(Q)printf '#[path = "custard.rs"] mod custard;\nfn main() { std::process::exit(custard::main()); }\n' \
+	  > $(OUTPUT_DIR)/$*_rs/driver.rs
+	@# MAKEFLAGS is cleared because rustc reads it and warns that it cannot
+	@# reach make's jobserver, which is noise and not a finding.
+	$(Q)cd $(OUTPUT_DIR)/$*_rs && MAKEFLAGS= rustc -O -o $*.rsexe driver.rs
+	$(call msg, "RUN", $(basename $(notdir $@)))
+	$(Q)$(OUTPUT_DIR)/$*_rs/$*.rsexe
+	$(Q)touch $@
+
 # karamel emits its own compile_flags.txt, which is the only portable way to
 # learn where krmllib's headers live.
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
@@ -1347,8 +1412,40 @@ EGREP_StrEqK += "__eq__Prims_string"
 EGREP_StrEqK += "--custard_backend KrmlC"
 
 
+# Section 54.1.  The three PrintKrml behaviours that differ between the two
+# karamel targets and had a test on one side only.  Each is *correct*; what
+# was missing was a leg that could observe it, since KrmlRust appeared in one
+# rule and that rule asserts refusals.
+#
+# LitOct and LitF32 already run on C and KrmlC; adding them here is the whole
+# fix for two of the three, and costs one line each.
+RUST_TESTS += LitOct
+RSGREP_LitOct += "0o17u32"
+RSGREP_LitOct += "0b1010u32"
+RSGREP_LitOct += "0xfu32"
+# The C spellings, which must not survive the trip: Rust has its own and
+# section 43.1's bug was karamel reading one back as another.
+RSNOGREP_LitOct += "017U"
+
+# Custard writes the binary32 literal *without* a suffix on the krml path and
+# karamel's Rust printer adds [f32] itself -- so the C-only [f] suffix must be
+# absent here, and the Rust one present.  Both halves are pinned, because
+# "absent" alone would also be satisfied by losing the literal.
+RUST_TESTS += LitF32
+RSGREP_LitF32 += "7038531f32"
+RSNOGREP_LitF32 += "7038531f;"
+
+RUST_TESTS += RustTup
+KRMLRS_RustTup := -fkeep-tuples
+RSGREP_RustTup += "pub fn swap(p: (u32, u32)) -> (u32, u32)"
+# The monomorphized *struct*, which is the KrmlC spelling.  Not the bare name:
+# karamel keeps it for the projector functions, which are names and not types,
+# and asserting its total absence would be pinning a naming scheme rather than
+# the representation this test is about.
+RSNOGREP_RustTup += "pub struct __uint32_t_uint32_t"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
-                  $(C_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) \
+                  $(C_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   SepApp SepAppC SplitHi SplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
@@ -1359,7 +1456,8 @@ ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
 # that does not exist.  Any name here that is not in a test list is one or the
 # other.  Recursively expanded, so that [.VARIABLES] is complete by the time a
 # recipe asks.
-SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CODE
+SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CODE \
+                    RSGREP RSNOGREP KRMLRS
 ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
   $(foreach v,$(filter $(p)_%,$(.VARIABLES)),\
     $(if $(filter $(patsubst $(p)_%,%,$(v)),$(ALL_TEST_NAMES) TESTS),,$(v)))))
@@ -1423,6 +1521,7 @@ all: check-checkgroup
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rustrejected, $(RUSTREJECT_TESTS)))

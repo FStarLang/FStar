@@ -12690,6 +12690,160 @@ Shared memory, with the descriptor rather than a description of it, and
 agreement that it wants a declared rather than a rewritten binder type.
 
 
+# 54 A leg that could only see refusals
+
+Round 50 from the CBOR/CDDL reporter, on `e72d44ad69`. He verified §52.3's
+two additions by *breaking* them rather than by watching them pass, then
+took §52.2's sharpened rule -- that the leg count a test needs follows
+where the code sits relative to the backend split -- and enumerated against
+it. The enumeration found a region that rule did not name.
+
+
+## 54.1 The KrmlRust leg was refusal-only
+
+`KrmlRust` occurred in `tests/custard/Makefile` in exactly one rule:
+`%.rustrejected`, which asserts a diagnostic code and then asserts that no
+`.rs` exists. **Nothing in the directory produced or checked Rust output.**
+
+So §52.2's two regions were not enough. Above the backend split (`Extract`,
+where Warning 382 lives) one leg is right by construction. Below it
+(`PrintKrml`) two targets can disagree, which is why §50.2's string
+equality needed a second leg. But a second leg that can only observe
+*refusals* covers only the constructs Custard rejects, and says nothing
+about the ones it emits -- which is most of them.
+
+Three `PrintKrml` behaviours sat in that gap, each with a `KrmlC` test and
+nothing opposite:
+
+| site | KrmlC | KrmlRust |
+| --- | --- | --- |
+| `krml_int_lit` | `oct = 15U` | `oct = 0o17u32` |
+| `krml_float_lit` | `1.5f` | `1.5`, karamel prints `1.5f32` |
+| `is_tuple_*_name` | monomorphized struct | native `(u32, u32)` |
+
+All three are correct. The reporter established that by *running* the
+compiler on both backends rather than by reading the branch, on the grounds
+that §52.0 was an audit-by-reading that got two answers wrong; the same
+method is used here.
+
+The leg now exists: `--custard_backend KrmlRust` to a `.krml`, `krml
+-backend rust`, `rustc`, and **run**. Running is the point, and §43.1 is
+why: the octal bug that test pins was karamel reading `017` back as
+seventeen, which a grep for a spelling would have accepted. `LitOct` and
+`LitF32` each cost one line to add, which is the argument for having built
+the rule; `RustTup` is new.
+
+Two things the rule has to do that the C one does not.
+
+- **`krml -backend rust` exits 0 after printing `N total errors`**, having
+  written a `.rs` anyway. A declaration can fail to translate, be left out
+  of the crate, and still be *used* by code that did translate. The exit
+  status says nothing, so the log is grepped, and that is what makes the leg
+  trustworthy rather than decorative. §54.2 is the case that proves it.
+- **`C._zero_for_deref`** is a karamel-internal name its Rust backend cannot
+  translate, and it appears whatever the input, so every run reports one
+  error without `-drop C`. That flag is deprecated and the suggested
+  replacement (`-bundle` plus reachability) does not eliminate it.
+
+Rust's `main` may not return `i32`, so the crate is compiled as a module
+under a two-line driver. The intermediate `.krml` goes in its own directory
+rather than being spelled differently: karamel dispatches on the extension,
+and two pattern rules for one suffix in one directory is the collision
+§49.6 spent a round on.
+
+
+## 54.2 A karamel Rust defect, caught by the leg that did not exist
+
+Found by the reporter while building the tuple half, and reproduced here. A
+**global of tuple type**:
+
+```fstar
+let gpair : (U32.t & U32.t) = (1ul, 2ul)
+```
+
+gives `ERROR translating GlobTup.gpair: Failure("Unexpected EAny")`, omits
+`gpair` from the crate, emits a `krmlinit` that assigns it and a `main` that
+reads it, and **exits 0**. `rustc` then says `cannot find value 'gpair' in
+this scope`. A global *record* is fine, so it is tuple-specific.
+
+Not Custard: the reporter ran the same module through the stock `--codegen
+krml` pipeline and got the identical error, and the `KrmlC` and direct-C
+legs both compile it correctly. It goes to `fr-karamel-prs`.
+
+One refinement to add to his report: it is conditional on
+**`-fkeep-tuples`**. Without that flag karamel monomorphizes the tuple into
+a struct before it reaches the Rust printer, and the global is emitted
+correctly; with it the native tuple reaches a path that cannot initialize
+one. That narrows where the fix goes.
+
+The new leg was pointed at it as a negative control and failed, naming the
+error. No test pins it -- a test asserting a karamel bug breaks when karamel
+is fixed, which is the wrong way round -- but the leg would now catch it in
+anything the suite does run, which is what it could not do before.
+
+That there is **no Custard refusal here** is a decision and not an
+omission. §50.2's `krml_reject_rust` exists for a construct karamel holds
+and karamel's Rust target cannot emit; this is a construct that target can
+emit, under a karamel flag Custard does not set and cannot see. Refusing on
+its account would break the default pipeline, where it works.
+
+
+## 54.3 The mirror of `unmapped`
+
+§52.3's `unmapped` reports a swept `.ml` that maps to no source. The
+reporter checked the other direction by hand -- a `src/custard` module the
+sweep never reads -- and found it empty:
+
+```
+swept: 18   sources: 18
+source with NO swept .ml: none
+swept .ml with NO source : none
+```
+
+Checking it by hand is the thing that does not survive a round. A new module
+the sweep never reaches is a module whose matches are never checked, and the
+gate stays green while covering less than it did -- exactly `unmapped`'s
+argument, from the other side. It is now checked, and verified in both
+directions by adding a module and taking it away again.
+
+
+## 54.4 A green check that checked nothing
+
+The reporter reports that `make cddl-spec` now fails with five Error 19s in
+`CDDL.Spec.MapGroup.Base.fst`, establishes that it is neither a resource
+limit (rlimit 32 to 256, same five) nor the `ulib` addition (reverted it,
+rebuilt, `diff`ed the error sets -- identical), and correctly attributes it
+upstream.
+
+The part worth recording is his own correction. The reason it surfaced now
+is that §51.3's `ulib/FStar.Attributes.fsti` edit is the first change in
+several rounds to invalidate EverParse's `.checked` files. In every round
+where only `src/custard/` moved, the rebuilt compiler left them valid and
+`make cbor-verify cddl-spec` finished in minutes printing `touch -c` lines
+-- **it re-verified nothing**, and "EverParse verifies" in those reports was
+a cache hit presented as evidence.
+
+This is §52.3 from the other side, and it is worth stating as one shape
+rather than two:
+
+> A check whose input is a cached or derived artifact reports on that
+> artifact, not on the thing you meant to ask about -- and when it is fast
+> and green, nothing prompts you to look.
+
+§52.3 was a gate reading a stale *compiler*; this is a gate reading stale
+*proofs*. In both cases the failure is silent, agrees with expectation, and
+is invisible in the exit status. The remedy is the same in kind: make the
+check say what it read. `checkpartial.py` does that now; a `.checked`-file
+suite would want the analogous thing, and that is upstream's to build.
+
+
+## 54.5 What remains
+
+`fr-karamel-prs` grows a third: the global-tuple `EAny`, with the
+`-fkeep-tuples` condition attached. The `cddl-spec` failure is upstream and
+undated, and is the second EverParse proof in this trial to go that way.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -12890,3 +13044,6 @@ agreement that it wants a declared rather than a rewritten binder type.
 | M10γΠ | **Globals in the device closure, and the one that cannot be marked** (§53.2) | Done, and one node type over from §51.3, which is where it broke: `propagate_prologues` had been marking globals all along -- a global is a `DLet` with no binders -- and the C printer's two parameterless branches dropped `prologue_of` on the way out.  A flag computed correctly and then discarded, which `nvcc` reports as *"a host variable cannot be directly read in a device function"*.  Both branches print it now, and `DevClosure.fst` grows a device-exclusive global plus a host-only one as the negative.  **The shared case is refused rather than fixed**, which is the part that needed deciding: the exclusive string is fine on a variable (`__device__` applies to one) but the shared string is not, because `__host__` on a variable is *dropped silently*, leaving a device-only variable that compiles with a warning and reads the wrong memory at runtime.  A qualifier meaning "reachable from both" describes a function; CUDA's answer for a shared variable is `__managed__`, unified memory with a runtime cost, not a decoration Custard may add on its own.  Of refuse, emit-shared and emit-exclusive, only refusing fails loudly, so a global in `device ∩ host` is **error 383**.  `tests/custard/DevGShare.fst`.  Zero file-scope variables in Kuiper's generated `.cu` today, for the same `inline_for_extraction noextract` reason the helpers were not a blocker and with the same fragility |
 | M10γΡ | **One C symbol has two prototypes** (§53.3) | Done, as a correction to Warning 367 and a new check.  The text claimed an external is never specialized; under `--custard_monomorphize_types` the parameters *are* substituted, and a polymorphic external comes out fully concrete with no warning at all.  What does not happen is a per-instantiation *symbol*, which is where the failure actually lands -- two instantiations give two `extern` lines under one name and `conflicting types`.  Worse, 367's own advice (*"declare one external per type vector, all with the same target name"*) reproduces exactly that pair by hand: following it gives a file that does not compile.  It works only with `[@@custard_c_header]`, which makes Custard emit no prototype at all -- the same mechanism that makes a variadic macro work and the same one that answers a `__device__` extern reached from a kernel (§53.4), so one mechanism covers three problems and the advice named none of them.  Both halves of the text corrected, and the failure is now **caught** rather than described: error 384 fires on two externals reaching one target name with different types and no header, quoting both generated prototypes -- which matters because the C compiler reports it in terms of generated names, and under monomorphization the second declaration is one nobody wrote.  `tests/custard/ExtDup.fst` |
 | M10γΣ | `ClosurePrologue` confirmed under `nvcc` (§51.3, §53.4) | Done by the reporter, and the check I could not run locally.  `DevClosure` with CUDA's real strings, extracted and handed to `nvcc` unedited: all three reachability classes right, `static __global__` accepted, `cuobjdump -ptx` showing the kernel as a `.entry`, and the prologue on the *prototype* load-bearing exactly as §41.4 said.  Three shapes he added past the tested ones all hold: two entries sharing a helper give `__device__` and not the shared string (shared is about the host, not about the arity of the seed set); self-recursion inside the closure is accepted; and a callee reached only *as a value*, never called, is still marked, because `dce` follows value references rather than call sites -- which is the version this needs.  Also §53.4: an extern reached from a kernel gets no prologue and needs none, `custard_c_header` being the answer, which matters for Kuiper because its device-side externs are `__device__ static inline` definitions rather than macros and a generated `extern` would collide with the real one whatever decorated it.  Third suspected gap this reporter has checked against the mechanism before reporting it and found already covered |
+| M10γΤ | **A Rust output leg** (§54.1) | Done, round 50 from the CBOR/CDDL reporter, and a coverage region §52.2 did not name.  `KrmlRust` appeared in exactly one rule -- `%.rustrejected`, which asserts a diagnostic code and then asserts that no `.rs` exists -- so **nothing in the directory produced or checked Rust output**, and the leg could observe only refusals.  §52.2's rule had two regions, above the split (one implementation, one leg right by construction) and below it (two targets that can disagree); the third is a second leg that covers only what Custard *rejects* and says nothing about what it emits, which is most of it.  Three `PrintKrml` behaviours sat there with a KrmlC test and nothing opposite: octal integer literals (`15U` against `0o17u32`), the binary32 suffix (`1.5f` against a bare `1.5` that karamel's Rust printer types itself), and tuples (monomorphized struct against native `(u32, u32)`).  All three correct, and established by *running* both backends rather than by reading the branch -- §52.0's lesson applied.  The leg goes to a `.krml`, through `krml -backend rust`, through `rustc`, and **runs**, which is the point: §43.1's octal bug was karamel reading `017` back as seventeen, a value error no grep for a spelling catches.  Two things the C rule does not need: `krml -backend rust` **exits 0** after printing `N total errors` and writes a `.rs` anyway, so the log is grepped and not the status; and `C._zero_for_deref` is a karamel-internal name its Rust backend cannot translate at all, appearing whatever the input, so `-drop C` is needed despite being deprecated.  `LitOct` and `LitF32` cost one line each to add, which is the argument for the rule; `tests/custard/RustTup.fst` is new |
+| M10γΥ | The global-tuple `EAny` (§54.2) | Not Custard's, and recorded rather than fixed.  A global of tuple type makes karamel's Rust backend fail with `Unexpected EAny`, omit the global from the crate, emit a `krmlinit` that assigns it and a `main` that reads it, and **exit 0**; `rustc` then cannot find the value.  A global *record* is fine.  The reporter attributed it before reporting it -- stock `--codegen krml` does the same, and the KrmlC and direct-C legs both compile it correctly -- so it joins `fr-karamel-prs`.  One refinement found here: it is conditional on **`-fkeep-tuples`**, without which karamel monomorphizes the tuple to a struct before the Rust printer sees it and the global comes out right, which narrows where the fix goes.  **No Custard refusal**, and that is a decision: §50.2's `krml_reject_rust` is for a construct karamel's Rust target cannot emit, and this one it can -- under a karamel flag Custard does not set and cannot see, so refusing would break the default pipeline where it works.  Used as a negative control for M10γΤ, which failed on it correctly; not pinned as a test, because a test asserting a karamel bug breaks when karamel is fixed |
+| M10γΦ | The mirror of `unmapped`, and a stale check from the other side (§54.3, §54.4) | Done.  §52.3's `unmapped` reports a swept `.ml` with no source; a source with no swept `.ml` is equally silent and loses more -- a new `src/custard` module the sweep never reaches has its matches unchecked while the gate stays green covering less than it did.  The reporter verified that direction was empty *by hand*, and checking by hand is what does not survive a round; `checkpartial.py` checks it now, verified both ways by adding a module and removing it.  §54.4 is the same shape from his side and is the one worth keeping: his `make cddl-spec` had been finishing in minutes printing `touch -c` lines for several rounds, because only `src/custard/` had moved and EverParse's `.checked` files stayed valid -- so *"EverParse verifies"* in those reports **re-verified nothing** and was a cache hit presented as evidence.  §51.3's `ulib` edit invalidated them and a genuine (upstream, undated) failure appeared.  Stated once for both: **a check whose input is a cached or derived artifact reports on that artifact and not on the question asked -- and when it is fast and green, nothing prompts a second look.**  §52.3 was a gate reading a stale compiler, this is a gate reading stale proofs; the remedy in both is to make the check say what it read |
