@@ -141,10 +141,16 @@ CNOGREP_PulseForCapture += "(*body)"
 # BufBlit, and until this file no test reached it, so the printer case had
 # never printed anything.  The length position is where a redundant pair
 # appears, and only when the length is already a group, which a literal is.
+#
+# Section 59: the length is now a bare [2] -- the [sizeof] it multiplies is
+# a [size_t], so the other operand fixes the type -- and section 59.3's
+# [is_atom] keeps [group] from putting the pair back.  The CNOGREP is kept
+# in both spellings, since 41.1's hazard is the pair and not the cast.
 C_TESTS += PulseBlit
 CGREP_PulseBlit += "memmove("
-CGREP_PulseBlit += "((size_t)2ULL) * sizeof(uint8_t)"
+CGREP_PulseBlit += "2 * sizeof(uint8_t)"
 CNOGREP_PulseBlit += "(((size_t)2ULL))"
+CNOGREP_PulseBlit += "(2) * sizeof"
 
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose

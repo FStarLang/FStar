@@ -238,8 +238,20 @@ let unparen (s:string) : ML string =
 (* Section 35.2.  Wrap in one pair, unless the string is already one group.
    Every position that needs its operand parenthesized goes through here, so
    that none of them can be the one that adds the second pair. *)
+(* An identifier or an integer literal: one token, so no operator can bind
+   into it and no position that calls {!group} needs it parenthesized.
+   Section 59.3 -- once a literal stops carrying a cast, the pair {!group}
+   would add around it is the only punctuation left, and [(1) * sizeof(T)]
+   is not what the cast removal was for.  Deliberately syntactic: a
+   suffixed hex literal is one token and so is a name, while [-1], [a.b]
+   and [a + b] are not and keep their pair. *)
+let is_atom (s:string) : ML bool =
+  s <> "" &&
+  List.for_all (fun c -> BU.is_letter_or_digit c || c = '_')
+               (String.list_of_string s)
+
 let group (s:string) : ML string =
-  if is_group s then s else "(" ^ s ^ ")"
+  if is_group s || is_atom s then s else "(" ^ s ^ ")"
 
 (* [!e] binds tighter than any operator, so the operand has to be a group;
    one that already is keeps its own parens rather than gaining a second. *)
@@ -588,6 +600,43 @@ let constant (c:constant) : ML string =
   | CFloat (v, Float64) -> float_lit_to_string v
   | CChar c -> "((uint32_t)" ^ show (BU.int_of_char c) ^ ")"
   | CString s -> "\"" ^ escape s ^ "\""
+
+(* Section 59.  The same literal, for a position where C already converts it
+   to the type it is meant to have: the initializer of a declaration of that
+   type, an assignment to it, a [return], a field of a compound literal, the
+   element written into a fresh array.  In every one of those the conversion
+   is *assignment* conversion (6.5.16.1), which is exactly what the cast in
+   {!constant} was doing, so spelling the cast as well says it twice.
+
+   The suffix is a separate question and cannot always go with the cast:
+   C gives a decimal literal the first *signed* type it fits in (6.4.4.1),
+   so a value too large for that has no type and a conforming compiler must
+   diagnose it -- which is why {!constant} carries the suffix in the first
+   place.  A value C guarantees an [int] holds can drop it; anything else
+   keeps it and loses only the cast.
+
+   The bound is the standard's, not the platform's.  [INT_MAX] is only
+   guaranteed to be 32767 (5.2.4.2.1), and while no target Custard emits for
+   has a 16-bit [int], a printer that is right by construction is worth more
+   here than four extra characters on a literal above 32767 -- and the
+   literals this is about, lengths and indices and small tags, are almost all
+   below it. *)
+let converted_int (target:cty) (e_ty:cty) (c:Custard.Syntax.constant) : ML (option string) =
+  match c with
+  | CInt (v, b, Some sw) when target = e_ty && e_ty = TInt sw ->
+    if -32767 <= v && v <= 32767
+    then Some (c_int_lit_to_string v b)
+    else Some (int_literal sw v b)
+  (* Section 43: a character is a code point, and {!constant} gives it its
+     type with a cast because there is no suffix that would.  In a
+     converting position it needs neither, and no test on [e_ty] is right
+     here -- the char type is *realized* (an abstract [TApp] a rule spells
+     as [uint32_t]), not a [TInt], so matching on [TInt] would never fire
+     and matching on the [TApp] would hard-code one rule's name.  That the
+     position converts to the value's own type is the whole condition. *)
+  | CChar c when target = e_ty && BU.int_of_char c <= 32767 ->
+    Some (show (BU.int_of_char c))
+  | _ -> None
 
 (* -------------------------------------------------------------------- *)
 (* Operators                                                            *)
@@ -988,8 +1037,25 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
                   "Applying a call's result is a separate application node."]
         | _ -> ())
      | _ -> ());
+    (* Section 59.4.  An argument is converted to the parameter type as if by
+       assignment, so a literal argument's cast is redundant -- but only
+       where a prototype says what that type is.  For a call this backend
+       generates one, and for a call through a function pointer the pointer's
+       type is the prototype.  **An extern is the exception and keeps its
+       casts**: its declaration is in a header this backend does not write,
+       and it may not be a function at all.  Kuiper's shared-memory
+       primitives are macros, where nothing is converted because nothing is
+       passed -- the token is substituted, and [sizeof] or a concatenation
+       inside the macro would see a different thing. *)
+    let cast_free_args =
+      match hd.e with
+      | EQual (n, _) -> None? (SMap.try_find !externs (string_of_name n))
+      | _ -> true in
     let call = c_expr out ind hd ^ "(" ^
-               String.concat ", " (args |> List.map (c_expr out ind)) ^ ")" in
+               String.concat ", "
+                 (args |> List.map (fun (a:expr) ->
+                    if cast_free_args then c_rvalue out ind a.ty a
+                    else c_expr out ind a)) ^ ")" in
     (* Section 57.1.  An extern returning a pointer is cast to its declared
        type at the call site.  In C the cast is a no-op -- a [void *] converts
        to any object pointer implicitly, which is why this was invisible --
@@ -1021,10 +1087,12 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   (* Both nodes are a C cast, but for opposite reasons: a conversion is what
      the cast *does*, and a coercion is a reinterpretation the C type system
      needs told about and the generated code does not act on. *)
+  (* Section 59.  A cast converts whatever it is given, so a literal
+     operand's own cast is subsumed by this one. *)
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt a, TInt b when a = b -> c_expr out ind e1
-     | _ -> "(" ^ ty t ^ ")" ^ c_expr out ind e1)
+     | _ -> "(" ^ ty t ^ ")" ^ c_rvalue out ind e1.ty e1)
   | ECoerce (e1, t) ->
     if e1.ty = t then c_expr out ind e1
     else "(" ^ ty t ^ ")" ^ c_expr out ind e1
@@ -1039,13 +1107,13 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | ERecord (_, fs) ->
     "(" ^ ty e.ty ^ "){ " ^
     String.concat ", " (fs |> List.map (fun (f, v) ->
-      "." ^ c_var f ^ " = " ^ c_expr out ind v)) ^ " }"
+      "." ^ c_var f ^ " = " ^ c_rvalue out ind v.ty v)) ^ " }"
   | EOp ({ po_op = BufRead }, [b; i]) ->
     (match b.e with
      | EVar y when is_cell y -> lookup_var y
-     | _ -> c_expr out ind b ^ "[" ^ c_expr out ind i ^ "]")
+     | _ -> c_expr out ind b ^ "[" ^ c_rvalue out ind i.ty i ^ "]")
   | EOp ({ po_op = BufSub }, [b; i]) ->
-    "(" ^ c_expr out ind b ^ " + " ^ c_expr out ind i ^ ")"
+    "(" ^ c_expr out ind b ^ " + " ^ c_rvalue out ind i.ty i ^ ")"
   | EOp ({ po_op = BufNull }, []) -> "(" ^ ty e.ty ^ ")NULL"
   | EOp ({ po_op = BufIsNull }, [b]) -> "(" ^ c_expr out ind b ^ " == NULL)"
   (* Section 44.2.  The same comparison in expression position.  [strcmp] is
@@ -1053,9 +1121,21 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && is_string_ty a.ty ->
     "(strcmp(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ ") " ^
     (if Eq? o.po_op then "==" else "!=") ^ " 0)"
+  (* Section 59.2.  A binary operator's two operands have the same IR type,
+     so a literal operand's cast is telling C what the *other* operand
+     already says: if that type outranks [int] the literal converts to it
+     under the usual arithmetic conversions, and if it does not, both sides
+     promote to [int] exactly as they did with the casts -- which is why
+     {!truncate} is here and is unchanged.
+
+     The condition is that the *other* operand is not itself a literal.
+     Two literals would leave nothing carrying the type, and the operator
+     would be evaluated at [int]; that is the one case where dropping the
+     casts could change a result. *)
   | EOp (o, [a; b]) when Some? (infix_op o) ->
-    truncate o ("(" ^ c_expr out ind a ^ " " ^ Some?.v (infix_op o) ^ " " ^
-                c_expr out ind b ^ ")")
+    let av = if EConst? b.e then c_expr out ind a else c_rvalue out ind a.ty a in
+    let bv = if EConst? a.e then c_expr out ind b else c_rvalue out ind b.ty b in
+    truncate o ("(" ^ av ^ " " ^ Some?.v (infix_op o) ^ " " ^ bv ^ ")")
   | EOp (o, [a]) when Some? (prefix_op o) ->
     truncate o ("(" ^ Some?.v (prefix_op o) ^ c_expr out ind a ^ ")")
   | EOp (o, args) ->
@@ -1129,12 +1209,24 @@ and tag_of (v:string) (d:dtype) : ML string =
 (* A constructor application.  Three shapes, and each is the natural C for the
    layout its type got: an enum constant, a struct literal, a tagged union
    literal. *)
+(* An expression in a position that converts it to [target]: only an
+   integer literal is printed differently there, and only by losing a cast
+   {!converted_int} explains is redundant.  Everything else goes through
+   {!c_expr} unchanged. *)
+and c_rvalue (out:ref string) (ind:string) (target:cty) (e:expr) : ML string =
+  match e.e with
+  | EConst c ->
+    (match converted_int target e.ty c with
+     | Some s -> s
+     | None -> c_expr out ind e)
+  | _ -> c_expr out ind e
+
 and ctor_lit (out:ref string) (ind:string) (t:cty) (cn:name) (args:list expr) : ML string =
   match find_ctor cn with
   | None -> reject ("the constructor " ^ string_of_name cn)
               ["It belongs to no type declaration in the program."]
   | Some (d, fields) ->
-    let vals = args |> List.map (c_expr out ind) in
+    let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
     let named = zip_fields fields vals in
     if is_enum d then c_tag cn
     else if single_ctor d then
@@ -1230,7 +1322,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
       when is_one len ->
     let out = mk_ref "" in
-    let iv = c_expr out ind init in
+    let iv = c_rvalue out ind t init in
     let saved = !scope in
     let nm = bind_cell x in
     let s2 = emit ind d e2 in
@@ -1275,7 +1367,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
               "\n"
             | _ -> ind ^ decl_of t x ^ ";\n" ^ body)
       else (let out = mk_ref "" in
-            let v = c_expr out ind e1 in
+            let v = c_rvalue out ind t e1 in
             let x = bind_var x in
             !out ^ ind ^ decl_of t x ^ " = " ^ v ^ ";\n") in
     let s2 = emit ind d e2 in
@@ -1341,8 +1433,9 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let lhs =
       match b.e with
       | EVar y when is_cell y -> lookup_var y
-      | _ -> c_expr out ind b ^ "[" ^ c_expr out ind i ^ "]" in
-    let v = c_expr out ind v in
+      | _ -> c_expr out ind b ^ "[" ^ c_rvalue out ind i.ty i ^ "]" in
+    (* Section 59.  An assignment to a cell of the element type. *)
+    let v = c_rvalue out ind v.ty v in
     !out ^ ind ^ lhs ^ " = " ^ v ^ ";\n" ^ unit_result ind d
 
   (* Pulse emits a matching "free" for a stack allocation too.  A collapsed
@@ -1361,10 +1454,13 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
               | TBuf e | TRef e -> ty e
               | _ -> reject "a blit whose destination is not a pointer" [] in
     let srcv = c_expr out ind src in
-    let siv = c_expr out ind si in
+    (* Section 59.  The two offsets are added to a pointer and the length is
+       multiplied by a [sizeof], so in all three the other operand fixes the
+       type and a literal's cast repeats it. *)
+    let siv = c_rvalue out ind si.ty si in
     let dstv = c_expr out ind dst in
-    let div = c_expr out ind di in
-    let lenv = c_expr out ind len in
+    let div = c_rvalue out ind di.ty di in
+    let lenv = c_rvalue out ind len.ty len in
     (* [group] and not a hand-written pair: section 41.1.  The length is
        almost always already parenthesized -- a literal, a cast, a field of a
        struct -- and a second pair around it is what section 32.10's gate
@@ -1374,7 +1470,11 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
 
   | _ ->
     let out = mk_ref "" in
-    let s = c_expr out ind e in
+    (* Section 59.  [D_Return] and [D_Assign] are assignment contexts whose
+       target type is [e.ty] -- the IR is typed, so a returned value has the
+       function's result type and an assigned one the variable's -- and
+       [D_Ignore] discards the value, where the spelling cannot matter. *)
+    let s = c_rvalue out ind e.ty e in
     !out ^ finish ind d s
 
 and unit_result (ind:string) (d:dest) : ML string =
@@ -1387,8 +1487,11 @@ and unit_result (ind:string) (d:dest) : ML string =
    initializes neither. *)
 and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr) : ML string =
   let out = mk_ref "" in
-  let iv = c_expr out ind init in
-  let lv = c_expr out ind len in
+  let iv = c_rvalue out ind init.ty init in
+  (* Section 59.  The bound is compared against a [size_t] counter this
+     printer declares itself, so it is the same situation as an infix
+     operator with one literal operand. *)
+  let lv = c_rvalue out ind len.ty len in
   let elt = match t with
             | TBuf e | TRef e -> ty e
             | _ -> reject "an allocation whose result is not a pointer" [] in
@@ -1410,7 +1513,12 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
       " * sizeof(" ^ elt ^ "));\n" ^
       ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n" in
   !out ^ alloc ^
-  ind ^ "for (size_t " ^ i ^ " = 0; " ^ i ^ " < (size_t)" ^ group lv ^ "; " ^ i ^ "++) {\n" ^
+  (* Section 59.  The counter is a [size_t] and the length is compared
+     against it, so the cast is there for a length of some other integer
+     type; when the length already *is* a [size_t] it says nothing. *)
+  ind ^ "for (size_t " ^ i ^ " = 0; " ^ i ^ " < " ^
+  (if len.ty = TInt (Unsigned, Sizet) then group lv else "(size_t)" ^ group lv) ^
+  "; " ^ i ^ "++) {\n" ^
   ind ^ "  " ^ arr ^ "[" ^ i ^ "] = " ^ iv ^ ";\n" ^
   ind ^ "}\n" ^
   finish ind d arr
@@ -1434,7 +1542,13 @@ and pat_tests (path:string) (t:cty) (p:pat)
      without looking at the constant. *)
   | PConst (CString v) when is_string_ty t ->
     (["strcmp(" ^ path ^ ", " ^ constant (CString v) ^ ") == 0"], [])
-  | PConst c -> ([path ^ " == " ^ constant c], [])
+  (* Section 59.2.  The path carries the type -- [t] is it, and a path is
+     never a literal -- so a constant pattern is the one-literal-operand case
+     of a comparison and the cast repeats what the scrutinee already says. *)
+  | PConst c ->
+    (match converted_int t t c with
+     | Some v -> ([path ^ " == " ^ v], [])
+     | None -> ([path ^ " == " ^ constant c], []))
   | PTuple _ ->
     reject "an anonymous tuple pattern"
       ["Tuples reach the backend as FStar.Pervasives.Native.MktupleN."]
@@ -1835,10 +1949,16 @@ let signature (l:dlet) : ML string =
    contents. *)
 let rec static_init (x:expr) : ML (option string) =
   match x.e with
+  (* Section 59.  The initializer of a declaration of this very type, which
+     is the assignment context {!converted_int} is about; a bare literal is
+     still a constant expression, which is what this list is selecting for. *)
   | EConst c ->
-    (match c with
-     | CInt (_, _, None) -> None
-     | _ -> Some (constant c))
+    (match converted_int x.ty x.ty c with
+     | Some v -> Some v
+     | None ->
+       match c with
+       | CInt (_, _, None) -> None
+       | _ -> Some (constant c))
   | ECast (e1, t) ->
     (match e1.ty, t, static_init e1 with
      | TInt a, TInt b, Some v when a = b -> Some v

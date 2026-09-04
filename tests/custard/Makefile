@@ -380,7 +380,9 @@ CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
 # demand itself, and both string instantiations have to survive as distinct
 # constants.
 C_TESTS += LitStr
-CGREP_LitStr  = "((uint32_t)3U)" "((uint32_t)5U)"
+# Section 59: the globals are [= 3] and [= 5] now; a literal is still a
+# constant expression, which is what the static-initializer list selects for.
+CGREP_LitStr  = "_lit__LStr = 3;" "_lit__LStr_1 = 5;"
 CNOGREP_LitStr = "list" "char *"
 
 # Section 30.15.  Nine nested tuple2s spelled out in one identifier is what an
@@ -452,8 +454,17 @@ CGREP_CExtern   = "include \"CExtern_stubs.h" \
                   "void custard_init_globals(void)" \
                   "CExtern_gt = cextern_mk_tag();" \
                   "if (c.tag == CEXTERN_BUMP) cextern_bump(" \
-                  "uint32_t CExtern_base = ((uint32_t)7U);" \
-                  "uint8_t CExtern_low = (uint8_t)((uint32_t)300U);"
+                  "uint32_t CExtern_base = 7;" \
+                  "uint8_t CExtern_low = (uint8_t)300;" \
+                  "cextern_make(((uint32_t)41U))"
+# Section 59.4: the last of those is the *exception* to the cast removal, and
+# it is here rather than with the other section 59 tests because this is the
+# file that has an extern taking an argument.  Custard writes no prototype
+# for cextern_make -- its declaration is in a header Custard does not own,
+# and it may be a macro, where nothing is converted because nothing is
+# passed -- so the argument keeps its cast.  Asserting the exception is what
+# keeps the rule from quietly widening.
+#
 # No definition is emitted for either external type, and neither is declared
 # as an abstract struct the way a Custard-owned opaque type would be.
 CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag" \
@@ -499,7 +510,7 @@ CNOGREP_CDeadLet = " = p;" "_letpattern"
 # budget is what makes this a test: it is far below what normalizing the
 # proposition would take, so extracting at all is the assertion.
 FLAGS_RefStrip   = --custard_norm_budget 20000
-CGREP_RefStrip   = "uint32_t RefStrip_table = ((uint32_t)7U);"
+CGREP_RefStrip   = "uint32_t RefStrip_table = 7;"
 CNOGREP_RefStrip = "q40"
 
 # Section 19.12: a closed lambda is lifted to a top-level function and the
@@ -517,9 +528,11 @@ CNOGREP_CFunPtr = "(*)("
 # output-quality invariants of section 6: a unit parameter is a thunk, which C
 # does not need; a pattern binding is an alias, not a copy; and the last arm
 # of an exhaustive match is not guarded.
+# Section 59: [n == 0], not [n == ((uint32_t)0U)] -- [n] carries the type,
+# so the literal's cast was saying what the other operand already said.
 CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
                     "if (s.tag == KRMLBASIC_SQUARE) return (s.val.KrmlBasic_Square._0" \
-                    "if (n == ((uint32_t)0U)) return acc;"
+                    "if (n == 0) return acc;"
 CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
 
 # Each of these is extracted with --custard_entry and *no* --custard_main, as a
@@ -1214,8 +1227,13 @@ CNOGREP_Half += "Half_bfloat16"
 # same number, so a pattern in one base matches a scrutinee in the other, and
 # -0.0 keeps its sign because a float has one.
 C_TESTS += LitBase
-CGREP_LitBase += "0xffU"
-CGREP_LitBase += "255U"
+# Section 59: the base survives the cast removal, which is the whole point
+# of this test -- and the patterns are anchored now, because a bare "0xff"
+# would also be matched by the tail of the 64-bit literal below.  That one
+# keeps its suffix: its value is past what C guarantees an int holds, so
+# without the suffix it would have no type at all.
+CGREP_LitBase += "== 0xff)"
+CGREP_LitBase += "== 255)"
 CGREP_LitBase += "0xffffffffffffffffULL"
 CGREP_LitBase += "= -0.0;"
 CGREP_LitBase += "0.0015"
@@ -1231,8 +1249,9 @@ CNOGREP_LitBase += "1.5e-3"
 # would have accepted.
 C_TESTS += LitOct
 KRML_TESTS += LitOct
-CGREP_LitOct += "017U"
-CGREP_LitOct += "0xfU"
+# Section 59: bases survive the cast removal; anchored for the same reason.
+CGREP_LitOct += "== 017)"
+CGREP_LitOct += "= 0xf;"
 CNOGREP_LitOct += "0o17"
 CNOGREP_LitOct += "0b1010"
 
@@ -1328,7 +1347,13 @@ EGREP_FloatLit += "is not a floating-point literal"
 # ChrLit computes 97 from the constant 'a', ChrTy from a char parameter.
 C_TESTS    += ChrLit
 KRML_TESTS += ChrLit
-CGREP_ChrLit += "((uint32_t)97)"
+# Section 59: the constant no longer carries a cast in a converting
+# position, so what pins "char is uint32_t" here is the signature -- which
+# says it once for the whole function rather than once per literal, and is
+# the stronger assertion.  That 97 is the right *value* is checked by the
+# program, as the comment above says.
+CGREP_ChrLit += "static uint32_t ChrLit_letter(void)"
+CGREP_ChrLit += "return 97;"
 
 # Section 46.2.  No character constant anywhere -- a char in argument position
 # alone used to produce a header that would not compile.  The absent typedef

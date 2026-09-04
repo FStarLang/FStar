@@ -13422,6 +13422,188 @@ in the body. The same applies to the `_break` flag itself, which is how
 Pulse compiles `return` (section 7.4) and which section 33 already notes
 as a source of tests that constant-fold away.
 
+# 59 Saying the type once
+
+The companion to section 58, and the same kind of report: the direct-C
+output was correct and did not read like C. Almost every integer literal
+carried a cast.
+
+```c
+size_t i = ((size_t)0ULL);
+for (size_t _ci = 0; _ci < (size_t)((size_t)4ULL); _ci++)
+if (n == ((uint32_t)0U)) return acc;
+put(s, ((size_t)3ULL), ((uint8_t)0x80U));
+```
+
+Across the two direct-C suites -- 4101 lines of generated C -- there were
+**1639** of them. Afterwards there are **three**, and all three are
+deliberate.
+
+## 59.1 Why the cast is there, and what it duplicates
+
+The cast is not decoration, and the comment on `constant` is right about
+why it exists:
+
+> The cast pins the type: an unsuffixed literal is `int`, which would make
+> `x + 1` promote and then wrap at the wrong width.
+
+That is true of a literal standing on its own. What it misses is that a
+literal almost never stands on its own. **C already converts, in most of
+the positions a literal appears in, to a type the printer knows.** Where
+it does, the cast says a second time what the context says first.
+
+The clearest case is assignment conversion (6.5.16.1), which governs
+
+- the initializer of a declaration,
+- an assignment,
+- a `return`,
+- a field of a compound literal,
+- an argument, where a prototype is in scope.
+
+In all of these the target type is the expression's own IR type, because
+the IR is typed: a returned value has the function's result type, an
+assigned one the variable's, an argument the parameter's. So the printer
+does not have to infer anything or thread an expected type through
+`c_expr`. It already knows.
+
+`converted_int` is the whole decision, and `c_rvalue` is the wrapper that
+applies it at a position. Everything that is not an integer or character
+literal goes through `c_expr` untouched.
+
+## 59.2 The suffix is a different question from the cast
+
+The two are not removed together, and conflating them would be a bug.
+
+C gives a decimal literal the first *signed* type it fits in (6.4.4.1),
+so a value too large for any of them has no type at all and a conforming
+compiler must diagnose it. That is why `constant` emits a suffix, and the
+suffix has to stay whenever the value needs it:
+
+```c
+static uint64_t big = 0xffffffffffffffffULL;   /* suffix kept */
+static uint32_t mask = 0xff;                   /* both dropped */
+```
+
+The threshold is **the standard's, not the platform's**: `INT_MAX` is only
+guaranteed to be 32767 (5.2.4.2.1), so that is the bound below which the
+bare spelling is used. No target Custard emits for has a 16-bit `int`, and
+picking the real bound would drop four more characters from the rare
+literal above 32767 -- but a printer that is right by construction is
+worth more than that, and the literals this is about, lengths and indices
+and small tags, are nearly all below it.
+
+The bound pays for itself in one place. Where **both** operands of an
+operator are literals there is nothing left carrying the type and the
+operator would be evaluated at `int` -- and two values under 32767 cannot
+overflow a 32-bit `int` through one `+` or `*`. That is an argument, not a
+guarantee, so the printer does not rely on it: see below.
+
+The base is preserved throughout. `0xff` stays hex and `017` stays octal,
+which is what sections 39 and 43 are about, and those tests still pass
+unchanged in substance.
+
+## 59.3 An operator's other operand carries the type
+
+Assignment contexts are not where most of the casts were. Most were
+operands:
+
+```c
+if (n == ((uint32_t)0U))
+```
+
+A binary operator's two operands have the **same IR type**, so a literal
+operand's cast is telling C what the other operand already says. If that
+type outranks `int`, the literal converts to it under the usual arithmetic
+conversions -- the same value the cast produced. If it does not outrank
+`int`, both sides promote to `int` exactly as they did *with* the casts,
+which is why `truncate` is around these expressions and is unchanged.
+
+The one condition is that **the other operand is not itself a literal**.
+Two literals leave nothing carrying the type. Rather than lean on the
+32767 argument above, the printer simply declines: if either operand is a
+constant, the other keeps its cast.
+
+A constant pattern is the same situation and gets the same treatment for
+a sharper reason: `pat_tests` is handed the type of the path it is testing
+against, and a path is never a literal, so the condition holds by
+construction.
+
+## 59.4 The pair that grew back
+
+Removing a cast exposed a second layer. `group` adds parentheses unless
+its argument already is one group, and a cast *was* one group -- so a
+literal reaching `group` came back parenthesized the moment it stopped
+being a cast:
+
+```c
+memmove(dst, src, (2) * sizeof(uint8_t));
+```
+
+`is_atom` is the answer: a string of letters, digits and underscores is
+one token, so no operator can bind into it and no position that calls
+`group` needs it parenthesized. That covers an identifier and an integer
+literal in any base with any suffix, and deliberately does not cover
+`-1`, `a.b` or `a + b`, which keep their pair.
+
+This is a widening of section 35.2's rule rather than an exception to it:
+every position that needs its operand parenthesized still goes through
+`group`, and `group` now knows one more thing about when a pair is not
+needed.
+
+## 59.5 Arguments, and the extern exception
+
+An argument is converted to the parameter type as if by assignment --
+**where a prototype says what that type is**. For a call to a function
+this backend generates, it wrote the prototype. For a call through a
+function pointer, the pointer's type is the prototype.
+
+**An extern is the exception and keeps its casts.** Its declaration lives
+in a header Custard does not write, and it may not be a function at all:
+Kuiper's shared-memory primitives are macros, where nothing is converted
+because nothing is passed -- the token is substituted, and a `sizeof` or a
+concatenation inside the macro would see a different thing. Section 57.1
+is the other half of the same fact: what an extern's declaration says is
+the only thing Custard knows about it, and there it had to be spelled *in*
+rather than left out.
+
+The exception is asserted, not just described. `CExtern` pins
+`cextern_make(((uint32_t)41U))`, so a later widening of the rule that
+swept externs in would fail a test rather than pass quietly.
+
+## 59.6 What is left, and what the tests say
+
+Three cast-wrapped literals survive in 4101 lines: two extern arguments,
+and `(double)3`, which is not a redundant cast at all but the IR's own
+`ECast` doing a real conversion.
+
+Every expectation that had to change was strengthened rather than
+transcribed:
+
+- `KrmlBasic` asserts `if (n == 0) return acc;`.
+- `LitBase` and `LitOct` are **anchored** now -- `"== 0xff)"` rather than
+  `"0xffU"` -- because once the suffix is gone a bare `0xff` would also be
+  matched by the tail of the 64-bit literal in the same file. The old
+  patterns were accidentally specific; the new ones are specific on
+  purpose.
+- `ChrLit` pinned `((uint32_t)97)` to show that `FStar.Char.char` is
+  `uint32_t`. It now pins the *signature*, `static uint32_t
+  ChrLit_letter(void)`, which says it once for the whole function instead
+  of once per literal and does not depend on how a constant is spelled.
+- `PulseBlit` keeps section 41.1's `CNOGREP` on the doubled pair in both
+  spellings, since 41.1's hazard is the pair and not the cast.
+
+## 59.7 Not done
+
+- **A character type that is not `uint32_t`.** `constant` spells a `CChar`
+  with a hard-coded `(uint32_t)`, while the type itself is realized by a
+  rule and could in principle be spelled otherwise. That inconsistency
+  predates this section and is not made worse by it -- in a converting
+  position the literal now takes the declared type, whatever it is -- but
+  the non-converting spelling is still guessing.
+- **Arithmetic on two literals** is left alone, as above. Constant folding
+  in the IR would remove the question rather than answer it.
+
+
 
 
 
@@ -13647,3 +13829,11 @@ as a source of tests that constant-fold away.
 | M10δΞ | The two forms agree, structurally (§58.3) | Recorded, because "it looks the same" is not the argument.  `while (c)` tests before each iteration **including the first**, which is where the `if (!c) break;` stood; the condition is still re-evaluated every iteration, since a header is not an initializer; and a `continue` lands in the same place either way (the top of `while (true)`, re-running condition and break test, versus the condition test).  Nothing downstream reads the emitted text, so the IR is unchanged and so is the C compiler's view of the program --- this is a printing choice and only a printing choice |
 | M10δΟ | Both halves of the split are asserted (§58.4) | Done, and **the second half is the one that matters**: `PulseBasic` and `PulseForCapture` have pure conditions and must now produce `while (i < n)` (with `while (true)` a `CNOGREP`), while `PulseHashTable`'s two loops genuinely need statements --- a `_break` flag is tested to produce the condition value, taking a declaration and an `if` --- and must **keep** `while (true)`, which it now carries as a `CGREP`.  Asserting only the rewritten form would leave a rewrite that fired too eagerly undetected.  `PulseForCapture` previously asserted `while (true)`, which held whatever the condition did; `while (i < n)` says strictly more, so the change strengthens the test it had to touch |
 | M10δΠ | `while (!_break)` not recovered (§58.5) | Not done, and deliberately not done *here*.  `PulseHashTable`'s second loop is `bool _ct1; if (_break) _ct1 = false; else _ct1 = true;`, which is `while (!_break)` --- but the condition really does arrive as a branch, so no printing decision can see through it.  Collapsing `if (p) x = false; else x = true;` to `x = !p` is a simplification of the *IR*, and doing it there would also improve the loops whose conditions must stay in the body, which a printer-level hack could not.  Same for the `_break` flag itself, which is how Pulse compiles `return` (§7.4) and which §33 already lists as a source of tests that constant-fold away |
+| M10δΡ | **The type said once, not twice** (§59.1) | Done, the companion report to §58 and the same kind: 1639 of the 4101 lines of generated direct-C carried a cast on an integer literal, `size_t i = ((size_t)0ULL)`.  The comment on `constant` is right about why the cast exists --- an unsuffixed literal is `int`, so `x + 1` would promote and wrap at the wrong width --- and wrong about how often it is needed, because **a literal almost never stands on its own**.  C's assignment conversion (6.5.16.1) already converts, at a declaration's initializer, an assignment, a `return`, a compound-literal field and an argument, to a type *the printer already knows*: the IR is typed, so a returned value has the function's result type and an argument the parameter's.  No expected type has to be threaded through `c_expr` and nothing has to be inferred.  `converted_int` is the whole decision and `c_rvalue` applies it at a position; everything that is not an integer or character literal goes through `c_expr` untouched.  Afterwards: **three** casts in the same 4101 lines |
+| M10δΣ | The cast and the suffix are separate questions (§59.2) | Recorded, because removing them together would be a bug.  C gives a decimal literal the first *signed* type it fits in (6.4.4.1), so a value too large for any of them has no type and must be diagnosed --- the suffix stays whenever the value needs it, and `0xffffffffffffffffULL` is unchanged while `0xff` loses both.  The threshold is **the standard's and not the platform's**: `INT_MAX` is only guaranteed to reach 32767 (5.2.4.2.1), so that is the bound, even though no target Custard emits for has a 16-bit `int` and the real bound would shorten the rare larger literal.  A printer that is right by construction is worth more than four characters, and the literals this is about --- lengths, indices, small tags --- are nearly all under it.  The base is preserved throughout, so §39's hex and §43's octal survive in substance |
+| M10δΤ | An operator's other operand carries the type (§59.3) | Done, and this is where most of the casts were --- operands, not assignments, `if (n == ((uint32_t)0U))`.  A binary operator's two operands share an **IR type**, so a literal operand's cast repeats what the other operand says: if that type outranks `int` the literal converts to it under the usual arithmetic conversions, and if not, both sides promote to `int` exactly as they did *with* the casts, which is why `truncate` is around these expressions and is unchanged.  The one condition is that **the other operand is not itself a literal**, since two literals leave nothing carrying the type and the operator would evaluate at `int`.  The 32767 bound independently makes that case safe, but the printer does not rely on the argument --- if either operand is a constant, the other keeps its cast.  A constant pattern is the same shape for a sharper reason: `pat_tests` is handed the tested path's type, and a path is never a literal, so the condition holds by construction |
+| M10δΥ | The pair that grew back (§59.4) | Done, a second layer the first change exposed.  `group` parenthesizes unless its argument is already one group --- and a cast *was* one group, so a literal reaching `group` came back as `(2) * sizeof(uint8_t)` the moment it stopped being a cast, defeating the point.  `is_atom` is the answer and is deliberately **syntactic**: a run of letters, digits and underscores is one token, so no operator can bind into it, which covers an identifier and an integer literal in any base with any suffix and does not cover `-1`, `a.b` or `a + b`.  A widening of §35.2's rule rather than an exception to it --- every position that needs its operand parenthesized still goes through `group`, which now knows one more case where the pair is not needed |
+| M10δΦ | **Externs keep their casts** (§59.5) | Done, and the exception is the interesting half.  An argument is converted as if by assignment *where a prototype says what the parameter type is*, which holds for a call to a function this backend generated (it wrote the prototype) and for a call through a function pointer (the pointer's type is the prototype).  It does **not** hold for an extern: its declaration lives in a header Custard does not write and **it may not be a function at all** --- Kuiper's shared-memory primitives are macros, where nothing is converted because nothing is passed, and a `sizeof` or a token pasting inside the macro would see a different thing.  §57.1 is the other half of the same fact from the other direction.  The exception is **asserted and not merely described**: `CExtern` pins `cextern_make(((uint32_t)41U))`, so a later widening that swept externs in fails a test instead of passing quietly |
+| M10δΧ | Every touched expectation was strengthened (§59.6) | Done, and worth listing because each break was a golden pinning the old spelling.  `LitBase` and `LitOct` are now **anchored** (`"== 0xff)"`, not `"0xff"`) --- once the suffix is gone a bare `0xff` would also be matched by the tail of the 64-bit literal in the same file, so the old patterns were accidentally specific and the new ones are specific on purpose.  `ChrLit` pinned `((uint32_t)97)` to show that `FStar.Char.char` is `uint32_t`; it now pins the **signature**, which says that once for the whole function rather than once per literal and does not depend on how a constant is spelled.  `PulseBlit` keeps §41.1's `CNOGREP` on the doubled pair in the new spelling as well, since 41.1's hazard is the pair and not the cast |
+| M10δΨ | Character literals in non-converting positions (§59.7) | Not done.  `constant` spells a `CChar` with a hard-coded `(uint32_t)`, while the type is realized by a **rule** and could in principle be spelled otherwise --- so the cast is guessing.  The guess predates this section and is not made worse by it: in a converting position the literal now takes whatever the declared type is, so the only remaining exposure is a character literal in a position that converts nothing.  Finding the realized spelling from the printer would mean asking the rule set for the type's C name at a point that currently only has a constant |
+| M10δΩ | Arithmetic between two literals (§59.7) | Not done, and left as the one case where the casts stay for a real reason rather than a conservative one.  Constant folding in the **IR** would remove the question rather than answer it, and would also help the tests §33 already describes as folding away.  Doing it in the printer would mean the printer knowing the target's arithmetic, which is exactly what it declines to know everywhere else |
