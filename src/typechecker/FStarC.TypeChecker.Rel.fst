@@ -2425,7 +2425,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                          | Some wl -> true, wl
                          | None -> false, wl
                   in
-                  let combine_refinements t_base p1_opt p2_opt wl : ML _ =
+                  let combine_refinements may_widen t_base p1_opt p2_opt wl : ML _ =
                     match op with
                     | None -> t_base, wl
                     | Some op ->
@@ -2459,8 +2459,21 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                            by such a disjunction.  Widen to the base instead;
                            that is sound here because we are joining *lower*
                            bounds.  Meeting upper bounds must keep both
-                           refinements. *)
-                        if not flip && not (U.term_eq phi phi1) && not (U.term_eq phi phi2)
+                           refinements.
+
+                           Only when the two bases were *already* the same type
+                           though ([may_widen]).  When they agreed only after
+                           delta-unfolding -- [natlt n1] and [natlt n2] both
+                           reducing to a refinement of [nat] -- the base is a
+                           type neither side was written at, and widening to it
+                           throws away the very information the bounds carry:
+                           joining them to [i:nat{i < n1 \/ i < n2}] is what
+                           lets the result meet a later upper bound of
+                           [natlt (max n1 n2)]. *)
+                        if may_widen
+                        && not flip
+                        && not (U.term_eq phi phi1)
+                        && not (U.term_eq phi phi2)
                         then t_base, wl
                         else refine x phi, wl
 
@@ -2477,14 +2490,14 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                   in
                   match try_eq t1_base t2_base wl with
                   | Some wl ->
-                    let t, wl = combine_refinements t1_base p1_opt p2_opt wl in
+                    let t, wl = combine_refinements true t1_base p1_opt p2_opt wl in
                     t, [], wl
 
                   | None ->
                     let t1_base, p1_opt = base_and_refinement_maybe_delta true env t1 in
                     let t2_base, p2_opt = base_and_refinement_maybe_delta true env t2 in
                     let p, wl = eq_prob t1_base t2_base wl in
-                    let t, wl = combine_refinements t1_base p1_opt p2_opt wl in
+                    let t, wl = combine_refinements false t1_base p1_opt p2_opt wl in
                     (t, [p], wl)
               in
               let t1, ps, wl = combine t1 t2 wl in
