@@ -286,7 +286,8 @@ failure in the other build is a genuine difference attributable to this PR.
 
 The experiment ran to a green build over several rounds (`-k` only ever exposes
 one layer of failures at a time, since dependents of a failing module are
-skipped). It found four more typechecker bugs, all fixed here:
+skipped). It found four more typechecker bugs and one extraction bug, all fixed
+here:
 
 - **Subtyping could not eta-expand across an arity mismatch.** A precondition is
   a trailing implicit binder, so `Pure t (requires p)` has one binder more than
@@ -344,10 +345,24 @@ skipped). It found four more typechecker bugs, all fixed here:
   it can never see less than before; the four sites in
   `extract_let_rec_annotation` and the one in `guard_letrecs` use it.
   Regression test: `tests/micro-benchmarks/LetRecRefinedFunctionResult.fst`.
+- **Extraction left a precondition's proof argument behind.** A `requires` is a
+  trailing implicit `squash` binder, and extraction erases it: `is_spec_binder`
+  recognises it, `binders_as_ml_binders` drops it from a lambda and
+  `drop_spec_args` drops the matching argument from an application. But
+  `drop_spec_args` looked for the binders in *one* `arrow_formals` of the head's
+  type, unfolding it once if that produced too few. That is not enough when the
+  `squash` binder is inside the head type's **result**: for
+  `callee : t_t -> Tot t_t` where `t_t = x:int -> y:int -> Pure r (requires ...)`,
+  the visible arity is 1 and one unfolding of the whole type still exposes only
+  the outer arrow. The `()` proof then survived into the generated OCaml as a
+  real argument, and the ML typechecker rejected it with
+  `Error 76: Ill-typed application`. `drop_spec_args` now unfolds the *result* of
+  the arrow it found, repeatedly, until it has as many formals as there are
+  arguments — bounded by fuel and by the unfolding reaching a fixpoint, so a type
+  that genuinely has fewer binders than arguments still costs one step.
+  Regression test: `tests/extraction/SquashArgErasure.fst`.
 (A sixth problem, in the SMT encoding rather than the typechecker, was
 root-caused but deliberately **not** fixed; see below.)
-
-One bug was root-caused but deliberately **not** fixed; see below.
 
 ## An open bug: obligations escaping a `let`
 
@@ -432,6 +447,53 @@ encoding is left alone. Closing this properly means making the hypothesis
 available *lazily*, in a way that does not also strengthen unrelated
 squash-typed hypotheses — a change to make on its own, with its own measurement,
 not at the end of a refactor.
+
+A fourth attempt was made and also rejected: closing the query over a
+`squash p` binding as `p ==> q` rather than `forall (x: squash p). q`
+(`Encode.encode_query`). That is exactly the shape upstream produces, and it does
+put `p` in the solver's hypothesis set directly — but it fixed neither
+`l2r_safe_writer_dsum_noroom_lemma` nor the `MapGroup` failure below, while
+restating every precondition in every query. It was reverted.
+
+## A third finding: the content of a proof argument is not restated
+
+`CDDL.Pulse.Parse.MapGroup.impl_zero_copy_map_zero_or_more_aux` was the last
+EverParse regression, and it is worth recording because the diagnosis is
+counter-intuitive: the *goal term* and the *hypothesis list* are byte-identical
+to upstream's, the axiom sets emitted for every symbol involved are identical,
+and the proof still fails. The difference is a single extra ground fact.
+
+The proof asserts
+
+```fstar
+assert (Ghost.reveal i.ser2 == coerce_eq (_ by (norm [...]; trefl ())) sp2.serializable)
+```
+
+where `i.ser2 : erased (dfst (mk_spec r2) -> bool)` and
+`sp2.serializable : tvalue -> bool`. The two arrow types are *different*
+`Tm_arrow_<hash>` symbols in the encoding — the domain is inside the abstraction,
+not an argument to it — so no amount of congruence on `dfst (mk_spec r2) == tvalue`
+relates them. The hypothesis in scope is `i.ser2 == hide (tvalue -> bool) sp2.serializable`,
+and `lemma_FStar.Ghost.reveal_hide` triggers on `reveal a (hide a x)`: it can only
+fire if the two `erased` type indices are the *same* E-graph term. So the proof
+needs the equation between the two arrow types, and nothing else will do.
+
+That equation is exactly the `squash (a == b)` argument the user's tactic solves.
+Taking the unsat core of upstream's query names it directly (`@hypothesis_135`):
+upstream restates a bound term's type at every `bind`, so the coercion's proof
+obligation is *also* published as a fact. This branch's `captured_typing` restates
+only what a binder's elimination would lose, and a tactic-solved implicit is not
+that, so the fact is dropped.
+
+The workaround is to state the equation the coercion rests on, once:
+
+```fstar
+assert ((tvalue -> bool) == (dfst (Iterator.mk_spec r2) -> bool))
+  by (norm [delta_only [`%dfst; `%Mkdtuple2?._1; `%Iterator.mk_spec]; iota; primops]; trefl ());
+```
+
+which is the same tactic already written inline for the coercion. The definition
+then verifies in 32s, against 45s for the failing attempt.
 
 ## User-visible changes
 
@@ -524,6 +586,22 @@ not at the end of a refactor.
   conclusion no longer matches the goal. Removing the `requires` in favour of a
   refinement on the argument's own type removes the eta-expansion and the
   problem: this is what `ASN1.Spec.Sequence` and `ASN1.Spec.Any` do.
+- **Accepted regression:** the proposition a `squash`-typed *argument* proves is
+  no longer published as a fact to the enclosing goal, so a `coerce_eq (_ by tac) x`
+  whose two types are only equal after normalisation leaves the solver unable to
+  relate them. State the equation once, with the same tactic, before the use:
+  `assert (a == b) by tac`. See the section above for the full diagnosis; this is
+  `CDDL.Pulse.Parse.MapGroup.impl_zero_copy_map_zero_or_more_aux`.
+- **Accepted regression:** when a definition's precondition is a predicate over
+  a scrutinee that the body then `match`es, the branch may no longer see what
+  the precondition says about the *branch's* pattern variables. The `squash`
+  hypothesis is in scope, but as an opaque `HasType` fact it does not drive the
+  solver to unfold the predicate at the refined scrutinee. Restate the
+  consequence with a `Lemma` taking the precondition and concluding what the
+  branch needs, called with `[@@inline_let] let _ = ... in` at the head of the
+  branch — the idiom EverParse already uses elsewhere. This is
+  `CDDL.Pulse.AST.Bundle.impl_bundle_wf_map_group_zero_or_more`, which needed
+  `typ_bounded ... key` and `... value` in its `WfMZeroOrMore` branch.
 - A top-level `let x = assert p` now has type `squash p`, so `p` becomes a fact
   for the rest of the module. Ascribe `: unit` where that is not wanted --
   in particular `let _ : unit = assert False`, which otherwise poisons
@@ -538,12 +616,11 @@ not at the end of a refactor.
 
 ## Costs
 
-- **Extraction ABI.** A `#(squash P)` binder on a *runtime* function extracts to
-  an extra `unit` argument (`let f (sq : unit) (x : Obj.t) = ...`). This is
-  accepted, and the blast radius turned out to be one golden file — most
-  `requires` clauses are on lemmas, which are erased entirely, or on binders that
-  were already refined. Teaching extraction to erase squash-typed implicit
-  binders would recover the ABI, and is left as a follow-up.
+- **Extraction ABI.** A `#(squash P)` binder carries no computational content,
+  so extraction drops it — both the binder and the matching argument — and the
+  ABI of a function with a `requires` clause is unchanged. The two sides have to
+  stay in agreement, which is where the extraction bug found by the EverParse
+  run came from; see above.
 - **Solver time.** 15 rlimit adjustments across ulib, Pulse, `examples` and
   `doc`. In aggregate there is no regression: a from-scratch verification of
   ulib's 319 modules takes 1m35s wall at `-j16`, or 13.2 CPU-minutes, against
@@ -578,9 +655,13 @@ is honest. Note that test `.checked` files live in `_cache` as well as
 `ci` already runs stage 3, `examples` and `doc` via `_test`, so it needed no
 change.
 
-Beyond `ci`, EverParse's `fstar2` branch verifies end to end against this
-compiler, after the downstream edits catalogued above (one `move_requires`
-removal, a handful of ascriptions and explicit implicit arguments, and four
-rlimit bumps). The A/B baseline build with EverParse's pinned toolchain reported
-zero errors, so that catalogue is the complete list of differences this PR makes
-to a large external codebase.
+Beyond `ci`, EverParse's `fstar2` branch verifies and extracts end to end
+against this compiler, from a clean tree, after the downstream edits catalogued
+above. The A/B baseline build with EverParse's pinned toolchain reported zero
+errors, so that catalogue is the complete list of differences this PR makes to a
+large external codebase: **30 files, +223/-100 lines**, made up of explicit
+implicit arguments and type ascriptions, `assert`s restating a fact the solver
+used to be handed, four small helper `Lemma`s, one `Ghost.hide`, and two rlimit
+bumps. Each of the five load-bearing workarounds was re-tested against the final
+compiler with the pristine source restored, and each is still required; none is
+masking a bug that has since been fixed.
