@@ -1091,7 +1091,7 @@ let matrix_mul_congruence #c #eq #m #n #p (add mul: CE.cm c eq)
     SP.foldm_snoc_equality add sp_xy sp_zw
   in matrix_equiv_from_proof eq (matrix_mul add mul mx my) (matrix_mul add mul mz mw) aux
  
-#push-options "--ifuel 0 --fuel 0"
+#push-options "--ifuel 0 --fuel 0 --z3rlimit_factor 4"
 let matrix_mul_is_left_distributive #c #eq #m #n #p (add: CE.cm c eq)
                                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
                                     (mx: matrix c m n) (my mz: matrix c n p)
@@ -1126,7 +1126,7 @@ let matrix_mul_is_left_distributive #c #eq #m #n #p (add: CE.cm c eq)
   in matrix_equiv_from_proof eq lhs rhs aux 
 #pop-options
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 #restart-solver
 let matrix_mul_is_right_distributive #c #eq #m #n #p (add: CE.cm c eq)
                                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
