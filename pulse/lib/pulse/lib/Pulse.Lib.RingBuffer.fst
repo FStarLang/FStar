@@ -17,7 +17,6 @@
 module Pulse.Lib.RingBuffer
 
 #lang-pulse
-#set-options "--z3rlimit_factor 4"
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Vec
 open FStar.SizeT

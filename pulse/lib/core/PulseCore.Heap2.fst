@@ -487,7 +487,7 @@ let lift_heap_pre_action_ghost
 
 #restart-solver
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+#push-options "--fuel 0 --ifuel 0"
 let lift_immut_ghost (m:bool) = if m then IMMUTABLE else ONLY_GHOST
 let lift_action_ghost
       (#immut:_)
