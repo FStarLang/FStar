@@ -2353,6 +2353,28 @@ let try_eta_expand_to_expected_typ env (cheap:bool) (e:term) (t1:typ) (t2:typ) (
     let bs =
       if n1 < n2
       then let pfx, sfx = List.splitAt n bs2 in
+           (* A trailing implicit [squash ?p] binder is the expected type's
+              precondition, and [?p] is still open exactly when the expected
+              type came from an application whose own precondition is an
+              implicit argument -- [FStar.Classical.move_requires]'s [#p], say.
+              Binding the sort as it stands would leave [?p] unconstrained and
+              the caller would report an unresolved implicit.
+
+              But [e] has no such binder at all, and in this encoding that is
+              precisely the statement that its precondition is [True].  So say
+              so: bind [squash True], and let the ordinary check between the
+              eta-expansion's type and [t2] be what solves [?p := True].  Only
+              an *open* precondition is rewritten; if the expected one is
+              already known, the binder must keep it, since [e] is then being
+              used at a stronger precondition, which is sound and must go on
+              working. *)
+           let sfx =
+             sfx |> List.map (fun b ->
+               match U.is_squash b.binder_bv.sort with
+               | Some p when Tm_uvar? (U.head_and_args_full p |> fst |> SS.compress).n ->
+                 { b with binder_bv = { b.binder_bv with sort = U.mk_squash U.t_true } }
+               | _ -> b)
+           in
            bs @ (sfx |> SS.subst_binders (U.rename_binders pfx bs))
       else bs
     in
