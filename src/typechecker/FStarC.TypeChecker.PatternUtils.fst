@@ -27,8 +27,6 @@ open FStarC.Ident
 open FStarC.Syntax.Subst
 open FStarC.TypeChecker.Common
 
-type lcomp_with_binder = option bv & lcomp
-
 module SS = FStarC.Syntax.Subst
 module S = FStarC.Syntax.Syntax
 module BU = FStarC.Util

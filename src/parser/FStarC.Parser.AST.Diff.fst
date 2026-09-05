@@ -291,8 +291,6 @@ and eq_term' (t1 t2:term')
       b1 = b2
     | Discrim l1, Discrim l2 ->
       Ident.lid_equals l1 l2
-    | Attributes ts1, Attributes ts2 ->
-      eq_list eq_term ts1 ts2
     | Antiquote t1, Antiquote t2 ->
       eq_term t1 t2
     | Quote (t1, k1), Quote (t2, k2) ->
@@ -550,10 +548,6 @@ and eq_effect_decl (t1 t2: effect_decl) : ML bool =
     eq_ident i1 i2 &&
     eq_list eq_binder bs1 bs2 &&
     eq_list eq_decl ds1 ds2
-  | RedefineEffect (i1, bs1, t1), RedefineEffect (i2, bs2, t2) ->
-    eq_ident i1 i2 &&
-    eq_list eq_binder bs1 bs2 &&
-    eq_term t1 t2
   | _ -> false
 
 and eq_decl (d1 d2:decl) : ML bool =

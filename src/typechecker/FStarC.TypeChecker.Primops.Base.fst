@@ -27,6 +27,23 @@ let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) : primitive
     interpretation_nbe             = f_nbe;
 }
 
+(* A precondition desugars to a trailing implicit binder of squash type (see
+   [ToSyntax.desugar_comp]), so an F* function that has one takes an argument
+   more than a primitive step naively written to implement it.  A primitive step
+   must have exactly the arity of the function it stands for, or the normalizer
+   fires it early and applies the leftover proof to the *result* -- turning
+   [FStar.Int8.mul 11y 11y ()] into the nonsensical [FStar.Int8.int_to_t 121 ()].
+   [with_extra_args n] adds [n] trailing arguments that the interpretation
+   ignores. *)
+let with_extra_args (n:int) (s:primitive_step) : primitive_step =
+  if n <= 0 then s
+  else
+    let a0 = s.arity in
+    { s with
+      arity = a0 + n;
+      interpretation = (fun psc cb us args -> s.interpretation psc cb us (fst (List.splitAt a0 args)));
+      interpretation_nbe = (fun cb us args -> s.interpretation_nbe cb us (fst (List.splitAt a0 args))); }
+
 let embed_simple {| EMB.embedding 'a |} (r:Range.t) (x:'a) : ML term =
     EMB.embed x r None EMB.id_norm_cb
 

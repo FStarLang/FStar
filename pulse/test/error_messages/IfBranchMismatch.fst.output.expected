@@ -10,7 +10,7 @@
   - In context:
       r: Pulse.Lib.Reference.ref Prims.int
       b: Prims.bool
-      _if_hyp: Prims.squash (Pulse.Lib.Core.rewrites_to_p b false)
+      Pulse.Lib.Core.rewrites_to_p b false
       _if_br: Prims.unit
   - See also IfBranchMismatch.fst(14,4-14,10)
 
@@ -26,6 +26,6 @@
   - In context:
       r: Pulse.Lib.Reference.ref Prims.int
       b: Prims.bool
-      _if_hyp: Prims.squash (Pulse.Lib.Core.rewrites_to_p b false)
+      Pulse.Lib.Core.rewrites_to_p b false
       __: Prims.unit
 

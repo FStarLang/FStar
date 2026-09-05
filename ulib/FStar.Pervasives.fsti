@@ -106,10 +106,12 @@ type eqtype_u = a:Type{hasEq a}
 
      Lemma post    (== Lemma (ensures post))
 
-   the squash argument on the postcondition allows to assume the
-   precondition for the *well-formedness* of the postcondition.
+   [Lemma (requires pre) (ensures post)] desugars to an arrow taking a
+   trailing implicit [squash pre] argument -- which is what lets [pre] be
+   assumed for the *well-formedness* of [post] -- and returning
+   [Tot (squash post)].
 *)
-effect Lemma (a: eqtype_u) = PURE a
+effect Lemma (a: Type) = Tot a
 
 (** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
@@ -188,7 +190,7 @@ let reveal_opaque (s: string) = norm_spec [delta_once [s]]
     identical to PURE, however the specs are given a partial
     correctness interpretation. Computations with the [DIV] effect may
     not terminate. *)
-assume effect DIV
+assume effect Div
 
 (** [PURE] computations can be silently promoted for use in a [DIV]
     context.  Note that there is deliberately no [GHOST ~> DIV] edge:
@@ -196,13 +198,13 @@ assume effect DIV
     informative type flow into extracted code.  A [GHOST] computation whose
     result type is non-informative is promoted to [PURE] first (see
     [Normalize.maybe_ghost_to_pure]) and reaches [DIV] that way. *)
-assume sub_effect PURE ~> DIV
+assume sub_effect Tot ~> Div
 
 (** [Div] is the Hoare-style counterpart of [DIV] *)
-effect Div (a: Type) = DIV a
+effect DIV (a: Type) = Div a
 
 (** [Dv] is the instance of [DIV] with trivial pre- and postconditions *)
-effect Dv (a: Type) = DIV a
+effect Dv (a: Type) = Div a
 
 
 (** We use the [EXT] effect to underspecify external system calls
@@ -229,7 +231,7 @@ type result (a: Type) =
 assume effect EXN
 
 (** We include divergence in exceptions. *)
-assume sub_effect DIV ~> EXN
+assume sub_effect Div ~> EXN
 
 (** A Hoare-style abbreviation for [EXN] *)
 effect Exn (a: Type) = EXN a

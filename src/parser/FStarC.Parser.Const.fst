@@ -278,6 +278,63 @@ let effect_DIV_lid   = psconst "DIV"
 let effect_Div_lid   = psconst "Div"
 let effect_Dv_lid    = psconst "Dv"
 
+(* Canonical classification of the primitive effects.
+
+   Each of the three primitive effects has several spellings: the
+   effect itself, and abbreviations of it.  Which one of them is the
+   *primitive* one is a property of Prims, not of the compiler, so every
+   place that needs to ask "is this the pure effect?" must go through
+   these predicates rather than comparing against one chosen spelling.
+   See [FStarC.Syntax.Util.is_pure_effect] and friends, which are the
+   usual entry points.
+
+   A computation type carries no specification any more, so these classes are
+   purely about the effect: [Pure]/[Ghost]/[Dv] are front-end abbreviations that
+   ToSyntax unfolds to [Tot]/[GTot]/[Div].  A test that really means "is this
+   literally a [Tot]?" is a different question, and has its own predicates
+   ([is_tot_lid] and friends) just below. *)
+let is_pure_effect_lid (l:lident) : bool =
+     lid_equals l effect_Tot_lid
+  || lid_equals l effect_PURE_lid
+  || lid_equals l effect_Pure_lid
+
+let is_ghost_effect_lid (l:lident) : bool =
+     lid_equals l effect_GTot_lid
+  || lid_equals l effect_GHOST_lid
+  || lid_equals l effect_Ghost_lid
+
+let is_div_effect_lid (l:lident) : bool =
+     lid_equals l effect_DIV_lid
+  || lid_equals l effect_Div_lid
+  || lid_equals l effect_Dv_lid
+
+(* The *primitive* spelling of each of the three built-in effects, i.e. the
+   one Prims actually declares (the others being abbreviations of it).
+
+   Code that *constructs* a computation type must use these rather than
+   naming a spelling directly, so that changing which spelling is primitive
+   is a change to these three definitions alone. *)
+let primitive_pure_lid  = effect_Tot_lid
+let primitive_ghost_lid = effect_GTot_lid
+let primitive_div_lid   = effect_Div_lid
+
+(* Is [l] the name of the pure (resp. ghost) *computation type*, i.e. exactly
+   [Tot] (resp. [GTot])?
+
+   This is the narrow question, and it is not the same as the class predicates
+   above: [Pure] and [PURE] are in the pure class but are not [Tot].  It is what
+   a match on the old [Total]/[GTotal] comp constructors used to ask, and it is
+   the right test wherever the *representation* matters -- printing, resugaring,
+   the reflection view, deciding whether an arrow's codomain can be flattened
+   into the spine.
+
+   Even though these are one-line comparisons today, they go through
+   [primitive_pure_lid]/[primitive_ghost_lid] so that the choice of which
+   spelling is primitive stays in one place. *)
+let is_tot_lid  (l:lident) : bool = lid_equals l primitive_pure_lid
+let is_gtot_lid (l:lident) : bool = lid_equals l primitive_ghost_lid
+let is_tot_or_gtot_lid (l:lident) : bool = is_tot_lid l || is_gtot_lid l
+
 (* The "All" monad and its associated symbols. *)
 
 let ef_base () =

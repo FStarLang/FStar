@@ -58,8 +58,14 @@ effect TacS (a:Type) = TAC a
 (* Always succeed, no effect *)
 effect TacRO (a:Type) = TAC a
 
-(* A variant that doesn't prove totality (nor type safety!) *)
-effect TacF (a:Type) = TAC a (requires False)
+(* A variant that doesn't prove totality (nor type safety!).
+
+   A precondition is an obligation on the *caller* now, and an effect
+   abbreviation has no arrow of its own to hang one on, so [TacF] can no longer
+   hand [False] to the body of a metaprogram.  Take the falsity as an argument
+   instead -- see [assume_safe] below, whose argument type is
+   [squash False -> Tac a]. *)
+effect TacF (a:Type) = TAC a
 
 val lift_div_tac_interleave_begin : unit
 #push-options "--admit_smt_queries true"
@@ -69,7 +75,7 @@ let lift_div_tac (a:Type) (f:unit -> Dv a) : tac_repr a
 #pop-options
 val lift_div_tac_interleave_end : unit
 
-sub_effect DIV ~> TAC = lift_div_tac
+sub_effect Div ~> TAC = lift_div_tac
 
 /// assert p by t
 
@@ -100,8 +106,13 @@ val by_tactic_seman (tau:unit -> Tac unit) (phi:prop)
 
 (* One can always bypass the well-formedness of metaprograms. It does
  * not matter as they are only run at typechecking time, and if they get
- * stuck, the compiler will simply raise an error. *)
-let assume_safe (#a:Type) (tau:unit -> TacF a) : Tac a = admit (); tau ()
+ * stuck, the compiler will simply raise an error.
+ *
+ * The argument's binder has type [squash False] rather than [unit]: that is how
+ * the metaprogram gets to assume it is unreachable, and how its body may be
+ * partial.  Write [assume_safe (fun _ -> ...)] and not [fun () -> ...]: a unit
+ * *pattern* forces the binder's type to [unit] and so erases the [False]. *)
+let assume_safe (#a:Type) (tau:squash False -> Tac a) : Tac a = admit (); tau ()
 
 private let tac a b = a -> Tac b
 private let tactic a = tac unit a

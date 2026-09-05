@@ -993,7 +993,7 @@ let fractionable_seq (#t: Type) (td: typedef t) (s: Seq.seq t) : prop =
 let mk_fraction_seq (#t: Type) (td: typedef t) (s: Seq.seq t) (p: perm) : Ghost (Seq.seq t)
   (requires (fractionable_seq td s))
   (ensures (fun _ -> True))
-= Seq.init_ghost (Seq.length s) (fun i -> mk_fraction td (Seq.index s i) p)
+= Seq.init_ghost #t (Seq.length s) (fun i -> mk_fraction td (Seq.index s i) p)
 
 let mk_fraction_seq_full (#t: Type0) (td: typedef t) (x: Seq.seq t) : Lemma
   (requires (fractionable_seq td x))

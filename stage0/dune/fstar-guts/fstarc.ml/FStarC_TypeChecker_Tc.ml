@@ -81,6 +81,8 @@ let set_hint_correlator (env : FStarC_TypeChecker_Env.env)
     FStarC_TypeChecker_Env.modules = (env.FStarC_TypeChecker_Env.modules);
     FStarC_TypeChecker_Env.expected_typ =
       (env.FStarC_TypeChecker_Env.expected_typ);
+    FStarC_TypeChecker_Env.expected_post =
+      (env.FStarC_TypeChecker_Env.expected_post);
     FStarC_TypeChecker_Env.sigtab = (env.FStarC_TypeChecker_Env.sigtab);
     FStarC_TypeChecker_Env.attrtab = (env.FStarC_TypeChecker_Env.attrtab);
     FStarC_TypeChecker_Env.instantiate_imp =
@@ -951,6 +953,8 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.t)
                   (env1.FStarC_TypeChecker_Env.modules);
                 FStarC_TypeChecker_Env.expected_typ =
                   (env1.FStarC_TypeChecker_Env.expected_typ);
+                FStarC_TypeChecker_Env.expected_post =
+                  (env1.FStarC_TypeChecker_Env.expected_post);
                 FStarC_TypeChecker_Env.sigtab =
                   (env1.FStarC_TypeChecker_Env.sigtab);
                 FStarC_TypeChecker_Env.attrtab =
@@ -1141,6 +1145,8 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.t)
                                     (env'.FStarC_TypeChecker_Env.modules);
                                   FStarC_TypeChecker_Env.expected_typ =
                                     (env'.FStarC_TypeChecker_Env.expected_typ);
+                                  FStarC_TypeChecker_Env.expected_post =
+                                    (env'.FStarC_TypeChecker_Env.expected_post);
                                   FStarC_TypeChecker_Env.sigtab =
                                     (env'.FStarC_TypeChecker_Env.sigtab);
                                   FStarC_TypeChecker_Env.attrtab =
@@ -1339,6 +1345,8 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.t)
                            (env'1.FStarC_TypeChecker_Env.modules);
                          FStarC_TypeChecker_Env.expected_typ =
                            (env'1.FStarC_TypeChecker_Env.expected_typ);
+                         FStarC_TypeChecker_Env.expected_post =
+                           (env'1.FStarC_TypeChecker_Env.expected_post);
                          FStarC_TypeChecker_Env.sigtab =
                            (env'1.FStarC_TypeChecker_Env.sigtab);
                          FStarC_TypeChecker_Env.attrtab =
@@ -1513,6 +1521,8 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.t)
                             (env'1.FStarC_TypeChecker_Env.modules);
                           FStarC_TypeChecker_Env.expected_typ =
                             (env'1.FStarC_TypeChecker_Env.expected_typ);
+                          FStarC_TypeChecker_Env.expected_post =
+                            (env'1.FStarC_TypeChecker_Env.expected_post);
                           FStarC_TypeChecker_Env.sigtab =
                             (env'1.FStarC_TypeChecker_Env.sigtab);
                           FStarC_TypeChecker_Env.attrtab =
@@ -1799,6 +1809,8 @@ let process_pragma (env : FStarC_TypeChecker_Env.env)
                     (env.FStarC_TypeChecker_Env.modules);
                   FStarC_TypeChecker_Env.expected_typ =
                     (env.FStarC_TypeChecker_Env.expected_typ);
+                  FStarC_TypeChecker_Env.expected_post =
+                    (env.FStarC_TypeChecker_Env.expected_post);
                   FStarC_TypeChecker_Env.sigtab =
                     (env.FStarC_TypeChecker_Env.sigtab);
                   FStarC_TypeChecker_Env.attrtab =
@@ -1971,6 +1983,8 @@ let process_pragma (env : FStarC_TypeChecker_Env.env)
                     (env'.FStarC_TypeChecker_Env.modules);
                   FStarC_TypeChecker_Env.expected_typ =
                     (env'.FStarC_TypeChecker_Env.expected_typ);
+                  FStarC_TypeChecker_Env.expected_post =
+                    (env'.FStarC_TypeChecker_Env.expected_post);
                   FStarC_TypeChecker_Env.sigtab =
                     (env'.FStarC_TypeChecker_Env.sigtab);
                   FStarC_TypeChecker_Env.attrtab =
@@ -2087,6 +2101,8 @@ let process_pragma (env : FStarC_TypeChecker_Env.env)
                           (env'.FStarC_TypeChecker_Env.modules);
                         FStarC_TypeChecker_Env.expected_typ =
                           (env'.FStarC_TypeChecker_Env.expected_typ);
+                        FStarC_TypeChecker_Env.expected_post =
+                          (env'.FStarC_TypeChecker_Env.expected_post);
                         FStarC_TypeChecker_Env.sigtab =
                           (env'.FStarC_TypeChecker_Env.sigtab);
                         FStarC_TypeChecker_Env.attrtab =
@@ -2280,6 +2296,8 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
                    (env.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.expected_post =
+                   (env.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -2531,6 +2549,8 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
                                   (env1.FStarC_TypeChecker_Env.modules);
                                 FStarC_TypeChecker_Env.expected_typ =
                                   (env1.FStarC_TypeChecker_Env.expected_typ);
+                                FStarC_TypeChecker_Env.expected_post =
+                                  (env1.FStarC_TypeChecker_Env.expected_post);
                                 FStarC_TypeChecker_Env.sigtab =
                                   (env1.FStarC_TypeChecker_Env.sigtab);
                                 FStarC_TypeChecker_Env.attrtab =
@@ -2729,6 +2749,8 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
                                   (env.FStarC_TypeChecker_Env.modules);
                                 FStarC_TypeChecker_Env.expected_typ =
                                   (env.FStarC_TypeChecker_Env.expected_typ);
+                                FStarC_TypeChecker_Env.expected_post =
+                                  (env.FStarC_TypeChecker_Env.expected_post);
                                 FStarC_TypeChecker_Env.sigtab =
                                   (env.FStarC_TypeChecker_Env.sigtab);
                                 FStarC_TypeChecker_Env.attrtab =
@@ -2950,6 +2972,8 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
                                 (env.FStarC_TypeChecker_Env.modules);
                               FStarC_TypeChecker_Env.expected_typ =
                                 (env.FStarC_TypeChecker_Env.expected_typ);
+                              FStarC_TypeChecker_Env.expected_post =
+                                (env.FStarC_TypeChecker_Env.expected_post);
                               FStarC_TypeChecker_Env.sigtab =
                                 (env.FStarC_TypeChecker_Env.sigtab);
                               FStarC_TypeChecker_Env.attrtab =
@@ -3182,6 +3206,8 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
                               (env1.FStarC_TypeChecker_Env.modules);
                             FStarC_TypeChecker_Env.expected_typ =
                               (env1.FStarC_TypeChecker_Env.expected_typ);
+                            FStarC_TypeChecker_Env.expected_post =
+                              (env1.FStarC_TypeChecker_Env.expected_post);
                             FStarC_TypeChecker_Env.sigtab =
                               (env1.FStarC_TypeChecker_Env.sigtab);
                             FStarC_TypeChecker_Env.attrtab =
@@ -3371,6 +3397,8 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
                               (env1.FStarC_TypeChecker_Env.modules);
                             FStarC_TypeChecker_Env.expected_typ =
                               (env1.FStarC_TypeChecker_Env.expected_typ);
+                            FStarC_TypeChecker_Env.expected_post =
+                              (env1.FStarC_TypeChecker_Env.expected_post);
                             FStarC_TypeChecker_Env.sigtab =
                               (env1.FStarC_TypeChecker_Env.sigtab);
                             FStarC_TypeChecker_Env.attrtab =
@@ -3669,6 +3697,8 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
                     (env.FStarC_TypeChecker_Env.modules);
                   FStarC_TypeChecker_Env.expected_typ =
                     (env.FStarC_TypeChecker_Env.expected_typ);
+                  FStarC_TypeChecker_Env.expected_post =
+                    (env.FStarC_TypeChecker_Env.expected_post);
                   FStarC_TypeChecker_Env.sigtab =
                     (env.FStarC_TypeChecker_Env.sigtab);
                   FStarC_TypeChecker_Env.attrtab =
@@ -3812,6 +3842,8 @@ let tc_decl (env : FStarC_TypeChecker_Env.env)
            (env1.FStarC_TypeChecker_Env.modules);
          FStarC_TypeChecker_Env.expected_typ =
            (env1.FStarC_TypeChecker_Env.expected_typ);
+         FStarC_TypeChecker_Env.expected_post =
+           (env1.FStarC_TypeChecker_Env.expected_post);
          FStarC_TypeChecker_Env.sigtab = (env1.FStarC_TypeChecker_Env.sigtab);
          FStarC_TypeChecker_Env.attrtab =
            (env1.FStarC_TypeChecker_Env.attrtab);
@@ -3946,6 +3978,8 @@ let tc_decl (env : FStarC_TypeChecker_Env.env)
                    (env2.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env2.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.expected_post =
+                   (env2.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env2.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -4071,6 +4105,8 @@ let tc_decl (env : FStarC_TypeChecker_Env.env)
                      (env3.FStarC_TypeChecker_Env.modules);
                    FStarC_TypeChecker_Env.expected_typ =
                      (env3.FStarC_TypeChecker_Env.expected_typ);
+                   FStarC_TypeChecker_Env.expected_post =
+                     (env3.FStarC_TypeChecker_Env.expected_post);
                    FStarC_TypeChecker_Env.sigtab =
                      (env3.FStarC_TypeChecker_Env.sigtab);
                    FStarC_TypeChecker_Env.attrtab =
@@ -4244,6 +4280,8 @@ let add_sigelt_to_env (env : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env1.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.expected_post =
+                   (env1.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env1.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -4361,6 +4399,8 @@ let add_sigelt_to_env (env : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env1.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.expected_post =
+                   (env1.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env1.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -4478,6 +4518,8 @@ let add_sigelt_to_env (env : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env1.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.expected_post =
+                   (env1.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env1.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -4595,6 +4637,8 @@ let add_sigelt_to_env (env : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env1.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.expected_post =
+                   (env1.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env1.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -5039,9 +5083,16 @@ let mark_karamel_private (env : FStarC_TypeChecker_Env.env)
   (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt=
   let lids = FStarC_Syntax_Util.lids_of_sigelt se in
   let uu___ =
-    if
-      (Prims.not (FStarC_TypeChecker_Env.has_iface env)) ||
-        (match lids with | [] -> true | uu___1 -> false)
+    let uu___1 =
+      let uu___2 =
+        let uu___3 = FStarC_Options_Ext.enabled "no_krml_private" in
+        if uu___3
+        then true
+        else Prims.not (FStarC_TypeChecker_Env.has_iface env) in
+      if uu___2
+      then true
+      else (match lids with | [] -> true | uu___3 -> false) in
+    if uu___1
     then true
     else
       FStarC_Util.for_some (FStarC_TypeChecker_Env.declared_in_iface env)
@@ -5100,57 +5151,64 @@ let tc_decls (env : FStarC_TypeChecker_Env.env)
               if uu___6
               then FStarC_TypeChecker_Env.toggle_id_info env1 true
               else ());
-             (let uu___6 =
+             (let uu___7 = FStarC_Options_Ext.enabled "freshen" in
+              if uu___7
+              then
+                (env1.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh
+                  (FStar_Pervasives_Native.Some
+                     (env1.FStarC_TypeChecker_Env.proof_ns))
+              else ());
+             (let uu___7 =
                 if
                   (se.FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_spliced
                 then ([], [], env1)
                 else tick_off_iface_todo env1 se in
-              match uu___6 with
+              match uu___7 with
               | (iface_prefix, iface_matched, env2) ->
                   (FStarC_List.iter
                      (fun se1 ->
                         (env2.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.encode_sig
                           env2 se1) iface_prefix;
-                   (let uu___8 =
-                      let uu___9 =
-                        let uu___10 =
+                   (let uu___9 =
+                      let uu___10 =
+                        let uu___11 =
                           FStarC_Syntax_Print.sigelt_to_string_short se in
                         FStarC_Format.fmt2
                           "While typechecking the %stop-level declaration \226\128\152%s\226\128\153"
                           (if
                              (se.FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_spliced
                            then "(spliced) "
-                           else "") uu___10 in
-                      FStarC_Errors.with_ctx uu___9
-                        (fun uu___10 -> tc_decl env2 se) in
-                    match uu___8 with
+                           else "") uu___11 in
+                      FStarC_Errors.with_ctx uu___10
+                        (fun uu___11 -> tc_decl env2 se) in
+                    match uu___9 with
                     | (ses', ses_elaborated, env3) ->
                         let ses'1 =
                           FStarC_List.map
                             (fun se1 ->
-                               (let uu___10 = FStarC_Effect.op_Bang dbg_UF in
-                                if uu___10
+                               (let uu___11 = FStarC_Effect.op_Bang dbg_UF in
+                                if uu___11
                                 then
-                                  let uu___11 =
+                                  let uu___12 =
                                     FStarC_Class_Show.show
                                       FStarC_Syntax_Print.showable_sigelt se1 in
                                   FStarC_Format.print1
-                                    "About to elim vars from %s\n" uu___11
+                                    "About to elim vars from %s\n" uu___12
                                 else ());
                                FStarC_TypeChecker_Normalize.elim_uvars env3
                                  se1) ses' in
                         let ses_elaborated1 =
                           FStarC_List.map
                             (fun se1 ->
-                               (let uu___10 = FStarC_Effect.op_Bang dbg_UF in
-                                if uu___10
+                               (let uu___11 = FStarC_Effect.op_Bang dbg_UF in
+                                if uu___11
                                 then
-                                  let uu___11 =
+                                  let uu___12 =
                                     FStarC_Class_Show.show
                                       FStarC_Syntax_Print.showable_sigelt se1 in
                                   FStarC_Format.print1
                                     "About to elim vars from (elaborated) %s\n"
-                                    uu___11
+                                    uu___12
                                 else ());
                                FStarC_TypeChecker_Normalize.elim_uvars env3
                                  se1) ses_elaborated in
@@ -5167,26 +5225,26 @@ let tc_decls (env : FStarC_TypeChecker_Env.env)
                               (fun env5 se1 ->
                                  add_sigelt_to_env env5 se1 false) env3 ses'3 in
                           FStarC_Syntax_Unionfind.reset ();
-                          (let uu___12 =
-                             let uu___13 =
-                               let uu___14 = FStarC_Options.log_types () in
-                               if uu___14
+                          (let uu___13 =
+                             let uu___14 =
+                               let uu___15 = FStarC_Options.log_types () in
+                               if uu___15
                                then true
                                else FStarC_Debug.medium () in
-                             if uu___13
+                             if uu___14
                              then true
                              else FStarC_Effect.op_Bang dbg_LogTypes in
-                           if uu___12
+                           if uu___13
                            then
-                             let uu___13 =
+                             let uu___14 =
                                FStarC_Class_Show.show
                                  (FStarC_Class_Show.show_list
                                     FStarC_Syntax_Print.showable_sigelt)
                                  ses'3 in
-                             FStarC_Format.print1 "Checked: %s\n" uu___13
+                             FStarC_Format.print1 "Checked: %s\n" uu___14
                            else ());
                           FStarC_Profiling.profile
-                            (fun uu___13 ->
+                            (fun uu___14 ->
                                FStarC_List.iter
                                  (fun se1 ->
                                     (env4.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.encode_sig
@@ -5201,14 +5259,14 @@ let tc_decls (env : FStarC_TypeChecker_Env.env)
                                  FStarC_Syntax_Util.lids_of_sigelt iface_se in
                                FStarC_List.iter
                                  (fun impl ->
-                                    let uu___14 =
+                                    let uu___15 =
                                       FStarC_Util.for_some
                                         (fun l ->
                                            FStarC_Util.for_some
                                              (FStarC_Ident.lid_equals l) lids)
                                         (FStarC_Syntax_Util.lids_of_sigelt
                                            impl) in
-                                    if uu___14
+                                    if uu___15
                                     then
                                       check_subsumes_iface_val env4 iface_se
                                         impl
@@ -5298,6 +5356,8 @@ let tc_partial_modul (env : FStarC_TypeChecker_Env.env)
         FStarC_TypeChecker_Env.modules = (env.FStarC_TypeChecker_Env.modules);
         FStarC_TypeChecker_Env.expected_typ =
           (env.FStarC_TypeChecker_Env.expected_typ);
+        FStarC_TypeChecker_Env.expected_post =
+          (env.FStarC_TypeChecker_Env.expected_post);
         FStarC_TypeChecker_Env.sigtab = (env.FStarC_TypeChecker_Env.sigtab);
         FStarC_TypeChecker_Env.attrtab = (env.FStarC_TypeChecker_Env.attrtab);
         FStarC_TypeChecker_Env.instantiate_imp =
@@ -5440,6 +5500,8 @@ let tc_partial_modul (env : FStarC_TypeChecker_Env.env)
                  (env6.FStarC_TypeChecker_Env.modules);
                FStarC_TypeChecker_Env.expected_typ =
                  (env6.FStarC_TypeChecker_Env.expected_typ);
+               FStarC_TypeChecker_Env.expected_post =
+                 (env6.FStarC_TypeChecker_Env.expected_post);
                FStarC_TypeChecker_Env.sigtab =
                  (env6.FStarC_TypeChecker_Env.sigtab);
                FStarC_TypeChecker_Env.attrtab =
@@ -5801,6 +5863,8 @@ let check_module (env0 : FStarC_TypeChecker_Env.env)
        FStarC_TypeChecker_Env.modules = (env0.FStarC_TypeChecker_Env.modules);
        FStarC_TypeChecker_Env.expected_typ =
          (env0.FStarC_TypeChecker_Env.expected_typ);
+       FStarC_TypeChecker_Env.expected_post =
+         (env0.FStarC_TypeChecker_Env.expected_post);
        FStarC_TypeChecker_Env.sigtab = (env0.FStarC_TypeChecker_Env.sigtab);
        FStarC_TypeChecker_Env.attrtab = (env0.FStarC_TypeChecker_Env.attrtab);
        FStarC_TypeChecker_Env.instantiate_imp =
@@ -5905,6 +5969,8 @@ let check_module (env0 : FStarC_TypeChecker_Env.env)
              (env1.FStarC_TypeChecker_Env.modules);
            FStarC_TypeChecker_Env.expected_typ =
              (env1.FStarC_TypeChecker_Env.expected_typ);
+           FStarC_TypeChecker_Env.expected_post =
+             (env1.FStarC_TypeChecker_Env.expected_post);
            FStarC_TypeChecker_Env.sigtab =
              (env1.FStarC_TypeChecker_Env.sigtab);
            FStarC_TypeChecker_Env.attrtab =

@@ -96,30 +96,43 @@ val ml_comp (t:term) (r:range) : ML comp
 
 val comp_effect_name (c:comp) : lident
 
+(* The effect name as the user wrote it; see [comp_typ.source_effect_name]. *)
+val comp_source_effect_name (c:comp) : lident
+
+(* How a computation that merges two others -- [bind], a lift -- decides which
+   written effect name the result inherits.  See the definition. *)
+val combine_source_effect_name (eff:lident) (s1:lident) (s2:lident) : lident
+
 val comp_flags (c:comp) : list cflag
 
 val comp_eff_name_and_res (c:comp) : lident & typ
 
-(* The precondition of a computation, as a formula. *)
-val comp_pre (c:comp) : term
-
-(* The postcondition of a computation, abstracted over its result:
-   a term of type [comp_result c -> prop]. *)
-val comp_post (c:comp) : ML term
-
-
-val is_named_tot (c:comp) : bool
+val comp_to_comp_typ (c:comp) : comp_typ
 
 val un_uinst (t:term) : ML term
 val is_t_true (t:term) : ML bool
+val is_t_false (t:term) : ML bool
 val is_trivial_post (p:term) : ML bool
-(* A computation type has a trivial specification when both its pre- and
-   postcondition are [True]. *)
-val has_trivial_spec (c:comp) : ML bool
+
+(* Is [c] literally a [Tot] (resp. [GTot])?  The narrow, syntactic question the
+   old [Total]/[GTotal] comp constructors used to answer by pattern matching.
+   For the weaker "is this total?", use [is_total_comp]/[is_tot_or_gtot_comp]. *)
+val is_named_tot (c:comp) : ML bool
+
+val is_named_gtot (c:comp) : ML bool
+
+val is_named_tot_or_gtot (c:comp) : ML bool
 
 val is_total_comp (c:comp) : ML bool
 
 val is_tot_or_gtot_comp (c:comp) : ML bool
+
+(* Exactly what [mk_Total]/[mk_GTotal] build: a [Tot] or [GTot] with nothing
+   else to say. *)
+val is_bare_tot_or_gtot_comp (c:comp) : ML bool
+
+(* Exactly what [mk_Total] builds. *)
+val is_bare_total_comp (c:comp) : ML bool
 
 val is_pure_effect (l:lident) : bool
 
@@ -171,6 +184,7 @@ val unrefine : term -> ML term
 
 val is_uvar : term -> ML bool
 
+val is_exactly_unit : term -> ML bool
 val is_unit : term -> ML bool
 
 val is_eqtype_no_unrefine : term -> ML bool
@@ -411,13 +425,15 @@ val unb2t (e:term) : ML (option term)
 val mk_conj_simp (t1 t2 : term) : ML term
 val mk_imp_simp (t1 t2 : term) : ML term
 val mk_disj_simp (t1 t2 : term) : ML term
+(* [mk_has_type us t x t'] is [x <: t'], for [x : t].  [us] are the universes of
+   [t] and of [t'], in that order. *)
+val mk_has_type (us:universes) (t x t' : term) : ML term
+
 (* The logical content of the typing hypothesis [v : t]: the refinement formula
    when [t] is a refinement (or a [squash]), and [True] otherwise.  Used to keep
    that information around when a binder of type [t] is eliminated. *)
-val mk_has_type (t x t' : term) : ML term
 val refinement_hypothesis (t:typ) (v:term) : ML term
 val apply_post (p:term) (e:term) : ML term
-val mk_conj_post (t:typ) (p1:term) (p2:term) : ML term
 
 val teq : term
 val mk_untyped_eq2 (e1 e2 : term) : ML term
@@ -470,6 +486,17 @@ val mk_nonempty (u:universe) (t:term) : ML term
 val un_squash (t:term) : ML (option term)
 
 val is_squash (t:term) : ML (option term)
+
+(* [refine_with_post t p] represents the postcondition [p] as a property of
+   the result type [t]: it returns [x:t{p x}], or [squash (p ())] when [t] is
+   [unit] and [p] does not mention its argument.  This is how a source-level
+   [ensures] clause is represented from desugaring onwards. *)
+val refine_with_post (t:typ) (p:term) : ML typ
+
+(* [post_of_result_typ t] is the partial inverse of [refine_with_post]: it
+   recovers the postcondition [fun x -> Q x] from a result type [x:t{Q x}] or
+   [squash Q], and returns the trivial postcondition otherwise. *)
+val post_of_result_typ (t:typ) : ML term
 
 val mk_b2t (t: term) : ML term
 val mk_t2b (t: term) : ML term
@@ -574,6 +601,10 @@ val is_smt_lemma (t:term) : ML bool
 
 val list_elements (e:term) : ML (option (list term))
 
+(* [split_squash_binders bs] splits [bs] into its real binders and the
+   precondition carried by a trailing implicit binder of squash type, if any. *)
+val split_squash_binders (bs:binders) : ML (binders & term)
+
 val destruct_lemma_with_smt_patterns (t:term)
 : ML (option (binders & term & term & list (list arg)))
 //binders, pre, post, patterns
@@ -588,7 +619,6 @@ val triggers_of_smt_lemma (t:term)
 has some other shape just apply it to `()`. *)
 val unthunk (t:term) : ML term
 
-val unthunk_lemma_post (t:term) : ML term
 
 val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list universe))
 : ML term
@@ -605,6 +635,9 @@ val eff_decl_of_new_effect (se:sigelt) : ML eff_decl
 val get_eff_repr    (ed:eff_decl) : option tscheme
 val get_return_repr (ed:eff_decl) : option tscheme
 val get_bind_repr   (ed:eff_decl) : option tscheme
+
+(* [u_a]. Type u#r, where [repr u#u_a a : Type u#r]. *)
+val get_repr_universe (ed:eff_decl) : option tscheme
 val apply_eff_combinators (f:tscheme -> ML tscheme) (combs:eff_combinators) : ML eff_combinators
 
 val aqual_is_erasable (aq:aqual) : ML bool

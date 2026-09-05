@@ -225,7 +225,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
           U.comp_flags c |> BU.prefix_until (function DECREASES _ -> true | _ -> false)
       in
       let fallback () =
-        let bs, c = U.arrow_formals_comp tarr in
+        let bs, c = U.arrow_formals_comp_strict tarr in
         match get_decreases c with
         | Some (pfx, DECREASES d, sfx) ->
            let c = Env.comp_set_flags env c (pfx @ sfx) in
@@ -239,11 +239,11 @@ let extract_let_rec_annotation env (lb:letbinding) :
       | Some annot ->
         let bs, c =
           match n_opt with
-          | Some n -> N.get_n_binders env n tarr
+          | Some n -> N.get_n_binders_no_unrefine env n tarr
           | None -> un_arrow tarr
         in
         let n_bs = List.length bs in
-        let bs', c' = N.get_n_binders env n_bs annot in
+        let bs', c' = N.get_n_binders_no_unrefine env n_bs annot in
         if List.length bs' <> n_bs
         then raise_error rng Errors.Fatal_LetRecArgumentMismatch [
                  text "Arity mismatch on let rec annotation";
@@ -341,7 +341,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
                 let n_bs = List.length bs in
                 let tarr, lbtyp, recheck =
                   reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt (Some n_bs) in
-                let bs', c = N.get_n_binders env n_bs tarr in
+                let bs', c = N.get_n_binders_no_unrefine env n_bs tarr in
                 if List.length bs' <> n_bs
                 then failwith "Impossible"
                 else let subst = U.rename_binders bs' bs in
@@ -493,41 +493,13 @@ let extract_let_rec_annotation env (lb:letbinding) :
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
 
-let comp_univ_opt c : ML _ =
-    match c.n with
-    | Total _ | GTotal _ -> None
-    | Comp c ->
-      match c.comp_univs with
-      | [] -> None
-      | hd::_ -> Some hd
-
-let lcomp_univ_opt lc : ML _ = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt c, g)
-
-let mk_comp_l mname u_result result pre post flags : ML _ =
-  mk_Comp ({ comp_univs=[u_result];
-             effect_name=mname;
+let mk_comp_l mname result flags : ML _ =
+  mk_Comp ({ effect_name=mname;
              result_typ=result;
-             comp_pre=pre;
-             comp_post=post;
-             flags=flags})
+             flags=flags;
+             source_effect_name=mname})
 
 let mk_comp md : ML _ = mk_comp_l md.mname
-
-(* [forall x1 ... xn. phi]; used to close specifications over pattern variables *)
-let close_formula env (bvs:list bv) (phi:term) : ML term =
-  List.fold_right (fun x phi -> U.mk_forall (env.universe_of env x.sort) x phi) bvs phi
-
-(* Close a postcondition over [bvs].  A postcondition is a *strongest*
-   postcondition, so the pattern variables are closed existentially. *)
-let close_post env (bvs:list bv) (t:typ) (post:term) : ML term =
-  if U.is_trivial_post post then post
-  else let x = S.new_bv None t in
-       U.abs [S.mk_binder x]
-             (List.fold_right
-                (fun (y:bv) phi -> U.mk_exists (env.universe_of env y.sort) y phi)
-                bvs
-                (U.apply_post post (S.bv_to_name x)))
-             (Some S.post_rc)
 
 let label reason r f : ML term =
     mk (Tm_meta {tm=f; meta=Meta_labeled(reason, r, false)}) f.pos
@@ -556,22 +528,26 @@ let lift_comp env (c:comp_typ) (m:lident) : ML (comp & guard_t) =
            ^/^ text "~>" ^/^ pp m ^/^ text "since its type" ^/^ pp c.result_typ
            ^/^ text "is informative"
        ];
-  S.mk_Comp ({ c with effect_name = m; flags = [] }), Env.trivial_guard
+  (* [source_effect_name] describes how the computation was *written*; once the
+     effect label changes it no longer does. *)
+  S.mk_Comp ({ c with effect_name = m; flags = [];
+                      source_effect_name =
+                        if lid_equals c.effect_name m then c.source_effect_name else m }),
+  Env.trivial_guard
 
-let join_effects env l1_in l2_in : ML _ =
-  let l1, l2 = Env.norm_eff_name env l1_in, Env.norm_eff_name env l2_in in
+let join_effects env l1 l2 : ML _ =
   match Env.join_opt env l1 l2 with
   | Some m -> m
   | None ->
     raise_error env Errors.Fatal_EffectsCannotBeComposed [
-        text "Effects" ^/^ pp l1_in ^/^ text "and" ^/^ pp l2_in ^/^ text "cannot be composed"
+        text "Effects" ^/^ pp l1 ^/^ text "and" ^/^ pp l2 ^/^ text "cannot be composed"
     ]
 
-let join_lcomp env c1 c2 : ML _ =
-  if TcComm.is_total_lcomp c1
-  && TcComm.is_total_lcomp c2
-  then C.effect_Tot_lid
-  else join_effects env c1.eff_name c2.eff_name
+let join_comp env c1 c2 : ML _ =
+  if U.is_total_comp c1
+  && U.is_total_comp c2
+  then C.primitive_pure_lid
+  else join_effects env (U.comp_effect_name c1) (U.comp_effect_name c2)
 
 // GM, 2023/01/30: This is here to make c2 well-scoped in lift_comps_sep_guards
 // below. Is it needed to push a null_binder, as below, when b is None? Not for
@@ -590,9 +566,9 @@ let maybe_push (env : Env.env) (b : option bv) : ML Env.env =
  *)
 let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
 : ML (lident & comp & comp & guard_t & guard_t) =
-  let c1 = Env.unfold_effect_abbrev env c1 in
+  let c1 = U.comp_to_comp_typ c1 in
   let env2 = maybe_push env b in
-  let c2 = Env.unfold_effect_abbrev env2 c2 in
+  let c2 = U.comp_to_comp_typ c2 in
   match Env.join_opt env c1.effect_name c2.effect_name with
   | Some m ->
     let c1, g1 = lift_comp env c1 m in
@@ -613,72 +589,45 @@ let lift_comps env c1 c2 (b:option bv) (for_bind:bool)
     for_bind in
   l, c1, c2, Env.conj_guard g1 g2
 
-let is_pure_effect env l : ML _ =
-  let l = norm_eff_name env l in
-  lid_equals l C.effect_PURE_lid
+(* A computation type carries no logical content any more, so there is nothing
+   to quantify: only the flags, which describe *this* occurrence, have to be
+   dropped. *)
+let drop_comp_flags env bvs (c:comp) : ML _ =
+    def_check_scoped c.pos "drop_comp_flags" (Env.push_bvs env bvs) c;
+    match c.n with
+    | Comp ct ->
+      S.mk_Comp ({ ct with flags = [] })
 
-let is_ghost_effect env l : ML _ =
-  let l = norm_eff_name env l in
-  lid_equals l C.effect_GHOST_lid
-
-let is_pure_or_ghost_effect env l : ML _ =
-  let l = norm_eff_name env l in
-  lid_equals l C.effect_PURE_lid
-  || (lid_equals l C.effect_GHOST_lid)
-
-(* Closing a computation over the pattern variables [bvs]: universally quantify
-   its precondition and postcondition. *)
-let close_wp_comp env bvs (c:comp) : ML _ =
-    def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
-    if U.is_ml_comp c then c
-    else
-      let env_bvs = Env.push_bvs env bvs in
-      match c.n with
-      | Total _
-      | GTotal _ -> c
-      | Comp ct ->
-        S.mk_Comp ({ ct with
-          comp_pre  = close_formula env_bvs bvs ct.comp_pre;
-          comp_post = close_post env_bvs bvs ct.result_typ ct.comp_post;
-          flags     = ct.flags |> List.filter (function MLEFFECT -> true | _ -> false) })
-
-let close_wp_lcomp env bvs (lc:lcomp) : ML lcomp =
+let close_comp_and_guard env bvs (c:comp) (g:guard_t) : ML (comp & guard_t) =
   let bs = bvs |> List.map S.mk_binder in
-  lc |>
-  TcComm.apply_lcomp
-    (close_wp_comp env bvs)
-    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
+  drop_comp_flags env bvs c,
+  g |> Env.close_guard env bs |> close_guard_implicits env false bs
 
-let close_layered_lcomp_with_combinator env bvs lc : ML _ = close_wp_lcomp env bvs lc
+let close_layered_comp_with_combinator env bvs c g : ML _ = close_comp_and_guard env bvs c g
 
 (*
  * Closing of computations via substitution
  *)
-let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) : ML _ =
+let close_layered_comp_with_substitutions env bvs tms (c:comp) (g:guard_t) : ML (comp & guard_t) =
   let bs = bvs |> List.map S.mk_binder in
   let substs = List.map2 (fun bv tm ->
     NT (bv, tm)
   ) bvs tms in
-  lc |>
-  TcComm.apply_lcomp
-    (SS.subst_comp substs)
-    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
-
-let should_not_inline_lc (lc:lcomp) : ML _ =
-    false
+  SS.subst_comp substs c,
+  g |> Env.close_guard env bs |> close_guard_implicits env false bs
 
 (* should_return env (Some e) lc:
  * We will "return" e, adding an equality to the VC, if all of the following conditions hold
  * (a) e is a pure or ghost term
- * (b) Its return type, lc.res_typ, is not a sub-singleton (unit, squash, etc), if lc.res_typ is an arrow, then we check the comp type of the arrow
+ * (b) Its return type, (U.comp_result lc), is not a sub-singleton (unit, squash, etc), if (U.comp_result lc) is an arrow, then we check the comp type of the arrow
  *     An exception is made for reifiable effects -- they are useful even if they return unit -- except when it is an layered effect, we never return layered effects
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
- * (d) It's not a let rec, as determined by the absence of the SHOULD_NOT_INLINE flag---see issue #1362. Would be better to just encode inner let recs to the SMT solver properly
+ * (d) It does not mention a name bound by the [let rec] being checked, since such a name cannot appear in a type that outlives it
  *)
 let should_return env eopt lc : ML _ =
   let lc_is_unit_or_effectful =
-    //if lc.res_typ is not an arrow, arrow_formals_comp returns Tot lc.res_typ
-    let c = lc.res_typ |> U.arrow_formals_comp |> snd in
+    //if (U.comp_result lc) is not an arrow, arrow_formals_comp returns Tot (U.comp_result lc)
+    let c = (U.comp_result lc) |> U.arrow_formals_comp |> snd in
     if U.is_pure_or_ghost_comp c
     then c |> U.comp_result |> N.unfold_whnf env |> U.is_unit
     else true
@@ -687,25 +636,25 @@ let should_return env eopt lc : ML _ =
   match eopt with
   | None -> false //no term to return
   | Some e ->
-    TcComm.is_pure_or_ghost_lcomp lc           &&  //condition (a), (see above)
+    U.is_pure_or_ghost_comp lc           &&  //condition (a), (see above)
     not lc_is_unit_or_effectful                &&  //condition (b)
     (let head, _ = U.head_and_args_full e in
      match (U.un_uinst head).n with
      | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv))  //condition (c)
-     | _ -> true)                               &&
-   not (should_not_inline_lc lc)                   //condition (d)
+     | _ -> true)                                                  &&
+    not (Env.mentions_rec_name env e)      //condition (d), see [Env.mentions_rec_name]
 
 (*
  * Sequential composition in the simplified effect system.
  *
- * Given [c1 : M t1 (requires pre1) (ensures post1)] and, under [x:t1],
- * [c2 : N t2 (requires pre2) (ensures post2)], the composite computation is
+ * A computation type is now nothing but an effect label and a result type, so
+ * sequencing is just the join of the two labels.  The logical content that used
+ * to be composed here lives elsewhere:
  *
- *   M|N t2 (requires pre1 /\ (forall x. post1 x ==> pre2))
- *          (ensures fun y -> forall x. post1 x ==> post2 y)
- *
- * The postcondition of [c1] is thus *assumed* while checking the continuation,
- * which is exactly the intended reading of the specification.
+ *  - [c1]'s postcondition is a refinement on [ct1.result_typ], hence in scope as
+ *    a hypothesis for [c2] through the binder [x];
+ *  - [c2]'s obligations live in a [guard_t], which the caller ([bind]) closes
+ *    over [x] and weakens with [x == e1].
  *)
 let discard_specs = Env.discard_specs
 
@@ -713,184 +662,69 @@ let mk_bind env
   (c1:comp)
   (b:option bv)
   (c2:comp)
-  (flags:list cflag)
   (r1:Range.t) : ML (comp & guard_t) =
 
   let env2 = maybe_push env b in
-  (* Composing specifications is not cheap: every bind costs a normalization
-     plus a traversal of both specifications.  When nobody will look at the
-     result, keep only the effect label and the result type.  (Compare
-     [strengthen_comp], which has always short-circuited in phase 1.) *)
-  if discard_specs env
-  then
-    let m, _c1, c2, g_lift = lift_comps env c1 c2 b true in
-    let ct2 = Env.comp_to_comp_typ env2 c2 in
-    let u2 =
-      match ct2.comp_univs with
-      | u::_ -> u
-      | [] -> env.universe_of env2 ct2.result_typ in
-    S.mk_triv_comp [u2] m ct2.result_typ flags, g_lift
-  else begin
   def_check_scoped r1 "mk_bind.in.c1" env c1;
   def_check_scoped r1 "mk_bind.in.c2" env2 c2;
-  let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
-  let ct1 = Env.comp_to_comp_typ env c1 in
-  let ct2 = Env.comp_to_comp_typ env2 c2 in
-
-  let u1 =
-    match ct1.comp_univs with
-    | u::_ -> u
-    | [] -> env.universe_of env ct1.result_typ in
-  let u2 =
-    match ct2.comp_univs with
-    | u::_ -> u
-    | [] -> env.universe_of env2 ct2.result_typ in
-
-  let x =
-    match b with
-    | Some x -> { x with sort = ct1.result_typ }
-    | None -> S.new_bv None ct1.result_typ in
-  (* [x] may well not occur in the composed specification, in which case the
-     quantifier below is dropped; conjoining the logical content of its type
-     keeps a refinement (or a [squash]) from being silently lost. *)
-  let post1_x =
-    let t1 = N.normalize_refinement N.whnf_steps env ct1.result_typ in
-    U.mk_conj_simp (Env.type_hypothesis env t1 (S.bv_to_name x))
-                   (U.apply_post ct1.comp_post (S.bv_to_name x)) in
-
-  (* When [post1 x] pins [x] down to a term, as in the [fun x -> x == e]
-     postcondition that [return_value] produces, we apply the one-point rule
-     and substitute instead of quantifying.  Without this every intermediate
-     computation would contribute an [exists] to the verification condition. *)
-  let one_point : option (term & term) = TcComm.one_point_defn x post1_x in
-
-  (* [forall x. post1 x ==> phi], dropping the quantifier when it is vacuous.
-     This is the weakest-precondition direction, used for [pre]. *)
-  let quantify (phi:term) : ML term =
-    if U.is_t_true phi then phi
-    else
-      match one_point with
-      | Some (v, rest) -> SS.subst [NT (x, v)] (U.mk_imp_simp rest phi)
-      | None ->
-        let body = U.mk_imp_simp post1_x phi in
-        if mem x (Free.names body)
-        then U.mk_forall u1 x body
-        else body
-  in
-
-  (* [exists x. post1 x /\ phi], the strongest-postcondition direction.
-     [c1] did produce a value of type [ct1.result_typ], so dropping the
-     existential when [x] does not occur is sound. *)
-  let compose (phi:term) : ML term =
-    match one_point with
-    | Some (v, rest) -> SS.subst [NT (x, v)] (U.mk_conj_simp rest phi)
-    | None ->
-      let body = U.mk_conj_simp post1_x phi in
-      if mem x (Free.names body)
-      then U.mk_exists u1 x body
-      else body
-  in
-
-  let pre = U.mk_conj_simp ct1.comp_pre (quantify ct2.comp_pre) in
-  let post =
-    let y = S.new_bv None ct2.result_typ in
-    let body = compose (U.apply_post ct2.comp_post (S.bv_to_name y)) in
-    if U.is_t_true body
-    then S.trivial_post ct2.result_typ
-    else U.abs [S.mk_binder y] body (Some S.post_rc)
-  in
-  let res = mk_comp_l m u2 ct2.result_typ pre post flags in
-  def_check_scoped r1 "mk_bind.out" env res;
+  let m, _c1, c2, g_lift = lift_comps env c1 c2 b true in
+  let ct2 = U.comp_to_comp_typ c2 in
+  let res = S.mk_Comp ({ effect_name = m; result_typ = ct2.result_typ; flags = [];
+                         source_effect_name =
+                           U.combine_source_effect_name m
+                             (U.comp_source_effect_name c1)
+                             (U.comp_source_effect_name c2) }) in
+  (* [res] takes its result type from [c2], so it is scoped in [env2]: it may
+     still mention [b].  Getting [b] out of it is the caller's job -- see
+     [close_x] in [bind_maybe_capture]. *)
+  def_check_scoped r1 "mk_bind.out" env2 res;
   res, g_lift
-  end
 
-(* [strengthen_comp env r c f] asserts [f] before running [c] *)
-let strengthen_comp env (reason:option (unit -> ML (list Pprint.document))) (c:comp) (f:formula) flags : ML (comp & guard_t) =
-    if env.phase1
-    then c, Env.trivial_guard
+(* [strengthen_comp env r c f] asserts [f] before running [c].  A computation
+   type carries no specification, so the assertion becomes an obligation on the
+   returned guard; [label_opt] attaches [reason] so the eventual error message
+   points here. *)
+let formula_as_labeled_guard env (reason:option (unit -> ML (list Pprint.document))) (f:formula) : ML guard_t =
+    if env.phase1 || U.is_t_true f
+    then Env.trivial_guard
     else
       let r = Env.get_range env in
-      let f = label_opt env reason r f in
-      let assert_c =
-        mk_comp_l C.effect_PURE_lid S.U_zero S.t_unit f (S.trivial_post S.t_unit) [] in
-      mk_bind env assert_c None c flags r
+      Env.guard_of_guard_formula (NonTrivial (label_opt env reason r f))
 
 (*
- * Return a value in eff_lid: the postcondition records the returned value.
- * Note that the *result type* is left alone: we never refine it.
+ * Return a value in eff_lid.  There is no specification to record the returned
+ * value in: [bind] relates a let-bound variable to its definition itself (see
+ * the [x_eq_e] equation there), and everything else about the result is carried
+ * by its type.
  *)
-let return_value env eff_lid u_t_opt t v : ML (comp & guard_t) =
-  let u =
-    match u_t_opt with
-    | None -> env.universe_of env t
-    | Some u -> u in
-  let x = S.new_bv None t in
-  let post =
-    U.abs [S.mk_binder x] (U.mk_eq2 u t (S.bv_to_name x) v) (Some S.post_rc) in
-  mk_comp_l (Env.norm_eff_name env eff_lid) u t S.trivial_pre post [],
+let return_value env eff_lid t v : ML (comp & guard_t) =
+  S.mk_Comp ({ effect_name = eff_lid; result_typ = t; flags = [];
+               source_effect_name = eff_lid }),
   Env.trivial_guard
 
-let weaken_flags flags : ML _ =
-    flags |> List.filter (function MLEFFECT -> true | _ -> false)
-
-(* [weaken_comp env c f] assumes [f] before running [c] *)
+(* [weaken_comp env c f] used to assume [f] before running [c].  A computation
+   type carries no specification any more, so there is nothing to weaken: the
+   hypothesis belongs on whatever *guard* carries [c]'s obligations, and it is
+   the caller's job to put it there with [TcComm.weaken_guard_formula]. *)
 let weaken_comp env (c:comp) (formula:term) : ML (comp & guard_t) =
-  if U.is_ml_comp c
-  then c, Env.trivial_guard
-  else
-    let r = Env.get_range env in
-    let assume_c =
-      mk_comp_l C.effect_PURE_lid S.U_zero S.t_unit
-                S.trivial_pre
-                (U.abs [S.null_binder S.t_unit] formula (Some S.post_rc))
-                [] in
-    mk_bind env assume_c None c (weaken_flags (U.comp_flags c)) r
+  c, Env.trivial_guard
 
-let weaken_precondition env lc (f:guard_formula) : ML lcomp =
-  let weaken () =
-      let c, g_c = TcComm.lcomp_comp lc in
-            match f with
-           | Trivial -> c, g_c
-           | NonTrivial f ->
-             let c, g_w = weaken_comp env c f in
-             c, Env.conj_guard g_c g_w
-  in
-  TcComm.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
+let simplify_and_label_guard
+      (reason:option (unit -> ML (list Pprint.document)))
+      env (g0:guard_t)
+: ML guard_t 
+= if Env.is_trivial_guard_formula g0
+  then g0
+  else if env.phase1 || Options.admit_smt_queries ()
+  then {g0 with guard_f=Trivial}
+  else (
+      let g0 = Rel.simplify_guard env g0 in
+      match guard_form g0 with
+      | Trivial -> g0
+      | NonTrivial f ->
+        {g0 with guard_f=NonTrivial (label_opt env reason (Env.get_range env) f)}
+  )
 
-let strengthen_precondition
-            (reason:option (unit -> ML (list Pprint.document)))
-            env
-            (e_for_debugging_only:term)
-            (lc:lcomp)
-            (g0:guard_t)
-    : ML (lcomp & guard_t) =
-    if Env.is_trivial_guard_formula g0
-    then lc, g0
-    else let flags = [] in
-         let strengthen () =
-            let c, g_c = TcComm.lcomp_comp lc in
-            if Options.admit_smt_queries ()
-            then c, g_c
-            else let g0 = Rel.simplify_guard env g0 in
-                 match guard_form g0 with
-                 | Trivial -> c, g_c
-                 | NonTrivial f ->
-                   if Debug.extreme ()
-                   then Format.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
-                     (N.term_to_string env e_for_debugging_only)
-                     (N.term_to_string env f);
-                   let c, g_s = strengthen_comp env reason c f flags in
-                   c, Env.conj_guard g_c g_s
-         in
-       TcComm.mk_lcomp (norm_eff_name env lc.eff_name)
-                       lc.res_typ
-                       flags
-                       strengthen,
-       {g0 with guard_f=Trivial}
-
-
-let lcomp_has_trivial_postcondition (lc:lcomp) : ML _ =
-    TcComm.is_tot_or_gtot_lcomp lc
 
 (*
  * This is used in bind, when c1 is a Tot (x:unit{phi})
@@ -901,297 +735,778 @@ let lcomp_has_trivial_postcondition (lc:lcomp) : ML _ =
  *
  * We should make wp-effects also same as the layered effects
  *)
-let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp)
-: ML (comp & guard_t & bool)
-= let t = N.normalize_refinement N.whnf_steps env t in
+(* Returns the computation with [x] substituted away, the hypothesis captured
+   from [x]'s type ([True] when there is none), and whether [c] is now closed
+   over [x].  The hypothesis is for the caller to add to whatever guard carries
+   [c]'s obligations. *)
+(* A type with at most one inhabitant: [unit] and any refinement of it,
+   including [squash p].  An equation [x == e] at such a type is vacuous, and
+   recording it would drag [e] -- a whole [calc] chain, say -- into the context
+   of every obligation that follows. *)
+let rec is_unit_like (t:term) : ML bool =
+  let t = SS.compress t in
+  if U.is_unit t then true
+  else match t.n with
+       | Tm_refine {b} -> is_unit_like b.sort
+       | _ -> Some? (U.un_squash t)
+
+(* How a binder's type relates to [unit].  A binder at a [unit]-shaped type has
+   [()] as its only possible value, so it can be substituted away rather than
+   quantified over -- but a refinement of [unit] still says something, and that
+   something has to be recovered before the binder disappears.
+
+   Every consumer of this classification used to inline its own copy; they are
+   now all phrased against [unit_shape_of]. *)
+type unit_shape =
+  | Not_unit
+  | Bare_unit
+  (* [_:unit{phi}], with [()] already substituted for the refinement's own
+     binder, so [phi] is closed and can be assumed as it stands. *)
+  | Refined_unit of term
+
+let unit_shape_of (env:env) (t:term) : ML unit_shape =
+  let is_unit_fv (t:term) =
+    match (SS.compress t).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv C.unit_lid
+    | _ -> false
+  in
+  let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
-  | Tm_refine {b; phi} ->
-    let is_unit =
-      match b.sort.n with
-      | Tm_fvar fv -> S.fv_eq_lid fv C.unit_lid
-      | _ -> false in
-    if is_unit then
-      let b, phi = SS.open_term_bv b phi in
-      let phi = SS.subst [NT (b, S.unit_const)] phi in
-      (* [x : unit{phi}], so its only possible value is [()].  Substituting it
-         away is what actually *closes* [c] over [x]; the caller relies on the
-         [true] below to skip the universal closure. *)
-      let c = SS.subst_comp [NT (x, S.unit_const)] c in
-      let c, g = weaken_comp env c phi in
-      c, g, true
-    else c, Env.trivial_guard, false
-  | Tm_fvar fv when S.fv_eq_lid fv C.unit_lid ->
+  | Tm_refine {b; phi} when is_unit_fv b.sort ->
+    let b, phi = SS.open_term_bv b phi in
+    Refined_unit (SS.subst [NT (b, S.unit_const)] phi)
+  | _ -> if is_unit_fv t then Bare_unit else Not_unit
+
+let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp)
+: ML (comp & term & bool)
+= match unit_shape_of env t with
+  | Refined_unit phi ->
+    (* [x : unit{phi}], so its only possible value is [()].  Substituting it
+       away is what actually *closes* [c] over [x]; the caller relies on the
+       [true] below to skip the universal closure.  [phi] would be lost with
+       it, so hand it back to be assumed. *)
+    SS.subst_comp [NT (x, S.unit_const)] c, phi, true
+  | Bare_unit ->
     (* Likewise for an unrefined [unit] binder: [()] is its only value, so the
        binder carries no information and need not be quantified over. *)
-    SS.subst_comp [NT (x, S.unit_const)] c, Env.trivial_guard, true
-  | _ -> c, Env.trivial_guard, false
+    SS.subst_comp [NT (x, S.unit_const)] c, U.t_true, true
+  | Not_unit -> c, U.t_true, false
 
-let optimize_bind_vc () : ML _ = Options.Ext.enabled "optimize_let_vc"
+(* A term whose head is a data constructor, or a literal, gets its type from the
+   constructor's own typing axiom in the SMT encoding.  Restating that type
+   would add nothing, and would cost a great deal: an application nested [n]
+   deep would contribute [n] hypotheses about terms of size O(n), i.e. work
+   quadratic in the size of the term. *)
+let has_evident_type (env:env) (e:term) : ML bool =
+  let hd, _ = U.head_and_args_full e in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv -> Env.is_datacon env (S.lid_of_fv fv)
+  | Tm_constant _ -> true
+  | _ -> false
 
-(* [optimize_let_vc] keeps a let-bound variable opaque in the verification
-   condition, turning [phi[e/x]] into [forall x. x == e ==> phi], which the SMT
-   encoding emits as a [declare-fun]/[assert] pair.  Substituting instead would
-   make VCs blow up exponentially (see issue #3800), so it only happens for
-   non-let bindings (intermediate values) and for [let unfold]. *)
-let bind
+(* The equation relating a let-bound variable to its definition, for the guard
+   that carries the continuation's obligations.  [t] is passed explicitly
+   because the callers do not agree on whether it is [x.sort] or [c1]'s result
+   type; the two coincide, but only [close_with_type_of_x] makes it so. *)
+let mk_binder_eqn (env:env) (t:typ) (x:bv) (e:term) : ML term =
+  if is_unit_like t then U.t_true
+  else U.mk_eq2 (env.universe_of env t) t e (bv_to_name x)
+
+(* ---------------------------------------------------------------------------
+   The result type of a bind.
+
+   [bind] eliminates a binder [x] that stands for [e1]'s value.  Two things have
+   to happen to it, and they are easy to confuse because they look alike:
+
+     - [x] must disappear from the composite's *result type*, which is read in a
+       context where [x] is not bound.  That is what this section does, by
+       substituting [e1] when it may legally appear in a type, and by
+       existentially closing [x] otherwise.
+
+     - [x] is deliberately *kept* in the composite's *guard*, where it is related
+       to [e1] by an equation [x == e1] under a [forall x].  That is what
+       [simplify_bind] and [bind_general] do below, and it is what keeps
+       verification conditions small (see issue #3800).
+
+   The two are complementary, not alternatives: types are closed by
+   substitution, formulas by quantification.
+   --------------------------------------------------------------------------- *)
+
+(* Should [e1] be substituted for [x] in [c2]'s result type?  Only if [x] is
+   actually there, and only if [e1] is a term that may appear in a type at all:
+   an effectful computation need not produce the same value twice, and a term
+   mentioning a [let rec]-bound name would not survive the [let rec].  When the
+   substitution is refused, [eliminate_binder_from_typ] closes [x]
+   existentially instead, which for [_ == x] yields [exists x. _ == x] and so
+   simplifies away -- the fact is dropped, but no unusable name was ever put in
+   a type to have to drop it later. *)
+let bind_result_subst (env:Env.env) (e1opt:option term) (lc1:comp) (b:option bv) (lc2:comp)
+: ML (list subst_elt)
+= match b, e1opt with
+  | Some x, Some e1 when mem x (Free.names (U.comp_result lc2))
+                      && U.is_pure_or_ghost_comp lc1
+                      && not (Env.mentions_rec_name env e1) -> [NT (x, e1)]
+  | _ -> []
+
+(* [check_no_escape] normalizes with the same steps [TcTerm] uses to
+   expose the head of a type. *)
+let norm_escape env t : ML term =
+  N.normalize [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm; Env.Exclude Env.Zeta] env t
+
+let check_no_escape (cause : escape_cause)
+    (env : Env.env)
+    (fvs:list bv)
+    (kt : term)
+: ML (term & guard_t)
+=
+  Errors.with_ctx "While checking for escaped variables" (fun () ->
+    let fail (x:bv) =
+      let open FStarC.Pprint in
+      let msg =
+        match cause with
+        | Escapes_application head -> [
+            text "Bound variable" ^/^ fquotes (pp x)
+              ^/^ text "escapes because of impure applications in the type of"
+              ^/^ fquotes (N.term_to_doc env head);
+            text "Add explicit let-bindings to avoid this";
+          ]
+        | _ -> [
+           text "Bound variable" ^/^ fquotes (pp x)
+             ^/^ text "would escape in the type of this letbinding";
+           text "Add a type annotation that does not mention it";
+        ]
+      in
+      raise_error env Errors.Fatal_EscapedBoundVar msg
+    in
+    match fvs with
+    | [] -> kt, mzero
+    | _ ->
+    let rec aux try_norm t : ML _ =
+      let t = if try_norm then norm_escape env t else t in
+      let fvs' = Free.names t in
+      match List.tryFind (fun x -> mem x fvs') fvs with
+      | None -> t, mzero
+      | Some x ->
+        (* some variable x seems to escape, try normalizing if we haven't *)
+        if not try_norm
+        then aux true (norm_escape env t)
+        else
+          (* A postcondition is a refinement of the result type now, so a
+             result type routinely mentions the binders of its arrow (e.g.
+             [assume_result_eq_pure_term_in_m] states [_ == f x y]).  That is
+             fine for the arrow itself, but at an application whose arguments
+             had to be let-bound the binders go out of scope.  Weakening the
+             type is always sound -- we simply claim less about the result --
+             and is far better than failing.  Whatever cannot be salvaged is
+             discarded conjunct by conjunct: [normalize_refinement] flattens
+             nested refinements into a single conjunction, so discarding the
+             whole refinement would also throw away the user's own
+             annotation. *)
+          (* The escaping variables of [t], in scope order.  [fvs] is
+             accumulated innermost-first, so it has to be reversed for the
+             binders of a quantifier to be well-scoped: a later binder's sort
+             may mention an earlier one. *)
+          let escaping_vars (t:term) : ML (list bv) =
+            let ns = Free.names t in
+            fvs |> List.rev |> List.filter (fun x -> mem x ns)
+          in
+          let escapes t = Cons? (escaping_vars t) in
+          let rec conjuncts (phi:term) : ML (list term) =
+            let hd, args = U.head_and_args_full phi in
+            match (U.un_uinst hd).n, args with
+            | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv C.and_lid ->
+              conjuncts a @ conjuncts b
+            | _ -> [phi]
+          in
+          (* Rather than drop what mentions a variable going out of scope,
+             quantify that variable existentially.  The variable itself
+             witnesses the existential, so this is still a weakening, but the
+             fact gets a chance to survive: simplifying applies the one-point
+             rule, which eliminates the quantifier when the formula pins the
+             variable down.  So [_ == x] with [x : nat] is not lost but
+             recovered as [_ >= 0], and [_ == f x /\ x == 3] as [_ == f 3].
+
+             The whole formula is closed at once, not one conjunct at a time:
+             with [y] going out of scope, [x == y /\ y == z] is recovered as
+             [x == z], which quantifying the conjuncts separately would reduce
+             to nothing.
+
+             The binders' sorts are normalized because the one-point rule
+             restates the eliminated binder's typing hypothesis, which it
+             cannot see through a type abbreviation -- that is what turns
+             [x : nat] into [_ >= 0].  Closing is iterated because a sort may
+             itself mention an escaping variable, which then has to be bound
+             further out. *)
+          let close_escaping (phi:term) : ML term =
+            match escaping_vars phi with
+            | [] -> phi
+            | _ ->
+              let binder_of (x:bv) : ML binder =
+                S.mk_binder { x with sort = N.normalize_refinement N.whnf_steps env x.sort }
+              in
+              let rec close (fuel:nat) (phi:term) : ML term =
+                match escaping_vars phi with
+                | [] -> phi
+                | xs ->
+                  if fuel = 0 then phi
+                  else close (fuel - 1)
+                             (U.close_exists_no_univs (List.map binder_of xs) phi)
+              in
+              N.normalize [Env.Beta; Env.Simplify; Env.Primops] env
+                          (close (List.length fvs) phi)
+          in
+          let rec weaken (t:term) : ML term =
+            let t0 = N.normalize_refinement N.whnf_steps env t in
+            match t0.n with
+            | Tm_refine {b=x; phi} when escapes phi ->
+              let sort = weaken x.sort in
+              let y, phi = SS.open_term_bv x phi in
+              let cs = conjuncts (close_escaping phi) in
+              (* Closing does not always reach every variable -- the fuel above
+                 is a bound, not a guarantee -- so drop whatever is still free. *)
+              let cs = cs |> List.filter (fun c -> not (U.is_t_true c) && not (escapes c)) in
+              if Nil? cs then sort
+              else U.refine {y with sort} (U.mk_conj_l cs)
+            | _ -> t
+          in
+          let tw = weaken t in
+          if None? (List.tryFind (fun x -> mem x (Free.names tw)) fvs)
+          then tw, mzero
+          else
+          (* if it still appears, try using the unifier to equate 't' to a uvar
+          created in the "short" env, which cannot mention any of the fvs. If any exception
+          is raised, we just report that 'x' escapes. Since we're calling try_teq with
+          SMT disabled it should not log an error. *)
+          try
+            let env_extended = Env.push_bvs env fvs in
+            let s, _, g0 = new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) false in
+            match Rel.try_teq false env_extended t s with
+            | Some g ->
+              let g = Rel.solve_deferred_constraints env_extended (g ++ g0) in
+              s, g
+            | _ -> fail x
+          with
+            | _ -> fail x
+    in
+    aux false kt
+  )
+
+(* Get [x] out of a type when it cannot be substituted away.  The fact that [x]
+   records is still worth keeping -- it is what relates the result to the
+   computation that produced it -- so bind [x] existentially, which is exactly
+   what a postcondition of the composite says.  The result never mentions [x]:
+   if no sound weakening can eliminate it, this raises rather than return a
+   type that is ill-scoped at the point it is about to be used. *)
+let eliminate_binder_from_typ (env:Env.env) (x:bv) (e1opt:option term) (lc1:comp) (t:typ)
+: ML (typ & guard_t)
+= if not (mem x (Free.names t)) then t, mzero
+  else
+  (* Only normalize when [t] is not already a refinement: [normalize_refinement]
+     also whnf's the *base* type, which delta-unfolds type abbreviations (e.g.
+     [tac unit] into [ref proofstate -> ML unit]).  The unfolded head cannot be
+     re-folded later, and unification against a flex application [?m ?a] then
+     has no first-order solution. *)
+  let tn =
+    match (SS.compress t).n with
+    (* Flatten, so that a refinement nested in the *sort* of the outer one
+       (which is how successive binds stack their facts) is merged into a
+       single [z:base{...}]: the existential below can only be introduced
+       when [x] does not occur in [z]'s sort. *)
+    | Tm_refine _ -> U.flatten_refinement (SS.compress t)
+    | _ -> N.normalize_refinement N.whnf_steps (Env.push_bv env x) t
+  in
+  match tn.n with
+  | Tm_refine {b=z; phi} when not (mem x (Free.names z.sort)) ->
+    let z, phi = SS.open_term_bv z phi in
+    let u_x = env.universe_of env x.sort in
+    U.refine z (U.mk_exists u_x x phi), mzero
+  | _ ->
+    (* [x] occurs in the type itself, not only in a refinement of it, so
+       there is nothing to existentially close. *)
+    match e1opt with
+    | Some e1 when U.is_pure_or_ghost_comp lc1
+                && not (Env.mentions_rec_name env e1) ->
+      (* Substitution is exact for a pure or ghost [e1], and is what
+         [bind_result_subst] would already have done had [x] been reachable
+         without normalizing. *)
+      SS.subst [NT (x, e1)] t, mzero
+    | _ ->
+      (* [e1] is effectful (or absent), so it must not be put in a type: it may
+         diverge, and two occurrences need not produce the same value.  This is
+         the one place that could be tempted to substitute it anyway, and doing
+         so would silently manufacture a type mentioning an impure application.
+         [check_no_escape] is the authority on getting a variable out of a type,
+         so defer to it: it normalizes first, seeing through [squash] and other
+         abbreviations that [U.unrefine] cannot, closes what it can
+         existentially, drops the rest conjunct by conjunct, and reports an
+         error if [x] is irreducibly in the type proper.  Whatever it returns
+         does not mention [x]. *)
+      check_no_escape Escapes_let env [x] t
+
+(* An intermediate value -- an application argument, say -- has no binder left
+   in the verification condition, so a refinement on its type is simply lost.
+   A computation type has no postcondition to restate it in any more, so it is
+   restated as a refinement of the composite's result type: that is precisely
+   what a postcondition is now.  Explicitly let-bound variables are exempt --
+   their binder survives, so nothing is lost.
+
+   Note that [normalize_refinement] flattens nested refinements, so what is
+   restated for a type like [ordset a f{...}] is the whole chain, down to
+   [sorted], [total_order] and [hasEq].  That is sound and often useful, but
+   it is also trigger noise on top of the typing axiom the solver already has:
+   [FStar.OrdSet.liat_direct] needs a hint because of it.
+
+   [capture] is [false] for a caller that is deliberately coarsening [lc1]'s
+   result type -- [weaken_result_typ] -- since restating the precision it is in
+   the business of dropping is at best noise, and at worst unsound scoping.
+   [substituted] says whether [e1] was substituted into the result type, i.e.
+   whether [bind_result_subst] fired. *)
+let captured_typing
+      (env:Env.env) (capture:bool) (is_let_binding:bool) (substituted:bool)
+      (lc1:comp) (e1opt:option term) (b:option bv)
+: ML term
+= match b, e1opt with
+  (* [e1] must be a term that can appear in a type: an effectful computation
+     need not produce the same value twice, so restating [(U.comp_result lc1)]
+     about [e1] would be unsound -- and the elaborated [e1] does not even
+     typecheck in a type position.  Nothing is lost: [x]'s sort *is*
+     [(U.comp_result lc1)], so what [e1] established about its result travels
+     with the binder that [eliminate_binder_from_typ] quantifies. *)
+  | Some _, Some e1 when capture && not (discard_specs env)
+                      && U.is_pure_or_ghost_comp lc1
+                      && not (Env.mentions_rec_name env e1) ->
+    let has_evident_type = has_evident_type env e1 in
+    (* Restating the type of a term that is not itself a computation buys
+       nothing and costs a great deal.  A variable already has its type in the
+       environment, so a refinement on it is known to the solver anyway; and a
+       unification variable standing for an implicit argument -- the image of a
+       precondition, above all (see [ToSyntax.desugar_comp]) -- carries an
+       obligation that is discharged right here, not a fact about a result.
+       Both would otherwise be restated at every enclosing bind, so a call with
+       a precondition and a [decreases] refinement on its last argument would
+       drag both into the result type of everything that contains it. *)
+    let uninformative =
+      match (SS.compress e1).n with
+      | Tm_name _ | Tm_bvar _ | Tm_uvar _ -> true
+      | _ -> false in
+    let t1 = N.normalize_refinement N.whnf_steps env (U.comp_result lc1) in
+    (* A [unit] refinement -- a lemma call in statement position -- is the one
+       case that must be captured even for an explicit [let]: the binder does
+       not survive either way, since [maybe_capture_unit_refinement]
+       substitutes [()] for it.  Its postcondition is the *only* thing the
+       computation contributes, so if it is not restated here it is visible to
+       the continuation and to nothing else.  That is what makes
+       [(l1 (); l2 ()); l3 ()] lose [l1]'s postcondition -- the left composite
+       would have type [squash p2], with [p1] buried in a guard hypothesis
+       that dies with the continuation.
+
+       [has_evident_type] still rules the term out, though: a constant's
+       refined type is imposed by the context, not computed by it.  A [squash]
+       *argument* is exactly that -- [Mkmonoid op one ()] would otherwise give
+       the record the type [_:monoid a{<the properties field>}], and an
+       explicit annotation would no longer be its type. *)
+    begin match unit_shape_of env t1 with
+    | Refined_unit phi when not uninformative && not has_evident_type -> phi
+    | _ ->
+      (* only a refinement carries information that the binder's elimination
+         would lose *)
+      let is_refinement = Tm_refine? t1.n in
+      (* [x] need not occur in [lc2]'s result type for the fact to be worth
+         keeping: it is about [e1], which is a closed term here, and it is the
+         only trace the intermediate computation leaves.  [hd :: f tl] is the
+         motivating case -- the cons cell's type says nothing about [f tl], so
+         without this the callee's specification is simply gone by the time
+         the enclosing definition is checked against its declared type.
+         In that position only a *call* is worth restating, though: any other
+         term gets its refined type from the parameter it is being passed to,
+         not from anything it computes, so restating it merely republishes the
+         callee's own signature.  [SemiLattice true (fun x y -> x || y)] is
+         the case that matters -- capturing the lambda's field refinement
+         would give the constructor application the type
+         [_:semilattice{commutative (fun x y -> x || y) /\ ...}], and an
+         annotation on it would no longer be its type. *)
+      let computed = Tm_app? (SS.compress e1).n in
+      if is_let_binding || has_evident_type || uninformative
+      || not is_refinement
+      || (not substituted && not computed)
+      then U.t_true
+      else Env.type_hypothesis env t1 e1
+    end
+  | _ -> U.t_true
+
+(* Restating a conjunct that the continuation's result type already carries
+   costs a duplicated hypothesis at every enclosing bind, so a long statement
+   sequence would accumulate the same facts quadratically.  Drop those. *)
+let drop_redundant_conjuncts (env:Env.env) (already_says:typ) (phi:term) : ML term =
+  if U.is_t_true phi then phi
+  else
+    let rec conjuncts (phi:term) : ML (list term) =
+      let hd, args = U.head_and_args_full phi in
+      match (U.un_uinst hd).n, args with
+      | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv C.and_lid ->
+        conjuncts a @ conjuncts b
+      | _ -> [phi]
+    in
+    let already =
+      match (N.normalize_refinement N.whnf_steps env already_says).n with
+      | Tm_refine {b; phi} ->
+        let b, phi = SS.open_term_bv b phi in
+        conjuncts phi
+      | _ -> []
+    in
+    let keep, _ =
+      List.fold_left
+        (fun (acc, seen) c ->
+          if List.existsb (U.term_eq c) seen
+          then acc, seen
+          else acc @ [c], c :: seen)
+        ([], already)
+        (conjuncts phi)
+    in
+    U.mk_conj_l keep
+
+(* The result type of the composite.
+
+   This is the *sole* authority on a bind's result type.  [simplify_bind] and
+   [bind_general] below build a comp from [c2]: they may leave [x] free in its
+   result type, or substitute [()] for it, and neither knows about
+   [captured_typing].  [bind_maybe_capture] therefore always overwrites what
+   they produce with what this returns.  When there is nothing to say, this
+   returns [lc2]'s result type unchanged, so the overwrite is a no-op. *)
+let composite_result_typ
+      (capture:bool) (is_let_binding:bool)
+      (env:Env.env) (e1opt:option term) (lc1:comp) (b:option bv) (lc2:comp)
+: ML (typ & guard_t)
+= let subst_x = bind_result_subst env e1opt lc1 b lc2 in
+  let phi = captured_typing env capture is_let_binding (Cons? subst_x) lc1 e1opt b in
+  (* [g_esc] is [mzero] except on [eliminate_binder_from_typ]'s last resort,
+     where [check_no_escape] may equate the type to a fresh uvar. *)
+  let res_typ_base, g_esc =
+    let t = SS.subst subst_x (U.comp_result lc2) in
+    match b with
+    | Some x when Nil? subst_x -> eliminate_binder_from_typ env x e1opt lc1 t
+    | _ -> t, mzero
+  in
+  let phi = drop_redundant_conjuncts env res_typ_base phi in
+  (if U.is_t_true phi then res_typ_base
+   else U.refine (S.new_bv (Some res_typ_base.pos) res_typ_base) phi),
+  g_esc
+
+
+(* Everything a bind's comp-and-guard construction works from, after the
+   ghost-to-pure downgrade.  Bundled because [simplify_bind] and [bind_general]
+   each need all of it, and because they must agree on it exactly. *)
+type bind_input = {
+  bi_env   : Env.env;
+  bi_range : Range.t;
+  bi_is_let: bool;      // an explicit source [let], as opposed to an intermediate value
+  bi_e1    : option term;
+  bi_c1    : comp;
+  bi_g1    : guard_t;
+  bi_x     : option bv; // the binder standing for [c1]'s result
+  bi_c2    : comp;
+  bi_g2    : guard_t;
+}
+
+let bind_debug (f: unit -> ML unit) : ML unit =
+  if Debug.extreme () || !dbg_bind then f ()
+
+(*
+ * AR: we need to be careful about handling g_c2 since it may have x free
+ *     whereever we return/add this, we have to either close it or substitute it
+ *)
+let bind_trivial_guard (bi:bind_input) : ML guard_t =
+  Env.conj_guard bi.bi_g1 (
+    match bi.bi_x with
+    | Some x ->
+      let b = S.mk_binder x in
+      if S.is_null_binder b then bi.bi_g2
+      else Env.close_guard bi.bi_env [b] bi.bi_g2
+    | None -> bi.bi_g2)
+
+(* The binder [bind] was handed may carry a coarser sort than the computation it
+   stands for.  Everything that closes over it must agree on this retyping. *)
+let binder_for_result (c1:comp) (x:bv) : bv = { x with sort = U.comp_result c1 }
+
+(* Eliminate [x] from [c] and [g].  When [x : unit{phi}] its only value is [()],
+   so it is substituted away and [phi] assumed instead; quantifying over it as
+   well would add a binder saying exactly what [phi] already does, once per
+   statement in a sequence.  Otherwise [x] is universally quantified in [g].
+   Reports which of the two happened; [x] is expected to be retyped already. *)
+let close_over_unit_binder (env:Env.env) (x:bv) (c:comp) (g:guard_t)
+: ML (comp & guard_t & bool)
+= let c, phi, closed = maybe_capture_unit_refinement env x.sort x c in
+  let g = TcComm.weaken_guard_formula g phi in
+  if closed
+  then c, Env.map_guard g (SS.subst [NT (x, S.unit_const)]), true
+  else c, Env.close_guard env [S.mk_binder x] g, false
+
+(* [c]'s obligations live in [g2]; whatever [c1]'s result type says has to be
+   assumed there, since a computation type no longer has a postcondition to
+   carry it.  When [x] survives as a quantified binder the comp is closed over
+   it too. *)
+let close_with_type_of_x (env:Env.env) (c1:comp) (x:bv) (c:comp) (g2:guard_t)
+: ML (comp & guard_t)
+= let x = binder_for_result c1 x in
+  let c, g2, closed = close_over_unit_binder env x c g2 in
+  if closed then c, g2 else drop_comp_flags env [x] c, g2
+
+
+(* A let-bound variable is kept opaque in the verification condition: [phi[e/x]]
+   becomes [forall x. x == e ==> phi], which the SMT encoding emits as a
+   [declare-fun]/[assert] pair.  Substituting instead would make VCs blow up
+   exponentially (see issue #3800), so it only happens for non-let bindings
+   (intermediate values) and for [let unfold]. *)
+(* [capture]: see [captured_typing] above. *)
+(* How much of a bind can be discharged here, rather than by [mk_bind]?
+   [Inl (c, g, why)] is the answer; [Inr why] declines, and [bind_general]
+   takes over.  The result type of [c] is not to be trusted -- see
+   [composite_result_typ], which is the sole authority on it. *)
+let simplify_bind (bi:bind_input) : ML (either (comp & guard_t & string) string) =
+  let env = bi.bi_env in
+  let is_let_binding = bi.bi_is_let in
+  let e1opt = bi.bi_e1 in
+  let c1 = bi.bi_c1 in
+  let g_c1 = bi.bi_g1 in
+  let b = bi.bi_x in
+  let c2 = bi.bi_c2 in
+  let g_c2 = bi.bi_g2 in
+  let trivial_guard = bind_trivial_guard bi in
+  (* The last resort of the simplifier: an ML-to-ML bind needs no bookkeeping,
+     anything else is [bind_general]'s problem. *)
+  let both_ml_or_give_up () =
+    if U.is_ml_comp c1 && U.is_ml_comp c2
+    then Inl (c2, trivial_guard, "both ml")
+    else Inr "both are not ML" in
+  (* A computation type carries no specification any more, so [c2]
+     mentions [x] only through its result type; the continuation's
+     logical content -- and hence almost every real use of [x] -- is in
+     [g_c2].  Any test for "is the binder used in the continuation?"
+     has to look at both. *)
+  let used_in_continuation (x:bv) : ML bool =
+    mem x (Free.names_comp c2) ||
+    (match g_c2.guard_f with
+     | NonTrivial f -> mem x (Free.names f)
+     | Trivial -> false) in
+  (* If the binder is unused in the continuation, simply dropping it would also
+     drop the information that its (refined) type is inhabited.  Decline to
+     simplify in that case, so that the fact is restated -- by
+     [captured_typing], as a refinement of the composite's result type.  (It
+     used to be restated in a postcondition; [mk_bind] composes no
+     specification any more.) *)
+  (* Explicit let bindings are exempt from [has_evident_type]:
+     [let _ = (x, y) in ...] is an idiom for bringing exactly the
+     fact it rules out into scope. *)
+  let e1_has_evident_type () : ML bool =
+    match e1opt with
+    | None -> false
+    | Some e -> has_evident_type env e in
+  let drops_typing_info () : ML bool =
+    match b with
+    | Some x when not (discard_specs env)
+               && (is_let_binding || not (e1_has_evident_type ()))
+               && not (used_in_continuation x) ->
+      let t = N.normalize_refinement N.whnf_steps env (U.comp_result c1) in
+      Refined_unit? (unit_shape_of env t) |> not &&
+      not (U.is_t_true (Env.type_hypothesis env t (S.bv_to_name x)))
+    | _ -> false in
+    let close_with_type_of_x (x:bv) (c:comp) (g2:guard_t) =
+    close_with_type_of_x env c1 x c g2
+  in
+  if drops_typing_info ()
+  then Inr "binder is unused but its type carries information"
+  else if U.is_total_comp c1
+  then
+      match e1opt, b with
+      | Some e, Some x when (
+          not is_let_binding //non-let bindings, e.g., in applications, are inlined
+        ) ->
+        (* Closing with [c1]'s result type: when it is [_:t{phi}] it is useful
+           to know that [t{phi}] is inhabited, even though [e] was inlined. *)
+        let x' = binder_for_result c1 x in
+        let c2, phi, _ =
+          maybe_capture_unit_refinement env x'.sort x' (SS.subst_comp [NT (x, e)] c2)
+        in
+        let g2 =
+          TcComm.weaken_guard_formula
+            (Env.map_guard g_c2 (SS.subst [NT (x, e)]))
+            phi in
+        Inl (c2, Env.conj_guard g_c1 g2, "c1 Tot")
+      | Some e, Some x -> (
+        let default_with_eqn () =
+          let g2 =
+            TcComm.weaken_guard_formula g_c2 (mk_binder_eqn env x.sort x e) in
+          let c2, g2 = close_with_type_of_x x c2 g2 in
+          Inl (c2, Env.conj_guard g_c1 g2, "c1 Tot with eq")
+        in
+        if U.is_tot_or_gtot_comp c2
+        && not (used_in_continuation x)
+        then (
+          //x is not free in c2; but if it is a unit refinement, the
+          //binder may legitimately be unused in the continuation,
+          //with only its type relevant---so close with unit refinement
+          //See, e.g., Unit1.Basic.bind_test2
+          //Note, closing with the type of x unconditionally causes
+          //other examples to blow up, e.g., in Registers.List.fst in native_tactics
+          //closing with the type of every let binding even with a tot continuation
+          //moves the continuation out of Tot to pure, and then
+          //we fall into the default case with equations.
+          //So, this is trying to strike a balance:
+          //Compact VCs for let bound Tot terms with Tot/GTot continuations
+          //remaining in Tot/GTot;
+          //Except if the let-bound terms binds a unit refinement,
+          //then we close with the unit refinement, so that the
+          //the refinement is captured.
+          let c2, g2, _ =
+            close_over_unit_binder env (binder_for_result c1 x) c2 g_c2 in
+          Inl (c2, Env.conj_guard g_c1 g2,  "both Tot/GTot")
+        )
+        else default_with_eqn ()
+      )
+      | _, Some x ->
+         let c2, g2 = close_with_type_of_x x c2 g_c2 in
+         Inl (c2, Env.conj_guard g_c1 g2, "c1 Tot only close")
+       | _, _ -> both_ml_or_give_up ()
+  else if U.is_tot_or_gtot_comp c1
+       && U.is_tot_or_gtot_comp c2
+  then
+    (* As in the [c1 Tot] cases above, [c2]'s obligations may be
+       discharged knowing [x == e1] and whatever [c1]'s result type
+       says: a computation type has no postcondition to carry either
+       of those any more. *)
+    (match b, e1opt with
+     | Some x, Some e when not (S.is_null_binder (S.mk_binder x)) ->
+       let g_c2 =
+         TcComm.weaken_guard_formula g_c2
+           (mk_binder_eqn env (U.comp_result c1) x e) in
+       let c2, g2 = close_with_type_of_x x c2 g_c2 in
+       Inl (S.mk_GTotal (U.comp_result c2), Env.conj_guard g_c1 g2, "both GTot")
+     | Some x, None when not (S.is_null_binder (S.mk_binder x)) ->
+       let c2, g2 = close_with_type_of_x x c2 g_c2 in
+       Inl (S.mk_GTotal (U.comp_result c2), Env.conj_guard g_c1 g2, "both GTot")
+     | _ ->
+       Inl (S.mk_GTotal (U.comp_result c2), trivial_guard, "both GTot"))
+  else both_ml_or_give_up ()
+
+(* The general case: build the bind with [mk_bind], keeping [x] opaque in the
+   guard and relating it to [e1] by an equation under a [forall x]. *)
+let bind_general (bi:bind_input) : ML (comp & guard_t) =
+  let env = bi.bi_env in
+  let is_let_binding = bi.bi_is_let in
+  let e1opt = bi.bi_e1 in
+  let c1 = bi.bi_c1 in
+  let g_c1 = bi.bi_g1 in
+  let b = bi.bi_x in
+  let c2 = bi.bi_c2 in
+  let g_c2 = bi.bi_g2 in
+  let r1 = bi.bi_range in
+  let trivial_guard = bind_trivial_guard bi in
+  let debug = bind_debug in
+  let mk_bind c1 b c2 g =  (* AR: end code for inlining pure and ghost terms *)
+    let c, g_bind = mk_bind env c1 b c2 r1 in
+    c, Env.conj_guard g g_bind in
+
+  (* AR: we have let the previously applied bind optimizations take effect,
+      below is the code to do more inlining for pure and ghost terms *)
+  let res_t1 = U.comp_result c1 in
+  //c1 and c2 are bound to the input comps
+  if Some? b
+  && should_return env e1opt c1
+  then let e1 = Option.must e1opt in
+       let x = Option.must b in
+       //we will inline e1 in the WP of c2
+       //Aiming to build a VC of the form
+       //
+       //     M.bind (lift_(Pure/Ghost)_M wp1)
+       //            (x == e1 ==> lift_M2_M (wp2[e1/x]))
+       //
+       //
+       //The additional equality hypothesis may seem
+       //redundant, but c1's post-condition or type may carry
+       //some meaningful information Then, it's important to
+       //weaken wp2 to with the equality, So that whatever
+       //property is proven about the result of wp1 (i.e., x)
+       //is still available in the proof of wp2 However, we
+       //do one optimization:
+
+  					//if c1 is already a return or a
+  					//partial return, then it already provides this equality,
+  					//so no need to add it again and instead generate
+       //
+       //    M.bind (lift_(Pure/Ghost)_M wp1)
+       //           (lift_M2_M (wp2[e1/x]))
+
+  				 //If the optimization does not apply,
+       //then we generate the WP mentioned at the top,
+       //i.e.
+       //
+       //    M.bind (lift_(Pure/Ghost)_M wp1)
+       //           (x == e1 ==> lift_M2_M (wp2[e1/x]))
+
+       if false
+       then
+            let _ = debug (fun () ->
+              Format.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
+            let c2 = SS.subst_comp [NT(x,e1)] c2 in
+            let g = Env.conj_guard g_c1 (Env.map_guard g_c2 (SS.subst [NT (x, e1)])) in
+            mk_bind c1 b c2 g
+       else
+            let _ = debug (fun () ->
+              Format.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
+            let c2 = 
+              if not is_let_binding
+              then SS.subst_comp [NT(x,e1)] c2
+              else c2
+            in
+            let x_eq_e = mk_binder_eqn env res_t1 x e1 in
+            let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
+            let g = Env.conj_guards [
+              g_c1;
+              Env.close_guard env [S.mk_binder x] g_w;
+              Env.close_guard env [S.mk_binder x] (TcComm.weaken_guard_formula g_c2 x_eq_e) ] in
+            mk_bind c1 b c2 g
+      //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
+      //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
+  else mk_bind c1 b c2 trivial_guard
+
+let bind_maybe_capture
+      (capture:bool)
       (r1:Range.t)
-      (is_let_binding:bool) 
-      (env:Env.env) (e1opt:option term) (lc1:lcomp) (binder_lc2:lcomp_with_binder) : ML lcomp =
-  let (b, lc2) = binder_lc2 in
-  let debug (f: unit -> ML unit) : ML unit =
-      if Debug.extreme () || !dbg_bind
-      then f ()
+      (is_let_binding:bool)
+      (env:Env.env) (e1opt:option term) (lc1_g : comp & guard_t) (binder_lc2:comp_with_binder) : ML (comp & guard_t) =
+  let (lc1, g_c1) = lc1_g in
+  let (b, lc2, g_c2) = binder_lc2 in
+  let lc1, lc2 = N.ghost_to_pure2 env (lc1, lc2) in  //downgrade from ghost to pure, if possible
+  let bi = { bi_env=env; bi_range=r1; bi_is_let=is_let_binding; bi_e1=e1opt;
+             bi_c1=lc1; bi_g1=g_c1; bi_x=b; bi_c2=lc2; bi_g2=g_c2 } in
+  bind_debug (fun () ->
+    Format.print5 "(1) bind (is_let_binding=%s): \n\tc1=%s\n\tx=%s\n\tc2=%s\n\te1=%s\n(1. end bind)\n"
+      (show is_let_binding) (show lc1)
+      (match b with None -> "none" | Some x -> show x)
+      (show lc2)
+      (match e1opt with None -> "none" | Some e1 -> show e1));
+  (* The result type is computed here and nowhere else: the comps returned below
+     are derived from [lc2] and may still mention [b], which is out of scope for
+     the caller. *)
+  let res_typ, g_esc = composite_result_typ capture is_let_binding env e1opt lc1 b lc2 in
+  let c, g =
+    match simplify_bind bi with
+    | Inl (c, g, reason) ->
+      bind_debug (fun () ->
+        Format.print2 "(2) bind: Simplified (because %s) to\n\t%s\n" reason (show c));
+      c, g
+    | Inr reason ->
+      bind_debug (fun () ->
+        Format.print1 "(2) bind: Not simplified because %s\n" reason);
+      bind_general bi
   in
-  let lc1, lc2 = N.ghost_to_pure_lcomp2 env (lc1, lc2) in  //downgrade from ghost to pure, if possible
-  let joined_eff = join_lcomp env lc1 lc2 in
-  let bind_flags =
-      if TcComm.is_total_lcomp lc1 && TcComm.is_total_lcomp lc2
-      then [TOTAL]
-      else []
-  in
-  let bind_it () =
-       begin
-           let c1, g_c1 = TcComm.lcomp_comp lc1 in
-           let c2, g_c2 = TcComm.lcomp_comp lc2 in
+  U.set_result_typ c res_typ, Env.conj_guard g g_esc
 
-          (*
-           * AR: we need to be careful about handling g_c2 since it may have x free
-           *     whereever we return/add this, we have to either close it or substitute it
-           *)
+let bind r1 is_let_binding env e1opt lc1 binder_lc2 : ML (comp & guard_t) =
+  bind_maybe_capture true r1 is_let_binding env e1opt lc1 binder_lc2
 
-          let trivial_guard = Env.conj_guard g_c1 (
-            match b with
-            | Some x ->
-              let b = S.mk_binder x in
-              if S.is_null_binder b
-              then g_c2
-              else Env.close_guard env [b] g_c2
-            | None -> g_c2) in
-
-          debug (fun () ->
-            Format.print5 "(1) bind (is_let_binding=%s): \n\tc1=%s\n\tx=%s\n\tc2=%s\n\te1=%s\n(1. end bind)\n"
-            (show is_let_binding)
-            (show c1)
-            (match b with
-                | None -> "none"
-                | Some x -> show x)
-            (show c2)
-            (match e1opt with
-             | None -> "none"
-             | Some e1 -> show e1));
-          let aux () =
-            if U.is_ml_comp c1 && U.is_ml_comp c2
-            then Inl (c2, "both ml")
-            else Inr "both are not ML"
-          in
-          let try_simplify () : ML (either (comp & guard_t & string) string) =
-            let aux_with_trivial_guard () =
-              match aux () with
-              | Inl (c, reason) -> Inl (c, trivial_guard, reason)
-              | Inr reason -> Inr reason in
-            (* If the binder is unused in the continuation, simply dropping it
-               would also drop the information that its (refined) type is
-               inhabited.  In that case go through mk_bind, which restates the
-               typing hypothesis in the postcondition. *)
-            (* A term whose head is a data constructor (or a literal) gets its
-               type from the constructor's own typing axiom in the SMT
-               encoding, so restating it adds nothing.  This matters for
-               performance: an application nested [n] deep would otherwise
-               contribute [n] typing hypotheses about terms of size O(n),
-               i.e. a postcondition quadratic in the size of the term.
-               Explicit let bindings are exempt: `let _ = (x, y) in ...` is an
-               idiom for bringing exactly this fact into scope. *)
-            let has_evident_type () : ML bool =
-              match e1opt with
-              | None -> false
-              | Some e ->
-                let hd, _ = U.head_and_args_full e in
-                match (U.un_uinst hd).n with
-                | Tm_fvar fv -> Env.is_datacon env (S.lid_of_fv fv)
-                | Tm_constant _ -> true
-                | _ -> false in
-            let drops_typing_info () : ML bool =
-              match b with
-              | Some x when not (discard_specs env)
-                         && (is_let_binding || not (has_evident_type ()))
-                         && not (mem x (Free.names_comp c2)) ->
-                let t = N.normalize_refinement N.whnf_steps env (U.comp_result c1) in
-                let is_unit_refinement =
-                  match t.n with
-                  | Tm_refine {b} ->
-                    (match b.sort.n with
-                     | Tm_fvar fv -> S.fv_eq_lid fv C.unit_lid
-                     | _ -> false)
-                  | _ -> false in
-                not is_unit_refinement &&
-                not (U.is_t_true (Env.type_hypothesis env t (S.bv_to_name x)))
-              | _ -> false in
-            if drops_typing_info ()
-            then Inr "binder is unused but its type carries information"
-            else if U.is_total_comp c1
-            then (*
-                  * Helper routine to close the compuation c with c1's return type
-                  * When c1's return type is of the form _:t{phi}, is is useful to know
-                  *   that t{phi} is inhabited, even if c1 is inlined etc.
-                  *)
-                let maybe_close_with_unit_refinement (x:bv) (c:comp) =
-                  let x = { x with sort = U.comp_result c1 } in
-                  maybe_capture_unit_refinement env x.sort x c
-                in
-                let close_with_type_of_x (x:bv) (c:comp) =
-                  let c, g, closed = maybe_close_with_unit_refinement x c in
-                  if closed then c, g
-                  else close_wp_comp env [x] c, Env.close_guard env [S.mk_binder x] g
-                in
-                let is_layered = false in
-                match e1opt, b with
-                | Some e, Some x when (
-                    not (optimize_bind_vc()) || // optimization is disabled
-                    not is_let_binding || //non-let bindings, e.g., in applications, are inlined
-                    is_layered // layered effects do not always support closing with universal quantification
-                  ) ->
-                  let c2, g_close, _ =
-                    c2 |> SS.subst_comp [NT (x, e)] |> maybe_close_with_unit_refinement x
-                  in
-                  Inl (c2, Env.conj_guards [
-                     g_c1;
-                     Env.map_guard g_c2 (SS.subst [NT (x, e)]);
-                     g_close ], "c1 Tot")
-                | Some e, Some x -> (
-                  let default_with_eqn () =
-                    let c2, g_c2' = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 (U.mk_eq2 (env.universe_of env x.sort) x.sort e (bv_to_name x)) in
-                    let c2, g_close = close_with_type_of_x x c2 in
-                    Inl (c2, Env.conj_guards [
-                              trivial_guard;
-                              Env.close_guard env [S.mk_binder x] g_c2';
-                              g_close], "c1 Tot with eq")
-                  in
-                  if U.is_tot_or_gtot_comp c2
-                  then (
-                    if is_let_binding
-                    then (
-                      if not (mem x (Free.names_comp c2))
-                      then (
-                        //x is not free in c2; but if it is a unit refinement, the
-                        //binder may legitimately be unused in the continuation,
-                        //with only its type relevant---so close with unit refinement
-                        //See, e.g., Unit1.Basic.bind_test2
-                        //Note, closing with the type of x unconditionally causes
-                        //other examples to blow up, e.g., in Registers.List.fst in native_tactics
-                        //closing with the type of every let binding even with a tot continuation
-                        //moves the continuation out of Tot to pure, and then
-                        //we fall into the default case with equations.
-                        //So, this is trying to strike a balance:
-                        //Compact VCs for let bound Tot terms with Tot/GTot continuations
-                        //remaining in Tot/GTot;
-                        //Except if the let-bound terms binds a unit refinement,
-                        //then we close with the unit refinement, so that the
-                        //the refinement is captured.
-                        let c2, g_close, _ = maybe_close_with_unit_refinement x c2 in
-                        Inl (c2, Env.conj_guards [ trivial_guard; g_close],  "both Tot/GTot")
-                      )
-                      else default_with_eqn ()
-                    )
-                    else Inl (SS.subst_comp [NT(x,e)] c2, trivial_guard, "both Tot/GTot")
-                  )
-                  else default_with_eqn ()
-                )
-                | _, Some x ->
-                   let c2, g_close = close_with_type_of_x x c2 in
-                   Inl (c2, Env.conj_guards [ trivial_guard; g_close ], "c1 Tot only close")
-                 | _, _ -> aux_with_trivial_guard ()
-            else if U.is_tot_or_gtot_comp c1
-                 && U.is_tot_or_gtot_comp c2
-            then Inl (S.mk_GTotal (U.comp_result c2), trivial_guard, "both GTot")
-            else aux_with_trivial_guard ()
-          in
-          match try_simplify () with
-          | Inl (c, g, reason) ->
-            debug (fun () ->
-                Format.print2 "(2) bind: Simplified (because %s) to\n\t%s\n"
-                            reason
-                            (show c));
-            c, g
-          | Inr reason ->
-            debug (fun () ->
-                Format.print1 "(2) bind: Not simplified because %s\n" reason);
-
-            let mk_bind c1 b c2 g =  (* AR: end code for inlining pure and ghost terms *)
-              let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
-              c, Env.conj_guard g g_bind in
-
-            (* AR: we have let the previously applied bind optimizations take effect,
-                below is the code to do more inlining for pure and ghost terms *)
-            let u_res_t1, res_t1 =
-              let t = U.comp_result c1 in
-              match comp_univ_opt c1 with
-              | None -> env.universe_of env t, t
-              | Some u -> u, t in
-            //c1 and c2 are bound to the input comps
-            if Some? b
-            && should_return env e1opt lc1
-            then let e1 = Option.must e1opt in
-                 let x = Option.must b in
-                 //we will inline e1 in the WP of c2
-                 //Aiming to build a VC of the form
-                 //
-                 //     M.bind (lift_(Pure/Ghost)_M wp1)
-                 //            (x == e1 ==> lift_M2_M (wp2[e1/x]))
-                 //
-                 //
-                 //The additional equality hypothesis may seem
-                 //redundant, but c1's post-condition or type may carry
-                 //some meaningful information Then, it's important to
-                 //weaken wp2 to with the equality, So that whatever
-                 //property is proven about the result of wp1 (i.e., x)
-                 //is still available in the proof of wp2 However, we
-                 //do one optimization:
-																	
-																	//if c1 is already a return or a
-																	//partial return, then it already provides this equality,
-																	//so no need to add it again and instead generate
-                 //
-                 //    M.bind (lift_(Pure/Ghost)_M wp1)
-                 //           (lift_M2_M (wp2[e1/x]))
-                 
-																 //If the optimization does not apply,
-                 //then we generate the WP mentioned at the top,
-                 //i.e.
-                 //
-                 //    M.bind (lift_(Pure/Ghost)_M wp1)
-                 //           (x == e1 ==> lift_M2_M (wp2[e1/x]))
-
-                 if false
-                 then
-                      let _ = debug (fun () ->
-                        Format.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
-                      let c2 = SS.subst_comp [NT(x,e1)] c2 in
-                      let g = Env.conj_guard g_c1 (Env.map_guard g_c2 (SS.subst [NT (x, e1)])) in
-                      mk_bind c1 b c2 g
-                 else
-                      let _ = debug (fun () ->
-                        Format.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
-                      let c2 = 
-                        if not (optimize_bind_vc()) || not is_let_binding
-                        then SS.subst_comp [NT(x,e1)] c2
-                        else c2
-                      in
-                      let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
-                      let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
-                      let g = Env.conj_guards [
-                        g_c1;
-                        Env.close_guard env [S.mk_binder x] g_w;
-                        Env.close_guard env [S.mk_binder x] (TcComm.weaken_guard_formula g_c2 x_eq_e) ] in
-                      mk_bind c1 b c2 g
-                //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
-                //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
-            else mk_bind c1 b c2 trivial_guard
-      end
-  in TcComm.mk_lcomp joined_eff
-                     lc2.res_typ
-      (* TODO : these cflags might be inconsistent with the one returned by bind_it  !!! *)
-                     bind_flags
-                     bind_it
+let bind_no_capture r1 is_let_binding env e1opt lc1 binder_lc2 : ML (comp & guard_t) =
+  bind_maybe_capture false r1 is_let_binding env e1opt lc1 binder_lc2
 
 let weaken_guard g1 g2 : ML _ = match g1, g2 with
     | NonTrivial f1, NonTrivial f2 ->
@@ -1202,73 +1517,26 @@ let weaken_guard g1 g2 : ML _ = match g1, g2 with
 
 (*
  * e has type lc, and lc is either pure or ghost
- * This function inserts a return (x==e) in lc
+ * This function refines lc's result type with [_ == e].
  *
- * Optionally, callers can provide an effect M that they would like to return
- * into
- *
- * If lc is PURE, the return happens in M
- * else if it is GHOST, the return happens in PURE
- *
- * If caller does not provide the m effect, return happens in PURE
- *
- * This forces the lcomp thunk and recreates it to keep the callers same
+ * There is no postcondition to record [result == e] in any more, so we state it
+ * as a refinement of the result type instead.  This matters for a value
+ * returned out of an effectful computation -- [let x = f (g y) in ...] with [f]
+ * effectful and [g] pure -- where nothing else relates [x] to [g y].
  *)
-let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : ML lcomp =
-  (*
-   * AR: m is the effect that we are going to do return in
-   *)
-  let m =
-    if m_opt |> None? || is_ghost_effect env lc.eff_name
-    then C.effect_PURE_lid
-    else m_opt |> Option.must in
+let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:comp) : ML comp =
+  let t = (U.comp_result lc) in
+  if is_unit_like t then lc
+  else
+    let u_t = env.universe_of env t in
+    let x = S.new_bv (Some t.pos) t in
+    let eq = U.mk_eq2 u_t t (S.bv_to_name x) e in
+    U.set_result_typ lc (U.refine x eq)
 
-  let flags = lc.cflags in
-
-  let refine () : ML (comp & guard_t) =
-      let c, g_c = TcComm.lcomp_comp lc in
-      let u_t =
-          match comp_univ_opt c with
-          | Some u_t -> u_t
-          | None -> env.universe_of env (U.comp_result c)
-      in
-      if U.is_tot_or_gtot_comp c
-      then //AR: insert an M.return
-           let retc, g_retc = return_value env m (Some u_t) (U.comp_result c) e in
-           let g_c = Env.conj_guard g_c g_retc in
-           if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
-           then let retc = Env.comp_to_comp_typ env retc in
-                let retc = {retc with effect_name=C.effect_GHOST_lid; flags=flags} in
-                S.mk_Comp retc, g_c
-           else Env.comp_set_flags env retc flags, g_c
-       else //AR: augment c's post-condition with a M.return
-            let c = Env.unfold_effect_abbrev env c in
-            let t = c.result_typ in
-            let c = mk_Comp c in
-            let x = S.new_bv (Some t.pos) t in
-            let xexp = S.bv_to_name x in
-            let env_x = Env.push_bv env x in
-            let ret, g_ret = return_value env_x m (Some u_t) t xexp in
-            let ret = TcComm.lcomp_of_comp <| Env.comp_set_flags env_x ret [] in
-            let eq = U.mk_eq2 u_t t xexp e in
-            let eq_ret = weaken_precondition env_x ret (NonTrivial eq) in
-            let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos false env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
-            Env.comp_set_flags env bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
-  in
-
-  if should_not_inline_lc lc
-  then raise_error e Errors.Fatal_UnexpectedTerm  [
-         text "assume_result_eq_pure_term cannot inline an non-inlineable lc : " ^^ pp e;
-       ]
-
-  else let c, g = refine () in
-       TcComm.lcomp_of_comp_guard c g
-
-let maybe_assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : ML lcomp =
+let maybe_assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:comp) : ML comp =
   let should_return =
       not env.phase1
    && should_return env (Some e) lc
-   && not (TcComm.is_lcomp_partial_return lc)
   in
   if not should_return then lc
   else assume_result_eq_pure_term_in_m env m_opt e lc
@@ -1281,67 +1549,52 @@ let maybe_return_e2_and_bind
         (is_let_binding:bool)
         (env:env)
         (e1opt:option term)
-        (lc1:lcomp)
+        (lc1_g : comp & guard_t)
         (e2:term)
-        (xlc2: option bv & lcomp)
-   : ML lcomp =
-   let (x, lc2) = xlc2 in
+        (xlc2: comp_with_binder)
+   : ML (comp & guard_t) =
+   let (lc1, g_c1) = lc1_g in
+   let (x, lc2, g_c2) = xlc2 in
    let env_x =
      match x with
      | None -> env
      | Some x -> Env.push_bv env x in
 
-   let lc1, lc2 = N.ghost_to_pure_lcomp2 env (lc1, lc2) in
+   let lc1, lc2 = N.ghost_to_pure2 env (lc1, lc2) in
 
    //AR: use c1's effect to return c2 into
    let lc2 =
-        let eff1 = Env.norm_eff_name env lc1.eff_name in
-        let eff2 = Env.norm_eff_name env lc2.eff_name in
+        let eff1 = U.comp_effect_name lc1 in
+        let eff2 = U.comp_effect_name lc2 in
 
         (*
          * AR: If eff1 and eff2 cannot be composed, and eff2 is PURE,
          *     we must return eff2 into eff1,
          *)
-        if lid_equals eff2 C.effect_PURE_lid &&
+        if U.is_pure_effect eff2 &&
            Env.join_opt env eff1 eff2 |> None?
         then assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
-        else if (not (is_pure_or_ghost_effect env eff1)
-             ||  should_not_inline_lc lc1)
-             && is_pure_or_ghost_effect env eff2
+        else if not (U.is_pure_or_ghost_effect eff1)
+             && U.is_pure_or_ghost_effect eff2
         then maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
-   bind r is_let_binding env e1opt lc1 (x, lc2)
+   bind r is_let_binding env e1opt (lc1, g_c1) (x, lc2, g_c2)
 
 let fvar_env env lid : ML _ =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
 
 (*
- * The comp type for a match with no cases: PURE t (requires False)
+ * Conjunction of two branch computations under the branch condition [p].
+ * Neither carries a specification any more, so all that is left is the effect
+ * label and the common result type; the branch conditions are pushed onto the
+ * branches' *guards* by [bind_cases].
  *)
-let comp_false env (u:universe) (t:typ) : ML comp =
-  mk_comp_l C.effect_PURE_lid u t (fvar_env env C.false_lid) (S.trivial_post t) []
-
-(*
- * Conjunction of two branch computations under the branch condition [p]:
- *
- *   pre  = (p ==> pre1) /\ (~p ==> pre2)
- *   post = fun x -> (p ==> post1 x) /\ (~p ==> post2 x)
- *)
-let mk_conjunction env (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.t)
+let mk_conjunction env (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.t)
 : ML (comp & guard_t) =
-  let np = U.mk_neg p in
-  let pre = U.mk_conj_simp (U.mk_imp_simp p ct1.comp_pre) (U.mk_imp_simp np ct2.comp_pre) in
-  let post =
-    if U.is_trivial_post ct1.comp_post && U.is_trivial_post ct2.comp_post
-    then S.trivial_post a
-    else
-      let x = S.new_bv None a in
-      U.abs [S.mk_binder x]
-            (U.mk_conj_simp
-               (U.mk_imp_simp p  (U.apply_post ct1.comp_post (S.bv_to_name x)))
-               (U.mk_imp_simp np (U.apply_post ct2.comp_post (S.bv_to_name x))))
-            (Some S.post_rc)
-  in
-  mk_comp_l ct1.effect_name u_a a pre post [], Env.trivial_guard
+  S.mk_Comp ({ effect_name = ct1.effect_name; result_typ = a; flags = [];
+               source_effect_name =
+                 U.combine_source_effect_name ct1.effect_name
+                   ct1.source_effect_name ct2.source_effect_name }),
+  Env.trivial_guard
 
 (*
  * When typechecking a match term, typechecking each branch returns
@@ -1372,6 +1625,88 @@ let get_neg_branch_conds (branch_conds:list formula)
     |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
     |> (fun (l1, l2) -> l1, List.hd l2)
 
+(* The branches of a match need not agree on a result type.  What they do agree
+   on is that, under the condition that it is the branch taken, branch [i]
+   establishes whatever its own result type refines.  A postcondition is a
+   refinement of the result type now, so this is the only place that per-branch
+   knowledge can be recovered from -- without it, [if b then l1 () else l2 (); e]
+   forgets everything the two lemmas proved.
+
+   Nothing is claimed of a branch that it did not itself establish, and a branch
+   whose result type mentions its pattern variables (so does not make sense
+   outside the match) simply contributes nothing. *)
+(* A bare unification variable says nothing at all about the type it stands for.
+   It is the one metavariable case that must *not* coarsen a result type: the
+   subtyping constraint [res_typ <: ?t] has already been registered, so [?t] is
+   still solved, and overwriting [res_typ] with it only throws the precision
+   away -- what [?t] eventually gets solved to may be coarser still. *)
+let is_bare_flex (t:typ) : ML bool =
+  match (SS.compress (fst (U.head_and_args_full t))).n with
+  | Tm_uvar _ -> true
+  | _ -> false
+
+let combine_branch_res_typs env (guard_x:bv) (res_t:typ) (lcases:list (formula & typ)) : ML typ =
+  match lcases with
+  | [] -> res_t
+  (* The branch conditions are only built when verifying (see
+     [build_and_check_branch_guard]); in a lax phase they are all [true], and a
+     refinement built from them would be nonsense.  Worse, it would not stay
+     local: phase 1's type is recorded as the annotation of the enclosing
+     let-binding and becomes phase 2's *expected* type for the branches. *)
+  | _ when not (Env.should_verify env) -> res_t
+  | _ ->
+    let unref t = U.unrefine (N.normalize_refinement N.whnf_steps env t) in
+    (* [res_t] is typically a unification variable here -- a match in statement
+       position has no expected type -- and refining *that* would produce a type
+       nobody can look through until it is solved.  The branches, on the other
+       hand, all have a concrete type; when they share an unrefined base, that
+       base is a result type for the match. *)
+    let base =
+      (* A branch whose base type is still a unification variable agrees with
+         whatever the others settle on -- it will be solved to it -- so it does
+         not veto a common base; its refinement is still worth keeping.  But if
+         *every* branch's base is that same unification variable -- which is what
+         a match in statement position looks like, since each branch is checked
+         against the same fresh expected type -- then it is the common base, and
+         refusing it here would throw away every branch's refinement. *)
+      let bases = lcases |> List.map (fun (_, t) -> unref t) in
+      let concrete = bases |> List.filter (fun b -> not (is_bare_flex b)) in
+      match (if Cons? concrete then concrete else bases) with
+      | b0 :: rest when rest |> List.for_all (fun b -> TEQ.eq_tm env b b0 = TEQ.Equal)
+                     && Env.closed env b0 -> Some b0
+      | _ -> None in
+    match base with
+    | None -> res_t
+    | Some base ->
+      let neg_conds, _ = get_neg_branch_conds (lcases |> List.map fst) in
+      let x = S.new_bv (Some res_t.pos) base in
+      let xt = S.bv_to_name x in
+      (* [x] names the match's result and [guard_x] its scrutinee; both are bound
+         here ([guard_x] is substituted away by [bind] in [tc_match]).  Everything
+         else a branch's type mentions -- its pattern variables, above all -- goes
+         out of scope at the branch, so it cannot appear in the match's type. *)
+      let env_x = Env.push_bvs env [x; guard_x] in
+      let rec conjuncts (t:term) : ML (list term) =
+        let hd, args = U.head_and_args_full t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv C.and_lid ->
+          conjuncts a @ conjuncts b
+        | _ -> [t] in
+      let phi =
+        List.fold_left2 (fun acc (g, t) neg_cond ->
+          (* Keep the conjuncts that are in scope rather than dropping the whole
+             branch: a recursive call's type, for one, is [squash phi] refined
+             with the [decreases] facts, and those mention pattern variables. *)
+          let phi_i =
+            U.refinement_hypothesis (N.normalize_refinement N.whnf_steps env t) xt
+            |> conjuncts
+            |> List.filter (Env.closed env_x)
+            |> List.fold_left U.mk_conj_simp U.t_true in
+          if U.is_t_true phi_i then acc
+          else U.mk_conj_simp acc (U.mk_imp (U.mk_conj_simp neg_cond (U.b2t g)) phi_i))
+          U.t_true lcases neg_conds in
+      if U.is_t_true phi then res_t else U.refine x phi
+
 (*
  * The formula in each element of lcases is the individual branch guard, a boolean
  *
@@ -1383,18 +1718,16 @@ let get_neg_branch_conds (branch_conds:list formula)
  * branch matches: i.e. the exhaustiveness check.
  *)
 let bind_cases env0 (res_t:typ)
-  (lcases:list (formula & lident & list cflag & (bool -> ML lcomp)))
-  (scrutinee:bv) : ML lcomp =
+  (lcases:list (formula & lident & list cflag & (bool -> ML (comp & guard_t))))
+  (scrutinee:bv) : ML (comp & guard_t) =
     let env = Env.push_binders env0 [scrutinee |> S.mk_binder] in
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
-                             C.effect_PURE_lid
+                             C.primitive_pure_lid
                              lcases
     in
-    let bind_cases_flags = [] in
-    let bind_cases () =
-        let u_res_t = env.universe_of env res_t in
-        let maybe_return eff_label_then (cthen: bool -> ML lcomp) : ML lcomp =
-           if not (is_pure_or_ghost_effect env eff)
+    let bind_cases_flags : list cflag = [] in
+        let maybe_return eff_label_then (cthen: bool -> ML (comp & guard_t)) : ML (comp & guard_t) =
+           if not (U.is_pure_or_ghost_effect eff)
            then cthen true //inline each branch, if eligible
            else cthen false //the entire match is pure and inlineable
         in
@@ -1404,7 +1737,7 @@ let bind_cases env0 (res_t:typ)
 
         let comp, g_comp =
           match lcases with
-          | [] -> comp_false env u_res_t res_t, Env.trivial_guard
+          | [] -> mk_Total res_t, Env.trivial_guard
           | _ ->
             let lcases, neg_branch_conds, comp, g_comp =
               let neg_branch_conds, neg_last =
@@ -1418,21 +1751,20 @@ let bind_cases env0 (res_t:typ)
                 |> (fun (l1, l2) -> l1, List.hd l2) in
 
               let c, g =
-                let lc = maybe_return eff_last c_last in
-                let c, g = TcComm.lcomp_comp lc in
+                let c, g = maybe_return eff_last c_last in
                 c, TcComm.weaken_guard_formula g (U.mk_conj (U.b2t g_last) neg_last) in
 
               lcases, neg_branch_conds, c, g in
 
             List.fold_right2 (fun (g, eff_label, _, cthen) neg_cond (celse, g_comp) ->
-              let cthen, g_then = TcComm.lcomp_comp (maybe_return eff_label cthen) in
+              let cthen, g_then = maybe_return eff_label cthen in
               let m, cthen, celse, g_lift_then, g_lift_else =
                 lift_comps_sep_guards env cthen celse None false in
-              let ct_then = cthen |> Env.comp_to_comp_typ env in
-              let ct_else = celse |> Env.comp_to_comp_typ env in
+              let ct_then = cthen |> U.comp_to_comp_typ in
+              let ct_else = celse |> U.comp_to_comp_typ in
 
               let c, g_conjunction =
-                mk_conjunction env u_res_t res_t (U.b2t g) ct_then ct_else (Env.get_range env) in
+                mk_conjunction env res_t (U.b2t g) ct_then ct_else (Env.get_range env) in
 
               //weaken the then and else guards
               //neg_cond is the negated branch condition upto this branch
@@ -1450,16 +1782,12 @@ let bind_cases env0 (res_t:typ)
             ) lcases neg_branch_conds (comp, g_comp) in
 
         //strengthen comp with the exhaustiveness check
-        let comp, g_comp =
-          let c, g =
+        let g =
             let check = U.mk_imp exhaustiveness_branch_cond U.t_false in
             let check = label Err.exhaustiveness_check (Env.get_range env) check   in
-            strengthen_comp env None comp check bind_cases_flags in
-          c, Env.conj_guard g_comp g in
-
-        comp, g_comp
-    in
-    TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
+            formula_as_labeled_guard env None check
+        in
+        comp, g_comp ++ g
 
 let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp & guard_t) =
   def_check_scoped c.pos "check_comp.c" env c;
@@ -1471,24 +1799,11 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp &
             (if use_eq then "$:" else "<:")
             (show c');
   (* [use_eq] (a [$]-marked binder, or an equality-typed ascription) demands
-     that the annotation match exactly, so that unification, rather than
-     subtyping, is what relates the two and implicit arguments can be solved
-     from the computed computation type.  This is what makes the [$f] idiom of
-     [FStar.Classical.forall_intro] work: the implicit [p] occurs only in the
-     postcondition of [f]'s type, and is solved by unifying that postcondition
-     with the one computed for the argument.
-
-     Unification is however too strong to *demand* of a specification: a term
-     is free to guarantee more than it was asked to, e.g. a lambda passed to a
-     [$]-binder whose expected postcondition is trivial still computes a
-     postcondition of its own.  So the specification is unified only when
-     there is something to solve in it --- and related by subsumption
-     otherwise.  Note that the *result type* is related by equality either way;
-     that much is essential, as it is what keeps a [$]-binder from being
-     instantiated by subtyping. *)
-  let spec_has_uvars (c:comp) : ML bool =
-    not (Free.uvars (U.comp_pre c) |> is_empty)
-    || not (Free.uvars (U.comp_post c) |> is_empty) in
+     that the annotation match exactly, so that unification rather than
+     subtyping relates the two.  That is what keeps a [$]-binder from being
+     instantiated by subtyping.  Since a computation type is now just an effect
+     label and a result type, "exactly" means: equate the result types, and
+     still relate the effects by the lattice. *)
   let eq_result_and_subsume () =
     match Rel.try_teq true env (U.comp_result c) (U.comp_result c') with
     | None -> None
@@ -1498,11 +1813,7 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp &
       | Some g -> Some (g_eq ++ g) in
   let g =
     if use_eq
-    then if spec_has_uvars c || spec_has_uvars c'
-         then match Rel.eq_comp env c c' with
-              | Some g -> Some g
-              | None -> eq_result_and_subsume ()
-         else eq_result_and_subsume ()
+    then eq_result_and_subsume ()
     else Rel.sub_comp env c c' in
   match g with
     | None ->
@@ -1512,38 +1823,47 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp &
     | Some g -> e, c', g
 
 (*
- * The universe of a computation type [M t (requires pre) (ensures post)].
- *
- * Since an effect is now just a name plus a specification, a computation
- * type is inhabited by (a description of) a value of type [t]: its universe
- * is the universe of [t], whatever the effect.
- *)
-(*
- * The universe of [M t]: the universe of [t] if [M] is pure/ghost or marked
- * [total], and u#0 otherwise.  A computation in a partial effect need not
- * return, so an arrow into it is proof-irrelevant and lives in Type0; this
- * is what makes e.g. [unit -> Dv t : Type0] for any [t : Type u#a].
+ * The universe of a computation type [M t], where [t : Type u#u_res].
  *)
 let universe_of_comp env u_res c : ML _ =
-  let c_lid = c |> U.comp_effect_name |> Env.norm_eff_name env in
-  if U.is_pure_or_ghost_effect c_lid then u_res
-  else if Env.lookup_effect_quals env c_lid |> List.existsb (fun q -> q = S.TotalEffect)
-  then u_res
-  else S.U_zero
+  Env.effect_universe env (U.comp_effect_name c) u_res
 
+(* A computation type carries no precondition any more -- there is nothing left
+   to discharge here. *)
 let check_trivial_precondition_wp env c : ML _ =
-  let ct = c |> Env.unfold_effect_abbrev env in
-  let vc = ct.comp_pre in
-  ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
+  let ct = c |> U.comp_to_comp_typ in
+  ct, U.t_true, Env.trivial_guard
 
 //Decorating terms with monadic operators
+(*
+ * The result type recorded in a [Meta_monadic]/[Meta_monadic_lift] annotation is
+ * a hint, not a claim: [tc_term] drops it when it re-checks such a term,
+ * extraction ignores it, and the normalizer uses it only to build the effect's
+ * representation type when reifying.  Record the bare type, with no
+ * specification attached.
+ *
+ * This matters now that a postcondition is a refinement of the result type.  An
+ * inferred postcondition embeds the very terms it describes -- the definiens of
+ * a pure [let] ([assume_result_eq_pure_term]), the result of every branch of a
+ * match ([combine_branch_res_typs]) -- so an annotation that carried it would
+ * hold a second copy of the computation it annotates.  Effectful code binds at
+ * every step, so the copies nest, and the elaborated term grows multiplicatively
+ * with the nesting depth.  A [Tac] function that traverses terms feels this
+ * sharply: reducing [FStar.Tactics.Visit.visit_tm] over a term of size n took
+ * time exponential in n, which is what made tests/bug-reports/closed/Bug3210.fst
+ * take twenty minutes.  Before specifications moved into the result type this
+ * information lived in the WP, which was never part of the term; dropping it
+ * here keeps annotated terms the size they were then.
+ *)
+let monadic_annot_typ (t:typ) : ML typ = U.unrefine t
+
 let maybe_lift env e c1 c2 t : ML _ =
-    // Tot/GTot are abbreviations of PURE/GHOST, but they may be used in Prims
-    // before those abbreviations are declared; normalize them by hand.
+    let t = monadic_annot_typ t in
+    // The several spellings of the pure and ghost effects may be used in Prims
+    // before the abbreviations relating them are declared; normalize by hand.
     let norm_eff l =
-      let l = Env.norm_eff_name env l in
-      if Ident.lid_equals l C.effect_Tot_lid then C.effect_PURE_lid
-      else if Ident.lid_equals l C.effect_GTot_lid then C.effect_GHOST_lid
+      if U.is_pure_effect l then C.primitive_pure_lid
+      else if U.is_ghost_effect l then C.primitive_ghost_lid
       else l
     in
     let m1 = norm_eff c1 in
@@ -1555,25 +1875,27 @@ let maybe_lift env e c1 c2 t : ML _ =
     else mk (Tm_meta {tm=e; meta=Meta_monadic_lift(m1, m2, t)}) e.pos
 
 let maybe_monadic env e c t : ML _ =
-    let m = Env.norm_eff_name env c in
-    if is_pure_or_ghost_effect env m
-    || Ident.lid_equals m C.effect_Tot_lid
-    || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
+    let t = monadic_annot_typ t in
+    let m = c in
+    (* [is_pure_or_ghost_effect] recognizes every spelling of the pure and
+       ghost effects, including the ones used in Prims before the
+       abbreviations relating them are declared. *)
+    if U.is_pure_or_ghost_effect m
     then e
     else mk (Tm_meta {tm=e; meta=Meta_monadic (m, t)}) e.pos
 
 let coerce_with (env:Env.env)
-                (e : term) (lc : lcomp) // original term and its computation type
+                (e : term) (lc : comp) // original term and its computation type
                 (f : lident) // coercion
                 (us : universes) (eargs : args) // extra arguments to coertion
                 (comp2 : comp) // new result computation type
-                : ML (term & lcomp) =
+                : ML (term & comp & guard_t) =
     match Env.try_lookup_lid env f with
     | Some _ ->
         if !dbg_Coercions then
             Format.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
-        let lc2 = TcComm.lcomp_of_comp <| comp2 in
-        let lc_res = bind e.pos false env (Some e) lc (None, lc2) in
+        let lc2 = comp2 in
+        let lc_res, g_res = bind e.pos false env (Some e) (lc, Env.trivial_guard) (None, lc2, Env.trivial_guard) in
         let coercion = S.fvar (Ident.set_lid_range f e.pos) None in
         let coercion = S.mk_Tm_uinst coercion us in
 
@@ -1584,21 +1906,21 @@ let coerce_with (env:Env.env)
         //    with appropriate meta monadic nodes
         //
         let e =
-          if TcComm.is_pure_or_ghost_lcomp lc
+          if U.is_pure_or_ghost_comp lc
           then mk_Tm_app coercion (eargs@[S.as_arg e]) e.pos
-          else let x = S.new_bv (Some e.pos) lc.res_typ in
+          else let x = S.new_bv (Some e.pos) (U.comp_result lc) in
                let e2 = mk_Tm_app coercion (eargs@[x |> S.bv_to_name |> S.as_arg]) e.pos in
-               let e = maybe_lift env e lc.eff_name lc_res.eff_name lc.res_typ in
-               let e2 = maybe_lift (Env.push_bv env x) e2 lc2.eff_name lc_res.eff_name lc2.res_typ in
-               let lb = U.mk_letbinding (Inl x) [] lc.res_typ lc_res.eff_name e [] e.pos in
+               let e = maybe_lift env e (U.comp_effect_name lc) (U.comp_effect_name lc_res) (U.comp_result lc) in
+               let e2 = maybe_lift (Env.push_bv env x) e2 (U.comp_effect_name lc2) (U.comp_effect_name lc_res) (U.comp_result lc2) in
+               let lb = U.mk_letbinding (Inl x) [] (U.comp_result lc) (U.comp_effect_name lc_res) e [] e.pos in
                let e = mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder x] e2}) e.pos in
-               maybe_monadic env e lc_res.eff_name lc_res.res_typ in
-        e, lc_res
+               maybe_monadic env e (U.comp_effect_name lc_res) (U.comp_result lc_res) in
+        e, lc_res, g_res
     | None ->
         Errors.log_issue e Errors.Warning_CoercionNotFound
                                 (Format.fmt1 "Coercion %s was not found in the environment, not coercing."
                                             (string_of_lid f));
-        e, lc
+        e, lc, Env.trivial_guard
 
 type isErased =
     | Yes of term
@@ -1674,9 +1996,9 @@ let (let?) = Option.bind
 let bool_guard (b:bool) : ML (option unit) =
   if b then Some () else None
 
-let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
-: ML (option (term & lcomp & guard_t))
-// returns coerced term, new lcomp type, and guard
+let find_coercion (env:Env.env) (checked: comp) (exp_t: typ) (e:term)
+: ML (option (term & comp & guard_t))
+// returns coerced term, new comp type, and guard
 // or None if no coercion applied
 =
  Errors.with_ctx "find_coercion" (fun () ->
@@ -1724,10 +2046,10 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 
   (* Bail out early if either the computed or expected type are not
   defined at the head *)
-  bool_guard (is_head_defined exp_t && is_head_defined checked.res_typ);?
+  bool_guard (is_head_defined exp_t && is_head_defined (U.comp_result checked));?
 
   (* The computed type for `e`. *)
-  let computed_t = head_unfold env checked.res_typ in
+  let computed_t = head_unfold env (U.comp_result checked) in
   let head, args = U.head_and_args_full computed_t in
 
   (* The expected type according to the context. *)
@@ -1736,27 +2058,27 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
   match (U.un_uinst head).n, args with
   (* b2t is primitive... for now *)
   | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_prop exp_t ->
-    let lc2 = TcComm.lcomp_of_comp <| S.mk_Total S.t_prop in
-    let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
-    Some (U.mk_b2t e, lc_res, Env.trivial_guard)
+    let lc2 = S.mk_Total S.t_prop in
+    let lc_res, g_res = bind e.pos false env (Some e) (checked, Env.trivial_guard) (None, lc2, Env.trivial_guard) in
+    Some (U.mk_b2t e, lc_res, g_res)
 
   (* squash *)
   | Tm_fvar fv, [] when S.fv_eq_lid fv C.prop_lid && is_type exp_t ->
-    let lc2 = TcComm.lcomp_of_comp <| S.mk_Total U.ktype0 in
-    let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
-    Some (U.mk_squash e, lc_res, Env.trivial_guard)
+    let lc2 = S.mk_Total U.ktype0 in
+    let lc_res, g_res = bind e.pos false env (Some e) (checked, Env.trivial_guard) (None, lc2, Env.trivial_guard) in
+    Some (U.mk_squash e, lc_res, g_res)
   
   (* squash + b2t *)
   | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
-    let lc2 = TcComm.lcomp_of_comp <| S.mk_Total U.ktype0 in
-    let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
-    Some (U.mk_squash (U.mk_b2t e), lc_res, Env.trivial_guard)
+    let lc2 = S.mk_Total U.ktype0 in
+    let lc_res, g_res = bind e.pos false env (Some e) (checked, Env.trivial_guard) (None, lc2, Env.trivial_guard) in
+    Some (U.mk_squash (U.mk_b2t e), lc_res, g_res)
 
   (* t2b *)
   | Tm_fvar fv, [] when S.fv_eq_lid fv C.prop_lid && is_bool exp_t ->
-    let lc2 = TcComm.lcomp_of_comp <| S.mk_GTotal U.t_bool in
-    let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
-    Some (U.mk_t2b e, lc_res, Env.trivial_guard)
+    let lc2 = S.mk_GTotal U.t_bool in
+    let lc_res, g_res = bind e.pos false env (Some e) (checked, Env.trivial_guard) (None, lc2, Env.trivial_guard) in
+    Some (U.mk_t2b e, lc_res, g_res)
 
   (* user coercions, find candidates with the @@coercion attribute and try. *)
   |  _ ->
@@ -1812,11 +2134,11 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
       let f_tm = S.fvar f_name None in
       let tt = U.mk_app f_tm [S.as_arg e] in
       Some (env.tc_term { env with nocoerce=true; admit=true; expected_typ = Some (exp_t, false) } tt)
-      // NB: tc_term returns exactly elaborated term, lcomp, and guard, so we just return that.
+      // NB: tc_term returns exactly elaborated term, comp, and guard, so we just return that.
     )
 )
 
-let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : ML (term & lcomp & guard_t) =
+let maybe_coerce_lc env (e:term) (lc:comp) (exp_t:term) : ML (term & comp & guard_t) =
   let head_types_equal t0 t1 =
     match (U.un_uinst (U.unrefine t0)).n, (U.un_uinst (U.unrefine t1)).n with
     | Tm_fvar fv0, Tm_fvar fv1 -> S.fv_eq fv0 fv1
@@ -1825,17 +2147,17 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : ML (term & lcomp & gu
   let should_coerce =
       env.phase1 &&
       not env.nocoerce &&
-      not (head_types_equal lc.res_typ exp_t)
+      not (head_types_equal (U.comp_result lc) exp_t)
   in
   if not should_coerce then (
     if !dbg_Coercions then
       Format.print4 "(%s) NOT Trying to coerce %s from type (%s) to type (%s)\n"
-              (show e.pos) (show e) (show lc.res_typ) (show exp_t);
+              (show e.pos) (show e) (show (U.comp_result lc)) (show exp_t);
     (e, lc, Env.trivial_guard)
   ) else (
     if !dbg_Coercions then
       Format.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
-              (show e.pos) (show e) (show lc.res_typ) (show exp_t);
+              (show e.pos) (show e) (show (U.comp_result lc)) (show exp_t);
     match find_coercion env lc exp_t e with
     | Some (coerced, lc, g) ->
       let _ = if !dbg_Coercions then
@@ -1864,16 +2186,16 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : ML (term & lcomp & gu
         | _ -> None
       in
 
-      match check_erased env lc.res_typ, check_erased env exp_t with
+      match check_erased env (U.comp_result lc), check_erased env exp_t with
       | No, Yes ty ->
           begin
           let u = env.universe_of env ty in
-          match Rel.get_subtyping_predicate env lc.res_typ ty with
+          match Rel.get_subtyping_predicate env (U.comp_result lc) ty with
           | None ->
             e, lc, Env.trivial_guard
           | Some g ->
             let g = Env.apply_guard g e in
-            let e_hide, lc = coerce_with env e lc C.hide [u] [S.iarg ty] (S.mk_Total exp_t) in
+            let e_hide, lc, g_c = coerce_with env e lc C.hide [u] [S.iarg ty] (S.mk_Total exp_t) in
             //
             // AR: an optimization to see if input e is a reveal e',
             //     we can just take e', rather than hide (reveal e') 
@@ -1882,162 +2204,305 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : ML (term & lcomp & gu
             //     since it has logic to compute the correct lc
             //  
             let e_hide = Option.dflt e_hide (strip_hide_or_reveal e C.reveal) in
-            e_hide, lc, g
+            e_hide, lc, Env.conj_guard g g_c
           end
 
       | Yes ty, No ->
         let u = env.universe_of env ty in
-        let e_reveal, lc = coerce_with env e lc C.reveal [u] [S.iarg ty] (S.mk_GTotal ty) in
+        let e_reveal, lc, g_c = coerce_with env e lc C.reveal [u] [S.iarg ty] (S.mk_GTotal ty) in
         let e_reveal = Option.dflt e_reveal (strip_hide_or_reveal e C.hide) in
-        e_reveal, lc, Env.trivial_guard
+        e_reveal, lc, g_c
 
       | _ ->
         e, lc, Env.trivial_guard
   )
 
-let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term & lcomp & guard_t) =
+(* [keep_res_typ env t res_typ] holds when coarsening a computation's result
+   type from [res_typ] to the ascribed [t] would throw information away.
+
+   Coarsening used to be harmless: whatever precision [res_typ] carried was also
+   recorded in the computation's postcondition.  A computation type has no
+   postcondition any more, so its result type is the only place precision can
+   live.  The case that matters is [e1; e2], which desugars to
+   [let _ = (e1 <: Tot unit) in e2]: that machine-generated ascription to [unit]
+   is not a request to view [e1] at a coarser type, and honouring it would
+   silently erase [e1]'s postcondition.  Callers are therefore expected to
+   restrict this to ascriptions that say nothing.
+
+   Hence the test is on [t] being refinement-free: [unit] says nothing, and so
+   does the [list (x:a{p x})] a data constructor expects of its argument.  When
+   [t] does say something it is authoritative: honouring it is what keeps an
+   inferred type equal to a declared one, where keeping the sharper type instead
+   defers the comparison to an arrow-subtyping check whose codomains are related
+   universally in the result rather than at the concrete term (see
+   [FStar.OrdSet.liat_direct]).
+
+   The metavariable tests matter: a uvar in either type is solved by *making*
+   the result type [t], and keeping [res_typ] instead leaves it unresolved.
+   (A [calc] justification is the archetype: [FStar.Calc.calc_push_impl] relates
+   [squash (?p ==> ?q)] to the step's [squash (y ==> z)].)
+
+   Callers that are looking at an *explicit* ascription are stricter still: they
+   additionally require [U.is_exactly_unit t], since [e <: int] is a request to
+   view [e] at [int] even when its inferred type is [nat]. *)
+let keep_res_typ env (t:typ) (res_typ:typ) : ML bool =
+  (* Phase 1 discards specifications everywhere else ([discard_specs]), so it
+     must not keep a precise result type either: [check_inner_let] records
+     [(U.comp_result c1)] as the elaborated let-binding's type, and phase 2 reads that
+     back as an authoritative annotation.  A type kept in phase 1 is therefore
+     a type phase 2 is forced to coarsen *to*, which is exactly backwards --
+     it is what makes [(l1 (); l2 ()); l3 ()] lose [l1]'s postcondition. *)
+  if discard_specs env then false else
+  let is_refinement (t:typ) : ML bool =
+    match (N.normalize_refinement N.whnf_steps env t).n with
+    | Tm_refine _ -> true
+    | _ -> false in
+  (* Keeping a precise result type against a bare flex is how an effectful
+     argument's result type reaches the binder that [bind] introduces for it:
+     [ppname_default, fresh g] must remember that [fresh g] is fresh.  When [t]
+     is a bare flex, [res_typ] may carry metavariables of its own -- a branch's
+     [bail #?a "..." : _:?a{False}] does -- and keeping it is still right: [?a]
+     and [?t] are solved together, and the refinement rides along. *)
+  TEQ.eq_tm env t res_typ <> TEQ.Equal &&
+  (is_bare_flex t || (is_empty (Free.uvars t) && is_empty (Free.uvars res_typ))) &&
+  is_refinement res_typ &&
+  not (is_refinement t)
+
+(* An effectful computation has nowhere else to record what it promises:
+   [assume_result_eq_pure_term] cannot restate the result of a [Dv] call, and a
+   computation type has no postcondition any more.  Coarsening its result type
+   to an unrefined expected type therefore loses the fact for good -- including
+   for the binder [bind] introduces for an effectful argument, which is where
+   [let x = ppname_default, fresh g in ...] gets its freshness from.  Unlike
+   [keep_res_typ] this applies in phase 1 too: phase 1 records this type on the
+   let-binding it elaborates, and phase 2 reads it back as an authoritative
+   annotation. *)
+let keep_effectful_res_typ env (lc:comp) (t:typ) : ML bool =
+  let is_refinement (t:typ) : ML bool =
+    match (N.normalize_refinement N.whnf_steps env t).n with
+    | Tm_refine _ -> true
+    | _ -> false in
+  not (U.is_pure_or_ghost_comp lc) &&
+  TEQ.eq_tm env t (U.comp_result lc) <> TEQ.Equal &&
+  is_empty (Free.uvars (U.comp_result lc)) &&
+  is_refinement (U.comp_result lc) &&
+  not (is_refinement t)
+
+(* A precondition is a *trailing implicit* binder of squash type, so an arrow
+   that has one has exactly one binder more than an otherwise identical arrow
+   that does not.  Subtyping on its own cannot bridge that: it would have to
+   relate the term's *result* type to an arrow, which it never is.  What is
+   needed is an eta-expansion of the term, after which the two arrows line up
+   binder for binder and [tc_abs] supplies the missing implicit binders itself
+   -- exactly as it already does for a term written as a lambda.
+
+   This is what lets a function that has no precondition be used, point-free,
+   where one that has a precondition is expected: [fst] against
+   [x: (a & b) -> Ghost a (requires p x) (ensures q)], say.
+
+   We only try this when the two arities genuinely differ, when the extra
+   binders on whichever side has more are all implicit, and when [e] is not
+   already an abstraction of the arity we would give it.  In that case the
+   direct check is bound to fail, so nothing is lost by trying.  The last
+   condition also rules out a loop: the term we hand back to [tc_term] is an
+   abstraction of exactly [n] binders, so it cannot come back here.
+
+   The mismatch runs in both directions.  A term whose type has *fewer*
+   binders than expected is the [fst] case above.  A term whose type has
+   *more* is its mirror: a function that itself has a precondition, used where
+   one without a precondition is expected, as in
+   [f: (x: t -> Pure u (requires p) (ensures q))] passed where [t -> u] is
+   wanted.  Either way [e] is applied to the smaller of the two arities' worth
+   of arguments, taken from the term's own binders (whose sorts are known)
+   rather than the expected type's (which may still be unification variables).
+
+   The abstraction, however, binds *all* of the expected type's binders: the
+   extra implicits are trailing, so binding them here is what makes the result
+   have the expected arity.  [tc_abs] would not insert them --- it only adds
+   *leading* implicits --- and leaving them to the body would push the same
+   mismatch one level down, where there is no arrow left to eta-expand. *)
+let try_eta_expand_to_expected_typ env (cheap:bool) (e:term) (t1:typ) (t2:typ) (use_eq:bool)
+  : ML (option (term & comp & guard_t)) =
+  (* [cheap] callers run on every result-type weakening, so they must not pay
+     for a normalization on each one: they only look at types that are already
+     syntactically arrows, and leave the rest to the caller that runs after
+     ordinary subtyping has failed. *)
+  if cheap && not (Tm_arrow? (SS.compress t1).n && Tm_arrow? (SS.compress t2).n)
+  then None
+  else
+  let whnf t = if cheap then t else N.unfold_whnf env t in
+  let bs1, _ = U.arrow_formals (whnf t1) in
+  let bs2, _ = U.arrow_formals_comp (whnf t2) in
+  let n1 = List.length bs1 in
+  let n2 = List.length bs2 in
+  let n = if n1 < n2 then n1 else n2 in
+  let actuals, _, _ = U.abs_formals e in
+  let extra = if n1 < n2 then bs2 else bs1 in
+  if n = 0 || n1 = n2 || List.length actuals = n
+  then None
+  else if not (extra |> List.splitAt n |> snd
+                     |> List.for_all (fun b -> S.is_bqual_implicit b.binder_qual))
+  then None
+  else
+    let applied = bs1 |> List.splitAt n |> fst in
+    let bs, args = U.args_of_binders applied in
+    (* When the expected type is the longer one, its trailing implicits are
+       part of the abstraction we must build. Their sorts may mention the
+       binders it shares with [bs1], so rename those to the ones we just
+       bound. *)
+    let bs =
+      if n1 < n2
+      then let pfx, sfx = List.splitAt n bs2 in
+           bs @ (sfx |> SS.subst_binders (U.rename_binders pfx bs))
+      else bs
+    in
+    let eta = U.abs bs (S.mk_Tm_app e args e.pos) None in
+    let tx = UF.new_transaction () in
+    let _, res =
+      Errors.catch_errors_and_ignore_rest (fun () ->
+        env.tc_term (Env.set_expected_typ_maybe_eq env t2 use_eq) eta)
+    in
+    match res with
+    | Some r -> UF.commit tx; Some r
+    | None -> UF.rollback tx; None
+
+let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool) : ML (term & comp & guard_t) =
+  let (lc, g_lc) = lc_g in
   if Debug.high () then
     Format.print4 "weaken_result_typ use_eq=%s e=(%s) lc=(%s) t=(%s)\n"
-            (show use_eq) (show e) (TcComm.lcomp_to_string lc) (show t);
+            (show use_eq) (show e) (show lc) (show t);
   let use_eq =
     use_eq            ||  //caller wants to check equality
     env.use_eq_strict ||
-    (match Env.effect_decl_opt env lc.eff_name with
-     // See issue #881 for why weakening result type of a reifiable computation is problematic
+    (match Env.effect_decl_opt env (U.comp_effect_name lc) with
+     // See issue 881 for why weakening result type of a reifiable computation is problematic
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
-     | _ -> false) in
+     | _ -> false)
+  in
+  (* The expected type may have more (implicit) binders than the term's own
+     type -- a [requires] is a trailing implicit [squash] binder now -- in
+     which case only an eta-expansion can bridge the two.  See
+     [try_eta_expand_to_expected_typ], which rejects at once unless the two
+     arities really do differ with all the extra binders implicit.
+
+     This has to run *before* the subtyping check rather than in its failure
+     branch: relating [x:a -> Tot b] to [x:a -> #_:squash p -> Tot b] does not
+     fail, it succeeds with a [has_type b (#_:squash p -> Tot b)] obligation
+     that no solver can discharge. It is restricted to pure and ghost
+     computations: eta-expanding an effectful [e] would delay, duplicate or
+     drop its effect. *)
+  match (if U.is_pure_or_ghost_comp lc
+         then try_eta_expand_to_expected_typ env true e (U.comp_result lc) t use_eq
+         else None) with
+  | Some (e, lc, g) -> e, lc, Env.conj_guard g_lc g
+  | None ->
   let gopt = if use_eq
-             then Rel.try_teq true env lc.res_typ t, false
-             else Rel.get_subtyping_predicate env lc.res_typ t, true in
+             then Rel.try_teq true env (U.comp_result lc) t, false
+             else Rel.get_subtyping_predicate env (U.comp_result lc) t, true
+  in
   match gopt with
-    | None, _ ->
-        (*
-         * AR: 11/18: should this always fail hard?
-         *)
-        if env.failhard
-        then Err.raise_basic_type_error env e.pos (Some e) t lc.res_typ
-        else (
-            subtype_fail env e lc.res_typ t; //log a sub-typing error
-            e, {lc with res_typ=t}, Env.trivial_guard //and keep going to type-check the result of the program
-        )
-    | Some g, apply_guard ->
-      match guard_form g with
-        | Trivial ->
-          (*
-           * AR: when the guard is trivial, simply setting the result type to t might lose some precision
-           *     e.g. when input lc has return type x:int{phi} and we are weakening it to int
-           *     so we should capture the precision before setting the comp type to t (see e.g. #1500, #1470)
-           *)
-          let strengthen_trivial () =
-            let c, g_c = TcComm.lcomp_comp lc in
-            let res_t = Util.comp_result c in
+  | None, _ ->
+    (match (if U.is_pure_or_ghost_comp lc
+            then try_eta_expand_to_expected_typ env false e (U.comp_result lc) t use_eq
+            else None) with
+     | Some (e, lc, g) -> e, lc, Env.conj_guard g_lc g
+     | None ->
+    (*
+      * AR: 11/18: should this always fail hard?
+      *)
+    if env.failhard
+    then Err.raise_basic_type_error env e.pos (Some e) t (U.comp_result lc)
+    else (
+        subtype_fail env e (U.comp_result lc) t; //log a sub-typing error
+        e, U.set_result_typ lc t, g_lc //and keep going to type-check the result of the program
+    ))
+  
+  | Some g, apply_guard ->
+    let keep () : ML bool = keep_res_typ env t (U.comp_result lc) || keep_effectful_res_typ env lc t in
+    match guard_form g with
+    (* [t] is a bare unification variable and the "subtyping predicate" is
+        only the placeholder guard of a problem [Rel] deferred -- its body is
+        still an unsolved uvar, and becomes [True] once the problem is solved.
+        There is nothing to weaken *to* here, so coarsening would discard the
+        result type in exchange for nothing; keep it, and discharge the
+        placeholder at [e]. *)
+    | NonTrivial f when is_bare_flex t
+                      && (let _, body, _ = U.abs_formals_ln f in is_bare_flex body)
+                      && keep () ->
+      let f = if apply_guard then mk_Tm_app f [S.as_arg e] f.pos else f in
+      e, lc, Env.conj_guard g_lc { g with guard_f = TcComm.check_trivial f }
 
-            let set_result_typ (c:comp) : ML comp = Util.set_result_typ c t in
+    | Trivial ->
+      if keep ()
+      then begin
+        if Debug.extreme ()
+        then Format.print2 "weaken_result_type: keeping the more precise res_typ %s rather than %s\n"
+                        (show (U.comp_result lc)) (show t);
+        e, lc, Env.conj_guard g_lc g
+      end
+      else
+        e, U.set_result_typ lc t, Env.conj_guard g_lc g
 
-            if TEQ.eq_tm env t res_t = TEQ.Equal then begin  //if the two types res_t and t are same, then just set the result type
-              if Debug.extreme()
-              then Format.print2 "weaken_result_type::strengthen_trivial: res_t:%s is same as t:%s\n"
-                             (show res_t) (show t);
-              set_result_typ c, g_c
+    | NonTrivial f ->
+      let g = {g with guard_f=Trivial} in
+      let strengthen () : ML (comp & guard_t) =
+          begin
+              //try to normalize one more time, since more unification variables may be resolved now
+              let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
+              match (SS.compress f).n with
+                  | Tm_abs _ when
+                      (match U.abs_formals_ln f with
+                        | _, {n=Tm_fvar fv}, _ -> S.fv_eq_lid fv C.true_lid
+                        | _ -> false) ->
+                    //it's trivial
+                    U.set_result_typ lc t, Env.trivial_guard
+
+                  | _ ->
+                      let c, g_c = lc, Env.trivial_guard in
+                      if Debug.extreme ()
+                      then Format.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
+                              (N.term_to_string env (U.comp_result lc))
+                              (N.term_to_string env t)
+                              (N.comp_to_string env c)
+                              (N.term_to_string env f);
+
+                      let x = S.new_bv (Some t.pos) t in
+                      let xexp = S.bv_to_name x in
+                      //AR: M.return
+                      let eq_ret, gret = return_value env
+                        (c |> U.comp_effect_name)
+                        t xexp in
+                      let guard = if apply_guard
+                                  then mk_Tm_app f [S.as_arg xexp] f.pos
+                                  else f
+                      in
+                      let g_eq =
+                          simplify_and_label_guard
+                            (Some <| Err.subtyping_failed env (U.comp_result lc) t)
+                            (Env.set_range (Env.push_bvs env [x]) e.pos)
+                            (guard_of_guard_formula <| NonTrivial guard)
+                      in
+                      (* [g_eq] is the subtyping obligation and mentions [x];
+                          hand it to [bind] alongside the continuation's comp,
+                          so that [bind] closes it over [x] and weakens it
+                          with [x == e]. *)
+                      let x = {x with sort=(U.comp_result lc)} in
+                      //AR: M_M bind
+                      let c, g_lc = bind_maybe_capture false e.pos false env (Some e) (c, Env.trivial_guard) (Some x, eq_ret, g_eq) in
+                      if Debug.extreme ()
+                      then Format.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
+                      c, Env.conj_guards [g_c; gret; g_lc]
             end
-            else
-              let is_res_t_refinement =
-                let res_t = N.normalize_refinement N.whnf_steps env res_t in
-                match res_t.n with
-                | Tm_refine _ -> true
-                | _ -> false
-              in
-              //if t is a refinement, insert a return to capture the return type res_t
-              //we are not inlining e, rather just adding (fun (x:res_t) -> p x) at the end
-              if is_res_t_refinement then
-                let x = S.new_bv (Some res_t.pos) res_t in
-                //AR: build M.return, where M is c's effect
-                let cret, gret = return_value env (c |> U.comp_effect_name |> Env.norm_eff_name env)
-                  (comp_univ_opt c) res_t (S.bv_to_name x) in
-                  //AR: an M_M bind
-                let lc = bind e.pos false env (Some e) (TcComm.lcomp_of_comp c) (Some x, TcComm.lcomp_of_comp cret) in
-                if Debug.extreme ()
-                then Format.print4 "weaken_result_type::strengthen_trivial: inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
-                               (show e) (show c) (show t) (TcComm.lcomp_to_string lc);
-                let c, g_lc = TcComm.lcomp_comp lc in
-                set_result_typ c, Env.conj_guards [g_c; gret; g_lc]
-              else begin
-                if Debug.extreme ()
-                then Format.print2 "weaken_result_type::strengthen_trivial: res_t:%s is not a refinement, leaving c:%s as is\n"
-                               (show res_t) (show c);
-                set_result_typ c, g_c
-              end
-          in
-          let lc = TcComm.mk_lcomp lc.eff_name t lc.cflags strengthen_trivial in
-          e, lc, g
+      in
+      let c, g_strengthen = strengthen () in
+      let g = {g with guard_f=Trivial} in
+      (e, U.set_result_typ c t, Env.conj_guards [g_lc; g_strengthen; g])
 
-        | NonTrivial f ->
-          let g = {g with guard_f=Trivial} in
-          let strengthen () =
-              begin
-                  //try to normalize one more time, since more unification variables may be resolved now
-                  let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
-                  match (SS.compress f).n with
-                      | Tm_abs _ when
-                          (match U.abs_formals_ln f with
-                           | _, {n=Tm_fvar fv}, _ -> S.fv_eq_lid fv C.true_lid
-                           | _ -> false) ->
-                        //it's trivial
-                        let lc = {lc with res_typ=t} in //NS: what's the point of this?
-                        TcComm.lcomp_comp lc
-
-                      | _ ->
-                          let c, g_c = TcComm.lcomp_comp lc in
-                          if Debug.extreme ()
-                          then Format.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
-                                  (N.term_to_string env lc.res_typ)
-                                  (N.term_to_string env t)
-                                  (N.comp_to_string env c)
-                                  (N.term_to_string env f);
-
-                          let u_t_opt = comp_univ_opt c in
-                          let x = S.new_bv (Some t.pos) t in
-                          let xexp = S.bv_to_name x in
-                          //AR: M.return
-                          let cret, gret = return_value env
-                            (c |> U.comp_effect_name |> Env.norm_eff_name env)
-                            u_t_opt t xexp in
-                          let guard = if apply_guard
-                                      then mk_Tm_app f [S.as_arg xexp] f.pos
-                                      else f
-                          in
-                          let eq_ret, _trivial_so_ok_to_discard =
-                              strengthen_precondition (Some <| Err.subtyping_failed env lc.res_typ t)
-                                                      (Env.set_range (Env.push_bvs env [x]) e.pos)
-                                                      e  //use e for debugging only
-                                                      (TcComm.lcomp_of_comp cret)
-                                                      (guard_of_guard_formula <| NonTrivial guard)
-                          in
-                          let x = {x with sort=lc.res_typ} in
-                          //AR: M_M bind
-                          let c = bind e.pos false env (Some e) (TcComm.lcomp_of_comp c) (Some x, eq_ret) in
-                          let c, g_lc = TcComm.lcomp_comp c in
-                          if Debug.extreme ()
-                          then Format.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
-                          c, Env.conj_guards [g_c; gret; g_lc]
-                end
-          in
-          let flags = [] in
-          let lc = TcComm.mk_lcomp (norm_eff_name env lc.eff_name) t flags strengthen in
-          let g = {g with guard_f=Trivial} in
-          (e, lc, g)
-
+(* A computation carries no specification any more: its precondition is an
+   implicit binder on the arrow it came from, and its postcondition is part of
+   its result type. *)
 let pure_or_ghost_pre_and_post env comp : ML _ =
-    let mk_post_type res_t ens =
-        let x = S.new_bv None res_t in
-        U.refine x (U.apply_post ens (S.bv_to_name x)) in
-    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding] env t in
-    if U.is_tot_or_gtot_comp comp
-    then None, U.comp_result comp
-    else
-      let ct = Env.unfold_effect_abbrev env comp in
-      let req = ct.comp_pre in
-      Some (norm req), (norm <| mk_post_type ct.result_typ ct.comp_post)
+    None, U.comp_result comp
 
 (* [norm_reify env t] assumes that [t] has the shape reify t0 *)
 (* where env |- t0 : M t' for some effect M and type t' where M is reifiable *)
@@ -2233,10 +2698,13 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : ML guard_t =
   | None -> Err.expected_expression_of_type env (Env.get_range env) t2 e t1
   | Some g -> g
 
-let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : ML (term & lcomp & guard_t) =
+let check_has_type_maybe_coerce env (e:term) (lc:comp) (t2:typ) use_eq : ML (term & comp & guard_t) =
   let env = Env.set_range env e.pos in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
-  let g = check_has_type env e lc.res_typ t2 use_eq in
+  match try_eta_expand_to_expected_typ env false e (U.comp_result lc) t2 use_eq with
+  | Some (e, lc, g) -> e, lc, (Env.conj_guard g g_c)
+  | None ->
+  let g = check_has_type env e (U.comp_result lc) t2 use_eq in
   if !dbg_Rel then
     Format.print1 "Applied guard is %s\n" <| guard_to_string env g;
   e, lc, (Env.conj_guard g g_c)
@@ -2245,26 +2713,25 @@ let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : ML (te
 let check_top_level env g lc : ML (bool & comp) =
  Errors.with_ctx "While checking for top-level effects" (fun () ->
   if Debug.medium () then
-    Format.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
+    Format.print1 "check_top_level, lc = %s\n" (show lc);
   let discharge g =
     force_trivial_guard env g;
-    if TcComm.is_pure_lcomp lc then true
+    if U.is_pure_comp lc then true
     (* An effect marked [@@top_level_effect] may appear at the top level. *)
-    else if Some? (Env.get_top_level_effect env lc.eff_name) then true
+    else if Some? (Env.get_top_level_effect env (U.comp_effect_name lc)) then true
     (* An effect with a representation is a value of that representation;
        running it at the top level is meaningless. *)
-    else if Env.is_reifiable_effect env lc.eff_name then
+    else if Env.is_reifiable_effect env (U.comp_effect_name lc) then
       raise_error env Errors.Fatal_UnexpectedEffect [
-        text "Effect" ^/^ pp lc.eff_name ^/^ text "cannot be used as a top-level effect"
+        text "Effect" ^/^ pp (U.comp_effect_name lc) ^/^ text "cannot be used as a top-level effect"
       ]
     (* Otherwise: warn, and mask the effect. *)
     else false in
   let g = Rel.solve_deferred_constraints env g in
-  let c, g_c = TcComm.lcomp_comp lc in
-  if TcComm.is_total_lcomp lc
+  let c, g_c = lc, Env.trivial_guard in
+  if U.is_total_comp lc
   then discharge (Env.conj_guard g g_c), c
-  else let c = Env.unfold_effect_abbrev env c in
-       let us = c.comp_univs in
+  else let c = U.comp_to_comp_typ c in
        let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
        let c = c
          |> S.mk_Comp
@@ -2378,7 +2845,7 @@ let must_erase_for_extraction (g:env) (t:typ) =
   res
 
 let effect_extraction_mode env l : ML _ =
-  l |> Env.norm_eff_name env
+  l
     |> Env.get_effect_decl env
     |> (fun ed -> ed.extraction_mode)
 
@@ -2386,7 +2853,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm : ML _ =
   raise_error r Errors.Fatal_UnexpectedEffect "Effects no longer have representations"
 
 let fresh_effect_repr_en env r eff_name u a_tm : ML _ =
-  let ed = Env.get_effect_decl env (Env.norm_eff_name env eff_name) in
+  let ed = Env.get_effect_decl env (eff_name) in
   match U.get_eff_repr ed with
   | None ->
     raise_error r Errors.Fatal_UnexpectedEffect

@@ -248,26 +248,20 @@ let __on_decreases #m {|d : lvm m |} (f : term -> ML (m term)) (cf : cflag) : ML
   | f -> return f
 
 let on_sub_comp_typ #m {|d : lvm m |} ct : ML (m _) =
-  let! comp_univs = ct.comp_univs |> mapM f_univ in
   let  effect_name = ct.effect_name in
+  let  source_effect_name = ct.source_effect_name in
   let! result_typ = ct.result_typ |> f_term in
-  let! comp_pre = ct.comp_pre |> f_term in
-  let! comp_post = ct.comp_post |> f_term in
   let! flags = ct.flags |> mapM (__on_decreases #m #d f_term) in
   return <| {
-    comp_univs;
     effect_name;
     result_typ;
-    comp_pre;
-    comp_post;
     flags;
+    source_effect_name;
   }
 
 let on_sub_comp #m {|d : lvm m |} c : ML (m comp) =
   let! cn =
     match c.n with
-    | Total typ  -> Total <$> f_term typ
-    | GTotal typ -> GTotal <$> f_term typ
     | Comp ct -> Comp <$> on_sub_comp_typ ct
   in
   return <| Syntax.mk cn c.pos
@@ -331,8 +325,6 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
   | Sig_new_effect ed ->
     let  mname           = ed.mname in
     let  cattributes     = ed.cattributes in
-    let  univs           = ed.univs in
-    let! binders         = ed.binders |> mapM f_binder in
     let! combinators =
       match ed.combinators with
       | None -> return None
@@ -340,11 +332,12 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
         let! repr        = c.repr        |> f_tscheme in
         let! return_repr = c.return_repr |> f_tscheme in
         let! bind_repr   = c.bind_repr   |> f_tscheme in
-        return (Some { repr; return_repr; bind_repr })
+        let! repr_universe = c.repr_universe |> f_tscheme in
+        return (Some { repr; return_repr; bind_repr; repr_universe })
     in
     let! eff_attrs       = ed.eff_attrs |> mapM f_term in
     let  extraction_mode = ed.extraction_mode in
-    let ed = { mname; cattributes; univs; binders; combinators; eff_attrs; extraction_mode; } in
+    let ed = { mname; cattributes; combinators; eff_attrs; extraction_mode; } in
     return <| Sig_new_effect ed
 
   | Sig_sub_effect se ->
@@ -355,12 +348,9 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
     in
     return <| Sig_sub_effect { se with lift }
 
-  | Sig_effect_abbrev {lid; us; bs; comp; cflags} ->
-    let! binders = bs |> mapM f_binder in
-    let! comp    = comp |> f_comp in
-    let! cflags  = cflags |> mapM (__on_decreases #m #d f_term) in
-    // ^ review: residual flags should not have terms
-    return <| Sig_effect_abbrev {lid; us; bs; comp; cflags}
+  (* An effect abbreviation is a pair of names: no subterms to visit. *)
+  | Sig_effect_abbrev _ ->
+    return se
 
   (* No content, except for Check. *)
   | Sig_pragma (Check t) ->

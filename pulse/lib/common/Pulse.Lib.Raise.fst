@@ -21,10 +21,11 @@ module U = FStar.Universe
 type punit : Type u#a = | PUnit
 
 let raisable : p:Type0 { nonempty (Type u#(max a b)) } =
-  squash (
-    nonempty_intro (punit u#(max a b));
-    subtype_of (Type u#(max a b)) (Type u#b)
-  )
+  (* [nonempty_intro] must be called *outside* the [squash]: its postcondition
+     has to be in scope for the refinement on [raisable]'s own type, which is
+     checked out here, not inside the squashed term. *)
+  let _ = nonempty_intro (punit u#(max a b)) in
+  squash (subtype_of (Type u#(max a b)) (Type u#b))
 
 let raisable_subsingleton x y = ()
 

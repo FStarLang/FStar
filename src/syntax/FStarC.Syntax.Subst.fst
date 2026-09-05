@@ -245,11 +245,9 @@ let subst_comp_typ' s t : ML _ =
   | [[]], NoUseRange -> t
   | _ ->
     {t with effect_name=tag_lid_with_range t.effect_name s;
-            comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
+            source_effect_name=tag_lid_with_range t.source_effect_name s;
             result_typ=subst' s t.result_typ;
-            flags=subst_flags' s t.flags;
-            comp_pre=subst' s t.comp_pre;
-            comp_post=subst' s t.comp_post}
+            flags=subst_flags' s t.flags}
 
 let subst_comp' s t : ML _ =
   match s with
@@ -257,8 +255,6 @@ let subst_comp' s t : ML _ =
   | [[]], NoUseRange -> t
   | _ ->
     match t.n with
-      | Total t -> mk_Total (subst' s t)
-      | GTotal t -> mk_GTotal (subst' s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 let subst_ascription' s (asc:ascription) : ML _ =
@@ -328,7 +324,7 @@ let subst_pat' s p : ML (pat & int) =
         {p with v=Pat_dot_term eopt}, n
   in aux 0 p
 
-let push_subst_lcomp s lopt : ML _ = match lopt with
+let push_subst_rc s lopt : ML _ = match lopt with
     | None -> None
     | Some rc ->
         let residual_typ = Option.map (subst' s) rc.residual_typ in
@@ -424,7 +420,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t : ML _ =
 
     | Tm_abs {b; body; rc_opt=lopt} ->
         let s' = shift_subst' 1 s in
-        mk (Tm_abs {b=subst_binder' s b; body=subst' s' body; rc_opt=push_subst_lcomp s' lopt})
+        mk (Tm_abs {b=subst_binder' s b; body=subst' s' body; rc_opt=push_subst_rc s' lopt})
 
     | Tm_arrow {b; comp} ->
         mk (Tm_arrow {b=subst_binder' s b; comp=subst_comp' (shift_subst' 1 s) comp})
@@ -451,7 +447,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t : ML _ =
             let b = subst_binder' s b in
             let asc = subst_ascription' (shift_subst' 1 s) asc in
             Some (b, asc) in
-        mk (Tm_match {scrutinee=t0; ret_opt=asc_opt; brs=pats; rc_opt=push_subst_lcomp s lopt})
+        mk (Tm_match {scrutinee=t0; ret_opt=asc_opt; brs=pats; rc_opt=push_subst_rc s lopt})
 
     | Tm_let {lbs=(is_rec, lbs); body} ->
         let n = List.length lbs in

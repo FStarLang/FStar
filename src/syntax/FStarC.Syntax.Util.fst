@@ -114,7 +114,8 @@ let rec name_function_binders_from (i:int) (t:term) : ML term = match t.n with
       in
       let comp =
         match comp.n with
-        | Total res -> { comp with n = Total (name_function_binders_from (i+1) res) }
+        | Comp ct when PC.is_tot_lid ct.effect_name ->
+          { comp with n = Comp {ct with result_typ = name_function_binders_from (i+1) ct.result_typ} }
         | _ -> comp
       in
       mk (Tm_arrow {b; comp}) t.pos
@@ -240,44 +241,41 @@ let eq_univs_list (us:universes) (vs:universes) : ML bool =
 (*********************** Utilities for computation types ************************)
 (********************************************************************************)
 
+(* [ML] is an abbreviation of [ALL], and a [comp_typ] records the root. *)
 let ml_comp t r =
-  mk_triv_comp [U_zero] (set_lid_range (PC.effect_ML_lid()) r) t [MLEFFECT]
+  mk_Comp ({ effect_name = set_lid_range (PC.effect_ALL_lid()) r;
+             result_typ = t;
+             flags = [];
+             source_effect_name = set_lid_range (PC.effect_ML_lid()) r })
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
-    | Total _ -> PC.effect_Tot_lid
-    | GTotal _ -> PC.effect_GTot_lid
+
+(* The effect name as the user wrote it; see [comp_typ.source_effect_name]. *)
+let comp_source_effect_name c = match c.n with
+    | Comp c  -> c.source_effect_name
+
+(* Merging two computations -- [bind], a lift, a normalization step -- has to
+   say which written name, if any, the result inherits.  An abbreviation is
+   presentation only, so the rule is: keep the written name when both sides
+   wrote the same one, and otherwise fall back to [eff], the root name of the
+   result.  Every caller goes through here so that they cannot drift apart. *)
+let combine_source_effect_name (eff:lident) (s1:lident) (s2:lident) : lident =
+  if lid_equals s1 s2 then s1 else eff
 
 let comp_flags c = match c.n with
-    | Total _ -> [TOTAL]
-    | GTotal _ -> []
     | Comp ct -> ct.flags
 
 let comp_eff_name_and_res (c:comp) : lident & typ =
   match c.n with
-  | Total t -> PC.effect_Tot_lid, t
-  | GTotal t -> PC.effect_GTot_lid, t
   | Comp c -> c.effect_name, c.result_typ
 
-(* The precondition of a computation, as a formula. *)
-let comp_pre (c:comp) : term = match c.n with
-    | Total _
-    | GTotal _ -> trivial_pre
-    | Comp ct -> ct.comp_pre
-
-(* The postcondition of a computation, abstracted over its result:
-   a term of type [comp_result c -> prop]. *)
-let comp_post (c:comp) : ML term = match c.n with
-    | Total t
-    | GTotal t -> trivial_post t
-    | Comp ct -> ct.comp_post
-
-
-let is_named_tot c =
-    match c.n with
-        | Comp c -> lid_equals c.effect_name PC.effect_Tot_lid
-        | Total _ -> true
-        | GTotal _ -> false
+(* [comp'] has a single constructor, so this is a projection.  It used to live
+   in [Env] and need an environment, because it also filled in the universe
+   list that a [comp_typ] carried. *)
+let comp_to_comp_typ (c:comp) : comp_typ =
+  match c.n with
+  | Comp ct -> ct
 
 let un_uinst t =
     let t = Subst.compress t in
@@ -296,6 +294,16 @@ let rec is_t_true t =
           | _ -> false) -> is_t_true a
      | _ -> false
 
+(* The dual of [is_t_true]. *)
+let rec is_t_false t =
+     match (unmeta t).n with
+     | Tm_fvar fv -> fv_eq_lid fv PC.false_lid
+     | Tm_app {hd; arg=(a, _)} when
+         (match (un_uinst hd).n with
+          | Tm_fvar fv -> fv_eq_lid fv PC.squash_lid
+          | _ -> false) -> is_t_false a
+     | _ -> false
+
 (* A postcondition is an abstraction [fun (x:t) -> phi].  It is trivial when
    [phi] is [True]. *)
 let is_trivial_post (p:term) : ML bool =
@@ -303,45 +311,49 @@ let is_trivial_post (p:term) : ML bool =
   | Tm_abs {body} -> is_t_true (compress body)
   | _ -> false
 
-(* A computation type has a trivial specification when both its pre- and
-   postcondition are [True]; such a computation is equivalent to a [Tot]. *)
-let has_trivial_spec (c:comp) : ML bool =
-  match c.n with
-  | Total _ | GTotal _ -> true
-  | Comp ct -> is_t_true ct.comp_pre && is_trivial_post ct.comp_post
+(* Is [c] literally a [Tot] (resp. [GTot])?  This is the narrow, syntactic
+   question -- the one a match on the old [Total]/[GTotal] constructors asked.
+   Use [is_total_comp]/[is_tot_or_gtot_comp] for the weaker "is this total?". *)
+let is_named_tot c =
+    PC.is_tot_lid (comp_effect_name c)
+
+let is_named_gtot c =
+    PC.is_gtot_lid (comp_effect_name c)
+
+let is_named_tot_or_gtot c =
+    PC.is_tot_or_gtot_lid (comp_effect_name c)
 
 let is_total_comp c =
-    lid_equals (comp_effect_name c) PC.effect_Tot_lid
-    (* [PURE t (requires True) (ensures True)] is just [Tot t] *)
-    || (lid_equals (comp_effect_name c) PC.effect_PURE_lid && has_trivial_spec c)
-    || comp_flags c |> U.for_some (function TOTAL -> true | _ -> false)
+    PC.is_pure_effect_lid (comp_effect_name c)
 
 let is_tot_or_gtot_comp c =
     is_total_comp c
-    || lid_equals PC.effect_GTot_lid (comp_effect_name c)
-    || (lid_equals PC.effect_GHOST_lid (comp_effect_name c) && has_trivial_spec c)
+    || PC.is_ghost_effect_lid (comp_effect_name c)
 
-let is_pure_effect l =
-     lid_equals l PC.effect_Tot_lid
-     || lid_equals l PC.effect_PURE_lid
-     || lid_equals l PC.effect_Pure_lid
+(* Exactly what [mk_Total]/[mk_GTotal] build: a [Tot] or [GTot] with nothing
+   else to say.  Before [Total]/[GTotal] were folded into [Comp] this was a
+   distinct syntactic form, and a few places still want to single it out.
+   The *written* name is deliberately not consulted: [Lemma (ensures p)] is
+   [Tot (squash p)], and only differs in how it is displayed. *)
+let is_bare_tot_or_gtot_comp c =
+  match c.n with
+  | Comp ct ->
+    PC.is_tot_or_gtot_lid ct.effect_name
+    && Nil? ct.flags
+
+(* Exactly what [mk_Total] builds: a [Tot] with nothing else to say. *)
+let is_bare_total_comp c =
+  is_bare_tot_or_gtot_comp c && is_named_tot c
+
+let is_pure_effect l = PC.is_pure_effect_lid l
 
 let is_pure_comp c = match c.n with
-    | Total _ -> true
-    | GTotal _ -> false
     | Comp ct -> is_total_comp c
                  || is_pure_effect ct.effect_name
-                 || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
 
-let is_ghost_effect l =
-       lid_equals PC.effect_GTot_lid l
-    || lid_equals PC.effect_GHOST_lid l
-    || lid_equals PC.effect_Ghost_lid l
+let is_ghost_effect l = PC.is_ghost_effect_lid l
 
-let is_div_effect l =
-     lid_equals l PC.effect_DIV_lid
-     || lid_equals l PC.effect_Div_lid
-     || lid_equals l PC.effect_Dv_lid
+let is_div_effect l = PC.is_div_effect_lid l
 
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
@@ -354,7 +366,9 @@ let rec is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow {comp=c} ->
       (* [comp_result] is not in scope yet. *)
       (match c.n with
-       | Total res when Tm_arrow? (compress res).n -> is_pure_or_ghost_function res
+       | Comp ct when PC.is_tot_lid ct.effect_name
+                    && Tm_arrow? (compress ct.result_typ).n ->
+         is_pure_or_ghost_function ct.result_typ
        | _ -> is_pure_or_ghost_comp c)
     | _ -> true
 
@@ -407,20 +421,17 @@ let leftmost_head_and_args t =
     aux t []
 
 
+(* [ML] is an abbreviation of [ALL] and the desugarer resolves it away, so an
+   [ML t] computation carries [ALL] as its effect name; see [ml_comp]. *)
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.effect_name (PC.effect_ML_lid())
-              || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
+  | Comp c -> lid_equals c.effect_name (PC.effect_ALL_lid())
 
   | _ -> false
 
 let comp_result c = match c.n with
-  | Total t
-  | GTotal t -> t
   | Comp ct -> ct.result_typ
 
 let set_result_typ c t = match c.n with
-  | Total _ -> mk_Total t
-  | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
 (* The SMT patterns attached to a Lemma, if any. *)
@@ -520,6 +531,14 @@ let rec is_uvar t =
   | Tm_app _ -> t |> head_and_args_full |> fst |> is_uvar
   | Tm_ascribed {tm=t} -> is_uvar t
   | _ -> false
+
+(* [t] is literally [Prims.unit].  Unlike [is_unit] below, this rejects
+   refinements of [unit] and [squash _]: it is the test for "this type says
+   nothing", so it must not accept a type that does. *)
+let is_exactly_unit t =
+    match (compress t).n with
+    | Tm_fvar fv -> fv_eq_lid fv PC.unit_lid
+    | _ -> false
 
 let rec is_unit t =
     match (unrefine t).n with
@@ -721,8 +740,15 @@ let rec arrow_formals_comp_ln (k:term) =
     match k.n with
         | Tm_arrow {b; comp=c} ->
             if is_total_comp c && not (has_decreases c)
-            then let bs', k = arrow_formals_comp_ln (comp_result c) in
-                 b::bs', k
+            then let bs', k' = arrow_formals_comp_ln (comp_result c) in
+                 (* Only flatten if there was in fact something to flatten:
+                    otherwise keep [c] rather than rebuilding a bare [Total]
+                    around its result, which would discard its flags (the
+                    [SMTPAT] of a lemma, in particular) and the name the user
+                    wrote. *)
+                 (match bs' with
+                  | [] -> [b], c
+                  | _ -> b::bs', k')
             else [b], c
         | Tm_refine {b={ sort = s }} ->
           (*
@@ -817,12 +843,12 @@ let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun b -> mem b.binder_bv d_bvs)))
 
-let rec __abs_formals_ln t abs_body_lcomp : ML _ =
+let rec __abs_formals_ln t abs_body_rc : ML _ =
     match (unmeta_safe t).n with
     | Tm_abs {b; body=t; rc_opt=what} ->
       let bs', t, what = __abs_formals_ln t what in
       b::bs', t, what
-    | _ -> [], t, abs_body_lcomp
+    | _ -> [], t, abs_body_rc
 
 (* Collects all nested Tm_abs nodes without opening the binders. *)
 let abs_formals_ln (t:term) : ML (binders & term & option residual_comp) =
@@ -841,7 +867,7 @@ let rec abs_one_group_ln (t:term) : ML (binders & term & option residual_comp) =
     | _ -> [], t, None
 
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
-    let subst_lcomp_opt s l = match l with
+    let subst_rc_opt s l = match l with
         | Some rc ->
           Some ({rc with residual_typ = Option.map (Subst.subst s) rc.residual_typ})
         | _ -> l
@@ -849,14 +875,14 @@ let abs_formals_maybe_unascribe_body maybe_unascribe t =
     (* A single n-ary Tm_abs node is a maximal contiguous spine of unary nodes,
        so [maybe_unascribe=false] still walks the spine; it just does not look
        through Tm_meta between the levels. *)
-    let rec spine t abs_body_lcomp : ML _ =
+    let rec spine t abs_body_rc : ML _ =
         match (Subst.compress t).n with
         | Tm_abs {b; body=t; rc_opt=what} ->
           let bs', t, what = spine t what in
           b::bs', t, what
-        | _ -> [], t, abs_body_lcomp
+        | _ -> [], t, abs_body_rc
     in
-    let rec aux t abs_body_lcomp : ML _ =
+    let rec aux t abs_body_rc : ML _ =
         match (unmeta_safe t).n with
         | Tm_abs {b; body=t; rc_opt=what} ->
           if maybe_unascribe
@@ -864,12 +890,12 @@ let abs_formals_maybe_unascribe_body maybe_unascribe t =
                b::bs', t, what
           else let bs', t, what = spine t what in
                b::bs', t, what
-        | _ -> [], t, abs_body_lcomp
+        | _ -> [], t, abs_body_rc
     in
-    let bs, t, abs_body_lcomp = aux t None in
+    let bs, t, abs_body_rc = aux t None in
     let bs, t, opening = Subst.open_term' bs t in
-    let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
-    bs, t, abs_body_lcomp
+    let abs_body_rc = subst_rc_opt opening abs_body_rc in
+    bs, t, abs_body_rc
 
 let abs_formals t = abs_formals_maybe_unascribe_body true t
 
@@ -1066,9 +1092,11 @@ let mk_disj_simp t1 t2 =
 
 (* A postcondition is an abstraction [fun (x:t) -> phi].  It is trivial when
    [phi] is [True]. *)
-let mk_has_type t x t' =
-    let t_has_type = fvar_const PC.has_type_lid in //TODO: Fix the U_zeroes below!
-    let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
+(* [has_type] is universe-polymorphic in the type of [x] and in [t']: [us] are
+   the universes of [t] and of [t'], in that order. *)
+let mk_has_type us t x t' =
+    let t_has_type = fvar_const PC.has_type_lid in
+    let t_has_type = mk (Tm_uinst(t_has_type, us)) dummyRange in
     mk_Tm_app t_has_type [iarg t; as_arg x; as_arg t'] dummyRange
 
 let refinement_hypothesis (t:typ) (v:term) : ML term =
@@ -1095,16 +1123,6 @@ let apply_post (p:term) (e:term) : ML term =
       let bv, body = Subst.open_term_bv b.binder_bv body in
       Subst.subst [NT (bv, e)] body
     | _ -> mk_Tm_app p [as_arg e] p.pos
-
-(* Combine two postconditions over the same result type. *)
-let mk_conj_post (t:typ) (p1:term) (p2:term) : ML term =
-  if is_trivial_post p1 then p2
-  else if is_trivial_post p2 then p1
-  else
-    let x = new_bv None t in
-    abs [mk_binder x]
-        (mk_conj_simp (apply_post p1 (bv_to_name x)) (apply_post p2 (bv_to_name x)))
-        (Some post_rc)
 
 let teq = fvar_const PC.eq2_lid
 let mk_untyped_eq2 e1 e2 = mk_Tm_app teq [as_arg e1; as_arg e2] (Range.union_ranges e1.pos e2.pos)
@@ -1144,14 +1162,14 @@ let mk_residual_comp l t f = {
     residual_flags=f
   }
 let residual_tot t = {
-    residual_effect=PC.effect_Tot_lid;
+    residual_effect=PC.primitive_pure_lid;
     residual_typ=Some t;
-    residual_flags=[TOTAL]
+    residual_flags=[]
   }
 let residual_gtot t = {
-    residual_effect=PC.effect_GTot_lid;
+    residual_effect=PC.primitive_ghost_lid;
     residual_typ=Some t;
-    residual_flags=[TOTAL]
+    residual_flags=[]
   }
 let residual_comp_of_comp (c:comp) = {
     residual_effect=comp_effect_name c;
@@ -1238,6 +1256,37 @@ let is_squash t =
         when Syntax.fv_eq_lid fv PC.squash_lid ->
         Some t
     | _ -> None
+
+(* Represent a postcondition as a property of the result type: [t] together
+   with [fun x -> Q x] becomes [x:t{Q x}].  In the very common case where the
+   result is [unit] and [Q] does not mention it -- every [Lemma], in
+   particular -- we emit [squash Q] instead, which is the same type
+   (Prims.squash p = _:unit{p}) but reads and encodes better.  [un_squash]
+   recognises both forms. *)
+let refine_with_post (t:typ) (p:term) : ML typ =
+  if is_trivial_post p then t
+  else
+    let x = new_bv (Some t.pos) t in
+    let body = apply_post p (bv_to_name x) in
+    let t_is_unit =
+      match (Subst.compress t).n with
+      | Tm_fvar fv -> fv_eq_lid fv PC.unit_lid
+      | _ -> false
+    in
+    if t_is_unit && not (mem x (Free.names body))
+    then mk_squash body
+    else refine x body
+
+(* The partial inverse of [refine_with_post]. *)
+let post_of_result_typ (t:typ) : ML term =
+  match is_squash t with
+  | Some phi -> abs [null_binder t_unit] phi None
+  | None ->
+    match (Subst.compress t).n with
+    | Tm_refine {b=x; phi} ->
+      let bs, phi = Subst.open_term [mk_binder x] phi in
+      abs bs phi None
+    | _ -> trivial_post t
 
 
 let mk_b2t t = mk_app (fvar_with_dd PC.b2t_lid None) [as_arg t]
@@ -1363,7 +1412,6 @@ let rec term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool =
   | Tm_abs {b=b1;body=t1;rc_opt=k1}, Tm_abs {b=b2;body=t2;rc_opt=k2} ->
     (check "abs binders"  (binder_eq_dbg dbg b1 b2)) &&
     (check "abs bodies"   (term_eq_dbg dbg t1 t2))
-    //&& eqopt (eqsum lcomp_eq_dbg dbg residual_eq) k1 k2
 
   | Tm_arrow {b=b1;comp=c1}, Tm_arrow {b=b2;comp=c2} ->
     (check "arrow binders" (binder_eq_dbg dbg b1 b2)) &&
@@ -1458,7 +1506,6 @@ and comp_eq_dbg (dbg : bool) (c1 c2 : comp) : ML bool =
     let eff1, res1 = comp_eff_name_and_res c1 in
     let eff2, res2 = comp_eff_name_and_res c2 in
     (check_term_eq dbg "comp eff"  (lid_equals eff1 eff2)) &&
-    //(check "comp univs"  (c1.comp_univs = c2.comp_univs)) &&
     (check_term_eq dbg "comp result typ"  (term_eq_dbg dbg res1 res2)) &&
     true //eq_flags c1.flags c2.flags
 and branch_eq_dbg (dbg : bool) (br1 : pat & option term & term) (br2 : pat & option term & term) : ML bool =
@@ -1745,14 +1792,8 @@ and unbound_variables_ascription asc : ML _ =
 
 and unbound_variables_comp c : ML _ =
     match c.n with
-    | Total t
-    | GTotal t ->
-      unbound_variables t
-
     | Comp ct ->
       unbound_variables ct.result_typ
-      @ unbound_variables ct.comp_pre
-      @ unbound_variables ct.comp_post
 
 let extract_attr' (attr_lid:lid) (attrs:list term) : ML (option (list term & args)) =
     let rec aux acc attrs : ML _ =
@@ -1775,9 +1816,14 @@ let extract_attr (attr_lid:lid) (se:sigelt) : ML (option (sigelt & args)) =
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
 
+(* [Lemma] is an abbreviation of [Tot], so [effect_name] says nothing about it:
+   being a lemma is a property of how the computation type was *written*.  It
+   is what tells the SMT encoding to turn a [val] into an axiom (see
+   [is_smt_lemma] and [SMTEncoding.Encode]) and what lets [Rel] and [Resugar]
+   recognize one, so [source_effect_name] is consulted here. *)
 let is_lemma_comp c =
     match c.n with
-    | Comp ct -> lid_equals ct.effect_name PC.effect_Lemma_lid
+    | Comp ct -> lid_equals ct.source_effect_name PC.effect_Lemma_lid
     | _ -> false
 
 let is_lemma t =
@@ -1788,7 +1834,7 @@ let is_lemma t =
 let is_smt_lemma t =
   let _, c = arrow_formals_comp t in
   match c.n with
-  | Comp ct when lid_equals ct.effect_name PC.effect_Lemma_lid ->
+  | Comp ct when lid_equals ct.source_effect_name PC.effect_Lemma_lid ->
     begin match comp_smt_pats c with
     | Some pats ->
       let pats' = unmeta pats in
@@ -1810,6 +1856,19 @@ let rec list_elements (e:term) : ML (option (list term)) =
       Some (hd :: Option.must (list_elements tl))
   | _ ->
       None
+
+(* [split_squash_binders bs] splits [bs] into its real binders and the
+   precondition carried by a trailing implicit binder of squash type, if any.
+   This is the inverse of the desugaring of an arrow codomain's [requires]
+   clause (see [ToSyntax.desugar_comp]).  The squash binder is nameless and
+   nothing may refer to it, so dropping it needs no substitution. *)
+let split_squash_binders (bs:binders) : ML (binders & term) =
+  match List.rev bs with
+  | b :: rev_rest when (match b.binder_qual with Some (Implicit _) -> true | _ -> false) ->
+    (match un_squash b.binder_bv.sort with
+     | Some p -> List.rev rev_rest, p
+     | None -> bs, t_true)
+  | _ -> bs, t_true
 
 let destruct_lemma_with_smt_patterns (t:term)
 : ML (option (binders & term & term & list (list arg)))
@@ -1863,7 +1922,19 @@ let destruct_lemma_with_smt_patterns (t:term)
   match c.n with
   | Comp ct ->
     (match comp_smt_pats c with
-     | Some pats -> Some (bs, ct.comp_pre, ct.comp_post, lemma_pats pats)
+     | Some pats ->
+       (* A lemma's specification is no longer on its [comp]: the
+          precondition is a trailing implicit [squash] binder and the
+          postcondition is the argument of the [squash] in the result type.
+          The [SMTPAT] flag is what identifies this arrow as the image of a
+          source lemma, and it carries the patterns. *)
+       let bs, pre = split_squash_binders bs in
+       let post =
+         match un_squash ct.result_typ with
+         | Some q -> q
+         | None -> t_true
+       in
+       Some (bs, pre, post, lemma_pats pats)
      | None -> None)
   | _ ->
     None
@@ -1892,9 +1963,6 @@ let unthunk (t:term) : ML term =
     | _ ->
         mk_app t [as_arg exp_unit]
 
-let unthunk_lemma_post t =
-    unthunk t
-
 let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list universe))
 : ML term
 = let binders, pre, post, patterns =
@@ -1902,8 +1970,9 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list unive
     | None -> failwith "impos"
     | Some res -> res
   in
-  (* Postcondition is thunked, c.f. #57 *)
-  let post = unthunk_lemma_post post in
+  (* The postcondition is no longer thunked: the [#(squash pre)] binder is to
+     the left of the codomain, so [pre] is in scope while the postcondition's
+     well-formedness is checked, which is all the thunking of #57 bought. *)
   let body = mk (Tm_meta {tm=mk_imp pre post;
                           meta=Meta_pattern (binders_to_names binders, patterns)}) t.pos in
   let quant =
@@ -1928,11 +1997,13 @@ let eff_decl_of_new_effect (se:sigelt) : ML eff_decl =
 let get_eff_repr ed    = match ed.combinators with None -> None | Some c -> Some c.repr
 let get_return_repr ed = match ed.combinators with None -> None | Some c -> Some c.return_repr
 let get_bind_repr ed   = match ed.combinators with None -> None | Some c -> Some c.bind_repr
+let get_repr_universe ed = match ed.combinators with None -> None | Some c -> Some c.repr_universe
 
 let apply_eff_combinators f combs = {
-  repr        = f combs.repr;
-  return_repr = f combs.return_repr;
-  bind_repr   = f combs.bind_repr;
+  repr          = f combs.repr;
+  return_repr   = f combs.return_repr;
+  bind_repr     = f combs.bind_repr;
+  repr_universe = f combs.repr_universe;
 }
 
 let aqual_is_erasable (aq:aqual) =

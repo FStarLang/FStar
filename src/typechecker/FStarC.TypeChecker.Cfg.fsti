@@ -117,6 +117,12 @@ val cfg_env: cfg -> Env.env
 val find_prim_step: cfg -> fv -> ML (option primitive_step)
 val is_prim_step: cfg -> fv -> ML bool
 
+(* Is [fv] implemented by one of the built-in primitive steps, i.e. can the
+   normalizer replace an application of it by its value?  Unlike
+   [is_prim_step] this does not need a [cfg], so it can be consulted by the
+   typechecker. *)
+val is_built_in_primop: fv -> ML bool
+
 val log : cfg -> (unit -> ML unit) -> ML unit
 val log_top : cfg -> (unit -> ML unit) -> ML unit
 val log_cfg : cfg -> (unit -> ML unit) -> ML unit

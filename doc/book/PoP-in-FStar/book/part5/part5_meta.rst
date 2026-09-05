@@ -226,13 +226,11 @@ goals.
 In the following simplified example, we are looking to prove ``s``
 from ``p`` given some lemmas. The first thing we do is apply the
 ``qr_s`` lemma, which gives us two subgoals, for ``q`` and ``r``
-respectively. We then need to proceed to solve the first goal for
-``q``. In order to isolate the proofs of both goals, we can ``focus``
-on the current goal making all others temporarily invisible. To prove
-``q``, we then just use the ``p_r`` lemma and obtain a subgoal for
-``p``. This one we will just just leave to the SMT solver, hence we
-call ``smt()`` to move it to the list of SMT goals. We prove ``r``
-similarly, using ``p_r``.
+respectively. We then proceed to solve the first goal for ``q`` using
+the ``p_q`` lemma, and the second one for ``r`` using ``p_r``. The
+precondition ``p`` of each of these lemmas is an implicit argument, so
+it is left to the SMT solver, just as it would be at an ordinary call
+site.
 
 .. literalinclude:: ../code/Part5.Mapply.fst
    :language: fstar

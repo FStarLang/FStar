@@ -57,6 +57,21 @@ let plugin_unfold_warn_ctr : ref int = mk_ref 0
 let dbg_univ_norm = Debug.get_toggle "univ_norm"
 let dbg_NormRebuild = Debug.get_toggle "NormRebuild"
 
+(* Computing the universe of a type encountered *during* normalization.
+
+   The normalizer does not extend [cfg.tcenv] as it descends under binders: it
+   tracks the local scope in its own closure environment instead.  So a type
+   read off a residual comp or a monadic-lift annotation may mention variables
+   that [cfg.tcenv] has never heard of.  That is harmless for the universe
+   itself -- a universe is determined by sorts, not by any logical content --
+   but [Env.universe_of] checks its argument is well-scoped.  Reintroduce the
+   free variables from the sorts they carry, so the check sees what the
+   normalizer already knows. *)
+let universe_of_ln (env:Env.env) (t:typ) : ML universe =
+  let bvs = Free.names t |> FStarC.Class.Setlike.elems in
+  let env = if Nil? bvs then env else Env.push_bvs env bvs in
+  env.universe_of env t
+
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
  * reduction and strong reduction (under binders), as described in:
@@ -421,7 +436,7 @@ type stack_elt =
  | UnivArgs of list universe & Range.t // NB: universes must be values already, no bvars allowed
  | MemoLazy of cfg_memo (env & term)
  | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.t
- | Abs      of env & binders & env & option residual_comp & Range.t //the second env is the first one extended with the binders, for reducing the option lcomp
+ | Abs      of env & binders & env & option residual_comp & Range.t //the second env is the first one extended with the binders, for reducing the option comp
  | App      of env & term & aqual & Range.t
  | CBVApp   of env & term & aqual & Range.t
  | Meta     of env & S.metadata & Range.t
@@ -531,13 +546,12 @@ let lookup_bvar (env : env) x =
     try (List.nth env x.index)._2
     with _ -> failwith (Format.fmt2 "Failed to find %s\nEnv is %s\n" (show x) (show env))
 
+(* The pure counterpart of one of the built-in spellings of the ghost effect.
+   [None] for anything else -- in particular for a user-defined abbreviation of
+   [GTot], whose caller must unfold it first. *)
 let downgrade_ghost_effect_name l =
-    if Ident.lid_equals l PC.effect_Ghost_lid
-    then Some PC.effect_Pure_lid
-    else if Ident.lid_equals l PC.effect_GTot_lid
-    then Some PC.effect_Tot_lid
-    else if Ident.lid_equals l PC.effect_GHOST_lid
-    then Some PC.effect_PURE_lid
+    if PC.is_ghost_effect_lid l
+    then Some PC.primitive_pure_lid
     else None
 
 (********************************************************************************************************************)
@@ -670,10 +684,6 @@ let rec env_subst (env:env) : ML subst_t =
       memo := Some s;
       s
 
-let filter_out_lcomp_cflags flags =
-    (* TODO : lc.comp might have more cflags than lcomp.cflags *)
-    flags |> List.filter (function DECREASES _ -> false | _ -> true)
-
 let default_univ_uvars_to_zero (t:term) : ML term =
   Visit.visit_term_univs false (fun t -> t) (fun u ->
     match u with
@@ -732,6 +742,16 @@ let mk_psc_subst cfg (env:env) =
             | _ -> subst)
         env []
 
+(* See the use site in [reduce_primops]: is [reduced] the degenerate
+   application that a plugin builds when it fails to unembed its arguments? *)
+let is_shadow_app (fv:fv) (prim_step:PO.primitive_step) (reduced:term) : ML bool =
+  let head, args = U.head_and_args_full reduced in
+  List.length args < prim_step.arity &&
+  (match (SS.compress (U.unmeta head)).n with
+   | Tm_fvar fv'
+   | Tm_uinst ({n=Tm_fvar fv'}, _) -> S.fv_eq fv fv'
+   | _ -> false)
+
 (* Boolean indicates whether further normalization of the result is
 required. It is usually false, unless we call into a 'renorm' primitive
 step. *)
@@ -781,6 +801,20 @@ let reduce_primops norm_cb cfg (env:env) tm : ML (term & bool) =
                   match r with
                   | None ->
                       log_primops cfg (fun () -> Format.print1 "primop: <%s> did not reduce\n" (show tm));
+                      tm, false
+                  | Some reduced when is_shadow_app fv prim_step reduced ->
+                      (* A plugin that cannot unembed its arguments falls back to
+                         a "shadow" application which it rebuilds from just the
+                         arguments its generated wrapper handed it -- without the
+                         universes, and without the leading type arguments the
+                         wrapper stripped off (see [arrow_as_prim_step_N] in
+                         [Syntax.Embeddings]).  That term is a strictly partial
+                         application of the same head, so it can never reach this
+                         primitive step again: taking it would silently disable
+                         the plugin for every later occurrence, even once the
+                         arguments have become concrete.  Report it as a failure
+                         to reduce and keep the original term instead. *)
+                      log_primops cfg (fun () -> Format.print1 "primop: <%s> did not reduce (shadow app)\n" (show tm));
                       tm, false
                   | Some reduced ->
                       log_primops cfg (fun () -> Format.print2 "primop: <%s> reduced to  %s\n"
@@ -860,14 +894,8 @@ let should_reify cfg stack =
 let rec maybe_weakly_reduced tm :  ML bool =
     let aux_comp c =
         match c.n with
-        | GTotal t
-        | Total t ->
-          maybe_weakly_reduced t
-
         | Comp ct ->
           maybe_weakly_reduced ct.result_typ
-          || maybe_weakly_reduced ct.comp_pre
-          || maybe_weakly_reduced ct.comp_post
     in
     let t = Subst.compress tm in
     match t.n with
@@ -1008,7 +1036,7 @@ let maybe_drop_rc_typ cfg (rc:residual_comp) : ML residual_comp =
   else rc
 
 let get_extraction_mode env (m:Ident.lident) =
-  let norm_m = Env.norm_eff_name env m in
+  let norm_m = m in
   (Env.get_effect_decl env norm_m).extraction_mode
 
 let can_reify_for_extraction env (m:Ident.lident) = false
@@ -1387,11 +1415,11 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               match stack with
               | [] -> None
               | Meta (_, Meta_monadic (m, _), _)::tl
-                when lid_equals m PC.effect_DIV_lid ->
+                when PC.is_div_effect_lid m ->
                 maybe_strip_meta_divs tl
               | Meta (_, Meta_monadic_lift (src, tgt, _), _)::tl
-                when lid_equals src PC.effect_PURE_lid &&
-                     lid_equals tgt PC.effect_DIV_lid ->
+                when PC.is_pure_effect_lid src &&
+                     PC.is_div_effect_lid tgt ->
                 maybe_strip_meta_divs tl
               | Arg _::_ -> Some stack  //due to the precondition, this case doesn't arise in the top-level call
               | _ -> None
@@ -1668,7 +1696,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             (* If we are reifying, we reduce Div lets faithfully, i.e. in CBV *)
             (* This is important for tactics, see issue #1594 *)
             else if cfg.steps.tactics
-                    && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
+                    && U.is_div_effect (lb.lbeff)
             then let ffun = S.mk_Tm_abs [S.mk_binder (lb.lbname |> Inl?.v)] body None t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
                  log cfg (fun () -> Format.print_string "+++ Evaluating DIV Tm_let\n");
@@ -2072,7 +2100,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
       (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
       (*                                                                            *)
       (* ****************************************************************************)
-      let eff_name = Env.norm_eff_name cfg.tcenv m in
+      let eff_name = m in
       let ed = Env.get_effect_decl cfg.tcenv eff_name in
       let _, repr = ed |> U.get_eff_repr |> Option.must in
       let _, bind_repr = ed |> U.get_bind_repr |> Option.must in
@@ -2096,7 +2124,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
           (* We are in the case where [top] = [bind (return e) (fun x -> body)] *)
           (* which can be optimised to a non-monadic let-binding [let x = e in body] *)
           | Some e ->
-            let lb = {lb with lbeff=PC.effect_PURE_lid; lbdef=e} in
+            let lb = {lb with lbeff=PC.primitive_pure_lid; lbdef=e} in
             norm cfg env (List.tl stack) (S.mk (Tm_let {lbs=(false, [lb]); body=U.mk_reify body (Some m)}) top.pos)
           | None ->
             if (match is_return body with Some ({n=Tm_bvar y}) -> S.bv_eq x y | _ -> false)
@@ -2121,8 +2149,8 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
               let close = closure_as_term cfg env in
               let bind_inst = match (SS.compress bind_repr).n with
                 | Tm_uinst (bind, [_ ; _]) ->
-                    S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
-                                          ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
+                    S.mk (Tm_uinst (bind, [ universe_of_ln cfg.tcenv (close lb.lbtyp)
+                                          ; universe_of_ln cfg.tcenv (close t)]))
                     rng
                 | _ ->
                   raise_error rng Errors.Fatal_UnexpectedEffect
@@ -2151,8 +2179,8 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
                         { lbname = Inl bv;
                           lbunivs = [];
                           lbtyp = U.mk_app repr [S.as_arg x.sort];
-                          lbeff = if is_total_effect then PC.effect_Tot_lid
-                                                     else PC.effect_Dv_lid;
+                          lbeff = if is_total_effect then PC.primitive_pure_lid
+                                                     else PC.primitive_div_lid;
                           lbdef = head;
                           lbattrs = [];
                           lbpos = head.pos;
@@ -2207,12 +2235,12 @@ and reify_lift cfg e msrc mtgt t : ML term =
   let env = cfg.tcenv in
   log cfg (fun () -> Format.print3 "Reifying lift %s -> %s: %s\n"
         (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt) (show e));
-  match Env.lookup_lift env (Env.norm_eff_name env msrc) (Env.norm_eff_name env mtgt) with
+  match Env.lookup_lift env (msrc) (mtgt) with
   | Some (_, lift) ->
     (* An explicit lift was given. Feed it the reified source computation if the
        source effect is itself reifiable, and a thunk otherwise. *)
     let lift = match (SS.compress lift).n with
-      | Tm_uinst (lift_tm, [_]) -> S.mk (Tm_uinst (lift_tm, [env.universe_of env t])) e.pos
+      | Tm_uinst (lift_tm, [_]) -> S.mk (Tm_uinst (lift_tm, [universe_of_ln env t])) e.pos
       | _ -> lift in
     let e =
       if Env.is_reifiable_effect env msrc
@@ -2230,12 +2258,12 @@ and reify_lift cfg e msrc mtgt t : ML term =
     if not (U.is_pure_effect msrc || U.is_div_effect msrc || U.is_ghost_effect msrc)
     then failwith (Format.fmt2 "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
                      (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt));
-    let ed = Env.get_effect_decl env (Env.norm_eff_name env mtgt) in
+    let ed = Env.get_effect_decl env (mtgt) in
     let _, repr = ed |> U.get_eff_repr |> Option.must in
     let _, return_repr = ed |> U.get_return_repr |> Option.must in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
-            S.mk (Tm_uinst (return_tm, [env.universe_of env t])) e.pos
+            S.mk (Tm_uinst (return_tm, [universe_of_ln env t])) e.pos
         | _ ->
           raise_error e.pos Errors.Fatal_UnexpectedEffect
             (Format.fmt2 "The return combinator of effect %s must be polymorphic in exactly one universe (%s)"
@@ -2271,36 +2299,16 @@ and norm_comp : cfg -> env -> comp -> ML comp =
                                         (show comp)
                                         (show (List.length env)));
         match comp.n with
-            | Total t ->
-              let t = norm cfg env [] t in
-              { mk_Total t with pos = comp.pos }
-
-            | GTotal t ->
-              let t = norm cfg env [] t in
-              { mk_GTotal t with pos = comp.pos }
-
             | Comp ct ->
-              //
-              // if cfg.for_extraction and the effect extraction is not by reification,
-              // then drop the effect arguments
-              //
-              let comp_pre, comp_post =
-                if cfg.steps.for_extraction
-                then S.trivial_pre, S.trivial_post ct.result_typ
-                else norm cfg env [] ct.comp_pre, norm cfg env [] ct.comp_post in
               let flags = ct.flags |> List.map (function
                 | DECREASES (Decreases_lex l) ->
                   DECREASES (l |> List.map (norm cfg env []) |> Decreases_lex)
                 | DECREASES (Decreases_wf (rel, e)) ->
                   DECREASES (Decreases_wf (norm cfg env [] rel, norm cfg env [] e))
                 | f -> f) in
-              let comp_univs = List.map (norm_universe cfg env) ct.comp_univs in
               let result_typ = norm cfg env [] ct.result_typ in
-              { mk_Comp ({ct with comp_univs  = comp_univs;
-                                                result_typ  = result_typ;
-                                                comp_pre    = comp_pre;
-                                                comp_post   = comp_post;
-                                                flags       = flags}) with pos = comp.pos }
+              { mk_Comp ({ct with result_typ  = result_typ;
+                                  flags       = flags}) with pos = comp.pos }
 
 and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : ML binder =
     let x = { b.binder_bv with sort = norm cfg env [] b.binder_bv.sort } in
@@ -2382,6 +2390,24 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
             || (Ident.lid_equals l PC.bool_lid)
             || (Ident.lid_equals l PC.string_lid)
             || (Ident.lid_equals l PC.exn_lid)
+        (* [x:t{x == e}] is inhabited by [e] whenever [t] is.  That singleton
+           shape is what [assume_result_eq_pure_term] gives the result type of a
+           pure term now that a computation has no postcondition to record it
+           in, so it turns up on the result type of any definition ending in a
+           literal. *)
+        | Tm_refine {b; phi} when clearly_inhabited b.sort ->
+            let bv, phi = SS.open_term_bv b phi in
+            let is_name (t:term) : ML bool =
+              match (SS.compress t).n with
+              | Tm_name bv' -> S.bv_eq bv bv'
+              | _ -> false in
+            let hd, args = U.head_and_args_full phi in
+            (match (U.un_uinst hd).n, args with
+             | Tm_fvar fv, [_; (lhs, _); (rhs, _)]
+                 when S.fv_eq_lid fv PC.eq2_lid ->
+               (is_name lhs && not (FStarC.Class.Setlike.mem bv (Free.names rhs))) ||
+               (is_name rhs && not (FStarC.Class.Setlike.mem bv (Free.names lhs)))
+             | _ -> false)
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
@@ -3207,43 +3233,27 @@ let maybe_promote_t env non_informative_only t =
 
 let ghost_to_pure_aux env non_informative_only c =
     match c.n with
-    | Total _ -> c
-    | GTotal t ->
-      if maybe_promote_t env non_informative_only t then {c with n = Total t} else c
     | Comp ct ->
-        let l = Env.norm_eff_name env ct.effect_name in
+        let l = ct.effect_name in
         if U.is_ghost_effect l
         && maybe_promote_t env non_informative_only ct.result_typ
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
-                   let flags = if Ident.lid_equals pure_eff PC.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
-                   {ct with effect_name=pure_eff; flags=flags}
+                   {ct with effect_name=pure_eff; source_effect_name=pure_eff}
                  | None ->
-                    let ct = unfold_effect_abbrev env c in //must be GHOST
-                    {ct with effect_name=PC.effect_PURE_lid} in
+                    let ct = U.comp_to_comp_typ c in //must be ghost
+                    {ct with effect_name=PC.primitive_pure_lid;
+                             source_effect_name=PC.primitive_pure_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c
 
-let ghost_to_pure_lcomp_aux env non_informative_only (lc:lcomp) =
-    if U.is_ghost_effect lc.eff_name
-    && maybe_promote_t env non_informative_only lc.res_typ
-    then match downgrade_ghost_effect_name lc.eff_name with
-         | Some pure_eff ->
-           { TcComm.apply_lcomp (ghost_to_pure_aux env non_informative_only) (fun g -> g) lc
-             with eff_name = pure_eff }
-         | None -> //can't downgrade, don't know the particular incarnation of PURE to use
-           lc
-    else lc
-
 (* only promote non-informative types *)
 let maybe_ghost_to_pure env c = ghost_to_pure_aux env true c
-let maybe_ghost_to_pure_lcomp env lc = ghost_to_pure_lcomp_aux env true lc
 
 (* promote unconditionally *)
 let ghost_to_pure env c = ghost_to_pure_aux env false c
-let ghost_to_pure_lcomp env lc = ghost_to_pure_lcomp_aux env false lc
 
 (*
  * The following functions implement GHOST to PURE promotion
@@ -3255,41 +3265,34 @@ let ghost_to_pure_lcomp env lc = ghost_to_pure_lcomp_aux env false lc
 let ghost_to_pure2 env (c1, c2) =
   let c1, c2 = maybe_ghost_to_pure env c1, maybe_ghost_to_pure env c2 in
 
-  let c1_eff = c1 |> U.comp_effect_name |> Env.norm_eff_name env in
-  let c2_eff = c2 |> U.comp_effect_name |> Env.norm_eff_name env in
+  let c1_eff = c1 |> U.comp_effect_name in
+  let c2_eff = c2 |> U.comp_effect_name in
 
   if Ident.lid_equals c1_eff c2_eff then c1, c2
   else let c1_erasable = Env.is_erasable_effect env c1_eff in
        let c2_erasable = Env.is_erasable_effect env c2_eff in
 
-       if c1_erasable && Ident.lid_equals c2_eff PC.effect_GHOST_lid
+       if c1_erasable && PC.is_ghost_effect_lid c2_eff
        then c1, ghost_to_pure env c2
-       else if c2_erasable && Ident.lid_equals c1_eff PC.effect_GHOST_lid
+       else if c2_erasable && PC.is_ghost_effect_lid c1_eff
        then ghost_to_pure env c1, c2
        else c1, c2
-
-let ghost_to_pure_lcomp2 env (lc1, lc2) =
-  let lc1, lc2 = maybe_ghost_to_pure_lcomp env lc1, maybe_ghost_to_pure_lcomp env lc2 in
-
-  let lc1_eff = Env.norm_eff_name env lc1.eff_name in
-  let lc2_eff = Env.norm_eff_name env lc2.eff_name in
-
-  if Ident.lid_equals lc1_eff lc2_eff then lc1, lc2
-  else let lc1_erasable = Env.is_erasable_effect env lc1_eff in
-       let lc2_erasable = Env.is_erasable_effect env lc2_eff in
-
-       if lc1_erasable && Ident.lid_equals lc2_eff PC.effect_GHOST_lid
-       then lc1, ghost_to_pure_lcomp env lc2
-       else if lc2_erasable && Ident.lid_equals lc1_eff PC.effect_GHOST_lid
-       then ghost_to_pure_lcomp env lc1, lc2
-       else lc1, lc2
 
 let warn_norm_failure (r:Range.t) (e:exn) : ML unit =
   Errors.log_issue r Errors.Warning_NormalizationFailure (Format.fmt1 "Normalization failed with error %s\n" (BU.message_of_exn e))
 
+(* Steps used to tidy a term up before showing it to the user.
+
+   Fixpoint reduction is deliberately excluded.  A term that is being reported
+   in an error message has no reason to be terminating -- [let rec f x : Dv a =
+   f x in f] is a perfectly good subterm of a proposition -- and unfolding it
+   here loops until the process runs out of memory, which no [try ... with]
+   can catch.  A recursive definition also reads better left folded. *)
+let for_printing_steps = [AllowUnboundUniverses; Exclude Zeta]
+
 let term_to_doc env t =
   let t =
-    try normalize [AllowUnboundUniverses] env t
+    try normalize for_printing_steps env t
     with e ->
       warn_norm_failure t.pos e;
       t
@@ -3301,7 +3304,7 @@ let term_to_doc env t =
 
 let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =
-    try normalize [AllowUnboundUniverses] env t
+    try normalize for_printing_steps env t
     with e ->
       warn_norm_failure t.pos e;
       t
@@ -3310,7 +3313,7 @@ let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
 
 let comp_to_string env c = GenSym.with_frozen_gensym (fun () ->
   let c =
-    try norm_comp (config [AllowUnboundUniverses] env) [] c
+    try norm_comp (config for_printing_steps env) [] c
     with e ->
       warn_norm_failure c.pos e;
       c
@@ -3319,7 +3322,7 @@ let comp_to_string env c = GenSym.with_frozen_gensym (fun () ->
 
 let comp_to_doc env c = GenSym.with_frozen_gensym (fun () ->
   let c =
-    try norm_comp (config [AllowUnboundUniverses] env) [] c
+    try norm_comp (config for_printing_steps env) [] c
     with e ->
       warn_norm_failure c.pos e;
       c
@@ -3480,9 +3483,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) : ML sigelt =
 
     | Sig_sub_effect sub_eff -> s
 
-    | Sig_effect_abbrev {lid; us=univ_names; bs=binders; comp; cflags=flags} ->
-      let univ_names, binders, comp = elim_uvars_aux_c env univ_names binders comp in
-      {s with sigel = Sig_effect_abbrev {lid; us=univ_names; bs=binders; comp; cflags=flags}}
+    | Sig_effect_abbrev _ -> s
 
     | Sig_pragma _ ->
       s
@@ -3512,9 +3513,12 @@ let unfold_head_once env t =
   | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
   | _ -> None
 
-let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : ML (list binder & comp) =
+let get_n_binders_gen (split : term -> ML (list binder & comp))
+                      (env:Env.env) (steps : list step) (n:int) (t:term)
+  : ML (list binder & comp)
+  =
   let rec aux (retry:bool) (n:int) (t:term) : ML (list binder & comp) =
-    let bs, c = U.arrow_formals_comp t in
+    let bs, c = split t in
     let len = List.length bs in
     match bs, c with
     (* Got no binders, maybe retry after normalizing *)
@@ -3545,7 +3549,25 @@ let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : ML (list
   in
   aux true n t
 
+let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : ML (list binder & comp) =
+  get_n_binders_gen U.arrow_formals_comp env steps n t
+
 let get_n_binders env n t = get_n_binders' env [] n t
+
+(* [arrow_formals_comp] descends into a refinement whose underlying type is an
+   arrow, and throws the refinement away. That is fine for a caller that only
+   wants to count binders, but not for one that rebuilds a type from the
+   binders it got back: for a [let rec] annotated
+   [x:t -> Pure (f:(y:s -> u){phi})], the refinement [phi] *is* the definition's
+   [ensures], and losing it means the definition is never checked against it.
+   So look for binders with the strict splitter, and only fall back to the
+   unrefining one when that finds too few (which cannot lose anything the old
+   behaviour kept). *)
+let get_n_binders_no_unrefine env n t =
+  let bs, c = get_n_binders_gen U.arrow_formals_comp_strict env [] n t in
+  if List.length bs = n
+  then bs, c
+  else get_n_binders env n t
 
 let () =
   __get_n_binders := get_n_binders'

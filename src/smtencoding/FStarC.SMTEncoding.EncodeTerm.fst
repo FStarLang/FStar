@@ -97,9 +97,10 @@ let head_normal env t =
 let head_redex env t =
     match (U.un_uinst t).n with
     | Tm_abs {rc_opt=Some rc} ->
-      Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
-      || Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
-      || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
+      (* A [residual_comp] carries no specification, so this must test the
+         spec-free spellings [Tot]/[GTot] rather than the whole pure/ghost
+         class; those two names are stable across the primitive-effect flip. *)
+      Const.is_tot_or_gtot_lid rc.residual_effect
 
     | Tm_uinst({n=Tm_fvar fv}, _)
     | Tm_fvar fv ->
@@ -222,7 +223,7 @@ let is_app = function
     | Var "ApplyTF" -> true
     | _ -> false
 
-let check_pattern_vars env vars pats =
+let check_pattern_vars env vars body pats =
     let pats =
         pats |> List.map (fun (x, _) ->
         norm_with_steps [Env.Beta] env.tcenv x)
@@ -231,7 +232,15 @@ let check_pattern_vars env vars pats =
     | [] -> ()
     | hd::tl ->
         let pat_vars = List.fold_left (fun out x -> union out (Free.names x)) (Free.names hd) tl in
-        match vars |> Option.find (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
+        (* A binder that occurs neither in the body nor in the sort of another
+           binder is inert: no instantiation of it can matter, so a pattern that
+           does not mention it is not ill-formed. Such binders arise from
+           closing a guard over an irrelevant binder. *)
+        let relevant =
+          List.fold_left (fun out ({binder_bv=b}) -> union out (Free.names b.sort))
+                         (Free.names body) vars
+        in
+        match vars |> Option.find (fun ({binder_bv=b}) -> not (mem b pat_vars) && mem b relevant) with
         | None -> ()
         | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
@@ -962,11 +971,10 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                 *     we encode terms in this let-scope just to compute a hash
                 *)
                let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
-               let c = Env.unfold_effect_abbrev (Env.push_binders env.tcenv binders) res |> S.mk_Comp in
+               let c = res in
                let ct, _ = encode_term (c |> U.comp_result) env_bs in
-               let effect_args, _ = encode_args [c |> U.comp_pre |> S.as_arg; c |> U.comp_post |> S.as_arg] env_bs in
                let tkey = mkForall t.pos
-                 ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
+                 ([], vars, mk_and_l (guards_l@[ct])) in
                let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
                  (c |> U.comp_effect_name |> string_of_lid) in
                BU.digest_of_string tkey_hash
@@ -1163,6 +1171,17 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
           let dummy = S.new_bv None t_unit in
           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
           encode_term t env
+
+        | Tm_fvar fv, [(_r, _); (_msg, _); (phi, _)]
+        | Tm_uinst({n=Tm_fvar fv}, _), [(_r, _); (_msg, _); (phi, _)]
+            when S.fv_eq_lid fv Const.labeled_lid ->
+          (* [labeled r msg phi] is definitionally [phi]; the label only means
+             anything in goal position, where encode_formula turns it into a
+             Labeled node. Encode it transparently here, so that a hypothesis of
+             type [squash (labeled r msg phi)] -- which is what a [requires]
+             carrying a label desugars to -- is still usable: [labeled] is
+             irreducible, so the solver has no equation for it. *)
+          encode_term phi env
 
         | Tm_fvar fv, _
         | Tm_uinst({n=Tm_fvar fv}, _), _
@@ -1395,22 +1414,8 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
           in
 
           let is_impure (rc:S.residual_comp) =
-            TypeChecker.Util.is_pure_or_ghost_effect env.tcenv rc.residual_effect |> not
+            U.is_pure_or_ghost_effect rc.residual_effect |> not
           in
-
-//          let reify_comp_and_body env body =
-//            let reified_body = TcUtil.reify_body env.tcenv body in
-//            let c = match c with
-//              | Inl lc ->
-//                let typ = reify_comp ({env.tcenv with admit=true}) (lc.comp ()) U_unknown in
-//                Inl (U.lcomp_of_comp (S.mk_Total typ))
-//
-//              (* In this case we don't have enough information to reconstruct the *)
-//              (* whole computation type and reify it *)
-//              | Inr (eff_name, _) -> c
-//            in
-//            c, reified_body
-//          in
 
           let codomain_eff rc =
               let res_typ =
@@ -1427,11 +1432,10 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                   t
                 | Some t -> t
               in
-              if Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
+              if Const.is_tot_lid rc.residual_effect
               then Some (S.mk_Total res_typ)
-              else if Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
+              else if Const.is_gtot_lid rc.residual_effect
               then Some (S.mk_GTotal res_typ)
-              (* TODO (KM) : shouldn't we do something when flags contains TOTAL ? *)
               else None
           in
 
@@ -1848,13 +1852,13 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
              | Some (_, f) -> f phi.pos arms)
 
         | Some (QAll(vars, pats, body)) ->
-          pats |> List.iter (check_pattern_vars env vars);
+          pats |> List.iter (check_pattern_vars env vars body);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           let tm = mkForall phi.pos (pats, vars, mkImp(guard, body)) in
           tm, decls
 
         | Some (QEx(vars, pats, body)) ->
-          pats |> List.iter (check_pattern_vars env vars);
+          pats |> List.iter (check_pattern_vars env vars body);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           mkExists phi.pos (pats, vars, mkAnd(guard, body)), decls
 

@@ -119,11 +119,13 @@ let open_term (b : R.binder) (t : term) : Tac (binder & term) =
   let bndr : binder = open_binder b in
   (bndr, open_term_with b bndr t)
 
-let subst_comp (s : subst_t) (c : comp) : comp =
-  R.inspect_comp (R.subst_comp s (R.pack_comp c))
+(* NOTE: the [comp] view is only meaningful for a comp with no free de Bruijn
+indices, since reading it can introduce a binder (e.g. a Lemma's postcondition
+is presented as a function of its result). So every substitution below is
+performed on the *raw* comp, and the view is taken only once the comp is open. *)
 
 private
-let open_comp (b : R.binder) (t : comp) : Tac (binder & comp) =
+let open_comp (b : R.binder) (t : R.comp) : Tac (binder & comp) =
   let n = fresh () in
   let bv : RD.binder_view = R.inspect_binder b in
   let nv : R.namedv = R.pack_namedv {
@@ -132,7 +134,7 @@ let open_comp (b : R.binder) (t : comp) : Tac (binder & comp) =
     ppname = bv.ppname;
   }
   in
-  let t' = subst_comp [DB 0 nv] t in
+  let t' = R.inspect_comp (R.subst_comp [DB 0 nv] t) in
   let bndr : binder = {
     uniq   = n;
     sort   = bv.sort;
@@ -144,14 +146,14 @@ let open_comp (b : R.binder) (t : comp) : Tac (binder & comp) =
   (bndr, t')
 
 private
-let open_comp_with (b : R.binder) (nb : binder) (c : comp) : Tac comp =
+let open_comp_with (b : R.binder) (nb : binder) (c : R.comp) : Tac comp =
   let nv : R.namedv = R.pack_namedv {
     uniq   = nb.uniq;
     sort   = seal nb.sort;
     ppname = nb.ppname;
   }
   in
-  let t' = subst_comp [DB 0 nv] c in
+  let t' = R.inspect_comp (R.subst_comp [DB 0 nv] c) in
   t'
 
 (* FIXME: unfortunate duplication here. The effect means this proof cannot
@@ -178,7 +180,7 @@ let open_term_simple (b : R.simple_binder) (t : term) : Tac (simple_binder & ter
   (bndr, t')
 
 private
-let open_comp_simple (b : R.simple_binder) (t : comp) : Tac (simple_binder & comp) =
+let open_comp_simple (b : R.simple_binder) (t : R.comp) : Tac (simple_binder & comp) =
   let n = fresh () in
   let bv : RD.binder_view = R.inspect_binder b in
   let nv : R.namedv = R.pack_namedv {
@@ -187,7 +189,7 @@ let open_comp_simple (b : R.simple_binder) (t : comp) : Tac (simple_binder & com
     ppname = bv.ppname;
   }
   in
-  let t' = subst_comp [DB 0 nv] t in
+  let t' = R.inspect_comp (R.subst_comp [DB 0 nv] t) in
   let bndr : binder = {
     uniq   = n;
     sort   = bv.sort;
@@ -205,9 +207,9 @@ let close_term (b:binder) (t:term) : R.binder & term =
   let b = R.pack_binder { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   (b, t')
 private
-let close_comp (b:binder) (t:comp) : R.binder & comp =
+let close_comp (b:binder) (t:comp) : R.binder & R.comp =
   let nv = r_binder_to_namedv b in
-  let t' = subst_comp [NM nv 0] t in
+  let t' = R.subst_comp [NM nv 0] (R.pack_comp t) in
   let b = R.pack_binder { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   (b, t')
 
@@ -220,9 +222,9 @@ let close_term_simple (b:simple_binder) (t:term) : R.simple_binder & term =
   R.inspect_pack_binder bv;
   (b, t')
 private
-let close_comp_simple (b:simple_binder) (t:comp) : R.simple_binder & comp =
+let close_comp_simple (b:simple_binder) (t:comp) : R.simple_binder & R.comp =
   let nv = r_binder_to_namedv b in
-  let t' = subst_comp [NM nv 0] t in
+  let t' = R.subst_comp [NM nv 0] (R.pack_comp t) in
   let bv : RD.binder_view = { sort = b.sort; ppname = b.ppname; qual = b.qual; attrs = b.attrs } in
   let b = R.pack_binder bv in
   R.inspect_pack_binder bv;
@@ -383,7 +385,6 @@ let open_match_returns_ascription (mra : R.match_returns_ascription) : Tac match
   let ct = match ct with
     | Inl t -> Inl (open_term_with b nb t)
     | Inr c ->
-      let c = R.inspect_comp c in
       let c = open_comp_with b nb c in
       Inr c
   in
@@ -403,7 +404,6 @@ let close_match_returns_ascription (mra : match_returns_ascription) : R.match_re
     | Inl t -> Inl (snd (close_term nb t))
     | Inr c ->
       let _, c = close_comp nb c in
-      let c = R.pack_comp c in
       Inr c
   in
   let topt =
@@ -438,7 +438,7 @@ let open_view (tv:RD.term_view) : Tac (tv':named_term_view{ctor_matches tv' tv})
     Tv_Abs nb body
 
   | RD.Tv_Arrow b c ->
-    let nb, c = open_comp b (R.inspect_comp c) in
+    let nb, c = open_comp b c in
     Tv_Arrow nb c
 
   | RD.Tv_Refine b ref ->
@@ -485,7 +485,6 @@ let close_view (tv : named_term_view) : Tot (tv':RD.term_view{ctor_matches tv tv
 
   | Tv_Arrow nb c ->
     let b, c = close_comp nb c in
-    let c = R.pack_comp c in
     RD.Tv_Arrow b c
 
   | Tv_Refine nb ref ->

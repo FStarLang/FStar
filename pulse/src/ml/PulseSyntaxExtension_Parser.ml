@@ -40,7 +40,6 @@ let rewrite_token (tok:FP.token)
     | AS -> PP.AS
     | ASSERT -> PP.ASSERT
     | ASSUME -> PP.ASSUME
-    | ATTRIBUTES -> PP.ATTRIBUTES
     | BACKTICK -> PP.BACKTICK
     | BACKTICK_AT -> PP.BACKTICK_AT
     | BACKTICK_HASH -> PP.BACKTICK_HASH

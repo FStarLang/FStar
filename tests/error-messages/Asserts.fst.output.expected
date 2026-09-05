@@ -1,4 +1,4 @@
-* Info at Asserts.fst(6,9-6,17):
+* Info at Asserts.fst(6,2-6,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -8,8 +8,9 @@
       y: Prims.int
       x: Prims.int
       y + 1 == x
+  - See also Asserts.fst(6,9-6,17)
 
-* Info at Asserts.fst(11,9-11,17):
+* Info at Asserts.fst(11,2-11,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -19,8 +20,9 @@
       y: Prims.int
       x: Prims.int
       y + 1 == x
+  - See also Asserts.fst(11,9-11,17)
 
-* Info at Asserts.fst(16,9-16,14):
+* Info at Asserts.fst(16,2-16,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -28,4 +30,5 @@
   - In context:
       x: Prims.int
       y: Prims.int
+  - See also Asserts.fst(16,9-16,14)
 

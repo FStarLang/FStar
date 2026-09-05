@@ -180,7 +180,10 @@ let check_while
   let inv =
     if loop_requires `eq_tm` tm_l_true then inv else
     (inv `tm_star` tm_pure (mk_loop_requires_marker loop_requires)) in
-  let x_meas: nvar = mk_ppname_no_range "meas", fresh g in
+  (* No [: nvar] here, and no [: post_hint_for_env g2] on [body_ph] below: an
+     [ensures] is a refinement on the result type now, so those annotations
+     would discard facts the rest of this function needs. *)
+  let x_meas = mk_ppname_no_range "meas", fresh g in
   let u_meas, ty_meas, meas_val, is_tot, mk_dec =
     match meas with
     | [] -> u0, tm_unit, unit_const, false, mk_precedes u0 tm_unit
@@ -295,7 +298,7 @@ let check_while
 
   let body_pre_open = post_cond.post in
 
-  let body_ph : post_hint_for_env g2 = inv_as_post_hint g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div)) div in
+  let body_ph = inv_as_post_hint g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div)) div in
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
 

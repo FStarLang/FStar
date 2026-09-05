@@ -4,7 +4,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - See also Prims.fst(478,18-478,24)
+  - See also Prims.fst(477,18-477,24)
 
 * Info at NegativeTests.Neg.fst(24,8-24,10):
   - Expected failure:
@@ -12,14 +12,15 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - See also Prims.fst(478,18-478,24)
+  - See also Prims.fst(477,18-477,24)
 
-* Info at NegativeTests.Neg.fst(27,30-27,35):
+* Info at NegativeTests.Neg.fst(27,23-27,29):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: uu___: Prims.unit
+  - See also NegativeTests.Neg.fst(27,30-27,35)
 
 * Info at NegativeTests.Neg.fst(30,28-31,15):
   - Expected failure:
@@ -67,12 +68,8 @@
     got type FStar.Pervasives.result Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: V? ri
-  - In context:
-      ri: FStar.Pervasives.result Prims.int
-      a: Prims.eqtype
-      Prims.hasEq a
-      Prims.int == a
-  - See also FStar.Pervasives.fsti(219,4-219,5)
+  - In context: ri: FStar.Pervasives.result Prims.int
+  - See also FStar.Pervasives.fsti(221,4-221,5)
 
 * Info at NegativeTests.Neg.fst(55,25-55,26):
   - Expected failure:
@@ -81,7 +78,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
   - In context: x: Prims.int
-  - See also Prims.fst(478,18-478,24)
+  - See also Prims.fst(477,18-477,24)
 
 * Info at NegativeTests.Neg.fst(59,26-59,34):
   - Expected failure:

@@ -57,11 +57,24 @@ let exists_extensional (#a:Type u#a) (p q: a -> slprop)
         slprop_equiv_refl (p x)
     );
     I.slprop_equiv_exists p q ()
+(* [Pulse.Lib.Core] re-exports several [PulseCore.IndirectionTheorySep] symbols
+   point-free ([let later = later]); such definitions are opaque to the SMT
+   encoding, so a fact stated with one spelling cannot be transported to the
+   other by the solver.  [conv_squash] does the transport, with the type
+   equality discharged by conversion ([trefl]) rather than by SMT. *)
+private
+let conv_squash (#a #b:prop) (_h:squash a) (_eq:squash (a == b)) : squash b = ()
+
+let bridge_exists (#a:Type u#a) (p:a -> slprop)
+  : squash (op_exists_Star p == Sep.op_exists_Star p)
+  = assert (op_exists_Star p == Sep.op_exists_Star p) by (T.trefl ())
 let timeless_exists #a p =
-  exists_extensional p (fun x -> p x) ();
-  Sep.timeless_exists p;
-  let unfold h: squash (Sep.timeless Sep.(exists* x. p x)) = () in
-  let unfold h: squash (Sep.timeless (exists* x. p x)) = h in
+  let _he : squash (op_exists_Star p == op_exists_Star (fun x -> p x)) =
+    exists_extensional p (fun x -> p x) () in
+  let _hb : squash (op_exists_Star (fun x -> p x) == Sep.op_exists_Star (fun x -> p x)) =
+    bridge_exists (fun x -> p x) in
+  let _ht : squash (Sep.timeless (Sep.op_exists_Star (fun x -> p x))) =
+    Sep.timeless_exists p in
   ()
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
@@ -243,11 +256,13 @@ let later_elim_timeless p = A.implies_elim (later p) p
 let later_star = Sep.later_star
 let later_exists #t f =
   let h: squash Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
-  let h: squash (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
+  let h: squash (later (exists* x. f x) `implies` exists* x. later (f x)) =
+    conv_squash h (_ by (T.trefl ())) in
   A.implies_elim _ _
 let exists_later #t f =
   let h: squash Sep.((exists* x. later (f x)) `implies` later (exists* x. f x)) = Sep.later_exists #t f in
-  let h: squash ((exists* x. later (f x)) `implies` later (exists* x. f x)) = h in
+  let h: squash ((exists* x. later (f x)) `implies` later (exists* x. f x)) =
+    conv_squash h (_ by (T.trefl ())) in
   A.implies_elim _ _
 
 let on_later_eq = Sep.on_later_eq

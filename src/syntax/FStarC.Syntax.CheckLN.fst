@@ -85,14 +85,10 @@ and is_ln'_bv (n:int) (bv:bv) : ML bool =
 
 and is_ln'_comp (n:int) (c:comp) : ML bool =
   match c.n with
-  | Total t -> is_ln' n t
-  | GTotal t -> is_ln' n t
   | Comp ct -> is_ln'_comp_typ n ct
 
 and is_ln'_comp_typ (n:nat) (ct:comp_typ) : ML bool =
   is_ln' n ct.result_typ &&
-  is_ln' n ct.comp_pre &&
-  is_ln' n ct.comp_post &&
 //   L.for_all (is_ln' n) ct.flags
   true
 

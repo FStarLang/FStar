@@ -14,7 +14,7 @@ effect { M with {repr; return; bind} }
 
 let lift_PURE_M (a:Type) (f:unit -> a) : repr a = f ()
 
-sub_effect PURE ~> M = lift_PURE_M
+sub_effect Tot ~> M = lift_PURE_M
 
 assume val f (_:unit) : M int
 
@@ -36,7 +36,7 @@ let n : int = f ()
 [@@ top_level_effect]
 effect { N with {repr; return; bind} }
 
-sub_effect PURE ~> N = lift_PURE_M
+sub_effect Tot ~> N = lift_PURE_M
 
 //
 // And now F* lets the effect go through at the top-level

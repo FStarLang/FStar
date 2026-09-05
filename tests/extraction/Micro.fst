@@ -25,10 +25,10 @@ let h3 #post ($f: (x:int -> Lemma (post x))) x = f 0; x + 1
 let i3 (x:int) = h3 f1 x
 
 let weird0 (a:Type) : Pure a (requires (a == unit)) (ensures fun _ -> True) =
-  f1 0
+  let u : unit = f1 0 in u
 
 let weird1 (a:Type) (f: (int -> unit)) : Pure a (requires (a == unit)) (ensures fun _ -> True) =
-  f1 0
+  let u : unit = f1 0 in u
 
 #set-options "--admit_smt_queries true"
 let weird2 (a:Type) (f: int -> unit) : Pure a (requires (a == (int -> unit))) (ensures fun _ -> True) =
