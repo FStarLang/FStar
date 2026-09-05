@@ -950,6 +950,105 @@ conclusion uses each of them under a partial operation, prefer a `requires`** �
 and it is also a hint about the eventual fix: the `requires` path already does
 the scoping that the implicit-argument path does not.
 
+## The fifth finding, resolved: deduplicating VC conjuncts
+
+Merging `origin/master` turned the fifth finding from a performance note into
+two hard failures. Upstream landed a new SMT encoding for `prop`, which adds a
+`BoxProp` constructor to `Term` along with
+
+```smt2
+(assert (! (forall ((u Fuel) (x Term))
+             (! (implies (HasTypeFuel u x Prims.prop) (is-BoxProp x))
+                :pattern ((HasTypeFuel u x Prims.prop)))) :named prop_inversion))
+```
+
+`is-BoxProp` is a datatype tester, so every prop-typed term in the context is a
+potential constructor case-split. Master's VCs absorb that; ours do not, because
+of exactly the duplication described above. `FStar.Math.Lemmas.lemma_div_plus`
+and `FStar.Math.Fermat` began failing at the default budget. The failing goal
+was instructive: the SMT text of the query was *byte-identical* before and after
+the merge, and bare `z3` still solved it in 0.9s, but the goal went from **0.087
+rlimit to exhausting 5.000** — a purely contextual, ~57x blow-up. Its VC carried
+**32 syntactically identical copies** of the guard `n > 0 ==> n <> 0` emitted by
+the divisions in the statement, nested under seven layers of
+`forall (_: Prims.unit)`.
+
+So the fix is the one this section already predicted, and it is now implemented:
+`dedup_vc` in `FStarC.TypeChecker.Rel`. It walks the conjunctive structure of a
+VC and replaces a conjunct by `True` when a syntactically identical conjunct has
+already been seen in a *goal* position that dominates it. That is sound because
+the retained occurrence is proved outright, so the dropped one follows from it.
+The set of known conjuncts only ever travels *downwards* — into the right of a
+conjunction, the conclusion of an implication, and the body of a quantifier — so
+a conjunct found under a binder is never assumed known outside it. Pushing the
+outer set *under* a binder is fine: those conjuncts are well scoped in the
+enclosing context and therefore mention none of the bound variables, and
+`SS.open_term_1` picks globally fresh names, so capture is impossible.
+Membership uses `FStarC.Syntax.Hash`'s structural `equal_term`, not a hash
+comparison, so a collision costs a missed opportunity and never an unsound drop.
+
+It runs at the single point in `do_discharge_vc` where a goal is handed to
+`env.solver.solve` — after tactic preprocessing, after normalisation, and after
+`check_trivial`. Nothing upstream of the solver can observe it, so it cannot
+perturb unification, inference or tactics.
+
+On `FStar.Math.Lemmas`, against the pre-merge build of this branch:
+
+| | goals in the module | goals for `lemma_div_plus` | wall |
+| --- | --- | --- | --- |
+| pre-merge, no dedup | 1071 | 41 | 7.8s |
+| merged, no dedup | 1071 | 41 | *fails* |
+| merged, with dedup | 654 | 10 | 8.4s |
+
+The worst single goal in the module sits at rlimit 4.0 in both the pre-merge
+baseline and the deduplicated merge — it merely moves between lemmas, which is
+ordinary Z3 luck rather than a change in difficulty.
+
+This is a narrower fix than the section above asks for: it removes the
+duplicates at the end rather than avoiding their construction, so
+`Env.push_guard` still does redundant work and the compile-time cost of building
+those conjuncts remains. Scoping the guards at construction is still worth
+doing. But it removes the duplicates from every query, which is what the solver
+was actually paying for, and it does so without changing a single downstream
+proof.
+
+### The rest of the merge fallout
+
+Three tests moved, and it is worth separating what the dedup did from what the
+merge did. `FSTAR_NO_DEDUP_VC=1` turns `dedup_vc` off, which makes the
+attribution mechanical.
+
+**`tests/bug-reports/closed/Bug3213b.fst`** is the only one caused by the dedup,
+and it is the intended behaviour rather than a regression. The test asserts
+`expect_failure [19; 19; 19]`; it now raises two. Its two `forall_elim` calls
+differ only in their explicit argument, and `forall_elim`'s precondition
+`forall (x:a). p x` does not mention that argument — so the two obligations are
+the same formula, and are now reported once. The annotation is now `[19; 19]`.
+The cost is real, if small: two failing obligations at two source lines can
+collapse to one message. Labelled goals are unaffected, since `equal_term`
+compares the range inside `Meta_labeled`, so only unlabelled duplicates merge.
+
+The other two are fallout from #4519, which stopped emitting the *term*
+equation `f x == body` for a prop-valued definition, leaving only the formula
+equation `Valid (f x) <==> body`. Both fail with the dedup off as well.
+
+**`examples/data_structures/BinomialQueue.fst`** — `find_max_emp_repr_l`'s
+vacuous branch. The encoded query is byte-identical to the pre-merge one and the
+goal is still provable, but z3 now returns `unknown because (incomplete
+quantifiers)` in 0.01s having used 0.049 of its budget: it saturates rather than
+running out of resources, and `--z3rlimit 200`, `--fuel 4` and `--ifuel 2` all
+leave it exactly where it was. The unsat core from a run without a resource
+bound shows why — the new proof needs `prop_inversion`, `prop_validity`,
+`true_interp` and `function_token_typing_Prims.l_True`, none of which the old
+one used. Naming the intermediate fact (`assert (S.mem k (keys l).ms_elems)`)
+restores it. That is the right shape of fix for a saturation failure; an rlimit
+bump would not have worked at any size.
+
+**`examples/dsls/dependent_bool_refinement/DependentBoolRefinement.fst`** —
+`soundness`'s `T_App` case. This one *is* resource exhaustion, and
+`--z3rlimit_factor 2` on the enclosing `#push-options` block is enough; 4 and 8
+were also tried and are not needed. It is the one rlimit change in this merge.
+
 ## User-visible changes
 
 - `assume_safe`'s argument is now `squash False -> Tac a`, not `unit -> Tac a`.

@@ -358,8 +358,8 @@ assume (Projector C2 _0) val Postprocess.__proj__C2__item___0  : (projectee:(uu_
 [@ ]
 visible let rec lift  : (uu___:t1 -> Tot t2) = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2
-	|(B1 i#258)  -> (B2 i@0:(Tm_unknown))
-	|(C1 f#259)  -> (C2 (fun x -> (lift (f@1:(Tm_unknown) x@0:(Tm_unknown)))))))
+	|(B1 i#260)  -> (B2 i@0:(Tm_unknown))
+	|(C1 f#261)  -> (C2 (fun x -> (lift (f@1:(Tm_unknown) x@0:(Tm_unknown)))))))
 [@ ]
 visible let  lemA  : (uu___:unit -> Lemma ((squash (eq2 (lift A1) A2)))) = (fun uu___ -> ())
 [@ ]

@@ -56,6 +56,7 @@ module PC = FStarC.Parser.Const
 module FC = FStarC.Const
 module TcComm = FStarC.TypeChecker.Common
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
+module SynHash = FStarC.Syntax.Hash
 module CList = FStarC.CList
 module Free = FStarC.Syntax.Free
 
@@ -5160,6 +5161,81 @@ let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) 
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
   )
 
+(* [dedup_vc] removes syntactically duplicated proof obligations from a VC.
+
+   A verification condition is built by conjoining the guard accumulated so
+   far with the guard of each subterm as it is checked (see [Env.push_guard]
+   and [conj_guard]). Because the accumulated guard is carried along and
+   re-conjoined at every step, a single trivial side condition -- e.g. the
+   [n > 0 ==> n <> 0] emitted by a division -- routinely ends up repeated
+   dozens of times in one VC. Every copy becomes an independent goal when the
+   query is split and, more importantly, every copy is also a hypothesis for
+   the goals to its right, where it drives redundant instantiation of the
+   background theory. In particular the [prop] inversion axiom case-splits on
+   the shape of a [Term], so N copies of a prop-typed conjunct can cost
+   exponentially more than one.
+
+   This pass walks the conjunctive structure of the VC and replaces a conjunct
+   by [True] when a syntactically identical conjunct has already been seen in a
+   *goal* position that dominates it. That is sound: the retained occurrence is
+   proved outright, so the dropped one follows from it.
+
+   Scoping is respected because the set of known conjuncts only ever travels
+   *downwards* -- into the right of a conjunction, the conclusion of an
+   implication, and the body of a quantifier. A conjunct discovered underneath
+   a binder is never treated as known outside of that binder. Conversely,
+   pushing the outer set under a binder is fine: those conjuncts are well
+   scoped in the enclosing context, hence mention none of the bound variables,
+   and [SS.open_term_1] picks globally fresh names so no accidental capture is
+   possible. *)
+let dedup_vc (vc:term) : ML term =
+  (* An escape hatch for triage: [dedup_vc] only ever makes a query smaller, so
+     turning it off is always sound, and comparing the two is the quickest way
+     to tell whether it is responsible for a proof behaving differently. *)
+  if Some? (BU.expand_environment_variable "FSTAR_NO_DEDUP_VC") then vc else
+  let head_is (lid:Ident.lident) (t:term) : ML bool =
+    match (U.un_uinst t).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv lid
+    | _ -> false
+  in
+  let rec go (known:SynHash.term_map unit) (t:term) : ML (term & SynHash.term_map unit) =
+    let t0 = SS.compress t in
+    let hd, args = U.head_and_args_full t0 in
+    match args with
+    | [(t1, _); (t2, _)] when head_is PC.and_lid hd ->
+      let t1, known = go known t1 in
+      let t2, known = go known t2 in
+      U.mk_conj_simp t1 t2, known
+
+    | _ when SynHash.term_map_mem t0 known ->
+      U.t_true, known
+
+    | [(t1, _); (t2, _)] when head_is PC.imp_lid hd ->
+      (* Only the conclusion of an implication is in goal position. *)
+      let t2, _ = go known t2 in
+      U.mk_imp_simp t1 t2, SynHash.term_map_add t0 () known
+
+    | [(ty, q1); (f, q2)] when head_is PC.forall_lid hd ->
+      (* NB: [f] must be compressed: the enclosing [SS.open_term_1] leaves
+         delayed substitutions on the subterms it returns. *)
+      (match (SS.compress f).n with
+       | Tm_abs {b; body; rc_opt} ->
+         let b, body = SS.open_term_1 b body in
+         let body, _ = go known body in
+         let known = SynHash.term_map_add t0 () known in
+         if U.is_t_true body
+         then U.t_true, known
+         else
+           let f = S.mk (Tm_abs {b = List.hd (SS.close_binders [b]);
+                                 body = SS.close [b] body;
+                                 rc_opt}) t0.pos in
+           S.mk_Tm_app hd [(ty, q1); (f, q2)] t0.pos, known
+       | _ -> t0, SynHash.term_map_add t0 () known)
+
+    | _ -> t0, SynHash.term_map_add t0 () known
+  in
+  fst (go (SynHash.term_map_empty #unit) vc)
+
 let do_discharge_vc use_env_range_msg env vc : ML unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
@@ -5214,7 +5290,7 @@ let do_discharge_vc use_env_range_msg env vc : ML unit =
   vcs |> List.iter (fun (env, goal, opts) ->
     Options.with_saved_options (fun () ->
       FStarC.Options.set opts;
-      env.solver.solve use_env_range_msg env goal
+      env.solver.solve use_env_range_msg env (dedup_vc goal)
     )
   )
 
