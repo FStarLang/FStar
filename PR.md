@@ -1049,6 +1049,114 @@ bump would not have worked at any size.
 `--z3rlimit_factor 2` on the enclosing `#push-options` block is enough; 4 and 8
 were also tried and are not needed. It is the one rlimit change in this merge.
 
+### Re-testing EverParse and kuiper against the merged compiler
+
+Both downstream trees were wiped of every `.checked` file and rebuilt from
+scratch against the merged compiler. EverParse revised is green again at 417
+`.checked` after two changes; kuiper revised is green again at 396 `.checked`
+after five. Every failure below was attributed with `FSTAR_NO_DEDUP_VC=1` first:
+none of them is caused by `dedup_vc`.
+
+**EverParse, `LowParse.Pulse.Combinators`: an implicit that used to be solved to
+the other side's spelling.** `split_nondep_then` and `ghost_split_nondep_then`
+pass `nondep_then_eq_dtuple2` where a `(x: bytes) -> Lemma (parse p1 x == parse
+p2 x)` is expected. The lemma proves exactly that, and the error printed the
+goal and the hypothesis identically — even with `--print_implicits`. The
+encoded query showed the real difference:
+
+```
+hypothesis: (Prims.dtuple2 U_zero U_zero @sk_1
+              (ApplyTT (ApplyTT (ApplyTT const_fun@tok @sk_1) (Tm_type U_zero)) @sk_2))
+goal:       (Prims.dtuple2 U_zero U_zero @sk_1
+              (Tm_abs_37737479cb6c0218c05fc1830ca134c2 @sk_1 @sk_2))
+```
+
+The call site writes the type implicit as `#(_: t1 & t2)`, which elaborates to
+`dtuple2 t1 (fun _ -> t2)`, while `nondep_then_eq_dtuple2` states its
+postcondition with `dtuple2 t1 (const_fun t2)`. The two are equal only by
+delta-unfolding `const_fun` and eta — which the unifier does and the SMT
+encoding of a closure cannot. Pre-merge, the implicit was solved to the
+`const_fun` spelling and the obligation never reached the solver at all: the
+pre-merge query for this definition has two goals, both mentioning `const_fun`
+and neither mentioning the closure token. Post-merge the user's spelling
+survives, so the obligation is emitted, and z3 saturates on it
+(`incomplete quantifiers`, 0.01s, 0.07 of a budget of 5 — no rlimit helps).
+Only two upstream commits in the merge touch the typechecker
+(`790da6baa1`, which makes `eq_tm` compare binder qualifiers on arrows, and
+`bd499fb784`), and I did not pin it to either; what is verified is that the
+pre-merge build of this branch checks the module and the merged one does not.
+The fix is to write the same spelling on both sides:
+`#(dtuple2 t1 (const_fun t2))`.
+
+**EverParse, `CBOR.Pulse.Raw.Format.Serialize.map_peek`:** the subterm ordering
+`fst (List.Tot.hd (Map?.v r)) << r`, needed for `depth_cb_pos`'s last binder,
+now exhausts the default rlimit (`canceled`, exactly 5.000). The identical
+proof still succeeds unaided in `CBOR.Pulse.Raw.Read.map_peek`, so the cost is
+the ambient context of this module rather than the goal. `--z3rlimit 10`,
+scoped to that one `ghost fn`, is well below the 32 and 64 already used
+throughout the file.
+
+The eight kuiper failures are all arithmetic — nonlinear multiplication,
+division and modulus — and six of the eight are better fixed by naming the
+missing step than by raising a limit:
+
+- **`Kuiper.Divides.lemma_divides_trans`** — `x * f1 == y` and `y * f2 == z` no
+  longer give `x * (f1 * f2) == z` on their own; `M.paren_mul_right x f1 f2`
+  supplies the reassociation. A second step in the same file
+  (`c == (c/a) * a` from `a * (c/a) == c`) needs `M.swap_mul`.
+- **`Kuiper.Kahan.kahan_sum`** — the invariant's `new_c %~ 0.0R` was costing
+  61 seconds and exhausting rlimit 20. The real-arithmetic core is
+  `(s1 -. s0) -. (y -. 0.0R) == 0.0R` given `s1 == s0 +. y`. Hoisted to a
+  top-level `kahan_delta_zero` proved in an empty context, the module drops
+  from a 61s failure to a 4s success. The ambient context inside the loop is
+  saturated with the `_approx_pat` SMT patterns of
+  `Kuiper.Approximates.Base`, every one of which fires on the `sub`s in the
+  body; that is what made an otherwise trivial goal expensive.
+- **`Kuiper.Kernel.GEMM.Copy.Vec2.cp_array2_vec`** — the `while` measure. The
+  new index is `(git + 1) * nthr * chunk_et` and stays under `mlen` because
+  `chunk_et * nthr` divides `mlen`; chasing that through division, commutation
+  and reassociation *inside the loop body* took 303 seconds and exhausted an
+  already generous rlimit of 120. A top-level `cp_measure_helper` doing the
+  same four `FStar.Math.Lemmas` steps in an empty context is instant.
+- **`Kuiper.Sparse.Array.PtsTo.thread_gather_chunks`** and
+  **`Kuiper.Kernel.SDPA.Naive.sdpa_probs_spec_slice`** — the two that did get
+  an rlimit. Both are resource-bound (`canceled` at exactly the limit, not
+  `incomplete quantifiers`), both are `forall`-quantified nonlinear index
+  goals with no per-element proof hook to hang a lemma on, and
+  `--z3rlimit_factor 2` scoped to the single definition is enough for each. In
+  the `PtsTo` case I first tried the structural route — a quantified
+  `chunk_cell_offset_forall` — and it discharged the stated goal but simply
+  moved the cost onto the accompanying `Seq` bounds obligation, so the scoped
+  factor is the honest fix.
+- **`Kuiper.Sparse.SPMM.LoadSparse.load_array_vec`** — `n / (nthr * chunk et)
+  == n / nthr / chunk et`, a single `division_multiplication_lemma`, was
+  exhausting rlimit 30 inside the `thread_live_chunks` unfolding. A top-level
+  `load_array_vec_size` proved in an empty context is instant.
+- **`Kuiper.Sparse.SPMM.Compute.seq_load_vmprod_cell_lemma`** — the recursive
+  case has to recombine `(k1 / chunk et, k1 % chunk et)` back into `k1` to turn
+  the `_prop_` form of the invariant into the `_prop` form. The author had
+  already written the bridging call to `seq_load_vmprod_row_cell_prop_equiv`
+  and left it commented out because SMT had been finding it; uncommenting it is
+  the whole fix.
+- **`Kuiper.Sparse.SPMM.Barrier.barrier_p_to_q_transform`** — the third and
+  last rlimit, and the least satisfying. `barrier_in`'s implicit divisibility
+  squashes are spelled `(chunk et * p.blockWidth) /? p.blockItemsK` while the
+  `parameters` record refines `blockWidth` with the commuted `(k * chunk et) /?
+  blockItemsK`; discharging one from the other misses the default budget by a
+  little (`canceled` at 5.000; rlimit 8 suffices). Respelling would touch 69
+  binders across the SPMM sources, so this is a scoped `--z3rlimit_factor 2` on
+  the single declaration.
+
+Two measurement notes came out of this round. First, `--admit_except` is not a
+sound way to size an rlimit: `seq_load_vmprod_cell_lemma` *passes* under
+`--admit_except` and fails in the full-module run, because F* reuses one z3
+process across a module and the earlier queries change how the later ones
+perform. Sizes have to be measured in a full-module run. Second, the
+distinction between `canceled` and `incomplete quantifiers` in `--query_stats`
+decided every one of these: `canceled` at exactly the limit means a bump will
+work, and `incomplete quantifiers` in a fraction of a second means no bump ever
+will.
+
 ## User-visible changes
 
 - `assume_safe`'s argument is now `squash False -> Tac a`, not `unit -> Tac a`.
@@ -1213,16 +1321,20 @@ Beyond `ci`, EverParse's `fstar2` branch verifies and extracts end to end
 against this compiler, from a clean tree, after the downstream edits catalogued
 above. The A/B baseline build with EverParse's pinned toolchain reported zero
 errors, so that catalogue is the complete list of differences this PR makes to a
-large external codebase: **30 files, +223/-100 lines**, made up of explicit
+large external codebase: **32 files, +246/-102 lines**, made up of explicit
 implicit arguments and type ascriptions, `assert`s restating a fact the solver
-used to be handed, four small helper `Lemma`s, one `Ghost.hide`, and two rlimit
-bumps. Each of the five load-bearing workarounds was re-tested against the final
+used to be handed, four small helper `Lemma`s, one `Ghost.hide`, two implicit
+type annotations respelled to match the lemma they are passed to, and three
+rlimit bumps. Each of the five load-bearing workarounds was re-tested against the final
 compiler with the pristine source restored, and each is still required; none is
 masking a bug that has since been fixed.
 
 Kuiper is the second such run, and the same statement holds for it: 396 modules,
 green from a clean tree, against a baseline of 396 green modules built with the
-F* fork kuiper pins; **6 files, +21/-16 lines** of downstream difference,
-catalogued above. Both downstream trees were re-verified from scratch against the
-final compiler, after the last typechecker fix, not against the compiler each
-regression was found on.
+F* fork kuiper pins; **27 files, +354/-48 lines** of downstream difference,
+catalogued above, of which a good part is the comment on each change explaining
+why it is there. Both downstream trees were re-verified from scratch against the
+final compiler, after the last typechecker fix and after the merge with
+`origin/master`, not against the compiler each regression was found on. The
+final numbers are EverParse 417 `.checked` and kuiper 396 `.checked`, both at
+exit 0, matching their baselines exactly.
