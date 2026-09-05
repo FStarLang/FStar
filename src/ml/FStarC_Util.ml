@@ -776,15 +776,30 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_out_channel fh
 
+(* Write [fname] atomically: the payload is first written to a private
+   temporary file in the same directory, which is then renamed over [fname].
+   Since [Sys.rename] is atomic on POSIX, a concurrent reader of [fname]
+   observes either the previous contents or the new ones in full, but never a
+   partially written file. This matters because several fstar.exe processes
+   may share a single --cache_dir. *)
+let with_out_channel_atomic (fname:string) (f: out_channel -> 'a) : 'a =
+  maybe_create_parent fname;
+  let tmp =
+    Filename.temp_file ~temp_dir:(Filename.dirname fname)
+      (Filename.basename fname) ".tmp"
+  in
+  let channel = open_out_bin tmp in
+  let result =
+    try BatPervasives.finally (fun () -> close_out channel) f channel
+    with e -> (try Sys.remove tmp with _ -> ()); raise e
+  in
+  Sys.rename tmp fname;
+  result
+
 let save_value_to_file (fname:string) value =
   (* BatFile.with_file_out uses Unix.openfile (which isn't available in
      js_of_ocaml) instead of Pervasives.open_out, so we don't use it here. *)
-  maybe_create_parent fname;
-  let channel = open_out_bin fname in
-  BatPervasives.finally
-    (fun () -> close_out channel)
-    (fun channel -> output_value channel value)
-    channel
+  with_out_channel_atomic fname (fun channel -> output_value channel value)
 
 let load_value_from_file (fname:string) =
   (* BatFile.with_file_in uses Unix.openfile (which isn't available in
@@ -799,16 +814,13 @@ let load_value_from_file (fname:string) =
 
 let save_2values_to_file (fname:string) value1 value2 =
   try
-    maybe_create_parent fname;
-    let channel = open_out_bin fname in
-    BatPervasives.finally
-      (fun () -> close_out channel)
-      (fun channel ->
-        output_value channel value1;
-        output_value channel value2)
-      channel
+    with_out_channel_atomic fname (fun channel ->
+      output_value channel value1;
+      output_value channel value2)
   with
-  | e -> delete_file fname;
+  (* The atomic write leaves [fname] untouched on failure, but an older,
+     now-stale file may still be there: get rid of it. *)
+  | e -> (try delete_file fname with _ -> ());
          raise e
 
 let load_2values_from_file (fname:string) =
@@ -827,24 +839,21 @@ let load_2values_from_file (fname:string) =
 (* See FStarC.Util.fsti for the layout of this container format. *)
 let save_3values_to_file (fname:string) value1 value2 value3 =
   try
-    maybe_create_parent fname;
     let b12 = Marshal.to_string value1 [] ^ Marshal.to_string value2 [] in
     let b3 = Marshal.to_string value3 [] in
     (* A Merkle-style digest of the two halves, so that we never have to
        materialize the concatenation of the whole payload. *)
     let dig = BatDigest.to_hex (BatDigest.string (BatDigest.string b12 ^ BatDigest.string b3)) in
-    let channel = open_out_bin fname in
-    BatPervasives.finally
-      (fun () -> close_out channel)
-      (fun channel ->
-        output_value channel dig;
-        output_binary_int channel (String.length b12);
-        output_string channel b12;
-        output_string channel b3)
-      channel;
+    with_out_channel_atomic fname (fun channel ->
+      output_value channel dig;
+      output_binary_int channel (String.length b12);
+      output_string channel b12;
+      output_string channel b3);
     dig
   with
-  | e -> delete_file fname;
+  (* The atomic write leaves [fname] untouched on failure, but an older,
+     now-stale file may still be there: get rid of it. *)
+  | e -> (try delete_file fname with _ -> ());
          raise e
 
 let with_in_channel_opt (fname:string) (f: in_channel -> 'a) : 'a option =
