@@ -434,7 +434,9 @@ let sep_laws (_:unit) : squash (
   introduce forall x. star x emp == x with star_emp x; assert is_unit emp star
 
 let disjoint m0 m1 = disjoint_mem m0 m1
+#push-options "--z3rlimit_factor 4"
 let join m0 m1 = join_premem m0 m1
+#pop-options
 
 irreducible
 let clear_except_hogs_ (w: premem) : v:premem { disjoint_mem w v /\ w == join_premem w v /\ (forall a. read v a == read w a) } =
@@ -467,6 +469,7 @@ let join_update_timeless_mem m1 m2 p1 p2 =
         (update_timeless_mem (join_mem m1 m2) (B.join_mem p1 p2))
     fun _ -> ()
 
+#push-options "--z3rlimit_factor 4"
 let star_equiv p q m =
   introduce
     forall m0 m1. 
@@ -494,6 +497,7 @@ let star_equiv p q m =
       interp q m1
     with m1 m2 and ()
   )
+#pop-options
 
 let erase_pair #t #s (p: erased (t & s)) : erased t & erased s =
   (hide (fst p), hide (snd p))

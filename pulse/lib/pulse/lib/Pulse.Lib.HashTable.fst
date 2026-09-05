@@ -230,7 +230,7 @@ fn replace
 }
 
 
-#push-options "--fuel 1 --ifuel 2 --z3rlimit_factor 6"
+#push-options "--fuel 1 --ifuel 2 --z3rlimit_factor 24"
 fn insert
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -283,6 +283,11 @@ fn insert
       full_not_full pht.repr k;
       unreachable();
     };
+    SZ.size_v_inj voff;
+    SZ.size_v_inj ht.sz;
+    assert (pure (SZ.v voff < SZ.v ht.sz));
+    assert (pure (SZ.v (SZ.add voff 1sz) == SZ.v voff + 1));
+    assert (pure (SZ.lte (SZ.add voff 1sz) ht.sz));
 
     let sum = cidx `SZ.add` voff;
     let vidx = size_t_mod sum ht.sz;
@@ -304,6 +309,7 @@ fn insert
           with vcontents. assert (pts_to contents vcontents);
           with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
+          saunb_extend pht.repr (SZ.v cidx) (SZ.v voff) k;
           off := voff + 1sz;
         };
       }
@@ -466,7 +472,7 @@ fn insert_if_not_full
 }
 
 #restart-solver
-#push-options "--z3rlimit_factor 6"
+#push-options "--z3rlimit_factor 12"
 fn delete
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -509,6 +515,11 @@ fn delete
   {
     let voff = !off;
     if (voff = ht.sz) { break };
+    SZ.size_v_inj voff;
+    SZ.size_v_inj ht.sz;
+    assert (pure (SZ.v voff < SZ.v ht.sz));
+    assert (pure (SZ.v (SZ.add voff 1sz) == SZ.v voff + 1));
+    assert (pure (SZ.lte (SZ.add voff 1sz) ht.sz));
     let sum = cidx `SZ.add` voff;
     let idx = size_t_mod sum ht.sz;
     let c = V.read_ref contents idx;
@@ -526,6 +537,7 @@ fn delete
         }
         else
         {
+          aunb_extend pht.repr (SZ.v cidx) (SZ.v voff) k;
           off := voff + 1sz;
         }
       }
@@ -536,6 +548,7 @@ fn delete
       }
       Zombie ->
       {
+        aunb_extend pht.repr (SZ.v cidx) (SZ.v voff) k;
         off := voff + 1sz;
       }
     }

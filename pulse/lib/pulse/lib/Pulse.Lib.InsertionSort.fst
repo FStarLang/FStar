@@ -95,7 +95,7 @@ let inner_invariant
    else slot == Seq.index s' (SZ.v vi + 2) /\ permutation s0 (Seq.upd s' (SZ.v vi + 1) key)) /\
   (forall (k:nat). 0 <= k /\ k < Seq.length rhs ==> Seq.index rhs k >=? key))
 
-#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 5"
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 12"
 #restart-solver
 let step_inner_invariant
       (#t:Type)

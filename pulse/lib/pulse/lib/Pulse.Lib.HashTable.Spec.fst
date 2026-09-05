@@ -16,6 +16,7 @@
 
 module Pulse.Lib.HashTable.Spec
 #lang-pulse
+#set-options "--z3rlimit_factor 16"
 module US = FStar.SizeT
 
 open FStar.Ghost
@@ -589,6 +590,7 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
       false_elim () (* unreachable *)
     )
     else
+    let _ = assert (off < sz) in
     let idx = (cidx+off) % sz in
     match repr @@ idx with
     | Used k' v' ->
@@ -653,6 +655,7 @@ let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
   = if off = sz then
     repr // If we reach this, the element was not in the table
     else
+    let _ = assert (off < sz) in
     let idx = (cidx+off) % sz in
     match repr @@ idx with
     | Used k' v' ->
@@ -750,16 +753,23 @@ let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < 
     if (j < i) 
     then (
         assert (i == (j + (i-j)) % r.sz);
+        assert (strong_used_not_by r k ((j + (i-j)) % r.sz));
         assert (Used? (r @@ i))
     )
     else (
-      let k = ((r.sz - j) + i) in
-      assert (i == (j + k) % r.sz);
-      if (k < r.sz) then (
+      let k' = ((r.sz - j) + i) in
+      Math.Lemmas.modulo_addition_lemma i r.sz 1;
+      Math.Lemmas.small_mod i r.sz;
+      assert (i == (j + k') % r.sz);
+      if (k' < r.sz) then (
+        assert (strong_used_not_by r k ((j + k') % r.sz));
         assert (Used? (r @@ i))
       )
       else (
+        assert (i == j);
+        Math.Lemmas.small_mod j r.sz;
         assert (i == (j + 0) % r.sz);
+        assert (strong_used_not_by r k ((j + 0) % r.sz));
         assert (Used? (r @@ ((j + 0) % r.sz)))
       )
     )
