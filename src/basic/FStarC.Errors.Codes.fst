@@ -401,4 +401,6 @@ let default_settings : list error_setting =
     Error_CustardSharedGlobal                          , CAlwaysError, 383;
     Error_CustardExternConflict                        , CAlwaysError, 384;
     Error_CustardEntryNotFound                         , CAlwaysError, 385;
+    Error_CustardBadFloatWidth                         , CAlwaysError, 386;
+    Warning_CustardFloatVocabulary                     , CWarning, 387;
     ]

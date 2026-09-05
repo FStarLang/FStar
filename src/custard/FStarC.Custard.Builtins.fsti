@@ -77,6 +77,18 @@ val register_rule : Ident.lident -> rule -> ML unit
     is [(Unsigned, Int32)]. *)
 val machine_int_of_module : list string -> option (signedness & width)
 
+(** Section 63.1.  Install the callback that decides whether a namespace
+    declares a [@@custard_float] type.  {!builtin_rule} dispatches on a
+    [lident] and has no environment of its own, so the extractor supplies
+    one; answers are cached per namespace, negative ones included. *)
+val set_float_probe : (list string -> ML (option fwidth)) -> ML unit
+
+(** Section 63.1.  The width named by [@@custard_float n] on a type
+    declaration, if it carries one.  Raises error 386 for a width Custard
+    does not implement, so that the diagnostic names the attribute rather
+    than the first use of the type. *)
+val fwidth_of_attributes : list FStarC.Syntax.Syntax.term -> ML (option fwidth)
+
 (** The rule declared by a definition's attributes, if any:
     [@@custard_extern "target"] (plus an optional [@@custard_c_header "h.h"])
     and [@@custard_opaque].  Unlike {!lookup_rule} this needs the definition in
@@ -88,6 +100,13 @@ val rule_of_attributes : list FStarC.Syntax.Syntax.term -> ML (option rule)
     the compiler's own [FStarC.Tactics.V2.Builtins], and the two must be one
     name, or a metaprogram and the engine that runs it would not link. *)
 val no_fstar_stubs : list string -> list string
+
+(** Section 63.2.  If [l] names a symbol in a floating-point module and its
+    name is a near-miss for the vocabulary, the spelling that was meant.
+    [eq] is the case worth catching: an unrecognized name in a float module
+    becomes an external on purpose, so the mistake is silent until the
+    linker reports it. *)
+val float_vocabulary_hint : Ident.lident -> ML (option string)
 
 (* Whether a namespace -- given as it was written, before {!no_fstar_stubs} --
    is one of ulib's [FStar.Stubs.*] restatements of the compiler's own API.

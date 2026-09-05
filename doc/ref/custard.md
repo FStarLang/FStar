@@ -14062,6 +14062,198 @@ read, not a command to trust.
 
 
 
+# 63 Floating point without a privileged namespace
+
+Round 57.  Kuiper's report: 30 of their 62 generated files fail, all with
+error 368 on a type that is a float.  Their float type is not
+`FStar.Float32.t`.  It could not be: they need a `__device__` representation
+and their own axioms, so they declare their own module, and Custard's
+support for floating point was gated on `float_of_module` matching the two
+literal namespaces `FStar.Float32` and `FStar.Float64`.
+
+A library cannot opt in by re-exporting either one, because re-export does
+not change a type's name and the check is on the name.  So the whole
+feature was reachable only from `ulib`, which is not where a consumer's
+float type lives.
+
+`[@@custard_float 32]` on the type is the opt-in.  What it says is that the
+type is IEEE-754 binary32 and that the module declaring it supplies the
+arithmetic vocabulary --- `of_int`, `of_literal`, `add`, `sub`, `mul`,
+`div`, `lt`, `lte`, `ieee_eq`.  The two `ulib` modules keep working by
+name, unchanged; the attribute is how anything else joins them.
+
+## 63.1 The attribute is on the type and the question is about the module
+
+The awkwardness is that the attribute can only go in one place and the
+question is asked in another.  `add` carries no attribute --- it is an
+ordinary `assume val` --- and by the time `builtin_rule` is asked what
+`Klas.Float.add` means, all it has is an `Ident.lident`.  It has no
+environment, so it cannot look anything up.
+
+The first design registered the module when its *type* declaration was
+extracted, and it is wrong: it assumes `t` is requested before `add`, and
+nothing guarantees that.  Extraction order follows the call graph, and the
+call graph reaches operations from a caller without necessarily reaching
+the type first.  A registry filled as a side effect of extraction answers
+correctly or incorrectly depending on which name a program happened to
+mention first, which is the worst kind of wrong.
+
+So the answer is a probe, installed by `Extract.init` over the type-checker
+environment and consulted on demand: given a namespace, does it declare a
+`custard_float` type?  Order stops mattering, because the question is
+asked of the environment and not of a log of what has already happened.
+
+`t` is the required name.  Not a search for whichever type in the module
+carries the attribute --- that would make the rule depend on there being
+exactly one --- but the same fixed name `FStar.Float32.t` and the machine
+integer modules already use, and that `float_rule` already spells in its
+own `| "t" -> Rule_type (TFloat fw)` case.
+
+Results are cached, negative answers included, because the probe runs for
+every name in every module Custard meets and almost every answer is no.
+
+A width other than 32 or 64 is error 386, raised where the attribute is
+written.  This matters more than it looks: without it the type falls
+through to error 368 at its first *use*, which is in a different module and
+which names the type rather than the mistake.  Half precision is a real
+format that Custard does not have yet, so `[@@custard_float 16]` is a thing
+a reviewer will actually write, and the message it gets should be about the
+width and not about the C representation of an unrelated type.
+
+## 63.2 An unrecognized name is an external, and that is silent
+
+Kuiper also asked why `eq` is not accepted as a spelling of `ieee_eq`.
+
+It should not be, and the reason is the one that keeps `bit_eq` out of the
+operator table: `eq` does not say *which* equality.  Bitwise equality
+distinguishes the two zeros and makes a NaN equal to itself, and no C
+comparison operator does either, so the two cannot share a name.
+
+But finding out that the vocabulary is spelled `ieee_eq` was harder than it
+should have been, because the failure is silent.  A name in a float module
+that Custard does not recognize becomes an ordinary external --- and that
+is deliberate.  `FStar.Float32` declares `bit_eq` and `to_string` precisely
+so they can be calls into a support library, and an opted-in library brings
+its own axioms besides: Kuiper's has `kind`, `largest`, `infinity` and
+`fkind`.  A blanket warning would be wrong, and noisy for everyone.
+
+So the warning is narrow.  Warning 387 fires for `eq`, `equal` and
+`equals`, and for nothing else, because those three are the near misses ---
+they are what someone reaching for IEEE equality writes.  There is no other
+near miss worth catching: `FStar.Float32` declares no `gt` or `gte`, so
+there is no missing-comparison family to guess at.
+
+The narrowness is itself under test.  `tests/custard/FloatEq.fst` pins that
+`eq` warns; the assertion that `bit_eq` does *not* is what stops a later
+widening of the rule from passing quietly.
+
+## 63.3 An external is a signature, whoever asked for it
+
+Kuiper's finding (a) was that a polymorphic external does not survive, with
+the hypothesis that rules run after monomorphization and the failure is
+therefore inherent.
+
+The hypothesis is wrong, and the finding is bigger than they thought.  A
+plain polymorphic `assume val` --- no rule plugin anywhere ---
+
+```
+assume val ext (#a:Type0) (x:a) : a
+```
+
+fails the same way, and the message it fails with is:
+
+```
+- Custard: the type variable 'a has no C representation, in PE.ext@t.
+- That is a Custard bug, not a configuration problem: please report it
+```
+
+which was true, in a sense nobody wanted.
+
+There are three ways a symbol becomes external: a rule says so, its module
+is realized, or F* only ever saw a `val`.  The first two both went through
+`external_ty`, which does exactly the right thing --- it substitutes a
+supplied `Mono` type argument into the signature, collects the rest as
+`dx_typars`, and turns an unsupplied `Mono` type binder into `any`.  The
+third read its own type raw, with `ty_of_typ` on the whole arrow: `margs`
+dropped, `dx_typars` left empty, and so the type variable reached the
+backend still a variable.  Error 368, blaming a monomorphization pass that
+had never been asked to do anything.
+
+The fix is to route the third path through `external_ty` as well, and the
+result is what a C programmer would have written by hand: one symbol per
+instantiation.
+
+```
+extern uint32_t PolyExtern_identity__t(uint32_t);
+extern PolyExtern_pair PolyExtern_identity__pair(PolyExtern_pair);
+```
+
+That is the property worth stating, because the alternative is a
+miscompilation and not merely a limitation.  A single shared symbol taking
+two different types is what section 6 refuses everywhere else; two symbols
+is the honest answer, and it does mean the realization owes an
+implementation for each instantiation.
+
+`tests/custard/PolyExtern.fst` links against a hand-written
+`PolyExtern_stubs.c` that defines both, which is a stronger check than the
+greps: a collapsed signature would not compile against it.  It is also the
+first test to need a second translation unit, so the Makefile grew
+`CEXTRA_Name`.  Every other test that reaches C from outside F* uses a
+header of `static inline` definitions, and that works only when the test
+chose the name; here Custard mangles them, so there is nothing for an
+attribute to point at.
+
+## 63.4 What the budget is for
+
+Kuiper's finding (c) was that `--custard_norm_budget`'s default of 10^7 was
+too low for one of their kernels, which needs 2 x 10^8.
+
+Raising the default is the obvious response and it is not available.  The
+number is pinned, and §30.14 already recorded why: at 10^8, `TypeDiverge`
+--- a type-level definition that genuinely does not terminate --- exhausts
+the normalizer's *stack* before it exhausts its budget, and a crash is not
+a diagnostic.  Re-measured on this build, that is still exactly what
+happens.  A budget that fires after the normalizer runs out of stack is not
+a budget, so the default stays where the guard still works.
+
+Which makes what Kuiper did the intended use: hit the limit, read the
+message, raise the flag for their build.  Their kernel is large, not
+divergent, and the flag exists for that.
+
+What the message did not say is what raising it trades, and now it does.
+Raising it is safe for a term that is merely large and is not a way to
+compile a term that truly diverges --- past roughly 10^8 steps a deeply
+recursive reduction exhausts the stack and is reported as a crash rather
+than as error 365.  Without that sentence the natural reading of "raise
+`--custard_norm_budget`" is to keep raising it until the compiler stops
+producing errors, which is precisely how a clean error becomes a crash.
+
+Lifting the ceiling for real is a change to the normalizer's recursion, not
+to a default, and it is not this round's work.
+
+## 63.5 A gate is what you can see fail
+
+`FloatOptIn` is a two-module test on purpose.  `FloatLib` declares the
+`[@@custard_float 32]` type and the operations; `FloatOptIn` has its own
+`[@@custard_float 64]` type and calls both.  A single-module test would
+pass without the probe ever doing anything interesting, because the width
+would be found in the module being extracted.  The arrangement that made
+Kuiper's build fail is the cross-module one, so that is the arrangement the
+test has.
+
+The greps pin both widths, the `f` suffixes that keep binary32 arithmetic
+at binary32, and `(float)3` for `of_int` --- a conversion, so a cast.  The
+one negative grep is `FloatLib`, which appears nowhere in the output: every
+one of those names was an undefined symbol before the attribute existed.
+
+Greps cannot tell operands apart, though, and `a - b` and `b - a` are the
+same grep.  So the program checks itself at run time using `sub` and `div`,
+which do not commute, and exits 1 on a swap.
+
+
+
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -14307,3 +14499,8 @@ read, not a command to trust.
 | M10εΝ | **A tool found by name, in the one place the name is absent** (§62.1) | Fixed, and reported by CI rather than by a reviewer.  `tests/custard` and `tests/custard/pulse` ran karamel as a bare `krml` and gated their karamel legs on `command -v krml`; CI never puts karamel on the PATH, it passes `KRML_EXE=`, which `mk/test.mk` defines and exports.  The C legs therefore **skipped silently in CI** --- twenty-one targets in one suite, fifteen in the other, all reported as success --- while the Rust leg, gated on `rustc` alone and so scheduled, ran and died with `/bin/sh: 1: krml: not found`.  Two opposite failures from one cause, and the silent half is the worse one: those legs are exactly the karamel interop the reviewers depend on.  `tests/extraction/backends` had already solved this and its discovery block is now in both suites --- path first, PATH last --- with every recipe spelling `$(KRML_EXE)` and every guard testing `$(KRML_FOUND)`.  The Rust run leg is nested inside the karamel guard because it needs both tools; `%.rustrejected` stays outside because it shells out to nothing but `fstar.exe`.  Both guards now have an `else` that warns, which is what would have shown this a round or two earlier |
 | M10εΞ | A documented skip that raised a traceback (§62.2) | Fixed.  `checkpartial.py` promises, in its docstring and again in `tests/custard/Makefile`, to skip when it cannot run; it implemented that for a missing dune build tree and not for a missing `ocamlfind`, so it exited on a `FileNotFoundError` instead --- the one branch written to keep the gate portable was the branch that crashed it.  Now tests `shutil.which("ocamlfind")` beside the existing test.  No effect on CI, which has the tool; found while reproducing §62.1 under a reduced PATH, and worth fixing because a gate whose documented fallback raises is a gate the next person deletes |
 | M10εΟ | **`pulse/test`'s goldens had drifted three rounds** (§62.3) | Fixed, and the gap was in my process rather than in the code.  `pulse/test` extracts through Custard and pins nineteen `.c`/`.h` goldens, and it was not in the set of suites I ran before each commit; its `.expected` files dated from §24, so CI had been red on them for that whole stretch.  Regenerated, and every changed line audits to one of four intended changes: §47.1's `extern "C"` wrappers, §42.2's `CUSTARD_UNIT_DEFINED` guard, the tagged-union `enum` becoming a named top-level `enum X_tags`, and §59's cast elimination, which is the bulk.  Two findings came out of it.  §58's `while (cond)` rewrite correctly does **not** fire in `Example_Hashtable`, whose loops carry a `_break` flag --- the conservative half of §58 shown in a golden instead of asserted in a grep.  And `make accept` is a trap: four `.fst.output` goldens differ **here and not in CI**, every gensym index off by exactly one, and accepting them would have broken CI in the other direction.  They were reverted; CI's own log fails none of the four.  A blanket `accept` is a diff to read, not a command to trust.  `pulse/test` joins the standing gate set |
+| M10εΠ | **Floating point without a privileged namespace** (§63) | Done.  Round 57.  Kuiper: 30 of 62 generated files fail with error 368, all on their own float type, because `float_of_module` matched the two literal namespaces `FStar.Float32` and `FStar.Float64` and nothing else --- and re-export does not help, since re-export does not change a type's name.  `[@@custard_float 32]` on the type is the opt-in, and the awkwardness is that the attribute goes on the type while the question is asked about the module: `add` carries no attribute, and `builtin_rule` gets an `Ident.lident` and no environment.  The first design --- register the module when its type declaration is extracted --- is wrong, because it assumes `t` is requested before `add` and extraction order follows the call graph; it would answer correctly or not depending on which name a program mentioned first.  So: a probe over the type-checker environment, installed by `Extract.init`, asked on demand, cached with negative answers included.  `t` is the required name, the one `FStar.Float32`, the machine-integer modules and `float_rule`'s own `\| "t" -> Rule_type (TFloat fw)` case already agree on.  A bad width is error 386 *at the attribute*, which is the point: falling through to 368 reports at the first use, in another module, naming the type rather than the mistake --- and 16 is a width a reviewer will really write |
+| M10εΡ | Warning 387: the vocabulary's near misses (§63.2) | Done.  Kuiper asked why `eq` is not accepted for `ieee_eq`.  It should not be, for the reason that keeps `bit_eq` out of the operator table --- `eq` does not say *which* equality, and bitwise equality distinguishes the two zeros and makes a NaN equal to itself, which no C comparison operator does.  But discovering that was harder than it should be, because an unrecognized name in a float module becomes an ordinary external and the symptom is an undefined symbol at link time, a whole pipeline away.  The extern fallthrough is deliberate and must stay: `FStar.Float32` declares `bit_eq` and `to_string` to be exactly that, and an opted-in library brings its own axioms (Kuiper's has `kind`, `largest`, `infinity`, `fkind`), so a blanket warning would be wrong.  Hence a warning for `eq`/`equal`/`equals` and nothing else; there is no other near miss, since `FStar.Float32` declares no `gt` or `gte`.  `tests/custard/FloatEq.fst` pins that `eq` warns and that `bit_eq` does not --- the second half is what stops a later widening from passing quietly |
+| M10εΣ | **An external is a signature, whoever asked for it** (§63.3) | Done.  Kuiper's finding (a): a polymorphic external does not survive, hypothesis being that rules run after monomorphization and it is inherent.  The hypothesis is wrong and the finding is bigger: a plain `assume val ext (#a:Type0) (x:a) : a`, with no rule plugin anywhere, fails identically --- and told the reader to report a compiler bug, which was true in a sense nobody wanted.  Three ways a symbol becomes external: a rule says so, its module is realized, or F\* only saw a `val`.  The first two went through `external_ty`, which substitutes a supplied `Mono` type argument into the signature and collects the rest as `dx_typars`; the third read its own type raw with `ty_of_typ`, dropping `margs` and leaving `dx_typars` empty, so the type variable reached the backend still a variable.  Routing it through `external_ty` gives what a C programmer writes by hand --- `PolyExtern_identity__t` and `PolyExtern_identity__pair`, one symbol per instantiation.  That is the property and not merely a convenience: one shared symbol taking two types is the miscompilation §6 refuses elsewhere.  `tests/custard/PolyExtern.fst` links a hand-written `PolyExtern_stubs.c` defining both, which a collapsed signature would not compile against; it is the first test needing a second translation unit, so the Makefile grew `CEXTRA_Name` --- the usual `static inline` header trick works only when the test chose the name, and here Custard mangles them |
+| M10εΤ | `--custard_norm_budget`: the default is pinned, and the message now says so (§63.4) | Done.  Kuiper's finding (c): the 10^7 default is too low for one kernel, which needs 2 x 10^8.  Raising the default is not available, for the reason §30.14 recorded and this round re-measured on the current build: at 10^8 `TypeDiverge` exhausts the normalizer's *stack* before its budget, and a crash is not a diagnostic.  A budget that fires after the normalizer runs out of stack is not a budget.  So what Kuiper did --- hit it, read it, raise the flag for their build --- is the intended use, their kernel being large rather than divergent.  What the message did not say is what raising it trades, and now it does: safe for a term that is merely large, not a way to compile one that truly diverges, because past roughly 10^8 steps a deeply recursive reduction is reported as a crash rather than as error 365.  Without that sentence the natural reading of "raise `--custard_norm_budget`" is to keep raising it until the errors stop, which is exactly how a clean error becomes a crash.  Lifting the ceiling for real is a change to the normalizer's recursion, not to a default |
+| M10εΥ | Two modules, because one would not have failed (§63.5) | Done.  `FloatLib` declares the `[@@custard_float 32]` type and the operations, `FloatOptIn` has its own `[@@custard_float 64]` type and calls both.  A single-module test passes without the probe doing anything interesting --- the width would be found in the module being extracted --- and the arrangement that broke Kuiper's build is the cross-module one.  Greps pin both widths, the `f` suffixes that keep binary32 arithmetic at binary32, and `(float)3` for `of_int`; the one negative grep is `FloatLib`, absent from the output, every one of those names having been an undefined symbol before.  But a grep cannot tell operands apart --- `a - b` and `b - a` are the same grep --- so the program checks itself at run time with `sub` and `div`, which do not commute, and exits 1 on a swap.  Also: `[@@custard_c_header]`'s docstring now gives the second reason to need one, that the target may be a function-like macro, invisible to the linker, so that without a header the call compiles to an implicit declaration and then fails to link |

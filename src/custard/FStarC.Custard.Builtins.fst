@@ -176,11 +176,52 @@ let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
    names follow [FStarC.Extraction.Krml] for the same reason the integer ones
    do -- karamel is a backend that has to give these a C meaning, and a
    discrepancy would be a miscompilation rather than an error. *)
-let float_of_module (ns : list string) : option fwidth =
+(* Section 63.  A library other than [FStar.Float32] opts in with
+   [@@custard_float 32] on its abstract type, and its module joins this
+   table.  Keyed on the dotted namespace, because what the attribute
+   establishes is that *the module* speaks the float vocabulary: the
+   attribute is on the type, but [add] and [of_literal] are the names that
+   have to be recognized, and they carry no attribute of their own.
+
+   A table rather than a parameter because {!builtin_rule} dispatches on a
+   [lident] and has no environment to ask.  {!Extract} fills it in as it
+   meets declarations -- see [note_float_module] there -- which is sound
+   because the type of a module's [add] mentions its [t], so the type is
+   always requested before the operation that returns it. *)
+let float_modules : SMap.t fwidth = SMap.create 10
+let float_probed  : SMap.t bool   = SMap.create 10
+
+(* {!builtin_rule} dispatches on a [lident] and has no environment, so the
+   attribute is read through a callback that {!FStarC.Custard.Extract.init}
+   installs over the type-checker environment.  Answering per namespace
+   rather than per name keeps this order-independent: it does not matter
+   whether [add] or [t] is requested first, because the question asked is
+   always "does this module declare a [@@custard_float] type". *)
+let float_probe : ref (list string -> ML (option fwidth)) =
+  mk_ref (fun _ -> None)
+
+let set_float_probe (f : list string -> ML (option fwidth)) : ML unit =
+  float_probe := f
+
+let float_of_module (ns : list string) : ML (option fwidth) =
   match ns with
   | ["FStar"; "Float32"] -> Some Float32
   | ["FStar"; "Float64"] -> Some Float64
-  | _ -> None
+  | _ ->
+    let key = String.concat "." ns in
+    match SMap.try_find float_modules key with
+    | Some fw -> Some fw
+    | None ->
+      (* The negative answer is cached too: this runs for every name in
+         every module Custard meets, and a miss would otherwise be a
+         environment lookup each time. *)
+      if Some? (SMap.try_find float_probed key) then None
+      else begin
+        SMap.add float_probed key true;
+        match (!float_probe) ns with
+        | Some fw -> SMap.add float_modules key fw; Some fw
+        | None -> None
+      end
 
 let float_op (id:string) : option (op & int) =
   match id with
@@ -661,6 +702,30 @@ let attribute_string (attrs : list S.term) (a : Ident.lident) : ML (option strin
   | Some ((arg, _) :: _) -> string_arg arg
   | _ -> None
 
+(* Section 63.1.  [@@custard_float 32] carries an integer rather than a
+   string, and the two accepted values are the two [fwidth] has.  A width
+   Custard does not implement is an error at the declaration rather than a
+   silent fallthrough to "no C representation" at the first use, which is
+   several modules away and names the type instead of the attribute. *)
+let fwidth_of_attributes (attrs : list S.term) : ML (option fwidth) =
+  match U.get_attribute PC.custard_float_attr attrs with
+  | Some ((arg, _) :: _) ->
+    (match (SS.compress arg).n with
+     | Tm_constant (Const_int (32, _)) -> Some Float32
+     | Tm_constant (Const_int (64, _)) -> Some Float64
+     | Tm_constant (Const_int (n, _)) ->
+       FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadFloatWidth [
+         FStarC.Errors.Msg.text
+           ("Custard: [@@custard_float " ^ string_of_int n ^
+            "] is not a floating-point width Custard implements.");
+         FStarC.Errors.Msg.text
+           "The accepted widths are 32 and 64, which are IEEE-754 binary32                  and binary64.  Half and bfloat16 are not implemented yet." ]
+     | _ ->
+       FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadFloatWidth [
+         FStarC.Errors.Msg.text
+           "Custard: the argument of [@@custard_float] must be an integer                  literal, 32 or 64." ])
+  | _ -> None
+
 let rule_of_attributes (attrs : list S.term) : ML (option rule) =
   if U.has_attribute attrs PC.custard_opaque_attr
   then Some Rule_opaque
@@ -710,6 +775,27 @@ let no_fstar_stubs (ns : list string) : list string =
   | "FStar" :: "NormSteps" :: rest -> "FStarC" :: "NormSteps" :: rest
   | "FStar" :: "Stubs" :: rest -> "FStarC" :: rest
   | _ -> ns
+
+
+(* Section 63.2.  A name a float module declares and {!float_op} does not
+   recognize becomes an ordinary external, which is deliberate: [bit_eq] and
+   [to_string] are meant to be calls into a support library, and a library
+   that opts in carries its own axioms besides.  But the fallthrough is
+   silent, and its symptom is an undefined symbol at link time, a whole
+   pipeline away from the misspelling.  [eq] is the one name worth catching:
+   the vocabulary spells IEEE equality [ieee_eq] precisely because [eq] does
+   not say *which* equality is meant, which is the same distinction that
+   keeps [bit_eq] out of the operator table. *)
+let float_vocabulary_hint (l : Ident.lident) : ML (option string) =
+  match List.rev (Ident.path_of_lid l) with
+  | id :: rev_ns ->
+    (match float_of_module (no_fstar_stubs (List.rev rev_ns)) with
+     | None -> None
+     | Some _ ->
+       (match id with
+        | "eq" | "equal" | "equals" -> Some "ieee_eq"
+        | _ -> None))
+  | _ -> None
 
 (* The rewrite says where a stub's definitions *live*; this recognises that
    they are stubs at all.  A stub is a second declaration of something the

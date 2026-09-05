@@ -1011,9 +1011,23 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	@# shape sensitive and misses the ones around a call-comparison.
 	$(Q)python3 $(CHECKGROUP) $@ $(basename $@).h
 
-$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx
+# Second expansion so that [CEXTRA_$*] -- which needs the stem, and so is not
+# known when the rule is read -- can be a prerequisite and not just a
+# command-line argument: editing the hand-written half must rebuild.  It is
+# harmless for the rules below, whose prerequisites contain no [$].
+.SECONDEXPANSION:
+
+# [CEXTRA_Name] names hand-written C to link beside the generated unit.
+# Every other test that reaches C from outside F* does it with a header of
+# [static inline] definitions, which works when the target is a type or a
+# function whose name the test itself chose.  It does not work for a
+# polymorphic external (section 63.3): the symbols are one per instantiation
+# and Custard mangles their names, so there is nothing for an attribute to
+# point at, and the realization is what it says it is -- a separate
+# translation unit.
+$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx $$(CEXTRA_$$*)
 	$(call msg, "CC", $(basename $(notdir $@)))
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -x c $< -o $@
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -I$(OUTPUT_DIR) -x c $< $(CEXTRA_$*) -o $@
 
 # Section 47.1.  Every generated unit is also compiled as C++.
 #
@@ -1254,6 +1268,66 @@ CGREP_Floats += "1.5f"
 CGREP_Floats += "static float Floats_sum32(float a, float b)"
 CNOGREP_Floats += "FStar_Float64"
 CNOGREP_Floats += "FStar_Float32"
+
+# Section 63.  A floating-point library that is not FStar.Float32, opted in
+# with [@@custard_float 32] on its type.  FloatLib.fst is the library and is
+# not a test of its own; the cross-module lookup is the point, since that is
+# the arrangement Kuiper and EverParse have and the one that makes the probe
+# do work -- FloatOptIn mentions FloatLib.add, and the width has to be found
+# from FloatLib.t in another module.
+#
+# The runnable half is the real assertion.  A grep for an operator cannot
+# tell the operands apart, so [sub] and [div] -- which do not commute -- are
+# checked by the program at run time instead: an operand swap exits 1.
+C_TESTS += FloatOptIn
+CGREP_FloatOptIn += "double a = 1.5;"
+CGREP_FloatOptIn += "bool ok2 = ((a - b) < 0.0);"
+CGREP_FloatOptIn += "bool ok3 = ((a / b) <= 0.61);"
+# The other width, from the other module, and the [f] suffixes that keep it
+# single precision (section 38): without them the sum would be computed at
+# double and rounded once instead of twice.
+CGREP_FloatOptIn += "float x = 1.5f;"
+CGREP_FloatOptIn += "bool ok5 = ((x * y) == 3.375f);"
+# [of_int] is a conversion, so it is a cast and not a coercion.
+CGREP_FloatOptIn += "bool ok6 = ((float)3 == 3.0f);"
+# The whole point: the library's names do not survive as calls.  Before the
+# attribute existed every one of these was an undefined FloatLib_* symbol.
+CNOGREP_FloatOptIn += "FloatLib"
+
+# Section 63.1.  A width Custard does not implement is refused at the
+# attribute, not at the first use of the type: 386 names the mistake, where
+# 368 would name the type and point at another module.
+REJECT_TESTS += FloatWidth
+CODE_FloatWidth = 386
+EGREP_FloatWidth = "The accepted widths are 32 and 64"
+
+# Section 63.2.  An unrecognized name in a float module becomes an external
+# on purpose -- bit_eq and to_string are meant to be -- so a misspelling of
+# the vocabulary is silent until the linker sees it.  [eq] is the one name
+# worth catching, because [ieee_eq] is spelled that way to say which
+# equality is meant.  The diagnostic is the product.
+REJECT_TESTS += FloatEq
+CODE_FloatEq = 387
+EGREP_FloatEq = "Did you mean to name it \[ieee_eq\]"
+
+# Section 63.3.  A polymorphic [assume val] is realized once per
+# instantiation.  This was error 368 -- and the message told the reader to
+# report a compiler bug -- because the declaration path read its own type raw
+# instead of going through [external_ty] as the other two ways of reaching an
+# external already did.
+#
+# Both greps together are the assertion.  Either name alone would still be
+# there if the two instantiations had collapsed into one symbol; what says
+# they did not is that there are two, differing in the type they mangle.
+# PolyExtern_stubs.c would not compile against a collapsed signature either,
+# so the link is a check and not just a formality.
+C_TESTS += PolyExtern
+CEXTRA_PolyExtern = PolyExtern_stubs.c
+CGREP_PolyExtern += "extern uint32_t PolyExtern_identity__t(uint32_t);"
+CGREP_PolyExtern += "extern PolyExtern_pair PolyExtern_identity__pair(PolyExtern_pair);"
+CGREP_PolyExtern += "uint32_t x = PolyExtern_identity__t("
+# No leftover type parameter: the variable was substituted away, not passed.
+CNOGREP_PolyExtern += "void *"
 
 # Section 38.6.  Not Floats: karamel's constant folder reads a float constant
 # with Z.of_string.  Every operand in FloatsKrml is a variable.

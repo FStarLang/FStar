@@ -426,9 +426,25 @@ type state = {
   nfe:     SMap.t sigelt;
 }
 
-let init (deps:Dep.deps) (env:TcEnv.env) : ML state = {
+(* Section 63.1.  A module speaks the floating-point vocabulary when it
+   declares a type [t] carrying [@@custard_float n] -- the same convention
+   [FStar.Float32] and the machine-integer modules already follow, and the
+   name [float_rule] already answers [t] with.  Looking the type up on
+   demand, rather than registering it when its declaration happens to be
+   extracted, is what makes the answer independent of the order in which a
+   module's names are requested: [add] may well be reached before [t]. *)
+let float_probe_of_env (env : ref TcEnv.env) (ns : list string) : ML (option fwidth) =
+  let l = Ident.lid_of_path (ns @ ["t"]) Range.dummyRange in
+  match TcEnv.lookup_sigelt !env l with
+  | Some se -> Builtins.fwidth_of_attributes se.sigattrs
+  | None -> None
+
+let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
+  let envr = mk_ref env in
+  Builtins.set_float_probe (float_probe_of_env envr);
+  {
   deps    = deps;
-  env     = mk_ref env;
+  env     = envr;
   names   = SMap.create 100;
   emitted = SMap.create 100;
   order   = mk_ref [];
@@ -625,6 +641,18 @@ let norm_bounded_in (st:state) (env:TcEnv.env) (what:string)
             show (Options.custard_norm_budget ()) ^
             " reduction steps) while normalizing " ^ what ^ ".");
       text "Reduction of an argument to a monomorphized binder need not terminate: a recursive definition reachable from it may unfold without bound. Either avoid specializing on this value, or raise --custard_norm_budget if the term is merely large.";
+      (* Section 63.4.  Raising it is the right answer for a large term and
+         the wrong one for a diverging term, and the default is where it is
+         because of the second: a deeply recursive divergence overflows the
+         normalizer's stack somewhere past 10^8 steps, and an overflow is not
+         a diagnostic.  Saying so here is the difference between a reader who
+         raises the flag once and one who raises it until the compiler stops
+         producing errors at all. *)
+      text "Raising it is safe for a term that is merely large.  It is not a \
+            way to compile a term that truly diverges: past roughly 10^8 \
+            steps a deeply recursive reduction exhausts the normalizer's \
+            stack, and that is reported as a crash rather than as this \
+            error.";
       (* The term *as written* is what identifies the culprit.  The normalized
          one does not exist -- that is the failure -- and the request chain
          names the callee but not which of its arguments was written how. *)
@@ -841,6 +869,7 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_opaque_attr,          "custard_opaque";
   PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
   PC.custard_compile_time_attr,    "custard_compile_time";
+  PC.custard_float_attr,           "custard_float";
 ]
 
 (* Attributes that describe one *field* of a constructor. *)
@@ -922,6 +951,10 @@ let attr_home (nm:string) : string =
   | "custard_compile_time" ->
     "It says that applications of a *definition* are to be evaluated during \
      extraction, so it goes on that definition."
+  | "custard_float" ->
+    "It says that an abstract *type* is a floating-point format, so it goes \
+     on that type -- conventionally the [t] of the module that declares the \
+     arithmetic for it."
   | "custard_inline_field" ->
     "It asks for one field of a constructor to be stored by value, so it \
      goes on that field."
@@ -3660,7 +3693,39 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
       (match assumed_projector_lb st se l t with
        | Some lb -> with_inline (extract_letbinding st l nm lb false margs n_holes)
        | None ->
-         DExternal { dx_name = nm; dx_typars = []; dx_ty = ty_of_typ st t;
+         (* Section 63.2.  Falling through to an external is right for a
+            float module's own axioms, but not for a misspelling of its
+            vocabulary, which would only be reported by the linker. *)
+         (match Builtins.float_vocabulary_hint l with
+          | Some want ->
+            E.log_issue0 E.Warning_CustardFloatVocabulary [
+              text ("Custard: " ^ Ident.string_of_lid l ^ " is declared in a \
+                     floating-point module, but it is not part of the \
+                     vocabulary Custard recognizes, so it becomes an \
+                     external symbol.");
+              text ("Did you mean to name it [" ^ want ^ "]?  Custard spells \
+                     IEEE equality [ieee_eq] because [eq] does not say which \
+                     equality is meant --- bitwise equality distinguishes the \
+                     two zeros and makes a NaN equal to itself, and no C \
+                     comparison operator does either.") ]
+          | None -> ());
+         (* Section 63.3.  Through {!external_ty}, and not [ty_of_typ] on
+            [t] directly.  A declaration is the third way an external can
+            arise -- the other two are [Rule_extern] and a realized module's
+            values -- and it used to be the only one that read its own type
+            raw: [margs] was dropped and [dx_typars] left empty, so a
+            supplied [Mono] type argument was substituted nowhere and the
+            type variable it should have become reached the backend still a
+            variable.  That is error 368, reported against the declaration
+            and blaming a monomorphization pass that had in fact never been
+            asked to do anything.
+
+            The three paths now agree, which is the point: whether a symbol
+            is external because a rule said so, because its module is
+            realized, or because F* only ever saw a [val], the same code
+            decides what its signature is. *)
+         let typars, ty = external_ty st l margs in
+         DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                      dx_target = None; dx_header = None; dx_flags = [] })
 
   | Sig_inductive_typ {params} ->

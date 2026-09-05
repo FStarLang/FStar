@@ -436,8 +436,30 @@ val monomorphize : unit
     string means "use the name Custard would have generated". *)
 val custard_extern (target: string) : unit
 
-(** Custard: the C header that declares a [custard_extern] symbol. *)
+(** Custard: the C header that declares a [custard_extern] symbol.
+
+    Two reasons to need one.  The symbol may genuinely be declared elsewhere,
+    which is the ordinary case.  Or the target may not be a symbol at all: a
+    function-like macro is invisible to the linker, so without a header the
+    call compiles to an implicit declaration and then fails to link -- and if
+    the macro is an overload set, error 384 is what reports it. *)
 val custard_c_header (header: string) : unit
+
+(** Custard: this abstract type is an IEEE-754 binary floating-point format
+    of the given width in bits, and the module that declares it supplies the
+    arithmetic vocabulary for it (see doc/ref/custard.md, section 63).
+
+    [FStar.Float32] and [FStar.Float64] are recognized by name; this is how
+    any *other* library opts in, without having to re-export them.  Put it on
+    the type, not on the operations:
+
+    [[@@custard_float 32]] [assume val t : Type0]
+
+    The operations are then found by name in the same module, using the same
+    vocabulary [FStar.Float32] uses --- [add], [sub], [mul], [div], [lt],
+    [lte], [ieee_eq], [of_int] and [of_literal].  Only 32 and 64 are
+    accepted. *)
+val custard_float (width: int) : unit
 
 (** Custard: a prologue for everything this definition *reaches*, rather than
     for this definition (see doc/ref/custard.md, section 51.3).

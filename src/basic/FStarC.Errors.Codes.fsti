@@ -411,6 +411,8 @@ type error_code =
   | Error_CustardSharedGlobal
   | Error_CustardExternConflict
   | Error_CustardEntryNotFound
+  | Error_CustardBadFloatWidth
+  | Warning_CustardFloatVocabulary
 
 type error_setting = error_code & error_flag & int
 
