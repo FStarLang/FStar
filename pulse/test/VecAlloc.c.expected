@@ -3,10 +3,10 @@
 
 void VecAlloc_hf(void) {
   uint32_t *v;
-  uint32_t *_cbuf1 = (uint32_t *)malloc((((size_t)100ULL)) * sizeof(uint32_t));
+  uint32_t *_cbuf1 = (uint32_t *)malloc(100 * sizeof(uint32_t));
   if (_cbuf1 == NULL) { abort(); }
-  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)100ULL)); _ci2++) {
-    _cbuf1[_ci2] = ((uint32_t)1U);
+  for (size_t _ci2 = 0; _ci2 < 100; _ci2++) {
+    _cbuf1[_ci2] = 1;
   }
   v = _cbuf1;
   free(v);

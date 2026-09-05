@@ -13935,6 +13935,127 @@ The file I reached for was the one written for the neighbouring predicate.
   simply be deleted. Only the `Float16`/`BFloat16` half of 60.5 remains,
   and it still needs the version bump.
 
+# 62 A green suite that CI could not run
+
+Round 57 was reported by CI rather than by a reviewer, and both failures
+were the same kind of thing: a check that passes here and cannot run
+there.  Neither was a bug in the compiler.  One was a test suite looking
+for a tool by a name CI does not use; the other was a set of golden
+files that had been stale for long enough to accumulate three separate
+rounds of intended output changes.
+
+The shared lesson is that *a gate I do not run is not a gate*.  Both
+were introduced by me, both were invisible to the suites I had been
+running before each commit, and both had been failing for some rounds.
+
+## 62.1 `krml` is a path, not a name
+
+`tests/custard` and `tests/custard/pulse` invoked karamel as a bare
+`krml`, and decided whether to schedule their karamel legs with
+`ifneq ($(shell command -v krml 2>/dev/null),)`.  Both spellings ask
+the PATH.  CI never installs karamel onto the PATH: it passes
+`KRML_EXE=` on the command line, which `mk/test.mk` defines, exports,
+and defaults to `$(FSTAR_ROOT)/out/bin/krml`.
+
+So in CI the guard was false and the two karamel C legs were **skipped
+silently** --- twenty-one targets in one suite and fifteen in the
+other, reported as success.  The Rust leg was worse.  It was guarded on
+`rustc` alone, and CI has `rustc`, so its targets were scheduled and
+then each one ran a `krml` that was not there:
+
+```
+KRML-RUST       LitOct
+ERROR: krml wrote no Rust for LitOct
+/bin/sh: 1: krml: not found
+```
+
+The message is a good example of a diagnostic describing the symptom it
+was written for rather than the one it got: the rule's own "wrote no
+Rust" check fired first, so the real cause appeared on the next line and
+belonged to the shell.
+
+`tests/extraction/backends` had already solved this, and the fix is its
+block moved into both suites --- candidates in order, path before name,
+with the name last rather than first:
+
+```make
+KRML_CANDIDATES := $(KRML_EXE) $(dir $(FSTAR_EXE))krml \
+                   $(FSTAR_ROOT)/karamel/out/bin/krml
+KRML_FOUND      := $(firstword $(wildcard $(KRML_CANDIDATES)) \
+                   $(shell command -v krml 2>/dev/null))
+ifneq ($(KRML_FOUND),)
+  override KRML_EXE := $(KRML_FOUND)
+endif
+```
+
+Every recipe now spells the tool `$(KRML_EXE)` and every guard tests
+`$(KRML_FOUND)`.  The Rust run leg is nested inside the karamel guard,
+since it needs both tools; `%.rustrejected` stays outside it, because it
+shells out to nothing but `fstar.exe`.  Both suites now warn when they
+skip, which is the part that would have made this visible a round or two
+earlier --- the old karamel guard had no `else` at all.
+
+Verified by running both suites with karamel removed from the PATH and
+passed as `KRML_EXE=`, which is what CI does: previously the first
+failed and the second skipped its karamel legs, now both pass with all
+thirty-six legs running.  The skip branch was checked separately with
+`KRML_FOUND=`, which warns twice and schedules none of them.
+
+## 62.2 A skip that raised instead
+
+`tests/custard/Makefile` says of `checkpartial.py` that "ocamlfind is
+not guaranteed present and neither is a dune build tree, so the script
+skips rather than failing when it cannot run", and the script's own
+docstring says the same.  Half of it was true.  The missing build tree
+is handled and returns 0; the missing `ocamlfind` was never checked, so
+the script reached its `subprocess.run` and exited on a
+`FileNotFoundError` traceback.
+
+The one branch written to keep the gate portable was the branch that
+crashed it.  It now tests `shutil.which("ocamlfind")` beside the
+existing build-tree test.  This did not affect CI, which has
+`ocamlfind`; it was found while reproducing 62.1 with a reduced PATH,
+and it is fixed because a gate whose documented fallback raises is a
+gate that will be deleted by whoever next meets it without the tool.
+
+## 62.3 Goldens that had drifted three rounds
+
+`pulse/test` extracts through Custard (§15) and pins nineteen `.c` and
+`.h` goldens.  It is not one of the suites I had been running --- my
+standing set was `tests/custard`, `tests/custard/pulse`,
+`tests/extraction/backends`, `make custard` and `make custard-smoke`
+--- and its `.expected` files had last been regenerated in §24.
+Everything since that changed the shape of emitted C had accumulated in
+them, and CI had been red on it for that whole stretch.
+
+Regenerated, and the diff is worth recording because it is the only
+audit these changes got as a group.  Every line falls into one of four
+buckets, and none is a surprise:
+
+* the `extern "C"` and `#ifdef __cplusplus` wrappers of §47.1,
+* §42.2's `CUSTARD_UNIT_DEFINED` guard around the unit typedef,
+* the tagged-union `enum` becoming a *named* top-level `enum X_tags`
+  rather than an anonymous one inside the struct,
+* §59's cast and parenthesis elimination, which is the bulk of it.
+
+Two things are worth noting from the regeneration.  The first is that
+§58's `while (cond)` rewrite correctly does **not** fire in
+`Example_Hashtable`: those loops carry a `_break` flag, so the condition
+is not a simple test and the `if (!c) break;` form is kept.  That is the
+conservative half of §58 doing its job, visible in a golden rather than
+asserted in a grep.
+
+The second is a trap in `make accept`.  It regenerates whatever differs,
+and four `.fst.output` goldens differ **here but not in CI** --- every
+gensym index shifted by exactly one, `x#282` against `x#281`.  Accepting
+those would have committed a local artefact and broken CI in the other
+direction.  They were reverted, and the check that they were not mine is
+that CI's log fails none of the four.  A blanket `accept` is a diff to
+read, not a command to trust.
+
+`pulse/test` joins the standing gate set.
+
+
 
 
 
@@ -14183,3 +14304,6 @@ The file I reached for was the one written for the neighbouring predicate.
 | M10εΚ | **The other `!`, which was never right** (§61.2) | Fixed, and pre-existing rather than from §59.  There are two negation sites and they disagreed: `negate`, reached from `if` and `while` conditions, calls `group` and is the one `is_atom` governs; the `!` of an ordinary expression printed its operand with bare `c_expr` and **never called `group` at all**, so it was wrong for a macro extern before §59 existed.  It now goes through `group` too, which is what `negate`'s own comment --- *"`!e` binds tighter than any operator, so the operand has to be a group"* --- was stating as a rule for both.  The reviewer found this because their first reproducer hit the *other* site and **fixing `is_atom` did not change its output**; that non-change is what disproved the story, rather than any reading of the code.  `ExtFlag` exercises both and needs an `if ... then () else` with an empty then-branch to reach the first --- M10εΓ's lesson recurring inside one round: the obvious spelling of the test hits the wrong site |
 | M10εΛ | **§60.6 was wrong: `HNF` is pinned, `Weak` is not** (§61.3) | Corrected, and the method was the error rather than the conclusion.  §60.3 mutated `is_arity_aux` and concluded from **`KindAbbrev` alone** that `HNF` is unpinned; re-measured against the suite, both rows reproduce here independently --- dropping `HNF` and keeping `Weak` makes **`TyFun4` fail with error 365 returning**, while dropping `Weak` and keeping `HNF` leaves all tests passing.  So `HNF` is pinned individually by a test already in the tree, and by the mechanism `TyFun4`'s own comment states: one step gives `tuple2 U32.t (loop 0)` and `HNF` is what declines to reduce that argument, where `Weak` cannot help because there is no binder to avoid going under.  Without it the argument unfolds without bound and §58.1's symptom returns verbatim.  The method note is the durable part, since §60 was itself about coverage: **a mutation is answered by the suite, not by the test you wrote for it** --- and the file I reached for was the one written for the neighbouring predicate.  `Weak` is now the unpinned half, which is not the same as inert: no case separates it either way |
 | M10εΜ | §59's citations were off by one (§61) | Fixed while writing §61.  The code comments landed with §59 were numbered against a draft in which the suffix discussion was not yet its own subsection, so every citation from `59.2` onward pointed one subsection too low --- the infix rule cited `59.2` when it is `59.3`, `is_atom` cited `59.3` when it is `59.4`, and the extern exception cited `59.4` when it is `59.5`, in `PrintC.fst` and in `tests/custard/Makefile` alike.  Harmless to the compiler and corrosive to the document, since a citation that resolves to the wrong neighbouring subsection is worse than none: it reads as deliberate.  All nine corrected |
+| M10εΝ | **A tool found by name, in the one place the name is absent** (§62.1) | Fixed, and reported by CI rather than by a reviewer.  `tests/custard` and `tests/custard/pulse` ran karamel as a bare `krml` and gated their karamel legs on `command -v krml`; CI never puts karamel on the PATH, it passes `KRML_EXE=`, which `mk/test.mk` defines and exports.  The C legs therefore **skipped silently in CI** --- twenty-one targets in one suite, fifteen in the other, all reported as success --- while the Rust leg, gated on `rustc` alone and so scheduled, ran and died with `/bin/sh: 1: krml: not found`.  Two opposite failures from one cause, and the silent half is the worse one: those legs are exactly the karamel interop the reviewers depend on.  `tests/extraction/backends` had already solved this and its discovery block is now in both suites --- path first, PATH last --- with every recipe spelling `$(KRML_EXE)` and every guard testing `$(KRML_FOUND)`.  The Rust run leg is nested inside the karamel guard because it needs both tools; `%.rustrejected` stays outside because it shells out to nothing but `fstar.exe`.  Both guards now have an `else` that warns, which is what would have shown this a round or two earlier |
+| M10εΞ | A documented skip that raised a traceback (§62.2) | Fixed.  `checkpartial.py` promises, in its docstring and again in `tests/custard/Makefile`, to skip when it cannot run; it implemented that for a missing dune build tree and not for a missing `ocamlfind`, so it exited on a `FileNotFoundError` instead --- the one branch written to keep the gate portable was the branch that crashed it.  Now tests `shutil.which("ocamlfind")` beside the existing test.  No effect on CI, which has the tool; found while reproducing §62.1 under a reduced PATH, and worth fixing because a gate whose documented fallback raises is a gate the next person deletes |
+| M10εΟ | **`pulse/test`'s goldens had drifted three rounds** (§62.3) | Fixed, and the gap was in my process rather than in the code.  `pulse/test` extracts through Custard and pins nineteen `.c`/`.h` goldens, and it was not in the set of suites I ran before each commit; its `.expected` files dated from §24, so CI had been red on them for that whole stretch.  Regenerated, and every changed line audits to one of four intended changes: §47.1's `extern "C"` wrappers, §42.2's `CUSTARD_UNIT_DEFINED` guard, the tagged-union `enum` becoming a named top-level `enum X_tags`, and §59's cast elimination, which is the bulk.  Two findings came out of it.  §58's `while (cond)` rewrite correctly does **not** fire in `Example_Hashtable`, whose loops carry a `_break` flag --- the conservative half of §58 shown in a golden instead of asserted in a grep.  And `make accept` is a trap: four `.fst.output` goldens differ **here and not in CI**, every gensym index off by exactly one, and accepting them would have broken CI in the other direction.  They were reverted; CI's own log fails none of the four.  A blanket `accept` is a diff to read, not a command to trust.  `pulse/test` joins the standing gate set |

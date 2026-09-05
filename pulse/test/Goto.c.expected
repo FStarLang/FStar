@@ -2,13 +2,13 @@
 #include "Goto.h"
 
 void Goto_test1(int32_t *r) {
-  r[((size_t)0ULL)] = ((int32_t)42);
+  r[0] = 42;
 }
 
 size_t Goto_find_zero(int32_t *a, size_t sz) {
   size_t _return = (size_t){0};
   bool _return1 = false;
-  size_t i = ((size_t)0ULL);
+  size_t i = 0;
   while (true) {
     bool _ct1;
     if (_return1) _ct1 = false;
@@ -17,13 +17,13 @@ size_t Goto_find_zero(int32_t *a, size_t sz) {
     (void)(i);
     size_t __anf0 = i;
     int32_t __anf1 = a[__anf0];
-    if ((__anf1 == ((int32_t)0))) {
+    if (__anf1 == 0) {
       _return = i;
       _return1 = true;
     }
     if (!(_return1)) {
       size_t __anf01 = i;
-      i = (__anf01 + ((size_t)1ULL));
+      i = (__anf01 + 1);
     }
   }
   if (!(_return1)) _return = i;
@@ -32,12 +32,12 @@ size_t Goto_find_zero(int32_t *a, size_t sz) {
 
 void Goto_test2_alt(int32_t *r) {
   bool _return = false;
-  int32_t __anf0 = r[((size_t)0ULL)];
-  if ((__anf0 == ((int32_t)67))) {
-    r[((size_t)0ULL)] = ((int32_t)42);
+  int32_t __anf0 = r[0];
+  if (__anf0 == 67) {
+    r[0] = 42;
     _return = true;
   }
-  if (!(_return)) r[((size_t)0ULL)] = ((int32_t)17);
+  if (!(_return)) r[0] = 17;
 }
 
 

@@ -3,21 +3,21 @@
 
 uint32_t ExtractUninit_uninit_ref(void) {
   uint32_t r = (uint32_t){0};
-  r = ((uint32_t)3U);
-  return (r + ((uint32_t)29U));
+  r = 3;
+  return (r + 29);
 }
 
 uint32_t ExtractUninit_uninit_array(void) {
   uint32_t *arr;
-  uint32_t _cbuf1[((size_t)5ULL)];
-  for (size_t _ci2 = 0; _ci2 < (size_t)(((size_t)5ULL)); _ci2++) {
+  uint32_t _cbuf1[5];
+  for (size_t _ci2 = 0; _ci2 < 5; _ci2++) {
     _cbuf1[_ci2] = (uint32_t){0};
   }
   arr = _cbuf1;
-  arr[((size_t)1ULL)] = ((uint32_t)2U);
-  arr[((size_t)3ULL)] = ((uint32_t)4U);
-  uint32_t __anf1 = arr[((size_t)1ULL)];
-  uint32_t __anf0 = arr[((size_t)3ULL)];
+  arr[1] = 2;
+  arr[3] = 4;
+  uint32_t __anf1 = arr[1];
+  uint32_t __anf0 = arr[3];
   return (__anf1 + __anf0);
 }
 

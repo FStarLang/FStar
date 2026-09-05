@@ -11,6 +11,15 @@ FSTAR_EXE ?= $(FSTAR_ROOT)/stage3/out/bin/fstar.exe
 
 include $(PULSE_ROOT)/mk/test.mk
 
+# Section 62.1.  Same discovery as tests/custard and for the same reason:
+# CI passes KRML_EXE= and never puts krml on the PATH, so a `command -v
+# krml` guard silently skipped both karamel legs of this suite.
+KRML_CANDIDATES := $(KRML_EXE) $(dir $(FSTAR_EXE))krml $(FSTAR_ROOT)/karamel/out/bin/krml
+KRML_FOUND      := $(firstword $(wildcard $(KRML_CANDIDATES)) $(shell command -v krml 2>/dev/null))
+ifneq ($(KRML_FOUND),)
+  override KRML_EXE := $(KRML_FOUND)
+endif
+
 # Each of these is extracted with --codegen Custard from its 'main'; the
 # generated OCaml must contain every GREP_<name> pattern and none of the
 # NOGREP_<name> ones.  We check the shape of the output rather than running
@@ -223,7 +232,7 @@ $(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/%.rs: $(OUTPUT_DIR)/%.custard.rust.krml
 	$(call msg, "KRML-RUST", $(basename $(notdir $@)))
 	$(Q)rm -rf $(OUTPUT_DIR)/$*_rs
-	$(Q)krml -silent -fkeep-tuples -fno-box -skip-linking -backend rust \
+	$(Q)$(KRML_EXE) -silent -fkeep-tuples -fno-box -skip-linking -backend rust \
 	  -tmpdir $(OUTPUT_DIR)/$*_rs $<
 	$(Q)sed 's/^pub fn main()/pub fn krml_main()/' $(OUTPUT_DIR)/$*_rs/*.rs > $@
 	$(Q)grep -q '^pub fn krml_main()' $@ || \
@@ -291,7 +300,7 @@ $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
-	$(Q)krml -silent -skip-linking -tmpdir $(OUTPUT_DIR)/$*_c $<
+	$(Q)$(KRML_EXE) -silent -skip-linking -tmpdir $(OUTPUT_DIR)/$*_c $<
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
 	  -c $(OUTPUT_DIR)/$*_c/Custard.c -o $@
@@ -351,7 +360,7 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .grepped, $(GREP_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .mlchecked, $(OCAML_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 
-ifneq ($(shell command -v krml 2>/dev/null),)
+ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))
 ifneq ($(shell command -v rustc 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))

@@ -33,6 +33,7 @@ than reporting on the previous build, if that tree is older than src/custard/
 import glob
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -89,6 +90,15 @@ def main():
     objs, mls = find_tree(root)
     if objs is None:
         print("checkpartial: no dune build tree; skipping")
+        return 0
+
+    # Section 62.2.  The sweep shells out to ocamlfind, and the contract
+    # stated above -- and in tests/custard/Makefile -- is that a missing
+    # tool skips rather than fails.  Without this the run died with a
+    # FileNotFoundError traceback instead, so the one branch that was
+    # supposed to keep the gate portable was the branch that crashed it.
+    if shutil.which("ocamlfind") is None:
+        print("checkpartial: ocamlfind not found; skipping")
         return 0
 
     # Section 52.1.  The sweep reads the *extracted* compiler, so it answers

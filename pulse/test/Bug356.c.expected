@@ -3,12 +3,12 @@
 
 uint32_t Bug356_test(bool b) {
   (void)b;
-  return ((uint32_t)1U);
+  return 1;
 }
 
 uint32_t Bug356_test_final_admit(bool b) {
   (void)b;
-  return ((uint32_t)1U);
+  return 1;
 }
 
 void Bug356_test_unit_admit(bool x) {

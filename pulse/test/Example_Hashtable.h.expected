@@ -9,8 +9,17 @@
 
 /* The sole inhabited erased value (section 5.1).  A distinct typedef rather
 than void, so that it can be stored in a variable and returned like any
-other value. */
+other value.  Guarded because two generated headers may meet in one
+translation unit (section 42.2): this is a fixed name for a fixed type,
+so two spellings of it are the same spelling. */
+#ifndef CUSTARD_UNIT_DEFINED
+#define CUSTARD_UNIT_DEFINED
 typedef uint8_t custard_unit;
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct Example_Hashtable_data_s Example_Hashtable_data;
 typedef struct Pulse_Lib_HashTable_Spec_cell__uintsize_data_s Pulse_Lib_HashTable_Spec_cell__uintsize_data;
@@ -24,12 +33,13 @@ struct Example_Hashtable_data_s {
   bool left;
   bool right;
 };
+enum Pulse_Lib_HashTable_Spec_cell__uintsize_data_tags {
+  PULSE_LIB_HASHTABLE_SPEC_CLEAN__UINTSIZE_DATA,
+  PULSE_LIB_HASHTABLE_SPEC_ZOMBIE__UINTSIZE_DATA,
+  PULSE_LIB_HASHTABLE_SPEC_USED__UINTSIZE_DATA
+};
 struct Pulse_Lib_HashTable_Spec_cell__uintsize_data_s {
-  enum {
-    PULSE_LIB_HASHTABLE_SPEC_CLEAN__UINTSIZE_DATA,
-    PULSE_LIB_HASHTABLE_SPEC_ZOMBIE__UINTSIZE_DATA,
-    PULSE_LIB_HASHTABLE_SPEC_USED__UINTSIZE_DATA
-  } tag;
+  enum Pulse_Lib_HashTable_Spec_cell__uintsize_data_tags tag;
   union {
     struct {
       size_t k;
@@ -42,11 +52,12 @@ struct Pulse_Lib_HashTable_Type_ht_t__uintsize_data_s {
   size_t (*hashf)(size_t);
   Pulse_Lib_HashTable_Spec_cell__uintsize_data *contents;
 };
+enum FStar_Pervasives_Native_option__uintsize_tags {
+  FSTAR_PERVASIVES_NATIVE_NONE__UINTSIZE,
+  FSTAR_PERVASIVES_NATIVE_SOME__UINTSIZE
+};
 struct FStar_Pervasives_Native_option__uintsize_s {
-  enum {
-    FSTAR_PERVASIVES_NATIVE_NONE__UINTSIZE,
-    FSTAR_PERVASIVES_NATIVE_SOME__UINTSIZE
-  } tag;
+  enum FStar_Pervasives_Native_option__uintsize_tags tag;
   union {
     struct {
       size_t v;
@@ -69,5 +80,9 @@ struct FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_data_s {
 size_t Example_Hashtable_hash(size_t x);
 void Example_Hashtable_insert_lookup_and_replace(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif
 

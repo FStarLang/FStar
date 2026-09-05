@@ -15,25 +15,25 @@ void Break_simple_break(void) {
 
 void Break_break_continue_and_return(uint8_t which) {
   bool _return = false;
-  uint32_t i = ((uint32_t)0U);
+  uint32_t i = 0;
   bool _break = false;
   while (true) {
     bool _ct1;
     if (_break) _ct1 = false;
     else {
       if (_return) _ct1 = false;
-      else _ct1 = (i < ((uint32_t)1000U));
+      else _ct1 = (i < 1000);
     }
     if (!(_ct1)) { break; }
     bool _continue = false;
-    if ((which == ((uint8_t)0U))) _break = true;
+    if (which == 0) _break = true;
     if (!(_break)) {
-      if ((which == ((uint8_t)1U))) _continue = true;
+      if (which == 1) _continue = true;
       if (!(_continue)) {
-        if ((which == ((uint8_t)2U))) _return = true;
+        if (which == 2) _return = true;
         if (!(_return)) {
           uint32_t __anf0 = i;
-          i = (__anf0 + ((uint32_t)1U));
+          i = (__anf0 + 1);
         }
       }
     }
@@ -41,7 +41,7 @@ void Break_break_continue_and_return(uint8_t which) {
 }
 
 size_t Break_find_zero_with_break(int32_t *a, size_t sz) {
-  size_t i = ((size_t)0ULL);
+  size_t i = 0;
   bool _break = false;
   while (true) {
     bool _ct1;
@@ -51,10 +51,10 @@ size_t Break_find_zero_with_break(int32_t *a, size_t sz) {
     (void)(i);
     size_t __anf0 = i;
     int32_t __anf1 = a[__anf0];
-    if ((__anf1 == ((int32_t)0))) _break = true;
+    if (__anf1 == 0) _break = true;
     if (!(_break)) {
       size_t __anf01 = i;
-      i = (__anf01 + ((size_t)1ULL));
+      i = (__anf01 + 1);
     }
   }
   return i;

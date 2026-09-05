@@ -776,6 +776,20 @@ EGREP_FieldAttr = "on the field pimpl_type"
 
 include $(FSTAR_ROOT)/mk/test.mk
 
+# Section 62.1.  Finding karamel by name on the PATH is what a dev tree
+# happens to allow and what CI does not: CI never installs krml onto the
+# PATH, it passes KRML_EXE= on the command line.  The recipes below used a
+# bare `krml`, so the karamel legs skipped silently in CI while passing
+# here -- and the Rust leg, gated on rustc alone, ran anyway and died with
+# "krml: not found".  Discovery is now by path first and PATH last, the
+# same order tests/extraction/backends already used, and every recipe and
+# every guard goes through the result rather than through the name.
+KRML_CANDIDATES := $(KRML_EXE) $(dir $(FSTAR_EXE))krml $(FSTAR_ROOT)/karamel/out/bin/krml
+KRML_FOUND      := $(firstword $(wildcard $(KRML_CANDIDATES)) $(shell command -v krml 2>/dev/null))
+ifneq ($(KRML_FOUND),)
+  override KRML_EXE := $(KRML_FOUND)
+endif
+
 # --custard_warn_any escalated to an error (section 5.6): no declaration in the
 # corpus may lose the representation of a value.  This is what keeps the "no
 # surviving ECast, no surviving TAny" measurement of section 5.4 true.
@@ -917,7 +931,7 @@ $(OUTPUT_DIR)/rust/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/rust/%.krml
 	$(call msg, "KRML-RUST", $(basename $(notdir $@)))
 	$(Q)rm -rf $(OUTPUT_DIR)/$*_rs && mkdir -p $(OUTPUT_DIR)/$*_rs
-	$(Q)krml -silent -backend rust -skip-linking -no-prefix $* -drop C \
+	$(Q)$(KRML_EXE) -silent -backend rust -skip-linking -no-prefix $* -drop C \
 	  $(KRMLRS_$*) -tmpdir $(OUTPUT_DIR)/$*_rs $< \
 	  > $(OUTPUT_DIR)/$*.rslog 2>&1 || true
 	@# The exit status is 0 either way, so this is the only report there is.
@@ -949,7 +963,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
 	@# Section 45.3.  The test directory is on the include path because a
 	@# [@@custard_c_header] now reaches karamel's output as an #include.
-	$(Q)krml -silent -skip-linking -no-prefix $* -ccopts "-I$(CURDIR)" \
+	$(Q)$(KRML_EXE) -silent -skip-linking -no-prefix $* -ccopts "-I$(CURDIR)" \
 	  -tmpdir $(OUTPUT_DIR)/$*_c $<
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
@@ -1631,16 +1645,28 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 # toolchain is installed under another name can say so.
 RUSTC ?= rustc
 ifneq ($(shell command -v $(RUSTC) 2>/dev/null),)
+# Section 62.1.  [.rsran] runs krml before it runs rustc, so rustc alone is
+# not enough of a guard: on a machine with rustc and no karamel this list
+# used to be built and every target died with "krml: not found".  That is
+# exactly CI, which passes KRML_EXE= rather than installing krml on the
+# PATH.  [.rustrejected] stays outside the krml guard because it shells out
+# to nothing but fstar.exe.
+ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
+else
+$(warning krml not found: skipping the Rust run tests)
+endif
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rustrejected, $(RUSTREJECT_TESTS)))
 else
 $(warning rustc not found: skipping the Rust tests)
 endif
 
-# Only when karamel is on the PATH: the OCaml backend is always testable, the
-# C one needs a toolchain.
-ifneq ($(shell command -v krml 2>/dev/null),)
+# Only when karamel is available: the OCaml backend is always testable, the
+# C one needs a toolchain.  Found by path and not by name -- see 62.1.
+ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cran, $(KRML_TESTS)))
+else
+$(warning krml not found: skipping the karamel C tests)
 endif
 
 # The result type is peeled down to the last arrow, through both abbreviations.
