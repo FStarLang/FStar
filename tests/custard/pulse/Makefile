@@ -146,6 +146,16 @@ CNOGREP_PulseForCapture += "(*body)"
 # a [size_t], so the other operand fixes the type -- and section 59.3's
 # [is_atom] keeps [group] from putting the pair back.  The CNOGREP is kept
 # in both spellings, since 41.1's hazard is the pair and not the cast.
+C_TESTS += ExtBuf
+# Section 60.2.  The cast is the assertion, and the C++ leg added above is
+# what enforces it: extbuf_base is a macro yielding void *, which C converts
+# implicitly and C++ refuses.  Removing the cast from PrintC leaves this
+# file compiling clean under gcc and failing under g++.
+CGREP_ExtBuf = "(uint8_t *)extbuf_base"
+# The returned pointer must be *bound* to a typed variable.  Discarding it
+# would emit a (void) cast, which C++ accepts with or without the fix.
+CGREP_ExtBuf += "uint8_t *"
+
 C_TESTS += PulseBlit
 CGREP_PulseBlit += "memmove("
 CGREP_PulseBlit += "2 * sizeof(uint8_t)"
@@ -248,9 +258,28 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
 	$(Q)python3 $(CURDIR)/../checkgroup.py $@ $(basename $@).h
 
-$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc
+$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx
 	$(call msg, "CC", $(basename $(notdir $@)))
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -x c $< -o $@
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -x c $< -o $@
+
+# Section 60.1.  The C++ leg of section 47.1, which existed only in
+# tests/custard and so had never been run over any of the output in this
+# directory -- which is the output that matters more for it.  A C++
+# disagreement is about declarations, scope and implicit conversions, and
+# this is where the tagged unions, the nested structs, the function
+# pointers and the pointer-returning externs are.  The every-push suite
+# next door is mostly scalars.
+#
+# It found nothing: all seven units compiled clean as C++ the first time.
+# That is the right outcome and not a reason to leave the leg out --- 47.1's
+# bug (an enum nested in a struct scopes its enumerators differently in the
+# two languages) was invisible to a C-only suite for the same reason it
+# would be invisible here, and Kuiper consumes this backend through nvcc,
+# which is C++.
+$(OUTPUT_DIR)/%.dcxx: $(OUTPUT_DIR)/%.dc
+	$(call msg, "CXX", $(basename $(notdir $@)))
+	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -fsyntax-only -x c++ $<
+	$(Q)touch $@
 
 # Each of these programs' [main] checks its own answers and exits 0 if they
 # are right, so running it is a test of the generated code and not only of the

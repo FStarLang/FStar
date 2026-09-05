@@ -13603,6 +13603,191 @@ transcribed:
 - **Arithmetic on two literals** is left alone, as above. Constant folding
   in the IR would remove the question rather than answer it.
 
+# 60 Two reviewers, one missing half
+
+Round 55. Both reviewers independently reported the same thing about
+§57.1, from opposite directions: the fix covers `TBuf` and `TRef`, and the
+suite's only pointer-returning extern is a `ref`. The half that motivated
+the report is the half nothing pins.
+
+That is §57's own bug --- a guard written for one constructor with its
+sibling left open --- recurring one level up, in the tests. It is worth
+saying plainly that neither reviewer found a defect this round: everything
+below is coverage, and three of the four items are tests for code that was
+already right.
+
+## 60.1 The C++ leg was in the wrong directory
+
+§47.1 compiles every generated unit as C++ as well as C, because CUDA is
+C++ and a generated header is meant to be included. It found a real bug
+once: enumerators of an enum nested in a struct have *file* scope in C and
+*class* scope in C++, so every tagged union compiled clean as C11 and was
+unusable from nvcc.
+
+That leg existed only in `tests/custard`. It had never been run over
+anything in `tests/custard/pulse` --- **which is where the tagged unions
+are.** The every-push suite next door is mostly scalars; the Pulse suite is
+where the nested structs, the function pointers, the loops and the
+pointer-returning externs live. The leg was in the directory that needed it
+least.
+
+Adding it found nothing: all seven existing units compiled clean as C++ the
+first time. That is the right outcome and not an argument against the leg
+--- 47.1's bug was invisible to a C-only suite for exactly the reason it
+would have been invisible here.
+
+## 60.2 `ExtBuf`, and why it cannot live next to `ExtPtr`
+
+The `TBuf` half is now `pulse/ExtBuf.fst`, and it emits what it should:
+
+```c
+uint8_t *a = (uint8_t *)extbuf_base(((size_t)0ULL));
+```
+
+with the negative control exact --- delete the cast and `gcc -std=c11
+-Wall -Werror` accepts silently while `g++` gives `invalid conversion from
+'void*' to 'uint8_t*'`.
+
+**It could not go beside `ExtPtr`.** The only F\* types Custard maps to
+`TBuf` are `Pulse.Lib.Array.Core.array`, `Pulse.Lib.Vec.vec` and
+`Pulse.Lib.ArrayPtr.ptr`, so a `TBuf` test needs a Pulse library type; and
+`tests/custard` is run by `make test-1` and `test-2`, whose compilers
+answer `Module Pulse.Lib.Array cannot be found`. A reviewer proposed this
+file for `tests/custard` and it would have broken both. No Pulse *syntax*
+appears in it --- the note in `CborBoundary.fst` is about the language
+extension --- but the library dependency alone is enough to move it, and
+moving it is why 60.1 had to happen first: `pulse/` had no C++ leg to
+assert against.
+
+**The shape of `main` is the load-bearing part**, and this is the better
+half of the reviewer's report. Their first version discarded the result:
+
+```fstar
+let main () : ML I32.t = let _ = base 0sz in 0l
+```
+
+which wraps the call in a cast to `void` --- and with the pointer cast
+removed, C++ accepts *that* too, because converting a `void` pointer to
+`void` is not a conversion. The test would have passed on a build with the
+bug reintroduced. That is the same failure as the original `TRef` test one
+level down, and it is the more interesting statement of it: not "the fix
+covered the wrong constructor" but **"the test's shape meant the compiler
+was never asked the question."** Binding the result to a typed variable is
+what asks it.
+
+## 60.3 `KindAbbrev`: what it discriminates, and what it does not
+
+§57.2 replaced full normalization with `Weak; HNF` in `is_arity_aux` on an
+argument, and an argument is worth a test when being wrong miscompiles
+rather than rejects. A reviewer supplied three shapes whose head is not
+immediately present --- an abbreviation chain, a refinement, and `kf 0`, a
+type-level function returning a *kind*, which is §56's shape one level up
+--- and `is_arity_aux` normalizes **exactly once**, so a head it cannot
+expose in that single pass is a head it never finds.
+
+All three are erased correctly. But it is worth being exact about what the
+test guards, because I measured it rather than assuming:
+
+| mutation to `is_arity_aux` | `KindAbbrev` |
+| --- | --- |
+| drop `HNF`, keep `Weak` | **passes** |
+| drop `UnfoldUntil delta_constant` | **fails**, error 368 |
+
+So it does not discriminate on `HNF`; weak reduction alone already exposes
+these heads. What it pins is `UnfoldUntil delta_constant`, the step that
+sees through a *name* --- and it pins it in the miscompile-class way, since
+error 368 is the type variable that survived into the C. That is a real
+assertion and the test earns its place, but it is not a test of the
+`Weak; HNF` change as such. The test of that remains `TyFun4` against
+`TypeDiverge`.
+
+Recording the negative result matters as much as the positive one: `HNF`
+on top of `Weak` is belt-and-braces here, and a future reader should know
+no test holds it in place.
+
+## 60.4 `KindStar`: the half a reviewer said they could not reach
+
+§57.2 changed **two** step lists. The reviewer verified `is_arity_aux`
+thoroughly and then wrote that they had no probe for `is_star_aux`, their
+attempt having been rejected by F\* outright, and that they would rather say
+so than let six identical goldens stand in for it.
+
+That is the right instinct, and the measurement confirms it was justified:
+with `UnfoldUntil delta_constant` deleted from `is_star_aux` **alone**, the
+whole of `tests/custard` still passed. Nothing exercised it.
+
+The reason a probe is hard is that the two predicates are asked different
+questions. `is_arity` asks whether a binder is *erased*; `is_star_aux` asks
+whether an erased binder can become a **parameter of a target type**, which
+only a binder of kind `Type` can be (§5.0). A function's binders are
+settled by `is_arity` before `is_star_aux`'s normalization is needed ---
+which is why `KindAbbrev`, three functions, does not reach it either. What
+reaches it is a **type** parameterized by a name that unfolds to `Type`:
+
+```fstar
+let k1 : Type u#1 = Type0
+let k2 : Type u#1 = k1
+noeq type box (a : k2) = { v : a }
+```
+
+With the step removed, `k2` does not unfold, `box`'s parameter is not a
+type parameter, and `v`'s representation is lost --- the extraction fails
+rather than miscompiling, because `--custard_warn_any` is on. With it
+present, `box` is a one-field record and collapses to its field (§8), so
+the assertion is on the monomorphized `KindStar_get__t(uint32_t b)`.
+
+## 60.5 The Kuiper interop patch, and the field that exists for it
+
+A reviewer offered a 50-line patch letting their Krml plugin build on this
+branch, so that the two backends could be A/B'd on identical sources. The
+motivation is good and the goal is one worth having. The patch should not
+land as written, and the reason is not scope.
+
+Their analysis was that adding `EGFor` to `KrmlAst.expr` and
+`Float16`/`BFloat16` to `KrmlAst.width` is safe because the constructors
+are appended at the tail and **karamel already has them**, so the
+positional marshalling still lines up. The first half is right and I
+re-derived it: `KrmlAst.expr` and karamel's `InputAst.expr` agree at all 43
+positions, both ending at `ESizeof`, with `ETypApp`/`ETApp` a spelling
+difference only; and the two `width` types agree at all 14, including the
+`Bool` that `Constant.width` does not have and `InputConstant.width` does.
+
+The second half is **false at the pin this repository uses**. At karamel
+`9abbb865`, `InputAst.expr` ends at `ESizeof` --- there is no `EGFor` ---
+and neither `Constant.width` nor `InputConstant.width` has `Float16` or
+`BFloat16`. The alignment holds precisely because *neither side* has any of
+the three.
+
+What makes that more than a correction is how it would fail. A `.krml` file
+is read with `input_value`, which is OCaml's `Marshal`, and **`Marshal`
+does not typecheck**: a constant constructor is an index, and an index past
+the end of the reader's type is not an error but an undefined value. The
+file would not be rejected; it would be misread.
+
+The mechanism that exists to prevent exactly this is the version field.
+`Krml.fst`'s own log states the convention --- `v30: Added EBufDiff`,
+`v32: Introduce ESizeof` --- one bump per constructor addition, and
+karamel's reader fails loudly on `version > current_version`. The patch
+adds three constructors and leaves `current_version` at 32, which is the
+one change that turns a clean "upgrade KaRaMeL" into silent
+misinterpretation.
+
+So the ordering is the answer, not a refusal: the constructors land in
+karamel first, then here with a bump to 33. Of the rest, the `fake_SizeT`
+substitution should not land at all --- it silently narrows `size_t` to 32
+bits for every consumer, and its own comment says it should die --- and the
+`--ext kuiper` zeta gate is inert but belongs to the ML extraction path
+rather than to Custard, where it can be reviewed by the people who own it.
+
+## 60.6 Not done
+
+- **`HNF` in `is_arity_aux` is unpinned**, per the table in 60.3. Finding a
+  shape that needs it is open; it may be that none exists and the step is
+  redundant with `Weak`, which would be worth knowing.
+- The C++ leg is `g++` only here. `clang++` and `nvcc` are not available in
+  this container, and the reviewer who runs both reports 39/39 clean.
+
+
 
 
 
@@ -13837,3 +14022,9 @@ transcribed:
 | M10δΧ | Every touched expectation was strengthened (§59.6) | Done, and worth listing because each break was a golden pinning the old spelling.  `LitBase` and `LitOct` are now **anchored** (`"== 0xff)"`, not `"0xff"`) --- once the suffix is gone a bare `0xff` would also be matched by the tail of the 64-bit literal in the same file, so the old patterns were accidentally specific and the new ones are specific on purpose.  `ChrLit` pinned `((uint32_t)97)` to show that `FStar.Char.char` is `uint32_t`; it now pins the **signature**, which says that once for the whole function rather than once per literal and does not depend on how a constant is spelled.  `PulseBlit` keeps §41.1's `CNOGREP` on the doubled pair in the new spelling as well, since 41.1's hazard is the pair and not the cast |
 | M10δΨ | Character literals in non-converting positions (§59.7) | Not done.  `constant` spells a `CChar` with a hard-coded `(uint32_t)`, while the type is realized by a **rule** and could in principle be spelled otherwise --- so the cast is guessing.  The guess predates this section and is not made worse by it: in a converting position the literal now takes whatever the declared type is, so the only remaining exposure is a character literal in a position that converts nothing.  Finding the realized spelling from the printer would mean asking the rule set for the type's C name at a point that currently only has a constant |
 | M10δΩ | Arithmetic between two literals (§59.7) | Not done, and left as the one case where the casts stay for a real reason rather than a conservative one.  Constant folding in the **IR** would remove the question rather than answer it, and would also help the tests §33 already describes as folding away.  Doing it in the printer would mean the printer knowing the target's arithmetic, which is exactly what it declines to know everywhere else |
+| M10εΑ | **The C++ leg was in the directory that needed it least** (§60.1) | Done.  §47.1 compiles every generated unit as C++ as well as C, and it caught a real bug once --- enumerators of an enum nested in a struct have *file* scope in C and *class* scope in C++, so every tagged union compiled clean as C11 and was unusable from nvcc.  That leg existed only in `tests/custard`, and had never been run over anything in `tests/custard/pulse`, **which is where the tagged unions are**: the every-push suite is mostly scalars, while the Pulse suite has the nested structs, the function pointers and the pointer-returning externs.  It found nothing --- all seven existing units compiled clean as C++ the first time --- which is the right outcome and not an argument against it, since 47.1's bug was invisible to a C-only suite for precisely the reason it would have been invisible here |
+| M10εΒ | **The `TBuf` half of §57.1, and where it had to live** (§60.2) | Done, reported independently by both reviewers from opposite directions: the §57.1 guard covers `TBuf` and `TRef`, and the suite's only pointer-returning extern is a `ref`, so the half that *motivated* the report is the half nothing pinned.  That is §57's own bug --- a guard written for one constructor with its sibling left open --- recurring one level up, in the tests.  `pulse/ExtBuf.fst` closes it, with the negative control exact: delete the cast and `gcc -std=c11 -Wall -Werror` accepts silently while `g++` reports `invalid conversion from 'void*' to 'uint8_t*'`.  **It could not go beside `ExtPtr`**: the only F\* types Custard maps to `TBuf` are the three Pulse pointer types, and `tests/custard` is run by `make test-1` and `test-2`, whose compilers answer `Module Pulse.Lib.Array cannot be found` --- a reviewer proposed the file for that directory and it would have broken both.  Which is also why M10εΑ had to come first: `pulse/` had no C++ leg to assert against |
+| M10εΓ | The test's *shape* is what asks the compiler the question (§60.2) | Recorded, and the better half of that report.  The reviewer's first `ExtBuf` discarded the returned pointer (`let _ = base 0sz in 0l`), which wraps the call in a cast to `void` --- and with the pointer cast removed **C++ accepts that too**, because converting a `void` pointer to `void` is not a conversion.  The test would have passed on a build with the bug reintroduced.  This is the same failure as the original `TRef` test one level down, and the sharper statement of it: not "the fix covered the wrong constructor" but *"the test's shape meant the compiler was never asked the question"*.  Binding the result to a typed variable is what asks it, and that is why `main` is written the way it is |
+| M10εΔ | `KindAbbrev` pins `UnfoldUntil`, not `HNF` (§60.3) | Done, and the negative result is the part worth having.  A reviewer supplied three shapes whose head is not immediately present --- an abbreviation chain, a refinement, and `kf 0`, a type-level function returning a *kind*, which is §56's shape one level up --- against an `is_arity_aux` that normalizes **exactly once**.  All three are erased correctly.  But mutation says what the test actually holds: dropping `HNF` and keeping `Weak` leaves it **passing**, while dropping `UnfoldUntil delta_constant` makes it **fail with error 368**, the miscompile class (a type variable surviving into the C).  So it pins the step that sees through a *name*, not the `Weak; HNF` change as such --- the test of that remains `TyFun4` against `TypeDiverge`.  `HNF` on top of `Weak` is belt-and-braces here and no test holds it in place; a future reader should know that rather than infer the opposite from the file's name |
+| M10εΕ | **`is_star_aux` was reached by nothing** (§60.4) | Done, closing a gap a reviewer reported honestly rather than papering over --- they had no probe for the second of §57.2's two step lists, their attempt having been rejected by F\* outright, and said they would rather say so than let six identical goldens stand in for it.  The measurement justified the caution: with `UnfoldUntil delta_constant` deleted from `is_star_aux` **alone**, the whole of `tests/custard` still passed.  A probe is hard because the predicates answer different questions --- `is_arity` asks whether a binder is *erased*, `is_star_aux` whether an erased binder can be a **parameter of a target type**, which only kind `Type` can be (§5.0) --- so a function's binders are settled before `is_star_aux` normalizes, which is why `KindAbbrev`'s three functions miss it too.  What reaches it is a **type** parameterized by a name that unfolds to `Type`: `KindStar.fst`, where removing the step loses `v`'s representation and the extraction fails rather than miscompiling, because `--custard_warn_any` is on |
+| M10εΖ | **The Kuiper interop patch, and the field that exists for it** (§60.5) | Not landed, and the reason is not scope.  The reviewer's argument was that appending `EGFor` to `KrmlAst.expr` and `Float16`/`BFloat16` to `KrmlAst.width` is safe because karamel already has them.  The alignment half is right and I re-derived it --- `KrmlAst.expr` and `InputAst.expr` agree at all 43 positions, both ending at `ESizeof`, `ETypApp`/`ETApp` being a spelling difference, and the two `width` types at all 14 including the `Bool` that `Constant.width` lacks --- but the premise is **false at pin `9abbb865`**: karamel has none of the three, which is *why* the alignment holds.  What makes that more than a correction is the failure mode: a `.krml` is read with `input_value`, and **`Marshal` does not typecheck**, so a constructor index past the end of the reader's type is not an error but an undefined value --- the file is misread, not rejected.  The mechanism against exactly this is the version field, whose own log states the convention (`v30: Added EBufDiff`, `v32: Introduce ESizeof`) and whose reader fails loudly above `current_version`; the patch adds three constructors and leaves it at 32.  So the answer is an ordering --- karamel first, then here with a bump to 33 --- not a refusal.  Separately, `fake_SizeT` should not land at all, since it silently narrows `size_t` to 32 bits for every consumer and its own comment says it should die, and the `--ext kuiper` zeta gate belongs to the ML extraction path where its owners can review it |

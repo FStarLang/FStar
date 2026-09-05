@@ -335,6 +335,27 @@ CNOGREP_CEtaChain = "(*CEtaChain_g)" "(*CEtaChain_call_g("
 # of the [%.dc] rule below, not the grep; the grep just pins the shape.
 C_TESTS += ExtPtr
 CGREP_ExtPtr = "(uint8_t *)extptr_base"
+
+# Section 60.3.  A reviewer's probe for section 57.2's [Weak; HNF].  All
+# three binders are arities whose head is *not* immediately present -- an
+# abbreviation chain, a refinement, and a type-level function returning a
+# kind -- and [is_arity_aux] gets exactly one normalization pass to find it.
+# The assertion is that none of them survives into the signature: an arity
+# missed here is kept as a runtime parameter and miscompiles rather than
+# being rejected.  See KindAbbrev.fst for why the functions are recursive.
+C_TESTS += KindAbbrev
+CGREP_KindAbbrev = "KindAbbrev_hold_k__t(uint32_t x, uint32_t n)" \
+                   "KindAbbrev_hold_e__t(uint32_t x, uint32_t n)" \
+                   "KindAbbrev_hold_f__t(uint32_t x, uint32_t n)"
+CNOGREP_KindAbbrev = "void *"
+
+# Section 60.4.  The is_star_aux half, which nothing reached until this
+# file: deleting [UnfoldUntil delta_constant] from that one step list left
+# the entire suite passing.  It needs a *type* parameterized by a kind
+# abbreviation, since a function's binders are decided by is_arity first.
+C_TESTS += KindStar
+CGREP_KindStar = "KindStar_get__t(uint32_t b)"
+CNOGREP_KindStar = "void *"
 # Section 26.  CVarArity's callee is an arrow-typed global *variable* -- the
 # lowering section 25.3 keeps deliberately -- so the grep asserts that the
 # variable is still a variable and that its caller nonetheless takes both
