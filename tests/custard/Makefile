@@ -356,6 +356,21 @@ CNOGREP_KindAbbrev = "void *"
 C_TESTS += KindStar
 CGREP_KindStar = "KindStar_get__t(uint32_t b)"
 CNOGREP_KindStar = "void *"
+
+# Section 61.1.  Both directions: the shift keeps its cast, and the
+# addition must still have lost its own -- a fix that restored the cast for
+# every operator would pass a test that only checked the shift.  main
+# checks its own answers, so .dcran is the real assertion; before the fix
+# this program returned 1 with no compiler diagnostic at all.
+C_TESTS += ShiftLit
+CGREP_ShiftLit = "((uint64_t)40ULL) << n" "return (40 + n);"
+CNOGREP_ShiftLit = "return (40 << n);"
+
+# Section 61.2.  Two negation sites, broken for two different reasons.
+# EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
+C_TESTS += ExtFlag
+CGREP_ExtFlag = "if (!(EXT_FLAG)) return 0;" "if (!(EXT_FLAG)) r[0] = 0;"
+CNOGREP_ExtFlag = "!EXT_FLAG"
 # Section 26.  CVarArity's callee is an arrow-typed global *variable* -- the
 # lowering section 25.3 keeps deliberately -- so the grep asserts that the
 # variable is still a variable and that its caller nonetheless takes both
@@ -478,7 +493,7 @@ CGREP_CExtern   = "include \"CExtern_stubs.h" \
                   "uint32_t CExtern_base = 7;" \
                   "uint8_t CExtern_low = (uint8_t)300;" \
                   "cextern_make(((uint32_t)41U))"
-# Section 59.4: the last of those is the *exception* to the cast removal, and
+# Section 59.5: the last of those is the *exception* to the cast removal, and
 # it is here rather than with the other section 59 tests because this is the
 # file that has an extern taking an argument.  Custard writes no prototype
 # for cextern_make -- its declaration is in a header Custard does not own,

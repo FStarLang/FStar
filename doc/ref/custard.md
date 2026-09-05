@@ -13781,11 +13781,160 @@ rather than to Custard, where it can be reviewed by the people who own it.
 
 ## 60.6 Not done
 
-- **`HNF` in `is_arity_aux` is unpinned**, per the table in 60.3. Finding a
-  shape that needs it is open; it may be that none exists and the step is
-  redundant with `Weak`, which would be worth knowing.
+- ~~**`HNF` in `is_arity_aux` is unpinned**, per the table in 60.3.~~
+  **Wrong, and corrected in 61.3: it is `Weak` that nothing pins.** The
+  error was mutating against `KindAbbrev` rather than against the suite,
+  which is the same mistake this section was written to catch.
 - The C++ leg is `g++` only here. `clang++` and `nvcc` are not available in
   this container, and the reviewer who runs both reports 39/39 clean.
+
+# 61 Two miscompilations from §59, and a correction to §60
+
+§59 removed 1639 casts and introduced two ways to compute the wrong
+answer. Both were found by a reviewer against the EverParse corpus, and
+both are silent: no diagnostic under `-Wall -Wextra -O2`, and in one case
+the generated program simply returns the wrong value.
+
+Neither was caught by any suite here, and it is worth saying why before
+the details. §59's whole argument was that **the context already says the
+type**, and each bug is a context that does not: an operator that does not
+convert its operands, and a token that is not a token.
+
+## 61.1 A shift does not convert its operands
+
+§59.3's rule reads: a binary operator's two operands have the same IR type,
+so a literal operand's cast repeats what the other operand says.
+
+**A shift is exempt from the usual arithmetic conversions.** C 6.5.7
+promotes the two operands *separately* and gives the result the promoted
+type of the **left** operand alone. The right operand's type never reaches
+the result, so it says nothing about the left one. A shift is also the one
+binary operator for which §59.3's premise is false on its own terms:
+`U64.shift_left` takes a `U32.t` amount, so the operands do not share an IR
+type at all. The rule was written from the shape of `+` and applied to an
+operator that does not have that shape.
+
+`ShiftLit.fst` is the test, and `pl` is the control:
+
+```c
+static uint64_t ShiftLit_sh(uint32_t n) { return (40 << n); }   /* wrong */
+static uint64_t ShiftLit_pl(uint64_t n) { return (40 + n); }    /* right */
+```
+
+`40 << n` is computed at `int`. `gcc -std=c11 -Wall -Wextra -O2` emits
+nothing at all, and the program returns 1 --- its own check fails, because
+`sh(32)` is `0` and the answer is `171798691840`. UBSan names it:
+`shift exponent 32 is too large for 32-bit type 'int'`.
+
+**`truncate` does not cover this**, and the reason is exact: it re-casts
+only at `Int8` and `Int16`, where both operands promote to `int` anyway and
+the narrow result is what needs restoring. The bug is at 32 and 64 bits ---
+precisely the widths `truncate` is right to leave alone. At `uint64_t` it
+is a wrong value; at `uint32_t` it is undefined behaviour, since `40 << 31`
+overflows `int`.
+
+The fix keeps the §59 benefit where it is sound. Only the *left* operand of
+a shift is excluded; the right one still loses its cast, because its type
+provably cannot reach the result. Hence the control in the test: a fix that
+restored the cast for every operator would pass a test that only checked
+`sh`.
+
+## 61.2 A name is one *preprocessing* token
+
+§59.4 let `group` leave "an identifier or an integer literal"
+unparenthesized, because one token cannot be bound into.
+
+A name is one token **only until it is expanded**. If it is a macro it is
+one preprocessing token and afterwards it is whatever it expands to --- and
+the names Custard does not control are exactly the extern ones, whose
+declarations live in a header this backend does not write.
+
+§59.5 had already reached this conclusion for the sibling question. An
+extern keeps its casts *because it may be a macro*, and Kuiper's
+shared-memory primitives are named as the example. The parenthesis is the
+same question about the same names, and it did not get the same answer.
+The two rules were written a few hundred lines apart, one of them
+remembered the hazard, and nothing connected them.
+
+With `#define EXT_FLAG 0 || 1`:
+
+| | emitted | result |
+| --- | --- | --- |
+| before | `if (!EXT_FLAG) r[0] = 0;` | **0** --- `!0 \|\| 1` |
+| after | `if (!(EXT_FLAG)) r[0] = 0;` | 1 |
+
+`is_atom` is now a *number* rather than any single token. Custard's own
+names are safe, but nothing at that point can tell them apart from an
+extern's, and a pair of parentheses around a name costs nothing --- the
+readability that §59.4 bought is in the literals, which are unaffected.
+
+### The second `!`, which was never right
+
+The reviewer's first reproducer was aimed at the wrong site, and the
+correction is the more useful half of the report. Fixing `is_atom` did not
+change its output --- and *that non-change is what disproved the story*,
+rather than any reading of the code.
+
+There are two negation sites and they disagreed:
+
+- `negate`, reached from `if` and `while` conditions, calls `group`. This
+  is the one `is_atom` governs, and the one §59.4 broke.
+- the `!` of an ordinary expression printed its operand with bare `c_expr`
+  and **never called `group` at all**.
+
+So the second was wrong for a macro extern before §59 existed, and the
+`is_atom` fix alone does not reach it. It now goes through `group` too,
+which is evidently what `negate`'s own comment --- *"`!e` binds tighter
+than any operator, so the operand has to be a group"* --- was stating as a
+rule for both.
+
+`ExtFlag.fst` exercises both, and needs an `if ... then () else` with an
+empty then-branch to reach the first. That is 60.2's lesson recurring
+within one round: the obvious spelling of the test hits the wrong site.
+
+## 61.3 §60.6 was wrong: `HNF` is pinned, `Weak` is not
+
+§60.3 mutated `is_arity_aux` and concluded from `KindAbbrev` that `HNF` is
+unpinned. **The conclusion is false, and the method was the error**: I
+mutated against one file instead of against the suite. Re-measured
+properly, and both rows independently reproduced here:
+
+| mutation to `is_arity_aux` alone | `tests/custard` |
+| --- | --- |
+| drop `HNF`, keep `Weak` | **`TyFun4` fails** --- error 365 returns |
+| drop `Weak`, keep `HNF` | all pass |
+
+So `HNF` is pinned individually by a test that was already in the tree, and
+the mechanism is the one `TyFun4`'s own comment states: one step gives
+`tuple2 U32.t (loop 0)`, and `HNF` is what declines to reduce that
+argument. `Weak` cannot help there --- there is no binder to avoid going
+under --- so without `HNF` the argument unfolds without bound and error 365
+comes back, which is the §58.1 symptom verbatim.
+
+`Weak` is the half nothing distinguishes. That is not the same as inert: it
+means this corpus does not separate it, and no case has been constructed
+either way.
+
+Worth recording as a method note, since §60 was itself about coverage:
+**a mutation is answered by the suite, not by the test you wrote for it.**
+The file I reached for was the one written for the neighbouring predicate.
+
+## 61.4 Not done
+
+- **`Weak` in `is_arity_aux` is unpinned.** Constructing a case that
+  separates it is open; `is_arity_aux` normalizes only `Tm_fvar`,
+  `Tm_app` and `Tm_uinst` and stops at the head, which is suggestive that
+  none exists, but that is not a proof.
+- The version cross-check a reviewer suggested for `.krml` --- see 60.5 ---
+  is a karamel-side change and is theirs to make, but the observation that
+  `current_version` appears in two repositories with nothing comparing them
+  is what let the missing bump go unnoticed in a fork for an unknown
+  length of time.
+- `EGFor` is moot: karamel's author reports it a half-finished attempt at
+  general for-loops that the Kuiper plugin does not generate and that can
+  simply be deleted. Only the `Float16`/`BFloat16` half of 60.5 remains,
+  and it still needs the version bump.
+
 
 
 
@@ -14028,3 +14177,9 @@ rather than to Custard, where it can be reviewed by the people who own it.
 | M10εΔ | `KindAbbrev` pins `UnfoldUntil`, not `HNF` (§60.3) | Done, and the negative result is the part worth having.  A reviewer supplied three shapes whose head is not immediately present --- an abbreviation chain, a refinement, and `kf 0`, a type-level function returning a *kind*, which is §56's shape one level up --- against an `is_arity_aux` that normalizes **exactly once**.  All three are erased correctly.  But mutation says what the test actually holds: dropping `HNF` and keeping `Weak` leaves it **passing**, while dropping `UnfoldUntil delta_constant` makes it **fail with error 368**, the miscompile class (a type variable surviving into the C).  So it pins the step that sees through a *name*, not the `Weak; HNF` change as such --- the test of that remains `TyFun4` against `TypeDiverge`.  `HNF` on top of `Weak` is belt-and-braces here and no test holds it in place; a future reader should know that rather than infer the opposite from the file's name |
 | M10εΕ | **`is_star_aux` was reached by nothing** (§60.4) | Done, closing a gap a reviewer reported honestly rather than papering over --- they had no probe for the second of §57.2's two step lists, their attempt having been rejected by F\* outright, and said they would rather say so than let six identical goldens stand in for it.  The measurement justified the caution: with `UnfoldUntil delta_constant` deleted from `is_star_aux` **alone**, the whole of `tests/custard` still passed.  A probe is hard because the predicates answer different questions --- `is_arity` asks whether a binder is *erased*, `is_star_aux` whether an erased binder can be a **parameter of a target type**, which only kind `Type` can be (§5.0) --- so a function's binders are settled before `is_star_aux` normalizes, which is why `KindAbbrev`'s three functions miss it too.  What reaches it is a **type** parameterized by a name that unfolds to `Type`: `KindStar.fst`, where removing the step loses `v`'s representation and the extraction fails rather than miscompiling, because `--custard_warn_any` is on |
 | M10εΖ | **The Kuiper interop patch, and the field that exists for it** (§60.5) | Not landed, and the reason is not scope.  The reviewer's argument was that appending `EGFor` to `KrmlAst.expr` and `Float16`/`BFloat16` to `KrmlAst.width` is safe because karamel already has them.  The alignment half is right and I re-derived it --- `KrmlAst.expr` and `InputAst.expr` agree at all 43 positions, both ending at `ESizeof`, `ETypApp`/`ETApp` being a spelling difference, and the two `width` types at all 14 including the `Bool` that `Constant.width` lacks --- but the premise is **false at pin `9abbb865`**: karamel has none of the three, which is *why* the alignment holds.  What makes that more than a correction is the failure mode: a `.krml` is read with `input_value`, and **`Marshal` does not typecheck**, so a constructor index past the end of the reader's type is not an error but an undefined value --- the file is misread, not rejected.  The mechanism against exactly this is the version field, whose own log states the convention (`v30: Added EBufDiff`, `v32: Introduce ESizeof`) and whose reader fails loudly above `current_version`; the patch adds three constructors and leaves it at 32.  So the answer is an ordering --- karamel first, then here with a bump to 33 --- not a refusal.  Separately, `fake_SizeT` should not land at all, since it silently narrows `size_t` to 32 bits for every consumer and its own comment says it should die, and the `--ext kuiper` zeta gate belongs to the ML extraction path where its owners can review it |
+| M10εΗ | **A shift does not convert its operands** (§61.1) | Fixed, a miscompilation §59.3 introduced.  That section removed a literal operand's cast on the argument that a binary operator's two operands share an IR type, so the other operand already says what the literal's type is.  **A shift is exempt from the usual arithmetic conversions**: C 6.5.7 promotes the two operands *separately* and gives the result the promoted type of the **left** one, so the right operand's type never reaches the result and says nothing about the left.  It is also the one binary operator for which §59.3's premise is false on its own terms --- `U64.shift_left` takes a `U32.t` amount, so the operands do not share an IR type at all.  The rule was written from the shape of `+` and applied to an operator that does not have it.  `40 << n` was computed at `int`: `gcc -std=c11 -Wall -Wextra -O2` emits **nothing**, and the program returns the wrong answer (`sh(32)` is `0`, not `171798691840`); UBSan says `shift exponent 32 is too large for 32-bit type 'int'`.  **`truncate` cannot catch it** --- it re-casts only at `Int8`/`Int16`, where both operands promote to `int` anyway, so the bug is at exactly the 32 and 64 bits it is right to leave alone |
+| M10εΘ | The fix keeps the benefit where it is sound (§61.1) | Done, and `ShiftLit`'s control is the assertion that says so.  Only the **left** operand of a shift is excluded; the right one still loses its cast, because its type provably cannot reach the result.  So the test pins both directions --- `((uint64_t)40ULL) << n` **and** `return (40 + n);` --- since a fix that restored the cast for every operator would pass a test that only checked the shift.  `main` checks its own answers, so `.dcran` is the real assertion: before the fix this program returned 1 with no compiler diagnostic anywhere |
+| M10εΙ | **A name is one *preprocessing* token** (§61.2) | Fixed, the second miscompilation, and the same hazard §59.5 had already named.  §59.4 let `group` leave "an identifier or an integer literal" unparenthesized because one token cannot be bound into --- but a name is one token **only until it is expanded**, and the names Custard does not control are exactly the extern ones, whose declarations are in a header this backend does not write.  §59.5 keeps casts on extern arguments *because such a name may be a macro*, citing Kuiper's shared-memory primitives; the parenthesis is the same question about the same names and did not get the same answer.  The two rules were written a few hundred lines apart, one remembered the hazard, and nothing connected them.  With `#define EXT_FLAG 0 \|\| 1`, `!EXT_FLAG` is `!0 \|\| 1` --- silently true under `-Wall -Wextra`.  `is_atom` is now a *number* rather than any single token; Custard's own names are safe but nothing at that point can tell them apart, and a pair of parens around a name costs nothing, since §59's readability gain is in the literals |
+| M10εΚ | **The other `!`, which was never right** (§61.2) | Fixed, and pre-existing rather than from §59.  There are two negation sites and they disagreed: `negate`, reached from `if` and `while` conditions, calls `group` and is the one `is_atom` governs; the `!` of an ordinary expression printed its operand with bare `c_expr` and **never called `group` at all**, so it was wrong for a macro extern before §59 existed.  It now goes through `group` too, which is what `negate`'s own comment --- *"`!e` binds tighter than any operator, so the operand has to be a group"* --- was stating as a rule for both.  The reviewer found this because their first reproducer hit the *other* site and **fixing `is_atom` did not change its output**; that non-change is what disproved the story, rather than any reading of the code.  `ExtFlag` exercises both and needs an `if ... then () else` with an empty then-branch to reach the first --- M10εΓ's lesson recurring inside one round: the obvious spelling of the test hits the wrong site |
+| M10εΛ | **§60.6 was wrong: `HNF` is pinned, `Weak` is not** (§61.3) | Corrected, and the method was the error rather than the conclusion.  §60.3 mutated `is_arity_aux` and concluded from **`KindAbbrev` alone** that `HNF` is unpinned; re-measured against the suite, both rows reproduce here independently --- dropping `HNF` and keeping `Weak` makes **`TyFun4` fail with error 365 returning**, while dropping `Weak` and keeping `HNF` leaves all tests passing.  So `HNF` is pinned individually by a test already in the tree, and by the mechanism `TyFun4`'s own comment states: one step gives `tuple2 U32.t (loop 0)` and `HNF` is what declines to reduce that argument, where `Weak` cannot help because there is no binder to avoid going under.  Without it the argument unfolds without bound and §58.1's symptom returns verbatim.  The method note is the durable part, since §60 was itself about coverage: **a mutation is answered by the suite, not by the test you wrote for it** --- and the file I reached for was the one written for the neighbouring predicate.  `Weak` is now the unpinned half, which is not the same as inert: no case separates it either way |
+| M10εΜ | §59's citations were off by one (§61) | Fixed while writing §61.  The code comments landed with §59 were numbered against a draft in which the suffix discussion was not yet its own subsection, so every citation from `59.2` onward pointed one subsection too low --- the infix rule cited `59.2` when it is `59.3`, `is_atom` cited `59.3` when it is `59.4`, and the extern exception cited `59.4` when it is `59.5`, in `PrintC.fst` and in `tests/custard/Makefile` alike.  Harmless to the compiler and corrosive to the document, since a citation that resolves to the wrong neighbouring subsection is worse than none: it reads as deliberate.  All nine corrected |

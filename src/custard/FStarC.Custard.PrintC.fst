@@ -238,15 +238,28 @@ let unparen (s:string) : ML string =
 (* Section 35.2.  Wrap in one pair, unless the string is already one group.
    Every position that needs its operand parenthesized goes through here, so
    that none of them can be the one that adds the second pair. *)
-(* An identifier or an integer literal: one token, so no operator can bind
-   into it and no position that calls {!group} needs it parenthesized.
-   Section 59.3 -- once a literal stops carrying a cast, the pair {!group}
-   would add around it is the only punctuation left, and [(1) * sizeof(T)]
-   is not what the cast removal was for.  Deliberately syntactic: a
-   suffixed hex literal is one token and so is a name, while [-1], [a.b]
-   and [a + b] are not and keep their pair. *)
+(* An integer literal: one token, so no operator can bind into it and no
+   position that calls {!group} needs it parenthesized.  Section 59.4 --
+   once a literal stops carrying a cast, the pair {!group} would add around
+   it is the only punctuation left, and [(1) * sizeof(T)] is not what the
+   cast removal was for.
+
+   Section 61.2: a *number*, and not an identifier, which is what this said
+   at first.  A name is one **preprocessing** token, which is not the same
+   as one token: it is one token only until it is expanded, and the names
+   this backend does not write are exactly the extern ones.  With
+   [#define EXT_FLAG 0 || 1] in a header Custard never sees, [!EXT_FLAG] is
+   [!0 || 1], which is silently true.  Section 59.5 already makes this
+   exception for the sibling question -- an extern keeps its casts because
+   it may be a macro -- and the parenthesis is the same question, which did
+   not get the same answer.  Nothing here can tell an extern's name from
+   one of Custard's own, and a pair of parens around a name costs nothing.
+
+   Still deliberately syntactic: a suffixed hex literal is one token, while
+   [-1], [a.b] and [a + b] are not and keep their pair. *)
 let is_atom (s:string) : ML bool =
   s <> "" &&
+  BU.is_digit (String.get s 0) &&
   List.for_all (fun c -> BU.is_letter_or_digit c || c = '_')
                (String.list_of_string s)
 
@@ -1037,7 +1050,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
                   "Applying a call's result is a separate application node."]
         | _ -> ())
      | _ -> ());
-    (* Section 59.4.  An argument is converted to the parameter type as if by
+    (* Section 59.5.  An argument is converted to the parameter type as if by
        assignment, so a literal argument's cast is redundant -- but only
        where a prototype says what that type is.  For a call this backend
        generates one, and for a call through a function pointer the pointer's
@@ -1121,7 +1134,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && is_string_ty a.ty ->
     "(strcmp(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ ") " ^
     (if Eq? o.po_op then "==" else "!=") ^ " 0)"
-  (* Section 59.2.  A binary operator's two operands have the same IR type,
+  (* Section 59.3.  A binary operator's two operands have the same IR type,
      so a literal operand's cast is telling C what the *other* operand
      already says: if that type outranks [int] the literal converts to it
      under the usual arithmetic conversions, and if it does not, both sides
@@ -1133,11 +1146,34 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      would be evaluated at [int]; that is the one case where dropping the
      casts could change a result. *)
   | EOp (o, [a; b]) when Some? (infix_op o) ->
-    let av = if EConst? b.e then c_expr out ind a else c_rvalue out ind a.ty a in
-    let bv = if EConst? a.e then c_expr out ind b else c_rvalue out ind b.ty b in
+    (* Section 61.1.  A shift is the exception, and it is the one binary
+       operator whose operands genuinely do *not* share an IR type --
+       [U64.shift_left] takes a [U32.t] amount.  6.5.7 promotes the two
+       operands *separately* and gives the result the promoted type of the
+       **left** one, so the usual arithmetic conversions never run and the
+       right operand says nothing about the result.  A literal left
+       operand's cast is then the only thing carrying the width, and
+       without it [40 << n] is computed at [int] however wide the target
+       is: at 64 bits a wrong value, at 32 bits undefined behaviour, and
+       under [-Wall -Wextra] not a single diagnostic.  {!truncate} does not
+       cover it, because it re-casts only at [Int8]/[Int16], where both
+       operands promote to [int] anyway.
+
+       The right operand keeps the benefit: its type provably cannot reach
+       the result. *)
+    let shift = BShiftL? o.po_op || BShiftR? o.po_op in
+    let av = if shift || EConst? b.e then c_expr out ind a
+             else c_rvalue out ind a.ty a in
+    let bv = if (not shift) && EConst? a.e then c_expr out ind b
+             else c_rvalue out ind b.ty b in
     truncate o ("(" ^ av ^ " " ^ Some?.v (infix_op o) ^ " " ^ bv ^ ")")
+  (* Section 61.2.  Through {!group}, like the [!] of a condition: this site
+     printed its operand bare, so a macro extern was unparenthesized here
+     whatever {!is_atom} said.  That half is older than section 59 -- the two
+     [!] sites simply disagreed, and only the condition one was written to
+     the rule that {!negate}'s comment states. *)
   | EOp (o, [a]) when Some? (prefix_op o) ->
-    truncate o ("(" ^ Some?.v (prefix_op o) ^ c_expr out ind a ^ ")")
+    truncate o ("(" ^ Some?.v (prefix_op o) ^ group (c_expr out ind a) ^ ")")
   | EOp (o, args) ->
     reject ("an operator applied to " ^ show (List.length args) ^ " arguments") []
   (* Section 19.12.  A *closed* lambda has been lifted to a top-level function
@@ -1542,7 +1578,7 @@ and pat_tests (path:string) (t:cty) (p:pat)
      without looking at the constant. *)
   | PConst (CString v) when is_string_ty t ->
     (["strcmp(" ^ path ^ ", " ^ constant (CString v) ^ ") == 0"], [])
-  (* Section 59.2.  The path carries the type -- [t] is it, and a path is
+  (* Section 59.3.  The path carries the type -- [t] is it, and a path is
      never a literal -- so a constant pattern is the one-literal-operand case
      of a comparison and the cast repeats what the scrutinee already says. *)
   | PConst c ->
