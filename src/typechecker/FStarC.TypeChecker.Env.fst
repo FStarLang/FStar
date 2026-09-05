@@ -1037,7 +1037,7 @@ let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : ML (delta_depth) =
       if se.sigquals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false)
       then Delta_equational_at_level 1
       else if se.sigquals |> BU.for_some (Assumption?)
-        && not (se.sigquals |> BU.for_some (New?))
+        && not se.sigmeta.sigmeta_type_constructor
       then Delta_abstract d0
       else d0
 
@@ -1331,7 +1331,7 @@ let is_type_constructor env lid : ML _ =
         | Inr (se, _) ->
            begin match se.sigel with
             | Sig_declare_typ _ ->
-              Some (List.contains New se.sigquals)
+              Some se.sigmeta.sigmeta_type_constructor
             | Sig_inductive_typ _ ->
               Some true
             | _ -> Some false

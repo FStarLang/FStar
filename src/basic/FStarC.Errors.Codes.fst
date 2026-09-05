@@ -376,4 +376,5 @@ let default_settings : list error_setting =
     Error_CannotResolveRecord                         , CAlwaysError, 360;
     Error_MissingPopOptions                           , CWarning, 361;
     Error_AmbiguousName                               , CError, 362;
+    Warning_IgnoredNewQualifier                    , CWarning, 363;
     ]

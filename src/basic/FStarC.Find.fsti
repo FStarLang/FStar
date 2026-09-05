@@ -19,6 +19,17 @@ operations. *)
 
 open FStarC.Effect
 
+(* [Flat] provides only immediate files. [Recursive] also provides files in
+subdirectories. *)
+type module_include_path_kind =
+    | Flat
+    | Recursive
+
+type module_include_path = {
+    dir: string;
+    kind: module_include_path_kind
+}
+
 (* --include *)
 val get_include_path () : ML (list string)
 val set_include_path (path : list string) : ML unit
@@ -59,10 +70,8 @@ val epoch () : ML int
 (* The full include path. We search files in all of these directories. *)
 val full_include_path () : ML (list string)
 
-(* The full include path, with every entry normalized into an absolute path.
-This is memoized (and invalidated together with [full_include_path]), so it is
-cheap to call repeatedly. *)
-val full_include_path_normalized () : ML (list string)
+(* Directories providing modules, normalized into absolute paths. *)
+val module_include_paths_normalized () : ML (list module_include_path)
 
 (* Try to find a file in the include path with a given basename. *)
 val find_file (basename : string) : ML (option string)

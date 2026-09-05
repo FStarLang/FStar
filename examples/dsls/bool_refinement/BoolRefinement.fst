@@ -621,7 +621,7 @@ let rec shift_subst_spec_n_succ_list (n:nat) (ss:subst_spec)
     | [] -> ()
     | _::xs -> shift_subst_spec_n_succ_list n xs
 
-#push-options "--fuel 8 --ifuel 2"
+#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 4"
 #restart-solver
 let rec src_refinements_are_closed_core
                        (n:nat)

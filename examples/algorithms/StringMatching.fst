@@ -147,7 +147,11 @@ let aux (x: str nat) (base: nat) (prime:nat { prime > 0 }) (i: nat) (j: nat { i+
                 base
                 (hash x base prime (i + 1) (j - 1))
                 (pow base (j - i - 2) * Seq.index x i);
-            pow_lemma base (j - i - 2) }
+            pow_lemma base (j - i - 2);
+            FStar.Math.Lemmas.paren_mul_right
+                base
+                (pow base (j - i - 2))
+                (Seq.index x i) }
       (h_lsd + msd) % prime;            
   }
 

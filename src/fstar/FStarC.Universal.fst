@@ -529,7 +529,7 @@ and tc_one_file_no_frame
   in
   if not (Options.cache_off()) then
       let r = 
-        if fly_deps && Options.should_check_file fn
+        if fly_deps && Options.should_check (Dep.module_name_of_file fn)
         then None //if we reach here with fly_deps, then checked files are invalid
         else Ch.load_module_from_cache (tcenv_of_uenv env) fn
       in
@@ -545,7 +545,7 @@ and tc_one_file_no_frame
          * If codegen was given, the the user wants an ml/krml file, and it is fine
          * to load the cache.
          *)
-        if Options.should_check_file fn && (
+        if Options.should_check (Dep.module_name_of_file fn) && (
              Options.force () ||
              (Some? (Options.output_to ()) && None? (Options.codegen ()))
            )
@@ -911,7 +911,8 @@ let batch_mode_tc fly_deps filenames dep_graph
     Format.print1 "Here's the list of filenames we will process: %s\n"
       (String.concat " " filenames);
     Format.print1 "Here's the list of modules we will verify: %s\n"
-      (String.concat " " (filenames |> List.filter Options.should_verify_file))
+      (String.concat " " (filenames |> List.filter (fun fn ->
+        Options.should_verify (Dep.module_name_of_file fn))))
   end;
   let env = FStarC.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
   let all_mods, mllibs, env = tc_fold_interleave fly_deps None ([], [], env) filenames in

@@ -38,7 +38,7 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
  *)
-let cache_version_number = 98
+let cache_version_number = 99
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -443,7 +443,7 @@ let load_module_from_cache_internal =
       let fail msg cache_file =
         //Don't feel too bad if fn is the file on the command line
         //Also suppress the warning if already given to avoid a deluge
-        let suppress_warning = try_load || Options.should_check_file fn || !already_failed in
+        let suppress_warning = try_load || Options.should_check (Dep.module_name_of_file fn) || !already_failed in
         if not suppress_warning || !dbg then begin
           already_failed := true;
           FStarC.Errors.log_issue (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))

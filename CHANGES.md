@@ -11,6 +11,70 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## `new` no longer implies that a type is distinct from every other type, unless it really declares a type constructor
+
+  * **`assume new type b : int -> bool` used to prove `False`** (issue #4521).
+    `new` made the SMT encoder emit a `constructor_distinct` axiom, fixing a
+    fresh `Term_constr_id` for the declared symbol, but it could be written on
+    *any* `assume val`, including ones whose result type is not a sort. Since
+    the primitive types have inversion axioms phrased over the very same
+    `Term_constr_id`, fixing an id for `b x : bool` contradicts
+    `bool_inversion`:
+
+    ```fstar
+    assume new type b : int -> bool
+    let bad (x:int) : Lemma False = (assert (b x == true); assert (b x == false))
+    ```
+
+    and likewise for `int`, `string` and `unit` result types.
+
+    The axiom is now emitted only when the declaration really does introduce a
+    type constructor, i.e. when its result type, after normalization, is a
+    `Type u`. Writing `new` on anything else is ignored, with a new warning 363
+    (`Warning_IgnoredNewQualifier`); just drop it. Proofs that leaned on the old
+    behaviour were leaning on an inconsistency;
+    `tests/bug-reports/closed/Bug185.fst` had its `decreases` clause inferred
+    inside such a context and now states it explicitly.
+
+  * **The other things `new` controlled are now inferred from the shape of the
+    declaration, so they no longer need the qualifier.** Being rigid rather
+    than SMT-equatable during unification, and being usable as the head of a
+    match scrutinee's type, now hold for any `assume`d declaration whose result
+    type is a sort, with or without `new`.
+
+    `new` itself is *not* inferrable, and remains meaningful: an abstract type
+    in an interface,
+
+    ```fstar
+    val foo : Type0
+    val foo_eq_int : unit -> Lemma (foo == int)
+    ```
+
+    is indistinguishable from an assumed type constructor to a client, yet the
+    implementation may perfectly well define `let foo = int`. Writing `new`
+    there is rejected, since `foo` has a definition, and that is exactly the
+    side condition that makes the axiom sound.
+
+    Because `Type`-valued `assume val`s are no longer SMT-equatable, a type
+    mismatch that used to be deferred to the solver may now be reported by the
+    unifier instead; this uncovered a genuinely wrong type annotation in
+    `FStarC.Extraction.ML.Modul`. It also makes `Prims.prop` rigid, so a
+    subtyping check against it now reports a failure rather than emitting an
+    SMT guard equating it with another type.
+
+  * **The `pretype_axiom` emitted for `new` declarations is gone.** It said that
+    the type of a term determines `PreType` of that term, i.e. that
+    `x : t a /\ x : t b` implies `t a == t b` — note that `PreType` is an
+    uninterpreted function of the *value*, so this was never injectivity of
+    `t`. Nothing about an assumed type justifies it and nothing relied on it.
+    Inductives are unaffected; there the constructor ids are real datatype ids.
+
+    Changing which declarations get these axioms perturbs the solver's search,
+    so a proof sitting right at the default rlimit may now need a bigger one;
+    `FStar.UInt.shift_right_value_aux_3`,
+    `FStar.Algebra.CommMonoid.Fold.Nested` and two lemmas in
+    `Pulse.Lib.HashTable.Spec` did.
+
 ## Overloading by type
 
   * **A name may now denote several things at once, and F* uses the types at

@@ -216,6 +216,7 @@ val boxIntFun : string & string
 val boxBoolFun : string & string
 val boxStringFun : string & string
 val boxRealFun: string & string
+val boxPropFun: string & string
 val mkTrue :  term
 val mkFalse : term
 val mkUnreachable : term
@@ -320,6 +321,8 @@ val boxString:   term -> ML term
 val unboxString: term -> ML term
 val boxReal:      term -> ML term
 val unboxReal:    term -> ML term
+val boxProp:      term -> ML term
+val unboxProp:    term -> ML term
 val boxBitVec:   int -> term -> ML term
 val unboxBitVec: int -> term -> ML term
 

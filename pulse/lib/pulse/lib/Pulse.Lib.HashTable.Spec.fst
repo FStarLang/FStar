@@ -169,7 +169,7 @@ let repr_related #kt #vt (r1 r2:repr_t kt vt) =
   r1.hashf == r2.hashf /\ r1.sz == r2.sz
 
 let repr_t_sz kt vt sz = r:repr_t kt vt { r.sz == sz}
-#push-options "--z3rlimit_factor 8"
+#push-options "--z3rlimit_factor 16"
 
 let lemma_clean_upd_lookup_walk #kt #vt #sz
       (spec1 spec2 : spec_t kt vt) 
@@ -639,7 +639,6 @@ let insert_repr #kt #vt #sz
   let res = insert_repr_walk #kt #vt #sz #spec repr k v 0 cidx () () in
   res
 
-(* rlimit_factor 2 -> 4 *)
 #push-options "--z3rlimit_factor 4"
 let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 
   (repr : repr_t_sz kt vt sz{pht_models spec repr}) (k : kt)

@@ -126,6 +126,7 @@ jobs:
           python3 fstar-head/.scripts/ramon-report.py \
             fstar-base fstar-head \
             -o report.md \
+            --max-bytes 60000 \
             --lhs-label "Base (${{ steps.pr.outputs.base_ref }} @ ${{ steps.pr.outputs.base_sha }})" \
             --rhs-label "PR #${{ github.event.issue.number }} (${{ steps.pr.outputs.head_ref }} @ ${{ steps.pr.outputs.head_sha }})"
           python3 fstar-head/.scripts/ramon-report.py \
@@ -157,6 +158,12 @@ jobs:
             const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
             let body = fs.readFileSync('report.md', 'utf8');
             body += `\n\n---\n📎 [Download HTML report and raw .ramon files](${runUrl}#artifacts)\n`;
+            // GitHub rejects comments over 65536 characters.
+            const LIMIT = 65000;
+            if (body.length > LIMIT) {
+              const note = '\n\n_(report truncated: exceeded GitHub comment size limit)_\n';
+              body = body.slice(0, LIMIT - note.length) + note;
+            }
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

@@ -1582,6 +1582,22 @@ let term_eq t1 t2 =
     debug_term_eq := false;
     r
 
+(* See the comment on the declaration in the interface. *)
+let bqual_compat (b1 b2 : bqual) : bool =
+    match b1, b2 with
+    | None, None -> true
+    (* [Implicit] and [Meta] binders are interchangeable, and we never
+       compare the metaprograms of two [Meta] binders nor the
+       inaccessibility flag of two [Implicit] binders. *)
+    | Some (Implicit _), Some (Implicit _)
+    | Some (Implicit _), Some (Meta _)
+    | Some (Meta _), Some (Implicit _)
+    | Some (Meta _), Some (Meta _) -> true
+    | Some Equality, Some Equality
+    | Some Equality, None
+    | None, Some Equality -> true
+    | _ -> false
+
 // An estimation of the size of a term, only for debugging
 let rec sizeof (t:term) : ML int =
     match t.n with

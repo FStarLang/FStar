@@ -30,7 +30,7 @@ type vk = data
 
 type tag = data
 
-assume new type verified : vk -> data -> prop
+assume type verified : vk -> data -> prop
 type vkey (p:(data -> prop)) = k:vk{verified k == p}
 
 assume val verify: p:(data -> prop) -> v:vkey p -> d:data -> tag -> Tot (b:bool{b ==> p d})
@@ -38,13 +38,18 @@ assume val verify: p:(data -> prop) -> v:vkey p -> d:data -> tag -> Tot (b:bool{
 assume val format : list data -> Tot data
 assume val parse : d:data -> Tot (s : list data {format s = d})
 
-assume new type certified : data -> prop
+assume type certified : data -> prop
 assume Certified:
     (forall k. {:pattern (format [k])}
             certified (format [k]) <==> verified k == certified )
 
 val validate: vkey certified -> list data -> unit
-let rec validate vk0 chain =
+(* The `decreases` used to be inferred, but only because the context of the
+   recursive call was inconsistent: `verified vk == certified` is refutable when
+   prop-valued type constructors are given distinct SMT constructor ids. They no
+   longer are, since the encoding of prop is extensional. The point of this test
+   is the subtyping check on the recursive call, which still goes through. *)
+let rec validate vk0 chain : Tot unit (decreases chain) =
     (match chain with
     | cert:: chain_tl ->
         (match parse cert with
