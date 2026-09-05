@@ -701,13 +701,14 @@ uvars in ways that only worked because those shapes did not arise before.
   `Kuiper.Sparse.Matrix.PtsTo.fst` needed no downstream edit once it was fixed.
   Regression test: `pulse/test/CalcSquashSubtyping.fst`.
 
-Downstream, kuiper needed **22 files, +119/-33 lines**. Most are the familiar
+Downstream, kuiper needed **22 files, +99/-32 lines of code** (+260/-36 with the
+explanatory comments each change now carries). Most are the familiar
 kind — an explicit type ascription, a dropped `Classical.move_requires` that is
 now redundant because the precondition is a binder, a calc justification
 restated as the library lemma it was open-coding, a missing `lemma_divides_exact`
-that the old encoding happened to supply anyway, an arithmetic hint or an
+that the old encoding happened to supply anyway, and an arithmetic hint or an
 `SMTPat` lemma where a `fits` obligation is no longer a ground fact (see the
-fourth finding below), and three `z3rlimit` bumps. Six are more interesting:
+fourth finding below). Six are more interesting:
 
 - `Kuiper.Kernel.LogSoftmax.fsti`'s `log_softmax_real` had no result annotation,
   and its body sequences a `Lemma` call before returning. That postcondition is
@@ -784,6 +785,57 @@ fourth finding below), and three `z3rlimit` bumps. Six are more interesting:
   fix. Nothing here is about `squash`: it is a divisibility fact whose proof
   needs one nonlinear step, and the encoding change moved it across the
   threshold.
+
+### Auditing the downstream changes, and what happened to the `z3rlimit` bumps
+
+Every one of the 22 edits was re-tested individually, by restoring the original
+text of just that change — in the multi-part files, of just that hunk — and
+rechecking the module against the current compiler. All of them are still
+required: none is left over from an intermediate state of the branch. The
+harness is a scratch `--include` directory that shadows `src/`, so a single
+module can be rechecked in about a minute against the already-built `obj`.
+
+That audit also revised the three `z3rlimit` bumps, which are the changes most
+likely to hide a future regression. **Two of the three are gone, and the
+downstream diff now contains no rlimit increase at all** beyond one relocated
+`#push-options "--z3rlimit 20"` that simply follows a moved lemma and matches
+its two neighbours.
+
+- `Kuiper.Math.OnlineSoftmax.fst`'s `abcd_adcb` — the fifth finding below — was
+  carrying `--z3rlimit 30`. The real fix is to state the two non-zero side
+  conditions as a `requires` instead of as refinements on `b` and `d`. Reduced
+  to six lines over `FStar.Real` and nothing else, the refinement form takes
+  **11.1s** and the `requires` form **0.30s**, both at the default rlimit; in
+  the module itself the change replaces `--z3rlimit 30` and 22s with no option
+  at all and 17s. The refinement form makes each of the four divisions in the
+  conclusion re-derive its own guard, and those guards now survive into the
+  goal's context, where nlsat case-splits every one of them; a single `requires`
+  is one hypothesis instead.
+- `Kuiper.Kernel.GEMM.SHMem.fst`'s `bkf` had been raised from 40 to 100. What
+  actually fails is one `assert (pure (2 * (!bk + 1) == 2 * !bk + 1 + 1))` in
+  the loop body — linear, trivial, and timing out only because of how much else
+  is in scope by that point. Proving it as a two-line top-level lemma in an
+  empty context and calling it instead **restores the original rlimit of 40**.
+  (50, 60 and 80 all still fail without the lemma, so this was a real 2.5x bump,
+  not a rounding-up.)
+- `Kuiper.Kernel.GEMM.FlipFlopBarrier2.fst`'s `odd_barrier_p_to_q` is the one
+  case where a raise is genuinely the right answer, and it is lowered from 100
+  to 80. Here the failing goal is `it / 2 >= 0` with `it : natlt (2 * (shared/bk))`
+  in scope. It is not a hint that is missing: asking for the fact as the very
+  first `assert pure` of the body fails in 54s just as it does at the point of
+  use, so the cost is the ambient VC — the function's slprops mention the
+  concrete k-tile `it/2` where the neighbouring `even_barrier_p_to_q`, which
+  needs no raise, uses an existential. A sequenced `Lemma` does not help either:
+  it arrives at the query as a `Prims.unit` binder with its conclusion dropped.
+  Measured, 20 and 40 fail while 60, 80 and 100 succeed, so 80 leaves a 2x
+  margin over the last failing value without carrying the original number.
+
+The two lemma-in-a-clean-context fixes above are worth generalising: when a
+trivial arithmetic fact times out inside a large Pulse function, hoisting it to
+a top-level lemma is almost always better than raising the budget, because it
+is the context and not the goal that is expensive. It only fails when the
+ambient VC is itself over budget, which is what distinguishes the
+`FlipFlopBarrier2` case from the other two.
 
 ## A fourth finding: a postcondition now takes two instantiations, behind a guard
 
@@ -888,8 +940,15 @@ scoping the guards that `Env.push_guard` accumulates for implicit arguments —
 not in anything this PR touches, and it needs its own measurement: every
 `Lemma` in ulib is affected by how those guards are framed, and most theories
 are far less sensitive to redundant hypotheses than nonlinear reals are.
-Recorded, with `--z3rlimit 30` downstream; goal 5 needs 5.428, just over the
-default 5.
+
+Downstream the workaround is not an rlimit bump but a restatement: writing the
+two side conditions as a `requires` rather than as refinements on `b` and `d`
+produces one hypothesis instead of four guards, and takes 0.30s against the
+refinement form's 11.1s at the same default budget. That is a useful rule of
+thumb for anyone hitting this — **if a lemma's arguments are refined and its
+conclusion uses each of them under a partial operation, prefer a `requires`** —
+and it is also a hint about the eventual fix: the `requires` path already does
+the scoping that the implicit-argument path does not.
 
 ## User-visible changes
 
