@@ -36,6 +36,10 @@ type step =
   | Weak            //Do not descend into binders
   | HNF             //Only produce a head normal form: Do not descend into function arguments or into binder types
   | Primops         //reduce primitive operators like +, -, *, /, etc.
+  (* Like [Primops], but skips the steps that may answer with a value having no
+     term representation.  This is what a client that compiles the reduct, as
+     opposed to merely inspecting it, should ask for. *)
+  | SafePrimops
   | Eager_unfolding
   | Inlining
   | DoNotUnfoldPureLets

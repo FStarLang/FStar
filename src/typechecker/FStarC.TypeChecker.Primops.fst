@@ -130,9 +130,15 @@ let built_in_primitive_steps_list : list primitive_step =
   @ Primops.Array.ops
   @ Primops.Sealed.ops
   @ Primops.Erased.ops
-  @ Primops.Docs.ops
+  (* These two answer with embedded [FStar.Pprint.document]s, which have no
+     term representation at all -- see the FIXME in [Primops.Docs], which is
+     why almost every other pprint operation there is disabled.  They stay
+     enabled because [FStar.Errors.Msg.text] and [mkmsg] are only [val]s in
+     the library interface, so a tactic has no other way to evaluate them;
+     they are marked so that extraction can skip them. *)
+  @ (Primops.Docs.ops @ Primops.Errors.Msg.ops
+     |> List.map (fun s -> { s with unrepresentable_result = true }))
   @ Primops.MachineInts.ops
-  @ Primops.Errors.Msg.ops
   @ Primops.Range.ops
   @ Primops.Real.ops
 

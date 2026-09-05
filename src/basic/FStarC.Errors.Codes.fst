@@ -376,5 +376,31 @@ let default_settings : list error_setting =
     Error_CannotResolveRecord                         , CAlwaysError, 360;
     Error_MissingPopOptions                           , CWarning, 361;
     Error_AmbiguousName                               , CError, 362;
-    Warning_IgnoredNewQualifier                    , CWarning, 363;
+    Warning_IgnoredNewQualifier                       , CWarning, 363;
+    (* Custard's codes start at 364: 362 and 363 are master's, and a published
+       number outranks a branch-local one (see the book, 22.1 and 55.1). *)
+    Error_CustardCannotMonomorphize                   , CAlwaysError, 364;
+    Error_CustardFuelExhausted                        , CAlwaysError, 365;
+    Error_CustardUnextractableEffect                  , CAlwaysError, 366;
+    Warning_CustardLostRepresentation                 , CWarning, 367;
+    Error_CustardNoCRepresentation                    , CAlwaysError, 368;
+    Error_CustardBadUnitInterface                     , CAlwaysError, 369;
+    Error_CustardUnrepresentableValue                 , CAlwaysError, 370;
+    Warning_CustardIneffectiveAttribute                , CWarning, 371;
+    Error_CustardNotCompileTime                        , CAlwaysError, 372;
+    Warning_CustardKeyNotReduced                       , CWarning, 373;
+    Error_CustardExportCollision                       , CAlwaysError, 374;
+    Warning_CustardNoPublicDefinitions                 , CWarning, 375;
+    Error_CustardMonoExternal                          , CAlwaysError, 376;
+    Warning_CustardGeneratedNameInInterface            , CWarning, 377;
+    Error_CustardBadLift                               , CAlwaysError, 378;
+    Error_CustardDanglingReference                     , CAlwaysError, 379;
+    Error_CustardBadFloatLiteral                       , CAlwaysError, 380;
+    Warning_CustardRuleArity                           , CWarning, 381;
+    Warning_CustardExternErasure                       , CWarning, 382;
+    Error_CustardSharedGlobal                          , CAlwaysError, 383;
+    Error_CustardExternConflict                        , CAlwaysError, 384;
+    Error_CustardEntryNotFound                         , CAlwaysError, 385;
+    Error_CustardBadFloatWidth                         , CAlwaysError, 386;
+    Warning_CustardFloatVocabulary                     , CWarning, 387;
     ]

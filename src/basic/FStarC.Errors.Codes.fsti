@@ -389,6 +389,30 @@ type error_code =
   | Error_MissingPopOptions
   | Error_AmbiguousName
   | Warning_IgnoredNewQualifier
+  | Error_CustardCannotMonomorphize
+  | Error_CustardFuelExhausted
+  | Error_CustardUnextractableEffect
+  | Warning_CustardLostRepresentation
+  | Error_CustardNoCRepresentation
+  | Error_CustardBadUnitInterface
+  | Error_CustardUnrepresentableValue
+  | Warning_CustardIneffectiveAttribute
+  | Error_CustardNotCompileTime
+  | Warning_CustardKeyNotReduced
+  | Error_CustardExportCollision
+  | Warning_CustardNoPublicDefinitions
+  | Error_CustardMonoExternal
+  | Warning_CustardGeneratedNameInInterface
+  | Error_CustardBadLift
+  | Error_CustardDanglingReference
+  | Error_CustardBadFloatLiteral
+  | Warning_CustardRuleArity
+  | Warning_CustardExternErasure
+  | Error_CustardSharedGlobal
+  | Error_CustardExternConflict
+  | Error_CustardEntryNotFound
+  | Error_CustardBadFloatWidth
+  | Warning_CustardFloatVocabulary
 
 type error_setting = error_code & error_flag & int
 

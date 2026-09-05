@@ -422,3 +422,107 @@ val desugar_of_variant_record (type_name: string): unit
 
 (** Tag for implicits that are to be solved by a tactic. *)
 val defer_to (#a:Type) (tag : a) : unit
+
+(** Marks a binder for whole-program monomorphization by the Custard
+    extraction pipeline (see doc/ref/custard.md): every call site must supply a
+    specialization-time-known argument, and one copy of the definition is
+    emitted per distinct argument.  Attached to a whole definition, it marks
+    all of its non-erased binders. *)
+val monomorphize : unit
+
+(** Custard: do not compile this definition from its F* body; emit a reference
+    to an external symbol instead (see doc/ref/custard.md, section 8).  The
+    argument is the name of that symbol in the target language; the empty
+    string means "use the name Custard would have generated". *)
+val custard_extern (target: string) : unit
+
+(** Custard: the C header that declares a [custard_extern] symbol.
+
+    Two reasons to need one.  The symbol may genuinely be declared elsewhere,
+    which is the ordinary case.  Or the target may not be a symbol at all: a
+    function-like macro is invisible to the linker, so without a header the
+    call compiles to an implicit declaration and then fails to link -- and if
+    the macro is an overload set, error 384 is what reports it. *)
+val custard_c_header (header: string) : unit
+
+(** Custard: this abstract type is an IEEE-754 binary floating-point format
+    of the given width in bits, and the module that declares it supplies the
+    arithmetic vocabulary for it (see doc/ref/custard.md, section 63).
+
+    [FStar.Float32] and [FStar.Float64] are recognized by name; this is how
+    any *other* library opts in, without having to re-export them.  Put it on
+    the type, not on the operations:
+
+    [[@@custard_float 32]] [assume val t : Type0]
+
+    The operations are then found by name in the same module, using the same
+    vocabulary [FStar.Float32] uses --- [add], [sub], [mul], [div], [lt],
+    [lte], [ieee_eq], [of_int] and [of_literal].  Only 32 and 64 are
+    accepted. *)
+val custard_float (width: int) : unit
+
+(** Custard: a prologue for everything this definition *reaches*, rather than
+    for this definition (see doc/ref/custard.md, section 51.3).
+
+    [CPrologue] decorates one declaration, and for CUDA that is not enough: a
+    [__global__] function may only call [__device__] functions, so marking a
+    kernel says nothing about the ordinary C functions its body calls and
+    [nvcc] rejects every one of them.  The set that needs marking is the
+    transitive callees, which is a reachability question about the whole
+    program.
+
+    So Custard computes it.  Every definition reachable from this one -- not
+    this one, and not one carrying a [CPrologue] of its own -- receives a
+    prologue: [exclusive] when the only route to it is through a definition
+    marked this way, and [shared] when the rest of the program reaches it as
+    well.  For CUDA those are ["__device__"] and ["__device__ __host__"], and
+    a helper called from both a kernel and host code needs the second. *)
+val custard_c_closure_prologue (exclusive: string) (shared: string) : unit
+
+(** Custard: written on a [tcclass], this says that its instances are ordinary
+    runtime values rather than compile-time dictionaries, so an argument of
+    this class type is passed at run time instead of being specialized on (see
+    doc/ref/custard.md, section 3.1).
+
+    The class mechanism is how F* *resolves* such a value at elaboration time,
+    and monomorphizing on the result is normally the right answer -- it is what
+    turns a dictionary into direct calls.  But some classes exist only to make
+    resolution convenient for values that are built, stored and passed at run
+    time anyway: [FStarC.Syntax.Embeddings.Base.embedding] is one, and
+    [e_list e_sigelt] is a value the compiler computes.  Specializing on those
+    is not an optimization, it is a category error, and it makes every function
+    that takes one -- [unembed], say -- reject its own callers. *)
+val custard_no_monomorphize : unit
+
+(** Custard: evaluate every application of this definition during extraction,
+    rather than compiling it (see doc/ref/custard.md, section 30.10).
+
+    Custard does not evaluate closed terms in general -- a program that
+    computes something at run time is meant to compute it at run time, and
+    reducing on the extractor's own initiative would be a licence to unfold
+    anything.  But some definitions exist only to compute a specification-time
+    constant.  [CDDL.Pulse.AST.Literal.string_length] is one: it is
+    [List.Tot.length (String.list_of_string x)] applied to string literals, so
+    every call has an answer, and compiling it instead drags [list char] into
+    a C program that has no representation for it.
+
+    So this is opt-in and is a promise: the definition's applications must
+    reduce to values.  One that does not -- because an argument is only known
+    at run time -- is an error naming this definition, not a silent fallback
+    to compiling it. *)
+val custard_compile_time : unit
+
+(** Custard: compile this type from its F* definition, but treat its
+    representation as fixed elsewhere, so that the layout analysis neither
+    erases it nor collapses it as a newtype (see doc/ref/custard.md, 5.2). *)
+val custard_opaque : unit
+
+(** Custard: store this constructor field's contents directly in the
+    constructor rather than behind a pointer to it.  The field's type must be a
+    record (or a one-constructor inductive); its fields take the place of this
+    one.  Tuple fields are inlined without asking, since the indirection there
+    is never what the source meant (see doc/ref/custard.md, 5.6).
+
+    Written on the field's binder:
+    [noeq type wrap = | W : [@@@custard_inline_field] p:pair -> wrap] *)
+val custard_inline_field : unit
