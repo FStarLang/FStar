@@ -230,18 +230,16 @@ let almost_up_implies_heap_down #t {| total_order t |}
 let almost_to_full_heap #t {| total_order t |} (s:Seq.seq t) (bad:nat{bad < Seq.length s})
   : Lemma (requires almost_heap_sift_up s bad /\ heap_up_at s bad)
           (ensures is_heap s)
-  = // Call the helper for all valid indices
-    let rec aux (n:nat) 
-      : Lemma (requires n <= Seq.length s /\ almost_heap_sift_up s bad /\ heap_up_at s bad)
-              (ensures forall (i:nat). i < n ==> heap_down_at s i)
-              (decreases n) =
-      if n = 0 then ()
-      else (
-        aux (n - 1);
-        almost_up_implies_heap_down s bad (n - 1)
-      )
+  = // `almost_up_implies_heap_down` already establishes `heap_down_at s i` for
+    // every index, so no induction on the length is needed here.  The previous
+    // formulation recursed and asked Z3 to glue the inductive hypothesis at
+    // `n-1` to the new fact at `n-1`; that step was unstable, flipping between
+    // `unsat` and `canceled` merely under renamings of the gensym'd universe
+    // variables in the SMT encoding.
+    let aux (i:nat) : Lemma (i < Seq.length s ==> heap_down_at s i) =
+      if i < Seq.length s then almost_up_implies_heap_down s bad i
     in
-    aux (Seq.length s)
+    FStar.Classical.forall_intro aux
 #pop-options
 
 // Lemma: is_heap is equivalent to is_heap_alt

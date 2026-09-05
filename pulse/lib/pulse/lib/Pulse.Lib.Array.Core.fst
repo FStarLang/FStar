@@ -331,6 +331,11 @@ ghost fn pcm_share u#a (#t: Type u#a) #l
     Some? (Map.sel (mk_carrier' a p s m (a.vis l)) (i1 + a1.offset)));
   assert pure (mask_nonempty m2 (length a2) ==>
     Some? (Map.sel (mk_carrier' a p s m (a.vis l)) (i2 + a2.offset)));
+  // Both `fold`s below need the permission bound; leaving the `m1` side to Z3
+  // was unstable (it flipped to `canceled` under renamings of the gensym'd
+  // universe variables in the encoding), so state it explicitly, symmetrically
+  // with the `m2` side.
+  assert pure (mask_nonempty m1 (length a1) ==> p1 <=. 1.0R);
   assert pure (mask_nonempty m2 (length a2) ==> p2 <=. 1.0R);
   fold pts_to_mask a1 #p1 s1 m1;
   fold pts_to_mask a2 #p2 s2 m2;
