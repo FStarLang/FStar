@@ -467,6 +467,7 @@ let join_update_timeless_mem m1 m2 p1 p2 =
         (update_timeless_mem (join_mem m1 m2) (B.join_mem p1 p2))
     fun _ -> ()
 
+#push-options "--z3rlimit_factor 4"
 let star_equiv p q m =
   introduce
     forall m0 m1. 
@@ -494,6 +495,7 @@ let star_equiv p q m =
       interp q m1
     with m1 m2 and ()
   )
+#pop-options
 
 let erase_pair #t #s (p: erased (t & s)) : erased t & erased s =
   (hide (fst p), hide (snd p))

@@ -466,7 +466,7 @@ fn insert_if_not_full
 }
 
 #restart-solver
-#push-options "--z3rlimit_factor 6"
+#push-options "--z3rlimit_factor 24"
 fn delete
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -536,6 +536,11 @@ fn delete
       }
       Zombie ->
       {
+        SZ.size_v_inj voff;
+        SZ.size_v_inj ht.sz;
+        assert (pure (SZ.v voff < SZ.v ht.sz));
+        assert (pure (SZ.v (SZ.add voff 1sz) == SZ.v voff + 1));
+        aunb_extend pht.repr (SZ.v cidx) (SZ.v voff) k;
         off := voff + 1sz;
       }
     }

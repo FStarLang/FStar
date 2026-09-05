@@ -321,7 +321,8 @@ let all_used_not_by #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (
   forall (i:nat{i < len}). used_not_by repr k ((idx+i) % repr.sz)
 
 let strong_all_used_not_by #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (len : nat) (k : kt) : prop =
-  forall (i:nat{i < len}). strong_used_not_by repr k ((idx+i) % repr.sz)
+  forall (i:nat{i < len}). {:pattern (strong_used_not_by repr k ((idx+i) % repr.sz))}
+    strong_used_not_by repr k ((idx+i) % repr.sz)
 
 let aunb_extend #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off : nat) (k : kt)
   : Lemma (requires all_used_not_by repr idx off k /\ used_not_by repr k ((idx+off) % repr.sz))
@@ -362,6 +363,7 @@ let aunb_shrink #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off 
     Classical.forall_intro #(i:nat{i < off-1}) aux;
     ()
 
+#push-options "--z3rlimit_factor 4"
 let lemma_walk_from_canonical_all_used #kt #kv (repr : repr_t kt kv) (off : nat{off < repr.sz}) k v 
   : Lemma (requires all_used_not_by repr (canonical_index k repr) off k
                  /\ repr @@ ((canonical_index k repr + off) % repr.sz) == Used k v)
@@ -387,6 +389,7 @@ let lemma_walk_from_canonical_all_used #kt #kv (repr : repr_t kt kv) (off : nat{
   assert (lookup_repr repr k == walk repr cidx k 0);
   assert (lookup_repr repr k == Some v);
   ()
+#pop-options
 
 let lemma_clean_upd #kt #vt spec (repr : repr_t kt vt) (off:nat{off < repr.sz}) k v 
   : Lemma
@@ -589,6 +592,7 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
       false_elim () (* unreachable *)
     )
     else
+    let _ = assert (off < sz) in
     let idx = (cidx+off) % sz in
     match repr @@ idx with
     | Used k' v' ->
@@ -653,6 +657,7 @@ let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
   = if off = sz then
     repr // If we reach this, the element was not in the table
     else
+    let _ = assert (off < sz) in
     let idx = (cidx+off) % sz in
     match repr @@ idx with
     | Used k' v' ->
@@ -750,16 +755,20 @@ let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < 
     if (j < i) 
     then (
         assert (i == (j + (i-j)) % r.sz);
+        assert (strong_used_not_by r k ((j + (i-j)) % r.sz));
         assert (Used? (r @@ i))
     )
     else (
-      let k = ((r.sz - j) + i) in
-      assert (i == (j + k) % r.sz);
-      if (k < r.sz) then (
+      (* NB: not [k], which would shadow the key. *)
+      let d = ((r.sz - j) + i) in
+      assert (i == (j + d) % r.sz);
+      if (d < r.sz) then (
+        assert (strong_used_not_by r k ((j + d) % r.sz));
         assert (Used? (r @@ i))
       )
       else (
         assert (i == (j + 0) % r.sz);
+        assert (strong_used_not_by r k ((j + 0) % r.sz));
         assert (Used? (r @@ ((j + 0) % r.sz)))
       )
     )

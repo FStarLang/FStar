@@ -2047,6 +2047,26 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
             let t1 = norm_before_encoding env x.sort in
             if !dbg_SMTEncoding
             then (Format.print3 "Normalized %s : %s to %s\n" (show x) (show x.sort) (show t1));
+            begin
+            match unit_refinements env t1 with
+            | Some fs ->
+              (* [x] has a unit refinement type: rather than declaring a
+                 constant for it and asserting that it has a (freshly defined)
+                 refinement type, just bind [x] to the unit constant and
+                 assume its refinement. *)
+              let env' = push_term_var env x mk_Term_unit in
+              let g, decls' = encode_unit_refinements env fs in
+              let ax =
+                match g with
+                | App TrueOp _ _ -> []
+                | _ ->
+                  let a_name = "binder_unit_" ^ BU.digest_of_string (Term.hash_of_term g)
+                                              ^ "_" ^ show i in
+                  [Util.mkAssume(g, Some a_name, a_name)] |> mk_decls_trivial
+              in
+              i+1, decls@decls'@ax, env'
+
+            | None ->
             let t, decls' = encode_term t1 env in
             let t_hash = Term.hash_of_term t in
             let xxsym, xx, env' =
@@ -2064,6 +2084,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
                     @decls'
                     @([ax] |> mk_decls_trivial) in
             i+1, decls@g, env'
+            end
 
         | S.Binding_lid(x, (us, t)) ->
             let us, t = SS.open_univ_vars us t in
