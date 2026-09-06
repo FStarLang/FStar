@@ -45,3 +45,33 @@ private let introduce_still_works () : Lemma (forall (x:int). p x ==> q x) =
   introduce forall (x:int). p x ==> q x
   with introduce _ ==> _
   with lem x
+
+(* An implicit argument of a *user-defined* function, on the other hand, must
+   keep vetoing the rule: it need not be determined by anything around it, and
+   congruence against the expected type is the only thing that can solve it.
+
+   Here [#c] of [proj2_of_3] is open in the type of [f]'s binder, because the
+   list is empty and [#c] occurs nowhere else.  Checking [f]'s body relates
+   [pf]'s type to the type [mk] expects, and that congruence is what commits
+   [#c].  When the [squash <: squash] rule fired here instead, [#c] survived
+   into [f]'s type as a spurious generalized [#_: Type] binder, and every call
+   site of [f] then failed with "Failed to resolve implicit argument".
+
+   Reduced from [ASN1.Syntax.asn1_any_oid] in project-everest/everparse. *)
+module L = FStar.List.Tot
+
+private let proj2_of_3 (#a #b : Type) (#c : a -> b -> Type)
+                       (x : dtuple3 a (fun _ -> b) c) : a & b =
+  let (| x1, x2, _ |) = x in (x1, x2)
+
+assume val r : int -> string -> Type0
+private let item_k : Type = a:int & b:string & r a b
+private let id_dec : Type = int & string
+private let wf (li : list id_dec) : prop = L.length li >= 0
+
+assume val mk (prefix : list item_k)
+              (pf : squash (wf (L.map proj2_of_3 prefix))) : int
+
+private let f (pf : squash (wf (L.map proj2_of_3 []))) : int = mk [] pf
+
+private let f_is_applicable = f ()

@@ -1021,26 +1021,38 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
 
 let no_free_uvars t  = Setlike.is_empty (Free.uvars t) && Setlike.is_empty (Free.univs t)
 
-(* Does [t] mention a unification variable in a position that congruence would
-   have to solve, i.e. anywhere other than under an implicit argument?
+(* Does [t] mention a unification variable that only congruence can solve?
 
-   Uvars standing for implicit arguments -- the [#a:eqtype] of an [op_Equals],
-   the [#n] of a machine-integer operator -- are inference artifacts: they are
-   determined by the explicit arguments around them, not by the shape of the
-   term we are being related to.  Uvars in explicit positions, by contrast, are
-   logical content that only congruence can commit to (the [_]s of
-   [introduce _ ==> _], say, which elaborate to explicit arguments of
-   [FStar.Classical.Sugar.implies_intro]).  Only the latter are counted. *)
-let rec has_uvar_in_explicit_position (t:term) : ML bool =
+   Almost every uvar is of that kind, so the answer is almost always yes.  The
+   one exception is a uvar standing for an implicit argument of an *interpreted*
+   symbol: the [#a:eqtype] of an [op_Equality], the [#n] of a machine-integer
+   comparison.  Those are inference artifacts, pinned by the types of the
+   explicit arguments sitting right next to them, and they are also exactly the
+   heads whose congruence rule normalises arithmetic looking for a syntactic
+   match -- which is the behaviour we are trying to stay out of.
+
+   The restriction to interpreted heads matters.  An implicit argument of a
+   *user-defined* function need not be determined by anything else: in
+   EverParse's [ASN1.Syntax], the binder
+
+     pf_wf : squash (asn1_any_prefix_k_wf (Set.singleton oid_id)
+                                          (List.map proj2_of_3 []))
+
+   leaves the [#c] of [proj2_of_3] open, because the list is empty and [#c]
+   appears nowhere else, and the only thing that ever solves it is congruence
+   against the type the constructor expects.  So such a uvar is counted, even
+   though it sits in an implicit position. *)
+let rec has_uvar_needing_congruence env (t:term) : ML bool =
   let t = U.unmeta (SS.compress t) in
   match t.n with
   | Tm_app _ ->
     let hd, args = U.head_and_args_full t in
-    has_uvar_in_explicit_position hd
+    let hd_interpreted = Env.is_interpreted env hd in
+    has_uvar_needing_congruence env hd
     || args |> List.existsb (fun (a, q) ->
          (match q with
-          | Some ({ aqual_implicit = true }) -> false
-          | _ -> has_uvar_in_explicit_position a))
+          | Some ({ aqual_implicit = true }) when hd_interpreted -> false
+          | _ -> has_uvar_needing_congruence env a))
   | _ -> not (Setlike.is_empty (Free.uvars t))
 
 (* Deciding when it's okay to issue an SMT query for
@@ -4286,16 +4298,16 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
          simply makes [squash] transparent to subtyping: the [Tm_refine,
          Tm_refine] rule right below then relates [p] and [q] by implication.
 
-         We do this only when neither proposition mentions a term uvar in an
-         explicit position, since congruence is what solves those:
-         [squash ?b <: squash q] must commit [?b := q], and turning it into a
-         guard would leave [?b] unresolved (this breaks [FStar.Classical] and a
-         dozen other ulib modules; [introduce _ ==> _] is the canonical case,
-         where the two [_]s are explicit arguments of [implies_intro]).
+         We do this only when neither proposition mentions a term uvar that
+         congruence has to solve, since turning such a problem into a guard
+         would leave the uvar unresolved: [squash ?b <: squash q] must commit
+         [?b := q] (this breaks [FStar.Classical] and a dozen other ulib
+         modules; [introduce _ ==> _] is the canonical case, where the two
+         [_]s are explicit arguments of [implies_intro]).
 
-         Uvars sitting only in *implicit* positions do not count.  Such a uvar
-         is an inference artifact, determined by the explicit arguments around
-         it, and letting one veto this rule is exactly how [GC.Lib.Header] in
+         The one kind of uvar that does not count is an implicit argument of an
+         *interpreted* head; see [has_uvar_needing_congruence].  Letting one of
+         those veto this rule is exactly how [GC.Lib.Header] in
          pulse-verified-gc used to diverge: the two propositions there were
          [pow2 2 - 1 = 3] and [logand c mask_2bit = c], the [#a:eqtype] of the
          left-hand [=] was still open, so congruence decomposed the arguments
@@ -4309,8 +4321,8 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
       | _, _ when problem.relation <> EQ
                && Some? (U.is_squash t1)
                && Some? (U.is_squash t2)
-               && not (has_uvar_in_explicit_position t1)
-               && not (has_uvar_in_explicit_position t2) ->
+               && not (has_uvar_needing_congruence wl.tcenv t1)
+               && not (has_uvar_needing_congruence wl.tcenv t2) ->
         let unsquash t = U.refine (new_bv None t_unit) (Some?.v (U.is_squash t)) in
         solve_t' ({problem with lhs=unsquash t1; rhs=unsquash t2}) wl
 
