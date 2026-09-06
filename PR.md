@@ -1157,6 +1157,253 @@ decided every one of these: `canceled` at exactly the limit means a bump will
 work, and `incomplete quantifiers` in a fraction of a second means no bump ever
 will.
 
+## Testing against pulse-verified-gc, and a three-way A/B/C
+
+EverParse is parsing and low-level imperative code; kuiper is type-level
+computation and typeclasses. The third round was run against
+[pulse-verified-gc](https://github.com/FStarLang/pulse-verified-gc), a verified
+OCaml-style garbage collector: a very large body of *first-order arithmetic*
+spec code — heap addresses, word alignment, header bit-fields — with Pulse
+implementations on top. It is the most SMT-bound of the three, and it exercises
+a part of the system the first two rounds barely touched.
+
+It also forced a change in method. By this point the branch had merged
+`origin/master` several times, while pulse-verified-gc pins F* nightly
+`ae858eacbd07`. A two-way A/B can no longer distinguish "this PR broke it" from
+"upstream broke it in the meantime". So this round is an **A/B/C**: the pinned
+baseline, this branch, and a third tree built with plain `origin/master` at
+`52f17ab8fd`. Anything that fails in tree C is upstream drift and is not this
+PR's to fix.
+
+The result is worth stating plainly. Against the 241 modules of the baseline:
+
+| tree | modules verified | notes |
+|---|---|---|
+| baseline (nightly `ae858eacbd07`) | 241 | reference |
+| plain `origin/master` `52f17ab8fd` | 231 | needs the operator rename *and* an rlimit bump in `GC.Spec.Allocator.fsti` merely to get that far |
+| this branch | 241 | with the source changes below |
+
+Plain master needs the same mechanical `op_Subtraction` → `op_Minus` rename this
+branch does (upstream's "uniform operator name mangling"), then still fails in
+eight places, including every one of the two hardest failures this branch hit —
+`GC.Spec.SweepCoalesce.Helpers.combine_extract_nth` and
+`GC.Gen.CheneyPreservation.Forwarding` — plus four sites in
+`GC.Gen.MinorCollectForwarding` and two in `GC.Spec.Allocator.Lemmas` that this
+branch verifies without complaint. The `SweepCoalesce.Helpers` slowdown in
+particular (a ~4x regression on a bit-blasting-heavy `logand`/`shift_right`
+proof) is attributable to upstream `9c919fce78`, "Encode prop like bool, boxing
+to SMT Bool", which introduces the `BoxProp` constructor and shows up as a
+literal diff in the generated `.smt2`. None of it is this PR.
+
+### A finding that changes how a regression should be read: gensym instability
+
+Two F*-library modules — `Pulse.Lib.PriorityQueue` and `Pulse.Lib.Array.Core` —
+started failing after a `Rel.fst` change that could not possibly affect them.
+Dumping `--log_queries` from both compilers and normalising showed the two
+`.smt2` files differ **only** in the numbering of gensym'd universe variables
+(`uu___79` → `uu___83`, `uu___91` → `uu___95`). Replayed offline through z3, the
+old file gives zero `unknown` and the new one gives exactly one, at the same
+goal; renaming *part* of the symbol set does not flip it back, so the effect
+depends on the whole set.
+
+That is not a semantic regression. It is a proof that was passing with no margin,
+knocked over by a shifted fresh-name counter. Any perturbation of the compiler
+can do this, so it will happen again, and the diagnostic is worth writing down:
+
+1. Run both compilers with `--log_queries` (the file lands in the *cwd* as
+   `queries-<Module>.smt2`).
+2. `diff <(sed 's/uu___[0-9]*/UU/g;s/@x[0-9]*/@X/g' A) <(sed ... B)`. If the only
+   remaining difference is the `; STATUS:` comment, the inputs are equivalent and
+   the compiler change is not the cause.
+3. Confirm by replaying each file with `z3 -smt2` and counting `^unknown`. F*
+   embeds the per-goal `(set-option :rlimit N)` in the logged file, so an offline
+   replay is faithful.
+
+The right response is to fix the *proof*, not to revert the compiler change,
+and both were fixed at the source: `almost_to_full_heap`'s induction on sequence
+length was deleted outright (`almost_up_implies_heap_down` already gives
+`heap_down_at s i` at every index, so a single `Classical.forall_intro` does it),
+and `pcm_share` got the `m1`-side permission bound that was already present,
+asymmetrically, for `m2`.
+
+### Two compiler fixes
+
+**Uvars in implicit positions are not logical content.** Under this PR a
+`Lemma post` is checked by *subtyping between `squash` types*. `Rel` has a rule
+that rewrites `squash p <: squash q` into `(_:unit{p}) <: (_:unit{q})`, which is
+what makes such a check cheap; it was guarded by "neither side contains a uvar".
+An incidental *implicit* uvar — the `#a:eqtype` of `op_Equals` — was enough to
+disable it, sending the problem to `Tm_app` congruence instead, whose local
+`equal` helper normalises with `[UnfoldUntil delta_constant; ...]`; unfolding
+`to_vec`/`from_vec` at width 64 then consumed 32 GB and did not terminate. The
+guard is now `has_uvar_needing_congruence`: a uvar that is an implicit argument
+of an *interpreted* head can be ignored, while every other uvar is logical
+content and must still block the rewrite. (That distinction matters: an earlier
+"no flex at all" formulation broke `introduce _ ==> _`, because
+`FStar.Classical.Sugar.implies_intro`'s `p` and `q` *are* explicit.)
+
+The restriction to *interpreted* heads was not the first attempt, and the
+intermediate version — ignore a uvar in any implicit position — is worth
+recording, because it broke EverParse in a way that no `make ci` run would
+have caught. `ASN1.Syntax` has
+
+```fstar
+let asn1_any_oid (name : string) (supported : list (asn1_oid_t & asn1_gen_items_lk))
+                 (pf_wf : squash (asn1_any_prefix_k_wf (Set.singleton oid_id)
+                                                       (List.map proj2_of_3 [])))
+                 (pf_sup : squash (List.noRepeats (List.map fst supported)))
+  = ASN1_ILC sequence_id (ASN1_ANY_DEFINED_BY _ (list_as_l []) oid_id ASN1_OID
+                                              supported None pf_wf pf_sup)
+```
+
+`proj2_of_3` has an implicit `#c : a -> b -> Type`. In the type of `pf_wf` the
+list is empty, so `#c` occurs nowhere else and nothing local determines it. The
+one thing that does determine it is checking the body: `pf_wf` is passed to
+`ASN1_ANY_DEFINED_BY`, whose expected type for that argument mentions the *same*
+`List.map proj2_of_3 []` with `#c` already solved, and congruence on that
+`squash <: squash` problem commits it. Rewriting the problem into refinement
+subtyping instead hands it to the SMT solver as an implication, which solves
+nothing; `#c` then survived typechecking and was *generalized*, giving
+`asn1_any_oid` a spurious leading `#_: Type` binder. Every call site in
+`ASN1.X509` then failed with `Error 66: Failed to resolve implicit argument`.
+
+Two things about this are worth remembering. First, the symptom appeared three
+commits away from its cause, in a file whose `.checked` had been reused across
+compilers — a stale `ASN1.Syntax.fst.checked` also masked the *fix* on the first
+attempt, which sent the diagnosis down a blind alley. When a regression is about
+inference rather than proof, the caches of the *dependencies* have to be wiped
+too. Second, the useful oracle was not the error but the inferred type: running
+
+```
+let _ = assert True by (print (term_to_string (tc (cur_env ()) (`ASN1.Syntax.asn1_any_oid))))
+```
+
+under the branch and under `origin/master` showed `#_: Type ->` present in one
+and absent in the other, and reduced a 3000-line EverParse module to a
+fifteen-line test case.
+
+Regression tests: `tests/bug-reports/closed/SquashSubtypingDivergence.fst`, which
+now covers both directions — the `GC.Lib.Header` shape that must fire, and the
+`asn1_any_oid` shape that must not.
+
+The unbounded normalisation inside that `equal` helper is the more fundamental
+problem and is left as a follow-up: `Env.step` has no fuel constructor, so
+bounding it is not a one-line change.
+
+**Eta-expansion across a missing `requires` binder.** `ToSyntax` omits the
+`#(_:squash pre)` binder when `pre` is syntactically `True`, so
+`Lemma (ensures q)` has one binder *fewer* than `Lemma (requires p) (ensures q)`.
+`Classical.move_requires`' argument binder is `$_:`, i.e. `Equality`, which
+forces `use_eq` and rules out ordinary subtyping, so the gap has to be bridged
+in `try_eta_expand_to_expected_typ`. It now rebinds a trailing expected binder
+whose sort is `squash ?p` with `?p` *uvar-headed* at `squash True`, letting
+`?p := True` fall out of the ordinary check. A *concrete* expected precondition
+is left alone, so genuinely strengthening a precondition is still rejected.
+Regression test: `tests/bug-reports/closed/MoveRequiresNoPrecondition.fst`.
+
+### The source changes in pulse-verified-gc
+
+Every one of them is either an improvement or a documented stabilisation; none
+is a large rlimit bump. The pattern that dominates is the one kuiper already
+suggested, and pulse-verified-gc makes overwhelming:
+
+> When a trivial arithmetic fact times out inside a large proof, hoist it to a
+> top-level lemma proved in an empty context. It is the *context* that is
+> expensive, not the goal.
+
+- `GC.Gen.CheneyPreservation.Forwarding` needed two: `(a + k*8) % 8 == 0` from
+  `a % 8 == 0`, and `b + ((a-b)/8)*8 == a` from `a % 8 == b % 8 == 0`. Both are
+  one-line consequences of `FStar.Math.Lemmas`. Inline they were `canceled` at
+  rlimit 120; hoisted, the whole module verifies with a **maximum used rlimit of
+  7.1**.
+- `GC.Gen.Promote.promote_preserves_field_at` and
+  `GC.Gen.MinorHeap.minor_reset_tag_zero`: same treatment, both back to the
+  module's base rlimit. The `MinorHeap` one is also a small lesson in `assert_norm`:
+  the fact was `U64.v (U64.logand 0UL 0xFFUL) == 0`, and normalising it drives the
+  evaluator through `UInt.to_vec`/`from_vec` at width 64. Deriving it from
+  `UInt.logand_le` instead is both cheaper and context-independent. It has to be
+  *parameterised* over the header, though — as a closed fact Z3 will not do the
+  congruence step from `hdr == 0UL` under `--ifuel 0`.
+- `GC.Gen.Cheney.SimOne`: two `UInt64` facts hoisted; the module went from
+  failing after ~130 s to verifying in **8 s**.
+- `GC.Gen.TwoPassEquiv.two_pass_pointwise`: **an ascription bug this PR makes
+  visible.** The proof writes
+  `let obj : obj_addr = IndDesc.indefinite_description_ghost obj_addr (fun obj -> ...)`.
+  Under this PR `indefinite_description_ghost` returns a *refined* result
+  `x:a{p x}`; ascribing the unrefined `obj_addr` throws the refinement away and
+  leaves Z3 to re-derive `p obj` from the definitional equation. Deleting the two
+  ascriptions fixes it. This is the general shape to look for when a `Pure`/`Ghost`
+  result stops carrying its postcondition: an ascription that used to be free now
+  weakens the type. `GC.Impl.Allocator.init_heap_normal_lemma` is the same story
+  read in the other direction — there an ascription had to be *added*, to strip
+  `write_word`'s new result refinement where the unrefined `heap` was wanted.
+- `GC.Spec.Sweep.sweep_object_preserves_other_header`: the shared conclusion is
+  now asserted at the end of *each* of the four branches rather than once after
+  the `if`. A minimal test confirmed that lemma postconditions are **not**
+  generally lost across a join, on this branch or the baseline, so this is proof
+  robustness rather than a compiler workaround: the branches reach the conclusion
+  through different intermediates and the join keeps only what is stated.
+- Two scoped rlimit bumps, each with its `--query_stats` measurement recorded in
+  a comment next to it: `GC.Gen.CheneyBFS.forward_one_queue_prefix` 10 → 20 and
+  `GC.Spec.Allocator.Lemmas.Part1.alloc_split_facts_part1` (`canceled` at exactly
+  5.000; 6.925 used at 10). Nothing larger was needed.
+- Three more well-typedness side conditions moved out of the context that was
+  drowning them. `GC.Gen.PromoteUpdate.Field` is the sharpest: the `ensures` of
+  `update_all_objects_aux_field_effect` applied `U64.uint_to_t` to
+  `U64.v obj + j * 8`, so `FStar.UInt.size _ 64` and the `hp_addr` refinement
+  were being discharged in that lemma's full context — 21 s and 34.6 rlimit units
+  against a budget of 12. Adding the bound as an extra `requires` conjunct did
+  *not* help; the context, not the goal, was the problem. The fix is a **total
+  function with a junk value**: a private
+  `field_addr : U64.t -> nat -> GTot hp_addr` returning `zero_addr` when the
+  address is out of range, so the obligation is discharged once, at the
+  definition, in an empty context, plus a `field_addr_v` lemma naming the
+  equation under the real precondition. The lemma now uses **3.3** rlimit units.
+  (A first attempt returned `U64.t`; the caller then demanded `hp_addr` and the
+  problem simply moved. The return type has to be the refined one.)
+  `GC.Impl.MarkBounded.wosize_offset_fits` and
+  `GC.Gen.MinorHeap.infix_parent_below` are the same idiom applied to
+  `U64.mul wz mword` inside a Pulse `fn` and to `addr >= infix_parent minor addr`
+  in all four infix branches of `CheneyPreservation.Frame`.
+- **The one case where naming a *case analysis* was the fix, not naming a fact.**
+  `GC.Spec.SweepCoalesce.Helpers.combine_extract_nth` is a bit-level proof — an
+  8-way `select_byte`, a `shift_right` by the nonlinear `8 * k`, sixteen
+  `UInt.nth` lemmas — and it was `canceled` at rlimit 200, at 400, and at 800.
+  For each byte `m` above the extracted byte `k`, the `m`-th shifted byte
+  contributes nothing at bit `j`; that follows from `j >= 56 - 8*k` and `m > k`,
+  but only after a case analysis with **both** `8*k` and `8*m` symbolic. Writing
+  the seven instances out, with `m` a literal so `8*m` is a constant, takes the
+  lemma from timing out at 800 to using **42 of its declared 200**. Worth
+  stressing: this lemma also fails on plain `origin/master`, so it is not a cost
+  of this branch — it is where the ~4× slowdown from upstream `9c919fce78`
+  "Encode prop like bool, boxing to SMT Bool" surfaces. The fix is upstreamable
+  as-is.
+- Two quantifier weakenings hoisted for the same reason as the arithmetic:
+  `Forwarding.fwd_classified_weakens` (`fwd_valid_or_infix` is `fwd_classified`
+  with the existential witness dropped, but the weakening is *under* a
+  quantifier) and `Allocator.Lemmas.Part2.hd_address_v`. The first is the best
+  illustration in the whole campaign of why isolated probes are not evidence:
+  the goal took **0.1 s and 0.34 rlimit units** when the module was checked on
+  its own, and timed out at rlimit 20 in a full build. Whether the solver finds
+  the instantiation depends on the rest of the module, so "it passes in
+  isolation" means nothing. Every fix here was confirmed by a clean rebuild.
+- `GC.Gen.MinorHeap.minor_zero_header_fields`: decoding a zero minor header into
+  wosize 0 / tag 0 needs the bit-vector encoding of `shift_right` and `logand`.
+  All three SPOT nurseries were doing that inside a proof whose context already
+  fixes several *other* header words, and all three timed out. Proving it once
+  for an arbitrary `minor_state` fixes all three call sites.
+
+### Method notes
+
+`--query_stats`' reason-unknown is the classifier, and it was right every time:
+`canceled` at exactly the limit means a bump *may* work; `incomplete quantifiers`
+in a fraction of a second means a fact is missing and no bump ever will.
+`--admit_except` remains unsuitable for *sizing* an rlimit — F* reuses one z3
+process per module, so earlier queries change how later ones perform — but it is
+fine for extracting a single query with `--log_queries`. And `--admit_except`
+takes exactly one name: a comma-separated list silently admits the whole module
+and reports success.
+
 ## User-visible changes
 
 - `assume_safe`'s argument is now `squash False -> Tac a`, not `unit -> Tac a`.
@@ -1172,11 +1419,17 @@ will.
   `with e`, not `with h. e`. The hypothesis is an implicit `squash` binder that
   F* puts in the proof context of `e` itself, so there is nothing to name.
   `with h. e` is rejected with a message saying so.
-- `Classical.move_requires*` no longer applies to a lemma that has *no*
-  `requires` clause — such a lemma simply has no `squash` binder to move.
-  Nor is it wanted: `Lemma (ensures Q)` is now literally `Tot (squash Q)`, which
-  is what `Classical.forall_intro*` expects, so the lemma can be passed
-  directly. Several vacuous `move_requires` wrappers in ulib were deleted.
+- `Classical.move_requires*` applied to a lemma that has *no* `requires` clause
+  is now a no-op rather than an error. Such a lemma has no `squash` binder to
+  move, so it has one binder fewer than `move_requires` expects; the gap is
+  bridged by `try_eta_expand_to_expected_typ`, which binds the missing
+  precondition binder at `squash True` when the expected precondition is still
+  an unresolved uvar (a *concrete* expected precondition is left alone, so a
+  genuine strengthening is still checked). This keeps a very common idiom
+  working. Note, though, that the wrapper is not *wanted*: `Lemma (ensures Q)`
+  is now literally `Tot (squash Q)`, which is what `Classical.forall_intro*`
+  expects, so the lemma can be passed directly. Several vacuous `move_requires`
+  wrappers in ulib were deleted.
 - **Accepted regression:** for a call through a let-bound alias, a precondition
   failure is localized to the alias rather than to the call.
 - **Accepted regression:** a `Pure`/`Ghost` with an `ensures` now returns a
@@ -1338,3 +1591,20 @@ final compiler, after the last typechecker fix and after the merge with
 `origin/master`, not against the compiler each regression was found on. The
 final numbers are EverParse 417 `.checked` and kuiper 396 `.checked`, both at
 exit 0, matching their baselines exactly.
+
+pulse-verified-gc is the third, and the largest of the three: **241 `.checked`
+plus the `spot` sub-build, both at exit 0 from a clean tree**, against a
+baseline of the same 241 built with the F* nightly it pins. The downstream
+difference is **8 commits**, all of them named lemmas and case analyses rather
+than budget increases -- the two scoped rlimit bumps listed above are the only
+ones, and one *reduction* came out of it (`combine_extract_nth` went from
+timing out at rlimit 800 to using 42 of its declared 200).
+
+A caution that this run produced and the earlier two did not: **an isolated
+module check is not evidence.** `Forwarding.cheney_promote_fwd_valid_or_infix`
+took 0.1 s and 0.34 rlimit units when its module was checked on its own, and
+timed out at rlimit 20 in a full build of the same tree, with the same
+dependency `.checked` files. Fixing one blocker also exposes the next: a `-k`
+build stops at ~176 `.checked` when an early spec module fails, so error counts
+between runs are not comparable. Every fix reported here was confirmed by a
+clean rebuild, not by a probe.
