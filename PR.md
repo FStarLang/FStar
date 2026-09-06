@@ -1404,6 +1404,85 @@ fine for extracting a single query with `--log_queries`. And `--admit_except`
 takes exactly one name: a comma-separated list silently admits the whole module
 and reports success.
 
+## Two benchmark outliers, and what they were
+
+The benchmarking bot on this PR reports the change as roughly neutral overall
+(geometric mean 1.003x memory, 0.989x time, 308s less wall clock in total), with
+some large wins — `ExtUIntMask` -55.8%, `BVExtend` -94.4%,
+`Lib.Sequence.Lemmas` -49% — and two large outliers. Both turned out to be worth
+chasing: neither is really about this branch's design, and one of them is a
+long-standing performance bug in `Rel`.
+
+### `Bug3800.fst`: `forall x. phi ==> True`
+
+`tests/bug-reports/closed/Bug3800.fst` went from 0.47s/94MB to 6.18s/330MB. A
+size-parameterised family of the same shape shows why: the cost is *exponential*
+in the nesting depth of the test's sixteen chained `let v = if ... then ... else v in`,
+while on master it is linear. The SMT query is not the problem — it is in fact
+*smaller* on this branch. `--profile` puts 5.9 of the 6.2 seconds inside
+`Rel.sub_comp` -> `Rel.simplify_vc` -> `Normalize.normalize`.
+
+The guard being normalized is
+
+```
+forall (_: u32). _ == <the entire sixteen-deep let/match body> ==> True
+```
+
+It comes from the refinement/refinement case of `solve_t'`. The left-hand side
+of the subtyping problem is the definition's computed type, which on this branch
+carries the definitional equation as a *refinement* (on master the same fact
+lives in a `Pure` wp and is already CPS-flattened, so it normalizes linearly).
+The right-hand side is the annotated `Tot u32`, which is unrefined —
+`force_refinement` turns it into `x:u32{True}` purely so that the two sides have
+the same shape. The case then builds `forall x. phi1 ==> True`.
+
+That guard is trivial, but nothing noticed: `mk_conj`/`mk_imp` do not simplify,
+so `simplify_vc` dutifully normalized the antecedent first, and normalizing a
+chain of sixteen `let`s over a `match` duplicates the continuation into both
+branches.
+
+The fix is two lines of `mk_imp_simp`/`mk_conj_simp` (which already existed in
+`Syntax.Util` and short-circuit on `is_t_true`) plus an `is_t_true` test before
+`guard_on_element`, which also avoids a needless `universe_of` call on the
+binder's sort. `EQ` is deliberately left alone: `phi1 <==> True` is `phi1`, not
+`True`.
+
+This is not a regression this branch introduced so much as one it exposed —
+master reaches the same code, just with an antecedent that happens to be cheap to
+normalize — and the fix is independent of everything else here. After it,
+`Bug3800.fst` runs in **0.31s/84MB**, i.e. faster than master's 0.47s/94MB.
+
+### `Quicksort.Base.fst`: a proof that was passing by luck
+
+`pulse/share/pulse/examples/Quicksort.Base.fst` went from 22s to 87s. Profiling
+puts all of the delta in Z3 (9.8s -> 45.8s of aggregate query time), and
+`--query_stats` narrows it to two lemmas, `transfer_larger_slice` and
+`transfer_smaller_slice`, under a `#push-options "--retry 10"`.
+
+Both compilers fail the *same* goal — the third `assert`, which re-indexes a
+lower bound on `s` into a lower bound on `Seq.slice s (l - shift) (r - shift)`.
+Master happens to succeed on its second retry; this branch exhausts all ten
+(~2.8s each) and then succeeds only once F* escalates `ifuel` to 2. Extracting
+the goal with `--log_queries` and running it standalone confirms it: with a fresh
+solver the goal is `unknown` at `ifuel 1` on *both* compilers, under every
+hypothesis configuration I tried. The three-`assert` proof was never actually
+working; it was winning a race against `--retry`.
+
+The missing step is that the goal mentions
+`Seq.index (Seq.slice s (l - shift) (r - shift)) k`, which the `SMTPat` on
+`Seq.lemma_index_slice` rewrites to `Seq.index s (k + (l - shift))`, whereas the
+hypothesis has to be instantiated at `k + l`, giving
+`Seq.index s ((k + l) - shift)`. The two index terms are equal only by linear
+arithmetic, so whether E-matching bridges them depends on whether the arithmetic
+solver has already merged their congruence classes.
+
+Replacing the three `assert`s with an `introduce forall ... with introduce _ ==> _`
+that names the witness `j = k + l` explicitly — which puts `Seq.index s (j - shift)`
+in scope and makes the instantiation immediate — makes the goal go through
+deterministically, and the `--retry 10` and `#restart-solver` are no longer
+needed. The file now takes **7.6s on this branch and 7.7s on master**, against
+14.4s for master before the change.
+
 ## User-visible changes
 
 - `assume_safe`'s argument is now `squash False -> Tac a`, not `unit -> Tac a`.
