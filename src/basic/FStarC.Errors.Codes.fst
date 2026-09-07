@@ -405,4 +405,5 @@ let default_settings : list error_setting =
     Warning_CustardFloatVocabulary                     , CWarning, 387;
     Error_CustardPolyExternalUnused                    , CAlwaysError, 388;
     Error_CustardBadMacro                              , CAlwaysError, 389;
+    Error_CustardBadTemplateArg                        , CAlwaysError, 390;
     ]

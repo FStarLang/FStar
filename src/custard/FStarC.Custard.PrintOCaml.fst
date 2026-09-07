@@ -385,6 +385,22 @@ let rec ty (t:cty) : ML string =
      [PrintC.decl_of]. *)
   | TInline _ ->
     failwith "Custard: an inline-field marker reached the OCaml backend"
+  (* Section 69.  A template-id is a C++ construction and OCaml's type
+     language has nowhere to put its arguments. *)
+  | TConst _ ->
+    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadTemplateArg [
+      FStarC.Errors.Msg.text
+        "Custard: an external type with a template target reached the OCaml \
+         backend.";
+      FStarC.Errors.Msg.text
+        "[wmma::fragment<matrix_a, 16, 16, 16, half, row_major>] is one type \
+         and [wmma::fragment<matrix_b, ...>] another; OCaml has no such \
+         construction, so section 69 is a C-backend feature \
+         (--custard_backend C).";
+      FStarC.Errors.Msg.text
+        "The unparameterized form still works everywhere: a \
+         [@@custard_extern] target with no [{0}] placeholder names one target \
+         type, and its arguments are dropped." ]
   (* [FStar.Pervasives.Native.tupleN] is OCaml's own N-tuple.  The realization
      says so -- [type ('a,'b) tuple2 = 'a * 'b] is an alias, not a definition
      -- so writing the tuple type directly is not a translation of it but the
@@ -1118,13 +1134,43 @@ let reserve_top (p:program) : ML unit =
     | DExternal e -> [ocaml_value_name e.dx_name]
     | _ -> [])
 
+(* Section 69.  A template-id -- [wmma::fragment<matrix_a, 16, 16, 16, half,
+   row_major>] -- is a C++ construction, and OCaml's type language has
+   nowhere to put its arguments.  Two instantiations of a templated external
+   type are two different target types, so dropping the arguments here would
+   silently conflate them; say so instead. *)
+let reject_template_types (p:program) : ML unit =
+  p |> List.iter (fun d ->
+    match d with
+    | DType ty ->
+      ty.dt_flags |> List.iter (fun f ->
+        match f with
+        | Extern (Some target, _) when is_template (template_of_string target) ->
+          FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadTemplateArg [
+            FStarC.Errors.Msg.text
+              ("Custard: the external type " ^ string_of_name ty.dt_name ^
+               " has a template target, and templates reached the OCaml backend.");
+            FStarC.Errors.Msg.text
+              ("Its target spelling [" ^ target ^ "] has a placeholder for an \
+                argument, so two instantiations of it are two different \
+                target types; OCaml has no such construction.  Section 69 \
+                is a C-backend feature (--custard_backend C).");
+            FStarC.Errors.Msg.text
+              "The unparameterized form still works everywhere: a \
+               [@@custard_extern] target with no [{0}] placeholder names one \
+               target type, and its arguments are dropped." ]
+        | _ -> ())
+    | _ -> ())
+
 let print_program (p:program) : ML string =
+  reject_template_types p;
   build_tables (SMap.create 0) p;
   current_module := None;
   reserve_top p;
   assemble (print_decls p @ entry_calls p)
 
 let print_split (files : list (string & program)) : ML (list (string & string)) =
+  reject_template_types (List.collect snd files);
   let homes = SMap.create 100 in
   files |> List.iter (fun (m, ds) ->
     let m = module_name_of_unit m in

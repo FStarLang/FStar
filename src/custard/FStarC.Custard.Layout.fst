@@ -73,6 +73,9 @@ let rec cty_erased (t:tbl) (c:cty) : ML bool =
   | TUnit -> true
   | TVar _ -> false
   | TAny -> false
+  (* Section 69.  Not a type at all: it only ever occurs as an argument of an
+     external type, whose layout is the target's business. *)
+  | TConst _ -> false
   (* An exception value is a value; and raising one is observable whether or
      not anything reads it. *)
   | TExn -> false

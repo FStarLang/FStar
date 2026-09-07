@@ -105,6 +105,13 @@ let rec hint_of_cty (fuel:int) (c:cty) : ML string =
   | TExn -> "exn"
   | TArrow _ -> "fn"
   | TAny -> "any"
+  (* Section 69.  A value argument of a templated external type.  It is part
+     of the hint because it is part of what distinguishes two instantiations,
+     and a name that read the same for [bitset 32] and [bitset 64] would be
+     the wrong hint for both. *)
+  | TConst (CInt (v, _, _)) -> show v
+  | TConst (CBool b) -> if b then "true" else "false"
+  | TConst _ -> "const"
 
 let clip (s:string) : ML string =
   if String.length s <= hint_width then s
@@ -196,6 +203,15 @@ let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
 let is_extern_type (st:state) (n:name) : ML bool =
   match SMap.try_find st.types (string_of_name n) with
   | Some d -> d.dt_flags |> List.existsb Extern?
+  | None -> false
+
+(* Section 69.  An external type whose target *is* indexed by its arguments.
+   The paragraph above says an external's arguments are dropped because there
+   is nowhere in a target string for one to go; a template is exactly the
+   target string that has somewhere, so for one of those they are kept. *)
+let is_template_type (st:state) (n:name) : ML bool =
+  match SMap.try_find st.types (string_of_name n) with
+  | Some d -> Some? (extern_template_of_flags d.dt_flags)
   | None -> false
 
 let is_poly (st:state) (n:name) : ML bool =
@@ -297,6 +313,8 @@ let rec mono_cty (st:state) (c:cty) : ML cty =
   let c = unfold_cty st 100 c in
   match c with
   | TApp (n, args) ->
+    if is_template_type st n
+    then TApp (n, args |> List.map (mono_cty st)) else
     if is_extern_type st n then TApp (n, []) else
     let args = args |> List.map (mono_cty st) in
     if is_poly st n then TApp (request st n args, []) else TApp (n, args)
@@ -305,7 +323,7 @@ let rec mono_cty (st:state) (c:cty) : ML cty =
   | TRef c -> TRef (mono_cty st c)
   | TInline c -> TInline (mono_cty st c)
   | TTuple cs -> TTuple (cs |> List.map (mono_cty st))
-  | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny -> c
+  | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny | TConst _ -> c
 
 (* The instantiation a use site is building or matching.  [None] means the
    type was not polymorphic, so its constructors keep their names. *)
@@ -615,7 +633,7 @@ let run (prog:program) : ML program =
     | TArrow (a, _, b) -> freeze (fuel - 1) a; freeze (fuel - 1) b
     | TBuf c | TRef c | TInline c -> freeze (fuel - 1) c
     | TTuple cs -> cs |> List.iter (freeze (fuel - 1))
-    | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny -> () in
+    | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny | TConst _ -> () in
   prog |> List.iter (fun d ->
     match d with
     | DExternal x -> freeze 100 x.dx_ty

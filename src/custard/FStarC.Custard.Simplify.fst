@@ -2450,7 +2450,7 @@ let coerce_prog (prog:program) : ML program =
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
     | TBuf c | TRef c | TInline c -> has_any c
-    | TVar _ | TInt _ | TFloat _ | TUnit | TExn -> false in
+    | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   let trust (c:cty) : ML (option cty) = if has_any c then None else Some c in
   (* Does this term obviously have *some* representation, whatever it is?  When
      a value of unknown type reaches a position declared [TAny], that is the
@@ -2908,7 +2908,7 @@ let narrow_rets (prog:program) : ML program =
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
     | TBuf c | TRef c | TInline c -> has_any c
-    | TVar _ | TInt _ | TFloat _ | TUnit | TExn -> false in
+    | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   (* Name -> the whole type, arguments included, so that a use of a name in
      head position can be peeled the same way [coerce_prog] peels it. *)
   let tbl : SMap.t cty = SMap.create 100 in

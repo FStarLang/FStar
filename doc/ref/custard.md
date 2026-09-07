@@ -15001,6 +15001,141 @@ first.
 
 
 
+## 69.  Parameterized external types
+
+### 69.0.  `auto&` is not a type
+
+An external type in Custard names a target type:
+`[@@custard_extern "cudaStream_t"]` gives F* a `Type0` that prints as
+`cudaStream_t` and is otherwise opaque.  That covers a C type name and it does
+not cover a C++ *template-id*.
+
+The case that forced this is Kuiper's, §61.3.  A Tensor Core fragment is
+
+```c++
+nvcuda::wmma::fragment<nvcuda::wmma::matrix_a, 16, 16, 16, __half,
+                       nvcuda::wmma::row_major>
+```
+
+which needs three kinds of argument at once: a tag that is a *type* in C++ but
+reads as an index in F*, three *values*, and an element type.  Custard's `cty`
+had somewhere to put the first and the last of those and nowhere at all to put
+the sizes, so the only way to write the type was to hide it:
+
+```c++
+typedef auto& tc_auto_ref;
+```
+
+That works inside one function body and it is not a type.  `auto` is a
+placeholder resolved from an initializer, so a header cannot name it, a struct
+cannot contain it, a function cannot return it, and a local without an
+initializer cannot have it.  Every one of those is an ordinary thing to want
+from a fragment.  The remaining option --- one nullary external type per
+instantiation, `frag_a_16_16_16_half_row_major` --- is a `typedef` per shape
+written by hand in a header Custard does not generate, which is the state a
+generator is supposed to remove.
+
+### 69.1.  Placeholders
+
+The target string of an external type may now contain positional placeholders:
+
+```fstar
+[@@custard_extern "nvcuda::wmma::fragment<{0}, {1}, {2}, {3}, {4}, {5}>"]
+assume val fragment (use : Type0) (m n k : nat) (t : Type0) (l : Type0) : Type0
+```
+
+`{i}` refers to the declaration's *i*th binder, counting **all** of them from
+zero in source order --- the numbering the author of the `assume val` is
+looking at.  A target may use the placeholders in any order, may use one twice,
+and need not use them all.  `{{` is a literal `{`.
+
+**A target with no placeholder is not a template, and nothing changes for it.**
+That is the whole backward-compatibility story:
+`[@@custard_extern "cudaStream_t"]` applied to arguments still names one target
+type and still drops them, exactly as before §69, so an existing consumer sees
+no difference.  Being a template is
+a property of the *string*, not a new attribute, which also means the two
+spellings cannot be given inconsistently.
+
+Type-tag arguments needed no new machinery at all.  `nvcuda::wmma::matrix_a` is
+a type in C++, so it is a *nullary* external type in F*, and a nullary external
+already prints its target verbatim --- it arrives at the placeholder as
+`tpl_matrix_a` because that is what it prints as everywhere.  Only the *value*
+arguments were actually missing.
+
+### 69.2.  `TConst`
+
+`cty` gains one leaf:
+
+```fstar
+| TConst of constant
+```
+
+The alternative was to change `TApp of name & list cty` to carry a tagged
+argument --- a type or a value --- which is the more honest type and touches
+every `cty` traversal in the compiler.  A leaf is far less invasive and carries
+the same information.  Its invariant is narrow and stated where it is declared:
+`TConst` is legal **only** as an argument of a `TApp` whose head is a templated
+external type.  Nothing enforces that structurally; what enforces it is that
+every backend rejects the leaf anywhere it can reach one, so a `TConst` that
+escaped its position is a diagnostic and not a silent miscompilation.
+
+Extraction reduces a value argument with the compile-time steps before reading
+it, and peels the wrappers a machine-integer index usually arrives in
+(`FStar.Ghost.hide`/`reveal`, `UIntN.uint_to_t` and friends), so `bitset 64`
+and `bitset (v (64ul))` are the same type.
+
+A value argument prints **without a width suffix**: `std::bitset<64>`, not
+`std::bitset<64ULL>`.  A non-type template parameter has a declared type and the
+argument is converted to it, so the suffix Custard puts on an ordinary literal
+is at best noise and at worst a different type.  Same reasoning as §68.2's
+macro bodies.
+
+### 69.3.  Monomorphization has to keep the arguments
+
+Round 45 made `mono_cty` drop *all* arguments of an external type, on the
+reasoning that the target names one type whatever F* applies it to.  For a
+template that reasoning is exactly inverted: `fragment<matrix_a, ...>` and
+`fragment<matrix_b, ...>` are two different C++ types, with different layouts,
+and code specialized for one is wrong for the other.  So `mono_cty` now keeps
+the arguments when the target is a template and drops them otherwise, and
+`hint_of_cty` includes them, so the two instantiations get two names.
+
+This is the reversal of a deliberate decision, and it is narrow: it applies to
+templated targets only, which is to say only to declarations written after §69
+and only to ones that ask for it.
+
+### 69.4.  What is refused
+
+Error **390**, `Error_CustardBadTemplateArg`, in three places.
+
+* A value argument that does not reduce to a constant.  A non-type template
+  argument has to be a constant expression; an argument known only at run time
+  would otherwise be pasted into a template-id and refused by the target's
+  compiler, in the target's file, about a name the F* author did not write.
+  The message says what it reduced to, and offers the way out: drop that
+  placeholder from the target string, which makes the argument invisible to the
+  target again.
+* A placeholder index with no corresponding argument.
+* A templated external type reaching the **OCaml** or **karamel** backend.  A
+  template-id is a C++ construction and neither of those type languages has
+  anywhere to put the arguments; dropping them would silently conflate two
+  target types.  §69 is a C-backend feature.  The check is on the *declaration*,
+  not only on the leaf, so it fires whether or not the type happens to reach a
+  printed position.
+
+The unparameterized form keeps working on every backend, which is what makes
+this a refusal of a new thing rather than a regression.
+
+### 69.5.  Scope
+
+This answers the *type* half of Kuiper's §61.3.  The other half --- a C++
+function template, where the value argument belongs to a *call* rather than to
+a type --- is untouched: `dx_target` has no placeholder mechanism, and whether
+it should get the same one is open.  Rust's const generics would fit the same
+shape and are not implemented.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -15271,3 +15406,6 @@ first.
 | M10ζΞ | Error 389, and why the check is not defensive (§68.3) | Done.  A `[@@ CMacro ]` body that is not a constant expression is refused.  Without the check the `#define` is emitted anyway and expands to a variable, so the constant *looks* exported and all three uses fail at the consumer, in the consumer's file, about a name the consumer did not write --- which is the failure mode the whole item is about, reintroduced one level down.  Worth noting how hard the error is to reach: Custard's reduction turns a body that *computes* a constant into the constant well before this test runs, so only a body genuinely depending on something run-time gets there, which is exactly the case where refusing is right |
 | M10ζΟ | Error 376's third way out (§68.4, §61.5) | Done.  Kuiper's ask.  376 refuses a monomorphized *value* argument to an external, on the premise that specialization substitutes into a body and an external has no body, so the argument would be silently discarded.  The message offered two ways out --- drop the annotation, or give the definition a body --- and omitted the one a plugin author actually wants: **register a rule**.  A rule does not have the error's premise at all; it replaces the call rather than specializing a body, and is handed the argument's term, which is precisely what a target intrinsic with a compile-time operand needs.  Kuiper found this by reading the source, which is the wrong way to find it.  Recorded alongside: warning 381's retained-binder count is an accidental arity oracle for plugin authors and is now an intended one |
 | M10ζΠ | Tensor Cores, and two gaps (§68.5) | Done as a record.  Kuiper's §61: Custard's C through `nvcc` produces real `wmma.mma.sync` PTX --- the instruction, not a library call that might become one --- and the property that made it work is one karamel does not have, fragment indices surviving to C, which retires one of Kuiper's two `sed` post-passes.  First target intrinsic with a *structured* operand to work without post-processing.  Two gaps stay open and are design questions rather than defects: `TApp` carries only type arguments, so a C++ template's value argument has nowhere to live (`auto` covers the local cases only); and error 379 makes a target *token* cost a fake `assume val` each, the refusal being right for the case it was written for.  Answered from §61.6: `CUSTARD_FLOAT16_DEFINED` stays a single guard --- the one consumer with an override says it is what they need, and a guard whose halves can be set inconsistently is a new way to get a mismatched ABI |
+| M10ζΡ | **Parameterized external types** (§69.0--§69.2) | Done.  The user's ask, and the type half of Kuiper's §61.3.  An external type's target string may now contain positional placeholders --- `[@@custard_extern "nvcuda::wmma::fragment<{0}, {1}, {2}, {3}, {4}, {5}>"]` --- numbered over *all* the declaration's binders from zero in source order, usable in any order and not necessarily all.  What this replaces is `typedef auto& tc_auto_ref;`, which is not a type: `auto` is resolved from an initializer, so a header cannot name it, a struct cannot contain it, a function cannot return it and an uninitialized local cannot have it, and every one of those is an ordinary thing to want from a fragment.  Type-tag arguments needed nothing new --- `matrix_a` is a *nullary* external type and a nullary external already prints its target verbatim --- so the only genuinely missing piece was a *value* argument, which is the new `cty` leaf `TConst`.  A leaf rather than the more honest tagged-argument list, because the latter touches every `cty` traversal for the same information; its invariant, "only as an argument of a templated external's `TApp`", is enforced by every backend rejecting it elsewhere.  Value arguments print with **no width suffix**, `std::bitset<64>` and not `std::bitset<64ULL>`, a non-type template parameter having a declared type its argument is converted to |
+| M10ζΣ | Backward compatibility, and round 45 reversed (§69.1, §69.3) | Done.  Being a template is a property of the *string* --- a target with no `{i}` is not one --- so there is no second attribute to get inconsistent with the first, and every external type written before §69 behaves exactly as it did, arguments dropped.  Where §69 does change existing behaviour is monomorphization: round 45 had `mono_cty` drop all arguments of an external type, on the reasoning that the target names one type whatever F* applies it to, and for a template that reasoning is exactly inverted --- `fragment<matrix_a, ...>` and `fragment<matrix_b, ...>` are two C++ types with two layouts, and code specialized for one is wrong for the other.  So the arguments are kept, and `hint_of_cty` includes them so the two instantiations get two names.  Narrow by construction: it applies only to declarations that ask for it |
+| M10ζΤ | Error 390 (§69.4) | Done.  Three refusals under one code.  A value argument that does not reduce to a constant is refused with what it *did* reduce to, and with the way out named --- drop that placeholder --- rather than being pasted into a template-id for the target's compiler to reject in the target's file; a placeholder index with no argument likewise.  Third, a templated external reaching the OCaml or karamel backend, checked on the **declaration** rather than only on the `TConst` leaf, so that it fires whether or not the type reaches a printed position --- the leaf check alone passed a test that should have failed, because the value was never printed.  Silently dropping the arguments there would conflate two target types, which is the one outcome worth more than an error.  Still open, and the other half of §61.3: a C++ *function* template, whose value argument belongs to a call rather than to a type, `dx_target` having no placeholder mechanism |

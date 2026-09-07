@@ -393,6 +393,34 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
      [PrintC.decl_of]. *)
   | TInline _ ->
     failwith "Custard: an inline-field marker reached the karamel backend"
+  (* Section 69. *)
+  | TConst _ ->
+    E.raise_error0 E.Error_CustardBadTemplateArg [
+      text "Custard: an external type with a template target reached the karamel backend.";
+      text "A template-id is a C++ construction: [wmma::fragment<matrix_a, \
+            16, 16, 16, half, row_major>] is one type and \
+            [wmma::fragment<matrix_b, ...>] another, and neither the OCaml \
+            nor the karamel type language has anywhere to put the \
+            arguments.  Section 69 is a C-backend feature (--custard_backend \
+            C).";
+      text "The unparameterized form still works everywhere: a \
+            [@@custard_extern] target with no [{0}] placeholder names one \
+            target type and its arguments are dropped." ]
+  | TApp (n, args) when Cons? args &&
+                        (match SMap.try_find !extern_types (string_of_name n) with
+                         | Some t -> is_template (template_of_string t)
+                         | None -> false) ->
+    E.raise_error0 E.Error_CustardBadTemplateArg [
+      text "Custard: an external type with a template target reached the karamel backend.";
+      text "A template-id is a C++ construction: [wmma::fragment<matrix_a, \
+            16, 16, 16, half, row_major>] is one type and \
+            [wmma::fragment<matrix_b, ...>] another, and neither the OCaml \
+            nor the karamel type language has anywhere to put the \
+            arguments.  Section 69 is a C-backend feature (--custard_backend \
+            C).";
+      text "The unparameterized form still works everywhere: a \
+            [@@custard_extern] target with no [{0}] placeholder names one \
+            target type and its arguments are dropped." ]
   | TApp (n, []) ->
     (match prim_type n with
      | Some t -> t
@@ -1008,7 +1036,36 @@ let shadow_table (p:program) : ML (SMap.t bool) =
     then SMap.add t (string_of_name n) true);
   t
 
+(* Section 69.  A template-id -- [wmma::fragment<matrix_a, 16, 16, 16, half,
+   row_major>] -- is a C++ construction, and karamel's type language has
+   nowhere to put its arguments.  Two instantiations of a templated external
+   type are two different target types, so dropping the arguments here would
+   silently conflate them; say so instead. *)
+let reject_template_types (p:program) : ML unit =
+  p |> List.iter (fun d ->
+    match d with
+    | DType ty ->
+      ty.dt_flags |> List.iter (fun f ->
+        match f with
+        | Extern (Some target, _) when is_template (template_of_string target) ->
+          E.raise_error0 E.Error_CustardBadTemplateArg [
+            text
+              ("Custard: the external type " ^ string_of_name ty.dt_name ^
+               " has a template target, and templates reached the karamel backend.");
+            text
+              ("Its target spelling [" ^ target ^ "] has a placeholder for an \
+                argument, so two instantiations of it are two different \
+                target types; karamel has no such construction.  Section 69 \
+                is a C-backend feature (--custard_backend C).");
+            text
+              "The unparameterized form still works everywhere: a \
+               [@@custard_extern] target with no [{0}] placeholder names one \
+               target type, and its arguments are dropped." ]
+        | _ -> ())
+    | _ -> ())
+
 let print_program (p:program) : ML (list Krml.file) =
+  reject_template_types p;
   extern_types := extern_type_table p;
   extern_values := extern_value_table p;
   shadowed := shadow_table p;
@@ -1027,6 +1084,7 @@ let print_program (p:program) : ML (list Krml.file) =
    same output rather than a different translation. *)
 let print_split (fs : list (string & program)) : ML (list Krml.file) =
   let whole = fs |> List.collect snd in
+  reject_template_types whole;
   extern_types := extern_type_table whole;
   extern_values := extern_value_table whole;
   shadowed := shadow_table whole;

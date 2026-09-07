@@ -27,6 +27,7 @@ open FStarC.Class.PP
 open FStarC.Pprint
 
 module BU = FStarC.Util
+module String = FStarC.String
 
 (* -------------------------------------------------------------------- *)
 (* Names                                                                *)
@@ -86,6 +87,44 @@ let is_pure (e:eff) : bool =
    The threshold is a matter of taste and this one is nobody's literal. *)
 let rec strip_zeros (m:int) (e:int) : int & int =
   if m <> 0 && m % 10 = 0 then strip_zeros (m / 10) (e + 1) else (m, e)
+
+(* Section 69.  Hand-rolled rather than a regexp: the grammar is three
+   productions and the module has no regexp dependency. *)
+let template_of_string (s:string) : ML (list tmpl_piece) =
+  let cs = String.list_of_string s in
+  let flush (acc : list char) (out : list tmpl_piece) : list tmpl_piece =
+    match acc with
+    | [] -> out
+    | _ -> TP_lit (String.string_of_list (List.rev acc)) :: out in
+  (* [acc] is the literal text seen since the last piece, reversed. *)
+  let rec go (cs : list char) (acc : list char) (out : list tmpl_piece)
+    : ML (list tmpl_piece) =
+    match cs with
+    | [] -> List.rev (flush acc out)
+    | '{' :: '{' :: rest -> go rest ('{' :: acc) out
+    | '{' :: rest ->
+      (* [{] followed by digits followed by [}], or nothing special. *)
+      let rec digits (cs : list char) (ds : list char)
+        : ML (option (int & list char)) =
+        match cs with
+        | '}' :: rest ->
+          (match ds with
+           | [] -> None
+           | _ ->
+             let n = List.fold_left
+                       (fun acc (d:char) -> acc * 10 + (BU.int_of_char d - 48))
+                       0 (List.rev ds) in
+             Some (n, rest))
+        | c :: rest when BU.int_of_char c >= 48 && BU.int_of_char c <= 57 ->
+          digits rest (c :: ds)
+        | _ -> None in
+      (match digits rest [] with
+       | Some (n, rest') -> go rest' [] (TP_arg n :: flush acc out)
+       | None -> go rest ('{' :: acc) out)
+    | c :: rest -> go rest (c :: acc) out in
+  go cs [] []
+
+let is_template (ps : list tmpl_piece) : ML bool = List.existsb TP_arg? ps
 
 let fwidth_to_string (fw:fwidth) : string =
   match fw with
@@ -207,6 +246,15 @@ let name_of_decl (d:decl) : name =
   | DExternal e -> e.dx_name
   | DExn e -> e.de_name
 
+(* Section 69. *)
+let extern_template_of_flags (fs : list flag) : ML (option (list tmpl_piece)) =
+  match List.tryPick (fun f -> match f with
+                               | Extern (t, _) -> t
+                               | _ -> None) fs with
+  | Some t -> let ps = template_of_string t in
+              if is_template ps then Some ps else None
+  | None -> None
+
 let decl_flags (d:decl) : list flag =
   match d with
   | DType t -> t.dt_flags
@@ -297,44 +345,6 @@ let op_to_string (o:prim_op) : string =
    | Some (PInt sw) -> width_to_string sw
    | Some (PFloat fw) -> fwidth_to_string fw)
 
-(* [prec] is the precedence of the enclosing context: 0 at the top, 1 under an
-   arrow's domain, 2 as the argument of a type application. *)
-let rec cty_to_doc' (prec:int) (t:cty) : ML document =
-  match t with
-  | TVar x -> text ("'" ^ x)
-  | TInt sw -> text (width_to_string sw)
-  | TFloat fw -> text (fwidth_to_string fw)
-  | TUnit -> text "unit"
-  | TExn -> text "exn"
-  | TAny -> text "any"
-  | TArrow (t1, e, t2) ->
-    let arrow =
-      match e with
-      | E_Pure -> text "->"
-      | E_Ghost -> text "-[G]->"
-      | E_Impure -> text "-[I]->"
-    in
-    parens_if (prec >= 1) <|
-      group (cty_to_doc' 1 t1 ^/^ arrow ^/^ cty_to_doc' 0 t2)
-  | TApp (n, []) -> name_to_doc n
-  | TApp (n, args) ->
-    parens_if (prec >= 2) <|
-      group (name_to_doc n ^^ langle ^^
-             sep_by (comma ^^ space) (List.map (cty_to_doc' 0) args) ^^ rangle)
-  | TBuf t ->
-    parens_if (prec >= 2) <| group (text "buf" ^/^ cty_to_doc' 2 t)
-  | TRef t ->
-    parens_if (prec >= 2) <| group (text "ref" ^/^ cty_to_doc' 2 t)
-  | TInline t ->
-    parens_if (prec >= 2) <| group (text "inline" ^/^ cty_to_doc' 2 t)
-  | TTuple ts ->
-    parens (sep_by (space ^^ text "*" ^^ space) (List.map (cty_to_doc' 1) ts))
-
-let cty_to_doc (t:cty) : ML document = cty_to_doc' 0 t
-let cty_to_string (t:cty) : ML string = render (cty_to_doc t)
-
-(* The dump is meant to be re-readable by eye, so escape rather than emit raw
-   control characters. *)
 let escape_char (c:char) : string =
   match c with
   | '\n' -> "\\n"
@@ -365,6 +375,45 @@ let constant_to_doc (c:constant) : ML document =
 
 let constant_to_string (c:constant) : ML string = render (constant_to_doc c)
 
+(* [prec] is the precedence of the enclosing context: 0 at the top, 1 under an
+   arrow's domain, 2 as the argument of a type application. *)
+let rec cty_to_doc' (prec:int) (t:cty) : ML document =
+  match t with
+  | TVar x -> text ("'" ^ x)
+  | TInt sw -> text (width_to_string sw)
+  | TFloat fw -> text (fwidth_to_string fw)
+  | TUnit -> text "unit"
+  | TExn -> text "exn"
+  | TAny -> text "any"
+  | TConst c -> constant_to_doc c
+  | TArrow (t1, e, t2) ->
+    let arrow =
+      match e with
+      | E_Pure -> text "->"
+      | E_Ghost -> text "-[G]->"
+      | E_Impure -> text "-[I]->"
+    in
+    parens_if (prec >= 1) <|
+      group (cty_to_doc' 1 t1 ^/^ arrow ^/^ cty_to_doc' 0 t2)
+  | TApp (n, []) -> name_to_doc n
+  | TApp (n, args) ->
+    parens_if (prec >= 2) <|
+      group (name_to_doc n ^^ langle ^^
+             sep_by (comma ^^ space) (List.map (cty_to_doc' 0) args) ^^ rangle)
+  | TBuf t ->
+    parens_if (prec >= 2) <| group (text "buf" ^/^ cty_to_doc' 2 t)
+  | TRef t ->
+    parens_if (prec >= 2) <| group (text "ref" ^/^ cty_to_doc' 2 t)
+  | TInline t ->
+    parens_if (prec >= 2) <| group (text "inline" ^/^ cty_to_doc' 2 t)
+  | TTuple ts ->
+    parens (sep_by (space ^^ text "*" ^^ space) (List.map (cty_to_doc' 1) ts))
+
+let cty_to_doc (t:cty) : ML document = cty_to_doc' 0 t
+let cty_to_string (t:cty) : ML string = render (cty_to_doc t)
+
+(* The dump is meant to be re-readable by eye, so escape rather than emit raw
+   control characters. *)
 let rec pat_to_doc (p:pat) : ML document =
   match p with
   | PWild -> underscore

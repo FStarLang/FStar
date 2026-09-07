@@ -1783,6 +1783,17 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
                     TcEnv.UnfoldOnly [l]] t with
            | None -> TAny
            | Some t' -> if U.term_eq t' t then TAny else ty_of_typ st t')
+        (* Section 69.  An external type whose target is a template keeps
+           *every* argument, type and value alike, because the template is
+           what gives a value argument somewhere to go.  This is the same
+           exception {!keeps_param} makes for a realized type and for the same
+           reason: the target declaration is hand-written, so its arity is not
+           Custard's to choose. *)
+        | Tm_fvar fv when Some? (extern_template st (S.lid_of_fv fv)) ->
+          let l = S.lid_of_fv fv in
+          let args = args |> List.mapi (fun i (a, _) -> template_arg st l i a) in
+          TApp (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 },
+                args)
         | Tm_fvar fv ->
           (* A type constructor's arguments survive into the [cty] exactly when
              they are types: an index like the [n] of [vec n] has no
@@ -1902,6 +1913,85 @@ and is_realized_type (st:state) (l:Ident.lident) : ML bool =
   match Builtins.lookup_rule l with
   | Some Builtins.Rule_realized -> true
   | _ -> false
+
+(* Section 69.  The target spelling of an external type, split into pieces,
+   when that spelling is a *template* -- that is, when it mentions any of the
+   type's arguments.
+
+   A target with no placeholder is not a template and is not returned here:
+   its arguments are invisible to the target and are dropped, which is what an
+   external type with a fixed C spelling wants and what every existing one
+   relies on. *)
+and extern_template (st:state) (l:Ident.lident) : ML (option (list tmpl_piece)) =
+  (* Both routes, as everywhere a rule is wanted: the attribute on the
+     declaration itself, and the built-in table for the names ulib does not
+     annotate. *)
+  let rule = match TcEnv.lookup_sigelt (tcenv st) l with
+             | Some se ->
+               (match Builtins.rule_of_attributes se.sigattrs with
+                | Some r -> Some r
+                | None -> Builtins.lookup_rule l)
+             | None -> Builtins.lookup_rule l in
+  match rule with
+  | Some (Builtins.Rule_extern x) ->
+    (match x.Builtins.x_name with
+     | Some s -> let ps = template_of_string s in
+                 if is_template ps then Some ps else None
+     | None -> None)
+  | _ -> None
+
+(* A template's *value* argument, reduced to the constant the target will see.
+
+   The reduction is the compile-time one (section 26), because that is what
+   this is: a C++ non-type template argument is required to be a constant
+   expression, so an argument that does not reduce to a constant is not an
+   argument the target can take, and saying so here is better than emitting a
+   template-id the C++ compiler rejects.
+
+   The wrappers peeled afterwards are the ones an index normally arrives in.
+   [Ghost.hide] because a size index is usually erased -- it is erased in
+   *F**, which is exactly why it can be a compile-time argument -- and
+   [uint_to_t] because a machine-integer index reduces to that and not to a
+   literal.  The width is dropped with the wrapper: a template argument is
+   spelled by its value, and the parameter's declared type is the template's
+   business, not the argument's. *)
+and const_of_arg (st:state) (t:term) : ML (option constant) =
+  let t = U.unmeta (U.unascribe t) in
+  let h, args = U.head_and_args_full t in
+  match (SS.compress h).n with
+  | Tm_constant c -> constant_of_sconst c
+  | Tm_fvar fv ->
+    let nm = Ident.string_of_lid (S.lid_of_fv fv) in
+    (match List.rev args with
+     | (a, _) :: _ when nm = "FStar.Ghost.hide" || nm = "FStar.Ghost.reveal" ||
+                     FStarC.Util.ends_with nm ".uint_to_t" || FStarC.Util.ends_with nm ".int_to_t" ||
+                     FStarC.Util.ends_with nm ".__uint_to_t" || FStarC.Util.ends_with nm ".__int_to_t" ->
+       const_of_arg st a
+     | _ -> None)
+  | _ -> None
+
+and template_arg (st:state) (l:Ident.lident) (i:int) (a:term) : ML cty =
+  if Mono.is_type_term (tcenv st) a then ty_of_typ st a
+  else
+    let a' = match norm_optional st compile_time_steps a with
+             | Some t -> t
+             | None -> a in
+    match const_of_arg st a' with
+    | Some c -> TConst c
+    | None ->
+      custard_error st E.Error_CustardBadTemplateArg [
+        text ("Custard: argument " ^ show i ^ " of the external type " ^
+              Ident.string_of_lid l ^
+              " is a value, and it does not reduce to a constant.");
+        text "The target spelling of this type is a template, so its \
+              arguments are written into a template-id; a non-type template \
+              argument has to be a constant expression, and one that is only \
+              known at run time is not.";
+        text ("What it reduced to was: " ^ show a');
+        text "Either make the argument compile-time known, or drop the \
+              placeholder for it from the [@@custard_extern] string, which \
+              makes the argument invisible to the target." ];
+      TAny
 
 (* Type constructors are compiled uniformly in their parameters (section 5.0),
    so an inductive is never specialized: it is always requested with an empty
@@ -3244,8 +3334,13 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
              | Some { sigel = Sig_declare_typ {t} } -> t
              | _ -> failwith "unreachable") in
     let bs, _ = U.arrow_formals t in
+    (* Section 69.  A template keeps every binder, since a use of it carries
+       every argument; without a template only the type parameters survive,
+       the rest being invisible to a fixed target spelling. *)
+    let tmpl = Some? (extern_template st l) in
     let ps = bs |> List.collect (fun b ->
-               if Mono.is_type_param (tcenv st) b then [name_of_bv b.binder_bv] else []) in
+               if tmpl || Mono.is_type_param (tcenv st) b
+               then [name_of_bv b.binder_bv] else []) in
     DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
             dt_flags = [Extern (x.Builtins.x_name, x.Builtins.x_header); NoNewtype] }
   | Some (Builtins.Rule_extern x) ->

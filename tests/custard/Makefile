@@ -1415,6 +1415,39 @@ C_TESTS += NarrowG
 CGREP_NarrowG += "static custard_f16 NarrowG_g = CUSTARD_F16_INIT(15872U);"
 CNOGREP_NarrowG += "NarrowG_g = CUSTARD_F16_LIT"
 
+# Section 69.  An external type whose target is a *template*: the arguments
+# go into placeholders instead of being dropped.  Three things are checked --
+# that a type argument reaches the target as its own C spelling, that a value
+# argument reaches it as a value, and that two instantiations of the same
+# external type are two different C types.  Template_stubs.h gives the shape
+# a C11 meaning so that the harness can run it; in CUDA the same output is a
+# real template-id.
+C_TESTS += Template
+CGREP_Template += "tpl_fragment(tpl_matrix_a, 16, 16, 16, uint32_t, tpl_row_major)"
+CGREP_Template += "tpl_fragment(tpl_matrix_b, 16, 16, 16, uint32_t, tpl_row_major)"
+CGREP_Template += "tpl_bitset(64)"
+# The value argument is spelled as a value, not with the width suffix Custard
+# gives an ordinary literal: a non-type template parameter has a declared type
+# and the argument is converted to it.
+CNOGREP_Template += "tpl_bitset(64ULL)"
+CNOGREP_Template += "tpl_bitset((size_t)64)"
+
+# ... and a value argument that is not compile-time known is refused, rather
+# than being pasted into a template-id the C++ compiler would reject.
+REJECT_TESTS += TemplateBad
+CODE_TemplateBad = 390
+FLAGS_TemplateBad = --custard_backend C
+EGREP_TemplateBad += "does not reduce to a constant"
+EGREP_TemplateBad += "argument has to be a constant"
+
+# ... and a template-id has no OCaml counterpart, so the OCaml backend says so
+# rather than dropping the arguments.
+REJECT_TESTS += TemplateML
+CODE_TemplateML = 390
+FLAGS_TemplateML = --custard_backend OCaml
+EGREP_TemplateML += "templates reached the OCaml backend"
+EGREP_TemplateML += "custard_backend C"
+
 # Section 68.  A protocol constant is part of a C API in a way a variable
 # cannot be: a [#define] is a constant expression, so it can be a [case]
 # label, can initialize an object with static storage duration, and is

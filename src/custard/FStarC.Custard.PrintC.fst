@@ -352,6 +352,15 @@ let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
   | _ -> xs
 
 let find_type (n:name) : ML (option dtype) = SMap.try_find !types (string_of_name n)
+
+(* Section 69.  The template pieces of an external type's target, if it has a
+   target and that target mentions any argument.  Read off the declaration
+   rather than kept in a table: it is the same string [Extract] parsed, and a
+   second copy of it is a second thing to keep in step. *)
+let extern_template_of (n:name) : ML (option (list tmpl_piece)) =
+  match find_type n with
+  | Some { dt_body = TAbstract; dt_flags = fs } -> extern_template_of_flags fs
+  | _ -> None
 let find_ctor (n:name) : ML (option (dtype & list (string & cty))) =
   SMap.try_find !ctors (string_of_name n)
 
@@ -519,6 +528,45 @@ and base_ty (t:cty) : ML string =
      intrinsics where those exist. *)
   | TFloat Float16 -> uses_narrow := true; "custard_f16"
   | TFloat BFloat16 -> uses_narrow := true; "custard_bf16"
+  (* Section 69.  A non-type template argument, spelled by its value.  As with
+     a [#define] (section 68) the integer form is bare: a template-id is a
+     constant expression already, and the cast Custard adds elsewhere would
+     only be noise inside the angle brackets. *)
+  (* No width suffix: a non-type template parameter has a declared type and
+     the argument is converted to it, so [16ULL] would be noise where the
+     consumer wrote, and reads, [16]. *)
+  | TConst (CInt (v, b, _)) -> c_int_lit_to_string v b
+  | TConst (CBool b) -> if b then "true" else "false"
+  | TConst c ->
+    E.raise_error0 E.Error_CustardBadTemplateArg [
+      text "Custard: this external type is applied to a constant that cannot \
+            be a template argument.";
+      text "A non-type template parameter may be an integer or a bool.  A \
+            float, a character or a string is not one, and neither is unit." ]
+  (* Section 69.  An applied external type whose target is a template: the
+     arguments go into the target's placeholders and become a C++ template-id.
+     This is the one applied type C prints, and it is not an exception to
+     uniform compilation (section 5.0) so much as an admission that the
+     *target's* type language has parameters even though C's does not, and
+     that a consumer writing against [wmma::fragment] or [std::bitset] has to
+     be able to say so. *)
+  | TApp (n, args) when Some? (extern_template_of n) ->
+    let ps = (match extern_template_of n with Some ps -> ps | None -> []) in
+    String.concat "" (ps |> List.map (fun p ->
+      match p with
+      | TP_lit s -> s
+      | TP_arg i ->
+        match snd (List.splitAt i args) with
+        | a :: _ -> base_ty a
+        | [] ->
+          E.raise_error0 E.Error_CustardBadTemplateArg [
+            text ("Custard: the target of the external type " ^
+                  string_of_name n ^ " mentions argument " ^ show i ^
+                  ", but the type has only " ^ show (List.length args) ^
+                  " argument(s).");
+            text "The placeholders in a [@@custard_extern] string count the \
+                  declaration's binders from zero, all of them, in source \
+                  order." ]))
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s

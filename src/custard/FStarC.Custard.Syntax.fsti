@@ -120,6 +120,34 @@ type fwidth =
       IEEE 754 interchange format, which is why it is not reachable through
       [@@custard_float] -- see [@@custard_bfloat16]. *)
 
+(** {1 Constants} *)
+
+(** A floating-point literal, section 39.  IEEE 754 is sign-and-magnitude and
+    so is this: [-0.0] and [0.0] are different floats, and
+    [FStar.Float64.bit_eq] can tell them apart, but they are the same *real
+    number* and [FStarC.Real.real] is canonical, so a sign folded into the
+    magnitude would be a sign lost.
+
+    [fl_mag] denotes the exact rational [mantissa * 10^exponent] and is never
+    negative.  What it cannot denote -- an infinity, a NaN -- is what
+    [of_literal]'s grammar does not accept either. *)
+type float_lit = {
+  fl_neg : bool;
+  fl_mag : Real.real;
+}
+
+type constant =
+  | CUnit
+  | CBool   of bool
+  | CInt    of int & int_base & option (signedness & width)
+  (** An integer literal, section 39: the mathematical integer it denotes,
+      and the base it was written in.  The base has no bearing on the value
+      and is carried for the reader of the generated code, who wrote [0xff]
+      and should not be shown 255. *)
+  | CFloat  of float_lit & fwidth
+  | CChar   of char
+  | CString of string
+
 type cty =
   | TVar   of string
   | TInt   of signedness & width
@@ -132,6 +160,17 @@ type cty =
       val t : Type0] -- and a builtin rule installs this in its place. *)
   | TArrow of cty & eff & cty
   | TApp   of name & list cty
+  | TConst of constant
+  (** Section 69.  A *value* argument of an applied external type: the [16]s
+      of [wmma::fragment<matrix_a, 16, 16, 16, half, row_major>], the [N] of
+      [std::bitset<N>].
+
+      Legal only as an argument of a [TApp] whose head is an external type
+      with a template target, and every backend that meets one anywhere else
+      refuses.  This is a deliberately narrow node: it is not a type, it
+      denotes nothing, and it exists because C++'s type language has
+      non-type parameters and F*'s target-independent [cty] otherwise has
+      nowhere to put one. *)
   | TBuf   of cty
   (** A pointer to a mutable, contiguous run of values: Pulse's [array], [vec]
       and [ptr] (section 8.4).  One node for all of them is what lets the C
@@ -161,33 +200,29 @@ type cty =
       Because the program is whole and monomorphic, this should be rare, and
       each occurrence is worth reporting. *)
 
-(** {1 Constants} *)
 
-(** A floating-point literal, section 39.  IEEE 754 is sign-and-magnitude and
-    so is this: [-0.0] and [0.0] are different floats, and
-    [FStar.Float64.bit_eq] can tell them apart, but they are the same *real
-    number* and [FStarC.Real.real] is canonical, so a sign folded into the
-    magnitude would be a sign lost.
+(** {1 External type templates (section 69)} *)
 
-    [fl_mag] denotes the exact rational [mantissa * 10^exponent] and is never
-    negative.  What it cannot denote -- an infinity, a NaN -- is what
-    [of_literal]'s grammar does not accept either. *)
-type float_lit = {
-  fl_neg : bool;
-  fl_mag : Real.real;
-}
+(** One piece of an external type's target spelling.  [TP_arg i] stands for
+    the type's [i]th source binder, counting from zero and counting *all* of
+    them, which is the numbering the author of the [assume val] sees. *)
+type tmpl_piece =
+  | TP_lit of string
+  | TP_arg of int
 
-type constant =
-  | CUnit
-  | CBool   of bool
-  | CInt    of int & int_base & option (signedness & width)
-  (** An integer literal, section 39: the mathematical integer it denotes,
-      and the base it was written in.  The base has no bearing on the value
-      and is carried for the reader of the generated code, who wrote [0xff]
-      and should not be shown 255. *)
-  | CFloat  of float_lit & fwidth
-  | CChar   of char
-  | CString of string
+(** Split a [@@custard_extern] target into literal text and placeholders.
+    [{0}] and friends are the placeholders; [{{] is a literal brace; a [{]
+    that does not begin either is literal too, since C++ has no use for one
+    and a target string is not a format the author asked to be parsed.
+
+    A string with no placeholder yields a single [TP_lit], which is how the
+    unparameterized spelling stays exactly what it was. *)
+val template_of_string : string -> ML (list tmpl_piece)
+
+(** Does this target mention any argument?  The whole of the difference
+    between an external type whose arguments are dropped (which is what one
+    with a fixed C spelling wants) and one that is a template. *)
+val is_template : list tmpl_piece -> ML bool
 
 (** The IR's own name for a floating-point width: [f32], [f64], [f16],
     [bf16].  Used in diagnostics and in monomorphization keys. *)
@@ -669,6 +704,12 @@ val subst_cty : list (string & cty) -> cty -> ML cty
 val mk : expr' -> cty -> eff -> expr
 val unit_expr : expr
 val name_of_decl : decl -> name
+(** The template pieces of an external declaration's target spelling, if it
+    has a target and that target mentions any argument.  The one place that
+    decides whether a [TApp] of an external type is a template, so that
+    monomorphization and every backend agree about it. *)
+val extern_template_of_flags : list flag -> ML (option (list tmpl_piece))
+
 val decl_flags : decl -> list flag
 val has_flag : list flag -> flag -> ML bool
 
