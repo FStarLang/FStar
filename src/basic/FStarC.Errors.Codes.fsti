@@ -416,6 +416,8 @@ type error_code =
   | Error_CustardPolyExternalUnused
   | Error_CustardBadMacro
   | Error_CustardBadTemplateArg
+  | Warning_CustardReferenceCopied
+  | Error_CustardBadReference
 
 type error_setting = error_code & error_flag & int
 

@@ -464,6 +464,28 @@ type flag =
       cannot use for the thing the constant is for.
 
       The body must be a constant expression; error 389 if it is not. *)
+  | CReference
+  (** Section 70.2.  Values of this external type are *handles*: a binding of
+      one aliases rather than copies.
+
+      [@@custard_c_reference], on an [@@custard_extern] type.  The case is a
+      C++ value object whose F\* model is a handle -- a Tensor Core fragment,
+      where F\* holds an [lseq (fragment ...)] and hands each element its own
+      permission, so reading an element yields a handle and copying it is
+      right in F\* because the permission travels separately.  In C++ the
+      fragment is an object, so [auto acc = accFrags[i]; mma_sync(acc, ...)]
+      writes a copy that dies at the end of the iteration --- and nothing
+      warns, the class being copyable and a reference to a fresh copy being
+      well-formed.  Wrong code, no diagnostic.
+
+      The direct-to-C backend emits a local bound from an *lvalue* of such a
+      type as [T &x = ...].  Only there: a struct field, a return type and an
+      array element are storage rather than a binding, and a value in storage
+      is a value.  Warning 391 reports the one remaining place a copy can
+      still lose a write, a parameter of a Custard-compiled function.
+
+      The other backends refuse it (error 390's third case), because the
+      output would compile and be wrong. *)
   | CInline
   (** Ask the C compiler to inline this definition.  [inline] in the generated
       C, nothing in OCaml.  Custard's own inlining decisions are {!Inline},

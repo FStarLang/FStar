@@ -1134,12 +1134,13 @@ let reserve_top (p:program) : ML unit =
     | DExternal e -> [ocaml_value_name e.dx_name]
     | _ -> [])
 
-(* Section 69.  A template-id -- [wmma::fragment<matrix_a, 16, 16, 16, half,
-   row_major>] -- is a C++ construction, and OCaml's type language has
+(* Sections 69 and 70.2.  Two C++ constructions with no counterpart here.  A
+   template-id -- [wmma::fragment<matrix_a, 16, 16, 16, half,
+   row_major>] -- is one, and OCaml's type language has
    nowhere to put its arguments.  Two instantiations of a templated external
    type are two different target types, so dropping the arguments here would
    silently conflate them; say so instead. *)
-let reject_template_types (p:program) : ML unit =
+let reject_target_only_types (p:program) : ML unit =
   p |> List.iter (fun d ->
     match d with
     | DType ty ->
@@ -1159,18 +1160,32 @@ let reject_template_types (p:program) : ML unit =
               "The unparameterized form still works everywhere: a \
                [@@custard_extern] target with no [{0}] placeholder names one \
                target type, and its arguments are dropped." ]
+        | CReference ->
+          FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadReference [
+            FStarC.Errors.Msg.text
+              ("Custard: the external type " ^ string_of_name ty.dt_name ^
+               " is [@@custard_c_reference], and reference bindings reached \
+                the OCaml backend.");
+            FStarC.Errors.Msg.text
+              "The attribute says that values of the type are handles, so a \
+               binding of one has to alias rather than copy -- which is C++ \
+               [T &x = ...], and OCaml has no way to spell it.  Emitting a \
+               copy instead would compile and be wrong, which is the exact \
+               failure the attribute exists to prevent.";
+            FStarC.Errors.Msg.text
+              "Section 70.2 is a C-backend feature (--custard_backend C)." ]
         | _ -> ())
     | _ -> ())
 
 let print_program (p:program) : ML string =
-  reject_template_types p;
+  reject_target_only_types p;
   build_tables (SMap.create 0) p;
   current_module := None;
   reserve_top p;
   assemble (print_decls p @ entry_calls p)
 
 let print_split (files : list (string & program)) : ML (list (string & string)) =
-  reject_template_types (List.collect snd files);
+  reject_target_only_types (List.collect snd files);
   let homes = SMap.create 100 in
   files |> List.iter (fun (m, ds) ->
     let m = module_name_of_unit m in

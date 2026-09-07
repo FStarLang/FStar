@@ -553,6 +553,7 @@ let flag_to_doc (f:flag) : ML document =
   | ClosurePrologue (a, b) ->
     text ("closure_prologue " ^ a ^ " / " ^ b)
   | CMacro -> text "c_macro"
+  | CReference -> text "c_reference"
   | CInline -> text "c_inline"
   | Realized -> text "realized"
   | Extern (n, h) ->

@@ -445,6 +445,23 @@ val custard_extern (target: string) : unit
     the macro is an overload set, error 384 is what reports it. *)
 val custard_c_header (header: string) : unit
 
+(** Custard: values of this external type are *handles*, so a binding of one
+    aliases rather than copies (see doc/ref/custard.md, section 70.2).
+
+    The case is a C++ value object whose F* model is a handle.  A Tensor Core
+    fragment is one: F* holds an [lseq (fragment ...)] and hands each element
+    its own permission, so reading [s.[i]] yields a handle and copying it is
+    the right thing in F*, because the permission travels separately.  In C++
+    the fragment is an object, so [auto acc = accFrags[i]; mma_sync(acc, ...)]
+    writes a copy that dies at the end of the iteration, and nothing warns:
+    the class is copyable and a reference to a fresh copy is well-formed.
+
+    With this attribute a local bound from an lvalue of the type is emitted as
+    [T &x = ...] rather than [T x = ...], so the alias the F* model describes
+    is the alias the C++ has.  Only the direct-to-C backend implements it, and
+    the output is then C++ rather than C. *)
+val custard_c_reference : unit
+
 (** Custard: this abstract type is an IEEE-754 binary floating-point format
     of the given width in bits, and the module that declares it supplies the
     arithmetic vocabulary for it (see doc/ref/custard.md, section 63).

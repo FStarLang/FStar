@@ -361,6 +361,17 @@ let extern_template_of (n:name) : ML (option (list tmpl_piece)) =
   match find_type n with
   | Some { dt_body = TAbstract; dt_flags = fs } -> extern_template_of_flags fs
   | _ -> None
+(* Section 70.2.  A binding at this type aliases rather than copies, because
+   its values are handles ([@@custard_c_reference]).  Read off the declaration
+   for the same reason as {!extern_template_of}. *)
+let binds_by_ref (t:cty) : ML bool =
+  match t with
+  | TApp (n, _) ->
+    (match find_type n with
+     | Some { dt_flags = fs } -> fs |> List.existsb CReference?
+     | _ -> false)
+  | _ -> false
+
 let find_ctor (n:name) : ML (option (dtype & list (string & cty))) =
   SMap.try_find !ctors (string_of_name n)
 
@@ -1292,6 +1303,17 @@ let rec is_stable (e:expr) : ML bool =
   | EProj (a, _, _) -> is_stable a
   | _ -> false
 
+(* Section 70.2.  An expression that names an object, so that a reference can
+   be bound to it.  A call is excluded and has to be: [T &x = f();] does not
+   bind a non-const reference to a temporary, and the whole point of the
+   reference is that it aliases something that outlives the binding. *)
+let rec is_lvalue (e:expr) : ML bool =
+  match e.e with
+  | EVar _ | EQual _ -> true
+  | EOp ({ po_op = BufRead }, [_; _]) -> true
+  | EProj (a, _, _) -> is_lvalue a
+  | _ -> false
+
 (* No calls, no writes, no loops: an expression that can be moved anywhere
    without changing what the program does. *)
 let rec is_pure (e:expr) : ML bool =
@@ -1845,6 +1867,11 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
       else (let out = mk_ref "" in
             let v = c_rvalue out ind t e1 in
             let x = bind_var x in
+            (* Section 70.2.  A handle type binds by reference, so that the
+               alias the F* model describes is the alias the C++ has.  Only
+               from an lvalue: there is nothing to alias otherwise, and the
+               value case is a fresh object, which is a copy of nothing. *)
+            let x = if binds_by_ref t && is_lvalue e1 then "&" ^ x else x in
             !out ^ ind ^ decl_of t x ^ " = " ^ v ^ ";\n") in
     let s2 = emit ind d e2 in
     scope := saved;
@@ -2896,6 +2923,36 @@ let build_macros (p:program) : ML unit =
     | _ -> ());
   macros := final
 
+(* Section 70.2.  A reference binding fixes the case the attribute is about --
+   a local bound from an lvalue -- and there is one place left where a copy of
+   a handle can still lose a write: a parameter of a function Custard compiles
+   itself, which is a by-value binding with no lvalue to alias.  An external's
+   parameters are not this: the declaration is in a header Custard does not
+   write, and whether it takes a reference is that header's business.
+
+   A warning rather than an error, because a copy is sometimes what is wanted
+   -- a function that only reads its argument is fine -- and because refusing
+   would make the attribute unusable on any type that is also passed around.
+   What it must not be is silent. *)
+let check_reference_copies (p:program) : ML unit =
+  p |> List.iter (function
+    | DLet l ->
+      l.dl_binders |> List.iter (fun b ->
+        if binds_by_ref b.b_ty then
+          E.log_issue0 E.Warning_CustardReferenceCopied [
+            text ("Custard: " ^ string_of_name l.dl_name ^ " takes " ^
+                  b.b_name ^ " at the type `" ^ base_ty b.b_ty ^
+                  "', whose values are handles, and a parameter is a copy.");
+            text "A write the callee makes through it is made to the copy and \
+                  is lost when the call returns.  [@@custard_c_reference] \
+                  binds a *local* by reference; it does not change a \
+                  signature, because a reference parameter would then refuse \
+                  every argument that is not an lvalue.";
+            text "If the callee only reads the argument this is fine.  If it \
+                  writes, pass the container and the index instead, or make \
+                  the callee external." ])
+    | _ -> ())
+
 let check_interface_names (p:program) : ML unit =
   let rec spec_names (c:cty) : ML (list name) =
     match c with
@@ -2908,6 +2965,19 @@ let check_interface_names (p:program) : ML unit =
   let declared : SMap.t bool = SMap.create 50 in
   p |> List.iter (function
     | DType t -> SMap.add declared (string_of_name t.dt_name) true
+    | _ -> ());
+  (* Section 70.1.  A generated name that the unit *also* publishes an
+     abbreviation for is a different situation from one it does not: the
+     stable spelling the warning is about to ask for is already in this very
+     header, and telling a reader to write their own would send them past it.
+     So name it instead. *)
+  let aliases : SMap.t string = SMap.create 20 in
+  p |> List.iter (function
+    | DType t ->
+      (match t.dt_body with
+       | TAbbrev (TApp (n, [])) when Nil? t.dt_params && None? t.dt_name.spec ->
+         SMap.add aliases (string_of_name n) (c_name t.dt_name)
+       | _ -> ())
     | _ -> ());
   let seen : SMap.t bool = SMap.create 10 in
   p |> List.iter (function
@@ -2924,7 +2994,12 @@ let check_interface_names (p:program) : ML unit =
                   string_of_name l.dl_name ^
                   " has it in its signature -- but its name is generated.");
             text "It is a specialization, so the name carries a hint built from the monomorphizer's input and may change when that input does. --custard_c_no_prefix does not rename specializations.";
-            text "A consumer that must spell it should typedef it once, in its own header, rather than depend on this name throughout."; ]
+            (match SMap.try_find aliases s with
+             | Some alias ->
+               text ("This header already publishes `" ^ alias ^
+                     "' as another name for it; spell that instead.")
+             | None ->
+               text "A consumer that must spell it should typedef it once, in its own header, rather than depend on this name throughout."); ]
         end)
     | _ -> ())
 
@@ -3084,6 +3159,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   build_renames p;
   build_macros p;
   check_interface_names p;
+  check_reference_copies p;
   arities := at;
   uses_narrow := false;
 

@@ -406,4 +406,6 @@ let default_settings : list error_setting =
     Error_CustardPolyExternalUnused                    , CAlwaysError, 388;
     Error_CustardBadMacro                              , CAlwaysError, 389;
     Error_CustardBadTemplateArg                        , CAlwaysError, 390;
+    Warning_CustardReferenceCopied                     , CWarning, 391;
+    Error_CustardBadReference                          , CAlwaysError, 392;
     ]

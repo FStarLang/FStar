@@ -1036,12 +1036,13 @@ let shadow_table (p:program) : ML (SMap.t bool) =
     then SMap.add t (string_of_name n) true);
   t
 
-(* Section 69.  A template-id -- [wmma::fragment<matrix_a, 16, 16, 16, half,
-   row_major>] -- is a C++ construction, and karamel's type language has
+(* Sections 69 and 70.2.  Two C++ constructions with no counterpart here.  A
+   template-id -- [wmma::fragment<matrix_a, 16, 16, 16, half,
+   row_major>] -- is one, and karamel's type language has
    nowhere to put its arguments.  Two instantiations of a templated external
    type are two different target types, so dropping the arguments here would
    silently conflate them; say so instead. *)
-let reject_template_types (p:program) : ML unit =
+let reject_target_only_types (p:program) : ML unit =
   p |> List.iter (fun d ->
     match d with
     | DType ty ->
@@ -1061,11 +1062,25 @@ let reject_template_types (p:program) : ML unit =
               "The unparameterized form still works everywhere: a \
                [@@custard_extern] target with no [{0}] placeholder names one \
                target type, and its arguments are dropped." ]
+        | CReference ->
+          E.raise_error0 E.Error_CustardBadReference [
+            text
+              ("Custard: the external type " ^ string_of_name ty.dt_name ^
+               " is [@@custard_c_reference], and reference bindings reached \
+                the karamel backend.");
+            text
+              "The attribute says that values of the type are handles, so a \
+               binding of one has to alias rather than copy -- which is C++ \
+               [T &x = ...], and karamel has no way to spell it.  Emitting a \
+               copy instead would compile and be wrong, which is the exact \
+               failure the attribute exists to prevent.";
+            text
+              "Section 70.2 is a C-backend feature (--custard_backend C)." ]
         | _ -> ())
     | _ -> ())
 
 let print_program (p:program) : ML (list Krml.file) =
-  reject_template_types p;
+  reject_target_only_types p;
   extern_types := extern_type_table p;
   extern_values := extern_value_table p;
   shadowed := shadow_table p;
@@ -1084,7 +1099,7 @@ let print_program (p:program) : ML (list Krml.file) =
    same output rather than a different translation. *)
 let print_split (fs : list (string & program)) : ML (list Krml.file) =
   let whole = fs |> List.collect snd in
-  reject_template_types whole;
+  reject_target_only_types whole;
   extern_types := extern_type_table whole;
   extern_values := extern_value_table whole;
   shadowed := shadow_table whole;

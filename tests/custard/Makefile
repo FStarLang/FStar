@@ -1106,6 +1106,19 @@ $(OUTPUT_DIR)/%.dcxx: $(OUTPUT_DIR)/%.dc
 	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -fsyntax-only -x c++ $<
 	$(Q)touch $@
 
+# Section 70.2.  A reference binding is C++, not C, so a test whose whole
+# point is one cannot go through the C leg above.  [CXX_TESTS] runs the same
+# generated .c through the C++ compiler and then runs it; the .dc rule and
+# all of its greps are shared, so only the compile-and-link half differs.
+$(OUTPUT_DIR)/%.dcxxexe: $(OUTPUT_DIR)/%.dc $$(CEXTRA_$$*)
+	$(call msg, "CXX", $(basename $(notdir $@)))
+	$(Q)$(CXX) -std=c++17 -Wall -Wextra -Werror -I$(CURDIR) -I$(OUTPUT_DIR) -x c++ $< $(CEXTRA_$*) -o $@
+
+$(OUTPUT_DIR)/%.dcxxran: $(OUTPUT_DIR)/%.dcxxexe
+	$(call msg, "RUN-CXX", $(basename $(notdir $@)))
+	$(Q)$<
+	$(Q)touch $@
+
 $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 	$(call msg, "RUN-C", $(basename $(notdir $@)))
 	$(Q)$<
@@ -1458,6 +1471,57 @@ FLAGS_TemplateML = --custard_backend OCaml
 EGREP_TemplateML += "templates reached the OCaml backend"
 EGREP_TemplateML += "custard_backend C"
 
+# Section 70.1.  A type abbreviation is a library's published C type surface,
+# and Custard unfolds abbreviations -- so nothing in the extracted code refers
+# to the name, and it is dead by construction.  --custard_entry_module now
+# roots one, which is where a library's interface is actually named.  The
+# [iter_t] row is the one that made this a blocker: its body is a
+# monomorphized instance, so without the typedef a consumer writes down the
+# mangled name of an internal encoding (EverParse's section 65.4).
+C_TESTS += TypeAbbrev
+FLAGS_TypeAbbrev = --custard_entry_module TypeAbbrev --custard_monomorphize_types true
+CGREP_TypeAbbrev += "typedef TypeAbbrev_point TypeAbbrev_handle_t;"
+CGREP_TypeAbbrev += "typedef uint32_t TypeAbbrev_count_t;"
+CGREP_TypeAbbrev += "typedef TypeAbbrev_cell__point TypeAbbrev_iter_t;"
+# A proof-level abbreviation is erased, not emitted.
+CNOGREP_TypeAbbrev += "TypeAbbrev_spec_t"
+
+# Section 70.2.  An external type whose F* values are handles: a binding of
+# one has to alias, or a write through it is lost.  Kuiper's section 62 --
+# [auto acc = accFrags[i]; mma_sync(acc, ...)] wrote a copy that died at the
+# end of the iteration, the accumulator chain folded away, and the kernel
+# wrote zeros with no diagnostic anywhere.  A reference binding is C++, so
+# this test runs through the C++ leg.
+CXX_TESTS += RefBind
+FLAGS_RefBind = --custard_backend C
+CGREP_RefBind += "rb_cell &"
+CGREP_RefBind += "rb_get(rb_slot)"
+# A fresh value is a copy of nothing, so that binding is not a reference.
+CNOPAIR_RefBind += "rb_cell &@rb_make"
+
+# ... and the attribute means nothing without a target, so it is refused on a
+# type Custard compiles itself.
+REJECT_TESTS += RefBindBad
+CODE_RefBindBad = 392
+FLAGS_RefBindBad = --custard_backend C
+EGREP_RefBindBad += "is on RefBindBad.cell, which is not an"
+
+# ... and a reference binding is C++, so the OCaml backend says so rather than
+# emitting a copy that compiles and is wrong.
+REJECT_TESTS += RefBindML
+CODE_RefBindML = 392
+FLAGS_RefBindML = --custard_backend OCaml
+EGREP_RefBindML += "reached the OCaml backend"
+EGREP_RefBindML += "custard_backend C"
+
+# ... and the one place a copy can still lose a write -- a parameter of a
+# function Custard compiles itself -- is reported rather than left silent.
+REJECT_TESTS += RefBindCopy
+CODE_RefBindCopy = 391
+FLAGS_RefBindCopy = --custard_backend C
+EGREP_RefBindCopy += "a parameter is a copy"
+EGREP_RefBindCopy += "make the callee external"
+
 # Section 68.  A protocol constant is part of a C API in a way a variable
 # cannot be: a [#define] is a constant expression, so it can be a [case]
 # label, can initialize an object with static storage duration, and is
@@ -1482,6 +1546,14 @@ CNOGREP_Macro += "Macro_major_type_uint64"
 # assignment.
 CGREP_Macro += "uint8_t Macro_table = MACRO_MAX_SIMPLE_VALUE;"
 CNOGREP_Macro += "custard_init_globals"
+# EverParse's section 65.1.  The three uses, compiled rather than grepped, in
+# a separate translation unit that sees only the generated header -- which is
+# what a consumer is.  The [#if] probe is deliberately written against a
+# *non-zero* constant: with the macro absent the preprocessor reads
+# [MACRO_MAJOR_TYPE_UINT64 == 0] as [0 == 0], so a zero-valued constant tests
+# as passing either way and the failure is invisible to the natural test for
+# it.
+CEXTRA_Macro = Macro_probe.c
 
 # ... and one whose body C cannot evaluate is refused, rather than being
 # emitted as something the preprocessor would paste in unevaluated.
@@ -1848,7 +1920,7 @@ RSSGREP_RustSplit += "pub _2: u32"
 RSSDRIVER_RustSplit := \#[path = "lower.rs"] mod lower;\n\#[path = "upper.rs"] mod upper;\nfn main() { std::process::exit(upper::main()); }\n
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
-                  $(C_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
+                  $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \
                   SepApp SepAppC SplitHi SplitLo
 
@@ -1961,6 +2033,7 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
 
 # Section 57.4.  Same treatment as krml just below: extraction to Rust is
 # always testable, but *compiling* the result needs a toolchain, and a

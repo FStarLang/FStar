@@ -3302,6 +3302,27 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
     let pats = drop_flagged flags pats |> List.map (fun (p, _) -> pat_of_pat st p) in
     PCtor (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }, pats)
 
+(* Section 70.2.  [@@custard_c_reference]: values of this type are handles, so
+   a binding of one aliases rather than copies.  It is a statement about how
+   the *target* spells a binding, and so means nothing without a target: on a
+   type Custard compiles itself a binding is a binding of Custard's own
+   representation, and there is no second object for a write to be lost in. *)
+and reference_flags (l:Ident.lident) (attrs:list S.term) (is_extern:bool)
+  : ML (list flag) =
+  if not (U.has_attribute attrs PC.custard_c_reference_attr) then []
+  else begin
+    if not is_extern then
+      E.log_issue0 E.Error_CustardBadReference [
+        text ("Custard: [@@custard_c_reference] is on " ^
+              Ident.string_of_lid l ^ ", which is not an external type.");
+        text "It says that values of the type are handles, so a binding of \
+              one has to alias rather than copy -- which is a statement about \
+              how the target spells a binding, and a type Custard compiles \
+              itself has no target spelling to differ from.";
+        text "Add a [@@custard_extern] target, or drop the attribute." ];
+    [CReference]
+  end
+
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
@@ -3342,7 +3363,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                if tmpl || Mono.is_type_param (tcenv st) b
                then [name_of_bv b.binder_bv] else []) in
     DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
-            dt_flags = [Extern (x.Builtins.x_name, x.Builtins.x_header); NoNewtype] }
+            dt_flags = [Extern (x.Builtins.x_name, x.Builtins.x_header); NoNewtype] @
+                       (match se with
+                        | Some se -> reference_flags l se.sigattrs true
+                        | None -> []) }
   | Some (Builtins.Rule_extern x) ->
     (* Section 8.1, kind 4: the F* "definition" is a specification (often
        literally [admit ()]); the real one lives in a hand-written .ml or .c
@@ -3845,9 +3869,11 @@ and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term
       let extern = match Builtins.extern_type_of_lid l with
                    | Some x -> [Extern (x.Builtins.x_name, x.Builtins.x_header); NoNewtype]
                    | None -> [] in
+      let refbind = reference_flags l se.sigattrs (Cons? extern) in
       DType { dt_name = nm; dt_params = ps; dt_body = TAbstract;
-              dt_flags = extern @ (if is_erasable st se || is_prop_sig st t
-                                   then [Erased] else []) }
+              dt_flags = extern @ refbind @
+                         (if is_erasable st se || is_prop_sig st t
+                          then [Erased] else []) }
     else
       (* [@@no_auto_projectors] makes F* declare a type's projectors and
          discriminators without defining them: [TcInductive] emits the [val]
@@ -4573,9 +4599,29 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      module normally holds specifications and proofs alongside the code, and
      the request is "whatever of this is code", not "all of this is code".
 
-     Only values.  A type is rooted by the definitions that use it, and under
-     [--custard_monomorphize_types] a parametric type has no single instance
-     to root anyway.  A projector or a discriminator is derived rather than
+     Section 70.1.  Types included, and a *type abbreviation* is the reason.
+     "Only values" was the rule until EverParse's §65.4 measured what it
+     costs: [CBOR.Pulse.API.Det.Type] is nothing but [let cbor_det_t =
+     Raw.cbor_raw] and four more like it, karamel emits a [typedef] for each,
+     and Custard emitted none -- so the published C type surface of the
+     library became the monomorphized internal names underneath it, up to and
+     including [CBOR_Pulse_Raw_Iterator_cbor_raw_iterator__cbor_map_entry].
+     EverParse's own shipped [example/main.c] does not compile against that
+     header, and does against a five-line [typedef] shim.
+
+     An abbreviation is *not* rooted by the definitions that use it, which is
+     the whole difficulty: Custard unfolds it, so nothing in the extracted
+     code refers to the name and it is dead by construction.  Only being a
+     root keeps it, which is exactly what [--custard_entry] on a type already
+     did ([tests/custard/TypeEntry.fst], §8.2); this extends the same answer
+     to the module form, where a library's interface is actually named.
+
+     Rooted quietly and by the same test as everything else here: an
+     abbreviation of an erased type carries [Erased] from
+     [extract_type_abbrev] and is not printed, so a module's proof-level type
+     definitions do not become header noise.  An inductive or a record is
+     still rooted by its uses -- it has a definition of its own and cannot be
+     unfolded away.  A projector or a discriminator is derived rather than
      written, and comes along with its type. *)
   Prof.timed "run.entry_modules" (fun () ->
     Options.custard_entry_modules () |> List.iter (fun (m:string) ->
@@ -4602,7 +4648,8 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
                  output.  Nothing calls them, so only being a root keeps them
                  alive; asking whether the result has a runtime meaning is
                  what tells them apart from a genuine [unit] function. *)
-              | Inr fv when not (erased_definition st lb.lbtyp) ->
+              | Inr fv when not (erased_definition st lb.lbtyp) ||
+                            is_type_sig st lb.lbtyp ->
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
           | _ -> ())));

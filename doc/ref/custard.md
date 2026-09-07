@@ -15136,6 +15136,240 @@ it should get the same one is open.  Rust's const generics would fit the same
 shape and are not implemented.
 
 
+# 70. Round 62: a copy that silently lost every write
+
+## 70.0 Intake
+
+Three reports. Kuiper's §62 and §63, and EverParse's §65.
+
+Kuiper's §62 is the first *silently incorrect* output this project has
+produced. Their 2x2 Tensor Core kernel runs, exits zero, and writes zeros.
+The generated C++ binds `auto acc_frag = accFrags[i]`, which is a **copy**;
+`mma_sync` writes the copy; the copy dies at the end of the iteration; nvcc
+sees the accumulator chain has no observable effect and folds all of it away.
+The measurable symptom is in the PTX: four `wmma.mma.sync` instructions where
+the source has twelve, and `%r89 = 0` feeding every store lane.
+
+Kuiper was careful to separate this from §69, and then took the trouble to
+*measure* the separation (their §63.4): §69 shipped, the `auto` disappeared,
+and the kernel still wrote zeros. Two independent bugs that happened to be
+visible at the same line. §70.2 is the second one.
+
+EverParse's §65.4 is a different kind of gap: nothing is wrong with the
+generated code, but the generated *header* does not publish the names their
+consumers compile against. §70.1.
+
+Also merged this round: **PR #4531**, Kuiper's own fix, dropping `escape_kw`
+on the extern *value* path so that a target name such as `float` survives
+verbatim. A name given explicitly in an attribute is a name, not an
+identifier to be sanitized; the type path already did this and the value path
+did not.
+
+## 70.1 A module of nothing but type abbreviations extracted to nothing
+
+`CBOR.Pulse.API.Det.Type` contains no functions and no data types. It is a
+list of abbreviations:
+
+```fstar
+let cbor_det_t = cbor_raw
+let cbor_det_map_entry_t = cbor_map_entry
+```
+
+karamel emits a `typedef` for each. Custard emitted none, and EverParse's own
+shipped `example/main.c` --- which spells `cbor_det_t` --- did not compile
+against Custard's header. It compiles against a five-line typedef shim, and
+then all 48 assertions pass, so the shim is exactly the gap.
+
+### 70.1.1  Why an abbreviation is dead by construction
+
+Custard unfolds abbreviations. After extraction *nothing in the program refers
+to the name*: every occurrence has become the right-hand side, and by the time
+reachability runs there is no edge pointing at it. Whole-program dead-code
+elimination is then doing its job when it drops the declaration.
+
+So the fix is not in the printer --- `TAbbrev` has been in the IR since M2 and
+`PrintC.decl_of` has emitted `typedef` for it all along, and
+`--custard_entry` on a type already worked (§8.2, `tests/custard/TypeEntry.fst`).
+The fix is in **rooting**: `--custard_entry_module` has to root the module's
+type abbreviations, not only its values.
+
+### 70.1.2  The one-line change, and why it was not one line
+
+`Extract.run`'s entry-module loop deliberately rooted only values:
+
+```fstar
+| Inr fv when not (erased_definition st lb.lbtyp) ->
+```
+
+An abbreviation's `lbtyp` is `Type0`, which is erased, so the guard excluded
+every one of them. It now reads:
+
+```fstar
+| Inr fv when not (erased_definition st lb.lbtyp) || is_type_sig st lb.lbtyp ->
+```
+
+The second disjunct is not redundant with the first and is not a widening of
+it: `is_type_sig` asks whether the *definition* is a type, where
+`erased_definition` asks whether the definition's **value** is erased. A type
+abbreviation is both --- it defines a type, and it has no value --- and only
+the first question is the one the entry module is asking.
+
+Rooting something erased is safe here for a reason that already existed:
+`extract_lid`'s `Sig_let` branch applies `with_erased_flag` when
+`is_erasable st se || is_prop_sig st lb.lbtyp`, so an abbreviation whose
+right-hand side is a proposition is marked and never printed. The test pins
+this with a `squash`-valued abbreviation that is rooted and produces no
+output.
+
+### 70.1.3  Warning 377 now names the alias
+
+Warning 377 fires when a rooted entity's C name is a Custard-invented
+monomorphized name --- `CBOR_Pulse_Raw_Iterator_cbor_raw_iterator__cbor_map_entry`
+--- and it used to advise the reader to write their own typedef. If the unit
+*already* publishes a nullary abbreviation for that name, that advice is
+wrong: the name they should spell is right there in the header. The check now
+builds an alias map from the `DType`s whose body is a bare
+`TAbbrev (TApp (n, []))` and says "This header already publishes `X' as
+another name for it; spell that instead."
+
+### 70.1.4  Every element of a `+` bundle is a root
+
+EverParse retracted their own §65 headline --- "43/43 C API parity" --- after
+finding that two greps had both undercounted. The truth was 47 exported
+against 43, and the four they were missing were not a Custard gap but their
+own flags usage: **each module in a karamel `-bundle` `+` list is a root and
+needs its own `--custard_entry_module`.** A bundle is a packaging directive
+for karamel, and packaging is not reachability; Custard has no notion of it,
+and a module named only inside one is not reachable from anything.
+
+This is the same shape as §67.2 from the other side. §67.2 says a `-bundle`
+line written against karamel's output is not one for Custard's, because which
+modules survive differs. §70.1.4 says the same line does not even *mean* the
+same thing, because karamel's bundles name packaging and Custard's entry
+modules name roots. A consumer porting a bundle clause should read every `+`
+element as an entry module.
+
+For completeness, and because EverParse asked: `--custard_c_no_prefix`
+*renames*, it does not export. It cannot substitute for an entry module.
+
+## 70.2 An extern type whose values are handles must bind by reference
+
+### 70.2.1  The bug
+
+`wmma::fragment` is a C++ class. In F\* Kuiper models it as an abstract type
+whose values are *handles* --- the permission to write travels separately, in
+Pulse's separation logic, and the F\* value is just a name for the object. On
+that reading `let f = frags.(i) in mma_sync f ...` names the element and
+writes to it.
+
+Custard printed `auto acc_frag = accFrags[i];`, which under C++'s reading is a
+**copy**, because a class type in an initializer is a value. Everything after
+that is correct, well-formed, warning-free C++ that does the wrong thing: the
+writes land in the copy, the copy dies, and the optimizer proves the whole
+chain dead.
+
+Nothing diagnoses it. The class is copyable --- it has to be --- and there is
+no rule against writing to a local. This is the worst failure mode available
+to a code generator, and it is worth naming the property that produced it: an
+F\* type whose *values* are handles is being compiled to a C++ type whose
+values are objects, and the two disagree about what `=` means.
+
+### 70.2.2  `[@@custard_c_reference]`
+
+The attribute goes on an external type and says: values of this type are
+handles, so a **local bound from an lvalue** binds by reference.
+
+```fstar
+[@@custard_extern "wmma::fragment"; custard_c_reference]
+assume val fragment : Type0
+```
+
+`let x = <lvalue> in ...` at such a type prints `T &x = <lvalue>;` rather than
+`T x = <lvalue>;`. `binds_by_ref` looks the flag up on the type; `is_lvalue`
+accepts `EVar`, `EQual` (a global), `EOp (BufRead, [_;_])` (an array element)
+and `EProj` of one, recursively.
+
+The lvalue requirement is load-bearing, not defensive: `T &x = f();` does not
+bind a non-const reference to a temporary and would not compile. Where the
+initializer is not an lvalue there is no object to name and a copy is the only
+possible answer --- and the correct one, because a temporary has no writes to
+lose.
+
+Note that the output is C++. A reference is not C, so the test lives in a new
+`CXX_TESTS` leg of `tests/custard/Makefile` and the OCaml and karamel backends
+refuse the flag outright (error 392, §70.2.4).
+
+### 70.2.3  What is deliberately *not* a reference
+
+**Struct fields, return types and array elements** are storage. A value in
+storage is a value; a reference member would change the layout of a type whose
+layout is the target's, which is exactly what an external type exists to
+avoid.
+
+**Parameters** are the interesting exclusion, because they are the case that
+still loses writes. A reference parameter would be correct for a caller that
+passes an lvalue and would refuse *every* caller that does not --- and Custard
+cannot see its callers' argument forms when it prints a signature, because a
+signature is printed once. So a parameter stays a copy, and the silence is
+replaced by **warning 391**: "`f` takes `c` at the type `T`, whose values are
+handles, and a parameter is a copy. If the callee only reads the argument this
+is fine. If it writes, pass the container and the index instead, or make the
+callee external."
+
+That is a real limitation and it is stated as one. Kuiper's unimplemented
+`with_fragment` combinator would want it. Making it work needs the argument
+form to reach the signature, which is a call-site-directed signature and a
+larger change than this round.
+
+### 70.2.4  Error 392, at the declaration and not at the leaf
+
+§69 taught this the hard way: a check placed at a *printed leaf* can be
+unreachable, because a value at that type may never be printed. `TemplateML`
+passed the OCaml backend for exactly that reason.
+
+So the refusal is at the declaration. `reject_target_only_types` --- the §69
+function, renamed now that it rejects two things --- walks the program's
+`DType`s once from `print_program` and `print_split` in both `PrintOCaml` and
+`PrintKrml`, and raises error 392 on a `CReference` flag with the same
+structure it uses for a templated extern. `[@@custard_c_reference]` on a type
+that is not external is also error 392, at extraction time.
+
+## 70.3 For the record
+
+**Kuiper's §62.4** retracts their own earlier description of karamel's
+`auto_AMP` sed rule as cosmetic. It is load-bearing for correctness --- it is
+the same reference binding, applied textually after the fact --- and calling
+it cosmetic is what made §62 look like a formatting question for a round.
+Recorded because the correction is more useful than the original claim: a
+downstream post-processing hack is evidence about semantics, and reading one
+as whitespace is a way to lose a bug.
+
+**Kuiper's §63.2** measured §69. It deleted more than it was asked to: `auto`,
+`KPR_INIT` and `KPR_INIT_ARR`, the variadic `kpr_fragment` macro, seven
+`frag_tok` declarations, and `frag_type_expr`. `Kuiper.Example.ARPort.fst`
+went from 209 lines to 152. The §57.1 `(auto *)` cast bug fell out as a side
+effect, which is what one hopes for from removing a workaround rather than
+patching it.
+
+**Kuiper's §63.3** notes that `EAny` at an external type prints `(T){0}`, and
+that this is well-formed only because `wmma::fragment` is an aggregate. A
+class with a user-provided constructor would reject it. `T x;` would be the
+general answer. Open, and not hit yet.
+
+**EverParse's §65.1** sharpened the macro test. Their `#if` probe as
+originally written did not discriminate: it tested a *zero*-valued constant,
+and with the macro absent the preprocessor reads `MACRO_MAJOR_TYPE_UINT64 == 0`
+as `0 == 0`. The right answer for the wrong reason, and a failure invisible to
+the natural test for it. `tests/custard/Macro_probe.c` now compiles the three
+uses against a non-zero constant with an `#error`, in a separate translation
+unit that sees only the generated header --- which is what a consumer is.
+
+**EverParse's null-experiment note** is worth keeping as method. Both of the
+retractions this round came from *deliberately breaking the thing being
+measured and checking that the measurement noticed*. A test that passes
+against a broken input is not a test, and the two ways to find that out are to
+run the control or to wait for the bug.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -15409,3 +15643,13 @@ shape and are not implemented.
 | M10ζΡ | **Parameterized external types** (§69.0--§69.2) | Done.  The user's ask, and the type half of Kuiper's §61.3.  An external type's target string may now contain positional placeholders --- `[@@custard_extern "nvcuda::wmma::fragment<{0}, {1}, {2}, {3}, {4}, {5}>"]` --- numbered over *all* the declaration's binders from zero in source order, usable in any order and not necessarily all.  What this replaces is `typedef auto& tc_auto_ref;`, which is not a type: `auto` is resolved from an initializer, so a header cannot name it, a struct cannot contain it, a function cannot return it and an uninitialized local cannot have it, and every one of those is an ordinary thing to want from a fragment.  Type-tag arguments needed nothing new --- `matrix_a` is a *nullary* external type and a nullary external already prints its target verbatim --- so the only genuinely missing piece was a *value* argument, which is the new `cty` leaf `TConst`.  A leaf rather than the more honest tagged-argument list, because the latter touches every `cty` traversal for the same information; its invariant, "only as an argument of a templated external's `TApp`", is enforced by every backend rejecting it elsewhere.  Value arguments print with **no width suffix**, `std::bitset<64>` and not `std::bitset<64ULL>`, a non-type template parameter having a declared type its argument is converted to |
 | M10ζΣ | Backward compatibility, and round 45 reversed (§69.1, §69.3) | Done.  Being a template is a property of the *string* --- a target with no `{i}` is not one --- so there is no second attribute to get inconsistent with the first, and every external type written before §69 behaves exactly as it did, arguments dropped.  Where §69 does change existing behaviour is monomorphization: round 45 had `mono_cty` drop all arguments of an external type, on the reasoning that the target names one type whatever F* applies it to, and for a template that reasoning is exactly inverted --- `fragment<matrix_a, ...>` and `fragment<matrix_b, ...>` are two C++ types with two layouts, and code specialized for one is wrong for the other.  So the arguments are kept, and `hint_of_cty` includes them so the two instantiations get two names.  Narrow by construction: it applies only to declarations that ask for it |
 | M10ζΤ | Error 390 (§69.4) | Done.  Three refusals under one code.  A value argument that does not reduce to a constant is refused with what it *did* reduce to, and with the way out named --- drop that placeholder --- rather than being pasted into a template-id for the target's compiler to reject in the target's file; a placeholder index with no argument likewise.  Third, a templated external reaching the OCaml or karamel backend, checked on the **declaration** rather than only on the `TConst` leaf, so that it fires whether or not the type reaches a printed position --- the leaf check alone passed a test that should have failed, because the value was never printed.  Silently dropping the arguments there would conflate two target types, which is the one outcome worth more than an error.  Still open, and the other half of §61.3: a C++ *function* template, whose value argument belongs to a call rather than to a type, `dx_target` having no placeholder mechanism |
+| M10ζΥ | **A copy that silently lost every write** (§70, §70.2) | Done.  Round 62, and the first *silently incorrect* output this project has produced.  Kuiper's 2x2 Tensor Core kernel runs, exits zero, and writes zeros: Custard emitted `auto acc_frag = accFrags[i]`, which under C++'s reading is a **copy**, so `mma_sync` writes the copy, the copy dies at the end of the iteration, and nvcc proves the whole accumulator chain dead --- four `wmma.mma.sync` instructions in the PTX where the source has twelve, and `%r89 = 0` feeding every store lane.  Nothing diagnoses it: the class is copyable, and there is no rule against writing to a local.  The property that produced it is worth naming --- an F\* type whose *values* are handles was being compiled to a C++ type whose values are objects, and the two disagree about what `=` means.  Kuiper separated this from §69 and then *measured* the separation (their §63.4): §69 shipped, the `auto` disappeared, and the kernel still wrote zeros.  Two independent bugs, visible at the same line |
+| M10ζΦ | `[@@custard_c_reference]`, and the lvalue requirement (§70.2.2) | Done.  The attribute goes on an external type and says values of this type are handles, so a **local bound from an lvalue** binds by reference: `T &x = <lvalue>;` rather than `T x = <lvalue>;`.  `binds_by_ref` looks the flag up on the type and `is_lvalue` accepts `EVar`, `EQual`, `EOp (BufRead, [_;_])` and `EProj` of one, recursively.  The lvalue requirement is load-bearing rather than defensive --- `T &x = f();` does not bind a non-const reference to a temporary and would not compile --- and where the initializer is not an lvalue a copy is not merely the only possible answer but the correct one, because a temporary has no writes to lose.  The output is C++, so the test needed a new `CXX_TESTS` leg in `tests/custard/Makefile`, compiled with `-std=c++17 -Wall -Wextra -Werror`; and the test itself had to be built around an extern **global**, because `is_stable` already aliases a plain `EVar` or `EProj` correctly and `TBuf` is reachable only from Pulse, which `tests/custard` cannot resolve.  Control-verified: removing the attribute makes it exit 1 |
+| M10ζΧ | Fields, returns and parameters are deliberately still copies (§70.2.3, warning 391) | Done, and the exclusion is the limitation worth stating.  Struct fields, return types and array elements are *storage*, and a value in storage is a value; a reference member would change the layout of a type whose layout is the target's, which is what an external type exists to avoid.  **Parameters** are the case that still loses writes, and they are excluded for a reason Custard cannot engineer around this round: a reference parameter is correct for a caller passing an lvalue and refuses *every* caller that does not, and a signature is printed once, without sight of its call sites' argument forms.  So a parameter stays a copy and the silence is replaced by warning 391, which says so and names the two ways out --- pass the container and the index, or make the callee external.  Kuiper's unimplemented `with_fragment` would want the general answer; that needs a call-site-directed signature |
+| M10ζΨ | Error 392, at the declaration and not at the leaf (§70.2.4) | Done, and §69 is why it is where it is.  A check at a *printed leaf* can be unreachable, because a value at that type may never be printed --- which is exactly how `TemplateML` passed the OCaml backend one round ago.  So `reject_target_only_types` (the §69 function, renamed now that it rejects two things) walks the program's `DType`s once from `print_program` and `print_split` in both `PrintOCaml` and `PrintKrml` and raises 392 on a `CReference` flag.  `[@@custard_c_reference]` on a type that is not external is 392 too, at extraction time.  Both are tested (`RefBindML`, `RefBindBad`), and both pins had to be shortened to survive the message formatter's line wrapping --- a pinned phrase that spans a break does not match |
+| M10ζΩ | **A module of nothing but type abbreviations extracted to nothing** (§70.1) | Done.  EverParse's §65.4, and the blocker for drop-in header compatibility: `CBOR.Pulse.API.Det.Type` is a list of `let cbor_det_t = cbor_raw`, karamel emits a `typedef` for each, Custard emitted none, and EverParse's own shipped `example/main.c` did not compile against Custard's header --- it compiles against a five-line typedef shim, and then all 48 assertions pass, so the shim is exactly the gap.  An abbreviation is **dead by construction**: Custard unfolds it, so after extraction nothing refers to the name and reachability is doing its job when it drops the declaration.  The printer was never the problem --- `TAbbrev` has been in the IR since M2, `PrintC.decl_of` emits `typedef`, and `--custard_entry` on a type already worked (§8.2) --- **rooting** was |
+| M10ηΑ | `is_type_sig` is not a widening of `erased_definition` (§70.1.2) | Done.  `Extract.run`'s entry-module loop rooted only values, and an abbreviation's `lbtyp` is `Type0`, which is erased, so the guard excluded every one of them.  It now reads `not (erased_definition st lb.lbtyp) || is_type_sig st lb.lbtyp`, and the second disjunct is neither redundant with the first nor a relaxation of it: `is_type_sig` asks whether the *definition* is a type where `erased_definition` asks whether the definition's **value** is erased.  A type abbreviation is both, and only the first question is the one an entry module is asking.  Rooting something erased is safe for a reason that already existed --- `extract_lid`'s `Sig_let` branch applies `with_erased_flag` when `is_erasable st se || is_prop_sig st lb.lbtyp` --- and `TypeAbbrev.fst` pins it with a rooted `squash`-valued abbreviation that produces no output |
+| M10ηΒ | Warning 377 names the alias instead of asking for one (§70.1.3) | Done, and a small thing that follows directly.  377 fires when a rooted entity's C name is a Custard-invented monomorphized name --- `CBOR_Pulse_Raw_Iterator_cbor_raw_iterator__cbor_map_entry` --- and it used to advise the reader to write their own typedef.  Once the unit publishes abbreviations that advice can be wrong, because the name to spell is already in the header.  `check_interface_names` now builds an alias map from the `DType`s whose body is a bare `TAbbrev (TApp (n, []))` with no parameters and no spec, and says which name to use |
+| M10ηΓ | Every element of a `+` bundle is a root (§70.1.4) | Done as a rule, and it is EverParse's second retraction of a claim about their own numbers: "43/43 C API parity" fell to 47 exported against 43 once two greps were found to have both undercounted, and the four missing were not a Custard gap but a flags usage error.  **Each module named in a karamel `-bundle` `+` list is a root and needs its own `--custard_entry_module`.**  A bundle is a packaging directive; packaging is not reachability, Custard has no notion of it, and a module named only inside one is reachable from nothing.  This is §67.2 from the other side: §67.2 says a `-bundle` line written against karamel's output is not one for Custard's because which modules survive differs; this says the line does not even *mean* the same thing.  And `--custard_c_no_prefix` renames, it does not export, so it cannot substitute |
+| M10ηΔ | A `#if` probe that could not fail (§70.3, §65.1) | Done.  EverParse's own sharpening, and worth keeping as method.  Their `#if` probe tested a *zero*-valued constant, so with the macro absent the preprocessor reads `MACRO_MAJOR_TYPE_UINT64 == 0` as `0 == 0`: the right answer for the wrong reason, and a failure invisible to the natural test for it.  `tests/custard/Macro_probe.c` now compiles all three uses --- `#if` with an `#error` against a *non-zero* constant, a `case` label, and a static initializer --- in a separate translation unit that includes only the generated header, which is what a consumer is.  Control-run with the `#define` replaced by an `extern` declaration: `#error` fires.  Both retractions this round came from deliberately breaking the thing being measured and checking that the measurement noticed |
+| M10ηΕ | Two corrections and an open question, recorded (§70.0, §70.3) | Done as a record.  Kuiper's §62.4 retracts their earlier description of karamel's `auto_AMP` sed rule as cosmetic: it is load-bearing for correctness, being the same reference binding applied textually after the fact, and calling it cosmetic is what made §62 look like a formatting question for a round --- a downstream post-processing hack is evidence about semantics, and reading one as whitespace is a way to lose a bug.  Kuiper's §63.2 measured §69: `auto`, `KPR_INIT`, `KPR_INIT_ARR`, the variadic `kpr_fragment` macro, seven `frag_tok` declarations and `frag_type_expr` all deleted, `Kuiper.Example.ARPort.fst` 209 lines to 152, and the §57.1 `(auto *)` cast bug fixed as a side effect.  Left open by §63.3: `EAny` at an external type prints `(T){0}`, well-formed only because `wmma::fragment` is an aggregate; `T x;` is the general answer, not hit yet.  Also merged: **PR #4531**, Kuiper's own fix dropping `escape_kw` on the extern *value* path so a target name such as `float` survives verbatim --- a name given explicitly in an attribute is a name, not an identifier to sanitize, and the type path already did this |
