@@ -2977,9 +2977,15 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
             a symbol that already exists on the other side, spelled the way
             its own language spells it.  Sanitizing [wmma::mma_sync] into
             [wmma__mma_sync] does not make it legal, it makes it absent.
-            [escape_kw] stays, because a C keyword really would be a
-            mistake. *)
-         | Some t -> escape_kw t);
+            A C keyword is not escaped either, and for the same reason.
+            The escape was here to catch a mistake, but it cannot: renaming
+            [float] to [float_] does not make a wrong name right, it turns a
+            link error against a name the program *did* write into one
+            against a name it did not.  And the name is sometimes exactly a
+            keyword on purpose -- Kuiper's [wmma::fragment<..., float>] needs
+            a token spelled [float], and the type path above already lets
+            [auto] through for the same reason.  The two paths now agree. *)
+         | Some t -> t);
       (* A unit parameter of an *external* goes too, and unconditionally: the
          function on the other side is C, C has no unit value, and whatever it
          was declared as it was not declared to take one.  There is no body to

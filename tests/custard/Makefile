@@ -1397,6 +1397,16 @@ CGREP_Narrow += "typedef struct { uint16_t bits; } custard_f16;"
 # why it does not use them.
 CNOGREP_Narrow += "a + b"
 
+# Section 45.1.  A [@@custard_extern] target is emitted verbatim, and that
+# includes a C keyword: the operand of a type-taking macro or of a C++
+# template argument list often *is* one.  Kuiper's accumulator fragment is
+# wmma::fragment<..., float> and there is no other spelling of float.  The
+# external type path was already verbatim -- that is what lets Kuiper spell a
+# fragment type as auto -- and this pins that the value path agrees.
+C_TESTS += ExternKw
+CGREP_ExternKw += "KW_SIZEOF(float)"
+CNOGREP_ExternKw += "float_"
+
 # Section 66.  The support block is overridable, and the override reaches it
 # through [@@custard_c_header] -- so those includes have to be emitted above
 # the block.  NarrowOverride_stubs.h defines CUSTARD_FLOAT16_DEFINED and its
