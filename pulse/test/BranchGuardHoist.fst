@@ -114,3 +114,26 @@ fn let_nonEq_refinement (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t)
   let r = (if (!i `SZ.lt` l1) then 0sz else (bump (!j)));
   r
 }
+
+(* Regression test for issue #4488, the converse direction: a refinement that
+   constrains the result but mentions *no* hoisted temporary must be kept.
+
+   Here the `while` guard binds the stateful read to a user-written `ii`, so
+   `SZ.lt`'s `ensures` yields `z:bool{ z == (SZ.v ii < SZ.v n) }` with `ii` in
+   scope; nothing escapes. Dropping such refinements (as the original fix for
+   the leak above did, for every result-constraining refinement) is not
+   observable as a failure here, but it forces the solver to rederive the guard
+   through `result == term` and made the loop invariants of #4488 about 9x more
+   expensive. The `invariant` below is deliberately arithmetic so that the
+   connection between the guard and `SZ.v ii` is actually used. *)
+divergent fn while_user_bound_guard (i:ref SZ.t) (n:SZ.t)
+  requires i |-> 'vi ** pure (SZ.v 'vi <= SZ.v n)
+  ensures  exists* vi. i |-> vi ** pure (SZ.v vi <= SZ.v n)
+{
+  while (let ii = !i; SZ.lt ii n)
+  invariant exists* (vi:SZ.t). i |-> vi ** pure (SZ.v vi <= SZ.v n)
+  {
+    let ii = !i;
+    i := SZ.add ii 1sz;
+  }
+}
