@@ -324,6 +324,31 @@ let int_inj (sw : signedness & width) : string =
   let sgn, _ = sw in
   int_module sw ^ (match sgn with Unsigned -> ".uint_to_t" | Signed -> ".int_to_t")
 
+(* Section 38.  OCaml has one floating-point type and it is [double], so
+   [Float64] is faithful and no other width is; the C backend is where a
+   single-precision program belongs, and the backend that cannot round right
+   says so rather than rounding wrong.
+
+   This is called from three places, not one.  {!ty} alone is not enough: it
+   is reached only when the width appears in a *signature*, and a program
+   whose float values all live inside one function has no signature that
+   mentions them.  Such a program used to extract silently and compute at
+   binary64 -- [1.0f +. 1e-8f] is [1.0f] at binary32 and is not at binary64,
+   so the C and OCaml backends returned different answers for the same source
+   with no diagnostic.  So the other two calls are at the two places a float
+   value is actually emitted: a literal, and an operator. *)
+let reject_fwidth (fw:fwidth) : ML unit =
+  if Float64? fw then () else
+  FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardNoCRepresentation [
+    FStarC.Errors.Msg.text
+      "Custard: FStar.Float32 has no OCaml representation.";
+    FStarC.Errors.Msg.text
+      "OCaml's float is IEEE 754 binary64 and there is no binary32 type to \
+       round to, so a single-precision program would silently compute at \
+       double precision (section 38).";
+    FStarC.Errors.Msg.text
+      "Use FStar.Float64, or extract with --custard_backend C." ]
+
 let rec ty (t:cty) : ML string =
   match t with
   | TUnit -> "unit"
@@ -331,21 +356,10 @@ let rec ty (t:cty) : ML string =
   | TAny -> "Obj.t"
   | TVar x -> "'" ^ ocaml_var x
   | TInt sw -> int_module sw ^ ".t"
-  (* Section 38.  OCaml has one floating-point type and it is [double], so
-     [Float64] is faithful and [Float32] is not; the C backend is where a
-     single-precision program belongs, and the backend that cannot round
-     right says so rather than rounding wrong. *)
+  (* Section 38; the reason, and the other two call sites, are on
+     [reject_fwidth]. *)
   | TFloat Float64 -> "float"
-  | TFloat Float32 ->
-    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardNoCRepresentation [
-      FStarC.Errors.Msg.text
-        "Custard: FStar.Float32 has no OCaml representation.";
-      FStarC.Errors.Msg.text
-        "OCaml's float is IEEE 754 binary64 and there is no binary32 type to \
-         round to, so a single-precision program would silently compute at \
-         double precision (section 38).";
-      FStarC.Errors.Msg.text
-        "Use FStar.Float64, or extract with --custard_backend C." ]
+  | TFloat fw -> reject_fwidth fw; "float"
   | TArrow (t1, _, t2) -> "(" ^ ty t1 ^ " -> " ^ ty t2 ^ ")"
   | TTuple ts -> "(" ^ String.concat " * " (List.map ty ts) ^ ")"
   (* Section 8.4: a buffer is an OCaml array.  This is faithful for everything
@@ -411,7 +425,7 @@ let constant (c:constant) : ML string =
   | CBool b -> if b then "true" else "false"
   (* Section 39.  OCaml's lexer accepts the same grammar section 39.2 does,
      so no suffix and no reformatting. *)
-  | CFloat (v, _) -> "(" ^ float_lit_to_string v ^ ")"
+  | CFloat (v, fw) -> reject_fwidth fw; "(" ^ float_lit_to_string v ^ ")"
   (* Prims.int is arbitrary precision in the OCaml runtime, exactly as in the
      ML extraction. *)
   | CInt (v, b, None) -> "(Prims.parse_int \"" ^ int_lit_to_string v b ^ "\")"
@@ -437,7 +451,8 @@ let op_name (o:prim_op) : ML string =
   match o.po_ty with
   (* Section 38.  OCaml's own float operators, since [float] is a real OCaml
      type and going through a support module would only rename them. *)
-  | Some (PFloat _) ->
+  | Some (PFloat fw) ->
+    reject_fwidth fw;
     (match o.po_op with
      | Add | AddW -> "( +. )" | Sub | SubW -> "( -. )"
      | Mult | MultW -> "( *. )" | Div | DivW -> "( /. )"

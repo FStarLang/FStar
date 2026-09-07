@@ -1360,6 +1360,19 @@ CGREP_FloatOptIn += "(1.0f < FLT_MAX)"
 # attribute existed every one of these was an undefined FloatLib_* symbol.
 CNOGREP_FloatOptIn += "FloatLib"
 
+# Section 38.1.  The OCaml backend refuses a width it cannot represent -- at
+# the value, not only at the type.  [ty] is reached only when the type is in
+# a signature, so a program whose floats are all local to one function slipped
+# past it and computed at binary64: the two backends returned different
+# answers for this source, quietly.  A wrong answer with no diagnostic is
+# worse than a refusal, so the check is at the literal and the operator too.
+REJECT_TESTS += FloatHole
+CODE_FloatHole = 368
+EGREP_FloatHole += "FStar.Float32 has no OCaml representation"
+EGREP_FloatHole += "silently compute at double precision"
+# It must name the way out, since Float64 really does work on this backend.
+EGREP_FloatHole += "custard_backend C"
+
 # Section 63.1.  A width Custard does not implement is refused at the
 # attribute, not at the first use of the type: 386 names the mistake, where
 # 368 would name the type and point at another module.
