@@ -1397,6 +1397,17 @@ CGREP_Narrow += "typedef struct { uint16_t bits; } custard_f16;"
 # why it does not use them.
 CNOGREP_Narrow += "a + b"
 
+# Section 66.  The support block is overridable, and the override reaches it
+# through [@@custard_c_header] -- so those includes have to be emitted above
+# the block.  NarrowOverride_stubs.h defines CUSTARD_FLOAT16_DEFINED and its
+# own custard_f16; below the block that is a redefinition and the compile
+# fails, so the ordering is checked by cc and not by a grep.  This is the
+# arrangement Kuiper needs, where custard_f16 has to become CUDA's __half for
+# wmma::fragment to accept it.
+C_TESTS += NarrowOverride
+CGREP_NarrowOverride += "NarrowOverride_stubs.h"
+CGREP_NarrowOverride += "CUSTARD_F16_LIT(15872U)"
+
 # Section 66.  A global at a narrow width takes the *initializer* spelling,
 # not the expression one: a compound literal has automatic storage duration
 # and cannot initialize an object with static storage duration.

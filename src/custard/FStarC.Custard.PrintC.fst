@@ -3131,8 +3131,18 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
 
   let hdr =
     header ^
-    (if !uses_narrow then narrow_support else "") ^ "\n" ^
   (match includes with [] -> "" | _ -> String.concat "\n" includes ^ "\n\n") ^
+    (* Section 66.  After the [custard_c_header] includes, not before them.
+       The support block is overridable by defining CUSTARD_FLOAT16_DEFINED
+       and supplying the type and the operations first -- which is how a CUDA
+       consumer reaches __half, the only 16-bit type wmma::fragment is a
+       template over.  Emitted above the includes, that override could not be
+       written in the program at all: the header carrying it is named by an
+       attribute on an F* declaration, so it arrives here and nowhere
+       earlier, and -include on the compiler command line was the only way
+       in.  [narrow_support] needs only <stdint.h> and <string.h>, both in
+       [header] above, so it has no reason to precede anything else. *)
+    (if !uses_narrow then narrow_support ^ "\n" else "") ^
   cpp_open ^
   String.concat "" fwds ^ (match fwds with [] -> "" | _ -> "\n") ^
   String.concat "" tys ^ (match tys with [] -> "" | _ -> "\n") ^
