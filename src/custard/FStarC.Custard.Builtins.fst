@@ -729,7 +729,7 @@ let attribute_string (attrs : list S.term) (a : Ident.lident) : ML (option strin
    a silent fallthrough to "no C representation" at the first use, which is
    several modules away and names the type instead of the attribute.
 
-   Section 65.  bfloat16 is *not* reachable here.  [custard_float]'s contract
+   Section 66.  bfloat16 is *not* reachable here.  [custard_float]'s contract
    is "IEEE 754 binary floating-point of the given width", and bfloat16 is not
    an IEEE 754 interchange format -- it is binary32 with 16 fraction bits
    dropped.  16 therefore means binary16, and bfloat16 has its own nullary

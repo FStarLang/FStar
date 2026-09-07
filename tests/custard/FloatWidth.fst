@@ -9,7 +9,7 @@ module U32 = FStar.UInt32
    "no C representation" (368) at the first use, which is a different module
    and names the type instead of the mistake.
 
-   Section 65.  This used to be 16, which Custard now implements; 8 is the
+   Section 66.  This used to be 16, which Custard now implements; 8 is the
    width that is still a real format and still absent, so the message a
    reviewer asking for one will see is still the one under test. *)
 

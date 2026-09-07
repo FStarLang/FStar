@@ -14584,6 +14584,259 @@ both halves may refer to, and putting them above the module that uses them
 makes the two files circular. karamel says exactly that, at length, and it is
 a property of the bundle spec rather than of anything Custard emitted.
 
+## 66.0 Two 16-bit formats, and why they are two
+
+`[@@custard_float 16]` is IEEE binary16. bfloat16 is a *separate* nullary
+`[@@custard_bfloat16]`.
+
+That is not a stylistic split. `custard_float`'s documented contract is
+"IEEE-754 binary floating-point of the given width", and bfloat16 is not an
+IEEE 754 interchange format --- it is binary32's 8-bit exponent with the
+fraction truncated to 7 stored bits. An integer width has no honest way to say
+which of the two 16-bit formats is meant, so 16 means the one the contract
+names and the other gets its own spelling. `[@@custard_float 8]` is still
+error 386.
+
+Both extract to an **opaque two-byte struct**, not to `_Float16` or `__bf16`.
+`_Float16` is C23 and its availability varies by target; `__bf16` more so. A
+flag that silently changed a type's ABI depending on which compiler happened to
+be in `PATH` would produce bug reports nobody could reproduce. The struct has
+the storage the format actually has, every C compiler has one, and the
+arithmetic is *defined* in a support header --- so this is a working
+implementation everywhere rather than a set of link-time stubs that would make
+a host-side build quietly stop existing.
+
+A target with native instructions is served by defining
+`CUSTARD_FLOAT16_DEFINED` and supplying the type and the operations first. The
+representation is the format's own bit pattern, so an override is
+layout-compatible by construction.
+
+## 66.1 The struct is why these are constructors
+
+`Float16` and `BFloat16` are `fwidth` constructors rather than a width field,
+because the *shape* of the emitted code differs and not just a type name.
+
+An operator becomes a call: `a + b` is not valid on a struct, so it is
+`custard_f16_add(a, b)`, emitted ahead of the infix case in `c_expr`. A
+conversion becomes a call, in both directions, since a struct is not castable.
+And a literal becomes a bit pattern.
+
+Going through `float` for the arithmetic is exactly IEEE for both formats,
+which is worth stating rather than assuming: binary32 holds every binary16 and
+every bfloat16 exactly, and its 24 bits of significand meet the 2p+2 that
+add, sub, mul and div need (24 for binary16, 18 for bfloat16). The intermediate
+is therefore exact and the only rounding is the final encode.
+
+## 66.2 A literal is a bit pattern, computed exactly
+
+`narrow_float_bits` encodes the literal's *exact rational value* --- mantissa
+times a power of ten, so an integer numerator and denominator --- with all the
+scaling done in integer arithmetic and a single round-to-nearest-even at the
+end. No float appears in the encoder.
+
+Two reasons, and neither is style.
+
+It is **statically initializable**. `custard_f16_of_f32(0.5f)` is a function
+call, so an object with static storage duration could not be initialized with
+it at all. A bit pattern can be.
+
+It **rounds once**. Routing a decimal literal through binary32 and then to
+binary16 rounds twice, which is visibly wrong at a format this narrow.
+`1.00048828125` is the midpoint between 1 and the next binary16, and is exact
+in binary32; `1.000488281250001` is above it, so the correct answer is the
+value above, `0x3C01`. Via binary32 it rounds first to the midpoint and then
+ties-to-even *down*, giving `0x3C00`.
+
+## 66.3 Two spellings per literal, and one for linkage
+
+Two mistakes were found by testing rather than by reasoning, and both are in
+the header rather than in the code generator.
+
+**A compound literal is not a constant expression.** Inside a function it has
+automatic storage duration, so it cannot initialize an object with static
+storage duration --- which is exactly what a global at a narrow width needs.
+`CUSTARD_F16_LIT` is the expression form and `CUSTARD_F16_INIT` the
+initializer, and `static_init` takes the second. Each is `__cplusplus`-switched
+as well, because a compound literal is a GNU extension in C++ while the braced
+form is not valid C in expression position, and generated CUDA is compiled as
+C++. `NarrowG` pins the initializer case; it is the one a grep for the
+expression form would have called a pass.
+
+**`static inline` is a `__host__` function.** Under nvcc, calling one from a
+`__global__` or `__device__` function is an error and not a warning --- and a
+kernel doing 16-bit arithmetic is the *main* reason these widths exist, so that
+is the normal case and not a corner. The header's functions are `CUSTARD_FN`,
+which is `static __host__ __device__ inline` under `__CUDACC__`.
+
+This is the half CI cannot reach. There is no nvcc in the suite, and the
+closest thing that does run everywhere is that the header compiles as C++,
+which the existing `CXX` leg does check. The `__host__ __device__` qualifiers
+themselves are only ever exercised outside it, and a green tick should not be
+read as covering them.
+
+## 66.4 What refuses, and where
+
+Neither width has an OCaml or a karamel representation, so `PrintOCaml` and
+`PrintKrml` refuse them --- `PrintOCaml` through `reject_fwidth`, which is the
+other half of this round.
+
+`PrintOCaml` refused `TFloat Float32` in `ty` alone. `ty` is reached when a
+width appears in a **signature**, and a program whose float values all live
+inside one function has no signature that mentions them. Such a program
+extracted silently and computed at binary64: `1.0f + 1e-8f` is `1.0f` at
+binary32, because 1e-8 is far below the ulp of 1.0 at 24 bits, and is not at
+binary64 --- so the C backend returned 0 for `tests/custard/FloatHole.fst` and
+the OCaml backend returned 1, from the same source, with no diagnostic.
+
+That is a different answer, not a missing feature, and a backend that quietly
+disagrees with another backend about arithmetic is strictly worse than one
+that refuses. The check now lives in `reject_fwidth`, called from `ty` and from
+the two places a float value is actually *emitted*: the `CFloat` constant and
+the `PFloat` operator. Checking where a value is printed rather than only where
+its type is printed is what makes it total.
+
+The message also names the width the program used, in the reader's vocabulary
+rather than the code generator's --- `fwidth_to_string` spells these `f16` and
+`bf16` because that is what goes in a C identifier, and a diagnostic is not a C
+identifier. `Float32` additionally keeps its module name, since `FStar.Float32`
+is a module a reader can go and open; the 16-bit widths are opt-in on a
+library's own type and have no such module to name.
+
+## 66.5 What the validation does and does not cover
+
+Exhaustive against gcc 13.3's native `_Float16` and `__bf16`: all 2^16 decodes
+and all 2^32 encodes at both formats, and every non-NaN operand pair for add,
+sub, mul and div at both. No mismatch.
+
+One row of that is **not an independent check**, and it matters that it is
+labelled. gcc has no native bfloat16 *arithmetic* --- it promotes to `float`,
+which is what this implementation does --- so the bfloat16 arithmetic row
+confirms that the implementation does what it says, not that what it says is
+right. The bfloat16 *conversions* are independent and exhaustive, and that is
+where the interesting rounding is. The binary16 arithmetic row is independent.
+
+Six exhaustive-looking numbers of which five are load-bearing is a better thing
+to be handed than six that are not distinguished.
+
+## 67.0 A stale checked file, reported as a mystery
+
+EverParse's round 63 named one blocker, and it blocked both backends:
+
+```
+* Error 317:
+  - Cross-module inlining expects all modules to be checked first.
+  - Module .../CBOR.Pulse.API.Det.C.fsti was not checked.
+```
+
+They established what it was not --- not `--custard_split`, not `--cache_dir`,
+not a missing file --- and observed that removing `--codegen` made it go away,
+which put it on Custard's side of `Universal.fst`'s
+`Some? (codegen ()) && cmi ()` guard.
+
+It is a stale checked file, and it is not a Custard defect. §64 added
+`val custard_float` to `ulib/FStar.Attributes.fsti`, and this round adds
+`val custard_bfloat16`. That is a real change to a real ulib interface, so every
+checked file transitively downstream of it is legitimately stale, and every
+consumer with a prebuilt `.checked` tree has to rebuild it.
+
+What *is* a defect is that nothing said so. The reason is computed --- the
+loader knows perfectly well that `FStar.Attributes.fsti.checked`'s digest moved
+--- and then discarded, twice over:
+
+* The warning that carries it is **suppressed for a module the user named on
+  the command line**, on the reasonable grounds that rechecking such a module
+  is what was asked for. Under `--codegen` with cross-module inlining it is
+  not what happens: the caller raises instead.
+* Under `--ext fly_deps`, a command-line module's cache is not consulted at
+  all. So the module error 317 names is not even the module whose load failed.
+  It is the one that could not proceed *because* of it.
+
+Between the two, the user is told that a module was not checked and nothing
+whatever about which file went stale --- which, in a tree the size of
+EverParse's, is the entire question.
+
+So `CheckedFiles` now records the reason whether or not it reports it, and
+`Universal` attaches it to both errors that fire on a cache miss. The answer is
+deliberately *not* keyed on the module being asked about: a checked file is
+invalidated by a **dependence**, so the file worth naming is almost never the
+one in the error's first line.
+
+```
+* Error 317:
+  - Cross-module inlining expects all modules to be checked first.
+  - Module StaleMain.fst was not checked.
+  - The last checked file that could not be loaded: StaleLib.fsti.checked is not
+    usable since checked file StaleLib.fsti.checked is stale (digest mismatch
+    for StaleLib.fsti).
+```
+
+`check-stale` builds a two-module program, makes the interface stale on
+purpose, and asserts all three lines. It runs in a scratch directory, since
+the point is to invalidate something.
+
+There is a second half to the recovery that the message now also walks a user
+through: rebuilding the stale file alone is not enough. The next attempt names
+`StaleMain.fst.checked`, because *its* dependence hash moved too. The whole
+downstream closure has to be rebuilt, and now each step says which file is next
+rather than repeating that a module was not checked.
+
+## 67.1 `--custard_rust_no_prefix` is not needed
+
+Asked in §65.3 as a measurement rather than a guess, and answered: no.
+
+On the C path the flag exists because C has one flat namespace and the prefix
+is the only qualification available. On the Rust path the module structure *is*
+the qualification. EverParse measured both sides and found nothing for the flag
+to remove: of the 35 public functions in the generated `cbordetver.rs`, **0**
+carry an F\* module prefix, exactly as in the shipped crate --- and of the 135
+in the *pre-split* flat output, 0 did either. This was never a Rust problem.
+
+They also found the shape that would make such a flag actively wrong.
+`cbor_validate_det` is emitted `pub(crate)`, and the shipped file has it
+`pub(crate)` too, character for character. A `no_prefix`-style pass on this
+path would have to reason about visibility it does not own.
+
+The item is dropped rather than deferred.
+
+## 67.2 A `-bundle` line cannot be shared between the two pipelines
+
+EverParse's shipped clause names five modules. Under whole-program Custard two
+of them --- `CBOR.Pulse.Raw.Slice` and `CBOR.Pulse.API.Det.Type` --- emit
+nothing at all, having been fully inlined, and karamel rejects the entire clause
+because one of the names does not exist.
+
+That is not a Custard bug: those modules having no residue is the point of
+whole-program extraction. But it is a real consequence worth stating plainly,
+because it is easy to read the split as making the two pipelines
+interchangeable. It does not. **Which modules survive is a property of the
+extractor**, so a `-bundle` line written against karamel's output is not a
+`-bundle` line for Custard's, and a consumer maintaining both maintains two.
+
+Whether karamel should tolerate an absent module in a `+` list is karamel's
+question, not this document's; a clause that names five modules and gets four
+is at least as likely to be a typo as a pipeline difference.
+
+Deleting the two absent names is what produced EverParse's working run:
+`cbordetver.rs` and `cbordetveraux.rs`, the file layout they ship, passing the
+full behavioural corpus --- 45 valid vectors with 0 failures, 440 malformed to
+72 accepted and 368 rejected, 0 BAD. That is the first time the Rust
+deliverable's *shape* has been reachable, and §65.0 is what made it so.
+
+## 67.3 Ten functions that nothing calls
+
+The generated `cbordetver.rs` exposes 35 public functions against the shipped
+45. All 35 are in the shipped set; all 10 absent are `uu___is_*`
+discriminators.
+
+EverParse checked before calling this benign: across both shipped crates,
+`uu___is_*` has **0** call sites --- every occurrence is its own definition.
+karamel emits them and nothing consumes them, so Custard dropping them is
+better output rather than a gap.
+
+Recorded here because it is still an observable difference in a *published* API
+surface, and whether anything downstream is entitled to those names is
+EverParse's call and not Custard's.
+
 
 
 
@@ -14847,3 +15100,9 @@ a property of the bundle spec rather than of anything Custard emitted.
 | M10ζΓ | **Two definitions of `Prims.dtuple2`, and the collision was Custard's** (§65.1) | Done.  EverParse's §62.4, which they flagged rather than diagnosed and were right not to be confident about.  karamel prepends its own `Prims` to every program (`Builtin.prepare`: \"prims is a special-case, as it is not extracted by F*\"), and that `Prims` defines `list`, `dtuple2` and the `Mkdtuple2` projectors --- reasonable, because in the ML pipeline nothing else defines them.  Custard is whole-program and compiles them from their F\* sources, so two definitions arrive under one lident and they disagree: karamel's `dtuple2` is a variant with fields `fst` and `snd`, F\*'s is a record with `_1` and `_2`.  Neither is wrong on its own, which is why the symptom reads so strangely --- karamel's checker rejecting Custard's own code against karamel's definition of Custard's own type, naming a declaration whose two halves are individually correct.  `Prims.list` collides the same way over constructor names, and was found by fixing this one.  So Custard's copies move to `Custard.Prims`, under `Builtins.is_realized_module` --- the same predicate `Split` already uses to give them a file of their own, so the lident now agrees with the file rather than adding a second rule.  Only declarations Custard emits a body for move: an external, a modelled type and a realized type resolve to someone else's definition, and renaming those would be renaming *away* from it.  The change does not decide who is right about the field names; it makes that stop being a question anyone has to answer, which is the only available outcome when both definitions are correct |
 | M10ζΔ | `GCType`: the flag the collision was hiding (§65.2) | Done, and found by fixing §65.1 --- which broke a program that had been passing, for a reason worth recording.  `Prims.list`'s tail field has the type being declared, so a C struct for it is of infinite size and gcc says so; the Rust enum has the same problem and rustc suggests a `Box`.  karamel's answer is `GCType`, which puts the indirection in, and karamel's builtin `Prims.list` **carries** it.  Custard set it on nothing, so every recursive datatype Custard compiled was one karamel could not lay out --- and nobody had noticed, because for the one recursive datatype anybody used the collision meant karamel was reading its own definition, which had the flag.  Two definitions of one name is not merely a hazard in itself: while it lasts, the wrong one can be answering.  The first version of the fix marked any type reaching itself, which is too eager --- `PulseSliceRec`'s `tree` reaches itself through a `Pulse.Lib.Slice.slice`, already a borrow, and marking it turned a `&\[tree\]` field into `&\[&\[tree\]\]`.  So the traversal is *by value*: into a type application's arguments, since a datatype applied to a datatype does contain it, and stopping at `TBuf`, `TRef`, a function type and the modelled slice.  §20.6 had put the test that caught this in place three rounds before it was needed |
 | M10ζΕ | Two modules and three assertions, because one of each proves nothing (§65.3, §65.4) | Done.  `RustSplit` and `RustSplitLib`: two F\* modules, two `-bundle ...\[rename=\]` clauses spelled the way EverParse spells theirs, and a call across the boundary.  The grep is for `crate::lower::` and not for the answer, because a single flattened module would still compile and still run --- what it would not do is produce a qualified path, which is how the generated code in `src/cose/rust/src` reaches its own other modules and the hand-written ones beside them.  Three assertions before the run, one per failure mode this round produced: a bundle naming a module that does not exist is fatal and was the original report; a `\[rename=\]` that puts karamel's checker on a re-checking path is **not** fatal --- it prints `Cannot re-check`, drops the declaration and exits 0 --- so the log is the only report there is; and a crate whose modules were all empty would satisfy both.  The `*` goes on the *lower* bundle, because the shared declarations have to land in a file both halves may refer to and putting them above their user makes the two circular; that is a property of the bundle spec, not of anything Custard emits.  `list` is covered by `KrmlPrims` on the `KrmlC` leg instead, because recursive datatypes do not survive karamel's Rust backend at all --- the stock `--codegen krml` pipeline dies on one with `Fatal error: exception Not_found`, so a Rust test using one would be pinning that and not this |
+| M10ζΖ | **A width the OCaml backend cannot represent, refused at the value** (§66.4) | Done.  Round 60, and the more important half of Kuiper's float16 work --- filed almost in passing, split out at request into its own PR, and better for it.  `PrintOCaml` refused `TFloat Float32` in `ty` alone.  `ty` is reached when a width appears in a *signature*, and a program whose float values all live inside one function has no signature that mentions them: `main : unit -> ML U32.t`, with the floats local.  Such a program extracted silently and computed at binary64.  That is not a missing feature, it is a **different answer** --- `1.0f + 1e-8f` is `1.0f` at binary32, because 1e-8 is far below the ulp of 1.0 at 24 bits of significand, and is not at binary64, so the C backend returned 0 for the same source that made the OCaml backend return 1, with no diagnostic anywhere.  A backend that quietly disagrees with another backend about arithmetic is strictly worse than one that refuses.  The check moves to `reject_fwidth`, which `ty` now calls and which is also called at the two places a float value is actually *emitted*: the `CFloat` constant and the `PFloat` operator.  Checking where a value is printed rather than only where its type is printed is what makes it total.  Splitting this out forced a question the combined patch had ducked --- a narrow-width case had been *added* beside the `Float32` case in `ty`, leaving one message in two places and a third about to be written --- and the answer was that with f16 out of the picture there is no reason for `ty` to raise at all |
+| M10ζΗ | **binary16 and bfloat16, as opaque structs with defined arithmetic** (§66, §66.0--§66.2) | Done.  `[@@custard_float 16]` is IEEE binary16; bfloat16 is a *separate* nullary `[@@custard_bfloat16]`, because `custard_float`'s contract is "IEEE-754 binary floating-point of the given width" and bfloat16 is not an IEEE 754 interchange format --- an integer width has no honest way to say which of the two 16-bit formats is meant.  Neither emits `_Float16` or `__bf16`: those are not portable C, `_Float16` being C23 with target-dependent availability and `__bf16` more so, and a flag that silently changed a type's ABI based on which compiler was in `PATH` would produce bug reports nobody could reproduce.  Both are two-byte structs with the arithmetic **defined** in a support header, injected only when a narrow width is reached and guarded by `CUSTARD_FLOAT16_DEFINED` so a target with native instructions can substitute its own and stay layout-compatible.  The struct is why these are `fwidth` constructors and not a width field: the *shape* of the emitted code differs, an operator becoming a call and a conversion becoming a call.  A literal becomes a bit pattern computed from the literal's exact rational value in integer arithmetic --- which is statically initializable, where a conversion call is not, and which rounds **once**, where routing a decimal through binary32 rounds twice and is visibly wrong this narrow: `1.000488281250001` is above the binary16 midpoint `1.00048828125` and must be `0x3C01`, but via binary32 it ties-to-even down to `0x3C00` |
+| M10ζΘ | Two literal spellings, and one for linkage (§66.3) | Done, and both were found by testing rather than by reasoning, which is the reason to record them.  A **compound literal is not a constant expression** --- inside a function it has automatic storage duration, so it cannot initialize an object with static storage duration, which is exactly what a global at a narrow width needs.  Hence two macros: `CUSTARD_F16_LIT` in expression position and `CUSTARD_F16_INIT` in initializer position, with `static_init` taking the second, each additionally `__cplusplus`-switched because a compound literal is a GNU extension in C++ while the braced form is not valid C in expression position and generated CUDA is compiled as C++.  `NarrowG` pins the initializer case, which a grep for the expression form would have called a pass.  And **`static inline` is a `__host__` function**: under nvcc, calling one from a `__global__` function is an error and not a warning, and a kernel doing 16-bit arithmetic is the *main* reason these widths exist, so that is the normal case rather than a corner.  The header's functions are `CUSTARD_FN`, `static __host__ __device__ inline` under `__CUDACC__`.  This is the half CI cannot reach --- there is no nvcc in the suite, the closest thing that runs everywhere is the existing `CXX` leg checking that the header compiles as C++, and a green tick should not be read as covering the qualifiers themselves |
+| M10ζΙ | **A stale checked file, reported as a mystery** (§67.0) | Done.  EverParse's §63.5, filed as the one thing blocking both backends, and measured carefully enough to be worth acting on even though the conclusion is that it is not a Custard defect: §64 added `val custard_float` to `ulib/FStar.Attributes.fsti` and this round adds `val custard_bfloat16`, so every checked file transitively downstream of that interface is *legitimately* stale and every consumer with a prebuilt `.checked` tree has to rebuild it.  What **is** a defect is that nothing said so.  The loader knows exactly which digest moved, and then discards it twice: the warning carrying it is suppressed for a module the user named on the command line, on the reasonable grounds that rechecking such a module is what was asked for --- but under `--codegen` with cross-module inlining the caller *raises* instead of rechecking; and under `--ext fly_deps` a command-line module's cache is not consulted at all, so the module error 317 names is not even the one whose load failed, it is the one that could not proceed because of it.  Between the two, a user in a tree the size of EverParse's is told that a module was not checked and nothing whatever about which file went stale.  `CheckedFiles` now records the reason whether or not it reports it and `Universal` attaches it to both errors that fire on a cache miss, deliberately *not* keyed on the module being asked about, since a checked file is invalidated by a **dependence** and the file worth naming is almost never the one in the error's first line |
+| M10ζΚ | `--custard_rust_no_prefix`, dropped rather than deferred (§67.1) | Done, by measurement and not by implementation.  §65.3 asked EverParse whether the flag was needed once §65.0 gave the Rust path module structure, on the reasoning that there the module *is* the qualification --- and the answer is no: of the 35 public functions in the generated `cbordetver.rs`, **0** carry an F\* module prefix, exactly as in the shipped crate, and of the 135 in the *pre-split* flat output, 0 did either.  There is nothing for such a flag to remove and there never was; the C flag exists because C has one flat namespace, which has no Rust analogue.  They also found the shape that would make it actively *wrong*: `cbor_validate_det` is emitted `pub(crate)` and the shipped file has it `pub(crate)` too, character for character, so a `no_prefix`-style pass on this path would have to reason about visibility it does not own.  Worth recording as a method note as much as a result --- the item had been on the list for three rounds on the strength of a C-side analogy, and one measurement retired it |
+| M10ζΛ | What the split does *not* make interchangeable (§67.2, §67.3) | Done.  EverParse's shipped `-bundle` clause names five modules; under whole-program Custard two of them emit nothing at all, having been fully inlined, and karamel rejects the **entire clause** because one of the names does not exist.  Not a Custard bug --- those modules having no residue is the point --- but a consequence worth stating plainly, because it is easy to read §65.0 as making the two pipelines interchangeable.  It does not: **which modules survive is a property of the extractor**, so a `-bundle` line written against karamel's output is not one for Custard's, and a consumer maintaining both maintains two.  Deleting the two absent names is what produced their working run --- `cbordetver.rs` plus `cbordetveraux.rs`, the layout they ship, passing the full corpus at 45 valid vectors with 0 failures and 440 malformed to 72/368 with 0 BAD, which is the first time the Rust deliverable's shape has been reachable at all.  Recorded alongside it: the generated crate exposes 35 public functions against the shipped 45, all 35 in the shipped set and all 10 absent being `uu___is_*` discriminators, which across *both* shipped crates have 0 call sites --- karamel emits them and nothing consumes them, so dropping them is better output and not a gap, though it is still an observable difference in a published API surface and whether anything downstream is entitled to those names is EverParse's call |

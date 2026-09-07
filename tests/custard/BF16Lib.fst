@@ -1,6 +1,6 @@
 module BF16Lib
 
-(* Section 65.  bfloat16 is not an IEEE 754 interchange format, so it is not
+(* Section 66.  bfloat16 is not an IEEE 754 interchange format, so it is not
    [@@custard_float 16] -- that width means binary16.  This is the other
    spelling, and the vocabulary is identical. *)
 

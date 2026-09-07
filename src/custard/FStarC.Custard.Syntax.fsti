@@ -106,7 +106,7 @@ val is_pure : eff -> bool
 type fwidth =
   | Float32
   | Float64
-  (** Section 65.  The two 16-bit formats.  Unlike the wider two these have no
+  (** Section 66.  The two 16-bit formats.  Unlike the wider two these have no
       portable C spelling: [_Float16] is C23 and its availability varies by
       target, [__bf16] more so.  So they are emitted as *opaque two-byte
       structs* with the arithmetic in the support header, where a target that

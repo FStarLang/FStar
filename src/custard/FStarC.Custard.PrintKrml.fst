@@ -234,14 +234,14 @@ let krml_fwidth (fw:fwidth) : ML K.width =
   match fw with
   | Float32 -> K.Float32
   | Float64 -> K.Float64
-  (* Section 65.  karamel's [width] has no 16-bit float, and inventing one
+  (* Section 66.  karamel's [width] has no 16-bit float, and inventing one
      here would mean emitting a [K.Float32] that is not one. *)
   | Float16 | BFloat16 ->
     FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardNoCRepresentation [
       FStarC.Errors.Msg.text
         ("Custard: " ^ fwidth_to_string fw ^ " has no krml representation.");
       FStarC.Errors.Msg.text
-        "karamel's IR has no 16-bit floating-point width (section 65).";
+        "karamel's IR has no 16-bit floating-point width (section 66).";
       FStarC.Errors.Msg.text
         "Extract with --custard_backend C, which emits these as a two-byte \
          struct with the arithmetic in the support header." ]

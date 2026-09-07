@@ -537,7 +537,7 @@ val custard_inline_field : unit
 (** Custard: this abstract type is bfloat16 -- binary32's 8-bit exponent with
     7 fraction bits stored (8 with the hidden one) -- and the module that
     declares it supplies the arithmetic vocabulary for it, exactly as
-    [custard_float] describes (see doc/ref/custard.md, section 65).
+    [custard_float] describes (see doc/ref/custard.md, section 66).
 
     A separate attribute rather than [@@custard_float 16], because
     [custard_float]'s contract is IEEE 754 *by width* and bfloat16 is not an

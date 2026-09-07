@@ -562,19 +562,32 @@ and tc_one_file_no_frame
       in
       match r with
       | None ->
+        (* Both errors below are about a checked file that could not be
+           loaded, and that always has a reason.  The reason is reported as a
+           warning only when the module is not one the user named on the
+           command line, and under [--ext fly_deps] the command-line module is
+           not even the one whose load failed --- so on the path that raises
+           rather than rechecking, the user was told that a module was not
+           checked and nothing at all about which file went stale.  It is
+           nearly always a *dependence*, so it is worth naming. *)
+        let why =
+          match Ch.last_load_failure () with
+          | Some msg -> [text <| Format.fmt1 "The last checked file that could not be loaded: %s." msg]
+          | None -> []
+        in
         if Options.should_be_already_cached (FStarC.Parser.Dep.module_name_of_file fn)
         && not (Options.force ())
-        then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
+        then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure ([
                  text <| Format.fmt1 "Expected %s to already be checked." fn
-               ];
+               ] @ why);
 
         if (Some? (Options.codegen())
         && Options.cmi())
         && not (Options.force ())
-        then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
+        then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure ([
                  text "Cross-module inlining expects all modules to be checked first.";
                  text <| Format.fmt1 "Module %s was not checked." fn;
-               ];
+               ] @ why);
 
         let parsing_data, tc_result, mllib, env = tc_source_file () in
 

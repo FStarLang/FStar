@@ -339,7 +339,7 @@ let int_inj (sw : signedness & width) : string =
    value is actually emitted: a literal, and an operator. *)
 let reject_fwidth (fw:fwidth) : ML unit =
   if Float64? fw then () else
-  (* Section 65.  Name the width the program actually used, in the reader's
+  (* Section 66.  Name the width the program actually used, in the reader's
      vocabulary rather than the code generator's -- [fwidth_to_string] spells
      these "f16"/"bf16" because that is what goes in a C identifier, and a
      diagnostic is not a C identifier.  Float32 additionally keeps its module
@@ -356,7 +356,7 @@ let reject_fwidth (fw:fwidth) : ML unit =
     FStarC.Errors.Msg.text
       ("OCaml's float is IEEE 754 binary64 and there is no " ^ format ^
        " type to round to, so such a program would silently compute at \
-       double precision (sections 38 and 65).");
+       double precision (sections 38 and 66).");
     FStarC.Errors.Msg.text
       "Use FStar.Float64, or extract with --custard_backend C." ]
 

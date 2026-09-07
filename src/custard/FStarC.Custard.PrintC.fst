@@ -455,7 +455,7 @@ let is_string_ty (t:cty) : ML bool =
    literal wants.  Building the two together is what lets a returned pointer
    ([uint32_t *f(void)]) and a stored function ([size_t ( *hashf)(size_t)]) come
    out right without special cases at each use. *)
-(* Section 65.  Whether this unit mentions a 16-bit float anywhere, so that
+(* Section 66.  Whether this unit mentions a 16-bit float anywhere, so that
    the support types are emitted into the header only when they are used.
    Set while the *bodies* are rendered, which happens before the header is
    assembled -- a narrow float can appear in a local variable and nowhere in
@@ -502,7 +502,7 @@ and base_ty (t:cty) : ML string =
   | TInt sw -> int_type sw
   | TFloat Float32 -> "float"
   | TFloat Float64 -> "double"
-  (* Section 65.  Not [_Float16]/[__bf16]: those are not portable C, and the
+  (* Section 66.  Not [_Float16]/[__bf16]: those are not portable C, and the
      whole point of the struct is that the generated file compiles wherever C
      does.  The support header is what maps them onto native types or device
      intrinsics where those exist. *)
@@ -602,7 +602,7 @@ let escape (s:string) : ML string =
   String.concat "" (List.map esc (String.list_of_string s))
 
 (* -------------------------------------------------------------------- *)
-(* Section 65: the 16-bit formats                                       *)
+(* Section 66: the 16-bit formats                                       *)
 (* -------------------------------------------------------------------- *)
 
 (* The parameters of the two narrow formats: fraction bits stored, and the
@@ -687,7 +687,7 @@ let narrow_float_init (fw:fwidth) (v:float_lit) : ML string =
 let narrow_support : string =
   String.concat "\n" [
     "";
-    "/* Section 65: the two 16-bit floating-point formats.";
+    "/* Section 66: the two 16-bit floating-point formats.";
     "";
     "   Opaque two-byte structs rather than _Float16 and __bf16, because those are";
     "   not portable: _Float16 is C23 and its availability varies by target, and";
@@ -916,7 +916,7 @@ let constant (c:constant) : ML string =
      suffix already does. *)
   | CFloat (v, Float32) -> float_lit_to_string v ^ "f"
   | CFloat (v, Float64) -> float_lit_to_string v
-  (* Section 65.  At the narrow widths the type is a struct, so there is no
+  (* Section 66.  At the narrow widths the type is a struct, so there is no
      literal to suffix: what is emitted is the *bit pattern*, in a compound
      literal.  Two reasons, and neither is style.
 
@@ -1008,7 +1008,7 @@ let prefix_op (o:prim_op) : ML (option string) =
   | BNot -> Some "~"
   | _ -> None
 
-(* Section 65.  At the two narrow widths the operand type is a struct, so
+(* Section 66.  At the two narrow widths the operand type is a struct, so
    there is no C operator to emit and the operation is a call into the support
    header instead.  This is the reason [Float16] and [BFloat16] are separate
    [fwidth] constructors rather than a width field: the *shape* of the emitted
@@ -1468,7 +1468,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt a, TInt b when a = b -> c_expr out ind e1
-     (* Section 65.  A struct is not castable, so a conversion at a narrow
+     (* Section 66.  A struct is not castable, so a conversion at a narrow
         width is a call.  Both directions, and between the two narrow formats
         via [float], which is exact for either of them and so rounds once --
         the only rounding is the final encode. *)
@@ -1520,7 +1520,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      Two literals would leave nothing carrying the type, and the operator
      would be evaluated at [int]; that is the one case where dropping the
      casts could change a result. *)
-  (* Section 65.  Before the infix case, which would otherwise emit [+] on a
+  (* Section 66.  Before the infix case, which would otherwise emit [+] on a
      struct.  No {!truncate}: that is about C's integer promotions, and these
      are neither integers nor promoted. *)
   | EOp (o, [a; b]) when Some? (narrow_call o) ->
@@ -2375,7 +2375,7 @@ let rec static_init (x:expr) : ML (option string) =
      | None ->
        match c with
        | CInt (_, _, None) -> None
-       (* Section 65.  A narrow float's expression spelling is a compound
+       (* Section 66.  A narrow float's expression spelling is a compound
           literal, which is not a constant expression; here the braced
           initializer is what is meant. *)
        | CFloat (v, fw) when narrow_ty fw -> Some (narrow_float_init fw v)
@@ -2383,7 +2383,7 @@ let rec static_init (x:expr) : ML (option string) =
   | ECast (e1, t) ->
     (match e1.ty, t, static_init e1 with
      | TInt a, TInt b, Some v when a = b -> Some v
-     (* Section 65.  A conversion to or from a narrow width is a call, and a
+     (* Section 66.  A conversion to or from a narrow width is a call, and a
         call is not a constant expression.  The *literals* still are -- they
         are emitted as bit patterns for exactly this reason -- so this rules
         out only a static initializer that converts, which then gets the same

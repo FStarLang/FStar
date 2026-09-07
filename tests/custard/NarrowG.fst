@@ -10,7 +10,7 @@ assume val lt  : t -> t -> bool
 assume val ieee_eq : t -> t -> bool
 assume val of_literal : string -> t
 
-(* Section 65.  A global at a narrow width: this is the case that needs the
+(* Section 66.  A global at a narrow width: this is the case that needs the
    initializer spelling rather than the expression one. *)
 let g : t = of_literal "1.5"
 

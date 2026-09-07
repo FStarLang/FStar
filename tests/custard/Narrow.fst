@@ -5,7 +5,7 @@ open FStar.All
 module B = BF16Lib
 module U32 = FStar.UInt32
 
-(* Section 65.  binary16 declared here, bfloat16 in [BF16Lib], so one test
+(* Section 66.  binary16 declared here, bfloat16 in [BF16Lib], so one test
    covers both formats and both the same-module and cross-module lookups.
 
    Like [FloatOptIn], nothing is proved: the program checks its own answers.

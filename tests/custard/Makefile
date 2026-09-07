@@ -1373,7 +1373,7 @@ EGREP_FloatHole += "silently compute at double precision"
 # It must name the way out, since Float64 really does work on this backend.
 EGREP_FloatHole += "custard_backend C"
 
-# Section 65.  The two 16-bit formats.  Narrow.fst declares binary16 with
+# Section 66.  The two 16-bit formats.  Narrow.fst declares binary16 with
 # [@@custard_float 16], BF16Lib.fst declares bfloat16 with the separate
 # [@@custard_bfloat16] -- separate because [custard_float]'s contract is IEEE
 # 754 by width and bfloat16 is not an IEEE 754 format.
@@ -1397,7 +1397,7 @@ CGREP_Narrow += "typedef struct { uint16_t bits; } custard_f16;"
 # why it does not use them.
 CNOGREP_Narrow += "a + b"
 
-# Section 65.  A global at a narrow width takes the *initializer* spelling,
+# Section 66.  A global at a narrow width takes the *initializer* spelling,
 # not the expression one: a compound literal has automatic storage duration
 # and cannot initialize an object with static storage duration.
 C_TESTS += NarrowG
@@ -1826,6 +1826,40 @@ check-partial:
 	$(Q)python3 $(CURDIR)/checkpartial.py
 
 all: check-partial
+
+# Section 67.  A stale checked file, under --codegen with cross-module
+# inlining, used to produce error 317 and nothing else: "module M was not
+# checked", where M is the module on the command line and the file that
+# actually went stale is a dependence several steps away.  The reason was
+# computed and then discarded, because the warning that carries it is
+# suppressed for a module the user named on the command line -- and under
+# fly_deps the command-line module is not even the one whose load failed.
+#
+# This is what EverParse hit in round 63 after ulib/FStar.Attributes.fsti
+# gained an attribute: every checked file downstream of it was legitimately
+# stale, and nothing said so.  Rebuilt in a scratch directory rather than
+# against the suite's own checked files, since the point is to make one go
+# stale on purpose.
+.PHONY: check-stale
+check-stale:
+	$(Q)rm -rf $(OUTPUT_DIR)/stale && mkdir -p $(OUTPUT_DIR)/stale
+	$(Q)cd $(OUTPUT_DIR)/stale && \
+	  printf 'module StaleLib\nval double : FStar.UInt32.t -> FStar.UInt32.t\n' > StaleLib.fsti && \
+	  printf 'module StaleLib\nlet double x = FStar.UInt32.add_mod x x\n' > StaleLib.fst && \
+	  printf 'module StaleMain\nopen FStar.All\nlet main () : ML FStar.UInt32.t =\n  if StaleLib.double 21ul = 42ul then 0ul else 1ul\n' > StaleMain.fst && \
+	  $(FSTAR_EXE) --cache_checked_modules StaleLib.fsti > /dev/null && \
+	  $(FSTAR_EXE) --cache_checked_modules StaleLib.fst > /dev/null && \
+	  $(FSTAR_EXE) --cache_checked_modules StaleMain.fst > /dev/null && \
+	  $(FSTAR_EXE) --codegen Custard --custard_backend C \
+	    --custard_entry StaleMain.main StaleMain.fst --odir . > /dev/null && \
+	  printf '\n(* touched *)\n' >> StaleLib.fsti && \
+	  ! $(FSTAR_EXE) --codegen Custard --custard_backend C \
+	    --custard_entry StaleMain.main StaleMain.fst --odir . > stale.out 2>&1 && \
+	  grep -q "Error 317" stale.out && \
+	  grep -q "StaleLib.fsti.checked" stale.out && \
+	  grep -q "last checked file that could not be loaded" stale.out
+
+all: check-stale
 
 # Section 37.1: the gate has its own gate.  A matcher that silently stops
 # recognizing one of the three shapes it was written for reads like coverage
