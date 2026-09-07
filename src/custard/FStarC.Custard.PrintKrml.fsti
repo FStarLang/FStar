@@ -41,5 +41,19 @@ module BU   = FStarC.Util
 
 val print_program : program -> ML (list Krml.file)
 
+(** One karamel file per F\* source module, from {!FStarC.Custard.Split.run}'s
+    partition, named the way karamel names its own: the module path joined with
+    underscores.
+
+    Unsplit, Custard emits a single file called [Custard], which is all C needs
+    -- karamel decides the C layout itself.  Rust is different: there the
+    karamel file *is* the crate module, and [-bundle]/[-no-prefix] select on
+    file names, so a consumer with a specified crate layout cannot express it
+    against a program that has collapsed to one.  See section 65. *)
+val print_split : list (string & program) -> ML (list Krml.file)
+
+(** Write [fs] to [fn] in karamel's versioned binary format. *)
+val write_files : string -> list Krml.file -> ML unit
+
 (** Write [p] to [fn] in karamel's versioned binary format. *)
 val write_program : string -> program -> ML unit

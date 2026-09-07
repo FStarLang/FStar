@@ -316,6 +316,13 @@ GREP_Phantom   = "type ('a, 'ph) phantom_tagged" "and ('a, 'ph) phantom_even_t" 
 # karamel is not installed.
 KRML_TESTS += KrmlBasic
 
+# Section 65.1.  [Prims.list] and [Prims.dtuple2], which karamel defines
+# itself and Custard also compiles.  On the KrmlC leg rather than the Rust
+# one because a recursive datatype does not survive karamel's Rust backend
+# even in the stock pipeline (section 65.2), so the list half is only
+# testable here.
+KRML_TESTS += KrmlPrims
+
 # Each of these is extracted with --custard_backend C, then compiled by a C11
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
@@ -955,6 +962,58 @@ $(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/rust/%.krml
 	$(Q)cd $(OUTPUT_DIR)/$*_rs && MAKEFLAGS= rustc -O -o $*.rsexe driver.rs
 	$(call msg, "RUN", $(basename $(notdir $@)))
 	$(Q)$(OUTPUT_DIR)/$*_rs/$*.rsexe
+	$(Q)touch $@
+
+# Section 65.  The same leg with [--custard_split] and per-module bundles.
+#
+# Separate from [.rsran] rather than a flag on it, because what it checks is
+# not the same thing.  [.rsran] pins how one declaration is spelled; this pins
+# that karamel's *module-level* flags have something to select on, which is a
+# property of the file list and not of any declaration in it.  The bundles are
+# written the way EverParse writes theirs -- an api module, a pattern, and a
+# [rename=] -- because "does -bundle work" and "does -bundle work the way the
+# consumer spells it" turned out to be different questions.
+#
+# Every one of the three failure modes below was reported as, or found while
+# fixing, EverParse's round 62:
+#
+#  * a bundle naming a module that does not exist is *fatal*, and was the
+#    original report;
+#  * a [rename=] that puts karamel's checker on a path where it re-checks the
+#    program is not fatal -- it prints "Cannot re-check", drops the
+#    declaration, and exits 0 -- so the log is the only report there is;
+#  * and a crate whose modules are all empty would satisfy both of the above.
+#
+# Hence three separate assertions and then a run.
+$(OUTPUT_DIR)/rustsplit/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-RUST-SPLIT", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)/rustsplit
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_split \
+	  --custard_backend KrmlRust --custard_main $*.main $< -o $@
+
+$(OUTPUT_DIR)/%.rssplit: $(OUTPUT_DIR)/rustsplit/%.krml
+	$(call msg, "KRML-RUST-SPLIT", $(basename $(notdir $@)))
+	$(Q)rm -rf $(OUTPUT_DIR)/$*_rss && mkdir -p $(OUTPUT_DIR)/$*_rss
+	$(Q)$(KRML_EXE) -silent -backend rust -skip-linking -drop C \
+	  $(KRMLSPLIT_$*) -tmpdir $(OUTPUT_DIR)/$*_rss $< \
+	  > $(OUTPUT_DIR)/$*.rsslog 2>&1 || true
+	@# Fatal on a bundle naming a module that does not exist, which is what
+	@# a single flattened [Custard] module produced for every clause.
+	$(Q)grep -q "doesn't exist" $(OUTPUT_DIR)/$*.rsslog \
+	  && { echo "ERROR: krml could not find a bundled module for $*"; \
+	       cat $(OUTPUT_DIR)/$*.rsslog; exit 1; }; true
+	@# Not fatal: krml prints this, drops the declaration and exits 0.
+	$(Q)grep -q "Cannot re-check\|total errors" $(OUTPUT_DIR)/$*.rsslog \
+	  && { echo "ERROR: krml rejected a declaration for $* on Rust"; \
+	       cat $(OUTPUT_DIR)/$*.rsslog; exit 1; }; true
+	$(Q)for p in $(RSSGREP_$*); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/$*_rss/*.rs \
+	    || { echo "ERROR: $* split Rust output is missing $$p"; exit 1; }; done
+	$(call msg, "RUSTC", $(basename $(notdir $@)))
+	$(Q)printf '$(RSSDRIVER_$*)' > $(OUTPUT_DIR)/$*_rss/driver.rs
+	$(Q)cd $(OUTPUT_DIR)/$*_rss && MAKEFLAGS= rustc -O -o $*.rsexe driver.rs
+	$(call msg, "RUN", $(basename $(notdir $@)))
+	$(Q)$(OUTPUT_DIR)/$*_rss/$*.rsexe
 	$(Q)touch $@
 
 # karamel emits its own compile_flags.txt, which is the only portable way to
@@ -1633,8 +1692,33 @@ RSGREP_RustTup += "pub fn swap(p: (u32, u32)) -> (u32, u32)"
 # the representation this test is about.
 RSNOGREP_RustTup += "pub struct __uint32_t_uint32_t"
 
+# Section 65.  Two F* modules, two karamel files, two [rename=] bundles, and a
+# reference across the boundary.  The bundles are spelled the way EverParse
+# spells theirs: an api module on the left of the [=], a pattern on the right.
+RUSTSPLIT_TESTS += RustSplit
+# The [*] goes on the *lower* bundle, which is EverParse's own arrangement
+# read the other way up: the shared declarations -- [Custard.Prims], the
+# specializations Custard makes of library functions -- have to end up in a
+# file both halves may refer to, and putting them above the module that uses
+# them is what makes the two files circular.  karamel says so, in as many
+# words, and the round spent a while learning to read it.
+KRMLSPLIT_RustSplit := -fkeep-tuples \
+  -bundle 'RustSplit=[rename=Upper]' \
+  -bundle 'RustSplitLib=*[rename=Lower]'
+# The point of the leg: the call across the module boundary is a [crate::]
+# path, which is what a consumer's hand-written modules are reached by and
+# what a single flattened file cannot produce.
+RSSGREP_RustSplit += "crate::lower::"
+# Section 65.1.  Custard's own [dtuple2] survives with F*'s field names.
+# karamel's builtin [Prims] spells them [fst] and [snd] and used to win, so
+# this is the declaration EverParse saw rejected.
+RSSGREP_RustSplit += "pub _1: u32"
+RSSGREP_RustSplit += "pub _2: u32"
+RSSDRIVER_RustSplit := \#[path = "lower.rs"] mod lower;\n\#[path = "upper.rs"] mod upper;\nfn main() { std::process::exit(upper::main()); }\n
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
+                  $(RUSTSPLIT_TESTS) \
                   SepApp SepAppC SplitHi SplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
@@ -1646,7 +1730,7 @@ ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
 # other.  Recursively expanded, so that [.VARIABLES] is complete by the time a
 # recipe asks.
 SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CODE \
-                    RSGREP RSNOGREP KRMLRS
+                    RSGREP RSNOGREP KRMLRS RSSGREP KRMLSPLIT RSSDRIVER
 ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
   $(foreach v,$(filter $(p)_%,$(.VARIABLES)),\
     $(if $(filter $(patsubst $(p)_%,%,$(v)),$(ALL_TEST_NAMES) TESTS),,$(v)))))
@@ -1734,6 +1818,7 @@ ifneq ($(shell command -v $(RUSTC) 2>/dev/null),)
 # to nothing but fstar.exe.
 ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rssplit, $(RUSTSPLIT_TESTS)))
 else
 $(warning krml not found: skipping the Rust run tests)
 endif

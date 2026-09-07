@@ -417,7 +417,16 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      Computed before the interface is written, because the interface has to
      record it: a downstream unit qualifies a reference by the *file* the
      declaration was emitted into, not by the unit's name. *)
-  let files = if Options.custard_split () && Options.custard_backend () = "OCaml"
+  (* Section 12.9 for OCaml, section 65 for karamel.  The partition is the
+     same one; what differs is why it is wanted.  OCaml needs it because its
+     compilation units must form a DAG and the hand-written realizations
+     reference modules Custard compiles.  karamel needs it because [-bundle]
+     and [-no-prefix] select on file names, and a consumer whose crate or
+     header layout is *specified* in those flags cannot express it against a
+     program that has collapsed to a single file. *)
+  let split_backends = ["OCaml"; "KrmlC"; "KrmlRust"] in
+  let files = if Options.custard_split ()
+                 && List.mem (Options.custard_backend ()) split_backends
               then Some (phase "split" (fun () ->
                      Split.run deps (Extract.link_homes st)
                                (List.map fst imports @ prog)))
@@ -488,6 +497,10 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     phase "print" (fun () ->
       OCaml.print_split (Some?.v files) |> List.iter (fun (m, src) ->
         BU.write_file (Find.prepend_output_dir (m ^ ".ml")) src))
+  | "KrmlC" | "KrmlRust" when Some? files ->
+    (* Section 65.  One karamel file per F* source module, so that karamel's
+       own module-level flags have something to select on. *)
+    phase "print" (fun () -> Krml.write_files ofile (Krml.print_split (Some?.v files)))
   | "KrmlC" | "KrmlRust" -> Krml.write_program ofile prog
   | "C" ->
     let hdr, src = C.print_program stem cu (List.map fst imports @ prog) in

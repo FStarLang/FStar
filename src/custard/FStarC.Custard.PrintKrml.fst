@@ -79,6 +79,105 @@ let fresh_local (env:kenv) (base:string) : ML string =
    recognizes its own builtins ([Prims.op_Addition], the [FStar.UInt32]
    operators, the Pulse primitives) by their fully qualified name.  Only the
    specialization suffix is new. *)
+(* Section 65.2.  A datatype that contains itself, which karamel needs told
+   about.
+
+   [Prims.list]'s field [tl] has the type being declared, so a C struct for it
+   is of infinite size and the compiler says so; the Rust enum has the same
+   problem and rustc suggests a [Box].  karamel's answer is the [GCType] flag,
+   which puts the indirection in and warns that the result needs a collector --
+   and karamel's own builtin [Prims.list] carries it, which is why this never
+   showed up before Custard's copies stopped colliding with those builtins.
+   Custard set it on nothing, so every recursive datatype it compiled was one
+   karamel could not lay out.
+
+   Reachability rather than a direct self-reference, because mutual recursion
+   between two datatypes has exactly the same problem and neither of them
+   mentions itself.  The fixpoint is over the whole program's type graph and
+   converges in at most one pass per type.
+
+   *By value* only.  A type that reaches itself through a pointer, a buffer or
+   a slice is already indirect and lays out perfectly well; asking karamel to
+   add a second indirection changes what the type is.  [PulseSliceRec] is the
+   case -- its [tree] reaches itself through a [Pulse.Lib.Slice.slice], which
+   is EverParse's [cbor_raw] in miniature -- and marking it turned a
+   [&[tree]] field into a [&[&[tree]]].  So the traversal descends into
+   [TApp]'s arguments, since a datatype applied to a datatype does contain it,
+   but stops at [TBuf], [TRef] and the modelled slice, and does not follow a
+   function type at all. *)
+let rec by_value_names (c:cty) : ML (list string) =
+  match c with
+  | TApp (n, args) ->
+    (* Section 20: karamel models the Pulse slice as a borrow, so a field of
+       slice type holds a pointer and not the elements. *)
+    if B.is_krml_model n.ns then []
+    else string_of_name n :: (args |> List.collect by_value_names)
+  | TInline c -> by_value_names c
+  | TBuf _ | TRef _ | TArrow _ -> []
+  | _ -> []
+
+let rec_type_table (p:program) : ML (SMap.t bool) =
+  let refs : SMap.t (list string) = SMap.create 100 in
+  let _ = p |> List.iter (fun d ->
+            match d with
+            | DType t ->
+              let body = match t.dt_body with
+                         | TAbbrev c -> by_value_names c
+                         | TRecord fs -> fs |> List.collect (fun (_, c) -> by_value_names c)
+                         | TVariant cs ->
+                           cs |> List.collect (fun (_, fs) ->
+                             fs |> List.collect (fun (_, c) -> by_value_names c))
+                         | _ -> [] in
+              SMap.add refs (string_of_name t.dt_name) body
+            | _ -> ()) in
+  let out : SMap.t bool = SMap.create 20 in
+  let _ = SMap.keys refs |> List.iter (fun start ->
+            let seen : SMap.t bool = SMap.create 20 in
+            let rec go (n:string) : ML bool =
+              if n = start && Some true = SMap.try_find seen n then true
+              else if Some true = SMap.try_find seen n then false
+              else begin
+                SMap.add seen n true;
+                match SMap.try_find refs n with
+                | None -> false
+                | Some ns -> ns |> List.existsb (fun m -> m = start || go m)
+              end in
+            match SMap.try_find refs start with
+            | Some ns when ns |> List.existsb (fun m -> m = start || go m) ->
+              SMap.add out start true
+            | _ -> ()) in
+  out
+
+let rec_types : ref (SMap.t bool) = mk_ref (SMap.create 0)
+
+
+(* Section 65.1.  The declarations Custard compiles whose lident karamel
+   already has a definition for.
+
+   karamel prepends its own [Prims] to every program it is given
+   ([Builtin.prepare]: "prims is a special-case, as it is not extracted by
+   F*"), and that [Prims] defines [list], [dtuple2] and the [Mkdtuple2]
+   projectors.  It is a reasonable thing for karamel to do, because in the ML
+   pipeline nothing else defines them.  Custard is whole-program and compiles
+   them from their F* sources, so both definitions arrive, under one lident,
+   and they do not agree: karamel's [dtuple2] is a variant with fields [fst]
+   and [snd], F*'s is a record with [_1] and [_2].
+
+   Which of the two wins is not something either side chose.  The symptom is
+   karamel's checker rejecting Custard's *own* code against karamel's
+   definition of Custard's own type -- "record or union type data Mkdtuple2
+   { fst; snd } doesn't have a field named _2" -- naming a declaration whose
+   two halves are individually correct.
+
+   So Custard's copies move out of the way.  The predicate is
+   {!B.is_realized_module}, which is the same one {!FStarC.Custard.Split} uses
+   to put those declarations in a file of their own; this makes the lident
+   agree with the file rather than adding a second rule.  Only declarations
+   Custard actually emits a body for are in the table: an external or a
+   modelled type resolves to a definition someone else wrote, and renaming it
+   would be renaming away from that definition rather than towards it. *)
+let shadowed : ref (SMap.t bool) = mk_ref (SMap.create 0)
+
 let lident_of_name (n:name) : ML K.lident =
   (* Every value name reaches karamel through here, which is what
      [B.krml_compat_name] needs: mapping a reference but not the declaration it
@@ -88,6 +187,8 @@ let lident_of_name (n:name) : ML K.lident =
   let id = match n.spec with
            | None -> id
            | Some s -> id ^ "__" ^ s in
+  let ns = if Some true = SMap.try_find !shadowed (string_of_name n)
+           then "Custard" :: ns else ns in
   (ns, id)
 
 (* The external types of the program being printed, by mangled name, mapped to
@@ -746,7 +847,11 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
   | DType t ->
     let env = with_typars env t.dt_params in
     let n_t = List.length t.dt_params in
-    let flags = krml_flags t.dt_flags in
+    (* Section 65.2.  A type that contains itself has no layout without an
+       indirection, and [GCType] is how karamel is told to put one in. *)
+    let flags = krml_flags t.dt_flags
+                @ (if Some true = SMap.try_find !rec_types (string_of_name t.dt_name)
+                   then [K.GCType] else []) in
     let lid = lident_of_name t.dt_name in
     (match t.dt_body with
      | TAbbrev c -> Some (K.DTypeAlias (lid, flags, n_t, krml_typ env c))
@@ -851,19 +956,78 @@ let extern_value_table (p:program) : ML (SMap.t string) =
     | _ -> ());
   t
 
+(* A karamel file name is the F* module path joined with underscores --
+   [String.concat "_" module_name] in {!FStarC.Extraction.Krml.translate_module}
+   -- and karamel's own [-bundle] and [-no-prefix] rebuild the same string from
+   their dotted arguments before comparing ([Bundles.in_api_list]).  So the
+   translation is one line, but it has to be exactly this one: a file named
+   with dots matches no pattern, and the diagnostic for that is karamel saying
+   the module does not exist. *)
+let krml_file_name (m:string) : ML string =
+  String.concat "_" (String.split ['.'] m)
+
+let decls_of (p:program) : ML (list K.decl) =
+  let env = { names = []; names_t = []; ctor_arity = ctor_table p; tvars_any = false } in
+  p |> List.collect (fun d ->
+    match krml_decl env d with
+    | Some d -> [d]
+    | None -> [])
+
+(* Section 65.1.  Which of Custard's own declarations have to move out of
+   karamel's way; see {!shadowed}.  A declaration qualifies when Custard emits
+   a body for it *and* its module is one that already has a definition on this
+   backend -- an external, a modelled type and a realized type all resolve to
+   someone else's, and are exactly the ones that must keep their names. *)
+let shadow_table (p:program) : ML (SMap.t bool) =
+  let t = SMap.create 20 in
+  let emits (d:decl) : ML bool =
+    None? (imported_unit d) &&
+    (match d with
+     | DExternal _ -> false
+     | DType ty -> not (has_flag ty.dt_flags Realized)
+                   && not (has_flag ty.dt_flags Modelled)
+     | _ -> true) in
+  p |> List.iter (fun d ->
+    let n = name_of_decl d in
+    if emits d && B.is_realized_module n.ns
+    then SMap.add t (string_of_name n) true);
+  t
+
 let print_program (p:program) : ML (list Krml.file) =
   extern_types := extern_type_table p;
   extern_values := extern_value_table p;
-  let env = { names = []; names_t = []; ctor_arity = ctor_table p; tvars_any = false } in
-  let ds = p |> List.collect (fun d ->
-             match krml_decl env d with
-             | Some d -> [d]
-             | None -> []) in
-  (* Custard is whole-program, so there is exactly one karamel "file"; karamel
-     is free to split the C output as it likes. *)
-  [("Custard", ds)]
+  shadowed := shadow_table p;
+  rec_types := rec_type_table p;
+  (* Custard is whole-program, so unsplit there is exactly one karamel "file";
+     karamel is free to split the C output as it likes.  That is enough for C
+     and not for Rust, where the karamel file is the crate module and
+     [-bundle]'s patterns are written against F* module names: see
+     {!print_split} and section 65. *)
+  [("Custard", decls_of p)]
+
+(* [ctor_arity] is consulted for constructors that may live in another file, so
+   it is built from the whole program and not from the piece being printed;
+   likewise the two extern tables, which are global refs.  Nothing else in
+   [krml_decl] is per-file, which is what makes splitting a regrouping of the
+   same output rather than a different translation. *)
+let print_split (fs : list (string & program)) : ML (list Krml.file) =
+  let whole = fs |> List.collect snd in
+  extern_types := extern_type_table whole;
+  extern_values := extern_value_table whole;
+  shadowed := shadow_table whole;
+  rec_types := rec_type_table whole;
+  let arity = ctor_table whole in
+  fs |> List.collect (fun (m, p) ->
+    let env = { names = []; names_t = []; ctor_arity = arity; tvars_any = false } in
+    let ds = p |> List.collect (fun d ->
+               match krml_decl env d with
+               | Some d -> [d]
+               | None -> []) in
+    if ds = [] then [] else [(krml_file_name m, ds)])
+
+let write_files (fn:string) (fs : list Krml.file) : ML unit =
+  let bin : Krml.binary_format = (Krml.current_version, fs) in
+  BU.save_value_to_file fn bin
 
 let write_program (fn:string) (p:program) : ML unit =
-  let bin : Krml.binary_format =
-    (Krml.current_version, print_program p) in
-  BU.save_value_to_file fn bin
+  write_files fn (print_program p)

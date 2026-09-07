@@ -14412,6 +14412,182 @@ or one instantiation standing in for both, arrives at.
 
 
 
+# 65 One module is not a layout
+
+Round 59, and EverParse's maintainer changed the question. Instead of another
+round of Custard-internal findings, they asked what actually stands between
+Custard and EverParse shipping, and measured against the artifacts EverParse
+really ships rather than against whatever comes out.
+
+The answer is not codegen. It is naming and module structure, and the C half
+of it was already solved by a flag they had not been passing --- `43` of `43`
+`cbor_det_*` names match the shipped `CBORDet.h` exactly under
+`--custard_c_no_prefix`, and the renamed output passes their full corpus under
+ASan and UBSan. Their §62.6 is worth repeating here: that is the fourth thing
+this review nearly filed as a defect that turned out to be an interface not
+read. The ratio is a good sign about the other reports.
+
+The Rust half was a real blocker, and this section is that.
+
+## 65.0 `-bundle` needs something to bundle
+
+EverParse's crate layout is not "whatever comes out". It is *specified*, in
+karamel `-bundle`/`-no-prefix` clauses over F\* module names:
+
+```
+-bundle 'CBOR.Pulse.API.Det.Type=CBOR.Pulse.Raw.Type,...[rename=CBORDetType]'
+-bundle 'CBOR.Spec.Constants+CBOR.Pulse.API.Det.C+...=*[rename=CBORDet]'
+```
+
+Those clauses define the header their users `#include` and the crate their
+users depend on. Against a Custard `.krml` none of them can even be *written*:
+
+```
+-bundle 'CBOR.Pulse.API.Det.Rust=[rename=CBORDetVer]'
+  => one of these modules doesn't exist: CBOR.Pulse.API.Det.Rust   (fatal)
+```
+
+Custard's `.krml` held a single module called `Custard`. The F\* module path
+was not lost --- it is in every declaration's lident, which is why karamel's
+diagnostics could still name `CBOR.Pulse.Raw.EverParse.Format.read_header` ---
+but the *file* grouping, which is what `-bundle` matches on, had been
+flattened to one.
+
+That was fine for C, and the comment on `print_program` said why: karamel
+decides the C layout itself, so one file in is no constraint on what comes
+out. It stops being fine on the Rust path, where the karamel file *is* the
+crate module. `src/cose/rust/src` is four generated files with 4,040
+cross-module `crate::` references between them, and the split is also the
+generated/hand-written boundary --- `lib.rs` supplies `mod ed25519` with real
+`ed25519_dalek` calls, and the generated code reaches it as `crate::ed25519`.
+A single flattened file has nowhere to put any of that.
+
+The fix is that the partition already existed. `--custard_split` has been
+there since §12.9 for OCaml, where compilation units must form a DAG, and
+`Split.run` does the whole job: one piece per F\* source module, ordered so
+that every reference points backwards, relocating the declarations that would
+point forwards and merging genuine cycles. It is now available on `KrmlC` and
+`KrmlRust` too, and `PrintKrml` groups by it rather than emitting one file.
+
+The one translation is the file *name*: karamel joins a module path with
+underscores, and rebuilds the same string from `-bundle`'s dotted argument
+before comparing. Getting that wrong is not subtle --- a file named with dots
+matches no pattern and karamel says the module does not exist --- but it is
+the entire interface between the two sides.
+
+## 65.1 Two definitions of `Prims.dtuple2`
+
+EverParse's §62.4, flagged rather than diagnosed, and they were right not to
+be confident whose bug it was. It is Custard's.
+
+```
+Warning 4: in top-level declaration KTup.mk, in file KT: Malformed input:
+  Not a record (2) Prims_dtuple2 uint32_t uint32_t
+Warning 4: ... FStar.Pervasives.dsnd__uint32_t_uint32_t ...
+  record or union type data Mkdtuple2 { fst: 1; snd: 0 }
+    doesn't have a field named _2
+```
+
+karamel prepends its own `Prims` to every program it is given ---
+`Builtin.prepare`, with the comment "prims is a special-case, as it is not
+extracted by F\*" --- and that `Prims` defines `list`, `dtuple2` and the
+`Mkdtuple2` projectors. Which is a reasonable thing for karamel to do, because
+in the ML pipeline nothing else defines them.
+
+Custard is whole-program. It compiles them from their F\* sources. So two
+definitions arrive under one lident, and they do not agree: karamel's
+`dtuple2` is a variant whose fields are `fst` and `snd`, F\*'s is a record
+whose fields are `_1` and `_2`. Neither side is wrong on its own, which is why
+the symptom is so strange --- karamel's checker rejecting Custard's own code
+against karamel's definition of Custard's own type, naming a declaration whose
+two halves are individually correct.
+
+`Prims.list` collides the same way, over constructor names, and was found by
+fixing this one.
+
+So Custard's copies move out of the way, into `Custard.Prims`. The predicate
+is `Builtins.is_realized_module`, which is the same one `Split` already uses to
+put those declarations in a file of their own --- so the lident now agrees with
+the file rather than adding a second rule. Only declarations Custard actually
+emits a body for move: an external, a modelled type and a realized type all
+resolve to a definition someone else wrote, and renaming those would be
+renaming *away* from the definition rather than towards it.
+
+Note what this does not do. It does not decide who is right about
+`dtuple2`'s field names. It makes the question stop being one anybody has to
+answer, which is the only available outcome when both definitions are
+correct and the collision is over a name.
+
+## 65.2 The flag that was hiding it
+
+Fixing §65.1 broke a program that had been passing, and the reason is worth
+recording, because it is the shape of every bug that a collision hides.
+
+`Prims.list`'s tail field has the type being declared, so a C struct for it is
+of infinite size and gcc says so; the Rust enum has the same problem and rustc
+suggests a `Box`. karamel's answer is the `GCType` flag, which puts the
+indirection in --- and karamel's builtin `Prims.list` *carries* it. Custard
+set it on nothing. Every recursive datatype Custard compiled was one karamel
+could not lay out, and nobody had noticed, because for the one recursive
+datatype anybody used the collision meant karamel was reading its own
+definition, which had the flag.
+
+Two definitions of one name is not just a hazard in itself. While it lasts,
+the wrong one can be answering.
+
+The first version of the fix was too eager: it marked any type that reaches
+itself. `PulseSliceRec`'s `tree` reaches itself through a
+`Pulse.Lib.Slice.slice`, which is already a borrow, and marking it turned a
+`&[tree]` field into `&[&[tree]]`. So the traversal is *by value*: it descends
+into a type application's arguments, since a datatype applied to a datatype
+does contain it, and stops at `TBuf`, `TRef`, a function type and the modelled
+slice. Which is a case §20.6 had already put a test in place for, three rounds
+before it was needed for this.
+
+## 65.3 What is still not there
+
+Recursive datatypes do not survive karamel's Rust backend, and that is not
+Custard's: the stock `--codegen krml` pipeline dies on a `list` with
+`Fatal error: exception Not_found`. Custard now gets one step further --- it
+emits a Rust enum, which fails at rustc for want of a `Box` --- but "further"
+is not "works". So `RustSplit` covers `dtuple2` and the cross-module
+reference, and `KrmlPrims` covers `list` on the `KrmlC` leg, where recursive
+types do work.
+
+There is still no `--custard_rust_no_prefix`. On the Rust path the module
+structure *is* the qualification, so what §65.0 delivers may well be the whole
+of it; that is a question for EverParse's next measurement rather than one to
+answer speculatively here.
+
+## 65.4 The test is two modules, because one proves nothing
+
+`RustSplit` and `RustSplitLib`: two F\* modules, two `-bundle ...[rename=]`
+clauses, and a call across the boundary. The program is small; the shape is
+the one that was impossible.
+
+The grep is for `crate::lower::` and not for the answer. A single flattened
+module would still compile and still run --- what it would not do is produce a
+qualified path, which is how the generated code in `src/cose/rust/src` reaches
+both its own other modules and the hand-written ones beside them.
+
+Three assertions before the run, one per failure mode this round produced.
+A bundle naming a module that does not exist is *fatal*, and was the original
+report. A `[rename=]` that puts karamel's checker on a path where it re-checks
+the program is *not* fatal --- it prints `Cannot re-check`, drops the
+declaration, and exits 0 --- so the log is the only report there is. And a
+crate whose modules were all empty would satisfy both.
+
+One thing the round spent a while learning to read: the `*` goes on the
+*lower* bundle. The shared declarations --- `Custard.Prims`, the
+specializations Custard makes of library functions --- have to end up in a file
+both halves may refer to, and putting them above the module that uses them
+makes the two files circular. karamel says exactly that, at length, and it is
+a property of the bundle spec rather than of anything Custard emitted.
+
+
+
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -14667,3 +14843,7 @@ or one instantiation standing in for both, arrives at.
 | M10εΨ | Warning 381, from the other side (§64.2) | Done.  Kuiper's rule-authoring trap, and it is a real one: `Rule_prim (n, f)`'s `n` counts every argument the declaration retains, and the trailing unit applications of a Pulse `fn` are arguments --- `array_vec_cpy` looks like six and is ten.  Too *large* was already warning 381, every use eta-expanding into a lambda nothing applies.  Too *small* was nothing at all: the rule succeeds, the surplus arguments are applied to its result, and `(void)(((custard_unit)0)());` reaches `nvcc`, so the first thing to object is a C compiler, about generated code, in a file the rule author did not write.  They proposed catching it in the IR checker as an application whose head has type `unit`, which would work; one step earlier is better, because in `prim_app` we still know whose rule it is, what arity it declared and how many arguments the use site supplied --- the entire content of the answer, none of which survives into the IR.  Same code, opposite direction, and `Rule_prim`'s docstring now states the counting convention and cites both |
 | M10εΩ | Error 388 keys on the bare reference, not on the empty one (§64.3) | Done, and the first version was wrong in a way the suite caught within minutes.  The obvious condition --- error if a polymorphic external ends up with no instantiations --- fires on a program that is entirely fine, because a plugin registers its roots once for every program it is ever loaded into and most use only some; adding a second test module made the *first* one fail, over a `sink` it did not call.  An uninstantiated external is harmless: no instantiation means no call, so nothing dangles.  What is not harmless is a reference carrying **no** type arguments, which names the declaration being dropped and has nothing to replace it with --- a rule that forgot to put the instantiation on its `EQual`, and §36.2's dangling name whose symptom is a link error in generated C.  The check has to run in a second pass after the worklist drains, because *was it referenced* is not answerable until every declaration has been walked.  Both cases are in the plugin test: `CustardRuleBare.fst` is the rule that forgets, and `CustardRuleTest`'s own `bare_sink` is the root legitimately unused by the program declaring it |
 | M10ζΑ | The test has to run, not just compile (§64.4) | Done.  All of §64 needs a rule, so it lives in `make custard-plugin`.  `CustardRulePlugin` grew an `emit` rule forwarding to a polymorphic `sink`, plus `bare` and `under` for the two diagnostics; `CustardRuleMain.c` grew `CustardRuleTest_sink__uint32` and `CustardRuleTest_sink__uint64` as real definitions.  `sink` deliberately carries no `[@@custard_extern]`: two instantiations need two C names and a fixed target string has nowhere to put a type, so with one they collide --- which is error 384's job, and why Kuiper's own `ext` needs the `custard_c_header` it has.  Greps pin both mangled names and pin the absence of an unspecialized `CustardRuleTest_sink(`, but the load-bearing check is that the linked program *runs*: `sink_total ()` reads back what the two calls did, and 3 + 4 = 7 is not a number one shared symbol, or one instantiation standing in for both, arrives at |
+| M10ζΒ | **A `.krml` with one module in it, and a crate layout that is specified** (§65, §65.0) | Done.  Round 59.  EverParse's maintainer stopped the bug hunt and asked what actually stands between Custard and shipping, measured against the artifacts they really ship rather than against whatever comes out.  Codegen was not the problem.  Their crate and header layouts are *specified*, in karamel `-bundle`/`-no-prefix` clauses over F\* module names, and against a Custard `.krml` none of those clauses could even be **written**: the file held a single module called `Custard`, so every one failed with \"one of these modules doesn't exist\", fatally.  The module path was not lost --- it is in every lident, which is why karamel's diagnostics could still name `CBOR.Pulse.Raw.EverParse.Format.read_header` --- but the *file* grouping, which is what `-bundle` matches on, had been flattened to one.  Harmless for C, where karamel decides the layout itself and `print_program`'s comment said so; not harmless for Rust, where the karamel file **is** the crate module.  `src/cose/rust/src` is four generated files with 4,040 cross-module `crate::` references, and the split is also the generated/hand-written boundary: `lib.rs` supplies `mod ed25519` with real `ed25519_dalek` calls and the generated code reaches it as `crate::ed25519`.  The fix is that the partition already existed --- `Split.run` has done exactly this for OCaml since §12.9, ordering the pieces so every reference points backwards --- so `--custard_split` now applies to `KrmlC` and `KrmlRust` and `PrintKrml` groups by it.  The one translation is the file *name*: karamel joins a module path with underscores and rebuilds the same string from `-bundle`'s dotted argument before comparing, and a file named with dots matches no pattern at all |
+| M10ζΓ | **Two definitions of `Prims.dtuple2`, and the collision was Custard's** (§65.1) | Done.  EverParse's §62.4, which they flagged rather than diagnosed and were right not to be confident about.  karamel prepends its own `Prims` to every program (`Builtin.prepare`: \"prims is a special-case, as it is not extracted by F*\"), and that `Prims` defines `list`, `dtuple2` and the `Mkdtuple2` projectors --- reasonable, because in the ML pipeline nothing else defines them.  Custard is whole-program and compiles them from their F\* sources, so two definitions arrive under one lident and they disagree: karamel's `dtuple2` is a variant with fields `fst` and `snd`, F\*'s is a record with `_1` and `_2`.  Neither is wrong on its own, which is why the symptom reads so strangely --- karamel's checker rejecting Custard's own code against karamel's definition of Custard's own type, naming a declaration whose two halves are individually correct.  `Prims.list` collides the same way over constructor names, and was found by fixing this one.  So Custard's copies move to `Custard.Prims`, under `Builtins.is_realized_module` --- the same predicate `Split` already uses to give them a file of their own, so the lident now agrees with the file rather than adding a second rule.  Only declarations Custard emits a body for move: an external, a modelled type and a realized type resolve to someone else's definition, and renaming those would be renaming *away* from it.  The change does not decide who is right about the field names; it makes that stop being a question anyone has to answer, which is the only available outcome when both definitions are correct |
+| M10ζΔ | `GCType`: the flag the collision was hiding (§65.2) | Done, and found by fixing §65.1 --- which broke a program that had been passing, for a reason worth recording.  `Prims.list`'s tail field has the type being declared, so a C struct for it is of infinite size and gcc says so; the Rust enum has the same problem and rustc suggests a `Box`.  karamel's answer is `GCType`, which puts the indirection in, and karamel's builtin `Prims.list` **carries** it.  Custard set it on nothing, so every recursive datatype Custard compiled was one karamel could not lay out --- and nobody had noticed, because for the one recursive datatype anybody used the collision meant karamel was reading its own definition, which had the flag.  Two definitions of one name is not merely a hazard in itself: while it lasts, the wrong one can be answering.  The first version of the fix marked any type reaching itself, which is too eager --- `PulseSliceRec`'s `tree` reaches itself through a `Pulse.Lib.Slice.slice`, already a borrow, and marking it turned a `&\[tree\]` field into `&\[&\[tree\]\]`.  So the traversal is *by value*: into a type application's arguments, since a datatype applied to a datatype does contain it, and stopping at `TBuf`, `TRef`, a function type and the modelled slice.  §20.6 had put the test that caught this in place three rounds before it was needed |
+| M10ζΕ | Two modules and three assertions, because one of each proves nothing (§65.3, §65.4) | Done.  `RustSplit` and `RustSplitLib`: two F\* modules, two `-bundle ...\[rename=\]` clauses spelled the way EverParse spells theirs, and a call across the boundary.  The grep is for `crate::lower::` and not for the answer, because a single flattened module would still compile and still run --- what it would not do is produce a qualified path, which is how the generated code in `src/cose/rust/src` reaches its own other modules and the hand-written ones beside them.  Three assertions before the run, one per failure mode this round produced: a bundle naming a module that does not exist is fatal and was the original report; a `\[rename=\]` that puts karamel's checker on a re-checking path is **not** fatal --- it prints `Cannot re-check`, drops the declaration and exits 0 --- so the log is the only report there is; and a crate whose modules were all empty would satisfy both.  The `*` goes on the *lower* bundle, because the shared declarations have to land in a file both halves may refer to and putting them above their user makes the two circular; that is a property of the bundle spec, not of anything Custard emits.  `list` is covered by `KrmlPrims` on the `KrmlC` leg instead, because recursive datatypes do not survive karamel's Rust backend at all --- the stock `--codegen krml` pipeline dies on one with `Fatal error: exception Not_found`, so a Rust test using one would be pinning that and not this |
