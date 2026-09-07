@@ -14841,6 +14841,166 @@ EverParse's call and not Custard's.
 
 
 
+## Section 68.  A constant is not a variable
+
+### 68.0  What EverParse retracted
+
+Round 63 recorded the C deliverable as at parity: `CBORDet.c` and `CBORDet.h`
+byte-identical to karamel's, 43 of 43 functions.  Round 64 retracts that, and
+the retraction is the useful part of the round.
+
+The header is at parity in its *functions*.  It is missing ten of its
+*constants* --- `CBOR_MAJOR_TYPE_UINT64` and its siblings,
+`MAX_SIMPLE_VALUE_ADDITIONAL_INFO`, `MIN_SIMPLE_VALUE_LONG_ARGUMENT`.  They are
+absent for a reason Custard is entitled to: nothing in the entry set reaches
+them, so whole-program reachability drops them, exactly as designed.  Naming
+`CBOR.Spec.Constants` with `--custard_entry_module` brings them back, which is
+the mechanism section 44 provides for precisely this and which worked.
+
+What came back was the wrong thing:
+
+```c
+extern uint8_t cbor_major_type_uint64;      /* Custard, before this round */
+#define CBOR_MAJOR_TYPE_UINT64 (0U)         /* karamel */
+```
+
+Both declare something a caller can read.  Only one of them is a constant.  A
+C *constant expression* is a syntactic category, not a value: an object with
+external linkage is not one however immutable it is in fact, because its value
+is not known until the program is linked and, for the preprocessor, not known
+at all.  EverParse did not argue this, they measured it, and got three
+failures from three ordinary uses:
+
+* a static initializer --- `static uint8_t t[] = { CBOR_MAJOR_TYPE_UINT64 };`
+  is a diagnosable constraint violation, an object with static storage
+  duration must be initialized by a constant expression;
+* a `case` label --- same category, and there is no workaround, since a
+  `switch` over a protocol's major types is what the constants are *for*;
+* `#if` --- the preprocessor runs before there are objects at all, so an
+  `extern` declaration is not merely not-constant, it is invisible; `#if
+  CBOR_MAJOR_TYPE_UINT64 == 0` silently reads it as `0 == 0`, which is the bad
+  case, because it is true.
+
+So this is not a cosmetic difference in a header.  It is the difference
+between exporting a constant and exporting a variable that happens to hold
+one, and a consumer's existing C does not compile against the second.
+
+### 68.1  The mechanism, which already existed
+
+karamel spells this `FStar.Attributes.CMacro`, an attribute on a top-level
+`let`, and Custard now reads the same attribute to mean the same thing.  Using
+karamel's rather than inventing one is deliberate: EverParse's constants are
+*already* marked, for the pipeline they already ship, and a consumer evaluating
+Custard should not have to annotate their source twice to compare two outputs.
+
+Two details of karamel's behaviour are part of the contract and are therefore
+copied rather than improved on:
+
+* **The name is uppercased.**  `karamel/lib/GlobalNames.ml` uppercases a
+  `Macro`'s formatted name, which is why a lowercase F\* `major_type_uint64`
+  reaches C as `CBOR_MAJOR_TYPE_UINT64`.  That is the token in the consumer's
+  source, so matching it is the entire point of the exercise; a
+  better-considered scheme that produced a different spelling would be no use.
+* **The body is a bare parenthesized literal**, `(0U)`, with no cast.  Custard
+  normally prints an integer constant with a cast to its declared type
+  (section 59), which is a constant expression and would serve for a `case`
+  label and a static initializer --- but *not* for `#if`, where a cast is not
+  in the grammar.  Since `#if` is one of the three uses, the macro form drops
+  the cast and relies on the integer suffix, which is what karamel emits.
+
+The flag is `CMacro` in the IR, set by `c_decoration_flags` alongside
+`CInline`, and passed through to `KrmlAst.Macro` by the krml backend so that
+the two backends emit the same `#define` from the same source.
+
+### 68.2  A macro has no linkage, and that has consequences
+
+A `#define` is not a declaration.  It has no linkage, no scope, and no
+relationship to any object; it is a textual rewrite of a token over the rest of
+the translation unit.  Three things follow, and the direct-to-C backend does
+each of them:
+
+* **No `extern`.**  The header emits the `#define` *instead of* the
+  declaration, not beside it.  Beside it would be worse than redundant: the
+  macro would rewrite the declaration's own name, and the two would declare
+  different things.
+* **Every reference site follows automatically.**  The macro spelling is
+  installed in a table that `c_name` consults ahead of the rename table, so a
+  use of the constant anywhere in the unit prints as the macro without any
+  call site knowing.  This is not an optimization; it is the only correct
+  behaviour, since after substitution the old name does not exist.
+* **A reference to one is itself a constant expression.**  `static_init` now
+  says so.  The visible consequence is that a global initialized from a macro
+  is initialized *statically* rather than assigned in `custard_init_globals`
+  --- which is the same property the attribute exists to give the consumer,
+  applied to Custard's own output.
+
+Collisions are checked, because uppercasing is not injective and a macro has no
+scope to protect anything from it: two macros whose names differ only in case,
+or a macro whose uppercase form is an existing C name in the unit, are reported
+as an export collision rather than left to the C compiler, which would see only
+the token that survived substitution.
+
+### 68.3  And a macro must actually be constant
+
+Error 389 fires when the body is not a constant expression.  This is not
+defensive: the failure mode without it is that the `#define` is emitted anyway
+and its expansion is a variable, so the constant *looks* exported and every one
+of the three uses fails at the consumer, in their file, about a name they did
+not write.
+
+The diagnostic says what a constant expression is here --- a literal, or a cast
+or arithmetic combination of literals --- and offers the way out, which is to
+drop the attribute and accept an ordinary global initialized at startup.  Note
+that Custard's own reduction usually gets there first: a body that *computes* a
+constant is reduced to the constant before this test sees it, so the error is
+reached only by a body that genuinely depends on something run-time, which is
+the case where refusing is right.
+
+### 68.4  Two notes recorded without action
+
+**EverParse's rlimit.**  `CBOR.Pulse.Raw.Format.Serialize.fst` needs
+`--z3rlimit_factor 2` under Custard's build of the tree.  EverParse explicitly
+declines to call this a regression --- they have no control to compare against
+--- and it is verification cost, not extraction behaviour.  Recorded so that
+the next consumer who hits it knows it has been seen.
+
+**Warning 381 as an arity oracle.**  Kuiper observes that the rule-arity
+warning, which exists to catch a rule declaring more arity than the
+declaration retains, incidentally *tells* a plugin author how many binders
+survive erasure --- a number they otherwise have to derive by reading the
+extraction rules.  That is an accident of the message, but it is a useful one
+and it is now intended: the retained count stays in the text.
+
+### 68.5  Kuiper's round: what worked, and the two gaps
+
+Tensor Cores work end to end.  Custard's C, through `nvcc`, produces real
+`wmma.mma.sync` PTX --- the actual instruction, not a library call that might
+become one.  The property that made it possible is one Custard has and karamel
+does not: fragment indices survive to C, where karamel loses them, which
+retires one of the two `sed` post-passes Kuiper had been carrying.  That is the
+first case of a target intrinsic with a *structured* operand working without
+post-processing.
+
+Two gaps are recorded and not yet answered:
+
+* **§61.3, `TApp` carries only type arguments.**  A C++ template can take a
+  value argument and Custard's application node has nowhere to put one.  `auto`
+  covers the local cases and does not cover the rest.
+* **§61.4, error 379 and target tokens.**  A token that exists only to name a
+  target concept still costs a fake `assume val`, because 379 refuses an
+  unapplied polymorphic external.  The refusal is right for the case it was
+  written for; whether target tokens should be a recognized exception to it is
+  a design question, not a bug.
+
+Answered, from §61.6: the `CUSTARD_FLOAT16_DEFINED` override guard stays a
+single guard.  Splitting it into storage and arithmetic halves is defensible
+in the abstract, but the one consumer with an override says the single guard is
+what they need, and a guard whose halves can be set inconsistently is a new way
+to get a mismatched ABI.  Revisit when a second consumer disagrees with the
+first.
+
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -15106,3 +15266,8 @@ EverParse's call and not Custard's.
 | M10ζΙ | **A stale checked file, reported as a mystery** (§67.0) | Done.  EverParse's §63.5, filed as the one thing blocking both backends, and measured carefully enough to be worth acting on even though the conclusion is that it is not a Custard defect: §64 added `val custard_float` to `ulib/FStar.Attributes.fsti` and this round adds `val custard_bfloat16`, so every checked file transitively downstream of that interface is *legitimately* stale and every consumer with a prebuilt `.checked` tree has to rebuild it.  What **is** a defect is that nothing said so.  The loader knows exactly which digest moved, and then discards it twice: the warning carrying it is suppressed for a module the user named on the command line, on the reasonable grounds that rechecking such a module is what was asked for --- but under `--codegen` with cross-module inlining the caller *raises* instead of rechecking; and under `--ext fly_deps` a command-line module's cache is not consulted at all, so the module error 317 names is not even the one whose load failed, it is the one that could not proceed because of it.  Between the two, a user in a tree the size of EverParse's is told that a module was not checked and nothing whatever about which file went stale.  `CheckedFiles` now records the reason whether or not it reports it and `Universal` attaches it to both errors that fire on a cache miss, deliberately *not* keyed on the module being asked about, since a checked file is invalidated by a **dependence** and the file worth naming is almost never the one in the error's first line |
 | M10ζΚ | `--custard_rust_no_prefix`, dropped rather than deferred (§67.1) | Done, by measurement and not by implementation.  §65.3 asked EverParse whether the flag was needed once §65.0 gave the Rust path module structure, on the reasoning that there the module *is* the qualification --- and the answer is no: of the 35 public functions in the generated `cbordetver.rs`, **0** carry an F\* module prefix, exactly as in the shipped crate, and of the 135 in the *pre-split* flat output, 0 did either.  There is nothing for such a flag to remove and there never was; the C flag exists because C has one flat namespace, which has no Rust analogue.  They also found the shape that would make it actively *wrong*: `cbor_validate_det` is emitted `pub(crate)` and the shipped file has it `pub(crate)` too, character for character, so a `no_prefix`-style pass on this path would have to reason about visibility it does not own.  Worth recording as a method note as much as a result --- the item had been on the list for three rounds on the strength of a C-side analogy, and one measurement retired it |
 | M10ζΛ | What the split does *not* make interchangeable (§67.2, §67.3) | Done.  EverParse's shipped `-bundle` clause names five modules; under whole-program Custard two of them emit nothing at all, having been fully inlined, and karamel rejects the **entire clause** because one of the names does not exist.  Not a Custard bug --- those modules having no residue is the point --- but a consequence worth stating plainly, because it is easy to read §65.0 as making the two pipelines interchangeable.  It does not: **which modules survive is a property of the extractor**, so a `-bundle` line written against karamel's output is not one for Custard's, and a consumer maintaining both maintains two.  Deleting the two absent names is what produced their working run --- `cbordetver.rs` plus `cbordetveraux.rs`, the layout they ship, passing the full corpus at 45 valid vectors with 0 failures and 440 malformed to 72/368 with 0 BAD, which is the first time the Rust deliverable's shape has been reachable at all.  Recorded alongside it: the generated crate exposes 35 public functions against the shipped 45, all 35 in the shipped set and all 10 absent being `uu___is_*` discriminators, which across *both* shipped crates have 0 call sites --- karamel emits them and nothing consumes them, so dropping them is better output and not a gap, though it is still an observable difference in a published API surface and whether anything downstream is entitled to those names is EverParse's call |
+| M10ζΜ | **A constant, exported as a constant** (§68.0--§68.3) | Done.  EverParse's §64.4, which retracts their own round-63 "C at parity" finding, and the retraction is worth more than the finding was: the header matched karamel's in every *function* and was missing ten of its *constants*, and once `--custard_entry_module CBOR.Spec.Constants` brought them back they came back as `extern uint8_t cbor_major_type_uint64;` where karamel emits `#define CBOR_MAJOR_TYPE_UINT64 (0U)`.  Both let a caller read the value; only one of them is a *constant expression*, which is a syntactic category and not a property of the value --- so EverParse measured three failures from three ordinary uses of a protocol constant: a static initializer and a `case` label are both diagnosable constraint violations, and `#if` is worse than a failure, since the preprocessor cannot see an object at all and reads `#if CBOR_MAJOR_TYPE_UINT64 == 0` as `0 == 0`, which is *true*.  Custard now reads karamel's own `FStar.Attributes.CMacro` --- their attribute rather than a new one, because EverParse's constants are already marked for the pipeline they already ship --- and copies two details of karamel's behaviour as contract: the name is **uppercased** (`GlobalNames.ml`), because that uppercase token is what is in the consumer's source, and the body is a bare suffixed literal with **no cast**, because a cast is not in `#if`'s grammar.  Carried through to `KrmlAst.Macro` as well, so both backends emit the same `#define` |
+| M10ζΝ | What follows from having no linkage (§68.2) | Done.  A `#define` is a textual rewrite, not a declaration, and three things follow that the direct-to-C backend now does: the header emits the macro **instead of** the `extern`, not beside it, since beside it the macro would rewrite the declaration's own name; every *reference* site picks up the macro spelling automatically, via a table `c_name` consults ahead of the rename table, which is not an optimization but the only correct behaviour, the old name having ceased to exist; and a reference to a macro is now itself a constant expression in `static_init`, whose visible effect is that a global initialized from one is initialized statically instead of being assigned in `custard_init_globals` --- Custard giving its own output the property the attribute exists to give the consumer.  Collisions are checked rather than left to the C compiler, since uppercasing is not injective and a macro has no scope to protect a name from it |
+| M10ζΞ | Error 389, and why the check is not defensive (§68.3) | Done.  A `[@@ CMacro ]` body that is not a constant expression is refused.  Without the check the `#define` is emitted anyway and expands to a variable, so the constant *looks* exported and all three uses fail at the consumer, in the consumer's file, about a name the consumer did not write --- which is the failure mode the whole item is about, reintroduced one level down.  Worth noting how hard the error is to reach: Custard's reduction turns a body that *computes* a constant into the constant well before this test runs, so only a body genuinely depending on something run-time gets there, which is exactly the case where refusing is right |
+| M10ζΟ | Error 376's third way out (§68.4, §61.5) | Done.  Kuiper's ask.  376 refuses a monomorphized *value* argument to an external, on the premise that specialization substitutes into a body and an external has no body, so the argument would be silently discarded.  The message offered two ways out --- drop the annotation, or give the definition a body --- and omitted the one a plugin author actually wants: **register a rule**.  A rule does not have the error's premise at all; it replaces the call rather than specializing a body, and is handed the argument's term, which is precisely what a target intrinsic with a compile-time operand needs.  Kuiper found this by reading the source, which is the wrong way to find it.  Recorded alongside: warning 381's retained-binder count is an accidental arity oracle for plugin authors and is now an intended one |
+| M10ζΠ | Tensor Cores, and two gaps (§68.5) | Done as a record.  Kuiper's §61: Custard's C through `nvcc` produces real `wmma.mma.sync` PTX --- the instruction, not a library call that might become one --- and the property that made it work is one karamel does not have, fragment indices surviving to C, which retires one of Kuiper's two `sed` post-passes.  First target intrinsic with a *structured* operand to work without post-processing.  Two gaps stay open and are design questions rather than defects: `TApp` carries only type arguments, so a C++ template's value argument has nowhere to live (`auto` covers the local cases only); and error 379 makes a target *token* cost a fake `assume val` each, the refusal being right for the case it was written for.  Answered from §61.6: `CUSTARD_FLOAT16_DEFINED` stays a single guard --- the one consumer with an override says it is what they need, and a guard whose halves can be set inconsistently is a new way to get a mismatched ABI |

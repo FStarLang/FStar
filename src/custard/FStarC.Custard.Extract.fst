@@ -938,6 +938,10 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
       if not (fresh nm) then [] else
       (match nm with
        | "FStar.Attributes.CInline" -> [CInline]
+       (* Section 68.  karamel's attribute, read the same way, because a
+          consumer that already marks its protocol constants for one pipeline
+          should not have to mark them again for the other. *)
+       | "FStar.Attributes.CMacro" -> [CMacro]
        | _ -> [])
     | _ -> [])
 
@@ -3603,7 +3607,18 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
                    runtime, or give the definition a body Custard can \
                    compile.  A monomorphized *type* argument is fine: it is \
                    substituted into the signature, which is all a type \
-                   argument is." ]
+                   argument is.";
+             (* Section 68.  The third way out, and for a plugin the usual
+                one: the premise here is that specialization would discard the
+                argument because there is no body to substitute it into.  A
+                rule does not have that premise -- it replaces the call
+                outright and is handed the argument's term, which is exactly
+                what a target intrinsic with a compile-time operand needs. *)
+             text "Or register a rule for it.  A rule replaces the call \
+                   rather than specializing a body, and is handed the \
+                   monomorphized argument's term, so nothing is discarded -- \
+                   which is how a target intrinsic with a compile-time \
+                   operand is normally expressed." ]
          | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys
          | Mono, None when is_type_binder (tcenv st) b && is_root st l ->
            (* Section 64.  A root is reached from no F* call site -- that is

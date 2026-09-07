@@ -503,6 +503,7 @@ let flag_to_doc (f:flag) : ML document =
   | Epilogue s -> text ("epilogue " ^ s)
   | ClosurePrologue (a, b) ->
     text ("closure_prologue " ^ a ^ " / " ^ b)
+  | CMacro -> text "c_macro"
   | CInline -> text "c_inline"
   | Realized -> text "realized"
   | Extern (n, h) ->

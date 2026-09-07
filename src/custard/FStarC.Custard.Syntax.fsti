@@ -412,6 +412,23 @@ type flag =
 
       Consumed by {!FStarC.Custard.Simplify}, which rewrites it into
       {!Prologue}s.  No backend sees one. *)
+  | CMacro
+  (** Section 68.  A parameterless definition of constant value becomes a C
+      preprocessor [#define] rather than a variable.
+
+      karamel's [@@ CMacro ]; recognized under the same F\* attribute and
+      given the same spelling, uppercased, because the point is that a
+      consumer's existing C compiles unchanged against either pipeline's
+      header.
+
+      This is not decoration.  A variable --- even one the header declares
+      [extern] --- is not a *constant expression*, so it may not initialize an
+      object with static storage duration, may not be a [case] label, and is
+      invisible to [#if].  Those are the three ordinary uses of a protocol
+      constant, so a header exporting them as variables is a header a caller
+      cannot use for the thing the constant is for.
+
+      The body must be a constant expression; error 389 if it is not. *)
   | CInline
   (** Ask the C compiler to inline this definition.  [inline] in the generated
       C, nothing in OCaml.  Custard's own inlining decisions are {!Inline},

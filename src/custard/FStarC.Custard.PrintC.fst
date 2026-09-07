@@ -281,7 +281,18 @@ let escape_kw (s:string) : ML string =
    for one IR name, not a second name for the same thing. *)
 let renames : ref (SMap.t string) = mk_ref (SMap.create 0)
 
+(* Section 68.  The declarations marked [@@ CMacro ], mapped to the spelling
+   the preprocessor sees.  Consulted by {!c_name}, so that every reference to
+   one is the macro's name without any call site having to know: a [#define]
+   has no linkage and no separate declaration, so the name at the use is the
+   only name there is.  Built after {!build_renames}, since the macro name is
+   the uppercase of whatever the rename settled on. *)
+let macros : ref (SMap.t string) = mk_ref (SMap.create 0)
+
 let c_name (n:name) : ML string =
+  match SMap.try_find !macros (string_of_name n) with
+  | Some s -> s
+  | None ->
   match SMap.try_find !renames (string_of_name n) with
   | Some s -> s
   | None -> escape_kw (sanitize (mangled_name n))
@@ -2380,6 +2391,11 @@ let rec static_init (x:expr) : ML (option string) =
           initializer is what is meant. *)
        | CFloat (v, fw) when narrow_ty fw -> Some (narrow_float_init fw v)
        | _ -> Some (constant c))
+  (* Section 68.  A reference to a [@@ CMacro ] definition is a reference to
+     its body, textually, before the program runs -- so it is as much a
+     constant expression as the body is, and can initialize a global. *)
+  | EQual (n, _) when Some? (SMap.try_find !macros (string_of_name n)) ->
+    Some (c_name n)
   | ECast (e1, t) ->
     (match e1.ty, t, static_init e1 with
      | TInt a, TInt b, Some v when a = b -> Some v
@@ -2411,6 +2427,44 @@ let global_decl (l:dlet) : ML string =
   match static_init l.dl_body with
   | Some v -> d ^ " = " ^ v ^ ";\n"
   | None -> d ^ ";\n"
+
+(* Section 68.  A parameterless definition whose value C can compute at
+   translation time, emitted as a [#define] rather than as a variable.
+
+   The distinction is not cosmetic.  A variable is not a constant expression,
+   so it may not initialize an object with static storage duration, may not be
+   a [case] label, and is invisible to [#if] -- which are the three ordinary
+   uses of a protocol constant.  karamel has always emitted these as macros
+   and consumers write C against that, so a header that exports them as
+   [extern] variables is a header the existing callers do not compile
+   against. *)
+let is_macro (l:dlet) : ML bool =
+  Nil? l.dl_binders && List.existsb CMacro? l.dl_flags
+
+(* Deliberately not {!constant}: at an integer width that adds a cast to the
+   declared type, and a cast makes the result useless to [#if], which is the
+   one of the three uses that cannot be worked around at the call site.  The
+   suffix carries the type well enough for the other two, and it is what
+   karamel emits, so a consumer's [#if] keeps working. *)
+let macro_value (l:dlet) : ML (option string) =
+  match l.dl_body.e with
+  | EConst (CInt (v, b, Some sw)) -> Some (int_literal sw v b)
+  | _ -> static_init l.dl_body
+
+let macro_decl (l:dlet) : ML string =
+  current := string_of_name l.dl_name;
+  match macro_value l with
+  | Some v -> "#define " ^ c_name l.dl_name ^ " (" ^ v ^ ")\n"
+  | None ->
+    E.raise_error0 E.Error_CustardBadMacro [
+      text ("Custard: " ^ string_of_name l.dl_name ^
+            " is marked [@@ CMacro ] but its value is not a constant \
+             expression.");
+      text "A [#define] is substituted before the program runs, so there is \
+            nothing to evaluate it: only a literal, or a cast or an \
+            arithmetic combination of literals, can be one.";
+      text "Drop the attribute to get an ordinary variable, initialized at \
+            startup like any other global." ]
 
 let global_init (l:dlet) : ML string =
   current := string_of_name l.dl_name;
@@ -2568,7 +2622,9 @@ let global_inits_of (p:program) : ML (list dlet) =
   p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
-    | DLet l when Nil? l.dl_binders && not (has_static_init l) -> [l]
+    (* Section 68.  A macro has no storage, so there is nothing to set; the
+       body has already been checked to be a constant expression. *)
+    | DLet l when Nil? l.dl_binders && not (is_macro l) && not (has_static_init l) -> [l]
     | _ -> [])
 
 let init_globals_name (cu:unit_info) (p:program) : ML (option string) =
@@ -2735,6 +2791,63 @@ Name the module with --custard_entry_module, or its definitions with \
    naming one such definition, because the consumer's problem is the type.
    Only types the unit actually declares are reported: an abbreviation that
    was unfolded leaves no name in the header to depend on. *)
+(* Section 68.  The macro spellings, computed once {!build_renames} has settled
+   what each declaration is called.  Uppercased, because that is what karamel
+   does (GlobalNames.ml) and the whole point of the attribute is that a
+   consumer's existing C compiles against either pipeline's header.
+
+   Uppercasing is not injective and a macro has no scope, so it can capture a
+   name that was fine before; both are collisions and both are reported here
+   rather than being left to the C compiler, which would see only the token
+   after substitution. *)
+let build_macros (p:program) : ML unit =
+  macros := SMap.create 0;
+  let ms = p |> List.collect (fun d ->
+    match d with
+    | DLet l when is_macro l -> [l.dl_name]
+    | _ -> []) in
+  if Nil? ms then () else begin
+    (* Every other C name in the unit, so that a macro landing on one is
+       caught: after substitution that name is no longer spellable. *)
+    let taken : SMap.t string = SMap.create 50 in
+    p |> List.iter (fun d ->
+      let n = name_of_decl d in
+      if List.existsb (fun m -> string_of_name m = string_of_name n) ms
+      then ()
+      else SMap.add taken (c_name n) (string_of_name n));
+    ms |> List.iter (fun n ->
+      let m = String.uppercase (c_name n) in
+      let clash =
+        match SMap.try_find taken m with
+        | Some o -> Some o
+        | None -> SMap.try_find !macros m in
+      match clash with
+      | Some o ->
+        E.raise_error0 E.Error_CustardExportCollision [
+          text ("Custard: the macro for " ^ string_of_name n ^ " is " ^ m ^
+                ", which is already the C name of " ^ o ^ ".");
+          text "A [@@ CMacro ] definition is spelled in upper case, following \
+                karamel, and the preprocessor rewrites that token everywhere \
+                in the translation unit -- including in the other \
+                declaration, which would then be unspellable.";
+          text "Rename one of the two, or drop the attribute." ]
+      | None ->
+        SMap.add !macros (string_of_name n) m;
+        (* The inverse direction, for the next iteration's collision test. *)
+        SMap.add !macros m (string_of_name n))
+  end;
+  (* The reverse entries were bookkeeping for the loop above; a lookup is by
+     the F* name, so rebuild without them. *)
+  let final : SMap.t string = SMap.create 20 in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l when is_macro l ->
+      (match SMap.try_find !macros (string_of_name l.dl_name) with
+       | Some m -> SMap.add final (string_of_name l.dl_name) m
+       | None -> ())
+    | _ -> ());
+  macros := final
+
 let check_interface_names (p:program) : ML unit =
   let rec spec_names (c:cty) : ML (list name) =
     match c with
@@ -2915,6 +3028,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
   build_renames p;
+  build_macros p;
   check_interface_names p;
   arities := at;
   uses_narrow := false;
@@ -3041,6 +3155,9 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let protos = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
+    (* A public one is in the header, which this source includes; repeating it
+       here would be a redefinition. *)
+    | DLet l when is_macro l -> if is_public l then [] else [prologue_of l ^ macro_decl l]
     | DLet l when Nil? l.dl_binders -> [prologue_of l ^ storage l ^ global_decl l]
     | DLet l when Cons? l.dl_binders ->
       if is_public l then []
@@ -3050,6 +3167,10 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let pub_decls = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
+    (* Section 68.  A [#define] and nothing else: it has no linkage, so an
+       [extern] declaration beside it would declare a different object, and
+       the macro would then rewrite that declaration's own name. *)
+    | DLet l when is_public l && is_macro l -> [prologue_of l ^ macro_decl l]
     | DLet l when is_public l && Nil? l.dl_binders ->
       current := string_of_name l.dl_name;
       [prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"]

@@ -414,6 +414,7 @@ type error_code =
   | Error_CustardBadFloatWidth
   | Warning_CustardFloatVocabulary
   | Error_CustardPolyExternalUnused
+  | Error_CustardBadMacro
 
 type error_setting = error_code & error_flag & int
 

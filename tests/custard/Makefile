@@ -1415,6 +1415,39 @@ C_TESTS += NarrowG
 CGREP_NarrowG += "static custard_f16 NarrowG_g = CUSTARD_F16_INIT(15872U);"
 CNOGREP_NarrowG += "NarrowG_g = CUSTARD_F16_LIT"
 
+# Section 68.  A protocol constant is part of a C API in a way a variable
+# cannot be: a [#define] is a constant expression, so it can be a [case]
+# label, can initialize an object with static storage duration, and is
+# visible to [#if].  karamel has always emitted these as macros, uppercased,
+# and consumers write C against that spelling, so Custard matches it exactly.
+C_TESTS += Macro
+# The constants are the API; without an entry module nothing reaches them
+# from [main] and whole-program reachability drops them (section 64.4).
+FLAGS_Macro = --custard_entry_module Macro
+CGREP_Macro += "\#define MACRO_MAJOR_TYPE_UINT64 (0U)"
+CGREP_Macro += "\#define MACRO_MAX_SIMPLE_VALUE (23U)"
+CGREP_Macro += "\#define MACRO_INTERNAL_LIMIT (65535U)"
+# No cast in the body: a cast is not usable in [#if], which is one of the
+# three reasons to want the macro at all.
+CNOGREP_Macro += "\#define MACRO_MAJOR_TYPE_UINT64 ((uint8_t)0U)"
+# A macro has no linkage, so an [extern] declaration beside it would declare
+# a different object -- and the macro would then rewrite that declaration.
+CNOGREP_Macro += "extern uint8_t MACRO_MAJOR_TYPE_UINT64"
+CNOGREP_Macro += "Macro_major_type_uint64"
+# A reference to a macro is a reference to its body, so it is itself a
+# constant expression and a global initialized from one needs no startup
+# assignment.
+CGREP_Macro += "uint8_t Macro_table = MACRO_MAX_SIMPLE_VALUE;"
+CNOGREP_Macro += "custard_init_globals"
+
+# ... and one whose body C cannot evaluate is refused, rather than being
+# emitted as something the preprocessor would paste in unevaluated.
+REJECT_TESTS += MacroBad
+CODE_MacroBad = 389
+FLAGS_MacroBad = --custard_backend C --custard_entry_module MacroBad
+EGREP_MacroBad += "but its value is not a constant"
+EGREP_MacroBad += "Drop the attribute"
+
 # Section 63.1.  A width Custard does not implement is refused at the
 # attribute, not at the first use of the type: 386 names the mistake, where
 # 368 would name the type and point at another module.

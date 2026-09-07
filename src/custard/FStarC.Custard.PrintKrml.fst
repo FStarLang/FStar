@@ -820,6 +820,10 @@ let krml_flags (fs : list flag) : ML (list K.flag) =
     | Prologue s -> [K.Prologue s]
     | Epilogue s -> [K.Epilogue s]
     | CInline -> [K.CInline]
+    (* Section 68.  karamel's own [Macro], so that the two backends emit the
+       same [#define] and a consumer's C does not have to know which one
+       produced the header. *)
+    | CMacro -> [K.Macro]
     | _ -> [])
 
 let with_typars (env:kenv) (ps : list string) : ML kenv =
