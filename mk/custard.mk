@@ -306,11 +306,70 @@ plugin: $(BIN)
 	$(Q)grep -q '= kpr_kcall;' $(PLUGIN_DIR)/CustardRuleTest.c \
 	  && { echo "ERROR: the rule's call went through a function pointer"; \
 	       exit 1; } || true
+	# Section 64: a polymorphic external reached only through a rule.  The
+	# extractor never sees a call to [sink], so the instantiations exist
+	# only as type arguments on the [EQual] the rule built; one declaration
+	# per distinct type vector is what says they were read.  Both greps
+	# together are the assertion -- either name alone would still be here
+	# if the two had collapsed into one symbol at [any].
+	$(Q)grep -q 'CustardRuleTest_sink__uint32(uint32_t)' \
+	  $(PLUGIN_DIR)/CustardRuleTest.c \
+	  || { echo "ERROR: the u32 instantiation of the rule's polymorphic \
+	             external is missing"; exit 1; }
+	$(Q)grep -q 'CustardRuleTest_sink__uint64(uint64_t)' \
+	  $(PLUGIN_DIR)/CustardRuleTest.c \
+	  || { echo "ERROR: the u64 instantiation of the rule's polymorphic \
+	             external is missing"; exit 1; }
+	# And nothing left at [any], which is what it used to come out as.
+	$(Q)grep -q 'CustardRuleTest_sink(' $(PLUGIN_DIR)/CustardRuleTest.c \
+	  && { echo "ERROR: the polymorphic external survived unspecialized"; \
+	       exit 1; } || true
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror \
 	  -I$(abspath $(PLUGIN_DIR)) -x c $(PLUGIN_DIR)/CustardRuleTest.c \
 	  $(PLUGIN_SRC)/CustardRuleMain.c \
 	  -o $(PLUGIN_DIR)/CustardRuleTest.exe
 	$(Q)$(PLUGIN_DIR)/CustardRuleTest.exe
+	# Section 64.2: the arity mistake in the direction that used to get all
+	# the way to the C compiler.  The rule for CustardRuleArity.thrice is
+	# registered at arity 1 against three retained arguments, so its result
+	# is applied to the two left over.  Extracted for the diagnostic; the
+	# C is expected not to compile and is not compiled.
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) --lax \
+	  --cache_checked_modules --cache_dir $(abspath $(PLUGIN_DIR))/cache \
+	  --include $(PLUGIN_SRC) $(PLUGIN_SRC)/CustardRuleArity.fst
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) \
+	  --load_cmxs $(abspath $(PLUGIN_DIR))/$(PLUGIN_MOD) \
+	  --codegen Custard --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_main CustardRuleArity.main \
+	  --cache_dir $(PLUGIN_DIR)/cache --include $(PLUGIN_SRC) \
+	  $(PLUGIN_SRC)/CustardRuleArity.fst \
+	  -o $(PLUGIN_DIR)/CustardRuleArity.c > $(PLUGIN_DIR)/arity.log 2>&1 || true
+	$(Q)grep -q 'Warning 381' $(PLUGIN_DIR)/arity.log \
+	  || { echo "ERROR: an under-declared rule arity was not reported"; \
+	       cat $(PLUGIN_DIR)/arity.log; exit 1; }
+	$(Q)grep -qF 'the rule'"'"'s result is not a function' $(PLUGIN_DIR)/arity.log \
+	  || { echo "ERROR: 381 fired, but not for the under-arity reason"; \
+	       cat $(PLUGIN_DIR)/arity.log; exit 1; }
+	# Section 64: the other rule-authoring mistake a polymorphic entry point
+	# makes possible -- an EQual built without the argument's type.  Nothing
+	# else records the instantiation, so the reference would name a symbol
+	# that does not exist; 388 says so here instead of the linker saying it
+	# about generated code.
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) --lax \
+	  --cache_checked_modules --cache_dir $(abspath $(PLUGIN_DIR))/cache \
+	  --include $(PLUGIN_SRC) $(PLUGIN_SRC)/CustardRuleBare.fst
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) \
+	  --load_cmxs $(abspath $(PLUGIN_DIR))/$(PLUGIN_MOD) \
+	  --codegen Custard --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_main CustardRuleBare.main \
+	  --cache_dir $(PLUGIN_DIR)/cache --include $(PLUGIN_SRC) \
+	  $(PLUGIN_SRC)/CustardRuleBare.fst \
+	  -o $(PLUGIN_DIR)/CustardRuleBare.c > $(PLUGIN_DIR)/bare.log 2>&1 || true
+	$(Q)grep -q 'Error 388' $(PLUGIN_DIR)/bare.log \
+	  || { echo "ERROR: a rule that dropped the type argument was not \
+	             reported"; cat $(PLUGIN_DIR)/bare.log; exit 1; }
 
 # -------------------------------------------------------------- pulse plugin
 

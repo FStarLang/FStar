@@ -28,3 +28,18 @@ assume val lte : t -> t -> bool
 assume val ieee_eq : t -> t -> bool
 assume val of_int : FStar.Int64.t -> t
 assume val of_literal : string -> t
+
+(* Section 64.1.  [FStar.Float32] *derives* these ([let zero = of_int 0L]), so
+   there is no [val] and nothing to fall through; a library that declares them
+   abstract instead -- the natural thing when the axioms are the point -- used
+   to get an extern and a link error, with no diagnostic.  They are part of the
+   vocabulary now. *)
+assume val zero : t
+assume val one : t
+
+(* Section 64.1.  Not part of the vocabulary, and its [@@custard_extern] says
+   so on purpose: a rule from a definition's own attributes beats the builtin
+   table, which is what lets a library that really does realize a constant in
+   C keep doing so. *)
+[@@FStar.Attributes.custard_extern "FLT_MAX"; FStar.Attributes.custard_c_header "float.h"]
+assume val largest : t

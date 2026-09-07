@@ -198,6 +198,50 @@ let launch (tys : list cty) (args : list expr) : ML expr =
     mk (EApp (kc, [kernel; shmem] @ cap_args)) n.ty E_Impure
   | _ -> failwith "CustardRulePlugin: launch applied to the wrong number of arguments"
 
+(* Section 64.  A rule that forwards its argument to a *polymorphic* runtime
+   entry point, which is the case the extractor cannot see: [sink] has no F*
+   caller, so [margs] never carries an instantiation for it, and the type
+   argument exists only on the [EQual] node this builds.
+
+   The type argument is the whole content of the rule.  Dropping it -- writing
+   [EQual (sink, [])] -- is what a rule author does by accident, and it is why
+   the declaration used to come out at [any]. *)
+let sink_lid = "CustardRuleTest.sink"
+
+let emit (_tys : list cty) (args : list expr) : ML expr =
+  match args with
+  | [x] ->
+    let sink = mk (EQual ({ ns = ["CustardRuleTest"]; id = "sink"; spec = None },
+                          [x.ty]))
+                  (TArrow (x.ty, E_Impure, TUnit)) E_Impure in
+    mk (EApp (sink, [x])) TUnit E_Impure
+  | _ -> failwith "CustardRulePlugin: emit applied to the wrong number of arguments"
+
+(* Section 64.2.  Deliberately wrong: [thrice] retains three arguments and
+   this claims one, so the rule's result -- a [u32], not a function -- is
+   applied to the two that are left.  Registered so that the warning has
+   something to fire on. *)
+let under (_tys : list cty) (args : list expr) : ML expr =
+  match args with
+  | [x] -> x
+  | _ -> failwith "CustardRulePlugin: under applied to the wrong number of arguments"
+
+(* Section 64.  Deliberately wrong in the other way a rule for a polymorphic
+   external can be: the [EQual] carries no type argument, so nothing says
+   which instantiation is meant. *)
+let bare (_tys : list cty) (args : list expr) : ML expr =
+  match args with
+  | [x] ->
+    let sink = mk (EQual ({ ns = ["CustardRuleTest"]; id = "bare_sink"; spec = None }, []))
+                  (TArrow (x.ty, E_Impure, TUnit)) E_Impure in
+    mk (EApp (sink, [x])) TUnit E_Impure
+  | _ -> failwith "CustardRulePlugin: bare applied to the wrong number of arguments"
+
 let _ =
+  B.register_rule (Ident.lid_of_str "CustardRuleTest.bare_emit") (B.Rule_prim (1, bare));
+  B.register_root (Ident.lid_of_str "CustardRuleTest.bare_sink");
+  B.register_rule (Ident.lid_of_str "CustardRuleArity.thrice") (B.Rule_prim (1, under));
   B.register_rule (Ident.lid_of_str "CustardRuleTest.launch") (B.Rule_prim (2, launch));
+  B.register_rule (Ident.lid_of_str "CustardRuleTest.emit") (B.Rule_prim (1, emit));
+  B.register_root (Ident.lid_of_str sink_lid);
   B.register_root (Ident.lid_of_str kcall_lid)

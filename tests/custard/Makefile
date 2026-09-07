@@ -1290,6 +1290,13 @@ CGREP_FloatOptIn += "float x = 1.5f;"
 CGREP_FloatOptIn += "bool ok5 = ((x * y) == 3.375f);"
 # [of_int] is a conversion, so it is a cast and not a coercion.
 CGREP_FloatOptIn += "bool ok6 = ((float)3 == 3.0f);"
+# Section 64.1.  [zero]/[one] are constants, not calls: an abstract [val zero]
+# in a float library used to become an extern and a link error.  And
+# [largest], which has [@@custard_extern], stays one -- a rule from a
+# definition's own attributes beats the builtin table.
+CGREP_FloatOptIn += "((0.0f + 1.0f) == 1.0f)"
+CGREP_FloatOptIn += "\#include \"float.h\""
+CGREP_FloatOptIn += "(1.0f < FLT_MAX)"
 # The whole point: the library's names do not survive as calls.  Before the
 # attribute existed every one of these was an undefined FloatLib_* symbol.
 CNOGREP_FloatOptIn += "FloatLib"

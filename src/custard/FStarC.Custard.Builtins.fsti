@@ -51,7 +51,15 @@ type rule =
   (** [Rule_prim (n, f)] builds a term from the type arguments and [n]
       translated value arguments.  A use supplying fewer than [n] arguments is
       eta-expanded rather than rejected, so that a primitive can still be
-      passed around as a function. *)
+      passed around as a function.
+
+      [n] counts every argument the declaration *retains* after erasure, which
+      is not the same as the number the rule reads.  In particular the trailing
+      unit applications of a Pulse [fn] are arguments like any others: a rule
+      for something that looks like six parameters may need [n = 10].  Both
+      ways of getting it wrong are warning 381 -- too large and every use is
+      eta-expanded into a lambda nothing applies, too small and the left-over
+      arguments are applied to the rule's result (section 64.2). *)
 
   | Rule_type of (list cty -> ML cty)
   (** Build a type from the type arguments. *)

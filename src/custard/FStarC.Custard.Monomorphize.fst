@@ -51,6 +51,7 @@ open FStarC.Const
 open FStarC.Custard.Syntax
 
 module SMap   = FStarC.SMap
+module Pprint = FStarC.Pprint
 module String = FStarC.String
 module Options = FStarC.Options
 
@@ -126,6 +127,18 @@ type state = {
   (* Instantiations whose body has not been built yet.  Building one can
      demand others, hence a worklist rather than recursion. *)
   todo:   ref (list (name & name & list cty));
+  (* Section 64.  Every external declaration, by name, and the clones made
+     of the polymorphic ones.  An external that still has [dx_typars] when
+     the IR exists is one the extractor could not specialize, because the
+     calls to it were synthesized by a rule and so were never F* call sites
+     with arguments to read.  They are ordinary [EQual] type applications by
+     now, though, which is all this pass ever needs. *)
+  exts:      SMap.t dexternal;
+  ext_names: SMap.t name;
+  (* Referenced with *no* type arguments, which is the only way dropping the
+     polymorphic declaration can leave something dangling. *)
+  ext_bare:  SMap.t bool;
+  ext_clones: ref (list dexternal);
 }
 
 (* An external is realized by hand-written code in the target language, which
@@ -187,6 +200,14 @@ let is_poly (st:state) (n:name) : ML bool =
   if Some? (SMap.try_find st.frozen (string_of_name n)) then false
   else match SMap.try_find st.types (string_of_name n) with
   | Some d -> Cons? d.dt_params
+  | None -> false
+
+(* An external the extractor left polymorphic.  [dx_typars] is empty for every
+   external that reached its instantiations through [margs], so this is exactly
+   the rule-synthesized case. *)
+let is_poly_extern (st:state) (n:name) : ML bool =
+  match SMap.try_find st.exts (string_of_name n) with
+  | Some d -> Cons? d.dx_typars
   | None -> false
 
 (* A constructor's name is a function of its owner's, which is what lets a use
@@ -313,6 +334,38 @@ let request_inst (st:state) (n:name) (args:list cty) : ML name =
 (* The field types of constructor [cn] of [owner] at [args] -- the types the
    subpatterns of a [PCtor] are matched at.  Read off the *original*
    polymorphic declaration, so no clone body has to exist yet. *)
+(* Section 64.  The value-level twin of {!request}, and deliberately built the
+   same way: one clone per distinct type vector, named from a hint so the
+   output stays readable, and registered before the body so that nothing asks
+   twice.
+
+   It needs no worklist.  A type's clone can demand another type's -- [list
+   (list int)] -- but an external has no body, so substituting into its
+   signature is the whole of the work and can be done here. *)
+let request_extern (st:state) (n:name) (args:list cty) : ML name =
+  let key = key_of n args in
+  match SMap.try_find st.ext_names key with
+  | Some nm -> nm
+  | None ->
+    let hint = String.concat "_" (args |> List.map (hint_of_cty hint_depth)) in
+    let base = clip ((match n.spec with Some s -> s ^ "_" | None -> "") ^ hint) in
+    let rec pick (i:int) : ML string =
+      let cand = if i = 0 then base else base ^ "_" ^ show i in
+      let k = string_of_name ({ n with spec = None }) ^ "__" ^ cand in
+      if Some? (SMap.try_find st.taken k) then pick (i + 1)
+      else (SMap.add st.taken k true; cand) in
+    let nm = { n with spec = Some (pick 0) } in
+    SMap.add st.ext_names key nm;
+    (match SMap.try_find st.exts (string_of_name n) with
+     | None -> ()
+     | Some d ->
+       let sub = zip_params d.dx_typars args in
+       st.ext_clones :=
+         { d with dx_name = nm; dx_typars = [];
+                  dx_ty = mono_cty st (subst_cty sub d.dx_ty) }
+         :: !st.ext_clones);
+    nm
+
 let ctor_fields (st:state) (owner:name) (args:list cty) (cn:name) : ML (list cty) =
   match SMap.try_find st.types (string_of_name owner) with
   | Some ({ dt_body = TVariant cs; dt_params = ps }) ->
@@ -434,7 +487,22 @@ let rec mono_expr (st:state) (env:env) (x:expr) : ML expr =
   let e' =
     match x.e with
     | EConst _ | EVar _ | EAny | EAbort _ -> x.e
-    | EQual (n, args) -> EQual (n, args |> List.map (mono_cty st))
+    | EQual (n, args) ->
+      let args = args |> List.map (mono_cty st) in
+      (* Section 64.  The type arguments are on the node either way; what
+         changes for a polymorphic external is that they now select a
+         declaration instead of being coerced away against an [any]. *)
+      if is_poly_extern st n
+      then
+        if Cons? args
+        then EQual (request_extern st n args, [])
+        else
+          (* No type arguments to select an instantiation with, and the
+             declaration this names is about to be dropped.  Recorded rather
+             than reported here, because a use is not an error until we know
+             the declaration really went away. *)
+          (SMap.add st.ext_bare (string_of_name n) true; EQual (n, args))
+      else EQual (n, args)
     | ELet (v, t, e1, e2) ->
       ELet (v, mono_cty st t, go e1, mono_expr st ((v, t) :: env) e2)
     | EApp (h, es) -> EApp (go h, es |> List.map go)
@@ -507,12 +575,19 @@ let run (prog:program) : ML program =
              names  = SMap.create 100;
              taken  = SMap.create 100;
              clones = mk_ref [];
-             todo   = mk_ref [] } in
+             todo   = mk_ref [];
+             exts       = SMap.create 20;
+             ext_names  = SMap.create 20;
+             ext_bare   = SMap.create 20;
+             ext_clones = mk_ref [] } in
   prog |> List.iter (fun d ->
     match d with
     | DType t ->
       SMap.add st.types (string_of_name t.dt_name) t;
       SMap.add st.taken (string_of_name t.dt_name) true
+    | DExternal x ->
+      SMap.add st.exts (string_of_name x.dx_name) x;
+      SMap.add st.taken (string_of_name x.dx_name) true
     | _ -> ());
   (* Freezing is transitive: a frozen [list] mentions [option] in no way here,
      but if it did, that [option] could not be cloned either. *)
@@ -585,7 +660,48 @@ let run (prog:program) : ML program =
                              (l.dl_binders |> List.map (fun (b:binder) ->
                                 (b.b_name, b.b_ty)))
                              l.dl_body }]
+    (* Section 64.  A polymorphic external is replaced by its instantiations,
+       exactly as a polymorphic type is.  Dropping it is the point and not
+       merely tidiness: its own signature still mentions the type variable,
+       and there is no C for that -- keeping it would trade one error 368 for
+       another on the same declaration. *)
+    | DExternal x when Cons? x.dx_typars -> [DExternal x]
     | DExternal x -> [DExternal { x with dx_ty = mono_cty st x.dx_ty }]
     | DExn e -> [DExn { e with de_args = e.de_args |> List.map (mono_cty st) }]) in
   drain st;
-  rest @ (List.rev !st.clones |> List.map (fun d -> DType d))
+  (* Section 64.  The polymorphic externals are dropped here rather than in
+     the pass above, because "was it instantiated?" is not answerable until
+     every declaration has been walked: the call that instantiates one may
+     be in a definition that comes later in the list.
+
+     Dropping an uninstantiated one is not in itself a problem: with no
+     instantiation there is no call either, so nothing dangles, and a plugin
+     registers its roots once for every program it is loaded into -- most of
+     which will legitimately use only some of them.
+
+     What *is* a problem is a reference carrying no type arguments, because
+     that names the declaration being dropped and nothing replaces it.  That
+     is a rule that forgot to put the instantiation on the [EQual] it built,
+     and it is the §36.2 failure again: a dangling name whose symptom is a
+     link error in generated C. *)
+  let rest = rest |> List.collect (fun d ->
+    match d with
+    | DExternal x when Cons? x.dx_typars ->
+      if None? (SMap.try_find st.ext_bare (string_of_name x.dx_name)) then []
+      else
+        FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardPolyExternalUnused ([
+          Pprint.arbitrary_string
+            ("Custard: the external " ^ string_of_name x.dx_name ^
+             " is polymorphic, and it is referred to with no type \
+              arguments, so there is no type to declare it at.");
+          Pprint.arbitrary_string
+            "A polymorphic external is emitted once per instantiation, and \
+             an instantiation comes from the type arguments on the reference \
+             to it.  With none, there is nothing to emit and the reference \
+             would name a symbol that does not exist.";
+          Pprint.arbitrary_string
+            "If this is a rule, put the argument's type on the EQual node it \
+             builds.  Otherwise give the declaration a monomorphic type."])
+    | d -> [d]) in
+  rest @ (List.rev !st.ext_clones |> List.map (fun d -> DExternal d))
+       @ (List.rev !st.clones |> List.map (fun d -> DType d))

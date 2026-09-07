@@ -285,6 +285,27 @@ let float_rule (fw:fwidth) (id:string) : ML (option rule) =
               "Its argument has to be concrete: it becomes a constant in the                generated code, and there is nothing else it could become." ]
         | _ -> failwith "Custard: FStar.Float.of_literal applied to the wrong arity"))
 
+    (* Section 64.1.  [zero] and [one] are part of the vocabulary, even though
+       [FStar.Float32] does not declare them: it *derives* them, as
+       [let zero = of_int 0L], so there is no [val] and nothing falls through.
+       A library that declares them abstract instead -- which is the natural
+       thing to do when the axioms are what you care about -- got an extern
+       and a link error, with no diagnostic, because an unrecognized name in a
+       float module is deliberately an extern (section 63.2).
+
+       Recognizing them is better than warning about them.  Custard knows what
+       zero and one are in an IEEE format, the constants agree with what ulib
+       derives, and every float library has the two names.  A library that
+       really does want them realized in C can still say so: a rule from a
+       definition's own attributes beats the builtin table, so
+       [@@custard_extern "MY_ZERO"] wins over this. *)
+    | "zero" | "one" ->
+      let s = if id = "zero" then "0" else "1" in
+      (match float_lit_of_string s with
+       | Some f ->
+         Some (Rule_prim (0, fun _ _ -> mk (EConst (CFloat (f, fw))) (TFloat fw) E_Pure))
+       | None -> None)
+
     (* Realized outside F*, as the machine integers' are. *)
     | "bit_eq" | "to_string" | "of_string" ->
       Some (Rule_extern { x_name = None; x_header = None })

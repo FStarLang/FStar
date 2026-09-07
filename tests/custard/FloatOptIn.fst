@@ -49,4 +49,11 @@ let main () : ML U32.t =
   let ok6 = L.ieee_eq (L.of_int 3L) (L.of_literal "3.0") in
   let ok7 = L.lt (L.sub x y) (L.of_literal "0.0") in
 
-  if ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 then 0ul else 1ul
+  (* Section 64.1.  [zero] and [one] are vocabulary, so they are constants and
+     not calls; [largest] carries [@@custard_extern] and so stays one, which
+     is the half that says the override still wins. *)
+  let ok8 = L.ieee_eq (L.add L.zero L.one) L.one in
+  let ok9 = L.lt L.one L.largest in
+
+  if ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8 && ok9
+  then 0ul else 1ul

@@ -457,8 +457,14 @@ val custard_c_header (header: string) : unit
 
     The operations are then found by name in the same module, using the same
     vocabulary [FStar.Float32] uses --- [add], [sub], [mul], [div], [lt],
-    [lte], [ieee_eq], [of_int] and [of_literal].  Only 32 and 64 are
-    accepted. *)
+    [lte], [ieee_eq], [of_int], [of_literal], [zero] and [one].  Only 32 and
+    64 are accepted.
+
+    Any *other* name the module declares becomes an external symbol, which is
+    deliberate: that is how [bit_eq] and [to_string] are realized, and how a
+    library's own axioms are.  It does mean a misspelling of the vocabulary is
+    a link error rather than a compile error, so the near misses of [ieee_eq]
+    are warning 387. *)
 val custard_float (width: int) : unit
 
 (** Custard: a prologue for everything this definition *reaches*, rather than

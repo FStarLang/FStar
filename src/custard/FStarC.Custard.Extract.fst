@@ -467,6 +467,13 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   nfe     = SMap.create 20;
 }
 
+(* A name given on --custard_entry, named by --custard_main, or registered by
+   a plugin with [register_root].  What the roots have in common, and the
+   reason this is worth a name, is that nothing in the F* program has to
+   reach them: they are live because someone said so. *)
+let is_root (st:state) (l:Ident.lident) : ML bool =
+  Some? (SMap.try_find st.roots (Ident.string_of_lid l))
+
 (* Just enough to fire the redexes that substituting a local function creates,
    and nothing else: this runs on the enclosing body, which is code, so any
    further reduction here would be reduction of the emitted program. *)
@@ -2599,7 +2606,43 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
     let e = f tyargs given in
     match extra with
     | [] -> e
-    | _ -> mk (EApp (e, extra)) (apply_result st e.ty (List.length extra))
+    | _ ->
+      (* Section 64.2.  The other direction of the arity mistake, and the one
+         that gets further before it is noticed.  Declaring [n] too *large*
+         produces a lambda nothing applies, which the warning above catches;
+         declaring it too *small* leaves arguments over, and they are applied
+         to whatever the rule returned.
+
+         When the rule returned a non-function that is not a program.  It is
+         also easy to reach without noticing: the trailing unit applications
+         of a Pulse [fn] are arguments like any others, so a rule written by
+         counting the interesting parameters undercounts by however many
+         those are.  The result reaches C as a call through a [custard_unit],
+         and the first thing to object is the C compiler -- about generated
+         code, in a file the rule author did not write.
+
+         Named here rather than checked in the IR because here we still know
+         whose rule it is and what the two numbers were, which is the whole
+         content of the diagnosis. *)
+      (match head_ty st e.ty 10 with
+       | TArrow _ -> ()
+       | rty ->
+         custard_warning st E.Warning_CustardRuleArity [
+           Pprint.doc_of_string
+             ("The rule for " ^ Ident.string_of_lid l ^ " declares arity " ^
+              show n ^ ", but the use site supplies " ^
+              show (List.length args) ^ " argument(s), and the rule's result \
+              is not a function: it has type " ^ show rty ^ ".");
+           Pprint.doc_of_string
+             ("The " ^ show (List.length extra) ^ " left-over argument(s) are \
+               applied to that result, which is not something the target can \
+               run -- it reaches C as a call through a non-function and is \
+               reported there, about generated code.");
+           Pprint.doc_of_string
+             "A rule's arity counts every argument the declaration retains, \
+              including the trailing unit applications of a Pulse [fn], not \
+              only the ones the rule reads."]);
+      mk (EApp (e, extra)) (apply_result st e.ty (List.length extra))
               (List.fold_left (fun x a -> join_eff x a.eff)
                               (apply_eff st e.ty (List.length extra)) extra)
 
@@ -3264,7 +3307,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                     q = S.Unfold_for_unification_and_vcgen) in
     let d = if is_realized && not inlined then with_realized d else d in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
-    if is_inlinable se && not (Some? (SMap.try_find st.roots (Ident.string_of_lid l)))
+    if is_inlinable se && not (is_root st l)
     then with_inline d else d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
@@ -3562,6 +3605,20 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
                    substituted into the signature, which is all a type \
                    argument is." ]
          | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys
+         | Mono, None when is_type_binder (tcenv st) b && is_root st l ->
+           (* Section 64.  A root is reached from no F* call site -- that is
+              what makes it a root -- so "the call site did not supply it"
+              says nothing about whether the instantiation is known.  For a
+              root the callers are rule-synthesized [EQual] nodes, which do
+              carry type arguments, and collapsing to [any] here throws away
+              the only thing that could have used them.
+
+              So the parameter is kept, and the declaration stays
+              polymorphic for exactly one more pass: {!Monomorphize} sees
+              the instantiations written in the IR and emits one external
+              per distinct type vector, which is what the extractor already
+              does for an ordinary external through [margs]. *)
+           go (i + 1) bs' cs' subst (b' :: keep) anys
          | Mono, None when is_type_binder (tcenv st) b ->
            go (i + 1) bs' cs' subst (b' :: keep) (name_of_bv b.binder_bv :: anys)
          | _ -> go (i + 1) bs' cs' subst (b' :: keep) anys)
@@ -4382,6 +4439,14 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      projector or discriminator that some *other* root gets to first would be
      extracted, marked [Inline] and cached before its own turn came. *)
   roots |> List.iter (fun (l:Ident.lident) ->
+    SMap.add st.roots (Ident.string_of_lid l) true);
+  (* Section 64.  A plugin's roots belong in this set too.  They were marked
+     alongside [--custard_entry]'s below and described as being treated
+     "exactly as [--custard_entry]'s are", but they were missing from the one
+     place that records *which* names are roots -- so the two things that ask
+     the question, inlining and now [external_ty], answered it wrongly for
+     precisely the names a plugin cares about. *)
+  Builtins.registered_roots () |> List.iter (fun (l:Ident.lident) ->
     SMap.add st.roots (Ident.string_of_lid l) true);
   let modroots, roots =
     roots |> List.partition (fun (l:Ident.lident) ->

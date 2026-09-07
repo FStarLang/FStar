@@ -413,6 +413,7 @@ type error_code =
   | Error_CustardEntryNotFound
   | Error_CustardBadFloatWidth
   | Warning_CustardFloatVocabulary
+  | Error_CustardPolyExternalUnused
 
 type error_setting = error_code & error_flag & int
 

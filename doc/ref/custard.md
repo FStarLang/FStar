@@ -14254,6 +14254,164 @@ which do not commute, and exits 1 on a swap.
 
 
 
+# 64 An external is a signature, and a rule is a call site
+
+Round 58.  §63.3 fixed polymorphic externals for the case where F\* can see
+the call: `assume val ext (#a:Type0) (x:a) : a`, applied in source, now
+gets one declaration per instantiation.  Kuiper confirmed that and then
+sent the case it does not cover, which is the one they actually have.
+
+A rule synthesizes the call.  Nothing in F\* applies `sink`, so the
+extractor never sees an argument to read an instantiation from --- their
+`kcallN` launcher and a `vec_memcpy` rule, twice independently.  The
+instantiations are not *unknown*, though: the rule put them on the `EQual`
+node it built.  They were simply being ignored.
+
+```
+[@@root]
+external RuleSrc.ext : any -[I]-> unit = "ext"
+
+let RuleSrc.main (tmp: unit) : unit [Impure] =
+(RuleSrc.ext<u32> (3<u32> <: any));
+  RuleSrc.ext<u64> (4<u64> <: any)
+```
+
+The call sites are right and the declaration is at `any`.
+
+## 64.0 Three bugs in a row, and each one hid the next
+
+The fix is small in each of three places, and the places are worth
+listing, because the shape of the thing is that no single one of them was
+wrong on its own.
+
+**A root is not a call site that failed to supply an argument.**
+`external_ty` turns an unsupplied `Mono` type binder into `any`, on the
+reasoning that "the call site did not supply it" means the instantiation is
+not known.  For a root that reasoning does not apply: a root has no F\* call
+site at all --- that is what makes it a root --- so the absence of an
+argument says nothing.  Roots now keep the parameter.
+
+**A plugin's roots were not in the set of roots.**  `st.roots` was filled
+from `--custard_entry` and `--custard_main` only.  The plugin roots were
+marked live a few lines below, under a comment saying they are treated
+"exactly as `--custard_entry`'s are", and they were --- for liveness, which
+was all anyone had asked.  They were absent from the record of *which names
+are roots*, so both things that consult it, inlining and now `external_ty`,
+answered wrongly for precisely the names a plugin exists to name.
+
+**Monomorphize did values only for types.**  The pass gives each
+instantiation of a polymorphic *type* its own declaration.  Value
+declarations were left alone because they did not need it --- the extractor
+had already specialized every function through `margs` --- and a rule's
+call is exactly the case where it had not.  `DExternal` with `dx_typars`
+still on it is now specialized the same way, by the same worklist-free
+version of the same `request`.
+
+Three fixes, and the first two are invisible until the third exists.
+
+## 64.1 `zero` and `one`
+
+Kuiper's second finding, and they flagged it as a maybe: `val zero : t`
+compiled silently to `extern float Kuiper_Float32_Base_zero;` and a link
+error.  Same shape as the `eq` case in §63.2, and warning 387 does not
+catch it because `zero` is not a misspelling of anything.
+
+It does not arise in `ulib` for an accidental reason: `FStar.Float32`
+*derives* them, `let zero = of_int 0L`, so there is no `val` and nothing
+falls through.  A library that declares them abstract instead --- which is
+the natural thing to do when the axioms are what you care about --- gets
+the extern.
+
+They were right to be unsure about a warning, and the reason is that a
+warning is the wrong instrument.  Custard knows what zero and one are in an
+IEEE format.  The constants agree exactly with what `ulib` derives, every
+float library has the two names, and recognizing them removes the failure
+instead of describing it.  So they are vocabulary.
+
+What makes that safe is that it is overridable, and not by a new mechanism:
+a rule from a definition's own attributes already beats the builtin table,
+so a library that really does realize a constant in C says
+`[@@custard_extern "MY_ZERO"]` and gets it.  Which is precisely what Kuiper
+already does for `largest`, and their report is what shows the two cases
+have to coexist --- `FloatLib` now has both, and the test checks that
+`zero` is a constant and `largest` is still an extern.
+
+## 64.2 Arity, in the direction that gets furthest
+
+Kuiper's rule-authoring trap.  `Rule_prim (n, f)`'s `n` counts every
+argument the declaration retains, and the trailing unit applications of a
+Pulse `fn` are arguments: `array_vec_cpy` looks like six and is ten.
+
+Declaring `n` too *large* was already warning 381 --- every use is
+eta-expanded, the result is a lambda nothing applies.  Too *small* was not
+anything: the rule succeeds, the left-over arguments are applied to its
+result, and
+
+```c
+(void)(((custard_unit)0)());
+```
+
+reaches `nvcc`.  The first thing to object is a C compiler, about generated
+code, in a file the rule author did not write.
+
+They suggested catching "an application whose head has type `unit`" in the
+IR checker, and that would work, but the diagnosis is better one step
+earlier.  In `prim_app` we still know whose rule it is, what arity it
+declared, and how many arguments the use site supplied --- which is the
+entire content of the answer, and none of which survives into the IR.  So
+it is warning 381 again, from the other side.
+
+## 64.3 What error 388 is, and what it is not
+
+Dropping the polymorphic declaration needs a diagnosis for the case where
+dropping it breaks something, and the first version got the condition
+wrong in an instructive way.
+
+The obvious rule --- error if a polymorphic external ends up with no
+instantiations --- fires on a program that is perfectly fine.  A plugin
+registers its roots once, for every program it is ever loaded into, and
+most programs use some of them.  The suite caught this immediately: adding
+a second test module made the *first* one fail, because its roots included
+a `sink` it did not call.
+
+An uninstantiated external is harmless: with no instantiation there is no
+call either, so nothing dangles.  What is not harmless is a reference
+carrying *no* type arguments, which names the declaration being dropped and
+has nothing to replace it with.  That is a rule that forgot to put the
+instantiation on the `EQual` it built, and it is §36.2's failure again ---
+a dangling name whose symptom is a link error in generated C.
+
+So 388 fires on the bare reference and not on the empty one, and the
+plugin test has both: `CustardRuleBare.fst` is the rule that forgets, and
+`CustardRuleTest`'s own `bare_sink` is the root that is legitimately
+unused in the program that declares it.
+
+## 64.4 The test needs the plugin
+
+Everything above is reachable only with a rule, so the test is in
+`make custard-plugin` and not in `tests/custard`.  `CustardRulePlugin`
+grew an `emit` rule forwarding to a polymorphic `sink`, and
+`CustardRuleMain.c` grew the two realizations:
+
+```c
+void CustardRuleTest_sink__uint32(uint32_t x) { kpr_sink_acc += x; }
+void CustardRuleTest_sink__uint64(uint64_t x) { kpr_sink_acc += (uint32_t)x; }
+```
+
+No `[@@custard_extern]` on `sink`, deliberately: the two instantiations
+must get *different* C names, and a fixed target string has nowhere to put
+a type.  With one they collide, which is error 384's job --- and which is
+why Kuiper's own `ext` needs the `custard_c_header` it has.
+
+The greps pin both names, and pin that nothing is left at `any`.  But the
+load-bearing check is that the program runs: `sink_total ()` reads back
+what the two calls did, and 3 + 4 = 7 is not something one shared symbol,
+or one instantiation standing in for both, arrives at.
+
+
+
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -14504,3 +14662,8 @@ which do not commute, and exits 1 on a swap.
 | M10εΣ | **An external is a signature, whoever asked for it** (§63.3) | Done.  Kuiper's finding (a): a polymorphic external does not survive, hypothesis being that rules run after monomorphization and it is inherent.  The hypothesis is wrong and the finding is bigger: a plain `assume val ext (#a:Type0) (x:a) : a`, with no rule plugin anywhere, fails identically --- and told the reader to report a compiler bug, which was true in a sense nobody wanted.  Three ways a symbol becomes external: a rule says so, its module is realized, or F\* only saw a `val`.  The first two went through `external_ty`, which substitutes a supplied `Mono` type argument into the signature and collects the rest as `dx_typars`; the third read its own type raw with `ty_of_typ`, dropping `margs` and leaving `dx_typars` empty, so the type variable reached the backend still a variable.  Routing it through `external_ty` gives what a C programmer writes by hand --- `PolyExtern_identity__t` and `PolyExtern_identity__pair`, one symbol per instantiation.  That is the property and not merely a convenience: one shared symbol taking two types is the miscompilation §6 refuses elsewhere.  `tests/custard/PolyExtern.fst` links a hand-written `PolyExtern_stubs.c` defining both, which a collapsed signature would not compile against; it is the first test needing a second translation unit, so the Makefile grew `CEXTRA_Name` --- the usual `static inline` header trick works only when the test chose the name, and here Custard mangles them |
 | M10εΤ | `--custard_norm_budget`: the default is pinned, and the message now says so (§63.4) | Done.  Kuiper's finding (c): the 10^7 default is too low for one kernel, which needs 2 x 10^8.  Raising the default is not available, for the reason §30.14 recorded and this round re-measured on the current build: at 10^8 `TypeDiverge` exhausts the normalizer's *stack* before its budget, and a crash is not a diagnostic.  A budget that fires after the normalizer runs out of stack is not a budget.  So what Kuiper did --- hit it, read it, raise the flag for their build --- is the intended use, their kernel being large rather than divergent.  What the message did not say is what raising it trades, and now it does: safe for a term that is merely large, not a way to compile one that truly diverges, because past roughly 10^8 steps a deeply recursive reduction is reported as a crash rather than as error 365.  Without that sentence the natural reading of "raise `--custard_norm_budget`" is to keep raising it until the errors stop, which is exactly how a clean error becomes a crash.  Lifting the ceiling for real is a change to the normalizer's recursion, not to a default |
 | M10εΥ | Two modules, because one would not have failed (§63.5) | Done.  `FloatLib` declares the `[@@custard_float 32]` type and the operations, `FloatOptIn` has its own `[@@custard_float 64]` type and calls both.  A single-module test passes without the probe doing anything interesting --- the width would be found in the module being extracted --- and the arrangement that broke Kuiper's build is the cross-module one.  Greps pin both widths, the `f` suffixes that keep binary32 arithmetic at binary32, and `(float)3` for `of_int`; the one negative grep is `FloatLib`, absent from the output, every one of those names having been an undefined symbol before.  But a grep cannot tell operands apart --- `a - b` and `b - a` are the same grep --- so the program checks itself at run time with `sub` and `div`, which do not commute, and exits 1 on a swap.  Also: `[@@custard_c_header]`'s docstring now gives the second reason to need one, that the target may be a function-like macro, invisible to the linker, so that without a header the call compiles to an implicit declaration and then fails to link |
+| M10εΦ | **A rule is a call site, and its instantiation was on the floor** (§64, §64.0) | Done.  Round 58.  Kuiper verified §63.3 and sent the case it does not cover: `sink` is applied by *their rule*, never by F\*, so the extractor sees no argument to read an instantiation from --- and the declaration comes out `external RuleSrc.ext : any -[I]-> unit` while both call sites are right.  The instantiations were never unknown; the rule put them on the `EQual` node it built and nobody looked.  Three defects, each hiding the next.  `external_ty` collapses an unsupplied `Mono` binder to `any` on the reasoning that the call site did not supply it --- which is not reasoning that applies to a **root**, whose absence of an F\* call site is what makes it a root.  Roots now keep the binder.  Second, a plugin's roots were never in `st.roots`: they were marked live a few lines below, under a comment saying they are handled \"exactly as `--custard_entry`'s are\", and they were, for liveness, which was all anyone had asked --- so both consumers of *is this a root*, inlining and now `external_ty`, answered wrongly for precisely the names a plugin exists to name.  Third, `Monomorphize` specialized polymorphic types and not polymorphic values, because values had not needed it: the extractor already specialized every function through `margs`, and a rule's call is exactly where it had not.  `request_extern` is `request` without the worklist, an external having no body to revisit.  Fixing any one alone changes nothing observable, which is why the report had a hypothesis attached rather than a reproducer |
+| M10εΧ | `zero` and `one` are vocabulary, not a warning (§64.1) | Done.  Kuiper's finding (b), flagged as a maybe: `val zero : t` becomes `extern float ..._zero;` and a link error, the §63.2 shape again, and warning 387 cannot catch it because `zero` is not a misspelling of anything.  It does not arise in `ulib` for an accidental reason --- `FStar.Float32` *derives* them, `let zero = of_int 0L`, so there is no `val` and nothing falls through --- and a library that declares them abstract instead, the natural thing when the axioms are the point, gets the extern.  They were right to be unsure about a warning, because a warning is the wrong instrument here: Custard knows what zero and one are in an IEEE format, the constants agree exactly with what `ulib` derives, and every float library has the two names, so recognizing them removes the failure instead of describing it.  What makes that safe is a mechanism that already exists rather than a new one --- a rule from a definition's own attributes beats the builtin table --- so a library that really does realize a constant in C writes `[@@custard_extern \"MY_ZERO\"]` and gets it.  Which is what Kuiper already does for `largest`; their report is what shows the two cases have to coexist, and `FloatLib` now has both, with the test checking that `zero` is a constant *and* that `largest` is still an extern |
+| M10εΨ | Warning 381, from the other side (§64.2) | Done.  Kuiper's rule-authoring trap, and it is a real one: `Rule_prim (n, f)`'s `n` counts every argument the declaration retains, and the trailing unit applications of a Pulse `fn` are arguments --- `array_vec_cpy` looks like six and is ten.  Too *large* was already warning 381, every use eta-expanding into a lambda nothing applies.  Too *small* was nothing at all: the rule succeeds, the surplus arguments are applied to its result, and `(void)(((custard_unit)0)());` reaches `nvcc`, so the first thing to object is a C compiler, about generated code, in a file the rule author did not write.  They proposed catching it in the IR checker as an application whose head has type `unit`, which would work; one step earlier is better, because in `prim_app` we still know whose rule it is, what arity it declared and how many arguments the use site supplied --- the entire content of the answer, none of which survives into the IR.  Same code, opposite direction, and `Rule_prim`'s docstring now states the counting convention and cites both |
+| M10εΩ | Error 388 keys on the bare reference, not on the empty one (§64.3) | Done, and the first version was wrong in a way the suite caught within minutes.  The obvious condition --- error if a polymorphic external ends up with no instantiations --- fires on a program that is entirely fine, because a plugin registers its roots once for every program it is ever loaded into and most use only some; adding a second test module made the *first* one fail, over a `sink` it did not call.  An uninstantiated external is harmless: no instantiation means no call, so nothing dangles.  What is not harmless is a reference carrying **no** type arguments, which names the declaration being dropped and has nothing to replace it with --- a rule that forgot to put the instantiation on its `EQual`, and §36.2's dangling name whose symptom is a link error in generated C.  The check has to run in a second pass after the worklist drains, because *was it referenced* is not answerable until every declaration has been walked.  Both cases are in the plugin test: `CustardRuleBare.fst` is the rule that forgets, and `CustardRuleTest`'s own `bare_sink` is the root legitimately unused by the program declaring it |
+| M10ζΑ | The test has to run, not just compile (§64.4) | Done.  All of §64 needs a rule, so it lives in `make custard-plugin`.  `CustardRulePlugin` grew an `emit` rule forwarding to a polymorphic `sink`, plus `bare` and `under` for the two diagnostics; `CustardRuleMain.c` grew `CustardRuleTest_sink__uint32` and `CustardRuleTest_sink__uint64` as real definitions.  `sink` deliberately carries no `[@@custard_extern]`: two instantiations need two C names and a fixed target string has nowhere to put a type, so with one they collide --- which is error 384's job, and why Kuiper's own `ext` needs the `custard_c_header` it has.  Greps pin both mangled names and pin the absence of an unspecialized `CustardRuleTest_sink(`, but the load-bearing check is that the linked program *runs*: `sink_total ()` reads back what the two calls did, and 3 + 4 = 7 is not a number one shared symbol, or one instantiation standing in for both, arrives at |

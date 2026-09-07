@@ -19,3 +19,23 @@ uint32_t kpr_kcall(uint32_t (*f)(uint32_t, uint32_t), uint32_t nblk,
      last.  3 + 42 + (1 + 7) = 53, which is what main checks. */
   return nblk + f(cap, (uint32_t)1U);
 }
+
+/* Section 64.  The realization of a polymorphic external, which is one
+   function per instantiation.
+
+   The names are Custard's: CustardRulePlugin's [emit] rule builds an [EQual]
+   carrying the argument's type, and the monomorphization pass turns that into
+   one declaration per distinct type vector.  Nothing in CustardRuleTest.fst
+   calls [sink], so [register_root] is what keeps it alive, exactly as for
+   [kcall] above.
+
+   That the two take different C types is the property under test: a single
+   shared symbol could not be declared at both, and would not add up to 7. */
+
+static uint32_t kpr_sink_acc = 0;
+
+void CustardRuleTest_sink__uint32(uint32_t x) { kpr_sink_acc += x; }
+
+void CustardRuleTest_sink__uint64(uint64_t x) { kpr_sink_acc += (uint32_t)x; }
+
+uint32_t kpr_sink_total(void) { return kpr_sink_acc; }
