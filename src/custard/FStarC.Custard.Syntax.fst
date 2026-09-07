@@ -87,6 +87,13 @@ let is_pure (e:eff) : bool =
 let rec strip_zeros (m:int) (e:int) : int & int =
   if m <> 0 && m % 10 = 0 then strip_zeros (m / 10) (e + 1) else (m, e)
 
+let fwidth_to_string (fw:fwidth) : string =
+  match fw with
+  | Float32 -> "f32"
+  | Float64 -> "f64"
+  | Float16 -> "f16"
+  | BFloat16 -> "bf16"
+
 let float_lit_to_string (f:float_lit) : string =
   let sign = if f.fl_neg then "-" else "" in
   let m = Real.mantissa f.fl_mag in
@@ -265,10 +272,6 @@ let eff_to_string (e:eff) : string =
 
 let eff_to_doc (e:eff) : ML document = text (eff_to_string e)
 
-let fwidth_to_string (fw:fwidth) : string =
-  match fw with
-  | Float32 -> "f32"
-  | Float64 -> "f64"
 
 let width_to_string (sw:signedness & width) : string =
   let s, w = sw in

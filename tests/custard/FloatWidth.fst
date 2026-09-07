@@ -9,11 +9,11 @@ module U32 = FStar.UInt32
    "no C representation" (368) at the first use, which is a different module
    and names the type instead of the mistake.
 
-   16 is the interesting wrong width rather than an absurd one: half
-   precision is a real format that Custard does not have yet, so this is the
-   message a reviewer asking for it will actually see. *)
+   Section 65.  This used to be 16, which Custard now implements; 8 is the
+   width that is still a real format and still absent, so the message a
+   reviewer asking for one will see is still the one under test. *)
 
-[@@FStar.Attributes.custard_float 16]
+[@@FStar.Attributes.custard_float 8]
 assume val t : Type0
 
 assume val of_literal : string -> t

@@ -93,6 +93,8 @@ let rec hint_of_cty (fuel:int) (c:cty) : ML string =
      | Int64 -> "64" | Sizet -> "size")
   | TFloat Float32 -> "float32"
   | TFloat Float64 -> "float64"
+  | TFloat Float16 -> "float16"
+  | TFloat BFloat16 -> "bfloat16"
   | TApp (n, []) -> (match n.spec with Some s -> n.id ^ "_" ^ s | None -> n.id)
   | TApp (n, args) -> n.id ^ "_" ^ String.concat "_" (args |> List.map sub)
   | TBuf c -> sub c ^ "_ptr"

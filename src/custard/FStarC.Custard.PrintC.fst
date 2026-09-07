@@ -455,6 +455,13 @@ let is_string_ty (t:cty) : ML bool =
    literal wants.  Building the two together is what lets a returned pointer
    ([uint32_t *f(void)]) and a stored function ([size_t ( *hashf)(size_t)]) come
    out right without special cases at each use. *)
+(* Section 65.  Whether this unit mentions a 16-bit float anywhere, so that
+   the support types are emitted into the header only when they are used.
+   Set while the *bodies* are rendered, which happens before the header is
+   assembled -- a narrow float can appear in a local variable and nowhere in
+   any signature, so the decl types alone are not enough to decide. *)
+let uses_narrow : ref bool = mk_ref false
+
 let rec decl_of (t:cty) (x:string) : ML string =
   match t with
   | TBuf e | TRef e -> decl_of e ("*" ^ x)
@@ -495,6 +502,12 @@ and base_ty (t:cty) : ML string =
   | TInt sw -> int_type sw
   | TFloat Float32 -> "float"
   | TFloat Float64 -> "double"
+  (* Section 65.  Not [_Float16]/[__bf16]: those are not portable C, and the
+     whole point of the struct is that the generated file compiles wherever C
+     does.  The support header is what maps them onto native types or device
+     intrinsics where those exist. *)
+  | TFloat Float16 -> uses_narrow := true; "custard_f16"
+  | TFloat BFloat16 -> uses_narrow := true; "custard_bf16"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -588,6 +601,298 @@ let escape (s:string) : ML string =
   in
   String.concat "" (List.map esc (String.list_of_string s))
 
+(* -------------------------------------------------------------------- *)
+(* Section 65: the 16-bit formats                                       *)
+(* -------------------------------------------------------------------- *)
+
+(* The parameters of the two narrow formats: fraction bits stored, and the
+   exponent range.  binary16 is IEEE 754's, bfloat16 has binary32's exponent
+   with binary32's fraction truncated to 7 stored bits. *)
+let narrow_params (fw:fwidth) : ML (int & int & int) =
+  match fw with
+  | Float16   -> (10, -14, 15)
+  | BFloat16  -> (7, -126, 127)
+  | _ -> failwith "Custard: narrow_params at a wide float width"
+
+let rec pow_int (b:int) (n:nat) : Tot int (decreases n) =
+  if n = 0 then 1 else b * pow_int b (n - 1)
+
+(* [floor (log2 (num/den))] for a strictly positive rational, by comparison
+   alone: the value is exact, so this is too, and no float is involved. *)
+let ilog2_rat (num:int) (den:int) : ML int =
+  (* Scale until num/den lands in [1,2). *)
+  let rec go (e:int) (n:int) (d:int) (fuel:nat) : ML int =
+    if fuel = 0 then e
+    else if n >= d * 2 then go (e + 1) n (d * 2) (fuel - 1)
+    else if n < d then go (e - 1) (n * 2) d (fuel - 1)
+    else e in
+  go 0 num den 4096
+
+(* Round [num/den] to the nearest integer, ties to even.  Both arguments are
+   strictly positive. *)
+let round_ne (num:int) (den:int) : ML int =
+  let q = num / den in
+  let r = num - q * den in
+  if r * 2 > den then q + 1
+  else if r * 2 < den then q
+  else if q % 2 = 1 then q + 1 else q
+
+(* The literal's exact value, correctly rounded to [fw], as a bit pattern.
+   The value is [mantissa * 10^exponent], which is a rational with an exact
+   integer numerator and denominator, so every step below is integer
+   arithmetic and the single rounding is {!round_ne}'s. *)
+let narrow_float_bits (fw:fwidth) (v:float_lit) : ML int =
+  let (p, emin, emax) = narrow_params fw in
+  let m = Real.mantissa v.fl_mag in
+  let e10 = Real.exponent v.fl_mag in
+  let (num, den) =
+    if e10 >= 0 then (m * pow_int 10 e10, 1)
+    else (m, pow_int 10 (- e10)) in
+  let sign = if v.fl_neg then pow_int 2 (p + (if Float16? fw then 5 else 8)) else 0 in
+  if num = 0 then sign
+  else begin
+    let e = ilog2_rat num den in
+    (* Scale so that rounding to an integer leaves [p] fraction bits.  Below
+       [emin] the exponent is pinned and the result is subnormal, which is
+       gradual underflow and not a special case in the arithmetic. *)
+    let e = if e < emin then emin else e in
+    let sh = p - e in
+    let (n2, d2) =
+      if sh >= 0 then (num * pow_int 2 sh, den)
+      else (num, den * pow_int 2 (- sh)) in
+    let q = round_ne n2 d2 in
+    (* Rounding may have carried the significand up a binade. *)
+    let (q, e) = if q >= pow_int 2 (p + 1) then (q / 2, e + 1) else (q, e) in
+    let ebits = if Float16? fw then 5 else 8 in
+    let bias = pow_int 2 (ebits - 1) - 1 in
+    if e > emax then sign + (pow_int 2 ebits - 1) * pow_int 2 p   (* infinity *)
+    else if q < pow_int 2 p then sign + q                          (* subnormal *)
+    else sign + (e + bias) * pow_int 2 p + (q - pow_int 2 p)
+  end
+
+(* A compound literal, which at file scope has static storage duration and is
+   a valid initializer -- see the comment at {!constant}. *)
+let narrow_float_lit' (fw:fwidth) (v:float_lit) (sfx:string) : ML string =
+  uses_narrow := true;
+  let b = narrow_float_bits fw v in
+  "CUSTARD_" ^ (if Float16? fw then "F16" else "BF16") ^ sfx ^ "(" ^ show b ^ "U)"
+
+let narrow_float_lit (fw:fwidth) (v:float_lit) : ML string =
+  narrow_float_lit' fw v "_LIT"
+
+(* Initializer position; see the two macros' comment in the support header. *)
+let narrow_float_init (fw:fwidth) (v:float_lit) : ML string =
+  narrow_float_lit' fw v "_INIT"
+
+let narrow_support : string =
+  String.concat "\n" [
+    "";
+    "/* Section 65: the two 16-bit floating-point formats.";
+    "";
+    "   Opaque two-byte structs rather than _Float16 and __bf16, because those are";
+    "   not portable: _Float16 is C23 and its availability varies by target, and";
+    "   __bf16 more so.  The struct has the storage the format actually has, every";
+    "   C compiler has one, and the arithmetic below is *defined* -- it converts to";
+    "   float, operates, and rounds back -- so this is a working implementation";
+    "   anywhere, not a set of link-time stubs that would make a host-side build";
+    "   silently stop existing.";
+    "";
+    "   Going through float rounds once, which is what IEEE specifies: binary32";
+    "   holds every binary16 and every bfloat16 exactly, and has enough precision";
+    "   (24 bits, against 2*11+2 and 2*8+2) that the intermediate is exact for";
+    "   add, sub, mul and div.  So the only rounding is the final encode.";
+    "";
+    "   Literals do not appear here: Custard emits their bit patterns directly, so";
+    "   that a static initializer stays a constant expression.";
+    "";
+    "   Override by defining CUSTARD_FLOAT16_DEFINED and supplying the type and";
+    "   the operations first -- that is how a target with native instructions, or";
+    "   CUDA's __half and __nv_bfloat16 (C++-only, hence not emitted here), gets";
+    "   used instead.  The representation is the format's own bit pattern, so an";
+    "   override is layout-compatible with this by construction. */";
+    "#ifndef CUSTARD_FLOAT16_DEFINED";
+    "#define CUSTARD_FLOAT16_DEFINED";
+    "typedef struct { uint16_t bits; } custard_f16;";
+    "typedef struct { uint16_t bits; } custard_bf16;";
+    "";
+    "/* Linkage.  Under nvcc these have to be callable from a __global__ or";
+    "   __device__ function as well as from the host: a plain [static inline]";
+    "   is a __host__ function, and calling one from device code is an error,";
+    "   not a warning.  A kernel doing 16-bit arithmetic is the main reason";
+    "   this width exists, so that case is the normal one and not a corner. */";
+    "#if defined(__CUDACC__)";
+    "#define CUSTARD_FN static __host__ __device__ inline";
+    "#else";
+    "#define CUSTARD_FN static inline";
+    "#endif";
+    "";
+    "/* A literal.  Custard emits the bit pattern, so this must stay a";
+    "   constant expression: it is what initializes an object with static";
+    "   storage duration.  Two spellings because a compound literal is C and";
+    "   a GNU extension in C++, while the braced form is C++ and not C --";
+    "   generated CUDA is compiled as C++, so getting only one of them right";
+    "   would cost -pedantic on one of the two targets. */";
+    "#ifdef __cplusplus";
+    "#define CUSTARD_F16_LIT(b)  (custard_f16{ (uint16_t)(b) })";
+    "#define CUSTARD_BF16_LIT(b) (custard_bf16{ (uint16_t)(b) })";
+    "#else";
+    "#define CUSTARD_F16_LIT(b)  ((custard_f16){ (uint16_t)(b) })";
+    "#define CUSTARD_BF16_LIT(b) ((custard_bf16){ (uint16_t)(b) })";
+    "#endif";
+    "";
+    "/* And in *initializer* position, where the above will not do: a compound";
+    "   literal has automatic storage duration inside a function and is not a";
+    "   constant expression, so it cannot initialize an object with static";
+    "   storage duration.  A braced initializer can, and is spelled the same";
+    "   in C and C++ -- but it is only an initializer, never an expression,";
+    "   which is why there are two macros and not one. */";
+    "#define CUSTARD_F16_INIT(b)  { (uint16_t)(b) }";
+    "#define CUSTARD_BF16_INIT(b) { (uint16_t)(b) }";
+    "";
+    "CUSTARD_FN float custard__f32_of_bits(uint32_t u) {";
+    "  float f; memcpy(&f, &u, sizeof f); return f;";
+    "}";
+    "CUSTARD_FN uint32_t custard__bits_of_f32(float f) {";
+    "  uint32_t u; memcpy(&u, &f, sizeof u); return u;";
+    "}";
+    "";
+    "/* binary16 -> binary32.  Exact. */";
+    "CUSTARD_FN float custard_f16_to_f32(custard_f16 h) {";
+    "  uint32_t s = (uint32_t)(h.bits >> 15) & 1u;";
+    "  uint32_t e = (uint32_t)(h.bits >> 10) & 0x1Fu;";
+    "  uint32_t m = (uint32_t)h.bits & 0x3FFu;";
+    "  uint32_t out;";
+    "  if (e == 0u) {";
+    "    if (m == 0u) { out = s << 31; }";
+    "    else {";
+    "      /* Subnormal: normalize, one exponent step per shift from -14. */";
+    "      int k = 0;";
+    "      while ((m & 0x400u) == 0u) { m <<= 1; k++; }";
+    "      m &= 0x3FFu;";
+    "      out = (s << 31) | ((uint32_t)(113 - k) << 23) | (m << 13);";
+    "    }";
+    "  } else if (e == 0x1Fu) {";
+    "    out = (s << 31) | 0x7F800000u | (m << 13);";
+    "  } else {";
+    "    out = (s << 31) | ((e + 112u) << 23) | (m << 13);";
+    "  }";
+    "  return custard__f32_of_bits(out);";
+    "}";
+    "";
+    "/* binary32 -> binary16, round-to-nearest-even. */";
+    "CUSTARD_FN custard_f16 custard_f16_of_f32(float f) {";
+    "  uint32_t u = custard__bits_of_f32(f);";
+    "  uint32_t s = (u >> 31) & 1u;";
+    "  int32_t  e = (int32_t)((u >> 23) & 0xFFu);";
+    "  uint32_t m = u & 0x7FFFFFu;";
+    "  custard_f16 h;";
+    "  if (e == 0xFF) {                       /* inf, or a NaN that stays one */";
+    "    h.bits = (uint16_t)((s << 15) | 0x7C00u | (m ? (0x0200u | (m >> 13)) : 0u));";
+    "    return h;";
+    "  }";
+    "  if ((u & 0x7FFFFFFFu) == 0u) { h.bits = (uint16_t)(s << 15); return h; }";
+    "  {";
+    "    uint32_t sig = m | ((e != 0) ? 0x800000u : 0u);";
+    "    int ue = (e != 0) ? (e - 127) : -126;";
+    "    int shift = 13;";
+    "    if (ue < -14) {                      /* gradual underflow */";
+    "      shift = 13 + (-14 - ue);";
+    "      if (shift > 24) { h.bits = (uint16_t)(s << 15); return h; }";
+    "      ue = -14;";
+    "    }";
+    "    {";
+    "      uint32_t keep = sig >> shift;";
+    "      uint32_t rest = sig & ((1u << shift) - 1u);";
+    "      uint32_t half = 1u << (shift - 1);";
+    "      uint32_t exp16;";
+    "      if (rest > half || (rest == half && (keep & 1u))) keep++;";
+    "      if (keep >> 11) { keep >>= 1; ue++; }";
+    "      if ((keep >> 10) == 0u) { exp16 = 0u; }";
+    "      else {";
+    "        exp16 = (uint32_t)(ue + 15);";
+    "        if (exp16 >= 0x1Fu) {";
+    "          h.bits = (uint16_t)((s << 15) | 0x7C00u); return h;";
+    "        }";
+    "      }";
+    "      h.bits = (uint16_t)((s << 15) | (exp16 << 10) | (keep & 0x3FFu));";
+    "      return h;";
+    "    }";
+    "  }";
+    "}";
+    "";
+    "/* bfloat16 is binary32 with the low 16 fraction bits dropped. */";
+    "CUSTARD_FN float custard_bf16_to_f32(custard_bf16 h) {";
+    "  return custard__f32_of_bits((uint32_t)h.bits << 16);";
+    "}";
+    "CUSTARD_FN custard_bf16 custard_bf16_of_f32(float f) {";
+    "  uint32_t u = custard__bits_of_f32(f);";
+    "  custard_bf16 h;";
+    "  if (((u >> 23) & 0xFFu) == 0xFFu && (u & 0x7FFFFFu) != 0u) {";
+    "    h.bits = (uint16_t)((u >> 16) | 0x0040u); return h;";
+    "  }";
+    "  { uint32_t lsb = (u >> 16) & 1u;";
+    "    h.bits = (uint16_t)((u + 0x7FFFu + lsb) >> 16); }";
+    "  return h;";
+    "}";
+    "";
+    "/* double converts in one step: binary64 holds both formats exactly and has";
+    "   the precision to make the intermediate exact, so rounding once here is the";
+    "   correctly-rounded answer where going via float would round twice. */";
+    "CUSTARD_FN custard_f16 custard_f16_of_f64(double d) {";
+    "  return custard_f16_of_f32((float)d);";
+    "}";
+    "CUSTARD_FN custard_bf16 custard_bf16_of_f64(double d) {";
+    "  return custard_bf16_of_f32((float)d);";
+    "}";
+    "CUSTARD_FN custard_f16 custard_f16_of_i64(int64_t x) {";
+    "  return custard_f16_of_f32((float)x);";
+    "}";
+    "CUSTARD_FN custard_bf16 custard_bf16_of_i64(int64_t x) {";
+    "  return custard_bf16_of_f32((float)x);";
+    "}";
+    "";
+    "#define CUSTARD__F16_BIN(nm, op)                                         \\";
+    "  CUSTARD_FN custard_f16 custard_f16_##nm(custard_f16 a,              \\";
+    "                                             custard_f16 b) {            \\";
+    "    return custard_f16_of_f32(custard_f16_to_f32(a) op                   \\";
+    "                              custard_f16_to_f32(b)); }";
+    "#define CUSTARD__F16_CMP(nm, op)                                         \\";
+    "  CUSTARD_FN bool custard_f16_##nm(custard_f16 a, custard_f16 b) {    \\";
+    "    return custard_f16_to_f32(a) op custard_f16_to_f32(b); }";
+    "#define CUSTARD__BF16_BIN(nm, op)                                        \\";
+    "  CUSTARD_FN custard_bf16 custard_bf16_##nm(custard_bf16 a,           \\";
+    "                                               custard_bf16 b) {         \\";
+    "    return custard_bf16_of_f32(custard_bf16_to_f32(a) op                 \\";
+    "                               custard_bf16_to_f32(b)); }";
+    "#define CUSTARD__BF16_CMP(nm, op)                                        \\";
+    "  CUSTARD_FN bool custard_bf16_##nm(custard_bf16 a, custard_bf16 b) { \\";
+    "    return custard_bf16_to_f32(a) op custard_bf16_to_f32(b); }";
+    "";
+    "CUSTARD__F16_BIN(add, +)";
+    "CUSTARD__F16_BIN(sub, -)";
+    "CUSTARD__F16_BIN(mul, *)";
+    "CUSTARD__F16_BIN(div, /)";
+    "CUSTARD__F16_CMP(eq,  ==)";
+    "CUSTARD__F16_CMP(neq, !=)";
+    "CUSTARD__F16_CMP(lt,  <)";
+    "CUSTARD__F16_CMP(lte, <=)";
+    "CUSTARD__F16_CMP(gt,  >)";
+    "CUSTARD__F16_CMP(gte, >=)";
+    "";
+    "CUSTARD__BF16_BIN(add, +)";
+    "CUSTARD__BF16_BIN(sub, -)";
+    "CUSTARD__BF16_BIN(mul, *)";
+    "CUSTARD__BF16_BIN(div, /)";
+    "CUSTARD__BF16_CMP(eq,  ==)";
+    "CUSTARD__BF16_CMP(neq, !=)";
+    "CUSTARD__BF16_CMP(lt,  <)";
+    "CUSTARD__BF16_CMP(lte, <=)";
+    "CUSTARD__BF16_CMP(gt,  >)";
+    "CUSTARD__BF16_CMP(gte, >=)";
+    "#endif";
+    "";
+  ]
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> unit_value
@@ -611,6 +916,25 @@ let constant (c:constant) : ML string =
      suffix already does. *)
   | CFloat (v, Float32) -> float_lit_to_string v ^ "f"
   | CFloat (v, Float64) -> float_lit_to_string v
+  (* Section 65.  At the narrow widths the type is a struct, so there is no
+     literal to suffix: what is emitted is the *bit pattern*, in a compound
+     literal.  Two reasons, and neither is style.
+
+     Statically initializable.  [custard_f16_of_f32(0.5f)] is a function call,
+     so an object with static storage duration could not be initialized with
+     it at all; a bit pattern can be, through [CUSTARD_F16_INIT] -- the
+     braced spelling {!narrow_float_init} emits, since the compound literal
+     this case produces is itself not a constant expression.
+
+     One rounding.  Encoding the literal's exact value directly to binary16 is
+     correctly rounded by construction, where routing it through [float] would
+     round twice -- decimal to binary32, then binary32 to binary16 -- and
+     double rounding is visibly wrong at a format this narrow.  1.00048828125
+     is the midpoint between 1 and the next binary16, and is exact in
+     binary32; [1.000488281250001] is above it, so the correct answer is the
+     next value up, 0x3C01.  Via binary32 it rounds first to the midpoint and
+     then ties-to-even down to 1.0, giving 0x3C00. *)
+  | CFloat (v, fw) -> narrow_float_lit fw v
   | CChar c -> "((uint32_t)" ^ show (BU.int_of_char c) ^ ")"
   | CString s -> "\"" ^ escape s ^ "\""
 
@@ -683,6 +1007,45 @@ let prefix_op (o:prim_op) : ML (option string) =
   | Not -> Some (if at_int_width o then "~" else "!")
   | BNot -> Some "~"
   | _ -> None
+
+(* Section 65.  At the two narrow widths the operand type is a struct, so
+   there is no C operator to emit and the operation is a call into the support
+   header instead.  This is the reason [Float16] and [BFloat16] are separate
+   [fwidth] constructors rather than a width field: the *shape* of the emitted
+   code differs, not just a type name.
+
+   The names are the header's, and the vocabulary is exactly {!Builtins.float_op}'s
+   -- anything outside it never becomes an [EOp] in the first place. *)
+let narrow_ty (fw:fwidth) : bool = Float16? fw || BFloat16? fw
+
+let narrow_pfx (fw:fwidth) : ML string =
+  uses_narrow := true;
+  if Float16? fw then "custard_f16_" else "custard_bf16_"
+
+let narrow_fw (o:prim_op) : option fwidth =
+  match o.po_ty with
+  | Some (PFloat Float16)  -> Some Float16
+  | Some (PFloat BFloat16) -> Some BFloat16
+  | _ -> None
+
+let narrow_call (o:prim_op) : ML (option string) =
+  match narrow_fw o with
+  | None -> None
+  | Some fw ->
+    uses_narrow := true;
+    let pfx = if Float16? fw then "custard_f16_" else "custard_bf16_" in
+    (match o.po_op with
+     | Add | AddW   -> Some (pfx ^ "add")
+     | Sub | SubW   -> Some (pfx ^ "sub")
+     | Mult | MultW -> Some (pfx ^ "mul")
+     | Div | DivW   -> Some (pfx ^ "div")
+     | Eq  -> Some (pfx ^ "eq")
+     | Neq -> Some (pfx ^ "neq")
+     | Lt  -> Some (pfx ^ "lt")
+     | Lte -> Some (pfx ^ "lte")
+     | Gt  -> Some (pfx ^ "gt")
+     | Gte -> Some (pfx ^ "gte")
+     | _ -> None)
 
 (* C promotes anything narrower than [int] before it operates on it, so at
    [uint8_t] and [uint16_t] the result of a C operator is an [int] and can sit
@@ -1105,6 +1468,18 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt a, TInt b when a = b -> c_expr out ind e1
+     (* Section 65.  A struct is not castable, so a conversion at a narrow
+        width is a call.  Both directions, and between the two narrow formats
+        via [float], which is exact for either of them and so rounds once --
+        the only rounding is the final encode. *)
+     | _, TFloat fw when narrow_ty fw ->
+       narrow_pfx fw ^ (match e1.ty with
+                        | TInt (_, _) -> "of_i64((int64_t)"
+                        | TFloat Float64 -> "of_f64("
+                        | _ -> "of_f32(") ^
+       c_rvalue out ind e1.ty e1 ^ ")"
+     | TFloat fw, _ when narrow_ty fw ->
+       "(" ^ ty t ^ ")" ^ narrow_pfx fw ^ "to_f32(" ^ c_expr out ind e1 ^ ")"
      | _ -> "(" ^ ty t ^ ")" ^ c_rvalue out ind e1.ty e1)
   | ECoerce (e1, t) ->
     if e1.ty = t then c_expr out ind e1
@@ -1145,6 +1520,12 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      Two literals would leave nothing carrying the type, and the operator
      would be evaluated at [int]; that is the one case where dropping the
      casts could change a result. *)
+  (* Section 65.  Before the infix case, which would otherwise emit [+] on a
+     struct.  No {!truncate}: that is about C's integer promotions, and these
+     are neither integers nor promoted. *)
+  | EOp (o, [a; b]) when Some? (narrow_call o) ->
+    Some?.v (narrow_call o) ^ "(" ^ c_rvalue out ind a.ty a ^ ", " ^
+                                    c_rvalue out ind b.ty b ^ ")"
   | EOp (o, [a; b]) when Some? (infix_op o) ->
     (* Section 61.1.  A shift is the exception, and it is the one binary
        operator whose operands genuinely do *not* share an IR type --
@@ -1994,10 +2375,21 @@ let rec static_init (x:expr) : ML (option string) =
      | None ->
        match c with
        | CInt (_, _, None) -> None
+       (* Section 65.  A narrow float's expression spelling is a compound
+          literal, which is not a constant expression; here the braced
+          initializer is what is meant. *)
+       | CFloat (v, fw) when narrow_ty fw -> Some (narrow_float_init fw v)
        | _ -> Some (constant c))
   | ECast (e1, t) ->
     (match e1.ty, t, static_init e1 with
      | TInt a, TInt b, Some v when a = b -> Some v
+     (* Section 65.  A conversion to or from a narrow width is a call, and a
+        call is not a constant expression.  The *literals* still are -- they
+        are emitted as bit patterns for exactly this reason -- so this rules
+        out only a static initializer that converts, which then gets the same
+        diagnostic any other non-constant initializer does. *)
+     | _, TFloat fw, _ when narrow_ty fw -> None
+     | TFloat fw, _, _ when narrow_ty fw -> None
      | _, _, Some v -> Some ("(" ^ ty t ^ ")" ^ v)
      | _ -> None)
   | ECoerce (e1, t) ->
@@ -2525,6 +2917,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   build_renames p;
   check_interface_names p;
   arities := at;
+  uses_narrow := false;
 
   (* Only the standard library, and only the parts that are used unavoidably:
      fixed-width integers, malloc/free/abort, memmove, and bool. *)
@@ -2737,7 +3130,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     "\n#ifdef __cplusplus\n}\n#endif\n" in
 
   let hdr =
-    header ^ "\n" ^
+    header ^
+    (if !uses_narrow then narrow_support else "") ^ "\n" ^
   (match includes with [] -> "" | _ -> String.concat "\n" includes ^ "\n\n") ^
   cpp_open ^
   String.concat "" fwds ^ (match fwds with [] -> "" | _ -> "\n") ^

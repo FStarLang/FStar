@@ -724,14 +724,23 @@ let attribute_string (attrs : list S.term) (a : Ident.lident) : ML (option strin
   | _ -> None
 
 (* Section 63.1.  [@@custard_float 32] carries an integer rather than a
-   string, and the two accepted values are the two [fwidth] has.  A width
-   Custard does not implement is an error at the declaration rather than a
-   silent fallthrough to "no C representation" at the first use, which is
-   several modules away and names the type instead of the attribute. *)
+   string, and the accepted values are the IEEE 754 widths [fwidth] has.  A
+   width Custard does not implement is an error at the declaration rather than
+   a silent fallthrough to "no C representation" at the first use, which is
+   several modules away and names the type instead of the attribute.
+
+   Section 65.  bfloat16 is *not* reachable here.  [custard_float]'s contract
+   is "IEEE 754 binary floating-point of the given width", and bfloat16 is not
+   an IEEE 754 interchange format -- it is binary32 with 16 fraction bits
+   dropped.  16 therefore means binary16, and bfloat16 has its own nullary
+   attribute, because an integer width has no honest way to say which of the
+   two 16-bit formats is meant. *)
 let fwidth_of_attributes (attrs : list S.term) : ML (option fwidth) =
+  if U.has_attribute attrs PC.custard_bfloat16_attr then Some BFloat16 else
   match U.get_attribute PC.custard_float_attr attrs with
   | Some ((arg, _) :: _) ->
     (match (SS.compress arg).n with
+     | Tm_constant (Const_int (16, _)) -> Some Float16
      | Tm_constant (Const_int (32, _)) -> Some Float32
      | Tm_constant (Const_int (64, _)) -> Some Float64
      | Tm_constant (Const_int (n, _)) ->
@@ -740,11 +749,11 @@ let fwidth_of_attributes (attrs : list S.term) : ML (option fwidth) =
            ("Custard: [@@custard_float " ^ string_of_int n ^
             "] is not a floating-point width Custard implements.");
          FStarC.Errors.Msg.text
-           "The accepted widths are 32 and 64, which are IEEE-754 binary32                  and binary64.  Half and bfloat16 are not implemented yet." ]
+           "The accepted widths are 16, 32 and 64, which are IEEE-754                  binary16, binary32 and binary64.  bfloat16 is not an IEEE-754                  format and is [@@custard_bfloat16] rather than a width." ]
      | _ ->
        FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadFloatWidth [
          FStarC.Errors.Msg.text
-           "Custard: the argument of [@@custard_float] must be an integer                  literal, 32 or 64." ])
+           "Custard: the argument of [@@custard_float] must be an integer                  literal, 16, 32 or 64." ])
   | _ -> None
 
 let rule_of_attributes (attrs : list S.term) : ML (option rule) =

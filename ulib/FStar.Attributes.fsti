@@ -457,8 +457,9 @@ val custard_c_header (header: string) : unit
 
     The operations are then found by name in the same module, using the same
     vocabulary [FStar.Float32] uses --- [add], [sub], [mul], [div], [lt],
-    [lte], [ieee_eq], [of_int], [of_literal], [zero] and [one].  Only 32 and
-    64 are accepted.
+    [lte], [ieee_eq], [of_int], [of_literal], [zero] and [one].  16, 32 and
+    64 are accepted; 16 is IEEE binary16, and bfloat16 --- which is not an
+    IEEE 754 format --- is [@@custard_bfloat16] instead.
 
     Any *other* name the module declares becomes an external symbol, which is
     deliberate: that is how [bit_eq] and [to_string] are realized, and how a
@@ -532,3 +533,18 @@ val custard_opaque : unit
     Written on the field's binder:
     [noeq type wrap = | W : [@@@custard_inline_field] p:pair -> wrap] *)
 val custard_inline_field : unit
+
+(** Custard: this abstract type is bfloat16 -- binary32's 8-bit exponent with
+    7 fraction bits stored (8 with the hidden one) -- and the module that
+    declares it supplies the arithmetic vocabulary for it, exactly as
+    [custard_float] describes (see doc/ref/custard.md, section 65).
+
+    A separate attribute rather than [@@custard_float 16], because
+    [custard_float]'s contract is IEEE 754 *by width* and bfloat16 is not an
+    IEEE 754 interchange format: 16 there is binary16, and there would be no
+    honest way to spell the difference in an integer.
+
+    Both 16-bit formats extract to an opaque two-byte struct with the
+    arithmetic in the support header, not to [_Float16] or [__bf16], so that
+    the generated C compiles wherever C does. *)
+val custard_bfloat16 : unit

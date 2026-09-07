@@ -106,6 +106,19 @@ val is_pure : eff -> bool
 type fwidth =
   | Float32
   | Float64
+  (** Section 65.  The two 16-bit formats.  Unlike the wider two these have no
+      portable C spelling: [_Float16] is C23 and its availability varies by
+      target, [__bf16] more so.  So they are emitted as *opaque two-byte
+      structs* with the arithmetic in the support header, where a target that
+      does have native instructions can be given them without the code
+      generator changing.  Which is also why they are separate constructors
+      rather than a width field: at these two, an operator is a call. *)
+  | Float16
+  (** IEEE 754 binary16. *)
+  | BFloat16
+  (** bfloat16: binary32's exponent range with 8 fraction bits.  *Not* an
+      IEEE 754 interchange format, which is why it is not reachable through
+      [@@custard_float] -- see [@@custard_bfloat16]. *)
 
 type cty =
   | TVar   of string
@@ -175,6 +188,10 @@ type constant =
   | CFloat  of float_lit & fwidth
   | CChar   of char
   | CString of string
+
+(** The IR's own name for a floating-point width: [f32], [f64], [f16],
+    [bf16].  Used in diagnostics and in monomorphization keys. *)
+val fwidth_to_string : fwidth -> string
 
 (** The literal as it is spelled in generated code, e.g. ["-1.5"], ["314e-7"].
     Always parseable back by [float_lit_of_string], and always denoting the

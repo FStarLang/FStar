@@ -1373,12 +1373,43 @@ EGREP_FloatHole += "silently compute at double precision"
 # It must name the way out, since Float64 really does work on this backend.
 EGREP_FloatHole += "custard_backend C"
 
+# Section 65.  The two 16-bit formats.  Narrow.fst declares binary16 with
+# [@@custard_float 16], BF16Lib.fst declares bfloat16 with the separate
+# [@@custard_bfloat16] -- separate because [custard_float]'s contract is IEEE
+# 754 by width and bfloat16 is not an IEEE 754 format.
+#
+# Both extract to an opaque two-byte struct with the arithmetic in the support
+# header, so what is checked is that an operator became a *call* and that a
+# literal became a *bit pattern*: 1.5 is 0x3E00 = 15872 at binary16.  The
+# program checks its own answers and exits nonzero if any is wrong, so the
+# rounding is under test too -- 2049 is not representable at binary16 and
+# ties-to-even sends it to 2048, which going through a double would not do.
+C_TESTS += Narrow
+CGREP_Narrow += "custard_f16 a = CUSTARD_F16_LIT(15872U);"
+CGREP_Narrow += "custard_f16_add(a, b)"
+CGREP_Narrow += "custard_f16_lt(custard_f16_sub(a, b)"
+CGREP_Narrow += "custard_f16_of_i64((int64_t)2049)"
+CGREP_Narrow += "custard_bf16_add(CUSTARD_BF16_LIT(16320U)"
+CGREP_Narrow += "typedef struct { uint16_t bits; } custard_f16;"
+# The operators must not have survived as C operators on a struct.  That the
+# native spellings are unused is asserted by the [typedef] above rather than
+# by their absence: the support header names them in the comment explaining
+# why it does not use them.
+CNOGREP_Narrow += "a + b"
+
+# Section 65.  A global at a narrow width takes the *initializer* spelling,
+# not the expression one: a compound literal has automatic storage duration
+# and cannot initialize an object with static storage duration.
+C_TESTS += NarrowG
+CGREP_NarrowG += "static custard_f16 NarrowG_g = CUSTARD_F16_INIT(15872U);"
+CNOGREP_NarrowG += "NarrowG_g = CUSTARD_F16_LIT"
+
 # Section 63.1.  A width Custard does not implement is refused at the
 # attribute, not at the first use of the type: 386 names the mistake, where
 # 368 would name the type and point at another module.
 REJECT_TESTS += FloatWidth
 CODE_FloatWidth = 386
-EGREP_FloatWidth = "The accepted widths are 32 and 64"
+EGREP_FloatWidth = "The accepted widths are 16, 32 and 64"
 
 # Section 63.2.  An unrecognized name in a float module becomes an external
 # on purpose -- bit_eq and to_string are meant to be -- so a misspelling of
