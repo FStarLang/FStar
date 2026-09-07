@@ -137,6 +137,15 @@ let new_implicit_var (reason: string) (r:FStarC_Range.range) (g:TcEnv.env) (e:S.
   let uvar, _, _ = FStarC_TypeChecker_Util.new_implicit_var reason r g e unrefine in
   uvar
 
+(* If [t] is (an application of) an unsolved uvar, return the type it was
+   created at.  Used to decide whether a stuck hole can be eta-expanded. *)
+let uvar_typ (t:S.term) : S.typ option =
+  let hd, _ = FStarC_Syntax_Util.head_and_args_full (FStarC_Syntax_Subst.compress t) in
+  match (FStarC_Syntax_Subst.compress hd).FStarC_Syntax_Syntax.n with
+  | FStarC_Syntax_Syntax.Tm_uvar (ctx_u, _) ->
+    Some (FStarC_Syntax_Util.ctx_uvar_typ ctx_u)
+  | _ -> None
+
 let try_solve_single_valued_implicits (g:TcEnv.env) (ts: S.term list) : unit =
   let g = {g with phase1=true; admit=true} in
   let imps = List.filter_map (fun t ->

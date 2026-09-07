@@ -75,6 +75,8 @@ val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
 val float_one : FStar.Float64.float64
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
 val new_implicit_var : reason:string -> range -> env -> typ -> unrefine:bool -> Dv term
+(* If the head of the term is an unsolved uvar, the type it was created at. *)
+val uvar_typ (t:term) : Dv (option typ)
 val try_solve_single_valued_implicits : env -> list term -> Dv unit
 module T = FStar.Tactics.V2
 val tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool) : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues)
