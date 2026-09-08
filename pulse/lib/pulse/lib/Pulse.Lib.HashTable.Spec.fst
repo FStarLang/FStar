@@ -363,7 +363,7 @@ let aunb_shrink #kt #kv (repr : repr_t kt kv) (idx : (n:nat{n < repr.sz})) (off 
     Classical.forall_intro #(i:nat{i < off-1}) aux;
     ()
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 let lemma_walk_from_canonical_all_used #kt #kv (repr : repr_t kt kv) (off : nat{off < repr.sz}) k v 
   : Lemma (requires all_used_not_by repr (canonical_index k repr) off k
                  /\ repr @@ ((canonical_index k repr + off) % repr.sz) == Used k v)
@@ -558,6 +558,7 @@ let not_full #kt #vt (r:repr_t kt vt) : prop =
   exists i. ~(Used? (r @@ i ))
 
 #restart-solver
+#push-options "--z3rlimit_factor 8"
 let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 
   (repr : repr_t_sz kt vt sz{pht_models spec repr /\ not_full repr}) (k : kt) (v : vt) 
   (off:nat{off <= sz})
@@ -572,7 +573,7 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
   = if off = sz then (
       // Impossible! table was not full
       let aux (i:nat{i < sz}) : Lemma (Used? (repr @@ i)) =
-        assert (all_used_not_by repr cidx sz k);
+        saunb_weaken repr cidx sz k;
         let off = (i - cidx) % sz in
         calc (==) {
           (cidx + off) % sz;
@@ -630,6 +631,7 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
           (**)lemma_zombie_upd spec repr off k v;
           upd_ repr idx k v
         )
+#pop-options
 
 let insert_repr #kt #vt #sz
                 (#spec : erased (spec_t kt vt))
@@ -646,7 +648,7 @@ let insert_repr #kt #vt #sz
   let res = insert_repr_walk #kt #vt #sz #spec repr k v 0 cidx () () in
   res
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 8"
 let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 
   (repr : repr_t_sz kt vt sz{pht_models spec repr}) (k : kt)
   (off:nat{off <= sz}) (cidx:nat{cidx = canonical_index k repr})
@@ -669,13 +671,15 @@ let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
         (**)lemma_del spec repr idx k v';
         del_ repr idx
       end else begin
-        assert (all_used_not_by repr cidx (off+1) k);
+        aunb_extend repr cidx off k;
         delete_repr_walk #kt #vt #sz #spec repr k (off+1) cidx () ()
       end
 
     | Clean -> repr
 
-    | Zombie -> delete_repr_walk #kt #vt #sz #spec repr k (off+1) cidx () ()
+    | Zombie ->
+      aunb_extend repr cidx off k;
+      delete_repr_walk #kt #vt #sz #spec repr k (off+1) cidx () ()
 #pop-options
 
 let delete_repr #kt #vt #sz (#spec : erased (spec_t kt vt))
