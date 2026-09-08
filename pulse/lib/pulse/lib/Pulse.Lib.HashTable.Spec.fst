@@ -585,6 +585,9 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
           == { Math.Lemmas.modulo_lemma i sz }
           i;
         };
+        // Name the instance of strong_all_used_not_by's trigger at this index;
+        // the calc above rewrites it to i.
+        assert (strong_used_not_by repr k ((cidx + off) % sz));
         assert (Used? (repr @@ i));
         ()
       in
