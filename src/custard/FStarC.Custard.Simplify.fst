@@ -1021,41 +1021,14 @@ let eta_reduce_decls (prog:program) : ML program =
       DLet { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
     | d -> d)
 
-(* One left-to-right pass: the program is topologically sorted, so by the time
-   an [Inline] body is stored it has already had its own callees inlined. *)
-let inline_decls (prog:program) : ML program =
-  let tbl : SMap.t (list binder & expr) = SMap.create 50 in
-  let used : SMap.t bool = SMap.create 50 in
-  let prog = prog |> List.map (fun d ->
-    match d with
-    | DLet dl ->
-      let body = inline_expr tbl used dl.dl_body in
-      if dl.dl_flags |> List.existsb Inline?
-      then SMap.add tbl (string_of_name dl.dl_name) (dl.dl_binders, body);
-      DLet { dl with dl_body = body }
-    | d -> d) in
-  prog |> List.filter (fun d ->
-    match d with
-    (* [Root] survives inlining.  A root was asked for by name, and what asks
-       for it is outside the extracted program -- hand-written OCaml calling
-       the compiler, which has nothing to inline into (section 12.13).  Every
-       *use* inside the program is still substituted; only the declaration
-       stays. *)
-    | DLet dl -> not (dl.dl_flags |> List.existsb Inline?)
-              || dl.dl_flags |> List.existsb Root?
-              || Some? (SMap.try_find used (string_of_name dl.dl_name))
-    | _ -> true)
-
 (* -------------------------------------------------------------------- *)
-(* Dead-declaration elimination                                         *)
+(* The call graph                                                       *)
 (* -------------------------------------------------------------------- *)
 
-(* Extraction requests a definition as soon as it meets one, including from
-   positions that the layout analysis later erases -- the ghost model of a data
-   structure, say.  What is left behind is a specification-only declaration
-   that nothing reachable calls: harmless in OCaml, but karamel rejects it
-   ("not Low*", because specifications use mathematical integers), so it has to
-   go.  Reachability is computed after inlining, when the call graph is final. *)
+(* What a declaration refers to.  Read by {!dce}, by {!record_parents} in the
+   C backend, by {!propagate_prologues} -- and, since section 72.4, by
+   {!inline_decls}, which is why these sit above it rather than in the
+   dead-code section they were written for. *)
 
 let rec cty_deps (c:cty) : ML (list string) =
   match c with
@@ -1113,6 +1086,85 @@ let decl_deps (d:decl) : ML (list string) =
      | TAbstract -> [])
   | DExternal x -> cty_deps x.dx_ty
   | DExn e -> List.collect cty_deps e.de_args
+
+(* Section 72.4.  [tbl] is filled in *dependency* order rather than in program
+   order, and before any use is rewritten.
+
+   This used to be one forward sweep: a declaration was inlined against the
+   entries built so far and then added to them, so a use that came before its
+   definition was left standing and the callee kept alive.  The comment on
+   [used] called that a mutual-recursion case.  It is not: a rule's lifted
+   functions go in *front* of the program ({!Extract.run}, section 36.3),
+   because they are the translation of no F* definition and so are in no
+   request's order.  Every [Inline] declaration a lifted kernel calls was
+   therefore missed --- and Kuiper's kernels call generated *projectors*,
+   which are [Inline] precisely so that no synthesized function survives.
+   In CUDA that is not a quality question: the surviving projector is a
+   [__host__] function called from [__global__], which nvcc refuses (section
+   72.4).
+
+   Depth-first over {!decl_deps}, entered in program order so the result does
+   not depend on hash order, with [visiting] breaking cycles exactly where the
+   old sweep did --- the first member of a cycle inlines nothing of the rest,
+   and they stay. *)
+let inline_decls (prog:program) : ML program =
+  let tbl : SMap.t (list binder & expr) = SMap.create 50 in
+  let used : SMap.t bool = SMap.create 50 in
+  let inl : SMap.t dlet = SMap.create 50 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet dl when dl.dl_flags |> List.existsb Inline? ->
+      SMap.add inl (string_of_name dl.dl_name) dl
+    | _ -> ());
+  let visiting : SMap.t bool = SMap.create 50 in
+  let bodies : SMap.t expr = SMap.create 50 in
+  let rec fill (n:string) : ML unit =
+    if None? (SMap.try_find visiting n) then begin
+      SMap.add visiting n true;
+      match SMap.try_find inl n with
+      | Some dl ->
+        decl_deps (DLet dl) |> List.iter fill;
+        let body = inline_expr tbl used dl.dl_body in
+        SMap.add bodies n body;
+        SMap.add tbl n (dl.dl_binders, body)
+      | None -> ()
+    end in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet dl when dl.dl_flags |> List.existsb Inline? ->
+      fill (string_of_name dl.dl_name)
+    | _ -> ());
+  let prog = prog |> List.map (fun d ->
+    match d with
+    | DLet dl ->
+      (* An [Inline] declaration's body was already rewritten by [fill], and
+         rewriting it again would re-enter [used] for the calls that stayed. *)
+      (match SMap.try_find bodies (string_of_name dl.dl_name) with
+       | Some body -> DLet { dl with dl_body = body }
+       | None -> DLet { dl with dl_body = inline_expr tbl used dl.dl_body })
+    | d -> d) in
+  prog |> List.filter (fun d ->
+    match d with
+    (* [Root] survives inlining.  A root was asked for by name, and what asks
+       for it is outside the extracted program -- hand-written OCaml calling
+       the compiler, which has nothing to inline into (section 12.13).  Every
+       *use* inside the program is still substituted; only the declaration
+       stays. *)
+    | DLet dl -> not (dl.dl_flags |> List.existsb Inline?)
+              || dl.dl_flags |> List.existsb Root?
+              || Some? (SMap.try_find used (string_of_name dl.dl_name))
+    | _ -> true)
+
+(* -------------------------------------------------------------------- *)
+(* Dead-declaration elimination                                         *)
+(* -------------------------------------------------------------------- *)
+
+(* Extraction requests a definition as soon as it meets one, including from
+   positions that the layout analysis later erases -- the ghost model of a data
+   structure, say.  What is left behind is a specification-only declaration
+   that nothing reachable calls: harmless in OCaml, but karamel rejects it
+   ("not Low*", because specifications use mathematical integers), so it has to
+   go.  Reachability is computed after inlining, when the call graph is final. *)
 
 (* A constructor or field name refers to its declaration, not to itself. *)
 let ctor_owners (prog:program) : ML (SMap.t string) =

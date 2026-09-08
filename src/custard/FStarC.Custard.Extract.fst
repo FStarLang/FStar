@@ -1988,6 +1988,14 @@ and template_arg (st:state) (l:Ident.lident) (i:int) (a:term) : ML cty =
               argument has to be a constant expression, and one that is only \
               known at run time is not.";
         text ("What it reduced to was: " ^ show a');
+        (* Section 72.3.  The request chain below says which specializations
+           led here, and on a whole-module run it can be empty or a single
+           root -- neither of which identifies the *declaration* that still
+           has the index as a runtime parameter, which is the only thing the
+           reader can act on.  [st.cur] is that declaration, and it costs one
+           line to say so. *)
+        text ("It is reached while extracting " ^ string_of_name !st.cur ^
+              ", which is where the index is still a runtime value.");
         text "Either make the argument compile-time known, or drop the \
               placeholder for it from the [@@custard_extern] string, which \
               makes the argument invisible to the target." ];
@@ -2153,8 +2161,13 @@ and expr_of_term (st:state) (t:term) : ML expr =
                         | [] -> flags)
                   else flags in
       drop_flagged flags bs in
+    (* Section 72.2, as in [extract_letbinding]: a binder the guard above put
+       back is there for the arity and carries nothing, so [unit] is its type
+       and not whatever its sort says. *)
     let bs = bs |> List.map (fun b ->
-      { b_name = name_of_bv b.binder_bv; b_ty = ty_of_typ st b.binder_bv.sort }) in
+      { b_name = name_of_bv b.binder_bv;
+        b_ty = if Mono.is_erased_binder (tcenv st) b then TUnit
+               else ty_of_typ st b.binder_bv.sort }) in
     (match bs with
      | [] -> body
      | _ ->
@@ -2224,10 +2237,9 @@ and expr_of_term (st:state) (t:term) : ML expr =
                             local_inline_steps
                                       (SS.subst [NT (bv, U.unmeta lb.lbdef)] body))
        else
-       let e1 = if TcUtil.must_erase_for_extraction (tcenv st) lb.lbtyp &&
-                   U.is_pure_or_ghost_effect lb.lbeff
-                then unit_expr
-                else expr_of_term st lb.lbdef in
+       let erased_lb = TcUtil.must_erase_for_extraction (tcenv st) lb.lbtyp &&
+                       U.is_pure_or_ghost_effect lb.lbeff in
+       let e1 = if erased_lb then unit_expr else expr_of_term st lb.lbdef in
        (* Section 3.2b: remember what the variable stands for, so that a
           [Mono] argument written as [d] is judged by [d]'s definition rather
           than rejected as a runtime parameter.  Only pure definitions: an
@@ -2242,8 +2254,14 @@ and expr_of_term (st:state) (t:term) : ML expr =
        (* The annotation the typechecker left is authoritative when it says
           anything at all; a [--lax] run often leaves nothing, and then the
           right-hand side's own type is the better answer. *)
-       let lty = ty_of_typ st lb.lbtyp in
-       let lty = if TAny? lty then e1.ty else lty in
+       (* Section 72.2.  An erased binding has been replaced by [()], so its
+          type is [unit] and not the one the annotation carries.  A [ghost fn]
+          local is the case that showed this: the annotation is a function
+          type, so the [let] was emitted as a function-typed variable holding
+          a unit, which the IR accepts and C does not. *)
+       let lty = if erased_lb then e1.ty else
+                 let lty = ty_of_typ st lb.lbtyp in
+                 if TAny? lty then e1.ty else lty in
        SMap.add st.lettys (show bv.index) lty;
        let e2 = expr_of_term st body in
        mk (ELet (name_of_bv bv, lty, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
@@ -4233,15 +4251,21 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      what [c] was realigned to, so it is the right set. *)
   let benv = Prof.timed "push_binders" (fun () -> TcEnv.push_binders (tcenv st) bs) in
   let bs = drop_flagged flags bs in
-  (* A type binder that survived [drop_flagged] is the one {!Mono.keep_thunk}
-     put back so that the definition does not become a value.  It carries no
-     type at runtime and no value either, and its callers pass [()]
+  (* An *erased* binder that survived [drop_flagged] is the one
+     {!Mono.keep_thunk} put back so that the definition does not become a
+     value.  It carries nothing at runtime and its callers pass [()]
      ({!Mono.unit_binders}), so [unit] is both its honest type and the one that
-     needs no coercion -- typing it by its sort would make it [any] and put an
-     [Obj.magic] at every call. *)
+     needs no coercion -- typing it by its sort would make a type binder [any]
+     and put an [Obj.magic] at every call.
+
+     Section 72.2.  [is_erased_binder] rather than [is_type_binder], which is
+     what this said until a [ghost fn] parameter found the difference: an
+     erased *value* binder put back the same way kept its function type, its
+     callers passed the erased [()], and the C compiler --- not Custard ---
+     was the first thing to object. *)
   let binders = bs |> List.map (fun b ->
     { b_name = name_of_bv b.binder_bv;
-      b_ty = if is_type_binder (tcenv st) b then TUnit
+      b_ty = if Mono.is_erased_binder (tcenv st) b then TUnit
              else ty_of_typ st b.binder_bv.sort }) in
   (* The effect is the one of the *codomain*: [lbeff] is the effect of
      evaluating the lambda, which is always Tot.
@@ -4499,6 +4523,29 @@ let erased_definition (st:state) (ty:typ) : ML bool =
   U.is_ghost_effect (U.comp_effect_name c) ||
   TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c)
 
+(* Section 72.1.  Whether a definition is one that cannot be a root at all.
+
+   Specialization is driven by call sites: a type binder is instantiated by
+   what a caller passes.  A root has no caller.  So a definition with a type
+   binder, rooted on its own, reaches the backend still polymorphic and is
+   refused with error 368 --- a refusal that is correct and that nothing the
+   user can set will avoid, because the definition was never the thing they
+   meant to compile.  A [Mono] binder is the same story one step along, and
+   error 364 has been saying so since section 19; only the type-variable form
+   was left claiming a Custard bug.
+
+   [--custard_entry_module] is a bulk request --- "whatever of this module is
+   code" --- and a polymorphic helper is not code until it is instantiated,
+   exactly as a specification is not code at all.  So it is skipped here, on
+   the same footing and for the same reason [erased_definition] skips a
+   specification, and quietly for the same reason: a module that has some is
+   the normal case, not a mistake worth a diagnostic on every module.
+
+   [--custard_entry] names one definition and is still taken at its word.
+   What changed there is only the message: section 72.1. *)
+let unrootable_definition (st:state) (ty:typ) : ML bool =
+  Mono.type_binders (tcenv st) ty |> List.existsb (fun b -> b)
+
 (* Section 19.11.  The same question asked of an explicit root, before it is
    requested rather than after.
 
@@ -4659,8 +4706,9 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
                  output.  Nothing calls them, so only being a root keeps them
                  alive; asking whether the result has a runtime meaning is
                  what tells them apart from a genuine [unit] function. *)
-              | Inr fv when not (erased_definition st lb.lbtyp) ||
-                            is_type_sig st lb.lbtyp ->
+              | Inr fv when (not (erased_definition st lb.lbtyp) ||
+                             is_type_sig st lb.lbtyp) &&
+                            not (unrootable_definition st lb.lbtyp) ->
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
           | _ -> ())));

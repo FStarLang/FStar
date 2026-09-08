@@ -413,16 +413,24 @@ let retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ) =
 
    Two kinds.  A unit-shaped binder is the one rule 1 declines to delete, and
    what the source supplies for it can be a [Prims.magic ()] that aborts at
-   runtime, or an arbitrarily expensive piece of ghost code.  A *type* binder
-   is normally deleted outright, but {!keep_thunk} puts the last one back when
-   deleting it would turn the definition into a value; what the source supplies
-   for that one is a type, and a type is not a term.  Passing it produces
-   either an [Obj.magic ()] (when the argument is a concrete type, which
-   happens to work) or a reference to a type variable in value position (when
-   it is not, which does not). *)
+   runtime, or an arbitrarily expensive piece of ghost code.  An *erased*
+   binder is normally deleted outright, but {!keep_thunk} puts the last one
+   back when deleting it would turn the definition into a value; what the
+   source supplies for that one is not a term Custard can pass.
+
+   Section 72.2.  This second kind is [is_erased_binder] and not just
+   [is_type_binder], which is what it said until a [ghost fn] parameter found
+   the difference.  A type argument passing through produces an [Obj.magic ()]
+   (when the argument is a concrete type, which happens to work) or a
+   reference to a type variable in value position (when it is not, which does
+   not).  An erased *value* argument is worse, because it type-checks in the
+   IR and fails only in the C compiler: the binder keeps its function type
+   while its argument has been erased to [()], and the call is emitted with a
+   unit where a function pointer belongs.  Both are the same fact -- a binder
+   {!keep_thunk} put back is there for its arity and for nothing else. *)
 let unit_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = arrow_formals_unfold env t in
-  bs |> List.map (fun b -> U.is_unit b.binder_bv.sort || is_type_binder env b)
+  bs |> List.map (fun b -> U.is_unit b.binder_bv.sort || is_erased_binder env b)
 
 let type_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = arrow_formals_unfold env t in

@@ -1919,6 +1919,43 @@ RSSGREP_RustSplit += "pub _1: u32"
 RSSGREP_RustSplit += "pub _2: u32"
 RSSDRIVER_RustSplit := \#[path = "lower.rs"] mod lower;\n\#[path = "upper.rs"] mod upper;\nfn main() { std::process::exit(upper::main()); }\n
 
+# Section 72.1.  A root has no call site, so a polymorphic definition cannot
+# be one: specialization takes its type argument from a caller.
+# --custard_entry_module therefore does not root [pick], on the same footing
+# as [spec], and what comes out is the concrete instance [use_it] calls.
+# Before this the whole module was refused with error 368, naming a helper the
+# user never asked to compile -- six of Kuiper's modules, in section 72.0's
+# sweep.
+C_TESTS += PolyRoot
+FLAGS_PolyRoot = --custard_entry_module PolyRoot
+CGREP_PolyRoot += "PolyRoot_use_it"
+# The instance is emitted; the uninstantiated helper is not a declaration at
+# all.
+CNOGREP_PolyRoot += "PolyRoot_pick("
+CNOGREP_PolyRoot += "PolyRoot_spec"
+
+# ... and the other half: --custard_entry names one definition, so it is taken
+# at its word and still refused.  What changed is only the advice.  The
+# NOEGREP is the point of the test: this refusal is correct, and telling the
+# reader to report it as a Custard bug is what sent it to the issue tracker.
+REJECT_TESTS += PolyRootEntry
+CODE_PolyRootEntry = 368
+FLAGS_PolyRootEntry = --custard_backend C --custard_monomorphize_types true \
+                      --custard_entry PolyRootEntry.pick
+EGREP_PolyRootEntry += "This declaration is a root, and a root has no call site"
+EGREP_PolyRootEntry += "Root a concrete caller of it instead"
+NOEGREP_PolyRootEntry += "please report it"
+
+# Section 72.3.  Error 390 names the declaration in which the template
+# argument is still a runtime value.  The request chain it already printed
+# names specializations, and on a run rooted at [main] that is [main] -- which
+# is not where the reader has to make a change.
+REJECT_TESTS += TmplRun
+CODE_TmplRun = 390
+FLAGS_TmplRun = --custard_backend C --custard_entry TmplRun.main
+EGREP_TmplRun += "It is reached while extracting"
+EGREP_TmplRun += "extracting TmplRun.helper"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \

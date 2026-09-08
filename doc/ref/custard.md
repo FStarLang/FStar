@@ -15588,6 +15588,194 @@ were explicitly deferred; the IR node they would need is the one that now
 exists, so the remaining work is in `PrintC`'s statement path rather than in
 the front end.
 
+## 72. Round 64: a whole-module sweep
+
+### 72.0 Intake
+
+Two reports confirmed round 62 and 63 and one opened four new items.
+
+Kuiper's §64 confirms the Tensor Core miscompilation is gone.
+`custard_c_reference` now recovers the operation counts the karamel reference
+produces --- 6/6/12/4 where the broken build had 2/2/4/4 --- and the two
+generated `.cu` files differ by exactly seven `&`, which is the reference
+binding and nothing else. §64.1 **retracts their own §62.1**: every write into
+a fragment array was discarded, not merely the accumulate, so the diagnosis
+they filed was narrower than the bug. §64.3 confirms warning 391 fires by
+control test, and that their silence on it was a fact about their code. §64.5
+agrees to leave `(T){0}` alone.
+
+EverParse's §66 confirms the round 63 work end to end: the shim is **zero
+lines**, all five type abbreviations emit, and EverParse's own unmodified
+`main.c` builds, links and passes all 48 assertions under ASan and UBSan ---
+47 of 47 functions, 10 of 10 `CMacro` constants, 485 behavioural vectors, and
+the Rust leg regression-checked. Warning 377's alias advice is singled out as
+doing "the whole job".
+
+Kuiper's §65 is the new one. They swept all 62 modules of their `dist/`
+directory: 52 extract, 43 compile under nvcc. Four asks follow, and the
+sections below take them in order.
+
+### 72.1 A root has no call site
+
+Six modules were refused with error 368, "the type variable `'a` has no C
+representation", ending with *"That is a Custard bug, not a configuration
+problem: please report it"*. It is not a bug, and the message sent a correct
+refusal to the issue tracker.
+
+Specialization is driven by call sites. A type binder is instantiated by what
+a caller passes; §5.0.1's monomorphization pass walks the program from its
+roots and rewrites each call it meets. A **root has no caller** --- that is
+what being a root means --- so a root that is still polymorphic has nothing to
+be specialized against, and no setting makes one appear.
+`--custard_monomorphize_types` was already on in every one of the six.
+
+Two changes, one on each side of the question.
+
+`--custard_entry_module` no longer roots a definition that cannot be one. A
+bulk request means "whatever of this module is code", and a polymorphic helper
+is not code until it is instantiated --- exactly as a specification is not code
+at all. `Extract.unrootable_definition` asks `Mono.type_binders`, and the
+`--custard_entry_module` loop skips what it reports, on the same footing and
+in the same loop as `erased_definition` already skips a specification. It
+skips **quietly**, for the same reason: a module with polymorphic helpers is
+the normal case, not a mistake worth a diagnostic on every module. A `Mono`
+binder is the same story one step along, and error 364 has been saying so
+since §19; only the type-variable form claimed a Custard bug.
+
+`--custard_entry` names one definition and is still taken at its word, so the
+refusal stands there. What changed is what it says. `PrintC` gains
+`root_decls`, filled by `record_parents` alongside `seen`, and
+`mono_advice_for` uses it: for a root, the three "please report it" lines are
+replaced by three that say a root has no call site, that the module form now
+skips these, and what to do instead --- root a concrete caller, or give the
+definition a monomorphic signature if it is meant to be called from outside
+the program.
+
+`root_decls` has to be a separate table. An empty `reached_through` says only
+that the BFS never assigned a parent, which is equally true of a declaration
+the walk never visited, so being a root is not derivable from `parents`.
+
+`tests/custard/PolyRoot.fst` is the module form and runs; `PolyRootEntry.fst`
+is the named form and is a reject test, with the retired sentence pinned as
+**absent** --- §33.4's rule, and this is exactly the failure it exists for.
+
+### 72.2 A binder `keep_thunk` puts back is there for its arity
+
+A Pulse function taking a `ghost fn` parameter compiled to C that does not
+build:
+
+```c
+void ( *justif)(void) = ((custard_unit)0);
+GhostPulse_with_justif(justif());
+```
+
+A unit where a function pointer belongs, and then a call through it. Nothing
+between Pulse and the C compiler had anything to say.
+
+`Mono.keep_thunk` retains the last binder of a definition when deleting all of
+them would turn the definition into a value. A binder retained that way is
+there **for the arity and for nothing else**: it carries nothing at run time,
+and `Mono.unit_binders` is what tells the call sites to pass `()`. So its type
+in the IR must be `unit`, whatever its sort says.
+
+That was encoded for a *type* binder only. `Mono.is_erased_binder` is
+`is_type_binder || is_dropped_binder`, and the second disjunct was the gap: an
+erased **value** binder put back the same way kept its declared type. A type
+binder passing through produces an `Obj.magic ()` --- wrong, but wrong in a
+way the IR can see. An erased value binder is worse, because the IR is
+perfectly happy with it and only the C compiler objects.
+
+`unit_binders` now reads `U.is_unit sort || is_erased_binder env b`, and three
+places in `Extract` that typed a surviving binder by `is_type_binder` now ask
+`is_erased_binder`: the signature binders in `extract_letbinding`, the lambda
+binders in `expr_of_term`, and --- the fourth site --- a `let` whose binding is
+erased, whose type is now the right-hand side's `unit` rather than the
+annotation's arrow. `is_dropped_binder` excludes `U.is_unit` sorts, so this is
+a strict extension and no binder that was already `unit`-typed changes.
+
+Why the parameter is erased at all: `PulseCore.Atomic.stt_ghost` and
+`Pulse.Lib.Core.stt_ghost` both carry `[@@erasable]`, so `unit -> stt_ghost
+unit ...` is non-informative by `TcEnv.non_informative`'s arrow case. Why it
+had an extra arrow in the IR: §7.2 turns an `extract_as_impure_effect` type
+`stt a ...` into `unit -> a`, so the parameter printed as `unit -> unit ->
+unit`.
+
+`tests/custard/pulse/PulseGhostFn.fst`, in the C leg, because compiling is the
+test.
+
+### 72.3 Error 390 names the declaration
+
+Error 390 --- a non-type template argument that is not a constant expression
+--- printed the request chain, which names *specializations*. On a whole-module
+run that chain can be a single root, and a root is not where the reader has to
+make a change. Kuiper: "nothing in the message says which of our functions to
+look at".
+
+`Extract.template_arg` now adds one line naming `st.cur`, the declaration being
+extracted when the argument was found --- which is where the index is still a
+runtime value, and the only thing in the message that is actionable.
+`tests/custard/TmplRun.fst` pins it.
+
+### 72.4 The inliner was order-dependent
+
+Kuiper's fourth item is a generated projector left in the output as a
+`__host__` function and called from a `__global__` one, which nvcc refuses.
+
+`Simplify.inline_decls` was a single forward sweep: a declaration was inlined
+against the entries built so far and then added to them. Its comment said the
+program is topologically sorted, so a callee is always passed before its
+caller, and that is true of everything `Extract.request` files --- `st.order`
+is appended *after* `extract_lid` returns, so callees precede callers.
+
+There is exactly one exception, and §36.3 wrote it deliberately: a rule's
+lifted functions are the translation of no F\* definition and so are in no
+request's order, and `Extract.run` collects the program as `take_lifted () @
+List.rev !st.order`. They go **in front**. So every `Inline` declaration that a
+lifted function calls was passed over --- not inlined into it, and kept alive
+because the call that remains is a use. Projectors and discriminators are
+`Inline` (`Extract.is_inlinable`) precisely so that no synthesized function
+survives into the output, and in CUDA that is not a code-quality question: the
+survivor is a host function called from device code.
+
+`inline_decls` is now order-independent. `decl_deps` and the three functions
+under it move up out of the dead-code section --- they are the call graph, and
+`dce` is no longer their only reader --- and the pass fills its table by a
+depth-first walk over that graph, entered in program order so nothing depends
+on hash order, with `visiting` breaking cycles exactly where the old sweep
+broke them. The bodies it computes are reused in the rewrite pass rather than
+recomputed, so a declaration is inlined once.
+
+There is no regression test, and the reason is worth recording. The suite's
+only rule lives in `tests/custard/plugin`, and a rule's arguments are
+normalized before the rule sees them (§30.17) --- which unfolds a projector
+application into the match it stands for, on the spot. So a projector *call*
+cannot be got into a lifted body through the supported path, and neither can
+an `inline_for_extraction` one, for the same reason. What the suite can show
+is the mechanism: `--custard_dump_ir` on the plugin test prints the lifted
+kernel first, ahead of every declaration it depends on. The fix follows from
+that ordering and from the report; the trigger does not reduce.
+
+Kuiper's first ask needs no change at all. They asked for "a prologue that
+applies to everything reachable from a kernel", and that is
+`ClosurePrologue (excl, shared)` and `Simplify.propagate_prologues`, added in
+§51.3. `Builtins.lift_named` takes a `list flag`, so a plugin passes
+`ClosurePrologue ("__device__", "__device__ __host__")` alongside
+`Prologue "__global__"` and gets exactly the propagation they described.
+
+### 72.5 For the record
+
+Two observations from the sweep are noted and not acted on.
+
+A function returning a pointer into its own stack frame --- Kuiper's
+`gpu_array_alloc_vis` returned its own VLA --- compiles, is wrong at run time,
+and made nvcc 12.6 ICE. Nothing warns. It is the same family as §62's
+reference bindings and wants its own diagnostic; it is not in this round.
+
+A `noextract` function that is reachable still gets a C definition. Custard's
+view is whole-program: if something reachable from a root calls it, there is
+no program without it, and `noextract` on such a definition is a contradiction
+rather than an instruction. Documented here rather than changed.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -15876,3 +16064,7 @@ the front end.
 | M10ηΘ | `BufUnconst`, because a cast is dropped (§71.3) | Done, and the reason it is an operator is the round's sharpest constraint.  `const T *` to `T *` is mandatory --- it is a `-Werror` diagnostic in C and a hard error in C++ --- and `ECast`/`ECoerce` cannot carry it, because `Layout.fst:496` is `if e1.ty = c then e1 else ...` and the two types here genuinely *are* equal: both `TBuf t`, with the qualifier not modelled in `cty` at all.  A conversion whose justification is invisible to the type it converts has nowhere to live but an operator.  The declarator is the same lesson: `decl_of (TBuf t) x` gives `t *x`, a pointer variable, where what is wanted is `t x[n]`, an array object --- so `array_decl` builds it by hand.  Header gets `extern const T x[n]`, since `extern const T *x` is the classic link-clean run-time-wrong program, and `custard_init_globals` skips these, since a startup pass would be assigning to a `const` object |
 | M10ηΙ | Three refusals, three different questions (§71.4) | Done, with a `REJECT_TESTS` leg ported into `tests/custard/pulse/Makefile` --- ported and not shared, because these need Pulse in scope and `tests/custard` cannot resolve a Pulse module.  Contents not compile-time: 393 **names the shape it got**, "a reference to `T.opaque_list`", because a rule has no request chain to print and without the shape the message says only that something went wrong.  Empty: `t x[0]` is a constraint violation, `{ }` is not an initializer, and there is no address to hand out.  Expression position: refused in `PrintC` and deliberately **not** in the rule, since OCaml and karamel both accept the same program.  Each pinned phrase had to be re-cut twice to avoid spanning one of the formatter's line breaks, which is §33.4's tax and still cheaper than an unpinned message |
 | M10ηΚ | OCaml `[| |]`, karamel `EBufCreateL`, and one column that is laxer (§71.5) | Done.  OCaml gets an array literal and `BufUnconst` is the identity, there being no second type to convert to.  karamel gets `EBufCreateL (Eternal, ...)` and emits the array **without** `const`, from its own lifetime handling --- not wrong, since the Pulse API still prevents every write, but a real difference between the two C columns, and the direct backend is the stricter of them.  Function-local array initializers remain deferred at the user's request; the IR node they need is the one that now exists, so what is left is in `PrintC`'s statement path and not in the front end |
+| M10ηΛ | A root has no call site (§72.1) | Done.  Six of the 62 modules in Kuiper's sweep were refused with error 368 and told to report a Custard bug; the refusal was correct and the advice was not.  Specialization is caller-driven, so a definition with a type binder cannot be a root: there is nothing to instantiate it against and no setting that makes one appear.  `--custard_entry_module` is a bulk request and now skips them quietly, on the same footing as it already skips a specification --- `Extract.unrootable_definition`, in the same loop as `erased_definition`.  `--custard_entry` names one definition and is still taken at its word; what changed there is the message, through a new `PrintC.root_decls`, which has to be its own table because an empty `reached_through` is equally true of a declaration the BFS never visited |
+| M10ηΜ | A binder `keep_thunk` puts back is there for its arity (§72.2) | Done.  A Pulse `ghost fn` parameter came out as `void ( *justif)(void) = ((custard_unit)0);` followed by a call through it --- a unit where a function pointer belongs.  `Mono.unit_binders` said `is_type_binder` where it meant `is_erased_binder`, so an erased *value* binder kept its declared type while its argument was erased to `()`.  Four sites: the predicate, the signature binders, the lambda binders, and a `let` whose binding is erased and whose type must therefore be the right-hand side's `unit` and not the annotation's arrow.  A type binder passing through produces an `Obj.magic ()`, which the IR can see; this one type-checks in the IR and only the C compiler objects, which is why it needed a C-leg test rather than a grep |
+| M10ηΝ | Error 390 names the declaration, not the chain (§72.3) | Done, one line.  The request chain names specializations, and on a whole-module run it can be a single root; `st.cur` is the declaration in which the template argument is still a runtime value, which is the only part of the message the reader can act on |
+| M10ηΞ | The inliner was order-dependent (§72.4) | Done.  `inline_decls` was one forward sweep resting on `st.order` being topological, which it is --- except for a rule's lifted functions, which §36.3 puts in *front* deliberately.  So every `Inline` declaration a lifted kernel called was passed over and kept, and a projector is `Inline` exactly so that no synthesized function survives: in CUDA a surviving one is a `__host__` function called from `__global__`, which nvcc refuses.  Now a depth-first fill over `decl_deps` --- moved up out of the dead-code section, since `dce` is no longer its only reader --- entered in program order for determinism, with `visiting` breaking cycles where the old sweep broke them.  No regression test, and the reason is recorded rather than papered over: a rule's arguments are normalized before the rule sees them, which unfolds a projector on the spot, so the trigger does not reduce through the supported path.  Kuiper's other ask needs no change --- `ClosurePrologue` and `propagate_prologues` (§51.3) are the propagation they described |

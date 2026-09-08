@@ -194,6 +194,15 @@ GREP_PulseGlobalArray += "FStar_UInt8.uint_to_t (Prims.parse_int \"2\")"
 NOGREP_PulseGlobalArray += "squares"
 KRML_TESTS += PulseGlobalArray
 
+# Section 72.2.  A [ghost fn] parameter is erased, and the one binder
+# [keep_thunk] puts back is there for the arity alone.  The failure was in the
+# C compiler, not in Custard, so compiling is the test.
+C_TESTS += PulseGhostFn
+CGREP_PulseGhostFn += "PulseGhostFn_with_justif(void)"
+# No function-typed local, no unit standing in for one, and no call through it.
+CNOGREP_PulseGhostFn += "*justif"
+CNOGREP_PulseGhostFn += "(justif()"
+
 # Section 71.4.  The three ways a static array is not one, and what each says.
 # A run whose contents are a run-time value is a contradiction in terms, so it
 # is refused rather than built at startup behind the programmer's back.

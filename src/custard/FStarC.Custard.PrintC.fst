@@ -100,6 +100,13 @@ let frozen_by_target : SMap.t string = SMap.create 20
    exist, and this one is filled from the program at the same time they are. *)
 let existentials : SMap.t (string & string) = SMap.create 20
 
+(* Section 72.1.  The declarations that were rooted, so that a rejection can
+   tell "nothing reached this" from "nothing reached this *yet*".  An empty
+   {!reached_through} says only that the BFS never assigned a parent, which is
+   also true of a declaration the walk did not visit; being a root is the fact
+   that actually changes the advice, and it is not derivable from [parents]. *)
+let root_decls : SMap.t bool = SMap.create 50
+
 let reached_through (n:string) : ML (list string) =
   let rec up (n:string) (fuel:int) (acc:list string) : ML (list string) =
     if fuel <= 0 then List.rev acc
@@ -452,6 +459,27 @@ let mono_advice_for (n:option name) : ML (list string) =
       if Cons? (existential_msg ())
       then ["--custard_monomorphize_types is already set, so nothing was left \
              polymorphic by choice; the reason is below."]
+      else
+      (* Section 72.1.  A *root* is the one case where a surviving type
+         variable is neither a bug nor a configuration problem.  Specialization
+         is driven by call sites, and a root has none by definition -- so there
+         is nothing to instantiate this variable against, and no setting makes
+         one appear.  Error 364 has said exactly this for a monomorphized
+         binder since section 19; saying "please report a Custard bug" for the
+         type-variable form sent six of Kuiper's modules to the issue tracker
+         for a correct refusal. *)
+      if Some? (SMap.try_find root_decls !current)
+      then ["This declaration is a root, and a root has no call site.  \
+             Specialization takes its type arguments from callers, so a root \
+             that is still polymorphic has nothing to be specialized against \
+             -- which is a fact about what was asked for, not a Custard bug.";
+            "--custard_entry_module roots every definition in a module, \
+             including polymorphic helpers that the program only ever calls \
+             at concrete types.  Those are skipped now (section 72.1); this \
+             one was named directly, so it was taken at its word.";
+            "Root a concrete caller of it instead -- --custard_entry on the \
+             definition that applies it -- or, if it is meant to be called \
+             from outside the program, give it a monomorphic signature."]
       else
       ["--custard_monomorphize_types is already set, so this type is one the \
         monomorphization pass did not reach (section 5.0.1).";
@@ -3142,7 +3170,8 @@ let record_parents (p:program) : ML unit =
     | _ -> ()) in
   let roots = p |> List.collect (fun d ->
     if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)
-    then (let n = string_of_name (name_of_decl d) in SMap.add seen n true; [n])
+    then (let n = string_of_name (name_of_decl d) in
+          SMap.add seen n true; SMap.add root_decls n true; [n])
     else []) in
   bfs roots
 
