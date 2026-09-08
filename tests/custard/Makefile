@@ -1060,8 +1060,14 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	  grep -F -A1 -- "$$a" $@ $(basename $@).h | grep -qF -- "$$b" \
 	    && { echo "ERROR: $* has a '$$a' immediately before '$$b'"; \
 	         exit 1; }; done; true
-	$(Q)awk '/\{$$/ { open = NR; next } \
-	         /^[ \t]*\}/ && open == NR - 1 { print NR; found = 1 } \
+	@# A [void] function whose body collapsed to nothing is the one empty
+	@# block that is not a defect: a root of type [unit -> unit] (section
+	@# 73) has no statements left to emit and still has to exist.  The
+	@# opening line has to start at column zero to be a definition rather
+	@# than a nested block.
+	$(Q)awk '/\{$$/ { open = NR; \
+	                  void_fn = (/^(static )?void [A-Za-z_]/); next } \
+	         /^[ \t]*\}/ && open == NR - 1 && !void_fn { print NR; found = 1 } \
 	         { open = 0 } END { exit found }' $@ \
 	  || { echo "ERROR: $* C output has an empty block, at the lines above"; \
 	       exit 1; }
@@ -1955,6 +1961,19 @@ CODE_TmplRun = 390
 FLAGS_TmplRun = --custard_backend C --custard_entry TmplRun.main
 EGREP_TmplRun += "It is reached while extracting"
 EGREP_TmplRun += "extracting TmplRun.helper"
+
+# Section 73.  A prettified alias of a unit-typed rule: both wrapper layers
+# collapse, and [evercddl_null_left]'s pattern went with them while its body
+# kept the variable the pattern bound.
+C_TESTS += PrettyUnit
+FLAGS_PrettyUnit = --custard_entry_module PrettyUnit
+CGREP_PrettyUnit += "void PrettyUnit_evercddl_null_left(void)"
+CGREP_PrettyUnit += "PrettyUnit_round_trip"
+
+# The reporter hit this on both COSE legs, so both are pinned: the karamel
+# route died with a bare OCaml failure where the direct C route raised error
+# 368 (section 69.4).
+KRML_TESTS += PrettyUnit
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \

@@ -368,36 +368,73 @@ let hoist (dropped:list expr) (result:expr) : ML expr =
     if is_pure d.eff then acc
     else { acc with e = ESeq (d, acc) }) dropped result
 
-let rec rw_pat (t:tbl) (p:pat) : ML pat =
+(* The variables a pattern binds.  [POr] binds the same set in every branch,
+   so collecting all of them over-counts nothing that matters here: the list
+   is only used to re-bind names whose pattern the layout deleted. *)
+let rec pat_vars (p:pat) : ML (list string) =
+  match p with
+  | PVar v -> [v]
+  | PCtor (_, ps) | PTuple ps | POr ps -> List.collect pat_vars ps
+  | PRecord (_, fs) -> fs |> List.collect (fun (_, q) -> pat_vars q)
+  | PWild | PConst _ -> []
+
+(* Collapsing a type deletes sub-patterns as well as sub-expressions, and a
+   deleted sub-pattern takes its variables with it -- while the branch body
+   may still mention them (section 5.2).  Every field the layout drops has no
+   runtime representation, so the values those names stood for are unit; the
+   pattern side's answer to [hoist] is therefore to hand the dropped names
+   back and let [rw_branch] bind each to [()].
+
+   Reported against COSE's [evercddl_null_left], where an alias of a
+   unit-typed rule gave [match x with Mkevercddl_null0 y -> y] over a type
+   that collapses away entirely: the pattern became [_] and [y] was left
+   free, which the C backend rejected with error 368 and the karamel backend
+   with a bare failure. *)
+let rec rw_pat (t:tbl) (p:pat) : ML (pat & list string) =
+  let many (ps:list pat) : ML (list pat & list string) =
+    let ps = ps |> List.map (rw_pat t) in
+    (ps |> List.map fst, ps |> List.collect snd) in
   match p with
   | PCtor (n, ps) ->
-    let ps = ps |> List.map (rw_pat t) in
+    let ps, freed = many ps in
     (match ctor_owner t n with
-     | Some (L_erased, _) -> PWild
+     | Some (L_erased, _) -> (PWild, freed @ List.collect pat_vars ps)
      | Some (L_newtype nt, _) ->
        (match nth_opt ps nt.nt_index with
-        | Some p' -> p'
-        | None -> PWild)
-     | Some (_, cl) -> PCtor (n, keep_by_slots cl.cl_slots ps |> fst)
-     | None -> PCtor (n, ps))
+        | Some p' ->
+          let others = ps |> List.mapi (fun i q -> (i, q))
+                          |> List.collect (fun (i, q) ->
+                               if i = nt.nt_index then [] else pat_vars q) in
+          (p', freed @ others)
+        | None -> (PWild, freed @ List.collect pat_vars ps))
+     | Some (_, cl) ->
+       let kept, dropped = keep_by_slots cl.cl_slots ps in
+       (PCtor (n, kept), freed @ List.collect pat_vars dropped)
+     | None -> (PCtor (n, ps), freed))
   (* The mirror of [ERecord] in [rw_expr]: a record has one shape, so there is
      no tag to collapse, and a field the layout dropped is simply not matched
      on. *)
   | PRecord (n, fs) ->
-    let fs = fs |> List.map (fun (f, q) -> (f, rw_pat t q)) in
+    let qs = fs |> List.map (fun (f, q) -> (f, rw_pat t q)) in
+    let fs = qs |> List.map (fun (f, (q, _)) -> (f, q)) in
+    let freed = qs |> List.collect (fun (_, (_, vs)) -> vs) in
+    let others (keep:string -> ML bool) : ML (list string) =
+      fs |> List.collect (fun (f, q) -> if keep f then [] else pat_vars q) in
     (match SMap.try_find t.layouts (key n) with
-     | Some L_erased -> PWild
+     | Some L_erased -> (PWild, freed @ others (fun _ -> false))
      | Some (L_newtype nt) ->
        (match fs |> List.tryFind (fun (f, _) -> f = nt.nt_field) with
-        | Some (_, q) -> q
-        | None -> PWild)
+        | Some (_, q) -> (q, freed @ others (fun f -> f = nt.nt_field))
+        | None -> (PWild, freed @ others (fun _ -> false)))
      | Some (L_struct [cl]) ->
-       PRecord (n, fs |> List.filter (fun (f, _) ->
-         cl.cl_fields |> List.existsb (fun (g, _) -> g = f)))
-     | _ -> PRecord (n, fs))
-  | PTuple ps -> PTuple (ps |> List.map (rw_pat t))
-  | POr ps -> POr (ps |> List.map (rw_pat t))
-  | p -> p
+       let keep (f:string) : ML bool =
+         cl.cl_fields |> List.existsb (fun (g, _) -> g = f) in
+       (PRecord (n, fs |> List.filter (fun (f, _) -> keep f)),
+        freed @ others keep)
+     | _ -> (PRecord (n, fs), freed))
+  | PTuple ps -> let ps, freed = many ps in (PTuple ps, freed)
+  | POr ps -> let ps, freed = many ps in (POr ps, freed)
+  | p -> (p, [])
 
 let rec rw_expr (t:tbl) (x:expr) : ML expr =
   let ty = resolve t 100 x.ty in
@@ -497,7 +534,14 @@ let rec rw_expr (t:tbl) (x:expr) : ML expr =
 
 and rw_branch (t:tbl) (br:branch) : ML branch =
   let p, g, b = br in
-  (rw_pat t p, (match g with None -> None | Some g -> Some (rw_expr t g)), rw_expr t b)
+  let p, freed = rw_pat t p in
+  (* [Simplify] deletes these again as soon as it sees them; what matters is
+     that the body stays closed in between. *)
+  let bind (e:expr) : ML expr =
+    List.fold_right (fun v acc ->
+      { acc with e = ELet (v, TUnit, unit_expr, acc) }) freed e in
+  (p, (match g with None -> None | Some g -> Some (bind (rw_expr t g))),
+   bind (rw_expr t b))
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)

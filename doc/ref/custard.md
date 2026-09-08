@@ -15776,6 +15776,113 @@ view is whole-program: if something reachable from a root calls it, there is
 no program without it, and `noextract` on such a definition is a contradiction
 rather than an instruction. Documented here rather than changed.
 
+## 73. Round 65: a collapsed pattern's variables
+
+Two reports on the same defect, from EverParse's COSE work. Both legs of that
+build --- direct C and KrmlRust --- stopped at one place, and the karamel
+baselines are byte-exact on either side of it, so there is an exact diff
+target waiting once it clears.
+
+### 73.1 Intake
+
+`--custard_dump_ir` on a seven-line CDDL spec showed three sibling
+definitions, two of them right and one not:
+
+```
+let COSE.Format.evercddl_bool_left (x4: Prims.bool) : Prims.bool = x4
+let COSE.Format.evercddl_uint_left (x4: u64)        : u64        = x4
+let COSE.Format.evercddl_null_left (x4: unit)       : unit       = x6
+```
+
+`x6` is bound by no binder. The direct C backend refused it with error 368
+naming the definition; the KrmlRust backend died with a bare OCaml `Failure`.
+
+The reporter's bisect is what made it findable. A bare simple value
+(`nil = #7.22`) is fine; an *alias* of one (`null = nil`) breaks. An alias of
+a non-unit rule (`mybstr = bstr`) is fine. An alias of an integer literal
+(`five = 5`, then `myfive = five`) breaks. So the trigger is a unit-typed
+identity coercion, and one layer of wrapping is not enough --- it takes two.
+
+### 73.2 Where the shape comes from
+
+EverParse's CDDL compiler emits, per rule,
+
+```
+%splice[T; T_left; T_right; ...] (FStar.Tactics.PrettifyType.entry "T" (`%ugly_T))
+```
+
+and `FStar.Tactics.PrettifyType` is in this repository's `ulib`. So the
+generated shape reproduces without EverParse at all. `entry` wraps a type in a
+one-field record and generates the round trip between the two; `T_left` is
+
+```
+let T_left (x: T) : ugly_T = match x with | MkT0 y -> y
+```
+
+An alias makes `ugly_T` *another* such wrapper, this time over `unit`. Both
+layers then collapse: the inner one is a newtype over `unit`, so it has no
+representation, and the outer one is a newtype over that.
+`tests/custard/PrettyUnit.fst` is those two `%splice`s and nothing else, and it
+reproduced on the first run.
+
+### 73.3 The fix
+
+`Layout.rw_pat` (§5.2) rewrites patterns alongside `rw_expr`'s rewriting of
+terms, and the two were not symmetric. When a constructor's type collapses,
+`rw_expr` has `hoist`: the arguments that no longer have anywhere to go are
+sequenced before the result, so nothing is silently lost. `rw_pat` had no
+counterpart. `PCtor (MkT0, [PVar y])` over an erased owner became `PWild`, and
+`y` --- still named by the branch body --- became free.
+
+There are six such sites: an erased owner, a newtype's non-payload fields, and
+a struct's dropped slots, each for `PCtor` and for `PRecord`. Every field a
+layout drops has no runtime representation, so the values those names stood
+for are `unit`. `rw_pat` now returns the names it deleted along with the
+pattern, and `rw_branch` binds each to `()` around the guard and the body.
+`Simplify` deletes the bindings again as soon as it sees them --- `Layout`
+runs first --- so nothing reaches a backend; what matters is that the body is
+closed in between.
+
+The single-wrapper case never went wrong because it never got that far: its
+payload is `unit` already and the definition is erased before the pattern is
+reached. That is why the reporter's bisect needed the alias.
+
+### 73.4 The karamel backend's diagnostic
+
+The reporter asked for this separately, and it is worth having whatever the
+defect. `PrintKrml.find` and `find_t` raised a bare OCaml `failwith`: no error
+number, no location, no name. The direct backend's `PrintC.lookup_var` raises
+error 368 and says which definition is broken, because `PrintC` tracks a
+`current`. `PrintKrml` now tracks one too, set in `krml_decl` for `DLet` and
+`DType`, and both `find`s raise the same numbered error with the same three
+lines. The bug they report is a compiler bug either way, so the reader should
+not have to know which backend they asked for to get a usable message.
+
+Error 368 is a family --- a polymorphic type, an abstract type, a `TAny`, an
+unbound variable --- so the code alone is not a triage signal, and the
+sentence after it is what distinguishes them. That is unchanged; what is new
+is that both backends now print one.
+
+### 73.5 The test harness's empty-block check
+
+`tests/custard/Makefile` fails a C test whose output contains a block that
+opens and closes with nothing between. The regression test trips it honestly:
+a root of type `unit -> unit` has no statements left, and `void
+PrettyUnit_evercddl_null_left(void) { }` is what it must compile to. The check
+now allows exactly that shape --- an opening line at column zero declaring a
+`void` function --- and still rejects an empty `if`, `while` or nested block,
+which is what it was written for.
+
+### 73.6 Carried forward
+
+`t = { 1: 1 }` in the same reporter's spec hits error 365, `Mono.norm_bounded`
+exhausting its budget, where `Extract.norm_optional` would have degraded to
+`TAny`. Same family as §58.1. Not reproduced here and not in this round.
+
+EverParse has no Custard target in any of its Makefiles; the C leg needs six
+entry modules and the Rust leg five. That integration is the reporter's work
+and is unstarted.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -16068,3 +16175,6 @@ rather than an instruction. Documented here rather than changed.
 | M10ηΜ | A binder `keep_thunk` puts back is there for its arity (§72.2) | Done.  A Pulse `ghost fn` parameter came out as `void ( *justif)(void) = ((custard_unit)0);` followed by a call through it --- a unit where a function pointer belongs.  `Mono.unit_binders` said `is_type_binder` where it meant `is_erased_binder`, so an erased *value* binder kept its declared type while its argument was erased to `()`.  Four sites: the predicate, the signature binders, the lambda binders, and a `let` whose binding is erased and whose type must therefore be the right-hand side's `unit` and not the annotation's arrow.  A type binder passing through produces an `Obj.magic ()`, which the IR can see; this one type-checks in the IR and only the C compiler objects, which is why it needed a C-leg test rather than a grep |
 | M10ηΝ | Error 390 names the declaration, not the chain (§72.3) | Done, one line.  The request chain names specializations, and on a whole-module run it can be a single root; `st.cur` is the declaration in which the template argument is still a runtime value, which is the only part of the message the reader can act on |
 | M10ηΞ | The inliner was order-dependent (§72.4) | Done.  `inline_decls` was one forward sweep resting on `st.order` being topological, which it is --- except for a rule's lifted functions, which §36.3 puts in *front* deliberately.  So every `Inline` declaration a lifted kernel called was passed over and kept, and a projector is `Inline` exactly so that no synthesized function survives: in CUDA a surviving one is a `__host__` function called from `__global__`, which nvcc refuses.  Now a depth-first fill over `decl_deps` --- moved up out of the dead-code section, since `dce` is no longer its only reader --- entered in program order for determinism, with `visiting` breaking cycles where the old sweep broke them.  No regression test, and the reason is recorded rather than papered over: a rule's arguments are normalized before the rule sees them, which unfolds a projector on the spot, so the trigger does not reduce through the supported path.  Kuiper's other ask needs no change --- `ClosurePrologue` and `propagate_prologues` (§51.3) are the propagation they described |
+| M10ηΟ | A collapsed pattern kept its variables (§73.1--§73.3) | Done.  `Layout.rw_expr` has `hoist` for the arguments a collapse leaves without a home; `rw_pat` had nothing, so a deleted sub-pattern took its variables with it while the branch body went on naming them.  Both COSE legs stopped there --- error 368 on the direct backend, a bare failure on karamel.  `rw_pat` now returns the names it deleted and `rw_branch` binds each to `()`; every dropped field is erased, so `unit` is the right value, and `Simplify` removes the bindings immediately afterwards.  Reproduced in fifteen lines with two `FStar.Tactics.PrettifyType` splices, which is the shape EverParse's CDDL compiler generates, and pinned on both backends |
+| M10ηΠ | The karamel backend names the definition too (§73.4) | Done.  `PrintKrml.find` and `find_t` raised an OCaml `failwith` with no number, no location and no name, where `PrintC.lookup_var` raised error 368 naming the declaration.  `PrintKrml` now tracks a `current` in `krml_decl` and both raise the same message.  Which backend was asked for should not decide whether a compiler bug is legible |
+| M10ηΡ | An empty `void` body is not an empty block (§73.5) | Done.  The C-test harness's empty-block check is for an `if` or a loop that lost its statement; a root of type `unit -> unit` legitimately has none.  The check now exempts an opening line at column zero that declares a `void` function, and nothing else |

@@ -53,13 +53,28 @@ type kenv = {
 let extend (env:kenv) (x:string) : kenv = { env with names = x :: env.names }
 let extend_t (env:kenv) (x:string) : kenv = { env with names_t = x :: env.names_t }
 
+(* The declaration being translated, for the diagnostics below.  Section 69.4:
+   a free variable used to leave this backend as a bare OCaml [Failure] --
+   no error number, no location, and no name to look at -- while the direct C
+   backend raised a numbered error that said which definition was broken.
+   The defect is the same one either way, so the message should be too. *)
+let current : ref string = mk_ref "<none>"
+
+let reject_ir (#a:Type) (what:string) : ML a =
+  E.raise_error0 E.Error_CustardNoCRepresentation
+    [text ("Custard: " ^ what ^ " reached the karamel backend, in "
+           ^ !current ^ ".");
+     text "No binder in this definition introduces it.";
+     text "This is a compiler bug: please report it, with the definition \
+           named above."]
+
 let find (env:kenv) (x:string) : ML int =
   try List.index (fun y -> y = x) env.names
-  with _ -> failwith ("Custard: unbound variable " ^ x ^ " reached the karamel backend")
+  with _ -> reject_ir ("the unbound variable " ^ x)
 
 let find_t (env:kenv) (x:string) : ML int =
   try List.index (fun y -> y = x) env.names_t
-  with _ -> failwith ("Custard: unbound type variable " ^ x ^ " reached the karamel backend")
+  with _ -> reject_ir ("the unbound type variable " ^ x)
 
 (* A name for a binder Custard invents, that no reference in scope can resolve
    to.  [find] takes the first match, so reusing a name already bound would
@@ -867,6 +882,10 @@ let with_typars (env:kenv) (ps : list string) : ML kenv =
   ps |> List.fold_left extend_t env
 
 let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
+  (match d with
+   | DLet l -> current := string_of_name l.dl_name
+   | DType t -> current := string_of_name t.dt_name
+   | _ -> ());
   match d with
   (* A type karamel knows natively must not be redeclared: uses of it are
      translated to the native form, so the declaration would be dead at best
