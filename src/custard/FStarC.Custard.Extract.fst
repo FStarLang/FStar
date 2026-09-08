@@ -2640,6 +2640,17 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let args = if None? decl_ty
              then args |> List.filter (fun (a, _) -> not (Mono.is_type_term (tcenv st) a))
              else drop_flagged flags args in
+  (* Section 71.  A rule whose arguments are compile-time data gets them
+     reduced first.  This has to happen on the *terms*, before extraction:
+     [squares 5] extracts to a call, and a call is not a list of elements
+     however constant it is. *)
+  let args =
+    if Builtins.normalizes_arguments l
+    then args |> List.map (fun (a, q) ->
+           (norm_bounded st ("the compile-time argument of " ^
+                             Ident.string_of_lid l)
+                         compile_time_steps a, q))
+    else args in
   let args = args |> List.map fst |> List.map (expr_of_term st) in
   (* Section 8's rules dispatch on the shape of an argument's type, so an
      abbreviation has to be seen through first; see {!head_ty}. *)

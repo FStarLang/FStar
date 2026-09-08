@@ -15370,6 +15370,224 @@ measured and checking that the measurement noticed*. A test that passes
 against a broken input is not a test, and the two ways to find that out are to
 run the control or to wait for the bug.
 
+## 71. Round 63: static global arrays
+
+### 71.0 The ask
+
+The user asked a one-line question: *"do we have anything that can declare a
+`static const int foo[] = { 1,2,3,4,5,6,7 };` array?"*
+
+The answer was no, and the three places one might have looked all say no for
+different reasons.
+
+There is **no array-literal node in the IR**. `BufCreate` takes an initial
+element and a length and fills the run uniformly with that one value; there
+was no way to say seven different things. `BufCreateL` exists in karamel and
+had no Custard counterpart to lower into it.
+
+`static_init` in `PrintC.fst` **excludes struct and array initializers on
+purpose**, and the comment there explains why: a compound literal is not a
+constant expression at file scope, so a global whose initializer is one has to
+be built by `custard_init_globals` at startup rather than placed in the image.
+That is the right call for a struct, and it is exactly the wrong answer for a
+table of primes, which is meant to cost nothing at run time and to live in
+`.rodata`.
+
+§68's `CMacro` handles compile-time constants, but only **scalars** --- a
+`#define` for an integer or a string, not an aggregate.
+
+So the feature was genuinely missing rather than misconfigured. What was left
+was to pick the source form that triggers it.
+
+### 71.1 The Pulse API
+
+Function-local array initializers are a separate question and the user
+explicitly deferred them: *"let's focus on globals for now"*. The consumer is
+Pulse code, and the user supplied the axiomatization, which is now
+`pulse/lib/pulse/lib/Pulse.Lib.GlobalArray.fst`:
+
+```fstar
+assume val static_array ([@@@strictly_positive] t : Type0) : Type0
+assume val static_array_elems (#t:Type0) (a: static_array t) : GTot (Seq.seq t)
+assume val mk_static_array (#t:Type0) (l: list t)
+  : a : static_array t { static_array_elems a == Seq.seq_of_list l }
+assume val array_of_static_array (#t:Type0) (a: static_array t)
+  : stt_atomic (A.array t) #Neutral emp_inames emp
+      (fun a' -> exists* (p:perm). pts_to a' #p (static_array_elems a))
+```
+
+Four declarations, and three of the choices in them are load-bearing for the
+compilation rather than for the proof.
+
+**`static_array` has no decidable equality**, so `mk_static_array` can be a
+*pure* function. A pure function is a value, a value can be the body of a
+top-level definition, and a top-level definition is where C wants a braced
+initializer. Had the constructor been a computation it could only have
+appeared in a statement position, which is the one place C will not take it.
+
+**The post-condition hands out an existential fraction and never a full
+permission.** That is what licenses `const` on the emitted declaration: no
+Pulse program can obtain write permission to the run, so no Pulse program can
+write through the pointer, so the object may be placed in read-only memory.
+The `const` is not a decoration Custard chose --- it is a fact about the API
+made visible to the C compiler.
+
+**The conversion is a computation.** `array_of_static_array` is `stt_atomic`
+at `Neutral` observability, so it can be called from Pulse code without
+disturbing atomicity, and it produces a genuine `array t` that the ordinary
+array operations accept. The user's design note is the whole story: *"In C,
+`static_array t` is represented as `t*`"* --- one representation, two
+capabilities.
+
+The user later relaxed the constructor's argument from `Seq.seq t` to
+`list t`: *"It's also fine to use list literals instead of seq if that's
+easier."* It was considerably easier, and that is §71.2.
+
+### 71.2 Compile-time arguments
+
+A `list` literal extracts to a `Prims.Cons` spine, which `Builtins.list_literal`
+walks directly off the extracted argument --- looking through `ECoerce` on the
+way, since the elements arrive coerced. A `Seq.seq` would have needed a
+normalizer hook into `FStar.Seq.Base`, because `seq![a; b]` desugars
+(`ToSyntax.fst:2106`) to `Seq.cons a (Seq.cons b Seq.empty)` and the spine is
+only visible after unfolding. Same feature, one fewer moving part.
+
+But reading the spine off the argument *as extracted* is not enough, and the
+first test found out why. Rule arguments are extracted as they stand, so
+
+```fstar
+let squares : G.static_array U32.t = G.mk_static_array (build 5)
+```
+
+arrives as a **call** to `build`, not as a list of five elements --- however
+constant that call is. It was refused with error 393.
+
+The obvious reach was `[@@normalize_for_extraction]` on `build`. It did not
+help, and the reason it did not is the interesting part: that attribute is a
+statement about *one definition*, and the reduction has to happen where the
+*rule's arguments* are prepared, which is a different place and a different
+time.
+
+The fix is a new predicate, `Builtins.normalizes_arguments`, true for
+`mk_static_array` and nothing else today. When it holds, `Extract.prim_app`
+runs each argument **term** through the existing `compile_time_steps` before
+extracting it. Term level, not expression level: `build 5` has to be reduced
+while it is still a term, because once it is an `expr` it is a call and a call
+is not a list.
+
+This is principled rather than a heuristic, and the distinction is worth
+stating. The contents of a `static_array` are compile-time data **by type**.
+Not because someone annotated a definition, and not because a particular
+argument happened to be constant --- because there is no other kind of value
+the type can hold. A predicate keyed on the callee is the honest encoding of
+that; an attribute on the caller would be asking the programmer to restate
+what the type already says.
+
+`compile_time_steps` already existed with exactly the right steps: `Beta`,
+`Iota`, `Zeta`, `SafePrimops`, `Eager_unfolding`, `Inlining`, `Unascribe`,
+`Unmeta`, `UnfoldUntil delta_constant`.
+
+### 71.3 The C output
+
+Two new IR operators, both in `Syntax.fsti` after `BufBlit`.
+
+**`BufLit`** carries the elements as its arguments. It is an *initializer*,
+not a computation, and `PrintC` treats it accordingly: `global_decl` tries
+`array_decl` first, and `c_expr` refuses it outright (§71.4).
+
+The declarator is the crux, and it is not what the type says. `decl_of (TBuf
+t) x` produces `t *x` --- a pointer variable, which is a different object with
+a different size and a different address. What is wanted is `t x[n]`, an array
+object. `array_decl` therefore builds the declarator by hand, as
+`decl_of t (name ^ "[" ^ n ^ "]")`. Same IR type, different C declaration,
+and the difference is the whole feature.
+
+**`BufUnconst`** is the `const T *` to `T *` conversion, and it had to become
+an operator because a cast could not carry it. The natural encoding is
+`ECast` or `ECoerce`; both are dropped, because `Layout.fst:496` reads
+
+```fstar
+if e1.ty = c then e1 else ...
+```
+
+and the two types here *are* equal. Both sides are `TBuf t`; the qualifier is
+not modelled in `cty` at all. Meanwhile the conversion is not optional:
+assigning a `const T *` to a `T *` is a `-Werror` diagnostic in C and a hard
+error in C++. An operator is the only place to put a conversion whose
+justification is invisible to the type it converts.
+
+The emitted C:
+
+```c
+static const uint8_t PulseGlobalArray_primes[7] = { 2, 3, 5, 7, 11, 13, 17 };
+static const uint32_t PulseGlobalArray_sq[5] = { 0, 1, 4, 9, 16 };
+
+static uint32_t PulseGlobalArray_sum_primes(void) {
+  uint8_t *a = (uint8_t *)PulseGlobalArray_primes;
+  ...
+```
+
+A public one gets `extern const T name[n];` in the header, from
+`array_extern` --- `extern const T *name;` would declare a different object
+and is the classic way to get a link-time-clean, run-time-wrong program.
+
+And `custard_init_globals`'s collection filter gained `&& not
+(is_static_array l)`. That is not an optimization; a startup pass that
+assigned to these would be assigning to a `const` object, which is what the
+whole arrangement exists to prevent.
+
+### 71.4 The refusals
+
+Three, and each is a different question about the same construct.
+
+**Contents not known at compile time.** After `compile_time_steps` the
+argument still is not a literal list. Error 393 names the shape it got ---
+"after reduction the argument is a reference to `T.opaque_list`" --- because a
+rule has no request chain to print, and without the shape the message says
+only that something went wrong somewhere. It also points at the two exits: use
+a `Vec` or an `Array` if the contents really are computed, or raise
+`--custard_norm_budget` if they are constant and the budget ran out.
+
+**Empty.** `t x[0]` is a constraint violation in C, `{ }` is not an
+initializer, and a run with no elements has no address to hand out either.
+Refused rather than papered over with a one-element dummy.
+
+**In an expression position.** A braced initializer may appear only in a
+declaration. This refusal lives in `PrintC` and *not* in the rule, which is
+the correct placement, because OCaml and karamel both accept the same program
+--- OCaml has an array literal and karamel has `EBufCreateL`. The message says
+to bind it to a top-level definition, which is the fix.
+
+All three are registered in `tests/custard/pulse/Makefile`, which grew a
+`REJECT_TESTS` leg ported from `tests/custard/Makefile`. Ported rather than
+shared: these tests need Pulse in scope, and `tests/custard` cannot resolve a
+Pulse module at all.
+
+### 71.5 The other backends
+
+**OCaml** emits `[| e; ... |]` for `BufLit`, and `BufUnconst` is the identity
+--- OCaml arrays are mutable and there is no second type to convert to. Both
+were added to the two "not an OCaml operator" failure lists.
+
+**karamel** lowers `BufLit` to `EBufCreateL (Eternal, ...)` and `BufUnconst`
+to the identity. Worth recording that karamel emits the array **without**
+`const`, from its own `Eternal` lifetime handling:
+
+```c
+uint8_t PulseGlobalArray_primes[7U] = { 2U, 3U, 5U, 7U, 11U, 13U, 17U };
+```
+
+Not wrong --- the Pulse API still prevents any write --- but it is a
+difference between the two C columns, and one the direct backend is stricter
+about than the one that goes through karamel.
+
+### 71.6 Scope
+
+Globals only. Function-local array initializers are the natural next step and
+were explicitly deferred; the IR node they would need is the one that now
+exists, so the remaining work is in `PrintC`'s statement path rather than in
+the front end.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -15653,3 +15871,8 @@ run the control or to wait for the bug.
 | M10ηΓ | Every element of a `+` bundle is a root (§70.1.4) | Done as a rule, and it is EverParse's second retraction of a claim about their own numbers: "43/43 C API parity" fell to 47 exported against 43 once two greps were found to have both undercounted, and the four missing were not a Custard gap but a flags usage error.  **Each module named in a karamel `-bundle` `+` list is a root and needs its own `--custard_entry_module`.**  A bundle is a packaging directive; packaging is not reachability, Custard has no notion of it, and a module named only inside one is reachable from nothing.  This is §67.2 from the other side: §67.2 says a `-bundle` line written against karamel's output is not one for Custard's because which modules survive differs; this says the line does not even *mean* the same thing.  And `--custard_c_no_prefix` renames, it does not export, so it cannot substitute |
 | M10ηΔ | A `#if` probe that could not fail (§70.3, §65.1) | Done.  EverParse's own sharpening, and worth keeping as method.  Their `#if` probe tested a *zero*-valued constant, so with the macro absent the preprocessor reads `MACRO_MAJOR_TYPE_UINT64 == 0` as `0 == 0`: the right answer for the wrong reason, and a failure invisible to the natural test for it.  `tests/custard/Macro_probe.c` now compiles all three uses --- `#if` with an `#error` against a *non-zero* constant, a `case` label, and a static initializer --- in a separate translation unit that includes only the generated header, which is what a consumer is.  Control-run with the `#define` replaced by an `extern` declaration: `#error` fires.  Both retractions this round came from deliberately breaking the thing being measured and checking that the measurement noticed |
 | M10ηΕ | Two corrections and an open question, recorded (§70.0, §70.3) | Done as a record.  Kuiper's §62.4 retracts their earlier description of karamel's `auto_AMP` sed rule as cosmetic: it is load-bearing for correctness, being the same reference binding applied textually after the fact, and calling it cosmetic is what made §62 look like a formatting question for a round --- a downstream post-processing hack is evidence about semantics, and reading one as whitespace is a way to lose a bug.  Kuiper's §63.2 measured §69: `auto`, `KPR_INIT`, `KPR_INIT_ARR`, the variadic `kpr_fragment` macro, seven `frag_tok` declarations and `frag_type_expr` all deleted, `Kuiper.Example.ARPort.fst` 209 lines to 152, and the §57.1 `(auto *)` cast bug fixed as a side effect.  Left open by §63.3: `EAny` at an external type prints `(T){0}`, well-formed only because `wmma::fragment` is an aggregate; `T x;` is the general answer, not hit yet.  Also merged: **PR #4531**, Kuiper's own fix dropping `escape_kw` on the extern *value* path so a target name such as `float` survives verbatim --- a name given explicitly in an attribute is a name, not an identifier to sanitize, and the type path already did this |
+| M10ηΖ | `Pulse.Lib.GlobalArray`, and `static const uint8_t x[7] = {...}` (§71.0, §71.1) | Done.  Asked for directly rather than through a reviewer, and the answer to "do we have anything that can declare a `static const int foo[] = {1,2,3};`" was no, in three independent places: `BufCreate` fills a run uniformly and there was no array-literal node at all, `static_init` deliberately excludes compound literals because one is not a constant expression at file scope, and §68's `CMacro` is scalars only.  The user supplied the axiomatization and three of its choices turn out to be load-bearing for the *compilation* rather than the proof: **no decidable equality** lets `mk_static_array` be pure, which is what lets it be a top-level definition body, which is the one place C accepts a braced initializer; the post-condition's **existential fraction** is what licenses `const`, since no Pulse program can ever hold write permission; and the conversion being a **computation** is what makes an ordinary `array t` out of it |
+| M10ηΗ | `list` rather than `Seq`, and compile-time argument reduction (§71.2) | Done, and the user's throwaway relaxation --- "it's also fine to use list literals instead of seq if that's easier" --- removed the largest piece of the implementation.  A `list` literal extracts to a `Prims.Cons` spine readable straight off the argument; a `Seq.seq` would have needed a normalizer hook, since `seq![a;b]` desugars to `Seq.cons a (Seq.cons b Seq.empty)`.  But reading the argument as extracted is not enough: `mk_static_array (build 5)` arrives as a *call*, however constant it is, and `[@@normalize_for_extraction]` does not help because that attribute is a statement about one definition and the reduction has to happen where the *rule's* arguments are prepared.  New `Builtins.normalizes_arguments`, with `Extract.prim_app` running the argument **term** through the existing `compile_time_steps`.  Principled and not a heuristic: a `static_array`'s contents are compile-time data **by type**, so keying on the callee is the honest encoding, and an attribute on the caller would ask the programmer to restate what the type already says |
+| M10ηΘ | `BufUnconst`, because a cast is dropped (§71.3) | Done, and the reason it is an operator is the round's sharpest constraint.  `const T *` to `T *` is mandatory --- it is a `-Werror` diagnostic in C and a hard error in C++ --- and `ECast`/`ECoerce` cannot carry it, because `Layout.fst:496` is `if e1.ty = c then e1 else ...` and the two types here genuinely *are* equal: both `TBuf t`, with the qualifier not modelled in `cty` at all.  A conversion whose justification is invisible to the type it converts has nowhere to live but an operator.  The declarator is the same lesson: `decl_of (TBuf t) x` gives `t *x`, a pointer variable, where what is wanted is `t x[n]`, an array object --- so `array_decl` builds it by hand.  Header gets `extern const T x[n]`, since `extern const T *x` is the classic link-clean run-time-wrong program, and `custard_init_globals` skips these, since a startup pass would be assigning to a `const` object |
+| M10ηΙ | Three refusals, three different questions (§71.4) | Done, with a `REJECT_TESTS` leg ported into `tests/custard/pulse/Makefile` --- ported and not shared, because these need Pulse in scope and `tests/custard` cannot resolve a Pulse module.  Contents not compile-time: 393 **names the shape it got**, "a reference to `T.opaque_list`", because a rule has no request chain to print and without the shape the message says only that something went wrong.  Empty: `t x[0]` is a constraint violation, `{ }` is not an initializer, and there is no address to hand out.  Expression position: refused in `PrintC` and deliberately **not** in the rule, since OCaml and karamel both accept the same program.  Each pinned phrase had to be re-cut twice to avoid spanning one of the formatter's line breaks, which is §33.4's tax and still cheaper than an unpinned message |
+| M10ηΚ | OCaml `[| |]`, karamel `EBufCreateL`, and one column that is laxer (§71.5) | Done.  OCaml gets an array literal and `BufUnconst` is the identity, there being no second type to convert to.  karamel gets `EBufCreateL (Eternal, ...)` and emits the array **without** `const`, from its own lifetime handling --- not wrong, since the Pulse API still prevents every write, but a real difference between the two C columns, and the direct backend is the stricter of them.  Function-local array initializers remain deferred at the user's request; the IR node they need is the one that now exists, so what is left is in `PrintC`'s statement path and not in the front end |

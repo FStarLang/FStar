@@ -500,7 +500,7 @@ let op_name (o:prim_op) : ML string =
      (* Section 49.1.  Handled at the [EOp] site as OCaml array and [ref]
         expressions, so none of them reaches an operator name. *)
      | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
-     | BufBlit | BufCreate _ ->
+     | BufBlit | BufCreate _ | BufLit | BufUnconst ->
        failwith "Custard: a buffer operation is not an OCaml operator")
   | None ->
     (match o.po_op with
@@ -516,7 +516,7 @@ let op_name (o:prim_op) : ML string =
      | BShiftL -> "(lsl)" | BShiftR -> "(lsr)"
      (* Section 49.1.  See the [PInt] case above. *)
      | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
-     | BufBlit | BufCreate _ ->
+     | BufBlit | BufCreate _ | BufLit | BufUnconst ->
        failwith "Custard: a buffer operation is not an OCaml operator")
 
 (* OCaml has no integer pattern that means what the IR's [PConst (CInt _)]
@@ -783,6 +783,16 @@ let rec term (ind:string) (e:expr) : ML string =
     term ind dst ^ " " ^ index ind di ^ " " ^ index ind len ^ ")"
   | EOp ({ po_op = BufSub }, _) ->
     "(failwith \"Custard: pointer arithmetic has no OCaml representation\")"
+  (* Section 71.  OCaml has an array literal, and no notion of an object with
+     static storage duration -- so a static array is just an array, built once
+     when the module is initialized.  Unlike in C it may appear anywhere, and
+     there is no reason to restrict it to a global. *)
+  | EOp ({ po_op = BufLit }, elems) ->
+    "[| " ^ String.concat "; " (elems |> List.map (term ind)) ^ " |]"
+  (* Section 71.  [const] is a C spelling and OCaml has nothing to say about
+     it; what keeps the array read-only here is the same thing that keeps it
+     read-only there, namely that Pulse never hands out a full permission. *)
+  | EOp ({ po_op = BufUnconst }, [b]) -> term ind b
   (* Infix, not [((&&) a b)].  OCaml's [&&] and [||] are the [%sequand] and
      [%sequor] primitives, which the compiler does short-circuit even when
      they are written prefix and fully applied -- but nothing in the emitted

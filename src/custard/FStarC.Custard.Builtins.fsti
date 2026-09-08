@@ -189,6 +189,13 @@ exception No_custard_rule
     {!No_custard_rule}. *)
 let rule_lookup_t = Ident.lident -> ML rule
 
+(** Section 71.  Whether the value arguments of this name are compile-time
+    data, and so have to be reduced before its rule runs.  Unlike
+    [@@normalize_for_extraction] this follows from the type rather than from
+    an annotation: the contents of a static array are in the program image by
+    construction. *)
+val normalizes_arguments : Ident.lident -> ML bool
+
 (** Try [f] before everything already registered. *)
 val register_pre_rule : rule_lookup_t -> ML unit
 

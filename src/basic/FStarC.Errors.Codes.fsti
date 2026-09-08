@@ -418,6 +418,7 @@ type error_code =
   | Error_CustardBadTemplateArg
   | Warning_CustardReferenceCopied
   | Error_CustardBadReference
+  | Error_CustardBadStaticArray
 
 type error_setting = error_code & error_flag & int
 

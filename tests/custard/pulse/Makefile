@@ -165,6 +165,60 @@ CGREP_ExtBuf = "(uint8_t *)extbuf_base"
 # would emit a (void) cast, which C++ accepts with or without the fix.
 CGREP_ExtBuf += "uint8_t *"
 
+# Section 71.  A table baked into the program image.
+C_TESTS += PulseGlobalArray
+# The whole point: an array *object* with a braced initializer, not a pointer
+# variable assigned at startup.  const, so it can go in .rodata and so that a
+# write that slipped past Pulse's permissions is a compile error.
+CGREP_PulseGlobalArray += "static const uint8_t PulseGlobalArray_primes[7] = { 2, 3, 5, 7, 11, 13, 17 };"
+# The list was not written out -- [squares 5] is a recursive function of a
+# literal -- and Custard reduced it before extraction (section 71.2).
+CGREP_PulseGlobalArray += "static const uint32_t PulseGlobalArray_sq[5] = { 0, 1, 4, 9, 16 };"
+# Neither the builder nor Prims.list survives it.
+CNOGREP_PulseGlobalArray += "squares"
+CNOGREP_PulseGlobalArray += "Prims_list"
+# There is nothing to run before main: a static array is initialized where it
+# is declared, so it must not be pushed into the startup pass.
+CNOGREP_PulseGlobalArray += "custard_init_globals"
+# Section 71.3.  Reading it goes through the pointer conversion, which is
+# where const is cast away.
+CGREP_PulseGlobalArray += "(uint8_t *)PulseGlobalArray_primes"
+CGREP_PulseGlobalArray += "(uint32_t *)PulseGlobalArray_sq"
+
+# The same program through the other three backends, because "compile-time
+# data" is a claim about every one of them: OCaml has an array literal,
+# karamel has EBufCreateL, and neither has anything to say about const.
+GREP_TESTS += PulseGlobalArray
+GREP_PulseGlobalArray += "let pulseGlobalArray_primes : (FStar_UInt8.t array)"
+GREP_PulseGlobalArray += "FStar_UInt8.uint_to_t (Prims.parse_int \"2\")"
+NOGREP_PulseGlobalArray += "squares"
+KRML_TESTS += PulseGlobalArray
+
+# Section 71.4.  The three ways a static array is not one, and what each says.
+# A run whose contents are a run-time value is a contradiction in terms, so it
+# is refused rather than built at startup behind the programmer's back.
+REJECT_TESTS += PulseGlobalArrayOpaque
+CODE_PulseGlobalArrayOpaque = 393
+FLAGS_PulseGlobalArrayOpaque = --custard_backend C --custard_entry PulseGlobalArrayOpaque.tbl
+EGREP_PulseGlobalArrayOpaque += "known at compile time"
+# The message names the shape it got, since a rule has no request chain to
+# print and the shape is what identifies the culprit.
+EGREP_PulseGlobalArrayOpaque += "reference to PulseGlobalArrayOpaque.opaque_list"
+# An array object with no elements is a constraint violation in C, and there
+# would be no address to hand out either.
+REJECT_TESTS += PulseGlobalArrayEmpty
+CODE_PulseGlobalArrayEmpty = 393
+FLAGS_PulseGlobalArrayEmpty = --custard_backend C --custard_entry PulseGlobalArrayEmpty.tbl
+EGREP_PulseGlobalArrayEmpty += "is an empty static array"
+# A braced initializer is not an expression in C.  The other two backends
+# accept this same program, which is why the refusal is in PrintC and not in
+# the rule.
+REJECT_TESTS += PulseGlobalArrayLocal
+CODE_PulseGlobalArrayLocal = 393
+FLAGS_PulseGlobalArrayLocal = --custard_backend C
+EGREP_PulseGlobalArrayLocal += "uses a static array where C needs an"
+EGREP_PulseGlobalArrayLocal += "Bind it to a top-level definition"
+
 C_TESTS += PulseBlit
 CGREP_PulseBlit += "memmove("
 CGREP_PulseBlit += "2 * sizeof(uint8_t)"
@@ -331,8 +385,31 @@ $(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked $(F
 specification:"; cat $(OUTPUT_DIR)/$$e.out; exit 1; }; done
 	$(Q)touch $@
 
+# Section 71.4.  A program Custard must refuse, and what it must say about it.
+# Ported from ../Makefile rather than shared, because these tests need Pulse
+# in scope and ../Makefile cannot resolve a Pulse module at all.
+$(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "REJECT", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	  $(FLAGS_$*) --custard_main $*.main $*.fst \
+	  >$(OUTPUT_DIR)/$*.err 2>&1 || true
+	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
+	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $*"; \
+	       cat $(OUTPUT_DIR)/$*.err; false; }
+	@# A pinned phrase must not span one of the formatter's line breaks.
+	$(Q)for p in $(EGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
+	    || { echo "ERROR: $* diagnostic is missing $$p"; \
+	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done
+	$(Q)for p in $(NOEGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
+	    && { echo "ERROR: $* diagnostic should not contain $$p"; \
+	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done; true
+	$(Q)touch $@
+
 ALL_TEST_NAMES := $(GREP_TESTS) $(OCAML_TESTS) $(C_TESTS) \
-                  $(KRML_TESTS) $(RUST_TESTS)
+                  $(KRML_TESTS) $(RUST_TESTS) $(REJECT_TESTS)
 
 # Section 35.3.  A setting whose name matches no registered test.
 #
@@ -364,5 +441,7 @@ ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))
 ifneq ($(shell command -v rustc 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
+
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 endif
 endif

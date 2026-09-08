@@ -339,7 +339,8 @@ let op_to_string (o:prim_op) : string =
    | BufCreate LStack -> "alloca" | BufCreate LHeap -> "malloc"
    | BufRead -> "read" | BufWrite -> "write" | BufSub -> "sub"
    | BufFree -> "free" | BufNull -> "null" | BufIsNull -> "is_null"
-   | BufBlit -> "blit") ^
+   | BufBlit -> "blit"
+   | BufLit -> "lit" | BufUnconst -> "unconst") ^
   (match o.po_ty with
    | None -> ""
    | Some (PInt sw) -> width_to_string sw

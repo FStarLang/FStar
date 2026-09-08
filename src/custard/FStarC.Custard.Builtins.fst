@@ -449,6 +449,43 @@ let identity_rule (n:int) : rule =
     | a :: _ -> a
     | [] -> unit_expr)
 
+(* Section 71.  The element list of a [Pulse.Lib.GlobalArray.mk_static_array],
+   read back off the extracted argument.
+
+   A [list] literal extracts to a [Prims.Cons] spine, so the shape is already
+   there by the time a rule runs; nothing has to be normalized here that the
+   norm budget (section 8.3) has not already done.  Anything else -- a list
+   that is a function of a run-time value, or one the normalizer could not
+   finish -- returns [None], and the caller reports it rather than falling
+   back to building the table at startup. *)
+(* What the argument turned out to be, for the error message.  A rule has no
+   access to the request chain {!FStarC.Custard.Extract.custard_error} prints,
+   so the shape is the only thing here that can name the culprit -- and it is
+   usually enough, because the shape that gets here is an application of the
+   function that failed to reduce. *)
+let describe_shape (x:expr) : ML string =
+  match x.e with
+  | EQual (n, _) -> "a reference to " ^ string_of_name n
+  | EApp ({ e = EQual (n, _) }, _) -> "an application of " ^ string_of_name n
+  | EApp _ -> "a function application"
+  | EVar v -> "the local variable " ^ v
+  | EMatch _ -> "a match"
+  | EIf _ -> "a conditional"
+  | ECtor (n, _) -> "a " ^ string_of_name n ^ " application"
+  | _ -> "not a literal list"
+
+let rec list_literal (x:expr) : ML (option (list expr)) =
+  match x.e with
+  (* A representation coercion computes nothing, so it may sit between the
+     spine and the literal without changing what the literal is. *)
+  | ECoerce (e1, _) -> list_literal e1
+  | ECtor (n, []) when n.id = "Nil" -> Some []
+  | ECtor (n, [hd; tl]) when n.id = "Cons" ->
+    (match list_literal tl with
+     | Some rest -> Some (hd :: rest)
+     | None -> None)
+  | _ -> None
+
 let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   let buf tys (_ : list expr) : ML cty = TBuf (elt_of tys) in
   let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
@@ -572,6 +609,52 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     Some (identity_rule 1)
   | ["Pulse"; "Lib"; "ArrayPtr"], "memcpy" ->
     Some (buf_prim 5 BufBlit E_Impure unit_ty (fun args -> args))
+
+  (* Section 71.  A read-only run whose contents are known at compile time:
+     in C an object with static storage duration and a braced initializer,
+     which costs no startup code and which the linker can put in [.rodata].
+
+     The type is the same [TBuf] every other Pulse pointer is.  What is
+     different is *where the value may appear*: a braced initializer is not
+     an expression in C, so the C backend takes a [BufLit] in a global's body
+     and refuses it anywhere else. *)
+  | ["Pulse"; "Lib"; "GlobalArray"], "static_array" ->
+    Some (Rule_type (fun tys -> TBuf (elt_of tys)))
+  | ["Pulse"; "Lib"; "GlobalArray"], "mk_static_array" ->
+    Some (Rule_prim (1, fun tys args ->
+      let t = elt_of tys in
+      match args with
+      | [l] ->
+        (match list_literal l with
+         | Some elems ->
+           mk (EOp ({ po_op = BufLit; po_ty = None }, elems)) (TBuf t) E_Pure
+         | None ->
+           FStarC.Errors.raise_error0
+             FStarC.Errors.Codes.Error_CustardBadStaticArray [
+             FStarC.Errors.Msg.text
+               ("Custard: the elements of a Pulse.Lib.GlobalArray.static_array \
+                 have to be known at compile time, and these are not: after \
+                 reduction the argument is " ^ describe_shape l ^ ".");
+             FStarC.Errors.Msg.text
+               "The whole point of the type is that the run is baked into the \
+                program image, so there is nowhere to evaluate this: the \
+                argument of mk_static_array has to reduce to a literal list.";
+             FStarC.Errors.Msg.text
+               "If the contents really are computed, allocate a Pulse.Lib.Vec \
+                or a Pulse.Lib.Array and fill it instead.  If they are \
+                constant but Custard could not see it, the norm budget may \
+                have run out: try raising --custard_norm_budget."])
+      | _ ->
+        failwith "Custard: mk_static_array applied to the wrong number of \
+                  arguments"))
+  (* The far end of the same thing: the object is [const], and this is where
+     a pointer to it becomes an ordinary Pulse array.  It computes nothing --
+     in C it is a cast and in the other two backends it is the identity --
+     but it cannot be an [ECast], because [Layout] drops a cast whose source
+     and target types agree and these two agree in everything the IR
+     models. *)
+  | ["Pulse"; "Lib"; "GlobalArray"], "array_of_static_array" ->
+    Some (buf_prim 1 BufUnconst E_Pure self (fun args -> args))
 
   (* Null pointers, shared by all of them. *)
   | ["Pulse"; "Lib"; "Reference"], "null"
@@ -1099,6 +1182,22 @@ let custard_rule (id:string) : ML (option rule) =
                      | [e] -> e
                      | _ -> failwith "FStar.Custard.dyn applied to the wrong number of arguments"))
   | _ -> None
+
+(* Section 71.  Names whose value arguments are *compile-time data* rather
+   than run-time values, and which are therefore reduced before the rule for
+   them runs.
+
+   This is not the same judgement as [@@normalize_for_extraction], which is a
+   statement by the programmer about one definition.  Here it follows from the
+   type: the contents of a [Pulse.Lib.GlobalArray.static_array] are in the
+   program image by construction, so an argument that has not reduced to a
+   literal is not a slow compile but a program with no meaning, and reducing
+   it is not a heuristic.
+
+   Reduction is still bounded by --custard_norm_budget, so a table built by a
+   function that does not terminate is reported rather than hung on. *)
+let normalizes_arguments (l : Ident.lident) : ML bool =
+  Ident.string_of_lid l = "Pulse.Lib.GlobalArray.mk_static_array"
 
 let builtin_rule (l:Ident.lident) : ML rule =
   let r =

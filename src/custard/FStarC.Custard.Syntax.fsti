@@ -306,6 +306,25 @@ type op =
   | BufNull                (** no arguments; the element type is the node's *)
   | BufIsNull              (** [buf] *)
   | BufBlit                (** [src; srcidx; dst; dstidx; len] *)
+  (** Section 71.  A run whose contents are known at compile time: the
+      arguments are the elements, and the node's type is the [TBuf].
+
+      Unlike every other operation here this one is not a computation.  It is
+      an *initializer*, and C accepts a braced one only where an object is
+      being declared, so the C backend takes it in a global's body and
+      nowhere else (error 393).  The other two backends have a value form for
+      it and are unrestricted. *)
+  | BufLit                 (** [e_0; ...; e_n-1] *)
+  (** Section 71.  The conversion at the far end of a {!BufLit}: the object
+      is [const] in C, and this is where a pointer to it becomes a pointer to
+      non-[const].
+
+      It cannot be an [ECast] or an [ECoerce], because both of those are
+      identities when their source and target types agree and [Layout] drops
+      them on exactly that test --- the two pointer types are the same [cty]
+      and differ only in a qualifier the IR does not model.  It is an
+      operation so that it survives to the printer. *)
+  | BufUnconst             (** [buf] *)
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

@@ -310,7 +310,7 @@ let krml_op (o:op) : ML K.op =
      which is the argument for [make check-partial] rather than for reading
      more carefully.) *)
   | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
-  | BufBlit | BufCreate _ ->
+  | BufBlit | BufCreate _ | BufLit | BufUnconst ->
     failwith "Custard: a buffer operation is not a karamel operator"
 
 (* -------------------------------------------------------------------- *)
@@ -711,6 +711,15 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EOp ({ po_op = BufBlit }, [src; srci; dst; dsti; len]) ->
     K.EBufBlit (krml_expr env src, krml_expr env srci,
                 krml_expr env dst, krml_expr env dsti, krml_expr env len)
+  (* Section 71.  karamel has the node already, and [Eternal] is the lifetime
+     that means static storage duration -- which is what a static array is.
+     karamel's own C backend then emits the same [const] declaration this
+     one's does. *)
+  | EOp ({ po_op = BufLit }, elems) ->
+    K.EBufCreateL (K.Eternal, elems |> List.map (krml_expr env))
+  (* Section 71.  Nothing to say: karamel tracks constness itself, from the
+     lifetime, and adding a cast here would only get in its way. *)
+  | EOp ({ po_op = BufUnconst }, [b]) -> krml_expr env b
 
   (* Decidable equality at no particular width is *polymorphic*: karamel types
      it only through an explicit type application naming the operand type

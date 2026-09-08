@@ -1585,6 +1585,30 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     "(" ^ c_expr out ind b ^ " + " ^ c_rvalue out ind i.ty i ^ ")"
   | EOp ({ po_op = BufNull }, []) -> "(" ^ ty e.ty ^ ")NULL"
   | EOp ({ po_op = BufIsNull }, [b]) -> "(" ^ c_expr out ind b ^ " == NULL)"
+  (* Section 71.  The object a [BufLit] declared is [const], so a pointer to
+     it is a [const T *] and the array type Pulse gives back is a [T *].
+     Writing through the result would be undefined, and what rules that out
+     is the post-condition of [array_of_static_array], which hands out a
+     fractional permission and never a full one.
+
+     Spelled out rather than left implicit because C would not merely warn
+     here, it would refuse: assigning a [const T *] to a [T *] discards a
+     qualifier, and a C++ consumer -- section 70.2 puts one in reach -- makes
+     that a hard error. *)
+  | EOp ({ po_op = BufUnconst }, [b]) ->
+    "(" ^ ty e.ty ^ ")" ^ c_expr out ind b
+  (* Section 71.  A braced initializer is not an expression in C: it may only
+     appear where an object is being declared, which for Custard means the
+     body of a global.  {!global_decl} takes it there, so reaching here means
+     the value escaped into a computation. *)
+  | EOp ({ po_op = BufLit }, _) ->
+    E.raise_error0 E.Error_CustardBadStaticArray [
+      text ("Custard: " ^ !current ^ " uses a static array where C needs an \
+             expression.");
+      text "A Pulse.Lib.GlobalArray.static_array is a braced initializer, and \
+            C accepts one of those only in a declaration -- so it can be the \
+            body of a top-level definition and nothing else.";
+      text "Bind it to a top-level definition and use that name here."]
   (* Section 44.2.  The same comparison in expression position.  [strcmp] is
      declared by the <string.h> the header already includes. *)
   | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && is_string_ty a.ty ->
@@ -2496,8 +2520,63 @@ let has_static_init (l:dlet) : ML bool =
   current := string_of_name l.dl_name;
   Some? (static_init l.dl_body)
 
+(* Section 71.  A [Pulse.Lib.GlobalArray.static_array], which is an *array*
+   object and not a pointer one.
+
+   The declarator is the difference that matters.  [decl_of (TBuf t)] gives
+   [t *x], which would be a pointer variable with a braced initializer -- not
+   the same object and not even legal.  What is wanted is [t x[n]], an array
+   of [n] elements with the elements as its initializer, so that the storage
+   is the table itself and the name decays to a pointer at every use.
+
+   [const] because {!array_of_static_array} hands out a fractional permission
+   and never a full one, so no Pulse program can write through it.  It buys
+   [.rodata] rather than [.data], and it turns a write that slipped past the
+   proof into a compile error instead of undefined behaviour.  The pointer
+   conversion back is at the [BufUnconst] above. *)
+let array_decl (l:dlet) : ML (option string) =
+  match l.dl_body.e, l.dl_ret with
+  | EOp ({ po_op = BufLit }, elems), TBuf t ->
+    let out = mk_ref "" in
+    let vs = elems |> List.map (fun (x:expr) -> c_rvalue out "" t x) in
+    (* A run of length zero has no C spelling: [t x[0]] is a constraint
+       violation and [{ }] is not an initializer.  Nor is there anything to
+       point at, so this is a refusal rather than a workaround. *)
+    if Nil? elems then
+      E.raise_error0 E.Error_CustardBadStaticArray [
+        text ("Custard: " ^ string_of_name l.dl_name ^ " is an empty static \
+               array, and C has no declaration for one.");
+        text "An array object needs at least one element, and a run with no \
+              elements has no address to hand out either.";
+        text "Use Pulse.Lib.Array.null if what is meant is the absence of a \
+              run."]
+    else
+      Some ("const " ^ decl_of t (c_name l.dl_name ^ "[" ^
+                                  string_of_int (List.length elems) ^ "]") ^
+            " = { " ^ String.concat ", " vs ^ " };\n")
+  | _ -> None
+
+(* The same object as {!array_decl}, declared rather than defined.  It has to
+   repeat the [const] and the length: a declaration that disagrees with the
+   definition about either is a different type, and C says so. *)
+let array_extern (l:dlet) : ML (option string) =
+  match l.dl_body.e, l.dl_ret with
+  | EOp ({ po_op = BufLit }, elems), TBuf t when Cons? elems ->
+    Some ("extern const " ^
+          decl_of t (c_name l.dl_name ^ "[" ^
+                     string_of_int (List.length elems) ^ "]") ^ ";\n")
+  | _ -> None
+
+let is_static_array (l:dlet) : ML bool =
+  match l.dl_body.e with
+  | EOp ({ po_op = BufLit }, _) -> true
+  | _ -> false
+
 let global_decl (l:dlet) : ML string =
   current := string_of_name l.dl_name;
+  match array_decl l with
+  | Some d -> d
+  | None ->
   let d = decl_of l.dl_ret (c_name l.dl_name) in
   match static_init l.dl_body with
   | Some v -> d ^ " = " ^ v ^ ";\n"
@@ -2699,7 +2778,11 @@ let global_inits_of (p:program) : ML (list dlet) =
     match d with
     (* Section 68.  A macro has no storage, so there is nothing to set; the
        body has already been checked to be a constant expression. *)
-    | DLet l when Nil? l.dl_binders && not (is_macro l) && not (has_static_init l) -> [l]
+    (* Section 71.  A static array is initialized where it is declared, like
+       anything else {!static_init} accepts -- it is simply not an expression,
+       so it is recognized by its own shape rather than by that function. *)
+    | DLet l when Nil? l.dl_binders && not (is_macro l) &&
+                  not (has_static_init l) && not (is_static_array l) -> [l]
     | _ -> [])
 
 let init_globals_name (cu:unit_info) (p:program) : ML (option string) =
@@ -3303,7 +3386,10 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     | DLet l when is_public l && is_macro l -> [prologue_of l ^ macro_decl l]
     | DLet l when is_public l && Nil? l.dl_binders ->
       current := string_of_name l.dl_name;
-      [prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"]
+      (match array_extern l with
+       | Some d -> [prologue_of l ^ d]
+       | None ->
+         [prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"])
     | DLet l when is_public l -> [prologue_of l ^ inline_of l ^ proto_of l]
     | _ -> []) in
 
