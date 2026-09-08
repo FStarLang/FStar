@@ -117,43 +117,42 @@ just been rejected; the inconsistency then produced a second, spurious error.
 after a subtyping failure, and `Bug3213.fst` reports both of its offending
 arguments instead of one plus a cascade.
 
-The `cflag` list shrank from five constructors to two. It was
+The `cflag` list went from five constructors to two. It was
 
 ```fstar
 and cflag = TOTAL | MLEFFECT | LEMMA | SMTPAT of term | DECREASES of decreases_order
 ```
 
-and it is now
+and it is now, in full:
 
 ```fstar
-and cflag = SMTPAT of term | DECREASES of decreases_order
+and cflag =
+  | SMTPAT of term            (* the SMT patterns of a Lemma, as a list literal *)
+  | DECREASES of decreases_order
 ```
 
-— the two flags that carry information a `comp_typ` does not otherwise have.
-Each of the other three was a *restatement of the effect name*, which is now
-always reliable:
+`TOTAL`, `MLEFFECT` and `LEMMA` are all gone. Each was a *restatement of the
+effect name*, which is now always reliable, so each had a reader that tested the
+name anyway:
 
-- `MLEFFECT` was set exactly when `effect_name` was already `FStar.All.ML`, and
-  every site that read it tested the name first.
-- `TOTAL` was sprinkled on every `Tot`-named comp, residual comp and `bind`
-  result. It had one genuinely non-redundant use — recording that a comp's
-  effect was an *abbreviation* rooted at `Tot`, such as `Lemma`, which the name
-  did not say and `Syntax.Util.is_total_comp` has no env to look up. Removing
-  it while that was still true did not work: `Bug1953.fst` rejects
-  `type t = | A : int -> X t` for `effect X a = Tot a` as "constructors cannot
-  have effects", and a partially-applied lemma stops being recognised as pure,
-  so its trailing implicit is never instantiated. So it was first narrowed to
-  that one job (set in exactly one place, `ToSyntax.desugar_comp`) and only
-  removed once the desugarer resolved abbreviations away and `effect_name`
-  became unconditionally a root effect — see "An effect abbreviation is a bare
-  alias" below.
-- `LEMMA` went the same way, and for the same reason: `is_lemma_comp` and
-  `is_smt_lemma` now read `source_effect_name` instead.
+- `MLEFFECT` was set exactly when `effect_name` was already `FStar.All.ML`.
+- `LEMMA` is now `source_effect_name = Prims.Lemma`, which is what
+  `is_lemma_comp` and `is_smt_lemma` read.
+- `TOTAL` is now `PC.is_pure_effect_lid (comp_effect_name c)`, which is the whole
+  of `Syntax.Util.is_total_comp`.
 
-Along the way, once `TOTAL` stopped being set redundantly,
-`TypeChecker.Util.weaken_flags` became dead and `mk_bind` lost its `flags`
-parameter, along with the standing `TODO` about `bind`'s flags being
-inconsistent with the comp it returns.
+The last one took two steps and is the reason the other two could go. `TOTAL` was
+sprinkled on every `Tot`-named comp, residual comp and `bind` result, but it had
+one use that was not redundant: it recorded that a comp's effect was an
+*abbreviation* rooted at `Tot`, such as `Lemma` — something the effect name did
+not say, and which `is_total_comp` has no env to look up. So it was first
+narrowed to that single job, and only deleted once the desugarer began resolving
+abbreviations away, making `effect_name` unconditionally a root effect. See "An
+effect abbreviation is a bare alias" below.
+
+Two things fell out of the narrowing: `TypeChecker.Util.weaken_flags` became
+dead, and `mk_bind` lost its `flags` parameter along with the standing `TODO`
+about `bind`'s flags being inconsistent with the comp it returns.
 
 ## Where the specification went
 
