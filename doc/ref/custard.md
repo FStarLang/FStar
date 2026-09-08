@@ -15979,6 +15979,115 @@ One placement note from the field, recorded because it is not written down
 anywhere else: a Pulse `[@@ ...]` must precede the whole qualifier block
 (`noextract` / `atomic` / `fn`), not sit between qualifiers.
 
+## 75 A module that emits nothing still has to exist
+
+### 75.1 Intake
+
+EverParse's round 74 reported the C leg finished. The generated
+`COSE_Format.c` is 694 KB, compiles with `gcc -c` and no diagnostics, and its
+header is at API parity with the shipped karamel one: 82 of 82 `validate_*`,
+41 of 41 `parse_*`, 41 of 41 `serialize_*`, 9 of 9 `COSE_EverCrypt_*`, nothing
+missing. The only symbols the shipped header has and Custard's does not are 50
+`uu___is_Mk*0` discriminators over single-constructor types, which are
+constantly `true`; omitting them is an improvement. The measurement was
+checked against a deletion control, so it is not vacuous.
+
+The Rust leg did not finish, and the report separates two reasons. One is a
+type mismatch inside karamel that this section does not resolve; §75.5 records
+where the investigation stopped. The other is this one, and it is short.
+
+### 75.2 The defect
+
+EverParse's Rust crate layout is specified in karamel `-bundle` clauses over
+F\* module names, and one of them names `CBOR.Pulse.Raw.Slice`. That module has
+a `.fsti` and no `.fst`: everything in it is either inlined at the use site or
+realized by hand, so no declaration anywhere carries its name.
+
+karamel's own input still holds a module of that name. F\*'s ML extraction
+writes one file per module it extracted, empty ones included, and the bundle
+clause was written against that file list. Custard's split (§65) dropped the
+module instead, in two places independently: `Split.run` emitted nothing for a
+chunk with no declarations, and `PrintKrml.print_split` dropped a file whose
+declarations all translated to nothing.
+
+karamel does not treat a bundle naming a module it was not given as an empty
+selection. It is fatal, and it takes the whole run with it:
+
+```
+There an issue with your bundle.
+You specified: -bundle CBOR.Pulse.Raw.Slice=[rename=Slice]
+Here's the issue: one of these modules doesn't exist: CBOR.Pulse.Raw.Slice.
+```
+
+So a consumer whose crate layout mentions an interface-only module cannot
+express that layout against Custard's file list at all --- not "the module
+comes out empty", but "the flags do not parse". Which of the two ways it is
+spelled matters: a pattern-only clause, `-bundle 'M[rename=N]'`, tolerates a
+missing module, and a clause with the module on the left of the `=` does not.
+EverParse's are the second kind.
+
+### 75.3 The fix
+
+Both places keep the module.
+
+`Split.run` gains the modules that contributed nothing, taken from
+`Dep.topological_order` and appended in dependency order after the ones that
+did. Two exclusions: a realized module, whose contents are a hand-written
+file's and whose name Custard already avoids (`file_of`), and a name an
+upstream linked unit owns (`foreign`, §12.9). And only on the karamel
+backends: the OCaml split writes one `.ml` per entry, where an empty file
+named after a module somebody else realizes is not parity but a collision.
+
+`PrintKrml.print_split` no longer drops a file whose declaration list came out
+empty. It had no reason to beyond tidiness, and tidiness is what the consumer
+cannot express against.
+
+The cost is an empty record per module. On `RustSplit` the `.krml` goes from
+567 to 1454 bytes for about sixty added modules, and karamel writes no source
+for any of them, so the generated crate is byte-identical.
+
+### 75.4 The test
+
+`tests/custard/RustSplitIface.fsti` is an interface-only module holding one
+`inline_for_extraction` definition, which `RustSplit.fst` calls. The body is
+substituted at the use site, so no declaration carries the module's name, and
+`KRMLSPLIT_RustSplit` gains a third clause naming it on the left of an `=`.
+Without the fix karamel refuses the whole bundle set; with it the test builds
+and runs as before. Checked against the unfixed compiler.
+
+The clause form is the assertion. Written as a pattern it would pass either
+way, which is why the first attempt at this test did.
+
+### 75.5 Carried forward
+
+The Rust type mismatch is not reproduced. karamel reports 171 of
+
+```
+type mismatch; t = fn (&[u8], usize) -> usize
+             t_ret = fn (cose::format::tstr_ugly, usize) -> usize
+```
+
+on CBOR functions, where `tstr_ugly` is a `COSE.Format`-local abbreviation
+that the CBOR modules have no business naming. Five shapes were tried locally
+--- an abbreviation over a monomorphized record, the same used higher-order,
+one over a machine integer, one over a Pulse slice, and the last again under
+`--custard_split` so the reference crosses a module boundary --- and none
+reproduces. In every one `Layout.resolve` had already unfolded the
+abbreviation out of every signature, leaving the `DTypeAlias` behind as a dead
+declaration, which is the behaviour that makes the C leg work. So the
+condition under which an abbreviation *survives* into a signature is still
+unknown, and guessing further is not productive; the generated `COSE.Format.fst`
+from the reporter's five-line CDDL input is what the next attempt needs.
+
+Also outstanding, both from the same report: error 365 on `t = { 1: 1 }`
+survives `--custard_norm_budget 1000000000`, which means it is
+`norm_bounded`'s fatal path and not a budget that is merely too small ---
+`is_type_sig` and `is_prop_sig` only look at the head of what they normalize,
+so the graceful degradation of §30.6 should apply, but the input to check it
+against is not in hand either. And Custard exports 85 `_left`/`_right`
+coercions that karamel keeps `static`; a visibility difference, cosmetic, and
+noted so it is not rediscovered.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -16275,3 +16384,4 @@ anywhere else: a Pulse `[@@ ...]` must precede the whole qualifier block
 | M10ηΠ | The karamel backend names the definition too (§73.4) | Done.  `PrintKrml.find` and `find_t` raised an OCaml `failwith` with no number, no location and no name, where `PrintC.lookup_var` raised error 368 naming the declaration.  `PrintKrml` now tracks a `current` in `krml_decl` and both raise the same message.  Which backend was asked for should not decide whether a compiler bug is legible |
 | M10ηΡ | An empty `void` body is not an empty block (§73.5) | Done.  The C-test harness's empty-block check is for an `if` or a loop that lost its statement; a root of type `unit -> unit` legitimately has none.  The check now exempts an opening line at column zero that declares a `void` function, and nothing else |
 | M10ηΣ | A `Mono` binder behind an abbreviation (§74.2) | Done, one line.  `Mono.classify_def` measures the arrow spine with `arrow_formals_unfold`; `Extract.specialize` measured it with `U.arrow_formals_comp`, and the indices in `margs` are indices into the classification.  A `[@@monomorphize]` binder hidden behind a codomain abbreviation was therefore classified, and its argument removed from every call spine, while `specialize` ran out of binders before reaching it --- so the key was never substituted.  Two symptoms, reported as unrelated: the binder survived into the signature, giving a saturated call refused as "applied to 6 of its 7 arguments" against a signature matching karamel's exactly; and the body still named it, so a template argument computed from it reduced to `FStar.SizeT.v tm` and was refused with error 390.  `specialize` now unfolds too.  `MonoAbbrev` and `TmplAbbrev` pin the two halves, each checked against the unfixed compiler |
+| M10ηΤ | A module that emits nothing still has to exist (§75.2) | Done.  EverParse's Rust crate layout names `CBOR.Pulse.Raw.Slice` in a karamel `-bundle` clause; the module is `.fsti`-only, so no declaration carries its name, and Custard dropped it in two independent places --- `Split.run` skipped a chunk with no declarations and `PrintKrml.print_split` skipped a file whose declarations all translated to nothing.  karamel's own input keeps the module, because F*'s ML extraction writes one file per module it extracted, and a `-bundle` clause naming a module karamel was not given is fatal rather than an empty selection, so the whole flag set was refused.  Both places now keep it; the empties come from `Dep.topological_order`, excluding realized modules and names an upstream unit owns, and only on the karamel backends, since an empty `.ml` named after a realized module is a collision and not parity.  `RustSplitIface.fsti` pins it, with the clause spelled the way EverParse spells it --- module on the left of the `=`, which is the form that is fatal |

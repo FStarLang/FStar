@@ -280,8 +280,35 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
      backwards; within a file the extraction order is preserved untouched. *)
   let names = SMap.keys chunks in
   let names = BU.sort_with (fun a b -> rank_of a - rank_of b) names in
-  names |> List.collect (fun m ->
+  let files = names |> List.collect (fun m ->
     let ds = match SMap.try_find chunks m with
              | Some r -> List.rev !r
              | None -> [] in
-    if ds = [] then [] else [(avoid foreign m, ds)])
+    if ds = [] then [] else [(avoid foreign m, ds)]) in
+  (* Section 75.3.  A module that contributed no declaration still has to
+     exist.  [-bundle] and [-no-prefix] select on module *names*, and karamel
+     treats a pattern that names a module it was not given as a fatal error --
+     not as an empty selection -- so a consumer whose crate layout mentions
+     an interface-only module cannot express it against a file list that
+     silently omits the module.  karamel's own input never omits it: F*'s ML
+     extraction writes one [.krml] per module it extracted, empty ones
+     included, and the consumer's flags were written against that.  So the
+     empty modules are emitted too, in dependency order, which costs an empty
+     record each and buys back the parity the flags assume. *)
+  let have : SMap.t bool = SMap.create 100 in
+  let _ = files |> List.iter (fun (m, _) -> SMap.add have m true) in
+  (* Only for karamel.  The OCaml split writes one [.ml] per entry, and a
+     module that emits nothing is a module whose contents are somebody else's
+     -- a hand-written realization, most often -- so an empty file of that
+     name is not parity but a collision, and the realization is the thing it
+     would shadow. *)
+  let want_empties =
+    List.mem (Options.custard_backend ()) ["KrmlC"; "KrmlRust"] in
+  let empties =
+    if not want_empties then []
+    else Dep.topological_order deps (fun m -> m) |> List.collect (fun m ->
+      if Some? (SMap.try_find have m) || List.mem m foreign
+         || Builtins.is_realized_module (String.split ['.'] m)
+      then []
+      else (SMap.add have m true; [(m, [])])) in
+  files @ empties

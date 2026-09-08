@@ -1139,7 +1139,13 @@ let print_split (fs : list (string & program)) : ML (list Krml.file) =
                match krml_decl env d with
                | Some d -> [d]
                | None -> []) in
-    if ds = [] then [] else [(krml_file_name m, ds)])
+    (* Section 75.3.  An empty module is kept.  karamel selects on module
+       names in [-bundle] and [-no-prefix] and treats a name it was not given
+       as fatal, so a module that emits nothing still has to be present for
+       the consumer's flags to resolve against -- which is what karamel's own
+       input, one file per module F* extracted, already gives it.  karamel
+       writes no source for an empty module, so keeping it costs a record. *)
+    [(krml_file_name m, ds)])
 
 let write_files (fn:string) (fs : list Krml.file) : ML unit =
   let bin : Krml.binary_format = (Krml.current_version, fs) in

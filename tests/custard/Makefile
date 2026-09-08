@@ -1911,8 +1911,15 @@ RUSTSPLIT_TESTS += RustSplit
 # file both halves may refer to, and putting them above the module that uses
 # them is what makes the two files circular.  karamel says so, in as many
 # words, and the round spent a while learning to read it.
+#
+# Section 75.4.  The third clause names RustSplitIface, which is .fsti-only
+# and inlined away, so no declaration carries its name.  karamel treats a
+# bundle naming a module it was not given as fatal, so this clause is the
+# assertion: Custard has to emit the empty module the way F*'s own extraction
+# does.  It was EverParse's [CBOR.Pulse.Raw.Slice].
 KRMLSPLIT_RustSplit := -fkeep-tuples \
   -bundle 'RustSplit=[rename=Upper]' \
+  -bundle 'RustSplitIface=[rename=Iface]' \
   -bundle 'RustSplitLib=*[rename=Lower]'
 # The point of the leg: the call across the module boundary is a [crate::]
 # path, which is what a consumer's hand-written modules are reached by and
