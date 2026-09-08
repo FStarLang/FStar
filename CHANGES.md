@@ -30,11 +30,10 @@ Guidelines for the changelog:
     computations where `Dv` or `Tac` is expected. As for `DIV`, there is no
     `GHOST ~> NDET` edge.
 
-  * **Top-level definitions in a `total` effect no longer warn.** Because
-    `Nd` terminates, `let global = f ()` really does denote a value, so it is
-    accepted silently: no warning 272 (*top-level let-bindings must be
-    total*) and no `Prims.nonempty` proof obligation. This applies to any
-    effect marked `total`; `Dv` at the top level is unchanged.
+  * **Top-level `Nd` definitions no longer warn.** Because `Nd` terminates,
+    `let global = f ()` really does denote a value, so it is accepted
+    silently: no warning 272 (*top-level let-bindings must be total*) and no
+    `Prims.nonempty` proof obligation. `Dv` at the top level is unchanged.
 
   * **`FStar.Sealed` is now an interface to nondivergent values.**
     `FStar.Sealed.unseal : sealed a -> Nd a` has been added: unsealing is
