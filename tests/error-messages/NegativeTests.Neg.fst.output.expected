@@ -72,7 +72,7 @@
       a: Prims.eqtype
       Prims.hasEq a
       Prims.int == a
-  - See also FStar.Pervasives.fsti(219,4-219,5)
+  - See also FStar.Pervasives.fsti(248,4-248,5)
 
 * Info at NegativeTests.Neg.fst(55,25-55,26):
   - Expected failure:
