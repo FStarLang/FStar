@@ -1373,7 +1373,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             //         [Meta; Meta; ..; Meta; Arg; ...]
             //       Then we remove the meta nodes so that the following argument
             //       can be applied to the lambda
-            //       We only remove DIV and PURE ~> DIV lifts
+            //       We only remove DIV/NDET and PURE/NDET ~> NDET/DIV lifts
             //
 
             //
@@ -1387,11 +1387,14 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               match stack with
               | [] -> None
               | Meta (_, Meta_monadic (m, _), _)::tl
-                when lid_equals m PC.effect_DIV_lid ->
+                when lid_equals m PC.effect_DIV_lid ||
+                     lid_equals m PC.effect_NDET_lid ->
                 maybe_strip_meta_divs tl
               | Meta (_, Meta_monadic_lift (src, tgt, _), _)::tl
-                when lid_equals src PC.effect_PURE_lid &&
-                     lid_equals tgt PC.effect_DIV_lid ->
+                when (lid_equals src PC.effect_PURE_lid ||
+                      lid_equals src PC.effect_NDET_lid) &&
+                     (lid_equals tgt PC.effect_DIV_lid ||
+                      lid_equals tgt PC.effect_NDET_lid) ->
                 maybe_strip_meta_divs tl
               | Arg _::_ -> Some stack  //due to the precondition, this case doesn't arise in the top-level call
               | _ -> None
@@ -1668,7 +1671,8 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             (* If we are reifying, we reduce Div lets faithfully, i.e. in CBV *)
             (* This is important for tactics, see issue #1594 *)
             else if cfg.steps.tactics
-                    && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
+                    && (let l = Env.norm_eff_name cfg.tcenv lb.lbeff in
+                        U.is_div_effect l || U.is_ndet_effect l)
             then let ffun = S.mk_Tm_abs [S.mk_binder (lb.lbname |> Inl?.v)] body None t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
                  log cfg (fun () -> Format.print_string "+++ Evaluating DIV Tm_let\n");
@@ -2227,7 +2231,8 @@ and reify_lift cfg e msrc mtgt t : ML term =
   | None ->
     (* No explicit lift: the source computation must be pure or divergent, and we
        inject it with the target effect's [return]. *)
-    if not (U.is_pure_effect msrc || U.is_div_effect msrc || U.is_ghost_effect msrc)
+    if not (U.is_pure_effect msrc || U.is_div_effect msrc ||
+            U.is_ndet_effect msrc || U.is_ghost_effect msrc)
     then failwith (Format.fmt2 "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
                      (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt));
     let ed = Env.get_effect_decl env (Env.norm_eff_name env mtgt) in

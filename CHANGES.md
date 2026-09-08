@@ -11,6 +11,43 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## New `Nd` effect for nondeterministic, but terminating, computations
+
+  * `Nd` (an instance of the new primitive effect `NDET`) sits strictly
+    between `Tot` and `Dv`. `Dv` relaxes `Tot` in two independent ways:
+    computations may diverge, and computations are not functions (nothing
+    relates the results of two calls). `NDET` only relaxes the second: an
+    `Nd` computation is nondeterministic, but always terminates.
+
+    ```fstar
+    assume val f : unit -> Nd int
+    let _ () : Nd unit = let x = f () in let y = f () in assert (x == y) // fails
+    let rec loop (x:int) : Nd int = loop x                               // fails: termination
+    ```
+
+    The effect lattice is now `PURE ~> NDET ~> DIV`, and `NDET ~> TAC`, so
+    `Tot` computations may be used where `Nd` is expected, and `Nd`
+    computations where `Dv` or `Tac` is expected. As for `DIV`, there is no
+    `GHOST ~> NDET` edge.
+
+  * **Top-level definitions in a `total` effect no longer warn.** Because
+    `Nd` terminates, `let global = f ()` really does denote a value, so it is
+    accepted silently: no warning 272 (*top-level let-bindings must be
+    total*) and no `Prims.nonempty` proof obligation. This applies to any
+    effect marked `total`; `Dv` at the top level is unchanged.
+
+  * **`FStar.Sealed` is now an interface to nondivergent values.**
+    `FStar.Sealed.unseal : sealed a -> Nd a` has been added: unsealing is
+    total, but nondeterministic, which is exactly what keeps it compatible
+    with `sealed_singl`. `map_seal` and `bind_seal` now take `Nd` functions
+    (`a -> Nd b` and `a -> Nd (sealed b)`), so their arguments may themselves
+    unseal.
+
+    `FStar.Tactics.unseal` (i.e. `FStar.Stubs.Tactics.Unseal.unseal`) is now
+    just `FStar.Sealed.unseal` coerced into `Tac`, and is kept for
+    compatibility; existing metaprograms need no change. New code can use
+    `FStar.Sealed.unseal` directly, in `Nd` or in any effect above it.
+
 ## `new` no longer implies that a type is distinct from every other type, unless it really declares a type constructor
 
   * **`assume new type b : int -> bool` used to prove `False`** (issue #4521).
