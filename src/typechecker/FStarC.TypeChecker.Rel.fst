@@ -4365,25 +4365,32 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
         let subst = [DB(0, x1)] in
         let phi1 = Subst.subst subst phi1 in
         let phi2 = Subst.subst subst phi2 in
-        (* Do not build [forall x. phi1 ==> True]. The right-hand side of a
-           subtyping problem is very often an unrefined type, which
-           [force_refinement] turns into [x:t{True}] just so we land in this
-           case; the implication is then trivial, but its *antecedent* is not,
-           and every consumer of the guard -- [simplify_vc] in particular --
-           pays to normalize it before discovering that. When phi1 is a
-           definitional equation [_ == e] for a large [e], normalizing it can be
-           exponential in the nesting depth of [e]'s lets and matches. See
-           tests/bug-reports/closed/Bug3800.fst. *)
-        let mk_imp (imp : term -> term -> ML term) phi1 phi2 : ML _ =
-          let f = imp phi1 phi2 in
-          if U.is_t_true f then f
-          else f |> guard_on_element wl problem x1
-        in
+        let close_on_element (f:term) : ML term = f |> guard_on_element wl problem x1 in
         let fallback () =
            let impl =
                if problem.relation = EQ
-               then mk_imp U.mk_iff phi1 phi2
-               else mk_imp U.mk_imp_simp phi1 phi2 in
+               then
+                 (* No simplification here: [phi1 <==> True] is [phi1], not
+                    [True], and there is no [mk_iff_simp]. *)
+                 close_on_element (U.mk_iff phi1 phi2)
+               else
+                 (* Do not build [forall x. phi1 ==> True]. The right-hand side
+                    of a subtyping problem is very often an unrefined type,
+                    which [force_refinement] turns into [x:t{True}] just so we
+                    land in this case; the implication is then trivial, but its
+                    *antecedent* is not, and every consumer of the guard --
+                    [simplify_vc] in particular -- pays to normalize it before
+                    discovering that.  When phi1 is a definitional equation
+                    [_ == e] for a large [e], normalizing it can be exponential
+                    in the nesting depth of [e]'s lets and matches.  See
+                    tests/bug-reports/closed/Bug3800.fst.
+
+                    [mk_imp_simp] returns [t_true] only when [phi2] is [True],
+                    and [t_true] is closed, so dropping the [forall] here is
+                    just [forall x. True == True]. *)
+                 let f = U.mk_imp_simp phi1 phi2 in
+                 if U.is_t_true f then f else close_on_element f
+           in
            let guard = U.mk_conj_simp (p_guard base_prob) impl in
            def_check_scoped (p_loc orig) "ref.1" (List.map (fun b -> b.binder_bv) (p_scope orig)) (p_guard base_prob);
            def_check_scoped (p_loc orig) "ref.2" (List.map (fun b -> b.binder_bv) (p_scope orig)) impl;
@@ -4421,10 +4428,11 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
              | Success (_, defer_to_tac, imps) ->
                UF.commit tx;
                let guard =
+                   (* Same as in [fallback]: [p_guard ref_prob] is very often
+                      [True], and [forall x. True] is [True]. *)
                    U.mk_conj_simp (p_guard base_prob)
                                   (let g = p_guard ref_prob in
-                                   if U.is_t_true g then g
-                                   else g |> guard_on_element wl problem x1) in
+                                   if U.is_t_true g then g else close_on_element g) in
                let wl = solve_prob orig (Some guard) [] wl in
                let wl = {wl with ctr=wl.ctr+1} in
                let wl = extend_wl wl empty defer_to_tac imps in
