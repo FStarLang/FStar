@@ -15883,6 +15883,102 @@ EverParse has no Custard target in any of its Makefiles; the C leg needs six
 entry modules and the Rust leg five. That integration is the reporter's work
 and is unstarted.
 
+## 74. Round 66: a `Mono` binder behind an abbreviation
+
+Kuiper's side of §66 is finished: 60 of 62 modules extract and **all 60 now
+compile under nvcc**, up from 53. Every one of the seven compile failures was a
+missing extraction rule on the consumer's side rather than a Custard defect ---
+112 `custard_extern` annotations for float math, twelve casts, four atomics,
+and one `gpu_array_alloc` rule that had been silently returning a stack
+allocation. `ClosurePrologue` from §72.5 moved eight modules on its own. There
+is no TensorCore regression: call counts against karamel's shipped
+`Klas_GEMM_TensorCore2D.cu` are identical.
+
+Two modules still failed, with what looked like two unrelated errors. They are
+one defect.
+
+### 74.1 The two reports
+
+`Klas.SPMM` was refused with error 368 in a run that, in the same output,
+emitted the definition it was complaining about:
+
+```c
+void Klas_SPMM_g_spmm_f32_32x64x8(size_t rows, size_t shared, size_t cols,
+    Kuiper_Sparse_Matrix_smatrix__float32 gA, size_t *row_indices,
+    float *gB, float *gC)
+```
+
+--- seven parameters, matching karamel exactly --- while reporting
+
+```
+Custard: the partial application of Klas.SPMM.g_spmm_f32_32x64x8 has no C
+representation, in Klas.SPMM.spmm_f32_dispatch.
+It is applied to 6 of its 7 arguments.
+```
+
+The source call is saturated. The reporter ruled out the norm budget and
+explicit rooting by running both, could not reduce it, and said so.
+
+`Klas.GEMM.TensorCore2D.To` was refused with error 390: a `wmma_fragment`
+template argument had reduced only to `FStar.SizeT.v tm`, where `tm` is passed
+the literal `16sz`. The reporter's leading hypothesis --- a closure over the
+runtime `alpha`/`beta` --- was tested and refuted.
+
+One detail in the first report was the whole answer. Under the *default* norm
+budget the same module gives error 365 instead, whose §72 wording mentions "an
+argument to a **monomorphized binder**".
+
+### 74.2 The defect
+
+`Mono.classify_def` measures the arrow spine with `arrow_formals_unfold`
+(§19.4), which continues through a total codomain that abbreviates another
+arrow. `Extract.specialize` measured it with `U.arrow_formals_comp`, which
+stops at the abbreviation. The indices in `margs` are indices into the
+*classification*.
+
+So a `[@@monomorphize]` binder hiding behind a codomain abbreviation was
+classified --- and `split_mono_args` duly removed its argument from the call
+spine --- while the walk in `specialize` ran out of binders before reaching it.
+The key was never substituted. Two things followed:
+
+* The binder survived into the emitted signature, because
+  `extract_letbinding`'s `flags` only drops a binder past `n_poly` when it is
+  *erased*, and this one is an ordinary runtime value. The definition took one
+  parameter more than every call supplied --- the 6-of-7.
+* The body still mentioned the binder as a variable. A template argument
+  computed from it therefore reduced to `FStar.SizeT.v tm` and not to a
+  constant --- the 390.
+
+`specialize` now uses `Mono.arrow_formals_unfold`, which is newly exported for
+the purpose. That is a one-line change and it is the whole fix: the two ends
+measure the same spine, which is the invariant `erased_binders_unfold`'s own
+comment already states for call spines.
+
+### 74.3 The tests
+
+`tests/custard/MonoAbbrev.fst` is fourteen lines --- a `[@@@monomorphize]`
+binder written into an `inline_for_extraction` type abbreviation used as a
+codomain --- and gives "applied to 2 of its 3 arguments" without the fix.
+`tests/custard/TmplAbbrev.fst` is the same shape with the binder also serving
+as a template argument of an external type, and gives error 390, "what it
+reduced to was: n". Both pass with it, and both were checked against the
+unfixed compiler rather than assumed to fail.
+
+That the two symptoms reduce to one twelve-line shape is the part worth
+recording. Neither report was reducible from its own end: one is an arity and
+the other is a normalization result, and nothing in either message says
+"abbreviation".
+
+### 74.4 Carried forward
+
+Three warnings remain across the 60 compiling modules --- three 377s
+(specialization names in an interface) and one 382 (`sync_device`'s erased
+`justif`) --- all informational.
+
+One placement note from the field, recorded because it is not written down
+anywhere else: a Pulse `[@@ ...]` must precede the whole qualifier block
+(`noextract` / `atomic` / `fn`), not sit between qualifiers.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -16178,3 +16274,4 @@ and is unstarted.
 | M10ηΟ | A collapsed pattern kept its variables (§73.1--§73.3) | Done.  `Layout.rw_expr` has `hoist` for the arguments a collapse leaves without a home; `rw_pat` had nothing, so a deleted sub-pattern took its variables with it while the branch body went on naming them.  Both COSE legs stopped there --- error 368 on the direct backend, a bare failure on karamel.  `rw_pat` now returns the names it deleted and `rw_branch` binds each to `()`; every dropped field is erased, so `unit` is the right value, and `Simplify` removes the bindings immediately afterwards.  Reproduced in fifteen lines with two `FStar.Tactics.PrettifyType` splices, which is the shape EverParse's CDDL compiler generates, and pinned on both backends |
 | M10ηΠ | The karamel backend names the definition too (§73.4) | Done.  `PrintKrml.find` and `find_t` raised an OCaml `failwith` with no number, no location and no name, where `PrintC.lookup_var` raised error 368 naming the declaration.  `PrintKrml` now tracks a `current` in `krml_decl` and both raise the same message.  Which backend was asked for should not decide whether a compiler bug is legible |
 | M10ηΡ | An empty `void` body is not an empty block (§73.5) | Done.  The C-test harness's empty-block check is for an `if` or a loop that lost its statement; a root of type `unit -> unit` legitimately has none.  The check now exempts an opening line at column zero that declares a `void` function, and nothing else |
+| M10ηΣ | A `Mono` binder behind an abbreviation (§74.2) | Done, one line.  `Mono.classify_def` measures the arrow spine with `arrow_formals_unfold`; `Extract.specialize` measured it with `U.arrow_formals_comp`, and the indices in `margs` are indices into the classification.  A `[@@monomorphize]` binder hidden behind a codomain abbreviation was therefore classified, and its argument removed from every call spine, while `specialize` ran out of binders before reaching it --- so the key was never substituted.  Two symptoms, reported as unrelated: the binder survived into the signature, giving a saturated call refused as "applied to 6 of its 7 arguments" against a signature matching karamel's exactly; and the body still named it, so a template argument computed from it reduced to `FStar.SizeT.v tm` and was refused with error 390.  `specialize` now unfolds too.  `MonoAbbrev` and `TmplAbbrev` pin the two halves, each checked against the unfixed compiler |

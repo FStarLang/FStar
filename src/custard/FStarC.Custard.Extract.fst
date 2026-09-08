@@ -4107,7 +4107,16 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
       hbs, List.map (fun (i, t) -> (i, inst t)) margs
     | _ -> [], margs
   in
-  let bs, c = U.arrow_formals_comp ty in
+  (* Section 74.  [arrow_formals_unfold] and not [U.arrow_formals_comp],
+     because [cs] came from {!Mono.classify_def}, which unfolds -- and the
+     indices in [margs] are indices into *that* list.  A [Mono] binder hiding
+     behind a codomain abbreviation therefore had a classification, and a call
+     site duly removed its argument, while the spine walked here stopped at
+     the abbreviation and never reached the binder to substitute it.  The
+     binder survived into the emitted signature, so the definition took one
+     more parameter than every call supplied, and the argument the
+     specialization was keyed on was still a variable in its body. *)
+  let bs, c = Mono.arrow_formals_unfold (tcenv st) ty in
   (* How far the spine may run.  A value may be duplicated freely, so it takes
      the whole arrow; anything else only takes the binders its own lambdas
      absorb.  A [Mono] argument past that point has to be substituted all the

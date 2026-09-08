@@ -1975,6 +1975,19 @@ CGREP_PrettyUnit += "PrettyUnit_round_trip"
 # 368 (section 69.4).
 KRML_TESTS += PrettyUnit
 
+# Section 74.  A [@@monomorphize] binder hiding behind an abbreviation in the
+# codomain: classified, so the call dropped its argument, but not substituted,
+# so the definition kept its parameter.
+C_TESTS += MonoAbbrev
+CGREP_MonoAbbrev += "MonoAbbrev_mk"
+CNOGREP_MonoAbbrev += "tile"
+
+# The same defect seen as error 390: the unsubstituted [Mono] binder was also
+# a template argument, so it reduced to a variable and not to a constant.
+C_TESTS += TmplAbbrev
+CGREP_TmplAbbrev += "tpl_bitset(64) b"
+CNOGREP_TmplAbbrev += "tpl_bitset(n)"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \

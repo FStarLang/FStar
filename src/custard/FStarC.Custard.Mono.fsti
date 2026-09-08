@@ -111,6 +111,14 @@ val keep_thunk (env:TcEnv.env) (bs:binders) (c:comp) (flags:list bool) : ML (lis
     [arrow_formals_comp] too. *)
 val erased_binders (env:TcEnv.env) (t:typ) : ML (list bool)
 
+(** [arrow_formals_unfold env t] is [FStarC.Syntax.Util.arrow_formals_comp]
+    continued through a *total* codomain that is an abbreviation of another
+    arrow, up to a fuel bound.  This is the spine [classify] and
+    [unit_binders] measure, so anything whose indices have to line up with a
+    classification -- notably {!classify_def}'s [Mono] positions -- has to
+    measure the same spine. *)
+val arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp)
+
 (** [erased_binders_unfold env t] is [erased_binders] over the whole arrow
     spine, unfolding abbreviations in the codomain as [classify] does.  This is
     what filtering a *call spine* wants: a call may run straight through an
