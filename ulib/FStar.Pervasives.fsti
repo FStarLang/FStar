@@ -182,6 +182,33 @@ val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
     solver as: [reveal_opaque (`%defn) defn]. *)
 let reveal_opaque (s: string) = norm_spec [delta_once [s]]
 
+/// The [NDET] effect for nondeterministic, but terminating, computations
+
+(** The effect of nondeterminism. It sits strictly between [PURE] and
+    [DIV]: an [NDET] computation always terminates (the effect is marked
+    [total], so recursive functions in it are still subject to a
+    termination check), but it is not a mathematical function, so
+    nothing relates the results of two calls to the same computation on
+    the same arguments. In particular, given [f : unit -> NDET int], one
+    cannot prove [let x = f () in let y = f () in x == y].
+
+    Since [NDET] computations do terminate, they may be used at the top
+    level: [let global = f ()] is fine when [f] is an [NDET]
+    computation, whereas it would mask a divergent effect (and require a
+    proof that the result type is inhabited) if [f] were in [DIV]. *)
+total assume effect NDET
+
+(** [PURE] computations can be silently promoted for use in an [NDET]
+    context. As for [DIV] below, there is deliberately no
+    [GHOST ~> NDET] edge. *)
+assume sub_effect PURE ~> NDET
+
+(** [Ndet] is the Hoare-style counterpart of [NDET] *)
+effect Ndet (a: Type) = NDET a
+
+(** [Nd] is the instance of [NDET] with trivial pre- and postconditions *)
+effect Nd (a: Type) = NDET a
+
 /// The [DIV] effect for divergent computations
 
 (** The effect of divergence: from a specificational perspective it is
@@ -190,13 +217,15 @@ let reveal_opaque (s: string) = norm_spec [delta_once [s]]
     not terminate. *)
 assume effect DIV
 
-(** [PURE] computations can be silently promoted for use in a [DIV]
-    context.  Note that there is deliberately no [GHOST ~> DIV] edge:
-    [DIV] is not erasable, so admitting one would let a ghost value of an
-    informative type flow into extracted code.  A [GHOST] computation whose
-    result type is non-informative is promoted to [PURE] first (see
-    [Normalize.maybe_ghost_to_pure]) and reaches [DIV] that way. *)
-assume sub_effect PURE ~> DIV
+(** [NDET] computations can be silently promoted for use in a [DIV]
+    context; composed with [PURE ~> NDET] above this also gives the
+    [PURE ~> DIV] edge.  Note that there is deliberately no
+    [GHOST ~> DIV] edge: [DIV] is not erasable, so admitting one would
+    let a ghost value of an informative type flow into extracted code.
+    A [GHOST] computation whose result type is non-informative is
+    promoted to [PURE] first (see [Normalize.maybe_ghost_to_pure]) and
+    reaches [DIV] that way. *)
+assume sub_effect NDET ~> DIV
 
 (** [Div] is the Hoare-style counterpart of [DIV] *)
 effect Div (a: Type) = DIV a
