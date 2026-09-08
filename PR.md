@@ -5,7 +5,11 @@ through the typechecker). That approach kept the Hoare specification inside a
 `comp_typ` and worked around the consequences; this one removes it from
 `comp_typ` altogether, so the consequences do not arise.
 
-56 commits, 268 files, `+4196 / −2021`.
+112 commits, 326 files, `+9492 / −4175`. Of that, **323 files and
+`+6497 / −4146` are code and tests**; the remainder is this document,
+`regression_questions.md` (two accepted regressions worked out in detail) and
+`revise_primitive_effects.md` (the original design brief, kept for the record —
+where it and this document disagree, this document is what was built).
 
 ## The two representations that went away
 
@@ -33,15 +37,17 @@ unfolded and desugared away before the typechecker ever sees them, and
 
 ```fstar
 and comp_typ = {
-  effect_name : lident;
-  result_typ  : typ;
-  flags       : list cflag;
+  effect_name        : lident;   // always a *root* effect
+  result_typ         : typ;
+  flags              : list cflag;
+  source_effect_name : lident;   // what the user wrote; presentation only
 }
 and comp' = | Comp of comp_typ
 ```
 
 A computation type is now a label and a result type. Obligations live in
-`guard_t`, where they were always meant to live.
+`guard_t`, where they were always meant to live. (`source_effect_name` carries
+no meaning of its own — see "An effect abbreviation is a bare alias" below.)
 
 `comp_univs` went with them. It was there to carry the universe instance of a
 *polymonadic* effect's `wp`, and a computation type has no `wp` any more: every
@@ -111,19 +117,40 @@ just been rejected; the inconsistency then produced a second, spurious error.
 after a subtyping failure, and `Bug3213.fst` reports both of its offending
 arguments instead of one plus a cascade.
 
-The `cflag` list shrank too. `MLEFFECT` is gone: every site that set it did so
-exactly when `effect_name` was already `FStar.All.ML`, and every site that read
-it already tested the name first. `TOTAL` survives, but with one narrow job
-instead of four. It used to be sprinkled on every `Tot`-named comp, residual
-comp and `bind` result, where it merely restated the effect name; now it is set
-in exactly one place, `ToSyntax.desugar_comp`, and records the one fact the name
-does *not* carry — that this comp's effect is an *abbreviation* whose root is
-`Tot`, such as `Lemma`. Abbreviations are not unfolded until the typechecker,
-and `Syntax.Util.is_total_comp` has no env, so the flag is the env-free record
-of that fact. Dropping it entirely breaks `Bug1953.fst` (`type t = | A : int ->
-X t` for `effect X a = Tot a` is rejected as "constructors cannot have effects")
-and leaves partially-applied lemmas unrecognised as pure, so their trailing
-implicit is never instantiated. With `TOTAL` no longer redundant,
+The `cflag` list shrank from five constructors to two. It was
+
+```fstar
+and cflag = TOTAL | MLEFFECT | LEMMA | SMTPAT of term | DECREASES of decreases_order
+```
+
+and it is now
+
+```fstar
+and cflag = SMTPAT of term | DECREASES of decreases_order
+```
+
+— the two flags that carry information a `comp_typ` does not otherwise have.
+Each of the other three was a *restatement of the effect name*, which is now
+always reliable:
+
+- `MLEFFECT` was set exactly when `effect_name` was already `FStar.All.ML`, and
+  every site that read it tested the name first.
+- `TOTAL` was sprinkled on every `Tot`-named comp, residual comp and `bind`
+  result. It had one genuinely non-redundant use — recording that a comp's
+  effect was an *abbreviation* rooted at `Tot`, such as `Lemma`, which the name
+  did not say and `Syntax.Util.is_total_comp` has no env to look up. Removing
+  it while that was still true did not work: `Bug1953.fst` rejects
+  `type t = | A : int -> X t` for `effect X a = Tot a` as "constructors cannot
+  have effects", and a partially-applied lemma stops being recognised as pure,
+  so its trailing implicit is never instantiated. So it was first narrowed to
+  that one job (set in exactly one place, `ToSyntax.desugar_comp`) and only
+  removed once the desugarer resolved abbreviations away and `effect_name`
+  became unconditionally a root effect — see "An effect abbreviation is a bare
+  alias" below.
+- `LEMMA` went the same way, and for the same reason: `is_lemma_comp` and
+  `is_smt_lemma` now read `source_effect_name` instead.
+
+Along the way, once `TOTAL` stopped being set redundantly,
 `TypeChecker.Util.weaken_flags` became dead and `mk_bind` lost its `flags`
 parameter, along with the standing `TODO` about `bind`'s flags being
 inconsistent with the comp it returns.
@@ -155,7 +182,8 @@ effect Lemma (a: Type) = Tot a
 
 ```
 val f (bs) : Lemma (requires P) (ensures Q) [SMTPat pats]
-  ==>  bs -> #(_ : squash P) -> Tot (squash Q)     flags = [LEMMA; SMTPAT pats]
+  ==>  bs -> #(_ : squash P) -> Tot (squash Q)
+       flags = [SMTPAT pats], source_effect_name = Prims.Lemma
 ```
 
 Since `squash Q` *is* `_:unit{Q}`, this is the general rule at `t = unit`. Two
@@ -175,9 +203,10 @@ This was the main risk: ~5300 `Lemma` occurrences, ~1080 with `requires`. If
 trigger selection or the quantified-binder set shifted, proofs would fail
 diffusely and far from the cause.
 
-It does not shift. The `LEMMA`/`SMTPAT` flags are kept on the innermost `Tot`
-and the post is written with the `squash` fvar, so the encoder recovers
-everything structurally: `pre` from the trailing squash-typed implicit binder,
+It does not shift. The comp still records that the user wrote `Lemma`
+(`source_effect_name`) and still carries its `SMTPAT` flag, and the post is
+written with the `squash` fvar, so the encoder recovers everything
+structurally: `pre` from the trailing squash-typed implicit binder,
 `post` from the argument of `squash`, and the quantifier ranges over the **real**
 binders only. For
 
@@ -196,6 +225,296 @@ the emitted axiom is
 — byte-for-byte the shape emitted before. Verified across no-`requires`
 lemmas, multi-binder lemmas with `SMTPatOr`, universe-polymorphic lemmas with
 fuel instrumentation, and lemmas with a quantified `ensures`.
+
+## An effect abbreviation is a bare alias
+
+Before this PR an effect abbreviation could take binders and give its
+right-hand side a specification:
+
+```fstar
+effect MyTot (a:Type) = Tot a (ensures fun _ -> False)
+```
+
+Neither could mean anything. A computation type supplies exactly one argument —
+its result type — so every binder but the first was already dead, and once a
+comp carries no specification the `ensures` above is silently dropped:
+`x -> MyTot b` checks as `x -> Tot b`. (An earlier commit on this branch,
+`7e71460e09`, *added* support for an `ensures` here; this reverses it. Making it
+mean what it says would require refining the result type at every use site of
+the abbreviation, and a `requires` would have to become an implicit binder on an
+arrow the abbreviation does not have.)
+
+The machinery keeping that shape alive was substantial: `Env.norm_eff_name`
+(~50 call sites), `lookup_effect_abbrev`, `unfold_effect_abbrev`,
+`TcEffect.tc_effect_abbrev`, `eff_decl.univs`/`binders`, and the `TOTAL` and
+`LEMMA` comp flags, which existed only to record env-free facts about a
+not-yet-unfolded abbreviation.
+
+An abbreviation is now what it always was in substance: another name for an
+effect. **`ToSyntax` resolves it away**, so `comp_typ.effect_name` is always a
+root effect and the typechecker never unfolds anything. `comp_typ` gains
+`source_effect_name`, which records the name the user wrote so that error
+messages, IDE hovers, `Syntax.Resugar` and `inspect_comp` can still say `Lemma`,
+`Tac` or `St`. It is presentation only, with one exception: `Lemma` roots at
+`Tot`, so `U.is_lemma_comp`/`is_smt_lemma` — and hence whether
+`SMTEncoding.Encode` emits a lemma's axiom — read it.
+
+`Sig_effect_abbrev` shrinks to
+
+```fstar
+| Sig_effect_abbrev { lid : lident; root : lident }
+```
+
+kept only so that a module read from a `.checked` file can rebuild its `DsEnv`.
+
+The canonical surface form is `effect M = N`. The eta-expanded spelling
+`effect M (a:Type) = N a` is still accepted, because `ulib` has to stay
+parseable by the bootstrap compiler in `stage0`; everything else is now rejected
+(Error 316) rather than silently misinterpreted.
+`tests/bug-reports/closed/Bug1370b.fst` pins down the accepted and refused
+forms.
+
+Two hand-built-syntax sites named an abbreviation where a root effect is
+required, and only worked before because `norm_eff_name` cleaned up after them:
+`Pulse.Extract.CompilerLib` (`DIV`, `PURE`) and `is_ml_comp` / the `fail_exp`
+letbinding (`ML`).
+
+Three neighbouring pieces of surface syntax go with it:
+
+- **`redefine_effect`** (`effect M = N <: ...`) is gone from the grammar. It was
+  the only other production for `NEW_EFFECT`.
+- **The `[attributes ...]` clause** on an effect abbreviation or redefinition is
+  gone — the `ATTRIBUTES` token, the production, the `Attributes` surface-AST
+  node and the `cattributes` plumbing it fed in `ToSyntax`. The only flag it
+  ever produced was `CPS`, which went away with Dijkstra Monads for Free
+  (`7e468aa485`), leaving a match with nothing but a wildcard raising "Unknown
+  attribute". Nothing in `ulib`, `examples`, `tests`, `doc` or `pulse` writes it.
+- **A lift must now name effects, not abbreviations.** A lift is an edge of the
+  effect lattice and an abbreviation is not a node of it; `sub_effect PURE ~> M`
+  worked only because `ToSyntax` quietly resolved it first. Now that `PURE`,
+  `GHOST` and `DIV` are abbreviations of `Tot`, `GTot` and `Div`, write the
+  effect. The error message names the effect the abbreviation stands for, so the
+  fix is in the message.
+
+A fourth, from the same clean-up of how a computation type's arguments are read:
+a **universe application on an effect**, as in `Tot u#0 int`, is now rejected
+rather than accepted and dropped. A computation is an effect applied to its
+result type, so its universe is that type's and there is nothing an annotation
+could add. It was recorded in `comp_univs` before this series and has been
+silently discarded since. The commit that does this (`7c9426d2c8`) also
+introduces `sort_comp_args`, a single classifier for "which argument is the
+result type, which the pre, which the post". `comp_requires` — which lifts a
+precondition out of a codomain into an implicit binder — used to scan for an
+index in a way that had to agree with `desugar_comp`'s own classification but
+shared no code with it, so a definition could acquire a binder that its `val`
+does not have; and `desugar_comp` classified twice. Both are now driven from
+`sort_comp_args`, and `Lemma` is simply the effect that has no result type and
+may carry SMT patterns.
+
+## A total effect's universe comes from its representation
+
+`TcUtil.universe_of_comp` decided the universe of `M t` by
+
+```
+if M is pure/ghost, or marked `total`, then u_res else u#0
+```
+
+which is unsound for any total effect whose `repr` does not preserve universes.
+Given
+
+```fstar
+let repr (a:Type u#a) : Type u#(max a 1) = (t:Type u#0 & a)
+total reifiable reflectable effect { M with { repr = ...; ... } }
+```
+
+`M bool` is inhabited by a `(t:Type u#0 & bool)`, so it belongs in `Type u#1`;
+answering `u#0` let `unit -> M bool` pass as a `Type u#0` while really carrying a
+`Type u#1` value — an embedding of `Type u#0` into `Type u#0`.
+
+`FStarC.TypeChecker.Core.check_comp` already had this right: for a total effect
+it built `repr t` and took *its* universe. The main typechecker and the core
+checker disagreed, and the main one was wrong. They now share
+`Env.effect_universe`.
+
+Rather than re-derive the representation's universe at every arrow,
+`TcEffect.tc_eff_decl` reads it off `repr` once, when the effect is declared, and
+stores it in `eff_combinators.repr_universe` as the scheme
+
+```
+[u_a]. Type u#r     where    repr u#u_a a : Type u#r
+```
+
+so that instantiating it at the universe of a result type gives the universe of
+the computation type. This is a function of `u_a` alone: `repr`'s codomain
+universe is fixed by its type.
+
+The rule cuts both ways. A `repr` that *lowers* the universe — say
+`repr (a:Type u#a) : Type u#0 = bool` — makes `M t` smaller than `t`, where the
+old rule wrongly reported `u_res`; `unit -> M (Type u#5)` is now correctly a
+`Type u#0`.
+
+Unchanged: a partial effect still answers `u#0`, since an arrow into one is not a
+type of values (`unit -> Dv t : Type0` for any `t`); and `Tot`, `GTot` and any
+other `total assume effect` have no representation to consult, so they still
+answer with the universe of the result type.
+
+**This bug is not one the surrounding refactor introduced** — `master` has the
+same three lines — but it is one the refactor's own test effects walk straight
+into. Nothing in ulib or pulse declares a total effect with a representation, so
+nothing there moves. `tests/micro-benchmarks/SimpleEffects_ReprUniverse.fst`
+pins it.
+
+## The size of an elaborated term
+
+A postcondition is now a refinement of the result type, and a result type is part
+of the term. That is fine in the two places a specification is *written*, and it
+was a serious problem in one place it is *inferred*.
+
+`Meta_monadic` / `Meta_monadic_lift` annotate a monadic `let` or application with
+its result type, as a hint for reification and extraction — `tc_term` drops the
+type when it re-checks such a term, and extraction ignores it. Recording the
+*inferred* type there meant recording a postcondition that embeds the very terms
+it describes: the definiens of a pure let, the result of every branch of a match.
+Effectful code binds at every step, so the copies nested, and the elaborated term
+grew multiplicatively with the nesting depth. Reducing
+`FStar.Tactics.Visit.visit_tm` over a term of size *n* took time exponential in
+*n*: `tests/bug-reports/closed/Bug3210.fst` went from **0.52s to 1214s**, and
+`FStar.Tactics.Visit.fst.checked` from 151KB to 546KB.
+
+Recording the bare type (`5f60b4c352`) puts Bug3210 back to 0.57s, makes
+`visit_tm` flat in the size of the visited term again, and brings the checked
+file to 255KB. Before specifications moved into the result type this information
+lived in the WP, which was never part of the term, so this restores the size
+annotated terms used to have.
+
+## Getting a variable out of a type
+
+The other consequence of an inferred postcondition being part of the type: it
+mentions the terms it is about, so it routinely mentions variables that are
+about to go out of scope — a `let`-bound name, a `match` pattern variable, the
+names of a `let rec`. Five commits converge on a single discipline here, and it
+is worth reading them together.
+
+- **Recover, don't drop** (`8f70eb8b3f`). An inferred refinement that mentions an
+  escaping variable used to have the offending conjuncts deleted. Quantify the
+  escaping variables *existentially* instead: they witness the existential
+  themselves, so this is still a weakening, but simplification then applies the
+  one-point rule and the fact survives. `_ == x` with `x : nat` used to leave
+  nothing behind and now yields `_ >= 0`; `_ == f x /\ x == 3` is recovered as
+  `_ == f 3`. The whole formula is closed at once rather than conjunct by
+  conjunct: with `y` escaping, `x == y /\ y == z` is recovered as `x == z`, which
+  closing separately would reduce to nothing. The quantified binders' sorts are
+  normalized, since the one-point rule restates the eliminated binder's typing
+  hypothesis and cannot see it through an abbreviation — that is what turns `nat`
+  into `_ >= 0`.
+- **Decline to introduce, for `let rec`** (`3557bce2d2`). For the names bound by
+  a `let rec`, the recovery above says nothing: `exists (f: a -> b). _ == f n` is
+  witnessed by any constant function, while putting a higher-order quantifier in
+  every type derived from this one. So those conjuncts are not introduced in the
+  first place. `env.rec_names` records the names bound by the `let rec` whose
+  body is being checked, and the four points in `TypeChecker.Util` that would put
+  a term in a type consult it: `should_return`, `bind_result_subst`, the
+  pure-substitution branch of `eliminate_binder_from_typ`, and `captured_typing`.
+- **One authority** (`4c798eb6f4`). `check_no_escape` is that authority, but it
+  lived in `TcTerm`, out of `TypeChecker.Util`'s reach — so
+  `eliminate_binder_from_typ` had a last case that returned its argument with `x`
+  still free and relied on `TcTerm` to notice, breaking the contract its name
+  states. Moving `check_no_escape` and `escape_cause` into `TypeChecker.Util`
+  *deletes* logic: the case used to drop refinements with `U.unrefine` when that
+  happened to suffice, and `check_no_escape` does better — it normalizes first,
+  so it sees through `squash` and other abbreviations, closes what it can
+  existentially, and discards conjunct by conjunct rather than wholesale.
+- **Never substitute an impure term into a type** (`42f039a3c1`). That last
+  resort used to substitute the bound term, which is exact for a pure or ghost
+  term and wrong for an effectful one, which may diverge and need not produce the
+  same value twice. Instrumenting the branch finds it reachable: one hit across
+  ulib and the test suite, at `tests/extraction/Micro.fst` with `c1 = Div`, where
+  it produced `squash (f11 (g11 x) == g11 x)` — a type mentioning a `Div`
+  application, which no source program could write.
+- **Split the driver** (`d62b4d6194`). `bind_maybe_capture` had grown to ~500
+  lines conflating four jobs: closing the binder, deciding how much of what `e1`
+  established is worth restating, simplifying degenerate binds, and building the
+  composite result type together with the `x == e1` hypothesis. The driver is now
+  34 lines. `composite_result_typ` is the sole authority on the result type, and
+  its two ways of getting rid of the binder are separated: `bind_result_subst`
+  substitutes `e1`, `eliminate_binder_from_typ` closes `x` existentially when it
+  cannot. This is the type-side counterpart of the guard-side elimination, which
+  quantifies instead — types are closed by substitution, formulas by
+  quantification — and the two do not conflict: the substitution rewrites the
+  result type, where `x` is not bound, while the `x == e1` equation goes on the
+  guard under `Env.close_guard`, where `x` deliberately stays.
+
+## Smaller compiler fixes carried by this branch
+
+Several of these are latent on `master` and were surfaced, not caused, by the
+refactor.
+
+- **A failed precondition is reported at the call, not at the definition**
+  (`dc401f3935`). `check_implicit_solution_and_discharge_guard` discharged the
+  guard with whatever range the environment happened to carry when the implicit
+  was finally resolved, which is typically the enclosing definition. The range is
+  now the implicit's own introduction site. This matters directly for the
+  `squash` implicits that preconditions desugar to.
+- **The normalizer can now compute universes of types that mention local
+  binders** (`a198fab809`). The normalizer tracks the local scope in its own
+  closure environment and never extends `cfg.tcenv`, so a type read off a
+  residual comp or a monadic lift annotation may mention variables `tcenv` has
+  never heard of. That was harmless while computation types carried no logical
+  content; now that a result type carries the postcondition, such a type
+  routinely mentions the binders the postcondition talks about, and
+  `reify_bind`/`reify_lift`'s calls to `universe_of` trip the defensive
+  well-scopedness check (Bug3236, Error 290). The free variables are reintroduced
+  from the sorts they already carry before asking for the universe; a universe is
+  determined by sorts alone, so no result changes.
+- **`has_type` was instantiated at `u#0` twice** (`691d7c8598`), with a standing
+  `TODO`. Only `Rel.guard_of_prob` was still on that path, and the SMT encoder
+  *does* encode universe arguments, so a formula about `x <: t` at any other
+  universe was encoded against a symbol nothing else mentions. Both universes are
+  now computed at that site and `mk_has_type` takes them.
+- **A failed plugin reduction could corrupt the term** (`fc8dbb0d71`).
+  `examples/native_tactics/Registers.List.Test` was OOM-killed in CI (34 GB and
+  still climbing locally). When a native plugin cannot unembed its arguments —
+  because they are still symbolic — `arrow_as_prim_step_N` falls back to a
+  "shadow" application rebuilt from the arguments its generated wrapper handed
+  it, which exclude the universes and leading type arguments the wrapper stripped
+  off. The result is a strictly *partial* application of the same head: `sel #int
+  r 1` comes back as `sel r 1`. `reduce_primops` accepted that as a reduction,
+  after which the term could never reach the primitive step again — the plugin
+  was silently disabled for that occurrence even once its arguments became
+  concrete. Latent on `master`; the primitive-effect flip made it reachable.
+- **A native tactic's `.cmxs` was never rebuilt** (`f31316706f`).
+  `load_native_tactics` compiles a plugin's extracted `.ml` only when the `.cmxs`
+  is *absent*; an existing one is dynlinked however old it is. After a compiler
+  rebuild every test in that directory failed with Error 353 ("interface mismatch
+  on `FStarC_TypeChecker_Util`") or an undefined symbol, and the only cure was to
+  know to delete the objects by hand. The stamps already depend on `$(FSTAR_EXE)`,
+  so the objects are dropped there now.
+- **`--ext optimize_let_vc` is now inert** (`f8a8e05784`). Keeping a let-bound
+  variable opaque in the VC — `forall x. x == e ==> phi` rather than `phi[e/x]` —
+  is no longer optional, and there are no layered effects left in `bind` to
+  accommodate. The key defaulted to true in `Options.Ext.defaults` and nothing in
+  the tree set it to false, so the disjunct it guarded was constantly false; the
+  flags still passed by pulse, examples and karamel become inert rather than
+  wrong, and are left alone. Two neighbouring dead branches go with it
+  (`is_layered` was the literal `false`; an `else` was unreachable because the
+  guard of the case above it contains `not is_let_binding`).
+- **Every `Tot`/`GTot` test goes through a `Parser.Const` predicate**
+  (`8b19adb704`). Collapsing `Total`/`GTotal` into `Comp` turned every match on
+  those constructors into an open-coded `lid_equals ct.effect_name
+  PC.effect_Tot_lid` — 20-odd copies of the knowledge that generation 1 existed
+  to remove. `is_tot_lid`, `is_gtot_lid` and `is_tot_or_gtot_lid` are deliberately
+  distinct from the *class* predicates (`Pure` and `PURE` are in the pure class
+  but are not `Tot`), and `Syntax.Util` gains `is_named_gtot` /
+  `is_named_tot_or_gtot` so a caller holding a `comp` never reaches for the
+  effect name. This found a latent inconsistency: `Normalize` gave a reified
+  divergent let-binding `lbeff = Dv`.
+- **A matching loop in `FStar.Rational.Gcd`** (`14351b8174`). The module header
+  already warns that `is_gcd` and `divides` reliably produce matching loops with
+  nonlinear arithmetic, and the module is written to keep them apart; one `assert`
+  was proved with the recursive call's `is_gcd` postcondition in scope, and z3
+  fired `primitive_Prims.op_Star` 22k times. Raising the rlimit does not help — it
+  is a loop, not a marginal proof. Hoisting the arithmetic into a private lemma,
+  where the `is_gcd` fact is not in scope, brings the module to 4.5s.
 
 ## Two generations, and a stage0 bump
 
@@ -224,8 +543,9 @@ partly vacuous.
 Collapsing `Total`/`GTotal` forced the issue: `.checked` payloads are OCaml
 `Marshal`ed, so removing a constructor shifts every later tag, and a stale
 artifact *segfaults* the compiler rather than failing to load. Bumping
-`cache_version_number` 93 → 94 is mandatory (and 94 → 95 later, for dropping
-`MLEFFECT` from `cflag`) — and it bought the first honest
+`cache_version_number` is therefore mandatory, and this branch does it twice
+(97 → 99 against current `master`): once for the `comp'` collapse, once for
+shrinking `cflag`. It bought the first honest
 re-verification of the whole tree, which immediately surfaced four real bugs
 that had been masked for the entire refactor:
 
@@ -1493,7 +1813,20 @@ needed. The file now takes **7.6s on this branch and 7.7s on master**, against
 - The resugarer folds `#(squash P) -> Tot (x:t{Q x})` back into
   `Lemma (requires P) (ensures Q)`, so error messages and IDE hovers read as
   before. Squash binders print as hypotheses rather than as arguments.
-- Effect abbreviations may now carry an `ensures`.
+- **Effect abbreviations are bare aliases.** `effect M = N` is canonical; the
+  eta-expanded `effect M (a:Type) = N a` is still accepted. Anything else — extra
+  binders, a right-hand side that is not an eta-expansion of an effect name, or a
+  `requires`/`ensures` on the right-hand side — is now rejected with Error 316
+  instead of being silently dropped. See "An effect abbreviation is a bare alias".
+- The `effect M = N <: ...` (`redefine_effect`) form is gone from the grammar.
+- The `[attributes ...]` clause on an effect declaration is gone. It has been
+  impossible to write since Dijkstra Monads for Free removed the `CPS` flag.
+- `sub_effect` must name effects, not abbreviations: write `sub_effect Tot ~> M`,
+  not `sub_effect PURE ~> M`. The error message names the effect to write.
+- A universe application on an effect (`Tot u#0 int`) is rejected rather than
+  accepted and discarded.
+- `--ext optimize_let_vc` is inert. The behaviour it selected is now the only
+  behaviour; existing flags in downstream Makefiles need no change.
 - `introduce` and `eliminate` no longer bind a name for the hypothesis: write
   `with e`, not `with h. e`. The hypothesis is an implicit `squash` binder that
   F* puts in the proof context of `e` itself, so there is nothing to name.
@@ -1640,14 +1973,21 @@ same type-level match verifies.
 
 ## Validation
 
-`make 1`, `make 2`, `make 3`, then `make test` (which covers `tests`,
-`examples` and `doc`, at stage 3, with Pulse), plus `boot-diff`, `test-2-bare`,
-`stage2-unit-tests` and `fsharp-all` — all green, with caches wiped so the run
-is honest. Note that test `.checked` files live in `_cache` as well as
+`make ci -j48 -k` from a fully wiped tree — `stage{1,2}/{ulib,fstarc}.checked`,
+`pulse/build/lib.pulse.checked`, and every `_output` and `_cache` directory under
+`tests`, `pulse`, `doc` and `examples` — exits **0**. That covers `make 1`,
+`make 2`, `make 3` and `make test` (which is `tests`, `examples` and `doc`, at
+stage 3, with Pulse), plus `boot-diff`, `test-2-bare`, `stage2-unit-tests` and
+`fsharp-all`. Note that test `.checked` files live in `_cache` as well as
 `_output`; wiping only the latter is what let several failures hide.
 
 `ci` already runs stage 3, `examples` and `doc` via `_test`, so it needed no
 change.
+
+Both benchmark outliers reported by the PR's benchmarking bot are fixed and the
+fixes are in that run: `Bug3800.fst` is 0.31s / 84MB against `master`'s 0.47s /
+94MB, and `Quicksort.Base.fst` is 7.6s against `master`'s 7.7s (`master` was
+14.4s before the same change was applied to it). See "Two benchmark outliers".
 
 Beyond `ci`, EverParse's `fstar2` branch verifies and extracts end to end
 against this compiler, from a clean tree, after the downstream edits catalogued
@@ -1687,3 +2027,9 @@ dependency `.checked` files. Fixing one blocker also exposes the next: a `-k`
 build stops at ~176 `.checked` when an early spec module fails, so error counts
 between runs are not comparable. Every fix reported here was confirmed by a
 clean rebuild, not by a probe.
+
+All three downstream trees were rebuilt one final time, from clean, against the
+compiler that includes the two benchmark fixes: EverParse **417 `.checked`,
+exit 0**; kuiper **396 `.checked`, exit 0**; pulse-verified-gc **exit 0 on both
+the main build and `spot`**. Those are the same counts as their respective
+baselines.
