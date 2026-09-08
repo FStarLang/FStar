@@ -90,6 +90,22 @@ KRML_FLAGS_PulseSlice += --custard_monomorphize_types true
 # program that merely builds does not.
 RUST_TESTS += PulseSlice
 RUST_TESTS += PulseSliceRec
+# Section 77.  A dead abbreviation for a slice.  karamel reads an abbreviation
+# of an applied type as the chosen name for that instance and rewrites every
+# occurrence of the instance to it, which its Rust backend's native slice arm
+# then disagrees with -- so before the fix this program did not build at all,
+# even though nothing refers to the alias.  Run as well as built, since the
+# alias is equal to its body and dropping it must not change any behaviour.
+RUST_TESTS += UglyAlias
+KRML_TESTS += UglyAlias
+# Rooted, because that is the only way a dead abbreviation reaches the backend
+# at all: Custard unfolds every use, so nothing refers to the name and dead
+# code elimination would otherwise drop it.  Section 70.1 roots one on purpose
+# -- an abbreviation is a library's published type surface -- which is exactly
+# the situation the report came from.
+RUST_FLAGS_UglyAlias += --custard_entry_module UglyAlias
+KRML_FLAGS_UglyAlias += --custard_entry_module UglyAlias
+KRML_FLAGS_UglyAlias += --custard_monomorphize_types true
 # A reduced CBOR well-formedness checker over a slice, run against a curated
 # corpus of 48 boundary vectors.  Unlike the tests above it does not merely
 # build: it writes each vector through the slice and checks its own answer,
@@ -278,7 +294,7 @@ $(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-KRML-RUST", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlRust --custard_main $*.main \
-	  $*.fst -o $@
+	  $(RUST_FLAGS_$*) $*.fst -o $@
 
 # -fkeep-tuples is not optional here and is part of what section 20 documents:
 # karamel's split_at hook destructures a real tuple, and without the flag the

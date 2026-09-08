@@ -29,6 +29,7 @@ module BU   = FStarC.Util
 module E    = FStarC.Errors
 module Options = FStarC.Options
 module B    = FStarC.Custard.Builtins
+module Simplify = FStarC.Custard.Simplify
 
 open FStarC.Errors.Msg
 
@@ -164,6 +165,82 @@ let rec_type_table (p:program) : ML (SMap.t bool) =
   out
 
 let rec_types : ref (SMap.t bool) = mk_ref (SMap.create 0)
+
+
+(* Section 77.  A type abbreviation nothing refers to is dropped on the Rust
+   backend.
+
+   Custard has no *use* of an abbreviation to emit: {!Layout.resolve} unfolds
+   every one at every occurrence, so a [TAbbrev] declaration reaching here is
+   already dead by construction unless some other declaration names it -- and
+   the only way that happens is [Realized], which [resolve] deliberately does
+   not unfold.  Emitting the dead ones was harmless in C, where a [typedef] is
+   structurally transparent, and it is not harmless in Rust.
+
+   karamel's monomorphization (Monomorphization.ml, the
+   [DType (lid, _, 0, 0, Abbrev (TApp _ | TCgApp _))] case) reads an
+   abbreviation of an *applied* type as the name the programmer has chosen for
+   that instance, and registers [lid] in its [state] table under the key
+   [(head, args)].  Registration is by declaration and not by use, so every
+   later occurrence of that instance anywhere in the program is rewritten to
+   [TQualified lid] -- including occurrences Custard wrote structurally and
+   meant structurally.  For most heads that is exactly right and is how a
+   consumer names a monomorphic instance.  It is wrong for the heads karamel's
+   Rust backend translates *natively*: [AstToMiniRust.translate_type_with_config]
+   sends [Pulse.Lib.Slice.slice t] to [Ref (_, Shared, Slice t)] by a
+   structural arm that never consults its [types] environment, while
+   [TQualified lid] goes through [lookup_type] to [Name lid].  The two arms
+   then disagree about one and the same type and [possibly_convert] falls
+   through to "type mismatch; t=&[u8] ... t_ret=m::ugly".
+
+   So a single [let ugly = S.slice U8.t] anywhere in the program is enough to
+   break every unrelated function that takes a slice, whether or not the
+   abbreviation is used.
+
+   Only abbreviations of a *modelled* head are dropped, and only unreferenced
+   ones.  karamel's rewrite is right for every other head and is how a
+   consumer names a monomorphic instance -- section 70.1 roots an
+   abbreviation precisely so that [iter_t] is what the header says instead of
+   a mangled internal encoding, and that must keep working.  The modelled
+   heads are exactly the ones the Rust backend also translates structurally,
+   so they are exactly the ones where the two answers can differ.  Dropping
+   one changes no type Custard emits: the alias was equal to its body, and
+   every occurrence already prints as the body. *)
+let dead_abbrev_table (p:program) : ML (SMap.t bool) =
+  let out : SMap.t bool = SMap.create 20 in
+  if Options.custard_backend () <> "KrmlRust" then out
+  else begin
+    let modelled_abbrev (t:dtype) : ML bool =
+      match t.dt_body with
+      | TAbbrev (TApp (n, _)) -> B.is_krml_model_name n.ns n.id
+      | _ -> false in
+    let is_cand (d:decl) : ML bool =
+      match d with
+      | DType t -> Some true = SMap.try_find out (string_of_name t.dt_name)
+      | _ -> false in
+    p |> List.iter (fun d ->
+      match d with
+      | DType t when modelled_abbrev t -> SMap.add out (string_of_name t.dt_name) true
+      | _ -> ());
+    (* Dropping one candidate can make another unreferenced, so this is a
+       fixpoint and not a sweep.  Each round drops at least one candidate or
+       stops, hence the bound. *)
+    let rec go (fuel:int) : ML unit =
+      if fuel <= 0 then () else begin
+        let changed = mk_ref false in
+        p |> List.iter (fun d ->
+          if is_cand d then () else
+            Simplify.decl_deps d |> List.iter (fun n ->
+              if Some true = SMap.try_find out n then begin
+                SMap.remove out n; changed := true
+              end));
+        if !changed then go (fuel - 1)
+      end in
+    go (List.length p + 1);
+    out
+  end
+
+let dead_abbrevs : ref (SMap.t bool) = mk_ref (SMap.create 0)
 
 
 (* Section 65.1.  The declarations Custard compiles whose lident karamel
@@ -915,6 +992,9 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
      rewrites it, so dropping them is "no corresponding implementation". *)
   | DType t when has_flag t.dt_flags Modelled -> None
 
+  (* Section 77. *)
+  | DType t when Some true = SMap.try_find !dead_abbrevs (string_of_name t.dt_name) -> None
+
   | DType t ->
     let env = with_typars env t.dt_params in
     let n_t = List.length t.dt_params in
@@ -1113,6 +1193,7 @@ let print_program (p:program) : ML (list Krml.file) =
   extern_values := extern_value_table p;
   shadowed := shadow_table p;
   rec_types := rec_type_table p;
+  dead_abbrevs := dead_abbrev_table p;
   (* Custard is whole-program, so unsplit there is exactly one karamel "file";
      karamel is free to split the C output as it likes.  That is enough for C
      and not for Rust, where the karamel file is the crate module and
@@ -1132,6 +1213,7 @@ let print_split (fs : list (string & program)) : ML (list Krml.file) =
   extern_values := extern_value_table whole;
   shadowed := shadow_table whole;
   rec_types := rec_type_table whole;
+  dead_abbrevs := dead_abbrev_table whole;
   let arity = ctor_table whole in
   fs |> List.collect (fun (m, p) ->
     let env = { names = []; names_t = []; ctor_arity = arity; tvars_any = false } in

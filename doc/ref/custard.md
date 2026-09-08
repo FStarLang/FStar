@@ -16215,6 +16215,158 @@ The program checks both answers rather than only building.
 
 Checked against the unfixed compiler.
 
+## Section 77. A dead abbreviation is not inert
+
+### 77.1 Intake
+
+Reported against the Rust column, and reported twice: once by EverParse,
+whose generated `COSE.Format` crate stopped building, and once as a
+five-line program that reproduces it exactly.
+
+```fstar
+module UglyAlias
+module U8 = FStar.UInt8
+module S = Pulse.Lib.Slice
+let ugly = S.slice U8.t
+let f (x: S.slice U8.t) : U8.t = 0uy
+```
+
+karamel refuses `f`:
+
+```
+ERROR translating UglyAlias.f: type mismatch;
+  t=&[u8]      (MiniRust.Ref (None, Shared, Slice (Constant UInt8)))
+  t_ret=uglyalias::ugly   (MiniRust.Name (["uglyalias"; "ugly"], []))
+```
+
+Note what `f` does *not* do: it does not mention `ugly`.  Nothing in the
+program mentions `ugly`.  The declaration is dead, and deleting that one
+line makes the program build and gives `pub fn f(x: &[u8]) -> u8`.
+
+The reporter ran the control this section owes them.  They put the same
+module through F*'s own `--codegen krml` and got the same error, on all six
+shapes they tried, with no divergence from Custard anywhere.  That reframed
+the question correctly: the machinery that reaches for the alias is
+karamel's, and what Custard controls is only whether the alias is there to
+be reached.
+
+### 77.2 Why it happened
+
+The IR is not at fault, and `--custard_dump_ir` says so:
+
+```
+type UglyAlias.ugly = Pulse.Lib.Slice.slice<u8>
+let UglyAlias.f (x: Pulse.Lib.Slice.slice<u8>) : u8 [Pure] =
+```
+
+`Layout.resolve` unfolds an abbreviation at every occurrence, so `f`'s
+binder is structural, and it stays structural all the way into the `.krml`
+file --- karamel's own `-dast` and `-dmonomorphization` dumps show
+`f(x: Pulse_Lib_Slice_slice uint8_t)`.  The name is introduced downstream of
+everything either extractor writes.
+
+It is introduced by karamel's monomorphization
+(`lib/Monomorphization.ml`), in the case
+
+```ocaml
+| DType (lid, _, 0, 0, Abbrev ((TApp _ | TCgApp _) as t)) ->
+    ...
+    Hashtbl.add state node_key (White [], chosen_lid);
+```
+
+An abbreviation whose body is an *applied* type is read as the name the
+programmer has chosen for that instance, and `lid` is registered in the
+monomorphization state under the key `(head, args)`.  Registration is by
+declaration, not by use: from that point every occurrence of
+`Pulse.Lib.Slice.slice uint8_t` anywhere in the program is rewritten to
+`TQualified UglyAlias.ugly`.
+
+For nearly every head that is not only right but wanted, and §70.1 depends
+on it --- rooting `iter_t` is how a consumer writes `iter_t` instead of the
+mangled name of an internal encoding.  It is wrong for exactly the heads the
+Rust backend also translates *structurally*.
+`AstToMiniRust.translate_type_with_config` has
+
+```ocaml
+| TApp ((["Pulse"; "Lib"; "Slice"], "slice"), [ t ]) ->
+    Ref (config.lifetime, Shared, Slice (translate_type_with_config env config t))
+| TQualified lid ->
+    ...  Name (lookup_type env lid, generic_params)
+```
+
+The first arm never consults the `types` environment; the second is nothing
+but a lookup in it.  So one and the same F* type now has two Rust
+translations, `&[u8]` and `Name ["uglyalias"; "ugly"]`, depending on which
+arm sees it, and `possibly_convert` falls through to the mismatch above.
+`bind_type_decl` compounds it by wildcarding both the flags and the
+definition, so no visibility qualifier and no dead-code judgement keeps a
+`DType` out of `types`.
+
+Two consequences worth stating plainly.  One dead abbreviation breaks every
+*unrelated* function in the program that takes a slice, which is why the
+error EverParse saw named a function that has nothing to do with the alias.
+And the C column was never affected, because a C `typedef` is structurally
+transparent --- `UglyAlias_ugly` and `Pulse_Lib_Slice_slice__uint8` are the
+same type to a C compiler, so the two answers cannot disagree.
+
+No open karamel issue tracks this and it is unfixed on master.
+
+### 77.3 The fix
+
+Custard has no *use* of an abbreviation to emit.  `Layout.resolve` unfolded
+them all, so a `TAbbrev` declaration that reaches `PrintKrml` is referenced
+by nothing --- and the only reason one survives dead-code elimination at all
+is that something rooted it, which under `--custard_entry_module` is §70.1
+doing its job.
+
+`PrintKrml.dead_abbrev_table` therefore drops an abbreviation subject to
+three conditions, all of them necessary:
+
+* the backend is `KrmlRust`, since in C the declaration is inert and is the
+  published type surface §70.1 exists to publish;
+* the body is an application of a head karamel *models*
+  (`Builtins.is_krml_model_name`), which is precisely the set whose Rust
+  translation is structural and so the set where the two answers can
+  differ.  Every other head keeps karamel's rewrite, and `TypeAbbrev` still
+  gets its `iter_t`;
+* no other declaration in the program refers to the name.  Dropping a
+  referenced declaration would leave a dangling one, and a referenced
+  abbreviation is a `Realized` one, which `resolve` does not unfold and
+  which therefore is not dead.
+
+The last condition is a fixpoint rather than a sweep, since dropping one
+candidate can leave another unreferenced.  It walks `Simplify.decl_deps`,
+the same relation dead-code elimination and the splitter walk, so a name is
+counted as referenced in exactly the cases those two count it.
+
+Dropping one changes no type Custard emits.  The alias was equal to its
+body by definition, and every occurrence of it already printed as the body.
+
+### 77.4 The test
+
+`tests/custard/pulse/UglyAlias.fst` declares `ugly` and never uses it, and
+its `first` takes a slice structurally --- the report's shape, with a `main`
+that allocates, reads back through the slice and checks the byte, so that a
+fix which merely made the program build would still have to make it right.
+
+It runs on both columns, and the two columns assert opposite things.  Rust
+must not contain the alias:
+
+```rust
+pub fn first(s: &[u8]) -> u8 { s[0usize] }
+```
+
+C must still contain it, because §70.1 is not being repealed:
+
+```c
+typedef Pulse_Lib_Slice_slice__uint8 UglyAlias_ugly;
+```
+
+Both legs pass `--custard_entry_module UglyAlias`, which is the only way a
+dead abbreviation reaches a backend at all and is the situation the report
+came from.  Against the unfixed compiler the Rust leg fails with three
+errors, naming `first` and `main` --- neither of which mentions `ugly`.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -16513,3 +16665,4 @@ Checked against the unfixed compiler.
 | M10ηΣ | A `Mono` binder behind an abbreviation (§74.2) | Done, one line.  `Mono.classify_def` measures the arrow spine with `arrow_formals_unfold`; `Extract.specialize` measured it with `U.arrow_formals_comp`, and the indices in `margs` are indices into the classification.  A `[@@monomorphize]` binder hidden behind a codomain abbreviation was therefore classified, and its argument removed from every call spine, while `specialize` ran out of binders before reaching it --- so the key was never substituted.  Two symptoms, reported as unrelated: the binder survived into the signature, giving a saturated call refused as "applied to 6 of its 7 arguments" against a signature matching karamel's exactly; and the body still named it, so a template argument computed from it reduced to `FStar.SizeT.v tm` and was refused with error 390.  `specialize` now unfolds too.  `MonoAbbrev` and `TmplAbbrev` pin the two halves, each checked against the unfixed compiler |
 | M10ηΤ | A module that emits nothing still has to exist (§75.2) | Done.  EverParse's Rust crate layout names `CBOR.Pulse.Raw.Slice` in a karamel `-bundle` clause; the module is `.fsti`-only, so no declaration carries its name, and Custard dropped it in two independent places --- `Split.run` skipped a chunk with no declarations and `PrintKrml.print_split` skipped a file whose declarations all translated to nothing.  karamel's own input keeps the module, because F*'s ML extraction writes one file per module it extracted, and a `-bundle` clause naming a module karamel was not given is fatal rather than an empty selection, so the whole flag set was refused.  Both places now keep it; the empties come from `Dep.topological_order`, excluding realized modules and names an upstream unit owns, and only on the karamel backends, since an empty `.ml` named after a realized module is a collision and not parity.  `RustSplitIface.fsti` pins it, with the clause spelled the way EverParse spells it --- module on the left of the `=`, which is the form that is fatal |
 | M10ηΥ | A type class costs a run-time initializer (§76.2) | Done.  A class with a value method specializes to a parameterless definition per instance, and every definition that reads the method is another one, so a chain of them becomes a chain of globals each naming the one before --- and a reference to a global is a reference to a *variable*, which C does not accept where an object with static storage duration is initialized.  The whole chain was assigned at startup in `custard_init_globals`, which is not only work but interface: a program embedding the unit has to call it.  Two halves to the fix.  `Simplify.const_globals` substitutes a constant global's value into *another global's* initializer, before `dce` so the declaration it made unreachable goes with it, and never through a `[@@ CMacro ]`, whose name is the point (§68).  `PrintC.static_init` then accepts arithmetic over constants, printed by `c_expr` so that `truncate` and §59.3's casts decide the width exactly as they do for the assignment being replaced.  `TcConst` pins a three-deep chain and a narrow-width wraparound, and asserts the initializer is not generated at all |
+| M10ηΦ | A dead abbreviation is not inert (§77.2) | Done.  A single unused `let ugly = S.slice U8.t` broke every unrelated function in the program that takes a slice.  karamel's monomorphization reads an abbreviation of an *applied* type as the name chosen for that instance and registers it by declaration rather than by use, so every later occurrence of the instance is rewritten to it; that is right for every head except the ones karamel's Rust backend also translates structurally, where `TApp (slice, [u8])` goes to `&[u8]` by an arm that never consults the type environment while `TQualified` goes to `Name` by one that is nothing else, and the two answers meet in `possibly_convert`.  C was never affected, a `typedef` being structurally transparent.  Custard has no use of an abbreviation to emit --- `Layout.resolve` unfolds them all --- so `PrintKrml` now drops one whose body applies a modelled head and which nothing refers to, on `KrmlRust` only, leaving §70.1's published `iter_t` alone.  `UglyAlias` pins both columns, the Rust one asserting the alias is gone and the C one asserting it is still there.  Reported twice, and reduced by the reporter, who ran the control that showed the machinery is karamel's |
