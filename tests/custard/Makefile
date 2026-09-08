@@ -1995,6 +1995,25 @@ C_TESTS += TmplAbbrev
 CGREP_TmplAbbrev += "tpl_bitset(64) b"
 CNOGREP_TmplAbbrev += "tpl_bitset(n)"
 
+# Section 76.  A type class with a value method.  Each instance and each
+# reader of the method is a parameterless definition, so a reference to one
+# from another is a reference to a *variable* -- which C does not accept where
+# an object with static storage duration is initialized, so the whole chain
+# used to be assigned at startup in custard_init_globals.  Reported from the
+# field.
+#
+# The assertion is the absence of the initializer, not the presence of a
+# spelling: with nothing left to set there is no function, the header does not
+# declare it and main does not call it.  The run pins that the folded values
+# are the ones the assignments would have computed.
+C_TESTS += TcConst
+CGREP_TcConst += "TcConst_twice__t = "
+CNOGREP_TcConst += "custard_init_globals"
+# The substituted-from definitions are unreachable afterwards and have to go:
+# an unreferenced static is a -Werror=unused-variable failure, which is why
+# the pass runs before dce.
+CNOGREP_TcConst += "TcConst_start"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \

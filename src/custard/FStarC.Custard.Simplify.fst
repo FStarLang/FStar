@@ -3025,6 +3025,101 @@ let narrow_rets (prog:program) : ML program =
        | None -> d)
     | d -> d)
 
+(* -------------------------------------------------------------------- *)
+(* Section 76.  Constants in a global's initializer                     *)
+(* -------------------------------------------------------------------- *)
+
+(* A parameterless definition whose value is known at translation time is
+   still, in the IR, a definition like any other -- and a reference to it is a
+   reference to a *variable*.  C does not accept one of those where an object
+   with static storage duration is being initialized, so a global whose body
+   names another global has to be set up at run time instead, in
+   [custard_init_globals] (section 27).
+
+   That is what a type class costs.  A class with a value method,
+
+     class foo (t: Type0) = { bar: UInt32.t }
+
+   specializes to a parameterless definition per instance, and every
+   definition that reads the method is another one; none of them has an
+   argument, so a chain of them becomes a chain of globals, each initialized
+   from the one before, and all of it runs before [main] to compute numbers
+   the compiler could have folded.  Reported from the field, on exactly this
+   shape.
+
+   The fix is to substitute: a use of a constant global inside *another
+   global's initializer* is replaced by the constant itself, after which C can
+   fold the arithmetic and the whole chain is initialized where it is
+   declared.  Only inside another initializer, because that is the position
+   where a variable is not allowed; a function body may name whichever global
+   it likes and reads better for it.
+
+   The substituted-from declaration usually becomes unreachable, which is why
+   this runs before [dce] -- leaving it would be worse than not substituting,
+   since an unreferenced [static] is a [-Wunused-variable] error under the
+   [-Werror] the generated C is compiled with.  A [Root] is kept by [dce] and
+   is not [static], so it does not have that problem. *)
+
+(* The shape C accepts as a constant expression, as the IR spells it: a
+   literal, a conversion of one, and pure arithmetic over those.  The
+   backend's own test ([PrintC.static_init]) is narrower still and has the
+   final say; this one only decides what is worth substituting, so being
+   slightly generous costs a substitution that does not pay off rather than a
+   program that does not compile.
+
+   Deliberately not the buffer operations.  [BufLit] is an initializer and not
+   an expression (section 71), and everything else in that group either reads
+   or allocates. *)
+let rec const_shape (x:expr) : ML bool =
+  match x.e with
+  | EConst _ -> true
+  | ECast (e1, _) | ECoerce (e1, _) -> const_shape e1
+  | EOp (o, es) ->
+    (match o.po_op with
+     | Add | AddW | Sub | SubW | Mult | MultW | Div | DivW | Mod
+     | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
+     | Eq | Neq | Lt | Lte | Gt | Gte | And | Or | Not ->
+       (* Floats are left out for now: a narrow one is a call rather than an
+          operator in C, and a wide one is only reachable through the same
+          sites, so there is nothing here to gain by telling them apart. *)
+       (match o.po_ty with
+        | Some (PFloat _) -> false
+        | _ -> es |> List.for_all const_shape)
+     | _ -> false)
+  | _ -> false
+
+let const_globals (prog:program) : ML program =
+  (* Filled in program order, which is dependency order by the time this runs
+     ([scc] has not reordered anything yet, and extraction emits a definition
+     before its users): a global can only name one already in the table, so
+     the substituted bodies are already fully substituted and no fixpoint is
+     needed. *)
+  let tbl : SMap.t expr = SMap.create 50 in
+  let rec subst (x:expr) : ML expr =
+    match x.e with
+    | EQual (n, []) ->
+      (match SMap.try_find tbl (string_of_name n) with Some e -> e | None -> x)
+    | ECast (e1, c) -> { x with e = ECast (subst e1, c) }
+    | ECoerce (e1, c) -> { x with e = ECoerce (subst e1, c) }
+    | EOp (o, es) -> { x with e = EOp (o, es |> List.map subst) }
+    | _ -> x in
+  prog |> List.map (fun d ->
+    match d with
+    (* Not a [@@ CMacro ] definition (section 68).  Its whole purpose is that
+       the *name* survives into the generated C -- a consumer's [#if] is
+       written against it -- and a macro is already a constant expression
+       wherever it appears, so there is nothing to gain by expanding it and a
+       header's contract to lose. *)
+    | DLet dl when Nil? dl.dl_binders && Nil? dl.dl_typars &&
+                   None? (imported_unit d) &&
+                   not (dl.dl_flags |> List.existsb CMacro?) ->
+      let body = subst dl.dl_body in
+      if const_shape body
+      then (SMap.add tbl (string_of_name dl.dl_name) body;
+            DLet { dl with dl_body = body })
+      else DLet { dl with dl_body = body }
+    | d -> d)
+
 let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   let pass (n:string) (f : program -> ML program) (p:program) : ML program =
     Prof.timed ("s." ^ n) (fun () -> f p) in
@@ -3062,6 +3157,9 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      them. *)
   let prog = if Options.custard_backend () = "C"
              then pass "lift_lambdas" lift_lambdas prog else prog in
+  (* Section 76.  Before [dce], which is what removes the declaration a
+     substituted constant made unreachable. *)
+  let prog = pass "const_globals" const_globals prog in
   (* Last: a coercion is inserted where two types disagree, so every pass that
      can change a type has to have run.  Nothing below it may rewrite a term. *)
   let prog = pass "dce" dce prog in

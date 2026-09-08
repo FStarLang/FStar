@@ -2502,6 +2502,25 @@ let signature (l:dlet) : ML string =
    left out for a sharper reason: the compound literal Custard emits for one
    is not a constant expression at file scope, however constant its
    contents. *)
+(* Section 76.  The operators C folds at translation time, which is every one
+   Custard prints infix at an integer or boolean type.  The float widths are
+   left out: a narrow one is a call ({!narrow_call}) and so not constant, and
+   a wide one is only reachable through the same globals, so telling the two
+   apart would buy nothing yet.
+
+   Division and the shifts are on the list.  Both have inputs C would refuse
+   to fold -- a zero divisor is a constraint violation, an over-wide shift is
+   undefined -- and neither can occur: [UInt32.div] and [UInt32.shift_left]
+   carry the preconditions that rule them out, so a term that reaches here has
+   already been proved not to be one. *)
+let const_op (o:prim_op) : ML bool =
+  (match o.po_ty with Some (PFloat _) -> false | _ -> true) &&
+  (match o.po_op with
+   | Add | AddW | Sub | SubW | Mult | MultW | Div | DivW | Mod
+   | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
+   | Eq | Neq | Lt | Lte | Gt | Gte | And | Or | Not -> true
+   | _ -> false)
+
 let rec static_init (x:expr) : ML (option string) =
   match x.e with
   (* Section 59.  The initializer of a declaration of this very type, which
@@ -2542,6 +2561,28 @@ let rec static_init (x:expr) : ML (option string) =
   (* A null pointer constant, which is what an uninitialized buffer global is
      and the one aggregate-typed thing on this list. *)
   | EOp ({ po_op = BufNull }, []) -> Some ("(" ^ ty x.ty ^ ")NULL")
+  (* Section 76.  Arithmetic over constants is a constant expression in C, and
+     after [Simplify.const_globals] a chain of type-class constants is exactly
+     that: [(7 + 1)] rather than [bar + 1].  Without this arm the substitution
+     would buy nothing, since the result would still not be an initializer.
+
+     Printed by {!c_expr}, not by a second evaluator.  Everything the width
+     costs -- {!truncate} at [Int8] and [Int16], the casts section 59.3 keeps
+     and drops, the separate promotion of a shift's operands -- is decided
+     there, and a constant folded by the C compiler has to be the same value
+     the run-time assignment would have computed.  Anything that hoists a
+     statement is not an expression at all, so an [out] that came back
+     non-empty is the test for that.
+
+     [strcmp] is the one operator on this list that C emits as a call
+     (section 44.2), so a string comparison is refused here rather than
+     silently becoming a run-time initializer's worth of work. *)
+  | EOp (o, es) when const_op o &&
+                     es |> List.for_all (fun (a:expr) ->
+                       Some? (static_init a) && not (is_string_ty a.ty)) ->
+    let out = mk_ref "" in
+    let v = c_expr out "" x in
+    if !out = "" then Some v else None
   | _ -> None
 
 let has_static_init (l:dlet) : ML bool =

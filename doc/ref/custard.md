@@ -16088,6 +16088,133 @@ against is not in hand either. And Custard exports 85 `_left`/`_right`
 coercions that karamel keeps `static`; a visibility difference, cosmetic, and
 noted so it is not rediscovered.
 
+## 76 A type class costs a run-time initializer
+
+### 76.1 Intake
+
+Reported from the field. A class with a value method,
+
+```fstar
+class foo (t: Type0) = { bar: UInt32.t }
+```
+
+produced `foo_bar__t = UInt32_zero;` inside `custard_init_globals`, and so did
+every definition that read the method:
+
+```fstar
+let baz #t {| foo t |} = UInt32.add (bar #t #_) 1ul
+```
+
+None of it needs to run. The values are known at translation time, and the
+report is that they are computed at startup anyway.
+
+### 76.2 Why it happened
+
+A class method specializes to a *parameterless* definition per instance
+(§3.4: `ReduceProjections` collapses the method accessor against the concrete
+dictionary, so no projector survives, but the field's value still becomes a
+definition of its own). A definition that reads the method is another
+parameterless definition. So the chain in the report is three globals deep,
+and each names the one before it.
+
+A reference to a global is, in C, a reference to a **variable**, and a
+variable is not a constant expression --- so it may not initialize an object
+with static storage duration. §27 already knew that: `static_init` recognizes
+a small set of bodies that C accepts where the object is declared, and
+everything else is declared uninitialized and assigned in
+`custard_init_globals`. A name was not on that list, and neither was
+arithmetic, so the whole chain fell off the fast path.
+
+The cost is not only the work. `custard_init_globals` is part of the unit's
+interface: a program embedding the translation unit has to call it before
+anything else, and §42.3 gives it a per-unit name for that reason. A class
+with a value method therefore turned a header that needed no initialization
+into one that does.
+
+### 76.3 The fix, part one: substitute
+
+`Simplify.const_globals`, a new pass, replaces a use of a constant global
+**inside another global's initializer** by the constant itself. The shape it
+recognizes (`const_shape`) is a literal, a conversion of one, and pure
+arithmetic over those.
+
+Three restrictions, each load-bearing.
+
+*Only inside another initializer.* That is the position where C does not
+accept a variable. A function body may name whichever global it likes and
+reads better for it.
+
+*Not a `[@@ CMacro ]` definition.* §68's whole point is that the name survives
+into the generated C, because a consumer's `#if` is written against it --- and
+a macro is already a constant expression wherever it appears, so expanding it
+would trade a header's contract for nothing. The `Macro` test caught this,
+which is what a test asserting a *spelling* is for.
+
+*Before `dce`.* The substituted-from declaration is usually unreachable
+afterwards, and leaving it would be worse than not substituting: an
+unreferenced `static` is a `-Werror=unused-variable` failure under the flags
+the generated C is compiled with. A `Root` is kept by `dce` and is not
+`static`, so it does not have that problem.
+
+The table is filled in program order, which is dependency order at that point
+in the pipeline, so a global can only name one already in it and no fixpoint
+is needed.
+
+### 76.4 The fix, part two: fold
+
+Substitution alone buys nothing --- `bar + 1` becomes `7 + 1`, which is still
+not on `static_init`'s list. So `static_init` gains an arm for arithmetic:
+every operator Custard prints infix at an integer or boolean type, when each
+operand is itself a static initializer.
+
+It is printed by `c_expr`, not by a second evaluator, and that is the point.
+Everything the width costs --- `truncate` at `Int8` and `Int16`, the casts
+§59.3 keeps and drops, the separate promotion of a shift's operands --- is
+decided there, and a constant the C compiler folds has to be the same value
+the run-time assignment would have computed. Reusing the printer makes that
+true by construction rather than by review. Anything that hoists a statement
+is not an expression at all, so an `out` that comes back non-empty is the test
+for that.
+
+Two exclusions. The float widths, because a narrow one is a call
+(`narrow_call`) and so not constant, and a wide one is only reachable through
+the same globals, so telling them apart buys nothing yet. And a string
+comparison, which C emits as a `strcmp` call (§44.2).
+
+Division and the shifts *are* on the list, although both have inputs C would
+refuse to fold --- a zero divisor is a constraint violation, an over-wide
+shift is undefined. Neither can occur: `UInt32.div` and `UInt32.shift_left`
+carry the preconditions that rule them out, so a term that reaches the printer
+has already been proved not to be one.
+
+### 76.5 The test
+
+`tests/custard/TcConst.fst` is the reported shape with the chain made three
+deep. The instance field is initialized from a named constant rather than a
+literal, which is the case the report named; `twice` reads through `bumped`,
+so the last link is arithmetic and not a copy. The whole chain now folds into
+
+```c
+static uint32_t TcConst_twice__t = ((((uint32_t)7U) + ((uint32_t)1U)) * 2);
+```
+
+and `custard_init_globals` is not generated at all --- the header does not
+declare it and `main` does not call it, which is what the test asserts.
+
+A narrow-width field is included on purpose:
+
+```c
+static uint8_t TcConst_wrapped__t = ((uint8_t)(((uint8_t)200U) + ((uint8_t)100U)));
+```
+
+`200 + 100` is 300 at `int` and 44 in a `uint8_t`, which is what `add_mod`
+means; the cast `truncate` emits is what makes the folded initializer agree
+with the assignment it replaced, and without it the value would be wrong and
+`-Woverflow` would not fire, because the arithmetic is not what overflows.
+The program checks both answers rather than only building.
+
+Checked against the unfixed compiler.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -16385,3 +16512,4 @@ noted so it is not rediscovered.
 | M10ηΡ | An empty `void` body is not an empty block (§73.5) | Done.  The C-test harness's empty-block check is for an `if` or a loop that lost its statement; a root of type `unit -> unit` legitimately has none.  The check now exempts an opening line at column zero that declares a `void` function, and nothing else |
 | M10ηΣ | A `Mono` binder behind an abbreviation (§74.2) | Done, one line.  `Mono.classify_def` measures the arrow spine with `arrow_formals_unfold`; `Extract.specialize` measured it with `U.arrow_formals_comp`, and the indices in `margs` are indices into the classification.  A `[@@monomorphize]` binder hidden behind a codomain abbreviation was therefore classified, and its argument removed from every call spine, while `specialize` ran out of binders before reaching it --- so the key was never substituted.  Two symptoms, reported as unrelated: the binder survived into the signature, giving a saturated call refused as "applied to 6 of its 7 arguments" against a signature matching karamel's exactly; and the body still named it, so a template argument computed from it reduced to `FStar.SizeT.v tm` and was refused with error 390.  `specialize` now unfolds too.  `MonoAbbrev` and `TmplAbbrev` pin the two halves, each checked against the unfixed compiler |
 | M10ηΤ | A module that emits nothing still has to exist (§75.2) | Done.  EverParse's Rust crate layout names `CBOR.Pulse.Raw.Slice` in a karamel `-bundle` clause; the module is `.fsti`-only, so no declaration carries its name, and Custard dropped it in two independent places --- `Split.run` skipped a chunk with no declarations and `PrintKrml.print_split` skipped a file whose declarations all translated to nothing.  karamel's own input keeps the module, because F*'s ML extraction writes one file per module it extracted, and a `-bundle` clause naming a module karamel was not given is fatal rather than an empty selection, so the whole flag set was refused.  Both places now keep it; the empties come from `Dep.topological_order`, excluding realized modules and names an upstream unit owns, and only on the karamel backends, since an empty `.ml` named after a realized module is a collision and not parity.  `RustSplitIface.fsti` pins it, with the clause spelled the way EverParse spells it --- module on the left of the `=`, which is the form that is fatal |
+| M10ηΥ | A type class costs a run-time initializer (§76.2) | Done.  A class with a value method specializes to a parameterless definition per instance, and every definition that reads the method is another one, so a chain of them becomes a chain of globals each naming the one before --- and a reference to a global is a reference to a *variable*, which C does not accept where an object with static storage duration is initialized.  The whole chain was assigned at startup in `custard_init_globals`, which is not only work but interface: a program embedding the unit has to call it.  Two halves to the fix.  `Simplify.const_globals` substitutes a constant global's value into *another global's* initializer, before `dce` so the declaration it made unreachable goes with it, and never through a `[@@ CMacro ]`, whose name is the point (§68).  `PrintC.static_init` then accepts arithmetic over constants, printed by `c_expr` so that `truncate` and §59.3's casts decide the width exactly as they do for the assignment being replaced.  `TcConst` pins a three-deep chain and a narrow-width wraparound, and asserts the initializer is not generated at all |
